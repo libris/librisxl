@@ -1,6 +1,5 @@
 import java.util.concurrent.atomic.AtomicInteger
 
-okReport = getReportWriter("ok.tsv")
 notOkReport = getReportWriter("not-ok.tsv")
 errorReport = getReportWriter("errors.tsv")
 
@@ -9,6 +8,7 @@ def ids = new URL("http://xlbuild.libris.kb.se/3161-modified.txt").getText().rea
 ids.parallelStream().forEach(this::process)
 
 class ScriptGlobal {
+    static AtomicInteger badCount = new AtomicInteger()
     static AtomicInteger count = new AtomicInteger()
 } 
 
@@ -18,16 +18,17 @@ void process(String id) {
         process3161(m.before)
         def getThing = { getAtPath(it, ['@graph', 1]) }
         def ok = getThing(m.before) == getThing(m.after)
-        
-        def msg = "$id\t${diffLink(id, m.beforeVersion, m.afterVersion)}"
-        (ok ? okReport : notOkReport).println()
-        if (!ok) {
-            println(msg)
-        }
 
         int count = ScriptGlobal.count.incrementAndGet()
-        if (count % 100 == 0) {
-            println(count)
+        if (count % 100 == 0) { 
+            println(count) 
+        }
+        
+        if (!ok) {
+            def msg = "$id\t${diffLink(id, m.beforeVersion, m.afterVersion)}"
+            notOkReport.println(msg)
+            
+            println("${ScriptGlobal.badCount.incrementAndGet()} / $count $msg")
         }
     }
     catch (Exception e) {
