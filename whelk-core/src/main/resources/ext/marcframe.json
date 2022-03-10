@@ -22377,12 +22377,14 @@
       },
       "[6]": {
         "NOTE:local": "Posttyp - z - Auktoritetspost",
+        "ignored": true,
         "fixedDefault": "z"
       },
       "[7]": null,
       "[8]": null,
       "[9]": {
         "NOTE:local": "Teckenuppsättning - a - UCS/Unicode",
+        "ignored": true,
         "fixedDefault": "a"
       },
       "NOTE:[10]": "see bib",
@@ -22391,10 +22393,12 @@
       "[17]": {
         "NOTE:local": "Fullständighetsnivå - n - Fullständig",
         "NOTE": "Remove encodingLevel from auth. All records will default to Complete Authority records",
+        "ignored": true,
         "fixedDefault": "n"
       },
       "[18]": {
         "NOTE:local": "Interpunktionspolicy - # - Ej specificerad",
+        "ignored": true,
         "fixedDefault": " "
       },
       "[19]": null,
@@ -22529,11 +22533,13 @@
       "[12]": {
         "NOTE:local": "Typ av serie - n - Ej tillämplig.",
         "NOTE": "previously marc:typeOfSeries",
+        "ignored": true,
         "fixedDefault": "n"
       },
       "[13]": {
         "NOTE:local": "Numrering i serie - n - Ej tillämplig.",
         "NOTE": "previously marc:numberedSeries",
+        "ignored": true,
         "fixedDefault": "n"
       },
       "[14]": {
@@ -22551,6 +22557,7 @@
       "[16]": {
         "NOTE:local": "Användningsområde: seriesökelement - b - Kan inte användas som seriebiuppslag",
         "NOTE": "previously marc:headingSeries",
+        "ignored": true,
         "fixedDefault": "b"
       },
       "[17]": {
