@@ -23,25 +23,25 @@ Fixing bad records:
 
 import java.util.concurrent.atomic.AtomicInteger
 
+class ScriptGlobal {
+    static AtomicInteger badCount = new AtomicInteger()
+    static AtomicInteger count = new AtomicInteger()
+
+    // Copied from LXL-3161 script below
+    static Set LINK_FIELDS_WORK = ['translationOf', 'translation', 'supplement', 'supplementTo', 'hasPart',
+                                   'continues', 'continuesInPart', 'precededBy', 'precededInPartBy',
+                                   'mergerOf', 'absorbed', 'absorbedInPart', 'separatedFrom', 'continuedBy',
+                                   'continuedInPartBy', 'succeededBy', 'succeededInPartBy', 'absorbedBy',
+                                   'absorbedInPartBy', 'splitInto', 'mergedToForm', 'relatedTo' ]
+}
+
 notOkReport = getReportWriter("not-ok.tsv")
 notFixableReport = getReportWriter("not-fixable.tsv")
 errorReport = getReportWriter("errors.tsv")
 
-//def ids = new URL("http://xlbuild.libris.kb.se/3161-modified.txt").getText().readLines()
-def ids = new URL("http://xlbuild.libris.kb.se/3161-bad.txt").getText().readLines()
+def ids = new URL("http://xlbuild.libris.kb.se/3161-modified.txt").getText().readLines()
 
 ids.parallelStream().forEach(this::process)
-
-class ScriptGlobal {
-    static AtomicInteger badCount = new AtomicInteger()
-    static AtomicInteger count = new AtomicInteger()
-    
-    static Set LINK_FIELDS_WORK = ['translationOf', 'translation', 'supplement', 'supplementTo', 'hasPart',
-    'continues', 'continuesInPart', 'precededBy', 'precededInPartBy',
-    'mergerOf', 'absorbed', 'absorbedInPart', 'separatedFrom', 'continuedBy',
-    'continuedInPartBy', 'succeededBy', 'succeededInPartBy', 'absorbedBy',
-    'absorbedInPartBy', 'splitInto', 'mergedToForm', 'relatedTo' ]
-} 
 
 void process(String id) {
     try {
@@ -90,7 +90,7 @@ Map getThing(Map doc) {
 Map getBeforeAfter3161(String id) {
     def SCRIPT_3161 = "https://libris.kb.se/sys/globalchanges/2020/05/lxl-3161-move-linkfield-to-instance/script.groovy"
     def version=-1
-    while(true) {
+    while(true) { // getDoc throws if version not found
         def doc = getDoc(id, version--)
         if (getAtPath(doc, ['@graph',0, 'generationProcess', '@id']) == SCRIPT_3161) {
             return [
@@ -106,7 +106,8 @@ Map getBeforeAfter3161(String id) {
 static Map getDoc(String id, int version = -1) {
     def json = new URL("https://libris.kb.se/$id?embellished=false&version=$version")
             .getText(requestProperties: ['Accept': 'application/ld+json'])
-    new groovy.json.JsonSlurper().parseText(json)
+    
+    return new groovy.json.JsonSlurper().parseText(json)
 }
 
 private void overWriteThingProps(String id, Map properties) {
@@ -139,15 +140,15 @@ static Object getAtPath(item, Iterable path, defaultTo = null) {
 }
 
 // ---------------------------------------------------------------------------------------------------
-// Slightly edited version of LXL-3161 script
-// - So that we can pass the doc we want to process instead of the script fetching it from the DB
-// - Fixed the bug so that it always makes the correct changes  
+// Everything below is a slightly edited version of LXL-3161 script
+// - So that we can pass the doc instead of the script fetching it from the DB
+// - Fixed the bug so that it always makes correct changes  
 
 /*
  * Move properties from Work to Instance and make object an Instance
  *
  * See LXL-3161
- *
+ *the
  */
 
 
