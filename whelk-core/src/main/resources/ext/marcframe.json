@@ -22377,7 +22377,6 @@
       },
       "[6]": {
         "NOTE:local": "Posttyp - z - Auktoritetspost",
-        "ignored": true,
         "fixedDefault": "z"
       },
       "[7]": null,
@@ -22408,6 +22407,28 @@
         "fixedDefault": "4500"
       },
       "_spec": [
+        {
+          "name": "Fixed defaults with ignored (x in originalLeader)",
+          "originalLeader": "01341cz  a2200397n  4500",
+          "source": {
+            "leader": "     cz  x       xx xxxx",
+            "fields": [{"001": "140482"}]
+          },
+          "normalized": {
+            "leader": "     cz  a       n  4500",
+            "fields": [{"001": "140482"}]
+          },
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/auth/140482",
+            "controlNumber": "140482",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "mainEntity": { }
+          },
+          "addOnRevert": {
+            "mainEntity": {"@type": "Identity"}
+          }
+        },
         {
           "name": "Status Corrected or revised record",
           "originalLeader": "01341cz  a2200397n  4500",
@@ -22615,6 +22636,27 @@
       },
       "repeatable": false,
       "_spec": [
+        {
+          "name": "Fixed defaults with ignored (x in source)",
+          "source": [
+            {"008": "011206n| ac|xxaabn          |x anx    x|"}
+          ],
+          "normalized": [
+            {"008": "011206n| ac|nnaabn          |n ana    ||"}
+          ],
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/auth/140482",
+            "controlNumber": "140482",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "created": "2001-12-06T00:00:00.0+01:00",
+            "descriptionConventions": [{ "@id": "https://id.kb.se/marc/CatalogingRulesType-c" }],
+            "mainEntity": { }
+          },
+          "addOnRevert": {
+            "mainEntity": {"@type": "Person"}
+          }
+        },
         {
           "name": "Person - Astrid Lindgren (71639)",
           "NOTE:normalized": "See postProcessing spec for position 32, marc:personalName",
