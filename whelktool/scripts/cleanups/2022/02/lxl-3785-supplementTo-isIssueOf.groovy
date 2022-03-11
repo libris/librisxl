@@ -77,6 +77,7 @@ There were no supplementTo with multiple controlnumbers (refering to newspaper s
 import groovy.transform.Memoized
 
 noMarcGf = getReportWriter("no-marc-gf.txt")
+otherMarcGf = getReportWriter("other-marc-gf.txt")
 notMimer = getReportWriter("not-mimer.txt")
 
 def where = """
@@ -95,6 +96,11 @@ selectBySqlWhere(where) { bib ->
 
     if (!isMimerRecord(thing.'@id')) {
         notMimer.println(thing.'@id')
+        return
+    }
+    
+    if(marcGf(thing).with { it && it.any {l -> l != 'issue'}}) {
+        otherMarcGf.println("${thing.'@id'}\t${marcGf(thing)}")
         return
     }
     
@@ -193,8 +199,14 @@ static def controlNumberToId(String controlNumber) {
         : 'http://libris.kb.se/resource/bib/' + controlNumber
 }
 
-boolean isMarcGfIssue(Map thing) {
+static boolean isMarcGfIssue(Map thing) {
     getAtPath(thing, ['instanceOf', 'genreForm', '*', 'prefLabel'], []).any{ it == 'issue'}
+}
+
+static List<String> marcGf(Map thing) {
+    getAtPath(thing, ['instanceOf', 'genreForm', '*'], []).findAll {
+        getAtPath(thing, ['inScheme', '@id']) == 'https://id.kb.se/term/marcgt'
+    }.collect{ it.prefLabel }
 }
 
 List verifyTitle(Map thing, List<Map> serials, Map reference) {
