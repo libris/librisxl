@@ -205,7 +205,7 @@ static boolean isMarcGfIssue(Map thing) {
 
 static List<String> marcGf(Map thing) {
     getAtPath(thing, ['instanceOf', 'genreForm', '*'], []).findAll {
-        getAtPath(thing, ['inScheme', '@id']) == 'https://id.kb.se/term/marcgt'
+        getAtPath(it, ['inScheme', '@id']) == 'https://id.kb.se/term/marcgt'
     }.collect{ it.prefLabel }
 }
 
