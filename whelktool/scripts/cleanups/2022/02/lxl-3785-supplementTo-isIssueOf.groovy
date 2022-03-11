@@ -77,6 +77,7 @@ There were no supplementTo with multiple controlnumbers (refering to newspaper s
 import groovy.transform.Memoized
 
 noMarcGf = getReportWriter("no-marc-gf.txt")
+notMimer = getReportWriter("no-marc-gf.txt")
 
 def where = """
     collection = 'bib'
@@ -92,6 +93,11 @@ selectBySqlWhere(where) { bib ->
         return
     }
 
+    if (!isMimerRecord(thing.'@id')) {
+        notMimer.println(thing.'@id')
+        return
+    }
+    
     def isIssueOf = asList(thing.isIssueOf) as Set
     
     def i = ((List) thing.supplementTo).iterator()
@@ -234,6 +240,19 @@ def stripDate(String title) {
 
     def stripped = (title =~ PATTERN).with { matches() ? it[0][1] : title }
     return stripped
+}
+
+boolean isMimerRecord(String id) {
+    def where = """
+        data #>> '{@graph,1,itemOf,@id}' = '$id' 
+        AND data #>> '{@graph,1,heldBy,@id}' = 'https://libris.kb.se/library/APIS'
+    """
+    
+    boolean result = false
+    selectBySqlWhere(where) {
+        result = true
+    }
+    return result
 }
 
 // --------------------------------------------------------------------------------------
