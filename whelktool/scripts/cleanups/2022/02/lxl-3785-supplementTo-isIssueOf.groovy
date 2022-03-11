@@ -77,7 +77,7 @@ There were no supplementTo with multiple controlnumbers (refering to newspaper s
 import groovy.transform.Memoized
 
 noMarcGf = getReportWriter("no-marc-gf.txt")
-notMimer = getReportWriter("no-marc-gf.txt")
+notMimer = getReportWriter("not-mimer.txt")
 
 def where = """
     collection = 'bib'
