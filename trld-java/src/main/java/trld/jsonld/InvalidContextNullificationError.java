@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidContextNullificationError extends JsonLdError { // LINE: 31
+public class InvalidContextNullificationError extends JsonLdError { // LINE: 29
   InvalidContextNullificationError() { };
   InvalidContextNullificationError(String msg) { super(msg); };
 }

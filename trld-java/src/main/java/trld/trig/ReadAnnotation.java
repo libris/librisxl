@@ -35,29 +35,25 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ReadBNode extends ReadNode { // LINE: 638
-  ReadBNode(/*@Nullable*/ ParserState parent) { super(parent); };
+public class ReadAnnotation extends ReadBNode { // LINE: 660
+  ReadAnnotation(/*@Nullable*/ ParserState parent) { super(parent); };
+  public Boolean endStarted = false; // LINE: 662
 
-  public void init() { // LINE: 640
-    this.reset(); // LINE: 641
-  }
-
-  public void reset() { // LINE: 643
-    this.node = new HashMap<>(); // LINE: 644
-    this.p = null; // LINE: 645
-    this.lastValue = null; // LINE: 646
-  }
-
-  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 648
-    if (prevValue != null) { // LINE: 649
-      this.fillNode(prevValue); // LINE: 650
+  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 664
+    if (prevValue != null) { // LINE: 665
+      this.fillNode(prevValue); // LINE: 666
     }
-    if ((c == null && ((Object) EOF) == null || c != null && (c).equals(EOF))) { // LINE: 652
-      throw new NotationError("Unexpected " + c + " in bnode."); // LINE: 653
-    } else if ((c == null && ((Object) "]") == null || c != null && (c).equals("]"))) { // LINE: 654
-      return new KeyValue(this.parent, this.node); // LINE: 655
+    if ((c == null && ((Object) EOF) == null || c != null && (c).equals(EOF))) { // LINE: 668
+      throw new NotationError("Unexpected " + c + " in annotation."); // LINE: 669
+    } else if ((!(this.openBrace) && (c == null && ((Object) "|") == null || c != null && (c).equals("|")))) { // LINE: 670
+      this.endStarted = true; // LINE: 671
+      return new KeyValue(this, null); // LINE: 672
+    } else if ((c == null && ((Object) "}") == null || c != null && (c).equals("}"))) { // LINE: 673
+      assert this.endStarted;
+      this.endStarted = false; // LINE: 675
+      return new KeyValue(this.parent, Builtins.mapOf(ANNOTATION, this.node)); // LINE: 676
     } else {
-      return this.consumeNodeChar(c); // LINE: 657
+      return this.consumeNodeChar(c); // LINE: 678
     }
   }
 }

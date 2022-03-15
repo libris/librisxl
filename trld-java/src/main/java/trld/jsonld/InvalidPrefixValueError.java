@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidPrefixValueError extends JsonLdError { // LINE: 65
+public class InvalidPrefixValueError extends JsonLdError { // LINE: 63
   InvalidPrefixValueError() { };
   InvalidPrefixValueError(String msg) { super(msg); };
 }

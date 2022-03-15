@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidVocabMappingError extends JsonLdError { // LINE: 19
+public class InvalidVocabMappingError extends JsonLdError { // LINE: 17
   InvalidVocabMappingError() { };
   InvalidVocabMappingError(String msg) { super(msg); };
 }

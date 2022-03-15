@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidIriMappingError extends JsonLdError { // LINE: 57
+public class InvalidIriMappingError extends JsonLdError { // LINE: 55
   InvalidIriMappingError() { };
   InvalidIriMappingError(String msg) { super(msg); };
 }

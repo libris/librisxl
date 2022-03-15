@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidLocalContextError extends JsonLdError { // LINE: 33
+public class InvalidLocalContextError extends JsonLdError { // LINE: 31
   InvalidLocalContextError() { };
   InvalidLocalContextError(String msg) { super(msg); };
 }

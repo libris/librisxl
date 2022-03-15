@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class CyclicIriMappingError extends JsonLdError { // LINE: 41
+public class CyclicIriMappingError extends JsonLdError { // LINE: 39
   CyclicIriMappingError() { };
   CyclicIriMappingError(String msg) { super(msg); };
 }

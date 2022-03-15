@@ -35,47 +35,47 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ReadCompound extends BaseParserState { // LINE: 440
-  public ConsumeWs ws; // LINE: 442
-  public ConsumeComment comment; // LINE: 443
+public class ReadCompound extends BaseParserState { // LINE: 442
+  public ConsumeWs ws; // LINE: 444
+  public ConsumeComment comment; // LINE: 445
 
-  public ReadCompound(/*@Nullable*/ ParserState parent) { // LINE: 445
-    super(parent); // LINE: 446
-    this.ws = new ConsumeWs(this); // LINE: 447
-    this.comment = new ConsumeComment(this); // LINE: 448
+  public ReadCompound(/*@Nullable*/ ParserState parent) { // LINE: 447
+    super(parent); // LINE: 448
+    this.ws = new ConsumeWs(this); // LINE: 449
+    this.comment = new ConsumeComment(this); // LINE: 450
   }
 
-  public /*@Nullable*/ Map.Entry<ParserState, Object> readSpace(String c) { // LINE: 450
-    if (this.ws.accept(c)) { // LINE: 451
-      return new KeyValue(this.ws, null); // LINE: 452
-    } else if ((c == null && ((Object) "#") == null || c != null && (c).equals("#"))) { // LINE: 453
-      return new KeyValue(this.comment, null); // LINE: 454
+  public /*@Nullable*/ Map.Entry<ParserState, Object> readSpace(String c) { // LINE: 452
+    if (this.ws.accept(c)) { // LINE: 453
+      return new KeyValue(this.ws, null); // LINE: 454
+    } else if ((c == null && ((Object) "#") == null || c != null && (c).equals("#"))) { // LINE: 455
+      return new KeyValue(this.comment, null); // LINE: 456
     } else {
-      return null; // LINE: 456
+      return null; // LINE: 458
     }
   }
 
-  public Map nodeWithId(Map value) { // LINE: 458
-    if (value.containsKey(SYMBOL)) { // LINE: 459
-      String nodeId = (String) value.get(SYMBOL); // LINE: 460
-      if ((!nodeId.contains(":") && this.context.containsKey(VOCAB))) { // LINE: 461
-        nodeId = ((String) this.context.get(VOCAB)) + nodeId; // LINE: 462
+  public Map nodeWithId(Map value) { // LINE: 460
+    if (value.containsKey(SYMBOL)) { // LINE: 461
+      String nodeId = (String) value.get(SYMBOL); // LINE: 462
+      if ((!nodeId.contains(":") && this.context.containsKey(VOCAB))) { // LINE: 463
+        nodeId = ((String) this.context.get(VOCAB)) + nodeId; // LINE: 464
       }
-      value = Builtins.mapOf(ID, nodeId); // LINE: 463
+      value = Builtins.mapOf(ID, nodeId); // LINE: 465
     }
-    return value; // LINE: 464
+    return value; // LINE: 466
   }
 
-  public Object compactValue(Object value) { // LINE: 466
-    if (value instanceof Map) { // LINE: 467
-      if (((Map) value).containsKey(VALUE)) { // LINE: 468
-        if (((Map) value).size() == 1) { // LINE: 469
-          return ((Map) value).get(VALUE); // LINE: 470
+  public Object compactValue(Object value) { // LINE: 468
+    if (value instanceof Map) { // LINE: 469
+      if (((Map) value).containsKey(VALUE)) { // LINE: 470
+        if (((Map) value).size() == 1) { // LINE: 471
+          return ((Map) value).get(VALUE); // LINE: 472
         }
       } else {
-        return this.nodeWithId((Map) value); // LINE: 472
+        return this.nodeWithId((Map) value); // LINE: 474
       }
     }
-    return value; // LINE: 473
+    return value; // LINE: 475
   }
 }

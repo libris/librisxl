@@ -35,22 +35,22 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ReadLanguage extends ReadTerm { // LINE: 423
+public class ReadLanguage extends ReadTerm { // LINE: 425
   ReadLanguage(/*@Nullable*/ ParserState parent) { super(parent); };
-  public static final Pattern MATCH = (Pattern) Pattern.compile("[A-Za-z0-9-]"); // LINE: 425
+  public static final Pattern MATCH = (Pattern) Pattern.compile("[A-Za-z0-9-]"); // LINE: 427
 
-  public boolean accept(String c) { // LINE: 427
-    return (this.MATCH.matcher(c).matches() ? c : null) != null; // LINE: 428
+  public boolean accept(String c) { // LINE: 429
+    return (this.MATCH.matcher(c).matches() ? c : null) != null; // LINE: 430
   }
 
-  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 430
-    if (this.accept(c)) { // LINE: 431
-      this.collect(c); // LINE: 432
-      return new KeyValue(this, null); // LINE: 433
+  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 432
+    if (this.accept(c)) { // LINE: 433
+      this.collect(c); // LINE: 434
+      return new KeyValue(this, null); // LINE: 435
     } else {
-      String value = (String) this.pop(); // LINE: 435
-      this.collected = new ArrayList<>(); // LINE: 436
-      return this.parent.consume(c, Builtins.mapOf(LANGUAGE, value)); // LINE: 437
+      String value = (String) this.pop(); // LINE: 437
+      this.collected = new ArrayList<>(); // LINE: 438
+      return this.parent.consume(c, Builtins.mapOf(LANGUAGE, value)); // LINE: 439
     }
   }
 }

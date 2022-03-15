@@ -35,44 +35,44 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ReadDecl extends ReadCompound { // LINE: 476
-  public Boolean finalDot; // LINE: 478
-  public Boolean completed; // LINE: 479
+public class ReadDecl extends ReadCompound { // LINE: 478
+  public Boolean finalDot; // LINE: 480
+  public Boolean completed; // LINE: 481
 
-  public ReadDecl(ReadNodes parent, Boolean finalDot) { // LINE: 481
-    super(parent); // LINE: 482
-    this.finalDot = finalDot; // LINE: 483
-    this.completed = false; // LINE: 484
+  public ReadDecl(ReadNodes parent, Boolean finalDot) { // LINE: 483
+    super(parent); // LINE: 484
+    this.finalDot = finalDot; // LINE: 485
+    this.completed = false; // LINE: 486
   }
 
-  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 486
-    if (prevValue instanceof Map) { // LINE: 487
-      if (!(this.moreParts((Map) prevValue))) { // LINE: 488
-        this.completed = true; // LINE: 489
-        if (!(this.finalDot)) { // LINE: 490
-          this.declare(); // LINE: 491
-          return this.parent.consume(c, null); // LINE: 492
+  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 488
+    if (prevValue instanceof Map) { // LINE: 489
+      if (!(this.moreParts((Map) prevValue))) { // LINE: 490
+        this.completed = true; // LINE: 491
+        if (!(this.finalDot)) { // LINE: 492
+          this.declare(); // LINE: 493
+          return this.parent.consume(c, null); // LINE: 494
         }
       }
     }
-    Map.Entry<ParserState, Object> readspace = (Map.Entry<ParserState, Object>) this.readSpace(c); // LINE: 494
-    if (readspace != null) { // LINE: 495
-      return readspace; // LINE: 496
+    Map.Entry<ParserState, Object> readspace = (Map.Entry<ParserState, Object>) this.readSpace(c); // LINE: 496
+    if (readspace != null) { // LINE: 497
+      return readspace; // LINE: 498
     }
-    if ((c == null && ((Object) ".") == null || c != null && (c).equals("."))) { // LINE: 498
-      this.declare(); // LINE: 499
-      return new KeyValue(this.parent, null); // LINE: 500
-    } else if ((this.completed && this.finalDot)) { // LINE: 501
-      throw new NotationError("Expected a final dot"); // LINE: 502
+    if ((c == null && ((Object) ".") == null || c != null && (c).equals("."))) { // LINE: 500
+      this.declare(); // LINE: 501
+      return new KeyValue(this.parent, null); // LINE: 502
+    } else if ((this.completed && this.finalDot)) { // LINE: 503
+      throw new NotationError("Expected a final dot"); // LINE: 504
     }
-    return new ReadSymbol(this).consume(c, null); // LINE: 504
+    return new ReadSymbol(this).consume(c, null); // LINE: 506
   }
 
-  public boolean moreParts(Map value) { // LINE: 506
-    throw new RuntimeException(); // LINE: 507
+  public boolean moreParts(Map value) { // LINE: 508
+    throw new RuntimeException(); // LINE: 509
   }
 
-  public void declare() { // LINE: 509
-    throw new RuntimeException(); // LINE: 510
+  public void declare() { // LINE: 511
+    throw new RuntimeException(); // LINE: 512
   }
 }

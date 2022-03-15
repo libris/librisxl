@@ -9,16 +9,12 @@ public class Output {
     private ByteArrayOutputStream bos;
 
     public Output() {
-        this(false);
+        bos = new ByteArrayOutputStream();
+        out = new PrintStream(bos);
     }
 
-    public Output(boolean capture) {
-        if (capture) {
-            bos = new ByteArrayOutputStream();
-            out = new PrintStream(bos);
-        } else {
-            out = System.out;
-        }
+    public Output(PrintStream out) {
+        this.out = out;
     }
 
     public void write(String s) {
@@ -27,6 +23,10 @@ public class Output {
 
     public void writeln(String s) {
         out.println(s);
+    }
+
+    public ByteArrayOutputStream getCaptured() {
+        return bos;
     }
 
     public String getValue() {

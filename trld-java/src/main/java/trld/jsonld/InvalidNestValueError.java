@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidNestValueError extends JsonLdError { // LINE: 63
+public class InvalidNestValueError extends JsonLdError { // LINE: 61
   InvalidNestValueError() { };
   InvalidNestValueError(String msg) { super(msg); };
 }

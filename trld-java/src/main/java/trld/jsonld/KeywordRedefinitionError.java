@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class KeywordRedefinitionError extends JsonLdError { // LINE: 43
+public class KeywordRedefinitionError extends JsonLdError { // LINE: 41
   KeywordRedefinitionError() { };
   KeywordRedefinitionError(String msg) { super(msg); };
 }

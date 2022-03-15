@@ -35,62 +35,84 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ReadNode extends ReadCompound { // LINE: 562
+public class ReadNode extends ReadCompound { // LINE: 564
   ReadNode(/*@Nullable*/ ParserState parent) { super(parent); };
-  public /*@Nullable*/ Map node; // LINE: 564
-  public /*@Nullable*/ String p; // LINE: 565
-  public Boolean acceptValue; // LINE: 566
+  public /*@Nullable*/ Map node; // LINE: 566
+  public /*@Nullable*/ String p; // LINE: 567
+  public /*@Nullable*/ Object lastValue; // LINE: 568
+  public Boolean openBrace = false; // LINE: 569
 
-  public void fillNode(Object value) { // LINE: 568
-    if (this.p == null) { // LINE: 569
-      if ((value == null && ((Object) TYPE) == null || value != null && (value).equals(TYPE))) { // LINE: 570
-        this.p = TYPE; // LINE: 571
+  public void fillNode(Object value) { // LINE: 571
+    if (this.p == null) { // LINE: 572
+      if ((value == null && ((Object) TYPE) == null || value != null && (value).equals(TYPE))) { // LINE: 573
+        this.p = TYPE; // LINE: 574
       } else {
-        if (!(value instanceof Map)) { // LINE: 573
-          throw new NotationError("Unexpected predicate: " + value); // LINE: 574
+        if (!(value instanceof Map)) { // LINE: 576
+          throw new NotationError("Unexpected predicate: " + value); // LINE: 577
         }
-        this.p = (String) this.symbol((Map) value); // LINE: 575
+        this.p = (String) this.symbol((Map) value); // LINE: 578
       }
-    } else if (this.acceptValue) { // LINE: 576
-      if ((this.p == null && ((Object) TYPE) == null || this.p != null && (this.p).equals(TYPE))) { // LINE: 577
+    } else if (this.lastValue == null) { // LINE: 579
+      if ((this.p == null && ((Object) TYPE) == null || this.p != null && (this.p).equals(TYPE))) { // LINE: 580
         assert value instanceof Map;
-        value = ((String) this.symbol((Map) value)); // LINE: 579
+        value = ((String) this.symbol((Map) value)); // LINE: 582
       }
-      value = (Object) this.compactValue(value); // LINE: 581
-      /*@Nullable*/ Object given = (/*@Nullable*/ Object) this.node.get(this.p); // LINE: 583
-      if (given != null) { // LINE: 584
-        List values = (given instanceof List ? (List) given : new ArrayList<>(Arrays.asList(new Object[] {(Object) given}))); // LINE: 585
-        values.add(value); // LINE: 586
-        this.node.put(this.p, values); // LINE: 587
+      value = (Object) this.compactValue(value); // LINE: 584
+      /*@Nullable*/ Object given = (/*@Nullable*/ Object) this.node.get(this.p); // LINE: 586
+      if (given != null) { // LINE: 587
+        List values = (given instanceof List ? (List) given : new ArrayList<>(Arrays.asList(new Object[] {(Object) given}))); // LINE: 588
+        values.add(value); // LINE: 589
+        this.node.put(this.p, values); // LINE: 590
       } else {
-        this.node.put(this.p, value); // LINE: 589
+        this.node.put(this.p, value); // LINE: 592
       }
-      this.acceptValue = false; // LINE: 590
+      this.lastValue = value; // LINE: 593
+    } else if ((value instanceof Map && ((Map) value).containsKey(ANNOTATION))) { // LINE: 594
+      Object lastValue = (Object) this.lastValue; // LINE: 595
+      if ((this.p == null && ((Object) TYPE) == null || this.p != null && (this.p).equals(TYPE))) { // LINE: 596
+        lastValue = Builtins.mapOf(TYPE, lastValue); // LINE: 597
+      } else if (!(lastValue instanceof Map)) { // LINE: 598
+        lastValue = Builtins.mapOf(VALUE, lastValue); // LINE: 599
+      }
+      ((Map) lastValue).put(ANNOTATION, ((Map) value).get(ANNOTATION)); // LINE: 600
+      if (this.node.get(this.p) instanceof List) { // LINE: 601
+        List l = (List) this.node.get(this.p); // LINE: 602
+        l.set(l.size() - 1, (Map) lastValue); // LINE: 603
+      } else {
+        this.node.put(this.p, (Map) lastValue); // LINE: 605
+      }
     } else {
-      throw new NotationError("Unexpected: " + value); // LINE: 592
+      throw new NotationError("Unexpected: " + value); // LINE: 607
     }
   }
 
-  public Map.Entry<ParserState, Object> consumeNodeChar(String c) { // LINE: 594
-    Map.Entry<ParserState, Object> readspace = (Map.Entry<ParserState, Object>) this.readSpace(c); // LINE: 595
-    if (readspace != null) { // LINE: 596
-      return readspace; // LINE: 597
+  public Map.Entry<ParserState, Object> consumeNodeChar(String c) { // LINE: 609
+    Map.Entry<ParserState, Object> readspace = (Map.Entry<ParserState, Object>) this.readSpace(c); // LINE: 610
+    if (readspace != null) { // LINE: 611
+      return readspace; // LINE: 612
     }
-    if ((c == null && ((Object) "[") == null || c != null && (c).equals("["))) { // LINE: 598
-      return new KeyValue(new ReadBNode(this), null); // LINE: 599
-    } else if ((c == null && ((Object) "(") == null || c != null && (c).equals("("))) { // LINE: 600
-      return new KeyValue(new ReadCollection(this), null); // LINE: 601
-    } else if ((c == null && ((Object) ";") == null || c != null && (c).equals(";"))) { // LINE: 602
-      this.p = null; // LINE: 603
-      this.acceptValue = true; // LINE: 604
-      return new KeyValue(this, null); // LINE: 605
-    } else if ((c == null && ((Object) ",") == null || c != null && (c).equals(","))) { // LINE: 606
-      this.acceptValue = true; // LINE: 607
-      return new KeyValue(this, null); // LINE: 608
-    } else if (LITERAL_QUOTE_CHARS.contains(c)) { // LINE: 609
-      return new KeyValue(new ReadLiteral(this, c), null); // LINE: 610
+    if ((c == null && ((Object) "{") == null || c != null && (c).equals("{"))) { // LINE: 614
+      this.openBrace = true; // LINE: 615
+      return new KeyValue(this, null); // LINE: 616
+    } else if ((c == null && ((Object) "|") == null || c != null && (c).equals("|"))) { // LINE: 617
+      assert this.openBrace;
+      this.openBrace = false; // LINE: 619
+      return new KeyValue(new ReadAnnotation(this), null); // LINE: 620
+    } else if ((c == null && ((Object) "[") == null || c != null && (c).equals("["))) { // LINE: 621
+      return new KeyValue(new ReadBNode(this), null); // LINE: 622
+    } else if ((c == null && ((Object) "(") == null || c != null && (c).equals("("))) { // LINE: 623
+      return new KeyValue(new ReadCollection(this), null); // LINE: 624
+    } else if ((c == null && ((Object) ";") == null || c != null && (c).equals(";"))) { // LINE: 625
+      this.p = null; // LINE: 626
+      this.lastValue = null; // LINE: 627
+      return new KeyValue(this, null); // LINE: 628
+    } else if ((c == null && ((Object) ",") == null || c != null && (c).equals(","))) { // LINE: 629
+      this.lastValue = null; // LINE: 630
+      return new KeyValue(this, null); // LINE: 631
+    } else if (LITERAL_QUOTE_CHARS.contains(c)) { // LINE: 632
+      return new KeyValue(new ReadLiteral(this, c), null); // LINE: 633
     } else {
-      return new ReadSymbol(this).consume(c, null); // LINE: 612
+      return new ReadSymbol(this).consume(c, null); // LINE: 635
     }
   }
 }

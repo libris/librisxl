@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidVersionValueError extends JsonLdError { // LINE: 15
+public class InvalidVersionValueError extends JsonLdError { // LINE: 13
   InvalidVersionValueError() { };
   InvalidVersionValueError(String msg) { super(msg); };
 }

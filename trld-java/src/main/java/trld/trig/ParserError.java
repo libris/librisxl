@@ -35,21 +35,21 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ParserError extends RuntimeException { // LINE: 56
+public class ParserError extends RuntimeException { // LINE: 58
   ParserError() { };
   ParserError(String msg) { super(msg); };
-  public NotationError error; // LINE: 58
-  public Integer lno; // LINE: 59
-  public Integer cno; // LINE: 60
+  public NotationError error; // LINE: 60
+  public Integer lno; // LINE: 61
+  public Integer cno; // LINE: 62
 
-  public ParserError(NotationError error, Integer lno, Integer cno) { // LINE: 62
-    super(error.toString()); // LINE: 63
-    this.error = error; // LINE: 64
-    this.lno = lno; // LINE: 65
-    this.cno = cno; // LINE: 66
+  public ParserError(NotationError error, Integer lno, Integer cno) { // LINE: 64
+    super(error.toString()); // LINE: 65
+    this.error = error; // LINE: 66
+    this.lno = lno; // LINE: 67
+    this.cno = cno; // LINE: 68
   }
 
-  public String toString() { // LINE: 68
-    return "Notation error at line " + this.lno + ", column " + this.cno + ": " + this.error; // LINE: 69
+  public String toString() { // LINE: 70
+    return "Notation error at line " + this.lno + ", column " + this.cno + ": " + this.error; // LINE: 71
   }
 }

@@ -9,7 +9,7 @@ You can regenerate and update this copy by:
 ```
 $ pushd /tmp
 $ [[ -d trld ]] || git clone https://github.com/niklasl/trld.git
-$ cd trld && git pull && make _javatr
+$ cd trld && git pull && make java
 $ popd
-$ rsync -a --del /tmp/trld/build/java/src/ trld-java/src
+$ rsync -a --del /tmp/trld/build/java/src/ ./src
 ```

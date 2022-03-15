@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidPropagateValueError extends JsonLdError { // LINE: 27
+public class InvalidPropagateValueError extends JsonLdError { // LINE: 25
   InvalidPropagateValueError() { };
   InvalidPropagateValueError(String msg) { super(msg); };
 }

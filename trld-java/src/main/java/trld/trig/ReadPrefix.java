@@ -35,41 +35,41 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ReadPrefix extends ReadDecl { // LINE: 513
+public class ReadPrefix extends ReadDecl { // LINE: 515
   ReadPrefix(ReadNodes parent, Boolean finalDot) { super(parent, finalDot); };
-  public /*@Nullable*/ String pfx; // LINE: 515
-  public /*@Nullable*/ String ns; // LINE: 516
+  public /*@Nullable*/ String pfx; // LINE: 517
+  public /*@Nullable*/ String ns; // LINE: 518
 
-  public void init() { // LINE: 518
-    this.pfx = null; // LINE: 519
-    this.ns = null; // LINE: 520
+  public void init() { // LINE: 520
+    this.pfx = null; // LINE: 521
+    this.ns = null; // LINE: 522
   }
 
-  public boolean moreParts(Map value) { // LINE: 522
-    if (this.pfx == null) { // LINE: 523
-      String pfx = (String) ((String) value.get(SYMBOL)); // LINE: 524
-      if (!pfx.equals("")) { // LINE: 525
-        if (pfx.endsWith(":")) { // LINE: 526
-          pfx = pfx.substring(0, pfx.length() - 1); // LINE: 527
+  public boolean moreParts(Map value) { // LINE: 524
+    if (this.pfx == null) { // LINE: 525
+      String pfx = (String) ((String) value.get(SYMBOL)); // LINE: 526
+      if (!pfx.equals("")) { // LINE: 527
+        if (pfx.endsWith(":")) { // LINE: 528
+          pfx = pfx.substring(0, pfx.length() - 1); // LINE: 529
         } else {
-          throw new NotationError("Invalid prefix " + pfx); // LINE: 529
+          throw new NotationError("Invalid prefix " + pfx); // LINE: 531
         }
       }
-      this.pfx = pfx; // LINE: 530
-      return true; // LINE: 531
+      this.pfx = pfx; // LINE: 532
+      return true; // LINE: 533
     }
-    if (this.ns == null) { // LINE: 533
-      this.ns = (String) value.get(ID); // LINE: 534
+    if (this.ns == null) { // LINE: 535
+      this.ns = (String) value.get(ID); // LINE: 536
     }
-    return false; // LINE: 536
+    return false; // LINE: 538
   }
 
-  public void declare() { // LINE: 538
-    Object ns = (Object) this.ns; // LINE: 539
-    if ((!this.pfx.equals("") && !this.ns.equals("") && !(PREFIX_DELIMS.contains(this.ns.substring(this.ns.length() - 1, this.ns.length() - 1 + 1))))) { // LINE: 540
-      ns = Builtins.mapOf(ID, this.ns, PREFIX, true); // LINE: 541
+  public void declare() { // LINE: 540
+    Object ns = (Object) this.ns; // LINE: 541
+    if ((!this.pfx.equals("") && !this.ns.equals("") && !(PREFIX_DELIMS.contains(this.ns.substring(this.ns.length() - 1, this.ns.length() - 1 + 1))))) { // LINE: 542
+      ns = Builtins.mapOf(ID, this.ns, PREFIX, true); // LINE: 543
     }
-    String key = ((this.pfx != null && !this.pfx.equals("")) ? this.pfx : VOCAB); // LINE: 542
-    this.parent.context.put(key, ns); // LINE: 543
+    String key = ((this.pfx != null && !this.pfx.equals("")) ? this.pfx : VOCAB); // LINE: 544
+    this.parent.context.put(key, ns); // LINE: 545
   }
 }

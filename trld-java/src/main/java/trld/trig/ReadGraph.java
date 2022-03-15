@@ -35,33 +35,33 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ReadGraph extends ReadNodes { // LINE: 728
+public class ReadGraph extends ReadNodes { // LINE: 775
   ReadGraph(/*@Nullable*/ ParserState parent) { super(parent); };
 
-  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 730
-    if ((prevValue instanceof String && !prevValue.equals(TYPE))) { // LINE: 731
-      throw new NotationError("Directive not allowed in graph: " + prevValue); // LINE: 732
+  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 777
+    if ((prevValue instanceof String && !prevValue.equals(TYPE))) { // LINE: 778
+      throw new NotationError("Directive not allowed in graph: " + prevValue); // LINE: 779
     }
-    ReadNodes readnodes = (ReadNodes) ((ReadNodes) this.parent); // LINE: 734
-    if ((this.expectGraph || (c == null && ((Object) "{") == null || c != null && (c).equals("{")))) { // LINE: 736
-      throw new NotationError("Nested graphs are not allowed in TriG"); // LINE: 737
+    ReadNodes readnodes = (ReadNodes) ((ReadNodes) this.parent); // LINE: 781
+    if ((this.expectGraph || (this.openBrace && !c.equals("|")))) { // LINE: 783
+      throw new NotationError("Nested graphs are not allowed in TriG"); // LINE: 784
     }
-    if ((c == null && ((Object) "}") == null || c != null && (c).equals("}"))) { // LINE: 739
-      if (this.node != null) { // LINE: 740
-        if ((this.p != null && prevValue != null)) { // LINE: 741
-          this.fillNode(prevValue); // LINE: 742
+    if ((c == null && ((Object) "}") == null || c != null && (c).equals("}"))) { // LINE: 786
+      if (this.node != null) { // LINE: 787
+        if ((this.p != null && prevValue != null)) { // LINE: 788
+          this.fillNode(prevValue); // LINE: 789
         }
-        this.nextNode(); // LINE: 743
+        this.nextNode(); // LINE: 790
       }
-      if (readnodes.node == null) { // LINE: 744
+      if (readnodes.node == null) { // LINE: 791
         readnodes.nodes.addAll(this.nodes);
       } else {
-        readnodes.node.put(GRAPH, this.nodes); // LINE: 747
-        readnodes.nextNode(); // LINE: 748
+        readnodes.node.put(GRAPH, this.nodes); // LINE: 794
+        readnodes.nextNode(); // LINE: 795
       }
-      return new KeyValue(readnodes, null); // LINE: 749
+      return new KeyValue(readnodes, null); // LINE: 796
     } else {
-      return super.consume(c, prevValue); // LINE: 751
+      return super.consume(c, prevValue); // LINE: 798
     }
   }
 }

@@ -35,30 +35,30 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ReadIRI extends ReadTerm { // LINE: 193
+public class ReadIRI extends ReadTerm { // LINE: 195
   ReadIRI(/*@Nullable*/ ParserState parent) { super(parent); };
-  public static final Pattern MATCH = (Pattern) Pattern.compile("\\S"); // LINE: 195
+  public static final Pattern MATCH = (Pattern) Pattern.compile("\\S"); // LINE: 197
 
-  public void init() { // LINE: 197
-    this.escapeChars = new HashMap<>(); // LINE: 198
+  public void init() { // LINE: 199
+    this.escapeChars = new HashMap<>(); // LINE: 200
   }
 
-  public boolean accept(String c) { // LINE: 200
-    return (this.MATCH.matcher(c).matches() ? c : null) != null; // LINE: 201
+  public boolean accept(String c) { // LINE: 202
+    return (this.MATCH.matcher(c).matches() ? c : null) != null; // LINE: 203
   }
 
-  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 203
-    if ((c == null && ((Object) ">") == null || c != null && (c).equals(">"))) { // LINE: 204
-      String value = (String) this.pop(); // LINE: 205
-      return new KeyValue(this.parent, Builtins.mapOf(ID, value)); // LINE: 206
-    } else if (this.handleEscape(c)) { // LINE: 207
-      return new KeyValue(this, null); // LINE: 208
+  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 205
+    if ((c == null && ((Object) ">") == null || c != null && (c).equals(">"))) { // LINE: 206
+      String value = (String) this.pop(); // LINE: 207
+      return new KeyValue(this.parent, Builtins.mapOf(ID, value)); // LINE: 208
+    } else if (this.handleEscape(c)) { // LINE: 209
+      return new KeyValue(this, null); // LINE: 210
     } else {
-      if (!(this.accept(c))) { // LINE: 210
-        throw new NotationError("Invalid URI character: " + c); // LINE: 211
+      if (!(this.accept(c))) { // LINE: 212
+        throw new NotationError("Invalid URI character: " + c); // LINE: 213
       }
-      this.collect(c); // LINE: 212
-      return new KeyValue(this, null); // LINE: 213
+      this.collect(c); // LINE: 214
+      return new KeyValue(this, null); // LINE: 215
     }
   }
 }

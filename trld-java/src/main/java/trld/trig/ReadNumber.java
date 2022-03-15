@@ -35,67 +35,67 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ReadNumber extends ReadTerm { // LINE: 282
+public class ReadNumber extends ReadTerm { // LINE: 284
   ReadNumber(/*@Nullable*/ ParserState parent) { super(parent); };
-  public final Set<String> EXP = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) "E", "e"}))); // LINE: 284
-  public /*@Nullable*/ String whole; // LINE: 286
-  public String dot; // LINE: 287
-  public Boolean exp; // LINE: 288
+  public final Set<String> EXP = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) "E", "e"}))); // LINE: 286
+  public /*@Nullable*/ String whole; // LINE: 288
+  public String dot; // LINE: 289
+  public Boolean exp; // LINE: 290
 
-  public void init() { // LINE: 290
-    this.whole = null; // LINE: 291
-    this.dot = ""; // LINE: 292
-    this.exp = false; // LINE: 293
+  public void init() { // LINE: 292
+    this.whole = null; // LINE: 293
+    this.dot = ""; // LINE: 294
+    this.exp = false; // LINE: 295
   }
 
-  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 295
-    exp = this.EXP.contains(c); // LINE: 296
-    if (exp) { // LINE: 297
-      this.exp = true; // LINE: 298
+  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 297
+    exp = this.EXP.contains(c); // LINE: 298
+    if (exp) { // LINE: 299
+      this.exp = true; // LINE: 300
     }
-    if ((this.whole == null && (c == null && ((Object) ".") == null || c != null && (c).equals(".")))) { // LINE: 299
-      this.whole = (String) this.pop(); // LINE: 300
-      this.dot = c; // LINE: 301
-      return new KeyValue(this, null); // LINE: 302
-    } else if ((this.whole == null && exp)) { // LINE: 303
-      this.whole = (String) this.pop(); // LINE: 304
-      this.collect(c); // LINE: 305
-      return new KeyValue(this, null); // LINE: 306
-    } else if ((c.matches("^\\d+$") || (this.whole == null && this.collected.size() == 0 && (NUMBER_LEAD_CHARS.matcher(c).matches() ? c : null) != null) || (this.whole != null && this.EXP.contains(c)) || (this.collected.size() > 0 && this.EXP.contains(this.collected.get(this.collected.size() - 1)) && (NUMBER_LEAD_CHARS.matcher(c).matches() ? c : null) != null))) { // LINE: 307
-      this.collect(c); // LINE: 314
-      return new KeyValue(this, null); // LINE: 315
+    if ((this.whole == null && (c == null && ((Object) ".") == null || c != null && (c).equals(".")))) { // LINE: 301
+      this.whole = (String) this.pop(); // LINE: 302
+      this.dot = c; // LINE: 303
+      return new KeyValue(this, null); // LINE: 304
+    } else if ((this.whole == null && exp)) { // LINE: 305
+      this.whole = (String) this.pop(); // LINE: 306
+      this.collect(c); // LINE: 307
+      return new KeyValue(this, null); // LINE: 308
+    } else if ((c.matches("^\\d+$") || (this.whole == null && this.collected.size() == 0 && (NUMBER_LEAD_CHARS.matcher(c).matches() ? c : null) != null) || (this.whole != null && this.EXP.contains(c)) || (this.collected.size() > 0 && this.EXP.contains(this.collected.get(this.collected.size() - 1)) && (NUMBER_LEAD_CHARS.matcher(c).matches() ? c : null) != null))) { // LINE: 309
+      this.collect(c); // LINE: 316
+      return new KeyValue(this, null); // LINE: 317
     } else {
-      Object number; // LINE: 317
-      if ((this.whole != null && this.collected.size() == 0)) { // LINE: 318
-        if ((this.whole == null && ((Object) "") == null || this.whole != null && (this.whole).equals(""))) { // LINE: 319
-          return this.parent.consume(c, prevValue); // LINE: 320
+      Object number; // LINE: 319
+      if ((this.whole != null && this.collected.size() == 0)) { // LINE: 320
+        if ((this.whole == null && ((Object) "") == null || this.whole != null && (this.whole).equals(""))) { // LINE: 321
+          return this.parent.consume(c, prevValue); // LINE: 322
         }
-        number = (Object) Integer.valueOf(this.whole); // LINE: 321
-        return this.backtrack(".", c, number); // LINE: 322
+        number = (Object) Integer.valueOf(this.whole); // LINE: 323
+        return this.backtrack(".", c, number); // LINE: 324
       }
-      try { // LINE: 324
-        number = (Object) this.toNumber(); // LINE: 325
-      } catch (NumberFormatException e) { // LINE: 326
-        throw new NotationError("Invalid number character, got " + e); // LINE: 327
+      try { // LINE: 326
+        number = (Object) this.toNumber(); // LINE: 327
+      } catch (NumberFormatException e) { // LINE: 328
+        throw new NotationError("Invalid number character, got " + e); // LINE: 329
       }
-      return this.parent.consume(c, number); // LINE: 329
+      return this.parent.consume(c, number); // LINE: 331
     }
   }
 
-  public Object toNumber() { // LINE: 331
-    String value = (String) this.pop(); // LINE: 332
-    if (this.whole != null) { // LINE: 333
-      value = this.whole + this.dot + value; // LINE: 334
-      Double number = new Double(value); // LINE: 335
-      if ((number % 1 == 0)) { // LINE: 336
-        return Builtins.mapOf(VALUE, value, TYPE, (this.exp ? XSD_DOUBLE : XSD_DECIMAL)); // LINE: 337
+  public Object toNumber() { // LINE: 333
+    String value = (String) this.pop(); // LINE: 334
+    if (this.whole != null) { // LINE: 335
+      value = this.whole + this.dot + value; // LINE: 336
+      Double number = (Double) Double.parseDouble(value); // LINE: 337
+      if ((number % 1 == 0)) { // LINE: 338
+        return Builtins.mapOf(VALUE, value, TYPE, (this.exp ? XSD_DOUBLE : XSD_DECIMAL)); // LINE: 339
       }
-      return number; // LINE: 338
+      return number; // LINE: 340
     } else {
-      if ((value.length() > 1 && (TURTLE_INT_CHARS.matcher(value.substring(0, 0 + 1)).matches() ? value.substring(0, 0 + 1) : null) != null)) { // LINE: 340
-        return Builtins.mapOf(VALUE, value, TYPE, XSD_INTEGER); // LINE: 341
+      if ((value.length() > 1 && (TURTLE_INT_CHARS.matcher(value.substring(0, 0 + 1)).matches() ? value.substring(0, 0 + 1) : null) != null)) { // LINE: 342
+        return Builtins.mapOf(VALUE, value, TYPE, XSD_INTEGER); // LINE: 343
       }
-      return Integer.valueOf(value); // LINE: 342
+      return Integer.valueOf(value); // LINE: 344
     }
   }
 }

@@ -35,11 +35,11 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ParserState { // LINE: 73
-  public ParserState parent; // LINE: 75
-  public Map<String, Object> context; // LINE: 76
+public class ParserState { // LINE: 75
+  public ParserState parent; // LINE: 77
+  public Map<String, Object> context; // LINE: 78
 
-  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 78
-    throw new RuntimeException(); // LINE: 79
+  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 80
+    throw new RuntimeException(); // LINE: 81
   }
 }

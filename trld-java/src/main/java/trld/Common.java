@@ -14,14 +14,14 @@ import com.fasterxml.jackson.jr.ob.JSON;
 
 public class Common {
 
-    static /*@Nullable*/ Function<String, String> sourceLocator = null;
+    static /*@Nullable*/ Function<String, Input> documentLoader = null;
 
-    public /*@Nullable*/ Function<String, String> getSourceLocator() {
-        return sourceLocator;
+    public /*@Nullable*/ Function<String, Input> getDocumentLoader() {
+        return documentLoader;
     }
 
-    public static synchronized void setSourceLocator(Function<String, String> locator) {
-        sourceLocator = locator;
+    public static synchronized void setDocumentLoader(Function<String, Input> loader) {
+        documentLoader = loader;
     }
 
     public static String removeFileProtocol(String ref) {

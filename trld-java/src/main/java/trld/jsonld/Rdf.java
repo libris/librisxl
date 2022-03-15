@@ -394,7 +394,7 @@ public class Rdf {
         convertedValue = (Object) Integer.valueOf(literal.value); // LINE: 482
       } else if ((literal.datatype == null && ((Object) XSD_DOUBLE) == null || literal.datatype != null && (literal.datatype).equals(XSD_DOUBLE))) { // LINE: 483
         try { // LINE: 484
-          convertedValue = new Double(literal.value); // LINE: 485
+          convertedValue = (Object) Double.parseDouble(literal.value); // LINE: 485
         } catch (NumberFormatException e) { // LINE: 486
         }
       } else if (!literal.datatype.equals(XSD_STRING)) { // LINE: 489

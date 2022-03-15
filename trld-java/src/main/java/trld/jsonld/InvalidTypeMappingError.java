@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidTypeMappingError extends JsonLdError { // LINE: 53
+public class InvalidTypeMappingError extends JsonLdError { // LINE: 51
   InvalidTypeMappingError() { };
   InvalidTypeMappingError(String msg) { super(msg); };
 }

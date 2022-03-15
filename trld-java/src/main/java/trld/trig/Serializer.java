@@ -36,9 +36,6 @@ public class Serializer {
   public static final Pattern WORD_START = (Pattern) Pattern.compile("^\\w*$"); // LINE: 13
   public static final Pattern PNAME_LOCAL_ESC = (Pattern) Pattern.compile("([~!$&'()*+,;=/?#@%]|^[.-]|[.-]$)"); // LINE: 14
 
-  public static void serialize(Map<String, Object> data) {
-    serialize(data, null);
-  }
   public static void serialize(Map<String, Object> data, Output out) {
     serialize(data, out, null);
   }
@@ -49,15 +46,11 @@ public class Serializer {
     serialize(data, out, context, baseIri, null);
   }
   public static void serialize(Map<String, Object> data, Output out, /*@Nullable*/ Map context, /*@Nullable*/ String baseIri, Settings settings) { // LINE: 45
-    out = (out != null ? out : new Output()); // LINE: 52
-    settings = (settings != null ? settings : new Settings()); // LINE: 53
-    SerializerState state = new SerializerState(out, settings, context, baseIri); // LINE: 54
-    state.serialize(data); // LINE: 55
+    settings = (settings != null ? settings : new Settings()); // LINE: 52
+    SerializerState state = new SerializerState(out, settings, context, baseIri); // LINE: 53
+    state.serialize(data); // LINE: 54
   }
 
-  public static void serializeTurtle(Map<String, Object> data) {
-    serializeTurtle(data, null);
-  }
   public static void serializeTurtle(Map<String, Object> data, Output out) {
     serializeTurtle(data, out, null);
   }
@@ -67,29 +60,29 @@ public class Serializer {
   public static void serializeTurtle(Map<String, Object> data, Output out, /*@Nullable*/ Map context, /*@Nullable*/ String baseIri) {
     serializeTurtle(data, out, context, baseIri, false);
   }
-  public static void serializeTurtle(Map<String, Object> data, Output out, /*@Nullable*/ Map context, /*@Nullable*/ String baseIri, Boolean union) { // LINE: 58
-    Settings settings = new Settings(true, !(union)); // LINE: 65
-    serialize(data, out, context, baseIri, settings); // LINE: 66
+  public static void serializeTurtle(Map<String, Object> data, Output out, /*@Nullable*/ Map context, /*@Nullable*/ String baseIri, Boolean union) { // LINE: 57
+    Settings settings = new Settings(true, !(union)); // LINE: 64
+    serialize(data, out, context, baseIri, settings); // LINE: 65
   }
 
-  public static Map<String, String> collectPrefixes(/*@Nullable*/ Object context) { // LINE: 636
-    if (!(context instanceof Map)) { // LINE: 637
-      return new HashMap<>(); // LINE: 638
+  public static Map<String, String> collectPrefixes(/*@Nullable*/ Object context) { // LINE: 650
+    if (!(context instanceof Map)) { // LINE: 651
+      return new HashMap<>(); // LINE: 652
     }
-    Map prefixes = new HashMap<>(); // LINE: 640
-    for (Map.Entry<String, Object> key_value : ((Map<String, Object>) context).entrySet()) { // LINE: 641
+    Map prefixes = new HashMap<>(); // LINE: 654
+    for (Map.Entry<String, Object> key_value : ((Map<String, Object>) context).entrySet()) { // LINE: 655
       String key = key_value.getKey();
       Object value = key_value.getValue();
-      if ((value instanceof String && new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) "#", "/", ":"}))).contains(((String) value).substring(((String) value).length() - 1, ((String) value).length() - 1 + 1)))) { // LINE: 643
-        prefixes.put(((key == null && ((Object) VOCAB) == null || key != null && (key).equals(VOCAB)) ? "" : key), (String) value); // LINE: 644
-      } else if ((value instanceof Map && (((Map) value).get(PREFIX) == null && ((Object) true) == null || ((Map) value).get(PREFIX) != null && (((Map) value).get(PREFIX)).equals(true)))) { // LINE: 645
-        prefixes.put(key, ((Map) value).get(ID)); // LINE: 646
+      if ((value instanceof String && new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) "#", "/", ":"}))).contains(((String) value).substring(((String) value).length() - 1, ((String) value).length() - 1 + 1)))) { // LINE: 657
+        prefixes.put(((key == null && ((Object) VOCAB) == null || key != null && (key).equals(VOCAB)) ? "" : key), (String) value); // LINE: 658
+      } else if ((value instanceof Map && (((Map) value).get(PREFIX) == null && ((Object) true) == null || ((Map) value).get(PREFIX) != null && (((Map) value).get(PREFIX)).equals(true)))) { // LINE: 659
+        prefixes.put(key, ((Map) value).get(ID)); // LINE: 660
       }
     }
-    return prefixes; // LINE: 648
+    return prefixes; // LINE: 662
   }
 
-  public static List asList(Object value) { // LINE: 651
-    return (value instanceof List ? (List) value : new ArrayList<>(Arrays.asList(new Object[] {(Object) value}))); // LINE: 652
+  public static List asList(Object value) { // LINE: 665
+    return (value instanceof List ? (List) value : new ArrayList<>(Arrays.asList(new Object[] {(Object) value}))); // LINE: 666
   }
 }

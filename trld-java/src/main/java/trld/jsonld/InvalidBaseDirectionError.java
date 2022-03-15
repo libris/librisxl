@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidBaseDirectionError extends JsonLdError { // LINE: 23
+public class InvalidBaseDirectionError extends JsonLdError { // LINE: 21
   InvalidBaseDirectionError() { };
   InvalidBaseDirectionError(String msg) { super(msg); };
 }

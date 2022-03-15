@@ -35,22 +35,22 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ReadBase extends ReadDecl { // LINE: 546
+public class ReadBase extends ReadDecl { // LINE: 548
   ReadBase(ReadNodes parent, Boolean finalDot) { super(parent, finalDot); };
-  public /*@Nullable*/ String base; // LINE: 548
+  public /*@Nullable*/ String base; // LINE: 550
 
-  public void init() { // LINE: 550
-    this.base = null; // LINE: 551
+  public void init() { // LINE: 552
+    this.base = null; // LINE: 553
   }
 
-  public boolean moreParts(Map value) { // LINE: 553
-    if (this.base == null) { // LINE: 554
-      this.base = (String) value.get(ID); // LINE: 555
+  public boolean moreParts(Map value) { // LINE: 555
+    if (this.base == null) { // LINE: 556
+      this.base = (String) value.get(ID); // LINE: 557
     }
-    return false; // LINE: 556
+    return false; // LINE: 558
   }
 
-  public void declare() { // LINE: 558
-    this.parent.context.put(BASE, this.base); // LINE: 559
+  public void declare() { // LINE: 560
+    this.parent.context.put(BASE, this.base); // LINE: 561
   }
 }

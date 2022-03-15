@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidRemoteContextError extends JsonLdError { // LINE: 39
+public class InvalidRemoteContextError extends JsonLdError { // LINE: 37
   InvalidRemoteContextError() { };
   InvalidRemoteContextError(String msg) { super(msg); };
 }

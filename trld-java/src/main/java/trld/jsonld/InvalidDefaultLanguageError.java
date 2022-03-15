@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidDefaultLanguageError extends JsonLdError { // LINE: 21
+public class InvalidDefaultLanguageError extends JsonLdError { // LINE: 19
   InvalidDefaultLanguageError() { };
   InvalidDefaultLanguageError(String msg) { super(msg); };
 }

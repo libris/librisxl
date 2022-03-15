@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidReversePropertyError extends JsonLdError { // LINE: 55
+public class InvalidReversePropertyError extends JsonLdError { // LINE: 53
   InvalidReversePropertyError() { };
   InvalidReversePropertyError(String msg) { super(msg); };
 }

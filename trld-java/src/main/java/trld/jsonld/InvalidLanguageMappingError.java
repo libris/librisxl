@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidLanguageMappingError extends JsonLdError { // LINE: 51
+public class InvalidLanguageMappingError extends JsonLdError { // LINE: 49
   InvalidLanguageMappingError() { };
   InvalidLanguageMappingError(String msg) { super(msg); };
 }

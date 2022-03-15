@@ -33,20 +33,20 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.trig.Serializer.*;
 
 
-public class SerializerState { // LINE: 69
-  public Settings settings; // LINE: 70
-  public Output out; // LINE: 71
-  public /*@Nullable*/ SerializerState parent; // LINE: 72
-  public Map<String, Object> context; // LINE: 73
-  public /*@Nullable*/ String baseIri; // LINE: 74
-  public Map<String, String> prefixes; // LINE: 75
-  public KeyAliases aliases; // LINE: 76
-  public /*@Nullable*/ String bnodeSkolemBase = null; // LINE: 77
-  public String prefixKeyword; // LINE: 78
-  public String baseKeyword; // LINE: 79
-  public /*@Nullable*/ String graphKeyword = null; // LINE: 80
-  public String uniqueBnodeSuffix; // LINE: 81
-  public Integer bnodeCounter; // LINE: 82
+public class SerializerState { // LINE: 68
+  public Settings settings; // LINE: 69
+  public Output out; // LINE: 70
+  public /*@Nullable*/ SerializerState parent; // LINE: 71
+  public Map<String, Object> context; // LINE: 72
+  public /*@Nullable*/ String baseIri; // LINE: 73
+  public Map<String, String> prefixes; // LINE: 74
+  public KeyAliases aliases; // LINE: 75
+  public /*@Nullable*/ String bnodeSkolemBase = null; // LINE: 76
+  public String prefixKeyword; // LINE: 77
+  public String baseKeyword; // LINE: 78
+  public /*@Nullable*/ String graphKeyword = null; // LINE: 79
+  public String uniqueBnodeSuffix; // LINE: 80
+  public Integer bnodeCounter; // LINE: 81
 
   public SerializerState(Output out, Settings settings, /*@Nullable*/ Object context) {
     this(out, settings, context, null);
@@ -54,324 +54,336 @@ public class SerializerState { // LINE: 69
   public SerializerState(Output out, Settings settings, /*@Nullable*/ Object context, /*@Nullable*/ String baseIri) {
     this(out, settings, context, baseIri, null);
   }
-  public SerializerState(Output out, Settings settings, /*@Nullable*/ Object context, /*@Nullable*/ String baseIri, SerializerState parent) { // LINE: 84
-    this.out = (out != null ? out : ((SerializerState) parent).out); // LINE: 92
-    this.initContext(context); // LINE: 93
-    this.baseIri = baseIri; // LINE: 94
-    this.parent = parent; // LINE: 95
-    this.settings = (parent != null ? parent.settings : settings); // LINE: 96
-    this.prefixKeyword = (String) this.kw("prefix"); // LINE: 97
-    this.baseKeyword = (String) this.kw("base"); // LINE: 98
-    if (this.settings.useGraphKeyword) { // LINE: 99
-      this.graphKeyword = (String) this.kw("graph"); // LINE: 100
+  public SerializerState(Output out, Settings settings, /*@Nullable*/ Object context, /*@Nullable*/ String baseIri, SerializerState parent) { // LINE: 83
+    this.out = (out != null ? out : ((SerializerState) parent).out); // LINE: 91
+    this.initContext(context); // LINE: 92
+    this.baseIri = baseIri; // LINE: 93
+    this.parent = parent; // LINE: 94
+    this.settings = (parent != null ? parent.settings : settings); // LINE: 95
+    this.prefixKeyword = (String) this.kw("prefix"); // LINE: 96
+    this.baseKeyword = (String) this.kw("base"); // LINE: 97
+    if (this.settings.useGraphKeyword) { // LINE: 98
+      this.graphKeyword = (String) this.kw("graph"); // LINE: 99
     }
-    this.uniqueBnodeSuffix = ""; // LINE: 101
-    this.bnodeCounter = 0; // LINE: 102
+    this.uniqueBnodeSuffix = ""; // LINE: 100
+    this.bnodeCounter = 0; // LINE: 101
   }
 
-  protected String kw(String s) { // LINE: 104
-    return (this.settings.upcaseKeywords ? s.toUpperCase() : s); // LINE: 105
+  protected String kw(String s) { // LINE: 103
+    return (this.settings.upcaseKeywords ? s.toUpperCase() : s); // LINE: 104
   }
 
-  public void initContext(/*@Nullable*/ Object context) { // LINE: 107
-    this.aliases = new KeyAliases(); // LINE: 108
-    this.context = new HashMap<>(); // LINE: 109
-    if (context != null) { // LINE: 110
-      for (String key : this.context.keySet()) { // LINE: 111
-        throw new RuntimeException("context already initialized"); // LINE: 112
+  public void initContext(/*@Nullable*/ Object context) { // LINE: 106
+    this.aliases = new KeyAliases(); // LINE: 107
+    this.context = new HashMap<>(); // LINE: 108
+    if (context != null) { // LINE: 109
+      for (String key : this.context.keySet()) { // LINE: 110
+        throw new RuntimeException("context already initialized"); // LINE: 111
       }
     }
-    Map<String, Object> ctx = new HashMap<>(); // LINE: 113
-    if (context instanceof List) { // LINE: 115
-      for (Object item : (List) context) { // LINE: 116
-        ctx.putAll(((Map<String, Object>) item)); // LINE: 117
+    Map<String, Object> ctx = new HashMap<>(); // LINE: 112
+    if (context instanceof List) { // LINE: 114
+      for (Object item : (List) context) { // LINE: 115
+        ctx.putAll(((Map<String, Object>) item)); // LINE: 116
       }
-    } else if (context instanceof Map) { // LINE: 118
-      ctx.putAll((Map) context); // LINE: 119
+    } else if (context instanceof Map) { // LINE: 117
+      ctx.putAll((Map) context); // LINE: 118
     }
-    this.context = ctx; // LINE: 120
-    this.prefixes = (Map<String, String>) collectPrefixes(context); // LINE: 121
+    this.context = ctx; // LINE: 119
+    this.prefixes = (Map<String, String>) collectPrefixes(ctx); // LINE: 120
   }
 
-  public void serialize(Map data) { // LINE: 123
-    this.initContext(data.get(CONTEXT)); // LINE: 124
-    this.prelude(this.prefixes); // LINE: 125
-    Object graph = (data instanceof List ? (List) data : data.get(this.aliases.graph)); // LINE: 126
-    if (graph != null) { // LINE: 127
-      for (Object node : asList(graph)) { // LINE: 128
-        this.objectToTurtle(((Map<String, Object>) node)); // LINE: 129
-      }
+  public void serialize(Object data) { // LINE: 122
+    if (data instanceof Map) { // LINE: 123
+      this.initContext(((Map) data).get(CONTEXT)); // LINE: 124
+      this.prelude(this.prefixes); // LINE: 125
+      this.writeObject((Map) data); // LINE: 126
     } else {
-      this.objectToTurtle(data); // LINE: 131
+      assert data instanceof List;
+      for (Object item : (List) data) { // LINE: 129
+        this.writeObject(item); // LINE: 130
+      }
     }
   }
 
-  public void prelude(Map<String, String> prefixes) { // LINE: 133
-    for (Map.Entry<String, String> k_v : prefixes.entrySet()) { // LINE: 134
+  public void prelude(Map<String, String> prefixes) { // LINE: 132
+    for (Map.Entry<String, String> k_v : prefixes.entrySet()) { // LINE: 133
       String k = k_v.getKey();
       String v = k_v.getValue();
-      if ((k == null && ((Object) BASE) == null || k != null && (k).equals(BASE))) { // LINE: 135
-        this.writeBase(v); // LINE: 136
+      if ((k == null && ((Object) BASE) == null || k != null && (k).equals(BASE))) { // LINE: 134
+        this.writeBase(v); // LINE: 135
       } else {
-        this.writeln(this.prefixKeyword + " " + k + ": <" + v + ">"); // LINE: 138
+        this.writeln(this.prefixKeyword + " " + k + ": <" + v + ">"); // LINE: 137
       }
     }
-    if (this.baseIri != null) { // LINE: 139
-      this.writeBase(this.baseIri); // LINE: 140
+    if (this.baseIri != null) { // LINE: 138
+      this.writeBase(this.baseIri); // LINE: 139
     }
-    if (this.settings.prologueEndLine > 1) { // LINE: 141
-      this.writeln(); // LINE: 142
+    if (this.settings.prologueEndLine > 1) { // LINE: 140
+      this.writeln(); // LINE: 141
     }
   }
 
-  public void writeBase(String iri) { // LINE: 144
-    this.writeln(this.baseKeyword + " <" + iri + ">"); // LINE: 145
+  public void writeBase(String iri) { // LINE: 143
+    this.writeln(this.baseKeyword + " <" + iri + ">"); // LINE: 144
   }
 
-  public boolean isListContainer(String term) { // LINE: 147
-    if (this.context != null) { // LINE: 148
-      Object termdef = (Object) this.context.get(term); // LINE: 149
-      if (termdef instanceof Map) { // LINE: 150
-        return (((Map) termdef).get(CONTAINER) == null && ((Object) LIST) == null || ((Map) termdef).get(CONTAINER) != null && (((Map) termdef).get(CONTAINER)).equals(LIST)); // LINE: 151
+  public boolean isListContainer(String term) { // LINE: 146
+    if (this.context != null) { // LINE: 147
+      Object termdef = (Object) this.context.get(term); // LINE: 148
+      if (termdef instanceof Map) { // LINE: 149
+        return (((Map) termdef).get(CONTAINER) == null && ((Object) LIST) == null || ((Map) termdef).get(CONTAINER) != null && (((Map) termdef).get(CONTAINER)).equals(LIST)); // LINE: 150
       }
     }
-    return false; // LINE: 153
+    return false; // LINE: 152
   }
 
-  public boolean isLangContainer(String term) { // LINE: 155
-    if (this.context != null) { // LINE: 156
-      Object termdef = (Object) this.context.get(term); // LINE: 157
-      if (termdef instanceof Map) { // LINE: 158
-        return (((Map) termdef).get(CONTAINER) == null && ((Object) LANGUAGE) == null || ((Map) termdef).get(CONTAINER) != null && (((Map) termdef).get(CONTAINER)).equals(LANGUAGE)); // LINE: 159
+  public boolean isLangContainer(String term) { // LINE: 154
+    if (this.context != null) { // LINE: 155
+      Object termdef = (Object) this.context.get(term); // LINE: 156
+      if (termdef instanceof Map) { // LINE: 157
+        return (((Map) termdef).get(CONTAINER) == null && ((Object) LANGUAGE) == null || ((Map) termdef).get(CONTAINER) != null && (((Map) termdef).get(CONTAINER)).equals(LANGUAGE)); // LINE: 158
       }
     }
-    return false; // LINE: 161
+    return false; // LINE: 160
   }
 
-  public void objectToTrig(/*@Nullable*/ String iri, Object graph) { // LINE: 163
-    this.writeln(); // LINE: 164
-    if ((iri != null && this.settings.turtleDropNamed)) { // LINE: 165
-      return; // LINE: 166
+  public void writeGraph(/*@Nullable*/ String iri, Object graph) {
+    this.writeGraph(iri, graph, 0);
+  }
+  public void writeGraph(/*@Nullable*/ String iri, Object graph, Integer depth) { // LINE: 162
+    if ((iri != null && this.settings.turtleDropNamed)) { // LINE: 163
+      return; // LINE: 164
     }
+    Boolean inGraphBlock = (iri != null || depth > 0); // LINE: 166
     if (!(this.settings.turtleOnly)) { // LINE: 168
-      if ((iri == null && ((Object) null) == null || iri != null && (iri).equals(null))) { // LINE: 169
-        this.writeln("{"); // LINE: 170
-      } else {
-        if (this.graphKeyword != null) { // LINE: 172
-          this.write(this.graphKeyword + " "); // LINE: 173
+      if (iri == null) { // LINE: 169
+        if (depth > 0) { // LINE: 170
+          this.writeln(); // LINE: 171
+          this.writeln("{"); // LINE: 172
         }
-        this.writeln(this.refRepr(iri) + " {"); // LINE: 174
+      } else {
+        this.writeln(); // LINE: 174
+        if (this.graphKeyword != null) { // LINE: 175
+          this.write(this.graphKeyword + " "); // LINE: 176
+        }
+        this.writeln(this.refRepr(iri) + " {"); // LINE: 177
       }
     }
-    for (Object node : asList(graph)) { // LINE: 176
-      this.objectToTurtle(((Map<String, Object>) node), 0, this.aliases.graph); // LINE: 177
+    for (Object node : asList(graph)) { // LINE: 179
+      /*@Nullable*/ String via = (inGraphBlock ? this.aliases.graph : null); // LINE: 180
+      this.writeObject(((Map<String, Object>) node), depth, via); // LINE: 181
     }
-    if (!(this.settings.turtleOnly)) { // LINE: 179
-      this.writeln(); // LINE: 180
-      this.writeln("}"); // LINE: 181
+    if (!(this.settings.turtleOnly)) { // LINE: 183
+      if (inGraphBlock) { // LINE: 184
+        this.writeln(); // LINE: 185
+        this.writeln("}"); // LINE: 186
+      }
     }
   }
 
-  public List<Map<String, Object>> objectToTurtle(Object obj) {
-    return this.objectToTurtle(obj, 0);
+  public List<Map<String, Object>> writeObject(Object obj) {
+    return this.writeObject(obj, 0);
   }
-  public List<Map<String, Object>> objectToTurtle(Object obj, Integer depth) {
-    return this.objectToTurtle(obj, depth, null);
+  public List<Map<String, Object>> writeObject(Object obj, Integer depth) {
+    return this.writeObject(obj, depth, null);
   }
-  public List<Map<String, Object>> objectToTurtle(Object obj, Integer depth, /*@Nullable*/ String viaKey) { // LINE: 183
-    if ((depth > 0 && obj instanceof Map && ((Map) obj).containsKey(CONTEXT))) { // LINE: 189
-      throw new RuntimeException("Nested context not supported yet"); // LINE: 191
+  public List<Map<String, Object>> writeObject(Object obj, Integer depth, /*@Nullable*/ String viaKey) { // LINE: 188
+    if ((depth > 0 && obj instanceof Map && ((Map) obj).containsKey(CONTEXT))) { // LINE: 194
+      throw new RuntimeException("Nested context not supported yet"); // LINE: 196
     }
-    if ((viaKey != null && this.isLangContainer(viaKey) && obj instanceof Map)) { // LINE: 193
-      Boolean first = true; // LINE: 194
-      for (Map.Entry<String, Object> lang_value : ((Map<String, Object>) obj).entrySet()) { // LINE: 195
+    if ((viaKey != null && this.isLangContainer(viaKey) && obj instanceof Map)) { // LINE: 198
+      Boolean first = true; // LINE: 199
+      for (Map.Entry<String, Object> lang_value : ((Map<String, Object>) obj).entrySet()) { // LINE: 200
         String lang = lang_value.getKey();
         Object value = lang_value.getValue();
-        if (!(first)) { // LINE: 196
-          this.write(" , "); // LINE: 197
+        if (!(first)) { // LINE: 201
+          this.write(" , "); // LINE: 202
         }
-        this.toLiteral(Builtins.mapOf(this.aliases.value, value, this.aliases.lang, lang), viaKey); // LINE: 198
-        first = false; // LINE: 201
+        this.toLiteral(Builtins.mapOf(this.aliases.value, value, this.aliases.lang, lang), viaKey); // LINE: 203
+        first = false; // LINE: 206
       }
-      return new ArrayList<>(); // LINE: 202
+      return new ArrayList<>(); // LINE: 207
     }
-    if ((!(obj instanceof Map) || ((Map) obj).containsKey(this.aliases.value))) { // LINE: 204
-      this.toLiteral(((Object) obj), viaKey); // LINE: 205
-      return new ArrayList<>(); // LINE: 206
+    if ((!(obj instanceof Map) || ((Map) obj).containsKey(this.aliases.value))) { // LINE: 209
+      this.toLiteral(((Object) obj), viaKey); // LINE: 210
+      return new ArrayList<>(); // LINE: 211
     }
-    Boolean explicitList = (Boolean) ((Map) obj).containsKey(this.aliases.list); // LINE: 208
-    if ((viaKey != null && this.isListContainer(viaKey))) { // LINE: 210
-      obj = Builtins.mapOf(this.aliases.list, obj); // LINE: 211
+    Boolean explicitList = (Boolean) ((Map) obj).containsKey(this.aliases.list); // LINE: 213
+    if ((viaKey != null && this.isListContainer(viaKey))) { // LINE: 215
+      obj = Builtins.mapOf(this.aliases.list, obj); // LINE: 216
     }
-    /*@Nullable*/ String s = (/*@Nullable*/ String) ((/*@Nullable*/ String) ((Map) obj).get(this.aliases.id)); // LINE: 213
-    Boolean isList = (Boolean) ((Map) obj).containsKey(this.aliases.list); // LINE: 215
-    Boolean startedList = isList; // LINE: 216
-    Boolean isBracketed = (Boolean) (isList || (viaKey == null && ((Object) this.aliases.annotation) == null || viaKey != null && (viaKey).equals(this.aliases.annotation))); // LINE: 218
-    if (((Map) obj).containsKey(this.aliases.graph)) { // LINE: 220
-      if ((((Map) obj).containsKey(ID) && this.settings.turtleDropNamed)) { // LINE: 221
-        return new ArrayList<>(); // LINE: 222
+    /*@Nullable*/ String s = (/*@Nullable*/ String) ((/*@Nullable*/ String) ((Map) obj).get(this.aliases.id)); // LINE: 218
+    Boolean isList = (Boolean) ((Map) obj).containsKey(this.aliases.list); // LINE: 220
+    Boolean startedList = isList; // LINE: 221
+    Boolean isBracketed = (Boolean) (isList || (viaKey == null && ((Object) this.aliases.annotation) == null || viaKey != null && (viaKey).equals(this.aliases.annotation))); // LINE: 223
+    if (((Map) obj).containsKey(this.aliases.graph)) { // LINE: 225
+      if ((s != null && this.settings.turtleDropNamed)) { // LINE: 226
+        return new ArrayList<>(); // LINE: 227
       }
-      if (((Map) obj).containsKey(CONTEXT)) { // LINE: 224
-        this.prelude(collectPrefixes(((Map) obj).get(CONTEXT))); // LINE: 225
+      if ((((Map) obj).containsKey(CONTEXT) && depth > 0)) { // LINE: 229
+        this.prelude(collectPrefixes(((Map) obj).get(CONTEXT))); // LINE: 230
       }
-      this.objectToTrig(s, ((Map) obj).get(this.aliases.graph)); // LINE: 226
-      return new ArrayList<>(); // LINE: 227
+      this.writeGraph(s, ((Map) obj).get(this.aliases.graph), depth); // LINE: 231
+      return new ArrayList<>(); // LINE: 232
     }
-    if (explicitList) { // LINE: 229
-      this.write("( "); // LINE: 230
+    if (explicitList) { // LINE: 234
+      this.write("( "); // LINE: 235
     }
-    Boolean inGraph = (Boolean) ((viaKey == null && ((Object) this.aliases.graph) == null || viaKey != null && (viaKey).equals(this.aliases.graph)) && !(this.settings.turtleOnly)); // LINE: 232
-    Integer inGraphAdd = (inGraph ? 1 : 0); // LINE: 233
-    if ((s != null && this.hasKeys((Map) obj, 2))) { // LINE: 235
-      if (depth == 0) { // LINE: 236
-        this.writeln(); // LINE: 237
+    Boolean inGraph = (Boolean) ((viaKey == null && ((Object) this.aliases.graph) == null || viaKey != null && (viaKey).equals(this.aliases.graph)) && !(this.settings.turtleOnly)); // LINE: 237
+    Integer inGraphAdd = (inGraph ? 1 : 0); // LINE: 238
+    if ((s != null && this.hasKeys((Map) obj, 2))) { // LINE: 240
+      if (depth == 0) { // LINE: 241
+        this.writeln(); // LINE: 242
       }
-      if (inGraphAdd > 0) { // LINE: 238
-        this.write(this.getIndent(0)); // LINE: 239
+      if (inGraphAdd > 0) { // LINE: 243
+        this.write(this.getIndent(0)); // LINE: 244
       }
-      this.write(this.refRepr(s)); // LINE: 240
-    } else if (depth > 0) { // LINE: 241
-      if (!(isBracketed)) { // LINE: 242
+      this.write(this.refRepr(s)); // LINE: 245
+    } else if (depth > 0) { // LINE: 246
+      if (!(isBracketed)) { // LINE: 247
         depth += 1;
-        this.write("["); // LINE: 244
+        this.write("["); // LINE: 249
       }
     } else {
-      return new ArrayList<>(); // LINE: 246
+      return new ArrayList<>(); // LINE: 251
     }
-    String indent = this.getIndent(depth + inGraphAdd); // LINE: 248
-    Integer nestedDepth = depth + 1 + inGraphAdd; // LINE: 250
-    List<Map<String, Object>> topObjects = new ArrayList<>(); // LINE: 252
-    Boolean first = true; // LINE: 254
-    Boolean endedList = false; // LINE: 255
-    for (Map.Entry<String, Object> key_vo : ((Map<String, Object>) obj).entrySet()) { // LINE: 257
+    String indent = this.getIndent(depth + inGraphAdd); // LINE: 253
+    Integer nestedDepth = depth + 1 + inGraphAdd; // LINE: 255
+    List<Map<String, Object>> topObjects = new ArrayList<>(); // LINE: 257
+    Boolean first = true; // LINE: 259
+    Boolean endedList = false; // LINE: 260
+    for (Map.Entry<String, Object> key_vo : ((Map<String, Object>) obj).entrySet()) { // LINE: 262
       String key = key_vo.getKey();
       Object vo = key_vo.getValue();
-      String term = (String) this.termFor(key); // LINE: 258
-      /*@Nullable*/ String revKey = (/*@Nullable*/ String) ((term == null && ((Object) null) == null || term != null && (term).equals(null)) ? this.revKeyFor(key) : null); // LINE: 260
-      if ((term == null && revKey == null)) { // LINE: 261
-        continue; // LINE: 262
+      String term = (String) this.termFor(key); // LINE: 263
+      /*@Nullable*/ String revKey = (term == null ? this.revKeyFor(key) : null); // LINE: 265
+      if ((term == null && revKey == null)) { // LINE: 266
+        continue; // LINE: 267
       }
-      if (((term == null && ((Object) this.aliases.id) == null || term != null && (term).equals(this.aliases.id)) || (term == null && ((Object) CONTEXT) == null || term != null && (term).equals(CONTEXT)))) { // LINE: 264
-        continue; // LINE: 265
+      if (((term == null && ((Object) this.aliases.id) == null || term != null && (term).equals(this.aliases.id)) || (term == null && ((Object) CONTEXT) == null || term != null && (term).equals(CONTEXT)))) { // LINE: 269
+        continue; // LINE: 270
       }
-      if ((term == null && ((Object) this.aliases.index) == null || term != null && (term).equals(this.aliases.index))) { // LINE: 267
-        continue; // LINE: 268
+      if ((term == null && ((Object) this.aliases.index) == null || term != null && (term).equals(this.aliases.index))) { // LINE: 272
+        continue; // LINE: 273
       }
-      if ((term == null && ((Object) this.aliases.annotation) == null || term != null && (term).equals(this.aliases.annotation))) { // LINE: 270
-        continue; // LINE: 271
+      if ((term == null && ((Object) this.aliases.annotation) == null || term != null && (term).equals(this.aliases.annotation))) { // LINE: 275
+        continue; // LINE: 276
       }
-      List vs = (vo instanceof List ? (List) vo : (vo != null ? new ArrayList<>(Arrays.asList(new Object[] {(Object) vo})) : new ArrayList<>())); // LINE: 273
-      vs = ((List) vs.stream().filter((x) -> x != null).collect(Collectors.toList())); // LINE: 274
-      if (vs.size() == 0) { // LINE: 276
-        continue; // LINE: 277
+      List vs = (vo instanceof List ? (List) vo : (vo != null ? new ArrayList<>(Arrays.asList(new Object[] {(Object) vo})) : new ArrayList<>())); // LINE: 278
+      vs = ((List) vs.stream().filter((x) -> x != null).collect(Collectors.toList())); // LINE: 279
+      if (vs.size() == 0) { // LINE: 281
+        continue; // LINE: 282
       }
-      Boolean inList = (isList || this.isListContainer(key)); // LINE: 279
-      /*@Nullable*/ Map<String, Object> revContainer = null; // LINE: 281
-      if ((term == null && ((Object) this.aliases.reverse) == null || term != null && (term).equals(this.aliases.reverse))) { // LINE: 282
-        revContainer = ((/*@Nullable*/ Map<String, Object>) ((Map) obj).get(key)); // LINE: 283
-      } else if (revKey != null) { // LINE: 284
-        revContainer = (Map<String, Object>) Builtins.mapOf(revKey, ((Map) obj).get(key)); // LINE: 285
+      Boolean inList = (isList || this.isListContainer(key)); // LINE: 284
+      /*@Nullable*/ Map<String, Object> revContainer = null; // LINE: 286
+      if ((term == null && ((Object) this.aliases.reverse) == null || term != null && (term).equals(this.aliases.reverse))) { // LINE: 287
+        revContainer = ((/*@Nullable*/ Map<String, Object>) ((Map) obj).get(key)); // LINE: 288
+      } else if (revKey != null) { // LINE: 289
+        revContainer = (Map<String, Object>) Builtins.mapOf(revKey, ((Map) obj).get(key)); // LINE: 290
       }
-      if (revContainer != null) { // LINE: 287
-        for (Map.Entry<String, Object> revkey_rvo : revContainer.entrySet()) { // LINE: 288
+      if (revContainer != null) { // LINE: 292
+        for (Map.Entry<String, Object> revkey_rvo : revContainer.entrySet()) { // LINE: 293
           String revkey = revkey_rvo.getKey();
           Object rvo = revkey_rvo.getValue();
-          vs = (rvo instanceof List ? (List) rvo : (rvo != null ? new ArrayList<>(Arrays.asList(new Object[] {(Object) rvo})) : new ArrayList<>())); // LINE: 289
-          for (Object x : vs) { // LINE: 290
-            topObjects.add(this.makeTopObject(s, revkey, ((Map<String, Object>) x))); // LINE: 291
+          vs = (rvo instanceof List ? (List) rvo : (rvo != null ? new ArrayList<>(Arrays.asList(new Object[] {(Object) rvo})) : new ArrayList<>())); // LINE: 294
+          for (Object x : vs) { // LINE: 295
+            topObjects.add(this.makeTopObject(s, revkey, ((Map<String, Object>) x))); // LINE: 296
           }
         }
       } else {
-        String useIndent = indent; // LINE: 295
-        if (first) { // LINE: 296
-          useIndent = " "; // LINE: 297
-          first = false; // LINE: 298
+        String useIndent = indent; // LINE: 300
+        if (first) { // LINE: 301
+          useIndent = " "; // LINE: 302
+          first = false; // LINE: 303
         } else {
-          if ((startedList && !(inList) && !(endedList))) { // LINE: 300
-            endedList = true; // LINE: 301
-            this.write(" )"); // LINE: 302
+          if ((startedList && !(inList) && !(endedList))) { // LINE: 305
+            endedList = true; // LINE: 306
+            this.write(" )"); // LINE: 307
           }
-          this.writeln(" ;"); // LINE: 303
+          this.writeln(" ;"); // LINE: 308
         }
         assert term instanceof String;
-        if ((term == null && ((Object) this.aliases.type) == null || term != null && (term).equals(this.aliases.type))) { // LINE: 307
-          term = "a"; // LINE: 308
+        if ((term == null && ((Object) this.aliases.type) == null || term != null && (term).equals(this.aliases.type))) { // LINE: 312
+          term = "a"; // LINE: 313
         }
-        if (!term.equals(LIST)) { // LINE: 310
-          term = (String) this.toValidTerm((String) term); // LINE: 311
-          this.write(useIndent + term + " "); // LINE: 312
+        if (!term.equals(LIST)) { // LINE: 315
+          term = (String) this.toValidTerm((String) term); // LINE: 316
+          this.write(useIndent + term + " "); // LINE: 317
         }
-        for (int i = 0; i < vs.size(); i++) { // LINE: 314
-          Object v = (Object) vs.get(i); // LINE: 315
-          if (inList) { // LINE: 317
-            if (!(startedList)) { // LINE: 318
-              this.write("("); // LINE: 319
-              startedList = true; // LINE: 320
+        for (int i = 0; i < vs.size(); i++) { // LINE: 319
+          Object v = (Object) vs.get(i); // LINE: 320
+          if (inList) { // LINE: 322
+            if (!(startedList)) { // LINE: 323
+              this.write("("); // LINE: 324
+              startedList = true; // LINE: 325
             }
-            this.write(" "); // LINE: 321
-          } else if (i > 0) { // LINE: 322
-            if (this.settings.predicateRepeatNewLine) { // LINE: 323
-              this.writeln(" ,"); // LINE: 324
-              this.write(this.getIndent(nestedDepth)); // LINE: 325
+            this.write(" "); // LINE: 326
+          } else if (i > 0) { // LINE: 327
+            if (this.settings.predicateRepeatNewLine) { // LINE: 328
+              this.writeln(" ,"); // LINE: 329
+              this.write(this.getIndent(nestedDepth)); // LINE: 330
             } else {
-              this.write(" , "); // LINE: 327
+              this.write(" , "); // LINE: 332
             }
           }
-          if ((this.bnodeSkolemBase != null && v instanceof Map && !((Map) v).containsKey(this.aliases.id))) { // LINE: 329
-            s = (String) this.genSkolemId(); // LINE: 330
-            ((Map) v).put(this.aliases.id, s); // LINE: 331
+          if ((this.bnodeSkolemBase != null && v instanceof Map && !((Map) v).containsKey(this.aliases.id))) { // LINE: 334
+            s = (String) this.genSkolemId(); // LINE: 335
+            ((Map) v).put(this.aliases.id, s); // LINE: 336
           }
-          if ((term == null && ((Object) "a") == null || term != null && (term).equals("a"))) { // LINE: 333
-            String t = (String) this.reprType(((Object) v)); // LINE: 334
-            this.write(t); // LINE: 335
-          } else if ((v != null && v instanceof Map && ((Map) v).containsKey(this.aliases.id))) { // LINE: 336
-            topObjects.add((Map) v); // LINE: 337
-            this.write(this.refRepr(((Map) v).get(this.aliases.id))); // LINE: 338
-          } else if (v != null) { // LINE: 339
-            List<Map<String, Object>> objects = this.objectToTurtle(v, nestedDepth, key); // LINE: 340
-            for (Map<String, Object> it : objects) { // LINE: 341
-              topObjects.add(it); // LINE: 342
+          if ((term == null && ((Object) "a") == null || term != null && (term).equals("a"))) { // LINE: 338
+            String t = (String) this.reprType(((Object) v)); // LINE: 339
+            this.write(t); // LINE: 340
+          } else if ((v != null && v instanceof Map && ((Map) v).containsKey(this.aliases.id))) { // LINE: 341
+            topObjects.add((Map) v); // LINE: 342
+            this.write(this.refRepr(((Map) v).get(this.aliases.id))); // LINE: 343
+          } else if (v != null) { // LINE: 344
+            List<Map<String, Object>> objects = this.writeObject(v, nestedDepth, key); // LINE: 345
+            for (Map<String, Object> it : objects) { // LINE: 346
+              topObjects.add(it); // LINE: 347
             }
           }
-          this.outputAnnotation(v, depth); // LINE: 344
+          this.writeAnnotation(v, depth); // LINE: 349
         }
       }
     }
-    if ((explicitList || ((!(isList) && startedList) && !(endedList)))) { // LINE: 346
-      this.write(" )"); // LINE: 347
+    if ((explicitList || ((!(isList) && startedList) && !(endedList)))) { // LINE: 351
+      this.write(" )"); // LINE: 352
     }
-    if (depth == 0) { // LINE: 349
-      if (!(first)) { // LINE: 350
-        this.writeln(" ."); // LINE: 351
+    if (depth == 0) { // LINE: 354
+      if (!(first)) { // LINE: 355
+        this.writeln(" ."); // LINE: 356
       }
-      for (Map<String, Object> it : topObjects) { // LINE: 353
-        this.objectToTurtle(it, depth, viaKey); // LINE: 354
+      for (Map<String, Object> it : topObjects) { // LINE: 358
+        this.writeObject(it, depth, viaKey); // LINE: 359
       }
-      return new ArrayList<>(); // LINE: 355
+      return new ArrayList<>(); // LINE: 360
     } else {
-      indent = this.getIndent(nestedDepth - 1 + inGraphAdd); // LINE: 357
-      if (this.settings.bracketEndNewLine) { // LINE: 358
-        this.writeln(); // LINE: 359
-        this.write(indent); // LINE: 360
+      indent = this.getIndent(nestedDepth - 1 + inGraphAdd); // LINE: 362
+      if (this.settings.bracketEndNewLine) { // LINE: 363
+        this.writeln(); // LINE: 364
+        this.write(indent); // LINE: 365
       } else {
-        this.write(" "); // LINE: 362
+        this.write(" "); // LINE: 367
       }
-      if (!(isBracketed)) { // LINE: 363
-        this.write("]"); // LINE: 368
+      if (!(isBracketed)) { // LINE: 368
+        this.write("]"); // LINE: 373
       }
-      return topObjects; // LINE: 369
+      return topObjects; // LINE: 374
     }
   }
 
-  public void outputAnnotation(Object v, Integer depth) { // LINE: 371
-    if (this.settings.dropRdfstar) { // LINE: 372
-      return; // LINE: 373
+  public void writeAnnotation(Object v, Integer depth) { // LINE: 376
+    if (this.settings.dropRdfstar) { // LINE: 377
+      return; // LINE: 378
     }
-    if ((v instanceof Map && ((Map) v).containsKey(this.aliases.annotation))) { // LINE: 375
-      Map<String, Object> annotation = (Map<String, Object>) ((Map) v).get(this.aliases.annotation); // LINE: 376
-      this.write(":|"); // LINE: 377
-      this.objectToTurtle(annotation, depth + 2, this.aliases.annotation); // LINE: 378
-      this.write("|}"); // LINE: 379
+    if ((v instanceof Map && ((Map) v).containsKey(this.aliases.annotation))) { // LINE: 380
+      Map<String, Object> annotation = (Map<String, Object>) ((Map) v).get(this.aliases.annotation); // LINE: 381
+      if (annotation != null) { // LINE: 382
+        this.write(" {|"); // LINE: 383
+        this.writeObject(annotation, depth + 2, this.aliases.annotation); // LINE: 384
+        this.write("|}"); // LINE: 385
+      }
     }
   }
 
@@ -381,289 +393,304 @@ public class SerializerState { // LINE: 69
   public void toLiteral(Object obj, /*@Nullable*/ String viaKey) {
     this.toLiteral(obj, viaKey, null);
   }
-  public void toLiteral(Object obj, /*@Nullable*/ String viaKey, Function write) { // LINE: 381
-    if (write == null) { // LINE: 387
-      write = (s) -> this.write(s); // LINE: 388
+  public void toLiteral(Object obj, /*@Nullable*/ String viaKey, Function write) { // LINE: 387
+    if (write == null) { // LINE: 393
+      write = (s) -> this.write(s); // LINE: 394
     }
-    Object value = obj; // LINE: 389
-    /*@Nullable*/ Object lang = (/*@Nullable*/ Object) this.context.get(LANGUAGE); // LINE: 390
-    /*@Nullable*/ String datatype = null; // LINE: 391
-    if (obj instanceof Map) { // LINE: 392
-      value = ((Map) obj).get(this.aliases.value); // LINE: 393
-      datatype = ((String) ((Map) obj).get(this.aliases.type)); // LINE: 394
-      lang = ((Map) obj).get(this.aliases.lang); // LINE: 395
+    Object value = obj; // LINE: 395
+    /*@Nullable*/ Object lang = (/*@Nullable*/ Object) this.context.get(LANGUAGE); // LINE: 396
+    /*@Nullable*/ String datatype = null; // LINE: 397
+    if (obj instanceof Map) { // LINE: 398
+      value = ((Map) obj).get(this.aliases.value); // LINE: 399
+      datatype = ((String) ((Map) obj).get(this.aliases.type)); // LINE: 400
+      lang = ((Map) obj).get(this.aliases.lang); // LINE: 401
     } else {
-      /*@Nullable*/ Object kdef = null; // LINE: 397
-      if ((viaKey != null && this.context.containsKey(viaKey))) { // LINE: 398
-        kdef = ((Object) this.context.get(viaKey)); // LINE: 399
+      /*@Nullable*/ Object kdef = null; // LINE: 403
+      if ((viaKey != null && this.context.containsKey(viaKey))) { // LINE: 404
+        kdef = ((Object) this.context.get(viaKey)); // LINE: 405
       }
-      /*@Nullable*/ String coerceTo = null; // LINE: 400
-      if ((kdef instanceof Map && ((Map) kdef).containsKey(TYPE))) { // LINE: 401
-        coerceTo = ((String) ((Map) kdef).get(TYPE)); // LINE: 402
+      /*@Nullable*/ String coerceTo = null; // LINE: 406
+      if ((kdef instanceof Map && ((Map) kdef).containsKey(TYPE))) { // LINE: 407
+        coerceTo = ((String) ((Map) kdef).get(TYPE)); // LINE: 408
       }
-      if ((coerceTo == null && ((Object) VOCAB) == null || coerceTo != null && (coerceTo).equals(VOCAB))) { // LINE: 403
-        Boolean next = false; // LINE: 404
-        for (Object v : asList(value)) { // LINE: 405
-          if (next) { // LINE: 406
-            write(" , "); // LINE: 407
+      if ((coerceTo == null && ((Object) VOCAB) == null || coerceTo != null && (coerceTo).equals(VOCAB))) { // LINE: 409
+        Boolean next = false; // LINE: 410
+        for (Object v : asList(value)) { // LINE: 411
+          if (next) { // LINE: 412
+            write(" , "); // LINE: 413
           } else {
-            next = true; // LINE: 409
+            next = true; // LINE: 415
           }
-          write((v instanceof String ? this.refRepr((String) v, true) : v.toString())); // LINE: 410
+          write((v instanceof String ? this.refRepr((String) v, true) : this.toStr(v))); // LINE: 416
         }
-        return; // LINE: 411
-      } else if ((coerceTo == null && ((Object) ID) == null || coerceTo != null && (coerceTo).equals(ID))) { // LINE: 412
-        Boolean next = false; // LINE: 413
-        for (Object v : asList(value)) { // LINE: 414
-          if (next) { // LINE: 415
-            write(" , "); // LINE: 416
+        return; // LINE: 417
+      } else if ((coerceTo == null && ((Object) ID) == null || coerceTo != null && (coerceTo).equals(ID))) { // LINE: 418
+        Boolean next = false; // LINE: 419
+        for (Object v : asList(value)) { // LINE: 420
+          if (next) { // LINE: 421
+            write(" , "); // LINE: 422
           } else {
-            next = true; // LINE: 418
+            next = true; // LINE: 424
           }
-          write(this.refRepr(v)); // LINE: 419
+          write(this.refRepr(v)); // LINE: 425
         }
-        return; // LINE: 420
-      } else if (coerceTo != null) { // LINE: 421
-        datatype = coerceTo; // LINE: 422
-      } else if ((kdef instanceof Map && ((Map) kdef).containsKey(LANGUAGE))) { // LINE: 424
-        lang = ((Map) kdef).get(LANGUAGE); // LINE: 425
+        return; // LINE: 426
+      } else if (coerceTo != null) { // LINE: 427
+        datatype = coerceTo; // LINE: 428
+      } else if ((kdef instanceof Map && ((Map) kdef).containsKey(LANGUAGE))) { // LINE: 430
+        lang = ((Map) kdef).get(LANGUAGE); // LINE: 431
       }
     }
-    Boolean next = false; // LINE: 427
-    for (Object v : asList(value)) { // LINE: 428
-      if (next) { // LINE: 429
-        write(" , "); // LINE: 430
+    Boolean next = false; // LINE: 433
+    for (Object v : asList(value)) { // LINE: 434
+      if (next) { // LINE: 435
+        write(" , "); // LINE: 436
       } else {
-        next = true; // LINE: 432
+        next = true; // LINE: 438
       }
-      if (v instanceof String) { // LINE: 434
-        String escaped = (String) ((String) v).replace("\\", "\\\\"); // LINE: 435
-        String quote = "\""; // LINE: 436
-        if (escaped.indexOf("\n") > -1) { // LINE: 437
-          quote = "\"\"\""; // LINE: 438
-          if (escaped.endsWith("\"")) { // LINE: 439
-            escaped = escaped.substring(0, escaped.length() - 1) + "\\\""; // LINE: 440
-          }
-        } else {
-          escaped = escaped.replace("\"", "\\\""); // LINE: 442
-        }
-        write(quote); // LINE: 443
-        write(escaped); // LINE: 444
-        write(quote); // LINE: 445
-        if (datatype != null) { // LINE: 446
-          write("^^" + this.toValidTerm(((String) this.termFor(datatype)))); // LINE: 447
-        } else if (lang instanceof String) { // LINE: 448
-          write("@" + lang); // LINE: 449
-        }
-      } else {
-        write(v.toString()); // LINE: 451
-      }
+      write(this.toStr(v, datatype, lang)); // LINE: 440
     }
   }
 
-  public /*@Nullable*/ String termFor(String key) { // LINE: 453
-    if (key.startsWith("@")) { // LINE: 454
-      return key; // LINE: 455
-    } else if ((key.indexOf(":") > -1 || key.indexOf("/") > -1 || key.indexOf("#") > -1)) { // LINE: 456
-      return key; // LINE: 459
-    } else if (this.context.containsKey(key)) { // LINE: 460
-      Object kdef = (Object) this.context.get(key); // LINE: 461
-      if (kdef == null) { // LINE: 462
-        return null; // LINE: 463
-      }
-      Object term = null; // LINE: 464
-      if (kdef instanceof Map) { // LINE: 465
-        term = ((Map) kdef).getOrDefault(ID, key); // LINE: 466
+  public String toStr(Object v) {
+    return this.toStr(v, null);
+  }
+  public String toStr(Object v, /*@Nullable*/ String datatype) {
+    return this.toStr(v, datatype, null);
+  }
+  public String toStr(Object v, /*@Nullable*/ String datatype, /*@Nullable*/ Object lang) { // LINE: 442
+    if (v instanceof String) { // LINE: 443
+      List<String> parts = new ArrayList<>(); // LINE: 444
+      String escaped = (String) ((String) v).replace("\\", "\\\\"); // LINE: 445
+      String quote = "\""; // LINE: 446
+      if (escaped.indexOf("\n") > -1) { // LINE: 447
+        quote = "\"\"\""; // LINE: 448
+        if (escaped.endsWith("\"")) { // LINE: 449
+          escaped = escaped.substring(0, escaped.length() - 1) + "\\\""; // LINE: 450
+        }
       } else {
-        term = kdef; // LINE: 468
+        escaped = escaped.replace("\"", "\\\""); // LINE: 452
+      }
+      parts.add(quote); // LINE: 453
+      parts.add(escaped); // LINE: 454
+      parts.add(quote); // LINE: 455
+      if (datatype != null) { // LINE: 456
+        parts.add("^^" + this.toValidTerm(((String) this.termFor(datatype)))); // LINE: 457
+      } else if (lang instanceof String) { // LINE: 458
+        parts.add("@" + lang); // LINE: 459
+      }
+      return String.join("", parts); // LINE: 460
+    } else if (v instanceof Boolean) { // LINE: 461
+      return ((Boolean) v ? "true" : "false"); // LINE: 462
+    } else {
+      return v.toString(); // LINE: 464
+    }
+  }
+
+  public /*@Nullable*/ String termFor(String key) { // LINE: 466
+    if (key.startsWith("@")) { // LINE: 467
+      return key; // LINE: 468
+    } else if ((key.indexOf(":") > -1 || key.indexOf("/") > -1 || key.indexOf("#") > -1)) { // LINE: 469
+      return key; // LINE: 472
+    } else if (this.context.containsKey(key)) { // LINE: 473
+      Object kdef = (Object) this.context.get(key); // LINE: 474
+      if (kdef == null) { // LINE: 475
+        return null; // LINE: 476
+      }
+      Object term = null; // LINE: 477
+      if (kdef instanceof Map) { // LINE: 478
+        term = ((Map) kdef).getOrDefault(ID, key); // LINE: 479
+      } else {
+        term = kdef; // LINE: 481
       }
       assert term instanceof String;
-      Integer ci = (Integer) ((String) term).indexOf(":"); // LINE: 470
-      return (ci == -1 ? ":" + term : (String) term); // LINE: 471
+      Integer ci = (Integer) ((String) term).indexOf(":"); // LINE: 483
+      return (ci == -1 ? ":" + term : (String) term); // LINE: 484
     } else {
-      return ":" + key; // LINE: 473
+      return ":" + key; // LINE: 486
     }
   }
 
-  public /*@Nullable*/ String revKeyFor(String key) { // LINE: 475
-    Object kdef = (Object) this.context.get(key); // LINE: 476
-    if ((kdef instanceof Map && ((Map) kdef).containsKey(REVERSE))) { // LINE: 477
-      return ((String) ((Map) kdef).get(REVERSE)); // LINE: 478
+  public /*@Nullable*/ String revKeyFor(String key) { // LINE: 488
+    Object kdef = (Object) this.context.get(key); // LINE: 489
+    if ((kdef instanceof Map && ((Map) kdef).containsKey(REVERSE))) { // LINE: 490
+      return ((String) ((Map) kdef).get(REVERSE)); // LINE: 491
     }
-    return null; // LINE: 479
+    return null; // LINE: 492
   }
 
-  public Map<String, Object> makeTopObject(/*@Nullable*/ String s, String revKey, Map it) { // LINE: 481
-    Map node = new HashMap(it); // LINE: 482
-    if (!node.containsKey(this.aliases.id)) { // LINE: 484
-      node.put(this.aliases.id, "_:bnode-" + this.bnodeCounter); // LINE: 485
+  public Map<String, Object> makeTopObject(/*@Nullable*/ String s, String revKey, Map it) { // LINE: 494
+    Map node = new HashMap(it); // LINE: 495
+    if (!node.containsKey(this.aliases.id)) { // LINE: 497
+      node.put(this.aliases.id, "_:bnode-" + this.bnodeCounter); // LINE: 498
       this.bnodeCounter += 1;
     }
-    node.put(revKey, Builtins.mapOf(this.aliases.id, s)); // LINE: 487
-    return node; // LINE: 488
+    node.put(revKey, Builtins.mapOf(this.aliases.id, s)); // LINE: 500
+    return node; // LINE: 501
   }
 
-  public String reprType(Object t) { // LINE: 490
-    String tstr = (String) (t instanceof String ? (String) t : ((String) ((Map) t).get(TYPE))); // LINE: 491
-    return this.toValidTerm(((String) this.termFor(tstr))); // LINE: 492
+  public String reprType(Object t) { // LINE: 503
+    String tstr = (String) (t instanceof String ? (String) t : ((String) ((Map) t).get(TYPE))); // LINE: 504
+    return this.toValidTerm(((String) this.termFor(tstr))); // LINE: 505
   }
 
   public String refRepr(/*@Nullable*/ Object refobj) {
     return this.refRepr(refobj, false);
   }
-  public String refRepr(/*@Nullable*/ Object refobj, Boolean useVocab) { // LINE: 494
-    if (refobj == null) { // LINE: 495
-      return "[]"; // LINE: 496
+  public String refRepr(/*@Nullable*/ Object refobj, Boolean useVocab) { // LINE: 507
+    if (refobj == null) { // LINE: 508
+      return "[]"; // LINE: 509
     }
-    if ((refobj instanceof Map && ((Map) refobj).containsKey(this.aliases.id))) { // LINE: 498
-      return this.reprTriple((Map) refobj); // LINE: 499
+    if ((refobj instanceof Map && ((Map) refobj).containsKey(this.aliases.id))) { // LINE: 511
+      return this.reprTriple((Map) refobj); // LINE: 512
     }
-    String ref = (String) ((String) refobj); // LINE: 501
-    Integer c_i = (Integer) ref.indexOf(":"); // LINE: 503
-    if (c_i > -1) { // LINE: 504
-      String pfx = ref.substring(0, c_i); // LINE: 505
-      if ((pfx == null && ((Object) "_") == null || pfx != null && (pfx).equals("_"))) { // LINE: 506
-        String nodeId = ref + this.uniqueBnodeSuffix; // LINE: 507
-        if (this.bnodeSkolemBase != null) { // LINE: 508
-          ref = this.bnodeSkolemBase + nodeId.substring(2); // LINE: 509
+    String ref = (String) ((String) refobj); // LINE: 514
+    Integer c_i = (Integer) ref.indexOf(":"); // LINE: 516
+    if (c_i > -1) { // LINE: 517
+      String pfx = ref.substring(0, c_i); // LINE: 518
+      if ((pfx == null && ((Object) "_") == null || pfx != null && (pfx).equals("_"))) { // LINE: 519
+        String nodeId = ref + this.uniqueBnodeSuffix; // LINE: 520
+        if (this.bnodeSkolemBase != null) { // LINE: 521
+          ref = this.bnodeSkolemBase + nodeId.substring(2); // LINE: 522
         } else {
-          return this.toValidTerm(nodeId); // LINE: 511
+          return this.toValidTerm(nodeId); // LINE: 524
         }
-      } else if (this.context.containsKey(pfx)) { // LINE: 512
-        String local = ref.substring(c_i + 1); // LINE: 513
-        return pfx + ":" + this.escapePnameLocal(local); // LINE: 514
+      } else if (this.context.containsKey(pfx)) { // LINE: 525
+        String local = ref.substring(c_i + 1); // LINE: 526
+        return pfx + ":" + this.escapePnameLocal(local); // LINE: 527
       }
-    } else if ((useVocab && ref.indexOf("/") == -1)) { // LINE: 515
-      return ":" + ref; // LINE: 516
+    } else if ((useVocab && ref.indexOf("/") == -1)) { // LINE: 528
+      return ":" + ref; // LINE: 529
     }
-    if ((this.context.containsKey(VOCAB) && ref.startsWith(((String) this.context.get(VOCAB))))) { // LINE: 518
-      return ":" + ref.substring(((String) this.context.get(VOCAB)).length()); // LINE: 519
+    if ((this.context.containsKey(VOCAB) && ref.startsWith(((String) this.context.get(VOCAB))))) { // LINE: 531
+      return ":" + ref.substring(((String) this.context.get(VOCAB)).length()); // LINE: 532
     }
-    ref = (String) this.cleanValue(ref); // LINE: 521
-    c_i = (Integer) ref.indexOf(":"); // LINE: 523
-    if (c_i > -1) { // LINE: 524
-      String pfx = ref.substring(0, c_i); // LINE: 525
-      String rest = (String) ref.substring(c_i); // LINE: 526
-      if (this.context.containsKey(pfx)) { // LINE: 527
-        return ref; // LINE: 528
+    ref = (String) this.cleanValue(ref); // LINE: 534
+    c_i = (Integer) ref.indexOf(":"); // LINE: 536
+    if (c_i > -1) { // LINE: 537
+      String pfx = ref.substring(0, c_i); // LINE: 538
+      String rest = (String) ref.substring(c_i); // LINE: 539
+      if (this.context.containsKey(pfx)) { // LINE: 540
+        return ref; // LINE: 541
       }
-      if ((this.context.size() > 0 && rest.indexOf(":") == -1 && (WORD_START.matcher(rest).matches() ? rest : null) != null && (WORD_START.matcher(pfx).matches() ? pfx : null) != null)) { // LINE: 530
-        return ref; // LINE: 534
+      if ((this.context.size() > 0 && rest.indexOf(":") == -1 && (WORD_START.matcher(rest).matches() ? rest : null) != null && (WORD_START.matcher(pfx).matches() ? pfx : null) != null)) { // LINE: 543
+        return ref; // LINE: 547
       }
     }
-    return "<" + ref + ">"; // LINE: 536
+    return "<" + ref + ">"; // LINE: 549
   }
 
-  public String reprTriple(Map<String, Object> ref) { // LINE: 538
-    if (this.settings.dropRdfstar) { // LINE: 539
-      throw new RuntimeException("Triple nodes disallowed unless in RDF-star mode"); // LINE: 540
+  public String reprTriple(Map<String, Object> ref) { // LINE: 551
+    if (this.settings.dropRdfstar) { // LINE: 552
+      throw new RuntimeException("Triple nodes disallowed unless in RDF-star mode"); // LINE: 553
     }
-    String s = (String) this.refRepr(((String) ref.get(this.aliases.id))); // LINE: 542
-    String p = ""; // LINE: 544
-    Object obj = ""; // LINE: 545
-    for (String k : ref.keySet()) { // LINE: 546
-      if ((k == null && ((Object) this.aliases.id) == null || k != null && (k).equals(this.aliases.id))) { // LINE: 547
-        continue; // LINE: 548
+    String s = (String) this.refRepr(((String) ref.get(this.aliases.id))); // LINE: 555
+    String p = ""; // LINE: 557
+    Object obj = ""; // LINE: 558
+    for (String k : ref.keySet()) { // LINE: 559
+      if ((k == null && ((Object) this.aliases.id) == null || k != null && (k).equals(this.aliases.id))) { // LINE: 560
+        continue; // LINE: 561
       }
-      if (p != null) { // LINE: 549
-        throw new RuntimeException("Quoted triples cannot contain multiple statements"); // LINE: 550
+      if (!p.equals("")) { // LINE: 562
+        throw new RuntimeException("Quoted triples cannot contain multiple statements"); // LINE: 563
       }
-      p = (String) this.termFor(k); // LINE: 552
-      obj = ((Map<String, Object>) ref.get(k)); // LINE: 553
+      p = ((String) this.termFor(k)); // LINE: 565
+      obj = ((Map<String, Object>) ref.get(k)); // LINE: 566
     }
-    String o; // LINE: 555
-    if ((p == null && ((Object) this.aliases.type) == null || p != null && (p).equals(this.aliases.type))) { // LINE: 556
-      p = "a"; // LINE: 557
-      o = (String) this.reprType(obj); // LINE: 558
+    String o; // LINE: 568
+    if ((p == null && ((Object) this.aliases.type) == null || p != null && (p).equals(this.aliases.type))) { // LINE: 569
+      p = "a"; // LINE: 570
+      o = (String) this.reprType(obj); // LINE: 571
     } else {
-      if (obj instanceof List) { // LINE: 560
-        throw new RuntimeException("Quoted triples must have one single object"); // LINE: 561
+      if (obj instanceof List) { // LINE: 573
+        throw new RuntimeException("Quoted triples must have one single object"); // LINE: 574
       }
-      if ((this.isLangContainer(p) && obj instanceof Map)) { // LINE: 562
-        throw new RuntimeException("Language containers not yet supported in quoted triples"); // LINE: 563
+      if ((this.isLangContainer(p) && obj instanceof Map)) { // LINE: 575
+        throw new RuntimeException("Language containers not yet supported in quoted triples"); // LINE: 576
       }
-      if ((obj instanceof Map && ((Map) obj).containsKey(this.aliases.list))) { // LINE: 564
-        throw new RuntimeException("Quoted triples cannot contain Lists"); // LINE: 565
+      if ((obj instanceof Map && ((Map) obj).containsKey(this.aliases.list))) { // LINE: 577
+        throw new RuntimeException("Quoted triples cannot contain Lists"); // LINE: 578
       }
-      if ((!(obj instanceof Map) || ((Map) obj).containsKey(this.aliases.value))) { // LINE: 567
-        List<String> l = new ArrayList<>(); // LINE: 568
-        this.toLiteral((Map) obj, p, (x) -> l.add(((String) x))); // LINE: 569
-        o = String.join("", l); // LINE: 570
+      if ((!(obj instanceof Map) || ((Map) obj).containsKey(this.aliases.value))) { // LINE: 580
+        List<String> l = new ArrayList<>(); // LINE: 581
+        this.toLiteral((Map) obj, p, (x) -> l.add(((String) x))); // LINE: 582
+        o = String.join("", l); // LINE: 583
       } else {
-        o = (String) this.refRepr((Map) obj); // LINE: 572
+        assert (obj instanceof Map && ((Map) obj).containsKey(this.aliases.id));
+        o = (String) this.refRepr(((String) ((Map) obj).get(this.aliases.id))); // LINE: 586
       }
     }
-    return "<< " + s + " " + p + " " + o + " >>"; // LINE: 574
+    return "<< " + s + " " + p + " " + o + " >>"; // LINE: 588
   }
 
-  public String toValidTerm(String term) { // LINE: 576
-    term = (String) this.cleanValue(term); // LINE: 577
-    Integer c_i = (Integer) term.indexOf(":"); // LINE: 578
-    /*@Nullable*/ String pfx = (c_i > -1 ? term.substring(0, c_i) : null); // LINE: 579
-    if ((!(this.context.containsKey(pfx)) && (term.indexOf("/") > -1 || term.indexOf("#") > -1 || (pfx != null && term.lastIndexOf(":") > pfx.length())))) { // LINE: 580
-      return "<" + term + ">"; // LINE: 587
+  public String toValidTerm(String term) { // LINE: 590
+    term = (String) this.cleanValue(term); // LINE: 591
+    Integer c_i = (Integer) term.indexOf(":"); // LINE: 592
+    /*@Nullable*/ String pfx = (c_i > -1 ? term.substring(0, c_i) : null); // LINE: 593
+    if ((!(this.context.containsKey(pfx)) && (term.indexOf("/") > -1 || term.indexOf("#") > -1 || (pfx != null && term.lastIndexOf(":") > pfx.length())))) { // LINE: 594
+      return "<" + term + ">"; // LINE: 601
     }
-    if (pfx != null) { // LINE: 588
-      String local = term.substring(c_i + 1); // LINE: 589
-      return pfx + ":" + this.escapePnameLocal(local); // LINE: 590
+    if (pfx != null) { // LINE: 602
+      String local = term.substring(c_i + 1); // LINE: 603
+      return pfx + ":" + this.escapePnameLocal(local); // LINE: 604
     }
-    return this.escapePnameLocal(term); // LINE: 591
+    return this.escapePnameLocal(term); // LINE: 605
   }
 
   public boolean hasKeys(Map<String, Object> obj) {
     return this.hasKeys(obj, 1);
   }
-  public boolean hasKeys(Map<String, Object> obj, Integer atLeast) { // LINE: 593
-    Integer seen = 0; // LINE: 594
-    for (String k : obj.keySet()) { // LINE: 595
-      if (!k.equals(this.aliases.annotation)) { // LINE: 596
+  public boolean hasKeys(Map<String, Object> obj, Integer atLeast) { // LINE: 607
+    Integer seen = 0; // LINE: 608
+    for (String k : obj.keySet()) { // LINE: 609
+      if (!k.equals(this.aliases.annotation)) { // LINE: 610
         seen += 1;
-        if ((seen == null && ((Object) atLeast) == null || seen != null && (seen).equals(atLeast))) { // LINE: 598
-          return true; // LINE: 599
+        if ((seen == null && ((Object) atLeast) == null || seen != null && (seen).equals(atLeast))) { // LINE: 612
+          return true; // LINE: 613
         }
       }
     }
-    return false; // LINE: 600
+    return false; // LINE: 614
   }
 
-  public String cleanValue(String v) { // LINE: 602
-    return v; // LINE: 603
+  public String cleanValue(String v) { // LINE: 616
+    return v; // LINE: 617
   }
 
-  public String escapePnameLocal(String pnlocal) { // LINE: 605
-    return (PNAME_LOCAL_ESC.matcher(pnlocal).replaceAll("\\\\$1")); // LINE: 609
+  public String escapePnameLocal(String pnlocal) { // LINE: 619
+    return (PNAME_LOCAL_ESC.matcher(pnlocal).replaceAll("\\\\$1")); // LINE: 623
   }
 
-  public /*@Nullable*/ String genSkolemId() { // LINE: 611
-    if (this.bnodeSkolemBase == null) { // LINE: 612
-      return null; // LINE: 613
+  public /*@Nullable*/ String genSkolemId() { // LINE: 625
+    if (this.bnodeSkolemBase == null) { // LINE: 626
+      return null; // LINE: 627
     }
-    return this.bnodeSkolemBase + uuid4(); // LINE: 614
+    return this.bnodeSkolemBase + uuid4(); // LINE: 628
   }
 
-  public String getIndent(Integer depth) { // LINE: 616
-    List<String> chunks = new ArrayList<>(); // LINE: 617
-    Integer i = -1; // LINE: 618
-    while (i < depth) { // LINE: 619
+  public String getIndent(Integer depth) { // LINE: 630
+    List<String> chunks = new ArrayList<>(); // LINE: 631
+    Integer i = -1; // LINE: 632
+    while (i < depth) { // LINE: 633
       i += 1;
-      chunks.add(this.settings.indentChars); // LINE: 621
+      chunks.add(this.settings.indentChars); // LINE: 635
     }
-    return String.join("", chunks); // LINE: 622
+    return String.join("", chunks); // LINE: 636
   }
 
-  public void write(String s) { // LINE: 624
-    this.out.write((s != null ? s : "")); // LINE: 625
+  public void write(String s) { // LINE: 638
+    this.out.write((s != null ? s : "")); // LINE: 639
   }
 
   public void writeln() {
     this.writeln(null);
   }
-  public void writeln(/*@Nullable*/ String s) { // LINE: 627
-    this.out.write((s != null ? s : "") + "\n"); // LINE: 628
+  public void writeln(/*@Nullable*/ String s) { // LINE: 641
+    this.out.write((s != null ? s : "") + "\n"); // LINE: 642
   }
 
-  protected /*@Nullable*/ String write(Object s) { // LINE: 631
-    this.write(((String) s)); // LINE: 632
-    return null; // LINE: 633
+  protected /*@Nullable*/ String write(Object s) { // LINE: 645
+    this.write(((String) s)); // LINE: 646
+    return null; // LINE: 647
   }
 }

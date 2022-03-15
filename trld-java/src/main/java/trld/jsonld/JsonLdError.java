@@ -18,7 +18,7 @@ import trld.KeyValue;
 import static trld.jsonld.Base.*;
 
 
-public class JsonLdError extends RuntimeException { // LINE: 97
+public class JsonLdError extends RuntimeException { // LINE: 99
   JsonLdError() { };
   JsonLdError(String msg) { super(msg); };
 }

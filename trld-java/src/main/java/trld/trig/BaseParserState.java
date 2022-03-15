@@ -35,26 +35,26 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class BaseParserState extends ParserState { // LINE: 82
+public class BaseParserState extends ParserState { // LINE: 84
 
-  public BaseParserState(/*@Nullable*/ ParserState parent) { // LINE: 84
-    super(); // LINE: 85
-    this.parent = (parent != null ? parent : new ParserState()); // LINE: 86
-    this.context = (this.parent instanceof BaseParserState ? ((BaseParserState) this.parent).context : new HashMap<>()); // LINE: 87
-    this.init(); // LINE: 88
+  public BaseParserState(/*@Nullable*/ ParserState parent) { // LINE: 86
+    super(); // LINE: 87
+    this.parent = (parent != null ? parent : new ParserState()); // LINE: 88
+    this.context = (this.parent instanceof BaseParserState ? ((BaseParserState) this.parent).context : new HashMap<>()); // LINE: 89
+    this.init(); // LINE: 90
   }
 
-  public void init() { // LINE: 90
+  public void init() { // LINE: 92
   }
 
-  public String symbol(Map<String, String> value) { // LINE: 93
-    if (value.containsKey(SYMBOL)) { // LINE: 94
-      String sym = (String) value.get(SYMBOL); // LINE: 95
-      if (this.context.containsKey(sym)) { // LINE: 96
-        sym = ((String) this.context.get(VOCAB)) + sym; // LINE: 97
+  public String symbol(Map<String, String> value) { // LINE: 95
+    if (value.containsKey(SYMBOL)) { // LINE: 96
+      String sym = (String) value.get(SYMBOL); // LINE: 97
+      if (this.context.containsKey(sym)) { // LINE: 98
+        sym = ((String) this.context.get(VOCAB)) + sym; // LINE: 99
       }
-      return sym; // LINE: 98
+      return sym; // LINE: 100
     }
-    return value.get(ID); // LINE: 99
+    return value.get(ID); // LINE: 101
   }
 }

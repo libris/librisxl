@@ -53,141 +53,142 @@ public class Base {
   public static final Set<String> DIRECTIONS = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) "rtl", "ltr"}))); // LINE: 91
   public static final String JSONLD10 = "json-ld-1.0"; // LINE: 93
   public static final String JSONLD11 = "json-ld-1.1"; // LINE: 94
+  public static final String JSONLD_CONTEXT_RELATION = "http://www.w3.org/ns/json-ld#context"; // LINE: 96
 
-  public static boolean isIri(/*@Nullable*/ String value) { // LINE: 101
-    return (value != null && value.contains(":") && isIriRef(value)); // LINE: 102
+  public static boolean isIri(/*@Nullable*/ String value) { // LINE: 103
+    return (value != null && value.contains(":") && isIriRef(value)); // LINE: 104
   }
 
-  public static boolean isIriRef(/*@Nullable*/ String value) { // LINE: 105
-    /* ... */; // LINE: 106
-    return (value != null && !value.contains(" ") && !(isBlank(value))); // LINE: 107
+  public static boolean isIriRef(/*@Nullable*/ String value) { // LINE: 107
+    /* ... */; // LINE: 108
+    return (value != null && !value.contains(" ") && !(isBlank(value))); // LINE: 109
   }
 
-  public static boolean isBlank(String value) { // LINE: 110
-    /* ... */; // LINE: 111
-    return value.startsWith("_:"); // LINE: 112
+  public static boolean isBlank(String value) { // LINE: 112
+    /* ... */; // LINE: 113
+    return value.startsWith("_:"); // LINE: 114
   }
 
-  public static boolean hasKeywordForm(String s) { // LINE: 115
-    return (s.startsWith("@") && s.substring(1).matches("^\\w+$")); // LINE: 116
+  public static boolean hasKeywordForm(String s) { // LINE: 117
+    return (s.startsWith("@") && s.substring(1).matches("^\\w+$")); // LINE: 118
   }
 
-  public static boolean isLangTag(/*@Nullable*/ String value) { // LINE: 119
-    /* ... */; // LINE: 120
-    return (value != null && value.substring(0, 0 + 1).matches("^\\w+$") && !value.contains(" ")); // LINE: 121
+  public static boolean isLangTag(/*@Nullable*/ String value) { // LINE: 121
+    /* ... */; // LINE: 122
+    return (value != null && value.substring(0, 0 + 1).matches("^\\w+$") && !value.contains(" ")); // LINE: 123
   }
 
-  public static boolean isScalar(Object o) { // LINE: 125
-    return o instanceof String || o instanceof Integer || o instanceof Double || o instanceof Boolean; // LINE: 126
+  public static boolean isScalar(Object o) { // LINE: 127
+    return o instanceof String || o instanceof Integer || o instanceof Double || o instanceof Boolean; // LINE: 128
   }
 
-  public static boolean isGraphObject(Map<String, Object> o) { // LINE: 129
-    if (o.containsKey(GRAPH)) { // LINE: 130
-      if (o.containsKey(ID)) { // LINE: 131
-        if (o.containsKey(INDEX)) { // LINE: 132
-          return o.size() == 3; // LINE: 133
+  public static boolean isGraphObject(Map<String, Object> o) { // LINE: 131
+    if (o.containsKey(GRAPH)) { // LINE: 132
+      if (o.containsKey(ID)) { // LINE: 133
+        if (o.containsKey(INDEX)) { // LINE: 134
+          return o.size() == 3; // LINE: 135
         }
-        return o.size() == 2; // LINE: 134
-      }
-      if (o.containsKey(INDEX)) { // LINE: 135
         return o.size() == 2; // LINE: 136
       }
-      return o.size() == 1; // LINE: 137
+      if (o.containsKey(INDEX)) { // LINE: 137
+        return o.size() == 2; // LINE: 138
+      }
+      return o.size() == 1; // LINE: 139
     }
-    return false; // LINE: 138
+    return false; // LINE: 140
   }
 
-  public static boolean isSimpleGraphObject(Map<String, Object> o) { // LINE: 141
-    if (o.containsKey(GRAPH)) { // LINE: 142
-      return (o.containsKey(INDEX) ? o.size() == 2 : o.size() == 1); // LINE: 143
+  public static boolean isSimpleGraphObject(Map<String, Object> o) { // LINE: 143
+    if (o.containsKey(GRAPH)) { // LINE: 144
+      return (o.containsKey(INDEX) ? o.size() == 2 : o.size() == 1); // LINE: 145
     }
-    return false; // LINE: 144
+    return false; // LINE: 146
   }
 
-  public static void addValueAsList(Map map, String key, Object value) { // LINE: 147
-    addValue(map, key, value, true); // LINE: 148
+  public static void addValueAsList(Map map, String key, Object value) { // LINE: 149
+    addValue(map, key, value, true); // LINE: 150
   }
 
   public static void addValue(Map map, String key, Object value) {
     addValue(map, key, value, false);
   }
-  public static void addValue(Map map, String key, Object value, Boolean aslist) { // LINE: 151
-    Object existing = (Object) map.get(key); // LINE: 153
-    if ((aslist && !map.containsKey(key))) { // LINE: 154
-      map.put(key, asList(value)); // LINE: 155
-    } else if (!map.containsKey(key)) { // LINE: 160
-      map.put(key, value); // LINE: 161
+  public static void addValue(Map map, String key, Object value, Boolean aslist) { // LINE: 153
+    Object existing = (Object) map.get(key); // LINE: 155
+    if ((aslist && !map.containsKey(key))) { // LINE: 156
+      map.put(key, asList(value)); // LINE: 157
+    } else if (!map.containsKey(key)) { // LINE: 162
+      map.put(key, value); // LINE: 163
     } else {
-      if (!(existing instanceof List)) { // LINE: 163
-        map.put(key, new ArrayList<>(Arrays.asList(new Object[] {(Object) existing}))); // LINE: 164
+      if (!(existing instanceof List)) { // LINE: 165
+        map.put(key, new ArrayList<>(Arrays.asList(new Object[] {(Object) existing}))); // LINE: 166
       }
-      if (value instanceof List) { // LINE: 165
+      if (value instanceof List) { // LINE: 167
         ((List) map.get(key)).addAll((List) value);
       } else {
         assert map instanceof Map;
-        Object values = (Object) ((Map) map).get(key); // LINE: 169
+        Object values = (Object) ((Map) map).get(key); // LINE: 171
         assert values instanceof List;
         assert value instanceof Object;
-        ((List) values).add((Object) value); // LINE: 172
+        ((List) values).add((Object) value); // LINE: 174
       }
     }
   }
 
-  public static List asList(Object obj) { // LINE: 175
-    return (obj instanceof List ? (List) obj : new ArrayList<>(Arrays.asList(new Object[] {(Object) obj}))); // LINE: 176
+  public static List asList(Object obj) { // LINE: 177
+    return (obj instanceof List ? (List) obj : new ArrayList<>(Arrays.asList(new Object[] {(Object) obj}))); // LINE: 178
   }
 
-  public static String relativiseIri(String base, String iri) { // LINE: 179
-    if (iri.startsWith(base + "#")) { // LINE: 180
-      return iri.substring(base.length()); // LINE: 181
-    }
-    if ((iri.contains("?") && iri.startsWith(base))) { // LINE: 182
+  public static String relativiseIri(String base, String iri) { // LINE: 181
+    if (iri.startsWith(base + "#")) { // LINE: 182
       return iri.substring(base.length()); // LINE: 183
     }
-    if (!(base.endsWith("/"))) { // LINE: 184
-      Integer last = (Integer) base.lastIndexOf("/"); // LINE: 185
-      base = base.substring(0, last + 1); // LINE: 186
+    if ((iri.contains("?") && iri.startsWith(base))) { // LINE: 184
+      return iri.substring(base.length()); // LINE: 185
     }
-    if (iri.startsWith(base)) { // LINE: 187
-      return iri.substring(base.length()); // LINE: 188
+    if (!(base.endsWith("/"))) { // LINE: 186
+      Integer last = (Integer) base.lastIndexOf("/"); // LINE: 187
+      base = base.substring(0, last + 1); // LINE: 188
     }
-    String parentbase = base.substring(0, base.lastIndexOf("/")); // LINE: 190
-    String leaf = iri.substring(iri.lastIndexOf("/") + 1); // LINE: 191
-    List<String> relativeto = new ArrayList<>(); // LINE: 192
-    while ((parentbase.contains("/") && !(parentbase.endsWith(":/")))) { // LINE: 193
-      if (iri.startsWith(parentbase)) { // LINE: 194
-        relativeto.add(leaf); // LINE: 195
-        return String.join("/", relativeto); // LINE: 196
+    if (iri.startsWith(base)) { // LINE: 189
+      return iri.substring(base.length()); // LINE: 190
+    }
+    String parentbase = base.substring(0, base.lastIndexOf("/")); // LINE: 192
+    String leaf = iri.substring(iri.lastIndexOf("/") + 1); // LINE: 193
+    List<String> relativeto = new ArrayList<>(); // LINE: 194
+    while ((parentbase.contains("/") && !(parentbase.endsWith(":/")))) { // LINE: 195
+      if (iri.startsWith(parentbase)) { // LINE: 196
+        relativeto.add(leaf); // LINE: 197
+        return String.join("/", relativeto); // LINE: 198
       }
-      relativeto.add(".."); // LINE: 197
-      parentbase = parentbase.substring(0, parentbase.lastIndexOf("/")); // LINE: 198
+      relativeto.add(".."); // LINE: 199
+      parentbase = parentbase.substring(0, parentbase.lastIndexOf("/")); // LINE: 200
     }
-    return iri; // LINE: 200
+    return iri; // LINE: 202
   }
 
-  public static boolean nodeEquals(Object a, Object b) { // LINE: 203
-    if (isScalar(a)) { // LINE: 204
-      return ((a.getClass() == null && ((Object) b.getClass()) == null || a.getClass() != null && (a.getClass()).equals(b.getClass())) && (a == null && ((Object) b) == null || a != null && (a).equals(b))); // LINE: 205
+  public static boolean nodeEquals(Object a, Object b) { // LINE: 205
+    if (isScalar(a)) { // LINE: 206
+      return ((a.getClass() == null && ((Object) b.getClass()) == null || a.getClass() != null && (a.getClass()).equals(b.getClass())) && (a == null && ((Object) b) == null || a != null && (a).equals(b))); // LINE: 207
     }
-    if (a instanceof List) { // LINE: 206
-      if (!(b instanceof List)) { // LINE: 207
-        return false; // LINE: 208
+    if (a instanceof List) { // LINE: 208
+      if (!(b instanceof List)) { // LINE: 209
+        return false; // LINE: 210
       }
-      Integer i = 0; // LINE: 211
-      for (Object ai : (List) a) { // LINE: 212
-        if (!(nodeEquals(ai, ((List) b).get(i)))) { // LINE: 213
-          return false; // LINE: 214
+      Integer i = 0; // LINE: 213
+      for (Object ai : (List) a) { // LINE: 214
+        if (!(nodeEquals(ai, ((List) b).get(i)))) { // LINE: 215
+          return false; // LINE: 216
         }
         i += 1;
       }
-      return true; // LINE: 216
-    } else if (a instanceof Map) { // LINE: 217
-      if (!(b instanceof Map)) { // LINE: 218
-        return false; // LINE: 219
+      return true; // LINE: 218
+    } else if (a instanceof Map) { // LINE: 219
+      if (!(b instanceof Map)) { // LINE: 220
+        return false; // LINE: 221
       }
-      return ((Map) a).keySet().stream().allMatch(k -> (((Map) b).containsKey(k) && nodeEquals(((Map) a).get(k), ((Map) b).get(k)))); // LINE: 220
+      return ((Map) a).keySet().stream().allMatch(k -> (((Map) b).containsKey(k) && nodeEquals(((Map) a).get(k), ((Map) b).get(k)))); // LINE: 222
     } else {
-      return false; // LINE: 222
+      return false; // LINE: 224
     }
   }
 }

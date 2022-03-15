@@ -104,7 +104,7 @@ public class TestCase { // LINE: 18
   }
 
   public Object runToRdfTest() { // LINE: 103
-    Output out = new Output(true); // LINE: 104
+    Output out = new Output(); // LINE: 104
     Object inData = (Object) ((Object) loadJson(this.indocPath)); // LINE: 105
     inData = expand(inData, this.baseUri, this.expandContext, true); // LINE: 106
     /*@Nullable*/ String rdfDirection = ((/*@Nullable*/ String) this.options.get("rdfDirection")); // LINE: 109

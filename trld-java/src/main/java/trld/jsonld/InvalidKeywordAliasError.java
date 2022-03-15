@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidKeywordAliasError extends JsonLdError { // LINE: 59
+public class InvalidKeywordAliasError extends JsonLdError { // LINE: 57
   InvalidKeywordAliasError() { };
   InvalidKeywordAliasError(String msg) { super(msg); };
 }

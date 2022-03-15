@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidContainerMappingError extends JsonLdError { // LINE: 61
+public class InvalidContainerMappingError extends JsonLdError { // LINE: 59
   InvalidContainerMappingError() { };
   InvalidContainerMappingError(String msg) { super(msg); };
 }

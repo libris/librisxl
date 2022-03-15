@@ -4,6 +4,7 @@ import java.util.*;
 
 import trld.Builtins;
 import trld.Common;
+import trld.Input;
 
 import static trld.jsonld.Base.CONTEXT;
 import static trld.jsonld.Base.JSONLD10;
@@ -16,7 +17,7 @@ public class TestRunner {
     static void runManifest(String manifestFile) {
         report("Running test suite: " + manifestFile);
 
-        Common.setSourceLocator(url -> url.replace(TESTS_URL, testsuiteDir));
+        Common.setDocumentLoader(url -> new Input(url.replace(TESTS_URL, testsuiteDir)));
         Map manifest = (Map) Common.loadJson(testsuiteDir + "/" + manifestFile);
 
         int runs = 0;

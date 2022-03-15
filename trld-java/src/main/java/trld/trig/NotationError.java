@@ -35,7 +35,7 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class NotationError extends RuntimeException { // LINE: 52
+public class NotationError extends RuntimeException { // LINE: 54
   NotationError() { };
   NotationError(String msg) { super(msg); };
 }
