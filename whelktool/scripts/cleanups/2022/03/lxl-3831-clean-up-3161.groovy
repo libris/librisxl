@@ -55,7 +55,7 @@ void process(String id) {
         if (count % 100 == 0) { 
             println(count) 
         }
-        
+                
         if (!ok) {
             def msg = "$id\t${diffLink(id, m.beforeVersion, m.afterVersion)}"
             notOkReport.println(msg)
@@ -90,17 +90,18 @@ Map getThing(Map doc) {
 
 Map getBeforeAfter3161(String id) {
     def SCRIPT_3161 = "https://libris.kb.se/sys/globalchanges/2020/05/lxl-3161-move-linkfield-to-instance/script.groovy"
-    def version=-1
+    def version= 1
     while(true) { // getDoc throws if version not found
-        def doc = getDoc(id, version--)
+        def doc = getDoc(id, version)
         if (getAtPath(doc, ['@graph',0, 'generationProcess', '@id']) == SCRIPT_3161) {
             return [
-                    beforeVersion: version,
-                    afterVersion: version + 1,
+                    beforeVersion: version - 1,
+                    afterVersion: version,
                     before: getDoc(id, version),
                     after: doc,
             ]
         }
+        version++
     }
 }
 
