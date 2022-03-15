@@ -64,11 +64,15 @@ void process(String id) {
             
             Map brokenThing = getThing(m.after)
             def affectedProps = brokenThing.keySet().intersect(ScriptGlobal.LINK_FIELDS_WORK)
+            
+            Map correctThing = getThing(correct) 
+            def badProps = affectedProps.findAll{ brokenThing[it] != correctThing[it] }
+            
             Map currentThing = getThing(getDoc(id))
             
-            def fixable = brokenThing.subMap(affectedProps) == currentThing.subMap(affectedProps)
+            def fixable = brokenThing.subMap(badProps) == currentThing.subMap(badProps)
             if (fixable) {
-                overWriteThingProps(id, getThing(correct).subMap(affectedProps))
+                overWriteThingProps(id, correctThing.subMap(badProps))
             }
             else {
                 notFixableReport.println("$id\t${diffLink(id, m.afterVersion, -1)}")
