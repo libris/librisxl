@@ -22,6 +22,7 @@ import static whelk.util.Jackson.mapper
 @Log
 class ElasticSearch {
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
+    static final String SEARCH_TYPE = "dfs_query_then_fetch"
 
     static final Set<String> LANGUAGES_TO_INDEX = ['sv', 'en'] as Set
     static final List<String> REMOVABLE_BASE_URIS = [
@@ -422,7 +423,7 @@ class ElasticSearch {
     Map queryIds(Map jsonDsl) {
         return performQuery(
                 jsonDsl,
-                getQueryUrl() + '?filter_path=took,hits.total,hits.hits._id',
+                getQueryUrl(['took','hits.total','hits.hits._id']),
                 { it."_id" }
         )
     }
@@ -493,8 +494,12 @@ class ElasticSearch {
         }
     }
 
-    private String getQueryUrl() {
-        return "/${indexName}/_search"
+    private String getQueryUrl(filterPath = []) {
+        def url = "/${indexName}/_search?search_type=$SEARCH_TYPE"
+        if (filterPath) {
+            url += "&filter_path=${filterPath.join(',')}"
+        }
+        return url.toString()
     }
 
     static String toElasticId(String id) {
@@ -600,7 +605,7 @@ class ElasticSearch {
 
         @Override
         String queryPath() {
-            "/${indexName}/_search?filter_path=$filterPath"
+            "/${indexName}/_search?search_type=$SEARCH_TYPE&filter_path=$filterPath"
         }
 
         @Override
@@ -657,7 +662,7 @@ class ElasticSearch {
 
         @Override
         String queryPath() {
-            "/_search?filter_path=$filterPath"
+            "/_search?search_type=$SEARCH_TYPE&filter_path=$filterPath"
         }
 
         @Override
