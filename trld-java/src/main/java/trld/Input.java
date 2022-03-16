@@ -6,28 +6,20 @@ import java.io.*;
 public class Input implements Closeable {
 
     private BufferedReader reader;
-    private boolean useStdin = false;
+    private InputStream ins;
 
     public Input() {
+        this(System.in);
     }
 
     public Input(String path) {
-        try {
-            path = Common.removeFileProtocol(path);
-            reader = new BufferedReader(new InputStreamReader(
-                        new FileInputStream(path), "utf-8"));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        this(sneakyFileInputStream(path));
     }
 
-    public Input(boolean useStdin) {
-        this.useStdin = useStdin;
-        if (!useStdin) {
-            return;
-        }
+    public Input(InputStream ins) {
+        this.ins = ins;
         try {
-            reader = new BufferedReader(new InputStreamReader(System.in, "utf-8"));
+            reader = new BufferedReader(new InputStreamReader(ins, "utf-8"));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -86,11 +78,20 @@ public class Input implements Closeable {
     }
 
     public void close() {
-        if (useStdin) {
+        if (ins == System.in) {
             return;
         }
         try {
             reader.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    static FileInputStream sneakyFileInputStream(String path) {
+        try {
+            path = Common.removeFileProtocol(path);
+            return new FileInputStream(path);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
