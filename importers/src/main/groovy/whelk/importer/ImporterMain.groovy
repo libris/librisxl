@@ -1,19 +1,18 @@
 package whelk.importer
 
-import whelk.reindexer.CardRefresher
-
 import java.lang.annotation.*
 import java.util.concurrent.ExecutorService
 import java.util.zip.GZIPOutputStream
+import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.io.output.CountingOutputStream
 import org.apache.commons.io.FilenameUtils
 
-import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
-import whelk.converter.JsonLdToTurtle
+import whelk.converter.JsonLdToTrigSerializer
 import whelk.filter.LinkFinder
+import whelk.reindexer.CardRefresher
 import whelk.reindexer.ElasticReindexer
 import whelk.util.PropertyLoader
 import whelk.util.Tools
@@ -115,11 +114,6 @@ class ImporterMain {
     void lddbToTrig(String file, String chunkSizeInMB = null, String gzip = null, String collection = null) {
         def whelk = Whelk.createLoadedCoreWhelk(props)
 
-        def ctx = JsonLdToTurtle.parseContext([
-                '@context': whelk.jsonld.context
-        ])
-        def opts = [useGraphKeyword: false, markEmptyBnode: true]
-
         boolean writingToFile = file && file != '-'
         boolean shouldGzip = writingToFile && gzip && gzip == '--gzip'
 
@@ -148,7 +142,9 @@ class ImporterMain {
         }
 
         CountingOutputStream cos = new CountingOutputStream(outputStream)
-        def serializer = new JsonLdToTurtle(ctx, cos, opts)
+        def ctx = whelk.jsonld.context
+        def serializer = new JsonLdToTrigSerializer(ctx, cos)
+
         serializer.prelude()
         int i = 0
         for (Document doc : whelk.storage.loadAll(collection)) {
@@ -164,7 +160,7 @@ class ImporterMain {
             ++i
             filterProblematicData(id, doc.data)
             try {
-                serializer.objectToTrig(id, doc.data)
+                serializer.writeGraph(id, doc.data['@graph'])
             } catch (Throwable e) {
                 // Part of the record may still have been written to the stream, which is now corrupt.
                 System.err.println("${doc.getShortId()} conversion failed with ${e.toString()}")

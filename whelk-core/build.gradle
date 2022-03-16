@@ -181,13 +181,6 @@ task vocabFromMarcFrame(dependsOn: 'classes', type: JavaExec) {
     mainClass = 'whelk.converter.marc.MarcFrameVocabExtractor'
 }
 
-task jsonldToTurtle(dependsOn: 'classes', type: JavaExec) {
-    description "Convert a JSON-LD file to Turtle (USAGE: -Dargs='<context> <source>')"
-    classpath = sourceSets.main.runtimeClasspath
-    mainClass = 'whelk.converter.JsonLdToTurtle'
-    args(System.getProperty('args', "").split() as String[])
-}
-
 task dataview(dependsOn: 'classes', type: JavaExec) {
     description "View JSON-LD data (USAGE: -Dargs='<card|chip|embellish|index> <source>')"
     classpath = sourceSets.main.runtimeClasspath

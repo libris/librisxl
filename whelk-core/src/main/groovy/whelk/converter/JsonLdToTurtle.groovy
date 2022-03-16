@@ -8,6 +8,10 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeJava
 import static whelk.util.Jackson.mapper
 
 @Log
+@Deprecated
+/**
+ * @deprecated In favour of JsonLdToTrigSerializer
+ */
 class JsonLdToTurtle {
 
     def INDENT = "  "
