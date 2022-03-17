@@ -1,6 +1,6 @@
 /* 
 Clean up newspaper (dagstidningar + tidskrifter) shapes.
-Link digitized newspaper monographs (issues) to their series. That is, replace supplementTo and/or isPartOf with hasSeries.
+Link digitized newspaper monographs (issues) to their series. That is, replace supplementTo and/or isPartOf with isIssueOf.
 
 Don't touch "Projects" and "Channel records" in supplementTo for now.
 
@@ -45,7 +45,7 @@ bf2:title [
     bf2:mainTitle "DAGENS NYHETER  1900-05-28"
     ] ;
 ...
-bf2:hasSeries <https://libris.kb.se/m5z2w4lz3m2zxpk#it> ;
+kbv:isIssueOf <https://libris.kb.se/m5z2w4lz3m2zxpk#it> ;
 ...
 
 
@@ -76,6 +76,10 @@ There were no supplementTo with multiple controlnumbers (refering to newspaper s
 */
 import groovy.transform.Memoized
 
+noMarcGf = getReportWriter("no-marc-gf.txt")
+otherMarcGf = getReportWriter("other-marc-gf.txt")
+notMimer = getReportWriter("not-mimer.txt")
+
 def where = """
     collection = 'bib'
     AND deleted = 'false'
@@ -90,19 +94,36 @@ selectBySqlWhere(where) { bib ->
         return
     }
 
-    def hasSeries = asList(thing.hasSeries) as Set
+    if (!isMimerRecord(thing.'@id')) {
+        notMimer.println(thing.'@id')
+        return
+    }
+    
+    if(marcGf(thing).with { it && it.any {l -> l != 'issue'}}) {
+        otherMarcGf.println("${thing.'@id'}\t${marcGf(thing)}")
+        return
+    }
+    
+    def isIssueOf = asList(thing.isIssueOf) as Set
     
     def i = ((List) thing.supplementTo).iterator()
     while (i.hasNext()) {
         Map supplementTo = (Map) i.next()
         def serials = tidningSerialThings(supplementTo)
-        serials = verifyTitle(serials, supplementTo)
+        serials = verifyTitle(thing, serials, supplementTo)
         if (serials) {
             incrementStats('supplementTo', supplementTo)
             incrementStats('supplementTo shape', supplementTo.keySet())
             
             i.remove()
-            hasSeries.addAll(serials.collect{['@id': it.'@id']})
+            isIssueOf.addAll(serials.collect{['@id': it.'@id']})
+            serials.each {
+                incrementStats('supplementTo linked', "${serialTitle(it.'@id')} - ${issueTitlesNoDate(thing).join(' · ')}")
+            }
+            incrementStats('isMarcGfIssue', isMarcGfIssue(thing))
+            if (!isMarcGfIssue(thing)) {
+                noMarcGf.println("${bib.doc.shortId}\t${issueTitlesNoDate(thing)}")
+            }
             bib.scheduleSave()
         }
     }
@@ -111,19 +132,27 @@ selectBySqlWhere(where) { bib ->
     while (i.hasNext()) {
         Map isPartOf = (Map) i.next()
         def serials = tidningSerialThings(isPartOf)
+        serials = verifyTitle(thing, serials, isPartOf)
         if (serials) {
             incrementStats('isPartOf', isPartOf)
             incrementStats('isPartOf shape', isPartOf.keySet())
 
             i.remove()
-            hasSeries.addAll(serials.collect{['@id': it.'@id']})
+            isIssueOf.addAll(serials.collect{['@id': it.'@id']})
+            serials.each {
+                incrementStats('isPartOf linked', "${serialTitle(it.'@id')} - ${issueTitlesNoDate(thing).join(' · ')}")
+            }
+            incrementStats('isMarcGfIssue', isMarcGfIssue(thing))
+            if (!isMarcGfIssue(thing)) {
+                noMarcGf.println("${bib.doc.shortId}\t${issueTitlesNoDate(thing)}")
+            }
             bib.scheduleSave()
         }
     }
     
     
-    if (hasSeries) {
-        thing.hasSeries = hasSeries as List
+    if (isIssueOf) {
+        thing.isIssueOf = isIssueOf as List
         if (!thing.supplementTo) {
             thing.remove('supplementTo')
         }
@@ -152,8 +181,15 @@ List tidningSerialThings(String controlNumber) {
 }
 
 static boolean isTidningSerial(Map thing) {
+    def tidningGf = [
+            'https://id.kb.se/term/saogf/Dagstidningar',
+            'https://id.kb.se/term/saogf/Periodika',
+            'https://id.kb.se/marc/Newspaper',
+            'https://id.kb.se/marc/Periodical'
+    ]
+    
     thing.issuanceType == 'Serial' && getAtPath(thing, ['instanceOf', 'genreForm', '*', '@id'], [])
-            .any { it == 'https://id.kb.se/term/saogf/Dagstidningar' || it == 'https://id.kb.se/term/saogf/Periodika' }
+            .any { String gf -> gf in tidningGf }
 }
 
 static def controlNumberToId(String controlNumber) {
@@ -163,9 +199,19 @@ static def controlNumberToId(String controlNumber) {
         : 'http://libris.kb.se/resource/bib/' + controlNumber
 }
 
-static List verifyTitle(List<Map> serials, Map reference) {
-    def titles = { Map thing ->
-        getAtPath(thing, ['hasTitle', '*', 'mainTitle'], []).collect { String title -> title.toLowerCase() }
+static boolean isMarcGfIssue(Map thing) {
+    getAtPath(thing, ['instanceOf', 'genreForm', '*', 'prefLabel'], []).any{ it == 'issue'}
+}
+
+static List<String> marcGf(Map thing) {
+    getAtPath(thing, ['instanceOf', 'genreForm', '*'], []).findAll {
+        getAtPath(it, ['inScheme', '@id']) == 'https://id.kb.se/term/marcgt'
+    }.collect{ it.prefLabel }
+}
+
+List verifyTitle(Map thing, List<Map> serials, Map reference) {
+    def titles = { Map t ->
+        getAtPath(t, ['hasTitle', '*', 'mainTitle'], []).collect { String title -> title.toLowerCase() }
     }
     
     def referenceTitles = titles(reference)
@@ -173,16 +219,52 @@ static List verifyTitle(List<Map> serials, Map reference) {
     if (!referenceTitles) {
         return serials
     }
-    
+
+    // A lot of records have the "issue title" here 
+    // e.g. MARIESTADSTIDNINGEN 2022-01-21 supplementTo.hasTitle.mainTitle MARIESTADSTIDNINGEN
+    def issueTitles = issueTitlesNoDate(thing).collect { String title -> title.toLowerCase() }
     return serials.findAll {
-        if (titles(it).intersect(referenceTitles)) {
+        def serialTitles = titles(it) + issueTitles
+        if (serialTitles.intersect(referenceTitles)) {
             return true
         }
         else {
-            incrementStats('bad title', reference)
+            incrementStats('bad title', "$referenceTitles -> $serialTitles")
             return false
         }
     }
+}
+
+@Memoized
+String serialTitle(String id) {
+    def thing = loadThing(id)
+    def title = getAtPath(thing, ['hasTitle', '*', 'mainTitle'], []).join(' · ')
+    def shortId = id.split('/').last().split('#').first()
+    return "$title ($shortId)"
+}
+
+List<String> issueTitlesNoDate(Map thing) {
+    getAtPath(thing, ['hasTitle', '*', 'mainTitle']).collect(this::stripDate)
+}
+
+def stripDate(String title) {
+    def PATTERN = /^(.*)\s+(\d\d\d\d-\d\d\-\d\d|\(\d\d\d\d\):\d+)$/
+
+    def stripped = (title =~ PATTERN).with { matches() ? it[0][1] : title }
+    return stripped
+}
+
+boolean isMimerRecord(String id) {
+    def where = """
+        data #>> '{@graph,1,itemOf,@id}' = '$id' 
+        AND data #>> '{@graph,1,heldBy,@id}' = 'https://libris.kb.se/library/APIS'
+    """
+    
+    boolean result = false
+    selectBySqlWhere(where) {
+        result = true
+    }
+    return result
 }
 
 // --------------------------------------------------------------------------------------
