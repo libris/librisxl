@@ -303,13 +303,9 @@ class Crud extends HttpServlet {
             sendError(response, HttpServletResponse.SC_GONE, "Document has been deleted.")
         } else if (request.getView() == CrudGetRequest.View.CHANGE_SETS) {
             History history = new History(whelk.storage.loadDocumentHistory(doc.getShortId()), jsonld)
-            sendGetResponse(
-                    response,
-                    history.m_changeSetsMap,
-                    ETag.plain(doc.getChecksum(jsonld)),
-                    request.getPath(),
-                    request.getContentType(),
-                    request.getId())
+            ETag eTag = ETag.plain(doc.getChecksum(jsonld))
+            def body = history.m_changeSetsMap
+            sendGetResponse(response, body, eTag, request.getPath(), request.getContentType(), request.getId())
         } else {
             ETag eTag
             if (request.shouldEmbellish()) {
@@ -330,14 +326,15 @@ class Crud extends HttpServlet {
                 sendNotModified(response, eTag)
                 return
             }
-
-            sendGetResponse(
-                    response,
-                    getFormattedResponseBody(request, response, doc, loc ?: doc.id),
-                    eTag,
-                    request.getPath(),
-                    request.getContentType(),
-                    request.getId())
+            
+            String profileId = request.getProfile().orElse(whelk.defaultTvmProfile)
+            def body = getFormattedResponseBody(request, doc, profileId)
+            addProfileHeaders(response, profileId)
+            
+            String location = loc ?: doc.id
+            addProposal25Headers(response, location, getDataURI(location, request))
+            
+            sendGetResponse(response, body, eTag, request.getPath(), request.getContentType(), request.getId())
         }
     }
 
@@ -354,50 +351,36 @@ class Crud extends HttpServlet {
         sendError(response, HttpServletResponse.SC_NOT_FOUND, "Document not found.")
     }
 
-    private Object getFormattedResponseBody(CrudGetRequest request,
-                                            HttpServletResponse response,
-                                            Document doc,
-                                            String location) {
+    private Object getFormattedResponseBody(CrudGetRequest request, Document doc, String profileId) {
         log.debug("Formatting document {}. embellished: {}, framed: {}, lens: {}, view: {}, profile: {}",
                 doc.getCompleteId(),
                 request.shouldEmbellish(),
                 request.shouldFrame(),
                 request.getLens(),
                 request.getView(),
-                request.getProfile())
+                profileId)
+        
         Map data
         if (request.getLens() != Lens.NONE) {
             data = applyLens(frameThing(doc), request.getLens())
         } else {
             data = request.shouldFrame()  ? frameRecord(doc) : doc.data
         }
-
-        String profileId = request.getProfile() ?: whelk.defaultTvmProfile
+        
         def contextData = whelk.jsonld.context
-        if (profileId != null && profileId != whelk.defaultTvmProfile) {
-            data = applyDataProfile(profileId, data, response)
+        if (profileId != whelk.defaultTvmProfile) {
+            data = applyDataProfile(profileId, data)
             contextData = data[JsonLd.CONTEXT_KEY]
             data[JsonLd.CONTEXT_KEY] = profileId
         }
-
-        // TODO: Spec in flux; see status at:
-        // <https://www.w3.org/TR/dx-prof-conneg/>
-        // and:
-        // <https://profilenegotiation.github.io/I-D-Profile-Negotiation/I-D-Profile-Negotiation.html>
-        response.setHeader("Content-Profile", "<$profileId>")
-        response.setHeader("Link", "<$profileId>; rel=\"profile\"")
-
+        
         def dataBody = data
         if (!(request.getContentType() in [MimeTypes.JSON, MimeTypes.JSONLD])) {
             def id = request.getContentType() == MimeTypes.TRIG ? doc.getCompleteId() : doc.getShortId()
             data[JsonLd.CONTEXT_KEY] = contextData
             dataBody = converterUtils.convert(data, id, request.getContentType())
         }
-
-        if (location != null) {
-            addProposal25Headers(response, location, getDataURI(location, request))
-        }
-
+        
         return dataBody
     }
 
@@ -527,9 +510,20 @@ class Crud extends HttpServlet {
         response.addHeader('Link', "<${location}>; rel=describedby")
     }
 
+    /**
+     * TODO: Spec in flux; see status at:
+     * <https://www.w3.org/TR/dx-prof-conneg/>
+     * and:
+     * <https://profilenegotiation.github.io/I-D-Profile-Negotiation/I-D-Profile-Negotiation.html>
+     */
+    private static void addProfileHeaders(HttpServletResponse response, String profileId) {
+        response.setHeader("Content-Profile", "<$profileId>")
+        response.setHeader("Link", "<$profileId>; rel=\"profile\"")
+    }
+
     private static String getDataURI(String location, CrudGetRequest request) {
         String lens = request.lens == Lens.NONE ? null : request.lens.toString().toLowerCase()
-        return getDataURI(location, request.contentType, lens, request.profile)
+        return getDataURI(location, request.contentType, lens, request.profile.orElse(null))
     }
 
     private static String getDataURI(String location,
@@ -561,13 +555,11 @@ class Crud extends HttpServlet {
         return loc.toString()
     }
 
-    Map applyDataProfile(String profileId, Map data, HttpServletResponse response) {
+    Map applyDataProfile(String profileId, Map data) {
         Tuple2<Document, String> docAndLoc = getDocumentFromStorage(profileId)
-        Document profileDoc = docAndLoc.first
-        String profileLocation = docAndLoc.second
+        Document profileDoc = docAndLoc.v1
         if (profileDoc == null) {
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Profile <${profileId}> is not available")
-            return
+            throw new BadRequestException("Profile <${profileId}> is not available")
         }
         log.debug("Using profile: $profileId")
         def contextDoc = profileDoc.data
