@@ -39,10 +39,12 @@ notOkReport = getReportWriter("not-ok.tsv")
 notFixableReport = getReportWriter("not-fixable.tsv")
 errorReport = getReportWriter("errors.tsv")
 
+whelk = getWhelk()
+
 def ids = new URL("http://xlbuild.libris.kb.se/3161-modified.txt").getText().readLines()
 
-// ids.parallelStream().forEach(this::process)
-ids.stream().forEach(this::process)
+ids.parallelStream().forEach(this::process)
+//ids.stream().forEach(this::process)
 
 void process(String id) {
     try {
@@ -95,13 +97,13 @@ Map getThing(Map doc) {
 Map getBeforeAfter3161(String id) {
     def SCRIPT_3161 = "https://libris.kb.se/sys/globalchanges/2020/05/lxl-3161-move-linkfield-to-instance/script.groovy"
     def version= 1
-    while(true) { // getDoc throws if version not found
+    while(true) {
         def doc = getDoc(id, version)
         if (getAtPath(doc, ['@graph',0, 'generationProcess', '@id']) == SCRIPT_3161) {
             return [
                     beforeVersion: version - 1,
                     afterVersion: version,
-                    before: getDoc(id, version),
+                    before: getDoc(id, version - 1),
                     after: doc,
             ]
         }
@@ -109,11 +111,15 @@ Map getBeforeAfter3161(String id) {
     }
 }
 
-static Map getDoc(String id, int version = -1) {
-    def json = new URL("https://libris.kb.se/$id?embellished=false&version=$version")
-            .getText(requestProperties: ['Accept': 'application/ld+json'])
-    
-    return new groovy.json.JsonSlurper().parseText(json)
+Map getDoc(String id, int version = -1) {
+    def doc = whelk.storage.load(id, "$version")
+    if (doc == null) {
+        throw new RuntimeException("Not found. id: $id, version: $version")
+    }
+    if (doc.deleted) {
+        throw new RuntimeException("Deleted id: $id, version: $version")
+    }
+    return doc.data
 }
 
 private void overWriteThingProps(String id, Map properties) {
@@ -122,6 +128,17 @@ private void overWriteThingProps(String id, Map properties) {
         thing.putAll(properties)
         bib.scheduleSave()
     }
+}
+
+def getWhelk() {
+    def whelk = null
+    selectByIds(['https://id.kb.se/marc']) { docItem ->
+        whelk = docItem.whelk
+    }
+    if (!whelk) {
+        throw new RuntimeException("Could not get Whelk")
+    }
+    return whelk
 }
 
 // ---------------------------------------------------------------------------------------------------
