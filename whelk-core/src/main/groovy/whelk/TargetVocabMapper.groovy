@@ -34,7 +34,9 @@ class TargetVocabMapper {
         def dataIri = null
         def indata = data
         def dropUnmapped = true
-        data[JsonLd.CONTEXT_KEY] = dataContext
+        if (!data.containsKey(JsonLd.CONTEXT_KEY)) {
+            data[JsonLd.CONTEXT_KEY] = dataContext
+        }
         indata = Expansion.expand(indata, dataIri)
         Object outdata = Mapper.mapTo(targetMap, indata, dropUnmapped)
         return Compaction.compact(target, outdata)
