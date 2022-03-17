@@ -1,22 +1,29 @@
 package whelk.importer
 
+import groovy.transform.CompileStatic
+
 import whelk.Document
+import whelk.IdGenerator
 import whelk.JsonLd
 import whelk.TargetVocabMapper
 import whelk.Whelk
 import whelk.converter.TrigToJsonLdParser
+import whelk.exception.CancelUpdateException
 
-class LinkedDataImporter {
+@CompileStatic
+class LinkedDataImporter extends DatasetImporter {
     static String ID = JsonLd.ID_KEY
     static String TYPE = JsonLd.TYPE_KEY
     static String GRAPH = JsonLd.GRAPH_KEY
 
     Whelk whelk
     TargetVocabMapper tvm
+    Map contextDocData
 
     LinkedDataImporter(Whelk whelk) {
         this.whelk = whelk
-        tvm = new TargetVocabMapper(whelk.jsonld, getDocById(whelk.kbvContextUri).data)
+        contextDocData = getDocByMainEntityId(whelk.kbvContextUri).data
+        tvm = new TargetVocabMapper(whelk.jsonld, contextDocData)
     }
 
     void importRdfAsMultipleRecords(String url) {
@@ -26,50 +33,62 @@ class LinkedDataImporter {
             :dataSource <https://example.org/data.rdf> .
         */
         def srcData = new URL(url).withInputStream { TrigToJsonLdParser.parse(it) }
-        println(srcData) //DEBUG
-        def contextDoc = getDocById(whelk.kbvContextUri).data
-        def kbvData = tvm.applyTargetVocabularyMap(whelk.defaultTvmProfile, contextDoc, srcData)
-        println(kbvData) //DEBUG
-        Set<String> remainingIds = whelk?.findBy(['inDataset.@id', datasetUrl]) ?: []
+        def kbvData = tvm.applyTargetVocabularyMap(whelk.defaultTvmProfile, contextDocData, srcData)
+        Set<String> idsInInput = []
 
         for (item in kbvData[GRAPH]) {
-            storeAsRecord(item, datasetUrl)
-            remainingIds.remove(item[ID])
+            idsInInput.add(storeAsRecord((Map) item, datasetUrl).getShortId())
         }
 
-        for (remId in remainingIds) {
-            whelk?.delete(remId)
-        }
+        List<String> needsRetry = []
+        long deletedCount = removeDeleted(whelk, datasetUrl, idsInInput, needsRetry)
+        println("Deleted: ${deletedCount}")
     }
 
-    private void storeAsRecord(Map mainEntity, String datasetUrl) {
-        def mainUrl = mainEntity[ID]
-        def data = recordify(mainEntity, datasetUrl)
-        def doc = whelk?.getByMainEntity(mainUrl) // Update if found
-        if (doc != null) { // Create new
-            doc.data = data
-        } else {
-            doc = whelk?.createNew(data)
+    private Document storeAsRecord(Map mainEntity, String datasetUrl) {
+        String mainUrl = mainEntity[ID]
+        Document existingDoc = getDocByMainEntityId(mainUrl)
+        String docId = getDocId(existingDoc)
+        Document incomingDoc = recordify(docId, mainEntity, datasetUrl)
+        if (existingDoc != null) { // Update
+            println("Update")
+            update(incomingDoc)
+        } else { // Create
+            println("Create")
+            whelk.createDocument(incomingDoc, "xl", null, "definitions", false)
         }
-        doc?.save()
-        println "Saving: ${data}"
+        return incomingDoc
     }
 
-    private Map recordify(Map mainEntity, String datasetUrl) {
+    private Document recordify(String docId, Map mainEntity, String datasetUrl) {
         def record = [
-            (ID): '#tempid',
+            (ID): docId,
             (TYPE): 'CacheRecord', // TODO: depending on .. dataset?
             'inDataset': [(ID): datasetUrl],
             'mainEntity': [(ID): mainEntity[ID]],
             // TODO: created, modified ...
         ]
-        return [
-            (GRAPH): [record, mainEntity]
-        ]
+        def data = [(GRAPH): [record, mainEntity]]
+        return new Document(data)
     }
 
-    private Document getDocById(String id) {
+    private Document getDocByMainEntityId(String id) {
         return whelk.storage.loadDocumentByMainId(id, null)
+    }
+
+    private String getDocId(Document doc) {
+        return doc != null ? doc.getCompleteId() : Document.BASE_URI.toString() + IdGenerator.generate()
+    }
+
+    private Document update(Document incomingDoc) {
+        whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, "xl", null, { doc ->
+            if (doc.getChecksum(whelk.jsonld) != incomingDoc.getChecksum(whelk.jsonld)) {
+                doc.data = incomingDoc.data
+            }
+            else {
+                throw new CancelUpdateException() // Not an error, merely cancels the update
+            }
+        })
     }
 
     public static void main(String[] args) {
