@@ -51,8 +51,6 @@ import static whelk.util.Jackson.mapper
 class Crud extends HttpServlet {
     final static String XL_ACTIVE_SIGEL_HEADER = 'XL-Active-Sigel'
     final static String CONTEXT_PATH = '/context.jsonld'
-    final static String KBV_CONTEXT = "https://id.kb.se/sys/context/kbv"
-    final static String DEFAULT_PROFILE = KBV_CONTEXT
     final static String DATA_CONTENT_TYPE = "application/ld+json"
 
     static final Counter requests = Counter.build()
@@ -115,8 +113,7 @@ class Crud extends HttpServlet {
                 (whelk.vocabUri): getDocumentFromStorage(whelk.vocabUri, null)
 
         ]
-
-        Tuple2<Document, String> docAndLoc = getDocumentFromStorage(KBV_CONTEXT)
+        Tuple2<Document, String> docAndLoc = getDocumentFromStorage(whelk.kbvContextUri)
         Document contextDoc = docAndLoc.first
         targetVocabMapper = new TargetVocabMapper(whelk.jsonld, contextDoc.data)
 
@@ -375,9 +372,9 @@ class Crud extends HttpServlet {
             data = request.shouldFrame()  ? frameRecord(doc) : doc.data
         }
 
-        String profileId = request.getProfile() ?: DEFAULT_PROFILE
+        String profileId = request.getProfile() ?: whelk.defaultTvmProfile
         def contextData = whelk.jsonld.context
-        if (profileId != null && profileId != DEFAULT_PROFILE) {
+        if (profileId != null && profileId != whelk.defaultTvmProfile) {
             data = applyDataProfile(profileId, data, response)
             contextData = data[JsonLd.CONTEXT_KEY]
             data[JsonLd.CONTEXT_KEY] = profileId

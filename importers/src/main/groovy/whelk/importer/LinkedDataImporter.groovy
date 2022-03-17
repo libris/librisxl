@@ -1,3 +1,5 @@
+package whelk.importer
+
 import whelk.Document
 import whelk.JsonLd
 import whelk.TargetVocabMapper
@@ -14,27 +16,33 @@ class LinkedDataImporter {
 
     LinkedDataImporter(Whelk whelk) {
         this.whelk = whelk
-        //tvm = new TargetVocabMapper(whelk.jsonld, dataContext)
+        tvm = new TargetVocabMapper(whelk.jsonld, getDocById(whelk.kbvContextUri).data)
     }
 
     void importRdfAsMultipleRecords(String url) {
-        def datasetUrl = url /* TODO: indirection via record in XL? Like:
+        def datasetUrl = url
+        /* TODO: indirection via record in XL? Like:
         <https://id.kb.se/dataset/example> a :Dataset ;
             :dataSource <https://example.org/data.rdf> .
         */
         def srcData = new URL(url).withInputStream { TrigToJsonLdParser.parse(it) }
-        def kbvData = srcData // tvm.applyTargetVocabularyMap(kbvTargetId, targetMap, srcData)
+        println(srcData) //DEBUG
+        def contextDoc = getDocById(whelk.kbvContextUri).data
+        def kbvData = tvm.applyTargetVocabularyMap(whelk.defaultTvmProfile, contextDoc, srcData)
+        println(kbvData) //DEBUG
         Set<String> remainingIds = whelk?.findBy(['inDataset.@id', datasetUrl]) ?: []
+
         for (item in kbvData[GRAPH]) {
             storeAsRecord(item, datasetUrl)
             remainingIds.remove(item[ID])
         }
+
         for (remId in remainingIds) {
             whelk?.delete(remId)
         }
     }
 
-    void storeAsRecord(Map mainEntity, String datasetUrl) {
+    private void storeAsRecord(Map mainEntity, String datasetUrl) {
         def mainUrl = mainEntity[ID]
         def data = recordify(mainEntity, datasetUrl)
         def doc = whelk?.getByMainEntity(mainUrl) // Update if found
@@ -47,7 +55,7 @@ class LinkedDataImporter {
         println "Saving: ${data}"
     }
 
-    Map recordify(Map mainEntity, String datasetUrl) {
+    private Map recordify(Map mainEntity, String datasetUrl) {
         def record = [
             (ID): '#tempid',
             (TYPE): 'CacheRecord', // TODO: depending on .. dataset?
@@ -60,6 +68,9 @@ class LinkedDataImporter {
         ]
     }
 
+    private Document getDocById(String id) {
+        return whelk.storage.loadDocumentByMainId(id, null)
+    }
 
     public static void main(String[] args) {
         String url = args[0]
