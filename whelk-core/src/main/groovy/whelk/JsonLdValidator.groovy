@@ -101,6 +101,9 @@ class JsonLdValidator {
                 case Validation.Scope.DEFINITIONS:
                     break
                 case Validation.Scope.HOLD:
+                    checkHasDefinition(key, validation)
+                    validateObjectProperties(key, value, validation)
+                    verifyVocabTerm(key, value, validation)
                     break
             }
         })

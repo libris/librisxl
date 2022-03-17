@@ -98,6 +98,7 @@ Map getBeforeAfter3161(String id) {
     def SCRIPT_3161 = "https://libris.kb.se/sys/globalchanges/2020/05/lxl-3161-move-linkfield-to-instance/script.groovy"
     def version= 1
     while(true) {
+
         def doc = getDoc(id, version)
         if (getAtPath(doc, ['@graph',0, 'generationProcess', '@id']) == SCRIPT_3161) {
             return [
@@ -120,6 +121,7 @@ Map getDoc(String id, int version = -1) {
         throw new RuntimeException("Deleted id: $id, version: $version")
     }
     return doc.data
+
 }
 
 private void overWriteThingProps(String id, Map properties) {
