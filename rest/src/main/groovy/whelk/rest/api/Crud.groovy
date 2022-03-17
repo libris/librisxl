@@ -301,39 +301,39 @@ class Crud extends HttpServlet {
             failedRequests.labels("GET", request.getPath(),
                     HttpServletResponse.SC_GONE.toString()).inc()
             sendError(response, HttpServletResponse.SC_GONE, "Document has been deleted.")
+        } else if (request.getView() == CrudGetRequest.View.CHANGE_SETS) {
+            History history = new History(whelk.storage.loadDocumentHistory(doc.getShortId()), jsonld)
+            sendGetResponse(
+                    response,
+                    history.m_changeSetsMap,
+                    ETag.plain(doc.getChecksum(jsonld)),
+                    request.getPath(),
+                    request.getContentType(),
+                    request.getId())
         } else {
-            String checksum = doc.getChecksum(jsonld)
-            ETag eTag = request.shouldEmbellish()
-                    ? ETag.embellished(checksum, doc.getChecksum(jsonld))
-                    : ETag.plain(checksum)
+            ETag eTag
+            if (request.shouldEmbellish()) {
+                String plainChecksum = doc.getChecksum(jsonld)
+                whelk.embellish(doc)
+                eTag = ETag.embellished(plainChecksum, doc.getChecksum(jsonld))
 
-            def requestBody
-
-            if (request.getView() == CrudGetRequest.View.CHANGE_SETS) {
-                History history = new History(whelk.storage.loadDocumentHistory(doc.getShortId()), jsonld)
-                requestBody = history.m_changeSetsMap
+                // reverse links are inserted by embellish, so can only do
+                // this when embellished
+                if (request.shouldApplyInverseOf()) {
+                    doc.applyInverses(whelk.jsonld)
+                }
             } else {
-                if (request.getIfNoneMatch().map(eTag.&isNotModified).orElse(false)) {
-                    sendNotModified(response, eTag)
-                    return
-                }
+                eTag = ETag.plain(doc.getChecksum(jsonld))
+            }
 
-                if (request.shouldEmbellish()) {
-                    whelk.embellish(doc)
-
-                    // reverse links are inserted by embellish, so can only do
-                    // this when embellished
-                    if (request.shouldApplyInverseOf()) {
-                        doc.applyInverses(whelk.jsonld)
-                    }
-                }
-
-                requestBody = getFormattedResponseBody(request, response, doc, loc ?: doc.id)
+            if (request.getIfNoneMatch().map(eTag.&isNotModified).orElse(false)) {
+                sendNotModified(response, eTag)
+                return
             }
 
             sendGetResponse(
                     response,
-                    requestBody,
+                    getFormattedResponseBody(request, response, doc, loc ?: doc.id),
                     eTag,
                     request.getPath(),
                     request.getContentType(),
