@@ -432,7 +432,6 @@ class Crud extends HttpServlet {
      * Document and String in the response may be null.
      *
      */
-    // TODO Handle version requests (See LXL-460)
     Tuple2<Document, String> getDocumentFromStorage(String id,
                                                     String version = null) {
         Tuple2<Document, String> result = new Tuple2(null, null)
