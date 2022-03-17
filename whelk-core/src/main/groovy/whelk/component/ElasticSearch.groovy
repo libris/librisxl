@@ -662,7 +662,9 @@ class ElasticSearch {
 
         @Override
         String queryPath() {
-            "/_search?search_type=$SEARCH_TYPE&filter_path=$filterPath"
+            isPitApiAvailable // point in time is created on index and then index cannot be specified here 
+                    ? "/_search?search_type=$SEARCH_TYPE&filter_path=$filterPath" 
+                    : "/${indexName}/_search?search_type=$SEARCH_TYPE&filter_path=$filterPath"
         }
 
         @Override
