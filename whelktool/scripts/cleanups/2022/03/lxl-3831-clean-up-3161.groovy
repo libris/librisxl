@@ -43,8 +43,8 @@ whelk = getWhelk()
 
 def ids = new URL("http://xlbuild.libris.kb.se/3161-modified.txt").getText().readLines()
 
-ids.parallelStream().forEach(this::process)
-//ids.stream().forEach(this::process)
+//ids.parallelStream().forEach(this::process)
+ids.stream().forEach(this::process)
 
 void process(String id) {
     try {
