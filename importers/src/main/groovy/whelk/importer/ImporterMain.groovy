@@ -66,6 +66,12 @@ class ImporterMain {
         new CardRefresher(whelk).refresh(collection)
     }
 
+    @Command(args='[SOURCE]')
+    void importLinkedData(String source=null) {
+        Whelk whelk = Whelk.createLoadedSearchWhelk(props)
+        new LinkedDataImporter(whelk).importRdfAsMultipleRecords(source)
+    }
+
     @Command(args='[FROM]')
     void reindexFrom(String from=null) {
         boolean useCache = true
