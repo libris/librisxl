@@ -66,7 +66,6 @@ class LinkedDataImporter extends DatasetImporter {
             (TYPE): 'CacheRecord', // TODO: depending on .. dataset?
             'inDataset': [(ID): datasetUrl],
             'mainEntity': [(ID): mainEntity[ID]],
-            // TODO: created, modified ...
         ]
         def data = [(GRAPH): [record, mainEntity]]
         return new Document(data)
@@ -89,10 +88,5 @@ class LinkedDataImporter extends DatasetImporter {
                 throw new CancelUpdateException() // Not an error, merely cancels the update
             }
         })
-    }
-
-    public static void main(String[] args) {
-        String url = args[0]
-        new LinkedDataImporter(null).importRdfAsMultipleRecords(url)
     }
 }
