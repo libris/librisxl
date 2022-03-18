@@ -86,6 +86,9 @@ void process(String id) {
                     before : ${beforeWork.subMap(badProps)}
                     after  : ${brokenThing.subMap(badProps)}
                     now    : ${currentThing.subMap(badProps)}
+
+                    --------------------------------------------------------------------------------------------
+
                     """.stripIndent()
                 )
                 
