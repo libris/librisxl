@@ -44,7 +44,7 @@ class HttpTools {
             out.close()
         }
     }
-
+    
     static void sendError(HttpServletResponse response, int statusCode, String msg, Object extraInfo = null) {
         Exception e = extraInfo instanceof Exception ? extraInfo : null
         Map extra = extraInfo instanceof Map ? extraInfo : [:]

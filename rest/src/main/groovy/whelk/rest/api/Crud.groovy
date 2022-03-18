@@ -219,9 +219,7 @@ class Crud extends HttpServlet {
         try {
             doGet2(request, response)
         } catch (Exception e) {
-            failedRequests.labels("GET", request.getRequestURI(),
-                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR.toString()).inc()
-            sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), e)
+            sendError(request, response, e)
         } finally {
             ongoingRequests.labels("GET").dec()
             requestTimer.observeDuration()
@@ -256,33 +254,14 @@ class Crud extends HttpServlet {
             sendGetResponse(response, responseBody, ETag.SYSTEM_START, marcframePath, "application/json")
             return
         }
-        
-        try {
-            String activeSite = request.getAttribute('activeSite')
-            Map activeSiteData = (Map) sitesData[activeSite]
-            if (activeSiteData?.getOrDefault('applyInverseOf', false)) {
-                request.setAttribute('_applyInverseOf', "true")
-            }
 
-            handleGetRequest(CrudGetRequest.parse(request), response)
-        } catch (UnsupportedContentTypeException e) {
-            failedRequests.labels("GET", request.getRequestURI(),
-                    response.SC_NOT_ACCEPTABLE.toString()).inc()
-            sendError(response, HttpServletResponse.SC_NOT_ACCEPTABLE, e.message)
-        } catch (NotFoundException e) {
-            failedRequests.labels("GET", request.getRequestURI(),
-                    response.SC_NOT_FOUND.toString()).inc()
-            sendError(response, HttpServletResponse.SC_NOT_FOUND, e.message)
-        } catch (BadRequestException e) {
-            failedRequests.labels("GET", request.getRequestURI(),
-                    response.SC_BAD_REQUEST.toString()).inc()
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST, e.message)
+        String activeSite = request.getAttribute('activeSite')
+        Map activeSiteData = (Map) sitesData[activeSite]
+        if (activeSiteData?.getOrDefault('applyInverseOf', false)) {
+            request.setAttribute('_applyInverseOf', "true")
         }
-        catch (WhelkRuntimeException e) {
-            failedRequests.labels("GET", request.getRequestURI(),
-                    response.SC_INTERNAL_SERVER_ERROR.toString()).inc()
-            sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), e)
-        }
+
+        handleGetRequest(CrudGetRequest.parse(request), response)
     }
     
     void handleGetRequest(CrudGetRequest request,
@@ -307,9 +286,7 @@ class Crud extends HttpServlet {
             }
             sendRedirect(request.getHttpServletRequest(), response, loc)
         } else if (doc.deleted) {
-            failedRequests.labels("GET", request.getPath(),
-                    HttpServletResponse.SC_GONE.toString()).inc()
-            sendError(response, HttpServletResponse.SC_GONE, "Document has been deleted.")
+            throw new OtherStatusException("Document has been deleted.", HttpServletResponse.SC_GONE)
         } else if (request.getView() == CrudGetRequest.View.CHANGE_SETS) {
             History history = new History(whelk.storage.loadDocumentHistory(doc.getShortId()), jsonld)
             ETag eTag = ETag.plain(doc.getChecksum(jsonld))
@@ -411,8 +388,7 @@ class Crud extends HttpServlet {
         }
         return JsonLd.frame(thingIds.get(0), document.data)
      }
-
-
+    
     private Map applyLens(Map framedThing, Lens lens) {
         switch (lens) {
             case Lens.NONE:
@@ -641,9 +617,7 @@ class Crud extends HttpServlet {
         try {
             doPost2(request, response)
         } catch (Exception e) {
-            failedRequests.labels("POST", request.getRequestURI(),
-                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR.toString()).inc()
-            sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), e)
+            sendError(request, response, e)
         } finally {
             ongoingRequests.labels("POST").dec()
             requestTimer.observeDuration()
@@ -654,37 +628,19 @@ class Crud extends HttpServlet {
 
     void doPost2(HttpServletRequest request, HttpServletResponse response) {
         if (request.pathInfo != "/") {
-            log.debug("Invalid POST request URL.")
-            failedRequests.labels("POST", request.getRequestURI(),
-                    HttpServletResponse.SC_METHOD_NOT_ALLOWED.toString()).inc()
-            sendError(response, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Method not allowed.")
-            return
+            throw new OtherStatusException("Method not allowed.", HttpServletResponse.SC_METHOD_NOT_ALLOWED)
         }
-
         if (!isSupportedContentType(request.getContentType())) {
-            log.debug("Unsupported Content-Type for POST.")
-            failedRequests.labels("POST", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Content-Type not supported.")
-            return
+            throw new BadRequestException("Content-Type not supported.")
         }
 
         Map requestBody = getRequestBody(request)
 
         if (isEmptyInput(requestBody)) {
-            log.debug("Empty POST request.")
-            failedRequests.labels("POST", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "No data received")
-            return
+            throw new BadRequestException("No data received.")
         }
-
         if (!JsonLd.isFlat(requestBody)) {
-            log.debug("POST body is not flat JSON-LD")
-            failedRequests.labels("POST", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Body is not flat JSON-LD.")
-            return
+            throw new BadRequestException("Body is not flat JSON-LD.")
         }
 
         // FIXME we're assuming Content-Type application/ld+json here
@@ -693,44 +649,23 @@ class Crud extends HttpServlet {
         Document newDoc = new Document(requestBody)
 
         if (!newDoc.getId()) {
-            log.debug("Temporary @id missing in Record")
-            failedRequests.labels("POST", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Document is missing temporary @id in Record")
-            return
+            throw new BadRequestException("Document is missing temporary @id in Record")
         }
-
         if (newDoc.getThingIdentifiers().isEmpty()) {
-            log.debug("Temporary mainEntity @id missing in Record")
-            failedRequests.labels("POST", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Document is missing temporary mainEntity.@id in Record")
-            return
+            throw new BadRequestException("Document is missing temporary mainEntity.@id in Record")
         }
 
         List graph = (List) newDoc.data['@graph']
         if (!graph[1] || !graph[1]['@id']) {
-            log.debug("Temporary @id missing in Thing")
-            failedRequests.labels("POST", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Document is missing temporary @id in Thing")
-            return
+            throw new BadRequestException("Document is missing temporary @id in Thing")
         }
 
         if (newDoc.getThingIdentifiers().first() != graph[1]['@id']) {
-            log.debug("mainEntity.@id not same as Thing @id")
-            failedRequests.labels("POST", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "The Record's temporary mainEntity.@id is not same as the Thing's temporary @id")
-            return
+            throw new BadRequestException("The Record's temporary mainEntity.@id is not same as the Thing's temporary @id")
         }
 
         if (newDoc.getId() == newDoc.getThingIdentifiers().first()) {
-            log.debug("Record @id same as Thing @id")
-            failedRequests.labels("POST", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST, "The Record's temporary @id can't be the same as the Thing's temporary mainEntity.@id")
-            return
+            throw new BadRequestException("The Record's temporary @id can't be the same as te Thing's temporary mainEntity.@id")
         }
 
         newDoc.normalizeUnicode()
@@ -740,41 +675,20 @@ class Crud extends HttpServlet {
         String collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, jsonld)
         List<JsonLdValidator.Error> errors = validator.validate(newDoc.data, collection)
         if (errors) {
-            failedRequests.labels("POST", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST,
-                    "Invalid JSON-LD", ['errors': errors.collect{ it.toMap() }])
-            return
+            // TODO: make sure extraInfo is passed along
+            throw new BadRequestException("Invalid JSON-LD", ['errors': errors.collect{ it.toMap() }])
         }
         
         // verify user permissions
-        log.debug("Checking permissions for ${newDoc}")
-        try {
-            boolean allowed = hasPostPermission(newDoc, (Map) request.getAttribute("user"))
-            if (!allowed) {
-                failedRequests.labels("POST", request.getRequestURI(),
-                        HttpServletResponse.SC_FORBIDDEN.toString()).inc()
-                sendError(response, HttpServletResponse.SC_FORBIDDEN,
-                        "You are not authorized to perform this " +
-                                "operation")
-                log.debug("Permission check failed. Denying request.")
-                return
-            }
-        } catch (ModelValidationException mve) {
-            failedRequests.labels("POST", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            // FIXME data leak
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST, mve.getMessage())
-            log.debug("Model validation check failed. Denying request: " + mve.getMessage())
-            return
+        if (!hasPostPermission(newDoc, (Map) request.getAttribute("user"))) {
+            throw new OtherStatusException("You are not authorized to perform this operation", HttpServletResponse.SC_FORBIDDEN)
         }
         
         // try store document
         // return 201 or error
         boolean isUpdate = false
         Document savedDoc
-        savedDoc = saveDocument(newDoc, request, response, isUpdate, "POST")
+        savedDoc = saveDocument(newDoc, request, isUpdate)
         if (savedDoc != null) {
             sendCreateResponse(response, savedDoc.getURI().toString(),
                     ETag.plain(savedDoc.getChecksum(jsonld)))
@@ -912,7 +826,7 @@ class Crud extends HttpServlet {
         }
         
         boolean isUpdate = true
-        Document savedDoc = saveDocument(updatedDoc, request, response, isUpdate, "PUT")
+        Document savedDoc = saveDocument(updatedDoc, request, isUpdate)
         if (savedDoc != null) {
             sendUpdateResponse(response, savedDoc.getURI().toString(),
                     ETag.plain(savedDoc.getChecksum(jsonld)))
@@ -939,9 +853,7 @@ class Crud extends HttpServlet {
         }
     }
 
-    Document saveDocument(Document doc, HttpServletRequest request,
-                          HttpServletResponse response,
-                          boolean isUpdate, String httpMethod) {
+    Document saveDocument(Document doc, HttpServletRequest request, boolean isUpdate) {
         try {
             if (doc) {
                 String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
@@ -975,38 +887,10 @@ class Crud extends HttpServlet {
 
                 return doc
             }
-        } catch (StorageCreateFailedException scfe) {
-            log.warn("Refused document with id ${scfe.duplicateId}")
-            failedRequests.labels(httpMethod, request.getRequestURI(),
-                    HttpServletResponse.SC_CONFLICT.toString()).inc()
-            sendError(response, HttpServletResponse.SC_CONFLICT,
-                    scfe.message)
-            return null
-        } catch (StaleUpdateException eme) {
-            log.warn("Did not store document, because the ETAGs did not match.")
-            failedRequests.labels(httpMethod, request.getRequestURI(),
-                    HttpServletResponse.SC_PRECONDITION_FAILED.toString()).inc()
-            sendError(response, HttpServletResponse.SC_PRECONDITION_FAILED,
-                                        "The resource has been updated by someone " +
-                                                "else. Please refetch.")
-            return null
+        } catch (StaleUpdateException ignored) {
+            throw new OtherStatusException("The resource has been updated by someone else. Please refetch.", HttpServletResponse.SC_PRECONDITION_FAILED)
         } catch (PostgreSQLComponent.AcquireLockException e) {
-            failedRequests.labels(httpMethod, request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST,
-                    "Failed to acquire a necessary lock. Did you submit a holding record without a valid bib link? " + e.message)
-            return null
-        } catch (LinkValidationException | PostgreSQLComponent.ConflictingHoldException | BadRequestException e) {
-            failedRequests.labels(httpMethod, request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST, e.getMessage())
-            return null
-        } catch (Exception e) {
-            failedRequests.labels(httpMethod, request.getRequestURI(),
-                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR.toString()).inc()
-            // FIXME data leak
-            sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), e)
-            return null
+            throw new BadRequestException("Failed to acquire a necessary lock. Did you submit a holding record without a valid bib link? " + e.message)
         }
         return null
     }
@@ -1095,9 +979,7 @@ class Crud extends HttpServlet {
         try {
             doDelete2(request, response)
         } catch (Exception e) {
-            failedRequests.labels("DELETE", request.getRequestURI(),
-                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR.toString()).inc()
-            sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), e)
+            sendError(request, response, e)
         } finally {
             ongoingRequests.labels("DELETE").dec()
             requestTimer.observeDuration()
@@ -1108,61 +990,89 @@ class Crud extends HttpServlet {
 
     void doDelete2(HttpServletRequest request, HttpServletResponse response) {
         if (request.pathInfo == "/") {
-            failedRequests.labels("DELETE", request.getRequestURI(),
-                    HttpServletResponse.SC_METHOD_NOT_ALLOWED.toString()).inc()
-            sendError(response, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Method not allowed.")
-            return
+            throw new OtherStatusException("Method not allowed.", HttpServletResponse.SC_METHOD_NOT_ALLOWED)
         }
-        try {
-            String id = getRequestPath(request).substring(1)
-            Tuple2<Document, String> docAndLocation = getDocumentFromStorage(id)
-            Document doc = docAndLocation.v1
-            String loc = docAndLocation.v2
+        String id = getRequestPath(request).substring(1)
+        Tuple2<Document, String> docAndLocation = getDocumentFromStorage(id)
+        Document doc = docAndLocation.v1
+        String loc = docAndLocation.v2
 
-            log.debug("Checking permissions for ${doc}")
-
-            if (!doc && loc) {
-                sendRedirect(request, response, loc)
-            } else if (!doc) {
-                failedRequests.labels("DELETE", request.getRequestURI(),
-                        HttpServletResponse.SC_NOT_FOUND.toString()).inc()
-                sendError(response, HttpServletResponse.SC_NOT_FOUND, "Document not found.")
-            } else if (doc && !hasDeletePermission(doc, (Map) request.getAttribute("user"))) {
-                failedRequests.labels("DELETE", request.getRequestURI(),
-                        HttpServletResponse.SC_FORBIDDEN.toString()).inc()
-                sendError(response, HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")
-            } else if (doc && doc.deleted) {
-                failedRequests.labels("DELETE", request.getRequestURI(),
-                        HttpServletResponse.SC_GONE.toString()).inc()
-                sendError(response, HttpServletResponse.SC_GONE,
-                        "Document has been deleted.")
-            } else if(!whelk.storage.followDependers(doc.getShortId()).isEmpty()) {
-                failedRequests.labels("DELETE", request.getRequestURI(),
-                        HttpServletResponse.SC_FORBIDDEN.toString()).inc()
-                sendError(response, HttpServletResponse.SC_FORBIDDEN, "This record may not be deleted, because it is referenced by other records.")
-            } else {
-                log.debug("Removing resource at ${doc.getShortId()}")
-                String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
-                whelk.remove(doc.getShortId(), "xl", activeSigel)
-                response.setStatus(HttpServletResponse.SC_NO_CONTENT)
-            }
-        } catch (ModelValidationException mve) {
-            failedRequests.labels("DELETE", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            // FIXME data leak
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST,
-                    mve.getMessage())
-        } catch (Exception e) {
-            failedRequests.labels("DELETE", request.getRequestURI(),
-                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR.toString()).inc()
-            sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), e)
+        if (!doc && loc) {
+            sendRedirect(request, response, loc)
+        } else if (!doc) {
+            throw new NotFoundException("Document not found.")
+        } else if (doc && !hasDeletePermission(doc, (Map) request.getAttribute("user"))) {
+            throw new OtherStatusException("You do not have sufficient privileges to perform this operation.", HttpServletResponse.SC_FORBIDDEN)
+        } else if (doc && doc.deleted) {
+            throw new OtherStatusException("Document has been deleted.", HttpServletResponse.SC_GONE)
+        } else if(!whelk.storage.followDependers(doc.getShortId()).isEmpty()) {
+            throw new OtherStatusException("This record may not be deleted, because it is referenced by other records.", HttpServletResponse.SC_FORBIDDEN)
+        } else {
+            log.debug("Removing resource at ${doc.getShortId()}")
+            String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
+            whelk.remove(doc.getShortId(), "xl", activeSigel)
+            response.setStatus(HttpServletResponse.SC_NO_CONTENT)
         }
+    }
 
+    static void sendError(HttpServletRequest request, HttpServletResponse response, Exception e) {
+        int code = mapError(e)
+        failedRequests.labels(request.getMethod(), request.getRequestURI(), code.toString()).inc()
+        if (log.isDebugEnabled()) {
+            log.debug("Sending error $code : ${e.getMessage()}")
+        }
+        sendError(response, code, e.getMessage(), e)
     }
     
-    static class NotFoundException extends RuntimeException {
+    static private int mapError(Exception e) {
+        switch(e) {
+            case BadRequestException:
+            case ModelValidationException:
+            case LinkValidationException:
+            case PostgreSQLComponent.ConflictingHoldException:    
+                return HttpServletResponse.SC_BAD_REQUEST
+            
+            case NotFoundException:
+                return HttpServletResponse.SC_NOT_FOUND
+            
+            case UnsupportedContentTypeException:
+                return HttpServletResponse.SC_NOT_ACCEPTABLE
+            
+            case WhelkRuntimeException:
+                return HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+
+            case StorageCreateFailedException:
+                return HttpServletResponse.SC_CONFLICT
+          
+            case OtherStatusException:
+                return e.code
+
+            default: 
+                return HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+        }
+    }
+    
+    static class NotFoundException extends NoStackTraceException {
         NotFoundException(String msg) {
             super(msg)
+        }
+    }
+
+    static class OtherStatusException extends NoStackTraceException {
+        int code
+        OtherStatusException(String msg, int code, Throwable cause = null) {
+            super(msg, cause)
+            this.code = code
+        }
+    }
+
+    static class NoStackTraceException extends RuntimeException {
+        protected NoStackTraceException(String msg) {
+            super(msg, null, true, false)
+        }
+        
+        protected NoStackTraceException(String msg, Throwable cause) {
+            super(msg, cause, true, false)
         }
     }
 }

@@ -1,7 +1,9 @@
 package whelk.rest.api
 
 class BadRequestException extends RuntimeException {
-    BadRequestException(String msg) {
+    Object extraInfo // TODO: use
+    BadRequestException(String msg, Object extraInfo = null) {
         super(msg)
+        this.extraInfo = extraInfo
     }
 }
