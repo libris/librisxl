@@ -494,8 +494,12 @@ class ElasticSearch {
         }
     }
 
-    private String getQueryUrl(filterPath = []) {
-        def url = "/${indexName}/_search?search_type=$SEARCH_TYPE"
+    private String getQueryUrlWithoutIndex(filterPath = []) {
+        getQueryUrl(filterPath, null)
+    }
+    
+    private String getQueryUrl(filterPath = [], index = indexName) {
+        def url = (index ? "/${index}" : '') + "/_search?search_type=$SEARCH_TYPE"
         if (filterPath) {
             url += "&filter_path=${filterPath.join(',')}"
         }
@@ -531,20 +535,23 @@ class ElasticSearch {
         boolean isBeforeFirstFetch = true
 
         Map query
-        String filterPath
+        List<String> filterPath
         Closure<T> hitCollector
         
         Scroll(Map query, List<String> hitsFilter = ['hits.hits._id'], Closure<T> hitCollector = { it['_id']}) {
             this.query = query
-            this.filterPath = (FILTER_PATH + hitsFilter).join(',')
+            this.filterPath = (FILTER_PATH + hitsFilter)
             this.hitCollector = hitCollector
         }
 
         abstract boolean isAfterLast()
         abstract void updateState(Map response)
-        abstract String queryPath()
         abstract Map nextRequest()
-
+        
+        String queryPath() {
+            getQueryUrl(filterPath)
+        }
+        
         @Override
         boolean hasNext() {
             if (isBeforeFirstFetch) {
@@ -602,12 +609,7 @@ class ElasticSearch {
 
             page++
         }
-
-        @Override
-        String queryPath() {
-            "/${indexName}/_search?search_type=$SEARCH_TYPE&filter_path=$filterPath"
-        }
-
+        
         @Override
         Map nextRequest() {
             return [
@@ -663,8 +665,8 @@ class ElasticSearch {
         @Override
         String queryPath() {
             isPitApiAvailable // point in time is created on index and then index cannot be specified here 
-                    ? "/_search?search_type=$SEARCH_TYPE&filter_path=$filterPath" 
-                    : "/${indexName}/_search?search_type=$SEARCH_TYPE&filter_path=$filterPath"
+                    ? getQueryUrlWithoutIndex(filterPath)
+                    : getQueryUrl(filterPath)
         }
 
         @Override
