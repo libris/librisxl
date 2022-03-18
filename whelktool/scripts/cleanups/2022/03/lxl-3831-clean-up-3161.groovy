@@ -37,6 +37,7 @@ class ScriptGlobal {
 
 notOkReport = getReportWriter("not-ok.tsv")
 notFixableReport = getReportWriter("not-fixable.tsv")
+notFixableDetails = getReportWriter("not-fixable.txt")
 errorReport = getReportWriter("errors.tsv")
 
 whelk = getWhelk()
@@ -78,6 +79,16 @@ void process(String id) {
             }
             else {
                 notFixableReport.println("$id\t${diffLink(id, m.afterVersion, -1)}")
+                def (_r, t, p) = getBeforeAfter3161(id).before.'@graph'
+                def beforeWork = getWork(t, p)
+                notFixableDetails.println("""
+                    ${currentThing.'@id'}
+                    before : ${beforeWork.subMap(badProps)}
+                    after  : ${brokenThing.subMap(badProps)}
+                    now    : ${currentThing.subMap(badProps)}
+                    """.stripIndent()
+                )
+                
             }
         }
     }
