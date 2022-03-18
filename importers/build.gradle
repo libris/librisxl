@@ -164,6 +164,9 @@ task(groovy, dependsOn: "classes", type: JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
     mainClass = "groovy.ui.GroovyMain"
     args(System.getProperty("args", "").split() as String[])
+    systemProperties(
+        'xl.secret.properties': System.getProperty("xl.secret.properties")
+    )
 }
 
 task(console, dependsOn: 'classes', type: JavaExec) {
