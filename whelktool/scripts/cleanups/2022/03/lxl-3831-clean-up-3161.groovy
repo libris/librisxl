@@ -84,7 +84,9 @@ void process(String id) {
                 notFixableDetails.println("""
                     ${currentThing.'@id'}
                     before : ${beforeWork.subMap(badProps)}
+                    
                     after  : ${brokenThing.subMap(badProps)}
+
                     now    : ${currentThing.subMap(badProps)}
 
                     --------------------------------------------------------------------------------------------
