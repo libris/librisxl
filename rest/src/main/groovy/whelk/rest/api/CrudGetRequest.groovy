@@ -72,8 +72,8 @@ class CrudGetRequest {
         return lens
     }
 
-    String getProfile() {
-        return profile
+    Optional<String> getProfile() {
+        return Optional.ofNullable(profile)
     }
 
     /**
