@@ -11,23 +11,19 @@ LABEL_MAPPINGS =
                 'Glass'      : ~/glas/,
                 'Metal'      : ~/metall?/,
                 'Canvas'     : ~/målarduk/,
-                'Panel'      : ~/pannå/,
                 'Textile'    : ~/textile?/,
                 'Vinyl'      : ~/vinyl/,
                 'Plaster'    : ~/gips/,
-                'Papyrus'    : ~/papyrus/,
                 'Watercolour': ~/akvarell|vattenfärg/,
-//                'Pencil'     : ~/blyerts/,
                 'Gouache'    : ~/gouas?che?/,
                 'Charcoal'   : ~/kol/,
                 'Ink'        : ~/bläck/,
                 'OilPaint'   : ~/oljefärg|olja/,
-                'IndiaInk'   : ~/tusch/
-//                'Pen'          : ~/penna/,
-//                'Wash'         : ~/lavering/,
-//                'Chalk'        : ~/krita|kritteckning/,
-//                'ColoredPencil': ~/färgpenn(a|or)/,
-//                'Cardboard'    : ~/papp|kartong/
+                'Synthetic'  : ~/syntetiskt material/,
+                'Lacquer'    : ~/fernissa/,
+                'Chalk'      : ~/krita/,
+                'Cardboard'  : ~/papp|kartong/,
+                'Pastel'     : ~/torrpastell/
         ]
 
 ['baseMaterial', 'appliedMaterial'].each { property ->
@@ -65,7 +61,7 @@ List findLinks(Map material) {
     def mappedParts = splitLabel.findResults { part -> LABEL_MAPPINGS.find { part ==~ /(?i)${it.value}/ }?.key }
 
     if (splitLabel.size() == mappedParts.size())
-        return mappedParts
+        return mappedParts.unique()
 
     return []
 }
