@@ -22,7 +22,7 @@ class JsonLdValidator {
         Preconditions.checkArgument(!jsonLd.context.isEmpty())
         Preconditions.checkArgument(!jsonLd.vocabIndex.isEmpty())
         def v = new JsonLdValidator(jsonLd)
-        v.setSkipTerms(['_marcUncompleted'])
+        v.setSkipTerms(['_marcUncompleted', '_marcFailedFixedFields'])
         return v
     }
 
