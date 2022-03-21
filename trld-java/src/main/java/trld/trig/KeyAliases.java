@@ -26,6 +26,7 @@ import static trld.jsonld.Base.INDEX;
 import static trld.jsonld.Base.LANGUAGE;
 import static trld.jsonld.Base.LIST;
 import static trld.jsonld.Base.PREFIX;
+import static trld.jsonld.Base.PREFIX_DELIMS;
 import static trld.jsonld.Base.REVERSE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.VALUE;
@@ -33,16 +34,16 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.trig.Serializer.*;
 
 
-public class KeyAliases { // LINE: 33
-  public String id = ID; // LINE: 34
-  public String value = VALUE; // LINE: 35
-  public String type = TYPE; // LINE: 36
-  public String lang = LANGUAGE; // LINE: 37
-  public String graph = GRAPH; // LINE: 38
-  public String list = LIST; // LINE: 39
-  public String reverse = REVERSE; // LINE: 40
-  public String index = INDEX; // LINE: 41
-  public String annotation = ANNOTATION; // LINE: 42
+public class KeyAliases { // LINE: 34
+  public String id = ID; // LINE: 35
+  public String value = VALUE; // LINE: 36
+  public String type = TYPE; // LINE: 37
+  public String lang = LANGUAGE; // LINE: 38
+  public String graph = GRAPH; // LINE: 39
+  public String list = LIST; // LINE: 40
+  public String reverse = REVERSE; // LINE: 41
+  public String index = INDEX; // LINE: 42
+  public String annotation = ANNOTATION; // LINE: 43
   public KeyAliases() {
     this(ID, VALUE, TYPE, LANGUAGE, GRAPH, LIST, REVERSE, INDEX, ANNOTATION);
   }

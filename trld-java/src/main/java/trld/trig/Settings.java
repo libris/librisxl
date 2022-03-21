@@ -26,6 +26,7 @@ import static trld.jsonld.Base.INDEX;
 import static trld.jsonld.Base.LANGUAGE;
 import static trld.jsonld.Base.LIST;
 import static trld.jsonld.Base.PREFIX;
+import static trld.jsonld.Base.PREFIX_DELIMS;
 import static trld.jsonld.Base.REVERSE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.VALUE;
@@ -33,16 +34,16 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.trig.Serializer.*;
 
 
-public class Settings { // LINE: 17
-  public Boolean turtleOnly = false; // LINE: 18
-  public Boolean turtleDropNamed = false; // LINE: 19
-  public Boolean dropRdfstar = false; // LINE: 20
-  public String indentChars = "  "; // LINE: 21
-  public Boolean useGraphKeyword = true; // LINE: 22
-  public Boolean upcaseKeywords = false; // LINE: 23
-  public Boolean predicateRepeatNewLine = true; // LINE: 25
-  public Boolean bracketEndNewLine = false; // LINE: 27
-  public Integer prologueEndLine = 1; // LINE: 29
+public class Settings { // LINE: 18
+  public Boolean turtleOnly = false; // LINE: 19
+  public Boolean turtleDropNamed = false; // LINE: 20
+  public Boolean dropRdfstar = false; // LINE: 21
+  public String indentChars = "  "; // LINE: 22
+  public Boolean useGraphKeyword = true; // LINE: 23
+  public Boolean upcaseKeywords = false; // LINE: 24
+  public Boolean predicateRepeatNewLine = true; // LINE: 26
+  public Boolean bracketEndNewLine = false; // LINE: 28
+  public Integer prologueEndLine = 1; // LINE: 30
   public Settings() {
     this(false, false, false, "  ", true, false, true, false, 1);
   }
