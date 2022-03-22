@@ -61,6 +61,7 @@ class SearchUtils {
         String query = getReservedQueryParameter('q', queryParameters)
         String sortBy = getReservedQueryParameter('_sort', queryParameters)
         String lens = getReservedQueryParameter('_lens', queryParameters)
+        String addStats = getReservedQueryParameter('_stats', queryParameters)
         String suggest = getReservedQueryParameter('_suggest', queryParameters)
 
         if (queryParameters['p'] && !object) {
@@ -82,6 +83,7 @@ class SearchUtils {
                           '_sort' : sortBy,
                           '_limit': limit,
                           '_lens' : lens,
+                          '_stats' : addStats,
                           '_suggest' : suggest,
         ]
 
@@ -116,6 +118,7 @@ class SearchUtils {
         String query = pageParams['q']
         String reverseObject = pageParams['o']
         List<String> predicates = pageParams['p']
+        String addStats = pageParams['_stats']
         String suggest = pageParams['_suggest']
         lens = lens ?: 'cards'
 
@@ -170,9 +173,13 @@ class SearchUtils {
         // results will be (x=a OR x=b).
         def selectedFacets = ((Map) mappingsAndPageParams.v2).findAll {it.key != JsonLd.TYPE_KEY }.keySet()
         def filteredAggregations = ((Map) esResult['aggregations']).findAll{ !selectedFacets.contains(it.key) }
-        Map stats = buildStats(lookup, filteredAggregations,
-                makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)),
-                (total > 0 && !predicates) ? reverseObject : null)
+
+        Map stats = null
+        if (addStats == null || (addStats == 'true' || addStats == 'on')) {
+            stats = buildStats(lookup, filteredAggregations,
+                               makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)),
+                               (total > 0 && !predicates) ? reverseObject : null)
+        }
         if (!stats) {
             log.debug("No stats found for query: ${queryParameters}")
         }
