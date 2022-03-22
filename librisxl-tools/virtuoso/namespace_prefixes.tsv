@@ -4,7 +4,6 @@ ctry	https://id.kb.se/country/
 dce	http://purl.org/dc/elements/1.1/
 dct	http://purl.org/dc/terms/
 foaf	http://xmlns.com/foaf/0.1/
-kbv	https://id.kb.se/vocab/
 lge	https://id.kb.se/language/
 lib	https://libris.kb.se/library/
 madsrdf	http://www.loc.gov/mads/rdf/v1#
@@ -22,3 +21,4 @@ void	http://rdfs.org/ns/void#
 wd	http://www.wikidata.org/entity/
 wdt	http://www.wikidata.org/prop/direct/
 xsd	http://www.w3.org/2001/XMLSchema#
+	https://id.kb.se/vocab/
