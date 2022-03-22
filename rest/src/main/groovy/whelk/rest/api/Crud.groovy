@@ -850,7 +850,7 @@ class Crud extends HttpServlet {
                     "Document not found.")
             return
         } else if (!existingDoc && location) {
-            sendRedirect(request, response, getDataURI(location, request.contentType))
+            sendRedirect(request, response, location)
             return
         } else  {
             String fullPutId = JsonLd.findFullIdentifier(requestBody)
