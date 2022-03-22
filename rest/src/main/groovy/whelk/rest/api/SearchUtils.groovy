@@ -158,7 +158,7 @@ class SearchUtils {
                 // This object must be re-added because it might get filtered out in applyLens().
                 item['reverseLinks'] = it['reverseLinks']
                 if (item['reverseLinks'] != null)
-                    item['reverseLinks'][JsonLd.ID_KEY] = Document.getBASE_URI().resolve('find?o=' + URLEncoder.encode(it['@id'], 'UTF-8').toString())
+                    item['reverseLinks'][JsonLd.ID_KEY] = Document.getBASE_URI().resolve('find?o=' + URLEncoder.encode(it['@id'], 'UTF-8').toString()).toString()
                 return item
             }
         }
@@ -207,6 +207,7 @@ class SearchUtils {
                                            limit, offset, total)
 
         if (stats && !suggest) {
+            stats[JsonLd.ID_KEY] = '#stats'
             result['stats'] = stats
         }
 
@@ -344,6 +345,8 @@ class SearchUtils {
             String baseUrlForKey = removeWildcardForKey(baseUrl, key)
             List observations = []
             Map sliceNode = ['dimension': key]
+            sliceNode['dimensionChain'] = makeDimensionChain(key)
+
             aggregation['buckets'].each { bucket ->
                 String itemId = bucket['key']
                 String searchPageUrl = "${baseUrlForKey}&${makeParam(key, itemId)}"
@@ -386,6 +389,18 @@ class SearchUtils {
         }
 
         return stats
+    }
+
+    List<String> makeDimensionChain(String key) {
+        List<String> dimensionChain = key.split(/\./).findResults {
+            it == JsonLd.TYPE_KEY ? 'rdf:type' : it == JsonLd.ID_KEY ? null : it
+        }
+        if (dimensionChain[0] == JsonLd.REVERSE_KEY) {
+            dimensionChain.remove(0)
+            String inv = dimensionChain.remove(0)
+            dimensionChain.add(0, ['inverseOfTerm': inv])
+        }
+        return dimensionChain
     }
 
     /**

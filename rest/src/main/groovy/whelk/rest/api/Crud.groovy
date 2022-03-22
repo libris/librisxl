@@ -140,12 +140,13 @@ class Crud extends HttpServlet {
 
         try {
             Map results = search.doSearch(queryParameters)
-            String responseContentType = CrudUtils.getBestContentType(request)
-            if (responseContentType == MimeTypes.JSONLD && !results[JsonLd.CONTEXT_KEY]) {
-                results[JsonLd.CONTEXT_KEY] = CONTEXT_PATH
-            }
-            def jsonResult = mapper.writeValueAsString(results)
-            sendResponse(response, jsonResult, responseContentType)
+            String uri = request.getRequestURI()
+            Map contextData = whelk.jsonld.context
+            def crudReq = CrudGetRequest.parse(request)
+            def dataBody = getNegotiatedDataBody(crudReq, contextData, results, uri)
+
+            sendGetResponse(response, dataBody, null, crudReq.getPath(), crudReq.getContentType(), crudReq.getId())
+
         } catch (ElasticIOException | UnexpectedHttpStatusException e) {
             log.error("Attempted elastic query, but failed: $e", e)
             failedRequests.labels("GET", request.getRequestURI(),
@@ -237,8 +238,7 @@ class Crud extends HttpServlet {
             return
         }
 
-        // TODO: Handle things other than JSON / JSON-LD
-        if (request.pathInfo == "/find" || request.pathInfo == "/find.json" || request.pathInfo == "/find.jsonld") {
+        if (request.pathInfo == "/find" || request.pathInfo.startsWith("/find.")) {
             handleQuery(request, response)
             return
         }
@@ -326,14 +326,14 @@ class Crud extends HttpServlet {
                 sendNotModified(response, eTag)
                 return
             }
-            
+
             String profileId = request.getProfile().orElse(whelk.defaultTvmProfile)
-            def body = getFormattedResponseBody(request, doc, profileId)
             addProfileHeaders(response, profileId)
-            
+            def body = getFormattedResponseBody(request, doc, profileId)
+
             String location = loc ?: doc.id
             addProposal25Headers(response, location, getDataURI(location, request))
-            
+
             sendGetResponse(response, body, eTag, request.getPath(), request.getContentType(), request.getId())
         }
     }
@@ -359,29 +359,33 @@ class Crud extends HttpServlet {
                 request.getLens(),
                 request.getView(),
                 profileId)
-        
+
         Map data
         if (request.getLens() != Lens.NONE) {
             data = applyLens(frameThing(doc), request.getLens())
         } else {
             data = request.shouldFrame()  ? frameRecord(doc) : doc.data
         }
-        
-        def contextData = whelk.jsonld.context
+
+        Map contextData = whelk.jsonld.context
         if (profileId != whelk.defaultTvmProfile) {
             data = applyDataProfile(profileId, data)
             contextData = data[JsonLd.CONTEXT_KEY]
             data[JsonLd.CONTEXT_KEY] = profileId
         }
-        
-        def dataBody = data
+
+
+        String uri = request.getContentType() == MimeTypes.TRIG ? doc.getCompleteId() : doc.getShortId()
+        return getNegotiatedDataBody(request, contextData, data, uri)
+    }
+
+    private Object getNegotiatedDataBody(CrudGetRequest request, Map contextData, Map data, String uri) {
         if (!(request.getContentType() in [MimeTypes.JSON, MimeTypes.JSONLD])) {
-            def id = request.getContentType() == MimeTypes.TRIG ? doc.getCompleteId() : doc.getShortId()
             data[JsonLd.CONTEXT_KEY] = contextData
-            dataBody = converterUtils.convert(data, id, request.getContentType())
+            return converterUtils.convert(data, uri, request.getContentType())
+        } else {
+            return data
         }
-        
-        return dataBody
     }
 
     private static Map frameRecord(Document document) {
@@ -578,8 +582,7 @@ class Crud extends HttpServlet {
     void sendGetResponse(HttpServletResponse response,
                          Object responseBody, ETag eTag, String path,
                          String contentType, String requestId = null) {
-        if (path.endsWith('.json')) {
-            contentType = MimeTypes.JSON
+        if (contentType == MimeTypes.JSON) {
             response.setHeader("Link",
                     "<$CONTEXT_PATH>; " +
                             "rel=\"http://www.w3.org/ns/json-ld#context\"; " +
@@ -590,7 +593,9 @@ class Crud extends HttpServlet {
             }
         }
 
-        response.setHeader("ETag", eTag.toString())
+        if (eTag != null) {
+            response.setHeader("ETag", eTag.toString())
+        }
 
         setVary(response)
 
