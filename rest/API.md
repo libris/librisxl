@@ -47,6 +47,26 @@ $ curl -XGET -H "Accept: application/ld+json" https://libris-qa.kb.se/s93ns5h436
 }
 ```
 
+### Profile Negotiation
+
+To get data in a different flavour (using a specific selection of RDF
+vocabularies), we support a form of profile negotiation.
+
+Using parameters:
+```
+$ curl -s -HAccept:text/turtle "http://libris-qa.kb.se/fxql7jqr38b1dkf?profile=https://id.kb.se/sys/context/target/sdo-w3c&embellished=false"
+
+$ curl -s -H'Accept: text/turtle' http://id-qa.kb.se/relator/contributor?profile=https://id.kb.se/sys/context/target/bibo-w3c
+
+$ curl -s -H'Accept: text/turtle' http://libris-qa.kb.se/fxql7jqr38b1dkf?profile=https://id.kb.se/sys/context/target/bibo-w3c
+```
+
+Using headers:
+```
+$ curl -H 'Accept-Profile: <https://id.kb.se/sys/context/target/loc-w3c-sdo>' \
+      http://libris-qa.kb.se/fxql7jqr38b1dkf
+```
+
 ## Requests that require authentication – create, update and remove
 
 In order to make requests that require authentication, an oauth client has to be registered

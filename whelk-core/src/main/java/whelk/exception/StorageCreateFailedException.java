@@ -1,10 +1,11 @@
 package whelk.exception;
 
-/**
- * Created by markus on 2015-12-09.
- */
 public class StorageCreateFailedException extends RuntimeException {
     String duplicateId = null;
+
+    public String getDuplicateId() {
+        return duplicateId;
+    }
 
     public StorageCreateFailedException(String identifier) {
         super("INSERT of document with id " + identifier + " failed. Document already in database.");

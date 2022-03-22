@@ -10,6 +10,7 @@ class CrudGetRequest {
     private String contentType
     private View view
     private Lens lens
+    private String profile
 
     static CrudGetRequest parse(HttpServletRequest request) {
         return new CrudGetRequest(request)
@@ -20,6 +21,7 @@ class CrudGetRequest {
         parsePath(getPath())
         contentType = getBestContentType(request)
         lens = parseLens(request)
+        profile = parseProfile(request)
     }
 
     HttpServletRequest getHttpServletRequest() {
@@ -70,6 +72,10 @@ class CrudGetRequest {
         return lens
     }
 
+    Optional<String> getProfile() {
+        return Optional.ofNullable(profile)
+    }
+
     /**
      * Parse a CRUD path
      *
@@ -97,6 +103,26 @@ class CrudGetRequest {
         catch (IllegalArgumentException e) {
             throw new BadRequestException("Unknown lens:" + lens)
         }
+    }
+
+    private String parseProfile(HttpServletRequest request) {
+        String param = request.getParameter('profile')
+        if (param != null) {
+            return param
+        }
+        String header = request.getHeader('Accept-Profile')
+        if (header != null) {
+            header = header.trim()
+            boolean startAngle = header.startsWith('<')
+            boolean endAngle = header.endsWith('>')
+            if (startAngle || endAngle) {
+                int start = startAngle ? 1 : 0
+                int end = header.size() - (endAngle ? 1 : 0)
+                header = header.substring(start, end)
+            }
+            return header
+        }
+        return null
     }
 
     private Optional<Boolean> getBoolParameter(String name) {

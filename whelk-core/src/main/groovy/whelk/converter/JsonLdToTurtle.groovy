@@ -8,6 +8,10 @@ import static org.apache.commons.lang3.StringEscapeUtils.escapeJava
 import static whelk.util.Jackson.mapper
 
 @Log
+@Deprecated
+/**
+ * @deprecated In favour of JsonLdToTrigSerializer
+ */
 class JsonLdToTurtle {
 
     def INDENT = "  "
@@ -15,10 +19,21 @@ class JsonLdToTurtle {
     Writer writer
     Map context
     String base
-    Map keys = [id: "@id", value: "@value", type: "@type", lang: "@language", graph: "@graph"]
+    Map keys = [
+        id: '@id',
+        value: '@value',
+        type: '@type',
+        lang: '@language',
+        graph: '@graph',
+        rev: '@reverse'
+    ]
     Map prefixes = [:]
-    def uniqueBNodeSuffix = ""
+    def uniqueBNodeSuffix = ''
     String bnodeSkolemBase = null
+    String prefixKeyword = 'PREFIX'
+    String baseKeyword = 'BASE'
+    String graphKeyword = 'GRAPH'
+    boolean noGraphs
     boolean useGraphKeyword
     boolean markEmptyBnode
     String emptyMarker = '_:Nothing'
@@ -32,6 +47,7 @@ class JsonLdToTurtle {
         this.context = context.context
         this.prefixes = context.prefixes
         this.base = base
+        this.noGraphs = opts?.noGraphs == true
         this.useGraphKeyword = opts?.useGraphKeyword == true
         this.markEmptyBnode = opts?.markEmptyBnode == true
         if ('owl' in prefixes) emptyMarker = 'owl:Nothing'
@@ -173,7 +189,7 @@ class JsonLdToTurtle {
 
     void prelude() {
         prefixes.each { k, v ->
-            writeln("PREFIX ${k}: <${v}>")
+            writeln("$prefixKeyword ${k}: <${v}>")
         }
         if (base) {
             writeBase(base)
@@ -183,7 +199,7 @@ class JsonLdToTurtle {
     }
 
     void writeBase(String iri) {
-        writeln("BASE <$iri>")
+        writeln("$baseKeyword <$iri>")
     }
 
     boolean isListContainer(String term) {
@@ -196,13 +212,30 @@ class JsonLdToTurtle {
             context[term]['@container'] == '@language'
     }
 
+    def objectToTrig(String iri, obj) {
+        if (!noGraphs && iri != null) {
+            writeln()
+            if (useGraphKeyword) write("$graphKeyword ")
+            writeln("<$iri> {")
+            writeln()
+        }
+        asList(obj).each {
+            objectToTurtle(it, 0, keys.graph)
+        }
+        if (!noGraphs && iri != null) {
+            writeln("}")
+            writeln()
+        }
+        flush()
+    }
+
     def objectToTurtle(obj, level=0, viaKey=null) {
         def indent = INDENT * (level + 1)
 
         if (isLangContainer(viaKey) && obj instanceof Map) {
             boolean first = true
             obj.each { lang, value ->
-                def values = value instanceof List ? value : value != null ? [value] : []
+                def values = asList(value)
                 values.each {
                     if (!first) write(' , ')
                     toLiteral(
@@ -230,6 +263,11 @@ class JsonLdToTurtle {
         boolean isList = '@list' in obj
         boolean startedList = isList
 
+        if (obj.containsKey(keys.graph)) {
+            objectToTrig(s, obj[keys.graph])
+            return Collections.emptyList()
+        }
+
         if (explicitList) {
             write('( ')
         }
@@ -238,15 +276,6 @@ class JsonLdToTurtle {
         } else if (level > 0) {
             if (!isList) {
                 writeln("[")
-            }
-        } else {
-            if (obj.containsKey(keys.graph)) {
-                if (obj.keySet().any { it[0] != '@' }) {
-                    // TODO: this is the default graph, described...
-                    write('[]')
-                }
-            } else {
-                return Collections.emptyList()
             }
         }
 
@@ -262,9 +291,13 @@ class JsonLdToTurtle {
                 return
             if (term == keys.id || term == "@context")
                 return
-            vs = vs instanceof List ? vs : vs != null ? [vs] : []
+            vs = asList(vs)
             if (!vs) // TODO: && not @list
                 return
+
+            if (term == keys.rev) {
+                return
+            }
 
             if (term == keys.graph) {
                 topObjects += vs
@@ -354,19 +387,6 @@ class JsonLdToTurtle {
         }
     }
 
-    def objectToTrig(String iri, Map obj) {
-        writeln()
-        if (useGraphKeyword) {
-            write("GRAPH ")
-        }
-        writeln("<$iri> {")
-        writeln()
-        objectToTurtle(obj)
-        writeln("}")
-        writeln()
-        flush()
-    }
-
     void toLiteral(obj, viaKey=null) {
         def value = obj
         def lang = context["@language"]
@@ -428,7 +448,7 @@ class JsonLdToTurtle {
 
     static OutputStream toTurtle(context, source, base=null) {
         def bos = new ByteArrayOutputStream()
-        def opts = [base: base]
+        def opts = [base: base, noGraphs: true]
         def serializer = new JsonLdToTurtle(context, bos, opts)
         serializer.toTurtle(source)
         return bos
@@ -440,6 +460,10 @@ class JsonLdToTurtle {
         def serializer = new JsonLdToTurtle(context, bos, opts)
         serializer.toTrig(source, iri)
         return bos
+    }
+
+    static List asList(o) {
+        return o instanceof List ? o : o != null ? [o] : []
     }
 
     static void main(args) {

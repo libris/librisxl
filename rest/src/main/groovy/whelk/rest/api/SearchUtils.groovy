@@ -61,6 +61,7 @@ class SearchUtils {
         String query = getReservedQueryParameter('q', queryParameters)
         String sortBy = getReservedQueryParameter('_sort', queryParameters)
         String lens = getReservedQueryParameter('_lens', queryParameters)
+        String addStats = getReservedQueryParameter('_stats', queryParameters)
         String suggest = getReservedQueryParameter('_suggest', queryParameters)
 
         if (queryParameters['p'] && !object) {
@@ -82,6 +83,7 @@ class SearchUtils {
                           '_sort' : sortBy,
                           '_limit': limit,
                           '_lens' : lens,
+                          '_stats' : addStats,
                           '_suggest' : suggest,
         ]
 
@@ -116,6 +118,7 @@ class SearchUtils {
         String query = pageParams['q']
         String reverseObject = pageParams['o']
         List<String> predicates = pageParams['p']
+        String addStats = pageParams['_stats']
         String suggest = pageParams['_suggest']
         lens = lens ?: 'cards'
 
@@ -158,7 +161,7 @@ class SearchUtils {
                 // This object must be re-added because it might get filtered out in applyLens().
                 item['reverseLinks'] = it['reverseLinks']
                 if (item['reverseLinks'] != null)
-                    item['reverseLinks'][JsonLd.ID_KEY] = Document.getBASE_URI().resolve('find?o=' + URLEncoder.encode(it['@id'], 'UTF-8').toString())
+                    item['reverseLinks'][JsonLd.ID_KEY] = Document.getBASE_URI().resolve('find?o=' + URLEncoder.encode(it['@id'], 'UTF-8').toString()).toString()
                 return item
             }
         }
@@ -170,9 +173,13 @@ class SearchUtils {
         // results will be (x=a OR x=b).
         def selectedFacets = ((Map) mappingsAndPageParams.v2).findAll {it.key != JsonLd.TYPE_KEY }.keySet()
         def filteredAggregations = ((Map) esResult['aggregations']).findAll{ !selectedFacets.contains(it.key) }
-        Map stats = buildStats(lookup, filteredAggregations,
-                makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)),
-                (total > 0 && !predicates) ? reverseObject : null)
+
+        Map stats = null
+        if (addStats == null || (addStats == 'true' || addStats == 'on')) {
+            stats = buildStats(lookup, filteredAggregations,
+                               makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)),
+                               (total > 0 && !predicates) ? reverseObject : null)
+        }
         if (!stats) {
             log.debug("No stats found for query: ${queryParameters}")
         }
@@ -207,6 +214,7 @@ class SearchUtils {
                                            limit, offset, total)
 
         if (stats && !suggest) {
+            stats[JsonLd.ID_KEY] = '#stats'
             result['stats'] = stats
         }
 
@@ -344,6 +352,8 @@ class SearchUtils {
             String baseUrlForKey = removeWildcardForKey(baseUrl, key)
             List observations = []
             Map sliceNode = ['dimension': key]
+            sliceNode['dimensionChain'] = makeDimensionChain(key)
+
             aggregation['buckets'].each { bucket ->
                 String itemId = bucket['key']
                 String searchPageUrl = "${baseUrlForKey}&${makeParam(key, itemId)}"
@@ -386,6 +396,18 @@ class SearchUtils {
         }
 
         return stats
+    }
+
+    List<String> makeDimensionChain(String key) {
+        List<String> dimensionChain = key.split(/\./).findResults {
+            it == JsonLd.TYPE_KEY ? 'rdf:type' : it == JsonLd.ID_KEY ? null : it
+        }
+        if (dimensionChain[0] == JsonLd.REVERSE_KEY) {
+            dimensionChain.remove(0)
+            String inv = dimensionChain.remove(0)
+            dimensionChain.add(0, ['inverseOfTerm': inv])
+        }
+        return dimensionChain
     }
 
     /**
