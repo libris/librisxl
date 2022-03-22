@@ -287,6 +287,7 @@ class JsonLdValidator {
                     'type'       : type,
                     'description': type.description,
                     'path'       : path,
+                    'key'        : key,
                     'value'      : value
             ]
         }
