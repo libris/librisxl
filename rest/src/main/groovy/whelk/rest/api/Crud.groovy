@@ -295,7 +295,9 @@ class Crud extends HttpServlet {
         if (!doc && !loc) {
             sendNotFound(response, request.getPath())
         } else if (!doc && loc) {
-            loc = getDataURI(loc, request.contentType)
+            if (request.getView() == CrudGetRequest.View.DATA) {
+                loc = getDataURI(loc, request.contentType)
+            }
             sendRedirect(request.getHttpServletRequest(), response, loc)
         } else if (doc.deleted) {
             failedRequests.labels("GET", request.getPath(),
