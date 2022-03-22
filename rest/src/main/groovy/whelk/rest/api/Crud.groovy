@@ -81,7 +81,11 @@ class Crud extends HttpServlet {
     SearchUtils search
     AccessControl accessControl = new AccessControl()
     ConverterUtils converterUtils
+
     Map siteConfig
+    Map sitesData
+    Map siteAlias
+
     Map<String, Tuple2<Document, String>> cachedDocs
 
     Crud() {
@@ -106,6 +110,8 @@ class Crud extends HttpServlet {
         converterUtils = new ConverterUtils(whelk)
         siteConfig = mapper.readValue(getClass().classLoader
                 .getResourceAsStream("site_config.json").getBytes(), Map)
+        sitesData = (Map) siteConfig['sites']
+        siteAlias = (Map) siteConfig['site_alias']
 
         cachedDocs = [
                 (whelk.vocabContextUri): getDocumentFromStorage(whelk.vocabContextUri, null),
@@ -125,17 +131,18 @@ class Crud extends HttpServlet {
         // Depending on what site/client we're serving, we might need to add extra query parameters
         // before they're sent further.
         String activeSite = request.getAttribute('activeSite')
+        Map activeSiteData = (Map) sitesData[activeSite]
 
         if (activeSite != siteConfig['default_site']) {
-            queryParameters.put('_site_base_uri', [siteConfig['sites'][activeSite]['@id']] as String[])
+            queryParameters.put('_site_base_uri', [activeSiteData['@id']] as String[])
         }
 
-        if (!queryParameters['_statsrepr'] && siteConfig['sites'][activeSite]['statsfind']) {
-            queryParameters.put('_statsrepr', [mapper.writeValueAsString(siteConfig['sites'][activeSite]['statsfind'])] as String[])
+        if (!queryParameters['_statsrepr'] && activeSiteData['statsfind']) {
+            queryParameters.put('_statsrepr', [mapper.writeValueAsString(activeSiteData['statsfind'])] as String[])
         }
 
-        if (!queryParameters['_boost'] && siteConfig['sites'][activeSite]['boost']) {
-            queryParameters.put('_boost', [siteConfig['sites'][activeSite]['boost']] as String[])
+        if (!queryParameters['_boost'] && activeSiteData['boost']) {
+            queryParameters.put('_boost', [activeSiteData['boost']] as String[])
         }
 
         try {
@@ -174,10 +181,10 @@ class Crud extends HttpServlet {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
         String activeSite = request.getAttribute('activeSite')
         Map results = [:]
-        results.putAll((Map) siteConfig['sites'][activeSite])
+        results.putAll((Map) sitesData[activeSite])
 
         if (!queryParameters['_statsrepr']) {
-            queryParameters.put('_statsrepr', [mapper.writeValueAsString(siteConfig['sites'][activeSite]['statsindex'])] as String[])
+            queryParameters.put('_statsrepr', [mapper.writeValueAsString(sitesData[activeSite]['statsindex'])] as String[])
         }
         if (!queryParameters['_limit']) {
             queryParameters.put('_limit', ["0"] as String[])
@@ -252,8 +259,8 @@ class Crud extends HttpServlet {
         
         try {
             String activeSite = request.getAttribute('activeSite')
-            Map activeSiteMap = (Map) siteConfig['sites'][activeSite]
-            if (activeSiteMap?.get('applyInverseOf', false)) {
+            Map activeSiteData = (Map) sitesData[activeSite]
+            if (activeSiteData?.getOrDefault('applyInverseOf', false)) {
                 request.setAttribute('_applyInverseOf', "true")
             }
 
@@ -441,17 +448,16 @@ class Crud extends HttpServlet {
 
     private String getActiveSite(HttpServletRequest request, String baseUri = null) {
         // If ?_site=<foo> has been specified (and <foo> is a valid site) it takes precedence
-        if (request.getParameter("_site") in siteConfig['sites']) {
+        if (request.getParameter("_site") in sitesData) {
             return request.getParameter("_site")
         }
 
-        if (baseUri in siteConfig['sites']) {
-            return siteConfig['sites'][baseUri]['@id']
+        if (baseUri in siteAlias) {
+            baseUri = siteAlias[baseUri]
         }
 
-        if (baseUri in siteConfig['site_alias']) {
-            String actualSite = siteConfig['site_alias'][baseUri]
-            return siteConfig['sites'][actualSite]['@id']
+        if (baseUri in sitesData) {
+            return sitesData[baseUri]['@id']
         }
 
         return siteConfig['default_site']
