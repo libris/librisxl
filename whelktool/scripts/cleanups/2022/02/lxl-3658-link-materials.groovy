@@ -26,6 +26,8 @@ LABEL_MAPPINGS =
                 'Pastel'     : ~/torrpastell/
         ]
 
+List modifiedIds = Collections.synchronizedList([])
+
 ['baseMaterial', 'appliedMaterial'].each { property ->
     selectByIds(queryIds([('exists-' + property): ['true']]).collect()) { data ->
         def id = data.doc.shortId
@@ -50,8 +52,26 @@ LABEL_MAPPINGS =
 
         thing[property] += add.collect { ['@id': MATERIAL_BASE_URI + it] }
 
-        if (modified)
+        if (modified) {
+            modifiedIds << id
             data.scheduleSave()
+        }
+    }
+}
+
+// Clean up duplicates (caused by some marc enums getting normalized into id.kb.se/material uris upon saving)
+selectByIds(modifiedIds) {
+    def thing = it.graph[1]
+    def newBm = thing.baseMaterial?.unique(false)
+    def newAm = thing.appliedMaterial?.unique(false)
+
+    if (newBm != thing.baseMaterial) {
+        thing.baseMaterial = newBm
+        it.scheduleSave()
+    }
+    if (newAm != thing.appliedMaterial) {
+        thing.appliedMaterial = newAm
+        it.scheduleSave()
     }
 }
 
@@ -65,3 +85,5 @@ List findLinks(Map material) {
 
     return []
 }
+
+
