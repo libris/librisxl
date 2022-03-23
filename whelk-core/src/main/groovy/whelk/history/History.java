@@ -255,6 +255,9 @@ public class History {
                 }
             }
 
+            if (!tempNew.isEmpty() || !tempOld.isEmpty())
+                ((List) changeSet.get("modifiedPaths")).add(path);
+
             for (int i = 0; i < tempNew.size(); ++i) {
                 List<Object> childPath = new ArrayList(path);
                 if ( tempOld.size() > i ) {
