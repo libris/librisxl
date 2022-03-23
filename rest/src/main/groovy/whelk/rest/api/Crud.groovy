@@ -376,7 +376,7 @@ class Crud extends HttpServlet {
             data = request.shouldFrame()  ? frameRecord(doc) : doc.data
         }
 
-        Map contextData = whelk.jsonld.context
+        Object contextData = whelk.jsonld.context
         if (profileId != whelk.defaultTvmProfile) {
             data = applyDataProfile(profileId, data)
             contextData = data[JsonLd.CONTEXT_KEY]
@@ -388,7 +388,7 @@ class Crud extends HttpServlet {
         return getNegotiatedDataBody(request, contextData, data, uri)
     }
 
-    private Object getNegotiatedDataBody(CrudGetRequest request, Map contextData, Map data, String uri) {
+    private Object getNegotiatedDataBody(CrudGetRequest request, Object contextData, Map data, String uri) {
         if (!(request.getContentType() in [MimeTypes.JSON, MimeTypes.JSONLD])) {
             data[JsonLd.CONTEXT_KEY] = contextData
             return converterUtils.convert(data, uri, request.getContentType())
