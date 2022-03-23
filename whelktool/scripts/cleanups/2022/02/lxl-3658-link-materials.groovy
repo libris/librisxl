@@ -58,7 +58,7 @@ LABEL_MAPPINGS =
 List findLinks(Map material) {
     def label = material.label in List ? material.label.join(' & ') : material.label
     def splitLabel = label.split(/ (och|&) |, ?/)
-    def mappedParts = splitLabel.findResults { part -> LABEL_MAPPINGS.find { part ==~ /(?i)${it.value}/ }?.key }
+    def mappedParts = splitLabel.findResults { part -> LABEL_MAPPINGS.find { part.trim() ==~ /(?i)${it.value}/ }?.key }
 
     if (splitLabel.size() == mappedParts.size())
         return mappedParts.unique()
