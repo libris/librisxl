@@ -62,9 +62,17 @@ List modifiedIds = Collections.synchronizedList([])
 // Clean up duplicates (caused by some marc enums getting normalized into id.kb.se/material uris upon saving)
 selectByIds(modifiedIds) {
     def thing = it.graph[1]
-    thing.baseMaterial?.unique(true)
-    thing.appliedMaterial?.unique(true)
-    it.scheduleSave()
+    def newBm = thing.baseMaterial?.unique(false)
+    def newAm = thing.appliedMaterial?.unique(false)
+
+    if (newBm != thing.baseMaterial) {
+        thing.baseMaterial = newBm
+        it.scheduleSave()
+    }
+    if (newAm != thing.appliedMaterial) {
+        thing.appliedMaterial = newAm
+        it.scheduleSave()
+    }
 }
 
 List findLinks(Map material) {
