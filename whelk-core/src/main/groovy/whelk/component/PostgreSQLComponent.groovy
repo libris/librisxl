@@ -134,7 +134,7 @@ class PostgreSQLComponent {
     private static final String GET_TABLE_SIZE_BYTES =
             "SELECT pg_total_relation_size(?)"
 
-    private static final String CLEAR_EMBELLISHED = "TRUNCATE TABLE lddb__embellished"
+    private static final String CLEAR_EMBELLISHED = "DELETE FROM lddb__embellished"
 
     private static final String GET_DOCUMENT_VERSION_BY_MAIN_ID = """
             SELECT id, data 
