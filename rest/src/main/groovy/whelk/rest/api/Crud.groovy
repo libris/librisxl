@@ -1,16 +1,26 @@
 package whelk.rest.api
 
+import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.util.logging.Log4j2 as Log
+
+import java.lang.management.ManagementFactory
+import javax.servlet.http.HttpServlet
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
 import io.prometheus.client.Summary
+
 import org.apache.http.entity.ContentType
+
 import whelk.Document
 import whelk.IdGenerator
 import whelk.IdType
 import whelk.JsonLd
 import whelk.JsonLdValidator
+import whelk.TargetVocabMapper
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.exception.ElasticIOException
@@ -21,15 +31,11 @@ import whelk.exception.StaleUpdateException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.UnexpectedHttpStatusException
 import whelk.exception.WhelkRuntimeException
+import whelk.history.History
 import whelk.rest.api.CrudGetRequest.Lens
 import whelk.rest.security.AccessControl
 import whelk.util.LegacyIntegrationTools
 import whelk.util.WhelkFactory
-
-import javax.servlet.http.HttpServlet
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
-import java.lang.management.ManagementFactory
 
 import static whelk.rest.api.CrudUtils.ETag
 import static whelk.rest.api.HttpTools.getBaseUri
@@ -41,9 +47,11 @@ import static whelk.util.Jackson.mapper
  * Handles all GET/PUT/POST/DELETE requests against the backend.
  */
 @Log
+@CompileStatic
 class Crud extends HttpServlet {
     final static String XL_ACTIVE_SIGEL_HEADER = 'XL-Active-Sigel'
     final static String CONTEXT_PATH = '/context.jsonld'
+    final static String DATA_CONTENT_TYPE = "application/ld+json"
 
     static final Counter requests = Counter.build()
         .name("api_requests_total").help("Total requests to API.")
@@ -62,22 +70,22 @@ class Crud extends HttpServlet {
         .help("API request latency in seconds.")
         .labelNames("method").register()
 
-    final static Map contextHeaders = [
-            "bib": "/sys/context/lib.jsonld",
-            "auth": "/sys/context/lib.jsonld",
-            "hold": "/sys/context/lib.jsonld"
-    ]
     Whelk whelk
 
     Map vocabData
     Map displayData
     JsonLd jsonld
     JsonLdValidator validator
+    TargetVocabMapper targetVocabMapper
 
     SearchUtils search
     AccessControl accessControl = new AccessControl()
     ConverterUtils converterUtils
+
     Map siteConfig
+    Map sitesData
+    Map siteAlias
+
     Map<String, Tuple2<Document, String>> cachedDocs
 
     Crud() {
@@ -102,6 +110,8 @@ class Crud extends HttpServlet {
         converterUtils = new ConverterUtils(whelk)
         siteConfig = mapper.readValue(getClass().classLoader
                 .getResourceAsStream("site_config.json").getBytes(), Map)
+        sitesData = (Map) siteConfig['sites']
+        siteAlias = (Map) siteConfig['site_alias']
 
         cachedDocs = [
                 (whelk.vocabContextUri): getDocumentFromStorage(whelk.vocabContextUri, null),
@@ -109,6 +119,10 @@ class Crud extends HttpServlet {
                 (whelk.vocabUri): getDocumentFromStorage(whelk.vocabUri, null)
 
         ]
+        Tuple2<Document, String> docAndLoc = getDocumentFromStorage(whelk.kbvContextUri)
+        Document contextDoc = docAndLoc.first
+        targetVocabMapper = new TargetVocabMapper(whelk.jsonld, contextDoc.data)
+
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response) {
@@ -117,27 +131,29 @@ class Crud extends HttpServlet {
         // Depending on what site/client we're serving, we might need to add extra query parameters
         // before they're sent further.
         String activeSite = request.getAttribute('activeSite')
+        Map activeSiteData = (Map) sitesData[activeSite]
 
         if (activeSite != siteConfig['default_site']) {
-            queryParameters.put('_site_base_uri', (String[])[siteConfig['sites'][activeSite]['@id']])
+            queryParameters.put('_site_base_uri', [activeSiteData['@id']] as String[])
         }
 
-        if (!queryParameters['_statsrepr'] && siteConfig['sites'][activeSite]['statsfind']) {
-            queryParameters.put('_statsrepr', (String[])[mapper.writeValueAsString(siteConfig['sites'][activeSite]['statsfind'])])
+        if (!queryParameters['_statsrepr'] && activeSiteData['statsfind']) {
+            queryParameters.put('_statsrepr', [mapper.writeValueAsString(activeSiteData['statsfind'])] as String[])
         }
 
-        if (!queryParameters['_boost'] && siteConfig['sites'][activeSite]['boost']) {
-            queryParameters.put('_boost', (String[])[siteConfig['sites'][activeSite]['boost']])
+        if (!queryParameters['_boost'] && activeSiteData['boost']) {
+            queryParameters.put('_boost', [activeSiteData['boost']] as String[])
         }
 
         try {
             Map results = search.doSearch(queryParameters)
-            String responseContentType = CrudUtils.getBestContentType(request)
-            if (responseContentType == MimeTypes.JSONLD && !results[JsonLd.CONTEXT_KEY]) {
-                results[JsonLd.CONTEXT_KEY] = CONTEXT_PATH
-            }
-            def jsonResult = mapper.writeValueAsString(results)
-            sendResponse(response, jsonResult, responseContentType)
+            String uri = request.getRequestURI()
+            Map contextData = whelk.jsonld.context
+            def crudReq = CrudGetRequest.parse(request)
+            def dataBody = getNegotiatedDataBody(crudReq, contextData, results, uri)
+
+            sendGetResponse(response, dataBody, null, crudReq.getPath(), crudReq.getContentType(), crudReq.getId())
+
         } catch (ElasticIOException | UnexpectedHttpStatusException e) {
             log.error("Attempted elastic query, but failed: $e", e)
             failedRequests.labels("GET", request.getRequestURI(),
@@ -164,16 +180,17 @@ class Crud extends HttpServlet {
     void handleData(HttpServletRequest request, HttpServletResponse response) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
         String activeSite = request.getAttribute('activeSite')
-        Map results = siteConfig['sites'][activeSite]
+        Map results = [:]
+        results.putAll((Map) sitesData[activeSite])
 
         if (!queryParameters['_statsrepr']) {
-            queryParameters.put('_statsrepr', (String[])[mapper.writeValueAsString(siteConfig['sites'][activeSite]['statsindex'])])
+            queryParameters.put('_statsrepr', [mapper.writeValueAsString(sitesData[activeSite]['statsindex'])] as String[])
         }
         if (!queryParameters['_limit']) {
-            queryParameters.put('_limit', (String[])["0"])
+            queryParameters.put('_limit', ["0"] as String[])
         }
         if (!queryParameters['q']) {
-            queryParameters.put('q', (String[])["*"])
+            queryParameters.put('q', ["*"] as String[])
         }
         Map searchResults = search.doSearch(queryParameters)
         results['statistics'] = searchResults['stats']
@@ -228,8 +245,7 @@ class Crud extends HttpServlet {
             return
         }
 
-        // TODO: Handle things other than JSON / JSON-LD
-        if (request.pathInfo == "/find" || request.pathInfo == "/find.json" || request.pathInfo == "/find.jsonld") {
+        if (request.pathInfo == "/find" || request.pathInfo.startsWith("/find.")) {
             handleQuery(request, response)
             return
         }
@@ -243,7 +259,8 @@ class Crud extends HttpServlet {
         
         try {
             String activeSite = request.getAttribute('activeSite')
-            if (siteConfig['sites'][activeSite]?.get('applyInverseOf', false)) {
+            Map activeSiteData = (Map) sitesData[activeSite]
+            if (activeSiteData?.getOrDefault('applyInverseOf', false)) {
                 request.setAttribute('_applyInverseOf', "true")
             }
 
@@ -285,39 +302,48 @@ class Crud extends HttpServlet {
         if (!doc && !loc) {
             sendNotFound(response, request.getPath())
         } else if (!doc && loc) {
+            if (request.getView() == CrudGetRequest.View.DATA) {
+                loc = getDataURI(loc, request.contentType)
+            }
             sendRedirect(request.getHttpServletRequest(), response, loc)
         } else if (doc.deleted) {
             failedRequests.labels("GET", request.getPath(),
                     HttpServletResponse.SC_GONE.toString()).inc()
             sendError(response, HttpServletResponse.SC_GONE, "Document has been deleted.")
+        } else if (request.getView() == CrudGetRequest.View.CHANGE_SETS) {
+            History history = new History(whelk.storage.loadDocumentHistory(doc.getShortId()), jsonld)
+            ETag eTag = ETag.plain(doc.getChecksum(jsonld))
+            def body = history.m_changeSetsMap
+            sendGetResponse(response, body, eTag, request.getPath(), request.getContentType(), request.getId())
         } else {
-            String checksum = doc.getChecksum(jsonld)
-            
+            ETag eTag
             if (request.shouldEmbellish()) {
+                String plainChecksum = doc.getChecksum(jsonld)
                 whelk.embellish(doc)
+                eTag = ETag.embellished(plainChecksum, doc.getChecksum(jsonld))
 
-                // reverse links are inserted by embellish, so can only do this when embellished
+                // reverse links are inserted by embellish, so can only do
+                // this when embellished
                 if (request.shouldApplyInverseOf()) {
                     doc.applyInverses(whelk.jsonld)
                 }
+            } else {
+                eTag = ETag.plain(doc.getChecksum(jsonld))
             }
-            
-            ETag eTag = request.shouldEmbellish()
-                    ? ETag.embellished(checksum, doc.getChecksum(jsonld))
-                    : ETag.plain(checksum)
 
             if (request.getIfNoneMatch().map(eTag.&isNotModified).orElse(false)) {
                 sendNotModified(response, eTag)
                 return
             }
-            
-            sendGetResponse(
-                    maybeAddProposal25Headers(response, loc),
-                    getFormattedResponseBody(request, doc),
-                    eTag,
-                    request.getPath(),
-                    request.getContentType(),
-                    request.getId())
+
+            String profileId = request.getProfile().orElse(whelk.defaultTvmProfile)
+            addProfileHeaders(response, profileId)
+            def body = getFormattedResponseBody(request, doc, profileId)
+
+            String location = loc ?: doc.id
+            addProposal25Headers(response, location, getDataURI(location, request))
+
+            sendGetResponse(response, body, eTag, request.getPath(), request.getContentType(), request.getId())
         }
     }
 
@@ -334,23 +360,41 @@ class Crud extends HttpServlet {
         sendError(response, HttpServletResponse.SC_NOT_FOUND, "Document not found.")
     }
 
-    private Object getFormattedResponseBody(CrudGetRequest request, Document doc) {
-        log.debug("Formatting document {}. embellished: {}, framed: {}, lens: {}",
-                doc.getCompleteId(), request.shouldEmbellish(), request.shouldFrame(), request.getLens())
+    private Object getFormattedResponseBody(CrudGetRequest request, Document doc, String profileId) {
+        log.debug("Formatting document {}. embellished: {}, framed: {}, lens: {}, view: {}, profile: {}",
+                doc.getCompleteId(),
+                request.shouldEmbellish(),
+                request.shouldFrame(),
+                request.getLens(),
+                request.getView(),
+                profileId)
 
-        def transformedResponse
+        Map data
         if (request.getLens() != Lens.NONE) {
-            transformedResponse = applyLens(frameThing(doc), request.getLens())
+            data = applyLens(frameThing(doc), request.getLens())
         } else {
-            transformedResponse = request.shouldFrame()  ? frameRecord(doc) : doc.data
+            data = request.shouldFrame()  ? frameRecord(doc) : doc.data
         }
 
+        Object contextData = whelk.jsonld.context
+        if (profileId != whelk.defaultTvmProfile) {
+            data = applyDataProfile(profileId, data)
+            contextData = data[JsonLd.CONTEXT_KEY]
+            data[JsonLd.CONTEXT_KEY] = profileId
+        }
+
+
+        String uri = request.getContentType() == MimeTypes.TRIG ? doc.getCompleteId() : doc.getShortId()
+        return getNegotiatedDataBody(request, contextData, data, uri)
+    }
+
+    private Object getNegotiatedDataBody(CrudGetRequest request, Object contextData, Map data, String uri) {
         if (!(request.getContentType() in [MimeTypes.JSON, MimeTypes.JSONLD])) {
-            def id = request.getContentType() == MimeTypes.TRIG ? doc.getCompleteId() : doc.getShortId()
-            return converterUtils.convert(transformedResponse, id, request.getContentType())
+            data[JsonLd.CONTEXT_KEY] = contextData
+            return converterUtils.convert(data, uri, request.getContentType())
+        } else {
+            return data
         }
-
-        return transformedResponse
     }
 
     private static Map frameRecord(Document document) {
@@ -369,19 +413,19 @@ class Crud extends HttpServlet {
      }
 
 
-    private Object applyLens(Object framedThing, Lens lens) {
+    private Map applyLens(Map framedThing, Lens lens) {
         switch (lens) {
             case Lens.NONE:
                 return framedThing
             case Lens.CARD:
                 return whelk.jsonld.toCard(framedThing)
             case Lens.CHIP:
-                return whelk.jsonld.toChip(framedThing)
+                return (Map) whelk.jsonld.toChip(framedThing)
         }
     }
 
     private static void setVary(HttpServletResponse response) {
-        response.setHeader("Vary", "Accept")
+        response.setHeader("Vary", "Accept, Accept-Profile")
     }
 
     /**
@@ -404,17 +448,16 @@ class Crud extends HttpServlet {
 
     private String getActiveSite(HttpServletRequest request, String baseUri = null) {
         // If ?_site=<foo> has been specified (and <foo> is a valid site) it takes precedence
-        if (request.getParameter("_site") in siteConfig['sites']) {
+        if (request.getParameter("_site") in sitesData) {
             return request.getParameter("_site")
         }
 
-        if (baseUri in siteConfig['sites']) {
-            return siteConfig['sites'][baseUri]['@id']
+        if (baseUri in siteAlias) {
+            baseUri = siteAlias[baseUri]
         }
 
-        if (baseUri in siteConfig['site_alias']) {
-            String actualSite = siteConfig['site_alias'][baseUri]
-            return siteConfig['sites'][actualSite]['@id']
+        if (baseUri in sitesData) {
+            return sitesData[baseUri]['@id']
         }
 
         return siteConfig['default_site']
@@ -427,7 +470,6 @@ class Crud extends HttpServlet {
      * Document and String in the response may be null.
      *
      */
-    // TODO Handle version requests (See LXL-460)
     Tuple2<Document, String> getDocumentFromStorage(String id,
                                                     String version = null) {
         Tuple2<Document, String> result = new Tuple2(null, null)
@@ -468,23 +510,74 @@ class Crud extends HttpServlet {
         return result
     }
 
-    private static HttpServletResponse maybeAddProposal25Headers(HttpServletResponse response,
-                                                                 String location) {
-        if (location) {
-            response.addHeader('Content-Location',
-                               getDataURI(location))
-            response.addHeader('Document', location)
-            response.addHeader('Link', "<${location}>; rel=describedby")
-        }
-        return response
+    /**
+     * See <https://www.w3.org/wiki/HTML/ChangeProposal25>
+     */
+    private static void addProposal25Headers(HttpServletResponse response,
+                                             String location,
+                                             String dataLocation) {
+        response.addHeader('Content-Location', dataLocation)
+        response.addHeader('Document', location)
+        response.addHeader('Link', "<${location}>; rel=describedby")
     }
 
-    private static String getDataURI(String location) {
-        if (location.endsWith('/')) {
-            return location + 'data.jsonld'
-        } else {
-            return location + '/data.jsonld'
+    /**
+     * TODO: Spec in flux; see status at:
+     * <https://www.w3.org/TR/dx-prof-conneg/>
+     * and:
+     * <https://profilenegotiation.github.io/I-D-Profile-Negotiation/I-D-Profile-Negotiation.html>
+     */
+    private static void addProfileHeaders(HttpServletResponse response, String profileId) {
+        response.setHeader("Content-Profile", "<$profileId>")
+        response.setHeader("Link", "<$profileId>; rel=\"profile\"")
+    }
+
+    private static String getDataURI(String location, CrudGetRequest request) {
+        String lens = request.lens == Lens.NONE ? null : request.lens.toString().toLowerCase()
+        return getDataURI(location, request.contentType, lens, request.profile.orElse(null))
+    }
+
+    private static String getDataURI(String location,
+                                     String contentType,
+                                     String lens=null,
+                                     String profile=null) {
+        if (contentType == null) {
+            return location
         }
+
+        def loc = new StringBuilder(location)
+
+        String slash = location.endsWith('/') ? '' : '/'
+        String ext = CrudUtils.EXTENSION_BY_MEDIA_TYPE[contentType] ?: 'jsonld'
+
+        loc << slash << 'data.' << ext
+
+        def params = new StringJoiner("&")
+        if (lens != null) {
+            params.add("lens=${lens}")
+        }
+        if (profile != null) {
+            params.add("profile=${profile}")
+        }
+        if (params.length() > 0) {
+            loc << '?' << params.toString()
+        }
+
+        return loc.toString()
+    }
+
+    Map applyDataProfile(String profileId, Map data) {
+        Tuple2<Document, String> docAndLoc = getDocumentFromStorage(profileId)
+        Document profileDoc = docAndLoc.v1
+        if (profileDoc == null) {
+            throw new BadRequestException("Profile <${profileId}> is not available")
+        }
+        log.debug("Using profile: $profileId")
+        def contextDoc = profileDoc.data
+        data = (Map) targetVocabMapper.applyTargetVocabularyMap(profileId, contextDoc, data)
+        data[JsonLd.CONTEXT_KEY] = contextDoc[JsonLd.CONTEXT_KEY]
+
+        return data
     }
 
     /**
@@ -496,30 +589,28 @@ class Crud extends HttpServlet {
     void sendGetResponse(HttpServletResponse response,
                          Object responseBody, ETag eTag, String path,
                          String contentType, String requestId = null) {
-        // FIXME remove?
-        String ctxHeader = contextHeaders.get(path.split("/")[1])
-        if (ctxHeader) {
+        if (contentType == MimeTypes.JSON) {
             response.setHeader("Link",
-                    "<$ctxHeader>; " +
+                    "<$CONTEXT_PATH>; " +
                             "rel=\"http://www.w3.org/ns/json-ld#context\"; " +
                             "type=\"application/ld+json\"")
+        } else if (contentType == MimeTypes.JSONLD && responseBody instanceof Map && requestId != whelk.vocabContextUri) {
+            if (!responseBody.containsKey(JsonLd.CONTEXT_KEY)) {
+                responseBody[JsonLd.CONTEXT_KEY] = CONTEXT_PATH
+            }
         }
 
-        if (contentType == MimeTypes.JSONLD && responseBody instanceof Map && requestId != whelk.vocabContextUri) {
-            responseBody[JsonLd.CONTEXT_KEY] = CONTEXT_PATH
-        }
-
-        response.setHeader("ETag", eTag.toString())
-
-        if (path in contextHeaders.collect { it.value }) {
-            log.debug("request is for context file. " +
-                    "Must serve original content-type ($contentType).")
-            // FIXME what should happen here?
+        if (eTag != null) {
+            response.setHeader("ETag", eTag.toString())
         }
 
         setVary(response)
 
-        sendResponse(response, responseBody, contentType)
+        if (responseBody instanceof Map) {
+            sendResponse(response, (Map) responseBody, contentType)
+        } else {
+            sendResponse(response, (String) responseBody, contentType)
+        }
     }
 
     /**
@@ -570,7 +661,7 @@ class Crud extends HttpServlet {
             return
         }
 
-        if (!isSupportedContentType(request)) {
+        if (!isSupportedContentType(request.getContentType())) {
             log.debug("Unsupported Content-Type for POST.")
             failedRequests.labels("POST", request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
@@ -617,7 +708,8 @@ class Crud extends HttpServlet {
             return
         }
 
-        if (!newDoc.data['@graph'][1] || !newDoc.data['@graph'][1]['@id']) {
+        List graph = (List) newDoc.data['@graph']
+        if (!graph[1] || !graph[1]['@id']) {
             log.debug("Temporary @id missing in Thing")
             failedRequests.labels("POST", request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
@@ -625,7 +717,7 @@ class Crud extends HttpServlet {
             return
         }
 
-        if (newDoc.getThingIdentifiers().first() != newDoc.data['@graph'][1]['@id']) {
+        if (newDoc.getThingIdentifiers().first() != graph[1]['@id']) {
             log.debug("mainEntity.@id not same as Thing @id")
             failedRequests.labels("POST", request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
@@ -659,7 +751,7 @@ class Crud extends HttpServlet {
         // verify user permissions
         log.debug("Checking permissions for ${newDoc}")
         try {
-            boolean allowed = hasPostPermission(newDoc, request.getAttribute("user"))
+            boolean allowed = hasPostPermission(newDoc, (Map) request.getAttribute("user"))
             if (!allowed) {
                 failedRequests.labels("POST", request.getRequestURI(),
                         HttpServletResponse.SC_FORBIDDEN.toString()).inc()
@@ -723,7 +815,7 @@ class Crud extends HttpServlet {
             return
         }
 
-        if (!isSupportedContentType(request)) {
+        if (!isSupportedContentType(request.getContentType())) {
             log.debug("Unsupported Content-Type for PUT.")
             failedRequests.labels("PUT", request.getRequestURI(),
                     HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
@@ -832,11 +924,9 @@ class Crud extends HttpServlet {
         return !inputData || inputData.size() == 0
     }
 
-    static boolean isSupportedContentType(HttpServletRequest request) {
-        ContentType contentType = ContentType.parse(request.getContentType())
-        String mimeType = contentType.getMimeType()
-        // FIXME add additional content types?
-        return mimeType == "application/ld+json"
+    static boolean isSupportedContentType(String contentType) {
+        String mimeType = ContentType.parse(contentType).getMimeType()
+        return mimeType == DATA_CONTENT_TYPE
     }
 
     static Map getRequestBody(HttpServletRequest request) {
@@ -1037,7 +1127,7 @@ class Crud extends HttpServlet {
                 failedRequests.labels("DELETE", request.getRequestURI(),
                         HttpServletResponse.SC_NOT_FOUND.toString()).inc()
                 sendError(response, HttpServletResponse.SC_NOT_FOUND, "Document not found.")
-            } else if (doc && !hasDeletePermission(doc, request.getAttribute("user"))) {
+            } else if (doc && !hasDeletePermission(doc, (Map) request.getAttribute("user"))) {
                 failedRequests.labels("DELETE", request.getRequestURI(),
                         HttpServletResponse.SC_FORBIDDEN.toString()).inc()
                 sendError(response, HttpServletResponse.SC_FORBIDDEN, "You do not have sufficient privileges to perform this operation.")

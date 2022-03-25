@@ -32,6 +32,17 @@ class CrudUtils {
             'n3': [N3]
     ]
 
+    static Map EXTENSION_BY_MEDIA_TYPE = [:]
+    static {
+        ALLOWED_MEDIA_TYPES_BY_EXT.each { ext, mediatypes ->
+            if (ext.size() > 0) {
+                mediatypes.each {
+                    EXTENSION_BY_MEDIA_TYPE[it.toString()] = ext
+                }
+            }
+        }
+    }
+
     static final List ALLOWED_MEDIA_TYPES = [JSON, JSONLD, TRIG, TURTLE, RDFXML, N3]
 
     static String getBestContentType(HttpServletRequest request) {

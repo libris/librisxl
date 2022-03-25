@@ -10,6 +10,7 @@ class CrudGetRequest {
     private String contentType
     private View view
     private Lens lens
+    private String profile
 
     static CrudGetRequest parse(HttpServletRequest request) {
         return new CrudGetRequest(request)
@@ -20,6 +21,7 @@ class CrudGetRequest {
         parsePath(getPath())
         contentType = getBestContentType(request)
         lens = parseLens(request)
+        profile = parseProfile(request)
     }
 
     HttpServletRequest getHttpServletRequest() {
@@ -70,6 +72,10 @@ class CrudGetRequest {
         return lens
     }
 
+    Optional<String> getProfile() {
+        return Optional.ofNullable(profile)
+    }
+
     /**
      * Parse a CRUD path
      *
@@ -77,7 +83,7 @@ class CrudGetRequest {
      * where view is 'data' or 'data-view'
      */
     private void parsePath(String path) {
-        def matcher = path =~ ~/^\/(.+?)(\/(data|data-view)(\.(\w+))?)?$/
+        def matcher = path =~ ~/^\/(.+?)(\/(data|data-view|_changesets)(\.(\w+))?)?$/
         if (matcher.matches()) {
             resourceId = matcher[0][1]
             view = View.fromString(matcher[0][3])
@@ -99,6 +105,26 @@ class CrudGetRequest {
         }
     }
 
+    private String parseProfile(HttpServletRequest request) {
+        String param = request.getParameter('profile')
+        if (param != null) {
+            return param
+        }
+        String header = request.getHeader('Accept-Profile')
+        if (header != null) {
+            header = header.trim()
+            boolean startAngle = header.startsWith('<')
+            boolean endAngle = header.endsWith('>')
+            if (startAngle || endAngle) {
+                int start = startAngle ? 1 : 0
+                int end = header.size() - (endAngle ? 1 : 0)
+                header = header.substring(start, end)
+            }
+            return header
+        }
+        return null
+    }
+
     private Optional<Boolean> getBoolParameter(String name) {
         return Optional
                 .ofNullable(request.getParameter(name) ?: request.getAttribute(name))
@@ -108,7 +134,8 @@ class CrudGetRequest {
     enum View {
         RESOURCE(''),
         DATA('data'),
-        DATA_VIEW('data-view');
+        DATA_VIEW('data-view'),
+        CHANGE_SETS('_changesets');
 
         private String name
 

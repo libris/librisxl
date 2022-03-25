@@ -22,7 +22,7 @@ class JsonLdValidator {
         Preconditions.checkArgument(!jsonLd.context.isEmpty())
         Preconditions.checkArgument(!jsonLd.vocabIndex.isEmpty())
         def v = new JsonLdValidator(jsonLd)
-        v.setSkipTerms(['_marcUncompleted'])
+        v.setSkipTerms(['_marcUncompleted', '_marcFailedFixedFields'])
         return v
     }
 
@@ -101,6 +101,9 @@ class JsonLdValidator {
                 case Validation.Scope.DEFINITIONS:
                     break
                 case Validation.Scope.HOLD:
+                    checkHasDefinition(key, validation)
+                    validateObjectProperties(key, value, validation)
+                    verifyVocabTerm(key, value, validation)
                     break
             }
         })
@@ -284,6 +287,7 @@ class JsonLdValidator {
                     'type'       : type,
                     'description': type.description,
                     'path'       : path,
+                    'key'        : key,
                     'value'      : value
             ]
         }

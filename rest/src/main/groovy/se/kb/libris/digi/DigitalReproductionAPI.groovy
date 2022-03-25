@@ -46,9 +46,11 @@ import static se.kb.libris.digi.DigitalReproductionAPI.Type.STRING
  - Record data can be specified in meta
 
 
- Example (without required authentication headers):
+Example:
 
-curl -v -XPOST 'http://localhost:8180/_reproduction' -H 'Content-Type: application/ld+json' --data-binary @- << EOF
+TOKEN=$(curl -s -X POST -d 'client_id=$CLIENT_ID&client_secret=$CLIENT_SECRET&grant_type=client_credentials' https://login-dev.libris.kb.se/oauth/token | jq -r .access_token)
+
+curl -v -XPOST 'http://localhost:8180/_reproduction' -H 'Content-Type: application/ld+json' -H "Authorization: Bearer $TOKEN" -H 'XL-Active-Sigel: S' --data-binary @- << EOF
 {
   "@type": "Electronic",
   "reproductionOf": { "@id": "http://kblocalhost.kb.se:5000/q822pht24j3ljjr#it" },
@@ -57,16 +59,23 @@ curl -v -XPOST 'http://localhost:8180/_reproduction' -H 'Content-Type: applicati
       "@type": "Reproduction",
       "agent": { "@id": "http://kblocalhost.kb.se:5000/jgvxv7m23l9rxd3#it" },
       "place": { "@type": "Place", "label": "Stockholm" },
-      "year": "2021"
-    } 
+      "date": "2021"
+    }
   ],
   "meta" : {
     "bibliography": [ {"@id" : "https://libris.kb.se/library/ARB"} ]
   },
   "@reverse" : {
     "itemOf": [
-      { "heldBy": { "@id": "https://libris.kb.se/library/S" }},
-      { "heldBy": { "@id": "https://libris.kb.se/library/Utb1" }}
+      {
+        "heldBy": { "@id": "https://libris.kb.se/library/S" }, 
+        "hasComponent": [{ "cataloguersNote": ["foo"] }]
+      },
+      {
+        "heldBy": { "@id": "https://libris.kb.se/library/Utb1" }, 
+        "cataloguersNote": ["bar"],
+        "meta": { "cataloguersNote": ["baz"] }
+      }
     ]
   }
 }
@@ -77,14 +86,14 @@ EOF
 @Log
 class DigitalReproductionAPI extends HttpServlet {
     static final String API_LOCATION = 'https://libris.kb.se/api/_reproduction' // Only for setting generationProcess 
-    
+
     private static final ObjectMapper mapper = new ObjectMapper()
 
     private static final def FORWARD_HEADERS = [
             'XL-Active-Sigel',
             'Authorization'
     ].collect { it.toLowerCase() }
-    
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         def forwardHeaders = request.headerNames
@@ -116,13 +125,13 @@ class DigitalReproductionAPI extends HttpServlet {
         }
 
         def electronic = readJson(request)
-        
+
         check(electronic, ['@type'], 'Electronic')
         check(electronic, ['reproductionOf', '@id'], STRING)
         check(electronic, ['production'], ARRAY)
         if (!isLink(getAtPath(electronic, ['production', 0]))) { // minimal valid shape, so just check the first one 
             check(electronic, ['production', 0, '@type'], 'Reproduction')
-            check(electronic, ['production', 0, 'year'], STRING)
+            check(electronic, ['production', 0, 'date'], STRING)
             if (!isLink(getAtPath(electronic, ['production', 0, 'agent']))) {
                 check(electronic, ['production', 0, 'place', '@type'], STRING)
             }
@@ -131,7 +140,7 @@ class DigitalReproductionAPI extends HttpServlet {
                 check(electronic, ['production', 0, 'place', 'label'], STRING)
             }
         }
-               
+
         return electronic
     }
 
@@ -145,15 +154,15 @@ class DigitalReproductionAPI extends HttpServlet {
             throw badRequest("Expected $expected at $path, got: ${actual ?: '<MISSING>'}")
         }
     }
-    
+
     static enum Type {
         ARRAY(List.class),
         STRING(String.class)
-        
+
         Class type
         Type(Class type) { this.type = type }
     }
-        
+
     static Map readJson(HttpServletRequest request) {
         try {
             mapper.readValue(request.getInputStream().getBytes(), Map)
@@ -167,7 +176,7 @@ class DigitalReproductionAPI extends HttpServlet {
         response.setHeader('Content-Type', 'application/json')
         mapper.writeValue(response.getOutputStream(), ['code': code, 'msg' : msg ?: ''])
     }
-    
+
     static String getXlAPI(HttpServletRequest request) {
         //FIXME
         int port = request.getServerPort()
@@ -197,8 +206,10 @@ class ReproductionService {
             throw badRequest("Thing linked in reproductionOf cannot be Electronic")
         }
 
-        def holdingsToCreate = getAtPath(electronicThing, ['@reverse', 'itemOf', '*', 'heldBy', '@id'], [])
-        def badHeldBy = holdingsToCreate.findAll { xl.get(it).isEmpty() }
+        def holdingsToCreate = getAtPath(electronicThing, ['@reverse', 'itemOf'], [])
+        def badHeldBy = holdingsToCreate
+                .collect{ getAtPath(it, ['heldBy', '@id'], 'MISSING') }
+                .findAll { xl.get(it).isEmpty() }
         if (badHeldBy) {
             throw badRequest("No such library: $badHeldBy")
         }
@@ -227,7 +238,7 @@ class ReproductionService {
         }
         
         def electronicId = xl.create(record, electronicThing)
-        holdingsToCreate.each { heldBy -> createHoldingFor(electronicId, heldBy) }
+        holdingsToCreate.each { item -> createHoldingFor(electronicId, item) }
         
         return electronicId
     }
@@ -261,19 +272,24 @@ class ReproductionService {
         thing.hasRepresentation || !asList(getAtPath(thing, ['associatedMedia', '*', 'uri'], [])).isEmpty()
     }
     
-    void createHoldingFor(thingId, heldById) {
+    void createHoldingFor(thingId, Map item) {
+        def record = asMap(item.remove('meta'))
+        def heldById = getAtPath(item, ['heldBy', '@id'])
+        
+        def components = (asList(item.hasComponent) ?: [[:]]).collect {
+            it + [
+                    '@type' : 'Item',
+                    'heldBy': ['@id' : heldById],
+            ]
+        }
+        
         xl.create(
-                [:],
-                [
+                record,
+                item + [
                         '@type' : 'Item',
                         'itemOf' : ['@id' : thingId],
                         'heldBy': ['@id' : heldById],
-                        'hasComponent' : [
-                                [
-                                        '@type' : 'Item',
-                                        'heldBy': ['@id' : heldById],
-                                ]
-                        ]
+                        'hasComponent' : components
                 ]
         )
     }

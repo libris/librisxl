@@ -47,13 +47,34 @@ $ curl -XGET -H "Accept: application/ld+json" https://libris-qa.kb.se/s93ns5h436
 }
 ```
 
+### Profile Negotiation
+
+To get data in a different flavour (using a specific selection of RDF
+vocabularies), we support a form of profile negotiation.
+
+Using parameters:
+```
+$ curl -s -HAccept:text/turtle "http://libris-qa.kb.se/fxql7jqr38b1dkf?profile=https://id.kb.se/sys/context/target/sdo-w3c&embellished=false"
+
+$ curl -s -H'Accept: text/turtle' http://id-qa.kb.se/relator/contributor?profile=https://id.kb.se/sys/context/target/bibo-w3c
+
+$ curl -s -H'Accept: text/turtle' http://libris-qa.kb.se/fxql7jqr38b1dkf?profile=https://id.kb.se/sys/context/target/bibo-w3c
+```
+
+Using headers:
+```
+$ curl -H 'Accept-Profile: <https://id.kb.se/sys/context/target/loc-w3c-sdo>' \
+      http://libris-qa.kb.se/fxql7jqr38b1dkf
+```
+
 ## Requests that require authentication – create, update and remove
 
 In order to make requests that require authentication, an oauth client has to be registered
 in Libris. To register a client, contact Libris customer service and they will provide you
 with a new set of credentials (client id and client secret) as well as an instruction on
 how these can be used to obtain a bearer token. This bearer token is referred to in the examples
-below.
+below. The provided credentials work either for the Libris test environments or the production environment, depending 
+on the character of the integration as well as the needs of the user.
 
 There are two different permission levels for the client: one for working with holdings
 and one for working with both holdings and bibliographic records. The client is connected
@@ -68,6 +89,7 @@ following to obtain a bearertoken:
 ```
 $ curl -X POST -d 'client_id=<Your client id>&client_secret=<Your client secret>&grant_type=client_credentials' https://login.libris.kb.se/oauth/token'
 ```
+To fetch a token that is valid for the test environments, adjust the token endpoint to `https://login-stg.libris.kb.se/oauth/token`.
 
 The response to the above request should look something like: 
 

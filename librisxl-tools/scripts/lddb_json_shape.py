@@ -1,7 +1,8 @@
 import json
+import os
 
 
-MAX_STATS = 512
+MAX_STATS = int(os.environ.get('MAX_STATS', '512'))
 HARD_MAX_STATS = 8192
 STATS_FOR_ALL = {
         # auth

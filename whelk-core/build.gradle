@@ -71,6 +71,8 @@ dependencies {
     api files('lib/isbntools-1.3.jar')
     implementation files('lib/oaij-0.1.jar')
 
+    implementation(project(':trld-java'))
+
     // Dependencies inherited from classic libris, due to profile handling
     implementation group: 'com.ibm.icu', name: 'icu4j', version: '4.8.1.1'
     implementation(group: 'org.dspace', name: 'xoai', version: '3.2.10') {
@@ -114,7 +116,7 @@ dependencies {
 
     // Integration
     api "org.apache.commons:commons-lang3:3.3.2"
-    implementation 'org.postgresql:postgresql:9.4.1212.jre7'
+    implementation 'org.postgresql:postgresql:42.3.3'
 
     // profiling and test
     testImplementation 'org.spockframework:spock-core:2.0-groovy-3.0'
@@ -177,13 +179,6 @@ task vocabFromMarcFrame(dependsOn: 'classes', type: JavaExec) {
     description "Extract a vocabulary from marcframe"
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'whelk.converter.marc.MarcFrameVocabExtractor'
-}
-
-task jsonldToTurtle(dependsOn: 'classes', type: JavaExec) {
-    description "Convert a JSON-LD file to Turtle (USAGE: -Dargs='<context> <source>')"
-    classpath = sourceSets.main.runtimeClasspath
-    mainClass = 'whelk.converter.JsonLdToTurtle'
-    args(System.getProperty('args', "").split() as String[])
 }
 
 task dataview(dependsOn: 'classes', type: JavaExec) {

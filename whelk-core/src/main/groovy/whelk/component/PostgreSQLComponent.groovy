@@ -1249,11 +1249,10 @@ class PostgreSQLComponent {
     }
 
     protected void deleteCard(Document doc, Connection connection) {
-        String systemId = getSystemIdByIri(doc.getThingIdentifiers().first())
         PreparedStatement preparedStatement = null
         try {
             preparedStatement = connection.prepareStatement(DELETE_CARD)
-            preparedStatement.setString(1,systemId)
+            preparedStatement.setString(1, doc.getShortId())
 
             preparedStatement.executeUpdate()
         }

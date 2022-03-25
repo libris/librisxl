@@ -13,6 +13,7 @@ import whelk.exception.InvalidQueryException
 import whelk.exception.WhelkRuntimeException
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
+import whelk.search.RangeParameterPrefix
 import whelk.util.DocumentUtil
 
 @Log
@@ -21,6 +22,8 @@ class SearchUtils {
     final static int DEFAULT_LIMIT = 200
     final static int MAX_LIMIT = 4000
     final static int DEFAULT_OFFSET = 0
+
+    final static String MATCHES_PROP = 'matchesTransitive'
 
     private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper()
 
@@ -58,6 +61,7 @@ class SearchUtils {
         String query = getReservedQueryParameter('q', queryParameters)
         String sortBy = getReservedQueryParameter('_sort', queryParameters)
         String lens = getReservedQueryParameter('_lens', queryParameters)
+        String addStats = getReservedQueryParameter('_stats', queryParameters)
         String suggest = getReservedQueryParameter('_suggest', queryParameters)
 
         if (queryParameters['p'] && !object) {
@@ -79,6 +83,7 @@ class SearchUtils {
                           '_sort' : sortBy,
                           '_limit': limit,
                           '_lens' : lens,
+                          '_stats' : addStats,
                           '_suggest' : suggest,
         ]
 
@@ -113,6 +118,7 @@ class SearchUtils {
         String query = pageParams['q']
         String reverseObject = pageParams['o']
         List<String> predicates = pageParams['p']
+        String addStats = pageParams['_stats']
         String suggest = pageParams['_suggest']
         lens = lens ?: 'cards'
 
@@ -155,7 +161,7 @@ class SearchUtils {
                 // This object must be re-added because it might get filtered out in applyLens().
                 item['reverseLinks'] = it['reverseLinks']
                 if (item['reverseLinks'] != null)
-                    item['reverseLinks'][JsonLd.ID_KEY] = Document.getBASE_URI().resolve('find?o=' + URLEncoder.encode(it['@id'], 'UTF-8').toString())
+                    item['reverseLinks'][JsonLd.ID_KEY] = Document.getBASE_URI().resolve('find?o=' + URLEncoder.encode(it['@id'], 'UTF-8').toString()).toString()
                 return item
             }
         }
@@ -167,9 +173,13 @@ class SearchUtils {
         // results will be (x=a OR x=b).
         def selectedFacets = ((Map) mappingsAndPageParams.v2).findAll {it.key != JsonLd.TYPE_KEY }.keySet()
         def filteredAggregations = ((Map) esResult['aggregations']).findAll{ !selectedFacets.contains(it.key) }
-        Map stats = buildStats(lookup, filteredAggregations,
-                makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)),
-                (total > 0 && !predicates) ? reverseObject : null)
+
+        Map stats = null
+        if (addStats == null || (addStats == 'true' || addStats == 'on')) {
+            stats = buildStats(lookup, filteredAggregations,
+                               makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)),
+                               (total > 0 && !predicates) ? reverseObject : null)
+        }
         if (!stats) {
             log.debug("No stats found for query: ${queryParameters}")
         }
@@ -204,6 +214,7 @@ class SearchUtils {
                                            limit, offset, total)
 
         if (stats && !suggest) {
+            stats[JsonLd.ID_KEY] = '#stats'
             result['stats'] = stats
         }
 
@@ -341,6 +352,8 @@ class SearchUtils {
             String baseUrlForKey = removeWildcardForKey(baseUrl, key)
             List observations = []
             Map sliceNode = ['dimension': key]
+            sliceNode['dimensionChain'] = makeDimensionChain(key)
+
             aggregation['buckets'].each { bucket ->
                 String itemId = bucket['key']
                 String searchPageUrl = "${baseUrlForKey}&${makeParam(key, itemId)}"
@@ -383,6 +396,18 @@ class SearchUtils {
         }
 
         return stats
+    }
+
+    List<String> makeDimensionChain(String key) {
+        List<String> dimensionChain = key.split(/\./).findResults {
+            it == JsonLd.TYPE_KEY ? 'rdf:type' : it == JsonLd.ID_KEY ? null : it
+        }
+        if (dimensionChain[0] == JsonLd.REVERSE_KEY) {
+            dimensionChain.remove(0)
+            String inv = dimensionChain.remove(0)
+            dimensionChain.add(0, ['inverseOfTerm': inv])
+        }
+        return dimensionChain
     }
 
     /**
@@ -445,18 +470,41 @@ class SearchUtils {
     private class Lookup {
         private Multimap<String, Map> iriPos = ArrayListMultimap.create()
         
-        Map chip(String itemId) {
+        Map chip(String itemRepr) {
+            boolean matchesTerm = false
+            def itemId = itemRepr
+            if (itemRepr.startsWith(RangeParameterPrefix.MATCHES.prefix)) {
+                matchesTerm = true
+                itemId = itemId[RangeParameterPrefix.MATCHES.prefix.size()..-1]
+            }
+
             def termKey = ld.toTermKey(itemId)
             if (termKey in ld.vocabIndex) {
                 return ld.vocabIndex[termKey]
             }
 
             if (!itemId.startsWith('http') && itemId.contains('.')) {
-                def chain = itemId.split('\\.').findAll {it != JsonLd.ID_KEY}
+                String[] parts = itemId.split('\\.')
+                List chain = parts
+                    .findAll { it != JsonLd.ID_KEY }
+                    .collect { Lookup.this.chip(it) }
+                String label = parts.join(' ')
+
+                if (matchesTerm) {
+                    def proptype = chain[-1][JsonLd.TYPE_KEY]
+                    List<String> proptypes = proptype instanceof String ?
+                        [(String) proptype] :
+                        (List<String>) proptype
+                    if (proptypes.any { ld.isSubClassOf(it, 'ObjectProperty') }) {
+                        chain << Lookup.this.chip(MATCHES_PROP)
+                        label = "matches $label"
+                    }
+                }
+
                 return [
-                        'propertyChainAxiom': chain.collect{ Lookup.this.chip(it) },
-                        'label': chain.join(' '),
-                        '_key': itemId,  // lxlviewer has some propertyChains of its own defined, this is used to match them 
+                        'propertyChainAxiom': chain,
+                        'label': label,
+                        '_key': itemRepr,  // lxlviewer has some propertyChains of its own defined, this is used to match them 
                 ]
             }
 
@@ -690,9 +738,12 @@ class SearchUtils {
                     termKey = param
                     value = val
                 }
-                
-                result << ['variable': param, 'predicate': lookup.chip(termKey),
-                           (valueProp): value]
+
+                result << [
+                    'variable': param,
+                    'predicate': lookup.chip(termKey),
+                    (valueProp): value
+                ]
 
                 if (!(param in pageParams)) {
                     pageParams[param] = []

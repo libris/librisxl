@@ -48,6 +48,8 @@ class Whelk {
     // resulting in potential serving of stale data.
 
     // TODO: encapsulate and configure (LXL-260)
+    String kbvContextUri = "https://id.kb.se/sys/context/kbv"
+    String defaultTvmProfile = kbvContextUri
     String vocabContextUri = "https://id.kb.se/vocab/context"
     String vocabDisplayUri = "https://id.kb.se/vocab/display"
     String vocabUri = "https://id.kb.se/vocab/"
@@ -376,7 +378,7 @@ class Whelk {
         storage.remove(id, changedIn, changedBy)
         if (elastic && !skipIndex) {
             elastic.remove(id)
-            reindexAffected(doc, doc.getExternalRefs(), new TreeSet<>())
+            reindexAffected(doc, doc.getExternalRefs(), Collections.emptySet())
             log.debug "Object ${id} was removed from Whelk"
         }
         else {

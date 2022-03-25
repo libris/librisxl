@@ -1,19 +1,18 @@
 package whelk.importer
 
-import whelk.reindexer.CardRefresher
-
 import java.lang.annotation.*
 import java.util.concurrent.ExecutorService
 import java.util.zip.GZIPOutputStream
+import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.io.output.CountingOutputStream
 import org.apache.commons.io.FilenameUtils
 
-import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
-import whelk.converter.JsonLdToTurtle
+import whelk.converter.JsonLdToTrigSerializer
 import whelk.filter.LinkFinder
+import whelk.reindexer.CardRefresher
 import whelk.reindexer.ElasticReindexer
 import whelk.util.PropertyLoader
 import whelk.util.Tools
@@ -67,6 +66,12 @@ class ImporterMain {
         new CardRefresher(whelk).refresh(collection)
     }
 
+    @Command(args='[SOURCE]')
+    void importLinkedData(String source=null) {
+        Whelk whelk = Whelk.createLoadedSearchWhelk(props)
+        new LinkedDataImporter(whelk).importRdfAsMultipleRecords(source)
+    }
+
     @Command(args='[FROM]')
     void reindexFrom(String from=null) {
         boolean useCache = true
@@ -109,37 +114,11 @@ class ImporterMain {
 
     // Records that do not cleanly translate to trig/turtle (bad data).
     // This obviously needs to be cleaned up!
-    def trigExcludeList = [
-            "b5qzm6mgd220mqq2", // @vocab:ISO639-2-T "sqi" ;
-            "htf4scsmk0n44qcq",
-            "b7f0m6mgd2q54bpd",
-            "m7g8xhxrp1f0lp7l",
-            "5qgtg1g97195wsm3",
-            "0qgn9v9421qh0jts",
-            "f8j3q9qkh342fhmg",
-            "7pcwj3jc92jmfccp",
-            "w0qj6r61z3kkbsrj",
-            "hdx4scsmk3c2bm5r",
-            "mw38xhxrp1s0b85x",
-            "1rvnbwb530j6k6nj",
-            "q8lc1l1vs3b7168t",
-            "mcd8xhxrp5k5zm44",
-            "qmjc1l1vs0hp5mck",
-            "1zbpbwb5313nlh3g",
-            "wbvj6r61z4zl0108",
-            "m468xhxrp3w9svn4",
-            "csk1n7nhf52nd4br",
-            "nq89zjzsq2fj5cjs"
-    ] as Set
+    def trigExcludeList = [] as Set
 
     @Command(args='FILE [CHUNKSIZEINMB [--gzip]]')
     void lddbToTrig(String file, String chunkSizeInMB = null, String gzip = null, String collection = null) {
         def whelk = Whelk.createLoadedCoreWhelk(props)
-
-        def ctx = JsonLdToTurtle.parseContext([
-                '@context': whelk.jsonld.context
-        ])
-        def opts = [useGraphKeyword: false, markEmptyBnode: true]
 
         boolean writingToFile = file && file != '-'
         boolean shouldGzip = writingToFile && gzip && gzip == '--gzip'
@@ -169,7 +148,9 @@ class ImporterMain {
         }
 
         CountingOutputStream cos = new CountingOutputStream(outputStream)
-        def serializer = new JsonLdToTurtle(ctx, cos, opts)
+        def ctx = whelk.jsonld.context
+        def serializer = new JsonLdToTrigSerializer(ctx, cos)
+
         serializer.prelude()
         int i = 0
         for (Document doc : whelk.storage.loadAll(collection)) {
@@ -185,7 +166,7 @@ class ImporterMain {
             ++i
             filterProblematicData(id, doc.data)
             try {
-                serializer.objectToTrig(id, doc.data)
+                serializer.writeGraph(id, doc.data['@graph'])
             } catch (Throwable e) {
                 // Part of the record may still have been written to the stream, which is now corrupt.
                 System.err.println("${doc.getShortId()} conversion failed with ${e.toString()}")

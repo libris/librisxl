@@ -24,7 +24,7 @@ class ESQuery {
     
     private static final int DEFAULT_PAGE_SIZE = 50
     private static final List RESERVED_PARAMS = [
-        'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens', '_suggest', '_site'
+        'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens', '_stats', '_suggest', '_site'
     ]
     private static final String OR_PREFIX = 'or-'
     private static final String EXISTS_PREFIX = 'exists-'
@@ -492,8 +492,10 @@ class ESQuery {
         def queryParametersCopy = new HashMap<>(queryParameters)
         List filters = []
 
-        makeRangeFilters(queryParametersCopy, filters)
-
+        def (handledParameters, rangeFilters) = makeRangeFilters(queryParametersCopy)
+        handledParameters.each {queryParametersCopy.remove(it)}
+        filters.addAll(rangeFilters)
+        
         // TODO This is copied from the old code and should be rewritten.
         // We don't have that many nested mappings, so this is way to general.
         Map groups = queryParametersCopy.groupBy { p -> getPrefixIfExists(p.key) }
@@ -719,32 +721,36 @@ class ESQuery {
 
     /**
      * Construct "range query" filters for parameters prefixed with any {@link RangeParameterPrefix}
-     * Ranges for different parameters are combined with AND
-     * Multiple ranges for the same parameter are combined with OR
+     * Ranges for different parameters are ANDed together
+     * Multiple ranges for the same parameter are ORed together
      *
      * Range endpoints are matched in the order they appear
      * e.g. minEx-x=1984&maxEx-x=1988&minEx-x=1993&min-x=2000&maxEx-x=1995
      * means 1984 < x < 1988 OR 1993 < x < 1995 OR x >= 2000
      */
-    @CompileDynamic // compiler doesn't get the collectMany construct below...
-    void makeRangeFilters(Map<String, String[]> queryParameters, List filters) {
-        Map<String, Ranges> ranges = [:]
+    Tuple2<Set<String>, List> makeRangeFilters(Map<String, String[]> queryParameters) {
+        Map<String, Ranges> parameterToRanges = [:]
         Set<String> handledParameters = new HashSet<>()
 
         queryParameters.each { parameter, values ->
-            parseRangeParameter(parameter) { String nameNoPrefix, RangeParameterPrefix prefix ->
-                Ranges r = ranges.computeIfAbsent(nameNoPrefix,
-                        { p -> p in dateFields ? Ranges.date(p, whelk.getTimezone()) : Ranges.nonDate(p)})
-                values.collectMany{ it.tokenize(',') }.each { r.add(prefix, it.trim()) }
+            parseRangeParameter(parameter) { String parameterNoPrefix, RangeParameterPrefix prefix ->
+                Ranges r = parameterToRanges.computeIfAbsent(parameterNoPrefix, { p ->
+                    p in dateFields 
+                            ? Ranges.date(p, whelk.getTimezone(), whelk) 
+                            : Ranges.nonDate(p, whelk) 
+                })
+                
+                values.each { it.tokenize(',').each { r.add(prefix, it.trim()) } }
                 handledParameters.add(parameter)
             }
         }
 
-        handledParameters.each {queryParameters.remove(it)}
-        filters.addAll(ranges.values().collect {it.toQuery()})
+        def filters = parameterToRanges.values().collect { it.toQuery() }
+
+        return new Tuple2(handledParameters, filters)
     }
 
-    private void parseRangeParameter (String parameter, Closure handler) {
+    private static void parseRangeParameter (String parameter, Closure handler) {
         for (RangeParameterPrefix p : RangeParameterPrefix.values()) {
             if (parameter.startsWith(p.prefix())) {
                 handler(parameter.substring(p.prefix().size()), p)
@@ -753,7 +759,7 @@ class ESQuery {
         }
     }
 
-    Set getDateFields(Map mappings) {
+    static Set getDateFields(Map mappings) {
         Set dateFields = [] as Set
         DocumentUtil.findKey(mappings['properties'], 'type') { value, path ->
             if (value == 'date') {

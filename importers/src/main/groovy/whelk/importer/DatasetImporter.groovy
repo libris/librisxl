@@ -18,9 +18,9 @@ class DatasetImporter {
         }
 
         Set<String> idsInInput = []
+
         long updatedCount = 0
         long createdCount = 0
-        long deletedCount = 0
         long lineCount = 0
 
         File inDataFile = new File(filePath)
@@ -61,11 +61,22 @@ class DatasetImporter {
             ++lineCount
         }
 
+        List<String> needsRetry = []
+        long deletedCount = removeDeleted(whelk, dataset, idsInInput, needsRetry)
+
+        System.err.println("Created: " + createdCount +" new,\n" +
+                "updated: " + updatedCount + " existing and\n" +
+                "deleted: " + deletedCount + " old records (should have been: " + (deletedCount + needsRetry.size()) + "),\n" +
+                "out of the: " + idsInInput.size() + " records in dataset: \"" + dataset + "\".\n" +
+                "Dataset now in sync.")
+    }
+
+    protected static long removeDeleted(Whelk whelk, String dataset, Set<String> idsInInput, List<String> needsRetry) {
         // Clear out anything that was previously stored in this dataset, but was not in the in-data now.
         // If faced with "can't delete depended on stuff", retry again later, after more other deletes have
         // succeeded (there may be intra-set dependencies). If the dataset contains circular dependencies,
         // deletions will never be possible until the circle is unlinked/broken somewhere along the chain.
-        List<String> needsRetry = []
+        long deletedCount = 0
         whelk.storage.doForIdInDataset(dataset, { String storedIdInDataset ->
             if (!idsInInput.contains(storedIdInDataset)) {
                 if (!remove(whelk, storedIdInDataset)) {
@@ -97,11 +108,7 @@ class DatasetImporter {
                     "possible, so they were skipped (most likely they are still depended upon):\n" + needsRetry)
         }
 
-        System.err.println("Created: " + createdCount +" new,\n" +
-                "updated: " + updatedCount + " existing and\n" +
-                "deleted: " + deletedCount + " old records (should have been: " + (deletedCount + needsRetry.size()) + "),\n" +
-                "out of the: " + idsInInput.size() + " records in dataset: \"" + dataset + "\".\n" +
-                "Dataset now in sync.")
+        return deletedCount
     }
 
     private static boolean remove(Whelk whelk, String id) {

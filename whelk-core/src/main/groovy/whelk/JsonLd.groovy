@@ -670,10 +670,19 @@ class JsonLd {
 
         additionalObjects.each { object ->
             if (object instanceof Map) {
-                if (((Map)object).containsKey('@graph')) {
+                if (object.containsKey(GRAPH_KEY)) {
+                    if (!object.containsKey(ID_KEY)) {
+                        def data = object[GRAPH_KEY]
+                        Map record = (Map) (data instanceof List ? ((List)data)[0] : data)
+                        String cardId = toCardId((String) record[ID_KEY])
+                        object = [
+                            (ID_KEY): cardId,
+                            (GRAPH_KEY): object[GRAPH_KEY]
+                        ]
+                    }
                     graphItems << object
                 } else {
-                    graphItems << ['@graph': object]
+                    graphItems << [[GRAPH_KEY]: object]
                 }
             }
         }
@@ -681,6 +690,10 @@ class JsonLd {
         jsonLd[GRAPH_KEY] = graphItems
 
         return jsonLd
+    }
+
+    String toCardId(String id) {
+        return "$id?lens=card"
     }
 
     Map toCard(Map thing, List<List> preservePaths) {

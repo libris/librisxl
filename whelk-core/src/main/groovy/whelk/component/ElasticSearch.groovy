@@ -22,6 +22,7 @@ import static whelk.util.Jackson.mapper
 @Log
 class ElasticSearch {
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
+    static final String SEARCH_TYPE = "dfs_query_then_fetch"
 
     static final Set<String> LANGUAGES_TO_INDEX = ['sv', 'en'] as Set
     static final List<String> REMOVABLE_BASE_URIS = [
@@ -34,6 +35,7 @@ class ElasticSearch {
     ]
 
     public int maxResultWindow = 10000 // Elasticsearch default (fallback value)
+    public int maxTermsCount = 65536 // Elasticsearch default (fallback value)
     
     String defaultIndex = null
     private List<String> elasticHosts
@@ -75,12 +77,16 @@ class ElasticSearch {
 
     void initSettings() {
         Map indexSettings = getSettings()
-        if (indexSettings.index &&
-                indexSettings.index['max_result_window'] &&
-                ((String) indexSettings.index['max_result_window']).isNumber()) {
-            maxResultWindow = ((String) indexSettings.index['max_result_window']).toInteger()
+        
+        def getInt = { String name, int defaultTo ->
+            indexSettings.index && indexSettings.index[name] && ((String) indexSettings.index[name]).isNumber()
+                ? ((String) indexSettings.index[name]).toInteger()
+                : defaultTo
         }
         
+        maxResultWindow = getInt('max_result_window', maxResultWindow)
+        maxTermsCount = getInt('max_terms_count', maxTermsCount)
+                
         Map clusterInfo = performRequest('GET', '/')
         if (clusterInfo?.version?.build_flavor == 'default') {
             isPitApiAvailable = true
@@ -417,7 +423,7 @@ class ElasticSearch {
     Map queryIds(Map jsonDsl) {
         return performQuery(
                 jsonDsl,
-                getQueryUrl() + '?filter_path=took,hits.total,hits.hits._id',
+                getQueryUrl(['took','hits.total','hits.hits._id']),
                 { it."_id" }
         )
     }
@@ -488,8 +494,16 @@ class ElasticSearch {
         }
     }
 
-    private String getQueryUrl() {
-        return "/${indexName}/_search"
+    private String getQueryUrlWithoutIndex(filterPath = []) {
+        getQueryUrl(filterPath, null)
+    }
+    
+    private String getQueryUrl(filterPath = [], index = indexName) {
+        def url = (index ? "/${index}" : '') + "/_search?search_type=$SEARCH_TYPE"
+        if (filterPath) {
+            url += "&filter_path=${filterPath.join(',')}"
+        }
+        return url.toString()
     }
 
     static String toElasticId(String id) {
@@ -521,20 +535,23 @@ class ElasticSearch {
         boolean isBeforeFirstFetch = true
 
         Map query
-        String filterPath
+        List<String> filterPath
         Closure<T> hitCollector
         
         Scroll(Map query, List<String> hitsFilter = ['hits.hits._id'], Closure<T> hitCollector = { it['_id']}) {
             this.query = query
-            this.filterPath = (FILTER_PATH + hitsFilter).join(',')
+            this.filterPath = (FILTER_PATH + hitsFilter)
             this.hitCollector = hitCollector
         }
 
         abstract boolean isAfterLast()
         abstract void updateState(Map response)
-        abstract String queryPath()
         abstract Map nextRequest()
-
+        
+        String queryPath() {
+            getQueryUrl(filterPath)
+        }
+        
         @Override
         boolean hasNext() {
             if (isBeforeFirstFetch) {
@@ -592,12 +609,7 @@ class ElasticSearch {
 
             page++
         }
-
-        @Override
-        String queryPath() {
-            "/${indexName}/_search?filter_path=$filterPath"
-        }
-
+        
         @Override
         Map nextRequest() {
             return [
@@ -652,7 +664,9 @@ class ElasticSearch {
 
         @Override
         String queryPath() {
-            "/_search?filter_path=$filterPath"
+            isPitApiAvailable // point in time is created on index and then index cannot be specified here 
+                    ? getQueryUrlWithoutIndex(filterPath)
+                    : getQueryUrl(filterPath)
         }
 
         @Override
