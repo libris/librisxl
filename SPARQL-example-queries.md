@@ -19,7 +19,7 @@ för klasser respektive egenskaper.
 
 Vanliga [namnrymdsprefix](https://www.w3.org/TR/sparql11-query/#prefNames) är [fördefinierade](https://libris.kb.se/sparql/?help=nsdecl) i endpointen.
 Dessa kan användas i frågorna utan att behöva deklareras explicit.
-I exempelfrågorna som följer deklarerar vi dock standardprefixet `:` för KBV-termer, för bättre läsbarhet, istället för det fördefinierade `kbv:`.
+För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfrågorna som följer använder vi istället standardprefixet `:` (deklareras explicit) för bättre läsbarhet.
 
 ---
 
@@ -234,7 +234,7 @@ I exempelfrågorna som följer deklarerar vi dock standardprefixet `:` för KBV-
                         :agent/:label ?agentLabel ;
                         :year ?year ] .
 
-            FILTER(str(?year) >= "1920" && str(?year) < "2000") 
+            FILTER(str(?year) >= "1920" && str(?year) < "2000")
         }
 
     **Kommentar:**  
@@ -245,12 +245,14 @@ I exempelfrågorna som följer deklarerar vi dock standardprefixet `:` för KBV-
 
 * #### Hur många böcker ges ut av egenutgivare varje år?
 
+        PREFIX : <https://id.kb.se/vocab/>
+
         SELECT ?year (COUNT(DISTINCT ?book) AS ?count) {
-            ?book bf2:issuance kbv:Monograph ;
-                bf2:instanceOf/a bf2:Text ;
-                kbv:publication [ a kbv:PrimaryPublication ;
-                        kbv:year ?year ] ;
-                ^bf2:itemOf/kbv:hasComponent?/kbv:cataloguersNote "nbegenutg" .
+            ?book :issuanceType :Monograph ;
+                :instanceOf/a :Text ;
+                :publication [ a :PrimaryPublication ;
+                        :year ?year ] ;
+                ^:itemOf/:hasComponent?/:cataloguersNote "nbegenutg" .
         }
         ORDER BY ?year
 
@@ -258,34 +260,35 @@ I exempelfrågorna som följer deklarerar vi dock standardprefixet `:` för KBV-
 
 * #### Hur många böcker har det getts ut inom barnlitteratur i Sverige varje år?
 
-        define input:same-as "yes"
+        PREFIX : <https://id.kb.se/vocab/>
 
         SELECT ?year (COUNT(DISTINCT ?book) AS ?count) {
-            ?audience (:exactMatch|^:exactMatch)* marc:Juvenile .
-            ?book bf2:issuance kbv:Monograph ;
-                bf2:instanceOf [ a bf2:Text ;
-                        bf2:intendedAudience marc:Juvenile ] ;
-                kbv:publication [ a kbv:PrimaryPublication ;
-                        kbv:country ctry:sw ;
-                        kbv:year ?year ] .
+            ?audience (:exactMatch|^:exactMatch|:sameAs|^:sameAs)* marc:Juvenile .
+            ?book :issuanceType :Monograph ;
+                :instanceOf [ a :Text ;
+                        :intendedAudience marc:Juvenile ] ;
+                :publication [ a :PrimaryPublication ;
+                        :country ctry:sw ;
+                        :year ?year ] .
         }
         GROUP BY ?year
         ORDER BY ?year
 
     **Kommentar:**  
-    Vill man undanta årtal som avviker från formen "yyyy" kan man lägga till det här filtret: `FILTER(regex(?year
-    , "^[0-9]{4}$"))`.
+    Vill man undanta årtal som avviker från formen "yyyy" kan man lägga till det här filtret: `FILTER(regex(?year, "^[0-9]{4}$"))`.
 
 ---
 
 * #### Hur många böcker ges ut i Sverige totalt varje år?
 
+        PREFIX : <https://id.kb.se/vocab/>
+
         SELECT ?year (COUNT(DISTINCT ?book) AS ?count) {
-            ?book bf2:issuance kbv:Monograph ;
-                bf2:instanceOf/a bf2:Text ;
-                kbv:publication [ a kbv:PrimaryPublication ;
-                        kbv:country ctry:sw ;
-                        kbv:year ?year ] .
+            ?book :issuanceType :Monograph ;
+                :instanceOf/a :Text ;
+                :publication [ a :PrimaryPublication ;
+                        :country ctry:sw ;
+                        :year ?year ] .
         }
         GROUP BY ?year
         ORDER BY ?year
@@ -294,23 +297,27 @@ I exempelfrågorna som följer deklarerar vi dock standardprefixet `:` för KBV-
 
 * #### Hur många böcker har digitaliserats under 2020?
 
+        PREFIX : <https://id.kb.se/vocab/>
+
         SELECT (COUNT(DISTINCT ?digiBook) AS ?count) {
-            ?digiBook bf2:issuance kbv:Monograph ;
-                bf2:instanceOf/a bf2:Text ;
-                kbv:production/bf2:date "2020" ;
-                ^foaf:primaryTopic/kbv:bibliography lib:DIGI .
+            ?digiBook :issuanceType :Monograph ;
+                :instanceOf/a :Text ;
+                :production/:date "2020" ;
+                ^:mainEntity/:bibliography lib:DIGI .
         }
 
 ---
 
 * #### Vilka titlar digitaliserades 2019?
 
+        PREFIX : <https://id.kb.se/vocab/>
+
         SELECT DISTINCT ?digi ?title {
-            ?digi kbv:production/bf2:date "2019" ;
-                ^foaf:primaryTopic/kbv:bibliography lib:DIGI .
+            ?digi :production/:date "2019" ;
+                ^:mainEntity/:bibliography lib:DIGI .
             OPTIONAL {
-                ?digi bf2:title [ a bf2:Title ;
-                        bf2:mainTitle ?title ] .
+                ?digi :hasTitle [ a :Title ;
+                        :mainTitle ?title ] .
             }
         }
         ORDER BY ?title
@@ -319,41 +326,35 @@ I exempelfrågorna som följer deklarerar vi dock standardprefixet `:` för KBV-
 
 * #### Hur många svenska utgivare fanns det 1970?
 
+        PREFIX : <https://id.kb.se/vocab/>
+
         SELECT (COUNT(DISTINCT ?publisherLabel) AS ?count) {
-            [] a kbv:PrimaryPublication ;
-                kbv:country ctry:sw ;
-                kbv:year "1970" ;
-                bf2:agent/bf2:label ?publisherLabel .
+            [] a :PrimaryPublication ;
+                :country ctry:sw ;
+                :year "1970" ;
+                :agent/:label ?publisherLabel .
         }
 
     **Kommentar:**  
-    Här frågar vi snarare "Vilka utgivare gav ut något i Sverige under 1970?". Tillräckliga påståenden om utgivare för
-     att besvara originalfrågan saknas i dagsläget. Utgivare ligger mestadels som lokala entiteter, där enbart dess
-      benämningar anges. Här skulle vi istället vilja att utgivare tilldelats URI:er och länkats under `bf2:agent`.
-      På respektive URI skulle sedan relevant information kunna samlas, exempelvis när förlaget grundats och landet
-       det verkar i.
+    Här frågar vi snarare "Vilka utgivare gav ut något i Sverige under 1970?". Tillräckliga påståenden om utgivare för att besvara originalfrågan saknas. Utgivare ligger mestadels som lokala entiteter, där enbart dess benämningar anges. Här skulle vi istället vilja att utgivare representerades av URI:er och   länkats under `:agent`. På respektive URI skulle sedan relevanta påståenden kunna samlas, exempelvis när förlaget grundats och landet det verkar i.
 
-    Om utgivare var länkade skulle vi också få ett mer exakt resultat, tack vare att vi då skulle kunna garantera att
-     antalet _unika_ utgivare räknas. Att räkna blanknoder fungerar inte eftersom vi inte kan särskilja vilka som
-      representerar samma förlag. Istället räknar vi antalet unika benämningar, även om inte heller detta sätt
-       garanterar ett helt exakt resultat då det kan förekomma olika benämningar på samma förlag, t.ex. "Natur
-        & Kultur" och "N&K".
+    Om utgivare var länkade skulle vi också få ett mer exakt resultat, tack vare att vi då skulle kunna garantera att antalet _unika_ utgivare räknas. Att räkna blanknoder fungerar inte eftersom vi inte kan särskilja vilka som representerar samma förlag. Istället räknar vi antalet unika benämningar, även om inte heller detta sätt garanterar ett helt exakt resultat då det kan förekomma olika benämningar på samma förlag, t.ex. "Natur & Kultur" och "N&K".
 
 ---
 
 * #### Hur många barnböcker gavs ut på ett annat språk än svenska av svenska utgivare 2019?
 
-        define input:same-as "yes"
+        PREFIX : <https://id.kb.se/vocab/>
 
         SELECT (COUNT(DISTINCT ?book) AS ?count) {
-            ?audience (:exactMatch|^:exactMatch)* marc:Juvenile .
-            ?book bf2:issuance kbv:Monograph ;
-                bf2:instanceOf [ a bf2:Text ;
-                        bf2:intendedAudience marc:Juvenile ;
-                        bf2:language ?language ] ;
-                kbv:publication [ a kbv:PrimaryPublication ;
-                        kbv:country ctry:sw ;
-                        kbv:year "2019" ] .
+            ?audience (:exactMatch|^:exactMatch|:sameAs|^:sameAs)* marc:Juvenile .
+            ?book :issuanceType :Monograph ;
+                :instanceOf [ a :Text ;
+                        :intendedAudience marc:Juvenile ;
+                        :language ?language ] ;
+                :publication [ a :PrimaryPublication ;
+                        :country ctry:sw ;
+                        :year "2019" ] .
 
             FILTER(?language != lge:swe)
         }
@@ -362,6 +363,8 @@ I exempelfrågorna som följer deklarerar vi dock standardprefixet `:` för KBV-
 
 * #### Vilka titlar har getts ut om coronapandemin 2019-2020 och coronaviruset?
 
+        PREFIX : <https://id.kb.se/vocab/>
+
         SELECT DISTINCT ?instance ?title {
             VALUES ?subject {
                 sao:Covid-19
@@ -369,16 +372,18 @@ I exempelfrågorna som följer deklarerar vi dock standardprefixet `:` för KBV-
                 sao:Coronavirus
             }
 
-            ?instance bf2:instanceOf/bf2:subject ?subject .
+            ?instance :instanceOf/:subject ?subject .
             OPTIONAL {
-                ?instance bf2:title [ a bf2:Title ;
-                        bf2:mainTitle ?title ] .
+                ?instance :hasTitle [ a :Title ;
+                        :mainTitle ?title ] .
             }
         }
 
 ---
 
 * #### Hur många titlar har getts ut om coronapandemin 2019-2020 och coronaviruset?
+
+        PREFIX : <https://id.kb.se/vocab/>
 
         SELECT (COUNT(DISTINCT ?instance) AS ?count) {
             VALUES ?subject {
@@ -387,20 +392,22 @@ I exempelfrågorna som följer deklarerar vi dock standardprefixet `:` för KBV-
                 sao:Coronavirus
             }
 
-            ?instance bf2:instanceOf/bf2:subject ?subject
+            ?instance :instanceOf/:subject ?subject
         }
 
 ---
 
 * #### Hur många tryckta monografier katalogiserades av Kungliga biblioteket 2020?
 
-        SELECT ?month (COUNT(?instance) as ?count) {  
-            ?instance a bf2:Print ;
-                bf2:issuance kbv:Monograph .
-            ?hold bf2:itemOf ?instance ;
-                bf2:heldBy lib:S .
-            ?holdMeta foaf:primaryTopic ?hold ;
-                bf2:creationDate ?date .
+        PREFIX : <https://id.kb.se/vocab/>
+
+        SELECT ?month (COUNT(?instance) AS ?count) {  
+            ?instance a :Print ;
+                :issuanceType :Monograph .
+            ?hold :itemOf ?instance ;
+                :heldBy lib:S .
+            ?holdMeta :mainEntity ?hold ;
+                :created ?date .
 
             BIND(month(?date) as ?month)
             FILTER(year(?date) = 2020)
@@ -415,15 +422,17 @@ I exempelfrågorna som följer deklarerar vi dock standardprefixet `:` för KBV-
 
 * #### Hur många elektroniska seriella resurser katalogiserades av Kungliga biblioteket 2018?
 
-        SELECT ?month (COUNT(?instance) as ?count) {  
-            ?instance a bf2:Electronic ;
-                bf2:issuance kbv:Serial .
-            ?hold bf2:itemOf ?instance ;
-                bf2:heldBy lib:S .
-            ?holdMeta foaf:primaryTopic ?hold ;
-                bf2:creationDate ?date .
+        PREFIX : <https://id.kb.se/vocab/>
 
-            BIND(month(?date) as ?month)
+        SELECT ?month (COUNT(DISTINCT ?instance) AS ?count) {  
+            ?instance a :Electronic ;
+                :issuanceType :Serial .
+            ?hold :itemOf ?instance ;
+                :heldBy lib:S .
+            ?holdMeta :mainEntity ?hold ;
+                :created ?date .
+
+            BIND(month(?date) AS ?month)
             FILTER(year(?date) = 2018)
         }
         GROUP BY ?month
@@ -433,14 +442,16 @@ I exempelfrågorna som följer deklarerar vi dock standardprefixet `:` för KBV-
 
 * #### Hur många monografier inom DDK 320 katalogiserades av Umeå universitetsbibliotek 2019?
 
-        SELECT COUNT(DISTINCT ?instance) {  
-            ?instance bf2:issuance kbv:Monograph ;
-                bf2:instanceOf/bf2:classification [ a bf2:ClassificationDdc ;
-                        bf2:code ?code ] .
-            ?hold bf2:itemOf ?instance ;
-                bf2:heldBy lib:Q .
-            ?holdMeta foaf:primaryTopic ?hold ;
-                bf2:creationDate ?date .
+        PREFIX : <https://id.kb.se/vocab/>
+
+        SELECT (COUNT(DISTINCT ?instance) AS ?count) {  
+            ?instance :issuanceType :Monograph ;
+                :instanceOf/:classification [ a :ClassificationDdc ;
+                        :code ?code ] .
+            ?hold :itemOf ?instance ;
+                :heldBy lib:Q .
+            ?holdMeta :mainEntity ?hold ;
+                :created ?date .
 
             FILTER(STRSTARTS(?code, "320"))
             FILTER(year(?date) = 2019)
@@ -450,33 +461,39 @@ I exempelfrågorna som följer deklarerar vi dock standardprefixet `:` för KBV-
 
 * #### Hur många poster katalogiserades med Svenska ämnesordet Missionärer 2010-2019?
 
-        SELECT COUNT(DISTINCT ?instance) {  
-            ?instance bf2:instanceOf/bf2:subject <https://id.kb.se/term/sao/Mission%C3%A4rer> ;
-                ^bf2:itemOf ?hold .
-            ?holdMeta foaf:primaryTopic ?hold ;
-                bf2:creationDate ?date .
+        PREFIX : <https://id.kb.se/vocab/>
+
+        SELECT (COUNT(DISTINCT ?instance) AS ?count) {  
+            ?instance :instanceOf/:subject sao:Mission%C3%A4rer ;
+                ^:itemOf ?hold .
+            ?holdMeta :mainEntity ?hold ;
+                :created ?date .
 
             FILTER(year(?date) >= 2010 && year(?date) <= 2020)
         }
 
 ---
 
- * #### Hur många poster finns det inom bibliografin SUEC??
+ * #### Hur många poster finns det inom bibliografin SUEC?
 
-        SELECT COUNT(?meta) {
-            ?meta a kbv:Record ;
-                kbv:bibliography lib:SUEC .
+        PREFIX : <https://id.kb.se/vocab/>
+
+        SELECT (COUNT(?record) AS ?count) {
+            ?record a :Record ;
+                :bibliography lib:SUEC .
         }
 
 ---
 
  * #### Hur många nya personbeskrivningar (auktoritetsposter) med ISNI skapades 2017-2021?
 
-        SELECT COUNT(?person) WHERE {
-            ?meta foaf:primaryTopic ?person ;
-                bf2:creationDate ?date .
-            ?person a bf2:Person ;
-                bf2:identifiedBy [ a bf2:Isni ]
+        PREFIX : <https://id.kb.se/vocab/>
+
+        SELECT (COUNT(DISTINCT ?person) AS ?count) {
+            ?meta :mainEntity ?person ;
+                :created ?date .
+            ?person a :Person ;
+                :identifiedBy [ a :ISNI ]
 
             FILTER(year(?date) >= 2017 && year(?date) <= 2021)
         }
@@ -485,14 +502,15 @@ I exempelfrågorna som följer deklarerar vi dock standardprefixet `:` för KBV-
 
  * #### Hur många personbeskrivningar ändrades 2017-2021?
 
-        SELECT COUNT(?person) {
-            ?meta foaf:primaryTopic ?person ;
-                bf2:changeDate ?date .
-            ?person a bf2:Person .
+        PREFIX : <https://id.kb.se/vocab/>
+
+        SELECT (COUNT(DISTINCT ?person) AS ?count) {
+            ?meta :mainEntity ?person ;
+                :modified ?date .
+            ?person a :Person .
 
             FILTER(year(?date) >= 2017 && year(?date) <= 2021)
         }
 
     **Kommentar:**
-    För att få motsvarande resultat för andra entitetstyper än personer räcker det att ändra `bf2:Person` till önskad
-     typ, t.ex. `bf2:Organization`.
+    För att få motsvarande resultat för andra entitetstyper än personer räcker det att ändra `:Person` till önskad typ, t.ex. `:Organization`.
