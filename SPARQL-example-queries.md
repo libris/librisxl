@@ -5,7 +5,7 @@
 Detta dokument innehåller ett antal exempelfrågor som demonstrerar hur vår [SPARQL endpoint](https://libris.kb.se/sparql/) kan användas för uttag av statistik från Libris XL.
 Vill man förstå syntaxen kan man med fördel läsa [W3C:s specifikation av SPARQL](https://www.w3.org/TR/sparql11-query/).
 
-Resurserna är beskrivna med termer ur KB:s egen [vokabulär](https://id.kb.se/vocab/) (KBV).
+Resurserna är beskrivna med termer ur [KB:s vokabulär](https://id.kb.se/vocab/) (KBV).
 De flesta termerna i KBV är mappade till motsvarigheter i andra välkända vokabulär, huvudsakligen [Bibframe](http://id.loc.gov/ontologies/bibframe/).
 Dessa mappningar kan man slå upp i [webbgränssnittet](https://id.kb.se/vocab/) eller direkt i en SPARQL-fråga med (exempel):
 
