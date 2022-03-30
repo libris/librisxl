@@ -80,7 +80,7 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
 
     **Kommentar:**  
     Denna fråga har omtolkats till "Vilka språk har svenska titlar översatts till mellan åren 2000-2010?".
-    Vi kan nämligen ta reda på verkets originalspråk via `bf2:translationOf`, däremot inget om dess originalutgivning.
+    Vi kan nämligen ta reda på verkets originalspråk via `:translationOf`, däremot inget om dess originalutgivning.
 
  ---
 
