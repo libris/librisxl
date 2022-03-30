@@ -9,11 +9,11 @@ Resurserna är beskrivna med termer ur [KB:s vokabulär](https://id.kb.se/vocab/
 De flesta termerna i KBV är mappade till motsvarigheter i andra välkända vokabulär, huvudsakligen [Bibframe](http://id.loc.gov/ontologies/bibframe/).
 Dessa mappningar kan man slå upp i [webbgränssnittet](https://id.kb.se/vocab/) eller direkt i en SPARQL-fråga med (exempel):
 
-`kbv:ExampleClass kbv:equivalentClass ?mappedClass`
+`kbv:ExampleClass owl:equivalentClass ?mappedClass`
 
 eller
 
-`kbv:exampleProperty kbv:equivalentProperty ?mappedProperty`
+`kbv:exampleProperty owl:equivalentProperty ?mappedProperty`
 
 för klasser respektive egenskaper.
 
