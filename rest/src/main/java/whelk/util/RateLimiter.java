@@ -43,7 +43,7 @@ public class RateLimiter {
         long deltaMs = currentTimeMillis - previousUpdate;
         long drainAmount = (long) ((deltaMs / 1000.0) * maxRateHz * SCALE_FACTOR);
         buckets.forEach((key, bucket) -> {
-            if (bucket.accumulateAndGet(drainAmount, (current, update) -> Math.max(current - update, 0)) == 0) {
+            if (0 == bucket.accumulateAndGet(drainAmount, (current, update) -> Math.max(current - update, 0))) {
                 // we might miss some increments here, that's ok
                 buckets.remove(key);
             }
