@@ -284,25 +284,27 @@ and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
 
     RewriteEngine On
 
-    RewriteCond %{HTTP_ACCEPT} (text/html|application/xhtml|\*/\*) [OR]
-    RewriteCond %{HTTP_ACCEPT} ^$
-    RewriteCond %{REQUEST_URI} !\.(json|jsonld)$
-    RewriteCond %{REQUEST_URI} !data\..+$
+    RewriteCond %%{REQUEST_URI} !\.(json|jsonld)$
+    RewriteCond %%{REQUEST_URI} !data\..+$
+    RewriteCond %%{REQUEST_URI} !/maintenance.html
+    RewriteCond %%{REQUEST_URI} !/robots.txt
     RewriteRule ^/(.*)$ http://localhost:3000/$1 [P,L]
     ProxyPass /_nuxt http://localhost:3000/_nuxt
     ProxyPass /_loading http://localhost:3000/_loading
     ProxyPass /__webpack_hmr http://localhost:3000/__webpack_hmr
 
+    # NOTE: The double slash is needed because of an "ambitious" sameAs on the vocab resource.
     ProxyPassMatch ^/vocab/(data.*) http://localhost:8180/https://id.kb.se/vocab//$1
     ProxyPass /vocab http://localhost:8180/https://id.kb.se/vocab
     ProxyPass /vocab/display/data.jsonld http://localhost:8180/https://id.kb.se/vocab/display
-    ProxyPass /context.jsonld http://localhost:8180/https://id.kb.se/vocab/context
+    ProxyPass /context.jsonld http://localhost:8180/https://id.kb.se/vocab/context/data.jsonld
 
     ProxyPassMatch ^/(data.*)$ http://localhost:8180/$1
     ProxyPassMatch ^/find(.*) http://localhost:8180/find$1
 
     ProxyPassMatch ^/(http.*)$ http://localhost:8180/$1 nocanon
     ProxyPassMatch ^/([bcdfghjklmnpqrstvwxz0-9]{15,16}) http://localhost:8180/$1
+    ProxyPassMatch ^/library/(.*) http://localhost:8180/https://libris.kb.se/library/$1 nocanon
     ProxyPassMatch ^/(.*) http://localhost:8180/https://id.kb.se/$1 nocanon
 
     AddOutputFilterByType DEFLATE text/css text/html text/plain text/xml
