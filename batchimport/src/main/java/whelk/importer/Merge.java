@@ -44,7 +44,7 @@ public class Merge {
      */
 
     // Contains paths where we're allowed to add things that don't already exist
-    private Set<List<Object>> m_pathAddRules = null;
+    private Map<List<Object>, Map> m_pathAddRules = null;
 
     // Maps a path to a sigel priority list.
     private Map<List<Object>, Map> m_pathReplaceRules = null;
@@ -52,7 +52,7 @@ public class Merge {
     private final Logger logger = LogManager.getLogger(this.getClass());
 
     public Merge(File ruleFile) throws IOException {
-        m_pathAddRules = new HashSet<>();
+        m_pathAddRules = new HashMap<>();
         m_pathReplaceRules = new HashMap<>();
         
         Map rulesMap = mapper.readValue(ruleFile, Map.class);
@@ -66,7 +66,7 @@ public class Merge {
             if (op.equals("replace"))
                 m_pathReplaceRules.put(path, prioMap);
             else if (op.equals("add_if_none"))
-                m_pathAddRules.add(path);
+                m_pathAddRules.put(path, prioMap);
             else
                 throw new RuntimeException("Malformed import rule, no such operation: " + op);
         }
@@ -108,11 +108,29 @@ public class Merge {
         return null;
     }
 
-    public boolean existsAddRuleForPath(List<Object> path) {
+    public boolean mayAddAtPath(List<Object> path, String incomingAgent, History history) {
         List<Object> temp = new ArrayList<>(path);
         while (!temp.isEmpty()) {
-            if (m_pathAddRules.contains(path))
-                return true;
+            if (m_pathAddRules.containsKey(temp)) {
+
+                Map prioMap = m_pathAddRules.get(temp);
+                if (prioMap == null) // No priority list given for this rules = anyone may add
+                    return true;
+
+                Ownership owner = history.getOwnership(temp);
+                int manualPrio = Integer.MIN_VALUE;
+                int systematicPrio = Integer.MIN_VALUE;
+                if (owner.m_manualEditor != null)
+                    manualPrio = (Integer) prioMap.get(owner.m_manualEditor);
+                if (owner.m_systematicEditor != null)
+                    systematicPrio = (Integer) prioMap.get(owner.m_systematicEditor);
+                int incomingPrio = (Integer) prioMap.get(incomingAgent);
+
+                if (incomingPrio > manualPrio && incomingPrio > systematicPrio) {
+                    return true;
+                }
+                return false;
+            }
             temp.remove(temp.size()-1);
         }
         return false;
@@ -195,7 +213,7 @@ public class Merge {
                 List<Object> childPath = new ArrayList(path);
                 childPath.add(key);
                 if ( ((Map) base).get(key) == null ) {
-                    if (existsAddRuleForPath(childPath)) {
+                    if (mayAddAtPath(childPath, incomingAgent, baseHistory)) {
                         ((Map) base).put(key, ((Map) correspondingIncoming).get(key));
                         logger.info("Merge of " + loggingForID + ": added object at " + childPath);
                     }
