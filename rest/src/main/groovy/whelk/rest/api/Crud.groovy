@@ -675,7 +675,6 @@ class Crud extends HttpServlet {
         String collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, jsonld)
         List<JsonLdValidator.Error> errors = validator.validate(newDoc.data, collection)
         if (errors) {
-            // TODO: make sure extraInfo is passed along
             throw new BadRequestException("Invalid JSON-LD", ['errors': errors.collect{ it.toMap() }])
         }
         
