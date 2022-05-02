@@ -706,9 +706,7 @@ class Crud extends HttpServlet {
         try {
             doPut2(request, response)
         } catch (Exception e) {
-            failedRequests.labels("PUT", request.getRequestURI(),
-                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR.toString()).inc()
-            sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), e)
+            sendError(request, response, e)
         } finally {
             ongoingRequests.labels("PUT").dec()
             requestTimer.observeDuration()
@@ -720,44 +718,23 @@ class Crud extends HttpServlet {
 
     void doPut2(HttpServletRequest request, HttpServletResponse response) {
         if (request.pathInfo == "/") {
-            log.debug("Invalid PUT request URL.")
-            failedRequests.labels("PUT", request.getRequestURI(),
-                    HttpServletResponse.SC_METHOD_NOT_ALLOWED.toString()).inc()
-            sendError(response, HttpServletResponse.SC_METHOD_NOT_ALLOWED,
-                    "Method not allowed.")
-            return
+            throw new OtherStatusException("Method not allowed.", HttpServletResponse.SC_METHOD_NOT_ALLOWED)
         }
-
         if (!isSupportedContentType(request.getContentType())) {
-            log.debug("Unsupported Content-Type for PUT.")
-            failedRequests.labels("PUT", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST,
-                    "Content-Type not supported.")
-            return
+            throw new BadRequestException("Content-Type not supported.")
         }
 
         Map requestBody = getRequestBody(request)
 
         if (isEmptyInput(requestBody)) {
-            log.debug("Empty PUT request.")
-            failedRequests.labels("PUT", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST,
-                    "No data received")
-            return
+            throw new BadRequestException("No data received.")
         }
 
         String documentId = JsonLd.findIdentifier(requestBody)
         String idFromUrl = getRequestPath(request).substring(1)
 
         if (!documentId) {
-            log.debug("Missing document ID in PUT request.")
-            failedRequests.labels("PUT", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST,
-                    "Missing @id in request.")
-            return
+            throw new BadRequestException("Missing @id in request.")
         }
 
         Tuple2<Document, String> docAndLoc = getDocumentFromStorage(idFromUrl)
@@ -765,11 +742,7 @@ class Crud extends HttpServlet {
         String location = docAndLoc.v2
 
         if (!existingDoc && !location) {
-            failedRequests.labels("PUT", request.getRequestURI(),
-                    HttpServletResponse.SC_NOT_FOUND.toString()).inc()
-            sendError(response, HttpServletResponse.SC_NOT_FOUND,
-                    "Document not found.")
-            return
+            throw new Crud.NotFoundException("Document not found.")
         } else if (!existingDoc && location) {
             sendRedirect(request, response, location)
             return
@@ -778,11 +751,7 @@ class Crud extends HttpServlet {
             if (fullPutId != existingDoc.id) {
                 log.debug("Record ID for ${existingDoc.id} changed to " +
                           "${fullPutId} in PUT body")
-                failedRequests.labels("PUT", request.getRequestURI(),
-                        HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-                sendError(response, HttpServletResponse.SC_BAD_REQUEST,
-                        "Record ID was modified")
-                return
+                throw new BadRequestException("Record ID was modified")
             }
         }
 
@@ -793,35 +762,13 @@ class Crud extends HttpServlet {
         String collection = LegacyIntegrationTools.determineLegacyCollection(updatedDoc, jsonld)
         List<JsonLdValidator.Error> errors = validator.validate(updatedDoc.data, collection)
         if (errors) {
-            String message = errors.collect { it.toStringWithPath() }.join("\n")
-            failedRequests.labels("PUT", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST,
-                    "Invalid JsonLd, got errors: " + message)
-            return
+            throw new BadRequestException("Invalid JSON-LD", ['errors': errors.collect{ it.toMap() }])
         }
 
         log.debug("Checking permissions for ${updatedDoc}")
-        try {
-            // TODO: 'collection' must also match the collection 'existingDoc'
-            // is in.
-            boolean allowed = hasPutPermission(updatedDoc, existingDoc,
-                    (Map) request.getAttribute("user"))
-            if (!allowed) {
-                failedRequests.labels("PUT", request.getRequestURI(),
-                        HttpServletResponse.SC_FORBIDDEN.toString()).inc()
-                sendError(response, HttpServletResponse.SC_FORBIDDEN,
-                        "You are not authorized to perform this " +
-                                "operation")
-                return
-            }
-        } catch (ModelValidationException mve) {
-            failedRequests.labels("PUT", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            // FIXME data leak
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST,
-                    mve.getMessage())
-            return
+        // TODO: 'collection' must also match the collection 'existingDoc' is in.
+        if (!hasPutPermission(updatedDoc, existingDoc, (Map) request.getAttribute("user"))) {
+            throw new OtherStatusException("You are not authorized to perform this operation", HttpServletResponse.SC_FORBIDDEN)
         }
         
         boolean isUpdate = true
