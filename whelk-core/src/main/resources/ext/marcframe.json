@@ -6448,7 +6448,7 @@
       "include": ["identifier"],
       "match": [
         {
-          "when": "i1=7 & $2 =~ ansi|ANSI|danacode|doi|DOI|hdl|HDL|isan|ISAN|iso|ISO|istc|ISTC|iswc|ISWC|uri|URI|urn|URN",
+          "when": "i1=7 & $2 =~ ansi|ANSI|danacode|doi|DOI|gtin-14|hdl|HDL|isan|ISAN|iso|ISO|istc|ISTC|iswc|ISWC|uri|URI|urn|URN",
           "i1": null,
           "$2": {
             "property": "@type",
@@ -6459,6 +6459,7 @@
               "danacode": "Danacode",
               "DOI": "DOI",
               "doi": "DOI",
+              "gtin-14": "GTIN14",
               "HDL": "Hdl",
               "hdl": "Hdl",
               "ISAN": "ISAN",
@@ -6614,6 +6615,23 @@
                 {
                   "@type": "Ansi",
                   "value":  "xyz"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Gtin-14, indicator from $2 when i1 = 7",
+          "source": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "1 00 12345 657890 2"}, {"2": "gtin-14"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type" : "Instance",
+              "identifiedBy": [
+                {
+                  "@type": "GTIN14",
+                  "value":  "1 00 12345 657890 2"
                 }
               ]
             }
