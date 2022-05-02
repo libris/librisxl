@@ -153,27 +153,16 @@ class Crud extends HttpServlet {
             def dataBody = getNegotiatedDataBody(crudReq, contextData, results, uri)
 
             sendGetResponse(response, dataBody, null, crudReq.getPath(), crudReq.getContentType(), crudReq.getId())
-
         } catch (ElasticIOException | UnexpectedHttpStatusException e) {
             log.error("Attempted elastic query, but failed: $e", e)
-            failedRequests.labels("GET", request.getRequestURI(),
-                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR.toString()).inc()
-            sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to reach elastic for query.")
-        }
-        catch (WhelkRuntimeException e) {
-            log.error("Attempted elastic query, but whelk has no " +
-                    "elastic component configured.", e)
-            failedRequests.labels("GET", request.getRequestURI(),
-                    HttpServletResponse.SC_NOT_IMPLEMENTED.toString()).inc()
-            sendError(response, HttpServletResponse.SC_NOT_IMPLEMENTED,
-                    "Attempted to use elastic for query, but " +
-                            "no elastic component is configured.")
+            throw new WhelkRuntimeException("Failed to reach elastic for query.", e)
+        } catch (WhelkRuntimeException e) {
+            log.error("Attempted elastic query, but whelk has no elastic component configured.", e)
+            throw new OtherStatusException("Attempted to use elastic for query, but no elastic component is configured.",
+                    HttpServletResponse.SC_NOT_IMPLEMENTED)
         } catch (InvalidQueryException e) {
             log.warn("Invalid query: ${queryParameters}")
-            failedRequests.labels("GET", request.getRequestURI(),
-                    HttpServletResponse.SC_BAD_REQUEST.toString()).inc()
-            sendError(response, HttpServletResponse.SC_BAD_REQUEST,
-                    "Invalid query, please check the documentation. ${e.getMessage()}")
+            throw new BadRequestException("Invalid query, please check the documentation. ${e.getMessage()}")
         }
     }
 
