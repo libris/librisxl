@@ -1044,7 +1044,7 @@ class Crud extends HttpServlet {
                 return HttpServletResponse.SC_CONFLICT
           
             case OtherStatusException:
-                return e.code
+                return ((OtherStatusException) e).code
 
             default: 
                 return HttpServletResponse.SC_INTERNAL_SERVER_ERROR
