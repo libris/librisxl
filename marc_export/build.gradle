@@ -36,7 +36,7 @@ dependencies {
     }
     implementation group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
     implementation 'org.apache.commons:commons-lang3:3.3.2'
-    implementation "org.codehaus.groovy:groovy:${groovyVersion}"
+    implementation "org.apache.groovy:groovy:${groovyVersion}"
 }
 
 gretty {

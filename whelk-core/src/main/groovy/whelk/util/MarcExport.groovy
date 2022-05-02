@@ -10,6 +10,7 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.converter.marc.JsonLD2MarcXMLConverter
+import groovy.xml.XmlSlurper
 
 @Log4j2
 class MarcExport {

@@ -71,8 +71,8 @@ dependencies {
     implementation(project(':whelk-core'))
 
     // Common tools
-    implementation "org.codehaus.groovy:groovy-all:${groovyVersion}"
-    implementation "org.codehaus.groovy:groovy-dateutil:${groovyVersion}"
+    implementation "org.apache.groovy:groovy-all:${groovyVersion}"
+    implementation "org.apache.groovy:groovy-dateutil:${groovyVersion}"
     implementation 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
     implementation 'commons-io:commons-io:2.11.0'
     implementation "com.google.guava:guava:${guavaVersion}"
@@ -101,10 +101,10 @@ dependencies {
     // Standalone
     executableWarDeps "org.eclipse.jetty:jetty-server:${jettyVersion}"
     executableWarDeps "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
-    executableWarDeps "org.codehaus.groovy:groovy-all:${groovyVersion}"
+    executableWarDeps "org.apache.groovy:groovy-all:${groovyVersion}"
     executableWarDeps 'commons-cli:commons-cli:1.2'
-    implementation "org.codehaus.groovy:groovy-xml:${groovyVersion}"
-    implementation "org.codehaus.groovy:groovy:${groovyVersion}"
+    implementation "org.apache.groovy:groovy-xml:${groovyVersion}"
+    implementation "org.apache.groovy:groovy:${groovyVersion}"
     implementation 'org.codehaus.jackson:jackson-core-asl:1.9.13'
     implementation 'xml-apis:xml-apis:1.4.01'
 }

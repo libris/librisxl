@@ -977,11 +977,11 @@ class ESQuery {
         } else {
             currentField = "${parentName}.${fieldName}"
         }
-        Map fields = fieldSettings.get('fields')
+        Map fields = (Map) fieldSettings.get('fields')
         if (fields && fields.get('keyword')) {
             result.add(currentField)
         }
-        Map properties = fieldSettings.get('properties')
+        Map properties = (Map) fieldSettings.get('properties')
         if (properties) {
             result += getKeywordFieldsFromProperties(properties, currentField)
         }
