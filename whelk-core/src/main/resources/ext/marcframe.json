@@ -27323,17 +27323,108 @@
     "050": {
       "inherit": "bib",
       "aboutEntity": "?thing",
-      "NOTE:local": "LIBRIS-definierat beståndsfält."
+      "NOTE:local": "LIBRIS-definierat beståndsfält.",
+      "_spec": [
+        {
+          "source": {
+            "050": {"ind1": " ", "ind2": "4", "subfields": [{"a": "NB933.F44"},{"b": "T6"}]}
+          },
+          "normalized": {
+            "050": {"ind1": " ", "ind2": "4", "subfields": [{"a": "NB933.F44"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type": "Item",
+              "classification": [{
+                "@type": "ClassificationLcc",
+                "code": "NB933.F44"
+              }]
+            }
+          }
+        }
+      ]
     },
     "060": {
       "inherit": "bib",
       "aboutEntity": "?thing",
-      "NOTE:local": "LIBRIS-definierat beståndsfält."
+      "NOTE:local": "LIBRIS-definierat beståndsfält.",
+      "_spec": [
+        {
+          "source": {
+            "060": {"ind1": "1", "ind2": "4", "subfields": [{"a": "W1"}]}
+          },
+          "normalized": {
+            "060": {"ind1": " ", "ind2": "4", "subfields": [{"a": "W1"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type": "Item",
+              "classification": [{
+                "@type": "ClassificationNlm",
+                "code": "W1"
+              }]
+            }
+          }
+        }
+      ]
     },
     "066": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS F.N. EJ"},
 
-    "072": {"inherit": "bib", "aboutEntity": "?thing", "NOTE:local": "LIBRIS-definierat beståndsfält."},
-    "080": {"inherit": "bib", "aboutEntity": "?thing", "NOTE:local": "LIBRIS-definierat beståndsfält."},
+    "072": {
+      "inherit": "bib",
+      "aboutEntity": "?thing",
+      "NOTE:local": "LIBRIS-definierat beståndsfält.",
+      "_spec": [
+        {
+          "source": {
+            "072": {"ind1": " ", "ind2": "7", "subfields": [
+              {"a": "aZ1"},
+              {"x": ".630"},
+              {"2": "mesh"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type": "Item",
+              "subject": [
+                {
+                  "@type": "Concept",
+                  "label": "aZ1",
+                  "inCollection": {
+                    "@type": "ConceptCollection",
+                    "label": ".630"
+                  },
+                  "inScheme": {
+                    "@type": "ConceptScheme",
+                    "code": "mesh"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "080": {
+      "inherit": "bib",
+      "aboutEntity": "?thing",
+      "NOTE:local": "LIBRIS-definierat beståndsfält.",
+      "_spec": [
+        {
+          "source": {
+            "080": {"ind1": " ", "ind2": " ", "subfields": [{"a": "030"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type": "Item",
+              "classification": [
+                {"@type": "ClassificationUdc", "code": "030"}
+              ]
+            }
+          }
+        }
+      ]
+    },
     "082": {
       "inherit": "bib",
       "aboutEntity": "?thing",
