@@ -68,8 +68,20 @@ class Crud extends HttpServlet {
     static final Summary requestsLatency = Summary.build()
         .name("api_requests_latency_seconds")
         .help("API request latency in seconds.")
-        .labelNames("method").register()
+        .labelNames("method")
+        .quantile(0.5f, 0.05f)
+        .quantile(0.95f, 0.01f)
+        .quantile(0.99f, 0.001f)
+        .register()
 
+    static final Summary searchLatency = Summary.build()
+        .name("search_api_requests_latency_seconds")
+        .help("Search API request latency in seconds.")
+        .quantile(0.5f, 0.05f)
+        .quantile(0.95f, 0.01f)
+        .quantile(0.99f, 0.001f)
+        .register()
+    
     Whelk whelk
 
     Map vocabData
@@ -203,7 +215,10 @@ class Crud extends HttpServlet {
     void doGet(HttpServletRequest request, HttpServletResponse response) {
         requests.labels("GET").inc()
         ongoingRequests.labels("GET").inc()
-        Summary.Timer requestTimer = requestsLatency.labels("GET").startTimer()
+        Summary.Timer requestTimer = request.pathInfo.startsWith('/find')
+            ? searchLatency.startTimer()
+            : requestsLatency.labels("GET").startTimer()
+        
         log.debug("Handling GET request for ${request.pathInfo}")
         try {
             doGet2(request, response)
