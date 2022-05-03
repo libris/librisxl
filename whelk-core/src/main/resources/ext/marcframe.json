@@ -6623,7 +6623,7 @@
         {
           "name": "Gtin-14, indicator from $2 when i1 = 7",
           "source": {
-            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "1 00 12345 657890 2"}, {"2": "gtin-14"}]}
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "100123456578902"}, {"2": "gtin-14"}]}
           },
           "result": {
             "mainEntity": {
@@ -6631,7 +6631,7 @@
               "identifiedBy": [
                 {
                   "@type": "GTIN14",
-                  "value":  "1 00 12345 657890 2"
+                  "value":  "100123456578902"
                 }
               ]
             }
