@@ -44,10 +44,9 @@ class HttpTools {
             out.close()
         }
     }
-
-    static void sendError(HttpServletResponse response, int statusCode, String msg, Object extraInfo = null) {
-        Exception e = extraInfo instanceof Exception ? extraInfo : null
-        Map extra = extraInfo instanceof Map ? extraInfo : [:]
+    
+    static void sendError(HttpServletResponse response, int statusCode, String msg, Exception e = null) {
+        Map extra = e instanceof BadRequestException ? e.getExtraInfo() : Collections.EMPTY_MAP
         
         Map json = [
                 "message"    : msg,
