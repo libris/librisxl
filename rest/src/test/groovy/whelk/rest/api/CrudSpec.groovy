@@ -257,6 +257,9 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "*/*"
         }
+        request.getMethod() >> {
+            "GET"
+        }
         storage.load(_, _) >> {
             Document doc = new Document(["@graph": [["@id": id, "foo": "bar"]]])
             doc.deleted = true
@@ -493,6 +496,9 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             acceptContentType
         }
+        request.getMethod() >> {
+            "GET"
+        }
         storage.load(_, _) >> {
             new Document(["@graph": [
                     ["@id": id, "mainEntity": ["@id": "main"]],
@@ -714,6 +720,9 @@ class CrudSpec extends Specification {
         }
         request.getParameter("lens") >> {
             "invalid"
+        }
+        request.getMethod() >> {
+            "GET"
         }
         storage.load(_, _) >> {
             return new Document(["@graph": [["@id": id, "foo": "bar"]]])
