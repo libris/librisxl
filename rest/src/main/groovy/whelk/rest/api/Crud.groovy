@@ -132,9 +132,10 @@ class Crud extends HttpServlet {
 
         ]
         Tuple2<Document, String> docAndLoc = getDocumentFromStorage(whelk.kbvContextUri)
-        Document contextDoc = docAndLoc.first
-        targetVocabMapper = new TargetVocabMapper(whelk.jsonld, contextDoc.data)
-
+        Document contextDoc = docAndLoc.v1
+        if (contextDoc) {
+            targetVocabMapper = new TargetVocabMapper(whelk.jsonld, contextDoc.data)
+        }
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response) {
