@@ -472,16 +472,16 @@ class CrudSpec extends Specification {
 
         where:
         // checksum             -1856152111
-        // checksum embellished -5527328642
+        // checksum embellished -5620206737
 
         embellished | eTag                      || status
         false       | '-1856152111'             || SC_NOT_MODIFIED
-        false       | "-1856152111:-5527328642" || SC_NOT_MODIFIED
+        false       | "-1856152111:-5620206737" || SC_NOT_MODIFIED
         false       | "-1856152111:other"       || SC_NOT_MODIFIED
         false       | "other"                   || SC_OK
 
         true        | '-1856152111'             || SC_OK
-        true        | '-1856152111:-5527328642' || SC_NOT_MODIFIED
+        true        | '-1856152111:-5620206737' || SC_NOT_MODIFIED
         true        | "-1856151741:other"       || SC_OK
         true        | "other"                   || SC_OK
     }
