@@ -10751,7 +10751,7 @@
       "resourceType": "marc:MusicalPresentationStatement",
       "$a": {"property": "label"},
       "$6": {"property": "marc:fieldref"},
-      "NOTE:LC": "I - note - Note",
+      "NOTE:LC": "W - musicFormat - MusicFormat, v1.6",
       "_spec": [
         {
           "source": [
@@ -10817,6 +10817,7 @@
     "257": {
       "onRevertPrefer": ["533", "264"],
       "NOTE": "Removing subfields incompatible with 264.",
+      "NOTE:LC": "W - originPlace - OriginPlace",
       "aboutEntity": "?thing",
       "addLink": "production",
       "resourceType": "Production", 
