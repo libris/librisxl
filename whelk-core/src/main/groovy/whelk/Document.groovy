@@ -336,7 +336,11 @@ class Document {
     }
 
     boolean isHolding(JsonLd jsonld) {
-        return ("hold" == LegacyIntegrationTools.determineLegacyCollection(this, jsonld))
+        return ("hold" == getLegacyCollection(jsonld))
+    }
+    
+    String getLegacyCollection(JsonLd jsonld) {
+        LegacyIntegrationTools.determineLegacyCollection(this, jsonld)
     }
 
     String getHeldBySigel() {

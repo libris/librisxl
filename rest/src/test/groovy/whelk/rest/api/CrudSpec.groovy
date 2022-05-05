@@ -95,8 +95,14 @@ class CrudSpec extends Specification {
             ["@id": "creationDate"],
             ["@id": "code"],
             ["@id": "mainEntity"],
+            ["@id": "Record"],
+            ["@id": "Item"],
+            ["@id": "Work"],
         ]]
         whelk.setJsonld(new JsonLd(whelk.contextData, whelk.displayData, whelk.vocabData))
+        // NB!! Mocking of static methods e.g. LegacyIntegrationTools.determineLegacyCollection
+        // does not work if they are called directly from Crud class
+        // TODO?: replace mocking with properly initiated vocab in tests so that regular determineLegacyCollection works?
         GroovySpy(LegacyIntegrationTools.class, global: true)
         crud = new Crud(whelk)
         crud.init()
