@@ -132,9 +132,10 @@ class Crud extends HttpServlet {
 
         ]
         Tuple2<Document, String> docAndLoc = getDocumentFromStorage(whelk.kbvContextUri)
-        Document contextDoc = docAndLoc.first
-        targetVocabMapper = new TargetVocabMapper(whelk.jsonld, contextDoc.data)
-
+        Document contextDoc = docAndLoc.v1
+        if (contextDoc) {
+            targetVocabMapper = new TargetVocabMapper(whelk.jsonld, contextDoc.data)
+        }
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response) {
@@ -675,9 +676,8 @@ class Crud extends HttpServlet {
         newDoc.normalizeUnicode()
         newDoc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
         newDoc.setControlNumber(newDoc.getShortId())
-
-        String collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, jsonld)
-        List<JsonLdValidator.Error> errors = validator.validate(newDoc.data, collection)
+        
+        List<JsonLdValidator.Error> errors = validator.validate(newDoc.data, newDoc.getLegacyCollection(jsonld))
         if (errors) {
             throw new BadRequestException("Invalid JSON-LD", ['errors': errors.collect{ it.toMap() }])
         }
@@ -762,9 +762,8 @@ class Crud extends HttpServlet {
         Document updatedDoc = new Document(requestBody)
         updatedDoc.normalizeUnicode()
         updatedDoc.setId(documentId)
-                
-        String collection = LegacyIntegrationTools.determineLegacyCollection(updatedDoc, jsonld)
-        List<JsonLdValidator.Error> errors = validator.validate(updatedDoc.data, collection)
+        
+        List<JsonLdValidator.Error> errors = validator.validate(updatedDoc.data, updatedDoc.getLegacyCollection(jsonld))
         if (errors) {
             throw new BadRequestException("Invalid JSON-LD", ['errors': errors.collect{ it.toMap() }])
         }
@@ -807,7 +806,7 @@ class Crud extends HttpServlet {
         try {
             if (doc) {
                 String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
-                String collection = LegacyIntegrationTools.determineLegacyCollection(doc, jsonld)
+                String collection = doc.getLegacyCollection(jsonld)
                 if (isUpdate) {
 
                     // You are not allowed to change collection when updating a record
