@@ -3,18 +3,11 @@ package whelk.rest.api
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.util.logging.Log4j2 as Log
-
-import java.lang.management.ManagementFactory
-import javax.servlet.http.HttpServlet
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
-
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
+import io.prometheus.client.Histogram
 import io.prometheus.client.Summary
-
 import org.apache.http.entity.ContentType
-
 import whelk.Document
 import whelk.IdGenerator
 import whelk.IdType
@@ -34,8 +27,12 @@ import whelk.exception.WhelkRuntimeException
 import whelk.history.History
 import whelk.rest.api.CrudGetRequest.Lens
 import whelk.rest.security.AccessControl
-import whelk.util.LegacyIntegrationTools
 import whelk.util.WhelkFactory
+
+import javax.servlet.http.HttpServlet
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+import java.lang.management.ManagementFactory
 
 import static whelk.rest.api.CrudUtils.ETag
 import static whelk.rest.api.HttpTools.getBaseUri
@@ -73,7 +70,12 @@ class Crud extends HttpServlet {
         .quantile(0.95f, 0.01f)
         .quantile(0.99f, 0.001f)
         .register()
-    
+
+    static final Histogram requestsLatencyHistogram = Histogram.build()
+            .name("api_requests_latency_seconds_histogram").help("API request latency in seconds.")
+            .labelNames("method")
+            .register()
+
     Whelk whelk
 
     Map vocabData
@@ -206,10 +208,11 @@ class Crud extends HttpServlet {
 
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
-        String metricLabel = request.pathInfo.startsWith('/find') ? 'FIND' : 'GET'
+        String metricLabel = isFindRequest(request) ? 'FIND' : 'GET'
         requests.labels(metricLabel).inc()
         ongoingRequests.labels(metricLabel).inc()
         Summary.Timer requestTimer = requestsLatency.labels(metricLabel).startTimer()
+        Histogram.Timer requestTimer2 = requestsLatencyHistogram.labels(metricLabel).startTimer()
         
         log.debug("Handling GET request for ${request.pathInfo}")
         try {
@@ -219,6 +222,7 @@ class Crud extends HttpServlet {
         } finally {
             ongoingRequests.labels(metricLabel).dec()
             requestTimer.observeDuration()
+            requestTimer2.observeDuration()
             log.debug("Sending GET response with status " +
                      "${response.getStatus()} for ${request.pathInfo}")
         }
@@ -239,7 +243,7 @@ class Crud extends HttpServlet {
             return
         }
 
-        if (request.pathInfo == "/find" || request.pathInfo.startsWith("/find.")) {
+        if (isFindRequest(request)) {
             handleQuery(request, response)
             return
         }
@@ -258,6 +262,10 @@ class Crud extends HttpServlet {
         }
 
         handleGetRequest(CrudGetRequest.parse(request), response)
+    }
+    
+    private boolean isFindRequest(HttpServletRequest request) {
+        request.pathInfo == "/find" || request.pathInfo.startsWith("/find.")
     }
     
     void handleGetRequest(CrudGetRequest request,
@@ -608,6 +616,7 @@ class Crud extends HttpServlet {
         requests.labels("POST").inc()
         ongoingRequests.labels("POST").inc()
         Summary.Timer requestTimer = requestsLatency.labels("POST").startTimer()
+        Histogram.Timer requestTimer2 = requestsLatencyHistogram.labels("POST").startTimer()
         log.debug("Handling POST request for ${request.pathInfo}")
 
         try {
@@ -617,6 +626,7 @@ class Crud extends HttpServlet {
         } finally {
             ongoingRequests.labels("POST").dec()
             requestTimer.observeDuration()
+            requestTimer2.observeDuration()
             log.debug("Sending POST response with status " +
                      "${response.getStatus()} for ${request.pathInfo}")
         }
@@ -696,6 +706,7 @@ class Crud extends HttpServlet {
         requests.labels("PUT").inc()
         ongoingRequests.labels("PUT").inc()
         Summary.Timer requestTimer = requestsLatency.labels("PUT").startTimer()
+        Histogram.Timer requestTimer2 = requestsLatencyHistogram.labels("PUT").startTimer()
         log.debug("Handling PUT request for ${request.pathInfo}")
 
         try {
@@ -705,6 +716,7 @@ class Crud extends HttpServlet {
         } finally {
             ongoingRequests.labels("PUT").dec()
             requestTimer.observeDuration()
+            requestTimer2.observeDuration()
             log.debug("Sending PUT response with status " +
                      "${response.getStatus()} for ${request.pathInfo}")
         }
@@ -913,6 +925,7 @@ class Crud extends HttpServlet {
         requests.labels("DELETE").inc()
         ongoingRequests.labels("DELETE").inc()
         Summary.Timer requestTimer = requestsLatency.labels("DELETE").startTimer()
+        Histogram.Timer requestTimer2 = requestsLatencyHistogram.labels("DELETE").startTimer()
         log.debug("Handling DELETE request for ${request.pathInfo}")
 
         try {
@@ -922,6 +935,7 @@ class Crud extends HttpServlet {
         } finally {
             ongoingRequests.labels("DELETE").dec()
             requestTimer.observeDuration()
+            requestTimer2.observeDuration()
             log.debug("Sending DELETE response with status " +
                      "${response.getStatus()} for ${request.pathInfo}")
         }
