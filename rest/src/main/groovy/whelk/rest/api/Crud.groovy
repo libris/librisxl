@@ -73,14 +73,6 @@ class Crud extends HttpServlet {
         .quantile(0.95f, 0.01f)
         .quantile(0.99f, 0.001f)
         .register()
-
-    static final Summary searchLatency = Summary.build()
-        .name("search_api_requests_latency_seconds")
-        .help("Search API request latency in seconds.")
-        .quantile(0.5f, 0.05f)
-        .quantile(0.95f, 0.01f)
-        .quantile(0.99f, 0.001f)
-        .register()
     
     Whelk whelk
 
@@ -214,11 +206,10 @@ class Crud extends HttpServlet {
 
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
-        requests.labels("GET").inc()
-        ongoingRequests.labels("GET").inc()
-        Summary.Timer requestTimer = request.pathInfo.startsWith('/find')
-            ? searchLatency.startTimer()
-            : requestsLatency.labels("GET").startTimer()
+        String metricLabel = request.pathInfo.startsWith('/find') ? 'FIND' : 'GET'
+        requests.labels(metricLabel).inc()
+        ongoingRequests.labels(metricLabel).inc()
+        Summary.Timer requestTimer = requestsLatency.labels(metricLabel).startTimer()
         
         log.debug("Handling GET request for ${request.pathInfo}")
         try {
@@ -226,7 +217,7 @@ class Crud extends HttpServlet {
         } catch (Exception e) {
             sendError(request, response, e)
         } finally {
-            ongoingRequests.labels("GET").dec()
+            ongoingRequests.labels(metricLabel).dec()
             requestTimer.observeDuration()
             log.debug("Sending GET response with status " +
                      "${response.getStatus()} for ${request.pathInfo}")
@@ -844,18 +835,17 @@ class Crud extends HttpServlet {
         return null
     }
 
-    static void sendCreateResponse(HttpServletResponse response, String locationRef,
-                                   ETag eTag) {
+    static void sendCreateResponse(HttpServletResponse response, String locationRef, ETag eTag) {
         sendDocumentSavedResponse(response, locationRef, eTag, true)
     }
 
-    static void sendUpdateResponse(HttpServletResponse response, String locationRef,
-                                   ETag eTag) {
+    static void sendUpdateResponse(HttpServletResponse response, String locationRef, ETag eTag) {
         sendDocumentSavedResponse(response, locationRef, eTag, false)
     }
 
     static void sendDocumentSavedResponse(HttpServletResponse response,
-                                          String locationRef, ETag eTag,
+                                          String locationRef, 
+                                          ETag eTag,
                                           boolean newDocument) {
         log.debug("Setting header Location: $locationRef")
 
