@@ -120,9 +120,9 @@ public class Merge {
                 Ownership owner = history.getOwnership(temp);
                 int manualPrio = Integer.MIN_VALUE;
                 int systematicPrio = Integer.MIN_VALUE;
-                if (owner.m_manualEditor != null)
+                if (owner.m_manualEditor != null && prioMap.get(owner.m_manualEditor) != null)
                     manualPrio = (Integer) prioMap.get(owner.m_manualEditor);
-                if (owner.m_systematicEditor != null)
+                if (owner.m_systematicEditor != null && prioMap.get(owner.m_systematicEditor) != null)
                     systematicPrio = (Integer) prioMap.get(owner.m_systematicEditor);
                 int incomingPrio = (Integer) prioMap.get(incomingAgent);
 
