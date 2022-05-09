@@ -65,7 +65,7 @@ for e.g. Fedora/CentOS/RHEL with minor adjustments.
     * We use the elasticsearch-oss version.
     * The [ICU Analysis plugin](https://www.elastic.co/guide/en/elasticsearch/plugins/7.12/analysis-icu.html) (`icu-analysis`) must be installed; see "Setting up Elasticsearch" below.
 
-3. [PostgreSQL](https://www.postgresql.org/) (version 9.6 or later)
+3. [PostgreSQL](https://www.postgresql.org/) (version 14.2 or later)
 
     ```
     # Ubuntu/Debian
@@ -76,10 +76,10 @@ for e.g. Fedora/CentOS/RHEL with minor adjustments.
     Windows:
     Download and install https://www.postgresql.org/download/windows/
 
-4. [Java](https://openjdk.java.net/) (version 8)
+4. [Java](https://openjdk.java.net/) (version 17)
 
     ```
-    sudo apt install openjdk-8-jdk # or openjdk-8-headless
+    sudo apt install openjdk-17-jdk # or openjdk-17-headless
     ```
 
 5. [Apache](https://httpd.apache.org/)
