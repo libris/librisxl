@@ -1,0 +1,156 @@
+import whelk.util.Statistics
+import whelk.Whelk
+
+import static datatool.scripts.mergeworks.Util.asList
+import static datatool.scripts.mergeworks.Util.parseRespStatement
+import static datatool.scripts.mergeworks.Util.getPathSafe
+import static datatool.scripts.mergeworks.Util.Relator
+import static datatool.scripts.mergeworks.Util.bestEncodingLevel
+import static datatool.scripts.mergeworks.Util.chipString
+import static datatool.scripts.mergeworks.WorkToolJob.nameMatch
+
+PrintWriter allStatements = getReportWriter("all-statements.csv")
+PrintWriter notParsed = getReportWriter("not-parsed.txt")
+PrintWriter roleSpecified = getReportWriter("role-specified.tsv")
+PrintWriter agentFoundInCluster = getReportWriter("agent-found-in-cluster.tsv")
+PrintWriter parsedButUnmatched = getReportWriter("parsed-but-unmatched.tsv")
+PrintWriter pseudonyms = getReportWriter("pseudonyms")
+
+Whelk whelk = Whelk.createLoadedCoreWhelk()
+Statistics s = new Statistics().printOnShutdown()
+
+def clusters = System.getProperty('clustersDir')
+        .with {new File(it, 'clusters.tsv') }
+        .collect { it.split() as List }
+
+clusters.each { cluster ->
+    s.increment('fetch contribution from respStatement', 'clusters checked')
+
+    selectByIds(cluster) { bib ->
+        def data = bib.doc.data
+        def id = bib.doc.shortId
+        def respStatement = getPathSafe(data, ['@graph', 1, 'responsibilityStatement'])
+        def encodingLevel = getPathSafe(data, ['@graph', 0, 'encodingLevel'])
+
+        if (!respStatement)
+            return
+
+        s.increment('fetch contribution from respStatement', 'docs checked')
+        allStatements.println(respStatement)
+
+        def contributionsInRespStmt = parseRespStatement(respStatement)
+        def contribution = getPathSafe(data, ['@graph', 1, 'instanceOf', 'contribution'], [])
+
+        if (contributionsInRespStmt.isEmpty()) {
+            notParsed.println([respStatement, id].join('\t'))
+            return
+        }
+
+        contribution.each { Map c ->
+            asList(c.agent).each { a ->
+                def matchedOnName = contributionsInRespStmt.find { n, r ->
+                    nameMatch(n, loadIfLink(a))
+                }
+
+                if (!matchedOnName)
+                    return
+
+                // Contributor found locally, omit from further search
+                contributionsInRespStmt.remove(matchedOnName.key)
+
+                def dontAdd = { Relator relator, boolean isFirstStmtPart ->
+                    relator == Relator.UNSPECIFIED_CONTRIBUTOR
+                            || isFirstStmtPart && relator == Relator.AUTHOR && c.'@type' != 'PrimaryContribution'
+                }
+
+                def rolesInRespStatement = matchedOnName.value
+                        .findResults { dontAdd(it) ? null : it.getV1().iri }
+
+                if (rolesInRespStatement.isEmpty())
+                    return
+
+                def rolesInContribution = asList(c.role).findAll { it.'@id' != Relator.UNSPECIFIED_CONTRIBUTOR.iri }
+
+                rolesInRespStatement.each { r ->
+                    def idLink = ['@id': r]
+                    if (!(idLink in rolesInContribution)) {
+                        def roleShort = r.split('/').last()
+                        s.increment('fetch contribution from respStatement', "$roleShort roles specified")
+                        roleSpecified.println([id, roleShort, matchedOnName.key, respStatement].join('\t'))
+                    }
+                }
+            }
+        }
+
+        def comparable = {
+            it*.getV1().findResults { Relator r ->
+                r != Relator.UNSPECIFIED_CONTRIBUTOR
+                        ? ['@id': r.iri]
+                        : null
+            }
+        }
+
+        contributionsInRespStmt.each { name, roles ->
+            def roleShort = { it.getV1().iri.split('/').last() }
+            def concat = { it.collect { r -> roleShort(r) }.join('|') }
+
+            def found = false
+
+            for (String otherId : cluster) {
+                def doc = loadDoc(otherId)
+                def otherEncodingLevel = getPathSafe(doc.data, ['@graph', 0, 'encodingLevel'])
+
+                def matched = getPathSafe(doc.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
+                        .find { Map c ->
+                            asList(c.agent).any { a ->
+                                nameMatch(name, loadIfLink(a))
+                                        && comparable(roles).with { r -> !r.isEmpty() && asList(c.role).containsAll(r) }
+                                        && bestEncodingLevel.indexOf(encodingLevel) <= bestEncodingLevel.indexOf(otherEncodingLevel)
+                            }
+                        }
+
+                if (matched) {
+                    def isPseudonym = {
+                        asList(it.agent).any { a ->
+                            loadIfLink(a).description =~ /(?i)pseud/
+                        }
+                    }
+
+                    if (isPseudonym(matched)) {
+                        pseudonyms.println([id, concat(roles), name, otherId, chipString(matched, whelk)].join('\t'))
+                        continue
+                    }
+
+                    roles.each { s.increment('fetch contribution from respStatement', "${roleShort(it)} found in cluster") }
+                    agentFoundInCluster.println([id, concat(roles), name, otherId, chipString(matched, whelk), respStatement].join('\t'))
+
+                    found = true
+                    break
+                }
+            }
+
+            if (!found)
+                parsedButUnmatched.println([id, concat(roles), name, respStatement].join('\t'))
+        }
+    }
+}
+
+def loadIfLink(Map agent) {
+    agent['@id'] ? loadThing(agent['@id']) : agent
+}
+
+def loadThing(String id) {
+    def thing = [:]
+    selectByIds([id]) { t ->
+        thing = t.graph[1]
+    }
+    return thing
+}
+
+def loadDoc(String id) {
+    def doc
+    selectByIds([id]) { d ->
+        doc = d.doc
+    }
+    return doc
+}
