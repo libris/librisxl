@@ -236,7 +236,7 @@ class Util {
         def initialPattern = ~/\p{Lu}/
         def namePattern = ~/\p{Lu}:?\p{Ll}+('\p{Ll})?/
         def betweenNamesPattern = ~/-| |\. ?| (de(l| la)?|von|van( de[nr])?|v\.|le|af|du|dos) | [ODdLl]'/
-        def fullNamePattern = ~/($initialPattern|$namePattern($betweenNamesPattern)?)*$namePattern/
+        def fullNamePattern = ~/(($initialPattern|$namePattern)($betweenNamesPattern)?)*$namePattern/
         def conjPattern = ~/ (och|&|and) /
         def roleAfterNamePattern = ~/( ?\(($rolePattern$conjPattern)?$rolePattern\))/
         def fullContributionPattern = ~/(($rolePattern($conjPattern|\/))*$rolePattern$followsRolePattern)?$fullNamePattern($conjPattern$fullNamePattern)*$roleAfterNamePattern?/
