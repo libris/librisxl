@@ -230,7 +230,7 @@ class Util {
                 ]
 
         def rolePattern = ~/((?iu)${roleToPattern.values().join('|')})/
-        def followsRolePattern = ~/((:| a[fv]| by) )/
+        def followsRolePattern = ~/(:| a[fv]| by) /
         def initialPattern = ~/\p{Lu}/
         def namePattern = ~/\p{Lu}:?\p{Ll}+('\p{Ll})?/
         def betweenNamesPattern = ~/-| |\. ?| (de(l| la)?|von|van( de[nr])?|v\.|le|af|du|dos) | [ODdLl]'/
@@ -246,16 +246,18 @@ class Util {
         matched.each { m ->
             // Extract roles from the contribution
             def roles = roleToPattern
-                    .findAll { k, v -> m =~ v }
+                    .findAll { k, v -> m =~ /(?iu)$v/ }
                     .with {
                         it.isEmpty() && matched =~ /.+$followsRolePattern/
                         ? [new Tuple2(Relator.UNSPECIFIED_CONTRIBUTOR, isFirstPart)]
                         : it.collect {role, pattern ->
-                            // Remove role from string, we don't want e.g. "Översättning" to be mistaken for a name later
-                            m = m.replaceAll(pattern, '')
                             new Tuple2(role, isFirstPart)
                         }
                     }
+
+            // Remove roles from string, we don't want e.g. "Översättning" to be mistaken for a name later
+            m = m.replaceAll(rolePattern, '')
+
             // Author should be the role if first part of respStatement (before ';') and no role seems to be stated
             if (roles.isEmpty() && isFirstPart) {
                 roles << new Tuple2(Relator.AUTHOR, isFirstPart)
