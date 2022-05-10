@@ -205,8 +205,6 @@ class Util {
         def parsedContributions = [:]
 
         respStatement.split(';').eachWithIndex { part, i ->
-            if (part =~ /(?i)pseud/)
-                return
             // TODO: generalize for other material types
             parseSwedishFictionContribution(StringUtils.normalizeSpace(part), i == 0).each { name, roles ->
                 parsedContributions

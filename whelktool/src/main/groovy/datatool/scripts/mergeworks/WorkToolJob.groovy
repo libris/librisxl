@@ -21,6 +21,7 @@ import static datatool.scripts.mergeworks.Util.chipString
 import static datatool.scripts.mergeworks.Util.getPathSafe
 import static datatool.scripts.mergeworks.Util.normalize
 import static datatool.scripts.mergeworks.Util.partition
+import static datatool.scripts.mergeworks.Util.parseRespStatement
 import static datatool.scripts.mergeworks.Util.Relator
 
 class WorkToolJob {
@@ -361,7 +362,7 @@ class WorkToolJob {
 
                     statistics.increment('fetch contribution from respStatement', 'docs checked')
 
-                    def contributionsInRespStmt = Util.parseRespStatement(respStatement)
+                    def contributionsInRespStmt = parseRespStatement(respStatement)
                     def contribution = getPathSafe(d.ogDoc.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
 
                     contribution.each { Map c ->
@@ -409,13 +410,19 @@ class WorkToolJob {
                         }
                     }
 
+                    def isPseudonym = {
+                        asList(it.agent).any { a ->
+                            loadIfLink(a).description =~ /(?i)pseud/
+                        }
+                    }
+
                     contributionsInRespStmt.each { name, roles ->
                         for (Map other : docs) {
                             Doc od = other.doc
                             def matched = getPathSafe(od.ogDoc.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
                                     .find { Map c ->
                                         asList(c.agent).any { a ->
-                                            nameMatch(name, loadIfLink(a))
+                                            loadIfLink(a).with { nameMatch(name, it) && !(it.description =~ /(?i)pseud/) }
                                                     && comparable(roles).with { r -> !r.isEmpty() && asList(c.role).containsAll(r) }
                                                     && Util.bestEncodingLevel.indexOf(d.encodingLevel()) <= Util.bestEncodingLevel.indexOf(od.encodingLevel())
                                         }
