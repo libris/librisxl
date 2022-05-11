@@ -248,7 +248,7 @@ class Util {
             def roles = roleToPattern
                     .findAll { k, v -> m =~ /(?iu)$v/ }
                     .with {
-                        it.isEmpty() && matched =~ /.+$followsRolePattern/
+                        it.isEmpty() && contribution =~ /.+$followsRolePattern/
                         ? [new Tuple2(Relator.UNSPECIFIED_CONTRIBUTOR, isFirstPart)]
                         : it.collect {role, pattern ->
                             new Tuple2(role, isFirstPart)

@@ -98,6 +98,8 @@ clusters.each { cluster ->
 
             for (String otherId : cluster) {
                 def doc = loadDoc(otherId)
+                if (!doc)
+                    continue
                 def otherEncodingLevel = getPathSafe(doc.data, ['@graph', 0, 'encodingLevel'])
 
                 def matched = getPathSafe(doc.data, ['@graph', 1, 'instanceOf', 'contribution'], [])

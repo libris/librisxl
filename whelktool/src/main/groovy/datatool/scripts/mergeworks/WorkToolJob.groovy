@@ -352,18 +352,19 @@ class WorkToolJob {
                 statistics.increment('fetch contribution from respStatement', 'clusters checked')
                 def docs = cluster
                         .collect(whelk.&getDocument)
-                        .collect { [doc: new Doc(whelk, it), checksum: it.getChecksum(whelk.jsonld), changed: false] }
+                        .findAll()
+                        .collect { [doc: it, checksum: it.getChecksum(whelk.jsonld), changed: false] }
 
                 docs.each {
-                    Doc d = it.doc
-                    def respStatement = d.getInstance().responsibilityStatement
+                    Document d = it.doc
+                    def respStatement = getPathSafe(d.data, ['@graph', 1, 'responsibilityStatement'])
                     if (!respStatement)
                         return
 
                     statistics.increment('fetch contribution from respStatement', 'docs checked')
 
                     def contributionsInRespStmt = parseRespStatement(respStatement)
-                    def contribution = getPathSafe(d.ogDoc.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
+                    def contribution = getPathSafe(d.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
 
                     contribution.each { Map c ->
                         asList(c.agent).each { a ->
@@ -397,6 +398,9 @@ class WorkToolJob {
                                     it.changed = true
                                     def roleShort = r.split('/').last()
                                     statistics.increment('fetch contribution from respStatement', "$roleShort roles specified")
+                                    if (verbose) {
+                                        println("${d.shortId} $matchedOnName.key <- $roleShort")
+                                    }
                                 }
                             }
                         }
@@ -410,16 +414,10 @@ class WorkToolJob {
                         }
                     }
 
-                    def isPseudonym = {
-                        asList(it.agent).any { a ->
-                            loadIfLink(a).description =~ /(?i)pseud/
-                        }
-                    }
-
                     contributionsInRespStmt.each { name, roles ->
                         for (Map other : docs) {
-                            Doc od = other.doc
-                            def matched = getPathSafe(od.ogDoc.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
+                            Document od = other.doc
+                            def matched = getPathSafe(od.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
                                     .find { Map c ->
                                         asList(c.agent).any { a ->
                                             loadIfLink(a).with { nameMatch(name, it) && !(it.description =~ /(?i)pseud/) }
@@ -433,6 +431,9 @@ class WorkToolJob {
                                     def roleShort = it.getV1().iri.split('/').last()
                                     statistics.increment('fetch contribution from respStatement', "$roleShort found in cluster")
                                 }
+                                if (verbose) {
+                                    println("${d.shortId} <- ${chipString(matched, whelk)} (${od.shortId})")
+                                }
                                 it.changed = true
                                 break
                             }
@@ -441,7 +442,7 @@ class WorkToolJob {
 
                     docs.each {
                         if (!dryRun && it.changed) {
-                            whelk.storeAtomicUpdate(it.doc.ogDoc, !loud, changedIn, changedBy, it.checksum)
+                            whelk.storeAtomicUpdate(it.doc, !loud, changedIn, changedBy, it.checksum)
                         }
                     }
                 }
