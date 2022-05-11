@@ -1,12 +1,11 @@
+import groovy.transform.Memoized
 import whelk.util.Statistics
-import whelk.Whelk
 
 import static datatool.scripts.mergeworks.Util.asList
 import static datatool.scripts.mergeworks.Util.parseRespStatement
 import static datatool.scripts.mergeworks.Util.getPathSafe
 import static datatool.scripts.mergeworks.Util.Relator
 import static datatool.scripts.mergeworks.Util.bestEncodingLevel
-import static datatool.scripts.mergeworks.Util.chipString
 import static datatool.scripts.mergeworks.WorkToolJob.nameMatch
 
 PrintWriter allStatements = getReportWriter("all-statements.csv")
@@ -16,7 +15,6 @@ PrintWriter agentFoundInCluster = getReportWriter("agent-found-in-cluster.tsv")
 PrintWriter parsedButUnmatched = getReportWriter("parsed-but-unmatched.tsv")
 PrintWriter pseudonyms = getReportWriter("pseudonyms")
 
-Whelk whelk = Whelk.createLoadedCoreWhelk()
 Statistics s = new Statistics().printOnShutdown()
 
 def clusters = System.getProperty('clustersDir')
@@ -70,13 +68,14 @@ clusters.each { cluster ->
                     return
 
                 def rolesInContribution = asList(c.role).findAll { it.'@id' != Relator.UNSPECIFIED_CONTRIBUTOR.iri }
+                def roleShort = { it.split('/').last() }
 
                 rolesInRespStatement.each { r ->
                     def idLink = ['@id': r]
                     if (!(idLink in rolesInContribution)) {
-                        def roleShort = r.split('/').last()
-                        s.increment('fetch contribution from respStatement', "$roleShort roles specified")
-                        roleSpecified.println([id, chipString(c, whelk), roleShort, respStatement].join('\t'))
+                        def existingRoles = asList(c.role).findResults { it.'@id' ? roleShort(it.'@id') : null }.join('|')
+                        s.increment('fetch contribution from respStatement', "${roleShort(r)} roles specified")
+                        roleSpecified.println([id, existingRoles, roleShort(r), matchedOnName.key, respStatement].join('\t'))
                     }
                 }
             }
@@ -119,12 +118,12 @@ clusters.each { cluster ->
                     }
 
                     if (isPseudonym(matched)) {
-                        pseudonyms.println([id, concat(roles), name, otherId, chipString(matched, whelk)].join('\t'))
+                        pseudonyms.println([id, concat(roles), name, otherId].join('\t'))
                         continue
                     }
 
                     roles.each { s.increment('fetch contribution from respStatement', "${roleShort(it)} found in cluster") }
-                    agentFoundInCluster.println([id, concat(roles), name, otherId, chipString(matched, whelk), respStatement].join('\t'))
+                    agentFoundInCluster.println([id, concat(roles), name, otherId, respStatement].join('\t'))
 
                     found = true
                     break
@@ -141,6 +140,7 @@ def loadIfLink(Map agent) {
     agent['@id'] ? loadThing(agent['@id']) : agent
 }
 
+@Memoized
 def loadThing(String id) {
     def thing = [:]
     selectByIds([id]) { t ->
@@ -149,6 +149,7 @@ def loadThing(String id) {
     return thing
 }
 
+@Memoized
 def loadDoc(String id) {
     def doc
     selectByIds([id]) { d ->
