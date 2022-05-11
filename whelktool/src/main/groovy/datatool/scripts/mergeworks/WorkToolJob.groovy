@@ -399,7 +399,7 @@ class WorkToolJob {
                                     def roleShort = r.split('/').last()
                                     statistics.increment('fetch contribution from respStatement', "$roleShort roles specified")
                                     if (verbose) {
-                                        println("${d.shortId} $matchedOnName.key <- $roleShort")
+                                        println("${chipString(c, whelk)} (${d.shortId}) <- $roleShort")
                                     }
                                 }
                             }

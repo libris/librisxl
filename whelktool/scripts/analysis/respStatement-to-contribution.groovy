@@ -76,7 +76,7 @@ clusters.each { cluster ->
                     if (!(idLink in rolesInContribution)) {
                         def roleShort = r.split('/').last()
                         s.increment('fetch contribution from respStatement', "$roleShort roles specified")
-                        roleSpecified.println([id, roleShort, matchedOnName.key, respStatement].join('\t'))
+                        roleSpecified.println([id, chipString(c, whelk), roleShort, respStatement].join('\t'))
                     }
                 }
             }
