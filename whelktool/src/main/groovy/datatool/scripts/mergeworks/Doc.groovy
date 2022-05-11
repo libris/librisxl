@@ -308,6 +308,14 @@ class Doc {
         (getInstance()['editionStatement'] ?: '').toString().toLowerCase().contains("förk")
     }
 
+    boolean hasRelationshipWithContribution() {
+        asList(getWork()['relationship']).any { r ->
+            asList(r['entity']).any { e ->
+                e.containsKey('contribution')
+            }
+        }
+    }
+
     void addComparisonProps() {
         if(hasDistinguishingEdition()) {
             addToWork('editionStatement')

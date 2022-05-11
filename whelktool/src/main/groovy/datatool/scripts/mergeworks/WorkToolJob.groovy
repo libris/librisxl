@@ -49,6 +49,7 @@ class WorkToolJob {
                 && doc.isMonograph()
                 && !doc.hasPart()
                 && (doc.encodingLevel() != 'marc:PartialPreliminaryLevel' && doc.encodingLevel() != 'marc:PrepublicationLevel'))
+                && !doc.hasRelationshipWithContribution()
     }
 
     void show() {
