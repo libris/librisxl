@@ -524,7 +524,12 @@ class Crud extends HttpServlet {
         if (contentType == null) {
             return location
         }
-
+        
+        if (location.endsWith('#it')) {
+            // We should normally never get '#it' URIs here since /data should only work on records 
+            location = location.substring(0, location.length() - '#it'.length())
+        }
+        
         def loc = new StringBuilder(location)
 
         String slash = location.endsWith('/') ? '' : '/'
