@@ -2655,6 +2655,9 @@
         "copyIfMissing": [
           "publication",
           "extent",
+          "responsibilityStatement",
+          "editionStatement",
+          "hasNote",
           {
             "from": "identifiedBy",
             "to": "indirectlyIdentifiedBy",
@@ -2679,10 +2682,13 @@
                         "year": "1773"
                       }
                     ],
+                    "responsibilityStatement": "av författaren",
+                    "editionStatement" : "Första utgåvan",
                     "extent": {"@type": "Extent", "label": ["259 s."]},
                     "identifiedBy": [
                       {"@type": "ISBN", "value": "00-0-000000-0"}
-                    ]
+                    ],
+                    "hasNote": [{"@type": "Note", "label": "Anmärkning"}]
                   }
                 ]
               }
@@ -2698,10 +2704,13 @@
                         "year": "1773"
                       }
                     ],
+                    "responsibilityStatement": "av författaren",
+                    "editionStatement" : "Första utgåvan",
                     "extent": {"@type": "Extent", "label": ["259 s."]},
                     "identifiedBy": [
                       {"@type": "ISBN", "value": "00-0-000000-0"}
-                    ]
+                    ],
+                    "hasNote": [{"@type": "Note", "label": "Anmärkning"}]
                   }
                 ],
                 "publication": [
@@ -2711,9 +2720,18 @@
                     "appliesTo": {"@type": "Resource", "label": "[original]"}
                   }
                 ],
+                "responsibilityStatement": "av författaren",
+                "editionStatement" : "Första utgåvan",
                 "extent": {"@type": "Extent", "label": ["259 s."], "appliesTo": {"@type": "Resource", "label": "[original]"}},
                 "indirectlyIdentifiedBy": [
                   {"@type": "ISBN", "value": "00-0-000000-0", "qualifier": "original"}
+                ],
+                "hasNote": [
+                  {
+                    "@type": "Note",
+                    "label": "Anmärkning",
+                    "appliesTo": {"@type": "Resource", "label": "[original]"}
+                  }
                 ]
               }
             }
