@@ -28,8 +28,8 @@ class WorkToolJob {
     File clusters
 
     String jobId = IdGenerator.generate()
-    File reportDir = new File("reports/$jobId") 
-    
+    File reportDir = new File("reports/$jobId")
+
     String changedIn = "xl"
     String changedBy = "SEK"
     boolean dryRun = true
@@ -58,7 +58,7 @@ class WorkToolJob {
             return {
                 try {
                     Collection<Collection<Doc>> docs = titleClusters(cluster)
-                    
+
                     if (docs.isEmpty() || docs.size() == 1 && docs.first().size() == 1) {
                         return
                     }
@@ -81,13 +81,13 @@ class WorkToolJob {
         })
         println(Html.END)
     }
-    
+
     void showWorks() {
         println(Html.START)
         run({ cluster ->
             return {
                 try {
-                    println(mergedWorks(titleClusters(cluster)).collect {[new Doc2(whelk, it.work)] + it.derivedFrom }
+                    println(mergedWorks(titleClusters(cluster)).collect { [new Doc2(whelk, it.work)] + it.derivedFrom }
                             .collect { Html.clusterTable(it) }
                             .join('') + Html.HORIZONTAL_RULE
                     )
@@ -104,16 +104,16 @@ class WorkToolJob {
     void merge() {
         def s = statistics.printOnShutdown()
         reportDir.mkdirs()
-        
+
         run({ cluster ->
             return {
                 def titles = titleClusters(cluster)
                 def works = mergedWorks(titles)
-                
+
                 works.each { store(it) }
 
                 String report = htmlReport(titles, works)
-                
+
                 new File(reportDir, "${Html.clusterId(cluster)}.html") << report
                 works.each {
                     s.increment('num derivedFrom', "${it.derivedFrom.size()}", it.work.shortId)
@@ -122,31 +122,57 @@ class WorkToolJob {
             }
         })
     }
-    
-    String htmlReport(Collection<Collection<Doc>> titleClusters, Collection<MergedWork> works)  {
+
+    void revert() {
+        run({ cluster ->
+            return {
+                def docs = cluster
+                        .collect(whelk.&getDocument)
+                        .collect { [doc: it, checksum: it.getChecksum(whelk.jsonld)] }
+
+                Set works = []
+
+                docs.each {
+                    Document d = it.doc
+                    works << getPathSafe(d.data, d.workIdPath)
+                    def revertTo = whelk.storage.loadAllVersions(d.shortId)
+                            .reverse()
+                            .find { v -> getPathSafe(v.data, v.workIdPath) == null }
+                    d.data = revertTo.data
+                    whelk.storeAtomicUpdate(it.doc, !loud, changedIn, changedBy, it.checksum)
+                }
+
+                works.findAll().each {
+                    whelk.remove(it, changedIn, changedBy)
+                }
+            }
+        })
+    }
+
+    String htmlReport(Collection<Collection<Doc>> titleClusters, Collection<MergedWork> works) {
         if (titleClusters.isEmpty() || titleClusters.size() == 1 && titleClusters.first().size() == 1) {
             return ""
         }
 
         StringBuilder s = new StringBuilder()
-        
+
         s.append(Html.START)
         s.append("<h1>Title cluster(s)</h1>")
         titleClusters.each { it.each { it.addComparisonProps() } }
-        
+
         titleClusters
-            .collect { it.sort { a, b -> a.getWork()['@type'] <=> b.getWork()['@type'] } }
-            .collect { it.sort { it.numPages() } }
-            .each { 
-                s.append(Html.clusterTable(it)) 
-                s.append(Html.HORIZONTAL_RULE)
-            }
+                .collect { it.sort { a, b -> a.getWork()['@type'] <=> b.getWork()['@type'] } }
+                .collect { it.sort { it.numPages() } }
+                .each {
+                    s.append(Html.clusterTable(it))
+                    s.append(Html.HORIZONTAL_RULE)
+                }
         titleClusters.each { it.each { it.removeComparisonProps() } }
 
         s.append("<h1>Extracted works</h1>")
-        works.collect {[new Doc2(whelk, it.work)] + it.derivedFrom }
+        works.collect { [new Doc2(whelk, it.work)] + it.derivedFrom }
                 .each { s.append(Html.clusterTable(it)) }
-        
+
         s.append(Html.END)
         return s.toString()
     }
@@ -158,24 +184,24 @@ class WorkToolJob {
 
     private Document buildWorkDocument(Map workData) {
         String workId = IdGenerator.generate()
-        
+
         workData['@id'] = "TEMPID#it"
         Document d = new Document([
                 "@graph": [
                         [
-                                "@id"       : "TEMPID",
-                                "@type"     : "Record",
-                                "mainEntity": ["@id": "TEMPID#it"],
+                                "@id"          : "TEMPID",
+                                "@type"        : "Record",
+                                "mainEntity"   : ["@id": "TEMPID#it"],
                                 "technicalNote": [[
-                                        "@type" : "TechnicalNote",
-                                        "hasNote": [[
-                                                "@type": "Note",
-                                                "label": ["Maskinellt utbrutet verk... TODO"]
-                                        ]],
-                                        "uri": ["http://xlbuild.libris.kb.se/works/$jobId/${workId}.html".toString()]
-                                        
-                                ]
-                        ]],
+                                                          "@type"  : "TechnicalNote",
+                                                          "hasNote": [[
+                                                                              "@type": "Note",
+                                                                              "label": ["Maskinellt utbrutet verk... TODO"]
+                                                                      ]],
+                                                          "uri"    : ["http://xlbuild.libris.kb.se/works/$jobId/${workId}.html".toString()]
+
+                                                  ]
+                                ]],
                         workData
                 ]
         ])
@@ -208,14 +234,14 @@ class WorkToolJob {
 
     private Collection<MergedWork> mergedWorks(Collection<Collection> titleClusters) {
         def works = []
-        titleClusters.each {titleCluster ->
-            titleCluster.sort {it.numPages() }
+        titleClusters.each { titleCluster ->
+            titleCluster.sort { it.numPages() }
             WorkComparator c = new WorkComparator(WorkComparator.allFields(titleCluster))
 
-            works.addAll(partition(titleCluster, { Doc a, Doc b -> c.sameWork(a, b)})
-                    .findAll {it.size() > 1 }
+            works.addAll(partition(titleCluster, { Doc a, Doc b -> c.sameWork(a, b) })
+                    .findAll { it.size() > 1 }
                     .each { work -> work.each { doc -> doc.removeComparisonProps() } }
-                    .collect{new MergedWork(work: buildWorkDocument(c.merge(it)), derivedFrom: it)})
+                    .collect { new MergedWork(work: buildWorkDocument(c.merge(it)), derivedFrom: it) })
         }
 
         return works
@@ -273,22 +299,22 @@ class WorkToolJob {
         def swedish = { Doc doc ->
             Util.asList(doc.getWork()['language']).collect { it['@id'] } == ['https://id.kb.se/language/swe']
         }
-        
+
         run({ cluster ->
             return {
                 def c = loadDocs(cluster)
                         .findAll(qualityMonographs)
                         .findAll(swedish)
-                        .findAll{ d -> !d.isDrama() }
+                        .findAll { d -> !d.isDrama() }
 
-                if (c.any { it.isFiction() } && !c.any{ it.isNotFiction()}) {
+                if (c.any { it.isFiction() } && !c.any { it.isNotFiction() }) {
                     println(c.collect { it.doc.shortId }.join('\t'))
                 }
             }
         })
     }
 
-    
+
     void filterDocs(Closure<Doc> predicate) {
         run({ cluster ->
             return {
@@ -304,21 +330,20 @@ class WorkToolJob {
         run({ cluster ->
             return {
                 def c = loadDocs(cluster)
-                
+
                 if (c) {
-                    if (c.any {it.isTranslation()}) {
-                        if (c.any{ it.hasTranslator() }) {
-                            c = c.findAll{ !it.isTranslationWithoutTranslator() }
-                        }
-                        else {
+                    if (c.any { it.isTranslation() }) {
+                        if (c.any { it.hasTranslator() }) {
+                            c = c.findAll { !it.isTranslationWithoutTranslator() }
+                        } else {
                             int pages = c.first().numPages()
-                            if (c.any{ it.numPages() != pages}) {
+                            if (c.any { it.numPages() != pages }) {
                                 return // drop cluster
                             }
                         }
                     }
                 }
-                
+
                 if (c.size() > 0) {
                     println(c.collect { it.doc.shortId }.join('\t'))
                 }
@@ -329,13 +354,13 @@ class WorkToolJob {
     void outputTitleClusters() {
         run({ cluster ->
             return {
-                titleClusters(cluster).findAll{ it.size() > 1 }.each {
-                    println(it.collect{it.doc.shortId }.join('\t'))
+                titleClusters(cluster).findAll { it.size() > 1 }.each {
+                    println(it.collect { it.doc.shortId }.join('\t'))
                 }
             }
         })
     }
-    
+
     void linkContribution() {
         def loadThingByIri = { String iri ->
             // TODO: fix whelk, add load by IRI method
@@ -343,9 +368,9 @@ class WorkToolJob {
                 return (Map) doc.data['@graph'][1]
             }
         }
-        
+
         def loadIfLink = { it['@id'] ? loadThingByIri(it['@id']) : it }
-        
+
         statistics.printOnShutdown()
         run({ cluster ->
             return {
@@ -353,8 +378,8 @@ class WorkToolJob {
                 // TODO: check work language?
                 def docs = cluster
                         .collect(whelk.&getDocument)
-                        .collect {[doc: it, checksum: it.getChecksum(whelk.jsonld), changed:false]}
-                
+                        .collect { [doc: it, checksum: it.getChecksum(whelk.jsonld), changed: false] }
+
                 List<Map> linked = []
                 docs.each { d ->
                     def contribution = getPathSafe(d.doc.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
@@ -369,22 +394,21 @@ class WorkToolJob {
                     statistics.increment('link contribution', 'docs checked')
                 }
 
-                docs.each { 
+                docs.each {
                     Document d = it.doc
                     def contribution = getPathSafe(d.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
                     contribution.each { Map c ->
                         if (c.agent && !c.agent['@id']) {
                             def l = linked.find {
-                                agentMatches(c.agent, it) && (!c.role || it.roles.containsAll(c.role)) 
+                                agentMatches(c.agent, it) && (!c.role || it.roles.containsAll(c.role))
                             }
                             if (l) {
                                 println("${d.shortId} ${chipString(c, whelk)} --> ${chipString(l, whelk)}")
                                 c.agent = ['@id': l['@id']]
                                 it.changed = true
                                 statistics.increment('link contribution', 'agents linked')
-                            }
-                            else if (verbose) {
-                                println("${d.shortId} NO MATCH: ${chipString(c, whelk)} ??? ${linked.collect{ chipString(it, whelk)}}")
+                            } else if (verbose) {
+                                println("${d.shortId} NO MATCH: ${chipString(c, whelk)} ??? ${linked.collect { chipString(it, whelk) }}")
                             }
                         }
                     }
@@ -394,7 +418,7 @@ class WorkToolJob {
                 docs.each {
                     def contribution = getPathSafe(it.doc.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
                     def p = contribution.findAll()
-                    contribution.each { 
+                    contribution.each {
                         if (it['@type'] == 'PrimaryContribution' && it['role'] == ['@id': 'https://id.kb.se/relator/author'] && it['agent']) {
                             Map agent = loadIfLink(it['agent'])
                             if (agent) {
@@ -403,7 +427,7 @@ class WorkToolJob {
                         }
                     }
                 }
-                                
+
                 docs.each {
                     Document d = it.doc
                     def contribution = getPathSafe(d.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
@@ -420,10 +444,10 @@ class WorkToolJob {
                         }
                     }
                 }
-                
+
                 docs.each {
                     if (!dryRun && it.changed) {
-                        whelk.storeAtomicUpdate(it.doc, !loud, changedIn, changedBy, it.checksum)    
+                        whelk.storeAtomicUpdate(it.doc, !loud, changedIn, changedBy, it.checksum)
                     }
                 }
             }
@@ -436,14 +460,15 @@ class WorkToolJob {
 
     static boolean nameMatch(Map local, Map linked) {
         def variants = [linked] + asList(linked.hasVariant)
-        def name = { 
-            Map p -> (p.givenName && p.familyName) 
-                    ? normalize("${p.givenName} ${p.familyName}")
-                    : p.name ? normalize("${p.name}") : null
+        def name = {
+            Map p ->
+                (p.givenName && p.familyName)
+                        ? normalize("${p.givenName} ${p.familyName}")
+                        : p.name ? normalize("${p.name}") : null
         }
-        
+
         name(local) && variants.any {
-            name(it) && name(local) == name(it)    
+            name(it) && name(local) == name(it)
         }
     }
 
@@ -454,7 +479,7 @@ class WorkToolJob {
         def d = death(local) && death(linked) && death(local) != death(linked)
         b || d
     }
-    
+
     private void run(Function<List<String>, Runnable> f) {
         ExecutorService s = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4)
 
@@ -492,10 +517,10 @@ class WorkToolJob {
     private Collection<Collection<Doc>> titleClusters(Collection<String> cluster) {
         loadDocs(cluster)
                 .findAll(qualityMonographs)
-                .each {it.addComparisonProps() }
+                .each { it.addComparisonProps() }
                 .with { partitionByTitle(it) }
                 .findAll { it.size() > 1 }
-                .findAll { !it.any{ doc -> doc.hasGenericTitle() } }
+                .findAll { !it.any { doc -> doc.hasGenericTitle() } }
                 .sort { a, b -> a.first().instanceDisplayTitle() <=> b.first().instanceDisplayTitle() }
     }
 

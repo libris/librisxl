@@ -28,7 +28,7 @@ class WorkTool {
         cli.a(longOpt:'allow-loud', 'Do loud modifications.')
         cli.v(longOpt:'verbose', '.')
         
-        cli.m(longOpt:'merge', 'Merge and extract matcing works')
+        cli.m(longOpt:'merge', 'Merge and extract matching works')
         cli.s(longOpt:'show', 'Show. Generate HTML report with title clusters')
         cli.s2(longOpt:'showWorks', 'Show. Generate HTML report with works')
         cli.dd(longOpt:'diff', args: 1, argName:'diff', 'Field to diff')
@@ -41,6 +41,7 @@ class WorkTool {
         cli.qm(longOpt:'qualityMonographs', 'Filter: "qualityMonographs"')
         cli.tc(longOpt:'title-clusters', 'Filter: output title clusters')
         cli.lc(longOpt:'link-contribution', 'link matching contribution within cluster')
+        cli.r(longOpt:'revert', 'undo merge and extraction of matching works')
 
         def options = cli.parse(args)
         if (options.h) {
@@ -91,7 +92,9 @@ class WorkTool {
         else if (options.lc) {
             m.linkContribution()
         }
-        else {
+        else if (options.r) {
+            m.revert()
+        } else {
             cli.usage()
             System.exit 1
         }
