@@ -86,6 +86,7 @@ public class Merge {
                     baseGraphList,
                     incomingGraphList.get(i),
                     path,
+                    path,
                     incomingAgent,
                     baseHistory,
                     base.getShortId()
@@ -108,16 +109,19 @@ public class Merge {
         return null;
     }
 
-    public boolean mayAddAtPath(List<Object> path, String incomingAgent, History history) {
+    public boolean mayAddAtPath(List<Object> path, List<Object> truePath, String incomingAgent, History history) {
         List<Object> temp = new ArrayList<>(path);
+        List<Object> trueTemp = new ArrayList<>(truePath);
         while (!temp.isEmpty()) {
             if (m_pathAddRules.containsKey(temp)) {
+
+                //System.err.println("  found rule! :" + temp + " matching true path: " + trueTemp);
 
                 Map prioMap = m_pathAddRules.get(temp);
                 if (prioMap == null) // No priority list given for this rules = anyone may add
                     return true;
 
-                Ownership owner = history.getOwnership(temp);
+                Ownership owner = history.getOwnership(trueTemp);
                 int manualPrio = Integer.MIN_VALUE;
                 int systematicPrio = Integer.MIN_VALUE;
                 int incomingPrio = 0;
@@ -134,12 +138,14 @@ public class Merge {
                 return false;
             }
             temp.remove(temp.size()-1);
+            trueTemp.remove(trueTemp.size()-1);
         }
         return false;
     }
 
     private void mergeInternal(Object base, Object baseParent, Object correspondingIncoming,
                                List<Object> path,
+                               List<Object> truePath, // Same as path, but without magic indexes, ..,0,mainTitle.. instead of ..,@type=Title,mainTitle.. for the BASE record, not incoming.
                                String incomingAgent,
                                History baseHistory,
                                String loggingForID) {
@@ -155,7 +161,7 @@ public class Merge {
             // Determine (the maximum) priority for any part of the already existing subtree (below 'path')
             int basePriorityHere = 0;
             boolean baseContainsHandEdits = false;
-            Set<Ownership> baseOwners = baseHistory.getSubtreeOwnerships(path);
+            Set<Ownership> baseOwners = baseHistory.getSubtreeOwnerships(truePath);
             for (Ownership baseOwnership : baseOwners) {
                 if (baseOwnership.m_manualEditTime != null)
                     baseContainsHandEdits = true;
@@ -214,8 +220,10 @@ public class Merge {
                 // Does the incoming record have properties here that we don't have and are allowed to add?
                 List<Object> childPath = new ArrayList(path);
                 childPath.add(key);
+                List<Object> trueChildPath = new ArrayList(truePath);
+                trueChildPath.add(key);
                 if ( ((Map) base).get(key) == null ) {
-                    if (mayAddAtPath(childPath, incomingAgent, baseHistory)) {
+                    if (mayAddAtPath(childPath, trueChildPath, incomingAgent, baseHistory)) {
                         ((Map) base).put(key, ((Map) correspondingIncoming).get(key));
                         logger.info("Merge of " + loggingForID + ": added object at " + childPath);
                     }
@@ -226,6 +234,7 @@ public class Merge {
                     mergeInternal( ((Map) base).get(key), base,
                             ((Map) correspondingIncoming).get(key),
                             childPath,
+                            trueChildPath,
                             incomingAgent,
                             baseHistory,
                             loggingForID);
@@ -258,11 +267,15 @@ public class Merge {
                 // Find the one instance of that type in each list
                 Map baseChild = null;
                 Map incomingChild = null;
-                for (Object o : baseList) {
+                int baseListInteger = -1;
+                for (int i = 0; i < baseList.size(); ++i) {
+                    Object o = baseList.get(i);
                     if (o instanceof Map) {
                         Map m = (Map) o;
-                        if (m.containsKey("@type") && m.get("@type").equals(type))
+                        if (m.containsKey("@type") && m.get("@type").equals(type)) {
+                            baseListInteger = i;
                             baseChild = m;
+                        }
                     }
                 }
                 for (Object o : incomingList) {
@@ -276,9 +289,12 @@ public class Merge {
                 // Keep scanning
                 List<Object> childPath = new ArrayList(path);
                 childPath.add("@type="+type);
+                List<Object> trueChildPath = new ArrayList(truePath);
+                trueChildPath.add(baseListInteger);
                 mergeInternal( baseChild, incomingList,
                         incomingChild,
                         childPath,
+                        trueChildPath,
                         incomingAgent,
                         baseHistory,
                         loggingForID);
