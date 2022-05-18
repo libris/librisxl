@@ -288,6 +288,10 @@ class Util {
             names << name
         }
 
+        // There should only be one name unless the string contains a conjunction
+        if (names.size() > 1 && !(s =~ conjPattern))
+            return []
+
         return names
     }
 }
