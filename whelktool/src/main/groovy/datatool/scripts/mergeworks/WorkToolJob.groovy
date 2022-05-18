@@ -380,11 +380,15 @@ class WorkToolJob {
 
                             def dontAdd = { Relator relator, boolean isFirstStmtPart ->
                                 relator == Relator.UNSPECIFIED_CONTRIBUTOR
-                                        || isFirstStmtPart && relator == Relator.AUTHOR && c.'@type' != 'PrimaryContribution'
+                                        || isFirstStmtPart && relator == Relator.AUTHOR
+                                            && c.'@type' != 'PrimaryContribution'
+                                        || relator == Relator.EDITOR
+                                            && asList(c.role).any { it.'@id' == Relator.AUTHOR.iri  }
+                                            && c.'@type' == 'PrimaryContribution'
                             }
 
                             def rolesInRespStatement = matchedOnName.value
-                                    .findResults { dontAdd(it) ? null : it.getV1().iri }
+                                    .findResults { dontAdd(it) ? null : it.getV1() }
 
                             if (rolesInRespStatement.isEmpty())
                                 return
@@ -392,11 +396,13 @@ class WorkToolJob {
                             def rolesInContribution = asList(c.role).findAll { it.'@id' != Relator.UNSPECIFIED_CONTRIBUTOR.iri }
 
                             rolesInRespStatement.each { r ->
-                                def idLink = ['@id': r]
+                                def idLink = ['@id': r.iri]
                                 if (!(idLink in rolesInContribution)) {
+                                    if (r == Relator.EDITOR)
+                                        rolesInContribution.removeAll { it.'@id' == Relator.ADAPTER.iri }
                                     rolesInContribution << idLink
                                     it.changed = true
-                                    def roleShort = r.split('/').last()
+                                    def roleShort = r.iri.split('/').last()
                                     statistics.increment('fetch contribution from respStatement', "$roleShort roles specified")
                                     if (verbose) {
                                         println("${chipString(c, whelk)} (${d.shortId}) <- $roleShort")
