@@ -221,7 +221,7 @@ class Util {
                 [
                         (Relator.TRANSLATOR)         : ~/(bemynd(\w+|\.)? )?öf?v(\.|ers(\.|\p{L}+)?)( (till|från) \p{L}+)?|(till svenskan?|från \p{L}+)|svensk text/,
                         (Relator.AUTHOR)             : ~/^(text(e[nr])?|skriven|written)/,
-                        (Relator.ILLUSTRATOR)        : ~/\bbild(er)?|ill(\.|ustr(\.|\w+)?)|(?<!ne[dr]|för|an)teckn\w*|vi(gn|nj)ett(er|ill)?|ritad/,
+                        (Relator.ILLUSTRATOR)        : ~/\bbild(er)?|ill(\.|ustr(\.|\w+)?)|\bvi(gn|nj)ett(er|ill)?|ritad/,
                         (Relator.AUTHOR_OF_INTRO)    : ~/förord|inl(edn(\.|ing)|edd)/,
                         (Relator.COVER_DESIGNER)     : ~/omslag/,
                         (Relator.AUTHOR_OF_AFTERWORD): ~/efter(ord|skrift)/,
