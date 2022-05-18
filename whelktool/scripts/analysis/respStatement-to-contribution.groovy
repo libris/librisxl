@@ -56,26 +56,34 @@ clusters.each { cluster ->
                 // Contributor found locally, omit from further search
                 contributionsInRespStmt.remove(matchedOnName.key)
 
+
                 def dontAdd = { Relator relator, boolean isFirstStmtPart ->
                     relator == Relator.UNSPECIFIED_CONTRIBUTOR
-                            || isFirstStmtPart && relator == Relator.AUTHOR && c.'@type' != 'PrimaryContribution'
+                            || isFirstStmtPart && relator == Relator.AUTHOR
+                                && c.'@type' != 'PrimaryContribution'
+                            || relator == Relator.EDITOR
+                                && asList(c.role).any { it.'@id' == Relator.AUTHOR.iri  }
+                                && c.'@type' == 'PrimaryContribution'
                 }
 
                 def rolesInRespStatement = matchedOnName.value
-                        .findResults { dontAdd(it) ? null : it.getV1().iri }
+                        .findResults { dontAdd(it) ? null : it.getV1() }
 
                 if (rolesInRespStatement.isEmpty())
                     return
 
                 def rolesInContribution = asList(c.role).findAll { it.'@id' != Relator.UNSPECIFIED_CONTRIBUTOR.iri }
-                def roleShort = { it.split('/').last() }
+                def roleShort = { it.'@id' ? it.'@id'.split('/').last() : 'BLANK' }
+                def joinRoles = { roles -> roles.collect { r -> roleShort(r) } }
 
                 rolesInRespStatement.each { r ->
-                    def idLink = ['@id': r]
+                    def idLink = ['@id': r.iri]
                     if (!(idLink in rolesInContribution)) {
-                        def existingRoles = asList(c.role).findResults { it.'@id' ? roleShort(it.'@id') : null }.join('|')
-                        s.increment('fetch contribution from respStatement', "${roleShort(r)} roles specified")
-                        roleSpecified.println([id, existingRoles, roleShort(r), matchedOnName.key, respStatement].join('\t'))
+                        if (r == Relator.EDITOR)
+                            rolesInContribution.removeAll { it.'@id' == Relator.ADAPTER.iri }
+                        rolesInContribution << idLink
+                        s.increment('fetch contribution from respStatement', "${roleShort(r.iri)} roles specified")
+                        roleSpecified.println([id, joinRoles(asList(c.role)), joinRoles(rolesInContribution), matchedOnName.key, respStatement].join('\t'))
                     }
                 }
             }

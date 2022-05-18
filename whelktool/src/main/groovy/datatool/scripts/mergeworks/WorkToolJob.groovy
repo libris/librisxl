@@ -383,7 +383,7 @@ class WorkToolJob {
                                         || isFirstStmtPart && relator == Relator.AUTHOR
                                             && c.'@type' != 'PrimaryContribution'
                                         || relator == Relator.EDITOR
-                                            && asList(c.role).any { it.'@id' == Relator.AUTHOR.iri  }
+                                            && asList(c.role).any { it.'@id' == Relator.AUTHOR.iri }
                                             && c.'@type' == 'PrimaryContribution'
                             }
 
