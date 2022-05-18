@@ -403,6 +403,8 @@ class WorkToolJob {
                                     }
                                 }
                             }
+
+                            c.role = rolesInContribution
                         }
                     }
 
