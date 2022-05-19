@@ -73,8 +73,8 @@ clusters.each { cluster ->
                     return
 
                 def rolesInContribution = asList(c.role).findAll { it.'@id' != Relator.UNSPECIFIED_CONTRIBUTOR.iri }
-                def roleShort = { it.'@id' ? it.'@id'.split('/').last() : 'BLANK' }
-                def joinRoles = { roles -> roles.collect { r -> roleShort(r) } }
+                def roleShort = { it.split('/').last() }
+                def joinRoles = { roles -> roles.collect { r -> r.'@id' ? roleShort(r.'@id') : 'BLANK' }.join('|') }
 
                 rolesInRespStatement.each { r ->
                     def idLink = ['@id': r.iri]
