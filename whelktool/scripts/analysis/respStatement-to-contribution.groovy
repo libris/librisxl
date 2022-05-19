@@ -61,9 +61,6 @@ clusters.each { cluster ->
                     relator == Relator.UNSPECIFIED_CONTRIBUTOR
                             || isFirstStmtPart && relator == Relator.AUTHOR
                                 && c.'@type' != 'PrimaryContribution'
-                            || relator == Relator.EDITOR
-                                && asList(c.role).any { it.'@id' == Relator.AUTHOR.iri  }
-                                && c.'@type' == 'PrimaryContribution'
                 }
 
                 def rolesInRespStatement = matchedOnName.value
@@ -76,11 +73,25 @@ clusters.each { cluster ->
                 def roleShort = { it.split('/').last() }
                 def joinRoles = { roles -> roles.collect { r -> r.'@id' ? roleShort(r.'@id') : 'BLANK' }.join('|') }
 
+                rolesInRespStatement.removeAll { r ->
+                    r == Relator.EDITOR && rolesInContribution.findIndexOf {
+                        it.'@id' == Relator.ADAPTER.iri
+                    }.with {
+                        if (it == -1) {
+                            return false
+                        } else {
+                            rolesInContribution[it]['@id'] = Relator.EDITOR.iri
+                            return true
+                        }
+                    }
+                }
+
+                if (rolesInRespStatement.size() <= rolesInContribution.size())
+                    return
+
                 rolesInRespStatement.each { r ->
                     def idLink = ['@id': r.iri]
                     if (!(idLink in rolesInContribution)) {
-                        if (r == Relator.EDITOR)
-                            rolesInContribution.removeAll { it.'@id' == Relator.ADAPTER.iri }
                         rolesInContribution << idLink
                         s.increment('fetch contribution from respStatement', "${roleShort(r.iri)} roles specified")
                         roleSpecified.println([id, joinRoles(asList(c.role)), joinRoles(rolesInContribution), matchedOnName.key, respStatement].join('\t'))

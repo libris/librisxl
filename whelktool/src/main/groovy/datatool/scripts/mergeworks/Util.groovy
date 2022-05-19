@@ -232,12 +232,17 @@ class Util {
         def rolePattern = ~/((?iu)${roleToPattern.values().join('|')})/
         def followsRolePattern = ~/(:| a[fv]| by) /
         def initialPattern = ~/\p{Lu}/
-        def namePattern = ~/\p{Lu}:?\p{Ll}+('\p{Ll})?/
+        def namePattern = ~/\p{Lu}:?\p{Ll}+('\p{Ll})?(,? [Jj](r|unior))?/
         def betweenNamesPattern = ~/-| |\. ?| (de(l| la)?|von|van( de[nr])?|v\.|le|af|du|dos) | [ODdLl]'/
         def fullNamePattern = ~/(($initialPattern|$namePattern)($betweenNamesPattern)?)*$namePattern/
         def conjPattern = ~/ (och|&|and) /
         def roleAfterNamePattern = ~/( ?\(($rolePattern$conjPattern)?$rolePattern\))/
         def fullContributionPattern = ~/(($rolePattern($conjPattern|\/))*$rolePattern$followsRolePattern)?$fullNamePattern($conjPattern$fullNamePattern)*$roleAfterNamePattern?/
+
+        // Make roles lower case so that they can't be mistaken for names
+        contribution = (contribution =~ rolePattern)*.first()
+                .collectEntries { [it, it.toLowerCase()] }
+                .with { contribution.replace(it) }
 
         def nameToRoles = [:]
 
@@ -253,9 +258,6 @@ class Util {
                                 : it.collect { role, pattern -> new Tuple2(role, isFirstPart) }
                     }
 
-            // Remove roles from string, we don't want e.g. "Översättning" to be mistaken for a name later
-            m = m.replaceAll(rolePattern, '')
-
             // Author should be the role if first part of respStatement (before ';') and no role seems to be stated
             if (roles.isEmpty() && isFirstPart) {
                 roles << new Tuple2(Relator.AUTHOR, isFirstPart)
@@ -267,10 +269,6 @@ class Util {
             // Assign the roles to each name
             nameToRoles.putAll(names.collectEntries { [it, roles] })
         }
-
-        // There should only be one contributor unless the string contains a conjunction
-        if (nameToRoles.size() > 1 && !nameToRoles.any { contribution =~ /$conjPattern${it.key}/ })
-            return [:]
 
         return nameToRoles
     }

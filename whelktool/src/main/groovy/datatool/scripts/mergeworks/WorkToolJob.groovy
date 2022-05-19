@@ -381,10 +381,7 @@ class WorkToolJob {
                             def dontAdd = { Relator relator, boolean isFirstStmtPart ->
                                 relator == Relator.UNSPECIFIED_CONTRIBUTOR
                                         || isFirstStmtPart && relator == Relator.AUTHOR
-                                            && c.'@type' != 'PrimaryContribution'
-                                        || relator == Relator.EDITOR
-                                            && asList(c.role).any { it.'@id' == Relator.AUTHOR.iri }
-                                            && c.'@type' == 'PrimaryContribution'
+                                        && c.'@type' != 'PrimaryContribution'
                             }
 
                             def rolesInRespStatement = matchedOnName.value
@@ -395,11 +392,26 @@ class WorkToolJob {
 
                             def rolesInContribution = asList(c.role).findAll { it.'@id' != Relator.UNSPECIFIED_CONTRIBUTOR.iri }
 
+                            // Replace Adapter with Editor
+                            it.changed = rolesInRespStatement.removeAll { r ->
+                                r == Relator.EDITOR && rolesInContribution.findIndexOf {
+                                    it.'@id' == Relator.ADAPTER.iri
+                                }.with {
+                                    if (it == -1) {
+                                        return false
+                                    } else {
+                                        rolesInContribution[it]['@id'] = Relator.EDITOR.iri
+                                        return true
+                                    }
+                                }
+                            }
+
+                            if (rolesInRespStatement.size() <= rolesInContribution.size())
+                                return
+
                             rolesInRespStatement.each { r ->
                                 def idLink = ['@id': r.iri]
                                 if (!(idLink in rolesInContribution)) {
-                                    if (r == Relator.EDITOR)
-                                        rolesInContribution.removeAll { it.'@id' == Relator.ADAPTER.iri }
                                     rolesInContribution << idLink
                                     it.changed = true
                                     def roleShort = r.iri.split('/').last()
@@ -455,7 +467,9 @@ class WorkToolJob {
                     }
                 }
             }
-        })
+        }
+
+        )
     }
 
     void linkContribution() {
@@ -628,6 +642,7 @@ class WorkToolJob {
             !a.getTitleVariants().intersect(b.getTitleVariants()).isEmpty()
         }
     }
+
 }
 
 class NoWorkException extends RuntimeException {
