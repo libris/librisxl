@@ -283,7 +283,7 @@ class Crud extends HttpServlet {
         String loc = docAndLocation.v2
 
         if (!doc && !loc) {
-            sendNotFound(request, response)
+            sendNotFound(request.getHttpServletRequest(), response)
         } else if (!doc && loc) {
             if (request.getView() == CrudGetRequest.View.DATA) {
                 loc = getDataURI(loc, request.contentType)
