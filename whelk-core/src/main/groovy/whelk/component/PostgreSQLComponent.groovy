@@ -7,6 +7,7 @@ import com.zaxxer.hikari.metrics.prometheus.PrometheusHistogramMetricsTrackerFac
 import groovy.json.StringEscapeUtils
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
+import org.postgresql.PGConnection
 import org.postgresql.PGStatement
 import org.postgresql.util.PGobject
 import org.postgresql.util.PSQLException
@@ -75,10 +76,14 @@ class PostgreSQLComponent {
 
     private static final int DEFAULT_MAX_POOL_SIZE = 16
     private static final String driverClass = "org.postgresql.Driver"
+    
+    private static final String NEW_VERSION_NOTIFICATION = 'lddb__versions_insert'
 
     private long embellishCacheMaxSize = 10L * 1024L * 1024L * 1024L // default 10GB
 
     private Random random = new Random(System.currentTimeMillis())
+    
+    private String whelkInstanceId = UUID.randomUUID().toString()
 
     // SQL statements
     private static final String UPDATE_DOCUMENT = """
@@ -137,7 +142,7 @@ class PostgreSQLComponent {
     private static final String CLEAR_EMBELLISHED = "DELETE FROM lddb__embellished"
 
     private static final String GET_DOCUMENT_VERSION_BY_MAIN_ID = """
-            SELECT id, data 
+            SELECT id, data
             FROM lddb__versions 
             WHERE id = (SELECT id FROM lddb__identifiers WHERE iri = ? AND mainid = 't') 
             AND checksum = ?
@@ -156,6 +161,25 @@ class PostgreSQLComponent {
             WHERE id = (SELECT id FROM lddb__identifiers WHERE iri = ? AND mainid = 't')
             ORDER BY GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) ASC
             """.stripIndent()
+    
+    private static final String GET_PREVIOUS_VERSION_PK_BY_ID_AND_PK = """
+            SELECT GREATEST(-1, MAX(pk)) AS pk 
+            FROM lddb__versions 
+            WHERE id = ? AND pk < ?;
+            """.stripIndent()
+
+    private static final String GET_DOCUMENT_VERSION_BY_PK = """
+            SELECT id, data, deleted, created, modified, changedBy, changedIn 
+            FROM lddb__versions 
+            WHERE pk = ?
+            """.stripIndent()
+    
+    private static final String NOTIFY_VERSION = """
+            SELECT pg_notify(
+              '$NEW_VERSION_NOTIFICATION', 
+              ? || (SELECT (SELECT GREATEST(-1,MAX(pk)) FROM lddb__versions WHERE id = ? AND pk < ?) || ' ' || ?)
+            )
+    """
 
     private static final String LOAD_ALL_DOCUMENTS =
             "SELECT id, data, created, modified, deleted FROM lddb WHERE modified >= ? AND modified <= ?"
@@ -446,6 +470,7 @@ class PostgreSQLComponent {
         }
 
         this.dependencyCache = new DependencyCache(this)
+        startNotificationListener()
     }
 
     private void cacheEmbellishedDocument(String id, Document embellishedDocument) {
@@ -1459,18 +1484,26 @@ class PostgreSQLComponent {
         update.setObject(8, doc.getShortId(), OTHER)
     }
 
-    boolean saveVersion(Document doc, Connection connection, Date createdTime,
+    long saveVersion(Document doc, Connection connection, Date createdTime,
                         Date modTime, String changedIn, String changedBy,
                         String collection, boolean deleted) {
         if (versioning) {
-            PreparedStatement insVersion = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
+            String[] PRIMARY_KEY_COLUMN = ['pk']
+            PreparedStatement insVersion = connection.prepareStatement(INSERT_DOCUMENT_VERSION, PRIMARY_KEY_COLUMN)
             try {
                 log.debug("Trying to save a version of ${doc.getShortId() ?: ""} with checksum ${doc.getChecksum(jsonld)}. Modified: $modTime")
                 insVersion = rigVersionStatement(insVersion, doc, createdTime,
                                               modTime, changedIn, changedBy,
                                               collection, deleted)
-                insVersion.executeUpdate()
-                return true
+                if (insVersion.executeUpdate()) {
+                    ResultSet primaryKeys = insVersion.getGeneratedKeys()
+                    if (primaryKeys.next()) {
+                        long pk = primaryKeys.getLong(1)
+                        notifyVersion(connection, doc.getShortId(), pk)
+                        return pk
+                    }
+                }
+                return -2
             } catch (Exception e) {
                 log.error("Failed to save document version: ${e.message}")
                 throw e
@@ -1479,10 +1512,10 @@ class PostgreSQLComponent {
                 close(insVersion)
             }
         } else {
-            return false
+            return -1
         }
     }
-
+    
     private PreparedStatement rigVersionStatement(PreparedStatement insvers,
                                                          Document doc, Date createdTime,
                                                          Date modTime, String changedIn,
@@ -1498,6 +1531,16 @@ class PostgreSQLComponent {
         insvers.setTimestamp(8, new Timestamp(modTime.getTime()))
         insvers.setBoolean(9, deleted)
         return insvers
+    }
+
+    private void notifyVersion(Connection connection, String shortId, long newVersionPrimaryKey) {
+        try (PreparedStatement ps = connection.prepareStatement(NOTIFY_VERSION)) {
+            ps.setString(1, whelkInstanceId)
+            ps.setString(2, shortId)
+            ps.setLong(3, newVersionPrimaryKey)
+            ps.setLong(4, newVersionPrimaryKey)
+            ps.execute()
+        }
     }
 
     boolean bulkStore(final List<Document> docs, String changedIn, String changedBy, String collection) {
@@ -2244,6 +2287,9 @@ class PostgreSQLComponent {
                     if (items.value instanceof Map || items.value instanceof List) {
                         selectstmt.setObject((Integer) items.key, mapper.writeValueAsString(items.value), OTHER)
                     }
+                    if (items.value instanceof Long) {
+                        selectstmt.setLong((Integer) items.key, (Long) items.value)
+                    }
                 }
                 log.trace("Executing query")
                 rs = selectstmt.executeQuery()
@@ -2552,6 +2598,65 @@ class PostgreSQLComponent {
             } finally {
                 close(preparedStatement)
             }
+        }
+    }
+    
+    private void startNotificationListener() {
+        withDbConnection {
+            try (Connection connection = getMyConnection(); Statement statement = connection.createStatement()) {
+                statement.execute("LISTEN $NEW_VERSION_NOTIFICATION")
+                log.info("Started listening for $NEW_VERSION_NOTIFICATION")
+            }
+            catch (Exception e) {
+                String msg = "Error listening for notification $NEW_VERSION_NOTIFICATION: $e"
+                log.error(msg, e)
+                throw new WhelkRuntimeException(msg, e)
+            }
+        }
+        
+        Thread t = new Thread({
+            while (true) {
+                try {
+                    checkNotificationsBlocking()
+                }
+                catch (Exception e) {
+                    log.error("Error checking notifications: $e", e)
+                }
+            }
+        })
+        t.setName(PostgreSQLComponent.class.getSimpleName() + "-notification-listener")
+        t.setDaemon(true)
+        t.start()
+    }
+
+    private void checkNotificationsBlocking() {
+        withDbConnection {
+            getMyConnection().unwrap(PGConnection).with { pgConnection ->
+                def timeOutMs = 1000
+                def notifications = pgConnection.getNotifications(timeOutMs)
+                if (!notifications) {
+                    return
+                }
+                
+                notifications
+                        .findAll { !it.getParameter().startsWith(whelkInstanceId) }
+                        .each { notification ->
+                            String payload = notification.getParameter().split(' ').drop(1).join(' ')
+                            handleNotification(notification.getName(), payload)
+                        }
+            }
+        }
+    }
+    
+    private void handleNotification(String name, String payload) {
+        if (name == NEW_VERSION_NOTIFICATION) {
+            List docs = payload.split(' ')
+                    .collect { Long.parseLong(it) }
+                    .collect { pk -> loadFromSql(GET_DOCUMENT_VERSION_BY_PK, [1: pk]) }
+
+            def (oldVersion, newVersion) = [docs[0], docs[1]]
+            dependencyCache.invalidate(oldVersion, newVersion)
+            log.debug("New doc version, invalidating cache: {}", oldVersion.shortId)
         }
     }
 
