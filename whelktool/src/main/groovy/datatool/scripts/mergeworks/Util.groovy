@@ -249,10 +249,8 @@ class Util {
                     .findAll { k, v -> m =~ /(?iu)$v/ }
                     .with {
                         it.isEmpty() && contribution =~ /.+$followsRolePattern/
-                        ? [new Tuple2(Relator.UNSPECIFIED_CONTRIBUTOR, isFirstPart)]
-                        : it.collect {role, pattern ->
-                            new Tuple2(role, isFirstPart)
-                        }
+                                ? [new Tuple2(Relator.UNSPECIFIED_CONTRIBUTOR, isFirstPart)]
+                                : it.collect { role, pattern -> new Tuple2(role, isFirstPart) }
                     }
 
             // Remove roles from string, we don't want e.g. "Översättning" to be mistaken for a name later
@@ -269,6 +267,11 @@ class Util {
             // Assign the roles to each name
             nameToRoles.putAll(names.collectEntries { [it, roles] })
         }
+
+        // There should only be one contributor unless the string contains a conjunction
+        if (nameToRoles.size() > 1 && !nameToRoles.any { contribution =~ /$conjPattern${it.key}/ })
+            return [:]
+
         return nameToRoles
     }
 
@@ -287,10 +290,6 @@ class Util {
             }
             names << name
         }
-
-        // There should only be one name unless the string contains a conjunction
-        if (names.size() > 1 && !(s =~ conjPattern))
-            return []
 
         return names
     }
