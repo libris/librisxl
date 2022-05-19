@@ -2663,11 +2663,11 @@ class PostgreSQLComponent {
 
                 def (oldVersion, newVersion) = [docs[0], docs[1]]
                 if (oldVersion && newVersion) {
-                    log.info("New doc version {}, invalidating dependencyCache.", newVersion.shortId)
+                    log.info("Document {} updated, invalidating dependencyCache.", newVersion.shortId)
                     dependencyCache.invalidate(oldVersion, newVersion)
                 }
                 else if (newVersion) {
-                    log.info("New doc version {}, invalidating dependencyCache.", newVersion.shortId)
+                    log.info("Document {} created, invalidating dependencyCache.", newVersion.shortId)
                     dependencyCache.invalidate(newVersion)
                 }
                 else {
