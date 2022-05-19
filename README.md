@@ -253,8 +253,8 @@ and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
 
     <LocationMatch "^/([bcdfghjklmnpqrstvwxz0-9]{15,16})$">
         ProxyPreserveHost Off
-        RewriteCond %{REQUEST_METHOD} GET
         RewriteCond %{HTTP_ACCEPT} (text/html|application/xhtml|\*/\*|^$)
+        RewriteCond %{REQUEST_METHOD} GET
         RewriteRule ([^/]+)$ http://id.kblocalhost.kb.se:5000/$1 [P]
     </LocationMatch>
 
@@ -262,6 +262,9 @@ and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
         ProxyPreserveHost Off
         ProxyPass http://id.kblocalhost.kb.se:5000/_nuxt
     </Location>
+    
+    ProxyPass        /katalogisering     http://localhost:8080/katalogisering                   
+    ProxyPassReverse /katalogisering     http://localhost:8080/katalogisering
 
     ProxyPassMatch ^/vocab/(data.*) http://localhost:8180/https://id.kb.se/vocab//$1
     ProxyPass /vocab http://localhost:8180/https://id.kb.se/vocab
@@ -270,7 +273,7 @@ and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
     RewriteCond %{REQUEST_METHOD} ^(POST|PUT|DELETE|OPTIONS)$
     RewriteRule ^/data(.*)$ http://localhost:8180/$1 [P,L]
 
-    ProxyPass / http://localhost:8180/ nocanon
+    ProxyPass / http://localhost:8180/
 
     AddOutputFilterByType DEFLATE text/css text/html text/plain text/xml
     AddOutputFilterByType DEFLATE application/x-javascript text/x-component application/javascript
@@ -284,11 +287,15 @@ and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
 
     RewriteEngine On
 
-    RewriteCond %%{REQUEST_URI} !\.(json|jsonld)$
-    RewriteCond %%{REQUEST_URI} !data\..+$
-    RewriteCond %%{REQUEST_URI} !/maintenance.html
-    RewriteCond %%{REQUEST_URI} !/robots.txt
+    RewriteCond %{HTTP_ACCEPT} (text/html|application/xhtml|\*/\*) [OR]
+    RewriteCond %{HTTP_ACCEPT} ^$
+    RewriteCond %{HTTP_ACCEPT} !^(text/turtle|application/trig|application/ld\+json|application/rdf\+xml)($|.+/x?html;q=0.*)
+    RewriteCond %{REQUEST_URI} !\.(json|jsonld)$
+    RewriteCond %{REQUEST_URI} !data\..+$
+    RewriteCond %{REQUEST_URI} !/maintenance.html
+    RewriteCond %{REQUEST_URI} !/robots.txt
     RewriteRule ^/(.*)$ http://localhost:3000/$1 [P,L]
+    
     ProxyPass /_nuxt http://localhost:3000/_nuxt
     ProxyPass /_loading http://localhost:3000/_loading
     ProxyPass /__webpack_hmr http://localhost:3000/__webpack_hmr
@@ -339,7 +346,7 @@ systemctl restart apache2
 ```
 
 You should now able to visit http://id.kblocalhost.kb.se, and use the cataloging client
-on http://localhost:8080/katalogisering/. The XL API itself is available on
+on http://kblocalhost.kb.se:5000/katalogisering/. The XL API itself is available on
 http://kblocalhost.kb.se:5000 (proxied via Apache), or directly on http://localhost:8180.
 
 ## Maintenance
