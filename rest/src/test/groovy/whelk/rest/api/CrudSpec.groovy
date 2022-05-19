@@ -215,6 +215,7 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             '/' + id
         }
+        request.getMethod() >> "GET"
         storage.load(_, _) >> {
             return null
         }
@@ -239,6 +240,7 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "*/*"
         }
+        request.getMethod() >> "GET"
         storage.load(_, _) >> {
             return null
         }
@@ -310,6 +312,7 @@ class CrudSpec extends Specification {
         request.getQueryString() >> {
             return 'version=1'
         }
+        request.getMethod() >> "GET"
         storage.load(_, _, _) >> {
             return null
         }
