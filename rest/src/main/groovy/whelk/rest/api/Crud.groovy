@@ -56,7 +56,7 @@ class Crud extends HttpServlet {
 
     static final Counter failedRequests = Counter.build()
         .name("api_failed_requests_total").help("Total failed requests to API.")
-        .labelNames("method", "resource", "status").register()
+        .labelNames("method", "status").register()
 
     static final Gauge ongoingRequests = Gauge.build()
         .name("api_ongoing_requests_total").help("Total ongoing API requests.")
@@ -283,7 +283,7 @@ class Crud extends HttpServlet {
         String loc = docAndLocation.v2
 
         if (!doc && !loc) {
-            sendNotFound(response, request.getPath())
+            sendNotFound(request, response)
         } else if (!doc && loc) {
             if (request.getView() == CrudGetRequest.View.DATA) {
                 loc = getDataURI(loc, request.contentType)
@@ -335,9 +335,8 @@ class Crud extends HttpServlet {
         sendError(response, HttpServletResponse.SC_NOT_MODIFIED, "Document has not been modified.")
     }
 
-    private static void sendNotFound(HttpServletResponse response, String path) {
-        failedRequests.labels("GET", path,
-                HttpServletResponse.SC_NOT_FOUND.toString()).inc()
+    private static void sendNotFound(HttpServletRequest request, HttpServletResponse response) {
+        failedRequests.labels(request.getMethod(), HttpServletResponse.SC_NOT_FOUND.toString()).inc()
         sendError(response, HttpServletResponse.SC_NOT_FOUND, "Document not found.")
     }
 
@@ -702,7 +701,7 @@ class Crud extends HttpServlet {
             sendCreateResponse(response, savedDoc.getURI().toString(),
                     ETag.plain(savedDoc.getChecksum(jsonld)))
         } else if (!response.isCommitted()) {
-            sendNotFound(response, request.getContextPath())
+            sendNotFound(request, response)
         }
     }
 
@@ -975,9 +974,9 @@ class Crud extends HttpServlet {
 
     static void sendError(HttpServletRequest request, HttpServletResponse response, Exception e) {
         int code = mapError(e)
-        failedRequests.labels(request.getMethod(), request.getRequestURI(), code.toString()).inc()
+        failedRequests.labels(request.getMethod(), code.toString()).inc()
         if (log.isDebugEnabled()) {
-            log.debug("Sending error $code : ${e.getMessage()}")
+            log.debug("Sending error $code : ${e.getMessage()} for ${request.getRequestURI()}")
         }
         sendError(response, code, e.getMessage(), e)
     }
