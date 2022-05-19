@@ -8,6 +8,7 @@ import groovy.json.StringEscapeUtils
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import org.postgresql.PGConnection
+import org.postgresql.PGNotification
 import org.postgresql.PGStatement
 import org.postgresql.util.PGobject
 import org.postgresql.util.PSQLException
@@ -174,10 +175,11 @@ class PostgreSQLComponent {
             WHERE pk = ?
             """.stripIndent()
     
+    // "<whelk instance id> <old version pk or -1> <new version pk>"
     private static final String NOTIFY_VERSION = """
             SELECT pg_notify(
               '$NEW_VERSION_NOTIFICATION', 
-              ? || (SELECT (SELECT GREATEST(-1,MAX(pk)) FROM lddb__versions WHERE id = ? AND pk < ?) || ' ' || ?)
+              ? || ' ' || (SELECT (SELECT GREATEST(-1, MAX(pk)) FROM lddb__versions WHERE id = ? AND pk < ?) || ' ' || ?)
             )
     """
 
@@ -1484,7 +1486,7 @@ class PostgreSQLComponent {
         update.setObject(8, doc.getShortId(), OTHER)
     }
 
-    long saveVersion(Document doc, Connection connection, Date createdTime,
+    boolean saveVersion(Document doc, Connection connection, Date createdTime,
                         Date modTime, String changedIn, String changedBy,
                         String collection, boolean deleted) {
         if (versioning) {
@@ -1500,10 +1502,9 @@ class PostgreSQLComponent {
                     if (primaryKeys.next()) {
                         long pk = primaryKeys.getLong(1)
                         notifyVersion(connection, doc.getShortId(), pk)
-                        return pk
+                        return true
                     }
                 }
-                return -2
             } catch (Exception e) {
                 log.error("Failed to save document version: ${e.message}")
                 throw e
@@ -1512,7 +1513,7 @@ class PostgreSQLComponent {
                 close(insVersion)
             }
         } else {
-            return -1
+            return false
         }
     }
     
@@ -2602,61 +2603,77 @@ class PostgreSQLComponent {
     }
     
     private void startNotificationListener() {
-        withDbConnection {
-            try (Connection connection = getMyConnection(); Statement statement = connection.createStatement()) {
-                statement.execute("LISTEN $NEW_VERSION_NOTIFICATION")
-                log.info("Started listening for $NEW_VERSION_NOTIFICATION")
-            }
-            catch (Exception e) {
-                String msg = "Error listening for notification $NEW_VERSION_NOTIFICATION: $e"
-                log.error(msg, e)
-                throw new WhelkRuntimeException(msg, e)
+        new NotificationListener().start()
+    }
+    
+    class NotificationListener extends Thread {
+        DataSource dataSource
+        
+        NotificationListener() {
+            def name = 'pgsql-listener'
+            dataSource = createAdditionalConnectionPool(name, 1)
+            setDaemon(true)
+            setName(name)
+        }
+
+        @Override
+        void run() {
+            while (true) {
+                try(Connection connection = dataSource.getConnection()) {
+                    Statement statement = connection.createStatement()
+                    statement.execute("LISTEN $NEW_VERSION_NOTIFICATION")
+                    statement.close()
+                    log.info("Started listening for $NEW_VERSION_NOTIFICATION")
+                    dependencyCache.invalidateAll()
+                    listen(connection.unwrap(PGConnection))
+                }
+                catch (Exception e) {
+                    log.warn("Error checking notifications: $e", e)
+                }
             }
         }
         
-        Thread t = new Thread({
+        private void listen (PGConnection connection) {
             while (true) {
-                try {
-                    checkNotificationsBlocking()
-                }
-                catch (Exception e) {
-                    log.error("Error checking notifications: $e", e)
-                }
-            }
-        })
-        t.setName(PostgreSQLComponent.class.getSimpleName() + "-notification-listener")
-        t.setDaemon(true)
-        t.start()
-    }
-
-    private void checkNotificationsBlocking() {
-        withDbConnection {
-            getMyConnection().unwrap(PGConnection).with { pgConnection ->
-                def timeOutMs = 1000
-                def notifications = pgConnection.getNotifications(timeOutMs)
+                def notifications = connection.getNotifications(0)  // blocks
                 if (!notifications) {
-                    return
+                    continue
                 }
-                
-                notifications
-                        .findAll { !it.getParameter().startsWith(whelkInstanceId) }
-                        .each { notification ->
-                            String payload = notification.getParameter().split(' ').drop(1).join(' ')
+
+                for (PGNotification notification : notifications) {
+                    try {
+                        def s = notification.getParameter().split(' ', 2)
+                        def (sender, payload) = [s[0], s[1]]
+                        if (sender != whelkInstanceId) {
                             handleNotification(notification.getName(), payload)
                         }
+                    }
+                    catch (Exception e) {
+                        log.error("Error handling notification: $e", e)
+                    }
+                }
             }
         }
-    }
-    
-    private void handleNotification(String name, String payload) {
-        if (name == NEW_VERSION_NOTIFICATION) {
-            List docs = payload.split(' ')
-                    .collect { Long.parseLong(it) }
-                    .collect { pk -> loadFromSql(GET_DOCUMENT_VERSION_BY_PK, [1: pk]) }
 
-            def (oldVersion, newVersion) = [docs[0], docs[1]]
-            dependencyCache.invalidate(oldVersion, newVersion)
-            log.debug("New doc version, invalidating cache: {}", oldVersion.shortId)
+        private void handleNotification(String name, String payload) {
+            if (name == NEW_VERSION_NOTIFICATION) {
+                List docs = payload.split(' ')
+                        .collect { Long.parseLong(it) }
+                        .collect { pk -> pk < 0 ? null : loadFromSql(GET_DOCUMENT_VERSION_BY_PK, [1: pk]) }
+
+                def (oldVersion, newVersion) = [docs[0], docs[1]]
+                if (oldVersion && newVersion) {
+                    log.info("New doc version {}, invalidating dependencyCache.", newVersion.shortId)
+                    dependencyCache.invalidate(oldVersion, newVersion)
+                }
+                else if (newVersion) {
+                    log.info("New doc version {}, invalidating dependencyCache.", newVersion.shortId)
+                    dependencyCache.invalidate(newVersion)
+                }
+                else {
+                    log.warn("Could not find document versions with pk: {}", payload)
+                }
+            }
         }
     }
 

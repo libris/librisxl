@@ -87,6 +87,11 @@ class DependencyCache {
         dependersCache.invalidate(link)
         dependenciesCache.invalidate(new Link(iri: fromIri, relation: link.relation))
     }
+    
+    void invalidateAll() {
+        dependenciesCache.invalidateAll()
+        dependersCache.invalidateAll()
+    }
 
     void logStats() {
         log.info("dependersCache: ${dependersCache.stats()}")
