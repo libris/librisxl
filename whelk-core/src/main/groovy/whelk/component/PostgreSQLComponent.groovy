@@ -7,6 +7,7 @@ import com.zaxxer.hikari.metrics.prometheus.PrometheusHistogramMetricsTrackerFac
 import groovy.json.StringEscapeUtils
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
+import io.prometheus.client.Counter
 import org.postgresql.PGConnection
 import org.postgresql.PGNotification
 import org.postgresql.PGStatement
@@ -172,14 +173,14 @@ class PostgreSQLComponent {
     private static final String GET_DOCUMENT_VERSION_BY_PK = """
             SELECT id, data, deleted, created, modified, changedBy, changedIn 
             FROM lddb__versions 
-            WHERE pk = ?
+            WHERE id = ? AND pk = ?
             """.stripIndent()
     
-    // "<whelk instance id> <old version pk or -1> <new version pk>"
+    // "<whelk instance id> <document id> <old version pk or -1> <new version pk>"
     private static final String NOTIFY_VERSION = """
             SELECT pg_notify(
               '$NEW_VERSION_NOTIFICATION', 
-              ? || ' ' || (SELECT (SELECT GREATEST(-1, MAX(pk)) FROM lddb__versions WHERE id = ? AND pk < ?) || ' ' || ?)
+               ? || ' ' || ? || ' ' || (SELECT GREATEST(-1, MAX(pk)) FROM lddb__versions WHERE id = ? AND pk < ?) || ' ' || ?
             )
     """
 
@@ -1538,8 +1539,9 @@ class PostgreSQLComponent {
         try (PreparedStatement ps = connection.prepareStatement(NOTIFY_VERSION)) {
             ps.setString(1, whelkInstanceId)
             ps.setString(2, shortId)
-            ps.setLong(3, newVersionPrimaryKey)
+            ps.setString(3, shortId)
             ps.setLong(4, newVersionPrimaryKey)
+            ps.setLong(5, newVersionPrimaryKey)
             ps.execute()
         }
     }
@@ -2607,13 +2609,18 @@ class PostgreSQLComponent {
     }
     
     class NotificationListener extends Thread {
+        private static final String NAME = 'pg_listener'
+        private static final Counter counter = Counter.build()
+                .name("${NAME}_handled")
+                .labelNames("name")
+                .help("Number of notifications handled.").register()
+
         DataSource dataSource
         
         NotificationListener() {
-            def name = 'pgsql-listener'
-            dataSource = createAdditionalConnectionPool(name, 1)
+            dataSource = createAdditionalConnectionPool(NAME, 1)
             setDaemon(true)
-            setName(name)
+            setName(NAME)
         }
 
         @Override
@@ -2646,6 +2653,7 @@ class PostgreSQLComponent {
                         def (sender, payload) = [s[0], s[1]]
                         if (sender != whelkInstanceId) {
                             handleNotification(notification.getName(), payload)
+                            counter.labels(notification.getName()).inc()
                         }
                     }
                     catch (Exception e) {
@@ -2657,21 +2665,23 @@ class PostgreSQLComponent {
 
         private void handleNotification(String name, String payload) {
             if (name == NEW_VERSION_NOTIFICATION) {
-                List docs = payload.split(' ')
+                def s = payload.split(' ', 2)
+                def (shortId, pks) = [s[0], s[1]]
+                List docs = pks.split(' ')
                         .collect { Long.parseLong(it) }
-                        .collect { pk -> pk < 0 ? null : loadFromSql(GET_DOCUMENT_VERSION_BY_PK, [1: pk]) }
+                        .collect { pk -> pk < 0 ? null : loadFromSql(GET_DOCUMENT_VERSION_BY_PK, [1: shortId, 2: pk]) }
 
                 def (oldVersion, newVersion) = [docs[0], docs[1]]
                 if (oldVersion && newVersion) {
-                    log.info("Document {} updated, invalidating dependencyCache.", newVersion.shortId)
+                    log.debug("Document {} updated, invalidating dependencyCache.", shortId)
                     dependencyCache.invalidate(oldVersion, newVersion)
                 }
                 else if (newVersion) {
-                    log.info("Document {} created, invalidating dependencyCache.", newVersion.shortId)
+                    log.debug("Document {} created, invalidating dependencyCache.", shortId)
                     dependencyCache.invalidate(newVersion)
                 }
                 else {
-                    log.warn("Could not find document versions with pk: {}", payload)
+                    log.warn("Could not find document versions: {}", payload)
                 }
             }
         }
