@@ -51,6 +51,7 @@ class WorkToolJob {
                 && doc.isMonograph()
                 && !doc.hasPart()
                 && (doc.encodingLevel() != 'marc:PartialPreliminaryLevel' && doc.encodingLevel() != 'marc:PrepublicationLevel'))
+                && !doc.hasRelationshipWithContribution()
     }
 
     void show() {
@@ -119,6 +120,32 @@ class WorkToolJob {
                 works.each {
                     s.increment('num derivedFrom', "${it.derivedFrom.size()}", it.work.shortId)
                     new File(reportDir, "${it.work.shortId}.html") << report
+                }
+            }
+        })
+    }
+
+    void revert() {
+        run({ cluster ->
+            return {
+                def docs = cluster
+                        .collect(whelk.&getDocument)
+                        .collect { [doc: it, checksum: it.getChecksum(whelk.jsonld)] }
+
+                Set works = []
+
+                docs.each {
+                    Document d = it.doc
+                    works << getPathSafe(d.data, d.workIdPath)
+                    def revertTo = whelk.storage.loadAllVersions(d.shortId)
+                            .reverse()
+                            .find { v -> getPathSafe(v.data, v.workIdPath) == null }
+                    d.data = revertTo.data
+                    whelk.storeAtomicUpdate(it.doc, !loud, changedIn, changedBy, it.checksum)
+                }
+
+                works.findAll().each {
+                    whelk.remove(it, changedIn, changedBy)
                 }
             }
         })
