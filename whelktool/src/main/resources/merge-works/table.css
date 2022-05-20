@@ -25,3 +25,6 @@
  hr {
    border: 4px solid;
  }
+ a:target {
+     background-color: coral;
+ }

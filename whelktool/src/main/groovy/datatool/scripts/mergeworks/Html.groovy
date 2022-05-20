@@ -17,14 +17,14 @@ class Html {
     static final String END = '</body></html>'
     static final String HORIZONTAL_RULE = "<hr/><br/>\n"
         
-    static def infoFields = ['instance title', 'work title', 'instance type', 'editionStatement', 'responsibilityStatement', 'encodingLevel', 'publication', 'identifiedBy', 'extent']
+    static def infoFields = ['reproductionOf', 'instance title', 'work title', 'instance type', 'editionStatement', 'responsibilityStatement', 'encodingLevel', 'publication', 'identifiedBy', 'extent']
 
     static String clusterTable(Collection<Doc> cluster) {
         String id = clusterId(cluster.collect { it.doc.shortId })
         String header = """
             <tr>
                 <th><a id="${id}"><a href="#${id}">${id}</th>
-                ${cluster.collect { doc -> "<th><a href=\"${doc.link()}\">${doc.doc.shortId}</a></th>" }.join('\n')}                                                             
+                ${cluster.collect { doc -> "<th><a id=\"${doc.doc.shortId}\" href=\"${doc.link()}\">${doc.doc.shortId}</a></th>" }.join('\n')}
             </tr>
             <tr>
                 <td></td>
