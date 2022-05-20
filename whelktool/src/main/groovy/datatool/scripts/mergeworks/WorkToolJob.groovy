@@ -9,6 +9,7 @@ import whelk.exception.WhelkRuntimeException
 import whelk.util.LegacyIntegrationTools
 import whelk.util.Statistics
 
+import java.text.SimpleDateFormat
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -29,9 +30,9 @@ class WorkToolJob {
     Statistics statistics
     File clusters
 
-    Date date = new Date()
+    String date = new SimpleDateFormat('yyyyMMdd-HHmmss').format(new Date())
     String jobId = IdGenerator.generate()
-    File reportDir = new File("reports/$jobId")
+    File reportDir = new File("reports/$date")
 
     String changedIn = "xl"
     String changedBy = "SEK"
@@ -201,7 +202,7 @@ class WorkToolJob {
                                                                               "@type": "Note",
                                                                               "label": ["Maskinellt utbrutet verk... TODO"]
                                                                       ]],
-                                                          "uri"    : ["http://xlbuild.libris.kb.se/works/${date.format('yyyyMMdd')}/$jobId/${workId}.html".toString()]
+                                                          "uri"    : ["http://xlbuild.libris.kb.se/works/$date/${workId}.html".toString()]
 
                                                   ]
                                 ]],
