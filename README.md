@@ -233,11 +233,11 @@ The system is then available on <http://localhost:8180>.
 (The OAI-PMH service is started in a similar way: just cd into `oaipmh`
 instead of `rest`.)
 
-To run the frontend, first set up LXLViewer and the id.kb.se web app
-(follow the README in each):
+To run the frontend, first set up the Libris cataloging client and the
+id.kb.se web app (follow the README in each):
 
-* [LXLViewer](https://github.com/libris/lxlviewer)
-* [id.kb.se](https://github.com/libris/id.kb.se) (set `API_PATH=http://id.kblocalhost.kb.se:5000` in `.env`)
+* [Libris cataloging](https://github.com/libris/lxlviewer/tree/develop/vue-client)
+* [id.kb.se](https://github.com/libris/lxlviewer/tree/develop/nuxt-app)
 
 At this point, you should have the LXLViewer cataloging client running on port 8080
 and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
@@ -345,7 +345,7 @@ Now (re)start Apache:
 systemctl restart apache2
 ```
 
-You should now able to visit http://id.kblocalhost.kb.se, and use the cataloging client
+You should now be able to visit http://id.kblocalhost.kb.se:5000, and use the cataloging client
 on http://kblocalhost.kb.se:5000/katalogisering/. The XL API itself is available on
 http://kblocalhost.kb.se:5000 (proxied via Apache), or directly on http://localhost:8180.
 
