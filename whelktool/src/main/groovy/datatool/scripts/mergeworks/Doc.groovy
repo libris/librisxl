@@ -148,6 +148,8 @@ class Doc {
             return chipString(getInstance()['identifiedBy'] ?: [])
         } else if (field == 'extent') {
             return chipString(getInstance()['extent'] ?: [])
+        } else if (field == 'reproductionOf') {
+            return reproductionOfLink()
         } else {
             return chipString(getWork().getOrDefault(field, []))
         }
@@ -159,6 +161,15 @@ class Doc {
 
     String tooltip(String string, String tooltip) {
         """<abbr title="${tooltip}">${string}</abbr>"""
+    }
+
+    private String reproductionOfLink() {
+        def shortId = Util.getPathSafe(getInstance(), ['reproductionOf', '@id'])
+                ?.tokenize("/#")
+                ?.dropRight(1)
+                ?.last() ?: ''
+
+        return "<a href=\"#$shortId\">$shortId</a>"
     }
 
     private List classificationStrings() {
