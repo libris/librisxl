@@ -29,6 +29,7 @@ class WorkToolJob {
     Statistics statistics
     File clusters
 
+    Date date = new Date()
     String jobId = IdGenerator.generate()
     File reportDir = new File("reports/$jobId")
 
@@ -200,7 +201,7 @@ class WorkToolJob {
                                                                               "@type": "Note",
                                                                               "label": ["Maskinellt utbrutet verk... TODO"]
                                                                       ]],
-                                                          "uri"    : ["http://xlbuild.libris.kb.se/works/$jobId/${workId}.html".toString()]
+                                                          "uri"    : ["http://xlbuild.libris.kb.se/works/${date.format('yyyyMMdd')}/$jobId/${workId}.html".toString()]
 
                                                   ]
                                 ]],
