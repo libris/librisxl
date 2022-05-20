@@ -7,6 +7,7 @@
 providers = [
         '[Barnbokskatalogen]',
         '[Elib]',
+        '[Publit]',
         'Provided by publisher'
 ]
 
