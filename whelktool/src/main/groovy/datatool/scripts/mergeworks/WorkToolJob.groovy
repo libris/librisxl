@@ -316,6 +316,15 @@ class WorkToolJob {
         })
     }
 
+    void filterClusters(Closure<Collection<Doc>> predicate) {
+        run({ cluster ->
+            return {
+                if (predicate(loadDocs(cluster))) {
+                    println(cluster.join('\t'))
+                }
+            }
+        })
+    }
 
     void filterDocs(Closure<Doc> predicate) {
         run({ cluster ->
