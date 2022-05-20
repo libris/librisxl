@@ -259,10 +259,28 @@ public class Merge {
             List baseList = (List) base;
             List incomingList = (List) correspondingIncoming;
 
-            Set<String> singleInstanceTypes = findSingleInstanceTypesInBoth(baseList, incomingList);
+            // For each type in the _incoming_ list that does not exist in the base list,
+            // consider add-if-none.
+            Set<String> singleInstanceTypesInIncoming = findSingleInstanceTypesInOnlyA(incomingList, baseList);
+            for (String type : singleInstanceTypesInIncoming) {
+                List<Object> childPath = new ArrayList(path);
+                childPath.add("@type="+type);
+                if (mayAddAtPath(childPath, truePath, incomingAgent, baseHistory)) {
+                    for (Object o : incomingList) {
+                        Map m = (Map) o;
+                        if (m.containsKey("@type") && m.get("@type") == type) {
+                            baseList.add(m);
+                        }
+                    }
+                    logger.info("Merge of " + loggingForID + ": added object at " + childPath);
+                }
+            }
+
+
+            Set<String> singleInstanceTypesInBoth = findSingleInstanceTypesInBoth(baseList, incomingList);
 
             // For each type of which there is exactly one instance in each list
-            for (String type : singleInstanceTypes) {
+            for (String type : singleInstanceTypesInBoth) {
 
                 // Find the one instance of that type in each list
                 Map baseChild = null;
@@ -300,6 +318,23 @@ public class Merge {
                         loggingForID);
             }
         }
+    }
+
+    /**
+     * Find the types of which there are exactly one instance in A and zero instances in B
+     */
+    private Set<String> findSingleInstanceTypesInOnlyA(List a, List b) {
+        HashMap<String, Integer> typeCountsA = countTypes(a);
+        HashMap<String, Integer> typeCountsB = countTypes(b);
+        Set<String> singleInstanceTypes = new HashSet<>();
+        for (String type : typeCountsA.keySet()) {
+            if (typeCountsA.containsKey(type) &&
+                    typeCountsA.get(type) == 1 &&
+                    !typeCountsB.containsKey(type)) {
+                singleInstanceTypes.add(type);
+            }
+        }
+        return singleInstanceTypes;
     }
 
     /**
