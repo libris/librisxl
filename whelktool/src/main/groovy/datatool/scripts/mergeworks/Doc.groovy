@@ -287,10 +287,14 @@ class Doc {
         isSabDrama() || isGfDrama()
     }
 
-    boolean hasTranslator() {
+    boolean hasRole(String relatorIri) {
         asList(getWork()['contribution']).any {
-            asList(it['role']).contains(['@id': 'https://id.kb.se/relator/translator'])
+            asList(it['role']).contains(['@id': relatorIri])
         }
+    }
+
+    boolean hasTranslator() {
+        hasRole('https://id.kb.se/relator/translator')
     }
 
     boolean hasDistinguishingEdition() {
