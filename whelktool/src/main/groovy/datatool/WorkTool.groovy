@@ -41,6 +41,7 @@ class WorkTool {
         cli.qm(longOpt:'qualityMonographs', 'Filter: "qualityMonographs"')
         cli.tc(longOpt:'title-clusters', 'Filter: output title clusters')
         cli.lc(longOpt:'link-contribution', 'link matching contribution within cluster')
+        cli.rc(longOpt: 'responsibilityStatement', 'fetch contributions from responsibilityStatement')
         cli.r(longOpt:'revert', 'undo merge and extraction of matching works')
 
         def options = cli.parse(args)
@@ -92,9 +93,13 @@ class WorkTool {
         else if (options.lc) {
             m.linkContribution()
         }
+        else if (options.rc) {
+            m.fetchContributionFromRespStatement()
+        }
         else if (options.r) {
             m.revert()
-        } else {
+        } 
+        else {
             cli.usage()
             System.exit 1
         }

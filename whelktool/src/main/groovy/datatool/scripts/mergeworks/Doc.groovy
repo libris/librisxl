@@ -28,7 +28,7 @@ class Doc {
             'https://id.kb.se/term/saogf/Dramatik',
             'https://id.kb.se/marc/Drama'
     ]
-    
+
     Whelk whelk
     Document doc
     Map work
@@ -76,7 +76,7 @@ class Doc {
 
         return titles
     }
-    
+
     boolean hasGenericTitle() {
         Util.hasGenericTitle(getInstance()['hasTitle'])
     }
@@ -107,7 +107,7 @@ class Doc {
     String encodingLevel() {
         return doc.data['@graph'][0]['encodingLevel'] ?: ''
     }
-    
+
     int numPages() {
         String extent = Util.getPathSafe(getInstance(), ['extent', 0, 'label', 0]) ?: Util.getPathSafe(getInstance(), ['extent', 0, 'label'], '')
         return numPages(extent)
@@ -128,52 +128,41 @@ class Doc {
     String getDisplayText(String field) {
         if (field == 'contribution') {
             return contributorStrings().join("<br>")
-        }
-        else if (field == 'classification') {
+        } else if (field == 'classification') {
             return classificationStrings().join("<br>")
-        }
-        else if (field == 'instance title') {
+        } else if (field == 'instance title') {
             return getInstance()['hasTitle'] ?: ''
-        }
-        else if (field == 'work title') {
+        } else if (field == 'work title') {
             return getFramed()['instanceOf']['hasTitle'] ?: ''
-        }
-        else if (field == 'instance type') {
+        } else if (field == 'instance type') {
             return getInstance()['@type']
-        }
-        else if (field == 'editionStatement') {
+        } else if (field == 'editionStatement') {
             return getInstance()['editionStatement'] ?: ''
-        }
-        else if (field == 'responsibilityStatement') {
+        } else if (field == 'responsibilityStatement') {
             return getInstance()['responsibilityStatement'] ?: ''
-        }
-        else if (field == 'encodingLevel') {
+        } else if (field == 'encodingLevel') {
             return encodingLevel()
-        }
-        else if (field == 'publication') {
+        } else if (field == 'publication') {
             return chipString(getInstance()['publication'] ?: [])
-        }
-        else if (field == 'identifiedBy') {
+        } else if (field == 'identifiedBy') {
             return chipString(getInstance()['identifiedBy'] ?: [])
-        }
-        else if (field == 'extent') {
+        } else if (field == 'extent') {
             return chipString(getInstance()['extent'] ?: [])
-        }
-        else {
+        } else {
             return chipString(getWork().getOrDefault(field, []))
         }
     }
 
-    protected String chipString (def thing) {
+    protected String chipString(def thing) {
         Util.chipString(thing, whelk)
     }
-    
+
     String tooltip(String string, String tooltip) {
         """<abbr title="${tooltip}">${string}</abbr>"""
     }
 
     private List classificationStrings() {
-        List<Map> classification =  Util.getPathSafe(getFramed(), ['instanceOf', 'classification'], [])
+        List<Map> classification = Util.getPathSafe(getFramed(), ['instanceOf', 'classification'], [])
         classification.collect() { c ->
             StringBuilder s = new StringBuilder()
             s.append(flatMaybeLinked(c['inScheme'], ['code', 'version']).with { it.isEmpty() ? it : it + ': ' })
@@ -191,7 +180,7 @@ class Doc {
     }
 
     protected Map getFramed() {
-        if(!framed) {
+        if (!framed) {
             framed = JsonLd.frame(doc.getThingIdentifiers().first(), whelk.loadEmbellished(doc.shortId).data)
         }
 
@@ -226,7 +215,7 @@ class Doc {
         }
         if (o instanceof Map) {
             return order
-                    .collect { ((Map)o).get(it, null) }
+                    .collect { ((Map) o).get(it, null) }
                     .grep { it != null }
                     .collect { flatten(it, order) }
                     .join(mapSeparator)
@@ -254,21 +243,21 @@ class Doc {
     }
 
     boolean isMarcFiction() {
-        (getWork()['genreForm'] ?: []).any{ it['@id'] in MARC_FICTION }
+        (getWork()['genreForm'] ?: []).any { it['@id'] in MARC_FICTION }
     }
 
     boolean isMarcNotFiction() {
-        (getWork()['genreForm'] ?: []).any{ it['@id'] in MARC_NOT_FICTION }
+        (getWork()['genreForm'] ?: []).any { it['@id'] in MARC_NOT_FICTION }
     }
 
     boolean isSaogfFiction() {
-        (getWork()['genreForm'] ?: []).any{ whelk.relations.isImpliedBy(SAOGF_SKÖN, it['@id'] ?: '') }
+        (getWork()['genreForm'] ?: []).any { whelk.relations.isImpliedBy(SAOGF_SKÖN, it['@id'] ?: '') }
     }
 
     boolean isSabFiction() {
-        classificationStrings().any{ it.contains('kssb') && it.contains(': H') }
+        classificationStrings().any { it.contains('kssb') && it.contains(': H') }
     }
-    
+
     boolean isNotFiction() {
         // A lot of fiction has marc/NotFictionNotFurtherSpecified but then classification is usually empty
         isMarcNotFiction() && (!classificationStrings().isEmpty() && !isSabFiction())
@@ -277,27 +266,27 @@ class Doc {
     boolean isText() {
         getWork()['@type'] == 'Text'
     }
-    
+
     boolean isTranslationWithoutTranslator() {
         isTranslation() && !hasTranslator()
     }
-    
+
     boolean isTranslation() {
         getWork()['translationOf']
     }
 
     boolean isSabDrama() {
-        classificationStrings().any{ it.contains(': Hc.02') || it.contains(': Hce.02') }
+        classificationStrings().any { it.contains(': Hc.02') || it.contains(': Hce.02') }
     }
 
     boolean isGfDrama() {
-        asList(getWork()['genreForm']).any{ it['@id'] in DRAMA_GF }
+        asList(getWork()['genreForm']).any { it['@id'] in DRAMA_GF }
     }
-    
+
     boolean isDrama() {
         isSabDrama() || isGfDrama()
     }
-    
+
     boolean hasTranslator() {
         asList(getWork()['contribution']).any {
             asList(it['role']).contains(['@id': 'https://id.kb.se/relator/translator'])
@@ -317,7 +306,7 @@ class Doc {
     }
 
     void addComparisonProps() {
-        if(hasDistinguishingEdition()) {
+        if (hasDistinguishingEdition()) {
             addToWork('editionStatement')
         }
         getWork()['numPages'] = numPages()
@@ -329,7 +318,7 @@ class Doc {
             getWork().remove('summary')
         }
     }
-    
+
     void addToWork(String field) {
         getWork()[field] = getInstance()[field]
     }
@@ -352,7 +341,7 @@ class Doc2 extends Doc {
     }
 
     protected Map getFramed() {
-        if(!framed) {
+        if (!framed) {
             Document copy = doc.clone()
             whelk.embellish(copy)
             framed = JsonLd.frame(doc.getThingIdentifiers().first(), copy.data)
