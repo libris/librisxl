@@ -21,6 +21,8 @@ import static datatool.scripts.mergeworks.Util.chipString
 import static datatool.scripts.mergeworks.Util.getPathSafe
 import static datatool.scripts.mergeworks.Util.normalize
 import static datatool.scripts.mergeworks.Util.partition
+import static datatool.scripts.mergeworks.Util.parseRespStatement
+import static datatool.scripts.mergeworks.Util.Relator
 
 class WorkToolJob {
     Whelk whelk
@@ -361,6 +363,142 @@ class WorkToolJob {
         })
     }
 
+    void fetchContributionFromRespStatement() {
+        def loadThingByIri = { String iri ->
+            // TODO: fix whelk, add load by IRI method
+            whelk.storage.loadDocumentByMainId(iri)?.with { doc ->
+                return (Map) doc.data['@graph'][1]
+            }
+        }
+
+        def loadIfLink = { it['@id'] ? loadThingByIri(it['@id']) : it }
+
+        statistics.printOnShutdown()
+        run({ cluster ->
+            return {
+                statistics.increment('fetch contribution from respStatement', 'clusters checked')
+                def docs = cluster
+                        .collect(whelk.&getDocument)
+                        .findAll()
+                        .collect { [doc: it, checksum: it.getChecksum(whelk.jsonld), changed: false] }
+
+                docs.each {
+                    Document d = it.doc
+                    def respStatement = getPathSafe(d.data, ['@graph', 1, 'responsibilityStatement'])
+                    if (!respStatement)
+                        return
+
+                    statistics.increment('fetch contribution from respStatement', 'docs checked')
+
+                    def contributionsInRespStmt = parseRespStatement(respStatement)
+                    def contribution = getPathSafe(d.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
+
+                    contribution.each { Map c ->
+                        asList(c.agent).each { a ->
+                            def matchedOnName = contributionsInRespStmt.find { n, r ->
+                                nameMatch(n, loadIfLink(a))
+                            }
+
+                            if (!matchedOnName)
+                                return
+
+                            // Contributor found locally, omit from further search
+                            contributionsInRespStmt.remove(matchedOnName.key)
+
+                            def dontAdd = { Relator relator, boolean isFirstStmtPart ->
+                                relator == Relator.UNSPECIFIED_CONTRIBUTOR
+                                        || isFirstStmtPart && relator == Relator.AUTHOR
+                                        && c.'@type' != 'PrimaryContribution'
+                            }
+
+                            def rolesInRespStatement = matchedOnName.value
+                                    .findResults { dontAdd(it) ? null : it.getV1() }
+
+                            if (rolesInRespStatement.isEmpty())
+                                return
+
+                            def rolesInContribution = asList(c.role).findAll { it.'@id' != Relator.UNSPECIFIED_CONTRIBUTOR.iri }
+
+                            // Replace Adapter with Editor
+                            it.changed = rolesInRespStatement.removeAll { r ->
+                                r == Relator.EDITOR && rolesInContribution.findIndexOf {
+                                    it.'@id' == Relator.ADAPTER.iri
+                                }.with {
+                                    if (it == -1) {
+                                        return false
+                                    } else {
+                                        rolesInContribution[it]['@id'] = Relator.EDITOR.iri
+                                        return true
+                                    }
+                                }
+                            }
+
+                            if (rolesInRespStatement.size() <= rolesInContribution.size())
+                                return
+
+                            rolesInRespStatement.each { r ->
+                                def idLink = ['@id': r.iri]
+                                if (!(idLink in rolesInContribution)) {
+                                    rolesInContribution << idLink
+                                    it.changed = true
+                                    def roleShort = r.iri.split('/').last()
+                                    statistics.increment('fetch contribution from respStatement', "$roleShort roles specified")
+                                    if (verbose) {
+                                        println("${chipString(c, whelk)} (${d.shortId}) <- $roleShort")
+                                    }
+                                }
+                            }
+
+                            c.role = rolesInContribution
+                        }
+                    }
+
+                    def comparable = {
+                        it*.getV1().findResults { Relator r ->
+                            r != Relator.UNSPECIFIED_CONTRIBUTOR
+                                    ? ['@id': r.iri]
+                                    : null
+                        }
+                    }
+
+                    contributionsInRespStmt.each { name, roles ->
+                        for (Map other : docs) {
+                            Document od = other.doc
+                            def matched = getPathSafe(od.data, ['@graph', 1, 'instanceOf', 'contribution'], [])
+                                    .find { Map c ->
+                                        asList(c.agent).any { a ->
+                                            loadIfLink(a).with { nameMatch(name, it) && !(it.description =~ /(?i)pseud/) }
+                                                    && comparable(roles).with { r -> !r.isEmpty() && asList(c.role).containsAll(r) }
+                                                    && Util.bestEncodingLevel.indexOf(d.encodingLevel()) <= Util.bestEncodingLevel.indexOf(od.encodingLevel())
+                                        }
+                                    }
+                            if (matched) {
+                                contribution << matched
+                                roles.each {
+                                    def roleShort = it.getV1().iri.split('/').last()
+                                    statistics.increment('fetch contribution from respStatement', "$roleShort found in cluster")
+                                }
+                                if (verbose) {
+                                    println("${d.shortId} <- ${chipString(matched, whelk)} (${od.shortId})")
+                                }
+                                it.changed = true
+                                break
+                            }
+                        }
+                    }
+
+                    docs.each {
+                        if (!dryRun && it.changed) {
+                            whelk.storeAtomicUpdate(it.doc, !loud, changedIn, changedBy, it.checksum)
+                        }
+                    }
+                }
+            }
+        }
+
+        )
+    }
+
     void linkContribution() {
         def loadThingByIri = { String iri ->
             // TODO: fix whelk, add load by IRI method
@@ -458,8 +596,8 @@ class WorkToolJob {
         nameMatch(local, linked) && !yearMismatch(local, linked)
     }
 
-    static boolean nameMatch(Map local, Map linked) {
-        def variants = [linked] + asList(linked.hasVariant)
+    static boolean nameMatch(Object local, Map agent) {
+        def variants = [agent] + asList(agent.hasVariant)
         def name = {
             Map p ->
                 (p.givenName && p.familyName)
@@ -467,8 +605,10 @@ class WorkToolJob {
                         : p.name ? normalize("${p.name}") : null
         }
 
-        name(local) && variants.any {
-            name(it) && name(local) == name(it)
+        def localName = local instanceof Map ? name(local) : normalize(local)
+
+        localName && variants.any {
+            name(it) && localName == name(it)
         }
     }
 
@@ -529,6 +669,7 @@ class WorkToolJob {
             !a.getTitleVariants().intersect(b.getTitleVariants()).isEmpty()
         }
     }
+
 }
 
 class NoWorkException extends RuntimeException {
