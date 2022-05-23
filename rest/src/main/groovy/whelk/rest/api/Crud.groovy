@@ -637,7 +637,7 @@ class Crud extends HttpServlet {
     }
 
     void doPost2(HttpServletRequest request, HttpServletResponse response) {
-        if (request.pathInfo != "/") {
+        if (request.pathInfo != "/" && request.pathInfo != "/data") {
             throw new OtherStatusException("Method not allowed.", HttpServletResponse.SC_METHOD_NOT_ALLOWED)
         }
         if (!isSupportedContentType(request.getContentType())) {
