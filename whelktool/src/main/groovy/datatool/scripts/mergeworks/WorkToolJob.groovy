@@ -479,7 +479,7 @@ class WorkToolJob {
                                         asList(c.agent).any { a ->
                                             loadIfLink(a).with { nameMatch(name, it) && !(it.description =~ /(?i)pseud/) }
                                                     && comparable(roles).with { r -> !r.isEmpty() && asList(c.role).containsAll(r) }
-                                                    && Util.bestEncodingLevel.indexOf(d.encodingLevel()) <= Util.bestEncodingLevel.indexOf(od.encodingLevel())
+                                                    && Util.bestEncodingLevel.indexOf(d.getEncodingLevel()) <= Util.bestEncodingLevel.indexOf(od.getEncodingLevel())
                                         }
                                     }
                             if (matched) {
