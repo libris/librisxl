@@ -430,7 +430,7 @@ class WorkToolJob {
                             def rolesInContribution = asList(c.role).findAll { it.'@id' != Relator.UNSPECIFIED_CONTRIBUTOR.iri }
 
                             // Replace Adapter with Editor
-                            it.changed = rolesInRespStatement.removeAll { r ->
+                            it.changed |= rolesInRespStatement.removeAll { r ->
                                 r == Relator.EDITOR && rolesInContribution.findIndexOf {
                                     it.'@id' == Relator.ADAPTER.iri
                                 }.with {
