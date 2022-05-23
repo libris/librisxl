@@ -102,7 +102,7 @@ subsequent request that requires authentication.
 
 ### Create
 
-A new record is created by sending a `POST` request to the API root (`/`) with at least the
+A new record is created by sending a `POST` request to `/data` with at least the
 `Content-Type`, `Authorization`, and `XL-Active-Sigel` headers set.
 
 There are some checks in place, e.g. in order to prevent creation of duplicate

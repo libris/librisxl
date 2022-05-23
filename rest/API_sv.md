@@ -83,7 +83,7 @@ anrop som kräver autentisering.
 
 ### Skapa
 
-En ny post kan skapas genom att skicka ett `POST`-anrop till API:ets rot (`/`)
+En ny post kan skapas genom att skicka ett `POST`-anrop till `/data`
 med åtminstone `Content-Type`-, `Authorization`- och `XL-Active-Sigel`-headern
 satta.
 
