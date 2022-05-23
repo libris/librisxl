@@ -374,15 +374,22 @@ class Whelk {
   
     void remove(String id, String changedIn, String changedBy) {
         log.debug "Deleting ${id} from Whelk"
-        Document doc = storage.load(id)
-        storage.remove(id, changedIn, changedBy)
-        if (elastic && !skipIndex) {
-            elastic.remove(id)
-            reindexAffected(doc, doc.getExternalRefs(), Collections.emptySet())
-            log.debug "Object ${id} was removed from Whelk"
+        Document doc
+        try {
+            doc = storage.load(id)
+        } catch (Exception e) {
+            log.warn "Could not remove object from whelk. No entry with id $id found"
         }
-        else {
-            log.warn "No Elastic present when deleting. Skipping call to elastic.remove(${id})"
+        if (doc) {
+            storage.remove(id, changedIn, changedBy)
+            if (elastic && !skipIndex) {
+                elastic.remove(id)
+                reindexAffected(doc, doc.getExternalRefs(), Collections.emptySet())
+                log.debug "Object ${id} was removed from Whelk"
+            }
+            else {
+                log.warn "No Elastic present when deleting. Skipping call to elastic.remove(${id})"
+            }
         }
     }
 
