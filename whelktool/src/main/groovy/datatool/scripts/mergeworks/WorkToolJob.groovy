@@ -145,7 +145,8 @@ class WorkToolJob {
                 }
 
                 works.grep().each {
-                    whelk.remove(it, changedIn, changedBy)
+                    def shortId = it.split("[#/]")[-2]
+                    whelk.remove(shortId, changedIn, changedBy)
                 }
             }
         })
