@@ -130,23 +130,21 @@ class WorkToolJob {
     void revert() {
         run({ cluster ->
             return {
-                def docs = cluster
-                        .collect(whelk.&getDocument)
-                        .collect { [doc: it, checksum: it.getChecksum(whelk.jsonld)] }
+                def docs = cluster.collect(whelk.&getDocument).grep()
 
-                Set works = []
+                Set<String> works = []
 
-                docs.each {
-                    Document d = it.doc
+                docs.each { Document d ->
+                    def sum = d.getChecksum(whelk.jsonld)
                     works << getPathSafe(d.data, d.workIdPath)
                     def revertTo = whelk.storage.loadAllVersions(d.shortId)
                             .reverse()
                             .find { v -> getPathSafe(v.data, v.workIdPath) == null }
                     d.data = revertTo.data
-                    whelk.storeAtomicUpdate(it.doc, !loud, changedIn, changedBy, it.checksum)
+                    whelk.storeAtomicUpdate(d, !loud, changedIn, changedBy, sum)
                 }
 
-                works.findAll().each {
+                works.grep().each {
                     whelk.remove(it, changedIn, changedBy)
                 }
             }
