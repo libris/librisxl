@@ -32,7 +32,7 @@ class WorkToolJob {
 
     String date = new SimpleDateFormat('yyyyMMdd-HHmmss').format(new Date())
     String jobId = IdGenerator.generate()
-    File reportDir = new File("reports/$date")
+    File reportDir = new File("reports/$date/merged-works")
 
     String changedIn = "xl"
     String changedBy = "SEK"
