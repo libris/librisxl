@@ -10,7 +10,7 @@ class Statistics {
     ConcurrentHashMap<String, ConcurrentHashMap<Object, AtomicInteger>> c = new ConcurrentHashMap<>()
     ConcurrentHashMap<String, ConcurrentHashMap<Object, ArrayBlockingQueue<Object>>> examples = new ConcurrentHashMap<>()
 
-    ThreadLocal<Object> context = ThreadLocal.withInitial({ -> null })
+    ThreadLocal<Stack<Object>> context = ThreadLocal.withInitial({ -> null })
 
     int numExamples
 
@@ -23,8 +23,8 @@ class Statistics {
         Preconditions.checkNotNull(name)
         c.computeIfAbsent(category, { new ConcurrentHashMap<>() })
                 .computeIfAbsent(name) { new AtomicInteger() }.incrementAndGet()
-
-        example = example ?: context.get()
+        
+        example = example ?: contextExample()
         if (example != null && numExamples > 0) {
             examples.computeIfAbsent(category, { new ConcurrentHashMap<>() })
                     .computeIfAbsent(name) { new ArrayBlockingQueue<Object>(numExamples) }
@@ -36,11 +36,20 @@ class Statistics {
         Preconditions.checkNotNull(example)
         Preconditions.checkNotNull(c)
         try {
-            context.set(example)
+            if (!context.get()) {
+                context.set(new Stack<Object>())
+            }
+            context.get().push(example)
             c.run()
         }
         finally {
-            context.remove()
+            context.get().pop()
+        }
+    }
+    
+    Object contextExample() {
+        if(context.get() && !context.get().isEmpty()) {
+            context.get().peek()
         }
     }
 
