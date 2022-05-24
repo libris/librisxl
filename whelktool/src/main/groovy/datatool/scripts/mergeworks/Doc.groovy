@@ -324,7 +324,7 @@ class Doc {
         if (hasDistinguishingEdition()) {
             addToWork('editionStatement')
         }
-        getWork()['numPages'] = numPages()
+        getWork()['_numPages'] = numPages()
     }
 
     void moveSummaryToInstance() {
@@ -340,7 +340,7 @@ class Doc {
 
     void removeComparisonProps() {
         getWork().remove('editionStatement')
-        getWork().remove('numPages')
+        getWork().remove('_numPages')
     }
 }
 

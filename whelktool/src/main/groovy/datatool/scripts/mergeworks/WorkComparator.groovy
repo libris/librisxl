@@ -24,7 +24,7 @@ class WorkComparator {
             'genreForm'       : new GenreForm(),
             'hasTitle'        : new WorkTitle(),
             'intendedAudience': new SameOrEmpty('https://id.kb.se/marc/Juvenile'),
-            'numPages'        : new Extent(),
+            '_numPages'        : new Extent(),
             'subject'         : new StuffSet(),
             'summary'         : new StuffSet(),
             'translationOf'   : new TranslationOf(),
