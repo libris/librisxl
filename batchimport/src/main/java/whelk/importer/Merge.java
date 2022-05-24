@@ -112,7 +112,7 @@ public class Merge {
     public boolean mayAddAtPath(List<Object> path, List<Object> truePath, String incomingAgent, History history) {
         List<Object> temp = new ArrayList<>(path);
         List<Object> trueTemp = new ArrayList<>(truePath);
-        while (!temp.isEmpty()) {
+        while (!temp.isEmpty() && !trueTemp.isEmpty()) {
             if (m_pathAddRules.containsKey(temp)) {
 
                 //System.err.println("  found rule! :" + temp + " matching true path: " + trueTemp);
