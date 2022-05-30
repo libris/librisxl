@@ -19,5 +19,12 @@ Session.vim
 /*/build
 /*/catalina.base_IS_UNDEFINED
 /*/logs
+
+# Eclipse meta files
 /eclipse-classes/
+.classpath
+.project
+.settings
+
+# Local overrides to Log4J configuration etc.
 /local-overrides/
