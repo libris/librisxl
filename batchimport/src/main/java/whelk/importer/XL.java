@@ -149,7 +149,7 @@ class XL
                     });
                 }
 
-                resultingResourceId = m_whelk.getStorage().getThingId(idToMerge);
+                resultingResourceId = m_whelk.getStorage().getThingMainIriBySystemId(idToMerge);
             }
 
             // Keep existing
