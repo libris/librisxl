@@ -231,6 +231,7 @@ class XL
                     m_whelk.storeAtomicUpdate(replaceSystemId, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(),
                             (Document doc) ->
                     {
+                        String existingChecksum = doc.getChecksum(m_whelk.getJsonld());
                         String existingEncodingLevel = doc.getEncodingLevel();
                         String newEncodingLevel = rdfDoc.getEncodingLevel();
 
@@ -260,6 +261,11 @@ class XL
                             doc.addTypedRecordIdentifier("SystemNumber", systemNumber);
                         if (controlNumber != null)
                             doc.setControlNumber(controlNumber);
+
+                        // Avoid writing an identical version
+                        String modifiedChecksum = doc.getChecksum(m_whelk.getJsonld());
+                        if (modifiedChecksum.equals(existingChecksum))
+                            throw new CancelUpdateException();
                     });
                 }
                 catch (TooHighEncodingLevelException e)
