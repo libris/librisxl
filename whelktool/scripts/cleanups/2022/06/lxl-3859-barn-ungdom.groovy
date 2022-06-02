@@ -13,7 +13,7 @@ selectBySqlWhere(where) { data ->
     boolean changed = false
     def instance = data.graph[1]
 
-    Map subjectToPreserve = null
+    Set subjectToPreserve = new HashSet()
 
     instance.instanceOf?.subject?.removeAll { subject ->
 
@@ -26,7 +26,7 @@ selectBySqlWhere(where) { data ->
 
             // Only the main term still remaining? - Remove the whole subject
             if (subject.termComponentList.size() == 1) {
-                subjectToPreserve = subject.termComponentList[0]
+                subjectToPreserve.add(subject.termComponentList[0])
                 return true
             }
         }
@@ -34,10 +34,10 @@ selectBySqlWhere(where) { data ->
         return false
     }
 
-    if (subjectToPreserve != null) {
-        if (! instance.instanceOf.subject.contains(subjectToPreserve))
-            instance.instanceOf.subject.add(subjectToPreserve)
-    }
+    subjectToPreserve.forEach( subject -> {
+        if (! instance.instanceOf.subject.contains(subject))
+            instance.instanceOf.subject.add(subject)
+    })
 
     if (changed) {
         Map gf = ["@id": "https://id.kb.se/term/barngf/Barn-%20och%20ungdomslitteratur"]
