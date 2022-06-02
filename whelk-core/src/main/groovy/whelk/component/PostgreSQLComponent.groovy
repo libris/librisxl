@@ -85,7 +85,7 @@ class PostgreSQLComponent {
 
     private Random random = new Random(System.currentTimeMillis())
     
-    private String whelkInstanceId = UUID.randomUUID().toString()
+    private String whelkInstanceId = "${ProcessHandle.current().pid()}@${InetAddress.getLocalHost().getHostName()}"
 
     // SQL statements
     private static final String UPDATE_DOCUMENT = """
@@ -452,6 +452,7 @@ class PostgreSQLComponent {
             config.setMetricsTrackerFactory(new PrometheusHistogramMetricsTrackerFactory())
 
             log.info("Connecting to sql database at ${config.getJdbcUrl()}, using driver $driverClass. Pool size: $maxPoolSize")
+            log.info("ID: ${whelkInstanceId}")
             URI connURI = new URI(sqlUrl.substring(5))
             if (connURI.getUserInfo() != null) {
                 String username = connURI.getUserInfo().split(":")[0]
