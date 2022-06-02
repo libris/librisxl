@@ -2657,7 +2657,6 @@
           "extent",
           "responsibilityStatement",
           "editionStatement",
-          "hasNote",
           {
             "from": "identifiedBy",
             "to": "indirectlyIdentifiedBy",
@@ -2725,13 +2724,6 @@
                 "extent": {"@type": "Extent", "label": ["259 s."], "appliesTo": {"@type": "Resource", "label": "[original]"}},
                 "indirectlyIdentifiedBy": [
                   {"@type": "ISBN", "value": "00-0-000000-0", "qualifier": "original"}
-                ],
-                "hasNote": [
-                  {
-                    "@type": "Note",
-                    "label": "Anmärkning",
-                    "appliesTo": {"@type": "Resource", "label": "[original]"}
-                  }
                 ]
               }
             }
