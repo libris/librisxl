@@ -17,10 +17,7 @@ selectBySqlWhere(where) { data ->
 
     instance.instanceOf?.subject?.removeAll { subject ->
 
-        if (subject["@type"] == "ComplexSubject" &&
-                subject.containsKey("inScheme") &&
-                subject.inScheme.containsKey("@id") &&
-                subject.inScheme["@id"] == "https://id.kb.se/term/barn") {
+        if (subject["@type"] == "ComplexSubject" && inSchemeBarn(subject)) {
             if (subject.termComponentList.removeAll { termComponent ->
                 return termComponent["@type"] == "GenreSubdivision" && termComponent.prefLabel == "barn- och ungdomslitteratur"
                 }) {
@@ -51,4 +48,23 @@ selectBySqlWhere(where) { data ->
         //System.err.println("result:\n" + data.doc.getDataAsString() + "\n\n")
         data.scheduleSave()
     }
+}
+
+boolean inSchemeBarn(Map subject) {
+    if (!subject.containsKey("inScheme"))
+        return false;
+    List inSchemeList = asList(subject.inScheme);
+    for (Object inScheme : inSchemeList) {
+        if (inScheme.containsKey("@id") && inScheme["@id"] == "https://id.kb.se/term/barn")
+            return true
+    }
+    return false
+}
+
+private List asList(Object o) {
+    if (o == null)
+        return []
+    if (o instanceof List)
+        return o
+    return [o]
 }
