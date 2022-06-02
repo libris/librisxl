@@ -17,7 +17,10 @@ selectBySqlWhere(where) { data ->
 
     instance.instanceOf?.subject?.removeAll { subject ->
 
-        if (subject["@type"] == "ComplexSubject" && subject.inScheme?.containsKey("@id") && subject.inScheme["@id"] == "https://id.kb.se/term/barn") {
+        if (subject["@type"] == "ComplexSubject" &&
+                subject.containsKey("inScheme") &&
+                subject.inScheme.containsKey("@id") &&
+                subject.inScheme["@id"] == "https://id.kb.se/term/barn") {
             if (subject.termComponentList.removeAll { termComponent ->
                 return termComponent["@type"] == "GenreSubdivision" && termComponent.prefLabel == "barn- och ungdomslitteratur"
                 }) {
