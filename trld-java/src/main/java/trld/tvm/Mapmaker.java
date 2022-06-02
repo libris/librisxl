@@ -80,287 +80,297 @@ public class Mapmaker {
       processPropertyRelations(obj, vocabIndex, targetDfn, targetMap); // LINE: 82
       processReifiedForms(obj, vocabIndex, targetMap); // LINE: 84
     }
-    for (Map.Entry<String, Object> key_rule : targetMap.entrySet()) { // LINE: 86
+    Map<String, String> identityMap = new HashMap<>(); // LINE: 86
+    for (Map.Entry<String, Object> key_rule : targetMap.entrySet()) { // LINE: 88
       String key = key_rule.getKey();
       Object rule = key_rule.getValue();
-      List<Map.Entry<Integer, Object>> rules = (List<Map.Entry<Integer, Object>>) Builtins.sorted(asList(rule), (it) -> new KeyValue(((Integer) ((Map.Entry) it).getKey()), (((Map.Entry) it).getValue() instanceof Map ? ((Map) ((Map.Entry) it).getValue()).get("match") != null : false)), true); // LINE: 87
-      targetMap.put(key, rules.stream().map((priority_it) -> priority_it.getValue()).collect(Collectors.toList())); // LINE: 94
-    }
-    return targetMap; // LINE: 96
-  }
-
-  protected static void processClassRelations(Map obj, Map vocabIndex, Map<String, Object> target, Map targetMap) { // LINE: 99
-    List<String> rels = new ArrayList<>(Arrays.asList(new String[] {(String) OWL_equivalentClass, RDFS_subClassOf})); // LINE: 100
-    List<BaseRelation> baseRels = new ArrayList<>(); // LINE: 103
-    /*@Nullable*/ String id = ((/*@Nullable*/ String) obj.get(ID)); // LINE: 105
-    Integer idTargetPrio = 0; // LINE: 107
-    if (id != null) { // LINE: 108
-      idTargetPrio = getTargetPriority(target, id); // LINE: 109
-      if (idTargetPrio > 0) { // LINE: 110
-        baseRels.add(new BaseRelation(null, id, idTargetPrio)); // LINE: 111
-      }
-    }
-    List<Map.Entry</*@Nullable*/ String, Map>> candidates = collectCandidates(obj, rels); // LINE: 113
-    Set<String> seenCandidates = new HashSet(); // LINE: 115
-    while ((candidates != null && candidates.size() > 0)) { // LINE: 117
-      Map.Entry<String, Map> crel_candidate = candidates.remove(0); // LINE: 118
-      String crel = crel_candidate.getKey();
-      Map candidate = crel_candidate.getValue();
-      if (!candidate.containsKey(ID)) { // LINE: 119
-        continue; // LINE: 120
-      }
-      String candidateId = (String) candidate.get(ID); // LINE: 121
-      candidate = ((Map) vocabIndex.getOrDefault(candidateId, candidate)); // LINE: 122
-      Integer targetPrio = getTargetPriority(target, candidateId); // LINE: 124
-      if (targetPrio > 0) { // LINE: 125
-        baseRels.add(new BaseRelation(crel, candidateId, targetPrio)); // LINE: 126
-      } else if ((SYMMETRIC.contains(crel) && idTargetPrio > 0)) { // LINE: 127
-        assert id != null;
-        addRule(targetMap, candidateId, id, idTargetPrio); // LINE: 129
-      } else if (!seenCandidates.contains(candidateId)) { // LINE: 130
-        extendCandidates(candidates, candidate, rels); // LINE: 131
-      }
-      seenCandidates.add(candidateId); // LINE: 133
-    }
-    if ((id != null && idTargetPrio == 0)) { // LINE: 135
-      baseRels = baseRels.stream().filter((it) -> !it.base.equals(id)).collect(Collectors.toList()); // LINE: 136
-      if (baseRels.size() > 0) { // LINE: 138
-        List<String> baseClasses = new ArrayList<>(); // LINE: 139
-        for (BaseRelation baserel : baseRels) { // LINE: 140
-          /*@Nullable*/ Map classDfn = ((/*@Nullable*/ Map) vocabIndex.get(baserel.base)); // LINE: 141
-          if (classDfn == null) { // LINE: 142
-            classDfn = Builtins.mapOf(ID, baserel.base); // LINE: 143
-          }
-          baseClasses.add(((String) classDfn.get(ID))); // LINE: 144
-          break; // LINE: 145
+      List<Map.Entry<Integer, Object>> rules = (List<Map.Entry<Integer, Object>>) Builtins.sorted(asList(rule), (it) -> new KeyValue(((Integer) ((Map.Entry) it).getKey()), (((Map.Entry) it).getValue() instanceof Map ? ((Map) ((Map.Entry) it).getValue()).get("match") != null : false)), true); // LINE: 89
+      targetMap.put(key, rules.stream().map((priority_it) -> priority_it.getValue()).collect(Collectors.toList())); // LINE: 96
+      for (Map.Entry<Integer, Object> priority_it : rules) { // LINE: 99
+        Integer priority = priority_it.getKey();
+        Object it = priority_it.getValue();
+        if (it instanceof String) { // LINE: 100
+          identityMap.put((String) it, (String) it); // LINE: 101
         }
-        addRule(targetMap, id, baseClasses); // LINE: 148
+        break; // LINE: 102
       }
     }
+    targetMap.putAll(identityMap); // LINE: 104
+    return targetMap; // LINE: 106
   }
 
-  protected static void processPropertyRelations(Map obj, Map vocabIndex, Map<String, Object> target, Map targetMap) { // LINE: 151
-    List<String> rels = new ArrayList<>(Arrays.asList(new String[] {(String) OWL_equivalentProperty, RDFS_subPropertyOf})); // LINE: 152
-    if (!obj.containsKey(ID)) { // LINE: 154
-      return; // LINE: 155
+  protected static void processClassRelations(Map obj, Map vocabIndex, Map<String, Object> target, Map targetMap) { // LINE: 109
+    List<String> rels = new ArrayList<>(Arrays.asList(new String[] {(String) OWL_equivalentClass, RDFS_subClassOf})); // LINE: 110
+    List<BaseRelation> baseRels = new ArrayList<>(); // LINE: 113
+    /*@Nullable*/ String id = ((/*@Nullable*/ String) obj.get(ID)); // LINE: 115
+    Integer idTargetPrio = 0; // LINE: 117
+    if (id != null) { // LINE: 118
+      idTargetPrio = getTargetPriority(target, id); // LINE: 119
+      if (idTargetPrio > 0) { // LINE: 120
+        baseRels.add(new BaseRelation(null, id, idTargetPrio)); // LINE: 121
+      }
     }
-    String id = (String) obj.get(ID); // LINE: 157
-    Integer idTargetPrio = getTargetPriority(target, id); // LINE: 158
-    /*@Nullable*/ String property = (idTargetPrio > 0 ? id : null); // LINE: 159
-    Integer propPrio = idTargetPrio; // LINE: 160
-    if (property != null) { // LINE: 163
-      addRule(targetMap, id, property, idTargetPrio); // LINE: 164
-    }
-    List<Map.Entry</*@Nullable*/ String, Map>> candidates = collectCandidates(obj, rels); // LINE: 166
-    List<Map.Entry<Integer, String>> baseprops = new ArrayList<>(); // LINE: 168
-    if (idTargetPrio > 0) { // LINE: 169
-      baseprops.add(new KeyValue(idTargetPrio, id)); // LINE: 170
-    }
-    /*@Nullable*/ String candidateProp = null; // LINE: 172
-    while ((candidates != null && candidates.size() > 0)) { // LINE: 174
-      Map.Entry<String, Map> crel_candidate = candidates.remove(0); // LINE: 175
+    List<Map.Entry</*@Nullable*/ String, Map>> candidates = collectCandidates(obj, rels); // LINE: 123
+    Set<String> seenCandidates = new HashSet(); // LINE: 125
+    while ((candidates != null && candidates.size() > 0)) { // LINE: 127
+      Map.Entry<String, Map> crel_candidate = candidates.remove(0); // LINE: 128
       String crel = crel_candidate.getKey();
       Map candidate = crel_candidate.getValue();
-      if (!candidate.containsKey(ID)) { // LINE: 176
-        continue; // LINE: 177
+      if (!candidate.containsKey(ID)) { // LINE: 129
+        continue; // LINE: 130
       }
-      String candidateId = (String) candidate.get(ID); // LINE: 178
-      candidate = ((Map) vocabIndex.getOrDefault(candidateId, candidate)); // LINE: 179
-      Integer targetPrio = getTargetPriority(target, candidateId); // LINE: 181
-      if ((idTargetPrio == 0 && targetPrio > 0)) { // LINE: 182
-        baseprops.add(new KeyValue(targetPrio, candidateId)); // LINE: 183
-        addRule(targetMap, id, candidateId, targetPrio); // LINE: 184
-        candidateProp = candidateId; // LINE: 185
-        propPrio = targetPrio; // LINE: 186
-      } else if ((SYMMETRIC.contains(crel) && targetPrio == 0 && idTargetPrio > 0)) { // LINE: 188
-        addRule(targetMap, candidateId, id, idTargetPrio); // LINE: 189
-        candidateProp = candidateId; // LINE: 190
-        propPrio = targetPrio; // LINE: 191
-      } else {
-        extendCandidates(candidates, candidate, rels); // LINE: 194
+      String candidateId = (String) candidate.get(ID); // LINE: 131
+      candidate = ((Map) vocabIndex.getOrDefault(candidateId, candidate)); // LINE: 132
+      Integer targetPrio = getTargetPriority(target, candidateId); // LINE: 134
+      if (targetPrio > 0) { // LINE: 135
+        baseRels.add(new BaseRelation(crel, candidateId, targetPrio)); // LINE: 136
+      } else if ((SYMMETRIC.contains(crel) && idTargetPrio > 0)) { // LINE: 137
+        assert id != null;
+        addRule(targetMap, candidateId, id, idTargetPrio); // LINE: 139
+      } else if (!seenCandidates.contains(candidateId)) { // LINE: 140
+        extendCandidates(candidates, candidate, rels); // LINE: 141
+      }
+      seenCandidates.add(candidateId); // LINE: 143
+    }
+    if ((id != null && idTargetPrio == 0)) { // LINE: 145
+      baseRels = baseRels.stream().filter((it) -> !it.base.equals(id)).collect(Collectors.toList()); // LINE: 146
+      if (baseRels.size() > 0) { // LINE: 148
+        List<String> baseClasses = new ArrayList<>(); // LINE: 149
+        for (BaseRelation baserel : baseRels) { // LINE: 150
+          /*@Nullable*/ Map classDfn = ((/*@Nullable*/ Map) vocabIndex.get(baserel.base)); // LINE: 151
+          if (classDfn == null) { // LINE: 152
+            classDfn = Builtins.mapOf(ID, baserel.base); // LINE: 153
+          }
+          baseClasses.add(((String) classDfn.get(ID))); // LINE: 154
+          break; // LINE: 155
+        }
+        addRule(targetMap, id, baseClasses); // LINE: 158
       }
     }
-    processPropertyChain(obj, target, targetMap, candidateProp, baseprops); // LINE: 196
   }
 
-  protected static boolean processPropertyChain(Map obj, Map<String, Object> target, Map targetMap, /*@Nullable*/ String candidateProp, List<Map.Entry<Integer, String>> baseprops) { // LINE: 199
-    if (!obj.containsKey(OWL_propertyChainAxiom)) { // LINE: 204
-      return false; // LINE: 205
+  protected static void processPropertyRelations(Map obj, Map vocabIndex, Map<String, Object> target, Map targetMap) { // LINE: 161
+    List<String> rels = new ArrayList<>(Arrays.asList(new String[] {(String) OWL_equivalentProperty, RDFS_subPropertyOf})); // LINE: 162
+    if (!obj.containsKey(ID)) { // LINE: 164
+      return; // LINE: 165
     }
-    List<Map> propChain = ((List<Map>) obj.get(OWL_propertyChainAxiom)); // LINE: 207
-    /*@Nullable*/ String sourceProperty = null; // LINE: 208
-    List<Map> lst = (List<Map>) propChain.get(0).get(LIST); // LINE: 210
-    Map lead = (Map) lst.get(0); // LINE: 211
-    if (lead != null) { // LINE: 213
-      sourceProperty = (String) lead.get(ID); // LINE: 214
+    String id = (String) obj.get(ID); // LINE: 167
+    Integer idTargetPrio = getTargetPriority(target, id); // LINE: 168
+    /*@Nullable*/ String property = (idTargetPrio > 0 ? id : null); // LINE: 169
+    Integer propPrio = idTargetPrio; // LINE: 170
+    if (property != null) { // LINE: 173
+      addRule(targetMap, id, property, idTargetPrio); // LINE: 174
     }
-    String valueFrom = (String) lst.get(1).get(ID); // LINE: 216
-    /*@Nullable*/ String rtype = null; // LINE: 217
-    if ((sourceProperty == null || sourceProperty.startsWith("_:"))) { // LINE: 220
-      try { // LINE: 221
-        List<Map> ranges = (List<Map>) lead.get(RDFS_range); // LINE: 222
-        rtype = (String) ranges.get(0).get(ID); // LINE: 223
-      } catch (Exception e) { // LINE: 224
+    List<Map.Entry</*@Nullable*/ String, Map>> candidates = collectCandidates(obj, rels); // LINE: 176
+    List<Map.Entry<Integer, String>> baseprops = new ArrayList<>(); // LINE: 178
+    if (idTargetPrio > 0) { // LINE: 179
+      baseprops.add(new KeyValue(idTargetPrio, id)); // LINE: 180
+    }
+    /*@Nullable*/ String candidateProp = null; // LINE: 182
+    while ((candidates != null && candidates.size() > 0)) { // LINE: 184
+      Map.Entry<String, Map> crel_candidate = candidates.remove(0); // LINE: 185
+      String crel = crel_candidate.getKey();
+      Map candidate = crel_candidate.getValue();
+      if (!candidate.containsKey(ID)) { // LINE: 186
+        continue; // LINE: 187
       }
-      List<Map> superprops = (List<Map>) lead.get(RDFS_subPropertyOf); // LINE: 226
-      sourceProperty = (String) superprops.get(0).get(ID); // LINE: 227
+      String candidateId = (String) candidate.get(ID); // LINE: 188
+      candidate = ((Map) vocabIndex.getOrDefault(candidateId, candidate)); // LINE: 189
+      Integer targetPrio = getTargetPriority(target, candidateId); // LINE: 191
+      if ((idTargetPrio == 0 && targetPrio > 0)) { // LINE: 192
+        baseprops.add(new KeyValue(targetPrio, candidateId)); // LINE: 193
+        addRule(targetMap, id, candidateId, targetPrio); // LINE: 194
+        candidateProp = candidateId; // LINE: 195
+        propPrio = targetPrio; // LINE: 196
+      } else if ((SYMMETRIC.contains(crel) && targetPrio == 0 && idTargetPrio > 0)) { // LINE: 198
+        addRule(targetMap, candidateId, id, idTargetPrio); // LINE: 199
+        candidateProp = candidateId; // LINE: 200
+        propPrio = targetPrio; // LINE: 201
+      } else {
+        extendCandidates(candidates, candidate, rels); // LINE: 204
+      }
     }
-    /*@Nullable*/ Map match = (rtype != null ? Builtins.mapOf(TYPE, rtype) : null); // LINE: 229
-    if (sourceProperty != null) { // LINE: 233
-      if ((!sourceProperty.equals(candidateProp) && getTargetPriority(target, sourceProperty) == 0)) { // LINE: 234
-        for (Map.Entry<Integer, String> prio_baseprop : baseprops) { // LINE: 236
+    processPropertyChain(obj, target, targetMap, candidateProp, baseprops); // LINE: 206
+  }
+
+  protected static boolean processPropertyChain(Map obj, Map<String, Object> target, Map targetMap, /*@Nullable*/ String candidateProp, List<Map.Entry<Integer, String>> baseprops) { // LINE: 209
+    if (!obj.containsKey(OWL_propertyChainAxiom)) { // LINE: 214
+      return false; // LINE: 215
+    }
+    List<Map> propChain = ((List<Map>) obj.get(OWL_propertyChainAxiom)); // LINE: 217
+    /*@Nullable*/ String sourceProperty = null; // LINE: 218
+    List<Map> lst = (List<Map>) propChain.get(0).get(LIST); // LINE: 220
+    Map lead = (Map) lst.get(0); // LINE: 221
+    if (lead != null) { // LINE: 223
+      sourceProperty = (String) lead.get(ID); // LINE: 224
+    }
+    String valueFrom = (String) lst.get(1).get(ID); // LINE: 226
+    /*@Nullable*/ String rtype = null; // LINE: 227
+    if ((sourceProperty == null || sourceProperty.startsWith("_:"))) { // LINE: 230
+      try { // LINE: 231
+        List<Map> ranges = (List<Map>) lead.get(RDFS_range); // LINE: 232
+        rtype = (String) ranges.get(0).get(ID); // LINE: 233
+      } catch (Exception e) { // LINE: 234
+      }
+      List<Map> superprops = (List<Map>) lead.get(RDFS_subPropertyOf); // LINE: 236
+      sourceProperty = (String) superprops.get(0).get(ID); // LINE: 237
+    }
+    /*@Nullable*/ Map match = (rtype != null ? Builtins.mapOf(TYPE, rtype) : null); // LINE: 239
+    if (sourceProperty != null) { // LINE: 243
+      if ((!sourceProperty.equals(candidateProp) && getTargetPriority(target, sourceProperty) == 0)) { // LINE: 244
+        for (Map.Entry<Integer, String> prio_baseprop : baseprops) { // LINE: 246
           Integer prio = prio_baseprop.getKey();
           String baseprop = prio_baseprop.getValue();
-          Map rule = ruleFrom(baseprop, null, valueFrom, match); // LINE: 237
-          addRule(targetMap, sourceProperty, rule, prio); // LINE: 238
+          Map rule = ruleFrom(baseprop, null, valueFrom, match); // LINE: 247
+          addRule(targetMap, sourceProperty, rule, prio); // LINE: 248
         }
-        return true; // LINE: 240
+        return true; // LINE: 250
       }
     }
-    return false; // LINE: 244
+    return false; // LINE: 254
   }
 
-  protected static List<Map.Entry</*@Nullable*/ String, Map>> collectCandidates(Map obj, List<String> rels) { // LINE: 247
-    List<Map.Entry</*@Nullable*/ String, Map>> candidates = new ArrayList<>(); // LINE: 248
-    for (String rel : rels) { // LINE: 249
-      Object refs = (Object) obj.get(rel); // LINE: 250
-      if (refs instanceof List) { // LINE: 251
+  protected static List<Map.Entry</*@Nullable*/ String, Map>> collectCandidates(Map obj, List<String> rels) { // LINE: 257
+    List<Map.Entry</*@Nullable*/ String, Map>> candidates = new ArrayList<>(); // LINE: 258
+    for (String rel : rels) { // LINE: 259
+      Object refs = (Object) obj.get(rel); // LINE: 260
+      if (refs instanceof List) { // LINE: 261
         candidates.addAll(((List<Map.Entry</*@Nullable*/ String, Map>>) ((List) refs).stream().map((ref) -> new KeyValue(rel, ref)).collect(Collectors.toList())));
       }
     }
-    return candidates; // LINE: 253
+    return candidates; // LINE: 263
   }
 
-  protected static void extendCandidates(List<Map.Entry</*@Nullable*/ String, Map>> candidates, Map candidate, List<String> rels) { // LINE: 256
-    for (String rel : rels) { // LINE: 257
-      /*@Nullable*/ List<Map> superrefs = ((/*@Nullable*/ List<Map>) candidate.get(rel)); // LINE: 258
-      if (superrefs != null) { // LINE: 259
-        for (Map sup : superrefs) { // LINE: 260
-          if (sup.containsKey(ID)) { // LINE: 261
-            candidates.add(new KeyValue(null, sup)); // LINE: 262
+  protected static void extendCandidates(List<Map.Entry</*@Nullable*/ String, Map>> candidates, Map candidate, List<String> rels) { // LINE: 266
+    for (String rel : rels) { // LINE: 267
+      /*@Nullable*/ List<Map> superrefs = ((/*@Nullable*/ List<Map>) candidate.get(rel)); // LINE: 268
+      if (superrefs != null) { // LINE: 269
+        for (Map sup : superrefs) { // LINE: 270
+          if (sup.containsKey(ID)) { // LINE: 271
+            candidates.add(new KeyValue(null, sup)); // LINE: 272
           }
         }
       }
     }
   }
 
-  protected static void processReifiedForms(Map obj, Map vocabIndex, Map<String, Object> targetMap) { // LINE: 265
-    /*@Nullable*/ Map prop = traceInverseOfSubject(obj, vocabIndex); // LINE: 266
-    if (prop != null) { // LINE: 268
-      List<Map> ranges = new ArrayList<>(); // LINE: 269
-      String propId = (String) obj.get(ID); // LINE: 271
-      if (obj.containsKey(RDFS_range)) { // LINE: 273
+  protected static void processReifiedForms(Map obj, Map vocabIndex, Map<String, Object> targetMap) { // LINE: 275
+    /*@Nullable*/ Map prop = traceInverseOfSubject(obj, vocabIndex); // LINE: 276
+    if (prop != null) { // LINE: 278
+      List<Map> ranges = new ArrayList<>(); // LINE: 279
+      String propId = (String) obj.get(ID); // LINE: 281
+      if (obj.containsKey(RDFS_range)) { // LINE: 283
         ranges.addAll(asList(obj.get(RDFS_range)));
       }
-      if ((prop != obj && prop.containsKey(RDFS_range))) { // LINE: 275
+      if ((prop != obj && prop.containsKey(RDFS_range))) { // LINE: 285
         ranges.addAll(asList(prop.get(RDFS_range)));
       }
-      /*@Nullable*/ String propertyFrom = null; // LINE: 278
-      /*@Nullable*/ String valueFrom = null; // LINE: 279
-      for (Map range : ranges) { // LINE: 281
-        /*@Nullable*/ Map rangeNode = (/*@Nullable*/ Map) vocabIndex.get(range.get(ID)); // LINE: 282
-        if (rangeNode == null) { // LINE: 283
-          continue; // LINE: 284
+      /*@Nullable*/ String propertyFrom = null; // LINE: 288
+      /*@Nullable*/ String valueFrom = null; // LINE: 289
+      for (Map range : ranges) { // LINE: 291
+        /*@Nullable*/ Map rangeNode = (/*@Nullable*/ Map) vocabIndex.get(range.get(ID)); // LINE: 292
+        if (rangeNode == null) { // LINE: 293
+          continue; // LINE: 294
         }
-        /*@Nullable*/ Map reverses = (/*@Nullable*/ Map) ((Map) rangeNode.get(REVERSE)); // LINE: 285
-        List<Map> inDomainOf = (reverses != null ? ((List<Map>) reverses.getOrDefault(RDFS_domain, new ArrayList<>())) : new ArrayList<>()); // LINE: 286
-        for (Map domainProp : inDomainOf) { // LINE: 287
-          if (leadsTo(domainProp, vocabIndex, RDFS_subPropertyOf, RDF_predicate)) { // LINE: 288
-            propertyFrom = (String) domainProp.get(ID); // LINE: 289
-          } else if (leadsTo(domainProp, vocabIndex, RDFS_subPropertyOf, RDF_object)) { // LINE: 290
-            valueFrom = (String) domainProp.get(ID); // LINE: 291
+        /*@Nullable*/ Map reverses = (/*@Nullable*/ Map) ((Map) rangeNode.get(REVERSE)); // LINE: 295
+        List<Map> inDomainOf = (reverses != null ? ((List<Map>) reverses.getOrDefault(RDFS_domain, new ArrayList<>())) : new ArrayList<>()); // LINE: 296
+        for (Map domainProp : inDomainOf) { // LINE: 297
+          if (leadsTo(domainProp, vocabIndex, RDFS_subPropertyOf, RDF_predicate)) { // LINE: 298
+            propertyFrom = (String) domainProp.get(ID); // LINE: 299
+          } else if (leadsTo(domainProp, vocabIndex, RDFS_subPropertyOf, RDF_object)) { // LINE: 300
+            valueFrom = (String) domainProp.get(ID); // LINE: 301
           }
         }
       }
-      if ((propertyFrom != null && valueFrom != null && propId instanceof String)) { // LINE: 293
-        addRule(targetMap, (String) propId, ruleFrom(null, propertyFrom, valueFrom, null)); // LINE: 294
+      if ((propertyFrom != null && valueFrom != null && propId instanceof String)) { // LINE: 303
+        addRule(targetMap, (String) propId, ruleFrom(null, propertyFrom, valueFrom, null)); // LINE: 304
       }
     }
   }
 
-  protected static /*@Nullable*/ Map traceInverseOfSubject(Map obj, Map vocabIndex) { // LINE: 297
-    /*@Nullable*/ List<Map> invs = ((/*@Nullable*/ List<Map>) obj.get(OWL_inverseOf)); // LINE: 298
-    if (invs != null) { // LINE: 300
-      for (Map p : invs) { // LINE: 301
-        if (leadsTo(p, vocabIndex, RDFS_subPropertyOf, RDF_subject)) { // LINE: 302
-          return p; // LINE: 303
+  protected static /*@Nullable*/ Map traceInverseOfSubject(Map obj, Map vocabIndex) { // LINE: 307
+    /*@Nullable*/ List<Map> invs = ((/*@Nullable*/ List<Map>) obj.get(OWL_inverseOf)); // LINE: 308
+    if (invs != null) { // LINE: 310
+      for (Map p : invs) { // LINE: 311
+        if (leadsTo(p, vocabIndex, RDFS_subPropertyOf, RDF_subject)) { // LINE: 312
+          return p; // LINE: 313
         }
       }
     }
-    /*@Nullable*/ List<Map> supers = ((/*@Nullable*/ List<Map>) obj.get(RDFS_subPropertyOf)); // LINE: 305
-    if (supers == null) { // LINE: 306
-      return null; // LINE: 307
+    /*@Nullable*/ List<Map> supers = ((/*@Nullable*/ List<Map>) obj.get(RDFS_subPropertyOf)); // LINE: 315
+    if (supers == null) { // LINE: 316
+      return null; // LINE: 317
     }
-    for (Map supref : supers) { // LINE: 309
-      Map sup = (Map) ((Map) (supref.containsKey(ID) ? vocabIndex.getOrDefault(supref.get(ID), supref) : supref)); // LINE: 310
-      if (traceInverseOfSubject(sup, vocabIndex) != null) { // LINE: 311
-        return sup; // LINE: 312
+    for (Map supref : supers) { // LINE: 319
+      Map sup = (Map) ((Map) (supref.containsKey(ID) ? vocabIndex.getOrDefault(supref.get(ID), supref) : supref)); // LINE: 320
+      if (traceInverseOfSubject(sup, vocabIndex) != null) { // LINE: 321
+        return sup; // LINE: 322
       }
     }
-    return null; // LINE: 314
+    return null; // LINE: 324
   }
 
   protected static void addRule(Map<String, Object> targetMap, String sourceId, Object rule) {
     addRule(targetMap, sourceId, rule, 0);
   }
-  protected static void addRule(Map<String, Object> targetMap, String sourceId, Object rule, Integer priority) { // LINE: 317
-    if ((sourceId == null && ((Object) rule) == null || sourceId != null && (sourceId).equals(rule))) { // LINE: 321
-      return; // LINE: 322
+  protected static void addRule(Map<String, Object> targetMap, String sourceId, Object rule, Integer priority) { // LINE: 327
+    if ((sourceId == null && ((Object) rule) == null || sourceId != null && (sourceId).equals(rule))) { // LINE: 331
+      return; // LINE: 332
     }
-    Object rulePriority = (Object) (rule instanceof List ? ((List) rule).stream().map((it) -> new KeyValue(priority, it)).collect(Collectors.toList()) : new ArrayList<>(Arrays.asList(new Object[] {(Object) new KeyValue(priority, rule)}))); // LINE: 324
-    List rules = (List) ((List) targetMap.get(sourceId)); // LINE: 326
-    if (rules == null) { // LINE: 327
-      targetMap.put(sourceId, rulePriority); // LINE: 328
+    Object rulePriority = (Object) (rule instanceof List ? ((List) rule).stream().map((it) -> new KeyValue(priority, it)).collect(Collectors.toList()) : new ArrayList<>(Arrays.asList(new Object[] {(Object) new KeyValue(priority, rule)}))); // LINE: 334
+    List rules = (List) ((List) targetMap.get(sourceId)); // LINE: 336
+    if (rules == null) { // LINE: 337
+      targetMap.put(sourceId, rulePriority); // LINE: 338
     } else {
-      if (!(rules instanceof List)) { // LINE: 330
-        rules = new ArrayList<>(Arrays.asList(new List[] {(List) rules})); // LINE: 331
-        targetMap.put(sourceId, rules); // LINE: 332
+      if (!(rules instanceof List)) { // LINE: 340
+        rules = new ArrayList<>(Arrays.asList(new List[] {(List) rules})); // LINE: 341
+        targetMap.put(sourceId, rules); // LINE: 342
       }
-      if (rulePriority instanceof List) { // LINE: 333
+      if (rulePriority instanceof List) { // LINE: 343
         rules.addAll((List) rulePriority);
       } else {
-        ((List) rules).add(rulePriority); // LINE: 336
+        ((List) rules).add(rulePriority); // LINE: 346
       }
     }
   }
 
-  protected static Map ruleFrom(/*@Nullable*/ String property, /*@Nullable*/ String propertyFrom, /*@Nullable*/ String valueFrom, /*@Nullable*/ Map<String, String> match) { // LINE: 339
-    return Builtins.mapOf("property", property, "propertyFrom", propertyFrom, "valueFrom", valueFrom, "match", match); // LINE: 343
+  protected static Map ruleFrom(/*@Nullable*/ String property, /*@Nullable*/ String propertyFrom, /*@Nullable*/ String valueFrom, /*@Nullable*/ Map<String, String> match) { // LINE: 349
+    return Builtins.mapOf("property", property, "propertyFrom", propertyFrom, "valueFrom", valueFrom, "match", match); // LINE: 353
   }
 
-  protected static Integer getTargetPriority(Map<String, Object> target, String id) { // LINE: 351
-    Integer topPrio = (Integer) target.size(); // LINE: 352
-    Integer prio = topPrio * 3; // LINE: 354
-    for (Object v : target.values()) { // LINE: 355
-      if ((id == null && ((Object) v) == null || id != null && (id).equals(v))) { // LINE: 356
-        return prio; // LINE: 357
+  protected static Integer getTargetPriority(Map<String, Object> target, String id) { // LINE: 361
+    Integer topPrio = (Integer) target.size(); // LINE: 362
+    Integer prio = topPrio * 3; // LINE: 364
+    for (Object v : target.values()) { // LINE: 365
+      if ((id == null && ((Object) v) == null || id != null && (id).equals(v))) { // LINE: 366
+        return prio; // LINE: 367
       }
       prio -= 1;
     }
-    if ((target.containsKey(VOCAB) && id.startsWith(((String) target.get(VOCAB))))) { // LINE: 360
-      return topPrio * 2; // LINE: 361
+    if ((target.containsKey(VOCAB) && id.startsWith(((String) target.get(VOCAB))))) { // LINE: 370
+      return topPrio * 2; // LINE: 371
     }
-    prio = topPrio; // LINE: 363
-    for (Object v : target.values()) { // LINE: 364
-      if ((v instanceof String && id.startsWith(((String) v)))) { // LINE: 365
-        return prio; // LINE: 366
+    prio = topPrio; // LINE: 373
+    for (Object v : target.values()) { // LINE: 374
+      if ((v instanceof String && id.startsWith(((String) v)))) { // LINE: 375
+        return prio; // LINE: 376
       }
       prio -= 1;
     }
-    return 0; // LINE: 369
+    return 0; // LINE: 379
   }
 
-  public static boolean leadsTo(Map s, Map vocabIndex, String rel, Object o) { // LINE: 372
-    if ((s.get(ID) == null && ((Object) o) == null || s.get(ID) != null && (s.get(ID)).equals(o))) { // LINE: 373
-      return true; // LINE: 374
+  public static boolean leadsTo(Map s, Map vocabIndex, String rel, Object o) { // LINE: 382
+    if ((s.get(ID) == null && ((Object) o) == null || s.get(ID) != null && (s.get(ID)).equals(o))) { // LINE: 383
+      return true; // LINE: 384
     }
-    /*@Nullable*/ Map data = (/*@Nullable*/ Map) ((Map) (s.containsKey(ID) ? vocabIndex.getOrDefault(s.get(ID), s) : s)); // LINE: 376
-    List<Map> xs = (List<Map>) (data != null ? ((List) data.getOrDefault(rel, new ArrayList<>())) : new ArrayList<>()); // LINE: 377
-    for (Map x : xs) { // LINE: 379
-      if (((x.get(ID) == null && ((Object) o) == null || x.get(ID) != null && (x.get(ID)).equals(o)) || leadsTo(x, vocabIndex, rel, o))) { // LINE: 380
-        return true; // LINE: 381
+    /*@Nullable*/ Map data = (/*@Nullable*/ Map) ((Map) (s.containsKey(ID) ? vocabIndex.getOrDefault(s.get(ID), s) : s)); // LINE: 386
+    List<Map> xs = (List<Map>) (data != null ? ((List) data.getOrDefault(rel, new ArrayList<>())) : new ArrayList<>()); // LINE: 387
+    for (Map x : xs) { // LINE: 389
+      if (((x.get(ID) == null && ((Object) o) == null || x.get(ID) != null && (x.get(ID)).equals(o)) || leadsTo(x, vocabIndex, rel, o))) { // LINE: 390
+        return true; // LINE: 391
       }
     }
-    return false; // LINE: 383
+    return false; // LINE: 393
   }
 }
