@@ -258,8 +258,33 @@ public class History {
                 }
             }
 
-            if (!tempNew.isEmpty() || !tempOld.isEmpty())
-                ((List) changeSet.get("modifiedPaths")).add(path);
+            // skip list equality on @graph,x. Otherwise you always get add+delete on @graph,1 if
+            // anything changed in there, and the @graph list has semantic meaning attached to the
+            // indexes.
+            if (path.size() > 1) {
+                for (Object obj : tempNew) {
+                    List list = (List) examining;
+                    for (int i = 0; i < list.size(); ++i) {
+
+                        if (obj == list.get(i)) { // pointer identity is intentional
+                            List<Object> newPath = new ArrayList<>(path);
+                            newPath.add(i);
+                            ((List) changeSet.get("addedPaths")).add(newPath);
+                        }
+                    }
+                }
+                for (Object obj : tempOld) {
+                    List list = (List) correspondingPrevious;
+                    for (int i = 0; i < list.size(); ++i) {
+
+                        if (obj == list.get(i)) { // pointer identity is intentional
+                            List<Object> newPath = new ArrayList<>(path);
+                            newPath.add(i);
+                            ((List) changeSet.get("removedPaths")).add(newPath);
+                        }
+                    }
+                }
+            }
 
             for (int i = 0; i < tempNew.size(); ++i) {
                 List<Object> childPath = new ArrayList(path);
