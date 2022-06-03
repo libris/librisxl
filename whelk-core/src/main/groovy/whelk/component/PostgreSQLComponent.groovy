@@ -164,13 +164,7 @@ class PostgreSQLComponent {
             ORDER BY GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) ASC
             """.stripIndent()
     
-    private static final String GET_PREVIOUS_VERSION_PK_BY_ID_AND_PK = """
-            SELECT GREATEST(-1, MAX(pk)) AS pk 
-            FROM lddb__versions 
-            WHERE id = ? AND pk < ?;
-            """.stripIndent()
-
-    private static final String GET_DOCUMENT_VERSION_BY_PK = """
+    private static final String GET_DOCUMENT_VERSION_BY_ID_AND_PK = """
             SELECT id, data, deleted, created, modified, changedBy, changedIn 
             FROM lddb__versions 
             WHERE id = ? AND pk = ?
@@ -2670,7 +2664,7 @@ class PostgreSQLComponent {
                 def (shortId, pks) = [s[0], s[1]]
                 List docs = pks.split(' ')
                         .collect { Long.parseLong(it) }
-                        .collect { pk -> pk < 0 ? null : loadFromSql(GET_DOCUMENT_VERSION_BY_PK, [1: shortId, 2: pk]) }
+                        .collect { pk -> pk < 0 ? null : loadFromSql(GET_DOCUMENT_VERSION_BY_ID_AND_PK, [1: shortId, 2: pk]) }
 
                 def (oldVersion, newVersion) = [docs[0], docs[1]]
                 if (oldVersion && newVersion) {
