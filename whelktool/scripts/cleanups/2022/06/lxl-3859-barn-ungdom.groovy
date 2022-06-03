@@ -46,7 +46,7 @@ selectBySqlWhere(where) { data ->
         if (! instance.instanceOf.genreForm.contains(gf))
             instance.instanceOf.genreForm.add(gf)
         //System.err.println("result:\n" + data.doc.getDataAsString() + "\n\n")
-        data.scheduleSave()
+        data.scheduleSave(loud: true)
     }
 }
 
