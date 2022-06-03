@@ -258,7 +258,7 @@ public class History {
                 }
             }
 
-            if (!tempNew.isEmpty() || !tempOld.isEmpty())
+            if (tempNew.size() != tempOld.size())
                 ((List) changeSet.get("modifiedPaths")).add(path);
 
             for (int i = 0; i < tempNew.size(); ++i) {
