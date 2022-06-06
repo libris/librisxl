@@ -167,9 +167,7 @@ class CopyOnRevertStep extends MarcFramePostProcStepBase {
                 for (item in source) {
                     if (!target.containsKey(prop.to) && item.containsKey(prop.from)) {
                         def src = item[prop.from]
-                        def copy = src instanceof List ?
-                            src.collect { jsonClone(it) } :
-                            jsonClone((Map) src)
+                        def copy = cloneValue(src)
 
                         Map inject = prop.injectOnCopies ?: this.injectOnCopies
                         if (inject) {
@@ -190,6 +188,16 @@ class CopyOnRevertStep extends MarcFramePostProcStepBase {
                     }
                 }
             }
+        }
+    }
+
+    Object cloneValue(Object value) {
+        if (value instanceof List) {
+            return value.collect { jsonClone(it) }
+        } else if (value instanceof Map) {
+            return jsonClone((Map) value)
+        } else { // assuming String|Integer|Double|Boolean
+            return value
         }
     }
 
