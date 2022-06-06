@@ -38,18 +38,20 @@ class ImporterMain {
         defsImporter.run("definitions")
     }
 
-    @Command(args='FNAME DATASET [--skip-index]')
-    void dataset(String fname, String dataset, String skipIndexParam=null) {
-        if (fname == '--skip-index' || dataset == '--skip-index' || (skipIndexParam && skipIndexParam != '--skip-index')) {
-            throw new IllegalArgumentException("--skip-index must be third argument")
-        }
-        
+    @Command(args='SOURCE_URL DATASET_URI',
+             flags='--skip-index --self-described --cache-records --internal-main-ids --allow-merge')
+    void dataset(String sourceUrl, String datasetUri, Map flags) {
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
-        if (skipIndexParam == '--skip-index') {
+        if (flags['skip-index']) {
             whelk.setSkipIndex(true)
         }
-                
-        DatasetImporter.importDataset(whelk, fname, dataset)
+        new DatasetImporter(whelk, datasetUri, flags).importDataset(sourceUrl)
+    }
+
+    @Command(args='DATASET_URI')
+    void dropDataset(String datasetUri) {
+        Whelk whelk = Whelk.createLoadedSearchWhelk(props)
+        new DatasetImporter(whelk, datasetUri).dropDataset()
     }
 
     @Command(args='[COLLECTION]')
@@ -66,12 +68,6 @@ class ImporterMain {
         new CardRefresher(whelk).refresh(collection)
     }
 
-    @Command(args='[SOURCE]')
-    void importLinkedData(String source=null) {
-        Whelk whelk = Whelk.createLoadedSearchWhelk(props)
-        new LinkedDataImporter(whelk).importRdfAsMultipleRecords(source)
-    }
-
     @Command(args='[FROM]')
     void reindexFrom(String from=null) {
         boolean useCache = true
@@ -80,7 +76,7 @@ class ImporterMain {
         long fromUnixTime = Long.parseLong(from)
         reindex.reindexFrom(fromUnixTime)
     }
-    
+
     /**
      * The additional_types argument should be one of:
      * - comma-separated list of types to include. Like so: Person,GenreForm
@@ -216,15 +212,30 @@ class ImporterMain {
         }
     }
 
-    static COMMANDS = getMethods().findAll { it.getAnnotation(Command)
-                                    }.collectEntries { [it.name, it]}
+    static Map COMMANDS = getMethods().findAll {
+        it.getAnnotation(Command)
+    }.collectEntries { [it.name, cmddef(it)]}
+
+    static Map cmddef(method) {
+        return [
+            method: method,
+            name: method.name,
+            argSpec: method.getAnnotation(Command).args(),
+            flagSpec: method.getAnnotation(Command).flags(),
+        ]
+    }
+
+    static String cmdhelp(Map command) {
+        def flaghelp = command.flagSpec ? "[${command.flagSpec}]" : ""
+        return "\t${command.name} ${command.argSpec} ${flaghelp}"
+    }
 
     static void help() {
         System.err.println "Usage: <program> COMMAND ARGS..."
         System.err.println()
         System.err.println("Available commands:")
         COMMANDS.values().sort().each {
-            System.err.println "\t${it.name} ${it.getAnnotation(Command).args()}"
+            System.err.println cmdhelp(it)
         }
     }
 
@@ -235,27 +246,37 @@ class ImporterMain {
         }
 
         def cmd = args[0]
-        def arglist = args.length > 1? args[1..-1] : []
 
-        def method = COMMANDS[cmd]
-        if (!method) {
+        def command = COMMANDS[cmd]
+        if (!command) {
             System.err.println "Unknown command: ${cmd}"
             help()
             System.exit(1)
         }
 
-        def main
-        if (cmd.startsWith("vcopy")) {
-            main = new ImporterMain("secret", "mysql")
-        } else {
-            main = new ImporterMain("secret")
-        }
-
+        def tool = new ImporterMain("secret")
+        def arglist = []
+        def flags = [:]
         try {
-            main."${method.name}"(*arglist)
+            if (command.flagSpec) {
+                args[1..-1].each {
+                    if (it.startsWith('--')) {
+                        if (command.flagSpec.indexOf(it) == -1) {
+                            throw new IllegalArgumentException("Uknown flag: ${it}")
+                        }
+                        flags[it.substring(2)] = true
+                    } else {
+                        arglist << it
+                    }
+                }
+                tool."${command.name}"(*arglist, flags)
+            } else {
+                arglist = args[1..-1]
+                tool."${command.name}"(*arglist)
+            }
         } catch (IllegalArgumentException e) {
             System.err.println "Missing arguments. Expected:"
-            System.err.println "\t${method.name} ${method.getAnnotation(Command).args()}"
+            System.err.println cmdhelp(command)
             System.err.println e.message
             org.codehaus.groovy.runtime.StackTraceUtils.sanitize(e).printStackTrace()
             System.exit(1)
@@ -268,4 +289,5 @@ class ImporterMain {
 @Target(ElementType.METHOD)
 @interface Command {
     String args() default ''
+    String flags() default ''
 }

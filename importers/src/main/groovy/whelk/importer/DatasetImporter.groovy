@@ -1,56 +1,77 @@
 package whelk.importer
 
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-
-import groovy.transform.Immutable
 import groovy.util.logging.Log4j2 as Log
+import groovy.transform.CompileStatic
+import static groovy.transform.TypeCheckingMode.SKIP
+
 import whelk.Document
 import whelk.JsonLd
+import whelk.TargetVocabMapper
 import whelk.Whelk
-import whelk.IdGenerator
-import whelk.util.DocumentUtil
+import whelk.converter.TrigToJsonLdParser
 import whelk.exception.CancelUpdateException
+import whelk.util.DocumentUtil
 
 import static whelk.util.Jackson.mapper
 
 @Log
+@CompileStatic
 class DatasetImporter {
 
-    static GRAPH = JsonLd.GRAPH_KEY
-    static ID = JsonLd.ID_KEY
-    static TYPE = JsonLd.TYPE_KEY
-    static REVERSE = JsonLd.REVERSE_KEY
+    static String GRAPH = JsonLd.GRAPH_KEY
+    static String ID = JsonLd.ID_KEY
+    static String TYPE = JsonLd.TYPE_KEY
+    static String REVERSE = JsonLd.REVERSE_KEY
 
     static String HASH_IT = '#it'
 
-    @Immutable
-    static class DatasetInfo {
-        String uri
-        int createdMs
-        String uriSpace
-    }
+    // Flags:
+    static SELF_DESCRIBED = 'self-described'
+    // verify that id:s are served by the system; if not, unless these are cache-records; use:
+    static INTERNAL_MAIN_IDS = 'internal-main-ids' // replace id with XL-id (move current to sameAs)
+    static CACHE_RECORDS = 'cache-records' // with preserved id:s (only part of XL as an implementation detail!)
 
-    static void importDataset(Whelk whelk, String filePath, String datasetUri) {
+    Whelk whelk
+    DatasetInfo dsInfo
+    String recordType = 'Record'
+    boolean selfDescribed = false
+    boolean makeMainIds = false
+
+    TargetVocabMapper tvm = null
+    Map contextDocData = null
+
+    Map<String, String> aliasMap = [:]
+
+    DatasetImporter(Whelk whelk, String datasetUri, Map flags=[:]) {
+        this.whelk = whelk
+        selfDescribed = SELF_DESCRIBED in flags
+        makeMainIds = INTERNAL_MAIN_IDS in flags
+        if (CACHE_RECORDS in flags) {
+            recordType = 'CacheRecord'
+        }
+        dsInfo = getDatasetInfo(datasetUri)
 
         if (Runtime.getRuntime().maxMemory() < 2l * 1024l * 1024l * 1024l) {
             log.warn("This application may require substantial amounts of memory, " +
                     "if the dataset in question is large. Please start with -Xmx3G (at least).")
             return
         }
+    }
 
+    void importDataset(String sourceUrl) {
         Set<String> idsInInput = []
 
         long updatedCount = 0
         long createdCount = 0
         long lineCount = 0
 
-        DatasetInfo dsInfo = getDatasetInfo(whelk, datasetUri)
+        if (tvm == null) {
+            contextDocData = getDocByMainEntityId(whelk.kbvContextUri).data
+            tvm = new TargetVocabMapper(whelk.jsonld, contextDocData)
+        }
 
-        File inDataFile = new File(filePath)
-        inDataFile.eachLine { line ->
-            Map data = mapper.readValue(line.getBytes("UTF-8"), Map)
-            Document incomingDoc = completeRecord(whelk, data, dsInfo)
+        eachItem(sourceUrl) { Map data ->
+            Document incomingDoc = completeRecord(data)
             idsInInput.add(incomingDoc.getShortId())
 
             // This race condition should be benign. If there is a document with
@@ -58,19 +79,11 @@ class DatasetImporter {
             // get an exception and fail early (unfortunate but acceptable).
             Document storedDoc = whelk.getDocument(incomingDoc.getShortId())
             if (storedDoc != null) {
-
                 // Update (potentially) of existing document
-                whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, "xl", null, { doc ->
-                    if (doc.getChecksum(whelk.jsonld) != incomingDoc.getChecksum(whelk.jsonld)) {
-                        doc.data = incomingDoc.data
-                    }
-                    else {
-                        throw new CancelUpdateException() // Not an error, merely cancels the update
-                    }
+                update(incomingDoc, {
                     ++updatedCount
                 })
             } else {
-
                 // New document
                 whelk.createDocument(incomingDoc, "xl", null, "definitions", false)
                 ++createdCount
@@ -84,24 +97,58 @@ class DatasetImporter {
         }
 
         List<String> needsRetry = []
-        long deletedCount = removeDeleted(whelk, datasetUri, idsInInput, needsRetry)
+        long deletedCount = removeDeleted(idsInInput, needsRetry)
 
         System.err.println("Created: " + createdCount +" new,\n" +
                 "updated: " + updatedCount + " existing and\n" +
                 "deleted: " + deletedCount + " old records (should have been: " + (deletedCount + needsRetry.size()) + "),\n" +
-                "out of the: " + idsInInput.size() + " records in dataset: \"" + datasetUri + "\".\n" +
+                "out of the: " + idsInInput.size() + " records in dataset: \"" + dsInfo.uri + "\".\n" +
                 "Dataset now in sync.")
     }
 
-    protected static long removeDeleted(Whelk whelk, String datasetUri, Set<String> idsInInput, List<String> needsRetry) {
+    void dropDataset() {
+        long deletedCount = removeDeleted([] as Set, [])
+        System.err.println("Deleted dataset ${dsInfo.uri} with ${deletedCount} existing records")
+    }
+
+    private void eachItem(String sourceUrl, Closure processItem) {
+        if (sourceUrl ==~ /.+\.(jsonl|json(ld)?\.lines)$/) {
+            File inDataFile = new File(sourceUrl)
+            inDataFile.eachLine { line ->
+                Map data = mapper.readValue(line.getBytes("UTF-8"), Map)
+                processItem(data)
+            }
+        } else {
+            Map data = new URL(sourceUrl).withInputStream { TrigToJsonLdParser.parse(it) }
+            data = (Map) tvm.applyTargetVocabularyMap(whelk.defaultTvmProfile, contextDocData, data)
+            List<Map> graph = (List<Map>) data[GRAPH]
+            for (Map item : graph) {
+                processItem(item)
+            }
+        }
+    }
+
+    protected Document update(Document incomingDoc, Closure callback=null) {
+        whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, "xl", null, { doc ->
+            if (doc.getChecksum(whelk.jsonld) == incomingDoc.getChecksum(whelk.jsonld)) {
+                throw new CancelUpdateException() // Not an error, merely cancels the update
+            }
+            doc.data = incomingDoc.data
+            if (callback) {
+                callback()
+            }
+        })
+    }
+
+    protected long removeDeleted(Set<String> idsInInput, List<String> needsRetry) {
         // Clear out anything that was previously stored in this dataset, but was not in the in-data now.
         // If faced with "can't delete depended on stuff", retry again later, after more other deletes have
         // succeeded (there may be intra-set dependencies). If the dataset contains circular dependencies,
         // deletions will never be possible until the circle is unlinked/broken somewhere along the chain.
         long deletedCount = 0
-        whelk.storage.doForIdInDataset(datasetUri, { String storedIdInDataset ->
+        whelk.storage.doForIdInDataset(dsInfo.uri, { String storedIdInDataset ->
             if (!idsInInput.contains(storedIdInDataset)) {
-                if (!remove(whelk, storedIdInDataset)) {
+                if (!remove(storedIdInDataset)) {
                     needsRetry.add(storedIdInDataset)
                 } else {
                     deletedCount++
@@ -116,7 +163,7 @@ class DatasetImporter {
         while (anythingRemovedLastPass) {
             anythingRemovedLastPass = false
             needsRetry.removeAll { String storedIdInDataset ->
-                if (remove(whelk, storedIdInDataset)) {
+                if (remove(storedIdInDataset)) {
                     anythingRemovedLastPass = true
                     deletedCount++
                     return true
@@ -133,7 +180,7 @@ class DatasetImporter {
         return deletedCount
     }
 
-    private static boolean remove(Whelk whelk, String id) {
+    private boolean remove(String id) {
         try {
             whelk.remove(id, "xl", null)
             return true
@@ -143,26 +190,29 @@ class DatasetImporter {
         }
     }
 
-    static DatasetInfo getDatasetInfo(Whelk whelk, String datasetUri) {
-        Map owningDataset = whelk.storage.getDocumentByIri(datasetUri)?.data[GRAPH][1]
-        assert owningDataset
-        def uriSpace = owningDataset['uriSpace']
-        if (uriSpace == null) {
-            uriSpace = owningDataset[ID]
-            if (!uriSpace.endsWith('/')) {
-                uriSpace += '/'
-            }
+    DatasetInfo getDatasetInfo(String datasetUri) {
+        if (selfDescribed) {
+            return new DatasetInfo([(ID): datasetUri])
         }
-        int createdMs = parseW3CDateTime(owningDataset['created'])
-
-        return new DatasetInfo(datasetUri, createdMs, uriSpace)
+        Document datasetRecord = whelk.storage.getDocumentByIri(datasetUri)
+        if (datasetRecord == null) {
+            throw new RuntimeException("Could not get dataset data for: $datasetUri")
+        }
+        Map datasetData = ((List) datasetRecord.data[GRAPH])[1]
+        assert datasetData[ID] == datasetUri
+        return new DatasetInfo(datasetData)
     }
 
-    static Document completeRecord(Whelk whelk, Map data, DatasetInfo dsInfo) {
+    @CompileStatic(SKIP)
+    Document completeRecord(Map data) {
         if (GRAPH !in data) {
             def givenId = data[ID]
-            def newId = mintNewId(dsInfo, givenId)
-            if (newId != null) {
+            def slug = dsInfo.mintPredictableRecordSlug(givenId)
+            assert slug
+            def newRecordId = Document.BASE_URI.resolve(slug).toString()
+
+            if (makeMainIds) {
+                def newId = newRecordId + HASH_IT
                 addToSameAs(data, givenId)
                 data[ID] = newId
             }
@@ -172,8 +222,8 @@ class DatasetImporter {
             }
 
             Map record = data.remove('meta') ?: [:]
-            record[ID] = data[ID].replace(HASH_IT, '')
-            record[TYPE] = 'Record'
+            record[ID] = newRecordId
+            record[TYPE] = recordType
 
             record['mainEntity'] = [(ID): data[ID]]
             data = [(GRAPH): [record, data]]
@@ -183,8 +233,9 @@ class DatasetImporter {
             if ('sameAs' in path) {
                 return
             }
-            def canonical = whelk.storage.getThingId(id)
+            def canonical = aliasMap.get(id) ?: whelk.storage.getThingId(id)
             if (canonical && id != canonical) {
+                aliasMap[id] = canonical
                 return new DocumentUtil.Replace(canonical)
             }
         }
@@ -193,10 +244,14 @@ class DatasetImporter {
         ensureAbsoluteSystemId(doc)
         doc.addInDataset(dsInfo.uri)
 
+        if (dsInfo.uriRegexPattern && !dsInfo.uriRegexPattern.matcher(incomingDoc.getMainId()).matches()) {
+            throw new RuntimeException("${incomingDoc.getMainId()} does not match ${dsInfo.uriRegexPattern}")
+        }
+
         return doc
     }
 
-    private static void ensureAbsoluteSystemId(Document doc) {
+    private void ensureAbsoluteSystemId(Document doc) {
         def sysBaseIri = Document.BASE_URI
         // A system id is in place; do nothing and return.
         if (doc.recordIdentifiers.any { it.startsWith(sysBaseIri.toString()) }) {
@@ -212,33 +267,15 @@ class DatasetImporter {
         throw new RuntimeException("Could not obtain a proper record ID for: " + doc.recordIdentifiers.toString())
     }
 
-    private static long parseW3CDateTime(String dt) {
-        return ZonedDateTime.parse(dt, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant().toEpochMilli()
-    }
-
-    private static String mintNewId(DatasetInfo dsInfo, String givenId) {
-        if (!givenId.startsWith(dsInfo.uriSpace)) {
-            return null
-        }
-        String slug = givenId.substring(dsInfo.uriSpace.length())
-        int timestamp = dsInfo.createdMs + fauxOffset(slug)
-        String xlId = IdGenerator.generate(timestamp, slug)
-        return Document.BASE_URI.resolve(xlId).toString() + HASH_IT
-    }
-
-    private static int fauxOffset(String s) {
-        int n = 0
-        for (int i = 0 ; i < s.size(); i++) {
-            n += s[i].codePointAt(0) * ((i+1) ** 2)
-        }
-        return n
-    }
-
-    private static void addToSameAs(Map entity, String id) {
+    private void addToSameAs(Map entity, String id) {
         List<Map<String, String>> same = entity.get('sameAs', [])
         if (!same.find { it[ID] == id }) {
             same << [(ID): id]
         }
+    }
+
+    private Document getDocByMainEntityId(String id) {
+        return whelk.storage.loadDocumentByMainId(id, null)
     }
 
 }
