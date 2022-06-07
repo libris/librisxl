@@ -2595,7 +2595,6 @@ class PostgreSQLComponent {
                     statement.execute()
                 }
             }
-            
         }
     }
     
