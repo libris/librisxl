@@ -79,13 +79,14 @@ class PostgreSQLComponent {
     private static final int DEFAULT_MAX_POOL_SIZE = 16
     private static final String driverClass = "org.postgresql.Driver"
     
-    private static final String NEW_VERSION_NOTIFICATION = 'lddb__versions_insert'
+    private static final int MAX_PG_NOTIFY_PAYLOAD_BYTES = 8000
+    private static final String NOTIFICATION_DELIMITER = '¤'
 
     private long embellishCacheMaxSize = 10L * 1024L * 1024L * 1024L // default 10GB
 
     private Random random = new Random(System.currentTimeMillis())
-    
-    private String whelkInstanceId = "${ProcessHandle.current().pid()}@${InetAddress.getLocalHost().getHostName()}"
+
+    private String whelkId = "${ProcessHandle.current().pid()}@${InetAddress.getLocalHost().getHostName()}"
 
     // SQL statements
     private static final String UPDATE_DOCUMENT = """
@@ -164,20 +165,6 @@ class PostgreSQLComponent {
             ORDER BY GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) ASC
             """.stripIndent()
     
-    private static final String GET_DOCUMENT_VERSION_BY_ID_AND_PK = """
-            SELECT id, data, deleted, created, modified, changedBy, changedIn 
-            FROM lddb__versions 
-            WHERE id = ? AND pk = ?
-            """.stripIndent()
-    
-    // "<whelk instance id> <document id> <old version pk or -1> <new version pk>"
-    private static final String NOTIFY_VERSION = """
-            SELECT pg_notify(
-              '$NEW_VERSION_NOTIFICATION', 
-               ? || ' ' || ? || ' ' || (SELECT GREATEST(-1, MAX(pk)) FROM lddb__versions WHERE id = ? AND pk < ?) || ' ' || ?
-            )
-    """
-
     private static final String LOAD_ALL_DOCUMENTS =
             "SELECT id, data, created, modified, deleted FROM lddb WHERE modified >= ? AND modified <= ?"
 
@@ -446,7 +433,6 @@ class PostgreSQLComponent {
             config.setMetricsTrackerFactory(new PrometheusHistogramMetricsTrackerFactory())
 
             log.info("Connecting to sql database at ${config.getJdbcUrl()}, using driver $driverClass. Pool size: $maxPoolSize")
-            log.info("ID: ${whelkInstanceId}")
             URI connURI = new URI(sqlUrl.substring(5))
             if (connURI.getUserInfo() != null) {
                 String username = connURI.getUserInfo().split(":")[0]
@@ -468,7 +454,7 @@ class PostgreSQLComponent {
         }
 
         this.dependencyCache = new DependencyCache(this)
-        startNotificationListener()
+        new NotificationListener().start()
     }
 
     private void cacheEmbellishedDocument(String id, Document embellishedDocument) {
@@ -713,6 +699,7 @@ class PostgreSQLComponent {
                 refreshDerivativeTables(doc, connection, deleted)
 
                 connection.commit()
+                connection.setAutoCommit(true)
                 def status = status(doc.getURI(), connection)
                 if (status.exists) {
                     doc.setCreated((Date) status['created'])
@@ -840,6 +827,7 @@ class PostgreSQLComponent {
             List<Runnable> postCommitActions = []
             Document result = storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum, connection, postCommitActions)
             connection.commit()
+            connection.setAutoCommit(true)
             postCommitActions.each { it.run() }
             return result
         }
@@ -1486,21 +1474,14 @@ class PostgreSQLComponent {
                         Date modTime, String changedIn, String changedBy,
                         String collection, boolean deleted) {
         if (versioning) {
-            String[] PRIMARY_KEY_COLUMN = ['pk']
-            PreparedStatement insVersion = connection.prepareStatement(INSERT_DOCUMENT_VERSION, PRIMARY_KEY_COLUMN)
+            PreparedStatement insVersion = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
             try {
                 log.debug("Trying to save a version of ${doc.getShortId() ?: ""} with checksum ${doc.getChecksum(jsonld)}. Modified: $modTime")
                 insVersion = rigVersionStatement(insVersion, doc, createdTime,
-                                              modTime, changedIn, changedBy,
-                                              collection, deleted)
-                if (insVersion.executeUpdate()) {
-                    ResultSet primaryKeys = insVersion.getGeneratedKeys()
-                    if (primaryKeys.next()) {
-                        long pk = primaryKeys.getLong(1)
-                        notifyVersion(connection, doc.getShortId(), pk)
-                        return true
-                    }
-                }
+                        modTime, changedIn, changedBy,
+                        collection, deleted)
+                insVersion.executeUpdate()
+                return true
             } catch (Exception e) {
                 log.error("Failed to save document version: ${e.message}")
                 throw e
@@ -1528,17 +1509,6 @@ class PostgreSQLComponent {
         insvers.setTimestamp(8, new Timestamp(modTime.getTime()))
         insvers.setBoolean(9, deleted)
         return insvers
-    }
-
-    private void notifyVersion(Connection connection, String shortId, long newVersionPrimaryKey) {
-        try (PreparedStatement ps = connection.prepareStatement(NOTIFY_VERSION)) {
-            ps.setString(1, whelkInstanceId)
-            ps.setString(2, shortId)
-            ps.setString(3, shortId)
-            ps.setLong(4, newVersionPrimaryKey)
-            ps.setLong(5, newVersionPrimaryKey)
-            ps.execute()
-        }
     }
 
     boolean bulkStore(final List<Document> docs, String changedIn, String changedBy, String collection) {
@@ -2599,8 +2569,34 @@ class PostgreSQLComponent {
         }
     }
     
-    private void startNotificationListener() {
-        new NotificationListener().start()
+    enum NotificationType {
+        dependency_cache_invalidate // LISTEN silently fails to register if upper case(???)
+    }
+    
+    void sendNotification(NotificationType type, List<String> payload) {
+        int MAX_BYTES_PER_CHAR_UNICODE_BMP = 3
+        def messages = []
+        StringBuilder s = new StringBuilder().append(whelkId)
+        
+        for (String p : payload) {
+            if (s.size() + p.size() + 1 > MAX_PG_NOTIFY_PAYLOAD_BYTES / MAX_BYTES_PER_CHAR_UNICODE_BMP) {
+                messages << s.toString()
+                s = new StringBuilder().append(whelkId)
+            }
+            s.append(NOTIFICATION_DELIMITER).append(p)
+        }
+        messages << s.toString()
+        
+        withDbConnection {
+            for (String message : messages) {
+                try (PreparedStatement statement = getMyConnection().prepareStatement('SELECT pg_notify(?, ?)')) {
+                    statement.setString(1, type.toString())
+                    statement.setString(2, message)
+                    statement.execute()
+                }
+            }
+            
+        }
     }
     
     class NotificationListener extends Thread {
@@ -2622,10 +2618,12 @@ class PostgreSQLComponent {
         void run() {
             while (true) {
                 try(Connection connection = dataSource.getConnection()) {
-                    Statement statement = connection.createStatement()
-                    statement.execute("LISTEN $NEW_VERSION_NOTIFICATION")
-                    statement.close()
-                    log.info("Started listening for $NEW_VERSION_NOTIFICATION")
+                    for (NotificationType t : NotificationType.values()) {
+                        try (def statement = connection.createStatement()) {
+                            statement.execute("LISTEN ${t.toString()}")
+                            log.info("Started listening for $t")
+                        }
+                    }
                     dependencyCache.invalidateAll()
                     listen(connection.unwrap(PGConnection))
                 }
@@ -2644,11 +2642,9 @@ class PostgreSQLComponent {
 
                 for (PGNotification notification : notifications) {
                     try {
-                        def s = notification.getParameter().split(' ', 2)
-                        def (sender, payload) = [s[0], s[1]]
-                        if (sender != whelkInstanceId) {
-                            handleNotification(notification.getName(), payload)
-                            counter.labels(notification.getName()).inc()
+                        String msg = notification.getParameter()
+                        if (!msg.startsWith(whelkId)) {
+                            handleNotification(notification.getName(), msg.split(NOTIFICATION_DELIMITER).drop(1) as List)
                         }
                     }
                     catch (Exception e) {
@@ -2658,26 +2654,9 @@ class PostgreSQLComponent {
             }
         }
 
-        private void handleNotification(String name, String payload) {
-            if (name == NEW_VERSION_NOTIFICATION) {
-                def s = payload.split(' ', 2)
-                def (shortId, pks) = [s[0], s[1]]
-                List docs = pks.split(' ')
-                        .collect { Long.parseLong(it) }
-                        .collect { pk -> pk < 0 ? null : loadFromSql(GET_DOCUMENT_VERSION_BY_ID_AND_PK, [1: shortId, 2: pk]) }
-
-                def (oldVersion, newVersion) = [docs[0], docs[1]]
-                if (oldVersion && newVersion) {
-                    log.debug("Document {} updated, invalidating dependencyCache.", shortId)
-                    dependencyCache.invalidate(oldVersion, newVersion)
-                }
-                else if (newVersion) {
-                    log.debug("Document {} created, invalidating dependencyCache.", shortId)
-                    dependencyCache.invalidate(newVersion)
-                }
-                else {
-                    log.warn("Could not find document versions: {}", payload)
-                }
+        private void handleNotification(String name, List<String> payload) {
+            if (name == NotificationType.dependency_cache_invalidate.toString()) {
+                dependencyCache.handleInvalidateNotification(payload)
             }
         }
     }
