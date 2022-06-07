@@ -164,23 +164,33 @@ class Whelk {
     }
 
     Map<String, Document> bulkLoad(Collection<String> ids) {
-        Map<String, Document> result = [:]
+        def idMap = [:]
+        def otherIris = []
+        List<String> systemIds = []
         ids.each { id ->
-            Document doc
-
-            // Fetch from DB
             if (id.startsWith(Document.BASE_URI.toString())) {
-                id = Document.BASE_URI.resolve(id).getPath().substring(1)
+                def systemId = Document.BASE_URI.resolve(id).getPath().substring(1)
+                idMap[systemId] = id
+                systemIds << systemId
             }
-            doc = storage.load(id)
-            if (doc == null)
-                doc = storage.getDocumentByIri(id)
-
-            if (doc && !doc.deleted) {
-                result[id] = doc
+            else if (JsonLd.looksLikeIri(id)) {
+                otherIris << id
+            }
+            else {
+                systemIds << id
             }
         }
-        return result
+        if (otherIris) {
+            Map<String, String> idToIri = storage.getSystemIdsByIris(otherIris)
+                    .collectEntries { k, v -> [(v): k] }
+            
+            systemIds.addAll(idToIri.keySet())
+            idMap.putAll(idToIri)
+        }
+        
+        return storage.bulkLoad(systemIds)
+                .findAll { id, doc -> !doc.deleted }
+                .collectEntries { id, doc -> [(idMap.getOrDefault(id, id)) : doc]}
     }
 
     private void reindex(Document updated, Document preUpdateDoc) {
