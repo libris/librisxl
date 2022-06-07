@@ -86,7 +86,7 @@ class PostgreSQLComponent {
 
     private Random random = new Random(System.currentTimeMillis())
 
-    private String whelkId = "${ProcessHandle.current().pid()}@${InetAddress.getLocalHost().getHostName()}"
+    private String whelkInstanceId = "${ProcessHandle.current().pid()}@${InetAddress.getLocalHost().getHostName()}"
 
     // SQL statements
     private static final String UPDATE_DOCUMENT = """
@@ -2574,14 +2574,14 @@ class PostgreSQLComponent {
     }
     
     void sendNotification(NotificationType type, List<String> payload) {
-        int MAX_BYTES_PER_CHAR_UNICODE_BMP = 3
+        int MAX_BYTES_PER_CHAR_UNICODE_BMP = 3 // overly cautious
         def messages = []
-        StringBuilder s = new StringBuilder().append(whelkId)
+        StringBuilder s = new StringBuilder().append(whelkInstanceId)
         
         for (String p : payload) {
             if (s.size() + p.size() + 1 > MAX_PG_NOTIFY_PAYLOAD_BYTES / MAX_BYTES_PER_CHAR_UNICODE_BMP) {
                 messages << s.toString()
-                s = new StringBuilder().append(whelkId)
+                s = new StringBuilder().append(whelkInstanceId)
             }
             s.append(NOTIFICATION_DELIMITER).append(p)
         }
@@ -2643,7 +2643,7 @@ class PostgreSQLComponent {
                 for (PGNotification notification : notifications) {
                     try {
                         String msg = notification.getParameter()
-                        if (!msg.startsWith(whelkId)) {
+                        if (!msg.startsWith(whelkInstanceId)) {
                             handleNotification(notification.getName(), msg.split(NOTIFICATION_DELIMITER).drop(1) as List)
                         }
                     }
