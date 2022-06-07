@@ -38,20 +38,20 @@ class ImporterMain {
         defsImporter.run("definitions")
     }
 
-    @Command(args='SOURCE_URL DATASET_URI',
-             flags='--skip-index --self-described --cache-records --internal-main-ids --allow-merge')
-    void dataset(String sourceUrl, String datasetUri, Map flags) {
+    @Command(args='SOURCE_URL DATASET_URI [DATASET_DESCRIPTION_FILE]',
+             flags='--skip-index --replace-main-ids --force-delete')
+    void dataset(String sourceUrl, String datasetUri, String datasetDescPath=null, Map flags) {
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
         if (flags['skip-index']) {
             whelk.setSkipIndex(true)
         }
-        new DatasetImporter(whelk, datasetUri, flags).importDataset(sourceUrl)
+        new DatasetImporter(whelk, datasetUri, flags, datasetDescPath).importDataset(sourceUrl)
     }
 
-    @Command(args='DATASET_URI')
-    void dropDataset(String datasetUri) {
+    @Command(args='DATASET_URI', flags='--force-delete')
+    void dropDataset(String datasetUri, Map flags) {
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
-        new DatasetImporter(whelk, datasetUri).dropDataset()
+        new DatasetImporter(whelk, datasetUri, flags).dropDataset()
     }
 
     @Command(args='[COLLECTION]')
@@ -217,17 +217,20 @@ class ImporterMain {
     }.collectEntries { [it.name, cmddef(it)]}
 
     static Map cmddef(method) {
+        def flagSpec = method.getAnnotation(Command).flags()
+        if (flagSpec.indexOf('[') == -1) {
+            flagSpec = flagSpec.split(/ /).findResults { it ? "[$it]" : null }.join(' ')
+        }
         return [
             method: method,
             name: method.name,
             argSpec: method.getAnnotation(Command).args(),
-            flagSpec: method.getAnnotation(Command).flags(),
+            flagSpec: flagSpec,
         ]
     }
 
     static String cmdhelp(Map command) {
-        def flaghelp = command.flagSpec ? "[${command.flagSpec}]" : ""
-        return "\t${command.name} ${command.argSpec} ${flaghelp}"
+        return "\t${command.name} ${command.argSpec} ${command.flagSpec}"
     }
 
     static void help() {
@@ -239,13 +242,14 @@ class ImporterMain {
         }
     }
 
-    static void main(String... args) {
-        if (args.length == 0) {
+    static void main(String... argv) {
+        if (argv.length == 0) {
             help()
             System.exit(1)
         }
 
-        def cmd = args[0]
+        def cmd = argv[0]
+        def args = argv.length > 1 ? argv[1..-1] : []
 
         def command = COMMANDS[cmd]
         if (!command) {
@@ -259,9 +263,9 @@ class ImporterMain {
         def flags = [:]
         try {
             if (command.flagSpec) {
-                args[1..-1].each {
+                args.each {
                     if (it.startsWith('--')) {
-                        if (command.flagSpec.indexOf(it) == -1) {
+                        if (command.flagSpec.indexOf("[$it]") == -1) {
                             throw new IllegalArgumentException("Uknown flag: ${it}")
                         }
                         flags[it.substring(2)] = true
@@ -271,7 +275,7 @@ class ImporterMain {
                 }
                 tool."${command.name}"(*arglist, flags)
             } else {
-                arglist = args[1..-1]
+                arglist = args
                 tool."${command.name}"(*arglist)
             }
         } catch (IllegalArgumentException e) {

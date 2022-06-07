@@ -32,6 +32,9 @@ class DatasetInfo {
     }
 
     String mintPredictableRecordSlug(String givenId) {
+        if (createdMs == 0) {
+            throw new RuntimeException("Missing created timestamp for dataset: $uri")
+        }
         String slug = givenId
         long timestamp = createdMs + fauxOffset(slug)
         return IdGenerator.generate(timestamp, slug)
