@@ -2575,9 +2575,9 @@ class PostgreSQLComponent {
     
     void sendNotification(NotificationType type, List<String> payload) {
         int MAX_BYTES_PER_CHAR_UNICODE_BMP = 3 // overly cautious
+        
         def messages = []
         StringBuilder s = new StringBuilder().append(whelkInstanceId)
-        
         for (String p : payload) {
             if (s.size() + p.size() + 1 > MAX_PG_NOTIFY_PAYLOAD_BYTES / MAX_BYTES_PER_CHAR_UNICODE_BMP) {
                 messages << s.toString()
