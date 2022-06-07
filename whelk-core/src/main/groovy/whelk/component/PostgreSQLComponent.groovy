@@ -2643,7 +2643,8 @@ class PostgreSQLComponent {
                     try {
                         String msg = notification.getParameter()
                         if (!msg.startsWith(whelkInstanceId)) {
-                            handleNotification(notification.getName(), msg.split(NOTIFICATION_DELIMITER).drop(1) as List)
+                            def payload = msg.split(NOTIFICATION_DELIMITER).drop(1) as List
+                            handleNotification(notification.getName(), payload)
                         }
                     }
                     catch (Exception e) {
