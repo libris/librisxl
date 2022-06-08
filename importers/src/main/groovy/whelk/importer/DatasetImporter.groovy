@@ -32,6 +32,7 @@ class DatasetImporter {
     Whelk whelk
     String datasetUri
     DatasetInfo dsInfo
+    private Document dsRecord
 
     boolean replaceMainIds = false
     String collection = null
@@ -47,7 +48,7 @@ class DatasetImporter {
         if (datasetDescPath != null) {
             Map givenDsData = (Map) loadData(datasetDescPath)[GRAPH].find { it[ID] == datasetUri  }
             dsInfo = getDatasetInfo(datasetUri, givenDsData)
-            Document dsRecord = completeRecord(givenDsData, 'Record')
+            dsRecord = completeRecord(givenDsData, 'Record')
             createOrUpdateDocument(dsRecord)
         }
 
@@ -72,13 +73,17 @@ class DatasetImporter {
     void importDataset(String sourceUrl) {
         Set<String> idsInInput = []
 
+        if (dsRecord != null) {
+            idsInInput.add(dsRecord.getShortId())
+        }
+
+        String recordType = sourceUrl ==~ /^(https?):.+/ ? 'CacheRecord' : 'Record'
+
         long updatedCount = 0
         long createdCount = 0
         long lineCount = 0
 
         boolean first = true
-
-        String recordType = sourceUrl ==~ /^(https?):.+/ ? 'CacheRecord' : 'Record'
 
         processDataset(sourceUrl) { Map data ->
             if (dsInfo == null) {
