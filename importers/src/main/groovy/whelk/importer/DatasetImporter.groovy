@@ -45,7 +45,7 @@ class DatasetImporter {
         this.whelk = whelk
         this.datasetUri = datasetUri
         if (datasetDescPath != null) {
-            Map givenDsData = (Map) loadData(datasetDescPath)[GRAPH].find { it[ID] == datasetUri  }
+            Map givenDsData = (Map) findInData(loadData(datasetDescPath), datasetUri)
             dsInfo = getDatasetInfo(datasetUri, givenDsData)
             dsRecord = completeRecord(givenDsData, 'Record')
             createOrUpdateDocument(dsRecord)
@@ -134,11 +134,8 @@ class DatasetImporter {
 
     protected DatasetInfo getDatasetInfo(String datasetUri, Map givenData=null) {
         if (givenData) {
-            Map dsData = givenData
-            if (GRAPH in givenData) {
-                dsData = (Map) givenData[GRAPH].find { it[ID] == datasetUri }
-            }
-            if (dsData[ID] != datasetUri) {
+            Map dsData = findInData(givenData, datasetUri)
+            if (dsData == null) {
                 throw new RuntimeException("Provided dataset ${givenData[ID]} does not match: ${datasetUri}")
             }
             return new DatasetInfo(dsData)
@@ -230,6 +227,16 @@ class DatasetImporter {
             } else {
                 throw new RuntimeException("Could not load: $path - unrecognized suffix")
             }
+    }
+
+    private Map findInData(Map data, String id) {
+        if (GRAPH in data) {
+            data = (Map) data[GRAPH].find { it[ID] == id }
+        }
+        if (data[ID] == id) {
+            return data
+        }
+        return null
     }
 
     private Map loadTurtleAsSystemShaped(InputStream ins) {
