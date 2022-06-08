@@ -118,7 +118,7 @@ configurations {
 
 project.afterEvaluate {
     war {
-        archivesBaseName = "vcopyImporter"
+        archivesBaseName = "xlimporter"
 
         from {
             configurations.executableWarDeps.collect {
