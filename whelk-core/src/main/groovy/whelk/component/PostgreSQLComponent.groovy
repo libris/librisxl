@@ -7,7 +7,6 @@ import com.zaxxer.hikari.metrics.prometheus.PrometheusHistogramMetricsTrackerFac
 import groovy.json.StringEscapeUtils
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
-import org.apache.jena.atlas.iterator.Iter
 import org.postgresql.PGStatement
 import org.postgresql.util.PGobject
 import org.postgresql.util.PSQLException
