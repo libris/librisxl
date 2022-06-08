@@ -21,7 +21,6 @@ class DatasetImporter {
     static String GRAPH = JsonLd.GRAPH_KEY
     static String ID = JsonLd.ID_KEY
     static String TYPE = JsonLd.TYPE_KEY
-    static String REVERSE = JsonLd.REVERSE_KEY
 
     static String HASH_IT = '#it'
 
@@ -156,10 +155,6 @@ class DatasetImporter {
     protected Document completeRecord(Map data, String recordType) {
         if (GRAPH !in data) {
             data = makeSystemRecordData(data, recordType)
-        }
-
-        if (REVERSE in data) {
-            Map revs = data.remove(REVERSE)
         }
 
         normalizeLinks(data)
