@@ -511,6 +511,10 @@ class JsonLd {
         return (o instanceof List) ? (List) o : o != null ? [o] : []
     }
 
+    static boolean looksLikeIri(String s) {
+        s && (s.startsWith('https://') || s.startsWith('http://'))
+    }
+
     static List<List<String>> findPaths(Map obj, String key, String value) {
         return findPaths(obj, key, [value].toSet())
     }

@@ -118,6 +118,12 @@ class PostgreSQLComponent {
     private static final String GET_DOCUMENT_VERSION =
             "SELECT id, data FROM lddb__versions WHERE id = ? AND checksum = ?"
 
+    private static final String BULK_LOAD_DOCUMENTS = """
+            SELECT id, data, created, modified, deleted
+            FROM unnest(?) AS in_id, lddb l 
+            WHERE in_id = l.id
+            """.stripIndent()
+    
     private static final String GET_EMBELLISHED_DOCUMENT =
             "SELECT data from lddb__embellished where id = ?"
 
@@ -1826,6 +1832,27 @@ class PostgreSQLComponent {
             doc = loadFromSql(GET_DOCUMENT, [1: id])
         }
         return doc
+    }
+    
+    Map<String, Document> bulkLoad(Iterable<String> systemIds) {
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            try {
+                preparedStatement = connection.prepareStatement(BULK_LOAD_DOCUMENTS)
+                preparedStatement.setArray(1,  connection.createArrayOf("TEXT", systemIds as String[]))
+
+                rs = preparedStatement.executeQuery()
+                SortedMap<String, Document> result = new TreeMap<>()
+                while(rs.next()) {
+                    result[rs.getString("id")] = assembleDocument(rs)
+                }
+                return result
+            } finally {
+                close(rs, preparedStatement)
+            }
+        }
     }
 
     String getSystemIdByIri(String iri) {
