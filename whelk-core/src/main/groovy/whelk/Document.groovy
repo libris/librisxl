@@ -895,4 +895,7 @@ class Document {
         jsonLd && key && jsonLd.isSetContainer(key)
     }
 
+    public String toVerboseString() {
+        return "{completeId=" + getCompleteId() + ", baseUri=" + baseUri.toString() + ", base identifiers:" + getRecordIdentifiers().join(',');
+    }
 }

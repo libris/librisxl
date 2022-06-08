@@ -161,7 +161,11 @@ class ElasticSearch {
                     String action = createActionRow(doc)
                     return "${action}\n${shapedData}\n"
                 } catch (Exception e) {
-                    log.error("Failed to index ${doc.getShortId()} in elastic: $e", e)
+                    if (doc.getShortId() == null) {
+                        log.error("Document has null shortId, something is wrong. Some details: " + doc.toVerboseString(), e);
+                    } else {
+                        log.error("Failed to index ${doc.getShortId()} in elastic: $e", e)
+                    }
                     return null
                 }
             }.join('')
