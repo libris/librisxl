@@ -161,8 +161,10 @@ class DatasetImporter {
         doc.addInDataset(dsInfo.uri)
 
         List<String> thingIds = doc.getThingIdentifiers()
-        if (dsInfo.uriRegexPattern && !thingIds.any { dsInfo.uriRegexPattern.matcher(it).matches() }) {
-            throw new RuntimeException("None of ${thingIds} does not match ${dsInfo.uriRegexPattern}")
+        if (dsInfo.uriRegexPattern && !thingIds.any {
+            it == dsInfo.uri || dsInfo.uriRegexPattern.matcher(it).matches()
+        }) {
+            throw new RuntimeException("None of ${thingIds} matches ${dsInfo.uriRegexPattern}")
         }
 
         return doc
