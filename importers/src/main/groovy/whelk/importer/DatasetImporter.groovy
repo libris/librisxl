@@ -11,6 +11,7 @@ import whelk.Whelk
 import whelk.converter.TrigToJsonLdParser
 import whelk.exception.CancelUpdateException
 import whelk.util.DocumentUtil
+import static whelk.util.LegacyIntegrationTools.NO_MARC_COLLECTION
 
 import static whelk.util.Jackson.mapper
 
@@ -34,7 +35,7 @@ class DatasetImporter {
     private Document dsRecord
 
     boolean replaceMainIds = false
-    String collection = null
+    String collection = NO_MARC_COLLECTION
 
     TargetVocabMapper tvm = null
     Map contextDocData = null
@@ -52,7 +53,6 @@ class DatasetImporter {
         }
 
         replaceMainIds = flags.get(REPLACE_MAIN_IDS) == true
-        collection = "none"
 
         if (Runtime.getRuntime().maxMemory() < 2l * 1024l * 1024l * 1024l) {
             log.warn("This application may require substantial amounts of memory, " +
