@@ -137,7 +137,7 @@ class DatasetImporter {
             if (dsData[ID] != datasetUri) {
                 throw new RuntimeException("Provided dataset ${givenData[ID]} does not match: ${datasetUri}")
             }
-            return new DatasetInfo(givenData)
+            return new DatasetInfo(dsData)
         }
         Document datasetRecord = whelk.storage.getDocumentByIri(datasetUri)
         if (datasetRecord == null) {
