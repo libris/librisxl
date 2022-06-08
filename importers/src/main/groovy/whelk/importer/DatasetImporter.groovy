@@ -52,7 +52,7 @@ class DatasetImporter {
         }
 
         replaceMainIds = flags.get(REPLACE_MAIN_IDS) == true
-        collection = "definitions" // TODO: legacy construct; prefer to keep this as null?
+        collection = "none"
 
         if (Runtime.getRuntime().maxMemory() < 2l * 1024l * 1024l * 1024l) {
             log.warn("This application may require substantial amounts of memory, " +
