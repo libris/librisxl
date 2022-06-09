@@ -1179,23 +1179,23 @@ class JsonLd {
         }
     }
 
-    private static Map embed(String mainId, Map mainItem, Map idMap, Set embedChain) {
+    private static Map embed(String mainId, Map mainItem, Map idMap, Set embedChain, int depth = 0) {
         embedChain.add(mainId)
         Map newItem = [:]
         mainItem.each { key, value ->
             if (key != JSONLD_ALT_ID_KEY)
-                newItem.put(key, toEmbedded(value, idMap, embedChain))
+                newItem.put(key, toEmbedded(value, idMap, embedChain, depth))
             else
                 newItem.put(key, value)
         }
         return newItem
     }
 
-    private static Object toEmbedded(Object o, Map idMap, Set embedChain) {
+    private static Object toEmbedded(Object o, Map idMap, Set embedChain, int depth) {
         if (o instanceof List) {
             def newList = []
             o.each {
-                newList.add(toEmbedded(it, idMap, embedChain))
+                newList.add(toEmbedded(it, idMap, embedChain, depth))
             }
             return newList
         }
@@ -1209,7 +1209,9 @@ class JsonLd {
                 obj = fullObj ? [:] + fullObj : null
             }
             if (obj) {
-                return embed(oId, obj, idMap, new HashSet<String>(embedChain))
+                return depth < 2
+                        ? embed(oId, obj, idMap, new HashSet<String>(embedChain), depth + 1)
+                        : obj
             }
         }
         return o
