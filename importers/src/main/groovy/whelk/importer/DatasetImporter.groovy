@@ -11,6 +11,7 @@ import whelk.Whelk
 import whelk.converter.TrigToJsonLdParser
 import whelk.exception.CancelUpdateException
 import whelk.util.DocumentUtil
+import static whelk.util.LegacyIntegrationTools.NO_MARC_COLLECTION
 
 import static whelk.util.Jackson.mapper
 
@@ -34,7 +35,7 @@ class DatasetImporter {
     private Document dsRecord
 
     boolean replaceMainIds = false
-    String collection = null
+    String collection = NO_MARC_COLLECTION
 
     TargetVocabMapper tvm = null
     Map contextDocData = null
@@ -52,7 +53,6 @@ class DatasetImporter {
         }
 
         replaceMainIds = flags.get(REPLACE_MAIN_IDS) == true
-        collection = "none"
 
         if (Runtime.getRuntime().maxMemory() < 2l * 1024l * 1024l * 1024l) {
             log.warn("This application may require substantial amounts of memory, " +
@@ -93,7 +93,7 @@ class DatasetImporter {
             }
             first = false
 
-            Document incomingDoc = completeRecord(data, recordType)
+            Document incomingDoc = completeRecord(data, recordType, true)
             idsInInput.add(incomingDoc.getShortId())
 
             // This race condition should be benign. If there is a document with
@@ -149,9 +149,13 @@ class DatasetImporter {
         return new DatasetInfo(datasetData)
     }
 
-    protected Document completeRecord(Map data, String recordType) {
+    protected Document completeRecord(Map data, String recordType, boolean remap = false) {
         if (GRAPH !in data) {
             data = makeSystemRecordData(data, recordType)
+        }
+
+        if (remap) {
+            applyMappings((Map) ((List) data[GRAPH])[1])
         }
 
         normalizeLinks(data)
@@ -161,8 +165,10 @@ class DatasetImporter {
         doc.addInDataset(dsInfo.uri)
 
         List<String> thingIds = doc.getThingIdentifiers()
-        if (dsInfo.uriRegexPattern && !thingIds.any { dsInfo.uriRegexPattern.matcher(it).matches() }) {
-            throw new RuntimeException("None of ${thingIds} does not match ${dsInfo.uriRegexPattern}")
+        if (dsInfo.uriRegexPattern && !thingIds.any {
+            it == dsInfo.uri || dsInfo.uriRegexPattern.matcher(it).matches()
+        }) {
+            throw new RuntimeException("None of ${thingIds} matches ${dsInfo.uriRegexPattern}")
         }
 
         return doc
@@ -186,6 +192,14 @@ class DatasetImporter {
         record['mainEntity'] = [(ID): data[ID]]
 
         return [(GRAPH): [record, data]]
+    }
+
+    protected void applyMappings(Map mainEntity) {
+        String type = mainEntity[TYPE]
+        String mappedType = dsInfo.classMap[type]
+        if (mappedType) {
+            mainEntity[TYPE] = mappedType
+        }
     }
 
     @CompileStatic(SKIP)

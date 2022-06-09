@@ -17,6 +17,7 @@ class DatasetInfo {
     long createdMs
     String uriSpace
     Pattern uriRegexPattern
+    Map<String, String> classMap = [:]
 
     DatasetInfo(Map data) {
         uri = data[ID]
@@ -28,6 +29,22 @@ class DatasetInfo {
         String created = (String) data['created']
         if (created != null) {
             createdMs = parseW3CDateTime(created)
+        }
+        setupMappings(data)
+    }
+
+    void setupMappings(Map data) {
+        def dsClass = data['datasetClass']
+        if (dsClass instanceof Map) {
+            def replaceType = dsClass.get('broadType') ?:
+                                 dsClass.get('narrowType') ?: null
+            if (replaceType instanceof String) {
+                def useType = dsClass.get('exactType') ?:
+                                 dsClass.get('closeType') ?: null
+                if (useType instanceof String) {
+                    classMap.put(replaceType, useType)
+                }
+            }
         }
     }
 
