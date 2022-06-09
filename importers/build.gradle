@@ -81,7 +81,7 @@ dependencies {
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
 
     // profiling and test
-    testImplementation 'org.spockframework:spock-core:2.0-groovy-3.0'
+    testImplementation "org.spockframework:spock-core:${spockVersion}"
     testImplementation 'cglib:cglib-nodep:3.1'
     implementation "org.codehaus.groovy:groovy-json:${groovyVersion}"
     implementation "org.codehaus.groovy:groovy-sql:${groovyVersion}"
@@ -93,7 +93,10 @@ dependencies {
 // Include dependent libraries in archive.
 jar {
     manifest {
-        attributes "Main-Class": "whelk.importer.ImporterMain"
+        attributes "Main-Class": "whelk.importer.ImporterMain",
+                // log4j uses multi-release to ship different stack walking implementations for different java
+                // versions. Since we repackage everything as a fat jar, that jar must also be multi-release.
+                "Multi-Release": true
     }
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -115,7 +118,7 @@ configurations {
 
 project.afterEvaluate {
     war {
-        archivesBaseName = "vcopyImporter"
+        archivesBaseName = "xlimporter"
 
         from {
             configurations.executableWarDeps.collect {

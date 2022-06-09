@@ -13,6 +13,7 @@ import whelk.exception.ModelValidationException
 import whelk.rest.security.AccessControl
 import whelk.util.LegacyIntegrationTools
 
+import javax.servlet.ReadListener
 import javax.servlet.ServletInputStream
 import javax.servlet.ServletOutputStream
 import javax.servlet.http.HttpServletRequest
@@ -94,8 +95,14 @@ class CrudSpec extends Specification {
             ["@id": "creationDate"],
             ["@id": "code"],
             ["@id": "mainEntity"],
+            ["@id": "Record"],
+            ["@id": "Item"],
+            ["@id": "Work"],
         ]]
         whelk.setJsonld(new JsonLd(whelk.contextData, whelk.displayData, whelk.vocabData))
+        // NB!! Mocking of static methods e.g. LegacyIntegrationTools.determineLegacyCollection
+        // does not work if they are called directly from Crud class
+        // TODO?: replace mocking with properly initiated vocab in tests so that regular determineLegacyCollection works?
         GroovySpy(LegacyIntegrationTools.class, global: true)
         crud = new Crud(whelk)
         crud.init()
@@ -208,6 +215,7 @@ class CrudSpec extends Specification {
         request.getPathInfo() >> {
             '/' + id
         }
+        request.getMethod() >> "GET"
         storage.load(_, _) >> {
             return null
         }
@@ -232,6 +240,7 @@ class CrudSpec extends Specification {
         request.getHeader("Accept") >> {
             "*/*"
         }
+        request.getMethod() >> "GET"
         storage.load(_, _) >> {
             return null
         }
@@ -255,6 +264,9 @@ class CrudSpec extends Specification {
         }
         request.getHeader("Accept") >> {
             "*/*"
+        }
+        request.getMethod() >> {
+            "GET"
         }
         storage.load(_, _) >> {
             Document doc = new Document(["@graph": [["@id": id, "foo": "bar"]]])
@@ -300,6 +312,7 @@ class CrudSpec extends Specification {
         request.getQueryString() >> {
             return 'version=1'
         }
+        request.getMethod() >> "GET"
         storage.load(_, _, _) >> {
             return null
         }
@@ -468,16 +481,16 @@ class CrudSpec extends Specification {
 
         where:
         // checksum             -1856152111
-        // checksum embellished -5527328642
+        // checksum embellished -5620206737
 
         embellished | eTag                      || status
         false       | '-1856152111'             || SC_NOT_MODIFIED
-        false       | "-1856152111:-5527328642" || SC_NOT_MODIFIED
+        false       | "-1856152111:-5620206737" || SC_NOT_MODIFIED
         false       | "-1856152111:other"       || SC_NOT_MODIFIED
         false       | "other"                   || SC_OK
 
         true        | '-1856152111'             || SC_OK
-        true        | '-1856152111:-5527328642' || SC_NOT_MODIFIED
+        true        | '-1856152111:-5620206737' || SC_NOT_MODIFIED
         true        | "-1856151741:other"       || SC_OK
         true        | "other"                   || SC_OK
     }
@@ -491,6 +504,9 @@ class CrudSpec extends Specification {
         }
         request.getHeader("Accept") >> {
             acceptContentType
+        }
+        request.getMethod() >> {
+            "GET"
         }
         storage.load(_, _) >> {
             new Document(["@graph": [
@@ -714,6 +730,9 @@ class CrudSpec extends Specification {
         request.getParameter("lens") >> {
             "invalid"
         }
+        request.getMethod() >> {
+            "GET"
+        }
         storage.load(_, _) >> {
             return new Document(["@graph": [["@id": id, "foo": "bar"]]])
         }
@@ -783,9 +802,9 @@ class CrudSpec extends Specification {
     // Tests for create
     def "POST to / should create document with generated @id"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(["@graph": [
+        request.getInputStream() >> {
+            return new ServletInputStreamMock(mapper.writeValueAsBytes(
+                ["@graph": [
                     [
                             "@type"     : "Record",
                             "@id"       : "some_temporary_id",
@@ -795,10 +814,8 @@ class CrudSpec extends Specification {
                     [
                             "@id": "some_temporary_thing_id"
                     ]
-            ]])
-        }
-        request.getInputStream() >> {
-            is
+                ]]
+            ))
         }
         request.getPathInfo() >> {
             "/"
@@ -834,12 +851,8 @@ class CrudSpec extends Specification {
 
     def "POST to / should return 400 Bad Request on empty content"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
-        is.getBytes() >> {
-            new byte[0]
-        }
         request.getInputStream() >> {
-            is
+            return new ServletInputStreamMock(new byte[0])
         }
         request.getPathInfo() >> {
             "/"
@@ -861,12 +874,8 @@ class CrudSpec extends Specification {
 
     def "POST to / should return 400 Bad Request on form content-type"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
-        is.getBytes() >> {
-            new String("foobar").getBytes("UTF-8")
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(new String("foobar").getBytes("UTF-8"))
         }
         request.getPathInfo() >> {
             "/"
@@ -890,12 +899,8 @@ class CrudSpec extends Specification {
     @Unroll
     def "POST to / should return 400 Bad Request if @id is missing, record/thing @id are equivalent, or mainEntity.@id not same as thing @id"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(data)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(data))
         }
         request.getPathInfo() >> {
             "/"
@@ -977,7 +982,6 @@ class CrudSpec extends Specification {
 
     def "POST to / should return 403 Forbidden if user has insufficient privilege"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
                                     "mainEntity": ["@id": "/work_id"],
@@ -988,11 +992,9 @@ class CrudSpec extends Specification {
                                     "contains": "some new data",
                                     "heldBy":
                                             ["code": "Ting"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(postData)
-        }
+
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(postData))
         }
         request.getPathInfo() >> {
             "/"
@@ -1038,7 +1040,6 @@ class CrudSpec extends Specification {
 
     def "POST to / should create document of type Item"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
                                     "mainEntity": ["@id": "/item_id"],
@@ -1049,11 +1050,8 @@ class CrudSpec extends Specification {
                                     "contains": "some new data",
                                     "heldBy":
                                             ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(postData)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(postData))
         }
         request.getPathInfo() >> {
             "/"
@@ -1091,7 +1089,6 @@ class CrudSpec extends Specification {
 
     def "POST to / should create document of type Work"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
                                     "mainEntity": ["@id": "/work_id"],
@@ -1102,11 +1099,8 @@ class CrudSpec extends Specification {
                                     "contains": "some new data",
                                     "heldBy":
                                             ["code": "S"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(postData)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(postData))
         }
         request.getPathInfo() >> {
             "/"
@@ -1152,7 +1146,6 @@ class CrudSpec extends Specification {
 
     def "POST to / should create the document if at least one privilege is valid"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
                                     "mainEntity": ["@id": "/item_id"],
@@ -1163,11 +1156,8 @@ class CrudSpec extends Specification {
                                     "contains": "some new data",
                                     "heldBy":
                                             ["code": "Ting"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(postData)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(postData))
         }
         request.getPathInfo() >> {
             "/"
@@ -1216,7 +1206,6 @@ class CrudSpec extends Specification {
 
     def "POST to / should return 400 Bad Request if no sigel found in document"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
                                     "contains": "some data",
@@ -1224,11 +1213,8 @@ class CrudSpec extends Specification {
                                    ["@id": "/item_id",
                                     "@type": "Item",
                                     "contains": "some new data"]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(postData)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(postData))
         }
         request.getPathInfo() >> {
             "/"
@@ -1274,7 +1260,6 @@ class CrudSpec extends Specification {
 
     def "POST to / should return 403 Forbidden if no user information"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
                                     "mainEntity": ["@id": "/item_id"],
@@ -1285,11 +1270,8 @@ class CrudSpec extends Specification {
                                     "contains": "some new data",
                                     "heldBy":
                                             ["code": "S"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(postData)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(postData))
         }
         request.getPathInfo() >> {
             "/"
@@ -1329,7 +1311,6 @@ class CrudSpec extends Specification {
 
     def "POST to / should return 403 Forbidden if document is not a holding"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
                                     "mainEntity": ["@id": "/instance_id"],
@@ -1340,11 +1321,8 @@ class CrudSpec extends Specification {
                                     "contains": "some new data",
                                     "heldBy":
                                             ["code": "S"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(postData)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(postData))
         }
         request.getPathInfo() >> {
             "/"
@@ -1390,7 +1368,6 @@ class CrudSpec extends Specification {
 
     def "POST to / should return 400 Bad Request if unable to check access"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
                                     "contains": "some data",
@@ -1400,11 +1377,8 @@ class CrudSpec extends Specification {
                                     "contains": "some new data",
                                     "heldBy":
                                             ["code": "Ting"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(postData)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(postData))
         }
         request.getPathInfo() >> {
             "/"
@@ -1453,7 +1427,6 @@ class CrudSpec extends Specification {
 
     def "POST to / should create non-holding if user has kat permission"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
                                     "mainEntity": ["@id": "/work_id"],
@@ -1464,11 +1437,8 @@ class CrudSpec extends Specification {
                                     "contains": "some new data",
                                     "heldBy":
                                             ["code": "S"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(postData)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(postData))
         }
         request.getPathInfo() >> {
             "/"
@@ -1514,7 +1484,6 @@ class CrudSpec extends Specification {
 
     def "POST to / should return 403 Forbidden if missing kat permission"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
                                     "mainEntity": ["@id": "/work_id"],
@@ -1525,11 +1494,8 @@ class CrudSpec extends Specification {
                                     "contains": "some new data",
                                     "heldBy":
                                             ["code": "S"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(postData)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(postData))
         }
         request.getPathInfo() >> {
             "/"
@@ -1575,7 +1541,6 @@ class CrudSpec extends Specification {
 
     def "POST to / should create holding if user has kat permission for code"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
                                     "mainEntity": ["@id": "/work_id"],
@@ -1586,11 +1551,8 @@ class CrudSpec extends Specification {
                                     "contains": "some new data",
                                     "heldBy":
                                             ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(postData)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(postData))
         }
         request.getPathInfo() >> {
             "/"
@@ -1636,7 +1598,6 @@ class CrudSpec extends Specification {
 
     def "POST to / should create holding if user has global registrant permission for active sigel"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
                                     "mainEntity": ["@id": "/work_id"],
@@ -1647,11 +1608,8 @@ class CrudSpec extends Specification {
                                     "contains": "some new data",
                                     "heldBy":
                                             ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(postData)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(postData))
         }
         request.getPathInfo() >> {
             "/"
@@ -1699,7 +1657,6 @@ class CrudSpec extends Specification {
 
     def "POST to / should return 403 Forbidden create holding if user is global registrant but not active"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
                                     "mainEntity": ["@id": "/work_id"],
@@ -1710,11 +1667,8 @@ class CrudSpec extends Specification {
                                     "contains": "some new data",
                                     "heldBy":
                                             ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(postData)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(postData))
         }
         request.getPathInfo() >> {
             "/"
@@ -1761,7 +1715,6 @@ class CrudSpec extends Specification {
     }
 
     def "POST to / should return 403 Forbidden if missing kat permission for code"() {
-        def is = GroovyMock(ServletInputStream.class)
         def postData = ["@graph": [["@id": "/some_id",
                                     "@type": "Record",
                                     "mainEntity": ["@id": "/work_id"],
@@ -1772,11 +1725,8 @@ class CrudSpec extends Specification {
                                     "contains": "some new data",
                                     "heldBy":
                                             ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(postData)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(postData))
         }
         request.getPathInfo() >> {
             "/"
@@ -1824,12 +1774,8 @@ class CrudSpec extends Specification {
 
     def "PUT to /<id> should return 400 Bad Request on empty content"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
-        is.getBytes() >> {
-            new byte[0]
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(new byte[0]))
         }
         request.getPathInfo() >> {
             "/some_id"
@@ -1851,12 +1797,8 @@ class CrudSpec extends Specification {
 
     def "PUT to /<id> should return 400 Bad Request on form content-type"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
-        is.getBytes() >> {
-            new String("foobar").getBytes("UTF-8")
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(new String("foobar").getBytes("UTF-8"))
         }
         request.getPathInfo() >> {
             "/some_id"
@@ -1890,12 +1832,8 @@ class CrudSpec extends Specification {
                                       "@type": "Record",
                                       "created": createdDate,
                                       "contains": "some updated data"]]]
-        def is = GroovyMock(ServletInputStream.class)
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
         request.getPathInfo() >> {
             "/1234"
@@ -1957,12 +1895,8 @@ class CrudSpec extends Specification {
                                       "sameAs": [["@id": altId]],
                                       "created": createdDate,
                                       "contains": "some updated data"]]]
-        def is = GroovyMock(ServletInputStream.class)
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
         request.getPathInfo() >> {
             altId
@@ -2010,16 +1944,12 @@ class CrudSpec extends Specification {
 
     def "PUT to /<id> should return 404 Not Found if document does not exist"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def id = BASE_URI.resolve("/bad_id").toString()
         def putData = ["@graph": [["@id": id,
                                    "@type": "Record",
                                    "contains": "some new data"]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(putData)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(putData))
         }
         request.getPathInfo() >> {
             "/bad_id"
@@ -2055,15 +1985,11 @@ class CrudSpec extends Specification {
 
     def "PUT to /<id> should return 400 Bad Request if ID in document is missing"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def id = BASE_URI.resolve("/some_id").toString()
         def putData = ["@graph": [["@type": "Record",
                                    "contains": "some new data"]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(putData)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(putData))
         }
         request.getPathInfo() >> {
             id
@@ -2099,7 +2025,6 @@ class CrudSpec extends Specification {
 
     def "PUT to /<id> should return 400 Bad Request if record ID has been changed"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def id = BASE_URI.resolve("/some_id").toString()
         def doc = ["@graph": [["@id": id,
                                "@type": "Record",
@@ -2107,11 +2032,8 @@ class CrudSpec extends Specification {
         def putData = ["@graph": [["@id": id + "_changed",
                                    "@type": "Record",
                                    "contains": "some new data"]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(putData)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(putData))
         }
         request.getPathInfo() >> {
             "/some_other_id"
@@ -2150,7 +2072,6 @@ class CrudSpec extends Specification {
 
     def "PUT to /<id> should return 400 Bad Request if collection has been changed"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def modifiedDate = new Date()
         def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
@@ -2171,11 +2092,8 @@ class CrudSpec extends Specification {
                                      ["@id": "/id",
                                       "@type": "Instance",
                                       "contains": "some new other data"]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
         request.getPathInfo() >> {
             id
@@ -2224,7 +2142,6 @@ class CrudSpec extends Specification {
 
     def "PUT to /<id> should return 403 Forbidden if user has insufficient privilege"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def modifiedDate = new Date()
         def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
@@ -2249,11 +2166,8 @@ class CrudSpec extends Specification {
                                       "contains": "some new other data",
                                       "heldBy":
                                               ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
         request.getPathInfo() >> {
             id
@@ -2295,7 +2209,6 @@ class CrudSpec extends Specification {
 
     def "PUT to /<id> should return 403 Forbidden if it is mismatch between sigel in the documents"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def modifiedDate = new Date()
         def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
@@ -2320,11 +2233,8 @@ class CrudSpec extends Specification {
                                       "contains": "some new other data",
                                       "heldBy":
                                               ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
         request.getPathInfo() >> {
             id
@@ -2366,7 +2276,6 @@ class CrudSpec extends Specification {
 
     def "PUT to /<id> should return 403 Forbidden if new content is not a holding"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def modifiedDate = new Date()
         def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
@@ -2391,12 +2300,10 @@ class CrudSpec extends Specification {
                                       "contains": "some new other data",
                                       "heldBy":
                                               ["code": "Ting"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
+
         request.getPathInfo() >> {
             id
         }
@@ -2436,7 +2343,6 @@ class CrudSpec extends Specification {
 
     def "PUT to /<id> should return 403 Forbidden if old content is not a holding"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def modifiedDate = new Date()
         def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
@@ -2461,11 +2367,8 @@ class CrudSpec extends Specification {
                                       "contains": "some new other data",
                                       "heldBy":
                                               ["code": "Ting"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
         request.getPathInfo() >> {
             id
@@ -2506,7 +2409,6 @@ class CrudSpec extends Specification {
 
     def "PUT to /<id> should return 403 Forbidden if no match on sigel in user privileges"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def modifiedDate = new Date()
         def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
@@ -2531,11 +2433,8 @@ class CrudSpec extends Specification {
                                       "contains": "some new other data",
                                       "heldBy":
                                               ["code": "Foo", "@id":"https://libris.kb.se/library/Foo"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
         request.getPathInfo() >> {
             id
@@ -2577,7 +2476,6 @@ class CrudSpec extends Specification {
 
     def "PUT to /<id> should return 403 Forbidden if missing sigel in old document and no permission for new"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def modifiedDate = new Date()
         def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
@@ -2600,11 +2498,8 @@ class CrudSpec extends Specification {
                                       "contains": "some new other data",
                                       "heldBy":
                                               ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
         request.getPathInfo() >> {
             id
@@ -2646,7 +2541,6 @@ class CrudSpec extends Specification {
 
     def "PUT to /<id> - Registrant can correct missing sigel in holding"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
         def id = "/1234"
@@ -2667,11 +2561,8 @@ class CrudSpec extends Specification {
                                       "contains": "some other data",
                                       "heldBy":
                                               ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
         request.getPathInfo() >> {
             id
@@ -2719,7 +2610,6 @@ class CrudSpec extends Specification {
 
     def "PUT to /<id> - Global registrant can correct missing sigel in holding"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
         def id = "/1234"
@@ -2740,11 +2630,8 @@ class CrudSpec extends Specification {
                                       "contains": "some other data",
                                       "heldBy":
                                               ["code": "Sing", "@id":"https://libris.kb.se/library/Sing"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
         request.getPathInfo() >> {
             id
@@ -2794,7 +2681,6 @@ class CrudSpec extends Specification {
 
     def "PUT to /<id> should return 400 Bad Request if missing sigel in new document"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def modifiedDate = new Date()
         def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
@@ -2817,11 +2703,8 @@ class CrudSpec extends Specification {
                                      ["@id": "/itemId",
                                       "@type": "Item",
                                       "contains": "some new other data"]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
         request.getPathInfo() >> {
             id
@@ -2862,7 +2745,6 @@ class CrudSpec extends Specification {
 
     def "PUT to /<id> should return 403 Forbidden if no user information"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def modifiedDate = new Date()
         def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
@@ -2887,11 +2769,8 @@ class CrudSpec extends Specification {
                                       "contains": "some new other data",
                                       "heldBy":
                                               ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
         request.getPathInfo() >> {
             id
@@ -2924,7 +2803,6 @@ class CrudSpec extends Specification {
 
     def "PUT to /<id> should update content of type holding"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def modifiedDate = new Date()
         def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
@@ -2949,11 +2827,8 @@ class CrudSpec extends Specification {
                                       "contains": "some new other data",
                                       "heldBy":
                                               ["code": "Ting", "@id":"https://libris.kb.se/library/Ting"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
         request.getPathInfo() >> {
             id
@@ -3002,7 +2877,6 @@ class CrudSpec extends Specification {
 
     def "PUT to /<id> should update content of type Work"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def modifiedDate = new Date()
         def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
@@ -3023,11 +2897,8 @@ class CrudSpec extends Specification {
                                      ["@id": "/workId",
                                       "@type": "Work",
                                       "contains": "some new other data"]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
         request.getPathInfo() >> {
             id
@@ -3079,7 +2950,6 @@ class CrudSpec extends Specification {
 
     def "PUT to /<id> should return 400 Bad Request if unable to check access"() {
         given:
-        def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def modifiedDate = new Date()
         def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
@@ -3104,11 +2974,8 @@ class CrudSpec extends Specification {
                                       "contains": "some new other data",
                                       "heldBy":
                                               ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
         request.getPathInfo() >> {
             id
@@ -3152,7 +3019,6 @@ class CrudSpec extends Specification {
     }
 
     def "PUT to /<id> should return 403 Forbidden if missing kat permission"() {
-        def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def modifiedDate = new Date()
         def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
@@ -3177,11 +3043,8 @@ class CrudSpec extends Specification {
                                       "contains": "some new other data",
                                       "heldBy":
                                               ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
         request.getPathInfo() >> {
             id
@@ -3217,7 +3080,6 @@ class CrudSpec extends Specification {
     }
 
     def "PUT to /<id> should update holding if user has kat permission for code"() {
-        def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def modifiedDate = new Date()
         def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
@@ -3242,11 +3104,8 @@ class CrudSpec extends Specification {
                                       "contains": "some new other data",
                                       "heldBy":
                                               ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
         request.getPathInfo() >> {
             id
@@ -3290,7 +3149,6 @@ class CrudSpec extends Specification {
     }
 
     def "PUT to /<id> should return 403 Forbidden if missing kat permission for code"() {
-        def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def modifiedDate = new Date()
         def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
@@ -3315,11 +3173,8 @@ class CrudSpec extends Specification {
                                       "contains": "some new other data",
                                       "heldBy":
                                               ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
         request.getPathInfo() >> {
             id
@@ -3357,7 +3212,6 @@ class CrudSpec extends Specification {
 
 
     def "PUT to /<id> should update holding if user has global registrant permission active"() {
-        def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def modifiedDate = new Date()
         def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
@@ -3382,11 +3236,8 @@ class CrudSpec extends Specification {
                                       "contains": "some new other data",
                                       "heldBy":
                                               ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
         request.getPathInfo() >> {
             id
@@ -3435,7 +3286,6 @@ class CrudSpec extends Specification {
     }
 
     def "PUT to /<id> should return 403 Forbidden if user has global registrant permission but not active"() {
-        def is = GroovyMock(ServletInputStream.class)
         def createdDate = "2009-04-21T00:00:00.0+02:00"
         def modifiedDate = new Date()
         def dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
@@ -3460,11 +3310,8 @@ class CrudSpec extends Specification {
                                       "contains": "some new other data",
                                       "heldBy":
                                               ["code": "S", "@id":"https://libris.kb.se/library/S"]]]]
-        is.getBytes() >> {
-            mapper.writeValueAsBytes(newContent)
-        }
         request.getInputStream() >> {
-            is
+            new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
         request.getPathInfo() >> {
             id
@@ -4147,5 +3994,34 @@ class CrudSpec extends Specification {
         then:
         response.getStatus() == HttpServletResponse.SC_FORBIDDEN
     }
+    
+    class ServletInputStreamMock extends ServletInputStream {
 
+        ByteArrayInputStream is
+
+        ServletInputStreamMock(byte[] bytes) {
+            is = new ByteArrayInputStream(bytes)
+        }
+        
+        @Override
+        boolean isFinished() {
+            return is.available() == 0
+        }
+
+        @Override
+        boolean isReady() {
+            return true
+        }
+
+        @Override
+        void setReadListener(ReadListener readListener) {
+
+        }
+
+        @Override
+        int read() throws IOException {
+            return is.read()
+        }
+
+    }
 }

@@ -2655,6 +2655,8 @@
         "copyIfMissing": [
           "publication",
           "extent",
+          "responsibilityStatement",
+          "editionStatement",
           {
             "from": "identifiedBy",
             "to": "indirectlyIdentifiedBy",
@@ -2679,10 +2681,13 @@
                         "year": "1773"
                       }
                     ],
+                    "responsibilityStatement": "av författaren",
+                    "editionStatement" : ["Första utgåvan"],
                     "extent": {"@type": "Extent", "label": ["259 s."]},
                     "identifiedBy": [
                       {"@type": "ISBN", "value": "00-0-000000-0"}
-                    ]
+                    ],
+                    "hasNote": [{"@type": "Note", "label": "Anmärkning"}]
                   }
                 ]
               }
@@ -2698,10 +2703,13 @@
                         "year": "1773"
                       }
                     ],
+                    "responsibilityStatement": "av författaren",
+                    "editionStatement" : ["Första utgåvan"],
                     "extent": {"@type": "Extent", "label": ["259 s."]},
                     "identifiedBy": [
                       {"@type": "ISBN", "value": "00-0-000000-0"}
-                    ]
+                    ],
+                    "hasNote": [{"@type": "Note", "label": "Anmärkning"}]
                   }
                 ],
                 "publication": [
@@ -2711,6 +2719,8 @@
                     "appliesTo": {"@type": "Resource", "label": "[original]"}
                   }
                 ],
+                "responsibilityStatement": "av författaren",
+                "editionStatement" : ["Första utgåvan"],
                 "extent": {"@type": "Extent", "label": ["259 s."], "appliesTo": {"@type": "Resource", "label": "[original]"}},
                 "indirectlyIdentifiedBy": [
                   {"@type": "ISBN", "value": "00-0-000000-0", "qualifier": "original"}
@@ -6448,7 +6458,7 @@
       "include": ["identifier"],
       "match": [
         {
-          "when": "i1=7 & $2 =~ ansi|ANSI|danacode|doi|DOI|hdl|HDL|isan|ISAN|iso|ISO|istc|ISTC|iswc|ISWC|uri|URI|urn|URN",
+          "when": "i1=7 & $2 =~ ansi|ANSI|danacode|doi|DOI|gtin-14|hdl|HDL|isan|ISAN|iso|ISO|istc|ISTC|iswc|ISWC|uri|URI|urn|URN",
           "i1": null,
           "$2": {
             "property": "@type",
@@ -6459,6 +6469,7 @@
               "danacode": "Danacode",
               "DOI": "DOI",
               "doi": "DOI",
+              "gtin-14": "GTIN14",
               "HDL": "Hdl",
               "hdl": "Hdl",
               "ISAN": "ISAN",
@@ -6614,6 +6625,23 @@
                 {
                   "@type": "Ansi",
                   "value":  "xyz"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Gtin-14, indicator from $2 when i1 = 7",
+          "source": {
+            "024": {"ind1": "7", "ind2": " ", "subfields": [{"a": "100123456578902"}, {"2": "gtin-14"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type" : "Instance",
+              "identifiedBy": [
+                {
+                  "@type": "GTIN14",
+                  "value":  "100123456578902"
                 }
               ]
             }
@@ -10733,7 +10761,7 @@
       "resourceType": "marc:MusicalPresentationStatement",
       "$a": {"property": "label"},
       "$6": {"property": "marc:fieldref"},
-      "NOTE:LC": "I - note - Note",
+      "NOTE:LC": "W - musicFormat - MusicFormat, v1.6",
       "_spec": [
         {
           "source": [
@@ -10799,6 +10827,7 @@
     "257": {
       "onRevertPrefer": ["533", "264"],
       "NOTE": "Removing subfields incompatible with 264.",
+      "NOTE:LC": "W - originPlace - OriginPlace",
       "aboutEntity": "?thing",
       "addLink": "production",
       "resourceType": "Production", 
@@ -27305,17 +27334,108 @@
     "050": {
       "inherit": "bib",
       "aboutEntity": "?thing",
-      "NOTE:local": "LIBRIS-definierat beståndsfält."
+      "NOTE:local": "LIBRIS-definierat beståndsfält.",
+      "_spec": [
+        {
+          "source": {
+            "050": {"ind1": " ", "ind2": "4", "subfields": [{"a": "NB933.F44"},{"b": "T6"}]}
+          },
+          "normalized": {
+            "050": {"ind1": " ", "ind2": "4", "subfields": [{"a": "NB933.F44"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type": "Item",
+              "classification": [{
+                "@type": "ClassificationLcc",
+                "code": "NB933.F44"
+              }]
+            }
+          }
+        }
+      ]
     },
     "060": {
       "inherit": "bib",
       "aboutEntity": "?thing",
-      "NOTE:local": "LIBRIS-definierat beståndsfält."
+      "NOTE:local": "LIBRIS-definierat beståndsfält.",
+      "_spec": [
+        {
+          "source": {
+            "060": {"ind1": "1", "ind2": "4", "subfields": [{"a": "W1"}]}
+          },
+          "normalized": {
+            "060": {"ind1": " ", "ind2": "4", "subfields": [{"a": "W1"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type": "Item",
+              "classification": [{
+                "@type": "ClassificationNlm",
+                "code": "W1"
+              }]
+            }
+          }
+        }
+      ]
     },
     "066": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS F.N. EJ"},
 
-    "072": {"inherit": "bib", "aboutEntity": "?thing", "NOTE:local": "LIBRIS-definierat beståndsfält."},
-    "080": {"inherit": "bib", "aboutEntity": "?thing", "NOTE:local": "LIBRIS-definierat beståndsfält."},
+    "072": {
+      "inherit": "bib",
+      "aboutEntity": "?thing",
+      "NOTE:local": "LIBRIS-definierat beståndsfält.",
+      "_spec": [
+        {
+          "source": {
+            "072": {"ind1": " ", "ind2": "7", "subfields": [
+              {"a": "aZ1"},
+              {"x": ".630"},
+              {"2": "mesh"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type": "Item",
+              "subject": [
+                {
+                  "@type": "Concept",
+                  "label": "aZ1",
+                  "inCollection": {
+                    "@type": "ConceptCollection",
+                    "label": ".630"
+                  },
+                  "inScheme": {
+                    "@type": "ConceptScheme",
+                    "code": "mesh"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "080": {
+      "inherit": "bib",
+      "aboutEntity": "?thing",
+      "NOTE:local": "LIBRIS-definierat beståndsfält.",
+      "_spec": [
+        {
+          "source": {
+            "080": {"ind1": " ", "ind2": " ", "subfields": [{"a": "030"}]}
+          },
+          "result": {
+            "mainEntity": {
+              "@type": "Item",
+              "classification": [
+                {"@type": "ClassificationUdc", "code": "030"}
+              ]
+            }
+          }
+        }
+      ]
+    },
     "082": {
       "inherit": "bib",
       "aboutEntity": "?thing",

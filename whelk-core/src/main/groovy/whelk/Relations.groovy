@@ -43,6 +43,9 @@ class Relations {
             String iri = stack.pop()
             for (String relation : relations) {
                 Set<String> dependencies = new HashSet<>(storage.getByRelation(iri, relation))
+                if (isSymmetric(relation)) {
+                    dependencies.addAll(storage.getByReverseRelation(iri, relation))
+                }
                 if (dependencies.contains(toIri)) {
                     return true
                 }

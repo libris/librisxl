@@ -1,4 +1,11 @@
 /* 
+In order to only check new records specify file where timestamp of last run is saved with:
+-Dlast-run-file=</path/to/file>
+
+(Schedule this script to run continuously until Mimer MODS conversion is fixed)
+
+***********************************************************************************************************************
+
 Clean up newspaper (dagstidningar + tidskrifter) shapes.
 Link digitized newspaper monographs (issues) to their series. That is, replace supplementTo and/or isPartOf with isIssueOf.
 
@@ -74,17 +81,28 @@ Examples
 
 There were no supplementTo with multiple controlnumbers (refering to newspaper serials)
 */
+
 import groovy.transform.Memoized
+
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 noMarcGf = getReportWriter("no-marc-gf.txt")
 otherMarcGf = getReportWriter("other-marc-gf.txt")
 notMimer = getReportWriter("not-mimer.txt")
+
+String now = ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+
+String lastRunOpt = System.getProperty('last-run-file', '')
+def lastRunTimestamp = new File(lastRunOpt).with { if (it.exists()) it.readLines()?.first() }
+println("Using lastRunTimestamp: ${lastRunTimestamp ?: '<NO>'}")
 
 def where = """
     collection = 'bib'
     AND deleted = 'false'
     AND data#>>'{@graph,1,@type}' = 'Electronic'
     AND (data#>>'{@graph,1,supplementTo}' IS NOT NULL OR data#>>'{@graph,1,isPartOf}' IS NOT NULL)
+    ${lastRunTimestamp ? "AND created >= '$lastRunTimestamp'" : ''}
 """
 
 selectBySqlWhere(where) { bib ->
@@ -159,6 +177,12 @@ selectBySqlWhere(where) { bib ->
         if (!thing.isPartOf) {
             thing.remove('isPartOf')
         }
+    }
+}
+
+if (lastRunOpt) {
+    new File(lastRunOpt).withWriter { writer ->
+        writer.write(now)
     }
 }
 

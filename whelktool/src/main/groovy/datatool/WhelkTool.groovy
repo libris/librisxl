@@ -122,7 +122,14 @@ class WhelkTool {
         ScriptEngineManager manager = new ScriptEngineManager()
         engine = (GroovyScriptEngineImpl) manager.getEngineByName("groovy")
         scriptFile = new File(scriptPath)
-        String scriptSource = scriptFile.getText("UTF-8")
+        String scriptSource = null
+        try {
+            scriptSource = scriptFile.getText("UTF-8")
+        }
+        catch (IOException e) {
+            System.err.println("Could not load script [$scriptPath] : $e")
+            System.exit(1)
+        }
         script = ((Compilable) engine).compile(scriptSource)
         def segment = '/scripts/'
         def path = scriptFile.toURI().toString()

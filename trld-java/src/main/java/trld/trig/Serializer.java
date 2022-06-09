@@ -66,24 +66,24 @@ public class Serializer {
     serialize(data, out, context, baseIri, settings); // LINE: 66
   }
 
-  public static Map<String, String> collectPrefixes(/*@Nullable*/ Object context) { // LINE: 668
-    if (!(context instanceof Map)) { // LINE: 669
-      return new HashMap<>(); // LINE: 670
+  public static Map<String, String> collectPrefixes(/*@Nullable*/ Object context) { // LINE: 671
+    if (!(context instanceof Map)) { // LINE: 672
+      return new HashMap<>(); // LINE: 673
     }
-    Map prefixes = new HashMap<>(); // LINE: 672
-    for (Map.Entry<String, Object> key_value : ((Map<String, Object>) context).entrySet()) { // LINE: 673
+    Map prefixes = new HashMap<>(); // LINE: 675
+    for (Map.Entry<String, Object> key_value : ((Map<String, Object>) context).entrySet()) { // LINE: 676
       String key = key_value.getKey();
       Object value = key_value.getValue();
-      if ((value instanceof String && PREFIX_DELIMS.contains(((String) value).substring(((String) value).length() - 1, ((String) value).length() - 1 + 1)))) { // LINE: 674
-        prefixes.put(((key == null && ((Object) VOCAB) == null || key != null && (key).equals(VOCAB)) ? "" : key), (String) value); // LINE: 675
-      } else if ((value instanceof Map && (((Map) value).get(PREFIX) == null && ((Object) true) == null || ((Map) value).get(PREFIX) != null && (((Map) value).get(PREFIX)).equals(true)))) { // LINE: 676
-        prefixes.put(key, ((Map) value).get(ID)); // LINE: 677
+      if ((value instanceof String && PREFIX_DELIMS.contains(((String) value).substring(((String) value).length() - 1, ((String) value).length() - 1 + 1)))) { // LINE: 677
+        prefixes.put(((key == null && ((Object) VOCAB) == null || key != null && (key).equals(VOCAB)) ? "" : key), (String) value); // LINE: 678
+      } else if ((value instanceof Map && (((Map) value).get(PREFIX) == null && ((Object) true) == null || ((Map) value).get(PREFIX) != null && (((Map) value).get(PREFIX)).equals(true)))) { // LINE: 679
+        prefixes.put(key, ((Map) value).get(ID)); // LINE: 680
       }
     }
-    return prefixes; // LINE: 679
+    return prefixes; // LINE: 682
   }
 
-  public static List asList(Object value) { // LINE: 682
-    return (value instanceof List ? (List) value : new ArrayList<>(Arrays.asList(new Object[] {(Object) value}))); // LINE: 683
+  public static List asList(Object value) { // LINE: 685
+    return (value instanceof List ? (List) value : new ArrayList<>(Arrays.asList(new Object[] {(Object) value}))); // LINE: 686
   }
 }

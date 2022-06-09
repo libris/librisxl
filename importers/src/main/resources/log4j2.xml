@@ -8,7 +8,7 @@
         <Console name="STDERR" target="SYSTEM_ERR">
             <PatternLayout pattern="%d{ISO8601} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
-        <File name="File" fileName="${sys:catalina.base}/logs/vcopyImporterServlet.log">
+        <File name="File" fileName="${sys:catalina.base}/logs/xlimporter.log">
             <PatternLayout pattern="%d{ISO8601} [%t] %-5level %logger{36} - %msg%n"/>
         </File>
     </Appenders>
