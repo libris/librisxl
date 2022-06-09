@@ -2682,7 +2682,7 @@
                       }
                     ],
                     "responsibilityStatement": "av författaren",
-                    "editionStatement" : "Första utgåvan",
+                    "editionStatement" : ["Första utgåvan"],
                     "extent": {"@type": "Extent", "label": ["259 s."]},
                     "identifiedBy": [
                       {"@type": "ISBN", "value": "00-0-000000-0"}
@@ -2704,7 +2704,7 @@
                       }
                     ],
                     "responsibilityStatement": "av författaren",
-                    "editionStatement" : "Första utgåvan",
+                    "editionStatement" : ["Första utgåvan"],
                     "extent": {"@type": "Extent", "label": ["259 s."]},
                     "identifiedBy": [
                       {"@type": "ISBN", "value": "00-0-000000-0"}
@@ -2720,7 +2720,7 @@
                   }
                 ],
                 "responsibilityStatement": "av författaren",
-                "editionStatement" : "Första utgåvan",
+                "editionStatement" : ["Första utgåvan"],
                 "extent": {"@type": "Extent", "label": ["259 s."], "appliesTo": {"@type": "Resource", "label": "[original]"}},
                 "indirectlyIdentifiedBy": [
                   {"@type": "ISBN", "value": "00-0-000000-0", "qualifier": "original"}

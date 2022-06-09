@@ -193,7 +193,7 @@ class CopyOnRevertStep extends MarcFramePostProcStepBase {
 
     Object cloneValue(Object value) {
         if (value instanceof List) {
-            return value.collect { jsonClone(it) }
+            return value.collect { cloneValue(it) }
         } else if (value instanceof Map) {
             return jsonClone((Map) value)
         } else { // assuming String|Integer|Double|Boolean
