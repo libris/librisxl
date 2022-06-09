@@ -93,7 +93,7 @@ class DatasetImporter {
             }
             first = false
 
-            Document incomingDoc = completeRecord(data, recordType)
+            Document incomingDoc = completeRecord(data, recordType, true)
             idsInInput.add(incomingDoc.getShortId())
 
             // This race condition should be benign. If there is a document with
@@ -149,9 +149,13 @@ class DatasetImporter {
         return new DatasetInfo(datasetData)
     }
 
-    protected Document completeRecord(Map data, String recordType) {
+    protected Document completeRecord(Map data, String recordType, boolean remap = false) {
         if (GRAPH !in data) {
             data = makeSystemRecordData(data, recordType)
+        }
+
+        if (remap) {
+            applyMappings((Map) ((List) data[GRAPH])[1])
         }
 
         normalizeLinks(data)
@@ -188,6 +192,14 @@ class DatasetImporter {
         record['mainEntity'] = [(ID): data[ID]]
 
         return [(GRAPH): [record, data]]
+    }
+
+    protected void applyMappings(Map mainEntity) {
+        String type = mainEntity[TYPE]
+        String mappedType = dsInfo.classMap[type]
+        if (mappedType) {
+            mainEntity[TYPE] = mappedType
+        }
     }
 
     @CompileStatic(SKIP)
