@@ -176,11 +176,17 @@ class Crud extends HttpServlet {
     void handleData(HttpServletRequest request, HttpServletResponse response) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
         String activeSite = request.getAttribute('activeSite')
+        Map activeSiteData = (Map) sitesData[activeSite]
+
         Map results = [:]
-        results.putAll((Map) sitesData[activeSite])
+        results.putAll((Map) activeSiteData)
+
+        if (activeSite != siteConfig['default_site']) {
+            queryParameters.put('_site_base_uri', [activeSiteData['@id']] as String[])
+        }
 
         if (!queryParameters['_statsrepr']) {
-            queryParameters.put('_statsrepr', [mapper.writeValueAsString(sitesData[activeSite]['statsindex'])] as String[])
+            queryParameters.put('_statsrepr', [mapper.writeValueAsString(activeSiteData['statsindex'])] as String[])
         }
         if (!queryParameters['_limit']) {
             queryParameters.put('_limit', ["0"] as String[])
