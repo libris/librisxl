@@ -2487,9 +2487,9 @@ class PostgreSQLComponent {
         }
     }
 
-    void remove(String identifier, String changedIn, String changedBy) {
+    void remove(String identifier, String changedIn, String changedBy, boolean force=false) {
         if (versioning) {
-            if(!followDependers(identifier).isEmpty())
+            if(!force && !followDependers(identifier).isEmpty())
                 throw new RuntimeException("Deleting depended upon records is not allowed.")
 
             log.debug("Marking document with ID ${identifier} as deleted.")

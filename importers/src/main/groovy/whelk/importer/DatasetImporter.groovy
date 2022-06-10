@@ -29,12 +29,15 @@ class DatasetImporter {
     // verify that id:s are served by the system; else use:
     static REPLACE_MAIN_IDS = 'replace-main-ids' // replace id with XL-id (move current to sameAs)
 
+    static FORCE_DELETE = 'force-delete'
+
     Whelk whelk
     String datasetUri
     DatasetInfo dsInfo
     private Document dsRecord
 
     boolean replaceMainIds = false
+    boolean forceDelete = false
     String collection = NO_MARC_COLLECTION
 
     TargetVocabMapper tvm = null
@@ -53,6 +56,7 @@ class DatasetImporter {
         }
 
         replaceMainIds = flags.get(REPLACE_MAIN_IDS) == true
+        forceDelete = flags.get(FORCE_DELETE) == true
 
         if (Runtime.getRuntime().maxMemory() < 2l * 1024l * 1024l * 1024l) {
             log.warn("This application may require substantial amounts of memory, " +
@@ -326,7 +330,7 @@ class DatasetImporter {
 
     private boolean remove(String id) {
         try {
-            whelk.remove(id, "xl", null)
+            whelk.remove(id, "xl", null, forceDelete)
             return true
         } catch ( RuntimeException re ) {
             // The expected exception here is: java.lang.RuntimeException: Deleting depended upon records is not allowed.
