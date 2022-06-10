@@ -372,10 +372,10 @@ class Whelk {
         return storage.quickCreateDocument(document, changedIn, changedBy, collection)
     }
   
-    void remove(String id, String changedIn, String changedBy) {
+    void remove(String id, String changedIn, String changedBy, boolean force=false) {
         log.debug "Deleting ${id} from Whelk"
         Document doc = storage.load(id)
-        storage.remove(id, changedIn, changedBy)
+        storage.remove(id, changedIn, changedBy, force)
         if (elastic && !skipIndex) {
             elastic.remove(id)
             reindexAffected(doc, doc.getExternalRefs(), Collections.emptySet())
