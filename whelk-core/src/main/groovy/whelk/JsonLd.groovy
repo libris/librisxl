@@ -1213,8 +1213,9 @@ class JsonLd {
                 obj = fullObj ? [:] + fullObj : null
             }
             if (obj) {
+                int i = oId ? 1 : 0
                 return depth < 2
-                        ? embed(oId, obj, idMap, new HashSet<String>(embedChain), depth + 1)
+                        ? embed(oId, obj, idMap, new HashSet<String>(embedChain), depth + i)
                         : obj
             }
         }
