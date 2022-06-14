@@ -82,12 +82,7 @@ dependencies {
     implementation "com.google.guava:guava:${guavaVersion}"
     implementation "org.apache.httpcomponents:httpclient:${httpComponentsClientVersion}"
     implementation "org.apache.httpcomponents:httpcore:${httpComponentsCoreVersion}"
-
-    // Integration
-    /* Not needed?
-    compile 'com.thoughtworks.paranamer:paranamer:2.7'
-    compile 'asm:asm:3.3.1'
-    */
+    
     // Standalone
     implementation "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
     implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
