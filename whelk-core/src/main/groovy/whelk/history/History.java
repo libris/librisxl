@@ -95,6 +95,31 @@ public class History {
 
             addVersion(version, changeSet);
 
+            // Clean up markers that have a more specific equivalent
+            {
+                List added = (List) changeSet.get("addedPaths");
+                List removed = (List) changeSet.get("removedPaths");
+                List modified = (List) changeSet.get("modifiedPaths");
+                List allMarkers = new ArrayList( added );
+                allMarkers.addAll( removed );
+                allMarkers.addAll( modified );
+
+                List<List> allLists = List.of(added, removed, modified);
+                for (List list : allLists) {
+                    Iterator markerPathIt = list.iterator();
+                    while (markerPathIt.hasNext()) {
+                        List<Object> path = (List<Object>) markerPathIt.next();
+                        for (Object o : allMarkers) {
+                            List<Object> otherPath = (List<Object>) o;
+                            if (path != otherPath && isSubList(path, otherPath)) {
+                                markerPathIt.remove();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
             // Clean up empty fields
             if ( ((List) changeSet.get("addedPaths")).isEmpty() )
                 changeSet.remove("addedPaths");
@@ -103,6 +128,14 @@ public class History {
             if ( ((List) changeSet.get("modifiedPaths")).isEmpty() )
                 changeSet.remove("modifiedPaths");
         }
+    }
+
+    private boolean isSubList(List a, List b) {
+        if (a.size() > b.size())
+            return false;
+        if (b.subList(0, a.size()).equals(a))
+            return true;
+        return false;
     }
 
     public void addVersion(DocumentVersion version, Map changeSetToBuild) {
