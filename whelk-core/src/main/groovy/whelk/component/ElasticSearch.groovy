@@ -281,8 +281,13 @@ class ElasticSearch {
     String getShapeForIndex(Document document, Whelk whelk) {
         Document copy = document.clone()
 
-        whelk.embellish(copy, ['chips'])
-
+        if (document.getThingType() == 'Item') {
+            whelk.embellish(copy, ['chips'])
+        }
+        else {
+            whelk.embellish(copy, ['cards'])
+        }
+        
         if (log.isDebugEnabled()) {
             log.debug("Framing ${document.getShortId()}")
         }
