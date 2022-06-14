@@ -86,7 +86,7 @@ dependencies {
     implementation group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
 
     // Common tools
-    implementation "com.google.guava:guava:16.0.1"
+    implementation "com.google.guava:guava:${guavaVersion}"
     implementation "io.github.resilience4j:resilience4j-circuitbreaker:${resilience4jVersion}"
     implementation "io.github.resilience4j:resilience4j-prometheus:${resilience4jVersion}"
     implementation "io.github.resilience4j:resilience4j-retry:${resilience4jVersion}"

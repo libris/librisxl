@@ -79,7 +79,7 @@ dependencies {
     implementation "org.codehaus.groovy:groovy-dateutil:${groovyVersion}"
     implementation 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
     implementation 'commons-io:commons-io:2.11.0'
-    implementation "com.google.guava:guava:16.0.1"
+    implementation "com.google.guava:guava:${guavaVersion}"
     implementation "org.apache.httpcomponents:httpclient:${httpComponentsClientVersion}"
     implementation "org.apache.httpcomponents:httpcore:${httpComponentsCoreVersion}"
 
