@@ -14,8 +14,6 @@ def getGitVersion() {
 
 def version = getGitVersion()
 
-archivesBaseName = "whelk"
-
 sourceSets {
     main {
         java { srcDirs = [] }
@@ -137,7 +135,6 @@ project.afterEvaluate {
 }
 
 gretty {
-    //jacocoEnabled false // https://github.com/akhikhl/gretty/issues/425
     httpPort = 8180
     contextPath = '/'
     systemProperties = ['xl.secret.properties': System.getProperty("xl.secret.properties")]
