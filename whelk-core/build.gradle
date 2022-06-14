@@ -1,6 +1,6 @@
 apply plugin: 'groovy'
 apply plugin: 'java-library'
-//apply plugin: 'jacoco'
+apply plugin: 'jacoco'
 apply plugin: 'nebula.lint'
 
 archivesBaseName = "xlcore"
@@ -22,21 +22,19 @@ sourceSets {
 }
 
 test {
-    /*
     jacoco {
         destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
         classDumpDir = file("$buildDir/jacoco/classpathdumps")
     }
-    */
 }
 
 test.testLogging {
     showStandardStreams = true
     exceptionFormat = "full"
 }
-/*
+
 jacoco {
-    toolVersion = "0.8.2"
+    toolVersion = "$jacocoVersion"
     reportsDirectory = file("$buildDir/coverage_report")
 }
 
@@ -47,7 +45,7 @@ jacocoTestReport {
         html.destination file("${buildDir}/coverage_report/html")
     }
 }
-*/
+
 repositories {
     mavenCentral()
     maven { url "https://jitpack.io/" }

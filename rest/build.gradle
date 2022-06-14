@@ -1,6 +1,6 @@
 apply plugin: 'groovy'
 apply plugin: 'war'
-//apply plugin: 'jacoco'
+apply plugin: 'jacoco'
 apply from: '../gretty.plugin'
 
 def getGitVersion() {
@@ -28,21 +28,19 @@ sourceSets {
 
 test {
     useJUnitPlatform()
-    /*
     jacoco {
         destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
         classDumpDir = file("$buildDir/jacoco/classpathdumps")
     }
-    */
 }
 
 test.testLogging {
     showStandardStreams = true
     exceptionFormat = "full"
 }
-/*
+
 jacoco {
-    toolVersion = "0.7.6.201602180812"
+    toolVersion = "$jacocoVersion"
     reportsDirectory = file("$buildDir/coverage_report")
 }
 
@@ -53,7 +51,7 @@ jacocoTestReport {
         html.destination file("${buildDir}/coverage_report/html")
     }
 }
-*/
+
 repositories {
     mavenCentral()
     maven { url "https://jitpack.io/" }
