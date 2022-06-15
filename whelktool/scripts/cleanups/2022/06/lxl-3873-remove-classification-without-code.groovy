@@ -23,15 +23,7 @@ selectBySqlWhere(where) { data ->
     thing.instanceOf?.classification?.removeAll {
         if (!it."@id" && !it.code) {
             changed = true
-            if (it.inScheme) {
-                if (it.inScheme.code) {
-                    statistics.increment("no @id, no code, has inScheme with code", it, data.doc.getShortId())
-                } else {
-                    statistics.increment("no @id, no code, has inScheme without code", it, data.doc.getShortId())
-                }
-            } else {
-                statistics.increment("no @id, no code, no inScheme", it, data.doc.getShortId())
-            }
+            statistics.increment("shapes", it.keySet().toList().sort(), data.doc.getShortId())
             return true
         }
         return false
