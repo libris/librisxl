@@ -13,7 +13,6 @@ class Util {
     static def titleVariant = ['Title', 'ParallelTitle']
     // removed 'VariantTitle', 'CoverTitle' since they sometimes contain random generic stuff like "Alibis filmroman", "Kompisböcker för de yngsta"
 
-
     static enum Relator {
         TRANSLATOR('https://id.kb.se/relator/translator'),
         AUTHOR('https://id.kb.se/relator/author'),
@@ -183,13 +182,19 @@ class Util {
             null
     ]
 
-    // TODO: review
-    // TODO: Use @type Title with any generic subtitles removed?
-
     // Return the most common title for the best encodingLevel
-    static Object bestTitle(Collection<Tuple2<Doc, Object>> docs) {
+    static Object bestTitle(Collection<Doc> docs) {
+        def isTitle = { it.'@type' == 'Title' }
+        def addSource = { t, d -> t.plus(['source': [d.getInstance().subMap('@id')]]) }
+
         for (def level : bestEncodingLevel) {
-            def titles = docs.findAll { it.getFirst().encodingLevel() == level }.collect { it.getSecond() }.grep()
+            def titles = docs
+                    .findAll { it.encodingLevel() == level }
+                    .collect { d ->
+                        d.getWork().get('hasTitle')?.findAll(isTitle)
+                                ?: d.getInstance().get('hasTitle')?.findResults { isTitle(it) ? addSource(it, d) : null }
+                    }
+
             if (!titles) {
                 continue
             }
