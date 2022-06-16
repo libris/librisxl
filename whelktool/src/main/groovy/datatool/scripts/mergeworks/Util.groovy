@@ -194,6 +194,7 @@ class Util {
                         d.getWork().get('hasTitle')?.findAll(isTitle)
                                 ?: d.getInstance().get('hasTitle')?.findResults { isTitle(it) ? addSource(it, d) : null }
                     }
+                    .grep()
 
             if (!titles) {
                 continue
