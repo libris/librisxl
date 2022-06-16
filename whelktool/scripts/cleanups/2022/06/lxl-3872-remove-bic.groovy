@@ -17,6 +17,9 @@ selectBySqlWhere(where) { data ->
         return false
     }
 
+    if (asList(data.graph[1].instanceOf?.subject).size() == 0)
+        data.graph[1].instanceOf.remove("subject")
+
     if (modified) {
         //System.err.println("result:\n" + data.doc.getDataAsString() + "\n\n")
         data.scheduleSave()
