@@ -111,7 +111,7 @@ public class History {
                         List<Object> path = (List<Object>) markerPathIt.next();
                         for (Object o : allMarkers) {
                             List<Object> otherPath = (List<Object>) o;
-                            if (path != otherPath && isSubList(path, otherPath)) {
+                            if (!path.equals(otherPath) && isSubList(path, otherPath)) {
                                 markerPathIt.remove();
                                 break;
                             }
