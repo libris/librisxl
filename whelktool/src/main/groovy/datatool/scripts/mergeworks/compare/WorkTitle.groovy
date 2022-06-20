@@ -17,7 +17,7 @@ class WorkTitle implements ValuePicker {
     }
     
     @Override
-    Object pick(List<Tuple2<Doc, Object>> values) {
+    Object pick(Collection<Doc> values) {
         return Util.bestTitle(values)
     }
 }
