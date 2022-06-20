@@ -36,6 +36,7 @@ class WorkToolJob {
 
     String changedIn = "xl"
     String changedBy = "SEK"
+    String generationProcess = 'https://libris.kb.se/sys/merge-works'
     boolean dryRun = true
     boolean skipIndex = false
     boolean loud = false
@@ -141,6 +142,8 @@ class WorkToolJob {
                             .reverse()
                             .find { v -> getPathSafe(v.data, v.workIdPath) == null }
                     d.data = revertTo.data
+                    d.setGenerationDate(new Date())
+                    d.setGenerationProcess(generationProcess)
                     whelk.storeAtomicUpdate(d, !loud, changedIn, changedBy, sum)
                 }
 
@@ -210,7 +213,7 @@ class WorkToolJob {
         ])
 
         d.setGenerationDate(new Date())
-        d.setGenerationProcess('https://libris.kb.se/sys/merge-works')
+        d.setGenerationProcess(generationProcess)
         d.deepReplaceId(Document.BASE_URI.toString() + workId)
         return d
     }
@@ -230,6 +233,8 @@ class WorkToolJob {
                     .each {
                         def sum = it.getChecksum(whelk.jsonld)
                         it.data[JsonLd.GRAPH_KEY][1]['instanceOf'] = [(JsonLd.ID_KEY): workIri]
+                        it.setGenerationDate(new Date())
+                        it.setGenerationProcess(generationProcess)
                         whelk.storeAtomicUpdate(it, !loud, changedIn, changedBy, sum)
                     }
         }
@@ -500,7 +505,10 @@ class WorkToolJob {
 
                 docs.each {
                     if (!dryRun && it.changed) {
-                        whelk.storeAtomicUpdate(it.doc, !loud, changedIn, changedBy, it.checksum)
+                        Document d = it.doc
+                        d.setGenerationDate(new Date())
+                        d.setGenerationProcess(generationProcess)
+                        whelk.storeAtomicUpdate(d, !loud, changedIn, changedBy, it.checksum)
                     }
                 }
             }
@@ -595,7 +603,10 @@ class WorkToolJob {
 
                 docs.each {
                     if (!dryRun && it.changed) {
-                        whelk.storeAtomicUpdate(it.doc, !loud, changedIn, changedBy, it.checksum)
+                        Document d = it.doc
+                        d.setGenerationDate(new Date())
+                        d.setGenerationProcess(generationProcess)
+                        whelk.storeAtomicUpdate(d, !loud, changedIn, changedBy, it.checksum)
                     }
                 }
             }
