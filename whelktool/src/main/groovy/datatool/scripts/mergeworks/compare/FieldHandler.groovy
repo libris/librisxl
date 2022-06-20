@@ -8,5 +8,5 @@ interface FieldHandler {
 }
 
 interface ValuePicker extends FieldHandler {
-    Object pick(List<Tuple2<Doc, Object>> values)
+    Object pick(Collection<Doc> values)
 }

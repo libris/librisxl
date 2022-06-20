@@ -58,7 +58,7 @@ class WorkComparator {
         fields.each { field ->
             FieldHandler h = comparators.getOrDefault(field, DEFAULT)
             def value = h instanceof ValuePicker
-                    ? h.pick(docs.collect {new Tuple2(it, it.getWork().get(field)) })
+                    ? h.pick(docs)
                     : mergeField(field, h, docs)
             
             if(value) {
@@ -67,7 +67,7 @@ class WorkComparator {
         }
 
         if (!result['hasTitle']) {
-            result['hasTitle'] = bestTitle(docs.collect { new Tuple2(it, it.getInstance().get('hasTitle')) })
+            result['hasTitle'] = bestTitle(docs)
         }
 
         return result
