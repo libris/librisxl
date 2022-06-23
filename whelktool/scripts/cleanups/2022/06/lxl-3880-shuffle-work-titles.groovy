@@ -8,6 +8,7 @@ def moved = getReportWriter('moved.tsv')
 def blankLangRemoved = getReportWriter('blank-lang-removed.tsv')
 def extraLang = getReportWriter('lang-added.tsv')
 def propertyAlreadyExists = getReportWriter('property-already-exists.tsv')
+def brokenLinks = getReportWriter('broken-links.tsv')
 
 languageLinker = buildLanguageMap()
 Map a = (Map<String, List>) languageLinker.ambiguousIdentifiers
@@ -65,9 +66,13 @@ selectByCollection('bib') { bib ->
     // Move expressionOf content primarily to translationOf, otherwise to instanceOf
     def (target, targetKey) = translationOf ? [translationOf, TRANSLATION_OF] : [work, INSTANCE_OF]
 
-    def linked = loadThing(expressionOf[ID])
     // Linked uniform work title in expressionOf, move hasTitle to instanceOf and then remove the link
-    if (linked) {
+    if (expressionOf[ID]) {
+        def linked = loadThing(expressionOf[ID])
+        if (!linked) {
+            brokenLinks.println([shortId, expressionOf[ID]].join('\t'))
+            return
+        }
         if (target[HAS_TITLE] && target[HAS_TITLE] != linked[HAS_TITLE]) {
             propertyAlreadyExists.println([shortId, "$EXPRESSION_OF -> $targetKey", HAS_TITLE, linked[HAS_TITLE], target[HAS_TITLE]].join('\t'))
         } else {
@@ -150,10 +155,8 @@ private List asList(Object o) {
 
 Map loadThing(def id) {
     def thing = [:]
-    if (id) {
-        selectByIds([id]) { t ->
-            thing = t.graph[1]
-        }
+    selectByIds([id]) { t ->
+        thing = t.graph[1]
     }
     return thing
 }
