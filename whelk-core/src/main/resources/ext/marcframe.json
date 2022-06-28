@@ -16130,6 +16130,77 @@
           }}
         },
         {
+          "name": "ComplexSubject Jurisdiction with subordinateUnit",
+          "source": {
+            "610": {"ind1": "1", "ind2": "0", "subfields": [
+              {"a": "Canada"},
+              {"b": "Agriculture Canada"},
+              {"x": "Officials and employees"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject" : [{
+                "@type": "ComplexSubject",
+                "inScheme" : {
+                  "@id" : "https://id.kb.se/term/lcsh",
+                  "@type" : "ConceptScheme",
+                  "code" : "lcsh"
+                },
+                "termComponentList" : [
+                  {
+                    "@type" : "Jurisdiction",
+                    "isPartOf" : {
+                      "@type" : "Jurisdiction",
+                      "name" : "Canada"
+                    },
+                    "marc:subordinateUnit": ["Agriculture Canada"]
+                  },
+                  {
+                    "@type" : "TopicSubdivision",
+                    "prefLabel" : "Officials and employees"
+                  }
+                ]
+              }]
+            }
+          }}
+        },
+        {
+          "name": "ComplexSubject Organization with subordinateUnit",
+          "source": { 
+            "610": {"ind1": "2", "ind2": "7", "subfields": [
+              {"a": "a"},
+              {"b": "b"},
+              {"x": "x"},
+              {"2": "sao"}]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "subject" : [{
+                "@type": "ComplexSubject",
+                "inScheme" : {
+                  "@id" : "https://id.kb.se/term/sao",
+                  "@type" : "ConceptScheme",
+                  "code" : "sao"
+                },
+                "termComponentList" : [
+                  {
+                    "@type" : "Organization",
+                    "isPartOf" : {
+                      "@type" : "Organization",
+                      "name" : "a"
+                    },
+                    "marc:subordinateUnit": ["b"]
+                  },
+                  {
+                    "@type" : "TopicSubdivision",
+                    "prefLabel" : "x"
+                  }
+                ]
+              }]
+            }
+          }}
+        },
+        {
           "source": {
             "610": {"ind1": "2", "ind2": "0", "subfields":[
               {"a": "Rossiĭskiĭ gosudarstvennyĭ arkhiv drevnikh aktov."},
