@@ -184,10 +184,10 @@ class MarcFrameConverterUtilsSpec extends Specification {
          MarcFixedFieldHandler.parseColumnNumbers(key) == colNums
          where:
          key        | colNums
-         '[0:1]'    | [[0, 1]]
-         '[0:2]'    | [[0, 2]]
-         '[0]'      | [[0, 1]]
-         '[0] [1] [2:4]'  | [[0, 1], [1, 2], [2,4]]
+         '[0:1]'    | [new Tuple2(0, 1)]
+         '[0:2]'    | [new Tuple2(0, 2)]
+         '[0]'      | [new Tuple2(0, 1)]
+         '[0] [1] [2:4]'  | [new Tuple2(0, 1), new Tuple2(1, 2), new Tuple2(2,4)]
     }
 
     def "should get keys sorted by dependency from pendingResources2"() {
