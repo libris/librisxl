@@ -2,6 +2,8 @@ package whelk.converter.marc
 
 import spock.lang.*
 
+import whelk.JsonLd
+
 
 @Unroll
 class MarcFrameConverterUtilsSpec extends Specification {
@@ -241,25 +243,37 @@ class MarcFrameConverterUtilsSpec extends Specification {
     }
 
     def "should build strings"() {
-        when:
-        def s = MarcFramePostProcStepBase.buildString(
-            [name: 'N', number: ['P', 'Q']],
-            [
-                'name',
-                [property: 'number', useValueFormat: [
-                    contentFirst: ', ',
-                    contentBefore: ' + ',
-                    contentAfter: ' .',
-                    contentLast: ' ;'
-                ]],
-                'qualifier',
-                [property: 'code', useValueFormat: [
-                    contentNoValue: ' [X]'
-                ]]
-            ]
-        )
-        then:
-        s == "N, P . + Q ; [X]"
+        setup:
+        def procStep = new MarcFramePostProcStepBase() {
+            void modify(Map record, Map thing) { }
+            void unmodify(Map record, Map thing) { }
+        }
+        procStep.ld = new JsonLd([:], [:], [:])
+        def buildString = procStep.&buildString
+        def show = [
+            'name',
+            [property: 'number', useValueFormat: [
+                contentFirst: ', ',
+                contentBefore: ' + ',
+                contentAfter: ' .',
+                contentLast: ' ;'
+            ]],
+            [property: 'qualifier', useValueFormat: [
+                contentBefore: ' (',
+                contentAfter: ')',
+                contentNoValue: ''
+            ]],
+            [property: 'code', useValueFormat: [
+                contentBefore: ' ',
+                contentNoValue: ' [X]'
+            ]]
+        ]
+        expect:
+        buildString([name: 'N', number: ['P', 'Q']], show) == "N, P . + Q ; [X]"
+        and:
+        buildString([name: 'N', number: ['P'], qualifier: 'Q'], show) == "N, P ; (Q) [X]"
+        and:
+        buildString([name: 'N', number: ['P'], code: 'Y'], show) == "N, P ; Y"
     }
 
     def newMarcFieldHandler() {
