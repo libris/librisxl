@@ -95,7 +95,7 @@ class DocumentUtilSpec extends Specification {
         def values = []
         DocumentUtil.findKey(data, 'a', { value, path ->
             values << value
-            visited << path
+            visited << path.collect()
             return NOP
         })
 
@@ -124,7 +124,7 @@ class DocumentUtilSpec extends Specification {
         def values = []
         DocumentUtil.findKey(data, ['a', 's', 'q'], { value, path ->
             values << value
-            visited << path
+            visited << path.collect()
             return NOP
         })
 
