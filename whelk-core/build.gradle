@@ -20,6 +20,7 @@ sourceSets {
 }
 
 test {
+    useJUnitPlatform()
     jacoco {
         destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
         classDumpDir = file("$buildDir/jacoco/classpathdumps")

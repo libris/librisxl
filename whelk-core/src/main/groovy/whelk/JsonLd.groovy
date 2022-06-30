@@ -686,7 +686,7 @@ class JsonLd {
                     }
                     graphItems << object
                 } else {
-                    graphItems << [[GRAPH_KEY]: object]
+                    graphItems << [(GRAPH_KEY): object]
                 }
             }
         }
