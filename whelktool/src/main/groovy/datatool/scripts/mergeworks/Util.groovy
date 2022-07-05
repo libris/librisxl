@@ -34,9 +34,9 @@ class Util {
         }
     }
 
-    private static Set<String> IGNORED_SUBTITLES = WorkToolJob.class.getClassLoader()
-            .getResourceAsStream('merge-works/ignored-subtitles.txt')
-            .readLines().grep().collect(Util.&normalize) as Set
+//    private static Set<String> IGNORED_SUBTITLES = WorkToolJob.class.getClassLoader()
+//            .getResourceAsStream('merge-works/ignored-subtitles.txt')
+//            .readLines().grep().collect(Util.&normalize) as Set
 
     private static Set<String> GENERIC_TITLES = WorkToolJob.class.getClassLoader()
             .getResourceAsStream('merge-works/generic-titles.txt')
@@ -88,22 +88,29 @@ class Util {
         hasTitle.any { it['mainTitle'] && normalize((String) it['mainTitle']) in GENERIC_TITLES }
     }
 
-    static List dropGenericSubTitles(List hasTitle) {
-        hasTitle.collect {
-            def copy = new TreeMap(it)
-            if (copy['subtitle'] || copy['titleRemainder']) {
-                DocumentUtil.traverse(copy) { value, path ->
-                    if (('subtitle' in path || 'titleRemainder' in path) && value instanceof String && genericSubtitle(value)) {
-                        new DocumentUtil.Remove()
-                    }
-                }
-            }
-            copy
+    static List dropSubTitles(List hasTitle) {
+        hasTitle.collect { t ->
+            def copy = new TreeMap(t)
+            copy.subMap(copy.keySet() - ['subtitle', 'titleRemainder'])
         }
     }
 
+//    static List dropGenericSubTitles(List hasTitle) {
+//        hasTitle.collect {
+//            def copy = new TreeMap(it)
+//            if (copy['subtitle'] || copy['titleRemainder']) {
+//                DocumentUtil.traverse(copy) { value, path ->
+//                    if (('subtitle' in path || 'titleRemainder' in path) && value instanceof String && genericSubtitle(value)) {
+//                        new DocumentUtil.Remove()
+//                    }
+//                }
+//            }
+//            copy
+//        }
+//    }
+
     static List flatTitles(List hasTitle) {
-        dropGenericSubTitles(hasTitle).collect {
+        dropSubTitles(hasTitle).collect {
             def title = new TreeMap<>()
             title['flatTitle'] = normalize(Doc.flatten(it, titleComponents))
             if (it['@type']) {
@@ -114,13 +121,13 @@ class Util {
         }
     }
 
-    private static boolean genericSubtitle(String s) {
-        s = Util.normalize(s)
-        if (s.startsWith("en ")) {
-            s = s.substring("en ".length())
-        }
-        return s in IGNORED_SUBTITLES
-    }
+//    private static boolean genericSubtitle(String s) {
+//        s = Util.normalize(s)
+//        if (s.startsWith("en ")) {
+//            s = s.substring("en ".length())
+//        }
+//        return s in IGNORED_SUBTITLES
+//    }
 
     static String normalize(String s) {
         return Unicode.asciiFold(Unicode.normalizeForSearch(StringUtils.normalizeSpace(" $s ".toLowerCase().replace(noise))))
@@ -200,7 +207,7 @@ class Util {
                 continue
             }
 
-            titles = titles.collect(Util.&dropGenericSubTitles)
+            titles = titles.collect(Util.&dropSubTitles)
             return partition(titles, { a, b -> a == b }).sort { it.size() }.reverse().first().first()
         }
 
