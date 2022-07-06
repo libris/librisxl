@@ -7,18 +7,14 @@ def where = """
 
 def badShape = ['@type', 'label', 'language'] as Set
 
-selectByCollection('bib') { bib ->
+selectBySqlWhere(where) { bib ->
     def instance = bib.graph[1]
     def work = instance.instanceOf
-
-    if (!work || work instanceof List)
-        return
 
     def normalizedSummary = work.summary.collect { Map s ->
         if (s.keySet().containsAll(badShape)) {
             def lang = s.subMap(['@type', 'language'])
             s.remove('language')
-            modified = true
             return [lang, s]
         }
         s
