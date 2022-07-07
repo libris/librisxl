@@ -254,13 +254,6 @@ class Crud extends HttpServlet {
             return
         }
 
-        def marcframePath = "/sys/marcframe.json"
-        if (request.pathInfo == marcframePath) {
-            def responseBody = getClass().classLoader.getResourceAsStream("ext/marcframe.json").getText("utf-8")
-            sendGetResponse(response, responseBody, ETag.SYSTEM_START, marcframePath, "application/json")
-            return
-        }
-
         String activeSite = request.getAttribute('activeSite')
         Map activeSiteData = (Map) sitesData[activeSite]
         if (activeSiteData?.getOrDefault('applyInverseOf', false)) {
