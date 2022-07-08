@@ -7,6 +7,7 @@ import datatool.scripts.mergeworks.compare.Extent
 import datatool.scripts.mergeworks.compare.FieldHandler
 import datatool.scripts.mergeworks.compare.GenreForm
 import datatool.scripts.mergeworks.compare.StuffSet
+import datatool.scripts.mergeworks.compare.Subject
 import datatool.scripts.mergeworks.compare.TranslationOf
 import datatool.scripts.mergeworks.compare.ValuePicker
 import datatool.scripts.mergeworks.compare.WorkTitle
@@ -24,8 +25,8 @@ class WorkComparator {
             'genreForm'       : new GenreForm(),
             'hasTitle'        : new WorkTitle(),
             'intendedAudience': new SameOrEmpty('https://id.kb.se/marc/Juvenile'),
-            '_numPages'        : new Extent(),
-            'subject'         : new StuffSet(),
+            '_numPages'       : new Extent(),
+            'subject'         : new Subject(),
             'summary'         : new StuffSet(),
             'translationOf'   : new TranslationOf(),
     ]
@@ -60,8 +61,8 @@ class WorkComparator {
             def value = h instanceof ValuePicker
                     ? h.pick(docs)
                     : mergeField(field, h, docs)
-            
-            if(value) {
+
+            if (value) {
                 result[field] = value
             }
         }
@@ -72,7 +73,7 @@ class WorkComparator {
 
         return result
     }
-    
+
     // TODO: preserve order? e.g. subject
     private Object mergeField(String field, FieldHandler h, Collection<Doc> docs) {
         Object value = docs.first().getWork().get(field)
@@ -124,5 +125,5 @@ class WorkComparator {
             c == FieldStatus.DIFF ? c : null
         } ?: (anyCompat ? FieldStatus.COMPATIBLE : FieldStatus.EQUAL)
     }
-    
+
 }
