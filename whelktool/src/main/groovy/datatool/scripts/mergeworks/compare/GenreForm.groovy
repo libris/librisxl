@@ -13,7 +13,7 @@ class GenreForm extends StuffSet {
                     ['@id': 'https://id.kb.se/marc/Autobiography'],
                     ['@id': 'https://id.kb.se/marc/Biography']
             ],
-            (['@id': 'https://id.kb.se/marc/FictionNotFurtherSpecified']): [
+            (['@id': 'https://id.kb.se/marc/FictionNotFurtherSpecified'])   : [
                     ['@id': 'https://id.kb.se/marc/Poetry'],
                     ['@id': 'https://id.kb.se/marc/Novel']
             ],
@@ -21,7 +21,7 @@ class GenreForm extends StuffSet {
 
     @Override
     Object merge(Object a, Object b) {
-        return mergeCompatibleElements(super.merge(a, b)) { gf1, gf2 ->
+        return mergeCompatibleElements(super.merge(a, b).findAll { it.'@id' }) { gf1, gf2 ->
             if (n(gf1, gf2)) {
                 gf2
             } else if (n(gf2, gf1)) {
@@ -31,6 +31,6 @@ class GenreForm extends StuffSet {
     }
 
     boolean n(a, b) {
-        norm[a]?.any {it == b || n(it, b) }
+        norm[a]?.any { it == b || n(it, b) }
     }
 }
