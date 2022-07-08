@@ -4,11 +4,12 @@ import whelk.util.Unicode
 
 import java.util.concurrent.ConcurrentLinkedQueue
 
-def moved = getReportWriter('moved.tsv')
-def blankLangRemoved = getReportWriter('blank-lang-removed.tsv')
-def extraLang = getReportWriter('lang-added.tsv')
-def propertyAlreadyExists = getReportWriter('property-already-exists.tsv')
-def brokenLinks = getReportWriter('broken-links.tsv')
+moved = getReportWriter('moved.tsv')
+blankLangRemoved = getReportWriter('blank-lang-removed.tsv')
+extraLang = getReportWriter('lang-added.tsv')
+propertyAlreadyExists = getReportWriter('property-already-exists.tsv')
+brokenLinks = getReportWriter('broken-links.tsv')
+multiple = getReportWriter('multiple.txt')
 
 languageLinker = buildLanguageMap()
 Map a = (Map<String, List>) languageLinker.ambiguousIdentifiers
@@ -18,6 +19,7 @@ ambiguousLangIds = a.values().flatten()
 languageNames = languageLinker.map.keySet() + languageLinker.substitutions.keySet() + languageLinker.ambiguousIdentifiers.keySet()
 
 INSTANCE_OF = "instanceOf"
+HAS_PART = "hasPart"
 HAS_TITLE = "hasTitle"
 EXPRESSION_OF = "expressionOf"
 TRANSLATION_OF = "translationOf"
@@ -26,19 +28,22 @@ ID = '@id'
 
 selectByCollection('bib') { bib ->
     Map instance = bib.graph[1]
+    def instanceOf = instance.find { it.key == INSTANCE_OF }
     def shortId = bib.doc.shortId
-    def work = instance[INSTANCE_OF]
 
-    if (!work || work instanceof List)
+    if (!instanceOf)
         return
 
-    def workTitle = work[HAS_TITLE]
-    def expressionOf = asList(work[EXPRESSION_OF])[0]
-    def translationOf = asList(work[TRANSLATION_OF])[0]
+    if (multipleValues(instanceOf.value)) {
+        multiple.println("$shortId\t$INSTANCE_OF")
+        return
+    }
 
+    Map work = asList(instanceOf.value)[0]
+
+    // Remove superfluous blank languages
     def worklang = asList(work[LANGUAGE])
     def whichOne = worklang.findAll { it[ID] in ambiguousLangIds }
-    // Remove superfluous blank languages
     def blankLang = worklang.find { !it[ID] }
     if (blankLang) {
         def mapped = mapBlankLanguages([blankLang], whichOne)
@@ -48,99 +53,128 @@ selectByCollection('bib') { bib ->
         }
     }
 
-    if (!expressionOf) {
-        // Move title from instanceOf to translationOf
-        if (translationOf && workTitle) {
-            if (translationOf[HAS_TITLE] && translationOf[HAS_TITLE] != work[HAS_TITLE]) {
-                propertyAlreadyExists.println([shortId, "$INSTANCE_OF -> $TRANSLATION_OF", HAS_TITLE, work[HAS_TITLE], translationOf[HAS_TITLE]].join('\t'))
-            } else {
-                translationOf[HAS_TITLE] = normalizeTitle(work[HAS_TITLE])
-                moved.println([shortId, "$INSTANCE_OF -> $TRANSLATION_OF", HAS_TITLE, translationOf[HAS_TITLE], translationOf[LANGUAGE]].join('\t'))
-                work.remove(HAS_TITLE)
-                bib.scheduleSave()
-            }
-        }
-        return
-    }
+    def expressionOf = work.find { it.key == EXPRESSION_OF }
 
-    // Move expressionOf content primarily to translationOf, otherwise to instanceOf
-    def (target, targetKey) = translationOf ? [translationOf, TRANSLATION_OF] : [work, INSTANCE_OF]
-
-    // Linked uniform work title in expressionOf, move hasTitle to instanceOf and then remove the link
-    if (expressionOf[ID]) {
-        def linked = loadThing(expressionOf[ID])
-        if (!linked) {
-            brokenLinks.println([shortId, expressionOf[ID]].join('\t'))
+    if (expressionOf) {
+        if (multipleValues(expressionOf.value)) {
+            multiple.println("$shortId\t$EXPRESSION_OF")
             return
         }
-        if (target[HAS_TITLE] && target[HAS_TITLE] != linked[HAS_TITLE]) {
-            propertyAlreadyExists.println([shortId, "$EXPRESSION_OF -> $targetKey", HAS_TITLE, linked[HAS_TITLE], target[HAS_TITLE]].join('\t'))
-        } else {
-            target[HAS_TITLE] = normalizeTitle(linked[HAS_TITLE])
-            moved.println([shortId, "$EXPRESSION_OF -> $targetKey", HAS_TITLE, target[HAS_TITLE], target[LANGUAGE]].join('\t'))
-            work.remove(EXPRESSION_OF)
-            bib.scheduleSave()
-        }
-        return
-    }
 
-    moveLanguagesFromTitle(expressionOf, whichOne)
+        Map hub = asList(expressionOf.value)[0]
+        // Move expressionOf content primarily to translationOf, otherwise to instanceOf
+        def target = work.find { it.key == TRANSLATION_OF } ?: instanceOf
 
-    // Move the complement expressionOf.language \ instanceOf.language to instanceOf.language
-    def langsAdded = []
-    asList(expressionOf[LANGUAGE]).each { l ->
-        asList(l.'@id' ? l : mapBlankLanguages([l], whichOne)).each {
-            if (!(it in worklang)) {
-                worklang << it
-                langsAdded << it
+        if (hub[ID]) {
+            def linked = loadThing(hub[ID])
+            if (!linked) {
+                brokenLinks.println([shortId, hub[ID]].join('\t'))
+            }
+            // Linked uniform work title in expressionOf: move hasTitle to target and then remove the link
+            else if (moveProperty(shortId, HAS_TITLE, expressionOf, target)) {
+                work.remove(EXPRESSION_OF)
             }
         }
-    }
-    if (langsAdded) {
-        work[LANGUAGE] = worklang
-        extraLang.println([shortId, langsAdded, worklang].join('\t'))
-    }
-    expressionOf.remove(LANGUAGE)
+        // Move title from local expressionOf to target
+        else if (moveProperty(shortId, HAS_TITLE, expressionOf, target)) {
+            hub.remove(HAS_TITLE)
+            // Move the complement expressionOf.language \ instanceOf.language to instanceOf.language
+            if (hub[LANGUAGE]) {
+                def langsAdded = []
+                asList(hub[LANGUAGE]).each { l ->
+                    asList(l.'@id' ? l : mapBlankLanguages([l], whichOne)).each {
+                        if (!(it in worklang)) {
+                            worklang << it
+                            langsAdded << it
+                        }
+                    }
+                }
+                if (langsAdded) {
+                    work[LANGUAGE] = worklang
+                    extraLang.println([shortId, langsAdded, worklang].join('\t'))
+                }
+                hub.remove(LANGUAGE)
+            }
+            // Move remaining properties (except @type) to the same place as the title
+            hub.removeAll {
+                it.key == '@type' ?: moveProperty(shortId, it.key, expressionOf, target)
+            }
+        }
 
-    // Move title from expressionOf
-    if (expressionOf[HAS_TITLE]) {
-        if (target[HAS_TITLE] && target[HAS_TITLE] != expressionOf[HAS_TITLE]) {
-            propertyAlreadyExists.println([shortId, "$EXPRESSION_OF -> $targetKey", HAS_TITLE, expressionOf[HAS_TITLE], target[HAS_TITLE]].join('\t'))
-        } else {
-            target[HAS_TITLE] = normalizeTitle(expressionOf[HAS_TITLE])
-            moved.println([shortId, "$EXPRESSION_OF -> $targetKey", HAS_TITLE, target[HAS_TITLE]].join('\t'))
-            expressionOf.remove(HAS_TITLE)
+        if (hub.isEmpty()) {
+            work.remove(EXPRESSION_OF)
+        }
+
+        bib.scheduleSave()
+    }
+    // Move title from instanceOf to translationOf
+    else if (moveProperty(shortId, HAS_TITLE, instanceOf, work.find { it.key == TRANSLATION_OF })) {
+        work.remove(HAS_TITLE)
+        bib.scheduleSave()
+    }
+
+    // Move title from hasPart to hasPart.translationOf
+    work[HAS_PART]?.each { Map p ->
+        if (moveProperty(shortId, HAS_TITLE, Map.entry(HAS_PART, p), p.find { it.key == TRANSLATION_OF })) {
+            p.remove(HAS_TITLE)
+            bib.scheduleSave()
         }
     }
-
-    // Move remaining properties (except @type) to the same place as the title
-    expressionOf.removeAll { k, v ->
-        if (k == '@type')
-            return true
-        if (target[k] && target[k] != v) {
-            propertyAlreadyExists.println([shortId, "$EXPRESSION_OF -> $targetKey", k, v, target[k]].join('\t'))
-            return false
-        } else {
-            target[k] = v
-            moved.println([shortId, "$EXPRESSION_OF -> $targetKey", k, target[k]].join('\t'))
-            return true
-        }
-    }
-
-    // No properties should remain unless there has been a conflict somewhere (reported in property-already-exists.tsv)
-    if (expressionOf.isEmpty()) {
-        work.remove(EXPRESSION_OF)
-    }
-
-    bib.scheduleSave()
 }
 
-// Remove single trailing period from mainTitle
-def normalizeTitle(title) {
-    def t = asList(title).collect().first()
-    if (t.mainTitle)
-        t.mainTitle = asList(t.mainTitle).first().replaceFirst(~/\s*(?<!\.)\.\s*$/, '')
-    return title
+boolean moveProperty(String id, String propToMove, Map.Entry from, Map.Entry target) {
+    def f = asList(from.value)[0]
+
+    if (f[propToMove] && target) {
+        def whatMove = "${from.key} -> ${target.key}"
+        def t = asList(target.value)[0]
+
+        if (multipleValues(t)) {
+            multiple.println("$id\t$target.key")
+            return false
+        }
+
+        if (t[propToMove]) {
+            propertyAlreadyExists.println([id, whatMove, propToMove, f[propToMove], t[propToMove]].join('\t'))
+        } else {
+            def cols
+
+            if (propToMove == HAS_TITLE) {
+                def movedLang = moveLanguagesFromTitle(f, asList(t[LANGUAGE]).findAll { it[ID] in ambiguousLangIds })
+                def normalized = normalizeTitle(f[HAS_TITLE])
+                cols = [id, whatMove, HAS_TITLE, f[HAS_TITLE], (movedLang || normalized)]
+                if (target.key == TRANSLATION_OF)
+                    cols << t[LANGUAGE]
+            } else {
+                cols = [id, whatMove, propToMove, f[propToMove]]
+            }
+
+            t[propToMove] = f[propToMove]
+
+            moved.println(cols.join('\t'))
+
+            return true
+        }
+    }
+
+    return false
+}
+
+// Remove single trailing period and trailing whitespace from mainTitle
+boolean normalizeTitle(title) {
+    def t = asList(title).first()
+    if (t.mainTitle && !multipleValues(t.mainTitle)) {
+        def norm = asList(t.mainTitle).first().replaceFirst(~/\s*(?<!\.)\.\s*$/, '')
+        if (norm != t.mainTitle) {
+            t.mainTitle = norm
+            return true
+        }
+    }
+    return false
+}
+
+boolean multipleValues(Object thing) {
+    return asList(thing).size() > 1
 }
 
 // The following methods are copied (with minor additions) from 2021/04/lxl-3547-link-expressionOf.groovy
@@ -181,7 +215,11 @@ private List mapBlankLanguages(List languages, List whichLanguageVersion = []) {
 
 // mainTitle: "Haggada. Jiddisch & Hebreiska" --> mainTitle: Haggada, language: [[@id:https://id.kb.se/language/yid], [@id:https://id.kb.se/language/heb]]
 boolean moveLanguagesFromTitle(Map work, List whichLanguageVersion = []) {
-    def (title, languages) = splitTitleLanguages(asList(work['hasTitle'])[0]?.mainTitle)
+    def mt = asList(work['hasTitle'])[0]?.mainTitle
+    if (multipleValues(mt))
+        return false
+
+    def (title, languages) = splitTitleLanguages(asList(mt)[0])
 
     if (!languages) {
         return false
