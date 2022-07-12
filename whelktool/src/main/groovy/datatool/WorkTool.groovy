@@ -31,6 +31,7 @@ class WorkTool {
         cli.m(longOpt: 'merge', 'Merge and extract matching works')
         cli.s(longOpt: 'show', 'Show. Generate HTML report with title clusters')
         cli.s2(longOpt: 'showWorks', 'Show. Generate HTML report with works')
+        cli.sh(longOpt: 'showHubs', 'Show. Generate HTML report with title clusters containing different works')
         cli.dd(longOpt: 'diff', args: 1, argName: 'diff', 'Field to diff')
         cli.i(longOpt: 'instance-vals', args: 1, argName: 'field', 'Instance field to print, e.g. editionStatement')
         cli.t(longOpt: 'subTitles', 'Print subtitles')
@@ -64,6 +65,8 @@ class WorkTool {
             m.show()
         } else if (options.s2) {
             m.showWorks()
+        } else if (options.sh) {
+            m.showHubs()
         } else if (options.t) {
             m.subTitles()
         } else if (options.i) {

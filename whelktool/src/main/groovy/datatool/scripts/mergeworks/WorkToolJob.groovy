@@ -92,10 +92,32 @@ class WorkToolJob {
         run({ cluster ->
             return {
                 try {
-                    println(mergedWorks(titleClusters(cluster)).collect { [new Doc2(whelk, it.work)] + it.derivedFrom }
-                            .collect { Html.clusterTable(it) }
-                            .join('') + Html.HORIZONTAL_RULE
-                    )
+                    def mergedWorks = mergedWorks(titleClusters(clusters))
+                    if (mergedWorks.size() > 1) {
+                        println(mergedWorks
+                                .collect { [new Doc2(whelk, it.work)] + it.derivedFrom }
+                                .collect { Html.clusterTable(it) }
+                                .join('') + Html.HORIZONTAL_RULE
+                        )
+                    }
+                }
+                catch (Exception e) {
+                    System.err.println(e.getMessage())
+                    e.printStackTrace(System.err)
+                }
+            }
+        })
+        println(Html.END)
+    }
+
+    void showHubs() {
+        println(Html.START)
+        run({ cluster ->
+            return {
+                try {
+                    def docs = mergedWorks(titleClusters(cluster))
+                            .collect { [new Doc2(whelk, it.work)] + it.derivedFrom }
+                    println(Html.hubTable(docs) + Html.HORIZONTAL_RULE)
                 }
                 catch (Exception e) {
                     System.err.println(e.getMessage())
@@ -115,7 +137,11 @@ class WorkToolJob {
                 def titles = titleClusters(cluster)
                 def works = mergedWorks(titles)
 
-                works.each { store(it) }
+                works.each {
+                    if (it.size() > 1) {
+                        store(it)
+                    }
+                }
 
                 String report = htmlReport(titles, works)
 
@@ -247,7 +273,6 @@ class WorkToolJob {
             WorkComparator c = new WorkComparator(WorkComparator.allFields(titleCluster))
 
             works.addAll(partition(titleCluster, { Doc a, Doc b -> c.sameWork(a, b) })
-                    .findAll { it.size() > 1 }
                     .each { work -> work.each { doc -> doc.removeComparisonProps() } }
                     .collect { new MergedWork(work: buildWorkDocument(c.merge(it)), derivedFrom: it) })
         }
