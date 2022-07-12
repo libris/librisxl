@@ -117,7 +117,9 @@ class WorkToolJob {
                 try {
                     def docs = mergedWorks(titleClusters(cluster))
                             .collect { [new Doc2(whelk, it.work)] + it.derivedFrom }
-                    println(Html.hubTable(docs) + Html.HORIZONTAL_RULE)
+                    if (docs.size() > 1) {
+                        println(Html.hubTable(docs) + Html.HORIZONTAL_RULE)
+                    }
                 }
                 catch (Exception e) {
                     System.err.println(e.getMessage())
