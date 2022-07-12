@@ -55,6 +55,9 @@ class WorkComparator {
     }
 
     Map merge(Collection<Doc> docs) {
+        if (docs.size() == 1) {
+            return docs[0].getWork()
+        }
         Map result = [:]
         fields.each { field ->
             FieldHandler h = comparators.getOrDefault(field, DEFAULT)
@@ -105,7 +108,7 @@ class WorkComparator {
     static Set<String> allFields(Collection<Doc> cluster) {
         Set<String> fields = new HashSet<>()
         cluster.each { fields.addAll(it.getWork().keySet()) }
-        return fields
+        return fields - 'summary' // - 'summary' only temporary, remove when summaries have been moved to instance (LXL-3303)
     }
 
     Map<String, FieldStatus> fieldStatuses(Collection<Doc> cluster) {
