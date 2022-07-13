@@ -2,7 +2,6 @@ package datatool.scripts.mergeworks
 
 import org.apache.commons.lang3.StringUtils
 import whelk.Whelk
-import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
 import java.util.regex.Pattern
@@ -192,14 +191,14 @@ class Util {
     // Return the most common title for the best encodingLevel
     static Object bestTitle(Collection<Doc> docs) {
         def isTitle = { it.'@type' == 'Title' }
-        def addSource = { t, d -> t.plus(['source': [d.getInstance().subMap('@id')]]) }
+        def addSource = { t, d -> t.plus(['source': [d.getMainEntity().subMap('@id')]]) }
 
         for (def level : bestEncodingLevel) {
             def titles = docs
                     .findAll { it.encodingLevel() == level }
                     .collect { d ->
                         d.getWork().get('hasTitle')?.findAll(isTitle)
-                                ?: d.getInstance().get('hasTitle')?.findResults { isTitle(it) ? addSource(it, d) : null }
+                                ?: d.getMainEntity().get('hasTitle')?.findResults { isTitle(it) ? addSource(it, d) : null }
                     }
                     .grep()
 

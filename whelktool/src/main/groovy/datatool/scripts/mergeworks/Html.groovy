@@ -41,7 +41,7 @@ class Html {
 
         return """
             <table>
-                ${header}   
+                ${header}
                 ${equal}
                 ${compatible}
                 ${diff}
