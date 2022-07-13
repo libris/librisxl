@@ -92,14 +92,11 @@ class WorkToolJob {
         run({ cluster ->
             return {
                 try {
-                    def mergedWorks = mergedWorks(titleClusters(clusters))
-                    if (mergedWorks.size() > 1) {
-                        println(mergedWorks
-                                .collect { [new Doc2(whelk, it.work)] + it.derivedFrom }
-                                .collect { Html.clusterTable(it) }
-                                .join('') + Html.HORIZONTAL_RULE
-                        )
-                    }
+                    println(mergedWorks(titleClusters(cluster)).findAll { it.derivedFrom.size() > 1 }
+                            .collect { [new Doc(whelk, it.work)] + it.derivedFrom }
+                            .collect { Html.clusterTable(it) }
+                            .join('') + Html.HORIZONTAL_RULE
+                    )
                 }
                 catch (Exception e) {
                     System.err.println(e.getMessage())
@@ -115,10 +112,10 @@ class WorkToolJob {
         run({ cluster ->
             return {
                 try {
-                    def docs = mergedWorks(titleClusters(cluster))
-                            .collect { [new Doc2(whelk, it.work)] + it.derivedFrom }
-                    if (docs.size() > 1) {
-                        println(Html.hubTable(docs) + Html.HORIZONTAL_RULE)
+                    def hub = mergedWorks(titleClusters(cluster))
+                            .collect { [new Doc(whelk, it.work)] + it.derivedFrom }
+                    if (hub.size() > 1) {
+                        println(Html.hubTable(hub) + Html.HORIZONTAL_RULE)
                     }
                 }
                 catch (Exception e) {
@@ -140,7 +137,7 @@ class WorkToolJob {
                 def works = mergedWorks(titles)
 
                 works.each {
-                    if (it.size() > 1) {
+                    if (it.derivedFrom.size() > 1) {
                         store(it)
                     }
                 }
@@ -204,7 +201,7 @@ class WorkToolJob {
         titleClusters.each { it.each { it.removeComparisonProps() } }
 
         s.append("<h1>Extracted works</h1>")
-        works.collect { [new Doc2(whelk, it.work)] + it.derivedFrom }
+        works.collect { [new Doc(whelk, it.work)] + it.derivedFrom }
                 .each { s.append(Html.clusterTable(it)) }
 
         s.append(Html.END)
