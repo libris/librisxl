@@ -23,8 +23,8 @@ class Util {
         AUTHOR_OF_AFTERWORD('https://id.kb.se/relator/authorOfAfterwordColophonEtc'),
         PHOTOGRAPHER('https://id.kb.se/relator/photographer'),
         EDITOR('https://id.kb.se/relator/editor'),
-        UNSPECIFIED_CONTRIBUTOR('https://id.kb.se/relator/unspecifiedContributor')
-
+        UNSPECIFIED_CONTRIBUTOR('https://id.kb.se/relator/unspecifiedContributor'),
+        PRIMARY_RIGHTS_HOLDER('https://id.kb.se/relator/primaryRightsHolder')
 
         String iri
 

@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Function
 
 import static datatool.scripts.mergeworks.FieldStatus.DIFF
+
 import static datatool.scripts.mergeworks.Util.asList
 import static datatool.scripts.mergeworks.Util.chipString
 import static datatool.scripts.mergeworks.Util.getPathSafe
@@ -397,6 +398,69 @@ class WorkToolJob {
             return {
                 titleClusters(cluster).findAll { it.size() > 1 }.each {
                     println(it.collect { it.doc.shortId }.join('\t'))
+                }
+            }
+        })
+    }
+
+    void add9pu() {
+        statistics.printOnShutdown()
+        run( {cluster ->
+            return {
+                statistics.increment('add 9pu', 'clusters checked')
+                def docs = cluster
+                        .collect(whelk.&getDocument)
+                        .findAll()
+                        .collect { [doc: it, checksum: it.getChecksum(whelk.jsonld), changed: false] }
+
+                def ill = ['@id': Relator.ILLUSTRATOR.iri]
+                def pu = ['@id': Relator.PRIMARY_RIGHTS_HOLDER.iri]
+                def path = ['@graph', 1, 'instanceOf', 'contribution']
+
+                docs.each {
+                    Document d = it.doc
+
+                    statistics.increment('add 9pu', 'docs checked')
+
+                    getPathSafe(d.data, path, []).each { Map c ->
+                        def r = asList(c.role)
+
+                        if (pu in r || !(ill in r) || c.'@type' == 'PrimaryContribution')
+                            return
+
+                        for (Map other : docs) {
+                            Document od = other.doc
+
+                            def found9pu = false
+
+                            getPathSafe(od.data, path, []).each { Map oc ->
+                                if (asList(c.agent) == asList(oc.agent) && asList(oc.role).containsAll([ill, pu])) {
+                                    c.role = asList(c.role) + pu
+                                    found9pu = true
+                                    statistics.increment('add 9pu', "9pu added")
+                                    if (verbose) {
+                                        println("${d.shortId} <- ${od.shortId}")
+                                    }
+                                    return
+                                }
+                            }
+
+                            if (found9pu) {
+                                println(c)
+                                it.changed = true
+                                break
+                            }
+                        }
+                    }
+                }
+
+                docs.each {
+                    if (!dryRun && it.changed) {
+                        Document d = it.doc
+                        d.setGenerationDate(new Date())
+                        d.setGenerationProcess(generationProcess)
+                        whelk.storeAtomicUpdate(d, !loud, changedIn, changedBy, it.checksum)
+                    }
                 }
             }
         })
