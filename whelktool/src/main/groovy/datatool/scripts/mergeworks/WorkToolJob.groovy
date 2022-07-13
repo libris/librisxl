@@ -405,7 +405,7 @@ class WorkToolJob {
 
     void add9pu() {
         statistics.printOnShutdown()
-        run( {cluster ->
+        run({ cluster ->
             return {
                 statistics.increment('add 9pu', 'clusters checked')
                 def docs = cluster
@@ -770,7 +770,7 @@ class WorkToolJob {
                 .with { partitionByTitle(it) }
                 .findAll { it.size() > 1 }
                 .findAll { !it.any { doc -> doc.hasGenericTitle() } }
-                .sort { a, b -> a.first().instanceDisplayTitle() <=> b.first().instanceDisplayTitle() }
+                .sort { a, b -> a.first().mainEntityDisplayTitle() <=> b.first().mainEntityDisplayTitle() }
     }
 
     Collection<Collection<Doc>> partitionByTitle(Collection<Doc> docs) {
