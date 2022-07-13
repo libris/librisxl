@@ -89,7 +89,7 @@ class Doc {
         thing['hasTitle'].collect { it['@type'] + ": " + it['flatTitle'] }.join(', ')
     }
 
-    String instanceDisplayTitle() {
+    String mainEntityDisplayTitle() {
         displayTitle(['hasTitle': Util.flatTitles(getMainEntity()['hasTitle'])])
     }
 
@@ -135,11 +135,14 @@ class Doc {
         } else if (field == 'classification') {
             return classificationStrings().join("<br>")
         } else if (field == 'instance title') {
-            return getMainEntity()['hasTitle'] ?: ''
+            return isInstance() ? (getMainEntity()['hasTitle'] ?: '') : ''
         } else if (field == 'work title') {
-            return getFramed()['instanceOf']['hasTitle'] ?: ''
+            // To load hasTitle from linked work in instanceOf we can use getFramed()
+            // However we then need to handle that getFramed() loads linked instances in hasTitle.source
+            // Prefer getMainEntity() for now
+            return isInstance() ? (getMainEntity()['instanceOf']['hasTitle'] ?: '') : (getMainEntity()['hasTitle'] ?: '')
         } else if (field == 'instance type') {
-            return getMainEntity()['@type']
+            return isInstance() ? getMainEntity()['@type'] : ''
         } else if (field == 'editionStatement') {
             return getMainEntity()['editionStatement'] ?: ''
         } else if (field == 'responsibilityStatement') {
