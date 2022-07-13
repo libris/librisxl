@@ -65,20 +65,24 @@ class Doc {
         return work
     }
 
-    Map getInstance() {
+    Map getMainEntity() {
         return doc.data['@graph'][1]
+    }
+
+    boolean isInstance() {
+        return getMainEntity().containsKey('instanceOf')
     }
 
     List<String> getTitleVariants() {
         if (!titles) {
-            titles = Util.getTitleVariants(getInstance()['hasTitle'])
+            titles = Util.getTitleVariants(getMainEntity()['hasTitle'])
         }
 
         return titles
     }
 
     boolean hasGenericTitle() {
-        Util.hasGenericTitle(getInstance()['hasTitle'])
+        Util.hasGenericTitle(getMainEntity()['hasTitle'])
     }
 
     private static String displayTitle(Map thing) {
@@ -86,7 +90,7 @@ class Doc {
     }
 
     String instanceDisplayTitle() {
-        displayTitle(['hasTitle': Util.flatTitles(getInstance()['hasTitle'])])
+        displayTitle(['hasTitle': Util.flatTitles(getMainEntity()['hasTitle'])])
     }
 
     String link() {
@@ -97,7 +101,7 @@ class Doc {
     }
 
     boolean isMonograph() {
-        getInstance()['issuanceType'] == 'Monograph'
+        getMainEntity()['issuanceType'] == 'Monograph'
     }
 
     boolean hasPart() {
@@ -109,7 +113,7 @@ class Doc {
     }
 
     int numPages() {
-        String extent = Util.getPathSafe(getInstance(), ['extent', 0, 'label', 0]) ?: Util.getPathSafe(getInstance(), ['extent', 0, 'label'], '')
+        String extent = Util.getPathSafe(getMainEntity(), ['extent', 0, 'label', 0]) ?: Util.getPathSafe(getMainEntity(), ['extent', 0, 'label'], '')
         return numPages(extent)
     }
 
@@ -131,23 +135,23 @@ class Doc {
         } else if (field == 'classification') {
             return classificationStrings().join("<br>")
         } else if (field == 'instance title') {
-            return getInstance()['hasTitle'] ?: ''
+            return getMainEntity()['hasTitle'] ?: ''
         } else if (field == 'work title') {
             return getFramed()['instanceOf']['hasTitle'] ?: ''
         } else if (field == 'instance type') {
-            return getInstance()['@type']
+            return getMainEntity()['@type']
         } else if (field == 'editionStatement') {
-            return getInstance()['editionStatement'] ?: ''
+            return getMainEntity()['editionStatement'] ?: ''
         } else if (field == 'responsibilityStatement') {
-            return getInstance()['responsibilityStatement'] ?: ''
+            return getMainEntity()['responsibilityStatement'] ?: ''
         } else if (field == 'encodingLevel') {
             return encodingLevel()
         } else if (field == 'publication') {
-            return chipString(getInstance()['publication'] ?: [])
+            return chipString(getMainEntity()['publication'] ?: [])
         } else if (field == 'identifiedBy') {
-            return chipString(getInstance()['identifiedBy'] ?: [])
+            return chipString(getMainEntity()['identifiedBy'] ?: [])
         } else if (field == 'extent') {
-            return chipString(getInstance()['extent'] ?: [])
+            return chipString(getMainEntity()['extent'] ?: [])
         } else if (field == 'reproductionOf') {
             return reproductionOfLink()
         } else {
@@ -164,7 +168,7 @@ class Doc {
     }
 
     private String reproductionOfLink() {
-        def shortId = Util.getPathSafe(getInstance(), ['reproductionOf', '@id'])
+        def shortId = Util.getPathSafe(getMainEntity(), ['reproductionOf', '@id'])
                 ?.tokenize("/#")
                 ?.dropRight(1)
                 ?.last() ?: ''
@@ -173,7 +177,8 @@ class Doc {
     }
 
     private List classificationStrings() {
-        List<Map> classification = Util.getPathSafe(getFramed(), ['instanceOf', 'classification'], [])
+        List path = isInstance() ? ['instanceOf', 'classification'] : ['classification']
+        List<Map> classification = Util.getPathSafe(getFramed(), path, [])
         classification.collect() { c ->
             StringBuilder s = new StringBuilder()
             s.append(flatMaybeLinked(c['inScheme'], ['code', 'version']).with { it.isEmpty() ? it : it + ': ' })
@@ -183,7 +188,8 @@ class Doc {
     }
 
     private List contributorStrings() {
-        List contribution = Util.getPathSafe(getFramed(), ['instanceOf', 'contribution'], [])
+        List path = isInstance() ? ['instanceOf', 'contribution'] : ['contribution']
+        List contribution = Util.getPathSafe(getFramed(), path, [])
 
         return contribution.collect { Map c ->
             contributionStr(c)
@@ -192,7 +198,13 @@ class Doc {
 
     protected Map getFramed() {
         if (!framed) {
-            framed = JsonLd.frame(doc.getThingIdentifiers().first(), whelk.loadEmbellished(doc.shortId).data)
+            if (isInstance()) {
+                framed = JsonLd.frame(doc.getThingIdentifiers().first(), whelk.loadEmbellished(doc.shortId).data)
+            } else {
+                Document copy = doc.clone()
+                whelk.embellish(copy)
+                framed = JsonLd.frame(doc.getThingIdentifiers().first(), copy.data)
+            }
         }
 
         return framed
@@ -309,7 +321,7 @@ class Doc {
     }
 
     boolean hasDistinguishingEdition() {
-        (getInstance()['editionStatement'] ?: '').toString().toLowerCase().contains("förk")
+        (getMainEntity()['editionStatement'] ?: '').toString().toLowerCase().contains("förk")
     }
 
     boolean hasRelationshipWithContribution() {
@@ -329,39 +341,17 @@ class Doc {
 
     void moveSummaryToInstance() {
         if (getWork()['summary']) {
-            getInstance()['summary'] = asList(getInstance()['summary']) + asList(getWork()['summary'])
+            getMainEntity()['summary'] = asList(getMainEntity()['summary']) + asList(getWork()['summary'])
             getWork().remove('summary')
         }
     }
 
     void addToWork(String field) {
-        getWork()[field] = getInstance()[field]
+        getWork()[field] = getMainEntity()[field]
     }
 
     void removeComparisonProps() {
         getWork().remove('editionStatement')
         getWork().remove('_numPages')
-    }
-}
-
-//TODO
-class Doc2 extends Doc {
-    Doc2(Whelk whelk, Document doc) {
-        super(whelk, doc)
-    }
-
-    @Override
-    String getDisplayText(String field) {
-        chipString(getWork().getOrDefault(field, []))
-    }
-
-    protected Map getFramed() {
-        if (!framed) {
-            Document copy = doc.clone()
-            whelk.embellish(copy)
-            framed = JsonLd.frame(doc.getThingIdentifiers().first(), copy.data)
-        }
-
-        return framed
     }
 }
