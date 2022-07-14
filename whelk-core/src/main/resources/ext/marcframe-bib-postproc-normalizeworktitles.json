@@ -1,0 +1,137 @@
+{
+  "type": "NormalizeWorkTitles",
+  "_spec": [
+    {
+      "name":  "move translationOf title for bib 240",
+      "result": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "hasTitle": [
+              {"@type": "Title", "mainTitle": "TITELN"}
+            ],
+            "language": [
+              {"@id": "https://id.kb.se/language/swe", "@type": "Language", "code": "swe", "label": "Svenska"}
+            ],
+            "contribution": [
+              {"@type": "PrimaryContribution"}
+            ],
+            "translationOf": [
+              {
+                "@type": "Work",
+                "hasTitle": [
+                  {"@type": "Title", "mainTitle": "THE TITLE"}
+                ],
+                "language": [
+                  {"@id": "https://id.kb.se/language/eng", "@type": "Language", "code": "eng", "label": ["English"]}
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "back": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "hasTitle": [
+              {"@type": "Title", "mainTitle": "TITELN", "_revertedBy": "NormalizeWorkTitlesStep"},
+              {"@type": "Title", "mainTitle": "THE TITLE", "_revertOnly": true}
+            ],
+            "language": [
+              {"@id": "https://id.kb.se/language/swe", "@type": "Language", "code": "swe", "label": "Svenska"}
+            ],
+            "contribution": [
+              {"@type": "PrimaryContribution"}
+            ],
+            "translationOf": [
+              {
+                "@type": "Work",
+                "hasTitle": [
+                  {"@type": "Title", "mainTitle": "THE TITLE"}
+                ],
+                "language": [
+                  {"@id": "https://id.kb.se/language/eng", "@type": "Language", "code": "eng", "label": ["English"]}
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name":  "move (non-copied) title to expressionOf for bib 130 if no contribution is present",
+      "result": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "hasTitle": [{"@type": "Title", "mainTitle": "TITELN"}],
+            "language": [{"@id": "https://id.kb.se/language/swe"}]
+          }
+        }
+      },
+      "back": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "hasTitle": [{"@type": "Title", "mainTitle": "TITELN", "_revertedBy": "NormalizeWorkTitlesStep"}],
+            "language": [{"@id": "https://id.kb.se/language/swe"}],
+            "expressionOf": {
+                "@type": "Work",
+                "hasTitle": [{"@type": "Title", "mainTitle": "TITELN", "_revertOnly": true}]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name":  "move translated title to expressionOf for bib 130 if no contribution is present",
+      "result": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "hasTitle": [{"@type": "Title", "mainTitle": "TITELN"}],
+            "language": [{"@id": "https://id.kb.se/language/swe", "@type": "Language", "code": "swe", "label": "Svenska"}],
+            "translationOf": [
+              {
+                "@type": "Work",
+                "hasTitle": [{"@type": "Title", "mainTitle": "THE TITLE"}],
+                "language": [{"@id": "https://id.kb.se/language/eng", "@type": "Language", "code": "eng", "label": "English"}]
+              }
+            ]
+          }
+        }
+      },
+      "back": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "hasTitle": [{"@type": "Title", "mainTitle": "TITELN"}],
+            "hasTitle": [
+              {"@type": "Title", "mainTitle": "TITELN", "_revertedBy": "NormalizeWorkTitlesStep"},
+              {"@type": "Title", "mainTitle": "THE TITLE", "_revertOnly": true}
+            ],
+            "language": [{"@id": "https://id.kb.se/language/swe", "@type": "Language", "code": "swe", "label": "Svenska"}],
+            "translationOf": [
+              {
+                "@type": "Work",
+                "hasTitle": [{"@type": "Title", "mainTitle": "THE TITLE"}],
+                "language": [{"@id": "https://id.kb.se/language/eng", "@type": "Language", "code": "eng", "label": "English"}]
+              }
+            ],
+            "expressionOf": {
+              "@type": "Work",
+              "hasTitle": [
+                {
+                  "@type": "Title", "mainTitle": "TITELN",
+                  "_revertOnly": true,
+                  "_revertedBy": "NormalizeWorkTitlesStep"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}
