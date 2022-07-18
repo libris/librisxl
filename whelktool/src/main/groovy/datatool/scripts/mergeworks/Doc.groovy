@@ -241,8 +241,7 @@ class Doc {
         }
         if (o instanceof Map) {
             return order
-                    .collect { ((Map) o).get(it, null) }
-                    .grep { it != null }
+                    .findResults { ((Map) o).get(it) }
                     .collect { flatten(it, order) }
                     .join(mapSeparator)
         }
