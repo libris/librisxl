@@ -28,7 +28,7 @@ class Html {
             </tr>
             <tr>
                 <td></td>
-                ${cluster.collect { doc -> "<td>${doc.instanceDisplayTitle()}</td>" }.join('\n')}                                                             
+                ${cluster.collect { doc -> "<td>${doc.mainEntityDisplayTitle()}</td>" }.join('\n')}                                     
             </tr>
            """.stripIndent()
 
