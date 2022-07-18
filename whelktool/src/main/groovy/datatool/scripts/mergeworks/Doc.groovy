@@ -65,6 +65,10 @@ class Doc {
         return work
     }
 
+    Map workCopy() {
+        return getWork(whelk, doc.clone())
+    }
+
     Map getMainEntity() {
         return doc.data['@graph'][1]
     }

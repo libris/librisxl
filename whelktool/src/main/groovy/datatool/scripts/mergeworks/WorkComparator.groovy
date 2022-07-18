@@ -69,7 +69,7 @@ class WorkComparator {
                 }
             }
         } else {
-            result = docs[0].getWork()
+            result = docs[0].workCopy()
         }
 
         if (!result['hasTitle']) {
