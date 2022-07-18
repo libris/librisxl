@@ -93,11 +93,13 @@ class WorkToolJob {
         run({ cluster ->
             return {
                 try {
-                    println(mergedWorks(titleClusters(cluster)).findAll { it.derivedFrom.size() > 1 }
-                            .collect { [new Doc(whelk, it.work)] + it.derivedFrom }
-                            .collect { Html.clusterTable(it) }
-                            .join('') + Html.HORIZONTAL_RULE
-                    )
+                    def merged = mergedWorks(titleClusters(cluster)).findAll { it.derivedFrom.size() > 1 }
+                    if (merged) {
+                        println(merged.collect { [new Doc(whelk, it.work)] + it.derivedFrom }
+                                .collect { Html.clusterTable(it) }
+                                .join('') + Html.HORIZONTAL_RULE
+                        )
+                    }
                 }
                 catch (Exception e) {
                     System.err.println(e.getMessage())
