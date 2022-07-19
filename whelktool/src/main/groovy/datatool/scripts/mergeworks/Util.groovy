@@ -238,7 +238,7 @@ class Util {
                         (Relator.COVER_DESIGNER)     : ~/omslag/,
                         (Relator.AUTHOR_OF_AFTERWORD): ~/efter(ord|skrift)/,
                         (Relator.PHOTOGRAPHER)       : ~/\bfoto\w*\.?/,
-                        (Relator.EDITOR)             : ~/red(\.(?! av)|aktör(er)?)|\bbearb(\.|\w+)?|återberättad|sammanställ\w*/,
+//                        (Relator.EDITOR)             : ~/red(\.(?! av)|aktör(er)?)|\bbearb(\.|\w+)?|återberättad|sammanställ\w*/,
                 ]
 
         def rolePattern = ~/((?iu)${roleToPattern.values().join('|')})/
