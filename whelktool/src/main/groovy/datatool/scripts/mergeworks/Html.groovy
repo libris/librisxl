@@ -71,7 +71,7 @@ class Html {
                 """
                     <tr class="info">
                         <td>_derivedFrom</td>
-                        ${ids.collect { "<td>${it.collect { id, link -> "<a id=\"$id\" href=\"$link\">$id</a>" }.join('\n')}</td>" }.join('\n')}
+                        ${ids.collect { "<td>${it.collect { id, link -> "<a id=\"$id\" href=\"$link\">$id</a>" }.join('<br>')}</td>" }.join('\n')}
                         </tr> 
                 """.stripIndent()
 
