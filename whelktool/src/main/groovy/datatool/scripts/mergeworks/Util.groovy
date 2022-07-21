@@ -194,20 +194,28 @@ class Util {
         def addSource = { t, d -> t.plus(['source': [d.getMainEntity().subMap('@id')]]) }
 
         for (def level : bestEncodingLevel) {
-            def titles = docs
-                    .findAll { it.encodingLevel() == level }
-                    .collect { d ->
-                        d.getWork().get('hasTitle')?.findAll(isTitle)
-                                ?: d.getMainEntity().get('hasTitle')?.findResults { isTitle(it) ? addSource(it, d) : null }
-                    }
-                    .grep()
+            def onLevel = docs.findAll { it.encodingLevel() == level }
+
+            def workTitles = onLevel.collect { it.getWork().get('hasTitle')?.findAll(isTitle) }.collect(Util.&dropSubTitles)
+            def instanceTitles = onLevel.collect { it.getMainEntity().get('hasTitle')?.findAll(isTitle) }.collect(Util.&dropSubTitles)
+            def instanceTitleToDoc = [instanceTitles, onLevel].transpose().collectEntries()
+
+            def titles = [workTitles, instanceTitles].transpose().collect { wt, itt ->
+                wt ?: itt
+            }.grep()
 
             if (!titles) {
                 continue
             }
 
-            titles = titles.collect(Util.&dropSubTitles)
-            return partition(titles, { a, b -> a == b }).sort { it.size() }.reverse().first().first()
+            def bestTitles = partition(titles, { a, b -> a == b })
+                    .sort { it.size() }
+                    .reverse()
+                    .with { p -> p.takeWhile { it.size() == p.first().size() } }
+                    .collect { it.first() }
+
+            return bestTitles.find { it in workTitles }
+                    ?: addSource(bestTitles.first(), instanceTitleToDoc[bestTitles.first()])
         }
 
         return null
