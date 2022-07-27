@@ -2718,6 +2718,18 @@ class PostgreSQLComponent {
         return s.startsWith('http://') || s.startsWith('https://')
     }
 
+    private static void close(AutoCloseable... resources) {
+        for (AutoCloseable resource : resources) {
+            try {
+                if (resource != null) {
+                    resource.close()
+                }
+            } catch (Exception e) {
+                log.debug("Error closing $resource : $e")
+            }
+        }
+    }
+
     private static void close(Object... resources = null) {
         if (resources != null) {
             for (def resource : resources) {
