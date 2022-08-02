@@ -2176,7 +2176,7 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
                 def items = (List<Map>) parent[link]
                 if (items instanceof List && items.size() == 1) {
                     parent.remove(link)
-                    parent.putAll(items[0])
+                    parent.putAll((Map) items[0])
                 }
             }
         }
