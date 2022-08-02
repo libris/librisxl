@@ -14,8 +14,7 @@ class LanguageLinker extends BlankNodeLinker implements DocumentUtil.Linker {
     boolean linkLanguages(data, List<Map> disambiguationNodes = [], String key = 'language') {
         return DocumentUtil.findKey(data, key, DocumentUtil.link(this, disambiguationNodes))
     }
-
-    //@Override
+    
     boolean linkAll(data, String key = 'language') {
         super.linkAll(data, key)
     }

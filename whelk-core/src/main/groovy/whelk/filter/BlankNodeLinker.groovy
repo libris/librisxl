@@ -3,19 +3,12 @@ package whelk.filter
 import com.google.common.collect.Iterables
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.JsonLd
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
 import whelk.util.DocumentUtil
 import whelk.util.Statistics
 
-/*
-Groovy compiler fails...
-.../compileGroovy/groovy-java-stubs/whelk/filter/BlankNodeLinker.java:10: error: cannot find symbol
-
-import static whelk.JsonLd.GRAPH_KEY
-import static whelk.JsonLd.ID_KEY
-import static whelk.JsonLd.TYPE_KEY
- */
 import static whelk.util.DocumentUtil.NOP
 import static whelk.util.DocumentUtil.Remove
 import static whelk.util.DocumentUtil.findKey
@@ -93,6 +86,7 @@ class BlankNodeLinker implements DocumentUtil.Linker {
                 }))
             }
         }
+
 
         String id = definition.isReplacedBy ? definition.isReplacedBy[JsonLd.ID_KEY] : definition[JsonLd.ID_KEY]
         identifiers.each { addMapping(it, id) }
