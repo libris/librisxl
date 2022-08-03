@@ -2597,7 +2597,18 @@ class PostgreSQLComponent {
     }
     
     enum NotificationType {
-        dependency_cache_invalidate // LISTEN silently fails to register if upper case(???)
+        DEPENDENCY_CACHE_INVALIDATE
+        
+        String id() {
+            // Made lower case by PG when used as a relname, but not when used as a string.
+            // So always make it lower case.
+            // https://stackoverflow.com/a/5173993
+            toString().toLowerCase(Locale.ROOT)
+        }
+        
+        static NotificationType parse(String id) {
+            values().find{ it.id() == id }
+        }
     }
     
     void sendNotification(NotificationType type, List<String> payload) {
@@ -2617,7 +2628,7 @@ class PostgreSQLComponent {
         withDbConnection {
             for (String message : messages) {
                 try (PreparedStatement statement = getMyConnection().prepareStatement('SELECT pg_notify(?, ?)')) {
-                    statement.setString(1, type.toString())
+                    statement.setString(1, type.id())
                     statement.setString(2, message)
                     statement.execute()
                 }
@@ -2646,11 +2657,11 @@ class PostgreSQLComponent {
                 try(Connection connection = dataSource.getConnection()) {
                     for (NotificationType t : NotificationType.values()) {
                         try (def statement = connection.createStatement()) {
-                            statement.execute("LISTEN ${t.toString()}")
-                            log.info("Started listening for $t")
+                            statement.execute("LISTEN ${t.id()}")
+                            log.info("Started listening for ${t.id()}")
                         }
                     }
-                    dependencyCache.invalidateAll()
+                    onConnected()
                     listen(connection.unwrap(PGConnection))
                 }
                 catch (Exception e) {
@@ -2671,7 +2682,7 @@ class PostgreSQLComponent {
                         String msg = notification.getParameter()
                         if (!msg.startsWith(whelkInstanceId)) {
                             def payload = msg.split(NOTIFICATION_DELIMITER).drop(1) as List
-                            handleNotification(notification.getName(), payload)
+                            handleNotification(NotificationType.parse(notification.getName()), payload)
                         }
                     }
                     catch (Exception e) {
@@ -2681,10 +2692,20 @@ class PostgreSQLComponent {
             }
         }
 
-        private void handleNotification(String name, List<String> payload) {
-            if (name == NotificationType.dependency_cache_invalidate.toString()) {
+        private void handleNotification(NotificationType type, List<String> payload) {
+            if (!type) {
+                return
+            }
+            
+            if (type == NotificationType.DEPENDENCY_CACHE_INVALIDATE) {
                 dependencyCache.handleInvalidateNotification(payload)
             }
+            
+            counter.labels(type.id()).inc()
+        }
+        
+        private void onConnected() {
+            dependencyCache.invalidateAll()
         }
     }
 

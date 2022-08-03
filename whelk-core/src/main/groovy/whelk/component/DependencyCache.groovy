@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit
 import java.util.function.BiFunction
 import java.util.function.Supplier
 
-import static whelk.component.PostgreSQLComponent.NotificationType.dependency_cache_invalidate
+import static whelk.component.PostgreSQLComponent.NotificationType.DEPENDENCY_CACHE_INVALIDATE
 
 @Log
 class DependencyCache {
@@ -98,7 +98,7 @@ class DependencyCache {
             "$fromIri ${link.relation} ${link.iri}"
         }
         log.debug("Sending {}", notification)
-        storage.sendNotification(dependency_cache_invalidate, notification)
+        storage.sendNotification(DEPENDENCY_CACHE_INVALIDATE, notification)
     }
     
     void handleInvalidateNotification(List<String> payload) {
