@@ -40,6 +40,8 @@ class Whelk {
     Relations relations
     DocumentNormalizer normalizer
     ElasticFind elasticFind
+
+    // FIXME: de-KBV/Libris-ify: configurable
     ZoneId timezone = ZoneId.of('Europe/Stockholm')
 
     URI baseUri = null
@@ -49,6 +51,7 @@ class Whelk {
     // Any other use of this results in a "local" cache, which will not be invalidated when data changes elsewhere,
     // resulting in potential serving of stale data.
 
+    // FIXME: de-KBV/Libris-ify: configurable
     // TODO: encapsulate and configure (LXL-260)
     String kbvContextUri = "https://id.kb.se/sys/context/kbv"
     String defaultTvmProfile = kbvContextUri
@@ -131,14 +134,14 @@ class Whelk {
             initDocumentNormalizers()
         }
     }
-    
+
+    // FIXME: de-KBV/Libris-ify: some of these are KBV specific, is that a problem?
     private void initDocumentNormalizers() {
         LanguageLinker languageLinker = new LanguageLinker()
         Normalizers.loadDefinitions(languageLinker, this)
         normalizer = new NormalizerChain(
                 [
                         Normalizers.nullRemover(),
-                        //FIXME: This is KBV specific stuff
                         Normalizers.workPosition(jsonld),
                         Normalizers.typeSingularity(jsonld),
                         Normalizers.language(languageLinker),

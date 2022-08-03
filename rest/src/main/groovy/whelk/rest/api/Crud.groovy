@@ -114,6 +114,7 @@ class Crud extends HttpServlet {
         search = new SearchUtils(whelk)
         validator = JsonLdValidator.from(jsonld)
         converterUtils = new ConverterUtils(whelk)
+        // FIXME: de-KBV/Libris-ify: make configurable
         siteConfig = mapper.readValue(getClass().classLoader
                 .getResourceAsStream("site_config.json").getBytes(), Map)
         sitesData = (Map) siteConfig['sites']
@@ -207,6 +208,7 @@ class Crud extends HttpServlet {
 
     static void displayInfo(HttpServletResponse response) {
         def info = [:]
+        // FIXME: de-KBV/Libris-ify?
         info["system"] = "LIBRISXL"
         info["format"] = "linked-data-api"
         sendResponse(response, mapper.writeValueAsString(info), "application/json")

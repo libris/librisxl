@@ -26,6 +26,7 @@ class ElasticSearch {
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
     static final String SEARCH_TYPE = "dfs_query_then_fetch"
 
+    // FIXME: de-KBV/Libris-ify: configurable
     static final List<String> REMOVABLE_BASE_URIS = [
             'http://libris.kb.se/',
             'https://libris.kb.se/',
