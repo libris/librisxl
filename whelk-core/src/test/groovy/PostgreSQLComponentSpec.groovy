@@ -5,6 +5,7 @@ import org.codehaus.jackson.map.ObjectMapper
 import spock.lang.Specification
 import whelk.Document
 
+import javax.sql.DataSource
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -17,7 +18,7 @@ class PostgreSQLComponentSpec extends Specification {
     def stmt = GroovyMock(PreparedStatement)
     def conn = GroovyMock(Connection)
     def result = GroovyMock(ResultSet)
-
+    def additionalDataSource = GroovyMock(DataSource)
 
     static private final ObjectMapper mapper = new ObjectMapper()
 
@@ -37,6 +38,11 @@ class PostgreSQLComponentSpec extends Specification {
             @Override
             List<String> followDependers(String id) {
                 return []
+            }
+
+            @Override
+            DataSource createAdditionalConnectionPool(String name, int size) {
+                additionalDataSource
             }
         }
     }
