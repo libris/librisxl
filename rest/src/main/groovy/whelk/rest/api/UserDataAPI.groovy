@@ -137,7 +137,6 @@ class UserDataAPI extends HttpServlet {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Key 'id' missing in user info")
             return false
         }
-2
         String id = "${userInfo.id}".digest(ID_HASH_FUNCTION)
         if (getRequestId(request) != id) {
             log.info("ID in request doesn't match ID from token")
