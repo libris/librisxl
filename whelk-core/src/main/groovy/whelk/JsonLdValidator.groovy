@@ -1,5 +1,7 @@
 package whelk
 
+import org.apache.jena.iri.IRI
+import org.apache.jena.iri.IRIFactory
 import com.google.common.base.Preconditions
 import whelk.util.DocumentUtil
 
@@ -12,6 +14,7 @@ class JsonLdValidator {
             'definitions': Validation.Scope.DEFINITIONS,
             'hold': Validation.Scope.HOLD,
     ]
+    static IRIFactory iriFactory = IRIFactory.iriImplementation()
 
     private JsonLdValidator(JsonLd jsonLd) {
         this.jsonLd = jsonLd
@@ -86,6 +89,7 @@ class JsonLdValidator {
 
             // Validations enabled for all collections
             checkIsNotNestedGraph(key, value, validation)
+            validateId(key, value, validation)
 
             // Additional per-collection validations
             switch (validation.scope) {
@@ -125,6 +129,8 @@ class JsonLdValidator {
         validateRepeatability(key, value, validation)
 
         validateObjectProperties(key, value, validation)
+
+        validateId(key, value, validation)
     }
 
     private void checkIsNotNestedGraph(String key, value, validation) {
@@ -202,6 +208,15 @@ class JsonLdValidator {
         }
     }
 
+    private void validateId(String key, value, Validation validation) {
+        if (key == jsonLd.ID_KEY) {
+            IRI iri = iriFactory.create(value)
+            if (iri.hasViolation(false)) {
+                handleError(new Error(Error.Type.INVALID_IRI, key, value), validation)
+            }
+        }
+    }
+
     private Map getContextDefinition(String key) {
         return jsonLd.context[key] instanceof Map ? jsonLd.context[key] : null
     }
@@ -249,7 +264,8 @@ class JsonLdValidator {
             MISSING_DEFINITION("Unknown term. Missing definition"),
             UNEXPECTED("Unexpected value of key"),
             NESTED_GRAPH("Nested graph object found"),
-            INVALID_KEY("Invalid key")
+            INVALID_KEY("Invalid key"),
+            INVALID_IRI("Invalid IRI")
 
             final String description
 
