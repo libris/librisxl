@@ -28,3 +28,6 @@ Session.vim
 
 # Local overrides to Log4J configuration etc.
 /local-overrides/
+
+# Logs
+/logs/
