@@ -456,8 +456,30 @@
   "010": {"ignored": true, "NOTE:record-count": 22, "NOTE:local": "ANVÄNDS NORMALT EJ"},
   "014": {
     "aboutEntity": "?record",
-    "i1": {"property": "marc:typeOfLinkageNumber", "marcDefault": "1"},
-    "$a": {"addLink": "identifiedBy", "resourceType": "LibrisIIINumber", "property": "value", "NOTE:marc-repeatable": false}
+    "addLink": "identifiedBy",
+    "resourceType": "LibrisIIINumber", 
+    "i1": {"ignored": true, "marcDefault": "1"},
+    "$a": {"property": "value", "NOTE:marc-repeatable": false},
+    "_spec": [
+      {
+        "source": {
+          "014": {"ind1": "0", "ind2": " ", "subfields": [{"a": "9926215580"}]}
+        },
+        "normalized": {
+          "014": {"ind1": "1", "ind2": " ", "subfields": [{"a": "9926215580"}]}
+        },
+        "result": {
+          "@type" : "Record",
+          "identifiedBy" : [{
+            "@type" : "LibrisIIINumber",
+            "value" : "9926215580"
+          }],
+          "mainEntity": {
+            "@type": "Item"
+          }
+        }
+      }
+    ]
   },
   "016": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ"},
   "017": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ"},
