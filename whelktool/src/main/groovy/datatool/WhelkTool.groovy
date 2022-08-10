@@ -135,6 +135,7 @@ class WhelkTool {
         def segment = '/scripts/'
         def path = scriptFile.toURI().toString()
         path = path.substring(path.lastIndexOf(segment) + segment.size())
+        // FIXME: de-KBV/Libris-ify
         scriptJobUri = "https://libris.kb.se/sys/globalchanges/${path}"
     }
 

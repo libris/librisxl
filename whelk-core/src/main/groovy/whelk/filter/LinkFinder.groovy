@@ -181,6 +181,7 @@ class LinkFinder {
                     data.clear()
                     data.put("@id", id)
                 } else if (id.startsWith("https://libris.kb.se/library/")) {
+                    // FIXME: de-KBV/Libris-ify
                     // A FUGLY special case/hack for library URIs, which we want as URIs alone, despite them not being XL-URIs.
                     data.clear()
                     data.put("@id", id)
