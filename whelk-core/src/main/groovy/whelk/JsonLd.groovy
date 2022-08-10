@@ -79,6 +79,7 @@ class JsonLd {
     Map displayData
     Map vocabIndex
 
+    // FIXME: de-KBV/Libris-ify: configurable
     List<String> locales
     private String vocabId
     private Map<String, String> nsToPrefixMap = [:]
