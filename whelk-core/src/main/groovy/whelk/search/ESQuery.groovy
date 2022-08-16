@@ -576,7 +576,7 @@ class ESQuery {
     private Map getNestedParams(Map groups) {
         Map nested = groups.findAll { g ->
             g.key in nestedFields &&
-            g.value.size() == 2
+            g.value.size() > 1
         }
         return nested
     }
