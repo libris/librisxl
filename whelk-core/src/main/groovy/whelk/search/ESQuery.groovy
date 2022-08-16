@@ -21,6 +21,7 @@ class ESQuery {
     private JsonLd jsonld
     private Set keywordFields
     private Set dateFields
+    private Set nestedFields
     
     private static final int DEFAULT_PAGE_SIZE = 50
     private static final List RESERVED_PARAMS = [
@@ -48,10 +49,12 @@ class ESQuery {
         if (whelk.elastic) {
             Map mappings = whelk.elastic.getMappings()
             this.keywordFields =  getKeywordFields(mappings)
-            this.dateFields = getDateFields(mappings)
+            this.dateFields = getFieldsOfType('date', mappings)
+            this.nestedFields = getFieldsOfType('nested', mappings)
         } else {
             this.keywordFields = Collections.emptySet()
             this.dateFields = Collections.emptySet()
+            this.nestedFields = Collections.emptySet()
         }
     }
     
@@ -571,10 +574,8 @@ class ESQuery {
 
     @CompileStatic(TypeCheckingMode.SKIP)
     private Map getNestedParams(Map groups) {
-        // TODO We hardcode `identifiedBy` here, since that's currently the only
-        // type of search in the client where we need nesting.
         Map nested = groups.findAll { g ->
-            g.key == 'identifiedBy' &&
+            g.key in nestedFields &&
             g.value.size() == 2
         }
         return nested
@@ -759,15 +760,15 @@ class ESQuery {
         }
     }
 
-    static Set getDateFields(Map mappings) {
-        Set dateFields = [] as Set
+    static Set getFieldsOfType(String type, Map mappings) {
+        Set fields = [] as Set
         DocumentUtil.findKey(mappings['properties'], 'type') { value, path ->
-            if (value == 'date') {
-                dateFields.add(path.dropRight(1).findAll{ it != 'properties'}.join('.'))
+            if (value == type) {
+                fields.add(path.dropRight(1).findAll{ it != 'properties'}.join('.'))
             }
             DocumentUtil.NOP
         }
-        return dateFields
+        return fields
     }
 
     /**
