@@ -499,13 +499,11 @@ class ESQuery {
         handledParameters.each {queryParametersCopy.remove(it)}
         filters.addAll(rangeFilters)
         
-        // TODO This is copied from the old code and should be rewritten.
-        // We don't have that many nested mappings, so this is way to general.
         Map groups = queryParametersCopy.groupBy { p -> getPrefixIfExists(p.key) }
         Map nested = getNestedParams(groups)
         Map notNested = (groups - nested).collect { it.value }.sum([:])
         nested.each { key, vals ->
-            filters << createNestedBoolFilter(key, vals)
+            filters.addAll(createNestedBoolFilters(key, vals))
         }
 
         notNested.removeAll {it.key in RESERVED_PARAMS}
@@ -573,26 +571,40 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    private Map getNestedParams(Map groups) {
+    private Map getNestedParams(Map<String, Map<String, String[]>> groups) {
         Map nested = groups.findAll { g ->
-            g.key in nestedFields &&
-            g.value.size() > 1
+            // More than one property or more than one value for some property
+            g.key in nestedFields && (g.value.size() > 1 || g.value.values().any{ it.length > 1})
         }
         return nested
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    private Map createNestedBoolFilter(String prefix, Map nestedQuery) {
-        Map result = [:]
-
-        Map musts = ['must': nestedQuery.collect { q -> ['match': [(q.key): q.value.first()]] }]
-
-        result << [['nested': ['path': prefix,
-                               'query': ['bool': musts]]]]
+    private List<Map> createNestedBoolFilters(String prefix, Map<String, String[]> nestedQuery) {
+        /*
+            Example
+            prefix: "identifiedBy"
+            nestedQuery: ["identifiedBy.@type":["ISBN","LCCN"], "identifiedBy.value":["1234","5678"]]
+         */
+        
+        int maxLen = nestedQuery.collect { it.value }.collect { it.length }.max()
+        
+        List result = []
+        for (int i = 0 ; i < maxLen ; i++) {
+            List<Map> musts = nestedQuery.findResults {
+                it.value.length > i 
+                    ? ['match': [(it.key): it.value[i]]]
+                    : null
+            }
+            
+            result << [ 'nested': [
+                            'path': prefix, 
+                            'query': ['bool': ['must': musts]]]]
+        }
 
         return result
     }
-
+    
     /**
      * Can this query string be handled by ES simple_query_string?
      */
