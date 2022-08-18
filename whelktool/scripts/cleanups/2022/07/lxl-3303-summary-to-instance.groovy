@@ -2,6 +2,7 @@ def where = """
   collection = 'bib' 
   AND data['@graph'][1]['instanceOf']['@type'] = '"Text"'
   AND data['@graph'][1]['instanceOf']['summary'] IS NOT NULL
+  AND data['@graph'][0]['descriptionCreator']['@id'] != '"https://libris.kb.se/library/APP1"'
   AND deleted = false
 """
 
