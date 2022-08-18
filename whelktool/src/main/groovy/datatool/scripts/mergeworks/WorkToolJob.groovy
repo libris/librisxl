@@ -263,7 +263,7 @@ class WorkToolJob {
         }
     }
 
-    private Collection<MergedWork> mergedWorks(Collection<Collection> titleClusters) {
+    private Collection<MergedWork> mergedWorks(Collection<Collection<Doc>> titleClusters) {
         def works = []
         titleClusters.each { titleCluster ->
             titleCluster.sort { it.numPages() }
@@ -457,12 +457,3 @@ class NoWorkException extends RuntimeException {
         super(msg)
     }
 }
-
-
-
-
-
-
-
-
-
