@@ -33,7 +33,12 @@ class Unicode {
     private static final List STRIP_UNICODE_CHARS = [
             '\ufeff',
     ]
-
+    
+    // U+201C LEFT DOUBLE QUOTATION MARK
+    // U+201D RIGHT DOUBLE QUOTATION MARK
+    private static final Pattern NORMALIZE_DOUBLE_QUOTES = Pattern.compile("[\u201c\u201d]", Pattern.UNICODE_CHARACTER_CLASS)
+    
+    // U+2060 WORD JOINER
     private static final Pattern LEADING_SPACE = Pattern.compile('^[\\p{Blank}\u2060]+', Pattern.UNICODE_CHARACTER_CLASS)
     private static final Pattern TRAILING_SPACE = Pattern.compile('[\\p{Blank}\u2060]+$', Pattern.UNICODE_CHARACTER_CLASS)
     
@@ -54,11 +59,19 @@ class Unicode {
     }
 
     static boolean isNormalizedForSearch(String s) {
-        return Normalizer.isNormalized(s, Normalizer.Form.NFKC)
+        return Normalizer.isNormalized(s, Normalizer.Form.NFKC) && isNormalizedDoubleQuotes(s)
     }
 
     static String normalizeForSearch(String s) {
-        return Normalizer.normalize(s, Normalizer.Form.NFKC)
+        return normalizeDoubleQuotes(Normalizer.normalize(s, Normalizer.Form.NFKC))
+    }
+    
+    static boolean isNormalizedDoubleQuotes(String s) {
+        !NORMALIZE_DOUBLE_QUOTES.matcher(s).find()
+    }
+    
+    static String normalizeDoubleQuotes(String s) {
+        s.replaceAll(NORMALIZE_DOUBLE_QUOTES, '"')
     }
 
     /**
