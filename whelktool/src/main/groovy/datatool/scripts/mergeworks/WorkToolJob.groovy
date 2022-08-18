@@ -314,7 +314,7 @@ class WorkToolJob {
                     if (titleCluster.size() > 1) {
                         def statuses = WorkComparator.compare(cluster)
                         if (!statuses[DIFF].contains('contribution')) {
-                            String gf = titleCluster.collect { it.getDisplayText('genreForm') }.join(' ')
+                            String gf = titleCluster.collect { it.view.getDisplayText('genreForm') }.join(' ')
                             if (gf.contains('marc/FictionNotFurtherSpecified') && gf.contains('marc/NotFictionNotFurtherSpecified')) {
                                 println(titleCluster.collect { it.getDoc().shortId }.join('\t'))
                             }
@@ -441,7 +441,7 @@ class WorkToolJob {
                 .with { partitionByTitle(it) }
                 .findAll { it.size() > 1 }
                 .findAll { !it.any { doc -> doc.hasGenericTitle() } }
-                .sort { a, b -> a.first().mainEntityDisplayTitle() <=> b.first().mainEntityDisplayTitle() }
+                .sort { a, b -> a.first().view.mainEntityDisplayTitle() <=> b.first().view.mainEntityDisplayTitle() }
     }
 
     Collection<Collection<Doc>> partitionByTitle(Collection<Doc> docs) {
