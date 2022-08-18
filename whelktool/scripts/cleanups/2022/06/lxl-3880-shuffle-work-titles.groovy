@@ -61,13 +61,13 @@ selectByCollection('bib') { bib ->
             return
         }
 
-        Map hub = asList(expressionOf.value)[0]
         // Move expressionOf content primarily to translationOf, otherwise to instanceOf
         def target = work.find { it.key == TRANSLATION_OF } ?: instanceOf
 
+        Map hub = asList(expressionOf.value)[0]
         if (hub[ID]) {
-            def linked = loadThing(hub[ID])
-            if (!linked) {
+            expressionOf.value = loadThing(hub[ID])
+            if (!expressionOf.value) {
                 brokenLinks.println([shortId, hub[ID]].join('\t'))
             }
             // Linked uniform work title in expressionOf: move hasTitle to target and then remove the link
