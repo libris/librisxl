@@ -24,11 +24,11 @@ class Html {
         String header = """
             <tr>
                 <th><a id="${id}"><a href="#${id}">${id}</th>
-                ${cluster.collect { doc -> "<th><a id=\"${doc.doc.shortId}\" href=\"${doc.link()}\">${doc.doc.shortId}</a></th>" }.join('\n')}
+                ${cluster.collect { doc -> "<th><a id=\"${doc.doc.shortId}\" href=\"${doc.view.link()}\">${doc.doc.shortId}</a></th>" }.join('\n')}
             </tr>
             <tr>
                 <td></td>
-                ${cluster.collect { doc -> "<td>${doc.mainEntityDisplayTitle()}</td>" }.join('\n')}                                     
+                ${cluster.collect { doc -> "<td>${doc.view.mainEntityDisplayTitle()}</td>" }.join('\n')}                                     
             </tr>
            """.stripIndent()
 
@@ -55,7 +55,7 @@ class Html {
         def mergedWorks = docs*.first()
         def ids = docs.collect { group ->
             group.drop(1).collectEntries { doc ->
-                [doc.doc.shortId, doc.link()]
+                [doc.doc.shortId, doc.view.link()]
             }
         }
         def clusterId = clusterId(ids*.keySet().flatten())
@@ -104,7 +104,7 @@ class Html {
             """
             <tr class="${cls}">
                 <td>${field}</td>
-                ${cluster.collect { "<td>${it.getDisplayText(field)}</td>" }.join('\n')}   
+                ${cluster.collect { "<td>${it.view.getDisplayText(field)}</td>" }.join('\n')}   
             </tr> """.stripIndent()
         }
     }
