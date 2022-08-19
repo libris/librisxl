@@ -53,70 +53,77 @@ selectByCollection('bib') { bib ->
         }
     }
 
-    def expressionOf = work.find { it.key == EXPRESSION_OF }
-
-    if (expressionOf) {
-        if (multipleValues(expressionOf.value)) {
-            multiple.println("$shortId\t$EXPRESSION_OF")
-            return
-        }
-
-        // Move expressionOf content primarily to translationOf, otherwise to instanceOf
-        def target = work.find { it.key == TRANSLATION_OF } ?: instanceOf
-
-        Map hub = asList(expressionOf.value)[0]
-        if (hub[ID]) {
-            expressionOf.value = loadThing(hub[ID])
-            if (!expressionOf.value) {
-                brokenLinks.println([shortId, hub[ID]].join('\t'))
-            }
-            // Linked uniform work title in expressionOf: move hasTitle to target and then remove the link
-            else if (moveProperty(shortId, HAS_TITLE, expressionOf, target)) {
-                work.remove(EXPRESSION_OF)
-            }
-        }
-        // Move title from local expressionOf to target
-        else if (moveProperty(shortId, HAS_TITLE, expressionOf, target)) {
-            hub.remove(HAS_TITLE)
-            // Move the complement expressionOf.language \ instanceOf.language to instanceOf.language
-            if (hub[LANGUAGE]) {
-                def langsAdded = []
-                asList(hub[LANGUAGE]).each { l ->
-                    asList(l.'@id' ? l : mapBlankLanguages([l], whichOne)).each {
-                        if (!(it in worklang)) {
-                            worklang << it
-                            langsAdded << it
-                        }
-                    }
-                }
-                if (langsAdded) {
-                    work[LANGUAGE] = worklang
-                    extraLang.println([shortId, langsAdded, worklang].join('\t'))
-                }
-                hub.remove(LANGUAGE)
-            }
-            // Move remaining properties (except @type) to the same place as the title
-            hub.removeAll {
-                it.key == '@type' ?: moveProperty(shortId, it.key, expressionOf, target)
-            }
-        }
-
-        if (hub.isEmpty()) {
-            work.remove(EXPRESSION_OF)
-        }
-
-        bib.scheduleSave()
-    }
-    // Move title from instanceOf to translationOf if translationOf exists
-    else if (moveProperty(shortId, HAS_TITLE, instanceOf, work.find { it.key == TRANSLATION_OF })) {
-        work.remove(HAS_TITLE)
-        bib.scheduleSave()
-    }
-
     // Move title from hasPart to hasPart.translationOf if hasPart.translationOf exists
     work[HAS_PART]?.each { Map p ->
         if (moveProperty(shortId, HAS_TITLE, Map.entry(HAS_PART, p), p.find { it.key == TRANSLATION_OF })) {
             p.remove(HAS_TITLE)
+            bib.scheduleSave()
+        }
+    }
+
+    def expressionOf = work.find { it.key == EXPRESSION_OF }
+
+    if (!expressionOf) {
+        // Move title from instanceOf to translationOf if translationOf exists
+        if (moveProperty(shortId, HAS_TITLE, instanceOf, work.find { it.key == TRANSLATION_OF })) {
+            work.remove(HAS_TITLE)
+            bib.scheduleSave()
+            return
+        }
+    }
+
+    if (multipleValues(expressionOf.value)) {
+        multiple.println("$shortId\t$EXPRESSION_OF")
+        return
+    }
+
+    // Move expressionOf content primarily to translationOf, otherwise to instanceOf
+    def target = work.find { it.key == TRANSLATION_OF } ?: instanceOf
+
+    Map hub = asList(expressionOf.value)[0]
+    if (hub[ID]) {
+        expressionOf.value = loadThing(hub[ID])
+        if (!expressionOf.value) {
+            brokenLinks.println([shortId, hub[ID]].join('\t'))
+            return
+        }
+        // Linked uniform work title in expressionOf: move hasTitle to target and then remove the link
+        else if (moveProperty(shortId, HAS_TITLE, expressionOf, target)) {
+            work.remove(EXPRESSION_OF)
+            bib.scheduleSave()
+        }
+        else {
+            return
+        }
+    }
+    // Move title from local expressionOf to target
+    else if (moveProperty(shortId, HAS_TITLE, expressionOf, target)) {
+        hub.remove(HAS_TITLE)
+        // Move the complement expressionOf.language \ instanceOf.language to instanceOf.language
+        if (hub[LANGUAGE]) {
+            def langsAdded = []
+            asList(hub[LANGUAGE]).each { l ->
+                asList(l.'@id' ? l : mapBlankLanguages([l], whichOne)).each {
+                    if (!(it in worklang)) {
+                        worklang << it
+                        langsAdded << it
+                    }
+                }
+            }
+            if (langsAdded) {
+                work[LANGUAGE] = worklang
+                extraLang.println([shortId, langsAdded, worklang].join('\t'))
+            }
+            hub.remove(LANGUAGE)
+        }
+
+        // Move remaining properties (except @type) to the same place as the title
+        hub.removeAll {
+            it.key == '@type' ?: moveProperty(shortId, it.key, expressionOf, target)
+        }
+
+        if (hub.isEmpty()) {
+            work.remove(EXPRESSION_OF)
             bib.scheduleSave()
         }
     }
