@@ -32,7 +32,10 @@ selectBySqlWhere(where) { bib ->
             work.remove('summary')
         }
 
-        instance['summary'] = (instance.summary ?: []) + toInstance
+        instance['summary'] = instance.summary ?: []
+        if (!instance.summary.contains(toInstance)) {
+            instance.summary << toInstance
+        }
         bib.scheduleSave()
     }
 }
