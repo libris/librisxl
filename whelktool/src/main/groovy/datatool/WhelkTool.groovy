@@ -11,6 +11,7 @@ import whelk.search.ESQuery
 import whelk.search.ElasticFind
 import whelk.util.LegacyIntegrationTools
 import whelk.util.Statistics
+import whelk.meta.WhelkConstants
 
 import javax.script.Bindings
 import javax.script.Compilable
@@ -33,10 +34,8 @@ import static java.util.concurrent.TimeUnit.SECONDS
 import static whelk.util.Jackson.mapper
 
 class WhelkTool {
-
     static final int DEFAULT_BATCH_SIZE = 500
     static final int DEFAULT_FETCH_SIZE = 100
-    private static final String WHELKTOOL_THREAD_GROUP = "whelktool"
 
     Whelk whelk
 
@@ -363,7 +362,7 @@ class WhelkTool {
     }
 
     private boolean isWorkerThread() {
-        return Thread.currentThread().getThreadGroup().getName().contains(WHELKTOOL_THREAD_GROUP)
+        return Thread.currentThread().getThreadGroup().getName().contains(WhelkConstants.WHELKTOOL_THREAD_GROUP)
     }
 
     private ScheduledFuture<?> setupTimedLogger(Counter counter) {
