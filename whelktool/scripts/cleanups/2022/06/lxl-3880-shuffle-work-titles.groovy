@@ -107,13 +107,13 @@ selectByCollection('bib') { bib ->
 
         bib.scheduleSave()
     }
-    // Move title from instanceOf to translationOf
+    // Move title from instanceOf to translationOf if translationOf exists
     else if (moveProperty(shortId, HAS_TITLE, instanceOf, work.find { it.key == TRANSLATION_OF })) {
         work.remove(HAS_TITLE)
         bib.scheduleSave()
     }
 
-    // Move title from hasPart to hasPart.translationOf
+    // Move title from hasPart to hasPart.translationOf if hasPart.translationOf exists
     work[HAS_PART]?.each { Map p ->
         if (moveProperty(shortId, HAS_TITLE, Map.entry(HAS_PART, p), p.find { it.key == TRANSLATION_OF })) {
             p.remove(HAS_TITLE)
