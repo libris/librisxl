@@ -2,12 +2,9 @@ package datatool.scripts.mergeworks.normalize
 
 import groovy.transform.Memoized
 import whelk.Document
-import whelk.Whelk
 
-import static datatool.scripts.mergeworks.Util.contributionPath
 import static datatool.scripts.mergeworks.Util.asList
 import static datatool.scripts.mergeworks.Util.chipString
-import static datatool.scripts.mergeworks.Util.getClusters
 import static datatool.scripts.mergeworks.Util.getPathSafe
 import static datatool.scripts.mergeworks.Util.nameMatch
 import static datatool.scripts.mergeworks.Util.Relator
@@ -19,9 +16,11 @@ import static datatool.scripts.mergeworks.Util.Relator
 
 PrintWriter report = getReportWriter("report.txt")
 
-def whelk = Whelk.createLoadedCoreWhelk()
+def whelk = getWhelk()
 
-new File(System.getProperty(clusters)).splitEachLine('\t') { cluster ->
+def contributionPath = ['@graph', 1, 'instanceOf', 'contribution']
+
+new File(System.getProperty('clusters')).splitEachLine('\t') { cluster ->
     def docs = Collections.synchronizedList([])
     selectByIds(cluster.collect { it.trim() }) {
         docs << it.doc
@@ -58,12 +57,12 @@ new File(System.getProperty(clusters)).splitEachLine('\t') { cluster ->
                     agentMatches(c.agent, it) && (!c.role || it.roles.containsAll(c.role))
                 }
                 if (l) {
-                    report.println("${d.shortId} ${chipString(c)} --> ${chipString(l)}")
+                    report.println("${d.shortId} ${chipString(c, whelk)} --> ${chipString(l, whelk)}")
                     c.agent = ['@id': l['@id']]
                     changed = true
                     incrementStats('link contribution', 'agents linked')
                 } else {
-                    report.println("${d.shortId} NO MATCH: ${chipString(c)} ??? ${linked.collect { chipString(it) }}")
+                    report.println("${d.shortId} NO MATCH: ${chipString(c, whelk)} ??? ${linked.collect { chipString(it, whelk) }}")
                 }
             }
             if (c['@type'] == 'PrimaryContribution' && !c.role) {
@@ -109,6 +108,18 @@ static boolean yearMismatch(Map local, Map linked) {
     def b = birth(local) && birth(linked) && birth(local) != birth(linked)
     def d = death(local) && death(linked) && death(local) != death(linked)
     b || d
+}
+
+def getWhelk() {
+    // A little hack to get a handle to whelk...
+    def whelk = null
+    selectByIds(['https://id.kb.se/marc']) { docItem ->
+        whelk = docItem.whelk
+    }
+    if (!whelk) {
+        throw new RuntimeException("Could not get Whelk")
+    }
+    return whelk
 }
 
 

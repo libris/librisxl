@@ -4,8 +4,6 @@ import whelk.Document
 
 import static datatool.scripts.mergeworks.Util.asList
 import static datatool.scripts.mergeworks.Util.getPathSafe
-import static datatool.scripts.mergeworks.Util.contributionPath
-import static datatool.scripts.mergeworks.Util.clusters
 import static datatool.scripts.mergeworks.Util.Relator
 
 /**
@@ -15,10 +13,11 @@ import static datatool.scripts.mergeworks.Util.Relator
 
 PrintWriter report = getReportWriter("report.txt")
 
+def contributionPath = ['@graph', 1, 'instanceOf', 'contribution']
 def ill = ['@id': Relator.ILLUSTRATOR.iri]
 def pu = ['@id': Relator.PRIMARY_RIGHTS_HOLDER.iri]
 
-new File(System.getProperty(clusters)).splitEachLine('\t') { cluster ->
+new File(System.getProperty('clusters')).splitEachLine('\t') { cluster ->
     incrementStats('add 9pu', 'clusters checked')
 
     def docs = Collections.synchronizedList([])
