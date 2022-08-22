@@ -412,8 +412,7 @@ $ curl -XGET 'https://libris-qa.kb.se/_dependencies?id=http://libris.kb.se/bib/1
 
 ### `/_compilemarc` - Download MARC21 bibliographic record with holding and authority information
 
-This endpoint allows you to download a complete bibliographic record with holding
-information in MARC21.
+This endpoint allows you to download a complete bibliographic record with holding information in MARC21. If the compiled record is to contain any holding information, there must be an export profile registered for that library ID. Contact support if you need to register such a profile.
 
 #### Parameters
 
