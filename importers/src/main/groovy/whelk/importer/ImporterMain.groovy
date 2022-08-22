@@ -3,6 +3,7 @@ package whelk.importer
 import java.lang.annotation.*
 import java.util.concurrent.ExecutorService
 import java.util.zip.GZIPOutputStream
+import groovy.cli.picocli.CliBuilder
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.io.output.CountingOutputStream
 import org.apache.commons.io.FilenameUtils
@@ -51,13 +52,39 @@ class ImporterMain {
                 
         DatasetImporter.importDataset(whelk, fname, dataset)
     }
+    
+    @Command(args='[COLLECTION] [-t NUMBEROFTHREADS]')
+    void reindex(String... args) {
+        def cli = new CliBuilder(usage: 'reindex [collection] -[ht]')
+        // Create the list of options.
+        cli.with {
+            h longOpt: 'help', 'Show usage information'
+            t longOpt: 'threads', type: int,  'Number of threads in parallel'
+        }
+         
+        def options = cli.parse(args)
 
-    @Command(args='[COLLECTION]')
-    void reindex(String collection=null) {
+        // Show usage text when -h or --help option is used.
+        if (options.h) {
+            cli.usage()
+            
+            return
+        }
+        
+        String collection = null;
+        if (options.arguments()) {
+            collection = options.arguments()[0]
+        }
+        
+        int numberOfThreads = Runtime.getRuntime().availableProcessors() * 2;
+        if (options.t) {
+            numberOfThreads = options.t
+        }
+        
         boolean useCache = true
         Whelk whelk = Whelk.createLoadedSearchWhelk(props, useCache)
         def reindex = new ElasticReindexer(whelk)
-        reindex.reindex(collection)
+        reindex.reindex(collection, numberOfThreads)
     }
 
     @Command(args='[COLLECTION]')
