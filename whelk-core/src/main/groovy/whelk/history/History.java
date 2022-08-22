@@ -64,27 +64,27 @@ public class History {
                 Map tool = new HashMap();
                 tool.put("@id", "https://id.kb.se/generator/globalchanges");
                 changeSet.put("tool", tool);
-            } else if (version.changedIn.equals("APIX")) {
+            } else if ("APIX".equals(version.changedIn)) {
                 changeSet.put("date", version.doc.getModified());
                 Map tool = new HashMap();
                 tool.put("@id", "https://id.kb.se/generator/apix");
                 changeSet.put("tool", tool);
-            } else if (version.changedIn.equals("batch import")) {
+            } else if ("batch import".equals(version.changedIn)) {
                 changeSet.put("date", version.doc.getModified());
                 Map tool = new HashMap();
                 tool.put("@id", "https://id.kb.se/generator/batchimport");
                 changeSet.put("tool", tool);
-            } else if (version.changedIn.equals("vcopy")) {
+            } else if ("vcopy".equals(version.changedIn)) {
                 changeSet.put("date", version.doc.getModified());
                 Map tool = new HashMap();
                 tool.put("@id", "https://id.kb.se/generator/voyager");
                 changeSet.put("tool", tool);
-            } else if (version.changedBy.equals("WhelkCopier")) {
+            } else if ("WhelkCopier".equals(version.changedBy)) {
                 changeSet.put("date", version.doc.getModified());
                 Map tool = new HashMap();
                 tool.put("@id", "https://id.kb.se/generator/whelkcopier");
                 changeSet.put("tool", tool);
-            } else if (version.changedIn.equals("xl")) { // Must be last in list!
+            } else if ("xl".equals(version.changedBy)) { // Must be last in list!
                 changeSet.put("date", version.doc.getModified());
                 Map tool = new HashMap();
                 tool.put("@id", "https://id.kb.se/generator/crud");
