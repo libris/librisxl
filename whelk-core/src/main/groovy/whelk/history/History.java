@@ -59,33 +59,29 @@ public class History {
             Map agent = new HashMap();
             agent.put("@id", changedByToUri(version.changedBy));
             changeSet.put("agent", agent);
+            changeSet.put("date", version.doc.getModified());
             if (wasScriptEdit(version)) {
                 changeSet.put("date", version.doc.getGenerationDate());
                 Map tool = new HashMap();
                 tool.put("@id", "https://id.kb.se/generator/globalchanges");
                 changeSet.put("tool", tool);
             } else if ("APIX".equals(version.changedIn)) {
-                changeSet.put("date", version.doc.getModified());
                 Map tool = new HashMap();
                 tool.put("@id", "https://id.kb.se/generator/apix");
                 changeSet.put("tool", tool);
             } else if ("batch import".equals(version.changedIn)) {
-                changeSet.put("date", version.doc.getModified());
                 Map tool = new HashMap();
                 tool.put("@id", "https://id.kb.se/generator/batchimport");
                 changeSet.put("tool", tool);
             } else if ("vcopy".equals(version.changedIn)) {
-                changeSet.put("date", version.doc.getModified());
                 Map tool = new HashMap();
                 tool.put("@id", "https://id.kb.se/generator/voyager");
                 changeSet.put("tool", tool);
             } else if ("WhelkCopier".equals(version.changedBy)) {
-                changeSet.put("date", version.doc.getModified());
                 Map tool = new HashMap();
                 tool.put("@id", "https://id.kb.se/generator/whelkcopier");
                 changeSet.put("tool", tool);
-            } else if ("xl".equals(version.changedBy)) { // Must be last in list!
-                changeSet.put("date", version.doc.getModified());
+            } else if ("xl".equals(version.changedIn)) { // Must be last in list!
                 Map tool = new HashMap();
                 tool.put("@id", "https://id.kb.se/generator/crud");
                 changeSet.put("tool", tool);
