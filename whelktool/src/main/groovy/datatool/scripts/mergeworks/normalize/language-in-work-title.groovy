@@ -4,7 +4,6 @@ import groovy.transform.Memoized
 import whelk.util.DocumentUtil
 
 import static datatool.scripts.mergeworks.Util.getPathSafe
-import static datatool.scripts.mergeworks.Util.clusters
 
 /**
  Example:
@@ -13,7 +12,7 @@ import static datatool.scripts.mergeworks.Util.clusters
 
 PrintWriter report = getReportWriter("report.txt")
 
-def ids = new File(System.getProperty(clusters))
+def ids = new File(System.getProperty('clusters'))
         .readLines()
         .collect { it.split('\t').collect { it.trim()} }
         .flatten()

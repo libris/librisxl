@@ -5,12 +5,6 @@ import whelk.Whelk
 import whelk.util.Unicode
 
 class Util {
-    static def whelk = Whelk.createLoadedCoreWhelk()
-
-    static def clusters = 'clusters'
-
-    static def contributionPath = ['@graph', 1, 'instanceOf', 'contribution']
-
     static def titleComponents = ['mainTitle', 'titleRemainder', 'subtitle', 'hasPart', 'partNumber', 'partName', 'marc:parallelTitle', 'marc:equalTitle']
 
     static def titleVariant = ['Title', 'ParallelTitle']
@@ -154,7 +148,7 @@ class Util {
                 .collect { it['flatTitle'] }
     }
 
-    static String chipString(def thing) {
+    static String chipString(def thing, Whelk whelk) {
         if (thing instanceof Integer) {
             return thing
         }

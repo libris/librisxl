@@ -6,8 +6,6 @@ import whelk.Document
 
 import java.util.regex.Pattern
 
-import static datatool.scripts.mergeworks.Util.contributionPath
-import static datatool.scripts.mergeworks.Util.clusters
 import static datatool.scripts.mergeworks.Util.asList
 import static datatool.scripts.mergeworks.Util.chipString
 import static datatool.scripts.mergeworks.Util.getPathSafe
@@ -22,7 +20,11 @@ import static datatool.scripts.mergeworks.Util.Relator
 
 PrintWriter report = getReportWriter("report.txt")
 
-new File(System.getProperty(clusters)).splitEachLine('\t') { cluster ->
+def whelk = getWhelk()
+
+def contributionPath = ['@graph', 1, 'instanceOf', 'contribution']
+
+new File(System.getProperty('clusters')).splitEachLine('\t') { cluster ->
     incrementStats('fetch contribution from respStatement', 'clusters checked')
 
     def docs = Collections.synchronizedList([])
@@ -92,7 +94,7 @@ new File(System.getProperty(clusters)).splitEachLine('\t') { cluster ->
                         def roleShort = r.iri.split('/').last()
                         incrementStats('fetch contribution from respStatement', "$roleShort roles specified")
 
-                        report.println("${chipString(c)} (${d.shortId}) <- $roleShort")
+                        report.println("${chipString(c, whelk)} (${d.shortId}) <- $roleShort")
                     }
                 }
 
@@ -124,7 +126,7 @@ new File(System.getProperty(clusters)).splitEachLine('\t') { cluster ->
                         def roleShort = it.getV1().iri.split('/').last()
                         incrementStats('fetch contribution from respStatement', "$roleShort found in cluster")
                     }
-                    report.println("${d.shortId} <- ${chipString(matched)} (${other.shortId})")
+                    report.println("${d.shortId} <- ${chipString(matched, whelk)} (${other.shortId})")
                     changed = true
                     break
                 }
@@ -242,4 +244,16 @@ private List<String> parseNames(Pattern namePattern, Pattern conjPattern, String
     }
 
     return names
+}
+
+def getWhelk() {
+    // A little hack to get a handle to whelk...
+    def whelk = null
+    selectByIds(['https://id.kb.se/marc']) { docItem ->
+        whelk = docItem.whelk
+    }
+    if (!whelk) {
+        throw new RuntimeException("Could not get Whelk")
+    }
+    return whelk
 }
