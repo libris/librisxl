@@ -1,3 +1,25 @@
+/**
+ * The goal with this script is 1) to move translated (original) titles to translationOf and 2) to move out titles from
+ * expressionOf and then remove the property.
+ *
+ * The script mainly moves titles from three different places:
+ *  - instanceOf.hasTitle is moved to instanceOf.translationOf for all records where both instanceOf.hasTitle and
+ *    instanceOf.translationOf are present.
+ *  - instanceOf.expressionOf.hasTitle is moved to instanceOf.translationOf.hasTitle if instanceOf.translationOf is present,
+ *    otherwise to instanceOf.hasTitle.
+ *  - instanceOf.hasPart.hasTitle is moved to instanceOf.hasPart.translationOf.hasTitle if instanceOf.hasPart.translationOf is present.
+ *
+ * If a move can't be executed due to the data having a deviant structure, the update won't be saved. The intended move
+ * is instead written to a report for manual handling.
+ *
+ * In case expressionOf is a linked entity, only hasTitle is copied from the entity and then the link is removed.
+ * In case expressionOf is a local entity, all its properties except @type and language are moved to the target, not only hasTitle.
+ * A special case is when a local expressionOf contains another language than instanceOf. These "extra" languages are moved
+ * to instanceOf so that the information don't get lost when expressionOf is removed.
+ *
+ * The script also removes superfluous local entities in instanceOf.language (when a linked equivalent can be identified).
+ */
+
 import whelk.filter.LanguageLinker
 import whelk.util.Statistics
 import whelk.util.Unicode
