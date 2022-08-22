@@ -985,9 +985,11 @@ class Crud extends HttpServlet {
             case BadRequestException:
             case ModelValidationException:
             case LinkValidationException:
-            case PostgreSQLComponent.ConflictingHoldException:    
                 return HttpServletResponse.SC_BAD_REQUEST
-            
+
+            case PostgreSQLComponent.ConflictingHoldException:
+                return HttpServletResponse.SC_CONFLICT
+
             case NotFoundException:
                 return HttpServletResponse.SC_NOT_FOUND
             
