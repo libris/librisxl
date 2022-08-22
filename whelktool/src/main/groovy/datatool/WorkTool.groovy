@@ -41,9 +41,6 @@ class WorkTool {
         cli.tr2(longOpt: 'anonymousTranslation2', 'Filter: remove translations without translator')
         cli.qm(longOpt: 'qualityMonographs', 'Filter: "qualityMonographs"')
         cli.tc(longOpt: 'title-clusters', 'Filter: output title clusters')
-        cli.lc(longOpt: 'link-contribution', 'link matching contribution within cluster')
-        cli.rc(longOpt: 'responsibilityStatement', 'fetch contributions from responsibilityStatement')
-        cli.p(longOpt: '9pu', 'find and add 9pu codes for illustrators within cluster')
         cli.r(longOpt: 'revert', 'undo merge and extraction of matching works')
         cli.cr(longOpt: 'contribution-role', args: 1, argName: 'relator iri', 'Filter: output clusters where given role exists in at least one contribution')
 
@@ -84,12 +81,6 @@ class WorkTool {
             m.translationNoTranslator()
         } else if (options.tc) {
             m.outputTitleClusters()
-        } else if (options.lc) {
-            m.linkContribution()
-        } else if (options.rc) {
-            m.fetchContributionFromRespStatement()
-        } else if (options.p) {
-            m.add9pu()
         } else if (options.r) {
             m.revert()
         } else if (options.cr) {
