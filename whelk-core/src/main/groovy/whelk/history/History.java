@@ -119,20 +119,6 @@ public class History {
         }
     }
     
-    private static Map getAgent(DocumentVersion version) {
-        Map agent = new HashMap();
-        String uri = changedByToUri(version.changedBy);
-
-        // Seems like there was a bug at some point where changedBy wasn't updated correctly by WhelkTool.
-        // Consecutive versions have the same changedBy, generationProcess contains the correct value.
-        if (uri.contains("sys/globalchanges") && !uri.equals(version.doc.getGenerationProcess())) {
-            uri = version.doc.getGenerationProcess();
-        }
-        
-        agent.put("@id", uri);
-        return agent;
-    }
-
     private boolean isSubList(List a, List b) {
         if (a.size() > b.size())
             return false;
@@ -371,6 +357,20 @@ public class History {
         }
     }
 
+    private static Map getAgent(DocumentVersion version) {
+        Map agent = new HashMap();
+        String uri = changedByToUri(version.changedBy);
+
+        // Seems like there was a bug at some point where changedBy wasn't updated correctly by WhelkTool.
+        // Consecutive versions have the same changedBy, generationProcess contains the correct value.
+        if (uri.contains("sys/globalchanges") && !uri.equals(version.doc.getGenerationProcess())) {
+            uri = version.doc.getGenerationProcess();
+        }
+
+        agent.put("@id", uri);
+        return agent;
+    }
+    
     /**
      * What was put into the changedBy column has varied a bit over XLs history. This
      * tries to make sense of the different variants.
