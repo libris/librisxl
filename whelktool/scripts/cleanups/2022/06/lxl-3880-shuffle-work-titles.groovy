@@ -95,8 +95,8 @@ selectByCollection('bib') { bib ->
         if (moveProperty(shortId, HAS_TITLE, instanceOf, work.find { it.key == TRANSLATION_OF })) {
             work.remove(HAS_TITLE)
             bib.scheduleSave()
-            return
         }
+        return
     }
 
     if (multipleValues(expressionOf.value)) {
