@@ -17,6 +17,11 @@
  * A special case is when a local expressionOf contains another language than instanceOf. These "extra" languages are moved
  * to instanceOf so that the information don't get lost when expressionOf is removed.
  *
+ * A couple normalizations are done on the mainTitle string whenever a title is moved:
+ *  - Trailing period (not preceded by another period or a capital letter) is removed.
+ *  - Language is removed from the string if the language can be identified in the target entity's language property.
+ *    Example: mainTitle: "Haggada. Jiddisch & Hebreiska" --> mainTitle: Haggada, language: [[@id:https://id.kb.se/language/yid], [@id:https://id.kb.se/language/heb]]
+ *
  * The script also removes superfluous local entities in instanceOf.language (when a linked equivalent can be identified).
  */
 
@@ -170,8 +175,8 @@ boolean moveProperty(String id, String propToMove, Map.Entry from, Map.Entry tar
 
             if (propToMove == HAS_TITLE) {
                 def movedLang = moveLanguagesFromTitle(f, asList(t[LANGUAGE]).findAll { it[ID] in ambiguousLangIds })
-                def normalized = normalizeTitle(f[HAS_TITLE])
-                cols = [id, whatMove, HAS_TITLE, f[HAS_TITLE], (movedLang || normalized)]
+                def periodRemoved = removePeriod(f[HAS_TITLE])
+                cols = [id, whatMove, HAS_TITLE, f[HAS_TITLE], (movedLang || periodRemoved)]
                 if (target.key == TRANSLATION_OF)
                     cols << t[LANGUAGE]
             } else {
@@ -189,11 +194,11 @@ boolean moveProperty(String id, String propToMove, Map.Entry from, Map.Entry tar
     return false
 }
 
-// Remove single trailing period and trailing whitespace from mainTitle
-boolean normalizeTitle(title) {
+boolean removePeriod(title) {
     def t = asList(title).first()
     if (t.mainTitle && !multipleValues(t.mainTitle)) {
-        def norm = asList(t.mainTitle).first().replaceFirst(~/\s*(?<!\.)\.\s*$/, '')
+        // Also removes any remaining (trailing) whitespace.
+        def norm = asList(t.mainTitle).first().replaceFirst(~/\s*(?<!(\.|\p{Lu}))\.\s*$/, '')
         if (norm != t.mainTitle) {
             t.mainTitle = norm
             return true
