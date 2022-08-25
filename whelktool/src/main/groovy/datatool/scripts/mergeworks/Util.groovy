@@ -109,7 +109,7 @@ class Util {
     static List flatTitles(List hasTitle) {
         dropSubTitles(hasTitle).collect {
             def title = new TreeMap<>()
-            title['flatTitle'] = normalize(Doc.flatten(it, titleComponents))
+            title['flatTitle'] = normalize(DisplayDoc.flatten(it, titleComponents))
             if (it['@type']) {
                 title['@type'] = it['@type']
             }

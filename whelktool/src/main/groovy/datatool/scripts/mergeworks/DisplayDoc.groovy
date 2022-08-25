@@ -56,7 +56,7 @@ class DisplayDoc {
     }
 
     protected String chipString(def thing) {
-        Util.chipString(thing, whelk)
+        Util.chipString(thing, doc.whelk)
     }
 
     private String reproductionOfLink() {
@@ -154,7 +154,7 @@ class DisplayDoc {
             if (isInstance()) {
                 framed = JsonLd.frame(doc.doc.getThingIdentifiers().first(), doc.whelk.loadEmbellished(doc.doc.shortId).data)
             } else {
-                Document copy = doc.clone()
+                Document copy = doc.doc.clone()
                 doc.whelk.embellish(copy)
                 framed = JsonLd.frame(doc.doc.getThingIdentifiers().first(), copy.data)
             }
