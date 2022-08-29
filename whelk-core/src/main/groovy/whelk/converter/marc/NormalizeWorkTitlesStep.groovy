@@ -15,10 +15,10 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
     }
 
     void unmodify(Map record, Map thing) {
-        def work = thing.instanceOf
+        traverse(thing)
+    }
 
-        if (!work) return
-
+    void useOriginalTitle(Map work, String via=null) {
         asList(work.translationOf).each { original ->
             def originalTitle = asList(original.hasTitle).find { it[TYPE] == 'Title' }
 
@@ -35,7 +35,9 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
             }
         }
 
-        if (!work.contribution?.find { it[TYPE] == 'PrimaryContribution' }
+        if (
+            via == 'instanceOf'
+            && !work.contribution?.find { it[TYPE] == 'PrimaryContribution' }
             && !work.expressionOf
             && work.hasTitle
         ) {
@@ -45,14 +47,26 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
                 markToIgnore(workTitle)
                 work.expressionOf = [
                     (TYPE): 'Work',
-                    hasTitle: [ copiedTitle ]
+                    hasTitle: [ copiedTitle ],
+                    _revertOnly: true
                 ]
             }
         }
     }
 
-    void markToIgnore(item) {
-        asList(item).each {
+    void traverse(o, String via=null) {
+        asList(o).each {
+            if (it instanceof Map && '_revertOnly' !in it) {
+                useOriginalTitle(it, via)
+                it.each { k, v ->
+                    traverse(v, k)
+                }
+            }
+        }
+    }
+
+    void markToIgnore(o) {
+        asList(o).each {
             it._revertedBy = 'NormalizeWorkTitlesStep'
         }
     }
