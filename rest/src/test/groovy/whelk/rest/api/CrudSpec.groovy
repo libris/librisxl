@@ -657,7 +657,8 @@ class CrudSpec extends Specification {
         view         | queryString                      | acceptCT || responseCT | embellished | framed
         ''           | ''                               | JSONLD   || JSONLD     | true        | false
         ''           | '?version=1'                     | JSONLD   || JSONLD     | false       | false
-        ''           | '?version=1&embellished=true'    | JSONLD   || JSONLD     | false       | false
+        ''           | '?version=1&embellished=true'    | JSONLD   || JSONLD     | true        | false
+        ''           | '?version=1&embellished=true&framed=true' | JSONLD || JSONLD | true     | true
         ''           | '?framed=true'                   | JSONLD   || JSONLD     | true        | true
         ''           | '?embellished=false'             | JSONLD   || JSONLD     | false       | false
         ''           | '?embellished=false&framed=true' | JSONLD   || JSONLD     | false       | true
