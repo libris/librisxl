@@ -1,6 +1,7 @@
 package datatool.scripts.mergeworks
 
 import datatool.scripts.mergeworks.compare.Classification
+import datatool.scripts.mergeworks.compare.Id
 import datatool.scripts.mergeworks.compare.SameOrEmpty
 import datatool.scripts.mergeworks.compare.Default
 import datatool.scripts.mergeworks.compare.Extent
@@ -29,6 +30,7 @@ class WorkComparator {
             'subject'         : new Subject(),
             'summary'         : new StuffSet(),
             'translationOf'   : new TranslationOf(),
+            '@id'             : new Id()
     ]
 
     static FieldHandler DEFAULT = new Default()
@@ -113,7 +115,7 @@ class WorkComparator {
     static Set<String> allFields(Collection<Doc> cluster) {
         Set<String> fields = new HashSet<>()
         cluster.each { fields.addAll(it.getWork().keySet()) }
-        return fields - 'summary' // - 'summary' only temporary, remove when summaries have been moved to instance (LXL-3303)
+        return fields
     }
 
     Map<String, FieldStatus> fieldStatuses(Collection<Doc> cluster) {

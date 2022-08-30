@@ -62,7 +62,7 @@ class Doc {
     }
 
     static Map getWork(Whelk whelk, Document d) {
-        Map work = Normalizers.getWork(whelk.jsonld, d)
+        Map work = Normalizers.getWork(whelk, d)
         if (!work) {
             throw new NoWorkException(d.shortId)
         }
@@ -70,12 +70,16 @@ class Doc {
 
         //TODO 'marc:fieldref'
 
-        work.remove('@id')
+//        work.remove('@id')
         return work
     }
 
     Map workCopy() {
         return getWork(whelk, doc.clone())
+    }
+
+    String workIri() {
+        getWork()['@id']
     }
 
     Map getMainEntity() {

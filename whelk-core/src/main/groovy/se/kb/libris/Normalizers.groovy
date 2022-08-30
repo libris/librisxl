@@ -15,6 +15,7 @@ import whelk.util.Romanizer
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.TYPE_KEY
+import static whelk.JsonLd.WORK_KEY
 import static whelk.JsonLd.asList
 import static whelk.util.DocumentUtil.traverse
 
@@ -192,12 +193,19 @@ class Normalizers {
         }
     }
 
-    static Map getWork(JsonLd jsonLd, Document doc) {
-        def (_record, thing) = doc.data['@graph']
-        if (thing && isInstanceOf(jsonLd, thing, 'Work')) {
+    static Map getWork(Whelk whelk, Document doc) {
+        def (_record, thing) = doc.data[GRAPH_KEY]
+        if (thing && isInstanceOf(whelk.jsonld, thing, 'Work')) {
             return thing
-        } else if (thing && thing['instanceOf'] && isInstanceOf(jsonLd, thing['instanceOf'], 'Work')) {
-            return thing['instanceOf']
+        }
+        else if (thing && thing[WORK_KEY]) {
+            def linked = thing[WORK_KEY][ID_KEY]
+            if (linked) {
+                return getWork(whelk, whelk.storage.getDocumentByIri(linked))
+            }
+            if (isInstanceOf(whelk.jsonld, thing[WORK_KEY], 'Work')) {
+                return thing[WORK_KEY]
+            }
         }
         return null
     }

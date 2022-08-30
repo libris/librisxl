@@ -188,6 +188,14 @@ class Util {
 
     // Return the most common title for the best encodingLevel
     static Object bestTitle(Collection<Doc> docs) {
+        def linkedWorkTitle = docs.findResult {
+            def w = it.getWork()
+            w['@id'] ? w['hasTitle'] : null
+        }
+        if (linkedWorkTitle) {
+            return linkedWorkTitle
+        }
+
         def isTitle = { it.'@type' == 'Title' }
         def addSource = { t, d -> t.plus(['source': [d.getMainEntity().subMap('@id')]]) }
 
