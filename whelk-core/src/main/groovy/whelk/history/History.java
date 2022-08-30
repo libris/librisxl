@@ -270,16 +270,25 @@ public class History {
             // _following_ element being compared with the wrong element in the other list.
             List tempNew = new LinkedList((List) examining);
             List tempOld = new LinkedList((List) correspondingPrevious);
+            Map<Integer, Integer> newToOldListIndices = new HashMap<>(); // What used to be at index x (in examining) is now at index y (in tempNew).
+            int originalIndex = 0;
             for (int i = 0; i < tempNew.size(); ++i) {
+                boolean hasEqual = false;
                 for (int j = 0; j < tempOld.size(); ++j) {
                     if (tempNew.get(i).equals(tempOld.get(j))) { // Equals will recursively check the entire subtree!
                         tempNew.remove(i);
                         tempOld.remove(j);
                         --i;
                         --j;
+                        hasEqual = true;
                         break;
                     }
                 }
+
+                if (!hasEqual) {
+                    newToOldListIndices.put(i, originalIndex);
+                }
+                ++originalIndex;
             }
 
             // skip list equality on @graph,x. Otherwise you always get add+delete on @graph,1 if
@@ -313,7 +322,7 @@ public class History {
             for (int i = 0; i < tempNew.size(); ++i) {
                 List<Object> childPath = new ArrayList(path);
                 if ( tempOld.size() > i ) {
-                    childPath.add(Integer.valueOf(i));
+                    childPath.add(Integer.valueOf(newToOldListIndices.get(i)));
                     examineDiff(childPath, version,
                             tempNew.get(i), tempOld.get(i),
                             compositePath, changeSet);
