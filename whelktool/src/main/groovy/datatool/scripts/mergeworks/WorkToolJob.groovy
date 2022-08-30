@@ -28,7 +28,7 @@ class WorkToolJob {
 
     String date = new SimpleDateFormat('yyyyMMdd-HHmmss').format(new Date())
     String jobId = IdGenerator.generate()
-    File reportDir = new File("reports/$date/merged-works")
+    File reportDir = new File("reports/merged-works/$date")
 
     String changedIn = "xl"
     String changedBy = "SEK"
@@ -90,7 +90,7 @@ class WorkToolJob {
                 try {
                     def merged = mergedWorks(titleClusters(cluster)).findAll { it.derivedFrom.size() > 1 }
                     if (merged) {
-                        println(merged.collect { [new Doc(whelk, it.work)] + it.derivedFrom }
+                        println(merged.collect { [new Doc(whelk, it.doc)] + it.derivedFrom }
                                 .collect { Html.clusterTable(it) }
                                 .join('') + Html.HORIZONTAL_RULE
                         )
@@ -111,7 +111,7 @@ class WorkToolJob {
             return {
                 try {
                     def hub = mergedWorks(titleClusters(cluster))
-                            .collect { [new Doc(whelk, it.work)] + it.derivedFrom }
+                            .collect { [new Doc(whelk, it.doc)] + it.derivedFrom }
                     if (hub.size() > 1) {
                         println(Html.hubTable(hub) + Html.HORIZONTAL_RULE)
                     }
@@ -127,7 +127,6 @@ class WorkToolJob {
 
     void merge() {
         def s = statistics.printOnShutdown()
-        reportDir.mkdirs()
 
         run({ cluster ->
             return {
@@ -135,17 +134,20 @@ class WorkToolJob {
                 def works = mergedWorks(titles)
 
                 works.each {
-                    if (it.derivedFrom.size() > 1) {
-                        store(it)
-                    }
+                    store(it)
                 }
 
                 String report = htmlReport(titles, works)
 
-                new File(reportDir, "${Html.clusterId(cluster)}.html") << report
+//                new File(reportDir, "${Html.clusterId(cluster)}.html") << report
                 works.each {
-                    s.increment('num derivedFrom', "${it.derivedFrom.size()}", it.work.shortId)
-                    new File(reportDir, "${it.work.shortId}.html") << report
+                    if (it instanceof NewWork) {
+                        s.increment('num derivedFrom (new works)', "${it.derivedFrom.size()}", it.doc.shortId)
+                    } else if (it instanceof UpdatedWork) {
+                        s.increment('num derivedFrom (updated works)', "${it.derivedFrom.size()}", it.doc.shortId)
+                    }
+                    it.reportDir.mkdirs()
+                    new File(it.reportDir, "${it.doc.shortId}.html") << report
                 }
             }
         })
@@ -199,63 +201,37 @@ class WorkToolJob {
         titleClusters.each { it.each { it.removeComparisonProps() } }
 
         s.append("<h1>Extracted works</h1>")
-        works.collect { [new Doc(whelk, it.work)] + it.derivedFrom }
+        works.collect { [new Doc(whelk, it.doc)] + it.derivedFrom }
                 .each { s.append(Html.clusterTable(it)) }
 
         s.append(Html.END)
         return s.toString()
     }
 
-    class MergedWork {
-        Document work
-        Collection<Doc> derivedFrom
-    }
-
-    private Document buildWorkDocument(Map workData) {
-        String workId = IdGenerator.generate()
-
-        workData['@id'] = "TEMPID#it"
-        Document d = new Document([
-                "@graph": [
-                        [
-                                "@id"          : "TEMPID",
-                                "@type"        : "Record",
-                                "mainEntity"   : ["@id": "TEMPID#it"],
-                                "technicalNote": [[
-                                                          "@type"  : "TechnicalNote",
-                                                          "hasNote": [[
-                                                                              "@type": "Note",
-                                                                              "label": ["Maskinellt utbrutet verk... TODO"]
-                                                                      ]],
-                                                          "uri"    : ["http://xlbuild.libris.kb.se/works/$date/merged-works/${workId}.html".toString()]
-
-                                                  ]
-                                ]],
-                        workData
-                ]
-        ])
-
-        d.setGenerationDate(new Date())
-        d.setGenerationProcess(generationProcess)
-        d.deepReplaceId(Document.BASE_URI.toString() + workId)
-        return d
-    }
-
     private void store(MergedWork work) {
         if (!dryRun) {
             whelk.setSkipIndex(skipIndex)
-            if (!whelk.createDocument(work.work, changedIn, changedBy,
-                    LegacyIntegrationTools.determineLegacyCollection(work.work, whelk.getJsonld()), false)) {
-                throw new WhelkRuntimeException("Could not store new work: ${work.work.shortId}")
-            }
 
-            String workIri = work.work.thingIdentifiers.first()
+            def workIri = work.doc.thingIdentifiers.first()
+
+            if (work instanceof NewWork && work.derivedFrom > 1) {
+                if (!whelk.createDocument(work.doc, changedIn, changedBy,
+                        LegacyIntegrationTools.determineLegacyCollection(work.doc, whelk.getJsonld()), false)) {
+                    throw new WhelkRuntimeException("Could not store new work: ${work.doc.shortId}")
+                }
+                return
+            }
+            if (work instanceof UpdatedWork) {
+                work.doc.setGenerationDate(new Date())
+                work.doc.setGenerationProcess(generationProcess)
+                whelk.storeAtomicUpdate(work.doc, !loud, changedIn, generationProcess, work.checksum)
+            }
 
             work.derivedFrom
                     .collect { it.ogDoc }
                     .each {
                         def sum = it.getChecksum(whelk.jsonld)
-                        it.data[JsonLd.GRAPH_KEY][1]['instanceOf'] = [(JsonLd.ID_KEY): workIri]
+                        it.data[JsonLd.GRAPH_KEY][1][JsonLd.WORK_KEY] = [(JsonLd.ID_KEY): workIri]
                         it.setGenerationDate(new Date())
                         it.setGenerationProcess(generationProcess)
                         whelk.storeAtomicUpdate(it, !loud, changedIn, changedBy, sum)
@@ -269,9 +245,22 @@ class WorkToolJob {
             titleCluster.sort { it.numPages() }
             WorkComparator c = new WorkComparator(WorkComparator.allFields(titleCluster))
 
-            works.addAll(partition(titleCluster, { Doc a, Doc b -> c.sameWork(a, b) })
+            def workClusters = partition(titleCluster, { Doc a, Doc b -> c.sameWork(a, b) })
                     .each { work -> work.each { doc -> doc.removeComparisonProps() } }
-                    .collect { new MergedWork(work: buildWorkDocument(c.merge(it)), derivedFrom: it) })
+
+            workClusters.each { wc ->
+                def (linked, local) = wc.split { it.workIri() }
+                if (!linked) {
+                    works.add(new NewWork(c.merge(local), local, reportDir))
+                } else if (linked.size() == 1) {
+                    def doc = whelk.storage.getDocumentByIri(linked.first().workIri())
+                    def checksum = doc.getChecksum(whelk.jsonld)
+                    doc.data[JsonLd.GRAPH_KEY][1] = c.merge([new Doc(whelk, doc)] + local)
+                    works.add(new UpdatedWork(doc, local, reportDir, checksum))
+                } else {
+                    System.err.println("Local works in ${local.collect { it.shortId }} matches multiple linked works: ${linked.collect { it.shortId }}. Duplicate linked works?")
+                }
+            }
         }
 
         return works
@@ -435,7 +424,7 @@ class WorkToolJob {
     }
 
     private Collection<Collection<Doc>> titleClusters(Collection<String> cluster) {
-        loadDocs(cluster)
+        loadDocs(cluster).with { loadLinkedWorks(it) }
                 .findAll(qualityMonographs)
                 .each { it.addComparisonProps() }
                 .with { partitionByTitle(it) }
@@ -450,6 +439,13 @@ class WorkToolJob {
         }
     }
 
+    private Collection<Doc> loadLinkedWorks(Collection<Doc> docs) {
+        def (linked, local) = docs.split {
+            it.workIri()
+        }
+        return local + linked.unique { it.getMainEntity()['instanceOf'] }
+                .each { it.getMainEntity()['instanceOf'] = it.getWork() }
+    }
 }
 
 class NoWorkException extends RuntimeException {
