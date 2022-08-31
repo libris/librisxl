@@ -295,7 +295,11 @@ public class History {
             // anything changed in there, and the @graph list has semantic meaning attached to the
             // indexes.
             if (path.size() > 1) {
-                for (Object obj : tempNew) {
+
+                // Find new elements that weren't there before
+                Iterator newIt = tempNew.iterator();
+                while (newIt.hasNext()) {
+                    Object obj = newIt.next();
                     List list = (List) examining;
                     for (int i = 0; i < list.size(); ++i) {
 
@@ -303,10 +307,14 @@ public class History {
                             List<Object> newPath = new ArrayList<>(path);
                             newPath.add(i);
                             ((HashSet) changeSet.get("addedPaths")).add(newPath);
+                            newIt.remove(); // We know this is a new element, no need to check it for further diffs
                         }
                     }
                 }
-                for (Object obj : tempOld) {
+                // Find removed elements that are no longer there
+                Iterator oldIt = tempNew.iterator();
+                while (oldIt.hasNext()) {
+                    Object obj = oldIt.next();
                     List list = (List) correspondingPrevious;
                     for (int i = 0; i < list.size(); ++i) {
 
@@ -314,9 +322,11 @@ public class History {
                             List<Object> newPath = new ArrayList<>(path);
                             newPath.add(i);
                             ((HashSet) changeSet.get("removedPaths")).add(newPath);
+                            oldIt.remove(); // We know this is a removed element, no need to check it for further diffs
                         }
                     }
                 }
+
             }
 
             for (int i = 0; i < tempNew.size(); ++i) {
