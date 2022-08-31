@@ -133,14 +133,13 @@ class WorkToolJob {
                 def titles = titleClusters(cluster)
                 def works = mergedWorks(titles)
 
-                works.each {
-                    store(it)
-                }
+                def needsStore = { it instanceof UpdatedWork || it.derivedFrom > 1 }
+                def storedWorks = works.findAll(needsStore).each { store(it) }
 
-                String report = htmlReport(titles, works)
+                String report = htmlReport(titles, storedWorks)
 
 //                new File(reportDir, "${Html.clusterId(cluster)}.html") << report
-                works.each {
+                storedWorks.each {
                     if (it instanceof NewWork) {
                         s.increment('num derivedFrom (new works)', "${it.derivedFrom.size()}", it.doc.shortId)
                     } else if (it instanceof UpdatedWork) {
@@ -214,7 +213,7 @@ class WorkToolJob {
 
             def workIri = work.doc.thingIdentifiers.first()
 
-            if (work instanceof NewWork && work.derivedFrom > 1) {
+            if (work instanceof NewWork) {
                 if (!whelk.createDocument(work.doc, changedIn, changedBy,
                         LegacyIntegrationTools.determineLegacyCollection(work.doc, whelk.getJsonld()), false)) {
                     throw new WhelkRuntimeException("Could not store new work: ${work.doc.shortId}")
