@@ -270,23 +270,36 @@ public class History {
             // _following_ element being compared with the wrong element in the other list.
             List tempNew = new LinkedList((List) examining);
             List tempOld = new LinkedList((List) correspondingPrevious);
+            Map<Integer, Integer> newToOldListIndices = new HashMap<>(); // What used to be at index x (in examining) is now at index y (in tempNew).
+            int originalIndex = 0;
             for (int i = 0; i < tempNew.size(); ++i) {
+                boolean hasEqual = false;
                 for (int j = 0; j < tempOld.size(); ++j) {
                     if (tempNew.get(i).equals(tempOld.get(j))) { // Equals will recursively check the entire subtree!
                         tempNew.remove(i);
                         tempOld.remove(j);
                         --i;
                         --j;
+                        hasEqual = true;
                         break;
                     }
                 }
+
+                if (!hasEqual) {
+                    newToOldListIndices.put(i, originalIndex);
+                }
+                ++originalIndex;
             }
 
             // skip list equality on @graph,x. Otherwise you always get add+delete on @graph,1 if
             // anything changed in there, and the @graph list has semantic meaning attached to the
             // indexes.
             if (path.size() > 1) {
-                for (Object obj : tempNew) {
+
+                // Find new elements that weren't there before
+                Iterator newIt = tempNew.iterator();
+                while (newIt.hasNext()) {
+                    Object obj = newIt.next();
                     List list = (List) examining;
                     for (int i = 0; i < list.size(); ++i) {
 
@@ -294,10 +307,14 @@ public class History {
                             List<Object> newPath = new ArrayList<>(path);
                             newPath.add(i);
                             ((HashSet) changeSet.get("addedPaths")).add(newPath);
+                            newIt.remove(); // We know this is a new element, no need to check it for further diffs
                         }
                     }
                 }
-                for (Object obj : tempOld) {
+                // Find removed elements that are no longer there
+                Iterator oldIt = tempOld.iterator();
+                while (oldIt.hasNext()) {
+                    Object obj = oldIt.next();
                     List list = (List) correspondingPrevious;
                     for (int i = 0; i < list.size(); ++i) {
 
@@ -305,15 +322,17 @@ public class History {
                             List<Object> newPath = new ArrayList<>(path);
                             newPath.add(i);
                             ((HashSet) changeSet.get("removedPaths")).add(newPath);
+                            oldIt.remove(); // We know this is a removed element, no need to check it for further diffs
                         }
                     }
                 }
+
             }
 
             for (int i = 0; i < tempNew.size(); ++i) {
                 List<Object> childPath = new ArrayList(path);
                 if ( tempOld.size() > i ) {
-                    childPath.add(Integer.valueOf(i));
+                    childPath.add(Integer.valueOf(newToOldListIndices.get(i)));
                     examineDiff(childPath, version,
                             tempNew.get(i), tempOld.get(i),
                             compositePath, changeSet);
