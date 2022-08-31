@@ -312,7 +312,7 @@ public class History {
                     }
                 }
                 // Find removed elements that are no longer there
-                Iterator oldIt = tempNew.iterator();
+                Iterator oldIt = tempOld.iterator();
                 while (oldIt.hasNext()) {
                     Object obj = oldIt.next();
                     List list = (List) correspondingPrevious;
