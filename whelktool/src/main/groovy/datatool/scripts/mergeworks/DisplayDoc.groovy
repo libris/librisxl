@@ -61,7 +61,7 @@ class DisplayDoc {
 
     private String reproductionOfLink() {
         def shortId = Util.getPathSafe(getMainEntity(), ['reproductionOf', '@id'])
-                ?.tokenize("/#")
+                ?.split('[#/]')
                 ?.dropRight(1)
                 ?.last() ?: ''
 
