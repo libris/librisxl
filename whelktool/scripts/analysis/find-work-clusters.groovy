@@ -32,8 +32,6 @@ selectByCollection('bib') { bib ->
     }
 }
 
-exit()
-
 Map<String, List<String>> buildQuery(bib) {
     def title = title(bib)
 
@@ -63,10 +61,6 @@ Map<String, List<String>> buildQuery(bib) {
         return query
     }
     return null
-}
-
-synchronized void exit() {
-    System.exit(0)
 }
 
 private void insertLinkedAgents(bib) {
