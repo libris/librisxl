@@ -133,7 +133,7 @@ class WorkToolJob {
                 def titles = titleClusters(cluster)
                 def works = mergedWorks(titles)
 
-                def needsStore = { it instanceof UpdatedWork || it.derivedFrom > 1 }
+                def needsStore = { it instanceof UpdatedWork || it.derivedFrom.size() > 1 }
                 def storedWorks = works.findAll(needsStore).each { store(it) }
 
                 String report = htmlReport(titles, storedWorks)
