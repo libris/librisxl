@@ -41,7 +41,7 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
             && !work.expressionOf
             && work.hasTitle
         ) {
-            def workTitle = work.hasTitle?.find { it[TYPE] == 'Title' }
+            def workTitle = work.hasTitle?.find { it[TYPE] == 'Title' && '_revertedBy' !in it }
             if (workTitle instanceof Map) {
                 def copiedTitle = copyForRevert(workTitle)
                 markToIgnore(workTitle)
