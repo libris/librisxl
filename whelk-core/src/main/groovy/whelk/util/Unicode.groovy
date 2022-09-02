@@ -1,5 +1,7 @@
 package whelk.util
 
+import com.ibm.icu.text.Transliterator
+
 import java.text.Normalizer
 import java.util.regex.Pattern
 
@@ -44,6 +46,21 @@ class Unicode {
     
     private static final Map EXTRA_NORMALIZATION_MAP
 
+    
+    private static final Map<String, Transliterator> TRANSLITERATORS = [
+            'be' : romanizer('be-iso', ['romanization/be-iso.txt', 'romanization/slavic-iso.txt']),
+            'bg' : romanizer('bg-iso', ['romanization/bg-iso.txt', 'romanization/slavic-iso.txt']),
+            'el' : romanizer('el-btj', ['romanization/el-btj.txt']),
+            'kk' : romanizer('kk-iso', ['romanization/kk-iso.txt']),
+            'mk' : romanizer('mk-iso', ['romanization/mk-iso.txt', 'romanization/slavic-iso.txt']),
+            'mn' : romanizer('mn-lessing', ['romanization/mn-lessing.txt']),
+            'ru' : romanizer('ru-iso', ['romanization/ru-iso.txt', 'romanization/slavic-iso.txt']),
+            'sr' : romanizer('sr-iso', ['romanization/sr-iso.txt', 'romanization/slavic-iso.txt']),
+            'uk' : romanizer('uk-iso', ['romanization/uk-iso.txt', 'romanization/slavic-iso.txt']),
+    ]
+
+    private static final Transliterator NOP_TRANSFORM = Transliterator.createFromRules('', '', Transliterator.FORWARD)
+    
     static {
         EXTRA_NORMALIZATION_MAP = NORMALIZE_UNICODE_CHARS.collectEntries {
             [(it): Normalizer.normalize(it, Normalizer.Form.NFKC)]
@@ -92,5 +109,18 @@ class Unicode {
     
     static String trim(String s) {
         s.replaceFirst(LEADING_SPACE, '').replaceFirst(TRAILING_SPACE, '')
+    }
+    
+    static String romanize(String s, String langCode) {
+        TRANSLITERATORS.getOrDefault(langCode, NOP_TRANSFORM).transform(s)
+    }
+
+    static String readFromResources(String filename) {
+        return Unicode.class.getClassLoader()
+                .getResourceAsStream(filename).getText("UTF-8")
+    }
+    
+    static Transliterator romanizer(String id, List<String> filenames) {
+        Transliterator.createFromRules(id, filenames.collect(Unicode::readFromResources).join('\n'), Transliterator.FORWARD)
     }
 }
