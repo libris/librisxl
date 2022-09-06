@@ -51,6 +51,7 @@ class Unicode {
             'be' : romanizer('be-iso', ['romanization/be-iso.txt', 'romanization/slavic-iso.txt']),
             'bg' : romanizer('bg-iso', ['romanization/bg-iso.txt', 'romanization/slavic-iso.txt']),
             'el' : romanizer('el-btj', ['romanization/el-btj.txt']),
+            'grc' : romanizer('grc-skr', ['romanization/grc-skr.txt']),
             'kk' : romanizer('kk-iso', ['romanization/kk-iso.txt']),
             'mk' : romanizer('mk-iso', ['romanization/mk-iso.txt', 'romanization/slavic-iso.txt']),
             'mn' : romanizer('mn-lessing', ['romanization/mn-lessing.txt']),

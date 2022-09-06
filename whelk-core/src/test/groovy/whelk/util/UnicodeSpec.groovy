@@ -117,6 +117,32 @@ class UnicodeSpec extends Specification {
         // 9q9s44v77vswpddj
         // example of where the manual transcription was wrong "maghissa" <> "majissa"  
         'Η Ανια και η μαγισσα του χιονιου'                         | 'I Ania ke i majissa tou chioniou'
+        // https://libris.kb.se/dq6jzpv7b1ccb6m8#it
+        //'Σ.Ο.Σ. Άμεσος κίνδυνος'                                   | 'S.O.S. amesos kindhinos'
+        'Σ.Ο.Σ. Άμεσος κίνδυνος'                                   | 'S.O.S. Amesos kindhinos'
+        // https://libris.kb.se/q1gw6nq9nrjrfz5r#it
+        'Δυτικά της ελευθερίας'                                    | 'Dhitika tis eleftherias'
+        // https://libris.kb.se/bq7b06548vsgv13d#it
+        //'Πώς Οι Δανοί Εκπαιδεύουν Τα Πιο Ευτυχισμένα Παιδιά Στο Σχολείο Και Στην Οικογένεια' | 'Pos i dhani ekpedhevoun ta pio eftichismena pedhia sto scholio ke stin ikojenia'
+        'Πώς Οι Δανοί Εκπαιδεύουν Τα Πιο Ευτυχισμένα Παιδιά Στο Σχολείο Και Στην Οικογένεια' | 'Pos I Dhani Ekpedhevoun Ta Pio Eftichismena Pedhia Sto Scholio Ke Stin Ikojenia'
+        // https://libris.kb.se/7nnt5t5z5xtlzr37#it
+        //'Ο Αϊ-Βασιλης στη Φυλακη με τους 83 αρουραίους'            | 'O Ai-Vasilis sti filaki me tous 83 aroureous'
+        'Ο Αϊ-Βασιλης στη Φυλακη με τους 83 αρουραίους'            | 'O Ai-Vasilis sti Filaki me tous 83 aroureous'
+    }
+    
+    def "Romanize ancient greek"() {
+        expect:
+        Unicode.romanize(source, 'grc') == target
+        where:
+        source | target
+        // https://libris.kb.se/jx2hz4nbg495dgsm#it 	
+        "Oδύσσεια" | "Odysseia"
+        // https://libris.kb.se/s7h2fcnjqzrhngn7#it 	
+        "Ορέστης" | "Orestēs"
+        // https://libris.kb.se/gw5q6053dlvgwh1q#it 	
+        "Ιστορίαι" | "Istoriai"
+        // https://libris.kb.se/wbqtq3x4tbtk0151#it 	
+        "Νεφέλαι ; Λυσιστράτη" | "Nephelai ; Lysistratē"
     }
 
     def "Romanize russian with ISO"() {
@@ -149,7 +175,7 @@ class UnicodeSpec extends Specification {
         expect:
         Unicode.romanize(source, 'be') == target
         where:
-        source                                          || target
+        source || target
         // https://libris.kb.se/p408wtcjm06kz192#it
         // ŭ vs ǔ
         // 'Пiпi Доўгая Панчоха' || 'Pipi Doǔhaja Pančocha'
@@ -162,7 +188,7 @@ class UnicodeSpec extends Specification {
         expect:
         Unicode.romanize(source, 'bg') == target
         where:
-        source                                          || target
+        source || target
         // https://libris.kb.se/fzr6pkkr2vnc152#it
         'Баба праща поздрави и се извинява' || 'Baba prašta pozdravi i se izvinjava'
         // https://libris.kb.se/jxqb93w0gxhtbf7d#it

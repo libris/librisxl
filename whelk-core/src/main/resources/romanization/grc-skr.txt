@@ -1,0 +1,181 @@
+# ICU transform rules
+
+# "Gammalgrekiska texter (från före 1454) translittereras enligt schema fastlagt för vetenskapliga bibliotek i Svenska katalogiseringsregler 1980 (SKR)"
+# https://metadatabyran.kb.se/download/18.6945cdaa174b74a2c361608/1601918851828/Grekiska%20alfabetet.pdf
+# https://metadatabyran.kb.se/beskrivning/specialanvisningar/mangsprak/romaniseringsscheman#h-Gammalgrekiska
+
+:: NFC (NFD);
+
+Ῥ } [:LowercaseLetter:] > Rh ;
+Ῥ > RH ;
+ῥ > rh ;
+
+ΑΫ > AY ;
+Αϋ > Ay ;
+αϋ > ay ;
+
+:: NFD (NFC) ; # decompose to treat diacritics separately
+
+# ‘ (spiritus asper) h
+# spiritus asper ῾ U+0313 COMBINING COMMA ABOVE
+\u0313 > h ;
+
+# ’ (spiritus lenis) återges ej
+# spiritus lenis ̓  U+1FFE GREEK DASIA
+# Accenter återges ej.
+# List taken from: https://en.m.wikipedia.org/wiki/Greek_diacritics
+#  ́ U+0301 COMBINING ACUTE ACCENT
+# ´ U+00B4 ACUTE ACCENT
+# ` U+0060 GRAVE ACCENT
+# ᾿ U+1FBF GREEK PSILI
+# ῎ U+1FCE GREEK PSILI AND OXIA
+# ῍ U+1FCD GREEK PSILI AND VARIA
+# ῏ U+1FCF GREEK PSILI AND PERISPOMENI
+# ῾ U+1FFE GREEK DASIA
+# ῞ U+1FDE GREEK DASIA AND OXIA
+# ῝ U+1FDD GREEK DASIA AND VARIA
+# ῟ U+1FDF GREEK DASIA AND PERISPOMENI
+# ˉ U+02C9 MODIFIER LETTER MACRON
+# ˘ U+02D8 BREVE
+# ῀ U+1FC0 GREEK PERISPOMENI
+\u1FFE > ;
+\u0301 > ;
+\u00B4 > ;
+\u0060 > ;
+\u1FBF > ;
+\u1FCE > ;
+\u1FCD > ;
+\u1FCF > ;
+\u1FDE > ;
+\u1FDD > ;
+\u1FDF > ;
+\u02C9 > ;
+\u02D8 > ;
+\u1FC0 > ;
+
+# ¨ U+00A8 DIAERESIS
+# ΅ U+0385 GREEK DIALYTIKA TONOS
+# ῭ U+1FED GREEK DIALYTIKA AND VARIA
+# ῁ U+1FC1 GREEK DIALYTIKA AND PERISPOMENI
+\u00A8 > ;
+\u0385 > ;
+\u1FED > ;
+\u1FC1 > ;
+
+#  ͅ (iota subscriptum) återges med  ̧ under vokalen
+#  ͅ U+0345 COMBINING GREEK YPOGEGRAMMENI
+#  ̧ U+0327 COMBINING CEDILLA
+\u0345 > \u0327 ;
+
+ΑΙ > AI ;
+Αι > Ai ;
+αι > ai ;
+
+ΕΙ > EI ;
+Ει > Ei ;
+ει > ei ;
+
+ΟΙ > OI ;
+Οι > Oi ;
+οι > oi ;
+
+ΑΥ > AU ;
+Αυ > Au ;
+αυ > au ;
+
+ΕΥ > EU ;
+Ευ > Eu ;
+ευ > eu ;
+
+ΗΥ > ĒU ;
+Ηυ > Ēu ;
+ηυ > ēu ;
+
+ΟΥ > OU ;
+Ου > Ou ;
+ου > ou ;
+
+Α > a ;
+α > a ;
+
+Β > B ;
+β > b ;
+
+# Γ γ* g
+# *γ framför γ, κ, χ = n (utom i ordbegynnelse)
+[:^Letter:] { Γ > G ;
+[:^Letter:] { γ > g ;
+Γ } [ Γ Κ Χ γ κ χ ] > N ;
+γ } [ Γ Κ Χ γ κ χ ] > n ;
+Γ > g ;
+γ > g ;
+
+Δ > D ;
+δ > d ;
+
+Ε > E ;
+ε > e ;
+
+Ζ > Z ;
+ζ > z ;
+
+Η > Ē ;
+η > ē ;
+
+Θ } [:LowercaseLetter:] <> Th;
+Θ > TH ;
+θ > th ;
+
+Ι > I ;
+ι > i ;
+
+Κ > K ;
+κ > k ;
+
+Λ > L ;
+λ > l ;
+
+Μ > M ;
+μ > m ;
+
+Ν > N ;
+ν > n ;
+
+Ξ > X ;
+ξ > x ;
+
+Ο > O ;
+ο > o ;
+
+Π > P ;
+π > p ;
+
+Ρ > R ;
+ρ > r ;
+
+Σ > S ;
+σ > s ;
+ς > s ;
+
+Τ > T ;
+τ > t ;
+
+Υ > Y ;
+υ > y ;
+
+Φ } [:LowercaseLetter:] > Ph ;
+Φ > PH ;
+φ > ph ;
+
+Χ } [:LowercaseLetter:] > Ch ;
+Χ > CH ;
+χ > ch ;
+
+Ψ } [:LowercaseLetter:] > Ps ;
+Ψ > PS ;
+ψ > ps ;
+
+Ω > Ō ;
+ω > ō ;
+
+:: NFC (NFD);
