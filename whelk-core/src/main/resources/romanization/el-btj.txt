@@ -162,6 +162,7 @@ $vowel = [α ε η ι ο ω υ Α Ε Η Ι Ο Ω Υ] ;
 Γ > G ;
 γ > g ;
 
+Δ } [:LowercaseLetter:] > Dh ;
 Δ > DH ;
 δ > dh ;
 
@@ -173,10 +174,12 @@ $vowel = [α ε η ι ο ω υ Α Ε Η Ι Ο Ω Υ] ;
 # ευ 
 # ev före vokal eller β, γ, δ, ζ, λ, μ, ν, ρ
 # ef före θ, κ, ξ, π, σ, τ, φ, χ, ψ
-ΕΥ } [Θ Κ Ξ Π Σ Τ Φ Χ Ψ θ κ ξ π σ τ φ χ ψ] > EV ;
-ευ } [Θ Κ Ξ Π Σ Τ Φ Χ Ψ θ κ ξ π σ τ φ χ ψ] > ev ;
-ΕΥ > EF ;
-ευ > ef ;
+ΕΥ } [Θ Κ Ξ Π Σ Τ Φ Χ Ψ θ κ ξ π σ τ φ χ ψ] > EF ;
+Ευ } [Θ Κ Ξ Π Σ Τ Φ Χ Ψ θ κ ξ π σ τ φ χ ψ] > Ef ;
+ευ } [Θ Κ Ξ Π Σ Τ Φ Χ Ψ θ κ ξ π σ τ φ χ ψ] > ef ;
+ΕΥ > EV ;
+Ευ > Ev ;
+ευ > ev ;
 
 Ε > E ;
 ε > e ;
@@ -199,6 +202,8 @@ $vowel = [α ε η ι ο ω υ Α Ε Η Ι Ο Ω Υ] ;
 # ϊ - j mellan två vokaler
 $vowel { Ϊ } $vowel > J ;
 $vowel { ϊ } $vowel > j ;
+Ϊ > I ;
+ϊ > j ;
 
 # Κ U+039A GREEK CAPITAL LETTER KAPPA
 Κ > K ;
@@ -215,6 +220,7 @@ $vowel { ϊ } $vowel > j ;
 [:^Letter:] { Μπ > B ;
 [:^Letter:] { μπ > b ;
 ΜΠ > MB ;
+Μπ > Mb ;  # shouldn't really happen inside word
 μπ > mb ;
 
 Μ > M ;
@@ -228,6 +234,7 @@ $vowel { ϊ } $vowel > j ;
 [:^Letter:] { Ντ > D ;
 [:^Letter:] { ντ > d ;
 ΝΤ > ND ;
+Ντ > Nd ; # shouldn't really happen inside word
 ντ > nd ;
 
 Ν > N ;
@@ -270,7 +277,8 @@ $vowel { ϊ } $vowel > j ;
 # ϋ - j mellan två vokaler
 $vowel { Ϋ } $vowel > J ;
 $vowel { ϋ } $vowel > j ;
-
+Ϋ > I ;
+ϋ > i ;
 Υ > I ;
 υ > i ;
 
