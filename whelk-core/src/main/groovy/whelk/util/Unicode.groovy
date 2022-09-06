@@ -116,12 +116,12 @@ class Unicode {
         TRANSLITERATORS.getOrDefault(langCode, NOP_TRANSFORM).transform(s)
     }
 
-    static String readFromResources(String filename) {
+    private static String readFromResources(String filename) {
         return Unicode.class.getClassLoader()
                 .getResourceAsStream(filename).getText("UTF-8")
     }
     
-    static Transliterator romanizer(String id, List<String> filenames) {
+    private static Transliterator romanizer(String id, List<String> filenames) {
         Transliterator.createFromRules(id, filenames.collect(Unicode::readFromResources).join('\n'), Transliterator.FORWARD)
     }
 }
