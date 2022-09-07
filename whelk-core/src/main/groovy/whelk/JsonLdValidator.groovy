@@ -14,10 +14,13 @@ class JsonLdValidator {
             'definitions': Validation.Scope.DEFINITIONS,
             'hold': Validation.Scope.HOLD,
     ]
+    private Set langAliases
+    
     static IRIFactory iriFactory = IRIFactory.iriImplementation()
-
+    
     private JsonLdValidator(JsonLd jsonLd) {
         this.jsonLd = jsonLd
+        langAliases = jsonLd.langContainerAlias.values() as Set
     }
 
     static JsonLdValidator from(JsonLd jsonLd) {
@@ -82,6 +85,10 @@ class JsonLdValidator {
             }
             validation.at = path
 
+            if (!isBadLangContainer(path, key, value, validation)) {
+                return 
+            }
+            
             if (validation.scope == Validation.Scope.ALL) {
                 verifyAll(key, value, validation)
                 return
@@ -170,6 +177,19 @@ class JsonLdValidator {
             handleError(new Error(Error.Type.MISSING_DEFINITION, key), validation)
         }
     }
+    
+    private boolean isBadLangContainer( List path, String key, value, validation) {
+        if (langAliases.intersect(path)) {
+            if (key in langAliases) {
+                if (value !instanceof Map) {
+                    handleError(new Error(Error.Type.OBJECT_TYPE_EXPECTED, key, value), validation)
+                }
+            }
+            else if (value !instanceof String) {
+                handleError(new Error(Error.Type.UNEXPECTED, key, value), validation)
+            }
+        }
+    }
 
     private boolean isVocabTerm(String key) {
         def contextDefinition = getContextDefinition(key)
@@ -227,6 +247,10 @@ class JsonLdValidator {
 
     private Map getTermDefinition(String key) {
         Map termDefinition = jsonLd.vocabIndex[key] instanceof Map ? jsonLd.vocabIndex[key] : null
+        if (!termDefinition && aliases[key]) {
+            String k = aliases[key]
+            termDefinition = jsonLd.vocabIndex[k] instanceof Map ? jsonLd.vocabIndex[k] : null
+        }
         if (!termDefinition && key.indexOf(':') > -1) {
             termDefinition = jsonLd.vocabIndex[jsonLd.expand(key)]
         }
