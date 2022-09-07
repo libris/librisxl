@@ -6,6 +6,7 @@ import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.Subfield;
 
+import java.text.Normalizer;
 import java.util.Iterator;
 
 public class ComposeUtil {
@@ -17,7 +18,7 @@ public class ComposeUtil {
             
             if (f instanceof Controlfield) {
                 Controlfield cf = (Controlfield)f;
-                cf.setData(com.ibm.icu.text.Normalizer.compose(cf.getData(), compat));
+                cf.setData(compose(cf.getData(), compat));
             } else {
                 Datafield df = (Datafield)f;
                 Iterator siter = df.iterator();
@@ -38,7 +39,7 @@ public class ComposeUtil {
             
             if (f instanceof Controlfield) {
                 Controlfield cf = (Controlfield)f;
-                cf.setData(com.ibm.icu.text.Normalizer.decompose(cf.getData(), compat));
+                cf.setData(decompose(cf.getData(), compat));
             } else {
                 Datafield df = (Datafield)f;
                 Iterator siter = df.iterator();
@@ -52,10 +53,14 @@ public class ComposeUtil {
     }
 
     public static String compose(String str, boolean compat) {
-        return com.ibm.icu.text.Normalizer.compose(str, compat);
+        return compat 
+                ? Normalizer.normalize(str, Normalizer.Form.NFKC)
+                : Normalizer.normalize(str, Normalizer.Form.NFC);
     }
     
     public static String decompose(String str, boolean compat) {
-        return com.ibm.icu.text.Normalizer.decompose(str, compat);
+        return compat
+                ? Normalizer.normalize(str, Normalizer.Form.NFKD)
+                : Normalizer.normalize(str, Normalizer.Form.NFD);
     }    
 }
