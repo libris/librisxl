@@ -69,7 +69,7 @@ class UnicodeSpec extends Specification {
 
     def "Romanize mongolian languages"() {
         expect:
-        Unicode.romanize(source, 'mn') == target
+        Unicode.romanize(source, 'mn')['mn-Latn-t-mn-Cyrl-x0-lessing'] == target
         where:
         source                                                      | target
         // s3bjxplkqcmb6k8w
@@ -78,7 +78,7 @@ class UnicodeSpec extends Specification {
 
     def "Romanize Kazakh with cyrillic script"() {
         expect:
-        Unicode.romanize(source, 'kk') == target
+        Unicode.romanize(source, 'kk')['kk-Latn-t-kk-Cyrl-m0-iso-1995'] == target
         where:
         // All examples in the Libris catalogue seem to be wrong...
         source                                                      | target
@@ -99,7 +99,7 @@ class UnicodeSpec extends Specification {
 
     def "Romanize modern greek"() {
         expect:
-        Unicode.romanize(source, 'el') == target
+        Unicode.romanize(source, 'el')['el-Latn-t-el-Grek-x0-btj'] == target
         where:
         source                                                     | target
         // zd982r5xwmcb027n
@@ -132,7 +132,7 @@ class UnicodeSpec extends Specification {
     
     def "Romanize ancient greek"() {
         expect:
-        Unicode.romanize(source, 'grc') == target
+        Unicode.romanize(source, 'grc')['grc-Latn-t-grc-Grek-x0-skr-1980'] == target
         where:
         source | target
         // https://libris.kb.se/jx2hz4nbg495dgsm#it 	
@@ -147,7 +147,7 @@ class UnicodeSpec extends Specification {
 
     def "Romanize russian with ISO"() {
         expect:
-        Unicode.romanize(source, 'ru') == target
+        Unicode.romanize(source, 'ru')['ru-Latn-t-ru-Cyrl-m0-iso-1995'] == target
         where:
         source || target
         // https://libris.kb.se/dtmgzm6wb09mh1vl#it
@@ -173,7 +173,7 @@ class UnicodeSpec extends Specification {
 
     def "Romanize belarusian with ISO"() {
         expect:
-        Unicode.romanize(source, 'be') == target
+        Unicode.romanize(source, 'be')['be-Latn-t-be-Cyrl-m0-iso-1995'] == target
         where:
         source || target
         // https://libris.kb.se/p408wtcjm06kz192#it
@@ -186,7 +186,7 @@ class UnicodeSpec extends Specification {
 
     def "Romanize bulgarian with ISO"() {
         expect:
-        Unicode.romanize(source, 'bg') == target
+        Unicode.romanize(source, 'bg')['bg-Latn-t-bg-Cyrl-m0-iso-1995'] == target
         where:
         source || target
         // https://libris.kb.se/fzr6pkkr2vnc152#it
@@ -197,7 +197,7 @@ class UnicodeSpec extends Specification {
 
     def "Romanize macedonian with ISO"() {
         expect:
-        Unicode.romanize(source, 'mk') == target
+        Unicode.romanize(source, 'mk')['mk-Latn-t-mk-Cyrl-m0-iso-1995'] == target
         where:
         source || target
         // https://libris.kb.se/wbxc6926tctq1kz6#it
@@ -209,7 +209,7 @@ class UnicodeSpec extends Specification {
 
     def "Romanize serbian with ISO"() {
         expect:
-        Unicode.romanize(source, 'sr') == target
+        Unicode.romanize(source, 'sr')['sr-Latn-t-sr-Cyrl-m0-iso-1995'] == target
         where:
         source || target
         // https://libris.kb.se/2dbbcc810dxjnk9l#it
@@ -220,7 +220,7 @@ class UnicodeSpec extends Specification {
 
     def "Romanize ukrainian with ISO"() {
         expect:
-        Unicode.romanize(source, 'uk') == target
+        Unicode.romanize(source, 'uk')['uk-Latn-t-uk-Cyrl-m0-iso-1995'] == target
         where:
         source || target
         // https://libris.kb.se/n2wmnf2hll6cn6vg#it 	

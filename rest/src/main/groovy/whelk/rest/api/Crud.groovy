@@ -296,6 +296,7 @@ class Crud extends HttpServlet {
             def body = history.m_changeSetsMap
             sendGetResponse(response, body, eTag, request.getPath(), request.getContentType(), request.getId())
         } else {
+            whelk.normalize(doc)
             ETag eTag
             if (request.shouldEmbellish()) {
                 String plainChecksum = doc.getChecksum(jsonld)
