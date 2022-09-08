@@ -13,19 +13,19 @@ class ScriptShifterShifter {
     
     static final Map tables = [
             'armenian'               : 'hy-Latn-t-hy-m0-alaloc',
-            'azerbaijani'            : 'aze-Latn-t-aze-Cyrl-m0-alaloc',
+            'azerbaijani'            : 'az-Latn-t-az-Cyrl-m0-alaloc',
             'chinese'                : 'zh-Latn-t-zh-Hani-m0-alaloc',
             'church_slavonic'        : 'chu-Latn-t-chu-m0-alaloc',
             'ethiopic'               : 'am-Latn-t-am-m0-alaloc',
-            'georgian'               : 'geo-Latn-t-geo-m0-alaloc',
-            'hindi'                  : 'hin-Latn-t-hin-Deva-m0-alaloc',
+            'georgian'               : 'ka-Latn-t-ka-m0-alaloc',
+            'hindi'                  : 'hi-Latn-t-hi-Deva-m0-alaloc',
             'kyrgyz'                 : 'kir-Latn-t-kir-Cyrl-m0-alaloc',
             'mongolian_mongol_bichig': 'mn-Latn-t-mn-Mong-m0-alaloc',
-            'tajik'                  : 'tgk-Latn-t-tgk-Cyrl-m0-alaloc',
-            'tatar'                  : 'tat-Latn-t-tat-Cyrl-m0-alaloc',
-            'turkmen'                : 'tuk-Latn-t-tuk-Cyrl-m0-alaloc',
-            'uzbek'                  : 'uzb-Latn-t-uzb-Cyrl-m0-alaloc',
-            
+            'tajik'                  : 'tg-Latn-t-tg-Cyrl-m0-alaloc',
+            'tatar'                  : 'tt-Latn-t-tt-Cyrl-m0-alaloc',
+            'turkmen'                : 'tk-Latn-t-tk-Cyrl-m0-alaloc',
+            'uzbek'                  : 'uz-Latn-t-uz-Cyrl-m0-alaloc',
+
             /* "Multi-purpose transliteration for non-Slavic Cyrillic scripts: Abaza, Abkhaz, Adygei, Aisor, Altai, 
             Avar, Azeri, Balkar, Bashkir, Buryat, Chechen, Chukchi, Chuvash, Dargwa, Dungan, Eskimo, Even, Evenki, 
             Gagauz, Ingush, Inuit, Kabardian, Kalmyk, Karachay, Karachay-Balkar, Karakalpak, Karelian, Khakass, 

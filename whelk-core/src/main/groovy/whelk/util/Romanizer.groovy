@@ -33,17 +33,18 @@ class Romanizer {
             // Converted from LOC mappings
             // TODO: investigate how well these handle case/capitalization
             'am'     : [romanizer('am-Latn-t-am-m0-alaloc', ['loc/am-Latn-t-am-m0-alaloc.txt'])],
-            'aze'    : [romanizer('aze-Latn-t-aze-Cyrl-m0-alaloc', ['loc/aze-Latn-t-aze-Cyrl-m0-alaloc.txt'])],
+            'az'     : [romanizer('az-Latn-t-az-Cyrl-m0-alaloc', ['loc/az-Latn-t-az-Cyrl-m0-alaloc.txt'])],
             'chu'    : [romanizer('chu-Latn-t-chu-m0-alaloc', ['loc/chu-Latn-t-chu-m0-alaloc.txt'])],
-            'geo'    : [romanizer('geo-Latn-t-geo-m0-alaloc', ['loc/geo-Latn-t-geo-m0-alaloc.txt'])],
-            'hin'    : [romanizer('hin-Latn-t-hin-Deva-m0-alaloc', ['loc/hin-Latn-t-hin-Deva-m0-alaloc.txt'])],
+            'ka'     : [romanizer('ka-Latn-t-ka-m0-alaloc', ['loc/ka-Latn-t-ka-m0-alaloc.txt'])],
+            'hi'     : [romanizer('hi-Latn-t-hi-Deva-m0-alaloc', ['loc/hi-Latn-t-hi-Deva-m0-alaloc.txt'])],
             'hy'     : [romanizer('hy-Latn-t-hy-m0-alaloc', ['loc/hy-Latn-t-hy-m0-alaloc.txt'])],
             'kir'    : [romanizer('kir-Latn-t-kir-Cyrl-m0-alaloc', ['loc/kir-Latn-t-kir-Cyrl-m0-alaloc.txt'])],
             'mn-Mong': [romanizer('mn-Latn-t-mn-Mong-m0-alaloc', ['loc/mn-Latn-t-mn-Mong-m0-alaloc.txt'])],
-            'tat'    : [romanizer('tat-Latn-t-tat-Cyrl-m0-alaloc', ['loc/tat-Latn-t-tat-Cyrl-m0-alaloc.txt'])],
-            'tgk'    : [romanizer('tgk-Latn-t-tgk-Cyrl-m0-alaloc', ['loc/tgk-Latn-t-tgk-Cyrl-m0-alaloc.txt'])],
-            'tuk'    : [romanizer('tuk-Latn-t-tuk-Cyrl-m0-alaloc', ['loc/tuk-Latn-t-tuk-Cyrl-m0-alaloc.txt'])],
-            'uzb'    : [romanizer('uzb-Latn-t-uzb-Cyrl-m0-alaloc', ['loc/uzb-Latn-t-uzb-Cyrl-m0-alaloc.txt'])],
+            'tt'     : [romanizer('tt-Latn-t-tt-Cyrl-m0-alaloc', ['loc/tt-Latn-t-tt-Cyrl-m0-alaloc.txt'])],
+            'tg'     : [romanizer('tg-Latn-t-tg-Cyrl-m0-alaloc', ['loc/tg-Latn-t-tg-Cyrl-m0-alaloc.txt'])],
+            'tk'     : [romanizer('tk-Latn-t-tk-Cyrl-m0-alaloc', ['loc/tk-Latn-t-tk-Cyrl-m0-alaloc.txt'])],
+            'uz'     : [romanizer('uz-Latn-t-uz-Cyrl-m0-alaloc', ['loc/uz-Latn-t-uz-Cyrl-m0-alaloc.txt'])],
+            'zh'     : [romanizer('zh-Latn-t-zh-Hani-m0-alaloc', ['loc/zh-Latn-t-zh-Hani-m0-alaloc.txt'])],
     ] + alaLocNonSlavicCyrillic()
     
     static Map<String, String> romanize(String s, String langTag) {
@@ -70,6 +71,7 @@ class Romanizer {
     }
 
     private static String readFromResources(String filename) {
+        println(filename)
         Romanizer.class.getClassLoader().getResourceAsStream('romanizer/' + filename).getText("UTF-8")
     }
 }

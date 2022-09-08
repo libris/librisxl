@@ -2,7 +2,7 @@
 # Source: https://raw.githubusercontent.com/lcnetdev/transliterator/main/scriptshifter/tables/data/georgian.yml
 # ICU transform rules
 
-# geo-Latn-t-geo-m0-alaloc
+# ka-Latn-t-ka-m0-alaloc
 
 # script_to_roman
 'Ⴀ' > 'A' ;
