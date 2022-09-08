@@ -1,6 +1,5 @@
 package whelk.util
 
-import com.ibm.icu.text.Transliterator
 
 import java.text.Normalizer
 import java.util.regex.Pattern
@@ -46,20 +45,6 @@ class Unicode {
     
     private static final Map EXTRA_NORMALIZATION_MAP
     
-    private static final Map<String, List<Transliterator>> TRANSLITERATORS = [
-            'be' : [romanizer('be-Latn-t-be-Cyrl-m0-iso-1995', ['romanization/be-iso.txt', 'romanization/slavic-iso.txt'])],
-            'bg' : [romanizer('bg-Latn-t-bg-Cyrl-m0-iso-1995', ['romanization/bg-iso.txt', 'romanization/slavic-iso.txt'])],
-            'el' : [romanizer('el-Latn-t-el-Grek-x0-btj', ['romanization/el-btj.txt'])],
-            'grc': [romanizer('grc-Latn-t-grc-Grek-x0-skr-1980', ['romanization/grc-skr.txt'])],
-            // TODO[ distinguish ISO for slavic languages vs ISO för non-slavic languages? Or describe them with the same entity]?
-            'kk' : [romanizer('kk-Latn-t-kk-Cyrl-m0-iso-1995', ['romanization/kk-iso.txt'])],
-            'mk' : [romanizer('mk-Latn-t-mk-Cyrl-m0-iso-1995', ['romanization/mk-iso.txt', 'romanization/slavic-iso.txt'])],
-            'mn' : [romanizer('mn-Latn-t-mn-Cyrl-x0-lessing', ['romanization/mn-lessing.txt'])],
-            'ru' : [romanizer('ru-Latn-t-ru-Cyrl-m0-iso-1995', ['romanization/ru-iso.txt', 'romanization/slavic-iso.txt'])],
-            'sr' : [romanizer('sr-Latn-t-sr-Cyrl-m0-iso-1995', ['romanization/sr-iso.txt', 'romanization/slavic-iso.txt'])],
-            'uk' : [romanizer('uk-Latn-t-uk-Cyrl-m0-iso-1995', ['romanization/uk-iso.txt', 'romanization/slavic-iso.txt'])],
-    ]
-
     static {
         EXTRA_NORMALIZATION_MAP = NORMALIZE_UNICODE_CHARS.collectEntries {
             [(it): Normalizer.normalize(it, Normalizer.Form.NFKC)]
@@ -108,24 +93,5 @@ class Unicode {
     
     static String trim(String s) {
         s.replaceFirst(LEADING_SPACE, '').replaceFirst(TRAILING_SPACE, '')
-    }
-    
-    static Map<String, String> romanize(String s, String langTag) {
-        TRANSLITERATORS.getOrDefault(langTag, []).collectEntries {
-            [it.getID(), it.transform(s)]
-        }
-    }
-    
-    static Set<String> romanizableLangTags() {
-        TRANSLITERATORS.keySet()
-    }
-
-    private static String readFromResources(String filename) {
-        return Unicode.class.getClassLoader()
-                .getResourceAsStream(filename).getText("UTF-8")
-    }
-    
-    private static Transliterator romanizer(String id, List<String> filenames) {
-        Transliterator.createFromRules(id, filenames.collect(Unicode::readFromResources).join('\n'), Transliterator.FORWARD)
     }
 }

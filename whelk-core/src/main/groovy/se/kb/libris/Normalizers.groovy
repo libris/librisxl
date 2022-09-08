@@ -10,6 +10,7 @@ import whelk.filter.BlankNodeLinker
 import whelk.filter.LanguageLinker
 import whelk.util.DocumentUtil
 import whelk.util.DocumentUtil.Remove
+import whelk.util.Romanizer
 import whelk.util.Unicode
 
 import static whelk.JsonLd.GRAPH_KEY
@@ -62,8 +63,8 @@ class Normalizers {
                     def byLang = value
                     
                     byLang.keySet()
-                            .intersect(Unicode.romanizableLangTags())
-                            .collectEntries { langTag -> Unicode.romanize((String) byLang[langTag], langTag) }
+                            .intersect(Romanizer.romanizableLangTags())
+                            .collectEntries { langTag -> Romanizer.romanize((String) byLang[langTag], langTag) }
                             .each { langTagT, stringT -> byLang.putIfAbsent(langTagT, stringT) }
                 }
                 DocumentUtil.NOP
