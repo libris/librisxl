@@ -125,6 +125,7 @@ $vowel = [α ε η ι ο ω υ Α Ε Η Ι Ο Ω Υ] ;
 [:^Letter:] { ΓΚ > G ;
 [:^Letter:] { Γκ > G ;
 [:^Letter:] { γκ > g ;
+
 # γχ - nch
 ΓΧ > NCH ;
 Γχ > Nch ; # TODO: ta bort såna här osannolika?
@@ -160,8 +161,9 @@ $vowel = [α ε η ι ο ω υ Α Ε Η Ι Ο Ω Υ] ;
 γοι > ji ;
 Γ } [Ε Ι Η Υ ε ι η υ] > J ;
 γ } [Ε Ι Η Υ ε ι η υ] > j ;
-Γ > G ;
-γ > g ;
+Γ } [:LowercaseLetter:] > Gh ;
+Γ > GH ;
+γ > gh ;
 
 Δ } [:LowercaseLetter:] > Dh ;
 Δ > DH ;
