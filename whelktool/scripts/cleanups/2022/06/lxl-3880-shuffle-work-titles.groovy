@@ -9,20 +9,17 @@
  *    otherwise to instanceOf.hasTitle.
  *  - instanceOf.hasPart.hasTitle is moved to instanceOf.hasPart.translationOf.hasTitle if instanceOf.hasPart.translationOf is present.
  *
- * If a move can't be executed due to the data having a deviant structure, the update won't be saved. The intended move
+ * If a move can't be executed due to unexpected data, the update won't be saved. The intended move
  * is instead written to a report for manual handling.
  *
  * In case expressionOf is a linked entity, only hasTitle is copied from the entity and then the link is removed.
  * In case expressionOf is a local entity, all its properties except @type and language are moved to the target, not only hasTitle.
- * A special case is when a local expressionOf contains another language than instanceOf. These "extra" languages are moved
- * to instanceOf so that the information don't get lost when expressionOf is removed.
  *
  * A couple normalizations are done on the mainTitle string whenever a title is moved:
  *  - Trailing period (not preceded by another period or a capital letter) is removed.
  *  - Language is removed from the string if the language can be identified in the target entity's language property.
  *    Example: mainTitle: "Haggada. Jiddisch & Hebreiska" --> mainTitle: Haggada, language: [[@id:https://id.kb.se/language/yid], [@id:https://id.kb.se/language/heb]]
  *
- * The script also removes superfluous local entities in instanceOf.language (when a linked equivalent can be identified).
  */
 
 import whelk.filter.LanguageLinker
@@ -32,11 +29,10 @@ import whelk.util.Unicode
 import java.util.concurrent.ConcurrentLinkedQueue
 
 moved = getReportWriter('moved.tsv')
-blankLangRemoved = getReportWriter('blank-lang-removed.tsv')
-extraLang = getReportWriter('lang-added.tsv')
 propertyAlreadyExists = getReportWriter('property-already-exists.tsv')
 brokenLinks = getReportWriter('broken-links.tsv')
 multiple = getReportWriter('multiple.txt')
+langDiff = getReportWriter('lang-diff.tsv')
 
 languageLinker = buildLanguageMap()
 Map a = (Map<String, List>) languageLinker.ambiguousIdentifiers
@@ -67,18 +63,6 @@ selectByCollection('bib') { bib ->
     }
 
     Map work = asList(instanceOf.value)[0]
-
-    // Remove superfluous blank languages
-    def worklang = asList(work[LANGUAGE])
-    def whichOne = worklang.findAll { it[ID] in ambiguousLangIds }
-    def blankLang = worklang.find { !it[ID] }
-    if (blankLang) {
-        def mapped = mapBlankLanguages([blankLang], whichOne)
-        if ((worklang - blankLang).toSet() == mapped.toSet()) {
-            worklang.remove(blankLang)
-            blankLangRemoved.println([shortId, blankLang.label, worklang].join('\t'))
-        }
-    }
 
     // Move title from hasPart to hasPart.translationOf if hasPart.translationOf exists
     work[HAS_PART]?.each { Map p ->
@@ -118,30 +102,17 @@ selectByCollection('bib') { bib ->
         else if (moveProperty(shortId, HAS_TITLE, expressionOf, target)) {
             work.remove(EXPRESSION_OF)
             bib.scheduleSave()
-        }
-        else {
+        } else {
             return
         }
     }
     // Move title from local expressionOf to target
     else if (moveProperty(shortId, HAS_TITLE, expressionOf, target)) {
         hub.remove(HAS_TITLE)
-        // Move the complement expressionOf.language \ instanceOf.language to instanceOf.language
-        if (hub[LANGUAGE]) {
-            def langsAdded = []
-            asList(hub[LANGUAGE]).each { l ->
-                asList(l.'@id' ? l : mapBlankLanguages([l], whichOne)).each {
-                    if (!(it in worklang)) {
-                        worklang << it
-                        langsAdded << it
-                    }
-                }
-            }
-            if (langsAdded) {
-                work[LANGUAGE] = worklang
-                extraLang.println([shortId, langsAdded, worklang].join('\t'))
-            }
-            hub.remove(LANGUAGE)
+
+        if (hub[LANGUAGE] && !handleLang(shortId, work, hub)) {
+            // expressionOf.language differs from work.language and translation.language, abort
+            return
         }
 
         // Move remaining properties (except @type) to the same place as the title
@@ -156,17 +127,49 @@ selectByCollection('bib') { bib ->
     }
 }
 
+boolean handleLang(String id, Map work, Map hub) {
+    if (asList(work[LANGUAGE]) == [['@id': 'https://id.kb.se/language/und']] && hub[LANGUAGE]) {
+        work[LANGUAGE] = hub[LANGUAGE]
+    }
+
+    def workLang = asList(work[LANGUAGE])
+    def orig = asList(work[TRANSLATION_OF])
+    def origLang = asList(orig[0]?[LANGUAGE])
+    def hubLang = hub[LANGUAGE]
+
+    def whichOne = (workLang + origLang).findAll { it[ID] in ambiguousLangIds }
+    def diff = asList(hubLang).any { l ->
+        asList(l.'@id' ? l : mapBlankLanguages([l], whichOne)).any {
+            !workLang.contains(it) && !origLang.contains(it)
+        }
+    }
+
+    if (!diff) {
+        hub.remove(LANGUAGE)
+        return true
+    }
+
+    def cols = [id, hubLang, workLang, origLang]
+    if (hub[HAS_TITLE].toString() =~ /[Bb]ibe?l/) {
+        cols << hub[HAS_TITLE]
+    }
+    langDiff.println(cols.join('\t'))
+
+    return false
+}
+
 boolean moveProperty(String id, String propToMove, Map.Entry from, Map.Entry target) {
     def f = asList(from.value)[0]
 
     if (f[propToMove] && target) {
         def whatMove = "${from.key} -> ${target.key}"
-        def t = asList(target.value)[0]
 
-        if (multipleValues(t)) {
+        if (multipleValues(target.value)) {
             multiple.println("$id\t$target.key")
             return false
         }
+
+        def t = asList(target.value)[0]
 
         if (t[propToMove]) {
             propertyAlreadyExists.println([id, whatMove, propToMove, f[propToMove], t[propToMove]].join('\t'))
@@ -384,7 +387,8 @@ Map substitutions() {
             'dt'                              : 'tyska',
             'dt.'                             : 'tyska',
             'vertimas į lietuvių k'           : 'litauiska',
-            'slovenski jezik'                 : 'slovenska'
+            'slovenski jezik'                 : 'slovenska',
+            'samiska'                         : 'samiskt språk'
 
             // Also seen
             // Fornnorska
