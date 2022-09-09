@@ -24,8 +24,8 @@ class Romanizer {
             // TODO: distinguish ISO for slavic languages vs ISO för non-slavic languages? Or describe them with the same entity?
             'kk'     : [romanizer('kk-Latn-t-kk-Cyrl-m0-iso-1995', ['kk-iso.txt'])],
             'mk'     : [romanizer('mk-Latn-t-mk-Cyrl-m0-iso-1995', ['mk-iso.txt', 'slavic-iso.txt'])],
-            // TODO: change to mn-Cyrl ?
-            'mn'     : [romanizer('mn-Latn-t-mn-Cyrl-x0-lessing', ['mn-lessing.txt'])],
+            // TODO: Use script tags for source or decide source script using heuristics?
+            'mn-Cyrl': [romanizer('mn-Latn-t-mn-Cyrl-x0-lessing', ['mn-lessing.txt'])],
             'ru'     : [romanizer('ru-Latn-t-ru-Cyrl-m0-iso-1995', ['ru-iso.txt', 'slavic-iso.txt'])],
             'sr'     : [romanizer('sr-Latn-t-sr-Cyrl-m0-iso-1995', ['sr-iso.txt', 'slavic-iso.txt'])],
             'uk'     : [romanizer('uk-Latn-t-uk-Cyrl-m0-iso-1995', ['uk-iso.txt', 'slavic-iso.txt'])],

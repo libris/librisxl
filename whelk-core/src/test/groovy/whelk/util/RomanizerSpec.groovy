@@ -6,7 +6,7 @@ class RomanizerSpec extends Specification {
 
     def "Mongolian languages with cyrillic script"() {
         expect:
-        Romanizer.romanize(source, 'mn')['mn-Latn-t-mn-Cyrl-x0-lessing'] == target
+        Romanizer.romanize(source, 'mn-Cyrl')['mn-Latn-t-mn-Cyrl-x0-lessing'] == target
         where:
         source                                                      | target
         // s3bjxplkqcmb6k8w
