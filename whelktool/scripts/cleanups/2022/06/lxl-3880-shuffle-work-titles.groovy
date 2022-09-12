@@ -108,12 +108,12 @@ selectByCollection('bib') { bib ->
     }
     // Move title from local expressionOf to target
     else if (moveProperty(shortId, HAS_TITLE, expressionOf, target)) {
-        hub.remove(HAS_TITLE)
-
         if (hub[LANGUAGE] && !handleLang(shortId, work, hub)) {
             // expressionOf.language differs from work.language and translation.language, abort
             return
         }
+
+        hub.remove(HAS_TITLE)
 
         // Move remaining properties (except @type) to the same place as the title
         hub.removeAll {
@@ -139,9 +139,8 @@ boolean handleLang(String id, Map work, Map hub) {
 
     def whichOne = (workLang + origLang).findAll { it[ID] in ambiguousLangIds }
     def diff = asList(hubLang).any { l ->
-        asList(l.'@id' ? l : mapBlankLanguages([l], whichOne)).any {
-            !workLang.contains(it) && !origLang.contains(it)
-        }
+        def mappedLangs = asList(l.'@id' ? l : mapBlankLanguages([l], whichOne))
+        !workLang.containsAll(mappedLangs) && !origLang.containsAll(mappedLangs)
     }
 
     if (!diff) {
@@ -150,9 +149,10 @@ boolean handleLang(String id, Map work, Map hub) {
     }
 
     def cols = [id, hubLang, workLang, origLang]
-    if (hub[HAS_TITLE].toString() =~ /[Bb]ibe?l/) {
+    if (hub[HAS_TITLE].toString() =~ /[Bb]ib[bel]/) {
         cols << hub[HAS_TITLE]
     }
+
     langDiff.println(cols.join('\t'))
 
     return false
