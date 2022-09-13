@@ -49,28 +49,28 @@ TRANSLATION_OF = "translationOf"
 LANGUAGE = "language"
 ID = '@id'
 
-selectByCollection('bib') { bib ->
+def where = """
+    collection = 'bib'
+    and (
+        data['@graph'][1]['instanceOf']['expressionOf'] is not null
+        or (
+            data['@graph'][1]['instanceOf']['hasTitle'] is not null 
+            and data['@graph'][1]['instanceOf']['translationOf'] is not null
+        )
+    )
+"""
+
+def whereHasPart = """
+    collection = 'bib'
+    and data #>> '{@graph,1,instanceOf,hasPart}' like '%"translationOf"%' 
+"""
+
+selectByCollection(where) { bib ->
     Map instance = bib.graph[1]
     def instanceOf = instance.find { it.key == INSTANCE_OF }
     def shortId = bib.doc.shortId
 
-    if (!instanceOf)
-        return
-
-    if (multipleValues(instanceOf.value)) {
-        multiple.println("$shortId\t$INSTANCE_OF")
-        return
-    }
-
     Map work = asList(instanceOf.value)[0]
-
-    // Move title from hasPart to hasPart.translationOf if hasPart.translationOf exists
-    work[HAS_PART]?.each { Map p ->
-        if (moveProperty(shortId, HAS_TITLE, Map.entry(HAS_PART, p), p.find { it.key == TRANSLATION_OF })) {
-            p.remove(HAS_TITLE)
-            bib.scheduleSave()
-        }
-    }
 
     def expressionOf = work.find { it.key == EXPRESSION_OF }
 
@@ -124,6 +124,31 @@ selectByCollection('bib') { bib ->
             work.remove(EXPRESSION_OF)
             bib.scheduleSave()
         }
+    }
+}
+
+selectBySqlWhere(whereHasPart) { bib ->
+    Map work = bib.graph[1][INSTANCE_OF]
+
+    def failed = false
+    def modified = false
+
+    // Move title from hasPart to hasPart.translationOf if hasPart.translationOf exists
+    work[HAS_PART].each { Map p ->
+        def target = p.find { it.key == TRANSLATION_OF }
+        if (!target) {
+            return
+        }
+        if (moveProperty(bib.doc.shortId, HAS_TITLE, Map.entry(HAS_PART, p), target)) {
+            p.remove(HAS_TITLE)
+            modified = true
+        } else {
+            failed = true
+        }
+    }
+
+    if (modified && !failed) {
+        bib.scheduleSave()
     }
 }
 
