@@ -9,11 +9,12 @@
  *    otherwise to instanceOf.hasTitle.
  *  - instanceOf.hasPart.hasTitle is moved to instanceOf.hasPart.translationOf.hasTitle if instanceOf.hasPart.translationOf is present.
  *
- * If a move can't be executed due to unexpected data, the update won't be saved. The intended move
- * is instead written to a report for manual handling.
+ * A few additional properties (if present) follow the title to the target entity (see moveAdditional method).
  *
- * In case expressionOf is a linked entity, only hasTitle is copied from the entity and then the link is removed.
- * In case expressionOf is a local entity, all its properties except @type and language are moved to the target, not only hasTitle.
+ * If a move can't be executed due to unexpected data, the update won't be saved. The intended move is instead written to a report for manual handling.
+ *
+ * In case expressionOf is a linked entity, hasTitle and associated properties are copied from the entity and then the link is removed.
+ * In case expressionOf is a local entity, all its properties except @type and language are moved to the target.
  *
  * A couple normalizations are done on the mainTitle string whenever a title is moved:
  *  - Trailing period (not preceded by another period or a capital letter) is removed.
@@ -65,7 +66,7 @@ def whereHasPart = """
     and data #>> '{@graph,1,instanceOf,hasPart}' like '%"translationOf"%' 
 """
 
-selectByCollection(where) { bib ->
+selectBySqlWhere(where) { bib ->
     Map instance = bib.graph[1]
     def instanceOf = instance.find { it.key == INSTANCE_OF }
     def shortId = bib.doc.shortId
@@ -75,8 +76,9 @@ selectByCollection(where) { bib ->
     def expressionOf = work.find { it.key == EXPRESSION_OF }
 
     if (!expressionOf) {
-        // Move title from instanceOf to translationOf if translationOf exists
-        if (moveProperty(shortId, HAS_TITLE, instanceOf, work.find { it.key == TRANSLATION_OF })) {
+        def target = work.find { it.key == TRANSLATION_OF }
+        // Move title and its associated properties from instanceOf to translationOf if translationOf exists
+        if (moveProperty(shortId, HAS_TITLE, instanceOf, target) && moveAdditional(shortId, instanceOf, target)) {
             work.remove(HAS_TITLE)
             bib.scheduleSave()
         }
@@ -98,8 +100,8 @@ selectByCollection(where) { bib ->
             brokenLinks.println([shortId, hub[ID]].join('\t'))
             return
         }
-        // Linked uniform work title in expressionOf: move hasTitle to target and then remove the link
-        else if (moveProperty(shortId, HAS_TITLE, expressionOf, target)) {
+        // Linked uniform work title in expressionOf: move hasTitle and its associated properties to target and then remove the link
+        else if (moveProperty(shortId, HAS_TITLE, expressionOf, target) && moveAdditional(shortId, expressionOf, target)) {
             work.remove(EXPRESSION_OF)
             bib.scheduleSave()
         } else {
@@ -129,17 +131,19 @@ selectByCollection(where) { bib ->
 
 selectBySqlWhere(whereHasPart) { bib ->
     Map work = bib.graph[1][INSTANCE_OF]
+    def id = bib.doc.shortId
 
     def failed = false
     def modified = false
 
     // Move title from hasPart to hasPart.translationOf if hasPart.translationOf exists
     work[HAS_PART].each { Map p ->
+        def from = Map.entry(HAS_PART, p)
         def target = p.find { it.key == TRANSLATION_OF }
         if (!target) {
             return
         }
-        if (moveProperty(bib.doc.shortId, HAS_TITLE, Map.entry(HAS_PART, p), target)) {
+        if (moveProperty(id, HAS_TITLE, from, target) && moveAdditional(id, from, target)) {
             p.remove(HAS_TITLE)
             modified = true
         } else {
@@ -181,6 +185,24 @@ boolean handleLang(String id, Map work, Map hub) {
     langDiff.println(cols.join('\t'))
 
     return false
+}
+
+boolean moveAdditional(String id, Map.Entry from, Map.Entry target) {
+    def moveThese = ['musicKey', 'musicMedium', 'version', 'marc:version', 'marc:fieldref', 'legalDate', 'originDate']
+
+    def f = from.value
+    def additional = f.keySet().intersect(moveThese)
+
+    if (additional) {
+        for (String key in additional) {
+            if (!moveProperty(id, key, from, target)) {
+                return false
+            }
+        }
+        f.removeAll { it.key in additional }
+    }
+
+    return true
 }
 
 boolean moveProperty(String id, String propToMove, Map.Entry from, Map.Entry target) {
