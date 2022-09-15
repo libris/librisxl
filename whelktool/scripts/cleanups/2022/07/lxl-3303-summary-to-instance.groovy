@@ -24,8 +24,8 @@ selectBySqlWhere(where) { bib ->
         s
     }.flatten()
 
-    def (toInstance, toWork) = normalizedSummary.split { Map s ->
-        s.containsKey('label')
+    def (toWork, toInstance) = normalizedSummary.split { Map s ->
+        s.containsKey('language')
     }
 
     if (toInstance) {
