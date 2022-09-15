@@ -46,10 +46,23 @@ String where = """
 
 selectBySqlWhere(where) { data ->
     //String initial = data.doc.getDataAsString()
-    boolean changed = data.graph[1].instanceOf?.contribution?.removeAll { contribution ->
+    boolean changed = false;
+    data.graph[1].instanceOf?.contribution?.forEach { contribution ->
         def agent = contribution.agent
         if (agent != null && asList(agent["@id"])[0] != null) {
-            return isABadLink(asList(agent["@id"])[0])
+            def agentUri = asList(agent["@id"])[0]
+
+            if (isABadLink(agentUri)) {
+                selectByIds([agentUri]) { linkedAgent ->
+                    contribution.remove("agent")
+                    contribution.put("agent", [:])
+                    for (property in ["@type", "familyName", "givenName"]) {
+                        if (linkedAgent.graph[1][property] != null)
+                            contribution.agent.put(property, linkedAgent.graph[1][property])
+                    }
+                    changed = true
+                }
+            }
         }
     }
 
@@ -64,7 +77,6 @@ selectBySqlWhere(where) { data ->
 
 boolean isABadLink(String candidate) {
     String s = candidate.substring(0, candidate.length()-3) // Trim off the #it
-    System.err.println(candidate + " -> " + s)
     return s.endsWith("53hlt8kp5swj700") ||
             s.endsWith("zcr7x820wh3nsszg") ||
             s.endsWith("jgvz5wj22slrnfq") ||
