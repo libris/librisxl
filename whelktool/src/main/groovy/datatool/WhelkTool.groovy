@@ -4,11 +4,13 @@ import com.google.common.util.concurrent.MoreExecutors
 import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl
 import whelk.Document
 import whelk.IdGenerator
+import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.StaleUpdateException
 import whelk.exception.WhelkException
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
+import whelk.util.DocumentUtil
 import whelk.util.LegacyIntegrationTools
 import whelk.util.Statistics
 
@@ -619,6 +621,8 @@ class WhelkTool {
         bindings.put("queryIds", this.&queryIds)
         bindings.put("queryDocs", this.&queryDocs)
         bindings.put("incrementStats", statistics.&increment)
+        bindings.put("asList", JsonLd::asList)
+        bindings.put("getAtPath", DocumentUtil::getAtPath)
         return bindings
     }
 
