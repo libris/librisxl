@@ -1,0 +1,1205 @@
+[
+  {
+    "type": "RestructPropertyValuesAndFlag",
+    "sourceLink": "marc:primaryProvisionActivity",
+    "overwriteType": "PrimaryProvisionActivity",
+    "flagProperty": "marc:publicationStatus",
+    "matchValuePattern": "^[0-9u]{4}$",
+    "fuzzyMergeProperty": "date",
+    "fuzzPattern": "[^0-9]+",
+    "magicValueParts": {"[nu]": "[0-9nuxNUX?-]"},
+    "flagMatch": {
+      "marc:PublicationDateAndCopyrightDate": {
+        "mergeFirstLink": "publication",
+        "resourceType": "PrimaryPublication",
+        "remapProperty": {"year": "year", "otherYear": "marc:copyrightYear"}
+      },
+      "marc:SingleKnownDateProbableDate": {
+        "mergeFirstLink": "publication",
+        "resourceType": "PrimaryPublication",
+        "remapProperty": {"year": "year", "otherYear": null},
+        "revertRequiresNo": "endYear"
+      },
+      "marc:InclusiveDatesOfCollection": {
+        "mergeFirstLink": "production",
+        "resourceType": "PrimaryProduction",
+        "remapProperty": {"year": "startYear", "otherYear": "endYear"}
+      },
+      "marc:RangeOfYearsOfBulkOfCollection": {
+        "mergeFirstLink": "production",
+        "resourceType": "PrimaryBulkProduction",
+        "remapProperty": {"year": "startYear", "otherYear": "endYear"}
+      },
+      "marc:ContinuingResourceCurrentlyPublished": {
+        "mergeFirstLink": "publication",
+        "resourceType": "PrimaryPublication",
+        "remapProperty": {"year": "startYear", "otherYear": null},
+        "nullValue": "9999",
+        "revertRequiresNo": "endYear"
+      },
+      "marc:ContinuingResourceCeasedPublication": {
+        "mergeFirstLink": "publication",
+        "resourceType": "PrimaryPublication",
+        "remapProperty": {"year": "startYear", "otherYear": "endYear"}
+      },
+      "marc:ContinuingResourceStatusUnknown": {
+        "mergeFirstLink": "publication",
+        "resourceType": "PrimaryPublication",
+        "remapProperty": {"year": "startYear", "otherYear": "endYear"},
+        "keepFlag": true
+      },
+      "marc:MultipleDates": {
+        "mergeFirstLink": "publication",
+        "resourceType": "PrimaryPublication",
+        "remapProperty": {"year": "startYear", "otherYear": "endYear"},
+        "keepFlag": true
+      },
+      "marc:ReprintReissueDateAndOriginalDate": {
+        "mergeFirstLink": "publication",
+        "resourceType": "marc:ReprintReissueAndOriginalPublication",
+        "remapProperty": {"year": "marc:reprintYear", "otherYear": "marc:originalYear"}
+      },
+      "marc:DateOfDistributionReleaseIssueAndProductionRecordingSessionWhenDifferent": {
+        "mergeFirstLink": "distribution",
+        "resourceType": "marc:DistributionAndProduction",
+        "remapProperty": {"year": "marc:distributionYear", "otherYear": "marc:productionYear"}
+      }
+    },
+    "_spec": [
+      {
+        "name":  "NOOP",
+        "source": {
+          "marc:primaryProvisionActivity": {
+            "@type": "PrimaryProvisionActivity",
+            "marc:publicationStatus": "marc:QuestionableDate",
+            "year": "1977",
+            "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+          }
+        },
+        "result": "source",
+        "back": "source"
+      },
+      {
+        "source": {
+          "marc:primaryProvisionActivity": {
+            "@type": "PrimaryProvisionActivity",
+            "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+            "year": "1977",
+            "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+          }
+        },
+        "result": {
+          "publication": [
+            {
+              "@type": "PrimaryPublication",
+              "year": "1977",
+              "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+            }
+          ]
+        },
+        "back": "both"
+      },
+      {
+        "source": {
+          "marc:primaryProvisionActivity": {
+            "@type": "PrimaryProvisionActivity",
+            "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+            "year": "1977"
+          },
+          "publication": [ {"@type": "Publication", "year": "1977"} ]
+        },
+        "result": {
+          "publication": [ {"@type": "PrimaryPublication", "year": "1977"} ]
+        },
+        "back": "both"
+      },
+      {
+        "name":  "Treating date as 'fuzzy like' year",
+        "source": {
+          "marc:primaryProvisionActivity": {
+            "@type": "PrimaryProvisionActivity",
+            "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+            "year": "1977"
+          },
+          "publication": [ {"@type": "Publication", "date": "ca 1977"} ]
+        },
+        "result": {
+          "publication": [
+            {"@type": "PrimaryPublication", "year": "1977", "date": "ca 1977"}
+          ]
+        },
+        "back": {
+          "marc:primaryProvisionActivity": {
+            "@type": "PrimaryProvisionActivity",
+            "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+            "year": "1977",
+            "date": "ca 1977"
+          },
+          "publication": [
+            {"@type": "PrimaryPublication", "year": "1977", "date": "ca 1977"}
+          ]
+        }
+      },
+      {
+        "name":  "Treating fuzzy date like year with magic 'u'",
+        "source": {
+          "marc:primaryProvisionActivity": {
+            "@type": "PrimaryProvisionActivity",
+            "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+            "year": "197u"
+          },
+          "publication": [ {"@type": "Publication", "date": "likely 1977?"} ]
+        },
+        "result": {
+          "publication": [
+            {"@type": "PrimaryPublication", "year": "197u", "date": "likely 1977?"}
+          ]
+        },
+        "back": {
+          "marc:primaryProvisionActivity": {
+            "@type": "PrimaryProvisionActivity",
+            "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+            "year": "197u",
+            "date": "likely 1977?"
+          },
+          "publication": [
+            {"@type": "PrimaryPublication", "year": "197u", "date": "likely 1977?"}
+          ]
+        }
+      },
+      {
+        "source": {
+          "publication": [ {"@type": "Publication", "year": "1977"} ]
+        },
+        "result": {
+          "publication": [ {"@type": "Publication", "year": "1977"} ]
+        }
+      },
+      {
+        "source": {
+          "marc:primaryProvisionActivity": {
+            "@type": "PrimaryProvisionActivity",
+            "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+            "year": "1977"
+          },
+          "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
+        },
+        "result": {
+          "publication": [
+            {"@type": "PrimaryPublication", "year": "1977"},
+            {"@type": "Publication", "date": ["1977", "1978"]}
+          ]
+        },
+        "back": "both"
+      },
+      {
+        "source": {
+          "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
+        },
+        "result": {
+          "publication": [ {"@type": "Publication", "date": ["1977", "1978"]} ]
+        }
+      },
+      {
+        "source": {
+          "marc:primaryProvisionActivity": {
+            "@type": "PrimaryProvisionActivity",
+            "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
+            "year": "1977",
+            "otherYear": "9999",
+            "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+          }
+        },
+        "result": {
+          "publication": [
+            {
+              "@type": "PrimaryPublication",
+              "startYear": "1977",
+              "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+            }
+          ]
+        },
+        "back": "both"
+      },
+      {
+        "source": {
+          "marc:primaryProvisionActivity": {
+            "@type": "PrimaryProvisionActivity",
+            "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
+            "year": "1977",
+            "otherYear": "2017"
+          }
+        },
+        "result": {
+          "publication": [
+            {
+              "@type": "PrimaryPublication",
+              "startYear": "1977",
+              "endYear": "2017"
+            }
+          ]
+        },
+        "back": "both"
+      },
+      {
+        "source": {
+          "marc:primaryProvisionActivity": {
+            "@type": "PrimaryProvisionActivity",
+            "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
+            "year": "1977",
+            "otherYear": "9999",
+            "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+          },
+          "publication": [ {"@type": "Publication", "startYear": "1977"} ]
+        },
+        "result": {
+          "publication": [
+            {
+              "@type": "PrimaryPublication",
+              "startYear": "1977",
+              "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+            }
+          ]
+        },
+        "back": "both"
+      },
+      {
+        "source": {
+          "marc:primaryProvisionActivity": {
+            "@type": "PrimaryProvisionActivity",
+            "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
+            "year": "1977",
+            "otherYear": "9999",
+            "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+          },
+          "publication": [
+            {"@type": "Publication", "date": "[1977-]"}
+          ]
+        },
+        "result": {
+          "publication": [
+            {
+              "@type": "PrimaryPublication",
+              "startYear": "1977",
+              "date": "[1977-]",
+              "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+            }
+          ]
+        },
+        "back": {
+          "marc:primaryProvisionActivity": {
+            "@type": "PrimaryProvisionActivity",
+            "marc:publicationStatus": "marc:ContinuingResourceCurrentlyPublished",
+            "year": "1977",
+            "otherYear": "9999",
+            "date": "[1977-]",
+            "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+          },
+          "publication": [
+            {
+              "@type": "PrimaryPublication",
+              "startYear": "1977",
+              "date": "[1977-]",
+              "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+            }
+          ]
+        }
+      },
+      {
+        "source": {
+          "marc:primaryProvisionActivity": {
+            "@type": "PrimaryProvisionActivity",
+            "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
+            "year": "1977",
+            "otherYear": "2017"
+          },
+          "publication": [ {"@type": "Publication", "startYear": "1977", "endYear": "2017"} ]
+        },
+        "result": {
+          "publication": [
+            {
+              "@type": "PrimaryPublication",
+              "startYear": "1977",
+              "endYear": "2017"
+            }
+          ]
+        },
+        "back": "both"
+      },
+      {
+        "name":  "Treating fuzzy date like startYear plus endYear with magic 'u'",
+        "source": {
+          "marc:primaryProvisionActivity": {
+            "@type": "PrimaryProvisionActivity",
+            "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
+            "year": "197u",
+            "otherYear": "202u"
+          },
+          "publication": [ {"@type": "Publication", "date": "[ca 197?-202-]"} ]
+        },
+        "result": {
+          "publication": [
+            {
+              "@type": "PrimaryPublication",
+              "startYear": "197u",
+              "endYear": "202u",
+              "date": "[ca 197?-202-]"
+            }
+          ]
+        },
+        "back": {
+          "marc:primaryProvisionActivity": {
+            "@type": "PrimaryProvisionActivity",
+            "marc:publicationStatus": "marc:ContinuingResourceCeasedPublication",
+            "year": "197u",
+            "otherYear": "202u",
+            "date": "[ca 197?-202-]"
+          },
+          "publication": [
+            {
+              "@type": "PrimaryPublication",
+              "startYear": "197u",
+              "endYear": "202u",
+              "date": "[ca 197?-202-]"
+            }
+          ]
+        }
+      },
+      {
+        "source": {
+          "marc:primaryProvisionActivity": {
+            "@type": "PrimaryProvisionActivity",
+            "marc:publicationStatus": "marc:DateOfDistributionReleaseIssueAndProductionRecordingSessionWhenDifferent",
+            "year": "2018",
+            "otherYear": "1996"
+          }
+        },
+        "result": {
+          "distribution": [
+            {
+              "@type": "marc:DistributionAndProduction",
+              "marc:distributionYear": "2018",
+              "marc:productionYear": "1996"
+            }
+          ]
+        },
+        "back": "both"
+      }
+    ]
+  },
+  {
+    "type": "SetFlagsByPatterns",
+    "select": "seriesMembership",
+    "match": [
+      {
+        "exists": ["seriesStatement", "inSeries"],
+        "setFlags": {
+          "marc:seriesTracingPolicy": "1"
+        }
+      },
+      {
+        "exists": ["seriesStatement"],
+        "setFlags": {
+          "marc:seriesTracingPolicy": "0"
+        }
+      }
+    ],
+    "_spec": [
+      {
+        "source": {
+          "mainEntity": {
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "seriesStatement": "...",
+                "marc:seriesTracingPolicy": "0",
+                "inSeries": {"...": "..."}
+              }
+            ]
+          }
+        },
+        "result": "source",
+        "back": "source"
+      },
+      {
+        "source": {
+          "mainEntity": {
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "seriesStatement": "...",
+                "inSeries": {"...": "..."}
+              }
+            ]
+          }
+        },
+        "result": "source",
+        "back": {
+          "mainEntity": {
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "seriesStatement": "...",
+                "marc:seriesTracingPolicy": "1",
+                "inSeries": {"...": "..."}
+              }
+            ]
+          }
+        }
+      },
+      {
+        "source": {
+          "mainEntity": {
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "seriesStatement": "..."
+              }
+            ]
+          }
+        },
+        "result": "source",
+        "back": {
+          "mainEntity": {
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "seriesStatement": "...",
+                "marc:seriesTracingPolicy": "0"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "source": {
+          "mainEntity": {
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "inSeries": {"...": "..."}
+              }
+            ]
+          }
+        },
+        "result": "source",
+        "back": {
+          "mainEntity": {
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "inSeries": {"...": "..."}
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "type": "ProduceIfMissing",
+    "select": "seriesMembership",
+    "produceMissing": {
+      "produceProperty": "seriesStatement",
+      "sourcePath": ["inSeries", "instanceOf", "hasTitle"],
+      "showProperties": [
+        "mainTitle",
+        {
+          "property": "partNumber",
+          "useValueFormat": {"contentBefore": ", ", "contentNoValue": ""}
+        },
+        {
+          "property": "partName",
+          "useValueFormat": {"contentBefore": ". ", "contentNoValue": ""}
+        }
+      ]
+    },
+    "_spec": [
+      {
+        "name":  "NOOP",
+        "source": {
+          "mainEntity": {
+            "seriesMembership": [
+              {
+                "seriesStatement": "CNI Publications",
+                "@type": "SeriesMembership",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "hasTitle": [ {"@type": "Title", "mainTitle": "CNI Publications"} ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "result": "source",
+        "back": "source"
+      },
+      {
+        "source": {
+          "mainEntity": {
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "hasTitle": [ {"@type": "Title", "mainTitle": "CNI Publications"} ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "result": "source",
+        "back": {
+          "mainEntity": {
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "seriesStatement": "CNI Publications",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "hasTitle": [ {"@type": "Title", "mainTitle": "CNI Publications"} ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "source": {
+          "mainEntity": {
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "hasTitle": [ {"@type": "Title", "mainTitle": "T", "partName": "P", "partNumber": "1"} ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "result": "source",
+        "back": {
+          "mainEntity": {
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "seriesStatement": "T, 1. P",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "hasTitle": [ {"@type": "Title", "mainTitle": "T", "partName": "P", "partNumber": "1"} ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name":  "Series statement comes from the title of the same membership node",
+        "source": {
+          "mainEntity": {
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {"@type": "Work", "hasTitle": [{"@type": "Title", "mainTitle": "A"}]}
+                }
+              },
+              {
+                "@type": "SeriesMembership",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {"@type": "Work", "hasTitle": [{"@type": "Title", "mainTitle": "B"}]}
+                }
+              }
+            ]
+          }
+        },
+        "result": "source",
+        "back": {
+          "mainEntity": {
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "seriesStatement": "A",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {"@type": "Work", "hasTitle": [{"@type": "Title", "mainTitle": "A"}]}
+                }
+              },
+              {
+                "@type": "SeriesMembership",
+                "seriesStatement": "B",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {"@type": "Work", "hasTitle": [{"@type": "Title", "mainTitle": "B"}]}
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name":  "Skip entirely if there is any one item with the expected property (regardless of value)",
+        "source": {
+          "mainEntity": {
+            "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "seriesStatement": "Some Publications"
+              },
+              {
+                "@type": "SeriesMembership",
+                "inSeries": {
+                  "@type": "Instance",
+                  "instanceOf": {
+                    "@type": "Work",
+                    "hasTitle": [ {"@type": "Title", "mainTitle": "Other Publications"} ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "result": "source",
+        "back": "source"
+      }
+    ]
+  },
+  {
+    "type": "ProduceIfMissing",
+    "select": "associatedMedia",
+    "produceMissing": {
+      "produceProperty": "marc:publicNote",
+      "showProperties": [
+        {
+          "property": ["usageAndAccessPolicy", "label"],
+          "useValueFormat": {
+            "contentNoValue": "Tillgänglig"
+          }
+        },
+        {
+          "property": ["publisher", "name"],
+          "useValueFormat": {
+            "contentFirst": " via ",
+            "contentAfter": " och ",
+            "contentLast": "",
+            "contentNoValue": ""
+          }
+        }
+      ]
+    },
+    "_spec": [
+      {
+        "source": {
+          "mainEntity": {
+            "associatedMedia": [
+              {
+                "@type": "MediaObject",
+                "uri": ["http://example.com/doc.pdf"]
+              }
+            ]
+          }
+        },
+        "result": "source",
+        "back": {
+          "mainEntity": {
+            "associatedMedia": [
+              {
+                "@type": "MediaObject",
+                "uri": ["http://example.com/doc.pdf"]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "source": {
+          "mainEntity": {
+            "associatedMedia": [
+              {
+                "@type": "MediaObject",
+                "uri": ["http://example.com/doc.pdf"],
+                "usageAndAccessPolicy": [
+                  {"label": "Fritt tillgänglig"}
+                ]
+              }
+            ]
+          }
+        },
+        "result": "source",
+        "back": {
+          "mainEntity": {
+            "associatedMedia": [
+              {
+                "@type": "MediaObject",
+                "uri": ["http://example.com/doc.pdf"],
+                "marc:publicNote": "Fritt tillgänglig",
+                "usageAndAccessPolicy": [
+                  {"label": "Fritt tillgänglig"}
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "source": {
+          "mainEntity": {
+            "associatedMedia": [
+              {
+                "@type": "MediaObject",
+                "uri": ["http://example.com/doc.pdf"],
+                "publisher": {"name": "Kungliga biblioteket"}
+              }
+            ]
+          }
+        },
+        "result": "source",
+        "back": {
+          "mainEntity": {
+            "associatedMedia": [
+              {
+                "@type": "MediaObject",
+                "uri": ["http://example.com/doc.pdf"],
+                "marc:publicNote": "Tillgänglig via Kungliga biblioteket",
+                "publisher": {"name": "Kungliga biblioteket"}
+              }
+            ]
+          }
+        }
+      },
+      {
+        "source": {
+          "mainEntity": {
+            "associatedMedia": [
+              {
+                "@type": "MediaObject",
+                "uri": ["http://example.com/doc.pdf"],
+                "usageAndAccessPolicy": [
+                  {"prefLabelByLang": {"sv": "Fritt tillgänglig"}}
+                ],
+                "publisher": [
+                  {"name": "Kungliga biblioteket"},
+                  {"name": "Umeå universitetsbibliotek"}
+                ]
+              }
+            ]
+          }
+        },
+        "result": "source",
+        "back": {
+          "mainEntity": {
+            "associatedMedia": [
+              {
+                "@type": "MediaObject",
+                "uri": ["http://example.com/doc.pdf"],
+                "marc:publicNote": "Fritt tillgänglig via Kungliga biblioteket och Umeå universitetsbibliotek",
+                "usageAndAccessPolicy": [
+                  {"prefLabelByLang": {"sv": "Fritt tillgänglig"}}
+                ],
+                "publisher": [
+                  {"name": "Kungliga biblioteket"},
+                  {"name": "Umeå universitetsbibliotek"}
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "source": {
+          "mainEntity": {
+            "associatedMedia": [
+              {
+                "@type": "MediaObject",
+                "uri": ["http://example.com/doc.pdf"],
+                "usageAndAccessPolicy": [
+                  {"uri": "http://example.org"}
+                ],
+                "publisher": [
+                  {"name": "Kungliga biblioteket"}
+                ]
+              }
+            ]
+          }
+        },
+        "result": "source",
+        "back": {
+          "mainEntity": {
+            "associatedMedia": [
+              {
+                "@type": "MediaObject",
+                "uri": ["http://example.com/doc.pdf"],
+                "marc:publicNote": "Tillgänglig via Kungliga biblioteket",
+                "usageAndAccessPolicy": [
+                  {"uri": "http://example.org"}
+                ],
+                "publisher": [
+                  {"name": "Kungliga biblioteket"}
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "type": "InjectWhenMatchingOnRevert",
+    "rules": [
+      {
+        "matches": {
+          "@type": "Electronic",
+          "reproductionOf": {},
+          "production": {
+            "@id": "?1",
+            "@type": "Reproduction"
+          }
+        },
+        "injectData": {
+          "production": {
+            "@id": "?1",
+            "typeNote": "Digital reproduktion"
+          }
+        }
+      }
+    ],
+    "_spec": [
+      {
+        "source": {
+          "mainEntity": {
+            "@type": "Electronic",
+            "reproductionOf": {},
+            "production": {
+              "@type": "Reproduction"
+            }
+          }
+        },
+        "result": "source",
+        "back": {
+          "mainEntity": {
+            "@type": "Electronic",
+            "reproductionOf": {},
+            "production": {
+              "@type": "Reproduction",
+              "typeNote": "Digital reproduktion"
+            }
+          }
+        }
+      },
+      {
+        "source": {
+          "mainEntity": {
+            "@type": "Electronic",
+            "reproductionOf": {},
+            "production": [
+              {
+                "@type": "Reproduction"
+              }
+            ]
+          }
+        },
+        "result": "source",
+        "back": {
+          "mainEntity": {
+            "@type": "Electronic",
+            "reproductionOf": {},
+            "production": [
+              {
+                "@type": "Reproduction",
+                "typeNote": "Digital reproduktion"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "source": {
+          "mainEntity": {
+            "@type": "Electronic",
+            "reproductionOf": {},
+            "production": [
+              {
+                "@type": "Reproduction",
+                "typeNote": "Digitalt faksimil och elektronisk text"
+              }
+            ]
+          }
+        },
+        "result": "source",
+        "back": {
+          "mainEntity": {
+            "@type": "Electronic",
+            "reproductionOf": {},
+            "production": [
+              {
+                "@type": "Reproduction",
+                "typeNote": "Digitalt faksimil och elektronisk text"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "type": "InjectWhenMatchingOnRevert",
+    "_TODO": "This should follow closeMatch+broader instead and leverage embellish",
+    "rules": [
+      {
+        "matches": {
+          "@type": "Electronic",
+          "carrierType": [
+            {"@id": "https://id.kb.se/term/rda/OnlineResource"}
+          ]
+        },
+        "injectData": {
+          "carrierType": [
+            {
+              "@id": "https://id.kb.se/marc/OnlineResource",
+              "@type": "CarrierType",
+              "sameAs": [
+                {"@id": "https://id.kb.se/marc/ComputerMaterialType-r"}
+              ]
+            },
+            {
+              "@id": "https://id.kb.se/marc/Online",
+              "sameAs": [
+                {"@id": "https://id.kb.se/marc/ItemType-o"},
+                {"@id": "https://id.kb.se/marc/BooksItemType-o"},
+                {"@id": "https://id.kb.se/marc/ComputerItemType-o"},
+                {"@id": "https://id.kb.se/marc/SerialsOriginalItemType-o"}
+              ]
+            }
+          ],
+          "mediaType": [
+            {
+              "@id": "https://id.kb.se/term/rda/Computer",
+              "@type": "MediaType",
+              "code": "c",
+              "prefLabelByLang": {"sv": "dator"}
+            }
+          ]
+        }
+      }
+    ],
+    "_spec": [
+      {
+        "source": {
+          "mainEntity": {
+            "@type": "Electronic",
+            "carrierType": [
+              {"@id": "https://id.kb.se/term/rda/OnlineResource"}
+            ]
+          }
+        },
+        "result": "source",
+        "back": {
+          "mainEntity": {
+            "@type": "Electronic",
+            "carrierType": [
+              {"@id": "https://id.kb.se/term/rda/OnlineResource"},
+              {
+                "@id": "https://id.kb.se/marc/OnlineResource",
+                "@type": "CarrierType",
+                "sameAs": [
+                  {"@id": "https://id.kb.se/marc/ComputerMaterialType-r"}
+                ]
+              },
+              {
+                "@id": "https://id.kb.se/marc/Online",
+                "sameAs": [
+                  {"@id": "https://id.kb.se/marc/ItemType-o"},
+                  {"@id": "https://id.kb.se/marc/BooksItemType-o"},
+                  {"@id": "https://id.kb.se/marc/ComputerItemType-o"},
+                  {"@id": "https://id.kb.se/marc/SerialsOriginalItemType-o"}
+                ]
+              }
+            ],
+            "mediaType": [
+              {
+                "@id": "https://id.kb.se/term/rda/Computer",
+                "@type": "MediaType",
+                "code": "c",
+                "prefLabelByLang": {"sv": "dator"}
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "do not duplicate already given",
+        "source": {
+          "mainEntity": {
+            "@type": "Electronic",
+            "carrierType": [
+              {"@id": "https://id.kb.se/term/rda/OnlineResource"},
+              {"@id": "https://id.kb.se/marc/OnlineResource"}
+            ],
+            "mediaType": [
+              {"@id": "https://id.kb.se/term/rda/Unmediated"}
+            ]
+          }
+        },
+        "result": "source",
+        "back": {
+          "mainEntity": {
+            "@type": "Electronic",
+            "carrierType": [
+              {"@id": "https://id.kb.se/term/rda/OnlineResource"},
+              {"@id": "https://id.kb.se/marc/OnlineResource"},
+              {
+                "@id": "https://id.kb.se/marc/Online",
+                "sameAs": [
+                  {"@id": "https://id.kb.se/marc/ItemType-o"},
+                  {"@id": "https://id.kb.se/marc/BooksItemType-o"},
+                  {"@id": "https://id.kb.se/marc/ComputerItemType-o"},
+                  {"@id": "https://id.kb.se/marc/SerialsOriginalItemType-o"}
+                ]
+              }
+            ],
+            "mediaType": [
+              {"@id": "https://id.kb.se/term/rda/Unmediated"},
+              {
+                "@id": "https://id.kb.se/term/rda/Computer",
+                "@type": "MediaType",
+                "code": "c",
+                "prefLabelByLang": {"sv": "dator"}
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "type": "CopyOnRevert",
+    "sourceLink": "reproductionOf",
+    "copyIfMissing": [
+      "publication",
+      "extent",
+      "responsibilityStatement",
+      "editionStatement",
+      {
+        "from": "identifiedBy",
+        "to": "indirectlyIdentifiedBy",
+        "injectOnCopies": {
+          "qualifier": "original"
+        }
+      }
+    ],
+    "injectOnCopies": {
+      "appliesTo": {"@type": "Resource", "label": "[original]"}
+    },
+    "_spec": [
+      {
+        "name":  "Copy data from the original of a reproduction",
+        "source": {
+          "mainEntity": {
+            "reproductionOf": [
+              {
+                "publication": [
+                  {
+                    "@type": "Publication",
+                    "year": "1773"
+                  }
+                ],
+                "responsibilityStatement": "av författaren",
+                "editionStatement" : ["Första utgåvan"],
+                "extent": {"@type": "Extent", "label": ["259 s."]},
+                "identifiedBy": [
+                  {"@type": "ISBN", "value": "00-0-000000-0"}
+                ],
+                "hasNote": [{"@type": "Note", "label": "Anmärkning"}]
+              }
+            ]
+          }
+        },
+        "result": "source",
+        "back": {
+          "mainEntity": {
+            "reproductionOf": [
+              {
+                "publication": [
+                  {
+                    "@type": "Publication",
+                    "year": "1773"
+                  }
+                ],
+                "responsibilityStatement": "av författaren",
+                "editionStatement" : ["Första utgåvan"],
+                "extent": {"@type": "Extent", "label": ["259 s."]},
+                "identifiedBy": [
+                  {"@type": "ISBN", "value": "00-0-000000-0"}
+                ],
+                "hasNote": [{"@type": "Note", "label": "Anmärkning"}]
+              }
+            ],
+            "publication": [
+              {
+                "@type": "Publication",
+                "year": "1773",
+                "appliesTo": {"@type": "Resource", "label": "[original]"}
+              }
+            ],
+            "responsibilityStatement": "av författaren",
+            "editionStatement" : ["Första utgåvan"],
+            "extent": {"@type": "Extent", "label": ["259 s."], "appliesTo": {"@type": "Resource", "label": "[original]"}},
+            "indirectlyIdentifiedBy": [
+              {"@type": "ISBN", "value": "00-0-000000-0", "qualifier": "original"}
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "type": "CopyOnRevert",
+    "sourceLink": "hasReproduction",
+    "copyIfMissing": [
+      "associatedMedia"
+    ],
+    "_spec": [
+      {
+        "name":  "Copy associatedMedia from a reproduction",
+        "source": {
+          "mainEntity": {
+            "hasReproduction": [
+              {
+                "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}]
+              }
+            ]
+          }
+        },
+        "result": "source",
+        "back": {
+          "mainEntity": {
+            "hasReproduction": [
+              {
+                "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}]
+              }
+            ],
+            "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}]
+          }
+        }
+      }
+    ]
+  }
+]

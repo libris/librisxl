@@ -1,0 +1,1386 @@
+{
+  "pendingResources": {
+    "?thing": {
+      "about": "?record",
+      "link": "mainEntity",
+      "resourceType": "Item",
+      "fragmentId": "it",
+      "uriTemplate": "http://libris.kb.se/resource/{marcType}/{controlNumber}",
+      "matchUriTokens": {
+        "controlNumber": "^\\d{1,14}$"
+      }
+    }
+  },
+
+  "oaipmhSetSpecPrefixMap": {
+    "bibid": {
+      "about": "?thing",
+      "link": "itemOf",
+      "uriTemplate": "http://libris.kb.se/resource/bib/{_}",
+      "matchUriToken": "^\\d{1,14}$"
+    },
+    "location": {
+      "TODO:apply": "852-$b",
+      "about": "?thing",
+      "link": "heldBy",
+      "uriTemplate": "https://libris.kb.se/library/{sigel}",
+      "resourceType": "Agent",
+      "property": "sigel"
+    }
+  },
+
+  "postProcessing": [
+    {
+      "type": "MappedProperty",
+      "sourceEntity": "?thing",
+      "sourceLink": "itemOf",
+      "sourceProperty": "issuanceType",
+      "targetEntity": "?record",
+      "targetProperty": "marc:holdingType",
+      "valueMap": {
+        "ComponentPart": "marc:SinglePartItemHolding",
+        "Collection": "marc:SinglePartItemHolding",
+        "SubCollection": "marc:SinglePartItemHolding",
+        "Monograph": "marc:SinglePartItemHolding",
+        "SerialComponentPart": "marc:SerialItemHolding",
+        "Integrating": "marc:SerialItemHolding",
+        "Serial": "marc:SerialItemHolding",
+        "?": "marc:MultipartItemHolding",
+        "Periodical": null
+      },
+      "_spec": [
+        {
+          "name": "compute value if itemOf data is given (normally not on convert)",
+          "result": {
+            "mainEntity": {
+              "itemOf": {"issuanceType": "Monograph"}
+            }
+          },
+          "back": {
+            "marc:holdingType": "marc:SinglePartItemHolding",
+            "mainEntity": {
+              "itemOf": {"issuanceType": "Monograph"}
+            }
+          }
+        },
+        {
+          "name": "If no holdingType is present on revert, but itemOf is given, compute value",
+          "result": {
+            "mainEntity": {
+              "itemOf": {"issuanceType": "Serial"}
+            }
+          },
+          "back": {
+            "marc:holdingType": "marc:SerialItemHolding",
+            "mainEntity": {
+              "itemOf": {"issuanceType": "Serial"}
+            }
+          }
+        },
+        {
+          "name": "Preserve explicit holdingType even if not matching itemOf.issuanceType",
+          "source": {
+            "marc:holdingType": "marc:MultipartItemHolding",
+            "mainEntity": {
+              "itemOf": {"issuanceType": "Monograph"}
+            }
+          },
+          "result": {
+            "marc:holdingType": "marc:MultipartItemHolding",
+            "mainEntity": {
+              "itemOf": {"issuanceType": "Monograph"}
+            }
+          },
+          "back": {
+            "marc:holdingType": "marc:MultipartItemHolding",
+            "mainEntity": {
+              "itemOf": {"issuanceType": "Monograph"}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "TODO": "ExpandSimpleItem",
+      "_spec": [
+        {
+          "source": {
+            "@type": "Item",
+            "heldBy": {"@id": "/org/1"},
+            "itemOf": {"@id": "/bib/0"},
+            "shelfMark": "Hc.01/DR"
+          },
+          "result": {
+            "@type": "Record",
+            "mainEntity": {
+              "@type": "Item",
+              "itemOf": {"@id": "/bib/0"},
+              "heldBy": {"@id": "/org/1"},
+              "hasComponent": [
+                {
+                  "@type": "Item",
+                  "shelfMark": "Hc.01/DR"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+
+  "000": {
+    "NOTE:[0:5]": "see bib",
+    "[5]": {
+      "aboutEntity": "?record",
+      "property": "recordStatus",
+      "tokenMap": "StatusType"
+    },
+    "[6]": {
+      "aboutEntity": "?record",
+      "property": "marc:holdingType",
+      "tokenMap": "HoldingType",
+      "fixedDefault": "u"
+    },
+    "[7]": {
+      "NOTE": "Undefined in MARC21/Voyager",
+      "aboutEntity": "?record",
+      "link": "marc:statistics",
+      "uriTemplate": "https://id.kb.se/marc/StatisticsType-{_}",
+      "matchUriToken": "^[or]$",
+      "fixedDefault": " "
+    },
+    "[8]": null,
+    "[9]": {
+      "NOTE": "Character coding scheme - a - UCS/Unicode",
+      "ignored": true,
+      "fixedDefault": "a"
+    },
+    "NOTE:[10]": "see bib",
+    "NOTE:[11]": "see bib",
+    "NOTE:[12:17]": "see bib",
+    "[17]": {
+      "NOTE": "Encoding level - u - Unknown",
+      "ignored": true,
+      "fixedDefault": "u"
+    },
+    "[18]": {
+      "aboutEntity": "?record",
+      "property": "marc:itemInfoInRecord",
+      "tokenMap": {"i": true, "n": false},
+      "fixedDefault": "n"
+    },
+    "[19]": null,
+    "[20:24]": {
+      "NOTE": "Entry map - 4500 - Default value in MARC21",
+      "ignored": true,
+      "fixedDefault": "4500"
+    },
+    "repeatable": false,
+    "_spec": [
+      {
+        "name": "Drop encodingLevel and revert to correct default value",
+        "originalLeader": "00236nxa a22001091n44500",
+        "source": {"leader": "     nx  a       1n 4500", "fields": [
+          {"001": "0000000"},
+          {"004": "7149593"}
+        ]},
+        "normalized": {"leader": "     nx  a       un 4500", "fields": [
+          {"001": "0000000"},
+          {"004": "7149593"}
+        ]},
+        "result": {
+          "@type": "Record",
+          "@id": "http://libris.kb.se/hold/0000000",
+          "controlNumber": "0000000",
+          "recordStatus": "marc:New",
+          "marc:holdingType": "marc:SinglePartItemHolding",
+          "mainEntity": {
+            "@type": "Item",
+            "@id": "http://libris.kb.se/resource/hold/0000000",
+            "itemOf": {"@id": "http://libris.kb.se/resource/bib/7149593"}
+          }
+        }
+      }
+    ]
+  },
+
+  "001" : {"inherit": "bib"},
+
+  "003": {
+    "ignored": true,
+    "NOTE:local": "FÖREKOMMER EJ I LIBRIS BESTÅNDSFORMAT"
+  },
+
+  "004": {
+    "aboutType": "Item",
+    "link": "itemOf", "uriTemplate": "http://libris.kb.se/resource/bib/{_}",
+    "matchUriToken": "^\\d{1,14}$",
+    "TODO:meta": {"property": "controlNumber"},
+    "repeatable": false
+  },
+
+  "005": {"inherit": "bib"},
+
+  "007": {"inherit": "bib"},
+
+  "008": {
+    "[0:6]": {
+      "aboutEntity": "?record",
+      "property": "created",
+      "parseDateTime": "yyMMdd", "timeZone": "CET"
+    },
+    "[6]": {
+      "link": "marc:acquisitionStatus",
+      "uriTemplate": "https://id.kb.se/marc/AcquisitionStatusType-{_}",
+      "matchUriToken": "^[12345acdnp]$",
+      "fixedDefault": "|"
+    },
+    "[7]": {
+      "link": "marc:acquisitionMethod",
+      "uriTemplate": "https://id.kb.se/marc/AcquisitionMethodType-{_}",
+      "matchUriToken": "^[cdefglmnpz]$"
+    },
+    "[8:12]": {
+      "property": "marc:expectedAcquisitionEndDate",
+      "TODO:parseDateTime": "yyMM", "timeZone": "CET",
+      "fixedDefault": "0000",
+      "matchAsDefault": "^ *0+ *$|^ +$|^\\|+$"
+    },
+    "[12]": {
+      "link": "marc:retentionPolicy",
+      "uriTemplate": "https://id.kb.se/marc/RetentionPolicyType-{_}",
+      "matchUriToken": "^[12345678]$",
+      "fixedDefault": "|"
+    },
+    "[13]": {
+      "link": "marc:specificRetentionPolicy",
+      "uriTemplate": "https://id.kb.se/marc/SpecificRetentionPolicyType-{_}",
+      "matchUriToken": "^[lp]$",
+      "fixedDefault": "|"
+    },
+    "[14]": {
+      "property": "marc:retentionPolicyNumberOfUnits",
+      "fixedDefault": "|"
+    },
+    "[15]": {
+      "link": "marc:retentionPolicyUnitType",
+      "uriTemplate": "https://id.kb.se/marc/RetentionPolicyUnitType-{_}",
+      "matchUriToken": "^[eimswy]$",
+      "fixedDefault": "|"
+    },
+    "[16]": {
+      "link": "marc:completeness",
+      "uriTemplate": "https://id.kb.se/marc/CompletenessType-{_}",
+      "fixedDefault": "|"
+    },
+    "[17:20]": {
+      "property": "inventoryLevel",
+      "parseZeroPaddedNumber": true,
+      "fixedDefault": "000"
+    },
+    "[20]": {
+      "link": "marc:lendingPolicy",
+      "uriTemplate": "https://id.kb.se/marc/LendingPolicyType-{_}",
+      "matchUriToken": "^[abcl]$",
+      "fixedDefault": "|"
+    },
+    "[21]": {
+      "link": "marc:reproductionPolicy",
+      "uriTemplate": "https://id.kb.se/marc/ReproductionPolicyType-{_}",
+      "matchUriToken": "^[ab]$",
+      "fixedDefault": "|"
+    },
+    "[22:25]": {
+      "addLink": "language",
+      "uriTemplate": "https://id.kb.se/language/{_}",
+      "matchUriToken": "^\\w{2,3}$",
+      "fixedDefault": "|||"
+    },
+    "[25]": {
+      "link": "marc:copyReport",
+      "uriTemplate": "https://id.kb.se/marc/CopyReportType-{_}",
+      "matchUriToken": "^[01]$",
+      "fixedDefault": "|"
+    },
+    "[26:32]": {
+      "aboutEntity": "?record",
+      "property": "date",
+      "parseDateTime": "yyMMdd", "timeZone": "CET",
+      "fixedDefault": "000000",
+      "matchAsDefault": "^ *0+ *$|^ +$|^\\|+$"
+    },
+    "repeatable": false,
+    "_spec": [
+      {
+        "source": {"008": "900101||    |   ||||||swe|000000"},
+        "normalized": {"008": "900101||0000|||||000||swe|000000"},
+        "result": {
+          "created": "1990-01-01T00:00:00.0+01:00",
+          "mainEntity": {
+            "language": [{"@id": "https://id.kb.se/language/swe"}]
+          }
+        }
+      },
+      {
+        "name": "keep broken date values verbatim",
+        "source": {"008": "900101||    |   ||||||und|000000"},
+        "normalized": {"008": "900101||0000|||||000||und|000000"},
+        "result": {
+          "created": "1990-01-01T00:00:00.0+01:00",
+          "mainEntity": {
+            "language": [{"@id": "https://id.kb.se/language/und"}]
+          }
+        }
+      },
+      {
+        "name": "parse zero padded inventoryLevel",
+        "source": {"008": "900101||    |   |001||und|000000"},
+        "normalized": {"008": "900101||0000|||||001||und|000000"},
+        "result": {
+          "created": "1990-01-01T00:00:00.0+01:00",
+          "mainEntity": {
+            "inventoryLevel": 1,
+            "language": [{"@id": "https://id.kb.se/language/und"}]
+          }
+        }
+      },
+      {
+        "name": "broken inventoryLevel",
+        "source": {"008": "900101||    |   |NaN||und|000000"},
+        "normalized": {"008": "900101||0000|||||000||und|000000"},
+        "result": {
+          "created": "1990-01-01T00:00:00.0+01:00",
+          "mainEntity": {
+            "inventoryLevel": "NaN",
+            "language": [{"@id": "https://id.kb.se/language/und"}]
+          }
+        }
+      },
+    {
+        "name": "non-zero-padded inventoryLevel and odd dates",
+        "source": {"008": "121102||0   |||||1  b ||| 0     "},
+        "normalized": {"008": "121102||0000|||||001b|||||000000"},
+        "result": {
+          "created": "2012-11-02T00:00:00.0+01:00",
+          "mainEntity": {
+            "inventoryLevel": 1,
+            "marc:lendingPolicy": {"@id": "https://id.kb.se/marc/LendingPolicyType-b"}
+          }
+        }
+      },
+      {
+        "name": "value of completeness will be kept after revert",
+        "source": {"008": "900101||    |   1|||||swe|000000"},
+        "normalized": {"008": "900101||0000||||1000||swe|000000"},
+        "result": {
+          "created": "1990-01-01T00:00:00.0+01:00",
+          "mainEntity": {
+            "language": [{"@id": "https://id.kb.se/language/swe"}],
+            "marc:completeness" : {
+              "@id" : "https://id.kb.se/marc/CompletenessType-1"
+            }
+          }
+        }
+      },
+      {
+        "name": "completeness will be set to fixedDefault",
+        "source": {"008": "900101||    |    |||||swe|000000"},
+        "normalized": {"008": "900101||0000|||||000||swe|000000"},
+        "result": {
+          "created": "1990-01-01T00:00:00.0+01:00",
+          "mainEntity": {
+            "language": [{"@id": "https://id.kb.se/language/swe"}]
+          }
+        }
+      },
+      {
+        "name": "Keep value of expectedAcquisitionEndDate",
+        "source": {"008": "811001||8107|    |||||swe|000000"},
+        "normalized": {"008": "811001||8107|||||000||swe|000000"},
+        "result": {
+          "created": "1981-10-01T00:00:00.0+01:00",
+          "mainEntity": {
+            "language": [{"@id": "https://id.kb.se/language/swe"}],
+            "marc:expectedAcquisitionEndDate": "8107"
+          }
+        }
+      },
+      {
+        "name": "empty retentionPolicy will be set to fixedDefault",
+        "source": {"008": "900101||         |||||swe|000000"},
+        "normalized": {"008": "900101||0000|||||000||swe|000000"},
+        "result": {
+          "created": "1990-01-01T00:00:00.0+01:00",
+          "mainEntity": {
+            "language": [{"@id": "https://id.kb.se/language/swe"}]
+          }
+        }
+      },
+      {
+        "name": "handle unexpected array value for fixed field",
+        "normalized": {"008": "900101||0000|||||000||swe|901128"},
+        "result": {
+          "created": "1990-01-01T00:00:00.0+01:00",
+          "date": [ "1990-11-28T00:00:00.0+01:00" ],
+          "mainEntity": {
+            "language": [{"@id": "https://id.kb.se/language/swe"}]
+          }
+        }
+      },
+      {
+        "name": "handle unexpected object for fixed field",
+        "normalized": {"008": "900101||0000|||||000||swe|000000"},
+        "result": {
+          "created": "1990-01-01T00:00:00.0+01:00",
+          "date": {"value": "1990-11-28T00:00:00.0+01:00"},
+          "mainEntity": {
+            "language": [{"@id": "https://id.kb.se/language/swe"}]
+          }
+        }
+      },
+      {
+        "name": "handle unexpected object in unexpected array for fixed field",
+        "normalized": {"008": "900101||0000|||||000||swe|000000"},
+        "result": {
+          "created": "1990-01-01T00:00:00.0+01:00",
+          "date": [ {"value": "1990-11-28T00:00:00.0+01:00"} ],
+          "mainEntity": {
+            "language": [{"@id": "https://id.kb.se/language/swe"}]
+          }
+        }
+      }
+    ]
+  },
+
+  "010": {"ignored": true, "NOTE:record-count": 22, "NOTE:local": "ANVÄNDS NORMALT EJ"},
+  "014": {
+    "aboutEntity": "?record",
+    "addLink": "identifiedBy",
+    "resourceType": "LibrisIIINumber", 
+    "i1": {"ignored": true, "marcDefault": "1"},
+    "$a": {"property": "value", "NOTE:marc-repeatable": false},
+    "_spec": [
+      {
+        "source": {
+          "014": {"ind1": "0", "ind2": " ", "subfields": [{"a": "9926215580"}]}
+        },
+        "normalized": {
+          "014": {"ind1": "1", "ind2": " ", "subfields": [{"a": "9926215580"}]}
+        },
+        "result": {
+          "@type" : "Record",
+          "identifiedBy" : [{
+            "@type" : "LibrisIIINumber",
+            "value" : "9926215580"
+          }],
+          "mainEntity": {
+            "@type": "Item"
+          }
+        }
+      }
+    ]
+  },
+  "016": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ"},
+  "017": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ"},
+  "020": {"inherit": "bib"},
+  "022": {"inherit": "bib"},
+  "024": {"inherit": "bib"},
+  "027": {"ignored": true, "NOTE:record-count": 0, "TODO": "inherit-bib?"},
+  "030": {"ignored": true, "NOTE:record-count": 0, "TODO": "inherit-bib?"},
+  "035": {
+    "inherit": "bib",
+    "aboutEntity": null,
+    "NOTE:local": "Fältet förekommer normalt inte i beståndsposter, men kan användas för dubblettkontroll/länkning vid postexport till lokalt system.",
+    "$6": {"property": "marc:hold035-fieldref", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!"},
+    "$8": {"addProperty": "marc:hold035-groupid", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!"},
+    "$9": null
+  },
+  "040": {"ignored": true, "NOTE:record-count": 4, "NOTE:local": "ANVÄNDS NORMALT EJ I BESTÅNDSFORMATET"}, 
+  "050": {
+    "inherit": "bib",
+    "aboutEntity": "?thing",
+    "NOTE:local": "LIBRIS-definierat beståndsfält.",
+    "_spec": [
+      {
+        "source": {
+          "050": {"ind1": " ", "ind2": "4", "subfields": [{"a": "NB933.F44"},{"b": "T6"}]}
+        },
+        "normalized": {
+          "050": {"ind1": " ", "ind2": "4", "subfields": [{"a": "NB933.F44"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "classification": [{
+              "@type": "ClassificationLcc",
+              "code": "NB933.F44"
+            }]
+          }
+        }
+      }
+    ]
+  },
+  "060": {
+    "inherit": "bib",
+    "aboutEntity": "?thing",
+    "NOTE:local": "LIBRIS-definierat beståndsfält.",
+    "_spec": [
+      {
+        "source": {
+          "060": {"ind1": "1", "ind2": "4", "subfields": [{"a": "W1"}]}
+        },
+        "normalized": {
+          "060": {"ind1": " ", "ind2": "4", "subfields": [{"a": "W1"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "classification": [{
+              "@type": "ClassificationNlm",
+              "code": "W1"
+            }]
+          }
+        }
+      }
+    ]
+  },
+  "066": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS F.N. EJ"},
+
+  "072": {
+    "inherit": "bib",
+    "aboutEntity": "?thing",
+    "NOTE:local": "LIBRIS-definierat beståndsfält.",
+    "_spec": [
+      {
+        "source": {
+          "072": {"ind1": " ", "ind2": "7", "subfields": [
+            {"a": "aZ1"},
+            {"x": ".630"},
+            {"2": "mesh"}
+          ]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "subject": [
+              {
+                "@type": "Concept",
+                "label": "aZ1",
+                "inCollection": {
+                  "@type": "ConceptCollection",
+                  "label": ".630"
+                },
+                "inScheme": {
+                  "@type": "ConceptScheme",
+                  "code": "mesh"
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "080": {
+    "inherit": "bib",
+    "aboutEntity": "?thing",
+    "NOTE:local": "LIBRIS-definierat beståndsfält.",
+    "_spec": [
+      {
+        "source": {
+          "080": {"ind1": " ", "ind2": " ", "subfields": [{"a": "030"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "classification": [
+              {"@type": "ClassificationUdc", "code": "030"}
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "082": {
+    "inherit": "bib",
+    "aboutEntity": "?thing",
+    "NOTE:local": "LIBRIS-definierat beståndsfält.",
+    "$b": {"property": "itemPortion"},
+    "$m": null,
+    "$q": null,
+    "_spec": [
+      {
+        "name": "In contrast to bib, continue to map $b to itemPortion ",
+        "source": {
+          "082": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "808"}, {"b": ".066"}, {"2": "21"}
+          ]}},
+        "normalized": {
+          "082": {"ind1": " ", "ind2": "4", "subfields": [
+            {"a": "808"}, {"b": ".066"}, {"2": "21"}
+          ]}},
+        "result": {"mainEntity": {
+          "@type": "Item",
+          "classification": [
+            {
+              "@type": "ClassificationDdc",
+              "code": "808",
+              "edition": "other",
+              "editionEnumeration": "21",
+              "itemPortion" : ".066"
+            }
+          ]
+        }}
+      }
+    ]
+  },
+  "084": {
+    "inherit": "bib",
+    "aboutEntity": "?thing",
+    "NOTE:local": "LIBRIS-definierat beståndsfält.",
+    "$b": {"property": "itemPortion"},
+    "TODO:_spec": [
+      {
+        "TODO": "Add ignoreOnRevert. As it is now, it collides with 082. See bug issue LXL-3287",
+        "name": "In contrast to bib, continue to map $b to itemPortion.",
+        "source": {
+          "084": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Ncba/VP"}, {"b": "Nc"}, {"2": "kssb/8"}
+          ]}},
+        "result": {"mainEntity": {
+          "@type": "Item",
+          "classification": [
+            {
+              "@type": "Classification",
+              "code": "Ncba/VP",
+              "itemPortion": "Nc",
+              "inScheme": {
+                "@id": "https://id.kb.se/term/kssb%2F8/",
+                "@type": "ConceptScheme",
+                "code": "kssb",
+                "version": "8"
+              }
+            }
+          ]
+        }}
+      }
+    ]
+  },
+  "337": {"ignored": true, "NOTE:record-count": 0, "NOTE:": "Media only on work or instance"},
+  "338": {"ignored": true, "NOTE:record-count": 0, "NOTE:": "Carrier only on instance"},
+  "347": {"ignored": true, "NOTE:record-count": 0},
+  "500": {
+    "inherit": "bib",
+    "NOTE:local": "LIBRIS-definierat beståndsfält.",
+    "onRevertPrefer": ["562", "563", "583"]
+  },
+  "506": {"inherit": "bib", "aboutEntity": "?thing"},
+  "520": {"inherit": "bib", "aboutEntity": "?thing", "NOTE:local": "LIBRIS-definierat beståndsfält."},
+  "538": {"inherit": "bib", "$5": null},
+  "541": {
+    "groupId": "?example-$seq",
+    "NOTE": "groupId has created only sameAs links in the actual converted data.",
+    "i1": {
+      "NOTE": "0 = Sekretessbelagd information. Används f.n. ej. = ca 5000 poster",
+      "property": "marc:isPrivate",
+      "marcDefault": " ",
+      "tokenMap": {
+        "0": true,
+        "1": null
+      }
+    },
+    "addLink": "immediateAcquisition",
+    "resourceType": "ImmediateAcquisition",
+    "$a": {"property": "marc:sourceOfAcquisition"},
+    "$b": {"property": "marc:address"},
+    "$c": {"property": "marc:methodOfAcquisition"},
+    "$d": {"property": "marc:dateOfAcquisition"},
+    "$e": {
+      "addLink": "identifiedBy",
+      "resourceType": "AccessionNumber",
+      "property": "value"
+    },
+    "$f": {"property": "marc:owner"},
+    "$h": {"property": "marc:purchasePrice"},
+    "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+    "_spec": [
+      {
+        "source": {
+          "541": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Gåva"}, {"d": "2006"}
+          ]}},
+          "normalized": {
+            "541": {"ind1": "0", "ind2": " ", "subfields": [
+              {"a": "Gåva"}, {"d": "2006"}
+            ]}},
+        "result": {"mainEntity": {
+          "@type": "Item",
+          "immediateAcquisition": [
+            {
+              "@id" : "?example-g1-1",
+              "@type": "ImmediateAcquisition",
+              "marc:sourceOfAcquisition": "Gåva",
+              "marc:dateOfAcquisition": "2006",
+              "marc:isPrivate": true
+            }
+          ]
+        }}
+      }
+    ]
+  },
+  "546": {
+    "aboutEntity": "?thing",
+    "addLink": "hasNote",
+    "resourceType": "Note",
+    "onRevertPrefer": "500",
+    "NOTE:local": "Definierat för konvertering av MO-bestånd",
+    "$a": {"property": "label"}
+  },
+  "561": {
+    "groupId": "?example-$seq",
+    "NOTE:i1": "0 = Sekretessbelagd information. Används f.n. ej. = 8 poster. Remove i1 when revert",
+    "i1": {"marcDefault": " "},
+    "$a": {"property": "custodialHistory"},
+    "$3": {
+      "link": "marc:custodialHistory-appliesTo", "resourceType": "Resource", "property": "label",
+      "NOTE": "Qualified with related property to avoid collision when put directly on top-level resource!"
+    },
+    "$8": {"property": "marc:hold561-groupid", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!"},
+    "_spec": [
+      {
+        "source": {"561": {"ind1": "0", "ind2": " ","subfields": [{"a": "xxx"}]}},
+        "normalized": {"561": {"ind1": " ", "ind2": " ","subfields": [{"a": "xxx"}]}},
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "custodialHistory": "xxx"
+          }
+        }
+      }
+    ]
+  },
+  "562": {
+    "inherit": "bib",
+    "groupId": "?example-$seq"
+  },
+  "563": {
+    "addLink": "marc:hasBindingInformation", "embedded": true, "resourceType": "marc:BindingInformationNote",
+    "groupId": "?example-$seq",
+    "$a": {"property": "label"},
+    "$8": {"property": "marc:groupid"},
+    "repeatable": true
+  },
+  "583": {
+    "addLink": "marc:hasActionNote",
+    "resourceType": "marc:ActionNote",
+    "i1": {
+      "NOTE": "0 = Sekretessbelagd information. Används f.n. ej. = 1 post",
+      "property": "marc:isPrivate",
+      "marcDefault": " ",
+      "tokenMap": {
+        "0": true,
+        "1": null
+      }
+    },
+    "$a": {"property": "label"},
+    "$b": {"addProperty": "marc:actionIdentification"},
+    "$x": {"addProperty": "marc:cataloguersNote", "TODO": "ignore?"},
+    "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+    "_spec": [
+      {
+        "source": {
+          "583": {"ind1": "1", "ind2": " ", "subfields": [
+            {"a": "a"}
+          ]}},
+          "normalized": {
+            "583": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "a"}
+            ]}},
+        "result": {"mainEntity": {
+          "@type": "Item",
+          "marc:hasActionNote": [
+            {
+              "@type": "marc:ActionNote",
+              "label": "a"
+            }
+          ]
+        }}
+      }
+    ]
+  },
+  "599": {
+    "NOTE:local": "LIBRIS-definierat beståndsfält.",
+    "TODO:": "Should this not be internal data? Ignore until we know further.",
+    "aboutEntity": "?record",
+    "$a": {"addProperty": "cataloguersNote"},
+    "_spec": [
+      {"source": {"599": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Notes"}]}},
+        "result": {"cataloguersNote": ["Notes"], "mainEntity": {"@type": "Item"}}}]
+  },
+  
+  "600": {
+    "NOTE:local": "LIBRIS-definierat beståndsfält.",
+    "inherit": "bib:600",
+    "aboutEntity": null
+  },
+  "610": {"inherit": "bib:610", "aboutEntity": null},
+  "611": {"inherit": "bib:611", "aboutEntity": null},
+  "630": {"inherit": "bib:630", "aboutEntity": null},
+  "648": {"inherit": "bib:648", "aboutEntity": null},
+  "650": {"inherit": "bib:650", "aboutEntity": null},
+  "651": {"inherit": "bib:651", "aboutEntity": null},
+  "653": {"inherit": "bib:653", "aboutEntity": null},
+  "655": {"inherit": "bib:655", "aboutEntity": null},
+  "698": {
+    "addLink": "marc:hasLocalSubjectAndHeading",
+    "resourceType": "marc:LocalSubjectAndHeading",
+    "NOTE:local": "LIBRIS-definierat beståndsfält.",
+    "$a": {"property": "code"},
+    "$b": {"property": "label"}
+  },
+
+  "700": {"inherit": "bib:700", "aboutEntity": null},
+  "710": {"inherit": "bib:710", "aboutEntity": null},
+  "752": {
+    "inherit": "bib:752",
+    "aboutEntity": null,
+    "$4": {"addProperty": "marc:relatorCode"}
+  },
+  "787": {"inherit": "bib:787", "aboutEntity": null},
+
+  "841": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS EJ"},
+  "842": {
+    "NOTE:LC": "nac",
+    "addLink": "hasNote",
+    "NOTE:marc-repeatable": false,
+    "resourceType": "marc:TextualPhysicalFormDesignator",
+    "$a": {"property": "label"},
+    "$8": {"property": "marc:groupid"},
+    "repeatable": false
+  },
+  "843": {
+    "addLink": "hasNote",
+    "resourceType": "marc:ReproductionNote",
+    "NOTE": "same marc-structure as bib:533, but that one uses provisionActivity and has Reproduction which is limited to instance",
+    "NOTE:LC": "nac",
+    "$a": {"property": "marc:typeOfReproduction"},
+    "$b": {"addProperty": "marc:placeOfReproduction"},
+    "$c": {"addProperty": "marc:agencyResponsibleForReproduction"},
+    "$d": {"property": "marc:dateOfReproduction"},
+    "$e": {"property": "marc:physicalDescriptionOfReproduction"},
+    "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+  },
+  "844": {
+    "link": "marc:hasNameOfUnit",
+    "resourceType": "marc:NameOfUnit",
+    "$a": {"property": "label"}
+  },
+  "845": {
+    "addLink": "hasNote",
+    "resourceType": "marc:TermsGoverningUseAndReproductionNote",
+    "NOTE:LC": "nac",
+    "$a": {"property": "marc:termsGoverningUseAndReproduction"},
+    "$b": {"property": "marc:jurisdiction"},
+    "$c": {"property": "marc:authorization"}
+  },
+
+  "852": {
+    "aboutType": "Item",
+    "required": true,
+    "linkEveryIfRepeated": {
+      "addLink": "hasComponent",
+      "embedded": true,
+      "resourceType": "Item"
+    },
+    "match": [
+      {
+        "when": {
+          "onRevert": {"shelfMark": {"@type": "ShelfMarkSequence"}}
+        },
+        "$h": {"link": "shelfMark", "resourceType": "ShelfMarkSequence", "property": "label"}
+      }
+    ],
+    "i1": {"property": "marc:shelvingScheme", "marcDefault": " "},
+    "i2": {"property": "marc:shelvingOrder", "marcDefault": " "},
+    "$2": {"property": "marc:sourceOfClassificationOrShelfMarkScheme"},
+    "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+    "$6": {"property": "marc:fieldref", "NOTE": "This is the ONLY allowed mapping to this property on the top-level resource (works since 'linkEveryIfRepeated' is in place)."},
+    "$8": {"property": "marc:groupid", "NOTE": "This is the ONLY allowed mapping to this property on the top-level resource (works since 'linkEveryIfRepeated' is in place)."},
+    "$9": {"addProperty": "organizationalUnit"},
+    "$a": {"property": "location"},
+    "$b": {
+      "link": "heldBy",
+      "NOTE:marc-repeatable": "true in MARC21, but not in Libris (although it's been in 0.06 % of our records)",
+      "resourceType": "Agent",
+      "uriTemplate": "https://libris.kb.se/library/{_}",
+      "matchUriToken": "^\\S+$",
+      "property": "sigel",
+      "TODO": "move to mainEntity and auto-repeat here",
+      "NOTE": "libris deviates from standard (sublocationOrCollection)"
+    },
+    "$c": {"addProperty": "physicalLocation"},
+    "$d": {"addProperty": "formerShelfLocation"},
+    "$e": {"addProperty": "address"},
+    "$f": {"addProperty": "codedLocationQualifier"},
+    "$g": {"addProperty": "nonCodedLocationQualifier"},
+    "$h": {
+      "link": "shelfMark", "resourceType": "ShelfMark", "property": "label",
+      "NOTE": "libris deviates from standard classificationPart (libris use it for all kinds of shelfControlNumber?)"
+    },
+    "$i": {
+      "addLink": "availability",
+      "resourceType": "ItemAvailability",
+      "property": "label", "infer": true,
+      "NOTE": "deviates from standard (itemPart)?"
+    },
+    "$j": {"property": "shelfControlNumber"},
+    "$k": {"addProperty": "callNumberPrefix"},
+    "$l": {"property": "shelfLabel"},
+    "$m": {"addProperty": "callNumberSuffix"},
+    "$n": {"link": "country", "resourceType": "Country", "property": "code"},
+    "$p": {"property": "marc:pieceDesignation"},
+    "$q": {"property": "itemCondition"},
+    "$s": {"addProperty": "copyrightArticleFeeCode"},
+    "$t": {"property": "copyNumber"},
+    "$u": {"addProperty": "uri"},
+    "$x": {"addProperty": "cataloguersNote"},
+    "$z": {
+      "addLink": "hasNote",
+      "resourceType": "Note",
+      "property": "label"
+    },
+    "repeatable": true,
+    "subfieldOrder": "5 3 8 b c k h j d g i l m p q t u x z 9",
+    "_spec": [
+      {
+        "source": {"852": {
+          "ind1": " ",
+          "ind2": " ",
+          "subfields": [{"b": "H"}, {"c": "MAG"}, {"j": "65.465"}, {"t": "1"}]
+        }},
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "copyNumber": "1",
+            "heldBy": {"@id": "https://libris.kb.se/library/H", "@type": "Agent", "sigel": "H"},
+            "shelfControlNumber": "65.465",
+            "physicalLocation": ["MAG"]
+          }
+        }
+      },
+      {
+        "source": [
+          {"852": {"ind1": " ", "ind2": " ", "subfields": [{"b": "X"}, {"h": "Z"}, {"t": "1"}]}},
+          {"852": {"ind1": " ", "ind2": " ", "subfields": [{"b": "Y"}, {"t": "2"}]}}
+        ],
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "hasComponent": [
+              {
+                "@type": "Item",
+                "copyNumber": "1",
+                "heldBy": {
+                  "@id": "https://libris.kb.se/library/X", "@type": "Agent", "sigel": "X"},
+                "shelfMark": {
+                  "@type": "ShelfMark",
+                  "label": "Z"
+                }
+              },
+              {
+                "@type": "Item",
+                "copyNumber": "2",
+                "heldBy": {"@id": "https://libris.kb.se/library/Y", "@type": "Agent", "sigel": "Y"}
+              }
+            ]
+          }
+        }
+      },
+      {
+        "TODO": "a revert-only case",
+        "jsonLd": {
+          "mainEntity": {
+            "@type": "Item",
+            "copyNumber": "1",
+            "heldBy": {"@id": "https://libris.kb.se/library/H"},
+            "shelfControlNumber": "65.465",
+            "physicalLocation": ["MAG"]
+          }
+        },
+        "resultMarc": {"852": {
+          "ind1": " ",
+          "ind2": " ",
+          "subfields": [{"b": "H"}, {"c": "MAG"}, {"j": "65.465"}, {"t": "1"}]
+        }}
+      },
+      {
+        "name": "ShelfMarkSequence revert (Library)",
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "hasComponent": [
+              {
+                "@type": "Item",
+                "heldBy": {
+                  "@id": "https://libris.kb.se/library/X", "@type": "Library", "sigel": "X"},
+                "shelfMark": {
+                  "@type": "ShelfMarkSequence",
+                  "label": "Z"
+                },
+                "shelfControlNumber": "br 5"
+              }
+            ]
+          }
+        },
+        "normalized": {"852": {
+          "ind1": " ",
+          "ind2": " ",
+          "subfields": [{"b": "X"}, {"h": "Z"}, {"j": "br 5"}]
+        }}
+      },
+      {
+        "name": "ShelfMarkSequence revert (Bibliography)",
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "hasComponent": [
+              {
+                "@type": "Item",
+                "heldBy": {
+                  "@id": "https://libris.kb.se/library/NB", "@type": "Bibliography", "sigel": "NB"},
+                "shelfMark": {
+                  "@type": "ShelfMarkSequence",
+                  "label": "Z"
+                },
+                "shelfControlNumber": "br 5"
+              }
+            ]
+          }
+        },
+        "normalized": {"852": {
+          "ind1": " ",
+          "ind2": " ",
+          "subfields": [{"b": "NB"}, {"h": "Z"}, {"j": "br 5"}]
+        }}
+      }
+    ]
+  },
+
+  "853": {"ignored": true, "NOTE:record-count": 6, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
+  "854": {"ignored": true, "NOTE:record-count": 2, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
+  "855": {"ignored": true, "NOTE:record-count": 35, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
+
+  "856": {
+    "inherit": "bib"
+  },
+
+  "863": {
+    "addLink": "marc:hasEnumerationAndChronologyBasicBibliographicUnit",
+    "resourceType": "marc:EnumerationAndChronologyBasicBibliographicUnit",
+    "embedded": true,
+    "i1": {"property": "marc:holdingsLevel", "marcDefault": " "},
+    "i2": {"property": "marc:formOfHoldings", "marcDefault": " "},
+    "$a": {"property": "marc:firstLevelOfEnumeration"},
+    "$b": {"property": "marc:secondLevelOfEnumeration"},
+    "$c": {"property": "marc:thirdLevelOfEnumeration"},
+    "$d": {"ignored": true, "NOTE:record-count": 0},
+    "$e": {"ignored": true, "NOTE:record-count": 0},
+    "$p": {"property": "marc:pieceDesignation"},
+    "$t": {"property": "marc:copyNumber"},
+    "$x": {"addProperty": "marc:cataloguersNote"},
+    "$z": {"addProperty": "marc:publicNote"},
+    "$8": {"property": "marc:groupid"},
+    "$9": {"addProperty": "marc:organizationalUnit"},
+    "repeatable": true
+  },
+  "864": {"ignored": true, "NOTE:record-count": 6, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"}, 
+  "865": {"ignored": true, "NOTE:record-count": 8, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"}, 
+
+  "866": {
+    "addLink": "marc:hasTextualHoldingsBasicBibliographicUnit",
+    "resourceType": "marc:TextualHoldingsBasicBibliographicUnit",
+    "embedded": true,
+    "i1": {"property": "marc:holdingsLevel", "marcDefault": " "},
+    "i2": {"property": "marc:typeOfNotation", "marcDefault": " "},
+    "$a": {"property": "marc:textualString"},
+    "$x": {"addProperty": "marc:cataloguersNote"},
+    "$z": {"addProperty": "marc:publicNote"},
+    "$2": {"property": "marc:sourceOfNotation"},
+    "$6": {"property": "marc:fieldref"},
+    "$8": {"property": "marc:groupid"},
+    "$9": {"addProperty": "marc:organizationalUnit"},
+    "repeatable": true,
+    "subfieldOrder": "8 a x z 2 9",
+    "_spec": [
+      {
+        "name": "With indicator 1 set to 1",
+        "source": {"866": {"ind1": "1", "ind2": " ", "subfields": [
+          {"a": "Foo"}
+        ]}},
+        "result": {"mainEntity": {
+          "marc:hasTextualHoldingsBasicBibliographicUnit": [
+            {
+              "@type": "marc:TextualHoldingsBasicBibliographicUnit",
+              "marc:textualString": "Foo",
+              "marc:holdingsLevel": "1"
+            }
+          ]
+        }}
+      },
+      {
+        "name": "With indicator 1 set to blank",
+        "source": [
+          {"866": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Foo"}]}},
+          {"866": {"ind1": " ", "ind2": " ", "subfields": [{"x": "89-06-16 (inb.)"}]}}
+        ],
+        "result": {"mainEntity": {
+          "marc:hasTextualHoldingsBasicBibliographicUnit": [
+            {
+              "@type": "marc:TextualHoldingsBasicBibliographicUnit",
+              "marc:textualString": "Foo"
+            },
+            {
+              "@type": "marc:TextualHoldingsBasicBibliographicUnit",
+              "marc:cataloguersNote": [ "89-06-16 (inb.)" ]
+            }
+          ]
+        }}
+      },
+      {
+        "name": "With only $x used for statistics",
+        "source": [
+          {"866": {"ind1": " ", "ind2": " ", "subfields": [{"x": "nyfv"}]}}
+        ],
+        "result": {"mainEntity": {
+          "marc:hasTextualHoldingsBasicBibliographicUnit": [
+            {
+              "@type": "marc:TextualHoldingsBasicBibliographicUnit",
+              "marc:cataloguersNote": [ "nyfv" ]
+            }
+          ]
+        }}
+      },
+      {
+        "name": "With no indicators set at all",
+        "source": {"866": {"subfields": [{"a": "Foo"}]}},
+        "normalized": {"866": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Foo"}]}},
+        "result": {"mainEntity": {
+          "marc:hasTextualHoldingsBasicBibliographicUnit": [
+            {
+              "@type": "marc:TextualHoldingsBasicBibliographicUnit",
+              "marc:textualString": "Foo"
+            }
+          ]
+        }}
+      }
+    ]
+  },
+  "867": {
+    "addLink": "marc:hasTextualHoldingsSupplementaryMaterial",
+    "resourceType": "marc:TextualHoldingsSupplementaryMaterial",
+    "embedded": true,
+    "i1": {"property": "marc:holdingsLevel", "marcDefault": " "},
+    "i2": {"property": "marc:typeOfNotation", "marcDefault": " "},
+    "$a": {"property": "marc:textualString"},
+    "$x": {"addProperty": "marc:cataloguersNote"},
+    "$z": {"addProperty": "marc:publicNote"},
+    "repeatable": true
+  },
+  "868": {
+    "addLink": "marc:hasTextualHoldingsIndexes",
+    "resourceType": "marc:TextualHoldingsIndexes",
+    "embedded": true,
+    "i1": {"property": "marc:holdingsLevel", "marcDefault": " "},
+    "i2": {"property": "marc:typeOfNotation", "marcDefault": " "},
+    "$a": {"property": "marc:textualString"},
+    "$x": {"addProperty": "marc:cataloguersNote"},
+    "$z": {"addProperty": "marc:publicNote"},
+    "repeatable": true
+  },
+
+  "876": {
+    "addLink": "marc:hasItemInformationBasicBibliographicUnit",
+    "resourceType": "marc:ItemInformationBasicBibliographicUnit",
+    "NOTE:LC": "nac",
+    "$a": {"property": "marc:internalItemNumber"},
+    "$b": {"addProperty": "marc:invalidOrCanceledInternalItemNumber"},
+    "$c": {"addProperty": "marc:cost"},
+    "$d": {"addProperty": "marc:dateAcquired"},
+    "$e": {"addProperty": "marc:sourceOfAcquisition"},
+    "$h": {"addProperty": "marc:useRestrictions"},
+    "$j": {"addProperty": "marc:itemStatus"},
+    "$l": {"addProperty": "marc:temporaryLocation"},
+    "$p": {"addProperty": "marc:pieceDesignation"},
+    "$r": {"addProperty": "marc:invalidOrCanceledPieceDesignation"},
+    "$t": {"property": "marc:copyNumber"},
+    "$x": {"addProperty": "marc:cataloguersNote", "TODO": "ignore?"},
+    "$z": {"addProperty": "marc:publicNote"},
+    "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+    "$8": {"property": "marc:groupid"},
+    "$9": {"addProperty": "marc:organizationalUnit"}
+  },
+  "877": {
+    "inherit": "876",
+    "addLink": "marc:hasItemInformationSupplementaryMaterial",
+    "resourceType": "marc:ItemInformationSupplementaryMaterial",
+    "NOTE:LC": "nac"
+  },
+  "878": {"ignored": true, "NOTE:record-count": 9, "NOTE:LC": "nac"},
+
+  "880": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "LIBRIS-definierat beståndsfält."},
+  "883": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "LIBRIS-definierat beståndsfält."},
+  "884": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "LIBRIS-definierat beståndsfält."},
+  "886": {
+    "inherit": "bib",
+    "NOTE:LC": "nac"
+  },
+  "887": {"ignored": true, "NOTE:LC": "nac", "NOTE:local": "Maskinellt genererad information från LIBRIS XL till Voyager"},
+
+  "948": {
+    "addLink": "marc:hasHold948",
+    "resourceType": "marc:Hold948",
+    "i1": {"property": "marc:hasHold948-i1", "marcDefault": " "},
+    "i2": {"property": "marc:hasHold948-i2", "marcDefault": " "},
+    "$a": {"addProperty": "marc:hasHold948-a"},
+    "$b": {"addProperty": "marc:hasHold948-b"},
+    "$c": {"addProperty": "marc:hasHold948-c"},
+    "$d": {"addProperty": "marc:hasHold948-d"},
+    "$e": {"addProperty": "marc:hasHold948-e"},
+    "$f": {"addProperty": "marc:hasHold948-f"},
+    "$g": {"addProperty": "marc:hasHold948-g"},
+    "$h": {"addProperty": "marc:hasHold948-h"},
+    "$i": {"addProperty": "marc:hasHold948-i"},
+    "$j": {"addProperty": "marc:hasHold948-j"},
+    "$k": {"addProperty": "marc:hasHold948-k"},
+    "$l": {"addProperty": "marc:hasHold948-l"},
+    "$m": {"addProperty": "marc:hasHold948-m"},
+    "$n": {"addProperty": "marc:hasHold948-n"},
+    "$o": {"addProperty": "marc:hasHold948-o"},
+    "$p": {"addProperty": "marc:hasHold948-p"},
+    "$q": {"addProperty": "marc:hasHold948-q"},
+    "$r": {"addProperty": "marc:hasHold948-r"},
+    "$s": {"addProperty": "marc:hasHold948-s"},
+    "$t": {"addProperty": "marc:hasHold948-t"},
+    "$u": {"addProperty": "marc:hasHold948-u"},
+    "$v": {"addProperty": "marc:hasHold948-v"},
+    "$w": {"addProperty": "marc:hasHold948-w"},
+    "$x": {"addProperty": "marc:hasHold948-x"},
+    "$y": {"addProperty": "marc:hasHold948-y"},
+    "$z": {"addProperty": "marc:hasHold948-z"},
+    "$A": {"addProperty": "marc:hasHold948-A"},
+    "$B": {"addProperty": "marc:hasHold948-B"},
+    "$C": {"addProperty": "marc:hasHold948-C"},
+    "$D": {"addProperty": "marc:hasHold948-D"},
+    "$E": {"addProperty": "marc:hasHold948-E"},
+    "$F": {"addProperty": "marc:hasHold948-F"},
+    "$G": {"addProperty": "marc:hasHold948-G"},
+    "$H": {"addProperty": "marc:hasHold948-H"},
+    "$I": {"addProperty": "marc:hasHold948-I"},
+    "$J": {"addProperty": "marc:hasHold948-J"},
+    "$K": {"addProperty": "marc:hasHold948-K"},
+    "$L": {"addProperty": "marc:hasHold948-L"},
+    "$M": {"addProperty": "marc:hasHold948-M"},
+    "$N": {"addProperty": "marc:hasHold948-N"},
+    "$O": {"addProperty": "marc:hasHold948-O"},
+    "$P": {"addProperty": "marc:hasHold948-P"},
+    "$Q": {"addProperty": "marc:hasHold948-Q"},
+    "$R": {"addProperty": "marc:hasHold948-R"},
+    "$S": {"addProperty": "marc:hasHold948-S"},
+    "$T": {"addProperty": "marc:hasHold948-T"},
+    "$U": {"addProperty": "marc:hasHold948-U"},
+    "$V": {"addProperty": "marc:hasHold948-V"},
+    "$W": {"addProperty": "marc:hasHold948-W"},
+    "$X": {"addProperty": "marc:hasHold948-X"},
+    "$Y": {"addProperty": "marc:hasHold948-Y"},
+    "$Z": {"addProperty": "marc:hasHold948-Z"},
+    "$0": {"addProperty": "marc:hasHold948-0"},
+    "$1": {"addProperty": "marc:hasHold948-1"},
+    "$2": {"addProperty": "marc:hasHold948-2"},
+    "$3": {"addProperty": "marc:hasHold948-3"},
+    "$4": {"addProperty": "marc:hasHold948-4"},
+    "$5": {"addProperty": "marc:hasHold948-5"},
+    "$6": {"addProperty": "marc:hasHold948-6"},
+    "$7": {"addProperty": "marc:hasHold948-7"},
+    "$8": {"addProperty": "marc:hasHold948-8"},
+    "$9": {"addProperty": "marc:hasHold948-9"},
+    "repeatable": true
+  },
+  "949": {
+    "addLink": "marc:hasHold949",
+    "resourceType": "marc:Hold949",
+    "i1": {"property": "marc:hasHold949-i1", "marcDefault": " "},
+    "i2": {"property": "marc:hasHold949-i2", "marcDefault": " "},
+    "$a": {"addProperty": "marc:hasHold949-a"},
+    "$b": {"addProperty": "marc:hasHold949-b"},
+    "$c": {"addProperty": "marc:hasHold949-c"},
+    "$d": {"addProperty": "marc:hasHold949-d"},
+    "$e": {"addProperty": "marc:hasHold949-e"},
+    "$f": {"addProperty": "marc:hasHold949-f"},
+    "$g": {"addProperty": "marc:hasHold949-g"},
+    "$h": {"addProperty": "marc:hasHold949-h"},
+    "$i": {"addProperty": "marc:hasHold949-i"},
+    "$j": {"addProperty": "marc:hasHold949-j"},
+    "$k": {"addProperty": "marc:hasHold949-k"},
+    "$l": {"addProperty": "marc:hasHold949-l"},
+    "$m": {"addProperty": "marc:hasHold949-m"},
+    "$n": {"addProperty": "marc:hasHold949-n"},
+    "$o": {"addProperty": "marc:hasHold949-o"},
+    "$p": {"addProperty": "marc:hasHold949-p"},
+    "$q": {"addProperty": "marc:hasHold949-q"},
+    "$r": {"addProperty": "marc:hasHold949-r"},
+    "$s": {"addProperty": "marc:hasHold949-s"},
+    "$t": {"addProperty": "marc:hasHold949-t"},
+    "$u": {"addProperty": "marc:hasHold949-u"},
+    "$v": {"addProperty": "marc:hasHold949-v"},
+    "$w": {"addProperty": "marc:hasHold949-w"},
+    "$x": {"addProperty": "marc:hasHold949-x"},
+    "$y": {"addProperty": "marc:hasHold949-y"},
+    "$z": {"addProperty": "marc:hasHold949-z"},
+    "$A": {"addProperty": "marc:hasHold949-A"},
+    "$B": {"addProperty": "marc:hasHold949-B"},
+    "$C": {"addProperty": "marc:hasHold949-C"},
+    "$D": {"addProperty": "marc:hasHold949-D"},
+    "$E": {"addProperty": "marc:hasHold949-E"},
+    "$F": {"addProperty": "marc:hasHold949-F"},
+    "$G": {"addProperty": "marc:hasHold949-G"},
+    "$H": {"addProperty": "marc:hasHold949-H"},
+    "$I": {"addProperty": "marc:hasHold949-I"},
+    "$J": {"addProperty": "marc:hasHold949-J"},
+    "$K": {"addProperty": "marc:hasHold949-K"},
+    "$L": {"addProperty": "marc:hasHold949-L"},
+    "$M": {"addProperty": "marc:hasHold949-M"},
+    "$N": {"addProperty": "marc:hasHold949-N"},
+    "$O": {"addProperty": "marc:hasHold949-O"},
+    "$P": {"addProperty": "marc:hasHold949-P"},
+    "$Q": {"addProperty": "marc:hasHold949-Q"},
+    "$R": {"addProperty": "marc:hasHold949-R"},
+    "$S": {"addProperty": "marc:hasHold949-S"},
+    "$T": {"addProperty": "marc:hasHold949-T"},
+    "$U": {"addProperty": "marc:hasHold949-U"},
+    "$V": {"addProperty": "marc:hasHold949-V"},
+    "$W": {"addProperty": "marc:hasHold949-W"},
+    "$X": {"addProperty": "marc:hasHold949-X"},
+    "$Y": {"addProperty": "marc:hasHold949-Y"},
+    "$Z": {"addProperty": "marc:hasHold949-Z"},
+    "$0": {"addProperty": "marc:hasHold949-0"},
+    "$1": {"addProperty": "marc:hasHold949-1"},
+    "$2": {"addProperty": "marc:hasHold949-2"},
+    "$3": {"addProperty": "marc:hasHold949-3"},
+    "$4": {"addProperty": "marc:hasHold949-4"},
+    "$5": {"addProperty": "marc:hasHold949-5"},
+    "$6": {"addProperty": "marc:hasHold949-6"},
+    "$7": {"addProperty": "marc:hasHold949-7"},
+    "$8": {"addProperty": "marc:hasHold949-8"},
+    "$9": {"addProperty": "marc:hasHold949-9"},
+    "repeatable": true,
+    "subfieldOrder": "5 A B C D E F G H I J K L M N O P Q R S T U V W X Y Z 6 a b c d e f g h i j k l m n o p q r s t u v w x y z ..."
+  },
+  "951": {
+    "addLink": "marc:hasHold951",
+    "resourceType": "marc:Hold951",
+    "$a": {"addProperty": "marc:hasHold951-a"},
+    "$b": {"addProperty": "marc:hasHold951-b"},
+    "$z": {"addProperty": "marc:hasHold951-z"}
+  }
+}

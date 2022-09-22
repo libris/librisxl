@@ -2,7 +2,6 @@ package whelk.converter.marc
 
 import java.util.regex.Matcher
 import java.util.regex.Pattern
-import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 
 import whelk.JsonLd
@@ -96,7 +95,7 @@ abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
                     if (prevAfter != null) {
                         result += prevAfter
                     }
-                    if (fmt?.contentBefore != null && (fmt.contentFirst == null || first == null)) {
+                    if (fmt?.contentBefore != null && (fmt.contentFirst == null || !first)) {
                         result += fmt.contentBefore
                     }
                     result += it

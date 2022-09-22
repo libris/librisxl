@@ -1,9 +1,7 @@
 apply plugin: 'groovy'
 apply plugin: 'java-library'
-//apply plugin: 'jacoco'
+apply plugin: 'jacoco'
 apply plugin: 'nebula.lint'
-
-archivesBaseName = "xlcore"
 
 group = 'com.github.libris'
 
@@ -22,21 +20,20 @@ sourceSets {
 }
 
 test {
-    /*
+    useJUnitPlatform()
     jacoco {
         destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
         classDumpDir = file("$buildDir/jacoco/classpathdumps")
     }
-    */
 }
 
 test.testLogging {
     showStandardStreams = true
     exceptionFormat = "full"
 }
-/*
+
 jacoco {
-    toolVersion = "0.8.2"
+    toolVersion = "$jacocoVersion"
     reportsDirectory = file("$buildDir/coverage_report")
 }
 
@@ -47,7 +44,7 @@ jacocoTestReport {
         html.destination file("${buildDir}/coverage_report/html")
     }
 }
-*/
+
 repositories {
     mavenCentral()
     maven { url "https://jitpack.io/" }
@@ -86,7 +83,7 @@ dependencies {
     implementation group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
 
     // Common tools
-    implementation "com.google.guava:guava:16.0.1"
+    implementation "com.google.guava:guava:${guavaVersion}"
     implementation "io.github.resilience4j:resilience4j-circuitbreaker:${resilience4jVersion}"
     implementation "io.github.resilience4j:resilience4j-prometheus:${resilience4jVersion}"
     implementation "io.github.resilience4j:resilience4j-retry:${resilience4jVersion}"
@@ -97,7 +94,7 @@ dependencies {
     api 'commons-io:commons-io:2.11.0'
     implementation "org.apache.httpcomponents:httpclient:${httpComponentsClientVersion}"
     implementation "org.apache.httpcomponents:httpcore:${httpComponentsCoreVersion}"
-    implementation 'org.apache.jena:apache-jena-libs:3.0.1'
+    api 'org.apache.jena:apache-jena-libs:3.0.1'
     api "org.codehaus.groovy:groovy-json:${groovyVersion}"
     api "org.codehaus.groovy:groovy-xml:${groovyVersion}"
     api "org.codehaus.groovy:groovy:${groovyVersion}"
@@ -116,7 +113,7 @@ dependencies {
 
     // Integration
     api "org.apache.commons:commons-lang3:3.3.2"
-    implementation 'org.postgresql:postgresql:42.3.3'
+    implementation 'org.postgresql:postgresql:42.4.0'
 
     // profiling and test
     testImplementation "org.spockframework:spock-core:${spockVersion}"

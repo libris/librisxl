@@ -1,0 +1,1257 @@
+{
+
+  "idbase": {
+    "aboutEntity": "?thing",
+    "addLink": "identifiedBy",
+    "embedded": true
+  },
+
+  "idbasequalified": {
+    "include": ["idbase"],
+    "$a": {
+      "property": "value",
+      "splitValuePattern": "^(.+?)(?:\\s+\\((.+)\\))?$",
+      "splitValueProperties": ["value", "qualifier"],
+      "punctuationChars": ",:;"
+    },
+    "$q": {"addProperty": "qualifier"}
+  },
+
+  "identifier": {
+    "include": ["idbasequalified"],
+    "$z": {"addProperty": "marc:hiddenValue"}
+  },
+
+  "titlesearchelem": {
+    "i1": {
+      "about": "_:title",
+      "property": "marc:searchElement",
+      "tokenMap": {"0": null, "2": null, "3": null, "4": null, "|": null},
+      "marcDefault": "1"
+    }
+  },
+
+  "titledetailsUnused": {
+    "TODO": "unused, and slightly different from titledetails; why?",
+    "$d": {"addProperty": "treatySigningDate"},
+    "$f": {"property": "date"},
+    "$g": {"addProperty": "comment"},
+    "$h": {"property": "marc:mediaTerm"},
+    "$k": {"addProperty": "qualifier"},
+    "$l": {"link": "language", "resourceType": "Language", "property": "label"},
+    "$m": {"addProperty": "musicPerformanceMedium"},
+    "$n": {"addProperty": "partNumber", "punctuationChars": ","},
+    "$p": {"addProperty": "partName", "punctuationChars": "/"},
+    "$r": {"property": "musicKey"},
+    "$o": {"property": "musicArrangement"},
+    "$s": {"property": "version"}
+  },
+
+  "workdetails": {
+    "$f": {"about": "_:work", "property": "originDate"},
+    "$h": {"about": "_:work", "property": "marc:mediaTerm"},
+
+    "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label", "infer": true},
+    "$m": {"about": "_:work", "addLink": "musicMedium", "resourceType": "MusicMedium", "property": "label", "leadingPunctuation": ","},
+    "$o": {"about": "_:work", "property": "version", "TODO": "musicArrangement?"},
+
+    "$r": {"about": "_:work", "property": "musicKey", "leadingPunctuation": ","},
+    "$s": {"about": "_:work", "property": "marc:version", "TODO": "version"}
+  },
+  "i1-nonfiling": {
+    "i1": {
+      "about": "_:title",
+      "property": "marc:nonfilingChars",
+      "marcDefault": "0",
+      "tokenMap": "NonfilingChars"
+    }
+  },
+  "i2-nonfiling": {
+    "i2": {
+      "about": "_:title",
+      "property": "marc:nonfilingChars",
+      "marcDefault": "0",
+      "tokenMap": "NonfilingChars"
+    }
+  },
+
+  "titledetailsSansPartNumber": {
+    "include": ["workdetails"],
+    "$k": {"about": "_:title", "addProperty": "marc:formSubheading"},
+    "TODO:k": "We should map to bf2:natureOfContent instead. See auth:430",
+    "$p": {"about": "_:title", "TODO:about": "_:titlePart", "addProperty": "partName", "punctuationChars": "/"}
+  },
+
+  "titledetails": {
+    "include": ["titledetailsSansPartNumber"],
+    "$n": {"about": "_:title", "TODO:about": "_:titlePart", "addProperty": "partNumber", "punctuationChars": ",", "leadingPunctuation": ","}
+  },
+
+  "structuredtitle": {
+    "pendingResources": {
+      "_:titlePart": {
+        "addLink": "hasPart",
+        "resourceType": "TitlePart",
+        "embedded": true
+      }
+    },
+    "match": [
+      {
+        "when": "$a =~ .+\\.\\s*$ & $h =~ .+:\\s*$",
+        "$a": {"property": "mainTitle", "trailingPunctuation": "."},
+        "$h": {"aboutEntity": "?thing", "property": "marc:mediaTerm", "trailingPunctuation": " :", "surroundingChars": "[]"},
+        "$b": {"property": "subtitle", "required": true, "punctuationChars": "/"}
+      },
+      {
+        "when": "$a =~ .+:\\s*$",
+        "$a": {"property": "mainTitle", "trailingPunctuation": " :"},
+        "$b": {"property": "subtitle", "required": true, "punctuationChars": "/"}
+      },
+
+      {
+        "when": "$a =~ .+\\.\\s*$ & $h =~ .+=\\s*$",
+        "$a": {"property": "mainTitle", "trailingPunctuation": "."},
+        "$h": {"aboutEntity": "?thing", "property": "marc:mediaTerm", "trailingPunctuation": " =", "surroundingChars": "[]"},
+        "$b": {"property": "marc:parallelTitle", "required": true, "punctuationChars": "/"}
+      },
+      {
+        "when": "$h =~ .+=\\s*$",
+        "$h": {"aboutEntity": "?thing", "property": "marc:mediaTerm", "trailingPunctuation": " =", "surroundingChars": "[]"},
+        "$b": {"property": "marc:parallelTitle", "required": true, "punctuationChars": "/"}
+      },
+      {
+        "when": "$a =~ .+=\\s*$",
+        "$a": {"property": "mainTitle", "trailingPunctuation": " ="},
+        "$b": {"property": "marc:parallelTitle", "required": true, "punctuationChars": "/"}
+      },
+
+      {
+        "when": "$a =~ .+\\.\\s*$",
+        "$a": {"property": "mainTitle", "trailingPunctuation": "."},
+        "$b": {"property": "marc:equalTitle", "required": true, "punctuationChars": "/"},
+        "TODO": "$a and $b represent equal titles"
+      }
+    ],
+    "$a": {"property": "mainTitle", "punctuationChars": "=:/."},
+    "$b": {"property": "titleRemainder", "punctuationChars": "/"},
+    "$n": {"aboutNew": "_:titlePart", "property": "partNumber", "punctuationChars": "=:/,"},
+    "$p": {"about": "_:titlePart", "property": "partName", "punctuationChars": "=:/"}
+  },
+
+  "agentdetails": {
+    "TODO": "Just drop these extremely uncommon stray workdetails (Apart from $l perhaps; but is that the language of the name literal, or 'nationality'?)",
+    "include": ["agentpartnumber"],
+    "$f": {"about": "_:agent", "property": "marc:originDate"},
+    "$h": {"about": "_:agent", "property": "marc:mediaTerm"},
+    "$l": {"about": "_:agent", "link": "language", "resourceType": "Language", "property": "label", "infer": true},
+    "$o": {"about": "_:agent", "property": "version", "TODO": "align with other $o?"},
+    "$r": {"about": "_:agent", "property": "marc:musicKey"},
+    "$s": {"about": "_:agent", "property": "version"},
+    "$0": {"about": "_:agent", "addProperty": "marc:uri"}
+  },
+
+  "agentpartnumber": {
+    "$n": {"about": "_:agent", "addProperty": "marc:numeration", "punctuationChars": ",", "leadingPunctuation": ","}
+  },
+
+  "TODO:hasPlace:includeWhereThisPendingIsUsed": {
+    "pendingResources": {
+      "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+    }
+  },
+
+  "hasWork": {
+    "pendingResources": {
+      "_:contribution": {
+        "addLink": "contribution",
+        "resourceType": "PrimaryContribution",
+        "embedded": true
+      },
+      "_:title": {
+        "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+        "embedded": true
+      },
+      "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+    },
+    "$t": {"about": "_:title", "property": "mainTitle"},
+    "$i": {"addLink": "marc:relatedAs", "resourceType": "Relation", "property": "label"}
+  },
+
+  "hasPartDataSansLabelledRole": {
+    "include": ["hasWork"],
+    "addLink": "hasPart",
+    "resourceType": "Work",
+    "aboutAlias": "_:work",
+    "$x": {"about": "_:work", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"},
+    "$0": {"about": "_:work", "addProperty": "marc:uri"}
+  },
+
+  "hasPartData": {
+    "include": ["hasPartDataSansLabelledRole"],
+    "$e": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"},
+    "$6": {"about": "_:contribution", "property": "marc:fieldref"},
+    "$8": {"about": "_:contribution", "property": "marc:groupid"}
+  },
+
+  "hasPartPerson": {
+    "include": ["hasPartData"],
+    "pendingResources": {
+      "_:agent": {
+        "about": "_:contribution",
+        "link": "agent",
+        "resourceType": "Person",
+        "required": true
+      }
+    }
+  },
+
+  "hasPartFamily": {
+    "include": ["hasPartData"],
+    "pendingResources": {
+      "_:agent": {
+        "about": "_:contribution",
+        "link": "agent",
+        "resourceType": "Family",
+        "required": true
+      }
+    }
+  },
+
+  "hasPartJurisdiction": {
+    "include": ["hasPartData"],
+    "pendingResources": {
+      "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+      "_:agent": {
+        "about": "_:contribution",
+        "link": "agent",
+        "resourceType": "Jurisdiction",
+        "required": true
+      }
+    }
+  },
+
+  "hasPartOrganization": {
+    "include": ["hasPartData"],
+    "pendingResources": {
+      "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
+      "_:agent": {
+        "about": "_:contribution",
+        "link": "agent",
+        "resourceType": "Organization",
+        "required": true
+      }
+    }
+  },
+
+  "hasPartMeeting": {
+    "include": ["hasPartDataSansLabelledRole", "agentdataMeeting"],
+    "pendingResources": {
+      "_:agent": {
+        "about": "_:contribution",
+        "link": "agent",
+        "resourceType": "Meeting",
+        "required": true
+      }
+    }
+  },
+
+  "variantWork": {
+    "include": ["hasWork"],
+    "addLink": "hasVariant",
+    "resourceType": "Work",
+    "aboutAlias": "_:work",
+    "pendingResources": {
+      "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+    },
+    "$v": {"about": "_:work", "property": "marc:formSubdivision"},
+    "$w": {"about": "_:work", "property": "marc:controlSubfield"},
+    "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
+    "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
+    "$z": {"about": "_:work", "property": "marc:geographicSubdivision"}
+  },
+
+  "variantWorkWithPerson": {
+    "include": ["variantWork"],
+    "pendingResources": {
+      "_:agent": {
+        "about": "_:contribution",
+        "link": "agent",
+        "resourceType": "Person",
+        "required": true
+      }
+    }
+  },
+
+  "variantWorkWithFamily": {
+    "include": ["variantWork"],
+    "pendingResources": {
+      "_:agent": {
+        "about": "_:contribution",
+        "link": "agent",
+        "resourceType": "Family",
+        "required": true
+      }
+    }
+  },
+
+  "variantWorkWithOrganization": {
+    "include": ["variantWork"],
+    "pendingResources": {
+      "_:agent": {
+        "about": "_:contribution",
+        "link": "agent",
+        "resourceType": "Organization",
+        "required": true
+      },
+      "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"}
+    }
+  },
+
+  "variantWorkWithJurisdiction": {
+    "include": ["variantWork"],
+    "pendingResources": {
+      "_:agent": {
+        "about": "_:contribution",
+        "link": "agent",
+        "resourceType": "Jurisdiction",
+        "required": true
+      },
+      "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"}
+    }
+  },
+
+  "variantWorkWithMeeting": {
+    "include": ["variantWork"],
+    "pendingResources": {
+      "_:agent": {
+        "about": "_:contribution",
+        "link": "agent",
+        "resourceType": "Meeting",
+        "required": true
+      }
+    }
+  },
+
+  "variantAgent": {
+    "addLink": "hasVariant",
+    "aboutAlias": "_:agent",
+    "include": ["agentData"]
+  },
+
+  "variantPerson": {
+    "include": ["variantAgent"],
+    "resourceType": "Person"
+  },
+
+  "variantFamily": {
+    "include": ["variantAgent"],
+    "resourceType": "Family"
+  },
+
+  "variantOrganization": {
+    "include": ["variantAgent"],
+    "resourceType": "Organization",
+    "pendingResources": {
+      "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"}
+    }
+  },
+
+  "variantJurisdiction": {
+    "include": ["variantAgent"],
+    "resourceType": "Jurisdiction",
+    "pendingResources": {
+      "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"}
+    }
+  },
+
+  "variantMeeting": {
+    "include": ["variantAgent"],
+    "resourceType": "Meeting",
+    "pendingResources": {
+      "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Meeting"}
+    }
+  },
+
+  "agentData": {
+    "pendingResources": {
+      "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+    },
+    "TODO:alternative $a": {"addProperty": "altLabel"},
+    "$i": {"about": "_:agent", "addLink": "marc:relatedAs", "resourceType": "Relation", "property": "label"},
+    "TODO:$d": {"TODO": "if same as 100.$d (plus drop similar duplicate splitValueProperties)"},
+    "$v": {"about": "_:agent", "property": "marc:formSubdivision"},
+    "$w": {"about": "_:agent", "property": "marc:controlSubfield"},
+    "$x": {"about": "_:agent", "property": "marc:generalSubdivision"},
+    "$y": {"about": "_:agent", "property": "marc:chronologicalSubdivision"},
+    "$z": {"about": "_:agent", "property": "marc:geographicSubdivision"}
+  },
+
+  "contributionRole_4": {
+    "$4": {
+      "about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "code",
+      "uriTemplate": "https://id.kb.se/relator/{_}", "matchUriToken": "^\\w+$"
+    }
+  },
+
+  "contributionRole_4_e": {
+    "include": ["contributionRole_4"],
+    "$e": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"}
+  },
+
+  "contributionRole_4_j": {
+    "include": ["contributionRole_4"],
+    "$j": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"}
+  },
+
+  "hasContribution": {
+    "include": ["contributionRole_4_e"],
+    "pendingResources": {
+      "_:contribution": {
+        "about": "_:work",
+        "addLink": "contribution",
+        "resourceType": "PrimaryContribution",
+        "embedded": true
+      }
+    }
+  },
+
+  "relationshipDataSansLabelledRole": {
+    "include": ["contributionRole_4"],
+    "TODO": "compare this to hasPartData and consolidate",
+    "addLink": "relationship",
+    "resourceType": "Relationship",
+    "pendingResources": {
+      "_:work": {
+        "link": "entity",
+        "resourceType": "Work"
+      },
+      "_:contribution": {
+        "about": "_:work",
+        "addLink": "contribution",
+        "resourceType": "PrimaryContribution",
+        "embedded": true
+      },
+      "_:title": {
+        "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+        "embedded": true
+      }
+    },
+    "$i": {"addLink": "relation", "resourceType": "Relation", "property": "label"},
+    "$t": {"about": "_:title", "property": "mainTitle"},
+    "$x": {"about": "_:work", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value"},
+    "$0": {"about": "_:work", "addProperty": "marc:uri"}
+  },
+
+  "relationshipData": {
+    "include": ["relationshipDataSansLabelledRole"],
+    "$e": {"about": "_:contribution", "addLink": "role", "resourceType": "Role", "property": "label"},
+    "$6": {"about": "_:contribution", "property": "marc:fieldref"},
+    "$8": {"about": "_:contribution", "property": "marc:groupid"}
+  },
+
+  "hasRelationshipPerson": {
+    "include": ["relationshipData"],
+    "pendingResources": {
+      "_:agent": {
+        "about": "_:contribution",
+        "link": "agent",
+        "resourceType": "Person",
+        "required": true
+      }
+    }
+  },
+
+  "hasRelationshipFamily": {
+    "include": ["relationshipData"],
+    "pendingResources": {
+      "_:agent": {
+        "about": "_:contribution",
+        "link": "agent",
+        "resourceType": "Family",
+        "required": true
+      }
+    }
+  },
+
+  "hasRelationshipOrganization": {
+    "include": ["relationshipData"],
+    "pendingResources": {
+      "_:agent": {
+        "about": "_:contribution",
+        "link": "agent",
+        "resourceType": "Organization",
+        "required": true
+      },
+      "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
+      "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+    }
+  },
+
+  "hasRelationshipJurisdiction": {
+    "include": ["relationshipData"],
+    "pendingResources": {
+      "_:agent": {
+        "about": "_:contribution",
+        "link": "agent",
+        "resourceType": "Jurisdiction",
+        "required": true
+      },
+      "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+      "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+    }
+  },
+
+  "relatedToData": {
+    "addLink": "relatedTo",
+    "resourceType": "Work",
+    "aboutAlias": "_:work",
+    "pendingResources": {
+      "_:title": {
+        "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+        "embedded": true
+      }
+    },
+    "$i": {"addLink": "marc:relatedAs", "resourceType": "Relation", "property": "label"},
+    "$t": {"about": "_:title", "property": "mainTitle"},
+    "$v": {"about": "_:work", "property": "marc:formSubdivision"},
+    "$w": {"about": "_:work", "property": "marc:controlSubfield"},
+    "$x": {"about": "_:work", "property": "marc:generalSubdivision"},
+    "$y": {"about": "_:work", "property": "marc:chronologicalSubdivision"},
+    "$z": {"about": "_:work", "property": "marc:geographicSubdivision"},
+    "$0": {"about": "_:work", "addProperty": "marc:recordControlNumber"}
+  },
+
+  "hasRelatedToPerson": {
+    "include": ["relatedToData"],
+    "pendingResources": {
+      "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Person", "embedded": false, "required": true}
+    }
+  },
+
+  "hasRelatedToFamily": {
+    "include": ["relatedToData"],
+    "pendingResources": {
+      "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Family", "embedded": false, "required": true}
+    }
+  },
+
+  "hasRelatedToOrganization": {
+    "include": ["relatedToData"],
+    "pendingResources": {
+      "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Organization", "embedded": false, "required": true},
+      "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
+      "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+    }
+  },
+
+  "hasRelatedToJurisdiction": {
+    "include": ["relatedToData"],
+    "pendingResources": {
+      "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Jurisdiction", "embedded": false, "required": true},
+      "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+      "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+    }
+  },
+
+  "hasRelatedToMeeting": {
+    "include": ["relatedToData"],
+    "pendingResources": {
+      "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Meeting", "embedded": false, "required": true},
+      "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Meeting"},
+      "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+    }
+  },
+
+  "seeAlsoPerson": {
+    "include": ["agentData"],
+    "pendingResources": {
+      "_:agent": {"addLink": "seeAlso", "resourceType": "Person", "required": true}
+    },
+    "$0": {"about": "_:agent", "addProperty": "marc:recordControlNumber"}
+  },
+
+  "seeAlsoOrganization": {
+    "include": "agentData",
+    "addLink": "seeAlso",
+    "resourceType": "Organization",
+    "aboutAlias": "_:agent",
+    "pendingResources": {
+      "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
+      "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+    },
+    "$0": {"about": "_:agent", "addProperty": "marc:recordControlNumber"}
+  },
+
+  "seeAlsoJurisdiction": {
+    "include": "agentData",
+    "addLink": "seeAlso",
+    "resourceType": "Jurisdiction",
+    "aboutAlias": "_:agent",
+    "pendingResources": {
+      "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+      "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+    },
+    "$0": {"about": "_:agent", "addProperty": "marc:recordControlNumber"}
+  },
+
+  "seeAlsoMeeting": {
+    "include": "agentData",
+    "addLink": "seeAlso",
+    "resourceType": "Meeting",
+    "aboutAlias": "_:agent",
+    "pendingResources": {
+      "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Meeting"},
+      "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+    },
+    "$0": {"about": "_:agent", "addProperty": "marc:recordControlNumber"}
+  },
+
+  "contributionOrganization": {
+    "addLink": "contribution",
+    "resourceType": "Contribution",
+    "aboutAlias": "_:contribution",
+    "pendingResources": {
+      "_:agent": {"link": "agent", "resourceType": "Organization", "required": true},
+      "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
+      "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+    },
+    "$6": {"about": "_:contribution", "property": "marc:fieldref"},
+    "$8": {"about": "_:contribution", "property": "marc:groupid"}
+  },
+
+  "contributionJurisdiction": {
+    "addLink": "contribution",
+    "resourceType": "Contribution",
+    "aboutAlias": "_:contribution",
+    "pendingResources": {
+      "_:agent": {"link": "agent", "resourceType": "Jurisdiction", "required": true},
+      "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+      "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+    },
+    "$6": {"about": "_:contribution", "property": "marc:fieldref"},
+    "$8": {"about": "_:contribution", "property": "marc:groupid"}
+  },
+
+  "contributionData": {
+    "aboutType": "Work",
+    "pendingResources": {
+      "_:title": {
+        "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+        "embedded": true
+      },
+      "_:contribution": {
+        "addLink": "contribution",
+        "resourceType": "PrimaryContribution",
+        "embedded": true
+      }
+    },
+    "$t": {"about": "_:title", "property": "mainTitle"}
+  },
+
+  "contributionPerson": {
+    "include": ["agentdataPerson", "contributionData"],
+    "pendingResources": {
+      "_:agent": {
+        "about": "_:contribution",
+        "link": "agent",
+        "resourceType": "Person",
+        "required": true
+      }
+    }
+  },
+
+  "contributionNameOfPerson": {
+    "include": ["agentdataNameOfPerson", "contributionData"],
+    "pendingResources": {
+      "_:agent": {
+        "about": "_:contribution",
+        "link": "agent",
+        "resourceType": "Person",
+        "required": true
+      }
+    }
+  },
+
+  "contributionFamily": {
+    "include": ["agentdataFamily", "contributionData"],
+    "pendingResources": {
+      "_:agent": {
+        "about": "_:contribution",
+        "link": "agent",
+        "resourceType": "Family",
+        "required": true
+      }
+    }
+  },
+
+  "pendingContributionOrganization": {
+    "include": ["contributionData"],
+    "pendingResources": {
+      "_:agent": {
+        "about": "_:contribution",
+        "link": "agent",
+        "resourceType": "Organization",
+        "required": true
+      },
+      "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Organization"},
+      "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+    }
+  },
+
+  "pendingContributionJurisdiction": {
+    "include": ["contributionData"],
+    "pendingResources": {
+      "_:agent": {
+        "about": "_:contribution",
+        "link": "agent",
+        "resourceType": "Jurisdiction",
+        "required": true
+      },
+      "_:isPartOf": {"about": "_:agent", "link": "isPartOf", "resourceType": "Jurisdiction"},
+      "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+    }
+  },
+
+  "subjectOrganization": {
+    "addLink": "subject",
+    "pendingResources": {
+      "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Organization", "required": true}
+    }
+  },
+
+  "subjectJurisdiction": {
+    "addLink": "subject",
+    "pendingResources": {
+      "_:agent": {"about": "_:contribution", "link": "agent", "resourceType": "Jurisdiction", "required": true}
+    }
+  },
+
+  "agentdataFamily": {
+    "include": "agentdataPersonFamily",
+    "$a": {"about": "_:agent", "property": "name", "required": true, "punctuationChars": ")"}
+  },
+
+  "agentdataPerson": {
+    "include": "agentdataPersonFamily",
+    "$a": {"about": "_:agent", "property": "name", "required": true, "punctuationChars": ")"}
+  },
+
+  "agentdataNameOfPerson": {
+    "include": "agentdataPersonFamily",
+    "$a": {
+      "about": "_:agent",
+      "property": "name", "splitValuePattern": "([^,]+)(?:,\\s*([^,]+))",
+      "splitValueProperties": ["familyName", "givenName"], "rejoin": ", ",
+      "punctuationChars": ",",
+      "required": true
+    }
+  },
+
+  "agentdataPersonFamily": {
+    "pendingResources": {
+      "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+    },
+    "$b": {"about": "_:agent", "property": "marc:numeration"},
+    "$c": {"about": "_:agent", "addProperty": "marc:titlesAndOtherWordsAssociatedWithAName", "leadingPunctuation": ","},
+    "$d": {
+      "about": "_:agent",
+      "property": "lifeSpan",
+      "allowEmpty": true,
+      "leadingPunctuation": ","
+    },
+    "$g": {"about": "_:agent", "addProperty": "comment"},
+    "$j": {"about": "_:agent", "property": "marc:attributionQualifier"},
+    "$q": {"about": "_:agent", "property": "fullerFormOfName"},
+    "$u": {"about": "_:agent", "property": "marc:affiliation"}
+  },
+
+  "agentdataOrganizationSubUnit": {
+    "include": "agentdataOrganizationJurisdiction",
+    "$a": {"about": "_:isPartOf", "property": "name", "required": true},
+    "$b": {"about": "_:agent", "addProperty": "marc:subordinateUnit", "required": true}
+  },
+
+  "agentdataOrganization": {
+    "include": "agentdataOrganizationJurisdiction",
+    "$a": { "about": "_:agent", "property": "name", "required": true}
+  },
+
+  "agentdataOrganizationJurisdiction": {
+    "include": "agentdataCollectiveDetails",
+    "pendingResources": {
+      "_:place": {"about": "_:agent", "addLink": "place", "resourceType": "Place"}
+    },
+    "$g": {"about": "_:agent", "addProperty": "comment"},
+    "$u": {"about": "_:agent", "property": "marc:affiliation"},
+
+    "TODO::include": "contributionRole_4_e? e and 4. Also for Family och Person. Uses require aboutAlias: _:contribution"
+  },
+
+  "agentdataMeeting": {
+    "NOTE": "Used by: Bib 111, 611, 711, 811, Auth 111, 411, 511",
+    "include": "agentdataCollectiveDetails",
+    "$a": {"about": "_:agent", "property": "name", "required": true},
+    "$e": {"about":"_:agent", "addProperty": "marc:subordinateUnit"},
+    "$g": {"about": "_:agent", "addProperty": "comment"},
+    "$q": {"about":"_:agent", "property": "additionalName"},
+    "$u": {"about": "_:agent", "property": "marc:affiliation"}
+  },
+
+  "agentdataCollectiveDetails": {
+    "$c": {"about": "_:place", "property": "label", "infer": true},
+    "$d": {"about": "_:agent", "addProperty": "date", "TODO?:leadingPunctuation": ","}
+  },
+
+  "contributiondata": {
+    "include": ["contributionRole_4_e"],
+    "pendingResources": {
+      "_:agent": {"link": "agent", "resourceType": "Person", "required": true}
+    },
+    "embedded": true,
+    "match": [
+      {
+        "when": "i1=0",
+        "include": "agentdataPerson",
+        "pendingResources": {
+          "_:agent": {"link": "agent", "resourceType": "Person", "required": true}
+        }
+      },
+      {
+        "when": "i1=1",
+        "include": "agentdataNameOfPerson",
+        "pendingResources": {
+          "_:agent": {"link": "agent", "resourceType": "Person", "required": true}
+        }
+      },
+      {
+        "when": "i1=3",
+        "include": "agentdataFamily",
+        "pendingResources": {
+          "_:agent": {"link": "agent", "resourceType": "Family", "required": true}
+        }
+      },
+      {
+        "when": null,
+        "include": "agentdataNameOfPerson",
+        "pendingResources": {
+          "_:agent": {"link": "agent", "resourceType": "Person", "required": true}
+        }
+      }
+    ],
+    "$a": {"required": true}
+  },
+
+  "classification-ddc": {
+    "resourceType": "ClassificationDdc",
+    "i1": {
+      "NOTE": "i1=7 will be reverted to i1=' '",
+      "property": "edition",
+      "marcDefault": " ",
+      "tokenMap": {
+        "0": "full",
+        "1": "abridged",
+        "7": "other",
+        " ": "other"
+      }
+    },
+    "$a": {"property": "code", "required": true},
+    "$2": {"property": "editionEnumeration"}
+  },
+
+  "termid": {
+    "uriTemplate": "https://id.kb.se/term/{inScheme.code}/{prefLabel}"
+  },
+
+  "termcomplexsubjectHead": {
+    "$9": {
+      "addLink": "inCollection",
+      "resourceType": "TermCollection",
+      "property": "code",
+      "ignoreOnRevert": true
+    },
+    "constructProperties": {
+      "prefLabel": {"property": "termComponentList.prefLabel", "join": "--"}
+    }
+  },
+
+  "termcomplexsubjectMatch": {
+    "$v": {"addLink": "termComponentList",
+      "TODO": "use /term/saogf/{_}, but only if $2=sao",
+      "resourceType": "GenreSubdivision",
+      "itemPos": "rest",
+      "property": "prefLabel"},
+    "$x": {"addLink": "termComponentList",
+      "resourceType": "TopicSubdivision",
+      "itemPos": "rest",
+      "property": "prefLabel"},
+    "$y": {"addLink": "termComponentList",
+      "resourceType": "TemporalSubdivision",
+      "itemPos": "rest",
+      "property": "prefLabel"},
+    "$z": {"addLink": "termComponentList",
+      "TODO": "use /place/{_}, but only if $2=sao",
+      "resourceType": "GeographicSubdivision",
+      "itemPos": "rest",
+      "property": "prefLabel"}
+  },
+
+  "termbase": {
+    "include": ["termcomplexsubjectHead", "termcomplexsubjectMatch"],
+    "match": [
+      {
+        "when": "$v | $x | $y | $z",
+        "resourceType": "ComplexSubject"
+      }
+    ]
+  },
+
+  "abouttermbase": {
+    "include": ["termcomplexsubjectHead", "termcomplexsubjectMatch"],
+    "match": [
+      {
+        "when": "$v | $x | $y | $z",
+        "aboutType": "ComplexSubject"
+      }
+    ]
+  },
+
+  "termbase_with_id": {
+    "include": ["termbase", "termid"]
+  },
+
+  "termbase_with_uri_from_i2": {
+    "IMPORTANT": "Ensure all usages map $a to their own need (and use termComponentList with absorbSingle and required). Must be combined with i2 and $2 in subjectbase, to preserve the data (for revert to match here).",
+    "match": [
+      {
+        "when": "i2=7 & $2=sao",
+        "include": ["termbase_with_id"]
+      },
+      {
+        "when": "i2=7 & $2=saogf",
+        "include": ["termbase_with_id"]
+      },
+      {
+        "when": "i2=7 & $2=gmgpc//swe",
+        "include": ["termbase_with_id"]
+      },
+      {
+        "when": "i2=7 & $2=barn",
+        "include": ["termbase_with_id"]
+      },
+      {
+        "when": "i2=7 & $2=barngf",
+        "include": ["termbase_with_id"]
+      },
+      {
+        "when": "i2=0",
+        "include": ["termbase"],
+        "uriTemplate": "http://id.loc.gov/authorities/label/{prefLabel}"
+      },
+      {
+        "when": "i2=1",
+        "include": ["termbase"],
+        "uriTemplate": "http://id.loc.gov/authorities/childrensSubjects/{prefLabel}"
+      },
+
+      {
+        "when": {
+          "onRevert": {"inScheme": {"code": "lcsh"}},
+          "then": {"ind2": "0"}
+        },
+        "include": ["termbase"]
+      },
+      {
+        "when": {
+          "onRevert": {"inScheme": {"code": "lcshac"}},
+          "then": {"ind2": "1"}
+        },
+        "include": ["termbase"]
+      },
+      {
+        "when": {
+          "onRevert": {"inScheme": {"code": "mesh"}},
+          "then": {"ind2": "2"}
+        },
+        "include": ["termbase"],
+        "TODO:uriTemplate": "https://id.nlm.nih.gov/mesh/{prefLabel}",
+        "NOTE": "beta sparql endpoint. Do not use yet (labels don't match)..."
+      },
+      {
+        "when": {
+          "onRevert": {"inScheme": {"code": "nal"}},
+          "then": {"ind2": "3"}
+        },
+        "include": ["termbase"]
+      },
+      {
+        "when": {
+          "onRevert": {"inScheme": {"code": "csh"}},
+          "then": {"ind2": "5"}
+        },
+        "include": ["termbase"]
+      },
+      {
+        "when": {
+          "onRevert": {"inScheme": {"code": "rvm"}},
+          "then": {"ind2": "6"}
+        },
+        "include": ["termbase"]
+      },
+      {
+        "when": "i2=7 & $2 =~ .+",
+        "include": ["termbase"]
+      },
+      {
+        "when": null,
+        "include": ["termbase"]
+      }
+    ]
+  },
+
+  "subjectbaseSansUri": {
+    "include": ["termbase_with_uri_from_i2"],
+    "i2": {
+      "link": "inScheme",
+      "resourceType": "ConceptScheme",
+      "uriTemplate": "https://id.kb.se/term/{_}",
+      "property": "code",
+      "tokenMap": "thesaurus",
+      "marcDefault": "4",
+      "definedElsewhereToken": "7"
+    },
+    "$2": {
+      "requires-i2": "7",
+      "link": "inScheme",
+      "uriTemplate": "https://id.kb.se/term/{_}",
+      "resourceType": "ConceptScheme",
+      "property": "code"
+    }
+  },
+
+  "subjectbase": {
+    "include": ["subjectbaseSansUri"],
+    "$0": {"addProperty": "marc:uri", "supplementary": true}
+  },
+
+  "worksubjectData": {
+    "include": ["subjectbase"],
+    "TODO:pendingResources": "overwrites e.g. 610[i1=1 & $t] ?",
+    "pendingResources": {
+      "_:work": {
+        "addLink": "termComponentList",
+        "resourceType": "Work",
+        "itemPos": "first",
+        "absorbSingle": true
+      },
+      "_:title": {
+        "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+        "embedded": true
+      },
+      "_:contribution": {
+        "about": "_:work",
+        "addLink": "contribution", "NOTE:marc-repeatable": false, "resourceType": "Contribution"
+      },
+      "_:agent": {
+        "about": "_:contribution", "link": "agent", "resourceType": "Person",
+        "required": true
+      }
+    },
+    "$t": {
+      "about": "_:title", "property": "mainTitle"
+    }
+  },
+
+  "worksubjectSansPartNumber": {
+    "include": ["worksubjectData", "titledetailsSansPartNumber"]
+  },
+
+  "worksubject": {
+    "include": ["worksubjectData", "titledetails"]
+  },
+
+  "inseries": {
+    "addLink": "seriesMembership",
+    "resourceType": "SeriesMembership",
+    "FIXME:embedded:whenGroupIdsAreStrippedFromEmbedded": true,
+    "pendingResources": {
+      "_:seriesinstance": {
+        "groupId": "#seriesinstance-$seq",
+        "link": "inSeries",
+        "resourceType": "Instance"
+      },
+      "_:work": {
+        "about": "_:seriesinstance",
+        "link": "instanceOf",
+        "resourceType": "Work"
+      },
+      "_:title": {
+        "about": "_:work", "addLink": "hasTitle", "resourceType": "Title",
+        "embedded": true
+      }
+    },
+    "$v": {"property": "seriesEnumeration", "leadingPunctuation": " ;"},
+    "$x": {"about": "_:seriesinstance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "punctuationChars": ".,=;", "leadingPunctuation": ","}
+  },
+
+  "inseries_with_w": {
+    "include": ["inseries"],
+    "$w": {
+      "about": "_:seriesinstance",
+      "addLink": "describedBy",
+      "resourceType": "Record",
+      "property": "controlNumber",
+      "uriTemplate": "http://libris.kb.se/bib/{_}",
+      "matchUriToken": "^\\d{1,14}$"
+    }
+  },
+
+  "hasSeriesInstance": {
+    "include": ["inseries"],
+    "pendingResources": {
+      "_:contribution": {
+        "about": "_:work",
+        "addLink": "contribution",
+        "resourceType": "PrimaryContribution",
+        "embedded": true
+      }
+    },
+    "$t": {"about": "_:title", "property": "mainTitle"},
+    "$0": {"about": "_:work", "addProperty": "marc:uri"},
+    "$6": {"property": "marc:fieldref"},
+    "$8": {"property": "marc:groupid"}
+  },
+
+  "relation_from_w": {
+    "computeLinks": {"use": "$w", "mapping": {"g": "broader", "h": "narrower", "*": "related"}}
+  },
+
+  "referencedObjectDetails": {
+    "pendingResources": {
+      "_:work": {
+        "about": "_:instance",
+        "link": "instanceOf",
+        "resourceType": "Work"
+      },
+      "_:contribution": {
+        "about": "_:work",
+        "addLink": "contribution",
+        "resourceType": "PrimaryContribution",
+        "embedded": true
+      },
+      "_:agent": {
+        "about": "_:contribution",
+        "link": "agent",
+        "resourceType": "Agent"
+      },
+      "_:workTitle": {
+        "about": "_:work",
+        "addLink": "hasTitle",
+        "resourceType": "Title"
+      },
+      "_:title": {
+        "about": "_:instance",
+        "addLink": "hasTitle", "resourceType": "Title",
+        "allowedTypesOnRevert": ["KeyTitle", "Title"],
+        "embedded": true
+      },
+      "_:describedBy": {
+        "NOTE": "If not possible to link, LinkFinder will change it to a Local identifiedBy property",
+        "about": "_:instance",
+        "addLink": "describedBy", "infer": true,
+        "resourceType": "Record"
+      }
+    },
+    "i1": {
+      "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.16",
+      "marcDefault": "0"
+    },
+    "$a": {
+      "about": "_:agent",
+      "property": "label",
+      "splitValueProperties": ["familyName", "givenName"],
+      "rejoin": ", ",
+      "infer": true,
+      "TODO:targetMatch": "1xx"
+    },
+    "$b": {"about": "_:instance", "property": "editionStatement", "ignoreOnRevert": true, "TODO:targetMatch": "250"},
+    "$d": {"about": "_:instance", "property": "provisionActivityStatement", "TODO:targetMatch": "260$c"},
+    "$h": {"about": "_:instance", "addLink": "extent", "resourceType": "Extent", "property": "label", "ignoreOnRevert": true, "NOTE:marc-repeatable": false},
+    "$m": {"about": "_:instance", "property": "marc:materialSpecificDetails"},
+    "$n": {"about": "_:instance", "addLink": "hasNote", "resourceType": "Note", "property": "label",  "ignoreOnRevert": true},
+    "$o": {"NOTE:subfield-count (Libris)": 0, "NOTE": "Cannot ignore this field since we import Mimer data with $o (We have lost $o data between 1.14.0 and 1.15.0). See LXL-1517"},
+    "$s": {"about": "_:workTitle", "property": "mainTitle", "TODO:targetMatch": "240"},
+    "$t": {
+      "about": "_:title",
+      "property": "mainTitle",
+      "onRevertAppendValueFrom": "qualifier"
+    },
+    "$x": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "ISSN", "property": "value", "TODO:targetMatch": "022"},
+    "$y": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "CODEN", "property": "value", "TODO:targetMatch": "030"},
+    "$w": {"aboutNew": "_:describedBy", "property": "controlNumber"},
+    "TODO:$4": "Check occurrences; do we need to map this subfield or just drop it (ignored=true)?",
+    "$6": {"ignored": true, "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.16"},
+    "$7": {"ignored": true, "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.16"},
+    "$8": {"ignored": true, "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.16"},
+    "$9": {"ignored": true, "NOTE": "After using inventory and no contradictions from local libraries, it has been decided to remove this property with release 1.16"},
+    "subfieldOrder": "6 7 i a s t b c d h g k ... x z w 4 8 9"
+  },
+
+  "serialSpecificDetails": {
+    "$k": {"about": "_:instance", "addProperty": "seriesStatement", "TODO:targetMatch": "4xx, 8xx"},
+    "$r": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "ReportNumber", "property": "value", "TODO:targetMatch": "088"},
+    "$u": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "STRN", "property": "value", "TODO:targetMatch": "027"},
+    "$z": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "ISBN", "property": "value", "TODO:targetMatch": "020"}
+  },
+
+  "referencedObjectDetailsWithPart": {
+    "include": ["referencedObjectDetails"],
+    "$g": {"about": "_:instance", "addProperty": "part"}
+  },
+
+  "referenceToInstance": {
+    "include": ["referencedObjectDetailsWithPart", "instanceTitleQualifier", "serialSpecificDetails", "instanceDisplayText"]
+  },
+
+  "referenceToInstanceSansDisplayText": {
+    "include": ["referencedObjectDetails", "instanceTitleQualifier", "serialSpecificDetails"],
+    "$g": {"aboutEntity": "?thing", "addProperty": "part"}
+  },
+
+  "referenceToSeriesInstance": {
+    "include": ["referencedObjectDetailsWithPart", "instanceDisplayText"],
+    "TODO": "Deviates from 'referenceToInstance' - $c should be related to $t (not $s)",
+    "NOTE": "For now, continue to map $c together with $s - applies to bib 760 and 762",
+    "$c": {"about": "_:workTitle", "property": "qualifier", "ignoreOnRevert": true, "NOTE:marc-repeatable": false}
+  },
+
+  "instanceOfObject": {
+    "pendingResources": {
+      "_:work": {
+        "about": "_:instance",
+        "link": "instanceOf",
+        "resourceType": "Work"
+      }
+    }
+  },
+
+  "instanceDisplayText": {
+    "TODO:?$i": {"addLink": "relationship", "resourceType": "Relationship", "property": "label"},
+    "$i": {"about": "_:instance", "addProperty": "marc:displayText"}
+  },
+
+  "instanceTitleQualifier": {
+    "$c": {"about": "_:title", "property": "qualifier", "ignoreOnRevert": true, "NOTE:marc-repeatable": false}
+  },
+
+  "onRevertInd2": {
+    "match": [
+      {
+        "when": {
+          "onRevert": {"marc:displayText": []},
+          "then": {"ind2": "8"}
+        }
+      }
+    ]
+  }
+
+}

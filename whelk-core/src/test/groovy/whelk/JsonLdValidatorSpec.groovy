@@ -100,4 +100,36 @@ class JsonLdValidatorSpec extends Specification {
         then:
         assert errors.any {it.type == JsonLdValidator.Error.Type.MISSING_DEFINITION}
     }
+
+    def "@id with valid IRI should pass validation"() {
+        given:
+        def validator = setupValidator()
+        def errors = validator.validate(["@graph": [["@id": id]]])
+
+        expect:
+        assert errors.isEmpty()
+
+        where:
+        id << [
+                "https://id.kb.se/term/sao/Marsvin%20som%20s%C3%A4llskapsdjur",
+                "https://ja.wikipedia.org/wiki/モルモット",
+                "//foo"
+        ]
+    }
+
+    def "@id with invalid IRI should not pass validation"() {
+        given:
+        def validator = setupValidator()
+        def errors = validator.validate(["@graph": [["@id": id]]])
+
+        expect:
+        assert errors.any {it.type == JsonLdValidator.Error.Type.INVALID_IRI}
+
+        where:
+        id << [
+                "\"https://libris.kb.se/library/DIGI\"",
+                "https://example.com/ bar",
+                "[sfsdfsdf]",
+        ]
+    }
 }

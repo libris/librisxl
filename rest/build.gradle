@@ -1,6 +1,6 @@
 apply plugin: 'groovy'
 apply plugin: 'war'
-//apply plugin: 'jacoco'
+apply plugin: 'jacoco'
 apply from: '../gretty.plugin'
 
 def getGitVersion() {
@@ -14,8 +14,6 @@ def getGitVersion() {
 
 def version = getGitVersion()
 
-archivesBaseName = "whelk"
-
 sourceSets {
     main {
         java { srcDirs = [] }
@@ -28,21 +26,19 @@ sourceSets {
 
 test {
     useJUnitPlatform()
-    /*
     jacoco {
         destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
         classDumpDir = file("$buildDir/jacoco/classpathdumps")
     }
-    */
 }
 
 test.testLogging {
     showStandardStreams = true
     exceptionFormat = "full"
 }
-/*
+
 jacoco {
-    toolVersion = "0.7.6.201602180812"
+    toolVersion = "$jacocoVersion"
     reportsDirectory = file("$buildDir/coverage_report")
 }
 
@@ -53,7 +49,7 @@ jacocoTestReport {
         html.destination file("${buildDir}/coverage_report/html")
     }
 }
-*/
+
 repositories {
     mavenCentral()
     maven { url "https://jitpack.io/" }
@@ -79,15 +75,10 @@ dependencies {
     implementation "org.codehaus.groovy:groovy-dateutil:${groovyVersion}"
     implementation 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
     implementation 'commons-io:commons-io:2.11.0'
-    implementation "com.google.guava:guava:16.0.1"
+    implementation "com.google.guava:guava:${guavaVersion}"
     implementation "org.apache.httpcomponents:httpclient:${httpComponentsClientVersion}"
     implementation "org.apache.httpcomponents:httpcore:${httpComponentsCoreVersion}"
-
-    // Integration
-    /* Not needed?
-    compile 'com.thoughtworks.paranamer:paranamer:2.7'
-    compile 'asm:asm:3.3.1'
-    */
+    
     // Standalone
     implementation "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
     implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
@@ -144,7 +135,6 @@ project.afterEvaluate {
 }
 
 gretty {
-    //jacocoEnabled false // https://github.com/akhikhl/gretty/issues/425
     httpPort = 8180
     contextPath = '/'
     systemProperties = ['xl.secret.properties': System.getProperty("xl.secret.properties")]

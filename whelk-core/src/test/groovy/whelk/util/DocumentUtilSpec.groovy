@@ -5,6 +5,7 @@ import whelk.util.DocumentUtil.Remove
 import whelk.util.DocumentUtil.Replace
 
 import static whelk.util.DocumentUtil.NOP
+import static whelk.util.DocumentUtil.getAtPath
 
 class DocumentUtilSpec extends Specification {
 
@@ -95,7 +96,7 @@ class DocumentUtilSpec extends Specification {
         def values = []
         DocumentUtil.findKey(data, 'a', { value, path ->
             values << value
-            visited << path
+            visited << path.collect()
             return NOP
         })
 
@@ -124,7 +125,7 @@ class DocumentUtilSpec extends Specification {
         def values = []
         DocumentUtil.findKey(data, ['a', 's', 'q'], { value, path ->
             values << value
-            visited << path
+            visited << path.collect()
             return NOP
         })
 
@@ -197,5 +198,61 @@ class DocumentUtilSpec extends Specification {
                 [key: ['@id': 's']],
                 [key: [['@id': 8], ['@id': 9]]]
         ]
+    }
+    
+    def "get at path"() {
+        given:
+        def data = [
+                a:  [ 
+                        [b: [
+                                [x: 1],
+                                [x: 2],
+                                [x: 3],
+                                [x: 4],
+                                [x: 5],
+                        ]],
+                        [b: [x: 88]],
+                        [b: 'str'],
+                        [b: [x: 99]],
+                        [b: [
+                                [x: 6],
+                                [x: 7],
+                                [x: 8],
+                        ]],
+                        999
+                    ]
+                ]
+
+        expect:
+        getAtPath(data, path, defaultTo) == expected
+
+        where:
+        path                      | defaultTo || expected
+        ['b']                     | 'default' || 'default'
+        [1]                       | 'default' || 'default'
+        ['*']                     | 'default' || []
+        ['a', 4, 'b', 1, 'x']     | 'default' || 7
+        ['a', '*', 'b', 1, 'x']   | 'default' || [2, 7]
+        ['a', '*', 'b', 3, 'x']   | 'default' || [4]
+        ['a', '*', 'b', '*', 'x'] | 'default' || [1, 2, 3, 4, 5, 6, 7, 8]
+        ['a', '*', 'b', 'x']      | 'default' || [88, 99]
+        // maybe a bit counter-intuitive but using '*' flattens all lists
+        ['a', '*', 'b']           | 'default' || [[x: 1], [x: 2], [x: 3], [x: 4], [x: 5], [x: 88], 'str', [x: 99], [x: 6], [x: 7], [x: 8]]
+    }
+
+    def "get at empty path"() {
+        given:
+        def data = [a: [b: 1]]
+
+        expect:
+        getAtPath(data, []) == data
+    }
+
+    def "get at path default defaultTo"() {
+        given:
+        def data = [a: [b: 1]]
+
+        expect:
+        getAtPath(data, ['c']) == null
     }
 }

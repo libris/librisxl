@@ -24,11 +24,10 @@ class UserDataAPISpec extends Specification {
     HttpServletRequest request
     HttpServletResponse response
 
-    private static final Map ALICE_ATTR = [email: 'alice@example.com']
-    private static final String ALICE_HASH = "ff8d9819fc0e12bf0d24892e45987e249a28dce836a85cad60e28eaaa8c6d976"
-    private static final Map BOB_ATTR = [email: 'bob@example.com']
-    private static final String BOB_HASH = "5ff860bf1190596c7188ab851db691f0f3169c453936e9e1eba2f9a47f7a0018"
-
+    private static final Map ALICE_ATTR = [email: 'alice@example.com', id: 'alice']
+    private static final String ALICE_HASH = "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90"
+    private static final Map BOB_ATTR = [email: 'bob@example.com', id: 'bob']
+    
     void setup() {
         request = GroovyMock(HttpServletRequest.class)
         request.getRequestURI() >> {

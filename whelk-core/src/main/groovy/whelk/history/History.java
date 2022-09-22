@@ -52,41 +52,34 @@ public class History {
             Map versionLink = new HashMap();
             versionLink.put("@id", version.doc.getCompleteId() + "/data?version=" + i);
             changeSet.put("version", versionLink);
-            changeSet.put("addedPaths", new ArrayList<>());
-            changeSet.put("modifiedPaths", new ArrayList<>());
-            changeSet.put("removedPaths", new ArrayList<>());
+            changeSet.put("addedPaths", new HashSet<>());
+            changeSet.put("removedPaths", new HashSet<>());
             changeSet.put("agent", version.changedBy);
             List changeSets = (List) m_changeSetsMap.get("changeSets");
-            Map agent = new HashMap();
-            agent.put("@id", changedByToUri(version.changedBy));
-            changeSet.put("agent", agent);
+            changeSet.put("agent", getAgent(version));
+            changeSet.put("date", version.doc.getModified());
             if (wasScriptEdit(version)) {
                 changeSet.put("date", version.doc.getGenerationDate());
                 Map tool = new HashMap();
                 tool.put("@id", "https://id.kb.se/generator/globalchanges");
                 changeSet.put("tool", tool);
-            } else if (version.changedIn.equals("APIX")) {
-                changeSet.put("date", version.doc.getModified());
+            } else if ("APIX".equals(version.changedIn)) {
                 Map tool = new HashMap();
                 tool.put("@id", "https://id.kb.se/generator/apix");
                 changeSet.put("tool", tool);
-            } else if (version.changedIn.equals("batch import")) {
-                changeSet.put("date", version.doc.getModified());
+            } else if ("batch import".equals(version.changedIn)) {
                 Map tool = new HashMap();
                 tool.put("@id", "https://id.kb.se/generator/batchimport");
                 changeSet.put("tool", tool);
-            } else if (version.changedIn.equals("vcopy")) {
-                changeSet.put("date", version.doc.getModified());
+            } else if ("vcopy".equals(version.changedIn)) {
                 Map tool = new HashMap();
                 tool.put("@id", "https://id.kb.se/generator/voyager");
                 changeSet.put("tool", tool);
-            } else if (version.changedBy.equals("WhelkCopier")) {
-                changeSet.put("date", version.doc.getModified());
+            } else if ("WhelkCopier".equals(version.changedBy)) {
                 Map tool = new HashMap();
                 tool.put("@id", "https://id.kb.se/generator/whelkcopier");
                 changeSet.put("tool", tool);
-            } else if (version.changedIn.equals("xl")) { // Must be last in list!
-                changeSet.put("date", version.doc.getModified());
+            } else if ("xl".equals(version.changedIn)) { // Must be last in list!
                 Map tool = new HashMap();
                 tool.put("@id", "https://id.kb.se/generator/crud");
                 changeSet.put("tool", tool);
@@ -95,14 +88,43 @@ public class History {
 
             addVersion(version, changeSet);
 
+            // Clean up markers that have a more specific equivalent
+            {
+                HashSet added = (HashSet) changeSet.get("addedPaths");
+                HashSet removed = (HashSet) changeSet.get("removedPaths");
+                List allMarkers = new ArrayList( added );
+                allMarkers.addAll( removed );
+
+                List<HashSet> allLists = List.of(added, removed);
+                for (HashSet set : allLists) {
+                    Iterator markerPathIt = set.iterator();
+                    while (markerPathIt.hasNext()) {
+                        List<Object> path = (List<Object>) markerPathIt.next();
+                        for (Object o : allMarkers) {
+                            List<Object> otherPath = (List<Object>) o;
+                            if (!path.equals(otherPath) && isSubList(path, otherPath)) {
+                                markerPathIt.remove();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
             // Clean up empty fields
-            if ( ((List) changeSet.get("addedPaths")).isEmpty() )
+            if ( ((HashSet) changeSet.get("addedPaths")).isEmpty() )
                 changeSet.remove("addedPaths");
-            if ( ((List) changeSet.get("removedPaths")).isEmpty() )
+            if ( ((HashSet) changeSet.get("removedPaths")).isEmpty() )
                 changeSet.remove("removedPaths");
-            if ( ((List) changeSet.get("modifiedPaths")).isEmpty() )
-                changeSet.remove("modifiedPaths");
         }
+    }
+    
+    private boolean isSubList(List a, List b) {
+        if (a.size() > b.size())
+            return false;
+        if (b.subList(0, a.size()).equals(a))
+            return true;
+        return false;
     }
 
     public void addVersion(DocumentVersion version, Map changeSetToBuild) {
@@ -196,7 +218,7 @@ public class History {
                     newPath.add(key);
                     setOwnership(newPath, compositePath, version);
 
-                    ((List) changeSet.get("addedPaths")).add(newPath);
+                    ((HashSet) changeSet.get("addedPaths")).add(newPath);
                 }
             }
 
@@ -213,7 +235,7 @@ public class History {
                     // The actual thing being removed however no longer exists and can be owned by no-one.
                     clearOwnership(removedPath);
 
-                    ((List) changeSet.get("removedPaths")).add(removedPath);
+                    ((HashSet) changeSet.get("removedPaths")).add(removedPath);
                 }
             }
         }
@@ -221,7 +243,8 @@ public class History {
         if (examining instanceof List) {
             if (! (correspondingPrevious instanceof List) ) {
                 setOwnership(path, compositePath, version);
-                ((List) changeSet.get("modifiedPaths")).add(path);
+                ((HashSet) changeSet.get("addedPaths")).add(path);
+                ((HashSet) changeSet.get("removedPaths")).add(path);
                 return;
             }
         }
@@ -230,7 +253,8 @@ public class History {
                 examining instanceof Float || examining instanceof Boolean) {
             if (!examining.equals(correspondingPrevious)) {
                 setOwnership(path, compositePath, version);
-                ((List) changeSet.get("modifiedPaths")).add(path);
+                ((HashSet) changeSet.get("addedPaths")).add(path);
+                ((HashSet) changeSet.get("removedPaths")).add(path);
                 return;
             }
         }
@@ -246,25 +270,69 @@ public class History {
             // _following_ element being compared with the wrong element in the other list.
             List tempNew = new LinkedList((List) examining);
             List tempOld = new LinkedList((List) correspondingPrevious);
+            Map<Integer, Integer> newToOldListIndices = new HashMap<>(); // What used to be at index x (in examining) is now at index y (in tempNew).
+            int originalIndex = 0;
             for (int i = 0; i < tempNew.size(); ++i) {
+                boolean hasEqual = false;
                 for (int j = 0; j < tempOld.size(); ++j) {
                     if (tempNew.get(i).equals(tempOld.get(j))) { // Equals will recursively check the entire subtree!
                         tempNew.remove(i);
                         tempOld.remove(j);
                         --i;
                         --j;
+                        hasEqual = true;
                         break;
                     }
                 }
+
+                if (!hasEqual) {
+                    newToOldListIndices.put(i, originalIndex);
+                }
+                ++originalIndex;
             }
 
-            if (!tempNew.isEmpty() || !tempOld.isEmpty())
-                ((List) changeSet.get("modifiedPaths")).add(path);
+            // skip list equality on @graph,x. Otherwise you always get add+delete on @graph,1 if
+            // anything changed in there, and the @graph list has semantic meaning attached to the
+            // indexes.
+            if (path.size() > 1) {
+
+                // Find new elements that weren't there before
+                Iterator newIt = tempNew.iterator();
+                while (newIt.hasNext()) {
+                    Object obj = newIt.next();
+                    List list = (List) examining;
+                    for (int i = 0; i < list.size(); ++i) {
+
+                        if (obj == list.get(i)) { // pointer identity is intentional
+                            List<Object> newPath = new ArrayList<>(path);
+                            newPath.add(i);
+                            ((HashSet) changeSet.get("addedPaths")).add(newPath);
+                            newIt.remove(); // We know this is a new element, no need to check it for further diffs
+                        }
+                    }
+                }
+                // Find removed elements that are no longer there
+                Iterator oldIt = tempOld.iterator();
+                while (oldIt.hasNext()) {
+                    Object obj = oldIt.next();
+                    List list = (List) correspondingPrevious;
+                    for (int i = 0; i < list.size(); ++i) {
+
+                        if (obj == list.get(i)) { // pointer identity is intentional
+                            List<Object> newPath = new ArrayList<>(path);
+                            newPath.add(i);
+                            ((HashSet) changeSet.get("removedPaths")).add(newPath);
+                            oldIt.remove(); // We know this is a removed element, no need to check it for further diffs
+                        }
+                    }
+                }
+
+            }
 
             for (int i = 0; i < tempNew.size(); ++i) {
                 List<Object> childPath = new ArrayList(path);
                 if ( tempOld.size() > i ) {
-                    childPath.add(Integer.valueOf(i));
+                    childPath.add(Integer.valueOf(newToOldListIndices.get(i)));
                     examineDiff(childPath, version,
                             tempNew.get(i), tempOld.get(i),
                             compositePath, changeSet);
@@ -308,11 +376,25 @@ public class History {
         }
     }
 
+    private static Map getAgent(DocumentVersion version) {
+        Map agent = new HashMap();
+        String uri = changedByToUri(version.changedBy);
+
+        // Seems like there was a bug at some point where changedBy wasn't updated correctly by WhelkTool.
+        // Consecutive versions have the same changedBy, generationProcess contains the correct value.
+        if (uri.contains("sys/globalchanges") && !uri.equals(version.doc.getGenerationProcess())) {
+            uri = version.doc.getGenerationProcess();
+        }
+
+        agent.put("@id", uri);
+        return agent;
+    }
+    
     /**
      * What was put into the changedBy column has varied a bit over XLs history. This
      * tries to make sense of the different variants.
      */
-    private String changedByToUri(String changedBy) {
+    private static String changedByToUri(String changedBy) {
         if (changedBy == null)
             return "https://libris.kb.se/library/SEK";
         if (changedBy.startsWith("http"))
