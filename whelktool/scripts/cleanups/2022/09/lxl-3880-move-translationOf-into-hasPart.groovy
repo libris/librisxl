@@ -15,7 +15,7 @@
  *
  *  Unlink any linked part in hasPart.
  *
- *  Remove work.translationOf after it's been copied to hasPart.
+ *  Remove work.translationOf after it's been copied to hasPart if there is no instanceOf.hasTitle.
  *
  */
 
@@ -97,7 +97,9 @@ selectBySqlWhere(where) { bib ->
         p[TRANSLATION_OF] = translationOf
     }
 
-    work.remove(TRANSLATION_OF)
+    if (!work[HAS_TITLE]) {
+        work.remove(TRANSLATION_OF)
+    }
 
     bib.scheduleSave()
 }
