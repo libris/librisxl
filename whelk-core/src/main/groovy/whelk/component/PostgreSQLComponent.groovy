@@ -826,12 +826,12 @@ class PostgreSQLComponent {
         }
     }
 
-    Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum) {
+    Document storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, String oldChecksum) {
         return withDbConnection {
             Connection connection = getMyConnection()
             connection.setAutoCommit(false)
             List<Runnable> postCommitActions = []
-            Document result = storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum, connection, postCommitActions)
+            Document result = storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, changedIn, changedBy, oldChecksum, connection, postCommitActions)
             connection.commit()
             connection.setAutoCommit(true)
             postCommitActions.each { it.run() }
@@ -839,14 +839,14 @@ class PostgreSQLComponent {
         }
     }
 
-    Document storeUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent) {
+    Document storeUpdate(String id, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, UpdateAgent updateAgent) {
         int retriesLeft = STALE_UPDATE_RETRIES
         while (true) {
             try {
                 Document doc = load(id)
                 String checksum = doc.getChecksum(jsonld)
                 updateAgent.update(doc)
-                Document updated = storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, checksum)
+                Document updated = storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, changedIn, changedBy, checksum)
                 return updated
             }
             catch (StaleUpdateException e) {
@@ -861,7 +861,7 @@ class PostgreSQLComponent {
         }
     }
 
-    Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy,
+    Document storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy,
                                        String oldChecksum, Connection connection, List<Runnable> postCommitActions) {
         String id = doc.shortId
         log.debug("Saving (atomic update) ${id}")
@@ -888,6 +888,10 @@ class PostgreSQLComponent {
                 changedBy = oldChangedBy
 
             normalizeDocumentForStorage(doc, connection)
+
+            if (!writeIdenticalVersions && preUpdateDoc.getChecksum(jsonld).equals(doc.getChecksum(jsonld))) {
+                throw new CancelUpdateException()
+            }
             
             boolean deleted = doc.getDeleted()
             
@@ -953,7 +957,7 @@ class PostgreSQLComponent {
                 SortedSet<String> idsLinkingToOldId = getDependencyData(id, GET_DEPENDERS, connection)
                 for (String dependerId : idsLinkingToOldId) {
                     Document depender = load(dependerId)
-                    storeAtomicUpdate(depender, true, changedIn, changedBy, depender.getChecksum(jsonld), connection, postCommitActions)
+                    storeAtomicUpdate(depender, true, false, changedIn, changedBy, depender.getChecksum(jsonld), connection, postCommitActions)
                 }
             }
 
@@ -2508,7 +2512,7 @@ class PostgreSQLComponent {
 
             log.debug("Marking document with ID ${identifier} as deleted.")
             try {
-                storeUpdate(identifier, false, changedIn, changedBy,
+                storeUpdate(identifier, false, true, changedIn, changedBy,
                     { Document doc ->
                         doc.setDeleted(true)
                         // Add a tombstone marker (without removing anything) perhaps?
