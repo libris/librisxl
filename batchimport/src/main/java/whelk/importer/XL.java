@@ -139,13 +139,8 @@ class XL
                             + existing.getDataAsString());
                 }
                 else {
-                    m_whelk.storeAtomicUpdate(idToMerge, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(), (Document existing) -> {
-                        String existingChecksum = existing.getChecksum(m_whelk.getJsonld());
+                    m_whelk.storeAtomicUpdate(idToMerge, false, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(), (Document existing) -> {
                         m_merge.merge(existing, incoming, m_parameters.getChangedBy(), m_whelk);
-                        String modifiedChecksum = existing.getChecksum(m_whelk.getJsonld());
-                        // Avoid writing an identical version
-                        if (modifiedChecksum.equals(existingChecksum))
-                            throw new CancelUpdateException();
                     });
                 }
 
@@ -228,10 +223,9 @@ class XL
             {
                 try
                 {
-                    m_whelk.storeAtomicUpdate(replaceSystemId, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(),
+                    m_whelk.storeAtomicUpdate(replaceSystemId, false, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(),
                             (Document doc) ->
                     {
-                        String existingChecksum = doc.getChecksum(m_whelk.getJsonld());
                         String existingEncodingLevel = doc.getEncodingLevel();
                         String newEncodingLevel = rdfDoc.getEncodingLevel();
 
@@ -261,11 +255,6 @@ class XL
                             doc.addTypedRecordIdentifier("SystemNumber", systemNumber);
                         if (controlNumber != null)
                             doc.setControlNumber(controlNumber);
-
-                        // Avoid writing an identical version
-                        String modifiedChecksum = doc.getChecksum(m_whelk.getJsonld());
-                        if (modifiedChecksum.equals(existingChecksum))
-                            throw new CancelUpdateException();
                     });
                 }
                 catch (TooHighEncodingLevelException e)
