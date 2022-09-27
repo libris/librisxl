@@ -10,8 +10,16 @@ import static whelk.util.DocumentUtil.findKey
 def LANGUAGES = [
         'https://id.kb.se/language/9ft',
         'https://id.kb.se/language/9mk',
-        // 'https://id.kb.se/language/9sj',
-        // 'https://id.kb.se/language/9su'
+        'https://id.kb.se/language/9sj',
+        'https://id.kb.se/language/9su',
+        'https://id.kb.se/language/9ar',
+        'https://id.kb.se/language/9ke',
+        'https://id.kb.se/language/9kd',
+        'https://id.kb.se/language/9lo',
+        'https://id.kb.se/language/9sr',
+        'https://id.kb.se/language/9kv',
+        'https://id.kb.se/language/9ki',
+        'https://id.kb.se/language/9te'
 ]
 
 ConcurrentLinkedQueue<String> q = new ConcurrentLinkedQueue<>()
