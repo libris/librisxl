@@ -63,51 +63,70 @@ String where = """
 
 selectBySqlWhere(where) { data ->
     //String initial = data.doc.getDataAsString()
-
-    boolean changed = false;
-    data.graph[1].instanceOf?.contribution?.forEach { contribution ->
-        def agent = contribution.agent
-        if (agent != null && asList(agent["@id"])[0] != null) {
-            def agentUri = asList(agent["@id"])[0]
-
-            String agentSystemId = agentUri.substring(agentUri.lastIndexOf("/")+1, agentUri.length()-3) // Trim off base uri and "#it"
-            if (badAuthIDs.contains(agentSystemId)) {
-                selectByIds([agentUri]) { linkedAgent ->
-
-                    // Is the agent "source consulted" by this particular instance ?
-                    List titles = asList(data.graph[1]?.hasTitle).collect {
-                        it?.mainTitle
-                    }
-                    boolean linkIsSourceConsulted = false
-                    asList(linkedAgent.graph[0]?.sourceConsulted).forEach { sc ->
-                        for (String title : titles) {
-                            if (sc?.label.contains(title))
-                                linkIsSourceConsulted = true
-                        }
-                    }
-
-                    // Otherwise replace the linked agent with just a local entity with name
-                    if (!linkIsSourceConsulted) {
-                        contribution.remove("agent")
-                        contribution.put("agent", [:])
-                        for (property in ["@type", "familyName", "givenName"]) {
-                            if (linkedAgent.graph[1][property] != null)
-                                contribution.agent.put(property, linkedAgent.graph[1][property])
-                        }
-                        changed = true
-                    }
-                }
-            }
-        }
+    List titles = asList(data.graph[1]?.hasTitle).collect {
+        it?.mainTitle
     }
 
-    if (data.graph[1].instanceOf?.contribution != null && data.graph[1].instanceOf?.contribution.isEmpty())
-        data.graph[1].instanceOf.remove("contribution")
-
+    boolean changed = fixAllElements(data.graph, badAuthIDs, titles)
     if (changed) {
         //System.err.println("result:\n" +initial + "\nchanged into:\n"+ data.doc.getDataAsString() + "\n\n")
         data.scheduleSave()
     }
+}
+
+private boolean fixAllElements(element, badAuthIDs, titles) {
+    boolean changed = false
+
+    if (element instanceof List) {
+        element.forEach { listMember ->
+            changed |= fixAllElements(listMember, badAuthIDs, titles)
+        }
+    } else if (element instanceof Map) {
+        changed |= fixElement(element, badAuthIDs, titles)
+        element.keySet().forEach { key ->
+            changed |= fixAllElements(element[key], badAuthIDs, titles)
+        }
+    }
+
+    return changed
+}
+
+private boolean fixElement(Map element, badAuthIDs, titles) {
+    if (element == null ||
+            element["@id"] == null ||
+            asList(element["@id"])[0] == null ||
+            !asList(element["@id"])[0].endsWith("#it") ||
+            element.keySet().size() != 1)
+        return false
+
+    boolean changed = false
+    def linkedUri = element["@id"]
+
+    String agentSystemId = linkedUri.substring(linkedUri.lastIndexOf("/")+1, linkedUri.length()-3) // Trim off base uri and "#it"
+    if (badAuthIDs.contains(agentSystemId)) {
+        selectByIds([linkedUri]) { linkedAgent ->
+
+            // Is the instance "source consulted" by this particular agent ?
+            boolean linkIsSourceConsulted = false
+            asList(linkedAgent.graph[0]?.sourceConsulted).forEach { sc ->
+                for (String title : titles) {
+                    if (sc?.label.contains(title))
+                        linkIsSourceConsulted = true
+                }
+            }
+
+            // Otherwise replace the linked agent with just a local entity with name
+            if (!linkIsSourceConsulted) {
+                element.clear()
+                for (property in ["@type", "familyName", "givenName"]) {
+                    if (linkedAgent.graph[1][property] != null)
+                        element.put(property, linkedAgent.graph[1][property])
+                }
+                changed = true
+            }
+        }
+    }
+    return changed
 }
 
 private List asList(Object o) {
