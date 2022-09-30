@@ -224,6 +224,10 @@ class ReproductionService {
             electronicThing.hasTitle = physicalThing.hasTitle
         }
         
+        if (physicalThing.issuanceType && !electronicThing.issuanceType) {
+            electronicThing.issuanceType = physicalThing.issuanceType
+        }
+        
         if (isOnline(electronicThing)) {
             electronicThing.carrierType = asSet(electronicThing.carrierType) << ONLINE
         }
