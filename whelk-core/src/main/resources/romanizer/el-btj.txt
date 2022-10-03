@@ -1,0 +1,304 @@
+# ICU transform rules
+
+# Modern greek
+# "Transkriberingsschema för nygrekisk skrift efter Bibliotekstjänsts förslag till praxis för folkbiblioteken"
+# https://metadatabyran.kb.se/download/18.6945cdaa174b74a2c36160a/1601918887752/Transkriberingsschema%20f%C3%B6r%20nygrekisk%20skrift.pdf
+# https://metadatabyran.kb.se/beskrivning/specialanvisningar/mangsprak/romaniseringsscheman
+
+:: NFD (NFC) ; # decompose to treat diacritics separately
+
+# ῾ (spiritus asper) och ̓ (spiritus lenis) återges ej.
+# spiritus asper ῾ U+0313 COMBINING COMMA ABOVE
+# spiritus lenis ̓  U+1FFE GREEK DASIA
+# Accenter återges ej.
+# List taken from: https://en.m.wikipedia.org/wiki/Greek_diacritics
+#  ́ U+0301 COMBINING ACUTE ACCENT
+# ´ U+00B4 ACUTE ACCENT
+# ` U+0060 GRAVE ACCENT
+# ᾿ U+1FBF GREEK PSILI
+# ῎ U+1FCE GREEK PSILI AND OXIA
+# ῍ U+1FCD GREEK PSILI AND VARIA
+# ῏ U+1FCF GREEK PSILI AND PERISPOMENI
+# ῾ U+1FFE GREEK DASIA
+# ῞ U+1FDE GREEK DASIA AND OXIA
+# ῝ U+1FDD GREEK DASIA AND VARIA
+# ῟ U+1FDF GREEK DASIA AND PERISPOMENI
+# ˉ U+02C9 MODIFIER LETTER MACRON
+# ˘ U+02D8 BREVE
+# ῀ U+1FC0 GREEK PERISPOMENI
+\u0313 > ;
+\u1FFE > ;
+\u0301 > ;
+\u00B4 > ;
+\u0060 > ;
+\u1FBF > ;
+\u1FCE > ;
+\u1FCD > ;
+\u1FCF > ;
+\u1FDE > ;
+\u1FDD > ;
+\u1FDF > ;
+\u02C9 > ;
+\u02D8 > ;
+\u1FC0 > ;
+
+# Keep dialytika/trema (written with diaeresis) since we handle them below. 
+# Remove diacritics combined with dialytika.
+# ¨ U+00A8 DIAERESIS
+# ΅ U+0385 GREEK DIALYTIKA TONOS
+# ῭ U+1FED GREEK DIALYTIKA AND VARIA
+# ῁ U+1FC1 GREEK DIALYTIKA AND PERISPOMENI
+\u0385 > \u00A8 ;
+\u1FED > \u00A8 ;
+\u1FC1 > \u00A8 ;
+ 
+:: NFC (NFD);
+
+$vowel = [α ε η ι ο ω υ Α Ε Η Ι Ο Ω Υ] ;
+
+# Trema ̈ över i-ljudet i diftongerna αϊ, εϊ, οϊ, αϋ, εϋ, οϋ, innebär att
+# vokalerna behåller sitt värde; transkriberas resp. ai, ei, oi, ai, ei, oi före
+# konsonant och aj etc. före vokal.
+ΑΪ } $vowel > AJ ;
+ΕΪ } $vowel > EJ ;
+ΟΪ } $vowel > OJ ;
+ΑΫ } $vowel > AI ;
+ΕΫ } $vowel > EI ;
+ΟΫ } $vowel > OJ ;
+ΑΪ > AI ;
+ΕΪ > EI ;
+ΟΪ > OI ;
+ΑΫ > AI ;
+ΕΫ > EI ;
+ΟΫ > OI ;
+
+Αϊ } $vowel > Aj ;
+Εϊ } $vowel > Ej ;
+Οϊ } $vowel > Oj ;
+Αϋ } $vowel > Ai ;
+Εϋ } $vowel > Ei ;
+Οϋ } $vowel > Oj ;
+Αϊ > Ai ;
+Εϊ > Ei ;
+Οϊ > Oi ;
+Αϋ > Ai ;
+Εϋ > Ei ;
+Οϋ > Oi ;
+
+αϊ } $vowel > aj ;
+εϊ } $vowel > ej ;
+οϊ } $vowel > oj ;
+αϋ } $vowel > ai ;
+εϋ } $vowel > ei ;
+οϋ } $vowel > oj ;
+αϊ > ai ;
+εϊ > ei ;
+οϊ > oi ;
+αϋ > ai ;
+εϋ > ei ;
+οϋ > oi ;
+
+# Α U+0391 GREEK CAPITAL LETTER ALPHA
+ΑΙ > E ;
+Αι > E ;
+αι > e ;
+
+# αυ
+# av före vokal eller β, γ, δ, ζ, λ, μ, ν, ρ
+# af före θ, κ, ξ, π, σ, τ, φ, χ, ψ
+ΑΥ } [Θ Κ Ξ Π Σ Τ Φ Χ Ψ θ κ ξ π σ τ φ χ ψ] > AF ;
+Αυ } [Θ Κ Ξ Π Σ Τ Φ Χ Ψ θ κ ξ π σ τ φ χ ψ] > Af ;
+αυ } [Θ Κ Ξ Π Σ Τ Φ Χ Ψ θ κ ξ π σ τ φ χ ψ] > af ;
+ΑΥ > AV ;
+Αυ > Av ;
+αυ > av ;
+
+Α > A ;
+α > a ;
+
+# Β U+392 GREEK CAPITAL LETTER BETA
+Β > V ; 
+β > v ;
+# B > V ; # TODO: hur vanligt är det att man har latinska B för beta i strängarna? 
+
+# γκ - g endast i början av ord samt inuti vissa låneord
+[:^Letter:] { ΓΚ > G ;
+[:^Letter:] { Γκ > G ;
+[:^Letter:] { γκ > g ;
+
+# γχ - nch
+ΓΧ > NCH ;
+Γχ > Nch ; # TODO: ta bort såna här osannolika?
+γχ > nch ;
+
+# γγ, γκ - ng
+ΓΓ > NG ;
+Γγ > Ng ;
+γγ > ng ;
+ΓΚ > NG ;
+Γκ > Ng ;
+γκ > ng ;
+
+# γι, γυ - j före vokal
+ΓΙ } $vowel > J ;
+Γι } $vowel > J ;
+γι } $vowel > j ;
+ΓΥ } $vowel > J ;
+Γυ } $vowel > J ;
+γυ } $vowel > j ;
+
+# Γ γ 
+# j före ε, ι, η, υ, αι, ει, οι
+# gh före α, ο, ω, ου samt konsonanterna utom γ, κ, χ
+ΓΑΙ > JE ;
+ΓΕΙ > JI ;
+ΓΟΙ > JI ;
+Γαι > Je ;
+Γει > Ji ;
+Γοι > Ji ;
+γαι > je ;
+γει > ji ;
+γοι > ji ;
+Γ } [Ε Ι Η Υ ε ι η υ] > J ;
+γ } [Ε Ι Η Υ ε ι η υ] > j ;
+Γ } [:LowercaseLetter:] > Gh ;
+Γ > GH ;
+γ > gh ;
+
+Δ } [:LowercaseLetter:] > Dh ;
+Δ > DH ;
+δ > dh ;
+
+# Ε U+0395 GREEK CAPITAL LETTER EPSILON
+ΕΙ > I ;
+Ει > I ;
+ει > i ;
+
+# ευ 
+# ev före vokal eller β, γ, δ, ζ, λ, μ, ν, ρ
+# ef före θ, κ, ξ, π, σ, τ, φ, χ, ψ
+ΕΥ } [Θ Κ Ξ Π Σ Τ Φ Χ Ψ θ κ ξ π σ τ φ χ ψ] > EF ;
+Ευ } [Θ Κ Ξ Π Σ Τ Φ Χ Ψ θ κ ξ π σ τ φ χ ψ] > Ef ;
+ευ } [Θ Κ Ξ Π Σ Τ Φ Χ Ψ θ κ ξ π σ τ φ χ ψ] > ef ;
+ΕΥ > EV ;
+Ευ > Ev ;
+ευ > ev ;
+
+Ε > E ;
+ε > e ;
+
+# Ζ U+0396 GREEK CAPITAL LETTER ZETA
+Ζ > Z ;
+ζ > z ;
+
+# Η U+0397 GREEK CAPITAL LETTER ETA
+Η > I ;
+η > i ;
+
+Θ } [:LowercaseLetter:] <> Th;
+Θ > TH ;
+θ > th ;
+
+# Ι U+0399 GREEK CAPITAL LETTER IOTA
+Ι > I ;
+ι > i ;
+# ϊ - j mellan två vokaler
+$vowel { Ϊ } $vowel > J ;
+$vowel { ϊ } $vowel > j ;
+Ϊ > I ;
+ϊ > j ;
+
+# Κ U+039A GREEK CAPITAL LETTER KAPPA
+Κ > K ;
+κ > k ;
+
+Λ > L ;
+λ > l ;
+
+# Μ U+039C GREEK CAPITAL LETTER MU
+# μπ 
+# b i början av ett ord samt inuti vissa låneord
+# mb inuti ord
+[:^Letter:] { ΜΠ > B ;
+[:^Letter:] { Μπ > B ;
+[:^Letter:] { μπ > b ;
+ΜΠ > MB ;
+Μπ > Mb ;  # shouldn't really happen inside word
+μπ > mb ;
+
+Μ > M ;
+μ > m ;
+
+# Ν U+039D GREEK CAPITAL LETTER NU
+# ντ 
+# d i början av ett ord samt inuti vissa låneord
+# nd inuti ord, nt i vissa låneord
+[:^Letter:] { ΝΤ > D ;
+[:^Letter:] { Ντ > D ;
+[:^Letter:] { ντ > d ;
+ΝΤ > ND ;
+Ντ > Nd ; # shouldn't really happen inside word
+ντ > nd ;
+
+Ν > N ;
+ν > n ;
+
+Ξ > X ; 
+ξ > x ;
+
+# Ο U+039F GREEK CAPITAL LETTER OMICRON
+# ο U+03BF GREEK SMALL LETTER OMICRON
+ΟΙ > I ;
+Οι > I ;
+οι > i ;
+ΟΥ > OU ;
+Ου > Ou ;
+ου > ou ;
+
+Ο > O ;
+ο > o ;
+
+Π > P ;
+π > p ;
+
+# Ρ U+03A1 GREEK CAPITAL LETTER RHO
+Ρ > R ;
+ρ > r ;
+
+Σ > S ;
+σ > s ;
+ς > s ;
+
+# Τ U+03A4 GREEK CAPITAL LETTER TAU
+Τ > T ;
+τ > t ;
+
+# Υ U+03A5 GREEK CAPITAL LETTER UPSILON
+# υ U+03C5 GREEK SMALL LETTER UPSILON
+# Ϋ U+03AB GREEK CAPITAL LETTER UPSILON WITH DIALYTIKA
+# ϋ U+03CB GREEK SMALL LETTER UPSILON WITH DIALYTIKA
+# ϋ - j mellan två vokaler
+$vowel { Ϋ } $vowel > J ;
+$vowel { ϋ } $vowel > j ;
+Ϋ > I ;
+ϋ > i ;
+Υ > I ;
+υ > i ;
+
+Φ > F ;
+φ > f ;
+
+# Χ U+03A7 GREEK CAPITAL LETTER CHI
+# χ U+03C7 GREEK SMALL LETTER CHI
+Χ } [:LowercaseLetter:] <> Ch;
+Χ > CH ;
+χ > ch ;
+
+Ψ > PS ;
+ψ > ps ;
+
+Ω > O ;
+ω > o ;
+
+# Frågetecken skrivs i nygrekisk skrift med semikolon (;) och återges som frågetecken (?)
+';' > '?';

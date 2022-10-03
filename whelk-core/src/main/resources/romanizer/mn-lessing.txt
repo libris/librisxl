@@ -1,5 +1,7 @@
 # ICU transform rules
-# Ferdinand Lessings schema för Mongoliska
+
+# Mongolian
+# "Ferdinand Lessings schema för Mongoliska"
 # https://metadatabyran.kb.se/download/18.6945cdaa174b74a2c361600/1601917488493/Mongoliska,%20Lessings%20transkription.pdf
 # https://metadatabyran.kb.se/beskrivning/specialanvisningar/mangsprak/romaniseringsscheman
 # "Extratecknen Ө, ө romaniseras som svenskt Ö, ö och extratecknen Ү, ү som svenskt Ü, ü."

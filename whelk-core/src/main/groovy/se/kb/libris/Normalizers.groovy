@@ -10,6 +10,8 @@ import whelk.filter.BlankNodeLinker
 import whelk.filter.LanguageLinker
 import whelk.util.DocumentUtil
 import whelk.util.DocumentUtil.Remove
+import whelk.util.Romanizer
+import whelk.util.Unicode
 
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
@@ -49,6 +51,24 @@ class Normalizers {
         return { Document doc ->
             linker.linkAll(doc.data, 'associatedLanguage')
             linker.linkAll(doc.data, 'language')
+        }
+    }
+    
+    static DocumentNormalizer romanizer(Whelk whelk) {
+        def langAliases = whelk.jsonld.langContainerAlias.values() as Set
+        
+        return { Document doc ->
+            traverse(doc.data, { value, path ->
+                if (value instanceof Map && path && path.last() instanceof String && path.last() in langAliases) {
+                    def byLang = value
+                    
+                    byLang.keySet()
+                            .intersect(Romanizer.romanizableLangTags())
+                            .collectEntries { langTag -> Romanizer.romanize((String) byLang[langTag], langTag) }
+                            .each { langTagT, stringT -> byLang.putIfAbsent(langTagT, stringT) }
+                }
+                DocumentUtil.NOP
+            })
         }
     }
 
