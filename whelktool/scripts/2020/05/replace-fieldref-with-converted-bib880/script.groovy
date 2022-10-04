@@ -42,6 +42,14 @@ AND collection = 'bib'
 /**/ { data ->
     whelk = data.whelk
     def (record, instance, work) = data.graph
+
+    work = work ?: instance.instanceOf
+    if (work.size() == 1 && work[ID]) {
+        // TODO: if this ever happens; process linked work here to handle the
+        // case where any 880:s in this instance refer to work details!
+        assert false, "Problem: work linked from ${instance[ID]} may need bib 880 data from instance!"
+    }
+
     Map bib880Map = asList(instance.remove(BIB880)).withIndex().collectEntries { map, i ->
         ["880-${i < 9 ? '0' : ''}${i + 1}" as String, map]
     }
