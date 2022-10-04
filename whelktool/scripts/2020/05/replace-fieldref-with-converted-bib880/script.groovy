@@ -119,10 +119,23 @@ boolean addAltLang(parent, existing, owner, data, lang, key = null) {
                 stats.increment('linked-auths', parent[ID])
                 return true
             }
-            // TODO: change to use this when added to our JSON-LD context:
-            //String keyByLang = whelk.jsonld.langContainerAlias[key]
-            String keyByLang = "${key}ByLang"
-            parent.get(keyByLang, [:])[lang] = data
+            String keyByLang = whelk.jsonld.langContainerAlias[key]
+            if (!keyByLang) {
+                // TODO: never fall back and just *drop* 880?
+                keyByLang = whelk.jsonld.langContainerAlias[key]
+            }
+
+            def byLang = parent.get(keyByLang, [:])
+
+            def destScript = "Lat" // Assumed!
+            def transLangTag = "$lang-$destScript-t-$lang"
+            // TODO:
+            // sysCode = sysCodByLang[lang]
+            // + "-$origScript-m0-$sysCode"
+            byLang[transLangTag] = parent[key] // TODO: parent.remove(key)
+
+            byLang[lang] = data
+
             stats.increment('used-keys', keyByLang)
             if (!whelk.jsonld.vocabIndex.containsKey(keyByLang)) {
                 stats.increment('unknown-keys', keyByLang)
