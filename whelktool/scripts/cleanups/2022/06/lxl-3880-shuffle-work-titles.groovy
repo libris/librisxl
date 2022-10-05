@@ -13,8 +13,10 @@
  *
  * If a move can't be executed due to unexpected data, the update won't be saved. The intended move is instead written to a report for manual handling.
  *
- * In case expressionOf is a linked entity, hasTitle and associated properties are copied from the entity and then the link is removed.
- * In case expressionOf is a local entity, all its properties except @type and language are moved to the target.
+ * In case expressionOf is a linked entity, hasTitle and associated properties are copied to the target while the link remains in expressionOf.
+ * In case expressionOf is a local entity, all its properties except @type and language are moved to the target (expressionOf is removed).
+ * In case instanceOf.@type is Music or NotatedMusic nothing is moved to translationOf. The expressionOf content is always moved to instanceOf.
+ *
  *
  * A couple normalizations are done on the mainTitle string whenever a title is moved:
  *  - Trailing period (not preceded by another period or a capital letter) is removed.
@@ -75,7 +77,12 @@ selectBySqlWhere(where) { bib ->
 
     def expressionOf = work.find { it.key == EXPRESSION_OF }
 
+    def isMusic = work['@type'] in ['Music', 'NotatedMusic']
+
     if (!expressionOf) {
+        if (isMusic) {
+            return
+        }
         def target = work.find { it.key == TRANSLATION_OF }
         // Move title and its associated properties from instanceOf to translationOf if translationOf exists
         if (moveProperty(shortId, HAS_TITLE, instanceOf, target) && moveAdditional(shortId, instanceOf, target)) {
@@ -91,21 +98,17 @@ selectBySqlWhere(where) { bib ->
     }
 
     // Move expressionOf content primarily to translationOf, otherwise to instanceOf
-    def target = work.find { it.key == TRANSLATION_OF } ?: instanceOf
+    def target = isMusic ? instanceOf : (work.find { it.key == TRANSLATION_OF } ?: instanceOf)
 
     Map hub = asList(expressionOf.value)[0]
     if (hub[ID]) {
         expressionOf.value = loadThing(hub[ID])
         if (!expressionOf.value) {
             brokenLinks.println([shortId, hub[ID]].join('\t'))
-            return
         }
-        // Linked uniform work title in expressionOf: move hasTitle and its associated properties to target and then remove the link
+        // Linked uniform work title in expressionOf: copy hasTitle and its associated properties to target
         else if (moveProperty(shortId, HAS_TITLE, expressionOf, target) && moveAdditional(shortId, expressionOf, target)) {
-            work.remove(EXPRESSION_OF)
             bib.scheduleSave()
-        } else {
-            return
         }
     }
     // Move title from local expressionOf to target
