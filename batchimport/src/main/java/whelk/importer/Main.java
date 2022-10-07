@@ -217,7 +217,10 @@ public class Main
             if (reader != null)
                 reader.close();
             threadPool.shutdown();
-
+            // TODO: switch to BlockingThreadPool so that the main thread cannot queue too much work in case of gigantic import file?
+            if (!threadPool.awaitTermination(12, TimeUnit.HOURS)) {
+                System.err.println("warn: thread pool did not shut down within timeout");
+            }
         }
 
 	inputStream.close();
