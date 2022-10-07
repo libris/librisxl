@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eux
+
 # NEVER RUN THIS TEST CASE ON AN ENVIRONMENT WHERE THE DATA MATTERS!
 # This test case assumes you have built the batch_import jar file.
 # It also assumes that 'jq' is installed on the system.
