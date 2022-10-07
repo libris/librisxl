@@ -8,5 +8,5 @@ package whelk.meta;
  */
 
 public class WhelkConstants {
-    public static final String WHELKTOOL_THREAD_GROUP = "whelktool";
+    public static final String BATCH_THREAD_GROUP = "whelk-batch";
 }

@@ -364,7 +364,7 @@ class WhelkTool {
     }
 
     private boolean isWorkerThread() {
-        return Thread.currentThread().getThreadGroup().getName().contains(WhelkConstants.WHELKTOOL_THREAD_GROUP)
+        return Thread.currentThread().getThreadGroup().getName().contains(WhelkConstants.BATCH_THREAD_GROUP)
     }
 
     private ScheduledFuture<?> setupTimedLogger(Counter counter) {
