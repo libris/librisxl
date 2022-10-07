@@ -13,6 +13,7 @@ import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.StorageCreateFailedException
 import whelk.filter.LinkFinder
 import whelk.filter.NormalizerChain
+import whelk.meta.WhelkConstants
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
 import whelk.util.PropertyLoader
@@ -215,9 +216,9 @@ class Whelk {
                 log.error("Error reindexing: $e", e)
             }
         }
-
-        // If we are inside a batch job. Update them synchronously
-        if (batchJobThread()) {
+        
+        if (isBatchJobThread()) {
+            // Update them synchronously
             reindex.run()
         } else {
             // else use a fire-and-forget thread
@@ -473,8 +474,8 @@ class Whelk {
         storage.removeUserData(id)
     }
 
-    private static boolean batchJobThread() {
-        return Thread.currentThread().getThreadGroup().getName().contains("whelktool")
+    private static boolean isBatchJobThread() {
+        return Thread.currentThread().getThreadGroup().getName().contains(WhelkConstants.BATCH_THREAD_GROUP)
     }
 
     ZoneId getTimezone() {
