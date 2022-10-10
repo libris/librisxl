@@ -54,6 +54,11 @@
         <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet>
+        <servlet-name>MarcframeData</servlet-name>
+        <servlet-class>whelk.rest.api.MarcframeData</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet>
         <servlet-name>RemoteSearch</servlet-name>
         <servlet-class>whelk.rest.api.RemoteSearchAPI</servlet-class>
     </servlet>
@@ -130,6 +135,11 @@
     <servlet-mapping>
         <servlet-name>DigitalReproductionAPI</servlet-name>
         <url-pattern>/_reproduction</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>MarcframeData</servlet-name>
+        <url-pattern>/sys/marcframe.json</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>

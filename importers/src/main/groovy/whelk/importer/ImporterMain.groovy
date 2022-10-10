@@ -1,19 +1,19 @@
 package whelk.importer
 
-import whelk.reindexer.CardRefresher
-
 import java.lang.annotation.*
 import java.util.concurrent.ExecutorService
 import java.util.zip.GZIPOutputStream
+import groovy.cli.picocli.CliBuilder
+import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.io.output.CountingOutputStream
 import org.apache.commons.io.FilenameUtils
 
-import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
-import whelk.converter.JsonLdToTurtle
+import whelk.converter.JsonLdToTrigSerializer
 import whelk.filter.LinkFinder
+import whelk.reindexer.CardRefresher
 import whelk.reindexer.ElasticReindexer
 import whelk.util.PropertyLoader
 import whelk.util.Tools
@@ -39,26 +39,54 @@ class ImporterMain {
         defsImporter.run("definitions")
     }
 
-    @Command(args='FNAME DATASET [--skip-index]')
-    void dataset(String fname, String dataset, String skipIndexParam=null) {
-        if (fname == '--skip-index' || dataset == '--skip-index' || (skipIndexParam && skipIndexParam != '--skip-index')) {
-            throw new IllegalArgumentException("--skip-index must be third argument")
-        }
-        
+    @Command(args='SOURCE_URL DATASET_URI [DATASET_DESCRIPTION_FILE]',
+             flags='--skip-index --replace-main-ids --force-delete')
+    void dataset(String sourceUrl, String datasetUri, String datasetDescPath=null, Map flags) {
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
-        if (skipIndexParam == '--skip-index') {
+        if (flags['skip-index']) {
             whelk.setSkipIndex(true)
         }
-                
-        DatasetImporter.importDataset(whelk, fname, dataset)
+        new DatasetImporter(whelk, datasetUri, flags, datasetDescPath).importDataset(sourceUrl)
     }
 
-    @Command(args='[COLLECTION]')
-    void reindex(String collection=null) {
+    @Command(args='DATASET_URI', flags='--force-delete')
+    void dropDataset(String datasetUri, Map flags) {
+        Whelk whelk = Whelk.createLoadedSearchWhelk(props)
+        new DatasetImporter(whelk, datasetUri, flags).dropDataset()
+    }
+    
+    @Command(args='[COLLECTION] [-t NUMBEROFTHREADS]')
+    void reindex(String... args) {
+        def cli = new CliBuilder(usage: 'reindex [collection] -[ht]')
+        // Create the list of options.
+        cli.with {
+            h longOpt: 'help', 'Show usage information'
+            t longOpt: 'threads', type: int,  'Number of threads in parallel'
+        }
+         
+        def options = cli.parse(args)
+
+        // Show usage text when -h or --help option is used.
+        if (options.h) {
+            cli.usage()
+            
+            return
+        }
+        
+        String collection = null;
+        if (options.arguments()) {
+            collection = options.arguments()[0]
+        }
+        
+        int numberOfThreads = Runtime.getRuntime().availableProcessors() * 2;
+        if (options.t) {
+            numberOfThreads = options.t
+        }
+        
         boolean useCache = true
         Whelk whelk = Whelk.createLoadedSearchWhelk(props, useCache)
         def reindex = new ElasticReindexer(whelk)
-        reindex.reindex(collection)
+        reindex.reindex(collection, numberOfThreads)
     }
 
     @Command(args='[COLLECTION]')
@@ -75,7 +103,7 @@ class ImporterMain {
         long fromUnixTime = Long.parseLong(from)
         reindex.reindexFrom(fromUnixTime)
     }
-    
+
     /**
      * The additional_types argument should be one of:
      * - comma-separated list of types to include. Like so: Person,GenreForm
@@ -109,37 +137,11 @@ class ImporterMain {
 
     // Records that do not cleanly translate to trig/turtle (bad data).
     // This obviously needs to be cleaned up!
-    def trigExcludeList = [
-            "b5qzm6mgd220mqq2", // @vocab:ISO639-2-T "sqi" ;
-            "htf4scsmk0n44qcq",
-            "b7f0m6mgd2q54bpd",
-            "m7g8xhxrp1f0lp7l",
-            "5qgtg1g97195wsm3",
-            "0qgn9v9421qh0jts",
-            "f8j3q9qkh342fhmg",
-            "7pcwj3jc92jmfccp",
-            "w0qj6r61z3kkbsrj",
-            "hdx4scsmk3c2bm5r",
-            "mw38xhxrp1s0b85x",
-            "1rvnbwb530j6k6nj",
-            "q8lc1l1vs3b7168t",
-            "mcd8xhxrp5k5zm44",
-            "qmjc1l1vs0hp5mck",
-            "1zbpbwb5313nlh3g",
-            "wbvj6r61z4zl0108",
-            "m468xhxrp3w9svn4",
-            "csk1n7nhf52nd4br",
-            "nq89zjzsq2fj5cjs"
-    ] as Set
+    def trigExcludeList = [] as Set
 
     @Command(args='FILE [CHUNKSIZEINMB [--gzip]]')
     void lddbToTrig(String file, String chunkSizeInMB = null, String gzip = null, String collection = null) {
         def whelk = Whelk.createLoadedCoreWhelk(props)
-
-        def ctx = JsonLdToTurtle.parseContext([
-                '@context': whelk.jsonld.context
-        ])
-        def opts = [useGraphKeyword: false, markEmptyBnode: true]
 
         boolean writingToFile = file && file != '-'
         boolean shouldGzip = writingToFile && gzip && gzip == '--gzip'
@@ -169,7 +171,9 @@ class ImporterMain {
         }
 
         CountingOutputStream cos = new CountingOutputStream(outputStream)
-        def serializer = new JsonLdToTurtle(ctx, cos, opts)
+        def ctx = whelk.jsonld.context
+        def serializer = new JsonLdToTrigSerializer(ctx, cos)
+
         serializer.prelude()
         int i = 0
         for (Document doc : whelk.storage.loadAll(collection)) {
@@ -185,7 +189,7 @@ class ImporterMain {
             ++i
             filterProblematicData(id, doc.data)
             try {
-                serializer.objectToTrig(id, doc.data)
+                serializer.writeGraph(id, doc.data['@graph'])
             } catch (Throwable e) {
                 // Part of the record may still have been written to the stream, which is now corrupt.
                 System.err.println("${doc.getShortId()} conversion failed with ${e.toString()}")
@@ -235,46 +239,75 @@ class ImporterMain {
         }
     }
 
-    static COMMANDS = getMethods().findAll { it.getAnnotation(Command)
-                                    }.collectEntries { [it.name, it]}
+    static Map COMMANDS = getMethods().findAll {
+        it.getAnnotation(Command)
+    }.collectEntries { [it.name, cmddef(it)]}
+
+    static Map cmddef(method) {
+        def flagSpec = method.getAnnotation(Command).flags()
+        if (flagSpec.indexOf('[') == -1) {
+            flagSpec = flagSpec.split(/ /).findResults { it ? "[$it]" : null }.join(' ')
+        }
+        return [
+            method: method,
+            name: method.name,
+            argSpec: method.getAnnotation(Command).args(),
+            flagSpec: flagSpec,
+        ]
+    }
+
+    static String cmdhelp(Map command) {
+        return "\t${command.name} ${command.argSpec} ${command.flagSpec}"
+    }
 
     static void help() {
         System.err.println "Usage: <program> COMMAND ARGS..."
         System.err.println()
         System.err.println("Available commands:")
         COMMANDS.values().sort().each {
-            System.err.println "\t${it.name} ${it.getAnnotation(Command).args()}"
+            System.err.println cmdhelp(it)
         }
     }
 
-    static void main(String... args) {
-        if (args.length == 0) {
+    static void main(String... argv) {
+        if (argv.length == 0) {
             help()
             System.exit(1)
         }
 
-        def cmd = args[0]
-        def arglist = args.length > 1? args[1..-1] : []
+        def cmd = argv[0]
+        def args = argv.length > 1 ? argv[1..-1] : []
 
-        def method = COMMANDS[cmd]
-        if (!method) {
+        def command = COMMANDS[cmd]
+        if (!command) {
             System.err.println "Unknown command: ${cmd}"
             help()
             System.exit(1)
         }
 
-        def main
-        if (cmd.startsWith("vcopy")) {
-            main = new ImporterMain("secret", "mysql")
-        } else {
-            main = new ImporterMain("secret")
-        }
-
+        def tool = new ImporterMain("secret")
+        def arglist = []
+        def flags = [:]
         try {
-            main."${method.name}"(*arglist)
+            if (command.flagSpec) {
+                args.each {
+                    if (it.startsWith('--')) {
+                        if (command.flagSpec.indexOf("[$it]") == -1) {
+                            throw new IllegalArgumentException("Uknown flag: ${it}")
+                        }
+                        flags[it.substring(2)] = true
+                    } else {
+                        arglist << it
+                    }
+                }
+                tool."${command.name}"(*arglist, flags)
+            } else {
+                arglist = args
+                tool."${command.name}"(*arglist)
+            }
         } catch (IllegalArgumentException e) {
             System.err.println "Missing arguments. Expected:"
-            System.err.println "\t${method.name} ${method.getAnnotation(Command).args()}"
+            System.err.println cmdhelp(command)
             System.err.println e.message
             org.codehaus.groovy.runtime.StackTraceUtils.sanitize(e).printStackTrace()
             System.exit(1)
@@ -287,4 +320,5 @@ class ImporterMain {
 @Target(ElementType.METHOD)
 @interface Command {
     String args() default ''
+    String flags() default ''
 }

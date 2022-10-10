@@ -83,7 +83,7 @@ anrop som kräver autentisering.
 
 ### Skapa
 
-En ny post kan skapas genom att skicka ett `POST`-anrop till API:ets rot (`/`)
+En ny post kan skapas genom att skicka ett `POST`-anrop till `/data`
 med åtminstone `Content-Type`-, `Authorization`- och `XL-Active-Sigel`-headern
 satta.
 
@@ -404,7 +404,7 @@ $ curl -XGET 'https://libris-qa.kb.se/_dependencies?id=http://libris.kb.se/bib/1
 ### `/_compilemarc` - Ladda ner en bibliografisk post i MARC21 med bestånds- och auktoritetsinformation
 
 Detta anrop låter dig ladda ner en komplett bibliografisk post med bestånds-
-och auktoritetsinformation i MARC21-format.
+och auktoritetsinformation i MARC21-format. Om den kompletta posten ska innehålla beståndsinformation så måste en exportprofil först ha registrerats för ditt sigel-ID. Kontakta kundtjänst i fall du behöver registrera en sådan profil.
 
 
 #### Parametrar

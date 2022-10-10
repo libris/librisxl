@@ -1,0 +1,90 @@
+# ICU transform rules
+
+# Mongolian
+# "Ferdinand Lessings schema för Mongoliska"
+# https://metadatabyran.kb.se/download/18.6945cdaa174b74a2c361600/1601917488493/Mongoliska,%20Lessings%20transkription.pdf
+# https://metadatabyran.kb.se/beskrivning/specialanvisningar/mangsprak/romaniseringsscheman
+# "Extratecknen Ө, ө romaniseras som svenskt Ö, ö och extratecknen Ү, ү som svenskt Ü, ü."
+
+а <> a ;
+б <> b ;
+в <> v ;
+г <> g ;
+д <> d ;
+е <> ye ; # i schemat: "ye ~ yö (dis-ambiguate)"
+ё <> yo ;
+ж <> j ;
+з <> z ;
+и <> i ;
+й <> i ;
+к <> k ;
+л <> l ;
+м <> m ;
+н <> n ;
+о <> o ;
+ѳ <> ö ;
+п <> p ;
+р <> r ;
+с <> s ;
+т <> t ;
+у <> u ;
+ү <> ü ;
+ф <> f ;
+х <> kh ;
+ц <> ts ;
+ч <> ch ;
+ш <> sh ;
+щ <> shch ;
+ъ <> ı  ; # i schemat: "(or i if diacritical undesired)"
+ы <> î  ; # i schemat: "(or y if diacritical undesired)
+ь <> ĭ  ; # i schemat: "(or i if diacritical undesired)
+э <> e ;
+ю <> yu ; #  i schemat: "yu ~ yü (dis-ambiguate)"
+я <> ya ;
+ө <> ö ;
+
+А <> A ;
+Б <> B ;
+В <> V ;
+Г <> G ;
+Д <> D ;
+Е } [:LowercaseLetter:] <> Ye;
+Е <> YE;
+Ё } [:LowercaseLetter:] <> Yo;
+Ё <> YO;
+Ж <> J ;
+З <> Z ;
+И <> I ;
+Й <> I ;
+К <> K ;
+Л <> L ;
+М <> M ;
+Н <> N ;
+О <> O ;
+Ѳ <> Ö ;
+П <> P ;
+Р <> R ;
+С <> S ;
+Т <> T ;
+У <> U ;
+Ү <> Ü ;
+Ф <> F ;
+Х  } [:LowercaseLetter:] <> Kh ;
+Х <> KH ;
+Ц  } [:LowercaseLetter:] <> Ts ;
+Ц <> TS ;
+Ч  } [:LowercaseLetter:] <> Ch ;
+Ч <> CH ;
+Ш  } [:LowercaseLetter:] <> Sh ;
+Ш <> SH ;
+Щ  } [:LowercaseLetter:] <> Shch ;
+Щ <> SHCH ;
+Ъ <> I  ;
+Ы <> Î  ; 
+Ь <> Ĭ  ; 
+Э <> E ;
+Ю  } [:LowercaseLetter:] <> Yu ;
+Ю <> YU ;
+Я  } [:LowercaseLetter:] <> Ya ;
+Я <> YA ;
+Ө <> Ö ;

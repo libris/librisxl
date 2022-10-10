@@ -4,13 +4,16 @@ import com.google.common.util.concurrent.MoreExecutors
 import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl
 import whelk.Document
 import whelk.IdGenerator
+import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.StaleUpdateException
 import whelk.exception.WhelkException
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
+import whelk.util.DocumentUtil
 import whelk.util.LegacyIntegrationTools
 import whelk.util.Statistics
+import whelk.meta.WhelkConstants
 
 import javax.script.Bindings
 import javax.script.Compilable
@@ -33,10 +36,8 @@ import static java.util.concurrent.TimeUnit.SECONDS
 import static whelk.util.Jackson.mapper
 
 class WhelkTool {
-
     static final int DEFAULT_BATCH_SIZE = 500
     static final int DEFAULT_FETCH_SIZE = 100
-    private static final String WHELKTOOL_THREAD_GROUP = "whelktool"
 
     Whelk whelk
 
@@ -122,7 +123,14 @@ class WhelkTool {
         ScriptEngineManager manager = new ScriptEngineManager()
         engine = (GroovyScriptEngineImpl) manager.getEngineByName("groovy")
         scriptFile = new File(scriptPath)
-        String scriptSource = scriptFile.getText("UTF-8")
+        String scriptSource = null
+        try {
+            scriptSource = scriptFile.getText("UTF-8")
+        }
+        catch (IOException e) {
+            System.err.println("Could not load script [$scriptPath] : $e")
+            System.exit(1)
+        }
         script = ((Compilable) engine).compile(scriptSource)
         def segment = '/scripts/'
         def path = scriptFile.toURI().toString()
@@ -356,7 +364,7 @@ class WhelkTool {
     }
 
     private boolean isWorkerThread() {
-        return Thread.currentThread().getThreadGroup().getName().contains(WHELKTOOL_THREAD_GROUP)
+        return Thread.currentThread().getThreadGroup().getName().contains(WhelkConstants.BATCH_THREAD_GROUP)
     }
 
     private ScheduledFuture<?> setupTimedLogger(Counter counter) {
@@ -510,7 +518,7 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
-            whelk.storeAtomicUpdate(doc, !item.loud, changedIn, scriptJobUri, item.preUpdateChecksum)
+            whelk.storeAtomicUpdate(doc, !item.loud, true, changedIn, scriptJobUri, item.preUpdateChecksum)
         }
         modifiedLog.println(doc.shortId)
     }
@@ -612,6 +620,8 @@ class WhelkTool {
         bindings.put("queryIds", this.&queryIds)
         bindings.put("queryDocs", this.&queryDocs)
         bindings.put("incrementStats", statistics.&increment)
+        bindings.put("asList", JsonLd::asList)
+        bindings.put("getAtPath", DocumentUtil::getAtPath)
         return bindings
     }
 

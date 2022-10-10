@@ -139,7 +139,7 @@ class XL
                             + existing.getDataAsString());
                 }
                 else {
-                    m_whelk.storeAtomicUpdate(idToMerge, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(), (Document existing) -> {
+                    m_whelk.storeAtomicUpdate(idToMerge, false, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(), (Document existing) -> {
                         String existingChecksum = existing.getChecksum(m_whelk.getJsonld());
 
                         List<String> recordIDs = existing.getRecordIdentifiers();
@@ -172,7 +172,7 @@ class XL
                     });
                 }
 
-                resultingResourceId = m_whelk.getStorage().getThingId(idToMerge);
+                resultingResourceId = m_whelk.getStorage().getThingMainIriBySystemId(idToMerge);
             }
 
             // Keep existing
@@ -251,7 +251,7 @@ class XL
             {
                 try
                 {
-                    m_whelk.storeAtomicUpdate(replaceSystemId, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(),
+                    m_whelk.storeAtomicUpdate(replaceSystemId, false, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(),
                             (Document doc) ->
                     {
                         String existingEncodingLevel = doc.getEncodingLevel();

@@ -2,6 +2,8 @@
   "default_site": "https://libris.kb.se/",
   "site_alias": {
     "http://id.kblocalhost.kb.se:5000/": "https://id.kb.se/",
+    "http://id.kblocalhost.kb.se/": "https://id.kb.se/",
+    "https://id.kblocalhost.kb.se/": "https://id.kb.se/",
     "https://id-dev.kb.se/": "https://id.kb.se/",
     "https://id-dev2.kb.se/": "https://id.kb.se/",
     "https://id-edu.kb.se/": "https://id.kb.se/",

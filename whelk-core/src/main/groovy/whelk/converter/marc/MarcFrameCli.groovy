@@ -90,7 +90,7 @@ void addSystemComponents(converter) {
 static void addJsonLd(converter) {
     def defsbuild = System.env.defsbuild ?: '../../definitions/build'
 
-    def contextFile = new File("$defsbuild/vocab/context.jsonld")
+    def contextFile = new File("$defsbuild/sys/context/kbv.jsonld")
     assert contextFile.exists(), "Misssing context file: ${contextFile}"
 
     def vocabFile = new File("$defsbuild/vocab.jsonld")

@@ -34,6 +34,7 @@ AGENTS = ["Person", "Geographic", "Organization", "Jurisdiction", "Meeting", "Fa
 //selectByIds(['1jb45wtc5rzvpw4']) { bib ->
 selectByCollection('bib') { bib ->
     def data = bib.doc.data
+    def subjectRoot = []
     DocumentUtil.traverse(data, { value, path ->
         if (!(value instanceof Map && value.'@type'.equals("ComplexSubject") && value.termComponentList)) {
             return
@@ -53,16 +54,25 @@ selectByCollection('bib') { bib ->
                 prefLabelForSubdivision = thing.prefLabel
             }
 
+            def isRule1a = false
+            selectByIds(uri ? [uri] : []) { d ->
+                Map thing = d.doc.data['@graph'][1]
+                prefLabelForSubject = thing.prefLabel
+                if (thing.'@type' in AGENTS) {
+                    isRule1a = true
+                }
+            }
+
             def label = prefLabelForSubject + " " + prefLabelForSubdivision
             String combinedId = "https://id.kb.se/term/sao/" + URLEncoder.encode(label, 'UTF-8').replace("+", "%20")
 
             def pathCopy = path.collect()
             pathCopy.removeLast()
-            def subjectRoot = getAtPath(data, pathCopy)
+            subjectRoot = getAtPath(data, pathCopy)
 
             bib.scheduleSave()
 
-            if (isRule1a(uri, prefLabelForSubject)) {
+            if (isRule1a) {
                 incrementStats("Regel 1a", bib.doc.id)
                 subjectRoot.add(["@id" : SUBDIVISION_TO_SUBJECT[uriSubdivision]])
                 return new DocumentUtil.Replace(["@id" : uri])
@@ -82,6 +92,7 @@ selectByCollection('bib') { bib ->
                 incrementStats("Regel 4", bib.doc.id)
         }
     })
+    subjectRoot.unique()
 }
 
 private boolean isRule3(boolean rule2, uri) {
@@ -100,17 +111,6 @@ private boolean isRule1b(blankGeo) {
     return blankGeo
 }
 
-private boolean isRule1a(uri, prefLabelForSubject) {
-    def b = false
-    selectByIds(uri ? [uri] : []) { d ->
-        Map thing = d.doc.data['@graph'][1]
-        prefLabelForSubject = thing.prefLabel
-        if (thing.'@type' in AGENTS) {
-            b = true
-        }
-    }
-    return b
-}
 
 private boolean isSubdivision(it) {
     it.'@id' in SUBDIVISION_TO_SUBJECT.keySet()

@@ -53,4 +53,17 @@ class UnicodeSpec extends Specification {
         '\u2060\u2060\u2060WORD JOINER\u2060\u2060\u2060'           | 'WORD JOINER'
         'keep\u00A0\u202F\u2007\u2060us'                            | 'keep\u00A0\u202F\u2007\u2060us'
     }
+    
+    def "double quotation marks"() {
+        expect:
+        Unicode.isNormalizedDoubleQuotes(dirty) == (dirty == clean)
+        Unicode.normalizeDoubleQuotes(dirty) == clean
+        where:
+        dirty                                                       | clean
+        '"my query"'                                                | '"my query"'
+        '”my query”'                                                | '"my query"'
+        '“my query”'                                                | '"my query"'
+        'this is ”my query” string'                                 | 'this is "my query" string'
+        'this is “my query” string'                                 | 'this is "my query" string'
+    }
 }

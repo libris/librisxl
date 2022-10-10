@@ -336,7 +336,11 @@ class Document {
     }
 
     boolean isHolding(JsonLd jsonld) {
-        return ("hold" == LegacyIntegrationTools.determineLegacyCollection(this, jsonld))
+        return ("hold" == getLegacyCollection(jsonld))
+    }
+    
+    String getLegacyCollection(JsonLd jsonld) {
+        LegacyIntegrationTools.determineLegacyCollection(this, jsonld)
     }
 
     String getHeldBySigel() {
@@ -891,4 +895,7 @@ class Document {
         jsonLd && key && jsonLd.isSetContainer(key)
     }
 
+    public String toVerboseString() {
+        return "{completeId=" + getCompleteId() + ", baseUri=" + baseUri.toString() + ", base identifiers:" + getRecordIdentifiers().join(',');
+    }
 }

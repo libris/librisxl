@@ -65,7 +65,7 @@ for e.g. Fedora/CentOS/RHEL with minor adjustments.
     * We use the elasticsearch-oss version.
     * The [ICU Analysis plugin](https://www.elastic.co/guide/en/elasticsearch/plugins/7.12/analysis-icu.html) (`icu-analysis`) must be installed; see "Setting up Elasticsearch" below.
 
-3. [PostgreSQL](https://www.postgresql.org/) (version 9.6 or later)
+3. [PostgreSQL](https://www.postgresql.org/) (version 14.2 or later)
 
     ```
     # Ubuntu/Debian
@@ -76,10 +76,10 @@ for e.g. Fedora/CentOS/RHEL with minor adjustments.
     Windows:
     Download and install https://www.postgresql.org/download/windows/
 
-4. [Java](https://openjdk.java.net/) (version 8)
+4. [Java](https://openjdk.java.net/) (version 17)
 
     ```
-    sudo apt install openjdk-8-jdk # or openjdk-8-headless
+    sudo apt install openjdk-17-jdk # or openjdk-17-headless
     ```
 
 5. [Apache](https://httpd.apache.org/)
@@ -233,11 +233,11 @@ The system is then available on <http://localhost:8180>.
 (The OAI-PMH service is started in a similar way: just cd into `oaipmh`
 instead of `rest`.)
 
-To run the frontend, first set up LXLViewer and the id.kb.se web app
-(follow the README in each):
+To run the frontend, first set up the Libris cataloging client and the
+id.kb.se web app (follow the README in each):
 
-* [LXLViewer](https://github.com/libris/lxlviewer)
-* [id.kb.se](https://github.com/libris/id.kb.se) (set `API_PATH=http://id.kblocalhost.kb.se:5000` in `.env`)
+* [Libris cataloging](https://github.com/libris/lxlviewer/tree/develop/vue-client)
+* [id.kb.se](https://github.com/libris/lxlviewer/tree/develop/nuxt-app)
 
 At this point, you should have the LXLViewer cataloging client running on port 8080
 and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
@@ -253,8 +253,8 @@ and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
 
     <LocationMatch "^/([bcdfghjklmnpqrstvwxz0-9]{15,16})$">
         ProxyPreserveHost Off
-        RewriteCond %{REQUEST_METHOD} GET
         RewriteCond %{HTTP_ACCEPT} (text/html|application/xhtml|\*/\*|^$)
+        RewriteCond %{REQUEST_METHOD} GET
         RewriteRule ([^/]+)$ http://id.kblocalhost.kb.se:5000/$1 [P]
     </LocationMatch>
 
@@ -262,6 +262,9 @@ and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
         ProxyPreserveHost Off
         ProxyPass http://id.kblocalhost.kb.se:5000/_nuxt
     </Location>
+    
+    ProxyPass        /katalogisering     http://localhost:8080/katalogisering                   
+    ProxyPassReverse /katalogisering     http://localhost:8080/katalogisering
 
     ProxyPassMatch ^/vocab/(data.*) http://localhost:8180/https://id.kb.se/vocab//$1
     ProxyPass /vocab http://localhost:8180/https://id.kb.se/vocab
@@ -270,7 +273,7 @@ and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
     RewriteCond %{REQUEST_METHOD} ^(POST|PUT|DELETE|OPTIONS)$
     RewriteRule ^/data(.*)$ http://localhost:8180/$1 [P,L]
 
-    ProxyPass / http://localhost:8180/ nocanon
+    ProxyPass / http://localhost:8180/
 
     AddOutputFilterByType DEFLATE text/css text/html text/plain text/xml
     AddOutputFilterByType DEFLATE application/x-javascript text/x-component application/javascript
@@ -286,23 +289,29 @@ and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
 
     RewriteCond %{HTTP_ACCEPT} (text/html|application/xhtml|\*/\*) [OR]
     RewriteCond %{HTTP_ACCEPT} ^$
+    RewriteCond %{HTTP_ACCEPT} !^(text/turtle|application/trig|application/ld\+json|application/rdf\+xml)($|.+/x?html;q=0.*)
     RewriteCond %{REQUEST_URI} !\.(json|jsonld)$
     RewriteCond %{REQUEST_URI} !data\..+$
+    RewriteCond %{REQUEST_URI} !/maintenance.html
+    RewriteCond %{REQUEST_URI} !/robots.txt
     RewriteRule ^/(.*)$ http://localhost:3000/$1 [P,L]
+    
     ProxyPass /_nuxt http://localhost:3000/_nuxt
     ProxyPass /_loading http://localhost:3000/_loading
     ProxyPass /__webpack_hmr http://localhost:3000/__webpack_hmr
 
+    # NOTE: The double slash is needed because of an "ambitious" sameAs on the vocab resource.
     ProxyPassMatch ^/vocab/(data.*) http://localhost:8180/https://id.kb.se/vocab//$1
     ProxyPass /vocab http://localhost:8180/https://id.kb.se/vocab
     ProxyPass /vocab/display/data.jsonld http://localhost:8180/https://id.kb.se/vocab/display
-    ProxyPass /context.jsonld http://localhost:8180/https://id.kb.se/vocab/context
+    ProxyPass /context.jsonld http://localhost:8180/https://id.kb.se/vocab/context/data.jsonld
 
     ProxyPassMatch ^/(data.*)$ http://localhost:8180/$1
     ProxyPassMatch ^/find(.*) http://localhost:8180/find$1
 
     ProxyPassMatch ^/(http.*)$ http://localhost:8180/$1 nocanon
     ProxyPassMatch ^/([bcdfghjklmnpqrstvwxz0-9]{15,16}) http://localhost:8180/$1
+    ProxyPassMatch ^/library/(.*) http://localhost:8180/https://libris.kb.se/library/$1 nocanon
     ProxyPassMatch ^/(.*) http://localhost:8180/https://id.kb.se/$1 nocanon
 
     AddOutputFilterByType DEFLATE text/css text/html text/plain text/xml
@@ -336,8 +345,8 @@ Now (re)start Apache:
 systemctl restart apache2
 ```
 
-You should now able to visit http://id.kblocalhost.kb.se, and use the cataloging client
-on http://localhost:8080/katalogisering/. The XL API itself is available on
+You should now be able to visit http://id.kblocalhost.kb.se:5000, and use the cataloging client
+on http://kblocalhost.kb.se:5000/katalogisering/. The XL API itself is available on
 http://kblocalhost.kb.se:5000 (proxied via Apache), or directly on http://localhost:8180.
 
 ## Maintenance

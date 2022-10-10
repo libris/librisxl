@@ -47,6 +47,26 @@ $ curl -XGET -H "Accept: application/ld+json" https://libris-qa.kb.se/s93ns5h436
 }
 ```
 
+### Profile Negotiation
+
+To get data in a different flavour (using a specific selection of RDF
+vocabularies), we support a form of profile negotiation.
+
+Using parameters:
+```
+$ curl -s -HAccept:text/turtle "http://libris-qa.kb.se/fxql7jqr38b1dkf?profile=https://id.kb.se/sys/context/target/sdo-w3c&embellished=false"
+
+$ curl -s -H'Accept: text/turtle' http://id-qa.kb.se/relator/contributor?profile=https://id.kb.se/sys/context/target/bibo-w3c
+
+$ curl -s -H'Accept: text/turtle' http://libris-qa.kb.se/fxql7jqr38b1dkf?profile=https://id.kb.se/sys/context/target/bibo-w3c
+```
+
+Using headers:
+```
+$ curl -H 'Accept-Profile: <https://id.kb.se/sys/context/target/loc-w3c-sdo>' \
+      http://libris-qa.kb.se/fxql7jqr38b1dkf
+```
+
 ## Requests that require authentication – create, update and remove
 
 In order to make requests that require authentication, an oauth client has to be registered
@@ -82,7 +102,7 @@ subsequent request that requires authentication.
 
 ### Create
 
-A new record is created by sending a `POST` request to the API root (`/`) with at least the
+A new record is created by sending a `POST` request to `/data` with at least the
 `Content-Type`, `Authorization`, and `XL-Active-Sigel` headers set.
 
 There are some checks in place, e.g. in order to prevent creation of duplicate
@@ -392,8 +412,7 @@ $ curl -XGET 'https://libris-qa.kb.se/_dependencies?id=http://libris.kb.se/bib/1
 
 ### `/_compilemarc` - Download MARC21 bibliographic record with holding and authority information
 
-This endpoint allows you to download a complete bibliographic record with holding
-information in MARC21.
+This endpoint allows you to download a complete bibliographic record with holding information in MARC21. If the compiled record is to contain any holding information, there must be an export profile registered for that library ID. Contact support if you need to register such a profile.
 
 #### Parameters
 

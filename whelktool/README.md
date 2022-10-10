@@ -306,13 +306,6 @@ selectByIds(queryIds(q).collect()) { languageLabels.add(it.graph[1]['prefLabelBy
 ```
 
 ### Tips
-It is often helpful to define an `asList` helper to deal with properties being objects or lists or non-existing.
-```groovy
-List asList(o) {
-    (o instanceof List) ? (List) o : (o ? [o] : [])
-}
-```
-
 Any exception thrown inside `selectBy...` will halt script execution. Sometimes this is what you want, sometimes
 it is easier to catch exceptions from edge cases and write them to an error report (with doc id). For example
 during development of a script that takes a long time to run.
@@ -380,3 +373,44 @@ DocumentUtil.traverse(d.graph, { value, path ->
 })
 ```
 See also [DocumentUtilSpec.groovy](../whelk-core/src/test/groovy/whelk/util/DocumentUtilSpec.groovy)
+
+----
+
+You can use `asList` to deal with properties being objects or lists or non-existing.
+```groovy
+> asList([a:1])
+Result: [[a:1]]
+
+> asList('str')
+Result: [str]
+
+> asList([1, 2])
+Result: [1, 2]
+
+> asList(null)
+Result: []
+
+> asList(['is', 'a', 'list'])
+Result: [is, a, list]
+
+> asList(null)
+Result: []
+```
+
+----
+You can use `getAtPath(data, path, defaultTo=null)` for safe access to nested properties.
+If the path is not valid the specified default value is returned.
+```groovy
+selectByIds(ids) { d ->
+    def subjects = getAtPath(d.doc.data, ['@graph', 1, 'instanceOf', 'subject'], [])
+}
+```
+
+Use `'*'` as a wildcard for getting all values in a list (set).
+When using wildcards, `defaultTo` will always be an empty list.
+```groovy
+selectByIds(ids) { d ->
+    def agentIds = getAtPath(d.graph[1], ['instanceOf', 'contribution', '*', 'agent', '@id'])
+    def partTitles = getAtPath(d.graph[1], ['instanceOf', 'hasPart', '*', 'hasTitle', '*', 'mainTitle'])
+}
+```

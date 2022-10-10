@@ -1,5 +1,6 @@
 package whelk.filter
 
+import com.google.common.collect.Iterables
 import whelk.Whelk
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
@@ -63,9 +64,8 @@ class BlankNodeLinker implements DocumentUtil.Linker {
                     '_sort'   : [ID_KEY]
             ]
 
-            finder.findIds(q).each { id ->
-                def doc = whelk.getDocument(id)
-                if (doc) {
+            Iterables.partition(finder.findIds(q), 100).each { List<String> i ->
+                whelk.bulkLoad(i).each { id, doc ->
                     addDefinition(doc.data[GRAPH_KEY][1])
                 }
             }

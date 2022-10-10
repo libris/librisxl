@@ -59,7 +59,7 @@ curl -v -XPOST 'http://localhost:8180/_reproduction' -H 'Content-Type: applicati
       "@type": "Reproduction",
       "agent": { "@id": "http://kblocalhost.kb.se:5000/jgvxv7m23l9rxd3#it" },
       "place": { "@type": "Place", "label": "Stockholm" },
-      "year": "2021"
+      "date": "2021"
     }
   ],
   "meta" : {
@@ -131,7 +131,7 @@ class DigitalReproductionAPI extends HttpServlet {
         check(electronic, ['production'], ARRAY)
         if (!isLink(getAtPath(electronic, ['production', 0]))) { // minimal valid shape, so just check the first one 
             check(electronic, ['production', 0, '@type'], 'Reproduction')
-            check(electronic, ['production', 0, 'year'], STRING)
+            check(electronic, ['production', 0, 'date'], STRING)
             if (!isLink(getAtPath(electronic, ['production', 0, 'agent']))) {
                 check(electronic, ['production', 0, 'place', '@type'], STRING)
             }
@@ -224,6 +224,10 @@ class ReproductionService {
             electronicThing.hasTitle = physicalThing.hasTitle
         }
         
+        if (physicalThing.issuanceType && !electronicThing.issuanceType) {
+            electronicThing.issuanceType = physicalThing.issuanceType
+        }
+        
         if (isOnline(electronicThing)) {
             electronicThing.carrierType = asSet(electronicThing.carrierType) << ONLINE
         }
@@ -301,6 +305,7 @@ class XL {
     // Since we are (for now) making HTTP requests to the same servlet container. must be lower that maxConnections / 2
     private static final int MAX_CONCURRENT_REQUESTS = 10 
     private static final Semaphore semaphore = new Semaphore(MAX_CONCURRENT_REQUESTS)
+    private static final int TIMEOUT_SECONDS = 60
     private static final HttpClient client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build()
     private static final ObjectMapper mapper = new ObjectMapper()
     
@@ -425,7 +430,7 @@ class XL {
     HttpRequest.Builder requestForPath(String path) {
         def builder = HttpRequest.newBuilder()
                 .uri(URI.create("$apiLocation$path"))
-                .timeout(Duration.ofSeconds(15))
+                .timeout(Duration.ofSeconds(TIMEOUT_SECONDS))
         
         headers.each { k, v ->
             builder.header(k, v)

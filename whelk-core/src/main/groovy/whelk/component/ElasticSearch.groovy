@@ -22,6 +22,7 @@ import static whelk.util.Jackson.mapper
 @Log
 class ElasticSearch {
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
+    static final String SEARCH_TYPE = "dfs_query_then_fetch"
 
     static final Set<String> LANGUAGES_TO_INDEX = ['sv', 'en'] as Set
     static final List<String> REMOVABLE_BASE_URIS = [
@@ -160,7 +161,11 @@ class ElasticSearch {
                     String action = createActionRow(doc)
                     return "${action}\n${shapedData}\n"
                 } catch (Exception e) {
-                    log.error("Failed to index ${doc.getShortId()} in elastic: $e", e)
+                    if (doc.getShortId() == null) {
+                        log.error("Document has null shortId, something is wrong. Some details: " + doc.toVerboseString(), e);
+                    } else {
+                        log.error("Failed to index ${doc.getShortId()} in elastic: $e", e)
+                    }
                     return null
                 }
             }.join('')
@@ -422,7 +427,7 @@ class ElasticSearch {
     Map queryIds(Map jsonDsl) {
         return performQuery(
                 jsonDsl,
-                getQueryUrl() + '?filter_path=took,hits.total,hits.hits._id',
+                getQueryUrl(['took','hits.total','hits.hits._id']),
                 { it."_id" }
         )
     }
@@ -493,8 +498,16 @@ class ElasticSearch {
         }
     }
 
-    private String getQueryUrl() {
-        return "/${indexName}/_search"
+    private String getQueryUrlWithoutIndex(filterPath = []) {
+        getQueryUrl(filterPath, null)
+    }
+    
+    private String getQueryUrl(filterPath = [], index = indexName) {
+        def url = (index ? "/${index}" : '') + "/_search?search_type=$SEARCH_TYPE"
+        if (filterPath) {
+            url += "&filter_path=${filterPath.join(',')}"
+        }
+        return url.toString()
     }
 
     static String toElasticId(String id) {
@@ -526,20 +539,23 @@ class ElasticSearch {
         boolean isBeforeFirstFetch = true
 
         Map query
-        String filterPath
+        List<String> filterPath
         Closure<T> hitCollector
         
         Scroll(Map query, List<String> hitsFilter = ['hits.hits._id'], Closure<T> hitCollector = { it['_id']}) {
             this.query = query
-            this.filterPath = (FILTER_PATH + hitsFilter).join(',')
+            this.filterPath = (FILTER_PATH + hitsFilter)
             this.hitCollector = hitCollector
         }
 
         abstract boolean isAfterLast()
         abstract void updateState(Map response)
-        abstract String queryPath()
         abstract Map nextRequest()
-
+        
+        String queryPath() {
+            getQueryUrl(filterPath)
+        }
+        
         @Override
         boolean hasNext() {
             if (isBeforeFirstFetch) {
@@ -597,12 +613,7 @@ class ElasticSearch {
 
             page++
         }
-
-        @Override
-        String queryPath() {
-            "/${indexName}/_search?filter_path=$filterPath"
-        }
-
+        
         @Override
         Map nextRequest() {
             return [
@@ -657,7 +668,9 @@ class ElasticSearch {
 
         @Override
         String queryPath() {
-            "/_search?filter_path=$filterPath"
+            isPitApiAvailable // point in time is created on index and then index cannot be specified here 
+                    ? getQueryUrlWithoutIndex(filterPath)
+                    : getQueryUrl(filterPath)
         }
 
         @Override

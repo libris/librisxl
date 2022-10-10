@@ -21,10 +21,11 @@ class ESQuery {
     private JsonLd jsonld
     private Set keywordFields
     private Set dateFields
+    private Set nestedFields
     
     private static final int DEFAULT_PAGE_SIZE = 50
     private static final List RESERVED_PARAMS = [
-        'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens', '_suggest', '_site'
+        'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens', '_stats', '_suggest', '_site'
     ]
     private static final String OR_PREFIX = 'or-'
     private static final String EXISTS_PREFIX = 'exists-'
@@ -48,10 +49,12 @@ class ESQuery {
         if (whelk.elastic) {
             Map mappings = whelk.elastic.getMappings()
             this.keywordFields =  getKeywordFields(mappings)
-            this.dateFields = getDateFields(mappings)
+            this.dateFields = getFieldsOfType('date', mappings)
+            this.nestedFields = getFieldsOfType('nested', mappings)
         } else {
             this.keywordFields = Collections.emptySet()
             this.dateFields = Collections.emptySet()
+            this.nestedFields = Collections.emptySet()
         }
     }
     
@@ -496,13 +499,11 @@ class ESQuery {
         handledParameters.each {queryParametersCopy.remove(it)}
         filters.addAll(rangeFilters)
         
-        // TODO This is copied from the old code and should be rewritten.
-        // We don't have that many nested mappings, so this is way to general.
         Map groups = queryParametersCopy.groupBy { p -> getPrefixIfExists(p.key) }
         Map nested = getNestedParams(groups)
         Map notNested = (groups - nested).collect { it.value }.sum([:])
         nested.each { key, vals ->
-            filters << createNestedBoolFilter(key, vals)
+            filters.addAll(createNestedBoolFilters(key, vals))
         }
 
         notNested.removeAll {it.key in RESERVED_PARAMS}
@@ -570,28 +571,40 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    private Map getNestedParams(Map groups) {
-        // TODO We hardcode `identifiedBy` here, since that's currently the only
-        // type of search in the client where we need nesting.
+    private Map getNestedParams(Map<String, Map<String, String[]>> groups) {
         Map nested = groups.findAll { g ->
-            g.key == 'identifiedBy' &&
-            g.value.size() == 2
+            // More than one property or more than one value for some property
+            g.key in nestedFields && (g.value.size() > 1 || g.value.values().any{ it.length > 1})
         }
         return nested
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    private Map createNestedBoolFilter(String prefix, Map nestedQuery) {
-        Map result = [:]
-
-        Map musts = ['must': nestedQuery.collect { q -> ['match': [(q.key): q.value.first()]] }]
-
-        result << [['nested': ['path': prefix,
-                               'query': ['bool': musts]]]]
+    private List<Map> createNestedBoolFilters(String prefix, Map<String, String[]> nestedQuery) {
+        /*
+            Example
+            prefix: "identifiedBy"
+            nestedQuery: ["identifiedBy.@type":["ISBN","LCCN"], "identifiedBy.value":["1234","5678"]]
+         */
+        
+        int maxLen = nestedQuery.collect { it.value }.collect { it.length }.max()
+        
+        List result = []
+        for (int i = 0 ; i < maxLen ; i++) {
+            List<Map> musts = nestedQuery.findResults {
+                it.value.length > i 
+                    ? ['match': [(it.key): it.value[i]]]
+                    : null
+            }
+            
+            result << [ 'nested': [
+                            'path': prefix, 
+                            'query': ['bool': ['must': musts]]]]
+        }
 
         return result
     }
-
+    
     /**
      * Can this query string be handled by ES simple_query_string?
      */
@@ -759,15 +772,15 @@ class ESQuery {
         }
     }
 
-    static Set getDateFields(Map mappings) {
-        Set dateFields = [] as Set
+    static Set getFieldsOfType(String type, Map mappings) {
+        Set fields = [] as Set
         DocumentUtil.findKey(mappings['properties'], 'type') { value, path ->
-            if (value == 'date') {
-                dateFields.add(path.dropRight(1).findAll{ it != 'properties'}.join('.'))
+            if (value == type) {
+                fields.add(path.dropRight(1).findAll{ it != 'properties'}.join('.'))
             }
             DocumentUtil.NOP
         }
-        return dateFields
+        return fields
     }
 
     /**

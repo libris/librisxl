@@ -1,0 +1,191 @@
+# ICU transform rules
+
+# Common base for slavic languages in cyrillic script.
+# "Kyrillisk skrift för slaviska språk enligt ISO 9:1995"
+# https://metadatabyran.kb.se/download/18.6945cdaa174b74a2c3615fe/1601917435290/Kyrilliska%20alfabetet.pdf
+# https://metadatabyran.kb.se/beskrivning/specialanvisningar/mangsprak/romaniseringsscheman#h-Kyrilliskskrift
+
+# А а a
+\u0410 <> A ;
+\u0430 <> a ;
+
+# Б б b
+\u0411 <> B ;
+\u0431 <> b ;
+
+# В в v
+\u0412 <> V ;
+\u0432 <> v ;
+
+# Ѓ ѓ ǵ
+\u0403 <> \u01F4 ;
+\u0453 <> \u01F5 ;
+
+# Ґ ґ g
+\u0490 <> G ;
+\u0491 <> g ;
+
+# Д д d
+\u0414 <> D ;
+\u0434 <> d ;
+
+# Ђ ђ đ
+\u0402 <> \u0110 ;
+\u0452 <> \u0111 ;
+
+# Е е e
+\u0415 <> E ;
+\u0435 <> e ;
+
+# Ё ë ë
+# E och Ë betraktas i ryskan (men ej i vitryskan) vid alfabetisering som samma bokstav
+\u0401 <> \u00CB ;
+\u00EB <> \u00EB ;
+
+# Ж ж ž
+\u0416 <> \u017D ;
+\u0436 <> \u017E ;
+
+# З з z
+\u0417 <> Z ;
+\u0437 <> z ;
+
+# Й й j
+\u0419 <> J ;
+\u0439 <> j ;
+
+# І і і
+# TODO check
+#\u0406 <> \u0406 ;
+#\u0456 <> \u0456 ;
+\u0406 <> I ;
+\u0456 <> i ;
+
+# Ї ї ï
+\u0407 <> \u00CF ;
+\u0457 <> \u00EF ;
+
+# J j j
+# J <> J ;
+# j <> j ;
+
+# К к k
+\u041A <> K ;
+\u043A <> k ;
+
+# Ќ ќ ḱ
+\u040C <> \u1E30 ;
+\u045C <> \u1E31 ;
+
+# Л л l
+\u041B <> L ;
+\u043B <> l ;
+
+# Љ љ lj
+\u0409 } [:LowercaseLetter:] <> Lj;
+\u0409 <> LJ ;
+\u0459 <> lj ;
+
+# М м m
+\u041C <> M ;
+\u043C <> m ;
+
+# Н н n
+\u041D <> N ;
+\u043D <> n ;
+
+# Њ њ nj
+\u040A } [:LowercaseLetter:] <> Nj;
+\u040A <> NJ ;
+\u045A <> nj ;
+
+# О о o
+\u041E <> O ;
+\u043E <> o ;
+
+# П п p
+\u041F <> P ;
+\u043F <> p ;
+
+# Р р r
+\u0420 <> R ;
+\u0440 <> r ;
+
+# С с s
+\u0421 <> S ;
+\u0441 <> s ;
+
+# Т т t
+\u0422 <> T ;
+\u0442 <> t ;
+
+# Ћ ћ ć
+\u040B <> \u0106 ;
+\u045B <> \u0107 ;
+
+# У у u
+\u0423 <> U ;
+\u0443 <> u ;
+
+# Ў ў ŭ
+\u040E <> \u016C ;
+\u045E <> \u016D ;
+
+# Ф ф f
+\u0424 <> F ;
+\u0444 <> f ;
+
+# Ц ц c
+\u0426 <> C ;
+\u0446 <> c ;
+
+# Ч ч č
+\u0427 <> \u010C ;
+\u0447 <> \u010D ;
+
+# Џ џ dž
+\u040F } [:LowercaseLetter:] <> D\u017E;
+\u040F <> D\u017D ;
+\u045F <> d\u017E ;
+
+# Ш ш š
+\u0428 <> \u0160 ;
+\u0448 <> \u0161 ;
+
+# Ы ы y
+\u042B <> Y ;
+\u044B <> y ;
+
+# Ь ь ʹ
+\u042C <> \u02B9 ;
+\u044C <> \u02B9 ;
+
+# Ѣ ѣ (ĕ)
+\u0462 <> (\u0114) ;
+\u0463 <> (\u0115) ;
+
+# Э э ė
+\u042D <> \u0116 ;
+\u044D <> \u0117 ;
+
+# Ю ю ju
+\u042E } [:LowercaseLetter:] <> Ju;
+\u042E <> JU ;
+\u044E <> ju ;
+
+# Я я ja
+\u042F } [[:LowercaseLetter:][:^Letter:]] <> Ja;
+\u042F <> JA ;
+\u044F <> ja ;
+
+# Ө ө ḟ
+\u04E8 <> \u1E1E ;
+\u04E9 <> \u1E1F ;
+
+# Ѵ ѵ ẏ
+\u0474 <> \u1E8E ;
+\u0475 <> \u1E8F ;
+
+# Ѫ ѫ ă
+\u046A <> \u0102 ;
+\u046B <> \u0103 ;

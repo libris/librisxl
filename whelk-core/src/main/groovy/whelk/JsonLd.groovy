@@ -69,8 +69,12 @@ class JsonLd {
         ] as Set
     }
 
-    private static Logger log = LogManager.getLogger(JsonLd.class)
+    static final String SUB_PROPERTY_OF = 'subPropertyOf'
+    static final String ALTERNATE_PROPERTIES = 'alternateProperties'
+    static final String RANGE = 'range'
 
+    private static Logger log = LogManager.getLogger(JsonLd.class)
+    
     Map<String, Map> context = [:]
     Map displayData
     Map vocabIndex
@@ -133,12 +137,12 @@ class JsonLd {
         superClassOf = generateSubTermLists("subClassOf")
 
         subPropertiesByType = new HashMap<String, Set>()
-        superPropertyOf = generateSubTermLists("subPropertyOf")
+        superPropertyOf = generateSubTermLists(SUB_PROPERTY_OF)
 
         categories = generateSubTermLists('category')
         
         def zipMaps = { a, b -> (a.keySet() + b.keySet()).collectEntries{k -> [k, a.get(k, []) + b.get(k, [])]}}
-        inRange = zipMaps(generateSubTermLists('rangeIncludes'), generateSubTermLists('range'))
+        inRange = zipMaps(generateSubTermLists('rangeIncludes'), generateSubTermLists(RANGE))
         
         buildLangContainerAliasMap()
 
@@ -178,10 +182,12 @@ class JsonLd {
             def alias = langContainerAlias[p]
             return alias ? [p, alias] : p
         }
-        
+
         eachLens { lens ->
             lens['showProperties'] = lens['showProperties'].collect { p ->
-                isAlternateProperties(p)
+                // We only expand @language containers so { subPropertyOf:, range: } in alternateProperties 
+                // is not applicable since language maps can only contain strings.
+                isAlternateProperties(p) 
                     ? ((Map) p).collectEntries { k, v -> [(k), v.collect{ expand(it) }] }
                     : expand(p)
             }.flatten()
@@ -511,6 +517,10 @@ class JsonLd {
         return (o instanceof List) ? (List) o : o != null ? [o] : []
     }
 
+    static boolean looksLikeIri(String s) {
+        s && (s.startsWith('https://') || s.startsWith('http://'))
+    }
+
     static List<List<String>> findPaths(Map obj, String key, String value) {
         return findPaths(obj, key, [value].toSet())
     }
@@ -670,10 +680,19 @@ class JsonLd {
 
         additionalObjects.each { object ->
             if (object instanceof Map) {
-                if (((Map)object).containsKey('@graph')) {
+                if (object.containsKey(GRAPH_KEY)) {
+                    if (!object.containsKey(ID_KEY)) {
+                        def data = object[GRAPH_KEY]
+                        Map record = (Map) (data instanceof List ? ((List)data)[0] : data)
+                        String cardId = toCardId((String) record[ID_KEY])
+                        object = [
+                            (ID_KEY): cardId,
+                            (GRAPH_KEY): object[GRAPH_KEY]
+                        ]
+                    }
                     graphItems << object
                 } else {
-                    graphItems << ['@graph': object]
+                    graphItems << [(GRAPH_KEY): object]
                 }
             }
         }
@@ -681,6 +700,10 @@ class JsonLd {
         jsonLd[GRAPH_KEY] = graphItems
 
         return jsonLd
+    }
+
+    String toCardId(String id) {
+        return "$id?lens=card"
     }
 
     Map toCard(Map thing, List<List> preservePaths) {
@@ -826,14 +849,26 @@ class JsonLd {
             return prop
         }
         
-        def a = prop['alternateProperties'].findResult {
+        def a = prop[ALTERNATE_PROPERTIES].findResult {
             def hasByLang = { List<String> a -> // List with [prop, propAlias1, propAlias2...]
                  thing[a.head()] || (a.tail().any { 
                      it.endsWith('ByLang') && ((Map<String, ?>) thing.get(it))?.keySet()?.any{ it in languagesToKeep } 
                  })
             }
-            if (it instanceof List && hasByLang(it))
-            {
+            if (isAlternateSubProperty(it)) {
+                // alternateProperties with locally defined subProperty with narrower range.
+                // Example: {"subPropertyOf": "hasTitle", "range": "KeyTitle"},
+                // The correct RDF semantics would be to match range against all subclasses.
+                // For our current use cases we have no need for that. But we have a need to match against exactly Title without 
+                // any subclasses (e.g. VariantTitle) which is actually not possible to express with this construct. 
+                // So we use this broken implementation for now.
+                def range = it[RANGE]
+                def p = asList(it[SUB_PROPERTY_OF])
+                if (p.any { thing[it] instanceof Map && thing[it]['@type'] == range }) {
+                    return p.first()
+                }
+            }
+            else if (it instanceof List && hasByLang(it)) {
                 it.first()
             }
             else if (thing[it]) {
@@ -925,8 +960,13 @@ class JsonLd {
         }
         if (lens) {
             List propertiesToKeep = (List) lens.get("showProperties")
-                    .collect { prop -> isAlternateProperties(prop) ? prop['alternateProperties'] : prop }
+                    .collect { prop -> 
+                        isAlternateProperties(prop) 
+                                ? prop[ALTERNATE_PROPERTIES].collect { isAlternateSubProperty(it) ? it[SUB_PROPERTY_OF] : it } 
+                                : prop 
+                    }
                     .flatten()
+                    .unique()
             
             for (prop in propertiesToKeep) {
                 def values = object[prop]
@@ -1001,12 +1041,15 @@ class JsonLd {
                 }
                 else if (isAlternateProperties(p)) {
                     // We keep _all_ alternate properties, selecting one is more of a display thing 
-                    p['alternateProperties'].each { a ->
-                        if (a instanceof List) {
+                    p[ALTERNATE_PROPERTIES].each { a ->
+                        if (a instanceof String && thing[a]) {
+                            result[a] = thing[a]
+                        }
+                        else if (a instanceof List) {
                             a.each { if (thing[it]) result[it] = thing[it] }
                         }
-                        else if (thing[a]) {
-                            result[a] = thing[a]
+                        else if (isAlternateSubProperty(a) && thing[a[SUB_PROPERTY_OF]]) {
+                            result[a[SUB_PROPERTY_OF]] = thing[a[SUB_PROPERTY_OF]]
                         }
                     }
                 }
@@ -1018,7 +1061,11 @@ class JsonLd {
     }
     
     private static boolean isAlternateProperties(def p) {
-        p instanceof Map && p.size() == 1 && p['alternateProperties']
+        p instanceof Map && p.size() == 1 && p[ALTERNATE_PROPERTIES]
+    }
+    
+    private static boolean isAlternateSubProperty(def p) {
+        p instanceof Map && p[SUB_PROPERTY_OF] && p[RANGE]
     }
 
     Map getLensFor(Map thing, Map lensGroup) {
@@ -1166,23 +1213,23 @@ class JsonLd {
         }
     }
 
-    private static Map embed(String mainId, Map mainItem, Map idMap, Set embedChain) {
+    private static Map embed(String mainId, Map mainItem, Map idMap, Set embedChain, int depth = 0) {
         embedChain.add(mainId)
         Map newItem = [:]
         mainItem.each { key, value ->
             if (key != JSONLD_ALT_ID_KEY)
-                newItem.put(key, toEmbedded(value, idMap, embedChain))
+                newItem.put(key, toEmbedded(value, idMap, embedChain, depth))
             else
                 newItem.put(key, value)
         }
         return newItem
     }
 
-    private static Object toEmbedded(Object o, Map idMap, Set embedChain) {
+    private static Object toEmbedded(Object o, Map idMap, Set embedChain, int depth) {
         if (o instanceof List) {
             def newList = []
             o.each {
-                newList.add(toEmbedded(it, idMap, embedChain))
+                newList.add(toEmbedded(it, idMap, embedChain, depth))
             }
             return newList
         }
@@ -1196,7 +1243,10 @@ class JsonLd {
                 obj = fullObj ? [:] + fullObj : null
             }
             if (obj) {
-                return embed(oId, obj, idMap, new HashSet<String>(embedChain))
+                int i = oId ? 1 : 0
+                return depth < 2
+                        ? embed(oId, obj, idMap, new HashSet<String>(embedChain), depth + i)
+                        : obj
             }
         }
         return o

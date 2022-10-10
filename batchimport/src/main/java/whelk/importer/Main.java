@@ -8,6 +8,8 @@ import se.kb.libris.util.marc.io.Iso2709MarcRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
 import whelk.component.PostgreSQLComponent;
+import whelk.importer.ThreadPool.Worker;
+import whelk.meta.WhelkConstants;
 
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -20,6 +22,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.Collections;
 import java.util.Iterator;
 
@@ -156,7 +162,14 @@ public class Main
         int threadCount = 1;
         if (parameters.getRunParallel())
             threadCount = 2 * Runtime.getRuntime().availableProcessors();
-        ThreadPool threadPool = new ThreadPool( threadCount );
+        ThreadPoolExecutor threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadCount);
+        threadPool.setThreadFactory(new ThreadFactory() {
+            ThreadGroup group = new ThreadGroup(WhelkConstants.BATCH_THREAD_GROUP);
+
+            public Thread newThread(Runnable runnable) {
+                return new Thread(group, runnable);
+            }
+        });
 
         MarcXmlRecordReader reader = null;
         try
@@ -181,7 +194,8 @@ public class Main
                 {
                     if (recordsInBatch > 200)
                     {
-                        threadPool.executeOnThread(batch, Main::importBatch);
+                        executeOnThread(threadPool, batch, Main::importBatch);
+                                
                         batch = new ArrayList<>();
                         recordsInBatch = 0;
                     }
@@ -197,24 +211,35 @@ public class Main
                     {
                         long recordsPerSec = recordsBatched / secondDiff;
 	    		if ( verbose ) {
-                        	System.err.println("info: Currently importing " + recordsPerSec + " records / sec. Active threads: " + threadPool.getActiveThreadCount());
+                        	System.err.println("info: Currently importing " + recordsPerSec + " records / sec. Active threads: " + threadPool.getActiveCount());
 			}
                     }
                 }
             }
             // The last batch will not be followed by another bib.
-            threadPool.executeOnThread(batch, Main::importBatch);
+            executeOnThread(threadPool, batch, Main::importBatch);
         }
         finally
         {
             if (reader != null)
                 reader.close();
-            threadPool.joinAll();
-
+            threadPool.shutdown();
+            // TODO: switch to BlockingThreadPool so that the main thread cannot queue too much work in case of gigantic import file?
+            if (!threadPool.awaitTermination(12, TimeUnit.HOURS)) {
+                System.err.println("warn: thread pool did not shut down within timeout");
+            }
         }
 
 	inputStream.close();
 	removeTemporaryFiles();
+    }
+
+    private static <T> void executeOnThread(ThreadPoolExecutor threadPool, T workLoad, Worker<T> worker) {
+        threadPool.execute(new Runnable() {
+            public void run() {
+                worker.doWork(workLoad);
+            }
+        });
     }
 
     private static void removeTemporaryFiles()

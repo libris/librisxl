@@ -10,6 +10,8 @@ import whelk.filter.BlankNodeLinker
 import whelk.filter.LanguageLinker
 import whelk.util.DocumentUtil
 import whelk.util.DocumentUtil.Remove
+import whelk.util.Romanizer
+import whelk.util.Unicode
 
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
@@ -51,6 +53,24 @@ class Normalizers {
             linker.linkAll(doc.data, 'language')
         }
     }
+    
+    static DocumentNormalizer romanizer(Whelk whelk) {
+        def langAliases = whelk.jsonld.langContainerAlias.values() as Set
+        
+        return { Document doc ->
+            traverse(doc.data, { value, path ->
+                if (value instanceof Map && path && path.last() instanceof String && path.last() in langAliases) {
+                    def byLang = value
+                    
+                    byLang.keySet()
+                            .intersect(Romanizer.romanizableLangTags())
+                            .collectEntries { langTag -> Romanizer.romanize((String) byLang[langTag], langTag) }
+                            .each { langTagT, stringT -> byLang.putIfAbsent(langTagT, stringT) }
+                }
+                DocumentUtil.NOP
+            })
+        }
+    }
 
     /**
      * Link blank nodes based on "heuristic identifiers"
@@ -80,6 +100,7 @@ class Normalizers {
                 'ansi'    : 'Ansi',
                 'doi'     : 'DOI',
                 'danacode': 'Danacode',
+                'gtin-14' : 'GTIN14',
                 'hdl'     : 'Hdl',
                 'isan'    : 'ISAN',
                 'isni'    : 'ISNI',

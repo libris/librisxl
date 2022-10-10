@@ -19,7 +19,7 @@ import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
 import whelk.Document
-import whelk.converter.JsonLdToTurtle
+import whelk.converter.JsonLdToTrigSerializer
 import whelk.exception.UnexpectedHttpStatusException
 import whelk.util.Metrics
 
@@ -43,7 +43,7 @@ class Virtuoso {
 
     Virtuoso(Map jsonldContext, HttpClientConnectionManager cm, String endpoint, String user, String pass) {
         Preconditions.checkNotNull(jsonldContext)
-        this.ctx = JsonLdToTurtle.parseContext(['@context': jsonldContext])
+        this.ctx = jsonldContext
         this.sparqlCrudEndpoint = Preconditions.checkNotNull(endpoint)
         Preconditions.checkNotNull(cm)
         Preconditions.checkNotNull(user, "user was null")
@@ -133,13 +133,8 @@ class Virtuoso {
     }
 
     private String convertToTurtle(Document doc) {
-        final Map opts = [markEmptyBnode: true]
-        ByteArrayOutputStream out = new ByteArrayOutputStream()
-        JsonLdToTurtle serializer = new JsonLdToTurtle(ctx, out, opts)
-
-        serializer.toTurtle(doc.data)
-
-        return new String(out.toByteArray(), StandardCharsets.UTF_8)
+        def bytes = JsonLdToTrigSerializer.toTurtle(ctx, doc.data).toByteArray()
+        return new String(bytes, StandardCharsets.UTF_8)
     }
     
     private static CloseableHttpClient buildHttpClient(HttpClientConnectionManager cm, String user, String password) {

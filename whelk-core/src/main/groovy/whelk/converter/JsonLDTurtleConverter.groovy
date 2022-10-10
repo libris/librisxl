@@ -13,28 +13,14 @@ class JsonLDTurtleConverter implements FormatConverter {
 
     String resultContentType = "text/turtle"
     String requiredContentType = "application/ld+json"
-    def context
     def base
-    
+
     JsonLDTurtleConverter(String base = null, Whelk whelk = null) {
-        if (whelk) {
-            context = JsonLdToTurtle.parseContext(['@context': whelk.jsonld.context])
-        } else {
-            readContextFromDb()
-        }
         this.base = base
     }
 
-    private synchronized readContextFromDb() {
-        if (context == null) {
-            Properties props = PropertyLoader.loadProperties("secret")
-            PostgreSQLComponent postgreSQLComponent = new PostgreSQLComponent(props.getProperty("sqlUrl"))
-            context = JsonLdToTurtle.parseContext(mapper.readValue(postgreSQLComponent.getContext(), HashMap.class) )
-        }
-    }
-
     Map convert(Map source, String id) {
-        def bytes = JsonLdToTurtle.toTurtle(context, source, base).toByteArray()
+        def bytes = JsonLdToTrigSerializer.toTurtle(null, source, base).toByteArray()
         return [(JsonLd.NON_JSON_CONTENT_KEY) : (new String(bytes, "UTF-8"))]
     }
 }

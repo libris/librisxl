@@ -25,14 +25,17 @@ import static groovy.transform.TypeCheckingMode.SKIP
 class MarcFrameConverter implements FormatConverter {
 
     ObjectMapper mapper = new ObjectMapper()
-    String cfgBase = "ext"
     LinkFinder linkFinder
     JsonLd ld
 
+    String configResourceBase
+    String marcframeFile = "marcframe.json"
+
     protected MarcConversion conversion
 
-    MarcFrameConverter(LinkFinder linkFinder = null, JsonLd ld = null) {
+    MarcFrameConverter(LinkFinder linkFinder = null, JsonLd ld = null, configResourceBase = "ext") {
         this.linkFinder = linkFinder
+        this.configResourceBase = configResourceBase
         setLd(ld)
     }
 
@@ -43,45 +46,34 @@ class MarcFrameConverter implements FormatConverter {
 
     void initialize() {
         if (conversion) return
-        initialize(readConfig("$cfgBase/marcframe.json"))
+        initialize((Map) readConfig(marcframeFile))
     }
 
     void initialize(Map config) {
-        def tokenMaps = loadTokenMaps(config.tokenMaps)
+        Map tokenMaps = config.tokenMaps
         conversion = new MarcConversion(this, config, tokenMaps)
     }
 
-    Map readConfig(String path) {
-        return getClass().classLoader.getResourceAsStream(path).withStream {
-            mapper.readValue(it, SortedMap)
+    Object readConfig(String path) {
+        return getClass().classLoader.getResourceAsStream("$configResourceBase/$path").withStream {
+            Object config = mapper.readValue(it, Object)
+            expandIncludes(config)
+            return config
         }
     }
 
-    Map loadTokenMaps(tokenMaps) {
-        def result = [:]
-        def maps = [:]
-        if (tokenMaps instanceof String) {
-            tokenMaps = [tokenMaps]
-        }
-        if (tokenMaps instanceof List) {
-            tokenMaps.each {
-                if (it instanceof String) {
-                    maps += readConfig("$cfgBase/$it")
+    void expandIncludes(o) {
+        if (o instanceof List) {
+            o.each { expandIncludes(it) }
+        } else if (o instanceof Map) {
+            o.each {
+                if (it.value instanceof Map && '@include' in it.value) {
+                    it.value = readConfig(it.value['@include'])
                 } else {
-                    maps += it
+                    expandIncludes(it.value)
                 }
             }
-        } else {
-            maps = tokenMaps
         }
-        maps.each { key, src ->
-            if (src instanceof String) {
-                result[key] = readConfig("$cfgBase/$src")
-            } else {
-                result[key] = src
-            }
-        }
-        return result
     }
 
     Map runConvert(Map marcSource, String recordId = null, Map extraData = null) {

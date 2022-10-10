@@ -1,5 +1,7 @@
 package whelk
 
+import org.apache.jena.iri.IRI
+import org.apache.jena.iri.IRIFactory
 import com.google.common.base.Preconditions
 import whelk.util.DocumentUtil
 
@@ -12,9 +14,13 @@ class JsonLdValidator {
             'definitions': Validation.Scope.DEFINITIONS,
             'hold': Validation.Scope.HOLD,
     ]
-
+    private Set langAliases
+    
+    static IRIFactory iriFactory = IRIFactory.iriImplementation()
+    
     private JsonLdValidator(JsonLd jsonLd) {
         this.jsonLd = jsonLd
+        langAliases = jsonLd.langContainerAlias.values() as Set
     }
 
     static JsonLdValidator from(JsonLd jsonLd) {
@@ -22,7 +28,7 @@ class JsonLdValidator {
         Preconditions.checkArgument(!jsonLd.context.isEmpty())
         Preconditions.checkArgument(!jsonLd.vocabIndex.isEmpty())
         def v = new JsonLdValidator(jsonLd)
-        v.setSkipTerms(['_marcUncompleted'])
+        v.setSkipTerms(['_marcUncompleted', '_marcFailedFixedFields'])
         return v
     }
 
@@ -79,6 +85,10 @@ class JsonLdValidator {
             }
             validation.at = path
 
+            if (checkLangContainer(path, key, value, validation)) {
+                return 
+            }
+            
             if (validation.scope == Validation.Scope.ALL) {
                 verifyAll(key, value, validation)
                 return
@@ -86,6 +96,7 @@ class JsonLdValidator {
 
             // Validations enabled for all collections
             checkIsNotNestedGraph(key, value, validation)
+            validateId(key, value, validation)
 
             // Additional per-collection validations
             switch (validation.scope) {
@@ -101,6 +112,9 @@ class JsonLdValidator {
                 case Validation.Scope.DEFINITIONS:
                     break
                 case Validation.Scope.HOLD:
+                    checkHasDefinition(key, validation)
+                    validateObjectProperties(key, value, validation)
+                    verifyVocabTerm(key, value, validation)
                     break
             }
         })
@@ -122,6 +136,8 @@ class JsonLdValidator {
         validateRepeatability(key, value, validation)
 
         validateObjectProperties(key, value, validation)
+
+        validateId(key, value, validation)
     }
 
     private void checkIsNotNestedGraph(String key, value, validation) {
@@ -161,6 +177,20 @@ class JsonLdValidator {
             handleError(new Error(Error.Type.MISSING_DEFINITION, key), validation)
         }
     }
+    
+    private boolean checkLangContainer( List path, String key, value, validation) {
+        if (langAliases.intersect(path)) {
+            if (key in langAliases) {
+                if (value !instanceof Map) {
+                    handleError(new Error(Error.Type.OBJECT_TYPE_EXPECTED, key, value), validation)
+                }
+            }
+            else if (value !instanceof String) {
+                handleError(new Error(Error.Type.UNEXPECTED, key, value), validation)
+            }
+            return true
+        }
+    }
 
     private boolean isVocabTerm(String key) {
         def contextDefinition = getContextDefinition(key)
@@ -195,6 +225,15 @@ class JsonLdValidator {
                 handleError(new Error(Error.Type.OBJECT_TYPE_EXPECTED, key, value) , validation)
             } else if (isVocabTerm(key) && valueIsObject) {
                 handleError(new Error(Error.Type.VOCAB_STRING_EXPECTED, key, value), validation)
+            }
+        }
+    }
+
+    private void validateId(String key, value, Validation validation) {
+        if (key == jsonLd.ID_KEY) {
+            IRI iri = iriFactory.create(value)
+            if (iri.hasViolation(false)) {
+                handleError(new Error(Error.Type.INVALID_IRI, key, value), validation)
             }
         }
     }
@@ -246,7 +285,8 @@ class JsonLdValidator {
             MISSING_DEFINITION("Unknown term. Missing definition"),
             UNEXPECTED("Unexpected value of key"),
             NESTED_GRAPH("Nested graph object found"),
-            INVALID_KEY("Invalid key")
+            INVALID_KEY("Invalid key"),
+            INVALID_IRI("Invalid IRI")
 
             final String description
 
@@ -284,6 +324,7 @@ class JsonLdValidator {
                     'type'       : type,
                     'description': type.description,
                     'path'       : path,
+                    'key'        : key,
                     'value'      : value
             ]
         }

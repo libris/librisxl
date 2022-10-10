@@ -40,9 +40,9 @@ class UserDataAPI extends HttpServlet {
         Map userInfo = request.getAttribute("user")
         if (!isValidUserWithPermission(request, response, userInfo))
             return
-
-        String id = userInfo.email.digest(ID_HASH_FUNCTION)
-        String data = whelk.getUserData(id) ?: "{}"
+        
+        String id = "${userInfo.id}".digest(ID_HASH_FUNCTION)
+        String data = whelk.getUserData(id) ?: upgradeOldEmailBasedEntry(userInfo) ?: "{}"
 
         def eTag = CrudUtils.ETag.plain(data.digest("MD5"))
         response.setHeader("ETag", eTag.toString())
@@ -63,9 +63,9 @@ class UserDataAPI extends HttpServlet {
         if (!isValidUserWithPermission(request, response, userInfo))
             return
 
-        String id = userInfo.email.digest(ID_HASH_FUNCTION)
+        String id = "${userInfo.id}".digest(ID_HASH_FUNCTION)
         String data = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()))
-        String idAndEmail = "${id} (${userInfo.email})"
+        String idAndEmail = "${id} (${userInfo.id} ${userInfo.email})"
 
         // Arbitrary upper limit to prevent Clearly Too Large things from being saved.
         // Can't rely on request.getContentLength() because that's sent by the client.
@@ -101,8 +101,28 @@ class UserDataAPI extends HttpServlet {
         if (!isValidUserWithPermission(request, response, userInfo))
             return
 
-        whelk.removeUserData(userInfo.email.digest(ID_HASH_FUNCTION))
+        whelk.removeUserData("${userInfo.id}".digest(ID_HASH_FUNCTION))
         response.setStatus(HttpServletResponse.SC_NO_CONTENT)
+    }
+    
+    private String upgradeOldEmailBasedEntry(Map userInfo) {
+        if (!userInfo.email) {
+            return null
+        }
+        
+        String email = userInfo.email.digest(ID_HASH_FUNCTION)
+        String data = whelk.getUserData(email)
+        if (data) {
+            String id = "${userInfo.id}".digest(ID_HASH_FUNCTION)
+            String idAndEmail = "${id} (${userInfo.id} ${userInfo.email})"
+            if (whelk.storeUserData(id, data)) {
+                whelk.removeUserData(email)
+                log.info("${idAndEmail} moved from email to id")
+            } else {
+                log.warn("${idAndEmail} could not be saved to database")
+            }
+        }
+        return data
     }
 
     private static boolean isValidUserWithPermission(HttpServletRequest request, HttpServletResponse response, Map userInfo) {
@@ -112,13 +132,12 @@ class UserDataAPI extends HttpServlet {
             return false
         }
 
-        if (!userInfo.containsKey("email")) {
-            log.info("User check failed: 'email' missing in user")
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Key 'email' missing in user info")
+        if (!userInfo.containsKey("id")) {
+            log.info("User check failed: 'id' missing in user")
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Key 'id' missing in user info")
             return false
         }
-
-        String id = userInfo.email.digest(ID_HASH_FUNCTION)
+        String id = "${userInfo.id}".digest(ID_HASH_FUNCTION)
         if (getRequestId(request) != id) {
             log.info("ID in request doesn't match ID from token")
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "ID in request doesn't match ID from token")

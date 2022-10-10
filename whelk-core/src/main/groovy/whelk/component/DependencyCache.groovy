@@ -19,6 +19,8 @@ import java.util.concurrent.TimeUnit
 import java.util.function.BiFunction
 import java.util.function.Supplier
 
+import static whelk.component.PostgreSQLComponent.NotificationType.DEPENDENCY_CACHE_INVALIDATE
+
 @Log
 class DependencyCache {
     private static final int CACHE_SIZE = 50_000
@@ -59,11 +61,13 @@ class DependencyCache {
     }
 
     void invalidate(Document createdDoc) {
+        def i = []
         createdDoc.getThingIdentifiers().each { fromIri ->
             createdDoc.getExternalRefs().each { link ->
-                invalidate(fromIri, link)
+                i << new Tuple2(fromIri, link)
             }
         }
+        _invalidate(i)
     }
 
     void invalidate(Document preUpdateDoc, Document postUpdateDoc) {
@@ -76,16 +80,44 @@ class DependencyCache {
         Set<Link> added = (after - before)
         Set<Link> removed = (before - after)
 
+        def i = []
         (added + removed).each { Link link ->
             thingIris.each { fromIri ->
-                invalidate(fromIri, link)
+                i << new Tuple2(fromIri, link)
             }
         }
+        _invalidate(i)
     }
 
+    private void _invalidate(Collection<Tuple2<String, Link>> fromTo) {
+        fromTo.each { String fromIri, Link link ->
+            invalidate(fromIri, link)
+        }
+        
+        def notification = fromTo.collect{ String fromIri, Link link ->
+            "$fromIri ${link.relation} ${link.iri}"
+        }
+        log.debug("Sending {}", notification)
+        storage.sendNotification(DEPENDENCY_CACHE_INVALIDATE, notification)
+    }
+    
+    void handleInvalidateNotification(List<String> payload) {
+        payload.each {
+            def s = it.split(' ')
+            def (fromIri, relation, toIri) = [s[0], s[1], s[2]]
+            log.debug("Invalidate {} {} {}", fromIri, relation, toIri)
+            invalidate(fromIri, new Link(relation: relation, iri: toIri))
+        }
+    }
+    
     void invalidate(String fromIri, Link link) {
         dependersCache.invalidate(link)
         dependenciesCache.invalidate(new Link(iri: fromIri, relation: link.relation))
+    }
+    
+    void invalidateAll() {
+        dependenciesCache.invalidateAll()
+        dependersCache.invalidateAll()
     }
 
     void logStats() {

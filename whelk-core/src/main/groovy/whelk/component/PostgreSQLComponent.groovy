@@ -7,6 +7,9 @@ import com.zaxxer.hikari.metrics.prometheus.PrometheusHistogramMetricsTrackerFac
 import groovy.json.StringEscapeUtils
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
+import io.prometheus.client.Counter
+import org.postgresql.PGConnection
+import org.postgresql.PGNotification
 import org.postgresql.PGStatement
 import org.postgresql.util.PGobject
 import org.postgresql.util.PSQLException
@@ -75,10 +78,15 @@ class PostgreSQLComponent {
 
     private static final int DEFAULT_MAX_POOL_SIZE = 16
     private static final String driverClass = "org.postgresql.Driver"
+    
+    private static final int MAX_PG_NOTIFY_PAYLOAD_BYTES = 8000
+    private static final String NOTIFICATION_DELIMITER = '¤'
 
     private long embellishCacheMaxSize = 10L * 1024L * 1024L * 1024L // default 10GB
 
     private Random random = new Random(System.currentTimeMillis())
+
+    private String whelkInstanceId = "${ProcessHandle.current().pid()}@${InetAddress.getLocalHost().getHostName()}"
 
     // SQL statements
     private static final String UPDATE_DOCUMENT = """
@@ -118,6 +126,12 @@ class PostgreSQLComponent {
     private static final String GET_DOCUMENT_VERSION =
             "SELECT id, data FROM lddb__versions WHERE id = ? AND checksum = ?"
 
+    private static final String BULK_LOAD_DOCUMENTS = """
+            SELECT id, data, created, modified, deleted
+            FROM unnest(?) AS in_id, lddb l 
+            WHERE in_id = l.id
+            """.stripIndent()
+    
     private static final String GET_EMBELLISHED_DOCUMENT =
             "SELECT data from lddb__embellished where id = ?"
 
@@ -134,10 +148,10 @@ class PostgreSQLComponent {
     private static final String GET_TABLE_SIZE_BYTES =
             "SELECT pg_total_relation_size(?)"
 
-    private static final String CLEAR_EMBELLISHED = "TRUNCATE TABLE lddb__embellished"
+    private static final String CLEAR_EMBELLISHED = "DELETE FROM lddb__embellished"
 
     private static final String GET_DOCUMENT_VERSION_BY_MAIN_ID = """
-            SELECT id, data 
+            SELECT id, data
             FROM lddb__versions 
             WHERE id = (SELECT id FROM lddb__identifiers WHERE iri = ? AND mainid = 't') 
             AND checksum = ?
@@ -156,7 +170,7 @@ class PostgreSQLComponent {
             WHERE id = (SELECT id FROM lddb__identifiers WHERE iri = ? AND mainid = 't')
             ORDER BY GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) ASC
             """.stripIndent()
-
+    
     private static final String LOAD_ALL_DOCUMENTS =
             "SELECT id, data, created, modified, deleted FROM lddb WHERE modified >= ? AND modified <= ?"
 
@@ -446,6 +460,7 @@ class PostgreSQLComponent {
         }
 
         this.dependencyCache = new DependencyCache(this)
+        new NotificationListener().start()
     }
 
     private void cacheEmbellishedDocument(String id, Document embellishedDocument) {
@@ -690,6 +705,7 @@ class PostgreSQLComponent {
                 refreshDerivativeTables(doc, connection, deleted)
 
                 connection.commit()
+                connection.setAutoCommit(true)
                 def status = status(doc.getURI(), connection)
                 if (status.exists) {
                     doc.setCreated((Date) status['created'])
@@ -810,26 +826,27 @@ class PostgreSQLComponent {
         }
     }
 
-    Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum) {
+    Document storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, String oldChecksum) {
         return withDbConnection {
             Connection connection = getMyConnection()
             connection.setAutoCommit(false)
             List<Runnable> postCommitActions = []
-            Document result = storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum, connection, postCommitActions)
+            Document result = storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, changedIn, changedBy, oldChecksum, connection, postCommitActions)
             connection.commit()
+            connection.setAutoCommit(true)
             postCommitActions.each { it.run() }
             return result
         }
     }
 
-    Document storeUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, UpdateAgent updateAgent) {
+    Document storeUpdate(String id, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, UpdateAgent updateAgent) {
         int retriesLeft = STALE_UPDATE_RETRIES
         while (true) {
             try {
                 Document doc = load(id)
                 String checksum = doc.getChecksum(jsonld)
                 updateAgent.update(doc)
-                Document updated = storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, checksum)
+                Document updated = storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, changedIn, changedBy, checksum)
                 return updated
             }
             catch (StaleUpdateException e) {
@@ -844,7 +861,7 @@ class PostgreSQLComponent {
         }
     }
 
-    Document storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy,
+    Document storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy,
                                        String oldChecksum, Connection connection, List<Runnable> postCommitActions) {
         String id = doc.shortId
         log.debug("Saving (atomic update) ${id}")
@@ -871,6 +888,10 @@ class PostgreSQLComponent {
                 changedBy = oldChangedBy
 
             normalizeDocumentForStorage(doc, connection)
+
+            if (!writeIdenticalVersions && preUpdateDoc.getChecksum(jsonld).equals(doc.getChecksum(jsonld))) {
+                throw new CancelUpdateException()
+            }
             
             boolean deleted = doc.getDeleted()
             
@@ -936,7 +957,7 @@ class PostgreSQLComponent {
                 SortedSet<String> idsLinkingToOldId = getDependencyData(id, GET_DEPENDERS, connection)
                 for (String dependerId : idsLinkingToOldId) {
                     Document depender = load(dependerId)
-                    storeAtomicUpdate(depender, true, changedIn, changedBy, depender.getChecksum(jsonld), connection, postCommitActions)
+                    storeAtomicUpdate(depender, true, false, changedIn, changedBy, depender.getChecksum(jsonld), connection, postCommitActions)
                 }
             }
 
@@ -1467,8 +1488,8 @@ class PostgreSQLComponent {
             try {
                 log.debug("Trying to save a version of ${doc.getShortId() ?: ""} with checksum ${doc.getChecksum(jsonld)}. Modified: $modTime")
                 insVersion = rigVersionStatement(insVersion, doc, createdTime,
-                                              modTime, changedIn, changedBy,
-                                              collection, deleted)
+                        modTime, changedIn, changedBy,
+                        collection, deleted)
                 insVersion.executeUpdate()
                 return true
             } catch (Exception e) {
@@ -1482,7 +1503,7 @@ class PostgreSQLComponent {
             return false
         }
     }
-
+    
     private PreparedStatement rigVersionStatement(PreparedStatement insvers,
                                                          Document doc, Date createdTime,
                                                          Date modTime, String changedIn,
@@ -1826,6 +1847,27 @@ class PostgreSQLComponent {
             doc = loadFromSql(GET_DOCUMENT, [1: id])
         }
         return doc
+    }
+    
+    Map<String, Document> bulkLoad(Iterable<String> systemIds) {
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            try {
+                preparedStatement = connection.prepareStatement(BULK_LOAD_DOCUMENTS)
+                preparedStatement.setArray(1,  connection.createArrayOf("TEXT", systemIds as String[]))
+
+                rs = preparedStatement.executeQuery()
+                SortedMap<String, Document> result = new TreeMap<>()
+                while(rs.next()) {
+                    result[rs.getString("id")] = assembleDocument(rs)
+                }
+                return result
+            } finally {
+                close(rs, preparedStatement)
+            }
+        }
     }
 
     String getSystemIdByIri(String iri) {
@@ -2244,6 +2286,9 @@ class PostgreSQLComponent {
                     if (items.value instanceof Map || items.value instanceof List) {
                         selectstmt.setObject((Integer) items.key, mapper.writeValueAsString(items.value), OTHER)
                     }
+                    if (items.value instanceof Long) {
+                        selectstmt.setLong((Integer) items.key, (Long) items.value)
+                    }
                 }
                 log.trace("Executing query")
                 rs = selectstmt.executeQuery()
@@ -2460,14 +2505,14 @@ class PostgreSQLComponent {
         }
     }
 
-    void remove(String identifier, String changedIn, String changedBy) {
+    void remove(String identifier, String changedIn, String changedBy, boolean force=false) {
         if (versioning) {
-            if(!followDependers(identifier).isEmpty())
+            if(!force && !followDependers(identifier).isEmpty())
                 throw new RuntimeException("Deleting depended upon records is not allowed.")
 
             log.debug("Marking document with ID ${identifier} as deleted.")
             try {
-                storeUpdate(identifier, false, changedIn, changedBy,
+                storeUpdate(identifier, false, true, changedIn, changedBy,
                     { Document doc ->
                         doc.setDeleted(true)
                         // Add a tombstone marker (without removing anything) perhaps?
@@ -2552,6 +2597,119 @@ class PostgreSQLComponent {
             } finally {
                 close(preparedStatement)
             }
+        }
+    }
+    
+    enum NotificationType {
+        DEPENDENCY_CACHE_INVALIDATE
+        
+        String id() {
+            // Made lower case by PG when used as a relname, but not when used as a string.
+            // So always make it lower case.
+            // https://stackoverflow.com/a/5173993
+            toString().toLowerCase(Locale.ROOT)
+        }
+        
+        static NotificationType parse(String id) {
+            values().find{ it.id() == id }
+        }
+    }
+    
+    void sendNotification(NotificationType type, List<String> payload) {
+        int MAX_BYTES_PER_CHAR_UNICODE_BMP = 3 // overly cautious
+        
+        def messages = []
+        StringBuilder s = new StringBuilder().append(whelkInstanceId)
+        for (String p : payload) {
+            if (s.size() + p.size() + 1 > MAX_PG_NOTIFY_PAYLOAD_BYTES / MAX_BYTES_PER_CHAR_UNICODE_BMP) {
+                messages << s.toString()
+                s = new StringBuilder().append(whelkInstanceId)
+            }
+            s.append(NOTIFICATION_DELIMITER).append(p)
+        }
+        messages << s.toString()
+        
+        withDbConnection {
+            for (String message : messages) {
+                try (PreparedStatement statement = getMyConnection().prepareStatement('SELECT pg_notify(?, ?)')) {
+                    statement.setString(1, type.id())
+                    statement.setString(2, message)
+                    statement.execute()
+                }
+            }
+        }
+    }
+    
+    class NotificationListener extends Thread {
+        private static final String NAME = 'pg_listener'
+        private static final Counter counter = Counter.build()
+                .name("${NAME}_handled")
+                .labelNames("name")
+                .help("Number of notifications handled.").register()
+
+        DataSource dataSource
+        
+        NotificationListener() {
+            dataSource = createAdditionalConnectionPool(NAME, 1)
+            setDaemon(true)
+            setName(NAME)
+        }
+
+        @Override
+        void run() {
+            while (true) {
+                try(Connection connection = dataSource.getConnection()) {
+                    for (NotificationType t : NotificationType.values()) {
+                        try (def statement = connection.createStatement()) {
+                            statement.execute("LISTEN ${t.id()}")
+                            log.info("Started listening for ${t.id()}")
+                        }
+                    }
+                    onConnected()
+                    listen(connection.unwrap(PGConnection))
+                }
+                catch (Exception e) {
+                    log.warn("Error checking notifications: $e", e)
+                }
+            }
+        }
+        
+        private void listen (PGConnection connection) {
+            while (true) {
+                def notifications = connection.getNotifications(0)  // blocks
+                if (!notifications) {
+                    continue
+                }
+
+                for (PGNotification notification : notifications) {
+                    try {
+                        String msg = notification.getParameter()
+                        if (!msg.startsWith(whelkInstanceId)) {
+                            def payload = msg.split(NOTIFICATION_DELIMITER).drop(1) as List
+                            handleNotification(NotificationType.parse(notification.getName()), payload)
+                        }
+                    }
+                    catch (Exception e) {
+                        log.error("Error handling notification: $e", e)
+                    }
+                }
+            }
+        }
+
+        private void handleNotification(NotificationType type, List<String> payload) {
+            if (!type) {
+                return
+            }
+            
+            if (type == NotificationType.DEPENDENCY_CACHE_INVALIDATE) {
+                dependencyCache.handleInvalidateNotification(payload)
+            }
+            
+            counter.labels(type.id()).inc()
+        }
+        
+        private void onConnected() {
+            dependencyCache.invalidateAll()
         }
     }
 
@@ -2716,6 +2874,18 @@ class PostgreSQLComponent {
 
     private static boolean isHttpUri(String s) {
         return s.startsWith('http://') || s.startsWith('https://')
+    }
+
+    private static void close(AutoCloseable... resources) {
+        for (AutoCloseable resource : resources) {
+            try {
+                if (resource != null) {
+                    resource.close()
+                }
+            } catch (Exception e) {
+                log.debug("Error closing $resource : $e")
+            }
+        }
     }
 
     private static void close(Object... resources = null) {

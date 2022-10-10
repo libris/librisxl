@@ -2,7 +2,6 @@ package whelk.converter.marc
 
 import java.util.regex.Matcher
 import java.util.regex.Pattern
-import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 
 import whelk.JsonLd
@@ -96,7 +95,7 @@ abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
                     if (prevAfter != null) {
                         result += prevAfter
                     }
-                    if (fmt?.contentBefore != null && (fmt.contentFirst == null || first == null)) {
+                    if (fmt?.contentBefore != null && (fmt.contentFirst == null || !first)) {
                         result += fmt.contentBefore
                     }
                     result += it
@@ -167,9 +166,7 @@ class CopyOnRevertStep extends MarcFramePostProcStepBase {
                 for (item in source) {
                     if (!target.containsKey(prop.to) && item.containsKey(prop.from)) {
                         def src = item[prop.from]
-                        def copy = src instanceof List ?
-                            src.collect { jsonClone(it) } :
-                            jsonClone((Map) src)
+                        def copy = cloneValue(src)
 
                         Map inject = prop.injectOnCopies ?: this.injectOnCopies
                         if (inject) {
@@ -190,6 +187,16 @@ class CopyOnRevertStep extends MarcFramePostProcStepBase {
                     }
                 }
             }
+        }
+    }
+
+    Object cloneValue(Object value) {
+        if (value instanceof List) {
+            return value.collect { cloneValue(it) }
+        } else if (value instanceof Map) {
+            return jsonClone((Map) value)
+        } else { // assuming String|Integer|Double|Boolean
+            return value
         }
     }
 

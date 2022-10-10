@@ -13,6 +13,7 @@ import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.StorageCreateFailedException
 import whelk.filter.LinkFinder
 import whelk.filter.NormalizerChain
+import whelk.meta.WhelkConstants
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
 import whelk.util.PropertyLoader
@@ -48,6 +49,8 @@ class Whelk {
     // resulting in potential serving of stale data.
 
     // TODO: encapsulate and configure (LXL-260)
+    String kbvContextUri = "https://id.kb.se/sys/context/kbv"
+    String defaultTvmProfile = kbvContextUri
     String vocabContextUri = "https://id.kb.se/vocab/context"
     String vocabDisplayUri = "https://id.kb.se/vocab/display"
     String vocabUri = "https://id.kb.se/vocab/"
@@ -137,6 +140,7 @@ class Whelk {
                         Normalizers.typeSingularity(jsonld),
                         Normalizers.language(this),
                         Normalizers.identifiedBy(),
+                        Normalizers.romanizer(this),
                 ] + Normalizers.heuristicLinkers(this)
         )
     }
@@ -162,23 +166,33 @@ class Whelk {
     }
 
     Map<String, Document> bulkLoad(Collection<String> ids) {
-        Map<String, Document> result = [:]
+        def idMap = [:]
+        def otherIris = []
+        List<String> systemIds = []
         ids.each { id ->
-            Document doc
-
-            // Fetch from DB
             if (id.startsWith(Document.BASE_URI.toString())) {
-                id = Document.BASE_URI.resolve(id).getPath().substring(1)
+                def systemId = Document.BASE_URI.resolve(id).getPath().substring(1)
+                idMap[systemId] = id
+                systemIds << systemId
             }
-            doc = storage.load(id)
-            if (doc == null)
-                doc = storage.getDocumentByIri(id)
-
-            if (doc && !doc.deleted) {
-                result[id] = doc
+            else if (JsonLd.looksLikeIri(id)) {
+                otherIris << id
+            }
+            else {
+                systemIds << id
             }
         }
-        return result
+        if (otherIris) {
+            Map<String, String> idToIri = storage.getSystemIdsByIris(otherIris)
+                    .collectEntries { k, v -> [(v): k] }
+            
+            systemIds.addAll(idToIri.keySet())
+            idMap.putAll(idToIri)
+        }
+        
+        return storage.bulkLoad(systemIds)
+                .findAll { id, doc -> !doc.deleted }
+                .collectEntries { id, doc -> [(idMap.getOrDefault(id, id)) : doc]}
     }
 
     private void reindex(Document updated, Document preUpdateDoc) {
@@ -202,9 +216,9 @@ class Whelk {
                 log.error("Error reindexing: $e", e)
             }
         }
-
-        // If we are inside a batch job. Update them synchronously
-        if (batchJobThread()) {
+        
+        if (isBatchJobThread()) {
+            // Update them synchronously
             reindex.run()
         } else {
             // else use a fire-and-forget thread
@@ -332,9 +346,9 @@ class Whelk {
      * The UpdateAgent SHOULD be a pure function since the update will be retried in case the document
      * was modified in another transaction.
      */
-    void storeAtomicUpdate(String id, boolean minorUpdate, String changedIn, String changedBy, PostgreSQLComponent.UpdateAgent updateAgent) {
+    void storeAtomicUpdate(String id, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, PostgreSQLComponent.UpdateAgent updateAgent) {
         Document preUpdateDoc = null
-        Document updated = storage.storeUpdate(id, minorUpdate, changedIn, changedBy, { Document doc ->
+        Document updated = storage.storeUpdate(id, minorUpdate, writeIdenticalVersions, changedIn, changedBy, { Document doc ->
             preUpdateDoc = doc.clone()
             updateAgent.update(doc)
             normalize(doc)
@@ -348,10 +362,10 @@ class Whelk {
         sparqlUpdater?.pollNow()
     }
 
-    void storeAtomicUpdate(Document doc, boolean minorUpdate, String changedIn, String changedBy, String oldChecksum) {
+    void storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, String oldChecksum) {
         normalize(doc)
         Document preUpdateDoc = storage.load(doc.shortId)
-        Document updated = storage.storeAtomicUpdate(doc, minorUpdate, changedIn, changedBy, oldChecksum)
+        Document updated = storage.storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, changedIn, changedBy, oldChecksum)
 
         if (updated == null) {
             return
@@ -370,10 +384,10 @@ class Whelk {
         return storage.quickCreateDocument(document, changedIn, changedBy, collection)
     }
   
-    void remove(String id, String changedIn, String changedBy) {
+    void remove(String id, String changedIn, String changedBy, boolean force=false) {
         log.debug "Deleting ${id} from Whelk"
         Document doc = storage.load(id)
-        storage.remove(id, changedIn, changedBy)
+        storage.remove(id, changedIn, changedBy, force)
         if (elastic && !skipIndex) {
             elastic.remove(id)
             reindexAffected(doc, doc.getExternalRefs(), Collections.emptySet())
@@ -460,8 +474,8 @@ class Whelk {
         storage.removeUserData(id)
     }
 
-    private static boolean batchJobThread() {
-        return Thread.currentThread().getThreadGroup().getName().contains("whelktool")
+    private static boolean isBatchJobThread() {
+        return Thread.currentThread().getThreadGroup().getName().contains(WhelkConstants.BATCH_THREAD_GROUP)
     }
 
     ZoneId getTimezone() {

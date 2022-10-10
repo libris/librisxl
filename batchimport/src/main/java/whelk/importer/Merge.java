@@ -44,7 +44,7 @@ public class Merge {
      */
 
     // Contains paths where we're allowed to add things that don't already exist
-    private Set<List<Object>> m_pathAddRules = null;
+    private Map<List<Object>, Map> m_pathAddRules = null;
 
     // Maps a path to a sigel priority list.
     private Map<List<Object>, Map> m_pathReplaceRules = null;
@@ -52,7 +52,7 @@ public class Merge {
     private final Logger logger = LogManager.getLogger(this.getClass());
 
     public Merge(File ruleFile) throws IOException {
-        m_pathAddRules = new HashSet<>();
+        m_pathAddRules = new HashMap<>();
         m_pathReplaceRules = new HashMap<>();
         
         Map rulesMap = mapper.readValue(ruleFile, Map.class);
@@ -66,7 +66,7 @@ public class Merge {
             if (op.equals("replace"))
                 m_pathReplaceRules.put(path, prioMap);
             else if (op.equals("add_if_none"))
-                m_pathAddRules.add(path);
+                m_pathAddRules.put(path, prioMap);
             else
                 throw new RuntimeException("Malformed import rule, no such operation: " + op);
         }
@@ -85,6 +85,7 @@ public class Merge {
                     baseGraphList.get(i),
                     baseGraphList,
                     incomingGraphList.get(i),
+                    path,
                     path,
                     incomingAgent,
                     baseHistory,
@@ -108,18 +109,43 @@ public class Merge {
         return null;
     }
 
-    public boolean existsAddRuleForPath(List<Object> path) {
+    public boolean mayAddAtPath(List<Object> path, List<Object> truePath, String incomingAgent, History history) {
         List<Object> temp = new ArrayList<>(path);
-        while (!temp.isEmpty()) {
-            if (m_pathAddRules.contains(path))
-                return true;
+        List<Object> trueTemp = new ArrayList<>(truePath);
+        while (!temp.isEmpty() && !trueTemp.isEmpty()) {
+            if (m_pathAddRules.containsKey(temp)) {
+
+                //System.err.println("  found rule! :" + temp + " matching true path: " + trueTemp);
+
+                Map prioMap = m_pathAddRules.get(temp);
+                if (prioMap == null) // No priority list given for this rules = anyone may add
+                    return true;
+
+                Ownership owner = history.getOwnership(trueTemp);
+                int manualPrio = Integer.MIN_VALUE;
+                int systematicPrio = Integer.MIN_VALUE;
+                int incomingPrio = 0;
+                if (owner.m_manualEditor != null && prioMap.get(owner.m_manualEditor) != null)
+                    manualPrio = (Integer) prioMap.get(owner.m_manualEditor);
+                if (owner.m_systematicEditor != null && prioMap.get(owner.m_systematicEditor) != null)
+                    systematicPrio = (Integer) prioMap.get(owner.m_systematicEditor);
+                if (prioMap.get(incomingAgent) != null)
+                    incomingPrio = (Integer) prioMap.get(incomingAgent);
+
+                if (incomingPrio >= manualPrio && incomingPrio >= systematicPrio) {
+                    return true;
+                }
+                return false;
+            }
             temp.remove(temp.size()-1);
+            trueTemp.remove(trueTemp.size()-1);
         }
         return false;
     }
 
     private void mergeInternal(Object base, Object baseParent, Object correspondingIncoming,
                                List<Object> path,
+                               List<Object> truePath, // Same as path, but without magic indexes, ..,0,mainTitle.. instead of ..,@type=Title,mainTitle.. for the BASE record, not incoming.
                                String incomingAgent,
                                History baseHistory,
                                String loggingForID) {
@@ -135,7 +161,7 @@ public class Merge {
             // Determine (the maximum) priority for any part of the already existing subtree (below 'path')
             int basePriorityHere = 0;
             boolean baseContainsHandEdits = false;
-            Set<Ownership> baseOwners = baseHistory.getSubtreeOwnerships(path);
+            Set<Ownership> baseOwners = baseHistory.getSubtreeOwnerships(truePath);
             for (Ownership baseOwnership : baseOwners) {
                 if (baseOwnership.m_manualEditTime != null)
                     baseContainsHandEdits = true;
@@ -194,8 +220,10 @@ public class Merge {
                 // Does the incoming record have properties here that we don't have and are allowed to add?
                 List<Object> childPath = new ArrayList(path);
                 childPath.add(key);
+                List<Object> trueChildPath = new ArrayList(truePath);
+                trueChildPath.add(key);
                 if ( ((Map) base).get(key) == null ) {
-                    if (existsAddRuleForPath(childPath)) {
+                    if (mayAddAtPath(childPath, trueChildPath, incomingAgent, baseHistory)) {
                         ((Map) base).put(key, ((Map) correspondingIncoming).get(key));
                         logger.info("Merge of " + loggingForID + ": added object at " + childPath);
                     }
@@ -206,6 +234,7 @@ public class Merge {
                     mergeInternal( ((Map) base).get(key), base,
                             ((Map) correspondingIncoming).get(key),
                             childPath,
+                            trueChildPath,
                             incomingAgent,
                             baseHistory,
                             loggingForID);
@@ -230,19 +259,41 @@ public class Merge {
             List baseList = (List) base;
             List incomingList = (List) correspondingIncoming;
 
-            Set<String> singleInstanceTypes = findSingleInstanceTypesInBoth(baseList, incomingList);
+            // For each type in the _incoming_ list that does not exist in the base list,
+            // consider add-if-none.
+            Set<String> singleInstanceTypesInIncoming = findSingleInstanceTypesInOnlyA(incomingList, baseList);
+            for (String type : singleInstanceTypesInIncoming) {
+                List<Object> childPath = new ArrayList(path);
+                childPath.add("@type="+type);
+                if (mayAddAtPath(childPath, truePath, incomingAgent, baseHistory)) {
+                    for (Object o : incomingList) {
+                        Map m = (Map) o;
+                        if (m.containsKey("@type") && m.get("@type") == type) {
+                            baseList.add(m);
+                        }
+                    }
+                    logger.info("Merge of " + loggingForID + ": added object at " + childPath);
+                }
+            }
+
+
+            Set<String> singleInstanceTypesInBoth = findSingleInstanceTypesInBoth(baseList, incomingList);
 
             // For each type of which there is exactly one instance in each list
-            for (String type : singleInstanceTypes) {
+            for (String type : singleInstanceTypesInBoth) {
 
                 // Find the one instance of that type in each list
                 Map baseChild = null;
                 Map incomingChild = null;
-                for (Object o : baseList) {
+                int baseListInteger = -1;
+                for (int i = 0; i < baseList.size(); ++i) {
+                    Object o = baseList.get(i);
                     if (o instanceof Map) {
                         Map m = (Map) o;
-                        if (m.containsKey("@type") && m.get("@type").equals(type))
+                        if (m.containsKey("@type") && m.get("@type").equals(type)) {
+                            baseListInteger = i;
                             baseChild = m;
+                        }
                     }
                 }
                 for (Object o : incomingList) {
@@ -256,14 +307,34 @@ public class Merge {
                 // Keep scanning
                 List<Object> childPath = new ArrayList(path);
                 childPath.add("@type="+type);
+                List<Object> trueChildPath = new ArrayList(truePath);
+                trueChildPath.add(baseListInteger);
                 mergeInternal( baseChild, incomingList,
                         incomingChild,
                         childPath,
+                        trueChildPath,
                         incomingAgent,
                         baseHistory,
                         loggingForID);
             }
         }
+    }
+
+    /**
+     * Find the types of which there are exactly one instance in A and zero instances in B
+     */
+    private Set<String> findSingleInstanceTypesInOnlyA(List a, List b) {
+        HashMap<String, Integer> typeCountsA = countTypes(a);
+        HashMap<String, Integer> typeCountsB = countTypes(b);
+        Set<String> singleInstanceTypes = new HashSet<>();
+        for (String type : typeCountsA.keySet()) {
+            if (typeCountsA.containsKey(type) &&
+                    typeCountsA.get(type) == 1 &&
+                    !typeCountsB.containsKey(type)) {
+                singleInstanceTypes.add(type);
+            }
+        }
+        return singleInstanceTypes;
     }
 
     /**

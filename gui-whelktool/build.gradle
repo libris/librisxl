@@ -10,7 +10,10 @@ dependencies {
 
 jar {
     manifest {
-        attributes "Main-Class": "whelk.gui.GuiWhelkTool"
+        attributes "Main-Class": "whelk.gui.GuiWhelkTool",
+                // log4j uses multi-release to ship different stack walking implementations for different java
+                // versions. Since we repackage everything as a fat jar, that jar must also be multi-release.
+                "Multi-Release": true
     }
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
