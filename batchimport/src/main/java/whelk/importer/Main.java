@@ -8,26 +8,26 @@ import se.kb.libris.util.marc.io.Iso2709MarcRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
 import whelk.component.PostgreSQLComponent;
-import whelk.importer.ThreadPool.Worker;
-import whelk.meta.WhelkConstants;
+import whelk.util.BlockingThreadPool;
 
+import javax.xml.transform.Templates;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
-import javax.xml.transform.Templates;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 
 public class Main
 {
@@ -52,6 +52,8 @@ public class Main
             .name("batchimport_encountered_mulbibs")
             .help("The total number of incoming records with more than one duplicate already in the system.")
             .register(registry);
+    
+    private static BlockingThreadPool.SimplePool threadPool;
 
     // Abort on unhandled exceptions, including those on worker threads.
     static
@@ -75,7 +77,10 @@ public class Main
         // Normal importing operations
 	Parameters parameters = new Parameters(args);
 	verbose = parameters.getVerbose();
-
+    
+        int poolSize = parameters.getRunParallel() ? 2 * Runtime.getRuntime().availableProcessors() : 1;
+        threadPool = BlockingThreadPool.simplePool(poolSize);
+        
         s_librisXl = new XL(parameters);
 
         if (parameters.getPath() == null)
@@ -126,6 +131,7 @@ public class Main
 	if ( verbose ) {
             System.err.println("info: All done.");
 	}
+        threadPool.awaitAllAndShutdown();
     }
 
     /**
@@ -158,24 +164,12 @@ public class Main
 	    inputStream = transform(template.newTransformer(), inputStream);
             //inputStream = transform(transformer, inputStream);
         }
-
-        int threadCount = 1;
-        if (parameters.getRunParallel())
-            threadCount = 2 * Runtime.getRuntime().availableProcessors();
-        ThreadPoolExecutor threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadCount);
-        threadPool.setThreadFactory(new ThreadFactory() {
-            ThreadGroup group = new ThreadGroup(WhelkConstants.BATCH_THREAD_GROUP);
-
-            public Thread newThread(Runnable runnable) {
-                return new Thread(group, runnable);
-            }
-        });
-
+        
         MarcXmlRecordReader reader = null;
         try
         {
             reader = new MarcXmlRecordReader(inputStream, "/collection/record", null);
-
+            
             long start = System.currentTimeMillis();
             long recordsBatched = 0;
             int recordsInBatch = 0;
@@ -194,8 +188,7 @@ public class Main
                 {
                     if (recordsInBatch > 200)
                     {
-                        executeOnThread(threadPool, batch, Main::importBatch);
-                                
+                        threadPool.submit(batch, Main::importBatch);
                         batch = new ArrayList<>();
                         recordsInBatch = 0;
                     }
@@ -211,35 +204,24 @@ public class Main
                     {
                         long recordsPerSec = recordsBatched / secondDiff;
 	    		if ( verbose ) {
-                        	System.err.println("info: Currently importing " + recordsPerSec + " records / sec. Active threads: " + threadPool.getActiveCount());
+                        	System.err.println("info: Currently importing " + recordsPerSec + " records / sec.");
 			}
                     }
                 }
             }
             // The last batch will not be followed by another bib.
-            executeOnThread(threadPool, batch, Main::importBatch);
-        }
-        finally
-        {
+            threadPool.submit(batch, Main::importBatch);
+        } finally {
             if (reader != null)
                 reader.close();
-            threadPool.shutdown();
-            // TODO: switch to BlockingThreadPool so that the main thread cannot queue too much work in case of gigantic import file?
-            if (!threadPool.awaitTermination(12, TimeUnit.HOURS)) {
-                System.err.println("warn: thread pool did not shut down within timeout");
-            }
+            // separate import files inside the same directory are in practice more likely to contain bib duplicates 
+            // (multiple sigel from the same provider, for example BTJ)
+            // finish one file completely before starting the next
+            threadPool.awaitAll();
         }
 
 	inputStream.close();
 	removeTemporaryFiles();
-    }
-
-    private static <T> void executeOnThread(ThreadPoolExecutor threadPool, T workLoad, Worker<T> worker) {
-        threadPool.execute(new Runnable() {
-            public void run() {
-                worker.doWork(workLoad);
-            }
-        });
     }
 
     private static void removeTemporaryFiles()
@@ -254,6 +236,7 @@ public class Main
 	}
 
     }
+
 
     private static void importBatch(List<MarcRecord> batch)
     {
