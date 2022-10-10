@@ -277,10 +277,7 @@ class DatasetImporter {
     }
 
     private Document updateIfModified(Document incomingDoc, Closure callback=null) {
-        whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, "xl", null, { doc ->
-            if (doc.getChecksum(whelk.jsonld) == incomingDoc.getChecksum(whelk.jsonld)) {
-                throw new CancelUpdateException() // Not an error, merely cancels the update
-            }
+        whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, false, "xl", null, { doc ->
             doc.data = incomingDoc.data
             if (callback) {
                 callback()

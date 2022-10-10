@@ -100,7 +100,7 @@ class RefreshAPI extends HttpServlet
 
     void refreshLoudly(Document doc) {
         boolean minorUpdate = false
-        whelk.storeAtomicUpdate(doc.getShortId(), minorUpdate, "xl", "Libris admin", {
+        whelk.storeAtomicUpdate(doc.getShortId(), minorUpdate, true, "xl", "Libris admin", {
             Document _doc ->
                 _doc.data = doc.data
         })
