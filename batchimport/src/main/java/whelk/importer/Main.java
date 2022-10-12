@@ -15,6 +15,10 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Logger;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -59,8 +63,8 @@ public class Main {
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread thread, Throwable throwable) {
-                System.err.println("fatal: PANIC ABORT, unhandled exception:\n");
-                throwable.printStackTrace();
+                org.apache.logging.log4j.Logger log = LogManager.getLogger(XL.class.getName() + ".unhandled");
+                log.fatal("PANIC ABORT, unhandled exception:\n", throwable);
                 System.exit(-1);
             }
         });
