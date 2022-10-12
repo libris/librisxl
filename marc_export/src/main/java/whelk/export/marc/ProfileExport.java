@@ -13,6 +13,7 @@ import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.exception.WhelkRuntimeException;
+import whelk.util.BlockingThreadPool;
 import whelk.util.LegacyIntegrationTools;
 import whelk.util.MarcExport;
 

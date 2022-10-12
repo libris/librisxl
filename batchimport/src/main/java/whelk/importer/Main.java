@@ -8,29 +8,28 @@ import se.kb.libris.util.marc.io.Iso2709MarcRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
 import whelk.component.PostgreSQLComponent;
-import whelk.importer.ThreadPool.Worker;
-import whelk.meta.WhelkConstants;
+import whelk.util.BlockingThreadPool;
 
+import javax.xml.transform.Templates;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
-import javax.xml.transform.Templates;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 
-public class Main
-{
+public class Main {
     private static XL s_librisXl = null;
 
     private static boolean verbose = false;
@@ -53,14 +52,13 @@ public class Main
             .help("The total number of incoming records with more than one duplicate already in the system.")
             .register(registry);
 
+    private static BlockingThreadPool.SimplePool threadPool;
+
     // Abort on unhandled exceptions, including those on worker threads.
-    static
-    {
-        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler()
-        {
+    static {
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
-            public void uncaughtException(Thread thread, Throwable throwable)
-            {
+            public void uncaughtException(Thread thread, Throwable throwable) {
                 System.err.println("fatal: PANIC ABORT, unhandled exception:\n");
                 throwable.printStackTrace();
                 System.exit(-1);
@@ -68,13 +66,15 @@ public class Main
         });
     }
 
-	public static void main(String[] args)
-            throws Exception
-	{
+    public static void main(String[] args)
+            throws Exception {
 
         // Normal importing operations
-	Parameters parameters = new Parameters(args);
-	verbose = parameters.getVerbose();
+        Parameters parameters = new Parameters(args);
+        verbose = parameters.getVerbose();
+
+        int poolSize = parameters.getRunParallel() ? 2 * Runtime.getRuntime().availableProcessors() : 1;
+        threadPool = BlockingThreadPool.simplePool(poolSize);
 
         s_librisXl = new XL(parameters);
 
@@ -84,8 +84,7 @@ public class Main
         else // A path was specified
         {
             File file = new File(parameters.getPath().toString());
-            if (file.isDirectory())
-            {
+            if (file.isDirectory()) {
 
                 File[] subFiles = file.listFiles();
                 if (subFiles == null)
@@ -103,48 +102,42 @@ public class Main
                     }
                 });
 
-                for (File subFile : subFiles)
-                {
+                for (File subFile : subFiles) {
                     if (!subFile.isDirectory())
                         importFile(subFile.toPath(), parameters);
                 }
-            }
-            else // regular file (not directory)
+            } else // regular file (not directory)
             {
                 importFile(file.toPath(), parameters);
             }
         }
 
-        try
-        {
+        try {
             PushGateway pg = new PushGateway(METRICS_PUSHGATEWAY);
             pg.pushAdd(registry, "batch_import");
-        } catch (Throwable e)
-        {
+        } catch (Throwable e) {
             System.err.println("Metrics server connection failed. No metrics will be generated.");
         }
-	if ( verbose ) {
+        if (verbose) {
             System.err.println("info: All done.");
-	}
+        }
+        threadPool.awaitAllAndShutdown();
     }
 
     /**
      * Convenience method for turning files (paths) into reliable inputstreams and passing them along to importStream()
      */
     private static void importFile(Path path, Parameters parameters)
-            throws Exception
-    {
+            throws Exception {
         System.err.println("info: Importing file: " + path.toString());
         try (ExclusiveFile file = new ExclusiveFile(path);
-             InputStream fileInStream = file.getInputStream())
-        {
+             InputStream fileInStream = file.getInputStream()) {
             importStream(fileInStream, parameters);
         }
     }
 
     private static void importStream(InputStream inputStream, Parameters parameters)
-            throws Exception
-    {
+            throws Exception {
         inputStream = streamAsXml(inputStream, parameters);
 
         // Apply any transforms specified on the command line.
@@ -153,27 +146,13 @@ public class Main
         // is also expected to be; one bib record followed by any related holding records, after which
         // comes the next bib record and so on.
 
-        for (Templates template : parameters.getTemplates())
-        {
-	    inputStream = transform(template.newTransformer(), inputStream);
+        for (Templates template : parameters.getTemplates()) {
+            inputStream = transform(template.newTransformer(), inputStream);
             //inputStream = transform(transformer, inputStream);
         }
 
-        int threadCount = 1;
-        if (parameters.getRunParallel())
-            threadCount = 2 * Runtime.getRuntime().availableProcessors();
-        ThreadPoolExecutor threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadCount);
-        threadPool.setThreadFactory(new ThreadFactory() {
-            ThreadGroup group = new ThreadGroup(WhelkConstants.BATCH_THREAD_GROUP);
-
-            public Thread newThread(Runnable runnable) {
-                return new Thread(group, runnable);
-            }
-        });
-
         MarcXmlRecordReader reader = null;
-        try
-        {
+        try {
             reader = new MarcXmlRecordReader(inputStream, "/collection/record", null);
 
             long start = System.currentTimeMillis();
@@ -183,19 +162,15 @@ public class Main
             // Assemble a batch of records (= N * (one bib followed by zero or more hold) )
             MarcRecord marcRecord;
             List<MarcRecord> batch = new ArrayList<>();
-            while ((marcRecord = reader.readRecord()) != null)
-            {
+            while ((marcRecord = reader.readRecord()) != null) {
                 String collection = "bib"; // assumption
                 if (marcRecord.getLeader(6) == 'u' || marcRecord.getLeader(6) == 'v' ||
                         marcRecord.getLeader(6) == 'x' || marcRecord.getLeader(6) == 'y')
                     collection = "hold";
 
-                if (collection.equals("bib"))
-                {
-                    if (recordsInBatch > 200)
-                    {
-                        executeOnThread(threadPool, batch, Main::importBatch);
-                                
+                if (collection.equals("bib")) {
+                    if (recordsInBatch > 200) {
+                        threadPool.submit(batch, Main::importBatch);
                         batch = new ArrayList<>();
                         recordsInBatch = 0;
                     }
@@ -204,59 +179,45 @@ public class Main
                 ++recordsBatched;
                 ++recordsInBatch;
 
-                if (recordsBatched % 100 == 0)
-                {
+                if (recordsBatched % 100 == 0) {
                     long secondDiff = (System.currentTimeMillis() - start) / 1000;
-                    if (secondDiff > 0)
-                    {
+                    if (secondDiff > 0) {
                         long recordsPerSec = recordsBatched / secondDiff;
-	    		if ( verbose ) {
-                        	System.err.println("info: Currently importing " + recordsPerSec + " records / sec. Active threads: " + threadPool.getActiveCount());
-			}
+                        if (verbose) {
+                            System.err.println("info: Currently importing " + recordsPerSec + " records / sec.");
+                        }
                     }
                 }
             }
             // The last batch will not be followed by another bib.
-            executeOnThread(threadPool, batch, Main::importBatch);
-        }
-        finally
-        {
+            threadPool.submit(batch, Main::importBatch);
+        } finally {
             if (reader != null)
                 reader.close();
-            threadPool.shutdown();
-            // TODO: switch to BlockingThreadPool so that the main thread cannot queue too much work in case of gigantic import file?
-            if (!threadPool.awaitTermination(12, TimeUnit.HOURS)) {
-                System.err.println("warn: thread pool did not shut down within timeout");
+            // separate import files inside the same directory are in practice more likely to contain bib duplicates 
+            // (multiple sigel from the same provider, for example BTJ)
+            // finish one file completely before starting the next
+            threadPool.awaitAll();
+        }
+
+        inputStream.close();
+        removeTemporaryFiles();
+    }
+
+    private static void removeTemporaryFiles() {
+        synchronized (tempfiles) {
+            Iterator<File> i = tempfiles.iterator();
+            while (i.hasNext()) {
+                File f = i.next();
+                f.delete();
+                i.remove();
             }
         }
 
-	inputStream.close();
-	removeTemporaryFiles();
     }
 
-    private static <T> void executeOnThread(ThreadPoolExecutor threadPool, T workLoad, Worker<T> worker) {
-        threadPool.execute(new Runnable() {
-            public void run() {
-                worker.doWork(workLoad);
-            }
-        });
-    }
 
-    private static void removeTemporaryFiles()
-    {
-	synchronized(tempfiles) {
-		Iterator<File> i = tempfiles.iterator();
-		while (i.hasNext()) {
-    			File f = i.next();
-    			f.delete();
-    			i.remove();
-		}
-	}
-
-    }
-
-    private static void importBatch(List<MarcRecord> batch)
-    {
+    private static void importBatch(List<MarcRecord> batch) {
         String lastKnownBibDocId = null;
         for (MarcRecord marcRecord : batch) {
             try {
@@ -297,7 +258,7 @@ public class Main
             }
         }
     }
-    
+
     private static void dumpDigIds(MarcRecord marcRecord) {
         String[][] ids = DigId.digIds(marcRecord);
         if (ids != null) {
@@ -315,10 +276,9 @@ public class Main
     }
 
     private static File getTemporaryFile()
-            throws IOException
-    {
+            throws IOException {
         File tempFile = File.createTempFile("xlimport", ".tmp");
-	tempfiles.add(tempFile);
+        tempfiles.add(tempFile);
         return tempFile;
     }
 
@@ -327,22 +287,18 @@ public class Main
      * original format.
      */
     private static InputStream streamAsXml(InputStream inputStream, Parameters parameters)
-            throws IOException
-    {
-        if (parameters.getFormat() == Parameters.INPUT_FORMAT.FORMAT_ISO2709)
-        {
+            throws IOException {
+        if (parameters.getFormat() == Parameters.INPUT_FORMAT.FORMAT_ISO2709) {
             File tmpFile = getTemporaryFile();
 
-            try(OutputStream tmpOut = new FileOutputStream(tmpFile))
-            {
+            try (OutputStream tmpOut = new FileOutputStream(tmpFile)) {
                 Iso2709MarcRecordReader isoReader;
                 isoReader = new Iso2709MarcRecordReader(inputStream, parameters.getInputEncoding());
 
                 MarcXmlRecordWriter writer = new MarcXmlRecordWriter(tmpOut);
 
                 MarcRecord marcRecord;
-                while ((marcRecord = isoReader.readRecord()) != null)
-                {
+                while ((marcRecord = isoReader.readRecord()) != null) {
                     writer.writeRecord(marcRecord);
                 }
                 isoReader.close();
@@ -360,13 +316,11 @@ public class Main
      * and generate a new InputStream of the transformed data.
      */
     private static InputStream transform(Transformer transformer, InputStream inputStream)
-            throws TransformerException, IOException
-    {
+            throws TransformerException, IOException {
         File tmpFile = getTemporaryFile();
-        try(OutputStream tmpOut = new FileOutputStream(tmpFile))
-        {
+        try (OutputStream tmpOut = new FileOutputStream(tmpFile)) {
             StreamResult result = new StreamResult(tmpOut);
-            transformer.transform( new StreamSource(inputStream), result );
+            transformer.transform(new StreamSource(inputStream), result);
             inputStream.close();
         }
         return new FileInputStream(tmpFile);

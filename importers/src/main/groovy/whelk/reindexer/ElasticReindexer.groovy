@@ -3,7 +3,7 @@ package whelk.reindexer
 import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.Whelk
-import whelk.util.ThreadPool
+import whelk.util.BlockingThreadPool
 
 @Log
 class ElasticReindexer {
@@ -69,7 +69,7 @@ class ElasticReindexer {
             int counter = 0
             startTime = System.currentTimeMillis()
             List<String> collections = suppliedCollection ? [suppliedCollection] : whelk.storage.loadCollections()
-            ThreadPool threadPool = new ThreadPool(numberOfThreads)
+            BlockingThreadPool.SimplePool threadPool = BlockingThreadPool.simplePool(numberOfThreads)
             collections.each { collection ->
                 List<Document> documents = []
                 for (document in whelk.storage.loadAll(collection)) {
@@ -79,7 +79,8 @@ class ElasticReindexer {
                         if (counter % BATCH_SIZE == 0) {
                             double docsPerSec = ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000))
                             println("Indexing $docsPerSec documents per second (running average since process start). Total count: $counter.")
-                            threadPool.executeOnThread(new Batch(documents), new BatchHandler())
+                            def batch = documents
+                            threadPool.submit({ bulkIndexWithRetries(batch, whelk) })
                             documents = []
                         }
                     }
@@ -88,7 +89,7 @@ class ElasticReindexer {
                     bulkIndexWithRetries(documents, whelk)
                 }
             }
-            threadPool.joinAll()
+            threadPool.awaitAllAndShutdown()
             println("Done! $counter documents reindexed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
             whelk.storage.logStats()
         } catch (Throwable e) {
@@ -127,20 +128,6 @@ class ElasticReindexer {
         }
         catch (InterruptedException e) {
             log.warn("Woke up early", e)
-        }
-    }
-
-    private class Batch {
-        List<Document> documents
-
-        Batch(List<Document> documents) {
-            this.documents = documents
-        }
-    }
-
-    private class BatchHandler implements ThreadPool.Worker<Batch> {
-        void doWork(Batch batch, int threadIndex) {
-            bulkIndexWithRetries(batch.documents, whelk)
         }
     }
 }
