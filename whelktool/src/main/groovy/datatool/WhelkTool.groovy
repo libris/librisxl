@@ -352,7 +352,7 @@ class WhelkTool {
                 linkedBlockingDeque, new ThreadPoolExecutor.CallerRunsPolicy())
 
         executorService.setThreadFactory(new ThreadFactory() {
-            ThreadGroup group = new ThreadGroup(WHELKTOOL_THREAD_GROUP)
+            ThreadGroup group = new ThreadGroup(WhelkConstants.BATCH_THREAD_GROUP)
 
             @Override
             Thread newThread(Runnable runnable) {
