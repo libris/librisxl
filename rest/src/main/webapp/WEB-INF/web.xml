@@ -94,6 +94,10 @@
         <servlet-name>DigitalReproductionAPI</servlet-name>
         <servlet-class>se.kb.libris.digi.DigitalReproductionAPI</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>TransliterationAPI</servlet-name>
+        <servlet-class>whelk.rest.api.TransliterationAPI</servlet-class>
+    </servlet>
 
 
     <servlet>
@@ -140,6 +144,11 @@
     <servlet-mapping>
         <servlet-name>MarcframeData</servlet-name>
         <url-pattern>/sys/marcframe.json</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>TransliterationAPI</servlet-name>
+        <url-pattern>/_transliterate</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
