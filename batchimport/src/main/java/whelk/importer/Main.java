@@ -18,6 +18,7 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -225,8 +226,10 @@ public class Main {
 
     private static void importBatch(List<MarcRecord> batch) {
         String lastKnownBibDocId = null;
+        int recordNo = 0;
         for (MarcRecord marcRecord : batch) {
             try {
+                ThreadContext.push("-" + recordNo++);
                 if (verbose) {
                     dumpDigIds(marcRecord);
                 }
@@ -248,7 +251,7 @@ public class Main {
                     // - batch A creates holding
                     // - batch B creates holding  <-- ConflictingHoldException
                     // As a workaround we retry the holding record (batch B) which will now be found and updated instead
-                    System.err.println("Duplicate bib+hold in file? retrying:\n" + marcRecord.toString());
+                    LOG.warn("Duplicate bib+hold in file? retrying:\n" + marcRecord.toString());
                     String resultingId = s_librisXl.importISO2709(
                             marcRecord,
                             lastKnownBibDocId,
@@ -261,6 +264,8 @@ public class Main {
             } catch (Exception e) {
                 LOG.error("Failed to convert or write the following MARC record:\n" + marcRecord.toString());
                 throw new RuntimeException(e);
+            } finally {
+                ThreadContext.pop();
             }
         }
     }
@@ -272,7 +277,7 @@ public class Main {
                 if (r != null) {
                     for (String c : r) {
                         if (c != null) {
-                            System.out.printf("%s ", c);
+                            LOG.debug("%s ", c);
                         }
                     }
                 }
