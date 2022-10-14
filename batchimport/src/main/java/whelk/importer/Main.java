@@ -135,7 +135,7 @@ public class Main {
      */
     private static void importFile(Path path, Parameters parameters)
             throws Exception {
-        System.err.println("info: Importing file: " + path.toString());
+        LOG.info("Importing file: " + path.toString());
         try (ExclusiveFile file = new ExclusiveFile(path);
              InputStream fileInStream = file.getInputStream()) {
             importStream(fileInStream, parameters);
