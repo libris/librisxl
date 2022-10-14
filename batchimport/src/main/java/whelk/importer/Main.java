@@ -229,7 +229,7 @@ public class Main {
         int recordNo = 0;
         for (MarcRecord marcRecord : batch) {
             try {
-                ThreadContext.push("-" + recordNo++);
+                ThreadContext.push(Integer.toString(recordNo++));
                 if (verbose) {
                     dumpDigIds(marcRecord);
                 }
