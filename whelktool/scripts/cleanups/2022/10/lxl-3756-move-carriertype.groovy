@@ -11,7 +11,16 @@ selectBySqlWhere(where) { data ->
         if(!targetList.contains(OBJECT_TO_MOVE)) {
             targetList.add(OBJECT_TO_MOVE)
         }
-        data.graph[1].remove('hasPart') // see comment in Jira
+        sourceList.removeElement(OBJECT_TO_MOVE)
+        if(sourceList.isEmpty()) {
+            sourceList = data.graph[1].hasPart[0].remove('carrierType')
+            if(data.graph[1].hasPart[0].isEmpty()) {
+                data.graph[1].hasPart.remove(0)
+                if(data.graph[1].hasPart.isEmpty()) {
+                    data.graph[1].remove('hasPart')
+                }
+            }
+        }
         data.scheduleSave()
     }
 }
