@@ -9,11 +9,18 @@
 			<PatternLayout pattern="%msg%n" />
 		</Console>
 
-		<File name="File" fileName="logs/batchimport.log">
+		<RollingFile name="File"
+			fileName="logs/batchimport.log"
+			filePattern="logs/batchimport.%d{dd-MMM}.log.gz"
+			ignoreExceptions="false">
 			<PatternLayout>
-				<Pattern>%d %p %c{1.} [%t] %m%n</Pattern>
+				<Pattern>%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1.} [%t]%x %m%n</Pattern>
 			</PatternLayout>
-		</File>
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1" />
+			</Policies>
+			<DefaultRolloverStrategy max="5" />
+		</RollingFile>
 	</Appenders>
 
     <Loggers>
