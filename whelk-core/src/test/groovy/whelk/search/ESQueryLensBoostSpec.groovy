@@ -33,7 +33,24 @@ class ESQueryLensBoostSpec extends Specification {
                     "lenses": [
                         "Instance": [
                             "classLensDomain": "Instance",
-                            "showProperties": ["hasTitle", "publication"]
+                            "showProperties": [
+                                [
+                                    "alternateProperties": [
+                                        [
+                                            "subPropertyOf": "hasTitle"
+                                        ],
+                                        [
+                                            "subPropertyOf": "value"
+                                        ],
+                                        [
+                                            "noise": "should be ignored"
+                                        ],
+                                        "hasTitle",
+                                        "value"
+                                    ]
+                                ],
+                                "publication"
+                            ]
                         ]
                     ]
                 ]
@@ -63,7 +80,9 @@ class ESQueryLensBoostSpec extends Specification {
         def boostFields = lensBoost.computeBoostFieldsFromLenses(["Instance"] as String[])
 
         then:
-        boostFields == ['_str^100', 'hasTitle._str^200', 'comment^200', 'publication.agent._str^10']
+        boostFields == [
+            '_str^100', 'hasTitle._str^200', 'comment^200', 'value^10', 'publication.agent._str^10'
+        ]
     }
 
 }
