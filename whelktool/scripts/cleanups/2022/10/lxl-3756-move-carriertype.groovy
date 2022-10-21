@@ -17,10 +17,7 @@ selectBySqlWhere(where) { data ->
         if(sourceList.isEmpty()) {
             sourceList = data.graph[1].hasPart[0].remove('carrierType')
         }
-        if(data.graph[1].hasPart[0][TYPE] == ELECTRONIC) {
-            data.graph[1].hasPart[0].remove(TYPE)
-        }
-        if(data.graph[1].hasPart[0].isEmpty()) {
+        if(data.graph[1].hasPart[0].size() == 1 && data.graph[1].hasPart[0][TYPE] == ELECTRONIC) {
             data.graph[1].hasPart.remove(0)
             if(data.graph[1].hasPart.isEmpty()) {
                 data.graph[1].remove('hasPart')
