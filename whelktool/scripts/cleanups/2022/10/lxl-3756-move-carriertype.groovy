@@ -8,8 +8,10 @@ ELECTRONIC = "Electronic"
 
 selectBySqlWhere(where) { data ->
     sourceList = data.graph[1].hasPart[0].carrierType
-    targetList = data.graph[1].carrierType
+
     if(sourceList.contains(OBJECT_TO_MOVE)) {
+        data.graph[1].carrierType = data.graph[1].carrierType ?: []
+        targetList = data.graph[1].carrierType
         if(!targetList.contains(OBJECT_TO_MOVE)) {
             targetList.add(OBJECT_TO_MOVE)
         }
