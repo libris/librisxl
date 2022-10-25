@@ -45,10 +45,8 @@ class ESQueryLensBoost {
                 cardsLenses, types, baseTypes, seenKeys)
 
         boostFields += selectedCardsLenses.sum { lens ->
-            lens.showProperties.findResults {
-                if (it instanceof String) {
-                    return computeCardPropertyBoosts(it, seenKeys)
-                }
+            return getPropertiesToShow(lens).collect {
+                computeCardPropertyBoosts(it, seenKeys)
             }.flatten()
         }
 
@@ -67,8 +65,26 @@ class ESQueryLensBoost {
         }
     }
 
+    private List<String> getPropertiesToShow(Map lens) {
+        def properties = new LinkedHashSet()
+        for (dfn in lens.showProperties) {
+            if (dfn instanceof String) {
+                properties << dfn
+            } else if (dfn instanceof Map) {
+                for (alt in dfn.alternateProperties) {
+                    if (alt instanceof String) {
+                        properties << alt
+                    } else if (alt instanceof Map && alt.subPropertyOf) {
+                        properties << alt.subPropertyOf
+                    }
+                }
+            }
+        }
+        return properties as List
+    }
+
     private List<String> collectBoostFields(Map lens, int boost, Set seenKeys) {
-        lens.showProperties.findResults {
+        getPropertiesToShow(lens).findResults {
             if (!(it instanceof String)) {
                 return
             }
