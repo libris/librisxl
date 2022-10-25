@@ -5,8 +5,9 @@
 
 def where = """
   collection = 'bib'
-  AND data['@graph'][1]['instanceOf']['summary'] IS NOT NULL
-  AND data['@graph'][0]['descriptionCreator']['@id'] = '"https://libris.kb.se/library/Mtm"'
+  AND data#>>'{@graph,1,instanceOf,summary}' IS NOT NULL
+  AND (data#>>'{@graph,0,descriptionCreator,@id}' = 'https://libris.kb.se/library/Mtm'
+    OR data#>'{@graph,0,bibliography}' @> '[{"@id":"https://libris.kb.se/library/Mtm"}]')
   AND deleted = false
 """
 
