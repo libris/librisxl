@@ -409,7 +409,7 @@ public class ProfileExport
     private PreparedStatement getAllChangedIDsStatement(Timestamp from, Timestamp until, Connection connection)
             throws SQLException
     {
-        String sql = "SELECT id, collection, created, deleted, data#>>'{@graph,1,@type}' AS mainEntityType FROM lddb__versions WHERE modified >= ? AND modified <= ?";
+        String sql = "SELECT id, collection, created, deleted, data#>>'{@graph,1,@type}' AS mainEntityType FROM lddb__versions WHERE modified >= ? AND modified <= ? AND collection in ('bib', 'auth', 'hold')";
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         preparedStatement.setTimestamp(1, from);
         preparedStatement.setTimestamp(2, until);

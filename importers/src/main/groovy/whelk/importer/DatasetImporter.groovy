@@ -31,6 +31,14 @@ class DatasetImporter {
 
     static FORCE_DELETE = 'force-delete'
 
+    static SKIP_DEPENDERS = 'skip-dependers'
+
+    enum WRITE_RESULT {
+        ALREADY_UP_TO_DATE,
+        UPDATED,
+        CREATED
+    }
+
     Whelk whelk
     String datasetUri
     DatasetInfo dsInfo
@@ -38,6 +46,7 @@ class DatasetImporter {
 
     boolean replaceMainIds = false
     boolean forceDelete = false
+    boolean refreshDependers = true
     String collection = NO_MARC_COLLECTION
 
     TargetVocabMapper tvm = null
@@ -57,6 +66,7 @@ class DatasetImporter {
 
         replaceMainIds = flags.get(REPLACE_MAIN_IDS) == true
         forceDelete = flags.get(FORCE_DELETE) == true
+        refreshDependers = flags.get(SKIP_DEPENDERS) != true
 
         if (Runtime.getRuntime().maxMemory() < 2l * 1024l * 1024l * 1024l) {
             log.warn("This application may require substantial amounts of memory, " +
@@ -84,7 +94,7 @@ class DatasetImporter {
 
         long updatedCount = 0
         long createdCount = 0
-        long lineCount = 0
+        long lineCount = 1 // The data sets self describing first record also counts.
 
         boolean first = true
 
@@ -103,13 +113,13 @@ class DatasetImporter {
             // This race condition should be benign. If there is a document with
             // the same ID created in between the check and the creation, we'll
             // get an exception and fail early (unfortunate but acceptable).
-            createOrUpdateDocument(incomingDoc, { wasCreated ->
-                if (wasCreated) {
-                    ++createdCount
-                } else {
-                    ++updatedCount
-                }
-            })
+            switch (createOrUpdateDocument(incomingDoc)) {
+                case WRITE_RESULT.CREATED:
+                    createdCount++;
+                    break;
+                case WRITE_RESULT.UPDATED:
+                    updatedCount++;
+            }
 
             if ( lineCount % 100 == 0 ) {
                 System.err.println("Processed " + lineCount + " input records. " + createdCount + " created, " +
@@ -266,23 +276,22 @@ class DatasetImporter {
         return whelk.storage.loadDocumentByMainId(id, null)
     }
 
-    private void createOrUpdateDocument(Document incomingDoc, Closure callback=null) {
+    private WRITE_RESULT createOrUpdateDocument(Document incomingDoc) {
         Document storedDoc = whelk.getDocument(incomingDoc.getShortId())
+        WRITE_RESULT result
         if (storedDoc != null) {
-            updateIfModified(incomingDoc, { if (callback) callback(false) })
+            if (whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, false, refreshDependers, "xl", null, { doc ->
+                    doc.data = incomingDoc.data
+                }))
+                result = WRITE_RESULT.UPDATED
+            else {
+                result = WRITE_RESULT.ALREADY_UP_TO_DATE
+            }
         } else {
             whelk.createDocument(incomingDoc, "xl", null, collection, false)
-            if (callback) callback(true)
+            result = WRITE_RESULT.CREATED
         }
-    }
-
-    private Document updateIfModified(Document incomingDoc, Closure callback=null) {
-        whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, false, "xl", null, { doc ->
-            doc.data = incomingDoc.data
-            if (callback) {
-                callback()
-            }
-        })
+        return result
     }
 
     private long removeDeleted(Set<String> idsInInput, List<String> needsRetry) {
