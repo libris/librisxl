@@ -196,22 +196,25 @@ class Whelk {
     }
 
     private void reindex(Document updated, Document preUpdateDoc) {
-        if (elastic && !skipIndex) {
+        reindexAsyncOrSync({
             elastic.index(updated, this)
-
             if (hasChangedMainEntityId(updated, preUpdateDoc)) {
                 reindexAllLinks(updated.shortId)
             } else {
                 reindexAffected(updated, preUpdateDoc.getExternalRefs(), updated.getExternalRefs())
             }
-        }
+        })
     }
-
-    private void reindexAffected(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks) {
+    
+    private void reindexAsyncOrSync(Runnable runnable) {
+        if (!elastic || skipIndex) {
+            return
+        }
+        
         Runnable reindex = {
             try {
-                reindexAffectedSync(document, preUpdateLinks, postUpdateLinks)
-            } 
+                runnable.run()
+            }
             catch (Exception e) {
                 log.error("Error reindexing: $e", e)
             }
@@ -232,7 +235,7 @@ class Whelk {
         bulkIndex(links)
     }
 
-    private void reindexAffectedSync(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks) {
+    private void reindexAffected(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks) {
         Set<Link> addedLinks = (postUpdateLinks - preUpdateLinks)
         Set<Link> removedLinks = (preUpdateLinks - postUpdateLinks)
 
@@ -333,10 +336,10 @@ class Whelk {
 
         boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted)
         if (success) {
-            if (elastic && !skipIndex) {
+            reindexAsyncOrSync({
                 elastic.index(document, this)
                 reindexAffected(document, new TreeSet<>(), document.getExternalRefs())
-            }
+            })
             sparqlUpdater?.pollNow()
         }
         return success
