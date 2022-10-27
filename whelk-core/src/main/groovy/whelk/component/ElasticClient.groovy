@@ -38,7 +38,9 @@ class ElasticClient {
     static final int CONNECTION_POOL_SIZE = 30
 
     static final int CONNECT_TIMEOUT_MS = 5 * 1000
-    static final int READ_TIMEOUT_MS = 60 * 1000
+    static final int READ_TIMEOUT_MS = 15 * 1000
+    static final int BATCH_CONNECT_TIMEOUT_MS = 0 // infinite
+    static final int BATCH_READ_TIMEOUT_MS = READ_TIMEOUT_MS * 80
     static final int MAX_BACKOFF_S = 1024
 
     static final CircuitBreakerConfig CB_CONFIG = CircuitBreakerConfig.custom()
@@ -85,8 +87,8 @@ class ElasticClient {
         cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_HOST)
 
         RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectTimeout(0)
-                .setSocketTimeout(READ_TIMEOUT_MS * 20)
+                .setConnectTimeout(BATCH_CONNECT_TIMEOUT_MS)
+                .setSocketTimeout(BATCH_READ_TIMEOUT_MS)
                 .build()
 
         CloseableHttpClient httpClient = HttpClients.custom()
