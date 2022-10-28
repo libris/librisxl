@@ -204,6 +204,13 @@ class Indexer:
 
         write_xml(root, self.outdir / self.descfilename, self.compress)
 
+        # TODO: Use to enable cheap incremental updates?
+        #mapcreatedfile = outfile.parent / 'sitemap-created.tsv'
+        #print(f'Writing: {mapcreatedfile}', file=sys.stderr)
+        #with open(mapcreatedfile, 'w') as f:
+        #    for itemset in sorteditemsets:
+        #        print(itemset.file, itemset.created, sep='\t', file=f)
+
 
 class ItemsetWriter(NamedTuple):
 
