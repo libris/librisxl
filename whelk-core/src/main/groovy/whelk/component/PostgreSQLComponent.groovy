@@ -150,8 +150,6 @@ class PostgreSQLComponent {
 
     private static final String CLEAR_EMBELLISHED = "DELETE FROM lddb__embellished"
 
-    private static final String CLEAR_CARDS = "DELETE FROM lddb__cards"
-
     private static final String GET_DOCUMENT_VERSION_BY_MAIN_ID = """
             SELECT id, data
             FROM lddb__versions 
@@ -541,21 +539,10 @@ class PostgreSQLComponent {
     }
 
     void clearEmbellishedCache(Connection connection) {
-        log.info("Clearing embellish cache")
+        log.debug("Clearing embellish cache")
         PreparedStatement preparedStatement = null
         try {
             preparedStatement = connection.prepareStatement(CLEAR_EMBELLISHED)
-            preparedStatement.execute()
-        } finally {
-            close(preparedStatement)
-        }
-    }
-
-    void clearCards(Connection connection) {
-        log.info("Clearing card cache")
-        PreparedStatement preparedStatement = null
-        try {
-            preparedStatement = connection.prepareStatement(CLEAR_CARDS)
             preparedStatement.execute()
         } finally {
             close(preparedStatement)
@@ -977,7 +964,6 @@ class PostgreSQLComponent {
             refreshDerivativeTables(doc, connection, refreshDependers, deleted)
             if (!refreshDependers) {
                 clearEmbellishedCache(connection)
-                clearCards(connection)
             }
 
             postCommitActions << { dependencyCache.invalidate(preUpdateDoc, doc) }
