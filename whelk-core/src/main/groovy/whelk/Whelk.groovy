@@ -332,7 +332,7 @@ class Whelk {
     /**
      * NEVER use this to _update_ a document. Use storeAtomicUpdate() instead. Using this for new documents is fine.
      */
-    boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted, boolean index = true) {
+    boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted) {
         normalize(document)
         
         boolean detectCollisionsOnTypedIDs = false
