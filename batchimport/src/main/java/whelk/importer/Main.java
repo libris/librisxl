@@ -15,6 +15,11 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -31,6 +36,8 @@ import java.util.List;
 
 public class Main {
     private static XL s_librisXl = null;
+    
+    static Logger LOG = LogManager.getLogger(Main.class);
 
     private static boolean verbose = false;
 
@@ -59,8 +66,8 @@ public class Main {
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread thread, Throwable throwable) {
-                System.err.println("fatal: PANIC ABORT, unhandled exception:\n");
-                throwable.printStackTrace();
+                Logger log = LogManager.getLogger(XL.class.getName() + ".unhandled");
+                log.fatal("PANIC ABORT, unhandled exception:\n", throwable);
                 System.exit(-1);
             }
         });
@@ -116,10 +123,10 @@ public class Main {
             PushGateway pg = new PushGateway(METRICS_PUSHGATEWAY);
             pg.pushAdd(registry, "batch_import");
         } catch (Throwable e) {
-            System.err.println("Metrics server connection failed. No metrics will be generated.");
+            LOG.warn("Metrics server connection failed. No metrics will be generated.");
         }
         if (verbose) {
-            System.err.println("info: All done.");
+            LOG.info("All done.");
         }
         threadPool.awaitAllAndShutdown();
     }
@@ -129,7 +136,7 @@ public class Main {
      */
     private static void importFile(Path path, Parameters parameters)
             throws Exception {
-        System.err.println("info: Importing file: " + path.toString());
+        LOG.info("Importing file: " + path.toString());
         try (ExclusiveFile file = new ExclusiveFile(path);
              InputStream fileInStream = file.getInputStream()) {
             importStream(fileInStream, parameters);
@@ -184,7 +191,7 @@ public class Main {
                     if (secondDiff > 0) {
                         long recordsPerSec = recordsBatched / secondDiff;
                         if (verbose) {
-                            System.err.println("info: Currently importing " + recordsPerSec + " records / sec.");
+                            LOG.info("Currently importing " + recordsPerSec + " records / sec.");
                         }
                     }
                 }
@@ -219,8 +226,10 @@ public class Main {
 
     private static void importBatch(List<MarcRecord> batch) {
         String lastKnownBibDocId = null;
+        int recordNo = 0;
         for (MarcRecord marcRecord : batch) {
             try {
+                ThreadContext.push(Integer.toString(recordNo++));
                 if (verbose) {
                     dumpDigIds(marcRecord);
                 }
@@ -242,7 +251,7 @@ public class Main {
                     // - batch A creates holding
                     // - batch B creates holding  <-- ConflictingHoldException
                     // As a workaround we retry the holding record (batch B) which will now be found and updated instead
-                    System.err.println("Duplicate bib+hold in file? retrying:\n" + marcRecord.toString());
+                    LOG.warn("Duplicate bib+hold in file? retrying:\n" + marcRecord.toString());
                     String resultingId = s_librisXl.importISO2709(
                             marcRecord,
                             lastKnownBibDocId,
@@ -253,8 +262,10 @@ public class Main {
                         lastKnownBibDocId = resultingId;
                 }
             } catch (Exception e) {
-                System.err.println("Failed to convert or write the following MARC record:\n" + marcRecord.toString());
+                LOG.error("Failed to convert or write the following MARC record:\n" + marcRecord.toString());
                 throw new RuntimeException(e);
+            } finally {
+                ThreadContext.pop();
             }
         }
     }
@@ -266,7 +277,7 @@ public class Main {
                 if (r != null) {
                     for (String c : r) {
                         if (c != null) {
-                            System.out.printf("%s ", c);
+                            LOG.debug("%s ", c);
                         }
                     }
                 }
