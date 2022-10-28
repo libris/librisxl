@@ -7,12 +7,12 @@ class LanguageLinker extends BlankNodeLinker implements DocumentUtil.Linker {
     List ignoreCodes = []
 
     LanguageLinker(List ignoreCodes = [], Statistics stats = null) {
-        super('Language', ['label', 'code', 'prefLabelByLang', 'altLabelByLang', 'langCode', 'langCodeBib', 'langCodeFull', 'langCodeTerm'], stats)
+        super('Language', ['label', 'code', 'prefLabelByLang', 'altLabelByLang', 'langCode', 'langCodeBib', 'langCodeFull', 'langCodeTerm', 'hiddenLabel'], stats)
         this.ignoreCodes = ignoreCodes
     }
 
-    boolean linkLanguages(data, String key = 'language') {
-        return DocumentUtil.findKey(data, key, DocumentUtil.link(this))
+    boolean linkLanguages(data, List<Map> helpNodes = [], String key = 'language') {
+        return DocumentUtil.findKey(data, key, DocumentUtil.link(this, helpNodes))
     }
 
     @Override
@@ -44,6 +44,11 @@ class LanguageLinker extends BlankNodeLinker implements DocumentUtil.Linker {
                 matches << m.group(1)
             }
             return matches
+        }
+
+        // concatenated language labels, e.g. "Svenska & engelska"
+        if (labelOrCode ==~ /^(.*,)*.*( & | och | and ).*/) {
+            return labelOrCode.split(/,| & | och | and /) as List
         }
 
         return []
