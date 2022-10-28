@@ -6,12 +6,23 @@
 # https://metadatabyran.kb.se/beskrivning/specialanvisningar/mangsprak/romaniseringsscheman
 # "Extratecknen Ө, ө romaniseras som svenskt Ö, ö och extratecknen Ү, ү som svenskt Ü, ü."
 
+# Note about 'е' and 'ю'
+# in the table: 
+# е ye ~ yö (dis-ambiguate)
+# ю yu ~ yü (dis-ambiguate)
+# Answer from the Mongolian language expert at KB:
+# ”Det handlar om olika möjliga (snarlika) uttal av bokstäver i olika ord, huvudsakligen beroende på 
+# vilka övriga vokaler som ingår i ordet. Jag tycker personligen att det är bäst att skriva:
+#  е = ye
+#  ю = yu
+# Att särskilja på det sätt Lessing anger är verkligen helt onödig överkurs.”
+
 а <> a ;
 б <> b ;
 в <> v ;
 г <> g ;
 д <> d ;
-е <> ye ; # i schemat: "ye ~ yö (dis-ambiguate)"
+е <> ye ;
 ё <> yo ;
 ж <> j ;
 з <> z ;
@@ -35,11 +46,11 @@
 ч <> ch ;
 ш <> sh ;
 щ <> shch ;
-ъ <> ı  ; # i schemat: "(or i if diacritical undesired)"
-ы <> î  ; # i schemat: "(or y if diacritical undesired)
-ь <> ĭ  ; # i schemat: "(or i if diacritical undesired)
+ъ <> ı  ; # in the table: "(or i if diacritical undesired)"
+ы <> î  ; # in the table: "(or y if diacritical undesired)
+ь <> ĭ  ; # in the table: "(or i if diacritical undesired)
 э <> e ;
-ю <> yu ; #  i schemat: "yu ~ yü (dis-ambiguate)"
+ю <> yu ;
 я <> ya ;
 ө <> ö ;
 

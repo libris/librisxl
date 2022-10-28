@@ -195,10 +195,10 @@ class Whelk {
                 .collectEntries { id, doc -> [(idMap.getOrDefault(id, id)) : doc]}
     }
 
-    private void reindex(Document updated, boolean refreshDependers, Document preUpdateDoc) {
-        if (elastic && !skipIndex) {
+    private void reindexUpdated(Document updated, Document preUpdateDoc, boolean refreshDependers) {
+        indexAsyncOrSync {
             elastic.index(updated, this)
-
+            
             if (refreshDependers) {
                 if (hasChangedMainEntityId(updated, preUpdateDoc)) {
                     reindexAllLinks(updated.shortId)
@@ -208,12 +208,21 @@ class Whelk {
             }
         }
     }
-
-    private void reindexAffected(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks) {
+    
+    private void indexAsyncOrSync(Runnable runnable) {
+        if (skipIndex) {
+            return
+        }
+        
+        if(!elastic) {
+            log.warn("Elasticsearch not configured when trying to reindex")
+            return
+        }
+        
         Runnable reindex = {
             try {
-                reindexAffectedSync(document, preUpdateLinks, postUpdateLinks)
-            } 
+                runnable.run()
+            }
             catch (Exception e) {
                 log.error("Error reindexing: $e", e)
             }
@@ -234,7 +243,7 @@ class Whelk {
         bulkIndex(links)
     }
 
-    private void reindexAffectedSync(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks) {
+    private void reindexAffected(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks) {
         Set<Link> addedLinks = (postUpdateLinks - preUpdateLinks)
         Set<Link> removedLinks = (preUpdateLinks - postUpdateLinks)
 
@@ -335,7 +344,7 @@ class Whelk {
 
         boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted)
         if (success) {
-            if (elastic && !skipIndex) {
+            indexAsyncOrSync {
                 elastic.index(document, this)
                 reindexAffected(document, new TreeSet<>(), document.getExternalRefs())
             }
@@ -369,8 +378,8 @@ class Whelk {
         if (updated == null || preUpdateDoc == null) {
             return false
         }
-
-        reindex(updated, refreshDependers, preUpdateDoc)
+        
+        reindexUpdated(updated, preUpdateDoc, refreshDependers)
         sparqlUpdater?.pollNow()
 
         return true
@@ -384,8 +393,8 @@ class Whelk {
         if (updated == null) {
             return
         }
-        
-        reindex(updated, refreshDependers, preUpdateDoc)
+
+        reindexUpdated(updated, preUpdateDoc, refreshDependers)
         sparqlUpdater?.pollNow()
     }
 
@@ -402,13 +411,9 @@ class Whelk {
         log.debug "Deleting ${id} from Whelk"
         Document doc = storage.load(id)
         storage.remove(id, changedIn, changedBy, force)
-        if (elastic && !skipIndex) {
+        indexAsyncOrSync {
             elastic.remove(id)
             reindexAffected(doc, doc.getExternalRefs(), Collections.emptySet())
-            log.debug "Object ${id} was removed from Whelk"
-        }
-        else {
-            log.warn "No Elastic present when deleting. Skipping call to elastic.remove(${id})"
         }
     }
 
