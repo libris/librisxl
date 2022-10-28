@@ -195,13 +195,16 @@ class Whelk {
                 .collectEntries { id, doc -> [(idMap.getOrDefault(id, id)) : doc]}
     }
 
-    private void reindexUpdated(Document updated, Document preUpdateDoc) {
+    private void reindexUpdated(Document updated, Document preUpdateDoc, boolean refreshDependers) {
         indexAsyncOrSync {
             elastic.index(updated, this)
-            if (hasChangedMainEntityId(updated, preUpdateDoc)) {
-                reindexAllLinks(updated.shortId)
-            } else {
-                reindexAffected(updated, preUpdateDoc.getExternalRefs(), updated.getExternalRefs())
+            
+            if (refreshDependers) {
+                if (hasChangedMainEntityId(updated, preUpdateDoc)) {
+                    reindexAllLinks(updated.shortId)
+                } else {
+                    reindexAffected(updated, preUpdateDoc.getExternalRefs(), updated.getExternalRefs())
+                }
             }
         }
     }
@@ -353,33 +356,45 @@ class Whelk {
     /**
      * The UpdateAgent SHOULD be a pure function since the update will be retried in case the document
      * was modified in another transaction.
+     *
+     * Parameter explanation:
+     * minorUpdate - When set to true, the 'modified' timestamp will not be updated. This results in no exports being triggered.
+     * writeIdenticalVersions - When set to true, a new entry will be written to the versions table even if the data did not change.
+     * refreshDependers - When set to true (you almost always want this!) records referencing the updated record will have their
+     *                    various denormalized things refreshed as well. If you set this to false, the onus is on you to make sure
+     *                    your changes to the data do not affect the dependencies table, and to reindex all the dependeing records
+     *                    if/when necessary.
+     *
+     * Returns true if anything was written.
      */
-    void storeAtomicUpdate(String id, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, PostgreSQLComponent.UpdateAgent updateAgent) {
+    boolean storeAtomicUpdate(String id, boolean minorUpdate, boolean writeIdenticalVersions, boolean refreshDependers, String changedIn, String changedBy, PostgreSQLComponent.UpdateAgent updateAgent) {
         Document preUpdateDoc = null
-        Document updated = storage.storeUpdate(id, minorUpdate, writeIdenticalVersions, changedIn, changedBy, { Document doc ->
+        Document updated = storage.storeUpdate(id, minorUpdate, writeIdenticalVersions, refreshDependers, changedIn, changedBy, { Document doc ->
             preUpdateDoc = doc.clone()
             updateAgent.update(doc)
             normalize(doc)
         })
 
         if (updated == null || preUpdateDoc == null) {
-            return
+            return false
         }
-
-        reindexUpdated(updated, preUpdateDoc)
+        
+        reindexUpdated(updated, preUpdateDoc, refreshDependers)
         sparqlUpdater?.pollNow()
+
+        return true
     }
 
-    void storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, String oldChecksum) {
+    void storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, boolean refreshDependers, String changedIn, String changedBy, String oldChecksum) {
         normalize(doc)
         Document preUpdateDoc = storage.load(doc.shortId)
-        Document updated = storage.storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, changedIn, changedBy, oldChecksum)
+        Document updated = storage.storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, refreshDependers, changedIn, changedBy, oldChecksum)
 
         if (updated == null) {
             return
         }
 
-        reindexUpdated(updated, preUpdateDoc)
+        reindexUpdated(updated, preUpdateDoc, refreshDependers)
         sparqlUpdater?.pollNow()
     }
 

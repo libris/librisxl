@@ -539,7 +539,7 @@ class PostgreSQLComponent {
     }
 
     void clearEmbellishedCache(Connection connection) {
-        log.info("Clearing embellish cache")
+        log.debug("Clearing embellish cache")
         PreparedStatement preparedStatement = null
         try {
             preparedStatement = connection.prepareStatement(CLEAR_EMBELLISHED)
@@ -702,7 +702,7 @@ class PostgreSQLComponent {
                 insert.executeUpdate()
 
                 saveVersion(doc, connection, now, now, changedIn, changedBy, collection, deleted)
-                refreshDerivativeTables(doc, connection, deleted)
+                refreshDerivativeTables(doc, connection, true, deleted)
 
                 connection.commit()
                 connection.setAutoCommit(true)
@@ -749,7 +749,7 @@ class PostgreSQLComponent {
 
             long count = 0
             for (Document doc : loadAll(null, false, null, null)) {
-                refreshDerivativeTables(doc, connection, doc.getDeleted(), leaveCacheAlone)
+                refreshDerivativeTables(doc, connection, true, doc.getDeleted(), leaveCacheAlone)
 
                 ++count
                 if (count % 500 == 0)
@@ -782,7 +782,7 @@ class PostgreSQLComponent {
                 insert.executeUpdate()
 
                 saveVersion(doc, connection, now, now, changedIn, changedBy, collection, false)
-                refreshDerivativeTables(doc, connection, false)
+                refreshDerivativeTables(doc, connection, true, false)
 
                 connection.commit()
                 return true
@@ -826,12 +826,12 @@ class PostgreSQLComponent {
         }
     }
 
-    Document storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, String oldChecksum) {
+    Document storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, boolean refreshDependers, String changedIn, String changedBy, String oldChecksum) {
         return withDbConnection {
             Connection connection = getMyConnection()
             connection.setAutoCommit(false)
             List<Runnable> postCommitActions = []
-            Document result = storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, changedIn, changedBy, oldChecksum, connection, postCommitActions)
+            Document result = storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, refreshDependers, changedIn, changedBy, oldChecksum, connection, postCommitActions)
             connection.commit()
             connection.setAutoCommit(true)
             postCommitActions.each { it.run() }
@@ -839,14 +839,14 @@ class PostgreSQLComponent {
         }
     }
 
-    Document storeUpdate(String id, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, UpdateAgent updateAgent) {
+    Document storeUpdate(String id, boolean minorUpdate, boolean writeIdenticalVersions, boolean refreshDependers, String changedIn, String changedBy, UpdateAgent updateAgent) {
         int retriesLeft = STALE_UPDATE_RETRIES
         while (true) {
             try {
                 Document doc = load(id)
                 String checksum = doc.getChecksum(jsonld)
                 updateAgent.update(doc)
-                Document updated = storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, changedIn, changedBy, checksum)
+                Document updated = storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, refreshDependers, changedIn, changedBy, checksum)
                 return updated
             }
             catch (StaleUpdateException e) {
@@ -861,7 +861,7 @@ class PostgreSQLComponent {
         }
     }
 
-    Document storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy,
+    Document storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, boolean refreshDependers, String changedIn, String changedBy,
                                        String oldChecksum, Connection connection, List<Runnable> postCommitActions) {
         String id = doc.shortId
         log.debug("Saving (atomic update) ${id}")
@@ -957,11 +957,14 @@ class PostgreSQLComponent {
                 SortedSet<String> idsLinkingToOldId = getDependencyData(id, GET_DEPENDERS, connection)
                 for (String dependerId : idsLinkingToOldId) {
                     Document depender = load(dependerId)
-                    storeAtomicUpdate(depender, true, false, changedIn, changedBy, depender.getChecksum(jsonld), connection, postCommitActions)
+                    storeAtomicUpdate(depender, true, false, refreshDependers, changedIn, changedBy, depender.getChecksum(jsonld), connection, postCommitActions)
                 }
             }
 
-            refreshDerivativeTables(doc, connection, deleted)
+            refreshDerivativeTables(doc, connection, refreshDependers, deleted)
+            if (!refreshDependers) {
+                clearEmbellishedCache(connection)
+            }
 
             postCommitActions << { dependencyCache.invalidate(preUpdateDoc, doc) }
 
@@ -974,7 +977,7 @@ class PostgreSQLComponent {
             } else {
                 throw psqle
             }
-        } catch (TooHighEncodingLevelException | StaleUpdateException e) {
+        } catch (TooHighEncodingLevelException | StaleUpdateException | CancelUpdateException e) {
             connection.rollback()
             throw e
         } catch (Exception e) {
@@ -1047,16 +1050,17 @@ class PostgreSQLComponent {
         // We're ok.
     }
 
-    void refreshDerivativeTables(Document doc) {
+    void refreshDerivativeTables(Document doc, boolean refreshDependers) {
         withDbConnection {
             Connection connection = getMyConnection()
-            refreshDerivativeTables(doc, connection, doc.deleted)
+            refreshDerivativeTables(doc, connection, refreshDependers, doc.deleted)
         }
     }
 
-    void refreshDerivativeTables(Document doc, Connection connection, boolean deleted, boolean leaveCacheAlone = false) {
+    void refreshDerivativeTables(Document doc, Connection connection, boolean refreshDependers, boolean deleted, boolean leaveCacheAlone = false) {
         saveIdentifiers(doc, connection, deleted)
-        saveDependencies(doc, connection)
+        if (refreshDependers)
+            saveDependencies(doc, connection)
         if (!leaveCacheAlone)
             evictDependersFromEmbellishedCache(doc.getShortId(), connection)
 
@@ -1551,7 +1555,7 @@ class PostgreSQLComponent {
                 ver_batch.executeBatch()
                 docs.each { doc ->
                     boolean leaveCacheAlone = true
-                    refreshDerivativeTables(doc, connection, false, leaveCacheAlone)
+                    refreshDerivativeTables(doc, connection, true, false, leaveCacheAlone)
                 }
                 clearEmbellishedCache(connection)
                 connection.commit()
@@ -2512,7 +2516,7 @@ class PostgreSQLComponent {
 
             log.debug("Marking document with ID ${identifier} as deleted.")
             try {
-                storeUpdate(identifier, false, true, changedIn, changedBy,
+                storeUpdate(identifier, false, true, true, changedIn, changedBy,
                     { Document doc ->
                         doc.setDeleted(true)
                         // Add a tombstone marker (without removing anything) perhaps?

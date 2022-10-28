@@ -518,7 +518,7 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
-            whelk.storeAtomicUpdate(doc, !item.loud, true, changedIn, scriptJobUri, item.preUpdateChecksum)
+            whelk.storeAtomicUpdate(doc, !item.loud, true, true, changedIn, scriptJobUri, item.preUpdateChecksum)
         }
         modifiedLog.println(doc.shortId)
     }

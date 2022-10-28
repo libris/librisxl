@@ -40,7 +40,7 @@ class ImporterMain {
     }
 
     @Command(args='SOURCE_URL DATASET_URI [DATASET_DESCRIPTION_FILE]',
-             flags='--skip-index --replace-main-ids --force-delete')
+             flags='--skip-index --replace-main-ids --force-delete --skip-dependers')
     void dataset(String sourceUrl, String datasetUri, String datasetDescPath=null, Map flags) {
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
         if (flags['skip-index']) {
