@@ -17,6 +17,8 @@ import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
 
+import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
+import static whelk.exception.UnexpectedHttpStatusException.isNotFound
 import static whelk.util.Jackson.mapper
 
 @Log
@@ -245,20 +247,21 @@ class ElasticSearch {
                     body)
         }
         catch (Exception e) {
-            if (!isBadRequest(e)) {
-                log.warn("Failed to update reverse link counter for $shortId: $e, placing in retry queue.", e)
-                indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, deltaCount) })
+            if (isBadRequest(e)) {
+                log.warn("Failed to update reverse link counter ($deltaCount) for $shortId: $e", e)
+            }
+            else if (isNotFound(e)) {
+                // OK. All dependers must be removed before the dependee in lddb. But the index update can happen
+                // in any order, so the dependee might already be gone when trying to decrement the counter.
+                log.info("Could not update reverse link counter ($deltaCount) for $shortId: $e, it does not exist", e)
             }
             else {
-                log.warn("Failed to update reverse link counter for $shortId: $e", e)
+                log.warn("Failed to update reverse link counter ($deltaCount) for $shortId: $e, placing in retry queue.", e)
+                indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, deltaCount) })
             }
         }
     }
-
-    static boolean isBadRequest(Exception e) {
-        e instanceof UnexpectedHttpStatusException && e.getStatusCode() == 400
-    }
-
+    
     void remove(String identifier) {
         if (log.isDebugEnabled()) {
             log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
