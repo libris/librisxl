@@ -86,6 +86,35 @@ class DocumentUtil {
         return !node.containsKey('@id')
     }
 
+    /**
+     *
+     * @param item
+     * @param path
+     * @param defaultTo
+     * @return
+     */
+    static def getAtPath(item, Iterable path, defaultTo = null) {
+        if (!item) {
+            return defaultTo
+        }
+
+        for (int i = 0; i < path.size(); i++) {
+            def p = path[i]
+            if (p == '*') {
+                if (item instanceof Collection) {
+                    return item.collect { getAtPath(it, path.drop(i + 1), []) }.flatten()
+                } else {
+                    return []
+                }
+            } else if (((item instanceof Collection && p instanceof Integer) || item instanceof Map) && item[p] != null) {
+                item = item[p]
+            } else {
+                return defaultTo
+            }
+        }
+        return item
+    }
+
     private static Operation linkBlankNode(List<Map> nodes, Linker linker, List<Map> helpNodes = []) {
         if (!nodes.any(DocumentUtil.&isBlank)) {
             return NOP
