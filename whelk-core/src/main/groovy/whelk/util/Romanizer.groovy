@@ -71,7 +71,6 @@ class Romanizer {
     }
 
     private static String readFromResources(String filename) {
-        println(filename)
         Romanizer.class.getClassLoader().getResourceAsStream('romanizer/' + filename).getText("UTF-8")
     }
 }
