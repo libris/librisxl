@@ -60,13 +60,14 @@
       }
     },
     {
-      "name":  "move (non-copied) title to expressionOf for bib 130 if no contribution is present",
+      "name":  "move (non-copied) title (plus originDate) to expressionOf for bib 130 if no contribution is present",
       "result": {
         "mainEntity": {
           "instanceOf": {
             "@type": "Text",
             "hasTitle": [{"@type": "Title", "mainTitle": "TITELN"}],
-            "language": [{"@id": "https://id.kb.se/language/swe"}]
+            "language": [{"@id": "https://id.kb.se/language/swe"}],
+            "originDate": "1654."
           }
         }
       },
@@ -76,9 +77,11 @@
             "@type": "Text",
             "hasTitle": [{"@type": "Title", "mainTitle": "TITELN", "_revertedBy": "NormalizeWorkTitlesStep"}],
             "language": [{"@id": "https://id.kb.se/language/swe"}],
+            "originDate": "1654.",
             "expressionOf": {
                 "@type": "Work",
                 "hasTitle": [{"@type": "Title", "mainTitle": "TITELN", "_revertOnly": true}],
+                "originDate": "1654.",
                 "_revertOnly": true
             }
           }
@@ -280,6 +283,495 @@
           }
         }
       }
+    },
+    {
+      "name":  "move expressionOf title (including associated properties) to instanceOf",
+      "source": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {"@id": "https://id.kb.se/language/swe"}
+            ],
+            "expressionOf": {
+              "@type": "Work",
+              "hasTitle": [
+                {
+                  "@type": "Title",
+                  "mainTitle": "TITELN"
+                }
+              ],
+              "language": [
+                {"@id": "https://id.kb.se/language/swe"}
+              ],
+              "originDate": "1900",
+              "marc:version": "version"
+            }
+          }
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {"@id": "https://id.kb.se/language/swe"}
+            ],
+            "hasTitle": [
+              {
+                "@type": "Title",
+                "mainTitle": "TITELN"
+              }
+            ],
+            "originDate": "1900",
+            "marc:version": "version"
+          }
+        }
+      }
+    },
+    {
+      "name":  "TODO: move expressionOf title (with mainTitle normalized) to instanceOf",
+      "source": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {"@id": "https://id.kb.se/language/swe"}
+            ],
+            "expressionOf": {
+              "@type": "Work",
+              "hasTitle": [
+                {
+                  "@type": "Title",
+                  "mainTitle": "TODO: titel med dålig interpunktion"
+                }
+              ],
+              "language": [
+                {"@id": "https://id.kb.se/language/swe"}
+              ]
+            }
+          }
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {"@id": "https://id.kb.se/language/swe"}
+            ],
+            "hasTitle": [
+              {
+                "@type": "Title",
+                "mainTitle": "TODO: normaliserad titel"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name":  "move expressionOf title to translationOf",
+      "source": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {"@id": "https://id.kb.se/language/swe"}
+            ],
+            "expressionOf": {
+              "@type": "Work",
+              "hasTitle": [
+                {
+                  "@type": "Title",
+                  "mainTitle": "THE TITLE"
+                }
+              ],
+              "language": [
+                {"@id": "https://id.kb.se/language/swe"}
+              ]
+            },
+            "translationOf": [
+              {
+                "@type": "Work",
+                "language": [
+                  {"@id": "https://id.kb.se/language/eng"}
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {"@id": "https://id.kb.se/language/swe"}
+            ],
+            "translationOf": [
+              {
+                "@type": "Work",
+                "hasTitle": [
+                  {
+                    "@type": "Title",
+                    "mainTitle": "THE TITLE"
+                  }
+                ],
+                "language": [
+                  {"@id": "https://id.kb.se/language/eng"}
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name":  "link blank languages before moving expressionOf title to instanceOf",
+      "source": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {"@id": "https://id.kb.se/language/gre"},
+              {"@id": "https://id.kb.se/language/eng"}
+            ],
+            "expressionOf": {
+              "@type": "Work",
+              "hasTitle": [
+                {
+                  "@type": "Title",
+                  "mainTitle": "TITELN"
+                }
+              ],
+              "language": [
+                {"@type":"Language", label:["Grekiska & Tyska."]}
+              ]
+            }
+          }
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {"@id": "https://id.kb.se/language/gre"},
+              {"@id": "https://id.kb.se/language/eng"}
+            ],
+            "hasTitle": [
+              {
+                "@type": "Title",
+                "mainTitle": "TITELN"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name":  "don't move expressionOf title if languages don't match",
+      "source": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {"@id": "https://id.kb.se/language/eng"}
+            ],
+            "expressionOf": {
+              "@type": "Work",
+              "hasTitle": [
+                {
+                  "@type": "Title",
+                  "mainTitle": "TITELN"
+                }
+              ],
+              "language": [
+                {"@id": "https://id.kb.se/language/swe"}
+              ]
+            }
+          }
+        }
+      },
+      "result": "source"
+    },
+    {
+      "name":  "move instanceOf title to translationOf",
+      "source": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {"@id": "https://id.kb.se/language/swe"}
+            ],
+            "hasTitle": [
+              {
+                "@type": "Title",
+                "mainTitle": "THE TITLE"
+              }
+            ],
+            "translationOf": [
+              {
+                "@type": "Work",
+                "language": [
+                  {"@id": "https://id.kb.se/language/eng"}
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {"@id": "https://id.kb.se/language/swe"}
+            ],
+            "translationOf": [
+              {
+                "@type": "Work",
+                "hasTitle": [
+                  {
+                    "@type": "Title",
+                    "mainTitle": "THE TITLE"
+                  }
+                ],
+                "language": [
+                  {"@id": "https://id.kb.se/language/eng"}
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name":  "hasPart: move title to translationOf",
+      "source": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {"@id": "https://id.kb.se/language/eng"}
+            ],
+            "hasPart": [
+              {
+                "@type": "Work",
+                "language": [
+                  {"@id": "https://id.kb.se/language/eng"}
+                ],
+                "hasTitle": [
+                  {
+                    "@type": "Title",
+                    "mainTitle": "DELENS TITEL"
+                  }
+                ],
+                "translationOf": [
+                  {
+                    "@type": "Work",
+                    "language": [
+                      {"@id": "https://id.kb.se/language/swe"}
+                    ]
+                  }
+                ]
+              },
+              {
+                "@type": "Work",
+                "language": [
+                  {"@id": "https://id.kb.se/language/eng"}
+                ],
+                "hasTitle": [
+                  {
+                    "@type": "Title",
+                    "mainTitle": "DELENS TITEL"
+                  }
+                ],
+                "translationOf": [
+                  {
+                    "@type": "Work",
+                    "language": [
+                      {"@id": "https://id.kb.se/language/swe"}
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {"@id": "https://id.kb.se/language/eng"}
+            ],
+            "hasPart": [
+              {
+                "@type": "Work",
+                "language": [
+                  {"@id": "https://id.kb.se/language/eng"}
+                ],
+                "translationOf": [
+                  {
+                    "@type": "Work",
+                    "language": [
+                      {"@id": "https://id.kb.se/language/swe"}
+                    ],
+                    "hasTitle": [
+                      {
+                        "@type": "Title",
+                        "mainTitle": "DELENS TITEL"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "@type": "Work",
+                "language": [
+                  {"@id": "https://id.kb.se/language/eng"}
+                ],
+                "translationOf": [
+                  {
+                    "@type": "Work",
+                    "language": [
+                      {"@id": "https://id.kb.se/language/swe"}
+                    ],
+                    "hasTitle": [
+                      {
+                        "@type": "Title",
+                        "mainTitle": "DELENS TITEL"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name":  "Music/NotatedMusic: don't move instanceOf title to translationOf",
+      "source": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Music",
+            "language": [
+              {"@id": "https://id.kb.se/language/zxx"}
+            ],
+            "hasTitle": [
+              {
+                "@type": "Title",
+                "mainTitle": "Symfoni"
+              }
+            ],
+            "translationOf": [
+              {
+                "@type": "Work",
+                "language": [
+                  {"@id": "https://id.kb.se/language/eng"}
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "result": "source"
+    },
+    {
+      "name":  "Music/NotatedMusic: move expressionOf title to instanceOf regardless of translationOf presence",
+      "source": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "NotatedMusic",
+            "language": [
+              {"@id": "https://id.kb.se/language/fre"}
+            ],
+            "expressionOf": {
+              "@type": "Work",
+              "language": [
+                {"@id": "https://id.kb.se/language/fre"}
+              ],
+              "hasTitle": [
+                {
+                  "@type": "Title",
+                  "mainTitle": "LE TITRE"
+                }
+              ],
+              "musicKey": "A-dur"
+            },
+            "translationOf": [
+              {
+                "@type": "Work",
+                "language": [
+                  {"@id": "https://id.kb.se/language/ita"}
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "NotatedMusic",
+            "language": [
+              {"@id": "https://id.kb.se/language/fre"}
+            ],
+            "hasTitle": [
+              {
+                "@type": "Title",
+                "mainTitle": "LE TITRE"
+              }
+            ],
+            "musicKey": "A-dur",
+            "translationOf": [
+              {
+                "@type": "Work",
+                "language": [
+                  {"@id": "https://id.kb.se/language/ita"}
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name":  "don't move anything upon property conflict",
+      "source": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {"@id": "https://id.kb.se/language/swe"}
+            ],
+            "hasTitle": [
+              {
+                "@type": "Title",
+                "mainTitle": "TITEL 1"
+              }
+            ],
+            "expressionOf": {
+              "@type": "Work",
+              "hasTitle": [
+                {
+                  "@type": "Title",
+                  "mainTitle": "TITEL 2"
+                }
+              ],
+              "language": [
+                {"@id": "https://id.kb.se/language/swe"}
+              ]
+            }
+          }
+        }
+      },
+      "result": "source"
     }
   ]
 }
