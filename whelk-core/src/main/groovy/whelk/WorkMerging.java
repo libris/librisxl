@@ -28,15 +28,17 @@ public class WorkMerging {
 
         Document baseWork = selectBaseWork(instances, whelk);
         String baseWorkUri = baseWork.getThingIdentifiers().get(0);
+        Map correctLinkEntity = new HashMap();
+        correctLinkEntity.put("@id", baseWorkUri);
 
-        // Relink the instances
-        Map linkEntity = new HashMap();
-        linkEntity.put("@id", baseWorkUri);
+        // Collect all already existing external works (different from our target) before relinking
+        List<String> orphanIDs = new ArrayList<>();
         for (Document instance : instances) {
-            if (!instance.getWorkEntity().equals(linkEntity)) { // If not already linked to the correct record
-                whelk.storeAtomicUpdate(instance.getShortId(), true, false, true, "xl", null, (Document doc) -> {
-                    doc.setWorkEntity(linkEntity);
-                });
+            Map workEntity = instance.getWorkEntity();
+            if (workEntity.size() == 1 && !workEntity.equals(correctLinkEntity)) {
+                String workUri = (String) workEntity.get("@id");
+                String workId = whelk.getStorage().getSystemIdByIri(workUri);
+                orphanIDs.add(workId);
             }
         }
 
@@ -46,17 +48,22 @@ public class WorkMerging {
             // TODO MERGE HERE
         });
 
-        // Cleanup no longer linked work records
+        // Relink the instances
         for (Document instance : instances) {
-            Map workEntity = instance.getWorkEntity();
-            String workUri = (String) workEntity.get("@id");
-            String workId = whelk.getStorage().getSystemIdByIri(workUri);
-            if (workEntity.size() == 1
-                    && workEntity.containsKey("@id")
-                    && !workEntity.equals(linkEntity)
-                    && whelk.getStorage().getDependers(workId).isEmpty()) {
-                String orphanID = whelk.getStorage().getSystemIdByIri((String)workEntity.get("@id"));
+            if (!instance.getWorkEntity().equals(correctLinkEntity)) { // If not already linked to the correct record
+                whelk.storeAtomicUpdate(instance.getShortId(), true, false, true, "xl", null, (Document doc) -> {
+                    doc.setWorkEntity(correctLinkEntity);
+                });
+            }
+        }
+
+        // Cleanup no longer linked work records
+        for (String orphanID : orphanIDs) {
+            try {
                 whelk.getStorage().removeAndTransferMainEntityURIs(orphanID, baseWork.getShortId());
+            } catch (RuntimeException e) {
+                // Expected possible cause of exception: A new link was added to this work, _after_ we collected
+                // and relinked the instances of it. In this (theoretical) case, just leave the old work in place.
             }
         }
 
