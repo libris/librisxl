@@ -19,6 +19,9 @@ import static whelk.util.Jackson.mapper
 @CompileStatic
 class DatasetImporter {
 
+    static String CONTEXT = JsonLd.CONTEXT_KEY
+    static String VOCAB = JsonLd.VOCAB_KEY
+    static String BASE = '@base'
     static String GRAPH = JsonLd.GRAPH_KEY
     static String ID = JsonLd.ID_KEY
     static String TYPE = JsonLd.TYPE_KEY
@@ -269,7 +272,13 @@ class DatasetImporter {
 
     private Map loadTurtleAsSystemShaped(InputStream ins) {
         Map data = TrigToJsonLdParser.parse(ins)
-        data = (Map) getTvm().applyTargetVocabularyMap(whelk.defaultTvmProfile, contextDocData, data)
+        if (data[CONTEXT] instanceof Map) {
+            Map ctx = (Map) data[CONTEXT]
+            if (ctx[VOCAB] == whelk.jsonld.vocabId && (ctx.size() == 1 || (ctx.size() == 2 && ctx.containsKey(BASE)))) {
+                return (Map) TrigToJsonLdParser.compact(data, contextDocData)
+            }
+        }
+        return (Map) getTvm().applyTargetVocabularyMap(whelk.defaultTvmProfile, contextDocData, data)
     }
 
     private Document getDocByMainEntityId(String id) {
