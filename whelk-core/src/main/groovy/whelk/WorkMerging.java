@@ -19,12 +19,6 @@ public class WorkMerging {
      * outside. It also means that should the process be stopped halfway through,
      * results may look odd (but will still obey basic data integrity rules).
      *
-     * In the worst case scenario, if the process is interrupted just after the orphans
-     * have been deleted, but their sameAs-uris have not yet been moved to the merged
-     * work, those sameAs-uris will be lost. This risk cannot be avoided without compromising
-     * the URI integrity checks of the underlying code (two records are never allowed to
-     * have the same URI at the same time).
-     *
      * Returns the URI of the one remaining (or new) work that all of the instances
      * now link to.
      */
@@ -35,12 +29,10 @@ public class WorkMerging {
         Document baseWork = selectBaseWork(instances, whelk);
         String baseWorkUri = baseWork.getThingIdentifiers().get(0);
 
-        // Relink the instances and collect all work aliases
+        // Relink the instances
         Map linkEntity = new HashMap();
         linkEntity.put("@id", baseWorkUri);
-        List<String> workAlternateUris = new ArrayList<>();
         for (Document instance : instances) {
-            workAlternateUris.addAll( instance.getThingIdentifiers() );
             if (!instance.getWorkEntity().equals(linkEntity)) { // If not already linked to the correct record
                 whelk.storeAtomicUpdate(instance.getShortId(), true, false, true, "xl", null, (Document doc) -> {
                     doc.setWorkEntity(linkEntity);
@@ -64,17 +56,9 @@ public class WorkMerging {
                     && !workEntity.equals(linkEntity)
                     && whelk.getStorage().getDependers(workId).isEmpty()) {
                 String orphanID = whelk.getStorage().getSystemIdByIri((String)workEntity.get("@id"));
-                whelk.remove(orphanID, "xl", null);
+                whelk.getStorage().removeAndTransferMainEntityURIs(orphanID, baseWork.getShortId());
             }
         }
-
-        // We must now save the baseWork a second time, to add all of the sameAs identifiers.
-        // These could not be added the first time, because they still belonged to other records
-        // that were not yet deleted.
-        whelk.storeAtomicUpdate(baseWork.getShortId(), true, false, true, "xl", null, (Document doc) -> {
-            for (String uri : workAlternateUris)
-                baseWork.addThingIdentifier(uri);
-        });
 
         return baseWorkUri;
     }

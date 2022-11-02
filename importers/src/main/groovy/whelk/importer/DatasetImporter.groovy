@@ -58,10 +58,6 @@ class DatasetImporter {
     Map<String, String> aliasMap = [:]
 
     DatasetImporter(Whelk whelk, String datasetUri, Map flags=[:], String datasetDescPath=null) {
-        System.err.println("WARNING: Do not ever cancel an ongoing dataset loading operation using CTRL+C (or equivalent).\n"+
-        "Doing so poses a danger because dataset loading may under some circumstances need to perform\n"+
-        "operations that are not atomic, and loss of data can occur if the process is interrupted during\n"+
-        "such an operation.")
         this.whelk = whelk
         this.datasetUri = datasetUri
         if (datasetDescPath != null) {
