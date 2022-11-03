@@ -1,16 +1,15 @@
 import whelk.util.Unicode
 import whelk.filter.LanguageLinker
+import static whelk.JsonLd.looksLikeIri
 
 moved = getReportWriter('moved.tsv')
 propertyAlreadyExists = getReportWriter('property-already-exists.tsv')
 brokenLinks = getReportWriter('broken-links.tsv')
 langDiff = getReportWriter('lang-diff.tsv')
-hubLinks = getReportWriter('hub-links.tsv')
+linked = getReportWriter('linked.tsv')
 
 langLinker = getLangLinker()
 languageNames = langLinker.map.keySet() + langLinker.substitutions.keySet() + langLinker.ambiguousIdentifiers.keySet()
-
-newHubs = getNewHubs()
 
 HAS_TITLE = 'hasTitle'
 MAIN_TITLE = 'mainTitle'
@@ -20,6 +19,9 @@ TRANSLATION_OF = 'translationOf'
 EXPRESSION_OF = 'expressionOf'
 ID = '@id'
 TYPE = '@type'
+
+prefTitleToWorkHub = queryDocs(['@type': ['WorkHub']]).collectEntries { [it[HAS_TITLE][0][MAIN_TITLE], it[ID]] }
+localExpressionOfToPrefTitle = getLocalExpressionOfMappings('hubs.tsv')
 
 TITLE_RELATED_PROPS = ['hasTitle', 'musicKey', 'musicMedium', 'version', 'marc:version', 'marc:fieldref', 'legalDate', 'originDate']
 
@@ -50,33 +52,32 @@ selectBySqlWhere(where) {
             brokenLinks.println([id, expressionOf[ID]].join('\t'))
             return
         }
-        // Already a "good" hub, keep as is
-        if (hub[TYPE] == 'Hub') {
+        // Already a WorkHub hub, keep as is
+        else if (hub[TYPE] == 'Hub') {
             hubLinks.println([id, expressionOf[ID], expressionOf[ID]].join('\t')) // id   old link    new link
-            return
         }
-        // Uniform work title having a replacement hub. Relink to the better hub.
-        if (hub[EXPRESSION_OF][ID]) {
+        // Uniform work title has a replacement hub. Relink to the better hub (WorkHub).
+        else (hub[EXPRESSION_OF]?[ID]) {
             hubLinks.println([id, expressionOf[ID], hub[EXPRESSION_OF][ID]].join('\t'))
             expressionOf[ID] = hub[EXPRESSION_OF][ID]
             it.scheduleSave()
-            return
         }
 
-        // TODO: Will there be uniform work titles without replacement hubs? If so, probably copy the title
-//        if (tryCopyTitle(hub, target, targetProperty, id, expressionOf[ID])) {
-//            it.scheduleSave()
-//        }
+        // Shouldn't reach here if all linked uniform work title have been taken care of
+        return
+    }
+
+    linkLangs(expressionOf, target)
+    if (!compatibleLangs(expressionOf, target)) {
+        langDiff.println([id, targetProperty, expressionOf[LANGUAGE], target[LANGUAGE]].join('\t'))
         return
     }
 
     // Try match existing good hub on title
     def newHub = findHub(expressionOf)
     if (newHub) {
-        hubLinks.println([id, expressionOf[HAS_TITLE], newHub[ID], newHub[HAS_TITLE]].join('\t'))
-        // TODO: Where goes e.g. originDate in https://libris.kb.se/katalogisering/h0sgk3nt4r3617j?
         expressionOf.clear()
-        expressionOf[ID] = newHub[ID]
+        expressionOf[ID] = newHub
         it.scheduleSave()
         return
     }
@@ -87,7 +88,7 @@ selectBySqlWhere(where) {
     }
 }
 
-boolean tryCopyTitle(Map expressionOf, Map target, String targetProperty, String id, link='') {
+boolean tryCopyTitle(Map expressionOf, Map target, String targetProperty, String id) {
     //TODO: Not sure that all properties should move to target when targetProperty = translationOf, needs further analysis
     def copyThese = expressionOf.keySet().intersect(TITLE_RELATED_PROPS)
     if (!copyThese.contains(HAS_TITLE)) {
@@ -96,15 +97,7 @@ boolean tryCopyTitle(Map expressionOf, Map target, String targetProperty, String
 
     def conflictingProps = copyThese.intersect(target.keySet())
     if (conflictingProps) {
-        propertyAlreadyExists.println([id, targetProperty, conflictingProps, link].join('\t'))
-        return false
-    }
-
-    moveLanguagesFromTitle(expressionOf, expressionOf[HAS_TITLE])
-    langLinker.linkLanguages(target)
-    langLinker.linkLanguages(expressionOf, asList(target[LANGUAGE]))
-    if (!compatibleLangs(expressionOf, target)) {
-        langDiff.println([id, targetProperty, expressionOf[LANGUAGE], target[LANGUAGE], link].join('\t'))
+        propertyAlreadyExists.println([id, targetProperty, conflictingProps].join('\t'))
         return false
     }
 
@@ -114,8 +107,14 @@ boolean tryCopyTitle(Map expressionOf, Map target, String targetProperty, String
         }
     }
 //    normalizePunctuation(target[HAS_TITLE])
-    moved.println([id, targetProperty, copyThese, target.subMap(TITLE_RELATED_PROPS + LANGUAGE), link].join('\t'))
+    moved.println([id, targetProperty, copyThese, target.subMap(TITLE_RELATED_PROPS + LANGUAGE)].join('\t'))
     return true
+}
+
+void linkLangs(Map expressionOf, Map target) {
+    moveLanguagesFromTitle(expressionOf, expressionOf[HAS_TITLE])
+    langLinker.linkLanguages(target)
+    langLinker.linkLanguages(expressionOf, asList(target[LANGUAGE]))
 }
 
 boolean compatibleLangs(Map expressionOf, Map target) {
@@ -181,14 +180,46 @@ Map loadThing(def id) {
     return thing
 }
 
-Map findHub(Map expressionOf) {
-    //TODO: Implement method to match local expressionOf with hub
+// For matching local expressionOf with a WorkHub
+String findHub(Map expressionOf) {
+    def expressionOfAsString = stringify(expressionOf)
+    def prefTitle = localExpressionOfToPrefTitle[expressionOfAsString]
+    if (prefTitle) {
+        def matchedHub = prefTitleToWorkHub[prefTitle]
+        if (matchedHub) {
+            linked.println([expressionOfAsString, prefTitle, matchedHub].join('\t'))
+            incrementStats("$prefTitle · $matchedHub", expressionOfAsString)
+            return matchedHub
+        }
+    }
 }
 
-List<Map> getNewHubs() {
-    //TODO
+// Represent a local work entity as a string, e.g. "Bible. · [O.T., Psalms., Sternhold and Hopkins.] · eng"
+String stringify(Map work) {
+    def titleKeys = ['mainTitle', 'partName', 'partNumber', 'marc:formSubheading']
+    def keys = (titleKeys.collect { ['hasTitle', 0] + it } + TITLE_RELATED_PROPS - HAS_TITLE)
+    def props = keys.collect { getAtPath(work, asList(it)) }
+    def langcode = asList(work[LANGUAGE]).collect { (it[ID] ?: asList((it['label'] ?: '')).first()).split('/').last() }
+    return (props + langcode).grep().join(' · ')
 }
 
 LanguageLinker getLangLinker() {
-    //TODO
+    //TODO: Make LanguageLinker accessible from whelk
+}
+
+// e.g. {"Bible. · [O.T., Psalms., Sternhold and Hopkins.] · eng": "Bibeln. Psaltaren"}
+Map getLocalExpressionOfMappings(String filename) {
+    def localExpressionOfToPrefTitle = [:]
+
+    new File(scriptDir, filename).splitEachLine('\t') { row ->
+        if (row.size() == 5) {
+            def localOrUniform = row[0]
+            def (prefTitle, localExpressionOf) = row[3..4]
+            if (!looksLikeIri(localOrUniform) && prefTitle) {
+                localExpressionOfToPrefTitle[localExpressionOf] = prefTitle
+            }
+        }
+    }
+
+    return localExpressionOfToPrefTitle
 }
