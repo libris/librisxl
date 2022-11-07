@@ -99,7 +99,6 @@ class DatasetImporter {
 
         long updatedCount = 0
         long createdCount = 0
-
         long lineCount = 1 // The data sets self describing first record also counts.
 
         boolean first = true
