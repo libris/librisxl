@@ -1,10 +1,19 @@
 package whelk;
 
-import whelk.component.PostgreSQLComponent;
-
 import java.util.*;
 
 public class WorkMerging {
+
+    public enum WRITE_RESULT {
+        ALREADY_UP_TO_DATE,
+        UPDATED,
+        CREATED
+    }
+
+    // No proper pointers or multiple return values in Java :(
+    private static class WriteResultReference {
+        public WRITE_RESULT result = WRITE_RESULT.ALREADY_UP_TO_DATE;
+    }
 
     /**
      * Merge the works of all listed instances into one. The listed instances
@@ -15,15 +24,14 @@ public class WorkMerging {
      * This means that it is possible to observe the process halfway though from the
      * outside. It also means that should the process be stopped halfway through,
      * results may look odd (but will still obey basic data integrity rules).
-     *
-     * Returns the URI of the one remaining (or new) work that all of the instances
-     * now link to.
      */
-    public static String mergeWorksOf(List<String> instanceIDs, List<Document> extraWorks, Whelk whelk) {
+    public static WRITE_RESULT mergeWorksOf(List<String> instanceIDs, List<Document> extraWorks, Whelk whelk) {
+
+        WriteResultReference result = new WriteResultReference();
 
         List<Document> instances = collectInstancesOfThisWork(instanceIDs, whelk);
 
-        Document baseWork = selectBaseWork(instances, extraWorks, whelk);
+        Document baseWork = selectBaseWork(instances, extraWorks, result, whelk);
         String baseWorkUri = baseWork.getThingIdentifiers().get(0);
         Map correctLinkEntity = new HashMap();
         correctLinkEntity.put("@id", baseWorkUri);
@@ -39,12 +47,10 @@ public class WorkMerging {
             }
         }
 
-        System.err.println("**** SELECTED BASE: " + baseWork.getThingIdentifiers().get(0));
-
         // Merge other works into the baseWork. This must be done first, before any orphans can be deleted,
         // or we risk loosing data if the process is interrupted.
         /*whelk.storeAtomicUpdate(baseWork.getShortId(), true, false, true, "xl", null, (Document doc) -> {
-            // TODO MERGE HERE
+            // TODO MERGE HERE AND DONT FORGET TO SET result.result IF ANYTHING CHANGES!
         });*/
 
         // Relink the instances
@@ -66,7 +72,7 @@ public class WorkMerging {
             }
         }
 
-        return baseWorkUri;
+        return result.result;
     }
 
     /**
@@ -98,7 +104,7 @@ public class WorkMerging {
      * Select (or create+save) a work record that should be used going forward for
      * all of the passed instances.
      */
-    private static Document selectBaseWork(List<Document> instances, List<Document> extraWorks, Whelk whelk) {
+    private static Document selectBaseWork(List<Document> instances, List<Document> extraWorks, WriteResultReference result, Whelk whelk) {
         // Find all the works
         List<String> linkedWorkURIs = new ArrayList<>();
         List<Map> embeddedWorks = new ArrayList<>();
@@ -126,6 +132,7 @@ public class WorkMerging {
             ((Map)(((List)selectedWork.data.get("@graph")).get(1))).remove("@reverse"); // ugh
 
             whelk.createDocument(selectedWork, "xl", null, "auth", false);
+            result.result = WRITE_RESULT.CREATED;
             baseWorkUri = selectedWork.getThingIdentifiers().get(0);
         } else { // Otherwise break off an embedded one (3)
             String slug = IdGenerator.generate();
@@ -152,8 +159,9 @@ public class WorkMerging {
             Document newWork = new Document(docMap);
             newWork.setControlNumber(slug);
             newWork.setGenerationDate(new Date());
-            //newWork.setGenerationProcess("https://id.kb.se/datasetimporter"); // TODO: KOLLA MED FORMAT!!
+            //newWork.setGenerationProcess("https://id.kb.se/workmerger"); // TODO: KOLLA MED FORMAT!!
             whelk.createDocument(newWork, "xl", null, "auth", false);
+            result.result = WRITE_RESULT.CREATED;
             baseWorkUri = mainEntityId;
         }
 

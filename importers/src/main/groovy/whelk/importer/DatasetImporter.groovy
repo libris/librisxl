@@ -99,6 +99,7 @@ class DatasetImporter {
 
         long updatedCount = 0
         long createdCount = 0
+
         long lineCount = 1 // The data sets self describing first record also counts.
 
         boolean first = true
@@ -118,7 +119,13 @@ class DatasetImporter {
             if (data.get("@type") != null &&
                     whelk.getJsonld().isSubClassOf( incomingDoc.getThingType(), "Work" )) {
 
-                createOrUpdateWork(incomingDoc)
+                switch (createOrUpdateWork(incomingDoc)) {
+                    case WorkMerging.WRITE_RESULT.CREATED:
+                        createdCount++;
+                        break;
+                    case WorkMerging.WRITE_RESULT.UPDATED:
+                        updatedCount++;
+                }
 
             } else { // Not a work
 
