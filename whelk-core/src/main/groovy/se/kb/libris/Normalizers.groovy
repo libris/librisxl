@@ -11,7 +11,6 @@ import whelk.filter.LanguageLinker
 import whelk.util.DocumentUtil
 import whelk.util.DocumentUtil.Remove
 import whelk.util.Romanizer
-import whelk.util.Unicode
 
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
@@ -33,7 +32,8 @@ example:
 
 @Log
 class Normalizers {
-    
+    private static Set<String> loadedTypes = []
+
     static DocumentNormalizer nullRemover() {
         return { Document doc ->
             traverse(doc.data, { value, path ->
@@ -47,21 +47,22 @@ class Normalizers {
     static DocumentNormalizer language(Whelk whelk) {
         LanguageLinker linker = new LanguageLinker()
         loadDefinitions(linker, whelk)
+        loadedTypes.addAll(linker.getTypes())
 
-        return { Document doc ->
-            linker.linkAll(doc.data, 'associatedLanguage')
-            linker.linkAll(doc.data, 'language')
-        }
+        return new LinkerNormalizer(linker, { LanguageLinker l, Document doc ->
+            l.linkAll(doc.data, 'associatedLanguage')
+            l.linkAll(doc.data, 'language')
+        })
     }
-    
+
     static DocumentNormalizer romanizer(Whelk whelk) {
         def langAliases = whelk.jsonld.langContainerAlias.values() as Set
-        
+
         return { Document doc ->
             traverse(doc.data, { value, path ->
                 if (value instanceof Map && path && path.last() instanceof String && path.last() in langAliases) {
                     def byLang = value
-                    
+
                     byLang.keySet()
                             .intersect(Romanizer.romanizableLangTags())
                             .collectEntries { langTag -> Romanizer.romanize((String) byLang[langTag], langTag) }
@@ -75,18 +76,22 @@ class Normalizers {
     /**
      * Link blank nodes based on "heuristic identifiers"
      * e.g. { "@type": "Role", "label": "Þýðandi"} matches https://id.kb.se/relator/trl on prefLabelByLang.is
-     * 
+     *
      * For all types that have :category :heuristicIdentity in vocab:
      * Link all blank nodes with that @type that match on a property that has :category :heuristicIdentifier.
      * Only check blank nodes in properties where @type is in range (range or rangeIncludes).
      */
     static Collection<DocumentNormalizer> heuristicLinkers(Whelk whelk) {
         def properties = whelk.jsonld.getCategoryMembers('heuristicIdentifier').collect()
-        properties = properties + properties.findResults {(String) whelk.jsonld.langContainerAlias[it] }
-        
-        whelk.jsonld.getCategoryMembers('heuristicIdentity').collect{ type ->
+        properties = properties + properties.findResults { (String) whelk.jsonld.langContainerAlias[it] }
+
+        whelk.jsonld.getCategoryMembers('heuristicIdentity').collect { type ->
+            if (loadedTypes.contains(type)) {
+                return
+            }
             BlankNodeLinker linker = new BlankNodeLinker(type, properties)
             loadDefinitions(linker, whelk)
+            loadedTypes.addAll(linker.getTypes())
 
             Set<String> inRange = whelk.jsonld.getInRange(type)
             return (DocumentNormalizer) { doc ->
@@ -118,19 +123,19 @@ class Normalizers {
                 //if $2=music-publisher, then I - identifiedBy - MusicPublisherNumber;
                 //if $2=videorecording-identifer, then I - identifiedBy - VideoRecordingNumber;
         ]
-        
+
         return { Document doc ->
             def (_record, thing) = doc.data[GRAPH_KEY]
             thing.identifiedBy?.with {
                 asList(it).forEach { Map id ->
-                    id.typeNote?.with { String tn -> 
-                        OBSOLETE_TYPE_NOTES[tn.toLowerCase()] 
+                    id.typeNote?.with { String tn ->
+                        OBSOLETE_TYPE_NOTES[tn.toLowerCase()]
                     }?.with { type ->
                         id[TYPE_KEY] = type
                         id.remove('typeNote')
                     }
                 }
-                asList(it).findAll{ Map id -> Document.isIsni(id) || Document.isOrcid(id) }.forEach { Map isni ->
+                asList(it).findAll { Map id -> Document.isIsni(id) || Document.isOrcid(id) }.forEach { Map isni ->
                     if (isni.containsKey('value')) {
                         isni.value = ((String) isni.value).replace(' ', '')
                     }
@@ -138,7 +143,7 @@ class Normalizers {
             }
         }
     }
-    
+
     /**
      * Historically locally defined Work was placed in @graph[2],
      * this normalizer makes sure it is always placed in mainEntity.instanceOf
@@ -161,7 +166,7 @@ class Normalizers {
 
     static void enforceTypeSingularity(node, jsonLd) {
         if (node instanceof Map) {
-            for (Object key: node.keySet()) {
+            for (Object key : node.keySet()) {
 
                 if (key == "@type") {
                     Object typeObject = node[key]
@@ -184,9 +189,7 @@ class Normalizers {
                             log.warn("Could not reduce: " + typeList + " to a single type by removing superclasses.")
                         }
                     }
-                }
-
-                else {
+                } else {
                     enforceTypeSingularity(node[key], jsonLd)
                 }
             }
@@ -220,8 +223,7 @@ class Normalizers {
         def (_record, thing) = doc.data['@graph']
         if (thing && isInstanceOf(jsonLd, thing, 'Work')) {
             return thing
-        }
-        else if(thing && thing['instanceOf'] && isInstanceOf(jsonLd, thing['instanceOf'], 'Work')) {
+        } else if (thing && thing['instanceOf'] && isInstanceOf(jsonLd, thing['instanceOf'], 'Work')) {
             return thing['instanceOf']
         }
         return null
@@ -233,5 +235,19 @@ class Normalizers {
             return false
         def types = type instanceof String ? [type] : type
         return types.any { jsonLd.isSubClassOf(it, baseType) }
+    }
+}
+
+class LinkerNormalizer implements DocumentNormalizer {
+    BlankNodeLinker linker
+    Closure documentNormalizer
+
+    LinkerNormalizer(BlankNodeLinker linker, Closure documentNormalizer) {
+        this.linker = linker
+        this.documentNormalizer = documentNormalizer
+    }
+
+    void normalize(Document doc) {
+        documentNormalizer(linker, doc)
     }
 }
