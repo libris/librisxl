@@ -7,7 +7,7 @@ class LanguageLinker extends BlankNodeLinker implements DocumentUtil.Linker {
     List ignoreCodes = []
 
     LanguageLinker(List ignoreCodes = [], Statistics stats = null) {
-        super('Language', ['label', 'code', 'prefLabelByLang', 'altLabelByLang', 'langCode', 'langCodeBib', 'langCodeFull', 'langCodeTerm', 'hiddenLabel'], stats)
+        super('Language', ['label', 'code', 'prefLabelByLang', 'altLabelByLang', 'hiddenLabelByLang', 'langCode', 'langCodeBib', 'langCodeFull', 'langCodeTerm'], stats)
         this.ignoreCodes = ignoreCodes
     }
 
@@ -36,6 +36,11 @@ class LanguageLinker extends BlankNodeLinker implements DocumentUtil.Linker {
             return labelOrCode
         }
 
+        // concatenated language labels, e.g. "Svenska & engelska"
+        if (labelOrCode ==~ /^(.*,)*.*( & | och | and ).*/) {
+            return labelOrCode.split(/,| & | och | and /) as List
+        }
+
         // concatenated language codes, e.g "sweruseng", "swe ; rus ; eng"
         if (labelOrCode ==~ /^(\w{3}\W*){2,}/) {
             def m = labelOrCode =~ /(\w{3})\W*/
@@ -44,11 +49,6 @@ class LanguageLinker extends BlankNodeLinker implements DocumentUtil.Linker {
                 matches << m.group(1)
             }
             return matches
-        }
-
-        // concatenated language labels, e.g. "Svenska & engelska"
-        if (labelOrCode ==~ /^(.*,)*.*( & | och | and ).*/) {
-            return labelOrCode.split(/,| & | och | and /) as List
         }
 
         return []
