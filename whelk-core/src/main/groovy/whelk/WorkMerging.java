@@ -123,15 +123,8 @@ public class WorkMerging {
         } else if(!extraWorks.isEmpty()) { // Any supplied extra work (2)
             Document selectedWork = extraWorks.get(0);
 
-            String slug = IdGenerator.generate();
-            String recordId = Document.getBASE_URI().toString() + slug;
-            String mainEntityId = recordId + "#it";
-            Document._set(Document.getRecordIdPath(), recordId, selectedWork.data);
-            Document._set(Document.getThingIdPath(), mainEntityId, selectedWork.data);
-            Document._set(Document.getThingIdPath2(), mainEntityId, selectedWork.data);
-
             ((Map)(((List)selectedWork.data.get("@graph")).get(1))).remove("@reverse"); // ugh
-            
+
             whelk.createDocument(selectedWork, "xl", null, "auth", false);
             baseWorkUri = selectedWork.getThingIdentifiers().get(0);
         } else { // Otherwise break off an embedded one (3)
