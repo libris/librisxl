@@ -2,17 +2,14 @@ package whelk;
 
 import whelk.component.PostgreSQLComponent;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class WorkMerging {
 
     /**
      * Merge the works of all listed instances into one. The listed instances
      * may or may not have external works already. Orphaned work records will be
-     * deleted.
+     * deleted. Extra (previously unsaved) works may optionally be supplied.
      *
      * This is _not_ one atomic operation, but rather a series of operations.
      * This means that it is possible to observe the process halfway though from the
@@ -22,11 +19,11 @@ public class WorkMerging {
      * Returns the URI of the one remaining (or new) work that all of the instances
      * now link to.
      */
-    public static String mergeWorksOf(List<String> instanceIDs, Whelk whelk) {
+    public static String mergeWorksOf(List<String> instanceIDs, List<Document> extraWorks, Whelk whelk) {
 
         List<Document> instances = collectInstancesOfThisWork(instanceIDs, whelk);
 
-        Document baseWork = selectBaseWork(instances, whelk);
+        Document baseWork = selectBaseWork(instances, extraWorks, whelk);
         String baseWorkUri = baseWork.getThingIdentifiers().get(0);
         Map correctLinkEntity = new HashMap();
         correctLinkEntity.put("@id", baseWorkUri);
@@ -42,11 +39,13 @@ public class WorkMerging {
             }
         }
 
+        System.err.println("**** SELECTED BASE: " + baseWork.getThingIdentifiers().get(0));
+
         // Merge other works into the baseWork. This must be done first, before any orphans can be deleted,
         // or we risk loosing data if the process is interrupted.
-        whelk.storeAtomicUpdate(baseWork.getShortId(), true, false, true, "xl", null, (Document doc) -> {
+        /*whelk.storeAtomicUpdate(baseWork.getShortId(), true, false, true, "xl", null, (Document doc) -> {
             // TODO MERGE HERE
-        });
+        });*/
 
         // Relink the instances
         for (Document instance : instances) {
@@ -99,7 +98,7 @@ public class WorkMerging {
      * Select (or create+save) a work record that should be used going forward for
      * all of the passed instances.
      */
-    private static Document selectBaseWork(List<Document> instances, Whelk whelk) {
+    private static Document selectBaseWork(List<Document> instances, List<Document> extraWorks, Whelk whelk) {
         // Find all the works
         List<String> linkedWorkURIs = new ArrayList<>();
         List<Map> embeddedWorks = new ArrayList<>();
@@ -112,16 +111,57 @@ public class WorkMerging {
             }
         }
 
-        // Pick a linked one if any such exist, otherwise break off an embedded one
+        // Order of priority:
+        // 1. Any pre existing linked work records
+        // 2. Any supplied extra works
+        // 3. Any embedded work from one of the instances
+
+        // Pick a linked one if any such exist (1)
         String baseWorkUri = null;
         if (!linkedWorkURIs.isEmpty()) {
             baseWorkUri = linkedWorkURIs.get(0); // TODO: Be a little smarter about _which_ work we pick?
-        } else {
-            Document newWork = new Document(embeddedWorks.get(0)); // TODO: Be a little smarter about _which_ work we break off?
-            newWork.deepReplaceId(Document.getBASE_URI().toString() + IdGenerator.generate());
-            newWork.setControlNumber(newWork.getShortId());
+        } else if(!extraWorks.isEmpty()) { // Any supplied extra work (2)
+            Document selectedWork = extraWorks.get(0);
+
+            String slug = IdGenerator.generate();
+            String recordId = Document.getBASE_URI().toString() + slug;
+            String mainEntityId = recordId + "#it";
+            Document._set(Document.getRecordIdPath(), recordId, selectedWork.data);
+            Document._set(Document.getThingIdPath(), mainEntityId, selectedWork.data);
+            Document._set(Document.getThingIdPath2(), mainEntityId, selectedWork.data);
+
+            ((Map)(((List)selectedWork.data.get("@graph")).get(1))).remove("@reverse"); // ugh
+            
+            whelk.createDocument(selectedWork, "xl", null, "auth", false);
+            baseWorkUri = selectedWork.getThingIdentifiers().get(0);
+        } else { // Otherwise break off an embedded one (3)
+            String slug = IdGenerator.generate();
+            String recordId = Document.getBASE_URI().toString() + slug;
+            String mainEntityId = recordId + "#it";
+
+            Map chosenEmbedded = embeddedWorks.get(0); // TODO: Be a little smarter about _which_ work we break off?
+
+            Map docMap = new HashMap();
+            List graph = new ArrayList();
+            Map record = new HashMap();
+            docMap.put("@graph", graph);
+
+            graph.add(record);
+            record.put("@id", Document.getBASE_URI().toString() + slug);
+            record.put("@type", "Record");
+            Map mainEntityLink = new HashMap();
+            mainEntityLink.put("@id", mainEntityId);
+            record.put("mainEntity", mainEntityLink);
+
+            graph.add(chosenEmbedded);
+            chosenEmbedded.put("@id", mainEntityId);
+
+            Document newWork = new Document(docMap);
+            newWork.setControlNumber(slug);
+            newWork.setGenerationDate(new Date());
+            //newWork.setGenerationProcess("https://id.kb.se/datasetimporter"); // TODO: KOLLA MED FORMAT!!
             whelk.createDocument(newWork, "xl", null, "auth", false);
-            baseWorkUri = newWork.getThingIdentifiers().get(0);
+            baseWorkUri = mainEntityId;
         }
 
         return whelk.getStorage().loadDocumentByMainId(baseWorkUri);
