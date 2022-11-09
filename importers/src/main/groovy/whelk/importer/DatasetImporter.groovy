@@ -2,7 +2,7 @@ package whelk.importer
 
 import groovy.util.logging.Log4j2 as Log
 import groovy.transform.CompileStatic
-import whelk.WorkMerging.WorkMerging
+import whelk.WorkMerging
 
 import static groovy.transform.TypeCheckingMode.SKIP
 
@@ -11,6 +11,7 @@ import whelk.JsonLd
 import whelk.TargetVocabMapper
 import whelk.Whelk
 import whelk.converter.TrigToJsonLdParser
+import whelk.exception.CancelUpdateException
 import whelk.util.DocumentUtil
 import static whelk.util.LegacyIntegrationTools.NO_MARC_COLLECTION
 

@@ -1,8 +1,4 @@
-package whelk.WorkMerging;
-
-import whelk.Document;
-import whelk.IdGenerator;
-import whelk.Whelk;
+package whelk;
 
 import java.util.*;
 
