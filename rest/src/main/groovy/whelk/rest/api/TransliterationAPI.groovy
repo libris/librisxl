@@ -25,6 +25,13 @@ class TransliterationAPI extends HttpServlet {
         log.info("Request body")
 
         Map body = getRequestBody(request)
+
+        if (!(body.containsKey("langTag") && body.containsKey("source"))) {
+            log.warn("Transliteration parameter missing")
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,  "Parameter missing; needs langTag and source")
+            return
+        }
+
         def languageTag = body["langTag"]
         def source = body["source"]
         log.info(languageTag)
@@ -80,5 +87,4 @@ class TransliterationAPI extends HttpServlet {
             return [:]
         }
     }
-
 }
