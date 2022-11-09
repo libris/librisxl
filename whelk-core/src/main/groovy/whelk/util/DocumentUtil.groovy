@@ -66,9 +66,9 @@ class DocumentUtil {
         })
     }
 
-    static Visitor link(Linker linker, List<Map> helpNodes = []) {
+    static Visitor link(Linker linker, List<Map> disambiguationNodes = []) {
         return { value, path ->
-            return DocumentUtil.&linkBlankNodes(value, linker, helpNodes)
+            return DocumentUtil.&linkBlankNodes(value, linker, disambiguationNodes)
         }
     }
 
@@ -78,8 +78,8 @@ class DocumentUtil {
      * @param linker
      * @return
      */
-    static Operation linkBlankNodes(def objectOrArray, Linker linker, List<Map> helpNodes = []) {
-        return linkBlankNode(objectOrArray, linker, helpNodes)
+    static Operation linkBlankNodes(def objectOrArray, Linker linker, List<Map> disambiguationNodes = []) {
+        return linkBlankNode(objectOrArray, linker, disambiguationNodes)
     }
 
     static boolean isBlank(Map node) {
@@ -115,13 +115,12 @@ class DocumentUtil {
         return item
     }
 
-    private static Operation linkBlankNode(List<Map> nodes, Linker linker, List<Map> helpNodes = []) {
+    private static Operation linkBlankNode(List<Map> nodes, Linker linker, List<Map> disambiguationNodes = []) {
         if (!nodes.any(DocumentUtil.&isBlank)) {
             return NOP
         }
 
         List<Map> existingLinks = collectIris(nodes)
-        List<Map> helpLinks = collectIris(helpNodes)
         List<Map> result = []
 
         List<Map> newLinked
@@ -129,7 +128,7 @@ class DocumentUtil {
             if (isDefective(node)) {
                 continue // remove node
             }
-            if (isBlank(node) && (newLinked = linker.link(node, existingLinks) ?: linker.link(node, helpLinks))) {
+            if (isBlank(node) && (newLinked = linker.link(node, existingLinks) ?: linker.link(node, collectIris(disambiguationNodes)))) {
                 result.addAll(newLinked.findAll { l ->
                     !existingLinks.contains(l['@id']) && !result.contains { it['@id'] == l['@id'] }
                 })
@@ -145,7 +144,7 @@ class DocumentUtil {
         }
     }
 
-    private static Operation linkBlankNode(Map node, Linker linker, List<Map> helpNodes = []) {
+    private static Operation linkBlankNode(Map node, Linker linker, List<Map> disambiguationNodes = []) {
         if (isDefective(node)) {
             return new Remove()
         }
@@ -153,11 +152,11 @@ class DocumentUtil {
             return NOP
         }
 
-        toOperation(linker.link(node, collectIris(helpNodes)))
+        toOperation(linker.link(node, collectIris(disambiguationNodes)))
     }
 
-    private static Operation linkBlankNode(String singleValue, Linker linker, List<Map> helpNodes = []) {
-        toOperation(linker.link(singleValue, collectIris(helpNodes)))
+    private static Operation linkBlankNode(String singleValue, Linker linker, List<Map> disambiguationNodes = []) {
+        toOperation(linker.link(singleValue, collectIris(disambiguationNodes)))
     }
 
     private static Operation toOperation(List<Map> replacement) {

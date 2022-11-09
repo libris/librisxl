@@ -11,8 +11,8 @@ class LanguageLinker extends BlankNodeLinker implements DocumentUtil.Linker {
         this.ignoreCodes = ignoreCodes
     }
 
-    boolean linkLanguages(data, List<Map> helpNodes = [], String key = 'language') {
-        return DocumentUtil.findKey(data, key, DocumentUtil.link(this, helpNodes))
+    boolean linkLanguages(data, List<Map> disambiguationNodes = [], String key = 'language') {
+        return DocumentUtil.findKey(data, key, DocumentUtil.link(this, disambiguationNodes))
     }
 
     @Override
