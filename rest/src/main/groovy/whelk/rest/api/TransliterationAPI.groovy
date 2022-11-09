@@ -11,6 +11,7 @@ import static whelk.util.Jackson.mapper
 
 @Log
 class TransliterationAPI extends HttpServlet {
+    private static final Set<String> supportedLangTags = Romanizer.romanizableLangTags()
 
     @Override
     void init() {
@@ -19,19 +20,55 @@ class TransliterationAPI extends HttpServlet {
 
     @Override
     void doPost(HttpServletRequest request, HttpServletResponse response) {
-        log.debug("Handling GET request for ${request.pathInfo}")
+        log.debug("Handling POST request for ${request.pathInfo}")
         log.info("${request}")
         log.info("Request body")
 
-
-        Map body = getRequestBody(request);
+        Map body = getRequestBody(request)
         def languageTag = body["langTag"]
         def source = body["source"]
         log.info(languageTag)
         log.info(source)
 
-        def romanized = Romanizer.romanize(source.toString(), languageTag.toString())
-        HttpTools.sendResponse(response,  romanized, "application/json")
+        if (supportedLangTags.contains(languageTag)) {
+            def romanized = Romanizer.romanize(source.toString(), languageTag.toString())
+            HttpTools.sendResponse(response,  romanized, "application/json")
+        } else {
+            log.warn("Language tag ${languageTag} not found")
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,  "Invalid language code")
+        }
+    }
+
+    @Override
+    void doGet(HttpServletRequest request, HttpServletResponse response) {
+        log.debug("Handling GET request for ${request.pathInfo}")
+        log.info("${request}")
+        log.info("${request.getPathInfo()}")
+
+        if (request.getPathInfo() == "/listLanguages") {
+            HttpTools.sendResponse(response, ["supportedLanguages": supportedLangTags], "application/json", HttpServletResponse.SC_OK)
+        } else if (request.getPathInfo().startsWith("/language/")) {
+            handleLanguageCheck(request, response)
+        } else {
+            HttpTools.sendResponse(response, null, null, HttpServletResponse.SC_NOT_FOUND)
+        }
+    }
+
+    @Override
+    void doHead(HttpServletRequest request, HttpServletResponse response) {
+        if (request.getPathInfo().startsWith("/language/")) {
+            handleLanguageCheck(request, response)
+        }
+    }
+
+    private static void handleLanguageCheck(HttpServletRequest request, HttpServletResponse response) {
+        String languageTag = request.getPathInfo().split("/", 3).last()
+        if (supportedLangTags.contains(languageTag)) {
+            HttpTools.sendResponse(response, null, null, HttpServletResponse.SC_NO_CONTENT)
+        } else {
+            log.warn("Language tag ${languageTag} not found")
+            HttpTools.sendResponse(response, null, null, HttpServletResponse.SC_NOT_FOUND)
+        }
     }
 
     static Map getRequestBody(HttpServletRequest request) {

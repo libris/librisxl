@@ -148,7 +148,7 @@
 
     <servlet-mapping>
         <servlet-name>TransliterationAPI</servlet-name>
-        <url-pattern>/_transliterate</url-pattern>
+        <url-pattern>/_transliterate/*</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
