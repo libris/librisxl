@@ -35,21 +35,20 @@ class Normalizers {
     private static Set<String> loadedTypes = []
 
     static DocumentNormalizer nullRemover() {
-        return { Document doc ->
+        return new Normalizer({ Document doc ->
             traverse(doc.data, { value, path ->
                 if (value == null) {
                     new Remove()
                 }
             })
-        }
+        })
     }
 
     static DocumentNormalizer language(Whelk whelk) {
         LanguageLinker linker = new LanguageLinker()
         loadDefinitions(linker, whelk)
-        loadedTypes.addAll(linker.getTypes())
 
-        return new LinkerNormalizer(linker, { LanguageLinker l, Document doc ->
+        return new Normalizer(linker, { Document doc, LanguageLinker l = linker ->
             l.linkAll(doc.data, 'associatedLanguage')
             l.linkAll(doc.data, 'language')
         })
@@ -58,7 +57,7 @@ class Normalizers {
     static DocumentNormalizer romanizer(Whelk whelk) {
         def langAliases = whelk.jsonld.langContainerAlias.values() as Set
 
-        return { Document doc ->
+        return new Normalizer({ Document doc ->
             traverse(doc.data, { value, path ->
                 if (value instanceof Map && path && path.last() instanceof String && path.last() in langAliases) {
                     def byLang = value
@@ -70,7 +69,7 @@ class Normalizers {
                 }
                 DocumentUtil.NOP
             })
-        }
+        })
     }
 
     /**
@@ -85,18 +84,15 @@ class Normalizers {
         def properties = whelk.jsonld.getCategoryMembers('heuristicIdentifier').collect()
         properties = properties + properties.findResults { (String) whelk.jsonld.langContainerAlias[it] }
 
-        whelk.jsonld.getCategoryMembers('heuristicIdentity').collect { type ->
-            if (loadedTypes.contains(type)) {
-                return
-            }
+        whelk.jsonld.getCategoryMembers('heuristicIdentity').minus(loadedTypes).collect { type ->
             BlankNodeLinker linker = new BlankNodeLinker(type, properties)
             loadDefinitions(linker, whelk)
-            loadedTypes.addAll(linker.getTypes())
 
             Set<String> inRange = whelk.jsonld.getInRange(type)
-            return (DocumentNormalizer) { doc ->
-                linker.linkAll(doc.data, inRange)
-            }
+
+            return new Normalizer(linker, { Document doc, BlankNodeLinker l = linker ->
+                l.linkAll(doc.data, inRange)
+            })
         }
     }
 
@@ -124,7 +120,7 @@ class Normalizers {
                 //if $2=videorecording-identifer, then I - identifiedBy - VideoRecordingNumber;
         ]
 
-        return { Document doc ->
+        return new Normalizer({ Document doc ->
             def (_record, thing) = doc.data[GRAPH_KEY]
             thing.identifiedBy?.with {
                 asList(it).forEach { Map id ->
@@ -141,7 +137,7 @@ class Normalizers {
                     }
                 }
             }
-        }
+        })
     }
 
     /**
@@ -149,7 +145,7 @@ class Normalizers {
      * this normalizer makes sure it is always placed in mainEntity.instanceOf
      */
     static DocumentNormalizer workPosition(JsonLd jsonLd) {
-        return { Document doc ->
+        return new Normalizer({ Document doc ->
             def (_record, thing, legacyWork) = doc.data[GRAPH_KEY]
 
             boolean shouldMove = (legacyWork && isInstanceOf(jsonLd, legacyWork, 'Work')
@@ -161,7 +157,7 @@ class Normalizers {
                 work.remove(ID_KEY)
                 thing['instanceOf'] = work
             }
-        }
+        })
     }
 
     static void enforceTypeSingularity(node, jsonLd) {
@@ -201,14 +197,15 @@ class Normalizers {
     }
 
     static DocumentNormalizer typeSingularity(JsonLd jsonLd) {
-        return { Document doc ->
+        return new Normalizer({ Document doc ->
             enforceTypeSingularity(doc.data, jsonLd)
-        }
+        })
     }
 
     static void loadDefinitions(BlankNodeLinker linker, Whelk whelk) {
         try {
             linker.loadDefinitions(whelk)
+            loadedTypes.addAll(linker.getTypes())
             log.info("Loaded normalizer: $linker")
         }
         catch (InvalidQueryException e) {
@@ -238,16 +235,20 @@ class Normalizers {
     }
 }
 
-class LinkerNormalizer implements DocumentNormalizer {
+class Normalizer implements DocumentNormalizer {
     BlankNodeLinker linker
-    Closure documentNormalizer
+    Closure normalizeFunc
 
-    LinkerNormalizer(BlankNodeLinker linker, Closure documentNormalizer) {
+    Normalizer(BlankNodeLinker linker, Closure normalizeFunc) {
         this.linker = linker
-        this.documentNormalizer = documentNormalizer
+        this.normalizeFunc = normalizeFunc
+    }
+
+    Normalizer(Closure normalizeFunc) {
+        this.normalizeFunc = normalizeFunc
     }
 
     void normalize(Document doc) {
-        documentNormalizer(linker, doc)
+        normalizeFunc(doc)
     }
 }
