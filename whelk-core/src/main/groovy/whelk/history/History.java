@@ -284,8 +284,7 @@ public class History {
             List tempNew = new LinkedList((List) examining);
             List tempOld = new LinkedList((List) correspondingPrevious);
             for (int i = 0; i < tempNew.size(); ++i) {
-                int j;
-                for (j = 0; j < tempOld.size(); ++j) {
+                for (int j = 0; j < tempOld.size(); ++j) {
                     if (tempNew.get(i).equals(tempOld.get(j))) { // Equals will recursively check the entire subtree!
                         tempNew.remove(i);
                         tempOld.remove(j);
