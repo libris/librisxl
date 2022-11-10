@@ -131,7 +131,7 @@ public class History {
         if (m_lastVersion == null) {
             m_pathOwnership.put( new ArrayList<>(), new Ownership(version, null) );
         } else {
-            examineDiff(new ArrayList<>(), version, version.doc.data, m_lastVersion.doc.data, null, changeSetToBuild);
+            examineDiff(new ArrayList<>(), new ArrayList<>(), version, version.doc.data, m_lastVersion.doc.data, null, changeSetToBuild);
         }
         m_lastVersion = version;
     }
@@ -186,6 +186,7 @@ public class History {
      * of changes this version has.
      */
     private void examineDiff(List<Object> path,
+                             List<Object> correspondingPath,
                              DocumentVersion version,
                              Object examining, Object correspondingPrevious,
                              List<Object> compositePath,
@@ -219,6 +220,7 @@ public class History {
                     setOwnership(newPath, compositePath, version);
 
                     ((HashSet) changeSet.get("addedPaths")).add(newPath);
+                    //System.err.println(" Add: " + newPath);
                 }
             }
 
@@ -228,7 +230,7 @@ public class History {
                 removedKeys.removeAll(k1);
 
                 for (Object key : removedKeys) {
-                    List<Object> removedPath = new ArrayList(path);
+                    List<Object> removedPath = new ArrayList(correspondingPath);
                     removedPath.add(key);
                     // The point of this is to set ownership of the _composite_ object if a part of it is removed.
                     setOwnership(removedPath, compositePath, version);
@@ -236,6 +238,7 @@ public class History {
                     clearOwnership(removedPath);
 
                     ((HashSet) changeSet.get("removedPaths")).add(removedPath);
+                    //System.err.println(" Rem: " + removedPath);
                 }
             }
         }
@@ -244,7 +247,8 @@ public class History {
             if (! (correspondingPrevious instanceof List) ) {
                 setOwnership(path, compositePath, version);
                 ((HashSet) changeSet.get("addedPaths")).add(path);
-                ((HashSet) changeSet.get("removedPaths")).add(path);
+                ((HashSet) changeSet.get("removedPaths")).add(correspondingPath);
+                //System.err.println(" Add+Rem: " + path + " (which used to be) " + correspondingPath);
                 return;
             }
         }
@@ -254,7 +258,8 @@ public class History {
             if (!examining.equals(correspondingPrevious)) {
                 setOwnership(path, compositePath, version);
                 ((HashSet) changeSet.get("addedPaths")).add(path);
-                ((HashSet) changeSet.get("removedPaths")).add(path);
+                ((HashSet) changeSet.get("removedPaths")).add(correspondingPath);
+                //System.err.println(" Add+Rem: " + path + " (which used to be) " + correspondingPath + " due to diff of: " + examining + " and " + correspondingPrevious);
                 return;
             }
         }
@@ -271,9 +276,11 @@ public class History {
             List tempNew = new LinkedList((List) examining);
             List tempOld = new LinkedList((List) correspondingPrevious);
             Map<Integer, Integer> newToOldListIndices = new HashMap<>(); // What used to be at index x (in examining) is now at index y (in tempNew).
+            Map<Integer, Integer> correspondingNewToOldListIndices = new HashMap<>(); // What used to be at index x (in correspondingPrevious) is now at index y (in tempOld).
             int originalIndex = 0;
             for (int i = 0; i < tempNew.size(); ++i) {
                 boolean hasEqual = false;
+                int correspondingOriginalIndex = 0;
                 for (int j = 0; j < tempOld.size(); ++j) {
                     if (tempNew.get(i).equals(tempOld.get(j))) { // Equals will recursively check the entire subtree!
                         tempNew.remove(i);
@@ -283,10 +290,12 @@ public class History {
                         hasEqual = true;
                         break;
                     }
+                    ++correspondingOriginalIndex;
                 }
 
                 if (!hasEqual) {
                     newToOldListIndices.put(i, originalIndex);
+                    correspondingNewToOldListIndices.put(i, correspondingOriginalIndex);
                 }
                 ++originalIndex;
             }
@@ -307,7 +316,7 @@ public class History {
                             List<Object> newPath = new ArrayList<>(path);
                             newPath.add(i);
                             ((HashSet) changeSet.get("addedPaths")).add(newPath);
-                            newIt.remove(); // We know this is a new element, no need to check it for further diffs
+                            //System.err.println(" Add (and keep scanning): " + newPath);
                         }
                     }
                 }
@@ -322,7 +331,7 @@ public class History {
                             List<Object> newPath = new ArrayList<>(path);
                             newPath.add(i);
                             ((HashSet) changeSet.get("removedPaths")).add(newPath);
-                            oldIt.remove(); // We know this is a removed element, no need to check it for further diffs
+                            //System.err.println(" Remove (and keep scanning): " + newPath);
                         }
                     }
                 }
@@ -331,19 +340,23 @@ public class History {
 
             for (int i = 0; i < tempNew.size(); ++i) {
                 List<Object> childPath = new ArrayList(path);
+                List<Object> correspondingChildPath = new ArrayList(correspondingPath);
                 if ( tempOld.size() > i ) {
                     childPath.add(Integer.valueOf(newToOldListIndices.get(i)));
-                    examineDiff(childPath, version,
-                            tempNew.get(i), tempOld.get(i),
+                    correspondingChildPath.add(Integer.valueOf(correspondingNewToOldListIndices.get(i)));
+                    examineDiff(childPath, correspondingChildPath, version,
+                            tempNew.get(i), ((List)correspondingPrevious).get(newToOldListIndices.get(i)),
                             compositePath, changeSet);
                 }
             }
         } else if (examining instanceof Map) {
             for (Object key : ((Map) examining).keySet() ) {
                 List<Object> childPath = new ArrayList(path);
+                List<Object> correspondingChildPath = new ArrayList(correspondingPath);
                 if ( ((Map)correspondingPrevious).get(key) != null ) {
                     childPath.add(key);
-                    examineDiff(childPath, version,
+                    correspondingChildPath.add(key);
+                    examineDiff(childPath, correspondingChildPath, version,
                             ((Map) examining).get(key), ((Map) correspondingPrevious).get(key),
                             compositePath, changeSet);
                 }
