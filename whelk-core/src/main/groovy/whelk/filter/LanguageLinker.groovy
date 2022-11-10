@@ -7,7 +7,7 @@ class LanguageLinker extends BlankNodeLinker implements DocumentUtil.Linker {
     List ignoreCodes = []
 
     LanguageLinker(List ignoreCodes = [], Statistics stats = null) {
-        super('Language', ['label', 'code', 'prefLabelByLang', 'altLabelByLang', 'hiddenLabelByLang', 'langCode', 'langCodeBib', 'langCodeFull', 'langCodeTerm'], stats)
+        super('Language', ['label', 'code', 'prefLabelByLang', 'altLabelByLang', 'hiddenLabelByLang', 'hiddenLabel', 'langCode', 'langCodeBib', 'langCodeFull', 'langCodeTerm'], stats)
         this.ignoreCodes = ignoreCodes
     }
 
