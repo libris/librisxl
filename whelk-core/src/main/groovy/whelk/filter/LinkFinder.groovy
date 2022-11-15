@@ -5,6 +5,7 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.component.PostgreSQLComponent
 import whelk.exception.LinkValidationException
+import whelk.util.LegacyIntegrationTools
 
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -180,7 +181,7 @@ class LinkFinder {
                 if (postgres.getSystemIdByIri(id) != null) { // If we have such a record, then the link (@id) is enough.
                     data.clear()
                     data.put("@id", id)
-                } else if (id.startsWith("https://libris.kb.se/library/")) {
+                } else if (id.startsWith(LegacyIntegrationTools.BASE_LIBRARY_URI)) {
                     // FIXME: de-KBV/Libris-ify
                     // A FUGLY special case/hack for library URIs, which we want as URIs alone, despite them not being XL-URIs.
                     data.clear()
