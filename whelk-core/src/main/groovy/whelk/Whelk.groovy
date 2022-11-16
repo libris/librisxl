@@ -140,7 +140,6 @@ class Whelk {
                         Normalizers.typeSingularity(jsonld),
                         Normalizers.language(this),
                         Normalizers.identifiedBy(),
-//                        Normalizers.romanizer(this),
                 ] + Normalizers.heuristicLinkers(this)
         )
     }
