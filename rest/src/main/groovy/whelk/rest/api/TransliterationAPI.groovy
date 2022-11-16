@@ -21,36 +21,30 @@ class TransliterationAPI extends HttpServlet {
     @Override
     void doPost(HttpServletRequest request, HttpServletResponse response) {
         log.debug("Handling POST request for ${request.pathInfo}")
-        log.info("${request}")
-        log.info("Request body")
 
         Map body = getRequestBody(request)
 
         if (!(body.containsKey("langTag") && body.containsKey("source"))) {
             log.warn("Transliteration parameter missing")
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST,  "Parameter missing; needs langTag and source")
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Parameter missing; needs langTag and source")
             return
         }
 
         def languageTag = body["langTag"]
         def source = body["source"]
-        log.info(languageTag)
-        log.info(source)
 
         if (supportedLangTags.contains(languageTag)) {
             def romanized = Romanizer.romanize(source.toString(), languageTag.toString())
             HttpTools.sendResponse(response,  romanized, "application/json")
         } else {
             log.warn("Language tag ${languageTag} not found")
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST,  "Invalid language code")
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid language code")
         }
     }
 
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
         log.debug("Handling GET request for ${request.pathInfo}")
-        log.info("${request}")
-        log.info("${request.getPathInfo()}")
 
         if (request.getPathInfo() == "/listLanguages") {
             HttpTools.sendResponse(response, ["supportedLanguages": supportedLangTags], "application/json", HttpServletResponse.SC_OK)
