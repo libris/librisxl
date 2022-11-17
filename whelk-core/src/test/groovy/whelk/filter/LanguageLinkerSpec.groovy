@@ -254,6 +254,9 @@ class LanguageLinkerSpec extends Specification {
                         code           : 'gre',
                         prefLabelByLang: [
                                 'sv': 'Nygrekiska'
+                        ],
+                        hiddenLabelByLang: [
+                                'sv': 'grekiska'
                         ]
                 ],
                 [
@@ -261,6 +264,9 @@ class LanguageLinkerSpec extends Specification {
                         code           : 'grc',
                         prefLabelByLang: [
                                 'sv': 'Grekiska, klassisk'
+                        ],
+                        hiddenLabelByLang: [
+                                'sv': 'grekiska'
                         ]
                 ],
                 [
@@ -272,8 +278,6 @@ class LanguageLinkerSpec extends Specification {
                         ]
                 ]
         ].each(linker.&addDefinition)
-        linker.addMapping('grekiska', 'http://id/gre')
-        linker.addMapping('grekiska', 'http://id/grc')
 
         expect:
         linker.linkLanguages(data) == change
@@ -319,6 +323,9 @@ class LanguageLinkerSpec extends Specification {
                         code           : 'gre',
                         prefLabelByLang: [
                                 'sv': 'Nygrekiska'
+                        ],
+                        hiddenLabelByLang: [
+                                'sv': 'grekiska'
                         ]
                 ],
                 [
@@ -326,6 +333,9 @@ class LanguageLinkerSpec extends Specification {
                         code           : 'grc',
                         prefLabelByLang: [
                                 'sv': 'Grekiska, klassisk'
+                        ],
+                        hiddenLabelByLang: [
+                                'sv': 'grekiska'
                         ]
                 ],
                 [
@@ -337,8 +347,6 @@ class LanguageLinkerSpec extends Specification {
                         ]
                 ]
         ].each(linker.&addDefinition)
-        linker.addMapping('grekiska', 'http://id/gre')
-        linker.addMapping('grekiska', 'http://id/grc')
 
         expect:
         linker.linkLanguages(data, [['@id': 'http://id/ton'], ['@id': 'http://id/gre']]) == change
