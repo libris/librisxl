@@ -32,8 +32,6 @@ example:
 
 @Log
 class Normalizers {
-    private static Set<String> loadedTypes = []
-
     static DocumentNormalizer nullRemover() {
         return new Normalizer({ Document doc ->
             traverse(doc.data, { value, path ->
@@ -44,10 +42,7 @@ class Normalizers {
         })
     }
 
-    static DocumentNormalizer language(Whelk whelk) {
-        LanguageLinker linker = new LanguageLinker()
-        loadDefinitions(linker, whelk)
-
+    static DocumentNormalizer language(LanguageLinker linker) {
         return new Normalizer(linker, { Document doc, LanguageLinker l = linker ->
             l.linkAll(doc.data, 'associatedLanguage')
             l.linkAll(doc.data, 'language')
@@ -80,11 +75,11 @@ class Normalizers {
      * Link all blank nodes with that @type that match on a property that has :category :heuristicIdentifier.
      * Only check blank nodes in properties where @type is in range (range or rangeIncludes).
      */
-    static Collection<DocumentNormalizer> heuristicLinkers(Whelk whelk) {
+    static Collection<DocumentNormalizer> heuristicLinkers(Whelk whelk, Collection<String> skipTypes) {
         def properties = whelk.jsonld.getCategoryMembers('heuristicIdentifier').collect()
         properties = properties + properties.findResults { (String) whelk.jsonld.langContainerAlias[it] }
 
-        whelk.jsonld.getCategoryMembers('heuristicIdentity').minus(loadedTypes).collect { type ->
+        whelk.jsonld.getCategoryMembers('heuristicIdentity').minus(skipTypes).collect { type ->
             BlankNodeLinker linker = new BlankNodeLinker(type, properties)
             loadDefinitions(linker, whelk)
 
@@ -205,7 +200,6 @@ class Normalizers {
     static void loadDefinitions(BlankNodeLinker linker, Whelk whelk) {
         try {
             linker.loadDefinitions(whelk)
-            loadedTypes.addAll(linker.getTypes())
             log.info("Loaded normalizer: $linker")
         }
         catch (InvalidQueryException e) {
