@@ -178,7 +178,7 @@ class DocumentUtilSpec extends Specification {
                     }
 
                     @Override
-                    List<Map> link(String blank) {
+                    List<Map> link(String blank, List existingLinks) {
                         return [['@id': 's']]
                     }
                 }

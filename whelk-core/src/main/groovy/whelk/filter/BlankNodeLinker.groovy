@@ -39,7 +39,7 @@ class BlankNodeLinker implements DocumentUtil.Linker {
     boolean linkAll(data, Collection<String> keys) {
         return findKey(data, keys, link(this)) && removeDeleted(data)
     }
-    
+
     boolean linkAll(data, String key) {
         return findKey(data, key, link(this)) && removeDeleted(data)
     }
@@ -81,15 +81,14 @@ class BlankNodeLinker implements DocumentUtil.Linker {
                 labels.values().each(maybeCollection({ String label ->
                     identifiers.add(label.toLowerCase())
                 }))
-            }
-            else {
-                (definition[field] ?: []).with(maybeCollection( { String identifier ->
+            } else {
+                (definition[field] ?: []).with(maybeCollection({ String identifier ->
                     identifiers.add(identifier.toLowerCase())
                 }))
             }
         }
 
-        String id = definition.isReplacedBy? definition.isReplacedBy[ID_KEY] : definition[ID_KEY]
+        String id = definition.isReplacedBy ? definition.isReplacedBy[ID_KEY] : definition[ID_KEY]
         identifiers.each { addMapping(it, id) }
     }
 
@@ -125,7 +124,7 @@ class BlankNodeLinker implements DocumentUtil.Linker {
             return
         }
 
-        if (!fields.any {blank.containsKey(it)}) {
+        if (!fields.any { blank.containsKey(it) }) {
             incrementCounter('unhandled shape', blank.keySet())
             throw new RuntimeException('unhandled shape: ' + blank.keySet())
         }
@@ -156,15 +155,14 @@ class BlankNodeLinker implements DocumentUtil.Linker {
         return null
     }
 
-    List<Map> link(String blank) {
+    List<Map> link(String blank, List existingLinks = []) {
         incrementCounter('single value encountered', blank)
 
-        List<String> links = findLinks(blank, [])
+        List<String> links = findLinks(blank, existingLinks)
         if (links) {
             incrementCounter('mapped', blank)
             return links.collect { [(ID_KEY): it] }
-        }
-        else {
+        } else {
             incrementCounter('not mapped (canonized values)', canonize(blank))
         }
     }
