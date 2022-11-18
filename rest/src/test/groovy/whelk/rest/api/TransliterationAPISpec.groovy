@@ -139,20 +139,4 @@ class TransliterationAPISpec extends Specification {
         "rom-Cyrl" | "HEAD"  | SC_NO_CONTENT
         "xxxxxxxx" | "HEAD"  | SC_NOT_FOUND
     }
-
-    def "GET /listLanguages should return JSON with list of supported languages"() {
-        given:
-        request.getPathInfo() >> { "/listLanguages" }
-
-        when:
-        transliteration.doGet(request, response)
-
-        then:
-        response.getStatus() == SC_OK
-        response.getContentType() == "application/json"
-        Map parsedResponse = jsonSlurper.parseText(response.getResponseBody())
-        parsedResponse.containsKey("supportedLanguages")
-        parsedResponse["supportedLanguages"] instanceof List
-        ((List) parsedResponse["supportedLanguages"]).containsAll(["be", "grc", "uk", "mn-Mong", "rom-Cyrl"])
-    }
 }

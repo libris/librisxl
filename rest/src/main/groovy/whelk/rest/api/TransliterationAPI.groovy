@@ -26,7 +26,7 @@ class TransliterationAPI extends HttpServlet {
 
         if (!(body.containsKey("langTag") && body.containsKey("source"))) {
             log.warn("Transliteration parameter missing")
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Parameter missing; needs langTag and source")
+            HttpTools.sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Parameter missing; needs langTag and source")
             return
         }
 
@@ -38,7 +38,7 @@ class TransliterationAPI extends HttpServlet {
             HttpTools.sendResponse(response,  romanized, "application/json")
         } else {
             log.warn("Language tag ${languageTag} not found")
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid language code")
+            HttpTools.sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid language code")
         }
     }
 
@@ -46,9 +46,7 @@ class TransliterationAPI extends HttpServlet {
     void doGet(HttpServletRequest request, HttpServletResponse response) {
         log.debug("Handling GET request for ${request.pathInfo}")
 
-        if (request.getPathInfo() == "/listLanguages") {
-            HttpTools.sendResponse(response, ["supportedLanguages": supportedLangTags], "application/json", HttpServletResponse.SC_OK)
-        } else if (request.getPathInfo().startsWith("/language/")) {
+        if (request.getPathInfo().startsWith("/language/")) {
             handleLanguageCheck(request, response)
         } else {
             HttpTools.sendResponse(response, null, null, HttpServletResponse.SC_NOT_FOUND)
