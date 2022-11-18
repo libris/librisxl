@@ -11,6 +11,7 @@ import whelk.component.PostgreSQLComponent
 import whelk.component.SparqlUpdater
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.StorageCreateFailedException
+import whelk.filter.LanguageLinker
 import whelk.filter.LinkFinder
 import whelk.filter.NormalizerChain
 import whelk.meta.WhelkConstants
@@ -132,15 +133,18 @@ class Whelk {
     }
     
     private void initDocumentNormalizers() {
+        LanguageLinker languageLinker = new LanguageLinker()
+        Normalizers.loadDefinitions(languageLinker, this)
         normalizer = new NormalizerChain(
                 [
                         Normalizers.nullRemover(),
                         //FIXME: This is KBV specific stuff
                         Normalizers.workPosition(jsonld),
                         Normalizers.typeSingularity(jsonld),
-                        Normalizers.language(this),
+                        Normalizers.language(languageLinker),
                         Normalizers.identifiedBy(),
-                ] + Normalizers.heuristicLinkers(this)
+                        Normalizers.romanizer(this),
+                ] + Normalizers.heuristicLinkers(this, languageLinker.getTypes())
         )
     }
 
