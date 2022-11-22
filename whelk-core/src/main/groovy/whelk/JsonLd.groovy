@@ -616,12 +616,21 @@ class JsonLd {
     }
 
     boolean isSubClassOf(String type, String baseType) {
-        if (!type)
+        if (!type) {
             return false
-        if (type == baseType)
+        }
+        if (type == baseType) {
             return true
+        }
         Set<String> bases = getSubClasses(baseType)
         return type in bases
+    }
+
+    boolean isInstanceOf(Map entity, String baseType) {
+        if (entity.is(null)) {
+            return false
+        }
+        return asList(entity['@type']).any { isSubClassOf((String) it, baseType) }
     }
 
     Set<String> getSubClasses(String type) {

@@ -1057,12 +1057,7 @@ class ConversionPart {
     }
 
     boolean isInstanceOf(Map entity, String baseType) {
-        def type = entity['@type']
-        if (type == null)
-            return false
-        List<String> types = type instanceof String ? [(String) type] : (List<String>) type
-        return ld ? types.any { ld.isSubClassOf(it, baseType) }
-                  : types.contains(baseType)
+        return ld ? ld.isInstanceOf(entity, baseType) : Util.asList(entity['@type']).contains(baseType)
     }
 
     Tuple2<Boolean, Map<String, List>> buildAboutMap(Map pendingResources, List<String> pendingKeys, Map entity, String aboutAlias) {
