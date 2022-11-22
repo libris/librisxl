@@ -25,6 +25,7 @@ class DatasetImporter {
     static String GRAPH = JsonLd.GRAPH_KEY
     static String ID = JsonLd.ID_KEY
     static String TYPE = JsonLd.TYPE_KEY
+    static String VALUE = JsonLd.VALUE_KEY
 
     static String HASH_IT = '#it'
 
@@ -57,13 +58,18 @@ class DatasetImporter {
 
     Map<String, String> aliasMap = [:]
 
-    DatasetImporter(Whelk whelk, String datasetUri, Map flags=[:], String datasetDescPath=null) {
+    DatasetImporter(Whelk whelk, String datasetUri, Map flags=[:], Object descriptions=null) {
         this.whelk = whelk
         this.datasetUri = datasetUri
-        if (datasetDescPath != null) {
-            Map givenDsData = (Map) findInData(loadData(datasetDescPath), datasetUri)
-            dsInfo = getDatasetInfo(datasetUri, givenDsData)
-            dsRecord = completeRecord(givenDsData, 'Record')
+        if (descriptions != null) {
+            Map datasetDesc = descriptions instanceof Map ? (Map) descriptions : loadData((String) descriptions)
+            Map givenDsData = (Map) findInData(datasetDesc, datasetUri)
+            if (descriptions != null) {
+                setDatasetInfo(datasetUri, givenDsData)
+            } else {
+                lookupDatasetInfo(datasetUri)
+            }
+            dsRecord = completeRecord(givenDsData, 'SystemRecord')
             createOrUpdateDocument(dsRecord)
         }
 
@@ -78,6 +84,31 @@ class DatasetImporter {
         }
     }
 
+    static void loadDescribedDatasets(Whelk whelk, String datasetDescPath, String sourceBaseDir, Set<String> onlyDatasets=null, Map flags=[:]) {
+        Map datasets = (Map) new File(datasetDescPath).withInputStream {
+            loadSelfCompactedTurtle(it)
+        }
+        for (Map item : (List<Map>) datasets[GRAPH]) {
+            if (onlyDatasets && item[ID] !in onlyDatasets) {
+                System.err.println("Skipping dataset: ${item[ID]}")
+                continue
+            }
+            if (item[TYPE] == 'Dataset' && 'sourceData' in item) {
+                Map sourceRef = item['sourceData']
+                def created = item['created']
+                String sourceUrl = null
+                if (ID in sourceRef) {
+                    sourceUrl = sourceRef[ID]
+                } else {
+                    String sourcePath = (String) sourceRef['uri']
+                    sourceUrl = new File(new File(sourceBaseDir), sourcePath).toString()
+                }
+                assert sourceUrl
+                new DatasetImporter(whelk, (String) item[ID], flags, item).importDataset(sourceUrl)
+            }
+        }
+    }
+
     TargetVocabMapper getTvm() {
         if (tvm == null) {
             contextDocData = getDocByMainEntityId(whelk.kbvContextUri).data
@@ -87,6 +118,8 @@ class DatasetImporter {
     }
 
     void importDataset(String sourceUrl) {
+        System.err.println("Importing from: ${sourceUrl}")
+
         Set<String> idsInInput = []
 
         if (dsRecord != null) {
@@ -106,7 +139,7 @@ class DatasetImporter {
                 if (!first) {
                     throw new RuntimeException("Self-described dataset must be the first item.")
                 }
-                dsInfo = getDatasetInfo(datasetUri, data)
+                setDatasetInfo(datasetUri, data)
             }
             first = false
 
@@ -149,21 +182,24 @@ class DatasetImporter {
         System.err.println("Deleted dataset ${dsInfo.uri} with ${deletedCount} existing records")
     }
 
-    protected DatasetInfo getDatasetInfo(String datasetUri, Map givenData=null) {
-        if (givenData) {
-            Map dsData = findInData(givenData, datasetUri)
-            if (dsData == null) {
-                throw new RuntimeException("Provided dataset ${givenData[ID]} does not match: ${datasetUri}")
-            }
-            return new DatasetInfo(dsData)
+    protected void setDatasetInfo(String datasetUri, Map givenData) {
+        Map dsData = findInData(givenData, datasetUri)
+        if (dsData == null) {
+            throw new RuntimeException("Provided dataset ${givenData[ID]} does not match: ${datasetUri}")
         }
+        dsInfo = new DatasetInfo(dsData)
+        System.err.println("Using new dataset: ${dsInfo.uri}")
+    }
+
+    protected void lookupDatasetInfo(String datasetUri) {
         Document datasetRecord = whelk.storage.getDocumentByIri(datasetUri)
         if (datasetRecord == null) {
             throw new RuntimeException("Could not get dataset data for: $datasetUri")
         }
         Map datasetData = ((List) datasetRecord.data[GRAPH])[1]
         assert datasetData[ID] == datasetUri
-        return new DatasetInfo(datasetData)
+        dsInfo = new DatasetInfo(datasetData)
+        System.err.println("Using already defined dataset: ${dsInfo.uri}")
     }
 
     protected Document completeRecord(Map data, String recordType, boolean remap = false) {
@@ -234,15 +270,20 @@ class DatasetImporter {
     }
 
     private void processDataset(String sourceUrl, Closure processItem) {
-        if (sourceUrl ==~ /.+\.(jsonl|json(ld)?\.lines)$/) {
+        if (sourceUrl ==~ /.+\.(ndjson(ld)?|jsonl|json(ld)?\.lines)$/) {
             File inDataFile = new File(sourceUrl)
             inDataFile.eachLine { line ->
                 Map data = mapper.readValue(line.getBytes("UTF-8"), Map)
                 processItem(data)
             }
         } else {
-            Map data = new URL(sourceUrl).withInputStream { loadTurtleAsSystemShaped(it) }
-            List<Map> graph = (List<Map>) data[GRAPH]
+            Map data
+            if (sourceUrl ==~ /^\w+:\/\/.+/) {
+                data = new URL(sourceUrl).withInputStream { loadTurtleAsSystemShaped(it) }
+            } else {
+                data = (Map) new File(sourceUrl).withInputStream { loadTurtleAsSystemShaped(it) }
+            }
+            List<Map> graph = (List<Map>) data[GRAPH] ?: [data]
             for (Map item : graph) {
                 processItem(item)
             }
@@ -260,7 +301,7 @@ class DatasetImporter {
             }
     }
 
-    private Map findInData(Map data, String id) {
+    private static Map findInData(Map data, String id) {
         if (GRAPH in data) {
             data = (Map) data[GRAPH].find { it[ID] == id }
         }
@@ -268,6 +309,23 @@ class DatasetImporter {
             return data
         }
         return null
+    }
+
+    private static Map loadSelfCompactedTurtle(InputStream ins) {
+        // Assuming that the Turle *shape* follows a hard-coded system context!
+        Map data = (Map) TrigToJsonLdParser.parse(ins)
+        if (CONTEXT in data) {
+            Map ctx = [:]
+            ctx.putAll((Map) data[CONTEXT])
+            // Make URI:s absolute
+            ctx.remove(BASE)
+            // Force partial system context shape:
+            ctx['xsd'] = 'http://www.w3.org/2001/XMLSchema#'
+            // Assumes VOCAB + created in source actually means this!
+            ctx['created'] = [(TYPE): 'xsd:dateTime']
+            data = (Map) TrigToJsonLdParser.compact(data, [(CONTEXT): ctx])
+        }
+        return data
     }
 
     private Map loadTurtleAsSystemShaped(InputStream ins) {

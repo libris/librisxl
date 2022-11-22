@@ -20,6 +20,7 @@ class JsonLd {
     static final String VOCAB_KEY = "@vocab"
     static final String ID_KEY = "@id"
     static final String TYPE_KEY = "@type"
+    static final String VALUE_KEY = "@value"
     static final String LANGUAGE_KEY = "@language"
     static final String CONTAINER_KEY = "@container"
     static final String SET_KEY = "@set"
