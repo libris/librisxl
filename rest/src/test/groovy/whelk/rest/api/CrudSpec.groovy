@@ -585,7 +585,6 @@ class CrudSpec extends Specification {
         response.getContentType() == responseContentType
         isEmbellished(document) == embellished
         isFramed(document) == framed
-        println("emb: $embellished fr: $framed : $document")
 
         where:
         view         | ending    | acceptContentType      || responseContentType   | embellished | framed
@@ -704,8 +703,6 @@ class CrudSpec extends Specification {
         storage.getCards(_) >> { [] }
         crud.doGet(request, response)
         String document = response.getResponseBody()
-        println(lens)
-        println(document)
         expect:
         response.getStatus() == SC_OK
         response.getContentType() == JSONLD
