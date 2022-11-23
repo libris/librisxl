@@ -85,9 +85,9 @@ class Crud extends HttpServlet {
     AccessControl accessControl = new AccessControl()
     ConverterUtils converterUtils
 
-    Map siteConfig
     Map sitesData
     Map siteAlias
+    String defaultSite
 
     Map<String, Tuple2<Document, String>> cachedDocs
 
@@ -112,19 +112,16 @@ class Crud extends HttpServlet {
         search = new SearchUtils(whelk)
         validator = JsonLdValidator.from(jsonld)
         converterUtils = new ConverterUtils(whelk)
-        // FIXME: de-KBV/Libris-ify: make configurable
-        siteConfig = mapper.readValue(getClass().classLoader
-                .getResourceAsStream("site_config.json").getBytes(), Map)
-        sitesData = (Map) siteConfig['sites']
-        siteAlias = (Map) siteConfig['site_alias']
+        defaultSite = whelk.applicationId
+        sitesData = search.setupApplicationSearchData()
+        siteAlias = whelk.namedApplications.values().inject([:], { map, app -> map[app.id] = app.alias; map })
 
         cachedDocs = [
-                (whelk.systemContextUri): getDocumentFromStorage(whelk.systemContextUri, null),
-                (whelk.vocabDisplayUri): getDocumentFromStorage(whelk.vocabDisplayUri, null),
-                (whelk.vocabUri): getDocumentFromStorage(whelk.vocabUri, null)
-
+            (whelk.systemContextUri): getDocumentFromStorage(whelk.systemContextUri, null),
+            (whelk.vocabUri): getDocumentFromStorage(whelk.vocabUri, null),
+            (whelk.vocabDisplayUri): getDocumentFromStorage(whelk.vocabDisplayUri, null),
         ]
-        Tuple2<Document, String> docAndLoc = getDocumentFromStorage(whelk.systemContextUri)
+        Tuple2<Document, String> docAndLoc = cachedDocs[whelk.systemContextUri]
         Document contextDoc = docAndLoc.v1
         if (contextDoc) {
             targetVocabMapper = new TargetVocabMapper(jsonld, contextDoc.data)
@@ -139,16 +136,16 @@ class Crud extends HttpServlet {
         String activeSite = request.getAttribute('activeSite')
         Map activeSiteData = (Map) sitesData[activeSite]
 
-        if (activeSite != siteConfig['default_site']) {
+        if (activeSite != defaultSite) {
             queryParameters.put('_site_base_uri', [activeSiteData['@id']] as String[])
+            String activeSiteDomain = activeSite.replaceAll('^https?://([^/]+)/', '$1')
+            if (activeSiteDomain) {
+                queryParameters.put('_boost', [activeSiteDomain] as String[])
+            }
         }
 
         if (!queryParameters['_statsrepr'] && activeSiteData['statsfind']) {
             queryParameters.put('_statsrepr', [mapper.writeValueAsString(activeSiteData['statsfind'])] as String[])
-        }
-
-        if (!queryParameters['_boost'] && activeSiteData['boost']) {
-            queryParameters.put('_boost', [activeSiteData['boost']] as String[])
         }
 
         try {
@@ -180,7 +177,7 @@ class Crud extends HttpServlet {
         Map results = [:]
         results.putAll((Map) activeSiteData)
 
-        if (activeSite != siteConfig['default_site']) {
+        if (activeSite != defaultSite) {
             queryParameters.put('_site_base_uri', [activeSiteData['@id']] as String[])
         }
 
@@ -252,12 +249,6 @@ class Crud extends HttpServlet {
         if (isFindRequest(request)) {
             handleQuery(request, response)
             return
-        }
-
-        String activeSite = request.getAttribute('activeSite')
-        Map activeSiteData = (Map) sitesData[activeSite]
-        if (activeSiteData?.getOrDefault('applyInverseOf', false)) {
-            request.setAttribute('_applyInverseOf', "true")
         }
 
         handleGetRequest(CrudGetRequest.parse(request), response)
@@ -438,7 +429,7 @@ class Crud extends HttpServlet {
             return sitesData[baseUri]['@id']
         }
 
-        return siteConfig['default_site']
+        return defaultSite
     }
 
     /**

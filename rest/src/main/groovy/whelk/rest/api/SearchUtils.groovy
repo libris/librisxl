@@ -788,6 +788,36 @@ class SearchUtils {
                 ? QUERY_ESCAPER.escape(input).replace(['%3A': ':', '%2F': '/', '%40': '@'])
                 : input
     }
+
+    Map setupApplicationSearchData() {
+        Map sitesData = [:]
+        ([whelk.applicationId] + whelk.namedApplications.keySet() as List).findAll().each { appId ->
+            def appData = whelk.applicationData[appId]
+            sitesData[appId] = [
+                (JsonLd.ID_KEY): appId,
+                'statsfind': buildStatsFindReprFromSliceSpec(appData['stats']['sliceList'])
+            ]
+        }
+        return sitesData
+    }
+
+    protected Map buildStatsFindReprFromSliceSpec(List sliceList) {
+        def statsfind = [:]
+        for (Map slice : sliceList) {
+            List<String> path = slice.dimensionChain.collect {
+                it instanceof Map ? "@reverse.${it['inverseOfTerm']}" :
+                it == 'rdf:type' ? JsonLd.TYPE_KEY : it
+            }
+            if (ld.isInstanceOf(ld.vocabIndex[path[-1]], 'ObjectProperty')) {
+                path << JsonLd.ID_KEY
+            }
+            String key = path.join('.')
+            int limit = slice['itemLimit']
+            statsfind[key] = ['sort': 'value', 'sortOrder': 'desc', 'limit': limit]
+        }
+        return statsfind
+    }
+
 }
 
 class Offsets {
