@@ -900,7 +900,7 @@ class JsonLd {
         String initialLens
 
         for (String lensToTry : lensesToTry) {
-            Map lensGroup = lensGroups.get(lensToTry)
+            Map lensGroup = lensGroups?.get(lensToTry)
             lens = getLensFor((Map)thing, lensGroup)
             if (lens) {
                 initialLens = lensToTry
@@ -960,7 +960,7 @@ class JsonLd {
 
     List makeSearchKeyParts(Map object) {
         Map lensGroups = displayData.get('lensGroups')
-        Map lensGroup = lensGroups.get('chips')
+        Map lensGroup = lensGroups?.get('chips')
         Map lens = getLensFor(object, lensGroup)
         List parts = []
         def type = object.get(TYPE_KEY)
@@ -1006,7 +1006,7 @@ class JsonLd {
         }
 
         Map lensGroups = displayData.get('lensGroups')
-        Map lensGroup = lensGroups.get(lensType)
+        Map lensGroup = lensGroups?.get(lensType)
         Map lens = getLensFor(data, lensGroup)
         return new LinkedHashSet((List) lens?.get('inverseProperties') ?: [])
     }
@@ -1030,6 +1030,9 @@ class JsonLd {
 
     private Map getLens(Map thing, List<String> lensTypes) {
         Map lensGroups = displayData.get('lensGroups')
+        if (lensGroups == null) {
+            return
+        }
         lensTypes.findResult { lensType ->
             lensGroups.get(lensType)?.with { getLensFor(thing, (Map) it) }
         }
@@ -1083,11 +1086,15 @@ class JsonLd {
         if (types instanceof String)
             types = [types]
         for (type in types) {
-            Map lensForType = findLensForType((String)type, lensGroup)
-            if (lensForType)
-                return lensForType
-            return findLensForType('Resource', lensGroup)
+            if (lensGroup) {
+                Map lensForType = findLensForType((String)type, lensGroup)
+                if (lensForType) {
+                    return lensForType
+                }
+                return findLensForType('Resource', lensGroup)
+            }
         }
+        return null
     }
 
     private Map findLensForType(String typeKey, Map lensGroup) {
