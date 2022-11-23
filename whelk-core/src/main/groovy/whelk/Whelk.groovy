@@ -12,6 +12,7 @@ import whelk.component.SparqlUpdater
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.StorageCreateFailedException
 import whelk.filter.LanguageLinker
+import whelk.exception.WhelkException
 import whelk.filter.LinkFinder
 import whelk.filter.NormalizerChain
 import whelk.meta.WhelkConstants
@@ -32,6 +33,18 @@ class Whelk {
     ElasticSearch elastic
     SparqlUpdater sparqlUpdater
 
+    boolean completeCore = false
+
+    String applicationId
+    Map<String, Map<String, String>> namedApplications = [:]
+
+    String systemContextUri
+    String vocabUri
+    String vocabDisplayUri
+
+    ZoneId timezone = ZoneId.of('UTC')
+    List<String> locales = ['en']
+
     Map displayData
     Map vocabData
     Map contextData
@@ -41,22 +54,12 @@ class Whelk {
     DocumentNormalizer normalizer
     ElasticFind elasticFind
 
-    // FIXME: de-KBV/Libris-ify: configurable
-    ZoneId timezone = ZoneId.of('Europe/Stockholm')
-
     URI baseUri = null
     boolean skipIndex = false
 
     // useCache may be set to true only when doing initial imports (temporary processes with the rest of Libris down).
     // Any other use of this results in a "local" cache, which will not be invalidated when data changes elsewhere,
     // resulting in potential serving of stale data.
-
-    // FIXME: de-KBV/Libris-ify: configurable
-    // TODO: encapsulate and configure (LXL-260)
-    String systemContextUri = "https://id.kb.se/sys/context/kbv"
-    String vocabContextUri = "https://id.kb.se/vocab/context"
-    String vocabDisplayUri = "https://id.kb.se/vocab/display"
-    String vocabUri = "https://id.kb.se/vocab/"
 
     static Whelk createLoadedCoreWhelk(String propName = "secret", boolean useCache = false) {
         return createLoadedCoreWhelk(PropertyLoader.loadProperties(propName), useCache)
@@ -95,14 +98,51 @@ class Whelk {
     }
 
     private void configureAndLoad(Properties configuration) {
+        applicationId = configuration.applicationId
+        if (!applicationId) {
+            throw new WhelkException("Missing required configuration property: applicationId")
+        }
+        namedApplications = collectNamedApplications(configuration)
+
+        systemContextUri = configuration.systemContextUri
+        if (!systemContextUri) {
+            throw new WhelkException("Missing required configuration property: systemContextUri")
+        }
+
         if (configuration.baseUri) {
             baseUri = new URI((String) configuration.baseUri)
         }
+
         if (configuration.timezone) {
             timezone = ZoneId.of((String) configuration.timezone)
         }
-        loadCoreData()
+
+        if (configuration.locales) {
+            locales = ((String) configuration.locales).split(',').collect { it.trim() }
+        }
+
+        loadCoreData(systemContextUri)
+
         sparqlUpdater = SparqlUpdater.build(storage, jsonld.context, configuration)
+    }
+
+    static Map<String, Map<String, String>> collectNamedApplications(Properties configuration) {
+        Map apps = [:]
+        int i = 0
+        while (true) {
+            def appId = configuration["namedApplications[${i++}].id"]
+            if (!appId) {
+                break
+            }
+
+            def app = [id: appId]
+            def alias = configuration["namedApplications[${i}].alias"]
+            if (alias) {
+                app['alias'] = alias
+            }
+            apps[appId] = app
+        }
+        return apps
     }
 
     synchronized MarcFrameConverter getMarcFrameConverter() {
@@ -117,12 +157,41 @@ class Whelk {
         return relations
     }
 
-    void loadCoreData() {
-        loadContextData()
-        loadDisplayData()
-        loadVocabData()
-        setJsonld(new JsonLd(contextData, displayData, vocabData))
+    void loadCoreData(String systemContextUri) {
+        contextData = loadData(systemContextUri) ?: [:]
+        if (!checkCompleteData(contextData)) {
+            return
+        }
+
+        Map<String, Map> context = JsonLd.getNormalizedContext(contextData)
+        vocabUri = context[JsonLd.VOCAB_KEY]
+        vocabData = loadData(vocabUri)
+        if (!checkCompleteData(vocabData)) {
+            return
+        }
+
+        vocabDisplayUri = JsonLd.getDisplayUri(vocabUri, vocabData)
+        displayData = loadData(vocabDisplayUri)
+        if (!checkCompleteData(displayData)) {
+            return
+        }
+
+        setJsonld(new JsonLd(contextData, displayData, vocabData, locales))
+        completeCore = true
         log.info("Loaded with core data")
+    }
+
+    boolean checkCompleteData(Map data) {
+        if (data == null || data.size() == 0) {
+            log.warn("Whelk is in an incomplete core state")
+            setJsonld(new JsonLd(contextData ?: [:], displayData ?: [:], vocabData ?: [:], locales))
+            return false
+        }
+        return true
+    }
+
+    Map loadData(String uri) {
+        return this.storage.getDocumentByIri(uri)?.data
     }
 
     void setJsonld(JsonLd jsonld) {
@@ -148,18 +217,6 @@ class Whelk {
                         Normalizers.romanizer(this),
                 ] + Normalizers.heuristicLinkers(this, languageLinker.getTypes())
         )
-    }
-
-    void loadContextData() {
-        this.contextData = this.storage.getDocumentByIri(vocabContextUri).data
-    }
-
-    void loadDisplayData() {
-        this.displayData = this.storage.getDocumentByIri(vocabDisplayUri).data
-    }
-
-    void loadVocabData() {
-        this.vocabData = this.storage.getDocumentByIri(vocabUri).data
     }
 
     Document getDocument(String id) {
@@ -478,6 +535,11 @@ class Whelk {
             doc.normalizeUnicode()
             doc.trimStrings()
 
+            // TODO: just ensure that normalizers don't trip on these?
+            if (doc.data.containsKey(JsonLd.CONTEXT_KEY)) {
+                log.info "Skipping DocumentNormalizer step for $doc.id containing ${JsonLd.CONTEXT_KEY}"
+                return
+            }
             if (normalizer != null) {
                 normalizer.normalize(doc)
             }

@@ -29,6 +29,7 @@ class JsonLd {
     // JSON-LD 1.1
     static final String PREFIX_KEY = "@prefix"
 
+    static final String DISPLAY_KEY = "dataDisplay"
     static final String THING_KEY = "mainEntity"
     static final String WORK_KEY = "instanceOf"
     static final String RECORD_KEY = "meta"
@@ -75,12 +76,11 @@ class JsonLd {
     static final String RANGE = 'range'
 
     private static Logger log = LogManager.getLogger(JsonLd.class)
-    
-    Map<String, Map> context = [:]
+
+    Map<String, Map> context
     Map displayData
     Map vocabIndex
 
-    // FIXME: de-KBV/Libris-ify: configurable
     List<String> locales
     private String vocabId
     private Map<String, String> nsToPrefixMap = [:]
@@ -103,20 +103,37 @@ class JsonLd {
     /**
      * Make an instance to encapsulate model driven behaviour.
      */
-    JsonLd(Map contextData, Map displayData, Map vocabData,
-            List<String> locales = ['sv', 'en']) {
+    JsonLd(Map contextData, Map displayData, Map vocabData, List<String> locales = ['en']) {
         setSupportData(contextData, displayData, vocabData)
         this.locales = locales
     }
 
-    @TypeChecked(TypeCheckingMode.SKIP)
-    void setSupportData(Map contextData, Map displayData, Map vocabData) {
+    static Map<String, Map> getNormalizedContext(contextData) {
+        Map<String, Map> context = [:]
         def contextObj = contextData[CONTEXT_KEY]
         if (contextObj instanceof List) {
-            contextObj.each { context.putAll(it) }
-        } else if (contextObj) {
+            contextObj.each { context.putAll((Map) it) }
+        } else if (contextObj instanceof Map) {
             context.putAll(contextObj)
         }
+        return context
+    }
+
+    static String getDisplayUri(String vocabUri, Map vocabData) {
+        for (Map node : (List<Map>) vocabData[GRAPH_KEY]) {
+            if (node[ID_KEY] == vocabUri) {
+                Map displayRef = node[DISPLAY_KEY]
+                if (displayRef) {
+                    return displayRef[ID_KEY]
+                }
+            }
+        }
+        return null
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    void setSupportData(Map contextData, Map displayData, Map vocabData) {
+        context = getNormalizedContext(contextData)
 
         repeatableTerms = context.findResults { key, value ->
             if (isSetContainer(value) || isListContainer(value))
