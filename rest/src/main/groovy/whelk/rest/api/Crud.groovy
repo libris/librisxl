@@ -78,8 +78,6 @@ class Crud extends HttpServlet {
 
     Whelk whelk
 
-    Map vocabData
-    Map displayData
     JsonLdValidator validator
     TargetVocabMapper targetVocabMapper
 
@@ -110,8 +108,6 @@ class Crud extends HttpServlet {
         if (!whelk) {
             whelk = WhelkFactory.getSingletonWhelk()
         }
-        displayData = whelk.displayData
-        vocabData = whelk.vocabData
 
         search = new SearchUtils(whelk)
         validator = JsonLdValidator.from(jsonld)
