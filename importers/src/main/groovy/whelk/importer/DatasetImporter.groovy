@@ -111,7 +111,7 @@ class DatasetImporter {
 
     TargetVocabMapper getTvm() {
         if (tvm == null) {
-            contextDocData = getDocByMainEntityId(whelk.kbvContextUri).data
+            contextDocData = getDocByMainEntityId(whelk.systemContextUri).data
             tvm = new TargetVocabMapper(whelk.jsonld, contextDocData)
         }
         return tvm
@@ -336,7 +336,7 @@ class DatasetImporter {
                 return (Map) TrigToJsonLdParser.compact(data, contextDocData)
             }
         }
-        return (Map) getTvm().applyTargetVocabularyMap(whelk.defaultTvmProfile, contextDocData, data)
+        return (Map) getTvm().applyTargetVocabularyMap(whelk.systemContextUri, contextDocData, data)
     }
 
     private Document getDocByMainEntityId(String id) {

@@ -53,8 +53,7 @@ class Whelk {
 
     // FIXME: de-KBV/Libris-ify: configurable
     // TODO: encapsulate and configure (LXL-260)
-    String kbvContextUri = "https://id.kb.se/sys/context/kbv"
-    String defaultTvmProfile = kbvContextUri
+    String systemContextUri = "https://id.kb.se/sys/context/kbv"
     String vocabContextUri = "https://id.kb.se/vocab/context"
     String vocabDisplayUri = "https://id.kb.se/vocab/display"
     String vocabUri = "https://id.kb.se/vocab/"
@@ -452,7 +451,7 @@ class Whelk {
     Map<String, Map> getCards(Iterable<String> iris) {
         Map<String, Map> result = [:]
         storage.getCards(iris).each { card ->
-            List<Map> graph = (List<Map>) card['@graph']
+            List<Map> graph = (List<Map>) card[JsonLd.GRAPH_KEY]
             graph?.each { Map e ->
                 e['@id']?.with { result[(String) it] = card }
                 if (e.sameAs) {

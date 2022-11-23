@@ -442,7 +442,7 @@ class JsonLd {
 
     static Set<Link> getAllReferences(Map jsonLd) {
         if (!jsonLd.containsKey(GRAPH_KEY)) {
-            throw new FramingException("Missing '@graph' key in input")
+            throw new FramingException("Missing '${GRAPH_KEY}' key in input")
         }
         Set<Link> result = new HashSet<>() 
         DocumentUtil.traverse(jsonLd[GRAPH_KEY]) { value, path ->

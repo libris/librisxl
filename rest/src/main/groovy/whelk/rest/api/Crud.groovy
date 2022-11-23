@@ -80,7 +80,6 @@ class Crud extends HttpServlet {
 
     Map vocabData
     Map displayData
-    JsonLd jsonld
     JsonLdValidator validator
     TargetVocabMapper targetVocabMapper
 
@@ -102,6 +101,10 @@ class Crud extends HttpServlet {
         this.whelk = whelk
     }
 
+    JsonLd getJsonld() {
+        return whelk.jsonld
+    }
+
     @Override
     void init() {
         if (!whelk) {
@@ -110,7 +113,6 @@ class Crud extends HttpServlet {
         displayData = whelk.displayData
         vocabData = whelk.vocabData
 
-        jsonld = whelk.jsonld
         search = new SearchUtils(whelk)
         validator = JsonLdValidator.from(jsonld)
         converterUtils = new ConverterUtils(whelk)
@@ -121,15 +123,15 @@ class Crud extends HttpServlet {
         siteAlias = (Map) siteConfig['site_alias']
 
         cachedDocs = [
-                (whelk.vocabContextUri): getDocumentFromStorage(whelk.vocabContextUri, null),
+                (whelk.systemContextUri): getDocumentFromStorage(whelk.systemContextUri, null),
                 (whelk.vocabDisplayUri): getDocumentFromStorage(whelk.vocabDisplayUri, null),
                 (whelk.vocabUri): getDocumentFromStorage(whelk.vocabUri, null)
 
         ]
-        Tuple2<Document, String> docAndLoc = getDocumentFromStorage(whelk.kbvContextUri)
+        Tuple2<Document, String> docAndLoc = getDocumentFromStorage(whelk.systemContextUri)
         Document contextDoc = docAndLoc.v1
         if (contextDoc) {
-            targetVocabMapper = new TargetVocabMapper(whelk.jsonld, contextDoc.data)
+            targetVocabMapper = new TargetVocabMapper(jsonld, contextDoc.data)
         }
     }
 
@@ -156,7 +158,7 @@ class Crud extends HttpServlet {
         try {
             Map results = search.doSearch(queryParameters)
             String uri = request.getRequestURI()
-            Map contextData = whelk.jsonld.context
+            Map contextData = jsonld.context
             def crudReq = CrudGetRequest.parse(request)
             def dataBody = getNegotiatedDataBody(crudReq, contextData, results, uri)
 
@@ -307,7 +309,7 @@ class Crud extends HttpServlet {
                 // reverse links are inserted by embellish, so can only do
                 // this when embellished
                 if (request.shouldApplyInverseOf()) {
-                    doc.applyInverses(whelk.jsonld)
+                    doc.applyInverses(jsonld)
                 }
             } else {
                 eTag = ETag.plain(doc.getChecksum(jsonld))
@@ -318,7 +320,7 @@ class Crud extends HttpServlet {
                 return
             }
 
-            String profileId = request.getProfile().orElse(whelk.defaultTvmProfile)
+            String profileId = request.getProfile().orElse(whelk.systemContextUri)
             addProfileHeaders(response, profileId)
             def body = getFormattedResponseBody(request, doc, profileId)
 
@@ -357,8 +359,8 @@ class Crud extends HttpServlet {
             data = request.shouldFrame()  ? frameRecord(doc) : doc.data
         }
 
-        Object contextData = whelk.jsonld.context
-        if (profileId != whelk.defaultTvmProfile) {
+        Object contextData = jsonld.context
+        if (profileId != whelk.systemContextUri) {
             data = applyDataProfile(profileId, data)
             contextData = data[JsonLd.CONTEXT_KEY]
             data[JsonLd.CONTEXT_KEY] = profileId
@@ -398,9 +400,9 @@ class Crud extends HttpServlet {
             case Lens.NONE:
                 return framedThing
             case Lens.CARD:
-                return whelk.jsonld.toCard(framedThing)
+                return jsonld.toCard(framedThing)
             case Lens.CHIP:
-                return (Map) whelk.jsonld.toChip(framedThing)
+                return (Map) jsonld.toChip(framedThing)
         }
     }
 
@@ -579,7 +581,7 @@ class Crud extends HttpServlet {
                     "<$CONTEXT_PATH>; " +
                             "rel=\"http://www.w3.org/ns/json-ld#context\"; " +
                             "type=\"application/ld+json\"")
-        } else if (contentType == MimeTypes.JSONLD && responseBody instanceof Map && requestId != whelk.vocabContextUri) {
+        } else if (contentType == MimeTypes.JSONLD && responseBody instanceof Map) {
             if (!responseBody.containsKey(JsonLd.CONTEXT_KEY)) {
                 responseBody[JsonLd.CONTEXT_KEY] = CONTEXT_PATH
             }
