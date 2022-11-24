@@ -1,6 +1,5 @@
 package whelk.history;
 
-import whelk.Document;
 import whelk.JsonLd;
 
 import java.time.Instant;
@@ -92,20 +91,29 @@ public class History {
             {
                 HashSet added = (HashSet) changeSet.get("addedPaths");
                 HashSet removed = (HashSet) changeSet.get("removedPaths");
-                List allMarkers = new ArrayList( added );
-                allMarkers.addAll( removed );
+                List addMarkers = new ArrayList(added);
+                List removeMarkers = new ArrayList(removed);
 
-                List<HashSet> allLists = List.of(added, removed);
-                for (HashSet set : allLists) {
-                    Iterator markerPathIt = set.iterator();
-                    while (markerPathIt.hasNext()) {
-                        List<Object> path = (List<Object>) markerPathIt.next();
-                        for (Object o : allMarkers) {
-                            List<Object> otherPath = (List<Object>) o;
-                            if (!path.equals(otherPath) && isSubList(path, otherPath)) {
-                                markerPathIt.remove();
-                                break;
-                            }
+                Iterator markerPathIt = added.iterator();
+                while (markerPathIt.hasNext()) {
+                    List<Object> path = (List<Object>) markerPathIt.next();
+                    for (Object o : addMarkers) {
+                        List<Object> otherPath = (List<Object>) o;
+                        if (!path.equals(otherPath) && isSubList(path, otherPath)) {
+                            markerPathIt.remove();
+                            break;
+                        }
+                    }
+                }
+
+                markerPathIt = removed.iterator();
+                while (markerPathIt.hasNext()) {
+                    List<Object> path = (List<Object>) markerPathIt.next();
+                    for (Object o : removeMarkers) {
+                        List<Object> otherPath = (List<Object>) o;
+                        if (!path.equals(otherPath) && isSubList(path, otherPath)) {
+                            markerPathIt.remove();
+                            break;
                         }
                     }
                 }
@@ -131,7 +139,7 @@ public class History {
         if (m_lastVersion == null) {
             m_pathOwnership.put( new ArrayList<>(), new Ownership(version, null) );
         } else {
-            examineDiff(new ArrayList<>(), version, version.doc.data, m_lastVersion.doc.data, null, changeSetToBuild);
+            examineDiff(new ArrayList<>(), new ArrayList<>(), version, version.doc.data, m_lastVersion.doc.data, null, changeSetToBuild);
         }
         m_lastVersion = version;
     }
@@ -186,6 +194,7 @@ public class History {
      * of changes this version has.
      */
     private void examineDiff(List<Object> path,
+                             List<Object> correspondingPath,
                              DocumentVersion version,
                              Object examining, Object correspondingPrevious,
                              List<Object> compositePath,
@@ -219,6 +228,7 @@ public class History {
                     setOwnership(newPath, compositePath, version);
 
                     ((HashSet) changeSet.get("addedPaths")).add(newPath);
+                    //System.err.println(" Add: " + newPath);
                 }
             }
 
@@ -228,7 +238,7 @@ public class History {
                 removedKeys.removeAll(k1);
 
                 for (Object key : removedKeys) {
-                    List<Object> removedPath = new ArrayList(path);
+                    List<Object> removedPath = new ArrayList(correspondingPath);
                     removedPath.add(key);
                     // The point of this is to set ownership of the _composite_ object if a part of it is removed.
                     setOwnership(removedPath, compositePath, version);
@@ -236,6 +246,7 @@ public class History {
                     clearOwnership(removedPath);
 
                     ((HashSet) changeSet.get("removedPaths")).add(removedPath);
+                    //System.err.println(" Rem: " + removedPath);
                 }
             }
         }
@@ -244,7 +255,8 @@ public class History {
             if (! (correspondingPrevious instanceof List) ) {
                 setOwnership(path, compositePath, version);
                 ((HashSet) changeSet.get("addedPaths")).add(path);
-                ((HashSet) changeSet.get("removedPaths")).add(path);
+                ((HashSet) changeSet.get("removedPaths")).add(correspondingPath);
+                //System.err.println(" Add+Rem: " + path + " (which used to be) " + correspondingPath);
                 return;
             }
         }
@@ -254,7 +266,8 @@ public class History {
             if (!examining.equals(correspondingPrevious)) {
                 setOwnership(path, compositePath, version);
                 ((HashSet) changeSet.get("addedPaths")).add(path);
-                ((HashSet) changeSet.get("removedPaths")).add(path);
+                ((HashSet) changeSet.get("removedPaths")).add(correspondingPath);
+                //System.err.println(" Add+Rem: " + path + " (which used to be) " + correspondingPath + " due to diff of: " + examining + " and " + correspondingPrevious);
                 return;
             }
         }
@@ -270,25 +283,26 @@ public class History {
             // _following_ element being compared with the wrong element in the other list.
             List tempNew = new LinkedList((List) examining);
             List tempOld = new LinkedList((List) correspondingPrevious);
-            Map<Integer, Integer> newToOldListIndices = new HashMap<>(); // What used to be at index x (in examining) is now at index y (in tempNew).
-            int originalIndex = 0;
             for (int i = 0; i < tempNew.size(); ++i) {
-                boolean hasEqual = false;
                 for (int j = 0; j < tempOld.size(); ++j) {
                     if (tempNew.get(i).equals(tempOld.get(j))) { // Equals will recursively check the entire subtree!
                         tempNew.remove(i);
                         tempOld.remove(j);
                         --i;
                         --j;
-                        hasEqual = true;
                         break;
                     }
                 }
+            }
 
-                if (!hasEqual) {
-                    newToOldListIndices.put(i, originalIndex);
-                }
-                ++originalIndex;
+            // What used to be at index x (in examining) is now at index y (in tempNew), and in analogue for tempOld
+            Map<Integer, Integer> newToOldListIndices = new HashMap<>();
+            Map<Integer, Integer> correspondingNewToOldListIndices = new HashMap<>();
+            for (int i = 0; i < tempNew.size(); ++i) {
+                newToOldListIndices.put(i, ((List) examining).indexOf( tempNew.get(i) ));
+            }
+            for (int i = 0; i < tempOld.size(); ++i) {
+                correspondingNewToOldListIndices.put(i, ((List) correspondingPrevious).indexOf( tempOld.get(i) ));
             }
 
             // skip list equality on @graph,x. Otherwise you always get add+delete on @graph,1 if
@@ -307,7 +321,7 @@ public class History {
                             List<Object> newPath = new ArrayList<>(path);
                             newPath.add(i);
                             ((HashSet) changeSet.get("addedPaths")).add(newPath);
-                            newIt.remove(); // We know this is a new element, no need to check it for further diffs
+                            //System.err.println(" Add (and keep scanning): " + newPath);
                         }
                     }
                 }
@@ -319,10 +333,10 @@ public class History {
                     for (int i = 0; i < list.size(); ++i) {
 
                         if (obj == list.get(i)) { // pointer identity is intentional
-                            List<Object> newPath = new ArrayList<>(path);
+                            List<Object> newPath = new ArrayList<>(correspondingPath);
                             newPath.add(i);
                             ((HashSet) changeSet.get("removedPaths")).add(newPath);
-                            oldIt.remove(); // We know this is a removed element, no need to check it for further diffs
+                            //System.err.println(" Remove (and keep scanning): " + newPath);
                         }
                     }
                 }
@@ -331,19 +345,23 @@ public class History {
 
             for (int i = 0; i < tempNew.size(); ++i) {
                 List<Object> childPath = new ArrayList(path);
+                List<Object> correspondingChildPath = new ArrayList(correspondingPath);
                 if ( tempOld.size() > i ) {
                     childPath.add(Integer.valueOf(newToOldListIndices.get(i)));
-                    examineDiff(childPath, version,
-                            tempNew.get(i), tempOld.get(i),
+                    correspondingChildPath.add(Integer.valueOf(correspondingNewToOldListIndices.get(i)));
+                    examineDiff(childPath, correspondingChildPath, version,
+                            tempNew.get(i), ((List)correspondingPrevious).get(newToOldListIndices.get(i)),
                             compositePath, changeSet);
                 }
             }
         } else if (examining instanceof Map) {
             for (Object key : ((Map) examining).keySet() ) {
                 List<Object> childPath = new ArrayList(path);
+                List<Object> correspondingChildPath = new ArrayList(correspondingPath);
                 if ( ((Map)correspondingPrevious).get(key) != null ) {
                     childPath.add(key);
-                    examineDiff(childPath, version,
+                    correspondingChildPath.add(key);
+                    examineDiff(childPath, correspondingChildPath, version,
                             ((Map) examining).get(key), ((Map) correspondingPrevious).get(key),
                             compositePath, changeSet);
                 }
