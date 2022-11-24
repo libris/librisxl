@@ -3,10 +3,6 @@ package whelk.rest.api
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.util.logging.Log4j2 as Log
-import io.prometheus.client.Counter
-import io.prometheus.client.Gauge
-import io.prometheus.client.Histogram
-import io.prometheus.client.Summary
 import org.apache.http.entity.ContentType
 import whelk.Document
 import whelk.IdGenerator
@@ -50,31 +46,7 @@ class Crud extends HttpServlet {
     final static String CONTEXT_PATH = '/context.jsonld'
     final static String DATA_CONTENT_TYPE = "application/ld+json"
 
-    static final Counter requests = Counter.build()
-        .name("api_requests_total").help("Total requests to API.")
-        .labelNames("method").register()
-
-    static final Counter failedRequests = Counter.build()
-        .name("api_failed_requests_total").help("Total failed requests to API.")
-        .labelNames("method", "status").register()
-
-    static final Gauge ongoingRequests = Gauge.build()
-        .name("api_ongoing_requests_total").help("Total ongoing API requests.")
-        .labelNames("method").register()
-
-    static final Summary requestsLatency = Summary.build()
-        .name("api_requests_latency_seconds")
-        .help("API request latency in seconds.")
-        .labelNames("method")
-        .quantile(0.5f, 0.05f)
-        .quantile(0.95f, 0.01f)
-        .quantile(0.99f, 0.001f)
-        .register()
-
-    static final Histogram requestsLatencyHistogram = Histogram.build()
-            .name("api_requests_latency_seconds_histogram").help("API request latency in seconds.")
-            .labelNames("method")
-            .register()
+    static final RestMetrics metrics = new RestMetrics()
 
     Whelk whelk
 
@@ -211,21 +183,12 @@ class Crud extends HttpServlet {
 
     @Override
     void doGet(HttpServletRequest request, HttpServletResponse response) {
-        String metricLabel = isFindRequest(request) ? 'FIND' : 'GET'
-        requests.labels(metricLabel).inc()
-        ongoingRequests.labels(metricLabel).inc()
-        Summary.Timer requestTimer = requestsLatency.labels(metricLabel).startTimer()
-        Histogram.Timer requestTimer2 = requestsLatencyHistogram.labels(metricLabel).startTimer()
-        
         log.debug("Handling GET request for ${request.pathInfo}")
         try {
             doGet2(request, response)
         } catch (Exception e) {
             sendError(request, response, e)
         } finally {
-            ongoingRequests.labels(metricLabel).dec()
-            requestTimer.observeDuration()
-            requestTimer2.observeDuration()
             log.debug("Sending GET response with status " +
                      "${response.getStatus()} for ${request.pathInfo}")
         }
@@ -235,27 +198,26 @@ class Crud extends HttpServlet {
         request.setAttribute('activeSite', getActiveSite(request, getBaseUri(request)))
         log.debug("Active site: ${request.getAttribute('activeSite')}")
 
-        if (request.pathInfo == "/") {
-            displayInfo(response)
-            return
+        RestMetrics.Measurement measurement = null
+        try {
+            if (request.pathInfo == "/") {
+                measurement = metrics.measure('INDEX')
+                displayInfo(response)
+            }else if (request.pathInfo == "/data" || request.pathInfo.startsWith("/data.")) {
+                measurement = metrics.measure('DATA')
+                handleData(request, response)
+            } else if (request.pathInfo == "/find" || request.pathInfo.startsWith("/find.")) {
+                measurement = metrics.measure('FIND')
+                handleQuery(request, response)
+            } else {
+                measurement = metrics.measure('GET')
+                handleGetRequest(CrudGetRequest.parse(request), response)
+            }
+        } finally {
+            if (measurement != null) {
+                measurement.complete()
+            }
         }
-
-        // TODO: Handle things other than JSON / JSON-LD
-        if (request.pathInfo == "/data" || request.pathInfo == "/data.json" || request.pathInfo == "/data.jsonld") {
-            handleData(request, response)
-            return
-        }
-
-        if (isFindRequest(request)) {
-            handleQuery(request, response)
-            return
-        }
-
-        handleGetRequest(CrudGetRequest.parse(request), response)
-    }
-    
-    private boolean isFindRequest(HttpServletRequest request) {
-        request.pathInfo == "/find" || request.pathInfo.startsWith("/find.")
     }
     
     void handleGetRequest(CrudGetRequest request,
@@ -326,7 +288,7 @@ class Crud extends HttpServlet {
     }
 
     private static void sendNotFound(HttpServletRequest request, HttpServletResponse response) {
-        failedRequests.labels(request.getMethod(), HttpServletResponse.SC_NOT_FOUND.toString()).inc()
+        metrics.failedRequests.labels(request.getMethod(), HttpServletResponse.SC_NOT_FOUND.toString()).inc()
         sendError(response, HttpServletResponse.SC_NOT_FOUND, "Document not found.")
     }
 
@@ -607,10 +569,7 @@ class Crud extends HttpServlet {
 
     @Override
     void doPost(HttpServletRequest request, HttpServletResponse response) {
-        requests.labels("POST").inc()
-        ongoingRequests.labels("POST").inc()
-        Summary.Timer requestTimer = requestsLatency.labels("POST").startTimer()
-        Histogram.Timer requestTimer2 = requestsLatencyHistogram.labels("POST").startTimer()
+        RestMetrics.Measurement measurement = metrics.measure("POST")
         log.debug("Handling POST request for ${request.pathInfo}")
 
         try {
@@ -618,9 +577,7 @@ class Crud extends HttpServlet {
         } catch (Exception e) {
             sendError(request, response, e)
         } finally {
-            ongoingRequests.labels("POST").dec()
-            requestTimer.observeDuration()
-            requestTimer2.observeDuration()
+            measurement.complete()
             log.debug("Sending POST response with status " +
                      "${response.getStatus()} for ${request.pathInfo}")
         }
@@ -697,10 +654,7 @@ class Crud extends HttpServlet {
 
     @Override
     void doPut(HttpServletRequest request, HttpServletResponse response) {
-        requests.labels("PUT").inc()
-        ongoingRequests.labels("PUT").inc()
-        Summary.Timer requestTimer = requestsLatency.labels("PUT").startTimer()
-        Histogram.Timer requestTimer2 = requestsLatencyHistogram.labels("PUT").startTimer()
+        RestMetrics.Measurement measurement = metrics.measure("POST")
         log.debug("Handling PUT request for ${request.pathInfo}")
 
         try {
@@ -708,9 +662,7 @@ class Crud extends HttpServlet {
         } catch (Exception e) {
             sendError(request, response, e)
         } finally {
-            ongoingRequests.labels("PUT").dec()
-            requestTimer.observeDuration()
-            requestTimer2.observeDuration()
+            measurement.complete()
             log.debug("Sending PUT response with status " +
                      "${response.getStatus()} for ${request.pathInfo}")
         }
@@ -916,10 +868,7 @@ class Crud extends HttpServlet {
 
     @Override
     void doDelete(HttpServletRequest request, HttpServletResponse response) {
-        requests.labels("DELETE").inc()
-        ongoingRequests.labels("DELETE").inc()
-        Summary.Timer requestTimer = requestsLatency.labels("DELETE").startTimer()
-        Histogram.Timer requestTimer2 = requestsLatencyHistogram.labels("DELETE").startTimer()
+        RestMetrics.Measurement measurement = metrics.measure("DELETE")
         log.debug("Handling DELETE request for ${request.pathInfo}")
 
         try {
@@ -927,9 +876,7 @@ class Crud extends HttpServlet {
         } catch (Exception e) {
             sendError(request, response, e)
         } finally {
-            ongoingRequests.labels("DELETE").dec()
-            requestTimer.observeDuration()
-            requestTimer2.observeDuration()
+            measurement.complete()
             log.debug("Sending DELETE response with status " +
                      "${response.getStatus()} for ${request.pathInfo}")
         }
@@ -964,7 +911,7 @@ class Crud extends HttpServlet {
 
     static void sendError(HttpServletRequest request, HttpServletResponse response, Exception e) {
         int code = mapError(e)
-        failedRequests.labels(request.getMethod(), code.toString()).inc()
+        metrics.failedRequests.labels(request.getMethod(), code.toString()).inc()
         if (log.isDebugEnabled()) {
             log.debug("Sending error $code : ${e.getMessage()} for ${request.getRequestURI()}")
         }
