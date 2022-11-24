@@ -114,7 +114,7 @@ class Crud extends HttpServlet {
         converterUtils = new ConverterUtils(whelk)
         defaultSite = whelk.applicationId
         sitesData = search.setupApplicationSearchData()
-        siteAlias = whelk.namedApplications.values().inject([:], { map, app -> map[app.id] = app.alias; map })
+        siteAlias = whelk.namedApplications.values().inject([:], { map, app -> map[app.alias] = app.id; map })
 
         cachedDocs = [
             (whelk.systemContextUri): getDocumentFromStorage(whelk.systemContextUri, null),
