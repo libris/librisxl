@@ -110,7 +110,9 @@ public class MarcCliExport
                 stop = stop +"T23:59:59Z";
                 var parameters = new ProfileExport.Parameters(profile, start, stop, ProfileExport.DELETE_MODE.IGNORE, false);
                 Whelk whelk = Whelk.createLoadedCoreWhelk();
-                new ProfileExport(whelk, whelk.getStorage().createAdditionalConnectionPool("ProfileExport")).exportInto(output, parameters);
+                ProfileExport pf = new ProfileExport(whelk, whelk.getStorage().createAdditionalConnectionPool("ProfileExport"));
+                pf.exportInto(output, parameters);
+                pf.shutdown();
             }
             else
                 new MarcCliExport(Whelk.createLoadedCoreWhelk()).dump(profile, output);
