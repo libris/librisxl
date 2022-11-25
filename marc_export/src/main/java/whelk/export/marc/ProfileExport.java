@@ -493,9 +493,12 @@ public class ProfileExport
         }
 
         public void awaitCompletion() throws IOException {
-            workQueue.awaitAll();
-            out.close();
-            pool.shutdown();
+            try {
+                workQueue.awaitAll();
+                out.close();
+            } finally {
+                pool.shutdown();
+            }
         }
         
         private class Task implements Runnable {
