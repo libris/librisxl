@@ -70,17 +70,23 @@ public class ProfileExport
     private final JsonLD2MarcXMLConverter m_toMarcXmlConverter;
     private final Whelk m_whelk;
     private final DataSource m_connectionPool;
+    private final BlockingThreadPool m_threadPool;
     
     public ProfileExport(Whelk whelk, DataSource connectionPool)
     {
         m_whelk = whelk;
         m_connectionPool = connectionPool;
+        m_threadPool = new BlockingThreadPool(this.getClass().getSimpleName(), Runtime.getRuntime().availableProcessors());
         
         m_toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
 
         // _only_ the derivatives, not "Work" itself, as that is what the "classical" MARC works use, which we
         // do not want to filter out as bib.
         workDerivativeTypes = new HashSet<>(m_whelk.getJsonld().getSubClasses("Work"));
+    }
+
+    public void shutdown() {
+        m_threadPool.shutdown();
     }
 
     public static class Parameters {
@@ -127,7 +133,7 @@ public class ProfileExport
         if (parameters.profile.getProperty("status", "ON").equalsIgnoreCase("OFF"))
             return Collections.EMPTY_MAP;
         
-        ParallelExporter exporter = new ParallelExporter(output, parameters);
+        ParallelExporter exporter = new ParallelExporter(output, parameters, m_threadPool);
         
         try {
             try (Connection connection = m_connectionPool.getConnection()) {
@@ -139,9 +145,9 @@ public class ProfileExport
                     }
                 }
             }
+            exporter.awaitCompletion();
         }
         finally {
-            exporter.awaitCompletion();
             totalExportCount.observe(exporter.exportedIDs.size());
         }
 
@@ -468,9 +474,9 @@ public class ProfileExport
      * A possible improvement would be to split auth exports into smaller pieces (i.e. parallel exportDocument() instead)
      */
     private class ParallelExporter {
-        private final BlockingThreadPool pool = new BlockingThreadPool(ProfileExport.class.getSimpleName(), Runtime.getRuntime().availableProcessors());
+        private final BlockingThreadPool pool;
         
-        BlockingThreadPool.Queue workQueue = pool.getQueue();
+        BlockingThreadPool.Queue workQueue;
         
         Set<String> exportedIDs = ConcurrentHashMap.newKeySet();
         Map<String, DELETE_REASON> deletedNotifications = new ConcurrentHashMap<>();
@@ -478,9 +484,11 @@ public class ProfileExport
         Parameters parameters;
         MarcRecordWriterThread out;
 
-        public ParallelExporter(MarcRecordWriter output, Parameters parameters) {
+        public ParallelExporter(MarcRecordWriter output, Parameters parameters, BlockingThreadPool pool) {
             this.out = new MarcRecordWriterThread(output);
             this.parameters = parameters;
+            this.pool = pool;
+            this.workQueue = pool.getQueue();
         }
         
         public void submit(ResultSet resultSet) throws SQLException, IOException {
@@ -493,12 +501,12 @@ public class ProfileExport
         }
 
         public void awaitCompletion() throws IOException {
-            try {
-                workQueue.awaitAll();
-                out.close();
-            } finally {
-                pool.shutdown();
-            }
+            workQueue.awaitAll();
+            out.close();
+        }
+
+        public void shutdown() {
+            pool.shutdown();
         }
         
         private class Task implements Runnable {
