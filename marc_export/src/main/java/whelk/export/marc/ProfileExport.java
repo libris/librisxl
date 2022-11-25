@@ -139,9 +139,9 @@ public class ProfileExport
                     }
                 }
             }
-            exporter.awaitCompletion();
         }
         finally {
+            exporter.awaitCompletion();
             totalExportCount.observe(exporter.exportedIDs.size());
         }
 
@@ -468,9 +468,9 @@ public class ProfileExport
      * A possible improvement would be to split auth exports into smaller pieces (i.e. parallel exportDocument() instead)
      */
     private class ParallelExporter {
-        private static final BlockingThreadPool sharedPool = new BlockingThreadPool(ProfileExport.class.getSimpleName(), Runtime.getRuntime().availableProcessors());
+        private final BlockingThreadPool pool = new BlockingThreadPool(ProfileExport.class.getSimpleName(), Runtime.getRuntime().availableProcessors());
         
-        BlockingThreadPool.Queue workQueue = sharedPool.getQueue();
+        BlockingThreadPool.Queue workQueue = pool.getQueue();
         
         Set<String> exportedIDs = ConcurrentHashMap.newKeySet();
         Map<String, DELETE_REASON> deletedNotifications = new ConcurrentHashMap<>();
@@ -495,6 +495,7 @@ public class ProfileExport
         public void awaitCompletion() throws IOException {
             workQueue.awaitAll();
             out.close();
+            pool.shutdown();
         }
         
         private class Task implements Runnable {
