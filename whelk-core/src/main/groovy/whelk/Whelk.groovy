@@ -50,8 +50,6 @@ class Whelk {
     Map contextData
     JsonLd jsonld
 
-    Map applicationData
-
     MarcFrameConverter marcFrameConverter
     Relations relations
     DocumentNormalizer normalizer
@@ -180,11 +178,6 @@ class Whelk {
         }
 
         setJsonld(new JsonLd(contextData, displayData, vocabData, locales))
-
-        applicationData = loadData(applicationId)
-        if (!checkCompleteData(applicationData)) {
-            return
-        }
 
         completeCore = true
         log.info("Loaded with core data")

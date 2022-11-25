@@ -326,7 +326,7 @@ class SearchUtilsSpec extends Specification {
             'inScheme': [sort: 'value', sortOrder: 'desc', limit:100], // .@id
         ]
         expect:
-        search.buildStatsFindReprFromSliceSpec(slices) == expected
+        search.buildStatsReprFromSliceSpec(slices) == expected
     }
 
 }

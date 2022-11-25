@@ -53,15 +53,12 @@ class Crud extends HttpServlet {
     JsonLdValidator validator
     TargetVocabMapper targetVocabMapper
 
-    SearchUtils search
     AccessControl accessControl = new AccessControl()
     ConverterUtils converterUtils
 
-    Map sitesData
-    Map siteAlias
-    String defaultSite
+    SiteSearch siteSearch
 
-    Map<String, Tuple2<Document, String>> cachedDocs
+    Map<String, Tuple2<Document, String>> cachedFetches = [:]
 
     Crud() {
         // Do nothing - only here for Tomcat to have something to call
@@ -81,47 +78,70 @@ class Crud extends HttpServlet {
             whelk = WhelkFactory.getSingletonWhelk()
         }
 
-        search = new SearchUtils(whelk)
+        siteSearch = new SiteSearch(whelk)
         validator = JsonLdValidator.from(jsonld)
         converterUtils = new ConverterUtils(whelk)
-        defaultSite = whelk.applicationId
-        sitesData = search.setupApplicationSearchData()
-        siteAlias = whelk.namedApplications.values().inject([:], { map, app -> map[app.alias] = app.id; map })
 
-        cachedDocs = [
-            (whelk.systemContextUri): getDocumentFromStorage(whelk.systemContextUri, null),
-            (whelk.vocabUri): getDocumentFromStorage(whelk.vocabUri, null),
-            (whelk.vocabDisplayUri): getDocumentFromStorage(whelk.vocabDisplayUri, null),
-        ]
-        Tuple2<Document, String> docAndLoc = cachedDocs[whelk.systemContextUri]
+        cacheFetchedResource(whelk.systemContextUri)
+        cacheFetchedResource(whelk.vocabUri)
+        cacheFetchedResource(whelk.vocabDisplayUri)
+
+        Tuple2<Document, String> docAndLoc = cachedFetches[whelk.systemContextUri]
         Document contextDoc = docAndLoc.v1
         if (contextDoc) {
             targetVocabMapper = new TargetVocabMapper(jsonld, contextDoc.data)
         }
+
+    }
+
+    protected void cacheFetchedResource(String resourceUri) {
+        cachedFetches[resourceUri] = getDocumentFromStorage(resourceUri, null)
+    }
+
+    @Override
+    void doGet(HttpServletRequest request, HttpServletResponse response) {
+        log.debug("Handling GET request for ${request.pathInfo}")
+        try {
+            doGet2(request, response)
+        } catch (Exception e) {
+            sendError(request, response, e)
+        } finally {
+            log.debug("Sending GET response with status " +
+                     "${response.getStatus()} for ${request.pathInfo}")
+        }
+    }
+
+    void doGet2(HttpServletRequest request, HttpServletResponse response) {
+        RestMetrics.Measurement measurement = null
+        try {
+            if (request.pathInfo == "/") {
+                measurement = metrics.measure('INDEX')
+                displayInfo(response)
+            } else if (siteSearch.isSearchResource(request.pathInfo)) {
+                measurement = metrics.measure('FIND')
+                handleQuery(request, response)
+            } else {
+                measurement = metrics.measure('GET')
+                handleGetRequest(CrudGetRequest.parse(request), response)
+            }
+        } finally {
+            if (measurement != null) {
+                measurement.complete()
+            }
+        }
+    }
+
+    void displayInfo(HttpServletResponse response) {
+        Map info = siteSearch.appsIndex[whelk.applicationId]
+        sendResponse(response, mapper.writeValueAsString(info), "application/json")
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
-
-        // Depending on what site/client we're serving, we might need to add extra query parameters
-        // before they're sent further.
-        String activeSite = request.getAttribute('activeSite')
-        Map activeSiteData = (Map) sitesData[activeSite]
-
-        if (activeSite != defaultSite) {
-            queryParameters.put('_site_base_uri', [activeSiteData['@id']] as String[])
-            String activeSiteDomain = activeSite.replaceAll('^https?://([^/]+)/', '$1')
-            if (activeSiteDomain) {
-                queryParameters.put('_boost', [activeSiteDomain] as String[])
-            }
-        }
-
-        if (!queryParameters['_statsrepr'] && activeSiteData['statsfind']) {
-            queryParameters.put('_statsrepr', [mapper.writeValueAsString(activeSiteData['statsfind'])] as String[])
-        }
+        String baseUri = getBaseUri(request)
 
         try {
-            Map results = search.doSearch(queryParameters)
+            Map results = siteSearch.findData(queryParameters, baseUri, request.pathInfo)
             String uri = request.getRequestURI()
             Map contextData = jsonld.context
             def crudReq = CrudGetRequest.parse(request)
@@ -141,91 +161,12 @@ class Crud extends HttpServlet {
         }
     }
 
-    void handleData(HttpServletRequest request, HttpServletResponse response) {
-        Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
-        String activeSite = request.getAttribute('activeSite')
-        Map activeSiteData = (Map) sitesData[activeSite]
-
-        Map results = [:]
-        results.putAll((Map) activeSiteData)
-
-        if (activeSite != defaultSite) {
-            queryParameters.put('_site_base_uri', [activeSiteData['@id']] as String[])
-        }
-
-        if (!queryParameters['_statsrepr']) {
-            queryParameters.put('_statsrepr', [mapper.writeValueAsString(activeSiteData['statsindex'])] as String[])
-        }
-        if (!queryParameters['_limit']) {
-            queryParameters.put('_limit', ["0"] as String[])
-        }
-        if (!queryParameters['q']) {
-            queryParameters.put('q', ["*"] as String[])
-        }
-        Map searchResults = search.doSearch(queryParameters)
-        results['statistics'] = searchResults['stats']
-
-        String responseContentType = CrudUtils.getBestContentType(request)
-        if (responseContentType == MimeTypes.JSONLD && !results[JsonLd.CONTEXT_KEY]) {
-            results[JsonLd.CONTEXT_KEY] = CONTEXT_PATH
-        }
-        def jsonResult = mapper.writeValueAsString(results)
-        sendResponse(response, jsonResult, responseContentType)
-    }
-
-    static void displayInfo(HttpServletResponse response) {
-        def info = [:]
-        // FIXME: de-KBV/Libris-ify?
-        info["system"] = "LIBRISXL"
-        info["format"] = "linked-data-api"
-        sendResponse(response, mapper.writeValueAsString(info), "application/json")
-    }
-
-    @Override
-    void doGet(HttpServletRequest request, HttpServletResponse response) {
-        log.debug("Handling GET request for ${request.pathInfo}")
-        try {
-            doGet2(request, response)
-        } catch (Exception e) {
-            sendError(request, response, e)
-        } finally {
-            log.debug("Sending GET response with status " +
-                     "${response.getStatus()} for ${request.pathInfo}")
-        }
-    }
-
-    void doGet2(HttpServletRequest request, HttpServletResponse response) {
-        request.setAttribute('activeSite', getActiveSite(request, getBaseUri(request)))
-        log.debug("Active site: ${request.getAttribute('activeSite')}")
-
-        RestMetrics.Measurement measurement = null
-        try {
-            if (request.pathInfo == "/") {
-                measurement = metrics.measure('INDEX')
-                displayInfo(response)
-            }else if (request.pathInfo == "/data" || request.pathInfo.startsWith("/data.")) {
-                measurement = metrics.measure('DATA')
-                handleData(request, response)
-            } else if (request.pathInfo == "/find" || request.pathInfo.startsWith("/find.")) {
-                measurement = metrics.measure('FIND')
-                handleQuery(request, response)
-            } else {
-                measurement = metrics.measure('GET')
-                handleGetRequest(CrudGetRequest.parse(request), response)
-            }
-        } finally {
-            if (measurement != null) {
-                measurement.complete()
-            }
-        }
-    }
-    
     void handleGetRequest(CrudGetRequest request,
                           HttpServletResponse response) {
         Tuple2<Document, String> docAndLocation
 
-        if (request.getId() in cachedDocs) {
-            docAndLocation = cachedDocs[request.getId()]
+        if (request.getId() in cachedFetches) {
+            docAndLocation = cachedFetches[request.getId()]
         } else {
             docAndLocation = getDocumentFromStorage(
                     request.getId(), request.getVersion().orElse(null))
@@ -375,23 +316,6 @@ class Crud extends HttpServlet {
         }
 
         return path
-    }
-
-    private String getActiveSite(HttpServletRequest request, String baseUri = null) {
-        // If ?_site=<foo> has been specified (and <foo> is a valid site) it takes precedence
-        if (request.getParameter("_site") in sitesData) {
-            return request.getParameter("_site")
-        }
-
-        if (baseUri in siteAlias) {
-            baseUri = siteAlias[baseUri]
-        }
-
-        if (baseUri in sitesData) {
-            return sitesData[baseUri]['@id']
-        }
-
-        return defaultSite
     }
 
     /**

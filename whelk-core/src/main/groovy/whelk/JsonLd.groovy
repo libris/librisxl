@@ -297,6 +297,16 @@ class JsonLd {
         return propertyValue
     }
 
+    static Map findInData(Map data, String id) {
+        if (GRAPH_KEY in data) {
+            data = (Map) data[GRAPH_KEY].find { it[ID_KEY] == id }
+        }
+        if (data && data[ID_KEY] == id) {
+            return data
+        }
+        return null
+    }
+
     String toTermKey(String termId) {
         Integer splitPos = NS_SEPARATORS.findResult {
             int idx = termId.lastIndexOf(it)

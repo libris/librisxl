@@ -789,19 +789,7 @@ class SearchUtils {
                 : input
     }
 
-    Map setupApplicationSearchData() {
-        Map sitesData = [:]
-        ([whelk.applicationId] + whelk.namedApplications.keySet() as List).findAll().each { appId ->
-            def appData = whelk.applicationData[appId]
-            sitesData[appId] = [
-                (JsonLd.ID_KEY): appId,
-                'statsfind': buildStatsFindReprFromSliceSpec(appData['stats']['sliceList'])
-            ]
-        }
-        return sitesData
-    }
-
-    protected Map buildStatsFindReprFromSliceSpec(List sliceList) {
+    Map buildStatsReprFromSliceSpec(List sliceList) {
         def statsfind = [:]
         for (Map slice : sliceList) {
             List<String> path = slice.dimensionChain.collect {

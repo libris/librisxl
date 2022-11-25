@@ -11,9 +11,9 @@ import whelk.Whelk
 import whelk.converter.TrigToJsonLdParser
 import whelk.exception.CancelUpdateException
 import whelk.util.DocumentUtil
-import static whelk.util.LegacyIntegrationTools.NO_MARC_COLLECTION
-
+import static whelk.JsonLd.findInData
 import static whelk.util.Jackson.mapper
+import static whelk.util.LegacyIntegrationTools.NO_MARC_COLLECTION
 
 @Log
 @CompileStatic
@@ -299,16 +299,6 @@ class DatasetImporter {
             } else {
                 throw new RuntimeException("Could not load: $path - unrecognized suffix")
             }
-    }
-
-    private static Map findInData(Map data, String id) {
-        if (GRAPH in data) {
-            data = (Map) data[GRAPH].find { it[ID] == id }
-        }
-        if (data[ID] == id) {
-            return data
-        }
-        return null
     }
 
     private static Map loadSelfCompactedTurtle(InputStream ins) {
