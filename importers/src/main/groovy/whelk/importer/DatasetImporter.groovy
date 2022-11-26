@@ -45,8 +45,11 @@ class DatasetImporter {
 
     Whelk whelk
     String datasetUri
+
     DatasetInfo dsInfo
     private Document dsRecord
+    Map givenDsData = null
+    boolean useExistingDatasetDescription = false
 
     boolean replaceMainIds = false
     boolean forceDelete = false
@@ -63,14 +66,7 @@ class DatasetImporter {
         this.datasetUri = datasetUri
         if (descriptions != null) {
             Map datasetDesc = descriptions instanceof Map ? (Map) descriptions : loadData((String) descriptions)
-            Map givenDsData = (Map) findInData(datasetDesc, datasetUri)
-            if (descriptions != null) {
-                setDatasetInfo(datasetUri, givenDsData)
-            } else {
-                lookupDatasetInfo(datasetUri)
-            }
-            dsRecord = completeRecord(givenDsData, 'SystemRecord')
-            createOrUpdateDocument(dsRecord)
+            givenDsData = (Map) findInData(datasetDesc, datasetUri)
         }
 
         replaceMainIds = flags.get(REPLACE_MAIN_IDS) == true
@@ -130,18 +126,20 @@ class DatasetImporter {
 
         long updatedCount = 0
         long createdCount = 0
-        long lineCount = 1 // The data sets self describing first record also counts.
+        long lineCount = 1 // The datasets' self describing first record also counts.
 
         boolean first = true
 
         processDataset(sourceUrl) { Map data ->
-            if (dsInfo == null) {
+            if (first) {
+                first = false
+                determineDatasetDescription(data)
+                //return
+            } else if (dsInfo == null) {
                 if (!first) {
                     throw new RuntimeException("Self-described dataset must be the first item.")
                 }
-                setDatasetInfo(datasetUri, data)
             }
-            first = false
 
             Document incomingDoc = completeRecord(data, recordType, true)
             idsInInput.add(incomingDoc.getShortId())
@@ -180,6 +178,43 @@ class DatasetImporter {
         }
         long deletedCount = removeDeleted([] as Set, [])
         System.err.println("Deleted dataset ${dsInfo.uri} with ${deletedCount} existing records")
+    }
+
+    private void processDataset(String sourceUrl, Closure processItem) {
+        if (sourceUrl ==~ /.+\.(ndjson(ld)?|jsonl|json(ld)?\.lines)$/) {
+            File inDataFile = new File(sourceUrl)
+            inDataFile.eachLine { line ->
+                Map data = mapper.readValue(line.getBytes("UTF-8"), Map)
+                processItem(data)
+            }
+        } else {
+            Map data
+            if (sourceUrl ==~ /^\w+:\/\/.+/) {
+                data = new URL(sourceUrl).withInputStream { loadTurtleAsSystemShaped(it) }
+            } else {
+                data = (Map) new File(sourceUrl).withInputStream { loadTurtleAsSystemShaped(it) }
+            }
+            List<Map> graph = (List<Map>) data[GRAPH] ?: [data]
+            for (Map item : graph) {
+                processItem(item)
+            }
+        }
+    }
+
+    protected void determineDatasetDescription(Map data) {
+        Map selfDescribedDsData = findInData(data, datasetUri)
+        if (selfDescribedDsData != null) {
+            System.err.println("Usiing self-described dataset description")
+            setDatasetInfo(datasetUri, data)
+        } else if (givenDsData != null) {
+            System.err.println("Using given dataset description")
+            setDatasetInfo(datasetUri, givenDsData)
+            dsRecord = completeRecord(givenDsData, 'SystemRecord')
+            createOrUpdateDocument(dsRecord)
+        } else if (useExistingDatasetDescription) {
+            System.err.println("Using existing dataset description")
+            lookupDatasetInfo(datasetUri)
+        }
     }
 
     protected void setDatasetInfo(String datasetUri, Map givenData) {
@@ -265,27 +300,6 @@ class DatasetImporter {
             if (canonical && id != canonical) {
                 aliasMap[id] = canonical
                 return new DocumentUtil.Replace(canonical)
-            }
-        }
-    }
-
-    private void processDataset(String sourceUrl, Closure processItem) {
-        if (sourceUrl ==~ /.+\.(ndjson(ld)?|jsonl|json(ld)?\.lines)$/) {
-            File inDataFile = new File(sourceUrl)
-            inDataFile.eachLine { line ->
-                Map data = mapper.readValue(line.getBytes("UTF-8"), Map)
-                processItem(data)
-            }
-        } else {
-            Map data
-            if (sourceUrl ==~ /^\w+:\/\/.+/) {
-                data = new URL(sourceUrl).withInputStream { loadTurtleAsSystemShaped(it) }
-            } else {
-                data = (Map) new File(sourceUrl).withInputStream { loadTurtleAsSystemShaped(it) }
-            }
-            List<Map> graph = (List<Map>) data[GRAPH] ?: [data]
-            for (Map item : graph) {
-                processItem(item)
             }
         }
     }
