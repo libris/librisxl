@@ -33,6 +33,11 @@ class SiteSearch {
     protected synchronized setupApplicationSearchData() {
         for (var app : whelk.namedApplications.values()) {
             siteAlias[app.alias] = app.id
+            // Workaround for complicated path from webserver/webapp to REST API;
+            // somehow local request appears as HTTPS even when requested over HTTP...
+            if (app.alias.startsWith('http:')) {
+                siteAlias['https' + app.alias.substring(4)] = app.id
+            }
         }
 
         var appIds = [whelk.applicationId]
