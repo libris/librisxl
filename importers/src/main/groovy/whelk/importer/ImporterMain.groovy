@@ -58,12 +58,14 @@ class ImporterMain {
         DatasetImporter.loadDescribedDatasets(whelk, datasetDescPath, sourceBaseDir, onlyDatasets as Set, flags)
     }
 
-    @Command(args='DATASET_URI', flags='--force-delete')
-    void dropDataset(Map flags, String datasetUri) {
+    @Command(args='DATASET_URI...', flags='--force-delete')
+    void dropDataset(Map flags, String... datasetUris) {
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
-        new DatasetImporter(whelk, datasetUri, flags).dropDataset()
+        for (datasetUri in datasetUris) {
+            new DatasetImporter(whelk, datasetUri, flags).dropDataset()
+        }
     }
-    
+
     @Command(args='[COLLECTION] [-t NUMBEROFTHREADS]')
     void reindex(String... args) {
         def cli = new CliBuilder(usage: 'reindex [collection] -[ht]')
