@@ -1,6 +1,6 @@
 package whelk.rest.api
 
-
+import groovy.json.JsonSlurper
 import spock.lang.Ignore
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -10,6 +10,7 @@ import whelk.JsonLd
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.exception.ModelValidationException
+import whelk.history.DocumentVersion
 import whelk.rest.security.AccessControl
 import whelk.util.LegacyIntegrationTools
 
@@ -798,6 +799,34 @@ class CrudSpec extends Specification {
         crud.doGet(request, response)
         then:
         response.getStatus() == SC_OK
+    }
+
+    def "GET /<id>/_changesets should return changesets"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        request.getPathInfo() >> {
+            "/${id}/_changesets".toString()
+        }
+        storage.load(_, _) >> {
+            new Document(["@graph": [["@id": id, "foo": "bar"]]])
+        }
+        storage.loadDocumentHistory(_) >> {
+            [
+                new DocumentVersion(new Document(['@graph': [['modified':'2022-02-02T12:00:00Z'], ['a': 'x']]]), "foo", ""),
+                new DocumentVersion(new Document(['@graph': [['modified':'2022-02-02T12:00:00Z'], ['a': 'y']]]), "bar", ""),
+            ]
+        }
+
+        when:
+        crud.doGet(request, response)
+
+        then:
+        response.getStatus() == SC_OK
+        response.getContentType() == "application/ld+json"
+        def parsedResponse = new JsonSlurper().parseText(response.getResponseBody())
+        parsedResponse["changeSets"].size() == 2
+        parsedResponse["changeSets"][1]["addedPaths"] == [["@graph", 1, "a"]]
+        parsedResponse["changeSets"][1]["removedPaths"] == [["@graph", 1, "a"]]
     }
 
     // Tests for create
