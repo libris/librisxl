@@ -1,6 +1,5 @@
 package whelk.history
 
-import spock.lang.Ignore
 import spock.lang.Specification
 import whelk.Document
 import whelk.JsonLd
@@ -61,8 +60,7 @@ class HistorySpec extends Specification {
         changeSets[1].removedPaths == [["@graph", 1, "a"]] as Set
         changeSets[1].addedPaths == [["@graph", 1, "a"]] as Set
     }
-    
-    @Ignore("LXL-3934")
+
     def "nested value modified"() {
         given:
         def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, [:], JsonLdSpec.VOCAB_DATA)
@@ -85,16 +83,14 @@ class HistorySpec extends Specification {
 
         def history = new History(versions, ld)
         List<Map> changeSets = history.m_changeSetsMap['changeSets']
-        
-        printJson(changeSets)
-        
+
+        //printJson(changeSets)
+
         expect:
         changeSets.size() == 2
         changeSets[1].removedPaths == [["@graph", 1, "a", 0, "b"]] as Set
         changeSets[1].addedPaths == [["@graph", 1, "a", 0, "b"]] as Set
     }
-    
-    
 
     def printJson(def c) {
         println(groovy.json.JsonOutput.prettyPrint(Jackson.mapper().writeValueAsString(c)))

@@ -39,7 +39,7 @@ public class History {
         m_pathOwnership = new HashMap<>();
 
         m_changeSetsMap = new HashMap();
-        m_changeSetsMap.put("@id", versions.get(0).doc.getCompleteId() + "/changesets");
+        m_changeSetsMap.put("@id", versions.get(0).doc.getCompleteId() + "/_changesets");
         m_changeSetsMap.put("changeSets", new ArrayList<>());
 
         // The list we get is sorted chronologically, oldest first.
