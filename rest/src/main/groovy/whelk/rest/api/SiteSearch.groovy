@@ -30,7 +30,7 @@ class SiteSearch {
         return whelk.applicationId
     }
 
-    protected synchronized setupApplicationSearchData() {
+    protected synchronized void setupApplicationSearchData() {
         for (var app : whelk.namedApplications.values()) {
             siteAlias[app.alias] = app.id
             // Workaround for complicated path from webserver/webapp to REST API;
