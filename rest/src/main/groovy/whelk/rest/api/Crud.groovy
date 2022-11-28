@@ -578,7 +578,7 @@ class Crud extends HttpServlet {
 
     @Override
     void doPut(HttpServletRequest request, HttpServletResponse response) {
-        RestMetrics.Measurement measurement = metrics.measure("POST")
+        RestMetrics.Measurement measurement = metrics.measure("PUT")
         log.debug("Handling PUT request for ${request.pathInfo}")
 
         try {
