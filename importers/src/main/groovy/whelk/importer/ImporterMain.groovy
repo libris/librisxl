@@ -16,7 +16,6 @@ import whelk.filter.LinkFinder
 import whelk.reindexer.CardRefresher
 import whelk.reindexer.ElasticReindexer
 import whelk.util.PropertyLoader
-import whelk.util.Tools
 
 @Log
 class ImporterMain {
@@ -41,7 +40,7 @@ class ImporterMain {
 
     @Command(args='SOURCE_URL DATASET_URI [DATASET_DESCRIPTION_FILE]',
              flags='--skip-index --replace-main-ids --force-delete --skip-dependers')
-    void dataset(String sourceUrl, String datasetUri, String datasetDescPath=null, Map flags) {
+    void dataset(Map flags, String sourceUrl, String datasetUri, String datasetDescPath=null) {
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
         if (flags['skip-index']) {
             whelk.setSkipIndex(true)
@@ -49,12 +48,24 @@ class ImporterMain {
         new DatasetImporter(whelk, datasetUri, flags, datasetDescPath).importDataset(sourceUrl)
     }
 
-    @Command(args='DATASET_URI', flags='--force-delete')
-    void dropDataset(String datasetUri, Map flags) {
+    @Command(args='DATASETS_DESCRIPTION_FILE [SOURCE_BASE_DIR] [DATASET_URI...]',
+             flags='--skip-index --replace-main-ids --force-delete --skip-dependers')
+    void datasets(Map flags, String datasetDescPath, String sourceBaseDir=null, String... onlyDatasets=null) {
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
-        new DatasetImporter(whelk, datasetUri, flags).dropDataset()
+        if (flags['skip-index']) {
+            whelk.setSkipIndex(true)
+        }
+        DatasetImporter.loadDescribedDatasets(whelk, datasetDescPath, sourceBaseDir, onlyDatasets as Set, flags)
     }
-    
+
+    @Command(args='DATASET_URI...', flags='--force-delete')
+    void dropDataset(Map flags, String... datasetUris) {
+        Whelk whelk = Whelk.createLoadedSearchWhelk(props)
+        for (datasetUri in datasetUris) {
+            new DatasetImporter(whelk, datasetUri, flags).dropDataset()
+        }
+    }
+
     @Command(args='[COLLECTION] [-t NUMBEROFTHREADS]')
     void reindex(String... args) {
         def cli = new CliBuilder(usage: 'reindex [collection] -[ht]')
@@ -300,7 +311,7 @@ class ImporterMain {
                         arglist << it
                     }
                 }
-                tool."${command.name}"(*arglist, flags)
+                tool."${command.name}"(flags, *arglist)
             } else {
                 arglist = args
                 tool."${command.name}"(*arglist)

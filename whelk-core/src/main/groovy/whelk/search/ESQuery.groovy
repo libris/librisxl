@@ -101,8 +101,8 @@ class ESQuery {
         //   any k=v param - FILTER query (same key => OR, different key => AND)
         List filters
 
-        if (suggest && !ElasticSearch.LANGUAGES_TO_INDEX.contains(suggest)) {
-            throw new InvalidQueryException("Parameter '_suggest' value '${suggest}' invalid, must be one of ${ElasticSearch.LANGUAGES_TO_INDEX}")
+        if (suggest && !whelk.jsonld.locales.contains(suggest)) {
+            throw new InvalidQueryException("Parameter '_suggest' value '${suggest}' invalid, must be one of ${whelk.jsonld.locales}")
         }
 
         String[] originalTypeParam = queryParameters.get('@type')

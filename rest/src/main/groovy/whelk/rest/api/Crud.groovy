@@ -3,10 +3,6 @@ package whelk.rest.api
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.util.logging.Log4j2 as Log
-import io.prometheus.client.Counter
-import io.prometheus.client.Gauge
-import io.prometheus.client.Histogram
-import io.prometheus.client.Summary
 import org.apache.http.entity.ContentType
 import whelk.Document
 import whelk.IdGenerator
@@ -50,49 +46,19 @@ class Crud extends HttpServlet {
     final static String CONTEXT_PATH = '/context.jsonld'
     final static String DATA_CONTENT_TYPE = "application/ld+json"
 
-    static final Counter requests = Counter.build()
-        .name("api_requests_total").help("Total requests to API.")
-        .labelNames("method").register()
-
-    static final Counter failedRequests = Counter.build()
-        .name("api_failed_requests_total").help("Total failed requests to API.")
-        .labelNames("method", "status").register()
-
-    static final Gauge ongoingRequests = Gauge.build()
-        .name("api_ongoing_requests_total").help("Total ongoing API requests.")
-        .labelNames("method").register()
-
-    static final Summary requestsLatency = Summary.build()
-        .name("api_requests_latency_seconds")
-        .help("API request latency in seconds.")
-        .labelNames("method")
-        .quantile(0.5f, 0.05f)
-        .quantile(0.95f, 0.01f)
-        .quantile(0.99f, 0.001f)
-        .register()
-
-    static final Histogram requestsLatencyHistogram = Histogram.build()
-            .name("api_requests_latency_seconds_histogram").help("API request latency in seconds.")
-            .labelNames("method")
-            .register()
+    static final RestMetrics metrics = new RestMetrics()
 
     Whelk whelk
 
-    Map vocabData
-    Map displayData
-    JsonLd jsonld
     JsonLdValidator validator
     TargetVocabMapper targetVocabMapper
 
-    SearchUtils search
     AccessControl accessControl = new AccessControl()
     ConverterUtils converterUtils
 
-    Map siteConfig
-    Map sitesData
-    Map siteAlias
+    SiteSearch siteSearch
 
-    Map<String, Tuple2<Document, String>> cachedDocs
+    Map<String, Tuple2<Document, String>> cachedFetches = [:]
 
     Crud() {
         // Do nothing - only here for Tomcat to have something to call
@@ -102,60 +68,82 @@ class Crud extends HttpServlet {
         this.whelk = whelk
     }
 
+    JsonLd getJsonld() {
+        return whelk.jsonld
+    }
+
     @Override
     void init() {
         if (!whelk) {
             whelk = WhelkFactory.getSingletonWhelk()
         }
-        displayData = whelk.displayData
-        vocabData = whelk.vocabData
 
-        jsonld = whelk.jsonld
-        search = new SearchUtils(whelk)
+        siteSearch = new SiteSearch(whelk)
         validator = JsonLdValidator.from(jsonld)
         converterUtils = new ConverterUtils(whelk)
-        siteConfig = mapper.readValue(getClass().classLoader
-                .getResourceAsStream("site_config.json").getBytes(), Map)
-        sitesData = (Map) siteConfig['sites']
-        siteAlias = (Map) siteConfig['site_alias']
 
-        cachedDocs = [
-                (whelk.vocabContextUri): getDocumentFromStorage(whelk.vocabContextUri, null),
-                (whelk.vocabDisplayUri): getDocumentFromStorage(whelk.vocabDisplayUri, null),
-                (whelk.vocabUri): getDocumentFromStorage(whelk.vocabUri, null)
+        cacheFetchedResource(whelk.systemContextUri)
+        cacheFetchedResource(whelk.vocabUri)
+        cacheFetchedResource(whelk.vocabDisplayUri)
 
-        ]
-        Tuple2<Document, String> docAndLoc = getDocumentFromStorage(whelk.kbvContextUri)
+        Tuple2<Document, String> docAndLoc = cachedFetches[whelk.systemContextUri]
         Document contextDoc = docAndLoc.v1
         if (contextDoc) {
-            targetVocabMapper = new TargetVocabMapper(whelk.jsonld, contextDoc.data)
+            targetVocabMapper = new TargetVocabMapper(jsonld, contextDoc.data)
         }
+
+    }
+
+    protected void cacheFetchedResource(String resourceUri) {
+        cachedFetches[resourceUri] = getDocumentFromStorage(resourceUri, null)
+    }
+
+    @Override
+    void doGet(HttpServletRequest request, HttpServletResponse response) {
+        log.debug("Handling GET request for ${request.pathInfo}")
+        try {
+            doGet2(request, response)
+        } catch (Exception e) {
+            sendError(request, response, e)
+        } finally {
+            log.debug("Sending GET response with status " +
+                     "${response.getStatus()} for ${request.pathInfo}")
+        }
+    }
+
+    void doGet2(HttpServletRequest request, HttpServletResponse response) {
+        RestMetrics.Measurement measurement = null
+        try {
+            if (request.pathInfo == "/") {
+                measurement = metrics.measure('INDEX')
+                displayInfo(response)
+            } else if (siteSearch.isSearchResource(request.pathInfo)) {
+                measurement = metrics.measure('FIND')
+                handleQuery(request, response)
+            } else {
+                measurement = metrics.measure('GET')
+                handleGetRequest(CrudGetRequest.parse(request), response)
+            }
+        } finally {
+            if (measurement != null) {
+                measurement.complete()
+            }
+        }
+    }
+
+    void displayInfo(HttpServletResponse response) {
+        Map info = siteSearch.appsIndex[whelk.applicationId]
+        sendResponse(response, mapper.writeValueAsString(info), "application/json")
     }
 
     void handleQuery(HttpServletRequest request, HttpServletResponse response) {
         Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
-
-        // Depending on what site/client we're serving, we might need to add extra query parameters
-        // before they're sent further.
-        String activeSite = request.getAttribute('activeSite')
-        Map activeSiteData = (Map) sitesData[activeSite]
-
-        if (activeSite != siteConfig['default_site']) {
-            queryParameters.put('_site_base_uri', [activeSiteData['@id']] as String[])
-        }
-
-        if (!queryParameters['_statsrepr'] && activeSiteData['statsfind']) {
-            queryParameters.put('_statsrepr', [mapper.writeValueAsString(activeSiteData['statsfind'])] as String[])
-        }
-
-        if (!queryParameters['_boost'] && activeSiteData['boost']) {
-            queryParameters.put('_boost', [activeSiteData['boost']] as String[])
-        }
+        String baseUri = getBaseUri(request)
 
         try {
-            Map results = search.doSearch(queryParameters)
+            Map results = siteSearch.findData(queryParameters, baseUri, request.pathInfo)
             String uri = request.getRequestURI()
-            Map contextData = whelk.jsonld.context
+            Map contextData = jsonld.context
             def crudReq = CrudGetRequest.parse(request)
             def dataBody = getNegotiatedDataBody(crudReq, contextData, results, uri)
 
@@ -173,106 +161,12 @@ class Crud extends HttpServlet {
         }
     }
 
-    void handleData(HttpServletRequest request, HttpServletResponse response) {
-        Map queryParameters = new HashMap<String, String[]>(request.getParameterMap())
-        String activeSite = request.getAttribute('activeSite')
-        Map activeSiteData = (Map) sitesData[activeSite]
-
-        Map results = [:]
-        results.putAll((Map) activeSiteData)
-
-        if (activeSite != siteConfig['default_site']) {
-            queryParameters.put('_site_base_uri', [activeSiteData['@id']] as String[])
-        }
-
-        if (!queryParameters['_statsrepr']) {
-            queryParameters.put('_statsrepr', [mapper.writeValueAsString(activeSiteData['statsindex'])] as String[])
-        }
-        if (!queryParameters['_limit']) {
-            queryParameters.put('_limit', ["0"] as String[])
-        }
-        if (!queryParameters['q']) {
-            queryParameters.put('q', ["*"] as String[])
-        }
-        Map searchResults = search.doSearch(queryParameters)
-        results['statistics'] = searchResults['stats']
-
-        String responseContentType = CrudUtils.getBestContentType(request)
-        if (responseContentType == MimeTypes.JSONLD && !results[JsonLd.CONTEXT_KEY]) {
-            results[JsonLd.CONTEXT_KEY] = CONTEXT_PATH
-        }
-        def jsonResult = mapper.writeValueAsString(results)
-        sendResponse(response, jsonResult, responseContentType)
-    }
-
-    static void displayInfo(HttpServletResponse response) {
-        def info = [:]
-        info["system"] = "LIBRISXL"
-        info["format"] = "linked-data-api"
-        sendResponse(response, mapper.writeValueAsString(info), "application/json")
-    }
-
-    @Override
-    void doGet(HttpServletRequest request, HttpServletResponse response) {
-        String metricLabel = isFindRequest(request) ? 'FIND' : 'GET'
-        requests.labels(metricLabel).inc()
-        ongoingRequests.labels(metricLabel).inc()
-        Summary.Timer requestTimer = requestsLatency.labels(metricLabel).startTimer()
-        Histogram.Timer requestTimer2 = requestsLatencyHistogram.labels(metricLabel).startTimer()
-        
-        log.debug("Handling GET request for ${request.pathInfo}")
-        try {
-            doGet2(request, response)
-        } catch (Exception e) {
-            sendError(request, response, e)
-        } finally {
-            ongoingRequests.labels(metricLabel).dec()
-            requestTimer.observeDuration()
-            requestTimer2.observeDuration()
-            log.debug("Sending GET response with status " +
-                     "${response.getStatus()} for ${request.pathInfo}")
-        }
-    }
-
-    void doGet2(HttpServletRequest request, HttpServletResponse response) {
-        request.setAttribute('activeSite', getActiveSite(request, getBaseUri(request)))
-        log.debug("Active site: ${request.getAttribute('activeSite')}")
-
-        if (request.pathInfo == "/") {
-            displayInfo(response)
-            return
-        }
-
-        // TODO: Handle things other than JSON / JSON-LD
-        if (request.pathInfo == "/data" || request.pathInfo == "/data.json" || request.pathInfo == "/data.jsonld") {
-            handleData(request, response)
-            return
-        }
-
-        if (isFindRequest(request)) {
-            handleQuery(request, response)
-            return
-        }
-
-        String activeSite = request.getAttribute('activeSite')
-        Map activeSiteData = (Map) sitesData[activeSite]
-        if (activeSiteData?.getOrDefault('applyInverseOf', false)) {
-            request.setAttribute('_applyInverseOf', "true")
-        }
-
-        handleGetRequest(CrudGetRequest.parse(request), response)
-    }
-    
-    private boolean isFindRequest(HttpServletRequest request) {
-        request.pathInfo == "/find" || request.pathInfo.startsWith("/find.")
-    }
-    
     void handleGetRequest(CrudGetRequest request,
                           HttpServletResponse response) {
         Tuple2<Document, String> docAndLocation
 
-        if (request.getId() in cachedDocs) {
-            docAndLocation = cachedDocs[request.getId()]
+        if (request.getId() in cachedFetches) {
+            docAndLocation = cachedFetches[request.getId()]
         } else {
             docAndLocation = getDocumentFromStorage(
                     request.getId(), request.getVersion().orElse(null))
@@ -305,7 +199,7 @@ class Crud extends HttpServlet {
                 // reverse links are inserted by embellish, so can only do
                 // this when embellished
                 if (request.shouldApplyInverseOf()) {
-                    doc.applyInverses(whelk.jsonld)
+                    doc.applyInverses(jsonld)
                 }
             } else {
                 eTag = ETag.plain(doc.getChecksum(jsonld))
@@ -316,7 +210,7 @@ class Crud extends HttpServlet {
                 return
             }
 
-            String profileId = request.getProfile().orElse(whelk.defaultTvmProfile)
+            String profileId = request.getProfile().orElse(whelk.systemContextUri)
             addProfileHeaders(response, profileId)
             def body = getFormattedResponseBody(request, doc, profileId)
 
@@ -335,7 +229,7 @@ class Crud extends HttpServlet {
     }
 
     private static void sendNotFound(HttpServletRequest request, HttpServletResponse response) {
-        failedRequests.labels(request.getMethod(), HttpServletResponse.SC_NOT_FOUND.toString()).inc()
+        metrics.failedRequests.labels(request.getMethod(), HttpServletResponse.SC_NOT_FOUND.toString()).inc()
         sendError(response, HttpServletResponse.SC_NOT_FOUND, "Document not found.")
     }
 
@@ -355,8 +249,8 @@ class Crud extends HttpServlet {
             data = request.shouldFrame()  ? frameRecord(doc) : doc.data
         }
 
-        Object contextData = whelk.jsonld.context
-        if (profileId != whelk.defaultTvmProfile) {
+        Object contextData = jsonld.context
+        if (profileId != whelk.systemContextUri) {
             data = applyDataProfile(profileId, data)
             contextData = data[JsonLd.CONTEXT_KEY]
             data[JsonLd.CONTEXT_KEY] = profileId
@@ -396,9 +290,9 @@ class Crud extends HttpServlet {
             case Lens.NONE:
                 return framedThing
             case Lens.CARD:
-                return whelk.jsonld.toCard(framedThing)
+                return jsonld.toCard(framedThing)
             case Lens.CHIP:
-                return (Map) whelk.jsonld.toChip(framedThing)
+                return (Map) jsonld.toChip(framedThing)
         }
     }
 
@@ -422,23 +316,6 @@ class Crud extends HttpServlet {
         }
 
         return path
-    }
-
-    private String getActiveSite(HttpServletRequest request, String baseUri = null) {
-        // If ?_site=<foo> has been specified (and <foo> is a valid site) it takes precedence
-        if (request.getParameter("_site") in sitesData) {
-            return request.getParameter("_site")
-        }
-
-        if (baseUri in siteAlias) {
-            baseUri = siteAlias[baseUri]
-        }
-
-        if (baseUri in sitesData) {
-            return sitesData[baseUri]['@id']
-        }
-
-        return siteConfig['default_site']
     }
 
     /**
@@ -577,7 +454,7 @@ class Crud extends HttpServlet {
                     "<$CONTEXT_PATH>; " +
                             "rel=\"http://www.w3.org/ns/json-ld#context\"; " +
                             "type=\"application/ld+json\"")
-        } else if (contentType == MimeTypes.JSONLD && responseBody instanceof Map && requestId != whelk.vocabContextUri) {
+        } else if (contentType == MimeTypes.JSONLD && responseBody instanceof Map) {
             if (!responseBody.containsKey(JsonLd.CONTEXT_KEY)) {
                 responseBody[JsonLd.CONTEXT_KEY] = CONTEXT_PATH
             }
@@ -616,10 +493,7 @@ class Crud extends HttpServlet {
 
     @Override
     void doPost(HttpServletRequest request, HttpServletResponse response) {
-        requests.labels("POST").inc()
-        ongoingRequests.labels("POST").inc()
-        Summary.Timer requestTimer = requestsLatency.labels("POST").startTimer()
-        Histogram.Timer requestTimer2 = requestsLatencyHistogram.labels("POST").startTimer()
+        RestMetrics.Measurement measurement = metrics.measure("POST")
         log.debug("Handling POST request for ${request.pathInfo}")
 
         try {
@@ -627,9 +501,7 @@ class Crud extends HttpServlet {
         } catch (Exception e) {
             sendError(request, response, e)
         } finally {
-            ongoingRequests.labels("POST").dec()
-            requestTimer.observeDuration()
-            requestTimer2.observeDuration()
+            measurement.complete()
             log.debug("Sending POST response with status " +
                      "${response.getStatus()} for ${request.pathInfo}")
         }
@@ -706,10 +578,7 @@ class Crud extends HttpServlet {
 
     @Override
     void doPut(HttpServletRequest request, HttpServletResponse response) {
-        requests.labels("PUT").inc()
-        ongoingRequests.labels("PUT").inc()
-        Summary.Timer requestTimer = requestsLatency.labels("PUT").startTimer()
-        Histogram.Timer requestTimer2 = requestsLatencyHistogram.labels("PUT").startTimer()
+        RestMetrics.Measurement measurement = metrics.measure("PUT")
         log.debug("Handling PUT request for ${request.pathInfo}")
 
         try {
@@ -717,9 +586,7 @@ class Crud extends HttpServlet {
         } catch (Exception e) {
             sendError(request, response, e)
         } finally {
-            ongoingRequests.labels("PUT").dec()
-            requestTimer.observeDuration()
-            requestTimer2.observeDuration()
+            measurement.complete()
             log.debug("Sending PUT response with status " +
                      "${response.getStatus()} for ${request.pathInfo}")
         }
@@ -925,10 +792,7 @@ class Crud extends HttpServlet {
 
     @Override
     void doDelete(HttpServletRequest request, HttpServletResponse response) {
-        requests.labels("DELETE").inc()
-        ongoingRequests.labels("DELETE").inc()
-        Summary.Timer requestTimer = requestsLatency.labels("DELETE").startTimer()
-        Histogram.Timer requestTimer2 = requestsLatencyHistogram.labels("DELETE").startTimer()
+        RestMetrics.Measurement measurement = metrics.measure("DELETE")
         log.debug("Handling DELETE request for ${request.pathInfo}")
 
         try {
@@ -936,9 +800,7 @@ class Crud extends HttpServlet {
         } catch (Exception e) {
             sendError(request, response, e)
         } finally {
-            ongoingRequests.labels("DELETE").dec()
-            requestTimer.observeDuration()
-            requestTimer2.observeDuration()
+            measurement.complete()
             log.debug("Sending DELETE response with status " +
                      "${response.getStatus()} for ${request.pathInfo}")
         }
@@ -973,7 +835,7 @@ class Crud extends HttpServlet {
 
     static void sendError(HttpServletRequest request, HttpServletResponse response, Exception e) {
         int code = mapError(e)
-        failedRequests.labels(request.getMethod(), code.toString()).inc()
+        metrics.failedRequests.labels(request.getMethod(), code.toString()).inc()
         if (log.isDebugEnabled()) {
             log.debug("Sending error $code : ${e.getMessage()} for ${request.getRequestURI()}")
         }

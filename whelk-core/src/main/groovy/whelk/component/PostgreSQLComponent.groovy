@@ -2849,6 +2849,7 @@ class PostgreSQLComponent {
         return pool
     }
 
+    // FIXME: de-KBV/Libris-ify: maybe
     private String getDescriptionChangerId(String changedBy) {
         //FIXME(?): hardcoded
         // for historical reasons changedBy is the script URI for global changes

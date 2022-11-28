@@ -308,4 +308,25 @@ class SearchUtilsSpec extends Specification {
         [a: ['A', 'a'], 'b': 'B']|  [variable: 'a', value: 'a']                     | [a: ['A'], 'b': 'B']
     }
 
+    def "should build stats find repr from slice spec"() {
+        given:
+        def slices = [
+          [ "dimensionChain": [["inverseOfTerm": "itemOf"], "heldBy"], "itemLimit": 1000 ],
+          [ "dimensionChain": ["instanceOf", "language"], "itemLimit": 100 ],
+          [ "dimensionChain": ["publication", "year"], "itemLimit": 500 ],
+          [ "dimensionChain": ["rdf:type"], "itemLimit": 100 ],
+          [ "dimensionChain": ["inScheme"], "itemLimit": 100 ],
+        ]
+        def expected = [
+            // NOTE: the .@id should be added if the leafs are defined as ObjectProperty
+            '@reverse.itemOf.heldBy': [sort: 'value', sortOrder: 'desc', limit:1000], // .@id
+            'instanceOf.language': [sort: 'value', sortOrder: 'desc', limit:100], // .@id
+            'publication.year': [sort: 'value', sortOrder: 'desc', limit:500],
+            '@type': [sort: 'value', sortOrder: 'desc', limit:100],
+            'inScheme': [sort: 'value', sortOrder: 'desc', limit:100], // .@id
+        ]
+        expect:
+        search.buildStatsReprFromSliceSpec(slices) == expected
+    }
+
 }

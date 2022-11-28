@@ -26,7 +26,7 @@ class ElasticSearch {
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
     static final String SEARCH_TYPE = "dfs_query_then_fetch"
 
-    static final Set<String> LANGUAGES_TO_INDEX = ['sv', 'en'] as Set
+    // FIXME: de-KBV/Libris-ify: configurable
     static final List<String> REMOVABLE_BASE_URIS = [
             'http://libris.kb.se/',
             'https://libris.kb.se/',
@@ -313,7 +313,7 @@ class ElasticSearch {
         Map framed = JsonLd.frame(thingId, copy.data)
         framed['_sortKeyByLang'] = whelk.jsonld.applyLensAsMapByLang(
                 framed,
-                LANGUAGES_TO_INDEX,
+                whelk.jsonld.locales as Set,
                 REMOVABLE_BASE_URIS,
                 document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
 
@@ -359,7 +359,7 @@ class ElasticSearch {
         Set languageContainers = whelk.jsonld.langContainerAlias.values() as Set
         DocumentUtil.traverse(thing, { value, path ->
             if (path && path.last() in languageContainers) {
-                return new DocumentUtil.Replace(value.findAll {lang, str -> lang in LANGUAGES_TO_INDEX})
+                return new DocumentUtil.Replace(value.findAll {lang, str -> lang in whelk.jsonld.locales})
             }
         })
     }

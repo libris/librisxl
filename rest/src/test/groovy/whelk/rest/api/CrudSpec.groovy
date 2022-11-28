@@ -77,7 +77,13 @@ class CrudSpec extends Specification {
         storage = GroovyMock(PostgreSQLComponent.class)
         // We want to pass through calls in some cases
         accessControl = GroovySpy(AccessControl.class)
+
         whelk = new Whelk(storage)
+
+        whelk.namedApplications = [
+            'https://example.net/': [id: 'https://example.net/', alias: 'http://example.net.localhost/']
+        ]
+
         whelk.contextData = ['@context': [
                 'examplevocab': 'http://example.com',
                 'some_term': 'http://some-term.somewhere']]
@@ -101,10 +107,12 @@ class CrudSpec extends Specification {
             ["@id": "Work"],
         ]]
         whelk.setJsonld(new JsonLd(whelk.contextData, whelk.displayData, whelk.vocabData))
+
         // NB!! Mocking of static methods e.g. LegacyIntegrationTools.determineLegacyCollection
         // does not work if they are called directly from Crud class
         // TODO?: replace mocking with properly initiated vocab in tests so that regular determineLegacyCollection works?
         GroovySpy(LegacyIntegrationTools.class, global: true)
+
         crud = new Crud(whelk)
         crud.init()
         crud.accessControl = accessControl
@@ -586,7 +594,6 @@ class CrudSpec extends Specification {
         response.getContentType() == responseContentType
         isEmbellished(document) == embellished
         isFramed(document) == framed
-        println("emb: $embellished fr: $framed : $document")
 
         where:
         view         | ending    | acceptContentType      || responseContentType   | embellished | framed
@@ -705,8 +712,6 @@ class CrudSpec extends Specification {
         storage.getCards(_) >> { [] }
         crud.doGet(request, response)
         String document = response.getResponseBody()
-        println(lens)
-        println(document)
         expect:
         response.getStatus() == SC_OK
         response.getContentType() == JSONLD
@@ -4024,7 +4029,17 @@ class CrudSpec extends Specification {
         then:
         response.getStatus() == HttpServletResponse.SC_FORBIDDEN
     }
-    
+
+    def "should setup site search"() {
+        expect:
+        crud.siteSearch.siteAlias == [
+            'http://example.net.localhost/': 'https://example.net/',
+            'https://example.net.localhost/': 'https://example.net/',
+        ]
+        and:
+        crud.siteSearch.searchStatsReprs == [:]
+    }
+
     class ServletInputStreamMock extends ServletInputStream {
 
         ByteArrayInputStream is
