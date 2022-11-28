@@ -227,6 +227,21 @@
         "back": "both"
       },
       {
+        "name": "also handle non-array publication object",
+        "source": {
+          "marc:primaryProvisionActivity": {
+            "@type": "PrimaryProvisionActivity",
+            "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+            "year": "1977"
+          },
+          "publication": {"@type": "Publication", "year": "1977"}
+        },
+        "result": {
+          "publication": {"@type": "PrimaryPublication", "year": "1977"}
+        },
+        "back": "both"
+      },
+      {
         "name":  "Treating date as 'fuzzy like' year",
         "source": {
           "marc:primaryProvisionActivity": {
