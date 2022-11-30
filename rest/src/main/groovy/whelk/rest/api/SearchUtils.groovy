@@ -801,7 +801,7 @@ class SearchUtils {
             }
             String key = path.join('.')
             int limit = slice['itemLimit']
-            statsfind[key] = ['sort': 'value', 'sortOrder': 'desc', 'limit': limit]
+            statsfind[key] = ['sort': 'value', 'sortOrder': 'desc', 'size': limit]
         }
         return statsfind
     }

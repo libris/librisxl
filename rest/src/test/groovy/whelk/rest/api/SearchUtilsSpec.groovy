@@ -319,11 +319,11 @@ class SearchUtilsSpec extends Specification {
         ]
         def expected = [
             // NOTE: the .@id should be added if the leafs are defined as ObjectProperty
-            '@reverse.itemOf.heldBy': [sort: 'value', sortOrder: 'desc', limit:1000], // .@id
-            'instanceOf.language': [sort: 'value', sortOrder: 'desc', limit:100], // .@id
-            'publication.year': [sort: 'value', sortOrder: 'desc', limit:500],
-            '@type': [sort: 'value', sortOrder: 'desc', limit:100],
-            'inScheme': [sort: 'value', sortOrder: 'desc', limit:100], // .@id
+            '@reverse.itemOf.heldBy': [sort: 'value', sortOrder: 'desc', size:1000], // .@id
+            'instanceOf.language': [sort: 'value', sortOrder: 'desc', size:100], // .@id
+            'publication.year': [sort: 'value', sortOrder: 'desc', size:500],
+            '@type': [sort: 'value', sortOrder: 'desc', size:100],
+            'inScheme': [sort: 'value', sortOrder: 'desc', size:100], // .@id
         ]
         expect:
         search.buildStatsReprFromSliceSpec(slices) == expected
