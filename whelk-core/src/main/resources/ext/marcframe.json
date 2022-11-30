@@ -18574,9 +18574,24 @@
           }}
         },
         {
-          "source": {"780": {"ind1": "0", "ind2": "1", "subfields": [{"t": "A Title"}]}},
+          "name": "No reverse of STRN ($u) for ISSN-central.",
+          "source": {"780": {"ind1": "0", "ind2": "0", "subfields": [{"t": "Samhälle, opinion, massmedia"},{"u": "GU-STJM-SOM"},{"x": "0284-4788"}]}},
+          "normalized": {"780": {"ind1": "0", "ind2": "0", "subfields": [{"t": "Samhälle, opinion, massmedia"},{"x": "0284-4788"}]}},
           "result": {"mainEntity": {
-            "continuesInPart": [{
+            "continues": [{
+              "@type": "Instance",
+              "hasTitle": [{"@type": "Title", "mainTitle": "Samhälle, opinion, massmedia"}],
+              "identifiedBy": [
+                {"@type": "STRN", "value": "GU-STJM-SOM"},
+                {"@type": "ISSN", "value": "0284-4788"}
+              ]
+            }]
+          }}
+        },
+        {
+          "source": {"780": {"ind1": "0", "ind2": "0", "subfields": [{"t": "A Title"}]}},
+          "result": {"mainEntity": {
+            "continues": [{
               "@type": "Instance",
               "hasTitle": [{"@type": "Title", "mainTitle": "A Title"}]
             }]

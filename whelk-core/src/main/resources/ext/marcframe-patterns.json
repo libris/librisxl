@@ -1199,7 +1199,7 @@
   "serialSpecificDetails": {
     "$k": {"about": "_:instance", "addProperty": "seriesStatement", "TODO:targetMatch": "4xx, 8xx"},
     "$r": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "ReportNumber", "property": "value", "TODO:targetMatch": "088"},
-    "$u": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "STRN", "property": "value", "TODO:targetMatch": "027"},
+    "$u": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "STRN", "property": "value", "ignoreOnRevert": true, "TODO:targetMatch": "027"},
     "$z": {"about": "_:instance", "addLink": "identifiedBy", "resourceType": "ISBN", "property": "value", "TODO:targetMatch": "020"}
   },
 
