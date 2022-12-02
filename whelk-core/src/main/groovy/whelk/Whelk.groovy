@@ -257,7 +257,7 @@ class Whelk {
                 .findAll { id, doc -> !doc.deleted }
                 .collectEntries { id, doc -> [(idMap.getOrDefault(id, id)) : doc]}
     }
-
+    
     private void reindexUpdated(Document updated, Document preUpdateDoc, boolean refreshDependers) {
         indexAsyncOrSync {
             elastic.index(updated, this)
@@ -441,7 +441,7 @@ class Whelk {
         if (updated == null || preUpdateDoc == null) {
             return false
         }
-        
+   
         reindexUpdated(updated, preUpdateDoc, refreshDependers)
         sparqlUpdater?.pollNow()
 
@@ -456,7 +456,7 @@ class Whelk {
         if (updated == null) {
             return
         }
-
+        
         reindexUpdated(updated, preUpdateDoc, refreshDependers)
         sparqlUpdater?.pollNow()
     }
