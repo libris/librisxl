@@ -86,6 +86,8 @@ class DatasetImporter {
 
     static void loadDescribedDatasets(Whelk whelk, String datasetDescPath, String sourceBaseDir, Set<String> onlyDatasets=null, Map flags=[:]) {
         Map datasets = (Map) new File(datasetDescPath).withInputStream {
+            whelk.systemContextUri ?
+            new DatasetImporter(whelk, null).loadTurtleAsSystemShaped(it) :
             loadSelfCompactedTurtle(it)
         }
         for (Map item : (List<Map>) datasets[GRAPH] ?: asList(datasets)) {
