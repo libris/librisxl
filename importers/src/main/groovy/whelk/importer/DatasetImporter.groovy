@@ -65,6 +65,9 @@ class DatasetImporter {
     DatasetImporter(Whelk whelk, String datasetUri, Map flags=[:], Object descriptions=null) {
         this.whelk = whelk
         this.datasetUri = datasetUri
+        if (whelk.systemContextUri) {
+            contextDocData = getDocByMainEntityId(whelk.systemContextUri).data
+        }
         if (descriptions != null) {
             Map datasetDesc = descriptions instanceof Map ? (Map) descriptions : loadData((String) descriptions)
             givenDsData = (Map) findInData(datasetDesc, datasetUri)
@@ -108,7 +111,6 @@ class DatasetImporter {
 
     TargetVocabMapper getTvm() {
         if (tvm == null) {
-            contextDocData = getDocByMainEntityId(whelk.systemContextUri).data
             tvm = new TargetVocabMapper(whelk.jsonld, contextDocData)
         }
         return tvm
