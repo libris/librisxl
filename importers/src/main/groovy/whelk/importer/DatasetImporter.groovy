@@ -11,6 +11,7 @@ import whelk.Whelk
 import whelk.converter.TrigToJsonLdParser
 import whelk.exception.CancelUpdateException
 import whelk.util.DocumentUtil
+import static whelk.JsonLd.asList
 import static whelk.JsonLd.findInData
 import static whelk.util.Jackson.mapper
 import static whelk.util.LegacyIntegrationTools.NO_MARC_COLLECTION
@@ -84,7 +85,7 @@ class DatasetImporter {
         Map datasets = (Map) new File(datasetDescPath).withInputStream {
             loadSelfCompactedTurtle(it)
         }
-        for (Map item : (List<Map>) datasets[GRAPH]) {
+        for (Map item : (List<Map>) datasets[GRAPH] ?: asList(datasets)) {
             if (onlyDatasets && item[ID] !in onlyDatasets) {
                 System.err.println("Skipping dataset: ${item[ID]}")
                 continue
@@ -194,7 +195,7 @@ class DatasetImporter {
             } else {
                 data = (Map) new File(sourceUrl).withInputStream { loadTurtleAsSystemShaped(it) }
             }
-            List<Map> graph = (List<Map>) data[GRAPH] ?: [data]
+            List<Map> graph = (List<Map>) data[GRAPH] ?: asList(data)
             for (Map item : graph) {
                 processItem(item)
             }
