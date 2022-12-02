@@ -359,7 +359,7 @@ class DatasetImporter {
                 result = WRITE_RESULT.ALREADY_UP_TO_DATE
             }
         } else {
-            whelk.createDocument(incomingDoc, "xl", null, collection, false)
+            whelk.createDocument(incomingDoc, "xl", null, collection, false, refreshDependers)
             result = WRITE_RESULT.CREATED
         }
         return result

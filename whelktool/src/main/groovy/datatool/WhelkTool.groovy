@@ -531,7 +531,7 @@ class WhelkTool {
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
             if (!whelk.createDocument(doc, changedIn, scriptJobUri,
-                    LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld()), false))
+                    LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld()), false, true))
                 throw new WhelkException("Failed to save a new document. See general whelk log for details.")
         }
         createdLog.println(doc.shortId)
