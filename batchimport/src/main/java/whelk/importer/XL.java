@@ -296,7 +296,7 @@ class XL
             else
             {
                 // Doing simple "new"
-                m_whelk.createDocument(rdfDoc, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(), collection, false);
+                m_whelk.createDocument(rdfDoc, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(), collection, false, true);
             }
         }
         else

@@ -395,7 +395,7 @@ class Whelk {
     /**
      * NEVER use this to _update_ a document. Use storeAtomicUpdate() instead. Using this for new documents is fine.
      */
-    boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted) {
+    boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted, boolean refreshDependers) {
         normalize(document)
         
         boolean detectCollisionsOnTypedIDs = false
@@ -409,7 +409,9 @@ class Whelk {
         if (success) {
             indexAsyncOrSync {
                 elastic.index(document, this)
-                reindexAffected(document, new TreeSet<>(), document.getExternalRefs())
+                if(refreshDependers) {
+                    reindexAffected(document, new TreeSet<>(), document.getExternalRefs())
+                }
             }
             sparqlUpdater?.pollNow()
         }

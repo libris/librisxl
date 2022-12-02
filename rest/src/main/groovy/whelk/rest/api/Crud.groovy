@@ -698,7 +698,7 @@ class Crud extends HttpServlet {
                 }
                 else {
                     log.debug("Saving NEW document ("+ doc.getId() +")")
-                    boolean success = whelk.createDocument(doc, "xl", activeSigel, collection, false)
+                    boolean success = whelk.createDocument(doc, "xl", activeSigel, collection, false, true)
                     if (!success) {
                         return null
                     }
