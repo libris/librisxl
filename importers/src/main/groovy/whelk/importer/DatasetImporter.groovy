@@ -86,9 +86,9 @@ class DatasetImporter {
 
     static void loadDescribedDatasets(Whelk whelk, String datasetDescPath, String sourceBaseDir, Set<String> onlyDatasets=null, Map flags=[:]) {
         Map datasets = (Map) new File(datasetDescPath).withInputStream {
-            whelk.systemContextUri ?
-            new DatasetImporter(whelk, null).loadTurtleAsSystemShaped(it) :
-            loadSelfCompactedTurtle(it)
+            whelk.systemContextUri
+                ? new DatasetImporter(whelk, null).loadTurtleAsSystemShaped(it)
+                : loadSelfCompactedTurtle(it)
         }
         for (Map item : (List<Map>) datasets[GRAPH] ?: asList(datasets)) {
             if (onlyDatasets && item[ID] !in onlyDatasets) {
@@ -97,7 +97,7 @@ class DatasetImporter {
             }
             if (item[TYPE] == 'Dataset' && 'sourceData' in item) {
                 Map sourceRef = item['sourceData']
-                def created = item['created']
+
                 String sourceUrl = null
                 if (ID in sourceRef) {
                     sourceUrl = sourceRef[ID]
@@ -106,6 +106,7 @@ class DatasetImporter {
                     sourceUrl = new File(new File(sourceBaseDir), sourcePath).toString()
                 }
                 assert sourceUrl
+
                 new DatasetImporter(whelk, (String) item[ID], flags, item).importDataset(sourceUrl)
             }
         }
@@ -139,7 +140,6 @@ class DatasetImporter {
             if (first) {
                 first = false
                 determineDatasetDescription(data)
-                //return
             } else if (dsInfo == null) {
                 if (!first) {
                     throw new RuntimeException("Self-described dataset must be the first item.")
@@ -209,7 +209,7 @@ class DatasetImporter {
     protected void determineDatasetDescription(Map data) {
         Map selfDescribedDsData = findInData(data, datasetUri)
         if (selfDescribedDsData != null) {
-            System.err.println("Usiing self-described dataset description")
+            System.err.println("Using self-described dataset description")
             setDatasetInfo(datasetUri, data)
         } else if (givenDsData != null) {
             System.err.println("Using given dataset description")
@@ -321,7 +321,7 @@ class DatasetImporter {
     }
 
     private static Map loadSelfCompactedTurtle(InputStream ins) {
-        // Assuming that the Turle *shape* follows a hard-coded system context!
+        // Assuming that the Turtle *shape* follows a hard-coded system context!
         Map data = (Map) TrigToJsonLdParser.parse(ins)
         if (CONTEXT in data) {
             Map ctx = [:]
@@ -341,7 +341,8 @@ class DatasetImporter {
         Map data = TrigToJsonLdParser.parse(ins)
         if (data[CONTEXT] instanceof Map) {
             Map ctx = (Map) data[CONTEXT]
-            if (ctx[VOCAB] == whelk.jsonld.vocabId && (ctx.size() == 1 || (ctx.size() == 2 && ctx.containsKey(BASE)))) {
+            if (ctx[VOCAB] == whelk.jsonld.vocabId &&
+                (ctx.size() == 1 || (ctx.size() == 2 && ctx.containsKey(BASE)))) {
                 return (Map) TrigToJsonLdParser.compact(data, contextDocData)
             }
         }
