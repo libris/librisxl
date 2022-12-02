@@ -14,10 +14,13 @@ class JsonLdValidator {
             'definitions': Validation.Scope.DEFINITIONS,
             'hold': Validation.Scope.HOLD,
     ]
+    private Set langAliases
+    
     static IRIFactory iriFactory = IRIFactory.iriImplementation()
-
+    
     private JsonLdValidator(JsonLd jsonLd) {
         this.jsonLd = jsonLd
+        langAliases = jsonLd.langContainerAlias.values() as Set
     }
 
     static JsonLdValidator from(JsonLd jsonLd) {
@@ -82,6 +85,10 @@ class JsonLdValidator {
             }
             validation.at = path
 
+            if (checkLangContainer(path, key, value, validation)) {
+                return 
+            }
+            
             if (validation.scope == Validation.Scope.ALL) {
                 verifyAll(key, value, validation)
                 return
@@ -168,6 +175,20 @@ class JsonLdValidator {
     private void checkHasDefinition(String key, validation) {
         if (!getTermDefinition(key) && !jsonLd.LD_KEYS.contains(key)) {
             handleError(new Error(Error.Type.MISSING_DEFINITION, key), validation)
+        }
+    }
+    
+    private boolean checkLangContainer( List path, String key, value, validation) {
+        if (langAliases.intersect(path)) {
+            if (key in langAliases) {
+                if (value !instanceof Map) {
+                    handleError(new Error(Error.Type.OBJECT_TYPE_EXPECTED, key, value), validation)
+                }
+            }
+            else if (value !instanceof String) {
+                handleError(new Error(Error.Type.UNEXPECTED, key, value), validation)
+            }
+            return true
         }
     }
 

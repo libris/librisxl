@@ -13,6 +13,7 @@ import whelk.search.ElasticFind
 import whelk.util.DocumentUtil
 import whelk.util.LegacyIntegrationTools
 import whelk.util.Statistics
+import whelk.meta.WhelkConstants
 
 import javax.script.Bindings
 import javax.script.Compilable
@@ -35,10 +36,8 @@ import static java.util.concurrent.TimeUnit.SECONDS
 import static whelk.util.Jackson.mapper
 
 class WhelkTool {
-
     static final int DEFAULT_BATCH_SIZE = 500
     static final int DEFAULT_FETCH_SIZE = 100
-    private static final String WHELKTOOL_THREAD_GROUP = "whelktool"
 
     Whelk whelk
 
@@ -136,6 +135,7 @@ class WhelkTool {
         def segment = '/scripts/'
         def path = scriptFile.toURI().toString()
         path = path.substring(path.lastIndexOf(segment) + segment.size())
+        // FIXME: de-KBV/Libris-ify
         scriptJobUri = "https://libris.kb.se/sys/globalchanges/${path}"
     }
 
@@ -353,7 +353,7 @@ class WhelkTool {
                 linkedBlockingDeque, new ThreadPoolExecutor.CallerRunsPolicy())
 
         executorService.setThreadFactory(new ThreadFactory() {
-            ThreadGroup group = new ThreadGroup(WHELKTOOL_THREAD_GROUP)
+            ThreadGroup group = new ThreadGroup(WhelkConstants.BATCH_THREAD_GROUP)
 
             @Override
             Thread newThread(Runnable runnable) {
@@ -365,7 +365,7 @@ class WhelkTool {
     }
 
     private boolean isWorkerThread() {
-        return Thread.currentThread().getThreadGroup().getName().contains(WHELKTOOL_THREAD_GROUP)
+        return Thread.currentThread().getThreadGroup().getName().contains(WhelkConstants.BATCH_THREAD_GROUP)
     }
 
     private ScheduledFuture<?> setupTimedLogger(Counter counter) {
@@ -519,7 +519,7 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
-            whelk.storeAtomicUpdate(doc, !item.loud, true, changedIn, scriptJobUri, item.preUpdateChecksum)
+            whelk.storeAtomicUpdate(doc, !item.loud, true, true, changedIn, scriptJobUri, item.preUpdateChecksum)
         }
         modifiedLog.println(doc.shortId)
     }

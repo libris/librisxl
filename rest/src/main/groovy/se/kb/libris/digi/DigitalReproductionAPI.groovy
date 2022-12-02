@@ -224,6 +224,10 @@ class ReproductionService {
             electronicThing.hasTitle = physicalThing.hasTitle
         }
         
+        if (physicalThing.issuanceType && !electronicThing.issuanceType) {
+            electronicThing.issuanceType = physicalThing.issuanceType
+        }
+        
         if (isOnline(electronicThing)) {
             electronicThing.carrierType = asSet(electronicThing.carrierType) << ONLINE
         }
@@ -301,6 +305,7 @@ class XL {
     // Since we are (for now) making HTTP requests to the same servlet container. must be lower that maxConnections / 2
     private static final int MAX_CONCURRENT_REQUESTS = 10 
     private static final Semaphore semaphore = new Semaphore(MAX_CONCURRENT_REQUESTS)
+    private static final int TIMEOUT_SECONDS = 60
     private static final HttpClient client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build()
     private static final ObjectMapper mapper = new ObjectMapper()
     
@@ -425,7 +430,7 @@ class XL {
     HttpRequest.Builder requestForPath(String path) {
         def builder = HttpRequest.newBuilder()
                 .uri(URI.create("$apiLocation$path"))
-                .timeout(Duration.ofSeconds(15))
+                .timeout(Duration.ofSeconds(TIMEOUT_SECONDS))
         
         headers.each { k, v ->
             builder.header(k, v)

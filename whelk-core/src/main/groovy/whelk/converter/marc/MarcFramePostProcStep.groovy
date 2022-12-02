@@ -363,7 +363,8 @@ class RestructPropertyValuesAndFlagStep extends MarcFramePostProcStepBase {
             obj.remove(flagProperty)
         }
         if (flagRule.mergeFirstLink) {
-            List list = thing[flagRule.mergeFirstLink]
+            def linked = thing[flagRule.mergeFirstLink]
+            List list = linked instanceof List ? linked : linked ? [linked] : null
             if (!list) {
                 list = thing[flagRule.mergeFirstLink] = []
             }
@@ -446,7 +447,7 @@ class RestructPropertyValuesAndFlagStep extends MarcFramePostProcStepBase {
                 return
 
             // TODO: find first obj that matches a flagRule?
-            def obj = list[0]
+            def obj = list instanceof List ? list[0] : list
             if (!(obj instanceof Map))
                 return
 

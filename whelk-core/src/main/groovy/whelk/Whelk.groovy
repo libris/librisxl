@@ -11,8 +11,11 @@ import whelk.component.PostgreSQLComponent
 import whelk.component.SparqlUpdater
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.StorageCreateFailedException
+import whelk.filter.LanguageLinker
+import whelk.exception.WhelkException
 import whelk.filter.LinkFinder
 import whelk.filter.NormalizerChain
+import whelk.meta.WhelkConstants
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
 import whelk.util.PropertyLoader
@@ -30,15 +33,27 @@ class Whelk {
     ElasticSearch elastic
     SparqlUpdater sparqlUpdater
 
+    boolean completeCore = false
+
+    String applicationId
+    Map<String, Map<String, String>> namedApplications = [:]
+
+    String systemContextUri
+    String vocabUri
+    String vocabDisplayUri
+
+    ZoneId timezone = ZoneId.of('UTC')
+    List<String> locales = ['en']
+
     Map displayData
     Map vocabData
     Map contextData
     JsonLd jsonld
+
     MarcFrameConverter marcFrameConverter
     Relations relations
     DocumentNormalizer normalizer
     ElasticFind elasticFind
-    ZoneId timezone = ZoneId.of('Europe/Stockholm')
 
     URI baseUri = null
     boolean skipIndex = false
@@ -46,13 +61,6 @@ class Whelk {
     // useCache may be set to true only when doing initial imports (temporary processes with the rest of Libris down).
     // Any other use of this results in a "local" cache, which will not be invalidated when data changes elsewhere,
     // resulting in potential serving of stale data.
-
-    // TODO: encapsulate and configure (LXL-260)
-    String kbvContextUri = "https://id.kb.se/sys/context/kbv"
-    String defaultTvmProfile = kbvContextUri
-    String vocabContextUri = "https://id.kb.se/vocab/context"
-    String vocabDisplayUri = "https://id.kb.se/vocab/display"
-    String vocabUri = "https://id.kb.se/vocab/"
 
     static Whelk createLoadedCoreWhelk(String propName = "secret", boolean useCache = false) {
         return createLoadedCoreWhelk(PropertyLoader.loadProperties(propName), useCache)
@@ -91,14 +99,50 @@ class Whelk {
     }
 
     private void configureAndLoad(Properties configuration) {
+        applicationId = configuration.applicationId
+        if (!applicationId) {
+            throw new WhelkException("Missing required configuration property: applicationId")
+        }
+        namedApplications = collectNamedApplications(configuration)
+
+        systemContextUri = configuration.systemContextUri
+        if (!systemContextUri) {
+            throw new WhelkException("Missing required configuration property: systemContextUri")
+        }
+
         if (configuration.baseUri) {
             baseUri = new URI((String) configuration.baseUri)
         }
+
         if (configuration.timezone) {
             timezone = ZoneId.of((String) configuration.timezone)
         }
-        loadCoreData()
+
+        if (configuration.locales) {
+            locales = ((String) configuration.locales).split(',').collect { it.trim() }
+        }
+
+        loadCoreData(systemContextUri)
+
         sparqlUpdater = SparqlUpdater.build(storage, jsonld.context, configuration)
+    }
+
+    static Map<String, Map<String, String>> collectNamedApplications(Properties configuration) {
+        Map apps = [:]
+        for (int i = 0; true; i++) {
+            def appId = configuration["namedApplications[${i}].id" as String]
+            if (!appId) {
+                break
+            }
+
+            def app = [id: appId]
+            def alias = configuration["namedApplications[${i}].alias" as String]
+            if (alias) {
+                app['alias'] = alias
+            }
+            apps[appId] = app
+        }
+        return apps
     }
 
     synchronized MarcFrameConverter getMarcFrameConverter() {
@@ -113,12 +157,42 @@ class Whelk {
         return relations
     }
 
-    void loadCoreData() {
-        loadContextData()
-        loadDisplayData()
-        loadVocabData()
-        setJsonld(new JsonLd(contextData, displayData, vocabData))
+    void loadCoreData(String systemContextUri) {
+        contextData = loadData(systemContextUri) ?: [:]
+        if (!checkCompleteData(contextData)) {
+            return
+        }
+
+        Map<String, Map> context = JsonLd.getNormalizedContext(contextData)
+        vocabUri = context[JsonLd.VOCAB_KEY]
+        vocabData = loadData(vocabUri)
+        if (!checkCompleteData(vocabData)) {
+            return
+        }
+
+        vocabDisplayUri = JsonLd.getDisplayUri(vocabUri, vocabData)
+        displayData = loadData(vocabDisplayUri)
+        if (!checkCompleteData(displayData)) {
+            return
+        }
+
+        setJsonld(new JsonLd(contextData, displayData, vocabData, locales))
+
+        completeCore = true
         log.info("Loaded with core data")
+    }
+
+    boolean checkCompleteData(Map data) {
+        if (data == null || data.size() == 0) {
+            log.warn("Whelk is in an incomplete core state")
+            setJsonld(new JsonLd(contextData ?: [:], displayData ?: [:], vocabData ?: [:], locales))
+            return false
+        }
+        return true
+    }
+
+    Map loadData(String uri) {
+        return this.storage.getDocumentByIri(uri)?.data
     }
 
     void setJsonld(JsonLd jsonld) {
@@ -129,30 +203,21 @@ class Whelk {
             initDocumentNormalizers()
         }
     }
-    
+
+    // FIXME: de-KBV/Libris-ify: some of these are KBV specific, is that a problem?
     private void initDocumentNormalizers() {
+        LanguageLinker languageLinker = new LanguageLinker()
+        Normalizers.loadDefinitions(languageLinker, this)
         normalizer = new NormalizerChain(
                 [
                         Normalizers.nullRemover(),
-                        //FIXME: This is KBV specific stuff
                         Normalizers.workPosition(jsonld),
                         Normalizers.typeSingularity(jsonld),
-                        Normalizers.language(this),
+                        Normalizers.language(languageLinker),
                         Normalizers.identifiedBy(),
-                ] + Normalizers.heuristicLinkers(this)
+                        Normalizers.romanizer(this),
+                ] + Normalizers.heuristicLinkers(this, languageLinker.getTypes())
         )
-    }
-
-    void loadContextData() {
-        this.contextData = this.storage.getDocumentByIri(vocabContextUri).data
-    }
-
-    void loadDisplayData() {
-        this.displayData = this.storage.getDocumentByIri(vocabDisplayUri).data
-    }
-
-    void loadVocabData() {
-        this.vocabData = this.storage.getDocumentByIri(vocabUri).data
     }
 
     Document getDocument(String id) {
@@ -192,14 +257,17 @@ class Whelk {
                 .findAll { id, doc -> !doc.deleted }
                 .collectEntries { id, doc -> [(idMap.getOrDefault(id, id)) : doc]}
     }
-
-    private void reindexUpdated(Document updated, Document preUpdateDoc) {
+    
+    private void reindexUpdated(Document updated, Document preUpdateDoc, boolean refreshDependers) {
         indexAsyncOrSync {
             elastic.index(updated, this)
-            if (hasChangedMainEntityId(updated, preUpdateDoc)) {
-                reindexAllLinks(updated.shortId)
-            } else {
-                reindexAffected(updated, preUpdateDoc.getExternalRefs(), updated.getExternalRefs())
+            
+            if (refreshDependers) {
+                if (hasChangedMainEntityId(updated, preUpdateDoc)) {
+                    reindexAllLinks(updated.shortId)
+                } else {
+                    reindexAffected(updated, preUpdateDoc.getExternalRefs(), updated.getExternalRefs())
+                }
             }
         }
     }
@@ -222,9 +290,9 @@ class Whelk {
                 log.error("Error reindexing: $e", e)
             }
         }
-
-        // If we are inside a batch job. Update them synchronously
-        if (batchJobThread()) {
+        
+        if (isBatchJobThread()) {
+            // Update them synchronously
             reindex.run()
         } else {
             // else use a fire-and-forget thread
@@ -327,7 +395,7 @@ class Whelk {
     /**
      * NEVER use this to _update_ a document. Use storeAtomicUpdate() instead. Using this for new documents is fine.
      */
-    boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted, boolean index = true) {
+    boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted) {
         normalize(document)
         
         boolean detectCollisionsOnTypedIDs = false
@@ -351,33 +419,45 @@ class Whelk {
     /**
      * The UpdateAgent SHOULD be a pure function since the update will be retried in case the document
      * was modified in another transaction.
+     *
+     * Parameter explanation:
+     * minorUpdate - When set to true, the 'modified' timestamp will not be updated. This results in no exports being triggered.
+     * writeIdenticalVersions - When set to true, a new entry will be written to the versions table even if the data did not change.
+     * refreshDependers - When set to true (you almost always want this!) records referencing the updated record will have their
+     *                    various denormalized things refreshed as well. If you set this to false, the onus is on you to make sure
+     *                    your changes to the data do not affect the dependencies table, and to reindex all the dependeing records
+     *                    if/when necessary.
+     *
+     * Returns true if anything was written.
      */
-    void storeAtomicUpdate(String id, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, PostgreSQLComponent.UpdateAgent updateAgent) {
+    boolean storeAtomicUpdate(String id, boolean minorUpdate, boolean writeIdenticalVersions, boolean refreshDependers, String changedIn, String changedBy, PostgreSQLComponent.UpdateAgent updateAgent) {
         Document preUpdateDoc = null
-        Document updated = storage.storeUpdate(id, minorUpdate, writeIdenticalVersions, changedIn, changedBy, { Document doc ->
+        Document updated = storage.storeUpdate(id, minorUpdate, writeIdenticalVersions, refreshDependers, changedIn, changedBy, { Document doc ->
             preUpdateDoc = doc.clone()
             updateAgent.update(doc)
             normalize(doc)
         })
 
         if (updated == null || preUpdateDoc == null) {
-            return
+            return false
         }
-
-        reindexUpdated(updated, preUpdateDoc)
+   
+        reindexUpdated(updated, preUpdateDoc, refreshDependers)
         sparqlUpdater?.pollNow()
+
+        return true
     }
 
-    void storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, String oldChecksum) {
+    void storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, boolean refreshDependers, String changedIn, String changedBy, String oldChecksum) {
         normalize(doc)
         Document preUpdateDoc = storage.load(doc.shortId)
-        Document updated = storage.storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, changedIn, changedBy, oldChecksum)
+        Document updated = storage.storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, refreshDependers, changedIn, changedBy, oldChecksum)
 
         if (updated == null) {
             return
         }
-
-        reindexUpdated(updated, preUpdateDoc)
+        
+        reindexUpdated(updated, preUpdateDoc, refreshDependers)
         sparqlUpdater?.pollNow()
     }
 
@@ -429,7 +509,7 @@ class Whelk {
     Map<String, Map> getCards(Iterable<String> iris) {
         Map<String, Map> result = [:]
         storage.getCards(iris).each { card ->
-            List<Map> graph = (List<Map>) card['@graph']
+            List<Map> graph = (List<Map>) card[JsonLd.GRAPH_KEY]
             graph?.each { Map e ->
                 e['@id']?.with { result[(String) it] = card }
                 if (e.sameAs) {
@@ -456,6 +536,11 @@ class Whelk {
             doc.normalizeUnicode()
             doc.trimStrings()
 
+            // TODO: just ensure that normalizers don't trip on these?
+            if (doc.data.containsKey(JsonLd.CONTEXT_KEY)) {
+                log.info "Skipping DocumentNormalizer step for $doc.id containing ${JsonLd.CONTEXT_KEY}"
+                return
+            }
             if (normalizer != null) {
                 normalizer.normalize(doc)
             }
@@ -476,8 +561,8 @@ class Whelk {
         storage.removeUserData(id)
     }
 
-    private static boolean batchJobThread() {
-        return Thread.currentThread().getThreadGroup().getName().contains("whelktool")
+    private static boolean isBatchJobThread() {
+        return Thread.currentThread().getThreadGroup().getName().contains(WhelkConstants.BATCH_THREAD_GROUP)
     }
 
     ZoneId getTimezone() {

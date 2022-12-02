@@ -2,8 +2,8 @@ package whelk.importer
 
 import whelk.Document
 import whelk.Whelk
+import whelk.util.BlockingThreadPool
 import whelk.util.LegacyIntegrationTools
-import whelk.util.ThreadPool
 
 import static whelk.util.Jackson.mapper
 
@@ -17,7 +17,7 @@ class WhelkCopier {
     List recordIds
     String additionalTypes
     boolean shouldExcludeItems
-    ThreadPool threadPool = new ThreadPool(Runtime.getRuntime().availableProcessors())
+    BlockingThreadPool.SimplePool threadPool = BlockingThreadPool.simplePool(Runtime.getRuntime().availableProcessors())
     List<Document> saveQueue = []
 
     private int copied = 0
@@ -107,7 +107,7 @@ class WhelkCopier {
             }
         }
         flushSaveQueue()
-        threadPool.joinAll()
+        threadPool.awaitAllAndShutdown()
 
         dest.storage.reDenormalize()
         System.err.println "Copied $copied documents (from ${recordIds.size()} selected)."
@@ -140,8 +140,8 @@ class WhelkCopier {
     void flushSaveQueue() {
         List<Document> batch = saveQueue
         saveQueue = []
-        threadPool.executeOnThread(batch, {_batch, threadIndex ->
-            for (Document d : _batch)
+        threadPool.submit(() -> {
+            for (Document d : batch)
                 save(d)
         })
     }

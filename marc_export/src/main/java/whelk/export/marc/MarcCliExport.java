@@ -1,6 +1,8 @@
 package whelk.export.marc;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import se.kb.libris.export.ExportProfile;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.io.Iso2709MarcRecordWriter;
@@ -11,18 +13,25 @@ import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
+import whelk.util.BlockingThreadPool;
+import whelk.util.BlockingThreadPool.SimplePool;
 import whelk.util.MarcExport;
-import whelk.util.ThreadPool;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.Vector;
 
 public class MarcCliExport
 {
@@ -101,7 +110,9 @@ public class MarcCliExport
                 stop = stop +"T23:59:59Z";
                 var parameters = new ProfileExport.Parameters(profile, start, stop, ProfileExport.DELETE_MODE.IGNORE, false);
                 Whelk whelk = Whelk.createLoadedCoreWhelk();
-                new ProfileExport(whelk, whelk.getStorage().createAdditionalConnectionPool("ProfileExport")).exportInto(output, parameters);
+                ProfileExport pf = new ProfileExport(whelk, whelk.getStorage().createAdditionalConnectionPool("ProfileExport"));
+                pf.exportInto(output, parameters);
+                pf.shutdown();
             }
             else
                 new MarcCliExport(Whelk.createLoadedCoreWhelk()).dump(profile, output);
@@ -203,7 +214,7 @@ public class MarcCliExport
     private void dump(ExportProfile profile, MarcRecordWriter output)
             throws SQLException, InterruptedException
     {
-        ThreadPool threadPool = new ThreadPool(Runtime.getRuntime().availableProcessors());
+        SimplePool threadPool = BlockingThreadPool.simplePool(Runtime.getRuntime().availableProcessors());
         Batch batch = new Batch(profile, output);
 
         try (Connection connection = getConnection();
@@ -224,21 +235,23 @@ public class MarcCliExport
 
                 if (batch.bibUrisToConvert.size() >= BATCH_SIZE)
                 {
-                    threadPool.executeOnThread(batch, this::executeBatch);
+                    threadPool.submit(batch, this::executeBatch);
                     batch = new Batch(profile, output);
                 }
             }
-            if (!batch.bibUrisToConvert.isEmpty())
-                threadPool.executeOnThread(batch, this::executeBatch);
+            if (!batch.bibUrisToConvert.isEmpty()) {
+                threadPool.submit(batch, this::executeBatch);
+            }
         }
 
-        threadPool.joinAll();
+        threadPool.awaitAllAndShutdown();
     }
 
     private void dumpSpecific(ExportProfile profile, Path idFilePath, MarcRecordWriter output)
             throws IOException, InterruptedException
     {
-        ThreadPool threadPool = new ThreadPool(Runtime.getRuntime().availableProcessors());
+        SimplePool threadPool = BlockingThreadPool.simplePool(Runtime.getRuntime().availableProcessors());
+
         Batch batch = new Batch(profile, output);
 
         List<String> ids = Files.readAllLines(idFilePath);
@@ -252,17 +265,17 @@ public class MarcCliExport
 
             if (batch.bibUrisToConvert.size() >= BATCH_SIZE)
             {
-                threadPool.executeOnThread(batch, this::executeBatch);
+                threadPool.submit(batch, this::executeBatch);
                 batch = new Batch(profile, output);
             }
         }
         if (!batch.bibUrisToConvert.isEmpty())
-            threadPool.executeOnThread(batch, this::executeBatch);
+            threadPool.submit(batch, this::executeBatch);
 
-        threadPool.joinAll();
+        threadPool.awaitAllAndShutdown();
     }
 
-    private void executeBatch(Batch batch, int threadIndex)
+    private void executeBatch(Batch batch)
     {
         try
         {

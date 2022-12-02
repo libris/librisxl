@@ -3,6 +3,7 @@ package whelk.importer
 import java.lang.annotation.*
 import java.util.concurrent.ExecutorService
 import java.util.zip.GZIPOutputStream
+import groovy.cli.picocli.CliBuilder
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.io.output.CountingOutputStream
 import org.apache.commons.io.FilenameUtils
@@ -15,7 +16,6 @@ import whelk.filter.LinkFinder
 import whelk.reindexer.CardRefresher
 import whelk.reindexer.ElasticReindexer
 import whelk.util.PropertyLoader
-import whelk.util.Tools
 
 @Log
 class ImporterMain {
@@ -39,8 +39,8 @@ class ImporterMain {
     }
 
     @Command(args='SOURCE_URL DATASET_URI [DATASET_DESCRIPTION_FILE]',
-             flags='--skip-index --replace-main-ids --force-delete')
-    void dataset(String sourceUrl, String datasetUri, String datasetDescPath=null, Map flags) {
+             flags='--skip-index --replace-main-ids --force-delete --skip-dependers')
+    void dataset(Map flags, String sourceUrl, String datasetUri, String datasetDescPath=null) {
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
         if (flags['skip-index']) {
             whelk.setSkipIndex(true)
@@ -48,18 +48,56 @@ class ImporterMain {
         new DatasetImporter(whelk, datasetUri, flags, datasetDescPath).importDataset(sourceUrl)
     }
 
-    @Command(args='DATASET_URI', flags='--force-delete')
-    void dropDataset(String datasetUri, Map flags) {
+    @Command(args='DATASETS_DESCRIPTION_FILE [SOURCE_BASE_DIR] [DATASET_URI...]',
+             flags='--skip-index --replace-main-ids --force-delete --skip-dependers')
+    void datasets(Map flags, String datasetDescPath, String sourceBaseDir=null, String... onlyDatasets=null) {
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
-        new DatasetImporter(whelk, datasetUri, flags).dropDataset()
+        if (flags['skip-index']) {
+            whelk.setSkipIndex(true)
+        }
+        DatasetImporter.loadDescribedDatasets(whelk, datasetDescPath, sourceBaseDir, onlyDatasets as Set, flags)
     }
 
-    @Command(args='[COLLECTION]')
-    void reindex(String collection=null) {
+    @Command(args='DATASET_URI...', flags='--force-delete')
+    void dropDataset(Map flags, String... datasetUris) {
+        Whelk whelk = Whelk.createLoadedSearchWhelk(props)
+        for (datasetUri in datasetUris) {
+            new DatasetImporter(whelk, datasetUri, flags).dropDataset()
+        }
+    }
+
+    @Command(args='[COLLECTION] [-t NUMBEROFTHREADS]')
+    void reindex(String... args) {
+        def cli = new CliBuilder(usage: 'reindex [collection] -[ht]')
+        // Create the list of options.
+        cli.with {
+            h longOpt: 'help', 'Show usage information'
+            t longOpt: 'threads', type: int,  'Number of threads in parallel'
+        }
+         
+        def options = cli.parse(args)
+
+        // Show usage text when -h or --help option is used.
+        if (options.h) {
+            cli.usage()
+            
+            return
+        }
+        
+        String collection = null;
+        if (options.arguments()) {
+            collection = options.arguments()[0]
+        }
+        
+        int numberOfThreads = Runtime.getRuntime().availableProcessors() * 2;
+        if (options.t) {
+            numberOfThreads = options.t
+        }
+        
         boolean useCache = true
         Whelk whelk = Whelk.createLoadedSearchWhelk(props, useCache)
         def reindex = new ElasticReindexer(whelk)
-        reindex.reindex(collection)
+        reindex.reindex(collection, numberOfThreads)
     }
 
     @Command(args='[COLLECTION]')
@@ -273,7 +311,7 @@ class ImporterMain {
                         arglist << it
                     }
                 }
-                tool."${command.name}"(*arglist, flags)
+                tool."${command.name}"(flags, *arglist)
             } else {
                 arglist = args
                 tool."${command.name}"(*arglist)

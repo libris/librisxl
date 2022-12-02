@@ -1,0 +1,3 @@
+# .git-blame-ignore-revs
+# Fix indentation in batchimport Main.java
+db907e5fad7c81fe5132b31a3894e5ac516471af

@@ -20,6 +20,7 @@ class JsonLd {
     static final String VOCAB_KEY = "@vocab"
     static final String ID_KEY = "@id"
     static final String TYPE_KEY = "@type"
+    static final String VALUE_KEY = "@value"
     static final String LANGUAGE_KEY = "@language"
     static final String CONTAINER_KEY = "@container"
     static final String SET_KEY = "@set"
@@ -28,6 +29,7 @@ class JsonLd {
     // JSON-LD 1.1
     static final String PREFIX_KEY = "@prefix"
 
+    static final String DISPLAY_KEY = "dataDisplay"
     static final String THING_KEY = "mainEntity"
     static final String WORK_KEY = "instanceOf"
     static final String RECORD_KEY = "meta"
@@ -74,8 +76,8 @@ class JsonLd {
     static final String RANGE = 'range'
 
     private static Logger log = LogManager.getLogger(JsonLd.class)
-    
-    Map<String, Map> context = [:]
+
+    Map<String, Map> context
     Map displayData
     Map vocabIndex
 
@@ -101,20 +103,37 @@ class JsonLd {
     /**
      * Make an instance to encapsulate model driven behaviour.
      */
-    JsonLd(Map contextData, Map displayData, Map vocabData,
-            List<String> locales = ['sv', 'en']) {
+    JsonLd(Map contextData, Map displayData, Map vocabData, List<String> locales = ['en']) {
         setSupportData(contextData, displayData, vocabData)
         this.locales = locales
     }
 
-    @TypeChecked(TypeCheckingMode.SKIP)
-    void setSupportData(Map contextData, Map displayData, Map vocabData) {
+    static Map<String, Map> getNormalizedContext(contextData) {
+        Map<String, Map> context = [:]
         def contextObj = contextData[CONTEXT_KEY]
         if (contextObj instanceof List) {
-            contextObj.each { context.putAll(it) }
-        } else if (contextObj) {
+            contextObj.each { context.putAll((Map) it) }
+        } else if (contextObj instanceof Map) {
             context.putAll(contextObj)
         }
+        return context
+    }
+
+    static String getDisplayUri(String vocabUri, Map vocabData) {
+        for (Map node : (List<Map>) vocabData[GRAPH_KEY]) {
+            if (node[ID_KEY] == vocabUri) {
+                Map displayRef = node[DISPLAY_KEY]
+                if (displayRef) {
+                    return displayRef[ID_KEY]
+                }
+            }
+        }
+        return null
+    }
+
+    @TypeChecked(TypeCheckingMode.SKIP)
+    void setSupportData(Map contextData, Map displayData, Map vocabData) {
+        context = getNormalizedContext(contextData)
 
         repeatableTerms = context.findResults { key, value ->
             if (isSetContainer(value) || isListContainer(value))
@@ -276,6 +295,16 @@ class JsonLd {
             }
         }
         return propertyValue
+    }
+
+    static Map findInData(Map data, String id) {
+        if (GRAPH_KEY in data) {
+            data = (Map) data[GRAPH_KEY].find { it[ID_KEY] == id }
+        }
+        if (data && data[ID_KEY] == id) {
+            return data
+        }
+        return null
     }
 
     String toTermKey(String termId) {
@@ -440,7 +469,7 @@ class JsonLd {
 
     static Set<Link> getAllReferences(Map jsonLd) {
         if (!jsonLd.containsKey(GRAPH_KEY)) {
-            throw new FramingException("Missing '@graph' key in input")
+            throw new FramingException("Missing '${GRAPH_KEY}' key in input")
         }
         Set<Link> result = new HashSet<>() 
         DocumentUtil.traverse(jsonLd[GRAPH_KEY]) { value, path ->
@@ -615,12 +644,21 @@ class JsonLd {
     }
 
     boolean isSubClassOf(String type, String baseType) {
-        if (!type)
+        if (!type) {
             return false
-        if (type == baseType)
+        }
+        if (type == baseType) {
             return true
+        }
         Set<String> bases = getSubClasses(baseType)
         return type in bases
+    }
+
+    boolean isInstanceOf(Map entity, String baseType) {
+        if (entity.is(null)) {
+            return false
+        }
+        return asList(entity['@type']).any { isSubClassOf((String) it, baseType) }
     }
 
     Set<String> getSubClasses(String type) {
@@ -890,7 +928,7 @@ class JsonLd {
         String initialLens
 
         for (String lensToTry : lensesToTry) {
-            Map lensGroup = lensGroups.get(lensToTry)
+            Map lensGroup = lensGroups?.get(lensToTry)
             lens = getLensFor((Map)thing, lensGroup)
             if (lens) {
                 initialLens = lensToTry
@@ -950,7 +988,7 @@ class JsonLd {
 
     List makeSearchKeyParts(Map object) {
         Map lensGroups = displayData.get('lensGroups')
-        Map lensGroup = lensGroups.get('chips')
+        Map lensGroup = lensGroups?.get('chips')
         Map lens = getLensFor(object, lensGroup)
         List parts = []
         def type = object.get(TYPE_KEY)
@@ -996,7 +1034,7 @@ class JsonLd {
         }
 
         Map lensGroups = displayData.get('lensGroups')
-        Map lensGroup = lensGroups.get(lensType)
+        Map lensGroup = lensGroups?.get(lensType)
         Map lens = getLensFor(data, lensGroup)
         return new LinkedHashSet((List) lens?.get('inverseProperties') ?: [])
     }
@@ -1020,6 +1058,9 @@ class JsonLd {
 
     private Map getLens(Map thing, List<String> lensTypes) {
         Map lensGroups = displayData.get('lensGroups')
+        if (lensGroups == null) {
+            return
+        }
         lensTypes.findResult { lensType ->
             lensGroups.get(lensType)?.with { getLensFor(thing, (Map) it) }
         }
@@ -1073,11 +1114,15 @@ class JsonLd {
         if (types instanceof String)
             types = [types]
         for (type in types) {
-            Map lensForType = findLensForType((String)type, lensGroup)
-            if (lensForType)
-                return lensForType
-            return findLensForType('Resource', lensGroup)
+            if (lensGroup) {
+                Map lensForType = findLensForType((String)type, lensGroup)
+                if (lensForType) {
+                    return lensForType
+                }
+                return findLensForType('Resource', lensGroup)
+            }
         }
+        return null
     }
 
     private Map findLensForType(String typeKey, Map lensGroup) {

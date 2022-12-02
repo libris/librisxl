@@ -1,5 +1,6 @@
 package whelk.util
 
+
 import java.text.Normalizer
 import java.util.regex.Pattern
 
@@ -43,7 +44,7 @@ class Unicode {
     private static final Pattern TRAILING_SPACE = Pattern.compile('[\\p{Blank}\u2060]+$', Pattern.UNICODE_CHARACTER_CLASS)
     
     private static final Map EXTRA_NORMALIZATION_MAP
-
+    
     static {
         EXTRA_NORMALIZATION_MAP = NORMALIZE_UNICODE_CHARS.collectEntries {
             [(it): Normalizer.normalize(it, Normalizer.Form.NFKC)]

@@ -1,0 +1,32 @@
+# ICU transform rules
+
+# Macedonian
+# See also: slavic-iso.txt
+
+# Г г g (ukrainska och vitryska: h)
+\u0413 <> G ;
+\u0433 <> g ;
+
+# Ѕ ѕ dz (makedonska)
+\u0405 } [:LowercaseLetter:] <> Dz;
+\u0405 <> DZ ;
+\u0455 <> dz ;
+
+# И и i (ukrainska: y)
+\u0418 <> I ;
+\u0438 <> i ;
+
+# Х х ch (serbiska och makedonska: h)
+\u0425 <> H ;
+\u0445 <> h ;
+
+# Щ щ šč (bulgariska: št)
+\u0429 <> \u0160\u010C ;
+\u0449 <> \u0161\u010D ;
+
+# Ъ ъ ʺ (bulgariska: ă)
+# Återges ej då den enligt äldre ortografi står i ordslut
+\u042A } [:^Letter:] <> ;
+\u042A <> \u02BA ;
+\u044A } [:^Letter:] <> ;
+\u044A <> \u02BA ;

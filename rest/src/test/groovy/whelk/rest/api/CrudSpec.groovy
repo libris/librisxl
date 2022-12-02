@@ -1,6 +1,6 @@
 package whelk.rest.api
 
-
+import groovy.json.JsonSlurper
 import spock.lang.Ignore
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -10,6 +10,7 @@ import whelk.JsonLd
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.exception.ModelValidationException
+import whelk.history.DocumentVersion
 import whelk.rest.security.AccessControl
 import whelk.util.LegacyIntegrationTools
 
@@ -76,7 +77,13 @@ class CrudSpec extends Specification {
         storage = GroovyMock(PostgreSQLComponent.class)
         // We want to pass through calls in some cases
         accessControl = GroovySpy(AccessControl.class)
+
         whelk = new Whelk(storage)
+
+        whelk.namedApplications = [
+            'https://example.net/': [id: 'https://example.net/', alias: 'http://example.net.localhost/']
+        ]
+
         whelk.contextData = ['@context': [
                 'examplevocab': 'http://example.com',
                 'some_term': 'http://some-term.somewhere']]
@@ -100,10 +107,12 @@ class CrudSpec extends Specification {
             ["@id": "Work"],
         ]]
         whelk.setJsonld(new JsonLd(whelk.contextData, whelk.displayData, whelk.vocabData))
+
         // NB!! Mocking of static methods e.g. LegacyIntegrationTools.determineLegacyCollection
         // does not work if they are called directly from Crud class
         // TODO?: replace mocking with properly initiated vocab in tests so that regular determineLegacyCollection works?
         GroovySpy(LegacyIntegrationTools.class, global: true)
+
         crud = new Crud(whelk)
         crud.init()
         crud.accessControl = accessControl
@@ -585,7 +594,6 @@ class CrudSpec extends Specification {
         response.getContentType() == responseContentType
         isEmbellished(document) == embellished
         isFramed(document) == framed
-        println("emb: $embellished fr: $framed : $document")
 
         where:
         view         | ending    | acceptContentType      || responseContentType   | embellished | framed
@@ -704,8 +712,6 @@ class CrudSpec extends Specification {
         storage.getCards(_) >> { [] }
         crud.doGet(request, response)
         String document = response.getResponseBody()
-        println(lens)
-        println(document)
         expect:
         response.getStatus() == SC_OK
         response.getContentType() == JSONLD
@@ -798,6 +804,34 @@ class CrudSpec extends Specification {
         crud.doGet(request, response)
         then:
         response.getStatus() == SC_OK
+    }
+
+    def "GET /<id>/_changesets should return changesets"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        request.getPathInfo() >> {
+            "/${id}/_changesets".toString()
+        }
+        storage.load(_, _) >> {
+            new Document(["@graph": [["@id": id, "foo": "bar"]]])
+        }
+        storage.loadDocumentHistory(_) >> {
+            [
+                new DocumentVersion(new Document(['@graph': [['modified':'2022-02-02T12:00:00Z'], ['a': 'x']]]), "foo", ""),
+                new DocumentVersion(new Document(['@graph': [['modified':'2022-02-02T12:00:00Z'], ['a': 'y']]]), "bar", ""),
+            ]
+        }
+
+        when:
+        crud.doGet(request, response)
+
+        then:
+        response.getStatus() == SC_OK
+        response.getContentType() == "application/ld+json"
+        def parsedResponse = new JsonSlurper().parseText(response.getResponseBody())
+        parsedResponse["changeSets"].size() == 2
+        parsedResponse["changeSets"][1]["addedPaths"] == [["@graph", 1, "a"]]
+        parsedResponse["changeSets"][1]["removedPaths"] == [["@graph", 1, "a"]]
     }
 
     // Tests for create
@@ -3995,7 +4029,17 @@ class CrudSpec extends Specification {
         then:
         response.getStatus() == HttpServletResponse.SC_FORBIDDEN
     }
-    
+
+    def "should setup site search"() {
+        expect:
+        crud.siteSearch.siteAlias == [
+            'http://example.net.localhost/': 'https://example.net/',
+            'https://example.net.localhost/': 'https://example.net/',
+        ]
+        and:
+        crud.siteSearch.searchStatsReprs == [:]
+    }
+
     class ServletInputStreamMock extends ServletInputStream {
 
         ByteArrayInputStream is
