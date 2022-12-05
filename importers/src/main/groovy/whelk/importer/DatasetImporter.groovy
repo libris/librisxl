@@ -103,7 +103,7 @@ class DatasetImporter {
                 if (ID in sourceRef) {
                     sourceUrl = sourceRef[ID]
                 } else {
-                    String sourcePath = (String) sourceRef['uri']
+                    String sourcePath = asList(sourceRef['uri'])[0]
                     sourceUrl = new File(new File(sourceBaseDir), sourcePath).toString()
                 }
                 assert sourceUrl
@@ -353,6 +353,10 @@ class DatasetImporter {
                 }
             }
             if (ctx.size() == expectedSize) {
+                // Forces plain string uri values to be taken as datatyped
+                if ('uri' !in ctx) {
+                    ctx['uri'] = [(TYPE): 'xsd:anyURI']
+                }
                 return (Map) TrigToJsonLdParser.compact(data, contextDocData)
             }
         }
