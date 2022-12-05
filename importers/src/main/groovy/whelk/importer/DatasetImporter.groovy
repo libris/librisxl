@@ -140,7 +140,10 @@ class DatasetImporter {
         processDataset(sourceUrl) { Map data ->
             if (first) {
                 first = false
-                determineDatasetDescription(data)
+                String dsId = determineDatasetDescription(data)
+                if (dsId) {
+                    idsInInput.add(dsId)
+                }
             } else if (dsInfo == null) {
                 if (!first) {
                     throw new RuntimeException("Self-described dataset must be the first item.")
@@ -207,8 +210,9 @@ class DatasetImporter {
         }
     }
 
-    protected void determineDatasetDescription(Map data) {
+    protected String determineDatasetDescription(Map data) {
         Map selfDescribedDsData = findInData(data, datasetUri)
+        String dsId = null
         if (selfDescribedDsData != null) {
             System.err.println("Using self-described dataset description")
             setDatasetInfo(datasetUri, data)
@@ -217,10 +221,12 @@ class DatasetImporter {
             setDatasetInfo(datasetUri, givenDsData)
             dsRecord = completeRecord(givenDsData, 'SystemRecord')
             createOrUpdateDocument(dsRecord)
+            dsId = dsRecord.getShortId()
         } else if (useExistingDatasetDescription) {
             System.err.println("Using existing dataset description")
             lookupDatasetInfo(datasetUri)
         }
+        return dsId
     }
 
     protected void setDatasetInfo(String datasetUri, Map givenData) {
