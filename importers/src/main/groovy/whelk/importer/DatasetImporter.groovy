@@ -27,6 +27,7 @@ class DatasetImporter {
     static String ID = JsonLd.ID_KEY
     static String TYPE = JsonLd.TYPE_KEY
     static String VALUE = JsonLd.VALUE_KEY
+    static String XSD_NS = 'http://www.w3.org/2001/XMLSchema#'
 
     static String HASH_IT = '#it'
 
@@ -329,7 +330,7 @@ class DatasetImporter {
             // Make URI:s absolute
             ctx.remove(BASE)
             // Force partial system context shape:
-            ctx['xsd'] = 'http://www.w3.org/2001/XMLSchema#'
+            ctx['xsd'] = XSD_NS
             // Assumes VOCAB + created in source actually means this!
             ctx['created'] = [(TYPE): 'xsd:dateTime']
             data = (Map) TrigToJsonLdParser.compact(data, [(CONTEXT): ctx])
@@ -341,8 +342,17 @@ class DatasetImporter {
         Map data = TrigToJsonLdParser.parse(ins)
         if (data[CONTEXT] instanceof Map) {
             Map ctx = (Map) data[CONTEXT]
-            if (ctx[VOCAB] == whelk.jsonld.vocabId &&
-                (ctx.size() == 1 || (ctx.size() == 2 && ctx.containsKey(BASE)))) {
+            int expectedSize = 0
+            if (ctx[VOCAB] == whelk.jsonld.vocabId) {
+                expectedSize++
+                if (ctx.containsKey(BASE)) {
+                    expectedSize++
+                }
+                if (ctx['xsd'] == XSD_NS) {
+                    expectedSize++
+                }
+            }
+            if (ctx.size() == expectedSize) {
                 return (Map) TrigToJsonLdParser.compact(data, contextDocData)
             }
         }
