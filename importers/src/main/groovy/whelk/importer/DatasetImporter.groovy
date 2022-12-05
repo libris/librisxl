@@ -27,6 +27,7 @@ class DatasetImporter {
     static String ID = JsonLd.ID_KEY
     static String TYPE = JsonLd.TYPE_KEY
     static String VALUE = JsonLd.VALUE_KEY
+    static String XSD_NS = 'http://www.w3.org/2001/XMLSchema#'
 
     static String HASH_IT = '#it'
 
@@ -65,6 +66,9 @@ class DatasetImporter {
     DatasetImporter(Whelk whelk, String datasetUri, Map flags=[:], Object descriptions=null) {
         this.whelk = whelk
         this.datasetUri = datasetUri
+        if (whelk.systemContextUri) {
+            contextDocData = getDocByMainEntityId(whelk.systemContextUri).data
+        }
         if (descriptions != null) {
             Map datasetDesc = descriptions instanceof Map ? (Map) descriptions : loadData((String) descriptions)
             givenDsData = (Map) findInData(datasetDesc, datasetUri)
@@ -83,7 +87,9 @@ class DatasetImporter {
 
     static void loadDescribedDatasets(Whelk whelk, String datasetDescPath, String sourceBaseDir, Set<String> onlyDatasets=null, Map flags=[:]) {
         Map datasets = (Map) new File(datasetDescPath).withInputStream {
-            loadSelfCompactedTurtle(it)
+            whelk.systemContextUri
+                ? new DatasetImporter(whelk, null).loadTurtleAsSystemShaped(it)
+                : loadSelfCompactedTurtle(it)
         }
         for (Map item : (List<Map>) datasets[GRAPH] ?: asList(datasets)) {
             if (onlyDatasets && item[ID] !in onlyDatasets) {
@@ -92,15 +98,16 @@ class DatasetImporter {
             }
             if (item[TYPE] == 'Dataset' && 'sourceData' in item) {
                 Map sourceRef = item['sourceData']
-                def created = item['created']
+
                 String sourceUrl = null
                 if (ID in sourceRef) {
                     sourceUrl = sourceRef[ID]
                 } else {
-                    String sourcePath = (String) sourceRef['uri']
+                    String sourcePath = asList(sourceRef['uri'])[0]
                     sourceUrl = new File(new File(sourceBaseDir), sourcePath).toString()
                 }
                 assert sourceUrl
+
                 new DatasetImporter(whelk, (String) item[ID], flags, item).importDataset(sourceUrl)
             }
         }
@@ -108,7 +115,6 @@ class DatasetImporter {
 
     TargetVocabMapper getTvm() {
         if (tvm == null) {
-            contextDocData = getDocByMainEntityId(whelk.systemContextUri).data
             tvm = new TargetVocabMapper(whelk.jsonld, contextDocData)
         }
         return tvm
@@ -134,8 +140,10 @@ class DatasetImporter {
         processDataset(sourceUrl) { Map data ->
             if (first) {
                 first = false
-                determineDatasetDescription(data)
-                //return
+                String dsId = determineDatasetDescription(data)
+                if (dsId) {
+                    idsInInput.add(dsId)
+                }
             } else if (dsInfo == null) {
                 if (!first) {
                     throw new RuntimeException("Self-described dataset must be the first item.")
@@ -202,20 +210,23 @@ class DatasetImporter {
         }
     }
 
-    protected void determineDatasetDescription(Map data) {
+    protected String determineDatasetDescription(Map data) {
         Map selfDescribedDsData = findInData(data, datasetUri)
+        String dsId = null
         if (selfDescribedDsData != null) {
-            System.err.println("Usiing self-described dataset description")
+            System.err.println("Using self-described dataset description")
             setDatasetInfo(datasetUri, data)
         } else if (givenDsData != null) {
             System.err.println("Using given dataset description")
             setDatasetInfo(datasetUri, givenDsData)
             dsRecord = completeRecord(givenDsData, 'SystemRecord')
             createOrUpdateDocument(dsRecord)
+            dsId = dsRecord.getShortId()
         } else if (useExistingDatasetDescription) {
             System.err.println("Using existing dataset description")
             lookupDatasetInfo(datasetUri)
         }
+        return dsId
     }
 
     protected void setDatasetInfo(String datasetUri, Map givenData) {
@@ -317,7 +328,7 @@ class DatasetImporter {
     }
 
     private static Map loadSelfCompactedTurtle(InputStream ins) {
-        // Assuming that the Turle *shape* follows a hard-coded system context!
+        // Assuming that the Turtle *shape* follows a hard-coded system context!
         Map data = (Map) TrigToJsonLdParser.parse(ins)
         if (CONTEXT in data) {
             Map ctx = [:]
@@ -325,7 +336,7 @@ class DatasetImporter {
             // Make URI:s absolute
             ctx.remove(BASE)
             // Force partial system context shape:
-            ctx['xsd'] = 'http://www.w3.org/2001/XMLSchema#'
+            ctx['xsd'] = XSD_NS
             // Assumes VOCAB + created in source actually means this!
             ctx['created'] = [(TYPE): 'xsd:dateTime']
             data = (Map) TrigToJsonLdParser.compact(data, [(CONTEXT): ctx])
@@ -337,7 +348,21 @@ class DatasetImporter {
         Map data = TrigToJsonLdParser.parse(ins)
         if (data[CONTEXT] instanceof Map) {
             Map ctx = (Map) data[CONTEXT]
-            if (ctx[VOCAB] == whelk.jsonld.vocabId && (ctx.size() == 1 || (ctx.size() == 2 && ctx.containsKey(BASE)))) {
+            int expectedSize = 0
+            if (ctx[VOCAB] == whelk.jsonld.vocabId) {
+                expectedSize++
+                if (ctx.containsKey(BASE)) {
+                    expectedSize++
+                }
+                if (ctx['xsd'] == XSD_NS) {
+                    expectedSize++
+                }
+            }
+            if (ctx.size() == expectedSize) {
+                // Forces plain string uri values to be taken as datatyped
+                if ('uri' !in ctx) {
+                    ctx['uri'] = [(TYPE): 'xsd:anyURI']
+                }
                 return (Map) TrigToJsonLdParser.compact(data, contextDocData)
             }
         }
