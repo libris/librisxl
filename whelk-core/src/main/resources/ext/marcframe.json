@@ -11631,12 +11631,38 @@
         }
       ]
     },
-    "508": {
-      "aboutEntity": "?work", 
+    "508": { 
+      "NOTE:LC": "I - credits",
+      "aboutEntity": "?work",
       "addLink": "hasNote",
       "resourceType": "marc:CreationProductionCreditsNote",
       "$a": {"property": "label"},
-      "$6": {"property": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"},
+      "NOTE:$7": "BF2.1: $7 - Data provenance (R) nac",
+       "_spec": [
+         {
+           "source": [
+             {"508": {"ind1": " ", "ind2": " ", "subfields": [{"a": "credits"}]}},
+             {"511": {"ind1": "0", "ind2": " ", "subfields": [{"a": "cast"}]}}
+           ],
+           "result": {"mainEntity": {
+             "instanceOf": {
+               "@type": "Text",
+               "hasNote": [
+                 {
+                   "@type": "marc:CreationProductionCreditsNote",
+                   "label": "credits"
+                 },
+                 {
+                   "@type": "marc:ParticipantOrPerformerNote",
+                   "label": "cast"
+                 }
+               ]
+             }
+           }
+         }
+        }
+      ]
     },
     "510": {
       "addLink": "indexedIn",
@@ -11662,6 +11688,7 @@
     },
 
     "511": {
+      "NOTE:LC": "I - credits (Add Cast: before $a content)",
       "aboutEntity": "?work",
       "addLink": "hasNote",
       "resourceType": "marc:ParticipantOrPerformerNote",
@@ -11669,12 +11696,51 @@
         "property": "marc:displayConstantController",
         "marcDefault": "0",
         "tokenMap": {
-          "0": "marc:NoDisplayConstantGenerated",
+          "0": null,
           "1": "marc:Cast"
         }
       },
+      "TODO": {"match": [{"when": "i1=1","resourceType": "Cast"}]},
       "$a": {"property": "label"},
-      "$6": {"property": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source": [
+            {"511": {"ind1": "1", "ind2": " ", "subfields": [{"a": "cast"}]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasNote": [
+                {
+                  "@type": "marc:ParticipantOrPerformerNote",
+                  "label": "cast",
+                  "marc:displayConstantController": "marc:Cast"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": [
+            {"511": {"ind1": " ", "ind2": " ", "subfields": [{"a": "participant"}]}}
+          ],
+          "normalized": [
+            {"511": {"ind1": "0", "ind2": " ", "subfields": [{"a": "participant"}]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasNote": [
+                {
+                  "@type": "marc:ParticipantOrPerformerNote",
+                  "label":  "participant"
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
     "513": {
       "addLink": "hasNote",
