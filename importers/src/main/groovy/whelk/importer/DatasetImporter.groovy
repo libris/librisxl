@@ -67,7 +67,7 @@ class DatasetImporter {
         this.whelk = whelk
         this.datasetUri = datasetUri
         if (whelk.systemContextUri) {
-            contextDocData = getDocByMainEntityId(whelk.systemContextUri).data
+            contextDocData = getDocByMainEntityId(whelk.systemContextUri)?.data
         }
         if (descriptions != null) {
             Map datasetDesc = descriptions instanceof Map ? (Map) descriptions : loadData((String) descriptions)
@@ -86,10 +86,9 @@ class DatasetImporter {
     }
 
     static void loadDescribedDatasets(Whelk whelk, String datasetDescPath, String sourceBaseDir, Set<String> onlyDatasets=null, Map flags=[:]) {
-        Map datasets = (Map) new File(datasetDescPath).withInputStream {
-            whelk.systemContextUri
-                ? new DatasetImporter(whelk, null).loadTurtleAsSystemShaped(it)
-                : loadSelfCompactedTurtle(it)
+        var dsImp = new DatasetImporter(whelk, null)
+        var datasets = (Map) new File(datasetDescPath).withInputStream {
+            dsImp.contextDocData ? dsImp.loadTurtleAsSystemShaped(it) : loadSelfCompactedTurtle(it)
         }
         for (Map item : (List<Map>) datasets[GRAPH] ?: asList(datasets)) {
             if (onlyDatasets && item[ID] !in onlyDatasets) {
@@ -345,6 +344,7 @@ class DatasetImporter {
     }
 
     private Map loadTurtleAsSystemShaped(InputStream ins) {
+        assert contextDocData
         Map data = TrigToJsonLdParser.parse(ins)
         if (data[CONTEXT] instanceof Map) {
             Map ctx = (Map) data[CONTEXT]
