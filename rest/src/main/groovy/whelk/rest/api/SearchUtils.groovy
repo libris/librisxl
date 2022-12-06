@@ -796,7 +796,8 @@ class SearchUtils {
                 it instanceof Map ? "@reverse.${it['inverseOfTerm']}" :
                 it == 'rdf:type' ? JsonLd.TYPE_KEY : it
             }
-            if (ld.isInstanceOf(ld.vocabIndex[path[-1]], 'ObjectProperty')) {
+            String leaf = path[-1]
+            if (!ld.isVocabTerm(leaf) && ld.isInstanceOf(ld.vocabIndex[leaf], 'ObjectProperty')) {
                 path << JsonLd.ID_KEY
             }
             String key = path.join('.')
