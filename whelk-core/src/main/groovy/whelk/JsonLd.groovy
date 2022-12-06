@@ -285,6 +285,11 @@ class JsonLd {
         return dfn instanceof Map && dfn[CONTAINER_KEY] == LANGUAGE_KEY
     }
 
+    boolean isVocabTerm(String key) {
+        def dfn = context[key]
+        return dfn instanceof Map && dfn[TYPE_KEY] == VOCAB_KEY
+    }
+
     def getPropertyValue(Map entity, String property) {
         def propertyValue = property ? entity[property] : null
         if (propertyValue == null) {
