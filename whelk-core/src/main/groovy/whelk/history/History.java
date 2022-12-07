@@ -321,6 +321,7 @@ public class History {
                             List<Object> newPath = new ArrayList<>(path);
                             newPath.add(i);
                             ((HashSet) changeSet.get("addedPaths")).add(newPath);
+                            newIt.remove(); // TEMPORARY! Remove this line to get the more detailed history again!
                             //System.err.println(" Add (and keep scanning): " + newPath);
                         }
                     }
@@ -336,6 +337,7 @@ public class History {
                             List<Object> newPath = new ArrayList<>(correspondingPath);
                             newPath.add(i);
                             ((HashSet) changeSet.get("removedPaths")).add(newPath);
+                            oldIt.remove(); // TEMPORARY! Remove this line to get the more detailed history again!
                             //System.err.println(" Remove (and keep scanning): " + newPath);
                         }
                     }
