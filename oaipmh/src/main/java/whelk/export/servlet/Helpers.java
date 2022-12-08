@@ -252,7 +252,7 @@ public class Helpers
             throws SQLException
     {
         PreparedStatement preparedStatement;
-        String sql = "SELECT data FROM lddb WHERE collection <> 'definitions'";
+        String sql = "SELECT data FROM lddb WHERE collection in ('bib', 'auth', 'hold')";
 
         if (fromDateTime != null)
         {
@@ -295,7 +295,7 @@ public class Helpers
             throws SQLException
     {
         PreparedStatement preparedStatement;
-        String sql = "SELECT data FROM lddb WHERE collection <> 'definitions'";
+        String sql = "SELECT data FROM lddb WHERE collection in ('bib', 'auth', 'hold')";
 
         if (includeSilentChanges)
         {
