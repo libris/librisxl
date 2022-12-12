@@ -477,7 +477,7 @@ class WhelkTool {
     private boolean doRevertToTime(DocumentItem item) {
 
         // The 'versions' list is sorted, with the oldest version first.
-        List<Document> versions = whelk.storage.loadAllVersions(item.doc.shortId)
+        List<Document> versions = item.getVersions()
 
         ZonedDateTime restoreTime = ZonedDateTime.parse(item.restoreToTime)
 
@@ -759,7 +759,7 @@ class DocumentItem {
     }
 
     def getVersions() {
-        whelk.loadAllVersionsByMainId(doc.shortId)
+        whelk.storage.loadAllVersions(doc.shortId)
     }
 
     Map asCard(boolean withSearchKey = false) {
