@@ -1,0 +1,791 @@
+{
+  "type": "Romanization",
+  "_spec": [
+    {
+      "name": "revert-245",
+      "result": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text"
+          },
+          "hasTitle": [
+            {
+              "@type": "Title",
+              "mainTitleByLang": {
+                "ru": "Время женщин",
+                "ru-Latn-t-ru-Cyrl-m0-iso-1995": "Vremja ženščin"
+              },
+              "subtitleByLang": {
+                "ru": "романы",
+                "ru-Latn-t-ru-Cyrl-m0-iso-1995": "romany"
+              }
+            }
+          ],
+          "responsibilityStatementByLang": {
+            "ru": "Елена Чижова",
+            "ru-Latn-t-ru-Cyrl-m0-iso-1995": "Elena Čižova"
+          }
+        }
+      },
+      "back": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text"
+          },
+          "hasTitle": [
+            {
+              "@type": "Title",
+              "mainTitle": "Vremja ženščin",
+              "mainTitleByLang": {
+                "ru": "Время женщин",
+                "ru-Latn-t-ru-Cyrl-m0-iso-1995": "Vremja ženščin"
+              },
+              "subtitle": "romany",
+              "subtitleByLang": {
+                "ru": "романы",
+                "ru-Latn-t-ru-Cyrl-m0-iso-1995": "romany"
+              },
+              "marc:fieldref": "880-01"
+            }
+          ],
+          "responsibilityStatement": "Elena Čižova",
+          "responsibilityStatementByLang": {
+            "ru": "Елена Чижова",
+            "ru-Latn-t-ru-Cyrl-m0-iso-1995": "Elena Čižova"
+          },
+          "marc:hasBib880": [
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "245-01/(N"
+                },
+                {
+                  "marc:bib880-a": "Время женщин :"
+                },
+                {
+                  "marc:bib880-b": "романы /"
+                },
+                {
+                  "marc:bib880-c": "Елена Чижова."
+                }
+              ],
+              "marc:bib880-i1": "1",
+              "marc:bib880-i2": "0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "revert-repeated-245",
+      "result": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text"
+          },
+          "hasTitle": [
+            {
+              "@type": "Title",
+              "mainTitleByLang": {
+                "ru": "Время женщин",
+                "ru-Latn-t-ru-Cyrl-m0-iso-1995": "Vremja ženščin"
+              },
+              "subtitleByLang": {
+                "ru": "романы",
+                "ru-Latn-t-ru-Cyrl-m0-iso-1995": "romany"
+              }
+            },
+            {
+              "@type": "Title",
+              "mainTitleByLang": {
+                "ru": "Аз съм бременна",
+                "ru-Latn-t-ru-Cyrl-m0-iso-1995": "Az sŭm bremenna"
+              }
+            }
+          ],
+          "responsibilityStatementByLang": {
+            "ru": "Елена Чижова",
+            "ru-Latn-t-ru-Cyrl-m0-iso-1995": "Elena Čižova"
+          }
+        }
+      },
+      "back": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text"
+          },
+          "hasTitle": [
+            {
+              "@type": "Title",
+              "mainTitle": "Vremja ženščin",
+              "mainTitleByLang": {
+                "ru": "Время женщин",
+                "ru-Latn-t-ru-Cyrl-m0-iso-1995": "Vremja ženščin"
+              },
+              "subtitle": "romany",
+              "subtitleByLang": {
+                "ru": "романы",
+                "ru-Latn-t-ru-Cyrl-m0-iso-1995": "romany"
+              },
+              "marc:fieldref": "880-01"
+            },
+            {
+              "@type": "Title",
+              "mainTitle": "Az sŭm bremenna",
+              "mainTitleByLang": {
+                "ru": "Аз съм бременна",
+                "ru-Latn-t-ru-Cyrl-m0-iso-1995": "Az sŭm bremenna"
+              },
+              "marc:fieldref": "880-02"
+            }
+          ],
+          "responsibilityStatement": "Elena Čižova",
+          "responsibilityStatementByLang": {
+            "ru": "Елена Чижова",
+            "ru-Latn-t-ru-Cyrl-m0-iso-1995": "Elena Čižova"
+          },
+          "marc:hasBib880": [
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "245-01/(N"
+                },
+                {
+                  "marc:bib880-a": "Время женщин :"
+                },
+                {
+                  "marc:bib880-b": "романы /"
+                },
+                {
+                  "marc:bib880-c": "Елена Чижова."
+                }
+              ],
+              "marc:bib880-i1": "1",
+              "marc:bib880-i2": "0"
+            },
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "245-02/(N"
+                },
+                {
+                  "marc:bib880-a": "Аз съм бременна /"
+                },
+                {
+                  "marc:bib880-c": "Елена Чижова."
+                }
+              ],
+              "marc:bib880-i1": "1",
+              "marc:bib880-i2": "0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "revert-various-fields",
+      "result": {
+        "mainEntity": {
+          "@type": "Instance",
+          "hasTitle": [
+            {
+              "@type": "Title",
+              "mainTitle": "0-4 sui zhineng xunlian baikequanshu",
+              "mainTitleByLang": {
+                "zh": "0-4岁智能训练百科全书",
+                "zh-Latn-t-zh-Hani-m0-alaloc": "0-4 sui zhineng xunlian baikequanshu"
+              }
+            },
+            {
+              "@type": "ParallelTitle",
+              "mainTitle": "Intelligent training encyclopedia of 0-4 year old"
+            }
+          ],
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {
+                "@id": "https://id.kb.se/language/chi"
+              }
+            ]
+          },
+          "publication": [
+            {
+              "year": "2007",
+              "@type": "PrimaryPublication",
+              "agent": {
+                "@type": "Agent",
+                "label": "Heilongjiang kexue jizhu chubanshe",
+                "labelByLang": {
+                  "zh": "黑龙江科学技术出版社",
+                  "zh-Latn-t-zh-Hani-m0-alaloc": "Heilongjiang kexue jizhu chubanshe"
+                }
+              },
+              "place": [
+                {
+                  "@type": "Place",
+                  "label": "Haerbin",
+                  "labelByLang": {
+                    "zh": "哈尔滨",
+                    "zh-Latn-t-zh-Hani-m0-alaloc": "Haerbin"
+                  }
+                }
+              ],
+              "country": {
+                "@id": "https://id.kb.se/country/cc"
+              }
+            }
+          ],
+          "issuanceType": "Monograph",
+          "responsibilityStatement": "Zhang Qian",
+          "responsibilityStatementByLang": {
+            "zh": "张倩主编",
+            "zh-Latn-t-zh-Hani-m0-alaloc": "Zhang Qian"
+          }
+        }
+      },
+      "back": {
+        "mainEntity": {
+          "@type": "Instance",
+          "hasTitle": [
+            {
+              "@type": "Title",
+              "mainTitle": "0-4 sui zhineng xunlian baikequanshu",
+              "mainTitleByLang" : {
+                "zh" : "0-4岁智能训练百科全书",
+                "zh-Latn-t-zh-Hani-m0-alaloc" : "0-4 sui zhineng xunlian baikequanshu"
+              },
+              "marc:fieldref": "880-01"
+            },
+            {
+              "@type": "ParallelTitle",
+              "mainTitle": "Intelligent training encyclopedia of 0-4 year old"
+            }
+          ],
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {
+                "@id": "https://id.kb.se/language/chi"
+              }
+            ]
+          },
+          "publication": [
+            {
+              "year": "2007",
+              "@type": "PrimaryPublication",
+              "agent": {
+                "@type": "Agent",
+                "label": "Heilongjiang kexue jizhu chubanshe",
+                "labelByLang" : {
+                  "zh" : "黑龙江科学技术出版社",
+                  "zh-Latn-t-zh-Hani-m0-alaloc" : "Heilongjiang kexue jizhu chubanshe"
+                }
+              },
+              "place": [
+                {
+                  "@type": "Place",
+                  "label": "Haerbin",
+                  "labelByLang" : {
+                    "zh" : "哈尔滨",
+                    "zh-Latn-t-zh-Hani-m0-alaloc" : "Haerbin"
+                  }
+                }
+              ],
+              "country": {
+                "@id": "https://id.kb.se/country/cc"
+              },
+              "marc:fieldref": "880-02"
+            }
+          ],
+          "issuanceType": "Monograph",
+          "marc:hasBib880": [
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "245-01/$1"
+                },
+                {
+                  "marc:bib880-a": "0-4岁智能训练百科全书 /"
+                },
+                {
+                  "marc:bib880-c": "张倩主编."
+                }
+              ],
+              "marc:bib880-i1": "1",
+              "marc:bib880-i2": "0"
+            },
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "264-02/$1"
+                },
+                {
+                  "marc:bib880-a": "哈尔滨 :"
+                },
+                {
+                  "marc:bib880-b": "黑龙江科学技术出版社,"
+                }
+              ],
+              "marc:bib880-i1": " ",
+              "marc:bib880-i2": "1"
+            }
+          ],
+          "responsibilityStatement": "Zhang Qian",
+          "responsibilityStatementByLang" : {
+            "zh" : "张倩主编",
+            "zh-Latn-t-zh-Hani-m0-alaloc" : "Zhang Qian"
+          }
+        }
+      }
+    },
+    {
+      "name": "convert-245",
+      "source": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {
+                "@id": "https://id.kb.se/language/rus"
+              }
+            ]
+          },
+          "hasTitle": [
+            {
+              "@type": "Title",
+              "mainTitle": "Vremja ženščin",
+              "subtitle": "romany",
+              "marc:fieldref": "880-01"
+            }
+          ],
+          "responsibilityStatement": "Elena Čižova",
+          "marc:hasBib880": [
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "245-01/(N"
+                },
+                {
+                  "marc:bib880-a": "Время женщин :"
+                },
+                {
+                  "marc:bib880-b": "романы /"
+                },
+                {
+                  "marc:bib880-c": "Елена Чижова."
+                }
+              ],
+              "marc:bib880-i1": "1",
+              "marc:bib880-i2": "0"
+            }
+          ]
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {
+                "@id": "https://id.kb.se/language/rus"
+              }
+            ]
+          },
+          "hasTitle": [
+            {
+              "@type": "Title",
+              "mainTitle": "Vremja ženščin",
+              "mainTitleByLang": {
+                "ru": "Время женщин",
+                "ru-Latn-t-ru-Cyrl-m0-iso-1995": "Vremja ženščin"
+              },
+              "subtitle": "romany",
+              "subtitleByLang": {
+                "ru": "романы",
+                "ru-Latn-t-ru-Cyrl-m0-iso-1995": "romany"
+              }
+            }
+          ],
+          "responsibilityStatement": "Elena Čižova",
+          "responsibilityStatementByLang": {
+            "ru": "Елена Чижова",
+            "ru-Latn-t-ru-Cyrl-m0-iso-1995": "Elena Čižova"
+          }
+        }
+      }
+    },
+    {
+      "name": "convert-repeated-245",
+      "source": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {
+                "@id": "https://id.kb.se/language/rus"
+              }
+            ]
+          },
+          "hasTitle": [
+            {
+              "@type": "Title",
+              "mainTitle": "Vremja ženščin",
+              "subtitle": "romany",
+              "marc:fieldref": "880-01"
+            },
+            {
+              "@type": "Title",
+              "mainTitle": "Az sŭm bremenna",
+              "marc:fieldref": "880-02"
+            }
+          ],
+          "responsibilityStatement": "Elena Čižova",
+          "marc:hasBib880": [
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "245-01/(N"
+                },
+                {
+                  "marc:bib880-a": "Время женщин :"
+                },
+                {
+                  "marc:bib880-b": "романы /"
+                },
+                {
+                  "marc:bib880-c": "Елена Чижова."
+                }
+              ],
+              "marc:bib880-i1": "1",
+              "marc:bib880-i2": "0"
+            },
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "245-02/(N"
+                },
+                {
+                  "marc:bib880-a": "Аз съм бременна /"
+                },
+                {
+                  "marc:bib880-c": "Елена Чижова."
+                }
+              ],
+              "marc:bib880-i1": "1",
+              "marc:bib880-i2": "0"
+            }
+          ]
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {
+                "@id": "https://id.kb.se/language/rus"
+              }
+            ]
+          },
+          "hasTitle": [
+            {
+              "@type": "Title",
+              "mainTitle": "Vremja ženščin",
+              "mainTitleByLang": {
+                "ru": "Время женщин",
+                "ru-Latn-t-ru-Cyrl-m0-iso-1995": "Vremja ženščin"
+              },
+              "subtitle": "romany",
+              "subtitleByLang": {
+                "ru": "романы",
+                "ru-Latn-t-ru-Cyrl-m0-iso-1995": "romany"
+              }
+            },
+            {
+              "@type": "Title",
+              "mainTitle": "Az sŭm bremenna",
+              "mainTitleByLang": {
+                "ru": "Аз съм бременна",
+                "ru-Latn-t-ru-Cyrl-m0-iso-1995": "Az sŭm bremenna"
+              }
+            }
+          ],
+          "responsibilityStatement": "Elena Čižova",
+          "responsibilityStatementByLang": {
+            "ru": "Елена Чижова",
+            "ru-Latn-t-ru-Cyrl-m0-iso-1995": "Elena Čižova"
+          }
+        }
+      }
+    },
+    {
+      "name": "convert-various-fields",
+      "source": {
+        "mainEntity": {
+          "@type": "Instance",
+          "hasTitle": [
+            {
+              "@type": "Title",
+              "mainTitle": "0-4 sui zhineng xunlian baikequanshu",
+              "marc:fieldref": "880-01"
+            },
+            {
+              "@type": "ParallelTitle",
+              "mainTitle": "Intelligent training encyclopedia of 0-4 year old"
+            }
+          ],
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {
+                "@id": "https://id.kb.se/language/chi"
+              }
+            ]
+          },
+          "publication": [
+            {
+              "year": "2007",
+              "@type": "PrimaryPublication",
+              "agent": {
+                "@type": "Agent",
+                "label": "Heilongjiang kexue jizhu chubanshe"
+              },
+              "place": [
+                {
+                  "@type": "Place",
+                  "label": "Haerbin"
+                }
+              ],
+              "country": {
+                "@id": "https://id.kb.se/country/cc"
+              },
+              "marc:fieldref": "880-04"
+            }
+          ],
+          "issuanceType": "Monograph",
+          "marc:hasBib880": [
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "245-01"
+                },
+                {
+                  "marc:bib880-a": "0-4岁智能训练百科全书 /"
+                },
+                {
+                  "marc:bib880-c": "张倩主编."
+                }
+              ],
+              "marc:bib880-i1": "0",
+              "marc:bib880-i2": "0"
+            },
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "260-04"
+                },
+                {
+                  "marc:bib880-a": "哈尔滨 :"
+                },
+                {
+                  "marc:bib880-b": "黑龙江科学技术出版社,"
+                },
+                {
+                  "marc:bib880-c": "2007."
+                }
+              ],
+              "marc:bib880-i1": " ",
+              "marc:bib880-i2": " "
+            },
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "300-00"
+                },
+                {
+                  "marc:bib880-a": "21, 519页 ;"
+                },
+                {
+                  "marc:bib880-c": "22 cm."
+                }
+              ],
+              "marc:bib880-i1": " ",
+              "marc:bib880-i2": " "
+            },
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "500-00"
+                },
+                {
+                  "marc:bib880-a": "21世纪最有影响力的育婴书."
+                }
+              ],
+              "marc:bib880-i1": " ",
+              "marc:bib880-i2": " "
+            },
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "520-00"
+                },
+                {
+                  "marc:bib880-a": "本书包括智能训练从胎教开始、智能训练专家课堂、0-1岁智能训练方案、1-2岁智能训练方案、2-3岁智能训练方案、3-4岁智能训练方案等内容。"
+                }
+              ],
+              "marc:bib880-i1": " ",
+              "marc:bib880-i2": " "
+            },
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "650-00"
+                },
+                {
+                  "marc:bib880-a": "婴幼儿"
+                },
+                {
+                  "marc:bib880-x": "智力开发"
+                },
+                {
+                  "marc:bib880-2": "cct"
+                }
+              ],
+              "marc:bib880-i1": "0",
+              "marc:bib880-i2": "7"
+            },
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "650-00"
+                },
+                {
+                  "marc:bib880-a": "婴幼儿"
+                },
+                {
+                  "marc:bib880-2": "cct"
+                }
+              ],
+              "marc:bib880-i1": "0",
+              "marc:bib880-i2": "7"
+            },
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "650-00"
+                },
+                {
+                  "marc:bib880-a": "智力开发"
+                },
+                {
+                  "marc:bib880-2": "cct"
+                }
+              ],
+              "marc:bib880-i1": "0",
+              "marc:bib880-i2": "7"
+            },
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "700-06"
+                },
+                {
+                  "marc:bib880-a": "张倩."
+                }
+              ],
+              "marc:bib880-i1": "1",
+              "marc:bib880-i2": " "
+            }
+          ],
+          "responsibilityStatement": "Zhang Qian"
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "@type": "Instance",
+          "hasTitle": [
+            {
+              "@type": "Title",
+              "mainTitle": "0-4 sui zhineng xunlian baikequanshu",
+              "mainTitleByLang": {
+                "zh": "0-4岁智能训练百科全书",
+                "zh-Latn-t-zh-Hani-m0-alaloc": "0-4 sui zhineng xunlian baikequanshu"
+              }
+            },
+            {
+              "@type": "ParallelTitle",
+              "mainTitle": "Intelligent training encyclopedia of 0-4 year old"
+            }
+          ],
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {
+                "@id": "https://id.kb.se/language/chi"
+              }
+            ]
+          },
+          "publication": [
+            {
+              "year": "2007",
+              "@type": "PrimaryPublication",
+              "agent": {
+                "@type": "Agent",
+                "label": "Heilongjiang kexue jizhu chubanshe",
+                "labelByLang": {
+                  "zh": "黑龙江科学技术出版社",
+                  "zh-Latn-t-zh-Hani-m0-alaloc": "Heilongjiang kexue jizhu chubanshe"
+                }
+              },
+              "place": [
+                {
+                  "@type": "Place",
+                  "label": "Haerbin",
+                  "labelByLang": {
+                    "zh": "哈尔滨",
+                    "zh-Latn-t-zh-Hani-m0-alaloc": "Haerbin"
+                  }
+                }
+              ],
+              "country": {
+                "@id": "https://id.kb.se/country/cc"
+              }
+            }
+          ],
+          "issuanceType": "Monograph",
+          "responsibilityStatement": "Zhang Qian",
+          "responsibilityStatementByLang": {
+            "zh": "张倩主编",
+            "zh-Latn-t-zh-Hani-m0-alaloc": "Zhang Qian"
+          }
+        }
+      }
+    }
+  ]
+}
