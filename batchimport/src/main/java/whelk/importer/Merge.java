@@ -122,8 +122,8 @@ public class Merge {
                     return true;
 
                 Ownership owner = history.getOwnership(trueTemp);
-                int manualPrio = Integer.MIN_VALUE;
-                int systematicPrio = Integer.MIN_VALUE;
+                int manualPrio = 0;
+                int systematicPrio = 0;
                 int incomingPrio = 0;
                 if (owner.m_manualEditor != null && prioMap.get(owner.m_manualEditor) != null)
                     manualPrio = (Integer) prioMap.get(owner.m_manualEditor);
@@ -132,7 +132,7 @@ public class Merge {
                 if (prioMap.get(incomingAgent) != null)
                     incomingPrio = (Integer) prioMap.get(incomingAgent);
 
-                if (incomingPrio >= manualPrio && incomingPrio >= systematicPrio) {
+                if (incomingPrio > manualPrio && incomingPrio > systematicPrio) {
                     return true;
                 }
                 return false;
