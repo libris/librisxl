@@ -1,7 +1,6 @@
 package whelk.history
 
 import spock.lang.Specification
-import spock.lang.Ignore
 import whelk.Document
 import whelk.JsonLd
 import whelk.util.Jackson
@@ -62,7 +61,6 @@ class HistorySpec extends Specification {
         changeSets[1].addedPaths == [["@graph", 1, "a"]] as Set
     }
 
-    @Ignore // TODO/TEMPORARY! Remove @Ignore when we have detailed history again
     def "nested value modified"() {
         given:
         def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, [:], JsonLdSpec.VOCAB_DATA)
