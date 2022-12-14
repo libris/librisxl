@@ -240,4 +240,91 @@ class MergeSpec extends Specification {
                 ['a': "something"]
         ]]
     }
+
+    def "replace using @typed path"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        def versions = [
+                ['changedBy': 'sigel1',
+                 'changedIn': 'batch import',
+                 'data':
+                         ['@graph': [
+                                 ['modified': '2022-02-01T12:00:00Z'],
+                                 [ "prop": [
+                                         ['@type': "SomeType", 'a': "something"],
+                                         ['@type': "OtherType", 'a': "something else"]
+                                 ]]
+                         ]]
+                ]
+        ].collect { change ->
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+        }
+        def history = new History(versions, ld)
+        def incoming = new Document( (Map)
+                ['@graph': [
+                        ['modified': '2022-03-01T12:00:00Z'],
+                        [ "prop": [
+                                // Reversed order of list
+                                ['@type': "OtherType", 'a': "something else"],
+                                ['@type': "SomeType", 'a': "this should change"]
+                        ]]
+                ]]
+        )
+        Document base = versions.last().doc
+        Merge merge = new Merge(
+                [
+                        "rules": [
+                                ["operation": "replace", "path": ["@graph",1,"prop","@type=SomeType","a"], "priority": ["sigel1": 1, "sigel2": 2]]
+                        ]
+                ]
+        )
+        merge.merge(base, incoming, "sigel2", history)
+        expect:
+        base.data == ['@graph': [
+                ['modified': '2022-02-01T12:00:00Z'],
+                [ "prop": [
+                        ['@type': "SomeType", 'a': "this should change"],
+                        ['@type': "OtherType", 'a': "something else"]
+                ]]
+        ]]
+    }
+
+    def "update with same priority"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        def versions = [
+                ['changedBy': 'sigel1',
+                 'changedIn': 'batch import',
+                 'data':
+                         ['@graph': [
+                                 ['modified': '2022-02-01T12:00:00Z'],
+                                 ['a': "something"]
+                         ]]
+                ]
+        ].collect { change ->
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+        }
+        def history = new History(versions, ld)
+
+        def incoming = new Document( (Map)
+                ['@graph': [
+                        ['modified': '2022-03-01T12:00:00Z'],
+                        ['a': "something else"]
+                ]]
+        )
+        Document base = versions.last().doc
+        Merge merge = new Merge(
+                [
+                        "rules": [
+                                ["operation": "replace", "path": ["@graph",1,"a"], "priority": ["sigel1":1, "sigel2":1]]
+                        ]
+                ]
+        )
+        merge.merge(base, incoming, "sigel2", history)
+        expect:
+        base.data == ['@graph': [
+                ['modified': '2022-02-01T12:00:00Z'],
+                ['a': "something else"]
+        ]]
+    }
 }
