@@ -57,7 +57,6 @@ class MergeSpec extends Specification {
         ].collect { change ->
             new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
         }
-
         def history = new History(versions, ld)
 
         def incoming = new Document( (Map)
@@ -78,6 +77,99 @@ class MergeSpec extends Specification {
         merge.merge(base, incoming, "sigel3", history)
 
         expect:
-        base.data["@graph"][1]["a"] == "something third"
+        base.data == ['@graph': [
+                ['modified': '2022-02-02T12:00:00Z'],
+                ['a': "something third"]
+        ]]
+    }
+
+    def "don't replace a hand edit"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        def versions = [
+                ['changedBy': 'sigel1',
+                 'changedIn': 'batch import',
+                 'data':
+                         ['@graph': [
+                                 ['modified': '2022-02-01T12:00:00Z'],
+                                 ['a': "something"]
+                         ]]
+                ],
+                ['changedBy': 'sigel2',
+                 'changedIn': 'xl',
+                 'data':
+                         ['@graph': [
+                                 ['modified': '2022-02-02T12:00:00Z'],
+                                 ['a': "something second"]
+                         ]]
+                ]
+        ].collect { change ->
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+        }
+        def history = new History(versions, ld)
+
+        def incoming = new Document( (Map)
+                ['@graph': [
+                        ['modified': '2022-03-01T12:00:00Z'],
+                        ['a': "something third"]
+                ]]
+        )
+
+        Document base = versions.last().doc
+        Merge merge = new Merge(
+                [
+                        "rules": [
+                                ["operation": "replace", "path": ["@graph",1,"a"], "priority": ["sigel1": 1, "sigel2": 2, "sigel3": 3]]
+                        ]
+                ]
+        )
+        merge.merge(base, incoming, "sigel3", history)
+
+        expect:
+        base.data == ['@graph': [
+                ['modified': '2022-02-02T12:00:00Z'],
+                ['a': "something second"]
+        ]]
+    }
+
+    def "simple add"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        def versions = [
+                ['changedBy': 'sigel1',
+                 'changedIn': 'batch import',
+                 'data':
+                         ['@graph': [
+                                 ['modified': '2022-02-01T12:00:00Z'],
+                                 ['a': "something"]
+                         ]]
+                ]
+        ].collect { change ->
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+        }
+        def history = new History(versions, ld)
+
+        def incoming = new Document( (Map)
+                ['@graph': [
+                        ['modified': '2022-03-01T12:00:00Z'],
+                        ['b': "something else"]
+                ]]
+        )
+
+        Document base = versions.last().doc
+        Merge merge = new Merge(
+                [
+                        "rules": [
+                                ["operation": "add_if_none", "path": ["@graph",1,"b"]]
+                        ]
+                ]
+        )
+        merge.merge(base, incoming, "sigel2", history)
+
+        expect:
+        base.data == ['@graph': [
+                ['modified': '2022-02-01T12:00:00Z'],
+                ['a': "something", 'b': "something else"]
+        ]]
     }
 }
