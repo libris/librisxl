@@ -242,6 +242,8 @@ public class History {
                     removedPath.add(key);
                     // The point of this is to set ownership of the _composite_ object if a part of it is removed.
                     setOwnership(removedPath, compositePath, version);
+                    // The actual thing being removed however no longer exists and can be owned by no-one.
+                    clearOwnership(removedPath);
 
                     ((HashSet) changeSet.get("removedPaths")).add(removedPath);
                     //System.err.println(" Rem: " + removedPath);
@@ -319,6 +321,7 @@ public class History {
                             List<Object> newPath = new ArrayList<>(path);
                             newPath.add(i);
                             ((HashSet) changeSet.get("addedPaths")).add(newPath);
+                            setOwnership(newPath, compositePath, version);
                             //System.err.println(" Add (and keep scanning): " + newPath);
                         }
                     }
@@ -334,6 +337,7 @@ public class History {
                             List<Object> newPath = new ArrayList<>(correspondingPath);
                             newPath.add(i);
                             ((HashSet) changeSet.get("removedPaths")).add(newPath);
+                            clearOwnership(newPath);
                             //System.err.println(" Remove (and keep scanning): " + newPath);
                         }
                     }

@@ -28,7 +28,7 @@ class Parameters
     private String changedIn = null;
     private boolean forceUpdate = false;
     private final HashMap<String, Set<String>> specialRules = new HashMap<>();
-    private File mergeRuleFile = null;
+    private Path mergeRuleFilePath = null;
 
     Path getPath() { return path; }
     INPUT_FORMAT getFormat() { return format; }
@@ -44,7 +44,7 @@ class Parameters
     String getChangedIn() { return changedIn; }
     boolean getForceUpdate() { return forceUpdate; }
     HashMap<String, Set<String>> getSpecialRules() { return specialRules; }
-    File getMergeRuleFile() { return mergeRuleFile; }
+    Path getMergeRuleFile() { return mergeRuleFilePath; }
 
 
     enum INPUT_FORMAT
@@ -241,7 +241,7 @@ class Parameters
             case "--mergeBibUsing":
                 if (getReplaceBib())
                     throw new IllegalArgumentException("Encrich/replace are mutually exclusive");
-                mergeRuleFile = new File(value);
+                mergeRuleFilePath = Path.of(value);
                 break;
 
             default:
