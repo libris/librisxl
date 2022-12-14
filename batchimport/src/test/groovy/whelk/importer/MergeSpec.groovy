@@ -374,7 +374,7 @@ class MergeSpec extends Specification {
         ]]
     }
 
-    def "don't re-add something manually removed"() {
+    def "don't re-add something manually removed from list"() {
         given:
         def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
         def versions = [
@@ -391,7 +391,7 @@ class MergeSpec extends Specification {
                  'data':
                          ['@graph': [
                                  ['modified': '2022-02-01T12:00:00Z'],
-                                 ['a': []] // sigel1 removed something and claimed the list in hand edit
+                                 ['a': []] // sigel1 removed something and claimed the list in a hand edit
                          ]]
                 ]
         ].collect { change ->
@@ -417,6 +417,52 @@ class MergeSpec extends Specification {
         base.data == ['@graph': [
                 ['modified': '2022-02-01T12:00:00Z'],
                 ['a': []]
+        ]]
+    }
+
+    def "don't re-add a manually removed property"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        def versions = [
+                ['changedBy': 'sigel1',
+                 'changedIn': 'batch import',
+                 'data':
+                         ['@graph': [
+                                 ['modified': '2022-02-01T12:00:00Z'],
+                                 ['a': "something"]
+                         ]]
+                ],
+                ['changedBy': 'sigel1',
+                 'changedIn': 'xl', // a hand edit
+                 'data':
+                         ['@graph': [
+                                 ['modified': '2022-02-01T12:00:00Z'],
+                                 [] // sigel1 removed something and claimed the object in a hand edit
+                         ]]
+                ]
+        ].collect { change ->
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+        }
+        def history = new History(versions, ld)
+        def incoming = new Document( (Map)
+                ['@graph': [
+                        ['modified': '2022-03-01T12:00:00Z'],
+                        ['a': "something else"]
+                ]]
+        )
+        Document base = versions.last().doc
+        Merge merge = new Merge(
+                [
+                        "rules": [
+                                ["operation": "add_if_none", "path": ["@graph",1,"a"], "priority": ["sigel1": 1, "sigel2": 1]]
+                        ]
+                ]
+        )
+        merge.merge(base, incoming, "sigel2", history)
+        expect:
+        base.data == ['@graph': [
+                ['modified': '2022-02-01T12:00:00Z'],
+                []
         ]]
     }
 
