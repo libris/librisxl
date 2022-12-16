@@ -8,6 +8,8 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
 
+import java.nio.charset.StandardCharsets
+
 import static whelk.util.Jackson.mapper
 
 @CompileStatic
@@ -29,7 +31,7 @@ class JsonLD2RdfXml implements FormatConverter {
         }
 
         var jsonldStr = mapper.writeValueAsString(srcData)
-        var input = IOUtils.toInputStream(jsonldStr)
+        var input = IOUtils.toInputStream(jsonldStr, StandardCharsets.UTF_8)
         var baos = new ByteArrayOutputStream()
         var model = ModelFactory.createDefaultModel()
         model = model.read(input, Document.BASE_URI.toString(), "JSONLD")
