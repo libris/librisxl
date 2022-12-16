@@ -46,7 +46,7 @@ class TransliterationAPI extends HttpServlet {
     void doGet(HttpServletRequest request, HttpServletResponse response) {
         log.debug("Handling GET request for ${request.pathInfo}")
 
-        if (request.getPathInfo().startsWith("/language/")) {
+        if (request.getPathInfo()?.startsWith("/language/")) {
             handleLanguageCheck(request, response)
         } else {
             HttpTools.sendResponse(response, null, null, HttpServletResponse.SC_NOT_FOUND)
@@ -55,7 +55,7 @@ class TransliterationAPI extends HttpServlet {
 
     @Override
     void doHead(HttpServletRequest request, HttpServletResponse response) {
-        if (request.getPathInfo().startsWith("/language/")) {
+        if (request.getPathInfo()?.startsWith("/language/")) {
             handleLanguageCheck(request, response)
         }
     }
