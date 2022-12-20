@@ -7,7 +7,7 @@ for (String operation : ProgramLines) {
     String oldCtrlnr = part[1].trim()
     String newCtrlnr = part[2].trim()
 
-    where = """id in
+    def where = """id in
     (select lb.id
     from lddb lb
     where lb.collection = 'bib' and
