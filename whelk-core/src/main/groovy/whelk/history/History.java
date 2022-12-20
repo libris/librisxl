@@ -274,6 +274,11 @@ public class History {
 
         // Keep scanning
         if (examining instanceof List) {
+            // Removing from a list (reducing it in size) claims ownership of the list
+            // Other removals mixed with additions cannot be distinguished from modifications
+            if (((List) correspondingPrevious).size() > ((List) examining).size())
+                setOwnership(correspondingPath, null, version);
+
             // Create copies of the two lists (so that they can be manipulated)
             // and remove from them any elements that _have an identical copy_ in the
             // other list.
@@ -338,8 +343,6 @@ public class History {
                             newPath.add(i);
                             ((HashSet) changeSet.get("removedPaths")).add(newPath);
                             clearOwnership(newPath);
-                            // Removing from a list claims ownership of the list
-                            setOwnership(correspondingPath, null, version);
                             //System.err.println(" Remove (and keep scanning): " + newPath);
                         }
                     }

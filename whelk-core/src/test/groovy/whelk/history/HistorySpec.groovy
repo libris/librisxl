@@ -192,8 +192,8 @@ class HistorySpec extends Specification {
 
         def history = new History(versions, ld)
         expect:
-        history.getOwnership(["@graph", 1, "a", 0, "b"]).m_manualEditor == "sigel1"
-        history.getOwnership(["@graph", 1, "a", 1, "b"]).m_manualEditor == "sigel1" // Doesn't exist anymore, (should revert to root owner).
+        history.getOwnership(["@graph", 1, "a", 0, "b"]).m_manualEditor == "sigel2"
+        history.getOwnership(["@graph", 1, "a", 1, "b"]).m_manualEditor == "sigel2" // Doesn't exist anymore, (should revert to list owner).
     }
 
     def printJson(def c) {
