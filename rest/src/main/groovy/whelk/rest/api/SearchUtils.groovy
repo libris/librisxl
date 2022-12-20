@@ -788,6 +788,25 @@ class SearchUtils {
                 ? QUERY_ESCAPER.escape(input).replace(['%3A': ':', '%2F': '/', '%40': '@'])
                 : input
     }
+
+    Map buildStatsReprFromSliceSpec(List sliceList) {
+        def statsfind = [:]
+        for (Map slice : sliceList) {
+            List<String> path = slice.dimensionChain.collect {
+                it instanceof Map ? "@reverse.${it['inverseOfTerm']}" :
+                it == 'rdf:type' ? JsonLd.TYPE_KEY : it
+            }
+            String leaf = path[-1]
+            if (!ld.isVocabTerm(leaf) && ld.isInstanceOf(ld.vocabIndex[leaf], 'ObjectProperty')) {
+                path << JsonLd.ID_KEY
+            }
+            String key = path.join('.')
+            int limit = slice['itemLimit']
+            statsfind[key] = ['sort': 'value', 'sortOrder': 'desc', 'size': limit]
+        }
+        return statsfind
+    }
+
 }
 
 class Offsets {

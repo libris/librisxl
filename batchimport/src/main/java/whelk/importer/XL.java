@@ -21,10 +21,12 @@ import whelk.converter.marc.MarcFrameConverter;
 import whelk.exception.CancelUpdateException;
 import whelk.exception.TooHighEncodingLevelException;
 import whelk.filter.LinkFinder;
+import whelk.history.History;
 import whelk.util.LegacyIntegrationTools;
 import whelk.util.PropertyLoader;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -39,6 +41,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
+
+import static whelk.util.Jackson.mapper;
 
 class XL
 {
@@ -70,8 +74,10 @@ class XL
         m_repeatableTerms = m_whelk.getJsonld().getRepeatableTerms();
         m_marcFrameConverter = m_whelk.getMarcFrameConverter();
         m_linkfinder = new LinkFinder(m_whelk.getStorage());
-        if (parameters.getMergeRuleFile() != null)
-            m_merge = new Merge(parameters.getMergeRuleFile());
+        if (parameters.getMergeRuleFile() != null) {
+            Map rulesMap = mapper.readValue(Files.readString(parameters.getMergeRuleFile()), Map.class);
+            m_merge = new Merge(rulesMap);
+        }
         if (parameters.getChangedIn() != null)
             IMPORT_SYSTEM_CODE = parameters.getChangedIn();
         else
@@ -134,7 +140,8 @@ class XL
                 Document incoming = convertToRDF(incomingMarcRecord, idToMerge);
                 if (m_parameters.getReadOnly()) {
                     Document existing = m_whelk.getDocument(idToMerge);
-                    m_merge.merge(existing, incoming, m_parameters.getChangedBy(), m_whelk);
+                    History existingHistory = new History(m_whelk.getStorage().loadDocumentHistory(existing.getShortId()), m_whelk.getJsonld());
+                    m_merge.merge(existing, incoming, m_parameters.getChangedBy(), existingHistory);
                     System.out.println("info: Would now (if --live had been specified) have written the following json-ld to whelk as a merged record:\n"
                             + existing.getDataAsString());
                 }
@@ -151,7 +158,8 @@ class XL
                             if (tuple.get(0).equals("SystemNumber"))
                                 systemNumbers.add( (String) tuple.get(1) );
 
-                        m_merge.merge(existing, incoming, m_parameters.getChangedBy(), m_whelk);
+                        History existingHistory = new History(m_whelk.getStorage().loadDocumentHistory(existing.getShortId()), m_whelk.getJsonld());
+                        m_merge.merge(existing, incoming, m_parameters.getChangedBy(), existingHistory);
 
                         // The mainID must remain unaffected.
                         existing.deepPromoteId(recordIDs.get(0));
@@ -296,7 +304,7 @@ class XL
             else
             {
                 // Doing simple "new"
-                m_whelk.createDocument(rdfDoc, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(), collection, false);
+                m_whelk.createDocument(rdfDoc, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(), collection, false, true);
             }
         }
         else

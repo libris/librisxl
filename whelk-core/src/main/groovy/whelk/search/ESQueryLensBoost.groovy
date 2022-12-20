@@ -50,12 +50,12 @@ class ESQueryLensBoost {
             }.flatten()
         }
 
-        return boostFields.unique()
+        return boostFields.unique().findAll()
     }
 
     private List<Map> selectLenses(lenses, types, baseTypes, seenKeys) {
         if (types) {
-            return types.collect {
+            return types.findResults {
                 jsonld.getLensFor([(JsonLd.TYPE_KEY): it], lenses)
             }
         } else {

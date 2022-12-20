@@ -1,12 +1,10 @@
 package whelk.importer;
 
 import whelk.Document;
-import whelk.Whelk;
 import whelk.history.History;
 import whelk.history.Ownership;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
@@ -51,11 +49,10 @@ public class Merge {
 
     private final Logger logger = LogManager.getLogger(this.getClass());
 
-    public Merge(File ruleFile) throws IOException {
+    public Merge(Map rulesMap) throws IOException {
         m_pathAddRules = new HashMap<>();
         m_pathReplaceRules = new HashMap<>();
-        
-        Map rulesMap = mapper.readValue(ruleFile, Map.class);
+
         List rules = (List) rulesMap.get("rules");
         for (Object rule : rules) {
             Map ruleMap = (Map) rule;
@@ -72,9 +69,7 @@ public class Merge {
         }
     }
 
-    public void merge(Document base, Document incoming, String incomingAgent, Whelk whelk) {
-        History baseHistory = new History(whelk.getStorage().loadDocumentHistory(base.getShortId()), whelk.getJsonld());
-
+    public void merge(Document base, Document incoming, String incomingAgent, History baseHistory) {
         List<Object> baseGraphList = (List<Object>) base.data.get("@graph");
         List<Object> incomingGraphList = (List<Object>) incoming.data.get("@graph");
         for (int i = 0; i < Integer.min(baseGraphList.size(), incomingGraphList.size()); ++i) {
@@ -122,8 +117,8 @@ public class Merge {
                     return true;
 
                 Ownership owner = history.getOwnership(trueTemp);
-                int manualPrio = Integer.MIN_VALUE;
-                int systematicPrio = Integer.MIN_VALUE;
+                int manualPrio = 0;
+                int systematicPrio = 0;
                 int incomingPrio = 0;
                 if (owner.m_manualEditor != null && prioMap.get(owner.m_manualEditor) != null)
                     manualPrio = (Integer) prioMap.get(owner.m_manualEditor);
@@ -132,7 +127,7 @@ public class Merge {
                 if (prioMap.get(incomingAgent) != null)
                     incomingPrio = (Integer) prioMap.get(incomingAgent);
 
-                if (incomingPrio >= manualPrio && incomingPrio >= systematicPrio) {
+                if (incomingPrio > manualPrio && incomingPrio > systematicPrio) {
                     return true;
                 }
                 return false;

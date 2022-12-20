@@ -367,6 +367,15 @@ class PostgreSQLComponent {
                 )
         """.stripIndent()
 
+    private static final String LOAD_ALL_DOCUMENTS_BY_DATASET = """
+            SELECT id, data, created, modified, deleted
+            FROM lddb
+            WHERE modified >= ?
+            AND modified <= ?
+            AND data#>'{@graph,0,inDataset}' @> ?::jsonb
+            AND deleted = false
+            """.stripIndent()
+
     private static final String GET_DATASET_ID_LIST = """
             SELECT id FROM lddb WHERE data#>'{@graph,0,inDataset}' @> ?::jsonb AND deleted = false
         """.stripIndent()
@@ -1177,7 +1186,7 @@ class PostgreSQLComponent {
 
             PGobject jsonb = new PGobject()
             jsonb.setType("jsonb")
-            jsonb.setValue("[{\"@id\":\""+ dataset +"\"}]")
+            jsonb.setValue("""[{"@id":"${dataset}"}]""")
             statement.setObject(1, jsonb)
 
             rs = statement.executeQuery()
@@ -2418,21 +2427,34 @@ class PostgreSQLComponent {
                 long sinceTS = since?.getTime() ?: 0L
 
                 String sql
-                if (collection) {
-                    sql = LOAD_ALL_DOCUMENTS_BY_COLLECTION
+                String dataset = null
 
+                if (collection ==~ /^(https?):.+/) {
+                    dataset = collection
+                    sql = LOAD_ALL_DOCUMENTS_BY_DATASET
+                } else if (collection) {
+                    sql = LOAD_ALL_DOCUMENTS_BY_COLLECTION
                 } else {
                     sql = LOAD_ALL_DOCUMENTS
                 }
+
                 if (!includeDeleted)
                     sql += " AND deleted = false"
+
                 loadAllStatement = connection.prepareStatement(sql)
                 loadAllStatement.setFetchSize(100)
                 loadAllStatement.setTimestamp(1, new Timestamp(sinceTS))
                 loadAllStatement.setTimestamp(2, new Timestamp(untilTS))
-                if (collection) {
+
+                if (dataset) {
+                    PGobject jsonb = new PGobject()
+                    jsonb.setType("jsonb")
+                    jsonb.setValue("""[{"@id":"${dataset}"}]""")
+                    loadAllStatement.setObject(3, jsonb)
+                } else {
                     loadAllStatement.setString(3, collection)
                 }
+
                 ResultSet rs = loadAllStatement.executeQuery()
 
                 boolean more = rs.next()
@@ -2849,6 +2871,7 @@ class PostgreSQLComponent {
         return pool
     }
 
+    // FIXME: de-KBV/Libris-ify: maybe
     private String getDescriptionChangerId(String changedBy) {
         //FIXME(?): hardcoded
         // for historical reasons changedBy is the script URI for global changes

@@ -135,6 +135,7 @@ class WhelkTool {
         def segment = '/scripts/'
         def path = scriptFile.toURI().toString()
         path = path.substring(path.lastIndexOf(segment) + segment.size())
+        // FIXME: de-KBV/Libris-ify
         scriptJobUri = "https://libris.kb.se/sys/globalchanges/${path}"
     }
 
@@ -476,7 +477,7 @@ class WhelkTool {
     private boolean doRevertToTime(DocumentItem item) {
 
         // The 'versions' list is sorted, with the oldest version first.
-        List<Document> versions = whelk.storage.loadAllVersions(item.doc.shortId)
+        List<Document> versions = item.getVersions()
 
         ZonedDateTime restoreTime = ZonedDateTime.parse(item.restoreToTime)
 
@@ -530,7 +531,7 @@ class WhelkTool {
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
             if (!whelk.createDocument(doc, changedIn, scriptJobUri,
-                    LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld()), false))
+                    LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld()), false, true))
                 throw new WhelkException("Failed to save a new document. See general whelk log for details.")
         }
         createdLog.println(doc.shortId)
@@ -758,7 +759,7 @@ class DocumentItem {
     }
 
     def getVersions() {
-        whelk.loadAllVersionsByMainId(doc.shortId)
+        whelk.storage.loadAllVersions(doc.shortId)
     }
 
     Map asCard(boolean withSearchKey = false) {

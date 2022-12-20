@@ -197,6 +197,22 @@ class LanguageLinkerSpec extends Specification {
         [language: [code: 'swe qqq eng']]     | false  | [language: [code: 'swe qqq eng']]
     }
 
+    def "handles concatenated language labels"() {
+        expect:
+        linker.linkLanguages(data) == change
+        data == expected
+
+        where:
+        data                                                   | change | expected
+        [language: [label: 'svenska & engelska']]              | true   | [language: [['@id': 'http://id/swe'], ['@id': 'http://id/eng']]]
+        [language: [label: 'english and hebrew']]              | true   | [language: [['@id': 'http://id/eng'], ['@id': 'http://id/heb']]]
+        [language: [label: 'svenska, engelska och hebreiska']] | true   | [language: [['@id': 'http://id/swe'], ['@id': 'http://id/eng'], ['@id': 'http://id/heb']]]
+
+        // do nothing if not all codes can be mapped
+        [language: [label: 'svenska och hittepåiska']]         | false  | [language: [label: 'svenska och hittepåiska']]
+        [language: [label: 'engelska & hittepåiska']]          | false  | [language: [label: 'engelska & hittepåiska']]
+    }
+
     def "handles weird language label lists"() {
         expect:
         linker.linkLanguages(data) == change
@@ -238,6 +254,9 @@ class LanguageLinkerSpec extends Specification {
                         code           : 'gre',
                         prefLabelByLang: [
                                 'sv': 'Nygrekiska'
+                        ],
+                        hiddenLabelByLang: [
+                                'sv': 'grekiska'
                         ]
                 ],
                 [
@@ -245,6 +264,9 @@ class LanguageLinkerSpec extends Specification {
                         code           : 'grc',
                         prefLabelByLang: [
                                 'sv': 'Grekiska, klassisk'
+                        ],
+                        hiddenLabelByLang: [
+                                'sv': 'grekiska'
                         ]
                 ],
                 [
@@ -256,24 +278,90 @@ class LanguageLinkerSpec extends Specification {
                         ]
                 ]
         ].each(linker.&addDefinition)
-        linker.addMapping('grekiska', 'http://id/gre')
-        linker.addMapping('grekiska', 'http://id/grc')
 
         expect:
         linker.linkLanguages(data) == change
         data == expected
 
         where:
-        data                                                                | change | expected
-        [language: [[label: 'tonga']]]                                      | false  | [language: [[label: 'tonga']]]
-        [language: [[label: 'tonga'], ['@id': 'http://id/ton']]]            | true   | [language: [['@id': 'http://id/ton']]]
-        [language: [[label: 'tonga'], ['@id': 'http://id/tog']]]            | true   | [language: [['@id': 'http://id/tog']]]
+        data                                                        | change | expected
+        [language: [[label: 'tonga']]]                              | false  | [language: [[label: 'tonga']]]
+        [language: [[label: 'tonga'], ['@id': 'http://id/ton']]]    | true   | [language: [['@id': 'http://id/ton']]]
+        [language: [[label: 'tonga'], ['@id': 'http://id/tog']]]    | true   | [language: [['@id': 'http://id/tog']]]
 
-        [language: [[label: 'grekiska']]]                                   | false  | [language: [[label: 'grekiska']]]
-        [language: [[label: 'grekiska'], ['@id': 'http://id/gre']]]         | true   | [language: [['@id': 'http://id/gre']]]
-        [language: [[label: 'grekiska'], ['@id': 'http://id/grc']]]         | true   | [language: [['@id': 'http://id/grc']]]
+        [language: [[label: 'grekiska']]]                           | false  | [language: [[label: 'grekiska']]]
+        [language: [[label: 'grekiska'], ['@id': 'http://id/gre']]] | true   | [language: [['@id': 'http://id/gre']]]
+        [language: [[label: 'grekiska'], ['@id': 'http://id/grc']]] | true   | [language: [['@id': 'http://id/grc']]]
     }
 
+    def "handles ambiguous labels using given input to disambiguate"() {
+        given:
+        LanguageLinker linker = new LanguageLinker()
+        [
+                [
+                        '@id'          : 'http://id/tog',
+                        code           : 'tog',
+                        prefLabelByLang: [
+                                'sv': 'Tonga'
+                        ],
+                        commentByLang  : [
+                                sv: 'Nyasa'
+                        ]
+                ],
+                [
+                        '@id'          : 'http://id/ton',
+                        code           : 'ton',
+                        prefLabelByLang: [
+                                sv: 'Tonga'
+                        ],
+                        commentByLang  : [
+                                sv: 'Tongaöarna'
+                        ]
+                ],
+                [
+                        '@id'          : 'http://id/gre',
+                        code           : 'gre',
+                        prefLabelByLang: [
+                                'sv': 'Nygrekiska'
+                        ],
+                        hiddenLabelByLang: [
+                                'sv': 'grekiska'
+                        ]
+                ],
+                [
+                        '@id'          : 'http://id/grc',
+                        code           : 'grc',
+                        prefLabelByLang: [
+                                'sv': 'Grekiska, klassisk'
+                        ],
+                        hiddenLabelByLang: [
+                                'sv': 'grekiska'
+                        ]
+                ],
+                [
+                        '@id'          : 'http://id/lat',
+                        code           : 'lat',
+                        prefLabelByLang: [
+                                'sv': 'Latin',
+                                'en': 'Latin'
+                        ]
+                ]
+        ].each(linker.&addDefinition)
+
+        expect:
+        linker.linkLanguages(data, [['@id': 'http://id/ton'], ['@id': 'http://id/gre']]) == change
+        data == expected
+
+        where:
+        data                                                        | change | expected
+        [language: [[label: 'tonga']]]                              | true   | [language: [['@id': 'http://id/ton']]]
+        [language: [[label: 'tonga'], ['@id': 'http://id/ton']]]    | true   | [language: [['@id': 'http://id/ton']]]
+        [language: [[label: 'tonga'], ['@id': 'http://id/tog']]]    | true   | [language: [['@id': 'http://id/tog']]]
+
+        [language: [[label: 'grekiska']]]                           | true   | [language: [['@id': 'http://id/gre']]]
+        [language: [[label: 'grekiska'], ['@id': 'http://id/gre']]] | true   | [language: [['@id': 'http://id/gre']]]
+        [language: [[label: 'grekiska'], ['@id': 'http://id/grc']]] | true   | [language: [['@id': 'http://id/grc']]]
+    }
 
     def "removes non-existing sameAs links"() {
         expect:

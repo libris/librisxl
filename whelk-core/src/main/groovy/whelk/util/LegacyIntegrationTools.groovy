@@ -14,7 +14,7 @@ import whelk.JsonLd
 
 @CompileStatic
 class LegacyIntegrationTools {
-    
+    // FIXME: de-KBV/Libris-ify
     static final Map<String, String> MARC_COLLECTION_BY_CATEGORY = [
         'https://id.kb.se/marc/auth': 'auth',
         'https://id.kb.se/marc/bib': 'bib',
@@ -23,6 +23,7 @@ class LegacyIntegrationTools {
     
     static final String NO_MARC_COLLECTION = 'none'
 
+    // FIXME: de-KBV/Libris-ify
     static final String BASE_LIBRARY_URI = "https://libris.kb.se/library/"
 
     static String legacySigelToUri(String sigel) {
@@ -101,6 +102,7 @@ class LegacyIntegrationTools {
         return uri
     }
 
+    // FIXME: de-KBV/Libris-ify
     /**
      * Take a MARC record from another system, and make it a LIBRIS MARC record.
      *

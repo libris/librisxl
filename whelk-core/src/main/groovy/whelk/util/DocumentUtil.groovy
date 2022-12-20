@@ -23,7 +23,7 @@ class DocumentUtil {
          * This is called when the blank node search encounters
          * a single string value where there would normally be a node
          */
-        List<Map> link(String blank)
+        List<Map> link(String blank, List existingLinks)
     }
 
     /**
@@ -58,7 +58,7 @@ class DocumentUtil {
      * @return true if obj was changed
      */
     static boolean findKey(data, Collection<String> keys, Visitor visitor) {
-        Set<String> k = keys instanceof Set ? keys : new HashSet<>(keys) 
+        Set<String> k = keys instanceof Set ? keys : new HashSet<>(keys)
         return traverse(data, { value, path ->
             if (path && path.last() instanceof String && k.contains(path.last())) {
                 return visitor.visitElement(value, path)
@@ -66,9 +66,9 @@ class DocumentUtil {
         })
     }
 
-    static Visitor link(Linker linker) {
+    static Visitor link(Linker linker, List<Map> disambiguationNodes = []) {
         return { value, path ->
-            return DocumentUtil.&linkBlankNodes(value, linker)
+            return DocumentUtil.&linkBlankNodes(value, linker, disambiguationNodes)
         }
     }
 
@@ -78,37 +78,35 @@ class DocumentUtil {
      * @param linker
      * @return
      */
-    static Operation linkBlankNodes(def objectOrArray, Linker linker) {
-        return linkBlankNode(objectOrArray, linker)
+    static Operation linkBlankNodes(def objectOrArray, Linker linker, List<Map> disambiguationNodes = []) {
+        return linkBlankNode(objectOrArray, linker, disambiguationNodes)
     }
 
     static boolean isBlank(Map node) {
         return !node.containsKey('@id')
     }
-    
+
     /**
-     * 
+     *
      * @param item
      * @param path
      * @param defaultTo
      * @return
      */
     static def getAtPath(item, Iterable path, defaultTo = null) {
-        if(!item) {
+        if (!item) {
             return defaultTo
         }
 
-        for (int i = 0 ; i < path.size(); i++) {
+        for (int i = 0; i < path.size(); i++) {
             def p = path[i]
             if (p == '*') {
                 if (item instanceof Collection) {
                     return item.collect { getAtPath(it, path.drop(i + 1), []) }.flatten()
-                }
-                else {
+                } else {
                     return []
                 }
-            }
-            else if (((item instanceof Collection && p instanceof Integer) || item instanceof Map) && item[p] != null) {
+            } else if (((item instanceof Collection && p instanceof Integer) || item instanceof Map) && item[p] != null) {
                 item = item[p]
             } else {
                 return defaultTo
@@ -117,12 +115,12 @@ class DocumentUtil {
         return item
     }
 
-    private static Operation linkBlankNode(List<Map> nodes, Linker linker) {
+    private static Operation linkBlankNode(List<Map> nodes, Linker linker, List<Map> disambiguationNodes = []) {
         if (!nodes.any(DocumentUtil.&isBlank)) {
             return NOP
         }
 
-        List<Map> existingLinks = nodes.findAll { !DocumentUtil.&isBlank(it) }.collect { it['@id'] }
+        List<Map> existingLinks = collectIris(nodes)
         List<Map> result = []
 
         List<Map> newLinked
@@ -130,7 +128,7 @@ class DocumentUtil {
             if (isDefective(node)) {
                 continue // remove node
             }
-            if (isBlank(node) && (newLinked = linker.link(node, existingLinks))) {
+            if (isBlank(node) && (newLinked = linker.link(node, existingLinks) ?: linker.link(node, collectIris(disambiguationNodes)))) {
                 result.addAll(newLinked.findAll { l ->
                     !existingLinks.contains(l['@id']) && !result.contains { it['@id'] == l['@id'] }
                 })
@@ -146,7 +144,7 @@ class DocumentUtil {
         }
     }
 
-    private static Operation linkBlankNode(Map node, Linker linker) {
+    private static Operation linkBlankNode(Map node, Linker linker, List<Map> disambiguationNodes = []) {
         if (isDefective(node)) {
             return new Remove()
         }
@@ -154,11 +152,11 @@ class DocumentUtil {
             return NOP
         }
 
-        toOperation(linker.link(node, []))
+        toOperation(linker.link(node, collectIris(disambiguationNodes)))
     }
 
-    private static Operation linkBlankNode(String singleValue, Linker linker) {
-        toOperation(linker.link(singleValue))
+    private static Operation linkBlankNode(String singleValue, Linker linker, List<Map> disambiguationNodes = []) {
+        toOperation(linker.link(singleValue, collectIris(disambiguationNodes)))
     }
 
     private static Operation toOperation(List<Map> replacement) {
@@ -169,6 +167,10 @@ class DocumentUtil {
 
     private static boolean isDefective(Map node) {
         node.size() == 0 || (node.size() == 1 && node.containsKey(TYPE_KEY))
+    }
+
+    private static List<Map> collectIris(List<Map> nodes) {
+        nodes.findAll { !isBlank(it) }.collect { it['@id'] }
     }
 
     private static class DFS {
@@ -182,7 +184,7 @@ class DocumentUtil {
             operations = []
 
             node(obj)
-            operations = operations.reverse().each { it.perform(obj )}
+            operations = operations.reverse().each { it.perform(obj) }
             return !operations.isEmpty()
         }
 
@@ -236,6 +238,7 @@ class DocumentUtil {
     static class Nop extends Operation {
         @Override
         protected void perform(Object obj) {}
+
         protected Operation setPath(List path) { this }
     }
 
@@ -243,7 +246,7 @@ class DocumentUtil {
         @Override
         protected void perform(Object obj) {
             def (parent, key) = parentAndKey(obj)
-            if(!parent) {
+            if (!parent) {
                 return
             }
 

@@ -59,7 +59,10 @@ public class MarcHttpExport extends HttpServlet
         whelk = Whelk.createLoadedCoreWhelk();
         profileExport = new ProfileExport(whelk, whelk.getStorage().createAdditionalConnectionPool("ProfileExport"));
     }
-    public void destroy() { }
+
+    public void destroy() {
+        profileExport.shutdown();
+    }
 
     public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException
     {

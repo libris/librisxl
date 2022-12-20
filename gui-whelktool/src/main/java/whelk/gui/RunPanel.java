@@ -93,7 +93,15 @@ public class RunPanel extends WizardCard implements ActionListener
                                     "elasticCluster = " +
                                     System.getProperty("secretElasticCluster") + "\n" +
                                     "elasticIndex = " +
-                                    System.getProperty("secretElasticIndex") + "\n";
+                                    System.getProperty("secretElasticIndex") + "\n" +
+                                    "applicationId = " +
+                                    System.getProperty("secretApplicationId") + "\n" +
+                                    "systemContextUri = " +
+                                    System.getProperty("secretSystemContextUri") + "\n" +
+                                    "locales = " +
+                                    System.getProperty("secretLocales") + "\n" +
+                                    "timezone = " +
+                                    System.getProperty("secretTimezone") + "\n";
 
                             PropertyLoader.setUserEnteredProperties("secret", secretProperties);
                         }

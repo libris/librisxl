@@ -102,7 +102,9 @@ static void addJsonLd(converter) {
     def contextData = mapper.readValue(contextFile, Map)
     def displayData = mapper.readValue(displayFile, Map)
     def vocabData = mapper.readValue(vocabFile, Map)
-    converter.ld = new JsonLd(contextData, displayData, vocabData)
+    def locales = ['sv', 'en']
+
+    converter.ld = new JsonLd(contextData, displayData, vocabData, locales)
 }
 
 static void reportValidation(converter, source) {

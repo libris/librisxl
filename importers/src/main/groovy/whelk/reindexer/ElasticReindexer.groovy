@@ -65,11 +65,12 @@ class ElasticReindexer {
     }
 
     void reindex(String suppliedCollection, int numberOfThreads) {
+        BlockingThreadPool.SimplePool threadPool
         try {
             int counter = 0
             startTime = System.currentTimeMillis()
             List<String> collections = suppliedCollection ? [suppliedCollection] : whelk.storage.loadCollections()
-            BlockingThreadPool.SimplePool threadPool = BlockingThreadPool.simplePool(numberOfThreads)
+            threadPool = BlockingThreadPool.simplePool(numberOfThreads)
             collections.each { collection ->
                 List<Document> documents = []
                 for (document in whelk.storage.loadAll(collection)) {
@@ -89,11 +90,12 @@ class ElasticReindexer {
                     bulkIndexWithRetries(documents, whelk)
                 }
             }
-            threadPool.awaitAllAndShutdown()
             println("Done! $counter documents reindexed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
             whelk.storage.logStats()
         } catch (Throwable e) {
             println("Reindex failed with:\n" + e.toString() + "\ncallstack:\n" + e.printStackTrace())
+        } finally {
+            threadPool.awaitAllAndShutdown()
         }
     }
 
