@@ -112,11 +112,11 @@ public class Merge {
 
                 //System.err.println("  found rule! :" + temp + " matching true path: " + trueTemp);
 
-                Map prioMap = m_pathAddRules.get(temp);
-                if (prioMap == null) // No priority list given for this rules = anyone may add
-                    return true;
-
                 Ownership owner = history.getOwnership(trueTemp);
+                Map prioMap = m_pathAddRules.get(temp);
+                if (prioMap == null) // No priority list given for this rule = anyone may add (unless hand-edited)!
+                    return owner.m_manualEditor == null;
+
                 int manualPrio = 0;
                 int systematicPrio = 0;
                 int incomingPrio = 0;
@@ -260,7 +260,9 @@ public class Merge {
             for (String type : singleInstanceTypesInIncoming) {
                 List<Object> childPath = new ArrayList(path);
                 childPath.add("@type="+type);
-                if (mayAddAtPath(childPath, truePath, incomingAgent, baseHistory)) {
+                List<Object> trueChildPath = new ArrayList(truePath);
+                trueChildPath.add(indexOfType(incomingList, type));
+                if (mayAddAtPath(childPath, trueChildPath, incomingAgent, baseHistory)) {
                     for (Object o : incomingList) {
                         Map m = (Map) o;
                         if (m.containsKey("@type") && m.get("@type") == type) {
@@ -365,6 +367,20 @@ public class Merge {
             }
         }
         return typeCounts;
+    }
+
+    /**
+     * Find the integer index of the _only_ instance having type = 'type'.
+     */
+    private int indexOfType(List list, String type) {
+        for (int i = 0; i < list.size(); ++i) {
+            if (list.get(i) instanceof Map) {
+                Map m = (Map) list.get(i);
+                if (m.get("@type").equals(type))
+                    return i;
+            }
+        }
+        return -1;
     }
 
     private boolean subtreeContainsLinks(Object object) {

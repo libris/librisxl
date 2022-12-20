@@ -338,6 +338,8 @@ public class History {
                             newPath.add(i);
                             ((HashSet) changeSet.get("removedPaths")).add(newPath);
                             clearOwnership(newPath);
+                            // Removing from a list claims ownership of the list
+                            setOwnership(correspondingPath, null, version);
                             //System.err.println(" Remove (and keep scanning): " + newPath);
                         }
                     }
@@ -373,16 +375,21 @@ public class History {
 
     private void setOwnership(List<Object> newPath, List<Object> compositePath,
                               DocumentVersion version) {
+
+        //System.err.print(" *** Setting ownership of " + newPath + " to " + version.changedIn + "/" + version.changedBy + " classified script? : " + wasScriptEdit(version));
+
         List<Object> path;
         if (compositePath != null) {
             path = compositePath;
         } else {
             path = newPath;
         }
+        //System.err.println(" to: " + new Ownership(version, m_pathOwnership.get(path)));
         m_pathOwnership.put( path, new Ownership(version, m_pathOwnership.get(path)) );
     }
 
     private void clearOwnership(List<Object> removedPath) {
+        //System.err.println(" *** Clearing ownership of " + removedPath);
         Iterator<List<Object>> it = m_pathOwnership.keySet().iterator();
         while (it.hasNext()) {
             List<Object> keyPath = it.next();
