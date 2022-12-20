@@ -14,12 +14,15 @@ for (String operation : ProgramLines) {
     lb.data#>>'{@graph,0,controlNumber}' = '${ctrlnr}'
 )"""
 
-    selectBySqlWhere(where, silent: false, { bib ->
+    selectBySqlWhere(where, loud: true, { bib ->
         def oPF = bib.graph[1]["otherPhysicalFormat"][0]["describedBy"][0]["controlNumber"]
         boolean modified
 
         if (oPF == oldCtrlnr) {
-            bib.graph[1]["otherPhysicalFormat"][0]["describedBy"][0]["controlNumber"] = newCtrlnr
+            bib.graph[1].remove('otherPhysicalFormat')
+            bib.graph[1]["reproductionOf"] =  []
+            bib.graph[1]["reproductionOf"] <<
+                    ["@id": "https://libris-qa.kb.se/$newCtrlnr#it"]
             modified = true
         }
         if (modified) {
