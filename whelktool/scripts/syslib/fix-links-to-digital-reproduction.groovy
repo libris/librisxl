@@ -33,6 +33,7 @@ for (String operation : ProgramLines) {
             boolean digimodified = false
 
             if (digiOPF == newCtrlnr) {
+                assert data.graph[1]["otherPhysicalFormat"].size() == 1
                 data.graph[1].remove('otherPhysicalFormat')
                 data.graph[1]["reproductionOf"] = []
                 data.graph[1]["reproductionOf"] <<
