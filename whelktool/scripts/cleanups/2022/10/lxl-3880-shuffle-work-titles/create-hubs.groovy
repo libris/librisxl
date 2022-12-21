@@ -4,10 +4,10 @@ import static whelk.JsonLd.looksLikeIri
 onlyCandidateHasLanguage = getReportWriter('only-candidate-has-language.tsv')
 multipleCandidates = getReportWriter('multiple-candidates.tsv')
 newHubs = getReportWriter('new-hubs.tsv')
-upgradedHubs = getReportWriter('upgraded-hubs.tsv')
-replacedUniformWorkTitles = getReportWriter('replaced-uniform-work-titles.tsv')
+upgradedToHub = getReportWriter('upgraded-to-hub.tsv')
+replacedUniformWorkTitles = getReportWriter('replaced-uniform-work-title.tsv')
 
-HUB = 'Hub' //TODO: Change to 'WorkHub' when added to vocab
+HUB = 'WorkHub'
 ID = '@id'
 TYPE = '@type'
 HAS_TITLE = 'hasTitle'
@@ -17,12 +17,12 @@ List<String> hublessTitles = []
 Map<String, String> okHubToPrefTitle = [:]
 Map<String, String> oldHubToPrefTitle = [:]
 
-tsvToMap('hubs.tsv').each { prefTitle, data ->
+tsvToMap('hub-data/hubs.tsv').each { hubTitle, data ->
     def uniformWorkTitles = data.uniformWorkTitles
 
     // No hub candidate, create new hub from given preferred title
     if (uniformWorkTitles.isEmpty()) {
-        hublessTitles.add(prefTitle)
+        hublessTitles.add(hubTitle)
         return
     }
 
@@ -30,10 +30,10 @@ tsvToMap('hubs.tsv').each { prefTitle, data ->
     if (uniformWorkTitles.size() == 1) {
         if (uniformWorkTitles[0].language) {
             // The candidate has language, report
-            onlyCandidateHasLanguage.println([prefTitle, uniformWorkTitles[0].iri, uniformWorkTitles[0].language].join('\t'))
+            onlyCandidateHasLanguage.println([hubTitle, uniformWorkTitles[0].iri, uniformWorkTitles[0].language].join('\t'))
         } else {
             // No language, ok to use as hub
-            okHubToPrefTitle[uniformWorkTitles[0].iri] = prefTitle
+            okHubToPrefTitle[uniformWorkTitles[0].iri] = hubTitle
         }
         return
     }
@@ -42,31 +42,31 @@ tsvToMap('hubs.tsv').each { prefTitle, data ->
     def okHubRecords = uniformWorkTitles.findResults { it.language ? null : it.iri }
     if (okHubRecords.isEmpty()) {
         // All candidates have language, create new hub without language and link the rejected candidates to the new hub
-        hublessTitles.add(prefTitle)
+        hublessTitles.add(hubTitle)
         uniformWorkTitles.each {
-            oldHubToPrefTitle[it.iri] = prefTitle
+            oldHubToPrefTitle[it.iri] = hubTitle
         }
     } else if (okHubRecords.size() == 1) {
         // Exactly one candidate without language, ok to use as hub, link rejected candidates to this
-        okHubToPrefTitle[okHubRecords[0]] = prefTitle
+        okHubToPrefTitle[okHubRecords[0]] = hubTitle
         uniformWorkTitles.each {
             if (it.iri != okHubRecords[0]) {
-                oldHubToPrefTitle[it.iri] = prefTitle
+                oldHubToPrefTitle[it.iri] = hubTitle
             }
         }
     } else {
         // More than one candidate without language, report
-        multipleCandidates.println([prefTitle, okHubRecords].join('\t'))
+        multipleCandidates.println([hubTitle, okHubRecords].join('\t'))
     }
 }
 
-Map<String, DocumentItem> prefTitleToNewHub = hublessTitles.collectEntries { [it, newHub(it)] }
-Map<String, String> prefTitleToOkHub = okHubToPrefTitle.collectEntries { k, v -> [v, k] }
+Map<String, DocumentItem> hubTitleToNewHub = hublessTitles.collectEntries { [it, newHub(it)] }
+Map<String, String> hubTitleToOkHub = okHubToPrefTitle.collectEntries { k, v -> [v, k] }
 
 // Save new hubs
-selectFromIterable(prefTitleToNewHub.values()) {
+selectFromIterable(hubTitleToNewHub.values()) {
     def thing = it.graph[1]
-    newHubs.println([thing[ID], thing[HAS_TITLE][0][MAIN_TITLE]].join('\t'))
+    newHubs.println([thing[ID], thing[HAS_TITLE]].join('\t'))
     it.scheduleSave()
 }
 
@@ -74,7 +74,7 @@ selectFromIterable(prefTitleToNewHub.values()) {
 selectByIds(okHubToPrefTitle.keySet()) {
     def thing = it.graph[1]
     def thingId = thing[ID]
-    upgradedHubs.println([thingId, thing[HAS_TITLE], okHubToPrefTitle[thingId]].join('\t'))
+    upgradedToHub.println([thingId, thing[HAS_TITLE], okHubToPrefTitle[thingId]].join('\t'))
     upgradeHub(thing, okHubToPrefTitle[thingId])
     it.scheduleSave()
 }
@@ -83,15 +83,15 @@ selectByIds(okHubToPrefTitle.keySet()) {
 selectByIds(oldHubToPrefTitle.keySet()) {
     def thing = it.graph[1]
     def thingId = thing[ID]
-    def prefTitle = oldHubToPrefTitle[thingId]
-    def hubId = prefTitleToOkHub[prefTitle] ?: prefTitleToNewHub[prefTitle].graph[1][ID]
+    def hubTitle = oldHubToPrefTitle[thingId]
+    def hubId = hubTitleToOkHub[hubTitle] ?: hubTitleToNewHub[hubTitle].graph[1][ID]
     thing.expressionOf = [(ID): hubId]
     //TODO: Link back to expressions somehow
 //    def expressions = getExpressions(thingId)
 //    if (expressions) {
 //        thing.hasExpressionInstance = expressions
 //    }
-    replacedUniformWorkTitles.println([thingId, thing[HAS_TITLE], thing.language, hubId, prefTitle].join('\t'))
+    replacedUniformWorkTitles.println([thingId, thing[HAS_TITLE], thing.language, hubId, hubTitle].join('\t'))
     it.scheduleSave()
 }
 
@@ -99,13 +99,14 @@ def getExpressions(String hubId) {
     return queryDocs(['instanceOf.expressionOf.@id': [hubId]]).collect { it.subMap(ID) }
 }
 
-def upgradeHub(Map hub, String prefTitle) {
+def upgradeHub(Map hub, String hubTitle) {
     hub[TYPE] = HUB
-    hub[HAS_TITLE] = [[(TYPE): 'Title', (MAIN_TITLE): prefTitle]]
+    hub[HAS_TITLE] = [[(TYPE): 'Title', (MAIN_TITLE): hubTitle]]
     hub.remove('inCollection')
+    //TODO: Remove/move/add more metadata
 }
 
-def newHub(String prefTitle) {
+def newHub(String hubTitle) {
     //TODO: Add other relevant metadata. Provenience?
     def hubData =
             ["@graph": [
@@ -120,7 +121,7 @@ def newHub(String prefTitle) {
                             (HAS_TITLE): [
                                     [
                                             (TYPE)      : 'Title',
-                                            (MAIN_TITLE): prefTitle
+                                            (MAIN_TITLE): hubTitle
                                     ]
                             ]
                     ]
@@ -131,25 +132,22 @@ def newHub(String prefTitle) {
 
 def tsvToMap(String filename) {
     Map hubs = [:]
-
-    new File(scriptDir, filename).splitEachLine('\t') { row ->
-        if (row.size() > 3) {
-            def (localOrUniform, language, source, prefTitle) = row.take(4)
-            Map uniformWorkTitles = [:]
-            if (looksLikeIri(localOrUniform)) {
-                // replace only needed in test environments
-                uniformWorkTitles.iri = localOrUniform.replace("https://libris.kb.se/", baseUri.toString())
-            }
+    new File(scriptDir, filename).readLines().drop(1).each { row ->
+        def (localOrUniform, language, hubTitle, source) = row.split('\t', -1)
+        Map uniformWorkTitle = [:]
+        if (looksLikeIri(localOrUniform)) {
+            // replace only needed in test environments
+            uniformWorkTitle.iri = localOrUniform.replace("https://libris.kb.se/", baseUri.toString())
             if (language) {
-                uniformWorkTitles.language = language
+                uniformWorkTitle.language = language
             }
-            def entry = hubs.computeIfAbsent(prefTitle.trim(), { k -> ['uniformWorkTitles': []] })
-            if (source) {
-                entry.source = source
-            }
-            if (uniformWorkTitles) {
-                entry.uniformWorkTitles.add(uniformWorkTitles)
-            }
+        }
+        def entry = hubs.computeIfAbsent(hubTitle, { k -> ['uniformWorkTitles': []] })
+        if (uniformWorkTitle) {
+            entry.uniformWorkTitles.add(uniformWorkTitle)
+        }
+        if (source) {
+            entry.source = source
         }
     }
 
