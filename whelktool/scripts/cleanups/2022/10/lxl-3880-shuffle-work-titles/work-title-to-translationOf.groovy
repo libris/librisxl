@@ -14,8 +14,6 @@ def where = """
 selectBySqlWhere(where) {
     if (moveTitlesRecursive(it.graph[1].instanceOf, it.doc.shortId, 'instanceOf')) {
         it.scheduleSave()
-    } else {
-        println(it.doc.shortId)
     }
 }
 

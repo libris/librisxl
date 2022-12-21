@@ -261,12 +261,12 @@ String stringifyProps(Map work, List props) {
     return (values + langcode).grep().join(' · ')
 }
 
-String stringifyTitle(Map work, boolean norm = false) {
+String stringifyTitle(Map work) {
     def titleKeys = ['mainTitle', 'partName', 'partNumber', 'marc:formSubheading']
     def paths = titleKeys.collect { [HAS_TITLE, 0] + it }
     def titleParts = paths.collect { getAtPath(work, asList(it)) }.grep()
 
-    return norm ? normalizeTitle(titleParts) : titleParts.join(' · ')
+    return titleParts.join(' · ')
 }
 
 String stringifyInstanceTitle(Object o) {
@@ -313,10 +313,6 @@ Map loadHymnsAndBibles(String filename) {
                 .findAll { it.value }
         [stringifiedExpressionOf, data]
     }
-}
-
-String normalizeTitle(List parts) {
-    return parts.flatten().collect { it.replaceFirst(/\.\s*$/, '') }.join('. ').toLowerCase()
 }
 
 LanguageLinker getLangLinker() {
