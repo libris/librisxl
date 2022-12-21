@@ -390,7 +390,7 @@ class MergeSpec extends Specification {
                  'changedIn': 'xl', // a hand edit
                  'data':
                          ['@graph': [
-                                 ['modified': '2022-02-01T12:00:00Z'],
+                                 ['modified': '2022-02-02T12:00:00Z'],
                                  ['a': []] // sigel1 removed something and claimed the list in a hand edit
                          ]]
                 ]
@@ -400,7 +400,7 @@ class MergeSpec extends Specification {
         def history = new History(versions, ld)
         def incoming = new Document( (Map)
                 ['@graph': [
-                        ['modified': '2022-03-01T12:00:00Z'],
+                        ['modified': '2022-03-03T12:00:00Z'],
                         ['a': ["something else"]]
                 ]]
         )
@@ -408,14 +408,14 @@ class MergeSpec extends Specification {
         Merge merge = new Merge(
                 [
                         "rules": [
-                                ["operation": "add_if_none", "path": ["@graph",1,"a"], "priority": ["sigel1": 1, "sigel2": 1]]
+                                ["operation": "add_if_none", "path": ["@graph",1,"a"]]
                         ]
                 ]
         )
         merge.merge(base, incoming, "sigel2", history)
         expect:
         base.data == ['@graph': [
-                ['modified': '2022-02-01T12:00:00Z'],
+                ['modified': '2022-02-02T12:00:00Z'],
                 ['a': []]
         ]]
     }
