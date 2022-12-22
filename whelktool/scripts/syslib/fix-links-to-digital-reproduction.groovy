@@ -32,7 +32,7 @@ for (String operation : ProgramLines) {
             def digiOPF = data.graph[1]["otherPhysicalFormat"][0]["describedBy"][0]["controlNumber"]
             boolean digimodified = false
 
-            if (digiOPF == newCtrlnr) {
+            if (digiOPF == ctrlnr) {
                 assert data.graph[1]["otherPhysicalFormat"].size() == 1
                 data.graph[1].remove('otherPhysicalFormat')
                 data.graph[1]["reproductionOf"] = []
