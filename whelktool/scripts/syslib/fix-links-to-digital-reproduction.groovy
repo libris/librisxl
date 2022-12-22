@@ -28,7 +28,7 @@ for (String operation : ProgramLines) {
             bib.scheduleSave(loud: true)
         }
 
-        selectByIds(['${newCtrlnr}'], { data ->
+        selectByIds([newCtrlnr]) { data ->
             def digiOPF = data.graph[1]["otherPhysicalFormat"][0]["describedBy"][0]["controlNumber"]
             boolean digimodified = false
 
@@ -44,6 +44,6 @@ for (String operation : ProgramLines) {
             if (digimodified) {
                 data.scheduleSave(loud: true)
             }
-        })
+        }
     })
 }
