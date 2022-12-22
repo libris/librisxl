@@ -12,7 +12,7 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
     LanguageLinker langLinker = getLangLinker()
 
     void modify(Map record, Map thing) {
-        traverse(thing, null, true)
+//        traverse(thing, null, true)
     }
 
     void unmodify(Map record, Map thing) {
@@ -153,7 +153,7 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
     }
 
     boolean compatibleLangs(Map expressionOf, Map target) {
-        moveLanguagesFromTitle(expressionOf) //TODO: Necessary?
+//        moveLanguagesFromTitle(expressionOf) TODO: Necessary?
         langLinker.linkLanguages(target)
         langLinker.linkLanguages(expressionOf, asList(target.language))
         return asList(target.language).containsAll(expressionOf.language)
