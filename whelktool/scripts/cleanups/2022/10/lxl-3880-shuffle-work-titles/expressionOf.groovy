@@ -102,10 +102,10 @@ selectBySqlWhere(where) {
         def stringifiedInstanceTitle = stringifyInstanceTitle(asList(instance[HAS_TITLE])[0])
         notLinkedStats.s.increment('Not linked expressionOf (monograph)', stringified, id)
         if (targetProperty == TRANSLATION_OF) {
-            notLinkedStatsTranslations.s.increment('expressionOf to translationOf (monographs)', stringified, id)
+            notLinkedStatsTranslations.s.increment(work[TYPE], stringified, id)
             instanceTitlesTranslations.s.increment(stringifiedTitle, stringifiedInstanceTitle, id)
         } else {
-            notLinkedStatsOrigLang.s.increment('expressionOf to instanceOf (monographs)', stringified, id)
+            notLinkedStatsOrigLang.s.increment(work[TYPE], stringified, id)
             instanceTitles.s.increment(stringifiedTitle, stringifiedInstanceTitle, id)
         }
     }
