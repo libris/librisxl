@@ -5,6 +5,7 @@ import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.JsonLd
+import whelk.component.DocumentNormalizer
 import whelk.converter.FormatConverter
 import whelk.filter.LinkFinder
 
@@ -27,14 +28,16 @@ class MarcFrameConverter implements FormatConverter {
     ObjectMapper mapper = new ObjectMapper()
     LinkFinder linkFinder
     JsonLd ld
+    Collection<DocumentNormalizer> normalizers
 
     String configResourceBase
     String marcframeFile = "marcframe.json"
 
     protected MarcConversion conversion
 
-    MarcFrameConverter(LinkFinder linkFinder = null, JsonLd ld = null, configResourceBase = "ext") {
+    MarcFrameConverter(LinkFinder linkFinder = null, JsonLd ld = null, DocumentNormalizer normalizer = null, configResourceBase = "ext") {
         this.linkFinder = linkFinder
+        this.normalizers = normalizer.normalizers.findAll { it.getNormalizer() }
         this.configResourceBase = configResourceBase
         setLd(ld)
     }
@@ -213,7 +216,6 @@ class MarcConversion {
             procStep = new InjectWhenMatchingOnRevertStep(props); break
             case 'Romanization':
                 procStep = new RomanizationStep(props)
-                // TODO: Pass required classes properly
                 procStep.converter = converter; break
             case null:
             return null

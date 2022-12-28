@@ -1,34 +1,23 @@
 package whelk.converter.marc
 
-import whelk.search.ElasticFind
+import whelk.component.DocumentNormalizer
+import whelk.filter.LanguageLinker
 import whelk.util.DocumentUtil
+import whelk.util.Romanizer
+
 import static whelk.Document.deepCopy
 import static whelk.JsonLd.asList
 
 class RomanizationStep extends MarcFramePostProcStepBase {
     MarcFrameConverter converter
+    LanguageLinker langLinker
 
-    // TODO: load language definitions
-    Map tLangData =
-            [
-                    'ru-Latn-t-ru-Cyrl-m0-iso-1995':
-                            [
-                                    'inLanguage'    : 'https://id.kb.se/language/rus',
-                                    'fromLangScript': 'https://id.kb.se/i18n/script/Cyrl'
-                            ],
-                    "zh-Latn-t-zh-Hani-m0-alaloc"  :
-                            [
-                                    'inLanguage'    : 'https://id.kb.se/language/chi',
-                                    'fromLangScript': 'https://id.kb.se/i18n/script/Hani'
-                            ]
-            ]
-    Map langToLangTag =
-            [
-                    'https://id.kb.se/language/rus': 'ru',
-                    'https://id.kb.se/language/chi': 'zh'
-            ]
-//    Map tLangData = loadTLangs(elasticFind)
-//    Map langToLangTag = loadBcpLangs(elasticFind)
+    Map tLangCodes
+    Map langToLangTag
+    Map langAliases
+    Map byLangToBase
+    Map langToTLang
+
     Map scriptToCode =
             [
                     'https://id.kb.se/i18n/script/Arab': '/(3/r',
@@ -39,8 +28,6 @@ class RomanizationStep extends MarcFramePostProcStepBase {
 //                'https://id.kb.se/i18n/script/Deva': ??
 //                'https://id.kb.se/i18n/script/Mong': ??
             ]
-    Map byLangToBase
-    Map langToTLang
 
     String OG_MARK = '**OG**'
     String HAS_BIB880 = 'marc:hasBib880'
@@ -55,7 +42,6 @@ class RomanizationStep extends MarcFramePostProcStepBase {
                       'marc:bib250-fieldref', 'marc:hold035-fieldref']
 
     void modify(Map record, Map thing) {
-        langToTLang = tLangData.collectEntries { k, v -> [v.inLanguage, k] }
         def work = thing.instanceOf
 
         // TODO: Do we really want to remove everything? What about "00" fields?
@@ -114,8 +100,6 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     }
 
     void unmodify(Map record, Map thing) {
-        byLangToBase = ld.langContainerAlias.collectEntries { k, v -> [v, k] }
-
         def byLangPaths = findByLangPaths(thing)
         def uniqueTLangs = findUniqueTLangs(thing, byLangPaths)
 
@@ -160,7 +144,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
 
                 def hasBib880 = thing.computeIfAbsent(HAS_BIB880, s -> [])
                 def fieldrefIdx = zeroFill(hasBib880.size() + 1)
-                def ref = "$fieldNumber-$fieldrefIdx${scriptToCode[tLangData[tLang].fromLangScript] ?: ''}" as String
+                def ref = "$fieldNumber-$fieldrefIdx${scriptToCode[tLangCodes[tLang].fromLangScript] ?: ''}" as String
                 def bib880 =
                         [
                                 (TYPE)          : 'marc:Bib880',
@@ -188,9 +172,10 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     }
 
     boolean mergeAltLanguage(Map converted, Map thing, List language) {
-        // TODO: Link language (need to access LanguageLinker)
+        def tmpLang = ['language': language]
+        langLinker.linkAll(tmpLang)
         // Since the 880s do not specify which language they are in, we assume that they are in the first work language
-        def lang = language.findResult { it[ID] } ?: 'https://id.kb.se/language/und'
+        def lang = tmpLang.language.findResult { it[ID] } ?: 'https://id.kb.se/language/und'
         return addAltLang(thing, converted, lang)
     }
 
@@ -199,7 +184,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
             return false
         }
         def nonByLangPaths = []
-        DocumentUtil.findKey(converted, ld.langContainerAlias.keySet()) { value, path ->
+        DocumentUtil.findKey(converted, langAliases.keySet()) { value, path ->
             nonByLangPaths.add(path.collect())
             return
         }
@@ -214,7 +199,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
             asList(containingObject).each {
                 it.each { k, v ->
                     if (k == path.last()) {
-                        def byLangProp = ld.langContainerAlias[k]
+                        def byLangProp = langAliases[k]
                         byLang[byLangProp] =
                                 [
                                         (langToLangTag[lang]): DocumentUtil.getAtPath(converted, path),
@@ -238,7 +223,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
             containingObject.each { k, v ->
                 def base = byLangToBase[k]
                 if (base) {
-                    def romanized = v.findResults { langTag, literal -> langTag in tLangData.keySet() ? literal : null }
+                    def romanized = v.findResults { langTag, literal -> langTag in tLangCodes.keySet() ? literal : null }
                     nonByLang[base] = romanized
                 }
             }
@@ -264,7 +249,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
                 def base = byLangToBase[k]
                 if (base) {
                     def romanized = v.find { langTag, literal -> langTag == tLang }
-                    def original = v.find { langTag, literal -> langTag == langToLangTag[tLangData[tLang].inLanguage] }?.value
+                    def original = v.find { langTag, literal -> langTag == langToLangTag[tLangCodes[tLang].inLanguage] }?.value
                     if (romanized && original) {
                         nonByLang[base] = original instanceof List
                                 ? original.collect { OG_MARK + it }
@@ -292,7 +277,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
 
         byLangPaths.each {
             DocumentUtil.getAtPath(thing, it).each { langTag, literal ->
-                if (langTag in tLangData.keySet()) {
+                if (langTag in tLangCodes.keySet()) {
                     tLangs.add(langTag)
                 }
             }
@@ -305,7 +290,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         i < 10 ? "0$i" : "$i"
     }
 
-    def bib880ToMarcJson(Map bib880) {
+    Map bib880ToMarcJson(Map bib880) {
         def parts = bib880[PART_LIST]
         def tag = parts[0][FIELDREF].split('-')[0]
         return [(tag): [
@@ -320,9 +305,19 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         ]]
     }
 
-    static Map<String, Map> loadTLangs(ElasticFind elasticFind) {
-        return elasticFind.find([(TYPE): ['TransformedLanguageForm']])
-                .findAll { it.inLangScript[ID] == 'https://id.kb.se/i18n/script/Latn' }
+    void init() {
+        this.tLangCodes = getTLangCodes(converter.normalizers)
+        this.langToTLang = tLangCodes.collectEntries { k, v -> [v.inLanguage, k] }
+        this.langAliases = ld.langContainerAlias
+        this.byLangToBase = langAliases.collectEntries { k, v -> [v, k] }
+        this.langToLangTag = getLangTags(converter.normalizers)
+        this.langLinker = getLangLinker(converter.normalizers)
+    }
+
+    static Map<String, Map> getTLangCodes(Collection<DocumentNormalizer> normalizers) {
+        return normalizers.find { it.normalizer instanceof Romanizer }
+                .normalizer
+                .tLangs
                 .collectEntries {
                     def code = it[ID].split('/').last()
                     def data = [:]
@@ -336,8 +331,14 @@ class RomanizationStep extends MarcFramePostProcStepBase {
                 }
     }
 
-    static Map<String, String> loadBcpLangs(ElasticFind elasticFind) {
-        return elasticFind.find([(TYPE): ['Language']])
-                .findAll { it.langTag }.collectEntries { [it[ID], it.langTag] }
+    static Map<String, String> getLangTags(Collection<DocumentNormalizer> normalizers) {
+        return normalizers.find { it.normalizer instanceof Romanizer }
+                .normalizer
+                .langTags
+    }
+
+    static LanguageLinker getLangLinker(Collection<DocumentNormalizer> normalizers) {
+        return normalizers.find { it.normalizer instanceof LanguageLinker }
+                .normalizer
     }
 }
