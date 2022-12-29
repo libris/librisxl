@@ -173,10 +173,9 @@ class RomanizationStep extends MarcFramePostProcStepBase {
 
     boolean mergeAltLanguage(Map converted, Map thing) {
         // Since the 880s do not specify which language they are in, we assume that they are in the first work language
-        def lang = thing.instanceOf.subMap('language').with {
-            langLinker.linkAll(it)
-            asList(it.language).findResult { it[ID] } ?: 'https://id.kb.se/language/und'
-        }
+        def workLang = thing.instanceOf.subMap('language')
+        langLinker.linkAll(workLang)
+        def lang = asList(workLang.language).findResult { it[ID] } ?: 'https://id.kb.se/language/und'
 
         return addAltLang(thing, converted, lang)
     }
