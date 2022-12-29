@@ -37,9 +37,15 @@ class MarcFrameConverter implements FormatConverter {
 
     MarcFrameConverter(LinkFinder linkFinder = null, JsonLd ld = null, DocumentNormalizer normalizer = null, configResourceBase = "ext") {
         this.linkFinder = linkFinder
-        this.normalizers = normalizer.normalizers.findAll { it.getNormalizer() }
         this.configResourceBase = configResourceBase
+        setNormalizers(normalizer)
         setLd(ld)
+    }
+
+    void setNormalizers(DocumentNormalizer normalizer) {
+        if (normalizer) {
+            this.normalizers = normalizer.normalizers.findAll { it.normalizer }
+        }
     }
 
     void setLd(JsonLd ld) {

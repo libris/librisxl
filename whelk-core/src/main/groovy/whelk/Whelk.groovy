@@ -149,7 +149,7 @@ class Whelk {
 
     synchronized MarcFrameConverter getMarcFrameConverter() {
         if (!marcFrameConverter) {
-            marcFrameConverter = new MarcFrameConverter(new LinkFinder(storage), jsonld)
+            marcFrameConverter = new MarcFrameConverter(new LinkFinder(storage), jsonld, normalizer)
         }
 
         return marcFrameConverter

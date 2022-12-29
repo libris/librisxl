@@ -44,15 +44,13 @@ class RomanizationStep extends MarcFramePostProcStepBase {
                       'marc:bib250-fieldref', 'marc:hold035-fieldref']
 
     void modify(Map record, Map thing) {
-        def work = thing.instanceOf
-
         // TODO: Do we really want to remove everything? What about "00" fields?
         // https://katalogverk.kb.se/katalogisering/Formathandboken/Lankning/index.html
         def hasBib880 = thing.remove(HAS_BIB880)
 
         Map bib880ByField = [:]
 
-        asList(hasBib880).eachWithIndex { bib880, i ->
+        asList(hasBib880).each { bib880 ->
             def linkField = bib880[PART_LIST][0][FIELDREF].split('-')
             def tag = linkField[0]
             def seqNum = linkField[1].take(2)
@@ -81,14 +79,14 @@ class RomanizationStep extends MarcFramePostProcStepBase {
             } as Set
 
             refs.each {
-                sameField[it] = refs as Set
+                sameField[it] = refs
             }
         }
 
         Set handled = []
         def handle880Ref = { ref, path ->
             def converted = bib880Map[ref]
-            if (sameField[ref]?.intersect(handled) || converted && mergeAltLanguage(converted.mainEntity, thing, asList(work.language))) {
+            if (sameField[ref]?.intersect(handled) || converted && mergeAltLanguage(converted.mainEntity, thing)) {
                 handled.add(ref)
                 return new DocumentUtil.Remove()
             }
@@ -173,15 +171,17 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         putRomanizedLiteralInNonByLang(thing, byLangPaths)
     }
 
-    boolean mergeAltLanguage(Map converted, Map thing, List language) {
-        def tmpLang = ['language': language]
-        langLinker.linkAll(tmpLang)
+    boolean mergeAltLanguage(Map converted, Map thing) {
         // Since the 880s do not specify which language they are in, we assume that they are in the first work language
-        def lang = tmpLang.language.findResult { it[ID] } ?: 'https://id.kb.se/language/und'
+        def lang = thing.instanceOf.subMap('language').with {
+            langLinker.linkAll(it)
+            asList(it.language).findResult { it[ID] } ?: 'https://id.kb.se/language/und'
+        }
+
         return addAltLang(thing, converted, lang)
     }
 
-    boolean addAltLang(thing, converted, lang) {
+    boolean addAltLang(Map thing, Map converted, String lang) {
         if (!langToLangTag[lang] || !langToTLang[lang]) {
             return false
         }
