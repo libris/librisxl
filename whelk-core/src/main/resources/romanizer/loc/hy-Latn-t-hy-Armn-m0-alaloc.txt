@@ -2,7 +2,7 @@
 # Source: https://raw.githubusercontent.com/lcnetdev/transliterator/main/scriptshifter/tables/data/armenian.yml
 # ICU transform rules
 
-# hy-Latn-t-hy-m0-alaloc
+# hy-Latn-t-hy-Armn-m0-alaloc
 
 # script_to_roman
 'ԿՀ' > 'KʹH' ;

@@ -32,12 +32,12 @@ class Romanizer {
 
             // Converted from LOC mappings
             // TODO: investigate how well these handle case/capitalization
-            'am'     : [romanizer('am-Latn-t-am-m0-alaloc', ['loc/am-Latn-t-am-m0-alaloc.txt'])],
+            'am'     : [romanizer('am-Latn-t-am-Ethi-m0-alaloc', ['loc/am-Latn-t-am-Ethi-m0-alaloc.txt'])],
             'az'     : [romanizer('az-Latn-t-az-Cyrl-m0-alaloc', ['loc/az-Latn-t-az-Cyrl-m0-alaloc.txt'])],
-            'chu'    : [romanizer('chu-Latn-t-chu-m0-alaloc', ['loc/chu-Latn-t-chu-m0-alaloc.txt'])],
+            'chu'    : [romanizer('chu-Latn-t-chu-Cyrs-m0-alaloc', ['loc/chu-Latn-t-chu-Cyrs-m0-alaloc.txt'])],
             'ka'     : [romanizer('ka-Latn-t-ka-m0-alaloc', ['loc/ka-Latn-t-ka-m0-alaloc.txt'])],
             'hi'     : [romanizer('hi-Latn-t-hi-Deva-m0-alaloc', ['loc/hi-Latn-t-hi-Deva-m0-alaloc.txt'])],
-            'hy'     : [romanizer('hy-Latn-t-hy-m0-alaloc', ['loc/hy-Latn-t-hy-m0-alaloc.txt'])],
+            'hy'     : [romanizer('hy-Latn-t-hy-Armn-m0-alaloc', ['loc/hy-Latn-t-hy-Armn-m0-alaloc.txt'])],
             'kir'    : [romanizer('kir-Latn-t-kir-Cyrl-m0-alaloc', ['loc/kir-Latn-t-kir-Cyrl-m0-alaloc.txt'])],
             'mn-Mong': [romanizer('mn-Latn-t-mn-Mong-m0-alaloc', ['loc/mn-Latn-t-mn-Mong-m0-alaloc.txt'])],
             'tt'     : [romanizer('tt-Latn-t-tt-Cyrl-m0-alaloc', ['loc/tt-Latn-t-tt-Cyrl-m0-alaloc.txt'])],

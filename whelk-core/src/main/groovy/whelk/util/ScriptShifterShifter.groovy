@@ -12,11 +12,11 @@ class ScriptShifterShifter {
     static final String BASE = 'https://raw.githubusercontent.com/lcnetdev/transliterator/main/scriptshifter/tables/data/'
     
     static final Map tables = [
-            'armenian'               : 'hy-Latn-t-hy-m0-alaloc',
+            'armenian'               : 'hy-Latn-t-hy-Armn-m0-alaloc',
             'azerbaijani'            : 'az-Latn-t-az-Cyrl-m0-alaloc',
             'chinese'                : 'zh-Latn-t-zh-Hani-m0-alaloc',
-            'church_slavonic'        : 'chu-Latn-t-chu-m0-alaloc',
-            'ethiopic'               : 'am-Latn-t-am-m0-alaloc',
+            'church_slavonic'        : 'chu-Latn-t-chu-Cyrs-m0-alaloc',
+            'ethiopic'               : 'am-Latn-t-am-Ethi-m0-alaloc',
             'georgian'               : 'ka-Latn-t-ka-m0-alaloc',
             'hindi'                  : 'hi-Latn-t-hi-Deva-m0-alaloc',
             'kyrgyz'                 : 'kir-Latn-t-kir-Cyrl-m0-alaloc',
