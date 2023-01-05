@@ -359,7 +359,17 @@ class ElasticSearch {
         Set languageContainers = whelk.jsonld.langContainerAlias.values() as Set
         DocumentUtil.traverse(thing, { value, path ->
             if (path && path.last() in languageContainers) {
-                return new DocumentUtil.Replace(value.findAll {lang, str -> lang in whelk.jsonld.locales})
+                Map<String, String> langContainer = value
+                var keep = langContainer.findAll { langTag, str -> langTag in whelk.jsonld.locales }
+                
+                var transformed = langContainer.findAll { langTag, str -> langTag.contains('-t-') }
+                keep.putAll(transformed)
+                transformed.keySet().each { tLangTag ->
+                    var original = langContainer.findAll { langTag, str -> tLangTag.contains(langTag) }
+                    keep.putAll(original)
+                }
+                
+                return new DocumentUtil.Replace(keep)
             }
         })
     }
