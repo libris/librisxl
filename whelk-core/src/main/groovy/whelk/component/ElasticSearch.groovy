@@ -17,6 +17,7 @@ import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
 
+import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
 import static whelk.util.Jackson.mapper
@@ -317,11 +318,28 @@ class ElasticSearch {
                 REMOVABLE_BASE_URIS,
                 document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
 
-        // TODO: replace with elastic ICU Analysis plugin?
-        // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
-        DocumentUtil.findKey(framed, JsonLd.SEARCH_KEY) { value, path ->
-            if (!Unicode.isNormalizedForSearch(value)) {
+        DocumentUtil.traverse(framed) { value, path ->
+            if (path && JsonLd.SEARCH_KEY == path.last() && !Unicode.isNormalizedForSearch(value)) {
+                // TODO: replace with elastic ICU Analysis plugin?
+                // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
                 return new DocumentUtil.Replace(Unicode.normalizeForSearch(value))
+            }
+            
+            // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" } }
+            // -->
+            // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" }, "__foo": ["FOO", "EN", "SV"] }
+            if (value instanceof Map) {
+                var flattened = [:]
+                value.each { k, v ->
+                    if (k in whelk.jsonld.langContainerAlias) {
+                        var __k = flattenedLangMapKey(k)
+                        flattened[__k] = (flattened[__k] ?: []) + asList(v)
+                    } else if (k in whelk.jsonld.langContainerAliasInverted) {
+                        var __k = flattenedLangMapKey(whelk.jsonld.langContainerAliasInverted[k])
+                        flattened[__k] = (flattened[__k] ?: []) + ((Map) v).values().flatten()
+                    }
+                }
+                value.putAll(flattened)
             }
         }
 
@@ -330,6 +348,10 @@ class ElasticSearch {
         }
 
         return JsonOutput.toJson(framed)
+    }
+    
+    static String flattenedLangMapKey(key) {
+        return '__' + key
     }
 
     private static Map toSearchCard(Whelk whelk, Map thing, Set<String> preserveLinks) {
@@ -356,9 +378,8 @@ class ElasticSearch {
     }
 
     private static void filterLanguages(Whelk whelk, Map thing) {
-        Set languageContainers = whelk.jsonld.langContainerAlias.values() as Set
         DocumentUtil.traverse(thing, { value, path ->
-            if (path && path.last() in languageContainers) {
+            if (path && path.last() in whelk.jsonld.langContainerAliasInverted) {
                 Map<String, String> langContainer = value
                 var keep = langContainer.findAll { langTag, str -> langTag in whelk.jsonld.locales }
                 

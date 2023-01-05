@@ -93,6 +93,7 @@ class JsonLd {
     private Map<String, Set<String>> inRange
 
     Map langContainerAlias = [:]
+    Map langContainerAliasInverted
 
     /**
      * This includes terms that are declared as either set or list containers
@@ -193,6 +194,8 @@ class JsonLd {
                 }
             }
         }
+
+        langContainerAliasInverted = langContainerAlias.collectEntries { e -> [(e.value): e.key] }
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
