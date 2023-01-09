@@ -30,6 +30,13 @@ class ESQuery {
     private static final String OR_PREFIX = 'or-'
     private static final String EXISTS_PREFIX = 'exists-'
 
+    private static final Map recordsOverCacheRecordsBoost = [
+            'constant_score': [
+                    'filter': [ 'term': [ (JsonLd.RECORD_KEY + '.' + JsonLd.TYPE_KEY) : JsonLd.BASE_RECORD_TYPE ]],
+                    'boost': 1000.0
+            ]
+    ]
+
     private Map<String, List<String>> boostFieldsByType = [:]
     private ESQueryLensBoost lensBoost
 
@@ -137,7 +144,6 @@ class ESQuery {
         ]
 
         // In case of suggest/autocomplete search, target a specific field with a specific query type
-        // TODO: make language (sv, en) configurable?
         Map queryClauses = simpleQuery
 
         String[] boostParam = queryParameters.get('_boost')
@@ -175,6 +181,7 @@ class ESQuery {
                 'bool': ['should': [
                     boostedExact,
                     boostedSoft,
+                    recordsOverCacheRecordsBoost,
                     simpleQuery
                 ]]
             ]

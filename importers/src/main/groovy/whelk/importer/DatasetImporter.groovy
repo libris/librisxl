@@ -9,8 +9,8 @@ import whelk.JsonLd
 import whelk.TargetVocabMapper
 import whelk.Whelk
 import whelk.converter.TrigToJsonLdParser
-import whelk.exception.CancelUpdateException
 import whelk.util.DocumentUtil
+
 import static whelk.JsonLd.asList
 import static whelk.JsonLd.findInData
 import static whelk.util.Jackson.mapper
@@ -128,7 +128,7 @@ class DatasetImporter {
             idsInInput.add(dsRecord.getShortId())
         }
 
-        String recordType = sourceUrl ==~ /^(https?):.+/ ? 'CacheRecord' : 'Record'
+        String recordType = sourceUrl ==~ /^(https?):.+/ ? JsonLd.CACHE_RECORD_TYPE : JsonLd.BASE_RECORD_TYPE
 
         long updatedCount = 0
         long createdCount = 0
