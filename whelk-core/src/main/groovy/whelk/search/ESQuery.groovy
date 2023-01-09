@@ -1,13 +1,12 @@
 package whelk.search
 
-import groovy.transform.CompileDynamic
+
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.transform.TypeCheckingMode
 import groovy.util.logging.Log4j2 as Log
 import whelk.JsonLd
 import whelk.Whelk
-import whelk.component.ElasticSearch
 import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
@@ -29,6 +28,13 @@ class ESQuery {
     ]
     private static final String OR_PREFIX = 'or-'
     private static final String EXISTS_PREFIX = 'exists-'
+
+    private static final Map recordsOverCacheRecordsBoost = [
+            'constant_score': [
+                    'filter': [ 'term': [ (JsonLd.RECORD_KEY + '.' + JsonLd.TYPE_KEY) : JsonLd.RECORD_TYPE ]],
+                    'boost': 1000.0
+            ]
+    ]
 
     private Map<String, List<String>> boostFieldsByType = [:]
     private ESQueryLensBoost lensBoost
@@ -137,7 +143,6 @@ class ESQuery {
         ]
 
         // In case of suggest/autocomplete search, target a specific field with a specific query type
-        // TODO: make language (sv, en) configurable?
         Map queryClauses = simpleQuery
 
         String[] boostParam = queryParameters.get('_boost')
@@ -175,6 +180,7 @@ class ESQuery {
                 'bool': ['should': [
                     boostedExact,
                     boostedSoft,
+                    recordsOverCacheRecordsBoost,
                     simpleQuery
                 ]]
             ]

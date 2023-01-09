@@ -540,14 +540,14 @@ class MarcRuleSet {
 
             dfn = processInclude(config, dfn, tag)
 
-            if (dfn.aboutType && dfn.aboutType != 'Record') {
+            if (dfn.aboutType && dfn.aboutType != JsonLd.RECORD_TYPE) {
                 if (dfn.aboutEntity) {
                     assert tag && aboutTypeMap.containsKey(dfn.aboutEntity)
                 }
                 aboutTypeMap[dfn.aboutEntity ?: '?thing'] << dfn.aboutType
             }
             for (matchDfn in dfn['match']) {
-                if (matchDfn.aboutType && matchDfn.aboutType != 'Record') {
+                if (matchDfn.aboutType && matchDfn.aboutType != JsonLd.RECORD_TYPE) {
                     aboutTypeMap[matchDfn.aboutEntity ?: dfn.aboutEntity ?: '?thing'] << matchDfn.aboutType
                 }
             }
