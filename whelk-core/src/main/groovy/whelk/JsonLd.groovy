@@ -48,6 +48,9 @@ class JsonLd {
     static final String APIX_FAILURE_KEY = "apixExportFailedAt"
     static final String ENCODING_LEVEL_KEY = "marc:encLevel"
 
+    static final String RECORD_TYPE = 'Record'
+    static final String CACHE_RECORD_TYPE = 'CacheRecord'
+    
     static final String SEARCH_KEY = "_str"
 
     static final List<String> NS_SEPARATORS = ['#', '/', ':']
