@@ -239,7 +239,7 @@
                 "include_in_parent": true,
                 "properties": {
                     "@type": {"type": "keyword"},
-                    "__mainTitle": {
+                    "mainTitle": {
                         "type": "text",
                         "analyzer": "softmatcher",
                         "copy_to": "_all",
@@ -252,7 +252,7 @@
                     }
                 }
             },
-            "__prefLabel": {
+            "prefLabel": {
                 "type": "text",
                 "fields": {
                     "keyword": {

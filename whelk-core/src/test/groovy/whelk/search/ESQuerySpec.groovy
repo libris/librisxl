@@ -8,11 +8,6 @@ class ESQuerySpec extends Specification {
     void setup() {
         es = new ESQuery()
         es.setKeywords(['bar'] as Set)
-
-        Map context = ["@context": ["langAliasedByLang": ["@id": "langAliased", "@container": "@language"]]]
-        Map display = [:]
-        Map vocab = [:]
-        es.jsonld = new JsonLd(context, display, vocab)
     }
 
     def "should get query string"() {
@@ -101,12 +96,6 @@ class ESQuerySpec extends Specification {
                                             ]]
                                    ]]
 
-        ['langAliased': ['baz']] | [['bool': ['must': [
-                                                ['bool': [
-                                                    'should': [
-                                                        ['simple_query_string' : ['query': 'baz',
-                                                                                  'fields': ['__langAliased'],
-                                                                                  'default_operator': 'AND']]]]]]]]]
     }
 
     def "should create bool filter"(String key, String[] vals, Map result) {

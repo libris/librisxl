@@ -1,17 +1,17 @@
 package whelk.search
 
-
+import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.transform.TypeCheckingMode
 import groovy.util.logging.Log4j2 as Log
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.component.ElasticSearch
 import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
-import static whelk.component.ElasticSearch.flattenedLangMapKey
 import static whelk.util.Jackson.mapper
 
 @CompileStatic
@@ -600,7 +600,7 @@ class ESQuery {
         for (int i = 0 ; i < maxLen ; i++) {
             List<Map> musts = nestedQuery.findResults {
                 it.value.length > i 
-                    ? ['match': [(expandLangMapKeys(it.key)): it.value[i]]]
+                    ? ['match': [(it.key): it.value[i]]]
                     : null
             }
             
@@ -669,7 +669,7 @@ class ESQuery {
                     boolean isSimple = isSimple(val)
                     clauses.add([(isSimple ? 'simple_query_string' : 'query_string'): [
                             'query'           : isSimple ? val : escapeNonSimpleQueryString(val),
-                            'fields'          : [expandLangMapKeys(field)],
+                            'fields'          : [field],
                             'default_operator': 'AND'
                     ]])
                 }
@@ -677,15 +677,6 @@ class ESQuery {
         }
 
         return ['bool': ['should': clauses]]
-    }
-    
-    private String expandLangMapKeys(String field) {
-        var parts = field.split('\\.')
-        if (parts && parts[-1] in jsonld.langContainerAlias.keySet()) {
-            parts[-1] = flattenedLangMapKey(parts[-1])
-            return parts.join('.')
-        }
-        return field
     }
 
     private static boolean parseBoolean(String parameterName, String value) {
