@@ -36,17 +36,9 @@ class JsonLd {
     static final String CREATED_KEY = "created"
     static final String MODIFIED_KEY = "modified"
     static final String RECORD_STATUS_KEY = "recordStatus"
-    static final String DELETED_KEY = "deleted"
-    static final String COLLECTION_KEY = "collection"
-    static final String CONTENT_TYPE_KEY = "contentType"
-    static final String CHECKSUM_KEY = "checksum"
     static final String NON_JSON_CONTENT_KEY = "content"
-    static final String ALTERNATE_ID_KEY = "identifiers"
     static final String JSONLD_ALT_ID_KEY = "sameAs"
-    static final String CONTROL_NUMBER_KEY = "controlNumber"
     static final String ABOUT_KEY = "mainEntity"
-    static final String APIX_FAILURE_KEY = "apixExportFailedAt"
-    static final String ENCODING_LEVEL_KEY = "marc:encLevel"
 
     static final String RECORD_TYPE = 'Record'
     static final String CACHE_RECORD_TYPE = 'CacheRecord'
