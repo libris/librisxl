@@ -376,7 +376,7 @@ public class Merge {
         for (int i = 0; i < list.size(); ++i) {
             if (list.get(i) instanceof Map) {
                 Map m = (Map) list.get(i);
-                if (m.get("@type").equals(type))
+                if (m.get("@type") != null && m.get("@type").equals(type))
                     return i;
             }
         }
