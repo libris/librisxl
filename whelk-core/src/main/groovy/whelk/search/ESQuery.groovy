@@ -7,6 +7,7 @@ import groovy.transform.TypeCheckingMode
 import groovy.util.logging.Log4j2 as Log
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.component.ElasticSearch
 import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
@@ -64,6 +65,11 @@ class ESQuery {
             this.keywordFields =  getKeywordFields(mappings)
             this.dateFields = getFieldsOfType('date', mappings)
             this.nestedFields = getFieldsOfType('nested', mappings)
+            
+            if (mappings['properties']['__prefLabel']) {
+                whelk.elastic.ENABLE_SMUSH_LANG_TAGGED_PROPS = true
+                log.info("ENABLE_SMUSH_LANG_TAGGED_PROPS = true")
+            }
         } else {
             this.keywordFields = Collections.emptySet()
             this.dateFields = Collections.emptySet()
@@ -687,6 +693,10 @@ class ESQuery {
     }
     
     private String expandLangMapKeys(String field) {
+        if (!whelk.elastic.ENABLE_SMUSH_LANG_TAGGED_PROPS) {
+            return field
+        }
+        
         var parts = field.split('\\.')
         if (parts && parts[-1] in jsonld.langContainerAlias.keySet()) {
             parts[-1] = flattenedLangMapKey(parts[-1])
