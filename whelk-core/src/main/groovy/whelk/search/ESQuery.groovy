@@ -31,10 +31,16 @@ class ESQuery {
     private static final String EXISTS_PREFIX = 'exists-'
 
     private static final Map recordsOverCacheRecordsBoost = [
-            'constant_score': [
-                    'filter': [ 'term': [ (JsonLd.RECORD_KEY + '.' + JsonLd.TYPE_KEY) : JsonLd.RECORD_TYPE ]],
-                    'boost': 1000.0
-            ]
+            'bool': ['should': [
+                    ['constant_score': [
+                            'filter': [ 'term': [ (JsonLd.RECORD_KEY + '.' + JsonLd.TYPE_KEY) : JsonLd.RECORD_TYPE ]],
+                            'boost': 1000.0
+                    ]],
+                    ['constant_score': [
+                            'filter': [ 'term': [ (JsonLd.RECORD_KEY + '.' + JsonLd.TYPE_KEY) : JsonLd.CACHE_RECORD_TYPE ]],
+                            'boost': 1.0
+                    ]]
+            ]]
     ]
 
     private Map<String, List<String>> boostFieldsByType = [:]
@@ -177,14 +183,15 @@ class ESQuery {
                 ]
             ]
 
-            queryClauses = [
-                'bool': ['should': [
-                    boostedExact,
-                    boostedSoft,
-                    recordsOverCacheRecordsBoost,
-                    simpleQuery
-                ]]
-            ]
+            queryClauses = ['bool':
+                ['must': [
+                    ['bool': [ 'should': [
+                        boostedExact,
+                        boostedSoft,
+                        simpleQuery]]], 
+                    recordsOverCacheRecordsBoost
+                ]
+            ]]
         }
 
         Map query
