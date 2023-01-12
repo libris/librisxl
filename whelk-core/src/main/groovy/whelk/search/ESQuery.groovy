@@ -693,7 +693,7 @@ class ESQuery {
     }
     
     private String expandLangMapKeys(String field) {
-        if (!whelk.elastic.ENABLE_SMUSH_LANG_TAGGED_PROPS) {
+        if (whelk?.elastic && !whelk.elastic.ENABLE_SMUSH_LANG_TAGGED_PROPS) {
             return field
         }
         
