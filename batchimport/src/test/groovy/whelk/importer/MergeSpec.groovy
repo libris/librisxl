@@ -747,4 +747,87 @@ class MergeSpec extends Specification {
                         ]
                 ]]
     }
+
+    def "add primary contribution"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        def versions = [
+                ['changedBy': 'sigel1',
+                 'changedIn': 'batch import',
+                 'data': [
+                         '@graph': [
+                                 [
+                                         'modified': '2022-02-01T12:00:00Z',
+                                         'mainEntity': 'meID'
+                                 ],
+                                 [
+                                         '@id': 'meID',
+                                         'hasTitle': [
+                                                 ['@type': 'Title', 'mainTitle': 'Huvudtitel']
+                                         ],
+                                         'instanceOf': [
+                                                 'subject': ['@id': 'https://id.kb.se/term/sao/Fayyumportr%C3%A4tt'],
+                                                 'contribution': [
+                                                         ['@type': 'Contribution', 'agent': ['@id': 'some id']]
+                                                 ]
+                                         ]
+                                 ]
+                         ]
+                 ]
+                ]
+        ].collect { change ->
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+        }
+        def history = new History(versions, ld)
+        def incoming = new Document( (Map)
+                ['@graph': [
+                        [
+                                'modified': '2022-02-01T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'hasTitle': [
+                                        ['@type': 'Title', 'mainTitle': 'Huvudtitel']
+                                ],
+                                'instanceOf': [
+                                        'subject': ['@id': 'https://id.kb.se/term/sao/Fayyumportr%C3%A4tt'],
+                                        'contribution': [
+                                                ['@type': 'PrimaryContribution', 'agent': ['@id': 'other id']],
+                                                ['@type': 'Contribution', 'agent': ['@id': 'some id']]
+                                        ]
+                                ]
+                        ]
+                ]])
+        Document base = versions.last().doc
+        Merge merge = new Merge(
+                [
+                        "rules": [
+                                ["operation": "add_if_none", "path": ["@graph",1,"instanceOf", "contribution", "@type=PrimaryContribution"], "priority": ["sigel1": 1, "sigel2": 2]]
+                        ]
+                ]
+        )
+        merge.merge(base, incoming, "sigel2", history)
+        expect:
+        base.data == [
+                '@graph': [
+                        [
+                                'modified': '2022-02-01T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'hasTitle': [
+                                        ['@type': 'Title', 'mainTitle': 'Huvudtitel']
+                                ],
+                                'instanceOf': [
+                                        'subject': ['@id': 'https://id.kb.se/term/sao/Fayyumportr%C3%A4tt'],
+                                        'contribution': [
+                                                ['@type': 'Contribution', 'agent': ['@id': 'some id']],
+                                                ['@type': 'PrimaryContribution', 'agent': ['@id': 'other id']]
+                                        ]
+                                ]
+                        ]
+                ]]
+    }
 }
