@@ -1,4 +1,4 @@
-package whelk.importer;
+package whelk.importer
 
 import spock.lang.Specification
 import whelk.Document
@@ -237,7 +237,7 @@ class MergeSpec extends Specification {
         Merge merge = new Merge(
                 [
                         "rules": [
-                                ["operation": "add_if_none", "path": ["@graph",1,"b"], "priority": ["sigel1": 1, "sigel2": 2]]
+                                ["operation": "add_if_none", "path": ["@graph",1], "priority": ["sigel1": 1, "sigel2": 2]]
                         ]
                 ]
         )
@@ -275,7 +275,7 @@ class MergeSpec extends Specification {
         Merge merge = new Merge(
                 [
                         "rules": [
-                                ["operation": "add_if_none", "path": ["@graph",1,"b"], "priority": ["sigel1": 2, "sigel2": 1]]
+                                ["operation": "add_if_none", "path": ["@graph",1], "priority": ["sigel1": 2, "sigel2": 1]]
                         ]
                 ]
         )
@@ -503,5 +503,248 @@ class MergeSpec extends Specification {
                 ['modified': '2022-02-01T12:00:00Z'],
                 ['a': "something", 'b': "something else"]
         ]]
+    }
+
+    def "add subtitle with higher priority"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        def versions = [
+                ['changedBy': 'sigel1',
+                 'changedIn': 'batch import',
+                 'data': [
+                         '@graph': [
+                                 [
+                                         'modified': '2022-02-01T12:00:00Z',
+                                         'mainEntity': 'meID'
+                                 ],
+                                 [
+                                         '@id': 'meID',
+                                         'hasTitle': [
+                                                 ['@type': 'Title', 'mainTitle': 'Huvudtitel']
+                                         ],
+                                         'instanceOf': [
+                                                 'subject': ['@id': 'https://id.kb.se/term/sao/Fayyumportr%C3%A4tt'],
+                                                 'contribution': [
+                                                         ['@type': 'PrimaryContribution', 'agent': ['@id': 'https://libris-qa.kb.se/rp355vx91wjt2ms#it']]
+                                                 ]
+                                         ]
+                                 ]
+                         ]
+                 ]
+                ]
+        ].collect { change ->
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+        }
+        def history = new History(versions, ld)
+        def incoming = new Document( (Map)
+                ['@graph': [
+                [
+                        'modified': '2022-02-01T12:00:00Z',
+                        'mainEntity': 'meID'
+                ],
+                [
+                        '@id': 'meID',
+                        'hasTitle': [
+                                ['@type': 'Title', 'mainTitle': 'Huvudtitel', 'subtitle': 'Undertitel']
+                        ],
+                        'instanceOf': [
+                                'subject': ['@id': 'https://id.kb.se/term/sao/Fayyumportr%C3%A4tt'],
+                                'contribution': [
+                                        ['@type': 'PrimaryContribution', 'agent': ['@id': 'https://libris-qa.kb.se/rp355vx91wjt2ms#it']]
+                                ]
+                        ]
+                ]
+        ]])
+        Document base = versions.last().doc
+        Merge merge = new Merge(
+                [
+                        "rules": [
+                                ["operation": "add_if_none", "path": ["@graph",1,"hasTitle"], "priority": ["sigel1": 1, "sigel2": 2]]
+                        ]
+                ]
+        )
+        merge.merge(base, incoming, "sigel2", history)
+        expect:
+        base.data == [
+                '@graph': [
+                [
+                        'modified': '2022-02-01T12:00:00Z',
+                        'mainEntity': 'meID'
+                ],
+                [
+                        '@id': 'meID',
+                        'hasTitle': [
+                                ['@type': 'Title', 'mainTitle': 'Huvudtitel', 'subtitle': 'Undertitel']
+                        ],
+                        'instanceOf': [
+                                'subject': ['@id': 'https://id.kb.se/term/sao/Fayyumportr%C3%A4tt'],
+                                'contribution': [
+                                        ['@type': 'PrimaryContribution', 'agent': ['@id': 'https://libris-qa.kb.se/rp355vx91wjt2ms#it']]
+                                ]
+                        ]
+                ]
+        ]]
+    }
+
+    def "add subtitle with equal priority"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        def versions = [
+                ['changedBy': 'sigel1',
+                 'changedIn': 'batch import',
+                 'data': [
+                         '@graph': [
+                                 [
+                                         'modified': '2022-02-01T12:00:00Z',
+                                         'mainEntity': 'meID'
+                                 ],
+                                 [
+                                         '@id': 'meID',
+                                         'hasTitle': [
+                                                 ['@type': 'Title', 'mainTitle': 'Huvudtitel']
+                                         ],
+                                         'instanceOf': [
+                                                 'subject': ['@id': 'https://id.kb.se/term/sao/Fayyumportr%C3%A4tt'],
+                                                 'contribution': [
+                                                         ['@type': 'PrimaryContribution', 'agent': ['@id': 'https://libris-qa.kb.se/rp355vx91wjt2ms#it']]
+                                                 ]
+                                         ]
+                                 ]
+                         ]
+                 ]
+                ]
+        ].collect { change ->
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+        }
+        def history = new History(versions, ld)
+        def incoming = new Document( (Map)
+                ['@graph': [
+                        [
+                                'modified': '2022-02-01T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'hasTitle': [
+                                        ['@type': 'Title', 'mainTitle': 'Huvudtitel', 'subtitle': 'Undertitel']
+                                ],
+                                'instanceOf': [
+                                        'subject': ['@id': 'https://id.kb.se/term/sao/Fayyumportr%C3%A4tt'],
+                                        'contribution': [
+                                                ['@type': 'PrimaryContribution', 'agent': ['@id': 'https://libris-qa.kb.se/rp355vx91wjt2ms#it']]
+                                        ]
+                                ]
+                        ]
+                ]])
+        Document base = versions.last().doc
+        Merge merge = new Merge(
+                [
+                        "rules": [
+                                ["operation": "add_if_none", "path": ["@graph",1,"hasTitle"], "priority": ["sigel1": 1, "sigel2": 1]]
+                        ]
+                ]
+        )
+        merge.merge(base, incoming, "sigel2", history)
+        expect:
+        base.data == [
+                '@graph': [
+                        [
+                                'modified': '2022-02-01T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'hasTitle': [
+                                        ['@type': 'Title', 'mainTitle': 'Huvudtitel', 'subtitle': 'Undertitel']
+                                ],
+                                'instanceOf': [
+                                        'subject': ['@id': 'https://id.kb.se/term/sao/Fayyumportr%C3%A4tt'],
+                                        'contribution': [
+                                                ['@type': 'PrimaryContribution', 'agent': ['@id': 'https://libris-qa.kb.se/rp355vx91wjt2ms#it']]
+                                        ]
+                                ]
+                        ]
+                ]]
+    }
+
+    def "don't add subtitle with lower priority"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        def versions = [
+                ['changedBy': 'sigel1',
+                 'changedIn': 'batch import',
+                 'data': [
+                         '@graph': [
+                                 [
+                                         'modified': '2022-02-01T12:00:00Z',
+                                         'mainEntity': 'meID'
+                                 ],
+                                 [
+                                         '@id': 'meID',
+                                         'hasTitle': [
+                                                 ['@type': 'Title', 'mainTitle': 'Huvudtitel']
+                                         ],
+                                         'instanceOf': [
+                                                 'subject': ['@id': 'https://id.kb.se/term/sao/Fayyumportr%C3%A4tt'],
+                                                 'contribution': [
+                                                         ['@type': 'PrimaryContribution', 'agent': ['@id': 'https://libris-qa.kb.se/rp355vx91wjt2ms#it']]
+                                                 ]
+                                         ]
+                                 ]
+                         ]
+                 ]
+                ]
+        ].collect { change ->
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+        }
+        def history = new History(versions, ld)
+        def incoming = new Document( (Map)
+                ['@graph': [
+                        [
+                                'modified': '2022-02-01T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'hasTitle': [
+                                        ['@type': 'Title', 'mainTitle': 'Huvudtitel', 'subtitle': 'Undertitel']
+                                ],
+                                'instanceOf': [
+                                        'subject': ['@id': 'https://id.kb.se/term/sao/Fayyumportr%C3%A4tt'],
+                                        'contribution': [
+                                                ['@type': 'PrimaryContribution', 'agent': ['@id': 'https://libris-qa.kb.se/rp355vx91wjt2ms#it']]
+                                        ]
+                                ]
+                        ]
+                ]])
+        Document base = versions.last().doc
+        Merge merge = new Merge(
+                [
+                        "rules": [
+                                ["operation": "add_if_none", "path": ["@graph",1,"hasTitle"], "priority": ["sigel1": 2, "sigel2": 1]]
+                        ]
+                ]
+        )
+        merge.merge(base, incoming, "sigel2", history)
+        expect:
+        base.data == [
+                '@graph': [
+                        [
+                                'modified': '2022-02-01T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'hasTitle': [
+                                        ['@type': 'Title', 'mainTitle': 'Huvudtitel']
+                                ],
+                                'instanceOf': [
+                                        'subject': ['@id': 'https://id.kb.se/term/sao/Fayyumportr%C3%A4tt'],
+                                        'contribution': [
+                                                ['@type': 'PrimaryContribution', 'agent': ['@id': 'https://libris-qa.kb.se/rp355vx91wjt2ms#it']]
+                                        ]
+                                ]
+                        ]
+                ]]
     }
 }

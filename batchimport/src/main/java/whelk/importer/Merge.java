@@ -127,7 +127,7 @@ public class Merge {
                 if (prioMap.get(incomingAgent) != null)
                     incomingPrio = (Integer) prioMap.get(incomingAgent);
 
-                if (incomingPrio > manualPrio && incomingPrio > systematicPrio) {
+                if (incomingPrio >= manualPrio && incomingPrio >= systematicPrio) {
                     return true;
                 }
                 return false;
