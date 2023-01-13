@@ -159,6 +159,23 @@ class ElasticSearch {
             return [:]
         }
     }
+    
+    int getFieldCount() {
+        Map response
+        try {
+            response = mapper.readValue(client.performRequest('GET', "/${indexName}/_field_caps?fields=*", ''), Map)
+        } catch (Exception e) {
+            log.warn("Error getting fields from ES: $e", e)
+            return -1
+        }
+        
+        try {
+            return response.fields.size()
+        } catch (Exception e) {
+            log.warn("Error parsing response when getting number of fields from ES: $e", e)
+            return -1
+        }
+    }
 
     void bulkIndex(Collection<Document> docs, Whelk whelk) {
         if (docs) {
