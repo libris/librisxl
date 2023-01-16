@@ -8,6 +8,7 @@ import whelk.component.CachingPostgreSQLComponent
 import whelk.component.DocumentNormalizer
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
+import whelk.component.PostgreSQLComponent.UpdateAgent
 import whelk.component.SparqlUpdater
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.StorageCreateFailedException
@@ -57,7 +58,8 @@ class Whelk {
 
     URI baseUri = null
     boolean skipIndex = false
-
+    boolean skipIndexDependers = false
+    
     // useCache may be set to true only when doing initial imports (temporary processes with the rest of Libris down).
     // Any other use of this results in a "local" cache, which will not be invalidated when data changes elsewhere,
     // resulting in potential serving of stale data.
@@ -257,11 +259,11 @@ class Whelk {
                 .collectEntries { id, doc -> [(idMap.getOrDefault(id, id)) : doc]}
     }
     
-    private void reindexUpdated(Document updated, Document preUpdateDoc, boolean refreshDependers) {
+    private void reindexUpdated(Document updated, Document preUpdateDoc) {
         indexAsyncOrSync {
             elastic.index(updated, this)
             
-            if (refreshDependers) {
+            if (!skipIndexDependers) {
                 if (hasChangedMainEntityId(updated, preUpdateDoc)) {
                     reindexAllLinks(updated.shortId)
                 } else {
@@ -394,7 +396,7 @@ class Whelk {
     /**
      * NEVER use this to _update_ a document. Use storeAtomicUpdate() instead. Using this for new documents is fine.
      */
-    boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted, boolean refreshDependers) {
+    boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted) {
         normalize(document)
         
         boolean detectCollisionsOnTypedIDs = false
@@ -408,7 +410,7 @@ class Whelk {
         if (success) {
             indexAsyncOrSync {
                 elastic.index(document, this)
-                if(refreshDependers) {
+                if (!skipIndexDependers) {
                     reindexAffected(document, new TreeSet<>(), document.getExternalRefs())
                 }
             }
@@ -424,16 +426,12 @@ class Whelk {
      * Parameter explanation:
      * minorUpdate - When set to true, the 'modified' timestamp will not be updated. This results in no exports being triggered.
      * writeIdenticalVersions - When set to true, a new entry will be written to the versions table even if the data did not change.
-     * refreshDependers - When set to true (you almost always want this!) records referencing the updated record will have their
-     *                    various denormalized things refreshed as well. If you set this to false, the onus is on you to make sure
-     *                    your changes to the data do not affect the dependencies table, and to reindex all the dependeing records
-     *                    if/when necessary.
      *
      * Returns true if anything was written.
      */
-    boolean storeAtomicUpdate(String id, boolean minorUpdate, boolean writeIdenticalVersions, boolean refreshDependers, String changedIn, String changedBy, PostgreSQLComponent.UpdateAgent updateAgent) {
+    boolean storeAtomicUpdate(String id, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, UpdateAgent updateAgent) {
         Document preUpdateDoc = null
-        Document updated = storage.storeUpdate(id, minorUpdate, writeIdenticalVersions, refreshDependers, changedIn, changedBy, { Document doc ->
+        Document updated = storage.storeUpdate(id, minorUpdate, writeIdenticalVersions, changedIn, changedBy, { Document doc ->
             preUpdateDoc = doc.clone()
             updateAgent.update(doc)
             normalize(doc)
@@ -443,22 +441,22 @@ class Whelk {
             return false
         }
    
-        reindexUpdated(updated, preUpdateDoc, refreshDependers)
+        reindexUpdated(updated, preUpdateDoc)
         sparqlUpdater?.pollNow()
 
         return true
     }
 
-    void storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, boolean refreshDependers, String changedIn, String changedBy, String oldChecksum) {
+    void storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, String oldChecksum) {
         normalize(doc)
         Document preUpdateDoc = storage.load(doc.shortId)
-        Document updated = storage.storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, refreshDependers, changedIn, changedBy, oldChecksum)
+        Document updated = storage.storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, changedIn, changedBy, oldChecksum)
 
         if (updated == null) {
             return
         }
         
-        reindexUpdated(updated, preUpdateDoc, refreshDependers)
+        reindexUpdated(updated, preUpdateDoc)
         sparqlUpdater?.pollNow()
     }
 
@@ -477,7 +475,9 @@ class Whelk {
         storage.remove(id, changedIn, changedBy, force)
         indexAsyncOrSync {
             elastic.remove(id)
-            reindexAffected(doc, doc.getExternalRefs(), Collections.emptySet())
+            if (!skipIndexDependers) {
+                reindexAffected(doc, doc.getExternalRefs(), Collections.emptySet())
+            }
         }
     }
 

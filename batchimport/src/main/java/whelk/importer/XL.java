@@ -2,7 +2,6 @@ package whelk.importer;
 
 import groovy.lang.Tuple;
 import io.prometheus.client.Counter;
-import se.kb.libris.Normalizers;
 import se.kb.libris.util.marc.Datafield;
 import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcRecord;
@@ -146,7 +145,7 @@ class XL
                             + existing.getDataAsString());
                 }
                 else {
-                    m_whelk.storeAtomicUpdate(idToMerge, false, false, true, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(), (Document existing) -> {
+                    m_whelk.storeAtomicUpdate(idToMerge, false, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(), (Document existing) -> {
                         String existingChecksum = existing.getChecksum(m_whelk.getJsonld());
 
                         List<String> recordIDs = existing.getRecordIdentifiers();
@@ -259,7 +258,7 @@ class XL
             {
                 try
                 {
-                    m_whelk.storeAtomicUpdate(replaceSystemId, false, false, true, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(),
+                    m_whelk.storeAtomicUpdate(replaceSystemId, false, false, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(),
                             (Document doc) ->
                     {
                         String existingEncodingLevel = doc.getEncodingLevel();
@@ -304,7 +303,7 @@ class XL
             else
             {
                 // Doing simple "new"
-                m_whelk.createDocument(rdfDoc, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(), collection, false, true);
+                m_whelk.createDocument(rdfDoc, IMPORT_SYSTEM_CODE, m_parameters.getChangedBy(), collection, false);
             }
         }
         else

@@ -519,7 +519,7 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
-            whelk.storeAtomicUpdate(doc, !item.loud, true, true, changedIn, scriptJobUri, item.preUpdateChecksum)
+            whelk.storeAtomicUpdate(doc, !item.loud, true, changedIn, scriptJobUri, item.preUpdateChecksum)
         }
         modifiedLog.println(doc.shortId)
     }
@@ -530,8 +530,8 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
-            if (!whelk.createDocument(doc, changedIn, scriptJobUri,
-                    LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld()), false, true))
+            var collection = LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld())
+            if (!whelk.createDocument(doc, changedIn, scriptJobUri, collection, false))
                 throw new WhelkException("Failed to save a new document. See general whelk log for details.")
         }
         createdLog.println(doc.shortId)
