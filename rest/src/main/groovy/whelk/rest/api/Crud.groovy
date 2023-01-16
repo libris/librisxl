@@ -694,11 +694,11 @@ class Crud extends HttpServlet {
                             .orElseThrow({ -> new BadRequestException("Missing If-Match header in update") })
                     
                     log.info("If-Match: ${ifMatch}")
-                    whelk.storeAtomicUpdate(doc, false, true, true, "xl", activeSigel, ifMatch.documentCheckSum())
+                    whelk.storeAtomicUpdate(doc, false, true, "xl", activeSigel, ifMatch.documentCheckSum())
                 }
                 else {
                     log.debug("Saving NEW document ("+ doc.getId() +")")
-                    boolean success = whelk.createDocument(doc, "xl", activeSigel, collection, false, true)
+                    boolean success = whelk.createDocument(doc, "xl", activeSigel, collection, false)
                     if (!success) {
                         return null
                     }

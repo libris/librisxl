@@ -36,9 +36,7 @@ class DatasetImporter {
     static REPLACE_MAIN_IDS = 'replace-main-ids' // replace id with XL-id (move current to sameAs)
 
     static FORCE_DELETE = 'force-delete'
-
-    static SKIP_DEPENDERS = 'skip-dependers'
-
+    
     enum WRITE_RESULT {
         ALREADY_UP_TO_DATE,
         UPDATED,
@@ -55,7 +53,6 @@ class DatasetImporter {
 
     boolean replaceMainIds = false
     boolean forceDelete = false
-    boolean refreshDependers = true
     String collection = NO_MARC_COLLECTION
 
     TargetVocabMapper tvm = null
@@ -76,7 +73,6 @@ class DatasetImporter {
 
         replaceMainIds = flags.get(REPLACE_MAIN_IDS) == true
         forceDelete = flags.get(FORCE_DELETE) == true
-        refreshDependers = flags.get(SKIP_DEPENDERS) != true
 
         if (Runtime.getRuntime().maxMemory() < 2l * 1024l * 1024l * 1024l) {
             log.warn("This application may require substantial amounts of memory, " +
@@ -377,15 +373,16 @@ class DatasetImporter {
         Document storedDoc = whelk.getDocument(incomingDoc.getShortId())
         WRITE_RESULT result
         if (storedDoc != null) {
-            if (whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, false, refreshDependers, "xl", null, { doc ->
-                    doc.data = incomingDoc.data
-                }))
+            boolean updated = whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, false, "xl", null, { doc ->
+                doc.data = incomingDoc.data
+            })
+            if (updated) {
                 result = WRITE_RESULT.UPDATED
-            else {
+            } else {
                 result = WRITE_RESULT.ALREADY_UP_TO_DATE
             }
         } else {
-            whelk.createDocument(incomingDoc, "xl", null, collection, false, refreshDependers)
+            whelk.createDocument(incomingDoc, "xl", null, collection, false)
             result = WRITE_RESULT.CREATED
         }
         return result
@@ -399,7 +396,7 @@ class DatasetImporter {
         long deletedCount = 0
         whelk.storage.doForIdInDataset(dsInfo.uri, { String storedIdInDataset ->
             if (!idsInInput.contains(storedIdInDataset)) {
-                if (!remove(storedIdInDataset)) {
+                if (!remove(storedIdInDataset, forceDelete)) {
                     needsRetry.add(storedIdInDataset)
                 } else {
                     deletedCount++
@@ -414,7 +411,7 @@ class DatasetImporter {
         while (anythingRemovedLastPass) {
             anythingRemovedLastPass = false
             needsRetry.removeAll { String storedIdInDataset ->
-                if (remove(storedIdInDataset)) {
+                if (remove(storedIdInDataset, forceDelete)) {
                     anythingRemovedLastPass = true
                     deletedCount++
                     return true
@@ -424,16 +421,28 @@ class DatasetImporter {
         }
 
         if (!needsRetry.isEmpty()) {
+            Set dependers = needsRetry.collect { whelk.storage.getDependers(it) }.flatten().toSet()
+            if (needsRetry.containsAll(dependers)) {
+                var removed = needsRetry.findResults { remove(it, true) ? it : null }
+                deletedCount += removed.size()
+                needsRetry.removeAll(removed)
+                if (!needsRetry.isEmpty()) {
+                    log.error("Could not force delete the following IDs:\n" + needsRetry)
+                }
+            }
+        }
+        
+        if (!needsRetry.isEmpty()) {
             log.warn("The following IDs SHOULD have been deleted, but doing so was not " +
                     "possible, so they were skipped (most likely they are still depended upon):\n" + needsRetry)
         }
-
+        
         return deletedCount
     }
 
-    private boolean remove(String id) {
+    private boolean remove(String id, boolean force) {
         try {
-            whelk.remove(id, "xl", null, forceDelete)
+            whelk.remove(id, "xl", null, force)
             return true
         } catch ( RuntimeException re ) {
             // The expected exception here is: java.lang.RuntimeException: Deleting depended upon records is not allowed.

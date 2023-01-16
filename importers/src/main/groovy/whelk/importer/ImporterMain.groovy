@@ -45,6 +45,9 @@ class ImporterMain {
         if (flags['skip-index']) {
             whelk.setSkipIndex(true)
         }
+        if (flags['skip-dependers']) {
+            whelk.setSkipIndexDependers(true)
+        }
         new DatasetImporter(whelk, datasetUri, flags, datasetDescPath).importDataset(sourceUrl)
     }
 
@@ -54,6 +57,9 @@ class ImporterMain {
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
         if (flags['skip-index']) {
             whelk.setSkipIndex(true)
+        }
+        if (flags['skip-dependers']) {
+            whelk.setSkipIndexDependers(true)
         }
         DatasetImporter.loadDescribedDatasets(whelk, datasetDescPath, sourceBaseDir, onlyDatasets as Set, flags)
     }
