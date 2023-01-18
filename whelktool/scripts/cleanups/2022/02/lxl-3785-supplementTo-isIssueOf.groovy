@@ -101,14 +101,17 @@ def where = """
     collection = 'bib'
     AND deleted = 'false'
     AND data#>>'{@graph,1,@type}' = 'Electronic'
-    AND (data#>>'{@graph,1,supplementTo}' IS NOT NULL OR data#>>'{@graph,1,isPartOf}' IS NOT NULL)
+    AND (
+        (data#>>'{@graph,1,supplementTo}' IS NOT NULL OR data#>>'{@graph,1,isPartOf}' IS NOT NULL)
+        OR (data#>>'{@graph,1,editionStatement}' IS NOT NULL AND data#>>'{@graph,1,isIssueOfEdition}' IS NULL)
+    )
     ${lastRunTimestamp ? "AND created >= '$lastRunTimestamp'" : ''}
 """
 
 selectBySqlWhere(where) { bib ->
     def (record, thing) = bib.graph
-    
-    if (!thing.supplementTo && !thing.isPartOf) {
+
+    if (!thing.supplementTo && !thing.isPartOf && !thing.editionStatement) {
         return
     }
 
@@ -176,6 +179,15 @@ selectBySqlWhere(where) { bib ->
         }
         if (!thing.isPartOf) {
             thing.remove('isPartOf')
+        }
+    }
+
+    if (thing.editionStatement) {
+        def isIssueOfEdition = getEditionLink(thing.editionStatement)
+        if (isIssueOfEdition) {
+            thing.isIssueOfEdition = ['@id': isIssueOfEdition]
+            bib.scheduleSave()
+            thing.remove('editionStatement')
         }
     }
 }
@@ -289,6 +301,14 @@ boolean isMimerRecord(String id) {
         result = true
     }
     return result
+}
+
+@Memoized
+String getEditionLink(String signeEditionCode) {
+    // To make linking easy, editions have a nominal (not necessarily canonical) id.
+    // NOTE: These are nominal id:s (and not baseUri-dependent).
+    String id = "https://libris.kb.se/dataset/signe/edition/${signeEditionCode}"
+    return findCanonicalId(id)
 }
 
 // --------------------------------------------------------------------------------------
