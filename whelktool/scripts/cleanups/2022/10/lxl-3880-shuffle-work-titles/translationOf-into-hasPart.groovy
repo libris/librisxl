@@ -10,7 +10,7 @@
  *  - work.translationOf has exactly one language
  *  - work.translationOf differs from every hasPart.language
  *
- *  *Except entities that have either of the forms {@type,language}, {@type,contentType}, {@type,genreForm,intendedAudience} or {@type,genreForm}
+ *  *Except entities that have either of the forms {@type ,language}, {@type ,contentType}, {@type ,genreForm,intendedAudience} or {@type ,genreForm}
  *    These are ignored.
  *  **With a few exceptions, see code.
  *
@@ -92,7 +92,7 @@ selectBySqlWhere(where) { bib ->
         return
     }
 
-    if (hasPart.any { p -> !(p.keySet() in exceptShapes) && !p[HAS_TITLE] }) {
+    if (hasPart.any { p -> !(p.keySet() in exceptShapes || p[HAS_TITLE]) }) {
         unhandled.println([id, "missing title"].join('\t'))
         return
     }
@@ -150,9 +150,11 @@ selectBySqlWhere(where) { bib ->
 
 def linkLangs(LanguageLinker linker, Object obj, List disambiguationNodes = []) {
     asList(obj).each { entity ->
-        entity.subMap('language')?.with {
-            linker.linkLanguages(it, disambiguationNodes)
-            entity['language'] = it['language']
+        if (entity['language']) {
+            entity.subMap('language').with {
+                linker.linkLanguages(it, disambiguationNodes)
+                entity['language'] = it['language']
+            }
         }
     }
 }
