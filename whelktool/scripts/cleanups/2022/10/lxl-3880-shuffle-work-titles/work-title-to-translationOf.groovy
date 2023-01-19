@@ -4,7 +4,7 @@ propertyAlreadyExists = getReportWriter('property-already-exists.tsv')
 HAS_TITLE = 'hasTitle'
 TRANSLATION_OF = 'translationOf'
 
-TITLE_RELATED_PROPS = ['hasTitle', 'musicKey', 'musicMedium', 'version', 'marc:version', 'marc:fieldref', 'legalDate', 'originDate']
+TITLE_RELATED_PROPS = ['hasTitle', 'legalDate']
 
 def where = """
     collection = 'bib'
@@ -34,7 +34,7 @@ boolean moveTitlesRecursive(Object o, String id, String via) {
 }
 
 boolean tryMoveTitle(Map work, String id, String via) {
-    def moveThese = work.keySet().intersect(TITLE_RELATED_PROPS) //TODO: Maybe keep some properties on work, needs further analysis
+    def moveThese = work.keySet().intersect(TITLE_RELATED_PROPS)
 
     if (!moveThese.contains(HAS_TITLE)
             || asList(work[TRANSLATION_OF]).size() != 1
@@ -53,6 +53,7 @@ boolean tryMoveTitle(Map work, String id, String via) {
                 return true
             }
         }
+        work.remove('musicKey')
 //        normalizePunctuation(translationOf[HAS_TITLE])
         moved.println([id, via, moveThese, translationOf].join('\t'))
         return true
