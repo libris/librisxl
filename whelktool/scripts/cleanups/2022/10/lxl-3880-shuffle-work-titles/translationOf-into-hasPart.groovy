@@ -38,7 +38,7 @@ TRANSLATION_OF = 'translationOf'
 TYPE = '@type'
 ID = '@id'
 
-def exceptShapes = [['@type', 'language'], ['@type', 'contentType'], ['@type', 'genreForm', 'intendedAudience'], ['@type', 'genreForm']]*.toSet()
+def exceptShapes = [['@id'], ['@type', 'language'], ['@type', 'contentType'], ['@type', 'genreForm', 'intendedAudience'], ['@type', 'genreForm']]*.toSet()
 
 selectBySqlWhere(where) { bib ->
     def langLinker = bib.whelk.normalizer.normalizers.find { it.linker instanceof LanguageLinker }.linker
@@ -59,14 +59,6 @@ selectBySqlWhere(where) { bib ->
 
     def workLang = asList(work[LANGUAGE])
     def trlOfLang = asList(asList(translationOf)[0][LANGUAGE])
-
-    hasPart.each { p ->
-        if (p[ID]) {
-            def t = loadThing(p[ID])
-            p.clear()
-            p.putAll(t.subMap([TYPE, HAS_TITLE, LANGUAGE]))
-        }
-    }
 
     if (!hasPart.any { it[HAS_TITLE] && it[LANGUAGE] }) {
         return
