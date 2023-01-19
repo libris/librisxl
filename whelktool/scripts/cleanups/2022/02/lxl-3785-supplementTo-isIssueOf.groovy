@@ -115,18 +115,18 @@ selectBySqlWhere(where) { bib ->
         return
     }
 
-    if (!isMimerRecord(thing.'@id')) {
-        notMimer.println(thing.'@id')
-        return
-    }
-    
     if(marcGf(thing).with { it && it.any {l -> l != 'issue'}}) {
         otherMarcGf.println("${thing.'@id'}\t${marcGf(thing)}")
         return
     }
-    
+
+    if (!isMimerRecord(thing.'@id')) {
+        notMimer.println(thing.'@id')
+        return
+    }
+
     def isIssueOf = asList(thing.isIssueOf) as Set
-    
+
     def i = ((List) thing.supplementTo).iterator()
     while (i.hasNext()) {
         Map supplementTo = (Map) i.next()
