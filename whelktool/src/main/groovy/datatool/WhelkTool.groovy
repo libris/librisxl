@@ -46,6 +46,9 @@ class WhelkTool {
     File scriptFile
     CompiledScript script
     String scriptJobUri
+
+    private Bindings bindings
+
     private boolean hasStoredScriptJob
 
     String changedIn = "xl"
@@ -382,9 +385,12 @@ class WhelkTool {
     private boolean processBatch(Closure process, Batch batch, def counter) {
         boolean doContinue = true
         for (DocumentItem item : batch.items) {
+            var globals = new HashSet(bindings.keySet())
+
             if (!useThreads) {
                 repeat "Processing $item.number: ${item.doc.id} ($counter.summary)"
             }
+
             try {
                 doContinue = doProcess(process, item, counter)
             } catch (Throwable err) {
@@ -398,6 +404,15 @@ class WhelkTool {
                 errorDetected = err
                 return false
             }
+
+            var newglobals = bindings.keySet() - globals
+            if (newglobals) {
+                System.err.println("FORBIDDEN - new bindings detected: ${newglobals}")
+                System.err.println("Adding new global bindings during record processing is forbidden (since they share state across threads).")
+                System.err.println("Aborting.")
+                System.exit(1)
+            }
+
             if (!doContinue) {
                 break
             }
@@ -628,7 +643,7 @@ class WhelkTool {
 
     private void run() {
         whelk.setSkipIndex(skipIndex)
-        
+
         log "Running Whelk against:"
         log "  PostgreSQL:"
         log "    url:     ${whelk.storage.connectionPool.getJdbcUrl()}"
@@ -647,8 +662,10 @@ class WhelkTool {
         if (limit > -1) log "  limit: $limit"
         if (allowLoud) log "  allowLoud"
         log()
-        Bindings bindings = createMainBindings()
+
+        bindings = createMainBindings()
         script.eval(bindings)
+
         finish()
     }
 
