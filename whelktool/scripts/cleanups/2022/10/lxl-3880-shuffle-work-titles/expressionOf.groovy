@@ -8,14 +8,10 @@ propertyAlreadyExists = getReportWriter('property-already-exists.tsv')
 brokenLinks = getReportWriter('broken-links.tsv')
 langDiff = getReportWriter('lang-diff.tsv')
 relinked = getReportWriter('relinked.tsv')
-linked = getReportWriter('linked-mappings-from-file.tsv')
+linked = getReportWriter('linked.tsv')
 
-linkedStats = new StatsReport(getReportWriter('stats-linked-mappings-from-file.txt'), 3)
+linkedStats = new StatsReport(getReportWriter('stats-linked.txt'), 3)
 notLinkedStats = new StatsReport(getReportWriter('stats-not-linked.txt'), 3)
-notLinkedStatsTranslations = new StatsReport(getReportWriter('stats-not-linked-translations.txt'), 3)
-notLinkedStatsOrigLang = new StatsReport(getReportWriter('stats-not-linked-orig-lang.txt'), 3)
-instanceTitles = new StatsReport(getReportWriter('stats-instance-titles.txt'), 3)
-instanceTitlesTranslations = new StatsReport(getReportWriter('stats-instance-titles-translations.txt'), 3)
 unhandledUniformWorkTitles = new StatsReport(getReportWriter('unhandled-uniform-work-titles.txt'), 3)
 
 HAS_TITLE = 'hasTitle'
@@ -35,7 +31,7 @@ hubTitleToWorkHub = loadHubTitleToHubMappings()
 localExpressionOfToHubTitle = loadLocalExpressionOfToHubTitleMappings('hub-data/local-expressionOf.tsv')
 hymnsAndBibles = loadHymnsAndBibles('hub-data/psalmböcker-och-biblar.tsv')
 
-TITLE_RELATED_PROPS = ['musicKey', 'musicMedium', 'version', 'marc:version', 'marc:fieldref', 'legalDate', 'originDate']
+TITLE_RELATED_PROPS = ['musicMedium', 'version', 'marc:version', 'legalDate', 'originDate']
 
 def where = """
     collection = 'bib'
@@ -47,23 +43,18 @@ selectBySqlWhere(where) {
     def instance = it.graph[1]
     def work = instance[INSTANCE_OF]
 
-    def target = work[TYPE] in ['Music', 'NotatedMusic']
-            ? work
-            : (work[TRANSLATION_OF] ?: work)
-    def targetProperty = target == work ? INSTANCE_OF : TRANSLATION_OF
+    def isMusic = work[TYPE] in ['Music', 'NotatedMusic']
 
-    if (asList(work[EXPRESSION_OF]).size() != 1 || asList(target).size() != 1) {
+    if (asList(work[EXPRESSION_OF]).size() != 1) {
         return
     }
 
     def expressionOf = asList(work[EXPRESSION_OF])[0]
-    target = asList(target)[0]
 
     if (expressionOf[ID]) {
         def hub = loadThing(expressionOf[ID])
         if (!hub) {
             brokenLinks.println([id, expressionOf[ID]].join('\t'))
-            return
         }
         // Already a WorkHub hub, keep as is
         else if (hub[TYPE] == WORK_HUB) {
@@ -74,10 +65,10 @@ selectBySqlWhere(where) {
             relinked.println([id, hub[ID], hub[EXPRESSION_OF][ID]].join('\t')) // id   old link    new link
             expressionOf[ID] = hub[EXPRESSION_OF][ID]
             it.scheduleSave()
+        } else {
+            // Shouldn't reach here if all linked uniform work titles have been taken care of
+            unhandledUniformWorkTitles.s.increment('Unhandled uniform work titles', hub[ID], id)
         }
-
-        // Shouldn't reach here if all linked uniform work titles have been taken care of
-        unhandledUniformWorkTitles.s.increment('Unhandled uniform work titles', hub[ID], id)
         return
     }
 
@@ -85,10 +76,11 @@ selectBySqlWhere(where) {
     def newHub = findHub(expressionOf, id)
     if (newHub) {
         def stringified = stringify(expressionOf)
-        if (hymnsAndBibles[stringified] && !tryCopyToTarget(hymnsAndBibles[stringified], work, INSTANCE_OF, id)) {
+        if (hymnsAndBibles[stringified] && !tryCopyToTarget(hymnsAndBibles[stringified], work, id)) {
             return
         }
-        if (tryCopyToTarget(expressionOf, work, INSTANCE_OF, id, TITLE_RELATED_PROPS)) {
+        def moveThese = isMusic ? TITLE_RELATED_PROPS + 'musicKey' : TITLE_RELATED_PROPS
+        if (tryCopyToTarget(expressionOf, work, id, moveThese)) {
             expressionOf.clear()
             expressionOf[ID] = newHub
             it.scheduleSave()
@@ -97,56 +89,49 @@ selectBySqlWhere(where) {
     }
 
     if (instance.issuanceType == 'Monograph') {
-        def stringifiedTitle = stringifyTitle(expressionOf)
         def stringified = stringify(expressionOf)
-        def stringifiedInstanceTitle = stringifyInstanceTitle(asList(instance[HAS_TITLE])[0])
         notLinkedStats.s.increment('Not linked expressionOf (monograph)', stringified, id)
-        if (targetProperty == TRANSLATION_OF) {
-            notLinkedStatsTranslations.s.increment(work[TYPE], stringified, id)
-            instanceTitlesTranslations.s.increment(stringifiedTitle, stringifiedInstanceTitle, id)
-        } else {
-            notLinkedStatsOrigLang.s.increment(work[TYPE], stringified, id)
-            instanceTitles.s.increment(stringifiedTitle, stringifiedInstanceTitle, id)
-        }
     }
 
     moveLanguagesFromTitle(expressionOf)
-    linkLangs(expressionOf, work, targetProperty == TRANSLATION_OF ? target : [:])
+    langLinker.linkAll(work)
+    def workLang = asList(work[LANGUAGE])
+    def trlOf = asList(work[TRANSLATION_OF])[0]
+    def trlOfLang = trlOf ? asList(trlOf[LANGUAGE]) : []
+    langLinker.linkLanguages(expressionOf, workLang + trlOfLang)
+    def exprOfLang = asList(expressionOf[LANGUAGE])
 
-    if (!compatibleLangs(expressionOf, work, target)) {
-        def cols = [id, targetProperty, expressionOf[LANGUAGE], work[LANGUAGE]]
-        if (targetProperty == TRANSLATION_OF) {
-            cols.add(target[LANGUAGE])
-        }
-        langDiff.println(cols.join('\t'))
+    if (!(workLang + trlOfLang).containsAll(exprOfLang)) {
+        langDiff.println([id, expressionOf[LANGUAGE], workLang + trlOfLang].join('\t'))
         return
     }
 
-    if (expressionOf[HAS_TITLE] && tryCopyToTarget(expressionOf, target, targetProperty, id, TITLE_RELATED_PROPS + HAS_TITLE)) {
-        work.remove(EXPRESSION_OF)
-        it.scheduleSave()
+    if (expressionOf[HAS_TITLE]) {
+        List moveThese = TITLE_RELATED_PROPS + HAS_TITLE
+        if (isMusic) {
+            moveThese.add('musicKey')
+        }
+        if (tryCopyToTarget(expressionOf, work, id, moveThese)) {
+            work.remove(EXPRESSION_OF)
+            it.scheduleSave()
+        }
     }
 }
 
 [
         linkedStats,
         notLinkedStats,
-        notLinkedStatsTranslations,
-        notLinkedStatsOrigLang,
-        instanceTitles,
-        instanceTitlesTranslations,
         unhandledUniformWorkTitles
 ].each {
     it.print()
 }
 
-boolean tryCopyToTarget(Map from, Map target, String targetProperty, String id, Collection properties = null) {
-    //TODO: Not sure that all properties should move to target when targetProperty = translationOf, needs further analysis
+boolean tryCopyToTarget(Map from, Map target, String id, Collection properties = null) {
     def copyThese = properties ? from.keySet().intersect(properties) : from.keySet()
 
     def conflictingProps = copyThese.intersect(target.keySet())
     if (conflictingProps && conflictingProps.any { from[it] != target[it] }) {
-        propertyAlreadyExists.println([id, targetProperty, conflictingProps].join('\t'))
+        propertyAlreadyExists.println([id, conflictingProps].join('\t'))
         return false
     }
 
@@ -157,22 +142,10 @@ boolean tryCopyToTarget(Map from, Map target, String targetProperty, String id, 
             }
         }
 //        normalizePunctuation(target[HAS_TITLE])
-        moved.println([id, targetProperty, copyThese, target.subMap(copyThese + LANGUAGE)].join('\t'))
+        moved.println([id, copyThese, target.subMap(copyThese)].join('\t'))
     }
 
     return true
-}
-
-void linkLangs(Map expressionOf, Map work, Map translationOf) {
-    def workLang = work.subMap(LANGUAGE)
-    langLinker.linkLanguages(workLang)
-    work[LANGUAGE] = workLang[LANGUAGE]
-    langLinker.linkLanguages(translationOf)
-    langLinker.linkLanguages(expressionOf, asList(work[LANGUAGE]) + asList(translationOf[LANGUAGE]))
-}
-
-boolean compatibleLangs(Map expressionOf, Map work, Map target) {
-    (asList(work[LANGUAGE]) + asList(target[LANGUAGE])).containsAll(asList(expressionOf[LANGUAGE]))
 }
 
 void normalizePunctuation(Object title) {
@@ -267,27 +240,6 @@ String stringifyTitle(Map work) {
     def titleParts = paths.collect { getAtPath(work, asList(it)) }.grep()
 
     return titleParts.join(' · ')
-}
-
-String stringifyInstanceTitle(Object o) {
-    def titleParts = ['mainTitle', 'titleRemainder', 'subtitle', 'hasPart', 'partNumber', 'partName', 'marc:parallelTitle', 'marc:equalTitle']
-
-    if (o instanceof String) {
-        return o
-    }
-    if (o instanceof List) {
-        return o
-                .collect { stringifyInstanceTitle(it) }
-                .join(' || ')
-    }
-    if (o instanceof Map) {
-        return titleParts
-                .findResults { ((Map) o).get(it) }
-                .collect { stringifyInstanceTitle(it) }
-                .join(' · ')
-    }
-
-    throw new RuntimeException(String.format("unexpected type: %s for %s", o.class.getName(), o))
 }
 
 Map loadHubTitleToHubMappings() {
