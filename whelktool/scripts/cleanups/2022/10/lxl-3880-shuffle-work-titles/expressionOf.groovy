@@ -9,6 +9,7 @@ brokenLinks = getReportWriter('broken-links.tsv')
 langDiff = getReportWriter('lang-diff.tsv')
 relinked = getReportWriter('relinked.tsv')
 linked = getReportWriter('linked.tsv')
+originDateRemoved = getReportWriter('originDate-removed.txt')
 
 linkedStats = new StatsReport(getReportWriter('stats-linked.txt'), 3)
 notLinkedStats = new StatsReport(getReportWriter('stats-not-linked.txt'), 3)
@@ -115,6 +116,12 @@ selectBySqlWhere(where) {
             work.remove(EXPRESSION_OF)
             it.scheduleSave()
         }
+    }
+
+    def originDate = work['originDate']
+    if (originDate && asList(instance['publication']).any { originDate in it.subMap(['year', 'date']).values() }) {
+        originDateRemoved.println(it.doc.shortId)
+        work.remove('originDate')
     }
 }
 
