@@ -28,7 +28,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
                     'https://id.kb.se/i18n/script/Hani': '/$1',
                     'https://id.kb.se/i18n/script/Hans': '/$1',
                     'https://id.kb.se/i18n/script/Hant': '/$1',
-                    'https://id.kb.se/i18n/script/Hebr': '/(2'
+                    'https://id.kb.se/i18n/script/Hebr': '/(2/r'
             ]
 
     String OG_MARK = '**OG**'
