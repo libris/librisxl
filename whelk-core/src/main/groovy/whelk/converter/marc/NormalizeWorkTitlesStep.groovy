@@ -7,7 +7,7 @@ import static whelk.JsonLd.TYPE_KEY as TYPE
 
 class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
 
-    List<String> titleRelatedProps = ['hasTitle', 'musicKey', 'musicMedium', 'version', 'marc:version', 'marc:fieldref', 'legalDate', 'originDate']
+    List<String> titleProps = ['hasTitle', 'musicKey', 'musicMedium', 'version', 'marc:version', 'legalDate', 'originDate']
 
     LanguageLinker langLinker = getLangLinker()
 
@@ -47,20 +47,17 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
                     markToIgnore(work.hasTitle)
                     if (!work.hasTitle) work.hasTitle = []
                     work.hasTitle << copyForRevert(originalTitle)
-                    (titleRelatedProps - 'hasTitle').each {
-                        if (original[it]) {
-                            work[it] = original[it]
-                        }
+                    if (original['legalDate'] && !work['legalDate']) {
+                        work['legalDate'] = original['legalDate']
                     }
                 }
             }
         }
 
-        if (
-        via == 'instanceOf'
+        if (via == 'instanceOf'
                 && !work.contribution?.find { it[TYPE] == 'PrimaryContribution' }
                 && !work.expressionOf
-//                && (!work.expressionOf || work.expressionOf[ID]) TODO: Only if work.expressionOf[ID].inCollection == https://id.kb.se/term/uniformWorkTitle
+//                && (!work.expressionOf || work.expressionOf[ID]) // Only if work.expressionOf[ID].inCollection == https://id.kb.se/term/uniformWorkTitle, should never be the case
                 && work.hasTitle
         ) {
             def workTitle = work.hasTitle?.find { it[TYPE] == 'Title' && !('_revertedBy' in it) }
@@ -72,7 +69,7 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
                         hasTitle   : [copiedTitle],
                         _revertOnly: true
                 ]
-                (titleRelatedProps - 'hasTitle').each {
+                (titleProps - 'hasTitle').each {
                     if (work[it]) {
                         work.expressionOf[it] = work[it]
                     }
@@ -99,27 +96,30 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
     }
 
     void normalizePunctuationOnConvert(Object title) {
-        
+
     }
 
     void shuffleTitles(Map work) {
-        if (isOkTranslation(work)) {
-            tryMoveTitle(work, work.translationOf)
-        } else {
-            def target = isMusic(work) ? work : (work.translationOf ?: work)
-            if (isOkExpressionOf(work.expressionOf, target) && tryMoveTitle(work.expressionOf, target)) {
+        if (hasOkExpressionOf(work)) {
+            // try match existing linked hub first?
+            if (tryMove(work['expressionOf'], work, titleProps)) {
                 work.remove('expressionOf')
             }
         }
+        def isMusic = { it[TYPE] in ['Music', 'NotatedMusic'] }
+        if (!isMusic(work) && asList(work['translationOf']).size() == 1) {
+            tryMove(work, work['translationOf'], ['hasTitle', 'legalDate'])
+        }
     }
 
-    boolean tryMoveTitle(Object from, Object target) {
+    boolean tryMove(Object from, Object target, Collection properties) {
         from = asList(from)[0]
         target = asList(target)[0]
 
-        //TODO: Not sure that all properties should be moved to translationOf, needs further analysis
-        def moveThese = from.keySet().intersect(titleRelatedProps)
-        if (!moveThese.contains('hasTitle') || moveThese.intersect(target.keySet())) {
+        def moveThese = properties ? from.keySet().intersect(properties) : from.keySet()
+        def conflictingProps = moveThese.intersect(target.keySet())
+
+        if (conflictingProps && conflictingProps.any { from[it] != target[it] }) {
             return false
         }
 
@@ -134,29 +134,21 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
         return true
     }
 
-    boolean isOkTranslation(Map work) {
-        !work.expressionOf
-                && !isMusic(work)
-                && work.translationOf
-                && asList(work.translationOf).size() == 1
-    }
-
-    boolean isOkExpressionOf(Object expressionOf, Object target) {
-        expressionOf
-                && asList(expressionOf).size() == 1
-                && asList(target).size() == 1
-                && compatibleLangs(asList(expressionOf)[0], asList(target)[0])
-    }
-
-    boolean isMusic(Map work) {
-        work[TYPE] in ['Music', 'NotatedMusic']
-    }
-
-    boolean compatibleLangs(Map expressionOf, Map target) {
-//        moveLanguagesFromTitle(expressionOf) TODO: Necessary?
-        langLinker.linkLanguages(target)
-        langLinker.linkLanguages(expressionOf, asList(target.language))
-        return asList(target.language).containsAll(expressionOf.language)
+    boolean hasOkExpressionOf(Map work) {
+        if (asList(work['expressionOf']).size() != 1) {
+            return false
+        }
+        def expressionOf = asList(work['expressionOf'])[0]
+        if (!expressionOf['hasTitle']) {
+            return false
+        }
+        langLinker.linkAll(work)
+        def workLang = asList(work['language'])
+        def trlOf = asList(work['translationOf'])[0]
+        def trlOfLang = trlOf ? asList(trlOf['language']) : []
+        langLinker.linkLanguages(expressionOf, workLang + trlOfLang)
+        def exprOfLang = asList(expressionOf['language'])
+        return (workLang + trlOfLang).containsAll(exprOfLang)
     }
 
     LanguageLinker getLangLinker() {
