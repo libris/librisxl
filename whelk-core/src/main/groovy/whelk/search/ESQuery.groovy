@@ -30,6 +30,7 @@ class ESQuery {
     ]
     private static final String OR_PREFIX = 'or-'
     private static final String EXISTS_PREFIX = 'exists-'
+    private static final String AND_PREFIX = 'and-'
 
     private static final Map recordsOverCacheRecordsBoost = [
             'bool': ['should': [
@@ -554,6 +555,7 @@ class ESQuery {
     @CompileStatic(TypeCheckingMode.SKIP)
     private List<Map> getOrGroups(Map<String, String[]> parameters) {
         def or = [:]
+        def and = []
         def other = [:]
         def p = [:]
 
@@ -567,6 +569,11 @@ class ESQuery {
             }
             else if (key.startsWith(OR_PREFIX)) {
                 or.put(key.substring(OR_PREFIX.size()), value)
+            }
+            else if (key.startsWith(AND_PREFIX)) {
+                value.each {
+                    and << [(key.substring(AND_PREFIX.size())): [it]]
+                }
             }
             else {
                 other.put(key, value)
@@ -583,6 +590,9 @@ class ESQuery {
         List result = other.collect {[(it.getKey()): it.getValue()]}
         if (or.size() > 0) {
             result.add(or)
+        }
+        if (and.size() > 0) {
+            result.addAll(and)
         }
         if (p.size() > 0) {
             result.add(p)
