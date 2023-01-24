@@ -10,7 +10,6 @@ def where = """id in
 selectBySqlWhere(where, silent: false, { hold ->
 
     def items = hold.graph[1]
-    boolean modified = false
 
     if (items.hasNote) {
         List notes = items.hasNote
@@ -18,7 +17,6 @@ selectBySqlWhere(where, silent: false, { hold ->
             // The label is either a string or a list of strings
             note.label instanceof String && note.label.contains('Donation: Cnattingius') ||
                     note.label instanceof List && note.label.any { it.contains('Donation: Cnattingius') }
-            modified = true
         }
 
         if (notes.isEmpty()) {
@@ -31,7 +29,6 @@ selectBySqlWhere(where, silent: false, { hold ->
         catNotes.removeAll { catnote ->
             catnote instanceof String && catnote.contains('Donation: Cnattingius') ||
                     catnote instanceof List && catnote.any { it.contains('Donation: Cnattingius') }
-            modified = true
         }
 
         if (catNotes.isEmpty()) {
@@ -45,21 +42,18 @@ selectBySqlWhere(where, silent: false, { hold ->
         if (c['hasNote'] instanceof List) {
             def removedNote = c['hasNote'].removeAll { n ->
                 asList(n['label']).any { it.contains('Donation: Cnattingius') }
-                modified = true
             }
             if (c['hasNote'].isEmpty()) {
                 c.remove('hasNote')
             }
         } else if (c['hasNote'] instanceof Map && asList(c['hasNote']['label']).any { it.contains('Donation: Cnattingius') }) {
             c.remove('hasNote')
-            modified = true
         }
         if (c['cataloguersNote']) {
             List HCcatNotes = c.cataloguersNote
             HCcatNotes.removeAll { catnote2 ->
                 catnote2 instanceof String && catnote2.contains('Donation: Cnattingius') ||
                         catnote2 instanceof List && catnote2.any { it.contains('Donation: Cnattingius') }
-                modified = true
             }
 
             if (HCcatNotes.isEmpty()) {
@@ -86,7 +80,6 @@ selectBySqlWhere(where, silent: false, { hold ->
             THcatNotes.removeAll { thcatnote ->
                 thcatnote instanceof String && thcatnote.contains('Donation: Cnattingius') ||
                         thcatnote instanceof List && thcatnote.any { it.contains('Donation: Cnattingius') }
-                modified = true
             }
 
             if (THcatNotes.isEmpty()) {
@@ -98,7 +91,6 @@ selectBySqlWhere(where, silent: false, { hold ->
             pubcatNotes.removeAll { pubcatnote ->
                 pubcatnote instanceof String && pubcatnote.contains('Donation: Cnattingius') ||
                         pubcatnote instanceof List && pubcatnote.any { it.contains('Donation: Cnattingius') }
-                modified = true
             }
 
             if (pubcatNotes.isEmpty()) {
@@ -117,12 +109,13 @@ selectBySqlWhere(where, silent: false, { hold ->
 
     hasTextualHoldings?.removeAll { !it }
 
-    if (!items["custodialHistory"]) {
-        items["custodialHistory"] = 'Donation: Cnattingius'
-        modified = true
+    if (hasTextualHoldings?.isEmpty()) {
+        items.remove('marc:hasTextualHoldingsBasicBibliographicUnit')
     }
 
-    if (modified) {
+    if (!items["custodialHistory"]) {
+        items["custodialHistory"] = 'Donation: Cnattingius'
         hold.scheduleSave(loud: true)
     }
+
 })
