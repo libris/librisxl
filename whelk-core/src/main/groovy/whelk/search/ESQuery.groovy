@@ -31,6 +31,7 @@ class ESQuery {
     private static final String OR_PREFIX = 'or-'
     private static final String EXISTS_PREFIX = 'exists-'
     private static final String AND_PREFIX = 'and-'
+    private static final String NOT_PREFIX = 'not-'
 
     private static final Map recordsOverCacheRecordsBoost = [
             'bool': ['should': [
@@ -515,6 +516,7 @@ class ESQuery {
     List getFilters(Map<String, String[]> queryParameters) {
         def queryParametersCopy = new HashMap<>(queryParameters)
         List filters = []
+        List filtersForNot = []
 
         def (handledParameters, rangeFilters) = makeRangeFilters(queryParametersCopy)
         handledParameters.each {queryParametersCopy.remove(it)}
@@ -527,14 +529,38 @@ class ESQuery {
             filters.addAll(createNestedBoolFilters(key, vals))
         }
 
-        notNested.removeAll {it.key in RESERVED_PARAMS}
+        List notNestedGroupsForNot = []
+        notNested.removeAll {
+            if (it.key in RESERVED_PARAMS) {
+                return true
+            }
+            // Any not-<field> is removed from notNested and added to a separate list,
+            // since we need to deal with them separately
+            if (it.key.startsWith(NOT_PREFIX)) {
+                it.value.each { inner_value ->
+                    notNestedGroupsForNot << [(it.key.substring(NOT_PREFIX.size())): [inner_value]]
+                }
+                return true
+            }
+        }
 
         getOrGroups(notNested).each { m ->
             filters << createBoolFilter(m)
         }
+        notNestedGroupsForNot.each { m ->
+            filtersForNot << createBoolFilter(m)
+        }
 
+        Map allFilters = [:]
         if (filters) {
-            return [['bool': ['must': filters]]]
+            allFilters['must'] = filters
+        }
+        if (filtersForNot) {
+            allFilters['must_not'] = filtersForNot
+        }
+
+        if (allFilters) {
+            return [['bool': allFilters]]
         } else {
             return null
         }
