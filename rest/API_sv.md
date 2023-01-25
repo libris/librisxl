@@ -224,8 +224,8 @@ Det går att kombinera olika egenskaper med `ELLER` genom att använda prefixet 
  Filter-uttryck                                        | Filter-parametrar    
 -------------------------------------------------------|-----------------------                 
  a är x `ELLER` a är y...                              | `a=x&a=y...`
- a är x `OCH` a är `INTE` y...                         | `a=x&not-a=y`
- a är x `OCH` a är y...                                | `and-a=x&and-a=y`
+ a är x `OCH` a är `INTE` y...                         | `a=x&not-a=y...`
+ a är x `OCH` a är y...                                | `and-a=x&and-a=y...`
  a är x `OCH` b är y `OCH` c är z...                   | `a=x&b=y&c=z...`
  a är x `ELLER` b är y...                              | `or-a=x&or-b=y...`          
  (a är x `ELLER` b är y) `OCH` c är z...               | `or-a=x&or-b=y&c=z...`  

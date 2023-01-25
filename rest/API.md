@@ -237,8 +237,8 @@ It is possible to combine multiple fields with `OR` by using the prefix `or-`.
 Filter-expression                                     | Filter-parameters
 ------------------------------------------------------|----------------------------------------------
 a is x `OR` a is y...                                 | `a=x&a=y...`
-a is x `AND` a is `NOT` y...                          | `a=x&not-a=y`
-a is x `AND` a is y                                   | `and-a=x&and-a=y`
+a is x `AND` a is `NOT` y...                          | `a=x&not-a=y...`
+a is x `AND` a is y...                                | `and-a=x&and-a=y...`
 a is x `AND` b is y `AND` c is z...                   | `a=x&b=y&c=z...`
 a is x `OR` b is y...                                 | `or-a=x&or-b=y...`
 (a is x `OR` b is y) `AND` c is z...                  | `or-a=x&or-b=y&c=z...`
