@@ -130,9 +130,6 @@ class Doc {
         pages ? pages.max() : -1
     }
     
-
-    
-    
     boolean isFiction() {
         isMarcFiction() || isSaogfFiction() || isSabFiction()
     }
@@ -209,13 +206,6 @@ class Doc {
             addToWork('editionStatement')
         }
         getWork()['_numPages'] = numPages()
-    }
-
-    void moveSummaryToInstance() {
-        if (getWork()['summary']) {
-            getMainEntity()['summary'] = asList(getMainEntity()['summary']) + asList(getWork()['summary'])
-            getWork().remove('summary')
-        }
     }
 
     void addToWork(String field) {
