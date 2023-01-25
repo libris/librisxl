@@ -101,6 +101,50 @@ class ESQuerySpec extends Specification {
                                             ]]
                                    ]]
 
+        ['and-foo': ['bar', 'baz']]     | [['bool': ['must': [
+                                                        ['bool': [
+                                                            'should': [
+                                                                ['simple_query_string': ['query': 'bar',
+                                                                                         'fields': ['foo'],
+                                                                                         'default_operator': 'AND']],
+                                                            ]
+                                                        ]],
+                                                        ['bool': [
+                                                            'should': [
+                                                                ['simple_query_string': ['query': 'baz',
+                                                                                         'fields': ['foo'],
+                                                                                         'default_operator': 'AND']]
+                                                            ]
+                                                        ]]
+                                                ]]
+                                          ]]
+
+
+        ['foo': ['bar', 'baz'],
+         'not-foo': ['zzz']]     | [['bool': ['must': [
+                                                ['bool': [
+                                                    'should': [
+                                                        ['simple_query_string': ['query': 'bar',
+                                                                                 'fields': ['foo'],
+                                                                                 'default_operator': 'AND']],
+                                                        ['simple_query_string': ['query': 'baz',
+                                                                                 'fields': ['foo'],
+                                                                                 'default_operator': 'AND']]
+                                                    ]
+                                                ]]
+                                            ],
+                                            'must_not': [
+                                                ['bool': [
+                                                    'should': [
+                                                        ['simple_query_string' : ['query': 'zzz',
+                                                                                 'fields': ['foo'],
+                                                                                 'default_operator': 'AND']]
+                                                    ]
+                                                ]]
+                                            ]]
+                                  ]]
+
+
         ['langAliased': ['baz']] | [['bool': ['must': [
                                                 ['bool': [
                                                     'should': [
