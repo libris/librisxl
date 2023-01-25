@@ -6,9 +6,9 @@ import whelk.JsonLd
 class DisplayDoc {
     Doc doc
     Map framed
-    
+
     DisplayDoc(Doc doc) {
-        this.doc = doc    
+        this.doc = doc
     }
 
     private static String displayTitle(Map thing) {
@@ -51,8 +51,8 @@ class DisplayDoc {
         } else {
             return chipString(getWork().getOrDefault(field, []))
         }
-        
-        
+
+
     }
 
     protected String chipString(def thing) {
@@ -60,11 +60,10 @@ class DisplayDoc {
     }
 
     private String reproductionOfLink() {
-        def shortId = Util.getPathSafe(getMainEntity(), ['reproductionOf', '@id'])
-                ?.split('[#/]')
-                ?.dropRight(1)
-                ?.last() ?: ''
-
+        def reprOf = Util.asList(getMainEntity()['reproductionOf'])[0]
+        def shortId = reprOf
+                ? reprOf['@id'].split('[#/]').dropRight(1).last()
+                : ''
         return "<a href=\"#$shortId\">$shortId</a>"
     }
 
@@ -78,7 +77,7 @@ class DisplayDoc {
         String id = doc.doc.shortId
         return base + kat + id
     }
-    
+
     private List contributorStrings() {
         List path = isInstance() ? ['instanceOf', 'contribution'] : ['contribution']
         List contribution = Util.getPathSafe(getFramed(), path, [])
