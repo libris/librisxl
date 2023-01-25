@@ -207,11 +207,13 @@ innebär `ELLER`, `*` används för prefixsökningar, `""` matchar hela frasen o
   
 Sökningen kan filtreras på värdet på egenskaper i posten. Samma egenskap kan anges flera gånger genom
 att upprepa parametern eller genom att komma-separera värdena. Om olika egenskaper anges innebär det 
-`OCH`. Om samma egenskap anges flera gånger innebär det `ELLER`. Det går att kombinera olika egenskaper 
-med `ELLER` genom att använda prefixet `or-`.
+`OCH`. Om samma egenskap anges flera gånger innebär det `ELLER`, såvida inte prefixet `and-` används.
+Det går att kombinera olika egenskaper med `ELLER` genom att använda prefixet `or-`.
 
 * `<egenskap>` - Egenskapen har värdet.
+* `not-<egenskap>` - Egenskapen har inte värdet.
 * `or-<egenskap>` - Kombinera filter för olika egenskaper med `ELLER` istället för `OCH`.
+* `and-<field>` - Kombinera filter för _samma_ egenskap med `OCH` istället för `ELLER`.
 * `exists-<egenskap>` - Egenskapen existerar. Ange ett booleskt värde, d.v.s. `true` eller `false`.
 * `min-<egenskap>` - Värdet är större eller lika med.
 * `minEx-<egenskap>` - Värdet är större än (Ex står för "Exclusive").
@@ -222,7 +224,8 @@ med `ELLER` genom att använda prefixet `or-`.
  Filter-uttryck                                        | Filter-parametrar    
 -------------------------------------------------------|-----------------------                 
  a är x `ELLER` a är y...                              | `a=x&a=y...`
- a är x `OCH` a är y                                   | Inte möjligt.
+ a är x `OCH` a är `INTE` y...                         | `a=x&not-a=y`
+ a är x `OCH` a är y...                                | `and-a=x&and-a=y`
  a är x `OCH` b är y `OCH` c är z...                   | `a=x&b=y&c=z...`
  a är x `ELLER` b är y...                              | `or-a=x&or-b=y...`          
  (a är x `ELLER` b är y) `OCH` c är z...               | `or-a=x&or-b=y&c=z...`  

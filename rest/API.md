@@ -220,11 +220,13 @@ means `OR`, `*` is used for prefix queries, `""` matches the whole phrase, and
 
 Records can be filtered on field values. Specifying multiple values for the same field can be done
 by repeating the parameter or by giving a comma-separated list as value. Specifying multiple fields 
-means `AND`. Multiple values for the same field means `OR`. It is possible to combine multiple fields 
-with `OR` by using the prefix `or-`.
+means `AND`. Multiple values for the same field means `OR`, unless you use the prefix `and-`.
+It is possible to combine multiple fields with `OR` by using the prefix `or-`.
 
 * `<field>` - The record has this value for `field`.
+* `not-<field>` - The record does not have this value for `field`.
 * `or-<field>` - Combine filters for multiple fields with `OR` instead of `AND`.
+* `and-<field>` - Combine multiple filters for the _same_ field with `AND` instead of `OR`.
 * `exists-<field>` - The field exists in the record. Value should be `true` or `false`.
 * `min-<field>` - Greater or equal to.
 * `minEx-<field>` - Greater than (exclusive minimum).
@@ -235,7 +237,8 @@ with `OR` by using the prefix `or-`.
 Filter-expression                                     | Filter-parameters
 ------------------------------------------------------|----------------------------------------------
 a is x `OR` a is y...                                 | `a=x&a=y...`
-a is x `AND` a is y                                   | Not possible.
+a is x `AND` a is `NOT` y...                          | `a=x&not-a=y`
+a is x `AND` a is y                                   | `and-a=x&and-a=y`
 a is x `AND` b is y `AND` c is z...                   | `a=x&b=y&c=z...`
 a is x `OR` b is y...                                 | `or-a=x&or-b=y...`
 (a is x `OR` b is y) `AND` c is z...                  | `or-a=x&or-b=y&c=z...`
