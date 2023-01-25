@@ -1,12 +1,15 @@
 package whelk.converter.marc
 
 import groovy.transform.CompileStatic
+import groovy.transform.Immutable
+import groovy.transform.NullCheck
 import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.JsonLd
 import whelk.component.DocumentNormalizer
 import whelk.converter.FormatConverter
+import whelk.filter.LanguageLinker
 import whelk.filter.LinkFinder
 
 import java.time.LocalDate
@@ -28,24 +31,17 @@ class MarcFrameConverter implements FormatConverter {
     ObjectMapper mapper = new ObjectMapper()
     LinkFinder linkFinder
     JsonLd ld
-    Collection<DocumentNormalizer> normalizers
-
-    String configResourceBase
+    RomanizationStep.LanguageResources languageResources
+    
+    String configResourceBase = "ext"
     String marcframeFile = "marcframe.json"
 
     protected MarcConversion conversion
-
-    MarcFrameConverter(LinkFinder linkFinder = null, JsonLd ld = null, DocumentNormalizer normalizer = null, configResourceBase = "ext") {
+    
+    MarcFrameConverter(LinkFinder linkFinder = null, JsonLd ld = null, RomanizationStep.LanguageResources languageResources = null) {
         this.linkFinder = linkFinder
-        this.configResourceBase = configResourceBase
-        setNormalizers(normalizer)
+        this.languageResources = languageResources
         setLd(ld)
-    }
-
-    void setNormalizers(DocumentNormalizer normalizer) {
-        if (normalizer) {
-            this.normalizers = normalizer.normalizers.findAll { it.normalizer }
-        }
     }
 
     void setLd(JsonLd ld) {
@@ -221,8 +217,9 @@ class MarcConversion {
             case 'InjectWhenMatchingOnRevert':
             procStep = new InjectWhenMatchingOnRevertStep(props); break
             case 'Romanization':
-                procStep = new RomanizationStep(props)
-                procStep.converter = converter; break
+            procStep = new RomanizationStep(props)
+            procStep.converter = converter    
+            procStep.languageResources = converter.languageResources; break
             case null:
             return null
             default:
@@ -1967,6 +1964,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         if (!order['...']) {
             order['...'] = order.size()
         }
+        
+        if (!order['6']) {
+            order['6'] = -1 // MARC 21, Appendix A: "Subfield $6 is always the first subfield in the field."
+        }
+        
         Closure getOrder = {
             [order.get(it.code, order['...']), !it.code.isNumber(), it.code]
         }

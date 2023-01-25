@@ -1,14 +1,12 @@
 package whelk.rest.api
 
 import groovy.transform.CompileStatic
+import whelk.converter.marc.MarcFrameConverter
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
-import whelk.converter.marc.MarcFrameConverter
-
-import static whelk.rest.api.CrudUtils.ETag
 import static whelk.rest.api.HttpTools.sendResponse
 
 @CompileStatic

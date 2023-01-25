@@ -1,6 +1,6 @@
 package whelk.util
 
-import static whelk.JsonLd.TYPE_KEY
+import whelk.JsonLd
 
 class DocumentUtil {
     public final static Operation NOP = new Nop()
@@ -166,7 +166,7 @@ class DocumentUtil {
     }
 
     private static boolean isDefective(Map node) {
-        node.size() == 0 || (node.size() == 1 && node.containsKey(TYPE_KEY))
+        node.size() == 0 || (node.size() == 1 && node.containsKey(JsonLd.TYPE_KEY))
     }
 
     private static List<Map> collectIris(List<Map> nodes) {

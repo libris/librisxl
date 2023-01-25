@@ -174,7 +174,7 @@ def chooseTLang(String s, List tLangs) {
                     'https://id.kb.se/i18n/script/Beng': ~/\p{IsBengali}/,
                     'https://id.kb.se/i18n/script/Thai': ~/\p{IsThai}/,
                     'https://id.kb.se/i18n/script/Mymr': ~/\p{IsMyanmar}/,
-                    'https://id.kb.se/i18n/script/Sinh': ~/\p{IsSinhala}/
+                    'https://id.kb.se/i18n/script/Sinh': ~/\p{IsSinhala}/,
             ]
 
     for (entry in scriptToRegex) {

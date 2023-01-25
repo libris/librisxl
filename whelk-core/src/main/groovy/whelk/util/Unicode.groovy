@@ -1,7 +1,7 @@
 package whelk.util
 
-
 import java.text.Normalizer
+import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.Pattern
 
 class Unicode {
@@ -93,5 +93,87 @@ class Unicode {
     
     static String trim(String s) {
         s.replaceFirst(LEADING_SPACE, '').replaceFirst(TRAILING_SPACE, '')
+    }
+    
+    static Optional<Character.UnicodeScript> guessScript(String s) {
+        s = s.replaceAll(~/\p{IsCommon}|\p{IsInherited}|\p{IsUnknown}/, '')
+
+        if(s.isEmpty()) {
+            return Optional.empty()
+        }
+        
+        Map<Character.UnicodeScript, Integer> scores = [:]
+        s.codePoints().each {
+            var script = Character.UnicodeScript.of(it)
+            scores[script] = scores.getOrDefault(script, 0) + 1
+        }
+        
+        var winner = scores.max { it.value }
+        var minScore = s.size() / 2
+        return winner.value > minScore
+            ? Optional.of(winner.key) : Optional.empty()
+    }
+
+    static Optional<String> guessIso15924ScriptCode(String s) {
+        guessScript(s).flatMap(Unicode::iso15924scriptCode)
+    }
+
+    // Character.UnicodeScript has a method for 'ISO 15924 -> UnicodeScript' but not 'UnicodeScript -> ISO 15924'...
+    // https://bugs.openjdk.org/browse/JDK-8189951
+    static Optional<String> iso15924scriptCode(Character.UnicodeScript script) {
+       Optional.ofNullable(JAVA_TO_ISO_15924[script])
+    }
+    
+    static private Map<Character.UnicodeScript, String> JAVA_TO_ISO_15924 = new ConcurrentHashMap<>()
+    
+    static void add15924scriptCode(String code) {
+        try {
+            JAVA_TO_ISO_15924[Character.UnicodeScript.forName(code)] = code
+        } catch (IllegalArgumentException ignored) {}
+    }
+
+    static {
+        [
+                'Arab',
+                'Armn',
+                'Bali',
+                'Batk',
+                'Beng',
+                'Cans',
+                'Cher',
+                'Copt',
+                'Cyrl',
+                'Cyrs',
+                'Deva',
+                'Ethi',
+                'Geor',
+                'Geok',
+                'Grek',
+                'Gujr',
+                'Guru',
+                'Hang',
+                'Hani',
+                'Hans',
+                'Hant',
+                'Hebr',
+                'Java',
+                'Knda',
+                'Khmr',
+                'Laoo',
+                'Latn',
+                'Mlym',
+                'Mong',
+                'Mymr',
+                'Olck',
+                'Orya',
+                'Sinh',
+                'Syrc',
+                'Taml',
+                'Telu',
+                'Thai',
+                'Thaa',
+                'Tibt',
+                'Vaii',
+        ].each { add15924scriptCode(it) }
     }
 }

@@ -11,6 +11,7 @@ import whelk.component.PostgreSQLComponent
 import whelk.component.PostgreSQLComponent.UpdateAgent
 import whelk.component.SparqlUpdater
 import whelk.converter.marc.MarcFrameConverter
+import whelk.converter.marc.RomanizationStep
 import whelk.exception.StorageCreateFailedException
 import whelk.filter.LanguageLinker
 import whelk.exception.WhelkException
@@ -52,9 +53,10 @@ class Whelk {
     JsonLd jsonld
 
     MarcFrameConverter marcFrameConverter
+    RomanizationStep.LanguageResources languageResources 
+    ElasticFind elasticFind
     Relations relations
     DocumentNormalizer normalizer
-    ElasticFind elasticFind
 
     URI baseUri = null
     boolean skipIndex = false
@@ -149,7 +151,7 @@ class Whelk {
 
     synchronized MarcFrameConverter getMarcFrameConverter() {
         if (!marcFrameConverter) {
-            marcFrameConverter = new MarcFrameConverter(new LinkFinder(storage), jsonld, normalizer)
+            marcFrameConverter = new MarcFrameConverter(new LinkFinder(storage), jsonld, languageResources)
         }
 
         return marcFrameConverter
@@ -202,12 +204,12 @@ class Whelk {
         storage.setJsonld(jsonld)
         if (elastic) {
             elasticFind = new ElasticFind(new ESQuery(this))
-            initDocumentNormalizers()
+            initDocumentNormalizers(elasticFind)
         }
     }
 
     // FIXME: de-KBV/Libris-ify: some of these are KBV specific, is that a problem?
-    private void initDocumentNormalizers() {
+    private void initDocumentNormalizers(ElasticFind elasticFind) {
         LanguageLinker languageLinker = new LanguageLinker()
         Normalizers.loadDefinitions(languageLinker, this)
         normalizer = new NormalizerChain(
@@ -218,6 +220,18 @@ class Whelk {
                         Normalizers.language(languageLinker),
                         Normalizers.identifiedBy(),
                 ] + Normalizers.heuristicLinkers(this, languageLinker.getTypes())
+        )
+        
+        def idsToThings = { String type -> 
+            bulkLoad(elasticFind.findIds([(JsonLd.TYPE_KEY): [type]]).collect())
+            .collect { _, doc -> (doc.data[JsonLd.GRAPH_KEY] as List)[1] }
+            .collectEntries { [it[JsonLd.ID_KEY], it] }
+        }
+        languageResources = new RomanizationStep.LanguageResources(
+                languageLinker: languageLinker,
+                languages: elasticFind.find([(JsonLd.TYPE_KEY): ['Language']]).collect(),
+                transformedLanguageForms: idsToThings('TransformedLanguageForm'),
+                scripts: idsToThings('Script')
         )
     }
 

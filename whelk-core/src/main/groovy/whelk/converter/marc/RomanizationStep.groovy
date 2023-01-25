@@ -1,37 +1,52 @@
 package whelk.converter.marc
 
-import whelk.component.DocumentNormalizer
+import groovy.transform.CompileStatic
+import groovy.transform.MapConstructor
+import groovy.transform.NullCheck
 import whelk.filter.LanguageLinker
 import whelk.util.DocumentUtil
-import whelk.util.Romanizer
 
 import static whelk.Document.deepCopy
 import static whelk.JsonLd.asList
 
 class RomanizationStep extends MarcFramePostProcStepBase {
+    
+    @CompileStatic
+    @NullCheck(includeGenerated = true)
+    static class LanguageResources {
+        LanguageLinker languageLinker
+        List<Map> languages
+        Map transformedLanguageForms
+        Map scripts
+    }
+    
     MarcFrameConverter converter
-    LanguageLinker langLinker
+    LanguageResources languageResources
 
     Map tLangCodes
-    Map langToLangTag
+    Map langIdToLangTag
     Map langAliases
     Map byLangToBase
     Map langToTLang
 
-    Map scriptToCode =
+    private static final String TARGET_SCRIPT = 'Latn'
+    
+    // Note: MARC standard allows ISO 15924 in $6 but Libris practice doesn't
+    private static final Map MARC_SCRIPT_CODES = 
             [
-                    'https://id.kb.se/i18n/script/Arab': '/(3/r',
-                    'https://id.kb.se/i18n/script/Cyrl': '/(N',
-                    'https://id.kb.se/i18n/script/Cyrs': '/(N',
-                    'https://id.kb.se/i18n/script/Grek': '/(S',
-                    'https://id.kb.se/i18n/script/Hang': '/$1',
-                    'https://id.kb.se/i18n/script/Hani': '/$1',
-                    'https://id.kb.se/i18n/script/Hans': '/$1',
-                    'https://id.kb.se/i18n/script/Hant': '/$1',
-                    'https://id.kb.se/i18n/script/Hebr': '/(2/r'
+                    'Arab': '/(3/r',
+                    'Cyrl': '/(N',
+                    'Cyrs': '/(N',
+                    'Grek': '/(S',
+                    'Hang': '/$1',
+                    'Hani': '/$1',
+                    'Hans': '/$1',
+                    'Hant': '/$1',
+                    'Hebr': '/(2/r'
             ]
-
+    
     String OG_MARK = '**OG**'
+    
     String HAS_BIB880 = 'marc:hasBib880'
     String BIB880 = 'marc:bib880'
     String PART_LIST = 'marc:partList'
@@ -40,14 +55,25 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     String IND1 = 'ind1'
     String IND2 = 'ind2'
 
-    List FIELDREFS = [FIELDREF, 'marc:bib035-fieldref', 'marc:bib041-fieldref',
-                      'marc:bib250-fieldref', 'marc:hold035-fieldref']
+    String BIB035_REF = 'marc:bib035-fieldref'
+    String BIB041_REF = 'marc:bib041-fieldref'
+    String BIB250_REF = 'marc:bib250-fieldref'
+    String HOLD035_REF = 'marc:hold035-fieldref'
+    
+    List FIELD_REFS = [FIELDREF, BIB035_REF, BIB041_REF, BIB250_REF, HOLD035_REF]
 
     void modify(Map record, Map thing) {
+        if (!languageResources)
+            return
+        
         // TODO: Do we really want to remove everything? What about "00" fields?
         // https://katalogverk.kb.se/katalogisering/Formathandboken/Lankning/index.html
         def hasBib880 = thing.remove(HAS_BIB880)
 
+        if (!hasBib880) {
+            return
+        }
+        
         Map bib880ByField = [:]
 
         asList(hasBib880).each { bib880 ->
@@ -70,6 +96,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
             } catch (Exception e) {
                 return
             }
+            
             def marc = [leader: "00887cam a2200277 a 4500", fields: marcJson]
             def converted = converter.runConvert(marc)
 
@@ -86,30 +113,43 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         Set handled = []
         def handle880Ref = { ref, path ->
             def converted = bib880Map[ref]
-            if (sameField[ref]?.intersect(handled) || converted && mergeAltLanguage(converted.mainEntity, thing)) {
+            def mainEntity = DocumentUtil.getAtPath(converted, ['@graph', 1])
+            if (sameField[ref]?.intersect(handled) || (mainEntity && mergeAltLanguage(mainEntity, thing))) {
                 handled.add(ref)
                 return new DocumentUtil.Remove()
             }
         }
 
         if (bib880Map) {
-            FIELDREFS.each {
+            FIELD_REFS.each {
                 DocumentUtil.findKey(thing, it, handle880Ref)
             }
         }
     }
 
     void unmodify(Map record, Map thing) {
+        if (!languageResources)
+            return
+        
         def byLangPaths = findByLangPaths(thing)
         def uniqueTLangs = findUniqueTLangs(thing, byLangPaths)
 
         // TODO: Can multiple transform rules be applied to the same record? What happens then with non-repeatable fields?
         uniqueTLangs.each { tLang ->
-            def copy = deepCopy(record)
-            def thingCopy = copy.mainEntity
-            putOriginalLiteralInNonByLang(thingCopy, byLangPaths, tLang)
-            def reverted = converter.runRevert(copy)
-            /*
+            unmodifyTLang(thing, tLang, byLangPaths, record)
+        }
+
+        byLangPaths.each { putRomanizedLiteralInNonByLang(thing, it as List) }
+    }
+    
+    private def unmodifyTLang(def thing, def tLang, def byLangPaths, def record) {
+        def copy = deepCopy(record)
+        def thingCopy = copy.mainEntity
+
+        byLangPaths.each { putOriginalLiteralInNonByLang(thingCopy, it as List, tLang) }
+        def reverted = converter.runRevert(copy)
+        
+        /*
              We expect the order in reverted.fields to mirror the order in the "json data" for repeatable fields
              i.e. if e.g.
              thing.hasTitle[0] = {'@type': 'Title', 'mainTitle': 'Title 1'}
@@ -121,67 +161,114 @@ class RomanizationStep extends MarcFramePostProcStepBase {
              If this can't be achieved we probably need to add some kind of reference to each
              (romanized) object *before* reverting in order to get the fieldrefs right.
              */
-
-            def fieldrefLocationToFieldRef = [:]
-            DocumentUtil.findKey(thingCopy, '_revertedBy') { value, path ->
-                def fieldMap = reverted.fields.find { it.containsKey(value) }
-                def fieldNumber = value
-                def field = fieldMap[fieldNumber]
-
-                // TODO: less hacky way to track romanized strings
-                def romanizedSubfields = field[SUBFIELDS].findResults {
-                    def subfield = it.keySet()[0]
-                    // TODO: only romanized subfields or all?
-                    if (it[subfield].startsWith(OG_MARK)) {
-                        return [(BIB880 + '-' + subfield): it[subfield].replace(OG_MARK, '')]
-                    }
-                    return null
-                }
-
-                if (!romanizedSubfields) {
-                    return
-                }
-
-                def hasBib880 = thing.computeIfAbsent(HAS_BIB880, s -> [])
-                def fieldrefIdx = zeroFill(hasBib880.size() + 1)
-                def ref = "$fieldNumber-$fieldrefIdx${scriptToCode[tLangCodes[tLang].fromLangScript] ?: ''}" as String
-                def bib880 =
-                        [
-                                (TYPE)          : 'marc:Bib880',
-                                (PART_LIST)     : [[(FIELDREF): ref]] + romanizedSubfields,
-                                (BIB880 + '-i1'): field[IND1],
-                                (BIB880 + '-i2'): field[IND2]
-                        ]
-
-                hasBib880.add(bib880)
-                reverted.fields.remove(fieldMap)
-
-                fieldrefLocationToFieldRef[path.collect().dropRight(1)] = "880-$fieldrefIdx" as String
-
-                return
-            }
-
-            fieldrefLocationToFieldRef.each { path, ref ->
-                def refLocation = DocumentUtil.getAtPath(thing, path)
-                def uniqueRefs = asList(refLocation[FIELDREF]).plus(asList(ref)).unique()
-                refLocation[FIELDREF] = uniqueRefs.size() == 1 ? uniqueRefs[0] : uniqueRefs
-            }
+        
+        List<Ref> fieldRefs = []
+        
+        List<String> paths = []
+        DocumentUtil.findKey(thingCopy, '_revertedBy') { value, path ->
+            paths.add(path.dropRight(1).join('-'))
+            return DocumentUtil.NOP
         }
 
-        putRomanizedLiteralInNonByLang(thing, byLangPaths)
+        List<String> nested = paths.findAll { p -> paths.any{ p.startsWith(it + '-')  } }
+        paths = paths - nested
+        
+        DocumentUtil.findKey(thingCopy, '_revertedBy') { value, path ->
+            if (path.dropRight(1).join('-') !in paths) {
+                return 
+            }
+            
+            def fieldMap = reverted.fields.find { it.containsKey(value) }
+            if (!fieldMap) {
+                return
+            }
+            def fieldNumber = value
+            def field = fieldMap[fieldNumber]
+
+            if (!field[SUBFIELDS].any { Map sf -> sf.values().any { it.startsWith(OG_MARK) }}) {
+                return
+            }
+            
+            def subFields = field[SUBFIELDS].collect {
+                def subfield = it.keySet()[0]
+                [(BIB880 + '-' + subfield): stripPrefix(it[subfield], OG_MARK)]
+            }
+            
+            def hasBib880 = thing.computeIfAbsent(HAS_BIB880, s -> [])
+            def ref = new Ref(
+                    toField: fieldNumber,
+                    occurenceNumber: hasBib880.size() + 1,
+                    path: path.collect().dropRight(1)
+            )
+
+            def scriptCode = marcScript(tLang)
+
+            def bib880 =
+                    [
+                            (TYPE)          : 'marc:Bib880',
+                            (PART_LIST)     : [[(FIELDREF): ref.from880(scriptCode)]] + subFields,
+                            (BIB880 + '-i1'): field[IND1],
+                            (BIB880 + '-i2'): field[IND2]
+                    ]
+
+            hasBib880.add(bib880)
+            reverted.fields.remove(fieldMap)
+
+            fieldRefs.add(ref)
+  
+            return
+        }
+
+        fieldRefs.each { r ->
+            def t = DocumentUtil.getAtPath(thing, r.path)
+            t[r.propertyName()] = (asList(t[r.propertyName()]) << r.to880()).unique()
+        }
+    }
+    
+    private String marcScript(String tLang) {
+        def script = languageResources.scripts[tLangCodes[tLang].fromLangScript]
+        return MARC_SCRIPT_CODES[script?.code ?: '']
     }
 
+    private static String stripPrefix(String s, String prefix) {
+        s.startsWith(prefix) ? s.substring(prefix.length()) : s
+    }
+    
+    @MapConstructor
+    private class Ref {
+        String toField
+        int occurenceNumber
+        List path
+        
+        String from880(String scriptCode) {
+            "$toField-${String.format("%02d", occurenceNumber)}${scriptCode ?: ''}"
+        }
+        
+        String to880() {
+            "880-${String.format("%02d", occurenceNumber)}"
+        }
+        
+        String propertyName() {
+            switch (toField) {
+                case '035': return BIB035_REF // TODO: also 'marc:hold035-fieldref'
+                case '041': return BIB041_REF
+                case '250': return BIB250_REF
+                default: return FIELDREF
+            }
+        } 
+    }
+    
     boolean mergeAltLanguage(Map converted, Map thing) {
         // Since the 880s do not specify which language they are in, we assume that they are in the first work language
         def workLang = thing.instanceOf.subMap('language')
-        langLinker.linkAll(workLang)
+        languageResources.languageLinker.linkAll(workLang)
         def lang = asList(workLang.language).findResult { it[ID] } ?: 'https://id.kb.se/language/und'
 
         return addAltLang(thing, converted, lang)
     }
 
     boolean addAltLang(Map thing, Map converted, String lang) {
-        if (!langToLangTag[lang] || !langToTLang[lang]) {
+        if (!langIdToLangTag[lang] || !langToTLang[lang]) {
             return false
         }
         def nonByLangPaths = []
@@ -196,69 +283,62 @@ class RomanizationStep extends MarcFramePostProcStepBase {
                 return
             }
 
-            def byLang = [:]
             asList(containingObject).each {
-                it.each { k, v ->
-                    if (k == path.last()) {
-                        def byLangProp = langAliases[k]
-                        byLang[byLangProp] =
-                                [
-                                        (langToLangTag[lang]): DocumentUtil.getAtPath(converted, path),
-                                        (langToTLang[lang])  : v
-                                ]
-                    }
+                def k = path.last()
+                if (it[k]) {
+                    def byLangProp = langAliases[k]
+                    it[byLangProp] =
+                            [
+                                    (langIdToLangTag[lang]): DocumentUtil.getAtPath(converted, path),
+                                    (langToTLang[lang])    : it[k]
+                            ]
                 }
-                it.putAll(byLang)
+                it.remove(k)
             }
         }
 
         return true
     }
+    
+    def putLiteralInNonByLang(Map thing, List byLangPath, Closure handler) {
+        def key = byLangPath.last()
+        def path = byLangPath.dropRight(1)
+        Map parent = DocumentUtil.getAtPath(thing, path)
 
-    def putRomanizedLiteralInNonByLang(Map thing, List<List> byLangPaths) {
-        byLangPaths.each {
-            def path = it.dropRight(1)
-            def containingObject = DocumentUtil.getAtPath(thing, path)
-            def nonByLang = [:]
+        def base = byLangToBase[key]
+        if (base && parent[key] && !parent[base]) {
+            handler(parent, key, base)
+        }
+        parent.remove(key)
+    }
 
-            containingObject.each { k, v ->
-                def base = byLangToBase[k]
-                if (base) {
-                    def romanized = v.findResults { langTag, literal -> langTag in tLangCodes.keySet() ? literal : null }
-                    nonByLang[base] = romanized
-                }
-            }
-
-            nonByLang.each { k, v ->
-                if (v.isEmpty()) {
-                    containingObject.remove(k)
-                } else if (v.size() == 1) {
-                    containingObject[k] = v[0]
-                } else {
-                    containingObject[k] = v
-                }
+    def putRomanizedLiteralInNonByLang(Map thing, List byLangPath) {
+        putLiteralInNonByLang(thing, byLangPath) { Map parent, String key, String base ->
+            def langContainer = parent[key] as Map
+            if (langContainer.size() == 1) {
+                parent[base] = langContainer.values().first()
+            } else {
+                langContainer
+                        .findResults { langTag, literal -> langTag in tLangCodes.keySet() ? literal : null }
+                        .with(RomanizationStep::unpackSingle)
+                        ?.with{ parent[base] = it }
             }
         }
     }
 
-    def putOriginalLiteralInNonByLang(Map thing, List<List> byLangPaths, String tLang) {
-        byLangPaths.each {
-            def path = it.dropRight(1)
-            def containingObject = DocumentUtil.getAtPath(thing, path)
-            def nonByLang = [:]
-            containingObject.each { k, v ->
-                def base = byLangToBase[k]
-                if (base) {
-                    def romanized = v.find { langTag, literal -> langTag == tLang }
-                    def original = v.find { langTag, literal -> langTag == langToLangTag[tLangCodes[tLang].inLanguage] }?.value
-                    if (romanized && original) {
-                        nonByLang[base] = original instanceof List
-                                ? original.collect { OG_MARK + it }
-                                : OG_MARK + original
-                    }
-                }
+    static def unpackSingle(Collection l) {
+        return l.size() == 1 ? l[0] : l
+    }
+    
+    def putOriginalLiteralInNonByLang(Map thing, List byLangPath, String tLang) {
+        putLiteralInNonByLang(thing, byLangPath) {  Map parent, String key, String base ->
+            def romanized = parent[key].find { langTag, literal -> langTag == tLang }
+            def original = parent[key].find { langTag, literal -> langTag == langIdToLangTag[tLangCodes[tLang].inLanguage] }?.value
+            if (romanized && original) {
+                parent[base] = original instanceof List
+                        ? original.collect { OG_MARK + it }
+                        : OG_MARK + original
             }
-            containingObject.putAll(nonByLang)
         }
     }
 
@@ -287,10 +367,6 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         return tLangs
     }
 
-    String zeroFill(int i) {
-        i < 10 ? "0$i" : "$i"
-    }
-
     Map bib880ToMarcJson(Map bib880) {
         def parts = bib880[PART_LIST]
         def tag = parts[0][FIELDREF].split('-')[0]
@@ -307,20 +383,24 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     }
 
     void init() {
-        this.tLangCodes = getTLangCodes(converter.normalizers)
+        if (!languageResources) {
+            return
+        }
+        
+        this.tLangCodes = getTLangCodes(languageResources.transformedLanguageForms)
         this.langToTLang = tLangCodes.collectEntries { k, v -> [v.inLanguage, k] }
         this.langAliases = ld.langContainerAlias
         this.byLangToBase = langAliases.collectEntries { k, v -> [v, k] }
-        this.langToLangTag = getLangTags(converter.normalizers)
-        this.langLinker = getLangLinker(converter.normalizers)
+        this.langIdToLangTag = languageResources.languages
+                .findAll { it.langTag }.collectEntries { [it[ID], it.langTag] }
     }
 
-    static Map<String, Map> getTLangCodes(Collection<DocumentNormalizer> normalizers) {
-        return normalizers.find { it.normalizer instanceof Romanizer }
-                .normalizer
-                .tLangs
+    static Map<String, Map> getTLangCodes(Map<String, Map> transformedLanguageForms) {
+        String matchTag = "-${TARGET_SCRIPT}-t-"
+        return transformedLanguageForms
+                .values()
+                .findAll{ ((String) it.langTag)?.contains(matchTag) }
                 .collectEntries {
-                    def code = it[ID].split('/').last()
                     def data = [:]
                     if (it.inLanguage) {
                         data.inLanguage = it.inLanguage[ID]
@@ -328,18 +408,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
                     if (it.fromLangScript) {
                         data.fromLangScript = it.fromLangScript[ID]
                     }
-                    [code, data]
+                    [it.langTag, data]
                 }
-    }
-
-    static Map<String, String> getLangTags(Collection<DocumentNormalizer> normalizers) {
-        return normalizers.find { it.normalizer instanceof Romanizer }
-                .normalizer
-                .langTags
-    }
-
-    static LanguageLinker getLangLinker(Collection<DocumentNormalizer> normalizers) {
-        return normalizers.find { it.normalizer instanceof LanguageLinker }
-                .normalizer
     }
 }

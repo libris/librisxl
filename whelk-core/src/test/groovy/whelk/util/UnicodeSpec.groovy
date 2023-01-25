@@ -66,4 +66,26 @@ class UnicodeSpec extends Specification {
         'this is ”my query” string'                                 | 'this is "my query" string'
         'this is “my query” string'                                 | 'this is "my query" string'
     }
+    
+    def "guess unicode script"() {
+        expect:
+        Unicode.guessScript(string) == script
+        where:
+        script                                        | string
+        Optional.empty()                              | ''
+        Optional.empty()                              | '  '
+        Optional.of(Character.UnicodeScript.CYRILLIC) | 'Это дом'
+        Optional.of(Character.UnicodeScript.LATIN)    | 'dom'
+        Optional.of(Character.UnicodeScript.ARMENIAN) | 'վիրված'
+    }
+
+    def "guess 15924 script"() {
+        expect:
+        Unicode.guessIso15924ScriptCode(string) == script
+        where:
+        script                                        | string
+        Optional.empty()                              | ''
+        Optional.empty()                              | '  '
+        Optional.of('Cyrl')                           | 'Это дом'
+    }
 }
