@@ -597,6 +597,8 @@ class ESQuery {
                 or.put(key.substring(OR_PREFIX.size()), value)
             }
             else if (key.startsWith(AND_PREFIX)) {
+                // For AND on the same field to work, we need a separate
+                // map for each value
                 value.each {
                     and << [(key.substring(AND_PREFIX.size())): [it]]
                 }
