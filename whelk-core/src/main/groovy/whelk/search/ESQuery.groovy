@@ -28,10 +28,10 @@ class ESQuery {
     private static final List RESERVED_PARAMS = [
         'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens', '_stats', '_suggest', '_site'
     ]
-    private static final String OR_PREFIX = 'or-'
-    private static final String EXISTS_PREFIX = 'exists-'
-    private static final String AND_PREFIX = 'and-'
+    public static final String AND_PREFIX = 'and-'
+    public static final String OR_PREFIX = 'or-'
     private static final String NOT_PREFIX = 'not-'
+    private static final String EXISTS_PREFIX = 'exists-'
 
     private static final Map recordsOverCacheRecordsBoost = [
             'bool': ['should': [
