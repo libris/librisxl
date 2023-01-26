@@ -311,6 +311,47 @@ $ curl -XGET -H "Accept: application/ld+json" \
 ...
 ```
 
+#### Exempel
+
+Har ämne term/sao/Monster.
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find.jsonld?instanceOf.subject.@id=https://id.kb.se/term/sao/Monster'
+...
+```
+
+#### Exempel
+
+Har ämne term/sao/Monster _eller_ term/sao/Magi.
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find.jsonld?instanceOf.subject.@id=https://id.kb.se/term/sao/Monster&instanceOf.subject.@id=https://id.kb.se/term/sao/Magi'
+...
+```
+
+#### Exempel
+
+Har ämne term/sao/Monster _och_ term/sao/Magi.
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find.jsonld?and-instanceOf.subject.@id=https://id.kb.se/term/sao/Monster&and-instanceOf.subject.@id=https://id.kb.se/term/sao/Magi'
+...
+```
+
+#### Exempel
+
+Har ämne term/sao/Monster _och_ term/sao/Magi men _inte_ term/sao/Trollkarlar,
+och har genre/form term/saogf/Fantasy.
+```
+$ curl -XGET -H "Accept: application/ld+json" -G \
+    'https://libris-qa.kb.se/find.jsonld' \
+    -d and-instanceOf.subject.@id=https://id.kb.se/term/sao/Monster \
+    -d and-instanceOf.subject.@id=https://id.kb.se/term/sao/Magi \
+    -d not-instanceOf.subject.@id=https://id.kb.se/term/sao/Trollkarlar \
+    -d instanceOf.genreForm.@id=https://id.kb.se/term/saogf/Fantasy
+...
+```
+
 
 ### `/_remotesearch` - Sök i externa databaser  - Kräver autentisering
 
