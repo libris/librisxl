@@ -165,18 +165,18 @@ class SearchUtils {
                 return item
             }
         }
-
-        // Don't return facets on fields that already have an active facet.
-        // Now multiple conditions on the same field are always ORed, which means facets will behave weird.
-        // This can be changed if we add a way to have x=a AND x=b in the API. 
-        // Now: if x=a is selected, the facet for x=b will show the number for (x=a AND x=b) but when selected the 
-        // results will be (x=a OR x=b).
-        def selectedFacets = ((Map) mappingsAndPageParams.v2).findAll {it.key != JsonLd.TYPE_KEY }.keySet()
-        def filteredAggregations = ((Map) esResult['aggregations']).findAll{ !selectedFacets.contains(it.key) }
+        
+        def aggregations = ((Map) esResult['aggregations'])
+        def selectedFacets = ((Map) mappingsAndPageParams.v2)
+        selectedFacets.each { k, v ->
+            k = stripPrefix((String) k, ESQuery.AND_PREFIX)
+            k = stripPrefix((String) k, ESQuery.OR_PREFIX)
+            ((List) aggregations[k]?['buckets'])?.removeIf { it['key'] in v }
+        } 
 
         Map stats = null
         if (addStats == null || (addStats == 'true' || addStats == 'on')) {
-            stats = buildStats(lookup, filteredAggregations,
+            stats = buildStats(lookup, aggregations,
                                makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)),
                                (total > 0 && !predicates) ? reverseObject : null)
         }
@@ -342,9 +342,7 @@ class SearchUtils {
      *
      */
     private Map buildStats(Lookup lookup, Map aggregations, String baseUrl, String reverseObject) {
-        Map result = [:]
-        result = addSlices(lookup, [:], aggregations, baseUrl, reverseObject)
-        return result
+        return addSlices(lookup, [:], aggregations, baseUrl, reverseObject)
     }
 
     private Map addSlices(Lookup lookup, Map stats, Map aggregations, String baseUrl, String reverseObject) {
@@ -356,7 +354,7 @@ class SearchUtils {
 
             aggregation['buckets'].each { bucket ->
                 String itemId = bucket['key']
-                String searchPageUrl = "${baseUrlForKey}&${makeParam(key, itemId)}"
+                String searchPageUrl = "${baseUrlForKey}&${ESQuery.AND_PREFIX}${makeParam(key, itemId)}"
 
                 Map observation = ['totalItems': bucket.getAt('doc_count'),
                                    'view': [(JsonLd.ID_KEY): searchPageUrl],
@@ -738,6 +736,9 @@ class SearchUtils {
                     termKey = param
                     value = val
                 }
+                
+                termKey = stripPrefix(termKey, ESQuery.AND_PREFIX)
+                termKey = stripPrefix(termKey, ESQuery.OR_PREFIX)
 
                 result << [
                     'variable': param,
