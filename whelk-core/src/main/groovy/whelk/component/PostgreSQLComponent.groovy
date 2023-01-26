@@ -2448,7 +2448,7 @@ class PostgreSQLComponent {
                     jsonb.setType("jsonb")
                     jsonb.setValue("""[{"@id":"${dataset}"}]""")
                     loadAllStatement.setObject(3, jsonb)
-                } else {
+                } else if (collection) {
                     loadAllStatement.setString(3, collection)
                 }
 
