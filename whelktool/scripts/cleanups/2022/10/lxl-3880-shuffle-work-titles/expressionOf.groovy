@@ -113,6 +113,7 @@ selectBySqlWhere(where) {
             moveThese.add('musicKey')
         }
         if (tryCopyToTarget(expressionOf, work, id, moveThese)) {
+            work[HAS_TITLE][0]['source'] = 'expressionOf' // Temporary, for testing
             work.remove(EXPRESSION_OF)
             it.scheduleSave()
         }

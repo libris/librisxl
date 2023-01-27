@@ -1,4 +1,4 @@
-entity	originDate	originPlace	qualifier
+entity	originDate	originPlace	marc:version
 Bibeln. · [Apokryferna., Syrak. Svenska. 1541]			1541
 Bibeln. · [Psaltaren. Polska] · 1594.			1594
 Bibeln. · [Psaltaren. Svenska. 1703]			1703
@@ -269,11 +269,13 @@ Bible. · [O.T., Psalms., Winchester.] · eng			Winchester
 Bible. · [O.T., Psalms., Wither.] · eng			Wither
 Bible. · [O.T., Psalms., Woodford.] · eng			Woodford
 Bible. · [O.T., Psalms., Wyatt.] · eng			Wyatt
+Bible. · [Verse.] · Abridgments. · eng			Verse
 Bible. N. T. Gospels. French. 1943			1943
 Bible. N. T. Gothic. Selections. 1946			Gothic. 1946
 Bible. N. T. Greek. 1943			1943
 Bible. O. T. Ecclesiastes. English. 1945. Gordis			Gordis. 1945
 Bible.John, Gospel of. Manx.			Gospel of. Manx
+Testamentum novum <bulg., kirchenslaw.>.			Kirchenslaw
 Psalmboken 1542 Lübeck	1542	Lübeck	
 Psalmboken 1548 Stockholm	1548	Stockholm	
 Psalmboken 1553 Stockholm	1553	Stockholm	
@@ -794,4 +796,1119 @@ Psalmboken 1902 Sthlm Herzog	1902	Sthlm	Herzog
 Psalmboken 1906 Sthlm Herzog	1906	Sthlm	Herzog
 Psalmboken 1914 Sthlm Herzog	1914	Sthlm	Herzog
 Psalmboken, 1905 Stockholm Herzog	1905	Stockholm	Herzog
-Testamentum novum <bulg., kirchenslaw.>.			Kirchenslaw
+Almanach 1684 Voigt	1684		
+Almanach 1688 Voigt	1688		
+Almanach 1691 Voigt	1691		
+Almanach 1704 Nöller	1704		
+Almanach 1724 Stichter	1724		
+Almanack 1640 Herlitz	1640		
+Almanack 1641 Herlitz	1641		
+Almanack 1643 Herlitz	1643		
+Almanack 1648 Werve	1648		
+Almanack 1650 Schwartz	1650		
+Almanack 1656 Freund	1656		
+Almanack 1657 Freund	1657		
+Almanack 1661 Marchen	1661		
+Almanack 1664 Freund	1664		
+Almanack 1667 Fuhrmann	1667		
+Almanack 1669 Voigt	1669		
+Almanack 1670 Voigt	1670		
+Almanack 1676 Voigt	1676		
+Almanack 1681 Spole	1681		
+Almanack 1683 Voigt	1683		
+Almanack 1685 Voigt	1685		
+Almanack 1686 Spole	1686		
+Almanack 1688 Spole	1688		
+Almanack 1692 Spole	1692		
+Almanack 1698 Krook	1698		
+Almanack 1698 Voigt	1698		
+Almanack 1699 Spole	1699		
+Almanack 1700 Krook	1700		
+Almanack 1700 Spole	1700		
+Almanack 1701 Bilberg.	1701		
+Almanack 1701 Celsius.	1701		
+Almanack 1701 Elvius.	1701		
+Almanack 1701 Krook.	1701		
+Almanack 1701 Riddermarck.	1701		
+Almanack 1701.	1701.		
+Almanack 1702 Bilberg.	1702		
+Almanack 1702 Celsius.	1702		
+Almanack 1702 Elvius.	1702		
+Almanack 1702 Krook.	1702		
+Almanack 1702 Riddermarck.	1702		
+Almanack 1703 Bilberg.	1703		
+Almanack 1703 Elvius.	1703		
+Almanack 1703 Krook.	1703		
+Almanack 1703 Riddermarck.	1703		
+Almanack 1704 Bilberg.	1704		
+Almanack 1704 Celsius.	1704		
+Almanack 1704 Elvius.	1704		
+Almanack 1704 Krook.	1704		
+Almanack 1704 Riddermarck.	1704		
+Almanack 1705 Bilberg.	1705		
+Almanack 1705 Celsius.	1705		
+Almanack 1705 Elvius.	1705		
+Almanack 1705 Krook.	1705		
+Almanack 1705 Riddermarck.	1705		
+Almanack 1706 Bilberg.	1706		
+Almanack 1706 Celsius.	1706		
+Almanack 1706 Elvius.	1706		
+Almanack 1706 Krook.	1706		
+Almanack 1706 Riddermarck.	1706		
+Almanack 1707 Bilberg.	1707		
+Almanack 1707 Celsius.	1707		
+Almanack 1707 Elvius.	1707		
+Almanack 1707 Krook.	1707		
+Almanack 1708 Bilberg.	1708		
+Almanack 1708 Celsius.	1708		
+Almanack 1708 Elvius.	1708		
+Almanack 1708 Krook.	1708		
+Almanack 1709 Bilberg.	1709		
+Almanack 1709 Celsius.	1709		
+Almanack 1709 Elvius.	1709		
+Almanack 1709 Krook.	1709		
+Almanack 1710 Bilberg.	1710		
+Almanack 1710 Celsius.	1710		
+Almanack 1710 Elvius.	1710		
+Almanack 1710 Krook.	1710		
+Almanack 1711 Bilberg.	1711		
+Almanack 1711 Celsius.	1711		
+Almanack 1711 Elvius.	1711		
+Almanack 1711 Krook.	1711		
+Almanack 1712 Celsius.	1712		
+Almanack 1712 Elvius.	1712		
+Almanack 1712 Krook.	1712		
+Almanack 1712 Vallerius.	1712		
+Almanack 1713 Celsius.	1713		
+Almanack 1713 Elvius.	1713		
+Almanack 1713 Krook.	1713		
+Almanack 1713 Vallerius.	1713		
+Almanack 1714 Celsius.	1714		
+Almanack 1714 Elvius.	1714		
+Almanack 1714 Krook.	1714		
+Almanack 1714 Quensel.	1714		
+Almanack 1714 Vallerius.	1714		
+Almanack 1715 Celsius.	1715		
+Almanack 1715 Elvius.	1715		
+Almanack 1715 Krook.	1715		
+Almanack 1715 Quensel.	1715		
+Almanack 1715 Vallerius.	1715		
+Almanack 1716 Celsius.	1716		
+Almanack 1716 Elvius.	1716		
+Almanack 1716 Krook.	1716		
+Almanack 1716 Quensel.	1716		
+Almanack 1716 Vallerius.	1716		
+Almanack 1717 Celsius.	1717		
+Almanack 1717 Elvius.	1717		
+Almanack 1717 Quensel.	1717		
+Almanack 1717 Tammelin.	1717		
+Almanack 1717 Vallerius.	1717		
+Almanack 1718 Celsius.	1718		
+Almanack 1718 Elvius.	1718		
+Almanack 1718 Quensel.	1718		
+Almanack 1718 Tammelin.	1718		
+Almanack 1718 Vallerius.	1718		
+Almanack 1719 Celsius.	1719		
+Almanack 1719 Quensel.	1719		
+Almanack 1719 Tammelin.	1719		
+Almanack 1719 Vallerius.	1719		
+Almanack 1720 Burman.	1720		
+Almanack 1720 Celsius.	1720		
+Almanack 1720 Quensel.	1720		
+Almanack 1720 Tammelin.	1720		
+Almanack 1721 Burman.	1721		
+Almanack 1721 Celsius.	1721		
+Almanack 1721 Quensel.	1721		
+Almanack 1721 Tammelin.	1721		
+Almanack 1722 Burman.	1722		
+Almanack 1722 Celsius.	1722		
+Almanack 1722 Morsing.	1722		
+Almanack 1722 Quensel.	1722		
+Almanack 1722 Tammelin.	1722		
+Almanack 1723 Burman.	1723		
+Almanack 1723 Celsius.	1723		
+Almanack 1723 Quensel.	1723		
+Almanack 1723 Tammelin.	1723		
+Almanack 1724 Burman.	1724		
+Almanack 1724 Celsius.	1724		
+Almanack 1724 Quensel.	1724		
+Almanack 1724 Tammelin.	1724		
+Almanack 1724 Wassenius.	1724		
+Almanack 1725 Burman.	1725		
+Almanack 1725 Quensel.	1725		
+Almanack 1725 Tammelin.	1725		
+Almanack 1725 Wassenius.	1725		
+Almanack 1726 Burman.	1726		
+Almanack 1726 Quensel.	1726		
+Almanack 1726 Utrecht	1726		
+Almanack 1726 Wassenius.	1726		
+Almanack 1727 Burman.	1727		
+Almanack 1727 Hasselbom.	1727		
+Almanack 1727 Quensel.	1727		
+Almanack 1727 Wassenius.	1727		
+Almanack 1728 Burman.	1728		
+Almanack 1728 Celsius.	1728		
+Almanack 1728 Quensel.	1728		
+Almanack 1728 Wassenius.	1728		
+Almanack 1729 Burman	1729		
+Almanack 1729 Celsius.	1729		
+Almanack 1729 Quensel.	1729		
+Almanack 1729 Wassenius.	1729		
+Almanack 1730 Burman.	1730		
+Almanack 1730 Celsius.	1730		
+Almanack 1730 Quensel.	1730		
+Almanack 1730 Wassenius.	1730		
+Almanack 1731 Celsius.	1731		
+Almanack 1731 Quensel.	1731		
+Almanack 1731 Quensil.	1731		
+Almanack 1731 Wassenius.	1731		
+Almanack 1732 Celsius.	1732		
+Almanack 1732 Quensel.	1732		
+Almanack 1732 Wassenius.	1732		
+Almanack 1732 Wolfgang	1732		
+Almanack 1733 Celsius.	1733		
+Almanack 1733 Quensel.	1733		
+Almanack 1733 Wassenius.	1733		
+Almanack 1734 Celsius.	1734		
+Almanack 1734 Hiorter.	1734		
+Almanack 1734 Menlös.	1734		
+Almanack 1734 Wassenius.	1734		
+Almanack 1735 Celsius.	1735		
+Almanack 1735 Hiorter.	1735		
+Almanack 1735 Menlös.	1735		
+Almanack 1735 Wassenius.	1735		
+Almanack 1736 Celsius.	1736		
+Almanack 1736 Hiorter.	1736		
+Almanack 1736 Menlös.	1736		
+Almanack 1736 Wassenius.	1736		
+Almanack 1737 Celsius.	1737		
+Almanack 1737 Hiorter.	1737		
+Almanack 1737 Menlös.	1737		
+Almanack 1737 Wassenius.	1737		
+Almanack 1738 Hiorter.	1738		
+Almanack 1738 Menlös.	1738		
+Almanack 1738 Wassenius.	1738		
+Almanack 1739 Hiorter.	1739		
+Almanack 1739 Menlös.	1739		
+Almanack 1739 Wassenius.	1739		
+Almanack 1740 Celsius.	1740		
+Almanack 1740 Hiorter.	1740		
+Almanack 1740 Menlös.	1740		
+Almanack 1740 Wassenius.	1740		
+Almanack 1741 Celsius.	1741		
+Almanack 1741 Hiorter.	1741		
+Almanack 1741 Menlös.	1741		
+Almanack 1741 Wassenius.	1741		
+Almanack 1742 Hiorter.	1742		
+Almanack 1742 Menlös.	1742		
+Almanack 1742 Wahlström.	1742		
+Almanack 1742 Wassenius.	1742		
+Almanack 1743 Celsius.	1743		
+Almanack 1743 Hiorter.	1743		
+Almanack 1743 Menlös.	1743		
+Almanack 1743 Wassenius.	1743		
+Almanack 1744 Celsius.	1744		
+Almanack 1744 Hellant.	1744		
+Almanack 1744 Hielm.	1744		
+Almanack 1744 Hiorter.	1744		
+Almanack 1744 Menlös.	1744		
+Almanack 1744 Wahlström.	1744		
+Almanack 1744 Wassenius.	1744		
+Almanack 1745 Celsius.	1745		
+Almanack 1745 Hedström.	1745		
+Almanack 1745 Hielm.	1745		
+Almanack 1745 Hiorter.	1745		
+Almanack 1745 Menlös.	1745		
+Almanack 1745 Wassenius.	1745		
+Almanack 1746 Hedström.	1746		
+Almanack 1746 Hiorter.	1746		
+Almanack 1746 Liedbeck.	1746		
+Almanack 1746 Wahlström.	1746		
+Almanack 1746 Wassenius.	1746		
+Almanack 1747 Hiorter.	1747		
+Almanack 1747 Liedbeck.	1747		
+Almanack 1747 Wahlström.	1747		
+Almanack 1747 Wassenius.	1747		
+Almanack 1748 Hellant.	1748		
+Almanack 1748 Hiorter.	1748		
+Almanack 1748 Liedbeck.	1748		
+Almanack 1748 Wassenius.	1748		
+Almanack 1749 KVA Gbg.	1749		KVA Gbg.
+Almanack 1749 KVA Lund.	1749		KVA Lund.
+Almanack 1749 KVA Sthlm.	1749		KVA Sthlm.
+Almanack 1749 KVA Åbo	1749		KVA Åbo
+Almanack 1750 KVA Gbg.	1750		KVA Gbg.
+Almanack 1750 KVA Lund.	1750		KVA Lund.
+Almanack 1750 KVA Sthlm.	1750		KVA Sthlm.
+Almanack 1750 KVA Åbo	1750		KVA Åbo
+Almanack 1751 KVA Gbg.	1751		KVA Gbg.
+Almanack 1751 KVA Lund.	1751		KVA Lund.
+Almanack 1751 KVA Sthlm.	1751		KVA Sthlm.
+Almanack 1751 KVA Åbo	1751		KVA Åbo
+Almanack 1752 KVA Gbg.	1752		KVA Gbg.
+Almanack 1752 KVA Lund.	1752		KVA Lund.
+Almanack 1752 KVA Sthlm.	1752		KVA Sthlm.
+Almanack 1753 KVA Gbg.	1753		KVA Gbg.
+Almanack 1753 KVA Lund.	1753		KVA Lund.
+Almanack 1753 KVA Sthlm.	1753		KVA Sthlm.
+Almanack 1754 KVA Gbg.	1754		KVA Gbg.
+Almanack 1754 KVA Lund.	1754		KVA Lund.
+Almanack 1754 KVA Sthlm.	1754		KVA Sthlm.
+Almanack 1754 KVA Åbo.	1754		KVA Åbo.
+Almanack 1755 KVA Gbg.	1755		KVA Gbg.
+Almanack 1755 KVA Lund.	1755		KVA Lund.
+Almanack 1755 KVA Sthlm.	1755		KVA Sthlm.
+Almanack 1755 KVA Åbo.	1755		KVA Åbo.
+Almanack 1756 KVA Gbg.	1756		KVA Gbg.
+Almanack 1756 KVA Lund.	1756		KVA Lund.
+Almanack 1756 KVA Sthlm.	1756		KVA Sthlm.
+Almanack 1757 KVA Gbg.	1757		KVA Gbg.
+Almanack 1757 KVA Lund.	1757		KVA Lund.
+Almanack 1757 KVA Sthlm.	1757		KVA Sthlm.
+Almanack 1758 KVA Gbg.	1758		KVA Gbg.
+Almanack 1758 KVA Lund.	1758		KVA Lund.
+Almanack 1759 KVA Gbg.	1759		KVA Gbg.
+Almanack 1759 KVA Lund.	1759		KVA Lund.
+Almanack 1759 KVA Sthlm.	1759		KVA Sthlm.
+Almanack 1760 KVA Gbg.	1760		KVA Gbg.
+Almanack 1760 KVA Lund.	1760		KVA Lund.
+Almanack 1760 KVA Sthlm.	1760		KVA Sthlm.
+Almanack 1761 KVA Gbg.	1761		KVA Gbg.
+Almanack 1761 KVA Lund.	1761		KVA Lund.
+Almanack 1761 KVA Sthlm.	1761		KVA Sthlm.
+Almanack 1762 KVA Gbg.	1762		KVA Gbg.
+Almanack 1762 KVA Lund.	1762		KVA Lund.
+Almanack 1762 KVA Sthlm.	1762		KVA Sthlm.
+Almanack 1763 KVA Gbg.	1763		KVA Gbg.
+Almanack 1763 KVA Lund.	1763		KVA Lund.
+Almanack 1763 KVA Sthlm.	1763		KVA Sthlm.
+Almanack 1764 KVA Gbg.	1764		KVA Gbg.
+Almanack 1764 KVA Lund.	1764		KVA Lund.
+Almanack 1764 KVA Sthlm.	1764		KVA Sthlm.
+Almanack 1765 KVA Gbg.	1765		KVA Gbg.
+Almanack 1765 KVA Lund.	1765		KVA Lund.
+Almanack 1765 KVA Sthlm.	1765		KVA Sthlm.
+Almanack 1766 KVA Gbg.	1766		KVA Gbg.
+Almanack 1766 KVA Lund.	1766		KVA Lund.
+Almanack 1766 KVA Sthlm.	1766		KVA Sthlm.
+Almanack 1767 KVA Gbg.	1767		KVA Gbg.
+Almanack 1767 KVA Lund.	1767		KVA Lund.
+Almanack 1767 KVA Sthlm.	1767		KVA Sthlm.
+Almanack 1768 KVA Gbg.	1768		KVA Gbg.
+Almanack 1768 KVA Lund.	1768		KVA Lund.
+Almanack 1768 KVA Sthlm.	1768		KVA Sthlm.
+Almanack 1769 KVA Gbg.	1769		KVA Gbg.
+Almanack 1769 KVA Lund.	1769		KVA Lund.
+Almanack 1769 KVA Sthlm.	1769		KVA Sthlm.
+Almanack 1770 KVA Gbg.	1770		KVA Gbg.
+Almanack 1770 KVA Lund.	1770		KVA Lund.
+Almanack 1770 KVA Sthlm.	1770		KVA Sthlm.
+Almanack 1771 KVA Gbg.	1771		KVA Gbg.
+Almanack 1771 KVA Lund.	1771		KVA Lund.
+Almanack 1771 KVA Sthlm.	1771		KVA Sthlm.
+Almanack 1772 KVA Gbg.	1772		KVA Gbg.
+Almanack 1772 KVA Lund.	1772		KVA Lund.
+Almanack 1772 KVA Sthlm.	1772		KVA Sthlm.
+Almanack 1772 KVA Åbo.	1772		KVA Åbo.
+Almanack 1773 KVA Gbg.	1773		KVA Gbg.
+Almanack 1773 KVA Lund.	1773		KVA Lund.
+Almanack 1773 KVA Sthlm.	1773		KVA Sthlm.
+Almanack 1774 KVA Gbg.	1774		KVA Gbg.
+Almanack 1774 KVA Lund.	1774		KVA Lund.
+Almanack 1774 KVA Sthlm.	1774		KVA Sthlm.
+Almanack 1775 KVA Gbg.	1775		KVA Gbg.
+Almanack 1775 KVA Lund.	1775		KVA Lund.
+Almanack 1775 KVA Sthlm.	1775		KVA Sthlm.
+Almanack 1776 KVA Gbg.	1776		KVA Gbg.
+Almanack 1776 KVA Lund.	1776		KVA Lund.
+Almanack 1776 KVA Sthlm.	1776		KVA Sthlm.
+Almanack 1776 KVA Åbo.	1776		KVA Åbo.
+Almanack 1777 KVA Gbg.	1777		KVA Gbg.
+Almanack 1777 KVA Lund.	1777		KVA Lund.
+Almanack 1777 KVA Sthlm.	1777		KVA Sthlm.
+Almanack 1778 KVA Gbg.	1778		KVA Gbg.
+Almanack 1778 KVA Lund.	1778		KVA Lund.
+Almanack 1778 KVA Sthlm.	1778		KVA Sthlm.
+Almanack 1779 KVA Gbg.	1779		KVA Gbg.
+Almanack 1779 KVA Lund.	1779		KVA Lund.
+Almanack 1779 KVA Sthlm.	1779		KVA Sthlm.
+Almanack 1780 KVA Gbg.	1780		KVA Gbg.
+Almanack 1780 KVA Lund.	1780		KVA Lund.
+Almanack 1780 KVA Sthlm.	1780		KVA Sthlm.
+Almanack 1781 KVA Gbg.	1781		KVA Gbg.
+Almanack 1781 KVA Lund.	1781		KVA Lund.
+Almanack 1781 KVA Sthlm.	1781		KVA Sthlm.
+Almanack 1781 KVA Åbo.	1781		KVA Åbo.
+Almanack 1782 KVA Gbg.	1782		KVA Gbg.
+Almanack 1782 KVA Lund.	1782		KVA Lund.
+Almanack 1782 KVA Sthlm.	1782		KVA Sthlm.
+Almanack 1783 KVA Gbg.	1783		KVA Gbg.
+Almanack 1783 KVA Lund.	1783		KVA Lund.
+Almanack 1783 KVA Sthlm.	1783		KVA Sthlm.
+Almanack 1784 KVA Gbg.	1784		KVA Gbg.
+Almanack 1784 KVA Lund.	1784		KVA Lund.
+Almanack 1784 KVA Sthlm.	1784		KVA Sthlm.
+Almanack 1784 KVA Åbo.	1784		KVA Åbo.
+Almanack 1785 KVA Gbg.	1785		KVA Gbg.
+Almanack 1785 KVA Lund.	1785		KVA Lund.
+Almanack 1785 KVA Sthlm.	1785		KVA Sthlm.
+Almanack 1785 KVA Åbo.	1785		KVA Åbo.
+Almanack 1786 KVA Gbg.	1786		KVA Gbg.
+Almanack 1786 KVA Lund.	1786		KVA Lund.
+Almanack 1786 KVA Sthlm.	1786		KVA Sthlm.
+Almanack 1786 KVA Åbo.	1786		KVA Åbo.
+Almanack 1787 Böhme	1787		
+Almanack 1787 KVA Gbg.	1787		KVA Gbg.
+Almanack 1787 KVA Lund.	1787		KVA Lund.
+Almanack 1787 KVA Sthlm.	1787		KVA Sthlm.
+Almanack 1787 KVA Åbo.	1787		KVA Åbo.
+Almanack 1788 KVA Gbg.	1788		KVA Gbg.
+Almanack 1788 KVA Lund.	1788		KVA Lund.
+Almanack 1788 KVA Sthlm.	1788		KVA Sthlm.
+Almanack 1788 KVA Åbo.	1788		KVA Åbo.
+Almanack 1789 KVA Gbg.	1789		KVA Gbg.
+Almanack 1789 KVA Lund.	1789		KVA Lund.
+Almanack 1789 KVA Sthlm.	1789		KVA Sthlm.
+Almanack 1789 KVA Åbo.	1789		KVA Åbo.
+Almanack 1790 KVA Gbg.	1790		KVA Gbg.
+Almanack 1790 KVA Lund.	1790		KVA Lund.
+Almanack 1790 KVA Sthlm.	1790		KVA Sthlm.
+Almanack 1790 KVA Åbo.	1790		KVA Åbo.
+Almanack 1791 KVA Sthlm.	1791		KVA Sthlm.
+Almanack 1791 KVA Gbg.	1791		KVA Gbg.
+Almanack 1791 KVA Lund.	1791		KVA Lund.
+Almanack 1791 KVA Sthlm.	1791		KVA Sthlm.
+Almanack 1791 KVA Åbo.	1791		KVA Åbo.
+Almanack 1792 KVA Gbg.	1792		KVA Gbg.
+Almanack 1792 KVA Lund.	1792		KVA Lund.
+Almanack 1792 KVA Sthlm	1792		KVA Sthlm
+Almanack 1792 KVA Sthlm.	1792		KVA Sthlm.
+Almanack 1793 KVA Gbg.	1793		KVA Gbg.
+Almanack 1793 KVA Lund.	1793		KVA Lund.
+Almanack 1793 KVA Sthlm.	1793		KVA Sthlm.
+Almanack 1793 KVA Åbo.	1793		KVA Åbo.
+Almanack 1794 KVA Gbg.	1794		KVA Gbg.
+Almanack 1794 KVA Lund.	1794		KVA Lund.
+Almanack 1794 KVA Sthlm.	1794		KVA Sthlm.
+Almanack 1794 KVA Åbo.	1794		KVA Åbo.
+Almanack 1795 KVA Gbg.	1795		KVA Gbg.
+Almanack 1795 KVA Lund.	1795		KVA Lund.
+Almanack 1795 KVA Sthlm.	1795		KVA Sthlm.
+Almanack 1795 KVA Torneå.	1795		KVA Torneå.
+Almanack 1795 KVA Åbo.	1795		KVA Åbo.
+Almanack 1796 KVA Gbg.	1796		KVA Gbg.
+Almanack 1796 KVA Lund.	1796		KVA Lund.
+Almanack 1796 KVA Sthlm.	1796		KVA Sthlm.
+Almanack 1796 KVA Torneå.	1796		KVA Torneå.
+Almanack 1796 KVA Åbo.	1796		KVA Åbo.
+Almanack 1797 KVA Gbg.	1797		KVA Gbg.
+Almanack 1797 KVA Lund.	1797		KVA Lund.
+Almanack 1797 KVA Sthlm.	1797		KVA Sthlm.
+Almanack 1797 KVA Torneå.	1797		KVA Torneå.
+Almanack 1797 KVA Åbo.	1797		KVA Åbo.
+Almanack 1798 Böhme	1798		
+Almanack 1798 KVA Gbg.	1798		KVA Gbg.
+Almanack 1798 KVA Lund.	1798		KVA Lund.
+Almanack 1798 KVA Sthlm.	1798		KVA Sthlm.
+Almanack 1798 KVA Torneå.	1798		KVA Torneå.
+Almanack 1798 KVA Åbo.	1798		KVA Åbo.
+Almanack 1799 KVA Gbg.	1799		KVA Gbg.
+Almanack 1799 KVA Lund.	1799		KVA Lund.
+Almanack 1799 KVA Sthlm.	1799		KVA Sthlm.
+Almanack 1799 KVA Torneå.	1799		KVA Torneå.
+Almanack 1799 KVA Åbo.	1799		KVA Åbo.
+Almanack 1800 KVA Gbg.	1800		KVA Gbg.
+Almanack 1800 KVA Lund.	1800		KVA Lund.
+Almanack 1800 KVA Sthlm.	1800		KVA Sthlm.
+Almanack 1800 KVA Torneå.	1800		KVA Torneå.
+Almanack 1800 KVA Åbo.	1800		KVA Åbo.
+Almanack 1801 KVA Gbg.	1801		KVA Gbg.
+Almanack 1801 KVA Lund.	1801		KVA Lund.
+Almanack 1801 KVA Sthlm.	1801		KVA Sthlm.
+Almanack 1801 KVA Torneå.	1801		KVA Torneå.
+Almanack 1801 KVA Åbo.	1801		KVA Åbo.
+Almanack 1802 KVA Gbg.	1802		KVA Gbg.
+Almanack 1802 KVA Lund.	1802		KVA Lund.
+Almanack 1802 KVA Sthlm.	1802		KVA Sthlm.
+Almanack 1802 KVA Torneå.	1802		KVA Torneå.
+Almanack 1802 KVA Åbo.	1802		KVA Åbo.
+Almanack 1803 KVA Gbg.	1803		KVA Gbg.
+Almanack 1803 KVA Lund.	1803		KVA Lund.
+Almanack 1803 KVA Sthlm.	1803		KVA Sthlm.
+Almanack 1803 KVA Torneå.	1803		KVA Torneå.
+Almanack 1803 KVA Åbo.	1803		KVA Åbo.
+Almanack 1804 KVA Gbg.	1804		KVA Gbg.
+Almanack 1804 KVA Lund.	1804		KVA Lund.
+Almanack 1804 KVA Sthlm.	1804		KVA Sthlm.
+Almanack 1804 KVA Torneå.	1804		KVA Torneå.
+Almanack 1804 KVA Åbo.	1804		KVA Åbo.
+Almanack 1805 KVA Gbg.	1805		KVA Gbg.
+Almanack 1805 KVA Lund.	1805		KVA Lund.
+Almanack 1805 KVA Sthlm.	1805		KVA Sthlm.
+Almanack 1805 KVA Torneå.	1805		KVA Torneå.
+Almanack 1805 KVA Åbo.	1805		KVA Åbo.
+Almanack 1806 KVA Gbg.	1806		KVA Gbg.
+Almanack 1806 KVA Lund.	1806		KVA Lund.
+Almanack 1806 KVA Sthlm.	1806		KVA Sthlm.
+Almanack 1806 KVA Torneå.	1806		KVA Torneå.
+Almanack 1806 KVA Åbo.	1806		KVA Åbo.
+Almanack 1807 KVA Gbg.	1807		KVA Gbg.
+Almanack 1807 KVA Lund.	1807		KVA Lund.
+Almanack 1807 KVA Sthlm.	1807		KVA Sthlm.
+Almanack 1807 KVA Torneå.	1807		KVA Torneå.
+Almanack 1807 KVA Åbo.	1807		KVA Åbo.
+Almanack 1808 KVA Gbg.	1808		KVA Gbg.
+Almanack 1808 KVA Lund.	1808		KVA Lund.
+Almanack 1808 KVA Sthlm.	1808		KVA Sthlm.
+Almanack 1808 KVA Torneå.	1808		KVA Torneå.
+Almanack 1808 KVA Åbo.	1808		KVA Åbo.
+Almanack 1809 KVA Gbg.	1809		KVA Gbg.
+Almanack 1809 KVA Lund.	1809		KVA Lund.
+Almanack 1809 KVA Sthlm.	1809		KVA Sthlm.
+Almanack 1809 KVA Torneå.	1809		KVA Torneå.
+Almanack 1809 KVA Åbo.	1809		KVA Åbo.
+Almanack 1810 KVA Gbg.	1810		KVA Gbg.
+Almanack 1810 KVA Lund.	1810		KVA Lund.
+Almanack 1810 KVA Sthlm.	1810		KVA Sthlm.
+Almanack 1810 KVA Torneå.	1810		KVA Torneå.
+Almanack 1810 KVA Åbo.	1810		KVA Åbo.
+Almanack 1810 Åbo.	1810		
+Almanack 1811 KVA Gbg.	1811		KVA Gbg.
+Almanack 1811 KVA Haparanda.	1811		KVA Haparanda.
+Almanack 1811 KVA Lund.	1811		KVA Lund.
+Almanack 1811 KVA Sthlm.	1811		KVA Sthlm.
+Almanack 1811 Åbo.	1811		
+Almanack 1812 KVA Gbg.	1812		KVA Gbg.
+Almanack 1812 KVA Haparanda.	1812		KVA Haparanda.
+Almanack 1812 KVA Lund.	1812		KVA Lund.
+Almanack 1812 KVA Sthlm.	1812		KVA Sthlm.
+Almanack 1812 Åbo.	1812		
+Almanack 1813 KVA Gbg.	1813		KVA Gbg.
+Almanack 1813 KVA Haparanda.	1813		KVA Haparanda.
+Almanack 1813 KVA Lund.	1813		KVA Lund.
+Almanack 1813 KVA Sthlm.	1813		KVA Sthlm.
+Almanack 1813 Åbo.	1813		
+Almanack 1814 KVA Gbg.	1814		KVA Gbg.
+Almanack 1814 KVA Haparanda.	1814		KVA Haparanda.
+Almanack 1814 KVA Lund.	1814		KVA Lund.
+Almanack 1814 KVA Sthlm.	1814		KVA Sthlm.
+Almanack 1814 Åbo.	1814		
+Almanack 1815 KVA Gbg.	1815		KVA Gbg.
+Almanack 1815 KVA Haparanda.	1815		KVA Haparanda.
+Almanack 1815 KVA Lund.	1815		KVA Lund.
+Almanack 1815 KVA Sthlm.	1815		KVA Sthlm.
+Almanack 1815 Åbo.	1815		
+Almanack 1816 KVA Gbg.	1816		KVA Gbg.
+Almanack 1816 KVA Haparanda.	1816		KVA Haparanda.
+Almanack 1816 KVA Lund.	1816		KVA Lund.
+Almanack 1816 KVA Sthlm.	1816		KVA Sthlm.
+Almanack 1816 Åbo.	1816		
+Almanack 1817 KVA Gbg.	1817		KVA Gbg.
+Almanack 1817 KVA Haparanda.	1817		KVA Haparanda.
+Almanack 1817 KVA Lund.	1817		KVA Lund.
+Almanack 1817 KVA Sthlm.	1817		KVA Sthlm.
+Almanack 1817 Åbo.	1817		
+Almanack 1818 KVA Gbg.	1818		KVA Gbg.
+Almanack 1818 KVA Lund.	1818		KVA Lund.
+Almanack 1818 KVA Sthlm.	1818		KVA Sthlm.
+Almanack 1819 KVA Gbg.	1819		KVA Gbg.
+Almanack 1819 KVA Lund.	1819		KVA Lund.
+Almanack 1819 KVA Sthlm.	1819		KVA Sthlm.
+Almanack 1820 KVA Gbg.	1820		KVA Gbg.
+Almanack 1820 KVA Haparanda.	1820		KVA Haparanda.
+Almanack 1820 KVA Lund.	1820		KVA Lund.
+Almanack 1820 KVA Sthlm.	1820		KVA Sthlm.
+Almanack 1821 KVA Gbg.	1821		KVA Gbg.
+Almanack 1821 KVA Haparanda.	1821		KVA Haparanda.
+Almanack 1821 KVA Lund.	1821		KVA Lund.
+Almanack 1821 KVA Sthlm.	1821		KVA Sthlm.
+Almanack 1822 KVA Gbg.	1822		KVA Gbg.
+Almanack 1822 KVA Haparanda.	1822		KVA Haparanda.
+Almanack 1822 KVA Lund.	1822		KVA Lund.
+Almanack 1822 KVA Sthlm.	1822		KVA Sthlm.
+Almanack 1822 Åbo.	1822		
+Almanack 1823 Fleischer	1823		
+Almanack 1823 KVA Gbg.	1823		KVA Gbg.
+Almanack 1823 KVA Haparanda.	1823		KVA Haparanda.
+Almanack 1823 KVA Lund.	1823		KVA Lund.
+Almanack 1823 KVA Sthlm.	1823		KVA Sthlm.
+Almanack 1823 ÅBO.	1823		
+Almanack 1824 KVA Gbg.	1824		KVA Gbg.
+Almanack 1824 KVA Haparanda.	1824		KVA Haparanda.
+Almanack 1824 KVA Lund.	1824		KVA Lund.
+Almanack 1824 KVA Sthlm.	1824		KVA Sthlm.
+Almanack 1825 KVA Gbg.	1825		KVA Gbg.
+Almanack 1825 KVA Haparanda.	1825		KVA Haparanda.
+Almanack 1825 KVA Lund.	1825		KVA Lund.
+Almanack 1825 KVA Sthlm.	1825		KVA Sthlm.
+Almanack 1826 KVA Gbg.	1826		KVA Gbg.
+Almanack 1826 KVA Haparanda.	1826		KVA Haparanda.
+Almanack 1826 KVA Lund.	1826		KVA Lund.
+Almanack 1826 KVA Sthlm.	1826		KVA Sthlm.
+Almanack 1827 KVA Gbg.	1827		KVA Gbg.
+Almanack 1827 KVA Haparanda.	1827		KVA Haparanda.
+Almanack 1827 KVA Lund.	1827		KVA Lund.
+Almanack 1827 KVA Sthlm.	1827		KVA Sthlm.
+Almanack 1828 KVA Gbg.	1828		KVA Gbg.
+Almanack 1828 KVA Haparanda.	1828		KVA Haparanda.
+Almanack 1828 KVA Lund.	1828		KVA Lund.
+Almanack 1828 KVA Sthlm.	1828		KVA Sthlm.
+Almanack 1829 KVA Gbg.	1829		KVA Gbg.
+Almanack 1829 KVA Haparanda.	1829		KVA Haparanda.
+Almanack 1829 KVA Lund.	1829		KVA Lund.
+Almanack 1829 KVA Sthlm.	1829		KVA Sthlm.
+Almanack 1829 Åbo.	1829		
+Almanack 1830 KVA Gbg.	1830		KVA Gbg.
+Almanack 1830 KVA Haparanda.	1830		KVA Haparanda.
+Almanack 1830 KVA Lund.	1830		KVA Lund.
+Almanack 1830 KVA Sthlm.	1830		KVA Sthlm.
+Almanack 1830 Åbo.	1830		
+Almanack 1831 KVA Sthlm	1831		KVA Sthlm
+Almanack 1832 KVA Haparanda	1832		KVA Haparanda
+Almanack 1832 KVA Sthlm	1832		KVA Sthlm
+Almanack 1833 KVA Gbg	1833		KVA Gbg
+Almanack 1833 KVA Sthlm	1833		KVA Sthlm
+Almanack 1834 KVA Sthlm	1834		KVA Sthlm
+Almanack 1835 KVA Gbg	1835		KVA Gbg
+Almanack 1835 KVA Sthlm	1835		KVA Sthlm
+Almanack 1836 KVA Sthlm	1836		KVA Sthlm
+Almanack 1837 KVA Sthlm	1837		KVA Sthlm
+Almanack 1838 KVA Sthlm	1838		KVA Sthlm
+Almanack 1838 KVA Sthlm.	1838		KVA Sthlm.
+Almanack 1839 KVA Sthlm	1839		KVA Sthlm
+Almanack 1839 KVA Sthlm.	1839		KVA Sthlm.
+Almanack 1840 Hfors.	1840		
+Almanack 1840 KVA Sthlm	1840		KVA Sthlm
+Almanack 1841 Hfors.	1841		
+Almanack 1841 KVA Sthlm	1841		KVA Sthlm
+Almanack 1842 KVA Sthlm	1842		KVA Sthlm
+Almanack 1843 KVA Gbg.	1843		KVA Gbg.
+Almanack 1843 KVA Sthlm	1843		KVA Sthlm
+Almanack 1844 KVA Gbg	1844		KVA Gbg
+Almanack 1844 KVA Sthlm	1844		KVA Sthlm
+Almanack 1845 KVA Sthlm	1845		KVA Sthlm
+Almanack 1846 KVA Sthlm.	1846		KVA Sthlm.
+Almanack 1847 KVA Sthlm	1847		KVA Sthlm
+Almanack 1848 KVA Sthlm	1848		KVA Sthlm
+Almanack 1849 KVA Gbg.	1849		KVA Gbg.
+Almanack 1849 KVA Sthlm	1849		KVA Sthlm
+Almanack 1850 KVA Sthlm.	1850		KVA Sthlm.
+Almanack 1851 KVA Sthlm	1851		KVA Sthlm
+Almanack 1852 KVA Sthlm	1852		KVA Sthlm
+Almanack 1853 KVA Sthlm	1853		KVA Sthlm
+Almanack 1854 KVA Sthlm	1854		KVA Sthlm
+Almanack 1855 KVA Sthlm	1855		KVA Sthlm
+Almanack 1856 KVA Sthlm	1856		KVA Sthlm
+Almanack 1857 KVA Sthlm	1857		KVA Sthlm
+Almanack 1858 KVA Lund	1858		KVA Lund
+Almanack 1858 KVA Sthlm	1858		KVA Sthlm
+Almanack 1859 KVA Lund.	1859		KVA Lund.
+Almanack 1859 KVA Sthlm	1859		KVA Sthlm
+Almanack 1860 KVA Sthlm	1860		KVA Sthlm
+Almanack 1861 KVA Sthlm	1861		KVA Sthlm
+Almanack 1862 KVA Sthlm	1862		KVA Sthlm
+Almanack 1863 KVA Sthlm	1863		KVA Sthlm
+Almanack 1864 KVA Sthlm	1864		KVA Sthlm
+Almanack 1865 KVA Sthlm	1865		KVA Sthlm
+Almanack 1866 KVA Sthlm	1866		KVA Sthlm
+Almanack 1867 KVA Sthlm	1867		KVA Sthlm
+Almanack 1868 KVA Sthlm	1868		KVA Sthlm
+Almanack 1869 KVA Sthlm	1869		KVA Sthlm
+Almanack 1870 KVA Sthlm	1870		KVA Sthlm
+Almanack 1871 KVA Sthlm	1871		KVA Sthlm
+Almanack 1872 KVA Sthlm	1872		KVA Sthlm
+Almanack 1873 KVA Sthlm	1873		KVA Sthlm
+Almanack 1874 KVA Sthlm	1874		KVA Sthlm
+Almanack 1875 KVA Sthlm	1875		KVA Sthlm
+Almanack 1876 KVA Sthlm	1876		KVA Sthlm
+Almanack 1877 KVA Sthlm	1877		KVA Sthlm
+Almanack 1878 KVA Sthlm	1878		KVA Sthlm
+Almanack 1881 KVA Sthlm	1881		KVA Sthlm
+Almanack 1882 KVA Sthlm	1882		KVA Sthlm
+Almanack 1883 KVA Sthlm	1883		KVA Sthlm
+Almanack 1884 KVA Sthlm	1884		KVA Sthlm
+Almanack 1885 KVA Sthlm	1885		KVA Sthlm
+Almanack 1886 KVA Sthlm	1886		KVA Sthlm
+Almanack 1887 KVA Sthlm	1887		KVA Sthlm
+Almanack 1888 KVA Sthlm	1888		KVA Sthlm
+Almanack 1889 KVA Sthlm	1889		KVA Sthlm
+Almanack 1890 KVA Sthlm	1890		KVA Sthlm
+Almanack 1891 KVA Sthlm	1891		KVA Sthlm
+Almanack 1892 KVA Sthlm	1892		KVA Sthlm
+Almanack 1893 KVA Sthlm	1893		KVA Sthlm
+Almanack 1894 KVA Lund.	1894		KVA Lund.
+Almanack 1894 KVA Sthlm	1894		KVA Sthlm
+Almanack 1895 KVA Sthlm	1895		KVA Sthlm
+Almanack 1896 KVA Sthlm	1896		KVA Sthlm
+Almanack 1897 KVA Sthlm	1897		KVA Sthlm
+Almanack 1898 KVA Sthlm	1898		KVA Sthlm
+Almanack 1899 KVA Sthlm	1899		KVA Sthlm
+Almanack 1900 KVA Sthlm	1900		KVA Sthlm
+Almanack 1901 KVA Sthlm	1901		KVA Sthlm
+Almanack 1902 KVA Sthlm	1902		KVA Sthlm
+Almanack 1903 KVA Sthlm	1903		KVA Sthlm
+Almanack 1904 KVA Sthlm	1904		KVA Sthlm
+Almanack 1906 KVA Sthlm	1906		KVA Sthlm
+Almanack 1908 KVA Sthlm	1908		KVA Sthlm
+Almanack 1909 KVA Sthlm	1909		KVA Sthlm
+Almanack 1910 KVA Sthlm	1910		KVA Sthlm
+Almanack 1911 KVA Sthlm	1911		KVA Sthlm
+Almanack 1912 KVA Sthlm	1912		KVA Sthlm
+Almanack 1913 KVA Sthlm	1913		KVA Sthlm
+Almanack 1914 KVA Sthlm	1914		KVA Sthlm
+Almanack 1915 KVA Sthlm	1915		KVA Sthlm
+Almanack 1916 KVA Sthlm	1916		KVA Sthlm
+Almanack 1917 KVA Sthlm	1917		KVA Sthlm
+Almanack 1918 KVA Sthlm	1918		KVA Sthlm
+Almanack 1920 KVA Sthlm	1920		KVA Sthlm
+Almanack 1921 KVA Sthlm	1921		KVA Sthlm
+Almanack 1922 KVA Sthlm	1922		KVA Sthlm
+Almanack 1923 KVA Sthlm	1923		KVA Sthlm
+Almanack 1924 KVA Sthlm	1924		KVA Sthlm
+Almanack 1925 KVA Sthlm	1925		KVA Sthlm
+Almanack 1926 KVA Sthlm	1926		KVA Sthlm
+Almanack 1927 KVA Sthlm	1927		KVA Sthlm
+Almanack 1928 KVA Sthlm	1928		KVA Sthlm
+Almanack 1929 KVA Sthlm	1929		KVA Sthlm
+Almanack 1930 KVA Sthlm	1930		KVA Sthlm
+Almanack 1879 KVA Sthlm	1879		KVA Sthlm
+Almanack 1880 KVA Sthlm	1880		KVA Sthlm
+Bulletin 1813-08-13	1813-08-13		
+Bulletin 1813-08-16	1813-08-16		
+Bulletin 1813-08-18	1813-08-18		
+Bulletin 1813-08-21	1813-08-21		
+Bulletin 1813-08-24	1813-08-24		
+Bulletin 1813-08-25	1813-08-25		
+Bulletin 1813-08-30	1813-08-30		
+Bulletin 1813-09-04	1813-09-04		
+Bulletin 1813-09-08	1813-09-08		
+Bulletin 1813-09-10	1813-09-10		
+Bulletin 1813-09-12	1813-09-12		
+Bulletin 1813-09-14	1813-09-14		
+Bulletin 1813-09-16	1813-09-16		
+Bulletin 1813-09-20	1813-09-20		
+Bulletin 1813-09-22	1813-09-22		
+Bulletin 1813-09-26	1813-09-26		
+Bulletin 1813-09-30	1813-09-30		
+Bulletin 1813-09	1813-09		
+Bulletin 1813-10-04	1813-10-04		
+Bulletin 1813-10-06	1813-10-06		
+Bulletin 1813-10-20	1813-10-20		
+Bulletin 1813-10-21	1813-10-21		
+Bulletin 1813-10-28	1813-10-28		
+Bulletin 1813-10-30	1813-10-30		
+Bulletin 1813-11-10	1813-11-10		
+Bulletin 1813-11-30	1813-11-30		
+Bulletin 1813-12-06	1813-12-06		
+Bulletin 1813-12-12	1813-12-12		
+Bulletin 1813-12-16	1813-12-16		
+Bulletin 1813-12-21	1813-12-21		
+Bulletin 1813-12-26	1813-12-26		
+Bulletin 1814-01-06	1814-01-06		
+Bulletin 1814-01-17	1814-01-17		
+Bulletin 1814-01-31	1814-01-31		
+Bulletin 1814-02-12	1814-02-12		
+Bulletin 1805-12-05	1805-12-05		
+Bulletin 1805-12-06	1805-12-06		
+Bulletin 1805-12-08	1805-12-08		
+Bulletin 1805-12-20	1805-12-20		
+Bulletin 1805-12-22	1805-12-22		
+Bulletin 1806-01-02	1806-01-02		
+Bulletin 1806-01-12	1806-01-12		
+Bulletin 1806-01-20	1806-01-20		
+Bulletin 1806-01-27	1806-01-27		
+Bulletin 1806-02-01	1806-02-01		
+Bulletin 1806-02-10	1806-02-10		
+Bulletin 1806-02-11	1806-02-11		
+Bulletin 1806-02-20	1806-02-20		
+Bulletin 1806-02-24	1806-02-24		
+Bulletin 1806-03-10	1806-03-10		
+Bulletin 1806-03-13	1806-03-13		
+Bulletin 1806-03-26	1806-03-26		
+Bulletin 1806-03-30	1806-03-30		
+Bulletin 1806-04-02	1806-04-02		
+Bulletin 1806-04-07	1806-04-07		
+Bulletin 1806-04-16	1806-04-16		
+Bulletin 1806-04-22	1806-04-22		
+Bulletin 1806-04-26	1806-04-26		
+Bulletin 1806-05-03	1806-05-03		
+Bulletin 1806-05-06	1806-05-06		
+Bulletin 1806-05-13	1806-05-13		
+Bulletin 1806-05-17	1806-05-17		
+Bulletin 1806-05-20	1806-05-20		
+Bulletin 1806-05-24	1806-05-24		
+Bulletin 1806-06-03	1806-06-03		
+Bulletin 1806-06-07	1806-06-07		
+Bulletin 1806-06-10	1806-06-10		
+Bulletin 1806-06-14	1806-06-14		
+Bulletin 1806-06-17	1806-06-17		
+Bulletin 1806-06-21	1806-06-21		
+Bulletin 1806-06-28	1806-06-28		
+Bulletin 1806-07-01	1806-07-01		
+Bulletin 1806-07-10	1806-07-10		
+Bulletin 1806-07-13	1806-07-13		
+Bulletin 1806-07-17	1806-07-17		
+Bulletin 1806-07-20	1806-07-20		
+Bulletin 1806-07-24	1806-07-24		
+Bulletin 1806-08-04	1806-08-04		
+Bulletin 1806-08-07	1806-08-07		
+Bulletin 1806-08-11	1806-08-11		
+Bulletin 1806-08-18	1806-08-18		
+Bulletin 1806-08-22	1806-08-22		
+Bulletin 1806-08-25	1806-08-25		
+Bulletin 1806-08-29	1806-08-29		
+Bulletin 1806-08-30	1806-08-30		
+Bulletin 1806-09-01	1806-09-01		
+Bulletin 1806-09-04	1806-09-04		
+Bulletin 1806-09-08	1806-09-08		
+Bulletin 1806-09-13	1806-09-13		
+Bulletin 1807-02-19	1807-02-19		
+Bulletin 1807-03-01	1807-03-01		
+Bulletin 1807-03-05	1807-03-05		
+Bulletin 1807-03-08	1807-03-08		
+Bulletin 1807-03-13	1807-03-13		
+Bulletin 1807-03-16	1807-03-16		
+Bulletin 1807-03-20	1807-03-20		
+Bulletin 1807-03-26	1807-03-26		
+Bulletin 1807-04-01	1807-04-01		
+Bulletin 1807-04-07	1807-04-07		
+Bulletin 1807-04-16	1807-04-16		
+Bulletin 1807-04-18	1807-04-18		
+Bulletin 1807-04-25	1807-04-25		
+Bulletin 1807-04-26	1807-04-26		
+Bulletin 1807-05-07	1807-05-07		
+Bulletin 1807-05-14	1807-05-14		
+Bulletin 1807-05-21	1807-05-21		
+Bulletin 1807-05-26	1807-05-26		
+Bulletin 1807-05-29	1807-05-29		
+Bulletin 1807-06-02	1807-06-02		
+Bulletin 1807-06-08	1807-06-08		
+Bulletin 1807-06-12	1807-06-12		
+Bulletin 1807-06-16	1807-06-16		
+Bulletin 1807-06-19	1807-06-19		
+Bulletin 1807-06-23	1807-06-23		
+Bulletin 1807-06-28	1807-06-28		
+Bulletin 1807-07-02	1807-07-02		
+Bulletin 1807-07-07	1807-07-07		
+Bulletin 1807-07-11	1807-07-11		
+Bulletin 1807-07-17	1807-07-17		
+Bulletin 1807-08-21	1807-08-21		
+Bulletin 1807-08-25	1807-08-25		
+Bulletin 1807-08-28	1807-08-28		
+Bulletin 1807-08-29	1807-08-29		
+Bulletin 1807-08-30	1807-08-30		
+Bulletin 1807-09-02	1807-09-02		
+Bulletin 1807-09-07	1807-09-07		
+Bulletin 1807-09-13	1807-09-13		
+Bulletin 1807-09-17	1807-09-17		
+Bulletin 1807-09-20	1807-09-20		
+Bulletin 1807-09-24	1807-09-24		
+Bulletin 1807-10-01	1807-10-01		
+Bulletin 1807-10-22	1807-10-22		
+Bulletin 1807-10-30	1807-10-30		
+Bulletin 1807-11-02	1807-11-02		
+Bulletin 1807-11-15	1807-11-15		
+Bulletin 1807-11-29	1807-11-29		
+Bulletin 1807-12-14	1807-12-14		
+Bulletin 1807-12-19	1807-12-19		
+Bulletin 1807-12-28	1807-12-28		
+Bulletin 1808-07-24	1808-07-24		
+Bulletin 1808-07-27	1808-07-27		
+Bulletin 1808-07-31	1808-07-31		
+Bulletin 1808-08-03	1808-08-03		
+Bulletin 1808-08-05	1808-08-05		
+Bulletin 1808-08-09	1808-08-09		
+Bulletin 1808-08-10	1808-08-10		
+Bulletin 1808-08-14	1808-08-14		
+Bulletin 1808-08-19	1808-08-19		
+Bulletin 1808-08-23	1808-08-23		
+Bulletin 1808-08-24	1808-08-24		
+Bulletin 1808-08-26	1808-08-26		
+Bulletin 1808-08-28	1808-08-28		
+Bulletin 1808-08-31	1808-08-31		
+Bulletin 1808-09-01	1808-09-01		
+Bulletin 1808-09-03	1808-09-03		
+Bulletin 1808-09-07	1808-09-07		
+Bulletin 1808-09-11	1808-09-11		
+Bulletin 1808-09-13	1808-09-13		
+Bulletin 1808-09-16	1808-09-16		
+Bulletin 1808-09-17	1808-09-17		
+Bulletin 1808-09-19	1808-09-19		
+Bulletin 1808-09-22	1808-09-22		
+Bulletin 1808-09-23	1808-09-23		
+Bulletin 1808-09-25	1808-09-25		
+Bulletin 1808-09-26	1808-09-26		
+Bulletin 1808-09-27	1808-09-27		
+Bulletin 1808-09-28	1808-09-28		
+Bulletin 1808-09-29	1808-09-29		
+Bulletin 1808-10-03	1808-10-03		
+Bulletin 1808-10-05	1808-10-05		
+Bulletin 1808-10-06	1808-10-06		
+Bulletin 1808-10-07	1808-10-07		
+Bulletin 1808-10-08	1808-10-08		
+Bulletin 1808-10-12	1808-10-12		
+Bulletin 1808-10-14	1808-10-14		
+Bulletin 1808-10-16	1808-10-16		
+Bulletin 1808-10-17	1808-10-17		
+Bulletin 1808-10-19	1808-10-19		
+Bulletin 1808-10-24	1808-10-24		
+Bulletin 1808-10-28	1808-10-28		
+Bulletin 1808-11-05	1808-11-05		
+Bulletin 1813-05-27	1813-05-27		
+Bulletin 1813-06-05	1813-06-05		
+Bulletin 1813-06-11	1813-06-11		
+Bulletin 1813-07-11	1813-07-11		
+Bulletin 1813-07-17	1813-07-17		
+Bulletin 1813-08-13	1813-08-13		
+Bulletin 1813-08-16	1813-08-16		
+Bulletin 1813-08-21	1813-08-21		
+Bulletin 1813-08-24	1813-08-24		
+Bulletin 1813-08-28	1813-08-28		
+Bulletin 1813-08-30	1813-08-30		
+Bulletin 1813-09-01	1813-09-01		
+Bulletin 1813-09-04	1813-09-04		
+Bulletin 1813-09-08	1813-09-08		
+Bulletin 1813-09-10	1813-09-10		
+Bulletin 1813-09-12	1813-09-12		
+Bulletin 1813-09-14	1813-09-14		
+Bulletin 1813-09-16	1813-09-16		
+Bulletin 1813-09-22	1813-09-22		
+Bulletin 1813-09-26	1813-09-26		
+Bulletin 1813-09-30	1813-09-30		
+Bulletin 1813-09	1813-09		
+Bulletin 1813-10-28	1813-10-28		
+Bulletin 1813-10-30	1813-10-30		
+Bulletin 1813-12-12	1813-12-12		
+Bulletin 1813-12-16	1813-12-16		
+Bulletin 1813-12-21	1813-12-21		
+Bulletin 1813-12-26	1813-12-26		
+Bulletin 1814-01-17	1814-01-17		
+Bulletin 1814-01-31	1814-01-31		
+Bulletin 1814-02-12	1814-02-12		
+Bulletin 1813-08-28	1813-08-28		
+Bulletin 1807-04-06	1807-04-06		
+Bulletin 1807-05-03	1807-05-03		
+Bulletin 1813-08-18	1813-08-18		
+Bulletin 1813-08-25	1813-08-25		
+Bulletin 1813-09-20	1813-09-20		
+Bulletin 1813-10-04	1813-10-04		
+Bulletin 1813-10-06	1813-10-06		
+Bulletin 1813-10-20	1813-10-20		
+Bulletin 1813-10-21	1813-10-21		
+Bulletin 1813-11-10	1813-11-10		
+Bulletin 1813-11-30	1813-11-30		
+Bulletin 1813-12-06	1813-12-06		
+Bulletin 1814-01-06	1814-01-06		
+Evangelier och epistlar 1616 Uppsala	1616	Uppsala	
+Evangelier och epistlar 1690 Riga	1690	Riga	
+Evangelier och epistlar 1693 Lund	1693	Lund	
+Evangelier och epistlar 1700 Lund.	1700	Lund.	
+Evangelier och epistlar 1736	1736		
+Evangelier och epistlar 1739	1739		
+Evangelier och epistlar 1744	1744		
+Evangelier och epistlar 1750 Sthlm Kongl.tr.	1750	Sthlm	Kongl.tr.
+Evangelier och epistlar 1751 Gbg.	1751	Gbg.	
+Evangelier och epistlar 1754 Stockholm	1754	Stockholm	
+Evangelier och epistlar 1755 Strängnäs	1755	Strängnäs	
+Evangelier och epistlar 1755 Örebro.	1755	Örebro.	
+Evangelier och epistlar 1756 Sthlm kongl.tr.	1756	Sthlm	kongl.tr.
+Evangelier och epistlar 1757 Göteborg Lange	1757	Göteborg	Lange
+Evangelier och epistlar 1758 Örebro.	1758	Örebro.	
+Evangelier och epistlar 1759 Sthlm kongl.tr.	1759	Sthlm	kongl.tr.
+Evangelier och epistlar 1760 Nyköping.	1760	Nyköping.	
+Evangelier och epistlar 1760 Sthlm kongl.tr.	1760	Sthlm	kongl.tr.
+Evangelier och epistlar 1761 Västerås.	1761	Västerås.	
+Evangelier och epistlar 1763 Örebro.	1763	Örebro.	
+Evangelier och epistlar 1764 Örebro	1764	Örebro	
+Evangelier och epistlar 1765 Sthlm kongl.tr.	1765	Sthlm	kongl.tr.
+Evangelier och epistlar 1766 Örebro.	1766	Örebro.	
+Evangelier och epistlar 1769 Örebro.	1769	Örebro.	
+Evangelier och epistlar 1770 Örebro.	1770	Örebro.	
+Evangelier och epistlar 1771 Sthlm gamla kongl.tr.	1771	Sthlm	gamla kongl.tr.
+Evangelier och epistlar 1771 Örebro.	1771	Örebro.	
+Evangelier och epistlar 1772 Örebro.	1772	Örebro.	
+Evangelier och epistlar 1773 Sthlm f.d. kongl.tr.	1773	Sthlm	f.d. kongl.tr.
+Evangelier och epistlar 1773 Örebro.	1773	Örebro.	
+Evangelier och epistlar 1774 Sthlm Lange.	1774	Sthlm	Lange.
+Evangelier och epistlar 1774 Örebro.	1774	Örebro.	
+Evangelier och epistlar 1775 Sthlm f.d. kongl.tr.	1775	Sthlm	f.d. kongl.tr.
+Evangelier och epistlar 1776 Norrköping Kongl priviligerad boktryckare på eget förlag	1776	Norrköping	Kongl priviligerad boktryckare på eget förlag
+Evangelier och epistlar 1776 Sthlm f.d. kongl.tr.	1776	Sthlm	f.d. kongl.tr.
+Evangelier och epistlar 1776 Örebro.	1776	Örebro.	
+Evangelier och epistlar 1777 Sthlm f.d. kongl.tr.	1777	Sthlm	f.d. kongl.tr.
+Evangelier och epistlar 1777 Sthlm ordenstr.	1777	Sthlm	ordenstr.
+Evangelier och epistlar 1777 Sthlm Stolpe.	1777	Sthlm	Stolpe.
+Evangelier och epistlar 1777 Örebro.	1777	Örebro.	
+Evangelier och epistlar 1778 Sthlm ordenstr.	1778	Sthlm	ordenstr.
+Evangelier och epistlar 1778 Örebro.	1778	Örebro.	
+Evangelier och epistlar 1779 Örebro.	1779	Örebro.	
+Evangelier och epistlar 1780 Sthlm Lange.	1780	Sthlm	Lange.
+Evangelier och epistlar 1780 Sthlm Stolpe.	1780	Sthlm	Stolpe.
+Evangelier och epistlar 1781 Sthlm ordenstr.	1781	Sthlm	ordenstr.
+Evangelier och epistlar 1782 Norrköping.	1782	Norrköping.	
+Evangelier och epistlar 1783 Sthlm ordenstr.	1783	Sthlm	ordenstr.
+Evangelier och epistlar 1783 Örebro.	1783	Örebro.	
+Evangelier och epistlar 1784 Sthlm Fougt.	1784	Sthlm	Fougt.
+Evangelier och epistlar 1785 Sthlm Fougt.	1785	Sthlm	Fougt.
+Evangelier och epistlar 1785 Sthlm ordenstr.	1785	Sthlm	ordenstr.
+Evangelier och epistlar 1786 Linköping	1786	Linköping	
+Evangelier och epistlar 1786 Sthlm Lange.	1786	Sthlm	Lange.
+Evangelier och epistlar 1786 Sthlm ordenstr.	1786	Sthlm	ordenstr.
+Evangelier och epistlar 1786 Örebro.	1786	Örebro.	
+Evangelier och epistlar 1787 Sthlm ordenstr.	1787	Sthlm	ordenstr.
+Evangelier och epistlar 1788 Sthlm ordenstr.	1788	Sthlm	ordenstr.
+Evangelier och epistlar 1788 Örebro.	1788	Örebro.	
+Evangelier och epistlar 1789 Örebro.	1789	Örebro.	
+Evangelier och epistlar 1790 Örebro.	1790	Örebro.	
+Evangelier och epistlar 1791 Sthlm Lindh.	1791	Sthlm	Lindh.
+Evangelier och epistlar 1791 Sthlm Ordenstr.	1791	Sthlm	Ordenstr.
+Evangelier och epistlar 1792 Sthlm Lange.	1792	Sthlm	Lange.
+Evangelier och epistlar 1792 Sthlm Lindh.	1792	Sthlm	Lindh.
+Evangelier och epistlar 1792 Sthlm ordenstr.	1792	Sthlm	ordenstr.
+Evangelier och epistlar 1792 Örebro.	1792	Örebro.	
+Evangelier och epistlar 1793 Nyköping.	1793	Nyköping.	
+Evangelier och epistlar 1793 Sthlm Pfeiffer.	1793	Sthlm	Pfeiffer.
+Evangelier och epistlar 1794 Nyköping.	1794	Nyköping.	
+Evangelier och epistlar 1795 Nyköping.	1795	Nyköping.	
+Evangelier och epistlar 1795 Sthlm Lindh.	1795	Sthlm	Lindh.
+Evangelier och epistlar 1795 Örebro.	1795	Örebro.	
+Evangelier och epistlar 1796 Jönköping	1796	Jönköping	
+Evangelier och epistlar 1796 Nyköping.	1796	Nyköping.	
+Evangelier och epistlar 1796 Sthlm Lange.	1796	Sthlm	Lange.
+Evangelier och epistlar 1796 Sthlm ordenstr.	1796	Sthlm	ordenstr.
+Evangelier och epistlar 1797 Nyköping.	1797	Nyköping.	
+Evangelier och epistlar 1797 Sthlm Lindh.	1797	Sthlm	Lindh.
+Evangelier och epistlar 1797 Sthlm ordenstr.	1797	Sthlm	ordenstr.
+Evangelier och epistlar 1797 Stockholm.	1797	Stockholm.	
+Evangelier och epistlar 1797 Örebro.	1797	Örebro.	
+Evangelier och epistlar 1798 Linköping.	1798	Linköping.	
+Evangelier och epistlar 1798 Lund.	1798	Lund.	
+Evangelier och epistlar 1798 Nyköping.	1798	Nyköping.	
+Evangelier och epistlar 1798 Sthlm Lindh.	1798	Sthlm	Lindh.
+Evangelier och epistlar 1798 Sthlm ordenstr.	1798	Sthlm	ordenstr.
+Evangelier och epistlar 1798 Örebro.	1798	Örebro.	
+Evangelier och epistlar 1799 Gbg.	1799	Gbg.	
+Evangelier och epistlar 1799 Nyköping.	1799	Nyköping.	
+Evangelier och epistlar 1799 Sthlm Lindh.	1799	Sthlm	Lindh.
+Evangelier och epistlar 1799 Sthlm ordenstr.	1799	Sthlm	ordenstr.
+Evangelier och epistlar 1799 Örebro.	1799	Örebro.	
+Evangelier och epistlar 1800 Nyköping.	1800	Nyköping.	
+Evangelier och epistlar 1800 Sthlm ordenstr.	1800	Sthlm	ordenstr.
+Evangelier och epistlar 1800 Örebro.	1800	Örebro.	
+Evangelier och epistlar 1801 Nyköping.	1801	Nyköping.	
+Evangelier och epistlar 1801 Sthlm Lange.	1801	Sthlm	Lange.
+Evangelier och epistlar 1801 Sthlm Marquard.	1801	Sthlm	Marquard.
+Evangelier och epistlar 1801 Sthlm ordenstr.	1801	Sthlm	ordenstr.
+Evangelier och epistlar 1802 Gbg.	1802	Gbg.	
+Evangelier och epistlar 1802 Nyköping.	1802	Nyköping.	
+Evangelier och epistlar 1802 Sthlm Lindh.	1802	Sthlm	Lindh.
+Evangelier och epistlar 1802 Sthlm Marquard.	1802	Sthlm	Marquard.
+Evangelier och epistlar 1802 Sthlm ordenstr.	1802	Sthlm	ordenstr.
+Evangelier och epistlar 1802 Örebro.	1802	Örebro.	
+Evangelier och epistlar 1803 Nyköping.	1803	Nyköping.	
+Evangelier och epistlar 1803 Sthlm ordenstr.	1803	Sthlm	ordenstr.
+Evangelier och epistlar 1803 Strängnäs.	1803	Strängnäs.	
+Evangelier och epistlar 1803 Örebro.	1803	Örebro.	
+Evangelier och epistlar 1804 Norrköping.	1804	Norrköping.	
+Evangelier och epistlar 1804 Sthlm Lindh.	1804	Sthlm	Lindh.
+Evangelier och epistlar 1804 Sthlm ordenstr.	1804	Sthlm	ordenstr.
+Evangelier och epistlar 1804 Örebro.	1804	Örebro.	
+Evangelier och epistlar 1805 Jönköping.	1805	Jönköping.	
+Evangelier och epistlar 1805 Nyköping.	1805	Nyköping.	
+Evangelier och epistlar 1805 Sthlm Lindh.	1805	Sthlm	Lindh.
+Evangelier och epistlar 1805 Sthlm ordenstr.	1805	Sthlm	ordenstr.
+Evangelier och epistlar 1805 Stockholm.	1805	Stockholm.	
+Evangelier och epistlar 1805 Örebro.	1805	Örebro.	
+Evangelier och epistlar 1806 Gbg.	1806	Gbg.	
+Evangelier och epistlar 1806 Lund.	1806	Lund.	
+Evangelier och epistlar 1806 Nyköping	1806	Nyköping	
+Evangelier och epistlar 1806 Nyköping.	1806	Nyköping.	
+Evangelier och epistlar 1806 Sthlm Lindh.	1806	Sthlm	Lindh.
+Evangelier och epistlar 1806 Sthlm ordenstr.	1806	Sthlm	ordenstr.
+Evangelier och epistlar 1806 Örebro.	1806	Örebro.	
+Evangelier och epistlar 1807 Nyköping.	1807	Nyköping.	
+Evangelier och epistlar 1807 Sthlm Lindh.	1807	Sthlm	Lindh.
+Evangelier och epistlar 1807 Sthlm Ordenstr.	1807	Sthlm	Ordenstr.
+Evangelier och epistlar 1807 Strängnäs.	1807	Strängnäs.	
+Evangelier och epistlar 1808 Nyköping.	1808	Nyköping.	
+Evangelier och epistlar 1808 Strängnäs.	1808	Strängnäs.	
+Evangelier och epistlar 1808 Örebro.	1808	Örebro.	
+Evangelier och epistlar 1809 Strängnäs.	1809	Strängnäs.	
+Evangelier och epistlar 1810 Nyköping.	1810	Nyköping.	
+Evangelier och epistlar 1810 Örebro.	1810	Örebro.	
+Evangelier och epistlar 1811 Sthlm ordenstr.	1811	Sthlm	ordenstr.
+Evangelier och epistlar 1812 Nyköping.	1812	Nyköping.	
+Evangelier och epistlar 1812 Sthlm Lindh.	1812	Sthlm	Lindh.
+Evangelier och epistlar 1812 Sthlm ordenstr.	1812	Sthlm	ordenstr.
+Evangelier och epistlar 1812 Örebro.	1812	Örebro.	
+Evangelier och epistlar 1813 Halmstad.	1813	Halmstad.	
+Evangelier och epistlar 1813 Örebro.	1813	Örebro.	
+Evangelier och epistlar 1814 Göteborg	1814	Göteborg	
+Evangelier och epistlar 1816 Sthlm Lindh.	1816	Sthlm	Lindh.
+Evangelier och epistlar 1816 Sthlm ordenstr.	1816	Sthlm	ordenstr.
+Evangelier och epistlar 1816 Örebro.	1816	Örebro.	
+Evangelier och epistlar 1817 Sthlm Lindh.	1817	Sthlm	Lindh.
+Evangelier och epistlar 1817 Sthlm ordenstr.	1817	Sthlm	ordenstr.
+Evangelier och epistlar 1817 Örebro.	1817	Örebro.	
+Evangelier och epistlar 1818 Örebro.	1818	Örebro.	
+Evangelier och epistlar 1819 Gbg.	1819	Gbg.	
+Evangelier och epistlar 1819 Sthlm Elmén.	1819	Sthlm	Elmén.
+Evangelier och epistlar 1819 Sthlm Grahn.	1819	Sthlm	Grahn.
+Evangelier och epistlar 1819 Sthlm Lindh.	1819	Sthlm	Lindh.
+Evangelier och epistlar 1819 Örebro.	1819	Örebro.	
+Evangelier och epistlar 1820 Gbg.	1820	Gbg.	
+Evangelier och epistlar 1820 Jönköping.	1820	Jönköping.	
+Evangelier och epistlar 1820 Nyköping.	1820	Nyköping.	
+Evangelier och epistlar 1820 Sthlm Berglund.	1820	Sthlm	Berglund.
+Evangelier och epistlar 1820 Sthlm Grahn.	1820	Sthlm	Grahn.
+Evangelier och epistlar 1820 Sthlm Lindh.	1820	Sthlm	Lindh.
+Evangelier och epistlar 1820 Strängnäs.	1820	Strängnäs.	
+Evangelier och epistlar 1820 Örebro.	1820	Örebro.	
+Evangelier och epistlar 1821 Sthlm Lindh.	1821	Sthlm	Lindh.
+Evangelier och epistlar 1822 Gbg.	1822	Gbg.	
+Evangelier och epistlar 1823 Sthlm Norstedt.	1823	Sthlm	Norstedt.
+Evangelier och epistlar 1823 Örebro.	1823	Örebro.	
+Evangelier och epistlar 1824 Jönköping.	1824	Jönköping.	
+Evangelier och epistlar 1824 Kalmar.	1824	Kalmar.	
+Evangelier och epistlar 1824 Sthlm Norstedt.	1824	Sthlm	Norstedt.
+Evangelier och epistlar 1824 Sthlm Rumstedt.	1824	Sthlm	Rumstedt.
+Evangelier och epistlar 1824 Strängnäs.	1824	Strängnäs.	
+Evangelier och epistlar 1824 Åbo.	1824	Åbo.	
+Evangelier och epistlar 1824 Örebro.	1824	Örebro.	
+Evangelier och epistlar 1825 Gbg.	1825	Gbg.	
+Evangelier och epistlar 1825 Kalmar.	1825	Kalmar.	
+Evangelier och epistlar 1825 Linköping.	1825	Linköping.	
+Evangelier och epistlar 1825 Sthlm Norstedt.	1825	Sthlm	Norstedt.
+Evangelier och epistlar 1825 Sthlm Rumstedt.	1825	Sthlm	Rumstedt.
+Evangelier och epistlar 1825 Stockholm.	1825	Stockholm.	
+Evangelier och epistlar 1826 Jönköping.	1826	Jönköping.	
+Evangelier och epistlar 1826 Sthlm Marquard.	1826	Sthlm	Marquard.
+Evangelier och epistlar 1826 Sthlm Norstedt.	1826	Sthlm	Norstedt.
+Evangelier och epistlar 1826 Örebro.	1826	Örebro.	
+Evangelier och epistlar 1827 Sthlm Elmén.	1827	Sthlm	Elmén.
+Evangelier och epistlar 1827 Sthlm Norstedt.	1827	Sthlm	Norstedt.
+Evangelier och epistlar 1827 Örebro.	1827	Örebro.	
+Evangelier och epistlar 1828 Jönköping.	1828	Jönköping.	
+Evangelier och epistlar 1828 Karlskrona.	1828	Karlskrona.	
+Evangelier och epistlar 1828 Sthlm Norstedt.	1828	Sthlm	Norstedt.
+Evangelier och epistlar 1828 Sthlm Rumstedt.	1828	Sthlm	Rumstedt.
+Evangelier och epistlar 1828 Örebro.	1828	Örebro.	
+Evangelier och epistlar 1829 Gbg.	1829	Gbg.	
+Evangelier och epistlar 1829 Jönköping.	1829	Jönköping.	
+Evangelier och epistlar 1829 Nyköping.	1829	Nyköping.	
+Evangelier och epistlar 1829 Sthlm Norstedt.	1829	Sthlm	Norstedt.
+Evangelier och epistlar 1829 Örebro.	1829	Örebro.	
+Evangelier och epistlar 1831 Örebro	1831	Örebro	
+Evangelier och epistlar 1832 Sthlm Hörberg.	1832	Sthlm	Hörberg.
+Evangelier och epistlar 1832 Uddevalla	1832	Uddevalla	
+Evangelier och epistlar 1832 Västerås	1832	Västerås	
+Evangelier och epistlar 1833 Göteborg.	1833	Göteborg.	
+Evangelier och epistlar 1834 Uddevalla	1834	Uddevalla	
+Evangelier och epistlar 1835 Nyköping.	1835	Nyköping.	
+Evangelier och epistlar 1835 Skara.	1835	Skara.	
+Evangelier och epistlar 1837 Jönköping.	1837	Jönköping.	
+Evangelier och epistlar 1844 Sthlm Norstedt	1844	Sthlm	Norstedt
+Evangelier och epistlar 1858 Sthlm	1858	Sthlm	
+Evangelier och epistlar 1863 Gbg	1863	Gbg	
+Evangelier och epistlar 1864 Gbg	1864	Gbg	
+Evangelier och epistlar, 1815 Örebro	1815	Örebro	
