@@ -58,6 +58,9 @@ class WorkTool {
         m.verbose = options.v
 
         if (options.m) {
+            if (options.arguments()[1]) {
+                m.reportDir = new File(options.arguments()[1])
+            }
             m.merge()
         } else if (options.s) {
             m.show()

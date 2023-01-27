@@ -4,14 +4,14 @@
 
 import java.util.concurrent.ConcurrentHashMap
 
-clusterLog = getReportWriter("clusters.tsv")
+def input = System.getProperty('ids')
 
 visited = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>())  // TODO: remove?
 
-selectByCollection('bib') { bib ->
+def process = { bib ->
     if (!visited.add(bib.doc.shortId))
         return
-    
+
     try {
         def q = buildQuery(bib)
         if (!q) {
@@ -22,7 +22,7 @@ selectByCollection('bib') { bib ->
 
         if (ids.size() > 1) {
             visited.addAll(ids)
-            clusterLog.println(ids.join('\t'))
+            println(ids.join('\t'))
         }
     }
     catch (Exception e) {
@@ -30,6 +30,12 @@ selectByCollection('bib') { bib ->
         e.printStackTrace()
         return
     }
+}
+
+if (input) {
+    selectByIds(new File(input).readLines(), process)
+} else {
+    selectByCollection('bib', process)
 }
 
 Map<String, List<String>> buildQuery(bib) {
