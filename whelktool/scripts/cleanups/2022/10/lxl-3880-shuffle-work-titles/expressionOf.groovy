@@ -36,7 +36,7 @@ TITLE_RELATED_PROPS = ['musicMedium', 'version', 'marc:version', 'legalDate', 'o
 
 def where = """
     collection = 'bib'
-        and data['@graph'][1]['instanceOf']['expressionOf'] is not null 
+        and data #>> '{@graph, 1, instanceOf, expressionOf}' is not null 
 """
 
 selectBySqlWhere(where) {
