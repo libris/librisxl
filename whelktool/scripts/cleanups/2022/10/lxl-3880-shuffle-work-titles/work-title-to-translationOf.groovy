@@ -8,8 +8,8 @@ TITLE_RELATED_PROPS = ['hasTitle', 'legalDate']
 
 def where = """
     collection = 'bib'
-        and (data['@graph'][1]['instanceOf']['translationOf'] is not null
-            or data['@graph'][1]['instanceOf']['hasPart'] is not null)
+        and (data #>> '{@graph, 1, instanceOf, translationOf}' is not null
+            or data #>> '{@graph, instanceOf, hasPart}' is not null)
 """
 
 selectBySqlWhere(where) {
