@@ -26,8 +26,8 @@ def unhandled = getReportWriter('unhandled.tsv')
 
 def where = """
     collection = 'bib'
-    AND data['@graph'][1]['instanceOf']['translationOf'] IS NOT NULL
-    AND data['@graph'][1]['instanceOf']['hasPart'] IS NOT NULL
+    and data #>> '{@graph, 1, instanceOf, translationOf}' is not null
+    and data #>> '{@graph, instanceOf, hasPart}' is not null
 """
 
 LANGUAGE = 'language'
