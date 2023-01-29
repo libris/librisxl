@@ -30,27 +30,27 @@ time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$CLUSTE
 time java -Xmx4G -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool \
   -tc $CLUSTERS_DIR/2-merged.tsv >$CLUSTERS_DIR/3-title-clusters.tsv
 
-# Normalization step 1 (Probably not necessary after first run, titles with language doesn't seem to occur in newer records)
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$CLUSTERS_DIR/3-title-clusters.tsv -jar build/libs/whelktool.jar \
-  --report $NORMALIZATIONS_DIR/1-titles-with-language src/main/groovy/datatool/scripts/mergeworks/normalize/language-in-work-title.groovy
-
-# Normalization step 2
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$CLUSTERS_DIR/3-title-clusters.tsv -jar build/libs/whelktool.jar \
-  --report $NORMALIZATIONS_DIR/2-link-contribution src/main/groovy/datatool/scripts/mergeworks/normalize/link-contribution.groovy
-
-# Normalization step 3
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$CLUSTERS_DIR/3-title-clusters.tsv -jar build/libs/whelktool.jar \
-  --report $NORMALIZATIONS_DIR/3-responsibilityStatement src/main/groovy/datatool/scripts/mergeworks/normalize/fetch-contribution-from-respStatement.groovy
-
-# Normalization step 4
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$CLUSTERS_DIR/3-title-clusters.tsv -jar build/libs/whelktool.jar \
-  --report $NORMALIZATIONS_DIR/4-illustrators src/main/groovy/datatool/scripts/mergeworks/normalize/add-9pu-to-illustrators.groovy
-
-# Filtering step 1
+# Filter: Swedish fiction
 time java -Xmx4G -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool \
   --dry-run -f $CLUSTERS_DIR/3-title-clusters.tsv >$CLUSTERS_DIR/4-swedish-fiction.tsv
 
-# Filtering step 2
+# Normalization step 1 (Probably not necessary after first run, titles with language doesn't seem to occur in newer records)
+time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$CLUSTERS_DIR/4-swedish-fiction.tsv -jar build/libs/whelktool.jar \
+  --report $NORMALIZATIONS_DIR/1-titles-with-language src/main/groovy/datatool/scripts/mergeworks/normalize/language-in-work-title.groovy
+
+# Normalization step 2
+time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$CLUSTERS_DIR/4-swedish-fiction.tsv -jar build/libs/whelktool.jar \
+  --report $NORMALIZATIONS_DIR/2-link-contribution src/main/groovy/datatool/scripts/mergeworks/normalize/link-contribution.groovy
+
+# Normalization step 3
+time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$CLUSTERS_DIR/4-swedish-fiction.tsv -jar build/libs/whelktool.jar \
+  --report $NORMALIZATIONS_DIR/3-responsibilityStatement src/main/groovy/datatool/scripts/mergeworks/normalize/fetch-contribution-from-respStatement.groovy
+
+# Normalization step 4
+time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$CLUSTERS_DIR/4-swedish-fiction.tsv -jar build/libs/whelktool.jar \
+  --report $NORMALIZATIONS_DIR/4-illustrators src/main/groovy/datatool/scripts/mergeworks/normalize/add-9pu-to-illustrators.groovy
+
+# Filter: Drop translations without translator
 time java -Xmx4G -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool \
   --dry-run -tr $CLUSTERS_DIR/4-swedish-fiction.tsv >$CLUSTERS_DIR/5-no-translations-without-translators.tsv
 
