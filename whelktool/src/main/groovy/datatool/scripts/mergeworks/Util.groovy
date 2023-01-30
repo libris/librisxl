@@ -2,6 +2,7 @@ package datatool.scripts.mergeworks
 
 import org.apache.commons.lang3.StringUtils
 import whelk.Whelk
+import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
 class Util {
@@ -31,9 +32,9 @@ class Util {
         }
     }
 
-//    private static Set<String> IGNORED_SUBTITLES = WorkToolJob.class.getClassLoader()
-//            .getResourceAsStream('merge-works/ignored-subtitles.txt')
-//            .readLines().grep().collect(Util.&normalize) as Set
+    private static Set<String> IGNORED_SUBTITLES = WorkToolJob.class.getClassLoader()
+            .getResourceAsStream('merge-works/ignored-subtitles.txt')
+            .readLines().grep().collect(Util.&normalize) as Set
 
     private static Set<String> GENERIC_TITLES = WorkToolJob.class.getClassLoader()
             .getResourceAsStream('merge-works/generic-titles.txt')
@@ -85,29 +86,22 @@ class Util {
         hasTitle.any { it['mainTitle'] && normalize((String) it['mainTitle']) in GENERIC_TITLES }
     }
 
-    static List dropSubTitles(List hasTitle) {
-        hasTitle.collect { t ->
-            def copy = new TreeMap(t)
-            copy.subMap(copy.keySet() - ['subtitle', 'titleRemainder'])
+    static List dropGenericSubTitles(List hasTitle) {
+        hasTitle.collect {
+            def copy = new TreeMap(it)
+            if (copy['subtitle'] || copy['titleRemainder']) {
+                DocumentUtil.traverse(copy) { value, path ->
+                    if (('subtitle' in path || 'titleRemainder' in path) && value instanceof String && genericSubtitle(value)) {
+                        new DocumentUtil.Remove()
+                    }
+                }
+            }
+            copy
         }
     }
 
-//    static List dropGenericSubTitles(List hasTitle) {
-//        hasTitle.collect {
-//            def copy = new TreeMap(it)
-//            if (copy['subtitle'] || copy['titleRemainder']) {
-//                DocumentUtil.traverse(copy) { value, path ->
-//                    if (('subtitle' in path || 'titleRemainder' in path) && value instanceof String && genericSubtitle(value)) {
-//                        new DocumentUtil.Remove()
-//                    }
-//                }
-//            }
-//            copy
-//        }
-//    }
-
     static List flatTitles(List hasTitle) {
-        dropSubTitles(hasTitle).collect {
+        dropGenericSubTitles(hasTitle).collect {
             def title = new TreeMap<>()
             title['flatTitle'] = normalize(DisplayDoc.flatten(it, titleComponents))
             if (it['@type']) {
@@ -118,13 +112,13 @@ class Util {
         }
     }
 
-//    private static boolean genericSubtitle(String s) {
-//        s = Util.normalize(s)
-//        if (s.startsWith("en ")) {
-//            s = s.substring("en ".length())
-//        }
-//        return s in IGNORED_SUBTITLES
-//    }
+    private static boolean genericSubtitle(String s) {
+        s = Util.normalize(s)
+        if (s.startsWith("en ")) {
+            s = s.substring("en ".length())
+        }
+        return s in IGNORED_SUBTITLES
+    }
 
     static String normalize(String s) {
         return Unicode.asciiFold(Unicode.normalizeForSearch(StringUtils.normalizeSpace(" $s ".toLowerCase().replace(noise))))
@@ -187,7 +181,7 @@ class Util {
     ]
 
     // Return the most common title for the best encodingLevel
-    static Object bestTitle(Collection<Doc> docs) {
+    static def bestTitle(Collection<Doc> docs) {
         def linkedWorkTitle = docs.findResult {
             def w = it.getWork()
             w['@id'] ? w['hasTitle'] : null
@@ -196,36 +190,63 @@ class Util {
             return linkedWorkTitle
         }
 
-        def isTitle = { it.'@type' == 'Title' }
-        def addSource = { t, d -> t.plus(['source': [d.getMainEntity().subMap('@id')]]) }
+        for (def level : bestEncodingLevel) {
+            def onLevel = docs.findAll { it.encodingLevel() == level }
+            def bestWorkTitle = mostCommonWorkTitle(onLevel)
+            if (bestWorkTitle) {
+                return bestWorkTitle
+            }
+        }
 
         for (def level : bestEncodingLevel) {
             def onLevel = docs.findAll { it.encodingLevel() == level }
-
-            def workTitles = onLevel.collect { it.getWork().get('hasTitle')?.findAll(isTitle) }.collect(Util.&dropSubTitles)
-            def instanceTitles = onLevel.collect { it.getMainEntity().get('hasTitle')?.findAll(isTitle) }.collect(Util.&dropSubTitles)
-            def instanceTitleToDoc = [instanceTitles, onLevel].transpose().collectEntries()
-
-            def titles = [workTitles, instanceTitles].transpose().collect { wt, itt ->
-                wt ?: itt
-            }.grep()
-
-            if (!titles) {
-                continue
+            def bestInstanceTitle = mostCommonInstanceTitle(onLevel)
+            if (bestInstanceTitle) {
+                return bestInstanceTitle
             }
-
-            def bestTitles = partition(titles, { a, b -> a == b })
-                    .sort { it.size() }
-                    .reverse()
-                    .with { p -> p.takeWhile { it.size() == p.first().size() } }
-                    .collect { it.first() }
-
-            return bestTitles.find { it in workTitles }
-                    ?: addSource(bestTitles.first(), instanceTitleToDoc[bestTitles.first()])
         }
 
         return null
     }
+
+    static def mostCommonWorkTitle(Collection<Doc> docs) {
+        def workTitles = docs.collect { it.getWork().get('hasTitle')?.findAll(isTitle) }
+                .grep()
+                .collect { dropGenericSubTitles(it) }
+
+        if (workTitles) {
+            return mostCommon(workTitles)
+        }
+
+        return null
+    }
+
+    static def mostCommonInstanceTitle(Collection<Doc> docs) {
+        def addSource = { t, d ->
+            return t.collect { it.plus(['source': [d.getMainEntity().subMap('@id')]]) }
+        }
+
+        def instanceTitles = docs.collect { it.getMainEntity().get('hasTitle')?.findAll(isTitle) }
+                .collect { dropGenericSubTitles(it) }
+
+        if (instanceTitles.grep()) {
+            def instanceTitleToDoc = [instanceTitles, docs].transpose().collectEntries()
+            def best = mostCommon(instanceTitles.grep())
+            return addSource(best, instanceTitleToDoc[best])
+        }
+
+        return null
+    }
+
+    static def mostCommon(titles) {
+        return partition(titles, { a, b -> a == b })
+                .sort { it.size() }
+                .reverse()
+                .first()
+                .first()
+    }
+
+    static def isTitle = { it.'@type' == 'Title' }
 
     static boolean nameMatch(Object local, Map agent) {
         def variants = [agent] + asList(agent.hasVariant)
