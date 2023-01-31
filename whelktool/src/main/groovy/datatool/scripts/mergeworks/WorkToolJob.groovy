@@ -37,6 +37,7 @@ class WorkToolJob {
     boolean skipIndex = false
     boolean loud = false
     boolean verbose = false
+    int numThreads = -1
 
     WorkToolJob(File clusters) {
         this.clusters = clusters
@@ -389,7 +390,7 @@ class WorkToolJob {
     }
 
     private void run(Function<List<String>, Runnable> f) {
-        ExecutorService s = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4)
+        ExecutorService s = Executors.newFixedThreadPool(numThreads > 1 ? numThreads : defaultNumThreads())
 
         AtomicInteger i = new AtomicInteger()
         clusters.eachLine() {
@@ -414,6 +415,10 @@ class WorkToolJob {
 
         s.shutdown()
         s.awaitTermination(1, TimeUnit.DAYS)
+    }
+
+    private static int defaultNumThreads() {
+        Runtime.getRuntime().availableProcessors() * 4
     }
 
     private Collection<Doc> loadDocs(Collection<String> cluster) {

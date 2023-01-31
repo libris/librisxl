@@ -26,6 +26,7 @@ class WorkTool {
         cli.I(longOpt: 'skip-index', 'Do not index any changes, only write to storage.')
         cli.d(longOpt: 'dry-run', 'Do not save any modifications.')
         cli.a(longOpt: 'allow-loud', 'Do loud modifications.')
+        cli.nt(longOpt:'num-threads', args:1, argName:'N', "Override default number of threads.")
         cli.v(longOpt: 'verbose', '.')
         cli.r(longOpt: 'report', args: 1, argName: 'report dir', 'Save reports in this directory')
 
@@ -58,6 +59,7 @@ class WorkTool {
         m.loud = options.a
         m.verbose = options.v
         m.reportDir = options.r ? new File(options.r) : m.reportDir
+        m.numThreads = options.nt ? Integer.parseInt(options.nt) : -1
 
         if (options.m) {
             m.merge()
