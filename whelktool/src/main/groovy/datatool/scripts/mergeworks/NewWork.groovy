@@ -16,7 +16,7 @@ class NewWork implements MergedWork {
 
     private Document buildWorkDocument(Map workData) {
         String workId = IdGenerator.generate()
-        def reportUri = "http://xlbuild.libris.kb.se/works/${reportDir.getPath().replace('report/', '')}/${workId}.html"
+        def reportUri = "http://xlbuild.libris.kb.se/works/${reportDir.getPath()}/${workId}.html"
 
         workData['@id'] = "TEMPID#it"
         Document d = new Document([
