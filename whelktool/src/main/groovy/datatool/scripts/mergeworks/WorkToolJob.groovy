@@ -168,7 +168,7 @@ class WorkToolJob {
                     d.data = revertTo.data
                     d.setGenerationDate(new Date())
                     d.setGenerationProcess(generationProcess)
-                    whelk.storeAtomicUpdate(d, !loud, changedIn, changedBy, sum)
+                    whelk.storeAtomicUpdate(d, !loud, false, changedIn, changedBy, sum)
                 }
 
                 works.grep().each {
@@ -223,7 +223,7 @@ class WorkToolJob {
             if (work instanceof UpdatedWork) {
                 work.doc.setGenerationDate(new Date())
                 work.doc.setGenerationProcess(generationProcess)
-                whelk.storeAtomicUpdate(work.doc, !loud, changedIn, generationProcess, work.checksum)
+                whelk.storeAtomicUpdate(work.doc, !loud, false, changedIn, generationProcess, work.checksum)
             }
 
             work.derivedFrom
