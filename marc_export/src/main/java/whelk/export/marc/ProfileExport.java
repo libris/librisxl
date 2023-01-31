@@ -608,9 +608,13 @@ public class ProfileExport
             thread.shutdown();
             // Await all pending writes
             try {
-                int timeout = 90;
+                int timeout = 180;
+                long p1 = thread.getTaskCount() - thread.getCompletedTaskCount();
                 if (!thread.isTerminated() && !thread.awaitTermination(timeout, TimeUnit.SECONDS)) {
-                    throw new IOException(String.format("Could not write all pending records within %s seconds", timeout));
+                    long p2 = thread.getTaskCount() - thread.getCompletedTaskCount();
+                    var msg = String.format("Could not write all pending records (~%s) within %s seconds. ~%s remaining",
+                            p1, timeout, p2);
+                    throw new IOException(msg);
                 }
             } catch (InterruptedException e) {
                 throw new IOException(e);
