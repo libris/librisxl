@@ -219,9 +219,8 @@ class WorkToolJob {
                         LegacyIntegrationTools.determineLegacyCollection(work.doc, whelk.getJsonld()), false)) {
                     throw new WhelkRuntimeException("Could not store new work: ${work.doc.shortId}")
                 }
-                return
             }
-            if (work instanceof UpdatedWork) {
+            else if (work instanceof UpdatedWork) {
                 work.doc.setGenerationDate(new Date())
                 work.doc.setGenerationProcess(generationProcess)
                 whelk.storeAtomicUpdate(work.doc, !loud, false, changedIn, generationProcess, work.checksum)
