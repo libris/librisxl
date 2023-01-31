@@ -233,7 +233,7 @@ class WorkToolJob {
                         it.data[JsonLd.GRAPH_KEY][1][JsonLd.WORK_KEY] = [(JsonLd.ID_KEY): workIri]
                         it.setGenerationDate(new Date())
                         it.setGenerationProcess(generationProcess)
-                        whelk.storeAtomicUpdate(it, !loud, changedIn, changedBy, sum)
+                        whelk.storeAtomicUpdate(it, !loud, false, changedIn, changedBy, sum)
                     }
         }
     }
