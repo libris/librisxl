@@ -38,7 +38,7 @@ import static whelk.util.Jackson.mapper
 class WhelkTool {
     static final int DEFAULT_BATCH_SIZE = 500
     static final int DEFAULT_FETCH_SIZE = 100
-
+    
     Whelk whelk
 
     private GroovyScriptEngineImpl engine
@@ -63,6 +63,7 @@ class WhelkTool {
     boolean skipIndex
     boolean dryRun
     boolean noThreads = true
+    int numThreads = -1
     boolean stepWise
     int limit = -1
 
@@ -280,7 +281,7 @@ class WhelkTool {
         int batchCount = 0
         Batch batch = new Batch(number: ++batchCount)
 
-        def executorService = useThreads && !isWorkerThread() ? createExecutorService(batchSize) : null
+        def executorService = useThreads && !isWorkerThread() ? createExecutorService() : null
         if (executorService) {
             Thread.setDefaultUncaughtExceptionHandler {
                 Thread thread, Throwable err ->
@@ -343,12 +344,11 @@ class WhelkTool {
         loggerFuture?.cancel(true)
     }
 
-    private def createExecutorService(int batchSize) {
-        int cpus = Runtime.getRuntime().availableProcessors()
-        int maxPoolSize = cpus * 4
-        def linkedBlockingDeque = new LinkedBlockingDeque<Runnable>((int) (maxPoolSize * 1.5))
-
-        def executorService = new ThreadPoolExecutor(cpus, maxPoolSize,
+    private def createExecutorService() {
+        int poolSize = numThreads > 1 ? numThreads : defaultNumThreads()
+        def linkedBlockingDeque = new LinkedBlockingDeque<Runnable>((int) (poolSize * 1.5))
+        
+        def executorService = new ThreadPoolExecutor(poolSize, poolSize,
                 1, TimeUnit.DAYS,
                 linkedBlockingDeque, new ThreadPoolExecutor.CallerRunsPolicy())
 
@@ -362,6 +362,10 @@ class WhelkTool {
         })
 
         return executorService
+    }
+    
+    private static int defaultNumThreads() {
+        Runtime.getRuntime().availableProcessors() * 4
     }
 
     private boolean isWorkerThread() {
@@ -687,6 +691,7 @@ class WhelkTool {
         cli.I(longOpt:'skip-index', 'Do not index any changes, only write to storage.')
         cli.d(longOpt:'dry-run', 'Do not save any modifications.')
         cli.T(longOpt:'no-threads', 'Do not use threads to parallellize batch processing.')
+        cli.t(longOpt:'num-threads', args:1, argName:'N', "Override default number of threads (${defaultNumThreads()}).")
         cli.s(longOpt:'step', 'Change one document at a time, prompting to continue.')
         cli.l(longOpt:'limit', args:1, argName:'LIMIT', 'Amount of documents to process.')
         cli.a(longOpt:'allow-loud', 'Allow scripts to do loud modifications.')
@@ -706,6 +711,7 @@ class WhelkTool {
         tool.dryRun = options.d
         tool.stepWise = options.s
         tool.noThreads = options.T
+        tool.numThreads = options.t ? Integer.parseInt(options.t) : -1
         tool.limit = options.l ? Integer.parseInt(options.l) : -1
         tool.allowLoud = options.a
         tool.run()
