@@ -16,6 +16,7 @@ import whelk.exception.WhelkRuntimeException;
 import whelk.util.BlockingThreadPool;
 import whelk.util.LegacyIntegrationTools;
 import whelk.util.MarcExport;
+import whelk.util.ThreadDumper;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -608,12 +609,14 @@ public class ProfileExport
             thread.shutdown();
             // Await all pending writes
             try {
-                int timeout = 180;
+                int timeout = 5 * 60;
                 long p1 = thread.getTaskCount() - thread.getCompletedTaskCount();
                 if (!thread.isTerminated() && !thread.awaitTermination(timeout, TimeUnit.SECONDS)) {
                     long p2 = thread.getTaskCount() - thread.getCompletedTaskCount();
                     var msg = String.format("Could not write all pending records (~%s) within %s seconds. ~%s remaining",
                             p1, timeout, p2);
+                    logger.warn(msg);
+                    logger.warn(ThreadDumper.threadInfo(MarcRecordWriterThread.class.getSimpleName()));
                     throw new IOException(msg);
                 }
             } catch (InterruptedException e) {
