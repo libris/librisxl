@@ -56,6 +56,6 @@ time java -Xmx4G -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/l
 
 # Merge
 time java -Xmx4G -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool \
-  -m $CLUSTERS_DIR/5-no-translations-without-translators.tsv $REPORT_DIR/merged-works
+  -r $REPORT_DIR/merged-works -m $CLUSTERS_DIR/5-no-translations-without-translators.tsv
 
 

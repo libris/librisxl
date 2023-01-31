@@ -27,6 +27,7 @@ class WorkTool {
         cli.d(longOpt: 'dry-run', 'Do not save any modifications.')
         cli.a(longOpt: 'allow-loud', 'Do loud modifications.')
         cli.v(longOpt: 'verbose', '.')
+        cli.r(longOpt: 'report', args: 1, argName: 'report dir', 'Save reports in this directory')
 
         cli.m(longOpt: 'merge', 'Merge and extract matching works')
         cli.s(longOpt: 'show', 'Show. Generate HTML report with title clusters')
@@ -41,7 +42,7 @@ class WorkTool {
         cli.tr2(longOpt: 'anonymousTranslation2', 'Filter: remove translations without translator')
         cli.qm(longOpt: 'qualityMonographs', 'Filter: "qualityMonographs"')
         cli.tc(longOpt: 'title-clusters', 'Filter: output title clusters')
-        cli.r(longOpt: 'revert', 'undo merge and extraction of matching works')
+        cli.rv(longOpt: 'revert', 'undo merge and extraction of matching works')
         cli.cr(longOpt: 'contribution-role', args: 1, argName: 'relator iri', 'Filter: output clusters where given role exists in at least one contribution')
 
         def options = cli.parse(args)
@@ -56,11 +57,9 @@ class WorkTool {
         m.dryRun = options.d
         m.loud = options.a
         m.verbose = options.v
+        m.reportDir = options.r ? new File(options.r) : m.reportDir
 
         if (options.m) {
-            if (options.arguments()[1]) {
-                m.reportDir = new File(options.arguments()[1])
-            }
             m.merge()
         } else if (options.s) {
             m.show()
@@ -84,10 +83,10 @@ class WorkTool {
             m.translationNoTranslator()
         } else if (options.tc) {
             m.outputTitleClusters()
-        } else if (options.r) {
+        } else if (options.rv) {
             m.revert()
         } else if (options.cr) {
-            m.filterClusters(  { c -> c.any { Doc d -> d.hasRole(options.cr) } } )
+            m.filterClusters({ c -> c.any { Doc d -> d.hasRole(options.cr) } })
         } else {
             cli.usage()
             System.exit 1
