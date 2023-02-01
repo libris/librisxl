@@ -105,14 +105,17 @@ public class Merge {
     }
 
     public boolean mayAddAtPath(List<Object> path, List<Object> truePath, String incomingAgent, History history) {
+        //System.err.println("** Testing if I may add at: " + path + " / " + truePath);
+        //System.err.println("  testing against rules: " + m_pathAddRules);
         List<Object> temp = new ArrayList<>(path);
         List<Object> trueTemp = new ArrayList<>(truePath);
         while (!temp.isEmpty() && !trueTemp.isEmpty()) {
             if (m_pathAddRules.containsKey(temp)) {
 
-                //System.err.println("  found rule! :" + temp + " matching true path: " + trueTemp);
-
                 Ownership owner = history.getOwnership(trueTemp);
+
+                //System.err.println("  found rule! :" + temp + " matching true path: " + trueTemp + " existing owner is: " + owner);
+
                 Map prioMap = m_pathAddRules.get(temp);
                 if (prioMap == null) // No priority list given for this rule = anyone may add (unless hand-edited)!
                     return owner.m_manualEditor == null;
@@ -127,7 +130,10 @@ public class Merge {
                 if (prioMap.get(incomingAgent) != null)
                     incomingPrio = (Integer) prioMap.get(incomingAgent);
 
-                if (incomingPrio >= manualPrio && incomingPrio >= systematicPrio) {
+                if (manualPrio > 0) {
+                    return false;
+                }
+                else if (incomingPrio >= systematicPrio) {
                     return true;
                 }
                 return false;

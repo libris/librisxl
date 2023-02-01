@@ -830,4 +830,108 @@ class MergeSpec extends Specification {
                         ]
                 ]]
     }
+
+    def "don't add manually removed subtitle"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        def versions = [
+                ['changedBy': 'sigel1',
+                 'changedIn': 'batch import',
+                 'data': [
+                         '@graph': [
+                                 [
+                                         'modified': '2022-02-01T12:00:00Z',
+                                         'mainEntity': 'meID'
+                                 ],
+                                 [
+                                         '@id': 'meID',
+                                         'hasTitle': [
+                                                 ['@type': 'Title', 'mainTitle': 'Huvudtitel', 'subtitle': 'Undertitel']
+                                         ],
+                                         'instanceOf': [
+                                                 'subject': ['@id': 'https://id.kb.se/term/sao/Fayyumportr%C3%A4tt'],
+                                                 'contribution': [
+                                                         ['@type': 'PrimaryContribution', 'agent': ['@id': 'https://libris-qa.kb.se/rp355vx91wjt2ms#it']]
+                                                 ]
+                                         ]
+                                 ]
+                         ]
+                 ]
+                ],
+                ['changedBy': 'sigel1',
+                 'changedIn': 'xl', // A manual edit!
+                 'data': [
+                         '@graph': [
+                                 [
+                                         'modified': '2022-02-02T12:00:00Z',
+                                         'mainEntity': 'meID'
+                                 ],
+                                 [
+                                         '@id': 'meID',
+                                         'hasTitle': [
+                                                 ['@type': 'Title', 'mainTitle': 'Huvudtitel'] // Subtitle removed!
+                                         ],
+                                         'instanceOf': [
+                                                 'subject': ['@id': 'https://id.kb.se/term/sao/Fayyumportr%C3%A4tt'],
+                                                 'contribution': [
+                                                         ['@type': 'PrimaryContribution', 'agent': ['@id': 'https://libris-qa.kb.se/rp355vx91wjt2ms#it']]
+                                                 ]
+                                         ]
+                                 ]
+                         ]
+                 ]
+                ]
+        ].collect { change ->
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+        }
+        def history = new History(versions, ld)
+        def incoming = new Document( (Map)
+                ['@graph': [
+                        [
+                                'modified': '2022-02-03T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'hasTitle': [
+                                        ['@type': 'Title', 'mainTitle': 'Huvudtitel', 'subtitle': 'Undertitel']
+                                ],
+                                'instanceOf': [
+                                        'subject': ['@id': 'https://id.kb.se/term/sao/Fayyumportr%C3%A4tt'],
+                                        'contribution': [
+                                                ['@type': 'PrimaryContribution', 'agent': ['@id': 'https://libris-qa.kb.se/rp355vx91wjt2ms#it']]
+                                        ]
+                                ]
+                        ]
+                ]])
+        Document base = versions.last().doc
+        Merge merge = new Merge(
+                [
+                        "rules": [
+                                ["operation": "add_if_none", "path": ["@graph",1,"hasTitle","@type=Title","subtitle"], "priority": ["sigel1": 2, "sigel2": 3]]
+                        ]
+                ]
+        )
+        merge.merge(base, incoming, "sigel2", history)
+        expect:
+        base.data == [
+                '@graph': [
+                        [
+                                'modified': '2022-02-02T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'hasTitle': [
+                                        ['@type': 'Title', 'mainTitle': 'Huvudtitel'] // Manually removed subtitle not re added!
+                                ],
+                                'instanceOf': [
+                                        'subject': ['@id': 'https://id.kb.se/term/sao/Fayyumportr%C3%A4tt'],
+                                        'contribution': [
+                                                ['@type': 'PrimaryContribution', 'agent': ['@id': 'https://libris-qa.kb.se/rp355vx91wjt2ms#it']]
+                                        ]
+                                ]
+                        ]
+                ]]
+    }
 }

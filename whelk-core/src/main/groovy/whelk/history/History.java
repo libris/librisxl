@@ -315,22 +315,6 @@ public class History {
             // indexes.
             if (path.size() > 1) {
 
-                // Find new elements that weren't there before
-                Iterator newIt = tempNew.iterator();
-                while (newIt.hasNext()) {
-                    Object obj = newIt.next();
-                    List list = (List) examining;
-                    for (int i = 0; i < list.size(); ++i) {
-
-                        if (obj == list.get(i)) { // pointer identity is intentional
-                            List<Object> newPath = new ArrayList<>(path);
-                            newPath.add(i);
-                            ((HashSet) changeSet.get("addedPaths")).add(newPath);
-                            setOwnership(newPath, compositePath, version);
-                            //System.err.println(" Add (and keep scanning): " + newPath);
-                        }
-                    }
-                }
                 // Find removed elements that are no longer there
                 Iterator oldIt = tempOld.iterator();
                 while (oldIt.hasNext()) {
@@ -344,6 +328,23 @@ public class History {
                             ((HashSet) changeSet.get("removedPaths")).add(newPath);
                             clearOwnership(newPath);
                             //System.err.println(" Remove (and keep scanning): " + newPath);
+                        }
+                    }
+                }
+
+                // Find new elements that weren't there before
+                Iterator newIt = tempNew.iterator();
+                while (newIt.hasNext()) {
+                    Object obj = newIt.next();
+                    List list = (List) examining;
+                    for (int i = 0; i < list.size(); ++i) {
+
+                        if (obj == list.get(i)) { // pointer identity is intentional
+                            List<Object> newPath = new ArrayList<>(path);
+                            newPath.add(i);
+                            ((HashSet) changeSet.get("addedPaths")).add(newPath);
+                            setOwnership(newPath, compositePath, version);
+                            //System.err.println(" Add (and keep scanning): " + newPath);
                         }
                     }
                 }
