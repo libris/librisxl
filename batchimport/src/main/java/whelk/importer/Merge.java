@@ -109,11 +109,11 @@ public class Merge {
         //System.err.println("  testing against rules: " + m_pathAddRules);
         List<Object> temp = new ArrayList<>(path);
         List<Object> trueTemp = new ArrayList<>(truePath);
+
+        Ownership owner = history.getOwnership(truePath);
+
         while (!temp.isEmpty() && !trueTemp.isEmpty()) {
             if (m_pathAddRules.containsKey(temp)) {
-
-                Ownership owner = history.getOwnership(trueTemp);
-
                 //System.err.println("  found rule! :" + temp + " matching true path: " + trueTemp + " existing owner is: " + owner);
 
                 Map prioMap = m_pathAddRules.get(temp);
