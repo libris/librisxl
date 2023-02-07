@@ -1,3 +1,5 @@
 # .git-blame-ignore-revs
 # Fix indentation in batchimport Main.java
 db907e5fad7c81fe5132b31a3894e5ac516471af
+# Fix indentation in NB-inventory.groovy
+ab9533fa5537aaf4554235713892d16f14eb838a
