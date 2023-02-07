@@ -1,3 +1,5 @@
+import java.util.concurrent.ConcurrentHashMap
+
 PrintWriter IDreport = getReportWriter("ID-report.csv")
 PrintWriter manCheck = getReportWriter("Manuell-kontroll.csv")
 PrintWriter failedHoldIDs = getReportWriter("failed-holdIDs")
@@ -5,7 +7,7 @@ PrintWriter failedHoldIDs = getReportWriter("failed-holdIDs")
 File bibids = new File(scriptDir, "Inventory_ISBN_test.txt")
 List<String> ProgramLines = bibids.readLines()
 
-def itemList = []
+def itemList = Collections.synchronizedList([])
 
 IDreport.println("Inventarienummer;Input ISBN;Matching bib;identifiedBy;indirectlyIdentifiedBy;Nr of holdings;Sigel S Holding;New holding record;Comments;Save copy?")
 manCheck.println("Inventarienummer;Input ISBN;Matching bib;identifiedBy;indirectlyIdentifiedBy;Nr of holdings;Sigel S Holding;New holding record;Comments;Save copy?")
@@ -31,10 +33,10 @@ for (String operation : ProgramLines) {
             )
             """
 
-        List bibIds = []
-
+        Set bibIds = ConcurrentHashMap.newKeySet() 
         // Hitta matchande bib-poster
-        selectBySqlWhere(where, { bib -> bibIds << bib.doc.getShortId()
+        selectBySqlWhere(where, { bib -> 
+            bibIds << bib.doc.getShortId() 
         })
 
         if (bibIds.isEmpty()) {
@@ -54,7 +56,6 @@ for (String operation : ProgramLines) {
         // Om exakt en bib-post matchar kan vi gå fortsätta med denna
         selectByIds(bibIds, { bib ->
             def bibMainEntity = bib.graph[1]["@id"]
-            boolean foundIndIB = false
             List ISBN = []
             List IISBN = []
 
@@ -68,15 +69,12 @@ for (String operation : ProgramLines) {
             bib.graph[1]["indirectlyIdentifiedBy"].each {
                 // Sök och spara value från indirectlyIdentifiedBy med ISBN och där värdet inte är null
                 if (it["@type"] == "ISBN" && it["value"] != null) {
-                    //foundIndIB = true
                     IISBN.add(it.value.trim())
                 }
             }
 
             boolean foundHold = false
-            List holdIds = []
-            HC = 0 // sätta 0 som default (för rätt värde om inga bestånd finns)
-
+            Set holdIds = ConcurrentHashMap.newKeySet()
             selectBySqlWhere("""
                 data#>>'{@graph,1,itemOf,@id}' = '${bibMainEntity}' AND
                 collection = 'hold' AND
@@ -84,8 +82,8 @@ for (String operation : ProgramLines) {
                 """, silent: true) { hold ->
 
                 holdIds << hold.doc.getShortId()
-                HC = holdIds.size() // räkna antalet holds
             }
+            def HC = holdIds.size() // räkna antalet holds
             
             selectByIds(holdIds, { hold ->
 
