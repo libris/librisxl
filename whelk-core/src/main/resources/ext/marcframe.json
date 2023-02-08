@@ -7152,7 +7152,7 @@
                     "@type": "Language",
                     "label": "Svenska"
                   },
-                  "marc:version": "NT 81."
+                  "version": "NT 81."
                 }
               }
             }
@@ -7549,7 +7549,7 @@
               }],
               "musicMedium": [{"@type": "MusicMedium", "label": "piano, orkester"}],
               "musicKey": "c-moll;",
-              "version": "arr. piano (3), 10 h"
+              "marc:arrangedStatementForMusic": "arr. piano (3), 10 h"
             }
           }}
         },
@@ -7961,7 +7961,7 @@
                 "mainTitle": "Correspondence"
               } ],
               "language": {"@type": "Language", "label": "English"},
-              "marc:version": "Selections"
+              "version": "Selections"
             }
           }}
         }
