@@ -17,8 +17,8 @@ selectBySqlWhere(where, silent: false, { hold ->
                 asList(it["availability"]).each { availability ->
 
                     if (availability["label"] && availability["label"] instanceof String) {
-                        if (!availability["label"].contains("Ej fjärrlån")) {
-                            shouldChange = true
+                        if (availability["label"].contains("Ej fjärrlån")) {
+                            shouldChange = false
                         }
                     }
                 }
