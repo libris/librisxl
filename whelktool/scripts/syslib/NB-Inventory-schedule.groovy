@@ -1,4 +1,5 @@
 import java.text.SimpleDateFormat
+import java.util.concurrent.ConcurrentHashMap
 
 String currentDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date())
 
@@ -17,7 +18,7 @@ url = "http://devill.libris.kb.se/nb/export.php?timestamp=$lastRunDate" // url f
 inputRows = new URL(url).text
 List<String> ProgramLines = inputRows.readLines()
 
-def itemList = []
+def itemList = Collections.synchronizedList([])
 
 IDreport.println("Inventarienummer;Input ISBN;Matching bib;identifiedBy;indirectlyIdentifiedBy;Nr of holdings;Sigel S Holding;New holding record;Comments;Save copy?")
 manCheck.println("Inventarienummer;Input ISBN;Matching bib;identifiedBy;indirectlyIdentifiedBy;Nr of holdings;Sigel S Holding;New holding record;Comments;Save copy?")
@@ -47,7 +48,7 @@ for (String operation : ProgramLines) {
             and data#>>'{@graph,1,@type}' IN ('Instance','Print','TextInstance')))
             )"""
 
-    List bibIds = []
+    Set bibIds = ConcurrentHashMap.newKeySet()
 
     // Hitta matchande bib-poster
     selectBySqlWhere(where, { bib ->
@@ -71,7 +72,6 @@ for (String operation : ProgramLines) {
     // Om exakt en bib-post matchar kan vi gå fortsätta med denna
     selectByIds(bibIds, {bib ->
         def bibMainEntity = bib.graph[1]["@id"]
-        boolean foundIndIB = false
         List ISBN = []
         List IISBN = []
         
@@ -83,14 +83,13 @@ for (String operation : ProgramLines) {
 
         bib.graph[1]["indirectlyIdentifiedBy"].each { // Sök och spara value från indirectlyIdentifiedBy med ISBN och där värdet inte är null
                 if (it["@type"] == "ISBN" && it["value"] != null) {
-                //foundIndIB = true
                 IISBN.add(it.value.trim())
                 }
             }
 
         boolean foundHold = false
-        List holdIds = []
-        HC = 0
+        Set holdIds = ConcurrentHashMap.newKeySet()
+        def HC = 0
 
         selectBySqlWhere("""
                 data#>>'{@graph,1,itemOf,@id}' = '${bibMainEntity}' AND
