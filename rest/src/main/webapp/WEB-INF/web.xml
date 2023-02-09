@@ -28,7 +28,7 @@
         </init-param>
         <init-param>
             <param-name>whitelistedPostEndpoints</param-name>
-            <param-value>/_convert</param-value>
+            <param-value>/_convert,/_transliterate</param-value>
         </init-param>
         <init-param>
             <param-name>mockAuthentication</param-name>

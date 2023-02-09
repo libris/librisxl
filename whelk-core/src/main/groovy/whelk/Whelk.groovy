@@ -21,6 +21,7 @@ import whelk.meta.WhelkConstants
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
 import whelk.util.PropertyLoader
+import whelk.util.Romanizer
 
 import java.time.ZoneId
 
@@ -57,6 +58,7 @@ class Whelk {
     ElasticFind elasticFind
     Relations relations
     DocumentNormalizer normalizer
+    Romanizer romanizer
 
     URI baseUri = null
     boolean skipIndex = false
@@ -159,6 +161,13 @@ class Whelk {
 
     Relations getRelations() {
         return relations
+    }
+    
+    synchronized Romanizer getRomanizer() {
+        if (!romanizer) {
+            romanizer = new Romanizer(languageResources.transformedLanguageForms.values().collect{ (String) it['langTag'] })
+        }
+        return romanizer
     }
 
     void loadCoreData(String systemContextUri) {

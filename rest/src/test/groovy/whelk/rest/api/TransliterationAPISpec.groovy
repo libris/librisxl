@@ -2,6 +2,7 @@ package whelk.rest.api
 
 import groovy.json.JsonSlurper
 import spock.lang.Specification
+import whelk.util.Romanizer
 
 import javax.servlet.ServletInputStream
 import javax.servlet.ServletOutputStream
@@ -23,6 +24,8 @@ class TransliterationAPISpec extends Specification {
 
     void setup() {
         transliteration = new TransliterationAPI()
+        transliteration.romanizer = new Romanizer()
+        
         jsonSlurper = new JsonSlurper()
 
         request = GroovyMock(HttpServletRequest.class)

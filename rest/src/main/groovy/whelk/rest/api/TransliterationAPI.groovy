@@ -1,7 +1,9 @@
 package whelk.rest.api
 
 import groovy.util.logging.Log4j2 as Log
+import whelk.Whelk
 import whelk.util.Romanizer
+import whelk.util.WhelkFactory
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
@@ -11,11 +13,20 @@ import static whelk.util.Jackson.mapper
 
 @Log
 class TransliterationAPI extends HttpServlet {
-    private static final Set<String> supportedLangTags = Romanizer.romanizableLangTags()
 
+    Romanizer romanizer
+    
     @Override
     void init() {
         log.info("Starting Transliteration API")
+        getRomanizer()
+    }
+    
+    private synchronized getRomanizer() {
+        if (!romanizer) {
+            romanizer = WhelkFactory.getSingletonWhelk().getRomanizer()
+        }
+        return romanizer
     }
 
     @Override
@@ -32,13 +43,13 @@ class TransliterationAPI extends HttpServlet {
 
         def languageTag = body["langTag"]
         def source = body["source"]
-
-        if (supportedLangTags.contains(languageTag)) {
-            def romanized = Romanizer.romanize(source.toString(), languageTag.toString())
-            HttpTools.sendResponse(response,  romanized, "application/json")
-        } else {
+        
+        if (!getRomanizer().isMaybeRomanizable(languageTag)) {
             log.warn("Language tag ${languageTag} not found")
             HttpTools.sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid language code")
+        } else {
+            def romanized = getRomanizer().romanize(source.toString(), languageTag.toString())
+            HttpTools.sendResponse(response,  romanized, "application/json")
         }
     }
 
@@ -60,12 +71,14 @@ class TransliterationAPI extends HttpServlet {
         }
     }
 
-    private static void handleLanguageCheck(HttpServletRequest request, HttpServletResponse response) {
+    private void handleLanguageCheck(HttpServletRequest request, HttpServletResponse response) {
+        HttpTools.sendResponse(response, null, null, HttpServletResponse.SC_NO_CONTENT)
+        
         String languageTag = request.getPathInfo().split("/", 3).last()
-        if (supportedLangTags.contains(languageTag)) {
+        if (getRomanizer().isMaybeRomanizable(languageTag)) {
             HttpTools.sendResponse(response, null, null, HttpServletResponse.SC_NO_CONTENT)
         } else {
-            log.warn("Language tag ${languageTag} not found")
+            log.debug("Language tag ${languageTag} not found")
             HttpTools.sendResponse(response, null, null, HttpServletResponse.SC_NOT_FOUND)
         }
     }
