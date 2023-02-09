@@ -170,6 +170,15 @@ class RomanizerSpec extends Specification {
         "Я люблю ходити в дитячий садок" || "Ja ljublju chodyty v dytjačyj sadok"
     }
 
+    def "Azerbaijani in Cyrillic with ALA-LOC"() {
+        expect:
+        Romanizer.romanize(source, 'az')['az-Latn-t-az-Cyrl-m0-alaloc'] == target
+        where:
+        source || target
+        "АБВГҒДЕӘЖЗИЫЈКҜЛМНОӨПРСТУҮФХҺЧҸШ" || "ABVGGhDEĂZHZIYI̐KĠLMNOȮPRSTUU̇FKHḢCHJSH"
+        "абвгғдеәжзиыјкҝлмноөпрстуүфхһчҹш" || "abvgghdeăzhziyi̐kġlmnoȯprstuu̇fkhḣchjsh"
+    }
+
     /*
     PREFIX : <https://id.kb.se/vocab/>
 
