@@ -33,14 +33,14 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
                 :publication [ :year "2019" ; :country ctry:sw ] .
         }
 ```
-   **Kommentar:**  
-   Här frågar vi efter antalet _instanser_ vilket innebär att t.ex. olika bandtyper räknas individuellt.
-   Att räkna antalet unika verk är tyvärr inte möjligt i dagsläget, eftersom verk inte har URI:er att referera till.
+**Kommentar:**  
+Här frågar vi efter antalet _instanser_ vilket innebär att t.ex. olika bandtyper räknas individuellt.
+Att räkna antalet unika verk är tyvärr inte möjligt i dagsläget, eftersom verk inte har URI:er att referera till.
 
-   I nuvarande data identifieras romaner med genre/form-termen `marc:Novel`, men för att göra frågan beständig matchar vi även ekvivalenta termer (länkade med `:sameAs` eller `:exactMatch`).
+I nuvarande data identifieras romaner med genre/form-termen `marc:Novel`, men för att göra frågan beständig matchar vi även ekvivalenta termer (länkade med `:sameAs` eller `:exactMatch`).
 
-   I denna fråga och många av de följande används s.k. [property paths](https://www.w3.org/TR/sparql11-query/#propertypaths)
-   för att inte behöva skriva ut varje trippel i sin helhet.
+I denna fråga och många av de följande används s.k. [property paths](https://www.w3.org/TR/sparql11-query/#propertypaths)
+för att inte behöva skriva ut varje trippel i sin helhet.
 
 ---
 
@@ -59,8 +59,8 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
             FILTER(lang(?langName) = 'sv')    
         }
 ```
-    **Kommentar:**  
-    Här förutsätter vi att författaren alltid ligger som länkad entitet under `:agent`. En variant för att matcha även lokala entiteter vore att byta ut URI:n `<https://libris.kb.se/qn247n18248vs58#it>` mot en blanknod `[ :givenName "Selma" ; :familyName "Lagerlöf" ]`. Detta fungerar dock dåligt i det fall författaren har ett mer generiskt namn.  
+**Kommentar:**  
+Här förutsätter vi att författaren alltid ligger som länkad entitet under `:agent`. En variant för att matcha även lokala entiteter vore att byta ut URI:n `<https://libris.kb.se/qn247n18248vs58#it>` mot en blanknod `[ :givenName "Selma" ; :familyName "Lagerlöf" ]`. Detta fungerar dock dåligt i det fall författaren har ett mer generiskt namn.  
 
  ---
 
@@ -78,9 +78,9 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
             FILTER(lang(?langName) = 'sv')
         }
 ```
-    **Kommentar:**  
-    Denna fråga har omtolkats till "Vilka språk har svenska titlar översatts till mellan åren 2000-2010?".
-    Vi kan nämligen ta reda på verkets originalspråk via `:translationOf`, däremot inget om dess originalutgivning.
+**Kommentar:**  
+Denna fråga har omtolkats till "Vilka språk har svenska titlar översatts till mellan åren 2000-2010?".
+Vi kan nämligen ta reda på verkets originalspråk via `:translationOf`, däremot inget om dess originalutgivning.
 
  ---
 
@@ -116,10 +116,10 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
             }
         }     
 ```
-     **Kommentar:**  
-     Tyvärr är det inte möjligt att få fram vilka svenska verk som översatts till spanska då det kräver att verket ligger länkat under `bf2:translationOf`. I dagsläget får vi nöja oss med spanska instanser som översatts _från_ svenska.
+**Kommentar:**  
+Tyvärr är det inte möjligt att få fram vilka svenska verk som översatts till spanska då det kräver att verket ligger länkat under `bf2:translationOf`. I dagsläget får vi nöja oss med spanska instanser som översatts _från_ svenska.
 
-     Det vore även önskvärt att kunna ange _en_ term för _all_ skönlitteratur. Visserligen finns `saogf:Sk%C3%B6nlitteratur` men den har hittills för lite användning och dess relation till marc-termerna är inte heller definierad.
+Det vore även önskvärt att kunna ange _en_ term för _all_ skönlitteratur. Visserligen finns `saogf:Sk%C3%B6nlitteratur` men den har hittills för lite användning och dess relation till marc-termerna är inte heller definierad.
 
   ---
 
@@ -149,8 +149,8 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
             FILTER(isIri(?cartoonist))
         }
 ```
-    **Kommentar:**  
-    Serietecknare som ligger som lokala entiteter (blanknoder) under `:agent` filtreras här bort. Vill man ha med även de lokala entiteterna i resultatet tar man med fördel bort `FILTER(isIri(?cartoonist))`, dock innebär detta att samma serietecknare kan förekomma flera gånger i resultatet.
+**Kommentar:**  
+Serietecknare som ligger som lokala entiteter (blanknoder) under `:agent` filtreras här bort. Vill man ha med även de lokala entiteterna i resultatet tar man med fördel bort `FILTER(isIri(?cartoonist))`, dock innebär detta att samma serietecknare kan förekomma flera gånger i resultatet.
 
 ----
 
@@ -171,9 +171,9 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
             FILTER(str(?year) >= "1980" && str(?year) < "2020")
         }    
 ```
-    **Kommentar:**  
-    Här frågar vi snarare efter antalet svenska resurser som översatts _från_ franska. Det omvända kräver att verken ligger länkade under `:translationOf`, vilket inte är fallet i dagsläget.  
-    Vi frågar heller inte uteslutande efter böcker. Det är inte möjligt då det saknas en generell struktur som indikerar att en resurs är specifikt en bok. Däremot är det fullt möjligt att begränsa frågan till monografier (instansen) av typen text (verket).
+**Kommentar:**  
+Här frågar vi snarare efter antalet svenska resurser som översatts _från_ franska. Det omvända kräver att verken ligger länkade under `:translationOf`, vilket inte är fallet i dagsläget.  
+Vi frågar heller inte uteslutande efter böcker. Det är inte möjligt då det saknas en generell struktur som indikerar att en resurs är specifikt en bok. Däremot är det fullt möjligt att begränsa frågan till monografier (instansen) av typen text (verket).
 
  ---
 
@@ -209,8 +209,8 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
         GROUP BY ?year ?audience ?genre
         ORDER BY ?year ?audience ?genre
 ```
-    **Kommentar:**  
-    Det finns ingen URI som representerar alla samiska språk, utan vi får inkludera samtliga varieteter.
+**Kommentar:**  
+Det finns ingen URI som representerar alla samiska språk, utan vi får inkludera samtliga varieteter.
 
 ---
 
@@ -237,9 +237,9 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
             FILTER(str(?year) >= "1920" && str(?year) < "2000")
         }
 ```
-    **Kommentar:**  
-    I brist på en klass som representerar facklitteratur får vi här använda `marc:NotFictionNotFurtherSpecified` (=Ej skönlitterärt verk).
-    Det vore önskvärt att kunna referera till en URI som representerar förlaget Natur & Kultur men eftersom utgivare inte är länkade får vi istället matcha lokala entiteter / blanknoder på benämning.
+**Kommentar:**  
+I brist på en klass som representerar facklitteratur får vi här använda `marc:NotFictionNotFurtherSpecified` (=Ej skönlitterärt verk).
+Det vore önskvärt att kunna referera till en URI som representerar förlaget Natur & Kultur men eftersom utgivare inte är länkade får vi istället matcha lokala entiteter / blanknoder på benämning.
 
 ---
 
@@ -274,8 +274,8 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
         GROUP BY ?year
         ORDER BY ?year
 ```
-    **Kommentar:**  
-    Vill man undanta årtal som avviker från formen "yyyy" kan man lägga till det här filtret: `FILTER(regex(?year, "^[0-9]{4}$"))`.
+**Kommentar:**  
+Vill man undanta årtal som avviker från formen "yyyy" kan man lägga till det här filtret: `FILTER(regex(?year, "^[0-9]{4}$"))`.
 
 ---
 
@@ -335,10 +335,10 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
                 :agent/:label ?publisherLabel .
         }
 ```
-    **Kommentar:**  
-    Här frågar vi snarare "Vilka utgivare gav ut något i Sverige under 1970?". Tillräckliga påståenden om utgivare för att besvara originalfrågan saknas. Utgivare ligger mestadels som lokala entiteter, där enbart dess benämningar anges. Här skulle vi istället vilja att utgivare representerades av URI:er och   länkats under `:agent`. På respektive URI skulle sedan relevanta påståenden kunna samlas, exempelvis när förlaget grundats och landet det verkar i.
+**Kommentar:**  
+Här frågar vi snarare "Vilka utgivare gav ut något i Sverige under 1970?". Tillräckliga påståenden om utgivare för att besvara originalfrågan saknas. Utgivare ligger mestadels som lokala entiteter, där enbart dess benämningar anges. Här skulle vi istället vilja att utgivare representerades av URI:er och   länkats under `:agent`. På respektive URI skulle sedan relevanta påståenden kunna samlas, exempelvis när förlaget grundats och landet det verkar i.
 
-    Om utgivare var länkade skulle vi också få ett mer exakt resultat, tack vare att vi då skulle kunna garantera att antalet _unika_ utgivare räknas. Att räkna blanknoder fungerar inte eftersom vi inte kan särskilja vilka som representerar samma förlag. Istället räknar vi antalet unika benämningar, även om inte heller detta sätt garanterar ett helt exakt resultat då det kan förekomma olika benämningar på samma förlag, t.ex. "Natur & Kultur" och "N&K".
+Om utgivare var länkade skulle vi också få ett mer exakt resultat, tack vare att vi då skulle kunna garantera att antalet _unika_ utgivare räknas. Att räkna blanknoder fungerar inte eftersom vi inte kan särskilja vilka som representerar samma förlag. Istället räknar vi antalet unika benämningar, även om inte heller detta sätt garanterar ett helt exakt resultat då det kan förekomma olika benämningar på samma förlag, t.ex. "Natur & Kultur" och "N&K".
 
 ---
 
@@ -415,8 +415,8 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
         GROUP BY ?month
         ORDER BY ?month
 ```
-    **Kommentar:**
-    Med katalogiserades menar vi här när beståndspost skapades. Svaret visar antal per månad.
+**Kommentar:**
+Med katalogiserades menar vi här när beståndspost skapades. Svaret visar antal per månad.
 
 ---
 
@@ -512,5 +512,5 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
             FILTER(year(?date) >= 2017 && year(?date) <= 2021)
         }
 ```
-    **Kommentar:**
-    För att få motsvarande resultat för andra entitetstyper än personer räcker det att ändra `:Person` till önskad typ, t.ex. `:Organization`.
+**Kommentar:**
+För att få motsvarande resultat för andra entitetstyper än personer räcker det att ändra `:Person` till önskad typ, t.ex. `:Organization`.
