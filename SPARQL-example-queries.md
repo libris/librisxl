@@ -24,7 +24,7 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
 ---
 
 * #### Hur många romaner gavs ut i Sverige under 2019?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT (COUNT(DISTINCT ?novel) as ?count) {
@@ -32,7 +32,7 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
             ?novel :instanceOf/:genreForm ?gf ;
                 :publication [ :year "2019" ; :country ctry:sw ] .
         }
-
+```
    **Kommentar:**  
    Här frågar vi efter antalet _instanser_ vilket innebär att t.ex. olika bandtyper räknas individuellt.
    Att räkna antalet unika verk är tyvärr inte möjligt i dagsläget, eftersom verk inte har URI:er att referera till.
@@ -45,7 +45,7 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
 ---
 
  * #### Vilka språk finns Selma Lagerlöf översatt till?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT DISTINCT ?language ?langName {
@@ -58,14 +58,14 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
 
             FILTER(lang(?langName) = 'sv')    
         }
-
+```
     **Kommentar:**  
     Här förutsätter vi att författaren alltid ligger som länkad entitet under `:agent`. En variant för att matcha även lokala entiteter vore att byta ut URI:n `<https://libris.kb.se/qn247n18248vs58#it>` mot en blanknod `[ :givenName "Selma" ; :familyName "Lagerlöf" ]`. Detta fungerar dock dåligt i det fall författaren har ett mer generiskt namn.  
 
  ---
 
  * #### Vilka språk har svensk utgivning översatts till mellan åren 2000-2010?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT DISTINCT ?language ?langName {
@@ -77,7 +77,7 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
             FILTER(str(?year) >= "2000" && str(?year) < "2010")
             FILTER(lang(?langName) = 'sv')
         }
-
+```
     **Kommentar:**  
     Denna fråga har omtolkats till "Vilka språk har svenska titlar översatts till mellan åren 2000-2010?".
     Vi kan nämligen ta reda på verkets originalspråk via `:translationOf`, däremot inget om dess originalutgivning.
@@ -85,7 +85,7 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
  ---
 
   * #### Vilka svenska skönlitterära titlar har översatts till spanska 1990?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT DISTINCT ?spanishInstance ?spanishTitle ?swedishTitle {
@@ -115,7 +115,7 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
                 ?work :hasTitle [ a :Title ; :mainTitle ?swedishTitle ] .
             }
         }     
-
+```
      **Kommentar:**  
      Tyvärr är det inte möjligt att få fram vilka svenska verk som översatts till spanska då det kräver att verket ligger länkat under `bf2:translationOf`. I dagsläget får vi nöja oss med spanska instanser som översatts _från_ svenska.
 
@@ -124,7 +124,7 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
   ---
 
   * #### Vilka serietecknare har översatts till svenska under 1980-2020?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT DISTINCT ?cartoonist (CONCAT(?givenName, " ", ?familyName) as ?name) {
@@ -148,14 +148,14 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
             FILTER(str(?year) >= "1980" && str(?year) < "2020")
             FILTER(isIri(?cartoonist))
         }
-
+```
     **Kommentar:**  
     Serietecknare som ligger som lokala entiteter (blanknoder) under `:agent` filtreras här bort. Vill man ha med även de lokala entiteterna i resultatet tar man med fördel bort `FILTER(isIri(?cartoonist))`, dock innebär detta att samma serietecknare kan förekomma flera gånger i resultatet.
 
 ----
 
 * #### Hur många franska barnböcker översättes till svenska under 1980-2020?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT (COUNT(DISTINCT ?book) AS ?count) {
@@ -170,7 +170,7 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
 
             FILTER(str(?year) >= "1980" && str(?year) < "2020")
         }    
-
+```
     **Kommentar:**  
     Här frågar vi snarare efter antalet svenska resurser som översatts _från_ franska. Det omvända kräver att verken ligger länkade under `:translationOf`, vilket inte är fallet i dagsläget.  
     Vi frågar heller inte uteslutande efter böcker. Det är inte möjligt då det saknas en generell struktur som indikerar att en resurs är specifikt en bok. Däremot är det fullt möjligt att begränsa frågan till monografier (instansen) av typen text (verket).
@@ -178,7 +178,7 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
  ---
 
  * #### Hur många böcker gavs ut på samiska utifrån aspekterna genre, målgrupp och utgivningsår?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT ?year ?audience ?genre (COUNT(?book) AS ?count) {
@@ -208,14 +208,14 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
         }
         GROUP BY ?year ?audience ?genre
         ORDER BY ?year ?audience ?genre
-
+```
     **Kommentar:**  
     Det finns ingen URI som representerar alla samiska språk, utan vi får inkludera samtliga varieteter.
 
 ---
 
 * #### Hur många facklitterära böcker gav förlaget Natur och Kultur ut mellan åren 1920-2000?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT (COUNT(DISTINCT ?book) AS ?count) {
@@ -236,7 +236,7 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
 
             FILTER(str(?year) >= "1920" && str(?year) < "2000")
         }
-
+```
     **Kommentar:**  
     I brist på en klass som representerar facklitteratur får vi här använda `marc:NotFictionNotFurtherSpecified` (=Ej skönlitterärt verk).
     Det vore önskvärt att kunna referera till en URI som representerar förlaget Natur & Kultur men eftersom utgivare inte är länkade får vi istället matcha lokala entiteter / blanknoder på benämning.
@@ -244,7 +244,7 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
 ---
 
 * #### Hur många böcker ges ut av egenutgivare varje år?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT ?year (COUNT(DISTINCT ?book) AS ?count) {
@@ -255,11 +255,11 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
                 ^:itemOf/:hasComponent?/:cataloguersNote "nbegenutg" .
         }
         ORDER BY ?year
-
+```
 ---
 
 * #### Hur många böcker har det getts ut inom barnlitteratur i Sverige varje år?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT ?year (COUNT(DISTINCT ?book) AS ?count) {
@@ -273,14 +273,14 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
         }
         GROUP BY ?year
         ORDER BY ?year
-
+```
     **Kommentar:**  
     Vill man undanta årtal som avviker från formen "yyyy" kan man lägga till det här filtret: `FILTER(regex(?year, "^[0-9]{4}$"))`.
 
 ---
 
 * #### Hur många böcker ges ut i Sverige totalt varje år?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT ?year (COUNT(DISTINCT ?book) AS ?count) {
@@ -292,11 +292,11 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
         }
         GROUP BY ?year
         ORDER BY ?year
-
+```
 ---
 
 * #### Hur många böcker har digitaliserats under 2020?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT (COUNT(DISTINCT ?digiBook) AS ?count) {
@@ -305,11 +305,11 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
                 :production/:date "2020" ;
                 ^:mainEntity/:bibliography lib:DIGI .
         }
-
+```
 ---
 
 * #### Vilka titlar digitaliserades 2019?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT DISTINCT ?digi ?title {
@@ -321,11 +321,11 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
             }
         }
         ORDER BY ?title
-
+```
 ---
 
 * #### Hur många svenska utgivare fanns det 1970?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT (COUNT(DISTINCT ?publisherLabel) AS ?count) {
@@ -334,7 +334,7 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
                 :year "1970" ;
                 :agent/:label ?publisherLabel .
         }
-
+```
     **Kommentar:**  
     Här frågar vi snarare "Vilka utgivare gav ut något i Sverige under 1970?". Tillräckliga påståenden om utgivare för att besvara originalfrågan saknas. Utgivare ligger mestadels som lokala entiteter, där enbart dess benämningar anges. Här skulle vi istället vilja att utgivare representerades av URI:er och   länkats under `:agent`. På respektive URI skulle sedan relevanta påståenden kunna samlas, exempelvis när förlaget grundats och landet det verkar i.
 
@@ -343,7 +343,7 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
 ---
 
 * #### Hur många barnböcker gavs ut på ett annat språk än svenska av svenska utgivare 2019?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT (COUNT(DISTINCT ?book) AS ?count) {
@@ -358,11 +358,11 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
 
             FILTER(?language != lge:swe)
         }
-
+```
 ---
 
 * #### Vilka titlar har getts ut om coronapandemin 2019-2020 och coronaviruset?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT DISTINCT ?instance ?title {
@@ -378,11 +378,11 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
                         :mainTitle ?title ] .
             }
         }
-
+```
 ---
 
 * #### Hur många titlar har getts ut om coronapandemin 2019-2020 och coronaviruset?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT (COUNT(DISTINCT ?instance) AS ?count) {
@@ -394,11 +394,11 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
 
             ?instance :instanceOf/:subject ?subject
         }
-
+```
 ---
 
 * #### Hur många tryckta monografier katalogiserades av Kungliga biblioteket 2020?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT ?month (COUNT(?instance) AS ?count) {  
@@ -414,14 +414,14 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
         }
         GROUP BY ?month
         ORDER BY ?month
-
+```
     **Kommentar:**
     Med katalogiserades menar vi här när beståndspost skapades. Svaret visar antal per månad.
 
 ---
 
 * #### Hur många elektroniska seriella resurser katalogiserades av Kungliga biblioteket 2018?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT ?month (COUNT(DISTINCT ?instance) AS ?count) {  
@@ -437,11 +437,11 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
         }
         GROUP BY ?month
         ORDER BY ?month
-
+```
 ---
 
 * #### Hur många monografier inom DDK 320 katalogiserades av Umeå universitetsbibliotek 2019?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT (COUNT(DISTINCT ?instance) AS ?count) {  
@@ -456,11 +456,11 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
             FILTER(STRSTARTS(?code, "320"))
             FILTER(year(?date) = 2019)
         }
-
+```
 ---
 
 * #### Hur många poster katalogiserades med Svenska ämnesordet Missionärer 2010-2019?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT (COUNT(DISTINCT ?instance) AS ?count) {  
@@ -471,22 +471,22 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
 
             FILTER(year(?date) >= 2010 && year(?date) <= 2020)
         }
-
+```
 ---
 
  * #### Hur många poster finns det inom bibliografin SUEC?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT (COUNT(?record) AS ?count) {
             ?record a :Record ;
                 :bibliography lib:SUEC .
         }
-
+```
 ---
 
  * #### Hur många nya personbeskrivningar (auktoritetsposter) med ISNI skapades 2017-2021?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT (COUNT(DISTINCT ?person) AS ?count) {
@@ -497,11 +497,11 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
 
             FILTER(year(?date) >= 2017 && year(?date) <= 2021)
         }
-
+```
 ---
 
  * #### Hur många personbeskrivningar ändrades 2017-2021?
-
+```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
         SELECT (COUNT(DISTINCT ?person) AS ?count) {
@@ -511,6 +511,6 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
 
             FILTER(year(?date) >= 2017 && year(?date) <= 2021)
         }
-
+```
     **Kommentar:**
     För att få motsvarande resultat för andra entitetstyper än personer räcker det att ändra `:Person` till önskad typ, t.ex. `:Organization`.
