@@ -23,7 +23,7 @@ För termer ur KBV fungerar det fördefinierade prefixet `kbv:`, men i exempelfr
 
 ---
 
-* #### Hur många romaner gavs ut i Sverige under 2019?
+#### Hur många romaner gavs ut i Sverige under 2019?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -44,7 +44,7 @@ för att inte behöva skriva ut varje trippel i sin helhet.
 
 ---
 
- * #### Vilka språk finns Selma Lagerlöf översatt till?
+ #### Vilka språk finns Selma Lagerlöf översatt till?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -64,7 +64,7 @@ Här förutsätter vi att författaren alltid ligger som länkad entitet under `
 
  ---
 
- * #### Vilka språk har svensk utgivning översatts till mellan åren 2000-2010?
+ #### Vilka språk har svensk utgivning översatts till mellan åren 2000-2010?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -84,7 +84,7 @@ Vi kan nämligen ta reda på verkets originalspråk via `:translationOf`, därem
 
  ---
 
-  * #### Vilka svenska skönlitterära titlar har översatts till spanska 1990?
+  #### Vilka svenska skönlitterära titlar har översatts till spanska 1990?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -123,7 +123,7 @@ Det vore även önskvärt att kunna ange _en_ term för _all_ skönlitteratur. V
 
   ---
 
-  * #### Vilka serietecknare har översatts till svenska under 1980-2020?
+  #### Vilka serietecknare har översatts till svenska under 1980-2020?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -154,7 +154,7 @@ Serietecknare som ligger som lokala entiteter (blanknoder) under `:agent` filtre
 
 ----
 
-* #### Hur många franska barnböcker översättes till svenska under 1980-2020?
+#### Hur många franska barnböcker översättes till svenska under 1980-2020?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -177,7 +177,7 @@ Vi frågar heller inte uteslutande efter böcker. Det är inte möjligt då det 
 
  ---
 
- * #### Hur många böcker gavs ut på samiska utifrån aspekterna genre, målgrupp och utgivningsår?
+#### Hur många böcker gavs ut på samiska utifrån aspekterna genre, målgrupp och utgivningsår?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -214,7 +214,7 @@ Det finns ingen URI som representerar alla samiska språk, utan vi får inkluder
 
 ---
 
-* #### Hur många facklitterära böcker gav förlaget Natur och Kultur ut mellan åren 1920-2000?
+#### Hur många facklitterära böcker gav förlaget Natur och Kultur ut mellan åren 1920-2000?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -243,7 +243,7 @@ Det vore önskvärt att kunna referera till en URI som representerar förlaget N
 
 ---
 
-* #### Hur många böcker ges ut av egenutgivare varje år?
+#### Hur många böcker ges ut av egenutgivare varje år?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -258,7 +258,7 @@ Det vore önskvärt att kunna referera till en URI som representerar förlaget N
 ```
 ---
 
-* #### Hur många böcker har det getts ut inom barnlitteratur i Sverige varje år?
+#### Hur många böcker har det getts ut inom barnlitteratur i Sverige varje år?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -279,7 +279,7 @@ Vill man undanta årtal som avviker från formen "yyyy" kan man lägga till det 
 
 ---
 
-* #### Hur många böcker ges ut i Sverige totalt varje år?
+#### Hur många böcker ges ut i Sverige totalt varje år?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -295,7 +295,7 @@ Vill man undanta årtal som avviker från formen "yyyy" kan man lägga till det 
 ```
 ---
 
-* #### Hur många böcker har digitaliserats under 2020?
+#### Hur många böcker har digitaliserats under 2020?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -308,7 +308,7 @@ Vill man undanta årtal som avviker från formen "yyyy" kan man lägga till det 
 ```
 ---
 
-* #### Vilka titlar digitaliserades 2019?
+#### Vilka titlar digitaliserades 2019?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -324,7 +324,7 @@ Vill man undanta årtal som avviker från formen "yyyy" kan man lägga till det 
 ```
 ---
 
-* #### Hur många svenska utgivare fanns det 1970?
+#### Hur många svenska utgivare fanns det 1970?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -342,7 +342,7 @@ Om utgivare var länkade skulle vi också få ett mer exakt resultat, tack vare 
 
 ---
 
-* #### Hur många barnböcker gavs ut på ett annat språk än svenska av svenska utgivare 2019?
+#### Hur många barnböcker gavs ut på ett annat språk än svenska av svenska utgivare 2019?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -361,7 +361,7 @@ Om utgivare var länkade skulle vi också få ett mer exakt resultat, tack vare 
 ```
 ---
 
-* #### Vilka titlar har getts ut om coronapandemin 2019-2020 och coronaviruset?
+#### Vilka titlar har getts ut om coronapandemin 2019-2020 och coronaviruset?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -381,7 +381,7 @@ Om utgivare var länkade skulle vi också få ett mer exakt resultat, tack vare 
 ```
 ---
 
-* #### Hur många titlar har getts ut om coronapandemin 2019-2020 och coronaviruset?
+#### Hur många titlar har getts ut om coronapandemin 2019-2020 och coronaviruset?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -397,7 +397,7 @@ Om utgivare var länkade skulle vi också få ett mer exakt resultat, tack vare 
 ```
 ---
 
-* #### Hur många tryckta monografier katalogiserades av Kungliga biblioteket 2020?
+#### Hur många tryckta monografier katalogiserades av Kungliga biblioteket 2020?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -420,7 +420,7 @@ Med katalogiserades menar vi här när beståndspost skapades. Svaret visar anta
 
 ---
 
-* #### Hur många elektroniska seriella resurser katalogiserades av Kungliga biblioteket 2018?
+#### Hur många elektroniska seriella resurser katalogiserades av Kungliga biblioteket 2018?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -440,7 +440,7 @@ Med katalogiserades menar vi här när beståndspost skapades. Svaret visar anta
 ```
 ---
 
-* #### Hur många monografier inom DDK 320 katalogiserades av Umeå universitetsbibliotek 2019?
+#### Hur många monografier inom DDK 320 katalogiserades av Umeå universitetsbibliotek 2019?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -459,7 +459,7 @@ Med katalogiserades menar vi här när beståndspost skapades. Svaret visar anta
 ```
 ---
 
-* #### Hur många poster katalogiserades med Svenska ämnesordet Missionärer 2010-2019?
+#### Hur många poster katalogiserades med Svenska ämnesordet Missionärer 2010-2019?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -474,7 +474,7 @@ Med katalogiserades menar vi här när beståndspost skapades. Svaret visar anta
 ```
 ---
 
- * #### Hur många poster finns det inom bibliografin SUEC?
+ #### Hur många poster finns det inom bibliografin SUEC?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -485,7 +485,7 @@ Med katalogiserades menar vi här när beståndspost skapades. Svaret visar anta
 ```
 ---
 
- * #### Hur många nya personbeskrivningar (auktoritetsposter) med ISNI skapades 2017-2021?
+ #### Hur många nya personbeskrivningar (auktoritetsposter) med ISNI skapades 2017-2021?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
@@ -500,7 +500,7 @@ Med katalogiserades menar vi här när beståndspost skapades. Svaret visar anta
 ```
 ---
 
- * #### Hur många personbeskrivningar ändrades 2017-2021?
+ #### Hur många personbeskrivningar ändrades 2017-2021?
 ```sparql
         PREFIX : <https://id.kb.se/vocab/>
 
