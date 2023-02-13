@@ -179,22 +179,69 @@ class RomanizerSpec extends Specification {
         "абвгғдеәжзиыјкҝлмноөпрстуүфхһчҹш" || "abvgghdeăzhziyi̐kġlmnoȯprstuu̇fkhḣchjsh"
     }
 
-    /*
-    PREFIX : <https://id.kb.se/vocab/>
+    def "Armenian with ALA-LOC"() {
+        expect:
+        Romanizer.romanize(source, 'hy')['hy-Latn-t-hy-Armn-m0-alaloc'] == target
+        where:
+        source                            || target
 
-    SELECT ?i ?t ?vt {
-        ?i :instanceOf [ a :Text;
-                :language <https://id.kb.se/language/ukr> ];
-                ^:mainEntity [ a :Record ;
-                :technicalNote [ a :TechnicalNote ;
-                :label "Translitterering enligt ISO 9:1995" ]
-        ]
-                OPTIONAL {
-                    ?i :hasTitle [ a :Title ; :mainTitle ?t ] .
-                }
-                OPTIONAL {
-                    ?i :hasTitle [ a :VariantTitle ; :mainTitle ?vt ] .
-                }
+        // https://www.loc.gov/catdir/cpso/romanization/armenian.pdf
+        // Note 3
+        "պատսպարան"                       || "patʹsparan"
+        "կրտսեր"                          || "krtʹser"
+        "Դզնունի"                         || "Dʹznuni"
+        "մոտս"                            || "motʹs"
+        "տստակ"                           || "tʹstak"
+        "կհալ"                            || "kʹhal"
+        "սիկհ"                            || "sikʹh"
+        "Գհուկ"                           || "Gʹhuk"
+        "ՍՍՀ"                             || "SSʹH"
+        "սհաթ"                            || "sʹhatʻ"
+
+        // Note 6.
+        "դպրեվանք"                        || "dpreʹvankʻ"
+        "ագեվազ"                          || "ageʹvaz"
+        "Քարեվանք"                        || "Kʻareʹvankʻ"
+        "հոգեվարք"                        || "hogeʹvarkʻ"
+        "հոգեվիճակ"                       || "hogeʹvichak"
+        "ոսկեվազ"                         || "oskeʹvaz"
+        "ոսկեվարս"                        || "oskeʹvars" // "osokeʹvars" in spec looks wrong to me...
+        "ուղեվճար"                        || "ugheʹvchar"
+        "գերեվարել"                       || "gereʹvarel"
+        "գինեվաճառ"                       || "gineʹvachaṛ"
+        "գինեվարպետ"                      || "gineʹvarpet"
+        "դափնեվարդ"                       || "dapʻneʹvard"
+        "կարեվեր"                         || "kareʹver"
+
+        // Note 6
+        "Երևան"                           || "Erevan"
+        "ԵՐԵՎԱՆ"                          || "EREVAN" // "Erevan" in spec ?
+        "ևեթ"                             || "evetʻ"
+        "ևս"                              || "evs"
+
+        // Armenian Punctuation 1
+        "«Սարդարապատի պատմաշինությունը» և այլ երկեր" || '"Sardarapati patmashinutʻyuně" ev ayl erker'
+        
+        // Armenian Punctuation 2
+        "Դու կարդացե՞լ ես այս գիրքը"      || "Du kardatsʻel es ays girkʻě?"
+        "Դու կարդացե՞լ ես այս գիրքը: Դու" || "Du kardatsʻel es ays girkʻě? Du"
+
+        // Armenian Punctuation 3
+        "Այս ու՜մ եմ տեսնում"             || "Ays um em tesnum!"
+        "Այս ու՜մ եմ տեսնում: Այս"        || "Ays um em tesnum! Ays"
+
+        // Armenian Punctuation 4
+        "Կարդա՛, գրի՛ր տարին բոլոր"                  || "Karda, grir tarin bolor"
+
+        // Armenian Punctuation 5 
+        "Բարձրանում է աշխարհ մի անեզր, որ քոնն է անշուշտ և իմը:" || "Bardzranum ē ashkharh mi anezr, or kʻonn ē anshusht ev imě."
+        
+        // More examples from spec
+        "Բարձրանում է աշխարհ մի անեզր, որ քոնն է անշուշտ և իմը." || "Bardzranum ē ashkharh mi anezr, or kʻonn ē anshusht ev imě."
+        "Չիփչու Նիչուն և կամակորները"                            || "Chʻipʻchʻu Nichʻun ev kamakornerě"
+
+        // All caps
+        "ԲԱՐՁՐԱՆՈՒՄ Է ԱՇԽԱՐՀ ՄԻ ԱՆԵԶՐ, ՈՐ ՔՈՆՆ Է ԱՆՇՈՒՇՏ ԵՒ ԻՄԸ." || "BARDZRANUM Ē ASHKHARH MI ANEZR, OR KʻONN Ē ANSHUSHT EV IMĚ."
+        "ՉԻՓՉՈՒ ՆԻՉՈՒՆ ԵՒ ԿԱՄԱԿՈՐՆԵՐԸ"                            || "CHʻIPʻCHʻU NICHʻUN EV KAMAKORNERĚ"
     }
-     */
 }
