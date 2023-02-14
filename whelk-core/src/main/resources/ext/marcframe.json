@@ -16917,6 +16917,51 @@
           }}
         },
         {
+          "source": {"730": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Noter med relation"},
+            {"o": "arr."}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relationship": [
+                {
+                  "@type": "Relationship",
+                  "entity": {
+                    "@type": "Work",
+                    "hasTitle": [ {
+                      "@type": "Title",
+                      "mainTitle": "Noter med relation"
+                    } ],
+                    "marc:arrangedStatementForMusic": "arr."
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"730": {"ind1": "0", "ind2": "2", "subfields": [
+            {"a": "Noter med del"},
+            {"o": "arr."}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasPart": [
+                {
+                  "@type": "Work",
+                  "hasTitle": [ {
+                    "@type": "Title",
+                    "mainTitle": "Noter med del"
+                  } ],
+                  "marc:arrangedStatementForMusic": "arr."
+                }
+              ]
+            }
+          }}
+        },
+        {
           "source": {"730": {"ind1": "3", "ind2": "2", "subfields": [
             {"i": "Container of (work):"},
             {"a": "Gigue,"},
