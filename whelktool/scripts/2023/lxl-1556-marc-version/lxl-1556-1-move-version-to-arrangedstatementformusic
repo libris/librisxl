@@ -1,0 +1,28 @@
+// find all bib instanceOf version properties (approx 8666)
+
+// be wary of doing a general "version" sweep because of correct use of version in Classification and Instance titles.
+
+// alsono version in subjects
+
+
+
+def where = """
+  collection = 'bib' AND
+  (
+    data#>>'{@graph,1,instanceOf,version}' OR 
+    data#>>'{@graph,1,instanceOf,hasPart,version}' OR
+    data#>>'{@graph,1,instanceOf,relationship,entity,version}'
+    ) IS NOT NULL AND
+  deleted = false
+"""
+// auth?
+def where = """
+  collection = 'auth' AND
+  (
+    data#>>'{@graph,1,version}' OR 
+    data#>>'{@graph,1,hasVariant,version}'
+    ) IS NOT NULL
+  AND deleted = false
+"""
+
+// version -> marc:arrangedStatementForMusic
