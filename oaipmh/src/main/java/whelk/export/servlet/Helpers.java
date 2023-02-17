@@ -103,7 +103,7 @@ public class Helpers
                 if (requestedCollection.equals("auth") &&
                         (type == null || !OaiPmh.workDerivativeTypes.contains(type)))
                     queueDocument(updated);
-                if (includeDependenciesInTimeInterval && (requestedCollection.equals("bib") || requestedCollection.equals("hold")))
+                if (includeDependenciesInTimeInterval && (requestedCollection.equals("bib") || requestedCollection.equals("hold")) && hasCardChanged(updated))
                 {
                     List<Tuple2<String, String>> dependers = OaiPmh.s_whelk.getStorage().followDependers(updated.getShortId(), JsonLd.getNON_DEPENDANT_RELATIONS());
                     for (Tuple2<String, String> depender : dependers)
@@ -149,6 +149,18 @@ public class Helpers
                 }
             }
 
+        }
+
+        private boolean hasCardChanged(Document updated) {
+            Document previousVersion = OaiPmh.s_whelk.getStorage().load(updated.getShortId(), "-1");
+            if (previousVersion == null) {
+                return true;
+            }
+            
+            var jsonLd = OaiPmh.s_whelk.getJsonld();
+            var oldCard = jsonLd.toCard(previousVersion.data);
+            var newCard = jsonLd.toCard(updated.data);
+            return !oldCard.equals(newCard);
         }
 
         public boolean hasNext()
