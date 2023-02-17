@@ -3,6 +3,8 @@ package whelk.util
 import com.ibm.icu.text.Transliterator
 import groovy.yaml.*
 
+import static whelk.util.Unicode.normalize
+
 /**
  * Convert mappings from LOC's ScriptShifter in homegrown YAML format to ICU transform rules
  * https://github.com/lcnetdev/transliterator/
@@ -53,14 +55,16 @@ class ScriptShifterShifter {
             // Sort on key length so that rules don't shadow each other
             s.append('# script_to_roman\n')
             Map map = table.script_to_roman.map
+            map = map.collectEntries { k, v -> [(normalize(k)) : normalize(v ?: '')] }
             map.sort { a, b -> b.key.length() <=> a.key.length() }.each { k, v->
-                s.append("${quote(k)} > ${quote(v ?: '')} ;\n")
+                s.append("${quote(k)} > ${quote(v)} ;\n")
             }
             
             s.append('# roman_to_script\n')
             map = table.roman_to_script?.map ?: [:]
+            map = map.collectEntries { k, v -> [(normalize(k)) : normalize(v ?: '')] }
             map.sort { a, b -> b.key.length() <=> a.key.length() }.each { k, v->
-                s.append("${quote(v ?: '')} < ${quote(k)} ;\n")
+                s.append("${quote(v)} < ${quote(k)} ;\n")
             }
             
             String rules = s.toString()
