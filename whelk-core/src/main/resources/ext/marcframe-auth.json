@@ -1603,6 +1603,20 @@
             } ]
           }
         }
+      },
+      {
+        "name": "Title with version",
+        "source": [ {"130": {"ind1": " ", "ind2": "0", "subfields": [{"a": "Bibeln"}, {"s": "1917"}]}}],
+        "result": {
+          "mainEntity": {
+            "@type" : "Work",
+            "hasTitle" : [ {
+              "@type" : "Title",
+              "mainTitle" : "Bibeln"
+            }],
+            "version" :  "1917" 
+          }
+        }
       }
     ]
   },
