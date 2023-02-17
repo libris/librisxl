@@ -1,9 +1,16 @@
-import whelk.filter.LanguageLinker
-import whelk.util.Romanizer
+import whelk.util.Unicode
+import whelk.util.DocumentUtil
 
-import java.util.regex.Pattern
-
+PrintWriter unhandledScript = getReportWriter("unhandled-script.txt")
+PrintWriter moved = getReportWriter("moved.txt")
+PrintWriter skipped = getReportWriter("skipped.txt")
 Util u = new Util(getWhelk())
+
+MOVEABLE = [
+        'subtitle' : 'titleRemainder',
+        'qualifier': 'subtitle',
+        'partName' : 'partNumber'
+]
 
 def where = """
     collection = 'bib'
@@ -11,104 +18,181 @@ def where = """
         OR data #>> '{@graph,0,technicalNote}' ILIKE '%transkriber%')
 """
 
-selectBySqlWhere(where) {
-    def thing = it.graph[1]
-    def hasTitle = thing['hasTitle']
+selectByIds(new File(scriptDir, 'ids.txt').readLines()) { bib ->
+//selectBySqlWhere(where) {
+    //println(it.doc.shortId)
+    //return
+    
+    def thing = bib.graph[1]
+    List hasTitle = thing['hasTitle']
     if (!hasTitle) {
+        incrementStats("skipped", "no hasTitle")
         return
     }
 
-    def lang = thing.instanceOf.subMap('language').with {
+    def langId = thing.instanceOf.subMap('language').with {
         u.langLinker.linkAll(it)
+        // TODO: only one language?
         asList(it.language).findResult { it['@id'] } ?: 'https://id.kb.se/language/und'
     }
 
     def titles = hasTitle.findAll { it['@type'] == 'Title' }
     def variants = hasTitle.findAll { it['@type'] == 'VariantTitle' }
-    if (!titles || !variants) {
-        return
-    }
-    if (titles.size() > 1) {
-        return
-    }
-
-    def title = titles[0]
-
-    def langTag = u.langToLangTag[lang]
-    def tLangCandidates = u.langToTLang[lang]
-    if (!tLangCandidates) {
-        incrementStats('Missing tLang', lang)
-        return
-    }
-    def tLang = tLangCandidates.size() == 1 ? tLangCandidates[0].code : null
-
-    def byLang = [:]
-
-    variants.each {
-        def remaining = [] as Set
-        it.each { k, v ->
-            // TODO: v can be Map...example r7pccfs7pd77q83s
-            def compact = v.toString().replaceAll(/[^\p{L}]/, '')
-            if (u.langAliases[k] && compact && !looksLikeScript(compact, ~/\p{IsLatin}/)) {
-                tLang = tLang ?: chooseTLang(compact, tLangCandidates)
-                if (!tLang) {
-                    incrementStats('Ambiguous tLang, could not decide which to use', lang)
-                    return
-                }
-                incrementStats('tLangs', tLang)
-                def entry = byLang.computeIfAbsent(u.langAliases[k], x -> [:])
-                entry[langTag] = entry[langTag] ? asList(entry[langTag]) + v : v
-                entry[tLang] = entry[tLang] ? asList(entry[tLang]) + title[k] : title[k]
+    def nonLatinVariants = []
+    for (Map variant : variants) {
+        var script = guessScript(variant)
+        if (script.isPresent()) {
+            if (script.get() != 'Latn') {
+                nonLatinVariants << variant
+            }
+        }
+        else {
+            if (langId = 'https://id.kb.se/language/jpn') {
+                nonLatinVariants << variant
             } else {
-                remaining.add(k)
+                unhandledScript.println("${bib.doc.shortId} ${langId} ${variant}")
+                incrementStats("skipped", "unknown script")
+                return
             }
         }
-        remaining.remove('@type')
-        if (it.subMap(remaining) != title.subMap(remaining)) {
-            incrementStats('Unhandled properties in variant', remaining)
-            return
-        } else {
-            hasTitle.remove(it)
-        }
     }
+    
+    if (!titles || !nonLatinVariants || titles.size() > 1 || nonLatinVariants.size() > 1) {
+        def m = "Title ${titles.size()}, VariantTitle ${nonLatinVariants.size()}, hasBib880 ${thing['marc:hasBib880'] != null}"
+        incrementStats("skipped", m)
+        if (!(titles.size() == 1 && nonLatinVariants.size() == 0)) {
+            skipped.println("${bib.doc.shortId} $m")
+        }
+        return 
+    }
+    
+    Map title = titles[0]
+    Map variant = nonLatinVariants[0]
 
-    if (byLang) {
-        hasTitle.find { it['@type'] == 'Title' }.with { t ->
-            t.putAll(byLang)
-            byLang.each { k, v ->
-                if (v instanceof List && v.size() > 1) {
-                    incrementStats('Stats', 'Multiple variants')
+    def langTag = u.langToLangTag[langId]
+    def tLangCandidates = u.langToTLang[langId]
+    if (!tLangCandidates) {
+        incrementStats('Missing tLang', langId)
+        incrementStats('Missing tLang - num lang', asList(thing.instanceOf.language).size())
+        return
+    }
+    def tLangTag = tLangCandidates.size() == 1 ? tLangCandidates[0].code : chooseTLang(variant, tLangCandidates)
+    if (!tLangTag) {
+        incrementStats('Missing tLangTag', langId)
+        return
+    }
+    
+    Closure merge
+    merge = { Map romanized, Map originalScript ->
+        def remaining = []
+        def movedTo = []
+        def result = [:]
+        def keys = originalScript.keySet() - ['@type', 'marc:nonfilingChars']
+        for (k in keys) {
+            if (!romanized[k]) {
+                if (MOVEABLE[k] && romanized[MOVEABLE[k]] && !originalScript[MOVEABLE[k]]) {
+                    // never more than one
+                    def r = asList(romanized[MOVEABLE[k]]).first()
+                    def o = asList(originalScript[k]).first()
+                    incrementStats('Moved', "$k -> ${MOVEABLE[k]}")
+                    moved.println("${bib.doc.shortId} $k -> ${MOVEABLE[k]}\n  $o\n  $r\n")
+                    movedTo << MOVEABLE[k]
+                    result[MOVEABLE[k]] = [
+                            (tLangTag) : r,
+                            (langTag) : o
+                    ]
                 }
-                t.remove(u.langAliasesReversed[k])
+                else {
+                    remaining << k    
+                }
+                continue
+            }
+            
+            if (originalScript[k] instanceof List || romanized[k] instanceof List) {
+                def o = asList(originalScript[k])
+                def r = asList(romanized[k])
+                if (r.size() == o.size()) {
+                    if (u.langAliases[k]) {
+                        if (r.size() != 1) {
+                            incrementStats("Multiple language tagged strings", k)
+                            result[u.langAliases[k]] = [
+                                    (tLangTag) : r,
+                                    (langTag) : o
+                            ]
+                        }
+                        else {
+                            result[u.langAliases[k]] = [
+                                    (tLangTag) : r[0],
+                                    (langTag) : o[0]
+                            ]
+                        }
+                    }
+                    else {
+                        result[k] = []
+                        for (int i = 0 ; i < r.size() ; i++) {
+                            def (res, rest) = merge(r[i], o[i])
+                            result[k] << res
+                            remaining.addAll(rest)
+                        }
+                    }
+                }
+                else {
+                    incrementStats('Incompatible', k)
+                    remaining << k
+                }
+            }
+            else if (originalScript[k] instanceof Map) {
+                def (r, rest) = merge(romanized[k], originalScript[k])
+                result[k] = r
+                remaining.addAll(rest)
+            }
+            else if (originalScript[k] instanceof String) {
+                result[u.langAliases[k]] = [
+                        (tLangTag) : romanized[k],
+                        (langTag) : originalScript[k]
+                ]
+            }
+            else {
+                throw new RuntimeException("Unexpected type: " + originalScript[k])
             }
         }
-        it.scheduleSave()
+        result['@type'] = romanized['@type']
+        result.putAll(romanized.subMap(romanized.keySet() - originalScript.keySet() - movedTo))
+
+        return [result, remaining]
     }
+    
+    def (result, remaining) = merge(title, variant)
+    if (remaining) {
+        incrementStats('Unhandled properties in variant', remaining)
+        return 
+    }
+
+    hasTitle.remove(title)
+    hasTitle.remove(variant)
+    hasTitle.add(0, result)
+
+    bib.scheduleSave()
 }
 
-def chooseTLang(String s, List tLangs) {
-    Map scriptToRegex =
-            [
-                    'https://id.kb.se/i18n/script/Cyrl': ~/\p{IsCyrillic}/,
-                    'https://id.kb.se/i18n/script/Arab': ~/\p{IsArabic}/,
-                    'https://id.kb.se/i18n/script/Deva': ~/\p{IsDevanagari}/,
-                    'https://id.kb.se/i18n/script/Beng': ~/\p{IsBengali}/,
-                    'https://id.kb.se/i18n/script/Thai': ~/\p{IsThai}/,
-                    'https://id.kb.se/i18n/script/Mymr': ~/\p{IsMyanmar}/,
-                    'https://id.kb.se/i18n/script/Sinh': ~/\p{IsSinhala}/
-            ]
+def chooseTLang(Map m, List tLangs) {
+    def scriptUri = 'https://id.kb.se/i18n/script/' + guessScript(m).orElse(null)
+    return tLangs.find { it.fromLangScript == scriptUri }?.code
+}
 
-    for (entry in scriptToRegex) {
-        if (looksLikeScript(s, entry.value)) {
-            return tLangs.find { it.fromLangScript == entry.key }?.code
+def guessScript(Map m) {
+    StringBuilder s = new StringBuilder()
+    DocumentUtil.traverse(m) { value, path ->
+        if (value instanceof String && path.last() != '@type') {
+            s.append(value)
         }
+        return DocumentUtil.NOP
     }
-
-    return null
+    return Unicode.guessIso15924ScriptCode(s.toString())
 }
 
-def looksLikeScript(String s, Pattern p) {
-    return s.findAll { it ==~ p }.size() / s.size() > 0.5
+def looksLikeScript(String s, String scriptCode) {
+    Unicode.guessIso15924ScriptCode(s).map{ it == scriptCode }.orElse(false)
 }
 
 def getWhelk() {
@@ -131,28 +215,26 @@ class Util {
     Map langToLangTag
 
     Util(whelk) {
-        this.langLinker = getLangLinker(whelk.normalizer.normalizers)
-        this.tLangCodes = Collections.synchronizedMap(getTLangCodes(whelk.normalizer.normalizers))
-        this.langToTLang = Collections.synchronizedMap(getLangToTLangs(tLangCodes))
-        this.langAliases = Collections.synchronizedMap(whelk.jsonld.langContainerAlias)
-        this.langAliasesReversed = Collections.synchronizedMap(langAliases.collectEntries { k, v -> [v, k] })
-        this.langToLangTag = Collections.synchronizedMap(getLangTags(whelk.normalizer.normalizers))
+        this.langLinker = whelk.languageResources.languageLinker
+        this.tLangCodes = getTLangCodes(whelk.languageResources.transformedLanguageForms)
+        this.langToTLang = getLangToTLangs(tLangCodes)
+        this.langAliases = whelk.jsonld.langContainerAlias
+        this.langAliasesReversed = langAliases.collectEntries { k, v -> [v, k] }
+        this.langToLangTag = whelk.languageResources.languages
+                .findAll { it.value.langTag }.collectEntries { k, v ->  [k, v.langTag] }
     }
 
-    static Map<String, Map> getTLangCodes(normalizers) {
-        return normalizers.find { it.normalizer instanceof Romanizer }
-                .normalizer
-                .tLangs
-                .collectEntries {
-                    def code = it['@id'].split('/').last()
+    static Map<String, Map> getTLangCodes(Map transformedLanguageForms) {
+        return transformedLanguageForms
+                .collectEntries { k, v ->
                     def data = [:]
-                    if (it.inLanguage) {
-                        data.inLanguage = it.inLanguage['@id']
+                    if (v.inLanguage) {
+                        data.inLanguage = v.inLanguage['@id']
                     }
-                    if (it.fromLangScript) {
-                        data.fromLangScript = it.fromLangScript['@id']
+                    if (v.fromLangScript) {
+                        data.fromLangScript = v.fromLangScript['@id']
                     }
-                    [code, data]
+                    [v.langTag, data]
                 }
     }
 
@@ -165,16 +247,5 @@ class Util {
         }
 
         return langToTLangs
-    }
-
-    static Map<String, String> getLangTags(normalizers) {
-        return normalizers.find { it.normalizer instanceof Romanizer }
-                .normalizer
-                .langTags
-    }
-
-    static LanguageLinker getLangLinker(normalizers) {
-        return normalizers.find { it.normalizer instanceof LanguageLinker }
-                .normalizer
     }
 }

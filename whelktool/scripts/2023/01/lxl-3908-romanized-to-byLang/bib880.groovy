@@ -11,9 +11,10 @@ def where = """
     AND data#>>'{@graph,1,${u.HAS_BIB880}}' IS NOT NULL
 """
 
-selectBySqlWhere(where) {
+selectBySqlWhere(where) {    
     def (record, thing) = it.graph
 
+    // TODO: multiple languages?
     def lang = thing.instanceOf.subMap('language').with {
         u.langLinker.linkAll(it)
         asList(it.language).findResult { it[u.ID] } ?: 'https://id.kb.se/language/und'
@@ -166,28 +167,8 @@ void mergeLanguage(Map thing, Map converted, Util u, String langTag, String tLan
 }
 
 def chooseTLang(String s, List tLangs) {
-    Map scriptToRegex =
-            [
-                    'https://id.kb.se/i18n/script/Cyrl': ~/\p{IsCyrillic}/,
-                    'https://id.kb.se/i18n/script/Arab': ~/\p{IsArabic}/,
-                    'https://id.kb.se/i18n/script/Deva': ~/\p{IsDevanagari}/,
-                    'https://id.kb.se/i18n/script/Beng': ~/\p{IsBengali}/,
-                    'https://id.kb.se/i18n/script/Thai': ~/\p{IsThai}/,
-                    'https://id.kb.se/i18n/script/Mymr': ~/\p{IsMyanmar}/,
-                    'https://id.kb.se/i18n/script/Sinh': ~/\p{IsSinhala}/,
-            ]
-
-    for (entry in scriptToRegex) {
-        if (looksLikeScript(s, entry.value)) {
-            return tLangs.find { it.fromLangScript == entry.key }?.code
-        }
-    }
-
-    return null
-}
-
-def looksLikeScript(String s, Pattern p) {
-    return s.findAll { it ==~ p }.size() / s.size() > 0.5
+    def scriptUri = 'https://id.kb.se/i18n/script/' + Unicode.guessIso15924ScriptCode(s).orElse(null)
+    return tLangs.find { it.fromLangScript == scriptUri }?.code
 }
 
 Map bib880ToMarcJson(Map bib880, Util u) {
@@ -227,28 +208,25 @@ class Util {
                       'marc:bib250-fieldref', 'marc:hold035-fieldref']
 
     Util(whelk) {
-        this.converter = whelk.marcFrameConverter
-        this.langLinker = getLangLinker(whelk.normalizer.normalizers)
-        this.tLangCodes = Collections.synchronizedMap(getTLangCodes(whelk.normalizer.normalizers))
-        this.langToTLang = Collections.synchronizedMap(getLangToTLangs(tLangCodes))
-        this.langAliases = Collections.synchronizedMap(whelk.jsonld.langContainerAlias)
-        this.langToLangTag = Collections.synchronizedMap(getLangTags(whelk.normalizer.normalizers))
+        this.langLinker = whelk.languageResources.languageLinker
+        this.tLangCodes = getTLangCodes(whelk.languageResources.transformedLanguageForms)
+        this.langToTLang = getLangToTLangs(tLangCodes)
+        this.langAliases = whelk.jsonld.langContainerAlias
+        this.langToLangTag = whelk.languageResources.languages
+                .findAll { it.value.langTag }.collectEntries { k, v ->  [k, v.langTag] }
     }
 
-    static Map<String, Map> getTLangCodes(normalizers) {
-        return normalizers.find { it.normalizer instanceof Romanizer }
-                .normalizer
-                .tLangs
-                .collectEntries {
-                    def code = it[ID].split('/').last()
+    static Map<String, Map> getTLangCodes(Map transformedLanguageForms) {
+        return transformedLanguageForms
+                .collectEntries { k, v ->
                     def data = [:]
-                    if (it.inLanguage) {
-                        data.inLanguage = it.inLanguage[ID]
+                    if (v.inLanguage) {
+                        data.inLanguage = v.inLanguage['@id']
                     }
-                    if (it.fromLangScript) {
-                        data.fromLangScript = it.fromLangScript[ID]
+                    if (v.fromLangScript) {
+                        data.fromLangScript = v.fromLangScript['@id']
                     }
-                    [code, data]
+                    [v.langTag, data]
                 }
     }
 
@@ -261,16 +239,5 @@ class Util {
         }
 
         return langToTLangs
-    }
-
-    static Map<String, String> getLangTags(normalizers) {
-        return normalizers.find { it.normalizer instanceof Romanizer }
-                .normalizer
-                .langTags
-    }
-
-    static LanguageLinker getLangLinker(normalizers) {
-        return normalizers.find { it.normalizer instanceof LanguageLinker }
-                .normalizer
     }
 }

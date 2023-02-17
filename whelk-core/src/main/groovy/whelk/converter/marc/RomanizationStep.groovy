@@ -5,6 +5,7 @@ import groovy.transform.MapConstructor
 import groovy.transform.NullCheck
 import whelk.filter.LanguageLinker
 import whelk.util.DocumentUtil
+import whelk.util.Unicode
 
 import static whelk.Document.deepCopy
 import static whelk.JsonLd.asList
@@ -15,7 +16,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     @NullCheck(includeGenerated = true)
     static class LanguageResources {
         LanguageLinker languageLinker
-        List<Map> languages
+        Map languages
         Map transformedLanguageForms
         Map scripts
     }
@@ -392,7 +393,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         this.langAliases = ld.langContainerAlias
         this.byLangToBase = langAliases.collectEntries { k, v -> [v, k] }
         this.langIdToLangTag = languageResources.languages
-                .findAll { it.langTag }.collectEntries { [it[ID], it.langTag] }
+                .findAll { k,v -> v.langTag }.collectEntries { k, v ->  [k, v.langTag] }
     }
 
     static Map<String, Map> getTLangCodes(Map<String, Map> transformedLanguageForms) {

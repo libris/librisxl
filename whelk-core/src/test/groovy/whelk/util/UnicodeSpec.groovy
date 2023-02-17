@@ -77,6 +77,8 @@ class UnicodeSpec extends Specification {
         Optional.of(Character.UnicodeScript.CYRILLIC) | 'Это дом'
         Optional.of(Character.UnicodeScript.LATIN)    | 'dom'
         Optional.of(Character.UnicodeScript.ARMENIAN) | 'վիրված'
+        Optional.of(Character.UnicodeScript.ARABIC)   | 'می خوانم و غرق در کویر می شوم'
+        Optional.of(Character.UnicodeScript.HIRAGANA) | 'とんとんとんと'
     }
 
     def "guess 15924 script"() {
@@ -87,5 +89,10 @@ class UnicodeSpec extends Specification {
         Optional.empty()                              | ''
         Optional.empty()                              | '  '
         Optional.of('Cyrl')                           | 'Это дом'
+        Optional.of('Arab')                           | 'داستان یک سفر'
+        Optional.of('Arab')                           | 'پشمالو'
+        Optional.of('Armn')                           | 'Պիպին նավի վրա'
+        Optional.of('Kana')                           | 'デスノート'
+        Optional.of('Hira')                           | 'とんとんとんと'
     }
 }
