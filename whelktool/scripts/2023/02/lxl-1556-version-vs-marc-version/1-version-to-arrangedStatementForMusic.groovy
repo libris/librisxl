@@ -31,12 +31,14 @@ VERSION_AUTH_PATHS =
                 ['relatedTo']
         ]
 
-OK_WORK_TYPES = ['MovingImage', 'Music', 'Audio', 'NotatedMusic']
-
-selectBySqlWhere("collection = 'bib' and deleted = false and data::text LIKE '%\"version\"%'") { DocumentItem docItem ->
-    if (workType(docItem) in OK_WORK_TYPES) {
-        oldToNew(docItem, VERSION_BIB_PATHS, VERSION, MARC_ARRANGED)
-    }
+selectBySqlWhere("""
+    collection = 'bib' 
+    AND deleted = false 
+    AND data#>>'{@graph,1,instanceOf,@type}' IN ('MovingImage', 'Music', 'Audio', 'NotatedMusic') 
+    AND data::text LIKE '%"version"%'
+"""
+) { DocumentItem docItem ->
+    oldToNew(docItem, VERSION_BIB_PATHS, VERSION, MARC_ARRANGED)
 }
 
 selectBySqlWhere("collection = 'auth' and deleted = false and data::text LIKE '%\"version\"%'") { DocumentItem docItem ->
@@ -66,10 +68,6 @@ def oldToNew(DocumentItem docItem, List<List<String>> paths, String oldProp, Str
             }
         }
     }
-}
-
-def workType(DocumentItem docItem) {
-    return docItem.graph[1].instanceOf?.'@type'
 }
 
 def looksLikeDate(o) {
