@@ -10,7 +10,10 @@ def where = """
     collection = 'bib'
         and (data #>> '{@graph, 1, instanceOf, translationOf}' is not null
             or data #>> '{@graph, instanceOf, hasPart}' is not null)
+            or data #>> '{@graph, 1, instanceOf, contribution}' LIKE '%"https://id.kb.se/relator/translator"%'
 """
+
+moved.println(['id', 'location', 'moved properties', 'translationOf', 'has original language'].join('\t'))
 
 selectBySqlWhere(where) {
     if (moveTitlesRecursive(it.graph[1].instanceOf, it.doc.shortId, 'instanceOf')) {
@@ -37,10 +40,18 @@ boolean tryMoveTitle(Map work, String id, String via) {
     def moveThese = work.keySet().intersect(TITLE_RELATED_PROPS)
 
     if (!moveThese.contains(HAS_TITLE)
-            || asList(work[TRANSLATION_OF]).size() != 1
+            || asList(work[TRANSLATION_OF]).size() > 1
             || work['@type'] in ['Music', 'NotatedMusic']
     ) {
         return false
+    }
+
+    if (!work[TRANSLATION_OF]) {
+        if (hasTranslator(work)) {
+            work[TRANSLATION_OF] = ['@type': 'Work']
+        } else {
+            return false
+        }
     }
 
     def translationOf = asList(work[TRANSLATION_OF])[0]
@@ -55,12 +66,18 @@ boolean tryMoveTitle(Map work, String id, String via) {
         }
         work.remove('musicKey')
 //        normalizePunctuation(translationOf[HAS_TITLE])
-        moved.println([id, via, moveThese, translationOf].join('\t'))
+        moved.println([id, via, moveThese, translationOf, translationOf['language'].asBoolean()].join('\t'))
         return true
     }
 
     propertyAlreadyExists.println([id, via, conflictingProps].join('\t'))
     return false
+}
+
+boolean hasTranslator(Map work) {
+    asList(work.contribution).any { Map c ->
+        asList(c.role).contains(['@id': 'https://id.kb.se/relator/translator'])
+    }
 }
 
 void normalizePunctuation(Object title) {
