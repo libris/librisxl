@@ -39,7 +39,7 @@ selectBySqlWhere("collection = 'bib' and deleted = false and data::text LIKE '%\
     }
 }
 
-selectByCollection("collection = 'bib' and deleted = false and data::text LIKE '%\"version\"%'") { DocumentItem docItem ->
+selectBySqlWhere("collection = 'auth' and deleted = false and data::text LIKE '%\"version\"%'") { DocumentItem docItem ->
     oldToNew(docItem, VERSION_AUTH_PATHS, VERSION, MARC_ARRANGED)
 }
 
