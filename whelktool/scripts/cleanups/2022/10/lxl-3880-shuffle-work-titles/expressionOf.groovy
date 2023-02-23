@@ -1,18 +1,13 @@
 import whelk.util.Unicode
 import whelk.util.Statistics
 import whelk.filter.LanguageLinker
-import static whelk.util.Unicode.normalize
 
 moved = getReportWriter('moved.tsv')
 propertyAlreadyExists = getReportWriter('property-already-exists.tsv')
 brokenLinks = getReportWriter('broken-links.tsv')
 langDiff = getReportWriter('lang-diff.tsv')
-relinked = getReportWriter('relinked.tsv')
-linked = getReportWriter('linked.tsv')
 originDateRemoved = getReportWriter('originDate-removed.txt')
 
-linkedStats = new StatsReport(getReportWriter('stats-linked.txt'), 3)
-notLinkedStats = new StatsReport(getReportWriter('stats-not-linked.txt'), 3)
 unhandledUniformWorkTitles = new StatsReport(getReportWriter('unhandled-uniform-work-titles.txt'), 3)
 
 HAS_TITLE = 'hasTitle'
@@ -23,16 +18,15 @@ TRANSLATION_OF = 'translationOf'
 EXPRESSION_OF = 'expressionOf'
 ID = '@id'
 TYPE = '@type'
-WORK_HUB = 'WorkHub'
 
 langLinker = getLangLinker()
 languageNames = langLinker.map.keySet() + langLinker.substitutions.keySet() + langLinker.ambiguousIdentifiers.keySet()
 
-hubTitleToWorkHub = loadHubTitleToHubMappings()
-localExpressionOfToHubTitle = loadLocalExpressionOfToHubTitleMappings('hub-data/local-expressionOf.tsv')
-hymnsAndBibles = loadHymnsAndBibles('hub-data/psalmböcker-och-biblar.tsv')
+localExpressionOfToHubTitle = loadLocalExpressionOfToHubTitleMappings('title-mappings/local-expressionOf.tsv')
+linkedExpressionOfToHubTitle = loadLinkedExpressionOfToHubTitleMappings('title-mappings/linked-expressionOf.tsv')
+hymnsAndBibles = loadHymnsAndBibles('title-mappings/psalmböcker-och-biblar.tsv')
 
-TITLE_RELATED_PROPS = ['musicMedium', 'version', 'marc:version', 'legalDate', 'originDate']
+TITLE_RELATED_PROPS = ['musicMedium', 'version', 'marc:version', 'legalDate', 'originDate', 'originPlace']
 
 def where = """
     collection = 'bib'
@@ -53,45 +47,29 @@ selectBySqlWhere(where) {
     def expressionOf = asList(work[EXPRESSION_OF])[0]
 
     if (expressionOf[ID]) {
-        def hub = loadThing(expressionOf[ID])
-        if (!hub) {
+        def uniformWorkTitle = loadThing(expressionOf[ID])
+        if (!uniformWorkTitle) {
             brokenLinks.println([id, expressionOf[ID]].join('\t'))
-        }
-        // Already a WorkHub hub, keep as is
-        else if (hub[TYPE] == WORK_HUB) {
             return
         }
-        // Uniform work title has a replacement hub. Relink to the better hub (WorkHub).
-        else if (hub[EXPRESSION_OF]) {
-            relinked.println([id, hub[ID], hub[EXPRESSION_OF][ID]].join('\t')) // id   old link    new link
-            expressionOf[ID] = hub[EXPRESSION_OF][ID]
-            it.scheduleSave()
+        def hubTitle = linkedExpressionOfToHubTitle[expressionOf[ID]]
+        if (hubTitle) {
+            expressionOf = uniformWorkTitle
+            // Take preferred title from given list
+            expressionOf[HAS_TITLE] = [[(TYPE): 'Title', (MAIN_TITLE): hubTitle]]
         } else {
-            // Shouldn't reach here if all linked uniform work titles have been taken care of
-            unhandledUniformWorkTitles.s.increment('Unhandled uniform work titles', hub[ID], id)
-        }
-        return
-    }
-
-    // Try match existing good hub on title
-    def newHub = findHub(expressionOf, id)
-    if (newHub) {
-        def stringified = stringify(expressionOf)
-        if (hymnsAndBibles[stringified] && !tryCopyToTarget(hymnsAndBibles[stringified], work, id)) {
+            unhandledUniformWorkTitles.s.increment('Unhandled uniform work titles', expressionOf[ID], id)
             return
         }
-        def moveThese = isMusic ? TITLE_RELATED_PROPS + 'musicKey' : TITLE_RELATED_PROPS
-        if (tryCopyToTarget(expressionOf, work, id, moveThese)) {
-            expressionOf.clear()
-            expressionOf[ID] = newHub
-            it.scheduleSave()
+    } else {
+        def expressionOfAsString = stringify(expressionOf)
+        def hubTitle = localExpressionOfToHubTitle[expressionOfAsString]
+        if (hubTitle) {
+            if (hymnsAndBibles[expressionOfAsString]) {
+                expressionOf.putAll(hymnsAndBibles[expressionOfAsString])
+            }
+            expressionOf[HAS_TITLE] = [[(TYPE): 'Title', (MAIN_TITLE): hubTitle]]
         }
-        return
-    }
-
-    if (instance.issuanceType == 'Monograph') {
-        def stringified = stringify(expressionOf)
-        notLinkedStats.s.increment('Not linked expressionOf (monograph)', stringified, id)
     }
 
     moveLanguagesFromTitle(expressionOf)
@@ -113,7 +91,6 @@ selectBySqlWhere(where) {
             moveThese.add('musicKey')
         }
         if (tryCopyToTarget(expressionOf, work, id, moveThese)) {
-            work[HAS_TITLE][0]['source'] = 'expressionOf' // Temporary, for testing
             work.remove(EXPRESSION_OF)
             it.scheduleSave()
         }
@@ -126,13 +103,7 @@ selectBySqlWhere(where) {
     }
 }
 
-[
-        linkedStats,
-        notLinkedStats,
-        unhandledUniformWorkTitles
-].each {
-    it.print()
-}
+unhandledUniformWorkTitles.print()
 
 boolean tryCopyToTarget(Map from, Map target, String id, Collection properties = null) {
     def copyThese = properties ? from.keySet().intersect(properties) : from.keySet()
@@ -215,22 +186,6 @@ Map loadThing(def id) {
     return thing
 }
 
-// For matching local expressionOf with a WorkHub
-String findHub(Map expressionOf, String id) {
-    def expressionOfAsString = stringify(expressionOf)
-    def hubTitle = localExpressionOfToHubTitle[expressionOfAsString]
-    if (hubTitle) {
-        hubTitle = normalize(hubTitle)
-    }
-
-    def matchedHub = hubTitleToWorkHub[hubTitle]
-    if (matchedHub) {
-        linked.println([id, expressionOfAsString, hubTitle, matchedHub].join('\t'))
-        linkedStats.s.increment("$hubTitle · $matchedHub", expressionOfAsString, id)
-        return matchedHub
-    }
-}
-
 // Represent a local work entity as a string, e.g. "Bible. · [O.T., Psalms., Sternhold and Hopkins.] · eng"
 String stringify(Map work) {
     return [stringifyTitle(work), stringifyProps(work, TITLE_RELATED_PROPS)].grep().join(' · ').trim()
@@ -250,15 +205,19 @@ String stringifyTitle(Map work) {
     return titleParts.join(' · ')
 }
 
-Map loadHubTitleToHubMappings() {
-    return queryDocs([(TYPE): [WORK_HUB]]).collectEntries { [it[HAS_TITLE][0][MAIN_TITLE], it[ID]] }
-}
-
 // e.g. {"Bible. · [O.T., Psalms., Sternhold and Hopkins.] · eng": "Bibeln. Psaltaren"}
 Map loadLocalExpressionOfToHubTitleMappings(String filename) {
     return new File(scriptDir, filename).readLines().drop(1).collectEntries {
         def (hubTitle, stringifiedExpressionOf) = it.split('\t')
         [stringifiedExpressionOf, hubTitle]
+    }
+}
+
+Map loadLinkedExpressionOfToHubTitleMappings(String filename) {
+    return new File(scriptDir, filename).readLines().drop(1).collectEntries {
+        def (uniformWorkTitleIri, hubTitle) = it.split('\t')
+        // replace only needed in test environments
+        [uniformWorkTitleIri.replace("https://libris.kb.se/", baseUri.toString()), hubTitle]
     }
 }
 
