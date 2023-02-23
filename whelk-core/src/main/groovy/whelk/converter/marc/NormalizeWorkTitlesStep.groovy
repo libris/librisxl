@@ -7,7 +7,7 @@ import static whelk.JsonLd.TYPE_KEY as TYPE
 
 class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
 
-    List<String> titleProps = ['hasTitle', 'musicKey', 'musicMedium', 'version', 'marc:version', 'legalDate', 'originDate']
+    List<String> titleProps = ['hasTitle', 'musicKey', 'musicMedium', 'version', 'legalDate', 'originDate']
 
     LanguageLinker langLinker = getLangLinker()
 
@@ -57,7 +57,6 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
         if (via == 'instanceOf'
                 && !work.contribution?.find { it[TYPE] == 'PrimaryContribution' }
                 && !work.expressionOf
-//                && (!work.expressionOf || work.expressionOf[ID]) // Only if work.expressionOf[ID].inCollection == https://id.kb.se/term/uniformWorkTitle, should never be the case
                 && work.hasTitle
         ) {
             def workTitle = work.hasTitle?.find { it[TYPE] == 'Title' && !('_revertedBy' in it) }
@@ -101,13 +100,13 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
 
     void shuffleTitles(Map work) {
         if (hasOkExpressionOf(work)) {
-            // try match existing linked hub first?
+            // try normalize title according to curated lists?
             if (tryMove(work['expressionOf'], work, titleProps)) {
                 work.remove('expressionOf')
             }
         }
-        def isMusic = { it[TYPE] in ['Music', 'NotatedMusic'] }
-        if (!isMusic(work) && asList(work['translationOf']).size() == 1) {
+        def isMusic = work[TYPE] in ['Music', 'NotatedMusic']
+        if (!isMusic && asList(work['translationOf']).size() == 1) {
             tryMove(work, work['translationOf'], ['hasTitle', 'legalDate'])
         }
     }
