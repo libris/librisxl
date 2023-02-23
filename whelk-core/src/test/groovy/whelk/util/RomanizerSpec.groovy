@@ -244,4 +244,30 @@ class RomanizerSpec extends Specification {
         "ԲԱՐՁՐԱՆՈՒՄ Է ԱՇԽԱՐՀ ՄԻ ԱՆԵԶՐ, ՈՐ ՔՈՆՆ Է ԱՆՇՈՒՇՏ ԵՒ ԻՄԸ." || "BARDZRANUM Ē ASHKHARH MI ANEZR, OR KʻONN Ē ANSHUSHT EV IMĚ."
         "ՉԻՓՉՈՒ ՆԻՉՈՒՆ ԵՒ ԿԱՄԱԿՈՐՆԵՐԸ"                            || "CHʻIPʻCHʻU NICHʻUN EV KAMAKORNERĚ"
     }
+
+    def "Amharic with ALA-LOC"() {
+        expect:
+        Romanizer.romanize(source, 'am')['am-Latn-t-am-Ethi-m0-alaloc'] == target
+        where:
+        source            || target
+        "ባለረጅም"           || "bālaraǧem"
+        "የእግር"            || "yaʼeger"
+        // t8g2d3p4r89plb7s
+        "ዘነበና"            || "zanabanā"
+        // "ዘንጋዳው"  || "zangādāw" // Unhandled 6th order
+        // 2ldvpdwd3gfs5td
+        "የፍቅር"            || "yafeqer"
+        // "እርግማን"  || "'ergmān" // Unhandled 6th order
+        // sb4h6wd44q82dsx
+        "ኩርፊያ የሸፈነው ፈገግታ" || "kurfiyā yašafanaw fagagetā"
+        "ግለ ታሪክ"          || "gela tārik"
+        //"ሥዩም" | "s̍eyum" // diacritic in record looks wrong
+        "ሥዩም"              | "śeyum"
+        // "ወልደ" | "waledé" // waleda looks correct? ደ da
+        // "ራምሴ" | "rāmsé" // Unhandled 6th order
+        //"ወ/ሮ መሠረት ባልቻ" | "w/ro maśarat, bālčā" // Unhandled 6th order
+        "መሠረት"            || "maśarat"
+        // q3wn8w0sns6z7q2v
+        "ደፋርዋ ዶሮ"         || "dafārwā doro"
+    }
 }
