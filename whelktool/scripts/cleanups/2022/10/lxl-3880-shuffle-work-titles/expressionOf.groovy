@@ -22,8 +22,8 @@ TYPE = '@type'
 langLinker = getLangLinker()
 languageNames = langLinker.map.keySet() + langLinker.substitutions.keySet() + langLinker.ambiguousIdentifiers.keySet()
 
-localExpressionOfToHubTitle = loadLocalExpressionOfToHubTitleMappings('title-mappings/local-expressionOf.tsv')
-linkedExpressionOfToHubTitle = loadLinkedExpressionOfToHubTitleMappings('title-mappings/linked-expressionOf.tsv')
+localExpressionOfToPrefTitle = loadLocalExpressionOfToPrefTitleMappings('title-mappings/local-expressionOf.tsv')
+linkedExpressionOfToPrefTitle = loadLinkedExpressionOfToPrefTitleMappings('title-mappings/linked-expressionOf.tsv')
 hymnsAndBibles = loadHymnsAndBibles('title-mappings/psalmböcker-och-biblar.tsv')
 
 TITLE_RELATED_PROPS = ['musicMedium', 'version', 'marc:version', 'legalDate', 'originDate', 'originPlace']
@@ -47,28 +47,28 @@ selectBySqlWhere(where) {
     def expressionOf = asList(work[EXPRESSION_OF])[0]
 
     if (expressionOf[ID]) {
-        def uniformWorkTitle = loadThing(expressionOf[ID])
-        if (!uniformWorkTitle) {
-            brokenLinks.println([id, expressionOf[ID]].join('\t'))
-            return
-        }
-        def hubTitle = linkedExpressionOfToHubTitle[expressionOf[ID]]
-        if (hubTitle) {
+        def prefTitle = linkedExpressionOfToPrefTitle[expressionOf[ID]]
+        if (prefTitle) {
+            def uniformWorkTitle = loadThing(expressionOf[ID])
+            if (!uniformWorkTitle) {
+                brokenLinks.println([id, expressionOf[ID]].join('\t'))
+                return
+            }
             expressionOf = uniformWorkTitle
             // Take preferred title from given list
-            expressionOf[HAS_TITLE] = [[(TYPE): 'Title', (MAIN_TITLE): hubTitle]]
+            expressionOf[HAS_TITLE] = [[(TYPE): 'Title', (MAIN_TITLE): prefTitle]]
         } else {
             unhandledUniformWorkTitles.s.increment('Unhandled uniform work titles', expressionOf[ID], id)
             return
         }
     } else {
         def expressionOfAsString = stringify(expressionOf)
-        def hubTitle = localExpressionOfToHubTitle[expressionOfAsString]
-        if (hubTitle) {
+        def prefTitle = localExpressionOfToPrefTitle[expressionOfAsString]
+        if (prefTitle) {
             if (hymnsAndBibles[expressionOfAsString]) {
                 expressionOf.putAll(hymnsAndBibles[expressionOfAsString])
             }
-            expressionOf[HAS_TITLE] = [[(TYPE): 'Title', (MAIN_TITLE): hubTitle]]
+            expressionOf[HAS_TITLE] = [[(TYPE): 'Title', (MAIN_TITLE): prefTitle]]
         }
     }
 
@@ -206,14 +206,14 @@ String stringifyTitle(Map work) {
 }
 
 // e.g. {"Bible. · [O.T., Psalms., Sternhold and Hopkins.] · eng": "Bibeln. Psaltaren"}
-Map loadLocalExpressionOfToHubTitleMappings(String filename) {
+Map loadLocalExpressionOfToPrefTitleMappings(String filename) {
     return new File(scriptDir, filename).readLines().drop(1).collectEntries {
         def (hubTitle, stringifiedExpressionOf) = it.split('\t')
         [stringifiedExpressionOf, hubTitle]
     }
 }
 
-Map loadLinkedExpressionOfToHubTitleMappings(String filename) {
+Map loadLinkedExpressionOfToPrefTitleMappings(String filename) {
     return new File(scriptDir, filename).readLines().drop(1).collectEntries {
         def (uniformWorkTitleIri, hubTitle) = it.split('\t')
         // replace only needed in test environments
