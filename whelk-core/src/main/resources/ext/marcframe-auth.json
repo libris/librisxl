@@ -1603,6 +1603,20 @@
             } ]
           }
         }
+      },
+      {
+        "name": "Title with version",
+        "source": [ {"130": {"ind1": " ", "ind2": "0", "subfields": [{"a": "Bibeln"}, {"s": "1917"}]}}],
+        "result": {
+          "mainEntity": {
+            "@type" : "Work",
+            "hasTitle" : [ {
+              "@type" : "Title",
+              "mainTitle" : "Bibeln"
+            }],
+            "version" :  "1917" 
+          }
+        }
       }
     ]
   },
@@ -4288,7 +4302,7 @@
     "$o": {"property": "marc:arrangedStatementForMusic"},
     "$p": {"addProperty": "marc:nameOfPartSectionOfAWork"},
     "$r": {"ignored": true},
-    "$s": {"property": "marc:version"},
+    "$s": {"property": "version"},
     "$t": {"property": "marc:titleOfAWork"},
     "$v": {"addProperty": "marc:formSubdivision"},
     "$w": {"property": "marc:controlSubfield"},
@@ -4327,7 +4341,7 @@
     "$n": {"addProperty": "marc:numberOfPartSectionMeeting"},
     "$p": {"addProperty": "marc:nameOfPartSectionOfAWork"},
     "$q": {"ignored": true},
-    "$s": {"property": "marc:version"},
+    "$s": {"property": "version"},
     "$t": {"property": "marc:titleOfAWork"},
     "$v": {"addProperty": "marc:formSubdivision"},
     "$w": {"property": "marc:controlSubfield"},
@@ -4360,7 +4374,7 @@
     "$o": {"property": "marc:arrangedStatementForMusic"},
     "$p": {"addProperty": "marc:nameOfPartSectionOfAWork"},
     "$r": {"ignored": true},
-    "$s": {"property": "marc:version"},
+    "$s": {"property": "version"},
     "$t": {"property": "marc:titleOfAWork"},
     "$v": {"addProperty": "marc:formSubdivision"},
     "$w": {"property": "marc:controlSubfield"},

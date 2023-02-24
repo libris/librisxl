@@ -53,10 +53,9 @@
 
     "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label", "infer": true},
     "$m": {"about": "_:work", "addLink": "musicMedium", "resourceType": "MusicMedium", "property": "label", "leadingPunctuation": ","},
-    "$o": {"about": "_:work", "property": "version", "TODO": "musicArrangement?"},
-
+    "$o": {"about": "_:work", "property": "marc:arrangedStatementForMusic", "NOTE:LC": "rdf:type Arrangement - $o arranged- rdf:type used to set subfield and text"},
     "$r": {"about": "_:work", "property": "musicKey", "leadingPunctuation": ","},
-    "$s": {"about": "_:work", "property": "marc:version", "TODO": "version"}
+    "$s": {"about": "_:work", "property": "version"}
   },
   "i1-nonfiling": {
     "i1": {
@@ -144,7 +143,7 @@
     "$f": {"about": "_:agent", "property": "marc:originDate"},
     "$h": {"about": "_:agent", "property": "marc:mediaTerm"},
     "$l": {"about": "_:agent", "link": "language", "resourceType": "Language", "property": "label", "infer": true},
-    "$o": {"about": "_:agent", "property": "version", "TODO": "align with other $o?"},
+    "$o": {"about": "_:agent", "property": "marc:arrangedStatementForMusic"},
     "$r": {"about": "_:agent", "property": "marc:musicKey"},
     "$s": {"about": "_:agent", "property": "version"},
     "$0": {"about": "_:agent", "addProperty": "marc:uri"}
