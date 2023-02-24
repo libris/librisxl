@@ -13,7 +13,7 @@ selectBySqlWhere(where) { data ->
     }
 
     if (changed) {
-        data.scheduleSave()
+        data.scheduleSave(loud: true)
     }
 }
 
