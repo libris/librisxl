@@ -171,8 +171,13 @@ class Embellisher {
         // at jdk.proxy1.$Proxy37.apply(Unknown Source) ~[?:?]
         // at java_util_function_Function$apply.call(Unknown Source) ~[?:?]
         // at whelk.Embellisher.load(Embellisher.groovy:149) ~[main/:?]
-        
-        if (lens == 'chips') {
+
+        if (lens == 'search-chips') {
+            // NB! This depends on search-chips being subsets of cards. Since we shrink the cards to search-chips. 
+            var searchChips = true
+            data = data.collect{ (Map) jsonld.toChip(it, [], searchChips) }
+        }
+        else if (lens == 'chips') {
             data = data.collect{ (Map) jsonld.toChip(it) }
         }
 

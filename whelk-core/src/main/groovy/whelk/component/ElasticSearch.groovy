@@ -309,8 +309,8 @@ class ElasticSearch {
 
     String getShapeForIndex(Document document, Whelk whelk) {
         Document copy = document.clone()
-
-        whelk.embellish(copy, ['chips'])
+        
+        whelk.embellish(copy, ['search-chips'])
 
         if (log.isDebugEnabled()) {
             log.debug("Framing ${document.getShortId()}")
@@ -394,7 +394,7 @@ class ElasticSearch {
 
     private static void recordToChip(Whelk whelk, Map thing) {
         if (thing[JsonLd.GRAPH_KEY]) {
-            thing[JsonLd.GRAPH_KEY][0] = whelk.jsonld.toChip(thing[JsonLd.GRAPH_KEY][0])
+            thing[JsonLd.GRAPH_KEY][0] = whelk.jsonld.toChip(thing[JsonLd.GRAPH_KEY][0], [], true)
         }
     }
 

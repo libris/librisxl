@@ -759,7 +759,7 @@ class JsonLd {
         // If result is too small, use chip instead.
         // TODO: Support and use extends + super in card defs instead.)
         if (card.size() < 2) {
-            card = removeProperties(thing, getLens(thing, ['chips']))
+            card = removeProperties(thing, getLens(thing, searchCard ? ['search-chips', 'chips'] : ['chips']))
         }
 
         restorePreserved(card, thing, preservePaths)
@@ -815,17 +815,17 @@ class JsonLd {
         return result
     }
 
-    Object toChip(Object object, List<List> preservePaths = []) {
+    Object toChip(Object object, List<List> preservePaths = [], boolean searchChip = false) {
         if (object instanceof List) {
             return object.withIndex().collect { it, ix ->
-                toChip(it, pathRemainders([ix], preservePaths))
+                toChip(it, pathRemainders([ix], preservePaths), searchChip)
             }
         } else if ((object instanceof Map)) {
             Map result = [:]
-            Map reduced = removeProperties(object, getLens(object, ['chips']))
+            Map reduced = removeProperties(object, getLens(object, searchChip ? ['search-chips', 'chips'] : ['chips']))
             restorePreserved(reduced, (Map) object, preservePaths)
             reduced.each { key, value ->
-                result[key] = toChip(value, pathRemainders([key], preservePaths))
+                result[key] = toChip(value, pathRemainders([key], preservePaths), searchChip)
             }
             return result
         } else {
