@@ -1,8 +1,5 @@
-import whelk.filter.LanguageLinker
-import whelk.util.Romanizer
+import whelk.util.Unicode
 import whelk.util.DocumentUtil
-
-import java.util.regex.Pattern
 
 Util u = new Util(getWhelk())
 
