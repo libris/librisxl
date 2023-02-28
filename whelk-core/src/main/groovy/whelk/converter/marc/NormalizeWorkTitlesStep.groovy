@@ -42,11 +42,13 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
             if (originalTitle instanceof Map) {
                 boolean noWorkLangOrNotSameLang =
                         workLangIds.size() == 0
+                                || !original.language
                                 || !asList(original.language).every { it[ID] in workLangIds }
                 if (noWorkLangOrNotSameLang) {
                     markToIgnore(work.hasTitle)
                     if (!work.hasTitle) work.hasTitle = []
                     work.hasTitle << copyForRevert(originalTitle)
+                    original.remove('hasTitle')
                     if (original['legalDate'] && !work['legalDate']) {
                         work['legalDate'] = original['legalDate']
                     }
