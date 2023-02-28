@@ -8,7 +8,10 @@ def where = """
     AND data#>>'{@graph,1,${u.HAS_BIB880}}' IS NOT NULL
 """
 
-selectBySqlWhere(where) {    
+selectBySqlWhere(where) {
+    println(it.doc.shortId)
+    return
+    
     def (record, thing) = it.graph
 
     // TODO: multiple languages?
