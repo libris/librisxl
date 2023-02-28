@@ -288,10 +288,11 @@ class RomanizationStep extends MarcFramePostProcStepBase {
                 def k = path.last()
                 if (it[k]) {
                     def byLangProp = langAliases[k]
+                    def tag = langIdToLangTag[lang]
                     it[byLangProp] =
                             [
-                                    (langIdToLangTag[lang]): DocumentUtil.getAtPath(converted, path),
-                                    (langToTLang[lang])    : it[k]
+                                    (tag)               : DocumentUtil.getAtPath(converted, path),
+                                    "${tag}-Latn-t-$tag": it[k]
                             ]
                 }
                 it.remove(k)
