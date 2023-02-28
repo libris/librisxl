@@ -660,6 +660,12 @@ class ESQuery {
                             'query': ['bool': ['must': musts]]]]
         }
 
+        // Implicit OR
+        // identifiedBy.value=A&identifiedBy.value=B is expected to work the same way as for non-nested docs 
+        if (nestedQuery.size() == 1 && nestedQuery[nestedQuery.keySet().first()].size() > 1) {
+            result = [['bool': ['should': result]]]
+        }
+
         return result
     }
     
