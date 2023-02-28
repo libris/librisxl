@@ -10138,6 +10138,11 @@
         "resourceType": "Layout",
         "property": "label"
       },
+      "$l": {
+        "addLink": "binding",
+        "resourceType": "Binding",
+        "property": "label", "infer": true
+      },
       "$m": {
         "addLink": "bookFormat",
         "resourceType": "BookFormat",
@@ -10277,6 +10282,22 @@
                 {
                   "@type": "Material",
                   "label": "akvarell"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "binding",
+          "source":  [
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"l": "coptic bindings"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "binding": [
+                {
+                  "@type": "Binding",
+                  "label": "coptic bindings"
                 }
               ]
             }
