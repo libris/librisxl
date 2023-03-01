@@ -74,20 +74,34 @@ class JsonLdValidatorSpec extends Specification {
         assert errors.size() == 3
     }
     
-    def "language container can only contain strings"() {
+    def "language container cannot contain anything that is not a string or a list"() {
         given:
         def validator = setupValidator()
         when:
         def errors = validator.validateAll([
                 "labelByLang": [
-                        "en": ["someValue"],
                         "sv": [ "a": "b" ],
                         "de": 3,
                 ]
         ])
         then:
         assert errors.every {it.type == JsonLdValidator.Error.Type.UNEXPECTED }
-        assert errors.size() == 3
+        assert errors.size() == 2
+    }
+
+    def "language container can contain strings or lists"() {
+        given:
+        def validator = setupValidator()
+        when:
+        def errors = validator.validateAll([
+                "labelByLang": [
+                        "en": ["someValue"],
+                        "fi": "aString"
+                ]
+        ])
+        then:
+        assert errors.every {it.type == JsonLdValidator.Error.Type.UNEXPECTED }
+        assert errors.size() == 0
     }
 
 
