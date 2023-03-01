@@ -52,6 +52,11 @@ class UnicodeSpec extends Specification {
         '\u2007\u2007\u2007FIGURE SPACE\u2007\u2007\u2007'          | 'FIGURE SPACE'
         '\u2060\u2060\u2060WORD JOINER\u2060\u2060\u2060'           | 'WORD JOINER'
         'keep\u00A0\u202F\u2007\u2060us'                            | 'keep\u00A0\u202F\u2007\u2060us'
+        'LINE FEED\n\n\n'                                           | 'LINE FEED'
+        'CARRIAGE RETURN\r\r\r'                                     | 'CARRIAGE RETURN'
+        'line breaks\u000A\u000B\u000C\u000D\u0085\u2028\u2029'     | 'line breaks'
+        '\r\nkeep leading line breaks'                              | '\r\nkeep leading line breaks'
+        
     }
     
     def "double quotation marks"() {
