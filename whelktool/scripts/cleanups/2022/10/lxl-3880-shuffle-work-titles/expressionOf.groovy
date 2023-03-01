@@ -26,7 +26,7 @@ localExpressionOfToPrefTitle = loadLocalExpressionOfToPrefTitleMappings('title-m
 linkedExpressionOfToPrefTitle = loadLinkedExpressionOfToPrefTitleMappings('title-mappings/linked-expressionOf.tsv')
 hymnsAndBibles = loadHymnsAndBibles('title-mappings/psalmböcker-och-biblar.tsv')
 
-TITLE_RELATED_PROPS = ['musicMedium', 'version', 'marc:version', 'legalDate', 'originDate', 'originPlace']
+TITLE_RELATED_PROPS = ['musicMedium', 'version', 'legalDate', 'originDate', 'originPlace', 'marc:arrangedStatementForMusic']
 
 def where = """
     collection = 'bib'

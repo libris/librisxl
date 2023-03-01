@@ -7,7 +7,7 @@ import static whelk.JsonLd.TYPE_KEY as TYPE
 
 class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
 
-    List<String> titleProps = ['hasTitle', 'musicKey', 'musicMedium', 'version', 'legalDate', 'originDate']
+    List<String> titleProps = ['hasTitle', 'musicKey', 'musicMedium', 'version', 'legalDate', 'originDate', 'marc:arrangedStatementForMusic']
 
     LanguageLinker langLinker = getLangLinker()
 
