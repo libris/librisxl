@@ -55,7 +55,7 @@ selectBySqlWhere(where) {
             }
             expressionOf = uniformWorkTitle
             // Take preferred title from given list
-            expressionOf[HAS_TITLE] = [[(TYPE): 'Title', (MAIN_TITLE): prefTitle]]
+            expressionOf[HAS_TITLE] = [[(TYPE): 'Title', (MAIN_TITLE): prefTitle, 'source': 'excel/expressionOf']]
         } else {
             unhandledUniformWorkTitles.s.increment('Unhandled uniform work titles', expressionOf[ID], id)
             return
@@ -68,14 +68,10 @@ selectBySqlWhere(where) {
                 expressionOf.putAll(hymnsAndBibles[expressionOfAsString])
                 def originPlace = expressionOf['originPlace']
                 if (originPlace instanceof String) {
-                    expressionOf['originPlace'] =
-                            [
-                                    (TYPE) : 'Place',
-                                    'label': [originPlace]
-                            ]
+                    expressionOf['originPlace'] = [(TYPE): 'Place', 'label': [originPlace]]
                 }
             }
-            expressionOf[HAS_TITLE] = [[(TYPE): 'Title', (MAIN_TITLE): prefTitle]]
+            expressionOf[HAS_TITLE] = [[(TYPE): 'Title', (MAIN_TITLE): prefTitle, 'source': 'excel/expressionOf']]
         }
     }
 
@@ -93,6 +89,7 @@ selectBySqlWhere(where) {
     }
 
     if (expressionOf[HAS_TITLE]) {
+        expressionOf[HAS_TITLE][0]['source'] = expressionOf[HAS_TITLE][0]['source'] ?: 'expressionOf'
         List moveThese = TITLE_RELATED_PROPS + HAS_TITLE
         if (isMusic) {
             moveThese.add('musicKey')
