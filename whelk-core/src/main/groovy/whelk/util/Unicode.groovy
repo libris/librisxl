@@ -41,7 +41,7 @@ class Unicode {
     
     // U+2060 WORD JOINER
     private static final Pattern LEADING_SPACE = Pattern.compile('^[\\p{Blank}\u2060]+', Pattern.UNICODE_CHARACTER_CLASS)
-    private static final Pattern TRAILING_SPACE = Pattern.compile('[\\p{Blank}\u2060]+$', Pattern.UNICODE_CHARACTER_CLASS)
+    private static final Pattern TRAILING_SPACE = Pattern.compile('([\\p{Blank}\u2060]|\\R)+$', Pattern.UNICODE_CHARACTER_CLASS)
     
     private static final Map EXTRA_NORMALIZATION_MAP
     
