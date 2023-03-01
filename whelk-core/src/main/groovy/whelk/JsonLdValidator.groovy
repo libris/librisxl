@@ -188,6 +188,9 @@ class JsonLdValidator {
             else if (value !instanceof String && value !instanceof List) {
                 handleError(new Error(Error.Type.UNEXPECTED, key, value), validation)
             }
+            else if (value instanceof List && value.any{ it !instanceof String }) {
+                handleError(new Error(Error.Type.UNEXPECTED, key, value), validation)
+            }
             return true
         }
     }

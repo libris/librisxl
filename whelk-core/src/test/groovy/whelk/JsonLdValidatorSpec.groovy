@@ -104,6 +104,22 @@ class JsonLdValidatorSpec extends Specification {
         assert errors.size() == 0
     }
 
+    def "language container can contain lists containing nothing but strings"() {
+        given:
+        def validator = setupValidator()
+        when:
+        def errors = validator.validateAll([
+                "labelByLang": [
+                        "en": [["a": "b"]],
+                        "fi": [1, 2],
+                        "de": [["a string"]]
+                ]
+        ])
+        then:
+        assert errors.every {it.type == JsonLdValidator.Error.Type.UNEXPECTED }
+        assert errors.size() == 3
+    }
+
 
     def "repeatable term should pass validation if declared as repeatable in context"() {
         given:
