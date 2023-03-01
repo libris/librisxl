@@ -75,6 +75,7 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
                         work.expressionOf[it] = work[it]
                     }
                 }
+                addLangFor130(work)
             }
         }
     }
@@ -89,6 +90,16 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
         item = item.clone()
         item._revertOnly = true
         return item
+    }
+
+    void addLangFor130(Map work) {
+        List langs = work.translationOf ? asList(work.translationOf).findResults { it.language }.flatten() : work.language
+        def (linked, local) = langs.split { it['@id'] }
+        if (local.any { it.label }) {
+            work.expressionOf['language'] = local
+        } else if (linked.size() == 1) {
+            work.expressionOf['language'] = linked
+        }
     }
 
     //TODO: Implement here or in marcframe?
