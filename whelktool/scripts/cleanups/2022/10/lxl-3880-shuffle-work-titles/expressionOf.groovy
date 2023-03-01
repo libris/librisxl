@@ -66,6 +66,14 @@ selectBySqlWhere(where) {
         if (prefTitle) {
             if (hymnsAndBibles[expressionOfAsString]) {
                 expressionOf.putAll(hymnsAndBibles[expressionOfAsString])
+                def originPlace = expressionOf['originPlace']
+                if (originPlace instanceof String) {
+                    expressionOf['originPlace'] =
+                            [
+                                    (TYPE) : 'Place',
+                                    'label': [originPlace]
+                            ]
+                }
             }
             expressionOf[HAS_TITLE] = [[(TYPE): 'Title', (MAIN_TITLE): prefTitle]]
         }
