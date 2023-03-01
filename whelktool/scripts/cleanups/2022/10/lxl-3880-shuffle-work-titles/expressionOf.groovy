@@ -6,7 +6,6 @@ moved = getReportWriter('moved.tsv')
 propertyAlreadyExists = getReportWriter('property-already-exists.tsv')
 brokenLinks = getReportWriter('broken-links.tsv')
 langDiff = getReportWriter('lang-diff.tsv')
-originDateRemoved = getReportWriter('originDate-removed.txt')
 
 unhandledUniformWorkTitles = new StatsReport(getReportWriter('unhandled-uniform-work-titles.txt'), 3)
 
@@ -94,12 +93,6 @@ selectBySqlWhere(where) {
             work.remove(EXPRESSION_OF)
             it.scheduleSave()
         }
-    }
-
-    def originDate = work['originDate']
-    if (originDate && asList(instance['publication']).any { originDate in it.subMap(['year', 'date']).values() }) {
-        originDateRemoved.println(it.doc.shortId)
-        work.remove('originDate')
     }
 }
 
