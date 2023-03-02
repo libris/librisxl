@@ -9,8 +9,8 @@ TITLE_RELATED_PROPS = ['hasTitle', 'legalDate']
 def where = """
     collection = 'bib'
         and (data #>> '{@graph, 1, instanceOf, translationOf}' is not null
-            or data #>> '{@graph, instanceOf, hasPart}' is not null)
-            or data #>> '{@graph, 1, instanceOf, contribution}' LIKE '%"https://id.kb.se/relator/translator"%'
+            or data #>> '{@graph, 1, instanceOf, hasPart}' is not null
+            or data #>> '{@graph, 1, instanceOf, contribution}' LIKE '%"https://id.kb.se/relator/translator"%')
 """
 
 moved.println(['id', 'location', 'moved properties', 'translationOf', 'has original language'].join('\t'))
