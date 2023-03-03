@@ -219,7 +219,8 @@ Det går att kombinera olika egenskaper med `ELLER` genom att använda prefixet 
 * `minEx-<egenskap>` - Värdet är större än (Ex står för "Exclusive").
 * `max-<egenskap>` - Värdet är mindre eller lika med.
 * `maxEx-<egenskap>` - Värdet är mindre än.
-* `matches-<egenskap>` - Värdet matchar (se datum-sökning nedan).
+* `matches-<egenskap>` - Värdet matchar (se datumsökning och "inkludera underordnade termer"-sökning nedan).
+* `and-matches-<field>` - Kombinera flera `matches`-filter för _samma_ fält med `OCH` istället för `ELLER`.
 
  Filter-uttryck                                        | Filter-parametrar    
 -------------------------------------------------------|-----------------------                 
@@ -352,6 +353,26 @@ $ curl -XGET -H "Accept: application/ld+json" -G \
 ...
 ```
 
+#### Exempel
+
+Har ämne term/sao/Monster (eller en underordnad term, t.ex. Drakar, Gorgoner).
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find.jsonld?matches-instanceOf.subject.@id=https://id.kb.se/term/sao/Monster'
+...
+```
+
+#### Exempel
+
+Har ämne term/sao/Monster (eller en underordnad term, t.ex. Drakar, Gorgoner), _och_ term/sao/Magi (eller en underordnad term,
+t.ex. Amuletter, Häxeri).
+```
+$ curl -XGET -H "Accept: application/ld+json" -G \
+    'https://libris-qa.kb.se/find.jsonld' \
+    -d and-matches-instanceOf.subject.@id=https://id.kb.se/term/sao/Monster \
+    -d and-matches-instanceOf.subject.@id=https://id.kb.se/term/sao/Magi
+...
+```
 
 ### `/_remotesearch` - Sök i externa databaser  - Kräver autentisering
 

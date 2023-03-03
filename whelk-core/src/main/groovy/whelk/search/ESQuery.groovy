@@ -807,7 +807,7 @@ class ESQuery {
     /**
      * Construct "range query" filters for parameters prefixed with any {@link RangeParameterPrefix}
      * Ranges for different parameters are ANDed together
-     * Multiple ranges for the same parameter are ORed together
+     * Multiple ranges for the same parameter are ORed together, unless prefixed with `and-`
      *
      * Range endpoints are matched in the order they appear
      * e.g. minEx-x=1984&maxEx-x=1988&minEx-x=1993&min-x=2000&maxEx-x=1995
