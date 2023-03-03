@@ -118,9 +118,21 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
                 work.remove('expressionOf')
             }
         }
+
         def isMusic = work[TYPE] in ['Music', 'NotatedMusic']
-        if (!isMusic && asList(work['translationOf']).size() == 1) {
-            tryMove(work, work['translationOf'], ['hasTitle', 'legalDate'])
+        def hasTranslator = asList(work.contribution).any { Map c ->
+            asList(c.role).any { Map r ->
+                r.code == 'trl' || r.'@id' == 'https://id.kb.se/relator/translator'
+            }
+        }
+
+        if (!isMusic) {
+            if (!work['translationOf'] && hasTranslator) {
+                work['translationOf'] = [(TYPE): 'Work']
+            }
+            if (asList(work['translationOf']).size() == 1) {
+                tryMove(work, work['translationOf'], ['hasTitle', 'legalDate'])
+            }
         }
     }
 
