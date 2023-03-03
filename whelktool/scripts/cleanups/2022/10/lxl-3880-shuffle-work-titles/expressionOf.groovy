@@ -45,6 +45,8 @@ selectBySqlWhere(where) {
 
     def expressionOf = asList(work[EXPRESSION_OF])[0]
 
+    def normalized = false
+
     if (expressionOf[ID]) {
         def prefTitle = linkedExpressionOfToPrefTitle[expressionOf[ID]]
         if (prefTitle) {
@@ -56,6 +58,7 @@ selectBySqlWhere(where) {
             expressionOf = uniformWorkTitle
             // Take preferred title from given list
             expressionOf[HAS_TITLE] = [[(TYPE): 'Title', (MAIN_TITLE): prefTitle, 'source': 'Titel från lista/expressionOf']]
+            normalized = true
         } else {
             unhandledUniformWorkTitles.s.increment('Unhandled uniform work titles', expressionOf[ID], id)
             return
@@ -72,6 +75,7 @@ selectBySqlWhere(where) {
                 }
             }
             expressionOf[HAS_TITLE] = [[(TYPE): 'Title', (MAIN_TITLE): prefTitle, 'source': 'Titel från lista/expressionOf']]
+            normalized = true
         }
     }
 
@@ -89,6 +93,9 @@ selectBySqlWhere(where) {
     }
 
     if (expressionOf[HAS_TITLE]) {
+        if (!normalized && instance['issuanceType'] == 'Monograph') {
+            incrementStats('Title not normalized (Monographs)', stringify(expressionOf))
+        }
         expressionOf[HAS_TITLE][0]['source'] = expressionOf[HAS_TITLE][0]['source'] ?: 'Titel från expressionOf'
         List moveThese = TITLE_RELATED_PROPS + HAS_TITLE
         if (isMusic) {
