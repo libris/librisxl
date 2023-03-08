@@ -174,7 +174,7 @@ class RomanizerSpec extends Specification {
 
     def "Azerbaijani in Cyrillic with ALA-LOC"() {
         expect:
-        Romanizer.romanize(source, 'az')['az-Latn-t-az-Cyrl-m0-alaloc'] == target
+        new Romanizer().romanize(source, 'az')['az-Latn-t-az-Cyrl-m0-alaloc'] == target
         where:
         source || target
         "АБВГҒДЕӘЖЗИЫЈКҜЛМНОӨПРСТУҮФХҺЧҸШ" || "ABVGGhDEĂZHZIYI̐KĠLMNOȮPRSTUU̇FKHḢCHJSH"
@@ -183,7 +183,7 @@ class RomanizerSpec extends Specification {
 
     def "Armenian with ALA-LOC"() {
         expect:
-        Romanizer.romanize(source, 'hy')['hy-Latn-t-hy-Armn-m0-alaloc'] == target
+        new Romanizer().romanize(source, 'hy')['hy-Latn-t-hy-Armn-m0-alaloc'] == target
         where:
         source                            || target
 
@@ -249,7 +249,7 @@ class RomanizerSpec extends Specification {
 
     def "Amharic with ALA-LOC"() {
         expect:
-        Romanizer.romanize(source, 'am')['am-Latn-t-am-Ethi-m0-alaloc'] == target
+        new Romanizer().romanize(source, 'am')['am-Latn-t-am-Ethi-m0-alaloc'] == target
         where:
         source            || target
         "ባለረጅም"           || "bālaraǧem"
