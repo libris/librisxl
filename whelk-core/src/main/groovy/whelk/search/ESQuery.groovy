@@ -29,6 +29,7 @@ class ESQuery {
         'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens', '_stats', '_suggest', '_site'
     ]
     public static final String AND_PREFIX = 'and-'
+    public static final String AND_MATCHES_PREFIX = 'and-matches-'
     public static final String OR_PREFIX = 'or-'
     private static final String NOT_PREFIX = 'not-'
     private static final String EXISTS_PREFIX = 'exists-'
@@ -812,30 +813,42 @@ class ESQuery {
     /**
      * Construct "range query" filters for parameters prefixed with any {@link RangeParameterPrefix}
      * Ranges for different parameters are ANDed together
-     * Multiple ranges for the same parameter are ORed together
+     * Multiple ranges for the same parameter are ORed together, unless prefixed with `and-`
      *
      * Range endpoints are matched in the order they appear
      * e.g. minEx-x=1984&maxEx-x=1988&minEx-x=1993&min-x=2000&maxEx-x=1995
      * means 1984 < x < 1988 OR 1993 < x < 1995 OR x >= 2000
      */
     Tuple2<Set<String>, List> makeRangeFilters(Map<String, String[]> queryParameters) {
-        Map<String, Ranges> parameterToRanges = [:]
+        List<Ranges> parameterToRanges = []
         Set<String> handledParameters = new HashSet<>()
+        List<Tuple2<String, List>> queryParamsList = []
 
         queryParameters.each { parameter, values ->
+            if (parameter.startsWith(AND_MATCHES_PREFIX)) {
+                values.each { queryParamsList.add(new Tuple2(parameter.substring(AND_PREFIX.size()), [it])) }
+                handledParameters.add(parameter)
+            } else {
+                queryParamsList.add(new Tuple2(parameter, values))
+            }
+        }
+
+        queryParamsList.each { it ->
+            def parameter = (String) it[0]
+            def values = (List<String>) it[1]
+
             parseRangeParameter(parameter) { String parameterNoPrefix, RangeParameterPrefix prefix ->
-                Ranges r = parameterToRanges.computeIfAbsent(parameterNoPrefix, { p ->
-                    p in dateFields 
-                            ? Ranges.date(p, whelk.getTimezone(), whelk) 
-                            : Ranges.nonDate(p, whelk) 
-                })
-                
+                Ranges r = parameterNoPrefix in dateFields
+                        ? Ranges.date(parameterNoPrefix, whelk.getTimezone(), whelk)
+                        : Ranges.nonDate(parameterNoPrefix, whelk)
+
                 values.each { it.tokenize(',').each { r.add(prefix, it.trim()) } }
+                parameterToRanges.add(r)
                 handledParameters.add(parameter)
             }
         }
 
-        def filters = parameterToRanges.values().collect { it.toQuery() }
+        def filters = parameterToRanges.collect { it.toQuery() }
 
         return new Tuple2(handledParameters, filters)
     }

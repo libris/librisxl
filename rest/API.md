@@ -232,7 +232,8 @@ It is possible to combine multiple fields with `OR` by using the prefix `or-`.
 * `minEx-<field>` - Greater than (exclusive minimum).
 * `max-<field>` - Less or equal to.
 * `maxEx-<field>` - Less than.
-* `matches-<field>` - Value is matching (see date-search below).
+* `matches-<field>` - Value is matching (see date-search and "include narrower terms" search below).
+* `and-matches-<field>` - Combine multiple `matches-` filters for the _same_ field with `AND` instead of `OR`.
 
 Filter-expression                                     | Filter-parameters
 ------------------------------------------------------|----------------------------------------------
@@ -366,6 +367,26 @@ $ curl -XGET -H "Accept: application/ld+json" -G \
 ...
 ```
 
+#### Example
+
+Has subject term/sao/Monster (or a narrower term, e.g., Drakar, Gorgoner).
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find.jsonld?matches-instanceOf.subject.@id=https://id.kb.se/term/sao/Monster'
+...
+```
+
+#### Example
+
+Has subject term/sao/Monster (or a narrower term, e.g., Drakar, Gorgoner), _and_ term/sao/Magi (or a narrower term,
+e.g., Amuletter, Häxeri).
+```
+$ curl -XGET -H "Accept: application/ld+json" -G \
+    'https://libris-qa.kb.se/find.jsonld' \
+    -d and-matches-instanceOf.subject.@id=https://id.kb.se/term/sao/Monster \
+    -d and-matches-instanceOf.subject.@id=https://id.kb.se/term/sao/Magi
+...
+```
 
 ### `/_remotesearch` - Search external databases - Requires authentication
 
