@@ -1,11 +1,15 @@
 package whelk.converter.marc
 
 import groovy.transform.CompileStatic
+import groovy.transform.Immutable
+import groovy.transform.NullCheck
 import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.JsonLd
+import whelk.component.DocumentNormalizer
 import whelk.converter.FormatConverter
+import whelk.filter.LanguageLinker
 import whelk.filter.LinkFinder
 
 import java.time.LocalDate
@@ -27,15 +31,16 @@ class MarcFrameConverter implements FormatConverter {
     ObjectMapper mapper = new ObjectMapper()
     LinkFinder linkFinder
     JsonLd ld
-
-    String configResourceBase
+    RomanizationStep.LanguageResources languageResources
+    
+    String configResourceBase = "ext"
     String marcframeFile = "marcframe.json"
 
     protected MarcConversion conversion
-
-    MarcFrameConverter(LinkFinder linkFinder = null, JsonLd ld = null, configResourceBase = "ext") {
+    
+    MarcFrameConverter(LinkFinder linkFinder = null, JsonLd ld = null, RomanizationStep.LanguageResources languageResources = null) {
         this.linkFinder = linkFinder
-        this.configResourceBase = configResourceBase
+        this.languageResources = languageResources
         setLd(ld)
     }
 
@@ -66,6 +71,11 @@ class MarcFrameConverter implements FormatConverter {
         if (o instanceof List) {
             o.each { expandIncludes(it) }
         } else if (o instanceof Map) {
+            if ('@include' in o) {
+                def included = (Map) readConfig(o['@include'])
+                o.clear()
+                o.putAll(included)
+            }
             o.each {
                 if (it.value instanceof Map && '@include' in it.value) {
                     it.value = readConfig(it.value['@include'])
@@ -206,6 +216,10 @@ class MarcConversion {
             procStep = new CopyOnRevertStep(props); break
             case 'InjectWhenMatchingOnRevert':
             procStep = new InjectWhenMatchingOnRevertStep(props); break
+            case 'Romanization':
+            procStep = new RomanizationStep(props)
+            procStep.converter = converter    
+            procStep.languageResources = converter.languageResources; break
             case null:
             return null
             default:
@@ -1950,6 +1964,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
         if (!order['...']) {
             order['...'] = order.size()
         }
+        
+        if (!order['6']) {
+            order['6'] = -1 // MARC 21, Appendix A: "Subfield $6 is always the first subfield in the field."
+        }
+        
         Closure getOrder = {
             [order.get(it.code, order['...']), !it.code.isNumber(), it.code]
         }

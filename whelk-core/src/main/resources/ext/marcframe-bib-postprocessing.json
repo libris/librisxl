@@ -1216,5 +1216,6 @@
         }
       }
     ]
-  }
+  },
+  {"@include": "marcframe-bib-postproc-romanization.json"}
 ]

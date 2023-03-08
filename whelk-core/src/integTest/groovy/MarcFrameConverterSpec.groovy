@@ -1,20 +1,22 @@
 package whelk.converter.marc
 
-
+import whelk.Whelk
 import spock.lang.*
 
 
 @Unroll
 class MarcFrameConverterSpec extends Specification {
 
-    static converter = new MarcFrameConverter() {
-        def config
-        void initialize(Map config) {
-            super.initialize(config)
-            this.config = config
-            super.conversion.doPostProcessing = false
-            super.conversion.flatLinkedForm = false
-            super.conversion.baseUri = new URI("/")
+    static converter = Whelk.createLoadedSearchWhelk().with {
+        new MarcFrameConverter(null, it.jsonld, it.normalizer) {
+            def config
+            void initialize(Map config) {
+                super.initialize(config)
+                this.config = config
+                super.conversion.doPostProcessing = false
+                super.conversion.flatLinkedForm = false
+                super.conversion.baseUri = new URI("/")
+            }
         }
     }
 
@@ -25,8 +27,6 @@ class MarcFrameConverterSpec extends Specification {
     static postProcStepSpecs = []
 
     static {
-
-        MarcFrameCli.addJsonLd(converter)
 
         converter.conversion.sharedPostProcSteps.eachWithIndex { step, i ->
             def dfn = converter.config.postProcessing

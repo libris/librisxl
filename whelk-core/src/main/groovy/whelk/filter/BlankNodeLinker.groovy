@@ -1,15 +1,21 @@
 package whelk.filter
 
 import com.google.common.collect.Iterables
+import whelk.JsonLd
 import whelk.Whelk
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
 import whelk.util.DocumentUtil
 import whelk.util.Statistics
 
+/*
+Groovy compiler fails...
+.../compileGroovy/groovy-java-stubs/whelk/filter/BlankNodeLinker.java:10: error: cannot find symbol
+
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.TYPE_KEY
+ */
 import static whelk.util.DocumentUtil.NOP
 import static whelk.util.DocumentUtil.Remove
 import static whelk.util.DocumentUtil.findKey
@@ -46,7 +52,7 @@ class BlankNodeLinker implements DocumentUtil.Linker {
 
     static boolean removeDeleted(data) {
         // clean up blank nodes that have been deleted (marked by linking to DELETE)
-        findKey(data, ID_KEY) { value, path ->
+        findKey(data, JsonLd.ID_KEY) { value, path ->
             value == DELETE
                     ? new Remove()
                     : NOP
@@ -59,14 +65,14 @@ class BlankNodeLinker implements DocumentUtil.Linker {
 
         types.each { type ->
             def q = [
-                    (TYPE_KEY): [type],
+                    (JsonLd.TYPE_KEY): [type],
                     "q"       : ["*"],
-                    '_sort'   : [ID_KEY]
+                    '_sort'   : [JsonLd.ID_KEY]
             ]
 
             Iterables.partition(finder.findIds(q), 100).each { List<String> i ->
                 whelk.bulkLoad(i).each { id, doc ->
-                    addDefinition(doc.data[GRAPH_KEY][1])
+                    addDefinition(doc.data[JsonLd.GRAPH_KEY][1])
                 }
             }
         }
@@ -88,7 +94,7 @@ class BlankNodeLinker implements DocumentUtil.Linker {
             }
         }
 
-        String id = definition.isReplacedBy ? definition.isReplacedBy[ID_KEY] : definition[ID_KEY]
+        String id = definition.isReplacedBy ? definition.isReplacedBy[JsonLd.ID_KEY] : definition[JsonLd.ID_KEY]
         identifiers.each { addMapping(it, id) }
     }
 
@@ -119,8 +125,8 @@ class BlankNodeLinker implements DocumentUtil.Linker {
 
     @Override
     List<Map> link(Map blank, List existingLinks) {
-        if (blank[TYPE_KEY] && !(blank[TYPE_KEY] in types)) {
-            incrementCounter('unhandled type', blank[TYPE_KEY])
+        if (blank[JsonLd.TYPE_KEY] && !(blank[JsonLd.TYPE_KEY] in types)) {
+            incrementCounter('unhandled type', blank[JsonLd.TYPE_KEY])
             return
         }
 
@@ -134,7 +140,7 @@ class BlankNodeLinker implements DocumentUtil.Linker {
                 List<String> links = findLinks(blank[key], existingLinks)
                 if (links) {
                     incrementCounter('mapped', blank[key])
-                    return links.collect { [(ID_KEY): it] }
+                    return links.collect { [(JsonLd.ID_KEY): it] }
                 }
             }
         }
@@ -145,7 +151,7 @@ class BlankNodeLinker implements DocumentUtil.Linker {
             }
         }
 
-        if (blank['sameAs'] && !blank['sameAs'].any { knownId(it[ID_KEY]) }) {
+        if (blank['sameAs'] && !blank['sameAs'].any { knownId(it[JsonLd.ID_KEY]) }) {
             incrementCounter('sameAs 404 - removed', blank['sameAs'])
             Map r = new HashMap(blank)
             r.remove('sameAs')
@@ -161,7 +167,7 @@ class BlankNodeLinker implements DocumentUtil.Linker {
         List<String> links = findLinks(blank, existingLinks)
         if (links) {
             incrementCounter('mapped', blank)
-            return links.collect { [(ID_KEY): it] }
+            return links.collect { [(JsonLd.ID_KEY): it] }
         } else {
             incrementCounter('not mapped (canonized values)', canonize(blank))
         }
@@ -240,6 +246,6 @@ class BlankNodeLinker implements DocumentUtil.Linker {
 
     @Override
     String toString() {
-        return "${TYPE_KEY}: $types (${map.size()} mappings)"
+        return "${JsonLd.TYPE_KEY}: $types (${map.size()} mappings)"
     }
 }

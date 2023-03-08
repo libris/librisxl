@@ -16,7 +16,7 @@ import static whelk.util.Jackson.mapper
 @Log
 class HttpTools {
     static void sendResponse(HttpServletResponse response, Map data, String contentType, int statusCode = 200) {
-        if (!data) {
+        if (data == null) {
             sendResponse(response, new byte[0], contentType, statusCode)
         } else {
             sendResponse(response, mapper.writeValueAsBytes(data), contentType, statusCode)
