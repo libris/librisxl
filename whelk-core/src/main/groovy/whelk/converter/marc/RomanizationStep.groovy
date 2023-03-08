@@ -3,13 +3,14 @@ package whelk.converter.marc
 import groovy.transform.CompileStatic
 import groovy.transform.MapConstructor
 import groovy.transform.NullCheck
+import groovy.util.logging.Log4j2 as Log
 import whelk.filter.LanguageLinker
 import whelk.util.DocumentUtil
-import whelk.util.Unicode
 
 import static whelk.Document.deepCopy
 import static whelk.JsonLd.asList
 
+@Log
 class RomanizationStep extends MarcFramePostProcStepBase {
     
     @CompileStatic
@@ -64,6 +65,14 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     List FIELD_REFS = [FIELDREF, BIB035_REF, BIB041_REF, BIB250_REF, HOLD035_REF]
 
     void modify(Map record, Map thing) {
+        try {
+            _modify(record, thing)
+        } catch (Exception e) {
+            log.error("Failed to convert 880: $e", e)
+        }
+    }
+    
+    void _modify(Map record, Map thing) {
         if (!languageResources)
             return
         
@@ -129,6 +138,14 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     }
 
     void unmodify(Map record, Map thing) {
+        try {
+            _unmodify(record, thing)
+        } catch (Exception e) {
+            log.error("Failed to convert 880: $e", e)
+        }
+    }
+    
+    void _unmodify(Map record, Map thing) {
         if (!languageResources)
             return
         
