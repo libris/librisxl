@@ -25,6 +25,7 @@ class Romanizer {
             auto('bg-Cyrl',  'bg-Latn-t-bg-Cyrl-m0-iso-1995', ['bg-iso.txt', 'slavic-iso.txt']), 
             auto('el'     ,  'el-Latn-t-el-Grek-x0-btj', ['el-btj.txt']), 
             auto('grc'    ,  'grc-Latn-t-grc-Grek-x0-skr-1980', ['grc-skr.txt']), 
+            auto('yi'     ,  'yi-Latn-t-yi-Hebr-x0-yivo', ['yi-yivo.txt']), 
             auto('kk-Cyrl',  'kk-Latn-t-kk-Cyrl-m0-iso-1995', ['kk-iso.txt']), 
             auto('mk-Cyrl',  'mk-Latn-t-mk-Cyrl-m0-iso-1995', ['mk-iso.txt', 'slavic-iso.txt']), 
             auto('mn-Cyrl',  'mn-Latn-t-mn-Cyrl-x0-lessing', ['mn-lessing.txt']), 
@@ -59,6 +60,7 @@ class Romanizer {
     }
     
     Map<String, String> romanize(String s, String langTag) {
+        s = Unicode.normalize(s)
         (transliterators[langTag]
                 ?: Unicode.guessIso15924ScriptCode(s)
                     .map {code -> transliterators["$langTag-$code"] }

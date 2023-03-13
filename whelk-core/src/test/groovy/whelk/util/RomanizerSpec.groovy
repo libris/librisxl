@@ -272,4 +272,13 @@ class RomanizerSpec extends Specification {
         // q3wn8w0sns6z7q2v
         "ደፋርዋ ዶሮ"         || "dafārwā doro"
     }
+
+    def "Yiddish with YIVO"() {
+        expect:
+        new Romanizer().romanize(source, 'yi')['yi-Latn-t-yi-Hebr-x0-yivo'] == target
+        where:
+        source                                     || target
+        "קונסט און קינסטלער"                       || "kunst un kinstler"
+        "סאָוויעט רוסלאַנד: ווי איך האָב איהר געזעהן" || "soviet rusland: vi ikh hob ihr gezehn"
+    }
 }
