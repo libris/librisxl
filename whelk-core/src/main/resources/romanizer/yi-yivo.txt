@@ -1,0 +1,52 @@
+# ICU transform rules
+
+# Yiddish
+# "YIVO Institute for Jewish Research"
+# based on
+# https://www.yiddishwit.com/transliteration.html#transliteration
+# which references
+# https://www.yivo.org/Yiddish-Alphabet
+# https://tildeweb.au.dk/au132769/alefbeys.htm
+
+'וו' > 'v' ;
+'זש' > 'zh' ;
+'דזש' > 'dzh' ;
+'טש' > 'tsh' ;
+'וי' > 'oy' ;
+'יי' > 'ey' ;
+'ײַ' > 'ay' ; 
+'אַ' > 'a' ;
+'אָ' > 'o' ;
+'א' > ;
+'בֿ' > 'v' ;
+'ב' > 'b' ;
+'ג' > 'g' ;
+'ד' > 'd' ;
+'ה' > 'h' ;
+'וּ' > 'u' ;
+'ו' > 'u' ;
+'ז' > 'z' ;
+'ח' > 'kh' ;
+'ט' > 't' ;
+'י' > 'i' ;
+'כּ' > 'k' ;
+'כ' > 'kh' ;
+'ך' > 'kh' ;
+'ל' > 'l' ;
+'מ' > 'm' ;
+'ם' > 'm' ;
+'נ' > 'n' ;
+'ן' > 'n' ;
+'ס' > 's' ;
+'ע' > 'e' ;
+'פּ' > 'p' ;
+'פֿ' > 'f' ;
+'ף' > 'f' ;
+'צ' > 'ts' ;
+'ץ' > 'ts' ;
+'ק' > 'k' ;
+'ר' > 'r' ;
+'שׂ' > 's' ;
+'ש' > 'sh' ;
+'תּ' > 't' ;
+'ת' > 's' ;
