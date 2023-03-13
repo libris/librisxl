@@ -842,8 +842,8 @@ class ESQuery {
             def values = (List<String>) it[1]
 
             parseRangeParameter(parameter) { String parameterNoPrefix, RangeParameterPrefix prefix ->
-                // The name of the key in parameterToRanges doesn't matter, we just need to make sure that
-                // any parameter that should be AND'ed gets a unique key (hence the index)
+                // If a parameter has multiple values that should be ANDed we need to make sure that
+                // each value is under its own unique key in parameterToRanges (hence the index)
                 String parameterMapKey = parameter in andParameters ? "${parameterNoPrefix}-${idx}" : parameterNoPrefix
                 Ranges r = parameterToRanges.computeIfAbsent(parameterMapKey, { p ->
                     parameterNoPrefix in dateFields
