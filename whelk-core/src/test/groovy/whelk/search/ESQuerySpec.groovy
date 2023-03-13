@@ -8,6 +8,11 @@ class ESQuerySpec extends Specification {
     void setup() {
         es = new ESQuery()
         es.setKeywords(['bar'] as Set)
+
+        Map context = ["@context": ["langAliasedByLang": ["@id": "langAliased", "@container": "@language"]]]
+        Map display = [:]
+        Map vocab = [:]
+        es.jsonld = new JsonLd(context, display, vocab)
     }
 
     def "should get query string"() {
@@ -96,6 +101,56 @@ class ESQuerySpec extends Specification {
                                             ]]
                                    ]]
 
+        ['and-foo': ['bar', 'baz']]     | [['bool': ['must': [
+                                                        ['bool': [
+                                                            'should': [
+                                                                ['simple_query_string': ['query': 'bar',
+                                                                                         'fields': ['foo'],
+                                                                                         'default_operator': 'AND']],
+                                                            ]
+                                                        ]],
+                                                        ['bool': [
+                                                            'should': [
+                                                                ['simple_query_string': ['query': 'baz',
+                                                                                         'fields': ['foo'],
+                                                                                         'default_operator': 'AND']]
+                                                            ]
+                                                        ]]
+                                                ]]
+                                          ]]
+
+
+        ['foo': ['bar', 'baz'],
+         'not-foo': ['zzz']]     | [['bool': ['must': [
+                                                ['bool': [
+                                                    'should': [
+                                                        ['simple_query_string': ['query': 'bar',
+                                                                                 'fields': ['foo'],
+                                                                                 'default_operator': 'AND']],
+                                                        ['simple_query_string': ['query': 'baz',
+                                                                                 'fields': ['foo'],
+                                                                                 'default_operator': 'AND']]
+                                                    ]
+                                                ]]
+                                            ],
+                                            'must_not': [
+                                                ['bool': [
+                                                    'should': [
+                                                        ['simple_query_string' : ['query': 'zzz',
+                                                                                 'fields': ['foo'],
+                                                                                 'default_operator': 'AND']]
+                                                    ]
+                                                ]]
+                                            ]]
+                                  ]]
+
+
+        ['langAliased': ['baz']] | [['bool': ['must': [
+                                                ['bool': [
+                                                    'should': [
+                                                        ['simple_query_string' : ['query': 'baz',
+                                                                                  'fields': ['__langAliased'],
+                                                                                  'default_operator': 'AND']]]]]]]]]
     }
 
     def "should create bool filter"(String key, String[] vals, Map result) {

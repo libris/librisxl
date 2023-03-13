@@ -91,6 +91,7 @@ class ElasticReindexer {
                 }
             }
             println("Done! $counter documents reindexed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
+            println("New number of mappings/fields in ES: ${whelk.elastic.getFieldCount()}")
             whelk.storage.logStats()
         } catch (Throwable e) {
             println("Reindex failed with:\n" + e.toString() + "\ncallstack:\n" + e.printStackTrace())

@@ -49,24 +49,6 @@ class Normalizers {
         })
     }
 
-    static DocumentNormalizer romanizer(Whelk whelk) {
-        def langAliases = whelk.jsonld.langContainerAlias.values() as Set
-
-        return new Normalizer({ Document doc ->
-            traverse(doc.data, { value, path ->
-                if (value instanceof Map && path && path.last() instanceof String && path.last() in langAliases) {
-                    def byLang = value
-
-                    byLang.keySet()
-                            .intersect(Romanizer.romanizableLangTags())
-                            .collectEntries { langTag -> Romanizer.romanize((String) byLang[langTag], langTag) }
-                            .each { langTagT, stringT -> byLang.putIfAbsent(langTagT, stringT) }
-                }
-                DocumentUtil.NOP
-            })
-        })
-    }
-
     /**
      * Link blank nodes based on "heuristic identifiers"
      * e.g. { "@type": "Role", "label": "Þýðandi"} matches https://id.kb.se/relator/trl on prefLabelByLang.is
@@ -230,11 +212,11 @@ class Normalizers {
 }
 
 class Normalizer implements DocumentNormalizer {
-    BlankNodeLinker linker
+    Object normalizer
     Closure normalizeFunc
 
-    Normalizer(BlankNodeLinker linker, Closure normalizeFunc) {
-        this.linker = linker
+    Normalizer(Object normalizer, Closure normalizeFunc) {
+        this.normalizer = normalizer
         this.normalizeFunc = normalizeFunc
     }
 

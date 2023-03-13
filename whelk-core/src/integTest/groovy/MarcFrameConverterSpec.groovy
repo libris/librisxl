@@ -1,6 +1,6 @@
 package whelk.converter.marc
 
-
+import whelk.Whelk
 import spock.lang.*
 
 
@@ -9,6 +9,7 @@ class MarcFrameConverterSpec extends Specification {
 
     static converter = new MarcFrameConverter() {
         def config
+
         void initialize(Map config) {
             super.initialize(config)
             this.config = config

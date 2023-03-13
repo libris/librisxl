@@ -220,22 +220,26 @@ means `OR`, `*` is used for prefix queries, `""` matches the whole phrase, and
 
 Records can be filtered on field values. Specifying multiple values for the same field can be done
 by repeating the parameter or by giving a comma-separated list as value. Specifying multiple fields 
-means `AND`. Multiple values for the same field means `OR`. It is possible to combine multiple fields 
-with `OR` by using the prefix `or-`.
+means `AND`. Multiple values for the same field means `OR`, unless you use the prefix `and-`.
+It is possible to combine multiple fields with `OR` by using the prefix `or-`.
 
 * `<field>` - The record has this value for `field`.
+* `not-<field>` - The record does not have this value for `field`.
 * `or-<field>` - Combine filters for multiple fields with `OR` instead of `AND`.
+* `and-<field>` - Combine multiple filters for the _same_ field with `AND` instead of `OR`.
 * `exists-<field>` - The field exists in the record. Value should be `true` or `false`.
 * `min-<field>` - Greater or equal to.
 * `minEx-<field>` - Greater than (exclusive minimum).
 * `max-<field>` - Less or equal to.
 * `maxEx-<field>` - Less than.
-* `matches-<field>` - Value is matching (see date-search below).
+* `matches-<field>` - Value is matching (see date-search and "include narrower terms" search below).
+* `and-matches-<field>` - Combine multiple `matches-` filters for the _same_ field with `AND` instead of `OR`.
 
 Filter-expression                                     | Filter-parameters
 ------------------------------------------------------|----------------------------------------------
 a is x `OR` a is y...                                 | `a=x&a=y...`
-a is x `AND` a is y                                   | Not possible.
+a is x `AND` a is `NOT` y...                          | `a=x&not-a=y...`
+a is x `AND` a is y...                                | `and-a=x&and-a=y...`
 a is x `AND` b is y `AND` c is z...                   | `a=x&b=y&c=z...`
 a is x `OR` b is y...                                 | `or-a=x&or-b=y...`
 (a is x `OR` b is y) `AND` c is z...                  | `or-a=x&or-b=y&c=z...`
@@ -322,6 +326,67 @@ $ curl -XGET -H "Accept: application/ld+json" \
 ...
 ```
 
+#### Example
+
+Has subject term/sao/Monster.
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find.jsonld?instanceOf.subject.@id=https://id.kb.se/term/sao/Monster'
+...
+```
+
+#### Example
+
+Has subject term/sao/Monster _or_ subject term/sao/Magi.
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find.jsonld?instanceOf.subject.@id=https://id.kb.se/term/sao/Monster&instanceOf.subject.@id=https://id.kb.se/term/sao/Magi'
+...
+```
+
+#### Example
+
+Has subject term/sao/Monster _and_ subject term/sao/Magi.
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find.jsonld?and-instanceOf.subject.@id=https://id.kb.se/term/sao/Monster&and-instanceOf.subject.@id=https://id.kb.se/term/sao/Magi'
+...
+```
+
+#### Example
+
+Has subject term/sao/Monster _and_ subject term/sao/Magi but _not_ term/sao/Trollkarlar,
+and has genreForm term/saogf/Fantasy.
+```
+$ curl -XGET -H "Accept: application/ld+json" -G \
+    'https://libris-qa.kb.se/find.jsonld' \
+    -d and-instanceOf.subject.@id=https://id.kb.se/term/sao/Monster \
+    -d and-instanceOf.subject.@id=https://id.kb.se/term/sao/Magi \
+    -d not-instanceOf.subject.@id=https://id.kb.se/term/sao/Trollkarlar \
+    -d instanceOf.genreForm.@id=https://id.kb.se/term/saogf/Fantasy
+...
+```
+
+#### Example
+
+Has subject term/sao/Monster (or a narrower term, e.g., Drakar, Gorgoner).
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find.jsonld?matches-instanceOf.subject.@id=https://id.kb.se/term/sao/Monster'
+...
+```
+
+#### Example
+
+Has subject term/sao/Monster (or a narrower term, e.g., Drakar, Gorgoner), _and_ term/sao/Magi (or a narrower term,
+e.g., Amuletter, Häxeri).
+```
+$ curl -XGET -H "Accept: application/ld+json" -G \
+    'https://libris-qa.kb.se/find.jsonld' \
+    -d and-matches-instanceOf.subject.@id=https://id.kb.se/term/sao/Monster \
+    -d and-matches-instanceOf.subject.@id=https://id.kb.se/term/sao/Magi
+...
+```
 
 ### `/_remotesearch` - Search external databases - Requires authentication
 

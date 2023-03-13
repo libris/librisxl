@@ -16,6 +16,7 @@ import whelk.exception.WhelkRuntimeException;
 import whelk.util.BlockingThreadPool;
 import whelk.util.LegacyIntegrationTools;
 import whelk.util.MarcExport;
+import whelk.util.ThreadDumper;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -260,6 +261,10 @@ public class ProfileExport
         {
             usingCollectionRules = "bib";
         }
+        
+        if (collection.equals("auth") && !hasCardChanged(id)) {
+            return false;
+        }
 
         if (profile.getProperty(usingCollectionRules+"create", "ON").equalsIgnoreCase("OFF") && created) {
             logger.debug("Not exporting created {} ({}) for {}", id, collection, profileName);
@@ -305,6 +310,19 @@ public class ProfileExport
         }
 
         return true;
+    }
+
+    private boolean hasCardChanged(String id) {
+        Document currentVersion = m_whelk.getStorage().load(id);
+        Document previousVersion = m_whelk.getStorage().load(id, "-1");
+        if (previousVersion == null) {
+            return true;
+        }
+
+        var jsonLd = m_whelk.getJsonld();
+        var oldCard = jsonLd.toCard(previousVersion.data);
+        var newCard = jsonLd.toCard(currentVersion.data);
+        return !oldCard.equals(newCard);
     }
 
     private Collection<String> getAffectedBibIdsForAuth(String authId, ExportProfile profile) {
@@ -608,12 +626,14 @@ public class ProfileExport
             thread.shutdown();
             // Await all pending writes
             try {
-                int timeout = 180;
+                int timeout = 5 * 60;
                 long p1 = thread.getTaskCount() - thread.getCompletedTaskCount();
                 if (!thread.isTerminated() && !thread.awaitTermination(timeout, TimeUnit.SECONDS)) {
                     long p2 = thread.getTaskCount() - thread.getCompletedTaskCount();
                     var msg = String.format("Could not write all pending records (~%s) within %s seconds. ~%s remaining",
                             p1, timeout, p2);
+                    logger.warn(msg);
+                    logger.warn(ThreadDumper.threadInfo(MarcRecordWriterThread.class.getSimpleName()));
                     throw new IOException(msg);
                 }
             } catch (InterruptedException e) {

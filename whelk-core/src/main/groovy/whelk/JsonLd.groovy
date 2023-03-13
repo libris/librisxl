@@ -36,18 +36,13 @@ class JsonLd {
     static final String CREATED_KEY = "created"
     static final String MODIFIED_KEY = "modified"
     static final String RECORD_STATUS_KEY = "recordStatus"
-    static final String DELETED_KEY = "deleted"
-    static final String COLLECTION_KEY = "collection"
-    static final String CONTENT_TYPE_KEY = "contentType"
-    static final String CHECKSUM_KEY = "checksum"
     static final String NON_JSON_CONTENT_KEY = "content"
-    static final String ALTERNATE_ID_KEY = "identifiers"
     static final String JSONLD_ALT_ID_KEY = "sameAs"
-    static final String CONTROL_NUMBER_KEY = "controlNumber"
     static final String ABOUT_KEY = "mainEntity"
-    static final String APIX_FAILURE_KEY = "apixExportFailedAt"
-    static final String ENCODING_LEVEL_KEY = "marc:encLevel"
 
+    static final String RECORD_TYPE = 'Record'
+    static final String CACHE_RECORD_TYPE = 'CacheRecord'
+    
     static final String SEARCH_KEY = "_str"
 
     static final List<String> NS_SEPARATORS = ['#', '/', ':']
@@ -93,6 +88,7 @@ class JsonLd {
     private Map<String, Set<String>> inRange
 
     Map langContainerAlias = [:]
+    Map langContainerAliasInverted
 
     /**
      * This includes terms that are declared as either set or list containers
@@ -193,6 +189,8 @@ class JsonLd {
                 }
             }
         }
+
+        langContainerAliasInverted = langContainerAlias.collectEntries { e -> [(e.value): e.key] }
     }
 
     @TypeChecked(TypeCheckingMode.SKIP)
@@ -761,7 +759,7 @@ class JsonLd {
         // If result is too small, use chip instead.
         // TODO: Support and use extends + super in card defs instead.)
         if (card.size() < 2) {
-            card = removeProperties(thing, getLens(thing, ['chips']))
+            card = removeProperties(thing, getLens(thing, searchCard ? ['search-chips', 'chips'] : ['chips']))
         }
 
         restorePreserved(card, thing, preservePaths)
@@ -817,17 +815,17 @@ class JsonLd {
         return result
     }
 
-    Object toChip(Object object, List<List> preservePaths = []) {
+    Object toChip(Object object, List<List> preservePaths = [], boolean searchChip = false) {
         if (object instanceof List) {
             return object.withIndex().collect { it, ix ->
-                toChip(it, pathRemainders([ix], preservePaths))
+                toChip(it, pathRemainders([ix], preservePaths), searchChip)
             }
         } else if ((object instanceof Map)) {
             Map result = [:]
-            Map reduced = removeProperties(object, getLens(object, ['chips']))
+            Map reduced = removeProperties(object, getLens(object, searchChip ? ['search-chips', 'chips'] : ['chips']))
             restorePreserved(reduced, (Map) object, preservePaths)
             reduced.each { key, value ->
-                result[key] = toChip(value, pathRemainders([key], preservePaths))
+                result[key] = toChip(value, pathRemainders([key], preservePaths), searchChip)
             }
             return result
         } else {

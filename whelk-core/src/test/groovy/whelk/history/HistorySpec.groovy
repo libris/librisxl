@@ -1,7 +1,6 @@
 package whelk.history
 
 import spock.lang.Specification
-import spock.lang.Ignore
 import whelk.Document
 import whelk.JsonLd
 import whelk.util.Jackson
@@ -11,17 +10,17 @@ class HistorySpec extends Specification {
     def "array(set) order does not matter"() {
         given:
         def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, [:], JsonLdSpec.VOCAB_DATA)
-        def versions =[
+        def versions = [
                 ['@graph': [
-                        ['modified':'2022-02-02T12:00:00Z'],
-                        ['a':[
+                        ['modified': '2022-02-02T12:00:00Z'],
+                        ['a': [
                                 ['@id': 'id1'],
                                 ['b': 'x']
                         ]]
                 ]],
                 ['@graph': [
-                        ['modified':'2022-02-02T12:00:00Z'],
-                        ['a':[
+                        ['modified': '2022-02-02T12:00:00Z'],
+                        ['a': [
                                 ['b': 'x'],
                                 ['@id': 'id1'],
                         ]]
@@ -41,13 +40,13 @@ class HistorySpec extends Specification {
     def "simple value modified"() {
         given:
         def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, [:], JsonLdSpec.VOCAB_DATA)
-        def versions =[
+        def versions = [
                 ['@graph': [
-                        ['modified':'2022-02-02T12:00:00Z'],
+                        ['modified': '2022-02-02T12:00:00Z'],
                         ['a': 'x']
                 ]],
                 ['@graph': [
-                        ['modified':'2022-02-02T12:00:00Z'],
+                        ['modified': '2022-02-02T12:00:00Z'],
                         ['a': 'y']
                 ]]
         ].collect { data ->
@@ -62,20 +61,19 @@ class HistorySpec extends Specification {
         changeSets[1].addedPaths == [["@graph", 1, "a"]] as Set
     }
 
-    @Ignore // TODO/TEMPORARY! Remove @Ignore when we have detailed history again
     def "nested value modified"() {
         given:
         def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, [:], JsonLdSpec.VOCAB_DATA)
-        def versions =[
+        def versions = [
                 ['@graph': [
-                        ['modified':'2022-02-02T12:00:00Z'],
-                        ['a':[
+                        ['modified': '2022-02-02T12:00:00Z'],
+                        ['a': [
                                 ['b': 'x']
                         ]]
                 ]],
                 ['@graph': [
-                        ['modified':'2022-02-02T12:00:00Z'],
-                        ['a':[
+                        ['modified': '2022-02-02T12:00:00Z'],
+                        ['a': [
                                 ['b': 'y']
                         ]]
                 ]]
@@ -92,6 +90,110 @@ class HistorySpec extends Specification {
         changeSets.size() == 2
         changeSets[1].removedPaths == [["@graph", 1, "a", 0, "b"]] as Set
         changeSets[1].addedPaths == [["@graph", 1, "a", 0, "b"]] as Set
+    }
+
+    def "Owner changes deep in structure"() {
+        given:
+        def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, [:], JsonLdSpec.VOCAB_DATA)
+        def versions = [
+                ['changedBy': 'sigel1',
+                 'changedIn': 'xl',
+                 'data':
+                        ['@graph': [
+                                ['modified': '2022-02-01T12:00:00Z'],
+                                ['a': [
+                                        ['b': 'x']
+                                ]]
+                        ]]
+                ],
+                ['changedBy': 'sigel2',
+                 'changedIn': 'xl',
+                 'data':
+                        ['@graph': [
+                                ['modified': '2022-02-02T12:00:00Z'],
+                                ['a': [
+                                        ['b': 'y']
+                                ]]
+                        ]]
+                ]
+        ].collect { change ->
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+        }
+
+        def history = new History(versions, ld)
+        expect:
+        history.getOwnership(["@graph", 1, "a"]).m_manualEditor == "sigel1"
+        history.getOwnership(["@graph", 1, "a", 0, "b"]).m_manualEditor == "sigel2"
+    }
+
+    def "Owner changes deep in structure2"() {
+        given:
+        def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, [:], JsonLdSpec.VOCAB_DATA)
+        def versions = [
+                ['changedBy': 'sigel1',
+                 'changedIn': 'xl',
+                 'data':
+                         ['@graph': [
+                                 ['modified': '2022-02-01T12:00:00Z'],
+                                 ['a': [
+                                         ['b': 'x']
+                                 ]]
+                         ]]
+                ],
+                ['changedBy': 'sigel2',
+                 'changedIn': 'xl',
+                 'data':
+                         ['@graph': [
+                                 ['modified': '2022-02-02T12:00:00Z'],
+                                 ['a': [
+                                         ['b': 'x'],
+                                         ['b': 'y']
+                                 ]]
+                         ]]
+                ]
+        ].collect { change ->
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+        }
+
+        def history = new History(versions, ld)
+        expect:
+        history.getOwnership(["@graph", 1, "a", 0, "b"]).m_manualEditor == "sigel1"
+        history.getOwnership(["@graph", 1, "a", 1, "b"]).m_manualEditor == "sigel2"
+    }
+
+    def "Owner changes deep in structure3"() {
+        given:
+        def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, [:], JsonLdSpec.VOCAB_DATA)
+        def versions = [
+                ['changedBy': 'sigel1',
+                 'changedIn': 'xl',
+                 'data':
+                         ['@graph': [
+                                 ['modified': '2022-02-01T12:00:00Z'],
+                                 ['a': [
+                                         ['b': 'x'],
+                                         ['b': 'y']
+                                 ]]
+                         ]]
+                ],
+                ['changedBy': 'sigel2',
+                 'changedIn': 'xl',
+                 'data':
+                         ['@graph': [
+                                 ['modified': '2022-02-02T12:00:00Z'],
+                                 ['a': [
+                                         ['b': 'x']
+                                 ]]
+                         ]]
+                ]
+        ].collect { change ->
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+        }
+
+        def history = new History(versions, ld)
+        expect:
+        history.getOwnership(["@graph", 1, "a", 0, "b"]).m_manualEditor == "sigel2"
+        history.getOwnership(["@graph", 1, "a", 1, "b"]).m_manualEditor == "sigel2" // Doesn't exist anymore, (should revert to list owner).
     }
 
     def printJson(def c) {

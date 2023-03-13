@@ -1,60 +1,64 @@
-/* 
-In order to only check new records specify file where timestamp of last run is saved with:
+/***************************************************************************************
+
+SYSTEM PARAMETERS:
+
 -Dlast-run-file=</path/to/file>
+    If given, a timestamp of this run is saved in this file, and used to only
+    select new records on the next run.
 
-(Schedule this script to run continuously until Mimer MODS conversion is fixed)
+****************************************************************************************
 
-***********************************************************************************************************************
+PURPOSE: Clean up newspaper (dagstidningar + tidskrifter) shapes.
 
-Clean up newspaper (dagstidningar + tidskrifter) shapes.
-Link digitized newspaper monographs (issues) to their series. That is, replace supplementTo and/or isPartOf with isIssueOf.
+(Schedule this script to run continuously until Mimer MODS conversion is fixed.)
+
+ACTIONS:
+
+This performs one or both of these changes (depending on what is applicable per record):
+
+1. Link digitized newspaper monographs (issues) to their series. That is,
+   replace :supplementTo and/or :isPartOf with :isIssueOf.
+
+2. Change opaque signe codes in :editionStatement to links newspaper editions
+   using :isIssueOfEdition.
 
 Don't touch "Projects" and "Channel records" in supplementTo for now.
 
-Example
-Before
-...
-bf2:title [
-    a bf2:Title ;
-    bf2:mainTitle "DAGENS NYHETER  1900-05-28"
-    ] ;
-...
-bf2:supplementTo [
-    a bf2:Instance ;
-    bf2:instanceOf [
-      a bf2:Work ;
-      bf2:contribution [
-        a bflc:PrimaryContribution ;
-        bf2:agent [
-          a bf2:Agent ;
-          sdo:name "DAGENS NYHETER"
-          ]
-        ]
-      ] ;
-    :describedBy [
-      a :Record ;
-      :controlNumber "13991099"
-      ] ;
-    bf2:identifiedBy [
-      a bf2:Issn ;
-      rdf:value "1101-2447"
-      ] , [
-      a bf2:Strn ;
-      rdf:value "http://libris.kb.se/resource/bib/13991099"
-      ]
-    ] ;
-...
+****************************************************************************************
 
-After
-...
-bf2:title [
-    a bf2:Title ;
-    bf2:mainTitle "DAGENS NYHETER  1900-05-28"
-    ] ;
-...
-kbv:isIssueOf <https://libris.kb.se/m5z2w4lz3m2zxpk#it> ;
-...
+EXAMPLE
 
+BEFORE:
+
+    ?issue
+        ...
+        :hasTitle [ a :Title ; :mainTitle "DAGENS NYHETER  1900-05-28" ] ;
+        ...
+        :supplementTo [ a :Instance ;
+                :instanceOf [ a :Work ;
+                        :contribution [ a :PrimaryContribution ;
+                                :agent [ a :Agent ; :name "DAGENS NYHETER" ]
+                            ]
+                    ] ;
+                :describedBy [ a :Record ; :controlNumber "13991099" ] ;
+                :identifiedBy [ a :Issn ; :value "1101-2447" ] ,
+                    [ a :Strn ; :value "http://libris.kb.se/resource/bib/13991099" ]
+            ] ;
+        ...
+        :editionStatement "0"
+
+AFTER:
+
+    ?issue
+        ...
+        :hasTitle [ a :Title ; :mainTitle "DAGENS NYHETER  1900-05-28" ] ;
+        ...
+        :isIssueOf <https://libris.kb.se/m5z2w4lz3m2zxpk#it> ;
+        ...
+        :isIssueOfEdition <https://libris.kb.se/dataset/signe/edition/0> ;
+        ...
+
+****************************************************************************************
 
 Shapes encountered in dry-run
 
@@ -78,9 +82,9 @@ Examples
 [@type, hasTitle, describedBy, identifiedBy]
 {@type=Instance, hasTitle=[{@type=Title, mainTitle=SVENSKA DAGBLADET}], describedBy=[{@type=Record, controlNumber=13434192}], identifiedBy=[{@type=ISSN, value=2001-3868}]} [0jbj4c5b264549m, 3mfm5p5f1xm7xsv, q828thb23j7cmqr]
 
+There were no supplementTo with multiple controlnumbers (refering to newspaper serials).
 
-There were no supplementTo with multiple controlnumbers (refering to newspaper serials)
-*/
+***************************************************************************************/
 
 import groovy.transform.Memoized
 
@@ -101,14 +105,22 @@ def where = """
     collection = 'bib'
     AND deleted = 'false'
     AND data#>>'{@graph,1,@type}' = 'Electronic'
-    AND (data#>>'{@graph,1,supplementTo}' IS NOT NULL OR data#>>'{@graph,1,isPartOf}' IS NOT NULL)
+    AND (
+        (data#>>'{@graph,1,supplementTo}' IS NOT NULL OR data#>>'{@graph,1,isPartOf}' IS NOT NULL)
+        OR (data#>>'{@graph,1,editionStatement}' IS NOT NULL AND data#>>'{@graph,1,isIssueOfEdition}' IS NULL)
+    )
     ${lastRunTimestamp ? "AND created >= '$lastRunTimestamp'" : ''}
 """
 
 selectBySqlWhere(where) { bib ->
     def (record, thing) = bib.graph
-    
-    if (!thing.supplementTo && !thing.isPartOf) {
+
+    if (!thing.supplementTo && !thing.isPartOf && !thing.editionStatement) {
+        return
+    }
+
+    if(marcGf(thing).with { it && it.any {l -> l != 'issue'}}) {
+        otherMarcGf.println("${thing.'@id'}\t${marcGf(thing)}")
         return
     }
 
@@ -116,14 +128,9 @@ selectBySqlWhere(where) { bib ->
         notMimer.println(thing.'@id')
         return
     }
-    
-    if(marcGf(thing).with { it && it.any {l -> l != 'issue'}}) {
-        otherMarcGf.println("${thing.'@id'}\t${marcGf(thing)}")
-        return
-    }
-    
+
     def isIssueOf = asList(thing.isIssueOf) as Set
-    
+
     def i = ((List) thing.supplementTo).iterator()
     while (i.hasNext()) {
         Map supplementTo = (Map) i.next()
@@ -176,6 +183,15 @@ selectBySqlWhere(where) { bib ->
         }
         if (!thing.isPartOf) {
             thing.remove('isPartOf')
+        }
+    }
+
+    if (thing.editionStatement) {
+        def isIssueOfEdition = getEditionLink(thing.editionStatement)
+        if (isIssueOfEdition) {
+            thing.isIssueOfEdition = ['@id': isIssueOfEdition]
+            bib.scheduleSave()
+            thing.remove('editionStatement')
         }
     }
 }
@@ -289,6 +305,14 @@ boolean isMimerRecord(String id) {
         result = true
     }
     return result
+}
+
+@Memoized
+String getEditionLink(String signeEditionCode) {
+    // To make linking easy, editions have a nominal (not necessarily canonical) id.
+    // NOTE: These are nominal id:s (and not baseUri-dependent).
+    String id = "https://libris.kb.se/dataset/signe/edition/${signeEditionCode}"
+    return findCanonicalId(id)
 }
 
 // --------------------------------------------------------------------------------------

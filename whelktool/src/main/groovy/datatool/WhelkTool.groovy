@@ -38,7 +38,7 @@ import static whelk.util.Jackson.mapper
 class WhelkTool {
     static final int DEFAULT_BATCH_SIZE = 500
     static final int DEFAULT_FETCH_SIZE = 100
-
+    
     Whelk whelk
 
     private GroovyScriptEngineImpl engine
@@ -46,6 +46,9 @@ class WhelkTool {
     File scriptFile
     CompiledScript script
     String scriptJobUri
+
+    private Bindings bindings
+
     private boolean hasStoredScriptJob
 
     String changedIn = "xl"
@@ -63,6 +66,7 @@ class WhelkTool {
     boolean skipIndex
     boolean dryRun
     boolean noThreads = true
+    int numThreads = -1
     boolean stepWise
     int limit = -1
 
@@ -280,7 +284,7 @@ class WhelkTool {
         int batchCount = 0
         Batch batch = new Batch(number: ++batchCount)
 
-        def executorService = useThreads && !isWorkerThread() ? createExecutorService(batchSize) : null
+        def executorService = useThreads && !isWorkerThread() ? createExecutorService() : null
         if (executorService) {
             Thread.setDefaultUncaughtExceptionHandler {
                 Thread thread, Throwable err ->
@@ -343,12 +347,11 @@ class WhelkTool {
         loggerFuture?.cancel(true)
     }
 
-    private def createExecutorService(int batchSize) {
-        int cpus = Runtime.getRuntime().availableProcessors()
-        int maxPoolSize = cpus * 4
-        def linkedBlockingDeque = new LinkedBlockingDeque<Runnable>((int) (maxPoolSize * 1.5))
-
-        def executorService = new ThreadPoolExecutor(cpus, maxPoolSize,
+    private def createExecutorService() {
+        int poolSize = numThreads > 1 ? numThreads : defaultNumThreads()
+        def linkedBlockingDeque = new LinkedBlockingDeque<Runnable>((int) (poolSize * 1.5))
+        
+        def executorService = new ThreadPoolExecutor(poolSize, poolSize,
                 1, TimeUnit.DAYS,
                 linkedBlockingDeque, new ThreadPoolExecutor.CallerRunsPolicy())
 
@@ -362,6 +365,10 @@ class WhelkTool {
         })
 
         return executorService
+    }
+    
+    private static int defaultNumThreads() {
+        Runtime.getRuntime().availableProcessors() * 4
     }
 
     private boolean isWorkerThread() {
@@ -382,9 +389,12 @@ class WhelkTool {
     private boolean processBatch(Closure process, Batch batch, def counter) {
         boolean doContinue = true
         for (DocumentItem item : batch.items) {
+            var globals = new HashSet(bindings.keySet())
+
             if (!useThreads) {
                 repeat "Processing $item.number: ${item.doc.id} ($counter.summary)"
             }
+
             try {
                 doContinue = doProcess(process, item, counter)
             } catch (Throwable err) {
@@ -398,6 +408,15 @@ class WhelkTool {
                 errorDetected = err
                 return false
             }
+
+            var newglobals = bindings.keySet() - globals
+            if (newglobals) {
+                System.err.println("FORBIDDEN - new bindings detected: ${newglobals}")
+                System.err.println("Adding new global bindings during record processing is forbidden (since they share state across threads).")
+                System.err.println("Aborting.")
+                System.exit(1)
+            }
+
             if (!doContinue) {
                 break
             }
@@ -477,7 +496,7 @@ class WhelkTool {
     private boolean doRevertToTime(DocumentItem item) {
 
         // The 'versions' list is sorted, with the oldest version first.
-        List<Document> versions = whelk.storage.loadAllVersions(item.doc.shortId)
+        List<Document> versions = item.getVersions()
 
         ZonedDateTime restoreTime = ZonedDateTime.parse(item.restoreToTime)
 
@@ -519,7 +538,7 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
-            whelk.storeAtomicUpdate(doc, !item.loud, true, true, changedIn, scriptJobUri, item.preUpdateChecksum)
+            whelk.storeAtomicUpdate(doc, !item.loud, true, changedIn, scriptJobUri, item.preUpdateChecksum)
         }
         modifiedLog.println(doc.shortId)
     }
@@ -530,8 +549,8 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(scriptJobUri)
         if (!dryRun) {
-            if (!whelk.createDocument(doc, changedIn, scriptJobUri,
-                    LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld()), false, true))
+            var collection = LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld())
+            if (!whelk.createDocument(doc, changedIn, scriptJobUri, collection, false))
                 throw new WhelkException("Failed to save a new document. See general whelk log for details.")
         }
         createdLog.println(doc.shortId)
@@ -628,7 +647,7 @@ class WhelkTool {
 
     private void run() {
         whelk.setSkipIndex(skipIndex)
-        
+
         log "Running Whelk against:"
         log "  PostgreSQL:"
         log "    url:     ${whelk.storage.connectionPool.getJdbcUrl()}"
@@ -647,8 +666,10 @@ class WhelkTool {
         if (limit > -1) log "  limit: $limit"
         if (allowLoud) log "  allowLoud"
         log()
-        Bindings bindings = createMainBindings()
+
+        bindings = createMainBindings()
         script.eval(bindings)
+
         finish()
     }
 
@@ -687,6 +708,7 @@ class WhelkTool {
         cli.I(longOpt:'skip-index', 'Do not index any changes, only write to storage.')
         cli.d(longOpt:'dry-run', 'Do not save any modifications.')
         cli.T(longOpt:'no-threads', 'Do not use threads to parallellize batch processing.')
+        cli.t(longOpt:'num-threads', args:1, argName:'N', "Override default number of threads (${defaultNumThreads()}).")
         cli.s(longOpt:'step', 'Change one document at a time, prompting to continue.')
         cli.l(longOpt:'limit', args:1, argName:'LIMIT', 'Amount of documents to process.')
         cli.a(longOpt:'allow-loud', 'Allow scripts to do loud modifications.')
@@ -706,6 +728,7 @@ class WhelkTool {
         tool.dryRun = options.d
         tool.stepWise = options.s
         tool.noThreads = options.T
+        tool.numThreads = options.t ? Integer.parseInt(options.t) : -1
         tool.limit = options.l ? Integer.parseInt(options.l) : -1
         tool.allowLoud = options.a
         tool.run()
@@ -759,7 +782,7 @@ class DocumentItem {
     }
 
     def getVersions() {
-        whelk.loadAllVersionsByMainId(doc.shortId)
+        whelk.storage.loadAllVersions(doc.shortId)
     }
 
     Map asCard(boolean withSearchKey = false) {

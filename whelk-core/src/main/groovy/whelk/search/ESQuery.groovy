@@ -1,6 +1,6 @@
 package whelk.search
 
-import groovy.transform.CompileDynamic
+
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.transform.TypeCheckingMode
@@ -12,6 +12,7 @@ import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
+import static whelk.component.ElasticSearch.flattenedLangMapKey
 import static whelk.util.Jackson.mapper
 
 @CompileStatic
@@ -27,8 +28,24 @@ class ESQuery {
     private static final List RESERVED_PARAMS = [
         'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens', '_stats', '_suggest', '_site'
     ]
-    private static final String OR_PREFIX = 'or-'
+    public static final String AND_PREFIX = 'and-'
+    public static final String AND_MATCHES_PREFIX = 'and-matches-'
+    public static final String OR_PREFIX = 'or-'
+    private static final String NOT_PREFIX = 'not-'
     private static final String EXISTS_PREFIX = 'exists-'
+
+    private static final Map recordsOverCacheRecordsBoost = [
+            'bool': ['should': [
+                    ['constant_score': [
+                            'filter': [ 'term': [ (JsonLd.RECORD_KEY + '.' + JsonLd.TYPE_KEY) : JsonLd.RECORD_TYPE ]],
+                            'boost': 1000.0
+                    ]],
+                    ['constant_score': [
+                            'filter': [ 'term': [ (JsonLd.RECORD_KEY + '.' + JsonLd.TYPE_KEY) : JsonLd.CACHE_RECORD_TYPE ]],
+                            'boost': 1.0
+                    ]]
+            ]]
+    ]
 
     private Map<String, List<String>> boostFieldsByType = [:]
     private ESQueryLensBoost lensBoost
@@ -51,6 +68,11 @@ class ESQuery {
             this.keywordFields =  getKeywordFields(mappings)
             this.dateFields = getFieldsOfType('date', mappings)
             this.nestedFields = getFieldsOfType('nested', mappings)
+            
+            if (mappings['properties']['__prefLabel']) {
+                whelk.elastic.ENABLE_SMUSH_LANG_TAGGED_PROPS = true
+                log.info("ENABLE_SMUSH_LANG_TAGGED_PROPS = true")
+            }
         } else {
             this.keywordFields = Collections.emptySet()
             this.dateFields = Collections.emptySet()
@@ -137,7 +159,6 @@ class ESQuery {
         ]
 
         // In case of suggest/autocomplete search, target a specific field with a specific query type
-        // TODO: make language (sv, en) configurable?
         Map queryClauses = simpleQuery
 
         String[] boostParam = queryParameters.get('_boost')
@@ -171,13 +192,15 @@ class ESQuery {
                 ]
             ]
 
-            queryClauses = [
-                'bool': ['should': [
-                    boostedExact,
-                    boostedSoft,
-                    simpleQuery
-                ]]
-            ]
+            queryClauses = ['bool':
+                ['must': [
+                    ['bool': [ 'should': [
+                        boostedExact,
+                        boostedSoft,
+                        simpleQuery]]], 
+                    recordsOverCacheRecordsBoost
+                ]
+            ]]
         }
 
         Map query
@@ -494,6 +517,7 @@ class ESQuery {
     List getFilters(Map<String, String[]> queryParameters) {
         def queryParametersCopy = new HashMap<>(queryParameters)
         List filters = []
+        List filtersForNot = []
 
         def (handledParameters, rangeFilters) = makeRangeFilters(queryParametersCopy)
         handledParameters.each {queryParametersCopy.remove(it)}
@@ -506,14 +530,38 @@ class ESQuery {
             filters.addAll(createNestedBoolFilters(key, vals))
         }
 
-        notNested.removeAll {it.key in RESERVED_PARAMS}
+        List notNestedGroupsForNot = []
+        notNested.removeAll {
+            if (it.key in RESERVED_PARAMS) {
+                return true
+            }
+            // Any not-<field> is removed from notNested and added to a separate list,
+            // since we need to deal with them separately
+            if (it.key.startsWith(NOT_PREFIX)) {
+                it.value.each { inner_value ->
+                    notNestedGroupsForNot << [(it.key.substring(NOT_PREFIX.size())): [inner_value]]
+                }
+                return true
+            }
+        }
 
         getOrGroups(notNested).each { m ->
             filters << createBoolFilter(m)
         }
+        notNestedGroupsForNot.each { m ->
+            filtersForNot << createBoolFilter(m)
+        }
 
+        Map allFilters = [:]
         if (filters) {
-            return [['bool': ['must': filters]]]
+            allFilters['must'] = filters
+        }
+        if (filtersForNot) {
+            allFilters['must_not'] = filtersForNot
+        }
+
+        if (allFilters) {
+            return [['bool': allFilters]]
         } else {
             return null
         }
@@ -534,6 +582,7 @@ class ESQuery {
     @CompileStatic(TypeCheckingMode.SKIP)
     private List<Map> getOrGroups(Map<String, String[]> parameters) {
         def or = [:]
+        def and = []
         def other = [:]
         def p = [:]
 
@@ -547,6 +596,13 @@ class ESQuery {
             }
             else if (key.startsWith(OR_PREFIX)) {
                 or.put(key.substring(OR_PREFIX.size()), value)
+            }
+            else if (key.startsWith(AND_PREFIX)) {
+                // For AND on the same field to work, we need a separate
+                // map for each value
+                value.each {
+                    and << [(key.substring(AND_PREFIX.size())): [it]]
+                }
             }
             else {
                 other.put(key, value)
@@ -563,6 +619,9 @@ class ESQuery {
         List result = other.collect {[(it.getKey()): it.getValue()]}
         if (or.size() > 0) {
             result.add(or)
+        }
+        if (and.size() > 0) {
+            result.addAll(and)
         }
         if (p.size() > 0) {
             result.add(p)
@@ -593,13 +652,19 @@ class ESQuery {
         for (int i = 0 ; i < maxLen ; i++) {
             List<Map> musts = nestedQuery.findResults {
                 it.value.length > i 
-                    ? ['match': [(it.key): it.value[i]]]
+                    ? ['match': [(expandLangMapKeys(it.key)): it.value[i]]]
                     : null
             }
             
             result << [ 'nested': [
                             'path': prefix, 
                             'query': ['bool': ['must': musts]]]]
+        }
+
+        // Implicit OR
+        // identifiedBy.value=A&identifiedBy.value=B is expected to work the same way as for non-nested docs 
+        if (nestedQuery.size() == 1 && nestedQuery[nestedQuery.keySet().first()].size() > 1) {
+            result = [['bool': ['should': result]]]
         }
 
         return result
@@ -662,7 +727,7 @@ class ESQuery {
                     boolean isSimple = isSimple(val)
                     clauses.add([(isSimple ? 'simple_query_string' : 'query_string'): [
                             'query'           : isSimple ? val : escapeNonSimpleQueryString(val),
-                            'fields'          : [field],
+                            'fields'          : [expandLangMapKeys(field)],
                             'default_operator': 'AND'
                     ]])
                 }
@@ -670,6 +735,19 @@ class ESQuery {
         }
 
         return ['bool': ['should': clauses]]
+    }
+    
+    private String expandLangMapKeys(String field) {
+        if (whelk?.elastic && !whelk.elastic.ENABLE_SMUSH_LANG_TAGGED_PROPS) {
+            return field
+        }
+        
+        var parts = field.split('\\.')
+        if (parts && parts[-1] in jsonld.langContainerAlias.keySet()) {
+            parts[-1] = flattenedLangMapKey(parts[-1])
+            return parts.join('.')
+        }
+        return field
     }
 
     private static boolean parseBoolean(String parameterName, String value) {
@@ -735,30 +813,42 @@ class ESQuery {
     /**
      * Construct "range query" filters for parameters prefixed with any {@link RangeParameterPrefix}
      * Ranges for different parameters are ANDed together
-     * Multiple ranges for the same parameter are ORed together
+     * Multiple ranges for the same parameter are ORed together, unless prefixed with `and-`
      *
      * Range endpoints are matched in the order they appear
      * e.g. minEx-x=1984&maxEx-x=1988&minEx-x=1993&min-x=2000&maxEx-x=1995
      * means 1984 < x < 1988 OR 1993 < x < 1995 OR x >= 2000
      */
     Tuple2<Set<String>, List> makeRangeFilters(Map<String, String[]> queryParameters) {
-        Map<String, Ranges> parameterToRanges = [:]
+        List<Ranges> parameterToRanges = []
         Set<String> handledParameters = new HashSet<>()
+        List<Tuple2<String, List>> queryParamsList = []
 
         queryParameters.each { parameter, values ->
+            if (parameter.startsWith(AND_MATCHES_PREFIX)) {
+                values.each { queryParamsList.add(new Tuple2(parameter.substring(AND_PREFIX.size()), [it])) }
+                handledParameters.add(parameter)
+            } else {
+                queryParamsList.add(new Tuple2(parameter, values))
+            }
+        }
+
+        queryParamsList.each { it ->
+            def parameter = (String) it[0]
+            def values = (List<String>) it[1]
+
             parseRangeParameter(parameter) { String parameterNoPrefix, RangeParameterPrefix prefix ->
-                Ranges r = parameterToRanges.computeIfAbsent(parameterNoPrefix, { p ->
-                    p in dateFields 
-                            ? Ranges.date(p, whelk.getTimezone(), whelk) 
-                            : Ranges.nonDate(p, whelk) 
-                })
-                
+                Ranges r = parameterNoPrefix in dateFields
+                        ? Ranges.date(parameterNoPrefix, whelk.getTimezone(), whelk)
+                        : Ranges.nonDate(parameterNoPrefix, whelk)
+
                 values.each { it.tokenize(',').each { r.add(prefix, it.trim()) } }
+                parameterToRanges.add(r)
                 handledParameters.add(parameter)
             }
         }
 
-        def filters = parameterToRanges.values().collect { it.toQuery() }
+        def filters = parameterToRanges.collect { it.toQuery() }
 
         return new Tuple2(handledParameters, filters)
     }

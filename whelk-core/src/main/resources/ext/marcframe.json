@@ -7152,7 +7152,7 @@
                     "@type": "Language",
                     "label": "Svenska"
                   },
-                  "marc:version": "NT 81."
+                  "version": "NT 81."
                 }
               }
             }
@@ -7549,7 +7549,7 @@
               }],
               "musicMedium": [{"@type": "MusicMedium", "label": "piano, orkester"}],
               "musicKey": "c-moll;",
-              "version": "arr. piano (3), 10 h"
+              "marc:arrangedStatementForMusic": "arr. piano (3), 10 h"
             }
           }}
         },
@@ -7961,7 +7961,7 @@
                 "mainTitle": "Correspondence"
               } ],
               "language": {"@type": "Language", "label": "English"},
-              "marc:version": "Selections"
+              "version": "Selections"
             }
           }}
         }
@@ -10138,6 +10138,11 @@
         "resourceType": "Layout",
         "property": "label"
       },
+      "$l": {
+        "addLink": "binding",
+        "resourceType": "Binding",
+        "property": "label", "infer": true
+      },
       "$m": {
         "addLink": "bookFormat",
         "resourceType": "BookFormat",
@@ -10277,6 +10282,22 @@
                 {
                   "@type": "Material",
                   "label": "akvarell"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "binding",
+          "source":  [
+            {"340": {"ind1": " ", "ind2": " ", "subfields": [{"l": "coptic bindings"}]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "binding": [
+                {
+                  "@type": "Binding",
+                  "label": "coptic bindings"
                 }
               ]
             }
@@ -16911,6 +16932,51 @@
                     } ],
                     "language": {"@type": "Language", "label": "Svenska."}
                   }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"730": {"ind1": "0", "ind2": " ", "subfields": [
+            {"a": "Noter med relation"},
+            {"o": "arr."}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "relationship": [
+                {
+                  "@type": "Relationship",
+                  "entity": {
+                    "@type": "Work",
+                    "hasTitle": [ {
+                      "@type": "Title",
+                      "mainTitle": "Noter med relation"
+                    } ],
+                    "marc:arrangedStatementForMusic": "arr."
+                  }
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": {"730": {"ind1": "0", "ind2": "2", "subfields": [
+            {"a": "Noter med del"},
+            {"o": "arr."}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasPart": [
+                {
+                  "@type": "Work",
+                  "hasTitle": [ {
+                    "@type": "Title",
+                    "mainTitle": "Noter med del"
+                  } ],
+                  "marc:arrangedStatementForMusic": "arr."
                 }
               ]
             }

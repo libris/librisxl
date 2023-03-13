@@ -207,22 +207,26 @@ innebär `ELLER`, `*` används för prefixsökningar, `""` matchar hela frasen o
   
 Sökningen kan filtreras på värdet på egenskaper i posten. Samma egenskap kan anges flera gånger genom
 att upprepa parametern eller genom att komma-separera värdena. Om olika egenskaper anges innebär det 
-`OCH`. Om samma egenskap anges flera gånger innebär det `ELLER`. Det går att kombinera olika egenskaper 
-med `ELLER` genom att använda prefixet `or-`.
+`OCH`. Om samma egenskap anges flera gånger innebär det `ELLER`, såvida inte prefixet `and-` används.
+Det går att kombinera olika egenskaper med `ELLER` genom att använda prefixet `or-`.
 
 * `<egenskap>` - Egenskapen har värdet.
+* `not-<egenskap>` - Egenskapen har inte värdet.
 * `or-<egenskap>` - Kombinera filter för olika egenskaper med `ELLER` istället för `OCH`.
+* `and-<field>` - Kombinera filter för _samma_ egenskap med `OCH` istället för `ELLER`.
 * `exists-<egenskap>` - Egenskapen existerar. Ange ett booleskt värde, d.v.s. `true` eller `false`.
 * `min-<egenskap>` - Värdet är större eller lika med.
 * `minEx-<egenskap>` - Värdet är större än (Ex står för "Exclusive").
 * `max-<egenskap>` - Värdet är mindre eller lika med.
 * `maxEx-<egenskap>` - Värdet är mindre än.
-* `matches-<egenskap>` - Värdet matchar (se datum-sökning nedan).
+* `matches-<egenskap>` - Värdet matchar (se datumsökning och "inkludera underordnade termer"-sökning nedan).
+* `and-matches-<field>` - Kombinera flera `matches`-filter för _samma_ fält med `OCH` istället för `ELLER`.
 
  Filter-uttryck                                        | Filter-parametrar    
 -------------------------------------------------------|-----------------------                 
  a är x `ELLER` a är y...                              | `a=x&a=y...`
- a är x `OCH` a är y                                   | Inte möjligt.
+ a är x `OCH` a är `INTE` y...                         | `a=x&not-a=y...`
+ a är x `OCH` a är y...                                | `and-a=x&and-a=y...`
  a är x `OCH` b är y `OCH` c är z...                   | `a=x&b=y&c=z...`
  a är x `ELLER` b är y...                              | `or-a=x&or-b=y...`          
  (a är x `ELLER` b är y) `OCH` c är z...               | `or-a=x&or-b=y&c=z...`  
@@ -308,6 +312,67 @@ $ curl -XGET -H "Accept: application/ld+json" \
 ...
 ```
 
+#### Exempel
+
+Har ämne term/sao/Monster.
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find.jsonld?instanceOf.subject.@id=https://id.kb.se/term/sao/Monster'
+...
+```
+
+#### Exempel
+
+Har ämne term/sao/Monster _eller_ term/sao/Magi.
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find.jsonld?instanceOf.subject.@id=https://id.kb.se/term/sao/Monster&instanceOf.subject.@id=https://id.kb.se/term/sao/Magi'
+...
+```
+
+#### Exempel
+
+Har ämne term/sao/Monster _och_ term/sao/Magi.
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find.jsonld?and-instanceOf.subject.@id=https://id.kb.se/term/sao/Monster&and-instanceOf.subject.@id=https://id.kb.se/term/sao/Magi'
+...
+```
+
+#### Exempel
+
+Har ämne term/sao/Monster _och_ term/sao/Magi men _inte_ term/sao/Trollkarlar,
+och har genre/form term/saogf/Fantasy.
+```
+$ curl -XGET -H "Accept: application/ld+json" -G \
+    'https://libris-qa.kb.se/find.jsonld' \
+    -d and-instanceOf.subject.@id=https://id.kb.se/term/sao/Monster \
+    -d and-instanceOf.subject.@id=https://id.kb.se/term/sao/Magi \
+    -d not-instanceOf.subject.@id=https://id.kb.se/term/sao/Trollkarlar \
+    -d instanceOf.genreForm.@id=https://id.kb.se/term/saogf/Fantasy
+...
+```
+
+#### Exempel
+
+Har ämne term/sao/Monster (eller en underordnad term, t.ex. Drakar, Gorgoner).
+```
+$ curl -XGET -H "Accept: application/ld+json" \
+    'https://libris-qa.kb.se/find.jsonld?matches-instanceOf.subject.@id=https://id.kb.se/term/sao/Monster'
+...
+```
+
+#### Exempel
+
+Har ämne term/sao/Monster (eller en underordnad term, t.ex. Drakar, Gorgoner), _och_ term/sao/Magi (eller en underordnad term,
+t.ex. Amuletter, Häxeri).
+```
+$ curl -XGET -H "Accept: application/ld+json" -G \
+    'https://libris-qa.kb.se/find.jsonld' \
+    -d and-matches-instanceOf.subject.@id=https://id.kb.se/term/sao/Monster \
+    -d and-matches-instanceOf.subject.@id=https://id.kb.se/term/sao/Magi
+...
+```
 
 ### `/_remotesearch` - Sök i externa databaser  - Kräver autentisering
 

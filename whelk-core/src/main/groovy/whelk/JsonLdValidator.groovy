@@ -184,8 +184,9 @@ class JsonLdValidator {
                 if (value !instanceof Map) {
                     handleError(new Error(Error.Type.OBJECT_TYPE_EXPECTED, key, value), validation)
                 }
-            }
-            else if (value !instanceof String) {
+            } else if (value !instanceof String && value !instanceof List) {
+                handleError(new Error(Error.Type.UNEXPECTED, key, value), validation)
+            } else if (value instanceof List && value.any{ it !instanceof String }) {
                 handleError(new Error(Error.Type.UNEXPECTED, key, value), validation)
             }
             return true

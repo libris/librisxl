@@ -3,6 +3,8 @@ package whelk.util
 import com.ibm.icu.text.Transliterator
 import groovy.yaml.*
 
+import static whelk.util.Unicode.normalize
+
 /**
  * Convert mappings from LOC's ScriptShifter in homegrown YAML format to ICU transform rules
  * https://github.com/lcnetdev/transliterator/
@@ -12,11 +14,11 @@ class ScriptShifterShifter {
     static final String BASE = 'https://raw.githubusercontent.com/lcnetdev/transliterator/main/scriptshifter/tables/data/'
     
     static final Map tables = [
-            'armenian'               : 'hy-Latn-t-hy-m0-alaloc',
+            'armenian'               : 'hy-Latn-t-hy-Armn-m0-alaloc',
             'azerbaijani'            : 'az-Latn-t-az-Cyrl-m0-alaloc',
             'chinese'                : 'zh-Latn-t-zh-Hani-m0-alaloc',
-            'church_slavonic'        : 'chu-Latn-t-chu-m0-alaloc',
-            'ethiopic'               : 'am-Latn-t-am-m0-alaloc',
+            'church_slavonic'        : 'chu-Latn-t-chu-Cyrs-m0-alaloc',
+            'ethiopic'               : 'am-Latn-t-am-Ethi-m0-alaloc',
             'georgian'               : 'ka-Latn-t-ka-m0-alaloc',
             'hindi'                  : 'hi-Latn-t-hi-Deva-m0-alaloc',
             'kyrgyz'                 : 'kir-Latn-t-kir-Cyrl-m0-alaloc',
@@ -53,14 +55,16 @@ class ScriptShifterShifter {
             // Sort on key length so that rules don't shadow each other
             s.append('# script_to_roman\n')
             Map map = table.script_to_roman.map
+            map = map.collectEntries { k, v -> [(normalize(k)) : normalize(v ?: '')] }
             map.sort { a, b -> b.key.length() <=> a.key.length() }.each { k, v->
-                s.append("${quote(k)} > ${quote(v ?: '')} ;\n")
+                s.append("${quote(k)} > ${quote(v)} ;\n")
             }
             
             s.append('# roman_to_script\n')
             map = table.roman_to_script?.map ?: [:]
+            map = map.collectEntries { k, v -> [(normalize(k)) : normalize(v ?: '')] }
             map.sort { a, b -> b.key.length() <=> a.key.length() }.each { k, v->
-                s.append("${quote(v ?: '')} < ${quote(k)} ;\n")
+                s.append("${quote(v)} < ${quote(k)} ;\n")
             }
             
             String rules = s.toString()

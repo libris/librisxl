@@ -274,6 +274,11 @@ public class History {
 
         // Keep scanning
         if (examining instanceof List) {
+            // Removing from a list (reducing it in size) claims ownership of the list
+            // Other removals mixed with additions cannot be distinguished from modifications
+            if (((List) correspondingPrevious).size() > ((List) examining).size())
+                setOwnership(correspondingPath, null, version);
+
             // Create copies of the two lists (so that they can be manipulated)
             // and remove from them any elements that _have an identical copy_ in the
             // other list.
@@ -310,22 +315,6 @@ public class History {
             // indexes.
             if (path.size() > 1) {
 
-                // Find new elements that weren't there before
-                Iterator newIt = tempNew.iterator();
-                while (newIt.hasNext()) {
-                    Object obj = newIt.next();
-                    List list = (List) examining;
-                    for (int i = 0; i < list.size(); ++i) {
-
-                        if (obj == list.get(i)) { // pointer identity is intentional
-                            List<Object> newPath = new ArrayList<>(path);
-                            newPath.add(i);
-                            ((HashSet) changeSet.get("addedPaths")).add(newPath);
-                            newIt.remove(); // TEMPORARY! Remove this line to get the more detailed history again!
-                            //System.err.println(" Add (and keep scanning): " + newPath);
-                        }
-                    }
-                }
                 // Find removed elements that are no longer there
                 Iterator oldIt = tempOld.iterator();
                 while (oldIt.hasNext()) {
@@ -337,8 +326,25 @@ public class History {
                             List<Object> newPath = new ArrayList<>(correspondingPath);
                             newPath.add(i);
                             ((HashSet) changeSet.get("removedPaths")).add(newPath);
-                            oldIt.remove(); // TEMPORARY! Remove this line to get the more detailed history again!
+                            clearOwnership(newPath);
                             //System.err.println(" Remove (and keep scanning): " + newPath);
+                        }
+                    }
+                }
+
+                // Find new elements that weren't there before
+                Iterator newIt = tempNew.iterator();
+                while (newIt.hasNext()) {
+                    Object obj = newIt.next();
+                    List list = (List) examining;
+                    for (int i = 0; i < list.size(); ++i) {
+
+                        if (obj == list.get(i)) { // pointer identity is intentional
+                            List<Object> newPath = new ArrayList<>(path);
+                            newPath.add(i);
+                            ((HashSet) changeSet.get("addedPaths")).add(newPath);
+                            setOwnership(newPath, compositePath, version);
+                            //System.err.println(" Add (and keep scanning): " + newPath);
                         }
                     }
                 }
@@ -373,16 +379,21 @@ public class History {
 
     private void setOwnership(List<Object> newPath, List<Object> compositePath,
                               DocumentVersion version) {
+
+        //System.err.print(" *** Setting ownership of " + newPath + " to " + version.changedIn + "/" + version.changedBy + " classified script? : " + wasScriptEdit(version));
+
         List<Object> path;
         if (compositePath != null) {
             path = compositePath;
         } else {
             path = newPath;
         }
+        //System.err.println(" to: " + new Ownership(version, m_pathOwnership.get(path)));
         m_pathOwnership.put( path, new Ownership(version, m_pathOwnership.get(path)) );
     }
 
     private void clearOwnership(List<Object> removedPath) {
+        //System.err.println(" *** Clearing ownership of " + removedPath);
         Iterator<List<Object>> it = m_pathOwnership.keySet().iterator();
         while (it.hasNext()) {
             List<Object> keyPath = it.next();
