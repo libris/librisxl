@@ -813,42 +813,50 @@ class ESQuery {
     /**
      * Construct "range query" filters for parameters prefixed with any {@link RangeParameterPrefix}
      * Ranges for different parameters are ANDed together
-     * Multiple ranges for the same parameter are ORed together, unless prefixed with `and-`
+     * Multiple ranges for the same parameter are ORed together, the only exception being when `matches-`
+     * is itself prefixed with `and-`.
      *
      * Range endpoints are matched in the order they appear
      * e.g. minEx-x=1984&maxEx-x=1988&minEx-x=1993&min-x=2000&maxEx-x=1995
      * means 1984 < x < 1988 OR 1993 < x < 1995 OR x >= 2000
      */
     Tuple2<Set<String>, List> makeRangeFilters(Map<String, String[]> queryParameters) {
-        List<Ranges> parameterToRanges = []
+        Map<String, Ranges> parameterToRanges = [:]
+        Set<String> andParameters = new HashSet<>()
         Set<String> handledParameters = new HashSet<>()
         List<Tuple2<String, List>> queryParamsList = []
 
         queryParameters.each { parameter, values ->
             if (parameter.startsWith(AND_MATCHES_PREFIX)) {
                 values.each { queryParamsList.add(new Tuple2(parameter.substring(AND_PREFIX.size()), [it])) }
+                // `and-matches-` needs some special handling, so keep track of parameters that should be ANDed
+                andParameters.add(parameter.substring(AND_PREFIX.size()))
                 handledParameters.add(parameter)
             } else {
                 queryParamsList.add(new Tuple2(parameter, values))
             }
         }
 
-        queryParamsList.each { it ->
+        queryParamsList.eachWithIndex { it, idx ->
             def parameter = (String) it[0]
             def values = (List<String>) it[1]
 
             parseRangeParameter(parameter) { String parameterNoPrefix, RangeParameterPrefix prefix ->
-                Ranges r = parameterNoPrefix in dateFields
-                        ? Ranges.date(parameterNoPrefix, whelk.getTimezone(), whelk)
-                        : Ranges.nonDate(parameterNoPrefix, whelk)
+                // If a parameter has multiple values that should be ANDed we need to make sure that
+                // each value is under its own unique key in parameterToRanges (hence the index)
+                String parameterMapKey = parameter in andParameters ? "${parameterNoPrefix}-${idx}" : parameterNoPrefix
+                Ranges r = parameterToRanges.computeIfAbsent(parameterMapKey, { p ->
+                    parameterNoPrefix in dateFields
+                            ? Ranges.date(parameterNoPrefix, whelk.getTimezone(), whelk)
+                            : Ranges.nonDate(parameterNoPrefix, whelk)
+                })
 
                 values.each { it.tokenize(',').each { r.add(prefix, it.trim()) } }
-                parameterToRanges.add(r)
                 handledParameters.add(parameter)
             }
         }
 
-        def filters = parameterToRanges.collect { it.toQuery() }
+        def filters = parameterToRanges.values().collect { it.toQuery() }
 
         return new Tuple2(handledParameters, filters)
     }
