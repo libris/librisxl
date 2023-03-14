@@ -243,7 +243,7 @@ LanguageLinker getLangLinker() {
     LanguageLinker linker
 
     selectByIds(['https://id.kb.se/vocab/']) {
-        linker = it.whelk.normalizer.normalizers.find { it.getLinker() instanceof LanguageLinker }.getLinker()
+        linker = it.whelk.normalizer.normalizers.find { it.getNormalizer() instanceof LanguageLinker }.getNormalizer()
     }
 
     return linker
