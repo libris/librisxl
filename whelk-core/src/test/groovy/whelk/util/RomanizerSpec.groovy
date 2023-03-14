@@ -108,6 +108,9 @@ class RomanizerSpec extends Specification {
         // Test record seems to be made with a transliterator that doesn't handle case correctly
         //'ВХУТЕМАС - ВХУТЕИН. Полиграфический факультет. 1920-1930' | 'VChUTEMAS - VChUTEIN. Poligrafičeskij fakulʹtet. 1920-1930'
         'ВХУТЕМАС - ВХУТЕИН. Полиграфический факультет. 1920-1930' | 'VCHUTEMAS - VCHUTEIN. Poligrafičeskij fakulʹtet. 1920-1930'
+        // Hard sign
+        'съесть' || 'sʺestʹ'
+        'съ'     || 's'
     }
 
     def "Belarusian with ISO"() {
