@@ -1,6 +1,6 @@
 {
   "type": "Romanization",
-  "_spec": [
+  "_TODO:requires-whelk-with-i18n-dataset:_spec": [
     {
       "name": "revert-245",
       "result": {
