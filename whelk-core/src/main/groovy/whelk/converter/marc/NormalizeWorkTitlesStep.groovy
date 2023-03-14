@@ -9,7 +9,7 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
 
     List<String> titleProps = ['hasTitle', 'musicKey', 'musicMedium', 'version', 'legalDate', 'originDate', 'marc:arrangedStatementForMusic']
 
-    LanguageLinker langLinker = getLangLinker()
+    LanguageLinker langLinker
 
     void modify(Map record, Map thing) {
 //        traverse(thing, null, true)
@@ -173,9 +173,5 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
         langLinker.linkLanguages(expressionOf, workLang + trlOfLang)
         def exprOfLang = asList(expressionOf['language'])
         return (workLang + trlOfLang).containsAll(exprOfLang)
-    }
-
-    LanguageLinker getLangLinker() {
-        //TODO
     }
 }
