@@ -283,5 +283,32 @@ class RomanizerSpec extends Specification {
         source                                     || target
         "קונסט און קינסטלער"                       || "kunst un kinstler"
         "סאָוויעט רוסלאַנד: ווי איך האָב איהר געזעהן" || "soviet rusland: vi ikh hob ihr gezehn"
+        // https://ingeveb.org/pedagogy/guidelines-for-yiddish-in-bibliographies
+        "מענשען און געשעהנישען"                    || "menshen un geshehnishen"
+        "מענטש"                                    || "mentsh"
+        "נאָזהאָרן"                                  || "nozhorn"
+        "פּיקהאָלץ"                                  || "pikholts"
+        // https://aclanthology.org/2020.lrec-1.119.pdf
+        "באַפֿעלקערונג"                              || "bafelkerung"
+        "ברודערשאַפֿט"                               || "brudershaft"
+        "פֿרומקײַט"                                  || "frumkayt"
+        "זאַך"                                      || "zakh"
+        // https://en.wiktionary.org/wiki/Category:Yiddish_nouns
+        "אויסשפּראַך"                                || "oysshprakh"
+        "אומאָפּהענגיקײַט"                            || "umophengikayt"
+        "זעלבשטענדיקייט"                           || "zelbshtendikeyt"
+        "אַטאַקע"                                    || "atake"
+        "אַבאַזשור"                                  || "abazhur"
+        "אוטשאָק"                                   || "utshok"
+        "טשײַניק"                                   || "tshaynik"
+        "זומערקורס"                                || "zumerkurs"
+        //"ליאַלקע"                                 || "lyalke" yud i/y
+        "אונטן"                                    || "untn"
+        //"נעווראָלאָגיע"                            || "nevrologye" // yud i/y
+        "ספּודניצע"                                 || "spudnitse"
+        "עלעפֿאַנט"                                  || "elefant"
+        "פּלוידערײַ"                                 || "ployderay"
+        "פֿוספֿינגער"                                || "fusfinger"
+        "קאָמוניסטקע"                               || "komunistke"
     }
 }
