@@ -165,7 +165,12 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     private def unmodifyTLang(def thing, def tLang, def byLangPaths, def record) {
         def copy = deepCopy(record)
         def thingCopy = copy.mainEntity
-
+        
+        // marc:nonfilingChars is only valid for romanized string
+        DocumentUtil.findKey(thingCopy, 'marc:nonfilingChars') { value, path ->
+            new DocumentUtil.Remove()
+        }
+        
         byLangPaths.each { putOriginalLiteralInNonByLang(thingCopy, it as List, tLang) }
         def reverted = converter.runRevert(copy)
 
