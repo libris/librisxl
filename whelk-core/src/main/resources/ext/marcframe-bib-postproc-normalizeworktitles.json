@@ -82,12 +82,6 @@
             "translationOf": [
               {
                 "@type": "Work",
-                "hasTitle": [
-                  {
-                    "@type": "Title",
-                    "mainTitle": "THE TITLE"
-                  }
-                ],
                 "language": [
                   {
                     "@id": "https://id.kb.se/language/eng",
@@ -105,7 +99,7 @@
       }
     },
     {
-      "name": "move (non-copied) title (plus originDate) to expressionOf for bib 130 if no contribution is present",
+      "name": "move (non-copied) title (plus originDate and language) to expressionOf for bib 130 if no contribution is present",
       "result": {
         "mainEntity": {
           "instanceOf": {
@@ -151,6 +145,11 @@
                   "_revertOnly": true
                 }
               ],
+              "language": [
+                {
+                  "@id": "https://id.kb.se/language/swe"
+                }
+              ],
               "originDate": "1654.",
               "_revertOnly": true
             }
@@ -159,7 +158,7 @@
       }
     },
     {
-      "name": "move translated title to expressionOf for bib 130 if no contribution is present",
+      "name": "move original title to expressionOf for bib 130 if no contribution is present",
       "result": {
         "mainEntity": {
           "instanceOf": {
@@ -228,12 +227,6 @@
             "translationOf": [
               {
                 "@type": "Work",
-                "hasTitle": [
-                  {
-                    "@type": "Title",
-                    "mainTitle": "THE TITLE"
-                  }
-                ],
                 "language": [
                   {
                     "@id": "https://id.kb.se/language/eng",
@@ -251,6 +244,14 @@
                   "@type": "Title",
                   "mainTitle": "THE TITLE",
                   "_revertOnly": true
+                }
+              ],
+              "language": [
+                {
+                  "@id": "https://id.kb.se/language/eng",
+                  "@type": "Language",
+                  "code": "eng",
+                  "label": "English"
                 }
               ],
               "_revertOnly": true
@@ -374,12 +375,6 @@
                 "translationOf": [
                   {
                     "@type": "Work",
-                    "hasTitle": [
-                      {
-                        "@type": "Title",
-                        "mainTitle": "THE TITLE"
-                      }
-                    ],
                     "language": [
                       {
                         "@id": "https://id.kb.se/language/eng",
@@ -493,12 +488,6 @@
                 "translationOf": [
                   {
                     "@type": "Work",
-                    "hasTitle": [
-                      {
-                        "@type": "Title",
-                        "mainTitle": "THE TITLE"
-                      }
-                    ],
                     "language": [
                       {
                         "@id": "https://id.kb.se/language/eng",
@@ -542,7 +531,7 @@
                 }
               ],
               "originDate": "1900",
-              "marc:version": "version"
+              "version": "version"
             }
           }
         }
@@ -563,54 +552,7 @@
               }
             ],
             "originDate": "1900",
-            "marc:version": "version"
-          }
-        }
-      }
-    },
-    {
-      "name": "TODO: move expressionOf title (with mainTitle normalized) to instanceOf",
-      "source": {
-        "mainEntity": {
-          "instanceOf": {
-            "@type": "Text",
-            "language": [
-              {
-                "@id": "https://id.kb.se/language/swe"
-              }
-            ],
-            "expressionOf": {
-              "@type": "Work",
-              "hasTitle": [
-                {
-                  "@type": "Title",
-                  "mainTitle": "TODO: titel med dålig interpunktion"
-                }
-              ],
-              "language": [
-                {
-                  "@id": "https://id.kb.se/language/swe"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "result": {
-        "mainEntity": {
-          "instanceOf": {
-            "@type": "Text",
-            "language": [
-              {
-                "@id": "https://id.kb.se/language/swe"
-              }
-            ],
-            "hasTitle": [
-              {
-                "@type": "Title",
-                "mainTitle": "TODO: normaliserad titel"
-              }
-            ]
+            "version": "version"
           }
         }
       }
@@ -708,7 +650,7 @@
                 {
                   "@type": "Language",
                   "label": [
-                    "Grekiska & Tyska."
+                    "Grekiska & Engelska."
                   ]
                 }
               ]
@@ -985,75 +927,6 @@
         }
       },
       "result": "source"
-    },
-    {
-      "name": "Music/NotatedMusic: move expressionOf title to instanceOf regardless of translationOf presence",
-      "source": {
-        "mainEntity": {
-          "instanceOf": {
-            "@type": "NotatedMusic",
-            "language": [
-              {
-                "@id": "https://id.kb.se/language/fre"
-              }
-            ],
-            "expressionOf": {
-              "@type": "Work",
-              "language": [
-                {
-                  "@id": "https://id.kb.se/language/fre"
-                }
-              ],
-              "hasTitle": [
-                {
-                  "@type": "Title",
-                  "mainTitle": "LE TITRE"
-                }
-              ],
-              "musicKey": "A-dur"
-            },
-            "translationOf": [
-              {
-                "@type": "Work",
-                "language": [
-                  {
-                    "@id": "https://id.kb.se/language/ita"
-                  }
-                ]
-              }
-            ]
-          }
-        }
-      },
-      "result": {
-        "mainEntity": {
-          "instanceOf": {
-            "@type": "NotatedMusic",
-            "language": [
-              {
-                "@id": "https://id.kb.se/language/fre"
-              }
-            ],
-            "hasTitle": [
-              {
-                "@type": "Title",
-                "mainTitle": "LE TITRE"
-              }
-            ],
-            "musicKey": "A-dur",
-            "translationOf": [
-              {
-                "@type": "Work",
-                "language": [
-                  {
-                    "@id": "https://id.kb.se/language/ita"
-                  }
-                ]
-              }
-            ]
-          }
-        }
-      }
     },
     {
       "name": "don't move anything upon property conflict",
