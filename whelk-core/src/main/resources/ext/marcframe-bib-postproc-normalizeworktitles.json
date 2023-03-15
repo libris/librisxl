@@ -770,6 +770,66 @@
       }
     },
     {
+      "name": "move instanceOf title to constructed translationOf if translator in contribution",
+      "source": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {
+                "@id": "https://id.kb.se/language/swe"
+              }
+            ],
+            "hasTitle": [
+              {
+                "@type": "Title",
+                "mainTitle": "THE TITLE"
+              }
+            ],
+            "contribution": [
+              {
+                "@type": "Contribution",
+                "role": {
+                  "@id": "https://id.kb.se/relator/translator",
+                  "code": "trl"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {
+                "@id": "https://id.kb.se/language/swe"
+              }
+            ],
+            "contribution": [
+              {
+                "@type": "Contribution",
+                "role": {
+                  "@id": "https://id.kb.se/relator/translator",
+                  "code": "trl"
+                }
+              }
+            ],
+            "translationOf": {
+              "@type": "Work",
+              "hasTitle": [
+                {
+                  "@type": "Title",
+                  "mainTitle": "THE TITLE"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
       "name": "hasPart: move title to translationOf",
       "source": {
         "mainEntity": {
