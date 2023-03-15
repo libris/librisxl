@@ -12,7 +12,7 @@ import static whelk.JsonLd.asList
 
 @Log
 class RomanizationStep extends MarcFramePostProcStepBase {
-    
+
     @CompileStatic
     @NullCheck(includeGenerated = true)
     static class LanguageResources {
@@ -21,7 +21,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         Map transformedLanguageForms
         Map scripts
     }
-    
+
     MarcFrameConverter converter
     LanguageResources languageResources
 
@@ -32,9 +32,9 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     Map langToTLang
 
     private static final String TARGET_SCRIPT = 'Latn'
-    
+
     // Note: MARC standard allows ISO 15924 in $6 but Libris practice doesn't
-    private static final Map MARC_SCRIPT_CODES = 
+    private static final Map MARC_SCRIPT_CODES =
             [
                     'Arab': '/(3/r',
                     'Cyrl': '/(N',
@@ -46,9 +46,9 @@ class RomanizationStep extends MarcFramePostProcStepBase {
                     'Hant': '/$1',
                     'Hebr': '/(2/r'
             ]
-    
+
     String OG_MARK = '**OG**'
-    
+
     String HAS_BIB880 = 'marc:hasBib880'
     String BIB880 = 'marc:bib880'
     String PART_LIST = 'marc:partList'
@@ -61,7 +61,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     String BIB041_REF = 'marc:bib041-fieldref'
     String BIB250_REF = 'marc:bib250-fieldref'
     String HOLD035_REF = 'marc:hold035-fieldref'
-    
+
     List FIELD_REFS = [FIELDREF, BIB035_REF, BIB041_REF, BIB250_REF, HOLD035_REF]
 
     void modify(Map record, Map thing) {
@@ -71,11 +71,11 @@ class RomanizationStep extends MarcFramePostProcStepBase {
             log.error("Failed to convert 880: $e", e)
         }
     }
-    
+
     void _modify(Map record, Map thing) {
         if (!languageResources)
             return
-        
+
         // TODO: Do we really want to remove everything? What about "00" fields?
         // https://katalogverk.kb.se/katalogisering/Formathandboken/Lankning/index.html
         def hasBib880 = thing.remove(HAS_BIB880)
@@ -83,7 +83,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         if (!hasBib880) {
             return
         }
-        
+
         Map bib880ByField = [:]
 
         asList(hasBib880).each { bib880 ->
@@ -106,7 +106,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
             } catch (Exception e) {
                 return
             }
-            
+
             def marc = [leader: "00887cam a2200277 a 4500", fields: marcJson]
             def converted = converter.runConvert(marc)
 
@@ -144,11 +144,11 @@ class RomanizationStep extends MarcFramePostProcStepBase {
             log.error("Failed to convert 880: $e", e)
         }
     }
-    
+
     void _unmodify(Map record, Map thing) {
         if (!languageResources)
             return
-        
+
         def byLangPaths = findByLangPaths(thing)
         def uniqueTLangs = findUniqueTLangs(thing, byLangPaths)
 
@@ -159,14 +159,14 @@ class RomanizationStep extends MarcFramePostProcStepBase {
 
         byLangPaths.each { putRomanizedLiteralInNonByLang(thing, it as List) }
     }
-    
+
     private def unmodifyTLang(def thing, def tLang, def byLangPaths, def record) {
         def copy = deepCopy(record)
         def thingCopy = copy.mainEntity
 
         byLangPaths.each { putOriginalLiteralInNonByLang(thingCopy, it as List, tLang) }
         def reverted = converter.runRevert(copy)
-        
+
         /*
              We expect the order in reverted.fields to mirror the order in the "json data" for repeatable fields
              i.e. if e.g.
@@ -179,23 +179,23 @@ class RomanizationStep extends MarcFramePostProcStepBase {
              If this can't be achieved we probably need to add some kind of reference to each
              (romanized) object *before* reverting in order to get the fieldrefs right.
              */
-        
+
         List<Ref> fieldRefs = []
-        
+
         List<String> paths = []
         DocumentUtil.findKey(thingCopy, '_revertedBy') { value, path ->
             paths.add(path.dropRight(1).join('-'))
             return DocumentUtil.NOP
         }
 
-        List<String> nested = paths.findAll { p -> paths.any{ p.startsWith(it + '-')  } }
+        List<String> nested = paths.findAll { p -> paths.any { p.startsWith(it + '-') } }
         paths = paths - nested
-        
+
         DocumentUtil.findKey(thingCopy, '_revertedBy') { value, path ->
-            if (path.dropRight(1).join('-') !in paths) {
-                return 
+            if (!(path.dropRight(1).join('-') in paths)) {
+                return
             }
-            
+
             def fieldMap = reverted.fields.find { it.containsKey(value) }
             if (!fieldMap) {
                 return
@@ -203,15 +203,15 @@ class RomanizationStep extends MarcFramePostProcStepBase {
             def fieldNumber = value
             def field = fieldMap[fieldNumber]
 
-            if (!field[SUBFIELDS].any { Map sf -> sf.values().any { it.startsWith(OG_MARK) }}) {
+            if (!field[SUBFIELDS].any { Map sf -> sf.values().any { it.startsWith(OG_MARK) } }) {
                 return
             }
-            
+
             def subFields = field[SUBFIELDS].collect {
                 def subfield = it.keySet()[0]
                 [(BIB880 + '-' + subfield): stripPrefix(it[subfield], OG_MARK)]
             }
-            
+
             def hasBib880 = thing.computeIfAbsent(HAS_BIB880, s -> [])
             def ref = new Ref(
                     toField: fieldNumber,
@@ -233,7 +233,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
             reverted.fields.remove(fieldMap)
 
             fieldRefs.add(ref)
-  
+
             return
         }
 
@@ -242,7 +242,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
             t[r.propertyName()] = (asList(t[r.propertyName()]) << r.to880()).unique()
         }
     }
-    
+
     private String marcScript(String tLang) {
         def script = languageResources.scripts[tLangCodes[tLang].fromLangScript]
         return MARC_SCRIPT_CODES[script?.code ?: '']
@@ -251,21 +251,21 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     private static String stripPrefix(String s, String prefix) {
         s.startsWith(prefix) ? s.substring(prefix.length()) : s
     }
-    
+
     @MapConstructor
     private class Ref {
         String toField
         int occurenceNumber
         List path
-        
+
         String from880(String scriptCode) {
             "$toField-${String.format("%02d", occurenceNumber)}${scriptCode ?: ''}"
         }
-        
+
         String to880() {
             "880-${String.format("%02d", occurenceNumber)}"
         }
-        
+
         String propertyName() {
             switch (toField) {
                 case '035': return BIB035_REF // TODO: also 'marc:hold035-fieldref'
@@ -273,9 +273,9 @@ class RomanizationStep extends MarcFramePostProcStepBase {
                 case '250': return BIB250_REF
                 default: return FIELDREF
             }
-        } 
+        }
     }
-    
+
     boolean mergeAltLanguage(Map converted, Map thing) {
         // Since the 880s do not specify which language they are in, we assume that they are in the first work language
         def workLang = thing.instanceOf.subMap('language')
@@ -318,7 +318,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
 
         return true
     }
-    
+
     def putLiteralInNonByLang(Map thing, List byLangPath, Closure handler) {
         def key = byLangPath.last()
         def path = byLangPath.dropRight(1)
@@ -340,7 +340,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
                 langContainer
                         .findResults { langTag, literal -> langTag in tLangCodes.keySet() ? literal : null }
                         .with(RomanizationStep::unpackSingle)
-                        ?.with{ parent[base] = it }
+                        ?.with { parent[base] = it }
             }
         }
     }
@@ -348,9 +348,9 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     static def unpackSingle(Collection l) {
         return l.size() == 1 ? l[0] : l
     }
-    
+
     def putOriginalLiteralInNonByLang(Map thing, List byLangPath, String tLang) {
-        putLiteralInNonByLang(thing, byLangPath) {  Map parent, String key, String base ->
+        putLiteralInNonByLang(thing, byLangPath) { Map parent, String key, String base ->
             def romanized = parent[key].find { langTag, literal -> langTag == tLang }
             def original = parent[key].find { langTag, literal -> langTag == langIdToLangTag[tLangCodes[tLang].inLanguage] }?.value
             if (romanized && original) {
@@ -368,6 +368,8 @@ class RomanizationStep extends MarcFramePostProcStepBase {
             paths.add(path.collect())
             return
         }
+
+        paths = paths.findAll { DocumentUtil.getAtPath(thing, it).keySet().any { it =~ '-t-' } }
 
         return paths
     }
@@ -405,20 +407,20 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         if (!languageResources) {
             return
         }
-        
+
         this.tLangCodes = getTLangCodes(languageResources.transformedLanguageForms)
         this.langToTLang = tLangCodes.collectEntries { k, v -> [v.inLanguage, k] }
         this.langAliases = ld.langContainerAlias
         this.byLangToBase = langAliases.collectEntries { k, v -> [v, k] }
         this.langIdToLangTag = languageResources.languages
-                .findAll { k,v -> v.langTag }.collectEntries { k, v ->  [k, v.langTag] }
+                .findAll { k, v -> v.langTag }.collectEntries { k, v -> [k, v.langTag] }
     }
 
     static Map<String, Map> getTLangCodes(Map<String, Map> transformedLanguageForms) {
         String matchTag = "-${TARGET_SCRIPT}-t-"
         return transformedLanguageForms
                 .values()
-                .findAll{ ((String) it.langTag)?.contains(matchTag) }
+                .findAll { ((String) it.langTag)?.contains(matchTag) }
                 .collectEntries {
                     def data = [:]
                     if (it.inLanguage) {
