@@ -153,6 +153,8 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         def uniqueTLangs = findUniqueTLangs(thing, byLangPaths)
 
         // TODO: Can multiple transform rules be applied to the same record? What happens then with non-repeatable fields?
+        
+        
         uniqueTLangs.each { tLang ->
             unmodifyTLang(thing, tLang, byLangPaths, record)
         }
@@ -418,7 +420,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
 
     static Map<String, Map> getTLangCodes(Map<String, Map> transformedLanguageForms) {
         String matchTag = "-${TARGET_SCRIPT}-t-"
-        return transformedLanguageForms
+        def t = transformedLanguageForms
                 .values()
                 .findAll { ((String) it.langTag)?.contains(matchTag) }
                 .collectEntries {
@@ -431,5 +433,9 @@ class RomanizationStep extends MarcFramePostProcStepBase {
                     }
                     [it.langTag, data]
                 }
+        
+        //TODO: Implement proper selection of romanization form where multiple
+        t.remove('yi-Latn-t-yi-Hebr-x0-yivo')
+        return t
     }
 }
