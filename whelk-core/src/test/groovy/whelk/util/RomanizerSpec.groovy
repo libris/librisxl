@@ -318,23 +318,23 @@ class RomanizerSpec extends Specification {
         new Romanizer().romanize(source, 'yi')['yi-Latn-t-yi-Hebr-m0-alaloc'] == target
         where:
         source                                     || target
-        "קונסט און קינסטלער"                       || "kunsṭ un kinsṭler"
+        "קונסט און קינסטלער"                       || "ḳunsṭ un ḳinsṭler"
         "סאָוויעט רוסלאַנד: ווי איך האָב איהר געזעהן" || "soṿieṭ rusland: ṿi ikh hob ihr gezehn"
         "מענשען און געשעהנישען"                    || "menshen un geshehnishen"
         "מענטש"                                    || "menṭsh"
         "נאָזהאָרן"                                  || "nozhorn"
-        "פּיקהאָלץ"                                  || "pikholts"
-        "באַפֿעלקערונג"                              || "bafelkerung"
+        "פּיקהאָלץ"                                  || "piḳholts"
+        "באַפֿעלקערונג"                              || "bafelḳerung"
         "ברודערשאַפֿט"                               || "brudershafṭ"
-        "פֿרומקײַט"                                  || "frumkayṭ"
+        "פֿרומקײַט"                                  || "frumḳayṭ"
         "זאַך"                                      || "zakh"
         "אויסשפּראַך"                                || "oysshprakh"
-        "אומאָפּהענגיקײַט"                            || "umophengikayṭ"
-        "זעלבשטענדיקייט"                           || "zelbshṭendikeyṭ"
-        "אַטאַקע"                                    || "aṭake"
+        "אומאָפּהענגיקײַט"                            || "umophengiḳayṭ"
+        "זעלבשטענדיקייט"                           || "zelbshṭendiḳeyṭ"
+        "אַטאַקע"                                    || "aṭaḳe"
         "אַבאַזשור"                                  || "abazshur"
-        "זומערקורס"                                || "zumerkurs"
-        "ליאַלקע"                                   || "lialke"
+        "זומערקורס"                                || "zumerḳurs"
+        "ליאַלקע"                                   || "lialḳe"
         "נעווראָלאָגיע"                              || "neṿrologie"
     }
 }
