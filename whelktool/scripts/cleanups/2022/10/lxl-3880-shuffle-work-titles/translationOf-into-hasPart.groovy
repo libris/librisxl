@@ -41,7 +41,7 @@ ID = '@id'
 def exceptShapes = [['@id'], ['@type', 'language'], ['@type', 'contentType'], ['@type', 'genreForm', 'intendedAudience'], ['@type', 'genreForm']]*.toSet()
 
 selectBySqlWhere(where) { bib ->
-    def langLinker = bib.whelk.normalizer.normalizers.find { it.linker instanceof LanguageLinker }.linker
+    def langLinker = bib.whelk.normalizer.normalizers.find { it.normalizer instanceof LanguageLinker }.normalizer
     def id = bib.doc.shortId
 
     def work = bib.graph[1][INSTANCE_OF]
