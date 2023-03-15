@@ -1,0 +1,76 @@
+# ICU transform rules
+
+# Yiddish ALA-LC
+# based on
+# https://www.loc.gov/catdir/cpso/romanization/hebrew.pdf
+
+'בּ' > 'b' ;
+'ב' > 'b' ;
+'ג' > 'g' ;
+'ד' > 'd' ;
+'ה' > 'h' ;
+'וו' > 'ṿ' ; # "(only if a consonant)"
+'װ' > 'ṿ' ;  # "(only if a consonant)"
+# 'ו' > 'ṿ' ; # "(only if a consonant)" - u below
+'ז' > 'z' ;
+'ח' > 'ḥ' ;
+'ט' > 'ṭ' ;
+# 'י' > 'y' ;  # "(only if a consonant)" - i below
+'כּ' > 'k' ;
+'ךּ' > 'k' ;
+'כ' > 'kh' ;
+'ך' > 'kh' ;
+'ל' > 'l' ;
+'מ' > 'm' ;
+'ם' > 'm' ;
+'נ' > 'n' ;
+'ן' > 'n' ;
+'ס' > 's' ;
+'פּ' > 'p' ;
+'ףּ' > 'p' ;
+'פ' > 'f' ;
+'ף' > 'f' ;
+'צ' > 'ts' ;
+'ץ' > 'ts' ;
+'ק' > 'k' ;
+'ר' > 'r' ;
+'שׁ' > 'sh';
+'שׂ' > 'ś';
+'ש' > 'sh';
+'תּ' > 't';
+'ת' > 's̀';
+
+'אײַ' > 'ay' ; 
+'ײַ' > 'ay' ;
+'איי' > 'ey' ; 
+'אײ' > 'ey' ;
+'יי' > 'ey' ; 
+'ײ' > 'ey' ;
+'אױ' > 'oy' ;
+'אוי' > 'oy' ;
+'ױ' > 'oy' ;
+'וי' > 'oy' ;
+'אָ' > 'o' ;
+'אַ' > 'a' ;
+'או' > 'u' ;
+'ו' > 'u' ;
+'אי' > 'i' ;
+'י' > 'i' ;
+'ע' > 'e' ;
+'א' > 'a' ; # alef = a or o
+
+# Drop all other Hebrew diacritics 
+:: NFD (NFC) ; 
+[\u0591-\u05C5] > ;
+:: NFC (NFD);
+
+# Hebrew
+# 'יַ' > 'ai' ;
+# 'יֵ' > 'e' ;
+# 'יִ' > 'i' ;
+# 'וֹ' > 'o' ;
+# 'וּ' > 'u' ;
+# 'ְַ' > 'a' ;
+# 'ְֶ' > 'e' ;
+# 'ְָ' > 'o' ;
+# 'ְ' > 'e' ; # e or disregard
