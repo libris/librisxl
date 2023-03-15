@@ -311,4 +311,30 @@ class RomanizerSpec extends Specification {
         "פֿוספֿינגער"                                || "fusfinger"
         "קאָמוניסטקע"                               || "komunistke"
     }
+
+    // TODO: review these. They are copied and adapted from "Yiddish with YIVO" above
+    def "Yiddish with ALA-LOC"() {
+        expect:
+        new Romanizer().romanize(source, 'yi')['yi-Latn-t-yi-Hebr-m0-alaloc'] == target
+        where:
+        source                                     || target
+        "קונסט און קינסטלער"                       || "kunsṭ un kinsṭler"
+        "סאָוויעט רוסלאַנד: ווי איך האָב איהר געזעהן" || "soṿieṭ rusland: ṿi ikh hob ihr gezehn"
+        "מענשען און געשעהנישען"                    || "menshen un geshehnishen"
+        "מענטש"                                    || "menṭsh"
+        "נאָזהאָרן"                                  || "nozhorn"
+        "פּיקהאָלץ"                                  || "pikholts"
+        "באַפֿעלקערונג"                              || "bafelkerung"
+        "ברודערשאַפֿט"                               || "brudershafṭ"
+        "פֿרומקײַט"                                  || "frumkayṭ"
+        "זאַך"                                      || "zakh"
+        "אויסשפּראַך"                                || "oysshprakh"
+        "אומאָפּהענגיקײַט"                            || "umophengikayṭ"
+        "זעלבשטענדיקייט"                           || "zelbshṭendikeyṭ"
+        "אַטאַקע"                                    || "aṭake"
+        "אַבאַזשור"                                  || "abazshur"
+        "זומערקורס"                                || "zumerkurs"
+        "ליאַלקע"                                   || "lialke"
+        "נעווראָלאָגיע"                              || "neṿrologie"
+    }
 }
