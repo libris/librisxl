@@ -102,11 +102,8 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
 
     void addLangFor130(Map work) {
         List langs = work[TRANSLATION_OF] ? asList(work[TRANSLATION_OF]).findResults { it[LANGUAGE] }.flatten() : work[LANGUAGE]
-        def (linked, local) = langs.split { it[ID] }
-        if (local.any { it.label }) {
-            work[EXPRESSION_OF][LANGUAGE] = local
-        } else if (linked.size() == 1) {
-            work[EXPRESSION_OF][LANGUAGE] = linked
+        if (langs) {
+            work[EXPRESSION_OF][LANGUAGE] = langs[0..<1]
         }
     }
 
