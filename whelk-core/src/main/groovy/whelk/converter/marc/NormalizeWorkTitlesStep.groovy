@@ -20,7 +20,7 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
     LanguageLinker langLinker
 
     void modify(Map record, Map thing) {
-//        traverse(thing, null, true)
+        traverse(thing, null, true)
     }
 
     void unmodify(Map record, Map thing) {
@@ -31,9 +31,11 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
         asList(o).each {
             if (it instanceof Map) {
                 if (convert) {
-                    shuffleTitles(it)
+                    moveExpressionOfTitle(it)
+                    moveOriginalTitle(it)
                 } else if (!('_revertOnly' in it)) {
-                    useOriginalTitle(it, via)
+                    useOriginalTitle(it)
+                    titleToExpressionOfIfNoPrimaryContribution(it, via)
                 }
                 it.each { k, v ->
                     traverse(v, k, convert)
@@ -42,88 +44,15 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
         }
     }
 
-    void useOriginalTitle(Map work, String via = null) {
-        asList(work[TRANSLATION_OF]).each { original ->
-            def originalTitle = asList(original[HAS_TITLE]).find { it[TYPE] == TITLE }
-
-            Set workLangIds = asList(work[LANGUAGE]).collect { it[ID] }
-            if (originalTitle instanceof Map) {
-                boolean noWorkLangOrNotSameLang =
-                        workLangIds.size() == 0
-                                || !original[LANGUAGE]
-                                || !asList(original[LANGUAGE]).every { it[ID] in workLangIds }
-                if (noWorkLangOrNotSameLang) {
-                    markToIgnore(work[HAS_TITLE])
-                    if (!work[HAS_TITLE]) work[HAS_TITLE] = []
-                    work[HAS_TITLE] << copyForRevert(originalTitle)
-                    original.remove(HAS_TITLE)
-                    if (original[LEGAL_DATE] && !work[LEGAL_DATE]) {
-                        work[LEGAL_DATE] = original[LEGAL_DATE]
-                    }
-                }
-            }
-        }
-
-        if (via == 'instanceOf'
-                && !work[CONTRIBUTION]?.find { it[TYPE] == 'PrimaryContribution' }
-                && !work[EXPRESSION_OF]
-                && work[HAS_TITLE]
-        ) {
-            def workTitle = work[HAS_TITLE]?.find { it[TYPE] == TITLE && !('_revertedBy' in it) }
-            if (workTitle instanceof Map) {
-                def copiedTitle = copyForRevert(workTitle)
-                markToIgnore(workTitle)
-                work[EXPRESSION_OF] = [
-                        (TYPE)     : 'Work',
-                        (HAS_TITLE)   : [copiedTitle],
-                        _revertOnly: true
-                ]
-                (titleProps - HAS_TITLE).each {
-                    if (work[it]) {
-                        work[EXPRESSION_OF][it] = work[it]
-                    }
-                }
-                addLangFor130(work)
-            }
-        }
-    }
-
-    void markToIgnore(o) {
-        asList(o).each {
-            it._revertedBy = 'NormalizeWorkTitlesStep'
-        }
-    }
-
-    Map copyForRevert(Map item) {
-        item = item.clone()
-        item._revertOnly = true
-        return item
-    }
-
-    void addLangFor130(Map work) {
-        List langs = work[TRANSLATION_OF] ? asList(work[TRANSLATION_OF]).findResults { it[LANGUAGE] }.flatten() : work[LANGUAGE]
-        if (langs) {
-            work[EXPRESSION_OF][LANGUAGE] = langs[0..<1]
-        }
-    }
-
-    //TODO: Implement here or in marcframe?
-    void normalizePunctuationOnRevert(Object title) {
-
-    }
-
-    void normalizePunctuationOnConvert(Object title) {
-
-    }
-
-    void shuffleTitles(Map work) {
+    void moveExpressionOfTitle(Map work) {
         if (hasOkExpressionOf(work)) {
-            // try normalize title according to curated lists?
             if (tryMove(work[EXPRESSION_OF], work, titleProps)) {
                 work.remove(EXPRESSION_OF)
             }
         }
+    }
 
+    void moveOriginalTitle(Map work) {
         def isMusic = work[TYPE] in ['Music', 'NotatedMusic']
         def hasTranslator = asList(work[CONTRIBUTION]).any { Map c ->
             asList(c.role).any { Map r ->
@@ -137,6 +66,53 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
             }
             if (asList(work[TRANSLATION_OF]).size() == 1) {
                 tryMove(work, work[TRANSLATION_OF], [HAS_TITLE, LEGAL_DATE])
+            }
+        }
+    }
+
+    void useOriginalTitle(Map work) {
+        asList(work[TRANSLATION_OF]).each { original ->
+            def originalTitle = asList(original[HAS_TITLE]).find { it[TYPE] == TITLE }
+            Set workLangIds = asList(work[LANGUAGE]).collect { it[ID] }
+            if (originalTitle instanceof Map) {
+                boolean notSameLang =
+                        workLangIds.size() == 0
+                                || !original[LANGUAGE]
+                                || !asList(original[LANGUAGE]).every { it[ID] in workLangIds }
+                if (notSameLang) {
+                    markToIgnore(work[HAS_TITLE])
+                    if (!work[HAS_TITLE]) work[HAS_TITLE] = []
+                    work[HAS_TITLE] << copyForRevert(originalTitle)
+                    original.remove(HAS_TITLE)
+                    if (original[LEGAL_DATE] && !work[LEGAL_DATE]) {
+                        work[LEGAL_DATE] = original[LEGAL_DATE]
+                    }
+                }
+            }
+        }
+    }
+
+    void titleToExpressionOfIfNoPrimaryContribution(Map work, String via = null) {
+        if (via == 'instanceOf'
+                && !work[CONTRIBUTION]?.find { it[TYPE] == 'PrimaryContribution' }
+                && !work[EXPRESSION_OF]
+                && work[HAS_TITLE]
+        ) {
+            def workTitle = work[HAS_TITLE]?.find { it[TYPE] == TITLE && !('_revertedBy' in it) }
+            if (workTitle instanceof Map) {
+                def copiedTitle = copyForRevert(workTitle)
+                markToIgnore(workTitle)
+                work[EXPRESSION_OF] = [
+                        (TYPE)     : 'Work',
+                        (HAS_TITLE): [copiedTitle],
+                        _revertOnly: true
+                ]
+                (titleProps - HAS_TITLE).each {
+                    if (work[it]) {
+                        work[EXPRESSION_OF][it] = work[it]
+                    }
+                }
+                addExpressionOfLang(work)
             }
         }
     }
@@ -161,6 +137,25 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
         }
 
         return true
+    }
+
+    void markToIgnore(o) {
+        asList(o).each {
+            it._revertedBy = 'NormalizeWorkTitlesStep'
+        }
+    }
+
+    Map copyForRevert(Map item) {
+        item = item.clone()
+        item._revertOnly = true
+        return item
+    }
+
+    void addExpressionOfLang(Map work) {
+        List langs = work[TRANSLATION_OF] ? asList(work[TRANSLATION_OF]).findResults { it[LANGUAGE] }.flatten() : work[LANGUAGE]
+        if (langs) {
+            work[EXPRESSION_OF][LANGUAGE] = langs[0..<1]
+        }
     }
 
     boolean hasOkExpressionOf(Map work) {
