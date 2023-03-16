@@ -1,3 +1,9 @@
+/**
+ * Move titles in original language to translationOf for all work types except Music and NotatedMusic.
+ * Also move legalDate (if exists, only a few cases) along with the title.
+ * Construct translationOf when a work obviously is a translation (has a translator) but lack the property.
+ */
+
 moved = getReportWriter('moved.tsv')
 propertyAlreadyExists = getReportWriter('property-already-exists.tsv')
 
@@ -65,7 +71,6 @@ boolean tryMoveTitle(Map work, String id, String via) {
             }
         }
         work.remove('musicKey')
-//        normalizePunctuation(translationOf[HAS_TITLE])
         moved.println([id, via, moveThese, translationOf, translationOf['language'].asBoolean()].join('\t'))
         return true
     }
@@ -78,8 +83,4 @@ boolean hasTranslator(Map work) {
     asList(work.contribution).any { Map c ->
         asList(c.role).contains(['@id': 'https://id.kb.se/relator/translator'])
     }
-}
-
-void normalizePunctuation(Object title) {
-    // TODO
 }

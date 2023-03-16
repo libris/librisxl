@@ -1,7 +1,7 @@
 /**
- * This script moves instanceOf.translationOf into each entity of instanceOf.hasPart provided that certain requirements are met.
+ * This script moves instanceOf.translationOf into each part in instanceOf.hasPart provided that certain criteria are met.
  *
- * The requirements are:
+ * The criteria are:
  *  - Each of the properties translationOf, hasPart and language are present on the work (instanceOf)
  *  - Each part in hasPart has a title*
  *  - Each part in hasPart has language**
@@ -13,8 +13,6 @@
  *  *Except entities that have either of the forms {@type ,language}, {@type ,contentType}, {@type ,genreForm,intendedAudience} or {@type ,genreForm}
  *    These are ignored.
  *  **With a few exceptions, see code.
- *
- *  Unlink any linked part in hasPart.
  *
  *  Remove work.translationOf after it's been copied to hasPart if there is no instanceOf.hasTitle.
  *

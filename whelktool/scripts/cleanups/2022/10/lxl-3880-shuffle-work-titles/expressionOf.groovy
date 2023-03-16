@@ -1,13 +1,19 @@
+/**
+ * Move hasTitle from instanceOf.expressionOf to instanceOf.
+ * Also move a few other properties that are associated with the title.
+ * Remove expressionOf altogether given that the move is successful (i.e. no conflicts/deviations).
+ * The procedure is the same for both linked and local entities associated with expressionOf.
+ *
+ * Normalize titles according to given curated spreadsheets that map expressionOf entities to desired forms.
+ * Local expressionOf entities are identified by a string representation. Linked expression are identified by their URI's.
+ */
+
 import whelk.util.Unicode
-import whelk.util.Statistics
 import whelk.filter.LanguageLinker
 
 moved = getReportWriter('moved.tsv')
 propertyAlreadyExists = getReportWriter('property-already-exists.tsv')
-brokenLinks = getReportWriter('broken-links.tsv')
 langDiff = getReportWriter('lang-diff.tsv')
-
-unhandledUniformWorkTitles = new StatsReport(getReportWriter('unhandled-uniform-work-titles.txt'), 3)
 
 HAS_TITLE = 'hasTitle'
 MAIN_TITLE = 'mainTitle'
@@ -51,16 +57,19 @@ selectBySqlWhere(where) {
         def prefTitle = linkedExpressionOfToPrefTitle[expressionOf[ID]]
         if (prefTitle) {
             def uniformWorkTitle = loadThing(expressionOf[ID])
-            if (!uniformWorkTitle) {
-                brokenLinks.println([id, expressionOf[ID]].join('\t'))
-                return
-            }
             expressionOf = uniformWorkTitle
             // Take preferred title from given list
-            expressionOf[HAS_TITLE] = [[(TYPE): 'Title', (MAIN_TITLE): prefTitle, 'source': 'Titel från lista/expressionOf']]
+            expressionOf[HAS_TITLE] =
+                    [
+                            [
+                                    (TYPE)      : 'Title',
+                                    (MAIN_TITLE): prefTitle,
+                                    'source'    : [(TYPE): 'Source', 'label': 'TODO: Uniform titel']
+                            ]
+                    ]
             normalized = true
         } else {
-            unhandledUniformWorkTitles.s.increment('Unhandled uniform work titles', expressionOf[ID], id)
+            incrementStats('Unhandled uniform work titles', expressionOf[ID])
             return
         }
     } else {
@@ -74,7 +83,14 @@ selectBySqlWhere(where) {
                     expressionOf['originPlace'] = [(TYPE): 'Place', 'label': [originPlace]]
                 }
             }
-            expressionOf[HAS_TITLE] = [[(TYPE): 'Title', (MAIN_TITLE): prefTitle, 'source': 'Titel från lista/expressionOf']]
+            expressionOf[HAS_TITLE] =
+                    [
+                            [
+                                    (TYPE)      : 'Title',
+                                    (MAIN_TITLE): prefTitle,
+                                    'source'    : [(TYPE): 'Source', 'label': 'TODO: Uniform titel']
+                            ]
+                    ]
             normalized = true
         }
     }
@@ -96,7 +112,7 @@ selectBySqlWhere(where) {
         if (!normalized && instance['issuanceType'] == 'Monograph') {
             incrementStats('Title not normalized (Monographs)', stringify(expressionOf))
         }
-        expressionOf[HAS_TITLE][0]['source'] = expressionOf[HAS_TITLE][0]['source'] ?: 'Titel från expressionOf'
+        expressionOf[HAS_TITLE][0]['source'] = expressionOf[HAS_TITLE][0]['source'] ?: [(TYPE): 'Source', 'label': 'TODO: expressionOf']
         List moveThese = TITLE_RELATED_PROPS + HAS_TITLE
         if (isMusic) {
             moveThese.add('musicKey')
@@ -107,8 +123,6 @@ selectBySqlWhere(where) {
         }
     }
 }
-
-unhandledUniformWorkTitles.print()
 
 boolean tryCopyToTarget(Map from, Map target, String id, Collection properties = null) {
     def copyThese = properties ? from.keySet().intersect(properties) : from.keySet()
@@ -125,37 +139,22 @@ boolean tryCopyToTarget(Map from, Map target, String id, Collection properties =
                 target[k] = v
             }
         }
-//        normalizePunctuation(target[HAS_TITLE])
         moved.println([id, copyThese, target.subMap(copyThese)].join('\t'))
     }
 
     return true
 }
 
-void normalizePunctuation(Object title) {
-    //TODO
-}
-
+// mainTitle: "Haggada. Jiddisch & Hebreiska" --> mainTitle: Haggada, language: [[@id:https://id.kb.se/language/yid], [@id:https://id.kb.se/language/heb]]
 void moveLanguagesFromTitle(Map expressionOf) {
     def languages = []
 
     asList(expressionOf[HAS_TITLE]).each { t ->
-        if (t[MAIN_TITLE] instanceof String) {
-            def (mt, l) = splitTitleLanguages(t[MAIN_TITLE])
-            if (l) {
-                languages += l
-                t[MAIN_TITLE] = mt
-            }
-        }
-        if (t[MAIN_TITLE] instanceof List) {
-            t[MAIN_TITLE] = t[MAIN_TITLE].collect {
-                def (mt, l) = splitTitleLanguages(it)
-                if (l) {
-                    languages += l
-                    return mt
-                }
-                return it
-            }
+        assert t[MAIN_TITLE] instanceof String
+        def (mt, l) = splitTitleLanguages(t[MAIN_TITLE])
+        if (l) {
+            languages += l
+            t[MAIN_TITLE] = mt
         }
     }
 
@@ -218,6 +217,7 @@ Map loadLocalExpressionOfToPrefTitleMappings(String filename) {
     }
 }
 
+// e.g. {"https://libris.kb.se/0xbddxzj09vsjl9#it": "Bibeln. Haggai"}
 Map loadLinkedExpressionOfToPrefTitleMappings(String filename) {
     return new File(scriptDir, filename).readLines().drop(1).collectEntries {
         def (uniformWorkTitleIri, hubTitle) = it.split('\t')
@@ -226,6 +226,7 @@ Map loadLinkedExpressionOfToPrefTitleMappings(String filename) {
     }
 }
 
+// e.g. {"Bible. · [N.T., Gospels., Campbell.] · eng": {"version": "Campbell"}}
 Map loadHymnsAndBibles(String filename) {
     def rows = new File(scriptDir, filename).readLines()
     def propertyNames = rows.pop().split('\t')
@@ -247,26 +248,4 @@ LanguageLinker getLangLinker() {
     }
 
     return linker
-}
-
-class StatsReport {
-    PrintWriter report
-    Statistics s
-
-    StatsReport(PrintWriter report, int numExamples) {
-        this.report = report
-        this.s = new Statistics(numExamples)
-    }
-
-    void print() {
-        report.withCloseable {
-            s.print(0, it)
-        }
-    }
-
-    void filterCategories(int min) {
-        s.c.removeAll { k, v ->
-            v.values().collect { it.intValue() }.sum() < min
-        }
-    }
 }
