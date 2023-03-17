@@ -478,6 +478,7 @@ class ESQuery {
     }
 
     private String getInferredTermPath(String termPath) {
+        termPath = expandLangMapKeys(termPath)
         if (termPath in keywordFields) {
             return "${termPath}.keyword"
         } else {
