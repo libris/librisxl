@@ -5135,7 +5135,15 @@
       "linkSubsequentRepeated": {
         "addLink": "hasPart",
         "resourceType": "Work",
-        "embedded": true
+        "groupId": "#haslang-$seq",
+        "match": [
+          {
+            "when": {
+              "onRevert": {"translationOf": {}},
+              "then": {"ind1": "1"}
+            }
+          }
+        ]
       },
       "match": [
         {
@@ -15311,18 +15319,22 @@
       "match": [
         {
           "when": "$t & i1=0 & i2=2",
+          "groupId": "#haslang-$seq",
           "include": ["hasPartPerson", "agentdataPerson", "titledetails", "contributionRole_4"]
         },
         {
           "when": "$t & i1=1 & i2=2",
+          "groupId": "#haslang-$seq",
           "include": ["hasPartPerson", "agentdataNameOfPerson", "titledetails", "contributionRole_4"]
         },
         {
           "when": "$t & i1=3 & i2=2",
+          "groupId": "#haslang-$seq",
           "include": ["hasPartFamily", "agentdataFamily", "titledetails", "contributionRole_4"]
         },
         {
           "when": "$t & i2=2",
+          "groupId": "#haslang-$seq",
           "include": ["hasPartPerson", "agentdataPerson", "titledetails", "contributionRole_4"]
         },
         {
@@ -15971,6 +15983,96 @@
               } ]
             }
           }}
+        },
+        {
+          "name": "Revert languages in parts with translations",
+          "normalized": [
+            {"008" : "|     |        |  |||||||||||000 ||spa| "},
+            {
+              "041": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [ {"a": "spa"} ]
+              }
+            },
+            {
+              "041": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "spa"},
+                  {"h": "ita"}
+                ]
+              }
+            },
+            {
+              "700": {
+                "ind1": "1",
+                "ind2": "2",
+                "subfields": [
+                  {"a": "Ferrante, Elena,"},
+                  {"d": "1943-"},
+                  {"t": "L'amore molesto."},
+                  {"l": "Spanska"}
+                ]
+              }
+            }
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "language": [
+                  {
+                    "@type": "Language",
+                    "@id": "https://id.kb.se/language/spa",
+                    "label": "Spanska",
+                    "code":  "spa"
+                  }
+                ],
+                "hasPart": [
+                  {
+                    "@type": "Work",
+                    "hasTitle": [
+                      {
+                        "@type": "Title",
+                        "mainTitle": "L'amore molesto."
+                      }
+                    ],
+                    "language": [
+                      {
+                        "@type": "Language",
+                        "@id": "https://id.kb.se/language/spa",
+                        "label": "Spanska",
+                        "code":  "spa"
+                      }
+                    ],
+                    "contribution": [
+                      {
+                        "@type": "PrimaryContribution",
+                        "agent": {
+                          "@type": "Person",
+                          "lifeSpan": "1943-",
+                          "givenName": "Elena",
+                          "familyName": "Ferrante"
+                        }
+                      }
+                    ],
+                    "translationOf": [
+                      {
+                        "@type": "Work",
+                        "language": [
+                          {
+                            "@id": "https://id.kb.se/language/ita"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
         }
       ]
     },
@@ -18771,6 +18873,7 @@
       "aboutEntity": "?thing",
       "aboutAlias": "_:instance",
       "addLink": "succeededBy",
+      "TODO:silentRevert:if:otherPhysicalFormat && continuedBy...?": true,
       "resourceType": "Instance",
       "match": [
         {"when": "i2=0", "addLink": "continuedBy", "resourceType": "Instance"},
