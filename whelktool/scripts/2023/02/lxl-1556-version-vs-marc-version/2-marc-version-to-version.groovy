@@ -19,7 +19,8 @@ MARC_VERSION_BIB_PATHS =
                 ['instanceOf', 'expressionOf'],
                 ['instanceOf', 'hasPart'],
                 ['instanceOf', 'relationship', '*', 'entity'],
-                ['instanceOf', 'subject']
+                ['instanceOf', 'subject'],
+                ['instanceOf', 'seriesMembership', 'inSeries', 'instanceOf']
         ]
 
 MARC_VERSION_AUTH_PATHS =
