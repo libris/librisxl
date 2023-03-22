@@ -7,6 +7,11 @@
 \u0413 <> H ;
 \u0433 <> h ;
 
+# Ё ë ë
+# E och Ë betraktas i ryskan (men ej i vitryskan) vid alfabetisering som samma bokstav
+\u0401 <> \u00CB ;
+\u0451 <> \u00EB ;
+
 # Х х ch (serbiska och makedonska: h)
 \u0425 } [:LowercaseLetter:] <> Ch;
 \u0425 <> CH ;
