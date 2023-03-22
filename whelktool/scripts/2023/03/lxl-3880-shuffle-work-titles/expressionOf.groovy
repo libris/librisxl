@@ -63,8 +63,7 @@ selectBySqlWhere(where) {
                     [
                             [
                                     (TYPE)      : 'Title',
-                                    (MAIN_TITLE): prefTitle,
-                                    'source'    : 'Uniform titel' //TODO: Only for test, not to be kept in prod
+                                    (MAIN_TITLE): prefTitle
                             ]
                     ]
             normalized = true
@@ -83,8 +82,7 @@ selectBySqlWhere(where) {
                     [
                             [
                                     (TYPE)      : 'Title',
-                                    (MAIN_TITLE): prefTitle,
-                                    'source'    : 'Uniform titel' //TODO: Only for test, not to be kept in prod
+                                    (MAIN_TITLE): prefTitle
                             ]
                     ]
             normalized = true
@@ -108,7 +106,6 @@ selectBySqlWhere(where) {
         if (!normalized && instance['issuanceType'] == 'Monograph') {
             incrementStats('Title not normalized (Monographs)', stringify(expressionOf))
         }
-        expressionOf[HAS_TITLE][0]['source'] = expressionOf[HAS_TITLE][0]['source'] ?: 'expressionOf' //TODO: Only for test, not to be kept in prod
         List moveThese = TITLE_RELATED_PROPS + HAS_TITLE
         if (isMusic) {
             moveThese.add('musicKey')
