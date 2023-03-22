@@ -70,7 +70,7 @@ public class MarcCliExport
         if (args[0].equals("--sao"))
         {
             MarcRecordWriter output = new MarcXmlRecordWriter(System.out, "UTF-8");
-            new MarcCliExport(Whelk.createLoadedCoreWhelk()).dumpSao(output);
+            new MarcCliExport(Whelk.createLoadedSearchWhelk()).dumpSao(output);
             output.close();
             return;
         }
@@ -78,7 +78,7 @@ public class MarcCliExport
         if (args[0].equals("--auth"))
         {
             MarcRecordWriter output = new Iso2709MarcRecordWriter(System.out, "UTF-8");
-            new MarcCliExport(Whelk.createLoadedCoreWhelk()).dumpAuth(output);
+            new MarcCliExport(Whelk.createLoadedSearchWhelk()).dumpAuth(output);
             output.close();
             return;
         }
@@ -97,7 +97,7 @@ public class MarcCliExport
         if (args.length == 2)
         {
             Path idFilePath = new File(args[1]).toPath();
-            new MarcCliExport(Whelk.createLoadedCoreWhelk()).dumpSpecific(profile, idFilePath, output);
+            new MarcCliExport(Whelk.createLoadedSearchWhelk()).dumpSpecific(profile, idFilePath, output);
         } else if (args.length == 1)
         {
             // If the "profile" contains start/stop times, we should generate an interval-export instead
@@ -109,13 +109,13 @@ public class MarcCliExport
                 start = start +"T00:00:00Z";
                 stop = stop +"T23:59:59Z";
                 var parameters = new ProfileExport.Parameters(profile, start, stop, ProfileExport.DELETE_MODE.IGNORE, false);
-                Whelk whelk = Whelk.createLoadedCoreWhelk();
+                Whelk whelk = Whelk.createLoadedSearchWhelk();
                 ProfileExport pf = new ProfileExport(whelk, whelk.getStorage().createAdditionalConnectionPool("ProfileExport"));
                 pf.exportInto(output, parameters);
                 pf.shutdown();
             }
             else
-                new MarcCliExport(Whelk.createLoadedCoreWhelk()).dump(profile, output);
+                new MarcCliExport(Whelk.createLoadedSearchWhelk()).dump(profile, output);
         }
         output.close();
     }

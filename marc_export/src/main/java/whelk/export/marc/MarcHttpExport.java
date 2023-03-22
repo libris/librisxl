@@ -56,7 +56,7 @@ public class MarcHttpExport extends HttpServlet
 
     public void init()
     {
-        whelk = Whelk.createLoadedCoreWhelk();
+        whelk = Whelk.createLoadedSearchWhelk();
         profileExport = new ProfileExport(whelk, whelk.getStorage().createAdditionalConnectionPool("ProfileExport"));
     }
 
