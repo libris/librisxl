@@ -1,6 +1,6 @@
 {
   "type": "NormalizeWorkTitles",
-  "_TODO:requires-whelk:_spec": [
+  "_spec": [
     {
       "name": "move translationOf title for bib 240",
       "result": {
@@ -99,7 +99,7 @@
       }
     },
     {
-      "name": "move (non-copied) title (plus originDate and language) to expressionOf for bib 130 if no contribution is present",
+      "name": "move (non-copied) title (plus originDate) to expressionOf for bib 130 if no contribution is present",
       "result": {
         "mainEntity": {
           "instanceOf": {
@@ -143,11 +143,6 @@
                   "@type": "Title",
                   "mainTitle": "TITELN",
                   "_revertOnly": true
-                }
-              ],
-              "language": [
-                {
-                  "@id": "https://id.kb.se/language/swe"
                 }
               ],
               "originDate": "1654.",
@@ -248,10 +243,10 @@
               ],
               "language": [
                 {
-                  "@id": "https://id.kb.se/language/eng",
+                  "@id": "https://id.kb.se/language/swe",
                   "@type": "Language",
-                  "code": "eng",
-                  "label": "English"
+                  "code": "swe",
+                  "label": "Svenska"
                 }
               ],
               "_revertOnly": true

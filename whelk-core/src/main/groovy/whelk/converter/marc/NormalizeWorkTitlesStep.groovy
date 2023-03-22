@@ -112,7 +112,9 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
                         work[EXPRESSION_OF][it] = work[it]
                     }
                 }
-                addExpressionOfLang(work)
+                if (work[TRANSLATION_OF]) {
+                    work[EXPRESSION_OF][LANGUAGE] = work[LANGUAGE]
+                }
             }
         }
     }
@@ -149,13 +151,6 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
         item = item.clone()
         item._revertOnly = true
         return item
-    }
-
-    void addExpressionOfLang(Map work) {
-        List langs = work[TRANSLATION_OF] ? asList(work[TRANSLATION_OF]).findResults { it[LANGUAGE] }.flatten() : work[LANGUAGE]
-        if (langs) {
-            work[EXPRESSION_OF][LANGUAGE] = langs[0..<1]
-        }
     }
 
     boolean hasOkExpressionOf(Map work) {
