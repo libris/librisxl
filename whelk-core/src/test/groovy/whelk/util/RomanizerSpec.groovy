@@ -111,6 +111,9 @@ class RomanizerSpec extends Specification {
         // Hard sign
         'съесть' || 'sʺestʹ'
         'съ'     || 's'
+        // Yo
+        'сёрфингист' || 'serfingist'
+        'Ё' || 'E'
     }
 
     def "Belarusian with ISO"() {
@@ -124,6 +127,9 @@ class RomanizerSpec extends Specification {
         'Пiпi Доўгая Панчоха' || 'Pipi Doŭhaja Pančocha'
         // https://libris.kb.se/wb7x42x1t8wj48jg#it
         'Срэбная дарога' | 'Srėbnaja daroha'
+        // Yo
+        'стадыён' | 'stadyën'
+        'Ёрк'     | 'Ërk'
     }
 
     def "Bulgarian with ISO"() {

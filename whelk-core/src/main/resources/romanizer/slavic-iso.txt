@@ -37,11 +37,6 @@
 \u0415 <> E ;
 \u0435 <> e ;
 
-# Ё ë ë
-# E och Ë betraktas i ryskan (men ej i vitryskan) vid alfabetisering som samma bokstav
-\u0401 <> \u00CB ;
-\u00EB <> \u00EB ;
-
 # Ж ж ž
 \u0416 <> \u017D ;
 \u0436 <> \u017E ;
