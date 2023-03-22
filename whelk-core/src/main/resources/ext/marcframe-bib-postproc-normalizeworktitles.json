@@ -1,6 +1,6 @@
 {
   "type": "NormalizeWorkTitles",
-  "_spec": [
+  "_TODO:requires-whelk:_spec": [
     {
       "name": "move translationOf title for bib 240",
       "result": {
