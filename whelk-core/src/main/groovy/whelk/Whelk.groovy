@@ -691,7 +691,7 @@ class Whelk {
                                 redirectedIris[iri] = extDoc.getThingIdentifiers().first()
                                 extDoc.addThingIdentifier(iri)
                             }
-                            storeAtomicUpdate(extDoc, minorUpdate, changedIn, changedBy, checkSum)
+                            storeAtomicUpdate(extDoc, minorUpdate, false, changedIn, changedBy, checkSum)
                         })
                     }
                     catch (Exception e) { // TODO 
