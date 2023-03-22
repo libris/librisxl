@@ -7,6 +7,11 @@
 \u0413 <> G ;
 \u0433 <> g ;
 
+# Ё ё ë
+# E och Ë betraktas i ryskan (men ej i vitryskan) vid alfabetisering som samma bokstav
+\u0401 > E ;
+\u0451 > e ;
+
 # И и i (ukrainska: y)
 \u0418 <> I ;
 \u0438 <> i ;

@@ -108,6 +108,12 @@ class RomanizerSpec extends Specification {
         // Test record seems to be made with a transliterator that doesn't handle case correctly
         //'ВХУТЕМАС - ВХУТЕИН. Полиграфический факультет. 1920-1930' | 'VChUTEMAS - VChUTEIN. Poligrafičeskij fakulʹtet. 1920-1930'
         'ВХУТЕМАС - ВХУТЕИН. Полиграфический факультет. 1920-1930' | 'VCHUTEMAS - VCHUTEIN. Poligrafičeskij fakulʹtet. 1920-1930'
+        // Hard sign
+        'съесть' || 'sʺestʹ'
+        'съ'     || 's'
+        // Yo
+        'сёрфингист' || 'serfingist'
+        'Ё' || 'E'
     }
 
     def "Belarusian with ISO"() {
@@ -121,6 +127,9 @@ class RomanizerSpec extends Specification {
         'Пiпi Доўгая Панчоха' || 'Pipi Doŭhaja Pančocha'
         // https://libris.kb.se/wb7x42x1t8wj48jg#it
         'Срэбная дарога' | 'Srėbnaja daroha'
+        // Yo
+        'стадыён' | 'stadyën'
+        'Ёрк'     | 'Ërk'
     }
 
     def "Bulgarian with ISO"() {
