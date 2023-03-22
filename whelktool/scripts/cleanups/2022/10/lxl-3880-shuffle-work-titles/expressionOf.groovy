@@ -29,7 +29,7 @@ languageNames = langLinker.map.keySet() + langLinker.substitutions.keySet() + la
 
 localExpressionOfToPrefTitle = loadLocalExpressionOfToPrefTitleMappings('title-mappings/local-expressionOf.tsv')
 linkedExpressionOfToPrefTitle = loadLinkedExpressionOfToPrefTitleMappings('title-mappings/linked-expressionOf.tsv')
-hymnsAndBibles = loadHymnsAndBibles('title-mappings/psalmböcker-och-biblar.tsv')
+bibleToVersion = loadBibleVersions('title-mappings/bible-versions.tsv')
 
 TITLE_RELATED_PROPS = ['musicMedium', 'version', 'legalDate', 'originDate', 'originPlace', 'marc:arrangedStatementForMusic']
 
@@ -76,12 +76,8 @@ selectBySqlWhere(where) {
         def expressionOfAsString = stringify(expressionOf)
         def prefTitle = localExpressionOfToPrefTitle[expressionOfAsString]
         if (prefTitle) {
-            if (hymnsAndBibles[expressionOfAsString]) {
-                expressionOf.putAll(hymnsAndBibles[expressionOfAsString])
-                def originPlace = expressionOf['originPlace']
-                if (originPlace instanceof String) {
-                    expressionOf['originPlace'] = [(TYPE): 'Place', 'label': [originPlace]]
-                }
+            if (bibleToVersion[expressionOfAsString]) {
+                expressionOf['version'] = bibleToVersion[expressionOfAsString]
             }
             expressionOf[HAS_TITLE] =
                     [
@@ -226,17 +222,11 @@ Map loadLinkedExpressionOfToPrefTitleMappings(String filename) {
     }
 }
 
-// e.g. {"Bible. · [N.T., Gospels., Campbell.] · eng": {"version": "Campbell"}}
-Map loadHymnsAndBibles(String filename) {
-    def rows = new File(scriptDir, filename).readLines()
-    def propertyNames = rows.pop().split('\t')
+// e.g. {"Bible. · [N.T., Gospels., Campbell.] · eng": "Campbell"}
+Map loadBibleVersions(String filename) {
     return new File(scriptDir, filename).readLines().drop(1).collectEntries {
-        def values = it.split('\t', -1) as List
-        def stringifiedExpressionOf = values.pop()
-        def data = [propertyNames.drop(1), values].transpose()
-                .collectEntries { it }
-                .findAll { it.value }
-        [stringifiedExpressionOf, data]
+        def (bible, version) = it.split('\t')
+        [bible, version]
     }
 }
 
