@@ -220,6 +220,9 @@ class MarcConversion {
             procStep = new RomanizationStep(props)
             procStep.converter = converter    
             procStep.languageResources = converter.languageResources; break
+            case 'NormalizeWorkTitles':
+            procStep = new NormalizeWorkTitlesStep(props)
+            procStep.langLinker = converter.languageResources?.languageLinker; break
             case null:
             return null
             default:
