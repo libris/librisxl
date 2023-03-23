@@ -6,12 +6,16 @@ import whelk.IdGenerator
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.WhelkRuntimeException
+import whelk.meta.WhelkConstants
 import whelk.util.LegacyIntegrationTools
 import whelk.util.Statistics
 
 import java.text.SimpleDateFormat
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingDeque
+import java.util.concurrent.ThreadFactory
+import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Function
@@ -389,7 +393,7 @@ class WorkToolJob {
     }
 
     private void run(Function<List<String>, Runnable> f) {
-        ExecutorService s = Executors.newFixedThreadPool(numThreads > 1 ? numThreads : defaultNumThreads())
+        ExecutorService s = createExecutorService()
 
         AtomicInteger i = new AtomicInteger()
         clusters.eachLine() {
@@ -414,6 +418,26 @@ class WorkToolJob {
 
         s.shutdown()
         s.awaitTermination(1, TimeUnit.DAYS)
+    }
+
+    private def createExecutorService() {
+        int poolSize = numThreads > 1 ? numThreads : defaultNumThreads()
+        def linkedBlockingDeque = new LinkedBlockingDeque<Runnable>((int) (poolSize * 1.5))
+
+        def executorService = new ThreadPoolExecutor(poolSize, poolSize,
+                1, TimeUnit.DAYS,
+                linkedBlockingDeque, new ThreadPoolExecutor.CallerRunsPolicy())
+
+        executorService.setThreadFactory(new ThreadFactory() {
+            ThreadGroup group = new ThreadGroup(WhelkConstants.BATCH_THREAD_GROUP)
+
+            @Override
+            Thread newThread(Runnable runnable) {
+                return new Thread(group, runnable)
+            }
+        })
+
+        return executorService
     }
 
     private static int defaultNumThreads() {
