@@ -20,27 +20,33 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
     LanguageLinker langLinker
 
     void modify(Map record, Map thing) {
-        traverse(thing, null, true)
+        traverse(thing, doModify)
     }
 
     void unmodify(Map record, Map thing) {
-        traverse(thing)
+        traverse(thing, doUnmodify)
     }
 
-    void traverse(o, String via = null, convert = false) {
+    void traverse(o, String via = null, Closure handleTitles) {
         asList(o).each {
             if (it instanceof Map) {
-                if (convert) {
-                    moveExpressionOfTitle(it)
-                    moveOriginalTitle(it)
-                } else if (!('_revertOnly' in it)) {
-                    useOriginalTitle(it)
-                    titleToExpressionOfIfNoPrimaryContribution(it, via)
-                }
+                handleTitles(it, via)
                 it.each { k, v ->
-                    traverse(v, k, convert)
+                    traverse(v, k, handleTitles)
                 }
             }
+        }
+    }
+
+    Closure doModify = { Map work, String via ->
+        moveExpressionOfTitle(work)
+        moveOriginalTitle(work)
+    }
+
+    Closure doUnmodify = { Map work, String via ->
+        if (!('_revertOnly' in work)) {
+            useOriginalTitle(work)
+            titleToExpressionOfIfNoPrimaryContribution(work, via)
         }
     }
 
