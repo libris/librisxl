@@ -22,6 +22,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         Map scripts
     }
 
+    boolean requiresResources = true
     MarcFrameConverter converter
     LanguageResources languageResources
 
