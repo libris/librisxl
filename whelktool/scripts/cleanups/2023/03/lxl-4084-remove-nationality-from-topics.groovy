@@ -7,12 +7,13 @@
 
 selectBySqlWhere("""
         collection = 'auth' AND 
-        data#>>'{@graph,0,nationality}' IS NOT NULL AND
+
         (
             data#>>'{@graph,1,@type}' = 'Topic' OR 
             data#>>'{@graph,1,@type}' = 'Temporal' OR
             data#>>'{@graph,1,@type}' = 'ComplexSubject'
         )
+        data#>>'{@graph,1,nationality}' IS NOT NULL AND
     """) { data ->
 
     def (record, thing) = data.graph
