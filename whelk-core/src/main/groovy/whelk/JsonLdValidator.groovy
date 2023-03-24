@@ -83,7 +83,7 @@ class JsonLdValidator {
             if (!passedPreValidation(key, value, path, validation)) {
                 return
             }
-            validation.at = path
+            validation.at = path.collect()
 
             if (checkLangContainer(path, key, value, validation)) {
                 return 
