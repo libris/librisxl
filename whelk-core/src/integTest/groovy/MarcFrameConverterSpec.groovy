@@ -53,6 +53,9 @@ class MarcFrameConverterSpec extends Specification {
                 if (tag == 'postProcessing') {
                     ruleSet.postProcSteps.eachWithIndex { step, i ->
                         if (step.requiresResources && !whelk) {
+                            var name = step.class.name
+                            var size = dfn[i]._spec.size()
+                            System.err.println("Skipping $name (${size} specs) [requiresResources]")
                             return
                         }
                         dfn[i]._spec.each {
