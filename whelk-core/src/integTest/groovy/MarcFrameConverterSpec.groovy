@@ -7,9 +7,17 @@ import spock.lang.*
 @Unroll
 class MarcFrameConverterSpec extends Specification {
 
-    static converter = new MarcFrameConverter() {
-        def config
+    static Whelk whelk = null
+    static {
+        try {
+            whelk = Whelk.createLoadedSearchWhelk()
+        } catch (Exception e) {
+            System.err.println("Unable to instantiate whelk: $e")
+        }
+    }
 
+    static converter = new MarcFrameConverter(null, whelk?.jsonld, whelk?.languageResources) {
+        def config
         void initialize(Map config) {
             super.initialize(config)
             this.config = config
@@ -44,6 +52,12 @@ class MarcFrameConverterSpec extends Specification {
 
                 if (tag == 'postProcessing') {
                     ruleSet.postProcSteps.eachWithIndex { step, i ->
+                        if (step.requiresResources && !whelk) {
+                            var name = step.class.name
+                            var size = dfn[i]._spec.size()
+                            System.err.println("Skipping $name (${size} specs) [requiresResources]")
+                            return
+                        }
                         dfn[i]._spec.each {
                             postProcStepSpecs << [step: step, spec: it, thingLink: thingLink]
                         }

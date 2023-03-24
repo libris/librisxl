@@ -17,6 +17,7 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
 
     private static final List<String> titleProps = [HAS_TITLE, 'musicKey', 'musicMedium', 'version', LEGAL_DATE, 'originDate', 'marc:arrangedStatementForMusic']
 
+    boolean requiresResources = true
     LanguageLinker langLinker
 
     void modify(Map record, Map thing) {
