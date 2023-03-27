@@ -210,7 +210,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
 
             def subFields = field[SUBFIELDS].collect {
                 def subfield = it.keySet()[0]
-                [(BIB880 + '-' + subfield): stripPrefix(it[subfield], OG_MARK)]
+                [(BIB880 + '-' + subfield): stripMark(it[subfield], OG_MARK)]
             }
 
             def hasBib880 = thing.computeIfAbsent(HAS_BIB880, s -> [])
@@ -248,8 +248,11 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         MARC_SCRIPT_CODES.findResult{ tLang.contains(it.key) ? it.value : null } ?: ''
     }
 
-    private static String stripPrefix(String s, String prefix) {
-        s.startsWith(prefix) ? s.substring(prefix.length()) : s
+    private static String stripMark(String s, String mark) {
+        // Multiple properties can become one MARC subfield. So marks can also occur inside strings.
+        s.startsWith(mark)
+            ? s.replace(mark, '')
+            : s
     }
 
     @MapConstructor
