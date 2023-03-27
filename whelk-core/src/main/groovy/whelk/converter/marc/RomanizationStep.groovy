@@ -12,27 +12,25 @@ import static whelk.JsonLd.asList
 
 @Log
 class RomanizationStep extends MarcFramePostProcStepBase {
-
+    private static final String TARGET_SCRIPT = 'Latn'
+    private  static final String MATCH_T_TAG = "-${TARGET_SCRIPT}-t-"
+    
     @CompileStatic
     @NullCheck(includeGenerated = true)
     static class LanguageResources {
         LanguageLinker languageLinker
         Map languages
         Map transformedLanguageForms
-        Map scripts
     }
 
     MarcFrameConverter converter
     LanguageResources languageResources
 
-    Map tLangCodes
-    Map langIdToLangTag
     Map langAliases
     Map byLangToBase
-    Map langToTLang
-
-    private static final String TARGET_SCRIPT = 'Latn'
-
+    
+    Map langIdToLangTag
+    
     // Note: MARC standard allows ISO 15924 in $6 but Libris practice doesn't
     private static final Map MARC_SCRIPT_CODES =
             [
@@ -146,15 +144,11 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     }
 
     void _unmodify(Map record, Map thing) {
-        if (!languageResources)
-            return
-
         def byLangPaths = findByLangPaths(thing)
         def uniqueTLangs = findUniqueTLangs(thing, byLangPaths)
 
         // TODO: Can multiple transform rules be applied to the same record? What happens then with non-repeatable fields?
-        
-        
+                
         uniqueTLangs.each { tLang ->
             unmodifyTLang(thing, tLang, byLangPaths, record)
         }
@@ -216,7 +210,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
 
             def subFields = field[SUBFIELDS].collect {
                 def subfield = it.keySet()[0]
-                [(BIB880 + '-' + subfield): stripPrefix(it[subfield], OG_MARK)]
+                [(BIB880 + '-' + subfield): stripMark(it[subfield], OG_MARK)]
             }
 
             def hasBib880 = thing.computeIfAbsent(HAS_BIB880, s -> [])
@@ -251,12 +245,14 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     }
 
     private String marcScript(String tLang) {
-        def script = languageResources.scripts[tLangCodes[tLang].fromLangScript]
-        return MARC_SCRIPT_CODES[script?.code ?: '']
+        MARC_SCRIPT_CODES.findResult{ tLang.contains(it.key) ? it.value : null } ?: ''
     }
 
-    private static String stripPrefix(String s, String prefix) {
-        s.startsWith(prefix) ? s.substring(prefix.length()) : s
+    private static String stripMark(String s, String mark) {
+        // Multiple properties can become one MARC subfield. So marks can also occur inside strings.
+        s.startsWith(mark)
+            ? s.replace(mark, '')
+            : s
     }
 
     @MapConstructor
@@ -293,7 +289,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     }
 
     boolean addAltLang(Map thing, Map converted, String lang) {
-        if (!langIdToLangTag[lang] || !langToTLang[lang]) {
+        if (!langIdToLangTag[lang]) {
             return false
         }
         def nonByLangPaths = []
@@ -344,14 +340,19 @@ class RomanizationStep extends MarcFramePostProcStepBase {
             if (langContainer.size() == 1) {
                 parent[base] = langContainer.values().first()
             } else {
-                langContainer
-                        .findResults { langTag, literal -> langTag in tLangCodes.keySet() ? literal : null }
+                pickRomanization(langContainer).values()
                         .with(RomanizationStep::unpackSingle)
                         ?.with { parent[base] = it }
             }
         }
     }
 
+    static Map pickRomanization(Map langContainer) {
+        // For now we just take the first tag in alphabetical order
+        // works for picking e.g. yi-Latn-t-yi-Hebr-m0-alaloc over yi-Latn-t-yi-Hebr-x0-yivo
+        langContainer.findAll { String langTag, literal -> langTag.contains(MATCH_T_TAG) }.sort()?.take(1) ?: [:]
+    }
+    
     static def unpackSingle(Collection l) {
         return l.size() == 1 ? l[0] : l
     }
@@ -359,7 +360,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     def putOriginalLiteralInNonByLang(Map thing, List byLangPath, String tLang) {
         putLiteralInNonByLang(thing, byLangPath) { Map parent, String key, String base ->
             def romanized = parent[key].find { langTag, literal -> langTag == tLang }
-            def original = parent[key].find { langTag, literal -> langTag == langIdToLangTag[tLangCodes[tLang].inLanguage] }?.value
+            def original = parent[key].find { langTag, literal -> tLang.contains("${MATCH_T_TAG}${langTag}") }?.value
             if (romanized && original) {
                 parent[base] = original instanceof List
                         ? original.collect { OG_MARK + it }
@@ -385,11 +386,8 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         Set tLangs = []
 
         byLangPaths.each {
-            DocumentUtil.getAtPath(thing, it).each { langTag, literal ->
-                if (langTag in tLangCodes.keySet()) {
-                    tLangs.add(langTag)
-                }
-            }
+            Map<String, ?> langContainer = DocumentUtil.getAtPath(thing, it)
+            pickRomanization(langContainer).with { tLangs.addAll(it.keySet()) }
         }
 
         return tLangs
@@ -414,33 +412,10 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         if (!languageResources) {
             return
         }
-
-        this.tLangCodes = getTLangCodes(languageResources.transformedLanguageForms)
-        this.langToTLang = tLangCodes.collectEntries { k, v -> [v.inLanguage, k] }
+        
         this.langAliases = ld.langContainerAlias
         this.byLangToBase = langAliases.collectEntries { k, v -> [v, k] }
         this.langIdToLangTag = languageResources.languages
                 .findAll { k, v -> v.langTag }.collectEntries { k, v -> [k, v.langTag] }
-    }
-
-    static Map<String, Map> getTLangCodes(Map<String, Map> transformedLanguageForms) {
-        String matchTag = "-${TARGET_SCRIPT}-t-"
-        def t = transformedLanguageForms
-                .values()
-                .findAll { ((String) it.langTag)?.contains(matchTag) }
-                .collectEntries {
-                    def data = [:]
-                    if (it.inLanguage) {
-                        data.inLanguage = it.inLanguage[ID]
-                    }
-                    if (it.fromLangScript) {
-                        data.fromLangScript = it.fromLangScript[ID]
-                    }
-                    [it.langTag, data]
-                }
-        
-        //TODO: Implement proper selection of romanization form where multiple
-        t.remove('yi-Latn-t-yi-Hebr-x0-yivo')
-        return t
     }
 }
