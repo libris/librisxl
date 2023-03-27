@@ -357,7 +357,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     def putOriginalLiteralInNonByLang(Map thing, List byLangPath, String tLang) {
         putLiteralInNonByLang(thing, byLangPath) { Map parent, String key, String base ->
             def romanized = parent[key].find { langTag, literal -> langTag == tLang }
-            def original = parent[key].find { langTag, literal -> tLang.contains("${MATCH_T_TAG}${langTag}-") }?.value
+            def original = parent[key].find { langTag, literal -> tLang.contains("${MATCH_T_TAG}${langTag}") }?.value
             if (romanized && original) {
                 parent[base] = original instanceof List
                         ? original.collect { OG_MARK + it }
