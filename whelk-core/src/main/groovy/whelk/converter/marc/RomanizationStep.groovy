@@ -409,12 +409,12 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     }
 
     void init() {
+        this.langAliases = ld.langContainerAlias
+        this.byLangToBase = langAliases.collectEntries { k, v -> [v, k] }
+
         if (!languageResources) {
             return
         }
-        
-        this.langAliases = ld.langContainerAlias
-        this.byLangToBase = langAliases.collectEntries { k, v -> [v, k] }
         this.langIdToLangTag = languageResources.languages
                 .findAll { k, v -> v.langTag }.collectEntries { k, v -> [k, v.langTag] }
     }
