@@ -81,7 +81,7 @@ public class OaiPmh extends HttpServlet
 
     static
     {
-        s_whelk = Whelk.createLoadedSearchWhelk();
+        s_whelk = Whelk.createLoadedCoreWhelk();
         supportedFormats = new HashMap<String, FormatDescription>();
         supportedFormats.put("oai_dc", new FormatDescription(new JsonLD2DublinCoreConverter(), true, "http://www.openarchives.org/OAI/2.0/oai_dc.xsd", "http://www.openarchives.org/OAI/2.0"));
         supportedFormats.put("marcxml", new FormatDescription(new JsonLD2MarcXMLConverter(s_whelk.getMarcFrameConverter()), true, "http://www.loc.gov/standards/marcxml/schema/MARC21slim.xsd", "http://www.loc.gov/MARC21/slim"));
