@@ -21,21 +21,16 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         LanguageLinker languageLinker
         Map languages
         Map transformedLanguageForms
-        Map scripts
     }
 
     MarcFrameConverter converter
     LanguageResources languageResources
 
+    Map langAliases
     Map byLangToBase
     
-    Map tLangCodes
     Map langIdToLangTag
-    Map langAliases
-    Map langToTLang
-
     
-
     // Note: MARC standard allows ISO 15924 in $6 but Libris practice doesn't
     private static final Map MARC_SCRIPT_CODES =
             [
@@ -291,7 +286,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     }
 
     boolean addAltLang(Map thing, Map converted, String lang) {
-        if (!langIdToLangTag[lang] || !langToTLang[lang]) {
+        if (!langIdToLangTag[lang]) {
             return false
         }
         def nonByLangPaths = []
@@ -414,28 +409,10 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         if (!languageResources) {
             return
         }
-
-        this.tLangCodes = getTLangCodes(languageResources.transformedLanguageForms)
-        this.langToTLang = tLangCodes.collectEntries { k, v -> [v.inLanguage, k] }
+        
         this.langAliases = ld.langContainerAlias
         this.byLangToBase = langAliases.collectEntries { k, v -> [v, k] }
         this.langIdToLangTag = languageResources.languages
                 .findAll { k, v -> v.langTag }.collectEntries { k, v -> [k, v.langTag] }
-    }
-
-    static Map<String, Map> getTLangCodes(Map<String, Map> transformedLanguageForms) {
-        def t = transformedLanguageForms
-                .values()
-                .findAll { ((String) it.langTag)?.contains(MATCH_T_TAG) }
-                .collectEntries {
-                    def data = [:]
-                    if (it.inLanguage) {
-                        data.inLanguage = it.inLanguage[ID]
-                    }
-                    if (it.fromLangScript) {
-                        data.fromLangScript = it.fromLangScript[ID]
-                    }
-                    [it.langTag, data]
-                }
     }
 }

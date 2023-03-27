@@ -239,8 +239,7 @@ class Whelk {
         languageResources = new RomanizationStep.LanguageResources(
                 languageLinker: languageLinker,
                 languages: idsToThings('Language'),
-                transformedLanguageForms: idsToThings('TransformedLanguageForm'),
-                scripts: idsToThings('Script')
+                transformedLanguageForms: idsToThings('TransformedLanguageForm')
         )
     }
 
