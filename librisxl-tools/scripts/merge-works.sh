@@ -30,7 +30,7 @@ ALL_CLUSTERS=$CLUSTERS_DIR/1-all.tsv
 MERGED_CLUSTERS=$CLUSTERS_DIR/2-merged.tsv
 TITLE_CLUSTERS=$CLUSTERS_DIR/3-title-clusters.tsv
 SWEDISH_FICTION=$CLUSTERS_DIR/4-swedish-fiction.tsv
-NO_TRANSLATIONS_WITHOUT_TRANSLATOR=$CLUSTERS_DIR/5-no-translations-without-translators.tsv
+ANONYMOUS_TRANSLATIONS=$CLUSTERS_DIR/5-anonymous-translations.tsv
 
 LANGUAGE_IN_TITLE=$NORMALIZATIONS_DIR/1-titles-with-language
 LINK_CONTRIBUTION=$NORMALIZATIONS_DIR/2-link-contribution
@@ -106,8 +106,8 @@ echo "$(count_lines $ILLUSTRATORS/MODIFIED.txt) records affected, report in $ILL
 # Filter: Drop translations without translator
 echo "Filtering out translations without translator..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool \
-  $ARGS -tr $SWEDISH_FICTION >$NO_TRANSLATIONS_WITHOUT_TRANSLATOR
-NUM_CLUSTERS=$(count_lines $NO_TRANSLATIONS_WITHOUT_TRANSLATOR)
+  $ARGS -tr $SWEDISH_FICTION >$ANONYMOUS_TRANSLATIONS
+NUM_CLUSTERS=$(count_lines $ANONYMOUS_TRANSLATIONS)
 echo "$NUM_CLUSTERS clusters ready for merge"
 if [ $NUM_CLUSTERS == 0 ]; then
   exit 0
@@ -116,4 +116,4 @@ fi
 # Merge
 echo "Merging..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool \
-  $ARGS -r $REPORT_DIR/merged-works -m $NO_TRANSLATIONS_WITHOUT_TRANSLATOR
+  $ARGS -r $REPORT_DIR/merged-works -m $ANONYMOUS_TRANSLATIONS
