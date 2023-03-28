@@ -55,13 +55,9 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     String SUBFIELDS = 'subfields'
     String IND1 = 'ind1'
     String IND2 = 'ind2'
-
-    String BIB035_REF = 'marc:bib035-fieldref'
-    String BIB041_REF = 'marc:bib041-fieldref'
     String BIB250_REF = 'marc:bib250-fieldref'
-    String HOLD035_REF = 'marc:hold035-fieldref'
 
-    List FIELD_REFS = [FIELDREF, BIB035_REF, BIB041_REF, BIB250_REF, HOLD035_REF]
+    List FIELD_REFS = [FIELDREF, BIB250_REF]
 
     void modify(Map record, Map thing) {
         try {
@@ -232,12 +228,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         }
 
         String propertyName() {
-            switch (toField) {
-                case '035': return BIB035_REF // TODO: also 'marc:hold035-fieldref'
-                case '041': return BIB041_REF
-                case '250': return BIB250_REF
-                default: return FIELDREF
-            }
+            return toField == '250' ? BIB250_REF : FIELDREF
         }
     }
 
