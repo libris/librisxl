@@ -166,7 +166,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
 
         def fieldRefs = []
 
-        DocumentUtil.findKey(thingCopy, FIELDREF) { value, path ->
+        DocumentUtil.findKey(thingCopy, FIELD_REFS) { value, path ->
             def romanizedField = romanizedFieldsByTmpRef[value]
             if (romanizedField) {
                 def fieldNumber = romanizedField.keySet()[0]
@@ -344,6 +344,9 @@ class RomanizationStep extends MarcFramePostProcStepBase {
                 tmpRef += 1
             }
             return DocumentUtil.NOP
+        }
+        if (thing['editionStatement']) {
+            thing[BIB250_REF] = tmpRef.toString()
         }
     }
 

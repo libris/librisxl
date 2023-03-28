@@ -85,11 +85,11 @@
               "hasTitle": [
                 {
                   "@type": "Title",
-                  "mainTitle": "Vremja ženščin",
-                  "marc:fieldref": [
-                    "880-01"
-                  ]
+                  "mainTitle": "Vremja ženščin"
                 }
+              ],
+              "marc:fieldref": [
+                "880-01"
               ]
             }
           },
@@ -194,7 +194,7 @@
       }
     },
     {
-      "name": "construct-880-for-245[$a + $c]",
+      "name": "construct-880-for-245",
       "result": {
         "mainEntity": {
           "@type": "Instance",
@@ -382,5 +382,78 @@
         }
       }
     },
+    {
+      "name": "construct-880-for-250",
+      "result": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text"
+          },
+          "hasTitle": [
+            {
+              "@type": "Title",
+              "mainTitleByLang": {
+                "zh": "民族理论和民族政策纲要",
+                "zh-Latn-t-zh-Hani-m0-alaloc": "Minzu lilun he minzu zhengce gangyao"
+              }
+            }
+          ],
+          "editionStatementByLang": {
+            "zh": "第2版.(修訂本)",
+            "zh-Latn-t-zh-Hani-m0-alaloc": "Di 2 ban. (Xiuding ben)"
+          }
+        }
+      },
+      "back": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text"
+          },
+          "hasTitle": [
+            {
+              "@type": "Title",
+              "mainTitle": "Minzu lilun he minzu zhengce gangyao",
+              "marc:fieldref": [
+                "880-01"
+              ]
+            }
+          ],
+          "editionStatement": "Di 2 ban. (Xiuding ben)",
+          "marc:bib250-fieldref": [
+            "880-02"
+          ],
+          "marc:hasBib880": [
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "245-01/$1"
+                },
+                {
+                  "marc:bib880-a": "民族理论和民族政策纲要"
+                }
+              ],
+              "marc:bib880-i1": "1",
+              "marc:bib880-i2": "0"
+            },
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "250-02/$1"
+                },
+                {
+                  "marc:bib880-a": "第2版.(修訂本)"
+                }
+              ],
+              "marc:bib880-i1": " ",
+              "marc:bib880-i2": " "
+            }
+          ]
+        }
+      }
+    }
   ]
 }
