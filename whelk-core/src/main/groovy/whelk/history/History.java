@@ -1,10 +1,14 @@
 package whelk.history;
 
 import whelk.JsonLd;
+import whelk.util.DocumentUtil;
 
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static whelk.util.DocumentUtil.getAtPath;
 
 public class History {
 
@@ -84,55 +88,87 @@ public class History {
                 changeSet.put("tool", tool);
             }
             changeSets.add(changeSet);
-
+            var previousVersion = m_lastVersion;
             addVersion(version, changeSet);
 
             // Clean up markers that have a more specific equivalent
             {
-                HashSet added = (HashSet) changeSet.get("addedPaths");
-                HashSet removed = (HashSet) changeSet.get("removedPaths");
-                List addMarkers = new ArrayList(added);
-                List removeMarkers = new ArrayList(removed);
-
-                Iterator markerPathIt = added.iterator();
-                while (markerPathIt.hasNext()) {
-                    List<Object> path = (List<Object>) markerPathIt.next();
-                    for (Object o : addMarkers) {
-                        List<Object> otherPath = (List<Object>) o;
-                        if (!path.equals(otherPath) && isSubList(path, otherPath)) {
-                            markerPathIt.remove();
-                            break;
-                        }
-                    }
+                Set<List> added = (Set<List>) changeSet.get("addedPaths");
+                Set<List> removed = (Set<List>) changeSet.get("removedPaths");
+                
+                Set<List> addedAndRemoved = new HashSet<>(added);
+                addedAndRemoved.addAll(removed);
+                
+                for (List deeperPath : addedAndRemoved) {
+                    added.removeIf(p -> !p.equals(deeperPath) && isSubList(p, deeperPath));
+                    removed.removeIf(p -> !p.equals(deeperPath) && isSubList(p, deeperPath));
                 }
+                
+                if (previousVersion != null) {
+                    var aParents = added.stream().map(History::parent).collect(Collectors.toSet());
+                    var rParents = removed.stream().map(History::parent).collect(Collectors.toSet());
+                    var editLocations = intersect(aParents, rParents);
 
-                markerPathIt = removed.iterator();
-                while (markerPathIt.hasNext()) {
-                    List<Object> path = (List<Object>) markerPathIt.next();
-                    for (Object o : removeMarkers) {
-                        List<Object> otherPath = (List<Object>) o;
-                        if (!path.equals(otherPath) && isSubList(path, otherPath)) {
-                            markerPathIt.remove();
-                            break;
+                    var prev = previousVersion.doc.data;
+                    var curr = m_lastVersion.doc.data;
+
+                    for (var edit : editLocations) {
+                        boolean isLangContainer = jsonLd.getLangContainerAliasInverted().containsKey(last(edit));
+                        if (!isLangContainer && !isSimilar(getAtPath(prev, edit), getAtPath(curr, edit))) {
+                            added.removeIf(p -> isSubList(edit, p));
+                            removed.removeIf(p -> isSubList(edit, p));
+                            added.add(edit);
+                            removed.add(edit);
                         }
                     }
                 }
             }
-
-            // Clean up empty fields
-            if ( ((HashSet) changeSet.get("addedPaths")).isEmpty() )
-                changeSet.remove("addedPaths");
-            if ( ((HashSet) changeSet.get("removedPaths")).isEmpty() )
-                changeSet.remove("removedPaths");
         }
     }
     
-    private boolean isSubList(List a, List b) {
+    private static boolean isSubList(List a, List b) {
         if (a.size() > b.size())
             return false;
         if (b.subList(0, a.size()).equals(a))
             return true;
         return false;
+    }
+    
+    private static boolean isSimilar(Object a, Object b) {
+        if (a.getClass() != b.getClass()) {
+            return false;
+        }
+        if (a.equals(b)) {
+            return true;
+        }
+        if (a instanceof List) {
+            return true;
+        }
+        if (a instanceof Map) {
+            var ma = (Map<String, ?>) a;
+            var mb = (Map<String, ?>) b;
+            
+            if (JsonLd.isLink(ma) || JsonLd.isLink(mb)) {
+                return false;
+            }
+            
+            return intersect(ma.keySet(), mb.keySet()).size() > 0;
+        }
+        return false;
+    }
+    
+    private static List parent(List path) {
+        return path.subList(0, path.size() > 0 ? path.size() - 1 : 0);
+    }
+    
+    private static <T> T last(List<T> l) {
+        return l.size() > 0 ? l.get(l.size() - 1) : null;
+    }  
+    
+    private static <T> Set<T> intersect(Set<T> a, Set<T> b) {
+        var i = new HashSet<>(a);
+        i.retainAll(b);
+        return i;
     }
 
     public void addVersion(DocumentVersion version, Map changeSetToBuild) {
@@ -180,8 +216,8 @@ public class History {
      * in two versions of a record.
      *
      * 'version' is the new version (whole Record),
-     * 'previousVersion' is the old one (whole Record),
      * 'path' is where in the record(s) we are,
+     * 'correspondingPath' is the "same" object in the old version
      * 'examining' is the object (entity?) being compared,
      * 'correspondingPrevious' is the "same" object in the old version
      * 'compositePath' is null or a (shorter/higher) path to the latest

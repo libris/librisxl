@@ -341,6 +341,10 @@ class JsonLd {
     String expand(String ref) {
         return expand(ref, (Map) displayData[CONTEXT_KEY])
     }
+    
+    static boolean isLink(Map jsonLd) {
+        jsonLd.size() == 1 && jsonLd[ID_KEY]
+    }
 
     static URI findRecordURI(Map jsonLd) {
         String foundIdentifier = findIdentifier(jsonLd)
