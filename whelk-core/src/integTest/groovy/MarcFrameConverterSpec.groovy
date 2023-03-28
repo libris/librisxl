@@ -8,22 +8,23 @@ import spock.lang.*
 class MarcFrameConverterSpec extends Specification {
 
     static Whelk whelk = null
+    static MarcFrameConverter converter = null
+
     static {
         try {
             whelk = Whelk.createLoadedSearchWhelk()
         } catch (Exception e) {
             System.err.println("Unable to instantiate whelk: $e")
         }
-    }
-
-    static converter = new MarcFrameConverter(null, whelk?.jsonld, whelk?.languageResources) {
-        def config
-        void initialize(Map config) {
-            super.initialize(config)
-            this.config = config
-            super.conversion.doPostProcessing = false
-            super.conversion.flatLinkedForm = false
-            super.conversion.baseUri = new URI("/")
+        converter = new MarcFrameConverter(null, whelk?.jsonld, whelk?.languageResources) {
+            def config
+            void initialize(Map config) {
+                super.initialize(config)
+                this.config = config
+                super.conversion.doPostProcessing = false
+                super.conversion.flatLinkedForm = false
+                super.conversion.baseUri = new URI("/")
+            }
         }
     }
 
