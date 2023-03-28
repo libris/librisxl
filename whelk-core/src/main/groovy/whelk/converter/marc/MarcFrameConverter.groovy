@@ -430,13 +430,16 @@ class MarcConversion {
         def marcRuleSet = getRuleSetFromJsonLd(data)
 
         if (doPostProcessing) {
+            // Temporarily turn off to prevent recursive calls from postprocessing steps
+            doPostProcessing = false
             applyInverses(data, data[marcRuleSet.thingLink])
-            sharedPostProcSteps.each {
+            marcRuleSet.postProcSteps.reverseEach {
                 it.unmodify(data, data[marcRuleSet.thingLink])
             }
-            marcRuleSet.postProcSteps.each {
+            sharedPostProcSteps.reverseEach {
                 it.unmodify(data, data[marcRuleSet.thingLink])
             }
+            doPostProcessing = true
         }
 
         Map state = [:]
