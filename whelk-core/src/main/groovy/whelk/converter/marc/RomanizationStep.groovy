@@ -149,6 +149,10 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         uniqueTLangs.each { tLang ->
             unmodifyTLang(thing, tLang, byLangPaths, record)
         }
+        
+        if (thing[HAS_BIB880]) {
+            ((List) thing[HAS_BIB880]).sort { bib880 -> bib880[PART_LIST]?[0]?[FIELDREF] ?: '' }
+        }
 
         byLangPaths.each { putRomanizedLiteralInNonByLang(thing, it as List) }
     }
