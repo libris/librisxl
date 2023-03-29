@@ -7535,7 +7535,7 @@
         "uriTemplate": "http://libris.kb.se/auth/{_}",
         "matchUriToken": "^\\d{1,14}$"
       },
-      "$6": {"property": "marc:fieldref"},
+      "$6": {"about": "_:title", "property": "marc:fieldref"},
       "subfieldOrder": "6 a g d m n r p k l s f o 1 0",
       "_spec": [
         {
