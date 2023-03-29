@@ -32,7 +32,7 @@ boolean moveTitlesRecursive(Object o, String id, String via) {
 
     asList(o).each {
         if (it instanceof Map) {
-            successfulMove = tryMoveTitle(it, id, via)
+            successfulMove |= tryMoveTitle(it, id, via)
             it.each { k, v ->
                 successfulMove |= moveTitlesRecursive(v, id, k)
             }
