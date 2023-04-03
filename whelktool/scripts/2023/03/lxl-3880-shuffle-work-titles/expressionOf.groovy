@@ -64,7 +64,7 @@ selectBySqlWhere(where) {
                             [
                                     (TYPE)      : 'Title',
                                     (MAIN_TITLE): prefTitle,
-                                    'source'    : [(ID): expressionOf[ID]]
+                                    'source'    : [[(ID): expressionOf[ID]]]
                             ]
                     ]
             normalized = true
@@ -84,7 +84,7 @@ selectBySqlWhere(where) {
                             [
                                     (TYPE)      : 'Title',
                                     (MAIN_TITLE): prefTitle,
-                                    'source'    : [(ID): 'https://id.kb.se/term/uniformWorkTitle']
+                                    'source'    : [[(ID): 'https://id.kb.se/term/uniformWorkTitle']]
                             ]
                     ]
             normalized = true
