@@ -1,7 +1,6 @@
 package whelk.history;
 
 import whelk.JsonLd;
-import whelk.util.DocumentUtil;
 
 import java.time.Instant;
 import java.time.ZonedDateTime;
@@ -105,27 +104,29 @@ public class History {
                 }
                 
                 if (previousVersion != null) {
-                    var aParents = added.stream().map(History::parent).collect(Collectors.toSet());
-                    var rParents = removed.stream().map(History::parent).collect(Collectors.toSet());
-                    var editLocations = intersect(aParents, rParents);
-
                     var prev = previousVersion.doc.data;
                     var curr = m_lastVersion.doc.data;
-
-                    for (var edit : editLocations) {
-                        boolean isLangContainer = jsonLd.getLangContainerAliasInverted().containsKey(last(edit));
-                        if (!isLangContainer && !isSimilar(getAtPath(prev, edit), getAtPath(curr, edit))) {
-                            added.removeIf(p -> isSubList(edit, p));
-                            removed.removeIf(p -> isSubList(edit, p));
-                            added.add(edit);
-                            removed.add(edit);
+                    
+                    for (var parent : added.stream().map(History::parent).collect(Collectors.toSet())) {
+                        boolean isLangContainer = jsonLd.getLangContainerAliasInverted().containsKey(last(parent));
+                        if (!isLangContainer && isAllChanged(getAtPath(prev, parent), getAtPath(curr, parent))) {
+                            added.removeIf(p -> isSubList(parent, p));
+                            added.add(parent);
+                        }
+                    }
+                    
+                    for (var parent : removed.stream().map(History::parent).collect(Collectors.toSet())) {
+                        boolean isLangContainer = jsonLd.getLangContainerAliasInverted().containsKey(last(parent));
+                        if (!isLangContainer && isAllChanged(getAtPath(prev, parent), getAtPath(curr, parent))) {
+                            removed.removeIf(p -> isSubList(parent, p));
+                            removed.add(parent);
                         }
                     }
                 }
             }
         }
     }
-    
+        
     private static boolean isSubList(List a, List b) {
         if (a.size() > b.size())
             return false;
@@ -134,25 +135,26 @@ public class History {
         return false;
     }
     
-    private static boolean isSimilar(Object a, Object b) {
+    private static boolean isAllChanged(Object a, Object b) {
         if (a.getClass() != b.getClass()) {
-            return false;
+            return true;
         }
         if (a.equals(b)) {
-            return true;
-        }
-        if (a instanceof List) {
-            return true;
+            return false;
         }
         if (a instanceof Map) {
             var ma = (Map<String, ?>) a;
             var mb = (Map<String, ?>) b;
             
-            if (JsonLd.isLink(ma) || JsonLd.isLink(mb)) {
+            if (ma.isEmpty() || mb.isEmpty()) {
                 return false;
             }
             
-            return intersect(ma.keySet(), mb.keySet()).size() > 0;
+            if (JsonLd.isLink(ma) || JsonLd.isLink(mb)) {
+                return true;
+            }
+            
+            return intersect(ma.keySet(), mb.keySet()).size() == 0;
         }
         return false;
     }

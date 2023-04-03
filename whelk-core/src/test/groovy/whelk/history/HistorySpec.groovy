@@ -57,6 +57,44 @@ class HistorySpec extends Specification {
         def changeSets = diff([
                 ['@graph': [
                         ['modified': '2022-02-02T12:00:00Z'],
+                        ['0': '0']
+                ]],
+                ['@graph': [
+                        ['modified': '2022-02-02T12:00:00Z'],
+                        ['0': '0', 'a': 'x']
+                ]]
+        ])
+
+        expect:
+        changeSets.size() == 2
+        !changeSets[1].removedPaths
+        changeSets[1].addedPaths == [["@graph", 1, 'a']] as Set
+    }
+
+    def "simple value removed"() {
+        given:
+        def changeSets = diff([
+                ['@graph': [
+                        ['modified': '2022-02-02T12:00:00Z'],
+                        ['0': '0', 'a': 'x']
+                ]],
+                ['@graph': [
+                        ['modified': '2022-02-02T12:00:00Z'],
+                        ['0': '0']
+                ]]
+        ])
+
+        expect:
+        changeSets.size() == 2
+        changeSets[1].removedPaths == [["@graph", 1, 'a']] as Set
+        !changeSets[1].addedPaths
+    }
+
+    def "first simple value added"() {
+        given:
+        def changeSets = diff([
+                ['@graph': [
+                        ['modified': '2022-02-02T12:00:00Z'],
                         [:]
                 ]],
                 ['@graph': [
@@ -68,10 +106,10 @@ class HistorySpec extends Specification {
         expect:
         changeSets.size() == 2
         !changeSets[1].removedPaths
-        changeSets[1].addedPaths == [["@graph", 1, "a"]] as Set
+        changeSets[1].addedPaths == [["@graph", 1, 'a']] as Set
     }
 
-    def "simple value removed"() {
+    def "last simple value removed"() {
         given:
         def changeSets = diff([
                 ['@graph': [
@@ -86,7 +124,7 @@ class HistorySpec extends Specification {
 
         expect:
         changeSets.size() == 2
-        changeSets[1].removedPaths == [["@graph", 1, "a"]] as Set
+        changeSets[1].removedPaths == [["@graph", 1, 'a']] as Set
         !changeSets[1].addedPaths
     }
 
@@ -331,6 +369,31 @@ class HistorySpec extends Specification {
         changeSets.size() == 2
         changeSets[1].addedPaths == [["@graph", 1, "i", 3]] as Set
         !changeSets[1].removedPaths
+    }
+
+    def "array remove + edit"() {
+        given:
+        def changeSets = diff([
+                ['@graph': [
+                        ['modified': '2022-02-02T12:00:00Z'],
+                        ['i': [
+                                ['@id': 'a'],
+                                ['@id': 'b'],
+                        ]]
+                ]],
+                ['@graph': [
+                        ['modified': '2022-02-02T12:00:00Z'],
+                        ['i': [
+                                ['@id': 'b'],
+                                ['x': 'y'],
+                        ]]
+                ]]
+        ])
+
+        expect:
+        changeSets.size() == 2
+        changeSets[1].addedPaths == [["@graph", 1, "i", 1]] as Set
+        changeSets[1].removedPaths == [["@graph", 1, "i", 0]] as Set
     }
 
     def "array swap"() {
