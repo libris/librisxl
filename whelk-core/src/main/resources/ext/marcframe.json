@@ -11604,7 +11604,7 @@
       "$f": {"addProperty": "marc:standardizedTerminologyForAccessRestriction"},
       "$g": {"addProperty": "marc:availabilityDate"},
       "$q": {"property": "marc:supplyingAgency"},
-      "$u": {"addProperty": "uri"},
+      "$u": {"addProperty": "uri", "equivalentToId": true},
       "$2": null,
       "NOTE:$2": {"NOTE:LC": "nac"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
@@ -11630,7 +11630,10 @@
           },
           "normalized": {
             "506": {"ind1": " ", "ind2": " ",
-              "subfields": [{"a": "Fritt tillgänglig"}]
+              "subfields": [
+                {"a": "Fritt tillgänglig"},
+                {"u": "https://id.kb.se/policy/freely-available"}
+              ]
             }
           }
         }
@@ -12250,7 +12253,7 @@
       "$f": {"addProperty": "marc:useAndReproductionRights"},
       "$g": {"addProperty": "marc:availabilityDate"},
       "$q": {"property": "marc:supplyingAgency"},
-      "$u": {"addProperty": "uri"},
+      "$u": {"addProperty": "uri", "equivalentToId": true},
       "NOTE:$2": {"link": "source", "resourceType": "Source", "property": "label"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code"},
@@ -12312,7 +12315,10 @@
           },
           "normalized": {
             "540": {"ind1": " ", "ind2": " ",
-              "subfields": [{"a": "CC0 1.0 universell"}]
+              "subfields": [
+                {"a": "CC0 1.0 universell"},
+                {"u": "http://creativecommons.org/publicdomain/zero/1.0/"}
+              ]
             }
           }
         }

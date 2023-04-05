@@ -2604,6 +2604,7 @@ class MarcSubFieldHandler extends ConversionPart {
     boolean repeatProperty
     boolean overwrite
     boolean infer
+    boolean equivalentToId
     String resourceType
     String subUriTemplate
     Pattern matchUriToken = null
@@ -2692,6 +2693,7 @@ class MarcSubFieldHandler extends ConversionPart {
         overwrite = subDfn.overwrite == true
 
         infer = subDfn.infer == true
+        equivalentToId = subDfn.equivalentToId == true
 
         if (subDfn.splitValueProperties) {
             /*TODO: assert subDfn.splitValuePattern=~ /^\^.+\$$/,
@@ -2924,6 +2926,10 @@ class MarcSubFieldHandler extends ConversionPart {
                     if (propertyValue)
                         break
                 }
+            }
+
+            if (propertyValue == null && equivalentToId) {
+                propertyValue = entity['@id']
             }
 
             boolean checkResourceType = true
