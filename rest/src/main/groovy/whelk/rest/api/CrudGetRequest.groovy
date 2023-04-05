@@ -7,6 +7,7 @@ import static whelk.rest.api.CrudUtils.*
 class CrudGetRequest {
     private HttpServletRequest request
     private String resourceId
+    private String dataLeaf
     private String contentType
     private View view
     private Lens lens
@@ -19,7 +20,7 @@ class CrudGetRequest {
     private CrudGetRequest(HttpServletRequest request) {
         this.request = request
         parsePath(getPath())
-        contentType = getBestContentType(request)
+        contentType = getBestContentType(getAcceptHeader(request), dataLeaf)
         lens = parseLens(request)
         profile = parseProfile(request)
     }
@@ -86,6 +87,7 @@ class CrudGetRequest {
         def matcher = path =~ ~/^\/(.+?)(\/(data|data-view|_changesets)(\.(\w+))?)?$/
         if (matcher.matches()) {
             resourceId = matcher[0][1]
+            dataLeaf = matcher[0][2]
             view = View.fromString(matcher[0][3])
         } else {
             throw new Crud.NotFoundException("Not found:" + path)

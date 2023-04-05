@@ -45,10 +45,9 @@ class CrudUtils {
 
     static final List ALLOWED_MEDIA_TYPES = [JSON, JSONLD, TRIG, TURTLE, RDFXML, N3]
 
-    static String getBestContentType(HttpServletRequest request) {
-        def header = getAcceptHeader(request)
-        def desired = parseAcceptHeader(header)
-        def allowed = allowedMediaTypes(request, desired)
+    static String getBestContentType(String acceptHeader, String resourcePath) {
+        def desired = parseAcceptHeader(acceptHeader)
+        def allowed = allowedMediaTypes(resourcePath, desired)
 
         MediaType best = getBestMatchingMimeType(allowed, desired)
 
@@ -57,43 +56,46 @@ class CrudUtils {
         log.debug("Best Content-Type: ${best}")
 
         if (!best) {
-            throw new UnsupportedContentTypeException(header)
+            throw new UnsupportedContentTypeException(acceptHeader)
         }
 
         return best.toString()
     }
 
-    private static List<MediaType> allowedMediaTypes(HttpServletRequest request, List desired) {
-        String extension = FilenameUtils.getExtension(request.getRequestURI())
+    private static List<MediaType> allowedMediaTypes(String resourcePath, List desired) {
+        String extension = FilenameUtils.getExtension(resourcePath) ?: ''
 
-        List media_type_intersect = ALLOWED_MEDIA_TYPES.intersect(desired)
+        List mediaTypeIntersect = ALLOWED_MEDIA_TYPES.intersect(desired)
 
         // If no extension specified but Accept given, try Accept values first.
         // Otherwise, if extension (including no extension) specified, try that.
-        if (media_type_intersect.size() > 0 && extension == '') {
-            return media_type_intersect
+        if (mediaTypeIntersect.size() > 0 && extension == '') {
+            return mediaTypeIntersect
         } else if (ALLOWED_MEDIA_TYPES_BY_EXT.containsKey(extension)) {
             return ALLOWED_MEDIA_TYPES_BY_EXT.get(extension)
         } else {
             if (extension) {
                 throw new Crud.NotFoundException('.' + extension)
             } else {
-                throw new Crud.NotFoundException("${media_type_intersect}")
+                throw new Crud.NotFoundException("${mediaTypeIntersect}")
             }
         }
     }
 
+
+    /**
+     * Get Accept header from request.
+     *
+     * If no Accept header field is present, then it is assumed that the client
+     * accepts all media types.
+     *
+     * (See: https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html)
+     */
     private static String getAcceptHeader(HttpServletRequest request) {
         String acceptHeader = request.getHeader("Accept")
-
-        /**
-         * from w3.org:
-         * If no Accept header field is present, then it is assumed that the client accepts all media types.
-         */
         if (acceptHeader == null) {
             acceptHeader = '*/*'
         }
-
         return acceptHeader
     }
 
