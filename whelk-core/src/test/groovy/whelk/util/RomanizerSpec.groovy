@@ -316,6 +316,8 @@ class RomanizerSpec extends Specification {
         "פּלוידערײַ"                                 || "ployderay"
         "פֿוספֿינגער"                                || "fusfinger"
         "קאָמוניסטקע"                               || "komunistke"
+        // qamats qatan
+        "טאׇטע ביַים דאׇקטער"                         || "tote biim dokter"
     }
 
     // TODO: review these. They are copied and adapted from "Yiddish with YIVO" above
@@ -342,5 +344,7 @@ class RomanizerSpec extends Specification {
         "זומערקורס"                                || "zumerḳurs"
         "ליאַלקע"                                   || "lialḳe"
         "נעווראָלאָגיע"                              || "neṿrologie"
+        // qamats qatan
+        "טאׇטע ביַים דאׇקטער"                         || "ṭoṭe biim doḳṭer"
     }
 }
