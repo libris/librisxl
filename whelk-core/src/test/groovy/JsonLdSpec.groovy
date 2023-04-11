@@ -749,6 +749,17 @@ class JsonLdSpec extends Specification {
         assert JsonLd.getIdMap(input) == output
     }
 
+    def "should recognize link"() {
+        expect:
+        JsonLd.isLink(data) == expected
+
+        where:
+        data                         || expected
+        ['@id': 'foo']               || true
+        ['@id': 'foo', 'bar': 'bar'] || false
+        ['bar': 'bar']               || false
+    }
+
     static final String FLAT_INPUT = readFile("flatten-001-in.jsonld")
     static final String FLAT_OUTPUT = readFile("flatten-001-out.jsonld")
     static final String FRAMED_INPUT = readFile("frame-001-in.jsonld")
