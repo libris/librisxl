@@ -179,6 +179,9 @@ class RomanizerSpec extends Specification {
         "Знаменитий детектив Блюмквіст" || "Znamenytyj detektyv Bljumkvist"
         // https://libris.kb.se/csld89sd9f4gm75n#it
         "Я люблю ходити в дитячий садок" || "Ja ljublju chodyty v dytjačyj sadok"
+        // https://libris.kb.se/r7j8cqgsphgmr473#it
+        "Валер'ян" || "Valerʺjan"
+        "Валер’ян" || "Valerʺjan"
     }
 
     def "Azerbaijani in Cyrillic with ALA-LOC"() {
