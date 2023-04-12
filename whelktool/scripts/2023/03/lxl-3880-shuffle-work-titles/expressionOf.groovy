@@ -204,7 +204,7 @@ String stringifyProps(Map work, List props) {
 String stringifyTitle(Map work) {
     def titleKeys = ['mainTitle', 'partName', 'partNumber', 'marc:formSubheading']
     def paths = titleKeys.collect { [HAS_TITLE, 0] + it }
-    def titleParts = paths.collect { getAtPath(work, asList(it)) }.grep()
+    def titleParts = paths.collect { getAtPath(work, it) ?: getAtPath(work, it.dropRight(1) + [it.last() + 'byLang']) }.grep()
 
     return titleParts.join(' · ')
 }
