@@ -177,66 +177,62 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     void _unmodify(Map record, Map thing) {
         def byLangPaths = findByLangPaths(thing)
         def uniqueTLangs = findUniqueTLangs(thing, byLangPaths)
-
-        // TODO: Can multiple transform rules be applied to the same record? What happens then with non-repeatable fields?
-
-        uniqueTLangs.each { tLang ->
-            unmodifyTLang(thing, tLang, byLangPaths, record)
-        }
-
-        if (thing[HAS_BIB880]) {
-            ((List) thing[HAS_BIB880]).sort { bib880 -> bib880[PART_LIST] ?[0] ?[FIELDREF] ?: '' }
-        }
+        
+        unmodifyTLangs(thing, uniqueTLangs, byLangPaths, record)
 
         byLangPaths.each { putRomanizedLiteralInNonByLang(thing, it as List) }
     }
 
-    private def unmodifyTLang(def thing, def tLang, def byLangPaths, def record) {
-        def copy = deepCopy(record)
-        def thingCopy = copy.mainEntity
+    private def unmodifyTLangs(def thing, def tLangs, def byLangPaths, def record) {
+        def bib880ToRef = []
 
-        byLangPaths.each { putOriginalLiteralInNonByLang(thingCopy, it as List, tLang) }
+        tLangs.each { tLang ->
+            def copy = deepCopy(record)
+            def thingCopy = copy.mainEntity
 
-        prepareForRevert(thingCopy)
+            byLangPaths.each { putOriginalLiteralInNonByLang(thingCopy, it as List, tLang) }
 
-        def reverted = converter.runRevert(copy)
-        def romanizedFieldsByTmpRef = findRomanizedFields(reverted)
+            prepareForRevert(thingCopy)
 
-        def fieldRefs = []
+            def reverted = converter.runRevert(copy)
+            def romanizedFieldsByTmpRef = findRomanizedFields(reverted)
 
-        DocumentUtil.findKey(thingCopy, FIELD_REFS) { value, path ->
-            def romanizedField = romanizedFieldsByTmpRef[value]
-            if (romanizedField) {
-                def fieldNumber = romanizedField.keySet()[0]
-                def field = romanizedField[fieldNumber]
+            DocumentUtil.findKey(thingCopy, FIELD_REFS) { value, path ->
+                def romanizedField = romanizedFieldsByTmpRef[value]
+                if (romanizedField) {
+                    def fieldNumber = romanizedField.keySet()[0]
+                    def field = romanizedField[fieldNumber]
 
-                def hasBib880 = thing.computeIfAbsent(HAS_BIB880, s -> [])
+                    def ref = new Ref(
+                            toField: fieldNumber,
+                            path: path.dropRight(1),
+                            scriptCode: marcScript(tLang)
+                    )
 
-                def ref = new Ref(
-                        toField: fieldNumber,
-                        occurenceNumber: hasBib880.size() + 1,
-                        path: path.dropRight(1)
-                )
+                    def bib880 =
+                            [
+                                    (TYPE)          : 'marc:Bib880',
+                                    (PART_LIST)     : [[(FIELDREF): fieldNumber]] + field[SUBFIELDS],
+                                    (BIB880 + '-i1'): field[IND1],
+                                    (BIB880 + '-i2'): field[IND2]
+                            ]
 
-                def scriptCode = marcScript(tLang)
-
-                def bib880 =
-                        [
-                                (TYPE)          : 'marc:Bib880',
-                                (PART_LIST)     : [[(FIELDREF): ref.from880(scriptCode)]] + field[SUBFIELDS],
-                                (BIB880 + '-i1'): field[IND1],
-                                (BIB880 + '-i2'): field[IND2]
-                        ]
-
-                hasBib880.add(bib880)
-                fieldRefs.add(ref)
+                    bib880ToRef.add([bib880, ref])
+                }
+                return new DocumentUtil.Remove()
             }
-            return new DocumentUtil.Remove()
         }
 
-        fieldRefs.each { Ref r ->
-            def t = DocumentUtil.getAtPath(thing, r.path)
-            t[r.propertyName()] = (asList(t[r.propertyName()]) << r.to880()).unique()
+        if (bib880ToRef) {
+            def sorted = bib880ToRef.sort { it[1].toField }
+            sorted.eachWithIndex { entry, i ->
+                def (bib880, ref) = entry
+                bib880[PART_LIST][0][FIELDREF] = ref.from880(i + 1)
+                def t = DocumentUtil.getAtPath(thing, ref.path)
+                t[ref.propertyName()] = (asList(t[ref.propertyName()]) << ref.to880(i + 1)).unique()
+            }
+
+            thing[HAS_BIB880] = sorted.collect { it[0] }
         }
     }
 
@@ -254,14 +250,14 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     @MapConstructor
     private class Ref {
         String toField
-        int occurenceNumber
+        String scriptCode
         List path
 
-        String from880(String scriptCode) {
+        String from880(int occurenceNumber) {
             "$toField-${String.format("%02d", occurenceNumber)}${scriptCode ?: ''}"
         }
 
-        String to880() {
+        String to880(int occurenceNumber) {
             "880-${String.format("%02d", occurenceNumber)}"
         }
 
