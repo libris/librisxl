@@ -14,6 +14,7 @@ import whelk.filter.LanguageLinker
 moved = getReportWriter('moved.tsv')
 propertyAlreadyExists = getReportWriter('property-already-exists.tsv')
 langDiff = getReportWriter('lang-diff.tsv')
+hasFieldRef = getReportWriter('has-fieldref.txt')
 
 HAS_TITLE = 'hasTitle'
 MAIN_TITLE = 'mainTitle'
@@ -72,6 +73,10 @@ selectBySqlWhere(where) {
             return
         }
     } else {
+        if (expressionOf['marc:fieldref']) {
+            hasFieldRef.println(id)
+            return
+        }
         def expressionOfAsString = stringify(expressionOf)
         def prefTitle = localExpressionOfToPrefTitle[expressionOfAsString]
         if (prefTitle) {
@@ -143,7 +148,9 @@ void moveLanguagesFromTitle(Map expressionOf) {
     def languages = []
 
     asList(expressionOf[HAS_TITLE]).each { t ->
-        assert t[MAIN_TITLE] instanceof String
+        if (!t[MAIN_TITLE]) {
+            return
+        }
         def (mt, l) = splitTitleLanguages(t[MAIN_TITLE])
         if (l) {
             languages += l
