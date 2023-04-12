@@ -40,7 +40,7 @@ selectBySqlWhere(where) {
     }
     def tLangTag = "$langTag${u.MATCH_T_TAG}$langTag"
 
-    def hasBib880 = asList(thing[u.HAS_BIB880])
+    def hasBib880 = asList(thing.remove(u.HAS_BIB880))
 
     Map seqNumToBib880Data = [:]
     Set duplicateSeqNums = []
