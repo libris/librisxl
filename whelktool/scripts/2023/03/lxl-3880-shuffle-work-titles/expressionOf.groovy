@@ -32,7 +32,7 @@ localExpressionOfToPrefTitle = loadLocalExpressionOfToPrefTitleMappings('title-m
 linkedExpressionOfToPrefTitle = loadLinkedExpressionOfToPrefTitleMappings('title-mappings/linked-expressionOf.tsv')
 bibleToVersion = loadBibleVersions('title-mappings/bible-versions.tsv')
 
-TITLE_RELATED_PROPS = ['musicMedium', 'version', 'legalDate', 'originDate', 'originPlace', 'marc:arrangedStatementForMusic']
+TITLE_RELATED_PROPS = ['musicMedium', 'version', 'legalDate', 'originDate', 'marc:arrangedStatementForMusic']
 
 def where = """
     collection = 'bib'
@@ -212,17 +212,17 @@ String stringifyTitle(Map work) {
 // e.g. {"Bible. · [O.T., Psalms., Sternhold and Hopkins.] · eng": "Bibeln. Psaltaren"}
 Map loadLocalExpressionOfToPrefTitleMappings(String filename) {
     return new File(scriptDir, filename).readLines().drop(1).collectEntries {
-        def (hubTitle, stringifiedExpressionOf) = it.split('\t')
-        [stringifiedExpressionOf, hubTitle]
+        def (prefTitle, stringifiedExpressionOf) = it.split('\t')
+        [stringifiedExpressionOf, prefTitle]
     }
 }
 
 // e.g. {"https://libris.kb.se/0xbddxzj09vsjl9#it": "Bibeln. Haggai"}
 Map loadLinkedExpressionOfToPrefTitleMappings(String filename) {
     return new File(scriptDir, filename).readLines().drop(1).collectEntries {
-        def (uniformWorkTitleIri, hubTitle) = it.split('\t')
+        def (uniformWorkTitleIri, prefTitle) = it.split('\t')
         // replace only needed in test environments
-        [uniformWorkTitleIri.replace("https://libris.kb.se/", baseUri.toString()), hubTitle]
+        [uniformWorkTitleIri.replace("https://libris.kb.se/", baseUri.toString()), prefTitle]
     }
 }
 
