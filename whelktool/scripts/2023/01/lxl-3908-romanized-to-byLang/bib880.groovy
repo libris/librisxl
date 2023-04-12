@@ -125,7 +125,7 @@ selectBySqlWhere(where) {
                 def k = p.last()
                 if (it[k]) {
                     def byLangProp = u.langAliases[k]
-                    romanized.println([id, original, tLangTag, it[k], bib880data.ref].join('\t'))
+                    romanized.println([id, tLangTag, p.join('.'), bib880data.ref, original, it[k]].join('\t'))
                     it[byLangProp] =
                             [
                                     (langTag) : original,
@@ -150,7 +150,9 @@ selectBySqlWhere(where) {
         indexesOfHandled.sort().reverseEach {
             hasBib880.removeAt(it)
         }
-        thing[u.HAS_BIB880] = hasBib880
+        if (!hasBib880.isEmpty()) {
+            thing[u.HAS_BIB880] = hasBib880
+        }
         incrementStats('Romanized langs', tLangTag)
         it.scheduleSave()
     } else {
