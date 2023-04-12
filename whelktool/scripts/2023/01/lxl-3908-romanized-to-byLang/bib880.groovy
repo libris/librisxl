@@ -103,20 +103,20 @@ selectBySqlWhere(where) {
             // If there is no fieldref in the path it's still ok if no arrays are of of size > 1.
             def isSafePath = adjustArrayIndices(p, refPath) || !existRepeated(thing, p)
             if (!isSafePath) {
-                unsafePath.println([id, ref, p.join('.'), refPath.join('.')].join('\t'))
+                unsafePath.println([id, bib880data.ref, p.join('.'), refPath.join('.')].join('\t'))
                 incrementStats('Unsafe path: no fieldref in path and multiple elements in array', p.join('.'))
                 return
             }
 
             def original = getAtPath(bib880data.converted, pCopy)
             if (looksLikeScript(original.toString(), 'Latn')) {
-                looksLikeLatin.println([id, ref, p.join('.'), original].join('\t'))
+                looksLikeLatin.println([id, bib880data.ref, p.join('.'), original].join('\t'))
                 return
             }
 
             def parentObject = getAtPath(thing, p.dropRight(1))
             if (!parentObject) {
-                missingRomanized.println([id, ref, p.join('.'), original].join('\t'))
+                missingRomanized.println([id, bib880data.ref, p.join('.'), original].join('\t'))
                 incrementStats('No romanized value at path', p.join('.'))
                 return
             }
@@ -125,7 +125,7 @@ selectBySqlWhere(where) {
                 def k = p.last()
                 if (it[k]) {
                     def byLangProp = u.langAliases[k]
-                    romanized.println([id, original, tLangTag, it[k], ref].join('\t'))
+                    romanized.println([id, original, tLangTag, it[k], bib880data.ref].join('\t'))
                     it[byLangProp] =
                             [
                                     (langTag) : original,
