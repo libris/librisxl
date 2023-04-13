@@ -14,9 +14,9 @@ def where = """
     AND data#>>'{@graph,1,${u.HAS_BIB880}}' IS NOT NULL
 """
 
-selectBySqlWhere(where) {
-    def (record, thing) = it.graph
-    def id = it.doc.shortId
+selectBySqlWhere(where) { bib ->
+    def (record, thing) = bib.graph
+    def id = bib.doc.shortId
 
     def romanizableLangs = thing.instanceOf.subMap('language').with {
         u.langLinker.linkAll(it)
@@ -122,7 +122,7 @@ selectBySqlWhere(where) {
             thing[u.HAS_BIB880] = hasBib880
         }
         incrementStats('Romanized langs', tLangTag)
-        it.scheduleSave()
+        bib.scheduleSave()
     } else {
         incrementStats('Handled records', 'unhandled')
     }
