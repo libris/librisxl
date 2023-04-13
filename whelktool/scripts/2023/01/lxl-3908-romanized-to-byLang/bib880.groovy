@@ -42,39 +42,7 @@ selectBySqlWhere(where) {
 
     def hasBib880 = asList(thing.remove(u.HAS_BIB880))
 
-    Map seqNumToBib880Data = [:]
-    Set duplicateSeqNums = []
-
-    hasBib880.eachWithIndex { bib880, i ->
-        def ref = getFieldRef(bib880, u)
-        if (ref.isEmpty()) {
-            return
-        }
-
-        def converted = tryConvert(bib880, u)
-        if (converted.isEmpty()) {
-            incrementStats('Invalid Bib880', 'failed conversion')
-            return
-        }
-
-        def seqNum = ref.get().takeRight(2)
-
-        if (seqNumToBib880Data.containsKey(seqNum)) {
-            duplicateSeqNums.add(seqNum)
-            return
-        }
-
-        seqNumToBib880Data[seqNum] = [
-                'ref'          : ref.get(),
-                'converted'    : converted.get()['@graph'][1],
-                'idxOfOriginal': i
-        ]
-    }
-
-    duplicateSeqNums.each {
-        incrementStats('duplicate sequence number', it)
-        seqNumToBib880Data.remove(it)
-    }
+    Map seqNumToBib880Data = collectValidBib880sBySeqNum(hasBib880, u)
 
     DocumentUtil.findKey(thing, u.FIELDREFS) { ref, path ->
         if (ref instanceof List) {
@@ -158,6 +126,44 @@ selectBySqlWhere(where) {
     } else {
         incrementStats('Handled records', 'unhandled')
     }
+}
+
+Map collectValidBib880sBySeqNum(List hasBib880, Util u) {
+    Map seqNumToBib880Data = [:]
+    Set duplicateSeqNums = []
+
+    hasBib880.eachWithIndex { bib880, i ->
+        def ref = getFieldRef(bib880, u)
+        if (ref.isEmpty()) {
+            return
+        }
+
+        def converted = tryConvert(bib880, u)
+        if (converted.isEmpty()) {
+            incrementStats('Invalid Bib880', 'failed conversion')
+            return
+        }
+
+        def seqNum = ref.get().takeRight(2)
+
+        if (seqNumToBib880Data.containsKey(seqNum)) {
+            duplicateSeqNums.add(seqNum)
+            return
+        }
+
+        seqNumToBib880Data[seqNum] = [
+                'ref'          : ref.get(),
+                'converted'    : converted.get()['@graph'][1],
+                'idxOfOriginal': i
+        ]
+    }
+
+    duplicateSeqNums.each {
+        incrementStats('duplicate sequence number', it)
+        seqNumToBib880Data.remove(it)
+    }
+
+    return seqNumToBib880Data
 }
 
 def getWhelk() {
