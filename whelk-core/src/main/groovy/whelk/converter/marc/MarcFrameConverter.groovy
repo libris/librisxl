@@ -348,12 +348,14 @@ class MarcConversion {
         }
 
         if (doPostProcessing) {
+            doPostProcessing = false
             sharedPostProcSteps.each {
                 it.modify(record, thing)
             }
             marcRuleSet.postProcSteps.each {
                 it.modify(record, thing)
             }
+            doPostProcessing = true
         }
 
         if (flatLinkedForm) {
