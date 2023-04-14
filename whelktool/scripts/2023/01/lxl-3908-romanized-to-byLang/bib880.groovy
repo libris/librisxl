@@ -79,11 +79,6 @@ selectBySqlWhere(where) { bib ->
                     p = removeIndexFromPathIfNotArray(thing, p)
                 }
             }
-            if (!safePath) {
-                unsafePath.println([id, bib880data.ref, p.join('.'), refPath.join('.')].join('\t'))
-                incrementStats('Unsafe path: no fieldref in path and multiple elements in array', p.join('.'))
-                return
-            }
 
             def original = getAtPath(bib880data.converted, pCopy)
             if (looksLikeScript(original.toString(), 'Latn')) {
