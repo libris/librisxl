@@ -326,13 +326,15 @@ class Util {
     Util(whelk) {
         this.langAliases = whelk.jsonld.langContainerAlias
         this.byLangToBase = langAliases.collectEntries { k, v -> [v, k] }
-        this.langIdToLangTag = whelk.languageResources.languages
-                .findAll { k, v -> v.langTag }.collectEntries { k, v -> [k, v.langTag] }
+        this.langIdToLangTag = whelk.storage.loadAll("https://id.kb.se/dataset/languages")
+                .collect { it.data['@graph'][1] }
+                .findAll { it.langTag }
+                .collectEntries { [it['@id'], it.langTag] }
         this.converter = whelk.marcFrameConverter
         this.converter.conversion.doPostProcessing = false
         this.langLinker = whelk.languageResources.languageLinker
-        this.romanizableLangs = whelk.languageResources.transformedLanguageForms.findResults { k, v ->
-            v.inLanguage?.'@id'
+        this.romanizableLangs = whelk.storage.loadAll("https://id.kb.se/dataset/i18n/tlangs").findResults {
+            it.data['@graph'][1].inLanguage?.'@id'
         }
     }
 }
