@@ -2,7 +2,7 @@
   "type": "Romanization",
   "_spec": [
     {
-      "name": "construct-880-for-240",
+      "name": "byLang to marc:hasBib880: 240[$a]",
       "result": {
         "mainEntity": {
           "@type": "Instance",
@@ -54,7 +54,7 @@
       }
     },
     {
-      "name": "construct-880-for-130",
+      "name": "byLang to marc:hasBib880: 130[$a]",
       "result": {
         "mainEntity": {
           "@type": "Instance",
@@ -112,7 +112,7 @@
       }
     },
     {
-      "name": "construct-880-for-240-translation",
+      "name": "byLang to marc:hasBib880: 240[$a] (translation)",
       "result": {
         "mainEntity": {
           "@type": "Instance",
@@ -194,7 +194,7 @@
       }
     },
     {
-      "name": "construct-880-for-245",
+      "name": "byLang to marc:hasBib880: 245[$a + $c]",
       "result": {
         "mainEntity": {
           "@type": "Instance",
@@ -254,7 +254,7 @@
       }
     },
     {
-      "name": "construct-880-for-repeated-264",
+      "name": "byLang to marc:hasBib880: 264[$a + $b + $c] (repeated)",
       "result": {
         "mainEntity": {
           "@type": "Instance",
@@ -383,7 +383,7 @@
       }
     },
     {
-      "name": "construct-880-for-250",
+      "name": "byLang to marc:hasBib880: 245[$a], 250[$a]",
       "result": {
         "mainEntity": {
           "@type": "Instance",
@@ -450,6 +450,499 @@
               ],
               "marc:bib880-i1": " ",
               "marc:bib880-i2": " "
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "marc:hasBib880 to byLang: 245[$a + $c], 260[$a + $b]",
+      "source": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {
+                "@id": "https://id.kb.se/language/per"
+              }
+            ]
+          },
+          "hasTitle": [
+            {
+              "@type": "Title",
+              "mainTitle": "Qiṣṣahʹhā va rivāyāt-i tārīkhī-yi sarzamīn-i Afghānistān (Darī - Ingilīsī)",
+              "marc:fieldref": "880-01"
+            }
+          ],
+          "publication": [
+            {
+              "year": "2010",
+              "@type": "PrimaryPublication",
+              "agent": {
+                "@type": "Agent",
+                "label": [
+                  "Op Mercy Afghanistan"
+                ]
+              },
+              "place": [
+                {
+                  "@type": "Place",
+                  "label": [
+                    "Afghanistan"
+                  ]
+                }
+              ],
+              "marc:fieldref": "880-02"
+            }
+          ],
+          "responsibilityStatement": "Humāyūn Hūtak",
+          "marc:hasBib880": [
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "245-01"
+                },
+                {
+                  "marc:bib880-a": "قصه ها و روایات تاریخی سرزمین افغانستان (دری - انگلیسی)"
+                },
+                {
+                  "marc:bib880-c": "هوتک، همایون"
+                }
+              ],
+              "marc:bib880-i1": "1",
+              "marc:bib880-i2": "0"
+            },
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "260-02"
+                },
+                {
+                  "marc:bib880-a": "افغانستان :"
+                },
+                {
+                  "marc:bib880-b": "آپ مرسی افغانستان,"
+                },
+                {
+                  "marc:bib880-c": "2010"
+                }
+              ],
+              "marc:bib880-i1": " ",
+              "marc:bib880-i2": " "
+            }
+          ]
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {
+                "@id": "https://id.kb.se/language/per"
+              }
+            ]
+          },
+          "hasTitle": [
+            {
+              "@type": "Title",
+              "mainTitleByLang": {
+                "fa": "قصه ها و روایات تاریخی سرزمین افغانستان (دری - انگلیسی)",
+                "fa-Latn-t-fa": "Qiṣṣahʹhā va rivāyāt-i tārīkhī-yi sarzamīn-i Afghānistān (Darī - Ingilīsī)"
+              }
+            }
+          ],
+          "publication": [
+            {
+              "year": "2010",
+              "@type": "PrimaryPublication",
+              "agent": {
+                "@type": "Agent",
+                "labelByLang": {
+                  "fa": "آپ مرسی افغانستان",
+                  "fa-Latn-t-fa": [
+                    "Op Mercy Afghanistan"
+                  ]
+                }
+              },
+              "place": [
+                {
+                  "@type": "Place",
+                  "labelByLang": {
+                    "fa": "افغانستان",
+                    "fa-Latn-t-fa": [
+                      "Afghanistan"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "responsibilityStatementByLang": {
+            "fa": "هوتک، همایون",
+            "fa-Latn-t-fa": "Humāyūn Hūtak"
+          }
+        }
+      }
+    },
+    {
+      "name": "marc:hasBib880 to byLang: 100[$a], 700[$a] (multiple Contribution)",
+      "source": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {
+                "@id": "https://id.kb.se/language/heb"
+              }
+            ],
+            "contribution": [
+              {
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Person",
+                  "givenName": "Gal.",
+                  "familyName": "Porat"
+                },
+                "marc:fieldref": "880-01"
+              },
+              {
+                "@type": "Contribution",
+                "agent": {
+                  "@id": "https://libris.kb.se/sq468j4b191w1hm#it"
+                }
+              },
+              {
+                "@type": "Contribution",
+                "agent": {
+                  "@type": "Person",
+                  "givenName": "Aviel.",
+                  "familyName": "Basil"
+                },
+                "marc:fieldref": "880-02"
+              },
+              {
+                "@type": "Contribution",
+                "agent": {
+                  "@id": "https://libris.kb.se/sq466r7b1rk8mr0#it"
+                }
+              }
+            ]
+          },
+          "marc:hasBib880": [
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "100-01//r"
+                },
+                {
+                  "marc:bib880-a": "פורת, גל."
+                }
+              ],
+              "marc:bib880-i1": "1",
+              "marc:bib880-i2": " "
+            },
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "700-02//r"
+                },
+                {
+                  "marc:bib880-a": "בסיל, אביאל."
+                }
+              ],
+              "marc:bib880-i1": "1",
+              "marc:bib880-i2": " "
+            }
+          ]
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {
+                "@id": "https://id.kb.se/language/heb"
+              }
+            ],
+            "contribution": [
+              {
+                "@type": "PrimaryContribution",
+                "agent": {
+                  "@type": "Person",
+                  "givenNameByLang": {
+                    "he": "גל.",
+                    "he-Latn-t-he": "Gal."
+                  },
+                  "familyNameByLang": {
+                    "he": "פורת",
+                    "he-Latn-t-he": "Porat"
+                  }
+                }
+              },
+              {
+                "@type": "Contribution",
+                "agent": {
+                  "@id": "https://libris.kb.se/sq468j4b191w1hm#it"
+                }
+              },
+              {
+                "@type": "Contribution",
+                "agent": {
+                  "@type": "Person",
+                  "givenNameByLang": {
+                    "he": "אביאל.",
+                    "he-Latn-t-he": "Aviel."
+                  },
+                  "familyNameByLang": {
+                    "he": "בסיל",
+                    "he-Latn-t-he": "Basil"
+                  }
+                }
+              },
+              {
+                "@type": "Contribution",
+                "agent": {
+                  "@id": "https://libris.kb.se/sq466r7b1rk8mr0#it"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "marc:hasBib880 to byLang: 130[$a + $p] (multiple work langs)",
+      "source": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {
+                "@id": "https://id.kb.se/language/eng"
+              },
+              {
+                "@id": "https://id.kb.se/language/chi"
+              }
+            ],
+            "expressionOf": {
+              "@type": "Work",
+              "hasTitle": [
+                {
+                  "@type": "Title",
+                  "partName": [
+                    "Renwen shehui kexueban"
+                  ],
+                  "mainTitle": "Beijing guangbo xueyuan xuebao."
+                }
+              ],
+              "marc:fieldref": "880-01"
+            }
+          },
+          "marc:hasBib880": [
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "130-01/$1"
+                },
+                {
+                  "marc:bib880-a": "北京廣播學院學報."
+                },
+                {
+                  "marc:bib880-p": "人文社會科學版 (Online)"
+                }
+              ],
+              "marc:bib880-i1": "0",
+              "marc:bib880-i2": " "
+            }
+          ]
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {
+                "@id": "https://id.kb.se/language/eng"
+              },
+              {
+                "@id": "https://id.kb.se/language/chi"
+              }
+            ],
+            "expressionOf": {
+              "@type": "Work",
+              "hasTitle": [
+                {
+                  "@type": "Title",
+                  "partNameByLang": {
+                    "zh": [
+                      "人文社會科學版 (Online)"
+                    ],
+                    "zh-Latn-t-zh": [
+                      "Renwen shehui kexueban"
+                    ]
+                  },
+                  "mainTitleByLang": {
+                    "zh": "北京廣播學院學報.",
+                    "zh-Latn-t-zh": "Beijing guangbo xueyuan xuebao."
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "marc:hasBib880 to byLang: 240[$a] + 250[$a] + unhandled 700[$a + $e] (missing ind2)",
+      "source": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {
+                "@id": "https://id.kb.se/language/kor"
+              }
+            ],
+            "marc:fieldref": "880-01",
+            "hasTitle": [
+              {
+                "@type": "Title",
+                "mainTitle": "Ocherkʹ Korei."
+              }
+            ],
+            "contribution": [
+              {
+                "@type": "Contribution",
+                "agent": {
+                  "@type": "Person",
+                  "givenName": "Chang-jin",
+                  "familyName": "Chŏng"
+                },
+                "role": [
+                  {
+                    "@id": "https://id.kb.se/relator/translator"
+                  }
+                ]
+              }
+            ]
+          },
+          "editionStatement": "Ch'op'an.",
+          "marc:bib250-fieldref": "880-02",
+          "marc:hasBib880": [
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "240-01"
+                },
+                {
+                  "marc:bib880-a": "Очеркь Кореи."
+                },
+                {
+                  "marc:bib880-l": "Korean"
+                }
+              ],
+              "marc:bib880-i1": "1",
+              "marc:bib880-i2": "0"
+            },
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "250-02"
+                },
+                {
+                  "marc:bib880-a": "초판."
+                }
+              ]
+            },
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "700-04"
+                },
+                {
+                  "marc:bib880-a": "정 장진,"
+                },
+                {
+                  "marc:bib880-e": "translator."
+                }
+              ],
+              "marc:bib880-i1": "1"
+            }
+          ]
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {
+                "@id": "https://id.kb.se/language/kor"
+              }
+            ],
+            "contribution": [
+              {
+                "@type": "Contribution",
+                "agent": {
+                  "@type": "Person",
+                  "givenName": "Chang-jin",
+                  "familyName": "Chŏng"
+                },
+                "role": [
+                  {
+                    "@id": "https://id.kb.se/relator/translator"
+                  }
+                ]
+              }
+            ],
+            "hasTitle": [
+              {
+                "@type": "Title",
+                "mainTitleByLang": {
+                  "ko": "Очеркь Кореи.",
+                  "ko-Latn-t-ko": "Ocherkʹ Korei."
+                }
+              }
+            ]
+          },
+          "editionStatementByLang": {
+            "ko": "초판.",
+            "ko-Latn-t-ko": "Ch'op'an."
+          },
+          "marc:hasBib880": [
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "700-04"
+                },
+                {
+                  "marc:bib880-a": "정 장진,"
+                },
+                {
+                  "marc:bib880-e": "translator."
+                }
+              ],
+              "marc:bib880-i1": "1"
             }
           ]
         }
