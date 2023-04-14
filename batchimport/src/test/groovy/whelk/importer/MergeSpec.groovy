@@ -1038,4 +1038,153 @@ class MergeSpec extends Specification {
                         ]
                 ]]
     }
+
+    def "don't add manually removed translationOf"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        def versions = [
+                ['changedBy': 'sigel1',
+                 'changedIn': 'batch import',
+                 'data': [
+                         '@graph': [
+                                 [
+                                         'modified': '2022-02-01T12:00:00Z',
+                                         'mainEntity': 'meID'
+                                 ],
+                                 [
+                                         '@id': 'meID',
+                                         'instanceOf': [
+                                                 'translationOf' : ['@id': 'other ID'],
+                                         ]
+                                 ]
+                         ]
+                 ]
+                ],
+                ['changedBy': 'sigel1',
+                 'changedIn': 'xl', // A manual edit!
+                 'data': [
+                         '@graph': [
+                                 [
+                                         'modified': '2022-02-02T12:00:00Z',
+                                         'mainEntity': 'meID'
+                                 ],
+                                 [
+                                         '@id': 'meID',
+                                         'instanceOf': [
+
+                                         ]
+                                 ]
+                         ]
+                 ]
+                ]
+        ].collect { change ->
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+        }
+        def history = new History(versions, ld)
+        def incoming = new Document( (Map)
+                ['@graph': [
+                        [
+                                'modified': '2022-02-03T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'instanceOf': [
+                                        'translationOf' : ['@id': 'other ID'],
+                                ]
+                        ]
+                ]])
+        Document base = versions.last().doc
+        Merge merge = new Merge(
+                [
+                        "rules": [
+                                ["operation": "add_if_none", "path": ["@graph",1,"instanceOf","translationOf"]]
+                        ]
+                ]
+        )
+        merge.merge(base, incoming, "sigel2", history)
+        expect:
+        base.data == [
+                '@graph': [
+                        [
+                                'modified': '2022-02-02T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'instanceOf': [
+                                ]
+                        ]
+                ]]
+    }
+
+    def "don't add manually removed extent"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        def versions = [
+                ['changedBy': 'sigel1',
+                 'changedIn': 'batch import',
+                 'data': [
+                         '@graph': [
+                                 [
+                                         'modified': '2022-02-01T12:00:00Z',
+                                         'mainEntity': 'meID'
+                                 ],
+                                 [
+                                         '@id': 'meID',
+                                         'extent': 'some extent'
+                                 ]
+                         ]
+                 ]
+                ],
+                ['changedBy': 'sigel1',
+                 'changedIn': 'xl', // A manual edit!
+                 'data': [
+                         '@graph': [
+                                 [
+                                         'modified': '2022-02-02T12:00:00Z',
+                                         'mainEntity': 'meID'
+                                 ],
+                                 [
+                                         '@id': 'meID',
+                                 ]
+                         ]
+                 ]
+                ]
+        ].collect { change ->
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+        }
+        def history = new History(versions, ld)
+        def incoming = new Document( (Map)
+                ['@graph': [
+                        [
+                                'modified': '2022-02-03T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'extent': 'some extent'
+                        ]
+                ]])
+        Document base = versions.last().doc
+        Merge merge = new Merge(
+                [
+                        "rules": [
+                                ["operation": "add_if_none", "path": ["@graph",1,"extent"]]
+                        ]
+                ]
+        )
+        merge.merge(base, incoming, "sigel2", history)
+        expect:
+        base.data == [
+                '@graph': [
+                        [
+                                'modified': '2022-02-02T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                        ]
+                ]]
+    }
 }
