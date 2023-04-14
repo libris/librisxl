@@ -69,8 +69,17 @@ selectBySqlWhere(where) { bib ->
             // However in the description (thing) where we want to insert the bib880 values, there may be more than one object in some arrays.
             // So we check the index of the object containing the fieldref to get the path right.
             // If there is no fieldref in the path it's still ok if no arrays are of of size > 1.
-            def isSafePath = adjustArrayIndices(p, refPath) || !existRepeated(thing, p)
-            if (!isSafePath) {
+            def safePath = adjustArrayIndices(p, refPath)
+            if (!safePath) {
+                if (existRepeated(thing, p)) {
+                    unsafePath.println([id, bib880data.ref, p.join('.'), refPath.join('.')].join('\t'))
+                    incrementStats('Unsafe path: no fieldref in path and multiple elements in array', p.join('.'))
+                    return
+                } else {
+                    p = removeIndexFromPathIfNotArray(thing, p)
+                }
+            }
+            if (!safePath) {
                 unsafePath.println([id, bib880data.ref, p.join('.'), refPath.join('.')].join('\t'))
                 incrementStats('Unsafe path: no fieldref in path and multiple elements in array', p.join('.'))
                 return
@@ -274,25 +283,36 @@ boolean adjustArrayIndices(List path, List refPath) {
 
 // Check if any array in the path is of size > 1
 boolean existRepeated(Map thing, List path) {
-    def copy = path.collect()
-
-    def existRepeated = path.findIndexValues { it instanceof Integer }
-            *.toInteger()
-            .any {
-                def obj = getAtPath(thing, path.take(it))
-                if (obj instanceof Map) {
-                    // Not an array at subpath location, adjust accordingly (bättre förklaring)
-                    path.removeAt(it)
-                }
-                return obj instanceof List && obj.size() > 1
-            }
-
-    if (existRepeated) {
-        path.clear()
-        path.addAll(copy)
+    def nextArrayPath = path.takeWhile { it instanceof String }
+    if (nextArrayPath.isEmpty()) {
+        return false
     }
+    def obj = asList(getAtPath(thing, nextArrayPath))
+    if (obj.size() > 1) {
+        return true
+    }
+    if (obj[0] instanceof Map) {
+        existRepeated(obj[0], path.drop(nextArrayPath.size() + 1))
+    } else {
+        return false
+    }
+}
 
-    return existRepeated
+// E.g. ['hasDimensions', 0, 'label'] -> ['hasDimensions', 'label'] if thing.hasDimensions is a Map rather than List.
+List removeIndexFromPathIfNotArray(Map thing, List path) {
+    def nextArrayPath = path.takeWhile { it instanceof String }
+    if (nextArrayPath.isEmpty()) {
+        return path
+    }
+    def obj = getAtPath(thing, nextArrayPath)
+    if (obj instanceof Map) {
+        return nextArrayPath + removeIndexFromPathIfNotArray(obj, path.drop(nextArrayPath.size() + 1))
+    }
+    if (obj?.getAt(0) instanceof Map) {
+        return nextArrayPath + removeIndexFromPathIfNotArray(obj[0], path.drop(nextArrayPath.size()))
+    } else {
+        return path
+    }
 }
 
 boolean looksLikeScript(String s, String scriptCode) {
