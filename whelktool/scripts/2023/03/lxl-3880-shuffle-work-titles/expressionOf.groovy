@@ -39,7 +39,8 @@ def where = """
         and data #>> '{@graph, 1, instanceOf, expressionOf}' is not null 
 """
 
-selectBySqlWhere(where) {
+selectByIds(['k3wxhwnw3vbg04s']) {
+//selectBySqlWhere(where) {
     def id = it.doc.shortId
     def instance = it.graph[1]
     def work = instance[INSTANCE_OF]
@@ -208,8 +209,10 @@ String stringifyTitle(Map work) {
     def paths = titleKeys.collect { [HAS_TITLE, 0] + it }
     def titleParts = paths.collect {
         getAtPath(work, it)
-            ?: getAtPath(work, it.dropRight(1) + [it.last() + 'byLang'])?.find { !it.key.contains('-t-') }?.value
+            ?: getAtPath(work, it.dropRight(1) + [it.last() + 'ByLang'])?.find { it.key.contains('-t-') }?.value
     }.grep()
+
+    println(titleParts)
 
     return titleParts.join(' · ')
 }
