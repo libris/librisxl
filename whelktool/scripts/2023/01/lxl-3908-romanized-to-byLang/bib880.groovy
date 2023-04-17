@@ -28,7 +28,7 @@ selectBySqlWhere(where) { bib ->
     if (romanizableLangs.isEmpty()) {
         incrementStats('No romanizable language', asList(thing.instanceOf.language))
     }
-    if (romanizableLangs.size() > 2) {
+    if (romanizableLangs.size() > 1) {
         incrementStats('Multiple romanizable langs', romanizableLangs)
         return
     }
