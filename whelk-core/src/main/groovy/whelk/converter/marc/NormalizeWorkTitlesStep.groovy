@@ -14,6 +14,7 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
     private static final String TITLE = 'Title'
     private static final String LEGAL_DATE = 'legalDate'
     private static final String CONTRIBUTION = 'contribution'
+    private static final String HAS_PART = 'hasPart'
 
     private static final List<String> titleProps = [HAS_TITLE, 'musicKey', 'musicMedium', 'version', LEGAL_DATE, 'originDate', 'marc:arrangedStatementForMusic']
 
@@ -40,7 +41,11 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
     }
 
     Closure doModify = { Map work, String via ->
+        if (via == 'instanceOf') {
+            langLinker.linkAll(work)
+        }
         moveExpressionOfTitle(work)
+        moveTranslationOfIntoParts(work)
         moveOriginalTitle(work)
     }
 
@@ -55,6 +60,32 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
         if (hasOkExpressionOf(work)) {
             if (tryMove(work[EXPRESSION_OF], work, titleProps)) {
                 work.remove(EXPRESSION_OF)
+            }
+        }
+    }
+
+    void moveTranslationOfIntoParts(Map work) {
+        if (!work[HAS_PART] || !work[TRANSLATION_OF]) {
+            return
+        }
+        def origLangs = asList(work[TRANSLATION_OF]).collect { it[LANGUAGE] }.flatten().unique()
+        def workLangs = work[LANGUAGE]
+
+        def safeToMove = workLangs.size() == 1
+                && origLangs.size() == 1
+                && work[HAS_PART].every { p ->
+            p[LANGUAGE] == workLangs
+                    && p[LANGUAGE] != origLangs
+                    && p[HAS_TITLE]
+                    && !p[TRANSLATION_OF]
+        }
+
+        if (safeToMove) {
+            work[HAS_PART].each { p ->
+                p[TRANSLATION_OF] = work[TRANSLATION_OF]
+            }
+            if (!work[HAS_TITLE]) {
+                work.remove(TRANSLATION_OF)
             }
         }
     }
@@ -168,7 +199,6 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
         if (!expressionOf[HAS_TITLE]) {
             return false
         }
-        langLinker.linkAll(work)
         def workLang = asList(work[LANGUAGE])
         def trlOf = asList(work[TRANSLATION_OF])[0]
         def trlOfLang = trlOf ? asList(trlOf[LANGUAGE]) : []
