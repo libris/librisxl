@@ -42,7 +42,7 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
 
     Closure doModify = { Map work, String via ->
         if (via == 'instanceOf') {
-            langLinker.linkAll(work)
+            langLinker?.linkAll(work)
             moveExpressionOfTitle(work)
             moveTranslationOfIntoParts(work)
         }
@@ -202,7 +202,7 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
         def workLang = asList(work[LANGUAGE])
         def trlOf = asList(work[TRANSLATION_OF])[0]
         def trlOfLang = trlOf ? asList(trlOf[LANGUAGE]) : []
-        langLinker.linkLanguages(expressionOf, workLang + trlOfLang)
+        langLinker?.linkLanguages(expressionOf, workLang + trlOfLang)
         def exprOfLang = asList(expressionOf[LANGUAGE])
         return (workLang + trlOfLang).containsAll(exprOfLang)
     }
