@@ -211,8 +211,6 @@ String stringifyTitle(Map work) {
             ?: getAtPath(work, it.dropRight(1) + [it.last() + 'ByLang'])?.find { it.key.contains('-t-') }?.value
     }.grep()
 
-    println(titleParts)
-
     return titleParts.join(' · ')
 }
 
