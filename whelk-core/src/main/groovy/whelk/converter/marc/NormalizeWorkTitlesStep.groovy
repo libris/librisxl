@@ -99,7 +99,7 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
         }
 
         if (!isMusic) {
-            if (!work[TRANSLATION_OF] && hasTranslator) {
+            if (!work[TRANSLATION_OF] && hasTranslator && work[HAS_TITLE]) {
                 work[TRANSLATION_OF] = [(TYPE): 'Work']
             }
             if (asList(work[TRANSLATION_OF]).size() == 1) {
