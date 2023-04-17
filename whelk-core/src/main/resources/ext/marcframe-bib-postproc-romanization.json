@@ -807,7 +807,7 @@
       }
     },
     {
-      "name": "marc:hasBib880 to byLang: 240[$a] + 250[$a] + unhandled 700[$a + $e] (missing ind2)",
+      "name": "marc:hasBib880 to byLang: 240[$a] + 250[$a] + unhandled 700[$a + $e] (missing fieldref in contribution)",
       "source": {
         "mainEntity": {
           "@type": "Instance",
@@ -830,12 +830,12 @@
                 "@type": "Contribution",
                 "agent": {
                   "@type": "Person",
-                  "givenName": "Chang-jin",
-                  "familyName": "Chŏng"
+                  "givenName": "Sang-hak",
+                  "familyName": "An"
                 },
                 "role": [
                   {
-                    "@id": "https://id.kb.se/relator/translator"
+                    "@id": "https://id.kb.se/relator/author"
                   }
                 ]
               }
@@ -875,16 +875,14 @@
               "@type": "marc:Bib880",
               "marc:partList": [
                 {
-                  "marc:fieldref": "700-04"
+                  "marc:fieldref": "700-03"
                 },
                 {
-                  "marc:bib880-a": "정 장진,"
-                },
-                {
-                  "marc:bib880-e": "translator."
+                  "marc:bib880-a": "안, 상학"
                 }
               ],
-              "marc:bib880-i1": "1"
+              "marc:bib880-i1": "1",
+              "marc:bib880-i2": " "
             }
           ]
         }
@@ -904,12 +902,12 @@
                 "@type": "Contribution",
                 "agent": {
                   "@type": "Person",
-                  "givenName": "Chang-jin",
-                  "familyName": "Chŏng"
+                  "givenName": "Sang-hak",
+                  "familyName": "An"
                 },
                 "role": [
                   {
-                    "@id": "https://id.kb.se/relator/translator"
+                    "@id": "https://id.kb.se/relator/author"
                   }
                 ]
               }
@@ -933,16 +931,14 @@
               "@type": "marc:Bib880",
               "marc:partList": [
                 {
-                  "marc:fieldref": "700-04"
+                  "marc:fieldref": "700-03"
                 },
                 {
-                  "marc:bib880-a": "정 장진,"
-                },
-                {
-                  "marc:bib880-e": "translator."
+                  "marc:bib880-a": "안, 상학"
                 }
               ],
-              "marc:bib880-i1": "1"
+              "marc:bib880-i1": "1",
+              "marc:bib880-i2": " "
             }
           ]
         }
