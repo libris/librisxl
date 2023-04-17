@@ -6,6 +6,7 @@ import groovy.transform.NullCheck
 import groovy.util.logging.Log4j2 as Log
 import whelk.filter.LanguageLinker
 import whelk.util.DocumentUtil
+import whelk.util.Unicode
 
 import static whelk.Document.deepCopy
 import static whelk.JsonLd.asList
@@ -31,6 +32,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     Map byLangToBase
 
     Map langIdToLangTag
+    Set romanizableLangs
 
     // Note: MARC standard allows ISO 15924 in $6 but Libris practice doesn't
     private static final Map MARC_SCRIPT_CODES =
@@ -68,66 +70,98 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     }
 
     void _modify(Map record, Map thing) {
-        if (!languageResources)
-            return
-
-        // TODO: Do we really want to remove everything? What about "00" fields?
-        // https://katalogverk.kb.se/katalogisering/Formathandboken/Lankning/index.html
-        def hasBib880 = thing.remove(HAS_BIB880)
-
-        if (!hasBib880) {
+        if (!languageResources) {
             return
         }
 
-        Map bib880ByField = [:]
+        def workLang = thing.instanceOf.subMap('language')
+        languageResources.languageLinker.linkAll(workLang)
+        def romanizable = asList(workLang.language).findResults { it[ID] in romanizableLangs ? it[ID] : null }
 
-        asList(hasBib880).each { bib880 ->
-            def linkField = bib880[PART_LIST][0][FIELDREF].split('-')
-            def tag = linkField[0]
-            def seqNum = linkField[1].take(2)
-            if (seqNum != '00') {
-                def entry = bib880ByField.computeIfAbsent(tag, s -> [])
-                entry.add(['ref': '880-' + seqNum, 'bib880': bib880])
+        if (romanizable.size() > 1) {
+            return
+        }
+
+        def lang = romanizable.size() == 1 ? romanizable[0] : 'https://id.kb.se/language/und'
+        def langTag = langIdToLangTag[lang]
+        if (!langTag) {
+            return
+        }
+        def tLangTag = "$langTag${MATCH_T_TAG}$langTag" as String
+
+        def hasBib880 = asList(thing.remove(HAS_BIB880))
+
+        Map seqNumToBib880Data = collectValidBib880sBySeqNum(hasBib880)
+
+        DocumentUtil.findKey(thing, FIELD_REFS) { ref, path ->
+            if (ref instanceof List) {
+                if (ref.size() > 1) {
+                    return
+                } else {
+                    ref = ref[0]
+                }
             }
-        }
 
-        Map bib880Map = [:]
-        Map sameField = [:]
+            def refPath = path.dropRight(1)
+            def seqNum = ref.takeRight(2)
 
-        bib880ByField.each { tag, data ->
-            def marcJson = null
-            try {
-                marcJson = data.collect { bib880ToMarcJson(it.bib880) }
-            } catch (Exception e) {
+            def bib880data = seqNumToBib880Data[seqNum]
+            if (!bib880data) {
                 return
             }
 
-            def marc = [leader: "00887cam a2200277 a 4500", fields: marcJson]
-            def converted = converter.runConvert(marc)
+            def byLangBasePaths = collectByLangBasePaths(bib880data.converted)
 
-            def refs = data.collect {
-                bib880Map[it.ref] = converted
-                it.ref
-            } as Set
+            for (List p : byLangBasePaths) {
+                def pCopy = p.collect()
 
-            refs.each {
-                sameField[it] = refs
+                // Since we convert the bib880s one by one, array indexes in the path will always be 0.
+                // However in the description (thing) where we want to insert the bib880 values, there may be more than one object in some arrays.
+                // So we check the index of the object containing the fieldref to get the path right.
+                // If there is no fieldref in the path it's still ok if no arrays are of size > 1.
+                def safePath = adjustArrayIndexes(p, refPath)
+                if (!safePath) {
+                    if (existRepeated(thing, p)) {
+                        return
+                    } else {
+                        p = removeIndexFromPathIfNotArray(thing, p)
+                    }
+                }
+
+                def original = DocumentUtil.getAtPath(bib880data.converted, pCopy)
+                if (looksLikeLatin(original.toString())) {
+                    return
+                }
+
+                def parentObject = DocumentUtil.getAtPath(thing, p.dropRight(1))
+                if (!parentObject) {
+                    return
+                }
+
+                asList(parentObject).each {
+                    def k = p.last()
+                    if (it[k]) {
+                        def byLangProp = langAliases[k]
+                        it[byLangProp] =
+                                [
+                                        (langTag) : original,
+                                        (tLangTag): it.remove(k)
+                                ]
+                    }
+                }
             }
+
+            bib880data['handled'] = true
+            return new DocumentUtil.Remove()
         }
 
-        Set handled = []
-        def handle880Ref = { ref, path ->
-            def converted = bib880Map[ref]
-            def mainEntity = DocumentUtil.getAtPath(converted, ['@graph', 1])
-            if (sameField[ref]?.intersect(handled) || (mainEntity && mergeAltLanguage(mainEntity, thing))) {
-                handled.add(ref)
-                return new DocumentUtil.Remove()
+        def indexesOfHandled = seqNumToBib880Data.findResults { seqNum, data -> data.handled ? data.idxOfOriginal : null }
+        if (!indexesOfHandled.isEmpty()) {
+            indexesOfHandled.sort().reverseEach {
+                hasBib880.removeAt(it)
             }
-        }
-
-        if (bib880Map) {
-            FIELD_REFS.each {
-                DocumentUtil.findKey(thing, it, handle880Ref)
+            if (!hasBib880.isEmpty()) {
+                thing[HAS_BIB880] = hasBib880
             }
         }
     }
@@ -149,9 +183,9 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         uniqueTLangs.each { tLang ->
             unmodifyTLang(thing, tLang, byLangPaths, record)
         }
-        
+
         if (thing[HAS_BIB880]) {
-            ((List) thing[HAS_BIB880]).sort { bib880 -> bib880[PART_LIST]?[0]?[FIELDREF] ?: '' }
+            ((List) thing[HAS_BIB880]).sort { bib880 -> bib880[PART_LIST] ?[0] ?[FIELDREF] ?: '' }
         }
 
         byLangPaths.each { putRomanizedLiteralInNonByLang(thing, it as List) }
@@ -236,47 +270,168 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         }
     }
 
-    boolean mergeAltLanguage(Map converted, Map thing) {
-        // Since the 880s do not specify which language they are in, we assume that they are in the first work language
-        def workLang = thing.instanceOf.subMap('language')
-        languageResources.languageLinker.linkAll(workLang)
-        def lang = asList(workLang.language).findResult { it[ID] } ?: 'https://id.kb.se/language/und'
+    Map collectValidBib880sBySeqNum(List hasBib880) {
+        Map seqNumToBib880Data = [:]
+        Set duplicateSeqNums = []
 
-        return addAltLang(thing, converted, lang)
-    }
-
-    boolean addAltLang(Map thing, Map converted, String lang) {
-        if (!langIdToLangTag[lang]) {
-            return false
-        }
-        def nonByLangPaths = []
-        DocumentUtil.findKey(converted, langAliases.keySet()) { value, path ->
-            nonByLangPaths.add(path.collect())
-            return
-        }
-        nonByLangPaths.each { path ->
-            def containingObject = DocumentUtil.getAtPath(thing, path.dropRight(1))
-            if (!containingObject) {
-                //TODO: No romanized version seems to exists...
+        hasBib880.eachWithIndex { bib880, i ->
+            def ref = getFieldRef(bib880)
+            if (ref.isEmpty()) {
                 return
             }
 
-            asList(containingObject).each {
-                def k = path.last()
-                if (it[k]) {
-                    def byLangProp = langAliases[k]
-                    def tag = langIdToLangTag[lang]
-                    it[byLangProp] =
-                            [
-                                    (tag)               : DocumentUtil.getAtPath(converted, path),
-                                    "${tag}-Latn-t-$tag": it[k]
-                            ]
+            def converted = tryConvert(bib880)
+            if (converted.isEmpty()) {
+                return
+            }
+
+            def seqNum = ref.get().takeRight(2)
+
+            if (seqNumToBib880Data.containsKey(seqNum)) {
+                duplicateSeqNums.add(seqNum)
+                return
+            }
+
+            seqNumToBib880Data[seqNum] = [
+                    'ref'          : ref.get(),
+                    'converted'    : converted.get()['mainEntity'],
+                    'idxOfOriginal': i
+            ]
+        }
+
+        duplicateSeqNums.each {
+            seqNumToBib880Data.remove(it)
+        }
+
+        return seqNumToBib880Data
+    }
+
+    Optional<String> getFieldRef(Map bib880) {
+        def partList = asList(bib880[PART_LIST])
+        if (!partList) {
+            return Optional.empty()
+        }
+        def fieldref = partList[0][FIELDREF]
+        if (!(fieldref =~ /^\d{3}-\d{2}/)) {
+            return Optional.empty()
+        }
+        return Optional.of(fieldref.take(6))
+    }
+
+    Optional<Map> tryConvert(Map bib880) {
+        def converted = null
+
+        try {
+            def marcJson = bib880ToMarcJson(bib880)
+            def marc = [leader: "00887cam a2200277 a 4500", fields: [marcJson]]
+            converted = converter.runConvert(marc)
+        } catch (Exception e) {
+            return Optional.empty()
+        }
+
+        return Optional.of(converted)
+    }
+
+    Map bib880ToMarcJson(Map bib880) {
+        def parts = asList(bib880[PART_LIST])
+        def tag = parts[0][FIELDREF].split('-')[0]
+        return [(tag): [
+                (IND1)     : bib880["$BIB880-i1"],
+                (IND2)     : bib880["$BIB880-i2"],
+                (SUBFIELDS): parts[1..-1].collect {
+                    def subfields = it.collect { key, value ->
+                        [(key.replace('marc:bib880-', '')): value]
+                    }
+                    return subfields.size() == 1 ? subfields[0] : subfields
                 }
-                it.remove(k)
+        ]]
+    }
+
+    List collectByLangBasePaths(Map thing) {
+        def byLangBasePaths = []
+
+        DocumentUtil.findKey(thing, langAliases.keySet()) { value, path ->
+            if (!allLatin(value)) {
+                byLangBasePaths.add(path.collect())
+            }
+            return
+        }
+
+        return byLangBasePaths
+    }
+
+    boolean allLatin(s) {
+        def stripped = s.toString().replaceAll(~/\p{IsCommon}|\p{IsInherited}|\p{IsUnknown}/, '')
+        return !stripped || stripped.every { looksLikeLatin(it) }
+    }
+
+    boolean looksLikeLatin(String s) {
+        Unicode.guessIso15924ScriptCode(s).map { it == 'Latn' }.orElse(false)
+    }
+
+    // Get array index right when the referenced object is contained in an array of size > 1
+    // For example:
+    // [publication, 0, place, label] -> [publication, 1, place, label]
+    // [seriesMembership, 0, inSeries, instanceOf, hasTitle, 0, mainTitle] -> [seriesMembership, 0, inSeries, instanceOf, 1, hasTitle, 0, mainTitle]
+    // Returns false if refPath is not a subpath of the adjusted path
+    boolean adjustArrayIndexes(List path, List refPath) {
+        def copy = path.collect()
+
+        if (path.any { it instanceof Integer }) {
+            for (int i : 0..<refPath.size()) {
+                if (path[i] instanceof String && refPath[i] instanceof String) {
+                    if (path[i] != refPath[i]) {
+                        path.clear()
+                        path.addAll(copy)
+                        return false
+                    }
+                } else if (path[i] instanceof Integer && refPath[i] instanceof Integer) {
+                    if (path[i] != refPath[i]) {
+                        path[i] = refPath[i]
+                    }
+                } else if (path[i] instanceof String && refPath[i] instanceof Integer) {
+                    path.add(i, refPath[i])
+                } else if (path[i] instanceof Integer && refPath[i] instanceof String) {
+                    path.removeAt(i)
+                }
             }
         }
 
         return true
+    }
+
+    // Check if any array in the path is of size > 1
+    boolean existRepeated(Map thing, List path) {
+        def nextArrayPath = path.takeWhile { it instanceof String }
+        if (nextArrayPath.isEmpty()) {
+            return false
+        }
+        def obj = asList(getAtPath(thing, nextArrayPath))
+        if (obj.size() > 1) {
+            return true
+        }
+        if (obj[0] instanceof Map) {
+            existRepeated(obj[0], path.drop(nextArrayPath.size() + 1))
+        } else {
+            return false
+        }
+    }
+
+    // E.g. ['hasDimensions', 0, 'label'] -> ['hasDimensions', 'label'] if thing.hasDimensions is a Map rather than List.
+    List removeIndexFromPathIfNotArray(Map thing, List path) {
+        def nextArrayPath = path.takeWhile { it instanceof String }
+        if (nextArrayPath.isEmpty()) {
+            return path
+        }
+        def obj = getAtPath(thing, nextArrayPath)
+        if (obj instanceof Map) {
+            return nextArrayPath + removeIndexFromPathIfNotArray(obj, path.drop(nextArrayPath.size() + 1))
+        }
+        if (obj?.getAt(0) instanceof Map) {
+            return nextArrayPath + removeIndexFromPathIfNotArray(obj[0], path.drop(nextArrayPath.size()))
+        } else {
+            return path
+        }
     }
 
     Map findRomanizedFields(Map reverted) {
@@ -390,31 +545,19 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         return tLangs
     }
 
-    Map bib880ToMarcJson(Map bib880) {
-        def parts = bib880[PART_LIST]
-        def tag = parts[0][FIELDREF].split('-')[0]
-        return [(tag): [
-                (IND1)     : bib880["$BIB880-i1"],
-                (IND2)     : bib880["$BIB880-i2"],
-                (SUBFIELDS): parts[1..-1].collect {
-                    def subfields = it.collect { key, value ->
-                        [(key.replace('marc:bib880-', '')): value]
-                    }
-                    return subfields.size() == 1 ? subfields[0] : subfields
-                }
-        ]]
-    }
-
     void init() {
         if (ld) {
             this.langAliases = ld.langContainerAlias
             this.byLangToBase = langAliases.collectEntries { k, v -> [v, k] }
         }
-        
+
         if (!languageResources) {
             return
         }
+//        this.languageResources = languageResources
         this.langIdToLangTag = languageResources.languages
                 .findAll { k, v -> v.langTag }.collectEntries { k, v -> [k, v.langTag] }
+        this.romanizableLangs = languageResources.transformedLanguageForms
+                .findResults { it.value.inLanguage?.get(ID) }
     }
 }
