@@ -4,42 +4,27 @@ import com.google.common.net.MediaType
 import spock.lang.Specification
 import whelk.rest.api.CrudUtils
 
-import javax.servlet.http.HttpServletRequest
-
 class CrudUtilsSpec extends Specification {
-    HttpServletRequest request
-
-    void setup() {
-        request = GroovyMock(HttpServletRequest.class)
-    }
 
     def "Should return correct content type for request"() {
         given:
-        request.getHeader(_) >> {
-            "application/json, */*, text/html"
-        }
-        request.getRequestURI() >> {
-          "/"
-        }
+        var acceptHeader = "application/json, */*, text/html"
+        var requestPath = "/"
+
         when:
-        String contentType = CrudUtils.getBestContentType(request)
+        String contentType = CrudUtils.getBestContentType(acceptHeader, requestPath)
+
         then:
         contentType == "application/json"
 
     }
 
     def "Should return correct content type"() {
-        given:
-        request.getHeader(_) >> {
-            accept
-        }
-        request.getRequestURI() >> {
-            "/id${suffix}"
-        }
         expect:
-        CrudUtils.getBestContentType(request) == contentType
+        CrudUtils.getBestContentType(acceptHeader, "/id${suffix}") == contentType
+
         where:
-        accept                                              | suffix    || contentType
+        acceptHeader                                        | suffix    || contentType
         "text/turtle"                                       | ''        || "text/turtle"
         "application/json"                                  | ''        || "application/json"
         "application/ld+json"                               | ''        || "application/ld+json"
@@ -63,14 +48,11 @@ class CrudUtilsSpec extends Specification {
 
     def "Should throw on invalid suffix"() {
         given:
-        request.getHeader(_) >> {
-            '*/*'
-        }
-        request.getRequestURI() >> {
-            "/id${suffix}"
-        }
+        var acceptHeader = '*/*'
+        var requestPath = "/id${suffix}"
+
         when:
-        CrudUtils.getBestContentType(request)
+        CrudUtils.getBestContentType(acceptHeader, requestPath)
 
         then:
         thrown(Crud.NotFoundException)
@@ -83,6 +65,7 @@ class CrudUtilsSpec extends Specification {
     def "Should pick best matching MIME type"() {
         expect:
         assert CrudUtils.getBestMatchingMimeType(allowed, desired) == expected
+
         where:
         allowed                           | desired                              | expected
         [m("application/json"), m("text/html")] | [m("application/rdf+xml"), m("text/html")] | m("text/html")
@@ -94,6 +77,7 @@ class CrudUtilsSpec extends Specification {
     def "Should sort MIME types by quality"() {
         expect:
         assert CrudUtils.parseAcceptHeader(mimeTypes).collect{ it.toString() } == sortedMimeTypes
+
         where:
         mimeTypes                                                | sortedMimeTypes
         "*/*, text/html;q=0.1, application/json;q=0.8"           | ["*/*", "application/json", "text/html"]

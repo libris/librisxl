@@ -7,8 +7,9 @@ import org.codehaus.jackson.map.ObjectMapper
 import whelk.JsonLd
 
 interface MarcFramePostProcStep {
-    def ID = JsonLd.ID_KEY
-    def TYPE = JsonLd.TYPE_KEY
+    var ID = JsonLd.ID_KEY
+    var TYPE = JsonLd.TYPE_KEY
+    boolean getRequiresResources()
     void setLd(JsonLd ld)
     void setMapper(ObjectMapper mapper)
     void init()
@@ -23,6 +24,7 @@ abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
     Pattern matchValuePattern
     JsonLd ld
     ObjectMapper mapper
+    boolean requiresResources = false
 
     void setMatchValuePattern(String pattern) {
         matchValuePattern = Pattern.compile(pattern)
@@ -213,6 +215,7 @@ class MappedPropertyStep implements MarcFramePostProcStep {
     String type
     JsonLd ld
     ObjectMapper mapper
+    boolean requiresResources = false
 
     String sourceEntity
     String sourceLink

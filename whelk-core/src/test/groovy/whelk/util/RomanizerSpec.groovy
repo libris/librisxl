@@ -179,6 +179,9 @@ class RomanizerSpec extends Specification {
         "Знаменитий детектив Блюмквіст" || "Znamenytyj detektyv Bljumkvist"
         // https://libris.kb.se/csld89sd9f4gm75n#it
         "Я люблю ходити в дитячий садок" || "Ja ljublju chodyty v dytjačyj sadok"
+        // https://libris.kb.se/r7j8cqgsphgmr473#it
+        "Валер'ян" || "Valerʺjan"
+        "Валер’ян" || "Valerʺjan"
     }
 
     def "Azerbaijani in Cyrillic with ALA-LOC"() {
@@ -316,6 +319,8 @@ class RomanizerSpec extends Specification {
         "פּלוידערײַ"                                 || "ployderay"
         "פֿוספֿינגער"                                || "fusfinger"
         "קאָמוניסטקע"                               || "komunistke"
+        // qamats qatan
+        "טאׇטע ביַים דאׇקטער"                         || "tote biim dokter"
     }
 
     // TODO: review these. They are copied and adapted from "Yiddish with YIVO" above
@@ -342,5 +347,7 @@ class RomanizerSpec extends Specification {
         "זומערקורס"                                || "zumerḳurs"
         "ליאַלקע"                                   || "lialḳe"
         "נעווראָלאָגיע"                              || "neṿrologie"
+        // qamats qatan
+        "טאׇטע ביַים דאׇקטער"                         || "ṭoṭe biim doḳṭer"
     }
 }

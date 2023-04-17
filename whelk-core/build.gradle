@@ -132,6 +132,9 @@ task integTest(type: Test) {
     outputs.upToDateWhen { false }
     testClassesDirs = sourceSets.integTest.output.classesDirs
     classpath = sourceSets.integTest.runtimeClasspath
+    systemProperties(
+        'xl.secret.properties': System.getProperty("xl.secret.properties")
+    )
     testLogging {
         showStandardStreams = true
         exceptionFormat = "full"

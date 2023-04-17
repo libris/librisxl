@@ -220,6 +220,9 @@ class MarcConversion {
             procStep = new RomanizationStep(props)
             procStep.converter = converter    
             procStep.languageResources = converter.languageResources; break
+            case 'NormalizeWorkTitles':
+            procStep = new NormalizeWorkTitlesStep(props)
+            procStep.langLinker = converter.languageResources?.languageLinker; break
             case null:
             return null
             default:
@@ -345,12 +348,15 @@ class MarcConversion {
         }
 
         if (doPostProcessing) {
+            // Temporarily turn off to prevent recursive calls from postprocessing steps
+            doPostProcessing = false
             sharedPostProcSteps.each {
                 it.modify(record, thing)
             }
             marcRuleSet.postProcSteps.each {
                 it.modify(record, thing)
             }
+            doPostProcessing = true
         }
 
         if (flatLinkedForm) {
@@ -427,13 +433,16 @@ class MarcConversion {
         def marcRuleSet = getRuleSetFromJsonLd(data)
 
         if (doPostProcessing) {
+            // Temporarily turn off to prevent recursive calls from postprocessing steps
+            doPostProcessing = false
             applyInverses(data, data[marcRuleSet.thingLink])
-            sharedPostProcSteps.each {
+            marcRuleSet.postProcSteps.reverseEach {
                 it.unmodify(data, data[marcRuleSet.thingLink])
             }
-            marcRuleSet.postProcSteps.each {
+            sharedPostProcSteps.reverseEach {
                 it.unmodify(data, data[marcRuleSet.thingLink])
             }
+            doPostProcessing = true
         }
 
         Map state = [:]
@@ -2598,6 +2607,7 @@ class MarcSubFieldHandler extends ConversionPart {
     boolean repeatProperty
     boolean overwrite
     boolean infer
+    boolean equivalentToId
     String resourceType
     String subUriTemplate
     Pattern matchUriToken = null
@@ -2686,6 +2696,7 @@ class MarcSubFieldHandler extends ConversionPart {
         overwrite = subDfn.overwrite == true
 
         infer = subDfn.infer == true
+        equivalentToId = subDfn.equivalentToId == true
 
         if (subDfn.splitValueProperties) {
             /*TODO: assert subDfn.splitValuePattern=~ /^\^.+\$$/,
@@ -2918,6 +2929,10 @@ class MarcSubFieldHandler extends ConversionPart {
                     if (propertyValue)
                         break
                 }
+            }
+
+            if (propertyValue == null && equivalentToId) {
+                propertyValue = entity['@id']
             }
 
             boolean checkResourceType = true

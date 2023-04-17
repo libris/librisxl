@@ -7,15 +7,24 @@ import spock.lang.*
 @Unroll
 class MarcFrameConverterSpec extends Specification {
 
-    static converter = new MarcFrameConverter() {
-        def config
+    static Whelk whelk = null
+    static MarcFrameConverter converter = null
 
-        void initialize(Map config) {
-            super.initialize(config)
-            this.config = config
-            super.conversion.doPostProcessing = false
-            super.conversion.flatLinkedForm = false
-            super.conversion.baseUri = new URI("/")
+    static {
+        try {
+            whelk = Whelk.createLoadedSearchWhelk()
+        } catch (Exception e) {
+            System.err.println("Unable to instantiate whelk: $e")
+        }
+        converter = new MarcFrameConverter(null, whelk?.jsonld, whelk?.languageResources) {
+            def config
+            void initialize(Map config) {
+                super.initialize(config)
+                this.config = config
+                super.conversion.doPostProcessing = false
+                super.conversion.flatLinkedForm = false
+                super.conversion.baseUri = new URI("/")
+            }
         }
     }
 
@@ -44,6 +53,12 @@ class MarcFrameConverterSpec extends Specification {
 
                 if (tag == 'postProcessing') {
                     ruleSet.postProcSteps.eachWithIndex { step, i ->
+                        if (step.requiresResources && !whelk) {
+                            var name = step.class.name
+                            var size = dfn[i]._spec.size()
+                            System.err.println("Skipping $name (${size} specs) [requiresResources]")
+                            return
+                        }
                         dfn[i]._spec.each {
                             postProcStepSpecs << [step: step, spec: it, thingLink: thingLink]
                         }
@@ -380,9 +395,7 @@ class MarcFrameConverterSpec extends Specification {
         given:
         def data
         def dataWithOutDollars
-        def converter
         when:
-        converter = new MarcFrameConverter()
         dataWithOutDollars = ['doc':['leader':'01103cam a2200265 a 4500', 'fields':[['001':'9387233'], ['005':'20101001124525.0'], ['008':'040302s2002    sw ||||      |10| 0 swe c'], ['020':['ind1':' ', 'ind2':' ', 'subfields':[['a':'91-89655-25-7']]]], ['040':['ind1':' ', 'ind2':' ', 'subfields':[['a':'Ai']]]], ['042':['ind1':' ', 'ind2':' ', 'subfields':[['9':'ARB']]]], ['100':['ind1':'1', 'ind2':' ', 'subfields':[['a':'Essén, Anna,'], ['d':'1977-']]]], ['245':['ind1':'0', 'ind2':'0', 'subfields':[['a':'Svensk invandring och arbetsmarknaden :'], ['b':'återblick och nuläge /'], ['c':'Essén,  Anna']]]], ['260':['ind1':' ', 'ind2':' ', 'subfields':[['a':'Stockholm :'], ['b':'Institutet för framtidsstudier,'], ['c':'2002']]]], ['300':['ind1':' ', 'ind2':' ', 'subfields':[['a':'64 s.']]]], ['440':['ind1':' ', 'ind2':'0', 'subfields':[['a':'Arbetsrapport / Institutet för Framtidsstudier,'], ['x':'1652-120X ;'], ['v':'2002:6']]]], ['650':['ind1':' ', 'ind2':'7', 'subfields':[['a':'Invandrare'], ['2':'albt//swe']]]], ['650':['ind1':' ', 'ind2':'7', 'subfields':[['a':'Arbetsmarknad'], ['2':'albt//swe']]]], ['650':['ind1':' ', 'ind2':'7', 'subfields':[['a':'Sysselsättningsmöjligheter'], ['2':'albt//swe']]]], ['650':['ind1':' ', 'ind2':'7', 'subfields':[['a':'Trender och tendenser'], ['2':'albt//swe']]]], ['650':['ind1':' ', 'ind2':'7', 'subfields':[['a':'Arbetsmarknadsstatistik'], ['2':'albt//swe']]]], ['650':['ind1':' ', 'ind2':'7', 'subfields':[['a':'Sverige'], ['2':'albt//swe']]]], ['710':['ind1':'2', 'ind2':' ', 'subfields':[['a':'Institutet för framtidsstudier'], ['4':'pbl']]]], ['776':['ind1':'0', 'ind2':'8', 'subfields':[['i':'Online'], ['a':'Essén, Anna, 1977-'], ['t':'Svensk invandring och arbetsmarknaden'], ['d':'2002'], ['w':'10149216']]]], ['856':['ind1':'4', 'ind2':'1', 'subfields':[['u':'http://www.framtidsstudier.se/filebank/files/20051201133251fil048Ti3PL2UIwRJQEBbDG.pdf'], ['z':'Fritt tillgänglig via Institutet för framtidsstudier']]]]]], 'id':'fxqp0f0r1nfrgss', 'spec':null]
 
         //Does not blow
