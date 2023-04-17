@@ -43,9 +43,9 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
     Closure doModify = { Map work, String via ->
         if (via == 'instanceOf') {
             langLinker.linkAll(work)
+            moveExpressionOfTitle(work)
+            moveTranslationOfIntoParts(work)
         }
-        moveExpressionOfTitle(work)
-        moveTranslationOfIntoParts(work)
         moveOriginalTitle(work)
     }
 
