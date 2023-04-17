@@ -6,6 +6,7 @@
 
 moved = getReportWriter('moved.tsv')
 propertyAlreadyExists = getReportWriter('property-already-exists.tsv')
+hasFieldRef = getReportWriter('has-fieldref.txt')
 
 HAS_TITLE = 'hasTitle'
 TRANSLATION_OF = 'translationOf'
@@ -58,6 +59,11 @@ boolean tryMoveTitle(Map work, String id, String via) {
         } else {
             return false
         }
+    }
+
+    if (work['marc:fieldref']) {
+        hasFieldRef.println(id)
+        return false
     }
 
     def translationOf = asList(work[TRANSLATION_OF])[0]

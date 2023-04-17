@@ -14,6 +14,7 @@ import whelk.filter.LanguageLinker
 moved = getReportWriter('moved.tsv')
 propertyAlreadyExists = getReportWriter('property-already-exists.tsv')
 langDiff = getReportWriter('lang-diff.tsv')
+hasFieldRef = getReportWriter('has-fieldref.txt')
 
 HAS_TITLE = 'hasTitle'
 MAIN_TITLE = 'mainTitle'
@@ -31,7 +32,7 @@ localExpressionOfToPrefTitle = loadLocalExpressionOfToPrefTitleMappings('title-m
 linkedExpressionOfToPrefTitle = loadLinkedExpressionOfToPrefTitleMappings('title-mappings/linked-expressionOf.tsv')
 bibleToVersion = loadBibleVersions('title-mappings/bible-versions.tsv')
 
-TITLE_RELATED_PROPS = ['musicMedium', 'version', 'legalDate', 'originDate', 'originPlace', 'marc:arrangedStatementForMusic']
+TITLE_RELATED_PROPS = ['musicMedium', 'version', 'legalDate', 'originDate', 'marc:arrangedStatementForMusic']
 
 def where = """
     collection = 'bib'
@@ -73,6 +74,10 @@ selectBySqlWhere(where) {
             return
         }
     } else {
+        if (expressionOf['marc:fieldref']) {
+            hasFieldRef.println(id)
+            return
+        }
         def expressionOfAsString = stringify(expressionOf)
         def prefTitle = localExpressionOfToPrefTitle[expressionOfAsString]
         if (prefTitle) {
@@ -145,7 +150,9 @@ void moveLanguagesFromTitle(Map expressionOf) {
     def languages = []
 
     asList(expressionOf[HAS_TITLE]).each { t ->
-        assert t[MAIN_TITLE] instanceof String
+        if (!t[MAIN_TITLE]) {
+            return
+        }
         def (mt, l) = splitTitleLanguages(t[MAIN_TITLE])
         if (l) {
             languages += l
@@ -199,7 +206,10 @@ String stringifyProps(Map work, List props) {
 String stringifyTitle(Map work) {
     def titleKeys = ['mainTitle', 'partName', 'partNumber', 'marc:formSubheading']
     def paths = titleKeys.collect { [HAS_TITLE, 0] + it }
-    def titleParts = paths.collect { getAtPath(work, asList(it)) }.grep()
+    def titleParts = paths.collect {
+        getAtPath(work, it)
+            ?: getAtPath(work, it.dropRight(1) + [it.last() + 'byLang'])?.find { !it.key.contains('-t-') }?.value
+    }.grep()
 
     return titleParts.join(' · ')
 }
@@ -207,17 +217,17 @@ String stringifyTitle(Map work) {
 // e.g. {"Bible. · [O.T., Psalms., Sternhold and Hopkins.] · eng": "Bibeln. Psaltaren"}
 Map loadLocalExpressionOfToPrefTitleMappings(String filename) {
     return new File(scriptDir, filename).readLines().drop(1).collectEntries {
-        def (hubTitle, stringifiedExpressionOf) = it.split('\t')
-        [stringifiedExpressionOf, hubTitle]
+        def (prefTitle, stringifiedExpressionOf) = it.split('\t')
+        [stringifiedExpressionOf, prefTitle]
     }
 }
 
 // e.g. {"https://libris.kb.se/0xbddxzj09vsjl9#it": "Bibeln. Haggai"}
 Map loadLinkedExpressionOfToPrefTitleMappings(String filename) {
     return new File(scriptDir, filename).readLines().drop(1).collectEntries {
-        def (uniformWorkTitleIri, hubTitle) = it.split('\t')
+        def (uniformWorkTitleIri, prefTitle) = it.split('\t')
         // replace only needed in test environments
-        [uniformWorkTitleIri.replace("https://libris.kb.se/", baseUri.toString()), hubTitle]
+        [uniformWorkTitleIri.replace("https://libris.kb.se/", baseUri.toString()), prefTitle]
     }
 }
 
