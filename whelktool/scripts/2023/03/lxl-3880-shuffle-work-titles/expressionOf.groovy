@@ -39,8 +39,7 @@ def where = """
         and data #>> '{@graph, 1, instanceOf, expressionOf}' is not null 
 """
 
-selectByIds(['k3wxhwnw3vbg04s']) {
-//selectBySqlWhere(where) {
+selectBySqlWhere(where) {
     def id = it.doc.shortId
     def instance = it.graph[1]
     def work = instance[INSTANCE_OF]
