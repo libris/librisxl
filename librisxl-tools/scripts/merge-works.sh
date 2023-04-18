@@ -18,7 +18,7 @@ fi
 ENV=$1
 ARGS="${@:2}"
 NUM_CLUSTERS=0
-#UPDATED_RECORDS=TODO: Provide id list of recently updated records. Could as well be a timestamp
+
 REPORT_DIR=reports/merge-works/$ENV-$(date +%Y%m%d)
 
 mkdir -p $REPORT_DIR/{clusters,normalizations,merged-works}
@@ -39,8 +39,6 @@ ILLUSTRATORS=$NORMALIZATIONS_DIR/4-illustrators
 
 # Clustring step 1 TODO: run only on recently updated records after first run
 echo "Finding new clusters..."
-#time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dids=$UPDATED_RECORDS -jar build/libs/whelktool.jar \
-#  scripts/analysis/find-work-clusters.groovy >$CLUSTERS_DIR/1-all.tsv
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -jar build/libs/whelktool.jar \
   $ARGS scripts/analysis/find-work-clusters.groovy >$ALL_CLUSTERS
 NUM_CLUSTERS=$(count_lines $ALL_CLUSTERS)

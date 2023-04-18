@@ -2,11 +2,36 @@
  * (When running, redirect STDERR to avoid annoying prints from whelktool)
  */
 
-import java.util.concurrent.ConcurrentHashMap
 
-def input = System.getProperty('ids')
+import java.text.SimpleDateFormat
+import java.util.concurrent.ConcurrentHashMap
+import se.kb.libris.Normalizers
+
+def yesterday = new SimpleDateFormat('yyyy-MM-dd').with { sdf ->
+    Calendar.getInstance().with { c ->
+        c.add(Calendar.DATE, -1)
+        sdf.format(c.getTime())
+    }
+}
+
+def where = """
+    collection = '%s'
+    AND (date(created) = '$yesterday'
+        OR date(modified) = '$yesterday'
+        OR date(data#>>'{@graph,0,generationDate}') = '$yesterday')
+"""
 
 visited = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>())  // TODO: remove?
+instancesOfUpdatedLinkedWorks = Collections.synchronizedSet([] as Set)
+
+selectBySqlWhere(String.format(where, 'auth')) {
+    def thing = it.graph[1]
+    if (Normalizers.isInstanceOf(it.whelk.jsonld, thing, 'Work')) {
+        selectBySqlWhere("collection = 'bib' and data#>>'{@graph,1,instanceOf,@id}' = '${thing['@id']}'") {
+            instancesOfUpdatedLinkedWorks.add(it.doc.shortId)
+        }
+    }
+}
 
 def process = { bib ->
     if (!visited.add(bib.doc.shortId))
@@ -32,10 +57,14 @@ def process = { bib ->
     }
 }
 
-if (input) {
-    selectByIds(new File(input).readLines(), process)
-} else {
-    selectByCollection('bib', process)
+selectByIds(instancesOfUpdatedLinkedWorks) {
+    process(it)
+}
+
+// TODO: Change when starting to run regularly
+//selectBySqlWhere(String.format(where, 'bib')) { bib ->
+selectByCollection('bib') {
+    process(it)
 }
 
 Map<String, List<String>> buildQuery(bib) {
@@ -45,14 +74,14 @@ Map<String, List<String>> buildQuery(bib) {
         return null
 
     Map<String, List<String>> query = [
-            "q"                                : ["*"],
-            "@type"                            : ["Instance"],
-            "hasTitle.mainTitle"               : [title + "~"],
+            "q"                 : ["*"],
+            "@type"             : ["Instance"],
+            "hasTitle.mainTitle": [title + "~"],
     ]
 
     insertLinkedAgents(bib)
     def card = bib.asCard(true)
-    
+
     def author = primaryContributor(card) //.collect{ it + "~" }
     if (author) {
         query["or-instanceOf.contribution._str"] = author
@@ -82,11 +111,11 @@ private String title(bib) {
 }
 
 private List primaryContributor(bib) {
-    contributorStrings(getPathSafe(bib, ['@graph', 1, 'instanceOf', 'contribution'], []).find{ it['@type'] == "PrimaryContribution"})
+    contributorStrings(getPathSafe(bib, ['@graph', 1, 'instanceOf', 'contribution'], []).find { it['@type'] == "PrimaryContribution" })
 }
 
 private List contributors(bib) {
-    getPathSafe(bib, ['@graph', 1, 'instanceOf', 'contribution'], []).collect{ contributorStrings(it) }.grep().flatten()
+    getPathSafe(bib, ['@graph', 1, 'instanceOf', 'contribution'], []).collect { contributorStrings(it) }.grep().flatten()
 }
 
 //getPathSafe(contribution, ['_str'])?.with { String s -> s.replaceAll(/[^ \p{IsAlphabetic}]/, '') }
@@ -96,8 +125,8 @@ private List contributorStrings(contribution) {
     variants.collect { name(it) }.grep()
 }
 
-private String name(Map agent)  {
-    agent.givenName && agent.familyName 
+private String name(Map agent) {
+    agent.givenName && agent.familyName
             ? "${agent.givenName} ${agent.familyName}"
             : agent.name
 }
@@ -106,7 +135,7 @@ private Object getPathSafe(item, path, defaultTo = null) {
     if (!item) {
         return defaultTo
     }
-    
+
     for (p in path) {
         if (item[p] != null) {
             item = item[p]
