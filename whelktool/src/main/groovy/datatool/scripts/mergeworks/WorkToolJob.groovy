@@ -218,6 +218,9 @@ class WorkToolJob {
 
             def workIri = work.doc.thingIdentifiers.first()
 
+            work.doc.setGenerationDate(new Date())
+            work.doc.setGenerationProcess(generationProcess)
+
             if (work instanceof NewWork) {
                 if (!whelk.createDocument(work.doc, changedIn, changedBy,
                         LegacyIntegrationTools.determineLegacyCollection(work.doc, whelk.getJsonld()), false)) {
@@ -225,8 +228,6 @@ class WorkToolJob {
                 }
             }
             else if (work instanceof UpdatedWork) {
-                work.doc.setGenerationDate(new Date())
-                work.doc.setGenerationProcess(generationProcess)
                 whelk.storeAtomicUpdate(work.doc, !loud, false, changedIn, generationProcess, work.checksum)
             }
 
