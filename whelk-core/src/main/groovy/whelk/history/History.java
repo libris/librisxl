@@ -45,6 +45,12 @@ public class History {
         m_changeSetsMap.put("@id", versions.get(0).doc.getCompleteId() + "/_changesets");
         m_changeSetsMap.put("changeSets", new ArrayList<>());
 
+        // A list of all paths for which this added version claims ownership.
+        // These are no longer set directly, because this list needs to be pruned
+        // first. For example, we don't want a change in @graph,1,instanceOf,something
+        // to cause a claim on all of @graph,1.
+        List<List<Object>> claimedPaths = new ArrayList<>();
+
         // The list we get is sorted chronologically, oldest first.
         for (int i = 0; i < versions.size(); ++i) {
             DocumentVersion version = versions.get(i);
@@ -88,7 +94,38 @@ public class History {
             }
             changeSets.add(changeSet);
             var previousVersion = m_lastVersion;
-            addVersion(version, changeSet);
+            addVersion(version, changeSet, claimedPaths);
+
+            /*  Apply new ownerships. The rules for ownership are now:
+                1. Consider only the composite path if/when available (so for example changing a subtitle
+                   counts as having changed the title as a whole.
+                2. Count only the deepest place of change. So while a change deep in a document could be considered
+                   a change on many levels, only the actual place where data is different will be counted.
+                3. If the modified thing was an element in a list: Claim only that element.
+                4. If the modified thing was a property on some object, for example "issuanceType": Claim
+                   the whole containing object (the instance in this case).
+            */
+            {
+                for (List<Object> claimedPath : claimedPaths) {
+                    boolean existsMoreSpecific = false;
+                    for (List deeperPath : claimedPaths) {
+                        if (isSubList(claimedPath, deeperPath) && deeperPath.size() > claimedPath.size()) {
+                            existsMoreSpecific = true;
+                        }
+                    }
+
+                    if (!existsMoreSpecific) {
+                        List<Object> finalClaim;
+                        if (claimedPath.get(claimedPath.size()-1) instanceof String) {
+                            finalClaim = claimedPath.subList(0, claimedPath.size() - 1); // You own the next larger context than the one you changed.
+                        } else
+                            finalClaim = claimedPath;
+                        m_pathOwnership.put(finalClaim, new Ownership(version, m_pathOwnership.get(finalClaim)));
+
+                        //System.err.println("Claim:\n" + claimedPath + "\nreduced to:\n" + finalClaim);
+                    }
+                }
+            }
 
             // Clean up markers that have a more specific equivalent
             {
@@ -173,11 +210,11 @@ public class History {
         return i;
     }
 
-    public void addVersion(DocumentVersion version, Map changeSetToBuild) {
+    public void addVersion(DocumentVersion version, Map changeSetToBuild, List<List<Object>> claimedPaths) {
         if (m_lastVersion == null) {
             m_pathOwnership.put( new ArrayList<>(), new Ownership(version, null) );
         } else {
-            examineDiff(new ArrayList<>(), new ArrayList<>(), version, version.doc.data, m_lastVersion.doc.data, null, changeSetToBuild);
+            examineDiff(new ArrayList<>(), new ArrayList<>(), version, version.doc.data, m_lastVersion.doc.data, null, changeSetToBuild, claimedPaths);
         }
         m_lastVersion = version;
     }
@@ -186,10 +223,13 @@ public class History {
         List<Object> temp = new ArrayList<>(path);
         while (!temp.isEmpty()) {
             Ownership value = m_pathOwnership.get(temp);
-            if (value != null)
+            if (value != null) {
+                //System.err.println("getOwnership of " + path + " exiting (0) with " + value.m_manualEditor + "/" + value.m_systematicEditor);
                 return value;
+            }
             temp.remove(temp.size()-1);
         }
+        //System.err.println("getOwnership of " + path + " exiting (1) with default root owner");
         return m_pathOwnership.get(new ArrayList<>()); // The root (first) owner
     }
 
@@ -230,17 +270,20 @@ public class History {
      * the subtitle).
      * 'changeSet' is a map in which this function will be building a summary
      * of changes this version has.
+     * 'claimedPaths' is a list which this function will be building of paths
+     * for which the new version claims ownership
      */
     private void examineDiff(List<Object> path,
                              List<Object> correspondingPath,
                              DocumentVersion version,
                              Object examining, Object correspondingPrevious,
                              List<Object> compositePath,
-                             Map changeSet) {
+                             Map changeSet,
+                             List<List<Object>> claimedPaths) {
         if (examining instanceof Map) {
 
             if (! (correspondingPrevious instanceof Map) ) {
-                setOwnership(path, compositePath, version);
+                claimPath(path, compositePath, claimedPaths);
                 return;
             }
 
@@ -263,7 +306,7 @@ public class History {
                 for (Object key : newKeys) {
                     List<Object> newPath = new ArrayList(path);
                     newPath.add(key);
-                    setOwnership(newPath, compositePath, version);
+                    claimPath(newPath, compositePath, claimedPaths);
 
                     ((HashSet) changeSet.get("addedPaths")).add(newPath);
                     //System.err.println(" Add: " + newPath);
@@ -279,7 +322,7 @@ public class History {
                     List<Object> removedPath = new ArrayList(correspondingPath);
                     removedPath.add(key);
                     // The point of this is to set ownership of the _composite_ object if a part of it is removed.
-                    setOwnership(removedPath, compositePath, version);
+                    claimPath(removedPath, compositePath, claimedPaths);
                     // The actual thing being removed however no longer exists and can be owned by no-one.
                     clearOwnership(removedPath);
 
@@ -291,7 +334,7 @@ public class History {
 
         if (examining instanceof List) {
             if (! (correspondingPrevious instanceof List) ) {
-                setOwnership(path, compositePath, version);
+                claimPath(path, compositePath, claimedPaths);
                 ((HashSet) changeSet.get("addedPaths")).add(path);
                 ((HashSet) changeSet.get("removedPaths")).add(correspondingPath);
                 //System.err.println(" Add+Rem: " + path + " (which used to be) " + correspondingPath);
@@ -302,7 +345,7 @@ public class History {
         if (examining instanceof String ||
                 examining instanceof Float || examining instanceof Boolean) {
             if (!examining.equals(correspondingPrevious)) {
-                setOwnership(path, compositePath, version);
+                claimPath(path, compositePath, claimedPaths);
                 ((HashSet) changeSet.get("addedPaths")).add(path);
                 ((HashSet) changeSet.get("removedPaths")).add(correspondingPath);
                 //System.err.println(" Add+Rem: " + path + " (which used to be) " + correspondingPath + " due to diff of: " + examining + " and " + correspondingPrevious);
@@ -315,7 +358,7 @@ public class History {
             // Removing from a list (reducing it in size) claims ownership of the list
             // Other removals mixed with additions cannot be distinguished from modifications
             if (((List) correspondingPrevious).size() > ((List) examining).size())
-                setOwnership(correspondingPath, null, version);
+                claimPath(correspondingPath, null, claimedPaths);
 
             // Create copies of the two lists (so that they can be manipulated)
             // and remove from them any elements that _have an identical copy_ in the
@@ -328,7 +371,7 @@ public class History {
             List tempOld = new LinkedList((List) correspondingPrevious);
             for (int i = 0; i < tempNew.size(); ++i) {
                 for (int j = 0; j < tempOld.size(); ++j) {
-                    if (tempNew.get(i).equals(tempOld.get(j))) { // Equals will recursively check the entire subtree!
+                    if (equalsDisregardOrder(tempNew.get(i), tempOld.get(j))) { // Will recursively check the entire subtree!
                         tempNew.remove(i);
                         tempOld.remove(j);
                         --i;
@@ -337,6 +380,8 @@ public class History {
                     }
                 }
             }
+
+            //System.err.println("Not equals (disregarding order) old:\n" + tempOld + "\nnew:\n" + tempNew);
 
             // What used to be at index x (in examining) is now at index y (in tempNew), and in analogue for tempOld
             Map<Integer, Integer> newToOldListIndices = new HashMap<>();
@@ -348,45 +393,37 @@ public class History {
                 correspondingNewToOldListIndices.put(i, ((List) correspondingPrevious).indexOf( tempOld.get(i) ));
             }
 
-            // skip list equality on @graph,x. Otherwise you always get add+delete on @graph,1 if
-            // anything changed in there, and the @graph list has semantic meaning attached to the
-            // indexes.
-            if (path.size() > 1) {
+            // Find removed elements that are no longer there
+            Iterator oldIt = tempOld.iterator();
+            while (oldIt.hasNext()) {
+                Object obj = oldIt.next();
+                List list = (List) correspondingPrevious;
+                for (int i = 0; i < list.size(); ++i) {
 
-                // Find removed elements that are no longer there
-                Iterator oldIt = tempOld.iterator();
-                while (oldIt.hasNext()) {
-                    Object obj = oldIt.next();
-                    List list = (List) correspondingPrevious;
-                    for (int i = 0; i < list.size(); ++i) {
-
-                        if (obj == list.get(i)) { // pointer identity is intentional
-                            List<Object> newPath = new ArrayList<>(correspondingPath);
-                            newPath.add(i);
-                            ((HashSet) changeSet.get("removedPaths")).add(newPath);
-                            clearOwnership(newPath);
-                            //System.err.println(" Remove (and keep scanning): " + newPath);
-                        }
+                    if (obj == list.get(i)) { // pointer identity is intentional
+                        List<Object> newPath = new ArrayList<>(correspondingPath);
+                        newPath.add(i);
+                        ((HashSet) changeSet.get("removedPaths")).add(newPath);
+                        //System.err.println(" Remove (and keep scanning): " + newPath);
                     }
                 }
+            }
 
-                // Find new elements that weren't there before
-                Iterator newIt = tempNew.iterator();
-                while (newIt.hasNext()) {
-                    Object obj = newIt.next();
-                    List list = (List) examining;
-                    for (int i = 0; i < list.size(); ++i) {
+            // Find new elements that weren't there before
+            Iterator newIt = tempNew.iterator();
+            while (newIt.hasNext()) {
+                Object obj = newIt.next();
+                List list = (List) examining;
+                for (int i = 0; i < list.size(); ++i) {
 
-                        if (obj == list.get(i)) { // pointer identity is intentional
-                            List<Object> newPath = new ArrayList<>(path);
-                            newPath.add(i);
-                            ((HashSet) changeSet.get("addedPaths")).add(newPath);
-                            setOwnership(newPath, compositePath, version);
-                            //System.err.println(" Add (and keep scanning): " + newPath);
-                        }
+                    if (obj == list.get(i)) { // pointer identity is intentional
+                        List<Object> newPath = new ArrayList<>(path);
+                        newPath.add(i);
+                        ((HashSet) changeSet.get("addedPaths")).add(newPath);
+                        claimPath(newPath, compositePath, claimedPaths);
+                        //System.err.println(" Add (and keep scanning): " + newPath);
                     }
                 }
-
             }
 
             for (int i = 0; i < tempNew.size(); ++i) {
@@ -397,7 +434,7 @@ public class History {
                     correspondingChildPath.add(Integer.valueOf(correspondingNewToOldListIndices.get(i)));
                     examineDiff(childPath, correspondingChildPath, version,
                             tempNew.get(i), ((List)correspondingPrevious).get(newToOldListIndices.get(i)),
-                            compositePath, changeSet);
+                            compositePath, changeSet, claimedPaths);
                 }
             }
         } else if (examining instanceof Map) {
@@ -409,16 +446,46 @@ public class History {
                     correspondingChildPath.add(key);
                     examineDiff(childPath, correspondingChildPath, version,
                             ((Map) examining).get(key), ((Map) correspondingPrevious).get(key),
-                            compositePath, changeSet);
+                            compositePath, changeSet, claimedPaths);
                 }
             }
         }
     }
 
-    private void setOwnership(List<Object> newPath, List<Object> compositePath,
-                              DocumentVersion version) {
+    private boolean equalsDisregardOrder(Object a, Object b) {
+        if (a.getClass() != b.getClass()) {
+            return false;
+        }
+        else if (a instanceof Map) {
+            Map m1 = (Map) a;
+            Map m2 = (Map) b;
+            if (!m1.keySet().equals(m2.keySet()))
+                return false;
+            for (Object key : m1.keySet()) {
+                if (!equalsDisregardOrder(m1.get(key), m2.get(key)))
+                    return false;
+            }
+            return true;
+        }
+        else if (a instanceof List) {
+            List l1 = (List) a;
+            List l2 = (List) b;
+            if (l1.size() != l2.size())
+                return false;
+            for (int i = 0; i < l1.size(); ++i) {
+                for (int j = 0;; ++j) {
+                    if (j == l2.size())
+                        return false;
+                    if (equalsDisregardOrder(l1.get(i), l2.get(j)))
+                        break;
+                }
+            }
+            return true;
+        }
+        return a.equals(b);
+    }
 
-        //System.err.print(" *** Setting ownership of " + newPath + " to " + version.changedIn + "/" + version.changedBy + " classified script? : " + wasScriptEdit(version));
+    private void claimPath(List<Object> newPath, List<Object> compositePath, List<List<Object>> claimedPaths) {
 
         List<Object> path;
         if (compositePath != null) {
@@ -426,8 +493,10 @@ public class History {
         } else {
             path = newPath;
         }
-        //System.err.println(" to: " + new Ownership(version, m_pathOwnership.get(path)));
-        m_pathOwnership.put( path, new Ownership(version, m_pathOwnership.get(path)) );
+
+        //System.err.println(" *** Claiming ownership of " + path);
+
+        claimedPaths.add(path);
     }
 
     private void clearOwnership(List<Object> removedPath) {
