@@ -943,6 +943,87 @@
           ]
         }
       }
+    },
+    {
+      "name": "marc:hasBib880 to byLang: All unhandled (missing linkage), don't modify anything",
+      "source": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "language": [
+              {
+                "@id": "https://id.kb.se/language/kor"
+              }
+            ],
+            "hasTitle": [
+              {
+                "@type": "Title",
+                "mainTitle": "Ocherkʹ Korei."
+              }
+            ],
+            "contribution": [
+              {
+                "@type": "Contribution",
+                "agent": {
+                  "@type": "Person",
+                  "givenName": "Sang-hak",
+                  "familyName": "An"
+                },
+                "role": [
+                  {
+                    "@id": "https://id.kb.se/relator/author"
+                  }
+                ]
+              }
+            ]
+          },
+          "editionStatement": "Ch'op'an.",
+          "marc:hasBib880": [
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "240-01"
+                },
+                {
+                  "marc:bib880-a": "Очеркь Кореи."
+                },
+                {
+                  "marc:bib880-l": "Korean"
+                }
+              ],
+              "marc:bib880-i1": "1",
+              "marc:bib880-i2": "0"
+            },
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "250-02"
+                },
+                {
+                  "marc:bib880-a": "초판."
+                }
+              ]
+            },
+            {
+              "@type": "marc:Bib880",
+              "marc:partList": [
+                {
+                  "marc:fieldref": "700-03"
+                },
+                {
+                  "marc:bib880-a": "안, 상학"
+                }
+              ],
+              "marc:bib880-i1": "1",
+              "marc:bib880-i2": " "
+            }
+          ]
+        }
+      },
+      "result": "source"
     }
   ]
 }
