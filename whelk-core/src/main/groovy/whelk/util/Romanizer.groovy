@@ -57,7 +57,9 @@ class Romanizer {
         enabledTargetTags.each { tag ->
             (AUTO.findAll{ it.targetTag() == tag } ?: [new Manual(tag)]).each(this::add)
         }
-        log.info("Initialized with: ${transliterators.values().flatten().collect(Object::toString).sort()}")
+        
+        var t = transliterators.values().flatten()
+        log.info("Initialized with ${t.size()} transliterators: ${t.collect(Object::toString).sort()}")
     }
     
     Map<String, String> romanize(String s, String langTag) {
