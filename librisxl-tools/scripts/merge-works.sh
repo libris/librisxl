@@ -30,12 +30,13 @@ ALL_CLUSTERS=$CLUSTERS_DIR/1-all.tsv
 MERGED_CLUSTERS=$CLUSTERS_DIR/2-merged.tsv
 TITLE_CLUSTERS=$CLUSTERS_DIR/3-title-clusters.tsv
 SWEDISH_FICTION=$CLUSTERS_DIR/4-swedish-fiction.tsv
-ANONYMOUS_TRANSLATIONS=$CLUSTERS_DIR/5-anonymous-translations.tsv
+#ANONYMOUS_TRANSLATIONS=$CLUSTERS_DIR/5-anonymous-translations.tsv
 
 LANGUAGE_IN_TITLE=$NORMALIZATIONS_DIR/1-titles-with-language
 LINK_CONTRIBUTION=$NORMALIZATIONS_DIR/2-link-contribution
 RESP_STATEMENT=$NORMALIZATIONS_DIR/3-responsibilityStatement
 ILLUSTRATORS=$NORMALIZATIONS_DIR/4-illustrators
+TRANSLATION_OF=$NORMALIZATIONS_DIR/5-translationOf
 
 # Clustring step 1 TODO: run only on recently updated records after first run
 echo "Finding new clusters..."
@@ -101,17 +102,23 @@ time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDIS
   $ARGS --report $ILLUSTRATORS src/main/groovy/datatool/scripts/mergeworks/normalize/add-9pu-to-illustrators.groovy
 echo "$(count_lines $ILLUSTRATORS/MODIFIED.txt) records affected, report in $ILLUSTRATORS"
 
-# Filter: Drop translations without translator
-echo "Filtering out translations without translator..."
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool \
-  $ARGS -tr $SWEDISH_FICTION >$ANONYMOUS_TRANSLATIONS
-NUM_CLUSTERS=$(count_lines $ANONYMOUS_TRANSLATIONS)
-echo "$NUM_CLUSTERS clusters ready for merge"
-if [ $NUM_CLUSTERS == 0 ]; then
-  exit 0
-fi
+# Normalization step 5
+echo "Adding missing translationOf..."
+time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION -jar build/libs/whelktool.jar \
+  $ARGS --report $TRANSLATION_OF src/main/groovy/datatool/scripts/mergeworks/normalize/add-missing-translationOf.groovy
+echo "$(count_lines $TRANSLATION_OF/MODIFIED.txt) records affected, report in $TRANSLATION_OF"
+
+# Filter: Drop translations without translator // TODO: Decide what to do with these, in the meantime don't "hide" them
+#echo "Filtering out translations without translator..."
+#time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool \
+#  $ARGS -tr $SWEDISH_FICTION >$ANONYMOUS_TRANSLATIONS
+#NUM_CLUSTERS=$(count_lines $ANONYMOUS_TRANSLATIONS)
+#echo "$NUM_CLUSTERS clusters ready for merge"
+#if [ $NUM_CLUSTERS == 0 ]; then
+#  exit 0
+#fi
 
 # Merge
 echo "Merging..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool \
-  $ARGS -r $REPORT_DIR/merged-works -m $ANONYMOUS_TRANSLATIONS
+  $ARGS -r $REPORT_DIR/merged-works -m $SWEDISH_FICTION
