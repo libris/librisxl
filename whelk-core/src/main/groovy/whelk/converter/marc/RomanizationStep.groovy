@@ -150,7 +150,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     }
 
     private def unmodifyTLangs(def thing, def tLangs, def byLangPaths, def record) {
-        def bib880ToRef = [:]
+        def bib880ToRef = []
 
         tLangs.each { tLang ->
             def copy = deepCopy(record)
@@ -183,21 +183,22 @@ class RomanizationStep extends MarcFramePostProcStepBase {
                                     (BIB880 + '-i2'): field[IND2]
                             ]
 
-                    bib880ToRef[bib880] = ref
+                    bib880ToRef.add([bib880, ref])
                 }
                 return new DocumentUtil.Remove()
             }
         }
 
         if (bib880ToRef) {
-            def sorted = bib880ToRef.sort {it.key[PART_LIST][0][FIELDREF] }
-            sorted.eachWithIndex { bib880, ref, i ->
+            def sorted = bib880ToRef.sort { it[1].toField }
+            sorted.eachWithIndex { entry, i ->
+                def (bib880, ref) = entry
                 bib880[PART_LIST][0][FIELDREF] = ref.from880(i + 1)
                 def t = DocumentUtil.getAtPath(thing, ref.path)
                 t[ref.propertyName()] = (asList(t[ref.propertyName()]) << ref.to880(i + 1)).unique()
             }
 
-            thing[HAS_BIB880] = sorted.collect { it.key }
+            thing[HAS_BIB880] = sorted.collect { it[0] }
         }
     }
 
