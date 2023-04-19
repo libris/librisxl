@@ -825,7 +825,7 @@
       }
     },
     {
-      "name": "hasPart: move title to translationOf",
+      "name": "hasPart: move translationOf into each part and then move titles to translationOf",
       "source": {
         "mainEntity": {
           "instanceOf": {
@@ -833,6 +833,16 @@
             "language": [
               {
                 "@id": "https://id.kb.se/language/eng"
+              }
+            ],
+            "translationOf": [
+              {
+                "@type": "Work",
+                "language": [
+                  {
+                    "@id": "https://id.kb.se/language/swe"
+                  }
+                ]
               }
             ],
             "hasPart": [
@@ -848,16 +858,6 @@
                     "@type": "Title",
                     "mainTitle": "DELENS TITEL"
                   }
-                ],
-                "translationOf": [
-                  {
-                    "@type": "Work",
-                    "language": [
-                      {
-                        "@id": "https://id.kb.se/language/swe"
-                      }
-                    ]
-                  }
                 ]
               },
               {
@@ -871,16 +871,6 @@
                   {
                     "@type": "Title",
                     "mainTitle": "DELENS TITEL"
-                  }
-                ],
-                "translationOf": [
-                  {
-                    "@type": "Work",
-                    "language": [
-                      {
-                        "@id": "https://id.kb.se/language/swe"
-                      }
-                    ]
                   }
                 ]
               }

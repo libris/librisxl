@@ -348,12 +348,15 @@ class MarcConversion {
         }
 
         if (doPostProcessing) {
+            // Temporarily turn off to prevent recursive calls from postprocessing steps
+            doPostProcessing = false
             sharedPostProcSteps.each {
                 it.modify(record, thing)
             }
             marcRuleSet.postProcSteps.each {
                 it.modify(record, thing)
             }
+            doPostProcessing = true
         }
 
         if (flatLinkedForm) {
