@@ -160,9 +160,9 @@ class RomanizationStep extends MarcFramePostProcStepBase {
             indexesOfHandled.sort().reverseEach {
                 hasBib880.removeAt(it)
             }
-            if (!hasBib880.isEmpty()) {
-                thing[HAS_BIB880] = hasBib880
-            }
+        }
+        if (!hasBib880.isEmpty()) {
+            thing[HAS_BIB880] = hasBib880
         }
     }
 
