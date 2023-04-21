@@ -1,15 +1,11 @@
 package whelk.converter.marc
 
 import groovy.transform.CompileStatic
-import groovy.transform.Immutable
-import groovy.transform.NullCheck
 import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.JsonLd
-import whelk.component.DocumentNormalizer
 import whelk.converter.FormatConverter
-import whelk.filter.LanguageLinker
 import whelk.filter.LinkFinder
 
 import java.time.LocalDate
@@ -142,7 +138,8 @@ class MarcConversion {
     Map marcTypeMap = [:]
     Map tokenMaps
     Map defaultPunctuation
-
+    ThreadLocal<Boolean> isInsidePostProcessing = ThreadLocal.withInitial({ -> false })
+    
     private Set missingTerms = [] as Set
     private Set badRepeats = [] as Set
 
@@ -347,16 +344,19 @@ class MarcConversion {
             record[marcRuleSet.thingLink] = thing
         }
 
-        if (doPostProcessing) {
+        if (doPostProcessing && !isInsidePostProcessing.get()) {
             // Temporarily turn off to prevent recursive calls from postprocessing steps
-            doPostProcessing = false
-            sharedPostProcSteps.each {
-                it.modify(record, thing)
+            isInsidePostProcessing.set(true)
+            try {
+                sharedPostProcSteps.each {
+                    it.modify(record, thing)
+                }
+                marcRuleSet.postProcSteps.each {
+                    it.modify(record, thing)
+                }
+            } finally {
+                isInsidePostProcessing.set(false)
             }
-            marcRuleSet.postProcSteps.each {
-                it.modify(record, thing)
-            }
-            doPostProcessing = true
         }
 
         if (flatLinkedForm) {
@@ -432,17 +432,20 @@ class MarcConversion {
     Map revert(data) {
         def marcRuleSet = getRuleSetFromJsonLd(data)
 
-        if (doPostProcessing) {
+        if (doPostProcessing && !isInsidePostProcessing.get()) {
             // Temporarily turn off to prevent recursive calls from postprocessing steps
-            doPostProcessing = false
-            applyInverses(data, data[marcRuleSet.thingLink])
-            marcRuleSet.postProcSteps.reverseEach {
-                it.unmodify(data, data[marcRuleSet.thingLink])
+            isInsidePostProcessing.set(true)
+            try {
+                applyInverses(data, data[marcRuleSet.thingLink])
+                marcRuleSet.postProcSteps.reverseEach {
+                    it.unmodify(data, data[marcRuleSet.thingLink])
+                }
+                sharedPostProcSteps.reverseEach {
+                    it.unmodify(data, data[marcRuleSet.thingLink])
+                }
+            } finally {
+                isInsidePostProcessing.set(false)
             }
-            sharedPostProcSteps.reverseEach {
-                it.unmodify(data, data[marcRuleSet.thingLink])
-            }
-            doPostProcessing = true
         }
 
         Map state = [:]
