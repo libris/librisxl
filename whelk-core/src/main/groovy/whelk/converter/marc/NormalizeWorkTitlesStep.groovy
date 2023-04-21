@@ -111,20 +111,13 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
     void useOriginalTitle(Map work) {
         asList(work[TRANSLATION_OF]).each { original ->
             def originalTitle = asList(original[HAS_TITLE]).find { it[TYPE] == TITLE }
-            Set workLangIds = asList(work[LANGUAGE]).collect { it[ID] }
             if (originalTitle instanceof Map) {
-                boolean notSameLang =
-                        workLangIds.size() == 0
-                                || !original[LANGUAGE]
-                                || !asList(original[LANGUAGE]).every { it[ID] in workLangIds }
-                if (notSameLang) {
-                    markToIgnore(work[HAS_TITLE])
-                    if (!work[HAS_TITLE]) work[HAS_TITLE] = []
-                    work[HAS_TITLE] << copyForRevert(originalTitle)
-                    original.remove(HAS_TITLE)
-                    if (original[LEGAL_DATE] && !work[LEGAL_DATE]) {
-                        work[LEGAL_DATE] = original[LEGAL_DATE]
-                    }
+                markToIgnore(work[HAS_TITLE])
+                if (!work[HAS_TITLE]) work[HAS_TITLE] = []
+                work[HAS_TITLE] << copyForRevert(originalTitle)
+                original.remove(HAS_TITLE)
+                if (original[LEGAL_DATE] && !work[LEGAL_DATE]) {
+                    work[LEGAL_DATE] = original[LEGAL_DATE]
                 }
             }
         }
