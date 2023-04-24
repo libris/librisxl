@@ -62,9 +62,12 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     List FIELD_REFS = [FIELDREF, BIB250_REF]
 
     void modify(Map record, Map thing) {
+        def thingCopy = deepCopy(thing)
         try {
             _modify(record, thing)
         } catch (Exception e) {
+            thing.clear()
+            thing.putAll(thingCopy)
             log.error("Failed to convert 880: $e", e)
         }
     }
