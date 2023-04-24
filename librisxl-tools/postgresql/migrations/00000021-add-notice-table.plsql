@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS lddb__notices (
     CONSTRAINT version_fk FOREIGN KEY (versionid) REFERENCES lddb__versions(pk) ON DELETE CASCADE,
     CONSTRAINT user_fk FOREIGN KEY (userid) REFERENCES lddb__user_data(id) ON DELETE CASCADE
 );
-CREATE INDEX idx_notices ON lddb__notices USING BTREE (userid);
+CREATE INDEX idx_notices_user ON lddb__notices USING BTREE (userid);
+CREATE INDEX idx_notices_created ON lddb__notices USING BTREE (created);
 
 END$$;
 

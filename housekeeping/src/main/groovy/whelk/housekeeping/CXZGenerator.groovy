@@ -3,13 +3,27 @@ package whelk.housekeeping
 import whelk.Whelk
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
+import whelk.history.DocumentVersion
+import whelk.history.History
+
+import java.sql.Connection
+import java.sql.PreparedStatement
+import java.sql.ResultSet
+import java.sql.Timestamp
+import java.time.Instant
+import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
+import java.time.temporal.TemporalUnit
 
 @CompileStatic
 @Log
 class CXZGenerator extends HouseKeeper {
 
-    public CXZGenerator(Whelk whelk) {
+    private String status = "OK"
+    private Whelk whelk
 
+    public CXZGenerator(Whelk whelk) {
+        this.whelk = whelk
     }
 
     public String getName() {
@@ -17,11 +31,68 @@ class CXZGenerator extends HouseKeeper {
     }
 
     public String getStatusDescription() {
-        return "OK"
+        return status
     }
 
     public void trigger() {
-        System.err.println("  ** INTERNAL TICK **")
+
+        Connection connection
+        PreparedStatement statement
+        ResultSet resultSet
+
+        connection = whelk.getStorage().getOuterConnection()
+        connection.setAutoCommit(false)
+        try {
+
+            // First, determine the time interval of changes for which to generate notices.
+            // This interval, should generally be: From the last generated notice until now.
+            // However, if there are no previously generated notices (near enough in time), use
+            // now - [some pre set value], to avoid scanning the whole catalog.
+            String sql = "SELECT MAX(created) FROM lddb__notices;"
+            statement = connection.prepareStatement(sql)
+            resultSet = statement.executeQuery()
+            Timestamp from = Timestamp.from(Instant.now().minus(20, ChronoUnit.DAYS))
+            if (resultSet.next()) {
+                Timestamp lastCreated = resultSet.getTimestamp(1)
+                if (lastCreated && lastCreated.after(from))
+                    from = lastCreated
+            }
+            Timestamp until = Timestamp.from(Instant.now())
+
+            // Then fetch all changes within that interval
+            sql = "SELECT id FROM lddb WHERE collection IN ('bib', 'auth', 'hold') AND ( modified BETWEEN ? AND ? );";
+            connection.setAutoCommit(false);
+            statement = connection.prepareStatement(sql)
+            statement.setTimestamp(1, from)
+            statement.setTimestamp(2, until)
+            statement.setFetchSize(512)
+            resultSet = statement.executeQuery()
+            while (resultSet.next()) {
+                String id = resultSet.getString("id")
+
+                /*
+                List<DocumentVersion> versions = whelk.getStorage().loadDocumentHistory(id)
+                List<DocumentVersion> relevantVersions = []
+                relevantVersions.add(versions.get(fromVersion))
+                relevantVersions.add(versions.get(untilVersion))
+
+                 */
+                System.err.println("Was changed: " + id)
+
+                //History history = new History(relevantVersions, whelk.getJsonld())
+
+                //Map changes = history.m_changeSetsMap.changeSets[1]
+                //System.err.println("added:\n\t" + changes.addedPaths)
+                //System.err.println("removed:\n\t" + changes.removedPaths)
+            }
+
+        } catch (Throwable e) {
+            status = "Failed with:\n" + e + "\nat:\n" + e.getStackTrace().toString()
+            throw e
+        } finally {
+            connection.close()
+        }
+
     }
 
 
