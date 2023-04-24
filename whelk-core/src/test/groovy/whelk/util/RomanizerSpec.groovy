@@ -141,6 +141,8 @@ class RomanizerSpec extends Specification {
         'Баба праща поздрави и се извинява' || 'Baba prašta pozdravi i se izvinjava'
         // https://libris.kb.se/jxqb93w0gxhtbf7d#it
         "Белия зъб" || "Belija zăb"
+        // https://libris.kb.se/097g4pxsxddft0s7
+        "Ще се удавят в сълзите на майките си" || "Šte se udavjat v sălzite na majkite si"
     }
 
     def "Macedonian with ISO"() {
@@ -182,6 +184,9 @@ class RomanizerSpec extends Specification {
         // https://libris.kb.se/r7j8cqgsphgmr473#it
         "Валер'ян" || "Valerʺjan"
         "Валер’ян" || "Valerʺjan"
+        // https://libris.kb.se/dvl6skx8bs85pn24
+        "Що не так зі скандинавами?" || "Ščo ne tak zi skandynavamy?"
+        "Правда і міфи про найщасливіших людей" || "Pravda i mify pro najščaslyvišych ljudej"
     }
 
     def "Azerbaijani in Cyrillic with ALA-LOC"() {
