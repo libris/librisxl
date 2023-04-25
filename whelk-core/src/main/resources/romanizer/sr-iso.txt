@@ -1,6 +1,5 @@
 # ICU transform rules
 
-# Bosnian
 # Serbian
 # See also: slavic-iso.txt
 

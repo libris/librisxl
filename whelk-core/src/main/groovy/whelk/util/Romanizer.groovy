@@ -7,38 +7,6 @@ import java.util.regex.Pattern
 
 @Log
 class Romanizer {
-    private static final List<Transform> AUTO = [
-            auto('be-Cyrl',  'be-Latn-t-be-Cyrl-m0-iso-1995', ['be-iso.txt', 'slavic-iso.txt']),
-            auto('bs-Cyrl',  'bs-Latn-t-bs-Cyrl-m0-iso-1995', ['bs-sr-iso.txt', 'slavic-iso.txt']),
-            auto('bg-Cyrl',  'bg-Latn-t-bg-Cyrl-m0-iso-1995', ['bg-iso.txt', 'slavic-iso.txt']),
-            auto('el'     ,  'el-Latn-t-el-Grek-x0-btj', ['el-btj.txt']),
-            auto('grc'    ,  'grc-Latn-t-grc-Grek-x0-skr-1980', ['grc-skr.txt']),
-            auto('yi-Hebr',  'yi-Latn-t-yi-Hebr-x0-yivo', ['yi-yivo.txt']),
-            auto('yi-Hebr',  'yi-Latn-t-yi-Hebr-m0-alaloc', ['yi-alaloc.txt']),
-            auto('kk-Cyrl',  'kk-Latn-t-kk-Cyrl-m0-iso-1995', ['kk-iso.txt']),
-            auto('mk-Cyrl',  'mk-Latn-t-mk-Cyrl-m0-iso-1995', ['mk-iso.txt', 'slavic-iso.txt']),
-            auto('mn-Cyrl',  'mn-Latn-t-mn-Cyrl-x0-lessing', ['mn-lessing.txt']),
-            auto('ru-Cyrl',  'ru-Latn-t-ru-Cyrl-m0-iso-1995', ['ru-iso.txt', 'slavic-iso.txt']),
-            auto('sr-Cyrl',  'sr-Latn-t-sr-Cyrl-m0-iso-1995', ['bs-sr-iso.txt', 'slavic-iso.txt']),
-            auto('uk-Cyrl',  'uk-Latn-t-uk-Cyrl-m0-iso-1995', ['uk-iso.txt', 'slavic-iso.txt']),
-
-            // Converted from LOC mappings
-            // TODO: investigate how well these handle case/capitalization
-            auto('am-Ethi',  'am-Latn-t-am-Ethi-m0-alaloc', ['loc/am-Latn-t-am-Ethi-m0-alaloc.txt']),
-            auto('az-Cyrl',  'az-Latn-t-az-Cyrl-m0-alaloc', ['loc/az-Latn-t-az-Cyrl-m0-alaloc.txt']),
-            auto('chu'    ,  'chu-Latn-t-chu-Cyrs-m0-alaloc', ['loc/chu-Latn-t-chu-Cyrs-m0-alaloc.txt']),
-            auto('ka'     ,  'ka-Latn-t-ka-m0-alaloc', ['loc/ka-Latn-t-ka-m0-alaloc.txt']),
-            auto('hi-Deva',  'hi-Latn-t-hi-Deva-m0-alaloc', ['loc/hi-Latn-t-hi-Deva-m0-alaloc.txt']),
-            auto('hy-Armn',  'hy-Latn-t-hy-Armn-m0-alaloc', ['loc/hy-Latn-t-hy-Armn-m0-alaloc.txt']),
-            auto('kir-Cyrl', 'kir-Latn-t-kir-Cyrl-m0-alaloc', ['loc/kir-Latn-t-kir-Cyrl-m0-alaloc.txt']),
-            auto('mn-Mong',  'mn-Latn-t-mn-Mong-m0-alaloc', ['loc/mn-Latn-t-mn-Mong-m0-alaloc.txt']),
-            auto('tt-Cyrl',  'tt-Latn-t-tt-Cyrl-m0-alaloc', ['loc/tt-Latn-t-tt-Cyrl-m0-alaloc.txt']),
-            auto('tg-Cyrl',  'tg-Latn-t-tg-Cyrl-m0-alaloc', ['loc/tg-Latn-t-tg-Cyrl-m0-alaloc.txt']),
-            auto('tk-Cyrl',  'tk-Latn-t-tk-Cyrl-m0-alaloc', ['loc/tk-Latn-t-tk-Cyrl-m0-alaloc.txt']),
-            auto('uz-Cyrl',  'uz-Latn-t-uz-Cyrl-m0-alaloc', ['loc/uz-Latn-t-uz-Cyrl-m0-alaloc.txt']),
-            auto('zh-Hani',  'zh-Latn-t-zh-Hani-m0-alaloc', ['loc/zh-Latn-t-zh-Hani-m0-alaloc.txt']),
-    ] + alaLocNonSlavicCyrillic()
-
     /** Languages that use ALA-LOC "Asian Cyrillic - Multi-purpose transliteration for non-Slavic Cyrillic scripts"
      https://github.com/lcnetdev/transliterator/blob/main/scriptshifter/tables/data/index.yml
 
@@ -51,6 +19,37 @@ class Romanizer {
             'inh', 'kaa', 'kbd', 'kom', 'krc', 'krl', 'kum', 'lez', 'lit', 'nog',
             'oss', 'rom', 'rum', 'rum', 'sah', 'sel', 'tut', 'udm', 'xal',
     ]
+
+    private static final List<Transform> AUTO = [
+            auto('be-Cyrl',  'be-Latn-t-be-Cyrl-m0-iso-1995', ['be-iso.txt', 'slavic-iso.txt']), 
+            auto('bg-Cyrl',  'bg-Latn-t-bg-Cyrl-m0-iso-1995', ['bg-iso.txt', 'slavic-iso.txt']), 
+            auto('el'     ,  'el-Latn-t-el-Grek-x0-btj', ['el-btj.txt']), 
+            auto('grc'    ,  'grc-Latn-t-grc-Grek-x0-skr-1980', ['grc-skr.txt']), 
+            auto('yi-Hebr',  'yi-Latn-t-yi-Hebr-x0-yivo', ['yi-yivo.txt']), 
+            auto('yi-Hebr',  'yi-Latn-t-yi-Hebr-m0-alaloc', ['yi-alaloc.txt']), 
+            auto('kk-Cyrl',  'kk-Latn-t-kk-Cyrl-m0-iso-1995', ['kk-iso.txt']), 
+            auto('mk-Cyrl',  'mk-Latn-t-mk-Cyrl-m0-iso-1995', ['mk-iso.txt', 'slavic-iso.txt']), 
+            auto('mn-Cyrl',  'mn-Latn-t-mn-Cyrl-x0-lessing', ['mn-lessing.txt']), 
+            auto('ru-Cyrl',  'ru-Latn-t-ru-Cyrl-m0-iso-1995', ['ru-iso.txt', 'slavic-iso.txt']), 
+            auto('sr-Cyrl',  'sr-Latn-t-sr-Cyrl-m0-iso-1995', ['sr-iso.txt', 'slavic-iso.txt']), 
+            auto('uk-Cyrl',  'uk-Latn-t-uk-Cyrl-m0-iso-1995', ['uk-iso.txt', 'slavic-iso.txt']),
+
+            // Converted from LOC mappings
+            // TODO: investigate how well these handle case/capitalization
+            auto('am-Ethi',  'am-Latn-t-am-Ethi-m0-alaloc', ['loc/am-Latn-t-am-Ethi-m0-alaloc.txt']), 
+            auto('az-Cyrl',  'az-Latn-t-az-Cyrl-m0-alaloc', ['loc/az-Latn-t-az-Cyrl-m0-alaloc.txt']), 
+            auto('chu'    ,  'chu-Latn-t-chu-Cyrs-m0-alaloc', ['loc/chu-Latn-t-chu-Cyrs-m0-alaloc.txt']), 
+            auto('ka'     ,  'ka-Latn-t-ka-m0-alaloc', ['loc/ka-Latn-t-ka-m0-alaloc.txt']), 
+            auto('hi-Deva',  'hi-Latn-t-hi-Deva-m0-alaloc', ['loc/hi-Latn-t-hi-Deva-m0-alaloc.txt']), 
+            auto('hy-Armn',  'hy-Latn-t-hy-Armn-m0-alaloc', ['loc/hy-Latn-t-hy-Armn-m0-alaloc.txt']), 
+            auto('kir-Cyrl', 'kir-Latn-t-kir-Cyrl-m0-alaloc', ['loc/kir-Latn-t-kir-Cyrl-m0-alaloc.txt']), 
+            auto('mn-Mong',  'mn-Latn-t-mn-Mong-m0-alaloc', ['loc/mn-Latn-t-mn-Mong-m0-alaloc.txt']), 
+            auto('tt-Cyrl',  'tt-Latn-t-tt-Cyrl-m0-alaloc', ['loc/tt-Latn-t-tt-Cyrl-m0-alaloc.txt']), 
+            auto('tg-Cyrl',  'tg-Latn-t-tg-Cyrl-m0-alaloc', ['loc/tg-Latn-t-tg-Cyrl-m0-alaloc.txt']), 
+            auto('tk-Cyrl',  'tk-Latn-t-tk-Cyrl-m0-alaloc', ['loc/tk-Latn-t-tk-Cyrl-m0-alaloc.txt']), 
+            auto('uz-Cyrl',  'uz-Latn-t-uz-Cyrl-m0-alaloc', ['loc/uz-Latn-t-uz-Cyrl-m0-alaloc.txt']), 
+            auto('zh-Hani',  'zh-Latn-t-zh-Hani-m0-alaloc', ['loc/zh-Latn-t-zh-Hani-m0-alaloc.txt']), 
+    ] + alaLocNonSlavicCyrillic()
 
     private Map<String, List<Transform>> transliterators = [:]
     
