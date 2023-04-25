@@ -173,7 +173,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         try {
             _unmodify(record, thing)
         } catch (Exception e) {
-            log.error("Failed to convert 880: $e", e)
+            log.error("Failed to convert 880 for record ${record[ID]}: $e", e)
         }
     }
 
