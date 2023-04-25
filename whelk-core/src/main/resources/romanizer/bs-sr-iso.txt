@@ -1,6 +1,6 @@
 # ICU transform rules
 
-# Serbian
+# Bosnian & Serbian
 # See also: slavic-iso.txt
 
 # Г г g (ukrainska och vitryska: h)
@@ -16,6 +16,7 @@
 \u0445 <> h ;
 
 # Щ щ šč (bulgariska: št)
+\u0429 } [:LowercaseLetter:] <> \u0160\u010D ;
 \u0429 <> \u0160\u010C ;
 \u0449 <> \u0161\u010D ;
 
