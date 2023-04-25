@@ -24,10 +24,6 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
     LanguageLinker langLinker
 
     void modify(Map record, Map thing) {
-        _modify(record, thing)
-    }
-
-    void _modify(Map record, Map thing) {
         def work = thing[WORK_KEY]
         if (work instanceof Map) {
             langLinker?.linkAll(work)
@@ -38,10 +34,6 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
     }
 
     void unmodify(Map record, Map thing) {
-       _unmodify(record, thing)
-    }
-
-    void _unmodify(Map record, Map thing) {
         def work = thing[WORK_KEY]
         if (work instanceof Map) {
             traverse(work, moveOriginalTitleToTranslation)
