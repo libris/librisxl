@@ -132,14 +132,19 @@ class WorkToolJob {
 
     void merge() {
         def s = statistics.printOnShutdown()
+        def multiWorkClusters = Collections.synchronizedList([])
 
         run({ cluster ->
             return {
                 def titles = titleClusters(cluster)
                 def works = mergedWorks(titles)
 
-                def needsStore = { it instanceof UpdatedWork || it.derivedFrom.size() > 1 }
-                def storedWorks = works.findAll(needsStore).each { store(it) }
+                if (works.size() > 1) {
+                    multiWorkClusters.add(works.collect { [new Doc(whelk, it.doc)] + it.derivedFrom })
+                }
+
+                def multiInstanceWorks = works.findAll { it.derivedFrom.size() > 1 || it instanceof UpdatedWork }
+                def storedWorks = multiInstanceWorks.each { store(it) }
 
                 String report = htmlReport(titles, storedWorks)
 
@@ -155,6 +160,14 @@ class WorkToolJob {
                 }
             }
         })
+
+        new File(reportDir, "multi-work-clusters.html").with {f ->
+            f.append(Html.START)
+            multiWorkClusters.each {
+                f.append(Html.hubTable(it) + Html.HORIZONTAL_RULE)
+            }
+            f.append(Html.END)
+        }
     }
 
     void revert() {
@@ -226,8 +239,7 @@ class WorkToolJob {
                         LegacyIntegrationTools.determineLegacyCollection(work.doc, whelk.getJsonld()), false)) {
                     throw new WhelkRuntimeException("Could not store new work: ${work.doc.shortId}")
                 }
-            }
-            else if (work instanceof UpdatedWork) {
+            } else if (work instanceof UpdatedWork) {
                 whelk.storeAtomicUpdate(work.doc, !loud, false, changedIn, generationProcess, work.checksum)
             }
 

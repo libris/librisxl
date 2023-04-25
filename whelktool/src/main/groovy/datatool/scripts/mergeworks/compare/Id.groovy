@@ -7,7 +7,7 @@ class Id implements ValuePicker {
 
     @Override
     boolean isCompatible(Object a, Object b) {
-        return !a || !b
+        return true
     }
 
     @Override

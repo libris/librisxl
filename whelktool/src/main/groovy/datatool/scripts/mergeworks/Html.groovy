@@ -52,27 +52,39 @@ class Html {
     }
 
     static String hubTable(List<Collection<Doc>> docs) {
-        def mergedWorks = docs*.first()
-        def ids = docs.collect { group ->
-            group.drop(1).collectEntries { doc ->
+        def mergedWorks = []
+        def derivedFromIds = []
+
+        docs.each {
+            def work = it.head()
+            def derivedFrom = it.tail()
+            mergedWorks.add(work)
+            derivedFromIds.add(derivedFrom.collectEntries { doc ->
                 [doc.doc.shortId, doc.view.link()]
-            }
+            })
         }
-        def clusterId = clusterId(ids*.keySet().flatten())
+
+        def clusterId = clusterId(derivedFromIds*.keySet().flatten())
 
         String header = """
             <tr>
                 <th><a id="${clusterId}"><a href="#${clusterId}">${clusterId}</th>
-                ${mergedWorks.collect { "<th></th>" }.join('\n')}
+                ${docs.collect {
+            def work = it.head()
+            def derivedFrom = it.tail()
+            derivedFrom.size() > 1 || it instanceof UpdatedWork
+                    ? "<th><a id=\"${work.doc.shortId}\" href=\"${work.view.link()}\">${work.doc.shortId}</a></th>"
+                    : "<th></th>" }
+                .join('\n')}
             </tr>
            """.stripIndent()
 
         String derivedFrom =
                 """
                     <tr class="info">
-                        <td>_derivedFrom</td>
-                        ${ids.collect { "<td>${it.collect { id, link -> "<a id=\"$id\" href=\"$link\">$id</a>" }.join('<br>')}</td>" }.join('\n')}
-                        </tr> 
+                        <td>_instances</td>
+                        ${derivedFromIds.collect { "<td>${it.collect { id, link -> "<a id=\"$id\" href=\"$link\">$id</a>" }.join('<br>')}</td>" }.join('\n')}
+                        </tr>
                 """.stripIndent()
 
         def statuses = WorkComparator.compare(mergedWorks)
