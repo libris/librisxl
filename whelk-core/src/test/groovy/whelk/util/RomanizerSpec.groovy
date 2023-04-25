@@ -132,6 +132,15 @@ class RomanizerSpec extends Specification {
         'Ёрк'     | 'Ërk'
     }
 
+    def "Bosnian with ISO"() {
+        expect:
+        new Romanizer().romanize(source, 'bs')['bs-Latn-t-bs-Cyrl-m0-iso-1995'] == target
+        where:
+        source || target
+        // https://libris.kb.se/5m0smjhb3d66cj4c#it
+        "Бајке за дјецу" || "Bajke za djecu" // "Bajke za djecu" in record
+    }
+
     def "Bulgarian with ISO"() {
         expect:
         new Romanizer().romanize(source, 'bg')['bg-Latn-t-bg-Cyrl-m0-iso-1995'] == target
