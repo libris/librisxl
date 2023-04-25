@@ -1,6 +1,6 @@
 # ICU transform rules
 
-# Serbian
+# Bosnian & Serbian
 # See also: slavic-iso.txt
 
 # Г г g (ukrainska och vitryska: h)
