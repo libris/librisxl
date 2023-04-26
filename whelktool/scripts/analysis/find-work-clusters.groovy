@@ -16,9 +16,8 @@ def yesterday = new SimpleDateFormat('yyyy-MM-dd').with { sdf ->
 
 def where = """
     collection = '%s'
-    AND (date(created) = '$yesterday'
-        OR date(modified) = '$yesterday'
-        OR date(data#>>'{@graph,0,generationDate}') = '$yesterday')
+    AND modified = '$yesterday'
+        OR (data#>>'{@graph,0,generationDate}')::date = '$yesterday')
 """
 
 visited = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>())  // TODO: remove?
