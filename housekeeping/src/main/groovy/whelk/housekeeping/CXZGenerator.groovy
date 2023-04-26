@@ -51,7 +51,7 @@ class CXZGenerator extends HouseKeeper {
             String sql = "SELECT MAX(created) FROM lddb__notices;"
             statement = connection.prepareStatement(sql)
             resultSet = statement.executeQuery()
-            Timestamp from = Timestamp.from(Instant.now().minus(20, ChronoUnit.DAYS))
+            Timestamp from = Timestamp.from(Instant.now().minus(2, ChronoUnit.DAYS))
             if (resultSet.next()) {
                 Timestamp lastCreated = resultSet.getTimestamp(1)
                 if (lastCreated && lastCreated.after(from))
@@ -61,7 +61,7 @@ class CXZGenerator extends HouseKeeper {
 
             // Then fetch all changes within that interval
             sql = "SELECT id FROM lddb WHERE collection IN ('bib', 'auth', 'hold') AND ( modified BETWEEN ? AND ? );";
-            connection.setAutoCommit(false);
+            connection.setAutoCommit(false)
             statement = connection.prepareStatement(sql)
             statement.setTimestamp(1, from)
             statement.setTimestamp(2, until)
@@ -70,20 +70,36 @@ class CXZGenerator extends HouseKeeper {
             while (resultSet.next()) {
                 String id = resultSet.getString("id")
 
-                /*
+                // "versions" come sorted by ascending modification time, so oldest version first.
+                // We want to pick the "from version" (the base for which this notice details changes)
+                // as the last saved version *before* the sought interval.
+                DocumentVersion fromVersion = null
                 List<DocumentVersion> versions = whelk.getStorage().loadDocumentHistory(id)
+                for (DocumentVersion version : versions) {
+                    if (version.doc.getModifiedTimestamp().isBefore(from.toInstant()))
+                        fromVersion = version
+                }
+                if (fromVersion == null)
+                    continue
+
+                DocumentVersion untilVersion = versions.last()
+                if (untilVersion == fromVersion)
+                    continue
+
                 List<DocumentVersion> relevantVersions = []
-                relevantVersions.add(versions.get(fromVersion))
-                relevantVersions.add(versions.get(untilVersion))
+                relevantVersions.add(fromVersion)
+                relevantVersions.add(untilVersion)
 
-                 */
-                System.err.println("Was changed: " + id)
+                System.err.println("Was changed: " + id + " spans: " + fromVersion.doc.getModified() + " -> " + untilVersion.doc.getModified())
 
-                //History history = new History(relevantVersions, whelk.getJsonld())
+                History history = new History(relevantVersions, whelk.getJsonld())
 
-                //Map changes = history.m_changeSetsMap.changeSets[1]
+                Map changes = history.m_changeSetsMap
+                System.err.println(changes)
                 //System.err.println("added:\n\t" + changes.addedPaths)
                 //System.err.println("removed:\n\t" + changes.removedPaths)
+
+                //whelk.getStorage().insertNotice(untilVersion.versionID, USERID, changes)
             }
 
         } catch (Throwable e) {

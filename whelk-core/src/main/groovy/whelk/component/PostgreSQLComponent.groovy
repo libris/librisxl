@@ -158,7 +158,7 @@ class PostgreSQLComponent {
             """.stripIndent()
 
     private static final String GET_ALL_DOCUMENT_VERSIONS = """
-            SELECT id, data, deleted, created, modified, changedBy, changedIn 
+            SELECT id, data, deleted, created, modified, changedBy, changedIn, pk
             FROM lddb__versions
             WHERE id = ? 
             ORDER BY GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) ASC
@@ -397,6 +397,15 @@ class PostgreSQLComponent {
             SELECT lddb.deleted
             FROM lddb__identifiers
             JOIN lddb ON lddb__identifiers.id = lddb.id WHERE lddb__identifiers.iri = ?
+            """.stripIndent()
+
+    private static final String INSERT_NOTICE = """
+            INSERT INTO lddb__notices (versionid, userid, changes)
+            VALUES (?, ?, ?)
+            """.stripIndent()
+
+    private static final String GET_NOTICES_FOR_USER = """
+            SELECT * FROM lddb__notices WHERE userid = ? ORDER BY created ASC
             """.stripIndent()
 
     private HikariDataSource connectionPool
@@ -1374,6 +1383,48 @@ class PostgreSQLComponent {
         CardEntry cardEntry = new CardEntry(doc, Instant.now())
         storeCard(cardEntry)
         return cardEntry.getCard().data
+    }
+
+    Map getNoticesFor(String userid) {
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            try {
+                preparedStatement = connection.prepareStatement(GET_NOTICES_FOR_USER)
+                preparedStatement.setString(1, userid)
+
+                rs = preparedStatement.executeQuery()
+                List<Map> results = []
+                while(rs.next()) {
+                    Map notice = [
+                            "versionID" : rs.getInt("versionid"),
+                            "changes" : mapper.readValue(rs.getString("changes"), Map),
+                            "handled" : rs.getBoolean("handled")
+                    ]
+                    results.add(notice)
+                }
+                return results
+            } finally {
+                close(rs, preparedStatement)
+            }
+        }
+    }
+
+    boolean insertNotice(int versionID, String userID, Map changes) {
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement preparedStatement = null
+            try {
+                preparedStatement = connection.prepareStatement(INSERT_NOTICE)
+                preparedStatement.setInt(1, versionID)
+                preparedStatement.setString(2, userID)
+                preparedStatement.setObject(3, mapper.writeValueAsString(changes), OTHER)
+                return (preparedStatement.executeUpdate() == 1)
+            } finally {
+                close(preparedStatement)
+            }
+        }
     }
     
     void recalculateDependencies(Document doc) {
@@ -2364,7 +2415,7 @@ class PostgreSQLComponent {
                 while (rs.next()) {
                     def doc = assembleDocument(rs)
                     doc.version = v++
-                    docList.add(new DocumentVersion(doc, rs.getString("changedBy"), rs.getString("changedIn")))
+                    docList.add(new DocumentVersion(doc, rs.getString("changedBy"), rs.getString("changedIn"), rs.getInt("pk")))
                 }
             } finally {
                 close(rs, selectstmt)

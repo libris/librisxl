@@ -16,12 +16,13 @@ public abstract class HouseKeeper {
     public abstract void trigger()
 
     public ZonedDateTime lastFailAt = null
+    public ZonedDateTime lastRunAt = null
 }
 
 @CompileStatic
 @Log
 public class WebInterface extends HttpServlet {
-    private static final long PERIODIC_TRIGGER_MS = 10 * 1000;
+    private static final long PERIODIC_TRIGGER_MS = 10 * 1000
     private final Timer timer = new Timer("Housekeeper-timer", true)
     private List<HouseKeeper> houseKeepers = []
 
@@ -35,6 +36,7 @@ public class WebInterface extends HttpServlet {
             timer.scheduleAtFixedRate({
                 try {
                     hk.trigger()
+                    hk.lastRunAt = ZonedDateTime.now()
                 } catch (Throwable e) {
                     log.error("Could not handle throwable in Housekeeper TimerTask.", e)
                     hk.lastFailAt = ZonedDateTime.now()
@@ -53,6 +55,10 @@ public class WebInterface extends HttpServlet {
         sb.append("--------------\n")
         for (HouseKeeper hk : houseKeepers) {
             sb.append(hk.getName() + "\n")
+            if (hk.lastRunAt)
+                sb.append("last run at: " + hk.lastRunAt + "\n")
+            else
+                sb.append("has never run\n")
             if (hk.lastFailAt)
                 sb.append("last failed at: " + hk.lastFailAt + "\n")
             else

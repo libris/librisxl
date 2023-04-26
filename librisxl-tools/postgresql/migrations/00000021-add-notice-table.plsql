@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS lddb__notices (
     pk SERIAL PRIMARY KEY,
     versionid INTEGER,
     userid TEXT,
+    changes jsonb not null,
     handled BOOLEAN DEFAULT FALSE,
     created timestamp with time zone DEFAULT now() NOT NULL,
     

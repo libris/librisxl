@@ -688,7 +688,7 @@ class HistorySpec extends Specification {
                         ]]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
         }
 
         def history = new History(versions, ld)
@@ -723,7 +723,7 @@ class HistorySpec extends Specification {
                          ]]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
         }
 
         def history = new History(versions, ld)
@@ -758,7 +758,7 @@ class HistorySpec extends Specification {
                          ]]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
         }
 
         def history = new History(versions, ld)
@@ -776,7 +776,7 @@ class HistorySpec extends Specification {
         
         def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, display, JsonLdSpec.VOCAB_DATA)
         def v = versions.collect { data ->
-            new DocumentVersion(new Document(data), '', '')
+            new DocumentVersion(new Document(data), '', '', 0)
         }
 
         def history = new History(v, ld)
