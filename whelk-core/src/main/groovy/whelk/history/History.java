@@ -173,6 +173,9 @@ public class History {
     }
     
     private static boolean isAllChanged(Object a, Object b) {
+        if (a == null || b == null) {
+            return true;
+        }
         if (a.getClass() != b.getClass()) {
             return true;
         }
