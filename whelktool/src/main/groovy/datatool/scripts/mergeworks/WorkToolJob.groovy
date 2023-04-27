@@ -63,7 +63,7 @@ class WorkToolJob {
         run({ cluster ->
             return {
                 try {
-                    Collection<Collection<Doc>> docs = titleClusters(cluster)
+                    Collection<Collection<Doc>> docs = titleClusters(loadLastUnlinkedVersion(cluster))
 
                     if (docs.isEmpty() || docs.size() == 1 && docs.first().size() == 1) {
                         return
@@ -93,7 +93,7 @@ class WorkToolJob {
         run({ cluster ->
             return {
                 try {
-                    def merged = mergedWorks(titleClusters(cluster)).findAll { it.derivedFrom.size() > 1 }
+                    def merged = mergedWorks(titleClusters(loadLastUnlinkedVersion(cluster))).findAll { it.derivedFrom.size() > 1 }
                     if (merged) {
                         println(merged.collect { [new Doc(whelk, it.doc)] + it.derivedFrom }
                                 .collect { Html.clusterTable(it) }
@@ -115,7 +115,7 @@ class WorkToolJob {
         run({ cluster ->
             return {
                 try {
-                    def hub = mergedWorks(titleClusters(cluster))
+                    def hub = mergedWorks(titleClusters(loadLastUnlinkedVersion(cluster)))
                             .collect { [new Doc(whelk, it.doc)] + it.derivedFrom }
                     if (hub.size() > 1) {
                         println(Html.hubTable(hub) + Html.HORIZONTAL_RULE)
@@ -136,7 +136,7 @@ class WorkToolJob {
 
         run({ cluster ->
             return {
-                def titles = titleClusters(cluster)
+                def titles = titleClusters(loadLinkedWorks(loadDocs(cluster)))
                 def works = mergedWorks(titles)
 
                 if (works.size() > 1) {
@@ -161,7 +161,7 @@ class WorkToolJob {
             }
         })
 
-        new File(reportDir, "multi-work-clusters.html").with {f ->
+        new File(reportDir, "multi-work-clusters.html").with { f ->
             f.append(Html.START)
             multiWorkClusters.each {
                 f.append(Html.hubTable(it) + Html.HORIZONTAL_RULE)
@@ -313,7 +313,7 @@ class WorkToolJob {
     void fictionNotFiction() {
         run({ cluster ->
             return {
-                Collection<Collection<Doc>> titleClusters = titleClusters(cluster)
+                Collection<Collection<Doc>> titleClusters = titleClusters(loadLastUnlinkedVersion(cluster))
 
                 for (titleCluster in titleClusters) {
                     if (titleCluster.size() > 1) {
@@ -398,7 +398,7 @@ class WorkToolJob {
     void outputTitleClusters() {
         run({ cluster ->
             return {
-                titleClusters(cluster).findAll { it.size() > 1 }.each {
+                titleClusters(loadLastUnlinkedVersion(cluster)).findAll { it.size() > 1 }.each {
                     println(it.collect { it.doc.shortId }.join('\t'))
                 }
             }
@@ -463,9 +463,19 @@ class WorkToolJob {
                 .collect { new Doc(whelk, it) }
     }
 
-    private Collection<Collection<Doc>> titleClusters(Collection<String> cluster) {
-        loadDocs(cluster).with { loadLinkedWorks(it) }
-                .findAll(qualityMonographs)
+    private Collection<Doc> loadLastUnlinkedVersion(Collection<String> cluster) {
+        cluster.findResults {
+            whelk.storage.
+                    loadAllVersions(it)
+                    .reverse()
+                    .find { getPathSafe(it.data, it.workIdPath) == null }
+                    ?.with { new Doc(whelk, it) }
+        }
+    }
+
+    private Collection<Collection<Doc>> titleClusters(Collection<Doc> docs) {
+//        loadDocs(cluster).with { loadLinkedWorks(it) }
+        docs.findAll(qualityMonographs)
                 .each { it.addComparisonProps() }
                 .with { partitionByTitle(it) }
                 .findAll { it.size() > 1 }
