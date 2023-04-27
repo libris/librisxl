@@ -69,7 +69,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
             if (bib880) {
                 thing[HAS_BIB880] = bib880
             }
-            log.error("Failed to convert 880: $e", e)
+            log.error("Failed to convert 880 for record ${record[ID]}: $e", e)
         }
     }
 
