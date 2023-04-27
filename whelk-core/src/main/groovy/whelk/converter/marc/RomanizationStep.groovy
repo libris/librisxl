@@ -63,6 +63,9 @@ class RomanizationStep extends MarcFramePostProcStepBase {
 
     void modify(Map record, Map thing) {
         def bib880 = thing[HAS_BIB880]
+        if (!bib880) {
+            return
+        }
         try {
             _modify(record, thing)
         } catch (Exception e) {
@@ -294,7 +297,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
 
             seqNumToBib880Data[seqNum] = [
                     'ref'          : ref.get(),
-                    'converted'    : converted.get()['mainEntity'],
+                    'converted'    : converter.conversion.flatLinkedForm ? converted.get()['@graph'][1] : converted.get()['mainEntity'],
                     'idxOfOriginal': i
             ]
         }
