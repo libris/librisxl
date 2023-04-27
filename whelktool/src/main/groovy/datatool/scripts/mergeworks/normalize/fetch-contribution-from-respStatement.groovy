@@ -70,18 +70,18 @@ new File(System.getProperty('clusters')).splitEachLine('\t') { cluster ->
                 def rolesInContribution = asList(c.role).findAll { it.'@id' != Relator.UNSPECIFIED_CONTRIBUTOR.iri }
 
                 // Replace Adapter with Editor
-                changed |= rolesInRespStatement.removeAll { r ->
-                    r == Relator.EDITOR && rolesInContribution.findIndexOf {
-                        it.'@id' == Relator.ADAPTER.iri
-                    }.with {
-                        if (it == -1) {
-                            return false
-                        } else {
-                            rolesInContribution[it]['@id'] = Relator.EDITOR.iri
-                            return true
-                        }
-                    }
-                }
+//                changed |= rolesInRespStatement.removeAll { r ->
+//                    r == Relator.EDITOR && rolesInContribution.findIndexOf {
+//                        it.'@id' == Relator.ADAPTER.iri
+//                    }.with {
+//                        if (it == -1) {
+//                            return false
+//                        } else {
+//                            rolesInContribution[it]['@id'] = Relator.EDITOR.iri
+//                            return true
+//                        }
+//                    }
+//                }
 
                 if (rolesInRespStatement.size() <= rolesInContribution.size())
                     return
