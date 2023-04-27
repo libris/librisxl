@@ -114,11 +114,9 @@ new File(System.getProperty('clusters')).splitEachLine('\t') { cluster ->
             for (Document other : docs) {
                 def matched = getPathSafe(other.data, contributionPath, [])
                         .find { Map c ->
-                            asList(c.agent).any { a ->
-                                loadIfLink(a).with { nameMatch(name, it) && !(it.description =~ /(?i)pseud/) }
-                                        && comparable(roles).with { r -> !r.isEmpty() && asList(c.role).containsAll(r) }
-                                        && bestEncodingLevel.indexOf(d.getEncodingLevel()) <= bestEncodingLevel.indexOf(other.getEncodingLevel())
-                            }
+                            asList(c.agent).any { a -> loadIfLink(a).with { nameMatch(name, it) && !(it.description =~ /(?i)pseud/) } }
+                                    && comparable(roles).with { r -> !r.isEmpty() && asList(c.role).containsAll(r) }
+                                    && bestEncodingLevel.indexOf(other.getEncodingLevel()) <= bestEncodingLevel.indexOf(d.getEncodingLevel()) //TODO: Remove this condition?
                         }
                 if (matched) {
                     contribution << matched
