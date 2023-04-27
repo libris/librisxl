@@ -525,11 +525,11 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         List paths = []
 
         DocumentUtil.findKey(thing, byLangToBase.keySet()) { value, path ->
-            if (value instanceof Map && value.keySet().any { it =~ '-t-' }) {
-                paths.add(path.collect())
-            }
+            paths.add(path.collect())
             return
         }
+
+        paths = paths.findAll { DocumentUtil.getAtPath(thing, it).keySet().any { it =~ '-t-' } }
 
         return paths
     }
