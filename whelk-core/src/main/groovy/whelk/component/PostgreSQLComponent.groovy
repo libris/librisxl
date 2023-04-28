@@ -383,6 +383,9 @@ class PostgreSQLComponent {
     private static final String GET_USER_DATA =
             "SELECT data FROM lddb__user_data WHERE id = ?"
 
+    private static final String GET_ALL_USER_DATA =
+            "SELECT id, data FROM lddb__user_data"
+
     private static final String UPSERT_USER_DATA = """
             INSERT INTO lddb__user_data (id, data, modified)
             VALUES (?, ?, ?)
@@ -407,6 +410,11 @@ class PostgreSQLComponent {
     private static final String GET_NOTICES_FOR_USER = """
             SELECT * FROM lddb__notices WHERE userid = ? ORDER BY created ASC
             """.stripIndent()
+
+    private static final String GET_ALL_LIBRARIES_HOLDING_ID = """
+            SELECT l.data#>>'{@graph,1,heldBy,@id}' FROM lddb__dependencies d
+            LEFT JOIN lddb l ON d.id = l.id
+            WHERE d.dependsonid = ? AND d.relation = 'itemOf'"""
 
     private HikariDataSource connectionPool
     private HikariDataSource outerConnectionPool
@@ -1383,6 +1391,27 @@ class PostgreSQLComponent {
         CardEntry cardEntry = new CardEntry(doc, Instant.now())
         storeCard(cardEntry)
         return cardEntry.getCard().data
+    }
+
+    List<String> getAllLibrariesHolding(String id) {
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            try {
+                preparedStatement = connection.prepareStatement(GET_ALL_LIBRARIES_HOLDING_ID)
+                preparedStatement.setString(1, id)
+
+                rs = preparedStatement.executeQuery()
+                List<String> results = []
+                while(rs.next()) {
+                    results.add(rs.getString(1))
+                }
+                return results
+            } finally {
+                close(rs, preparedStatement)
+            }
+        }
     }
 
     Map getNoticesFor(String userid) {
@@ -2611,6 +2640,30 @@ class PostgreSQLComponent {
                 log.debug("Removed $numRemoved dependencies for id ${identifier}")
             } finally {
                 close(removeDependencies)
+            }
+        }
+    }
+
+    /**
+     * Returns the user-data map for each user _with the user id_ also inserted into the map.
+     */
+    List<Map> getAllUserData() {
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            List<Map> result = []
+            try {
+                preparedStatement = connection.prepareStatement(GET_ALL_USER_DATA)
+                rs = preparedStatement.executeQuery()
+                while (rs.next()) {
+                    Map userdata = mapper.readValue(rs.getString("data"), Map)
+                    userdata.put("id", rs.getString("id"))
+                    result.add(userdata)
+                }
+                return result
+            } finally {
+                close(rs, preparedStatement)
             }
         }
     }

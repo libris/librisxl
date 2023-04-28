@@ -1,5 +1,6 @@
 package whelk.housekeeping
 
+import whelk.Document
 import whelk.Whelk
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
@@ -11,9 +12,8 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
-import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
-import java.time.temporal.TemporalUnit
+import static whelk.util.Jackson.mapper
 
 @CompileStatic
 @Log
@@ -36,6 +36,26 @@ class CXZGenerator extends HouseKeeper {
 
     public void trigger() {
 
+        // Build a multi-map of library -> list of settings objects for that library's users
+        List<Map> allUserSettingStrings = whelk.getStorage().getAllUserData()
+        Map<String, List<Map>> libraryToUsers = new HashMap<>()
+        for (Map settings: allUserSettingStrings) {
+            settings?.requestedNotices.each { request ->
+                if (! request instanceof Map)
+                    return
+                if (! request["library"])
+                    return
+
+                String library = request["library"]
+                if (!libraryToUsers.containsKey(library))
+                    libraryToUsers.put(library, [])
+                List userSettingsForThisLib = libraryToUsers[library]
+                userSettingsForThisLib.add(settings)
+            }
+        }
+
+        System.err.println("Libraries to all there users and settings:\n\t" + libraryToUsers)
+
         Connection connection
         PreparedStatement statement
         ResultSet resultSet
@@ -44,7 +64,7 @@ class CXZGenerator extends HouseKeeper {
         connection.setAutoCommit(false)
         try {
 
-            // First, determine the time interval of changes for which to generate notices.
+            // Determine the time interval of changes for which to generate notices.
             // This interval, should generally be: From the last generated notice until now.
             // However, if there are no previously generated notices (near enough in time), use
             // now - [some pre set value], to avoid scanning the whole catalog.
@@ -60,7 +80,7 @@ class CXZGenerator extends HouseKeeper {
             Timestamp until = Timestamp.from(Instant.now())
 
             // Then fetch all changes within that interval
-            sql = "SELECT id FROM lddb WHERE collection IN ('bib', 'auth', 'hold') AND ( modified BETWEEN ? AND ? );";
+            sql = "SELECT id FROM lddb WHERE collection IN ('bib', 'auth') AND ( modified BETWEEN ? AND ? );";
             connection.setAutoCommit(false)
             statement = connection.prepareStatement(sql)
             statement.setTimestamp(1, from)
@@ -98,6 +118,13 @@ class CXZGenerator extends HouseKeeper {
                 System.err.println(changes)
                 //System.err.println("added:\n\t" + changes.addedPaths)
                 //System.err.println("removed:\n\t" + changes.removedPaths)
+
+                // TODO: Om id är i 'auth' gör istället allt nedan för beroende (och embellished!) instanser
+
+                List<String> libraries = whelk.getStorage().getAllLibrariesHolding(id)
+                System.err.println("   heldBy: " + libraries)
+
+
 
                 //whelk.getStorage().insertNotice(untilVersion.versionID, USERID, changes)
             }
