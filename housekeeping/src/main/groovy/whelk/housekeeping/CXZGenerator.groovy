@@ -37,24 +37,24 @@ class CXZGenerator extends HouseKeeper {
     public void trigger() {
 
         // Build a multi-map of library -> list of settings objects for that library's users
-        List<Map> allUserSettingStrings = whelk.getStorage().getAllUserData()
-        Map<String, List<Map>> libraryToUsers = new HashMap<>()
-        for (Map settings: allUserSettingStrings) {
-            settings?.requestedNotices.each { request ->
-                if (! request instanceof Map)
-                    return
-                if (! request["library"])
-                    return
+        Map<String, List<Map>> libraryToUsers = new HashMap<>();
+        {
+            List<Map> allUserSettingStrings = whelk.getStorage().getAllUserData()
+            for (Map settings : allUserSettingStrings) {
+                settings?.requestedNotices.each { request ->
+                    if (!request instanceof Map)
+                        return
+                    if (!request["library"])
+                        return
 
-                String library = request["library"]
-                if (!libraryToUsers.containsKey(library))
-                    libraryToUsers.put(library, [])
-                List userSettingsForThisLib = libraryToUsers[library]
-                userSettingsForThisLib.add(settings)
+                    String library = request["library"]
+                    if (!libraryToUsers.containsKey(library))
+                        libraryToUsers.put(library, [])
+                    List userSettingsForThisLib = libraryToUsers[library]
+                    userSettingsForThisLib.add(settings)
+                }
             }
         }
-
-        System.err.println("Libraries to all there users and settings:\n\t" + libraryToUsers)
 
         Connection connection
         PreparedStatement statement
@@ -63,7 +63,6 @@ class CXZGenerator extends HouseKeeper {
         connection = whelk.getStorage().getOuterConnection()
         connection.setAutoCommit(false)
         try {
-
             // Determine the time interval of changes for which to generate notices.
             // This interval, should generally be: From the last generated notice until now.
             // However, if there are no previously generated notices (near enough in time), use
@@ -89,44 +88,7 @@ class CXZGenerator extends HouseKeeper {
             resultSet = statement.executeQuery()
             while (resultSet.next()) {
                 String id = resultSet.getString("id")
-
-                // "versions" come sorted by ascending modification time, so oldest version first.
-                // We want to pick the "from version" (the base for which this notice details changes)
-                // as the last saved version *before* the sought interval.
-                DocumentVersion fromVersion = null
-                List<DocumentVersion> versions = whelk.getStorage().loadDocumentHistory(id)
-                for (DocumentVersion version : versions) {
-                    if (version.doc.getModifiedTimestamp().isBefore(from.toInstant()))
-                        fromVersion = version
-                }
-                if (fromVersion == null)
-                    continue
-
-                DocumentVersion untilVersion = versions.last()
-                if (untilVersion == fromVersion)
-                    continue
-
-                List<DocumentVersion> relevantVersions = []
-                relevantVersions.add(fromVersion)
-                relevantVersions.add(untilVersion)
-
-                System.err.println("Was changed: " + id + " spans: " + fromVersion.doc.getModified() + " -> " + untilVersion.doc.getModified())
-
-                History history = new History(relevantVersions, whelk.getJsonld())
-
-                Map changes = history.m_changeSetsMap
-                System.err.println(changes)
-                //System.err.println("added:\n\t" + changes.addedPaths)
-                //System.err.println("removed:\n\t" + changes.removedPaths)
-
-                // TODO: Om id är i 'auth' gör istället allt nedan för beroende (och embellished!) instanser
-
-                List<String> libraries = whelk.getStorage().getAllLibrariesHolding(id)
-                System.err.println("   heldBy: " + libraries)
-
-
-
-                //whelk.getStorage().insertNotice(untilVersion.versionID, USERID, changes)
+                generateNoticesForChange(id, libraryToUsers, from.toInstant())
             }
 
         } catch (Throwable e) {
@@ -135,7 +97,52 @@ class CXZGenerator extends HouseKeeper {
         } finally {
             connection.close()
         }
+    }
 
+    private void generateNoticesForChange(String id, Map libraryToUsers, Instant since) {
+        // "versions" come sorted by ascending modification time, so oldest version first.
+        // We want to pick the "from version" (the base for which this notice details changes)
+        // as the last saved version *before* the sought interval.
+        DocumentVersion fromVersion = null
+        List<DocumentVersion> versions = whelk.getStorage().loadDocumentHistory(id)
+        for (DocumentVersion version : versions) {
+            if (version.doc.getModifiedTimestamp().isBefore(since))
+                fromVersion = version
+        }
+        if (fromVersion == null)
+            return
+
+        DocumentVersion untilVersion = versions.last()
+        if (untilVersion == fromVersion)
+            return
+
+        List<DocumentVersion> relevantVersions = []
+        relevantVersions.add(fromVersion)
+        relevantVersions.add(untilVersion)
+
+        System.err.println("Was changed: " + id + " spans: " + fromVersion.doc.getModified() + " -> " + untilVersion.doc.getModified())
+
+        History history = new History(relevantVersions, whelk.getJsonld())
+
+        Map changes = history.m_changeSetsMap
+        System.err.println(changes)
+        //System.err.println("added:\n\t" + changes.addedPaths)
+        //System.err.println("removed:\n\t" + changes.removedPaths)
+
+        // TODO: Om id är i 'auth' gör istället allt nedan för beroende (och embellished!) instanser
+
+        List<String> libraries = whelk.getStorage().getAllLibrariesHolding(id)
+
+        for (String library : libraries) {
+            List<Map> users = (List<Map>) libraryToUsers[library]
+            if (users) {
+                for (Map user : users) {
+                    System.err.println("" + user["id"].toString() + " has requested updates for " + library)
+                }
+            }
+        }
+
+        //whelk.getStorage().insertNotice(untilVersion.versionID, USERID, changes)
     }
 
 
