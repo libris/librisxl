@@ -41,7 +41,7 @@ class Util {
             .readLines().grep().collect(Util.&normalize) as Set
 
     static def noise =
-            [",", '"', "'", '[', ']', ',', '.', '.', ':', ';', '-', '(', ')', ' the ', '-', '–', '+', '!', '?'].collectEntries { [it, ' '] }
+            [",", '"', "'", "ʹ", '[', ']', ',', '.', '.', ':', ';', '-', '(', ')', ' the ', '-', '–', '+', '!', '?', ].collectEntries { [it, ' '] }
 
 
     static List asList(Object o) {
