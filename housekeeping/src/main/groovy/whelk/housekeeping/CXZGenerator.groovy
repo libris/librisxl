@@ -78,7 +78,7 @@ class CXZGenerator extends HouseKeeper {
             }
             Timestamp until = Timestamp.from(Instant.now())
 
-            // Then fetch all changes within that interval
+            // Then fetch all changed IDs within that interval
             sql = "SELECT id FROM lddb WHERE collection IN ('bib', 'auth') AND ( modified BETWEEN ? AND ? );";
             connection.setAutoCommit(false)
             statement = connection.prepareStatement(sql)
@@ -137,12 +137,34 @@ class CXZGenerator extends HouseKeeper {
             List<Map> users = (List<Map>) libraryToUsers[library]
             if (users) {
                 for (Map user : users) {
-                    System.err.println("" + user["id"].toString() + " has requested updates for " + library)
+
+                    /*
+                    user is a map looking something like this:
+                    {
+                        "id": "sldknfslkdnsdlkgnsdkjgnb"
+	                    "requestedNotices": [
+			                {"library": "https://libris.kb.se/library/Utb1", "trigger": ["@graph", 1, "contribution", "@type=PrimaryContribution", "agent"]},
+			                {"library": "https://libris.kb.se/library/Utb2", "trigger": ["@graph", 1, "instanceOf", "hasTitle", "*", "mainTitle"]}
+			                ]
+			        }
+                     */
+                    //System.err.println("" + user["id"].toString() + " has requested updates for " + library)
+
+                    if (changeMatchesAnyTrigger(fromVersion, untilVersion, user)) {
+                        whelk.getStorage().insertNotice(untilVersion.versionID, user["id"].toString(), changes)
+                        System.err.println("STORED NOTICE FOR USER " + user["id"].toString() + " version: " + untilVersion.versionID)
+                    }
                 }
             }
         }
+    }
 
-        //whelk.getStorage().insertNotice(untilVersion.versionID, USERID, changes)
+    /**
+     * Parameters are the two relevant versions (before and after), and user is
+     * the user-data map for a user (which includes their selection of triggers)
+     */
+    private boolean changeMatchesAnyTrigger(DocumentVersion fromVersion, DocumentVersion untilVersion, Map user) {
+        return true
     }
 
 
