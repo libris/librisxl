@@ -1,6 +1,6 @@
 package whelk.housekeeping
 
-import whelk.Document
+
 import whelk.Whelk
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
@@ -13,16 +13,15 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import static whelk.util.Jackson.mapper
 
 @CompileStatic
 @Log
-class CXZGenerator extends HouseKeeper {
+class NotificationGenerator extends HouseKeeper {
 
     private String status = "OK"
     private Whelk whelk
 
-    public CXZGenerator(Whelk whelk) {
+    public NotificationGenerator(Whelk whelk) {
         this.whelk = whelk
     }
 
@@ -67,7 +66,7 @@ class CXZGenerator extends HouseKeeper {
             // This interval, should generally be: From the last generated notice until now.
             // However, if there are no previously generated notices (near enough in time), use
             // now - [some pre set value], to avoid scanning the whole catalog.
-            String sql = "SELECT MAX(created) FROM lddb__notices;"
+            String sql = "SELECT MAX(created) FROM lddb__notifications;"
             statement = connection.prepareStatement(sql)
             resultSet = statement.executeQuery()
             Timestamp from = Timestamp.from(Instant.now().minus(2, ChronoUnit.DAYS))
@@ -151,7 +150,7 @@ class CXZGenerator extends HouseKeeper {
                     //System.err.println("" + user["id"].toString() + " has requested updates for " + library)
 
                     if (changeMatchesAnyTrigger(fromVersion, untilVersion, user)) {
-                        whelk.getStorage().insertNotice(untilVersion.versionID, user["id"].toString(), changes)
+                        whelk.getStorage().insertNotification(untilVersion.versionID, user["id"].toString(), changes)
                         System.err.println("STORED NOTICE FOR USER " + user["id"].toString() + " version: " + untilVersion.versionID)
                     }
                 }

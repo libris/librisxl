@@ -98,6 +98,10 @@
         <servlet-name>TransliterationAPI</servlet-name>
         <servlet-class>whelk.rest.api.TransliterationAPI</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>NotificationsAPI</servlet-name>
+        <servlet-class>whelk.rest.api.NotificationsAPI</servlet-class>
+    </servlet>
 
 
     <servlet>
@@ -105,6 +109,11 @@
         <servlet-class>io.prometheus.client.exporter.MetricsServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
+
+    <servlet-mapping>
+        <servlet-name>NotificationsAPI</servlet-name>
+        <url-pattern>/_notifications/*</url-pattern>
+    </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>UserDataAPI</servlet-name>
@@ -179,6 +188,11 @@
     <filter-mapping>
         <filter-name>AuthenticationFilterGet</filter-name>
         <url-pattern>/_userdata/*</url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>AuthenticationFilterGet</filter-name>
+        <url-pattern>/_notifications/*</url-pattern>
     </filter-mapping>
 
     <filter-mapping>

@@ -402,13 +402,13 @@ class PostgreSQLComponent {
             JOIN lddb ON lddb__identifiers.id = lddb.id WHERE lddb__identifiers.iri = ?
             """.stripIndent()
 
-    private static final String INSERT_NOTICE = """
-            INSERT INTO lddb__notices (versionid, userid, changes)
+    private static final String INSERT_NOTIFICATION = """
+            INSERT INTO lddb__notifications (versionid, userid, changes)
             VALUES (?, ?, ?)
             """.stripIndent()
 
-    private static final String GET_NOTICES_FOR_USER = """
-            SELECT * FROM lddb__notices WHERE userid = ? ORDER BY created ASC
+    private static final String GET_NOTICFICATIONS_FOR_USER = """
+            SELECT * FROM lddb__notifications WHERE userid = ? ORDER BY created ASC
             """.stripIndent()
 
     private static final String GET_ALL_LIBRARIES_HOLDING_ID = """
@@ -1414,13 +1414,13 @@ class PostgreSQLComponent {
         }
     }
 
-    Map getNoticesFor(String userid) {
+    List<Map> getNotificationsFor(String userid) {
         return withDbConnection {
             Connection connection = getMyConnection()
             PreparedStatement preparedStatement = null
             ResultSet rs = null
             try {
-                preparedStatement = connection.prepareStatement(GET_NOTICES_FOR_USER)
+                preparedStatement = connection.prepareStatement(GET_NOTICFICATIONS_FOR_USER)
                 preparedStatement.setString(1, userid)
 
                 rs = preparedStatement.executeQuery()
@@ -1440,12 +1440,12 @@ class PostgreSQLComponent {
         }
     }
 
-    boolean insertNotice(int versionID, String userID, Map changes) {
+    boolean insertNotification(int versionID, String userID, Map changes) {
         return withDbConnection {
             Connection connection = getMyConnection()
             PreparedStatement preparedStatement = null
             try {
-                preparedStatement = connection.prepareStatement(INSERT_NOTICE)
+                preparedStatement = connection.prepareStatement(INSERT_NOTIFICATION)
                 preparedStatement.setInt(1, versionID)
                 preparedStatement.setString(2, userID)
                 preparedStatement.setObject(3, mapper.writeValueAsString(changes), OTHER)

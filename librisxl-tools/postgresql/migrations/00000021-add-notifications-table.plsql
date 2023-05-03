@@ -24,7 +24,7 @@ UPDATE lddb__schema SET version = new_version;
 -- ACTUAL SCHEMA CHANGES HERE:
 
 ALTER TABLE lddb__versions ADD UNIQUE (pk);
-CREATE TABLE IF NOT EXISTS lddb__notices (
+CREATE TABLE IF NOT EXISTS lddb__notifications (
     pk SERIAL PRIMARY KEY,
     versionid INTEGER,
     userid TEXT,
@@ -35,8 +35,8 @@ CREATE TABLE IF NOT EXISTS lddb__notices (
     CONSTRAINT version_fk FOREIGN KEY (versionid) REFERENCES lddb__versions(pk) ON DELETE CASCADE,
     CONSTRAINT user_fk FOREIGN KEY (userid) REFERENCES lddb__user_data(id) ON DELETE CASCADE
 );
-CREATE INDEX idx_notices_user ON lddb__notices USING BTREE (userid);
-CREATE INDEX idx_notices_created ON lddb__notices USING BTREE (created);
+CREATE INDEX idx_notifications_user ON lddb__notifications USING BTREE (userid);
+CREATE INDEX idx_notifications_created ON lddb__notifications USING BTREE (created);
 
 END$$;
 

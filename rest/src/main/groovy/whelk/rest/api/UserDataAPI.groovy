@@ -16,7 +16,7 @@ import java.util.stream.Collectors
 class UserDataAPI extends HttpServlet {
     private Whelk whelk
     private static final int POST_MAX_SIZE = 1000000
-    private static final String ID_HASH_FUNCTION = "SHA-256"
+    static final String ID_HASH_FUNCTION = "SHA-256"
 
     UserDataAPI() {
     }
@@ -125,7 +125,7 @@ class UserDataAPI extends HttpServlet {
         return data
     }
 
-    private static boolean isValidUserWithPermission(HttpServletRequest request, HttpServletResponse response, Map userInfo) {
+    static boolean isValidUserWithPermission(HttpServletRequest request, HttpServletResponse response, Map userInfo) {
         if (!userInfo) {
             log.info("User authentication failed")
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "User authentication failed")
