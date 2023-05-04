@@ -627,10 +627,12 @@
             "@type": "Text",
             "language": [
               {
-                "@id": "https://id.kb.se/language/gre"
+                "@id": "https://id.kb.se/language/gre",
+                "code": "gre"
               },
               {
-                "@id": "https://id.kb.se/language/eng"
+                "@id": "https://id.kb.se/language/eng",
+                "code": "eng"
               }
             ],
             "expressionOf": {
@@ -659,10 +661,12 @@
             "@type": "Text",
             "language": [
               {
-                "@id": "https://id.kb.se/language/gre"
+                "@id": "https://id.kb.se/language/gre",
+                "code": "gre"
               },
               {
-                "@id": "https://id.kb.se/language/eng"
+                "@id": "https://id.kb.se/language/eng",
+                "code": "eng"
               }
             ],
             "hasTitle": [

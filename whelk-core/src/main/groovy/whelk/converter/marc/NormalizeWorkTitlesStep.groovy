@@ -192,6 +192,6 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
         def trlOfLang = trlOf ? asList(trlOf[LANGUAGE]) : []
         langLinker?.linkLanguages(expressionOf, workLang + trlOfLang)
         def exprOfLang = asList(expressionOf[LANGUAGE])
-        return (workLang + trlOfLang).containsAll(exprOfLang)
+        return exprOfLang.every { l -> (workLang + trlOfLang).any { l.subMap(['@id'] + langLinker?.fields).intersect(it) } }
     }
 }
