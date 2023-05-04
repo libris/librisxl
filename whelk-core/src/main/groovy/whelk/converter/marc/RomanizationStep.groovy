@@ -62,10 +62,17 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     List FIELD_REFS = [FIELDREF, BIB250_REF]
 
     void modify(Map record, Map thing) {
+        def bib880 = thing[HAS_BIB880]
+        if (!bib880) {
+            return
+        }
         try {
             _modify(record, thing)
         } catch (Exception e) {
-            log.error("Failed to convert 880: $e", e)
+            if (bib880) {
+                thing[HAS_BIB880] = bib880
+            }
+            log.error("Failed to convert 880 for record ${record[ID]}: $e", e)
         }
     }
 
@@ -170,7 +177,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         try {
             _unmodify(record, thing)
         } catch (Exception e) {
-            log.error("Failed to convert 880: $e", e)
+            log.error("Failed to convert 880 for record ${record[ID]}: $e", e)
         }
     }
 
@@ -290,7 +297,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
 
             seqNumToBib880Data[seqNum] = [
                     'ref'          : ref.get(),
-                    'converted'    : converted.get()['mainEntity'],
+                    'converted'    : converter.conversion.flatLinkedForm ? converted.get()['@graph'][1] : converted.get()['mainEntity'],
                     'idxOfOriginal': i
             ]
         }
