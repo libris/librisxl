@@ -182,6 +182,7 @@ class Util {
 
     // Return the most common title for the best encodingLevel
     static def bestTitle(Collection<Doc> docs) {
+        // TODO: which title to pick when matched with already existing linked work?
         def linkedWorkTitle = docs.findResult {
             def w = it.getWork()
             w['@id'] ? w['hasTitle'] : null
@@ -209,8 +210,26 @@ class Util {
         return null
     }
 
-    static def mostCommonWorkTitle(Collection<Doc> docs) {
-        def workTitles = docs.collect { it.getWork().get('hasTitle')?.findAll(isTitle) }
+    static def bestOriginalTitle(Collection<Doc> docs) {
+        for (def level : bestEncodingLevel) {
+            def onLevel = docs.findAll { it.encodingLevel() == level }
+            def bestOrigTitle = mostCommonOriginalTitle(onLevel)
+            if (bestOrigTitle) {
+                return bestOrigTitle
+            }
+        }
+
+        return null
+    }
+
+    static def mostCommonOriginalTitle(Collection<Doc> docs) {
+        return mostCommonWorkTitle(docs) { Doc d ->
+            asList(d.getWork()['translationOf']).getAt(0)?.get('hasTitle')?.findAll(isTitle)
+        }
+    }
+
+    static def mostCommonWorkTitle(Collection<Doc> docs, Closure getTitle = { it.getWork().get('hasTitle')?.findAll(isTitle) }) {
+        def workTitles = docs.collect(getTitle)
                 .grep()
                 .collect { dropGenericSubTitles(it) }
 

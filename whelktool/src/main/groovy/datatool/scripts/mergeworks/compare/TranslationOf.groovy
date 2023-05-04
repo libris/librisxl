@@ -1,28 +1,46 @@
 package datatool.scripts.mergeworks.compare
 
+import datatool.scripts.mergeworks.Doc
 import datatool.scripts.mergeworks.Util
 import datatool.util.DocumentComparator
+import org.apache.commons.lang3.NotImplementedException
 
-class TranslationOf implements FieldHandler {
+class TranslationOf implements ValuePicker {
     DocumentComparator c = new DocumentComparator()
 
     @Override
     boolean isCompatible(Object a, Object b) {
         // @type is sometimes Work, sometimes Text. Should not matter for comparison
-        (!a && !b) || (a && b && [Util.asList(a), Util.asList(b)].transpose().every { Map x, Map y ->
-            c.isEqual(noTypeNoTitle(x), noTypeNoTitle(y))
-            && !Util.getTitleVariants(x['hasTitle']).intersect(Util.getTitleVariants(y['hasTitle'])).isEmpty()
-        })
+        // We assume that there are never more than one object in translationOf
+        a = Util.asList(a)[0]
+        b = Util.asList(b)[0]
+        (!a && !b) || (a && b && c.isEqual(noTypeNoTitle(a), noTypeNoTitle(b)) && noTitleOrSameTitle(a, b))
     }
 
     @Override
     Object merge(Object a, Object b) {
-        return a // TODO: prefer one @type over another?
+        throw new NotImplementedException('')
+    }
+
+    @Override
+    Object pick(Collection<Doc> values) {
+        // TODO: which title to pick when matched with already existing linked work?
+        def translationOf = values.first().getWork()['translationOf']
+        def title = Util.bestOriginalTitle(values)
+        if (title) {
+            Util.asList(translationOf)[0]['hasTitle'] = title
+        }
+
+        return translationOf
     }
 
     Map noTypeNoTitle(Map m) {
         m.findAll { k, v -> !(k in ['@type', 'hasTitle']) }
     }
 
-
+    boolean noTitleOrSameTitle(Map a, Map b) {
+        !a['hasTitle']
+                || !b['hasTitle']
+                || !Util.getTitleVariants(a['hasTitle']).intersect(Util.getTitleVariants(b['hasTitle'])).isEmpty()
+    }
 }
