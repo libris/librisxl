@@ -411,6 +411,10 @@ class PostgreSQLComponent {
             SELECT * FROM lddb__notifications WHERE userid = ? ORDER BY created ASC
             """.stripIndent()
 
+    private static final String FLIP_NOTIFICATION_HANDLED = """
+            UPDATE lddb__notifications SET handled = NOT handled WHERE userid = ? AND pk = ?
+            """.stripIndent()
+
     private static final String GET_ALL_LIBRARIES_HOLDING_ID = """
             SELECT l.data#>>'{@graph,1,heldBy,@id}' FROM lddb__dependencies d
             LEFT JOIN lddb l ON d.id = l.id
@@ -1427,6 +1431,7 @@ class PostgreSQLComponent {
                 List<Map> results = []
                 while(rs.next()) {
                     Map notice = [
+                            "notificationID": rs.getInt("pk"),
                             "versionID" : rs.getInt("versionid"),
                             "changes" : mapper.readValue(rs.getString("changes"), Map),
                             "handled" : rs.getBoolean("handled")
@@ -1449,6 +1454,21 @@ class PostgreSQLComponent {
                 preparedStatement.setInt(1, versionID)
                 preparedStatement.setString(2, userID)
                 preparedStatement.setObject(3, mapper.writeValueAsString(changes), OTHER)
+                return (preparedStatement.executeUpdate() == 1)
+            } finally {
+                close(preparedStatement)
+            }
+        }
+    }
+
+    boolean flipNotificationHandled(String userID, int notificationID) {
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement preparedStatement = null
+            try {
+                preparedStatement = connection.prepareStatement(FLIP_NOTIFICATION_HANDLED)
+                preparedStatement.setString(1, userID)
+                preparedStatement.setInt(2, notificationID)
                 return (preparedStatement.executeUpdate() == 1)
             } finally {
                 close(preparedStatement)

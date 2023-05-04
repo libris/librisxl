@@ -125,7 +125,7 @@ class UserDataAPI extends HttpServlet {
         return data
     }
 
-    static boolean isValidUserWithPermission(HttpServletRequest request, HttpServletResponse response, Map userInfo) {
+    private static boolean isValidUserWithPermission(HttpServletRequest request, HttpServletResponse response, Map userInfo) {
         if (!userInfo) {
             log.info("User authentication failed")
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "User authentication failed")
