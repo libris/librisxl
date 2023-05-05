@@ -16,6 +16,7 @@ import java.time.temporal.ChronoUnit
 @Log
 class NotificationGenerator extends HouseKeeper {
 
+    private static final int DAYS_TO_KEEP_NOTIFICATIONS = 10
     private String status = "OK"
     private Whelk whelk
 
@@ -38,7 +39,7 @@ class NotificationGenerator extends HouseKeeper {
         {
             List<Map> allUserSettingStrings = whelk.getStorage().getAllUserData()
             for (Map settings : allUserSettingStrings) {
-                settings?.requestedNotices.each { request ->
+                settings?.requestedNotifications.each { request ->
                     if (!request instanceof Map)
                         return
                     if (!request["library"])
@@ -67,7 +68,7 @@ class NotificationGenerator extends HouseKeeper {
             String sql = "SELECT MAX(created) FROM lddb__notifications;"
             statement = connection.prepareStatement(sql)
             resultSet = statement.executeQuery()
-            Timestamp from = Timestamp.from(Instant.now().minus(2, ChronoUnit.DAYS))
+            Timestamp from = Timestamp.from(Instant.now().minus(DAYS_TO_KEEP_NOTIFICATIONS, ChronoUnit.DAYS))
             if (resultSet.next()) {
                 Timestamp lastCreated = resultSet.getTimestamp(1)
                 if (lastCreated && lastCreated.after(from))
@@ -76,7 +77,7 @@ class NotificationGenerator extends HouseKeeper {
             Timestamp until = Timestamp.from(Instant.now())
 
             // Then fetch all changed IDs within that interval
-            sql = "SELECT id FROM lddb WHERE collection IN ('bib', 'auth') AND ( modified BETWEEN ? AND ? );";
+            sql = "SELECT id FROM lddb WHERE collection IN ('bib', 'auth') AND ( modified BETWEEN ? AND ? );"
             connection.setAutoCommit(false)
             statement = connection.prepareStatement(sql)
             statement.setTimestamp(1, from)
@@ -85,8 +86,14 @@ class NotificationGenerator extends HouseKeeper {
             resultSet = statement.executeQuery()
             while (resultSet.next()) {
                 String id = resultSet.getString("id")
-                generateNoticesForChangedID(id, libraryToUsers, from.toInstant())
+                generateNotificationsForChangedID(id, libraryToUsers, from.toInstant())
             }
+
+            // Finally, clean out any notifications that are too old
+            sql = "DELETE FROM lddb__notifications WHERE created < ?"
+            statement = connection.prepareStatement(sql)
+            statement.setTimestamp(1, Timestamp.from(Instant.now().minus(DAYS_TO_KEEP_NOTIFICATIONS, ChronoUnit.DAYS)))
+            statement.executeUpdate()
 
         } catch (Throwable e) {
             status = "Failed with:\n" + e + "\nat:\n" + e.getStackTrace().toString()
@@ -96,7 +103,7 @@ class NotificationGenerator extends HouseKeeper {
         }
     }
 
-    private void generateNoticesForChangedID(String id, Map libraryToUsers, Instant since) {
+    private void generateNotificationsForChangedID(String id, Map libraryToUsers, Instant since) {
         // "versions" come sorted by ascending modification time, so oldest version first.
         // We want to pick the "from version" (the base for which this notice details changes)
         // as the last saved version *before* the sought interval.
@@ -119,7 +126,7 @@ class NotificationGenerator extends HouseKeeper {
             String dependerID =  it[0]
             String dependerMainEntityType = whelk.getStorage().getMainEntityTypeBySystemID(dependerID)
             if (whelk.getJsonld().isSubClassOf(dependerMainEntityType, "Instance")) {
-                generateNoticesForAffectedInstance(dependerID, libraryToUsers, fromVersion, untilVersion)
+                generateNotificationsForAffectedInstance(dependerID, libraryToUsers, fromVersion, untilVersion)
             }
         }
 
@@ -129,7 +136,7 @@ class NotificationGenerator extends HouseKeeper {
      * Generate notice for a bibliographic instance. Beware: fromVersion and untilVersion may not be
      * _of this document_ (id), but rather of a document this instance depends on!
      */
-    private void generateNoticesForAffectedInstance(String id, Map libraryToUsers, DocumentVersion fromVersion, DocumentVersion untilVersion) {
+    private void generateNotificationsForAffectedInstance(String id, Map libraryToUsers, DocumentVersion fromVersion, DocumentVersion untilVersion) {
         List<String> libraries = whelk.getStorage().getAllLibrariesHolding(id)
         for (String library : libraries) {
             List<Map> users = (List<Map>) libraryToUsers[library]
@@ -137,32 +144,23 @@ class NotificationGenerator extends HouseKeeper {
                 for (Map user : users) {
 
                     /*
-                    user is a map looking something like this:
+                    'user' is now a map looking something like this:
                     {
                         "id": "sldknfslkdnsdlkgnsdkjgnb"
-	                    "requestedNotices": [
-			                {"library": "https://libris.kb.se/library/Utb1", "trigger": ["@graph", 1, "contribution", "@type=PrimaryContribution", "agent"]},
-			                {"library": "https://libris.kb.se/library/Utb2", "trigger": ["@graph", 1, "instanceOf", "hasTitle", "*", "mainTitle"]}
-			                ]
-			        }
-                     */
-                    //System.err.println("" + user["id"].toString() + " has requested updates for " + library)
+                        "requestedNotifications": [
+                            {
+                                "library": "https://libris.kb.se/library/Utb1",
+                                "triggers": [
+                                    "https://id.kb.se/notificationtriggers/sab",
+                                    "https://id.kb.se/notificationtriggers/primarycontribution"
+                                ]
+                            }
+                        ]
+                    }*/
 
-                    /*List<DocumentVersion> relevantVersions = []
-                    relevantVersions.add(fromVersion)
-                    relevantVersions.add(untilVersion)*/
-
-                    /*System.err.println("Was changed: " + id + " spans: " + fromVersion.doc.getModified() + " -> " + untilVersion.doc.getModified())
-
-                    History history = new History(relevantVersions, whelk.getJsonld())
-
-                    Map changes = history.m_changeSetsMap
-                    System.err.println(changes)*/
-
-                    Map changes = ["STILL":"TODO"]
-
-                    if (changeMatchesAnyTrigger(fromVersion, untilVersion, user)) {
-                        whelk.getStorage().insertNotification(untilVersion.versionID, user["id"].toString(), changes)
+                    List<String> triggered = changeMatchesAnyTrigger(fromVersion, untilVersion, user, library)
+                    if (triggered) {
+                        whelk.getStorage().insertNotification(untilVersion.versionID, user["id"].toString(), ["triggered" : triggered])
                         System.err.println("STORED NOTICE FOR USER " + user["id"].toString() + " version: " + untilVersion.versionID)
                     }
                 }
@@ -171,11 +169,57 @@ class NotificationGenerator extends HouseKeeper {
     }
 
     /**
-     * Parameters are the two relevant versions (before and after), and user is
-     * the user-data map for a user (which includes their selection of triggers)
+     * '*version' parameters are the two relevant versions (before and after).
+     * 'user' is the user-data map for a user (which includes their selection of triggers).
+     * 'library' is a library ("sigel") holding the instance in question.
+     *
+     * This function answers the question: Has 'user' requested to be notified of the change between
+     * 'fromVersion' and 'untilVersion' for instances held by 'library'?
+     *
+     * Returns the URIs of all triggered rules/triggers.
      */
-    private boolean changeMatchesAnyTrigger(DocumentVersion fromVersion, DocumentVersion untilVersion, Map user) {
-        return true
+    private static List<String> changeMatchesAnyTrigger(DocumentVersion fromVersion, DocumentVersion untilVersion, Map user, String library) {
+
+        List<String> triggeredTriggers = []
+
+        user.requestedNotifications.each { request ->
+
+            // This stuff (the request) comes from a user, so we must be super paranoid about it being correctly formed.
+
+            if (! request instanceof Map)
+                return
+
+            if (! request["library"] instanceof String)
+                return
+
+            if (request["library"] != library)
+                return
+
+            if (! request["triggers"] instanceof List)
+                return
+
+            for (Object triggerObject : request["triggers"]) {
+                if (! triggerObject instanceof String)
+                    return
+                String triggerUri = (String) triggerObject
+                if (triggerIsTriggered(fromVersion, untilVersion, triggerUri))
+                    triggeredTriggers.add(triggerUri)
+            }
+        }
+
+        return triggeredTriggers
+    }
+
+    /**
+     * Do the changes between 'fromVersion' and 'untilVersion' qualify to trigger 'triggerUri' ?
+     */
+    private static boolean triggerIsTriggered(DocumentVersion fromVersion, DocumentVersion untilVersion, String triggerUri) {
+        switch (triggerUri) {
+            case "https://id.kb.se/notificationtriggers/primarycontribution":
+                return true
+                break
+        }
+        return false
     }
 
 }

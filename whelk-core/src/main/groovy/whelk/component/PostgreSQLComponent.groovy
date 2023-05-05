@@ -411,7 +411,12 @@ class PostgreSQLComponent {
             """.stripIndent()
 
     private static final String GET_NOTICFICATIONS_FOR_USER = """
-            SELECT * FROM lddb__notifications WHERE userid = ? ORDER BY created ASC
+            SELECT n.pk, n.changes, n.handled, v.data#>>'{@graph,1,@id}' thingid
+            FROM lddb__notifications n
+            LEFT JOIN lddb__versions v
+            ON n.versionid = v.pk
+            WHERE userid = ?
+            ORDER BY n.created ASC
             """.stripIndent()
 
     private static final String FLIP_NOTIFICATION_HANDLED = """
@@ -1433,13 +1438,13 @@ class PostgreSQLComponent {
                 rs = preparedStatement.executeQuery()
                 List<Map> results = []
                 while(rs.next()) {
-                    Map notice = [
+                    Map notification = [
                             "notificationID": rs.getInt("pk"),
-                            "versionID" : rs.getInt("versionid"),
-                            "changes" : mapper.readValue(rs.getString("changes"), Map),
+                            "mainEntityID" : rs.getString("thingid"),
+                            "reason" : mapper.readValue(rs.getString("changes"), Map),
                             "handled" : rs.getBoolean("handled")
                     ]
-                    results.add(notice)
+                    results.add(notification)
                 }
                 return results
             } finally {

@@ -67,8 +67,6 @@ public class WebInterface extends HttpServlet {
             sb.append(hk.statusDescription+"\n")
             sb.append("--------------\n")
         }
-        //res.sendStatus(HttpServletResponse.SC_ACCEPTED, sb.toString())
-        //res.sendError(HttpServletResponse.SC_BAD_REQUEST, "CHYIIL.. DUDE");
         res.setStatus(HttpServletResponse.SC_OK)
         res.setContentType("text/plain")
         res.getOutputStream().print(sb.toString())

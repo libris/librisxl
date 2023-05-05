@@ -44,6 +44,8 @@ class NotificationsAPI extends HttpServlet {
         String userID = "${userInfo.id}".digest(UserDataAPI.ID_HASH_FUNCTION)
         String notificationID = request.getPathInfo().replace("/", "")
         whelk.getStorage().flipNotificationHandled(userID, Integer.parseInt(notificationID))
+
+        response.setStatus(HttpServletResponse.SC_OK)
     }
 
     static boolean isValidUserWithPermission(HttpServletRequest request, HttpServletResponse response, Map userInfo) {
