@@ -16,7 +16,7 @@ def yesterday = new SimpleDateFormat('yyyy-MM-dd').with { sdf ->
 
 def where = """
     collection = '%s'
-    AND modified = '$yesterday'
+    AND (modified = '$yesterday'
         OR (data#>>'{@graph,0,generationDate}')::date = '$yesterday')
 """
 
