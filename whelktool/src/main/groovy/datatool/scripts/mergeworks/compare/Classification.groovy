@@ -12,10 +12,10 @@ class Classification extends StuffSet {
             code1 = code1.trim()
             code2 = code2.trim()
 
-            if (isSab(c1) && isSab(c2) && (code1.startsWith(code2) || code2.startsWith(code1))) {
+            if (isSab(c1) && isSab(c2) && code1 == code2) {
                 def result = [
                         '@type' : 'Classification',
-                        'code'  : code1.size() > code2.size() ? code1 : code2,
+                        'code'  : code1,
                         inScheme: [
                                 '@type'  : 'ConceptScheme',
                                 'code'   : 'kssb'
