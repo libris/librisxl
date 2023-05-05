@@ -106,7 +106,7 @@ class DisplayDoc {
 
     List classificationStrings() {
         List path = isInstance() ? ['instanceOf', 'classification'] : ['classification']
-        List<Map> classification = Util.getPathSafe(getFramed(), path, [])
+        List<Map> classification = Util.getPathSafe(getMainEntity(), path, [])
         classification.collect() { c ->
             StringBuilder s = new StringBuilder()
             s.append(flatMaybeLinked(c['inScheme'], ['code', 'version']).with { it.isEmpty() ? it : it + ': ' })
