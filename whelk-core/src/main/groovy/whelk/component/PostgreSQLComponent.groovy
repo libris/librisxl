@@ -311,6 +311,9 @@ class PostgreSQLComponent {
     private static final String GET_COLLECTION_BY_SYSTEM_ID =
             "SELECT collection FROM lddb where id = ?"
 
+    private static final String GET_MAINENTITY_TYPE_BY_SYSTEM_ID =
+            "SELECT data#>>'{@graph,1,@type}' FROM lddb WHERE id = ?"
+
     /** This query does the same as LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM lddb"
         but much faster because postgres does not yet have 'loose indexscan' aka 'index skip scan'
         https://wiki.postgresql.org/wiki/Loose_indexscan' */
@@ -1928,6 +1931,32 @@ class PostgreSQLComponent {
 
             if (resultSet.next()) {
                 return resultSet.getString("collection")
+            }
+            return null
+        }
+        finally {
+            close(resultSet, selectStatement)
+        }
+    }
+
+    String getMainEntityTypeBySystemID(String id) {
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            return getMainEntityTypeBySystemID(id, connection)
+        }
+    }
+
+    String getMainEntityTypeBySystemID(String id, Connection connection) {
+        PreparedStatement selectStatement = null
+        ResultSet resultSet = null
+
+        try {
+            selectStatement = connection.prepareStatement(GET_MAINENTITY_TYPE_BY_SYSTEM_ID)
+            selectStatement.setString(1, id)
+            resultSet = selectStatement.executeQuery()
+
+            if (resultSet.next()) {
+                return resultSet.getString(1)
             }
             return null
         }

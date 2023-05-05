@@ -1,11 +1,9 @@
 package whelk.housekeeping
 
-
 import whelk.Whelk
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import whelk.history.DocumentVersion
-import whelk.history.History
 
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -26,7 +24,7 @@ class NotificationGenerator extends HouseKeeper {
     }
 
     public String getName() {
-        return "CXZ notifier generator"
+        return "Notifications generator"
     }
 
     public String getStatusDescription() {
@@ -87,7 +85,7 @@ class NotificationGenerator extends HouseKeeper {
             resultSet = statement.executeQuery()
             while (resultSet.next()) {
                 String id = resultSet.getString("id")
-                generateNoticesForChange(id, libraryToUsers, from.toInstant())
+                generateNoticesForChangedID(id, libraryToUsers, from.toInstant())
             }
 
         } catch (Throwable e) {
@@ -98,7 +96,7 @@ class NotificationGenerator extends HouseKeeper {
         }
     }
 
-    private void generateNoticesForChange(String id, Map libraryToUsers, Instant since) {
+    private void generateNoticesForChangedID(String id, Map libraryToUsers, Instant since) {
         // "versions" come sorted by ascending modification time, so oldest version first.
         // We want to pick the "from version" (the base for which this notice details changes)
         // as the last saved version *before* the sought interval.
@@ -115,23 +113,24 @@ class NotificationGenerator extends HouseKeeper {
         if (untilVersion == fromVersion)
             return
 
-        List<DocumentVersion> relevantVersions = []
-        relevantVersions.add(fromVersion)
-        relevantVersions.add(untilVersion)
+        List<Tuple2<String, String>> dependers = whelk.getStorage().followDependers(id, ["itemOf"])
+        dependers.add(new Tuple2(id, null)) // This ID too, not _only_ the dependers!
+        dependers.each {
+            String dependerID =  it[0]
+            String dependerMainEntityType = whelk.getStorage().getMainEntityTypeBySystemID(dependerID)
+            if (whelk.getJsonld().isSubClassOf(dependerMainEntityType, "Instance")) {
+                generateNoticesForAffectedInstance(dependerID, libraryToUsers, fromVersion, untilVersion)
+            }
+        }
 
-        System.err.println("Was changed: " + id + " spans: " + fromVersion.doc.getModified() + " -> " + untilVersion.doc.getModified())
+    }
 
-        History history = new History(relevantVersions, whelk.getJsonld())
-
-        Map changes = history.m_changeSetsMap
-        System.err.println(changes)
-        //System.err.println("added:\n\t" + changes.addedPaths)
-        //System.err.println("removed:\n\t" + changes.removedPaths)
-
-        // TODO: Om id är i 'auth' gör istället allt nedan för beroende (och embellished!) instanser
-
+    /**
+     * Generate notice for a bibliographic instance. Beware: fromVersion and untilVersion may not be
+     * _of this document_ (id), but rather of a document this instance depends on!
+     */
+    private void generateNoticesForAffectedInstance(String id, Map libraryToUsers, DocumentVersion fromVersion, DocumentVersion untilVersion) {
         List<String> libraries = whelk.getStorage().getAllLibrariesHolding(id)
-
         for (String library : libraries) {
             List<Map> users = (List<Map>) libraryToUsers[library]
             if (users) {
@@ -148,6 +147,19 @@ class NotificationGenerator extends HouseKeeper {
 			        }
                      */
                     //System.err.println("" + user["id"].toString() + " has requested updates for " + library)
+
+                    /*List<DocumentVersion> relevantVersions = []
+                    relevantVersions.add(fromVersion)
+                    relevantVersions.add(untilVersion)*/
+
+                    /*System.err.println("Was changed: " + id + " spans: " + fromVersion.doc.getModified() + " -> " + untilVersion.doc.getModified())
+
+                    History history = new History(relevantVersions, whelk.getJsonld())
+
+                    Map changes = history.m_changeSetsMap
+                    System.err.println(changes)*/
+
+                    Map changes = ["STILL":"TODO"]
 
                     if (changeMatchesAnyTrigger(fromVersion, untilVersion, user)) {
                         whelk.getStorage().insertNotification(untilVersion.versionID, user["id"].toString(), changes)
@@ -166,60 +178,4 @@ class NotificationGenerator extends HouseKeeper {
         return true
     }
 
-
-    //zonedFrom = ZonedDateTime.parse(from);
-    //zonedUntil = ZonedDateTime.parse(until);
-    /*public void generate(ZonedDateTime zonedFrom, ZonedDateTime zonedUntil) throws SQLException {
-
-        Connection connection;
-        PreparedStatement statement;
-        ResultSet resultSet;
-
-        connection = whelk.getStorage().getOuterConnection();
-        try {
-            String sql = "SELECT id FROM lddb WHERE collection IN ('bib', 'auth', 'hold') AND ( modified BETWEEN ? AND ? );";
-            connection.setAutoCommit(false);
-            statement = connection.prepareStatement(sql);
-            statement.setTimestamp(1, new Timestamp(zonedFrom.toInstant().getEpochSecond() * 1000L));
-            statement.setTimestamp(2, new Timestamp(zonedUntil.toInstant().getEpochSecond() * 1000L));
-            statement.setFetchSize(512);
-            resultSet = statement.executeQuery();
-        } catch (Throwable e) {
-            connection.close();
-            throw e;
-        }
-    }*/
-
-
 }
-
-
-/*
-       if (fromVersion < 0 || fromVersion >= untilVersion)
-        return // error out
-
-    // We don't need all versions, just specifically the starting and end point of the
-    // sought interval.
-    List<DocumentVersion> versions = whelk.getStorage().loadDocumentHistory(id)
-    List<DocumentVersion> relevantVersions = []
-    relevantVersions.add(versions.get(fromVersion))
-    relevantVersions.add(versions.get(untilVersion))
-
-    History history = new History(relevantVersions, whelk.getJsonld())
-    Map changes = history.m_changeSetsMap.changeSets[1]
-    System.err.println("added:\n\t" + changes.addedPaths)
-    System.err.println("removed:\n\t" + changes.removedPaths)
- */
-
-
-/*
-void doGet(HttpServletRequest request, HttpServletResponse response) {
-{
-    Map userInfo = request.getAttribute("user")
-    if (!isValidUserWithPermission(request, response, userInfo))
-        return
-
-    String id = "${userInfo.id}".digest(ID_HASH_FUNCTION)
-    String data = whelk.getUserData(id) ?: upgradeOldEmailBasedEntry(userInfo) ?: "{}"
-}
- */
