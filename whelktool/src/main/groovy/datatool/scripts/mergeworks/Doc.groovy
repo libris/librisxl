@@ -201,6 +201,10 @@ class Doc {
         }
     }
 
+    boolean isTactile() {
+        asList(getWork()['contentType']).contains(['@id': 'https://id.kb.se/term/rda/TactileText'])
+    }
+
     void addComparisonProps() {
         if (hasDistinguishingEdition()) {
             addToWork('editionStatement')

@@ -56,6 +56,7 @@ class WorkToolJob {
                 && !doc.hasPart()
                 && (doc.encodingLevel() != 'marc:PartialPreliminaryLevel' && doc.encodingLevel() != 'marc:PrepublicationLevel'))
                 && !doc.hasRelationshipWithContribution()
+                && !doc.isTactile()
     }
 
     void show() {
