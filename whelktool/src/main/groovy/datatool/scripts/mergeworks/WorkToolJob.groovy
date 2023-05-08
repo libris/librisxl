@@ -144,13 +144,23 @@ class WorkToolJob {
                     multiWorkClusters.add(works.collect { [new Doc(whelk, it.doc)] + it.derivedFrom })
                 }
 
-                def multiInstanceWorks = works.findAll { it.derivedFrom.size() > 1 || it instanceof UpdatedWork }
-                def storedWorks = multiInstanceWorks.each { store(it) }
+                def thingIds = []
+                def multiInstanceWorks = works.findAll {
+                    if (it.derivedFrom.size() > 1 || it instanceof UpdatedWork) {
+                        thingIds.add(it.doc.getThingIdentifiers().first())
+                        return true
+                    }
+                    thingIds.add(it.derivedFrom.first().doc.getThingIdentifiers().first())
+                    false
+                }.each {
+                    Util.addCloseMatch(it.doc.data['@graph'][1], thingIds)
+                    store(it)
+                }
 
-                String report = htmlReport(titles, storedWorks)
+                String report = htmlReport(titles, multiInstanceWorks)
 
 //                new File(reportDir, "${Html.clusterId(cluster)}.html") << report
-                storedWorks.each {
+                multiInstanceWorks.each {
                     if (it instanceof NewWork) {
                         s.increment('num derivedFrom (new works)', "${it.derivedFrom.size()}", it.doc.shortId)
                     } else if (it instanceof UpdatedWork) {

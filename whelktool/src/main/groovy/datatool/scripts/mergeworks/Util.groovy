@@ -23,7 +23,8 @@ class Util {
         PHOTOGRAPHER('https://id.kb.se/relator/photographer'),
         EDITOR('https://id.kb.se/relator/editor'),
         UNSPECIFIED_CONTRIBUTOR('https://id.kb.se/relator/unspecifiedContributor'),
-        PRIMARY_RIGHTS_HOLDER('https://id.kb.se/relator/primaryRightsHolder')
+        PRIMARY_RIGHTS_HOLDER('https://id.kb.se/relator/primaryRightsHolder'),
+        ABRIDGER('https://id.kb.se/relator/abridger')
 
         String iri
 
@@ -41,7 +42,7 @@ class Util {
             .readLines().grep().collect(Util.&normalize) as Set
 
     static def noise =
-            [",", '"', "'", "ʹ", '[', ']', ',', '.', '.', ':', ';', '-', '(', ')', ' the ', '-', '–', '+', '!', '?', ].collectEntries { [it, ' '] }
+            [",", '"', "'", "ʹ", '[', ']', ',', '.', '.', ':', ';', '-', '(', ')', ' the ', '-', '–', '+', '!', '?',].collectEntries { [it, ' '] }
 
 
     static List asList(Object o) {
@@ -280,6 +281,13 @@ class Util {
 
         localName && variants.any {
             name(it) && localName == name(it)
+        }
+    }
+
+    static def addCloseMatch(Map thing, List ids) {
+        def closeMatch = (asList(thing['closeMatch']) + (ids - thing['@id']).collect { ['@id': it] }).unique()
+        if (closeMatch) {
+            thing['closeMatch'] = closeMatch
         }
     }
 }
