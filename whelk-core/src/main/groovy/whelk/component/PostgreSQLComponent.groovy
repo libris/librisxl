@@ -131,6 +131,37 @@ class PostgreSQLComponent {
             FROM unnest(?) AS in_id, lddb l 
             WHERE in_id = l.id
             """.stripIndent()
+
+    private static final String BULK_LOAD_DOCUMENTS_AS_OF = """
+            SELECT
+                id, data, created, modified, deleted
+            FROM
+                lddb__versions v, unnest(?) AS in_id
+            WHERE
+                in_id = v.id
+                AND v.pk =
+                (
+                SELECT
+                    pk
+                FROM
+                    lddb__versions
+                WHERE
+                    id = v.id
+                    AND GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) <= ?
+                ORDER BY GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) DESC
+                limit 1
+                )
+            """.stripIndent()
+
+    private static final String GET_DOCUMENT_AS_OF = """
+            SELECT id, data, created, modified, deleted
+            FROM lddb__versions
+            WHERE id = ?
+            AND
+            GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) <= ?
+            ORDER BY GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) DESC
+            limit 1
+            """.stripIndent()
     
     private static final String GET_EMBELLISHED_DOCUMENT =
             "SELECT data from lddb__embellished where id = ?"
@@ -158,7 +189,7 @@ class PostgreSQLComponent {
             """.stripIndent()
 
     private static final String GET_ALL_DOCUMENT_VERSIONS = """
-            SELECT id, data, deleted, created, modified, changedBy, changedIn, pk
+            SELECT id, data, deleted, created, modified, changedBy, changedIn, pk, GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) as modTime
             FROM lddb__versions
             WHERE id = ? 
             ORDER BY GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) ASC
@@ -1974,6 +2005,10 @@ class PostgreSQLComponent {
         return load(id, null)
     }
 
+    Document loadAsOf(String id, Timestamp asOf) {
+        return loadFromSql(GET_DOCUMENT_AS_OF, [1: id, 2: asOf])
+    }
+
     Document load(String id, String version) {
         Document doc
         if (version && version.isInteger()) {
@@ -1993,21 +2028,40 @@ class PostgreSQLComponent {
         return doc
     }
     
-    Map<String, Document> bulkLoad(Iterable<String> systemIds) {
+    Map<String, Document> bulkLoad(Iterable<String> systemIds, Instant asOf = null) {
         return withDbConnection {
             Connection connection = getMyConnection()
             PreparedStatement preparedStatement = null
             ResultSet rs = null
             try {
-                preparedStatement = connection.prepareStatement(BULK_LOAD_DOCUMENTS)
-                preparedStatement.setArray(1,  connection.createArrayOf("TEXT", systemIds as String[]))
 
-                rs = preparedStatement.executeQuery()
-                SortedMap<String, Document> result = new TreeMap<>()
-                while(rs.next()) {
-                    result[rs.getString("id")] = assembleDocument(rs)
+                // The latest version of every document
+                if(asOf == null) {
+                    preparedStatement = connection.prepareStatement(BULK_LOAD_DOCUMENTS)
+                    preparedStatement.setArray(1, connection.createArrayOf("TEXT", systemIds as String[]))
+
+                    rs = preparedStatement.executeQuery()
+                    SortedMap<String, Document> result = new TreeMap<>()
+                    while (rs.next()) {
+                        result[rs.getString("id")] = assembleDocument(rs)
+                    }
+                    return result
+                } else { // Every document as it looked at time 'asOf'
+                    preparedStatement = connection.prepareStatement(BULK_LOAD_DOCUMENTS_AS_OF)
+                    preparedStatement.setArray(1, connection.createArrayOf("TEXT", systemIds as String[]))
+                    preparedStatement.setTimestamp(2, Timestamp.from(asOf))
+
+                    System.err.println(preparedStatement)
+
+                    rs = preparedStatement.executeQuery()
+                    SortedMap<String, Document> result = new TreeMap<>()
+                    while (rs.next()) {
+                        result[rs.getString("id")] = assembleDocument(rs)
+                    }
+                    System.err.println(" ** GAVE: " + result)
+                    return result
                 }
-                return result
+
             } finally {
                 close(rs, preparedStatement)
             }
@@ -2433,6 +2487,9 @@ class PostgreSQLComponent {
                     if (items.value instanceof Long) {
                         selectstmt.setLong((Integer) items.key, (Long) items.value)
                     }
+                    if (items.value instanceof Timestamp) {
+                        selectstmt.setTimestamp((Integer) items.key, (Timestamp) items.value)
+                    }
                 }
                 log.trace("Executing query")
                 rs = selectstmt.executeQuery()
@@ -2498,7 +2555,7 @@ class PostgreSQLComponent {
                 while (rs.next()) {
                     def doc = assembleDocument(rs)
                     doc.version = v++
-                    docList.add(new DocumentVersion(doc, rs.getString("changedBy"), rs.getString("changedIn"), rs.getInt("pk")))
+                    docList.add(new DocumentVersion(doc, rs.getString("changedBy"), rs.getString("changedIn"), rs.getInt("pk"), rs.getTimestamp("modTime")))
                 }
             } finally {
                 close(rs, selectstmt)

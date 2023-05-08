@@ -1,5 +1,6 @@
 package whelk.housekeeping
 
+import whelk.Document
 import whelk.Whelk
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
@@ -158,7 +159,7 @@ class NotificationGenerator extends HouseKeeper {
                         ]
                     }*/
 
-                    List<String> triggered = changeMatchesAnyTrigger(fromVersion, untilVersion, user, library)
+                    List<String> triggered = changeMatchesAnyTrigger(id, fromVersion, untilVersion, user, library)
                     if (triggered) {
                         whelk.getStorage().insertNotification(untilVersion.versionID, user["id"].toString(), ["triggered" : triggered])
                         System.err.println("STORED NOTICE FOR USER " + user["id"].toString() + " version: " + untilVersion.versionID)
@@ -178,7 +179,7 @@ class NotificationGenerator extends HouseKeeper {
      *
      * Returns the URIs of all triggered rules/triggers.
      */
-    private static List<String> changeMatchesAnyTrigger(DocumentVersion fromVersion, DocumentVersion untilVersion, Map user, String library) {
+    private List<String> changeMatchesAnyTrigger(String instanceId, DocumentVersion fromVersion, DocumentVersion untilVersion, Map user, String library) {
 
         List<String> triggeredTriggers = []
 
@@ -202,7 +203,7 @@ class NotificationGenerator extends HouseKeeper {
                 if (! triggerObject instanceof String)
                     return
                 String triggerUri = (String) triggerObject
-                if (triggerIsTriggered(fromVersion, untilVersion, triggerUri))
+                if (triggerIsTriggered(instanceId, fromVersion, untilVersion, triggerUri))
                     triggeredTriggers.add(triggerUri)
             }
         }
@@ -211,15 +212,89 @@ class NotificationGenerator extends HouseKeeper {
     }
 
     /**
-     * Do the changes between 'fromVersion' and 'untilVersion' qualify to trigger 'triggerUri' ?
+     * Do the changes between 'fromVersion' and 'untilVersion' affect 'instanceId' in such a way as to qualify 'triggerUri' triggered?
      */
-    private static boolean triggerIsTriggered(DocumentVersion fromVersion, DocumentVersion untilVersion, String triggerUri) {
+    private boolean triggerIsTriggered(String instanceId, DocumentVersion fromVersion, DocumentVersion untilVersion, String triggerUri) {
         switch (triggerUri) {
             case "https://id.kb.se/notificationtriggers/primarycontribution":
+                //whelk.getStorage().load
+                //whelk.embellish()
+                //fromVersion.
+                //Document from = fromVersion.doc.clone()
+                //Document until = untilVersion.doc.clone()
+
+                Document affectedInstance = whelk.getStorage().loadAsOf(instanceId, fromVersion.versionWriteTime)
+
+                // If a depender is created after a dependency, it will ofc not have existed at the original writing time
+                // of the dependency, if so, simply load the first available version of the depender.
+                if (affectedInstance == null)
+                    affectedInstance = whelk.getStorage().load(instanceId, "0")
+
+                //System.err.println("**** Loaded historic version of INSTANCE: " + affectedInstance.getDataAsString())
+
+                historicEmbellish(affectedInstance, ["instanceOf", "contribution", "agent"], fromVersion.versionWriteTime.toInstant())
                 return true
                 break
         }
         return false
+    }
+
+    /**
+     * This is a simplified/specialized from of 'embellish', for historic data and using only select properties.
+     * The full general embellish code can not help us here, because it is based on the idea of cached cards,
+     * which can (and must!) only cache the latest/current data for each card, which isn't what we need here
+     * (we need to embellish older historic data).
+     */
+    private historicEmbellish(Document doc, List<String> properties, Instant asOf) {
+        List graphList = doc.data["@graph"]
+
+        System.err.println("**** WILL NOW SCAN FOR LINKS:\n\t" + doc.getDataAsString())
+
+        Set uris = findLinkedURIs(graphList, properties)
+
+        System.err.println("\tFound links (with chosen properties): " + uris)
+
+        Map<String, Document> linkedDocumentsByUri = whelk.bulkLoad(uris, asOf)
+
+        //System.err.println("Was able to fetch historic data for: " + linkedDocumentsByUri.keySet())
+    }
+
+    private Set<String> findLinkedURIs(Object node, List<String> properties) {
+        Set<String> uris = []
+        if (node instanceof List) {
+            for (Object element : node) {
+                uris.addAll(findLinkedURIs(element, properties))
+            }
+        }
+        else if (node instanceof Map) {
+            for (String key : node.keySet()) {
+                if (properties.contains(key)) {
+                    uris.addAll(getLinkIfAny(node[key]))
+                }
+                uris.addAll(findLinkedURIs(node[key], properties))
+            }
+        }
+        return uris
+    }
+
+    private List<String> getLinkIfAny(Object node) {
+        System.err.println("\tCHECK getLinkIfAny with " + node)
+        List<String> uris = []
+        if (node instanceof Map) {
+            if (node.containsKey("@id")) {
+                uris.add((String) node["@id"])
+            }
+        }
+        if (node instanceof List) {
+            for (Object element : node) {
+                if (element instanceof Map) {
+                    if (element.containsKey("@id")) {
+                        uris.add((String) element["@id"])
+                    }
+                }
+            }
+        }
+        return uris
     }
 
 }
