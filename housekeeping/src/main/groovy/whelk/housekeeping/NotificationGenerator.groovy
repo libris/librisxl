@@ -1,6 +1,7 @@
 package whelk.housekeeping
 
 import whelk.Document
+import whelk.JsonLd
 import whelk.Whelk
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
@@ -159,9 +160,11 @@ class NotificationGenerator extends HouseKeeper {
                         ]
                     }*/
 
-                    List<String> triggered = changeMatchesAnyTrigger(id, fromVersion, untilVersion, user, library)
+                    List<String> triggered = changeMatchesAnyTrigger(
+                            id, fromVersion.versionWriteTime.toInstant(),
+                            untilVersion.versionWriteTime.toInstant(), user, library)
                     if (triggered) {
-                        whelk.getStorage().insertNotification(untilVersion.versionID, user["id"].toString(), ["triggered" : triggered])
+                        whelk.getStorage().insertNotification(untilVersion.versionID, user["id"].toString(), ["triggered" : triggered]) // TODO: Use until as created time!!
                         System.err.println("STORED NOTICE FOR USER " + user["id"].toString() + " version: " + untilVersion.versionID)
                     }
                 }
@@ -170,16 +173,16 @@ class NotificationGenerator extends HouseKeeper {
     }
 
     /**
-     * '*version' parameters are the two relevant versions (before and after).
+     * 'from' and 'until' are the instants of writing for the changed record (the previous and current versions)
      * 'user' is the user-data map for a user (which includes their selection of triggers).
      * 'library' is a library ("sigel") holding the instance in question.
      *
-     * This function answers the question: Has 'user' requested to be notified of the change between
-     * 'fromVersion' and 'untilVersion' for instances held by 'library'?
+     * This function answers the question: Has 'user' requested to be notified of the occurred changes between
+     * 'from' and 'until' for instances held by 'library'?
      *
      * Returns the URIs of all triggered rules/triggers.
      */
-    private List<String> changeMatchesAnyTrigger(String instanceId, DocumentVersion fromVersion, DocumentVersion untilVersion, Map user, String library) {
+    private List<String> changeMatchesAnyTrigger(String instanceId, Instant from, Instant until, Map user, String library) {
 
         List<String> triggeredTriggers = []
 
@@ -203,7 +206,7 @@ class NotificationGenerator extends HouseKeeper {
                 if (! triggerObject instanceof String)
                     return
                 String triggerUri = (String) triggerObject
-                if (triggerIsTriggered(instanceId, fromVersion, untilVersion, triggerUri))
+                if (triggerIsTriggered(instanceId, from, until, triggerUri))
                     triggeredTriggers.add(triggerUri)
             }
         }
@@ -212,29 +215,42 @@ class NotificationGenerator extends HouseKeeper {
     }
 
     /**
-     * Do the changes between 'fromVersion' and 'untilVersion' affect 'instanceId' in such a way as to qualify 'triggerUri' triggered?
+     * Do changes to the graph between times 'from' and 'until' affect 'instanceId' in such a way as to qualify 'triggerUri' triggered?
      */
-    private boolean triggerIsTriggered(String instanceId, DocumentVersion fromVersion, DocumentVersion untilVersion, String triggerUri) {
+    private boolean triggerIsTriggered(String instanceId, Instant from, Instant until, String triggerUri) {
+
+        // Load the two versions (old/new) of the instance
+        Document instanceBeforeChange = whelk.getStorage().loadAsOf(instanceId, Timestamp.from(from))
+        // If a depender is created after a dependency, it will ofc not have existed at the original writing time
+        // of the dependency, if so, simply load the first available version of the depender.
+        if (instanceBeforeChange == null)
+            instanceBeforeChange = whelk.getStorage().load(instanceId, "0")
+        Document instanceAfterChange = whelk.getStorage().loadAsOf(instanceId, Timestamp.from(until))
+
         switch (triggerUri) {
-            case "https://id.kb.se/notificationtriggers/primarycontribution":
-                //whelk.getStorage().load
-                //whelk.embellish()
-                //fromVersion.
-                //Document from = fromVersion.doc.clone()
-                //Document until = untilVersion.doc.clone()
 
-                Document affectedInstance = whelk.getStorage().loadAsOf(instanceId, fromVersion.versionWriteTime)
+            case "https://id.kb.se/notificationtriggers/primarycontribution": {
+                // Embellish both the new and old versions with historic dependencies from their respective times
+                historicEmbellish(instanceBeforeChange, ["instanceOf", "contribution", "agent"], from, 2)
+                historicEmbellish(instanceAfterChange, ["instanceOf", "contribution", "agent"], until, 2)
 
-                // If a depender is created after a dependency, it will ofc not have existed at the original writing time
-                // of the dependency, if so, simply load the first available version of the depender.
-                if (affectedInstance == null)
-                    affectedInstance = whelk.getStorage().load(instanceId, "0")
+                Object contributionsBefore = Document._get(["mainEntity", "instanceOf", "contribution"], instanceBeforeChange.data)
+                Object contributionsAfter = Document._get(["mainEntity", "instanceOf", "contribution"], instanceAfterChange.data)
 
-                //System.err.println("**** Loaded historic version of INSTANCE: " + affectedInstance.getDataAsString())
+                if (contributionsBefore == null || contributionsAfter == null || ! contributionsBefore instanceof List || !contributionsAfter instanceof List)
+                    return false
 
-                historicEmbellish(affectedInstance, ["instanceOf", "contribution", "agent"], fromVersion.versionWriteTime.toInstant())
-                return true
+                for (Object contrBefore : contributionsBefore) {
+                    for (Object contrAfter : contributionsAfter) {
+                        if (contrBefore["@type"].equals("PrimaryContribution") && contrAfter["@type"].equals("PrimaryContribution") ) {
+                            if (!contrBefore.equals(contrAfter))
+                                return true
+                        }
+                    }
+                }
                 break
+            }
+
         }
         return false
     }
@@ -244,19 +260,27 @@ class NotificationGenerator extends HouseKeeper {
      * The full general embellish code can not help us here, because it is based on the idea of cached cards,
      * which can (and must!) only cache the latest/current data for each card, which isn't what we need here
      * (we need to embellish older historic data).
+     *
+     * 'passes' means the number of times to collect URIs and expand the document. In practice it is the limit
+     * of "number of links" away we can look.
+     *
+     * This function mutates docToEmbellish
      */
-    private historicEmbellish(Document doc, List<String> properties, Instant asOf) {
-        List graphList = doc.data["@graph"]
+    private historicEmbellish(Document docToEmbellish, List<String> properties, Instant asOf, int passes) {
+        List graphListToEmbellish = docToEmbellish.data["@graph"]
 
-        System.err.println("**** WILL NOW SCAN FOR LINKS:\n\t" + doc.getDataAsString())
+        for (int i = 0; i < passes; ++i) {
+            Set uris = findLinkedURIs(graphListToEmbellish, properties)
 
-        Set uris = findLinkedURIs(graphList, properties)
+            Map<String, Document> linkedDocumentsByUri = whelk.bulkLoad(uris, asOf)
+            linkedDocumentsByUri.each {
+                List linkedGraphList = it.value.data["@graph"]
+                if (linkedGraphList.size() > 1)
+                    graphListToEmbellish.add(linkedGraphList[1])
+            }
+        }
 
-        System.err.println("\tFound links (with chosen properties): " + uris)
-
-        Map<String, Document> linkedDocumentsByUri = whelk.bulkLoad(uris, asOf)
-
-        //System.err.println("Was able to fetch historic data for: " + linkedDocumentsByUri.keySet())
+        docToEmbellish.data = JsonLd.frame(docToEmbellish.getCompleteId(), docToEmbellish.data)
     }
 
     private Set<String> findLinkedURIs(Object node, List<String> properties) {
@@ -278,7 +302,6 @@ class NotificationGenerator extends HouseKeeper {
     }
 
     private List<String> getLinkIfAny(Object node) {
-        System.err.println("\tCHECK getLinkIfAny with " + node)
         List<String> uris = []
         if (node instanceof Map) {
             if (node.containsKey("@id")) {

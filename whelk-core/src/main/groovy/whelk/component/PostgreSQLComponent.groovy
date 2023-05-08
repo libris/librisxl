@@ -2051,14 +2051,11 @@ class PostgreSQLComponent {
                     preparedStatement.setArray(1, connection.createArrayOf("TEXT", systemIds as String[]))
                     preparedStatement.setTimestamp(2, Timestamp.from(asOf))
 
-                    System.err.println(preparedStatement)
-
                     rs = preparedStatement.executeQuery()
                     SortedMap<String, Document> result = new TreeMap<>()
                     while (rs.next()) {
                         result[rs.getString("id")] = assembleDocument(rs)
                     }
-                    System.err.println(" ** GAVE: " + result)
                     return result
                 }
 
