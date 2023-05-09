@@ -86,9 +86,12 @@ class NotificationGenerator extends HouseKeeper {
             statement.setTimestamp(2, until)
             statement.setFetchSize(512)
             resultSet = statement.executeQuery()
+            // If both an instance and one of it's dependencies are affected within the same interval, we will
+            // (without this check) try to generate notifications for said instance twice.
+            Set affectedInstanceIDs = []
             while (resultSet.next()) {
                 String id = resultSet.getString("id")
-                generateNotificationsForChangedID(id, libraryToUsers, from.toInstant())
+                generateNotificationsForChangedID(id, libraryToUsers, from.toInstant(), until.toInstant(), affectedInstanceIDs)
             }
 
             // Finally, clean out any notifications that are too old
@@ -105,7 +108,7 @@ class NotificationGenerator extends HouseKeeper {
         }
     }
 
-    private void generateNotificationsForChangedID(String id, Map libraryToUsers, Instant since) {
+    private void generateNotificationsForChangedID(String id, Map libraryToUsers, Instant since, Instant until, Set affectedInstanceIDs) {
         // "versions" come sorted by ascending modification time, so oldest version first.
         // We want to pick the "from version" (the base for which this notice details changes)
         // as the last saved version *before* the sought interval.
@@ -128,7 +131,11 @@ class NotificationGenerator extends HouseKeeper {
             String dependerID =  it[0]
             String dependerMainEntityType = whelk.getStorage().getMainEntityTypeBySystemID(dependerID)
             if (whelk.getJsonld().isSubClassOf(dependerMainEntityType, "Instance")) {
-                generateNotificationsForAffectedInstance(dependerID, libraryToUsers, fromVersion, untilVersion)
+                // If we've not already created a notification for this instance!
+                if (!affectedInstanceIDs.contains(dependerID)) {
+                    affectedInstanceIDs.add(dependerID)
+                    generateNotificationsForAffectedInstance(dependerID, libraryToUsers, fromVersion, untilVersion, until)
+                }
             }
         }
 
@@ -138,7 +145,8 @@ class NotificationGenerator extends HouseKeeper {
      * Generate notice for a bibliographic instance. Beware: fromVersion and untilVersion may not be
      * _of this document_ (id), but rather of a document this instance depends on!
      */
-    private void generateNotificationsForAffectedInstance(String id, Map libraryToUsers, DocumentVersion fromVersion, DocumentVersion untilVersion) {
+    private void generateNotificationsForAffectedInstance(String id, Map libraryToUsers, DocumentVersion fromVersion,
+                                                          DocumentVersion untilVersion, Instant creationTime) {
         List<String> libraries = whelk.getStorage().getAllLibrariesHolding(id)
         for (String library : libraries) {
             List<Map> users = (List<Map>) libraryToUsers[library]
@@ -162,13 +170,13 @@ class NotificationGenerator extends HouseKeeper {
 
                     List<String> triggered = changeMatchesAnyTrigger(
                             id, fromVersion.versionWriteTime.toInstant(),
-                            untilVersion.versionWriteTime.toInstant(), user, library)
+                            creationTime, user, library)
                     if (triggered) {
                         whelk.getStorage().insertNotification(
                                 untilVersion.versionID, fromVersion.versionID,
                                 user["id"].toString(), ["triggered" : triggered],
-                                untilVersion.versionWriteTime)
-                        System.err.println("STORED NOTICE FOR USER " + user["id"].toString() + " version: " + untilVersion.versionID)
+                                Timestamp.from(creationTime))
+                        System.err.println("\tSTORED NOTICE FOR USER " + user["id"].toString() + " version: " + untilVersion.versionID + " created: " + creationTime)
                     }
                 }
             }
@@ -233,24 +241,45 @@ class NotificationGenerator extends HouseKeeper {
         switch (triggerUri) {
 
             case "https://id.kb.se/notificationtriggers/primarycontribution": {
-                // Embellish both the new and old versions with historic dependencies from their respective times
                 historicEmbellish(instanceBeforeChange, ["instanceOf", "contribution", "agent"], from)
                 historicEmbellish(instanceAfterChange, ["instanceOf", "contribution", "agent"], until)
 
                 Object contributionsBefore = Document._get(["mainEntity", "instanceOf", "contribution"], instanceBeforeChange.data)
                 Object contributionsAfter = Document._get(["mainEntity", "instanceOf", "contribution"], instanceAfterChange.data)
 
-                if (contributionsBefore == null || contributionsAfter == null || ! contributionsBefore instanceof List || !contributionsAfter instanceof List)
+                if (contributionsBefore == null || contributionsAfter == null || ! contributionsBefore instanceof List || ! contributionsAfter instanceof List)
                     return false
 
                 for (Object contrBefore : contributionsBefore) {
                     for (Object contrAfter : contributionsAfter) {
                         if (contrBefore["@type"].equals("PrimaryContribution") && contrAfter["@type"].equals("PrimaryContribution") ) {
-                            if (!contrBefore.equals(contrAfter))
-                                return true
+                            if ( contributionsBefore["agent"] != null && contributionsAfter["agent"] != null) {
+                                if (
+                                        contributionsBefore["agent"]["familyName"] != contributionsAfter["agent"]["familyName"] ||
+                                        contributionsBefore["agent"]["givenName"] != contributionsAfter["agent"]["givenName"] ||
+                                        contributionsBefore["agent"]["lifeSpan"] != contributionsAfter["agent"]["lifeSpan"]
+                                )
+                                    return true
+                            }
                         }
                     }
                 }
+                break
+            }
+
+            case "https://id.kb.se/notificationtriggers/worktitle": {
+                historicEmbellish(instanceBeforeChange, ["instanceOf", "hasTitle"], from)
+                historicEmbellish(instanceAfterChange, ["instanceOf", "hasTitle"], until)
+
+                Object titlesBefore = Document._get(["mainEntity", "instanceOf", "hasTitle"], instanceBeforeChange.data)
+                Object titlesAfter = Document._get(["mainEntity", "instanceOf", "hasTitle"], instanceAfterChange.data)
+
+                if (titlesBefore == null || titlesAfter == null || ! titlesBefore instanceof List || ! titlesAfter instanceof List)
+                    return false
+
+                if (titlesAfter as Set != titlesBefore as Set)
+                    return true
+
                 break
             }
 
