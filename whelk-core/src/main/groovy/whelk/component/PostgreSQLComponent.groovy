@@ -437,12 +437,12 @@ class PostgreSQLComponent {
             """.stripIndent()
 
     private static final String INSERT_NOTIFICATION = """
-            INSERT INTO lddb__notifications (versionid, userid, changes)
-            VALUES (?, ?, ?)
+            INSERT INTO lddb__notifications (versionid, baseversionid, userid, triggers, created)
+            VALUES (?, ?, ?, ?, ?)
             """.stripIndent()
 
     private static final String GET_NOTICFICATIONS_FOR_USER = """
-            SELECT n.pk, n.changes, n.handled, v.data#>>'{@graph,1,@id}' thingid
+            SELECT n.pk, n.triggers, n.handled, v.data#>>'{@graph,1,@id}' thingid
             FROM lddb__notifications n
             LEFT JOIN lddb__versions v
             ON n.versionid = v.pk
@@ -1472,7 +1472,7 @@ class PostgreSQLComponent {
                     Map notification = [
                             "notificationID": rs.getInt("pk"),
                             "mainEntityID" : rs.getString("thingid"),
-                            "reason" : mapper.readValue(rs.getString("changes"), Map),
+                            "triggers" : mapper.readValue(rs.getString("triggers"), Map),
                             "handled" : rs.getBoolean("handled")
                     ]
                     results.add(notification)
@@ -1484,15 +1484,17 @@ class PostgreSQLComponent {
         }
     }
 
-    boolean insertNotification(int versionID, String userID, Map changes) {
+    boolean insertNotification(int versionID, int baseVersionID, String userID, Map triggers, Timestamp time) {
         return withDbConnection {
             Connection connection = getMyConnection()
             PreparedStatement preparedStatement = null
             try {
                 preparedStatement = connection.prepareStatement(INSERT_NOTIFICATION)
                 preparedStatement.setInt(1, versionID)
-                preparedStatement.setString(2, userID)
-                preparedStatement.setObject(3, mapper.writeValueAsString(changes), OTHER)
+                preparedStatement.setInt(2, baseVersionID)
+                preparedStatement.setString(3, userID)
+                preparedStatement.setObject(4, mapper.writeValueAsString(triggers), OTHER)
+                preparedStatement.setTimestamp(5, time)
                 return (preparedStatement.executeUpdate() == 1)
             } finally {
                 close(preparedStatement)

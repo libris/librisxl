@@ -26,13 +26,15 @@ UPDATE lddb__schema SET version = new_version;
 ALTER TABLE lddb__versions ADD UNIQUE (pk);
 CREATE TABLE IF NOT EXISTS lddb__notifications (
     pk SERIAL PRIMARY KEY,
-    versionid INTEGER,
-    userid TEXT,
-    changes jsonb not null,
-    handled BOOLEAN DEFAULT FALSE,
+    versionid INTEGER NOT NULL,
+    baseversionid INTEGER NOT NULL,
+    userid TEXT NOT NULL,
+    triggers jsonb NOT NULL,
+    handled BOOLEAN DEFAULT FALSE NOT NULL,
     created timestamp with time zone DEFAULT now() NOT NULL,
     
     CONSTRAINT version_fk FOREIGN KEY (versionid) REFERENCES lddb__versions(pk) ON DELETE CASCADE,
+    CONSTRAINT baseversion_fk FOREIGN KEY (baseversionid) REFERENCES lddb__versions(pk) ON DELETE CASCADE,
     CONSTRAINT user_fk FOREIGN KEY (userid) REFERENCES lddb__user_data(id) ON DELETE CASCADE
 );
 CREATE INDEX idx_notifications_user ON lddb__notifications USING BTREE (userid);

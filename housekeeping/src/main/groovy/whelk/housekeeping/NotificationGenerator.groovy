@@ -79,7 +79,7 @@ class NotificationGenerator extends HouseKeeper {
             Timestamp until = Timestamp.from(Instant.now())
 
             // Then fetch all changed IDs within that interval
-            sql = "SELECT id FROM lddb WHERE collection IN ('bib', 'auth') AND ( modified BETWEEN ? AND ? );"
+            sql = "SELECT id FROM lddb WHERE collection IN ('bib', 'auth') AND ( modified > ? AND modified <= ? );"
             connection.setAutoCommit(false)
             statement = connection.prepareStatement(sql)
             statement.setTimestamp(1, from)
@@ -164,7 +164,10 @@ class NotificationGenerator extends HouseKeeper {
                             id, fromVersion.versionWriteTime.toInstant(),
                             untilVersion.versionWriteTime.toInstant(), user, library)
                     if (triggered) {
-                        whelk.getStorage().insertNotification(untilVersion.versionID, user["id"].toString(), ["triggered" : triggered]) // TODO: Use until as created time!!
+                        whelk.getStorage().insertNotification(
+                                untilVersion.versionID, fromVersion.versionID,
+                                user["id"].toString(), ["triggered" : triggered],
+                                untilVersion.versionWriteTime)
                         System.err.println("STORED NOTICE FOR USER " + user["id"].toString() + " version: " + untilVersion.versionID)
                     }
                 }
@@ -231,8 +234,8 @@ class NotificationGenerator extends HouseKeeper {
 
             case "https://id.kb.se/notificationtriggers/primarycontribution": {
                 // Embellish both the new and old versions with historic dependencies from their respective times
-                historicEmbellish(instanceBeforeChange, ["instanceOf", "contribution", "agent"], from, 2)
-                historicEmbellish(instanceAfterChange, ["instanceOf", "contribution", "agent"], until, 2)
+                historicEmbellish(instanceBeforeChange, ["instanceOf", "contribution", "agent"], from)
+                historicEmbellish(instanceAfterChange, ["instanceOf", "contribution", "agent"], until)
 
                 Object contributionsBefore = Document._get(["mainEntity", "instanceOf", "contribution"], instanceBeforeChange.data)
                 Object contributionsAfter = Document._get(["mainEntity", "instanceOf", "contribution"], instanceAfterChange.data)
@@ -261,16 +264,17 @@ class NotificationGenerator extends HouseKeeper {
      * which can (and must!) only cache the latest/current data for each card, which isn't what we need here
      * (we need to embellish older historic data).
      *
-     * 'passes' means the number of times to collect URIs and expand the document. In practice it is the limit
-     * of "number of links" away we can look.
-     *
      * This function mutates docToEmbellish
      */
-    private historicEmbellish(Document docToEmbellish, List<String> properties, Instant asOf, int passes) {
+    private historicEmbellish(Document docToEmbellish, List<String> properties, Instant asOf) {
         List graphListToEmbellish = docToEmbellish.data["@graph"]
+        Set alreadyLoadedURIs = []
 
-        for (int i = 0; i < passes; ++i) {
+        for (int i = 0; i < properties.size(); ++i) {
             Set uris = findLinkedURIs(graphListToEmbellish, properties)
+            uris.removeAll(alreadyLoadedURIs)
+            if (uris.isEmpty())
+                break
 
             Map<String, Document> linkedDocumentsByUri = whelk.bulkLoad(uris, asOf)
             linkedDocumentsByUri.each {
@@ -278,6 +282,7 @@ class NotificationGenerator extends HouseKeeper {
                 if (linkedGraphList.size() > 1)
                     graphListToEmbellish.add(linkedGraphList[1])
             }
+            alreadyLoadedURIs.addAll(uris)
         }
 
         docToEmbellish.data = JsonLd.frame(docToEmbellish.getCompleteId(), docToEmbellish.data)
