@@ -17,6 +17,7 @@
 \u0445 <> ch ;
 
 # Щ щ šč (bulgariska: št)
+\u0429 } [:LowercaseLetter:] <> \u0160t ;
 \u0429 <> \u0160T ;
 \u0449 <> \u0161t ;
 

@@ -51,12 +51,14 @@ selectBySqlWhere(where) { bib ->
         return
     }
 
+    def coreTranslationOf = asList(translationOf)[0].subMap([TYPE, LANGUAGE])
+
     linkLangs(langLinker, work)
-    linkLangs(langLinker, translationOf)
+    linkLangs(langLinker, coreTranslationOf)
     linkLangs(langLinker, hasPart, asList(work[LANGUAGE]))
 
     def workLang = asList(work[LANGUAGE])
-    def trlOfLang = asList(asList(translationOf)[0][LANGUAGE])
+    def trlOfLang = asList(coreTranslationOf[LANGUAGE])
 
     if (!hasPart.any { it[HAS_TITLE] && it[LANGUAGE] }) {
         return
@@ -128,10 +130,10 @@ selectBySqlWhere(where) { bib ->
         if (p.keySet() in exceptShapes || asList(p[LANGUAGE]) == trlOfLang) {
             return
         }
-        p[TRANSLATION_OF] = translationOf
+        p[TRANSLATION_OF] = [coreTranslationOf]
     }
 
-    if (!work[HAS_TITLE]) {
+    if (!work[HAS_TITLE] && asList(translationOf) == [coreTranslationOf]) {
         work.remove(TRANSLATION_OF)
     }
 
