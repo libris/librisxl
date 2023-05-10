@@ -81,20 +81,20 @@ Map<String, List<String>> buildQuery(bib) {
     Map<String, List<String>> query = [
             "q"                 : ["*"],
             "@type"             : ["Instance"],
-            "hasTitle.mainTitle": [esSafe(title) + "~"],
+            "hasTitle.mainTitle": [esSafe(title)],
     ]
 
     insertLinkedAgents(bib)
     def card = bib.asCard(true)
 
-    def author = primaryContributor(card).collect{ esSafe(it) } //.collect{ it + "~" }
+    def author = primaryContributor(card).collect{ esSafe(it) }
     if (author) {
         query["or-instanceOf.contribution._str"] = author
         query["or-instanceOf.contribution.agent._str"] = author
         return query
     }
 
-    def allContributors = contributors(card).collect{ esSafe(it) } //.collect{ it + "~" }
+    def allContributors = contributors(card).collect{ esSafe(it) }
     if (allContributors) {
         query["or-instanceOf.contribution._str"] = allContributors
         query["or-instanceOf.contribution.agent._str"] = allContributors
