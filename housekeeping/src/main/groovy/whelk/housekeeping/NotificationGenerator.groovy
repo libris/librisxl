@@ -228,21 +228,21 @@ class NotificationGenerator extends HouseKeeper {
     /**
      * Do changes to the graph between times 'from' and 'until' affect 'instanceId' in such a way as to qualify 'triggerUri' triggered?
      */
-    private boolean triggerIsTriggered(String instanceId, Instant from, Instant until, String triggerUri) {
+    private boolean triggerIsTriggered(String instanceId, Instant before, Instant after, String triggerUri) {
 
         // Load the two versions (old/new) of the instance
-        Document instanceBeforeChange = whelk.getStorage().loadAsOf(instanceId, Timestamp.from(from))
+        Document instanceBeforeChange = whelk.getStorage().loadAsOf(instanceId, Timestamp.from(before))
         // If a depender is created after a dependency, it will ofc not have existed at the original writing time
         // of the dependency, if so, simply load the first available version of the depender.
         if (instanceBeforeChange == null)
             instanceBeforeChange = whelk.getStorage().load(instanceId, "0")
-        Document instanceAfterChange = whelk.getStorage().loadAsOf(instanceId, Timestamp.from(until))
+        Document instanceAfterChange = whelk.getStorage().loadAsOf(instanceId, Timestamp.from(after))
 
         switch (triggerUri) {
 
             case "https://id.kb.se/notificationtriggers/primarycontribution": {
-                historicEmbellish(instanceBeforeChange, ["instanceOf", "contribution", "agent"], from)
-                historicEmbellish(instanceAfterChange, ["instanceOf", "contribution", "agent"], until)
+                historicEmbellish(instanceBeforeChange, ["instanceOf", "contribution", "agent"], before)
+                historicEmbellish(instanceAfterChange, ["instanceOf", "contribution", "agent"], after)
 
                 Object contributionsBefore = Document._get(["mainEntity", "instanceOf", "contribution"], instanceBeforeChange.data)
                 Object contributionsAfter = Document._get(["mainEntity", "instanceOf", "contribution"], instanceAfterChange.data)
@@ -268,8 +268,8 @@ class NotificationGenerator extends HouseKeeper {
             }
 
             case "https://id.kb.se/notificationtriggers/worktitle": {
-                historicEmbellish(instanceBeforeChange, ["instanceOf", "hasTitle"], from)
-                historicEmbellish(instanceAfterChange, ["instanceOf", "hasTitle"], until)
+                historicEmbellish(instanceBeforeChange, ["instanceOf", "hasTitle"], before)
+                historicEmbellish(instanceAfterChange, ["instanceOf", "hasTitle"], after)
 
                 Object titlesBefore = Document._get(["mainEntity", "instanceOf", "hasTitle"], instanceBeforeChange.data)
                 Object titlesAfter = Document._get(["mainEntity", "instanceOf", "hasTitle"], instanceAfterChange.data)
