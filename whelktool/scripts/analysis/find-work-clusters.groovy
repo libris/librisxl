@@ -7,6 +7,9 @@ import java.text.SimpleDateFormat
 import java.util.concurrent.ConcurrentHashMap
 import se.kb.libris.Normalizers
 
+PrintWriter failedQueries = getReportWriter("failed-queries")
+PrintWriter tooLargeResult = getReportWriter("too-large-result")
+
 def yesterday = new SimpleDateFormat('yyyy-MM-dd').with { sdf ->
     Calendar.getInstance().with { c ->
         c.add(Calendar.DATE, -1)
@@ -44,13 +47,16 @@ def process = { bib ->
 
         List ids = queryIds(q).collect()
 
-        if (ids.size() > 1) {
+        if (ids.size() > 200) {
+            tooLargeResult.println("Results: ${ids.size()} Query: ${q}")
+        }
+        else if (ids.size() > 1) {
             visited.addAll(ids)
             println(ids.join('\t'))
         }
     }
     catch (Exception e) {
-        println(e)
+        failedQueries.println(e)
         e.printStackTrace()
         return
     }
