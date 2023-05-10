@@ -283,6 +283,22 @@ class NotificationGenerator extends HouseKeeper {
                 break
             }
 
+            case "https://id.kb.se/notificationtriggers/intendedaudience": {
+                historicEmbellish(instanceBeforeChange, ["instanceOf", "intendedAudience"], before)
+                historicEmbellish(instanceAfterChange, ["instanceOf", "intendedAudience"], after)
+
+                Object audienceBefore = Document._get(["mainEntity", "instanceOf", "intendedAudience"], instanceBeforeChange.data)
+                Object audienceAfter = Document._get(["mainEntity", "instanceOf", "intendedAudience"], instanceAfterChange.data)
+
+                if (audienceBefore == null || audienceAfter == null || ! audienceBefore instanceof List || ! audienceAfter instanceof List)
+                    return false
+
+                if (audienceAfter as Set != audienceBefore as Set)
+                    return true
+
+                break
+            }
+
         }
         return false
     }
