@@ -20,6 +20,8 @@ import javax.servlet.ServletOutputStream
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.HttpServletResponseWrapper
+import java.sql.Timestamp
+import java.time.Instant
 
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND
@@ -817,8 +819,8 @@ class CrudSpec extends Specification {
         }
         storage.loadDocumentHistory(_) >> {
             [
-                new DocumentVersion(new Document(['@graph': [['modified':'2022-02-02T12:00:00Z'], ['a': 'x']]]), "foo", "", 0),
-                new DocumentVersion(new Document(['@graph': [['modified':'2022-02-02T12:00:00Z'], ['a': 'y']]]), "bar", "", 0),
+                    new DocumentVersion(new Document(['@graph': [['modified':'2022-02-02T12:00:00Z'], ['a': 'x']]]), "foo", "", 0, Timestamp.from(Instant.EPOCH)),
+                    new DocumentVersion(new Document(['@graph': [['modified':'2022-02-02T12:00:00Z'], ['a': 'y']]]), "bar", "", 0, Timestamp.from(Instant.EPOCH)),
             ]
         }
 
