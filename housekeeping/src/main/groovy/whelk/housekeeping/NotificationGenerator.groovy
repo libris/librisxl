@@ -299,6 +299,25 @@ class NotificationGenerator extends HouseKeeper {
                 break
             }
 
+            case "https://id.kb.se/notificationtriggers/ddc": {
+                historicEmbellish(instanceBeforeChange, ["instanceOf", "classification"], before)
+                historicEmbellish(instanceAfterChange, ["instanceOf", "classification"], after)
+
+                Object classificationBefore = Document._get(["mainEntity", "instanceOf", "classification"], instanceBeforeChange.data)
+                Object classificationAfter = Document._get(["mainEntity", "instanceOf", "classification"], instanceAfterChange.data)
+
+                if (classificationBefore == null || classificationAfter == null || ! classificationBefore instanceof List || ! classificationAfter instanceof List)
+                    return false
+
+                if (
+                        classificationAfter.findAll( it -> it["@type"] == "ClassificationDdc" ) as Set !=
+                        classificationBefore.findAll( it -> it["@type"] == "ClassificationDdc" ) as Set
+                )
+                    return true
+
+                break
+            }
+
         }
         return false
     }
