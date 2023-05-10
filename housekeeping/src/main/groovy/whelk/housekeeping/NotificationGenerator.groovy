@@ -318,6 +318,47 @@ class NotificationGenerator extends HouseKeeper {
                 break
             }
 
+            case "https://id.kb.se/notificationtriggers/sab": {
+                historicEmbellish(instanceBeforeChange, ["instanceOf", "classification"], before)
+                historicEmbellish(instanceAfterChange, ["instanceOf", "classification"], after)
+
+                Object classificationBefore = Document._get(["mainEntity", "instanceOf", "classification"], instanceBeforeChange.data)
+                Object classificationAfter = Document._get(["mainEntity", "instanceOf", "classification"], instanceAfterChange.data)
+
+                if (classificationBefore == null || classificationAfter == null || ! classificationBefore instanceof List || ! classificationAfter instanceof List)
+                    return false
+
+                Collection sabBefore = classificationAfter.findAll( it -> it["inScheme"] == "https://id.kb.se/term/kssb" )
+                Collection sabAfter = classificationAfter.findAll( it -> it["inScheme"] == "https://id.kb.se/term/kssb" )
+                sabBefore = sabBefore.findAll {
+                    if (it["code"] == null)
+                        return false
+                    return ((String) it["code"]).matches(".+/[A-Z].*")
+                }
+                sabAfter = sabAfter.findAll {
+                    if (it["code"] == null)
+                        return false
+                    return ((String) it["code"]).matches(".+/[A-Z].*")
+                }
+                return !sabAfter.containsAll(sabBefore)
+            }
+
+            case "https://id.kb.se/notificationtriggers/instancetitle": {
+                historicEmbellish(instanceBeforeChange, ["hasTitle"], before)
+                historicEmbellish(instanceAfterChange, ["hasTitle"], after)
+
+                Object titlesBefore = Document._get(["mainEntity", "hasTitle"], instanceBeforeChange.data)
+                Object titlesAfter = Document._get(["mainEntity", "hasTitle"], instanceAfterChange.data)
+
+                if (titlesBefore == null || titlesAfter == null || ! titlesBefore instanceof List || ! titlesAfter instanceof List)
+                    return false
+
+                if (titlesAfter as Set != titlesBefore as Set)
+                    return true
+
+                break
+            }
+
         }
         return false
     }
