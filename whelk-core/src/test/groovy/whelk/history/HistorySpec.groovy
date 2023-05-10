@@ -7,6 +7,9 @@ import whelk.JsonLd
 import whelk.util.Jackson
 import whelk.util.JsonLdSpec
 
+import java.sql.Timestamp
+import java.time.Instant
+
 class HistorySpec extends Specification {
     def "array(set) order does not matter"() {
         given:
@@ -688,7 +691,7 @@ class HistorySpec extends Specification {
                         ]]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0, Timestamp.from(Instant.EPOCH))
         }
 
         def history = new History(versions, ld)
@@ -723,7 +726,7 @@ class HistorySpec extends Specification {
                          ]]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0, Timestamp.from(Instant.EPOCH))
         }
 
         def history = new History(versions, ld)
@@ -758,7 +761,7 @@ class HistorySpec extends Specification {
                          ]]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0, Timestamp.from(Instant.EPOCH))
         }
 
         def history = new History(versions, ld)
@@ -776,7 +779,7 @@ class HistorySpec extends Specification {
         
         def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, display, JsonLdSpec.VOCAB_DATA)
         def v = versions.collect { data ->
-            new DocumentVersion(new Document(data), '', '', 0)
+            new DocumentVersion(new Document(data), '', '', 0, Timestamp.from(Instant.EPOCH))
         }
 
         def history = new History(v, ld)
