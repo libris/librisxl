@@ -6,6 +6,9 @@ import whelk.JsonLd
 import whelk.history.DocumentVersion
 import whelk.history.History
 
+import java.sql.Timestamp
+import java.time.Instant
+
 class MergeSpec extends Specification {
 
     static final Map CONTEXT_DATA = [
@@ -55,7 +58,7 @@ class MergeSpec extends Specification {
                          ]]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0, Timestamp.from(Instant.EPOCH))
         }
         def history = new History(versions, ld)
         def incoming = new Document( (Map)
@@ -101,7 +104,7 @@ class MergeSpec extends Specification {
                          ]]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0, Timestamp.from(Instant.EPOCH))
         }
         def history = new History(versions, ld)
         def incoming = new Document( (Map)
@@ -147,7 +150,7 @@ class MergeSpec extends Specification {
                          ]]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0, Timestamp.from(Instant.EPOCH))
         }
         def history = new History(versions, ld)
         def incoming = new Document( (Map)
@@ -185,7 +188,7 @@ class MergeSpec extends Specification {
                          ]]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0, Timestamp.from(Instant.EPOCH))
         }
         def history = new History(versions, ld)
 
@@ -224,7 +227,7 @@ class MergeSpec extends Specification {
                          ]]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0, Timestamp.from(Instant.EPOCH))
         }
         def history = new History(versions, ld)
         def incoming = new Document( (Map)
@@ -262,7 +265,7 @@ class MergeSpec extends Specification {
                          ]]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0, Timestamp.from(Instant.EPOCH))
         }
         def history = new History(versions, ld)
         def incoming = new Document( (Map)
@@ -303,7 +306,7 @@ class MergeSpec extends Specification {
                          ]]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0, Timestamp.from(Instant.EPOCH))
         }
         def history = new History(versions, ld)
         def incoming = new Document( (Map)
@@ -348,7 +351,7 @@ class MergeSpec extends Specification {
                          ]]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0, Timestamp.from(Instant.EPOCH))
         }
         def history = new History(versions, ld)
 
@@ -395,7 +398,7 @@ class MergeSpec extends Specification {
                          ]]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0, Timestamp.from(Instant.EPOCH))
         }
         def history = new History(versions, ld)
         def incoming = new Document( (Map)
@@ -441,7 +444,7 @@ class MergeSpec extends Specification {
                          ]]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0, Timestamp.from(Instant.EPOCH))
         }
         def history = new History(versions, ld)
         def incoming = new Document( (Map)
@@ -479,7 +482,7 @@ class MergeSpec extends Specification {
                          ]]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0, Timestamp.from(Instant.EPOCH))
         }
         def history = new History(versions, ld)
 
@@ -533,7 +536,7 @@ class MergeSpec extends Specification {
                  ]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0, Timestamp.from(Instant.EPOCH))
         }
         def history = new History(versions, ld)
         def incoming = new Document( (Map)
@@ -614,7 +617,7 @@ class MergeSpec extends Specification {
                  ]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0, Timestamp.from(Instant.EPOCH))
         }
         def history = new History(versions, ld)
         def incoming = new Document( (Map)
@@ -695,7 +698,7 @@ class MergeSpec extends Specification {
                  ]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0, Timestamp.from(Instant.EPOCH))
         }
         def history = new History(versions, ld)
         def incoming = new Document( (Map)
@@ -776,7 +779,7 @@ class MergeSpec extends Specification {
                  ]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0, Timestamp.from(Instant.EPOCH))
         }
         def history = new History(versions, ld)
         def incoming = new Document( (Map)
@@ -882,7 +885,7 @@ class MergeSpec extends Specification {
                  ]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0, Timestamp.from(Instant.EPOCH))
         }
         def history = new History(versions, ld)
         def incoming = new Document( (Map)
@@ -986,7 +989,7 @@ class MergeSpec extends Specification {
                  ]
                 ]
         ].collect { change ->
-            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0)
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn, 0, Timestamp.from(Instant.EPOCH))
         }
         def history = new History(versions, ld)
         def incoming = new Document( (Map)
