@@ -899,4 +899,37 @@ class Document {
     public String toVerboseString() {
         return "{completeId=" + getCompleteId() + ", baseUri=" + baseUri.toString() + ", base identifiers:" + getRecordIdentifiers().join(',');
     }
+
+    Set<String> getBlankNodeIds() {
+        Map work = get(["@graph", 1, "instanceOf"])
+        return (!work || JsonLd.isLink(work)) 
+            ? []
+            : [ "${getShortId()}#work" ]
+    }
+
+    Document centerOn(String id) {
+        if ("${getShortId()}#work" != id) {
+            throw new IllegalArgumentException(id)
+        }
+        
+        Document doc = clone()
+        Map record = doc.get(["@graph", 0])
+        Map work = doc.get(["@graph", 1, "instanceOf"])
+        Map instance = doc.get(["@graph", 1])
+        def workId = instance["@id"].replace('#it', '') + "#work"
+        
+        record["mainEntity"]["@id"] = workId
+        //record["@type"] = "VirtualRecord"
+        
+        work["@id"] = workId
+        work["@reverse"] = ["instanceOf": [["@id": instance["@id"]]]]
+        
+        if (!work['hasTitle']) {
+            work['hasTitle'] = instance['hasTitle']
+        }
+
+        doc.set(["@graph", 1], work)
+        
+        return doc
+    }
 }

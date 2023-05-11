@@ -17,6 +17,7 @@ import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
 
+import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
 import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
@@ -210,6 +211,28 @@ class ElasticSearch {
                     return null
                 }
             }.join('')
+
+            if (whelk.features.isEnabled(INDEX_BLANK_WORKS)) {
+                String bulkString2 = docs
+                        .collect { doc -> doc.getBlankNodeIds().collect {doc.centerOn(it) } }
+                        .flatten()
+                        .findResults{ Document doc ->
+                            try {
+                                String shapedData = getShapeForIndex(doc, whelk)
+                                String action = createActionRow(doc)
+                                return "${action}\n${shapedData}\n"
+                            } catch (Exception e) {
+                                if (doc.getShortId() == null) {
+                                    log.error("Document has null shortId, something is wrong. Some details: " + doc.toVerboseString(), e);
+                                } else {
+                                    log.error("Failed to index ${doc.getShortId()} in elastic: $e", e)
+                                }
+                                return null
+                            }
+                        }.join('')
+
+                bulkString += bulkString2
+            }
 
             if (bulkString) {
                 String response = bulkClient.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE)

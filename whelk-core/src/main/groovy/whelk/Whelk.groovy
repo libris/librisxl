@@ -25,6 +25,8 @@ import whelk.util.Romanizer
 import java.time.Instant
 import java.time.ZoneId
 
+import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
+
 /**
  * The Whelk is the root component of the XL system.
  */
@@ -59,6 +61,7 @@ class Whelk {
     Relations relations
     DocumentNormalizer normalizer
     Romanizer romanizer
+    FeatureFlags features
 
     URI baseUri = null
     boolean skipIndex = false
@@ -127,6 +130,8 @@ class Whelk {
         if (configuration.locales) {
             locales = ((String) configuration.locales).split(',').collect { it.trim() }
         }
+        
+        features = new FeatureFlags(configuration)
 
         loadCoreData(systemContextUri)
 
@@ -290,7 +295,10 @@ class Whelk {
     private void reindexUpdated(Document updated, Document preUpdateDoc) {
         indexAsyncOrSync {
             elastic.index(updated, this)
-
+            if (features.isEnabled(INDEX_BLANK_WORKS)) {
+                (preUpdateDoc.getBlankNodeIds() - updated.getBlankNodeIds()).each { elastic.remove(it) }
+                updated.getBlankNodeIds().each {elastic.index(updated.centerOn(it), this) }
+            }
             if (!skipIndexDependers) {
                 if (hasChangedMainEntityId(updated, preUpdateDoc)) {
                     reindexAllLinks(updated.shortId)
@@ -437,6 +445,9 @@ class Whelk {
         if (success) {
             indexAsyncOrSync {
                 elastic.index(document, this)
+                if (features.isEnabled(INDEX_BLANK_WORKS)) {
+                    document.getBlankNodeIds().each {elastic.index(document.centerOn(it), this) }
+                }
                 if (!skipIndexDependers) {
                     reindexAffected(document, new TreeSet<>(), document.getExternalRefs())
                 }
@@ -508,6 +519,9 @@ class Whelk {
             storage.remove(id, changedIn, changedBy, force)
             indexAsyncOrSync {
                 elastic.remove(id)
+                if (features.isEnabled(INDEX_BLANK_WORKS)) {
+                    doc.getBlankNodeIds().each { elastic.remove(it) }
+                }
                 if (!skipIndexDependers) {
                     reindexAffected(doc, doc.getExternalRefs(), Collections.emptySet())
                 }
