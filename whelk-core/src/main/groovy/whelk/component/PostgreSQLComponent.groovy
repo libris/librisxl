@@ -13,6 +13,7 @@ import org.postgresql.PGNotification
 import org.postgresql.PGStatement
 import org.postgresql.util.PGobject
 import org.postgresql.util.PSQLException
+import se.kb.libris.SignificantChangeCalculator
 import whelk.Document
 import whelk.IdType
 import whelk.JsonLd
@@ -898,6 +899,14 @@ class PostgreSQLComponent {
 
             normalizeDocumentForStorage(doc, connection)
 
+            Date modTime = minorUpdate
+                    ? new Date(resultSet.getTimestamp("modified").getTime())
+                    : new Date()
+
+            // EXPERIMENTALLY: Create "interesting changes"-markers if certain significant parts of the record were changed.
+            SignificantChangeCalculator.markSignificantChanges(preUpdateDoc, doc, modTime, getJsonld())
+            //
+
             if (!writeIdenticalVersions && preUpdateDoc.getChecksum(jsonld).equals(doc.getChecksum(jsonld))) {
                 throw new CancelUpdateException()
             }
@@ -938,11 +947,8 @@ class PostgreSQLComponent {
             if (doVerifyDocumentIdRetention) {
                 verifyDocumentIdRetention(preUpdateDoc, doc, connection)
             }
-            
+
             Date createdTime = new Date(resultSet.getTimestamp("created").getTime())
-            Date modTime = minorUpdate
-                ? new Date(resultSet.getTimestamp("modified").getTime())
-                : new Date()
             doc.setModified(modTime)
 
             if (!minorUpdate) {
