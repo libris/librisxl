@@ -3,16 +3,12 @@ package datatool.scripts.mergeworks
 
 import whelk.Document
 import whelk.IdGenerator
-import whelk.JsonLd
 import whelk.Whelk
-import whelk.exception.WhelkRuntimeException
 import whelk.meta.WhelkConstants
-import whelk.util.LegacyIntegrationTools
 import whelk.util.Statistics
 
 import java.text.SimpleDateFormat
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.ThreadPoolExecutor
@@ -34,9 +30,6 @@ class WorkToolJob {
     String jobId = IdGenerator.generate()
     File reportDir = new File("reports/merged-works/$date")
 
-    String changedIn = "xl"
-    String changedBy = "SEK"
-    String generationProcess = 'https://libris.kb.se/sys/merge-works'
     boolean dryRun = true
     boolean skipIndex = false
     boolean loud = false
@@ -141,33 +134,33 @@ class WorkToolJob {
                 def works = mergedWorks(titles)
 
                 if (works.size() > 1) {
-                    multiWorkClusters.add(works.collect { [new Doc(whelk, it.doc)] + it.derivedFrom })
+                    multiWorkClusters.add(works.collect { [it.doc] + Util.asList(it.derivedFrom) })
                 }
 
-                def thingIds = []
-                def multiInstanceWorks = works.findAll {
-                    if (it.derivedFrom.size() > 1 || it instanceof UpdatedWork) {
-                        thingIds.add(it.doc.getThingIdentifiers().first())
-                        return true
+                def linkableWorks = works.findAll { it instanceof NewWork || it instanceof UpdatedWork }
+                def linkableWorkIds = linkableWorks.collect { it.doc.doc.getThingIdentifiers().first() }
+
+                if (!dryRun) {
+                    whelk.setSkipIndex(skipIndex)
+                    works.each { work ->
+                        work.addCloseMatch(linkableWorkIds)
+                        work.setGenerationFields()
+                        work.store(whelk)
+                        work.linkInstances(whelk)
                     }
-                    thingIds.add(it.derivedFrom.first().doc.getThingIdentifiers().first())
-                    false
-                }.each {
-                    Util.addCloseMatch(it.doc.data['@graph'][1], thingIds)
-                    store(it)
                 }
 
-                String report = htmlReport(titles, multiInstanceWorks)
+                String report = htmlReport(titles, linkableWorks)
 
 //                new File(reportDir, "${Html.clusterId(cluster)}.html") << report
-                multiInstanceWorks.each {
+                linkableWorks.each {
                     if (it instanceof NewWork) {
-                        s.increment('num derivedFrom (new works)', "${it.derivedFrom.size()}", it.doc.shortId)
+                        s.increment('num derivedFrom (new works)', "${it.derivedFrom.size()}", it.document.shortId)
                     } else if (it instanceof UpdatedWork) {
-                        s.increment('num derivedFrom (updated works)', "${it.derivedFrom.size()}", it.doc.shortId)
+                        s.increment('num derivedFrom (updated works)', "${it.derivedFrom.size()}", it.document.shortId)
                     }
                     it.reportDir.mkdirs()
-                    new File(it.reportDir, "${it.doc.shortId}.html") << report
+                    new File(it.reportDir, "${it.document.shortId}.html") << report
                 }
             }
         })
@@ -229,41 +222,11 @@ class WorkToolJob {
         titleClusters.each { it.each { it.removeComparisonProps() } }
 
         s.append("<h1>Extracted works</h1>")
-        works.collect { [new Doc(whelk, it.doc)] + it.derivedFrom }
+        works.collect { [it.doc] + it.derivedFrom }
                 .each { s.append(Html.clusterTable(it)) }
 
         s.append(Html.END)
         return s.toString()
-    }
-
-    private void store(MergedWork work) {
-        if (!dryRun) {
-            whelk.setSkipIndex(skipIndex)
-
-            def workIri = work.doc.thingIdentifiers.first()
-
-            work.doc.setGenerationDate(new Date())
-            work.doc.setGenerationProcess(generationProcess)
-
-            if (work instanceof NewWork) {
-                if (!whelk.createDocument(work.doc, changedIn, changedBy,
-                        LegacyIntegrationTools.determineLegacyCollection(work.doc, whelk.getJsonld()), false)) {
-                    throw new WhelkRuntimeException("Could not store new work: ${work.doc.shortId}")
-                }
-            } else if (work instanceof UpdatedWork) {
-                whelk.storeAtomicUpdate(work.doc, !loud, false, changedIn, generationProcess, work.checksum)
-            }
-
-            work.derivedFrom
-                    .collect { it.ogDoc }
-                    .each {
-                        def sum = it.getChecksum(whelk.jsonld)
-                        it.data[JsonLd.GRAPH_KEY][1][JsonLd.WORK_KEY] = [(JsonLd.ID_KEY): workIri]
-                        it.setGenerationDate(new Date())
-                        it.setGenerationProcess(generationProcess)
-                        whelk.storeAtomicUpdate(it, !loud, false, changedIn, changedBy, sum)
-                    }
-        }
     }
 
     private Collection<MergedWork> mergedWorks(Collection<Collection<Doc>> titleClusters) {
@@ -278,12 +241,17 @@ class WorkToolJob {
             workClusters.each { wc ->
                 def (linked, local) = wc.split { it.workIri() }
                 if (!linked) {
-                    works.add(new NewWork(c.merge(local), local, reportDir))
+                    if (local.size() == 1) {
+                        Doc doc = local.first()
+                        works.add(new LocalWork(doc, reportDir, doc.doc.getChecksum(whelk.jsonld)))
+                    } else {
+                        works.add(new NewWork(local, reportDir)
+                                .tap { it.createDoc(whelk, c.merge(local)) })
+                    }
                 } else if (linked.size() == 1) {
-                    def doc = whelk.storage.getDocumentByIri(linked.first().workIri())
-                    def checksum = doc.getChecksum(whelk.jsonld)
-                    doc.data[JsonLd.GRAPH_KEY][1] = c.merge([new Doc(whelk, doc)] + local)
-                    works.add(new UpdatedWork(doc, local, reportDir, checksum))
+                    Doc doc = linked.first()
+                    works.add(new UpdatedWork(doc, local, reportDir, doc.doc.getChecksum(whelk.jsonld))
+                            .tap { it.update(c.merge(linked + local)) })
                 } else {
                     System.err.println("Local works in ${local.collect { it.shortId }} matches multiple linked works: ${linked.collect { it.shortId }}. Duplicate linked works?")
                 }
@@ -485,7 +453,6 @@ class WorkToolJob {
     }
 
     private Collection<Collection<Doc>> titleClusters(Collection<Doc> docs) {
-//        loadDocs(cluster).with { loadLinkedWorks(it) }
         docs.findAll(qualityMonographs)
                 .each { it.addComparisonProps() }
                 .with { partitionByTitle(it) }
@@ -504,8 +471,9 @@ class WorkToolJob {
         def (linked, local) = docs.split {
             it.workIri()
         }
-        return local + linked.unique { it.getMainEntity()['instanceOf'] }
-                .each { it.getMainEntity()['instanceOf'] = it.getWork() }
+        return local + linked.collect { it.workIri() }
+                .unique()
+                .collect { new Doc(whelk, whelk.storage.getDocumentByIri(it)) }
     }
 }
 

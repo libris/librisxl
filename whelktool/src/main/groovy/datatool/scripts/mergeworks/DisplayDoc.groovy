@@ -26,14 +26,11 @@ class DisplayDoc {
         } else if (field == 'classification') {
             return classificationStrings().join("<br>")
         } else if (field == 'instance title') {
-            return isInstance() ? (getMainEntity()['hasTitle'] ?: '') : ''
+            return getInstance()?['hasTitle'] ?: ''
         } else if (field == 'work title') {
-            // To load hasTitle from linked work in instanceOf we can use getFramed()
-            // However we then need to handle that getFramed() loads linked instances in hasTitle.source
-            // Prefer getMainEntity() for now
-            return isInstance() ? (getMainEntity()['instanceOf']['hasTitle'] ?: '') : (getMainEntity()['hasTitle'] ?: '')
+            return getWork()?['hasTitle'] ?: ''
         } else if (field == 'instance type') {
-            return isInstance() ? getMainEntity()['@type'] : ''
+            return getInstance()?['@type'] ?: ''
         } else if (field == 'editionStatement') {
             return getMainEntity()['editionStatement'] ?: ''
         } else if (field == 'responsibilityStatement') {
@@ -79,7 +76,7 @@ class DisplayDoc {
     }
 
     private List contributorStrings() {
-        List path = isInstance() ? ['instanceOf', 'contribution'] : ['contribution']
+        List path = getInstance() ? ['instanceOf', 'contribution'] : ['contribution']
         List contribution = Util.getPathSafe(getFramed(), path, [])
 
         return contribution.collect { Map c ->
@@ -105,7 +102,7 @@ class DisplayDoc {
     }
 
     List classificationStrings() {
-        List path = isInstance() ? ['instanceOf', 'classification'] : ['classification']
+        List path = getInstance() ? ['instanceOf', 'classification'] : ['classification']
         List<Map> classification = Util.getPathSafe(getMainEntity(), path, [])
         classification.collect() { c ->
             StringBuilder s = new StringBuilder()
@@ -150,7 +147,7 @@ class DisplayDoc {
 
     Map getFramed() {
         if (!framed) {
-            if (isInstance()) {
+            if (getInstance()) {
                 framed = JsonLd.frame(doc.doc.getThingIdentifiers().first(), doc.whelk.loadEmbellished(doc.doc.shortId).data)
             } else {
                 Document copy = doc.doc.clone()
@@ -166,8 +163,8 @@ class DisplayDoc {
         return doc.getMainEntity()
     }
 
-    boolean isInstance() {
-        return doc.isInstance()
+    Map getInstance() {
+        return doc.getInstance()
     }
 
     Map getWork() {

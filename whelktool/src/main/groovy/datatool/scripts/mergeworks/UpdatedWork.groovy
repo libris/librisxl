@@ -1,17 +1,24 @@
 package datatool.scripts.mergeworks
 
-import whelk.Document
+import whelk.JsonLd
+import whelk.Whelk
 
-class UpdatedWork implements MergedWork {
-    Document doc
-    Collection<Doc> derivedFrom
-    File reportDir
-    String checksum
+class UpdatedWork extends MergedWork {
 
-    UpdatedWork(Document doc, Collection<Doc> derivedFrom, File reportDir, String checksum) {
+    UpdatedWork(Doc doc, Collection<Doc> derivedFrom, File reportDir, String checksum) {
         this.doc = doc
+        this.document = doc.doc
         this.derivedFrom = derivedFrom
         this.reportDir = new File(reportDir, 'updated')
-        this.checksum = checksum
+        this.workPath = ['@graph', 1]
+    }
+
+    @Override
+    void store(Whelk whelk) {
+        whelk.storeAtomicUpdate(document, !loud, false, changedIn, generationProcess, doc.checksum)
+    }
+
+    void update(Map workData) {
+        document.data[JsonLd.GRAPH_KEY][1] = workData
     }
 }

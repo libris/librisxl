@@ -2,16 +2,29 @@ package datatool.scripts.mergeworks
 
 import whelk.Document
 import whelk.IdGenerator
+import whelk.Whelk
+import whelk.exception.WhelkRuntimeException
+import whelk.util.LegacyIntegrationTools
 
-class NewWork implements MergedWork {
-    Document doc
-    Collection<Doc> derivedFrom
-    File reportDir
+class NewWork extends MergedWork {
 
-    NewWork(Map data, Collection<Doc> derivedFrom, File reportDir) {
+    NewWork(Collection<Doc> derivedFrom, File reportDir) {
         this.derivedFrom = derivedFrom
         this.reportDir = new File(reportDir, 'new')
-        this.doc = buildWorkDocument(data)
+        this.workPath = ['@graph', 1]
+    }
+
+    @Override
+    void store(Whelk whelk) {
+        if (!whelk.createDocument(document, changedIn, changedBy,
+                LegacyIntegrationTools.determineLegacyCollection(document, whelk.getJsonld()), false)) {
+            throw new WhelkRuntimeException("Could not store new work: ${document.shortId}")
+        }
+    }
+
+    void createDoc(Whelk whelk, Map workData) {
+        this.document = buildWorkDocument(workData)
+        this.doc = new Doc(whelk, document)
     }
 
     private Document buildWorkDocument(Map workData) {
@@ -41,4 +54,6 @@ class NewWork implements MergedWork {
         d.deepReplaceId(Document.BASE_URI.toString() + workId)
         return d
     }
+
+
 }

@@ -59,19 +59,15 @@ class WorkComparator {
     Map merge(Collection<Doc> docs) {
         Map result = [:]
 
-        if (docs.size() > 1) {
-            fields.each { field ->
-                FieldHandler h = comparators.getOrDefault(field, DEFAULT)
-                def value = h instanceof ValuePicker
-                        ? h.pick(docs)
-                        : mergeField(field, h, docs)
+        fields.each { field ->
+            FieldHandler h = comparators.getOrDefault(field, DEFAULT)
+            def value = h instanceof ValuePicker
+                    ? h.pick(docs)
+                    : mergeField(field, h, docs)
 
-                if (value) {
-                    result[field] = value
-                }
+            if (value) {
+                result[field] = value
             }
-        } else {
-            result = docs[0].workCopy()
         }
 
         if (!result['hasTitle']) {

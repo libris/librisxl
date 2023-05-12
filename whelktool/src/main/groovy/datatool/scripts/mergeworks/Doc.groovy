@@ -34,15 +34,14 @@ class Doc {
     
     List<String> titles
 
-    //FIXME
-    Document ogDoc
-
     DisplayDoc display
+
+    String checksum
     
     Doc(Whelk whelk, Document doc) {
         this.whelk = whelk
         this.doc = doc
-        this.ogDoc = doc.clone()
+        this.checksum = doc.getChecksum(whelk.getJsonld())
     }
 
     Map getWork() {
@@ -70,24 +69,19 @@ class Doc {
 
         //TODO 'marc:fieldref'
 
-//        work.remove('@id')
         return work
-    }
-
-    Map workCopy() {
-        return getWork(whelk, doc.clone())
     }
 
     String workIri() {
         getWork()['@id']
     }
 
-    Map getMainEntity() {
-        return doc.data['@graph'][1]
+    Map getInstance() {
+        getMainEntity().containsKey('instanceOf') ? getMainEntity() : null
     }
 
-    boolean isInstance() {
-        return getMainEntity().containsKey('instanceOf')
+    Map getMainEntity() {
+        return doc.data['@graph'][1]
     }
 
     List<String> getTitleVariants() {
@@ -115,7 +109,7 @@ class Doc {
     }
 
     int numPages() {
-        String extent = Util.getPathSafe(getMainEntity(), ['extent', 0, 'label', 0]) ?: Util.getPathSafe(getMainEntity(), ['extent', 0, 'label'], '')
+        String extent = Util.getPathSafe(getInstance(), ['extent', 0, 'label', 0]) ?: Util.getPathSafe(getInstance(), ['extent', 0, 'label'], '')
         return numPages(extent)
     }
 
@@ -190,7 +184,7 @@ class Doc {
     }
 
     boolean hasDistinguishingEdition() {
-        (getMainEntity()['editionStatement'] ?: '').toString().toLowerCase().contains("förk")
+        (getInstance()?['editionStatement'] ?: '').toString().toLowerCase().contains("förk")
     }
 
     boolean hasRelationshipWithContribution() {
@@ -207,17 +201,17 @@ class Doc {
 
     void addComparisonProps() {
         if (hasDistinguishingEdition()) {
-            addToWork('editionStatement')
+            addToWork('_editionStatement')
         }
         getWork()['_numPages'] = numPages()
     }
 
     void addToWork(String field) {
-        getWork()[field] = getMainEntity()[field]
+        getWork()[field] = getInstance()[field]
     }
 
     void removeComparisonProps() {
-        getWork().remove('editionStatement')
+        getWork().remove('_editionStatement')
         getWork().remove('_numPages')
     }
 }

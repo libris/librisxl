@@ -243,10 +243,10 @@ class Util {
 
     static def mostCommonInstanceTitle(Collection<Doc> docs) {
         def addSource = { t, d ->
-            return t.collect { it.plus(['source': [d.getMainEntity().subMap('@id')]]) }
+            return t.collect { it.plus(['source': [d.getInstance().subMap('@id')]]) }
         }
 
-        def instanceTitles = docs.collect { it.getMainEntity().get('hasTitle')?.findAll(isTitle) }
+        def instanceTitles = docs.collect { it.getInstance().get('hasTitle')?.findAll(isTitle) }
                 .collect { dropGenericSubTitles(it) }
 
         if (instanceTitles.grep()) {
@@ -281,13 +281,6 @@ class Util {
 
         localName && variants.any {
             name(it) && localName == name(it)
-        }
-    }
-
-    static def addCloseMatch(Map thing, List ids) {
-        def closeMatch = (asList(thing['closeMatch']) + (ids - thing['@id']).collect { ['@id': it] }).unique()
-        if (closeMatch) {
-            thing['closeMatch'] = closeMatch
         }
     }
 }
