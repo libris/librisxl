@@ -630,7 +630,7 @@ class ElasticSearch {
         if (id.contains("/")) {
             return Base64.encodeBase64URLSafeString(id.getBytes("UTF-8"))
         } else {
-            return id // If XL-minted identifier, use the same charsequence
+            return id.replace('#', '_') // If XL-minted identifier, use the same charsequence
         }
     }
     

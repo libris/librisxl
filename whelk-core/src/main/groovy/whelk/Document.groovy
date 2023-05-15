@@ -925,14 +925,15 @@ class Document {
         def workId = instance["@id"].replace('#it', '') + "#work"
         
         record["mainEntity"]["@id"] = workId
-        record["@id"] = record["@id"] + "-work"
+        record["@id"] = record["@id"] + "#work-record"
         //record["@type"] = "VirtualRecord"
         
         work["@id"] = workId
         work["@reverse"] = ["instanceOf": [["@id": instance["@id"]]]]
         
+        // TODO...
         if (!work['hasTitle']) {
-            work['hasTitle'] = instance['hasTitle']
+            work['hasTitle'] = (instance['hasTitle'] ?: []).collect{ it['@type'] == 'Title' || it['@type'] == 'KeyTitle' }
         }
 
         doc.set(["@graph", 1], work)
