@@ -214,7 +214,7 @@ class ElasticSearch {
 
             if (whelk.features.isEnabled(INDEX_BLANK_WORKS)) {
                 String bulkString2 = docs
-                        .collect { doc -> doc.getBlankNodeIds().collect {doc.centerOn(it) } }
+                        .collect { doc -> doc.getVirtualRecordIds().collect {doc.getVirtualRecord(it) } }
                         .flatten()
                         .findResults{ Document doc ->
                             try {

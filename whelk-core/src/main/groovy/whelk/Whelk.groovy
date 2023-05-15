@@ -296,8 +296,8 @@ class Whelk {
         indexAsyncOrSync {
             elastic.index(updated, this)
             if (features.isEnabled(INDEX_BLANK_WORKS)) {
-                (preUpdateDoc.getBlankNodeIds() - updated.getBlankNodeIds()).each { elastic.remove(it) }
-                updated.getBlankNodeIds().each {elastic.index(updated.centerOn(it), this) }
+                (preUpdateDoc.getVirtualRecordIds() - updated.getVirtualRecordIds()).each { elastic.remove(it) }
+                updated.getVirtualRecordIds().each {elastic.index(updated.getVirtualRecord(it), this) }
             }
             if (!skipIndexDependers) {
                 if (hasChangedMainEntityId(updated, preUpdateDoc)) {
@@ -446,7 +446,7 @@ class Whelk {
             indexAsyncOrSync {
                 elastic.index(document, this)
                 if (features.isEnabled(INDEX_BLANK_WORKS)) {
-                    document.getBlankNodeIds().each {elastic.index(document.centerOn(it), this) }
+                    document.getVirtualRecordIds().each {elastic.index(document.getVirtualRecord(it), this) }
                 }
                 if (!skipIndexDependers) {
                     reindexAffected(document, new TreeSet<>(), document.getExternalRefs())
@@ -520,7 +520,7 @@ class Whelk {
             indexAsyncOrSync {
                 elastic.remove(id)
                 if (features.isEnabled(INDEX_BLANK_WORKS)) {
-                    doc.getBlankNodeIds().each { elastic.remove(it) }
+                    doc.getVirtualRecordIds().each { elastic.remove(it) }
                 }
                 if (!skipIndexDependers) {
                     reindexAffected(doc, doc.getExternalRefs(), Collections.emptySet())

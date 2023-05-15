@@ -900,21 +900,15 @@ class Document {
         return "{completeId=" + getCompleteId() + ", baseUri=" + baseUri.toString() + ", base identifiers:" + getRecordIdentifiers().join(',');
     }
 
-    Set<String> getBlankNodeIds() {
+    Set<String> getVirtualRecordIds() {
         Map work = get(["@graph", 1, "instanceOf"])
         return (!work || JsonLd.isLink(work) || isSuppressedRecord()) 
             ? []
-            : [ "${getShortId()}#work" ]
+            : [ "${getShortId()}#work-record" ]
     }
     
-    boolean isSuppressedRecord() {
-        (get(["@graph", 0, "technicalNote"]) ?: []).any { 
-            it instanceof Map && it.label == 'SUPPRESSRECORD' && it[JsonLd.TYPE_KEY] == 'TechnicalNote'
-        }
-    }
-
-    Document centerOn(String id) {
-        if ("${getShortId()}#work" != id) {
+    Document getVirtualRecord(String id) {
+        if ("${getShortId()}#work-record" != id) {
             throw new IllegalArgumentException(id)
         }
         
@@ -926,7 +920,7 @@ class Document {
         
         record["mainEntity"]["@id"] = workId
         record["@id"] = record["@id"] + "#work-record"
-        //record["@type"] = "VirtualRecord"
+        record["@type"] = "VirtualRecord"
         
         work["@id"] = workId
         work["@reverse"] = ["instanceOf": [["@id": instance["@id"]]]]
@@ -939,5 +933,11 @@ class Document {
         doc.set(["@graph", 1], work)
         
         return doc
+    }
+
+    private boolean isSuppressedRecord() {
+        (get(["@graph", 0, "technicalNote"]) ?: []).any {
+            it instanceof Map && it.label == 'SUPPRESSRECORD' && it[JsonLd.TYPE_KEY] == 'TechnicalNote'
+        }
     }
 }
