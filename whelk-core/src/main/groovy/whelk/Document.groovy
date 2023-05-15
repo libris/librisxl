@@ -902,9 +902,15 @@ class Document {
 
     Set<String> getBlankNodeIds() {
         Map work = get(["@graph", 1, "instanceOf"])
-        return (!work || JsonLd.isLink(work)) 
+        return (!work || JsonLd.isLink(work) || isSuppressedRecord()) 
             ? []
             : [ "${getShortId()}#work" ]
+    }
+    
+    boolean isSuppressedRecord() {
+        (get(["@graph", 0, "technicalNote"]) ?: []).any { 
+            it instanceof Map && it.label == 'SUPPRESSRECORD' && it[JsonLd.TYPE_KEY] == 'TechnicalNote'
+        }
     }
 
     Document centerOn(String id) {
@@ -919,6 +925,7 @@ class Document {
         def workId = instance["@id"].replace('#it', '') + "#work"
         
         record["mainEntity"]["@id"] = workId
+        record["@id"] = record["@id"] + "-work"
         //record["@type"] = "VirtualRecord"
         
         work["@id"] = workId
