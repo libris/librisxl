@@ -1,4 +1,4 @@
-File HoldIDs = new File(scriptDir, "Bestand-id.txt")
+File GeHolds = new File(scriptDir, "Bestand-id.txt")
 
 selectByIds(GeHolds.readLines()) {hold ->
   def items = hold.graph[1]
