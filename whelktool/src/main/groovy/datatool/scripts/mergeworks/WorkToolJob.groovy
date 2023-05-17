@@ -58,18 +58,13 @@ class WorkToolJob {
         run({ cluster ->
             return {
                 try {
-                    Collection<Collection<Doc>> docs = titleClusters(loadLastUnlinkedVersion(cluster))
+                    if (cluster.size() > 1) {
+                        Collection<Doc> docs = loadLastUnlinkedVersion(cluster).each { it.addComparisonProps() }
+                                .sort { a, b -> a.workType() <=> b.workType() }
+                                .sort { it.numPages() }
 
-                    if (docs.isEmpty() || docs.size() == 1 && docs.first().size() == 1) {
-                        return
+                        println(Html.clusterTable(docs) + Html.HORIZONTAL_RULE)
                     }
-
-                    println(docs
-                            .collect { it.sort { a, b -> a.getWork()['@type'] <=> b.getWork()['@type'] } }
-                            .collect { it.sort { it.numPages() } }
-                            .collect { Html.clusterTable(it) }
-                            .join('') + Html.HORIZONTAL_RULE
-                    )
                 }
                 catch (NoWorkException e) {
                     System.err.println(e.getMessage())
@@ -88,9 +83,9 @@ class WorkToolJob {
         run({ cluster ->
             return {
                 try {
-                    def merged = mergedWorks(titleClusters(loadLastUnlinkedVersion(cluster))).findAll { it.derivedFrom.size() > 1 }
+                    def merged = mergedWorks(loadLastUnlinkedVersion(cluster)).findAll { it instanceof NewWork }
                     if (merged) {
-                        println(merged.collect { [new Doc(whelk, it.doc)] + it.derivedFrom }
+                        println(merged.collect { [it.doc] + it.derivedFrom }
                                 .collect { Html.clusterTable(it) }
                                 .join('') + Html.HORIZONTAL_RULE
                         )
@@ -110,8 +105,7 @@ class WorkToolJob {
         run({ cluster ->
             return {
                 try {
-                    def hub = mergedWorks(titleClusters(loadLastUnlinkedVersion(cluster)))
-                            .collect { [new Doc(whelk, it.doc)] + it.derivedFrom }
+                    def hub = mergedWorks(loadLastUnlinkedVersion(cluster))
                     if (hub.size() > 1) {
                         println(Html.hubTable(hub) + Html.HORIZONTAL_RULE)
                     }
