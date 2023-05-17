@@ -1,7 +1,6 @@
 package datatool.scripts.mergeworks
 
 
-import whelk.Document
 import whelk.IdGenerator
 import whelk.Whelk
 import whelk.meta.WhelkConstants
@@ -15,8 +14,6 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Function
-
-import static datatool.scripts.mergeworks.FieldStatus.DIFF
 
 import static datatool.scripts.mergeworks.Util.getPathSafe
 import static datatool.scripts.mergeworks.Util.partition
@@ -347,7 +344,7 @@ class WorkToolJob {
 
     Collection<Collection<Doc>> partitionByTitle(Collection<Doc> docs) {
         return partition(docs) { Doc a, Doc b ->
-            !a.instanceTitleVariants().intersect(b.instanceTitleVariants()).isEmpty()
+            !a.flatInstanceTitle().intersect(b.flatInstanceTitle()).isEmpty()
         }
     }
 

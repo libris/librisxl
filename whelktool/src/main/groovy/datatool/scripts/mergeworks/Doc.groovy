@@ -35,7 +35,7 @@ class Doc {
     Map instanceData
     Map workData
 
-    List<String> instanceTitles
+    List<String> flatInstanceTitle
 
     DisplayDoc display
 
@@ -85,12 +85,12 @@ class Doc {
         asList(instanceData?.hasTitle)
     }
 
-    List<String> instanceTitleVariants() {
-        if (!instanceTitles) {
-            instanceTitles = Util.getTitleVariants(instanceTitle())
+    List<String> flatInstanceTitle() {
+        if (!flatInstanceTitle) {
+            flatInstanceTitle = Util.getFlatTitle(instanceTitle())
         }
 
-        return instanceTitles
+        return flatInstanceTitle
     }
 
     boolean hasGenericTitle() {

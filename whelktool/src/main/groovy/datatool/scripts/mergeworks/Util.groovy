@@ -125,7 +125,7 @@ class Util {
         return Unicode.asciiFold(Unicode.normalizeForSearch(StringUtils.normalizeSpace(" $s ".toLowerCase().replace(noise))))
     }
 
-    static Object getPathSafe(item,path, defaultTo = null) {
+    static Object getPathSafe(item, path, defaultTo = null) {
         for (p in path) {
             if ((item instanceof Collection || item instanceof Map) && item[p] != null) {
                 item = item[p]
@@ -136,11 +136,10 @@ class Util {
         return item
     }
 
-
-    static List<String> getTitleVariants(List hasTitle) {
+    static List<String> getFlatTitle(List hasTitle) {
         flatTitles(hasTitle)
-                .grep { it['@type'] in titleVariant }
-                .collect { it['flatTitle'] }
+                .grep(isTitle)
+                .collect{ it['flatTitle'] }
     }
 
     static String chipString(def thing, Whelk whelk) {

@@ -8,7 +8,7 @@ class WorkTitle implements ValuePicker {
 
     @Override
     boolean isCompatible(Object a, Object b) {
-        return !a || !b || !Util.getTitleVariants(a).intersect(Util.getTitleVariants(b)).isEmpty()
+        return !a || !b || !Util.getFlatTitle(a).intersect(Util.getFlatTitle(b)).isEmpty()
     }
 
     @Override

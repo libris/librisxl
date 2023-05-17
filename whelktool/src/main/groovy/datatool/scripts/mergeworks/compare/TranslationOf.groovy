@@ -41,6 +41,6 @@ class TranslationOf implements ValuePicker {
     boolean noTitleOrSameTitle(Map a, Map b) {
         !a['hasTitle']
                 || !b['hasTitle']
-                || !Util.getTitleVariants(a['hasTitle']).intersect(Util.getTitleVariants(b['hasTitle'])).isEmpty()
+                || !Util.getFlatTitle(a['hasTitle']).intersect(Util.getFlatTitle(b['hasTitle'])).isEmpty()
     }
 }
