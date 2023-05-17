@@ -33,6 +33,8 @@ class WorkComparator {
             '@id'             : new Id()
     ]
 
+    static Set<String> ignore = ['closeMatch']
+
     static FieldHandler DEFAULT = new Default()
 
     WorkComparator(Set<String> fields) {
@@ -44,8 +46,8 @@ class WorkComparator {
     }
 
     FieldStatus compare(Doc a, Doc b, String field) {
-        Object oa = a.getWork().get(field)
-        Object ob = b.getWork().get(field)
+        Object oa = a.workData.get(field)
+        Object ob = b.workData.get(field)
 
         if (oa == null && ob == null) {
             return FieldStatus.EQUAL
@@ -82,16 +84,16 @@ class WorkComparator {
 
     // TODO: preserve order? e.g. subject
     private Object mergeField(String field, FieldHandler h, Collection<Doc> docs) {
-        Object value = docs.first().getWork().get(field)
+        Object value = docs.first().workData.get(field)
         def rest = docs.drop(1)
         rest.each {
-            value = h.merge(value, it.getWork().get(field))
+            value = h.merge(value, it.workData.get(field))
         }
         return value
     }
 
     private FieldStatus compareDiff(Doc a, Doc b, String field) {
-        comparators.getOrDefault(field, DEFAULT).isCompatible(a.getWork().get(field), b.getWork().get(field))
+        comparators.getOrDefault(field, DEFAULT).isCompatible(a.workData.get(field), b.workData.get(field))
                 ? FieldStatus.COMPATIBLE
                 : FieldStatus.DIFF
     }
@@ -110,8 +112,8 @@ class WorkComparator {
 
     static Set<String> allFields(Collection<Doc> cluster) {
         Set<String> fields = new HashSet<>()
-        cluster.each { fields.addAll(it.getWork().keySet()) }
-        return fields
+        cluster.each { fields.addAll(it.workData.keySet()) }
+        return fields - ignore
     }
 
     Map<String, FieldStatus> fieldStatuses(Collection<Doc> cluster) {

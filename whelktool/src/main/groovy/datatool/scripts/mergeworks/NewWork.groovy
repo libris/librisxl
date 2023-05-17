@@ -6,7 +6,7 @@ import whelk.Whelk
 import whelk.exception.WhelkRuntimeException
 import whelk.util.LegacyIntegrationTools
 
-class NewWork extends MergedWork {
+class NewWork extends Work {
 
     NewWork(Collection<Doc> derivedFrom, File reportDir) {
         this.derivedFrom = derivedFrom

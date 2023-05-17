@@ -3,11 +3,11 @@ package datatool.scripts.mergeworks
 import whelk.JsonLd
 import whelk.Whelk
 
-class UpdatedWork extends MergedWork {
+class LinkedWork extends Work {
 
-    UpdatedWork(Doc doc, Collection<Doc> derivedFrom, File reportDir, String checksum) {
+    LinkedWork(Doc doc, Collection<Doc> derivedFrom, File reportDir) {
         this.doc = doc
-        this.document = doc.doc
+        this.document = doc.document
         this.derivedFrom = derivedFrom
         this.reportDir = new File(reportDir, 'updated')
         this.workPath = ['@graph', 1]

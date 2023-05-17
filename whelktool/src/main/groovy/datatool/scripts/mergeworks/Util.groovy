@@ -125,7 +125,7 @@ class Util {
         return Unicode.asciiFold(Unicode.normalizeForSearch(StringUtils.normalizeSpace(" $s ".toLowerCase().replace(noise))))
     }
 
-    static Object getPathSafe(item, path, defaultTo = null) {
+    static Object getPathSafe(item,path, defaultTo = null) {
         for (p in path) {
             if ((item instanceof Collection || item instanceof Map) && item[p] != null) {
                 item = item[p]
@@ -184,10 +184,7 @@ class Util {
     // Return the most common title for the best encodingLevel
     static def bestTitle(Collection<Doc> docs) {
         // TODO: which title to pick when matched with already existing linked work?
-        def linkedWorkTitle = docs.findResult {
-            def w = it.getWork()
-            w['@id'] ? w['hasTitle'] : null
-        }
+        def linkedWorkTitle = docs.findResult { it.workIri() ? it.workData['hasTitle'] : null }
         if (linkedWorkTitle) {
             return linkedWorkTitle
         }
@@ -225,11 +222,11 @@ class Util {
 
     static def mostCommonOriginalTitle(Collection<Doc> docs) {
         return mostCommonWorkTitle(docs) { Doc d ->
-            asList(d.getWork()['translationOf']).getAt(0)?.get('hasTitle')?.findAll(isTitle)
+            d.translationOf().findResult { it['hasTitle'] }?.findAll(isTitle)
         }
     }
 
-    static def mostCommonWorkTitle(Collection<Doc> docs, Closure getTitle = { it.getWork().get('hasTitle')?.findAll(isTitle) }) {
+    static def mostCommonWorkTitle(Collection<Doc> docs, Closure getTitle = { it.workTitle().findAll(isTitle) }) {
         def workTitles = docs.collect(getTitle)
                 .grep()
                 .collect { dropGenericSubTitles(it) }
@@ -243,10 +240,10 @@ class Util {
 
     static def mostCommonInstanceTitle(Collection<Doc> docs) {
         def addSource = { t, d ->
-            return t.collect { it.plus(['source': [d.getInstance().subMap('@id')]]) }
+            return t.collect { it.plus(['source': [d.instanceData.subMap('@id')]]) }
         }
 
-        def instanceTitles = docs.collect { it.getInstance().get('hasTitle')?.findAll(isTitle) }
+        def instanceTitles = docs.collect { it.instanceTitle().findAll(isTitle) }
                 .collect { dropGenericSubTitles(it) }
 
         if (instanceTitles.grep()) {

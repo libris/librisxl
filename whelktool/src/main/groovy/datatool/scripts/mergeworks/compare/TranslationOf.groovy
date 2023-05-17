@@ -25,7 +25,7 @@ class TranslationOf implements ValuePicker {
     @Override
     Object pick(Collection<Doc> values) {
         // TODO: which title to pick when matched with already existing linked work?
-        def translationOf = values.first().getWork()['translationOf']
+        def translationOf = values.first().workData['translationOf']
         def title = Util.bestOriginalTitle(values)
         if (title) {
             Util.asList(translationOf)[0]['hasTitle'] = title

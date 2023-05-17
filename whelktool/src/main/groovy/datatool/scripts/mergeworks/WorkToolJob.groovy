@@ -50,6 +50,7 @@ class WorkToolJob {
                 && (doc.encodingLevel() != 'marc:PartialPreliminaryLevel' && doc.encodingLevel() != 'marc:PrepublicationLevel'))
                 && !doc.hasRelationshipWithContribution()
                 && !doc.isTactile()
+                && !doc.isDrama()
     }
 
     void show() {
@@ -130,15 +131,15 @@ class WorkToolJob {
 
         run({ cluster ->
             return {
-                def titles = titleClusters(loadLinkedWorks(loadDocs(cluster)))
-                def works = mergedWorks(titles)
+                def docs = loadDocs(cluster)
+                def works = mergedWorks(docs)
 
                 if (works.size() > 1) {
-                    multiWorkClusters.add(works.collect { [it.doc] + Util.asList(it.derivedFrom) })
+                    multiWorkClusters.add(works)
                 }
 
-                def linkableWorks = works.findAll { it instanceof NewWork || it instanceof UpdatedWork }
-                def linkableWorkIds = linkableWorks.collect { it.doc.doc.getThingIdentifiers().first() }
+                def linkableWorks = works.findAll { it instanceof NewWork || it instanceof LinkedWork }
+                def linkableWorkIds = linkableWorks.collect { it.document.getThingIdentifiers().first() }
 
                 if (!dryRun) {
                     whelk.setSkipIndex(skipIndex)
@@ -150,13 +151,13 @@ class WorkToolJob {
                     }
                 }
 
-                String report = htmlReport(titles, linkableWorks)
+                String report = htmlReport(docs, linkableWorks)
 
 //                new File(reportDir, "${Html.clusterId(cluster)}.html") << report
                 linkableWorks.each {
                     if (it instanceof NewWork) {
                         s.increment('num derivedFrom (new works)', "${it.derivedFrom.size()}", it.document.shortId)
-                    } else if (it instanceof UpdatedWork) {
+                    } else if (it instanceof LinkedWork) {
                         s.increment('num derivedFrom (updated works)', "${it.derivedFrom.size()}", it.document.shortId)
                     }
                     it.reportDir.mkdirs()
@@ -201,60 +202,54 @@ class WorkToolJob {
         })
     }
 
-    String htmlReport(Collection<Collection<Doc>> titleClusters, Collection<MergedWork> works) {
-        if (titleClusters.isEmpty() || titleClusters.size() == 1 && titleClusters.first().size() == 1) {
-            return ""
-        }
-
+    String htmlReport(Collection<Doc> titleCluster, Collection<Work> works) {
         StringBuilder s = new StringBuilder()
 
         s.append(Html.START)
-        s.append("<h1>Title cluster(s)</h1>")
-        titleClusters.each { it.each { it.addComparisonProps() } }
 
-        titleClusters
-                .collect { it.sort { a, b -> a.getWork()['@type'] <=> b.getWork()['@type'] } }
-                .collect { it.sort { it.numPages() } }
-                .each {
-                    s.append(Html.clusterTable(it))
-                    s.append(Html.HORIZONTAL_RULE)
-                }
-        titleClusters.each { it.each { it.removeComparisonProps() } }
+        s.append("<h1>Title cluster</h1>")
+        titleCluster
+                .each { it.addComparisonProps() }
+                .sort { a, b -> a.workType() <=> b.workType() }
+                .sort { it.numPages() }
+        s.append(Html.clusterTable(titleCluster))
+        s.append(Html.HORIZONTAL_RULE)
 
         s.append("<h1>Extracted works</h1>")
         works.collect { [it.doc] + it.derivedFrom }
                 .each { s.append(Html.clusterTable(it)) }
 
         s.append(Html.END)
+
         return s.toString()
     }
 
-    private Collection<MergedWork> mergedWorks(Collection<Collection<Doc>> titleClusters) {
+    private Collection<Work> mergedWorks(Collection<Doc> titleCluster) {
         def works = []
-        titleClusters.each { titleCluster ->
-            titleCluster.sort { it.numPages() }
-            WorkComparator c = new WorkComparator(WorkComparator.allFields(titleCluster))
 
-            def workClusters = partition(titleCluster, { Doc a, Doc b -> c.sameWork(a, b) })
-                    .each { work -> work.each { doc -> doc.removeComparisonProps() } }
+        prepareForCompare(titleCluster)
 
-            workClusters.each { wc ->
-                def (linked, local) = wc.split { it.workIri() }
-                if (!linked) {
-                    if (local.size() == 1) {
-                        Doc doc = local.first()
-                        works.add(new LocalWork(doc, reportDir, doc.doc.getChecksum(whelk.jsonld)))
-                    } else {
-                        works.add(new NewWork(local, reportDir)
-                                .tap { it.createDoc(whelk, c.merge(local)) })
-                    }
-                } else if (linked.size() == 1) {
-                    Doc doc = linked.first()
-                    works.add(new UpdatedWork(doc, local, reportDir, doc.doc.getChecksum(whelk.jsonld))
-                            .tap { it.update(c.merge(linked + local)) })
+        WorkComparator c = new WorkComparator(WorkComparator.allFields(titleCluster))
+
+        def workClusters = partition(titleCluster, { Doc a, Doc b -> c.sameWork(a, b) })
+                .each { work -> work.each { doc -> doc.removeComparisonProps() } }
+
+        workClusters.each { wc ->
+            def (local, linked) = wc.split { it.instanceData }
+            if (!linked) {
+                if (local.size() == 1) {
+                    Doc doc = local.first()
+                    works.add(new LocalWork(doc, reportDir))
                 } else {
-                    System.err.println("Local works in ${local.collect { it.shortId }} matches multiple linked works: ${linked.collect { it.shortId }}. Duplicate linked works?")
+                    works.add(new NewWork(local, reportDir)
+                            .tap { it.createDoc(whelk, c.merge(local)) })
                 }
+            } else if (linked.size() == 1) {
+                Doc doc = linked.first()
+                works.add(new LinkedWork(doc, local, reportDir)
+                        .tap { it.update(c.merge(linked + local)) })
+            } else {
+                System.err.println("Local works in ${local.collect { it.shortId }} matches multiple linked works: ${linked.collect { it.shortId }}. Duplicate linked works?")
             }
         }
 
@@ -300,7 +295,7 @@ class WorkToolJob {
                         if (!statuses[DIFF].contains('contribution')) {
                             String gf = titleCluster.collect { it.view.getDisplayText('genreForm') }.join(' ')
                             if (gf.contains('marc/FictionNotFurtherSpecified') && gf.contains('marc/NotFictionNotFurtherSpecified')) {
-                                println(titleCluster.collect { it.getDoc().shortId }.join('\t'))
+                                println(titleCluster.collect { it.getDocument().shortId }.join('\t'))
                             }
                         }
                     }
@@ -311,18 +306,18 @@ class WorkToolJob {
 
     void swedishFiction() {
         def swedish = { Doc doc ->
-            Util.asList(doc.getWork()['language']).collect { it['@id'] } == ['https://id.kb.se/language/swe']
+            Util.asList(doc.workData['language']).collect { it['@id'] } == ['https://id.kb.se/language/swe']
         }
 
         run({ cluster ->
             return {
-                def c = loadDocs(cluster)
-                        .findAll(qualityMonographs)
-                        .findAll(swedish)
-                        .findAll { d -> !d.isDrama() }
+                def c = loadDocs(cluster).split { it.instanceData }
+                        .with { local, linked ->
+                            linked + local.findAll(qualityMonographs).findAll(swedish)
+                        }
 
-                if (c.any { it.isFiction() } && !c.any { it.isNotFiction() }) {
-                    println(c.collect { it.doc.shortId }.join('\t'))
+                if (c.any { Doc d -> d.isFiction() } && !c.any { Doc d -> d.isNotFiction() }) {
+                    println(c.collect { Doc d -> d.document.shortId }.join('\t'))
                 }
             }
         })
@@ -343,7 +338,7 @@ class WorkToolJob {
             return {
                 def c = loadDocs(cluster).findAll(predicate)
                 if (c.size() > 0) {
-                    println(c.collect { it.doc.shortId }.join('\t'))
+                    println(c.collect { it.document.shortId }.join('\t'))
                 }
             }
         })
@@ -355,7 +350,7 @@ class WorkToolJob {
                 def c = loadDocs(cluster)
 
                 if (c) {
-                    if (c.any { it.isTranslation() }) {
+                    if (c.any { it.translationOf() }) {
                         if (c.any { it.hasTranslator() }) {
                             c = c.findAll { !it.isTranslationWithoutTranslator() }
                         } else {
@@ -368,7 +363,7 @@ class WorkToolJob {
                 }
 
                 if (c.size() > 0) {
-                    println(c.collect { it.doc.shortId }.join('\t'))
+                    println(c.collect { it.document.shortId }.join('\t'))
                 }
             }
         })
@@ -377,8 +372,8 @@ class WorkToolJob {
     void outputTitleClusters() {
         run({ cluster ->
             return {
-                titleClusters(loadLinkedWorks(loadDocs(cluster))).findAll { it.size() > 1 }.each {
-                    println(it.collect { it.doc.shortId }.join('\t'))
+                titleClusters(loadDocs(cluster)).findAll { it.size() > 1 }.each {
+                    println(it.collect { it.document.shortId }.join('\t'))
                 }
             }
         })
@@ -452,28 +447,33 @@ class WorkToolJob {
         }
     }
 
+    def loadUniqueLinkedWorks = { Collection<Doc> docs ->
+        docs.findResults { it.workIri() }
+                .unique()
+                .collect { new Doc(whelk, whelk.storage.getDocumentByIri(it)) }
+                .plus(docs.findAll { !it.workIri() })
+    }
+
     private Collection<Collection<Doc>> titleClusters(Collection<Doc> docs) {
-        docs.findAll(qualityMonographs)
-                .each { it.addComparisonProps() }
-                .with { partitionByTitle(it) }
-                .findAll { it.size() > 1 }
+        partitionByTitle(docs)
                 .findAll { !it.any { doc -> doc.hasGenericTitle() } }
-                .sort { a, b -> a.first().view.mainEntityDisplayTitle() <=> b.first().view.mainEntityDisplayTitle() }
+                .collect(loadUniqueLinkedWorks)
+                .findAll { it.size() > 1 }
+                .sort { a, b -> a.first().view.instanceDisplayTitle() <=> b.first().view.instanceDisplayTitle() }
     }
 
     Collection<Collection<Doc>> partitionByTitle(Collection<Doc> docs) {
         return partition(docs) { Doc a, Doc b ->
-            !a.getTitleVariants().intersect(b.getTitleVariants()).isEmpty()
+            !a.instanceTitleVariants().intersect(b.instanceTitleVariants()).isEmpty()
         }
     }
 
-    private Collection<Doc> loadLinkedWorks(Collection<Doc> docs) {
-        def (linked, local) = docs.split {
-            it.workIri()
-        }
-        return local + linked.collect { it.workIri() }
-                .unique()
-                .collect { new Doc(whelk, whelk.storage.getDocumentByIri(it)) }
+    private Collection<Doc> prepareForCompare(Collection<Doc> docs) {
+        docs.each {
+            if (it.instanceData) {
+                it.addComparisonProps()
+            }
+        }.sort { it.numPages() }
     }
 }
 

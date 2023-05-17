@@ -15,8 +15,8 @@ class DisplayDoc {
         thing['hasTitle'].collect { it['@type'] + ": " + it['flatTitle'] }.join(', ')
     }
 
-    String mainEntityDisplayTitle() {
-        displayTitle(['hasTitle': Util.flatTitles(doc.getMainEntity()['hasTitle'])])
+    String instanceDisplayTitle() {
+        displayTitle(['hasTitle': Util.flatTitles(doc.instanceTitle())])
     }
 
     // TODO...
@@ -26,30 +26,26 @@ class DisplayDoc {
         } else if (field == 'classification') {
             return classificationStrings().join("<br>")
         } else if (field == 'instance title') {
-            return getInstance()?['hasTitle'] ?: ''
-        } else if (field == 'work title') {
-            return getWork()?['hasTitle'] ?: ''
+            return doc.instanceTitle() ?: ''
         } else if (field == 'instance type') {
-            return getInstance()?['@type'] ?: ''
+            return doc.instanceType() ?: ''
         } else if (field == 'editionStatement') {
-            return getMainEntity()['editionStatement'] ?: ''
+            return doc.editionStatement() ?: ''
         } else if (field == 'responsibilityStatement') {
-            return getMainEntity()['responsibilityStatement'] ?: ''
+            return doc.responsibilityStatement() ?: ''
         } else if (field == 'encodingLevel') {
             return doc.encodingLevel()
         } else if (field == 'publication') {
-            return chipString(getMainEntity()['publication'] ?: [])
+            return chipString(doc.publication())
         } else if (field == 'identifiedBy') {
-            return chipString(getMainEntity()['identifiedBy'] ?: [])
+            return chipString(doc.identifiedBy())
         } else if (field == 'extent') {
-            return chipString(getMainEntity()['extent'] ?: [])
+            return chipString(doc.extent() ?: [])
         } else if (field == 'reproductionOf') {
             return reproductionOfLink()
         } else {
-            return chipString(getWork().getOrDefault(field, []))
+            return chipString(doc.workData.getOrDefault(field, []))
         }
-
-
     }
 
     protected String chipString(def thing) {
@@ -57,9 +53,9 @@ class DisplayDoc {
     }
 
     private String reproductionOfLink() {
-        def reprOf = Util.asList(getMainEntity()['reproductionOf'])[0]
-        def shortId = reprOf
-                ? reprOf['@id'].split('[#/]').dropRight(1).last()
+        def base = Document.getBASE_URI().toString()
+        def shortId = doc.reproductionOf()
+                ? doc.reproductionOf()[0]['@id'].substring(base.length()).replace('#it', '')
                 : ''
         return "<a href=\"#$shortId\">$shortId</a>"
     }
@@ -71,12 +67,12 @@ class DisplayDoc {
     String link() {
         String base = Document.getBASE_URI().toString()
         String kat = "katalogisering/"
-        String id = doc.doc.shortId
+        String id = doc.document.shortId
         return base + kat + id
     }
 
     private List contributorStrings() {
-        List path = getInstance() ? ['instanceOf', 'contribution'] : ['contribution']
+        List path = doc.instanceData ? ['instanceOf', 'contribution'] : ['contribution']
         List contribution = Util.getPathSafe(getFramed(), path, [])
 
         return contribution.collect { Map c ->
@@ -102,9 +98,7 @@ class DisplayDoc {
     }
 
     List classificationStrings() {
-        List path = getInstance() ? ['instanceOf', 'classification'] : ['classification']
-        List<Map> classification = Util.getPathSafe(getMainEntity(), path, [])
-        classification.collect() { c ->
+        doc.classification().collect { c ->
             StringBuilder s = new StringBuilder()
             s.append(flatMaybeLinked(c['inScheme'], ['code', 'version']).with { it.isEmpty() ? it : it + ': ' })
             s.append(flatMaybeLinked(c, ['code']))
@@ -147,27 +141,15 @@ class DisplayDoc {
 
     Map getFramed() {
         if (!framed) {
-            if (getInstance()) {
-                framed = JsonLd.frame(doc.doc.getThingIdentifiers().first(), doc.whelk.loadEmbellished(doc.doc.shortId).data)
+            if (doc.instanceData) {
+                framed = JsonLd.frame(doc.document.getThingIdentifiers().first(), doc.whelk.loadEmbellished(doc.document.shortId).data)
             } else {
-                Document copy = doc.doc.clone()
+                Document copy = doc.document.clone()
                 doc.whelk.embellish(copy)
-                framed = JsonLd.frame(doc.doc.getThingIdentifiers().first(), copy.data)
+                framed = JsonLd.frame(doc.document.getThingIdentifiers().first(), copy.data)
             }
         }
 
         return framed
-    }
-
-    Map getMainEntity() {
-        return doc.getMainEntity()
-    }
-
-    Map getInstance() {
-        return doc.getInstance()
-    }
-
-    Map getWork() {
-        return doc.getWork()
     }
 }

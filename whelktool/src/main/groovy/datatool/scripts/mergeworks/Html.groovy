@@ -17,18 +17,18 @@ class Html {
     static final String END = '</body></html>'
     static final String HORIZONTAL_RULE = "<hr/><br/>\n"
 
-    static def infoFields = ['reproductionOf', 'instance title', 'work title', 'instance type', 'editionStatement', 'responsibilityStatement', 'encodingLevel', 'publication', 'identifiedBy', 'extent']
+    static def infoFields = ['reproductionOf', 'instance title', 'instance type', 'editionStatement', 'responsibilityStatement', 'encodingLevel', 'publication', 'identifiedBy', 'extent']
 
     static String clusterTable(Collection<Doc> cluster) {
-        String id = clusterId(cluster.collect { it.doc.shortId })
+        String id = clusterId(cluster.collect { it.document.shortId })
         String header = """
             <tr>
                 <th><a id="${id}"><a href="#${id}">${id}</th>
-                ${cluster.collect { doc -> "<th><a id=\"${doc.doc.shortId}\" href=\"${doc.view.link()}\">${doc.doc.shortId}</a></th>" }.join('\n')}
+                ${cluster.collect { doc -> "<th><a id=\"${doc.document.shortId}\" href=\"${doc.view.link()}\">${doc.document.shortId}</a></th>" }.join('\n')}
             </tr>
             <tr>
                 <td></td>
-                ${cluster.collect { doc -> "<td>${doc.view.mainEntityDisplayTitle()}</td>" }.join('\n')}                                     
+                ${cluster.collect { doc -> "<td>${doc.view.instanceDisplayTitle()}</td>" }.join('\n')}                                     
             </tr>
            """.stripIndent()
 
@@ -51,47 +51,36 @@ class Html {
         """
     }
 
-    static String hubTable(List<Collection<Doc>> docs) {
-        def mergedWorks = []
-        def derivedFromIds = []
-
-        docs.each {
-            def work = it.head()
-            def derivedFrom = it.tail()
-            mergedWorks.add(work)
-            derivedFromIds.add(derivedFrom.collectEntries { doc ->
-                [doc.doc.shortId, doc.view.link()]
-            })
-        }
-
-        def clusterId = clusterId(derivedFromIds*.keySet().flatten())
+    static String hubTable(Collection<Work> works) {
+        def instanceDocs = works.collect { work -> work.derivedFrom ?: [work.doc] }
+        def clusterId = clusterId(instanceDocs.flatten().collect { Doc d -> d.document.shortId })
 
         String header = """
             <tr>
                 <th><a id="${clusterId}"><a href="#${clusterId}">${clusterId}</th>
-                ${docs.collect {
-            def work = it.head()
-            def derivedFrom = it.tail()
-            derivedFrom.size() > 1 || it instanceof UpdatedWork
-                    ? "<th><a id=\"${work.doc.shortId}\" href=\"${work.view.link()}\">${work.doc.shortId}</a></th>"
-                    : "<th></th>" }
+                ${works.collect { it instanceof NewWork || it instanceof LinkedWork
+                ? "<th><a id=\"${it.document.shortId}\" href=\"${it.doc.view.link()}\">${it.document.shortId}</a></th>"
+                : "<th></th>" }
                 .join('\n')}
             </tr>
            """.stripIndent()
 
-        String derivedFrom =
+        def link = { Doc d -> "<a id=\"$d.document.shortId\" href=\"${d.view.link()}\">$d.document.shortId</a>" }
+
+        String instances =
                 """
                     <tr class="info">
                         <td>_instances</td>
-                        ${derivedFromIds.collect { "<td>${it.collect { id, link -> "<a id=\"$id\" href=\"$link\">$id</a>" }.join('<br>')}</td>" }.join('\n')}
+                        ${instanceDocs.collect { "<td>${it.collect(link).join('<br>')}</td>" }.join('\n')}
                         </tr>
                 """.stripIndent()
 
-        def statuses = WorkComparator.compare(mergedWorks)
+        def workDocs = works.collect {it.doc }
+        def statuses = WorkComparator.compare(workDocs)
 
-        String equal = statuses.get(EQUAL, []).collect(fieldRows(mergedWorks, mergedWorks.size() > 1 ? EQUAL.toString() : "")).join('\n')
-        String compatible = statuses.get(COMPATIBLE, []).collect(fieldRows(mergedWorks, COMPATIBLE.toString())).join('\n')
-        String diff = statuses.get(DIFF, []).collect(fieldRows(mergedWorks, DIFF.toString())).join('\n')
+        String equal = statuses.get(EQUAL, []).collect(fieldRows(workDocs, workDocs.size() > 1 ? EQUAL.toString() : "")).join('\n')
+        String compatible = statuses.get(COMPATIBLE, []).collect(fieldRows(workDocs, COMPATIBLE.toString())).join('\n')
+        String diff = statuses.get(DIFF, []).collect(fieldRows(workDocs, DIFF.toString())).join('\n')
 
         return """
             <table>
@@ -99,7 +88,7 @@ class Html {
                 ${equal}
                 ${compatible}
                 ${diff}
-                ${derivedFrom}
+                ${instances}
             </table>
             <br/><br/>
         """

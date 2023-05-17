@@ -1,6 +1,6 @@
 package datatool.scripts.mergeworks
 
-import se.kb.libris.Normalizers
+
 import whelk.Document
 import whelk.Whelk
 
@@ -28,30 +28,35 @@ class Doc {
             'https://id.kb.se/marc/Drama'
     ]
 
+
     Whelk whelk
-    Document doc
-    Map work
-    
-    List<String> titles
+    Document document
+
+    Map instanceData
+    Map workData
+
+    List<String> instanceTitles
 
     DisplayDoc display
 
     String checksum
-    
-    Doc(Whelk whelk, Document doc) {
+
+    Doc(Whelk whelk, Document document) {
         this.whelk = whelk
-        this.doc = doc
-        this.checksum = doc.getChecksum(whelk.getJsonld())
+        this.document = document
+        this.checksum = document.getChecksum(whelk.getJsonld())
+        setData()
     }
 
-    Map getWork() {
-        if (!work) {
-            work = getWork(whelk, doc)
+    void setData() {
+        if (mainEntity()['instanceOf']) {
+            instanceData = mainEntity()
+            workData = instanceData['instanceOf']
+        } else {
+            workData = mainEntity()
         }
-
-        return work
     }
-    
+
     DisplayDoc getView() {
         if (!display) {
             display = new DisplayDoc(this)
@@ -60,56 +65,96 @@ class Doc {
         return display
     }
 
-    static Map getWork(Whelk whelk, Document d) {
-        Map work = Normalizers.getWork(whelk, d)
-        if (!work) {
-            throw new NoWorkException(d.shortId)
-        }
-        work = new HashMap<>(work)
-
-        //TODO 'marc:fieldref'
-
-        return work
-    }
-
-    String workIri() {
-        getWork()['@id']
-    }
-
-    Map getInstance() {
-        getMainEntity().containsKey('instanceOf') ? getMainEntity() : null
-    }
-
-    Map getMainEntity() {
-        return doc.data['@graph'][1]
-    }
-
-    List<String> getTitleVariants() {
-        if (!titles) {
-            titles = Util.getTitleVariants(getMainEntity()['hasTitle'])
-        }
-
-        return titles
-    }
-
-    boolean hasGenericTitle() {
-        Util.hasGenericTitle(getMainEntity()['hasTitle'])
-    }
-    
-    boolean isMonograph() {
-        getMainEntity()['issuanceType'] == 'Monograph'
-    }
-
-    boolean hasPart() {
-        getWork()['hasPart'] != null
+    Map mainEntity() {
+        return document.data['@graph'][1]
     }
 
     String encodingLevel() {
-        return doc.data['@graph'][0]['encodingLevel'] ?: ''
+        return document.data['@graph'][0]['encodingLevel'] ?: ''
+    }
+
+    String workIri() {
+        workData['@id']
+    }
+
+    List<Map> workTitle() {
+        asList(workData['hasTitle'])
+    }
+
+    List<Map> instanceTitle() {
+        asList(instanceData?.hasTitle)
+    }
+
+    List<String> instanceTitleVariants() {
+        if (!instanceTitles) {
+            instanceTitles = Util.getTitleVariants(instanceTitle())
+        }
+
+        return instanceTitles
+    }
+
+    boolean hasGenericTitle() {
+        Util.hasGenericTitle(instanceTitle())
+    }
+
+    String workType() {
+        workData['@type']
+    }
+
+    String instanceType() {
+        instanceData?.'@type'
+    }
+
+    List<Map> translationOf() {
+        asList(workData['translationOf'])
+    }
+
+    List<Map> contribution() {
+        asList(workData['contribution'])
+    }
+
+    List<Map> classification() {
+        asList(workData['classification'])
+    }
+
+    List<Map> genreForm() {
+        asList(workData['genreForm'])
+    }
+
+    List<Map> publication() {
+        asList(instanceData?.publication)
+    }
+
+    List<Map> identifiedBy() {
+        asList(instanceData?.identifiedBy)
+    }
+
+    List<Map> extent() {
+        asList(instanceData?.extent)
+    }
+
+    List<Map> reproductionOf() {
+        asList(instanceData?.reproductionOf)
+    }
+
+    String editionStatement() {
+        instanceData?.editionStatement
+    }
+
+    String responsibilityStatement() {
+        instanceData?.responsibilityStatement
+    }
+
+    boolean isMonograph() {
+        instanceData?.issuanceType == 'Monograph'
+    }
+
+    boolean hasPart() {
+        workData['hasPart'] != null
     }
 
     int numPages() {
-        String extent = Util.getPathSafe(getInstance(), ['extent', 0, 'label', 0]) ?: Util.getPathSafe(getInstance(), ['extent', 0, 'label'], '')
+        String extent = Util.getPathSafe(extent(), [0, 'label', 0]) ?: Util.getPathSafe(extent(), [0, 'label'], '')
         return numPages(extent)
     }
 
@@ -123,72 +168,64 @@ class Doc {
         }
         pages ? pages.max() : -1
     }
-    
+
     boolean isFiction() {
         isMarcFiction() || isSaogfFiction() || isSabFiction()
     }
 
     boolean isMarcFiction() {
-        (getWork()['genreForm'] ?: []).any { it['@id'] in MARC_FICTION }
+        (genreForm() ?: []).any { it['@id'] in MARC_FICTION }
     }
 
     boolean isMarcNotFiction() {
-        (getWork()['genreForm'] ?: []).any { it['@id'] in MARC_NOT_FICTION }
+        (genreForm() ?: []).any { it['@id'] in MARC_NOT_FICTION }
     }
 
     boolean isSaogfFiction() {
-        (getWork()['genreForm'] ?: []).any { whelk.relations.isImpliedBy(SAOGF_SKÖN, it['@id'] ?: '') }
+        (genreForm() ?: []).any { whelk.relations.isImpliedBy(SAOGF_SKÖN, it['@id'] ?: '') }
     }
 
     boolean isSabFiction() {
-        view.classificationStrings().any { it.contains('kssb') && it.contains(': H') }
+        getView().classificationStrings().any { it.contains('kssb') && it.contains(': H') }
     }
 
     boolean isNotFiction() {
         // A lot of fiction has marc/NotFictionNotFurtherSpecified but then classification is usually empty
-        isMarcNotFiction() && (!view.classificationStrings().isEmpty() && !isSabFiction())
+        isMarcNotFiction() && (!getView().classificationStrings().isEmpty() && !isSabFiction())
     }
 
     boolean isText() {
-        getWork()['@type'] == 'Text'
+        workData['@type'] == 'Text'
     }
 
     boolean isTranslationWithoutTranslator() {
-        isTranslation() && !hasTranslator()
+        translationOf() && !hasTranslator()
     }
 
-    boolean isTranslation() {
-        getWork()['translationOf']
+    boolean hasTranslator() {
+        hasRole(Util.Relator.TRANSLATOR.iri)
     }
 
-    boolean isSabDrama() {
-        view.classificationStrings().any { it.contains(': Hc.02') || it.contains(': Hce.02') }
-    }
-
-    boolean isGfDrama() {
-        asList(getWork()['genreForm']).any { it['@id'] in DRAMA_GF }
+    boolean hasRole(String relatorIri) {
+        asList(workData['contribution']).any {
+            asList(it['role']).contains(['@id': relatorIri])
+        }
     }
 
     boolean isDrama() {
         isSabDrama() || isGfDrama()
     }
 
-    boolean hasRole(String relatorIri) {
-        asList(getWork()['contribution']).any {
-            asList(it['role']).contains(['@id': relatorIri])
-        }
+    boolean isSabDrama() {
+        getView().classificationStrings().any { it.contains(': Hc.02') || it.contains(': Hce.02') }
     }
 
-    boolean hasTranslator() {
-        hasRole('https://id.kb.se/relator/translator')
-    }
-
-    boolean hasDistinguishingEdition() {
-        (getInstance()?['editionStatement'] ?: '').toString().toLowerCase().contains("förk")
+    boolean isGfDrama() {
+        asList(genreForm()).any { it['@id'] in DRAMA_GF }
     }
 
     boolean hasRelationshipWithContribution() {
-        asList(getWork()['relationship']).any { r ->
+        asList(workData['relationship']).any { r ->
             asList(r['entity']).any { e ->
                 e.containsKey('contribution')
             }
@@ -196,22 +233,22 @@ class Doc {
     }
 
     boolean isTactile() {
-        asList(getWork()['contentType']).contains(['@id': 'https://id.kb.se/term/rda/TactileText'])
+        asList(workData['contentType']).contains(['@id': 'https://id.kb.se/term/rda/TactileText'])
+    }
+
+    boolean hasDistinguishingEdition() {
+        (instanceData?.editionStatement ?: '').toString().toLowerCase().contains("förk")
     }
 
     void addComparisonProps() {
         if (hasDistinguishingEdition()) {
-            addToWork('_editionStatement')
+            workData['_editionStatement'] = instanceData['editionStatement']
         }
-        getWork()['_numPages'] = numPages()
-    }
-
-    void addToWork(String field) {
-        getWork()[field] = getInstance()[field]
+        workData['_numPages'] = numPages()
     }
 
     void removeComparisonProps() {
-        getWork().remove('_editionStatement')
-        getWork().remove('_numPages')
+        workData.remove('_editionStatement')
+        workData.remove('_numPages')
     }
 }

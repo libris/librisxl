@@ -4,7 +4,7 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
 
-abstract class MergedWork {
+abstract class Work {
     Document document
     Doc doc
     Collection<Doc> derivedFrom
@@ -21,7 +21,7 @@ abstract class MergedWork {
 
     void linkInstances(Whelk whelk) {
         derivedFrom?.each {
-            Document d = it.doc
+            Document d = it.document
             d.data[JsonLd.GRAPH_KEY][1][JsonLd.WORK_KEY] = [(JsonLd.ID_KEY): d.getThingIdentifiers().first()]
             d.setGenerationDate(new Date())
             d.setGenerationProcess(generationProcess)
