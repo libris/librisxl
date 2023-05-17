@@ -22,7 +22,7 @@ abstract class Work {
     void linkInstances(Whelk whelk) {
         derivedFrom?.each {
             Document d = it.document
-            d.data[JsonLd.GRAPH_KEY][1][JsonLd.WORK_KEY] = [(JsonLd.ID_KEY): d.getThingIdentifiers().first()]
+            d.data[JsonLd.GRAPH_KEY][1][JsonLd.WORK_KEY] = [(JsonLd.ID_KEY): document.getThingIdentifiers().first()]
             d.setGenerationDate(new Date())
             d.setGenerationProcess(generationProcess)
             whelk.storeAtomicUpdate(d, !loud, false, changedIn, changedBy, it.checksum)
