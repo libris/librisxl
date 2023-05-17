@@ -180,6 +180,40 @@ class Util {
             null
     ]
 
+    static def toWorkTitleForm = { Map title ->
+        // partName/partNumber is usually in hasPart but not always
+        def partName = title['partName']
+        def partNumber = title['partNumber']
+
+        def hasPart = title['hasPart']
+        if (hasPart) {
+            if (hasPart.size() > 1) {
+                // TODO: Keep as is for now, for further analysis
+                return title
+            }
+            partName = hasPart[0]['partName']
+            partNumber = hasPart[0]['partNumber']
+        }
+
+        if (asList(partName).size() > 1 || asList(partNumber).size() > 1) {
+            // TODO: Keep as is for now, for further analysis
+            return title
+        }
+
+        partName = asList(partName)[0]
+        partNumber = asList(partNumber)[0]
+
+        if (partNumber && partName) {
+            title['mainTitle'] += ". $partNumber, $partName"
+        } else if (partNumber) {
+            title['mainTitle'] += ". $partNumber"
+        } else if (partName) {
+            title['mainTitle'] += ". $partName"
+        }
+
+        return title.subMap(['@type', 'mainTitle', 'source'])
+    }
+
     // Return the most common title for the best encodingLevel
     static def bestTitle(Collection<Doc> docs) {
         // TODO: which title to pick when matched with already existing linked work?
@@ -200,7 +234,7 @@ class Util {
             def onLevel = docs.findAll { it.encodingLevel() == level }
             def bestInstanceTitle = mostCommonInstanceTitle(onLevel)
             if (bestInstanceTitle) {
-                return bestInstanceTitle
+                return bestInstanceTitle.collect(toWorkTitleForm)
             }
         }
 
