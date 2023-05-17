@@ -16,10 +16,12 @@ bilderbok
 comédie
 contos
 deckare
+deckarroman
 detektivroman
 dikt
 dikter
 drama
+efterlämnade dikter
 ein coq-rouge-thriller
 ein roman
 eine erzählung
@@ -72,3 +74,4 @@ spänningsroman
 stories
 thriller
 ungdomsroman
+(Efterlämnade dikter.)
