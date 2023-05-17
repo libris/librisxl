@@ -3,7 +3,7 @@
 # Ancient greek
 # "Gammalgrekiska texter (från före 1454) translittereras enligt schema fastlagt för vetenskapliga bibliotek i Svenska katalogiseringsregler 1980 (SKR)"
 # https://metadatabyran.kb.se/download/18.6945cdaa174b74a2c361608/1601918851828/Grekiska%20alfabetet.pdf
-# https://metadatabyran.kb.se/beskrivning/specialanvisningar/mangsprak/romaniseringsscheman#h-Gammalgrekiska
+# https://metadatabyran.kb.se/beskrivning/specialanvisningar/mangsprak/libris-romaniseringspraxis#h-Gammalgrekiska
 
 :: NFC (NFD);
 

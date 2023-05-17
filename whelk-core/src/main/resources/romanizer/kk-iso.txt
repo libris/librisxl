@@ -4,7 +4,7 @@
 # "Kyrillisk skrift för icke slaviska språk enligt ISO 9:1995"
 # "Table for Cyrillic characters of non-Slavic languages"
 # https://metadatabyran.kb.se/download/18.4810e090180d0919bf4609/1653052278416/Table%20for%20Cyrillic%20characters%20of%20non-Slavic%20languages.pdf
-# https://metadatabyran.kb.se/beskrivning/specialanvisningar/mangsprak/romaniseringsscheman#h-Kazakiska
+# https://metadatabyran.kb.se/beskrivning/specialanvisningar/mangsprak/libris-romaniseringspraxis#h-Kazakiska
 
 # TODO: Some of these have multiple options in the spec. Review and pick the most likely one?
 
