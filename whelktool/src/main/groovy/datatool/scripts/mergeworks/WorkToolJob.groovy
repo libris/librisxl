@@ -133,12 +133,11 @@ class WorkToolJob {
                 }
 
                 def linkableWorks = works.findAll { it instanceof NewWork || it instanceof LinkedWork }
-                def linkableWorkIds = linkableWorks.collect { it.document.getThingIdentifiers().first() }
 
-                if (!dryRun) {
+                if (linkableWorks && !dryRun) {
                     whelk.setSkipIndex(skipIndex)
                     works.each { work ->
-                        work.addCloseMatch(linkableWorkIds)
+                        work.addCloseMatch(linkableWorks.collect { it.document.getThingIdentifiers().first() })
                         work.setGenerationFields()
                         work.store(whelk)
                         work.linkInstances(whelk)
@@ -167,33 +166,6 @@ class WorkToolJob {
             }
             f.append(Html.END)
         }
-    }
-
-    void revert() {
-        run({ cluster ->
-            return {
-                def docs = cluster.collect(whelk.&getDocument).grep()
-
-                Set<String> works = []
-
-                docs.each { Document d ->
-                    def sum = d.getChecksum(whelk.jsonld)
-                    works << getPathSafe(d.data, d.workIdPath)
-                    def revertTo = whelk.storage.loadAllVersions(d.shortId)
-                            .reverse()
-                            .find { v -> getPathSafe(v.data, v.workIdPath) == null }
-                    d.data = revertTo.data
-                    d.setGenerationDate(new Date())
-                    d.setGenerationProcess(generationProcess)
-                    whelk.storeAtomicUpdate(d, !loud, false, changedIn, changedBy, sum)
-                }
-
-                works.grep().each {
-                    def shortId = it.split("[#/]")[-2]
-                    whelk.remove(shortId, changedIn, changedBy)
-                }
-            }
-        })
     }
 
     String htmlReport(Collection<Doc> titleCluster, Collection<Work> works) {
@@ -250,54 +222,6 @@ class WorkToolJob {
         return works
     }
 
-
-    void subTitles() {
-        statistics.printOnShutdown(10)
-        run({ cluster ->
-            return {
-                String titles = cluster.collect(whelk.&getDocument).collect {
-                    getPathSafe(it.data, ['@graph', 1, 'hasTitle', 0, 'subtitle'])
-                }.grep().join('\n')
-
-                if (!titles.isBlank()) {
-                    println(titles + '\n')
-                }
-            }
-        })
-    }
-
-    void printInstanceValue(String field) {
-        run({ cluster ->
-            return {
-                String values = cluster.collect(whelk.&getDocument).collect {
-                    "${it.shortId}\t${getPathSafe(it.data, ['@graph', 1, field])}"
-                }.join('\n')
-
-                println(values + '\n')
-            }
-        })
-    }
-
-    void fictionNotFiction() {
-        run({ cluster ->
-            return {
-                Collection<Collection<Doc>> titleClusters = titleClusters(loadLastUnlinkedVersion(cluster))
-
-                for (titleCluster in titleClusters) {
-                    if (titleCluster.size() > 1) {
-                        def statuses = WorkComparator.compare(cluster)
-                        if (!statuses[DIFF].contains('contribution')) {
-                            String gf = titleCluster.collect { it.view.getDisplayText('genreForm') }.join(' ')
-                            if (gf.contains('marc/FictionNotFurtherSpecified') && gf.contains('marc/NotFictionNotFurtherSpecified')) {
-                                println(titleCluster.collect { it.getDocument().shortId }.join('\t'))
-                            }
-                        }
-                    }
-                }
-            }
-        })
-    }
-
     void swedishFiction() {
         def swedish = { Doc doc ->
             Util.asList(doc.workData['language']).collect { it['@id'] } == ['https://id.kb.se/language/swe']
@@ -317,45 +241,10 @@ class WorkToolJob {
         })
     }
 
-    void filterClusters(Closure<Collection<Doc>> predicate) {
-        run({ cluster ->
-            return {
-                if (predicate(loadDocs(cluster))) {
-                    println(cluster.join('\t'))
-                }
-            }
-        })
-    }
-
     void filterDocs(Closure<Doc> predicate) {
         run({ cluster ->
             return {
                 def c = loadDocs(cluster).findAll(predicate)
-                if (c.size() > 0) {
-                    println(c.collect { it.document.shortId }.join('\t'))
-                }
-            }
-        })
-    }
-
-    void translationNoTranslator() {
-        run({ cluster ->
-            return {
-                def c = loadDocs(cluster)
-
-                if (c) {
-                    if (c.any { it.translationOf() }) {
-                        if (c.any { it.hasTranslator() }) {
-                            c = c.findAll { !it.isTranslationWithoutTranslator() }
-                        } else {
-                            int pages = c.first().numPages()
-                            if (c.any { it.numPages() != pages }) {
-                                return // drop cluster
-                            }
-                        }
-                    }
-                }
-
                 if (c.size() > 0) {
                     println(c.collect { it.document.shortId }.join('\t'))
                 }
