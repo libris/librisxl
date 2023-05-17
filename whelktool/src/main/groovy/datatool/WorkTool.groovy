@@ -34,17 +34,10 @@ class WorkTool {
         cli.s(longOpt: 'show', 'Show. Generate HTML report with title clusters')
         cli.s2(longOpt: 'showWorks', 'Show. Generate HTML report with works')
         cli.sh(longOpt: 'showHubs', 'Show. Generate HTML report with title clusters containing different works')
-        cli.dd(longOpt: 'diff', args: 1, argName: 'diff', 'Field to diff')
-        cli.i(longOpt: 'instance-vals', args: 1, argName: 'field', 'Instance field to print, e.g. editionStatement')
-        cli.t(longOpt: 'subTitles', 'Print subtitles')
-        cli.nf(longOpt: 'fiction-not-fiction', 'Filter: output clusters with mixed marc/FictionNotFurtherSpecified and marc/NotFictionNotFurtherSpecified')
         cli.f(longOpt: 'swedishFiction', 'Filter: output clusters containing swedish fiction')
         cli.tr(longOpt: 'anonymousTranslation', 'Filter: remove translations without translator')
-        cli.tr2(longOpt: 'anonymousTranslation2', 'Filter: remove translations without translator')
         cli.qm(longOpt: 'qualityMonographs', 'Filter: "qualityMonographs"')
         cli.tc(longOpt: 'title-clusters', 'Filter: output title clusters')
-        cli.rv(longOpt: 'revert', 'undo merge and extraction of matching works')
-        cli.cr(longOpt: 'contribution-role', args: 1, argName: 'relator iri', 'Filter: output clusters where given role exists in at least one contribution')
 
         def options = cli.parse(args)
         if (options.h) {
@@ -69,26 +62,14 @@ class WorkTool {
             m.showWorks()
         } else if (options.sh) {
             m.showHubs()
-        } else if (options.t) {
-            m.subTitles()
-        } else if (options.i) {
-            m.printInstanceValue(options.i)
-        } else if (options.nf) {
-            m.fictionNotFiction()
         } else if (options.f) {
             m.swedishFiction()
         } else if (options.tr) {
             m.filterDocs({ Doc d -> !d.isTranslationWithoutTranslator() })
         } else if (options.qm) {
             m.filterDocs(WorkToolJob.qualityMonographs)
-        } else if (options.tr2) {
-            m.translationNoTranslator()
         } else if (options.tc) {
             m.outputTitleClusters()
-        } else if (options.rv) {
-            m.revert()
-        } else if (options.cr) {
-            m.filterClusters({ c -> c.any { Doc d -> d.hasRole(options.cr) } })
         } else {
             cli.usage()
             System.exit 1
