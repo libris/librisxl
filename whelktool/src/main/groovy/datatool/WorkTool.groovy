@@ -36,7 +36,6 @@ class WorkTool {
         cli.sh(longOpt: 'showHubs', 'Show. Generate HTML report with title clusters containing different works')
         cli.f(longOpt: 'swedishFiction', 'Filter: output clusters containing swedish fiction')
         cli.tr(longOpt: 'anonymousTranslation', 'Filter: remove translations without translator')
-        cli.qm(longOpt: 'qualityMonographs', 'Filter: "qualityMonographs"')
         cli.tc(longOpt: 'title-clusters', 'Filter: output title clusters')
 
         def options = cli.parse(args)
@@ -66,8 +65,6 @@ class WorkTool {
             m.swedishFiction()
         } else if (options.tr) {
             m.filterDocs({ Doc d -> !d.isTranslationWithoutTranslator() })
-        } else if (options.qm) {
-            m.filterDocs(WorkToolJob.qualityMonographs)
         } else if (options.tc) {
             m.outputTitleClusters()
         } else {

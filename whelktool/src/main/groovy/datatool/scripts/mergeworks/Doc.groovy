@@ -65,12 +65,16 @@ class Doc {
         return display
     }
 
+    Map record() {
+        document.data['@graph'][0]
+    }
+
     Map mainEntity() {
-        return document.data['@graph'][1]
+        document.data['@graph'][1]
     }
 
     String encodingLevel() {
-        return document.data['@graph'][0]['encodingLevel'] ?: ''
+        return record()['encodingLevel'] ?: ''
     }
 
     String workIri() {
@@ -149,8 +153,23 @@ class Doc {
         instanceData?.issuanceType == 'Monograph'
     }
 
-    boolean hasPart() {
-        workData['hasPart'] != null
+    boolean isInSb17Bibliography() {
+        asList(record()['bibliography']).contains(['@id': 'https://libris.kb.se/library/SB17'])
+    }
+
+    boolean isMaybeAggregate() {
+        workData['hasPart']
+                || getView().classificationStrings().any { it.contains('kssb') && it.contains('(s)') }
+                || !contribution().any { it['@type'] == 'PrimaryContribution' }
+                || hasRelationshipWithContribution()
+    }
+
+    boolean hasRelationshipWithContribution() {
+        asList(workData['relationship']).any { r ->
+            asList(r['entity']).any { e ->
+                e.containsKey('contribution')
+            }
+        }
     }
 
     int numPages() {
@@ -174,19 +193,19 @@ class Doc {
     }
 
     boolean isMarcFiction() {
-        (genreForm() ?: []).any { it['@id'] in MARC_FICTION }
+        genreForm().any { it['@id'] in MARC_FICTION }
     }
 
     boolean isMarcNotFiction() {
-        (genreForm() ?: []).any { it['@id'] in MARC_NOT_FICTION }
+        genreForm().any { it['@id'] in MARC_NOT_FICTION }
     }
 
     boolean isSaogfFiction() {
-        (genreForm() ?: []).any { whelk.relations.isImpliedBy(SAOGF_SKÖN, it['@id'] ?: '') }
+        genreForm().any { whelk.relations.isImpliedBy(SAOGF_SKÖN, it['@id'] ?: '') }
     }
 
     boolean isSabFiction() {
-        getView().classificationStrings().any { it.contains('kssb') && it.contains(': H') }
+        classification().any {it.inScheme.toString() =~ /kssb/ && it.code =~ /^(H|uH|ufH|ugH)/ }
     }
 
     boolean isNotFiction() {
@@ -207,7 +226,7 @@ class Doc {
     }
 
     boolean hasRole(String relatorIri) {
-        asList(workData['contribution']).any {
+        contribution().any {
             asList(it['role']).contains(['@id': relatorIri])
         }
     }
@@ -224,16 +243,13 @@ class Doc {
         asList(genreForm()).any { it['@id'] in DRAMA_GF }
     }
 
-    boolean hasRelationshipWithContribution() {
-        asList(workData['relationship']).any { r ->
-            asList(r['entity']).any { e ->
-                e.containsKey('contribution')
-            }
-        }
-    }
-
     boolean isTactile() {
         asList(workData['contentType']).contains(['@id': 'https://id.kb.se/term/rda/TactileText'])
+                || asList(instanceData?.carrierType).any { it['@id'] in ['https://id.kb.se/marc/Braille', 'https://id.kb.se/marc/TacMaterialType-b'] }
+    }
+
+    boolean isThesis() {
+        genreForm().any { it == ['@id': 'https://id.kb.se/marc/Thesis'] }
     }
 
     boolean hasDistinguishingEdition() {
