@@ -20,11 +20,11 @@ class Html {
     static def infoFields = ['reproductionOf', 'instance title', 'instance type', 'editionStatement', 'responsibilityStatement', 'encodingLevel', 'publication', 'identifiedBy', 'extent']
 
     static String clusterTable(Collection<Doc> cluster) {
-        String id = clusterId(cluster.collect { it.document.shortId })
+        String id = clusterId(cluster.collect { it.shortId() })
         String header = """
             <tr>
                 <th><a id="${id}"><a href="#${id}">${id}</th>
-                ${cluster.collect { doc -> "<th><a id=\"${doc.document.shortId}\" href=\"${doc.view.link()}\">${doc.document.shortId}</a></th>" }.join('\n')}
+                ${cluster.collect { doc -> "<th><a id=\"${doc.shortId()}\" href=\"${doc.view.link()}\">${doc.shortId()}</a></th>" }.join('\n')}
             </tr>
             <tr>
                 <td></td>
@@ -51,21 +51,21 @@ class Html {
         """
     }
 
-    static String hubTable(Collection<Work> works) {
-        def instanceDocs = works.collect { work -> work.derivedFrom ?: [work.doc] }
-        def clusterId = clusterId(instanceDocs.flatten().collect { Doc d -> d.document.shortId })
+    static String hubTable(Collection<Doc> works) {
+        def instanceDocs = works.collect { work -> work.unlinkedInstances ?: work }
+        def clusterId = clusterId(instanceDocs.flatten().collect { Doc d -> d.shortId() })
 
         String header = """
             <tr>
                 <th><a id="${clusterId}"><a href="#${clusterId}">${clusterId}</th>
-                ${works.collect { it instanceof NewWork || it instanceof LinkedWork
-                ? "<th><a id=\"${it.document.shortId}\" href=\"${it.doc.view.link()}\">${it.document.shortId}</a></th>"
+                ${works.collect { it.workIri()
+                ? "<th><a id=\"${it.shortId()}\" href=\"${it.view.link()}\">${it.shortId()}</a></th>"
                 : "<th></th>" }
                 .join('\n')}
             </tr>
            """.stripIndent()
 
-        def link = { Doc d -> "<a id=\"$d.document.shortId\" href=\"${d.view.link()}\">$d.document.shortId</a>" }
+        def link = { Doc d -> "<a id=\"${d.shortId()}\" href=\"${d.view.link()}\">${d.shortId()}</a>" }
 
         String instances =
                 """
@@ -75,12 +75,11 @@ class Html {
                         </tr>
                 """.stripIndent()
 
-        def workDocs = works.collect {it.doc }
-        def statuses = WorkComparator.compare(workDocs)
+        def statuses = WorkComparator.compare(works)
 
-        String equal = statuses.get(EQUAL, []).collect(fieldRows(workDocs, workDocs.size() > 1 ? EQUAL.toString() : "")).join('\n')
-        String compatible = statuses.get(COMPATIBLE, []).collect(fieldRows(workDocs, COMPATIBLE.toString())).join('\n')
-        String diff = statuses.get(DIFF, []).collect(fieldRows(workDocs, DIFF.toString())).join('\n')
+        String equal = statuses.get(EQUAL, []).collect(fieldRows(works, works.size() > 1 ? EQUAL.toString() : "")).join('\n')
+        String compatible = statuses.get(COMPATIBLE, []).collect(fieldRows(works, COMPATIBLE.toString())).join('\n')
+        String diff = statuses.get(DIFF, []).collect(fieldRows(works, DIFF.toString())).join('\n')
 
         return """
             <table>

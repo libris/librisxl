@@ -98,7 +98,10 @@ class DisplayDoc {
     }
 
     List classificationStrings() {
-        doc.classification().collect { c ->
+        List path = doc.instanceData ? ['instanceOf', 'classification'] : ['classification']
+        List classification = Util.getPathSafe(getFramed(), path, [])
+
+        classification.collect { c ->
             StringBuilder s = new StringBuilder()
             s.append(flatMaybeLinked(c['inScheme'], ['code', 'version']).with { it.isEmpty() ? it : it + ': ' })
             s.append(flatMaybeLinked(c, ['code']))
@@ -141,12 +144,12 @@ class DisplayDoc {
 
     Map getFramed() {
         if (!framed) {
-            if (doc.instanceData) {
-                framed = JsonLd.frame(doc.document.getThingIdentifiers().first(), doc.whelk.loadEmbellished(doc.document.shortId).data)
+            if (doc.existsInStorage) {
+                framed = JsonLd.frame(doc.thingIri(), doc.whelk.loadEmbellished(doc.shortId()).data)
             } else {
                 Document copy = doc.document.clone()
                 doc.whelk.embellish(copy)
-                framed = JsonLd.frame(doc.document.getThingIdentifiers().first(), copy.data)
+                framed = JsonLd.frame(doc.thingIri(), copy.data)
             }
         }
 

@@ -2,6 +2,7 @@ package datatool.scripts.mergeworks
 
 
 import whelk.Document
+import whelk.IdGenerator
 import whelk.Whelk
 
 import static datatool.scripts.mergeworks.Util.asList
@@ -32,6 +33,8 @@ class Doc {
     Whelk whelk
     Document document
 
+    Collection<Doc> unlinkedInstances
+
     Map instanceData
     Map workData
 
@@ -39,12 +42,15 @@ class Doc {
 
     DisplayDoc display
 
-    String checksum
+    String preUpdateChecksum
+
+    boolean existsInStorage = true
+    boolean modified = false
 
     Doc(Whelk whelk, Document document) {
         this.whelk = whelk
         this.document = document
-        this.checksum = document.getChecksum(whelk.getJsonld())
+        this.preUpdateChecksum = document.getChecksum(whelk.getJsonld())
         setData()
     }
 
@@ -73,6 +79,14 @@ class Doc {
         document.data['@graph'][1]
     }
 
+    String shortId() {
+        document.shortId
+    }
+
+    String thingIri() {
+        document.getThingIdentifiers().first()
+    }
+
     String encodingLevel() {
         return record()['encodingLevel'] ?: ''
     }
@@ -95,10 +109,6 @@ class Doc {
         }
 
         return flatInstanceTitle
-    }
-
-    boolean hasGenericTitle() {
-        Util.hasGenericTitle(instanceTitle())
     }
 
     String workType() {
@@ -149,6 +159,26 @@ class Doc {
         instanceData?.responsibilityStatement
     }
 
+    int numPages() {
+        String extent = Util.getPathSafe(extent(), [0, 'label', 0]) ?: Util.getPathSafe(extent(), [0, 'label'], '')
+        return numPages(extent)
+    }
+
+    // TODO: improve parsing https://metadatabyran.kb.se/beskrivning/materialtyper-arbetsfloden/tryckta-monografier/omfang-for-tryckta-monografier
+    static int numPages(String extentLabel) {
+        def l = extentLabel.replace('onumrerade', '')
+        def matcher = l =~ /(\d+)(?=[, \[\]0-9]*[sp])/
+        List<Integer> pages = []
+        while (matcher.find()) {
+            pages << Integer.parseInt(matcher.group(1))
+        }
+        pages ? pages.max() : -1
+    }
+
+    boolean hasGenericTitle() {
+        Util.hasGenericTitle(instanceTitle())
+    }
+
     boolean isMonograph() {
         instanceData?.issuanceType == 'Monograph'
     }
@@ -170,22 +200,6 @@ class Doc {
                 e.containsKey('contribution')
             }
         }
-    }
-
-    int numPages() {
-        String extent = Util.getPathSafe(extent(), [0, 'label', 0]) ?: Util.getPathSafe(extent(), [0, 'label'], '')
-        return numPages(extent)
-    }
-
-    // TODO: improve parsing https://metadatabyran.kb.se/beskrivning/materialtyper-arbetsfloden/tryckta-monografier/omfang-for-tryckta-monografier
-    static int numPages(String extentLabel) {
-        def l = extentLabel.replace('onumrerade', '')
-        def matcher = l =~ /(\d+)(?=[, \[\]0-9]*[sp])/
-        List<Integer> pages = []
-        while (matcher.find()) {
-            pages << Integer.parseInt(matcher.group(1))
-        }
-        pages ? pages.max() : -1
     }
 
     boolean isFiction() {
@@ -266,5 +280,19 @@ class Doc {
     void removeComparisonProps() {
         workData.remove('_editionStatement')
         workData.remove('_numPages')
+    }
+
+    void replaceWorkData(Map replacement) {
+        workData.clear()
+        workData.putAll(replacement)
+        modified = true
+    }
+
+    void addCloseMatch(List<String> workIds) {
+        def closeMatch = (asList(workData['closeMatch']) + (workIds - workIri()).collect { ['@id': it] }).unique()
+        if (closeMatch) {
+            workData['closeMatch'] = closeMatch
+            modified = true
+        }
     }
 }

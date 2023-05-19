@@ -1,6 +1,8 @@
 package datatool.scripts.mergeworks
 
 import org.apache.commons.lang3.StringUtils
+import whelk.Document
+import whelk.IdGenerator
 import whelk.Whelk
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
@@ -312,5 +314,33 @@ class Util {
         localName && variants.any {
             name(it) && localName == name(it)
         }
+    }
+
+    static Document buildWorkDocument(Map workData, File reportDir) {
+        String workId = IdGenerator.generate()
+        def reportUri = "http://xlbuild.libris.kb.se/works/${reportDir.getPath()}/new/${workId}.html"
+
+        workData['@id'] = "TEMPID#it"
+        Document d = new Document([
+                "@graph": [
+                        [
+                                "@id"          : "TEMPID",
+                                "@type"        : "Record",
+                                "mainEntity"   : ["@id": "TEMPID#it"],
+                                "technicalNote": [[
+                                                          "@type"  : "TechnicalNote",
+                                                          "hasNote": [[
+                                                                              "@type": "Note",
+                                                                              "label": ["Maskinellt utbrutet verk... TODO"]
+                                                                      ]],
+                                                          "uri"    : [reportUri]
+                                                  ]
+                                ]],
+                        workData
+                ]
+        ])
+
+        d.deepReplaceId(Document.BASE_URI.toString() + workId)
+        return d
     }
 }
