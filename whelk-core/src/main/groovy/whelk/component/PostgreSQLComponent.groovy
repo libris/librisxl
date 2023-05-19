@@ -903,9 +903,7 @@ class PostgreSQLComponent {
                     ? new Date(resultSet.getTimestamp("modified").getTime())
                     : new Date()
 
-            // EXPERIMENTALLY: Create "interesting changes"-markers if certain significant parts of the record were changed.
             SignificantChangeCalculator.markSignificantChanges(preUpdateDoc, doc, modTime, getJsonld())
-            //
 
             if (!writeIdenticalVersions && preUpdateDoc.getChecksum(jsonld).equals(doc.getChecksum(jsonld))) {
                 throw new CancelUpdateException()
