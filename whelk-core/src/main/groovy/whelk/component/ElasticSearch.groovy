@@ -307,9 +307,104 @@ class ElasticSearch {
         }
     }
 
+    /**
+     * Types in 'full' are allowed to inherit types in 'end' and still be considered equal-ending.
+     *
+     * For example, full = ["instanceOf", "@type=NotatedMusic"] and end = ["instanceOf", "@type=Work"] is considered
+     * equal-ending, but if 'full' and 'end' switch places, they are not.
+     */
+    boolean typedPathEndsWith(List<String> full, List<String> end, JsonLd jsonLd) {
+        if (end.size() > full.size())
+            return false
+        List fullEnd = full.subList(full.size() - end.size(), full.size())
+
+        for (int i = 0; i < end.size(); ++i) {
+            if (fullEnd[i].startsWith("@type=") && end[i].startsWith("@type=")) {
+                String t1 = fullEnd[i].substring("@type=".length())
+                String t2 = end[i].substring("@type=".length())
+                if (! jsonLd.isSubClassOf(t1, t2) ) {
+                    return false
+                }
+            }
+            else if (fullEnd[i] != end[i]) {
+                return false
+            }
+        }
+        return true
+    }
+
+    Map getImpliedTechnicalNote(Map note, List typedPath, JsonLd jsonld) {
+
+        //System.err.println("\ttesting "+ typedPath)
+
+        // Are conditions met for an implied primary-contribution marker?
+        if ( typedPathEndsWith(typedPath, ["contribution", "@type=PrimaryContribution", "agent", "@type=Agent", "technicalNote", "@type=ChangeNote"], jsonld) ) {
+            System.err.println("\tFound an inherited note: " + note)
+            if (note["category"] && note["category"] instanceof Map && note["category"]["@id"] && note["category"]["@id"] instanceof String) {
+                if (note["category"]["@id"] == "https://libris.kb.se/change/agent") {
+                    System.err.println("\t\tpc implied!")
+                    return [
+                            "@type"   : "ChangeNote",
+                            "category": ["@id": "https://libris.kb.se/change/primarycontribution"],
+                            "date"    : note["date"]
+                    ]
+                }
+            }
+        }
+
+        // Default: Return the original note
+        return note
+    }
+
+    Set collectTechnicalNotes(Object data, List typedPath, JsonLd jsonld) {
+        Set results = []
+        if (data instanceof Map) {
+
+            if ("ChangeNote" == data["@type"]) {
+                results.add( getImpliedTechnicalNote(data, typedPath, jsonld) )
+                results.add( data )
+            }
+
+            data.keySet().each {
+                List<String> nextPath = new ArrayList<>(typedPath)
+                nextPath.add(it)
+                if (data[it] instanceof Map && data[it]["@type"])
+                    nextPath.add("@type=" + data[it]["@type"])
+                results.addAll(collectTechnicalNotes(data[it], nextPath, jsonld))
+            }
+        } else if (data instanceof List) {
+            data.each { it ->
+                List<String> nextPath = new ArrayList<>(typedPath)
+                if (it instanceof Map && it["@type"])
+                    nextPath.add("@type=" + it["@type"])
+                results.addAll(collectTechnicalNotes(it, nextPath, jsonld))
+            }
+        }
+        return results
+    }
+
+    void compileTechnicalNotes(Map framed, JsonLd jsonld) {
+
+        //System.err.println("\n\nWill now get tech notes on: " + mapper.writeValueAsString(framed) + "\n\n")
+
+        Set<Map> compiledNotes = collectTechnicalNotes(framed, [], jsonld)
+
+        System.err.println(" Final new implied notes for " + framed["@id"] + " : " + compiledNotes)
+
+        if ( framed["technicalNote"] ) {
+            if ( framed["technicalNote"] instanceof List )
+                compiledNotes.addAll(framed["technicalNote"])
+            else
+                compiledNotes.add(framed["technicalNote"])
+        }
+        framed["technicalNote"] = compiledNotes.toList()
+    }
+
     String getShapeForIndex(Document document, Whelk whelk) {
         Document copy = document.clone()
-        
+
+        System.err.println("********** Reindexing " + copy.getShortId())
+
         whelk.embellish(copy, ['search-chips'])
 
         if (log.isDebugEnabled()) {
@@ -338,6 +433,8 @@ class ElasticSearch {
                 whelk.jsonld.locales as Set,
                 REMOVABLE_BASE_URIS,
                 document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
+
+        compileTechnicalNotes(framed, whelk.getJsonld())
 
         DocumentUtil.traverse(framed) { value, path ->
             if (path && JsonLd.SEARCH_KEY == path.last() && !Unicode.isNormalizedForSearch(value)) {

@@ -200,6 +200,11 @@ class JsonLdValidator {
     }
 
     private void verifyVocabTerm(String key, value, validation) {
+
+        // Temporary, until "ChangeNote" can be added to vocab
+        if (key == "@type" && value == "ChangeNote")
+            return
+
         if ((key == jsonLd.TYPE_KEY || isVocabTerm(key))
                 && !jsonLd.vocabIndex.containsKey(value?.toString())) {
             handleError(new Error(Error.Type.UNKNOWN_VOCAB_VALUE, key, value), validation)

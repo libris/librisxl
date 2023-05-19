@@ -9,19 +9,17 @@ class SignificantChangeCalculator {
      * Compares two versions of a document, and mutates postupdateDoc with added
      * ChangeNotes where applicable.
      */
-    public static boolean markSignificantChanges(Document preUpdateDoc, Document postUpdateDoc, Date modTime, JsonLd jsonld) {
+    public static void markSignificantChanges(Document preUpdateDoc, Document postUpdateDoc, Date modTime, JsonLd jsonld) {
         List<String> markersToAdd = []
 
-        if (significallyChangedAgent(preUpdateDoc, postUpdateDoc, jsonld))
+        if (significantlyChangedAgent(preUpdateDoc, postUpdateDoc, jsonld))
             markersToAdd.add("https://libris.kb.se/change/agent")
 
         // Add additional rules..
 
-        if (!postUpdateDoc.data["technicalNote"] || ! postUpdateDoc.data["technicalNote"] instanceof List)
-            postUpdateDoc.data["technicalNote"] = []
+        List newTechNotes = []
         for (String marker : markersToAdd) {
-            List techNotes = postUpdateDoc.data["technicalNote"]
-            techNotes.add(
+            newTechNotes.add(
                     [
                             "@type": "ChangeNote",
                             "category": ["@id": marker],
@@ -29,9 +27,19 @@ class SignificantChangeCalculator {
                     ]
             )
         }
+
+        if (newTechNotes) {
+            if (postUpdateDoc.data["@graph"][1]["technicalNote"] && postUpdateDoc.data["@graph"][1]["technicalNote"] instanceof List) {
+                Set notes = postUpdateDoc.data["@graph"][1]["technicalNote"] as Set
+                notes.addAll(newTechNotes)
+                postUpdateDoc.data["@graph"][1]["technicalNote"] = notes.toList()
+            } else {
+                postUpdateDoc.data["@graph"][1]["technicalNote"] = newTechNotes
+            }
+        }
     }
 
-    private static boolean significallyChangedAgent(Document preUpdateDoc, Document postUpdateDoc, JsonLd jsonld) {
+    private static boolean significantlyChangedAgent(Document preUpdateDoc, Document postUpdateDoc, JsonLd jsonld) {
         if ( ! jsonld.isSubClassOf( preUpdateDoc.getThingType(), "Agent") ||
              ! jsonld.isSubClassOf( postUpdateDoc.getThingType(), "Agent"))
             return false

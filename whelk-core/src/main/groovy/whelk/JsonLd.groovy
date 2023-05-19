@@ -1156,6 +1156,8 @@ class JsonLd {
 
     private static boolean shouldAlwaysKeep(String key) {
         return key == RECORD_KEY || key == THING_KEY || key == JSONLD_ALT_ID_KEY || key.startsWith("@")
+                // Temporary hack to make technical notes actually inherit/be embellishable
+                || key == "technicalNote" || key == "category" || key == "date" || key == "givenName" || key == "familyName"
     }
 
 
