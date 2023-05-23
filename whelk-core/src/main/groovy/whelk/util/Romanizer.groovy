@@ -21,19 +21,19 @@ class Romanizer {
     ]
 
     private static final List<Transform> AUTO = [
-            auto('be-Cyrl',  'be-Latn-t-be-Cyrl-m0-iso-1995', ['be-iso.txt', 'slavic-iso.txt']),
-            auto('bg-Cyrl',  'bg-Latn-t-bg-Cyrl-m0-iso-1995', ['bg-iso.txt', 'slavic-iso.txt']),
-            auto('bs-Cyrl',  'bs-Latn-t-bs-Cyrl-m0-iso-1995', ['bs-sr-iso.txt', 'slavic-iso.txt']),
+            auto('be-Cyrl',  'be-Latn-t-be-Cyrl-m0-iso-1968', ['be-iso.txt', 'slavic-iso.txt']),
+            auto('bg-Cyrl',  'bg-Latn-t-bg-Cyrl-m0-iso-1968', ['bg-iso.txt', 'slavic-iso.txt']),
+            auto('bs-Cyrl',  'bs-Latn-t-bs-Cyrl-m0-iso-1968', ['bs-sr-iso.txt', 'slavic-iso.txt']),
             auto('el'     ,  'el-Latn-t-el-Grek-x0-btj', ['el-btj.txt']),
             auto('grc'    ,  'grc-Latn-t-grc-Grek-x0-skr-1980', ['grc-skr.txt']),
             auto('yi-Hebr',  'yi-Latn-t-yi-Hebr-x0-yivo', ['yi-yivo.txt']),
             auto('yi-Hebr',  'yi-Latn-t-yi-Hebr-m0-alaloc', ['yi-alaloc.txt']),
             auto('kk-Cyrl',  'kk-Latn-t-kk-Cyrl-m0-iso-1995', ['kk-iso.txt']),
-            auto('mk-Cyrl',  'mk-Latn-t-mk-Cyrl-m0-iso-1995', ['mk-iso.txt', 'slavic-iso.txt']),
+            auto('mk-Cyrl',  'mk-Latn-t-mk-Cyrl-m0-iso-1968', ['mk-iso.txt', 'slavic-iso.txt']),
             auto('mn-Cyrl',  'mn-Latn-t-mn-Cyrl-x0-lessing', ['mn-lessing.txt']),
-            auto('ru-Cyrl',  'ru-Latn-t-ru-Cyrl-m0-iso-1995', ['ru-iso.txt', 'slavic-iso.txt']),
-            auto('sr-Cyrl',  'sr-Latn-t-sr-Cyrl-m0-iso-1995', ['bs-sr-iso.txt', 'slavic-iso.txt']),
-            auto('uk-Cyrl',  'uk-Latn-t-uk-Cyrl-m0-iso-1995', ['uk-iso.txt', 'slavic-iso.txt']),
+            auto('ru-Cyrl',  'ru-Latn-t-ru-Cyrl-m0-iso-1968', ['ru-iso.txt', 'slavic-iso.txt']),
+            auto('sr-Cyrl',  'sr-Latn-t-sr-Cyrl-m0-iso-1968', ['bs-sr-iso.txt', 'slavic-iso.txt']),
+            auto('uk-Cyrl',  'uk-Latn-t-uk-Cyrl-m0-iso-1968', ['uk-iso.txt', 'slavic-iso.txt']),
 
             // Converted from LOC mappings
             // TODO: investigate how well these handle case/capitalization
