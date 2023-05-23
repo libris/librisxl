@@ -5,6 +5,7 @@ import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.map.ObjectMapper
 import whelk.Document
 import whelk.JsonLd
+import whelk.ResourceCache
 import whelk.converter.FormatConverter
 import whelk.filter.LinkFinder
 
@@ -27,16 +28,16 @@ class MarcFrameConverter implements FormatConverter {
     ObjectMapper mapper = new ObjectMapper()
     LinkFinder linkFinder
     JsonLd ld
-    RomanizationStep.LanguageResources languageResources
-    
+    ResourceCache resourceCache
+
     String configResourceBase = "ext"
     String marcframeFile = "marcframe.json"
 
-    protected MarcConversion conversion
-    
-    MarcFrameConverter(LinkFinder linkFinder = null, JsonLd ld = null, RomanizationStep.LanguageResources languageResources = null) {
+    MarcConversion conversion
+
+    MarcFrameConverter(LinkFinder linkFinder = null, JsonLd ld = null, ResourceCache resourceCache = null) {
         this.linkFinder = linkFinder
-        this.languageResources = languageResources
+        this.resourceCache = resourceCache
         setLd(ld)
     }
 
@@ -213,13 +214,15 @@ class MarcConversion {
             procStep = new CopyOnRevertStep(props); break
             case 'InjectWhenMatchingOnRevert':
             procStep = new InjectWhenMatchingOnRevertStep(props); break
+            case 'ContributionByRole':
+            procStep = new ContributionByRoleStep(props); break
             case 'Romanization':
             procStep = new RomanizationStep(props)
-            procStep.converter = converter    
-            procStep.languageResources = converter.languageResources; break
+            procStep.converter = converter
+            break
             case 'NormalizeWorkTitles':
             procStep = new NormalizeWorkTitlesStep(props)
-            procStep.langLinker = converter.languageResources?.languageLinker; break
+            break
             case null:
             return null
             default:
@@ -227,6 +230,10 @@ class MarcConversion {
         }
         procStep.ld = converter.ld
         procStep.mapper = converter.mapper
+        if (procStep.requiresResources) {
+            assert converter.resourceCache
+            procStep.resourceCache = converter.resourceCache
+        }
         procStep.init()
         return procStep
     }

@@ -1,0 +1,34 @@
+{
+  "type": "ContributionByRole",
+  "_spec": [
+    {
+      "name": "NOOP",
+      "result": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "contribution": [
+              {
+                "@type": "Contribution"
+              }
+            ]
+          }
+        }
+      },
+      "back": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "contribution": [
+              {
+                "@type": "Contribution"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

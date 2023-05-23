@@ -1,9 +1,9 @@
 package whelk.converter.marc
 
-import groovy.transform.CompileStatic
 import groovy.transform.MapConstructor
-import groovy.transform.NullCheck
 import groovy.util.logging.Log4j2 as Log
+
+import whelk.ResourceCache
 import whelk.filter.LanguageLinker
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
@@ -16,17 +16,10 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     private static final String TARGET_SCRIPT = 'Latn'
     private static final String MATCH_T_TAG = "-${TARGET_SCRIPT}-t-"
 
-    @CompileStatic
-    @NullCheck(includeGenerated = true)
-    static class LanguageResources {
-        LanguageLinker languageLinker
-        Map languages
-        Map transformedLanguageForms
-    }
-
     boolean requiresResources = true
+
     MarcFrameConverter converter
-    LanguageResources languageResources
+    ResourceCache.LanguageResources languageResources
 
     Map langAliases
     Map byLangToBase
@@ -557,7 +550,11 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         if (!languageResources) {
             return
         }
-//        this.languageResources = languageResources
+
+        var languageResources = resourceCache.languageResources
+
+        this.langLinker = languageResources.languageLinker
+
         this.langIdToLangTag = languageResources.languages
                 .findAll { k, v -> v.langTag }.collectEntries { k, v -> [k, v.langTag] }
         this.romanizableLangs = languageResources.transformedLanguageForms

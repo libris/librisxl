@@ -11,7 +11,6 @@ import whelk.component.PostgreSQLComponent
 import whelk.component.PostgreSQLComponent.UpdateAgent
 import whelk.component.SparqlUpdater
 import whelk.converter.marc.MarcFrameConverter
-import whelk.converter.marc.RomanizationStep
 import whelk.exception.StorageCreateFailedException
 import whelk.filter.LanguageLinker
 import whelk.exception.WhelkException
@@ -54,7 +53,7 @@ class Whelk {
     JsonLd jsonld
 
     MarcFrameConverter marcFrameConverter
-    RomanizationStep.LanguageResources languageResources 
+    ResourceCache resourceCache
     ElasticFind elasticFind
     Relations relations
     DocumentNormalizer normalizer
@@ -153,7 +152,7 @@ class Whelk {
 
     synchronized MarcFrameConverter getMarcFrameConverter() {
         if (!marcFrameConverter) {
-            marcFrameConverter = new MarcFrameConverter(new LinkFinder(storage), jsonld, languageResources)
+            marcFrameConverter = new MarcFrameConverter(new LinkFinder(storage), jsonld, resourceCache)
         }
 
         return marcFrameConverter
@@ -162,10 +161,10 @@ class Whelk {
     Relations getRelations() {
         return relations
     }
-    
+
     synchronized Romanizer getRomanizer() {
         if (!romanizer) {
-            romanizer = new Romanizer(languageResources.transformedLanguageForms.values().collect{ (String) it['langTag'] })
+            romanizer = new Romanizer(resourceCache.languageResources.transformedLanguageForms.values().collect{ (String) it['langTag'] })
         }
         return romanizer
     }
@@ -230,16 +229,20 @@ class Whelk {
                         Normalizers.identifiedBy(),
                 ] + Normalizers.heuristicLinkers(this, languageLinker.getTypes())
         )
-        
-        def idsToThings = { String type -> 
+
+        def idsToThings = { String type ->
             bulkLoad(elasticFind.findIds([(JsonLd.TYPE_KEY): [type]]).collect())
             .collect { _, doc -> (doc.data[JsonLd.GRAPH_KEY] as List)[1] }
             .collectEntries { [it[JsonLd.ID_KEY], it] }
         }
-        languageResources = new RomanizationStep.LanguageResources(
-                languageLinker: languageLinker,
-                languages: idsToThings('Language'),
-                transformedLanguageForms: idsToThings('TransformedLanguageForm')
+
+        resourceCache = new ResourceCache(
+            relators: elasticFind.find(['@type': ['Role']]),
+            languageResources: new ResourceCache.LanguageResources(
+                    languageLinker: languageLinker,
+                    languages: idsToThings('Language'),
+                    transformedLanguageForms: idsToThings('TransformedLanguageForm')
+            )
         )
     }
 
