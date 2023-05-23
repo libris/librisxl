@@ -1,9 +1,17 @@
 package datatool.scripts.mergeworks.compare
 
 class Classification extends StuffSet {
+    // Terms that will be merged (values precede keys)
+    private static def norm = [
+            'uHc'                                                        : ['Hc,u'],
+            'uHce'                                                       : ['Hce,u'],
+            'Hc'                                                         : ['Hc.01', 'Hc.02', 'Hc.03'],
+            'Hc,u'                                                       : ['Hcf', 'Hcg']
+    ]
+
     @Override
     Object merge(Object a, Object b) {
-        return mergeCompatibleElements(super.merge(a, b)) { c1, c2 ->
+        return mergeCompatibleElements(super.merge(a, b).findAll { it['code'] }) { c1, c2 ->
             String code1 = c1['code']
             String code2 = c2['code']
             if (!code1 || !code2) {
@@ -12,27 +20,37 @@ class Classification extends StuffSet {
             code1 = code1.trim()
             code2 = code2.trim()
 
-            if (isSab(c1) && isSab(c2) && code1 == code2) {
-                def result = [
-                        '@type' : 'Classification',
-                        'code'  : code1,
-                        inScheme: [
-                                '@type'  : 'ConceptScheme',
-                                'code'   : 'kssb'
-                        ]
-                ]
-                def version = maxSabVersion(c1, c2)
-                if (version) {
-                    result['inScheme']['version'] = version
+            if (isSab(c1) && isSab(c2)) {
+                def code = code1 == code2 || n(code2, code1)
+                        ? code1
+                        : (n(code1, code2) ? code2 : null)
+                if (code) {
+                    def result = [
+                            '@type' : 'Classification',
+                            'code'  : code1,
+                            inScheme: [
+                                    '@type': 'ConceptScheme',
+                                    'code' : 'kssb'
+                            ]
+                    ]
+                    def version = maxSabVersion(c1, c2)
+                    if (version) {
+                        result['inScheme']['version'] = version
+                    }
+                    return result
                 }
-                return result
-            }
-            else if (isDewey(c1) && isDewey(c2) && code1 == code2) {
-                Map result = [:]
-                result.putAll(c1)
-                result.putAll(c2)
-                result['editionEnumeration'] = maxDeweyEdition(c1, c2)
-                return result
+            } else if (isDewey(c1) && isDewey(c2)) {
+                def code = code1.startsWith(code2.replace("/", ""))
+                        ? code1
+                        : (code2.startsWith(code1.replace("/", "")) ? code2 : null)
+                if (code) {
+                    Map result = [:]
+                    result.putAll(c1)
+                    result.putAll(c2)
+                    result['code'] = code
+                    result['editionEnumeration'] = maxDeweyEdition(c1, c2)
+                    return result
+                }
             }
         }
     }
@@ -59,5 +77,9 @@ class Classification extends StuffSet {
 
     int deweyEdition(String edition) {
         Integer.parseInt((edition ?: "0").replaceAll("[^0-9]", ""))
+    }
+
+    boolean n(a, b) {
+        norm[a]?.any { it == b || n(it, b) }
     }
 }
