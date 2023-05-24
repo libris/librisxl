@@ -262,7 +262,7 @@ public class ProfileExport
             usingCollectionRules = "bib";
         }
         
-        if (collection.equals("auth") && !hasCardChanged(id)) {
+        if (collection.equals("auth") && !hasCardChanged(id, from, until)) {
             return false;
         }
 
@@ -312,9 +312,9 @@ public class ProfileExport
         return true;
     }
 
-    private boolean hasCardChanged(String id) {
-        Document currentVersion = m_whelk.getStorage().load(id);
-        Document previousVersion = m_whelk.getStorage().load(id, "-1");
+    private boolean hasCardChanged(String id, Timestamp from, Timestamp until) {
+        Document currentVersion = m_whelk.getStorage().loadAsOf(id, until);
+        Document previousVersion = m_whelk.getStorage().loadAsOf(id, from);
         if (previousVersion == null) {
             return true;
         }
