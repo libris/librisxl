@@ -17,8 +17,8 @@ class Classification extends StuffSet {
             if (!code1 || !code2) {
                 return
             }
-            code1 = code1.trim()
-            code2 = code2.trim()
+            code1 = code1.replaceAll(/\s+/, "")
+            code2 = code2.replaceAll(/\s+/, "")
 
             if (isSab(c1) && isSab(c2)) {
                 def code = code1 == code2 || n(code2, code1)
