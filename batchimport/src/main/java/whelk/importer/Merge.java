@@ -223,7 +223,7 @@ public class Merge {
                 childPath.add(key);
                 List<Object> trueChildPath = new ArrayList(truePath);
                 trueChildPath.add(key);
-                if ( ((Map) base).get(key) == null ) {
+                if ( ((Map) base).get(key) == null && ((Map) base).get(key + "ByLang") == null ) {
                     if (mayAddAtPath(childPath, trueChildPath, incomingAgent, baseHistory)) {
                         ((Map) base).put(key, ((Map) correspondingIncoming).get(key));
                         logger.info("Merge of " + loggingForID + ": added object at " + childPath);
@@ -312,7 +312,7 @@ public class Merge {
                 childPath.add("@type="+type);
                 List<Object> trueChildPath = new ArrayList(truePath);
                 trueChildPath.add(baseListInteger);
-                mergeInternal( baseChild, incomingList,
+                mergeInternal( baseChild, base,
                         incomingChild,
                         childPath,
                         trueChildPath,
