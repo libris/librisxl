@@ -544,7 +544,12 @@ class JsonLd {
             }
             String rev = revIds.find { it in vocabIndex }
             if (rev) {
-                asList(thing.get(rev, [])).addAll(subjects)
+                thing[rev] = asList(thing.get(rev, []))
+                thing[rev].addAll(asList(subjects))
+                // NOTE: There *should* be no inverse for a property intended to be used with lists.
+                if (!isListContainer(rev)) {
+                    thing[rev].unique()
+                }
             }
         }
     }

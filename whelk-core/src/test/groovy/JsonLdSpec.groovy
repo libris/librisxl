@@ -1024,21 +1024,21 @@ class JsonLdSpec extends Specification {
         def thing = [
                 '@id': '1',
                 '@reverse': [
-                        'broader': [['@id': '2'], ['@id': '3']]
+                        'broader': [['@id': '1'], ['@id': '2']]
                 ]
         ]
         when:
         applyInverses(thing)
         def revMap = thing.remove('@reverse')
         then:
-        thing['narrower'] == [['@id': '2'], ['@id': '3']]
+        thing['narrower'] == [['@id': '1'], ['@id': '2']]
 
         when: 'adding inverses to existing accumulates results'
         thing['@reverse'] = revMap
         applyInverses(thing)
         thing.remove('@reverse')
         then:
-        thing['narrower'] == [['@id': '2'], ['@id': '3'], ['@id': '2'], ['@id': '3']]
+        thing['narrower'] == [['@id': '1'], ['@id': '2']]
     }
 
     def "should apply owl inverses"() {
