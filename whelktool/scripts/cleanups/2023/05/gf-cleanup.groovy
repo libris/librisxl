@@ -42,6 +42,8 @@ selectByCollection('bib') {
         return false
     }
 
+    work.genreForm?.unique()
+
     work.subject?.removeAll { s ->
         if (isLargePrint && s == ['@type':'Topic', 'label':['Storstil']]) {
             incrementStats('removed from subject', s.toString())
