@@ -231,7 +231,6 @@ class MarcConversion {
         procStep.ld = converter.ld
         procStep.mapper = converter.mapper
         if (procStep.requiresResources) {
-            assert converter.resourceCache
             procStep.resourceCache = converter.resourceCache
         }
         procStep.init()

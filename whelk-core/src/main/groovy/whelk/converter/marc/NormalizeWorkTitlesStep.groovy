@@ -24,7 +24,7 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
     LanguageLinker langLinker
 
     void init() {
-        this.langLinker = resourceCache.languageResources.languageLinker
+        this.langLinker = resourceCache?.languageResources?.languageLinker
     }
 
     void modify(Map record, Map thing) {
