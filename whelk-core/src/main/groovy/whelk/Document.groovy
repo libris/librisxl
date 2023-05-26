@@ -920,14 +920,16 @@ class Document {
         
         record["mainEntity"]["@id"] = workId
         record["@id"] = record["@id"] + "#work-record"
-        record["@type"] = "VirtualRecord"
+        // record["@type"] = "VirtualRecord"
+        
+        instance.remove('instanceOf')
         
         work["@id"] = workId
-        work["@reverse"] = ["instanceOf": [["@id": instance["@id"]]]]
+        work["@reverse"] = ["instanceOf": [instance]]
         
         // TODO...
         if (!work['hasTitle']) {
-            work['hasTitle'] = (instance['hasTitle'] ?: []).collect{ it['@type'] == 'Title' || it['@type'] == 'KeyTitle' }
+            work['hasTitle'] = (instance['hasTitle'] ?: []).findAll{ it['@type'] == 'Title' || it['@type'] == 'KeyTitle' }
         }
 
         doc.set(["@graph", 1], work)
