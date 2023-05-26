@@ -1020,6 +1020,7 @@ class JsonLdSpec extends Specification {
 
         def ld = new JsonLd(CONTEXT_DATA, [:], vocabData)
         Closure applyInverses =ld.&applyInverses
+
         given:
         def thing = [
                 '@id': '1',
@@ -1039,6 +1040,31 @@ class JsonLdSpec extends Specification {
         thing.remove('@reverse')
         then:
         thing['narrower'] == [['@id': '1'], ['@id': '2']]
+    }
+
+    def "should merge inverses with existing relation"() {
+        given:
+        def vocabData = [
+                "@graph": [
+                    ["@id": "http://example.org/ns/narrower",
+                     "inverseOf": [ ["@id": "http://example.org/ns/broader"] ]],
+                    ["@id": "http://example.org/ns/broader"]
+                ]
+        ]
+        def ld = new JsonLd(CONTEXT_DATA, [:], vocabData)
+
+        def thing = [
+                '@id': '1',
+                'broader': [['@id': '1'], ['@id': '2']],
+                '@reverse': [
+                    'narrower': [['@id': '2'], ['@id': '3']]
+                ]
+        ]
+
+        when:
+        ld.applyInverses(thing)
+        then:
+        thing['broader'] == [['@id': '1'], ['@id': '2'], ['@id': '3']]
     }
 
     def "should apply owl inverses"() {
