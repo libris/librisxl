@@ -3,7 +3,7 @@
 # Modern greek
 # "Transkriberingsschema för nygrekisk skrift efter Bibliotekstjänsts förslag till praxis för folkbiblioteken"
 # https://metadatabyran.kb.se/download/18.6945cdaa174b74a2c36160a/1601918887752/Transkriberingsschema%20f%C3%B6r%20nygrekisk%20skrift.pdf
-# https://metadatabyran.kb.se/beskrivning/specialanvisningar/mangsprak/romaniseringsscheman
+# https://metadatabyran.kb.se/beskrivning/specialanvisningar/mangsprak/libris-romaniseringspraxis
 
 :: NFD (NFC) ; # decompose to treat diacritics separately
 

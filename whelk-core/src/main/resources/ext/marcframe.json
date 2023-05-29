@@ -11303,6 +11303,28 @@
               }
             ]
           }}
+        },
+        {
+          "source": {"490": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Rapport,"},{"x": "xxxx-xxxx ;"},{"v": "2016, 4"}]}},
+          "result": {
+            "mainEntity": {
+              "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "inSeries" : {
+                  "@type" : "Instance",
+                  "identifiedBy" : [ {
+                    "@type" : "ISSN",
+                    "value" : "xxxx-xxxx"
+                  } ]
+                },
+                "marc:seriesTracingPolicy": "1",
+                "seriesStatement": ["Rapport"],
+                "seriesEnumeration": "2016, 4"
+              }
+              ]
+            }
+          }
         }
       ]
     },

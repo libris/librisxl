@@ -184,7 +184,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     void _unmodify(Map record, Map thing) {
         def byLangPaths = findByLangPaths(thing)
         def uniqueTLangs = findUniqueTLangs(thing, byLangPaths)
-        
+
         unmodifyTLangs(thing, uniqueTLangs, byLangPaths, record)
 
         byLangPaths.each { putRomanizedLiteralInNonByLang(thing, it as List) }

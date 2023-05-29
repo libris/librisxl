@@ -138,7 +138,7 @@ class MarcConversion {
     Map marcTypeMap = [:]
     Map tokenMaps
     Map defaultPunctuation
-    ThreadLocal<Boolean> isInsidePostProcessing = ThreadLocal.withInitial({ -> false })
+    ThreadLocal<Boolean> threadIsInsidePostProcessing = ThreadLocal.withInitial({ -> false })
     
     private Set missingTerms = [] as Set
     private Set badRepeats = [] as Set
@@ -344,9 +344,9 @@ class MarcConversion {
             record[marcRuleSet.thingLink] = thing
         }
 
-        if (doPostProcessing && !isInsidePostProcessing.get()) {
+        if (doPostProcessing && !threadIsInsidePostProcessing.get()) {
             // Temporarily turn off to prevent recursive calls from postprocessing steps
-            isInsidePostProcessing.set(true)
+            threadIsInsidePostProcessing.set(true)
             try {
                 sharedPostProcSteps.each {
                     it.modify(record, thing)
@@ -355,7 +355,7 @@ class MarcConversion {
                     it.modify(record, thing)
                 }
             } finally {
-                isInsidePostProcessing.set(false)
+                threadIsInsidePostProcessing.set(false)
             }
         }
 
@@ -432,9 +432,9 @@ class MarcConversion {
     Map revert(data) {
         def marcRuleSet = getRuleSetFromJsonLd(data)
 
-        if (doPostProcessing && !isInsidePostProcessing.get()) {
+        if (doPostProcessing && !threadIsInsidePostProcessing.get()) {
             // Temporarily turn off to prevent recursive calls from postprocessing steps
-            isInsidePostProcessing.set(true)
+            threadIsInsidePostProcessing.set(true)
             try {
                 applyInverses(data, data[marcRuleSet.thingLink])
                 marcRuleSet.postProcSteps.reverseEach {
@@ -444,7 +444,7 @@ class MarcConversion {
                     it.unmodify(data, data[marcRuleSet.thingLink])
                 }
             } finally {
-                isInsidePostProcessing.set(false)
+                threadIsInsidePostProcessing.set(false)
             }
         }
 

@@ -831,6 +831,10 @@ public class ExportProfile {
             move240to500(bibRecord);
         }
 
+        if (getProperty("issnIcFlavour", "off").equalsIgnoreCase("ON")) {
+            makeIssnIcFlavour(bibRecord);
+        }
+
         // Inactivate due to problems with machine-generated SAB from DEWEY
         /*if (getProperty("addxinfo", "false").equalsIgnoreCase("ON")) {
             bibRecord = addXinfo999(bibRecord);
@@ -954,5 +958,18 @@ public class ExportProfile {
             }
         }
     }
-    
+
+    private void makeIssnIcFlavour(MarcRecord mr) {
+        // Adapt to ISSN Intennational Centre MARC21 profile to pass their validation...
+        // https://www.issn.org/understanding-the-issn/assignment-rules/issn-marc21-and-unimarc-profiles/
+        // https://www.issn.org/wp-content/uploads/2016/11/ISSN-MARC-21-ENG-Revised-September-2016.pdf
+        Iterator iter008 = mr.iterator("008");
+        if (iter008.hasNext()) {
+            Controlfield cf = (Controlfield)iter008.next();
+            final var formOfItem = 23;
+            if (cf.getChar(formOfItem) == '|') {
+                cf.setChar(formOfItem, ' ');
+            }
+        }
+    }
 }

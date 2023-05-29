@@ -86,7 +86,7 @@ class RomanizerSpec extends Specification {
 
     def "Russian with ISO"() {
         expect:
-        new Romanizer().romanize(source, 'ru')['ru-Latn-t-ru-Cyrl-m0-iso-1995'] == target
+        new Romanizer().romanize(source, 'ru')['ru-Latn-t-ru-Cyrl-m0-iso-1968'] == target
         where:
         source || target
         // https://libris.kb.se/dtmgzm6wb09mh1vl#it
@@ -118,7 +118,7 @@ class RomanizerSpec extends Specification {
 
     def "Belarusian with ISO"() {
         expect:
-        new Romanizer().romanize(source, 'be')['be-Latn-t-be-Cyrl-m0-iso-1995'] == target
+        new Romanizer().romanize(source, 'be')['be-Latn-t-be-Cyrl-m0-iso-1968'] == target
         where:
         source || target
         // https://libris.kb.se/p408wtcjm06kz192#it
@@ -134,7 +134,7 @@ class RomanizerSpec extends Specification {
 
     def "Bosnian with ISO"() {
         expect:
-        new Romanizer().romanize(source, 'bs')['bs-Latn-t-bs-Cyrl-m0-iso-1995'] == target
+        new Romanizer().romanize(source, 'bs')['bs-Latn-t-bs-Cyrl-m0-iso-1968'] == target
         where:
         source           || target
         // https://libris.kb.se/5m0smjhb3d66cj4c#it
@@ -143,7 +143,7 @@ class RomanizerSpec extends Specification {
     
     def "Bulgarian with ISO"() {
         expect:
-        new Romanizer().romanize(source, 'bg')['bg-Latn-t-bg-Cyrl-m0-iso-1995'] == target
+        new Romanizer().romanize(source, 'bg')['bg-Latn-t-bg-Cyrl-m0-iso-1968'] == target
         where:
         source || target
         // https://libris.kb.se/fzr6pkkr2vnc152#it
@@ -156,7 +156,7 @@ class RomanizerSpec extends Specification {
 
     def "Macedonian with ISO"() {
         expect:
-        new Romanizer().romanize(source, 'mk')['mk-Latn-t-mk-Cyrl-m0-iso-1995'] == target
+        new Romanizer().romanize(source, 'mk')['mk-Latn-t-mk-Cyrl-m0-iso-1968'] == target
         where:
         source || target
         // https://libris.kb.se/wbxc6926tctq1kz6#it
@@ -168,7 +168,7 @@ class RomanizerSpec extends Specification {
 
     def "Serbian with ISO"() {
         expect:
-        new Romanizer().romanize(source, 'sr')['sr-Latn-t-sr-Cyrl-m0-iso-1995'] == target
+        new Romanizer().romanize(source, 'sr')['sr-Latn-t-sr-Cyrl-m0-iso-1968'] == target
         where:
         source || target
         // https://libris.kb.se/2dbbcc810dxjnk9l#it
@@ -179,7 +179,7 @@ class RomanizerSpec extends Specification {
 
     def "Ukrainian with ISO"() {
         expect:
-        new Romanizer().romanize(source, 'uk')['uk-Latn-t-uk-Cyrl-m0-iso-1995'] == target
+        new Romanizer().romanize(source, 'uk')['uk-Latn-t-uk-Cyrl-m0-iso-1968'] == target
         where:
         source || target
         // https://libris.kb.se/n2wmnf2hll6cn6vg#it 	

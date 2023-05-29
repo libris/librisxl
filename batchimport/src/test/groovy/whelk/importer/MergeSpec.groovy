@@ -1038,4 +1038,435 @@ class MergeSpec extends Specification {
                         ]
                 ]]
     }
+
+    def "don't add manually removed translationOf"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        def versions = [
+                ['changedBy': 'sigel1',
+                 'changedIn': 'batch import',
+                 'data': [
+                         '@graph': [
+                                 [
+                                         'modified': '2022-02-01T12:00:00Z',
+                                         'mainEntity': 'meID'
+                                 ],
+                                 [
+                                         '@id': 'meID',
+                                         'instanceOf': [
+                                                 'translationOf' : ['@id': 'other ID'],
+                                         ]
+                                 ]
+                         ]
+                 ]
+                ],
+                ['changedBy': 'sigel1',
+                 'changedIn': 'xl', // A manual edit!
+                 'data': [
+                         '@graph': [
+                                 [
+                                         'modified': '2022-02-02T12:00:00Z',
+                                         'mainEntity': 'meID'
+                                 ],
+                                 [
+                                         '@id': 'meID',
+                                         'instanceOf': [
+
+                                         ]
+                                 ]
+                         ]
+                 ]
+                ]
+        ].collect { change ->
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+        }
+        def history = new History(versions, ld)
+        def incoming = new Document( (Map)
+                ['@graph': [
+                        [
+                                'modified': '2022-02-03T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'instanceOf': [
+                                        'translationOf' : ['@id': 'other ID'],
+                                ]
+                        ]
+                ]])
+        Document base = versions.last().doc
+        Merge merge = new Merge(
+                [
+                        "rules": [
+                                ["operation": "add_if_none", "path": ["@graph",1,"instanceOf","translationOf"]]
+                        ]
+                ]
+        )
+        merge.merge(base, incoming, "sigel2", history)
+        expect:
+        base.data == [
+                '@graph': [
+                        [
+                                'modified': '2022-02-02T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'instanceOf': [
+                                ]
+                        ]
+                ]]
+    }
+
+    def "don't add manually removed extent"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        def versions = [
+                ['changedBy': 'sigel1',
+                 'changedIn': 'batch import',
+                 'data': [
+                         '@graph': [
+                                 [
+                                         'modified': '2022-02-01T12:00:00Z',
+                                         'mainEntity': 'meID'
+                                 ],
+                                 [
+                                         '@id': 'meID',
+                                         'extent': 'some extent'
+                                 ]
+                         ]
+                 ]
+                ],
+                ['changedBy': 'sigel1',
+                 'changedIn': 'xl', // A manual edit!
+                 'data': [
+                         '@graph': [
+                                 [
+                                         'modified': '2022-02-02T12:00:00Z',
+                                         'mainEntity': 'meID'
+                                 ],
+                                 [
+                                         '@id': 'meID',
+                                 ]
+                         ]
+                 ]
+                ]
+        ].collect { change ->
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+        }
+        def history = new History(versions, ld)
+        def incoming = new Document( (Map)
+                ['@graph': [
+                        [
+                                'modified': '2022-02-03T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'extent': 'some extent'
+                        ]
+                ]])
+        Document base = versions.last().doc
+        Merge merge = new Merge(
+                [
+                        "rules": [
+                                ["operation": "add_if_none", "path": ["@graph",1,"extent"]]
+                        ]
+                ]
+        )
+        merge.merge(base, incoming, "sigel2", history)
+        expect:
+        base.data == [
+                '@graph': [
+                        [
+                                'modified': '2022-02-02T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                        ]
+                ]]
+    }
+
+    def "don't add mainTitle on top of mainTitleByLang"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        def versions = [
+                ['changedBy': 'sigel1',
+                 'changedIn': 'batch import',
+                 'data': [
+                         '@graph': [
+                                 [
+                                         'modified': '2022-02-01T12:00:00Z',
+                                         'mainEntity': 'meID'
+                                 ],
+                                 [
+                                         '@id': 'meID',
+                                         'hasTitle': [
+                                                 ['@type': 'Title', 'mainTitleByLang':
+                                                         [
+                                                                 "el": "Η κόρη της Ανθής Αλκαίου",
+                                                                 "el-Latn-t-el": "I kori tis Anthis Alkeou"
+                                                         ]
+                                                 ]
+                                         ]
+                                 ]
+                         ]
+                 ]
+                ]
+        ].collect { change ->
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+        }
+        def history = new History(versions, ld)
+        def incoming = new Document( (Map)
+                ['@graph': [
+                        [
+                                'modified': '2022-02-01T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'hasTitle': [
+                                        ['@type': 'Title', 'mainTitle': 'I kori tis Anthis Alkeou']
+                                ]
+                        ]
+                ]])
+        Document base = versions.last().doc
+        Merge merge = new Merge(
+                [
+                        "rules": [
+                                ["operation": "add_if_none", "path": ["@graph",1,"hasTitle","@type=Title"]]
+                        ]
+                ]
+        )
+        merge.merge(base, incoming, "sigel2", history)
+        expect:
+        base.data == [
+                '@graph': [
+                        [
+                                'modified': '2022-02-01T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'hasTitle': [
+                                        ['@type': 'Title', 'mainTitleByLang':
+                                                [
+                                                        "el": "Η κόρη της Ανθής Αλκαίου",
+                                                        "el-Latn-t-el": "I kori tis Anthis Alkeou"
+                                                ]
+                                        ]
+                                ]
+                        ]
+                ]]
+    }
+
+    def "don't add mainTitleByLang on top of mainTitle"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        def versions = [
+                ['changedBy': 'sigel1',
+                 'changedIn': 'batch import',
+                 'data': [
+                         '@graph': [
+                                 [
+                                         'modified': '2022-02-01T12:00:00Z',
+                                         'mainEntity': 'meID'
+                                 ],
+                                 [
+                                         '@id': 'meID',
+                                         'hasTitle': [
+                                                 ['@type': 'Title', 'mainTitle': 'I kori tis Anthis Alkeou']
+                                         ]
+                                 ]
+                         ]
+                 ]
+                ]
+        ].collect { change ->
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+        }
+        def history = new History(versions, ld)
+        def incoming = new Document( (Map)
+                ['@graph': [
+                        [
+                                'modified': '2022-02-01T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'hasTitle': [
+                                        ['@type': 'Title', 'mainTitle':
+                                                [
+                                                        "el": "Η κόρη της Ανθής Αλκαίου",
+                                                        "el-Latn-t-el": "I kori tis Anthis Alkeou"
+                                                ]
+                                        ]
+                                ]
+                        ]
+                ]])
+        Document base = versions.last().doc
+        Merge merge = new Merge(
+                [
+                        "rules": [
+                                ["operation": "add_if_none", "path": ["@graph",1,"hasTitle","@type=Title"]]
+                        ]
+                ]
+        )
+        merge.merge(base, incoming, "sigel2", history)
+        expect:
+        base.data == [
+                '@graph': [
+                        [
+                                'modified': '2022-02-01T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'hasTitle': [
+                                        ['@type': 'Title', 'mainTitle': 'I kori tis Anthis Alkeou']
+                                ]
+                        ]
+                ]]
+    }
+
+    def "replace mainTitleByLang with mainTitle"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        def versions = [
+                ['changedBy': 'sigel1',
+                 'changedIn': 'batch import',
+                 'data': [
+                         '@graph': [
+                                 [
+                                         'modified': '2022-02-01T12:00:00Z',
+                                         'mainEntity': 'meID'
+                                 ],
+                                 [
+                                         '@id': 'meID',
+                                         'hasTitle': [
+                                                 ['@type': 'Title', 'mainTitleByLang':
+                                                         [
+                                                                 "el": "Η κόρη της Ανθής Αλκαίου",
+                                                                 "el-Latn-t-el": "I kori tis Anthis Alkeou"
+                                                         ]
+                                                 ]
+                                         ]
+                                 ]
+                         ]
+                 ]
+                ]
+        ].collect { change ->
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+        }
+        def history = new History(versions, ld)
+        def incoming = new Document( (Map)
+                ['@graph': [
+                        [
+                                'modified': '2022-02-01T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'hasTitle': [
+                                        ['@type': 'Title', 'mainTitle': 'I kori tis Anthis Alkeou']
+                                ]
+                        ]
+                ]])
+        Document base = versions.last().doc
+        Merge merge = new Merge(
+                [
+                        "rules": [
+                                ["operation": "replace", "path": ["@graph",1,"hasTitle","@type=Title"], "priority": ["sigel1": 1, "sigel2": 2]]
+                        ]
+                ]
+        )
+        merge.merge(base, incoming, "sigel2", history)
+        expect:
+        base.data == [
+                '@graph': [
+                        [
+                                'modified': '2022-02-01T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'hasTitle': [
+                                        ['@type': 'Title', 'mainTitle': 'I kori tis Anthis Alkeou']
+                                ]
+                        ]
+                ]]
+    }
+
+    def "replace mainTitle with mainTitleByLang"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, [:], VOCAB_DATA)
+        def versions = [
+                ['changedBy': 'sigel1',
+                 'changedIn': 'batch import',
+                 'data': [
+                         '@graph': [
+                                 [
+                                         'modified': '2022-02-01T12:00:00Z',
+                                         'mainEntity': 'meID'
+                                 ],
+                                 [
+                                         '@id': 'meID',
+                                         'hasTitle': [
+                                                 ['@type': 'Title', 'mainTitle': 'I kori tis Anthis Alkeou']
+                                         ]
+                                 ]
+                         ]
+                 ]
+                ]
+        ].collect { change ->
+            new DocumentVersion(new Document(change.data), change.changedBy, change.changedIn)
+        }
+        def history = new History(versions, ld)
+        def incoming = new Document( (Map)
+                ['@graph': [
+                        [
+                                'modified': '2022-02-01T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'hasTitle': [
+                                        ['@type': 'Title', 'mainTitleByLang':
+                                                [
+                                                        "el": "Η κόρη της Ανθής Αλκαίου",
+                                                        "el-Latn-t-el": "I kori tis Anthis Alkeou"
+                                                ]
+                                        ]
+                                ]
+                        ]
+                ]])
+        Document base = versions.last().doc
+        Merge merge = new Merge(
+                [
+                        "rules": [
+                                ["operation": "replace", "path": ["@graph",1,"hasTitle","@type=Title"], "priority": ["sigel1": 1, "sigel2": 2]]
+                        ]
+                ]
+        )
+        merge.merge(base, incoming, "sigel2", history)
+        expect:
+        base.data == [
+                '@graph': [
+                        [
+                                'modified': '2022-02-01T12:00:00Z',
+                                'mainEntity': 'meID'
+                        ],
+                        [
+                                '@id': 'meID',
+                                'hasTitle': [
+                                        ['@type': 'Title', 'mainTitleByLang':
+                                                [
+                                                        "el": "Η κόρη της Ανθής Αλκαίου",
+                                                        "el-Latn-t-el": "I kori tis Anthis Alkeou"
+                                                ]
+                                        ]
+                                ]
+                        ]
+                ]]
+    }
 }

@@ -405,28 +405,22 @@ class MarcFrameConverterSpec extends Specification {
         resultWithoutDollars != null
     }
 
-    def "should apply inverses"() {
-        Closure applyInverses = converter.conversion.&applyInverses
+    // NOTE: same as the JsonLdSpec test; used here to verify that it is uesed by conversion
+    def "should merge inverses with existing relation"() {
         given:
         def record = ['@id': null, controlNumber: "123"]
         def thing = [
-            '@id': '1',
-            '@reverse': [
-                'broader': [['@id': '2'], ['@id': '3']]
-            ]
+                '@id': '1',
+                'broader': [['@id': '1'], ['@id': '2']],
+                '@reverse': [
+                    'narrower': [['@id': '2'], ['@id': '3']]
+                ]
         ]
-        when:
-        applyInverses(record, thing)
-        def revMap = thing.remove('@reverse')
-        then:
-        thing['narrower'] == [['@id': '2'], ['@id': '3']]
 
-        when: 'adding inverses to existing accumulates results'
-        thing['@reverse'] = revMap
-        applyInverses(record, thing)
-        thing.remove('@reverse')
+        when:
+        converter.conversion.applyInverses(record, thing)
         then:
-        thing['narrower'] == [['@id': '2'], ['@id': '3'], ['@id': '2'], ['@id': '3']]
+        thing['broader'] == [['@id': '1'], ['@id': '2'], ['@id': '3']]
     }
 
     void assertJsonEquals(result, expected) {
