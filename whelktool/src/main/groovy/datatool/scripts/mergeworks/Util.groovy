@@ -296,18 +296,18 @@ class Util {
 
     static boolean nameMatch(Object local, Map agent) {
         def variants = [agent] + asList(agent.hasVariant)
-        def name = {
-            Map p ->
-                (p.givenName && p.familyName)
-                        ? normalize("${p.givenName} ${p.familyName}")
-                        : p.name ? normalize("${p.name}") : null
-        }
 
         def localName = local instanceof Map ? name(local) : normalize(local)
 
         localName && variants.any {
             name(it) && localName == name(it)
         }
+    }
+
+    static String name(Map agent) {
+        (agent.givenName && agent.familyName)
+                ? normalize("${agent.givenName} ${agent.familyName}")
+                : agent.name ? normalize("${agent.name}") : null
     }
 
     static Document buildWorkDocument(Map workData, File reportDir) {
