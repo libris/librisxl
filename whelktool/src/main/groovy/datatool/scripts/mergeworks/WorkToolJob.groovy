@@ -281,7 +281,7 @@ class WorkToolJob {
                             linked + local.findAll(qualityMonographs).findAll(swedish)
                         }
 
-                if (c.any { Doc d -> d.isFiction() } && !c.any { Doc d -> d.isNotFiction() }) {
+                if (c.size() > 1 && c.any { Doc d -> d.isFiction() } && !c.any { Doc d -> d.isNotFiction() }) {
                     println(c.collect { Doc d -> d.shortId() }.join('\t'))
                 }
             }
