@@ -37,7 +37,9 @@ class ContributionByRoleStep extends MarcFramePostProcStepBase {
             return
         }
 
-        assert work.keySet().grep { !it.startsWith('@') }.size() > 1 // not just a link
+        if (work.keySet().every { it.startsWith('@') }) {
+            return // no regular keys, likely a link
+        }
 
         var instanceContribs = []
         var workContribs = []
@@ -56,7 +58,9 @@ class ContributionByRoleStep extends MarcFramePostProcStepBase {
                 contrib.role = instanceRoles
                 instanceContribs << contrib
             } else {
-                contrib.role = workRoles
+                if (workRoles) {
+                    contrib.role = workRoles
+                }
                 workContribs << contrib
             }
         }
@@ -89,7 +93,7 @@ class ContributionByRoleStep extends MarcFramePostProcStepBase {
 
         if (!work.contribution) {
             work.contribution = []
-        } else if (work.contribution !instanceOf List) {
+        } else if (work.contribution !instanceof List) {
             work.contribution = [work.contribution]
         }
         work.contribution += asList(instance.contribution)
