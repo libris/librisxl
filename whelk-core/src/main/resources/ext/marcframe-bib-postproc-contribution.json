@@ -3,6 +3,55 @@
   "_spec": [
     {
       "name": "NOOP",
+      "source": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "contribution": [
+              {"@type": "Contribution"}
+            ]
+          }
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "contribution": [
+              {"@type": "Contribution"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "Move publisher",
+      "source": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "contribution": [
+              {
+                "role": [
+                  {"@id": "https://id.kb.se/relator/author"}
+                ],
+                "@type": "Contribution",
+                "agent": {"@id": "x"}
+              },
+              {
+                "role": [
+                  {"@id": "https://id.kb.se/relator/publisher"}
+                ],
+                "@type": "Contribution",
+                "agent": {"@id": "y"}
+              }
+            ]
+          }
+        }
+      },
       "result": {
         "mainEntity": {
           "@type": "Instance",
@@ -10,25 +59,26 @@
             "@type": "Text",
             "contribution": [
               {
-                "@type": "Contribution"
+                "role": [
+                  {"@id": "https://id.kb.se/relator/author"}
+                ],
+                "@type": "Contribution",
+                "agent": {"@id": "x"}
               }
             ]
-          }
+          },
+          "contribution": [
+              {
+                "role": [
+                  {"@id": "https://id.kb.se/relator/publisher"}
+                ],
+                "@type": "Contribution",
+                "agent": {"@id": "y"}
+              }
+          ]
         }
       },
-      "back": {
-        "mainEntity": {
-          "@type": "Instance",
-          "instanceOf": {
-            "@type": "Text",
-            "contribution": [
-              {
-                "@type": "Contribution"
-              }
-            ]
-          }
-        }
-      }
+      "back": "source"
     }
   ]
 }
