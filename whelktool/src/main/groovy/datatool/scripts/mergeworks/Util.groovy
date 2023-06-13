@@ -26,7 +26,8 @@ class Util {
         EDITOR('https://id.kb.se/relator/editor'),
         UNSPECIFIED_CONTRIBUTOR('https://id.kb.se/relator/unspecifiedContributor'),
         PRIMARY_RIGHTS_HOLDER('https://id.kb.se/relator/primaryRightsHolder'),
-        ABRIDGER('https://id.kb.se/relator/abridger')
+        ABRIDGER('https://id.kb.se/relator/abridger'),
+        IMPLICIT_AUTHOR('https://id.kb.se/relator/author')
 
         String iri
 

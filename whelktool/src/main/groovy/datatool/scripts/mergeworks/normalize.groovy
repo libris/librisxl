@@ -7,12 +7,15 @@ import whelk.JsonLd
 import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.Pattern
 
+import groovy.json.JsonBuilder
+import groovy.json.JsonSlurper
+
 import static datatool.scripts.mergeworks.Util.asList
-import static datatool.scripts.mergeworks.Util.chipString
 import static datatool.scripts.mergeworks.Util.name
 import static datatool.scripts.mergeworks.Util.normalize
 import static datatool.scripts.mergeworks.Util.Relator
 import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.looksLikeIri
 
 /**
  Example:
@@ -20,16 +23,41 @@ import static whelk.JsonLd.ID_KEY
  */
 
 linkedFoundInCluster = getReportWriter("linked-agent-found-in-cluster.tsv")
+linkedFoundInCluster.println(['id', 'agent name', 'roles', 'matched agent', 'agent occurrences in cluster', 'occurrences by role', 'examples'].join('\t'))
+
 linkedFoundGlobally = getReportWriter("linked-agent-found-globally.tsv")
+linkedFoundGlobally.println(['id', 'agent name', 'roles', 'matched agent', 'occurrences by role', 'examples'].join('\t'))
+
+ambiguous = getReportWriter("ambiguous.tsv")
+ambiguous.println(['id', 'agent name', 'roles', 'matched agent', 'occurrences by role', 'examples'].join('\t'))
+
 roleFoundInCluster = getReportWriter("role-found-in-cluster.tsv")
-roleFoundGlobally = getReportWriter("role-found-globally.tsv")
+roleFoundInCluster.println(['id', 'agent', 'roles', 'added role', 'occurrences in cluster', 'examples'].join('\t'))
+
 roleAddedFromRespStatement = getReportWriter("role-added-from-respStatement.tsv")
+roleAddedFromRespStatement.println(['id', 'agent name', 'roles', 'added role', 'occurrences', 'examples', 'resp statement'].join('\t'))
+
+respStatementLinkedAgentFoundInCluster = getReportWriter("respStatement-linked-agent-found-in-cluster.tsv")
+respStatementLinkedAgentFoundInCluster.println(['id', 'agent name', 'matched agent', 'resp statement roles', 'roles in cluster', 'new contribution roles', 'agent occurrences in cluster', 'occurrences by role', 'examples', 'resp statement'].join('\t'))
+
+respStatementLinkedAgentFoundGlobally = getReportWriter("respStatement-linked-agent-found-globally.tsv")
+respStatementLinkedAgentFoundGlobally.println(['id', 'agent name', 'matched agent', 'resp statement roles', 'occurrences by role', 'examples'].join('\t'))
+
+respStatementLocalAgentFoundInCluster = getReportWriter("respStatement-local-agent-found-in-cluster.tsv")
+respStatementLocalAgentFoundInCluster.println(['id', 'agent name', 'existing names', 'resp statement roles', 'roles in cluster', 'new contribution roles', 'agent occurrences in cluster', 'occurrences by role', 'examples', 'resp statement'].join('\t'))
+
+unmatchedContributionsInRespStatement = getReportWriter("unmatched-contributions-in-resp-statement.tsv")
+unmatchedContributionsInRespStatement.println(['id', 'agent name', 'existing names', 'roles', 'resp statement'].join('\t'))
+
+vagueNames = getReportWriter("vague-names.tsv")
 
 def clusters = new File(System.getProperty('clusters')).collect { it.split('\t').collect { it.trim() } }
 
 idToCluster = initIdToCluster(clusters)
 nameToAgents = new ConcurrentHashMap<String, ConcurrentHashMap>()
 agentToRolesToIds = new ConcurrentHashMap<String, ConcurrentHashMap<Map, ConcurrentHashMap>>()
+agentToLifeSpan = new ConcurrentHashMap<String, String>()
+linkedAgentToPrefName = new ConcurrentHashMap<String, String>()
 
 // Populate maps
 selectByIds(clusters.flatten()) { bib ->
@@ -37,20 +65,28 @@ selectByIds(clusters.flatten()) { bib ->
 
     bib.graph[1].instanceOf?.contribution?.each { Map c ->
         asList(c.agent).each { Map agent ->
-            ([agent] + asList(agent.hasVariant)).each {
-                String agentName = name(loadIfLink(it))
+            def agentStr = toString(agent)
+            def loadedAgent = loadIfLink(agent)
+            if (agent.containsKey('@id')) {
+                agentToLifeSpan.computeIfAbsent(agentStr, f -> lifeSpan(loadedAgent))
+                String agentName = name(loadedAgent)
                 if (agentName) {
-                    def a = toString(agent)
-                    nameToAgents.computeIfAbsent(agentName, f -> new ConcurrentHashMap().newKeySet()).add(a)
-                    def roleToIds = agentToRolesToIds.computeIfAbsent(a, f -> new ConcurrentHashMap())
-                    asList(c.role).with {
-                        if (it.isEmpty()) {
-                            roleToIds.computeIfAbsent(([:]), f -> new ConcurrentHashMap().newKeySet()).add(id)
-                        } else {
-                            it.each { r ->
-                                roleToIds.computeIfAbsent(r, f -> new ConcurrentHashMap().newKeySet()).add(id)
-                            }
-                        }
+                    linkedAgentToPrefName[agentStr] = agentName
+                }
+            }
+            ([loadedAgent] + asList(loadedAgent.hasVariant)).each { a ->
+                String agentName = name(a)
+                if (agentName) {
+                    nameToAgents.computeIfAbsent(agentName, f -> new ConcurrentHashMap().newKeySet()).add(agentStr)
+                }
+            }
+            def roleToIds = agentToRolesToIds.computeIfAbsent(agentStr, f -> new ConcurrentHashMap())
+            asList(c.role).with {
+                if (it.isEmpty()) {
+                    roleToIds.computeIfAbsent(([:]), f -> new ConcurrentHashMap().newKeySet()).add(id)
+                } else {
+                    it.each { r ->
+                        roleToIds.computeIfAbsent(r, f -> new ConcurrentHashMap().newKeySet()).add(id)
                     }
                 }
             }
@@ -58,9 +94,8 @@ selectByIds(clusters.flatten()) { bib ->
     }
 }
 
-agentToName = initAgentToName(nameToAgents)
+agentToNames = initAgentToNames(nameToAgents)
 
-//selectByIds(['zfwsfq7dw4tqw22r']) { bib ->
 selectByIds(clusters.flatten()) { bib ->
     Map thing = bib.graph[1]
     def id = bib.doc.shortId
@@ -68,47 +103,32 @@ selectByIds(clusters.flatten()) { bib ->
     def respStatement = thing.responsibilityStatement
     def contribution = thing.instanceOf?.contribution
 
-    if (!contribution) {
-        println("No contribution: $id")
-        return
-    }
+    if (!contribution) return
 
-    def contributionsInRespStatement = parseRespStatement(respStatement)
+    def normalizedNameToName = [:]
+    def contributionsInRespStatement = parseRespStatement(respStatement).collectEntries { name, roles ->
+        def normalizedName = normalize(name)
+        normalizedNameToName[normalizedName] = name
+        [normalizedName, roles]
+    }
 
     def modified = contribution.removeAll { !it.agent }
 
     contribution.each { Map c ->
         modified |= tryLinkAgent(c, id)
         modified |= tryAddRole(c, id)
-        if (contributionsInRespStatement) {
-            modified |= tryAddRolesFromRespStatement(c, contributionsInRespStatement, id)
-        }
+        modified |= tryAddRolesFromRespStatement(c, contributionsInRespStatement, respStatement, id)
     }
 
-    if (!contributionsInRespStatement.isEmpty()) {
-//        modified |= tryAddAgentsFromRespStatement(contribution, contributionsInRespStatement, id)
-//        if (localAgentsFromRespStatement()) {
-//            contribution += localAgentsFromRespStatement()
-//            modified = true
-//        }
-    }
-//
-//    contribution.each {
-//        tryAdd9pu()
-//        tryAddTranslationOf()
-//    }
+    modified |= tryAddLinkedAgentContributionsFromRespStatement(contribution, contributionsInRespStatement, respStatement, id)
+    modified |= tryAddLocalAgentContributionsFromRespStatement(contribution, contributionsInRespStatement, respStatement, id)
+    modified |= addRemainingContributionsFromRespStatement(contribution, contributionsInRespStatement, normalizedNameToName, respStatement, id)
+
+//    modified |= tryAddMissingTranslationOf()
 
     if (modified) {
         bib.scheduleSave()
     }
-}
-
-String toString(Map agent) {
-    agent[ID_KEY] ?: agent.toString()
-}
-
-def roleShort(String iri) {
-    iri?.split("/")?.last()
 }
 
 def initIdToCluster(List<List<String>> clusters) {
@@ -121,14 +141,14 @@ def initIdToCluster(List<List<String>> clusters) {
     return idToCluster
 }
 
-static Map<Object, String> initAgentToName(Map<String, List<Object>> nameToAgents) {
-    def agentToName = [:]
+static Map<Object, String> initAgentToNames(Map<String, List<Object>> nameToAgents) {
+    def agentToNames = [:]
     nameToAgents.each { name, agents ->
         agents.each {
-            agentToName[(it)] = name
+            agentToNames.computeIfAbsent(it, f -> [] as Set).add(name)
         }
     }
-    return agentToName
+    return agentToNames
 }
 
 boolean tryLinkAgent(Map contribution, String id) {
@@ -136,49 +156,55 @@ boolean tryLinkAgent(Map contribution, String id) {
 
     asList(contribution.agent).each { Map agent ->
         if (!agent.containsKey(ID_KEY)) {
-            def name = agentToName[toString(agent)]
-            if (!name) return
-            def matchingLinkedAgents = nameToAgents[name].findAll {
-                JsonLd.looksLikeIri(it) && (asList(contribution.role).isEmpty() || agentToRolesToIds[it].keySet().intersect(asList(contribution.role)))
+            def names = agentToNames[toString(agent)]
+            if (!names) return
+            def matchingLinkedAgents = nameToAgents.subMap(names).values().flatten().toSet().findAll { a ->
+                JsonLd.looksLikeIri(a) && !yearMismatch(lifeSpan(agent), agentToLifeSpan[a])
             }
             def matchedGlobally = []
             for (agentIri in matchingLinkedAgents) {
-                def matchingAgent = loadThing(agentIri)
-                if (!yearMismatch(agent, matchingAgent)) {
-                    Map roleToIds = agentToRolesToIds[agentIri]
-                    def agentIsInCluster = roleToIds.findAll { idToCluster[id].intersect(it.value) }.with {
-                        !it.isEmpty() && it.keySet().containsAll(asList(contribution.role))
+                Map roleToIds = agentToRolesToIds[agentIri]
+                def inCluster = roleToIds.findAll { _, ids -> idToCluster[id].intersect(ids) }
+                if (inCluster) {
+                    agent.clear()
+                    agent[ID_KEY] = agentIri
+                    def occursInIds = inCluster.collect { _, ids -> idToCluster[id].intersect(ids) }.flatten() as Set
+                    def ratio = "${occursInIds.size()}/${idToCluster[id].size()}"
+                    def examples = occursInIds.take(3)
+                    def numContributionsByRole = inCluster.collectEntries { r, ids -> [roleShort(r[ID_KEY]), idToCluster[id].intersect(ids).size()] }
+                            .sort { -it.value }
+                    def currentRoles = asList(contribution.role).findResults { roleShort(it[ID_KEY]) }.sort()
+                    linkedFoundInCluster.println([id, linkedAgentToPrefName[agentIri], currentRoles, idShort(agentIri), ratio, numContributionsByRole, examples].join('\t'))
+                    incrementStats('linked agent found in cluster', currentRoles)
+                    asList(contribution.role).each { r ->
+                        roleToIds.computeIfAbsent(r, f -> new ConcurrentHashMap().newKeySet()).add(id)
                     }
-                    if (agentIsInCluster) {
-                        agent.clear()
-                        agent[ID_KEY] = agentIri
-                        asList(contribution.role).each { r ->
-                            roleToIds[r].add(id)
-                        }
-                        linkedFoundInCluster.println([id, name, chipString(contribution, getWhelk())].join('\t'))
-                        incrementStats('linked agent found in cluster', asList(contribution.role).collect { roleShort(it[ID_KEY]) }.sort())
-                        modified = true
-                        return
-                    }
+                    return modified = true
+                }
 
-                    roleToIds = roleToIds.findAll { it.key != [:] }
-                    def numDifferentRoles = roleToIds.size()
-                    if (numDifferentRoles == 1) {
-                        def (usualRole, numContributions) = roleToIds.collect { role, ids -> [role, ids.size()] }.first()
-                        if (numContributions > 5) {
-                            matchedGlobally.add([agentIri, usualRole, numContributions])
-                        }
-                    }
+                def matchingRoles = roleToIds.findAll { role, _ -> role in asList(contribution.role) }
+                if (matchingRoles) {
+                    def numContributionsByRole = roleToIds.collectEntries { r, ids -> [roleShort(r[ID_KEY]), ids.size()] }.sort { -it.value }
+                    matchedGlobally.add([agentIri, numContributionsByRole])
                 }
             }
-            if (matchedGlobally.size() == 1) {
-                def (agentIri, usualRole, numContributions) = matchedGlobally[0]
-                agent.clear()
-                agent[ID_KEY] = agentIri
-                agentToRolesToIds[agentIri][usualRole].add(id)
-                linkedFoundGlobally.println([id, name, chipString(contribution, getWhelk()), numContributions].join('\t'))
-                incrementStats('linked agent found globally', shortRole, id)
-                modified = true
+            matchedGlobally.each { agentIri, numContributionsByRole ->
+                def name = linkedAgentToPrefName[agentIri]
+                def roleToIds = agentToRolesToIds[agentIri]
+                def examples = roleToIds.values().flatten().toSet().take(3)
+                def currentRolesShort = asList(contribution.role).findResults { roleShort(it[ID_KEY]) }.sort()
+                if (matchedGlobally.size() == 1) {
+                    agent.clear()
+                    agent[ID_KEY] = agentIri
+                    linkedFoundGlobally.println([id, name, currentRolesShort, idShort(agentIri), numContributionsByRole, examples].join('\t'))
+                    incrementStats('linked agent found globally', currentRolesShort, id)
+                    asList(contribution.role).each { r ->
+                        roleToIds.computeIfAbsent(r, f -> new ConcurrentHashMap().newKeySet()).add(id)
+                    }
+                    modified = true
+                } else {
+                    ambiguous.println([id, name, currentRolesShort, idShort(agentIri), numContributionsByRole, examples].join('\t'))
+                }
             }
         }
     }
@@ -193,96 +219,235 @@ boolean tryAddRole(Map contribution, String id) {
     Map roleToIds = agentToRolesToIds[linkedAgent]
     if (!roleToIds) return false
 
-    def currentRoles = roleToIds.findAll { role, ids -> id in ids }.keySet()
-    if (!noRole(currentRoles)) return false
-
-    def foundRolesInCluster = roleToIds.findAll { role, ids ->
-        role.containsKey(ID_KEY) && !noRole([role] as Set) && role[ID_KEY] != Relator.PRIMARY_RIGHTS_HOLDER.iri && ids.intersect(idToCluster[id])
+    def currentRoles = asList(contribution.role)
+    def foundRolesInCluster = roleToIds.findAll { r, ids ->
+        r.containsKey(ID_KEY) && !noRole([r]) && ids.intersect(idToCluster[id])
     }.collect { it.key }
+    def newRoles = foundRolesInCluster - currentRoles
 
-    if (foundRolesInCluster) {
-        contribution['role'] = foundRolesInCluster
-        foundRolesInCluster.each { r ->
-            roleToIds[r].add(id)
+    if (newRoles) {
+        contribution['role'] = noRole(currentRoles) ? newRoles : currentRoles + newRoles
+        def currentRolesShort = currentRoles.findResults { roleShort(it[ID_KEY]) }
+        newRoles.each { r ->
             def inClusterWithSameRole = roleToIds[r].intersect(idToCluster[id])
             def shortRole = roleShort(r[ID_KEY])
             def ratio = "${inClusterWithSameRole.size()}/${idToCluster[id].size()}"
-            roleFoundInCluster.println([id, linkedAgent, shortRole, ratio, inClusterWithSameRole.take(3)].join('\t'))
+            def examples = inClusterWithSameRole.take(3)
+            roleFoundInCluster.println([id, idShort(linkedAgent), currentRolesShort, shortRole, ratio, examples].join('\t'))
             incrementStats('role found in cluster', shortRole, id)
+            roleToIds[r].add(id)
         }
         return true
     }
 
-    roleToIds = roleToIds.findAll { it.key != [:] && it.key != [(ID_KEY): Relator.PRIMARY_RIGHTS_HOLDER.iri] }
-    def numDifferentRoles = roleToIds.size()
-    if (numDifferentRoles == 1) {
-        def (usualRole, numContributions) = roleToIds.collect { role, ids -> [role, ids.size()] }.first()
-        if (numContributions > 5 && usualRole[ID_KEY] != Relator.UNSPECIFIED_CONTRIBUTOR.iri) {
-            roleToIds[usualRole].add(id)
-            contribution['role'] = [usualRole]
-            def shortRole = roleShort(usualRole[ID_KEY])
-            roleFoundGlobally.println([id, linkedAgent, shortRole, numContributions].join('\t'))
-            incrementStats('role found globally', shortRole, id)
-            return true
-        }
-    }
-
     return false
 }
 
-boolean tryAddRolesFromRespStatement(Map contribution, Map contributionsInRespStatement, String id) {
+boolean tryAddRolesFromRespStatement(Map contribution, Map contributionsInRespStatement, String respStatement, String id) {
+    if (contributionsInRespStatement.isEmpty()) return false
+
     String agent = toString(asList(contribution.agent).find())
-    String agentName = agentToName[agent]
-    List<Tuple2> rolesInRespStatement = contributionsInRespStatement.remove(agentName)
+
+    def match = contributionsInRespStatement.subMap(agentToNames[agent] ?: []).find()
+    if (!match) return false
+
+    String name = match.key
+    List<Relator> rolesInRespStatement = match.value
+    contributionsInRespStatement.remove(name)
+
     Map roleToIds = agentToRolesToIds[agent]
+    if (!roleToIds) return false
 
-    if (!rolesInRespStatement || !roleToIds) return false
-
-    def currentRoles = roleToIds.findAll { role, ids -> id in ids }.keySet()
+    def currentRoles = asList(contribution.role)
     def isPrimaryContribution = contribution[ID_KEY] == 'PrimaryContribution'
-    def rolesOfInterest = rolesInRespStatement.findResults { Relator relator, boolean isImplicitRole ->
+    def rolesOfInterest = rolesInRespStatement.findResults { Relator relator ->
         relator != Relator.UNSPECIFIED_CONTRIBUTOR
-                && !(relator == Relator.AUTHOR && isImplicitRole && !isPrimaryContribution)
+                && !(relator == Relator.IMPLICIT_AUTHOR && !isPrimaryContribution)
                 ? [(ID_KEY): relator.iri]
                 : null
     }
-
-    if (rolesOfInterest) {
-        def replace = noRole(currentRoles)
-        def add = !replace && !currentRoles.containsAll(rolesOfInterest)
-        if (replace || add) {
-            def preUpdate = currentRoles.findResults { roleShort(it[ID_KEY]) }
-            rolesOfInterest.each { r ->
-                roleToIds.computeIfAbsent(r, f -> new ConcurrentHashMap().newKeySet()).add(id)
-                def inClusterWithSameRole = roleToIds[r].intersect(idToCluster[id])
-                def ratio = "${inClusterWithSameRole.size()}/${idToCluster[id].size()}"
-                def globalOccurences = roleToIds[r].size()
-                def shortRole = roleShort(r[ID_KEY])
-                roleAddedFromRespStatement.println([id, preUpdate, shortRole, ratio, globalOccurences, inClusterWithSameRole.take(3)].join('\t'))
-                incrementStats("role added from responsibilityStatement", shortRole, id)
-            }
-            contribution['role'] = replace ? rolesOfInterest : (asList(contribution['role']) + rolesOfInterest).unique()
-            return true
+    def newRoles = rolesOfInterest - currentRoles
+    if (newRoles) {
+        contribution['role'] = noRole(currentRoles) ? newRoles : currentRoles + newRoles
+        def currentRolesShort = currentRoles.findResults { roleShort(it[ID_KEY]) }
+        newRoles.each { r ->
+            def globalOccurences = roleToIds[r]?.size() ?: 0
+            def shortRole = roleShort(r[ID_KEY])
+            def examples = roleToIds[r]?.take(3) ?: []
+            roleAddedFromRespStatement.println([id, name, currentRolesShort, shortRole, globalOccurences, examples, respStatement].join('\t'))
+            incrementStats("role added from responsibilityStatement", shortRole, id)
+            roleToIds.computeIfAbsent(r, f -> new ConcurrentHashMap().newKeySet()).add(id)
         }
+        return true
     }
 
     return false
 }
 
-boolean tryAddAgentsFromRespStatement(Map contribution, Map contributionsInRespStatement, String id) {
-    contributionsInRespStatement.removeAll { String name, List roles ->
-        roles = roles.collect { Relator r, _ -> [(ID_KEY): r.iri] }
-        def (linkedAgents, localAgents) = asList(nameToAgents[name]).split()
-        def linkedAgentsMatchingAnyRole = linkedAgents.findAll {
-            agentToRolesToIds[it]
-                    .keySet()
-                    .intersect
+boolean tryAddLinkedAgentContributionsFromRespStatement(List<Map> contribution, Map contributionsInRespStatement, String respStatement, String id) {
+    if (contributionsInRespStatement.isEmpty()) return false
+
+    return contributionsInRespStatement.removeAll { String name, List<Relator> roles ->
+        def agents = nameToAgents[name]
+        if (!agents) return false
+
+        def linkedAgents = agents.findAll { looksLikeIri(it) }
+        def respStatementRoles = roles.findResults { r -> r == Relator.UNSPECIFIED_CONTRIBUTOR ? null : [(ID_KEY): r.iri] }
+
+        def matchedGlobally = []
+
+        for (agentIri in linkedAgents) {
+            Map roleToIds = agentToRolesToIds[agentIri]
+            def inCluster = roleToIds.findAll { _, ids ->
+                idToCluster[id].intersect(ids)
+            }
+            if (inCluster) {
+                def currentRoles = inCluster.findResults { r, _ -> noRole([r]) ? null : r }
+                def newContribution =
+                        [
+                                '@type': 'Contribution',
+                                'agent': [(ID_KEY): agentIri]
+                        ]
+                (currentRoles + respStatementRoles).unique().with {
+                    if (!it.isEmpty()) {
+                        newContribution['role'] = it
+                    }
+                }
+                contribution.add(newContribution)
+
+                def respStatementRolesShort = roles.collect { r -> roleShort(r.iri) }
+                def currentRolesShort = inCluster.collect { r, _ -> roleShort(r[ID_KEY]) }
+                def newContributionRolesShort = newContribution['role'].collect { roleShort(it[ID_KEY]) }.sort()
+                def occursInIds = inCluster.collect { _, ids -> idToCluster[id].intersect(ids) }.flatten() as Set
+                def ratio = "${occursInIds.size()}/${idToCluster[id].size()}"
+                def examples = occursInIds.take(3)
+                def numContributionsByRole = inCluster.collectEntries { r, ids -> [roleShort(r[ID_KEY]), idToCluster[id].intersect(ids).size()] }
+                        .sort { -it.value }
+                respStatementLinkedAgentFoundInCluster.println([id, name, idShort(agentIri), respStatementRolesShort, currentRolesShort, newContributionRolesShort, ratio, numContributionsByRole, examples, respStatement].join('\t'))
+                incrementStats('linked agents from respStatement (found in cluster)', newContributionRolesShort, id)
+                newContribution['role'].each { r ->
+                    roleToIds.computeIfAbsent(r, f -> new ConcurrentHashMap().newKeySet()).add(id)
+                }
+                return true
+            }
+            def matchingRoles = respStatementRoles.intersect(roleToIds.keySet())
+            if (matchingRoles) {
+                def numContributionsByRole = roleToIds.collectEntries { r, ids -> [roleShort(r[ID_KEY]), ids.size()] }.sort { -it.value }
+                matchedGlobally.add([agentIri, numContributionsByRole])
+            }
         }
+
+        def unambiguousMatch = false
+
+        matchedGlobally.each { agentIri, numContributionsByRole ->
+            def roleToIds = agentToRolesToIds[agentIri]
+            def examples = roleToIds.findAll { r, _ -> r in respStatementRoles }.values().flatten().take(3)
+            def respStatementRolesShort = respStatementRoles.collect { roleShort(it[ID_KEY]) }
+            if (matchedGlobally.size() == 1) {
+                def newContribution =
+                        [
+                                '@type': 'Contribution',
+                                'agent': [(ID_KEY): agentIri],
+                                'role' : respStatementRoles
+                        ]
+                contribution.add(newContribution)
+                respStatementLinkedAgentFoundGlobally.println([id, name, idShort(agentIri), respStatementRolesShort, numContributionsByRole, examples].join('\t'))
+                incrementStats('linked agents from respStatement (found globally)', respStatementRolesShort, id)
+                newContribution['role'].each { r ->
+                    roleToIds.computeIfAbsent(r, f -> new ConcurrentHashMap().newKeySet()).add(id)
+                }
+                unambiguousMatch = true
+            } else {
+                ambiguous.println([id, name, respStatementRolesShort, idShort(agentIri), numContributionsByRole, examples].join('\t'))
+            }
+        }
+
+        return unambiguousMatch
     }
 }
 
-boolean noRole(Set<Map> roles) {
-    roles == ([[:]] as Set) || roles == ([[(ID_KEY): Relator.UNSPECIFIED_CONTRIBUTOR.iri]] as Set)
+boolean tryAddLocalAgentContributionsFromRespStatement(List<Map> contribution, Map contributionsInRespStatement, String respStatement, String id) {
+    if (contributionsInRespStatement.isEmpty()) return false
+
+    def existingNames = contribution.findResults {
+        def agent = asList(it.agent).find()
+        return agent[ID_KEY] ? linkedAgentToPrefName[toString(agent)] : agentToNames[toString(agent)]?.find()
+    }
+
+    return contributionsInRespStatement.removeAll { String name, List<Relator> roles ->
+        def agents = nameToAgents[name]
+        if (!agents) return false
+
+        def localAgents = agents.findAll { !looksLikeIri(it) }
+        def respStatementRoles = roles.findResults { r -> r == Relator.UNSPECIFIED_CONTRIBUTOR ? null : [(ID_KEY): r.iri] }
+
+        for (localAgent in localAgents) {
+            Map roleToIds = agentToRolesToIds[localAgent]
+            def inCluster = roleToIds.findAll { _, ids ->
+                idToCluster[id].intersect(ids)
+            }
+            if (inCluster) {
+                def currentRoles = inCluster.findResults { r, _ -> noRole([r]) ? null : r }
+                def newContribution =
+                        [
+                                '@type': 'Contribution',
+                                'agent': toMap(localAgent)
+                        ]
+                (currentRoles + respStatementRoles).unique().with {
+                    if (!it.isEmpty()) {
+                        newContribution['role'] = it
+                    }
+                }
+                contribution.add(newContribution)
+
+                def respStatementRolesShort = roles.collect { r -> roleShort(r.iri) }
+                def currentRolesShort = inCluster.collect { r, _ -> roleShort(r[ID_KEY]) }
+                def newContributionRolesShort = newContribution['role'].collect { roleShort(it[ID_KEY]) }.sort()
+                def occursInIds = inCluster.collect { _, ids -> idToCluster[id].intersect(ids) }.flatten() as Set
+                def ratio = "${occursInIds.size()}/${idToCluster[id].size()}"
+                def examples = occursInIds.take(3)
+                def numContributionsByRole = inCluster.collectEntries { r, ids -> [roleShort(r[ID_KEY]), idToCluster[id].intersect(ids).size()] }
+                        .sort { -it.value }
+                respStatementLocalAgentFoundInCluster.println([id, name, existingNames, respStatementRolesShort, currentRolesShort, newContributionRolesShort, ratio, numContributionsByRole, examples, respStatement].join('\t'))
+                incrementStats('local agents from respStatement (found in cluster)', newContributionRolesShort, id)
+                newContribution['role'].each { r ->
+                    roleToIds.computeIfAbsent(r, f -> new ConcurrentHashMap().newKeySet()).add(id)
+                }
+                return true
+            }
+        }
+
+        return false
+    }
+}
+
+boolean addRemainingContributionsFromRespStatement(List<Map> contribution, Map contributionsInRespStatement, Map normalizedNames, String respStatement, String id) {
+    if (contributionsInRespStatement.isEmpty()) return false
+
+    def existingNames = contribution.findResults {
+        def agent = asList(it.agent).find()
+        return agent[ID_KEY] ? linkedAgentToPrefName[toString(agent)] : agentToNames[toString(agent)]?.find()
+    }
+
+    contributionsInRespStatement.each { name, roles ->
+        def newContribution =
+                [
+                        '@type': 'Contribution',
+                        'agent': ['@type': 'Person', 'name': normalizedNames[name]]
+                ]
+        roles = roles.findResults { r -> r == Relator.UNSPECIFIED_CONTRIBUTOR ? null : [(ID_KEY): r.iri] }
+        if (roles) {
+            newContribution['role'] = roles
+        }
+        contribution.add(newContribution)
+        unmatchedContributionsInRespStatement.println([id, normalizedNames[name], existingNames, roles.collect { roleShort(it[ID_KEY]) }, respStatement].join('\t'))
+    }
+
+    return true
+}
+
+boolean noRole(List<Map> roles) {
+    roles == [[:]] || roles == [[(ID_KEY): Relator.UNSPECIFIED_CONTRIBUTOR.iri]]
 }
 
 private Map loadIfLink(Map m) {
@@ -298,23 +463,29 @@ private Map loadThing(def id) {
     return thing
 }
 
-private static Map<String, List<Tuple2<Relator, Boolean>>> parseRespStatement(String respStatement) {
+Map<String, List<Relator>> parseRespStatement(String respStatement) {
     def parsedContributions = [:]
 
     if (respStatement) {
         respStatement.split(';').eachWithIndex { part, i ->
             parseSwedishFictionContribution(StringUtils.normalizeSpace(part), i == 0).each { name, roles ->
                 parsedContributions
-                        .computeIfAbsent(normalize(name), r -> [])
+                        .computeIfAbsent(name, r -> [])
                         .addAll(roles)
             }
         }
     }
 
-    return parsedContributions
+    return parsedContributions.findAll { name, roles ->
+        if (name =~ /\s/) {
+            return true
+        }
+        vagueNames.println([name, respStatement].join('\t'))
+        return false
+    }
 }
 
-private static Map<String, List<Tuple2<Relator, Boolean>>> parseSwedishFictionContribution(String contribution, boolean isFirstPart) {
+static Map<String, List<Relator>> parseSwedishFictionContribution(String contribution, boolean isFirstStmtPart) {
     def roleToPattern =
             [
                     (Relator.TRANSLATOR)         : ~/(bemynd(\w+|\.)? )?öf?v(\.|ers(\.|\p{L}+)?)( (till|från) \p{L}+)?|(till svenskan?|från \p{L}+)|svensk text/,
@@ -324,7 +495,7 @@ private static Map<String, List<Tuple2<Relator, Boolean>>> parseSwedishFictionCo
                     (Relator.COVER_DESIGNER)     : ~/omslag/,
                     (Relator.AUTHOR_OF_AFTERWORD): ~/efter(ord|skrift)/,
                     (Relator.PHOTOGRAPHER)       : ~/\bfoto\w*\.?/,
-//                        (Relator.EDITOR)             : ~/red(\.(?! av)|aktör(er)?)|\bbearb(\.|\w+)?|återberättad|sammanställ\w*/,
+                    (Relator.EDITOR)             : ~/red(\.(?! av)|aktör(er)?)|\bbearb(\.|\w+)?|återberättad|sammanställ\w*/,
             ]
 
     def rolePattern = ~/((?iu)${roleToPattern.values().join('|')})/
@@ -349,16 +520,16 @@ private static Map<String, List<Tuple2<Relator, Boolean>>> parseSwedishFictionCo
     matched.each { m ->
         // Extract roles from the contribution
         def roles = roleToPattern
-                .findAll { k, v -> m =~ /(?iu)$v/ }
+                .findAll { _, pattern -> m =~ /(?iu)$pattern/ }
                 .with {
                     it.isEmpty() && contribution =~ /.+$followsRolePattern/
-                            ? [new Tuple2(Relator.UNSPECIFIED_CONTRIBUTOR, isFirstPart)]
-                            : it.collect { role, pattern -> new Tuple2(role, isFirstPart) }
+                            ? [Relator.UNSPECIFIED_CONTRIBUTOR]
+                            : it.collect { role, _ -> role }
                 }
 
         // Author should be the role if first part of respStatement (before ';') and no role seems to be stated
-        if (roles.isEmpty() && isFirstPart) {
-            roles << new Tuple2(Relator.AUTHOR, isFirstPart)
+        if (roles.isEmpty() && isFirstStmtPart) {
+            roles << Relator.IMPLICIT_AUTHOR
         }
 
         // Extract names from the contribution
@@ -371,7 +542,7 @@ private static Map<String, List<Tuple2<Relator, Boolean>>> parseSwedishFictionCo
     return nameToRoles
 }
 
-private static List<String> parseNames(Pattern namePattern, Pattern conjPattern, String s) {
+static List<String> parseNames(Pattern namePattern, Pattern conjPattern, String s) {
     def names = []
 
     (s =~ namePattern).each {
@@ -403,12 +574,27 @@ def getWhelk() {
     return whelk
 }
 
-private static boolean yearMismatch(Map a, Map b) {
-    def lifeSpan = { Map agent ->
-        agent.lifeSpan?.replaceAll(~/[^\-0-9]/, '')?.replaceAll(~/-+/, ' ')
-    }
-    def aLifeSpan = lifeSpan(a)
-    def bLifeSpan = lifeSpan(b)
-    return aLifeSpan && bLifeSpan && aLifeSpan != bLifeSpan
+static boolean yearMismatch(String a, String b) {
+    a && b && a != b
+}
+
+static String lifeSpan(Map agent) {
+    agent.lifeSpan?.replaceAll(~/[^\-0-9]/, '')?.replaceAll(~/-+/, '-')
+}
+
+static String toString(Map agent) {
+    agent[ID_KEY] ?: new JsonBuilder(agent).toString()
+}
+
+static toMap(String agent) {
+    new JsonSlurper().parseText(agent)
+}
+
+static String idShort(String iri) {
+    iri.split("[#/]").dropRight(1).last()
+}
+
+static String roleShort(String iri) {
+    iri?.split("/")?.last() ?: 'NO ROLE'
 }
 
