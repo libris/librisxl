@@ -5,9 +5,8 @@ id in (
  from lddb l inner join lddb__dependencies d on l.id = d.dependsonid
  where
   l.collection = 'auth' and
-  l.modified > '2023-05-01' and
-  l.modified < '2023-05-30' and
-  l.changedby = 'S'
+  l.modified > '2023-04-17' and
+  l.modified < '2023-05-31'
 ) and deleted = false;
 """
 
