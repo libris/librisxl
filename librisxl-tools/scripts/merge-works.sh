@@ -34,10 +34,7 @@ SWEDISH_FICTION=$CLUSTERS_DIR/4-swedish-fiction.tsv
 #ANONYMOUS_TRANSLATIONS=$CLUSTERS_DIR/5-anonymous-translations.tsv
 
 LANGUAGE_IN_TITLE=$NORMALIZATIONS_DIR/1-titles-with-language
-LINK_CONTRIBUTION=$NORMALIZATIONS_DIR/2-link-contribution
-RESP_STATEMENT=$NORMALIZATIONS_DIR/3-responsibilityStatement
-ILLUSTRATORS=$NORMALIZATIONS_DIR/4-illustrators
-TRANSLATION_OF=$NORMALIZATIONS_DIR/5-translationOf
+CONTRIBUTION=$NORMALIZATIONS_DIR/2-contribution
 
 # Clustring step 1 TODO: run only on recently updated records after first run
 echo "Finding new clusters..."
@@ -82,40 +79,18 @@ if [ $NUM_CLUSTERS == 0 ]; then
   exit 0
 fi
 
-# Normalization step 1 (Probably not necessary after first run, titles with language doesn't seem to occur in newer records)
+# Normalization
 echo
 echo "Removing language from work titles..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION -jar build/libs/whelktool.jar \
   $ARGS --report $LANGUAGE_IN_TITLE src/main/groovy/datatool/scripts/mergeworks/normalize/language-in-work-title.groovy 2>/dev/null
 echo "$(count_lines $LANGUAGE_IN_TITLE/MODIFIED.txt) records affected, report in $LANGUAGE_IN_TITLE"
 
-# Normalization step 2
 echo
-echo "Linking contribution..."
+echo "Normalizing contribution..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION -jar build/libs/whelktool.jar \
-  $ARGS --report $LINK_CONTRIBUTION src/main/groovy/datatool/scripts/mergeworks/normalize/link-contribution.groovy 2>/dev/null
-echo "$(count_lines $LINK_CONTRIBUTION/MODIFIED.txt) records affected, report in $LINK_CONTRIBUTION"
-
-# Normalization step 3
-echo
-echo "Adding contributions found in responsibilityStatement..."
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION -jar build/libs/whelktool.jar \
-  $ARGS --report $RESP_STATEMENT src/main/groovy/datatool/scripts/mergeworks/normalize/fetch-contribution-from-respStatement.groovy 2>/dev/null
-echo "$(count_lines $RESP_STATEMENT/MODIFIED.txt) records affected, report in $RESP_STATEMENT"
-
-# Normalization step 4
-echo
-echo "Adding 9pu code to illustrators..."
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION -jar build/libs/whelktool.jar \
-  $ARGS --report $ILLUSTRATORS src/main/groovy/datatool/scripts/mergeworks/normalize/add-9pu-to-illustrators.groovy 2>/dev/null
-echo "$(count_lines $ILLUSTRATORS/MODIFIED.txt) records affected, report in $ILLUSTRATORS"
-
-# Normalization step 5
-echo
-echo "Adding missing translationOf..."
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION -jar build/libs/whelktool.jar \
-  $ARGS --report $TRANSLATION_OF src/main/groovy/datatool/scripts/mergeworks/normalize/add-missing-translationOf.groovy 2>/dev/null
-echo "$(count_lines $TRANSLATION_OF/MODIFIED.txt) records affected, report in $TRANSLATION_OF"
+  $ARGS --report $CONTRIBUTION src/main/groovy/datatool/scripts/mergeworks/normalize/contribution.groovy 2>/dev/null
+echo "$(count_lines $CONTRIBUTION/MODIFIED.txt) records affected, report in $CONTRIBUTION"
 
 # Filter: Drop translations without translator // TODO: Decide what to do with these, in the meantime don't "hide" them
 #echo "Filtering out translations without translator..."

@@ -1,4 +1,4 @@
-package datatool.scripts.mergeworks
+package datatool.scripts.mergeworks.normalize
 
 import groovy.transform.Memoized
 import org.apache.commons.lang3.StringUtils
