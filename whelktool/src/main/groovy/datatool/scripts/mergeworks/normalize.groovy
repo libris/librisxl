@@ -51,6 +51,11 @@ unmatchedContributionsInRespStatement.println(['id', 'agent name', 'existing nam
 
 vagueNames = getReportWriter("vague-names.tsv")
 
+titleMovedToTranslationOf = getReportWriter("title-moved-to-translationOf.tsv")
+
+originalWorkFoundInCluster = getReportWriter("original-work-found-in-cluster.tsv")
+originalWorkFoundInCluster.println(['id', 'added translationOf', 'occurrences in cluster', 'examples'].join('\t'))
+
 def clusters = new File(System.getProperty('clusters')).collect { it.split('\t').collect { it.trim() } }
 
 idToCluster = initIdToCluster(clusters)
@@ -58,12 +63,16 @@ nameToAgents = new ConcurrentHashMap<String, ConcurrentHashMap>()
 agentToRolesToIds = new ConcurrentHashMap<String, ConcurrentHashMap<Map, ConcurrentHashMap>>()
 agentToLifeSpan = new ConcurrentHashMap<String, String>()
 linkedAgentToPrefName = new ConcurrentHashMap<String, String>()
+idToTranslationOf = new ConcurrentHashMap<String, Object>()
 
 // Populate maps
 selectByIds(clusters.flatten()) { bib ->
     def id = bib.doc.shortId
+    def work = bib.graph[1].instanceOf
 
-    bib.graph[1].instanceOf?.contribution?.each { Map c ->
+    if (!work || work[ID_KEY]) return
+
+    work.contribution?.each { Map c ->
         asList(c.agent).each { Map agent ->
             def agentStr = toString(agent)
             def loadedAgent = loadIfLink(agent)
@@ -92,6 +101,10 @@ selectByIds(clusters.flatten()) { bib ->
             }
         }
     }
+
+    if (work['translationOf']) {
+        idToTranslationOf[id] = work['translationOf']
+    }
 }
 
 agentToNames = initAgentToNames(nameToAgents)
@@ -101,7 +114,8 @@ selectByIds(clusters.flatten()) { bib ->
     def id = bib.doc.shortId
 
     def respStatement = thing.responsibilityStatement
-    def contribution = thing.instanceOf?.contribution
+    def work = thing.instanceOf
+    def contribution = work?.contribution
 
     if (!contribution) return
 
@@ -124,7 +138,7 @@ selectByIds(clusters.flatten()) { bib ->
     modified |= tryAddLocalAgentContributionsFromRespStatement(contribution, contributionsInRespStatement, respStatement, id)
     modified |= addRemainingContributionsFromRespStatement(contribution, contributionsInRespStatement, normalizedNameToName, respStatement, id)
 
-//    modified |= tryAddMissingTranslationOf()
+    modified |= tryAddMissingTranslationOf(work, contribution, id)
 
     if (modified) {
         bib.scheduleSave()
@@ -441,9 +455,45 @@ boolean addRemainingContributionsFromRespStatement(List<Map> contribution, Map c
         }
         contribution.add(newContribution)
         unmatchedContributionsInRespStatement.println([id, normalizedNames[name], existingNames, roles.collect { roleShort(it[ID_KEY]) }, respStatement].join('\t'))
+        def roleToIds = agentToRolesToIds.computeIfAbsent(toString(newContribution.agent), f -> new ConcurrentHashMap())
+        asList(newContribution.role).each { r ->
+            roleToIds.computeIfAbsent(r, f -> new ConcurrentHashMap().newKeySet()).add(id)
+        }
     }
 
     return true
+}
+
+boolean tryAddMissingTranslationOf(Map work, List<Map> contribution, String id) {
+    def trl = [(ID_KEY): Relator.TRANSLATOR.iri]
+    def translators = contribution.findResults { asList(it.role).contains(trl) ? toString(asList(it.agent).find()) : null }
+
+    if (!translators || work['translationOf']) return false
+
+    def title = work.remove('hasTitle')
+    if (title) {
+        work['translationOf'] = ['@type': 'Work', 'hasTitle': title]
+        incrementStats('add missing translationOf', "title moved to new translationOf", id)
+        titleMovedToTranslationOf.println([id, work['translationOf']].join('\t'))
+        return true
+    }
+
+    for (String translator : translators) {
+        def roleToIds = agentToRolesToIds[translator]
+        def inClusterSameTranslator = roleToIds[trl].intersect(idToCluster[id])
+        def origWorks = inClusterSameTranslator.findResults { idToTranslationOf[it] }
+
+        if (origWorks) {
+            work['translationOf'] = origWorks.countBy { it }.max { it.value }?.key
+            def ratio = "${origWorks.size()}/${idToCluster[id].size()}"
+            def examples = inClusterSameTranslator.findAll { idToTranslationOf.containsKey(it) }.take(3)
+            incrementStats('add missing translationOf', 'original work found in cluster (same translator)', id)
+            originalWorkFoundInCluster.println([id, work['translationOf'], ratio, examples].join('\t'))
+            return true
+        }
+    }
+
+    return false
 }
 
 boolean noRole(List<Map> roles) {
