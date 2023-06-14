@@ -2,8 +2,11 @@ package whelk.util
 
 import io.prometheus.client.Counter
 import io.prometheus.client.Summary
+import io.prometheus.client.guava.cache.CacheMetricsCollector
 
 class Metrics {
+    static final CacheMetricsCollector cacheMetrics = new CacheMetricsCollector().register()
+    
     static final Summary clientTimer = Summary.build()
             .labelNames("target", "method")
             .quantile(0.5, 0.05)

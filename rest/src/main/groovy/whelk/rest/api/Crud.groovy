@@ -191,6 +191,13 @@ class Crud extends HttpServlet {
             sendGetResponse(response, body, eTag, request.getPath(), request.getContentType(), request.getId())
         } else {
             ETag eTag
+
+            if (doc.isPlaceholder()) {
+                whelk.external.getEphemeral(doc.getThingIdentifiers().first()).ifPresent({ ext ->
+                    doc.setThing(ext.getThing())
+                })
+            }
+            
             if (request.shouldEmbellish()) {
                 String plainChecksum = doc.getChecksum(jsonld)
                 whelk.embellish(doc)
@@ -679,7 +686,13 @@ class Crud extends HttpServlet {
         try {
             if (doc) {
                 String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
+
                 String collection = doc.getLegacyCollection(jsonld)
+                
+                if (doc.isCacheRecord()) {
+                    throw new BadRequestException("Cannot POST/PUT cache record")
+                }
+                
                 if (isUpdate) {
 
                     // You are not allowed to change collection when updating a record

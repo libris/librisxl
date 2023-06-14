@@ -283,7 +283,7 @@ class ElasticSearch {
             }
         }
     }
-    
+
     void remove(String identifier) {
         if (log.isDebugEnabled()) {
             log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
@@ -306,8 +306,28 @@ class ElasticSearch {
             log.warn("Record with id $identifier was not deleted from the Elasticsearch index: $e")
         }
     }
+    
+    Map retrieveIndexedDocument(String systemId) {
+        try {
+            mapper.readValue(client.performRequest('GET', 
+                    "/${indexName}/_doc/$systemId/_source", ''), Map)
+        } catch (UnexpectedHttpStatusException e) {
+            if (isMissingDocument(e)) {
+                return null
+            }
+            else {
+                throw e
+            }
+        }
+    }
 
     String getShapeForIndex(Document document, Whelk whelk) {
+        if (document.isPlaceholder()) {
+            whelk.external.getEphemeral(document.getThingIdentifiers().first()).ifPresent({ ext ->
+                document.setThing(ext.getThing())
+            })
+        }
+        
         Document copy = document.clone()
         
         whelk.embellish(copy, ['search-chips'])

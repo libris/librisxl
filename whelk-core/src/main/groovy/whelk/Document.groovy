@@ -50,6 +50,7 @@ class Document {
     static final List thingCarrierTypesPath = ["@graph", 1, "carrierType"]
     static final List thingInSchemePath = ["@graph",1,"inScheme","@id"]
     static final List recordIdPath = ["@graph", 0, "@id"]
+    static final List recordTypePath = ["@graph", 0, "@type"]
     static final List workIdPath = ["@graph", 1, "instanceOf", "@id"]
     static final List thingMetaPath = ["@graph", 1, "meta", "@id"]
     static final List recordSameAsPath = ["@graph", 0, "sameAs"]
@@ -171,11 +172,21 @@ class Document {
 
     String getThingType() { get(thingTypePath) }
 
+    String getRecordType() { get(recordTypePath) }
+
+    String setRecordType(type) { set(recordTypePath, type) }
+
     String getRecordStatus() { return get(statusPath) }
 
     void setRecordStatus(status) { set(statusPath, status) }
 
     void setThingMeta(meta) { set(thingMetaPath, meta) }
+
+    Map getThing() { (Map) get(thingPath) }
+    
+    void setThing(thing) { _removeLeafObject(thingPath, data); set(thingPath, thing) }
+
+    void setRecordId(id) { set(recordIdPath, id) }
 
     /**
      * Will have base URI prepended if not already there
@@ -341,6 +352,14 @@ class Document {
     
     String getLegacyCollection(JsonLd jsonld) {
         LegacyIntegrationTools.determineLegacyCollection(this, jsonld)
+    }
+    
+    boolean isPlaceholder() {
+        return getRecordType() == JsonLd.PLACEHOLDER_RECORD_TYPE
+    }
+
+    boolean isCacheRecord() {
+        return getRecordType() == JsonLd.CACHE_RECORD_TYPE
     }
 
     String getHeldBySigel() {
@@ -714,22 +733,22 @@ class Document {
         return _get(path, data)
     }
 
-    static Object _get(List path, Object root) {
+    static Object _get(List path, Object root, Object defaultTo = null) {
         // Start at root data node
         Object node = root
 
         for (Object step : path) {
             if ((node instanceof Map) && !(step instanceof String)) {
                 log.warn("Needed string as map key, but was given: " + step + ". (path was: " + path + ")")
-                return null
+                return defaultTo
             } else if ((node instanceof List) && !(step instanceof Integer)) {
                 log.warn("Needed integer as list index, but was given: " + step + ". (path was: " + path + ")")
-                return null
+                return defaultTo
             }
             node = node[step]
 
             if (node == null) {
-                return null
+                return defaultTo
             }
         }
 
@@ -894,8 +913,16 @@ class Document {
     private static boolean isSet(String key, JsonLd jsonLd) {
         jsonLd && key && jsonLd.isSetContainer(key)
     }
-
-    public String toVerboseString() {
+    
+    String toVerboseString() {
         return "{completeId=" + getCompleteId() + ", baseUri=" + baseUri.toString() + ", base identifiers:" + getRecordIdentifiers().join(',');
+    }
+    
+    void replaceLinks(Map<String, String> oldToNew) {
+        DocumentUtil.findKey(data, JsonLd.ID_KEY) { value, path ->
+            if (oldToNew.containsKey(value)) {
+                new DocumentUtil.Replace(oldToNew[(String) value])
+            }
+        }
     }
 }

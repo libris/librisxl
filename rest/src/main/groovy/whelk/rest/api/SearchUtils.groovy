@@ -8,13 +8,16 @@ import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
-import whelk.component.DocumentNormalizer
 import whelk.exception.InvalidQueryException
 import whelk.exception.WhelkRuntimeException
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
 import whelk.search.RangeParameterPrefix
 import whelk.util.DocumentUtil
+
+import static whelk.JsonLd.GRAPH_KEY
+import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.TYPE_KEY
 
 @Log
 class SearchUtils {
@@ -35,7 +38,7 @@ class SearchUtils {
     Whelk whelk
     JsonLd ld
     ESQuery esQuery
-    URI vocabUri
+    
 
     SearchUtils(Whelk whelk) {
         this(whelk.jsonld)
@@ -45,9 +48,6 @@ class SearchUtils {
 
     SearchUtils(JsonLd jsonld) {
         this.ld = jsonld
-        if (ld.vocabId) {
-            vocabUri = new URI(ld.vocabId)
-        }
     }
 
     Map doSearch(Map queryParameters) {
@@ -130,9 +130,10 @@ class SearchUtils {
         //
         // TODO Only manipulate `_limit` in one place
         queryParameters['_limit'] = [limit.toString()]
-
+        
         Map esResult = esQuery.doQuery(queryParameters, suggest)
-        Lookup lookup = new Lookup()
+        
+        Lookup lookup = new Lookup(whelk)
         
         List<Map> mappings = []
         if (query) {
@@ -159,9 +160,10 @@ class SearchUtils {
                 item.identifiedBy?.with { List ids -> ids.removeAll { (Document.isIsni(it) || Document.isOrcid(it) ) && it.value?.size() == 16+3 } }
                 
                 // This object must be re-added because it might get filtered out in applyLens().
-                item['reverseLinks'] = it['reverseLinks']
-                if (item['reverseLinks'] != null)
+                if (it['reverseLinks']) {
+                    item['reverseLinks'] = it['reverseLinks']
                     item['reverseLinks'][JsonLd.ID_KEY] = Document.getBASE_URI().resolve('find?o=' + URLEncoder.encode(it['@id'], 'UTF-8').toString()).toString()
+                }
                 return item
             }
         }
@@ -173,13 +175,14 @@ class SearchUtils {
             k = stripPrefix((String) k, ESQuery.OR_PREFIX)
             ((List) aggregations[k]?['buckets'])?.removeIf { it['key'] in v }
         } 
-
+        
         Map stats = null
         if (addStats == null || (addStats == 'true' || addStats == 'on')) {
             stats = buildStats(lookup, aggregations,
                                makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)),
                                (total > 0 && !predicates) ? reverseObject : null)
         }
+
         if (!stats) {
             log.debug("No stats found for query: ${queryParameters}")
         }
@@ -187,7 +190,7 @@ class SearchUtils {
         (query ? mappings.tail() : mappings).each { Map mapping ->
             Map params = removeMappingFromParams(pageParams, mapping)
             String upUrl = makeFindUrl(SearchType.ELASTIC, params, offset)
-            mapping['up'] = [ (JsonLd.ID_KEY): upUrl ]
+            mapping['up'] = [ (ID_KEY): upUrl ]
         }
 
         if (reverseObject) {
@@ -195,7 +198,7 @@ class SearchUtils {
             mappings << [
                     'variable' : 'o',
                     'object'   : lookup.chip(reverseObject),  // TODO: object/predicate/???
-                    'up'       : [(JsonLd.ID_KEY): upUrl],
+                    'up'       : [(ID_KEY): upUrl],
             ]
         }
 
@@ -205,7 +208,7 @@ class SearchUtils {
                     'variable' : 'p',
                     'object'   : reverseObject,
                     'predicate': lookup.chip(predicates.first()),
-                    'up'       : [(JsonLd.ID_KEY): upUrl],
+                    'up'       : [(ID_KEY): upUrl],
             ]
         }
         
@@ -222,20 +225,20 @@ class SearchUtils {
             result['_debug'] = esResult['_debug']
         }
 
-        result['maxItems'] = esQuery.getMaxItems().toString()
+        result['maxItems'] = esQuery.getMaxItems()
 
         lookup.run()
         
         return result
     }
-
+    
     Map removeMappingFromParams(Map pageParams, Map mapping) {
         Map params = pageParams.clone()
         String variable = mapping['variable']
         def param = params[variable]
         List values = param instanceof List ? param.clone() : param ? [param] : []
         if ('object' in mapping) {
-            def value = mapping.object[JsonLd.ID_KEY]
+            def value = mapping.object[ID_KEY]
             values.remove(value)
         } else if ('value' in mapping) {
             def value = mapping.value
@@ -275,8 +278,8 @@ class SearchUtils {
     private Map assembleSearchResults(SearchType st, List items,
                                       List mappings, Map pageParams,
                                       int limit, int offset, int total) {
-        Map result = [(JsonLd.TYPE_KEY): 'PartialCollectionView']
-        result[(JsonLd.ID_KEY)] = makeFindUrl(st, pageParams, offset)
+        Map result = [(TYPE_KEY): 'PartialCollectionView']
+        result[(ID_KEY)] = makeFindUrl(st, pageParams, offset)
         result['itemOffset'] = offset
         result['itemsPerPage'] = limit
         result['totalItems'] = total
@@ -290,20 +293,6 @@ class SearchUtils {
         result['items'] = items
 
         return result
-    }
-
-    /**
-     * Create ES filter for specified siteBaseUri.
-     *
-     */
-    Map makeSiteFilter(String siteBaseUri) {
-        return ['should': [
-                   ['prefix': [(JsonLd.ID_KEY): siteBaseUri]],
-                    // ideally, we'd use ID_KEY here too, but that
-                    // breaks the test case :/
-                   ['prefix': ['sameAs.@id': siteBaseUri]]
-                ],
-                'minimum_should_match': 1]
     }
 
     /**
@@ -357,7 +346,7 @@ class SearchUtils {
                 String searchPageUrl = "${baseUrlForKey}&${ESQuery.AND_PREFIX}${makeParam(key, itemId)}"
 
                 Map observation = ['totalItems': bucket.getAt('doc_count'),
-                                   'view': [(JsonLd.ID_KEY): searchPageUrl],
+                                   'view': [(ID_KEY): searchPageUrl],
                                    'object': lookup.chip(itemId)]
                 
                 observations << observation
@@ -377,7 +366,7 @@ class SearchUtils {
                     'dimension'  : JsonLd.REVERSE_KEY,
                     'observation': counts.collect { List<String> relations, long count ->
                         def viewUrl = baseUrl + '&' + 
-                                relations.collect{ makeParam('p', it + '.' + JsonLd.ID_KEY) }.join('&')
+                                relations.collect{ makeParam('p', it + '.' + ID_KEY) }.join('&')
                         [
                                 'totalItems': count,
                                 'view'      : ['@id': viewUrl],
@@ -456,7 +445,7 @@ class SearchUtils {
     
     private int numberOfIncomingLinks(String iri) {
         try {
-            def doc = new ElasticFind(esQuery).find([(JsonLd.ID_KEY): [iri]]).first()
+            def doc = new ElasticFind(esQuery).find([(ID_KEY): [iri]]).first()
             return doc['reverseLinks']['totalItems']
         }
         catch (Exception e) {
@@ -465,9 +454,21 @@ class SearchUtils {
         }
     }
 
-    private class Lookup {
+    static class Lookup {
         private Multimap<String, Map> iriPos = ArrayListMultimap.create()
+
+        private Whelk whelk
+        private JsonLd ld
+        private URI vocabUri
         
+        Lookup(Whelk whelk) {
+            this.whelk = whelk
+            this.ld = whelk.jsonld
+            if (ld.vocabId) {
+                vocabUri = new URI(ld.vocabId)
+            }
+        }
+
         Map chip(String itemRepr) {
             boolean matchesTerm = false
             def itemId = itemRepr
@@ -480,8 +481,8 @@ class SearchUtils {
             if (termKey in ld.vocabIndex) {
                 return ld.vocabIndex[termKey]
             }
-
-            if (!itemId.startsWith('http') && itemId.contains('.')) {
+            
+            if (!JsonLd.looksLikeIri(itemId) && itemId.contains('.')) {
                 String[] parts = itemId.split('\\.')
                 List chain = parts
                     .findAll { it != JsonLd.ID_KEY }
@@ -525,37 +526,37 @@ class SearchUtils {
                 it.value.putAll(chip)
             }
         }
-    }
-    
-    private Map dummyChip(String itemId) {
-        [(JsonLd.ID_KEY): itemId, 'label': itemId]
-    }
 
-    /*
-     * Read vocab term data from storage.
-     *
-     * Returns null if not found.
-     *
-     */
-    private String getFullUri(String id) {
-        try {
-            if (vocabUri) {
-                return vocabUri.resolve(id).toString()
+        private Map dummyChip(String itemId) {
+            [(ID_KEY): itemId, 'label': itemId]
+        }
+
+        /*
+         * Read vocab term data from storage.
+         *
+         * Returns null if not found.
+         *
+         */
+        private String getFullUri(String id) {
+            try {
+                if (vocabUri) {
+                    return vocabUri.resolve(id).toString()
+                }
+            }
+            catch (IllegalArgumentException e) {
+                // Couldn't resolve, which means id isn't a valid IRI.
+                // No need to check the db.
+                return null
             }
         }
-        catch (IllegalArgumentException e) {
-            // Couldn't resolve, which means id isn't a valid IRI.
-            // No need to check the db.
-            return null
+
+        // FIXME move to Document or JsonLd
+        private Map getEntry(Map jsonLd, String entryId) {
+            // we rely on this convention for the time being.
+            return jsonLd[(GRAPH_KEY)].find { it[ID_KEY] == entryId }
         }
     }
     
-    // FIXME move to Document or JsonLd
-    private Map getEntry(Map jsonLd, String entryId) {
-        // we rely on this convention for the time being.
-        return jsonLd[(JsonLd.GRAPH_KEY)].find { it[JsonLd.ID_KEY] == entryId }
-    }
-
     /**
      * Create a URL for '/find' with the specified query parameters.
      *
@@ -623,20 +624,20 @@ class SearchUtils {
 
         Offsets offsets = new Offsets(total, limit, offset)
 
-        result['first'] = [(JsonLd.ID_KEY): makeFindUrl(st, pageParams)]
-        result['last'] = [(JsonLd.ID_KEY): makeFindUrl(st, pageParams, offsets.last)]
+        result['first'] = [(ID_KEY): makeFindUrl(st, pageParams)]
+        result['last'] = [(ID_KEY): makeFindUrl(st, pageParams, offsets.last)]
 
         if (offsets.prev != null) {
             if (offsets.prev == 0) {
                 result['previous'] = result['first']
             } else {
-                result['previous'] = [(JsonLd.ID_KEY): makeFindUrl(st, pageParams,
+                result['previous'] = [(ID_KEY): makeFindUrl(st, pageParams,
                                                                    offsets.prev)]
             }
         }
 
         if (offsets.next) {
-            result['next'] = [(JsonLd.ID_KEY): makeFindUrl(st, pageParams,
+            result['next'] = [(ID_KEY): makeFindUrl(st, pageParams,
                                                            offsets.next)]
         }
 
@@ -710,7 +711,7 @@ class SearchUtils {
      * filtered out.
      *
      */
-    private Tuple2 mapParams(Lookup lookup, Map params) {
+    static Tuple2<List, Map> mapParams(Lookup lookup, Map params) {
         List result = []
         Map pageParams = [:]
         List reservedParams = getReservedParameters()
@@ -723,11 +724,11 @@ class SearchUtils {
                 String valueProp
                 String termKey
                 def value
-                if (param == JsonLd.TYPE_KEY || param == JsonLd.ID_KEY) {
+                if (param == TYPE_KEY || param == ID_KEY) {
                     valueProp = 'object'
                     termKey = param
                     value = lookup.chip(val).with { it[JsonLd.ID_KEY] = val; return it }
-                } else if (param.endsWith(".${JsonLd.ID_KEY}")) {
+                } else if (param.endsWith(".${ID_KEY}")) {
                     valueProp = 'object'
                     termKey = param[0..-5]
                     value = lookup.chip(val).with { it[JsonLd.ID_KEY] = val; return it }
@@ -761,7 +762,7 @@ class SearchUtils {
     /*
      * Return a list of reserved query params
      */
-    private List getReservedParameters() {
+    private static List getReservedParameters() {
         return ['q', 'p', 'o', 'value', '_limit', '_offset', '_suggest']
     }
 
