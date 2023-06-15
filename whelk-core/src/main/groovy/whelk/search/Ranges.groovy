@@ -167,7 +167,7 @@ class Ranges {
             def ld = whelk.jsonld
             def termKey = ld.toTermKey(value)
             if (termKey in ld.vocabIndex) {
-                return ld.getSubClasses(termKey).findResults{ (String) ld.vocabIndex[it]?[JsonLd.ID_KEY] }
+                return ld.getSubClasses(termKey).findResults{ ld.toTermId(it) }
             } else {
                 return whelk.relations.followReverseBroader(value).collect()
             }
