@@ -163,7 +163,7 @@ class Ranges {
             ["terms" : [(fieldName) : values]]
         }
         
-        Collection<String> narrower(String value) {
+        private Collection<String> narrower(String value) {
             def ld = whelk.jsonld
             def termKey = ld.toTermKey(value)
             if (termKey in ld.vocabIndex) {
