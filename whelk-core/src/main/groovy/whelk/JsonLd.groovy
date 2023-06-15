@@ -79,6 +79,7 @@ class JsonLd {
     List<String> locales
     private String vocabId
     private Map<String, String> nsToPrefixMap = [:]
+    private Map<String, String> prefixToNsMap = [:]
 
     private Map<String, List<String>> superClassOf
     private Map<String, Set<String>> subClassesByType
@@ -174,6 +175,7 @@ class JsonLd {
                 String ns = (String) term
                 if (NS_SEPARATORS.any { ns.endsWith(it) }) {
                     nsToPrefixMap[ns] = pfx
+                    prefixToNsMap[pfx] = ns
                 }
             }
         }
@@ -332,6 +334,16 @@ class JsonLd {
         }
 
         return termId.replace(vocabId, '')
+    }
+    
+    String toTermId(String termKey) {
+        if (termKey.contains(':')) {
+            def s = termKey.split(':')
+            def (prefix, key) = [s[0], s[1]]
+            return prefixToNsMap[prefix] ? prefixToNsMap[prefix] + key : null
+        } else {
+            return vocabId + termKey
+        }
     }
 
     Set<Link> expandLinks(Set<Link> refs) {
