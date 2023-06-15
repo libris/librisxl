@@ -13,6 +13,11 @@ selectBySqlWhere(where) { data ->
                     uri = uri[0]
                 }
 
+                if (!uri.startsWith("https://libris"))
+                    return
+                if (!uri.endsWith("#it"))
+                    return
+
                 //System.err.println("Replacing:\n\t" + agent + " with link:\n\t" + uri)
                 agent.clear()
                 agent["@id"] = uri
