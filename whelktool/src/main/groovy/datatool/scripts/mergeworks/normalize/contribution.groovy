@@ -44,10 +44,10 @@ respStatementLinkedAgentFoundGlobally = getReportWriter("respStatement-linked-ag
 respStatementLinkedAgentFoundGlobally.println(['id', 'agent name', 'matched agent', 'resp statement roles', 'occurrences by role', 'examples'].join('\t'))
 
 respStatementLocalAgentFoundInCluster = getReportWriter("respStatement-local-agent-found-in-cluster.tsv")
-respStatementLocalAgentFoundInCluster.println(['id', 'agent name', 'existing names', 'resp statement roles', 'roles in cluster', 'new contribution roles', 'agent occurrences in cluster', 'occurrences by role', 'examples', 'resp statement'].join('\t'))
+respStatementLocalAgentFoundInCluster.println(['id', 'agent name', 'score', 'existing names', 'resp statement roles', 'roles in cluster', 'new contribution roles', 'agent occurrences in cluster', 'occurrences by role', 'examples', 'resp statement'].join('\t'))
 
 unmatchedContributionsInRespStatement = getReportWriter("unmatched-contributions-in-resp-statement.tsv")
-unmatchedContributionsInRespStatement.println(['id', 'agent name', 'existing names', 'roles', 'resp statement'].join('\t'))
+unmatchedContributionsInRespStatement.println(['id', 'agent name', 'score', 'existing names', 'roles', 'resp statement'].join('\t'))
 
 vagueNames = getReportWriter("vague-names.tsv")
 
@@ -120,7 +120,7 @@ selectByIds(clusters.flatten()) { bib ->
     if (!contribution) return
 
     def normalizedNameToName = [:]
-    def contributionsInRespStatement = parseRespStatement(respStatement).collectEntries { name, roles ->
+    def contributionsInRespStatement = parseRespStatement(respStatement, id).collectEntries { name, roles ->
         def normalizedName = normalize(name)
         normalizedNameToName[normalizedName] = name
         [normalizedName, roles]
@@ -383,17 +383,18 @@ boolean tryAddLinkedAgentContributionsFromRespStatement(List<Map> contribution, 
 boolean tryAddLocalAgentContributionsFromRespStatement(List<Map> contribution, Map contributionsInRespStatement, String respStatement, String id) {
     if (contributionsInRespStatement.isEmpty()) return false
 
-    def existingNames = contribution.findResults {
-        def agent = asList(it.agent).find()
-        return agent[ID_KEY] ? linkedAgentToPrefName[toString(agent)] : agentToNames[toString(agent)]?.find()
-    }
+    def existingNames = contribution.findResults { agentToNames[toString(asList(it.agent).find())] }.flatten()
 
     return contributionsInRespStatement.removeAll { String name, List<Relator> roles ->
+        if (existingNames.any { isLikelySameAgent(it, name) }) return true
+
         def agents = nameToAgents[name]
         if (!agents) return false
 
         def localAgents = agents.findAll { !looksLikeIri(it) }
         def respStatementRoles = roles.findResults { r -> r == Relator.UNSPECIFIED_CONTRIBUTOR ? null : [(ID_KEY): r.iri] }
+
+        if (respStatementRoles.intersect(contribution.collect { it.role }.flatten())) return false
 
         for (localAgent in localAgents) {
             Map roleToIds = agentToRolesToIds[localAgent]
@@ -414,6 +415,7 @@ boolean tryAddLocalAgentContributionsFromRespStatement(List<Map> contribution, M
                 }
                 contribution.add(newContribution)
 
+                def maxSimilarity = existingNames.collect { stringSimilarity(it, name) }.max()
                 def respStatementRolesShort = roles.collect { r -> roleShort(r.iri) }
                 def currentRolesShort = inCluster.collect { r, _ -> roleShort(r[ID_KEY]) }
                 def newContributionRolesShort = newContribution['role'].collect { roleShort(it[ID_KEY]) }.sort()
@@ -422,7 +424,7 @@ boolean tryAddLocalAgentContributionsFromRespStatement(List<Map> contribution, M
                 def examples = occursInIds.take(3)
                 def numContributionsByRole = inCluster.collectEntries { r, ids -> [roleShort(r[ID_KEY]), idToCluster[id].intersect(ids).size()] }
                         .sort { -it.value }
-                respStatementLocalAgentFoundInCluster.println([id, name, existingNames, respStatementRolesShort, currentRolesShort, newContributionRolesShort, ratio, numContributionsByRole, examples, respStatement].join('\t'))
+                respStatementLocalAgentFoundInCluster.println([id, name, maxSimilarity, existingNames, respStatementRolesShort, currentRolesShort, newContributionRolesShort, ratio, numContributionsByRole, examples, respStatement].join('\t'))
                 incrementStats('local agents from respStatement (found in cluster)', newContributionRolesShort, id)
                 newContribution['role'].each { r ->
                     roleToIds.computeIfAbsent(r, f -> new ConcurrentHashMap().newKeySet()).add(id)
@@ -438,30 +440,34 @@ boolean tryAddLocalAgentContributionsFromRespStatement(List<Map> contribution, M
 boolean addRemainingContributionsFromRespStatement(List<Map> contribution, Map contributionsInRespStatement, Map normalizedNames, String respStatement, String id) {
     if (contributionsInRespStatement.isEmpty()) return false
 
-    def existingNames = contribution.findResults {
-        def agent = asList(it.agent).find()
-        return agent[ID_KEY] ? linkedAgentToPrefName[toString(agent)] : agentToNames[toString(agent)]?.find()
-    }
+    def existingNames = contribution.findResults { agentToNames[toString(asList(it.agent).find())] }.flatten()
 
-    contributionsInRespStatement.each { name, roles ->
+    return contributionsInRespStatement.removeAll { name, roles ->
+        if (!roles.any { it == Relator.TRANSLATOR || it == Relator.EDITOR }) return false
+
+        roles = roles.findResults { r -> r == Relator.UNSPECIFIED_CONTRIBUTOR ? null : [(ID_KEY): r.iri] }
+
+        if (roles.intersect(contribution.collect { it.role }.flatten()) || existingNames.any { isLikelySameAgent(it, name) }) {
+            return false
+        }
+
         def newContribution =
                 [
                         '@type': 'Contribution',
-                        'agent': ['@type': 'Person', 'name': normalizedNames[name]]
+                        'agent': ['@type': 'Person', 'name': normalizedNames[name]],
+                        'role' : roles
                 ]
-        roles = roles.findResults { r -> r == Relator.UNSPECIFIED_CONTRIBUTOR ? null : [(ID_KEY): r.iri] }
-        if (roles) {
-            newContribution['role'] = roles
-        }
+
         contribution.add(newContribution)
-        unmatchedContributionsInRespStatement.println([id, normalizedNames[name], existingNames, roles.collect { roleShort(it[ID_KEY]) }, respStatement].join('\t'))
+        def maxSimilarity = existingNames.collect { stringSimilarity(it, name) }.max()
+        unmatchedContributionsInRespStatement.println([id, normalizedNames[name], maxSimilarity, existingNames, roles.collect { roleShort(it[ID_KEY]) }, respStatement].join('\t'))
         def roleToIds = agentToRolesToIds.computeIfAbsent(toString(newContribution.agent), f -> new ConcurrentHashMap())
         asList(newContribution.role).each { r ->
             roleToIds.computeIfAbsent(r, f -> new ConcurrentHashMap().newKeySet()).add(id)
         }
-    }
 
-    return true
+        return true
+    }
 }
 
 boolean tryAddMissingTranslationOf(Map work, List<Map> contribution, String id) {
@@ -513,7 +519,7 @@ private Map loadThing(def id) {
     return thing
 }
 
-Map<String, List<Relator>> parseRespStatement(String respStatement) {
+Map<String, List<Relator>> parseRespStatement(String respStatement, String id) {
     def parsedContributions = [:]
 
     if (respStatement) {
@@ -530,7 +536,7 @@ Map<String, List<Relator>> parseRespStatement(String respStatement) {
         if (name =~ /\s/) {
             return true
         }
-        vagueNames.println([name, respStatement].join('\t'))
+        vagueNames.println([id, name, respStatement].join('\t'))
         return false
     }
 }
@@ -540,7 +546,7 @@ static Map<String, List<Relator>> parseSwedishFictionContribution(String contrib
             [
                     (Relator.TRANSLATOR)         : ~/(bemynd(\w+|\.)? )?öf?v(\.|ers(\.|\p{L}+)?)( (till|från) \p{L}+)?|(till svenskan?|från \p{L}+)|svensk text/,
                     (Relator.AUTHOR)             : ~/^(text(e[nr])?|skriven|written)/,
-                    (Relator.ILLUSTRATOR)        : ~/\bbild(er)?|ill(\.|ustr(\.|\w+)?)|\bvi(gn|nj)ett(er|ill)?|ritad/,
+                    (Relator.ILLUSTRATOR)        : ~/\bbild(erStrin)?|ill(\.|ustr(\.|\w+)?)|\bvi(gn|nj)ett(er|ill)?|ritad/,
                     (Relator.AUTHOR_OF_INTRO)    : ~/förord|inl(edn(\.|ing)|edd)/,
                     (Relator.COVER_DESIGNER)     : ~/omslag/,
                     (Relator.AUTHOR_OF_AFTERWORD): ~/efter(ord|skrift)/,
@@ -552,7 +558,7 @@ static Map<String, List<Relator>> parseSwedishFictionContribution(String contrib
     def followsRolePattern = ~/(:| a[fv]| by) /
     def initialPattern = ~/\p{Lu}/
     def namePattern = ~/\p{Lu}:?\p{Ll}+('\p{Ll})?(,? [Jj](r|unior))?/
-    def betweenNamesPattern = ~/-| |\. ?| (de(l| la)?|von|van( de[nr])?|v\.|le|af|du|dos) | [ODdLl]'/
+    def betweenNamesPattern = ~/-| |\. ?| ([Dd]e(l| la)?|von|van( de[nr])?|v\.|le|af|du|dos) | [ODdLl]'/
     def fullNamePattern = ~/(($initialPattern|$namePattern)($betweenNamesPattern)?)*$namePattern/
     def conjPattern = ~/ (och|&|and) /
     def roleAfterNamePattern = ~/( ?\(($rolePattern$conjPattern)?$rolePattern\))/
@@ -646,5 +652,21 @@ static String idShort(String iri) {
 
 static String roleShort(String iri) {
     iri?.split("/")?.last() ?: 'NO ROLE'
+}
+
+static boolean isLikelySameAgent(String a, String b) {
+    return [initials(a), initials(b)].with { x, y ->
+        x.containsAll(y) || y.containsAll(x)
+    }
+}
+
+static List<Character> initials(String s) {
+    s.split(/\s+|-/).collect { it[0] }
+}
+
+static float stringSimilarity(String a, String b) {
+    def editDist = StringUtils.getLevenshteinDistance(a, b)
+    def longest = Math.max(a.size(), b.size())
+    return ((longest - editDist) / longest).round(2)
 }
 
