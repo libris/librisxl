@@ -148,7 +148,17 @@ class SiteSearch {
             if (queryParameters.get("_statsrepr") == null && searchSettings.get("statsfind") != null) {
                 queryParameters.put("_statsrepr", new String[]{mapper.writeValueAsString(searchSettings.get("statsfind"))});
             }
-            return search.doSearch(queryParameters);
+            var results = search.doSearch(queryParameters);
+
+            var appDesc = appsIndex.get(activeSite + "find");
+            if (appDesc instanceof Map appDescMap) {
+              Object titleByLang = appDescMap.get("titleByLang");
+              if (titleByLang != null) {
+                results.put("titleByLang", titleByLang);
+              }
+            }
+
+            return results;
         }
     }
 
