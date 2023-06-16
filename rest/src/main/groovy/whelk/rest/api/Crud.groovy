@@ -57,6 +57,7 @@ class Crud extends HttpServlet {
     ConverterUtils converterUtils
 
     SiteSearch siteSearch
+    SearchFeed searchFeed
 
     Map<String, Tuple2<Document, String>> cachedFetches = [:]
 
@@ -92,6 +93,7 @@ class Crud extends HttpServlet {
             targetVocabMapper = new TargetVocabMapper(jsonld, contextDoc.data)
         }
 
+        searchFeed = new SearchFeed(jsonld, whelk.locales)
     }
 
     protected void cacheFetchedResource(String resourceUri) {
@@ -264,10 +266,22 @@ class Crud extends HttpServlet {
     private Object getNegotiatedDataBody(CrudGetRequest request, Object contextData, Map data, String uri) {
         if (!(request.getContentType() in [MimeTypes.JSON, MimeTypes.JSONLD])) {
             data[JsonLd.CONTEXT_KEY] = contextData
+            if ((request.getContentType() in [MimeTypes.ATOM])) {
+                var feedId = getFeedId(data, uri)
+                return searchFeed.represent(feedId, data)
+            }
             return converterUtils.convert(data, uri, request.getContentType())
         } else {
             return data
         }
+    }
+
+    String getFeedId(Object data, String uri) {
+        var searchPath = uri
+        if (data instanceof Map) {
+          searchPath = (String) data[JsonLd.ID_KEY]
+        }
+        return "${whelk.applicationId}${searchPath.substring(1)}"
     }
 
     private static Map frameRecord(Document document) {
