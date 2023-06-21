@@ -307,10 +307,10 @@ class ElasticSearch {
                 log.warn("Failed to delete $identifier from index: $e", e)
             }
             else if (isNotFound(e)) {
-                log.warn("Tried to remove $identifier from index, but it was not there: $e", e)
+                log.warn("Tried to delete $identifier from index, but it was not there: $e", e)
             }
             else {
-                log.warn("Failed to $identifier from index: $e, placing in retry queue.", e)
+                log.warn("Failed to delete $identifier from index: $e, placing in retry queue.", e)
                 indexingRetryQueue.add({ -> remove(identifier) })
             }
         }
