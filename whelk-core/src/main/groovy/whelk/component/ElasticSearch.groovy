@@ -303,7 +303,16 @@ class ElasticSearch {
             }
         }
         catch(Exception e) {
-            log.warn("Record with id $identifier was not deleted from the Elasticsearch index: $e")
+            if (isBadRequest(e)) {
+                log.warn("Failed to delete $identifier from index: $e", e)
+            }
+            else if (isNotFound(e)) {
+                log.warn("Tried to delete $identifier from index, but it was not there: $e", e)
+            }
+            else {
+                log.warn("Failed to delete $identifier from index: $e, placing in retry queue.", e)
+                indexingRetryQueue.add({ -> remove(identifier) })
+            }
         }
     }
 
