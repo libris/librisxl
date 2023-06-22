@@ -183,6 +183,10 @@ class Doc {
         instanceData?.issuanceType == 'Monograph'
     }
 
+    boolean isManuscript() {
+        instanceType() == 'Manuscript' || ['@id': 'https://id.kb.se/term/saogf/Manuskript'] in genreForm()
+    }
+
     boolean isInSb17Bibliography() {
         asList(record()['bibliography']).contains(['@id': 'https://libris.kb.se/library/SB17'])
     }

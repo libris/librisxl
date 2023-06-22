@@ -61,6 +61,7 @@ class WorkToolJob {
     public static Closure qualityMonographs = { Doc doc ->
         (doc.isText()
                 && doc.isMonograph()
+                && !doc.isManuscript()
                 && !doc.isMaybeAggregate()
                 && (doc.encodingLevel() != 'marc:PartialPreliminaryLevel' && doc.encodingLevel() != 'marc:PrepublicationLevel'))
                 && !doc.isTactile()
