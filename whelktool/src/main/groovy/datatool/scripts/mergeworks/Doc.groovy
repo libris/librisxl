@@ -184,7 +184,7 @@ class Doc {
     }
 
     boolean isManuscript() {
-        instanceType() == 'Manuscript' || ['@id': 'https://id.kb.se/term/saogf/Manuskript'] in genreForm()
+        instanceType() == 'Manuscript' || [['@id': 'https://id.kb.se/term/saogf/Manuskript'], ['@id': 'https://id.kb.se/term/saogf/Handskrifter']].intersect(genreForm())
     }
 
     boolean isInSb17Bibliography() {
