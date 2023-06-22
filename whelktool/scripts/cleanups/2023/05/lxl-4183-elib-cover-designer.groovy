@@ -1,9 +1,11 @@
 import groovy.transform.Memoized
 
+import java.util.concurrent.ConcurrentHashMap
+
 PrintWriter matchedAndSpecified = getReportWriter("matched.tsv")
 PrintWriter unmatchedSpecifiedAnyway = getReportWriter("mismatched.tsv")
 PrintWriter matchedInOtherWork = getReportWriter("matched-in-other-work.tsv")
-PrintWriter unhandled = getReportWriter("unhandled.tsv")
+PrintWriter notSpecifiedMovedToInstance = getReportWriter("not-specified-moved-to-instance.txt")
 
 def where = """
   collection = 'bib'
@@ -20,15 +22,16 @@ ROLES = [
 
 OTHER = [['@id': 'https://id.kb.se/relator/unspecifiedContributor']]
 
-Map<String, List<List<String>>> knownNames = Collections.synchronizedMap(['https://id.kb.se/relator/designer'     : [] as Set,
-                                                                          'https://id.kb.se/relator/coverDesigner': [] as Set])
-Map<Map, List<List<String>>> knownAgents = Collections.synchronizedMap(['https://id.kb.se/relator/designer'     : [] as Set,
-                                                                        'https://id.kb.se/relator/coverDesigner': [] as Set])
-Set<String> handled = Collections.synchronizedSet([] as Set)
+Map<String, Set<String>> knownNames = new ConcurrentHashMap(['https://id.kb.se/relator/designer'     : new ConcurrentHashMap().newKeySet(),
+                                                             'https://id.kb.se/relator/coverDesigner': new ConcurrentHashMap().newKeySet()])
+Map<String, Set<String>> knownAgents = new ConcurrentHashMap(['https://id.kb.se/relator/designer'     : new ConcurrentHashMap().newKeySet(),
+                                                              'https://id.kb.se/relator/coverDesigner': new ConcurrentHashMap().newKeySet()])
+Set<String> handled = new ConcurrentHashMap().newKeySet()
 
 selectBySqlWhere(where) { bib ->
     def id = bib.doc.shortId
-    def summary = asList(bib.graph[1]['instanceOf']['summary']) + asList(bib.graph[1]['summary'])
+    def instance = bib.graph[1]
+    def summary = asList(instance['instanceOf']['summary']) + asList(bib.graph[1]['summary'])
 
     def nameToRoles = summary
             .findResults { it['label'] }
@@ -38,7 +41,7 @@ selectBySqlWhere(where) { bib ->
                 knownNames.computeIfAbsent(name, f -> []).add(roles)
             }
 
-    List workContribution = bib.graph[1]['instanceOf']['contribution']
+    List workContribution = instance['instanceOf']['contribution']
     if (!workContribution) {
         return
     }
@@ -78,10 +81,9 @@ selectBySqlWhere(where) { bib ->
         }
     }
 
-
     workContribution.each { c ->
         def roles = asList(c.role)*.'@id'
-        if (m.keySet().intersect(roles)) {
+        if (knownAgents.keySet().intersect(roles)) {
             knownAgents.computeIfAbsent(c.agent, f -> []).add(roles)
         }
     }
@@ -96,8 +98,8 @@ selectBySqlWhere("collection = 'bib' AND data#>>'{@graph, 0, identifiedBy}' LIKE
     if (id in handled) {
         return
     }
-
-    List workContribution = bib.graph[1]['instanceOf']['contribution']
+    def instance = bib.graph[1]
+    List workContribution = instance['instanceOf']['contribution']
     if (!workContribution) {
         return
     }
@@ -108,25 +110,28 @@ selectBySqlWhere("collection = 'bib' AND data#>>'{@graph, 0, identifiedBy}' LIKE
         if (asList(c.role) == OTHER) {
             def roles = knownAgents[c.agent] ?: knownNames[name(loadIfLink(c.agent))]
             if (roles) {
-                def countByRole = roles.countBy { it }.sort {-it.value }
-                c['role'] = countByRole.max { it.value }.key.collect { ['@id': it] }
-                matchedInOtherWork.println(
-                        [
-                                id,
-                                c.agent,
-                                c['role'],
-                                countByRole.collectEntries { k, v -> [k.collect { it.split("/").last() }, v] }
-                        ].join('\t')
-                )
-                bib.scheduleSave()
+                def countByRole = roles.countBy { it }.sort { -it.value }
+                if (countByRole.size() == 1) {
+                    countByRole.find { it.value > 2 }?.with {
+                        def role = it.key
+                        def count = it.value
+                        c['role'] = [['@id': role]]
+                        matchedInOtherWork.println([id, c.agent, role, count].join('\t'))
+                        bib.scheduleSave()
+                    }
+                }
             }
         }
     }
 
-    def other = workContribution.findAll { asList(it.role) == OTHER }
-
-    if (other) {
-        unhandled.println([id, other.collect { it.agent }].join('\t'))
+    workContribution.removeAll { c ->
+        if (asList(c.role) == OTHER) {
+            instance['contribution'] = asList(instance['contribution']) + c
+            notSpecifiedMovedToInstance.println(id)
+            bib.scheduleSave()
+            return true
+        }
+        return false
     }
 }
 
