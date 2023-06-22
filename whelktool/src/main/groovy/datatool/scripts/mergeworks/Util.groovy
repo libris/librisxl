@@ -189,17 +189,8 @@ class Util {
 
         def hasPart = title['hasPart']
         if (hasPart) {
-            if (hasPart.size() > 1) {
-                // TODO: Keep as is for now, for further analysis
-                return title
-            }
             partName = hasPart[0]['partName']
             partNumber = hasPart[0]['partNumber']
-        }
-
-        if (asList(partName).size() > 1 || asList(partNumber).size() > 1) {
-            // TODO: Keep as is for now, for further analysis
-            return title
         }
 
         partName = asList(partName)[0]

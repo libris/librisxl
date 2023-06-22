@@ -188,10 +188,16 @@ class Doc {
     }
 
     boolean isMaybeAggregate() {
-        workData['hasPart']
+        hasPart()
                 || getView().classificationStrings().any { it.contains('kssb') && it.contains('(s)') }
                 || !contribution().any { it['@type'] == 'PrimaryContribution' }
                 || hasRelationshipWithContribution()
+    }
+
+    boolean hasPart() {
+        workData['hasPart'] || instanceData['hasTitle'].findAll { it['@type'] == 'Title' }.any {
+            it.hasPart?.size() > 1 || it.hasPart?.any { p -> asList(p.partName).size() > 1 || asList(p.partNumber).size() > 1 }
+        }
     }
 
     boolean hasRelationshipWithContribution() {
@@ -219,7 +225,7 @@ class Doc {
     }
 
     boolean isSabFiction() {
-        classification().any {it.inScheme.toString() =~ /kssb/ && it.code =~ /^(H|uH|ufH|ugH)/ }
+        classification().any { it.inScheme.toString() =~ /kssb/ && it.code =~ /^(H|uH|ufH|ugH)/ }
     }
 
     boolean isNotFiction() {
