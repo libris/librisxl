@@ -20,6 +20,12 @@ class GenreForm extends StuffSet {
     ]
 
     @Override
+    boolean isCompatible(Object a, Object b) {
+        def lattLast = { it == ['@id': 'https://id.kb.se/term/saogf/L%C3%A4ttl%C3%A4st'] }
+        a.find(lattLast) == b.find(lattLast)
+    }
+
+    @Override
     Object merge(Object a, Object b) {
         return mergeCompatibleElements(super.merge(a, b)) { gf1, gf2 ->
             if (n(gf1, gf2)) {
