@@ -94,8 +94,16 @@ class Util {
             def copy = new TreeMap(it)
             if (copy['subtitle'] || copy['titleRemainder']) {
                 DocumentUtil.traverse(copy) { value, path ->
-                    if (('subtitle' in path || 'titleRemainder' in path) && value instanceof String && genericSubtitle(value)) {
-                        new DocumentUtil.Remove()
+                    if (('subtitle' in path || 'titleRemainder' in path) && value instanceof String) {
+                        if (genericSubtitle(value)) {
+                            new DocumentUtil.Remove()
+                        } else {
+                            ((List) value.split(':')).with {
+                                if (it.size() > 1 && genericSubtitle(it.last().trim())) {
+                                    new DocumentUtil.Replace(value.replaceFirst(~/\s*:.+$/, ''))
+                                }
+                            }
+                        }
                     }
                 }
             }
