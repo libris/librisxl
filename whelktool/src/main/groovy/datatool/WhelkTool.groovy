@@ -38,7 +38,7 @@ import static whelk.util.Jackson.mapper
 class WhelkTool {
     static final int DEFAULT_BATCH_SIZE = 500
     static final int DEFAULT_FETCH_SIZE = 100
-    
+
     Whelk whelk
 
     private GroovyScriptEngineImpl engine
@@ -642,6 +642,7 @@ class WhelkTool {
         bindings.put("incrementStats", statistics.&increment)
         bindings.put("asList", JsonLd::asList)
         bindings.put("getAtPath", DocumentUtil::getAtPath)
+        bindings.put("getWhelk", this.&getWhelk)
         return bindings
     }
 
