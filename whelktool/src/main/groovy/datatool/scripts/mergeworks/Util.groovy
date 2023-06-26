@@ -77,12 +77,7 @@ class Util {
     }
 
     static <T> boolean groupMatches(T t, List<T> group, Closure matcher) {
-        for (T other : group) {
-            if (matcher(other, t)) {
-                return true
-            }
-        }
-        return false
+        group.every { other -> matcher(other, t) }
     }
 
     static boolean hasGenericTitle(List hasTitle) {
@@ -149,7 +144,7 @@ class Util {
     static List<String> getFlatTitle(List hasTitle) {
         flatTitles(hasTitle)
                 .grep(isTitle)
-                .collect{ it['flatTitle'] }
+                .collect { it['flatTitle'] }
     }
 
     static String chipString(def thing, Whelk whelk) {
