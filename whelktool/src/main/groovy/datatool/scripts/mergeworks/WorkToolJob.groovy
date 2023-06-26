@@ -147,7 +147,7 @@ class WorkToolJob {
                 def createdOrUpdated = works.findAll { it.unlinkedInstances }
 
                 WorkStatus.values().each {
-                    new File(reportDir, it.status).tap { it.mkdir() }
+                    new File(reportDir, it.status).tap { it.mkdirs() }
                 }
                 writeSingleWorkReport(docs, createdOrUpdated, s)
 
