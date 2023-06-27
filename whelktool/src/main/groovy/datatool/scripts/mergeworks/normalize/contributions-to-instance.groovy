@@ -5,6 +5,8 @@ import static whelk.JsonLd.ID_KEY
 
 def ids = new File(System.getProperty('clusters')).collect { it.split('\t').collect { it.trim() } }.flatten()
 
+def instanceRoles = [Relator.ILLUSTRATOR, Relator.AUTHOR_OF_INTRO, Relator.AUTHOR_OF_AFTERWORD].collect { [(ID_KEY): it.iri] }
+
 selectByIds(ids) { bib ->
     Map instance = bib.graph[1]
     def work = instance.instanceOf
@@ -17,13 +19,21 @@ selectByIds(ids) { bib ->
     def modified = false
 
     contribution.removeAll { c ->
-        if (!asList(c.role).contains(ill)) return false
-        def has9pu = [(ID_KEY): Relator.PRIMARY_RIGHTS_HOLDER.iri] in asList(c.role)
-        if (has9pu || isPictureBook(work) || isComics(work, bib.whelk)) return false
-        instance['contribution'] = asList(instance['contribution']) + c.clone().tap { it['role'] = [ill] }
-        c['role'] = asList(c.role) - ill
-        modified = true
-        return c.role.isEmpty()
+        def toInstance = asList(c.role).intersect(instanceRoles)
+        if (toInstance.contains(ill)) {
+            def has9pu = [(ID_KEY): Relator.PRIMARY_RIGHTS_HOLDER.iri] in asList(c.role)
+            if (has9pu || isPictureBook(work) || isComics(work, bib.whelk)) {
+                toInstance.remove(ill)
+            }
+        }
+        if (toInstance) {
+            instance['contribution'] = asList(instance['contribution']) + c.clone().tap { it['role'] = toInstance }
+            c['role'] = asList(c.role) - toInstance
+            modified = true
+            incrementStats('moved to instance', toInstance)
+            return c.role.isEmpty()
+        }
+        return false
     }
 
     if (contribution.isEmpty()) {
