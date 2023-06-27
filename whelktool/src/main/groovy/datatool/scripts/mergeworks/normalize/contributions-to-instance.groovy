@@ -5,7 +5,12 @@ import static whelk.JsonLd.ID_KEY
 
 def ids = new File(System.getProperty('clusters')).collect { it.split('\t').collect { it.trim() } }.flatten()
 
-def instanceRoles = [Relator.ILLUSTRATOR, Relator.AUTHOR_OF_INTRO, Relator.AUTHOR_OF_AFTERWORD].collect { [(ID_KEY): it.iri] }
+def whelk = getWhelk()
+def instanceRolesByDomain = whelk.resourceCache.relators.findResults {
+    def domain = whelk.jsonld.toTermKey(it.domain[ID_KEY])
+    if (whelk.jsonld.isSubClassOf(domain, 'Embodiment')) it.subMap([ID_KEY])
+}
+def instanceRoles = instanceRolesByDomain + [Relator.ILLUSTRATOR, Relator.AUTHOR_OF_INTRO, Relator.AUTHOR_OF_AFTERWORD].collect { [(ID_KEY): it.iri] }
 
 selectByIds(ids) { bib ->
     Map instance = bib.graph[1]
