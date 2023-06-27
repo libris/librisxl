@@ -34,8 +34,9 @@ SWEDISH_FICTION=$CLUSTERS_DIR/4-swedish-fiction.tsv
 #NO_ANONYMOUS_TRANSLATIONS=$CLUSTERS_DIR/5-no-anonymous-translations.tsv
 
 LANGUAGE_IN_TITLE=$NORMALIZATIONS_DIR/1-titles-with-language
-CONTRIBUTION=$NORMALIZATIONS_DIR/2-contribution
-ROLES_TO_INSTANCE=$NORMALIZATIONS_DIR/3-roles-to-instance
+ELIB_DESIGNERS=$$NORMALIZATIONS_DIR/1-elib-cover-designer
+CONTRIBUTION=$NORMALIZATIONS_DIR/3-contribution
+ROLES_TO_INSTANCE=$NORMALIZATIONS_DIR/4-roles-to-instance
 
 # Clustring step 1 TODO: run only on recently updated records after first run
 echo "Finding new clusters..."
@@ -86,6 +87,12 @@ echo "Removing language from work titles..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION -jar build/libs/whelktool.jar \
   $ARGS --report $LANGUAGE_IN_TITLE src/main/groovy/datatool/scripts/mergeworks/normalize/language-in-work-title.groovy 2>/dev/null
 echo "$(count_lines $LANGUAGE_IN_TITLE/MODIFIED.txt) records affected, report in $LANGUAGE_IN_TITLE"
+
+echo
+echo "Specifying designer roles in Elib records..."
+time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -jar build/libs/whelktool.jar \
+  $ARGS --report $ELIB_DESIGNERS scripts/cleanups/2023/05/lxl-4183-elib-cover-designer.groovy 2>/dev/null
+echo "$(count_lines $ELIB_DESIGNERS/MODIFIED.txt) records affected, report in $ELIB_DESIGNERS"
 
 echo
 echo "Normalizing contribution..."
