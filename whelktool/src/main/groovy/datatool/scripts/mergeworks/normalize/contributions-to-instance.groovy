@@ -3,12 +3,16 @@ import datatool.scripts.mergeworks.Util.Relator
 import whelk.Whelk
 import static whelk.JsonLd.ID_KEY
 
+report = getReportWriter('report.tsv')
+
 def ids = new File(System.getProperty('clusters')).collect { it.split('\t').collect { it.trim() } }.flatten()
 
 def whelk = getWhelk()
 def instanceRolesByDomain = whelk.resourceCache.relators.findResults {
-    def domain = whelk.jsonld.toTermKey(it.domain[ID_KEY])
-    if (whelk.jsonld.isSubClassOf(domain, 'Embodiment')) it.subMap([ID_KEY])
+    if (it.domain) {
+        def domain = whelk.jsonld.toTermKey(it.domain[ID_KEY])
+        if (whelk.jsonld.isSubClassOf(domain, 'Embodiment')) it.subMap([ID_KEY])
+    }
 }
 def instanceRoles = instanceRolesByDomain + [Relator.ILLUSTRATOR, Relator.AUTHOR_OF_INTRO, Relator.AUTHOR_OF_AFTERWORD].collect { [(ID_KEY): it.iri] }
 
@@ -35,6 +39,7 @@ selectByIds(ids) { bib ->
             instance['contribution'] = asList(instance['contribution']) + c.clone().tap { it['role'] = toInstance }
             c['role'] = asList(c.role) - toInstance
             modified = true
+            report.println([bib.doc.shortId, toInstance.collect { it[ID_KEY].split('/').last() }].join('\t'))
             incrementStats('moved to instance', toInstance)
             return c.role.isEmpty()
         }
