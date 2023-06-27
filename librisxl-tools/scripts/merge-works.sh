@@ -31,10 +31,11 @@ ALL_CLUSTERS=$CLUSTERS_DIR/1-all.tsv
 MERGED_CLUSTERS=$CLUSTERS_DIR/2-merged.tsv
 TITLE_CLUSTERS=$CLUSTERS_DIR/3-title-clusters.tsv
 SWEDISH_FICTION=$CLUSTERS_DIR/4-swedish-fiction.tsv
-#ANONYMOUS_TRANSLATIONS=$CLUSTERS_DIR/5-anonymous-translations.tsv
+#NO_ANONYMOUS_TRANSLATIONS=$CLUSTERS_DIR/5-no-anonymous-translations.tsv
 
 LANGUAGE_IN_TITLE=$NORMALIZATIONS_DIR/1-titles-with-language
 CONTRIBUTION=$NORMALIZATIONS_DIR/2-contribution
+ROLES_TO_INSTANCE=$NORMALIZATIONS_DIR/3-roles-to-instance
 
 # Clustring step 1 TODO: run only on recently updated records after first run
 echo "Finding new clusters..."
@@ -92,11 +93,17 @@ time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDIS
   $ARGS --report $CONTRIBUTION src/main/groovy/datatool/scripts/mergeworks/normalize/contribution.groovy 2>/dev/null
 echo "$(count_lines $CONTRIBUTION/MODIFIED.txt) records affected, report in $CONTRIBUTION"
 
+echo
+echo "Moving roles to instance..."
+time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION -jar build/libs/whelktool.jar \
+  $ARGS --report $ROLES_TO_INSTANCE src/main/groovy/datatool/scripts/mergeworks/normalize/contributions-to-instance.groovy 2>/dev/null
+echo "$(count_lines $ROLES_TO_INSTANCE/MODIFIED.txt) records affected, report in $ROLES_TO_INSTANCE"
+
 # Filter: Drop translations without translator // TODO: Decide what to do with these, in the meantime don't "hide" them
 #echo "Filtering out translations without translator..."
 #time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool \
-#  $ARGS -tr $SWEDISH_FICTION >$ANONYMOUS_TRANSLATIONS
-#NUM_CLUSTERS=$(count_lines $ANONYMOUS_TRANSLATIONS)
+#  $ARGS -tr $SWEDISH_FICTION >$NO_ANONYMOUS_TRANSLATIONS
+#NUM_CLUSTERS=$(count_lines $NO_ANONYMOUS_TRANSLATIONS)
 #echo "$NUM_CLUSTERS clusters ready for merge"
 #if [ $NUM_CLUSTERS == 0 ]; then
 #  exit 0
