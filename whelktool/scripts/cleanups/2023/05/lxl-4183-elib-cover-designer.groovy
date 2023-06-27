@@ -113,7 +113,7 @@ selectBySqlWhere("collection = 'bib' AND data#>>'{@graph, 0, identifiedBy}' LIKE
                 def countByRole = roles.countBy { it }.sort { -it.value }
                 if (countByRole.size() == 1) {
                     countByRole.find { it.value > 2 }?.with {
-                        def role = it.key
+                        def role = it.key.find()
                         def count = it.value
                         c['role'] = [['@id': role]]
                         matchedInOtherWork.println([id, c.agent, role, count].join('\t'))
