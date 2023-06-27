@@ -15,16 +15,16 @@ def where = """
   """
 
 ROLES = [
-        'Formgivare:'       : 'https://id.kb.se/relator/designer',
+        'Formgivare:'       : 'https://id.kb.se/relator/bookDesigner',
         'Omslag:'           : 'https://id.kb.se/relator/coverDesigner',
         'Omslagsformgivare:': 'https://id.kb.se/relator/coverDesigner',
 ]
 
 OTHER = [['@id': 'https://id.kb.se/relator/unspecifiedContributor']]
 
-Map<String, Set<String>> knownNames = new ConcurrentHashMap(['https://id.kb.se/relator/designer'     : new ConcurrentHashMap().newKeySet(),
+Map<String, Set<String>> knownNames = new ConcurrentHashMap(['https://id.kb.se/relator/bookDesigner'     : new ConcurrentHashMap().newKeySet(),
                                                              'https://id.kb.se/relator/coverDesigner': new ConcurrentHashMap().newKeySet()])
-Map<String, Set<String>> knownAgents = new ConcurrentHashMap(['https://id.kb.se/relator/designer'     : new ConcurrentHashMap().newKeySet(),
+Map<String, Set<String>> knownAgents = new ConcurrentHashMap(['https://id.kb.se/relator/bookDesigner'     : new ConcurrentHashMap().newKeySet(),
                                                               'https://id.kb.se/relator/coverDesigner': new ConcurrentHashMap().newKeySet()])
 Set<String> handled = new ConcurrentHashMap().newKeySet()
 
