@@ -153,9 +153,6 @@ selectByIds(clusters.flatten()) { bib ->
     modified |= tryAddMissingTranslationOf(work, contribution, id)
 
     if (modified) {
-        contribution.each {
-            println(it)
-        }
         bib.scheduleSave()
     }
 }
