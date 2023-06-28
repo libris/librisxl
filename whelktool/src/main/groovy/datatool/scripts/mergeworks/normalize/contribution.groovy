@@ -135,7 +135,7 @@ selectByIds(clusters.flatten()) { bib ->
     // drop unmatched agents that are likely to already exist (agent with same initials exists or contribution with same role exists)
     def existingNames = contribution.findResults { agentToNames[toString(asList(it.agent).find())] }.flatten()
     contributionsInRespStatement.removeAll { String name, List<Relator> roles ->
-        existingNames.any { sameInitials(it, name) }
+        existingNames.any { similarName(it, name) }
                 || roles.collect { [(ID_KEY): it.iri] }.intersect(contribution.collect { it.role }.flatten())
     }
 
@@ -596,12 +596,18 @@ static String roleShort(String iri) {
     iri?.split("/")?.last() ?: 'NO ROLE'
 }
 
-static boolean sameInitials(String a, String b) {
-    return [initials(a), initials(b)].with { x, y ->
-        x.containsAll(y) || y.containsAll(x)
+static boolean similarName(String a, String b) {
+    [nameParts(a), nameParts(b)].with { n1, n2 ->
+        n1.size() == 1 || n2.size() == 1
+                ? n1.intersect(n2)
+                : [initials(n1), initials(n2)].with { i1, i2 -> i1.containsAll(i2) || i2.containsAll(i1) }
     }
 }
 
-static List<Character> initials(String s) {
-    s.split(/\s+|-/).collect { it[0] }
+static List<Character> initials(List nameParts) {
+    nameParts.collect { it[0] }
+}
+
+static List<String> nameParts(String s) {
+    s.split(/\s+|-/) as List
 }
