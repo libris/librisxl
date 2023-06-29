@@ -2,6 +2,7 @@ import datatool.scripts.mergeworks.Util.Relator
 
 import whelk.Whelk
 import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.TYPE_KEY
 
 report = getReportWriter('report.tsv')
 
@@ -28,10 +29,11 @@ selectByIds(ids) { bib ->
     def modified = false
 
     contribution.removeAll { c ->
+        if (isPrimaryContribution(c)) return false
+
         def toInstance = asList(c.role).intersect(instanceRoles)
         if (toInstance.contains(ill)) {
-            def has9pu = [(ID_KEY): Relator.PRIMARY_RIGHTS_HOLDER.iri] in asList(c.role)
-            if (has9pu || isPictureBook(work) || isComics(work, bib.whelk)) {
+            if (has9pu(c) || isPictureBook(work) || isComics(work, bib.whelk) || isStillImage(work)) {
                 toInstance.remove(ill)
             }
         }
@@ -43,6 +45,7 @@ selectByIds(ids) { bib ->
             incrementStats('moved to instance', toInstance)
             return c.role.isEmpty()
         }
+
         return false
     }
 
@@ -53,6 +56,18 @@ selectByIds(ids) { bib ->
     if (modified) {
         bib.scheduleSave()
     }
+}
+
+boolean isPrimaryContribution(Map contribution) {
+    contribution[TYPE_KEY] == 'PrimaryContribution'
+}
+
+boolean has9pu(Map contribution) {
+    asList(contribution.role).contains([(ID_KEY): Relator.PRIMARY_RIGHTS_HOLDER.iri])
+}
+
+boolean isStillImage(Map work) {
+    asList(work.contentType).contains([(ID_KEY): 'https://id.kb.se/term/rda/StillImage'])
 }
 
 boolean isPictureBook(Map work) {
