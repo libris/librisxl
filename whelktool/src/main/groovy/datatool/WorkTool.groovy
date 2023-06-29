@@ -64,7 +64,7 @@ class WorkTool {
         } else if (options.f) {
             m.swedishFiction()
         } else if (options.tr) {
-            m.filterDocs({ Doc d -> !d.isTranslationWithoutTranslator() })
+            m.filterClusters({ Doc d -> !d.isAnonymousTranslation() })
         } else if (options.tc) {
             m.outputTitleClusters()
         } else {

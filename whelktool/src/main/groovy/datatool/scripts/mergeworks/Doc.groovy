@@ -2,10 +2,11 @@ package datatool.scripts.mergeworks
 
 
 import whelk.Document
-import whelk.IdGenerator
 import whelk.Whelk
 
+import static whelk.JsonLd.ID_KEY
 import static datatool.scripts.mergeworks.Util.asList
+import datatool.scripts.mergeworks.Util.Relator
 
 class Doc {
     public static final String SAOGF_SKÖN = 'https://id.kb.se/term/saogf/Sk%C3%B6nlitteratur'
@@ -241,17 +242,13 @@ class Doc {
         workData['@type'] == 'Text'
     }
 
-    boolean isTranslationWithoutTranslator() {
-        translationOf() && !hasTranslator()
+    boolean isAnonymousTranslation() {
+        translationOf() && !hasAnyRole([Relator.TRANSLATOR, Relator.EDITOR, Relator.ADAPTER])
     }
 
-    boolean hasTranslator() {
-        hasRole(Util.Relator.TRANSLATOR.iri)
-    }
-
-    boolean hasRole(String relatorIri) {
+    boolean hasAnyRole(List<Relator> relators) {
         contribution().any {
-            asList(it['role']).contains(['@id': relatorIri])
+            asList(it['role']).intersect(relators.collect { [(ID_KEY): it.iri] })
         }
     }
 

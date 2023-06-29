@@ -289,11 +289,11 @@ class WorkToolJob {
         })
     }
 
-    void filterDocs(Closure<Doc> predicate) {
+    void filterClusters(Closure<Doc> predicate) {
         run({ cluster ->
             return {
                 def c = loadDocs(cluster).findAll(predicate)
-                if (c.size() > 0) {
+                if (c.size() > 1) {
                     println(c.collect { it.shortId() }.join('\t'))
                 }
             }

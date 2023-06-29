@@ -31,7 +31,7 @@ ALL_CLUSTERS=$CLUSTERS_DIR/1-all.tsv
 MERGED_CLUSTERS=$CLUSTERS_DIR/2-merged.tsv
 TITLE_CLUSTERS=$CLUSTERS_DIR/3-title-clusters.tsv
 SWEDISH_FICTION=$CLUSTERS_DIR/4-swedish-fiction.tsv
-#NO_ANONYMOUS_TRANSLATIONS=$CLUSTERS_DIR/5-no-anonymous-translations.tsv
+NO_ANONYMOUS_TRANSLATIONS=$CLUSTERS_DIR/5-no-anonymous-translations.tsv
 
 LANGUAGE_IN_TITLE=$NORMALIZATIONS_DIR/1-titles-with-language
 ELIB_DESIGNERS=$NORMALIZATIONS_DIR/2-elib-cover-designer
@@ -106,18 +106,18 @@ time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDIS
   $ARGS --report $ROLES_TO_INSTANCE src/main/groovy/datatool/scripts/mergeworks/normalize/contributions-to-instance.groovy 2>/dev/null
 echo "$(count_lines $ROLES_TO_INSTANCE/MODIFIED.txt) records affected, report in $ROLES_TO_INSTANCE"
 
-# Filter: Drop translations without translator // TODO: Decide what to do with these, in the meantime don't "hide" them
-#echo "Filtering out translations without translator..."
-#time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool \
-#  $ARGS -tr $SWEDISH_FICTION >$NO_ANONYMOUS_TRANSLATIONS
-#NUM_CLUSTERS=$(count_lines $NO_ANONYMOUS_TRANSLATIONS)
-#echo "$NUM_CLUSTERS clusters ready for merge"
-#if [ $NUM_CLUSTERS == 0 ]; then
-#  exit 0
-#fi
+# Filter: Drop anonymous translations
+echo "Filtering out anonymous translations..."
+time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool \
+  $ARGS -tr $SWEDISH_FICTION >$NO_ANONYMOUS_TRANSLATIONS
+NUM_CLUSTERS=$(count_lines $NO_ANONYMOUS_TRANSLATIONS)
+echo "$NUM_CLUSTERS clusters ready for merge"
+if [ $NUM_CLUSTERS == 0 ]; then
+  exit 0
+fi
 
 # Merge
 echo
 echo "Merging..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool \
-  $ARGS -r $REPORT_DIR/merged-works -m $SWEDISH_FICTION
+  $ARGS -r $REPORT_DIR/merged-works -m $NO_ANONYMOUS_TRANSLATIONS
