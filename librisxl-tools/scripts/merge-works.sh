@@ -41,7 +41,7 @@ ROLES_TO_INSTANCE=$NORMALIZATIONS_DIR/4-roles-to-instance
 # Clustring step 1 TODO: run only on recently updated records after first run
 echo "Finding new clusters..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -jar build/libs/whelktool.jar \
-  $ARGS --report $FIND_CLUSTERS scripts/analysis/find-work-clusters.groovy >$ALL_CLUSTERS 2>/dev/null
+  $ARGS --report $FIND_CLUSTERS src/main/groovy/mergeworks/scripts/find-work-clusters.groovy >$ALL_CLUSTERS 2>/dev/null
 NUM_CLUSTERS=$(count_lines $ALL_CLUSTERS)
 echo "$NUM_CLUSTERS clusters found"
 if [ $NUM_CLUSTERS == 0 ]; then
@@ -52,7 +52,7 @@ fi
 echo
 echo "Merging clusters..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$ALL_CLUSTERS -jar build/libs/whelktool.jar \
-  $ARGS scripts/analysis/merge-clusters.groovy >$MERGED_CLUSTERS 2>/dev/null
+  $ARGS src/main/groovy/mergeworks/scripts/merge-clusters.groovy >$MERGED_CLUSTERS 2>/dev/null
 NUM_CLUSTERS=$(count_lines $MERGED_CLUSTERS)
 echo "Merged into $NUM_CLUSTERS clusters"
 if [ $NUM_CLUSTERS == 0 ]; then
@@ -62,8 +62,8 @@ fi
 # Clustring step 3
 echo
 echo "Finding title clusters..."
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool \
-  $ARGS -tc $MERGED_CLUSTERS >$TITLE_CLUSTERS
+time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$MERGED_CLUSTERS -jar build/libs/whelktool.jar \
+  $ARGS scripts/src/main/groovy/mergeworks/scripts/title-clusters.groovy >$TITLE_CLUSTERS 2>/dev/null
 NUM_CLUSTERS=$(count_lines $TITLE_CLUSTERS)
 echo "$NUM_CLUSTERS title clusters found"
 if [ $NUM_CLUSTERS == 0 ]; then
@@ -73,8 +73,8 @@ fi
 # Filter: Swedish fiction
 echo
 echo "Filtering on Swedish fiction..."
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool \
-  $ARGS -f $TITLE_CLUSTERS >$SWEDISH_FICTION
+time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$TITLE_CLUSTERS -jar build/libs/whelktool.jar \
+  $ARGS scripts/src/main/groovy/mergeworks/scripts/swedish-fiction.groovy >$SWEDISH_FICTION 2>/dev/null
 NUM_CLUSTERS=$(count_lines $SWEDISH_FICTION)
 echo "Found $NUM_CLUSTERS title clusters with Swedish fiction"
 if [ $NUM_CLUSTERS == 0 ]; then
@@ -85,13 +85,13 @@ fi
 echo
 echo "Removing language from work titles..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION -jar build/libs/whelktool.jar \
-  $ARGS --report $LANGUAGE_IN_TITLE src/main/groovy/datatool/scripts/mergeworks/normalize/language-in-work-title.groovy 2>/dev/null
+  $ARGS --report $LANGUAGE_IN_TITLE src/main/groovy/datatool/scripts/mergeworks/language-in-work-title.groovy 2>/dev/null
 echo "$(count_lines $LANGUAGE_IN_TITLE/MODIFIED.txt) records affected, report in $LANGUAGE_IN_TITLE"
 
 echo
 echo "Specifying designer roles in Elib records..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -jar build/libs/whelktool.jar \
-  $ARGS --report $ELIB_DESIGNERS scripts/cleanups/2023/05/lxl-4183-elib-cover-designer.groovy 2>/dev/null
+  $ARGS --report $ELIB_DESIGNERS src/main/groovy/datatool/scripts/mergeworks/elib-unspecified-contributor.groovy 2>/dev/null
 echo "$(count_lines $ELIB_DESIGNERS/MODIFIED.txt) records affected, report in $ELIB_DESIGNERS"
 
 echo
