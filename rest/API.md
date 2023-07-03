@@ -52,32 +52,37 @@ $ curl -XGET -H "Accept: application/ld+json" https://libris-qa.kb.se/s93ns5h436
 To get data in a different flavour (using a specific selection of RDF
 vocabularies), we support a form of profile negotiation.
 
-### Currently Defined Profiles
-
-See the [target contexts in the libris definitions repository](https://github.com/libris/definitions/tree/develop/sys/context/target).
-
-### Profiled Data Views
-
-Using parameters:
-```
-$ curl -s -HAccept:text/turtle "http://libris-qa.kb.se/fxql7jqr38b1dkf?profile=https://id.kb.se/sys/context/target/sdo-w3c&embellished=false"
-
-$ curl -s -H'Accept: text/turtle' http://id-qa.kb.se/relator/contributor?profile=https://id.kb.se/sys/context/target/bibo-w3c
-
-$ curl -s -H'Accept: text/turtle' http://libris-qa.kb.se/fxql7jqr38b1dkf?profile=https://id.kb.se/sys/context/target/bibo-w3c
-```
-
-Using headers:
-```
-$ curl -s -H 'Accept: application/trig' -H 'Accept-Profile: <https://id.kb.se/sys/context/target/loc-w3c-sdo>' \
-      http://libris-qa.kb.se/fxql7jqr38b1dkf
-```
-
 (Note: As of 2023, Profile Negotiation is not yet a standard. See the
 [IETF Internet Draft on Profile Negotiation](https://profilenegotiation.github.io/I-D-Profile-Negotiation/I-D-Profile-Negotiation.html)
 and
 [W3C Working Draft on Content Negotiation by Profile](https://www.w3.org/TR/dx-prof-conneg/)
 for details.)
+
+#### Currently Defined Profiles
+
+See the [target contexts in the libris definitions repository](https://github.com/libris/definitions/tree/develop/sys/context/target).
+
+#### Profiled Data Views
+
+Using content negotation plus parameters:
+```
+$ curl -s -H'Accept: text/turtle' "https://libris-qa.kb.se/fxql7jqr38b1dkf?profile=https://id.kb.se/sys/context/target/sdo-w3c"
+
+$ curl -s -H'Accept: text/turtle' "https://id-qa.kb.se/relator/contributor?profile=https://id.kb.se/sys/context/target/bibo-w3c"
+
+$ curl -s -H'Accept: text/turtle' "https://libris-qa.kb.se/fxql7jqr38b1dkf?profile=https://id.kb.se/sys/context/target/bibo-w3c"
+```
+
+Combining parameters:
+```
+$ curl -s -H'Accept: text/turtle' "https://libris-qa.kb.se/fxql7jqr38b1dkf?profile=https://id.kb.se/sys/context/target/sdo-w3c&embellished=false"
+```
+
+Using only headers for negotation:
+```
+$ curl -s -H 'Accept: application/trig' -H 'Accept-Profile: <https://id.kb.se/sys/context/target/loc-w3c-sdo>' \
+      http://libris-qa.kb.se/fxql7jqr38b1dkf
+```
 
 ## Requests that require authentication – create, update and remove
 
