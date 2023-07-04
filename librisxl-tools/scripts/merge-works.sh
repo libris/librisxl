@@ -63,7 +63,7 @@ fi
 echo
 echo "Finding title clusters..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$MERGED_CLUSTERS -jar build/libs/whelktool.jar \
-  $ARGS scripts/src/main/groovy/mergeworks/scripts/title-clusters.groovy >$TITLE_CLUSTERS 2>/dev/null
+  $ARGS src/main/groovy/mergeworks/scripts/title-clusters.groovy >$TITLE_CLUSTERS 2>/dev/null
 NUM_CLUSTERS=$(count_lines $TITLE_CLUSTERS)
 echo "$NUM_CLUSTERS title clusters found"
 if [ $NUM_CLUSTERS == 0 ]; then
@@ -74,7 +74,7 @@ fi
 echo
 echo "Filtering on Swedish fiction..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$TITLE_CLUSTERS -jar build/libs/whelktool.jar \
-  $ARGS scripts/src/main/groovy/mergeworks/scripts/swedish-fiction.groovy >$SWEDISH_FICTION 2>/dev/null
+  $ARGS src/main/groovy/mergeworks/scripts/swedish-fiction.groovy >$SWEDISH_FICTION 2>/dev/null
 NUM_CLUSTERS=$(count_lines $SWEDISH_FICTION)
 echo "Found $NUM_CLUSTERS title clusters with Swedish fiction"
 if [ $NUM_CLUSTERS == 0 ]; then
@@ -85,31 +85,32 @@ fi
 echo
 echo "Removing language from work titles..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION -jar build/libs/whelktool.jar \
-  $ARGS --report $LANGUAGE_IN_TITLE src/main/groovy/datatool/scripts/mergeworks/language-in-work-title.groovy 2>/dev/null
+  $ARGS --report $LANGUAGE_IN_TITLE src/main/groovy/mergeworks/scripts/language-in-work-title.groovy 2>/dev/null
 echo "$(count_lines $LANGUAGE_IN_TITLE/MODIFIED.txt) records affected, report in $LANGUAGE_IN_TITLE"
 
+
 echo
-echo "Specifying designer roles in Elib records..."
+echo "Specifying designer roles in Elib records..." # NOTE: Not dependent on clustring, can be run anytime after ContributionByRoleStep has been deployed.
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -jar build/libs/whelktool.jar \
-  $ARGS --report $ELIB_DESIGNERS src/main/groovy/datatool/scripts/mergeworks/elib-unspecified-contributor.groovy 2>/dev/null
+  $ARGS --report $ELIB_DESIGNERS src/main/groovy/mergeworks/scripts/elib-unspecified-contributor.groovy 2>/dev/null
 echo "$(count_lines $ELIB_DESIGNERS/MODIFIED.txt) records affected, report in $ELIB_DESIGNERS"
 
 echo
 echo "Normalizing contribution..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION -jar build/libs/whelktool.jar \
-  $ARGS --report $CONTRIBUTION src/main/groovy/datatool/scripts/mergeworks/normalize/contribution.groovy 2>/dev/null
+  $ARGS --report $CONTRIBUTION src/main/groovy/mergeworks/scripts/normalize-contribution.groovy 2>/dev/null
 echo "$(count_lines $CONTRIBUTION/MODIFIED.txt) records affected, report in $CONTRIBUTION"
 
 echo
 echo "Moving roles to instance..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION -jar build/libs/whelktool.jar \
-  $ARGS --report $ROLES_TO_INSTANCE src/main/groovy/datatool/scripts/mergeworks/normalize/contributions-to-instance.groovy 2>/dev/null
+  $ARGS --report $ROLES_TO_INSTANCE src/main/groovy/mergeworks/scripts/contributions-to-instance.groovy 2>/dev/null
 echo "$(count_lines $ROLES_TO_INSTANCE/MODIFIED.txt) records affected, report in $ROLES_TO_INSTANCE"
 
 # Filter: Drop anonymous translations
 echo "Filtering out anonymous translations..."
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool \
-  $ARGS -tr $SWEDISH_FICTION >$NO_ANONYMOUS_TRANSLATIONS
+time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION -jar build/libs/whelktool.jar \
+  $ARGS src/main/groovy/mergeworks/scripts/drop-anonymous-translations.groovy >$NO_ANONYMOUS_TRANSLATIONS 2>/dev/null
 NUM_CLUSTERS=$(count_lines $NO_ANONYMOUS_TRANSLATIONS)
 echo "$NUM_CLUSTERS clusters ready for merge"
 if [ $NUM_CLUSTERS == 0 ]; then
@@ -119,5 +120,5 @@ fi
 # Merge
 echo
 echo "Merging..."
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -cp build/libs/whelktool.jar datatool.WorkTool \
-  $ARGS -r $REPORT_DIR/merged-works -m $NO_ANONYMOUS_TRANSLATIONS
+time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$NO_ANONYMOUS_TRANSLATIONS -jar build/libs/whelktool.jar \
+  $ARGS --report $REPORT_DIR/merged-works src/main/groovy/mergeworks/scripts/merge-works.groovy 2>/dev/null

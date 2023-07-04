@@ -1,4 +1,4 @@
-package datatool.scripts.mergeworks.compare
+package mergeworks.compare
 
 class Classification extends StuffSet {
     // Terms that will be merged (values precede keys)

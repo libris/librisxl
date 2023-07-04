@@ -1,4 +1,4 @@
-package datatool.scripts.mergeworks
+package mergeworks
 
 import whelk.Document
 import whelk.JsonLd

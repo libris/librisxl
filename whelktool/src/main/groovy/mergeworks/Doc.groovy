@@ -1,6 +1,6 @@
 package mergeworks
 
-import datatool.scripts.mergeworks.DisplayDoc
+
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
@@ -34,8 +34,7 @@ class Doc {
 
     Whelk whelk
     Document document
-
-    Collection<Doc> unlinkedInstances
+    boolean existsInStorage
 
     Map instanceData
     Map workData
@@ -44,22 +43,10 @@ class Doc {
 
     DisplayDoc display
 
-    String preUpdateChecksum
-
-    boolean existsInStorage = true
-    boolean modified = false
-
-    Doc(Whelk whelk, Document document) {
-        this.whelk = whelk
-        this.document = document
-        this.preUpdateChecksum = document.getChecksum(whelk.getJsonld())
-        setData()
-    }
-
     Doc(DocumentItem docItem) {
         this.whelk = docItem.whelk
         this.document = docItem.doc
-        this.preUpdateChecksum = docItem.preUpdateChecksum
+        this.existsInStorage = docItem.existsInStorage
         setData()
     }
 
@@ -202,7 +189,7 @@ class Doc {
 
     boolean isMaybeAggregate() {
         hasPart()
-                || getView().classificationStrings().any { it.contains('kssb') && it.contains('(s)') }
+                || classification().any { it.inScheme?.code =~ /[Kk]ssb/ && it.code?.contains('(s)') }
                 || !contribution().any { it['@type'] == 'PrimaryContribution' }
                 || hasRelationshipWithContribution()
     }
@@ -238,12 +225,12 @@ class Doc {
     }
 
     boolean isSabFiction() {
-        classification().any { it.inScheme.toString() =~ /kssb/ && it.code =~ /^(H|uH|ufH|ugH)/ }
+        classification().any { it.inScheme?.code =~ /[Kk]ssb/ && it.code =~ /^(H|uH|ufH|ugH)/ }
     }
 
     boolean isNotFiction() {
         // A lot of fiction has marc/NotFictionNotFurtherSpecified but then classification is usually empty
-        isMarcNotFiction() && (!getView().classificationStrings().isEmpty() && !isSabFiction())
+        isMarcNotFiction() && (!classification().isEmpty() && !isSabFiction())
     }
 
     boolean isText() {
@@ -265,7 +252,7 @@ class Doc {
     }
 
     boolean isSabDrama() {
-        getView().classificationStrings().any { it.contains(': Hc.02') || it.contains(': Hce.02') }
+        classification().any { it.code?.contains('Hc.02') || it.code?.contains('Hce.02') }
     }
 
     boolean isGfDrama() {
@@ -300,14 +287,12 @@ class Doc {
     void replaceWorkData(Map replacement) {
         workData.clear()
         workData.putAll(replacement)
-        modified = true
     }
 
     void addCloseMatch(List<String> workIds) {
         def closeMatch = (asList(workData['closeMatch']) + (workIds - workIri()).collect { ['@id': it] }).unique()
         if (closeMatch) {
             workData['closeMatch'] = closeMatch
-            modified = true
         }
     }
 }

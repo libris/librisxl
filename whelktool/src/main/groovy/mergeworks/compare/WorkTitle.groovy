@@ -1,7 +1,7 @@
-package datatool.scripts.mergeworks.compare
+package mergeworks.compare
 
-import datatool.scripts.mergeworks.Doc
-import datatool.scripts.mergeworks.Util
+import mergeworks.Doc
+import mergeworks.Util
 import org.apache.commons.lang3.NotImplementedException
 
 class WorkTitle implements ValuePicker {

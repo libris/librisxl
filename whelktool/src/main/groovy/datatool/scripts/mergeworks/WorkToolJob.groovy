@@ -1,12 +1,14 @@
 package datatool.scripts.mergeworks
 
-
+import mergeworks.Html
+import mergeworks.WorkComparator
 import whelk.IdGenerator
 import whelk.Whelk
 import whelk.exception.WhelkRuntimeException
 import whelk.meta.WhelkConstants
 import whelk.util.LegacyIntegrationTools
 import whelk.util.Statistics
+import mergeworks.Doc
 
 import java.text.SimpleDateFormat
 import java.util.concurrent.ExecutorService
@@ -17,9 +19,8 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Function
 
-import static datatool.scripts.mergeworks.Util.buildWorkDocument
-import static datatool.scripts.mergeworks.Util.getPathSafe
-import static datatool.scripts.mergeworks.Util.partition
+import static mergeworks.Util.getPathSafe
+import static mergeworks.Util.partition
 
 class WorkToolJob {
     Whelk whelk
@@ -56,18 +57,6 @@ class WorkToolJob {
 
         this.whelk = Whelk.createLoadedSearchWhelk('secret', true)
         this.statistics = new Statistics()
-    }
-
-    public static Closure qualityMonographs = { Doc doc ->
-        (doc.isText()
-                && doc.isMonograph()
-                && !doc.isManuscript()
-                && !doc.isMaybeAggregate()
-                && (doc.encodingLevel() != 'marc:PartialPreliminaryLevel' && doc.encodingLevel() != 'marc:PrepublicationLevel'))
-                && !doc.isTactile()
-                && !doc.isDrama()
-                && !doc.isThesis()
-                && !doc.isInSb17Bibliography()
     }
 
     void show() {
@@ -270,46 +259,6 @@ class WorkToolJob {
         return works
     }
 
-    void swedishFiction() {
-        def swedish = { Doc doc ->
-            Util.asList(doc.workData['language']).collect { it['@id'] } == ['https://id.kb.se/language/swe']
-        }
-
-        run({ cluster ->
-            return {
-                def c = loadDocs(cluster).split { it.instanceData }
-                        .with { local, linked ->
-                            linked + local.findAll(qualityMonographs).findAll(swedish)
-                        }
-
-                if (c.size() > 1 && c.any { Doc d -> d.isFiction() } && !c.any { Doc d -> d.isNotFiction() }) {
-                    println(c.collect { Doc d -> d.shortId() }.join('\t'))
-                }
-            }
-        })
-    }
-
-    void filterClusters(Closure<Doc> predicate) {
-        run({ cluster ->
-            return {
-                def c = loadDocs(cluster).findAll(predicate)
-                if (c.size() > 1) {
-                    println(c.collect { it.shortId() }.join('\t'))
-                }
-            }
-        })
-    }
-
-    void outputTitleClusters() {
-        run({ cluster ->
-            return {
-                titleClusters(loadDocs(cluster)).findAll { it.size() > 1 }.each {
-                    println(it.collect { it.shortId() }.join('\t'))
-                }
-            }
-        })
-    }
-
     private void run(Function<List<String>, Runnable> f) {
         ExecutorService s = createExecutorService()
 
@@ -375,27 +324,6 @@ class WorkToolJob {
                     .reverse()
                     .find { getPathSafe(it.data, it.workIdPath) == null }
                     ?.with { new Doc(whelk, it) }
-        }
-    }
-
-    def loadUniqueLinkedWorks = { Collection<Doc> docs ->
-        docs.findResults { it.workIri() }
-                .unique()
-                .collect { new Doc(whelk, whelk.storage.getDocumentByIri(it)) }
-                .plus(docs.findAll { !it.workIri() })
-    }
-
-    private Collection<Collection<Doc>> titleClusters(Collection<Doc> docs) {
-        partitionByTitle(docs)
-                .findAll { !it.any { doc -> doc.hasGenericTitle() } }
-                .collect(loadUniqueLinkedWorks)
-                .findAll { it.size() > 1 }
-                .sort { a, b -> a.first().view.instanceDisplayTitle() <=> b.first().view.instanceDisplayTitle() }
-    }
-
-    Collection<Collection<Doc>> partitionByTitle(Collection<Doc> docs) {
-        return partition(docs) { Doc a, Doc b ->
-            !a.flatInstanceTitle().intersect(b.flatInstanceTitle()).isEmpty()
         }
     }
 

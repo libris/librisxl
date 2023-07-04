@@ -1,10 +1,11 @@
-package datatool.scripts.mergeworks
+package mergeworks
+
 
 import org.apache.commons.codec.digest.DigestUtils
 
-import static datatool.scripts.mergeworks.FieldStatus.COMPATIBLE
-import static datatool.scripts.mergeworks.FieldStatus.DIFF
-import static datatool.scripts.mergeworks.FieldStatus.EQUAL
+import static mergeworks.FieldStatus.COMPATIBLE
+import static mergeworks.FieldStatus.DIFF
+import static mergeworks.FieldStatus.EQUAL
 
 class Html {
     private static String CSS = Html.class.getClassLoader()
@@ -51,14 +52,15 @@ class Html {
         """
     }
 
-    static String hubTable(Collection<Doc> works) {
-        def instanceDocs = works.collect { work -> work.unlinkedInstances ?: work }
+    static String hubTable(Collection<Tuple2<Doc, Collection<Doc>>> works) {
+        def workDocs = works.collect {it.getV1() }
+        def instanceDocs = works.collect {it.getV2() }
         def clusterId = clusterId(instanceDocs.flatten().collect { Doc d -> d.shortId() })
 
         String header = """
             <tr>
                 <th><a id="${clusterId}"><a href="#${clusterId}">${clusterId}</th>
-                ${works.collect { it.workIri()
+                ${workDocs.collect { it.workIri()
                 ? "<th><a id=\"${it.shortId()}\" href=\"${it.view.link()}\">${it.shortId()}</a></th>"
                 : "<th></th>" }
                 .join('\n')}
@@ -75,11 +77,11 @@ class Html {
                         </tr>
                 """.stripIndent()
 
-        def statuses = WorkComparator.compare(works)
+        def statuses = WorkComparator.compare(workDocs)
 
-        String equal = statuses.get(EQUAL, []).collect(fieldRows(works, works.size() > 1 ? EQUAL.toString() : "")).join('\n')
-        String compatible = statuses.get(COMPATIBLE, []).collect(fieldRows(works, COMPATIBLE.toString())).join('\n')
-        String diff = statuses.get(DIFF, []).collect(fieldRows(works, DIFF.toString())).join('\n')
+        String equal = statuses.get(EQUAL, []).collect(fieldRows(workDocs, workDocs.size() > 1 ? EQUAL.toString() : "")).join('\n')
+        String compatible = statuses.get(COMPATIBLE, []).collect(fieldRows(workDocs, COMPATIBLE.toString())).join('\n')
+        String diff = statuses.get(DIFF, []).collect(fieldRows(workDocs, DIFF.toString())).join('\n')
 
         return """
             <table>

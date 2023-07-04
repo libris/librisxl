@@ -1,7 +1,7 @@
-package datatool.scripts.mergeworks.compare
+package mergeworks.compare
 
-import datatool.scripts.mergeworks.Doc
-import datatool.scripts.mergeworks.Util
+import mergeworks.Doc
+import mergeworks.Util
 import datatool.util.DocumentComparator
 import org.apache.commons.lang3.NotImplementedException
 

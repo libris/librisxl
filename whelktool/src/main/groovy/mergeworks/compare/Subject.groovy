@@ -1,4 +1,4 @@
-package datatool.scripts.mergeworks.compare
+package mergeworks.compare
 
 class Subject extends StuffSet {
     @Override

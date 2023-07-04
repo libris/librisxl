@@ -1,4 +1,4 @@
-package datatool.scripts.mergeworks
+package mergeworks
 
 enum FieldStatus {
     EQUAL,

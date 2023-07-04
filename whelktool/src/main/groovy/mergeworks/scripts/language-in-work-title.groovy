@@ -3,8 +3,6 @@ package mergeworks.scripts
 import groovy.transform.Memoized
 import whelk.util.DocumentUtil
 
-import static mergeworks.Util.getPathSafe
-
 /**
  Example:
  $ ENV=qa && time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters="reports/clusters.tsv" -jar build/libs/whelktool.jar --report reports/$ENV-$(date +%Y%m%d-%H%M%S) --dry-run src/main/groovy/datatool/scripts/mergeworks/normalize/language-in-work-title.groovy
@@ -22,7 +20,7 @@ selectByIds(ids) { bib ->
             [1, 'instanceOf', 'language', 0, '@id'],
             [1, 'instanceOf', 'translationOf', 0, 'language', 0, '@id']
     ].collect {
-        langName(getPathSafe(bib.graph, it, '')).toLowerCase() 
+        langName(getAtPath(bib.graph, it, '')).toLowerCase()
     }
     
     boolean changed = DocumentUtil.traverse(bib.graph[1].instanceOf) { value, path ->
@@ -45,7 +43,7 @@ selectByIds(ids) { bib ->
 
 @Memoized
 private String langName(def id) {
-    getPathSafe(loadThing(id), ['prefLabelByLang', 'sv'], "NOT FOUND")
+    getAtPath(loadThing(id), ['prefLabelByLang', 'sv'], "NOT FOUND")
 }
 
 private Map loadThing(def id) {

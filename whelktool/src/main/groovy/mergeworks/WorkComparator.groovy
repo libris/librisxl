@@ -1,20 +1,21 @@
-package datatool.scripts.mergeworks
+package mergeworks
 
-import datatool.scripts.mergeworks.compare.Classification
-import datatool.scripts.mergeworks.compare.Id
-import datatool.scripts.mergeworks.compare.SameOrEmpty
-import datatool.scripts.mergeworks.compare.Default
-import datatool.scripts.mergeworks.compare.Extent
-import datatool.scripts.mergeworks.compare.FieldHandler
-import datatool.scripts.mergeworks.compare.GenreForm
-import datatool.scripts.mergeworks.compare.StuffSet
-import datatool.scripts.mergeworks.compare.Subject
-import datatool.scripts.mergeworks.compare.TranslationOf
-import datatool.scripts.mergeworks.compare.ValuePicker
-import datatool.scripts.mergeworks.compare.WorkTitle
+import mergeworks.FieldStatus
+import mergeworks.compare.Classification
+import mergeworks.compare.Id
+import mergeworks.compare.SameOrEmpty
+import mergeworks.compare.Default
+import mergeworks.compare.Extent
+import mergeworks.compare.FieldHandler
+import mergeworks.compare.GenreForm
+import mergeworks.compare.StuffSet
+import mergeworks.compare.Subject
+import mergeworks.compare.TranslationOf
+import mergeworks.compare.ValuePicker
+import mergeworks.compare.WorkTitle
 import datatool.util.DocumentComparator
 
-import static datatool.scripts.mergeworks.Util.bestTitle
+import static mergeworks.Util.bestTitle
 
 class WorkComparator {
     Set<String> fields
@@ -42,7 +43,7 @@ class WorkComparator {
     }
 
     boolean sameWork(Doc a, Doc b) {
-        fields.every { compare(a, b, it).with { it == EQUAL || it == COMPATIBLE } }
+        fields.every { compare(a, b, it).with { it == FieldStatus.EQUAL || it == COMPATIBLE } }
     }
 
     FieldStatus compare(Doc a, Doc b, String field) {

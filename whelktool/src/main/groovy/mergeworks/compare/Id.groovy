@@ -1,6 +1,6 @@
-package datatool.scripts.mergeworks.compare
+package mergeworks.compare
 
-import datatool.scripts.mergeworks.Doc
+import mergeworks.Doc
 import org.apache.commons.lang3.NotImplementedException
 
 class Id implements ValuePicker {

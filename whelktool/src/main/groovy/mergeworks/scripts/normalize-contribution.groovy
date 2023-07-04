@@ -10,7 +10,6 @@ import java.util.regex.Pattern
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 
-import static mergeworks.Util.asList
 import static mergeworks.Util.name
 import static mergeworks.Util.normalize
 import static mergeworks.Util.Relator

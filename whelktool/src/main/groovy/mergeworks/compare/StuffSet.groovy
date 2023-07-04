@@ -1,9 +1,9 @@
-package datatool.scripts.mergeworks.compare
+package mergeworks.compare
 
 
 import java.util.function.BiFunction
 
-import static datatool.scripts.mergeworks.Util.asList
+import static mergeworks.Util.asList
 
 class StuffSet implements FieldHandler {
     @Override

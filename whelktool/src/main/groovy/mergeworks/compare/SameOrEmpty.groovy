@@ -1,6 +1,6 @@
-package datatool.scripts.mergeworks.compare
+package mergeworks.compare
 
-import static datatool.scripts.mergeworks.Util.asList
+import static mergeworks.Util.asList
 
 class SameOrEmpty implements FieldHandler {
     Object link

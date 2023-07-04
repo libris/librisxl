@@ -1,6 +1,6 @@
-package datatool.scripts.mergeworks.compare
+package mergeworks.compare
 
-import datatool.scripts.mergeworks.Doc
+import mergeworks.Doc
 
 interface FieldHandler {
     boolean isCompatible(Object a, Object b)

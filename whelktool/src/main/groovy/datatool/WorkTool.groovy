@@ -1,6 +1,6 @@
 package datatool
 
-import datatool.scripts.mergeworks.Doc
+import mergeworks.Doc
 import groovy.cli.commons.CliBuilder
 import datatool.scripts.mergeworks.WorkToolJob
 
@@ -65,8 +65,6 @@ class WorkTool {
             m.swedishFiction()
         } else if (options.tr) {
             m.filterClusters({ Doc d -> !d.isAnonymousTranslation() })
-        } else if (options.tc) {
-            m.outputTitleClusters()
         } else {
             cli.usage()
             System.exit 1

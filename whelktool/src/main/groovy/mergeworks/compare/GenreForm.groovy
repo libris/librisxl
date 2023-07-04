@@ -1,4 +1,4 @@
-package datatool.scripts.mergeworks.compare
+package mergeworks.compare
 
 import datatool.util.DocumentComparator
 
