@@ -52,9 +52,7 @@ class Html {
         """
     }
 
-    static String hubTable(Collection<Tuple2<Doc, Collection<Doc>>> works) {
-        def workDocs = works.collect {it.getV1() }
-        def instanceDocs = works.collect {it.getV2() }
+    static String hubTable(Collection<Doc> workDocs, Collection<Collection<Doc>> instanceDocs) {
         def clusterId = clusterId(instanceDocs.flatten().collect { Doc d -> d.shortId() })
 
         String header = """

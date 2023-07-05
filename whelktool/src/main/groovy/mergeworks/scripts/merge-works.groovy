@@ -7,6 +7,9 @@ import whelk.datatool.DocumentItem
 
 import static mergeworks.Util.partition
 
+multiWorkReport = getReportWriter("multi-work-clusters.html")
+multiWorkReport.print(Html.START)
+
 String changedBy = 'SEK'
 String generationProcess = 'https://libris.kb.se/sys/merge-works'
 
@@ -25,8 +28,6 @@ WorkStatus.values().each {
     new File(reportsDir, it.status).with { it.mkdirs() }
 }
 
-def multiWorkClusters = Collections.synchronizedList([])
-
 new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
     def docs = Collections.synchronizedList([])
     selectByIds(cluster) {
@@ -35,13 +36,13 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
 
     WorkComparator c = new WorkComparator(WorkComparator.allFields(docs))
 
-    List<Tuple2<Doc, Collection<Doc>>> uniqueWorks = []
+    List<Tuple2<Doc, Collection<Doc>>> uniqueWorksAndTheirInstances = []
 
     workClusters(docs, c).each { wc ->
         def (localWorks, linkedWorks) = wc.split { it.instanceData }
         if (!linkedWorks) {
             if (localWorks.size() == 1) {
-                uniqueWorks.add(new Tuple2(localWorks.find(), localWorks))
+                uniqueWorksAndTheirInstances.add(new Tuple2(localWorks.find(), localWorks))
             } else {
                 DocumentItem newWork = createNewWork(c.merge(localWorks))
                 addTechnicalNote(newWork, WorkStatus.NEW) //TODO: Add more/better adminmetadata
@@ -49,8 +50,8 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
                     it.scheduleSave(changedBy: changedBy, generationProcess: generationProcess)
                 }
                 Doc workDoc = new Doc(newWork)
-                uniqueWorks.add(new Tuple2(workDoc, localWorks))
-                writeSingleWorkReport(docs, workDoc, localWorks, WorkStatus.NEW)
+                uniqueWorksAndTheirInstances.add(new Tuple2(workDoc, localWorks))
+                writeWorkReport(docs, workDoc, localWorks, WorkStatus.NEW)
                 selectByIds(localWorks.collect { it.shortId() }) {
                     it.graph[1]['instanceOf'] = ['@id': workDoc.thingIri()]
                     it.scheduleSave(changedBy: changedBy, generationProcess: generationProcess)
@@ -60,8 +61,8 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
             Doc workDoc = linkedWorks.find()
             workDoc.replaceWorkData(c.merge(linkedWorks + localWorks))
             // TODO: Add adminmetadata
-            uniqueWorks.add(new Tuple2(workDoc, localWorks))
-            writeSingleWorkReport(docs, workDoc, localWorks, WorkStatus.UPDATED)
+            uniqueWorksAndTheirInstances.add(new Tuple2(workDoc, localWorks))
+            writeWorkReport(docs, workDoc, localWorks, WorkStatus.UPDATED)
             selectByIds(localWorks.collect { it.shortId() }) {
                 it.graph[1]['instanceOf'] = ['@id': workDoc.thingIri()]
                 it.scheduleSave(changedBy: changedBy, generationProcess: generationProcess)
@@ -71,12 +72,15 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
         }
     }
 
-    if (uniqueWorks.size() > 1) {
-        multiWorkClusters.add(uniqueWorks)
+    if (uniqueWorksAndTheirInstances.size() > 1) {
+        def (workDocs, instanceDocs) = uniqueWorksAndTheirInstances.transpose()
+        multiWorkReport.print(Html.hubTable(workDocs, instanceDocs) + Html.HORIZONTAL_RULE)
     }
 
-    List<String> linkableWorkIris = uniqueWorks.findResults { Doc workDoc, _ -> workDoc.workIri() }
-    uniqueWorks.each { Doc workDoc, _ ->
+    List<Doc> uniqueWorks = uniqueWorksAndTheirInstances.collect { it.getV1() }
+    List<String> linkableWorkIris = uniqueWorks.findResults { it.workIri() }
+
+    uniqueWorks.each { Doc workDoc ->
         workDoc.addCloseMatch(linkableWorkIris)
         selectByIds([workDoc.shortId()]) {
             it.doc.data = workDoc.document.data
@@ -85,7 +89,7 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
     }
 }
 
-writeMultiWorkReport(multiWorkClusters)
+multiWorkReport.print(Html.END)
 
 Collection<Collection<Doc>> workClusters(Collection<Doc> docs, WorkComparator c) {
     docs.each {
@@ -130,17 +134,7 @@ void addTechnicalNote(DocumentItem docItem, WorkStatus workStatus) {
                                          ]]
 }
 
-void writeMultiWorkReport(Collection<Collection<Tuple2<Doc, Collection<Doc>>>> workClusters) {
-    getReportWriter("multi-work-clusters.html").with { r ->
-        r.print(Html.START)
-        workClusters.each {
-            r.print(Html.hubTable(it) + Html.HORIZONTAL_RULE)
-        }
-        r.print(Html.END)
-    }
-}
-
-void writeSingleWorkReport(Collection<Doc> titleCluster, Doc derivedWork, Collection<Doc> derivedFrom, WorkStatus workStatus) {
+void writeWorkReport(Collection<Doc> titleCluster, Doc derivedWork, Collection<Doc> derivedFrom, WorkStatus workStatus) {
     String report = htmlReport(titleCluster, derivedWork, derivedFrom)
     getReportWriter("${workStatus.status}/${derivedWork.shortId()}.html").print(report)
     incrementStats("num derivedFrom (${workStatus.status} works)", "${derivedFrom.size()}", derivedWork.shortId())
