@@ -10,9 +10,6 @@ import static mergeworks.Util.partition
 multiWorkReport = getReportWriter("multi-work-clusters.html")
 multiWorkReport.print(Html.START)
 
-String changedBy = 'SEK'
-String generationProcess = 'https://libris.kb.se/sys/merge-works'
-
 enum WorkStatus {
     NEW('new'),
     UPDATED('updated')
@@ -40,35 +37,38 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
 
     workClusters(docs, c).each { wc ->
         def (localWorks, linkedWorks) = wc.split { it.instanceData }
-        if (!linkedWorks) {
+        if (linkedWorks.isEmpty()) {
             if (localWorks.size() == 1) {
                 uniqueWorksAndTheirInstances.add(new Tuple2(localWorks.find(), localWorks))
             } else {
-                DocumentItem newWork = createNewWork(c.merge(localWorks))
-                addTechnicalNote(newWork, WorkStatus.NEW) //TODO: Add more/better adminmetadata
-                selectFromIterable([newWork]) {
-                    it.scheduleSave(changedBy: changedBy, generationProcess: generationProcess)
-                }
-                Doc workDoc = new Doc(newWork)
-                uniqueWorksAndTheirInstances.add(new Tuple2(workDoc, localWorks))
-                writeWorkReport(docs, workDoc, localWorks, WorkStatus.NEW)
-                selectByIds(localWorks.collect { it.shortId() }) {
-                    it.graph[1]['instanceOf'] = ['@id': workDoc.thingIri()]
-                    it.scheduleSave(changedBy: changedBy, generationProcess: generationProcess)
-                }
+                Doc newWork = createNewWork(c.merge(localWorks))
+                uniqueWorksAndTheirInstances.add(new Tuple2(newWork, localWorks))
             }
         } else if (linkedWorks.size() == 1) {
-            Doc workDoc = linkedWorks.find()
-            workDoc.replaceWorkData(c.merge(linkedWorks + localWorks))
-            // TODO: Add adminmetadata
-            uniqueWorksAndTheirInstances.add(new Tuple2(workDoc, localWorks))
-            writeWorkReport(docs, workDoc, localWorks, WorkStatus.UPDATED)
-            selectByIds(localWorks.collect { it.shortId() }) {
-                it.graph[1]['instanceOf'] = ['@id': workDoc.thingIri()]
-                it.scheduleSave(changedBy: changedBy, generationProcess: generationProcess)
-            }
+            uniqueWorksAndTheirInstances.add(new Tuple2(linkedWorks.find(), localWorks))
         } else {
             System.err.println("Local works ${localWorks.collect { it.shortId() }} match multiple linked works: ${linkedWorks.collect { it.shortId() }}. Duplicate linked works?")
+        }
+    }
+
+    List<String> linkableWorkIris = uniqueWorksAndTheirInstances.findResults { it.getV1().workIri() }
+
+    uniqueWorksAndTheirInstances.each { Doc workDoc, List<Doc> instanceDocs ->
+        if (!workDoc.instanceData) {
+            if (workDoc.docItem.existsInStorage) {
+                replaceWorkData(workDoc, c.merge([workDoc] + instanceDocs))
+                // TODO: Add adminmetadata
+                writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.UPDATED)
+            } else {
+                addTechnicalNote(workDoc, WorkStatus.NEW) //TODO: Add more/better adminmetadata
+                writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.NEW)
+            }
+            addCloseMatch(workDoc, linkableWorkIris)
+            saveAndLink(workDoc, instanceDocs, workDoc.docItem.existsInStorage)
+        } else {
+            if (addCloseMatch(workDoc, linkableWorkIris)) {
+                saveAndLink(workDoc)
+            }
         }
     }
 
@@ -76,20 +76,30 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
         def (workDocs, instanceDocs) = uniqueWorksAndTheirInstances.transpose()
         multiWorkReport.print(Html.hubTable(workDocs, instanceDocs) + Html.HORIZONTAL_RULE)
     }
+}
 
-    List<Doc> uniqueWorks = uniqueWorksAndTheirInstances.collect { it.getV1() }
-    List<String> linkableWorkIris = uniqueWorks.findResults { it.workIri() }
+multiWorkReport.print(Html.END)
 
-    uniqueWorks.each { Doc workDoc ->
-        workDoc.addCloseMatch(linkableWorkIris)
+void saveAndLink(Doc workDoc, Collection<Doc> instanceDocs = [], boolean existsInStorage = true) {
+    def changedBy = 'SEK'
+    def generationProcess = 'https://libris.kb.se/sys/merge-works'
+
+    if (existsInStorage) {
         selectByIds([workDoc.shortId()]) {
             it.doc.data = workDoc.document.data
             it.scheduleSave(changedBy: changedBy, generationProcess: generationProcess)
         }
+    } else {
+        selectFromIterable([workDoc.docItem]) {
+            it.scheduleSave(changedBy: changedBy, generationProcess: generationProcess)
+        }
+    }
+
+    selectByIds(instanceDocs.collect { it.shortId() }) {
+        it.graph[1]['instanceOf'] = ['@id': workDoc.thingIri()]
+        it.scheduleSave(changedBy: changedBy, generationProcess: generationProcess)
     }
 }
-
-multiWorkReport.print(Html.END)
 
 Collection<Collection<Doc>> workClusters(Collection<Doc> docs, WorkComparator c) {
     docs.each {
@@ -104,7 +114,7 @@ Collection<Collection<Doc>> workClusters(Collection<Doc> docs, WorkComparator c)
     return workClusters
 }
 
-DocumentItem createNewWork(Map workData) {
+Doc createNewWork(Map workData) {
     workData['@id'] = "TEMPID#it"
     Map data = [
             "@graph": [
@@ -118,20 +128,20 @@ DocumentItem createNewWork(Map workData) {
             ]
     ]
 
-    return create(data)
+    return new Doc(create(data))
 }
 
-void addTechnicalNote(DocumentItem docItem, WorkStatus workStatus) {
-    def reportUri = "http://xlbuild.libris.kb.se/works/${reportsDir.getPath()}/${workStatus.status}/${docItem.doc.shortId}.html"
+void addTechnicalNote(Doc doc, WorkStatus workStatus) {
+    def reportUri = "http://xlbuild.libris.kb.se/works/${reportsDir.getPath()}/${workStatus.status}/${doc.shortId()}.html"
 
-    docItem.graph[0]['technicalNote'] = [[
-                                                 "@type"  : "TechnicalNote",
-                                                 "hasNote": [[
-                                                                     "@type": "Note",
-                                                                     "label": ["Maskinellt utbrutet verk... TODO"]
-                                                             ]],
-                                                 "uri"    : [reportUri]
-                                         ]]
+    doc.record()['technicalNote'] = [[
+                                             "@type"  : "TechnicalNote",
+                                             "hasNote": [[
+                                                                 "@type": "Note",
+                                                                 "label": ["Maskinellt utbrutet verk... TODO"]
+                                                         ]],
+                                             "uri"    : [reportUri]
+                                     ]]
 }
 
 void writeWorkReport(Collection<Doc> titleCluster, Doc derivedWork, Collection<Doc> derivedFrom, WorkStatus workStatus) {
@@ -163,4 +173,21 @@ static String htmlReport(Collection<Doc> titleCluster, Doc work, Collection<Doc>
     s.append(Html.END)
 
     return s.toString()
+}
+
+static void replaceWorkData(Doc workDoc, Map replacement) {
+    workDoc.workData.clear()
+    workDoc.workData.putAll(replacement)
+}
+
+static boolean addCloseMatch(Doc workDoc, List<String> workIris) {
+    def linkable = (workIris - workDoc.thingIri()).collect { ['@id': it] }
+    def closeMatch = asList(workDoc.workData['closeMatch'])
+
+    if (linkable && !closeMatch.containsAll(linkable)) {
+        workDoc.workData['closeMatch'] = (closeMatch + linkable).unique()
+        return true
+    }
+
+    return false
 }

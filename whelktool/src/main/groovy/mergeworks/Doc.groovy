@@ -34,7 +34,7 @@ class Doc {
 
     Whelk whelk
     Document document
-    boolean existsInStorage
+    DocumentItem docItem
 
     Map instanceData
     Map workData
@@ -46,7 +46,7 @@ class Doc {
     Doc(DocumentItem docItem) {
         this.whelk = docItem.whelk
         this.document = docItem.doc
-        this.existsInStorage = docItem.existsInStorage
+        this.docItem = docItem
         setData()
     }
 
@@ -282,17 +282,5 @@ class Doc {
     void removeComparisonProps() {
         workData.remove('_editionStatement')
         workData.remove('_numPages')
-    }
-
-    void replaceWorkData(Map replacement) {
-        workData.clear()
-        workData.putAll(replacement)
-    }
-
-    void addCloseMatch(List<String> workIds) {
-        def closeMatch = (asList(workData['closeMatch']) + (workIds - workIri()).collect { ['@id': it] }).unique()
-        if (closeMatch) {
-            workData['closeMatch'] = closeMatch
-        }
     }
 }

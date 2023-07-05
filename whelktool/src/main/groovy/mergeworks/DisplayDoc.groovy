@@ -144,7 +144,7 @@ class DisplayDoc {
 
     Map getFramed() {
         if (!framed) {
-            if (doc.existsInStorage) {
+            if (doc.docItem.existsInStorage) {
                 framed = JsonLd.frame(doc.thingIri(), doc.whelk.loadEmbellished(doc.shortId()).data)
             } else {
                 Document copy = doc.document.clone()
