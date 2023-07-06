@@ -23,9 +23,11 @@ class GenreForm extends StuffSet {
     boolean isCompatible(Object a, Object b) {
         def lattLast = {
             it['@id'] == 'https://id.kb.se/term/saogf/L%C3%A4ttl%C3%A4st'
+                    || it['@id'] == 'https://id.kb.se/term/barngf/L%C3%A4ttl%C3%A4sta%20b%C3%B6cker'
                     || it['prefLabel'] == 'Lättläst'
         }
-        a.findResult(lattLast) == b.findResult(lattLast)
+
+        a.find(lattLast).asBoolean() == b.findResult(lattLast).asBoolean()
     }
 
     @Override
