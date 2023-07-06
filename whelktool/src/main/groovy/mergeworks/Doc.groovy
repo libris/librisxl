@@ -35,6 +35,7 @@ class Doc {
     Whelk whelk
     Document document
     DocumentItem docItem
+    boolean existsInStorage = true
 
     Map instanceData
     Map workData
@@ -47,6 +48,13 @@ class Doc {
         this.whelk = docItem.whelk
         this.document = docItem.doc
         this.docItem = docItem
+        this.existsInStorage = docItem.existsInStorage
+        setData()
+    }
+
+    Doc(Whelk whelk, Document document) {
+        this.whelk = whelk
+        this.document = document
         setData()
     }
 

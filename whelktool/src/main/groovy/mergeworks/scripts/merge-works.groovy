@@ -55,7 +55,7 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
 
     uniqueWorksAndTheirInstances.each { Doc workDoc, List<Doc> instanceDocs ->
         if (!workDoc.instanceData) {
-            if (workDoc.docItem.existsInStorage) {
+            if (workDoc.existsInStorage) {
                 replaceWorkData(workDoc, c.merge([workDoc] + instanceDocs))
                 // TODO: Add adminmetadata
                 writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.UPDATED)
@@ -64,7 +64,7 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
                 writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.NEW)
             }
             addCloseMatch(workDoc, linkableWorkIris)
-            saveAndLink(workDoc, instanceDocs, workDoc.docItem.existsInStorage)
+            saveAndLink(workDoc, instanceDocs, workDoc.existsInStorage)
         } else {
             if (addCloseMatch(workDoc, linkableWorkIris)) {
                 saveAndLink(workDoc)
