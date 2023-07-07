@@ -3,7 +3,6 @@ package mergeworks.scripts
 import mergeworks.Html
 import mergeworks.WorkComparator
 import mergeworks.Doc
-import whelk.datatool.DocumentItem
 
 import static mergeworks.Util.partition
 
@@ -45,6 +44,7 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
                 uniqueWorksAndTheirInstances.add(new Tuple2(newWork, localWorks))
             }
         } else if (linkedWorks.size() == 1) {
+            // TODO: Måste finnas lokalt verk
             uniqueWorksAndTheirInstances.add(new Tuple2(linkedWorks.find(), localWorks))
         } else {
             System.err.println("Local works ${localWorks.collect { it.shortId() }} match multiple linked works: ${linkedWorks.collect { it.shortId() }}. Duplicate linked works?")
@@ -55,7 +55,7 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
 
     uniqueWorksAndTheirInstances.each { Doc workDoc, List<Doc> instanceDocs ->
         if (!workDoc.instanceData) {
-            if (workDoc.existsInStorage) {
+            if (workDoc.existsInStorage && instanceDocs) {
                 replaceWorkData(workDoc, c.merge([workDoc] + instanceDocs))
                 // TODO: Add adminmetadata
                 writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.UPDATED)
