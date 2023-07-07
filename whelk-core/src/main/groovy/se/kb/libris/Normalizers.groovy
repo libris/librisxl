@@ -191,7 +191,7 @@ class Normalizers {
                     def roles = []
                     contribution.removeAll {
                         if (asList(it.agent) == d) {
-                            roles += it.role
+                            roles += asList(it.role)
                             return true
                         }
                         return false
