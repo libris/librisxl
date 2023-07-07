@@ -1,7 +1,5 @@
 package mergeworks
 
-
-import datatool.scripts.mergeworks.WorkToolJob
 import org.apache.commons.lang3.StringUtils
 import whelk.Whelk
 import whelk.util.DocumentUtil
@@ -36,11 +34,11 @@ class Util {
         }
     }
 
-    private static Set<String> IGNORED_SUBTITLES = WorkToolJob.class.getClassLoader()
+    private static Set<String> IGNORED_SUBTITLES = Util.class.getClassLoader()
             .getResourceAsStream('merge-works/ignored-subtitles.txt')
             .readLines().grep().collect(Util.&normalize) as Set
 
-    private static Set<String> GENERIC_TITLES = WorkToolJob.class.getClassLoader()
+    private static Set<String> GENERIC_TITLES = Util.class.getClassLoader()
             .getResourceAsStream('merge-works/generic-titles.txt')
             .readLines().grep().collect(Util.&normalize) as Set
 
