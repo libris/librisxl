@@ -11,30 +11,30 @@ import se.kb.libris.Normalizers
 PrintWriter failedQueries = getReportWriter("failed-queries")
 PrintWriter tooLargeResult = getReportWriter("too-large-result")
 
-def yesterday = new SimpleDateFormat('yyyy-MM-dd').with { sdf ->
-    Calendar.getInstance().with { c ->
-        c.add(Calendar.DATE, -1)
-        sdf.format(c.getTime())
-    }
-}
+//def yesterday = new SimpleDateFormat('yyyy-MM-dd').with { sdf ->
+//    Calendar.getInstance().with { c ->
+//        c.add(Calendar.DATE, -1)
+//        sdf.format(c.getTime())
+//    }
+//}
 
-def where = """
-    collection = '%s'
-    AND (modified = '$yesterday'
-        OR (data#>>'{@graph,0,generationDate}')::date = '$yesterday')
-"""
+//def where = """
+//    collection = '%s'
+//    AND (modified::date = '$yesterday'
+//        OR (data#>>'{@graph,0,generationDate}')::date = '$yesterday')
+//"""
 
 visited = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>())  // TODO: remove?
-instancesOfUpdatedLinkedWorks = Collections.synchronizedSet([] as Set)
-
-selectBySqlWhere(String.format(where, 'auth')) {
-    def thing = it.graph[1]
-    if (Normalizers.isInstanceOf(it.whelk.jsonld, thing, 'Work')) {
-        selectBySqlWhere("collection = 'bib' and data#>>'{@graph,1,instanceOf,@id}' = '${thing['@id']}'") {
-            instancesOfUpdatedLinkedWorks.add(it.doc.shortId)
-        }
-    }
-}
+//instancesOfUpdatedLinkedWorks = Collections.synchronizedSet([] as Set)
+//
+//selectBySqlWhere(String.format(where, 'auth')) {
+//    def thing = it.graph[1]
+//    if (Normalizers.isInstanceOf(it.whelk.jsonld, thing, 'Work')) {
+//        selectBySqlWhere("collection = 'bib' and data#>>'{@graph,1,instanceOf,@id}' = '${thing['@id']}'") {
+//            instancesOfUpdatedLinkedWorks.add(it.doc.shortId)
+//        }
+//    }
+//}
 
 def process = { bib ->
     if (!visited.add(bib.doc.shortId))
@@ -63,12 +63,12 @@ def process = { bib ->
     }
 }
 
-selectByIds(instancesOfUpdatedLinkedWorks) {
-    process(it)
-}
+//selectByIds(instancesOfUpdatedLinkedWorks) {
+//    process(it)
+//}
 
 // TODO: Change when starting to run regularly
-//selectBySqlWhere(String.format(where, 'bib')) { bib ->
+//selectBySqlWhere(String.format(where, 'bib')) {
 selectByCollection('bib') {
     process(it)
 }
@@ -106,8 +106,9 @@ Map<String, List<String>> buildQuery(bib) {
 
 private void insertLinkedAgents(bib) {
     getPathSafe(bib.doc.data, ['@graph', 1, 'instanceOf', 'contribution']).each {
-        if (it.agent && it.agent['@id']) {
-            it.agent = loadThing(it.agent['@id'])
+        def agent = asList(it.agent).find()
+        if (agent && agent['@id']) {
+            it.agent = loadThing(agent['@id'])
         }
     }
 }

@@ -649,7 +649,7 @@ class WhelkTool {
         bindings.put("incrementStats", statistics.&increment)
         bindings.put("asList", JsonLd::asList)
         bindings.put("getAtPath", DocumentUtil::getAtPath)
-        bindings.put("getWhelk", whelk)
+        bindings.put("getWhelk", this.&getWhelk)
         return bindings
     }
 

@@ -6,6 +6,7 @@ import mergeworks.Doc
 
 import static mergeworks.Util.partition
 
+maybeDuplicates = getReportWriter("maybe-duplicate-linked-works.tsv")
 multiWorkReport = getReportWriter("multi-work-clusters.html")
 multiWorkReport.print(Html.START)
 
@@ -44,9 +45,9 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
                 uniqueWorksAndTheirInstances.add(new Tuple2(newWork, localWorks))
             }
         } else if (linkedWorks.size() == 1) {
-            // TODO: Måste finnas lokalt verk
             uniqueWorksAndTheirInstances.add(new Tuple2(linkedWorks.find(), localWorks))
         } else {
+            maybeDuplicates.println(linkedWorks.collect { it.shortId() }.join('\t'))
             System.err.println("Local works ${localWorks.collect { it.shortId() }} match multiple linked works: ${linkedWorks.collect { it.shortId() }}. Duplicate linked works?")
         }
     }
@@ -55,10 +56,12 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
 
     uniqueWorksAndTheirInstances.each { Doc workDoc, List<Doc> instanceDocs ->
         if (!workDoc.instanceData) {
-            if (workDoc.existsInStorage && instanceDocs) {
-                replaceWorkData(workDoc, c.merge([workDoc] + instanceDocs))
-                // TODO: Add adminmetadata
-                writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.UPDATED)
+            if (workDoc.existsInStorage) {
+                if (instanceDocs) {
+                    replaceWorkData(workDoc, c.merge([workDoc] + instanceDocs))
+                    // TODO: Add adminmetadata
+                    writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.UPDATED)
+                }
             } else {
                 addTechnicalNote(workDoc, WorkStatus.NEW) //TODO: Add more/better adminmetadata
                 writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.NEW)
@@ -180,7 +183,7 @@ static void replaceWorkData(Doc workDoc, Map replacement) {
     workDoc.workData.putAll(replacement)
 }
 
-static boolean addCloseMatch(Doc workDoc, List<String> workIris) {
+boolean addCloseMatch(Doc workDoc, List<String> workIris) {
     def linkable = (workIris - workDoc.thingIri()).collect { ['@id': it] }
     def closeMatch = asList(workDoc.workData['closeMatch'])
 

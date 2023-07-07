@@ -88,7 +88,6 @@ time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDIS
   $ARGS --report $LANGUAGE_IN_TITLE src/main/groovy/mergeworks/scripts/language-in-work-title.groovy 2>/dev/null
 echo "$(count_lines $LANGUAGE_IN_TITLE/MODIFIED.txt) records affected, report in $LANGUAGE_IN_TITLE"
 
-
 echo
 echo "Specifying designer roles in Elib records..." # NOTE: Not dependent on clustring, can be run anytime after ContributionByRoleStep has been deployed.
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -jar build/libs/whelktool.jar \
