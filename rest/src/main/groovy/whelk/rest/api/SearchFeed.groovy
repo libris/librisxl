@@ -15,13 +15,13 @@ import static whelk.JsonLd.asList
 @CompileStatic
 class SearchFeed {
 
+    static final String BULLET_SEP = " • "
+
     JsonLd jsonld
     List<String> locales
 
     Set<String> skipKeys = [ID_KEY, REVERSE_KEY, 'meta', 'reverseLinks'] as Set
     Set<String> skipDetails = skipKeys + ([TYPE_KEY, 'commentByLang'] as Set)
-
-    String feedTitle
 
     SearchFeed(JsonLd jsonld, List<String> locales) {
         this.jsonld = jsonld
@@ -64,8 +64,9 @@ class SearchFeed {
     String buildTitle(Map searchResults) {
         var title = getByLang((Map) searchResults['titleByLang'])
         def params = searchResults.search?.mapping?.findResults {
-            var o = toValueString(it.object, skipDetails)
-            return o
+            if (it.value !instanceof Boolean) {
+              return toValueString(it.value ?: it.object, skipDetails)
+            }
         }
         if (params) {
             return title + ': ' + params.join(' & ')
@@ -107,6 +108,8 @@ class SearchFeed {
         if (item instanceof Map) {
             def chip = jsonld.toChip(item)
             return toValueString(chip)
+        } else if (item == null) {
+          return ""
         } else {
             return item.toString()
         }
@@ -128,7 +131,7 @@ class SearchFeed {
             }
           }
         } else {
-          if (sb.size() > 0) sb.append(" • ")
+          if (sb.size() > 0) sb.append(BULLET_SEP)
           sb.append(o.toString())
         }
     }
