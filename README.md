@@ -205,8 +205,6 @@ python3 -m venv venv
 source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
-# Create Elasticsearch index
-fab conf.xl_local app.whelk.create_es_index
 # Import test data
 fab conf.xl_local app.whelk.import_work_example_data
 ```
@@ -218,7 +216,6 @@ To start the CRUD part of the whelk, run the following commands:
 *NIX-systems:
 ```
 cd ../librisxl/rest
-export JAVA_OPTS="-Dfile.encoding=utf-8"
 ../gradlew -Dxl.secret.properties=../secret.properties appRun
 ```
 
