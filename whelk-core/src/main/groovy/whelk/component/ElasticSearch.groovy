@@ -47,6 +47,8 @@ class ElasticSearch {
     String defaultIndex = null
     private List<String> elasticHosts
     private String elasticCluster
+    private String elasticUser
+    private String elasticPassword
     private ElasticClient client
     private ElasticClient bulkClient
     private boolean isPitApiAvailable = false
@@ -57,17 +59,21 @@ class ElasticSearch {
         this(
                 props.getProperty("elasticHost"),
                 props.getProperty("elasticCluster"),
-                props.getProperty("elasticIndex")
+                props.getProperty("elasticIndex"),
+                props.getProperty("elasticUser"),
+                props.getProperty("elasticPassword")
         )
     }
 
-    ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex) {
+    ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex, String elasticUser, String elasticPassword) {
         this.elasticHosts = getElasticHosts(elasticHost)
         this.elasticCluster = elasticCluster
         this.defaultIndex = elasticIndex
+        this.elasticUser = elasticUser
+        this.elasticPassword = elasticPassword
 
-        client = ElasticClient.withDefaultHttpClient(elasticHosts)
-        bulkClient = ElasticClient.withBulkHttpClient(elasticHosts)
+        client = ElasticClient.withDefaultHttpClient(elasticHosts, elasticUser, elasticPassword)
+        bulkClient = ElasticClient.withBulkHttpClient(elasticHosts, elasticUser, elasticPassword)
 
         new Timer("ElasticIndexingRetries", true).schedule(new TimerTask() {
             void run() {
@@ -119,7 +125,7 @@ class ElasticSearch {
             host = host.trim()
             if (!host.contains(":"))
                 host += ":9200"
-            hosts.add("http://" + host)
+            hosts.add("https://" + host)
         }
         return hosts
     }
@@ -390,6 +396,8 @@ class ElasticSearch {
             }
         }
 
+        framed["_es_id"] =  toElasticId(copy.getShortId())
+
         if (log.isTraceEnabled()) {
             log.trace("Framed data: ${framed}")
         }
@@ -525,7 +533,7 @@ class ElasticSearch {
         Map query = [
                 'bool': ['should': t1 + t2 ]
         ]
-        
+
         Scroll<String> ids = new DefaultScroll(query)
         try {
             ids.hasNext()
@@ -612,8 +620,7 @@ class ElasticSearch {
     private abstract class Scroll<T> implements Iterator<T> {
         final int FETCH_SIZE = 500
 
-        // TODO: change to _shard_doc when we upgrade to ES 7.12+
-        protected final List SORT = [['_id': 'asc']]
+        protected final List SORT = [['_es_id': 'asc']]
         protected final List FILTER_PATH = ['took', 'hits.hits.sort', 'pit_id', 'hits.total.value']
 
         Iterator<T> fetchedItems

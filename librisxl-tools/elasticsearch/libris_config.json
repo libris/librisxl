@@ -310,6 +310,9 @@
                 "type": "text",
                 "store": false,
                 "analyzer": "softmatcher"
+            },
+            "_es_id": {
+                "type": "keyword"
             }
         },
         "date_detection": false,

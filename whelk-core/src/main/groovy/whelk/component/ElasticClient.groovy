@@ -11,7 +11,9 @@ import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.retry.RetryConfig
 import io.github.resilience4j.retry.RetryRegistry
 import io.prometheus.client.CollectorRegistry
+import org.apache.http.Header
 import org.apache.http.HttpEntity
+import org.apache.http.HttpHeaders
 import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
 import org.apache.http.client.config.RequestConfig
@@ -19,16 +21,26 @@ import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.client.methods.HttpPut
 import org.apache.http.client.methods.HttpRequestBase
+import org.apache.http.config.Registry
+import org.apache.http.config.RegistryBuilder
 import org.apache.http.conn.HttpClientConnectionManager
+import org.apache.http.conn.socket.ConnectionSocketFactory
+import org.apache.http.conn.socket.PlainConnectionSocketFactory
+import org.apache.http.conn.ssl.NoopHostnameVerifier
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustStrategy
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
+import org.apache.http.message.BasicHeader
+import org.apache.http.ssl.SSLContexts
 import org.apache.http.util.EntityUtils
 import whelk.exception.ElasticIOException
 import whelk.exception.UnexpectedHttpStatusException
 
+import javax.net.ssl.SSLContext
 import java.time.Duration
 import java.util.function.Function
 
@@ -62,8 +74,16 @@ class ElasticClient {
     RetryRegistry retryRegistry = RetryRegistry.ofDefaults()
     Retry globalRetry
 
-    static ElasticClient withDefaultHttpClient(List<String> elasticHosts) {
-        HttpClientConnectionManager cm = new PoolingHttpClientConnectionManager()
+    static ElasticClient withDefaultHttpClient(List<String> elasticHosts, String elasticUser, String elasticPassword) {
+        TrustStrategy acceptingTrustStrategy = (cert, authType) -> true
+        SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build()
+        SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE)
+        Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory> create()
+            .register("https", sslsf)
+            .register("http", new PlainConnectionSocketFactory())
+            .build()
+
+        HttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(registry)
         cm.setMaxTotal(CONNECTION_POOL_SIZE)
         cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_HOST)
 
@@ -73,16 +93,30 @@ class ElasticClient {
                 .setSocketTimeout(READ_TIMEOUT_MS)
                 .build()
 
+        String auth = elasticUser + ":" + elasticPassword
+        Header authHeader = new BasicHeader(HttpHeaders.AUTHORIZATION, "Basic " + auth.bytes.encodeBase64().toString())
+        List<Header> headers = List.of(authHeader)
+
         CloseableHttpClient httpClient = HttpClients.custom()
+                .setSSLSocketFactory(sslsf)
                 .setConnectionManager(cm)
                 .setDefaultRequestConfig(requestConfig)
+                .setDefaultHeaders(headers)
                 .build()
-        
+
         return new ElasticClient(httpClient, elasticHosts, true)
     }
 
-    static ElasticClient withBulkHttpClient(List<String> elasticHosts) {
-        HttpClientConnectionManager cm = new PoolingHttpClientConnectionManager()
+    static ElasticClient withBulkHttpClient(List<String> elasticHosts, String elasticUser, String elasticPassword) {
+        TrustStrategy acceptingTrustStrategy = (cert, authType) -> true
+        SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build()
+        SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE)
+        Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory> create()
+                .register("https", sslsf)
+                .register("http", new PlainConnectionSocketFactory())
+                .build()
+
+        HttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(registry)
         cm.setMaxTotal(CONNECTION_POOL_SIZE)
         cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_HOST)
 
@@ -91,11 +125,17 @@ class ElasticClient {
                 .setSocketTimeout(BATCH_READ_TIMEOUT_MS)
                 .build()
 
+        String auth = elasticUser + ":" + elasticPassword
+        Header authHeader = new BasicHeader(HttpHeaders.AUTHORIZATION, "Basic " + auth.bytes.encodeBase64().toString())
+        List<Header> headers = List.of(authHeader)
+
         CloseableHttpClient httpClient = HttpClients.custom()
+                .setSSLSocketFactory(sslsf)
                 .setConnectionManager(cm)
                 .setDefaultRequestConfig(requestConfig)
+                .setDefaultHeaders(headers)
                 .build()
-        
+
         return new ElasticClient(httpClient, elasticHosts, false)
     }
 

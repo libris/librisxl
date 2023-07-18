@@ -96,7 +96,7 @@ class ElasticFind {
         p.put("_offset", [Integer.toString(offset)] as String[])
         p.put("_limit", [Integer.toString(PAGE_SIZE)] as String[])
 
-        p.putIfAbsent("_sort", ["_id"] as String[])
+        p.putIfAbsent("_sort", ["_es_id"] as String[])
 
         return p
     }
