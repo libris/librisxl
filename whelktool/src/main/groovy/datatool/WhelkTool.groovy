@@ -663,7 +663,6 @@ class WhelkTool {
         if (whelk.elastic) {
             log "  ElasticSearch:"
             log "    hosts:   ${whelk.elastic.elasticHosts}"
-            log "    cluster: ${whelk.elastic.elasticCluster}"
             log "    index:   ${whelk.elastic.defaultIndex}"
         }
         log "Using script: $scriptFile"

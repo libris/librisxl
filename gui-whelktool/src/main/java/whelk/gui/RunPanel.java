@@ -90,8 +90,6 @@ public class RunPanel extends WizardCard implements ActionListener
                                     System.getProperty("secretBaseUri") + "\n" +
                                     "elasticHost = " +
                                     System.getProperty("secretElasticHost") + "\n" +
-                                    "elasticCluster = " +
-                                    System.getProperty("secretElasticCluster") + "\n" +
                                     "elasticIndex = " +
                                     System.getProperty("secretElasticIndex") + "\n" +
                                     "applicationId = " +

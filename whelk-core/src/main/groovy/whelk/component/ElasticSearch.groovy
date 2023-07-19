@@ -46,7 +46,6 @@ class ElasticSearch {
     
     String defaultIndex = null
     private List<String> elasticHosts
-    private String elasticCluster
     private String elasticUser
     private String elasticPassword
     private ElasticClient client
@@ -58,16 +57,14 @@ class ElasticSearch {
     ElasticSearch(Properties props) {
         this(
                 props.getProperty("elasticHost"),
-                props.getProperty("elasticCluster"),
                 props.getProperty("elasticIndex"),
                 props.getProperty("elasticUser"),
                 props.getProperty("elasticPassword")
         )
     }
 
-    ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex, String elasticUser, String elasticPassword) {
+    ElasticSearch(String elasticHost, String elasticIndex, String elasticUser, String elasticPassword) {
         this.elasticHosts = getElasticHosts(elasticHost)
-        this.elasticCluster = elasticCluster
         this.defaultIndex = elasticIndex
         this.elasticUser = elasticUser
         this.elasticPassword = elasticPassword
