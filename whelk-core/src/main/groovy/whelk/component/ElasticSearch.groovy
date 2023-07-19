@@ -396,6 +396,10 @@ class ElasticSearch {
             }
         }
 
+        // In ES up until 7.8 we could use the _id field for aggregations and sorting, but it was discouraged
+        // for performance reasons. In 7.9 such use was deprecated, and since 8.x it's no longer supported, so
+        // we follow the advice and use a separate field.
+        // (https://www.elastic.co/guide/en/elasticsearch/reference/8.8/mapping-id-field.html).
         framed["_es_id"] =  toElasticId(copy.getShortId())
 
         if (log.isTraceEnabled()) {
