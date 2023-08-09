@@ -1,5 +1,5 @@
 {
-  "@id": "http://kblocalhost.kb.se:5000/n602lbw018zh88k#it",
+  "@id": "http://libris.localhost:5000/n602lbw018zh88k#it",
   "@type": "Electronic",
   "sameAs": [
     {
@@ -13,7 +13,7 @@
     }
   ],
   "instanceOf": {
-    "@id": "http://kblocalhost.kb.se:5000/n602lbw018zh88k#work",
+    "@id": "http://libris.localhost:5000/n602lbw018zh88k#work",
     "@type": "Text",
     "language": [
       {
