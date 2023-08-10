@@ -187,8 +187,8 @@ cp secret.properties.in secret.properties
 # In secret.properties, set:
 # - elasticCluster to whatever you set cluster.name to in the Elasticsearch configuration above.
 vim secret.properties
-# Make sure libris.localhost points to 127.0.0.1
-echo '127.0.0.1 libris.localhost' | sudo tee -a /etc/hosts
+# Make sure libris.kb.se.localhost points to 127.0.0.1
+echo '127.0.0.1 libris.kb.se.localhost' | sudo tee -a /etc/hosts
 ```
 
 ### Importing test data
@@ -242,7 +242,7 @@ and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
 
 ```
 <VirtualHost *:5000>
-    ServerName libris.localhost
+    ServerName libris.kb.se.localhost
     ProxyRequests Off
     ProxyPreserveHost On
 
@@ -252,12 +252,12 @@ and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
         ProxyPreserveHost Off
         RewriteCond %{HTTP_ACCEPT} (text/html|application/xhtml|\*/\*|^$)
         RewriteCond %{REQUEST_METHOD} GET
-        RewriteRule ([^/]+)$ http://id.localhost:5000/$1 [P]
+        RewriteRule ([^/]+)$ http://id.kb.se.localhost:5000/$1 [P]
     </LocationMatch>
 
     <Location /_nuxt>
         ProxyPreserveHost Off
-        ProxyPass http://id.localhost:5000/_nuxt
+        ProxyPass http://id.kb.se.localhost:5000/_nuxt
     </Location>
     
     ProxyPass        /katalogisering     http://localhost:8080/katalogisering                   
@@ -278,7 +278,7 @@ and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
 </VirtualHost>
 
 <VirtualHost *:5000>
-    ServerName id.localhost
+    ServerName id.kb.se.localhost
     ProxyRequests Off
     ProxyPreserveHost On
 
@@ -326,8 +326,8 @@ Listen 5000
 Add these lines to `/etc/hosts`:
 
 ```
-127.0.0.1 libris.localhost
-127.0.0.1 id.localhost
+127.0.0.1 libris.kb.se.localhost
+127.0.0.1 id.kb.se.localhost
 ```
 
 Make sure some necessary Apache modules are enabled:
@@ -342,9 +342,9 @@ Now (re)start Apache:
 systemctl restart apache2
 ```
 
-You should now be able to visit http://id.localhost:5000, and use the cataloging client
-on http://libris.localhost:5000/katalogisering/. The XL API itself is available on
-http://libris.localhost:5000 (proxied via Apache), or directly on http://localhost:8180.
+You should now be able to visit http://id.kb.se.localhost:5000, and use the cataloging client
+on http://libris.kb.se.localhost:5000/katalogisering/. The XL API itself is available on
+http://libris.kb.se.localhost:5000 (proxied via Apache), or directly on http://localhost:8180.
 
 ## Maintenance
 

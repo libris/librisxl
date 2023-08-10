@@ -1,7 +1,7 @@
 {
   "@graph": [
     {
-      "@id": "http://libris.localhost:5000/00nj5pg324f356g2",
+      "@id": "http://libris.kb.se.localhost:5000/00nj5pg324f356g2",
       "sameAs": [
         {
           "@id": "https://id.kb.se/vocab/display.jsonld"
