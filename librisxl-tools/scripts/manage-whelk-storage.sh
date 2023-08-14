@@ -10,19 +10,13 @@ usage () {
     cat <<EOF
 
 Usage: ./manage-whelk-storage.sh -n <NAME> [-h <POSTGRES HOST>]
-           [-e <ELASTICSEARCH HOST>] [-D <POSTGRES USER>]
-           [-C <CREATEDB USER>] [-R] [-N]
+           [-D <POSTGRES USER>] [-C <CREATEDB USER>] [-R] [-N]
 
     -n, --whelk-name
-        Instance name. Used as database name and ElasticSearch index.
+        Instance name. Used as database name.
 
     -h, --db-host
         PostgreSQL host to connect to.
-
-        Defaults to localhost.
-
-    -e, --es-host
-        ElasticSearch host to connect to.
 
         Defaults to localhost.
 
@@ -39,8 +33,8 @@ Usage: ./manage-whelk-storage.sh -n <NAME> [-h <POSTGRES HOST>]
         If unset, runs 'createdb' without 'sudo'.
 
     -R, --recreate-db
-        If set, will drop and recreate PostgreSQL and ElasticSearch
-        databases indicated by -n/--whelk-name, and reload schema.
+        If set, will drop and recreate PostgreSQL database indicated
+        by -n/--whelk-name, and reload schema.
 
         Unset by default.
 
@@ -63,14 +57,6 @@ do
             ;;
         -h|--db-host)
             DBHOST="$2"
-            shift
-            ;;
-        -e|--es-host)
-            ESHOST="$2"
-            shift
-            ;;
-        -E|--es-index)
-            ESINDEX="$2"
             shift
             ;;
         -D|--db-user)
@@ -100,14 +86,6 @@ if [ -z "$DBHOST" ]; then
     DBHOST="localhost"
 fi
 
-if [ -z "$ESHOST" ]; then
-    ESHOST="localhost"
-fi
-
-if [ -z "$ESINDEX" ]; then
-    ESINDEX="${WHELKNAME}"
-fi
-
 if [ "$DBUSER" ]; then
     DBUSER_ARG="-U ${DBUSER}"
 fi
@@ -127,21 +105,6 @@ if [ "$RECREATE_DB" = true ]; then
     do
       psql -h $DBHOST $DBUSER_ARG $WHELKNAME < $MIGRATIONFILE
     done
-
-    echo ""
-    echo "(Re)creating ElasticSearch database..."
-    echo ""
-
-    curl -XDELETE http://$ESHOST:9200/$ESINDEX
-
-    echo ""
-    echo ""
-    curl -XPUT http://$ESHOST:9200/$ESINDEX \
-         -d@$TOOLDIR/elasticsearch/libris_config.json \
-         --header "Content-Type: application/json"
-    echo ""
-    echo ""
-
 fi
 
 if [ "$RUN_MIGRATIONS" = true ]; then
