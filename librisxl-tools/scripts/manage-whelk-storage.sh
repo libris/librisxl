@@ -4,7 +4,6 @@ SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )
 TOOLDIR=$(dirname $SCRIPT_DIR)
 
 RECREATE_DB=false
-NUKE_DEFINITIONS=false
 RUN_MIGRATIONS=false
 
 usage () {
@@ -50,26 +49,7 @@ Usage: ./manage-whelk-storage.sh -n <NAME> [-h <POSTGRES HOST>]
         indicated by -n/--whelk-name
 
         Unset by default.
-
-    -N, --nuke-definitions
-        If set, will delete all definitions data from PostgreSQL and
-        ElasticSearch.
-
-        Unset by default.
 EOF
-}
-
-delete_definitions() {
-    psql -h $DBHOST $DBUSER_ARG $WHELKNAME -c \
-         "DELETE FROM lddb__identifiers WHERE id in (SELECT id from lddb where ( data#>'{@graph,0,inDataset}' @> '[{\"@id\":\"https://id.kb.se/dataset/definitions\"}]' OR data#>>'{@graph,1,@id}' in ('https://id.kb.se/vocab/', 'https://id.kb.se/vocab/context', 'https://id.kb.se/vocab/display')) and collection = 'definitions');"
-    psql -h $DBHOST $DBUSER_ARG $WHELKNAME -c \
-         "DELETE FROM lddb where ( data#>'{@graph,0,inDataset}' @> '[{\"@id\":\"https://id.kb.se/dataset/definitions\"}]' OR data#>>'{@graph,1,@id}' in ('https://id.kb.se/vocab/', 'https://id.kb.se/vocab/context', 'https://id.kb.se/vocab/display')) and collection = 'definitions';"
-    psql -h $DBHOST $DBUSER_ARG $WHELKNAME -c \
-         "DELETE FROM lddb__versions where ( data#>'{@graph,0,inDataset}' @> '[{\"@id\":\"https://id.kb.se/dataset/definitions\"}]' OR data#>>'{@graph,1,@id}' in ('https://id.kb.se/vocab/', 'https://id.kb.se/vocab/context', 'https://id.kb.se/vocab/display')) and collection = 'definitions' ;"
-
-    curl -XPOST http://$ESHOST:9200/$ESINDEX/_delete_by_query \
-          -H 'Content-Type: application/json' \
-          -d '{ "query": { "match": { "meta.inDataset.@id": "https://id.kb.se/dataset/definitions" } } }'
 }
 
 while [[ $# -gt 0 ]]
@@ -103,9 +83,6 @@ do
             ;;
         -R|--recreate-db)
             RECREATE_DB=true
-            ;;
-        -N|--nuke-definitions)
-            NUKE_DEFINITIONS=true
             ;;
         -M|--run-migrations)
             RUN_MIGRATIONS=true
@@ -181,15 +158,4 @@ if [ "$RUN_MIGRATIONS" = true ]; then
 
     echo ""
     echo "Version after: $(psql -qtA -h $DBHOST $DBUSER_ARG $WHELKNAME -c "SELECT version FROM lddb__schema")"
-fi
-
-if [ "$NUKE_DEFINITIONS" = true ]; then
-    echo ""
-    echo "Nuking definitions data..."
-    echo ""
-
-    delete_definitions
-
-    echo ""
-    echo ""
 fi
