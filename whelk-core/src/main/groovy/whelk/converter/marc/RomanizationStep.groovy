@@ -2,9 +2,6 @@ package whelk.converter.marc
 
 import groovy.transform.MapConstructor
 import groovy.util.logging.Log4j2 as Log
-
-import whelk.ResourceCache
-import whelk.filter.LanguageLinker
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
@@ -19,8 +16,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     boolean requiresResources = true
 
     MarcFrameConverter converter
-    ResourceCache.LanguageResources languageResources
-
+    
     Map langAliases
     Map byLangToBase
 
@@ -70,12 +66,12 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     }
 
     void _modify(Map record, Map thing) {
-        if (!languageResources) {
+        if (!resourceCache?.languageResources) {
             return
         }
 
         def workLang = thing.instanceOf.subMap('language')
-        languageResources.languageLinker.linkAll(workLang)
+        resourceCache.languageResources.languageLinker.linkAll(workLang)
         def romanizable = asList(workLang.language).findResults { it[ID] in romanizableLangs ? it[ID] : null }
 
         if (romanizable.size() > 1) {
@@ -547,13 +543,11 @@ class RomanizationStep extends MarcFramePostProcStepBase {
             this.byLangToBase = langAliases.collectEntries { k, v -> [v, k] }
         }
 
-        if (!languageResources) {
+        if (!resourceCache?.languageResources) {
             return
         }
 
         var languageResources = resourceCache.languageResources
-
-        this.langLinker = languageResources.languageLinker
 
         this.langIdToLangTag = languageResources.languages
                 .findAll { k, v -> v.langTag }.collectEntries { k, v -> [k, v.langTag] }
