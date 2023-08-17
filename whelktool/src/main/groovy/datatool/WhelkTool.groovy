@@ -627,6 +627,7 @@ class WhelkTool {
     }
 
     private Bindings createMainBindings() {
+        // Update Whelktool.gdsl when adding new bindings
         Bindings bindings = createDefaultBindings()
         bindings.put("scriptDir", scriptFile.parent)
         bindings.put("baseUri", Document.BASE_URI)
