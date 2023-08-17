@@ -1,13 +1,23 @@
 apply plugin: 'application'
 apply plugin: 'groovy'
 
+sourceSets {
+    scripts {
+        groovy { srcDir 'scripts' }
+    }
+}
+
 repositories {
     mavenCentral()
 }
 
 dependencies {
     implementation project(':whelktool')
-    implementation "org.codehaus.groovy:groovy:${groovyVersion}"
+    compileOnly "org.codehaus.groovy:groovy:${groovyVersion}"
+    compileOnly project(':whelk-core')
+    scriptsCompileOnly sourceSets.main.output
+    scriptsCompileOnly project(':whelk-core')
+    scriptsRuntimeOnly project(':whelktool')
 }
 
 jar {
