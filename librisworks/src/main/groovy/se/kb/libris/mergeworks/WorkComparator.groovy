@@ -1,9 +1,7 @@
 package se.kb.libris.mergeworks
 
 import datatool.util.DocumentComparator
-import se.kb.libris.mergeworks.Doc
 import se.kb.libris.mergeworks.compare.*
-
 
 import static Util.bestTitle
 

@@ -1,7 +1,5 @@
-package se.kb.libris.mergeworks.scripts
-
-import Doc
-import Html
+import se.kb.libris.mergeworks.Doc
+import se.kb.libris.mergeworks.Html
 
 htmlReport = getReportWriter('clusters.html')
 

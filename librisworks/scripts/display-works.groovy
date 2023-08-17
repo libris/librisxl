@@ -1,11 +1,8 @@
-package se.kb.libris.mergeworks.scripts
+import se.kb.libris.mergeworks.Doc
+import se.kb.libris.mergeworks.Html
+import se.kb.libris.mergeworks.WorkComparator
 
-
-import Doc
-import Html
-import WorkComparator
-
-import static Util.partition
+import static se.kb.libris.mergeworks.Util.partition
 
 htmlReport = getReportWriter('works.html')
 
@@ -34,7 +31,7 @@ htmlReport.println(Html.END)
 Collection<Collection<Doc>> workClusters(Collection<Doc> docs, WorkComparator c) {
     docs.each { it.addComparisonProps() }
 
-    def workClusters = mergeworks.Util.partition(docs, { Doc a, Doc b -> c.sameWork(a, b) })
+    def workClusters = partition(docs, { Doc a, Doc b -> c.sameWork(a, b) })
             .each { work -> work.each { doc -> doc.removeComparisonProps() } }
 
     return workClusters

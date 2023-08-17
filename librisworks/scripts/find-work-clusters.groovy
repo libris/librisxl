@@ -1,4 +1,3 @@
-package se.kb.libris.mergeworks.scripts
 /**
  * (When running, redirect STDERR to avoid annoying prints from whelktool)
  */

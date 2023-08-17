@@ -3,9 +3,9 @@ package se.kb.libris.mergeworks
 
 import org.apache.commons.codec.digest.DigestUtils
 
-import static se.kb.libris.mergeworks.FieldStatus.COMPATIBLE
-import static se.kb.libris.mergeworks.FieldStatus.DIFF
-import static se.kb.libris.mergeworks.FieldStatus.EQUAL
+import static FieldStatus.COMPATIBLE
+import static FieldStatus.DIFF
+import static FieldStatus.EQUAL
 
 class Html {
     private static String CSS = Html.class.getClassLoader()

@@ -1,5 +1,3 @@
-package se.kb.libris.mergeworks.scripts
-
 import datatool.util.DisjointSets
 
 mergeClusters(new File(System.getProperty('clusters')))
