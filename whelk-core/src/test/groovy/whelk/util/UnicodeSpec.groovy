@@ -90,16 +90,17 @@ class UnicodeSpec extends Specification {
         expect:
         Unicode.guessIso15924ScriptCode(string) == script
         where:
-        script                                        | string
-        Optional.empty()                              | ''
-        Optional.empty()                              | '  '
-        Optional.of('Cyrl')                           | 'Это дом'
-        Optional.of('Arab')                           | 'داستان یک سفر'
-        Optional.of('Arab')                           | 'پشمالو'
-        Optional.of('Armn')                           | 'Պիպին նավի վրա'
-        Optional.of('Kana')                           | 'デスノート'
-        Optional.of('Hira')                           | 'とんとんとんと'
-
+        script              | string
+        Optional.empty()    | ''
+        Optional.empty()    | '  '
+        Optional.of('Cyrl') | 'Это дом'
+        Optional.of('Arab') | 'داستان یک سفر'
+        Optional.of('Arab') | 'پشمالو'
+        Optional.of('Armn') | 'Պիպին նավի վրա'
+        Optional.of('Kana') | 'デスノート'
+        Optional.of('Hira') | 'とんとんとんと'
+    }
+        
     def "u"() {
         given:
         String s = "übers"   //uU+CC88
