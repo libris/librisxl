@@ -1,11 +1,6 @@
 import groovy.transform.Memoized
 import whelk.util.DocumentUtil
 
-/**
- Example:
- $ ENV=qa && time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters="reports/clusters.tsv" -jar build/libs/whelktool.jar --report reports/$ENV-$(date +%Y%m%d-%H%M%S) --dry-run src/main/groovy/datatool/se.kb.libris.mergeworks.scripts/mergeworks/normalize/language-in-work-title.groovy
- */
-
 PrintWriter report = getReportWriter("report.txt")
 
 def ids = new File(System.getProperty('clusters'))

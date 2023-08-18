@@ -14,11 +14,6 @@ import static se.kb.libris.mergeworks.Util.Relator
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.looksLikeIri
 
-/**
- Example:
- $ ENV=qa && time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters="reports/clusters.tsv" -jar build/libs/whelktool.jar --report reports/$ENV-$(date +%Y%m%d-%H%M%S) --dry-run src/main/groovy/datatool/se.kb.libris.mergeworks.scripts/mergeworks/normalize/fetch-contribution-from-respStatement.groovy
- */
-
 linkedFoundInCluster = getReportWriter("linked-agent-found-in-cluster.tsv")
 linkedFoundInCluster.println(['id', 'matched agent', 'agent occurs in (examples)'].join('\t'))
 

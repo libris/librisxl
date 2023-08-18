@@ -1,6 +1,6 @@
 package se.kb.libris.mergeworks.compare
 
-class Classification extends se.kb.libris.mergeworks.compare.StuffSet {
+class Classification extends StuffSet {
     // Terms that will be merged (values precede keys)
     private static def norm = [
             'uHc'                                                        : ['Hc,u'],
