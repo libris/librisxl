@@ -24,6 +24,18 @@ sourceSets {
     test {
         groovy { srcDir 'src/test/groovy/' }
     }
+    // This is just so that intellij will understand whelk-core and whelktool classes 
+    // inside whelktool scripts. So that autocomplete and navigation etc works.
+    //
+    // After importing the gradle project the 'scripts' directory needs to be manually 
+    // unmarked as "source root" for whelktool classes to work. And so that 'scripts' 
+    // is displayed as directories instead of as packages. Autocomplete etc. still works.
+    //
+    // Right-click on the 'scripts' directory and select 
+    // "Mark directory as" > "Unmark as Sources root"
+    whelktoolScripts {
+        groovy { srcDir 'scripts' }
+    }
 }
 
 mainClassName = "whelk.datatool.WhelkTool"
@@ -55,6 +67,8 @@ dependencies {
     implementation 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
     implementation 'commons-codec:commons-codec:1.7'
     implementation group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
+    whelktoolScriptsCompileOnly sourceSets.main.output
+    whelktoolScriptsCompileOnly project(':whelk-core')
 }
 
 jar {

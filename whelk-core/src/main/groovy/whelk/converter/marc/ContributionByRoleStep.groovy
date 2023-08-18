@@ -20,8 +20,13 @@ class ContributionByRoleStep extends MarcFramePostProcStepBase {
         // NOTE: Assuming OK to move role with a non-Instance Embodiment domain (Item
         // or Representation) to Instance (an instance is an embodiment, a work isn't).
         instanceRelators = resourceCache?.relators?.findResults {
-            def domain = ld.toTermKey(it.domain[ID])
-                if (ld.isSubClassOf(domain, 'Embodiment')) it[ID]
+            def domainRef = it.domain?[ID]
+            if (domainRef) {
+              def domain = ld.toTermKey(domainRef)
+              if (ld.isSubClassOf(domain, 'Embodiment')) {
+                return it[ID]
+              }
+            }
         } as Set
         log.debug "Using as instance relations: $INSTANCE_RELATORS"
     }

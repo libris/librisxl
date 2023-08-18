@@ -4,7 +4,7 @@
 *.*~
 .idea
 *.iml
-/.venv
+.venv
 Session.vim
 
 # Local Config
@@ -17,9 +17,10 @@ Session.vim
 /*/.gradle
 /build
 /*/build
+/*/out
 /*/catalina.base_IS_UNDEFINED
 /*/logs
-
+/lib
 # Eclipse meta files
 /eclipse-classes/
 .classpath

@@ -53,11 +53,11 @@ TOKEN=$(curl -s -X POST -d 'client_id=$CLIENT_ID&client_secret=$CLIENT_SECRET&gr
 curl -v -XPOST 'http://localhost:8180/_reproduction' -H 'Content-Type: application/ld+json' -H "Authorization: Bearer $TOKEN" -H 'XL-Active-Sigel: S' --data-binary @- << EOF
 {
   "@type": "Electronic",
-  "reproductionOf": { "@id": "http://kblocalhost.kb.se:5000/q822pht24j3ljjr#it" },
+  "reproductionOf": { "@id": "http://libris.kb.se.localhost:5000/q822pht24j3ljjr#it" },
   "production": [ 
     {
       "@type": "Reproduction",
-      "agent": { "@id": "http://kblocalhost.kb.se:5000/jgvxv7m23l9rxd3#it" },
+      "agent": { "@id": "http://libris.kb.se.localhost:5000/jgvxv7m23l9rxd3#it" },
       "place": { "@type": "Place", "label": "Stockholm" },
       "date": "2021"
     }
