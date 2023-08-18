@@ -181,7 +181,10 @@ class Unicode {
         ].each { add15924scriptCode(it) }
     }
 
-    static String asciiFold(String s) {
+    /**
+     * Removes all diacritics from a string, including those of proper letters like å, ä and ö.
+     */
+    static String removeDiacritics(String s) {
         return Normalizer.normalize(s, Normalizer.Form.NFD).replaceAll(UNICODE_MARK, '')
     }
 }

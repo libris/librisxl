@@ -109,13 +109,14 @@ class UnicodeSpec extends Specification {
         Unicode.normalize(s) == nfc
     }
 
-    def "asciiFold"() {
+    def "removeDiacritics"() {
         expect:
-        Unicode.asciiFold(unicode) == ascii
+        Unicode.removeDiacritics(in) == out
 
         where:
-        unicode          | ascii
+        in               | out
         'Désidéria'      | 'Desideria'
         'Антон Павлович' | 'Антон Павлович'
+        'Åkerbärsfrön'   | 'Akerbarsfron'
     }
 }

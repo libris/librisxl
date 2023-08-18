@@ -126,7 +126,7 @@ class Util {
     }
 
     static String normalize(String s) {
-        return Unicode.asciiFold(Unicode.normalizeForSearch(StringUtils.normalizeSpace(" $s ".toLowerCase().replace(noise))))
+        return Unicode.removeDiacritics(Unicode.normalizeForSearch(StringUtils.normalizeSpace(" $s ".toLowerCase().replace(noise))))
     }
 
     static Object getPathSafe(item, path, defaultTo = null) {
