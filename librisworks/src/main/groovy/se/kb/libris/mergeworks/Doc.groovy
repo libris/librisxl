@@ -46,8 +46,8 @@ class Doc {
     Doc(DocumentItem docItem) {
         this.whelk = docItem.whelk
         this.document = docItem.doc
-        this.docItem = docItem
         this.existsInStorage = docItem.existsInStorage
+        setDocItemIfNew(docItem)
         setData()
     }
 
@@ -55,6 +55,12 @@ class Doc {
         this.whelk = whelk
         this.document = document
         setData()
+    }
+
+    void setDocItemIfNew(DocumentItem docItem) {
+        if (!existsInStorage) {
+            this.docItem = docItem
+        }
     }
 
     void setData() {
