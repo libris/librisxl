@@ -18,7 +18,7 @@ class Html {
     static final String END = '</body></html>'
     static final String HORIZONTAL_RULE = "<hr/><br/>\n"
 
-    static def infoFields = ['reproductionOf', 'instance title', 'instance type', 'editionStatement', 'responsibilityStatement', 'encodingLevel', 'publication', 'identifiedBy', 'extent']
+    static def infoFields = ['reproductionOf', 'instance title', 'instance type', 'editionStatement', 'responsibilityStatement', 'encodingLevel', 'publication', 'identifiedBy', 'extent', 'physicalDetailsNote']
 
     static String clusterTable(Collection<Doc> cluster) {
         String id = clusterId(cluster.collect { it.shortId() })
