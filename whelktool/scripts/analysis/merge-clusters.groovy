@@ -1,15 +1,11 @@
 import datatool.util.DisjointSets
 
-String dir = System.getProperty('clustersDir')
-mergeClusters(
-        new File(dir, 'clusters.tsv'),
-        new File(dir, 'clusters-merged.tsv'))
+mergeClusters(new File(System.getProperty('clusters')))
 
-void mergeClusters(File input, File output) throws FileNotFoundException {
+void mergeClusters(File clusters) throws FileNotFoundException {
     DisjointSets<String> sets = new DisjointSets<>()
-    PrintWriter p = new PrintWriter(output)
 
-    input.eachLine() {
+    clusters.eachLine {
         sets.addSet(Arrays.asList(it.split(/[\t ]+/)))
     }
 
@@ -19,13 +15,13 @@ void mergeClusters(File input, File output) throws FileNotFoundException {
         void nextElement(String e) {
             if(!first)
                 print('\t')
-            p.print(e)
+            print(e)
             first = false
         }
 
         @Override
         void closeSet() {
-            p.println()
+            println()
             first = true
         }
     })
