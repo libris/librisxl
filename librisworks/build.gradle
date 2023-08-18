@@ -17,7 +17,6 @@ dependencies {
     compileOnly project(':whelk-core')
     scriptsCompileOnly sourceSets.main.output
     scriptsCompileOnly project(':whelk-core')
-    scriptsRuntimeOnly project(':whelktool')
 }
 
 jar {
