@@ -39,7 +39,7 @@ ELIB_DESIGNERS=$NORMALIZATIONS_DIR/2-elib-cover-designer
 CONTRIBUTION=$NORMALIZATIONS_DIR/3-contribution
 ROLES_TO_INSTANCE=$NORMALIZATIONS_DIR/4-roles-to-instance
 
-# Clustring step 1 TODO: run only on recently updated records after first run
+# Clustering step 1 TODO: run only on recently updated records after first run
 echo "Finding new clusters..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -jar $JAR_FILE \
   $ARGS --report $FIND_CLUSTERS $SCRIPTS_DIR/find-work-clusters.groovy >$ALL_CLUSTERS 2>/dev/null
@@ -49,7 +49,7 @@ if [ $NUM_CLUSTERS == 0 ]; then
   exit 0
 fi
 
-# Clustring step 2
+# Clustering step 2
 echo
 echo "Merging clusters..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$ALL_CLUSTERS -jar $JAR_FILE \
@@ -60,7 +60,7 @@ if [ $NUM_CLUSTERS == 0 ]; then
   exit 0
 fi
 
-# Clustring step 3
+# Clustering step 3
 echo
 echo "Finding title clusters..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$MERGED_CLUSTERS -jar $JAR_FILE \
@@ -90,7 +90,7 @@ time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDIS
 echo "$(count_lines $LANGUAGE_IN_TITLE/MODIFIED.txt) records affected, report in $LANGUAGE_IN_TITLE"
 
 echo
-echo "Specifying designer roles in Elib records..." # NOTE: Not dependent on clustring, can be run anytime after ContributionByRoleStep has been deployed.
+echo "Specifying designer roles in Elib records..." # NOTE: Not dependent on clustering, can be run anytime after ContributionByRoleStep has been deployed.
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -jar $JAR_FILE \
   $ARGS --report $ELIB_DESIGNERS $SCRIPTS_DIR/elib-unspecified-contributor.groovy 2>/dev/null
 echo "$(count_lines $ELIB_DESIGNERS/MODIFIED.txt) records affected, report in $ELIB_DESIGNERS"
