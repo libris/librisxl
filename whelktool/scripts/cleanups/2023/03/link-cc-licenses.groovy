@@ -12,10 +12,7 @@ URI_KEY = 'uri'
 
 selectBySqlWhere("collection = 'bib' and data::text LIKE '%://creativecommons.org/%'") { bib ->
     var data = bib.doc.data
-    DocumentUtil.traverse(data, { value, path ->
-        if (!path || path[-1] != URI_KEY) {
-            return
-        }
+    DocumentUtil.findKey(data, URI_KEY, { value, path ->
         def uri = value instanceof List && value.size() > 0 ? value[0] : value
         if (uri instanceof String && uri.indexOf('://creativecommons.org/') > -1) {
             var licenseId = getLicenseId(uri)
