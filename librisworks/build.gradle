@@ -1,0 +1,37 @@
+apply plugin: 'application'
+apply plugin: 'groovy'
+
+sourceSets {
+    scripts {
+        groovy { srcDir 'scripts' }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':whelktool')
+    compileOnly "org.codehaus.groovy:groovy:${groovyVersion}"
+    compileOnly project(':whelk-core')
+    scriptsCompileOnly sourceSets.main.output
+    scriptsCompileOnly project(':whelk-core')
+}
+
+jar {
+    manifest {
+        attributes "Main-Class": "whelk.datatool.WhelkTool",
+                // log4j uses multi-release to ship different stack walking implementations for different java
+                // versions. Since we repackage everything as a fat jar, that jar must also be multi-release.
+                "Multi-Release": true
+    }
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : project.zipTree(it).matching {
+            }
+        }
+    }
+}

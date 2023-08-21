@@ -15,6 +15,7 @@ def ctx = context(scope:scriptScope(), pathRegexp:'.*whelktool/scripts/.*')
 
 contributor(ctx) {
     property name:"scriptDir", type:String
+    property name:"reportsDir", type: File
     property name:"baseUri", type:URI
     method name:"asList", params:['':Object], type:List
     method name:"create", params:['data':Map], type:ITEM
