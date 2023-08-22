@@ -209,7 +209,10 @@ class Doc {
 
     boolean hasPart() {
         workData['hasPart'] || instanceData['hasTitle'].findAll { it['@type'] == 'Title' }.any {
-            it.hasPart?.size() > 1 || it.hasPart?.any { p -> asList(p.partName).size() > 1 || asList(p.partNumber).size() > 1 }
+            it.hasPart?.size() > 1
+                    || it.hasPart?.any { p -> asList(p.partName).size() > 1
+                    || asList(p.partNumber).size() > 1 }
+                    || it.mainTitle =~ /(?<!\/.+);/
         }
     }
 
