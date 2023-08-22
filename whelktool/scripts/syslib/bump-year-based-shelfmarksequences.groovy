@@ -37,18 +37,35 @@ selectByIds(queryIds(["@type": ["ShelfMarkSequence"]]).collect()) { s ->
     def label = thing.label 
     if (label instanceof String) {
         if (label.contains(oldFull)) {
-            replaceShelfMarkSequence(s, label.replace(oldFull, newFull))
+            replaceShelfMarkSequence(s, label.replace(oldFull, newFull), 'label')
+        } else if (label.contains(oldShort)) {
+            replaceShelfMarkSequence(s, label.replace(oldShort, newShort), 'label')
         }
-        else if (label.contains(oldShort)) {
-            replaceShelfMarkSequence(s, label.replace(oldShort, newShort))
+    }
+
+    def qualifier = thing.qualifier
+    def newQualifier = asList(qualifier).findResults {
+        if (it instanceof String) {
+            if (it.contains(oldFull)) {
+                return it.replace(oldFull, newFull)
+            } else if (it.contains(oldShort)) {
+                return it.replace(oldShort, newShort)
+            } else { // NOP
+                return it
+            }
         }
-    } 
+    }
+
+    newQualifier = qualifier instanceof String ?  newQualifier.pop() : newQualifier
+    if (newQualifier && newQualifier != qualifier) {
+        replaceShelfMarkSequence(s, newQualifier, 'qualifier')
+    }
 }
 
-void replaceShelfMarkSequence(old, String newLabel) {
+void replaceShelfMarkSequence(old, newLabel, String prop) {
     def newItem = create(old.doc.clone().data)
 
-    newItem.graph[1]['label'] = newLabel
+    newItem.graph[1][prop] = newLabel
     newItem.graph[1]['nextShelfControlNumber'] = 1
 
     selectFromIterable([newItem], { it.scheduleSave() })
@@ -64,5 +81,5 @@ void replaceShelfMarkSequence(old, String newLabel) {
     
     old.scheduleSave()
     
-    report.println("${old.graph[1]['label']} -> $newLabel ($old.doc.shortId -> $newItem.doc.shortId)")
+    report.println("${old.graph[1][prop]} -> $newLabel ($old.doc.shortId -> $newItem.doc.shortId)")
 }
