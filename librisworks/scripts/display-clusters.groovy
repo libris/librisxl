@@ -12,7 +12,7 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
         it.getVersions()
                 .reverse()
                 .find { getAtPath(it.data, it.workIdPath) == null }
-                ?.with { docs.add(new Doc(getWhelk, it)) }
+                ?.with { docs.add(new Doc(getWhelk(), it)) }
     }
 
     docs.each { it.addComparisonProps() }

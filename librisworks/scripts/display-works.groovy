@@ -15,7 +15,7 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
         it.getVersions()
                 .reverse()
                 .find { getAtPath(it.data, it.workIdPath) == null }
-                ?.with { docs.add(new Doc(getWhelk, it)) }
+                ?.with { docs.add(new Doc(getWhelk(), it)) }
     }
 
     WorkComparator c = new WorkComparator(WorkComparator.allFields(docs))
