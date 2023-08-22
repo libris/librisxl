@@ -185,7 +185,7 @@ class Doc {
     }
 
     boolean hasGenericTitle() {
-        Util.hasGenericTitle(instanceTitle())
+        Util.hasGenericTitle(instanceTitle()) || Util.hasGenericTitle(workTitle())
     }
 
     boolean isMonograph() {
