@@ -1,8 +1,8 @@
 /**
  * This script bumps the year for "year based" ShelfMarkSequences
  * 
- * Any ShelfMarkSequence with YY or YYYY in the label (e.g. "Sv2021") will be replacedBy
- * a new sequence starting at 1 and with the new year in the label (e.g. "Sv2022").
+ * Any ShelfMarkSequence with YY or YYYY in the label/qualifier (e.g. "Sv2021") will be replacedBy
+ * a new sequence starting at 1 and with the new year in the label/qualifier (e.g. "Sv2022").
  * 
  * To be scheduled at New Year's Eve 🎆
  */
