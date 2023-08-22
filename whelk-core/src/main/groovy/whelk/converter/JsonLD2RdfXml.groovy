@@ -26,7 +26,7 @@ class JsonLD2RdfXml implements FormatConverter {
     Map convert(Map originaldata, String id) {
         var srcData = [:]
         srcData.putAll(originaldata)
-        if (context) {
+        if (context && JsonLd.CONTEXT_KEY !in srcData) {
             srcData[JsonLd.CONTEXT_KEY] = context
         }
 
