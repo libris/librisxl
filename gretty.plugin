@@ -1,4 +1,4 @@
-// SOURCE: https://github.com/gretty-gradle-plugin/gretty/blob/master/pluginScripts/gretty-4.0.2.plugin
+// SOURCE: https://raw.githubusercontent.com/gretty-gradle-plugin/gretty/master/pluginScripts/gretty-4.1.0.plugin
 
 buildscript {
   repositories {
@@ -6,7 +6,7 @@ buildscript {
   }
 
   dependencies {
-    classpath 'org.gretty:gretty:4.0.2'
+    classpath 'org.gretty:gretty:4.1.0'
   }
 }
 

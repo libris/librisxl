@@ -728,7 +728,7 @@ class JsonLd {
         if (type == null)
             return
 
-        List subTerms = (List) (superTermOf[type])
+        List<String> subTerms = (List<String>) (superTermOf[type])
         if (subTerms == null)
             return
 
