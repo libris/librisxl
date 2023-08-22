@@ -10,12 +10,12 @@ import whelk.filter.BlankNodeLinker
 import whelk.filter.LanguageLinker
 import whelk.util.DocumentUtil
 import whelk.util.DocumentUtil.Remove
+import whelk.util.Romanizer
 
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
-import static whelk.util.DocumentUtil.findKey
 import static whelk.util.DocumentUtil.traverse
 
 /*
@@ -176,33 +176,6 @@ class Normalizers {
     static DocumentNormalizer typeSingularity(JsonLd jsonLd) {
         return new Normalizer({ Document doc ->
             enforceTypeSingularity(doc.data, jsonLd)
-        })
-    }
-
-    static DocumentNormalizer contribution() {
-        return new Normalizer({ Document doc ->
-            def (record, thing) = doc.data[GRAPH_KEY]
-            findKey(thing, 'contribution') { value, _ ->
-                List<Map> contribution = asList(value)
-                def duplicates = contribution.countBy { asList(it.agent) }.findResults { it.value > 1 ? it.key : null }
-                duplicates.each { d ->
-                    def firstIdx = contribution.findIndexOf { asList(it.agent) == d }
-                    def first = contribution[firstIdx]
-                    def roles = []
-                    contribution.removeAll {
-                        if (asList(it.agent) == d) {
-                            roles += asList(it.role)
-                            return true
-                        }
-                        return false
-                    }
-                    if (roles) first['role'] = roles.unique()
-                    contribution.add(firstIdx, first)
-                }
-                if (!(value instanceof List)) {
-                    return new DocumentUtil.Replace(contribution)
-                }
-            }
         })
     }
 

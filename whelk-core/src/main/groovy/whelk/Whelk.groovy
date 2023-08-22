@@ -227,7 +227,6 @@ class Whelk {
                         Normalizers.typeSingularity(jsonld),
                         Normalizers.language(languageLinker),
                         Normalizers.identifiedBy(),
-                        Normalizers.contribution(),
                 ] + Normalizers.heuristicLinkers(this, languageLinker.getTypes())
         )
 
