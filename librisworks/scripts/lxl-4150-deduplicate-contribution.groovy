@@ -9,8 +9,11 @@ selectByIds(ids) { bib ->
     def duplicates = contribution.countBy { asList(it.agent) }.findResults { it.value > 1 ? it.key : null }
 
     duplicates.each { d ->
-        def firstIdx = contribution.findIndexOf { asList(it.agent) == d }
-        def first = contribution[firstIdx]
+        def primaryContributionIdx = contribution.findIndexOf { asList(it.agent) == d && it['@type'] == 'PrimaryContribution' }
+        def mergeIntoIdx = primaryContributionIdx > -1
+                ? primaryContributionIdx
+                : contribution.findIndexOf { asList(it.agent) == d }
+        def mergeInto = contribution[mergeIntoIdx]
         def roles = []
 
         contribution.removeAll {
@@ -21,9 +24,9 @@ selectByIds(ids) { bib ->
             return false
         }
 
-        if (roles) first['role'] = roles.unique()
+        if (roles) mergeInto['role'] = roles.unique()
 
-        contribution.add(firstIdx, first)
+        contribution.add(mergeIntoIdx, mergeInto)
     }
 
     if (duplicates) {
