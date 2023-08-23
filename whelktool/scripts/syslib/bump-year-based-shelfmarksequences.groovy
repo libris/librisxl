@@ -33,13 +33,16 @@ selectByIds(queryIds(["@type": ["ShelfMarkSequence"]]).collect()) { s ->
     if (thing.shelfMarkStatus != "ActiveShelfMark") {
         return
     }
-    
-    def label = thing.label 
+
+    def modified = false
+    def newItem = create(s.doc.clone().data)
+    def label = thing.label
+
     if (label instanceof String) {
         if (label.contains(oldFull)) {
-            replaceShelfMarkSequence(s, label.replace(oldFull, newFull), 'label')
+            modified = replaceShelfMarkSequence(s, newItem, label.replace(oldFull, newFull), 'label')
         } else if (label.contains(oldShort)) {
-            replaceShelfMarkSequence(s, label.replace(oldShort, newShort), 'label')
+            modified = replaceShelfMarkSequence(s, newItem, label.replace(oldShort, newShort), 'label')
         }
     }
 
@@ -58,28 +61,33 @@ selectByIds(queryIds(["@type": ["ShelfMarkSequence"]]).collect()) { s ->
 
     newQualifier = qualifier instanceof String ?  newQualifier.pop() : newQualifier
     if (newQualifier && newQualifier != qualifier) {
-        replaceShelfMarkSequence(s, newQualifier, 'qualifier')
+        modified = replaceShelfMarkSequence(s, newItem, newQualifier, 'qualifier')
+    }
+
+    if (modified) {
+        createNewAndUpdateOld(s, newItem)
     }
 }
 
-void replaceShelfMarkSequence(old, newLabel, String prop) {
-    def newItem = create(old.doc.clone().data)
-
+boolean replaceShelfMarkSequence(old, newItem, newLabel, String prop) {
     newItem.graph[1][prop] = newLabel
     newItem.graph[1]['nextShelfControlNumber'] = 1
 
+    report.println("${old.graph[1][prop]} -> $newLabel ($old.doc.shortId -> $newItem.doc.shortId)")
+    return true
+}
+
+void createNewAndUpdateOld(old, newItem) {
     selectFromIterable([newItem], { it.scheduleSave() })
     selectByIds([newItem.doc.shortId], {
         // ShelfMarkSequences are access controlled on meta.descriptionCreator.
         // But we cannot set that while creating, update it afterwards instead.
-        it.graph[0].descriptionCreator = old.graph[0].descriptionCreator 
+        it.graph[0].descriptionCreator = old.graph[0].descriptionCreator
         it.scheduleSave()
     })
 
     old.graph[1]['replacedBy'] = ['@id': newItem.doc.getThingIdentifiers().first()]
     old.graph[1]['shelfMarkStatus'] = "InactiveShelfMark"
-    
+
     old.scheduleSave()
-    
-    report.println("${old.graph[1][prop]} -> $newLabel ($old.doc.shortId -> $newItem.doc.shortId)")
 }
