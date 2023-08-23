@@ -168,6 +168,10 @@ class Doc {
         instanceData?.responsibilityStatement
     }
 
+    String physicalDetailsNote() {
+        instanceData?.physicalDetailsNote
+    }
+
     int numPages() {
         String extent = Util.getPathSafe(extent(), [0, 'label', 0]) ?: Util.getPathSafe(extent(), [0, 'label'], '')
         return numPages(extent)

@@ -43,6 +43,8 @@ class DisplayDoc {
             return chipString(doc.extent() ?: [])
         } else if (field == 'reproductionOf') {
             return reproductionOfLink()
+        } else if (field == 'physicalDetailsNote') {
+            return doc.physicalDetailsNote() ?: ''
         } else {
             return chipString(doc.workData.getOrDefault(field, []))
         }
