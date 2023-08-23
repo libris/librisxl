@@ -20,12 +20,12 @@ selectBySqlWhere(where) { instance ->
                     linkedWork.scheduleSave()
                 }
             }
-            return workChanged
+            return true
         } else { // An embedded work
             boolean workChanged = addIntendedAudienceToWork(intendedAudience, instance.graph[1].instanceOf)
             //if (workChanged)
             //    System.err.println("Saving instance with embedded work with intendedAudience: " + instance.graph[1].instanceOf.intendedAudience)
-            return workChanged
+            return true
         }
     }
 
