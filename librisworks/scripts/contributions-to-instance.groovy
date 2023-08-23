@@ -73,7 +73,8 @@ boolean isStillImage(Map work) {
 boolean isPictureBook(Map work) {
     def picBookTerms = [
             'https://id.kb.se/term/barngf/Bilderb%C3%B6cker',
-            'https://id.kb.se/term/barngf/Sm%C3%A5barnsbilderb%C3%B6cker'
+            'https://id.kb.se/term/barngf/Sm%C3%A5barnsbilderb%C3%B6cker',
+            'https://id.kb.se/term/barngf/Pekb%C3%B6cker'
     ].collect { [(ID_KEY): it] }
 
     return asList(work.genreForm).any { it in picBookTerms }
@@ -85,7 +86,8 @@ boolean isComics(Map work, Whelk whelk) {
             'https://id.kb.se/term/barngf/Tecknade%20serier',
             'https://id.kb.se/term/gmgpc/swe/Tecknade%20serier',
             'https://id.kb.se/marc/ComicOrGraphicNovel',
-            'https://id.kb.se/marc/ComicStrip'
+            'https://id.kb.se/marc/ComicStrip',
+            'https://id.kb.se/term/barngf/Bildromaner'
     ].collect { [(ID_KEY): it] }
 
     return asList(work.genreForm).any {
