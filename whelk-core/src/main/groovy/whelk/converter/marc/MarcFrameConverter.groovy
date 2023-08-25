@@ -214,7 +214,7 @@ class MarcConversion {
             procStep = new CopyOnRevertStep(props); break
             case 'InjectWhenMatchingOnRevert':
             procStep = new InjectWhenMatchingOnRevertStep(props); break
-            case 'NormalizeContentTypeStep':
+            case 'NormalizeContentType':
             procStep = new NormalizeContentTypeStep(props); break
             case 'ContributionByRole':
             procStep = new ContributionByRoleStep(props); break

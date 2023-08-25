@@ -1248,7 +1248,7 @@
             "instanceOf": {
               "contentType": [
                 {
-                  "@id": "https://id.kb.se/term/rda/Text",
+                  "@id": "https://id.kb.se/term/rda/Text"
                 },
                 {
                   "@id": "https://id.kb.se/term/rda/StillImage"
@@ -1274,7 +1274,7 @@
                   "contentType": [
                     {
                       "@id": "https://id.kb.se/term/rda/StillImage"
-                    },
+                    }
                   ]
                 },
                 {
@@ -1295,7 +1295,7 @@
             "instanceOf": {
               "contentType": [
                 {
-                  "@id": "https://id.kb.se/term/rda/Text",
+                  "@id": "https://id.kb.se/term/rda/Text"
                 },
                 {
                   "@id": "https://id.kb.se/term/rda/StillImage"
