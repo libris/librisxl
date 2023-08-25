@@ -1,12 +1,18 @@
 import whelk.Whelk
 
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue
+
 import static se.kb.libris.mergeworks.Util.Relator
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.TYPE_KEY
 
 report = getReportWriter('report.tsv')
+//mixed = getReportWriter('mixed.tsv')
+//keep = getReportWriter('keep.tsv')
+//moveFor = getReportWriter('move.tsv')
 
-def ids = new File(System.getProperty('clusters')).collect { it.split('\t').collect { it.trim() } }.flatten()
+def clusters = new File(System.getProperty('clusters')).collect { it.split('\t').collect { it.trim() } }
 
 def whelk = getWhelk()
 def instanceRolesByDomain = whelk.resourceCache.relators.findResults {
@@ -16,15 +22,65 @@ def instanceRolesByDomain = whelk.resourceCache.relators.findResults {
     }
 }
 def instanceRoles = instanceRolesByDomain + [Relator.ILLUSTRATOR, Relator.AUTHOR_OF_INTRO, Relator.AUTHOR_OF_AFTERWORD].collect { [(ID_KEY): it.iri] }
+def ill = [(ID_KEY): Relator.ILLUSTRATOR.iri]
 
-selectByIds(ids) { bib ->
+def keepIllustratorOnWorkForIds = [:]
+
+clusters.each { c ->
+    def keepOnWork = new ConcurrentHashMap<Map, ConcurrentLinkedQueue>()
+    def electronic = new ConcurrentHashMap<Map, ConcurrentLinkedQueue>()
+//    def move = new ConcurrentLinkedQueue()
+
+    selectByIds(c) { bib ->
+        def id = bib.doc.shortId
+        Map instance = bib.graph[1]
+        Map work = instance.instanceOf
+        work.contribution?.each { contrib ->
+            if (asList(contrib.role).contains(ill)) {
+                def agent = asList(contrib.agent).find()
+                if (!agent) return
+                if (isPrimaryContribution(contrib)
+                        || has9pu(contrib)
+                        || isPictureBook(work)
+                        || isComics(work, bib.whelk)
+                        || isStillImage(work)
+                ) {
+                    keepOnWork.computeIfAbsent(agent, f -> new ConcurrentLinkedQueue()).add(id)
+                } else if (instance[TYPE_KEY] == 'Electronic') {
+                    electronic.computeIfAbsent(agent, f -> new ConcurrentLinkedQueue()).add(id)
+                }
+//                else {
+//                    move.add(id)
+//                }
+            }
+        }
+    }
+
+    keepOnWork.each { agent, ids ->
+        keepIllustratorOnWorkForIds.computeIfAbsent(agent, f -> [] as Set).with { s ->
+            s.addAll(ids)
+            if (electronic[agent]) {
+                s.addAll(electronic[agent])
+            }
+        }
+    }
+
+//    if (keepOnWork && move) {
+//        mixed.println(c.join('\t'))
+//    } else if (keepOnWork) {
+//        keep.println(c.join('\t'))
+//    } else if (move) {
+//        moveFor.println(c.join('\t'))
+//    }
+}
+
+selectByIds(clusters.flatten()) { bib ->
+    def id = bib.doc.shortId
     Map instance = bib.graph[1]
     def work = instance.instanceOf
     def contribution = work?.contribution
 
     if (!contribution) return
-
-    def ill = [(ID_KEY): Relator.ILLUSTRATOR.iri]
 
     def modified = false
 
@@ -33,7 +89,9 @@ selectByIds(ids) { bib ->
 
         def toInstance = asList(c.role).intersect(instanceRoles)
         if (toInstance.contains(ill)) {
-            if (has9pu(c) || isPictureBook(work) || isComics(work, bib.whelk) || isStillImage(work)) {
+            def illustrator = asList(c.agent).find()
+            if (!illustrator) return
+            if (id in keepIllustratorOnWorkForIds[illustrator]) {
                 toInstance.remove(ill)
             }
         }
