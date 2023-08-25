@@ -1217,6 +1217,133 @@
       }
     ]
   },
+  {
+    "type": "NormalizeContentType",
+    "_spec": [
+      {
+        "name": "move contentType and remove empty hasPart",
+        "source": {
+          "mainEntity": {
+            "instanceOf": {
+              "contentType": [
+                {
+                  "@id": "https://id.kb.se/term/rda/Text"
+                }
+              ],
+              "hasPart": [
+                {
+                  "@type": "Work",
+                  "contentType": [
+                    {
+                      "@id": "https://id.kb.se/term/rda/StillImage"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "mainEntity": {
+            "instanceOf": {
+              "contentType": [
+                {
+                  "@id": "https://id.kb.se/term/rda/Text",
+                },
+                {
+                  "@id": "https://id.kb.se/term/rda/StillImage"
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "name": "move contentType",
+        "source": {
+          "mainEntity": {
+            "instanceOf": {
+              "contentType": [
+                {
+                  "@id": "https://id.kb.se/term/rda/Text"
+                }
+              ],
+              "hasPart": [
+                {
+                  "@type": "Work",
+                  "contentType": [
+                    {
+                      "@id": "https://id.kb.se/term/rda/StillImage"
+                    },
+                  ]
+                },
+                {
+                  "@type": "Work",
+                  "hasTitle": [
+                    {
+                      "@type": "Title",
+                      "mainTitle": "Titeln"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "mainEntity": {
+            "instanceOf": {
+              "contentType": [
+                {
+                  "@id": "https://id.kb.se/term/rda/Text",
+                },
+                {
+                  "@id": "https://id.kb.se/term/rda/StillImage"
+                }
+              ],
+              "hasPart": [
+                {
+                  "@type": "Work",
+                  "hasTitle": [
+                    {
+                      "@type": "Title",
+                      "mainTitle": "Titeln"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "name": "Don't move contentType when other properties present",
+        "source": {
+          "mainEntity": {
+            "instanceOf": {
+              "hasPart": [
+                {
+                  "@type": "Work",
+                  "contentType": [
+                    {
+                      "@id": "https://id.kb.se/term/rda/Text"
+                    }
+                  ],
+                  "hasTitle": [
+                    {
+                      "@type": "Title",
+                      "mainTitle": "Titeln"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "result": "source"
+      }
+    ]
+  },
   {"@include": "marcframe-bib-postproc-contribution.json"},
   {"@include": "marcframe-bib-postproc-romanization.json"},
   {"@include": "marcframe-bib-postproc-normalizeworktitles.json"}
