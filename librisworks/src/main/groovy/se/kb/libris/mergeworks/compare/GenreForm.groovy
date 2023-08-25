@@ -26,7 +26,7 @@ class GenreForm extends StuffSet {
                     || it['@id'] == 'https://id.kb.se/term/barngf/L%C3%A4ttl%C3%A4sta%20b%C3%B6cker'
                     || it['prefLabel'] == 'Lättläst'
         }
-        a.find(lattLast).asBoolean() == b.findResult(lattLast).asBoolean()
+        a.any(lattLast) == b.any(lattLast)
     }
 
     @Override
