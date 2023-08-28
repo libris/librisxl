@@ -83,7 +83,20 @@ class ElasticSearch {
     }
 
     void initSettings() {
-        Map indexSettings = getSettings()
+
+        /* If ES is down when we're starting up, it causes a chain-reaction where the servlet is restarted
+           over and over with a pg connection pool that cannot be GC'ed, which eventually leads to system
+           collapse. Better to hang here until ES is available.
+         */
+        Map indexSettings = null
+        while (indexSettings == null) {
+            try {
+                indexSettings = getSettings()
+            } catch (Exception e) {
+                log.warn("Could not get settings from ES, retying in 10 seconds (cannot proceed without them)..", e)
+                Thread.sleep(10000)
+            }
+        }
         
         def getInt = { String name, int defaultTo ->
             indexSettings.index && indexSettings.index[name] && ((String) indexSettings.index[name]).isNumber()
@@ -303,7 +316,16 @@ class ElasticSearch {
             }
         }
         catch(Exception e) {
-            log.warn("Record with id $identifier was not deleted from the Elasticsearch index: $e")
+            if (isBadRequest(e)) {
+                log.warn("Failed to delete $identifier from index: $e", e)
+            }
+            else if (isNotFound(e)) {
+                log.warn("Tried to delete $identifier from index, but it was not there: $e", e)
+            }
+            else {
+                log.warn("Failed to delete $identifier from index: $e, placing in retry queue.", e)
+                indexingRetryQueue.add({ -> remove(identifier) })
+            }
         }
     }
 

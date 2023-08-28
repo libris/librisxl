@@ -35,8 +35,12 @@ public class DocumentComparator {
     }
 
     private boolean isEqual(Object a, Object b, Object key) {
-        if (a == null || b == null || a.getClass() != b.getClass()) {
+        if (a == null || b == null) {
             return false;
+        }
+        else if (a.getClass() != b.getClass()) {
+            return (isSingleItemList(a) && isEqual(((List<?>) a).get(0), b, key)
+                    || (isSingleItemList(b) && isEqual(a, ((List<?>) b).get(0), key)));
         }
         else if (a instanceof Map) {
             return isEqual((Map<?, ?>) a, (Map<?, ?>) b);
@@ -51,6 +55,10 @@ public class DocumentComparator {
         else {
             return a.equals(b);
         }
+    }
+
+    private boolean isSingleItemList(Object o) {
+        return o instanceof List && ((List<?>) o).size() == 1;
     }
 
     private boolean isEqualOrdered(List<?> a, List<?> b) {

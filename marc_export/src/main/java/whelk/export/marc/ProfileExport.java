@@ -262,7 +262,7 @@ public class ProfileExport
             usingCollectionRules = "bib";
         }
         
-        if (collection.equals("auth") && !hasCardChanged(id, from, until)) {
+        if (usingCollectionRules.equals("auth") && !hasCardChanged(id, from, until)) {
             return false;
         }
 

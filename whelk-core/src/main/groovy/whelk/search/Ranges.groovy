@@ -1,9 +1,8 @@
 package whelk.search
 
-
+import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.InvalidQueryException
-import whelk.search.Ranges.Query
 import groovy.util.logging.Log4j2 as Log
 
 import java.time.ZoneId
@@ -154,14 +153,24 @@ class Ranges {
         
         @Override
         Map toQuery() {
-            def values = [value] + whelk.relations.followReverseBroader(value).collect()
+            def values = [value] + narrower(value)
             
             if (values.size() > whelk.elastic.maxTermsCount) {
-                log.warn("followReversebroader($value) gave more than ES maxTermsCount (${whelk.elastic.maxTermsCount}) results, truncating term list")
+                log.warn("narrower($value) gave more than ES maxTermsCount (${whelk.elastic.maxTermsCount}) results, truncating term list")
                 values = values.take(whelk.elastic.maxTermsCount)
             }
             
             ["terms" : [(fieldName) : values]]
+        }
+        
+        private Collection<String> narrower(String value) {
+            def ld = whelk.jsonld
+            def termKey = ld.toTermKey(value)
+            if (termKey in ld.vocabIndex) {
+                return ld.getSubClasses(termKey).findResults{ ld.toTermId(it) }
+            } else {
+                return whelk.relations.followReverseBroader(value).collect()
+            }
         }
     }
 }

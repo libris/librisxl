@@ -38,7 +38,7 @@ import static whelk.util.Jackson.mapper
 class WhelkTool {
     static final int DEFAULT_BATCH_SIZE = 500
     static final int DEFAULT_FETCH_SIZE = 100
-    
+
     Whelk whelk
 
     private GroovyScriptEngineImpl engine
@@ -86,7 +86,7 @@ class WhelkTool {
     private ScheduledExecutorService timedLogger = MoreExecutors.getExitingScheduledExecutorService(
             Executors.newScheduledThreadPool(1))
 
-    WhelkTool(String scriptPath, File reportsDir=null, int statsNumIds) {
+    WhelkTool(String scriptPath, File reportsDir = null, int statsNumIds) {
         try {
             whelk = Whelk.createLoadedSearchWhelk()
         } catch (NullPointerException e) {
@@ -154,7 +154,7 @@ class WhelkTool {
     }
 
     void selectByIds(Collection<String> ids, Closure process,
-            int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false) {
+                     int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false) {
         if (!silent) {
             log "Select by ${ids.size()} IDs"
         }
@@ -199,8 +199,14 @@ class WhelkTool {
                     uriIdMap[rs.getString("iri")] = rs.getString("id")
                 }
             } finally {
-                try { rs?.close() } catch (SQLException e) {}
-                try { stmt?.close() } catch (SQLException e) {}
+                try {
+                    rs?.close()
+                } catch (SQLException e) {
+                }
+                try {
+                    stmt?.close()
+                } catch (SQLException e) {
+                }
             }
         }
         return uriIdMap
@@ -227,15 +233,15 @@ class WhelkTool {
     }
 
     void selectBySqlWhere(String whereClause,
-            int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false,
-            Closure process) {
+                          int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false,
+                          Closure process) {
         if (!silent)
             log "Select by SQL"
         doSelectBySqlWhere(whereClause, process, batchSize)
     }
 
     private void doSelectBySqlWhere(String whereClause, Closure process,
-            int batchSize = DEFAULT_BATCH_SIZE) {
+                                    int batchSize = DEFAULT_BATCH_SIZE) {
         def query = """
             SELECT id, data, created, modified, deleted
             FROM lddb
@@ -259,7 +265,7 @@ class WhelkTool {
     }
 
     void selectByCollection(String collection, Closure process,
-            int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false) {
+                            int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false) {
         if (!silent)
             log "Select by collection: ${collection}"
         select(whelk.storage.loadAll(collection), process, batchSize)
@@ -275,7 +281,7 @@ class WhelkTool {
     }
 
     private void select(Iterable<Document> selection, Closure process,
-            int batchSize = DEFAULT_BATCH_SIZE, boolean newItems = false) {
+                        int batchSize = DEFAULT_BATCH_SIZE, boolean newItems = false) {
         if (errorDetected) {
             log "Error detected, refusing further processing."
             return
@@ -288,15 +294,15 @@ class WhelkTool {
         if (executorService) {
             Thread.setDefaultUncaughtExceptionHandler {
                 Thread thread, Throwable err ->
-                log "Uncaught error: $err"
+                    log "Uncaught error: $err"
 
-                executorService.shutdownNow()
+                    executorService.shutdownNow()
 
-                errorLog.println "Thread: $thread"
-                errorLog.println "Error:"
-                err.printStackTrace errorLog
-                errorLog.println "-" * 20
-                errorLog.flush()
+                    errorLog.println "Thread: $thread"
+                    errorLog.println "Error:"
+                    err.printStackTrace errorLog
+                    errorLog.println "-" * 20
+                    errorLog.flush()
             }
         }
 
@@ -350,7 +356,7 @@ class WhelkTool {
     private def createExecutorService() {
         int poolSize = numThreads > 1 ? numThreads : defaultNumThreads()
         def linkedBlockingDeque = new LinkedBlockingDeque<Runnable>((int) (poolSize * 1.5))
-        
+
         def executorService = new ThreadPoolExecutor(poolSize, poolSize,
                 1, TimeUnit.DAYS,
                 linkedBlockingDeque, new ThreadPoolExecutor.CallerRunsPolicy())
@@ -366,7 +372,7 @@ class WhelkTool {
 
         return executorService
     }
-    
+
     private static int defaultNumThreads() {
         Runtime.getRuntime().availableProcessors() * 4
     }
@@ -431,15 +437,15 @@ class WhelkTool {
      */
     private boolean doProcess(Closure process, DocumentItem item, def counter) {
         String inJsonStr = stepWise
-            ? jsonWriter.writeValueAsString(item.doc.data)
-            : null
+                ? jsonWriter.writeValueAsString(item.doc.data)
+                : null
         counter.countProcessed()
         statistics.withContext(item.doc.shortId) {
             process(item)
         }
         if (item.needsSaving) {
             if (item.loud) {
-                assert allowLoud : "Loud changes need to be explicitly allowed"
+                assert allowLoud: "Loud changes need to be explicitly allowed"
             }
             if (item.restoreToTime != null) {
                 if (!doRevertToTime(item))
@@ -502,7 +508,7 @@ class WhelkTool {
 
         // If restoreTime is older than any stored version (we can't go back that far)
         ZonedDateTime oldestStoredTime = getLatestModification(versions.get(0))
-        if ( restoreTime.isBefore( oldestStoredTime ) ) {
+        if (restoreTime.isBefore(oldestStoredTime)) {
             errorLog.println("Cannot restore ${item.doc.shortId} to ${restoreTime}, oldest stored version from: ${oldestStoredTime}")
             return false
         }
@@ -536,9 +542,9 @@ class WhelkTool {
     private void doModification(DocumentItem item) {
         Document doc = item.doc
         doc.setGenerationDate(new Date())
-        doc.setGenerationProcess(scriptJobUri)
+        doc.setGenerationProcess(item.generationProcess ?: scriptJobUri)
         if (!dryRun) {
-            whelk.storeAtomicUpdate(doc, !item.loud, true, changedIn, scriptJobUri, item.preUpdateChecksum)
+            whelk.storeAtomicUpdate(doc, !item.loud, true, changedIn, item.changedBy ?: scriptJobUri, item.preUpdateChecksum)
         }
         modifiedLog.println(doc.shortId)
     }
@@ -547,10 +553,10 @@ class WhelkTool {
         Document doc = item.doc
         doc.setControlNumber(doc.getShortId())
         doc.setGenerationDate(new Date())
-        doc.setGenerationProcess(scriptJobUri)
+        doc.setGenerationProcess(item.generationProcess ?: scriptJobUri)
         if (!dryRun) {
             var collection = LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld())
-            if (!whelk.createDocument(doc, changedIn, scriptJobUri, collection, false))
+            if (!whelk.createDocument(doc, changedIn, item.changedBy ?: scriptJobUri, collection, false))
                 throw new WhelkException("Failed to save a new document. See general whelk log for details.")
         }
         createdLog.println(doc.shortId)
@@ -627,10 +633,12 @@ class WhelkTool {
     }
 
     private Bindings createMainBindings() {
+        // Update Whelktool.gdsl when adding new bindings
         Bindings bindings = createDefaultBindings()
         bindings.put("scriptDir", scriptFile.parent)
         bindings.put("baseUri", Document.BASE_URI)
         bindings.put("getReportWriter", this.&getReportWriter)
+        bindings.put("reportsDir", reportsDir)
         bindings.put("script", this.&compileScript)
         bindings.put("selectByCollection", this.&selectByCollection)
         bindings.put("selectByIds", this.&selectByIds)
@@ -642,6 +650,7 @@ class WhelkTool {
         bindings.put("incrementStats", statistics.&increment)
         bindings.put("asList", JsonLd::asList)
         bindings.put("getAtPath", DocumentUtil::getAtPath)
+        bindings.put("getWhelk", this.&getWhelk)
         return bindings
     }
 
@@ -683,7 +692,7 @@ class WhelkTool {
     }
 
     private PrintWriter getReportWriter(String reportName) {
-        reports.computeIfAbsent(reportName, { new PrintWriter(new File(reportsDir, it)) } )
+        reports.computeIfAbsent(reportName, { new PrintWriter(new File(reportsDir, it)) })
     }
 
     private void log() {
@@ -702,17 +711,17 @@ class WhelkTool {
     }
 
     static void main(String[] args) {
-        def cli = new CliBuilder(usage:'whelktool [options] <SCRIPT>')
+        def cli = new CliBuilder(usage: 'whelktool [options] <SCRIPT>')
         cli.h(longOpt: 'help', 'Print this help message and exit.')
-        cli.r(longOpt:'report', args:1, argName:'REPORT-DIR', 'Directory where reports are written (defaults to "reports").')
-        cli.I(longOpt:'skip-index', 'Do not index any changes, only write to storage.')
-        cli.d(longOpt:'dry-run', 'Do not save any modifications.')
-        cli.T(longOpt:'no-threads', 'Do not use threads to parallellize batch processing.')
-        cli.t(longOpt:'num-threads', args:1, argName:'N', "Override default number of threads (${defaultNumThreads()}).")
-        cli.s(longOpt:'step', 'Change one document at a time, prompting to continue.')
-        cli.l(longOpt:'limit', args:1, argName:'LIMIT', 'Amount of documents to process.')
-        cli.a(longOpt:'allow-loud', 'Allow scripts to do loud modifications.')
-        cli.n(longOpt:'stats-num-ids', args:1, 'Number of ids to print per entry in STATISTICS.txt.')
+        cli.r(longOpt: 'report', args: 1, argName: 'REPORT-DIR', 'Directory where reports are written (defaults to "reports").')
+        cli.I(longOpt: 'skip-index', 'Do not index any changes, only write to storage.')
+        cli.d(longOpt: 'dry-run', 'Do not save any modifications.')
+        cli.T(longOpt: 'no-threads', 'Do not use threads to parallellize batch processing.')
+        cli.t(longOpt: 'num-threads', args: 1, argName: 'N', "Override default number of threads (${defaultNumThreads()}).")
+        cli.s(longOpt: 'step', 'Change one document at a time, prompting to continue.')
+        cli.l(longOpt: 'limit', args: 1, argName: 'LIMIT', 'Amount of documents to process.')
+        cli.a(longOpt: 'allow-loud', 'Allow scripts to do loud modifications.')
+        cli.n(longOpt: 'stats-num-ids', args: 1, 'Number of ids to print per entry in STATISTICS.txt.')
 
         def options = cli.parse(args)
         if (options.h) {
@@ -741,6 +750,8 @@ class DocumentItem {
     int number
     Document doc
     String preUpdateChecksum
+    String changedBy
+    String generationProcess
     private Whelk whelk
     private boolean needsSaving = false
     private boolean doDelete = false
@@ -753,19 +764,19 @@ class DocumentItem {
         return doc.data['@graph']
     }
 
-    void scheduleSave(Map params=[:]) {
+    void scheduleSave(Map params = [:]) {
         needsSaving = true
         set(params)
         assert (restoreToTime == null)
     }
 
-    void scheduleDelete(Map params=[:]) {
+    void scheduleDelete(Map params = [:]) {
         needsSaving = true
         doDelete = true
         set(params)
     }
 
-    void scheduleRevertTo(Map params=[:]) {
+    void scheduleRevertTo(Map params = [:]) {
         needsSaving = true
         set(params)
         assert (restoreToTime != null)
@@ -777,6 +788,12 @@ class DocumentItem {
         }
         if (params.containsKey('time')) {
             this.restoreToTime = params.time
+        }
+        if (params.containsKey('changedBy')) {
+            this.changedBy = params.changedBy
+        }
+        if (params.containsKey('generationProcess')) {
+            this.generationProcess = params.generationProcess
         }
         this.onError = params.onError
     }

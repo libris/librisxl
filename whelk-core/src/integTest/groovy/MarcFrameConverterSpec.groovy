@@ -16,7 +16,7 @@ class MarcFrameConverterSpec extends Specification {
         } catch (Exception e) {
             System.err.println("Unable to instantiate whelk: $e")
         }
-        converter = new MarcFrameConverter(null, whelk?.jsonld, whelk?.languageResources) {
+        converter = new MarcFrameConverter(null, whelk?.jsonld, whelk?.resourceCache) {
             def config
             void initialize(Map config) {
                 super.initialize(config)

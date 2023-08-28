@@ -52,6 +52,14 @@ selectByCollection('bib') {
         return false
     }
 
+    if (work.genreForm?.isEmpty()) {
+        work.remove('genreForm')
+    }
+
+    if (work.subject?.isEmpty()) {
+        work.remove('subject')
+    }
+
     if (modified) {
         it.scheduleSave()
     }
