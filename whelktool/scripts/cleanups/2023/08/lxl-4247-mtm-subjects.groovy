@@ -52,5 +52,5 @@ selectByIds(insert.keySet() + delete.keySet()) { doc ->
         thing.instanceOf.subject = it
     }
     
-    doc.scheduleSave()
+    doc.scheduleSave(loud: true)
 }
