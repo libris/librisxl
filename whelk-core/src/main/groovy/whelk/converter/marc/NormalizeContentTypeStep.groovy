@@ -12,7 +12,7 @@ class NormalizeContentTypeStep extends MarcFramePostProcStepBase {
         def work = thing.instanceOf
         def moved = work?.hasPart?.removeAll { p ->
             if (p.keySet() == shape) {
-                work[contentType] = ld.asList(work[contentType]) + p[contentType]
+                work[contentType] = (ld.asList(work[contentType]) + p[contentType]).unique()
                 return true
             }
         }
