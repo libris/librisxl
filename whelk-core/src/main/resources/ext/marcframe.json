@@ -11925,10 +11925,11 @@
       ]
     },
     "521": {
-      "aboutEntity": "?thing",
+      "aboutEntity": "?work",
       "embedded": true,
       "addLink": "intendedAudience",
       "resourceType": "IntendedAudience",
+      "fallbackEntity": "?thing",
       "i1": {
         "marcDefault": " ",
         "property": "marc:audienceType",
@@ -11948,8 +11949,8 @@
       "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
-          "name": "With blank indicator 1",
-          "source": {"521": {"ind1": " ", "ind2": " ", "subfields": [
+          "name": "Instance With blank indicator 1",
+          "normalized": {"521": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "foo bar"}
           ]}},
           "result": {"mainEntity": {
@@ -11965,21 +11966,38 @@
           }}
         },
         {
+          "name": "Work With blank indicator 1",
+          "source": {"521": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "foo bar"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "intendedAudience": [
+                {
+                  "@type": "IntendedAudience",
+                  "label": "foo bar"
+                }
+              ]
+            }
+          }}
+        },
+        {
           "name": "With indicator 1 set to 0",
           "source": {"521": {"ind1": "0", "ind2": " ", "subfields": [
             {"a": "Baz"}
           ]}},
           "result": {"mainEntity": {
             "instanceOf": {
-              "@type": "Text"
-            },
-            "intendedAudience": [
-              {
-                "@type": "IntendedAudience",
-                "label": "Baz",
-                "marc:audienceType": "marc:ReadingGradeLevel"
-              }
-            ]
+              "@type": "Text",
+              "intendedAudience": [
+                {
+                  "@type": "IntendedAudience",
+                  "label": "Baz",
+                  "marc:audienceType": "marc:ReadingGradeLevel"
+                }
+              ]
+            }
           }}
         }
       ]
