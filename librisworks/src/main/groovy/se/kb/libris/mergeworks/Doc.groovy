@@ -212,7 +212,7 @@ class Doc {
             it.hasPart?.size() > 1
                     || it.hasPart?.any { p -> asList(p.partName).size() > 1
                     || asList(p.partNumber).size() > 1 }
-                    || it.mainTitle =~ /(?<!\/.+);/
+                    || [it.mainTitle, it.titleRemainder, it.subtitle].findAll().toString() =~ /(?<!\/.+);/
         }
     }
 
