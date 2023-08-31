@@ -145,7 +145,8 @@ boolean isComics(Map work, Whelk whelk) {
             'https://id.kb.se/term/gmgpc/swe/Tecknade%20serier',
             'https://id.kb.se/marc/ComicOrGraphicNovel',
             'https://id.kb.se/marc/ComicStrip',
-            'https://id.kb.se/term/barngf/Bildromaner'
+            'https://id.kb.se/term/barngf/Bildromaner',
+            'https://id.kb.se/term/barngf/Manga'
     ].collect { [(ID_KEY): it] }
 
     return asList(work.genreForm).any {
