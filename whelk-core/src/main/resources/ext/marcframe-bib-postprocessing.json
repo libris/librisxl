@@ -1217,6 +1217,7 @@
       }
     ]
   },
+  {"@include": "marcframe-bib-postproc-normalizecontenttype.json"},
   {"@include": "marcframe-bib-postproc-contribution.json"},
   {"@include": "marcframe-bib-postproc-romanization.json"},
   {"@include": "marcframe-bib-postproc-normalizeworktitles.json"}
