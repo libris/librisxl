@@ -8,9 +8,6 @@ import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.TYPE_KEY
 
 report = getReportWriter('report.tsv')
-//mixed = getReportWriter('mixed.tsv')
-//keep = getReportWriter('keep.tsv')
-//moveFor = getReportWriter('move.tsv')
 
 def clusters = new File(System.getProperty('clusters')).collect { it.split('\t').collect { it.trim() } }
 
@@ -28,8 +25,7 @@ def keepIllustratorOnWorkForIds = [:]
 
 clusters.each { c ->
     def keepOnWork = new ConcurrentHashMap<Map, ConcurrentLinkedQueue>()
-    def electronic = new ConcurrentHashMap<Map, ConcurrentLinkedQueue>()
-//    def move = new ConcurrentLinkedQueue()
+    def noIndicationOfKeeping = new ConcurrentHashMap<Map, ConcurrentLinkedQueue>()
 
     selectByIds(c) { bib ->
         def id = bib.doc.shortId
@@ -40,18 +36,13 @@ clusters.each { c ->
                 def agent = asList(contrib.agent).find()
                 if (!agent) return
                 if (isPrimaryContribution(contrib)
-                        || has9pu(contrib)
                         || isPictureBook(work)
                         || isComics(work, bib.whelk)
-                        || isStillImage(work)
                 ) {
                     keepOnWork.computeIfAbsent(agent, f -> new ConcurrentLinkedQueue()).add(id)
-                } else if (instance[TYPE_KEY] == 'Electronic') {
-                    electronic.computeIfAbsent(agent, f -> new ConcurrentLinkedQueue()).add(id)
+                } else {
+                    noIndicationOfKeeping.computeIfAbsent(agent, f -> new ConcurrentLinkedQueue()).add(id)
                 }
-//                else {
-//                    move.add(id)
-//                }
             }
         }
     }
@@ -59,19 +50,11 @@ clusters.each { c ->
     keepOnWork.each { agent, ids ->
         keepIllustratorOnWorkForIds.computeIfAbsent(agent, f -> [] as Set).with { s ->
             s.addAll(ids)
-            if (electronic[agent]) {
-                s.addAll(electronic[agent])
+            if (noIndicationOfKeeping[agent]) {
+                s.addAll(noIndicationOfKeeping[agent])
             }
         }
     }
-
-//    if (keepOnWork && move) {
-//        mixed.println(c.join('\t'))
-//    } else if (keepOnWork) {
-//        keep.println(c.join('\t'))
-//    } else if (move) {
-//        moveFor.println(c.join('\t'))
-//    }
 }
 
 selectByIds(clusters.flatten()) { bib ->
@@ -120,13 +103,13 @@ boolean isPrimaryContribution(Map contribution) {
     contribution[TYPE_KEY] == 'PrimaryContribution'
 }
 
-boolean has9pu(Map contribution) {
-    asList(contribution.role).contains([(ID_KEY): Relator.PRIMARY_RIGHTS_HOLDER.iri])
-}
-
-boolean isStillImage(Map work) {
-    asList(work.contentType).contains([(ID_KEY): 'https://id.kb.se/term/rda/StillImage'])
-}
+//boolean has9pu(Map contribution) {
+//    asList(contribution.role).contains([(ID_KEY): Relator.PRIMARY_RIGHTS_HOLDER.iri])
+//}
+//
+//boolean isStillImage(Map work) {
+//    asList(work.contentType).contains([(ID_KEY): 'https://id.kb.se/term/rda/StillImage'])
+//}
 
 boolean isPictureBook(Map work) {
     def picBookTerms = [
@@ -135,7 +118,7 @@ boolean isPictureBook(Map work) {
             'https://id.kb.se/term/barngf/Pekb%C3%B6cker'
     ].collect { [(ID_KEY): it] }
 
-    return asList(work.genreForm).any { it in picBookTerms }
+    return asList(work.genreForm).any { it in picBookTerms } || asList(work.classification).any { it.code == 'Hcf(yb)' }
 }
 
 boolean isComics(Map work, Whelk whelk) {
