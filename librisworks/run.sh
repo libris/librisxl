@@ -36,8 +36,9 @@ NO_ANONYMOUS_TRANSLATIONS=$CLUSTERS_DIR/5-no-anonymous-translations.tsv
 
 LANGUAGE_IN_TITLE=$NORMALIZATIONS_DIR/1-titles-with-language
 ELIB_DESIGNERS=$NORMALIZATIONS_DIR/2-elib-cover-designer
-CONTRIBUTION=$NORMALIZATIONS_DIR/3-contribution
-ROLES_TO_INSTANCE=$NORMALIZATIONS_DIR/4-roles-to-instance
+DEDUPLICATE_CONTRIBUTIONS=$NORMALIZATIONS_DIR/3-deduplicate-contributions
+ADD_MISSING_CONTRIBUTION_DATA=$NORMALIZATIONS_DIR/4-add-missing-contribution-data
+ROLES_TO_INSTANCE=$NORMALIZATIONS_DIR/5-roles-to-instance
 
 # Clustering step 1 TODO: run only on recently updated records after first run
 echo "Finding new clusters..."
@@ -96,10 +97,16 @@ time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -jar $JAR_FILE \
 echo "$(count_lines $ELIB_DESIGNERS/MODIFIED.txt) records affected, report in $ELIB_DESIGNERS"
 
 echo
-echo "Normalizing contribution..."
+echo "Merging contribution objects with same agent..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION -jar $JAR_FILE \
-  $ARGS --report $CONTRIBUTION $SCRIPTS_DIR/normalize-contribution.groovy 2>/dev/null
-echo "$(count_lines $CONTRIBUTION/MODIFIED.txt) records affected, report in $CONTRIBUTION"
+  $ARGS --report $DEDUPLICATE_CONTRIBUTIONS $SCRIPTS_DIR/lxl-4150-deduplicate-contribution.groovy 2>/dev/null
+echo "$(count_lines $DEDUPLICATE_CONTRIBUTIONS/MODIFIED.txt) records affected, report in $DEDUPLICATE_CONTRIBUTIONS"
+
+echo
+echo "Adding missing contribution data..."
+time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION -jar $JAR_FILE \
+  $ARGS --report $ADD_MISSING_CONTRIBUTION_DATA $SCRIPTS_DIR/add-missing-contribution-data.groovy 2>/dev/null
+echo "$(count_lines $ADD_MISSING_CONTRIBUTION_DATA/MODIFIED.txt) records affected, report in $ADD_MISSING_CONTRIBUTION_DATA"
 
 echo
 echo "Moving roles to instance..."
