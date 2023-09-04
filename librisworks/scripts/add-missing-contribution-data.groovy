@@ -399,7 +399,7 @@ boolean tryAddRole(Map contribution, String id) {
         def inClusterWithRole = ids.intersect(idToCluster[id])
         return inClusterWithRole
                 && !noRole([r])
-                && (inClusterWithRole.size() >= inCluster.size()
+                && (inClusterWithRole.size() >= inCluster.size() / 2
                 || noRole(currentRoles)
                 || r == [(ID_KEY): Relator.PRIMARY_RIGHTS_HOLDER.iri]
                 || (r in adapterEditor && currentRoles.intersect(adapterEditor)))
