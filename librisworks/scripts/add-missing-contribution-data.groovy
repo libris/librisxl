@@ -507,7 +507,7 @@ static Map<String, List<Relator>> parseSwedishFictionContribution(String contrib
     def namePattern = ~/\p{Lu}:?\p{Ll}+('\p{Ll})?(,? [Jj](r|unior))?/
     def betweenNamesPattern = ~/-| |\. ?| ([Dd]e(l| la)?|von|van( de[nr])?|v\.|le|af|du|dos) | [ODdLl]'/
     def fullNamePattern = ~/(($initialPattern|$namePattern)($betweenNamesPattern)?)*$namePattern/
-    def conjPattern = ~/ (och|&|and) /
+    def conjPattern = ~/(,| och| &| and) /
     def roleAfterNamePattern = ~/( ?\(($rolePattern$conjPattern)?$rolePattern\))/
     def fullContributionPattern = ~/(($rolePattern($conjPattern|\/))*$rolePattern$followsRolePattern)?$fullNamePattern($conjPattern$fullNamePattern)*$roleAfterNamePattern?/
 
