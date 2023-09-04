@@ -37,6 +37,9 @@ titleMovedToTranslationOf = getReportWriter("title-moved-to-translationOf.tsv")
 originalWorkFoundInCluster = getReportWriter("original-work-found-in-cluster.tsv")
 originalWorkFoundInCluster.println(['id', 'added translationOf', 'translationOf occurs in (examples)'].join('\t'))
 
+illVsTrl = getReportWriter("ill-vs-trl.tsv")
+illVsTrl.println(['id', 'removed/replaced role', 'agent name', 'resp statement'].join('\t'))
+
 def clusters = new File(System.getProperty('clusters')).collect { it.split('\t').collect { it.trim() } }
 
 idToCluster = initIdToCluster(clusters)
@@ -233,6 +236,11 @@ boolean tryAddRolesFromRespStatement(Map contribution, Map contributionsInRespSt
         relator == Relator.IMPLICIT_AUTHOR && !isPrimaryContribution
                 ? null
                 : [(ID_KEY): relator.iri]
+    }
+    def incorrectIllOrTrl = findIncorrectIllVsTrl(currentRoles, rolesOfInterest)
+    if (incorrectIllOrTrl) {
+        currentRoles.remove([(ID_KEY): incorrectIllOrTrl])
+        illVsTrl.println([id, roleShort(incorrectIllOrTrl), name, respStatement].join('\t'))
     }
     def newRoles = rolesOfInterest - currentRoles
     if (newRoles) {
@@ -601,4 +609,15 @@ static List<Character> initials(List nameParts) {
 
 static List<String> nameParts(String s) {
     s.split(/\s+|-/) as List
+}
+
+static String findIncorrectIllVsTrl(List currentRoles, List rolesInRespStatement) {
+    if ((currentRoles + rolesInRespStatement)[ID_KEY].containsAll([Relator.ILLUSTRATOR.iri, Relator.TRANSLATOR.iri])) {
+        if (!rolesInRespStatement[ID_KEY].contains(Relator.ILLUSTRATOR.iri)) {
+            return Relator.ILLUSTRATOR.iri
+        }
+        if (!rolesInRespStatement[ID_KEY].contains(Relator.TRANSLATOR.iri)) {
+            return Relator.TRANSLATOR.iri
+        }
+    }
 }
