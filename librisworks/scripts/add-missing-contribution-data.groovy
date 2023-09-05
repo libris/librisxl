@@ -424,6 +424,12 @@ boolean tryAddRole(Map contribution, String id) {
                 || (r in adapterEditor && currentRoles.intersect(adapterEditor)))
     }.collect { it.key }
 
+    def illAndTrl = [[(ID_KEY): Relator.TRANSLATOR.iri], [(ID_KEY): Relator.ILLUSTRATOR.iri]]
+
+    if ((currentRoles + rolesInCluster).containsAll(illAndTrl)) {
+        rolesInCluster -= illAndTrl
+    }
+
     def newRoles = rolesInCluster - currentRoles
     if (newRoles) {
         contribution['role'] = noRole(currentRoles) ? newRoles : currentRoles + newRoles
