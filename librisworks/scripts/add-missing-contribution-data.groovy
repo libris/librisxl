@@ -138,6 +138,20 @@ selectByIds(clusters.flatten()) { bib ->
     // if still no match, add constructed local Contribution with agent + roles extracted from responsibilityStatement
     modified |= addRemainingContributionsFromRespStatement(contribution, contributionsInRespStatement, normalizedNameToName, respStatement, id)
 
+    if (modified) {
+        bib.scheduleSave()
+    }
+}
+
+selectByIds(clusters.flatten()) { bib ->
+    def id = bib.doc.shortId
+    def work = bib.graph[1].instanceOf
+    def contribution = work?.contribution
+
+    if (!contribution) return
+
+    def modified = false
+
     contribution.each { Map c ->
         // add roles from contributions in same cluster with matching agent
         modified |= tryAddRole(c, id)
