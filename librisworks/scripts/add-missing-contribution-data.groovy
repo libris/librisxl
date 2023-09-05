@@ -634,7 +634,7 @@ static List<Character> initials(List nameParts) {
 }
 
 static List<String> nameParts(String s) {
-    s.split(/\s+|-/) as List
+    s.split(' ') as List
 }
 
 static String findIncorrectIllVsTrl(List currentRoles, List rolesInRespStatement) {
