@@ -237,10 +237,15 @@ boolean tryAddRolesFromRespStatement(Map contribution, Map contributionsInRespSt
                 ? null
                 : [(ID_KEY): relator.iri]
     }
+
+    def modified = false
+
     def incorrectIllOrTrl = findIncorrectIllVsTrl(currentRoles, rolesOfInterest)
     if (incorrectIllOrTrl) {
         currentRoles.remove([(ID_KEY): incorrectIllOrTrl])
+        contribution['role'] = currentRoles
         illVsTrl.println([id, roleShort(incorrectIllOrTrl), name, respStatement].join('\t'))
+        modified = true
     }
     def newRoles = rolesOfInterest - currentRoles
     if (newRoles) {
@@ -254,10 +259,10 @@ boolean tryAddRolesFromRespStatement(Map contribution, Map contributionsInRespSt
         newRoles.each { r ->
             roleToIds.computeIfAbsent(r, f -> new ConcurrentHashMap().newKeySet()).add(id)
         }
-        return true
+        modified = true
     }
 
-    return false
+    return modified
 }
 
 boolean tryAddLinkedAgentContributionsFromRespStatement(List<Map> contribution, Map contributionsInRespStatement, String respStatement, String id) {
