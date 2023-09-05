@@ -258,6 +258,7 @@ boolean tryAddRolesFromRespStatement(Map contribution, Map contributionsInRespSt
     if (incorrectIllOrTrl) {
         currentRoles.remove([(ID_KEY): incorrectIllOrTrl])
         contribution['role'] = currentRoles
+        roleToIds[[(ID_KEY): incorrectIllOrTrl]].remove(id)
         illVsTrl.println([id, roleShort(incorrectIllOrTrl), name, respStatement].join('\t'))
         modified = true
     }
