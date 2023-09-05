@@ -115,7 +115,8 @@ boolean isPictureBook(Map work) {
     def picBookTerms = [
             'https://id.kb.se/term/barngf/Bilderb%C3%B6cker',
             'https://id.kb.se/term/barngf/Sm%C3%A5barnsbilderb%C3%B6cker',
-            'https://id.kb.se/term/barngf/Pekb%C3%B6cker'
+            'https://id.kb.se/term/barngf/Pekb%C3%B6cker',
+            'https://id.kb.se/term/barngf/Kapitelb%C3%B6cker'
     ].collect { [(ID_KEY): it] }
 
     return asList(work.genreForm).any { it in picBookTerms } || asList(work.classification).any { it.code == 'Hcf(yb)' }
