@@ -59,7 +59,7 @@ selectByIds(clusters.flatten()) { bib ->
         asList(c.agent).each { Map agent ->
             def agentStr = toString(agent)
             def loadedAgent = loadIfLink(agent)
-            if (agent.containsKey('@id')) {
+            if (agent.containsKey(ID_KEY)) {
                 agentToLifeSpan.computeIfAbsent(agentStr, f -> lifeSpan(loadedAgent))
             }
             ([loadedAgent] + asList(loadedAgent.hasVariant)).each { a ->
@@ -130,7 +130,7 @@ selectByIds(clusters.flatten()) { bib ->
     def existingNames = contribution.findResults { agentToNames[toString(asList(it.agent).find())] }.flatten()
     contributionsInRespStatement.removeAll { String name, List<Relator> roles ->
         existingNames.any { similarName(it, name) }
-                || roles.collect { [(ID_KEY): it.iri] }.intersect(contribution.collect { it.role }.flatten())
+                || roles.collect { toIdMap(it.iri) }.intersect(contribution.collect { it.role }.flatten())
     }
 
     // match remaining against local agents in same cluster
@@ -249,16 +249,16 @@ boolean tryAddRolesFromRespStatement(Map contribution, Map contributionsInRespSt
     def rolesOfInterest = rolesInRespStatement.findResults { Relator relator ->
         relator == Relator.IMPLICIT_AUTHOR && !isPrimaryContribution
                 ? null
-                : [(ID_KEY): relator.iri]
+                : toIdMap(relator.iri)
     }
 
     def modified = false
 
     def incorrectIllOrTrl = findIncorrectIllVsTrl(currentRoles, rolesOfInterest)
     if (incorrectIllOrTrl) {
-        currentRoles.remove([(ID_KEY): incorrectIllOrTrl])
+        currentRoles.remove(toIdMap(incorrectIllOrTrl))
         contribution['role'] = currentRoles
-        roleToIds[[(ID_KEY): incorrectIllOrTrl]].remove(id)
+        roleToIds[toIdMap(incorrectIllOrTrl)].remove(id)
         illVsTrl.println([id, roleShort(incorrectIllOrTrl), name, respStatement].join('\t'))
         modified = true
     }
@@ -298,10 +298,10 @@ boolean tryAddLinkedAgentContributionsFromRespStatement(List<Map> contribution, 
                 def newContribution =
                         [
                                 '@type': 'Contribution',
-                                'agent': [(ID_KEY): agentIri]
+                                'agent': toIdMap(agentIri)
                         ]
 
-                roles = roles.collect { r -> [(ID_KEY): r.iri] }
+                roles = roles.collect { r -> toIdMap(r.iri) }
 
                 if (roles) {
                     newContribution['role'] = roles
@@ -347,7 +347,7 @@ boolean tryAddLocalAgentContributionsFromRespStatement(List<Map> contribution, M
                                 'agent': toMap(localAgent)
                         ]
 
-                roles = roles.collect { r -> [(ID_KEY): r.iri] }
+                roles = roles.collect { r -> toIdMap(r.iri) }
 
                 if (roles) {
                     newContribution['role'] = roles
@@ -376,7 +376,7 @@ boolean addRemainingContributionsFromRespStatement(List<Map> contribution, Map c
     if (contributionsInRespStatement.isEmpty()) return false
 
     return contributionsInRespStatement.removeAll { name, roles ->
-        def translatorEditor = roles.findResults { r -> r == Relator.TRANSLATOR || r == Relator.EDITOR ? [(ID_KEY): r.iri] : null }
+        def translatorEditor = roles.findResults { r -> r == Relator.TRANSLATOR || r == Relator.EDITOR ? toIdMap(r.iri) : null }
 
         if (translatorEditor) {
             def newContribution =
@@ -410,7 +410,7 @@ boolean tryAddRole(Map contribution, String id) {
     Map roleToIds = agentToRolesToIds[agentStr]
     if (!roleToIds) return false
 
-    def adapterEditor = [Relator.EDITOR, Relator.ADAPTER].collect { [(ID_KEY): it.iri] }
+    def adapterEditor = [Relator.EDITOR, Relator.ADAPTER].collect { toIdMap(it.iri) }
 
     def currentRoles = asList(contribution.role)
     // find roles in cluster that can be added (certain conditions need to be met)
@@ -421,11 +421,11 @@ boolean tryAddRole(Map contribution, String id) {
                 && !noRole([r])
                 && (inClusterWithRole.size() >= inCluster.size() / 2
                 || noRole(currentRoles)
-                || r == [(ID_KEY): Relator.PRIMARY_RIGHTS_HOLDER.iri]
+                || r == toIdMap(Relator.PRIMARY_RIGHTS_HOLDER.iri)
                 || (r in adapterEditor && currentRoles.intersect(adapterEditor)))
     }.collect { it.key }
 
-    def illAndTrl = [[(ID_KEY): Relator.TRANSLATOR.iri], [(ID_KEY): Relator.ILLUSTRATOR.iri]]
+    def illAndTrl = [toIdMap(Relator.TRANSLATOR.iri), toIdMap(Relator.ILLUSTRATOR.iri)]
 
     if ((currentRoles + rolesInCluster).containsAll(illAndTrl)) {
         rolesInCluster -= illAndTrl
@@ -449,7 +449,7 @@ boolean tryAddRole(Map contribution, String id) {
 }
 
 boolean tryAddMissingTranslationOf(Map work, List<Map> contribution, String id) {
-    def trl = [(ID_KEY): Relator.TRANSLATOR.iri]
+    def trl = toIdMap(Relator.TRANSLATOR.iri)
     def translators = contribution.findResults { asList(it.role).contains(trl) ? toString(asList(it.agent).find()) : null }
 
     if (!translators || work['translationOf']) return false
@@ -482,7 +482,7 @@ boolean tryAddMissingTranslationOf(Map work, List<Map> contribution, String id) 
 }
 
 boolean noRole(List<Map> roles) {
-    roles.isEmpty() || roles == [[:]] || roles == [[(ID_KEY): Relator.UNSPECIFIED_CONTRIBUTOR.iri]]
+    roles.isEmpty() || roles == [[:]] || roles == [toIdMap(Relator.UNSPECIFIED_CONTRIBUTOR.iri)]
 }
 
 private Map loadIfLink(Map m) {
@@ -646,4 +646,8 @@ static String findIncorrectIllVsTrl(List currentRoles, List rolesInRespStatement
             return Relator.TRANSLATOR.iri
         }
     }
+}
+
+def toIdMap(String iri) {
+    [(ID_KEY): iri]
 }
