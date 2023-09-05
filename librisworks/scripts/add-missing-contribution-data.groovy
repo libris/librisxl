@@ -66,6 +66,13 @@ selectByIds(clusters.flatten()) { bib ->
                 String agentName = name(a)
                 if (agentName) {
                     nameToAgents.computeIfAbsent(agentName, f -> new ConcurrentHashMap().newKeySet()).add(agentStr)
+                    def acronym = agentName.split(' ').findAll().with { parts ->
+                        (0..<parts.size() - 1).each {
+                            parts[it] = parts[it][0]
+                        }
+                        parts.join(' ')
+                    }
+                    nameToAgents.computeIfAbsent(acronym, f -> new ConcurrentHashMap().newKeySet()).add(agentStr)
                 }
             }
             def roleToIds = agentToRolesToIds.computeIfAbsent(agentStr, f -> new ConcurrentHashMap())
@@ -634,7 +641,7 @@ static List<Character> initials(List nameParts) {
 }
 
 static List<String> nameParts(String s) {
-    s.split(' ') as List
+    s.split(' ').findAll()
 }
 
 static String findIncorrectIllVsTrl(List currentRoles, List rolesInRespStatement) {
