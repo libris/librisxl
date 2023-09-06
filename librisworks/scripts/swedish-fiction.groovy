@@ -17,6 +17,7 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) {cluster ->
                 && !doc.isDrama()
                 && !doc.isThesis()
                 && !doc.isInSb17Bibliography()
+                && !doc.intendedForMarcPreAdolescent()
     }
 
     def swedish = { Doc doc ->
