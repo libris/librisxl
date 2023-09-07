@@ -1,12 +1,15 @@
 import whelk.Whelk
 
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue
+
 import static se.kb.libris.mergeworks.Util.Relator
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.TYPE_KEY
 
 report = getReportWriter('report.tsv')
 
-def ids = new File(System.getProperty('clusters')).collect { it.split('\t').collect { it.trim() } }.flatten()
+def clusters = new File(System.getProperty('clusters')).collect { it.split('\t').collect { it.trim() } }
 
 def whelk = getWhelk()
 def instanceRolesByDomain = whelk.resourceCache.relators.findResults {
@@ -16,15 +19,51 @@ def instanceRolesByDomain = whelk.resourceCache.relators.findResults {
     }
 }
 def instanceRoles = instanceRolesByDomain + [Relator.ILLUSTRATOR, Relator.AUTHOR_OF_INTRO, Relator.AUTHOR_OF_AFTERWORD].collect { [(ID_KEY): it.iri] }
+def ill = [(ID_KEY): Relator.ILLUSTRATOR.iri]
 
-selectByIds(ids) { bib ->
+def keepIllustratorOnWorkForIds = [:]
+
+clusters.each { c ->
+    def keepOnWork = new ConcurrentHashMap<Map, ConcurrentLinkedQueue>()
+    def noIndicationOfKeeping = new ConcurrentHashMap<Map, ConcurrentLinkedQueue>()
+
+    selectByIds(c) { bib ->
+        def id = bib.doc.shortId
+        Map instance = bib.graph[1]
+        Map work = instance.instanceOf
+        work.contribution?.each { contrib ->
+            if (asList(contrib.role).contains(ill)) {
+                def agent = asList(contrib.agent).find()
+                if (!agent) return
+                if (isPrimaryContribution(contrib)
+                        || isPictureBook(work)
+                        || isComics(work, bib.whelk)
+                ) {
+                    keepOnWork.computeIfAbsent(agent, f -> new ConcurrentLinkedQueue()).add(id)
+                } else {
+                    noIndicationOfKeeping.computeIfAbsent(agent, f -> new ConcurrentLinkedQueue()).add(id)
+                }
+            }
+        }
+    }
+
+    keepOnWork.each { agent, ids ->
+        keepIllustratorOnWorkForIds.computeIfAbsent(agent, f -> [] as Set).with { s ->
+            s.addAll(ids)
+            if (noIndicationOfKeeping[agent]) {
+                s.addAll(noIndicationOfKeeping[agent])
+            }
+        }
+    }
+}
+
+selectByIds(clusters.flatten()) { bib ->
+    def id = bib.doc.shortId
     Map instance = bib.graph[1]
     def work = instance.instanceOf
     def contribution = work?.contribution
 
     if (!contribution) return
-
-    def ill = [(ID_KEY): Relator.ILLUSTRATOR.iri]
 
     def modified = false
 
@@ -33,7 +72,9 @@ selectByIds(ids) { bib ->
 
         def toInstance = asList(c.role).intersect(instanceRoles)
         if (toInstance.contains(ill)) {
-            if (has9pu(c) || isPictureBook(work) || isComics(work, bib.whelk) || isStillImage(work)) {
+            def illustrator = asList(c.agent).find()
+            if (!illustrator) return
+            if (id in keepIllustratorOnWorkForIds[illustrator]) {
                 toInstance.remove(ill)
             }
         }
@@ -62,21 +103,22 @@ boolean isPrimaryContribution(Map contribution) {
     contribution[TYPE_KEY] == 'PrimaryContribution'
 }
 
-boolean has9pu(Map contribution) {
-    asList(contribution.role).contains([(ID_KEY): Relator.PRIMARY_RIGHTS_HOLDER.iri])
-}
-
-boolean isStillImage(Map work) {
-    asList(work.contentType).contains([(ID_KEY): 'https://id.kb.se/term/rda/StillImage'])
-}
+//boolean has9pu(Map contribution) {
+//    asList(contribution.role).contains([(ID_KEY): Relator.PRIMARY_RIGHTS_HOLDER.iri])
+//}
+//
+//boolean isStillImage(Map work) {
+//    asList(work.contentType).contains([(ID_KEY): 'https://id.kb.se/term/rda/StillImage'])
+//}
 
 boolean isPictureBook(Map work) {
     def picBookTerms = [
             'https://id.kb.se/term/barngf/Bilderb%C3%B6cker',
-            'https://id.kb.se/term/barngf/Sm%C3%A5barnsbilderb%C3%B6cker'
+            'https://id.kb.se/term/barngf/Sm%C3%A5barnsbilderb%C3%B6cker',
+            'https://id.kb.se/term/barngf/Pekb%C3%B6cker'
     ].collect { [(ID_KEY): it] }
 
-    return asList(work.genreForm).any { it in picBookTerms }
+    return asList(work.genreForm).any { it in picBookTerms } || asList(work.classification).any { it.code == 'Hcf(yb)' }
 }
 
 boolean isComics(Map work, Whelk whelk) {
@@ -85,7 +127,9 @@ boolean isComics(Map work, Whelk whelk) {
             'https://id.kb.se/term/barngf/Tecknade%20serier',
             'https://id.kb.se/term/gmgpc/swe/Tecknade%20serier',
             'https://id.kb.se/marc/ComicOrGraphicNovel',
-            'https://id.kb.se/marc/ComicStrip'
+            'https://id.kb.se/marc/ComicStrip',
+            'https://id.kb.se/term/barngf/Bildromaner',
+            'https://id.kb.se/term/barngf/Manga'
     ].collect { [(ID_KEY): it] }
 
     return asList(work.genreForm).any {
