@@ -293,16 +293,6 @@ class Util {
 
     static def isTitle = { it.'@type' == 'Title' }
 
-    static boolean nameMatch(Object local, Map agent) {
-        def variants = [agent] + asList(agent.hasVariant)
-
-        def localName = local instanceof Map ? name(local) : normalize(local)
-
-        localName && variants.any {
-            name(it) && localName == name(it)
-        }
-    }
-
     static String name(Map agent) {
         (agent.givenName && agent.familyName)
                 ? normalize("${agent.givenName} ${agent.familyName}")
