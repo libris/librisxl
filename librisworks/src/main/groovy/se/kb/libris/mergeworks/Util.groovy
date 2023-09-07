@@ -5,6 +5,9 @@ import whelk.Whelk
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
+import static se.kb.libris.mergeworks.compare.IntendedAudience.GENERAL
+import static se.kb.libris.mergeworks.compare.IntendedAudience.ADULT
+
 class Util {
     static def titleComponents = ['mainTitle', 'titleRemainder', 'subtitle', 'hasPart', 'partNumber', 'partName', 'marc:parallelTitle', 'marc:equalTitle']
 
@@ -307,5 +310,13 @@ class Util {
         (agent.givenName && agent.familyName)
                 ? normalize("${agent.givenName} ${agent.familyName}")
                 : agent.name ? normalize("${agent.name}") : null
+    }
+
+    static void sortByIntendedAudience(Collection<Doc> docs) {
+        docs.sort { Doc d ->
+            d.intendedAudience().with {
+                it.isEmpty() || it == [GENERAL] || it == [ADULT]
+            }
+        }.reverse(true)
     }
 }

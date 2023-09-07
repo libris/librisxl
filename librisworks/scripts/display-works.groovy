@@ -3,6 +3,7 @@ import se.kb.libris.mergeworks.Html
 import se.kb.libris.mergeworks.WorkComparator
 
 import static se.kb.libris.mergeworks.Util.partition
+import static se.kb.libris.mergeworks.Util.sortByIntendedAudience
 
 htmlReport = getReportWriter('works.html')
 
@@ -17,6 +18,8 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
                 .find { getAtPath(it.data, it.workIdPath) == null }
                 ?.with { docs.add(new Doc(getWhelk(), it)) }
     }
+
+    sortByIntendedAudience(docs)
 
     WorkComparator c = new WorkComparator(WorkComparator.allFields(docs))
 

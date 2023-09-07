@@ -3,6 +3,7 @@ import se.kb.libris.mergeworks.WorkComparator
 import se.kb.libris.mergeworks.Doc
 
 import static se.kb.libris.mergeworks.Util.partition
+import static se.kb.libris.mergeworks.Util.sortByIntendedAudience
 
 maybeDuplicates = getReportWriter("maybe-duplicate-linked-works.tsv")
 multiWorkReport = getReportWriter("multi-work-clusters.html")
@@ -107,7 +108,7 @@ Collection<Collection<Doc>> workClusters(Collection<Doc> docs, WorkComparator c)
         if (it.instanceData) {
             it.addComparisonProps()
         }
-    }
+    }.with { sortByIntendedAudience(it) }
 
     def workClusters = partition(docs, { Doc a, Doc b -> c.sameWork(a, b) })
             .each { work -> work.each { doc -> doc.removeComparisonProps() } }
