@@ -89,6 +89,16 @@ class HttpTools {
         return baseUri
     }
     
+    static Optional<String> getRemoteIp(HttpServletRequest request, List<String> proxyIps) {
+        List remoteIps = []
+        request.getHeaders('X-Forwarded-For').each {
+            it.split(',').each { ip -> remoteIps.add(it.trim()) }
+        }
+        
+        
+        return Optional.empty()
+    } 
+    
     enum DisplayMode {
         DOCUMENT, META, RAW
     }

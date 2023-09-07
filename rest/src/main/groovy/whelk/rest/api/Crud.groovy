@@ -133,15 +133,11 @@ class Crud extends HttpServlet {
                 measurement = metrics.measure('INDEX')
                 displayInfo(response)
             } else if (siteSearch.isSearchResource(request.pathInfo)) {
-                if (!rateLimiters[RequestType.FIND].isOk(request.getRemoteAddr())) {
-                    throw new RateLimitException('TODO')
-                }
+                rateLimit(request, RequestType.FIND)
                 measurement = metrics.measure('FIND')
                 handleQuery(request, response)
             } else {
-                if (!rateLimiters[RequestType.FIND].isOk(request.getRemoteAddr())) {
-                    throw new RateLimitException('TODO')
-                }
+                rateLimit(request, RequestType.READ)
                 measurement = metrics.measure('GET')
                 handleGetRequest(CrudGetRequest.parse(request), response)
             }
@@ -535,9 +531,7 @@ class Crud extends HttpServlet {
         if (!isSupportedContentType(request.getContentType())) {
             throw new BadRequestException("Content-Type not supported.")
         }
-        if (!rateLimiters[RequestType.WRITE].isOk(request.getRemoteAddr())) {
-            throw new RateLimitException('TODO')
-        }
+        rateLimit(request, RequestType.WRITE)
                 
         Map requestBody = getRequestBody(request)
 
@@ -624,9 +618,7 @@ class Crud extends HttpServlet {
         if (!isSupportedContentType(request.getContentType())) {
             throw new BadRequestException("Content-Type not supported.")
         }
-        if (!rateLimiters[RequestType.WRITE].isOk(request.getRemoteAddr())) {
-            throw new RateLimitException('TODO')
-        }
+        rateLimit(request, RequestType.WRITE)
         
         Map requestBody = getRequestBody(request)
 
@@ -859,7 +851,15 @@ class Crud extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_NO_CONTENT)
         }
     }
-
+    
+    void rateLimit(HttpServletRequest request, RequestType requestType) {
+        HttpTools.getRemoteIp(request, [/*TODO*/]).ifPresent { ip ->
+            if (!rateLimiters[requestType].isOk(ip)) {
+                throw new RateLimitException('TODO')
+            }
+        }
+    }
+    
     static void sendError(HttpServletRequest request, HttpServletResponse response, Exception e) {
         int code = mapError(e)
         metrics.failedRequests.labels(request.getMethod(), code.toString()).inc()
