@@ -193,7 +193,7 @@ class Doc {
     }
 
     boolean hasGenericTitle() {
-        Util.hasGenericTitle(instanceTitle())
+        Util.hasGenericTitle(instanceTitle()) || Util.hasGenericTitle(workTitle())
     }
 
     boolean isMonograph() {
@@ -221,7 +221,13 @@ class Doc {
 
     boolean hasPart() {
         workData['hasPart'] || instanceData['hasTitle'].findAll { it['@type'] == 'Title' }.any {
-            it.hasPart?.size() > 1 || it.hasPart?.any { p -> asList(p.partName).size() > 1 || asList(p.partNumber).size() > 1 }
+            it.hasPart?.size() > 1
+                    || it.hasPart?.any { p -> asList(p.partName).size() > 1
+                    || asList(p.partNumber).size() > 1 }
+                    // space+semicolon indicates an aggregate if it is not preceded by a slash
+                    // aggregate: Måsen ; Onkel Vanja ; Körsbärsträdgården
+                    // not aggregate: En visa för de döda / Patrick Dunne ; översättning: Hans Lindeberg
+                    || [it.mainTitle, it.titleRemainder, it.subtitle].findAll().toString() =~ /(?<!\/.+)(\s+;)/
         }
     }
 
