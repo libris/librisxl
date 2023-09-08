@@ -212,6 +212,9 @@ class Doc {
             it.hasPart?.size() > 1
                     || it.hasPart?.any { p -> asList(p.partName).size() > 1
                     || asList(p.partNumber).size() > 1 }
+                    // space+semicolon indicates an aggregate if it is not preceded by a slash
+                    // aggregate: Måsen ; Onkel Vanja ; Körsbärsträdgården
+                    // not aggregate: En visa för de döda / Patrick Dunne ; översättning: Hans Lindeberg
                     || [it.mainTitle, it.titleRemainder, it.subtitle].findAll().toString() =~ /(?<!\/.+)(\s+;)/
         }
     }
