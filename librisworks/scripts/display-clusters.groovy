@@ -1,8 +1,6 @@
 import se.kb.libris.mergeworks.Doc
 import se.kb.libris.mergeworks.Html
 
-import static se.kb.libris.mergeworks.Util.sortByIntendedAudience
-
 htmlReport = getReportWriter('clusters.html')
 
 htmlReport.println(Html.START)
@@ -18,7 +16,6 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
     }
 
     docs.each { it.addComparisonProps() }
-            .with { sortByIntendedAudience(it) }
 
     htmlReport.println(Html.clusterTable(docs) + Html.HORIZONTAL_RULE)
 }

@@ -2,8 +2,7 @@ import se.kb.libris.mergeworks.Html
 import se.kb.libris.mergeworks.WorkComparator
 import se.kb.libris.mergeworks.Doc
 
-import static se.kb.libris.mergeworks.Util.partition
-import static se.kb.libris.mergeworks.Util.sortByIntendedAudience
+import static se.kb.libris.mergeworks.Util.workClusters
 
 maybeDuplicates = getReportWriter("maybe-duplicate-linked-works.tsv")
 multiWorkReport = getReportWriter("multi-work-clusters.html")
@@ -47,7 +46,7 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
             uniqueWorksAndTheirInstances.add(new Tuple2(linkedWorks.find(), localWorks))
         } else {
             maybeDuplicates.println(linkedWorks.collect { it.shortId() }.join('\t'))
-            System.err.println("Local works ${localWorks.collect { it.shortId() }} match multiple linked works: ${linkedWorks.collect { it.shortId() }}. Duplicate linked works?")
+            System.err.println("Local works ${localWorks.collect { it.shortId() }} match multiple linked works: ${linkedWorks.collect { it.shortId() }}. Duplicated linked works?")
         }
     }
 
@@ -101,19 +100,6 @@ void saveAndLink(Doc workDoc, Collection<Doc> instanceDocs = [], boolean existsI
         it.graph[1]['instanceOf'] = ['@id': workDoc.thingIri()]
         it.scheduleSave(changedBy: changedBy, generationProcess: generationProcess)
     }
-}
-
-Collection<Collection<Doc>> workClusters(Collection<Doc> docs, WorkComparator c) {
-    docs.each {
-        if (it.instanceData) {
-            it.addComparisonProps()
-        }
-    }.with { sortByIntendedAudience(it) }
-
-    def workClusters = partition(docs, { Doc a, Doc b -> c.sameWork(a, b) })
-            .each { work -> work.each { doc -> doc.removeComparisonProps() } }
-
-    return workClusters
 }
 
 Doc createNewWork(Map workData) {
