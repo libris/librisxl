@@ -11,10 +11,10 @@ class WorkComparator {
 
     Map<String, FieldHandler> comparators = [
             'classification'  : new Classification(),
-            'contentType'     : new SameOrEmpty('https://id.kb.se/term/rda/Text'),
+            'contentType'     : new ContentType(),
             'genreForm'       : new GenreForm(),
             'hasTitle'        : new WorkTitle(),
-            'intendedAudience': new SameOrEmpty('https://id.kb.se/marc/Juvenile'),
+            'intendedAudience': new IntendedAudience(),
             '_numPages'       : new Extent(),
             'subject'         : new Subject(),
             'summary'         : new StuffSet(),

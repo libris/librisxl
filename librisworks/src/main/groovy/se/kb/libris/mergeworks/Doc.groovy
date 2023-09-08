@@ -144,6 +144,10 @@ class Doc {
         asList(workData['genreForm'])
     }
 
+    List<Map> intendedAudience() {
+        asList(workData['intendedAudience'])
+    }
+
     List<Map> publication() {
         asList(instanceData?.publication)
     }
@@ -209,6 +213,10 @@ class Doc {
                 || classification().any { it.inScheme?.code =~ /[Kk]ssb/ && it.code?.contains('(s)') }
                 || !contribution().any { it['@type'] == 'PrimaryContribution' }
                 || hasRelationshipWithContribution()
+    }
+
+    boolean intendedForMarcPreAdolescent() {
+        intendedAudience().contains(['@id': 'https://id.kb.se/marc/PreAdolescent'])
     }
 
     boolean hasPart() {

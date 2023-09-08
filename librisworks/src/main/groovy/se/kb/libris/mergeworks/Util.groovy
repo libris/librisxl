@@ -5,6 +5,8 @@ import whelk.Whelk
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
+import static se.kb.libris.mergeworks.compare.IntendedAudience.preferredComparisonOrder
+
 class Util {
     static def titleComponents = ['mainTitle', 'titleRemainder', 'subtitle', 'hasPart', 'partNumber', 'partName', 'marc:parallelTitle', 'marc:equalTitle']
 
@@ -297,5 +299,18 @@ class Util {
         (agent.givenName && agent.familyName)
                 ? normalize("${agent.givenName} ${agent.familyName}")
                 : agent.name ? normalize("${agent.name}") : null
+    }
+
+    static Collection<Collection<Doc>> workClusters(Collection<Doc> docs, WorkComparator c) {
+        docs.each {
+            if (it.instanceData) {
+                it.addComparisonProps()
+            }
+        }.with { preferredComparisonOrder(it) }
+
+        def workClusters = partition(docs, { Doc a, Doc b -> c.sameWork(a, b) })
+                .each { work -> work.each { doc -> doc.removeComparisonProps() } }
+
+        return workClusters
     }
 }
