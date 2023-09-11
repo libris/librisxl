@@ -186,20 +186,7 @@ class Util {
             null
     ]
 
-    static def toWorkTitleForm = { Map title ->
-        // partName/partNumber is usually in hasPart but not always
-        def partName = title['partName']
-        def partNumber = title['partNumber']
-
-        def hasPart = title['hasPart']
-        if (hasPart) {
-            partName = hasPart[0]['partName']
-            partNumber = hasPart[0]['partNumber']
-        }
-
-        partName = asList(partName)[0]
-        partNumber = asList(partNumber)[0]
-
+    static Map appendTitlePartsToMainTitle(Map title, String partNumber, String partName = null) {
         if (partNumber && partName) {
             title['mainTitle'] += ". $partNumber, $partName"
         } else if (partNumber) {
@@ -208,7 +195,16 @@ class Util {
             title['mainTitle'] += ". $partName"
         }
 
-        return title.subMap(['@type', 'mainTitle', 'source'])
+        title.remove('partNumber')
+        title.remove('partName')
+
+        return title
+    }
+
+    static String findTitlePart(List<Map> title, String prop) {
+        // partName/partNumber is usually found in hasPart but not always
+        def partNumber = title.findResult { Map t -> t[prop] ?: t['hasPart'].findResult { it[prop] } }
+        return asList(partNumber).find()
     }
 
     // Return the most common title for the best encodingLevel
@@ -219,22 +215,27 @@ class Util {
             return linkedWorkTitle
         }
 
-        for (def level : bestEncodingLevel) {
-            def onLevel = docs.findAll { it.encodingLevel() == level }
-            def bestWorkTitle = mostCommonWorkTitle(onLevel)
-            if (bestWorkTitle) {
-                return bestWorkTitle
-            }
+        def bestInstanceTitle = mostCommonHighestEncodingLevel(docs, this.&mostCommonInstanceTitle)
+        def bestWorkTitle = mostCommonHighestEncodingLevel(docs, this.&mostCommonWorkTitle)
+
+        def partNumber = findTitlePart(bestInstanceTitle, 'partNumber')
+        def partName = findTitlePart(bestInstanceTitle, 'partName')
+
+        if (bestWorkTitle) {
+            return bestWorkTitle.collect { appendTitlePartsToMainTitle(it, partNumber) }
         }
 
+        return bestInstanceTitle.collect { appendTitlePartsToMainTitle(it, partNumber, partName) }
+    }
+
+    static def mostCommonHighestEncodingLevel(Collection<Doc> docs, Closure<Collection<Doc>> findMostCommon) {
         for (def level : bestEncodingLevel) {
             def onLevel = docs.findAll { it.encodingLevel() == level }
-            def bestInstanceTitle = mostCommonInstanceTitle(onLevel)
-            if (bestInstanceTitle) {
-                return bestInstanceTitle.collect(toWorkTitleForm)
+            def mostCommonTitle = findMostCommon(onLevel)
+            if (mostCommonTitle) {
+                return mostCommonTitle
             }
         }
-
         return null
     }
 
