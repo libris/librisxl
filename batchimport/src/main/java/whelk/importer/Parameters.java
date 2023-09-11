@@ -85,7 +85,7 @@ class Parameters
         }
 
         // Check required parameters
-        if (format == null)
+        if (format == null || changedBy == null)
         {
             printUsage();
             System.exit(-1);
@@ -166,6 +166,7 @@ class Parameters
         System.err.println("              Using this option, a file containing such merge rules can be specified.");
         System.err.println();
         System.err.println("--changedBy   A string to use as descriptionCreator (MARC 040) for imported records.");
+        System.err.println("              This parameter must be specified.");
         System.err.println("--changedIn   A string to use for the changedIn column, defaults to \"batch import\".");
         System.err.println("--forceUpdate If this option is passed, encoding levels are ignored when deciding if");
         System.err.println("              An incoming record is allowed to affect existing records. USE WITH CARE");
