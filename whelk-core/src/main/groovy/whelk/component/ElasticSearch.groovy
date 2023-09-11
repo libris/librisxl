@@ -207,9 +207,13 @@ class ElasticSearch {
                 }
             }.join('')
 
-            String response = bulkClient.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE)
-            Map responseMap = mapper.readValue(response, Map)
-            log.info("Bulk indexed ${docs.count{it}} docs in ${responseMap.took} ms")
+            if (bulkString) {
+                String response = bulkClient.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE)
+                Map responseMap = mapper.readValue(response, Map)
+                log.info("Bulk indexed ${docs.count{it}} docs in ${responseMap.took} ms")
+            } else {
+                log.warn("Refused bulk indexing ${docs.count{it}} docs because body was empty")
+            }
         }
     }
 
