@@ -1,6 +1,6 @@
 def where = """
     changedIn = 'batch import'
-    and modified::date = '2023-09-08'
+    and modified > '2023-09-07' and modified < '2023-09-09'
     and data#>'{@graph,0,descriptionLastModifier,@id}' = 'null'
 """
 
