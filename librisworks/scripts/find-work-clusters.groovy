@@ -53,7 +53,7 @@ def process = { bib ->
         }
     }
     catch (Exception e) {
-        failedQueries.println(e)
+        failedQueries.println("Error in ${bib.doc.shortId}: ${e}")
         e.printStackTrace()
         return
     }
@@ -125,7 +125,7 @@ private List contributors(bib) {
 private List contributorStrings(contribution) {
     List variants = asList(contribution?.agent) + asList(getPathSafe(contribution, ['agent', 'hasVariant']))
 
-    variants.collect { name(it) }.grep()
+    variants.grep().collect { name(it) }.grep()
 }
 
 private String name(Map agent) {
