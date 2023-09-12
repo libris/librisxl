@@ -2148,6 +2148,33 @@
     "$6": {"property": "marc:fieldref"},
     "_spec": [
       {
+        "name": "(R)epeatability",
+         "source": [
+           {"400": {"ind1": "1", "ind2": " ", "subfields": [{"a": "B, A,"},{"d": "Date1"}]}},
+           {"400": {"ind1": "1", "ind2": " ", "subfields": [{"a": "D, C,"},{"d": "Date2"}]}}
+         ],
+
+         "result": {
+           "mainEntity": {
+             "@type": "Identity",
+             "hasVariant": [ 
+               {
+                 "@type": "Person",
+                 "givenName": "A",
+                 "familyName": "B",
+                 "lifeSpan": "Date1"
+              },
+              {
+               "@type": "Person",
+               "givenName": "C",
+               "familyName": "D",
+               "lifeSpan": "Date2"
+             } 
+             ]
+           }
+         }
+       },
+      {
         "source": {
           "400": {"ind1": "1", "ind2": " ", "subfields": [
             {"a": "Singh, Bhagat,"},
@@ -3271,6 +3298,35 @@
     "subfieldOrder": "w i a b c q d j e 4 g t m n r p k l s f o v x y z 0",
     "$h": {"ignored": true},
     "_spec": [
+      {
+       "name": "FIXME: (R)epeatability",
+        "source": [
+          {"500": {"ind1": "1", "ind2": " ", "subfields": [{"a": "B, A"},{"d": "Date1"}]}},
+          {"500": {"ind1": "1", "ind2": " ", "subfields": [{"a": "D, C"},{"d": "Date2"}]}}
+        ],
+        "normalized": [
+          {"500": {"ind1": "1", "ind2": " ", "subfields": [{"a": "B, A"},{"a": "D, C,"},{"d": "Date1,"},{"d": "Date2"}]}}
+        ],
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "seeAlso": [ 
+              {
+                "@type": "Person",
+                "givenName": "A",
+                "familyName": "B",
+                "lifeSpan": "Date1"
+             },
+             {
+              "@type": "Person",
+              "givenName": "C",
+              "familyName": "D",
+              "lifeSpan": "Date2"
+            } 
+            ]
+          }
+        }
+      },
       {
         "source": {
           "500": {"ind1": "3", "ind2": " ", "subfields": [
