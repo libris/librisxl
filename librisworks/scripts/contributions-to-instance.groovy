@@ -31,7 +31,7 @@ clusters.each { c ->
         def id = bib.doc.shortId
         Map instance = bib.graph[1]
         Map work = instance.instanceOf
-        work.contribution?.each { contrib ->
+        work?.contribution?.each { contrib ->
             if (asList(contrib.role).contains(ill)) {
                 def agent = asList(contrib.agent).find()
                 if (!agent) return

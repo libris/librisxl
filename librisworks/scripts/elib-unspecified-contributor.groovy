@@ -31,7 +31,7 @@ Set<String> handled = new ConcurrentHashMap().newKeySet()
 selectBySqlWhere(where) { bib ->
     def id = bib.doc.shortId
     def instance = bib.graph[1]
-    def summary = asList(instance['instanceOf']['summary']) + asList(bib.graph[1]['summary'])
+    def summary = asList(instance.instanceOf?.summary) + asList(instance.summary)
 
     def nameToRoles = summary
             .findResults { it['label'] }
@@ -99,7 +99,7 @@ selectBySqlWhere("collection = 'bib' AND data#>>'{@graph, 0, identifiedBy}' LIKE
         return
     }
     def instance = bib.graph[1]
-    List workContribution = instance['instanceOf']['contribution']
+    List workContribution = instance.instanceOf?.contribution
     if (!workContribution) {
         return
     }

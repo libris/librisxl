@@ -15,8 +15,12 @@ selectByIds(ids) { bib ->
     ].collect {
         langName(getAtPath(bib.graph, it, '')).toLowerCase()
     }
+
+    def work = bib.graph[1].instanceOf
+
+    if (!work || work['@id']) return
     
-    boolean changed = DocumentUtil.traverse(bib.graph[1].instanceOf) { value, path ->
+    boolean changed = DocumentUtil.traverse(work) { value, path ->
         if (path && 'mainTitle' in path && value instanceof String) {
             for (lang in langs) {
                 String r = value.replaceAll(/(?i)\s*\(\(?\s*${lang}\s*\)\)?\s*$/, '')
