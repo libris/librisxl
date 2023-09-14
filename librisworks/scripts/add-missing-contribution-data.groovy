@@ -389,7 +389,7 @@ boolean addRemainingContributionsFromRespStatement(List<Map> contribution, Map c
             def newContribution =
                     [
                             '@type': 'Contribution',
-                            'agent': ['@type': 'Person', 'name': normalizedNames[name]],
+                            'agent': ['name': normalizedNames[name], '@type': 'Person'],
                             'role' : translatorEditor
                     ]
 
@@ -472,6 +472,9 @@ boolean tryAddMissingTranslationOf(Map work, List<Map> contribution, String id) 
 
     for (String translator : translators) {
         def roleToIds = agentToRolesToIds[translator]
+
+        if (!roleToIds) continue
+
         def inClusterSameTranslator = roleToIds[trl].intersect(idToCluster[id])
         def origWorks = inClusterSameTranslator.findResults { idToTranslationOf[it] }
 
