@@ -867,6 +867,7 @@
   },
   "065": {
     "onRevertPrefer": "083",
+    "NOTE:local": "onRevertPrefer makes sure ClassificationDDC with broadMatch not get converted to 065",
     "inherit": "bib:084",
     "aboutEntity": "?thing",
     "addLink": "broadMatch",
