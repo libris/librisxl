@@ -9248,6 +9248,7 @@
       },
       "$6": {"ignored": true, "NOTE:LC": "ignore (v1.6)"},
       "$8": {"about": "_:extent", "property": "marc:groupid"},
+      "subfieldOrder": "3 ... ",
       "_spec": [
         {
           "Name": "Huvudsaklig resurs och medföljande",
@@ -9290,6 +9291,26 @@
                   "@type": "Resource",
                   "label": "1 CD-ROM"
                 }
+            }
+          }
+        },
+        {
+          "Name": "Medföljs av",
+          "source": [
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"3": "correspondence"},{"a": "3"},{"f": "boxes"}]}}
+          ],
+          "result": {
+            "mainEntity": 
+            {
+              "extent" : [ {
+                "@type" : "Extent",
+                "appliesTo" : {
+                  "@type" : "Resource",
+                  "label" : "correspondence"
+                },
+                "label" : "3",
+                "typeNote" : "boxes"
+              } ]
             }
           }
         },
