@@ -197,6 +197,7 @@ class Util {
 
         title.remove('partNumber')
         title.remove('partName')
+        title.remove('hasPart')
 
         return title
     }
