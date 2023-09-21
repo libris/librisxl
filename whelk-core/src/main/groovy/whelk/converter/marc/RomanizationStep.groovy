@@ -1,10 +1,7 @@
 package whelk.converter.marc
 
-import groovy.transform.CompileStatic
 import groovy.transform.MapConstructor
-import groovy.transform.NullCheck
 import groovy.util.logging.Log4j2 as Log
-import whelk.filter.LanguageLinker
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
@@ -16,18 +13,10 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     private static final String TARGET_SCRIPT = 'Latn'
     private static final String MATCH_T_TAG = "-${TARGET_SCRIPT}-t-"
 
-    @CompileStatic
-    @NullCheck(includeGenerated = true)
-    static class LanguageResources {
-        LanguageLinker languageLinker
-        Map languages
-        Map transformedLanguageForms
-    }
-
     boolean requiresResources = true
-    MarcFrameConverter converter
-    LanguageResources languageResources
 
+    MarcFrameConverter converter
+    
     Map langAliases
     Map byLangToBase
 
@@ -77,12 +66,12 @@ class RomanizationStep extends MarcFramePostProcStepBase {
     }
 
     void _modify(Map record, Map thing) {
-        if (!languageResources) {
+        if (!resourceCache?.languageResources) {
             return
         }
 
         def workLang = thing.instanceOf.subMap('language')
-        languageResources.languageLinker.linkAll(workLang)
+        resourceCache.languageResources.languageLinker.linkAll(workLang)
         def romanizable = asList(workLang.language).findResults { it[ID] in romanizableLangs ? it[ID] : null }
 
         if (romanizable.size() > 1) {
@@ -554,10 +543,12 @@ class RomanizationStep extends MarcFramePostProcStepBase {
             this.byLangToBase = langAliases.collectEntries { k, v -> [v, k] }
         }
 
-        if (!languageResources) {
+        if (!resourceCache?.languageResources) {
             return
         }
-//        this.languageResources = languageResources
+
+        var languageResources = resourceCache.languageResources
+
         this.langIdToLangTag = languageResources.languages
                 .findAll { k, v -> v.langTag }.collectEntries { k, v -> [k, v.langTag] }
         this.romanizableLangs = languageResources.transformedLanguageForms

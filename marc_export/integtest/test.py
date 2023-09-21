@@ -5,7 +5,7 @@ import os
 import json
 import xml.etree.ElementTree as ET
 
-base_uri = 'http://kblocalhost.kb.se:5000/'
+base_uri = 'http://libris.kb.se.localhost:5000/'
 export_url = 'http://localhost:8580/marc_export/'
     
 ## Util-stuff

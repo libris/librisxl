@@ -162,7 +162,7 @@ class PostgreSQLComponent {
             ORDER BY GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) DESC
             limit 1
             """.stripIndent()
-    
+
     private static final String GET_EMBELLISHED_DOCUMENT =
             "SELECT data from lddb__embellished where id = ?"
 
@@ -2029,7 +2029,7 @@ class PostgreSQLComponent {
         }
         return doc
     }
-    
+
     Map<String, Document> bulkLoad(Iterable<String> systemIds, Instant asOf = null) {
         return withDbConnection {
             Connection connection = getMyConnection()
@@ -2066,6 +2066,7 @@ class PostgreSQLComponent {
             }
         }
     }
+
 
     String getSystemIdByIri(String iri) {
         return withDbConnection {

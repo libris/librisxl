@@ -11,7 +11,6 @@ import whelk.component.PostgreSQLComponent
 import whelk.component.PostgreSQLComponent.UpdateAgent
 import whelk.component.SparqlUpdater
 import whelk.converter.marc.MarcFrameConverter
-import whelk.converter.marc.RomanizationStep
 import whelk.exception.StorageCreateFailedException
 import whelk.filter.LanguageLinker
 import whelk.exception.WhelkException
@@ -55,7 +54,7 @@ class Whelk {
     JsonLd jsonld
 
     MarcFrameConverter marcFrameConverter
-    RomanizationStep.LanguageResources languageResources 
+    ResourceCache resourceCache
     ElasticFind elasticFind
     Relations relations
     DocumentNormalizer normalizer
@@ -64,7 +63,7 @@ class Whelk {
     URI baseUri = null
     boolean skipIndex = false
     boolean skipIndexDependers = false
-    
+
     // useCache may be set to true only when doing initial imports (temporary processes with the rest of Libris down).
     // Any other use of this results in a "local" cache, which will not be invalidated when data changes elsewhere,
     // resulting in potential serving of stale data.
@@ -154,7 +153,7 @@ class Whelk {
 
     synchronized MarcFrameConverter getMarcFrameConverter() {
         if (!marcFrameConverter) {
-            marcFrameConverter = new MarcFrameConverter(new LinkFinder(storage), jsonld, languageResources)
+            marcFrameConverter = new MarcFrameConverter(new LinkFinder(storage), jsonld, resourceCache)
         }
 
         return marcFrameConverter
@@ -163,10 +162,10 @@ class Whelk {
     Relations getRelations() {
         return relations
     }
-    
+
     synchronized Romanizer getRomanizer() {
         if (!romanizer) {
-            romanizer = new Romanizer(languageResources.transformedLanguageForms.values().collect{ (String) it['langTag'] })
+            romanizer = new Romanizer(resourceCache.languageResources.transformedLanguageForms.values().collect{ (String) it['langTag'] })
         }
         return romanizer
     }
@@ -231,16 +230,20 @@ class Whelk {
                         Normalizers.identifiedBy(),
                 ] + Normalizers.heuristicLinkers(this, languageLinker.getTypes())
         )
-        
-        def idsToThings = { String type -> 
+
+        def idsToThings = { String type ->
             bulkLoad(elasticFind.findIds([(JsonLd.TYPE_KEY): [type]]).collect())
             .collect { _, doc -> (doc.data[JsonLd.GRAPH_KEY] as List)[1] }
             .collectEntries { [it[JsonLd.ID_KEY], it] }
         }
-        languageResources = new RomanizationStep.LanguageResources(
-                languageLinker: languageLinker,
-                languages: idsToThings('Language'),
-                transformedLanguageForms: idsToThings('TransformedLanguageForm')
+
+        resourceCache = new ResourceCache(
+            relators: elasticFind.find(['@type': ['Role']]),
+            languageResources: new ResourceCache.LanguageResources(
+                    languageLinker: languageLinker,
+                    languages: idsToThings('Language'),
+                    transformedLanguageForms: idsToThings('TransformedLanguageForm')
+            )
         )
     }
 
@@ -261,31 +264,29 @@ class Whelk {
                 def systemId = Document.BASE_URI.resolve(id).getPath().substring(1)
                 idMap[systemId] = id
                 systemIds << systemId
-            }
-            else if (JsonLd.looksLikeIri(id)) {
+            } else if (JsonLd.looksLikeIri(id)) {
                 otherIris << id
-            }
-            else {
+            } else {
                 systemIds << id
             }
         }
         if (otherIris) {
             Map<String, String> idToIri = storage.getSystemIdsByIris(otherIris)
                     .collectEntries { k, v -> [(v): k] }
-            
+
             systemIds.addAll(idToIri.keySet())
             idMap.putAll(idToIri)
         }
-        
+
         return storage.bulkLoad(systemIds, asOf)
                 .findAll { id, doc -> !doc.deleted }
-                .collectEntries { id, doc -> [(idMap.getOrDefault(id, id)) : doc]}
+                .collectEntries { id, doc -> [(idMap.getOrDefault(id, id)): doc] }
     }
-    
+
     private void reindexUpdated(Document updated, Document preUpdateDoc) {
         indexAsyncOrSync {
             elastic.index(updated, this)
-            
+
             if (!skipIndexDependers) {
                 if (hasChangedMainEntityId(updated, preUpdateDoc)) {
                     reindexAllLinks(updated.shortId)
@@ -295,17 +296,17 @@ class Whelk {
             }
         }
     }
-    
+
     private void indexAsyncOrSync(Runnable runnable) {
         if (skipIndex) {
             return
         }
-        
-        if(!elastic) {
+
+        if (!elastic) {
             log.warn("Elasticsearch not configured when trying to reindex")
             return
         }
-        
+
         Runnable reindex = {
             try {
                 runnable.run()
@@ -314,7 +315,7 @@ class Whelk {
                 log.error("Error reindexing: $e", e)
             }
         }
-        
+
         if (isBatchJobThread()) {
             // Update them synchronously
             reindex.run()
@@ -335,30 +336,29 @@ class Whelk {
         Set<Link> removedLinks = (preUpdateLinks - postUpdateLinks)
 
         removedLinks.findResults { storage.getSystemIdByIri(it.iri) }
-                .each{id -> elastic.decrementReverseLinks(id) }
+                .each { id -> elastic.decrementReverseLinks(id) }
 
         addedLinks.each { link ->
             String id = storage.getSystemIdByIri(link.iri)
             if (id) {
                 Document doc = storage.load(id)
                 def lenses = ['chips', 'cards', 'full']
-                def reverseRelations = lenses.collect{ jsonld.getInverseProperties(doc.data, it) }.flatten()
+                def reverseRelations = lenses.collect { jsonld.getInverseProperties(doc.data, it) }.flatten()
                 if (reverseRelations.contains(link.relation)) {
                     // we added a link to a document that includes us in its @reverse relations, reindex it
                     elastic.index(doc, this)
-                }
-                else {
+                } else {
                     // just update link counter
                     elastic.incrementReverseLinks(id)
                 }
             }
         }
-        
+
         if (storage.isCardChangedOrNonexistent(document.getShortId())) {
             bulkIndex(elastic.getAffectedIds(document.getThingIdentifiers() + document.getRecordIdentifiers()))
         }
     }
-    
+
     private void bulkIndex(Iterable<String> ids) {
         Iterables.partition(ids, 100).each {
             elastic.bulkIndexWithRetry(it, this)
@@ -375,12 +375,12 @@ class Whelk {
 
         // Identifiers-table lookup on:
         List<String> uriIDs = document.getRecordIdentifiers()
-        uriIDs.addAll( document.getThingIdentifiers() )
+        uriIDs.addAll(document.getThingIdentifiers())
         for (String uriID : uriIDs) {
             String systemId = storage.getSystemIdByIri(uriID)
             if (systemId != null && systemId != document.getShortId()) {
                 log.info("Determined that " + document.getShortId() + " is duplicate of " + systemId + " due to collision on URI: " + uriID)
-                collidingSystemIDs.add( new Tuple2(systemId, "on URI: " + uriID) )
+                collidingSystemIDs.add(new Tuple2(systemId, "on URI: " + uriID))
             }
         }
 
@@ -401,7 +401,7 @@ class Whelk {
                 if (includingTypedIDs) {
                     for (String collision : collisions) {
                         if (collision != document.getShortId())
-                        collidingSystemIDs.add( new Tuple2(collision, "on typed id: " + type + "," + graphIndex + "," + value) )
+                            collidingSystemIDs.add(new Tuple2(collision, "on typed id: " + type + "," + graphIndex + "," + value))
                     }
                 } else {
 
@@ -421,7 +421,7 @@ class Whelk {
      */
     boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted) {
         normalize(document)
-        
+
         boolean detectCollisionsOnTypedIDs = false
         List<Tuple2<String, String>> collidingIDs = getIdCollisions(document, detectCollisionsOnTypedIDs)
         if (!collidingIDs.isEmpty()) {
@@ -463,7 +463,7 @@ class Whelk {
         if (updated == null || preUpdateDoc == null) {
             return false
         }
-   
+
         reindexUpdated(updated, preUpdateDoc)
         sparqlUpdater?.pollNow()
 
@@ -478,7 +478,7 @@ class Whelk {
         if (updated == null) {
             return
         }
-        
+
         reindexUpdated(updated, preUpdateDoc)
         sparqlUpdater?.pollNow()
     }
@@ -491,15 +491,22 @@ class Whelk {
     boolean quickCreateDocument(Document document, String changedIn, String changedBy, String collection) {
         return storage.quickCreateDocument(document, changedIn, changedBy, collection)
     }
-  
-    void remove(String id, String changedIn, String changedBy, boolean force=false) {
+
+    void remove(String id, String changedIn, String changedBy, boolean force = false) {
         log.debug "Deleting ${id} from Whelk"
-        Document doc = storage.load(id)
-        storage.remove(id, changedIn, changedBy, force)
-        indexAsyncOrSync {
-            elastic.remove(id)
-            if (!skipIndexDependers) {
-                reindexAffected(doc, doc.getExternalRefs(), Collections.emptySet())
+        Document doc
+        try {
+            doc = storage.load(id)
+        } catch (Exception e) {
+            log.warn "Could not remove object from whelk. No entry with id $id found"
+        }
+        if (doc) {
+            storage.remove(id, changedIn, changedBy, force)
+            indexAsyncOrSync {
+                elastic.remove(id)
+                if (!skipIndexDependers) {
+                    reindexAffected(doc, doc.getExternalRefs(), Collections.emptySet())
+                }
             }
         }
     }
@@ -511,13 +518,12 @@ class Whelk {
     }
 
     void embellish(Document document, List<String> levels = null) {
-        def docsByIris = { List<String> iris -> bulkLoad(iris).values().collect{ it.data } }
+        def docsByIris = { List<String> iris -> bulkLoad(iris).values().collect { it.data } }
         Embellisher e = new Embellisher(jsonld, docsByIris, storage.&getCards, relations.&getByReverse)
 
         if (levels) {
             e.setEmbellishLevels(levels)
-        }
-        else if (document.getThingType() == 'Item') {
+        } else if (document.getThingType() == 'Item') {
             e.setEmbellishLevels(['cards'])
             e.setFollowInverse(false)
         }
@@ -543,7 +549,7 @@ class Whelk {
                 }
             }
         }
-        
+
         return result
     }
 

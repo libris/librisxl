@@ -96,3 +96,4 @@ Förklaring till (en del av) de olika inställningarna i exportprofilen:
 | `nameform`           | `Forskningsbiblioteksform` | Tvinga namnformer att anta Forskningsbiblioteksform.
 | `sab`                | `on`\|`off`                | Ska SAB-titlar (976) läggas till.
 | `virtualdelete`      | `on`\|`off`                | Betrakta bibliografiska poster som borttagna när de sigel som anges i `locations` inte längre har något bestånd. Används förslagsvis tillsammans med `exportdeleted`. Motsvarar HTTP-parametern `virtualDelete` som prioriteras framför värdet här om båda anges.
+| `issnIcFlavour`      | `on`\|`off`                | Ändra lodstreck ("\|") i 008/23 till blanksteg.

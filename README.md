@@ -46,7 +46,7 @@ Related external repositories:
 
 ## Dependencies
 
-The instructions below assume an Ubuntu 20.04 system (Debian should be identical), but should work
+The instructions below assume an Ubuntu 22.04 system (Debian should be identical), but should work
 for e.g. Fedora/CentOS/RHEL with minor adjustments.
 
 1. [Gradle](http://gradle.org/)
@@ -55,15 +55,10 @@ for e.g. Fedora/CentOS/RHEL with minor adjustments.
     [gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html)
     to automatically get the specified version of Gradle and Groovy.
 
-2. [Elasticsearch](http://elasticsearch.org/) (version 7.x)
+2. [Elasticsearch](http://elasticsearch.org/) (version 8.x)
 
-    [Download Elasticsearch](https://www.elastic.co/downloads/elasticsearch-oss)
-    (for Ubuntu/Debian, select "Install with apt-get"; before importing the Elasticsearch
-    PGP key you might have to do `sudo apt install gnupg` if you're running a minimal distribution.)
-
-    **NOTE:**
-    * We use the elasticsearch-oss version.
-    * The [ICU Analysis plugin](https://www.elastic.co/guide/en/elasticsearch/plugins/7.12/analysis-icu.html) (`icu-analysis`) must be installed; see "Setting up Elasticsearch" below.
+    [Download Elasticsearch](https://www.elastic.co/downloads/elasticsearch)
+    For Ubuntu/Debian, select "apt-get" and follow the instructions.
 
 3. [PostgreSQL](https://www.postgresql.org/) (version 14.2 or later)
 
@@ -159,8 +154,11 @@ whelk_dev=> \q
 
 ### Setting up Elasticsearch
 
-Edit `/etc/elasticsearch/elasticsearch.yml`. Uncomment `cluster.name` and set it to something unique
-on the network. This name is later specified when you configure the XL system.
+Assuming Elasticsearch is already running, first set the password of the `elastic` user:
+
+```
+printf "elastic\nelastic" | sudo /usr/share/elasticsearch/bin/elasticsearch-reset-password -b -i -u elastic
+```
 
 Next, install the ICU Analysis plugin:
 
@@ -174,8 +172,14 @@ Finally, (re)start Elasticsearch:
 sudo systemctl restart elasticsearch
 ```
 
-(To adjust the JVM heap size for Elasticsearch, edit `/etc/elasticsearch/jvm.options` and then restart
-Elasticsearch.)
+To adjust the JVM heap size for Elasticsearch, edit `/etc/elasticsearch/jvm.options`
+and then restart Elasticsearch. In a local development environment, you might want to
+add the following to prevent Elasticsearch from hogging memory:
+
+```
+-Xms2g
+-Xmx2g
+```
 
 ### Configuring secrets
 
@@ -184,11 +188,8 @@ Use `librisxl/secret.properties.in` as a starting point:
 ```
 cd librisxl
 cp secret.properties.in secret.properties
-# In secret.properties, set:
-# - elasticCluster to whatever you set cluster.name to in the Elasticsearch configuration above.
-vim secret.properties
-# Make sure kblocalhost.kb.se points to 127.0.0.1
-echo '127.0.0.1 kblocalhost.kb.se' | sudo tee -a /etc/hosts
+# Make sure libris.kb.se.localhost points to 127.0.0.1
+echo '127.0.0.1 libris.kb.se.localhost' | sudo tee -a /etc/hosts
 ```
 
 ### Importing test data
@@ -205,8 +206,6 @@ python3 -m venv venv
 source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
-# Create Elasticsearch index
-fab conf.xl_local app.whelk.create_es_index
 # Import test data
 fab conf.xl_local app.whelk.import_work_example_data
 ```
@@ -218,7 +217,6 @@ To start the CRUD part of the whelk, run the following commands:
 *NIX-systems:
 ```
 cd ../librisxl/rest
-export JAVA_OPTS="-Dfile.encoding=utf-8"
 ../gradlew -Dxl.secret.properties=../secret.properties appRun
 ```
 
@@ -245,7 +243,7 @@ and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
 
 ```
 <VirtualHost *:5000>
-    ServerName kblocalhost.kb.se
+    ServerName libris.kb.se.localhost
     ProxyRequests Off
     ProxyPreserveHost On
 
@@ -255,12 +253,12 @@ and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
         ProxyPreserveHost Off
         RewriteCond %{HTTP_ACCEPT} (text/html|application/xhtml|\*/\*|^$)
         RewriteCond %{REQUEST_METHOD} GET
-        RewriteRule ([^/]+)$ http://id.kblocalhost.kb.se:5000/$1 [P]
+        RewriteRule ([^/]+)$ http://id.kb.se.localhost:5000/$1 [P]
     </LocationMatch>
 
     <Location /_nuxt>
         ProxyPreserveHost Off
-        ProxyPass http://id.kblocalhost.kb.se:5000/_nuxt
+        ProxyPass http://id.kb.se.localhost:5000/_nuxt
     </Location>
     
     ProxyPass        /katalogisering     http://localhost:8080/katalogisering                   
@@ -281,7 +279,7 @@ and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
 </VirtualHost>
 
 <VirtualHost *:5000>
-    ServerName id.kblocalhost.kb.se
+    ServerName id.kb.se.localhost
     ProxyRequests Off
     ProxyPreserveHost On
 
@@ -329,8 +327,8 @@ Listen 5000
 Add these lines to `/etc/hosts`:
 
 ```
-127.0.0.1 kblocalhost.kb.se
-127.0.0.1 id.kblocalhost.kb.se
+127.0.0.1 libris.kb.se.localhost
+127.0.0.1 id.kb.se.localhost
 ```
 
 Make sure some necessary Apache modules are enabled:
@@ -345,9 +343,9 @@ Now (re)start Apache:
 systemctl restart apache2
 ```
 
-You should now be able to visit http://id.kblocalhost.kb.se:5000, and use the cataloging client
-on http://kblocalhost.kb.se:5000/katalogisering/. The XL API itself is available on
-http://kblocalhost.kb.se:5000 (proxied via Apache), or directly on http://localhost:8180.
+You should now be able to visit http://id.kb.se.localhost:5000, and use the cataloging client
+on http://libris.kb.se.localhost:5000/katalogisering/. The XL API itself is available on
+http://libris.kb.se.localhost:5000 (proxied via Apache), or directly on http://localhost:8180.
 
 ## Maintenance
 

@@ -94,6 +94,7 @@ class Virtuoso {
             return new HttpDelete(graphCrudURI)
         } else if (method == PUT) {
             HttpPut request = new HttpPut(graphCrudURI)
+            request.addHeader("Content-Type", "text/turtle")
             String turtleDoc = convertToTurtle(doc)
             request.setEntity(new StringEntity(turtleDoc, StandardCharsets.UTF_8))
             return request

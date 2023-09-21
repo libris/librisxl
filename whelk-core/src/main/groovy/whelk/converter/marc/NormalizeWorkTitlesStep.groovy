@@ -23,6 +23,10 @@ class NormalizeWorkTitlesStep extends MarcFramePostProcStepBase {
     boolean requiresResources = true
     LanguageLinker langLinker
 
+    void init() {
+        this.langLinker = resourceCache?.languageResources?.languageLinker
+    }
+
     void modify(Map record, Map thing) {
         def work = thing[WORK_KEY]
         if (work instanceof Map) {

@@ -52,18 +52,35 @@ $ curl -XGET -H "Accept: application/ld+json" https://libris-qa.kb.se/s93ns5h436
 To get data in a different flavour (using a specific selection of RDF
 vocabularies), we support a form of profile negotiation.
 
-Using parameters:
-```
-$ curl -s -HAccept:text/turtle "http://libris-qa.kb.se/fxql7jqr38b1dkf?profile=https://id.kb.se/sys/context/target/sdo-w3c&embellished=false"
+(Note: As of 2023, Profile Negotiation is not yet a standard. See the
+[IETF Internet Draft on Profile Negotiation](https://profilenegotiation.github.io/I-D-Profile-Negotiation/I-D-Profile-Negotiation.html)
+and
+[W3C Working Draft on Content Negotiation by Profile](https://www.w3.org/TR/dx-prof-conneg/)
+for details.)
 
-$ curl -s -H'Accept: text/turtle' http://id-qa.kb.se/relator/contributor?profile=https://id.kb.se/sys/context/target/bibo-w3c
+#### Currently Defined Profiles
 
-$ curl -s -H'Accept: text/turtle' http://libris-qa.kb.se/fxql7jqr38b1dkf?profile=https://id.kb.se/sys/context/target/bibo-w3c
+See the [target contexts in the libris definitions repository](https://github.com/libris/definitions/tree/develop/sys/context/target).
+
+#### Profiled Data Views
+
+Using content negotation plus parameters:
+```
+$ curl -s -H'Accept: text/turtle' "https://libris-qa.kb.se/fxql7jqr38b1dkf?profile=https://id.kb.se/sys/context/target/sdo-w3c"
+
+$ curl -s -H'Accept: text/turtle' "https://id-qa.kb.se/relator/contributor?profile=https://id.kb.se/sys/context/target/bibo-w3c"
+
+$ curl -s -H'Accept: text/turtle' "https://libris-qa.kb.se/fxql7jqr38b1dkf?profile=https://id.kb.se/sys/context/target/bibo-w3c"
 ```
 
-Using headers:
+Combining parameters:
 ```
-$ curl -H 'Accept-Profile: <https://id.kb.se/sys/context/target/loc-w3c-sdo>' \
+$ curl -s -H'Accept: text/turtle' "https://libris-qa.kb.se/fxql7jqr38b1dkf?profile=https://id.kb.se/sys/context/target/sdo-w3c&embellished=false"
+```
+
+Using only headers for negotation:
+```
+$ curl -s -H 'Accept: application/trig' -H 'Accept-Profile: <https://id.kb.se/sys/context/target/loc-w3c-sdo>' \
       http://libris-qa.kb.se/fxql7jqr38b1dkf
 ```
 
@@ -196,7 +213,7 @@ $ curl -XDELETE
 ```
 * `<token>` - An active and valid bearer token (e.g. hW3IHc9PexxxFP2IkAAbqKvjLbW4thQ)
 * `<sigel>` - A sigel that is connected to your oauth client (e.g. T)
-* `<id>` - Record ID (e.g. https://libris-qa.kb.se/s93ns5h436dxqsh)
+* `<id>` - Record ID (e.g. s93ns5h436dxqsh)
 
 ## Other API endpoints
 

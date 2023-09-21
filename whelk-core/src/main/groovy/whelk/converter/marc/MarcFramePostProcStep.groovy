@@ -5,6 +5,7 @@ import java.util.regex.Pattern
 import org.codehaus.jackson.map.ObjectMapper
 
 import whelk.JsonLd
+import whelk.ResourceCache
 
 interface MarcFramePostProcStep {
     var ID = JsonLd.ID_KEY
@@ -12,6 +13,7 @@ interface MarcFramePostProcStep {
     boolean getRequiresResources()
     void setLd(JsonLd ld)
     void setMapper(ObjectMapper mapper)
+    void setResourceCache(ResourceCache resourceCache)
     void init()
     void modify(Map record, Map thing)
     void unmodify(Map record, Map thing)
@@ -21,10 +23,13 @@ interface MarcFramePostProcStep {
 abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
 
     String type
-    Pattern matchValuePattern
+
     JsonLd ld
     ObjectMapper mapper
     boolean requiresResources = false
+    ResourceCache resourceCache
+
+    Pattern matchValuePattern
 
     void setMatchValuePattern(String pattern) {
         matchValuePattern = Pattern.compile(pattern)
@@ -216,6 +221,7 @@ class MappedPropertyStep implements MarcFramePostProcStep {
     JsonLd ld
     ObjectMapper mapper
     boolean requiresResources = false
+    ResourceCache resourceCache = null
 
     String sourceEntity
     String sourceLink

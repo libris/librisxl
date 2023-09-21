@@ -1,9 +1,9 @@
 # ICU transform rules
 
 # Common base for slavic languages in cyrillic script.
-# "Kyrillisk skrift för slaviska språk enligt ISO 9:1995"
+# "Kyrillisk skrift för slaviska språk enligt ISO/R 9:1968"
 # https://metadatabyran.kb.se/download/18.6945cdaa174b74a2c3615fe/1601917435290/Kyrilliska%20alfabetet.pdf
-# https://metadatabyran.kb.se/beskrivning/specialanvisningar/mangsprak/romaniseringsscheman#h-Kyrilliskskrift
+# https://metadatabyran.kb.se/beskrivning/specialanvisningar/mangsprak/libris-romaniseringspraxis#h-Kyrilliskskrift
 
 # А а a
 \u0410 <> A ;

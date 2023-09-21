@@ -9248,6 +9248,7 @@
       },
       "$6": {"ignored": true, "NOTE:LC": "ignore (v1.6)"},
       "$8": {"about": "_:extent", "property": "marc:groupid"},
+      "subfieldOrder": "3 ... ",
       "_spec": [
         {
           "Name": "Huvudsaklig resurs och medföljande",
@@ -9290,6 +9291,26 @@
                   "@type": "Resource",
                   "label": "1 CD-ROM"
                 }
+            }
+          }
+        },
+        {
+          "Name": "Medföljs av",
+          "source": [
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"3": "correspondence"},{"a": "3"},{"f": "boxes"}]}}
+          ],
+          "result": {
+            "mainEntity": 
+            {
+              "extent" : [ {
+                "@type" : "Extent",
+                "appliesTo" : {
+                  "@type" : "Resource",
+                  "label" : "correspondence"
+                },
+                "label" : "3",
+                "typeNote" : "boxes"
+              } ]
             }
           }
         },
@@ -11303,6 +11324,28 @@
               }
             ]
           }}
+        },
+        {
+          "source": {"490": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Rapport,"},{"x": "xxxx-xxxx ;"},{"v": "2016, 4"}]}},
+          "result": {
+            "mainEntity": {
+              "seriesMembership": [
+              {
+                "@type": "SeriesMembership",
+                "inSeries" : {
+                  "@type" : "Instance",
+                  "identifiedBy" : [ {
+                    "@type" : "ISSN",
+                    "value" : "xxxx-xxxx"
+                  } ]
+                },
+                "marc:seriesTracingPolicy": "1",
+                "seriesStatement": ["Rapport"],
+                "seriesEnumeration": "2016, 4"
+              }
+              ]
+            }
+          }
         }
       ]
     },
@@ -11903,10 +11946,11 @@
       ]
     },
     "521": {
-      "aboutEntity": "?thing",
+      "aboutEntity": "?work",
       "embedded": true,
       "addLink": "intendedAudience",
       "resourceType": "IntendedAudience",
+      "fallbackEntity": "?thing",
       "i1": {
         "marcDefault": " ",
         "property": "marc:audienceType",
@@ -11926,8 +11970,8 @@
       "$6": {"property": "marc:fieldref"},
       "_spec": [
         {
-          "name": "With blank indicator 1",
-          "source": {"521": {"ind1": " ", "ind2": " ", "subfields": [
+          "name": "Instance With blank indicator 1",
+          "normalized": {"521": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "foo bar"}
           ]}},
           "result": {"mainEntity": {
@@ -11943,21 +11987,38 @@
           }}
         },
         {
+          "name": "Work With blank indicator 1",
+          "source": {"521": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "foo bar"}
+          ]}},
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "intendedAudience": [
+                {
+                  "@type": "IntendedAudience",
+                  "label": "foo bar"
+                }
+              ]
+            }
+          }}
+        },
+        {
           "name": "With indicator 1 set to 0",
           "source": {"521": {"ind1": "0", "ind2": " ", "subfields": [
             {"a": "Baz"}
           ]}},
           "result": {"mainEntity": {
             "instanceOf": {
-              "@type": "Text"
-            },
-            "intendedAudience": [
-              {
-                "@type": "IntendedAudience",
-                "label": "Baz",
-                "marc:audienceType": "marc:ReadingGradeLevel"
-              }
-            ]
+              "@type": "Text",
+              "intendedAudience": [
+                {
+                  "@type": "IntendedAudience",
+                  "label": "Baz",
+                  "marc:audienceType": "marc:ReadingGradeLevel"
+                }
+              ]
+            }
           }}
         }
       ]

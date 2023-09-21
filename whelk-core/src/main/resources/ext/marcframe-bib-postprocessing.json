@@ -1,118 +1,5 @@
 [
   {
-    "type": "CopyOnRevert",
-    "sourceLink": "reproductionOf",
-    "copyIfMissing": [
-      "publication",
-      "extent",
-      "responsibilityStatement",
-      "editionStatement",
-      {
-        "from": "identifiedBy",
-        "to": "indirectlyIdentifiedBy",
-        "injectOnCopies": {
-          "qualifier": "original"
-        }
-      }
-    ],
-    "injectOnCopies": {
-      "appliesTo": {"@type": "Resource", "label": "[original]"}
-    },
-    "_spec": [
-      {
-        "name":  "Copy data from the original of a reproduction",
-        "source": {
-          "mainEntity": {
-            "reproductionOf": [
-              {
-                "publication": [
-                  {
-                    "@type": "Publication",
-                    "year": "1773"
-                  }
-                ],
-                "responsibilityStatement": "av författaren",
-                "editionStatement" : ["Första utgåvan"],
-                "extent": {"@type": "Extent", "label": ["259 s."]},
-                "identifiedBy": [
-                  {"@type": "ISBN", "value": "00-0-000000-0"}
-                ],
-                "hasNote": [{"@type": "Note", "label": "Anmärkning"}]
-              }
-            ]
-          }
-        },
-        "result": "source",
-        "back": {
-          "mainEntity": {
-            "reproductionOf": [
-              {
-                "publication": [
-                  {
-                    "@type": "Publication",
-                    "year": "1773"
-                  }
-                ],
-                "responsibilityStatement": "av författaren",
-                "editionStatement" : ["Första utgåvan"],
-                "extent": {"@type": "Extent", "label": ["259 s."]},
-                "identifiedBy": [
-                  {"@type": "ISBN", "value": "00-0-000000-0"}
-                ],
-                "hasNote": [{"@type": "Note", "label": "Anmärkning"}]
-              }
-            ],
-            "publication": [
-              {
-                "@type": "Publication",
-                "year": "1773",
-                "appliesTo": {"@type": "Resource", "label": "[original]"}
-              }
-            ],
-            "responsibilityStatement": "av författaren",
-            "editionStatement" : ["Första utgåvan"],
-            "extent": {"@type": "Extent", "label": ["259 s."], "appliesTo": {"@type": "Resource", "label": "[original]"}},
-            "indirectlyIdentifiedBy": [
-              {"@type": "ISBN", "value": "00-0-000000-0", "qualifier": "original"}
-            ]
-          }
-        }
-      }
-    ]
-  },
-  {
-    "type": "CopyOnRevert",
-    "sourceLink": "hasReproduction",
-    "copyIfMissing": [
-      "associatedMedia"
-    ],
-    "_spec": [
-      {
-        "name":  "Copy associatedMedia from a reproduction",
-        "source": {
-          "mainEntity": {
-            "hasReproduction": [
-              {
-                "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}]
-              }
-            ]
-          }
-        },
-        "result": "source",
-        "back": {
-          "mainEntity": {
-            "hasReproduction": [
-              {
-                "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}]
-              }
-            ],
-            "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}]
-          }
-        }
-      }
-    ]
-  },
-  {
     "type": "RestructPropertyValuesAndFlag",
     "sourceLink": "marc:primaryProvisionActivity",
     "overwriteType": "PrimaryProvisionActivity",
@@ -512,6 +399,119 @@
           ]
         },
         "back": "both"
+      }
+    ]
+  },
+  {
+    "type": "CopyOnRevert",
+    "sourceLink": "reproductionOf",
+    "copyIfMissing": [
+      "publication",
+      "extent",
+      "responsibilityStatement",
+      "editionStatement",
+      {
+        "from": "identifiedBy",
+        "to": "indirectlyIdentifiedBy",
+        "injectOnCopies": {
+          "qualifier": "original"
+        }
+      }
+    ],
+    "injectOnCopies": {
+      "appliesTo": {"@type": "Resource", "label": "[original]"}
+    },
+    "_spec": [
+      {
+        "name":  "Copy data from the original of a reproduction",
+        "source": {
+          "mainEntity": {
+            "reproductionOf": [
+              {
+                "publication": [
+                  {
+                    "@type": "Publication",
+                    "year": "1773"
+                  }
+                ],
+                "responsibilityStatement": "av författaren",
+                "editionStatement" : ["Första utgåvan"],
+                "extent": {"@type": "Extent", "label": ["259 s."]},
+                "identifiedBy": [
+                  {"@type": "ISBN", "value": "00-0-000000-0"}
+                ],
+                "hasNote": [{"@type": "Note", "label": "Anmärkning"}]
+              }
+            ]
+          }
+        },
+        "result": "source",
+        "back": {
+          "mainEntity": {
+            "reproductionOf": [
+              {
+                "publication": [
+                  {
+                    "@type": "Publication",
+                    "year": "1773"
+                  }
+                ],
+                "responsibilityStatement": "av författaren",
+                "editionStatement" : ["Första utgåvan"],
+                "extent": {"@type": "Extent", "label": ["259 s."]},
+                "identifiedBy": [
+                  {"@type": "ISBN", "value": "00-0-000000-0"}
+                ],
+                "hasNote": [{"@type": "Note", "label": "Anmärkning"}]
+              }
+            ],
+            "publication": [
+              {
+                "@type": "Publication",
+                "year": "1773",
+                "appliesTo": {"@type": "Resource", "label": "[original]"}
+              }
+            ],
+            "responsibilityStatement": "av författaren",
+            "editionStatement" : ["Första utgåvan"],
+            "extent": {"@type": "Extent", "label": ["259 s."], "appliesTo": {"@type": "Resource", "label": "[original]"}},
+            "indirectlyIdentifiedBy": [
+              {"@type": "ISBN", "value": "00-0-000000-0", "qualifier": "original"}
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "type": "CopyOnRevert",
+    "sourceLink": "hasReproduction",
+    "copyIfMissing": [
+      "associatedMedia"
+    ],
+    "_spec": [
+      {
+        "name":  "Copy associatedMedia from a reproduction",
+        "source": {
+          "mainEntity": {
+            "hasReproduction": [
+              {
+                "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}]
+              }
+            ]
+          }
+        },
+        "result": "source",
+        "back": {
+          "mainEntity": {
+            "hasReproduction": [
+              {
+                "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}]
+              }
+            ],
+            "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/doc.pdf"]}]
+          }
+        }
       }
     ]
   },
@@ -1217,6 +1217,8 @@
       }
     ]
   },
+  {"@include": "marcframe-bib-postproc-normalizecontenttype.json"},
+  {"@include": "marcframe-bib-postproc-contribution.json"},
   {"@include": "marcframe-bib-postproc-romanization.json"},
   {"@include": "marcframe-bib-postproc-normalizeworktitles.json"}
 ]
