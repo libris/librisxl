@@ -1243,7 +1243,7 @@ class JsonLd {
         return false
     }
 
-    static Map frame(String mainId, Map inData) {
+    static Map frame(String mainId, Map inData, int depthLimit = 2) {
         Map<String, Map> idMap = getIdMap(inData)
 
         putRecordReferencesIntoThings(idMap)
@@ -1252,7 +1252,7 @@ class JsonLd {
 
         Map framedData
         try {
-            framedData = embed(mainId, mainItem, idMap, new HashSet<String>())
+            framedData = embed(mainId, mainItem, idMap, new HashSet<String>(), 0, depthLimit)
             if (!framedData) {
                 throw new FramingException("Failed to frame JSONLD ($inData)")
             }
@@ -1282,23 +1282,23 @@ class JsonLd {
         }
     }
 
-    private static Map embed(String mainId, Map mainItem, Map idMap, Set embedChain, int depth = 0) {
+    private static Map embed(String mainId, Map mainItem, Map idMap, Set embedChain, int depth, int depthLimit) {
         embedChain.add(mainId)
         Map newItem = [:]
         mainItem.each { key, value ->
             if (key != JSONLD_ALT_ID_KEY)
-                newItem.put(key, toEmbedded(value, idMap, embedChain, depth))
+                newItem.put(key, toEmbedded(value, idMap, embedChain, depth, depthLimit))
             else
                 newItem.put(key, value)
         }
         return newItem
     }
 
-    private static Object toEmbedded(Object o, Map idMap, Set embedChain, int depth) {
+    private static Object toEmbedded(Object o, Map idMap, Set embedChain, int depth, int depthLimit) {
         if (o instanceof List) {
             def newList = []
             o.each {
-                newList.add(toEmbedded(it, idMap, embedChain, depth))
+                newList.add(toEmbedded(it, idMap, embedChain, depth, depthLimit))
             }
             return newList
         }
@@ -1313,8 +1313,8 @@ class JsonLd {
             }
             if (obj) {
                 int i = oId ? 1 : 0
-                return depth < 2
-                        ? embed(oId, obj, idMap, new HashSet<String>(embedChain), depth + i)
+                return depth < depthLimit
+                        ? embed(oId, obj, idMap, new HashSet<String>(embedChain), depth + i, depthLimit)
                         : obj
             }
         }
