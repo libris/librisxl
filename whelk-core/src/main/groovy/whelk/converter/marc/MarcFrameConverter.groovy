@@ -92,7 +92,7 @@ class MarcFrameConverter implements FormatConverter {
         initialize()
         if (data['@graph']) {
             def entryId = data['@graph'][0]['@id']
-            data = JsonLd.frame(entryId, data)
+            data = JsonLd.frame(entryId, data, 3)
         } else if (data[JsonLd.RECORD_KEY]) {
             // Reshape a framed top-level thing with a meta record
             Map thing = data.clone()
