@@ -30,7 +30,7 @@ public class WebInterface extends HttpServlet {
         Whelk whelk = Whelk.createLoadedCoreWhelk()
 
         houseKeepers = []
-        houseKeepers.add(new NotificationGenerator(whelk))
+        houseKeepers.add(new NotificationSender(whelk))
 
         for (HouseKeeper hk : houseKeepers) {
             timer.scheduleAtFixedRate({

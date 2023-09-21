@@ -16,18 +16,17 @@ import java.time.temporal.ChronoUnit
 
 @CompileStatic
 @Log
-class NotificationGenerator extends HouseKeeper {
+class NotificationSender extends HouseKeeper {
 
-    private static final int DAYS_TO_KEEP_NOTIFICATIONS = 10
     private String status = "OK"
     private Whelk whelk
 
-    public NotificationGenerator(Whelk whelk) {
+    public NotificationSender(Whelk whelk) {
         this.whelk = whelk
     }
 
     public String getName() {
-        return "Notifications generator"
+        return "Notifications sender"
     }
 
     public String getStatusDescription() {
@@ -67,7 +66,8 @@ class NotificationGenerator extends HouseKeeper {
             // This interval, should generally be: From the last generated notice until now.
             // However, if there are no previously generated notices (near enough in time), use
             // now - [some pre set value], to avoid scanning the whole catalog.
-            String sql = "SELECT MAX(created) FROM lddb__notifications;"
+
+            /*String sql = "SELECT MAX(created) FROM lddb__notifications;"
             statement = connection.prepareStatement(sql)
             resultSet = statement.executeQuery()
             Timestamp from = Timestamp.from(Instant.now().minus(DAYS_TO_KEEP_NOTIFICATIONS, ChronoUnit.DAYS))
@@ -75,11 +75,12 @@ class NotificationGenerator extends HouseKeeper {
                 Timestamp lastCreated = resultSet.getTimestamp(1)
                 if (lastCreated && lastCreated.after(from))
                     from = lastCreated
-            }
+            }*/
+            Timestamp from = Timestamp.from(Instant.now().minus(1, ChronoUnit.DAYS))
             Timestamp until = Timestamp.from(Instant.now())
 
             // Then fetch all changed IDs within that interval
-            sql = "SELECT id FROM lddb WHERE collection IN ('bib', 'auth') AND ( modified > ? AND modified <= ? );"
+            String sql = "SELECT id FROM lddb WHERE collection IN ('bib', 'auth') AND ( modified > ? AND modified <= ? );"
             connection.setAutoCommit(false)
             statement = connection.prepareStatement(sql)
             statement.setTimestamp(1, from)
@@ -91,15 +92,8 @@ class NotificationGenerator extends HouseKeeper {
             Set affectedInstanceIDs = []
             while (resultSet.next()) {
                 String id = resultSet.getString("id")
-                generateNotificationsForChangedID(id, libraryToUsers, from.toInstant(), until.toInstant(), affectedInstanceIDs)
+                sendNotificationsForChangedID(id, libraryToUsers, from.toInstant(), until.toInstant(), affectedInstanceIDs)
             }
-
-            // Finally, clean out any notifications that are too old
-            sql = "DELETE FROM lddb__notifications WHERE created < ?"
-            statement = connection.prepareStatement(sql)
-            statement.setTimestamp(1, Timestamp.from(Instant.now().minus(DAYS_TO_KEEP_NOTIFICATIONS, ChronoUnit.DAYS)))
-            statement.executeUpdate()
-
         } catch (Throwable e) {
             status = "Failed with:\n" + e + "\nat:\n" + e.getStackTrace().toString()
             throw e
@@ -108,7 +102,7 @@ class NotificationGenerator extends HouseKeeper {
         }
     }
 
-    private void generateNotificationsForChangedID(String id, Map libraryToUsers, Instant since, Instant until, Set affectedInstanceIDs) {
+    private void sendNotificationsForChangedID(String id, Map libraryToUsers, Instant since, Instant until, Set affectedInstanceIDs) {
         // "versions" come sorted by ascending modification time, so oldest version first.
         // We want to pick the "from version" (the base for which this notice details changes)
         // as the last saved version *before* the sought interval.
@@ -131,10 +125,10 @@ class NotificationGenerator extends HouseKeeper {
             String dependerID =  it[0]
             String dependerMainEntityType = whelk.getStorage().getMainEntityTypeBySystemID(dependerID)
             if (whelk.getJsonld().isSubClassOf(dependerMainEntityType, "Instance")) {
-                // If we've not already created a notification for this instance!
+                // If we've not already sent a notification for this instance!
                 if (!affectedInstanceIDs.contains(dependerID)) {
                     affectedInstanceIDs.add(dependerID)
-                    generateNotificationsForAffectedInstance(dependerID, libraryToUsers, fromVersion, untilVersion, until)
+                    sendNotificationsForAffectedInstance(dependerID, libraryToUsers, fromVersion, untilVersion, until)
                 }
             }
         }
@@ -142,10 +136,10 @@ class NotificationGenerator extends HouseKeeper {
     }
 
     /**
-     * Generate notice for a bibliographic instance. Beware: fromVersion and untilVersion may not be
+     * Send notices for a bibliographic instance. Beware: fromVersion and untilVersion may not be
      * _of this document_ (id), but rather of a document this instance depends on!
      */
-    private void generateNotificationsForAffectedInstance(String id, Map libraryToUsers, DocumentVersion fromVersion,
+    private void sendNotificationsForAffectedInstance(String id, Map libraryToUsers, DocumentVersion fromVersion,
                                                           DocumentVersion untilVersion, Instant creationTime) {
         List<String> libraries = whelk.getStorage().getAllLibrariesHolding(id)
         for (String library : libraries) {
@@ -172,11 +166,7 @@ class NotificationGenerator extends HouseKeeper {
                             id, fromVersion.versionWriteTime.toInstant(),
                             creationTime, user, library)
                     if (triggered) {
-                        whelk.getStorage().insertNotification(
-                                untilVersion.versionID, fromVersion.versionID,
-                                user["id"].toString(), ["triggered" : triggered],
-                                Timestamp.from(creationTime))
-                        System.err.println("\tSTORED NOTICE FOR USER " + user["id"].toString() + " version: " + untilVersion.versionID + " created: " + creationTime)
+                        System.err.println("\tSEND NOTICE FOR USER " + user["id"].toString())
                     }
                 }
             }
@@ -244,7 +234,8 @@ class NotificationGenerator extends HouseKeeper {
                 historicEmbellish(instanceBeforeChange, ["instanceOf", "contribution", "agent"], before)
                 historicEmbellish(instanceAfterChange, ["instanceOf", "contribution", "agent"], after)
 
-                Object contributionsBefore = Document._get(["mainEntity", "instanceOf", "contribution"], instanceBeforeChange.data)
+                // Check for pre-made change notes instead.
+                /*Object contributionsBefore = Document._get(["mainEntity", "instanceOf", "contribution"], instanceBeforeChange.data)
                 Object contributionsAfter = Document._get(["mainEntity", "instanceOf", "contribution"], instanceAfterChange.data)
 
                 if (contributionsBefore == null || contributionsAfter == null || ! contributionsBefore instanceof List || ! contributionsAfter instanceof List)
@@ -263,99 +254,7 @@ class NotificationGenerator extends HouseKeeper {
                             }
                         }
                     }
-                }
-                break
-            }
-
-            case "https://id.kb.se/notificationtriggers/worktitle": {
-                historicEmbellish(instanceBeforeChange, ["instanceOf", "hasTitle"], before)
-                historicEmbellish(instanceAfterChange, ["instanceOf", "hasTitle"], after)
-
-                Object titlesBefore = Document._get(["mainEntity", "instanceOf", "hasTitle"], instanceBeforeChange.data)
-                Object titlesAfter = Document._get(["mainEntity", "instanceOf", "hasTitle"], instanceAfterChange.data)
-
-                if (titlesBefore == null || titlesAfter == null || ! titlesBefore instanceof List || ! titlesAfter instanceof List)
-                    return false
-
-                if (titlesAfter as Set != titlesBefore as Set)
-                    return true
-
-                break
-            }
-
-            case "https://id.kb.se/notificationtriggers/intendedaudience": {
-                historicEmbellish(instanceBeforeChange, ["instanceOf", "intendedAudience"], before)
-                historicEmbellish(instanceAfterChange, ["instanceOf", "intendedAudience"], after)
-
-                Object audienceBefore = Document._get(["mainEntity", "instanceOf", "intendedAudience"], instanceBeforeChange.data)
-                Object audienceAfter = Document._get(["mainEntity", "instanceOf", "intendedAudience"], instanceAfterChange.data)
-
-                if (audienceBefore == null || audienceAfter == null || ! audienceBefore instanceof List || ! audienceAfter instanceof List)
-                    return false
-
-                if (audienceAfter as Set != audienceBefore as Set)
-                    return true
-
-                break
-            }
-
-            case "https://id.kb.se/notificationtriggers/ddc": {
-                historicEmbellish(instanceBeforeChange, ["instanceOf", "classification"], before)
-                historicEmbellish(instanceAfterChange, ["instanceOf", "classification"], after)
-
-                Object classificationBefore = Document._get(["mainEntity", "instanceOf", "classification"], instanceBeforeChange.data)
-                Object classificationAfter = Document._get(["mainEntity", "instanceOf", "classification"], instanceAfterChange.data)
-
-                if (classificationBefore == null || classificationAfter == null || ! classificationBefore instanceof List || ! classificationAfter instanceof List)
-                    return false
-
-                if (
-                        classificationAfter.findAll( it -> it["@type"] == "ClassificationDdc" ) as Set !=
-                        classificationBefore.findAll( it -> it["@type"] == "ClassificationDdc" ) as Set
-                )
-                    return true
-
-                break
-            }
-
-            case "https://id.kb.se/notificationtriggers/sab": {
-                historicEmbellish(instanceBeforeChange, ["instanceOf", "classification"], before)
-                historicEmbellish(instanceAfterChange, ["instanceOf", "classification"], after)
-
-                Object classificationBefore = Document._get(["mainEntity", "instanceOf", "classification"], instanceBeforeChange.data)
-                Object classificationAfter = Document._get(["mainEntity", "instanceOf", "classification"], instanceAfterChange.data)
-
-                if (classificationBefore == null || classificationAfter == null || ! classificationBefore instanceof List || ! classificationAfter instanceof List)
-                    return false
-
-                Collection sabBefore = classificationAfter.findAll( it -> it["inScheme"] == "https://id.kb.se/term/kssb" )
-                Collection sabAfter = classificationAfter.findAll( it -> it["inScheme"] == "https://id.kb.se/term/kssb" )
-                sabBefore = sabBefore.findAll {
-                    if (it["code"] == null)
-                        return false
-                    return ((String) it["code"]).matches(".+/[A-Z].*")
-                }
-                sabAfter = sabAfter.findAll {
-                    if (it["code"] == null)
-                        return false
-                    return ((String) it["code"]).matches(".+/[A-Z].*")
-                }
-                return !sabAfter.containsAll(sabBefore)
-            }
-
-            case "https://id.kb.se/notificationtriggers/instancetitle": {
-                historicEmbellish(instanceBeforeChange, ["hasTitle"], before)
-                historicEmbellish(instanceAfterChange, ["hasTitle"], after)
-
-                Object titlesBefore = Document._get(["mainEntity", "hasTitle"], instanceBeforeChange.data)
-                Object titlesAfter = Document._get(["mainEntity", "hasTitle"], instanceAfterChange.data)
-
-                if (titlesBefore == null || titlesAfter == null || ! titlesBefore instanceof List || ! titlesAfter instanceof List)
-                    return false
-
-                if (titlesAfter as Set != titlesBefore as Set)
-                    return true
-
+                }*/
                 break
             }
 

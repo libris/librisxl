@@ -436,24 +436,6 @@ class PostgreSQLComponent {
             JOIN lddb ON lddb__identifiers.id = lddb.id WHERE lddb__identifiers.iri = ?
             """.stripIndent()
 
-    private static final String INSERT_NOTIFICATION = """
-            INSERT INTO lddb__notifications (versionid, baseversionid, userid, triggers, created)
-            VALUES (?, ?, ?, ?, ?)
-            """.stripIndent()
-
-    private static final String GET_NOTICFICATIONS_FOR_USER = """
-            SELECT n.pk, n.triggers, n.handled, v.data#>>'{@graph,1,@id}' thingid
-            FROM lddb__notifications n
-            LEFT JOIN lddb__versions v
-            ON n.versionid = v.pk
-            WHERE userid = ?
-            ORDER BY n.created ASC
-            """.stripIndent()
-
-    private static final String FLIP_NOTIFICATION_HANDLED = """
-            UPDATE lddb__notifications SET handled = NOT handled WHERE userid = ? AND pk = ?
-            """.stripIndent()
-
     private static final String GET_ALL_LIBRARIES_HOLDING_ID = """
             SELECT l.data#>>'{@graph,1,heldBy,@id}' FROM lddb__dependencies d
             LEFT JOIN lddb l ON d.id = l.id
@@ -1457,66 +1439,6 @@ class PostgreSQLComponent {
         }
     }
 
-    List<Map> getNotificationsFor(String userid) {
-        return withDbConnection {
-            Connection connection = getMyConnection()
-            PreparedStatement preparedStatement = null
-            ResultSet rs = null
-            try {
-                preparedStatement = connection.prepareStatement(GET_NOTICFICATIONS_FOR_USER)
-                preparedStatement.setString(1, userid)
-
-                rs = preparedStatement.executeQuery()
-                List<Map> results = []
-                while(rs.next()) {
-                    Map notification = [
-                            "notificationID": rs.getInt("pk"),
-                            "mainEntityID" : rs.getString("thingid"),
-                            "triggers" : mapper.readValue(rs.getString("triggers"), Map),
-                            "handled" : rs.getBoolean("handled")
-                    ]
-                    results.add(notification)
-                }
-                return results
-            } finally {
-                close(rs, preparedStatement)
-            }
-        }
-    }
-
-    boolean insertNotification(int versionID, int baseVersionID, String userID, Map triggers, Timestamp time) {
-        return withDbConnection {
-            Connection connection = getMyConnection()
-            PreparedStatement preparedStatement = null
-            try {
-                preparedStatement = connection.prepareStatement(INSERT_NOTIFICATION)
-                preparedStatement.setInt(1, versionID)
-                preparedStatement.setInt(2, baseVersionID)
-                preparedStatement.setString(3, userID)
-                preparedStatement.setObject(4, mapper.writeValueAsString(triggers), OTHER)
-                preparedStatement.setTimestamp(5, time)
-                return (preparedStatement.executeUpdate() == 1)
-            } finally {
-                close(preparedStatement)
-            }
-        }
-    }
-
-    boolean flipNotificationHandled(String userID, int notificationID) {
-        return withDbConnection {
-            Connection connection = getMyConnection()
-            PreparedStatement preparedStatement = null
-            try {
-                preparedStatement = connection.prepareStatement(FLIP_NOTIFICATION_HANDLED)
-                preparedStatement.setString(1, userID)
-                preparedStatement.setInt(2, notificationID)
-                return (preparedStatement.executeUpdate() == 1)
-            } finally {
-                close(preparedStatement)
-            }
-        }
-    }
-    
     void recalculateDependencies(Document doc) {
         withDbConnection {
             saveDependencies(doc, getMyConnection())
@@ -2555,7 +2477,7 @@ class PostgreSQLComponent {
                 while (rs.next()) {
                     def doc = assembleDocument(rs)
                     doc.version = v++
-                    docList.add(new DocumentVersion(doc, rs.getString("changedBy"), rs.getString("changedIn"), rs.getInt("pk"), rs.getTimestamp("modTime")))
+                    docList.add(new DocumentVersion(doc, rs.getString("changedBy"), rs.getString("changedIn"), rs.getTimestamp("modTime")))
                 }
             } finally {
                 close(rs, selectstmt)
