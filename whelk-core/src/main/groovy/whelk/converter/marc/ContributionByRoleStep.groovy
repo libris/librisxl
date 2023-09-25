@@ -58,14 +58,16 @@ class ContributionByRoleStep extends MarcFramePostProcStepBase {
                     workRoles << it
                 }
             }
-            def contrib = it.clone()
+
             if (instanceRoles) {
+              def contrib = it.clone()
                 contrib.role = instanceRoles
+                setToPlainContribution(contrib)
                 instanceContribs << contrib
-            } else {
-                if (workRoles) {
-                    contrib.role = workRoles
-                }
+            }
+            if (workRoles) {
+                def contrib = it.clone()
+                contrib.role = workRoles
                 workContribs << contrib
             }
         }
@@ -76,10 +78,12 @@ class ContributionByRoleStep extends MarcFramePostProcStepBase {
             } else {
                 work.contribution = workContribs
             }
+
             if (!instance.contribution) {
                 instance.contribution = []
             }
             instance.contribution += instanceContribs
+
             return true
         } else {
             return false
@@ -101,7 +105,14 @@ class ContributionByRoleStep extends MarcFramePostProcStepBase {
         } else if (work.contribution !instanceof List) {
             work.contribution = [work.contribution]
         }
-        work.contribution += asList(instance.contribution)
-        instance.remove('contribution')
+        var instanceContribs = asList(instance.remove('contribution'))
+        instanceContribs.each { setToPlainContribution(it) }
+        work.contribution += instanceContribs
+    }
+
+    void setToPlainContribution(contrib) {
+      if (contrib[TYPE] != 'Contribution') {
+        contrib[TYPE] = 'Contribution'
+      }
     }
 }
