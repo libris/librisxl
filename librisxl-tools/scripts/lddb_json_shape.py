@@ -1,3 +1,4 @@
+from __future__ import annotations
 import json
 import os
 
@@ -69,32 +70,45 @@ def count_value(k, v, shape):
 
 
 if __name__ == '__main__':
-    from time import time
-    import sys
+    from datetime import datetime
     from pathlib import Path
+    from time import time
+    import argparse
+    import sys
 
-    args = sys.argv[:]
-    cmd = args.pop(0)
-    if not args:
-        print(f'USAGE: {cmd} OUT_DIR', file=sys.stderr)
-        sys.exit(1)
+    argp = argparse.ArgumentParser()
+    argp.add_argument('-d', '--debug', action='store_true', default=False)
+    argp.add_argument('-c', '--min-created')  # inclusive
+    argp.add_argument('-C', '--max-created')  # exclusive
+    argp.add_argument('outdir', metavar='OUT_DIR')
 
-    outpath = Path(args.pop(0))
+    args = argp.parse_args()
+
     SUFFIX = '.json'
+
+    outpath: Path|None = Path(args.outdir)
+    assert outpath
+
     if outpath.suffix == SUFFIX:
         outdir = outpath.parent
     else:
         outdir = outpath
         outpath = None
+
     if not outdir.is_dir():
         outdir.mkdir(parents=True, exist_ok=True)
 
-    index = {}
-    work_by_type_index = {}
-    instance_index = {}
-    work_index = {}
+    # NOTE: fromisoformat with timezones requires Python 3.11
+    min_inc_created: datetime|None = datetime.fromisoformat(args.min_created) if args.min_created else None
+    max_ex_created: datetime|None = datetime.fromisoformat(args.max_created) if args.max_created else None
+    print(min_inc_created, max_ex_created, file=sys.stderr)
 
-    t_last = 0
+    index: dict = {}
+    work_by_type_index: dict = {}
+    instance_index: dict = {}
+    work_index: dict = {}
+
+    t_last = 0.0
     cr = '\r'
     for i, l in enumerate(sys.stdin):
         if not l.rstrip():
@@ -109,6 +123,14 @@ if __name__ == '__main__':
 
         try:
             data = json.loads(l)
+
+            if '@graph' in data:
+                created = datetime.fromisoformat(data['@graph'][0]['created'])
+                if min_inc_created and created < min_inc_created:
+                    continue
+                if max_ex_created and created >= max_ex_created:
+                    continue
+
             thing, work = reshape(data)
             compute_shape(thing, index)
             if work:
