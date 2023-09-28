@@ -43,7 +43,7 @@
               },
               {
                 "role": [
-                  {"@id": "https://id.kb.se/relator/publisher"}
+                  {"code": "pbl"}
                 ],
                 "@type": "Contribution",
                 "agent": {"@id": "y"}
@@ -78,7 +78,30 @@
           ]
         }
       },
-      "back": "source"
+      "back": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "contribution": [
+              {
+                "role": [
+                  {"@id": "https://id.kb.se/relator/author"}
+                ],
+                "@type": "Contribution",
+                "agent": {"@id": "x"}
+              },
+              {
+                "role": [
+                  {"@id": "https://id.kb.se/relator/publisher"}
+                ],
+                "@type": "Contribution",
+                "agent": {"@id": "y"}
+              }
+            ]
+          }
+        }
+      }
     },
     {
       "name": "Split publisher from author and move",
