@@ -39,6 +39,10 @@ class ContributionByRoleStep extends MarcFramePostProcStepBase {
     }
 
     void modify(Map record, Map thing) {
+        if (!relatorLinker || !instanceRelators) {
+            log.error("Conversion failed: Missing required resources")
+            return
+        }
         moveRoles(thing)
     }
 
