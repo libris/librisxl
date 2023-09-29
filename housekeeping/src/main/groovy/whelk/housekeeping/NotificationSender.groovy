@@ -216,7 +216,7 @@ class NotificationSender extends HouseKeeper {
     }
 
     /**
-     * Do changes to the graph between times 'from' and 'until' affect 'instanceId' in such a way as to qualify 'triggerUri' triggered?
+     * Do changes to the graph between times 'before' and 'after' affect 'instanceId' in such a way as to qualify 'triggerUri' triggered?
      */
     private boolean triggerIsTriggered(String instanceId, Instant before, Instant after, String triggerUri) {
 
