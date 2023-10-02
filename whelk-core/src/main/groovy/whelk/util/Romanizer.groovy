@@ -45,6 +45,7 @@ class Romanizer {
             auto('hy-Armn',  'hy-Latn-t-hy-Armn-m0-alaloc', ['loc/hy-Latn-t-hy-Armn-m0-alaloc.txt']),
             auto('kir-Cyrl', 'kir-Latn-t-kir-Cyrl-m0-alaloc', ['loc/kir-Latn-t-kir-Cyrl-m0-alaloc.txt']),
             auto('mn-Mong',  'mn-Latn-t-mn-Mong-m0-alaloc', ['loc/mn-Latn-t-mn-Mong-m0-alaloc.txt']),
+            auto('tir-Ethi',  'tir-Latn-t-tir-Ethi-m0-alaloc', ['loc/am-Latn-t-am-Ethi-m0-alaloc.txt']),
             auto('tt-Cyrl',  'tt-Latn-t-tt-Cyrl-m0-alaloc', ['loc/tt-Latn-t-tt-Cyrl-m0-alaloc.txt']),
             auto('tg-Cyrl',  'tg-Latn-t-tg-Cyrl-m0-alaloc', ['loc/tg-Latn-t-tg-Cyrl-m0-alaloc.txt']),
             auto('tk-Cyrl',  'tk-Latn-t-tk-Cyrl-m0-alaloc', ['loc/tk-Latn-t-tk-Cyrl-m0-alaloc.txt']),

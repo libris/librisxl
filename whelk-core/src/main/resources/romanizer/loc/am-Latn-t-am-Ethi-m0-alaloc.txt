@@ -1,3 +1,5 @@
+# Amharic (am) and Tigrinya (tir)
+
 # The romanization table (https://www.loc.gov/catdir/cpso/romanization/amharic.pdf)
 # gives no indication on how to distinguish the cases for the 6th order 
 # For example: ህ he/h, ል le/l, ም me/m 
@@ -32,6 +34,7 @@
 # ICU transform rules
 
 # am-Latn-t-am-Ethi-m0-alaloc
+# tir-Latn-t-tir-Ethi-m0-alaloc
 
 # script_to_roman
 'ፘ' > 'rya' ;

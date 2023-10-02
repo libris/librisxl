@@ -298,6 +298,17 @@ class RomanizerSpec extends Specification {
         // q3wn8w0sns6z7q2v
         "ደፋርዋ ዶሮ"         || "dafārwā doro"
     }
+    
+    def "Tigrinya with ALA-LOC"() {
+        expect:
+        new Romanizer().romanize(source, 'tir')['tir-Latn-t-tir-Ethi-m0-alaloc'] == target
+        where:
+        source         || target
+        // zh9lf7193q7n08w
+        "ልቢ ህጻን"       || "lebi heṣān"
+        // h1t5ms9t2x1nc6n
+        "ሮቢ ናብ"       || "robi nāb"
+    }
 
     def "Yiddish with YIVO"() {
         expect:
