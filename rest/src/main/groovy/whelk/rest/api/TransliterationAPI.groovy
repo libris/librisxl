@@ -1,7 +1,6 @@
 package whelk.rest.api
 
 import groovy.util.logging.Log4j2 as Log
-import whelk.Whelk
 import whelk.util.Romanizer
 import whelk.util.WhelkFactory
 
@@ -44,7 +43,7 @@ class TransliterationAPI extends HttpServlet {
         def languageTag = body["langTag"]
         def source = body["source"]
         
-        if (!getRomanizer().isMaybeRomanizable(languageTag)) {
+        if (!getRomanizer().isMaybeTransliterable(languageTag)) {
             log.warn("Language tag ${languageTag} not found")
             HttpTools.sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid language code")
         } else {
@@ -75,7 +74,7 @@ class TransliterationAPI extends HttpServlet {
         HttpTools.sendResponse(response, null, null, HttpServletResponse.SC_NO_CONTENT)
         
         String languageTag = request.getPathInfo().split("/", 3).last()
-        if (getRomanizer().isMaybeRomanizable(languageTag)) {
+        if (getRomanizer().isMaybeTransliterable(languageTag)) {
             HttpTools.sendResponse(response, null, null, HttpServletResponse.SC_NO_CONTENT)
         } else {
             log.debug("Language tag ${languageTag} not found")

@@ -273,6 +273,15 @@ class RomanizerSpec extends Specification {
         "ՉԻՓՉՈՒ ՆԻՉՈՒՆ ԵՒ ԿԱՄԱԿՈՐՆԵՐԸ"                            || "CHʻIPʻCHʻU NICHʻUN EV KAMAKORNERĚ"
     }
 
+    def "Amharic reverse with ALA-LOC"() {
+        expect:
+        new Romanizer().romanize(source, 'am-Latn-t-am-Ethi-m0-alaloc')['am'] == target
+        where:
+        source            || target
+        "bālaraǧem"       || "ባለረጅም"
+        "yaʼeger"         || "የእግር"
+    }
+
     def "Amharic with ALA-LOC"() {
         expect:
         new Romanizer().romanize(source, 'am')['am-Latn-t-am-Ethi-m0-alaloc'] == target

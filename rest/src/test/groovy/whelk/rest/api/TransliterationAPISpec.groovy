@@ -85,6 +85,7 @@ class TransliterationAPISpec extends Specification {
         tag | source | expectedKey | expectedValue | expectedStatus
         "uk"  | "Королівська бібліотека Швеції"  | "uk-Latn-t-uk-Cyrl-m0-iso-1995"   | "Korolivsʹka biblioteka Šveciï"    | SC_OK
         "grc" | "Εθνική βιβλιοθήκη της Σουηδίας" | "grc-Latn-t-grc-Grek-x0-skr-1980" | "Ethnikē bibliothēkē tēs Souēdias" | SC_OK
+        "am-Latn-t-am-Ethi-m0-alaloc" | "bālaraǧem" | "amE" | "ባለረጅም" | SC_OK
         "nonexistent" | "klsdfjsklfjsdf" | "" | "" | SC_BAD_REQUEST
     }
 

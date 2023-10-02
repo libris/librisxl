@@ -20,6 +20,8 @@ class Romanizer {
             'oss', 'rom', 'rum', 'rum', 'sah', 'sel', 'tut', 'udm', 'xal',
     ]
 
+    private Map<String, List<Transform>> transliterators = [:]
+
     private static final List<Transform> AUTO = [
             auto('be-Cyrl',  'be-Latn-t-be-Cyrl-m0-iso-1968', ['be-iso.txt', 'slavic-iso.txt']),
             auto('bg-Cyrl',  'bg-Latn-t-bg-Cyrl-m0-iso-1968', ['bg-iso.txt', 'slavic-iso.txt']),
@@ -51,9 +53,21 @@ class Romanizer {
             auto('tk-Cyrl',  'tk-Latn-t-tk-Cyrl-m0-alaloc', ['loc/tk-Latn-t-tk-Cyrl-m0-alaloc.txt']),
             auto('uz-Cyrl',  'uz-Latn-t-uz-Cyrl-m0-alaloc', ['loc/uz-Latn-t-uz-Cyrl-m0-alaloc.txt']),
             auto('zh-Hani',  'zh-Latn-t-zh-Hani-m0-alaloc', ['loc/zh-Latn-t-zh-Hani-m0-alaloc.txt']),
-    ] + alaLocNonSlavicCyrillic()
 
-    private Map<String, List<Transform>> transliterators = [:]
+            autoReverse('am-Latn-t-am-Ethi-m0-alaloc',   'am',  ['loc/am-Latn-t-am-Ethi-m0-alaloc.txt']),
+            autoReverse('az-Latn-t-az-Cyrl-m0-alaloc',   'az',  ['loc/az-Latn-t-az-Cyrl-m0-alaloc.txt']),
+            autoReverse('chu-Latn-t-chu-Cyrs-m0-alaloc', 'chu', ['loc/chu-Latn-t-chu-Cyrs-m0-alaloc.txt']),
+            autoReverse('ka-Latn-t-ka-m0-alaloc',        'ka',  ['loc/ka-Latn-t-ka-m0-alaloc.txt']),
+            autoReverse('hi-Latn-t-hi-Deva-m0-alaloc',   'hi',  ['loc/hi-Latn-t-hi-Deva-m0-alaloc.txt']),
+            autoReverse('hy-Latn-t-hy-Armn-m0-alaloc',   'hy',  ['loc/hy-Latn-t-hy-Armn-m0-alaloc.txt']),
+            autoReverse('kir-Latn-t-kir-Cyrl-m0-alaloc', 'kir', ['loc/kir-Latn-t-kir-Cyrl-m0-alaloc.txt']),
+            autoReverse('mn-Latn-t-mn-Mong-m0-alaloc',   'mn',  ['loc/mn-Latn-t-mn-Mong-m0-alaloc.txt']),
+            autoReverse('tir-Latn-t-tir-Ethi-m0-alaloc', 'tir', ['loc/am-Latn-t-am-Ethi-m0-alaloc.txt']),
+            autoReverse('tt-Latn-t-tt-Cyrl-m0-alaloc',   'tt',  ['loc/tt-Latn-t-tt-Cyrl-m0-alaloc.txt']),
+            autoReverse('tg-Latn-t-tg-Cyrl-m0-alaloc',   'tg',  ['loc/tg-Latn-t-tg-Cyrl-m0-alaloc.txt']),
+            autoReverse('tk-Latn-t-tk-Cyrl-m0-alaloc',   'tk',  ['loc/tk-Latn-t-tk-Cyrl-m0-alaloc.txt']),
+            autoReverse('uz-Latn-t-uz-Cyrl-m0-alaloc',   'uz',  ['loc/uz-Latn-t-uz-Cyrl-m0-alaloc.txt']),
+    ] + alaLocNonSlavicCyrillic()
     
     Romanizer(List<String> enabledTargetTags = AUTO.collect { it.targetTag() }) {
         enabledTargetTags.each { tag ->
@@ -73,8 +87,9 @@ class Romanizer {
         ).collectEntries { [it.targetTag(), it.transform(s)]}
     }
     
-    boolean isMaybeRomanizable(String langTag) {
-        !isTransformed(langTag) && transliterators.keySet().any{ sourceTag -> sourceTag.startsWith(langTag) }
+    boolean isMaybeTransliterable(String langTag) {
+        transliterators.keySet().contains(langTag)
+                || (!isTransformed(langTag) && transliterators.keySet().any{ sourceTag -> sourceTag.startsWith(langTag) })
     }
 
     private void add(Transform transform) {
@@ -90,11 +105,17 @@ class Romanizer {
         new Auto(sourceTag, t)
     }
 
+    private static Transform autoReverse(String sourceTag, String targetTag, List<String> filenames) {
+        Transliterator t = Transliterator.createFromRules(targetTag, filenames.collect(Romanizer::readFromResources).join('\n'), Transliterator.REVERSE)
+        new Auto(sourceTag, t)
+    }
+
     private static List<Transform> alaLocNonSlavicCyrillic() {
         ALA_LOC_NON_SLAVIC_CYRILLIC.collect { tag ->
             def from = "$tag-Cyrl".toString()
             def to = "${tag}-Latn-t-${tag}-Cyrl-m0-alaloc"
             auto(from, to, ['loc/und-Latn-t-und-Cyrl-m0-alaloc.txt'])
+            autoReverse(to, tag, ['loc/und-Latn-t-und-Cyrl-m0-alaloc.txt'])
         }
     }
 
