@@ -12,6 +12,8 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 @CompileStatic
@@ -160,9 +162,6 @@ class NotificationSender extends HouseKeeper {
                         ]
                     }*/
 
-                    System.err.println("*** SEND STUFF FOR CHANGED ID: " + id)
-                    System.err.println("    USER SETTINGS ARE   : " + user)
-
                     List<String> triggered = changeMatchesAnyTrigger(
                             id, fromVersion.versionWriteTime.toInstant(),
                             creationTime, user, library)
@@ -184,7 +183,7 @@ class NotificationSender extends HouseKeeper {
      *
      * Returns the URIs of all triggered rules/triggers.
      */
-    private List<String> changeMatchesAnyTrigger(String instanceId, Instant from, Instant until, Map user, String library) {
+    private List<String> changeMatchesAnyTrigger(String instanceId, Instant from, Instant until, Map user, String heldBy) {
 
         List<String> triggeredTriggers = []
 
@@ -195,10 +194,10 @@ class NotificationSender extends HouseKeeper {
             if (! request instanceof Map)
                 return
 
-            if (! request["library"] instanceof String)
+            if (! request["heldBy"] instanceof String)
                 return
 
-            if (request["library"] != library)
+            if (request["heldBy"] != heldBy)
                 return
 
             if (! request["triggers"] instanceof List)
@@ -216,61 +215,44 @@ class NotificationSender extends HouseKeeper {
         return triggeredTriggers
     }
 
-    /**
-     * Do changes to the graph between times 'before' and 'after' affect 'instanceId' in such a way as to qualify 'triggerUri' triggered?
-     */
     private boolean triggerIsTriggered(String instanceId, Instant before, Instant after, String triggerUri) {
-
-        // Load the two versions (old/new) of the instance
-        Document instanceBeforeChange = whelk.getStorage().loadAsOf(instanceId, Timestamp.from(before))
-        // If a depender is created after a dependency, it will ofc not have existed at the original writing time
-        // of the dependency, if so, simply load the first available version of the depender.
-        if (instanceBeforeChange == null)
-            instanceBeforeChange = whelk.getStorage().load(instanceId, "0")
         Document instanceAfterChange = whelk.getStorage().loadAsOf(instanceId, Timestamp.from(after))
 
+        // Populate 'changeNotes' with every note affecting this instance in the specified interval
+        List<Map> changeNotes = new ArrayList<>();
+        List notesOnInstance = (List) Document._get(["@graph", 0, "hasChangeNote"], instanceAfterChange.data)
+        if (notesOnInstance != null)
+        changeNotes.addAll(notesOnInstance)
         switch (triggerUri) {
-
             case "https://id.kb.se/changenote/primarytitle": {
-                historicEmbellish(instanceBeforeChange, ["hasTitle"], before)
-                historicEmbellish(instanceAfterChange, ["hasTitle"], after)
-
-
-                break;
+                historicEmbellish(instanceAfterChange, ["hasTitle"], after, changeNotes)
             }
-
-            case "https://id.kb.se/notificationtriggers/primarycontribution": {
-                historicEmbellish(instanceBeforeChange, ["instanceOf", "contribution", "agent"], before)
-                historicEmbellish(instanceAfterChange, ["instanceOf", "contribution", "agent"], after)
-
-                // Check for pre-made change notes instead.
-                /*Object contributionsBefore = Document._get(["mainEntity", "instanceOf", "contribution"], instanceBeforeChange.data)
-                Object contributionsAfter = Document._get(["mainEntity", "instanceOf", "contribution"], instanceAfterChange.data)
-
-                if (contributionsBefore == null || contributionsAfter == null || ! contributionsBefore instanceof List || ! contributionsAfter instanceof List)
-                    return false
-
-                for (Object contrBefore : contributionsBefore) {
-                    for (Object contrAfter : contributionsAfter) {
-                        if (contrBefore["@type"].equals("PrimaryContribution") && contrAfter["@type"].equals("PrimaryContribution") ) {
-                            if ( contributionsBefore["agent"] != null && contributionsAfter["agent"] != null) {
-                                if (
-                                        contributionsBefore["agent"]["familyName"] != contributionsAfter["agent"]["familyName"] ||
-                                        contributionsBefore["agent"]["givenName"] != contributionsAfter["agent"]["givenName"] ||
-                                        contributionsBefore["agent"]["lifeSpan"] != contributionsAfter["agent"]["lifeSpan"]
-                                )
-                                    return true
-                            }
-                        }
-                    }
-                }*/
-                break
-            }
-
         }
-        return false
+
+        boolean matches = false
+        filterChangeNotesNotInInterval(changeNotes, before, after)
+        changeNotes.each { note ->
+            note.category.each { category ->
+                if (category["@id"] == triggerUri)
+                    matches = true
+            }
+        }
+        return matches
     }
-    
+
+    private void filterChangeNotesNotInInterval(List<Map> changeNotes, Instant before, Instant after) {
+        changeNotes.removeAll { changeNote ->
+            if (changeNote == null)
+                return true
+            if (!changeNote.atTime)
+                return true
+            Instant atTime = ZonedDateTime.parse( (String) changeNote.atTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant();
+            if (atTime.isBefore(before) || atTime.isAfter(after))
+                return true
+            return false
+        }
+    }
+
     /**
      * This is a simplified/specialized from of 'embellish', for historic data and using only select properties.
      * The full general embellish code can not help us here, because it is based on the idea of cached cards,
@@ -278,8 +260,9 @@ class NotificationSender extends HouseKeeper {
      * (we need to embellish older historic data).
      *
      * This function mutates docToEmbellish
+     * This function also collects metadata ChangeNotes from embellished records.
      */
-    private historicEmbellish(Document docToEmbellish, List<String> properties, Instant asOf) {
+    private historicEmbellish(Document docToEmbellish, List<String> properties, Instant asOf, List<Map> changeNotes) {
         List graphListToEmbellish = docToEmbellish.data["@graph"]
         Set alreadyLoadedURIs = []
 
@@ -294,6 +277,9 @@ class NotificationSender extends HouseKeeper {
                 List linkedGraphList = it.value.data["@graph"]
                 if (linkedGraphList.size() > 1)
                     graphListToEmbellish.add(linkedGraphList[1])
+                linkedGraphList[0]["hasChangeNote"].each { changeNote ->
+                    changeNotes.add( (Map) changeNote )
+                }
             }
             alreadyLoadedURIs.addAll(uris)
         }
