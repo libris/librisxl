@@ -36,21 +36,21 @@ class NotificationSender extends HouseKeeper {
     public void trigger() {
 
         // Build a multi-map of library -> list of settings objects for that library's users
-        Map<String, List<Map>> libraryToUsers = new HashMap<>();
+        Map<String, List<Map>> heldByToUserSettings = new HashMap<>();
         {
             List<Map> allUserSettingStrings = whelk.getStorage().getAllUserData()
             for (Map settings : allUserSettingStrings) {
                 settings?.requestedNotifications.each { request ->
                     if (!request instanceof Map)
                         return
-                    if (!request["library"])
+                    if (!request["heldBy"])
                         return
 
-                    String library = request["library"]
-                    if (!libraryToUsers.containsKey(library))
-                        libraryToUsers.put(library, [])
-                    List userSettingsForThisLib = libraryToUsers[library]
-                    userSettingsForThisLib.add(settings)
+                    String heldBy = request["heldBy"]
+                    if (!heldByToUserSettings.containsKey(heldBy))
+                        heldByToUserSettings.put(heldBy, [])
+                    List userSettingsForThisHeldBy = heldByToUserSettings[heldBy]
+                    userSettingsForThisHeldBy.add(settings)
                 }
             }
         }
@@ -92,7 +92,7 @@ class NotificationSender extends HouseKeeper {
             Set affectedInstanceIDs = []
             while (resultSet.next()) {
                 String id = resultSet.getString("id")
-                sendNotificationsForChangedID(id, libraryToUsers, from.toInstant(), until.toInstant(), affectedInstanceIDs)
+                sendNotificationsForChangedID(id, heldByToUserSettings, from.toInstant(), until.toInstant(), affectedInstanceIDs)
             }
         } catch (Throwable e) {
             status = "Failed with:\n" + e + "\nat:\n" + e.getStackTrace().toString()
@@ -102,7 +102,7 @@ class NotificationSender extends HouseKeeper {
         }
     }
 
-    private void sendNotificationsForChangedID(String id, Map libraryToUsers, Instant since, Instant until, Set affectedInstanceIDs) {
+    private void sendNotificationsForChangedID(String id, Map heldByToUserSettings, Instant since, Instant until, Set affectedInstanceIDs) {
         // "versions" come sorted by ascending modification time, so oldest version first.
         // We want to pick the "from version" (the base for which this notice details changes)
         // as the last saved version *before* the sought interval.
@@ -128,7 +128,7 @@ class NotificationSender extends HouseKeeper {
                 // If we've not already sent a notification for this instance!
                 if (!affectedInstanceIDs.contains(dependerID)) {
                     affectedInstanceIDs.add(dependerID)
-                    sendNotificationsForAffectedInstance(dependerID, libraryToUsers, fromVersion, untilVersion, until)
+                    sendNotificationsForAffectedInstance(dependerID, heldByToUserSettings, fromVersion, untilVersion, until)
                 }
             }
         }
@@ -139,14 +139,13 @@ class NotificationSender extends HouseKeeper {
      * Send notices for a bibliographic instance. Beware: fromVersion and untilVersion may not be
      * _of this document_ (id), but rather of a document this instance depends on!
      */
-    private void sendNotificationsForAffectedInstance(String id, Map libraryToUsers, DocumentVersion fromVersion,
+    private void sendNotificationsForAffectedInstance(String id, Map heldByToUserSettings, DocumentVersion fromVersion,
                                                           DocumentVersion untilVersion, Instant creationTime) {
         List<String> libraries = whelk.getStorage().getAllLibrariesHolding(id)
         for (String library : libraries) {
-            List<Map> users = (List<Map>) libraryToUsers[library]
+            List<Map> users = (List<Map>) heldByToUserSettings[library]
             if (users) {
                 for (Map user : users) {
-
                     /*
                     'user' is now a map looking something like this:
                     {
@@ -155,12 +154,14 @@ class NotificationSender extends HouseKeeper {
                             {
                                 "library": "https://libris.kb.se/library/Utb1",
                                 "triggers": [
-                                    "https://id.kb.se/notificationtriggers/sab",
-                                    "https://id.kb.se/notificationtriggers/primarycontribution"
+                                    "https://id.kb.se/changenote/primarytitle"
                                 ]
                             }
                         ]
                     }*/
+
+                    System.err.println("*** SEND STUFF FOR CHANGED ID: " + id)
+                    System.err.println("    USER SETTINGS ARE   : " + user)
 
                     List<String> triggered = changeMatchesAnyTrigger(
                             id, fromVersion.versionWriteTime.toInstant(),
@@ -230,6 +231,14 @@ class NotificationSender extends HouseKeeper {
 
         switch (triggerUri) {
 
+            case "https://id.kb.se/changenote/primarytitle": {
+                historicEmbellish(instanceBeforeChange, ["hasTitle"], before)
+                historicEmbellish(instanceAfterChange, ["hasTitle"], after)
+
+
+                break;
+            }
+
             case "https://id.kb.se/notificationtriggers/primarycontribution": {
                 historicEmbellish(instanceBeforeChange, ["instanceOf", "contribution", "agent"], before)
                 historicEmbellish(instanceAfterChange, ["instanceOf", "contribution", "agent"], after)
@@ -261,7 +270,7 @@ class NotificationSender extends HouseKeeper {
         }
         return false
     }
-
+    
     /**
      * This is a simplified/specialized from of 'embellish', for historic data and using only select properties.
      * The full general embellish code can not help us here, because it is based on the idea of cached cards,
