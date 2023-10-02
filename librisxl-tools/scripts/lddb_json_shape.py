@@ -101,7 +101,10 @@ if __name__ == '__main__':
     # NOTE: fromisoformat with timezones requires Python 3.11
     min_inc_created: datetime|None = datetime.fromisoformat(args.min_created) if args.min_created else None
     max_ex_created: datetime|None = datetime.fromisoformat(args.max_created) if args.max_created else None
-    print(min_inc_created, max_ex_created, file=sys.stderr)
+    if min_inc_created:
+        print(f"Filter - min created (inclusive): {min_inc_created}", file=sys.stderr)
+    if max_ex_created:
+        print(f"Filter - max created (exclusive): {max_ex_created}", file=sys.stderr)
 
     index: dict = {}
     work_by_type_index: dict = {}
@@ -125,11 +128,14 @@ if __name__ == '__main__':
             data = json.loads(l)
 
             if '@graph' in data:
-                created = datetime.fromisoformat(data['@graph'][0]['created'])
-                if min_inc_created and created < min_inc_created:
-                    continue
-                if max_ex_created and created >= max_ex_created:
-                    continue
+                try:
+                    created = datetime.fromisoformat(data['@graph'][0]['created'])
+                    if min_inc_created and created < min_inc_created:
+                        continue
+                    if max_ex_created and created >= max_ex_created:
+                        continue
+                except (KeyError, ValueError):
+                    pass
 
             thing, work = reshape(data)
             compute_shape(thing, index)
@@ -139,7 +145,7 @@ if __name__ == '__main__':
                 compute_shape(work, work_index, type_key='Work')
 
         except (ValueError, AttributeError) as e:
-            print(f'ERROR at: {i} in data:', file=sys.stderr)
+            print(f'ERROR at: {i + 1} in data:', file=sys.stderr)
             print(l, file=sys.stderr)
             print(e, file=sys.stderr)
 
