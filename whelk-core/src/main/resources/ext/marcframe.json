@@ -891,6 +891,7 @@
       },
       "Text": {
         "[1] [2] [3] [4]": {
+          "TODO": "Clean up these and deprecate? Text/hasPart/illustrativeContent seems *mostly* identical to 008 illustrativeContent",
           "link": "illustrativeContent",
           "uriTemplate": "https://id.kb.se/marc/BooksIllustrationsType-{_}",
           "matchUriToken": "^[abcdefghijklmop]$"
@@ -2398,8 +2399,6 @@
 
       "Text": {
         "[18] [19] [20] [21]": {
-          "aboutEntity": "?work",
-          "TODO": "Decide if it is Work or Instance?",
           "link": "illustrativeContent",
           "uriTemplate": "https://id.kb.se/marc/BooksIllustrationsType-{_}",
           "matchUriToken": "^[abcdefghijklmop]$"
@@ -2952,6 +2951,12 @@
                 "year": "1977",
                 "country": [{"@id": "https://id.kb.se/country/sw"}]
               },
+              "illustrativeContent": [
+                {"@id": "https://id.kb.se/marc/BooksIllustrationsType-a"},
+                {"@id": "https://id.kb.se/marc/BooksIllustrationsType-b"},
+                {"@id": "https://id.kb.se/marc/BooksIllustrationsType-c"},
+                {"@id": "https://id.kb.se/marc/BooksIllustrationsType-d"}
+              ],
               "instanceOf": {
                 "@type": "Text",
                 "language": [{"@id": "https://id.kb.se/language/swe"}],
@@ -2964,12 +2969,6 @@
                 "genreForm": [{"@id": "https://id.kb.se/marc/BooksContentsType-e"},
                               {"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"},
                               {"@id": "https://id.kb.se/marc/BooksBiographyType-a"}
-                ],
-                "illustrativeContent": [
-                  {"@id": "https://id.kb.se/marc/BooksIllustrationsType-a"},
-                  {"@id": "https://id.kb.se/marc/BooksIllustrationsType-b"},
-                  {"@id": "https://id.kb.se/marc/BooksIllustrationsType-c"},
-                  {"@id": "https://id.kb.se/marc/BooksIllustrationsType-d"}
                 ]
               }
             }

@@ -171,6 +171,29 @@ class JsonLdSpec extends Specification {
         assert JsonLd.frame(id, input) == expected
     }
 
+   def "should frame flat jsonld for works with linked contributors"() {
+        given:
+        def input = ["@graph": [
+          ["@id": "record1", "mainEntity": ["@id": "print1"]],
+          ["@id": "print1", "instanceOf": ["@id": "text1"]],
+          ["@id": "text1", "contribution": ["agent": ["@id": "person1"]]],
+          ["@id": "person1", "name": "Person One"]
+        ]]
+        def expected = [
+          "@id": "record1",
+          "mainEntity": [
+            "@id": "print1",
+            "instanceOf": [
+              "@id": "text1",
+              "contribution": ["agent": ["@id": "person1", "name": "Person One"]],
+            ],
+            "meta": ["@id": "record1"]
+          ]
+        ]
+        expect:
+        assert JsonLd.frame("record1", input, 3) == expected
+    }
+
     def "should flatten framed jsonld"() {
         given:
         def id = "1234"

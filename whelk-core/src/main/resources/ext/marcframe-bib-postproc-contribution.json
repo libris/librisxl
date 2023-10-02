@@ -79,6 +79,77 @@
         }
       },
       "back": "source"
+    },
+    {
+      "name": "Split publisher from author and move",
+      "source": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "contribution": [
+              {
+                "role": [
+                  {"@id": "https://id.kb.se/relator/author"},
+                  {"@id": "https://id.kb.se/relator/publisher"}
+                ],
+                "@type": "PrimaryContribution",
+                "agent": {"@id": "x"}
+              }
+            ]
+          }
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "contribution": [
+              {
+                "role": [
+                  {"@id": "https://id.kb.se/relator/author"}
+                ],
+                "@type": "PrimaryContribution",
+                "agent": {"@id": "x"}
+              }
+            ]
+          },
+          "contribution": [
+              {
+                "role": [
+                  {"@id": "https://id.kb.se/relator/publisher"}
+                ],
+                "@type": "Contribution",
+                "agent": {"@id": "x"}
+              }
+          ]
+        }
+      },
+      "back": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "contribution": [
+              {
+                "role": [
+                  {"@id": "https://id.kb.se/relator/author"}
+                ],
+                "@type": "PrimaryContribution",
+                "agent": {"@id": "x"}
+              },
+              {
+                "role": [
+                  {"@id": "https://id.kb.se/relator/publisher"}
+                ],
+                "@type": "Contribution",
+                "agent": {"@id": "x"}
+              }
+            ]
+          }
+        }
+      }
     }
   ]
 }
