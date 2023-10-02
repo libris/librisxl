@@ -1,6 +1,8 @@
 from __future__ import annotations
+from datetime import datetime
 import json
 import os
+import re
 
 
 MAX_STATS = int(os.environ.get('MAX_STATS', '512'))
@@ -69,8 +71,16 @@ def count_value(k, v, shape):
         shape[k] = stats + 1
 
 
+def isodatetime(s):
+    # NOTE: fromisoformat with timezones requires Python 3.11+
+    try:
+        return datetime.fromisoformat(s)
+    except ValueError:
+        # Strip TZ info:
+        return datetime.fromisoformat(re.sub(r'(\+[0-9:]+|[A-Z]+)$', '', s))
+
+
 if __name__ == '__main__':
-    from datetime import datetime
     from pathlib import Path
     from time import time
     import argparse
@@ -98,9 +108,8 @@ if __name__ == '__main__':
     if not outdir.is_dir():
         outdir.mkdir(parents=True, exist_ok=True)
 
-    # NOTE: fromisoformat with timezones requires Python 3.11
-    min_inc_created: datetime|None = datetime.fromisoformat(args.min_created) if args.min_created else None
-    max_ex_created: datetime|None = datetime.fromisoformat(args.max_created) if args.max_created else None
+    min_inc_created: datetime|None = isodatetime(args.min_created) if args.min_created else None
+    max_ex_created: datetime|None = isodatetime(args.max_created) if args.max_created else None
     if min_inc_created:
         print(f"Filter - min created (inclusive): {min_inc_created}", file=sys.stderr)
     if max_ex_created:
@@ -129,7 +138,7 @@ if __name__ == '__main__':
 
             if '@graph' in data:
                 try:
-                    created = datetime.fromisoformat(data['@graph'][0]['created'])
+                    created = isodatetime(data['@graph'][0]['created'])
                     if min_inc_created and created < min_inc_created:
                         continue
                     if max_ex_created and created >= max_ex_created:
