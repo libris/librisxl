@@ -102,6 +102,7 @@ class NotificationSender extends HouseKeeper {
                 generateNotificationsForChangedID(id, heldByToUserSettings, from.toInstant(),
                         until.toInstant(), affectedInstanceIDs, notificationsByUser)
             }
+            System.err.println("Email summaries to send:\n" + notificationsByUser)
         } catch (Throwable e) {
             status = "Failed with:\n" + e + "\nat:\n" + e.getStackTrace().toString()
             throw e
@@ -142,8 +143,8 @@ class NotificationSender extends HouseKeeper {
                 // If we've not already sent a notification for this instance!
                 if (!affectedInstanceIDs.contains(dependerID)) {
                     affectedInstanceIDs.add(dependerID)
-                    generateNotificationsForAffectedInstance(dependerID, heldByToUserSettings, fromVersion,
-                            untilVersion, until, notificationsByUser)
+                    generateNotificationsForAffectedInstance(dependerID, heldByToUserSettings, fromVersion.versionWriteTime.toInstant(),
+                            until, notificationsByUser)
                 }
             }
         }
@@ -154,8 +155,8 @@ class NotificationSender extends HouseKeeper {
      * Generate notifications for an affected bibliographic instance. Beware: fromVersion and untilVersion may not be
      * _of this document_ (id), but rather of a document this instance depends on!
      */
-    private void generateNotificationsForAffectedInstance(String id, Map heldByToUserSettings, DocumentVersion fromVersion,
-                                                          DocumentVersion untilVersion, Instant creationTime,
+    private void generateNotificationsForAffectedInstance(String id, Map heldByToUserSettings, Instant from,
+                                                          Instant until,
                                                           Map<String, List<String>> notificationsByUser) {
         List<String> libraries = whelk.getStorage().getAllLibrariesHolding(id)
         for (String library : libraries) {
@@ -178,10 +179,13 @@ class NotificationSender extends HouseKeeper {
                     }*/
 
                     List<String> triggered = changeMatchesAnyTrigger(
-                            id, fromVersion.versionWriteTime.toInstant(),
-                            creationTime, user, library)
+                            id, from,
+                            until, user, library)
                     if (triggered) {
-                        System.err.println("\tSEND NOTICE FOR USER " + user.notificationEmail + " : " + triggered + " on instance: " + id)
+                        if (!notificationsByUser.containsKey(user.notificationEmail))
+                            notificationsByUser.put((String)user.notificationEmail, [])
+                        notificationsByUser[user.notificationEmail].add(
+                                "En instansbeskrivning har ändrats\n\tInstans: " + Document.BASE_URI.resolve(id) + "\n\tÄndrinskatergorier: " + triggered+"\n")
                     }
                 }
             }
