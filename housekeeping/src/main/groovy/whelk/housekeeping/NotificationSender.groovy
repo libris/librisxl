@@ -166,7 +166,7 @@ class NotificationSender extends HouseKeeper {
                             id, fromVersion.versionWriteTime.toInstant(),
                             creationTime, user, library)
                     if (triggered) {
-                        System.err.println("\tSEND NOTICE FOR USER " + user["id"].toString())
+                        System.err.println("\tSEND NOTICE FOR USER " + user["id"].toString() + " : " + triggered)
                     }
                 }
             }
@@ -224,9 +224,27 @@ class NotificationSender extends HouseKeeper {
         if (notesOnInstance != null)
         changeNotes.addAll(notesOnInstance)
         switch (triggerUri) {
-            case "https://id.kb.se/changenote/primarytitle": {
-                historicEmbellish(instanceAfterChange, ["hasTitle"], after, changeNotes)
-            }
+            case "https://id.kb.se/changenote/primarytitle":
+            case "https://id.kb.se/changenote/maintitle":
+                historicEmbellish(instanceAfterChange, ["mainEntity", "hasTitle"], after, changeNotes)
+                break
+            case "https://id.kb.se/changenote/primarypublication":
+            case "https://id.kb.se/changenote/serialtermination":
+                historicEmbellish(instanceAfterChange, ["publication"], after, changeNotes)
+                break
+            case "https://id.kb.se/changenote/intendedaudience":
+                historicEmbellish(instanceAfterChange, ["mainEntity", "intendedAudience"], after, changeNotes)
+                break
+            case "https://id.kb.se/changenote/ddcclassification":
+            case "https://id.kb.se/changenote/sabclassification":
+                historicEmbellish(instanceAfterChange, ["mainEntity", "classification"], after, changeNotes)
+                break
+            case "https://id.kb.se/changenote/serialrelation":
+                historicEmbellish(instanceAfterChange, ["mainEntity", "precededBy", "succeededBy"], after, changeNotes)
+                break
+            /*case "https://id.kb.se/changenote/primarycontribution": {
+                historicEmbellish(instanceAfterChange, ["mainEntity", "instanceOf", "contribution"], after, changeNotes)
+            }*/
         }
 
         boolean matches = false
