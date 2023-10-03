@@ -42,6 +42,8 @@ class NotificationSender extends HouseKeeper {
         {
             List<Map> allUserSettingStrings = whelk.getStorage().getAllUserData()
             for (Map settings : allUserSettingStrings) {
+                if (!settings["notificationEmail"])
+                    return
                 settings?.requestedNotifications.each { request ->
                     if (!request instanceof Map)
                         return
@@ -56,6 +58,8 @@ class NotificationSender extends HouseKeeper {
                 }
             }
         }
+
+        //System.err.println("Users map:\n\n" + heldByToUserSettings + "\n\n")
 
         Connection connection
         PreparedStatement statement
@@ -92,9 +96,11 @@ class NotificationSender extends HouseKeeper {
             // If both an instance and one of it's dependencies are affected within the same interval, we will
             // (without this check) try to generate notifications for said instance twice.
             Set affectedInstanceIDs = []
+            Map<String, List<String>> notificationsByUser = new HashMap<>()
             while (resultSet.next()) {
                 String id = resultSet.getString("id")
-                sendNotificationsForChangedID(id, heldByToUserSettings, from.toInstant(), until.toInstant(), affectedInstanceIDs)
+                generateNotificationsForChangedID(id, heldByToUserSettings, from.toInstant(),
+                        until.toInstant(), affectedInstanceIDs, notificationsByUser)
             }
         } catch (Throwable e) {
             status = "Failed with:\n" + e + "\nat:\n" + e.getStackTrace().toString()
@@ -104,7 +110,13 @@ class NotificationSender extends HouseKeeper {
         }
     }
 
-    private void sendNotificationsForChangedID(String id, Map heldByToUserSettings, Instant since, Instant until, Set affectedInstanceIDs) {
+    /**
+     * Based on the fact that 'id' has been updated, generate (if the change resulted in a ChangeNotice)
+     * and collect notifications per user into 'notificationsByUser'
+     */
+    private void generateNotificationsForChangedID(String id, Map heldByToUserSettings,
+                                                   Instant since, Instant until, Set affectedInstanceIDs,
+                                                   Map<String, List<String>> notificationsByUser) {
         // "versions" come sorted by ascending modification time, so oldest version first.
         // We want to pick the "from version" (the base for which this notice details changes)
         // as the last saved version *before* the sought interval.
@@ -130,7 +142,8 @@ class NotificationSender extends HouseKeeper {
                 // If we've not already sent a notification for this instance!
                 if (!affectedInstanceIDs.contains(dependerID)) {
                     affectedInstanceIDs.add(dependerID)
-                    sendNotificationsForAffectedInstance(dependerID, heldByToUserSettings, fromVersion, untilVersion, until)
+                    generateNotificationsForAffectedInstance(dependerID, heldByToUserSettings, fromVersion,
+                            untilVersion, until, notificationsByUser)
                 }
             }
         }
@@ -138,11 +151,12 @@ class NotificationSender extends HouseKeeper {
     }
 
     /**
-     * Send notices for a bibliographic instance. Beware: fromVersion and untilVersion may not be
+     * Generate notifications for an affected bibliographic instance. Beware: fromVersion and untilVersion may not be
      * _of this document_ (id), but rather of a document this instance depends on!
      */
-    private void sendNotificationsForAffectedInstance(String id, Map heldByToUserSettings, DocumentVersion fromVersion,
-                                                          DocumentVersion untilVersion, Instant creationTime) {
+    private void generateNotificationsForAffectedInstance(String id, Map heldByToUserSettings, DocumentVersion fromVersion,
+                                                          DocumentVersion untilVersion, Instant creationTime,
+                                                          Map<String, List<String>> notificationsByUser) {
         List<String> libraries = whelk.getStorage().getAllLibrariesHolding(id)
         for (String library : libraries) {
             List<Map> users = (List<Map>) heldByToUserSettings[library]
@@ -159,14 +173,15 @@ class NotificationSender extends HouseKeeper {
                                     "https://id.kb.se/changenote/primarytitle"
                                 ]
                             }
-                        ]
+                        ],
+                        "email": "noreply@kb.se"
                     }*/
 
                     List<String> triggered = changeMatchesAnyTrigger(
                             id, fromVersion.versionWriteTime.toInstant(),
                             creationTime, user, library)
                     if (triggered) {
-                        System.err.println("\tSEND NOTICE FOR USER " + user["id"].toString() + " : " + triggered)
+                        System.err.println("\tSEND NOTICE FOR USER " + user.notificationEmail + " : " + triggered + " on instance: " + id)
                     }
                 }
             }
