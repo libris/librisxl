@@ -51,6 +51,7 @@ class ElasticSearch {
     private ElasticClient client
     private ElasticClient bulkClient
     private boolean isPitApiAvailable = false
+    private static final int ES_LOG_MIN_DURATION = 2000 // Only log queries taking at least this amount of milliseconds
 
     private final Queue<Runnable> indexingRetryQueue = new LinkedBlockingQueue<>()
 
@@ -566,7 +567,9 @@ class ElasticSearch {
             def duration = System.currentTimeMillis() - start
             Map responseMap = mapper.readValue(responseBody, Map)
 
-            log.info("ES query took ${duration} (${responseMap.took} server-side)")
+            if (duration >= ES_LOG_MIN_DURATION) {
+                log.info("ES query took ${duration} (${responseMap.took} server-side)")
+            }
 
             def results = [:]
 
