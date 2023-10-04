@@ -12,6 +12,8 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
+import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -20,6 +22,7 @@ import java.time.temporal.ChronoUnit
 @Log
 class NotificationSender extends HouseKeeper {
 
+    private final String STATE_KEY = "Email notifications"
     private String status = "OK"
     private Whelk whelk
 
@@ -59,7 +62,12 @@ class NotificationSender extends HouseKeeper {
             }
         }
 
-        //System.err.println("Users map:\n\n" + heldByToUserSettings + "\n\n")
+        // Determine the time interval of changes for which to generate notifications.
+        Timestamp from = Timestamp.from(Instant.now().minus(1, ChronoUnit.DAYS)) // Default to last 24h if first time.
+        Map state = whelk.getStorage().getState(STATE_KEY)
+        if (state && state.lastEmailTime)
+            from = Timestamp.from( ZonedDateTime.parse( (String) state.lastEmailTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant() )
+        Timestamp until = Timestamp.from(Instant.now())
 
         Connection connection
         PreparedStatement statement
@@ -68,24 +76,7 @@ class NotificationSender extends HouseKeeper {
         connection = whelk.getStorage().getOuterConnection()
         connection.setAutoCommit(false)
         try {
-            // Determine the time interval of changes for which to generate notices.
-            // This interval, should generally be: From the last generated notice until now.
-            // However, if there are no previously generated notices (near enough in time), use
-            // now - [some pre set value], to avoid scanning the whole catalog.
-
-            /*String sql = "SELECT MAX(created) FROM lddb__notifications;"
-            statement = connection.prepareStatement(sql)
-            resultSet = statement.executeQuery()
-            Timestamp from = Timestamp.from(Instant.now().minus(DAYS_TO_KEEP_NOTIFICATIONS, ChronoUnit.DAYS))
-            if (resultSet.next()) {
-                Timestamp lastCreated = resultSet.getTimestamp(1)
-                if (lastCreated && lastCreated.after(from))
-                    from = lastCreated
-            }*/
-            Timestamp from = Timestamp.from(Instant.now().minus(1, ChronoUnit.DAYS))
-            Timestamp until = Timestamp.from(Instant.now())
-
-            // Then fetch all changed IDs within that interval
+            // Fetch all changed IDs within the interval
             String sql = "SELECT id FROM lddb WHERE collection IN ('bib', 'auth') AND ( modified > ? AND modified <= ? );"
             connection.setAutoCommit(false)
             statement = connection.prepareStatement(sql)
@@ -108,6 +99,9 @@ class NotificationSender extends HouseKeeper {
             throw e
         } finally {
             connection.close()
+            Map newState = new HashMap()
+            newState.lastEmailTime = until.toInstant().atOffset(ZoneOffset.UTC).toString() //.atZone(ZoneId.of("UTC")) //ZonedDateTime.from(until.toInstant()).toString()
+            whelk.getStorage().putState(STATE_KEY, newState)
         }
     }
 
@@ -283,7 +277,7 @@ class NotificationSender extends HouseKeeper {
                 return true
             if (!changeNote.atTime)
                 return true
-            Instant atTime = ZonedDateTime.parse( (String) changeNote.atTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant();
+            Instant atTime = ZonedDateTime.parse( (String) changeNote.atTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant()
             if (atTime.isBefore(before) || atTime.isAfter(after))
                 return true
             return false

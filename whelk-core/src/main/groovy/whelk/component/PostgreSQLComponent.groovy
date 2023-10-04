@@ -414,6 +414,16 @@ class PostgreSQLComponent {
             SELECT id FROM lddb WHERE data#>'{@graph,0,inDataset}' @> ?::jsonb AND deleted = false
         """.stripIndent()
 
+    private static final String GET_STATE =
+            "SELECT value FROM lddb__state WHERE key = ?"
+
+    private static final String UPSERT_STATE = """
+            INSERT INTO lddb__state (key, value)
+            VALUES (?, ?)
+            ON CONFLICT (key) DO UPDATE
+            SET (key, value) = (EXCLUDED.key, EXCLUDED.value)
+            """.stripIndent()
+
     private static final String GET_USER_DATA =
             "SELECT data FROM lddb__user_data WHERE id = ?"
 
@@ -2673,6 +2683,48 @@ class PostgreSQLComponent {
                 log.debug("Removed $numRemoved dependencies for id ${identifier}")
             } finally {
                 close(removeDependencies)
+            }
+        }
+    }
+
+    void putState(String key, Map value) {
+        withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement preparedStatement = null
+            try {
+                PGobject jsonb = new PGobject()
+                jsonb.setType("jsonb")
+                jsonb.setValue( mapper.writeValueAsString(value) )
+
+                preparedStatement = connection.prepareStatement(UPSERT_STATE)
+                preparedStatement.setString(1, key)
+                preparedStatement.setObject(2, jsonb)
+
+                preparedStatement.executeUpdate()
+            } finally {
+                close(preparedStatement)
+            }
+        }
+    }
+
+    Map getState(String key) {
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            try {
+                preparedStatement = connection.prepareStatement(GET_STATE)
+                preparedStatement.setString(1, key)
+
+                rs = preparedStatement.executeQuery()
+                if (rs.next()) {
+                    return mapper.readValue(rs.getString("value"), Map)
+                }
+                else {
+                    return null
+                }
+            } finally {
+                close(rs, preparedStatement)
             }
         }
     }
