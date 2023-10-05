@@ -1,18 +1,22 @@
 package whelk.housekeeping
 
+import org.simplejavamail.api.email.Email
+import org.simplejavamail.api.mailer.Mailer
+import org.simplejavamail.email.EmailBuilder
+import org.simplejavamail.mailer.MailerBuilder
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import whelk.history.DocumentVersion
+import whelk.util.PropertyLoader
 
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
-import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -24,10 +28,26 @@ class NotificationSender extends HouseKeeper {
 
     private final String STATE_KEY = "Email notifications"
     private String status = "OK"
-    private Whelk whelk
+    private final Whelk whelk
+    private final Mailer mailer
+    private final String senderAddress
 
     public NotificationSender(Whelk whelk) {
         this.whelk = whelk
+        Properties props = PropertyLoader.loadProperties("secret")
+        if (props.containsKey("smtpServer") &&
+                props.containsKey("smtpPort") &&
+                props.containsKey("smtpSender") &&
+                props.containsKey("smtpUser") &&
+                props.containsKey("smtpPassword"))
+            mailer = MailerBuilder
+                .withSMTPServer(
+                        (String) props.get("smtpServer"),
+                        Integer.parseInt((String)props.get("smtpPort")),
+                        (String) props.get("smtpUser"),
+                        (String) props.get("smtpPassword")
+                ).buildMailer()
+        senderAddress = props.get("smtpSender")
     }
 
     public String getName() {
@@ -93,15 +113,38 @@ class NotificationSender extends HouseKeeper {
                 generateNotificationsForChangedID(id, heldByToUserSettings, from.toInstant(),
                         until.toInstant(), affectedInstanceIDs, notificationsByUser)
             }
-            System.err.println("Email summaries to send:\n" + notificationsByUser)
+
+            //System.err.println("Email summaries to send: \n" + notificationsByUser)
+            notificationsByUser.keySet().each { email ->
+                List<String> notifications = notificationsByUser.get(email)
+                sendEmail(senderAddress, email, "Förändingsmeddelande", notifications.join("\n"))
+            }
+
+
         } catch (Throwable e) {
             status = "Failed with:\n" + e + "\nat:\n" + e.getStackTrace().toString()
             throw e
         } finally {
             connection.close()
             Map newState = new HashMap()
-            newState.lastEmailTime = until.toInstant().atOffset(ZoneOffset.UTC).toString() //.atZone(ZoneId.of("UTC")) //ZonedDateTime.from(until.toInstant()).toString()
+            newState.lastEmailTime = until.toInstant().atOffset(ZoneOffset.UTC).toString()
             whelk.getStorage().putState(STATE_KEY, newState)
+        }
+    }
+
+    private void sendEmail(String sender, String recipient, String subject, String body) {
+        Email email  = EmailBuilder.startingBlank()
+                .to(recipient)
+                .withSubject(subject)
+                .from(sender)
+                .withPlainText(body)
+                .buildEmail()
+        
+        if (mailer) {
+            log.info("Sending notification (cxz) email to " + recipient)
+            mailer.sendMail(email)
+        } else {
+            log.info("Should now have sent notification (cxz) email to " + recipient + " but SMTP not configured.")
         }
     }
 

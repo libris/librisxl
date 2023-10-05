@@ -38,6 +38,9 @@ dependencies {
 
     //implementation 'org.apache.commons:commons-lang3:3.3.2'
     implementation "org.codehaus.groovy:groovy:${groovyVersion}"
+
+    // Email
+    implementation group: 'org.simplejavamail', name: 'simple-java-mail', version: '8.2.0'
 }
 
 gretty {
