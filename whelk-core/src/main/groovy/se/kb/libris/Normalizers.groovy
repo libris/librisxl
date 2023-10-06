@@ -212,11 +212,11 @@ class Normalizers {
 }
 
 class Normalizer implements DocumentNormalizer {
-    Object normalizer
+    BlankNodeLinker linker
     Closure normalizeFunc
 
-    Normalizer(Object normalizer, Closure normalizeFunc) {
-        this.normalizer = normalizer
+    Normalizer(BlankNodeLinker linker, Closure normalizeFunc) {
+        this.linker = linker
         this.normalizeFunc = normalizeFunc
     }
 

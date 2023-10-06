@@ -220,6 +220,7 @@ class Whelk {
     private void initDocumentNormalizers(ElasticFind elasticFind) {
         LanguageLinker languageLinker = new LanguageLinker()
         Normalizers.loadDefinitions(languageLinker, this)
+        Collection<DocumentNormalizer> heuristicLinkers = Normalizers.heuristicLinkers(this, languageLinker.getTypes())
         normalizer = new NormalizerChain(
                 [
                         Normalizers.nullRemover(),
@@ -227,22 +228,25 @@ class Whelk {
                         Normalizers.typeSingularity(jsonld),
                         Normalizers.language(languageLinker),
                         Normalizers.identifiedBy(),
-                ] + Normalizers.heuristicLinkers(this, languageLinker.getTypes())
+                ] + heuristicLinkers
         )
 
         def idsToThings = { String type ->
             bulkLoad(elasticFind.findIds([(JsonLd.TYPE_KEY): [type]]).collect())
-            .collect { _, doc -> (doc.data[JsonLd.GRAPH_KEY] as List)[1] }
-            .collectEntries { [it[JsonLd.ID_KEY], it] }
+                    .collect { _, doc -> (doc.data[JsonLd.GRAPH_KEY] as List)[1] }
+                    .collectEntries { [it[JsonLd.ID_KEY], it] }
         }
 
         resourceCache = new ResourceCache(
-            relators: elasticFind.find(['@type': ['Role']]),
-            languageResources: new ResourceCache.LanguageResources(
-                    languageLinker: languageLinker,
-                    languages: idsToThings('Language'),
-                    transformedLanguageForms: idsToThings('TransformedLanguageForm')
-            )
+                relatorResources: new ResourceCache.RelatorResources(
+                        relatorLinker: heuristicLinkers.findResult { it.getLinker()?.types == ['Role'] ? it.getLinker() : null },
+                        relators: elasticFind.find(['@type': ['Role']])
+                ),
+                languageResources: new ResourceCache.LanguageResources(
+                        languageLinker: languageLinker,
+                        languages: idsToThings('Language'),
+                        transformedLanguageForms: idsToThings('TransformedLanguageForm')
+                )
         )
     }
 

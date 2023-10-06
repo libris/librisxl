@@ -2,6 +2,7 @@ package whelk.converter.marc
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
+import whelk.filter.BlankNodeLinker
 
 import static whelk.JsonLd.asList
 
@@ -15,11 +16,17 @@ class ContributionByRoleStep extends MarcFramePostProcStepBase {
 
     boolean requiresResources = true
     Set<String> instanceRelators
+    BlankNodeLinker relatorLinker
 
     void init() {
+        def relatorResources = resourceCache?.relatorResources
+
+        if (!relatorResources) return
+
+        relatorLinker = relatorResources.relatorLinker
         // NOTE: Assuming OK to move role with a non-Instance Embodiment domain (Item
         // or Representation) to Instance (an instance is an embodiment, a work isn't).
-        instanceRelators = resourceCache?.relators?.findResults {
+        instanceRelators = relatorResources.relators.findResults {
             def domainRef = it.domain?[ID]
             if (domainRef) {
               def domain = ld.toTermKey(domainRef)
@@ -28,10 +35,14 @@ class ContributionByRoleStep extends MarcFramePostProcStepBase {
               }
             }
         } as Set
-        log.debug "Using as instance relations: $INSTANCE_RELATORS"
+        log.debug "Using as instance relations: $instanceRelators"
     }
 
     void modify(Map record, Map thing) {
+        if (!relatorLinker || !instanceRelators) {
+            log.error("Conversion failed: Missing required resources")
+            return
+        }
         moveRoles(thing)
     }
 
@@ -51,6 +62,7 @@ class ContributionByRoleStep extends MarcFramePostProcStepBase {
         asList(work.contribution).each {
             var instanceRoles = []
             var workRoles = []
+            relatorLinker.linkAll(it, 'role')
             asList(it.role).each {
                 if (it[ID] in instanceRelators) {
                     instanceRoles << it
