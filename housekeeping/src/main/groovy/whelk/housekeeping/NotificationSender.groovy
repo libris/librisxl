@@ -59,14 +59,13 @@ class NotificationSender extends HouseKeeper {
     }
 
     public void trigger() {
-
         // Build a multi-map of library -> list of settings objects for that library's users
         Map<String, List<Map>> heldByToUserSettings = new HashMap<>();
         {
             List<Map> allUserSettingStrings = whelk.getStorage().getAllUserData()
             for (Map settings : allUserSettingStrings) {
                 if (!settings["notificationEmail"])
-                    return
+                    continue
                 settings?.requestedNotifications.each { request ->
                     if (!request instanceof Map)
                         return
@@ -114,7 +113,6 @@ class NotificationSender extends HouseKeeper {
                         until.toInstant(), affectedInstanceIDs, notificationsByUser)
             }
 
-            //System.err.println("Email summaries to send: \n" + notificationsByUser)
             notificationsByUser.keySet().each { email ->
                 List<String> notifications = notificationsByUser.get(email)
                 sendEmail(senderAddress, email, "Förändingsmeddelande", notifications.join("\n"))
@@ -139,7 +137,7 @@ class NotificationSender extends HouseKeeper {
                 .from(sender)
                 .withPlainText(body)
                 .buildEmail()
-        
+
         if (mailer) {
             log.info("Sending notification (cxz) email to " + recipient)
             mailer.sendMail(email)
@@ -153,24 +151,8 @@ class NotificationSender extends HouseKeeper {
      * and collect notifications per user into 'notificationsByUser'
      */
     private void generateNotificationsForChangedID(String id, Map heldByToUserSettings,
-                                                   Instant since, Instant until, Set affectedInstanceIDs,
+                                                   Instant from, Instant until, Set affectedInstanceIDs,
                                                    Map<String, List<String>> notificationsByUser) {
-        // "versions" come sorted by ascending modification time, so oldest version first.
-        // We want to pick the "from version" (the base for which this notice details changes)
-        // as the last saved version *before* the sought interval.
-        DocumentVersion fromVersion = null
-        List<DocumentVersion> versions = whelk.getStorage().loadDocumentHistory(id)
-        for (DocumentVersion version : versions) {
-            if (version.doc.getModifiedTimestamp().isBefore(since))
-                fromVersion = version
-        }
-        if (fromVersion == null)
-            return
-
-        DocumentVersion untilVersion = versions.last()
-        if (untilVersion == fromVersion)
-            return
-
         List<Tuple2<String, String>> dependers = whelk.getStorage().followDependers(id, ["itemOf"])
         dependers.add(new Tuple2(id, null)) // This ID too, not _only_ the dependers!
         dependers.each {
@@ -180,7 +162,7 @@ class NotificationSender extends HouseKeeper {
                 // If we've not already sent a notification for this instance!
                 if (!affectedInstanceIDs.contains(dependerID)) {
                     affectedInstanceIDs.add(dependerID)
-                    generateNotificationsForAffectedInstance(dependerID, heldByToUserSettings, fromVersion.versionWriteTime.toInstant(),
+                    generateNotificationsForAffectedInstance(dependerID, heldByToUserSettings, from,
                             until, notificationsByUser)
                 }
             }
