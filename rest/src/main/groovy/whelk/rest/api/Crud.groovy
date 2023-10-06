@@ -823,7 +823,7 @@ class Crud extends HttpServlet {
             throw new OtherStatusException("You do not have sufficient privileges to perform this operation.", HttpServletResponse.SC_FORBIDDEN)
         } else if (doc && doc.deleted) {
             throw new OtherStatusException("Document has been deleted.", HttpServletResponse.SC_GONE)
-        } else if(!whelk.storage.followDependers(doc.getShortId()).isEmpty()) {
+        } else if(!whelk.storage.followDependers(doc.getShortId(), JsonLd.ALLOW_LINK_TO_DELETED).isEmpty()) {
             throw new OtherStatusException("This record may not be deleted, because it is referenced by other records.", HttpServletResponse.SC_FORBIDDEN)
         } else {
             log.debug("Removing resource at ${doc.getShortId()}")

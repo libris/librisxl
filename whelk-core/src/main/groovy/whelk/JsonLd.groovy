@@ -48,6 +48,7 @@ class JsonLd {
     static final List<String> NS_SEPARATORS = ['#', '/', ':']
 
     static final List<String> NON_DEPENDANT_RELATIONS = ['narrower', 'broader', 'expressionOf', 'related', 'derivedFrom']
+    static final List<String> ALLOW_LINK_TO_DELETED = ['meta.derivedFrom', 'hasTitle.source', 'translationOf.hasTitle.source', 'instanceOf.hasTitle.source', 'instanceOf.translationOf.hasTitle.source']
 
     static final Set<String> LD_KEYS
 
