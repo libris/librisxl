@@ -130,14 +130,14 @@ class NotificationSender extends HouseKeeper {
     }
 
     private void sendEmail(String sender, String recipient, String subject, String body) {
-        Email email  = EmailBuilder.startingBlank()
-                .to(recipient)
-                .withSubject(subject)
-                .from(sender)
-                .withPlainText(body)
-                .buildEmail()
-
         if (mailer) {
+            Email email  = EmailBuilder.startingBlank()
+                    .to(recipient)
+                    .withSubject(subject)
+                    .from(sender)
+                    .withPlainText(body)
+                    .buildEmail()
+
             log.info("Sending notification (cxz) email to " + recipient)
             mailer.sendMail(email)
         } else {
@@ -187,7 +187,7 @@ class NotificationSender extends HouseKeeper {
                         "id": "sldknfslkdnsdlkgnsdkjgnb"
                         "requestedNotifications": [
                             {
-                                "library": "https://libris.kb.se/library/Utb1",
+                                "heldBy": "https://libris.kb.se/library/Utb1",
                                 "triggers": [
                                     "https://id.kb.se/changenote/primarytitle"
                                 ]
@@ -202,12 +202,33 @@ class NotificationSender extends HouseKeeper {
                     if (triggered) {
                         if (!notificationsByUser.containsKey(user.notificationEmail))
                             notificationsByUser.put((String)user.notificationEmail, [])
-                        notificationsByUser[user.notificationEmail].add(
-                                "En instansbeskrivning har ändrats\n\tInstans: " + Document.BASE_URI.resolve(id) + "\n\tÄndrinskatergorier: " + triggered+"\n")
+                        notificationsByUser[user.notificationEmail].add(generateEmailBody(id, triggered))
                     }
                 }
             }
         }
+    }
+
+    private String generateEmailBody(String changedInstanceId, List<String> triggeredCategories) {
+        Document changed = whelk.getStorage().load(changedInstanceId)
+        String mainTitle = Document._get(["@graph", 1, "hasTitle", 0, "mainTitle"], changed.data)
+        if (mainTitle == null)
+            mainTitle = "Ingen huvudtitel"
+
+        String changeCategories = ""
+        for (String categoryUri : triggeredCategories) {
+            Document categoryDoc = whelk.getStorage().loadDocumentByMainId(categoryUri)
+            String swedishLabel = Document._get(["@graph", 1, "prefLabelByLand", "sv"], categoryDoc.data)
+            if (swedishLabel) {
+                changeCategories += swedishLabel + "(" + categoryUri + ") "
+            } else {
+                changeCategories += categoryUri + " "
+            }
+        }
+
+        return "Instansbeskrivning har ändrats\n\tInstans: " + Document.BASE_URI.resolve(changedInstanceId) +
+        "(" + mainTitle + ")\n\t" +
+        "Ändrinskatergorier: " + changeCategories + "\n"
     }
 
     /**
@@ -216,7 +237,7 @@ class NotificationSender extends HouseKeeper {
      * 'library' is a library ("sigel") holding the instance in question.
      *
      * This function answers the question: Has 'user' requested to be notified of the occurred changes between
-     * 'from' and 'until' for instances held by 'library'?
+     * 'from' and 'until' for instances held by 'heldBy'?
      *
      * Returns the URIs of all triggered rules/triggers.
      */
