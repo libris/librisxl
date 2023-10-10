@@ -7,9 +7,6 @@ import whelk.JsonLd
 import whelk.util.Jackson
 import whelk.util.JsonLdSpec
 
-import java.sql.Timestamp
-import java.time.Instant
-
 class HistorySpec extends Specification {
     def "array(set) order does not matter"() {
         given:

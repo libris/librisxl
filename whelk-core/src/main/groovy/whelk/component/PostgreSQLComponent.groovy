@@ -189,7 +189,7 @@ class PostgreSQLComponent {
             """.stripIndent()
 
     private static final String GET_ALL_DOCUMENT_VERSIONS = """
-            SELECT id, data, deleted, created, modified, changedBy, changedIn
+            SELECT id, data, deleted, created, modified, changedBy, changedIn 
             FROM lddb__versions
             WHERE id = ? 
             ORDER BY GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) ASC

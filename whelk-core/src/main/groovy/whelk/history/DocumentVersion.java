@@ -2,8 +2,6 @@ package whelk.history;
 
 import whelk.Document;
 
-import java.sql.Timestamp;
-
 /**
  * Represents a version of a record, including the out-of-record info (like the changedBy column)
  */
@@ -11,7 +9,6 @@ public class DocumentVersion {
     public Document doc;
     public String changedBy;
     public String changedIn;
-
     public DocumentVersion(Document doc, String changedBy, String changedIn) {
         this.doc = doc;
         this.changedBy = changedBy;
