@@ -189,7 +189,7 @@ class PostgreSQLComponent {
             """.stripIndent()
 
     private static final String GET_ALL_DOCUMENT_VERSIONS = """
-            SELECT id, data, deleted, created, modified, changedBy, changedIn, pk, GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) as modTime
+            SELECT id, data, deleted, created, modified, changedBy, changedIn
             FROM lddb__versions
             WHERE id = ? 
             ORDER BY GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) ASC
@@ -2487,7 +2487,7 @@ class PostgreSQLComponent {
                 while (rs.next()) {
                     def doc = assembleDocument(rs)
                     doc.version = v++
-                    docList.add(new DocumentVersion(doc, rs.getString("changedBy"), rs.getString("changedIn"), rs.getTimestamp("modTime")))
+                    docList.add(new DocumentVersion(doc, rs.getString("changedBy"), rs.getString("changedIn")))
                 }
             } finally {
                 close(rs, selectstmt)

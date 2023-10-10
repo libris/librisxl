@@ -12,11 +12,9 @@ public class DocumentVersion {
     public String changedBy;
     public String changedIn;
 
-    public Timestamp versionWriteTime;
-    public DocumentVersion(Document doc, String changedBy, String changedIn, Timestamp versionWriteTime) {
+    public DocumentVersion(Document doc, String changedBy, String changedIn) {
         this.doc = doc;
         this.changedBy = changedBy;
         this.changedIn = changedIn;
-        this.versionWriteTime = versionWriteTime;
     }
 }
