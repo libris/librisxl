@@ -9,7 +9,6 @@ import whelk.JsonLd
 import whelk.Whelk
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
-import whelk.history.DocumentVersion
 import whelk.util.PropertyLoader
 
 import java.sql.Connection
@@ -280,9 +279,31 @@ class NotificationSender extends HouseKeeper {
             case "https://id.kb.se/changenote/serialrelation":
                 historicEmbellish(instanceAfterChange, ["mainEntity", "precededBy", "succeededBy"], after, changeNotes)
                 break
-            /*case "https://id.kb.se/changenote/primarycontribution": {
+            case "https://id.kb.se/changenote/primarycontribution": {
+                Document instanceBeforeChange = whelk.getStorage().loadAsOf(instanceId, Timestamp.from(before))
+                historicEmbellish(instanceBeforeChange, ["mainEntity", "instanceOf", "contribution"], after, changeNotes)
                 historicEmbellish(instanceAfterChange, ["mainEntity", "instanceOf", "contribution"], after, changeNotes)
-            }*/
+                Object contributionsAfter = Document._get(["mainEntity", "instanceOf", "contribution"], instanceAfterChange.data)
+                Object contributionsBefore = Document._get(["mainEntity", "instanceOf", "contribution"], instanceBeforeChange.data)
+                if (contributionsBefore == null || contributionsAfter == null || ! contributionsBefore instanceof List || ! contributionsAfter instanceof List)
+                    break
+
+                for (Object contrBefore : contributionsBefore) {
+                    for (Object contrAfter : contributionsAfter) {
+                        if (contrBefore["@type"].equals("PrimaryContribution") && contrAfter["@type"].equals("PrimaryContribution") ) {
+                            if ( contributionsBefore["agent"] != null && contributionsAfter["agent"] != null) {
+                                if (
+                                        contributionsBefore["agent"]["familyName"] != contributionsAfter["agent"]["familyName"] ||
+                                                contributionsBefore["agent"]["givenName"] != contributionsAfter["agent"]["givenName"] ||
+                                                contributionsBefore["agent"]["lifeSpan"] != contributionsAfter["agent"]["lifeSpan"]
+                                )
+                                    return true
+                            }
+                        }
+                    }
+                }
+                break
+            }
         }
 
         boolean matches = false
@@ -318,7 +339,7 @@ class NotificationSender extends HouseKeeper {
      * This function mutates docToEmbellish
      * This function also collects metadata ChangeNotes from embellished records.
      */
-    private historicEmbellish(Document docToEmbellish, List<String> properties, Instant asOf, List<Map> changeNotes) {
+    private void historicEmbellish(Document docToEmbellish, List<String> properties, Instant asOf, List<Map> changeNotes) {
         List graphListToEmbellish = docToEmbellish.data["@graph"]
         Set alreadyLoadedURIs = []
 
