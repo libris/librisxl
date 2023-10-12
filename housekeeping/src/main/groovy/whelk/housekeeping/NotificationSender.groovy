@@ -301,9 +301,13 @@ class NotificationSender extends HouseKeeper {
                 historicEmbellish(instanceAfterChange, ["mainEntity", "precededBy", "succeededBy"], after, changeNotes)
                 break
             case "https://id.kb.se/changenote/primarycontribution": {
+                historicEmbellish(instanceAfterChange, ["mainEntity", "instanceOf", "contribution"], after, changeNotes)
+
+                // Uncomment this block, to get the full functionality. The feature had to be hamstrung due to political
+                // reasons.
+                /*
                 Document instanceBeforeChange = whelk.getStorage().loadAsOf(instanceId, Timestamp.from(before))
                 historicEmbellish(instanceBeforeChange, ["mainEntity", "instanceOf", "contribution"], after, changeNotes)
-                historicEmbellish(instanceAfterChange, ["mainEntity", "instanceOf", "contribution"], after, changeNotes)
                 Object contributionsAfter = Document._get(["mainEntity", "instanceOf", "contribution"], instanceAfterChange.data)
                 Object contributionsBefore = Document._get(["mainEntity", "instanceOf", "contribution"], instanceBeforeChange.data)
                 if (contributionsBefore == null || contributionsAfter == null || ! contributionsBefore instanceof List || ! contributionsAfter instanceof List)
@@ -322,7 +326,7 @@ class NotificationSender extends HouseKeeper {
                             }
                         }
                     }
-                }
+                }*/
                 break
             }
         }
