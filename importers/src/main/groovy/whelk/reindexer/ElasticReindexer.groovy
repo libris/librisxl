@@ -5,6 +5,8 @@ import whelk.Document
 import whelk.Whelk
 import whelk.util.BlockingThreadPool
 
+import java.time.ZonedDateTime
+
 @Log
 class ElasticReindexer {
 
@@ -15,6 +17,11 @@ class ElasticReindexer {
     Whelk whelk
 
     long startTime
+
+    // For example 1000 -> 1 means there's 1 thread whose last modified is 1000
+    // For example 1000 -> 2 means there's 2 threads whose last modified is 1000
+    HashMap<Long, Long> timestampsInFlight = new HashMap<>()
+    long confirmedIndexedTo = 0
 
     // Abort on unhandled exceptions, including those on worker threads.
     static
@@ -35,25 +42,54 @@ class ElasticReindexer {
         this.whelk = w
     }
 
+    private synchronized void stillIndexing(long timeStamp) {
+        Long old = timestampsInFlight.get(timeStamp)
+        if (old == null)
+            timestampsInFlight.put(timeStamp, 1)
+        else {
+            timestampsInFlight.put(timeStamp, old + 1)
+        }
+    }
+
+    private synchronized void noLongerIndexing(long timeStamp) {
+        Long old = timestampsInFlight.get(timeStamp)
+        assert(old != null)
+        if (old > 1)
+            timestampsInFlight.put(timeStamp, old - 1)
+        else if (old == 1) {
+            long lowestInFlight = timestampsInFlight.keySet().sort().first()
+            if (timeStamp == lowestInFlight)
+                confirmedIndexedTo = lowestInFlight
+            timestampsInFlight.remove(timeStamp)
+        }
+    }
+
     /**
      * Reindex all changes since a point in time
      */
+
     void reindexFrom(long fromUnixTime) {
+        BlockingThreadPool.SimplePool threadPool
         try {
             int counter = 0
             for (collection in whelk.storage.loadCollections()) {
                 boolean includeDeleted = true
                 List<Document> documents = []
                 for (document in whelk.storage.loadAll(collection, includeDeleted, new Date(fromUnixTime*1000))) {
-
-                        documents.add(document)
-                        counter++
-                        if (counter % BATCH_SIZE == 0) {
-                            double docsPerSec = ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000))
-                            println("Indexing $docsPerSec documents per second (running average since process start). Total count: $counter.")
-                            bulkIndexWithRetries(documents, whelk)
-                            documents = []
-                        }
+                    documents.add(document)
+                    counter++
+                    if (counter % BATCH_SIZE == 0) {
+                        double docsPerSec = ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000))
+                        println("Indexing $docsPerSec documents per second (running average since process start). Total count: $counter. Confirmed indexed up to UNIX-time: ${confirmedIndexedTo-1}")
+                        def batch = documents
+                        threadPool.submit({
+                            long indexedToUnixTime = ZonedDateTime.parse(document.getModified()).toInstant().getEpochSecond()
+                            stillIndexing(indexedToUnixTime)
+                            bulkIndexWithRetries(batch, whelk)
+                            noLongerIndexing(indexedToUnixTime)
+                        })
+                        documents = []
+                    }
                 }
                 if (documents.size() > 0) {
                     bulkIndexWithRetries(documents, whelk)
@@ -61,6 +97,8 @@ class ElasticReindexer {
             }
         } catch (Throwable e) {
             println("Reindex failed with:\n" + e.toString() + "\ncallstack:\n" + e.printStackTrace())
+        } finally {
+            threadPool.awaitAllAndShutdown()
         }
     }
 
@@ -79,9 +117,14 @@ class ElasticReindexer {
                         counter++
                         if (counter % BATCH_SIZE == 0) {
                             double docsPerSec = ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000))
-                            println("Indexing $docsPerSec documents per second (running average since process start). Total count: $counter.")
+                            println("Indexing $docsPerSec documents per second (running average since process start). Total count: $counter. Confirmed indexed up to UNIX-time: ${confirmedIndexedTo-1}")
                             def batch = documents
-                            threadPool.submit({ bulkIndexWithRetries(batch, whelk) })
+                            threadPool.submit({
+                                long indexedToUnixTime = ZonedDateTime.parse(document.getModified()).toInstant().getEpochSecond()
+                                stillIndexing(indexedToUnixTime)
+                                bulkIndexWithRetries(batch, whelk)
+                                noLongerIndexing(indexedToUnixTime)
+                            })
                             documents = []
                         }
                     }

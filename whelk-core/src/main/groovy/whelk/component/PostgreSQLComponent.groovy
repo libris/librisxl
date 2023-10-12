@@ -203,7 +203,7 @@ class PostgreSQLComponent {
             """.stripIndent()
     
     private static final String LOAD_ALL_DOCUMENTS =
-            "SELECT id, data, created, modified, deleted FROM lddb WHERE modified >= ? AND modified <= ?"
+            "SELECT id, data, created, modified, deleted FROM lddb WHERE deleted = false AND modified >= ? AND modified <= ? ORDER BY modified"
 
     private static final String LOAD_ALL_DOCUMENTS_BY_COLLECTION = """
             SELECT id, data, created, modified, deleted
@@ -2487,6 +2487,14 @@ class PostgreSQLComponent {
                 } else if (collection) {
                     sql = LOAD_ALL_DOCUMENTS_BY_COLLECTION
                 } else {
+                    /*
+                    This provides postgres with a "hint" that it should do the sane thing, and deliver the data ordered
+                    using the existing index on modified, rather than trying to sort it all over again, which it
+                    otherwise tries to do. The setting is transaction-local, meaning it is lost/reset at the end of
+                    the transaction.
+                     */
+                    PreparedStatement disableSorting = connection.prepareStatement("SET LOCAL enable_sort = off;")
+                    disableSorting.execute()
                     sql = LOAD_ALL_DOCUMENTS
                 }
 
