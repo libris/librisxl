@@ -239,6 +239,16 @@ class ImporterMain {
     }
 
     private static void filterProblematicData(id, data) {
+        if (data instanceof Collection) {
+            data.eachWithIndex { it, index ->
+                if (it instanceof String) {
+                    // Virtuoso bulk load doesn't like some unusual characters, such as 0x02,
+                    // so remove invisible control characters and unused code points
+                    data[index] = it.replaceAll(/\p{C}/, "")
+                }
+            }
+        }
+
         if (data instanceof Map) {
             data.removeAll { entry ->
                 return entry.key.startsWith("generic") || entry.key.equals("marc:hasGovernmentDocumentClassificationNumber") || (entry.key.equals("encodingLevel") && entry.value instanceof String && entry.value.contains(" "))
