@@ -219,7 +219,7 @@ class NotificationSender extends HouseKeeper {
             Document categoryDoc = whelk.getStorage().loadDocumentByMainId(categoryUri)
             String swedishLabel = Document._get(["@graph", 1, "prefLabelByLand", "sv"], categoryDoc.data)
             if (swedishLabel) {
-                changeCategories += swedishLabel + "(" + categoryUri + ") "
+                changeCategories += swedishLabel + " "
             } else {
                 changeCategories += categoryUri + " "
             }
@@ -227,7 +227,7 @@ class NotificationSender extends HouseKeeper {
 
         return "Instansbeskrivning har ändrats\n\tInstans: " + Document.BASE_URI.resolve(changedInstanceId) +
         "(" + mainTitle + ")\n\t" +
-        "Ändrinskatergorier: " + changeCategories + "\n"
+        "Ändring har skett med avseende på: " + changeCategories + "\n\n"
     }
 
     /**
