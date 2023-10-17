@@ -91,9 +91,10 @@ class DocumentUtil {
      * @param item
      * @param path
      * @param defaultTo
+     * @param requireListIndex
      * @return
      */
-    static def getAtPath(item, Iterable path, defaultTo = null) {
+    static def getAtPath(item, Iterable path, defaultTo = null, boolean requireListIndex = []) {
         if (!item) {
             return defaultTo
         }
@@ -108,6 +109,8 @@ class DocumentUtil {
                 }
             } else if (((item instanceof Collection && p instanceof Integer) || item instanceof Map) && item[p] != null) {
                 item = item[p]
+            } else if (item instanceof Collection && !requireListIndex) {
+                return item.collect { getAtPath(it, path.drop(i), [], requireListIndex) }.flatten()
             } else {
                 return defaultTo
             }
