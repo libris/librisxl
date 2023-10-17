@@ -94,7 +94,7 @@ class DocumentUtil {
      * @param requireListIndex
      * @return
      */
-    static def getAtPath(item, Iterable path, defaultTo = null, boolean requireListIndex = []) {
+    static def getAtPath(item, Iterable path, defaultTo = null, boolean requireListIndex = true) {
         if (!item) {
             return defaultTo
         }
