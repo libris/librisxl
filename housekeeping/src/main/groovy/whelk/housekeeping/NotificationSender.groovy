@@ -65,7 +65,7 @@ class NotificationSender extends HouseKeeper {
             for (Map settings : allUserSettingStrings) {
                 if (!settings["notificationEmail"])
                     continue
-                settings?.requestedNotifications.each { request ->
+                settings?.requestedNotifications?.each { request ->
                     if (!request instanceof Map)
                         return
                     if (!request["heldBy"])
