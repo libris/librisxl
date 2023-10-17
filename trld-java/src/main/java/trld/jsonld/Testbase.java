@@ -29,5 +29,5 @@ import static trld.nq.Parser.load;
 import static trld.nq.Serializer.serialize;
 
 public class Testbase {
-  public static final String TESTS_URL = "https://w3c.github.io/json-ld-api/tests"; // LINE: 15
+  public static final String TESTS_URL = "https://w3c.github.io/json-ld-api/tests";
 }

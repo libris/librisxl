@@ -23,11 +23,11 @@ import trld.jsonld.InvalidBaseDirectionError;
 import trld.jsonld.InvalidNestValueError;
 
 public class Expansion {
-  public static final String EMBED = "@embed"; // LINE: 12
-  public static final String EXPLICIT = "@explicit"; // LINE: 13
-  public static final String OMIT_DEFAULT = "@omit_default"; // LINE: 14
-  public static final String REQUIRES_ALL = "@requires_all"; // LINE: 15
-  public static final Set<String> FRAMING_KEYWORDS = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) DEFAULT, EMBED, EXPLICIT, OMIT_DEFAULT, REQUIRES_ALL}))); // LINE: 16
+  public static final String EMBED = "@embed";
+  public static final String EXPLICIT = "@explicit";
+  public static final String OMIT_DEFAULT = "@omit_default";
+  public static final String REQUIRES_ALL = "@requires_all";
+  public static final Set<String> FRAMING_KEYWORDS = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) DEFAULT, EMBED, EXPLICIT, OMIT_DEFAULT, REQUIRES_ALL})));
 
   public static List expand(Object docData, String baseIri) {
     return expand(docData, baseIri, null);
@@ -35,19 +35,19 @@ public class Expansion {
   public static List expand(Object docData, String baseIri, String expandContext) {
     return expand(docData, baseIri, expandContext, false);
   }
-  public static List expand(Object docData, String baseIri, String expandContext, Boolean ordered) { // LINE: 50
-    Context ctx = new Context(baseIri); // LINE: 54
-    if (expandContext != null) { // LINE: 55
-      ctx = ctx.getContext(expandContext, expandContext); // LINE: 56
+  public static List expand(Object docData, String baseIri, String expandContext, Boolean ordered) {
+    Context ctx = new Context(baseIri);
+    if (expandContext != null) {
+      ctx = ctx.getContext(expandContext, expandContext);
     }
-    /*@Nullable*/ Object result = expansion(ctx, null, docData, baseIri, false, ordered); // LINE: 57
-    if (result == null) { // LINE: 59
-      return new ArrayList<>(); // LINE: 60
+    /*@Nullable*/ Object result = expansion(ctx, null, docData, baseIri, false, ordered);
+    if (result == null) {
+      return new ArrayList<>();
     }
-    if ((result instanceof Map && ((Map) result).containsKey(GRAPH) && ((Map) result).size() == 1)) { // LINE: 61
-      result = ((Map) result).get(GRAPH); // LINE: 62
+    if ((result instanceof Map && ((Map) result).containsKey(GRAPH) && ((Map) result).size() == 1)) {
+      result = ((Map) result).get(GRAPH);
     }
-    return asList(result); // LINE: 63
+    return asList(result);
   }
 
   public static /*@Nullable*/ Object expansion(Context activeContext, /*@Nullable*/ String activeProperty, /*@Nullable*/ Object element, String baseUrl) {
@@ -68,114 +68,114 @@ public class Expansion {
   public static /*@Nullable*/ Object expansion(Context activeContext, /*@Nullable*/ String activeProperty, /*@Nullable*/ Object element, String baseUrl, Boolean frameExpansion, Boolean ordered, Boolean fromMap, Boolean warnOnKeywordlikeTerms, Boolean warnOnEmptyKeys) {
     return expansion(activeContext, activeProperty, element, baseUrl, frameExpansion, ordered, fromMap, warnOnKeywordlikeTerms, warnOnEmptyKeys, false);
   }
-  public static /*@Nullable*/ Object expansion(Context activeContext, /*@Nullable*/ String activeProperty, /*@Nullable*/ Object element, String baseUrl, Boolean frameExpansion, Boolean ordered, Boolean fromMap, Boolean warnOnKeywordlikeTerms, Boolean warnOnEmptyKeys, Boolean warnOnBnodeProperties) { // LINE: 66
-    if (element == null) { // LINE: 79
-      return null; // LINE: 80
+  public static /*@Nullable*/ Object expansion(Context activeContext, /*@Nullable*/ String activeProperty, /*@Nullable*/ Object element, String baseUrl, Boolean frameExpansion, Boolean ordered, Boolean fromMap, Boolean warnOnKeywordlikeTerms, Boolean warnOnEmptyKeys, Boolean warnOnBnodeProperties) {
+    if (element == null) {
+      return null;
     }
-    if ((activeProperty == null && ((Object) "@default") == null || activeProperty != null && (activeProperty).equals("@default"))) { // LINE: 83
-      frameExpansion = false; // LINE: 84
+    if ((activeProperty == null && ((Object) "@default") == null || activeProperty != null && (activeProperty).equals("@default"))) {
+      frameExpansion = false;
     }
-    /*@Nullable*/ Context propertyScopedContext = null; // LINE: 86
-    if ((activeContext.terms.containsKey(activeProperty) && activeContext.terms.get(activeProperty).hasLocalContext)) { // LINE: 89
-      propertyScopedContext = (Context) activeContext.terms.get(activeProperty).getLocalContext(activeContext); // LINE: 91
+    /*@Nullable*/ Context propertyScopedContext = null;
+    if ((activeContext.terms.containsKey(activeProperty) && activeContext.terms.get(activeProperty).hasLocalContext)) {
+      propertyScopedContext = (Context) activeContext.terms.get(activeProperty).getLocalContext(activeContext);
     }
-    if (!(element instanceof Map || element instanceof List)) { // LINE: 94
-      if ((activeProperty == null || (activeProperty == null && ((Object) GRAPH) == null || activeProperty != null && (activeProperty).equals(GRAPH)))) { // LINE: 96
-        return null; // LINE: 97
+    if (!(element instanceof Map || element instanceof List)) {
+      if ((activeProperty == null || (activeProperty == null && ((Object) GRAPH) == null || activeProperty != null && (activeProperty).equals(GRAPH)))) {
+        return null;
       }
-      if (propertyScopedContext != null) { // LINE: 99
-        activeContext = propertyScopedContext; // LINE: 100
+      if (propertyScopedContext != null) {
+        activeContext = propertyScopedContext;
       }
-      return valueExpansion(activeContext, activeProperty, element); // LINE: 102
+      return valueExpansion(activeContext, activeProperty, element);
     }
-    if (element instanceof List) { // LINE: 105
-      List results = new ArrayList<>(); // LINE: 107
-      for (Object item : (List) element) { // LINE: 109
-        /*@Nullable*/ Object expandedItem = expansion(activeContext, activeProperty, item, baseUrl, frameExpansion, fromMap); // LINE: 111
-        /*@Nullable*/ Term activeTerm = (/*@Nullable*/ Term) activeContext.terms.get(activeProperty); // LINE: 113
-        if ((activeTerm != null && activeTerm.container.contains(LIST) && expandedItem instanceof List)) { // LINE: 114
-          expandedItem = Builtins.mapOf(LIST, expandedItem); // LINE: 115
+    if (element instanceof List) {
+      List results = new ArrayList<>();
+      for (Object item : (List) element) {
+        /*@Nullable*/ Object expandedItem = expansion(activeContext, activeProperty, item, baseUrl, frameExpansion, fromMap);
+        /*@Nullable*/ Term activeTerm = (/*@Nullable*/ Term) activeContext.terms.get(activeProperty);
+        if ((activeTerm != null && activeTerm.container.contains(LIST) && expandedItem instanceof List)) {
+          expandedItem = Builtins.mapOf(LIST, expandedItem);
         }
-        if (expandedItem instanceof List) { // LINE: 118
+        if (expandedItem instanceof List) {
           results.addAll((List) expandedItem);
-        } else if (expandedItem != null) { // LINE: 120
-          results.add(expandedItem); // LINE: 121
+        } else if (expandedItem != null) {
+          results.add(expandedItem);
         }
       }
-      return results; // LINE: 124
+      return results;
     }
     assert element instanceof Map;
-    if ((!(activeContext.propagate) && activeContext.previousContext != null)) { // LINE: 131
-      Context activeContext2 = activeContext; // LINE: 133
-      if ((!(fromMap) && !(((Map) element).keySet().stream().anyMatch(k -> (activeContext2.terms.containsKey(k) && (activeContext2.terms.get(k).iri == null && ((Object) VALUE) == null || activeContext2.terms.get(k).iri != null && (activeContext2.terms.get(k).iri).equals(VALUE))))) && !((((Map) element).size() == 1 && ((Map) element).keySet().stream().anyMatch(k -> (activeContext2.expandIri(((String) k)) == null && ((Object) ID) == null || activeContext2.expandIri(((String) k)) != null && (activeContext2.expandIri(((String) k))).equals(ID))))))) { // LINE: 134
-        activeContext = (Context) activeContext.previousContext; // LINE: 137
+    if ((!(activeContext.propagate) && activeContext.previousContext != null)) {
+      Context activeContext2 = activeContext;
+      if ((!(fromMap) && !(((Map) element).keySet().stream().anyMatch(k -> (activeContext2.terms.containsKey(k) && (activeContext2.terms.get(k).iri == null && ((Object) VALUE) == null || activeContext2.terms.get(k).iri != null && (activeContext2.terms.get(k).iri).equals(VALUE))))) && !((((Map) element).size() == 1 && ((Map) element).keySet().stream().anyMatch(k -> (activeContext2.expandIri(((String) k)) == null && ((Object) ID) == null || activeContext2.expandIri(((String) k)) != null && (activeContext2.expandIri(((String) k))).equals(ID))))))) {
+        activeContext = (Context) activeContext.previousContext;
       }
     }
-    if (propertyScopedContext != null) { // LINE: 140
-      activeContext = propertyScopedContext; // LINE: 141
+    if (propertyScopedContext != null) {
+      activeContext = propertyScopedContext;
     }
-    if (((Map) element).containsKey(CONTEXT)) { // LINE: 144
-      activeContext = (Context) activeContext.getContext(((Map) element).get(CONTEXT), baseUrl); // LINE: 145
+    if (((Map) element).containsKey(CONTEXT)) {
+      activeContext = (Context) activeContext.getContext(((Map) element).get(CONTEXT), baseUrl);
     }
-    Context typeScopedContext = activeContext; // LINE: 148
-    /*@Nullable*/ List<String> values = null; // LINE: 151
-    List<String> keys = (List<String>) new ArrayList(((Map) element).keySet()); // LINE: 152
-    Collections.sort(keys); // LINE: 153
-    for (String key : keys) { // LINE: 154
-      if ((typeScopedContext.expandIri(key) == null && ((Object) TYPE) == null || typeScopedContext.expandIri(key) != null && (typeScopedContext.expandIri(key)).equals(TYPE))) { // LINE: 155
-        values = (List<String>) new ArrayList(asList(((Map) element).get(key))); // LINE: 157
-        Collections.sort(values); // LINE: 158
-        for (String value : values) { // LINE: 160
-          /*@Nullable*/ Term term = (/*@Nullable*/ Term) typeScopedContext.terms.get(value); // LINE: 161
-          if ((value instanceof String && term != null && term.hasLocalContext)) { // LINE: 162
-            activeContext = term.getLocalContext(typeScopedContext, false); // LINE: 163
+    Context typeScopedContext = activeContext;
+    /*@Nullable*/ List<String> values = null;
+    List<String> keys = (List<String>) new ArrayList(((Map) element).keySet());
+    Collections.sort(keys);
+    for (String key : keys) {
+      if ((typeScopedContext.expandIri(key) == null && ((Object) TYPE) == null || typeScopedContext.expandIri(key) != null && (typeScopedContext.expandIri(key)).equals(TYPE))) {
+        values = (List<String>) new ArrayList(asList(((Map) element).get(key)));
+        Collections.sort(values);
+        for (String value : values) {
+          /*@Nullable*/ Term term = (/*@Nullable*/ Term) typeScopedContext.terms.get(value);
+          if ((value instanceof String && term != null && term.hasLocalContext)) {
+            activeContext = term.getLocalContext(typeScopedContext, false);
           }
         }
       }
     }
-    Map result = new HashMap<>(); // LINE: 166
-    Map nests = new HashMap<>(); // LINE: 167
-    /*@Nullable*/ String inputType = ((values != null && values.size() > 0) ? values.get(values.size() - 1) : null); // LINE: 168
-    if ((inputType != null && inputType instanceof String)) { // LINE: 169
-      inputType = (String) activeContext.expandIri((String) inputType); // LINE: 171
+    Map result = new HashMap<>();
+    Map nests = new HashMap<>();
+    /*@Nullable*/ String inputType = ((values != null && values.size() > 0) ? values.get(values.size() - 1) : null);
+    if ((inputType != null && inputType instanceof String)) {
+      inputType = (String) activeContext.expandIri((String) inputType);
     }
-    expandElement(activeContext, typeScopedContext, activeProperty, (Map) element, result, nests, inputType, baseUrl, frameExpansion, ordered, fromMap, warnOnKeywordlikeTerms, warnOnEmptyKeys, warnOnBnodeProperties); // LINE: 175
-    if (result.containsKey(VALUE)) { // LINE: 181
-      Object resultval = (Object) result.get(VALUE); // LINE: 182
-      if ((result.keySet().stream().anyMatch(k -> !VALUE_KEYWORDS.contains(k)) || (result.containsKey(TYPE) && (result.containsKey(LANGUAGE) || result.containsKey(DIRECTION))))) { // LINE: 184
-        throw new InvalidValueObjectError(); // LINE: 186
+    expandElement(activeContext, typeScopedContext, activeProperty, (Map) element, result, nests, inputType, baseUrl, frameExpansion, ordered, fromMap, warnOnKeywordlikeTerms, warnOnEmptyKeys, warnOnBnodeProperties);
+    if (result.containsKey(VALUE)) {
+      Object resultval = (Object) result.get(VALUE);
+      if ((result.keySet().stream().anyMatch(k -> !VALUE_KEYWORDS.contains(k)) || (result.containsKey(TYPE) && (result.containsKey(LANGUAGE) || result.containsKey(DIRECTION))))) {
+        throw new InvalidValueObjectError();
       }
-      if ((result.containsKey(TYPE) && (result.get(TYPE) == null && ((Object) JSON) == null || result.get(TYPE) != null && (result.get(TYPE)).equals(JSON)))) { // LINE: 188
-      } else if ((resultval == null || (resultval == null && ((Object) new ArrayList<>()) == null || resultval != null && (resultval).equals(new ArrayList<>())))) { // LINE: 191
-        return null; // LINE: 192
-      } else if ((!(resultval instanceof String) && result.containsKey(LANGUAGE))) { // LINE: 194
-        throw new InvalidLanguageTaggedValueError(); // LINE: 195
-      } else if ((result.containsKey(TYPE) && !((result.get(TYPE) instanceof String && isIri(((String) result.get(TYPE))))))) { // LINE: 197
-        throw new InvalidTypedValueError((String) result.get(TYPE).toString()); // LINE: 198
+      if ((result.containsKey(TYPE) && (result.get(TYPE) == null && ((Object) JSON) == null || result.get(TYPE) != null && (result.get(TYPE)).equals(JSON)))) {
+      } else if ((resultval == null || (resultval == null && ((Object) new ArrayList<>()) == null || resultval != null && (resultval).equals(new ArrayList<>())))) {
+        return null;
+      } else if ((!(resultval instanceof String) && result.containsKey(LANGUAGE))) {
+        throw new InvalidLanguageTaggedValueError();
+      } else if ((result.containsKey(TYPE) && !((result.get(TYPE) instanceof String && isIri(((String) result.get(TYPE))))))) {
+        throw new InvalidTypedValueError((String) result.get(TYPE).toString());
       }
-    } else if ((result.containsKey(TYPE) && !(result.get(TYPE) instanceof List))) { // LINE: 201
-      result.put(TYPE, new ArrayList<>(Arrays.asList(new Object[] {(Object) result.get(TYPE)}))); // LINE: 202
-    } else if ((result.containsKey(SET) || result.containsKey(LIST))) { // LINE: 205
-      if (result.size() > 1) { // LINE: 207
-        if ((result.size() > 2 || !result.containsKey(INDEX))) { // LINE: 208
-          throw new InvalidSetOrListObjectError(result.toString()); // LINE: 209
+    } else if ((result.containsKey(TYPE) && !(result.get(TYPE) instanceof List))) {
+      result.put(TYPE, new ArrayList<>(Arrays.asList(new Object[] {(Object) result.get(TYPE)})));
+    } else if ((result.containsKey(SET) || result.containsKey(LIST))) {
+      if (result.size() > 1) {
+        if ((result.size() > 2 || !result.containsKey(INDEX))) {
+          throw new InvalidSetOrListObjectError(result.toString());
         }
       }
-      if (result.containsKey(SET)) { // LINE: 211
-        return result.get(SET); // LINE: 215
+      if (result.containsKey(SET)) {
+        return result.get(SET);
       }
     }
-    if ((result.size() == 1 && result.containsKey(LANGUAGE))) { // LINE: 218
-      return null; // LINE: 219
+    if ((result.size() == 1 && result.containsKey(LANGUAGE))) {
+      return null;
     }
-    if ((activeProperty == null || (activeProperty == null && ((Object) GRAPH) == null || activeProperty != null && (activeProperty).equals(GRAPH)))) { // LINE: 222
-      if (((result instanceof Map && ((Map) result).size() == 0) || (((Map) result).containsKey(VALUE) || ((Map) result).containsKey(LIST)))) { // LINE: 227
-        return null; // LINE: 228
-      } else if ((!(frameExpansion) && result.size() == 1 && result.containsKey(ID))) { // LINE: 230
-        return null; // LINE: 231
+    if ((activeProperty == null || (activeProperty == null && ((Object) GRAPH) == null || activeProperty != null && (activeProperty).equals(GRAPH)))) {
+      if (((result instanceof Map && ((Map) result).size() == 0) || (((Map) result).containsKey(VALUE) || ((Map) result).containsKey(LIST)))) {
+        return null;
+      } else if ((!(frameExpansion) && result.size() == 1 && result.containsKey(ID))) {
+        return null;
       }
     }
-    return result; // LINE: 234
+    return result;
   }
 
   protected static void expandElement(Context activeContext, Context typeScopedContext, /*@Nullable*/ String activeProperty, Map<String, /*@Nullable*/ Object> element, Map<String, /*@Nullable*/ Object> result, Map<String, Object> nests, /*@Nullable*/ String inputType, String baseUrl) {
@@ -196,338 +196,338 @@ public class Expansion {
   protected static void expandElement(Context activeContext, Context typeScopedContext, /*@Nullable*/ String activeProperty, Map<String, /*@Nullable*/ Object> element, Map<String, /*@Nullable*/ Object> result, Map<String, Object> nests, /*@Nullable*/ String inputType, String baseUrl, Boolean frameExpansion, Boolean ordered, Boolean fromMap, Boolean warnOnKeywordlikeTerms, Boolean warnOnEmptyKeys) {
     expandElement(activeContext, typeScopedContext, activeProperty, element, result, nests, inputType, baseUrl, frameExpansion, ordered, fromMap, warnOnKeywordlikeTerms, warnOnEmptyKeys, false);
   }
-  protected static void expandElement(Context activeContext, Context typeScopedContext, /*@Nullable*/ String activeProperty, Map<String, /*@Nullable*/ Object> element, Map<String, /*@Nullable*/ Object> result, Map<String, Object> nests, /*@Nullable*/ String inputType, String baseUrl, Boolean frameExpansion, Boolean ordered, Boolean fromMap, Boolean warnOnKeywordlikeTerms, Boolean warnOnEmptyKeys, Boolean warnOnBnodeProperties) { // LINE: 237
-    List<String> keys = new ArrayList(element.keySet()); // LINE: 254
-    if (ordered) { // LINE: 255
-      Collections.sort(keys); // LINE: 256
+  protected static void expandElement(Context activeContext, Context typeScopedContext, /*@Nullable*/ String activeProperty, Map<String, /*@Nullable*/ Object> element, Map<String, /*@Nullable*/ Object> result, Map<String, Object> nests, /*@Nullable*/ String inputType, String baseUrl, Boolean frameExpansion, Boolean ordered, Boolean fromMap, Boolean warnOnKeywordlikeTerms, Boolean warnOnEmptyKeys, Boolean warnOnBnodeProperties) {
+    List<String> keys = new ArrayList(element.keySet());
+    if (ordered) {
+      Collections.sort(keys);
     }
-    for (String key : keys) { // LINE: 257
-      /*@Nullable*/ Object value = (/*@Nullable*/ Object) element.get(key); // LINE: 258
-      /*@Nullable*/ Object expandedValue = null; // LINE: 259
-      Map<String, /*@Nullable*/ Object> expandedMap; // LINE: 260
-      List</*@Nullable*/ Object> expandedList; // LINE: 261
-      Map<String, Object> reverseMap; // LINE: 262
-      if ((key == null && ((Object) CONTEXT) == null || key != null && (key).equals(CONTEXT))) { // LINE: 265
-        continue; // LINE: 266
+    for (String key : keys) {
+      /*@Nullable*/ Object value = (/*@Nullable*/ Object) element.get(key);
+      /*@Nullable*/ Object expandedValue = null;
+      Map<String, /*@Nullable*/ Object> expandedMap;
+      List</*@Nullable*/ Object> expandedList;
+      Map<String, Object> reverseMap;
+      if ((key == null && ((Object) CONTEXT) == null || key != null && (key).equals(CONTEXT))) {
+        continue;
       }
-      /*@Nullable*/ String expandedProperty = (/*@Nullable*/ String) activeContext.expandVocabIri(key); // LINE: 268
-      if ((expandedProperty == null || (!expandedProperty.contains(":") && !KEYWORDS.contains(expandedProperty)))) { // LINE: 270
-        continue; // LINE: 271
+      /*@Nullable*/ String expandedProperty = (/*@Nullable*/ String) activeContext.expandVocabIri(key);
+      if ((expandedProperty == null || (!expandedProperty.contains(":") && !KEYWORDS.contains(expandedProperty)))) {
+        continue;
       }
-      if (KEYWORDS.contains(expandedProperty)) { // LINE: 273
-        if ((activeProperty == null && ((Object) REVERSE) == null || activeProperty != null && (activeProperty).equals(REVERSE))) { // LINE: 275
-          throw new InvalidReversePropertyMapError(); // LINE: 276
+      if (KEYWORDS.contains(expandedProperty)) {
+        if ((activeProperty == null && ((Object) REVERSE) == null || activeProperty != null && (activeProperty).equals(REVERSE))) {
+          throw new InvalidReversePropertyMapError();
         }
-        if ((result.containsKey(expandedProperty) && !new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) INCLUDED, TYPE}))).contains(expandedProperty))) { // LINE: 278
+        if ((result.containsKey(expandedProperty) && !new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) INCLUDED, TYPE}))).contains(expandedProperty))) {
         }
-        if ((expandedProperty == null && ((Object) ID) == null || expandedProperty != null && (expandedProperty).equals(ID))) { // LINE: 284
-          if ((!(value instanceof String) || (frameExpansion && ((value == null && ((Object) new HashMap<>()) == null || value != null && (value).equals(new HashMap<>())) || value instanceof List)))) { // LINE: 286
-            throw new InvalidIdValueError(); // LINE: 288
+        if ((expandedProperty == null && ((Object) ID) == null || expandedProperty != null && (expandedProperty).equals(ID))) {
+          if ((!(value instanceof String) || (frameExpansion && ((value == null && ((Object) new HashMap<>()) == null || value != null && (value).equals(new HashMap<>())) || value instanceof List)))) {
+            throw new InvalidIdValueError();
           }
-          if (frameExpansion) { // LINE: 290
-            expandedValue = expandedList = new ArrayList<>(); // LINE: 291
-            for (Object v : expandedList) { // LINE: 292
-              expandedList.add((v instanceof String ? activeContext.expandDocRelativeIri((String) v) : v)); // LINE: 293
+          if (frameExpansion) {
+            expandedValue = expandedList = new ArrayList<>();
+            for (Object v : expandedList) {
+              expandedList.add((v instanceof String ? activeContext.expandDocRelativeIri((String) v) : v));
             }
           } else {
-            expandedValue = (Object) activeContext.expandDocRelativeIri((String) value); // LINE: 297
+            expandedValue = (Object) activeContext.expandDocRelativeIri((String) value);
           }
-        } else if ((expandedProperty == null && ((Object) TYPE) == null || expandedProperty != null && (expandedProperty).equals(TYPE))) { // LINE: 300
-          if ((!(value instanceof String || value instanceof List) && !((frameExpansion && ((value == null && ((Object) new HashMap<>()) == null || value != null && (value).equals(new HashMap<>())) || (value instanceof Map && isIri(((String) ((Map) value).get(DEFAULT))))))))) { // LINE: 302
-            throw new InvalidTypeValueError(); // LINE: 306
+        } else if ((expandedProperty == null && ((Object) TYPE) == null || expandedProperty != null && (expandedProperty).equals(TYPE))) {
+          if ((!(value instanceof String || value instanceof List) && !((frameExpansion && ((value == null && ((Object) new HashMap<>()) == null || value != null && (value).equals(new HashMap<>())) || (value instanceof Map && isIri(((String) ((Map) value).get(DEFAULT))))))))) {
+            throw new InvalidTypeValueError();
           }
-          if ((value instanceof Map && (value == null && ((Object) new HashMap<>()) == null || value != null && (value).equals(new HashMap<>())))) { // LINE: 308
-            expandedValue = expandedMap = (Map) value; // LINE: 309
-          } else if ((value instanceof Map && ((Map) value).containsKey(DEFAULT))) { // LINE: 311
-            expandedMap = (Map<String, Object>) Builtins.mapOf(DEFAULT, typeScopedContext.expandDocRelativeVocabIri(((String) ((Map) value).get(DEFAULT)))); // LINE: 312
+          if ((value instanceof Map && (value == null && ((Object) new HashMap<>()) == null || value != null && (value).equals(new HashMap<>())))) {
+            expandedValue = expandedMap = (Map) value;
+          } else if ((value instanceof Map && ((Map) value).containsKey(DEFAULT))) {
+            expandedMap = (Map<String, Object>) Builtins.mapOf(DEFAULT, typeScopedContext.expandDocRelativeVocabIri(((String) ((Map) value).get(DEFAULT))));
           } else {
-            expandedValue = expandedList = new ArrayList<>(); // LINE: 315
-            for (Object v : asList(((Object) value))) { // LINE: 316
-              expandedList.add(typeScopedContext.expandDocRelativeVocabIri(((String) v))); // LINE: 317
+            expandedValue = expandedList = new ArrayList<>();
+            for (Object v : asList(((Object) value))) {
+              expandedList.add(typeScopedContext.expandDocRelativeVocabIri(((String) v)));
             }
-            if (expandedList.size() == 1) { // LINE: 319
-              expandedValue = (Object) expandedList.get(0); // LINE: 320
+            if (expandedList.size() == 1) {
+              expandedValue = (Object) expandedList.get(0);
             }
           }
-          if (result.containsKey(TYPE)) { // LINE: 322
-            expandedValue = Stream.concat(asList(result.get(TYPE)).stream(), asList(expandedValue).stream()).collect(Collectors.toList()); // LINE: 323
+          if (result.containsKey(TYPE)) {
+            expandedValue = Stream.concat(asList(result.get(TYPE)).stream(), asList(expandedValue).stream()).collect(Collectors.toList());
           }
-        } else if ((expandedProperty == null && ((Object) GRAPH) == null || expandedProperty != null && (expandedProperty).equals(GRAPH))) { // LINE: 329
-          expandedValue = asList(expansion(activeContext, GRAPH, value, baseUrl, frameExpansion, ordered, fromMap, warnOnKeywordlikeTerms, warnOnEmptyKeys, warnOnBnodeProperties)); // LINE: 330
-        } else if ((expandedProperty == null && ((Object) INCLUDED) == null || expandedProperty != null && (expandedProperty).equals(INCLUDED))) { // LINE: 336
-          if ((activeContext.processingMode == null && ((Object) JSONLD10) == null || activeContext.processingMode != null && (activeContext.processingMode).equals(JSONLD10))) { // LINE: 338
-            continue; // LINE: 339
+        } else if ((expandedProperty == null && ((Object) GRAPH) == null || expandedProperty != null && (expandedProperty).equals(GRAPH))) {
+          expandedValue = asList(expansion(activeContext, GRAPH, value, baseUrl, frameExpansion, ordered, fromMap, warnOnKeywordlikeTerms, warnOnEmptyKeys, warnOnBnodeProperties));
+        } else if ((expandedProperty == null && ((Object) INCLUDED) == null || expandedProperty != null && (expandedProperty).equals(INCLUDED))) {
+          if ((activeContext.processingMode == null && ((Object) JSONLD10) == null || activeContext.processingMode != null && (activeContext.processingMode).equals(JSONLD10))) {
+            continue;
           }
-          expandedValue = expandedList = asList(expansion(activeContext, null, value, baseUrl, frameExpansion, ordered, fromMap, warnOnKeywordlikeTerms, warnOnEmptyKeys, warnOnBnodeProperties)); // LINE: 341
-          if (expandedList.stream().anyMatch(v -> !(v instanceof Map))) { // LINE: 346
-            throw new InvalidIncludedValueError(); // LINE: 347
+          expandedValue = expandedList = asList(expansion(activeContext, null, value, baseUrl, frameExpansion, ordered, fromMap, warnOnKeywordlikeTerms, warnOnEmptyKeys, warnOnBnodeProperties));
+          if (expandedList.stream().anyMatch(v -> !(v instanceof Map))) {
+            throw new InvalidIncludedValueError();
           }
-          if (result.containsKey(INCLUDED)) { // LINE: 349
-            expandedValue = Stream.concat(asList(result.get(INCLUDED)).stream(), expandedList.stream()).collect(Collectors.toList()); // LINE: 350
+          if (result.containsKey(INCLUDED)) {
+            expandedValue = Stream.concat(asList(result.get(INCLUDED)).stream(), expandedList.stream()).collect(Collectors.toList());
           }
-        } else if ((expandedProperty == null && ((Object) VALUE) == null || expandedProperty != null && (expandedProperty).equals(VALUE))) { // LINE: 353
-          if ((inputType == null && ((Object) JSON) == null || inputType != null && (inputType).equals(JSON))) { // LINE: 355
-            if ((activeContext.processingMode == null && ((Object) JSONLD10) == null || activeContext.processingMode != null && (activeContext.processingMode).equals(JSONLD10))) { // LINE: 356
-              throw new InvalidValueObjectValueError(); // LINE: 357
+        } else if ((expandedProperty == null && ((Object) VALUE) == null || expandedProperty != null && (expandedProperty).equals(VALUE))) {
+          if ((inputType == null && ((Object) JSON) == null || inputType != null && (inputType).equals(JSON))) {
+            if ((activeContext.processingMode == null && ((Object) JSONLD10) == null || activeContext.processingMode != null && (activeContext.processingMode).equals(JSONLD10))) {
+              throw new InvalidValueObjectValueError();
             }
-            expandedValue = value; // LINE: 358
-          } else if (((!(isScalar(value)) && value != null) && !((frameExpansion && ((value == null && ((Object) new HashMap<>()) == null || value != null && (value).equals(new HashMap<>())) || (value instanceof List && ((List) value).stream().allMatch(v -> isScalar(v)))))))) { // LINE: 360
-            throw new InvalidValueObjectValueError("Unexpected value " + value); // LINE: 364
+            expandedValue = value;
+          } else if (((!(isScalar(value)) && value != null) && !((frameExpansion && ((value == null && ((Object) new HashMap<>()) == null || value != null && (value).equals(new HashMap<>())) || (value instanceof List && ((List) value).stream().allMatch(v -> isScalar(v)))))))) {
+            throw new InvalidValueObjectValueError("Unexpected value " + value);
           } else {
-            expandedValue = ((Object) value); // LINE: 367
-            if (frameExpansion) { // LINE: 368
-              expandedValue = (Object) asList(expandedValue); // LINE: 369
+            expandedValue = ((Object) value);
+            if (frameExpansion) {
+              expandedValue = (Object) asList(expandedValue);
             }
           }
-          if (expandedValue == null) { // LINE: 371
-            result.put(VALUE, null); // LINE: 372
-            continue; // LINE: 373
+          if (expandedValue == null) {
+            result.put(VALUE, null);
+            continue;
           }
-        } else if ((expandedProperty == null && ((Object) LANGUAGE) == null || expandedProperty != null && (expandedProperty).equals(LANGUAGE))) { // LINE: 376
-          if (!(value instanceof String)) { // LINE: 378
-            throw new InvalidLanguageTaggedStringError(); // LINE: 379
+        } else if ((expandedProperty == null && ((Object) LANGUAGE) == null || expandedProperty != null && (expandedProperty).equals(LANGUAGE))) {
+          if (!(value instanceof String)) {
+            throw new InvalidLanguageTaggedStringError();
           }
-          expandedValue = (String) value; // LINE: 381
-          if (!(isLangTag((String) value))) { // LINE: 382
-            warning("Language tag " + value + " is not well-formed"); // LINE: 383
+          expandedValue = (String) value;
+          if (!(isLangTag((String) value))) {
+            warning("Language tag " + value + " is not well-formed");
           }
-          if (frameExpansion) { // LINE: 384
-            expandedValue = (Object) asList(expandedValue); // LINE: 385
+          if (frameExpansion) {
+            expandedValue = (Object) asList(expandedValue);
           }
-        } else if ((expandedProperty == null && ((Object) DIRECTION) == null || expandedProperty != null && (expandedProperty).equals(DIRECTION))) { // LINE: 388
-          if ((activeContext.processingMode == null && ((Object) JSONLD10) == null || activeContext.processingMode != null && (activeContext.processingMode).equals(JSONLD10))) { // LINE: 390
-            continue; // LINE: 391
+        } else if ((expandedProperty == null && ((Object) DIRECTION) == null || expandedProperty != null && (expandedProperty).equals(DIRECTION))) {
+          if ((activeContext.processingMode == null && ((Object) JSONLD10) == null || activeContext.processingMode != null && (activeContext.processingMode).equals(JSONLD10))) {
+            continue;
           }
-          if ((!DIRECTIONS.contains(value) || (frameExpansion && (!value.equals(new HashMap<>()) || (value instanceof List && !(((List) value).stream().allMatch(v -> v instanceof String))))))) { // LINE: 393
-            throw new InvalidBaseDirectionError(); // LINE: 394
+          if ((!DIRECTIONS.contains(value) || (frameExpansion && (!value.equals(new HashMap<>()) || (value instanceof List && !(((List) value).stream().allMatch(v -> v instanceof String))))))) {
+            throw new InvalidBaseDirectionError();
           }
-          expandedValue = value; // LINE: 396
-          if (frameExpansion) { // LINE: 397
-            expandedValue = (Object) asList(expandedValue); // LINE: 398
+          expandedValue = value;
+          if (frameExpansion) {
+            expandedValue = (Object) asList(expandedValue);
           }
-        } else if ((expandedProperty == null && ((Object) INDEX) == null || expandedProperty != null && (expandedProperty).equals(INDEX))) { // LINE: 401
-          if (!(value instanceof String)) { // LINE: 403
-            throw new InvalidIndexValueError(); // LINE: 404
+        } else if ((expandedProperty == null && ((Object) INDEX) == null || expandedProperty != null && (expandedProperty).equals(INDEX))) {
+          if (!(value instanceof String)) {
+            throw new InvalidIndexValueError();
           }
-          expandedValue = (String) value; // LINE: 406
-        } else if ((expandedProperty == null && ((Object) LIST) == null || expandedProperty != null && (expandedProperty).equals(LIST))) { // LINE: 409
-          if ((activeProperty == null || (activeProperty == null && ((Object) GRAPH) == null || activeProperty != null && (activeProperty).equals(GRAPH)))) { // LINE: 411
-            continue; // LINE: 412
+          expandedValue = (String) value;
+        } else if ((expandedProperty == null && ((Object) LIST) == null || expandedProperty != null && (expandedProperty).equals(LIST))) {
+          if ((activeProperty == null || (activeProperty == null && ((Object) GRAPH) == null || activeProperty != null && (activeProperty).equals(GRAPH)))) {
+            continue;
           }
-          expandedValue = asList(expansion(activeContext, activeProperty, value, baseUrl, frameExpansion, ordered, fromMap, warnOnKeywordlikeTerms, warnOnEmptyKeys, warnOnBnodeProperties)); // LINE: 414
-        } else if ((expandedProperty == null && ((Object) SET) == null || expandedProperty != null && (expandedProperty).equals(SET))) { // LINE: 420
-          expandedValue = expansion(activeContext, activeProperty, value, baseUrl, frameExpansion, ordered, fromMap, warnOnKeywordlikeTerms, warnOnEmptyKeys, warnOnBnodeProperties); // LINE: 421
-        } else if ((expandedProperty == null && ((Object) REVERSE) == null || expandedProperty != null && (expandedProperty).equals(REVERSE))) { // LINE: 427
-          if (!(value instanceof Map)) { // LINE: 429
-            throw new InvalidReverseValueError(); // LINE: 430
+          expandedValue = asList(expansion(activeContext, activeProperty, value, baseUrl, frameExpansion, ordered, fromMap, warnOnKeywordlikeTerms, warnOnEmptyKeys, warnOnBnodeProperties));
+        } else if ((expandedProperty == null && ((Object) SET) == null || expandedProperty != null && (expandedProperty).equals(SET))) {
+          expandedValue = expansion(activeContext, activeProperty, value, baseUrl, frameExpansion, ordered, fromMap, warnOnKeywordlikeTerms, warnOnEmptyKeys, warnOnBnodeProperties);
+        } else if ((expandedProperty == null && ((Object) REVERSE) == null || expandedProperty != null && (expandedProperty).equals(REVERSE))) {
+          if (!(value instanceof Map)) {
+            throw new InvalidReverseValueError();
           }
-          expandedMap = ((Map<String, /*@Nullable*/ Object>) expansion(activeContext, REVERSE, (Map) value, baseUrl, frameExpansion, ordered, fromMap, warnOnKeywordlikeTerms, warnOnEmptyKeys, warnOnBnodeProperties)); // LINE: 437
-          if (expandedMap.containsKey(REVERSE)) { // LINE: 443
-            Map<String, Object> entry = ((Map<String, Object>) expandedMap.get(REVERSE)); // LINE: 445
-            for (Map.Entry<String, Object> prop_item : entry.entrySet()) { // LINE: 446
+          expandedMap = ((Map<String, /*@Nullable*/ Object>) expansion(activeContext, REVERSE, (Map) value, baseUrl, frameExpansion, ordered, fromMap, warnOnKeywordlikeTerms, warnOnEmptyKeys, warnOnBnodeProperties));
+          if (expandedMap.containsKey(REVERSE)) {
+            Map<String, Object> entry = ((Map<String, Object>) expandedMap.get(REVERSE));
+            for (Map.Entry<String, Object> prop_item : entry.entrySet()) {
               String prop = prop_item.getKey();
               Object item = prop_item.getValue();
-              addValueAsList(result, prop, item); // LINE: 447
+              addValueAsList(result, prop, item);
             }
           }
-          if (expandedMap.keySet().stream().anyMatch(k -> !k.equals(REVERSE))) { // LINE: 450
+          if (expandedMap.keySet().stream().anyMatch(k -> !k.equals(REVERSE))) {
             if (!result.containsKey(REVERSE)) result.put(REVERSE, new HashMap<>());
-            reverseMap = ((Map<String, Object>) result.get(REVERSE)); // LINE: 452
-            for (Map.Entry<String, Object> prop_items : expandedMap.entrySet()) { // LINE: 454
+            reverseMap = ((Map<String, Object>) result.get(REVERSE));
+            for (Map.Entry<String, Object> prop_items : expandedMap.entrySet()) {
               String prop = prop_items.getKey();
               Object items = prop_items.getValue();
-              for (Map<String, Object> item : ((List<Map<String, Object>>) items)) { // LINE: 456
-                if ((item instanceof Map && (((Map) item).containsKey(VALUE) || ((Map) item).containsKey(LIST)))) { // LINE: 458
-                  throw new InvalidReversePropertyValueError(); // LINE: 459
+              for (Map<String, Object> item : ((List<Map<String, Object>>) items)) {
+                if ((item instanceof Map && (((Map) item).containsKey(VALUE) || ((Map) item).containsKey(LIST)))) {
+                  throw new InvalidReversePropertyValueError();
                 }
-                addValueAsList(reverseMap, prop, item); // LINE: 461
+                addValueAsList(reverseMap, prop, item);
               }
             }
           }
-          continue; // LINE: 464
-        } else if ((expandedProperty == null && ((Object) NEST) == null || expandedProperty != null && (expandedProperty).equals(NEST))) { // LINE: 467
+          continue;
+        } else if ((expandedProperty == null && ((Object) NEST) == null || expandedProperty != null && (expandedProperty).equals(NEST))) {
           if (!nests.containsKey(key)) nests.put(key, new ArrayList<>());
-          nests.get(key); // LINE: 468
-          continue; // LINE: 469
+          nests.get(key);
+          continue;
         }
-        if ((frameExpansion && FRAMING_KEYWORDS.contains(expandedProperty))) { // LINE: 472
-          expandedValue = expansion(activeContext, activeProperty, value, baseUrl, frameExpansion, ordered, fromMap, warnOnKeywordlikeTerms, warnOnEmptyKeys, warnOnBnodeProperties); // LINE: 473
+        if ((frameExpansion && FRAMING_KEYWORDS.contains(expandedProperty))) {
+          expandedValue = expansion(activeContext, activeProperty, value, baseUrl, frameExpansion, ordered, fromMap, warnOnKeywordlikeTerms, warnOnEmptyKeys, warnOnBnodeProperties);
         }
-        if (!((expandedValue == null && (expandedProperty == null && ((Object) VALUE) == null || expandedProperty != null && (expandedProperty).equals(VALUE)) && !inputType.equals(JSON)))) { // LINE: 479
-          result.put(expandedProperty, expandedValue); // LINE: 480
+        if (!((expandedValue == null && (expandedProperty == null && ((Object) VALUE) == null || expandedProperty != null && (expandedProperty).equals(VALUE)) && !inputType.equals(JSON)))) {
+          result.put(expandedProperty, expandedValue);
         }
-        continue; // LINE: 483
+        continue;
       }
-      /*@Nullable*/ Term keyTerm = (/*@Nullable*/ Term) activeContext.terms.get(key); // LINE: 486
-      List containerMapping = (keyTerm != null ? keyTerm.container : new ArrayList<>()); // LINE: 487
-      if ((keyTerm != null && (keyTerm.typeMapping == null && ((Object) JSON) == null || keyTerm.typeMapping != null && (keyTerm.typeMapping).equals(JSON)))) { // LINE: 490
-        expandedValue = Builtins.mapOf(VALUE, value, TYPE, JSON); // LINE: 491
-      } else if ((containerMapping.contains(LANGUAGE) && value instanceof Map)) { // LINE: 494
-        expandedValue = expandedList = new ArrayList<>(); // LINE: 496
-        /*@Nullable*/ String direction = (/*@Nullable*/ String) activeContext.defaultBaseDirection; // LINE: 498
-        if ((keyTerm != null && keyTerm.direction != null)) { // LINE: 500
-          direction = (String) keyTerm.direction; // LINE: 501
+      /*@Nullable*/ Term keyTerm = (/*@Nullable*/ Term) activeContext.terms.get(key);
+      List containerMapping = (keyTerm != null ? keyTerm.container : new ArrayList<>());
+      if ((keyTerm != null && (keyTerm.typeMapping == null && ((Object) JSON) == null || keyTerm.typeMapping != null && (keyTerm.typeMapping).equals(JSON)))) {
+        expandedValue = Builtins.mapOf(VALUE, value, TYPE, JSON);
+      } else if ((containerMapping.contains(LANGUAGE) && value instanceof Map)) {
+        expandedValue = expandedList = new ArrayList<>();
+        /*@Nullable*/ String direction = (/*@Nullable*/ String) activeContext.defaultBaseDirection;
+        if ((keyTerm != null && keyTerm.direction != null)) {
+          direction = (String) keyTerm.direction;
         }
-        List<String> languages = (List<String>) new ArrayList(((Map) value).keySet()); // LINE: 503
-        if (ordered) { // LINE: 504
-          Collections.sort(languages); // LINE: 505
+        List<String> languages = (List<String>) new ArrayList(((Map) value).keySet());
+        if (ordered) {
+          Collections.sort(languages);
         }
-        for (String lang : languages) { // LINE: 506
-          List<String> langvalues = (List<String>) asList(((Map) value).get(lang)); // LINE: 508
-          for (String item : langvalues) { // LINE: 510
-            if (item == null) { // LINE: 512
-              continue; // LINE: 513
+        for (String lang : languages) {
+          List<String> langvalues = (List<String>) asList(((Map) value).get(lang));
+          for (String item : langvalues) {
+            if (item == null) {
+              continue;
             }
-            if (!(item instanceof String)) { // LINE: 515
-              throw new InvalidLanguageMapValueError(); // LINE: 516
+            if (!(item instanceof String)) {
+              throw new InvalidLanguageMapValueError();
             }
-            Map<String, String> o = Builtins.mapOf(VALUE, item, LANGUAGE, lang); // LINE: 518
-            if ((!NULLS.contains(lang) && !(isLangTag(lang)))) { // LINE: 520
-              warning("Language tag " + value + " is not well-formed"); // LINE: 521
+            Map<String, String> o = Builtins.mapOf(VALUE, item, LANGUAGE, lang);
+            if ((!NULLS.contains(lang) && !(isLangTag(lang)))) {
+              warning("Language tag " + value + " is not well-formed");
             }
-            if ((NULLS.contains(lang) || (activeContext.expandIri(lang) == null && ((Object) NONE) == null || activeContext.expandIri(lang) != null && (activeContext.expandIri(lang)).equals(NONE)))) { // LINE: 523
-              o.remove(LANGUAGE); // LINE: 524
+            if ((NULLS.contains(lang) || (activeContext.expandIri(lang) == null && ((Object) NONE) == null || activeContext.expandIri(lang) != null && (activeContext.expandIri(lang)).equals(NONE)))) {
+              o.remove(LANGUAGE);
             }
-            if (!NULLS.contains(direction)) { // LINE: 526
-              o.put(DIRECTION, ((String) direction)); // LINE: 527
+            if (!NULLS.contains(direction)) {
+              o.put(DIRECTION, ((String) direction));
             }
-            expandedList.add(o); // LINE: 529
+            expandedList.add(o);
           }
         }
-      } else if ((new ArrayList<>(Arrays.asList(new String[] {(String) INDEX, TYPE, ID})).stream().anyMatch(k -> containerMapping.contains(k)) && value instanceof Map)) { // LINE: 532
-        expandedValue = expandedList = new ArrayList<>(); // LINE: 534
-        String indexKey = INDEX; // LINE: 536
-        if ((keyTerm != null && keyTerm.index != null)) { // LINE: 537
-          indexKey = (String) keyTerm.index; // LINE: 538
+      } else if ((new ArrayList<>(Arrays.asList(new String[] {(String) INDEX, TYPE, ID})).stream().anyMatch(k -> containerMapping.contains(k)) && value instanceof Map)) {
+        expandedValue = expandedList = new ArrayList<>();
+        String indexKey = INDEX;
+        if ((keyTerm != null && keyTerm.index != null)) {
+          indexKey = (String) keyTerm.index;
         }
-        List<String> indexes = (List<String>) new ArrayList(((Map) value).keySet()); // LINE: 541
-        if (ordered) { // LINE: 542
-          Collections.sort(indexes); // LINE: 543
+        List<String> indexes = (List<String>) new ArrayList(((Map) value).keySet());
+        if (ordered) {
+          Collections.sort(indexes);
         }
-        for (String index : indexes) { // LINE: 544
-          Context mapContext; // LINE: 546
-          if (((containerMapping.contains(ID) || containerMapping.contains(TYPE)) && activeContext.previousContext != null)) { // LINE: 547
-            mapContext = (Context) activeContext.previousContext; // LINE: 549
+        for (String index : indexes) {
+          Context mapContext;
+          if (((containerMapping.contains(ID) || containerMapping.contains(TYPE)) && activeContext.previousContext != null)) {
+            mapContext = (Context) activeContext.previousContext;
           } else {
-            mapContext = activeContext; // LINE: 551
+            mapContext = activeContext;
           }
-          /*@Nullable*/ Term indexTerm = (/*@Nullable*/ Term) activeContext.terms.get(index); // LINE: 554
-          if ((containerMapping.contains(TYPE) && indexTerm != null && indexTerm.hasLocalContext)) { // LINE: 555
-            mapContext = (Context) indexTerm.getLocalContext(mapContext); // LINE: 556
+          /*@Nullable*/ Term indexTerm = (/*@Nullable*/ Term) activeContext.terms.get(index);
+          if ((containerMapping.contains(TYPE) && indexTerm != null && indexTerm.hasLocalContext)) {
+            mapContext = (Context) indexTerm.getLocalContext(mapContext);
           } else {
-            mapContext = activeContext; // LINE: 559
+            mapContext = activeContext;
           }
-          String expandedIndex = (String) ((String) activeContext.expandVocabIri(index)); // LINE: 562
-          List<Map<String, Object>> indexValues = (List<Map<String, Object>>) asList(((Map) value).get(index)); // LINE: 564
-          indexValues = ((List<Map<String, Object>>) expansion(mapContext, key, indexValues, baseUrl, frameExpansion, ordered, true, warnOnKeywordlikeTerms, warnOnEmptyKeys, warnOnBnodeProperties)); // LINE: 566
-          for (Map<String, Object> item : indexValues) { // LINE: 571
-            if ((containerMapping.contains(GRAPH) && (!(item instanceof Map) || !((Map) item).containsKey(GRAPH)))) { // LINE: 573
-              item = (Map) Builtins.mapOf(GRAPH, asList((Map) item)); // LINE: 574
+          String expandedIndex = (String) ((String) activeContext.expandVocabIri(index));
+          List<Map<String, Object>> indexValues = (List<Map<String, Object>>) asList(((Map) value).get(index));
+          indexValues = ((List<Map<String, Object>>) expansion(mapContext, key, indexValues, baseUrl, frameExpansion, ordered, true, warnOnKeywordlikeTerms, warnOnEmptyKeys, warnOnBnodeProperties));
+          for (Map<String, Object> item : indexValues) {
+            if ((containerMapping.contains(GRAPH) && (!(item instanceof Map) || !((Map) item).containsKey(GRAPH)))) {
+              item = (Map) Builtins.mapOf(GRAPH, asList((Map) item));
             }
-            if ((containerMapping.contains(INDEX) && !indexKey.equals(INDEX) && !expandedIndex.equals(NONE))) { // LINE: 576
-              Object reexpandedIndex = valueExpansion(activeContext, indexKey, index); // LINE: 578
-              String expandedIndexKey = (String) ((String) activeContext.expandVocabIri(indexKey)); // LINE: 581
-              List indexPropertyValues = new ArrayList<>(Arrays.asList(new Object[] {(Object) reexpandedIndex})); // LINE: 583
-              if (((Map) item).containsKey(expandedIndexKey)) { // LINE: 584
+            if ((containerMapping.contains(INDEX) && !indexKey.equals(INDEX) && !expandedIndex.equals(NONE))) {
+              Object reexpandedIndex = valueExpansion(activeContext, indexKey, index);
+              String expandedIndexKey = (String) ((String) activeContext.expandVocabIri(indexKey));
+              List indexPropertyValues = new ArrayList<>(Arrays.asList(new Object[] {(Object) reexpandedIndex}));
+              if (((Map) item).containsKey(expandedIndexKey)) {
                 indexPropertyValues.addAll(asList(((Map) item).get(expandedIndexKey)));
               }
-              ((Map) item).put(expandedIndexKey, indexPropertyValues); // LINE: 587
-              if ((item instanceof Map && ((Map) item).containsKey(VALUE) && ((Map) item).size() > 1)) { // LINE: 589
-                throw new InvalidValueObjectError(); // LINE: 590
+              ((Map) item).put(expandedIndexKey, indexPropertyValues);
+              if ((item instanceof Map && ((Map) item).containsKey(VALUE) && ((Map) item).size() > 1)) {
+                throw new InvalidValueObjectError();
               }
-            } else if ((containerMapping.contains(INDEX) && !((Map) item).containsKey(INDEX) && !expandedIndex.equals(NONE))) { // LINE: 592
-              ((Map) item).put(INDEX, index); // LINE: 593
-            } else if ((containerMapping.contains(ID) && !((Map) item).containsKey(ID) && !expandedIndex.equals(NONE))) { // LINE: 595
-              expandedIndex = ((String) activeContext.expandDocRelativeIri(index)); // LINE: 597
-              ((Map) item).put(ID, expandedIndex); // LINE: 598
-            } else if ((containerMapping.contains(TYPE) && !expandedIndex.equals(NONE))) { // LINE: 600
-              List<String> types = new ArrayList<>(Arrays.asList(new String[] {(String) expandedIndex})); // LINE: 601
-              if (((Map) item).containsKey(TYPE)) { // LINE: 602
+            } else if ((containerMapping.contains(INDEX) && !((Map) item).containsKey(INDEX) && !expandedIndex.equals(NONE))) {
+              ((Map) item).put(INDEX, index);
+            } else if ((containerMapping.contains(ID) && !((Map) item).containsKey(ID) && !expandedIndex.equals(NONE))) {
+              expandedIndex = ((String) activeContext.expandDocRelativeIri(index));
+              ((Map) item).put(ID, expandedIndex);
+            } else if ((containerMapping.contains(TYPE) && !expandedIndex.equals(NONE))) {
+              List<String> types = new ArrayList<>(Arrays.asList(new String[] {(String) expandedIndex}));
+              if (((Map) item).containsKey(TYPE)) {
                 types.addAll(asList(((Map) item).get(TYPE)));
               }
-              ((Map) item).put(TYPE, types); // LINE: 604
+              ((Map) item).put(TYPE, types);
             }
-            expandedList.add((Map) item); // LINE: 606
+            expandedList.add((Map) item);
           }
         }
       } else {
-        expandedValue = expansion(activeContext, key, value, baseUrl, frameExpansion, ordered, fromMap, warnOnKeywordlikeTerms, warnOnEmptyKeys, warnOnBnodeProperties); // LINE: 610
+        expandedValue = expansion(activeContext, key, value, baseUrl, frameExpansion, ordered, fromMap, warnOnKeywordlikeTerms, warnOnEmptyKeys, warnOnBnodeProperties);
       }
-      if (expandedValue == null) { // LINE: 616
-        continue; // LINE: 617
+      if (expandedValue == null) {
+        continue;
       }
-      if (containerMapping.contains(LIST)) { // LINE: 620
-        if ((!(expandedValue instanceof Map) || !((Map) expandedValue).containsKey(LIST))) { // LINE: 621
-          expandedValue = (Map) Builtins.mapOf(LIST, asList(((Object) expandedValue))); // LINE: 622
+      if (containerMapping.contains(LIST)) {
+        if ((!(expandedValue instanceof Map) || !((Map) expandedValue).containsKey(LIST))) {
+          expandedValue = (Map) Builtins.mapOf(LIST, asList(((Object) expandedValue)));
         }
       }
-      if ((containerMapping.contains(GRAPH) && !containerMapping.contains(ID) && !containerMapping.contains(INDEX))) { // LINE: 625
-        List newExpanded = new ArrayList<>(); // LINE: 626
-        for (Object ev : asList(expandedValue)) { // LINE: 627
-          newExpanded.add(Builtins.mapOf(GRAPH, asList(ev))); // LINE: 629
+      if ((containerMapping.contains(GRAPH) && !containerMapping.contains(ID) && !containerMapping.contains(INDEX))) {
+        List newExpanded = new ArrayList<>();
+        for (Object ev : asList(expandedValue)) {
+          newExpanded.add(Builtins.mapOf(GRAPH, asList(ev)));
         }
-        expandedValue = (Object) newExpanded; // LINE: 630
+        expandedValue = (Object) newExpanded;
       }
-      if ((keyTerm != null && keyTerm.isReverseProperty)) { // LINE: 633
+      if ((keyTerm != null && keyTerm.isReverseProperty)) {
         if (!result.containsKey(REVERSE)) result.put(REVERSE, new HashMap<>());
-        reverseMap = ((Map<String, Object>) result.get(REVERSE)); // LINE: 636
-        if (!(expandedValue instanceof List)) { // LINE: 638
-          expandedValue = new ArrayList<>(Arrays.asList(new Object[] {(Object) expandedValue})); // LINE: 639
+        reverseMap = ((Map<String, Object>) result.get(REVERSE));
+        if (!(expandedValue instanceof List)) {
+          expandedValue = new ArrayList<>(Arrays.asList(new Object[] {(Object) expandedValue}));
         }
-        for (Object item : (List) expandedValue) { // LINE: 641
-          if ((item instanceof Map && (((Map) item).containsKey(VALUE) || ((Map) item).containsKey(LIST)))) { // LINE: 643
-            throw new InvalidReversePropertyValueError(); // LINE: 644
+        for (Object item : (List) expandedValue) {
+          if ((item instanceof Map && (((Map) item).containsKey(VALUE) || ((Map) item).containsKey(LIST)))) {
+            throw new InvalidReversePropertyValueError();
           }
           if (!reverseMap.containsKey(expandedProperty)) reverseMap.put(expandedProperty, new ArrayList<>());
-          List revEntry = (List) ((List) reverseMap.get(expandedProperty)); // LINE: 646
-          addValueAsList(reverseMap, expandedProperty, item); // LINE: 648
+          List revEntry = (List) ((List) reverseMap.get(expandedProperty));
+          addValueAsList(reverseMap, expandedProperty, item);
         }
       } else {
-        addValueAsList(result, expandedProperty, expandedValue); // LINE: 652
+        addValueAsList(result, expandedProperty, expandedValue);
       }
     }
-    List<String> nestingKeys = new ArrayList(nests.keySet()); // LINE: 655
-    if (ordered) { // LINE: 656
-      Collections.sort(nestingKeys); // LINE: 657
+    List<String> nestingKeys = new ArrayList(nests.keySet());
+    if (ordered) {
+      Collections.sort(nestingKeys);
     }
-    for (String nestingKey : nestingKeys) { // LINE: 658
-      List<Object> nestedValues = (element.containsKey(nestingKey) ? asList(element.get(nestingKey)) : new ArrayList<>()); // LINE: 660
-      for (Object nestedValue : nestedValues) { // LINE: 662
-        if ((!(nestedValue instanceof Map) || ((Map) nestedValue).keySet().stream().anyMatch(k -> (activeContext.expandIri(((String) k)) == null && ((Object) VALUE) == null || activeContext.expandIri(((String) k)) != null && (activeContext.expandIri(((String) k))).equals(VALUE))))) { // LINE: 664
-          throw new InvalidNestValueError(); // LINE: 665
+    for (String nestingKey : nestingKeys) {
+      List<Object> nestedValues = (element.containsKey(nestingKey) ? asList(element.get(nestingKey)) : new ArrayList<>());
+      for (Object nestedValue : nestedValues) {
+        if ((!(nestedValue instanceof Map) || ((Map) nestedValue).keySet().stream().anyMatch(k -> (activeContext.expandIri(((String) k)) == null && ((Object) VALUE) == null || activeContext.expandIri(((String) k)) != null && (activeContext.expandIri(((String) k))).equals(VALUE))))) {
+          throw new InvalidNestValueError();
         }
-        expandElement(activeContext, typeScopedContext, activeProperty, (Map) nestedValue, result, nests, inputType, baseUrl, frameExpansion, ordered, fromMap, warnOnKeywordlikeTerms, warnOnEmptyKeys, warnOnBnodeProperties); // LINE: 668
+        expandElement(activeContext, typeScopedContext, activeProperty, (Map) nestedValue, result, nests, inputType, baseUrl, frameExpansion, ordered, fromMap, warnOnKeywordlikeTerms, warnOnEmptyKeys, warnOnBnodeProperties);
       }
     }
   }
 
-  public static Object valueExpansion(Context activeContext, String activeProperty, Object value) { // LINE: 674
-    /*@Nullable*/ Term activeTerm = (/*@Nullable*/ Term) activeContext.terms.get(activeProperty); // LINE: 676
-    if ((activeTerm != null && (activeTerm.typeMapping == null && ((Object) ID) == null || activeTerm.typeMapping != null && (activeTerm.typeMapping).equals(ID)) && value instanceof String)) { // LINE: 677
-      return Builtins.mapOf(ID, activeContext.expandDocRelativeIri((String) value)); // LINE: 678
+  public static Object valueExpansion(Context activeContext, String activeProperty, Object value) {
+    /*@Nullable*/ Term activeTerm = (/*@Nullable*/ Term) activeContext.terms.get(activeProperty);
+    if ((activeTerm != null && (activeTerm.typeMapping == null && ((Object) ID) == null || activeTerm.typeMapping != null && (activeTerm.typeMapping).equals(ID)) && value instanceof String)) {
+      return Builtins.mapOf(ID, activeContext.expandDocRelativeIri((String) value));
     }
-    if ((activeTerm != null && (activeTerm.typeMapping == null && ((Object) VOCAB) == null || activeTerm.typeMapping != null && (activeTerm.typeMapping).equals(VOCAB)) && value instanceof String)) { // LINE: 681
-      return Builtins.mapOf(ID, activeContext.expandDocRelativeVocabIri((String) value)); // LINE: 682
+    if ((activeTerm != null && (activeTerm.typeMapping == null && ((Object) VOCAB) == null || activeTerm.typeMapping != null && (activeTerm.typeMapping).equals(VOCAB)) && value instanceof String)) {
+      return Builtins.mapOf(ID, activeContext.expandDocRelativeVocabIri((String) value));
     }
-    Map<String, /*@Nullable*/ Object> result = Builtins.mapOf(VALUE, value); // LINE: 685
-    if ((activeTerm != null && !new HashSet(new ArrayList<>(Arrays.asList(new Object[] {(Object) ID, VOCAB, NONE, null}))).contains(activeTerm.typeMapping))) { // LINE: 688
-      result.put(TYPE, activeTerm.typeMapping); // LINE: 689
-    } else if (value instanceof String) { // LINE: 691
-      /*@Nullable*/ String language = (/*@Nullable*/ String) activeContext.defaultLanguage; // LINE: 693
-      if ((activeTerm != null && activeTerm.language != null)) { // LINE: 694
-        language = (NOTHING.contains(activeTerm.language) ? null : activeTerm.language); // LINE: 696
+    Map<String, /*@Nullable*/ Object> result = Builtins.mapOf(VALUE, value);
+    if ((activeTerm != null && !new HashSet(new ArrayList<>(Arrays.asList(new Object[] {(Object) ID, VOCAB, NONE, null}))).contains(activeTerm.typeMapping))) {
+      result.put(TYPE, activeTerm.typeMapping);
+    } else if (value instanceof String) {
+      /*@Nullable*/ String language = (/*@Nullable*/ String) activeContext.defaultLanguage;
+      if ((activeTerm != null && activeTerm.language != null)) {
+        language = (NOTHING.contains(activeTerm.language) ? null : activeTerm.language);
       }
-      /*@Nullable*/ String direction = (/*@Nullable*/ String) activeContext.defaultBaseDirection; // LINE: 698
-      if ((activeTerm != null && activeTerm.direction != null)) { // LINE: 699
-        direction = (NOTHING.contains(activeTerm.direction) ? null : activeTerm.direction); // LINE: 701
+      /*@Nullable*/ String direction = (/*@Nullable*/ String) activeContext.defaultBaseDirection;
+      if ((activeTerm != null && activeTerm.direction != null)) {
+        direction = (NOTHING.contains(activeTerm.direction) ? null : activeTerm.direction);
       }
-      if (language != null) { // LINE: 703
-        result.put(LANGUAGE, language); // LINE: 704
+      if (language != null) {
+        result.put(LANGUAGE, language);
       }
-      if (direction != null) { // LINE: 706
-        result.put(DIRECTION, direction); // LINE: 707
+      if (direction != null) {
+        result.put(DIRECTION, direction);
       }
     }
-    return result; // LINE: 710
+    return result;
   }
 }

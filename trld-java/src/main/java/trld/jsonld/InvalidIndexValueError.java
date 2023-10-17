@@ -24,7 +24,7 @@ import trld.jsonld.InvalidNestValueError;
 import static trld.jsonld.Expansion.*;
 
 
-public class InvalidIndexValueError extends JsonLdError { // LINE: 41
+public class InvalidIndexValueError extends JsonLdError {
   InvalidIndexValueError() { };
   InvalidIndexValueError(String msg) { super(msg); };
 }

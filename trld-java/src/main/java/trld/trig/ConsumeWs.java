@@ -35,19 +35,19 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ConsumeWs extends BaseParserState { // LINE: 104
+public class ConsumeWs extends BaseParserState {
   ConsumeWs(/*@Nullable*/ ParserState parent) { super(parent); };
-  public static final Pattern MATCH = (Pattern) Pattern.compile("\\s"); // LINE: 106
+  public static final Pattern MATCH = (Pattern) Pattern.compile("\\s");
 
-  public boolean accept(String c) { // LINE: 108
-    return (this.MATCH.matcher(c).matches() ? c : null) != null; // LINE: 109
+  public boolean accept(String c) {
+    return (this.MATCH.matcher(c).matches() ? c : null) != null;
   }
 
-  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 111
-    if (this.accept(c)) { // LINE: 112
-      return new KeyValue(this, null); // LINE: 113
+  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) {
+    if (this.accept(c)) {
+      return new KeyValue(this, null);
     } else {
-      return this.parent.consume(c, prevValue); // LINE: 115
+      return this.parent.consume(c, prevValue);
     }
   }
 }

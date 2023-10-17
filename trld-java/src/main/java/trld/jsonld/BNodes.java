@@ -20,27 +20,27 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Flattening.*;
 
 
-public class BNodes { // LINE: 12
-  public Integer i; // LINE: 13
-  public Map<String, String> idMap; // LINE: 14
+public class BNodes {
+  public Integer i;
+  public Map<String, String> idMap;
 
-  public BNodes() { // LINE: 16
-    this.i = 0; // LINE: 17
-    this.idMap = new HashMap<>(); // LINE: 18
+  public BNodes() {
+    this.i = 0;
+    this.idMap = new HashMap<>();
   }
 
   public String makeBnodeId() {
     return this.makeBnodeId(null);
   }
-  public String makeBnodeId(/*@Nullable*/ String identifier) { // LINE: 20
-    if (this.idMap.containsKey(identifier)) { // LINE: 21
-      return this.idMap.get(identifier); // LINE: 22
+  public String makeBnodeId(/*@Nullable*/ String identifier) {
+    if (this.idMap.containsKey(identifier)) {
+      return this.idMap.get(identifier);
     }
-    String bnodeId = "_:b" + this.i.toString(); // LINE: 23
+    String bnodeId = "_:b" + this.i.toString();
     this.i += 1;
-    if (identifier != null) { // LINE: 25
-      this.idMap.put(identifier, bnodeId); // LINE: 26
+    if (identifier != null) {
+      this.idMap.put(identifier, bnodeId);
     }
-    return bnodeId; // LINE: 27
+    return bnodeId;
   }
 }

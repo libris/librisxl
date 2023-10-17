@@ -26,165 +26,165 @@ import static trld.trig.Parser.ESC_CHARS;
 import trld.trig.ReadTerm;
 
 public class Parser {
-  public static final Integer READ_STMT = 0; // LINE: 13
-  public static final Integer READ_IRI = 1; // LINE: 14
-  public static final Integer READ_BNODE_ID = 2; // LINE: 15
-  public static final Integer READ_STRING = 3; // LINE: 16
-  public static final Integer READ_LITERAL_END = 4; // LINE: 17
-  public static final Integer READ_DATATYPE_START = 5; // LINE: 18
-  public static final Integer READ_DATATYPE_NEXT = 6; // LINE: 19
-  public static final Integer READ_DATATYPE_IRI = 7; // LINE: 20
-  public static final Integer READ_LANGUAGE = 8; // LINE: 21
-  public static final Integer READ_LITERAL_FINISH = 9; // LINE: 22
-  public static final Integer READ_COMMENT = 10; // LINE: 23
-  public static final ReadTerm READ_ESCAPES = new ReadTerm(null); // LINE: 28
+  public static final Integer READ_STMT = 0;
+  public static final Integer READ_IRI = 1;
+  public static final Integer READ_BNODE_ID = 2;
+  public static final Integer READ_STRING = 3;
+  public static final Integer READ_LITERAL_END = 4;
+  public static final Integer READ_DATATYPE_START = 5;
+  public static final Integer READ_DATATYPE_NEXT = 6;
+  public static final Integer READ_DATATYPE_IRI = 7;
+  public static final Integer READ_LANGUAGE = 8;
+  public static final Integer READ_LITERAL_FINISH = 9;
+  public static final Integer READ_COMMENT = 10;
+  public static final ReadTerm READ_ESCAPES = new ReadTerm(null);
 
-  public static void load(RdfDataset dataset, Input inp) { // LINE: 31
-    Object state = (Object) READ_STMT; // LINE: 32
-    Object prevState = -1; // LINE: 33
-    List<String> chars = new ArrayList<>(); // LINE: 34
-    /*@Nullable*/ String literal = null; // LINE: 35
-    /*@Nullable*/ String datatype = null; // LINE: 36
-    /*@Nullable*/ String language = null; // LINE: 37
-    List<Object> terms = new ArrayList<>(); // LINE: 38
-    for (String c : ((Iterable<String>) inp.characters())) { // LINE: 40
-      if (READ_ESCAPES.handleEscape(c)) { // LINE: 41
-        if (state != READ_ESCAPES) { // LINE: 42
-          READ_ESCAPES.escapeChars = (READ_STRING > 0 ? ESC_CHARS : new HashMap<>()); // LINE: 43
-          prevState = state; // LINE: 44
+  public static void load(RdfDataset dataset, Input inp) {
+    Object state = (Object) READ_STMT;
+    Object prevState = -1;
+    List<String> chars = new ArrayList<>();
+    /*@Nullable*/ String literal = null;
+    /*@Nullable*/ String datatype = null;
+    /*@Nullable*/ String language = null;
+    List<Object> terms = new ArrayList<>();
+    for (String c : ((Iterable<String>) inp.characters())) {
+      if (READ_ESCAPES.handleEscape(c)) {
+        if (state != READ_ESCAPES) {
+          READ_ESCAPES.escapeChars = (READ_STRING > 0 ? ESC_CHARS : new HashMap<>());
+          prevState = state;
         }
-        state = (Object) READ_ESCAPES; // LINE: 45
+        state = (Object) READ_ESCAPES;
       }
-      if ((state == null && ((Object) READ_LITERAL_FINISH) == null || state != null && (state).equals(READ_LITERAL_FINISH))) { // LINE: 47
+      if ((state == null && ((Object) READ_LITERAL_FINISH) == null || state != null && (state).equals(READ_LITERAL_FINISH))) {
         assert literal != null;
-        terms.add(new RdfLiteral(literal, datatype, language)); // LINE: 49
-        literal = datatype = language = null; // LINE: 50
-        state = (Object) READ_STMT; // LINE: 51
+        terms.add(new RdfLiteral(literal, datatype, language));
+        literal = datatype = language = null;
+        state = (Object) READ_STMT;
       }
-      if ((state == null && ((Object) READ_ESCAPES) == null || state != null && (state).equals(READ_ESCAPES))) { // LINE: 53
-        if (READ_ESCAPES.collected.size() == 1) { // LINE: 54
-          c = (String) READ_ESCAPES.pop(); // LINE: 55
-          state = prevState; // LINE: 56
+      if ((state == null && ((Object) READ_ESCAPES) == null || state != null && (state).equals(READ_ESCAPES))) {
+        if (READ_ESCAPES.collected.size() == 1) {
+          c = (String) READ_ESCAPES.pop();
+          state = prevState;
         } else {
-          continue; // LINE: 58
+          continue;
         }
-      } else if ((state == null && ((Object) READ_STMT) == null || state != null && (state).equals(READ_STMT))) { // LINE: 59
-        if (c.matches("^\\s+$")) { // LINE: 60
-          continue; // LINE: 61
-        } else if ((c == null && ((Object) "<") == null || c != null && (c).equals("<"))) { // LINE: 62
-          state = (Object) READ_IRI; // LINE: 63
-          continue; // LINE: 64
-        } else if ((c == null && ((Object) "_") == null || c != null && (c).equals("_"))) { // LINE: 65
-          state = (Object) READ_BNODE_ID; // LINE: 66
-        } else if ((c == null && ((Object) "\"") == null || c != null && (c).equals("\""))) { // LINE: 67
-          state = (Object) READ_STRING; // LINE: 68
-          continue; // LINE: 69
-        } else if ((c == null && ((Object) ".") == null || c != null && (c).equals("."))) { // LINE: 70
-          handleStatement(dataset, terms); // LINE: 71
-          terms = new ArrayList<>(); // LINE: 72
-          continue; // LINE: 73
-        } else if ((c == null && ((Object) "#") == null || c != null && (c).equals("#"))) { // LINE: 74
-          state = (Object) READ_COMMENT; // LINE: 75
-          continue; // LINE: 76
+      } else if ((state == null && ((Object) READ_STMT) == null || state != null && (state).equals(READ_STMT))) {
+        if (c.matches("^\\s+$")) {
+          continue;
+        } else if ((c == null && ((Object) "<") == null || c != null && (c).equals("<"))) {
+          state = (Object) READ_IRI;
+          continue;
+        } else if ((c == null && ((Object) "_") == null || c != null && (c).equals("_"))) {
+          state = (Object) READ_BNODE_ID;
+        } else if ((c == null && ((Object) "\"") == null || c != null && (c).equals("\""))) {
+          state = (Object) READ_STRING;
+          continue;
+        } else if ((c == null && ((Object) ".") == null || c != null && (c).equals("."))) {
+          handleStatement(dataset, terms);
+          terms = new ArrayList<>();
+          continue;
+        } else if ((c == null && ((Object) "#") == null || c != null && (c).equals("#"))) {
+          state = (Object) READ_COMMENT;
+          continue;
         }
-      } else if (((state == null && ((Object) READ_IRI) == null || state != null && (state).equals(READ_IRI)) || (state == null && ((Object) READ_DATATYPE_IRI) == null || state != null && (state).equals(READ_DATATYPE_IRI)))) { // LINE: 77
-        if ((c == null && ((Object) ">") == null || c != null && (c).equals(">"))) { // LINE: 78
-          String s = String.join("", chars); // LINE: 79
-          if ((state == null && ((Object) READ_IRI) == null || state != null && (state).equals(READ_IRI))) { // LINE: 80
-            terms.add(s); // LINE: 81
-            state = (Object) READ_STMT; // LINE: 82
+      } else if (((state == null && ((Object) READ_IRI) == null || state != null && (state).equals(READ_IRI)) || (state == null && ((Object) READ_DATATYPE_IRI) == null || state != null && (state).equals(READ_DATATYPE_IRI)))) {
+        if ((c == null && ((Object) ">") == null || c != null && (c).equals(">"))) {
+          String s = String.join("", chars);
+          if ((state == null && ((Object) READ_IRI) == null || state != null && (state).equals(READ_IRI))) {
+            terms.add(s);
+            state = (Object) READ_STMT;
           } else {
-            datatype = s; // LINE: 84
-            state = (Object) READ_LITERAL_FINISH; // LINE: 85
+            datatype = s;
+            state = (Object) READ_LITERAL_FINISH;
           }
-          chars = new ArrayList<>(); // LINE: 86
-          continue; // LINE: 87
+          chars = new ArrayList<>();
+          continue;
         }
-      } else if ((state == null && ((Object) READ_BNODE_ID) == null || state != null && (state).equals(READ_BNODE_ID))) { // LINE: 88
-        if (c.matches("^\\s+$")) { // LINE: 89
-          terms.add(String.join("", chars)); // LINE: 90
-          chars = new ArrayList<>(); // LINE: 91
-          state = (Object) READ_STMT; // LINE: 92
-          continue; // LINE: 93
+      } else if ((state == null && ((Object) READ_BNODE_ID) == null || state != null && (state).equals(READ_BNODE_ID))) {
+        if (c.matches("^\\s+$")) {
+          terms.add(String.join("", chars));
+          chars = new ArrayList<>();
+          state = (Object) READ_STMT;
+          continue;
         }
-      } else if ((state == null && ((Object) READ_STRING) == null || state != null && (state).equals(READ_STRING))) { // LINE: 94
-        if ((c == null && ((Object) "\"") == null || c != null && (c).equals("\""))) { // LINE: 95
-          literal = String.join("", chars); // LINE: 96
-          chars = new ArrayList<>(); // LINE: 97
-          state = (Object) READ_LITERAL_END; // LINE: 98
-          continue; // LINE: 99
+      } else if ((state == null && ((Object) READ_STRING) == null || state != null && (state).equals(READ_STRING))) {
+        if ((c == null && ((Object) "\"") == null || c != null && (c).equals("\""))) {
+          literal = String.join("", chars);
+          chars = new ArrayList<>();
+          state = (Object) READ_LITERAL_END;
+          continue;
         }
-      } else if ((state == null && ((Object) READ_LITERAL_END) == null || state != null && (state).equals(READ_LITERAL_END))) { // LINE: 100
-        if ((c == null && ((Object) "@") == null || c != null && (c).equals("@"))) { // LINE: 101
-          state = (Object) READ_LANGUAGE; // LINE: 102
-          continue; // LINE: 103
-        } else if ((c == null && ((Object) "^") == null || c != null && (c).equals("^"))) { // LINE: 104
-          state = (Object) READ_DATATYPE_START; // LINE: 105
-          continue; // LINE: 106
+      } else if ((state == null && ((Object) READ_LITERAL_END) == null || state != null && (state).equals(READ_LITERAL_END))) {
+        if ((c == null && ((Object) "@") == null || c != null && (c).equals("@"))) {
+          state = (Object) READ_LANGUAGE;
+          continue;
+        } else if ((c == null && ((Object) "^") == null || c != null && (c).equals("^"))) {
+          state = (Object) READ_DATATYPE_START;
+          continue;
         } else {
-          state = (Object) READ_LITERAL_FINISH; // LINE: 108
-          continue; // LINE: 109
+          state = (Object) READ_LITERAL_FINISH;
+          continue;
         }
-      } else if ((state == null && ((Object) READ_LANGUAGE) == null || state != null && (state).equals(READ_LANGUAGE))) { // LINE: 110
-        if (c.matches("^\\s+$")) { // LINE: 111
-          language = String.join("", chars); // LINE: 112
-          chars = new ArrayList<>(); // LINE: 113
-          state = (Object) READ_LITERAL_FINISH; // LINE: 114
-          continue; // LINE: 115
+      } else if ((state == null && ((Object) READ_LANGUAGE) == null || state != null && (state).equals(READ_LANGUAGE))) {
+        if (c.matches("^\\s+$")) {
+          language = String.join("", chars);
+          chars = new ArrayList<>();
+          state = (Object) READ_LITERAL_FINISH;
+          continue;
         }
-      } else if ((state == null && ((Object) READ_DATATYPE_START) == null || state != null && (state).equals(READ_DATATYPE_START))) { // LINE: 116
-        if ((c == null && ((Object) "^") == null || c != null && (c).equals("^"))) { // LINE: 117
-          state = (Object) READ_DATATYPE_NEXT; // LINE: 118
-          continue; // LINE: 119
+      } else if ((state == null && ((Object) READ_DATATYPE_START) == null || state != null && (state).equals(READ_DATATYPE_START))) {
+        if ((c == null && ((Object) "^") == null || c != null && (c).equals("^"))) {
+          state = (Object) READ_DATATYPE_NEXT;
+          continue;
         } else {
-          throw new RuntimeException("Bad READ_DATATYPE_START char: " + c); // LINE: 121
+          throw new RuntimeException("Bad READ_DATATYPE_START char: " + c);
         }
-      } else if ((state == null && ((Object) READ_DATATYPE_NEXT) == null || state != null && (state).equals(READ_DATATYPE_NEXT))) { // LINE: 122
-        if ((c == null && ((Object) "<") == null || c != null && (c).equals("<"))) { // LINE: 123
-          state = (Object) READ_DATATYPE_IRI; // LINE: 124
-          continue; // LINE: 125
+      } else if ((state == null && ((Object) READ_DATATYPE_NEXT) == null || state != null && (state).equals(READ_DATATYPE_NEXT))) {
+        if ((c == null && ((Object) "<") == null || c != null && (c).equals("<"))) {
+          state = (Object) READ_DATATYPE_IRI;
+          continue;
         } else {
-          throw new RuntimeException("Bad READ_DATATYPE_NEXT char: " + c); // LINE: 127
+          throw new RuntimeException("Bad READ_DATATYPE_NEXT char: " + c);
         }
-      } else if ((state == null && ((Object) READ_COMMENT) == null || state != null && (state).equals(READ_COMMENT))) { // LINE: 128
-        if ((c == null && ((Object) "\n") == null || c != null && (c).equals("\n"))) { // LINE: 129
-          state = (Object) READ_STMT; // LINE: 130
+      } else if ((state == null && ((Object) READ_COMMENT) == null || state != null && (state).equals(READ_COMMENT))) {
+        if ((c == null && ((Object) "\n") == null || c != null && (c).equals("\n"))) {
+          state = (Object) READ_STMT;
         }
-        continue; // LINE: 131
+        continue;
       }
-      chars.add(c); // LINE: 133
+      chars.add(c);
     }
-    if ((chars.size() != 0 || terms.size() != 0)) { // LINE: 135
-      throw new RuntimeException("Trailing data: chars=" + String.join("", chars) + ", terms=" + terms); // LINE: 136
+    if ((chars.size() != 0 || terms.size() != 0)) {
+      throw new RuntimeException("Trailing data: chars=" + String.join("", chars) + ", terms=" + terms);
     }
   }
 
-  public static void handleStatement(RdfDataset dataset, List terms) { // LINE: 139
-    if ((terms.size() < 3 || terms.size() > 4)) { // LINE: 140
-      throw new RuntimeException("Invalid NQuads statement " + terms.toString()); // LINE: 141
+  public static void handleStatement(RdfDataset dataset, List terms) {
+    if ((terms.size() < 3 || terms.size() > 4)) {
+      throw new RuntimeException("Invalid NQuads statement " + terms.toString());
     }
-    String s = (String) terms.get(0); // LINE: 143
-    String p = (String) terms.get(1); // LINE: 144
-    Object o = (Object) terms.get(2); // LINE: 145
-    /*@Nullable*/ String g = (/*@Nullable*/ String) (terms.size() == 4 ? ((String) terms.get(3)) : null); // LINE: 146
-    RdfGraph graph; // LINE: 148
-    if (g == null) { // LINE: 149
-      graph = (RdfGraph) dataset.defaultGraph; // LINE: 150
-      if (graph == null) { // LINE: 151
-        graph = dataset.defaultGraph = new RdfGraph(); // LINE: 152
+    String s = (String) terms.get(0);
+    String p = (String) terms.get(1);
+    Object o = (Object) terms.get(2);
+    /*@Nullable*/ String g = (/*@Nullable*/ String) (terms.size() == 4 ? ((String) terms.get(3)) : null);
+    RdfGraph graph;
+    if (g == null) {
+      graph = (RdfGraph) dataset.defaultGraph;
+      if (graph == null) {
+        graph = dataset.defaultGraph = new RdfGraph();
       }
     } else {
-      if (!dataset.namedGraphs.containsKey(g)) { // LINE: 154
-        dataset.namedGraphs.put(g, new RdfGraph(g)); // LINE: 155
+      if (!dataset.namedGraphs.containsKey(g)) {
+        dataset.namedGraphs.put(g, new RdfGraph(g));
       }
-      graph = (RdfGraph) dataset.namedGraphs.get(g); // LINE: 156
+      graph = (RdfGraph) dataset.namedGraphs.get(g);
     }
-    graph.add(new RdfTriple(s, p, o)); // LINE: 158
+    graph.add(new RdfTriple(s, p, o));
   }
 
-  public static Object parse(Input inp) { // LINE: 161
-    RdfDataset dataset = new RdfDataset(); // LINE: 162
-    load(dataset, inp); // LINE: 163
-    return toJsonld(dataset); // LINE: 164
+  public static Object parse(Input inp) {
+    RdfDataset dataset = new RdfDataset();
+    load(dataset, inp);
+    return toJsonld(dataset);
   }
 }

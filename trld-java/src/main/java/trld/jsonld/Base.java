@@ -17,178 +17,178 @@ import trld.KeyValue;
 
 
 public class Base {
-  public static final Set<String> PREFIX_DELIMS = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) ":", "/", "?", "#", "[", "]", "@"}))); // LINE: 13
-  public static final String BASE = "@base"; // LINE: 15
-  public static final String CONTAINER = "@container"; // LINE: 16
-  public static final String CONTEXT = "@context"; // LINE: 17
-  public static final String DIRECTION = "@direction"; // LINE: 18
-  public static final String GRAPH = "@graph"; // LINE: 19
-  public static final String ID = "@id"; // LINE: 20
-  public static final String IMPORT = "@import"; // LINE: 21
-  public static final String INCLUDED = "@included"; // LINE: 22
-  public static final String INDEX = "@index"; // LINE: 23
-  public static final String JSON = "@json"; // LINE: 24
-  public static final String LANGUAGE = "@language"; // LINE: 25
-  public static final String LIST = "@list"; // LINE: 26
-  public static final String NEST = "@nest"; // LINE: 27
-  public static final String NONE = "@none"; // LINE: 28
-  public static final String PREFIX = "@prefix"; // LINE: 29
-  public static final String PROPAGATE = "@propagate"; // LINE: 30
-  public static final String PROTECTED = "@protected"; // LINE: 31
-  public static final String REVERSE = "@reverse"; // LINE: 32
-  public static final String SET = "@set"; // LINE: 33
-  public static final String TYPE = "@type"; // LINE: 34
-  public static final String VALUE = "@value"; // LINE: 35
-  public static final String VERSION = "@version"; // LINE: 36
-  public static final String VOCAB = "@vocab"; // LINE: 37
-  public static final String ANY = "@any"; // LINE: 40
-  public static final String NULL = "@null"; // LINE: 41
-  public static final String DEFAULT = "@default"; // LINE: 42
-  public static final Set</*@Nullable*/ String> NULLS = new HashSet(new ArrayList<>(Arrays.asList(new Object[] {(Object) null, NULL}))); // LINE: 45
-  public static final Set</*@Nullable*/ String> NOTHING = new HashSet(new ArrayList<>(Arrays.asList(new Object[] {(Object) null, NULL, NONE}))); // LINE: 46
-  public static final Set<String> KEYWORDS = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) BASE, CONTAINER, CONTEXT, DIRECTION, GRAPH, ID, IMPORT, INCLUDED, INDEX, JSON, LANGUAGE, LIST, NEST, NONE, PREFIX, PROPAGATE, PROTECTED, REVERSE, SET, TYPE, VALUE, VERSION, VOCAB}))); // LINE: 48
-  public static final Set<String> CONTEXT_KEYWORDS = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) VERSION, IMPORT, BASE, VOCAB, LANGUAGE, DIRECTION, PROPAGATE, PROTECTED}))); // LINE: 74
-  public static final Set<String> VALUE_KEYWORDS = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) DIRECTION, INDEX, LANGUAGE, TYPE, VALUE}))); // LINE: 85
-  public static final Set<String> CONTAINER_KEYWORDS = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) GRAPH, ID, INDEX, LANGUAGE, LIST, SET, TYPE}))); // LINE: 89
-  public static final Set<String> DIRECTIONS = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) "rtl", "ltr"}))); // LINE: 91
-  public static final String JSONLD10 = "json-ld-1.0"; // LINE: 93
-  public static final String JSONLD11 = "json-ld-1.1"; // LINE: 94
-  public static final String JSONLD_CONTEXT_RELATION = "http://www.w3.org/ns/json-ld#context"; // LINE: 96
+  public static final Set<String> PREFIX_DELIMS = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) ":", "/", "?", "#", "[", "]", "@"})));
+  public static final String BASE = "@base";
+  public static final String CONTAINER = "@container";
+  public static final String CONTEXT = "@context";
+  public static final String DIRECTION = "@direction";
+  public static final String GRAPH = "@graph";
+  public static final String ID = "@id";
+  public static final String IMPORT = "@import";
+  public static final String INCLUDED = "@included";
+  public static final String INDEX = "@index";
+  public static final String JSON = "@json";
+  public static final String LANGUAGE = "@language";
+  public static final String LIST = "@list";
+  public static final String NEST = "@nest";
+  public static final String NONE = "@none";
+  public static final String PREFIX = "@prefix";
+  public static final String PROPAGATE = "@propagate";
+  public static final String PROTECTED = "@protected";
+  public static final String REVERSE = "@reverse";
+  public static final String SET = "@set";
+  public static final String TYPE = "@type";
+  public static final String VALUE = "@value";
+  public static final String VERSION = "@version";
+  public static final String VOCAB = "@vocab";
+  public static final String ANY = "@any";
+  public static final String NULL = "@null";
+  public static final String DEFAULT = "@default";
+  public static final Set</*@Nullable*/ String> NULLS = new HashSet(new ArrayList<>(Arrays.asList(new Object[] {(Object) null, NULL})));
+  public static final Set</*@Nullable*/ String> NOTHING = new HashSet(new ArrayList<>(Arrays.asList(new Object[] {(Object) null, NULL, NONE})));
+  public static final Set<String> KEYWORDS = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) BASE, CONTAINER, CONTEXT, DIRECTION, GRAPH, ID, IMPORT, INCLUDED, INDEX, JSON, LANGUAGE, LIST, NEST, NONE, PREFIX, PROPAGATE, PROTECTED, REVERSE, SET, TYPE, VALUE, VERSION, VOCAB})));
+  public static final Set<String> CONTEXT_KEYWORDS = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) VERSION, IMPORT, BASE, VOCAB, LANGUAGE, DIRECTION, PROPAGATE, PROTECTED})));
+  public static final Set<String> VALUE_KEYWORDS = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) DIRECTION, INDEX, LANGUAGE, TYPE, VALUE})));
+  public static final Set<String> CONTAINER_KEYWORDS = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) GRAPH, ID, INDEX, LANGUAGE, LIST, SET, TYPE})));
+  public static final Set<String> DIRECTIONS = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) "rtl", "ltr"})));
+  public static final String JSONLD10 = "json-ld-1.0";
+  public static final String JSONLD11 = "json-ld-1.1";
+  public static final String JSONLD_CONTEXT_RELATION = "http://www.w3.org/ns/json-ld#context";
 
-  public static boolean isIri(/*@Nullable*/ String value) { // LINE: 103
-    return (value != null && value.contains(":") && isIriRef(value)); // LINE: 104
+  public static boolean isIri(/*@Nullable*/ String value) {
+    return (value != null && value.contains(":") && isIriRef(value));
   }
 
-  public static boolean isIriRef(/*@Nullable*/ String value) { // LINE: 107
-    /* ... */; // LINE: 108
-    return (value != null && !value.contains(" ") && !(isBlank(value))); // LINE: 109
+  public static boolean isIriRef(/*@Nullable*/ String value) {
+    /* ... */;
+    return (value != null && !value.contains(" ") && !(isBlank(value)));
   }
 
-  public static boolean isBlank(String value) { // LINE: 112
-    /* ... */; // LINE: 113
-    return value.startsWith("_:"); // LINE: 114
+  public static boolean isBlank(String value) {
+    /* ... */;
+    return value.startsWith("_:");
   }
 
-  public static boolean hasKeywordForm(String s) { // LINE: 117
-    return (s.startsWith("@") && s.substring(1).matches("^\\w+$")); // LINE: 118
+  public static boolean hasKeywordForm(String s) {
+    return (s.startsWith("@") && s.substring(1).matches("^\\w+$"));
   }
 
-  public static boolean isLangTag(/*@Nullable*/ String value) { // LINE: 121
-    /* ... */; // LINE: 122
-    return (value != null && value.substring(0, 0 + 1).matches("^\\w+$") && !value.contains(" ")); // LINE: 123
+  public static boolean isLangTag(/*@Nullable*/ String value) {
+    /* ... */;
+    return (value != null && value.substring(0, 0 + 1).matches("^\\w+$") && !value.contains(" "));
   }
 
-  public static boolean isScalar(Object o) { // LINE: 127
-    return o instanceof String || o instanceof Integer || o instanceof Double || o instanceof Boolean; // LINE: 128
+  public static boolean isScalar(Object o) {
+    return o instanceof String || o instanceof Integer || o instanceof Double || o instanceof Boolean;
   }
 
-  public static boolean isGraphObject(Map<String, Object> o) { // LINE: 131
-    if (o.containsKey(GRAPH)) { // LINE: 132
-      if (o.containsKey(ID)) { // LINE: 133
-        if (o.containsKey(INDEX)) { // LINE: 134
-          return o.size() == 3; // LINE: 135
+  public static boolean isGraphObject(Map<String, Object> o) {
+    if (o.containsKey(GRAPH)) {
+      if (o.containsKey(ID)) {
+        if (o.containsKey(INDEX)) {
+          return o.size() == 3;
         }
-        return o.size() == 2; // LINE: 136
+        return o.size() == 2;
       }
-      if (o.containsKey(INDEX)) { // LINE: 137
-        return o.size() == 2; // LINE: 138
+      if (o.containsKey(INDEX)) {
+        return o.size() == 2;
       }
-      return o.size() == 1; // LINE: 139
+      return o.size() == 1;
     }
-    return false; // LINE: 140
+    return false;
   }
 
-  public static boolean isSimpleGraphObject(Map<String, Object> o) { // LINE: 143
-    if (o.containsKey(GRAPH)) { // LINE: 144
-      return (o.containsKey(INDEX) ? o.size() == 2 : o.size() == 1); // LINE: 145
+  public static boolean isSimpleGraphObject(Map<String, Object> o) {
+    if (o.containsKey(GRAPH)) {
+      return (o.containsKey(INDEX) ? o.size() == 2 : o.size() == 1);
     }
-    return false; // LINE: 146
+    return false;
   }
 
-  public static void addValueAsList(Map map, String key, Object value) { // LINE: 149
-    addValue(map, key, value, true); // LINE: 150
+  public static void addValueAsList(Map map, String key, Object value) {
+    addValue(map, key, value, true);
   }
 
   public static void addValue(Map map, String key, Object value) {
     addValue(map, key, value, false);
   }
-  public static void addValue(Map map, String key, Object value, Boolean aslist) { // LINE: 153
-    Object existing = (Object) map.get(key); // LINE: 155
-    if ((aslist && !map.containsKey(key))) { // LINE: 156
-      map.put(key, asList(value)); // LINE: 157
-    } else if (!map.containsKey(key)) { // LINE: 162
-      map.put(key, value); // LINE: 163
+  public static void addValue(Map map, String key, Object value, Boolean aslist) {
+    Object existing = (Object) map.get(key);
+    if ((aslist && !map.containsKey(key))) {
+      map.put(key, asList(value));
+    } else if (!map.containsKey(key)) {
+      map.put(key, value);
     } else {
-      if (!(existing instanceof List)) { // LINE: 165
-        map.put(key, new ArrayList<>(Arrays.asList(new Object[] {(Object) existing}))); // LINE: 166
+      if (!(existing instanceof List)) {
+        map.put(key, new ArrayList<>(Arrays.asList(new Object[] {(Object) existing})));
       }
-      if (value instanceof List) { // LINE: 167
+      if (value instanceof List) {
         ((List) map.get(key)).addAll((List) value);
       } else {
         assert map instanceof Map;
-        Object values = (Object) ((Map) map).get(key); // LINE: 171
+        Object values = (Object) ((Map) map).get(key);
         assert values instanceof List;
         assert value instanceof Object;
-        ((List) values).add((Object) value); // LINE: 174
+        ((List) values).add((Object) value);
       }
     }
   }
 
-  public static List asList(Object obj) { // LINE: 177
-    return (obj instanceof List ? (List) obj : new ArrayList<>(Arrays.asList(new Object[] {(Object) obj}))); // LINE: 178
+  public static List asList(Object obj) {
+    return (obj instanceof List ? (List) obj : new ArrayList<>(Arrays.asList(new Object[] {(Object) obj})));
   }
 
-  public static String relativiseIri(String base, String iri) { // LINE: 181
-    if (iri.startsWith(base + "#")) { // LINE: 182
-      return iri.substring(base.length()); // LINE: 183
+  public static String relativiseIri(String base, String iri) {
+    if (iri.startsWith(base + "#")) {
+      return iri.substring(base.length());
     }
-    if ((iri.contains("?") && iri.startsWith(base))) { // LINE: 184
-      return iri.substring(base.length()); // LINE: 185
+    if ((iri.contains("?") && iri.startsWith(base))) {
+      return iri.substring(base.length());
     }
-    if (!(base.endsWith("/"))) { // LINE: 186
-      Integer last = (Integer) base.lastIndexOf("/"); // LINE: 187
-      base = base.substring(0, last + 1); // LINE: 188
+    if (!(base.endsWith("/"))) {
+      Integer last = (Integer) base.lastIndexOf("/");
+      base = base.substring(0, last + 1);
     }
-    if (iri.startsWith(base)) { // LINE: 189
-      return iri.substring(base.length()); // LINE: 190
+    if (iri.startsWith(base)) {
+      return iri.substring(base.length());
     }
-    String parentbase = base.substring(0, base.lastIndexOf("/")); // LINE: 192
-    String leaf = iri.substring(iri.lastIndexOf("/") + 1); // LINE: 193
-    List<String> relativeto = new ArrayList<>(); // LINE: 194
-    while ((parentbase.contains("/") && !(parentbase.endsWith(":/")))) { // LINE: 195
-      if (iri.startsWith(parentbase)) { // LINE: 196
-        relativeto.add(leaf); // LINE: 197
-        return String.join("/", relativeto); // LINE: 198
+    String parentbase = base.substring(0, base.lastIndexOf("/"));
+    String leaf = iri.substring(iri.lastIndexOf("/") + 1);
+    List<String> relativeto = new ArrayList<>();
+    while ((parentbase.contains("/") && !(parentbase.endsWith(":/")))) {
+      if (iri.startsWith(parentbase)) {
+        relativeto.add(leaf);
+        return String.join("/", relativeto);
       }
-      relativeto.add(".."); // LINE: 199
-      parentbase = parentbase.substring(0, parentbase.lastIndexOf("/")); // LINE: 200
+      relativeto.add("..");
+      parentbase = parentbase.substring(0, parentbase.lastIndexOf("/"));
     }
-    return iri; // LINE: 202
+    return iri;
   }
 
-  public static boolean nodeEquals(Object a, Object b) { // LINE: 205
-    if (isScalar(a)) { // LINE: 206
-      return ((a.getClass() == null && ((Object) b.getClass()) == null || a.getClass() != null && (a.getClass()).equals(b.getClass())) && (a == null && ((Object) b) == null || a != null && (a).equals(b))); // LINE: 207
+  public static boolean nodeEquals(Object a, Object b) {
+    if (isScalar(a)) {
+      return ((a.getClass() == null && ((Object) b.getClass()) == null || a.getClass() != null && (a.getClass()).equals(b.getClass())) && (a == null && ((Object) b) == null || a != null && (a).equals(b)));
     }
-    if (a instanceof List) { // LINE: 208
-      if (!(b instanceof List)) { // LINE: 209
-        return false; // LINE: 210
+    if (a instanceof List) {
+      if (!(b instanceof List)) {
+        return false;
       }
-      Integer i = 0; // LINE: 213
-      for (Object ai : (List) a) { // LINE: 214
-        if (!(nodeEquals(ai, ((List) b).get(i)))) { // LINE: 215
-          return false; // LINE: 216
+      Integer i = 0;
+      for (Object ai : (List) a) {
+        if (!(nodeEquals(ai, ((List) b).get(i)))) {
+          return false;
         }
         i += 1;
       }
-      return true; // LINE: 218
-    } else if (a instanceof Map) { // LINE: 219
-      if (!(b instanceof Map)) { // LINE: 220
-        return false; // LINE: 221
+      return true;
+    } else if (a instanceof Map) {
+      if (!(b instanceof Map)) {
+        return false;
       }
-      return ((Map) a).keySet().stream().allMatch(k -> (((Map) b).containsKey(k) && nodeEquals(((Map) a).get(k), ((Map) b).get(k)))); // LINE: 222
+      return ((Map) a).keySet().stream().allMatch(k -> (((Map) b).containsKey(k) && nodeEquals(((Map) a).get(k), ((Map) b).get(k))));
     } else {
-      return false; // LINE: 224
+      return false;
     }
   }
 }

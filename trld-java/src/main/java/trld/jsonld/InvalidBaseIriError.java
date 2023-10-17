@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidBaseIriError extends JsonLdError { // LINE: 15
+public class InvalidBaseIriError extends JsonLdError {
   InvalidBaseIriError() { };
   InvalidBaseIriError(String msg) { super(msg); };
 }

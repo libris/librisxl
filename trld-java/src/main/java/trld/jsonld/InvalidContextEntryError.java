@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidContextEntryError extends JsonLdError { // LINE: 23
+public class InvalidContextEntryError extends JsonLdError {
   InvalidContextEntryError() { };
   InvalidContextEntryError(String msg) { super(msg); };
 }

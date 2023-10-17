@@ -35,88 +35,88 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ReadLiteral extends ReadTerm { // LINE: 347
-  public /*@Nullable*/ String value; // LINE: 349
-  public String quotechar; // LINE: 350
-  public Integer multiline; // LINE: 351
-  public Integer prevDtStart; // LINE: 352
+public class ReadLiteral extends ReadTerm {
+  public /*@Nullable*/ String value;
+  public String quotechar;
+  public Integer multiline;
+  public Integer prevDtStart;
 
-  public ReadLiteral(ParserState parent, String quotechar) { // LINE: 354
-    super(parent); // LINE: 355
-    this.quotechar = quotechar; // LINE: 356
-    this.escapeChars = ESC_CHARS; // LINE: 357
+  public ReadLiteral(ParserState parent, String quotechar) {
+    super(parent);
+    this.quotechar = quotechar;
+    this.escapeChars = ESC_CHARS;
   }
 
-  public void init() { // LINE: 359
-    this.prevDtStart = 0; // LINE: 360
-    this.value = null; // LINE: 361
-    this.multiline = 0; // LINE: 362
+  public void init() {
+    this.prevDtStart = 0;
+    this.value = null;
+    this.multiline = 0;
   }
 
-  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 364
-    if (((this.value == null && ((Object) "") == null || this.value != null && (this.value).equals("")) && (c == null && ((Object) this.quotechar) == null || c != null && (c).equals(this.quotechar)))) { // LINE: 365
-      this.multiline = 1; // LINE: 366
-      this.value = null; // LINE: 367
-      return new KeyValue(this, null); // LINE: 368
-    } else if (this.value != null) { // LINE: 369
-      if (this.prevDtStart > 0) { // LINE: 370
-        this.noAfterLiteral("Datatype", prevValue); // LINE: 371
-        if ((c == null && ((Object) "^") == null || c != null && (c).equals("^"))) { // LINE: 372
+  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) {
+    if (((this.value == null && ((Object) "") == null || this.value != null && (this.value).equals("")) && (c == null && ((Object) this.quotechar) == null || c != null && (c).equals(this.quotechar)))) {
+      this.multiline = 1;
+      this.value = null;
+      return new KeyValue(this, null);
+    } else if (this.value != null) {
+      if (this.prevDtStart > 0) {
+        this.noAfterLiteral("Datatype", prevValue);
+        if ((c == null && ((Object) "^") == null || c != null && (c).equals("^"))) {
           assert this.prevDtStart == 1;
-          this.prevDtStart = 2; // LINE: 374
-          return new KeyValue(this, null); // LINE: 375
+          this.prevDtStart = 2;
+          return new KeyValue(this, null);
         } else {
           assert this.prevDtStart == 2;
-          this.prevDtStart = 0; // LINE: 378
-          return new ReadSymbol(this).consume(c, null); // LINE: 379
+          this.prevDtStart = 0;
+          return new ReadSymbol(this).consume(c, null);
         }
       }
-      if ((c == null && ((Object) "^") == null || c != null && (c).equals("^"))) { // LINE: 381
-        this.noAfterLiteral("Datatype", prevValue); // LINE: 382
-        this.prevDtStart = 1; // LINE: 383
-        return new KeyValue(this, null); // LINE: 384
+      if ((c == null && ((Object) "^") == null || c != null && (c).equals("^"))) {
+        this.noAfterLiteral("Datatype", prevValue);
+        this.prevDtStart = 1;
+        return new KeyValue(this, null);
       }
-      if ((c == null && ((Object) "@") == null || c != null && (c).equals("@"))) { // LINE: 386
-        this.noAfterLiteral("Language", prevValue); // LINE: 387
-        ReadLanguage state = new ReadLanguage(this); // LINE: 388
-        return new KeyValue(new ReadLanguage(this), null); // LINE: 389
+      if ((c == null && ((Object) "@") == null || c != null && (c).equals("@"))) {
+        this.noAfterLiteral("Language", prevValue);
+        ReadLanguage state = new ReadLanguage(this);
+        return new KeyValue(new ReadLanguage(this), null);
       }
-      Map<String, String> value = Builtins.mapOf(VALUE, this.value); // LINE: 391
-      if (prevValue != null) { // LINE: 392
-        if ((prevValue instanceof Map && ((Map) prevValue).containsKey(LANGUAGE))) { // LINE: 393
-          value.putAll((Map) prevValue); // LINE: 394
+      Map<String, String> value = Builtins.mapOf(VALUE, this.value);
+      if (prevValue != null) {
+        if ((prevValue instanceof Map && ((Map) prevValue).containsKey(LANGUAGE))) {
+          value.putAll((Map) prevValue);
         } else {
           assert prevValue instanceof Map;
-          value.put(TYPE, this.symbol((Map) prevValue)); // LINE: 397
+          value.put(TYPE, this.symbol((Map) prevValue));
         }
       }
-      return this.parent.consume(c, value); // LINE: 399
+      return this.parent.consume(c, value);
     }
-    if (this.handleEscape(c)) { // LINE: 401
-      return new KeyValue(this, null); // LINE: 402
+    if (this.handleEscape(c)) {
+      return new KeyValue(this, null);
     }
-    if ((c == null && ((Object) this.quotechar) == null || c != null && (c).equals(this.quotechar))) { // LINE: 404
-      if ((this.multiline == 0 || this.multiline == 3)) { // LINE: 405
-        this.multiline = 0; // LINE: 406
-        this.value = (String) this.pop(); // LINE: 407
-      } else if (this.multiline > 0) { // LINE: 408
+    if ((c == null && ((Object) this.quotechar) == null || c != null && (c).equals(this.quotechar))) {
+      if ((this.multiline == 0 || this.multiline == 3)) {
+        this.multiline = 0;
+        this.value = (String) this.pop();
+      } else if (this.multiline > 0) {
         this.multiline += 1;
       }
-      return new KeyValue(this, null); // LINE: 410
+      return new KeyValue(this, null);
     }
-    if (this.multiline > 1) { // LINE: 412
-      for (int i = 0; i < this.multiline - 1; i++) { // LINE: 413
-        this.collect(this.quotechar); // LINE: 414
+    if (this.multiline > 1) {
+      for (int i = 0; i < this.multiline - 1; i++) {
+        this.collect(this.quotechar);
       }
-      this.multiline = 1; // LINE: 415
+      this.multiline = 1;
     }
-    this.collect(c); // LINE: 417
-    return new KeyValue(this, null); // LINE: 418
+    this.collect(c);
+    return new KeyValue(this, null);
   }
 
-  public void noAfterLiteral(Object kind, Object prevValue) { // LINE: 420
-    if (prevValue != null) { // LINE: 421
-      throw new NotationError(kind + " not allowed after " + prevValue); // LINE: 422
+  public void noAfterLiteral(Object kind, Object prevValue) {
+    if (prevValue != null) {
+      throw new NotationError(kind + " not allowed after " + prevValue);
     }
   }
 }

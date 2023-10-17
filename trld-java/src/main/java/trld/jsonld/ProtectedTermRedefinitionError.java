@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class ProtectedTermRedefinitionError extends JsonLdError { // LINE: 65
+public class ProtectedTermRedefinitionError extends JsonLdError {
   ProtectedTermRedefinitionError() { };
   ProtectedTermRedefinitionError(String msg) { super(msg); };
 }

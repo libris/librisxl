@@ -23,7 +23,7 @@ import trld.jsonld.InvalidNestValueError;
 import static trld.jsonld.Invcontext.getInverseContext;
 
 public class Compaction {
-  public static final String PRESERVE = "@preserve"; // LINE: 8
+  public static final String PRESERVE = "@preserve";
 
   public static Object compact(Object context, Object docData) {
     return compact(context, docData, null);
@@ -34,26 +34,26 @@ public class Compaction {
   public static Object compact(Object context, Object docData, /*@Nullable*/ String baseIri, Boolean compactArrays) {
     return compact(context, docData, baseIri, compactArrays, false);
   }
-  public static Object compact(Object context, Object docData, /*@Nullable*/ String baseIri, Boolean compactArrays, Boolean ordered) { // LINE: 15
-    Context activeContext; // LINE: 19
-    if (context instanceof Context) { // LINE: 20
-      activeContext = (Context) context; // LINE: 21
+  public static Object compact(Object context, Object docData, /*@Nullable*/ String baseIri, Boolean compactArrays, Boolean ordered) {
+    Context activeContext;
+    if (context instanceof Context) {
+      activeContext = (Context) context;
     } else {
-      /*@Nullable*/ String contextUrl = (context instanceof String ? (String) context : null); // LINE: 23
-      if (context instanceof Map) { // LINE: 24
-        context = ((Map) context).get(CONTEXT); // LINE: 25
+      /*@Nullable*/ String contextUrl = (context instanceof String ? (String) context : null);
+      if (context instanceof Map) {
+        context = ((Map) context).get(CONTEXT);
       }
-      activeContext = (Context) new Context(baseIri).getContext(((Object) context), contextUrl); // LINE: 26
+      activeContext = (Context) new Context(baseIri).getContext(((Object) context), contextUrl);
     }
-    Object result = compaction(activeContext, null, docData, compactArrays, ordered); // LINE: 28
-    if (result instanceof List) { // LINE: 29
-      if (((List) result).size() == 0) { // LINE: 30
-        result = new HashMap<>(); // LINE: 31
+    Object result = compaction(activeContext, null, docData, compactArrays, ordered);
+    if (result instanceof List) {
+      if (((List) result).size() == 0) {
+        result = new HashMap<>();
       } else {
-        result = Builtins.mapOf(iriCompaction(activeContext, GRAPH), result); // LINE: 33
+        result = Builtins.mapOf(iriCompaction(activeContext, GRAPH), result);
       }
     }
-    return result; // LINE: 34
+    return result;
   }
 
   public static Object compaction(Context activeContext, /*@Nullable*/ String activeProperty, Object element) {
@@ -62,279 +62,279 @@ public class Compaction {
   public static Object compaction(Context activeContext, /*@Nullable*/ String activeProperty, Object element, Boolean compactArrays) {
     return compaction(activeContext, activeProperty, element, compactArrays, false);
   }
-  public static Object compaction(Context activeContext, /*@Nullable*/ String activeProperty, Object element, Boolean compactArrays, Boolean ordered) { // LINE: 37
-    Context typeScopedContext = activeContext; // LINE: 45
-    Object result; // LINE: 46
-    Map<String, Object> resultMap; // LINE: 47
-    List<Object> resultList; // LINE: 48
-    /*@Nullable*/ Term activeTerm = (/*@Nullable*/ Term) activeContext.terms.get(activeProperty); // LINE: 50
-    List activeContainerMapping = (activeTerm != null ? activeTerm.container : new ArrayList<>()); // LINE: 51
-    Object compactedItem; // LINE: 52
-    if ((element == null || isScalar(element))) { // LINE: 55
-      return element; // LINE: 56
+  public static Object compaction(Context activeContext, /*@Nullable*/ String activeProperty, Object element, Boolean compactArrays, Boolean ordered) {
+    Context typeScopedContext = activeContext;
+    Object result;
+    Map<String, Object> resultMap;
+    List<Object> resultList;
+    /*@Nullable*/ Term activeTerm = (/*@Nullable*/ Term) activeContext.terms.get(activeProperty);
+    List activeContainerMapping = (activeTerm != null ? activeTerm.container : new ArrayList<>());
+    Object compactedItem;
+    if ((element == null || isScalar(element))) {
+      return element;
     }
-    if (element instanceof List) { // LINE: 59
-      result = resultList = new ArrayList<>(); // LINE: 61
-      for (Object item : (List) element) { // LINE: 63
-        compactedItem = compaction(activeContext, activeProperty, item, compactArrays, ordered); // LINE: 65
-        if (compactedItem != null) { // LINE: 68
-          ((List) result).add(compactedItem); // LINE: 69
+    if (element instanceof List) {
+      result = resultList = new ArrayList<>();
+      for (Object item : (List) element) {
+        compactedItem = compaction(activeContext, activeProperty, item, compactArrays, ordered);
+        if (compactedItem != null) {
+          ((List) result).add(compactedItem);
         }
       }
-      if ((resultList.size() == 0 || resultList.size() > 1 || !(compactArrays) || new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) GRAPH, SET}))).contains(activeProperty) || activeContainerMapping.contains(LIST) || activeContainerMapping.contains(SET))) { // LINE: 71
-        return resultList; // LINE: 74
+      if ((resultList.size() == 0 || resultList.size() > 1 || !(compactArrays) || new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) GRAPH, SET}))).contains(activeProperty) || activeContainerMapping.contains(LIST) || activeContainerMapping.contains(SET))) {
+        return resultList;
       } else {
-        return resultList.get(0); // LINE: 77
+        return resultList.get(0);
       }
     }
     assert element instanceof Map;
-    if ((!(activeContext.propagate) && activeContext.previousContext != null)) { // LINE: 83
-      if (!((Map) element).containsKey(VALUE)) { // LINE: 84
-        if ((!((Map) element).containsKey(ID) || ((Map) element).size() != 1)) { // LINE: 85
-          activeContext = (Context) activeContext.previousContext; // LINE: 86
+    if ((!(activeContext.propagate) && activeContext.previousContext != null)) {
+      if (!((Map) element).containsKey(VALUE)) {
+        if ((!((Map) element).containsKey(ID) || ((Map) element).size() != 1)) {
+          activeContext = (Context) activeContext.previousContext;
         }
       }
     }
-    if ((activeTerm != null && activeTerm.hasLocalContext)) { // LINE: 89
-      activeContext = (Context) activeTerm.getLocalContext(activeContext); // LINE: 90
+    if ((activeTerm != null && activeTerm.hasLocalContext)) {
+      activeContext = (Context) activeTerm.getLocalContext(activeContext);
     }
-    if ((((Map) element).containsKey(VALUE) || ((Map) element).containsKey(ID))) { // LINE: 93
-      Object valueResult = valueCompaction(activeContext, activeTerm, (Map) element); // LINE: 94
-      if ((isScalar(valueResult) || (activeTerm != null && (activeTerm.typeMapping == null && ((Object) JSON) == null || activeTerm.typeMapping != null && (activeTerm.typeMapping).equals(JSON))))) { // LINE: 95
-        return valueResult; // LINE: 96
+    if ((((Map) element).containsKey(VALUE) || ((Map) element).containsKey(ID))) {
+      Object valueResult = valueCompaction(activeContext, activeTerm, (Map) element);
+      if ((isScalar(valueResult) || (activeTerm != null && (activeTerm.typeMapping == null && ((Object) JSON) == null || activeTerm.typeMapping != null && (activeTerm.typeMapping).equals(JSON))))) {
+        return valueResult;
       }
     }
-    if ((element instanceof Map && ((Map) element).containsKey(LIST) && activeContainerMapping.contains(LIST))) { // LINE: 99
-      return compaction(activeContext, activeProperty, ((Map) element).get(LIST), compactArrays, ordered); // LINE: 100
+    if ((element instanceof Map && ((Map) element).containsKey(LIST) && activeContainerMapping.contains(LIST))) {
+      return compaction(activeContext, activeProperty, ((Map) element).get(LIST), compactArrays, ordered);
     }
-    Boolean insideReverse = (Boolean) (activeProperty == null && ((Object) REVERSE) == null || activeProperty != null && (activeProperty).equals(REVERSE)); // LINE: 103
-    result = resultMap = new HashMap<>(); // LINE: 106
-    List<String> compactedTypes = new ArrayList<>(); // LINE: 110
-    Context currentActiveContext = activeContext; // LINE: 111
-    if (((Map) element).containsKey(TYPE)) { // LINE: 112
-      for (Object expandedType : asList(((Map) element).get(TYPE))) { // LINE: 113
-        compactedTypes.add(iriCompaction(typeScopedContext, ((String) expandedType))); // LINE: 114
+    Boolean insideReverse = (Boolean) (activeProperty == null && ((Object) REVERSE) == null || activeProperty != null && (activeProperty).equals(REVERSE));
+    result = resultMap = new HashMap<>();
+    List<String> compactedTypes = new ArrayList<>();
+    Context currentActiveContext = activeContext;
+    if (((Map) element).containsKey(TYPE)) {
+      for (Object expandedType : asList(((Map) element).get(TYPE))) {
+        compactedTypes.add(iriCompaction(typeScopedContext, ((String) expandedType)));
       }
-      for (Object ctype : Builtins.sorted(compactedTypes)) { // LINE: 116
-        /*@Nullable*/ Term typeterm = (/*@Nullable*/ Term) typeScopedContext.terms.get(ctype); // LINE: 118
-        if ((typeterm != null && typeterm.hasLocalContext)) { // LINE: 119
-          activeContext = typeterm.getLocalContext(currentActiveContext, false); // LINE: 120
+      for (Object ctype : Builtins.sorted(compactedTypes)) {
+        /*@Nullable*/ Term typeterm = (/*@Nullable*/ Term) typeScopedContext.terms.get(ctype);
+        if ((typeterm != null && typeterm.hasLocalContext)) {
+          activeContext = typeterm.getLocalContext(currentActiveContext, false);
         }
       }
     }
-    for (Map.Entry<String, Object> expandedProperty_expandedValue : ((Map<String, Object>) element).entrySet()) { // LINE: 123
+    for (Map.Entry<String, Object> expandedProperty_expandedValue : ((Map<String, Object>) element).entrySet()) {
       String expandedProperty = expandedProperty_expandedValue.getKey();
       Object expandedValue = expandedProperty_expandedValue.getValue();
-      /*@Nullable*/ String compactedValue = null; // LINE: 124
-      String alias = iriCompaction(activeContext, expandedProperty, expandedValue); // LINE: 126
-      /*@Nullable*/ Term aliasTerm = (/*@Nullable*/ Term) activeContext.terms.get(alias); // LINE: 127
-      List aliasContainerMapping = (aliasTerm != null ? aliasTerm.container : new ArrayList<>()); // LINE: 128
-      Boolean asArray; // LINE: 129
-      if ((expandedProperty == null && ((Object) ID) == null || expandedProperty != null && (expandedProperty).equals(ID))) { // LINE: 132
-        if (expandedValue instanceof String) { // LINE: 134
-          compactedValue = shortenIri(activeContext, (String) expandedValue); // LINE: 135
+      /*@Nullable*/ String compactedValue = null;
+      String alias = iriCompaction(activeContext, expandedProperty, expandedValue);
+      /*@Nullable*/ Term aliasTerm = (/*@Nullable*/ Term) activeContext.terms.get(alias);
+      List aliasContainerMapping = (aliasTerm != null ? aliasTerm.container : new ArrayList<>());
+      Boolean asArray;
+      if ((expandedProperty == null && ((Object) ID) == null || expandedProperty != null && (expandedProperty).equals(ID))) {
+        if (expandedValue instanceof String) {
+          compactedValue = shortenIri(activeContext, (String) expandedValue);
         }
-        resultMap.put(alias, ((Object) compactedValue)); // LINE: 139
-        continue; // LINE: 140
-      } else if ((expandedProperty == null && ((Object) TYPE) == null || expandedProperty != null && (expandedProperty).equals(TYPE))) { // LINE: 143
-        asArray = (((activeContext.processingMode == null && ((Object) JSONLD11) == null || activeContext.processingMode != null && (activeContext.processingMode).equals(JSONLD11)) && aliasContainerMapping.contains(SET)) || !(compactArrays)); // LINE: 154
-        addValue(resultMap, alias, (compactedTypes.size() == 1 ? compactedTypes.get(0) : compactedTypes), asArray); // LINE: 159
-        continue; // LINE: 163
-      } else if ((expandedProperty == null && ((Object) REVERSE) == null || expandedProperty != null && (expandedProperty).equals(REVERSE))) { // LINE: 166
-        Map<String, Object> compactedMap = ((Map<String, Object>) compaction(activeContext, REVERSE, expandedValue, compactArrays, ordered)); // LINE: 168
-        for (String prop : ((List<String>) new ArrayList(compactedMap.keySet()))) { // LINE: 171
-          Object value = (Object) compactedMap.get(prop); // LINE: 172
-          /*@Nullable*/ Term propTerm = (/*@Nullable*/ Term) activeContext.terms.get(prop); // LINE: 173
-          if ((propTerm != null && propTerm.isReverseProperty)) { // LINE: 175
-            asArray = (((activeContext.processingMode == null && ((Object) JSONLD11) == null || activeContext.processingMode != null && (activeContext.processingMode).equals(JSONLD11)) && propTerm.container.contains(SET)) || !(compactArrays)); // LINE: 177
-            addValue(resultMap, prop, value, asArray); // LINE: 180
-            compactedMap.remove(prop); // LINE: 182
+        resultMap.put(alias, ((Object) compactedValue));
+        continue;
+      } else if ((expandedProperty == null && ((Object) TYPE) == null || expandedProperty != null && (expandedProperty).equals(TYPE))) {
+        asArray = (((activeContext.processingMode == null && ((Object) JSONLD11) == null || activeContext.processingMode != null && (activeContext.processingMode).equals(JSONLD11)) && aliasContainerMapping.contains(SET)) || !(compactArrays));
+        addValue(resultMap, alias, (compactedTypes.size() == 1 ? compactedTypes.get(0) : compactedTypes), asArray);
+        continue;
+      } else if ((expandedProperty == null && ((Object) REVERSE) == null || expandedProperty != null && (expandedProperty).equals(REVERSE))) {
+        Map<String, Object> compactedMap = ((Map<String, Object>) compaction(activeContext, REVERSE, expandedValue, compactArrays, ordered));
+        for (String prop : ((List<String>) new ArrayList(compactedMap.keySet()))) {
+          Object value = (Object) compactedMap.get(prop);
+          /*@Nullable*/ Term propTerm = (/*@Nullable*/ Term) activeContext.terms.get(prop);
+          if ((propTerm != null && propTerm.isReverseProperty)) {
+            asArray = (((activeContext.processingMode == null && ((Object) JSONLD11) == null || activeContext.processingMode != null && (activeContext.processingMode).equals(JSONLD11)) && propTerm.container.contains(SET)) || !(compactArrays));
+            addValue(resultMap, prop, value, asArray);
+            compactedMap.remove(prop);
           }
         }
-        if (compactedMap.size() > 0) { // LINE: 184
-          String revAlias = iriCompaction(activeContext, REVERSE); // LINE: 186
-          resultMap.put(revAlias, compactedMap); // LINE: 188
+        if (compactedMap.size() > 0) {
+          String revAlias = iriCompaction(activeContext, REVERSE);
+          resultMap.put(revAlias, compactedMap);
         }
-        continue; // LINE: 190
-      } else if ((expandedProperty == null && ((Object) PRESERVE) == null || expandedProperty != null && (expandedProperty).equals(PRESERVE))) { // LINE: 193
-        if (!expandedValue.equals(new ArrayList<>())) { // LINE: 196
-          resultMap.put(PRESERVE, compaction(activeContext, activeProperty, expandedValue, compactArrays, ordered)); // LINE: 197
+        continue;
+      } else if ((expandedProperty == null && ((Object) PRESERVE) == null || expandedProperty != null && (expandedProperty).equals(PRESERVE))) {
+        if (!expandedValue.equals(new ArrayList<>())) {
+          resultMap.put(PRESERVE, compaction(activeContext, activeProperty, expandedValue, compactArrays, ordered));
         }
-      } else if (((expandedProperty == null && ((Object) INDEX) == null || expandedProperty != null && (expandedProperty).equals(INDEX)) && activeContainerMapping.contains(INDEX))) { // LINE: 201
-        continue; // LINE: 202
-      } else if (new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) DIRECTION, INDEX, LANGUAGE, VALUE}))).contains(expandedProperty)) { // LINE: 205
-        resultMap.put(alias, expandedValue); // LINE: 208
-        continue; // LINE: 209
+      } else if (((expandedProperty == null && ((Object) INDEX) == null || expandedProperty != null && (expandedProperty).equals(INDEX)) && activeContainerMapping.contains(INDEX))) {
+        continue;
+      } else if (new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) DIRECTION, INDEX, LANGUAGE, VALUE}))).contains(expandedProperty)) {
+        resultMap.put(alias, expandedValue);
+        continue;
       }
-      String itemActiveProperty; // LINE: 211
-      /*@Nullable*/ Term itemActiveTerm; // LINE: 212
-      Map<String, Object> nestResult; // LINE: 213
-      if ((expandedValue == null && ((Object) new ArrayList<>()) == null || expandedValue != null && (expandedValue).equals(new ArrayList<>()))) { // LINE: 215
-        itemActiveProperty = iriCompaction(activeContext, expandedProperty, expandedValue, true, insideReverse); // LINE: 217
-        itemActiveTerm = (Term) activeContext.terms.get(itemActiveProperty); // LINE: 218
-        nestResult = getNestResult(activeContext, itemActiveTerm, resultMap); // LINE: 220
-        addValueAsList(nestResult, itemActiveProperty, new ArrayList<>()); // LINE: 222
+      String itemActiveProperty;
+      /*@Nullable*/ Term itemActiveTerm;
+      Map<String, Object> nestResult;
+      if ((expandedValue == null && ((Object) new ArrayList<>()) == null || expandedValue != null && (expandedValue).equals(new ArrayList<>()))) {
+        itemActiveProperty = iriCompaction(activeContext, expandedProperty, expandedValue, true, insideReverse);
+        itemActiveTerm = (Term) activeContext.terms.get(itemActiveProperty);
+        nestResult = getNestResult(activeContext, itemActiveTerm, resultMap);
+        addValueAsList(nestResult, itemActiveProperty, new ArrayList<>());
       }
-      expandedValue = (Object) asList(expandedValue); // LINE: 225
+      expandedValue = (Object) asList(expandedValue);
       assert expandedValue instanceof List;
-      for (Object expandedItem : (List) expandedValue) { // LINE: 228
-        itemActiveProperty = iriCompaction(activeContext, expandedProperty, expandedItem, true, insideReverse); // LINE: 230
-        itemActiveTerm = (Term) activeContext.terms.get(itemActiveProperty); // LINE: 231
-        nestResult = getNestResult(activeContext, itemActiveTerm, resultMap); // LINE: 233
-        List<String> container; // LINE: 235
-        if ((itemActiveTerm != null && itemActiveTerm.container != null)) { // LINE: 236
-          container = (List<String>) itemActiveTerm.container; // LINE: 237
+      for (Object expandedItem : (List) expandedValue) {
+        itemActiveProperty = iriCompaction(activeContext, expandedProperty, expandedItem, true, insideReverse);
+        itemActiveTerm = (Term) activeContext.terms.get(itemActiveProperty);
+        nestResult = getNestResult(activeContext, itemActiveTerm, resultMap);
+        List<String> container;
+        if ((itemActiveTerm != null && itemActiveTerm.container != null)) {
+          container = (List<String>) itemActiveTerm.container;
         } else {
-          container = new ArrayList<>(); // LINE: 239
+          container = new ArrayList<>();
         }
-        asArray = ((container.contains(SET) || new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) GRAPH, LIST}))).contains(itemActiveProperty)) || !(compactArrays)); // LINE: 241
-        Object itemToCompact = expandedItem; // LINE: 245
-        Boolean itemIsListObject = false; // LINE: 246
-        Boolean itemIsGraphObject = false; // LINE: 247
-        if (expandedItem instanceof Map) { // LINE: 248
-          if (((Map) expandedItem).containsKey(LIST)) { // LINE: 249
-            itemToCompact = ((Map) expandedItem).get(LIST); // LINE: 250
-            itemIsListObject = true; // LINE: 251
+        asArray = ((container.contains(SET) || new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) GRAPH, LIST}))).contains(itemActiveProperty)) || !(compactArrays));
+        Object itemToCompact = expandedItem;
+        Boolean itemIsListObject = false;
+        Boolean itemIsGraphObject = false;
+        if (expandedItem instanceof Map) {
+          if (((Map) expandedItem).containsKey(LIST)) {
+            itemToCompact = ((Map) expandedItem).get(LIST);
+            itemIsListObject = true;
           }
-          if (isGraphObject((Map) expandedItem)) { // LINE: 252
-            itemToCompact = ((Map) expandedItem).get(GRAPH); // LINE: 253
-            itemIsGraphObject = true; // LINE: 254
+          if (isGraphObject((Map) expandedItem)) {
+            itemToCompact = ((Map) expandedItem).get(GRAPH);
+            itemIsGraphObject = true;
           }
         }
-        compactedItem = compaction(activeContext, itemActiveProperty, itemToCompact, compactArrays, ordered); // LINE: 256
-        if (itemIsListObject) { // LINE: 260
+        compactedItem = compaction(activeContext, itemActiveProperty, itemToCompact, compactArrays, ordered);
+        if (itemIsListObject) {
           assert expandedItem instanceof Map;
-          if (!(compactedItem instanceof List)) { // LINE: 264
-            compactedItem = new ArrayList<>(Arrays.asList(new Object[] {(Object) compactedItem})); // LINE: 265
+          if (!(compactedItem instanceof List)) {
+            compactedItem = new ArrayList<>(Arrays.asList(new Object[] {(Object) compactedItem}));
           }
-          if (!container.contains(LIST)) { // LINE: 267
-            compactedItem = Builtins.mapOf(iriCompaction(activeContext, LIST), compactedItem); // LINE: 269
+          if (!container.contains(LIST)) {
+            compactedItem = Builtins.mapOf(iriCompaction(activeContext, LIST), compactedItem);
             assert compactedItem instanceof Map;
-            if (((Map) expandedItem).containsKey(INDEX)) { // LINE: 272
-              ((Map) compactedItem).put(iriCompaction(activeContext, INDEX), ((Map) expandedItem).get(INDEX)); // LINE: 273
+            if (((Map) expandedItem).containsKey(INDEX)) {
+              ((Map) compactedItem).put(iriCompaction(activeContext, INDEX), ((Map) expandedItem).get(INDEX));
             }
-            addValue(nestResult, itemActiveProperty, (Map) compactedItem, asArray); // LINE: 275
-            continue; // LINE: 277
-          } else if (activeProperty != null) { // LINE: 279
-            nestResult.put(activeProperty, (List) compactedItem); // LINE: 280
+            addValue(nestResult, itemActiveProperty, (Map) compactedItem, asArray);
+            continue;
+          } else if (activeProperty != null) {
+            nestResult.put(activeProperty, (List) compactedItem);
           }
         }
-        Map<String, Object> mapObject; // LINE: 283
-        /*@Nullable*/ String mapKey = null; // LINE: 284
-        if (itemIsGraphObject) { // LINE: 285
+        Map<String, Object> mapObject;
+        /*@Nullable*/ String mapKey = null;
+        if (itemIsGraphObject) {
           assert expandedItem instanceof Map;
-          if ((container.contains(GRAPH) && container.contains(ID))) { // LINE: 288
+          if ((container.contains(GRAPH) && container.contains(ID))) {
             if (!nestResult.containsKey(itemActiveProperty)) nestResult.put(itemActiveProperty, new HashMap<>());
-            mapObject = ((Map<String, Object>) nestResult.get(itemActiveProperty)); // LINE: 290
-            String idOrNone = (String) (((Map) expandedItem).containsKey(ID) ? ((String) ((Map) expandedItem).get(ID)) : NONE); // LINE: 292
-            mapKey = (String) iriCompaction(activeContext, idOrNone, null, !((Map) expandedItem).containsKey(ID)); // LINE: 293
-            addValue(mapObject, mapKey, compactedItem, asArray); // LINE: 295
-          } else if ((container.contains(GRAPH) && container.contains(INDEX) && isSimpleGraphObject((Map) expandedItem))) { // LINE: 297
+            mapObject = ((Map<String, Object>) nestResult.get(itemActiveProperty));
+            String idOrNone = (String) (((Map) expandedItem).containsKey(ID) ? ((String) ((Map) expandedItem).get(ID)) : NONE);
+            mapKey = (String) iriCompaction(activeContext, idOrNone, null, !((Map) expandedItem).containsKey(ID));
+            addValue(mapObject, mapKey, compactedItem, asArray);
+          } else if ((container.contains(GRAPH) && container.contains(INDEX) && isSimpleGraphObject((Map) expandedItem))) {
             if (!nestResult.containsKey(itemActiveProperty)) nestResult.put(itemActiveProperty, new HashMap<>());
-            mapObject = ((Map<String, Object>) nestResult.get(itemActiveProperty)); // LINE: 299
-            String indexOrNone = (String) (((Map) expandedItem).containsKey(INDEX) ? ((String) ((Map) expandedItem).get(INDEX)) : NONE); // LINE: 301
-            mapKey = iriCompaction(activeContext, indexOrNone); // LINE: 302
-            addValue(mapObject, mapKey, compactedItem, asArray); // LINE: 304
-          } else if ((container.contains(GRAPH) && isSimpleGraphObject((Map) expandedItem))) { // LINE: 306
-            if ((compactedItem instanceof List && ((List) compactedItem).size() > 1)) { // LINE: 308
-              compactedItem = Builtins.mapOf(iriCompaction(activeContext, INCLUDED), compactedItem); // LINE: 309
+            mapObject = ((Map<String, Object>) nestResult.get(itemActiveProperty));
+            String indexOrNone = (String) (((Map) expandedItem).containsKey(INDEX) ? ((String) ((Map) expandedItem).get(INDEX)) : NONE);
+            mapKey = iriCompaction(activeContext, indexOrNone);
+            addValue(mapObject, mapKey, compactedItem, asArray);
+          } else if ((container.contains(GRAPH) && isSimpleGraphObject((Map) expandedItem))) {
+            if ((compactedItem instanceof List && ((List) compactedItem).size() > 1)) {
+              compactedItem = Builtins.mapOf(iriCompaction(activeContext, INCLUDED), compactedItem);
             }
-            addValue(nestResult, itemActiveProperty, compactedItem, asArray); // LINE: 311
+            addValue(nestResult, itemActiveProperty, compactedItem, asArray);
           } else {
-            compactedItem = Builtins.mapOf(iriCompaction(activeContext, GRAPH), compactedItem); // LINE: 315
+            compactedItem = Builtins.mapOf(iriCompaction(activeContext, GRAPH), compactedItem);
             assert compactedItem instanceof Map;
-            if (((Map) expandedItem).containsKey(ID)) { // LINE: 318
-              ((Map) compactedItem).put(iriCompaction(activeContext, ID), shortenIri(activeContext, ((String) ((Map) expandedItem).get(ID)))); // LINE: 319
+            if (((Map) expandedItem).containsKey(ID)) {
+              ((Map) compactedItem).put(iriCompaction(activeContext, ID), shortenIri(activeContext, ((String) ((Map) expandedItem).get(ID))));
             }
-            if (((Map) expandedItem).containsKey(INDEX)) { // LINE: 321
-              ((Map) compactedItem).put(iriCompaction(activeContext, INDEX), iriCompaction(activeContext, ((String) ((Map) expandedItem).get(INDEX)))); // LINE: 322
+            if (((Map) expandedItem).containsKey(INDEX)) {
+              ((Map) compactedItem).put(iriCompaction(activeContext, INDEX), iriCompaction(activeContext, ((String) ((Map) expandedItem).get(INDEX))));
             }
-            addValue(nestResult, itemActiveProperty, (Map) compactedItem, asArray); // LINE: 324
+            addValue(nestResult, itemActiveProperty, (Map) compactedItem, asArray);
           }
-        } else if (((container.contains(LANGUAGE) || container.contains(INDEX) || container.contains(ID) || container.contains(TYPE)) && !container.contains(GRAPH))) { // LINE: 327
+        } else if (((container.contains(LANGUAGE) || container.contains(INDEX) || container.contains(ID) || container.contains(TYPE)) && !container.contains(GRAPH))) {
           assert expandedItem instanceof Map;
           if (!nestResult.containsKey(itemActiveProperty)) nestResult.put(itemActiveProperty, new HashMap<>());
-          mapObject = ((Map<String, Object>) nestResult.get(itemActiveProperty)); // LINE: 333
-          String containerKw = (String) ((String) (container.contains(LANGUAGE) ? LANGUAGE : (container.contains(INDEX) ? INDEX : (container.contains(ID) ? ID : (container.contains(TYPE) ? TYPE : null))))); // LINE: 335
-          String containerKey = iriCompaction(activeContext, containerKw); // LINE: 339
-          String indexKey = ((itemActiveTerm != null && itemActiveTerm.index != null) ? itemActiveTerm.index : INDEX); // LINE: 341
-          if ((container.contains(LANGUAGE) && ((Map) expandedItem).containsKey(VALUE))) { // LINE: 343
-            if (compactedItem instanceof Map) { // LINE: 345
-              compactedItem = ((Map) compactedItem).get(VALUE); // LINE: 346
+          mapObject = ((Map<String, Object>) nestResult.get(itemActiveProperty));
+          String containerKw = (String) ((String) (container.contains(LANGUAGE) ? LANGUAGE : (container.contains(INDEX) ? INDEX : (container.contains(ID) ? ID : (container.contains(TYPE) ? TYPE : null)))));
+          String containerKey = iriCompaction(activeContext, containerKw);
+          String indexKey = ((itemActiveTerm != null && itemActiveTerm.index != null) ? itemActiveTerm.index : INDEX);
+          if ((container.contains(LANGUAGE) && ((Map) expandedItem).containsKey(VALUE))) {
+            if (compactedItem instanceof Map) {
+              compactedItem = ((Map) compactedItem).get(VALUE);
             }
-            mapKey = ((String) ((Map) expandedItem).get(LANGUAGE)); // LINE: 347
-          } else if ((container.contains(INDEX) && (indexKey == null && ((Object) INDEX) == null || indexKey != null && (indexKey).equals(INDEX)))) { // LINE: 349
-            if ((compactedItem instanceof Map && ((Map) compactedItem).containsKey(VALUE) && ((Map) compactedItem).size() == 1)) { // LINE: 351
-              compactedItem = ((Map) compactedItem).get(VALUE); // LINE: 352
+            mapKey = ((String) ((Map) expandedItem).get(LANGUAGE));
+          } else if ((container.contains(INDEX) && (indexKey == null && ((Object) INDEX) == null || indexKey != null && (indexKey).equals(INDEX)))) {
+            if ((compactedItem instanceof Map && ((Map) compactedItem).containsKey(VALUE) && ((Map) compactedItem).size() == 1)) {
+              compactedItem = ((Map) compactedItem).get(VALUE);
             }
-            mapKey = ((String) ((Map) expandedItem).get(INDEX)); // LINE: 353
-          } else if ((container.contains(INDEX) && !indexKey.equals(INDEX))) { // LINE: 355
-            containerKey = iriCompaction(activeContext, indexKey); // LINE: 357
-            if ((compactedItem instanceof Map && ((Map) compactedItem).containsKey(containerKey))) { // LINE: 360
-              mapKey = (String) getMapKeyAndDepleteContainerKey((Map) compactedItem, containerKey, asArray); // LINE: 361
+            mapKey = ((String) ((Map) expandedItem).get(INDEX));
+          } else if ((container.contains(INDEX) && !indexKey.equals(INDEX))) {
+            containerKey = iriCompaction(activeContext, indexKey);
+            if ((compactedItem instanceof Map && ((Map) compactedItem).containsKey(containerKey))) {
+              mapKey = (String) getMapKeyAndDepleteContainerKey((Map) compactedItem, containerKey, asArray);
             }
-          } else if (container.contains(ID)) { // LINE: 363
+          } else if (container.contains(ID)) {
             assert compactedItem instanceof Map;
-            mapKey = ((/*@Nullable*/ String) ((Map) compactedItem).remove(containerKey)); // LINE: 365
-          } else if (container.contains(TYPE)) { // LINE: 367
+            mapKey = ((/*@Nullable*/ String) ((Map) compactedItem).remove(containerKey));
+          } else if (container.contains(TYPE)) {
             assert compactedItem instanceof Map;
-            if (((Map) compactedItem).containsKey(containerKey)) { // LINE: 372
-              mapKey = (String) getMapKeyAndDepleteContainerKey((Map) compactedItem, containerKey, asArray); // LINE: 373
+            if (((Map) compactedItem).containsKey(containerKey)) {
+              mapKey = (String) getMapKeyAndDepleteContainerKey((Map) compactedItem, containerKey, asArray);
             }
-            if (((Map) compactedItem).size() == 1) { // LINE: 375
-              for (Map.Entry<String, Object> key_idval : ((Map<String, Object>) compactedItem).entrySet()) { // LINE: 376
+            if (((Map) compactedItem).size() == 1) {
+              for (Map.Entry<String, Object> key_idval : ((Map<String, Object>) compactedItem).entrySet()) {
                 String key = key_idval.getKey();
                 Object idval = key_idval.getValue();
-                if ((activeContext.expandVocabIri(key) == null && ((Object) ID) == null || activeContext.expandVocabIri(key) != null && (activeContext.expandVocabIri(key)).equals(ID))) { // LINE: 377
-                  compactedItem = compaction(activeContext, itemActiveProperty, Builtins.mapOf(ID, idval)); // LINE: 378
+                if ((activeContext.expandVocabIri(key) == null && ((Object) ID) == null || activeContext.expandVocabIri(key) != null && (activeContext.expandVocabIri(key)).equals(ID))) {
+                  compactedItem = compaction(activeContext, itemActiveProperty, Builtins.mapOf(ID, idval));
                 }
               }
             }
           }
-          if (mapKey == null) { // LINE: 381
-            mapKey = iriCompaction(activeContext, NONE); // LINE: 382
+          if (mapKey == null) {
+            mapKey = iriCompaction(activeContext, NONE);
           }
-          addValue(mapObject, mapKey, compactedItem, asArray); // LINE: 384
+          addValue(mapObject, mapKey, compactedItem, asArray);
         } else {
-          addValue(nestResult, itemActiveProperty, compactedItem, asArray); // LINE: 388
+          addValue(nestResult, itemActiveProperty, compactedItem, asArray);
         }
       }
     }
-    return result; // LINE: 391
+    return result;
   }
 
-  protected static /*@Nullable*/ String getMapKeyAndDepleteContainerKey(Map<String, Object> compactedItem, String containerKey, Boolean asArray) { // LINE: 394
-    List<String> containerKeyValues = (List<String>) asList(compactedItem.get(containerKey)); // LINE: 398
-    Object keyValue = (Object) containerKeyValues.remove(0); // LINE: 400
-    if (!(keyValue instanceof String)) { // LINE: 401
-      return null; // LINE: 402
+  protected static /*@Nullable*/ String getMapKeyAndDepleteContainerKey(Map<String, Object> compactedItem, String containerKey, Boolean asArray) {
+    List<String> containerKeyValues = (List<String>) asList(compactedItem.get(containerKey));
+    Object keyValue = (Object) containerKeyValues.remove(0);
+    if (!(keyValue instanceof String)) {
+      return null;
     }
-    String mapKey = (String) keyValue; // LINE: 403
-    if (compactedItem.get(containerKey) != containerKeyValues) { // LINE: 405
-      for (Object remaining : new ArrayList(containerKeyValues)) { // LINE: 406
-        addValue(compactedItem, containerKey, remaining); // LINE: 407
+    String mapKey = (String) keyValue;
+    if (compactedItem.get(containerKey) != containerKeyValues) {
+      for (Object remaining : new ArrayList(containerKeyValues)) {
+        addValue(compactedItem, containerKey, remaining);
       }
     }
-    if ((containerKeyValues.size() == 1 && !(asArray))) { // LINE: 409
-      compactedItem.put(containerKey, containerKeyValues.get(0)); // LINE: 410
-    } else if (containerKeyValues.size() == 0) { // LINE: 411
-      compactedItem.remove(containerKey); // LINE: 412
+    if ((containerKeyValues.size() == 1 && !(asArray))) {
+      compactedItem.put(containerKey, containerKeyValues.get(0));
+    } else if (containerKeyValues.size() == 0) {
+      compactedItem.remove(containerKey);
     }
-    return mapKey; // LINE: 414
+    return mapKey;
   }
 
-  protected static Map<String, Object> getNestResult(Context activeContext, /*@Nullable*/ Term itemActiveTerm, Map<String, Object> resultMap) { // LINE: 417
-    Map<String, Object> nestResult; // LINE: 422
-    if ((itemActiveTerm != null && itemActiveTerm.nestValue != null)) { // LINE: 423
-      if ((!itemActiveTerm.nestValue.equals(NEST) && !activeContext.expandVocabIri(itemActiveTerm.nestValue).equals(NEST))) { // LINE: 425
-        throw new InvalidNestValueError(itemActiveTerm.nestValue); // LINE: 427
+  protected static Map<String, Object> getNestResult(Context activeContext, /*@Nullable*/ Term itemActiveTerm, Map<String, Object> resultMap) {
+    Map<String, Object> nestResult;
+    if ((itemActiveTerm != null && itemActiveTerm.nestValue != null)) {
+      if ((!itemActiveTerm.nestValue.equals(NEST) && !activeContext.expandVocabIri(itemActiveTerm.nestValue).equals(NEST))) {
+        throw new InvalidNestValueError(itemActiveTerm.nestValue);
       }
-      if (!resultMap.containsKey(itemActiveTerm.nestValue)) { // LINE: 429
-        resultMap.put(itemActiveTerm.nestValue, new HashMap<>()); // LINE: 430
+      if (!resultMap.containsKey(itemActiveTerm.nestValue)) {
+        resultMap.put(itemActiveTerm.nestValue, new HashMap<>());
       }
-      return ((Map<String, Object>) resultMap.get(itemActiveTerm.nestValue)); // LINE: 432
+      return ((Map<String, Object>) resultMap.get(itemActiveTerm.nestValue));
     } else {
-      return resultMap; // LINE: 435
+      return resultMap;
     }
   }
 
@@ -347,15 +347,15 @@ public class Compaction {
   public static /*@Nullable*/ String maybeIriCompaction(Context activeContext, /*@Nullable*/ String iri, /*@Nullable*/ Object value, Boolean vocab) {
     return maybeIriCompaction(activeContext, iri, value, vocab, false);
   }
-  public static /*@Nullable*/ String maybeIriCompaction(Context activeContext, /*@Nullable*/ String iri, /*@Nullable*/ Object value, Boolean vocab, Boolean reverse) { // LINE: 438
-    if (iri == null) { // LINE: 445
-      return null; // LINE: 446
+  public static /*@Nullable*/ String maybeIriCompaction(Context activeContext, /*@Nullable*/ String iri, /*@Nullable*/ Object value, Boolean vocab, Boolean reverse) {
+    if (iri == null) {
+      return null;
     }
-    return iriCompaction(activeContext, iri, value, vocab, reverse); // LINE: 447
+    return iriCompaction(activeContext, iri, value, vocab, reverse);
   }
 
-  public static String shortenIri(Context activeContext, String iri) { // LINE: 452
-    return iriCompaction(activeContext, iri, null, false); // LINE: 453
+  public static String shortenIri(Context activeContext, String iri) {
+    return iriCompaction(activeContext, iri, null, false);
   }
 
   public static String iriCompaction(Context activeContext, String iri) {
@@ -367,291 +367,291 @@ public class Compaction {
   public static String iriCompaction(Context activeContext, String iri, /*@Nullable*/ Object value, Boolean vocab) {
     return iriCompaction(activeContext, iri, value, vocab, false);
   }
-  public static String iriCompaction(Context activeContext, String iri, /*@Nullable*/ Object value, Boolean vocab, Boolean reverse) { // LINE: 456
-    Map inverseContext = (Map) getInverseContext(activeContext); // LINE: 462
-    if ((vocab && inverseContext.containsKey(iri))) { // LINE: 465
-      String defaultLanguage = (activeContext.defaultLanguage != null ? activeContext.defaultLanguage : NONE); // LINE: 467
-      if (activeContext.defaultBaseDirection != null) { // LINE: 468
-        defaultLanguage = defaultLanguage + "_" + activeContext.defaultBaseDirection; // LINE: 470
+  public static String iriCompaction(Context activeContext, String iri, /*@Nullable*/ Object value, Boolean vocab, Boolean reverse) {
+    Map inverseContext = (Map) getInverseContext(activeContext);
+    if ((vocab && inverseContext.containsKey(iri))) {
+      String defaultLanguage = (activeContext.defaultLanguage != null ? activeContext.defaultLanguage : NONE);
+      if (activeContext.defaultBaseDirection != null) {
+        defaultLanguage = defaultLanguage + "_" + activeContext.defaultBaseDirection;
       }
-      if ((value instanceof Map && ((Map) value).containsKey(PRESERVE))) { // LINE: 473
-        List values = (List) asList(((Map) value).get(PRESERVE)); // LINE: 474
-        value = (Map) values.get(0); // LINE: 475
+      if ((value instanceof Map && ((Map) value).containsKey(PRESERVE))) {
+        List values = (List) asList(((Map) value).get(PRESERVE));
+        value = (Map) values.get(0);
       }
-      List<String> containers = new ArrayList<>(); // LINE: 478
-      String typeOrLanguage = LANGUAGE; // LINE: 481
-      String typeOrLanguageValue = NULL; // LINE: 482
-      if ((value instanceof Map && ((Map) value).containsKey(INDEX) && !((Map) value).containsKey(GRAPH))) { // LINE: 485
-        containers.add(INDEX); // LINE: 486
-        containers.add(INDEX + SET); // LINE: 487
+      List<String> containers = new ArrayList<>();
+      String typeOrLanguage = LANGUAGE;
+      String typeOrLanguageValue = NULL;
+      if ((value instanceof Map && ((Map) value).containsKey(INDEX) && !((Map) value).containsKey(GRAPH))) {
+        containers.add(INDEX);
+        containers.add(INDEX + SET);
       }
-      if (reverse) { // LINE: 490
-        typeOrLanguage = TYPE; // LINE: 491
-        typeOrLanguageValue = REVERSE; // LINE: 492
-        containers.add(SET); // LINE: 493
-      } else if ((value instanceof Map && ((Map) value).containsKey(LIST))) { // LINE: 495
-        if (!((Map) value).containsKey(INDEX)) { // LINE: 497
-          containers.add(LIST); // LINE: 498
+      if (reverse) {
+        typeOrLanguage = TYPE;
+        typeOrLanguageValue = REVERSE;
+        containers.add(SET);
+      } else if ((value instanceof Map && ((Map) value).containsKey(LIST))) {
+        if (!((Map) value).containsKey(INDEX)) {
+          containers.add(LIST);
         }
-        List<Map<String, Object>> valuelist = (List<Map<String, Object>>) ((List<Map<String, Object>>) ((Map) value).get(LIST)); // LINE: 500
-        /*@Nullable*/ String commonType = null; // LINE: 502
-        /*@Nullable*/ String commonLanguage = null; // LINE: 503
-        if (valuelist.size() == 0) { // LINE: 504
-          commonLanguage = defaultLanguage; // LINE: 505
+        List<Map<String, Object>> valuelist = (List<Map<String, Object>>) ((List<Map<String, Object>>) ((Map) value).get(LIST));
+        /*@Nullable*/ String commonType = null;
+        /*@Nullable*/ String commonLanguage = null;
+        if (valuelist.size() == 0) {
+          commonLanguage = defaultLanguage;
         }
-        for (Map<String, Object> item : valuelist) { // LINE: 507
-          String itemLanguage = NONE; // LINE: 510
-          String itemType = NONE; // LINE: 511
-          if ((item instanceof Map && ((Map) item).containsKey(VALUE))) { // LINE: 513
-            if (((Map) item).containsKey(DIRECTION)) { // LINE: 515
-              itemLanguage = ((String) ((Map) item).getOrDefault(LANGUAGE, "")) + "_" + ((Map) item).get(DIRECTION); // LINE: 516
-            } else if (((Map) item).containsKey(LANGUAGE)) { // LINE: 518
-              itemLanguage = ((String) ((Map) item).get(LANGUAGE)); // LINE: 519
-            } else if (((Map) item).containsKey(TYPE)) { // LINE: 521
-              itemType = ((String) ((Map) item).get(TYPE)); // LINE: 522
+        for (Map<String, Object> item : valuelist) {
+          String itemLanguage = NONE;
+          String itemType = NONE;
+          if ((item instanceof Map && ((Map) item).containsKey(VALUE))) {
+            if (((Map) item).containsKey(DIRECTION)) {
+              itemLanguage = ((String) ((Map) item).getOrDefault(LANGUAGE, "")) + "_" + ((Map) item).get(DIRECTION);
+            } else if (((Map) item).containsKey(LANGUAGE)) {
+              itemLanguage = ((String) ((Map) item).get(LANGUAGE));
+            } else if (((Map) item).containsKey(TYPE)) {
+              itemType = ((String) ((Map) item).get(TYPE));
             } else {
-              itemLanguage = NULL; // LINE: 525
+              itemLanguage = NULL;
             }
           } else {
-            itemType = ID; // LINE: 528
+            itemType = ID;
           }
-          if (commonLanguage == null) { // LINE: 530
-            commonLanguage = itemLanguage; // LINE: 531
-          } else if ((!itemLanguage.equals(commonLanguage) && item instanceof Map && ((Map) item).containsKey(VALUE))) { // LINE: 533
-            commonLanguage = NONE; // LINE: 534
+          if (commonLanguage == null) {
+            commonLanguage = itemLanguage;
+          } else if ((!itemLanguage.equals(commonLanguage) && item instanceof Map && ((Map) item).containsKey(VALUE))) {
+            commonLanguage = NONE;
           }
-          if (commonType == null) { // LINE: 536
-            commonType = itemType; // LINE: 537
-          } else if (!itemType.equals(commonType)) { // LINE: 539
-            commonType = NONE; // LINE: 540
+          if (commonType == null) {
+            commonType = itemType;
+          } else if (!itemType.equals(commonType)) {
+            commonType = NONE;
           }
-          if (((commonLanguage == null && ((Object) NONE) == null || commonLanguage != null && (commonLanguage).equals(NONE)) && (commonType == null && ((Object) NONE) == null || commonType != null && (commonType).equals(NONE)))) { // LINE: 542
-            break; // LINE: 543
+          if (((commonLanguage == null && ((Object) NONE) == null || commonLanguage != null && (commonLanguage).equals(NONE)) && (commonType == null && ((Object) NONE) == null || commonType != null && (commonType).equals(NONE)))) {
+            break;
           }
         }
-        if (commonLanguage == null) { // LINE: 545
-          commonLanguage = NONE; // LINE: 546
+        if (commonLanguage == null) {
+          commonLanguage = NONE;
         }
-        if (commonType == null) { // LINE: 548
-          commonType = NONE; // LINE: 549
+        if (commonType == null) {
+          commonType = NONE;
         }
-        if (!commonType.equals(NONE)) { // LINE: 551
-          typeOrLanguage = TYPE; // LINE: 552
-          typeOrLanguageValue = commonType; // LINE: 553
+        if (!commonType.equals(NONE)) {
+          typeOrLanguage = TYPE;
+          typeOrLanguageValue = commonType;
         } else {
-          typeOrLanguageValue = commonLanguage; // LINE: 556
+          typeOrLanguageValue = commonLanguage;
         }
-      } else if ((value instanceof Map && ((Map) value).containsKey(GRAPH))) { // LINE: 558
-        if (((Map) value).containsKey(INDEX)) { // LINE: 560
-          containers.add(GRAPH + INDEX); // LINE: 561
-          containers.add(GRAPH + INDEX + SET); // LINE: 562
+      } else if ((value instanceof Map && ((Map) value).containsKey(GRAPH))) {
+        if (((Map) value).containsKey(INDEX)) {
+          containers.add(GRAPH + INDEX);
+          containers.add(GRAPH + INDEX + SET);
         }
-        if (((Map) value).containsKey(ID)) { // LINE: 564
-          containers.add(GRAPH + ID); // LINE: 565
-          containers.add(GRAPH + ID + SET); // LINE: 566
+        if (((Map) value).containsKey(ID)) {
+          containers.add(GRAPH + ID);
+          containers.add(GRAPH + ID + SET);
         }
-        containers.add(GRAPH); // LINE: 568
-        containers.add(GRAPH + SET); // LINE: 569
-        containers.add(SET); // LINE: 570
-        if (!((Map) value).containsKey(INDEX)) { // LINE: 572
-          containers.add(GRAPH + INDEX); // LINE: 573
-          containers.add(GRAPH + INDEX + SET); // LINE: 574
+        containers.add(GRAPH);
+        containers.add(GRAPH + SET);
+        containers.add(SET);
+        if (!((Map) value).containsKey(INDEX)) {
+          containers.add(GRAPH + INDEX);
+          containers.add(GRAPH + INDEX + SET);
         }
-        if (!((Map) value).containsKey(ID)) { // LINE: 576
-          containers.add(GRAPH + ID); // LINE: 577
-          containers.add(GRAPH + ID + SET); // LINE: 578
+        if (!((Map) value).containsKey(ID)) {
+          containers.add(GRAPH + ID);
+          containers.add(GRAPH + ID + SET);
         }
-        containers.add(INDEX); // LINE: 580
-        containers.add(INDEX + SET); // LINE: 581
-        typeOrLanguage = TYPE; // LINE: 583
-        typeOrLanguageValue = ID; // LINE: 584
+        containers.add(INDEX);
+        containers.add(INDEX + SET);
+        typeOrLanguage = TYPE;
+        typeOrLanguageValue = ID;
       } else {
-        if ((value instanceof Map && ((Map) value).containsKey(VALUE))) { // LINE: 588
-          if ((((Map) value).containsKey(DIRECTION) && !((Map) value).containsKey(INDEX))) { // LINE: 590
-            typeOrLanguageValue = ((String) ((Map) value).getOrDefault(LANGUAGE, "")) + "_" + ((Map) value).get(DIRECTION); // LINE: 591
-            containers.add(LANGUAGE); // LINE: 592
-            containers.add(LANGUAGE + SET); // LINE: 593
-          } else if ((((Map) value).containsKey(LANGUAGE) && !((Map) value).containsKey(INDEX))) { // LINE: 595
-            typeOrLanguageValue = ((String) ((Map) value).get(LANGUAGE)); // LINE: 596
-            containers.add(LANGUAGE); // LINE: 597
-            containers.add(LANGUAGE + SET); // LINE: 598
-          } else if (((Map) value).containsKey(TYPE)) { // LINE: 600
-            typeOrLanguageValue = ((String) ((Map) value).get(TYPE)); // LINE: 601
-            typeOrLanguage = TYPE; // LINE: 602
+        if ((value instanceof Map && ((Map) value).containsKey(VALUE))) {
+          if ((((Map) value).containsKey(DIRECTION) && !((Map) value).containsKey(INDEX))) {
+            typeOrLanguageValue = ((String) ((Map) value).getOrDefault(LANGUAGE, "")) + "_" + ((Map) value).get(DIRECTION);
+            containers.add(LANGUAGE);
+            containers.add(LANGUAGE + SET);
+          } else if ((((Map) value).containsKey(LANGUAGE) && !((Map) value).containsKey(INDEX))) {
+            typeOrLanguageValue = ((String) ((Map) value).get(LANGUAGE));
+            containers.add(LANGUAGE);
+            containers.add(LANGUAGE + SET);
+          } else if (((Map) value).containsKey(TYPE)) {
+            typeOrLanguageValue = ((String) ((Map) value).get(TYPE));
+            typeOrLanguage = TYPE;
           }
         } else {
-          typeOrLanguage = TYPE; // LINE: 605
-          typeOrLanguageValue = ID; // LINE: 606
-          containers.add(ID); // LINE: 607
-          containers.add(ID + SET); // LINE: 608
-          containers.add(TYPE); // LINE: 609
-          containers.add(SET + TYPE); // LINE: 610
+          typeOrLanguage = TYPE;
+          typeOrLanguageValue = ID;
+          containers.add(ID);
+          containers.add(ID + SET);
+          containers.add(TYPE);
+          containers.add(SET + TYPE);
         }
-        containers.add(SET); // LINE: 612
+        containers.add(SET);
       }
-      containers.add(NONE); // LINE: 615
-      if (!activeContext.processingMode.equals(JSONLD10)) { // LINE: 617
-        if ((!(value instanceof Map) || !((Map) value).containsKey(INDEX))) { // LINE: 618
-          containers.add(INDEX); // LINE: 619
-          containers.add(INDEX + SET); // LINE: 620
-        }
-      }
-      if (!activeContext.processingMode.equals(JSONLD10)) { // LINE: 622
-        if ((value instanceof Map && ((Map) value).size() == 1 && ((Map) value).containsKey(VALUE))) { // LINE: 623
-          containers.add(LANGUAGE); // LINE: 624
-          containers.add(LANGUAGE + SET); // LINE: 625
+      containers.add(NONE);
+      if (!activeContext.processingMode.equals(JSONLD10)) {
+        if ((!(value instanceof Map) || !((Map) value).containsKey(INDEX))) {
+          containers.add(INDEX);
+          containers.add(INDEX + SET);
         }
       }
-      if (typeOrLanguageValue == null) { // LINE: 627
-        typeOrLanguageValue = NULL; // LINE: 628
+      if (!activeContext.processingMode.equals(JSONLD10)) {
+        if ((value instanceof Map && ((Map) value).size() == 1 && ((Map) value).containsKey(VALUE))) {
+          containers.add(LANGUAGE);
+          containers.add(LANGUAGE + SET);
+        }
       }
-      List<String> preferredValues = new ArrayList<>(); // LINE: 630
-      if ((typeOrLanguageValue == null && ((Object) REVERSE) == null || typeOrLanguageValue != null && (typeOrLanguageValue).equals(REVERSE))) { // LINE: 632
-        preferredValues.add(REVERSE); // LINE: 633
+      if (typeOrLanguageValue == null) {
+        typeOrLanguageValue = NULL;
       }
-      if ((new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) ID, REVERSE}))).contains(typeOrLanguageValue) && value instanceof Map && ((Map) value).containsKey(ID))) { // LINE: 635
-        String compactId = (String) iriCompaction(activeContext, ((String) ((Map) value).get(ID))); // LINE: 637
-        /*@Nullable*/ Term idTerm = (/*@Nullable*/ Term) activeContext.terms.get(compactId); // LINE: 638
-        if ((idTerm != null && (idTerm.iri == null && ((Object) ((Map) value).get(ID)) == null || idTerm.iri != null && (idTerm.iri).equals(((Map) value).get(ID))))) { // LINE: 639
-          preferredValues.add(VOCAB); // LINE: 640
-          preferredValues.add(ID); // LINE: 641
-          preferredValues.add(NONE); // LINE: 642
+      List<String> preferredValues = new ArrayList<>();
+      if ((typeOrLanguageValue == null && ((Object) REVERSE) == null || typeOrLanguageValue != null && (typeOrLanguageValue).equals(REVERSE))) {
+        preferredValues.add(REVERSE);
+      }
+      if ((new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) ID, REVERSE}))).contains(typeOrLanguageValue) && value instanceof Map && ((Map) value).containsKey(ID))) {
+        String compactId = (String) iriCompaction(activeContext, ((String) ((Map) value).get(ID)));
+        /*@Nullable*/ Term idTerm = (/*@Nullable*/ Term) activeContext.terms.get(compactId);
+        if ((idTerm != null && (idTerm.iri == null && ((Object) ((Map) value).get(ID)) == null || idTerm.iri != null && (idTerm.iri).equals(((Map) value).get(ID))))) {
+          preferredValues.add(VOCAB);
+          preferredValues.add(ID);
+          preferredValues.add(NONE);
         } else {
-          preferredValues.add(ID); // LINE: 645
-          preferredValues.add(VOCAB); // LINE: 646
-          preferredValues.add(NONE); // LINE: 647
+          preferredValues.add(ID);
+          preferredValues.add(VOCAB);
+          preferredValues.add(NONE);
         }
       } else {
-        preferredValues.add(typeOrLanguageValue); // LINE: 650
-        preferredValues.add(NONE); // LINE: 651
-        if ((value instanceof Map && ((Map) value).containsKey(LIST))) { // LINE: 652
-          List listvalue = (List) ((List) ((Map) value).get(LIST)); // LINE: 653
-          if (listvalue.size() == 0) { // LINE: 654
-            typeOrLanguage = ANY; // LINE: 655
+        preferredValues.add(typeOrLanguageValue);
+        preferredValues.add(NONE);
+        if ((value instanceof Map && ((Map) value).containsKey(LIST))) {
+          List listvalue = (List) ((List) ((Map) value).get(LIST));
+          if (listvalue.size() == 0) {
+            typeOrLanguage = ANY;
           }
         }
       }
-      preferredValues.add(ANY); // LINE: 657
-      for (String pv : ((List<String>) new ArrayList(preferredValues))) { // LINE: 659
-        Integer idx = (Integer) pv.indexOf("_"); // LINE: 660
-        if (idx > -1) { // LINE: 661
-          preferredValues.add(pv.substring(idx)); // LINE: 662
+      preferredValues.add(ANY);
+      for (String pv : ((List<String>) new ArrayList(preferredValues))) {
+        Integer idx = (Integer) pv.indexOf("_");
+        if (idx > -1) {
+          preferredValues.add(pv.substring(idx));
         }
       }
-      /*@Nullable*/ String termKey = termSelection(activeContext, iri, containers, typeOrLanguage, preferredValues); // LINE: 664
-      if (termKey != null) { // LINE: 666
-        return termKey; // LINE: 667
+      /*@Nullable*/ String termKey = termSelection(activeContext, iri, containers, typeOrLanguage, preferredValues);
+      if (termKey != null) {
+        return termKey;
       }
     }
-    if ((vocab && activeContext.vocabularyMapping != null)) { // LINE: 670
-      if (iri.startsWith(activeContext.vocabularyMapping)) { // LINE: 672
-        String suffix = (String) iri.substring(activeContext.vocabularyMapping.length()); // LINE: 673
-        if ((suffix.length() > 0 && !activeContext.terms.containsKey(suffix))) { // LINE: 674
-          return suffix; // LINE: 675
+    if ((vocab && activeContext.vocabularyMapping != null)) {
+      if (iri.startsWith(activeContext.vocabularyMapping)) {
+        String suffix = (String) iri.substring(activeContext.vocabularyMapping.length());
+        if ((suffix.length() > 0 && !activeContext.terms.containsKey(suffix))) {
+          return suffix;
         }
       }
     }
-    /*@Nullable*/ String compactIri = null; // LINE: 678
-    for (Map.Entry<String, Term> key_termDfn : activeContext.terms.entrySet()) { // LINE: 681
+    /*@Nullable*/ String compactIri = null;
+    for (Map.Entry<String, Term> key_termDfn : activeContext.terms.entrySet()) {
       String key = key_termDfn.getKey();
       Term termDfn = key_termDfn.getValue();
-      if ((termDfn.iri == null || (termDfn.iri == null && ((Object) iri) == null || termDfn.iri != null && (termDfn.iri).equals(iri)) || !(iri.startsWith(termDfn.iri)) || !(termDfn.isPrefix))) { // LINE: 683
-        continue; // LINE: 684
+      if ((termDfn.iri == null || (termDfn.iri == null && ((Object) iri) == null || termDfn.iri != null && (termDfn.iri).equals(iri)) || !(iri.startsWith(termDfn.iri)) || !(termDfn.isPrefix))) {
+        continue;
       }
-      String candidate = key + ":" + iri.substring(termDfn.iri.length()); // LINE: 686
-      if ((compactIri == null || (candidate.length() <= compactIri.length() && candidate.compareTo(compactIri) < 0))) { // LINE: 688
-        if ((!activeContext.terms.containsKey(candidate) || ((activeContext.terms.get(candidate).iri == null && ((Object) iri) == null || activeContext.terms.get(candidate).iri != null && (activeContext.terms.get(candidate).iri).equals(iri)) && value == null))) { // LINE: 689
-          compactIri = candidate; // LINE: 690
+      String candidate = key + ":" + iri.substring(termDfn.iri.length());
+      if ((compactIri == null || (candidate.length() <= compactIri.length() && candidate.compareTo(compactIri) < 0))) {
+        if ((!activeContext.terms.containsKey(candidate) || ((activeContext.terms.get(candidate).iri == null && ((Object) iri) == null || activeContext.terms.get(candidate).iri != null && (activeContext.terms.get(candidate).iri).equals(iri)) && value == null))) {
+          compactIri = candidate;
         }
       }
     }
-    if (compactIri != null) { // LINE: 693
-      return compactIri; // LINE: 694
+    if (compactIri != null) {
+      return compactIri;
     }
-    Integer colonx = (Integer) iri.indexOf(":"); // LINE: 697
-    if ((colonx > -1 && !iri.contains("//"))) { // LINE: 698
-      /*@Nullable*/ Term term = activeContext.terms.get(iri.substring(0, colonx)); // LINE: 699
-      if ((term != null && term.isPrefix)) { // LINE: 700
-        throw new IRIConfusedWithPrefixError(iri.toString()); // LINE: 701
+    Integer colonx = (Integer) iri.indexOf(":");
+    if ((colonx > -1 && !iri.contains("//"))) {
+      /*@Nullable*/ Term term = activeContext.terms.get(iri.substring(0, colonx));
+      if ((term != null && term.isPrefix)) {
+        throw new IRIConfusedWithPrefixError(iri.toString());
       }
     }
-    if (!(vocab)) { // LINE: 704
-      iri = relativiseIri(activeContext.baseIri, iri); // LINE: 705
+    if (!(vocab)) {
+      iri = relativiseIri(activeContext.baseIri, iri);
     }
-    return iri; // LINE: 708
+    return iri;
   }
 
-  public static /*@Nullable*/ String termSelection(Context activeContext, String keywordOrIri, List<String> containers, String typeOrLanguage, List<String> preferredValues) { // LINE: 711
-    Map inverseContext = (Map) getInverseContext(activeContext); // LINE: 718
-    Map<String, Object> containerMap = ((Map<String, Object>) inverseContext.get(keywordOrIri)); // LINE: 720
-    for (String container : containers) { // LINE: 722
-      if (!containerMap.containsKey(container)) { // LINE: 724
-        continue; // LINE: 725
+  public static /*@Nullable*/ String termSelection(Context activeContext, String keywordOrIri, List<String> containers, String typeOrLanguage, List<String> preferredValues) {
+    Map inverseContext = (Map) getInverseContext(activeContext);
+    Map<String, Object> containerMap = ((Map<String, Object>) inverseContext.get(keywordOrIri));
+    for (String container : containers) {
+      if (!containerMap.containsKey(container)) {
+        continue;
       }
-      Map<String, Object> typelanguageMap = ((Map<String, Object>) containerMap.get(container)); // LINE: 727
-      Map<String, String> valueMap = ((Map<String, String>) typelanguageMap.get(typeOrLanguage)); // LINE: 729
-      for (String item : preferredValues) { // LINE: 731
-        if (!valueMap.containsKey(item)) { // LINE: 733
-          continue; // LINE: 734
+      Map<String, Object> typelanguageMap = ((Map<String, Object>) containerMap.get(container));
+      Map<String, String> valueMap = ((Map<String, String>) typelanguageMap.get(typeOrLanguage));
+      for (String item : preferredValues) {
+        if (!valueMap.containsKey(item)) {
+          continue;
         }
-        return valueMap.get(item); // LINE: 736
+        return valueMap.get(item);
       }
     }
-    return null; // LINE: 738
+    return null;
   }
 
-  public static Object valueCompaction(Context activeContext, /*@Nullable*/ Term activeTerm, Map<String, Object> value) { // LINE: 741
-    Object result = new HashMap(value); // LINE: 747
-    Map inverseContext = (Map) getInverseContext(activeContext); // LINE: 750
-    /*@Nullable*/ String language = (/*@Nullable*/ String) activeContext.defaultLanguage; // LINE: 752
-    if ((activeTerm != null && activeTerm.language != null)) { // LINE: 753
-      language = (String) activeTerm.language; // LINE: 754
+  public static Object valueCompaction(Context activeContext, /*@Nullable*/ Term activeTerm, Map<String, Object> value) {
+    Object result = new HashMap(value);
+    Map inverseContext = (Map) getInverseContext(activeContext);
+    /*@Nullable*/ String language = (/*@Nullable*/ String) activeContext.defaultLanguage;
+    if ((activeTerm != null && activeTerm.language != null)) {
+      language = (String) activeTerm.language;
     }
-    /*@Nullable*/ String direction = (/*@Nullable*/ String) activeContext.defaultBaseDirection; // LINE: 756
-    if ((activeTerm != null && activeTerm.direction != null)) { // LINE: 757
-      direction = (String) activeTerm.direction; // LINE: 758
+    /*@Nullable*/ String direction = (/*@Nullable*/ String) activeContext.defaultBaseDirection;
+    if ((activeTerm != null && activeTerm.direction != null)) {
+      direction = (String) activeTerm.direction;
     }
-    if (((value.containsKey(ID) && value.size() == 1) || (value.size() == 2 && value.containsKey(INDEX)))) { // LINE: 760
-      if ((activeTerm != null && (activeTerm.typeMapping == null && ((Object) ID) == null || activeTerm.typeMapping != null && (activeTerm.typeMapping).equals(ID)))) { // LINE: 762
-        result = (Object) shortenIri(activeContext, ((String) value.get(ID))); // LINE: 763
-      } else if ((activeTerm != null && (activeTerm.typeMapping == null && ((Object) VOCAB) == null || activeTerm.typeMapping != null && (activeTerm.typeMapping).equals(VOCAB)))) { // LINE: 765
-        result = (Object) iriCompaction(activeContext, ((String) value.get(ID))); // LINE: 766
+    if (((value.containsKey(ID) && value.size() == 1) || (value.size() == 2 && value.containsKey(INDEX)))) {
+      if ((activeTerm != null && (activeTerm.typeMapping == null && ((Object) ID) == null || activeTerm.typeMapping != null && (activeTerm.typeMapping).equals(ID)))) {
+        result = (Object) shortenIri(activeContext, ((String) value.get(ID)));
+      } else if ((activeTerm != null && (activeTerm.typeMapping == null && ((Object) VOCAB) == null || activeTerm.typeMapping != null && (activeTerm.typeMapping).equals(VOCAB)))) {
+        result = (Object) iriCompaction(activeContext, ((String) value.get(ID)));
       }
-    } else if ((activeTerm != null && value.containsKey(TYPE) && (value.get(TYPE) == null && ((Object) activeTerm.typeMapping) == null || value.get(TYPE) != null && (value.get(TYPE)).equals(activeTerm.typeMapping)))) { // LINE: 768
-      result = (Object) value.get(VALUE); // LINE: 769
-    } else if (((activeTerm != null && (activeTerm.typeMapping == null && ((Object) NONE) == null || activeTerm.typeMapping != null && (activeTerm.typeMapping).equals(NONE))) || (value.containsKey(TYPE) && (activeTerm == null || !value.get(TYPE).equals(activeTerm.typeMapping))))) { // LINE: 771
-      if ((result instanceof Map && ((Map) result).containsKey(TYPE))) { // LINE: 773
-        Object rtype = (Object) ((Map) result).get(TYPE); // LINE: 775
-        if (rtype instanceof List) { // LINE: 776
-          List<String> ctypes = new ArrayList<>(); // LINE: 777
-          for (Object t : (List) rtype) { // LINE: 778
-            ctypes.add(iriCompaction(activeContext, ((String) t))); // LINE: 779
+    } else if ((activeTerm != null && value.containsKey(TYPE) && (value.get(TYPE) == null && ((Object) activeTerm.typeMapping) == null || value.get(TYPE) != null && (value.get(TYPE)).equals(activeTerm.typeMapping)))) {
+      result = (Object) value.get(VALUE);
+    } else if (((activeTerm != null && (activeTerm.typeMapping == null && ((Object) NONE) == null || activeTerm.typeMapping != null && (activeTerm.typeMapping).equals(NONE))) || (value.containsKey(TYPE) && (activeTerm == null || !value.get(TYPE).equals(activeTerm.typeMapping))))) {
+      if ((result instanceof Map && ((Map) result).containsKey(TYPE))) {
+        Object rtype = (Object) ((Map) result).get(TYPE);
+        if (rtype instanceof List) {
+          List<String> ctypes = new ArrayList<>();
+          for (Object t : (List) rtype) {
+            ctypes.add(iriCompaction(activeContext, ((String) t)));
           }
-          ((Map) result).put(TYPE, ctypes); // LINE: 780
+          ((Map) result).put(TYPE, ctypes);
         } else {
-          ((Map) result).put(TYPE, iriCompaction(activeContext, ((String) rtype))); // LINE: 782
+          ((Map) result).put(TYPE, iriCompaction(activeContext, ((String) rtype)));
         }
       }
-    } else if ((value.containsKey(VALUE) && !(value.get(VALUE) instanceof String))) { // LINE: 784
-      if (((value.containsKey(INDEX) && activeTerm != null && activeTerm.container.contains(INDEX)) || !value.containsKey(INDEX))) { // LINE: 786
-        result = (Object) value.get(VALUE); // LINE: 787
+    } else if ((value.containsKey(VALUE) && !(value.get(VALUE) instanceof String))) {
+      if (((value.containsKey(INDEX) && activeTerm != null && activeTerm.container.contains(INDEX)) || !value.containsKey(INDEX))) {
+        result = (Object) value.get(VALUE);
       }
-    } else if ((value.containsKey(VALUE) && ((value.containsKey(LANGUAGE) && (value.get(LANGUAGE) == null && ((Object) language) == null || value.get(LANGUAGE) != null && (value.get(LANGUAGE)).equals(language))) || (NULLS.contains(language) && !value.containsKey(LANGUAGE))))) { // LINE: 789
-      if ((!value.containsKey(DIRECTION) || (direction != null && (value.get(DIRECTION) == null && ((Object) direction) == null || value.get(DIRECTION) != null && (value.get(DIRECTION)).equals(direction))))) { // LINE: 790
-        if ((!value.containsKey(INDEX) || (activeTerm != null && activeTerm.container.contains(INDEX)))) { // LINE: 792
-          result = (Object) value.get(VALUE); // LINE: 793
+    } else if ((value.containsKey(VALUE) && ((value.containsKey(LANGUAGE) && (value.get(LANGUAGE) == null && ((Object) language) == null || value.get(LANGUAGE) != null && (value.get(LANGUAGE)).equals(language))) || (NULLS.contains(language) && !value.containsKey(LANGUAGE))))) {
+      if ((!value.containsKey(DIRECTION) || (direction != null && (value.get(DIRECTION) == null && ((Object) direction) == null || value.get(DIRECTION) != null && (value.get(DIRECTION)).equals(direction))))) {
+        if ((!value.containsKey(INDEX) || (activeTerm != null && activeTerm.container.contains(INDEX)))) {
+          result = (Object) value.get(VALUE);
         }
       }
     }
-    if (result instanceof Map) { // LINE: 795
-      Map compacted = new HashMap<>(); // LINE: 796
-      for (Map.Entry<String, Object> k_v : ((Map<String, Object>) result).entrySet()) { // LINE: 797
+    if (result instanceof Map) {
+      Map compacted = new HashMap<>();
+      for (Map.Entry<String, Object> k_v : ((Map<String, Object>) result).entrySet()) {
         String k = k_v.getKey();
         Object v = k_v.getValue();
-        compacted.put(iriCompaction(activeContext, k, v), v); // LINE: 798
+        compacted.put(iriCompaction(activeContext, k, v), v);
       }
-      result = compacted; // LINE: 799
+      result = compacted;
     }
-    return result; // LINE: 801
+    return result;
   }
 }

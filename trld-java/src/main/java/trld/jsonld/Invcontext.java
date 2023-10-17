@@ -21,105 +21,105 @@ import trld.jsonld.Term;
 
 public class Invcontext {
 
-  public static Map getInverseContext(Context activeContext) { // LINE: 5
-    if (activeContext.inverseContext == null) { // LINE: 6
-      activeContext.inverseContext = (Map) createInverseContext(activeContext); // LINE: 7
+  public static Map getInverseContext(Context activeContext) {
+    if (activeContext.inverseContext == null) {
+      activeContext.inverseContext = (Map) createInverseContext(activeContext);
     }
-    return activeContext.inverseContext; // LINE: 8
+    return activeContext.inverseContext;
   }
 
-  public static Map<String, Object> createInverseContext(Context activeContext) { // LINE: 11
-    Map<String, Object> result = new HashMap<>(); // LINE: 13
-    String defaultLanguage = (activeContext.defaultLanguage != null ? activeContext.defaultLanguage : NONE); // LINE: 16
-    List</*@Nullable*/ String> termKeys = new ArrayList(activeContext.terms.keySet()); // LINE: 19
-    Collections.sort(termKeys, Builtins.makeComparator((s) -> new KeyValue((s != null ? ((String) s).length() : 0), s), false)); // LINE: 20
-    for (String termKey : termKeys) { // LINE: 21
+  public static Map<String, Object> createInverseContext(Context activeContext) {
+    Map<String, Object> result = new HashMap<>();
+    String defaultLanguage = (activeContext.defaultLanguage != null ? activeContext.defaultLanguage : NONE);
+    List</*@Nullable*/ String> termKeys = new ArrayList(activeContext.terms.keySet());
+    Collections.sort(termKeys, Builtins.makeComparator((s) -> new KeyValue((s != null ? ((String) s).length() : 0), s), false));
+    for (String termKey : termKeys) {
       assert termKey instanceof String;
-      /*@Nullable*/ Term termDfn = (/*@Nullable*/ Term) activeContext.terms.get(termKey); // LINE: 23
-      if (termDfn == null) { // LINE: 25
-        continue; // LINE: 26
+      /*@Nullable*/ Term termDfn = (/*@Nullable*/ Term) activeContext.terms.get(termKey);
+      if (termDfn == null) {
+        continue;
       }
-      String container = NONE; // LINE: 28
-      if (termDfn.container.size() > 0) { // LINE: 29
-        container = String.join("", Builtins.sorted(termDfn.container)); // LINE: 30
+      String container = NONE;
+      if (termDfn.container.size() > 0) {
+        container = String.join("", Builtins.sorted(termDfn.container));
       }
-      String iri = (String) termDfn.iri; // LINE: 32
-      if (!result.containsKey(iri)) { // LINE: 34
-        result.put(iri, new HashMap<>()); // LINE: 35
+      String iri = (String) termDfn.iri;
+      if (!result.containsKey(iri)) {
+        result.put(iri, new HashMap<>());
       }
-      Map<String, Object> containerMap = ((Map<String, Object>) result.get(iri)); // LINE: 37
-      if (!containerMap.containsKey(container)) { // LINE: 39
-        containerMap.put(container, Builtins.mapOf(LANGUAGE, new HashMap<>(), TYPE, new HashMap<>(), ANY, Builtins.mapOf(NONE, termKey))); // LINE: 40
+      Map<String, Object> containerMap = ((Map<String, Object>) result.get(iri));
+      if (!containerMap.containsKey(container)) {
+        containerMap.put(container, Builtins.mapOf(LANGUAGE, new HashMap<>(), TYPE, new HashMap<>(), ANY, Builtins.mapOf(NONE, termKey)));
       }
-      Map<String, Object> typelanguageMap = ((Map<String, Object>) containerMap.get(container)); // LINE: 42
-      Map<String, Object> typeMap = ((Map<String, Object>) typelanguageMap.get(TYPE)); // LINE: 44
-      Map<String, Object> languageMap = ((Map<String, Object>) typelanguageMap.get(LANGUAGE)); // LINE: 46
-      String langDir; // LINE: 47
-      if (termDfn.isReverseProperty) { // LINE: 49
-        if (!typeMap.containsKey(REVERSE)) { // LINE: 51
-          typeMap.put(REVERSE, (String) termKey); // LINE: 52
+      Map<String, Object> typelanguageMap = ((Map<String, Object>) containerMap.get(container));
+      Map<String, Object> typeMap = ((Map<String, Object>) typelanguageMap.get(TYPE));
+      Map<String, Object> languageMap = ((Map<String, Object>) typelanguageMap.get(LANGUAGE));
+      String langDir;
+      if (termDfn.isReverseProperty) {
+        if (!typeMap.containsKey(REVERSE)) {
+          typeMap.put(REVERSE, (String) termKey);
         }
-      } else if ((termDfn.typeMapping == null && ((Object) NONE) == null || termDfn.typeMapping != null && (termDfn.typeMapping).equals(NONE))) { // LINE: 54
-        if (!languageMap.containsKey(ANY)) { // LINE: 56
-          languageMap.put(ANY, (String) termKey); // LINE: 57
+      } else if ((termDfn.typeMapping == null && ((Object) NONE) == null || termDfn.typeMapping != null && (termDfn.typeMapping).equals(NONE))) {
+        if (!languageMap.containsKey(ANY)) {
+          languageMap.put(ANY, (String) termKey);
         }
-        if (!typeMap.containsKey(ANY)) { // LINE: 59
-          typeMap.put(ANY, (String) termKey); // LINE: 60
+        if (!typeMap.containsKey(ANY)) {
+          typeMap.put(ANY, (String) termKey);
         }
-      } else if (termDfn.typeMapping != null) { // LINE: 62
-        if (!typeMap.containsKey(termDfn.typeMapping)) { // LINE: 64
-          typeMap.put(termDfn.typeMapping, (String) termKey); // LINE: 65
+      } else if (termDfn.typeMapping != null) {
+        if (!typeMap.containsKey(termDfn.typeMapping)) {
+          typeMap.put(termDfn.typeMapping, (String) termKey);
         }
-      } else if ((termDfn.language != null && termDfn.direction != null)) { // LINE: 67
-        langDir = NULL; // LINE: 69
-        if ((termDfn.language != NULL && termDfn.direction != NULL)) { // LINE: 71
-          langDir = termDfn.language + "_" + termDfn.direction; // LINE: 72
-        } else if (termDfn.language != NULL) { // LINE: 74
-          langDir = (String) termDfn.language; // LINE: 75
-        } else if (termDfn.direction != NULL) { // LINE: 77
-          langDir = (String) termDfn.direction; // LINE: 78
+      } else if ((termDfn.language != null && termDfn.direction != null)) {
+        langDir = NULL;
+        if ((termDfn.language != NULL && termDfn.direction != NULL)) {
+          langDir = termDfn.language + "_" + termDfn.direction;
+        } else if (termDfn.language != NULL) {
+          langDir = (String) termDfn.language;
+        } else if (termDfn.direction != NULL) {
+          langDir = (String) termDfn.direction;
         }
-        if (!languageMap.containsKey(langDir)) { // LINE: 80
-          languageMap.put(langDir, (String) termKey); // LINE: 81
+        if (!languageMap.containsKey(langDir)) {
+          languageMap.put(langDir, (String) termKey);
         }
-      } else if (termDfn.language != null) { // LINE: 83
-        String language = (String) termDfn.language; // LINE: 85
-        if (!languageMap.containsKey(language)) { // LINE: 87
-          languageMap.put(language, (String) termKey); // LINE: 88
+      } else if (termDfn.language != null) {
+        String language = (String) termDfn.language;
+        if (!languageMap.containsKey(language)) {
+          languageMap.put(language, (String) termKey);
         }
-      } else if (termDfn.direction != null) { // LINE: 90
-        String direction = (String) termDfn.direction; // LINE: 92
-        if ((direction == null && ((Object) NULL) == null || direction != null && (direction).equals(NULL))) { // LINE: 93
-          direction = NONE; // LINE: 94
+      } else if (termDfn.direction != null) {
+        String direction = (String) termDfn.direction;
+        if ((direction == null && ((Object) NULL) == null || direction != null && (direction).equals(NULL))) {
+          direction = NONE;
         } else {
-          direction = "_" + direction; // LINE: 96
+          direction = "_" + direction;
         }
-        if (!languageMap.containsKey(direction)) { // LINE: 98
-          languageMap.put(direction, (String) termKey); // LINE: 99
+        if (!languageMap.containsKey(direction)) {
+          languageMap.put(direction, (String) termKey);
         }
-      } else if (activeContext.defaultBaseDirection != null) { // LINE: 101
-        langDir = activeContext.defaultLanguage + "_" + activeContext.defaultBaseDirection; // LINE: 103
-        if (!languageMap.containsKey(langDir)) { // LINE: 105
-          languageMap.put(langDir, (String) termKey); // LINE: 106
+      } else if (activeContext.defaultBaseDirection != null) {
+        langDir = activeContext.defaultLanguage + "_" + activeContext.defaultBaseDirection;
+        if (!languageMap.containsKey(langDir)) {
+          languageMap.put(langDir, (String) termKey);
         }
-        if (!languageMap.containsKey(NONE)) { // LINE: 108
-          languageMap.put(NONE, (String) termKey); // LINE: 109
+        if (!languageMap.containsKey(NONE)) {
+          languageMap.put(NONE, (String) termKey);
         }
-        if (!typeMap.containsKey(NONE)) { // LINE: 111
-          typeMap.put(NONE, (String) termKey); // LINE: 112
+        if (!typeMap.containsKey(NONE)) {
+          typeMap.put(NONE, (String) termKey);
         }
       } else {
-        if ((activeContext.defaultLanguage != null && !languageMap.containsKey(activeContext.defaultLanguage))) { // LINE: 116
-          languageMap.put(activeContext.defaultLanguage, (String) termKey); // LINE: 117
+        if ((activeContext.defaultLanguage != null && !languageMap.containsKey(activeContext.defaultLanguage))) {
+          languageMap.put(activeContext.defaultLanguage, (String) termKey);
         }
-        if (!languageMap.containsKey(NONE)) { // LINE: 119
-          languageMap.put(NONE, (String) termKey); // LINE: 120
+        if (!languageMap.containsKey(NONE)) {
+          languageMap.put(NONE, (String) termKey);
         }
-        if (!typeMap.containsKey(NONE)) { // LINE: 122
-          typeMap.put(NONE, (String) termKey); // LINE: 123
+        if (!typeMap.containsKey(NONE)) {
+          typeMap.put(NONE, (String) termKey);
         }
       }
     }
-    return result; // LINE: 126
+    return result;
   }
 }

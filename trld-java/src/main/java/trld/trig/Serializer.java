@@ -33,9 +33,9 @@ import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.VOCAB;
 
 public class Serializer {
-  public static final String ANNOTATION = "@annotation"; // LINE: 12
-  public static final Pattern WORD_START = (Pattern) Pattern.compile("^\\w*$"); // LINE: 14
-  public static final Pattern PNAME_LOCAL_ESC = (Pattern) Pattern.compile("([~!$&'()*+,;=/?#@%]|^[.-]|[.-]$)"); // LINE: 15
+  public static final String ANNOTATION = "@annotation";
+  public static final Pattern WORD_START = (Pattern) Pattern.compile("^\\w*$");
+  public static final Pattern PNAME_LOCAL_ESC = (Pattern) Pattern.compile("([~!$&'()*+,;=/?#@%]|^[.-]|[.-]$)");
 
   public static void serialize(Map<String, Object> data, Output out) {
     serialize(data, out, null);
@@ -46,10 +46,10 @@ public class Serializer {
   public static void serialize(Map<String, Object> data, Output out, /*@Nullable*/ Map context, /*@Nullable*/ String baseIri) {
     serialize(data, out, context, baseIri, null);
   }
-  public static void serialize(Map<String, Object> data, Output out, /*@Nullable*/ Map context, /*@Nullable*/ String baseIri, Settings settings) { // LINE: 46
-    settings = (settings != null ? settings : new Settings()); // LINE: 53
-    SerializerState state = new SerializerState(out, settings, context, baseIri); // LINE: 54
-    state.serialize(data); // LINE: 55
+  public static void serialize(Map<String, Object> data, Output out, /*@Nullable*/ Map context, /*@Nullable*/ String baseIri, Settings settings) {
+    settings = (settings != null ? settings : new Settings());
+    SerializerState state = new SerializerState(out, settings, context, baseIri);
+    state.serialize(data);
   }
 
   public static void serializeTurtle(Map<String, Object> data, Output out) {
@@ -61,29 +61,29 @@ public class Serializer {
   public static void serializeTurtle(Map<String, Object> data, Output out, /*@Nullable*/ Map context, /*@Nullable*/ String baseIri) {
     serializeTurtle(data, out, context, baseIri, false);
   }
-  public static void serializeTurtle(Map<String, Object> data, Output out, /*@Nullable*/ Map context, /*@Nullable*/ String baseIri, Boolean union) { // LINE: 58
-    Settings settings = new Settings(true, !(union)); // LINE: 65
-    serialize(data, out, context, baseIri, settings); // LINE: 66
+  public static void serializeTurtle(Map<String, Object> data, Output out, /*@Nullable*/ Map context, /*@Nullable*/ String baseIri, Boolean union) {
+    Settings settings = new Settings(true, !(union));
+    serialize(data, out, context, baseIri, settings);
   }
 
-  public static Map<String, String> collectPrefixes(/*@Nullable*/ Object context) { // LINE: 671
-    if (!(context instanceof Map)) { // LINE: 672
-      return new HashMap<>(); // LINE: 673
+  public static Map<String, String> collectPrefixes(/*@Nullable*/ Object context) {
+    if (!(context instanceof Map)) {
+      return new HashMap<>();
     }
-    Map prefixes = new HashMap<>(); // LINE: 675
-    for (Map.Entry<String, Object> key_value : ((Map<String, Object>) context).entrySet()) { // LINE: 676
+    Map prefixes = new HashMap<>();
+    for (Map.Entry<String, Object> key_value : ((Map<String, Object>) context).entrySet()) {
       String key = key_value.getKey();
       Object value = key_value.getValue();
-      if ((value instanceof String && PREFIX_DELIMS.contains(((String) value).substring(((String) value).length() - 1, ((String) value).length() - 1 + 1)))) { // LINE: 677
-        prefixes.put(((key == null && ((Object) VOCAB) == null || key != null && (key).equals(VOCAB)) ? "" : key), (String) value); // LINE: 678
-      } else if ((value instanceof Map && (((Map) value).get(PREFIX) == null && ((Object) true) == null || ((Map) value).get(PREFIX) != null && (((Map) value).get(PREFIX)).equals(true)))) { // LINE: 679
-        prefixes.put(key, ((Map) value).get(ID)); // LINE: 680
+      if ((value instanceof String && PREFIX_DELIMS.contains(((String) value).substring(((String) value).length() - 1, ((String) value).length() - 1 + 1)))) {
+        prefixes.put(((key == null && ((Object) VOCAB) == null || key != null && (key).equals(VOCAB)) ? "" : key), (String) value);
+      } else if ((value instanceof Map && (((Map) value).get(PREFIX) == null && ((Object) true) == null || ((Map) value).get(PREFIX) != null && (((Map) value).get(PREFIX)).equals(true)))) {
+        prefixes.put(key, ((Map) value).get(ID));
       }
     }
-    return prefixes; // LINE: 682
+    return prefixes;
   }
 
-  public static List asList(Object value) { // LINE: 685
-    return (value instanceof List ? (List) value : new ArrayList<>(Arrays.asList(new Object[] {(Object) value}))); // LINE: 686
+  public static List asList(Object value) {
+    return (value instanceof List ? (List) value : new ArrayList<>(Arrays.asList(new Object[] {(Object) value})));
   }
 }

@@ -35,37 +35,37 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ReadCollection extends ReadCompound { // LINE: 681
+public class ReadCollection extends ReadCompound {
   ReadCollection(/*@Nullable*/ ParserState parent) { super(parent); };
-  public List<Object> nodes; // LINE: 683
+  public List<Object> nodes;
 
-  public void init() { // LINE: 685
-    this.reset(); // LINE: 686
+  public void init() {
+    this.reset();
   }
 
-  public void reset() { // LINE: 688
-    this.nodes = new ArrayList<>(); // LINE: 689
+  public void reset() {
+    this.nodes = new ArrayList<>();
   }
 
-  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 691
-    if (prevValue != null) { // LINE: 692
-      this.nodes.add(this.compactValue(prevValue)); // LINE: 693
+  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) {
+    if (prevValue != null) {
+      this.nodes.add(this.compactValue(prevValue));
     }
-    Map.Entry<ParserState, Object> readspace = (Map.Entry<ParserState, Object>) this.readSpace(c); // LINE: 695
-    if (readspace != null) { // LINE: 696
-      return readspace; // LINE: 697
-    } else if ((c == null && ((Object) EOF) == null || c != null && (c).equals(EOF))) { // LINE: 698
-      throw new NotationError("Unexpected EOF in collection."); // LINE: 699
-    } else if ((c == null && ((Object) "[") == null || c != null && (c).equals("["))) { // LINE: 700
-      return new KeyValue(new ReadBNode(this), null); // LINE: 701
-    } else if ((c == null && ((Object) "(") == null || c != null && (c).equals("("))) { // LINE: 702
-      return new KeyValue(new ReadCollection(this), null); // LINE: 703
-    } else if ((c == null && ((Object) ")") == null || c != null && (c).equals(")"))) { // LINE: 704
-      return new KeyValue(this.parent, Builtins.mapOf(LIST, this.nodes)); // LINE: 705
-    } else if (LITERAL_QUOTE_CHARS.contains(c)) { // LINE: 706
-      return new KeyValue(new ReadLiteral(this, c), null); // LINE: 707
+    Map.Entry<ParserState, Object> readspace = (Map.Entry<ParserState, Object>) this.readSpace(c);
+    if (readspace != null) {
+      return readspace;
+    } else if ((c == null && ((Object) EOF) == null || c != null && (c).equals(EOF))) {
+      throw new NotationError("Unexpected EOF in collection.");
+    } else if ((c == null && ((Object) "[") == null || c != null && (c).equals("["))) {
+      return new KeyValue(new ReadBNode(this), null);
+    } else if ((c == null && ((Object) "(") == null || c != null && (c).equals("("))) {
+      return new KeyValue(new ReadCollection(this), null);
+    } else if ((c == null && ((Object) ")") == null || c != null && (c).equals(")"))) {
+      return new KeyValue(this.parent, Builtins.mapOf(LIST, this.nodes));
+    } else if (LITERAL_QUOTE_CHARS.contains(c)) {
+      return new KeyValue(new ReadLiteral(this, c), null);
     } else {
-      return new ReadSymbol(this).consume(c, null); // LINE: 709
+      return new ReadSymbol(this).consume(c, null);
     }
   }
 }

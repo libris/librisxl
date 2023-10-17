@@ -34,16 +34,16 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.trig.Serializer.*;
 
 
-public class KeyAliases { // LINE: 34
-  public String id = ID; // LINE: 35
-  public String value = VALUE; // LINE: 36
-  public String type = TYPE; // LINE: 37
-  public String lang = LANGUAGE; // LINE: 38
-  public String graph = GRAPH; // LINE: 39
-  public String list = LIST; // LINE: 40
-  public String reverse = REVERSE; // LINE: 41
-  public String index = INDEX; // LINE: 42
-  public String annotation = ANNOTATION; // LINE: 43
+public class KeyAliases {
+  public String id = ID;
+  public String value = VALUE;
+  public String type = TYPE;
+  public String lang = LANGUAGE;
+  public String graph = GRAPH;
+  public String list = LIST;
+  public String reverse = REVERSE;
+  public String index = INDEX;
+  public String annotation = ANNOTATION;
   public KeyAliases() {
     this(ID, VALUE, TYPE, LANGUAGE, GRAPH, LIST, REVERSE, INDEX, ANNOTATION);
   }

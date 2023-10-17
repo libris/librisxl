@@ -24,7 +24,7 @@ import trld.jsonld.InvalidNestValueError;
 import static trld.jsonld.Expansion.*;
 
 
-public class InvalidLanguageTaggedStringError extends JsonLdError { // LINE: 39
+public class InvalidLanguageTaggedStringError extends JsonLdError {
   InvalidLanguageTaggedStringError() { };
   InvalidLanguageTaggedStringError(String msg) { super(msg); };
 }

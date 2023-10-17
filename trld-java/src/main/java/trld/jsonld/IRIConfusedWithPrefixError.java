@@ -24,7 +24,7 @@ import static trld.jsonld.Invcontext.getInverseContext;
 import static trld.jsonld.Compaction.*;
 
 
-public class IRIConfusedWithPrefixError extends JsonLdError { // LINE: 11
+public class IRIConfusedWithPrefixError extends JsonLdError {
   IRIConfusedWithPrefixError() { };
   IRIConfusedWithPrefixError(String msg) { super(msg); };
 }

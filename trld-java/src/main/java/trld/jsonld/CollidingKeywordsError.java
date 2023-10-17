@@ -24,7 +24,7 @@ import trld.jsonld.InvalidNestValueError;
 import static trld.jsonld.Expansion.*;
 
 
-public class CollidingKeywordsError extends JsonLdError { // LINE: 21
+public class CollidingKeywordsError extends JsonLdError {
   CollidingKeywordsError() { };
   CollidingKeywordsError(String msg) { super(msg); };
 }

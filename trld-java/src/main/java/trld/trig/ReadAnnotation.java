@@ -35,25 +35,25 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ReadAnnotation extends ReadBNode { // LINE: 660
+public class ReadAnnotation extends ReadBNode {
   ReadAnnotation(/*@Nullable*/ ParserState parent) { super(parent); };
-  public Boolean endStarted = false; // LINE: 662
+  public Boolean endStarted = false;
 
-  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 664
-    if (prevValue != null) { // LINE: 665
-      this.fillNode(prevValue); // LINE: 666
+  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) {
+    if (prevValue != null) {
+      this.fillNode(prevValue);
     }
-    if ((c == null && ((Object) EOF) == null || c != null && (c).equals(EOF))) { // LINE: 668
-      throw new NotationError("Unexpected " + c + " in annotation."); // LINE: 669
-    } else if ((!(this.openBrace) && (c == null && ((Object) "|") == null || c != null && (c).equals("|")))) { // LINE: 670
-      this.endStarted = true; // LINE: 671
-      return new KeyValue(this, null); // LINE: 672
-    } else if ((c == null && ((Object) "}") == null || c != null && (c).equals("}"))) { // LINE: 673
+    if ((c == null && ((Object) EOF) == null || c != null && (c).equals(EOF))) {
+      throw new NotationError("Unexpected " + c + " in annotation.");
+    } else if ((!(this.openBrace) && (c == null && ((Object) "|") == null || c != null && (c).equals("|")))) {
+      this.endStarted = true;
+      return new KeyValue(this, null);
+    } else if ((c == null && ((Object) "}") == null || c != null && (c).equals("}"))) {
       assert this.endStarted;
-      this.endStarted = false; // LINE: 675
-      return new KeyValue(this.parent, Builtins.mapOf(ANNOTATION, this.node)); // LINE: 676
+      this.endStarted = false;
+      return new KeyValue(this.parent, Builtins.mapOf(ANNOTATION, this.node));
     } else {
-      return this.consumeNodeChar(c); // LINE: 678
+      return this.consumeNodeChar(c);
     }
   }
 }

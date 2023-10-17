@@ -20,7 +20,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Flattening.*;
 
 
-public class ConflictingIndexesError extends JsonLdError { // LINE: 9
+public class ConflictingIndexesError extends JsonLdError {
   ConflictingIndexesError() { };
   ConflictingIndexesError(String msg) { super(msg); };
 }

@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidTermDefinitionError extends JsonLdError { // LINE: 43
+public class InvalidTermDefinitionError extends JsonLdError {
   InvalidTermDefinitionError() { };
   InvalidTermDefinitionError(String msg) { super(msg); };
 }

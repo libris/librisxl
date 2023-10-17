@@ -40,10 +40,10 @@ import static trld.Rdfterms.I18N;
 import static trld.jsonld.Rdf.*;
 
 
-public class RdfTriple { // LINE: 47
-  public String s; // LINE: 48
-  public String p; // LINE: 49
-  public Object o; // LINE: 50
+public class RdfTriple {
+  public String s;
+  public String p;
+  public Object o;
   public RdfTriple(String s, String p, Object o) {
     this.s = s;
     this.p = p;

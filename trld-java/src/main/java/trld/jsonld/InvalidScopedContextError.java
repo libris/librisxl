@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidScopedContextError extends JsonLdError { // LINE: 45
+public class InvalidScopedContextError extends JsonLdError {
   InvalidScopedContextError() { };
   InvalidScopedContextError(String msg) { super(msg); };
 }

@@ -24,7 +24,7 @@ import trld.jsonld.InvalidNestValueError;
 import static trld.jsonld.Expansion.*;
 
 
-public class InvalidReversePropertyMapError extends JsonLdError { // LINE: 19
+public class InvalidReversePropertyMapError extends JsonLdError {
   InvalidReversePropertyMapError() { };
   InvalidReversePropertyMapError(String msg) { super(msg); };
 }

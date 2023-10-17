@@ -25,41 +25,41 @@ public class Index {
   public static Map<String, Map<String, Object>> makeIndex(List<Map<String, Object>> graph) {
     return makeIndex(graph, true);
   }
-  public static Map<String, Map<String, Object>> makeIndex(List<Map<String, Object>> graph, Boolean addReverses) { // LINE: 5
-    Map<String, Map<String, Object>> index = new HashMap<>(); // LINE: 6
-    for (Map<String, Object> item : graph) { // LINE: 8
-      /*@Nullable*/ String id = ((/*@Nullable*/ String) item.get(ID)); // LINE: 9
-      if (id instanceof String) { // LINE: 10
-        index.put((String) id, item); // LINE: 11
+  public static Map<String, Map<String, Object>> makeIndex(List<Map<String, Object>> graph, Boolean addReverses) {
+    Map<String, Map<String, Object>> index = new HashMap<>();
+    for (Map<String, Object> item : graph) {
+      /*@Nullable*/ String id = ((/*@Nullable*/ String) item.get(ID));
+      if (id instanceof String) {
+        index.put((String) id, item);
       }
     }
-    if (addReverses) { // LINE: 13
-      indexReverses(index); // LINE: 14
+    if (addReverses) {
+      indexReverses(index);
     }
-    return index; // LINE: 16
+    return index;
   }
 
-  protected static void indexReverses(Map<String, Map<String, Object>> index) { // LINE: 19
-    for (Map<String, Object> item : index.values()) { // LINE: 20
-      if (!item.containsKey(ID)) { // LINE: 21
-        continue; // LINE: 22
+  protected static void indexReverses(Map<String, Map<String, Object>> index) {
+    for (Map<String, Object> item : index.values()) {
+      if (!item.containsKey(ID)) {
+        continue;
       }
-      for (String link : item.keySet()) { // LINE: 23
-        List refs = (List) asList(item.get(link)); // LINE: 24
-        for (Object ref : refs) { // LINE: 25
-          if (!(ref instanceof Map)) { // LINE: 26
-            continue; // LINE: 27
+      for (String link : item.keySet()) {
+        List refs = (List) asList(item.get(link));
+        for (Object ref : refs) {
+          if (!(ref instanceof Map)) {
+            continue;
           }
-          Object linked = (Object) index.get(((String) ((Map) ref).get(ID))); // LINE: 28
-          if (!(linked instanceof Map)) { // LINE: 29
-            continue; // LINE: 30
+          Object linked = (Object) index.get(((String) ((Map) ref).get(ID)));
+          if (!(linked instanceof Map)) {
+            continue;
           }
           if (!((Map) linked).containsKey(REVERSE)) ((Map) linked).put(REVERSE, new HashMap<>());
-          Map revmap = (Map) ((Map) linked).get(REVERSE); // LINE: 31
+          Map revmap = (Map) ((Map) linked).get(REVERSE);
           if (!revmap.containsKey(link)) revmap.put(link, new ArrayList<>());
-          List<Map> revs = (List<Map>) revmap.get(link); // LINE: 32
-          if (!(revs.stream().anyMatch(rev -> (rev.get(ID) == null && ((Object) item.get(ID)) == null || rev.get(ID) != null && (rev.get(ID)).equals(item.get(ID)))))) { // LINE: 33
-            revs.add(Builtins.mapOf(ID, item.get(ID))); // LINE: 34
+          List<Map> revs = (List<Map>) revmap.get(link);
+          if (!(revs.stream().anyMatch(rev -> (rev.get(ID) == null && ((Object) item.get(ID)) == null || rev.get(ID) != null && (rev.get(ID)).equals(item.get(ID)))))) {
+            revs.add(Builtins.mapOf(ID, item.get(ID)));
           }
         }
       }

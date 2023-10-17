@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidProtectedValueError extends JsonLdError { // LINE: 47
+public class InvalidProtectedValueError extends JsonLdError {
   InvalidProtectedValueError() { };
   InvalidProtectedValueError(String msg) { super(msg); };
 }

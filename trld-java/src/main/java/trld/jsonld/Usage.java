@@ -40,10 +40,10 @@ import static trld.Rdfterms.I18N;
 import static trld.jsonld.Rdf.*;
 
 
-public class Usage { // LINE: 84
-  public Map<String, Object> node; // LINE: 85
-  public String property; // LINE: 86
-  public Map<String, Object> value; // LINE: 87
+public class Usage {
+  public Map<String, Object> node;
+  public String property;
+  public Map<String, Object> value;
   public Usage(Map<String, Object> node, String property, Map<String, Object> value) {
     this.node = node;
     this.property = property;

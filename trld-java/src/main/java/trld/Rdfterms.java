@@ -17,22 +17,22 @@ import trld.KeyValue;
 
 
 public class Rdfterms {
-  public static final String RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"; // LINE: 1
-  public static final String RDF_TYPE = RDF + "type"; // LINE: 2
-  public static final String RDF_VALUE = RDF + "value"; // LINE: 3
-  public static final String RDF_LIST = RDF + "List"; // LINE: 4
-  public static final String RDF_FIRST = RDF + "first"; // LINE: 5
-  public static final String RDF_REST = RDF + "rest"; // LINE: 6
-  public static final String RDF_NIL = RDF + "nil"; // LINE: 7
-  public static final String RDF_DIRECTION = RDF + "direction"; // LINE: 8
-  public static final String RDF_LANGUAGE = RDF + "language"; // LINE: 9
-  public static final String RDF_JSON = RDF + "JSON"; // LINE: 10
-  public static final String RDF_LANGSTRING = RDF + "langString"; // LINE: 11
-  public static final String XSD = "http://www.w3.org/2001/XMLSchema#"; // LINE: 13
-  public static final String XSD_BOOLEAN = XSD + "boolean"; // LINE: 14
-  public static final String XSD_DECIMAL = XSD + "decimal"; // LINE: 15
-  public static final String XSD_DOUBLE = XSD + "double"; // LINE: 16
-  public static final String XSD_INTEGER = XSD + "integer"; // LINE: 17
-  public static final String XSD_STRING = XSD + "string"; // LINE: 18
-  public static final String I18N = "https://www.w3.org/ns/i18n#"; // LINE: 20
+  public static final String RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+  public static final String RDF_TYPE = RDF + "type";
+  public static final String RDF_VALUE = RDF + "value";
+  public static final String RDF_LIST = RDF + "List";
+  public static final String RDF_FIRST = RDF + "first";
+  public static final String RDF_REST = RDF + "rest";
+  public static final String RDF_NIL = RDF + "nil";
+  public static final String RDF_DIRECTION = RDF + "direction";
+  public static final String RDF_LANGUAGE = RDF + "language";
+  public static final String RDF_JSON = RDF + "JSON";
+  public static final String RDF_LANGSTRING = RDF + "langString";
+  public static final String XSD = "http://www.w3.org/2001/XMLSchema#";
+  public static final String XSD_BOOLEAN = XSD + "boolean";
+  public static final String XSD_DECIMAL = XSD + "decimal";
+  public static final String XSD_DOUBLE = XSD + "double";
+  public static final String XSD_INTEGER = XSD + "integer";
+  public static final String XSD_STRING = XSD + "string";
+  public static final String I18N = "https://www.w3.org/ns/i18n#";
 }

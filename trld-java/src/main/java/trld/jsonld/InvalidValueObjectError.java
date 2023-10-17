@@ -24,7 +24,7 @@ import trld.jsonld.InvalidNestValueError;
 import static trld.jsonld.Expansion.*;
 
 
-public class InvalidValueObjectError extends JsonLdError { // LINE: 29
+public class InvalidValueObjectError extends JsonLdError {
   InvalidValueObjectError() { };
   InvalidValueObjectError(String msg) { super(msg); };
 }

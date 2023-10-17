@@ -24,7 +24,7 @@ import trld.jsonld.InvalidNestValueError;
 import static trld.jsonld.Expansion.*;
 
 
-public class InvalidReverseValueError extends JsonLdError { // LINE: 43
+public class InvalidReverseValueError extends JsonLdError {
   InvalidReverseValueError() { };
   InvalidReverseValueError(String msg) { super(msg); };
 }

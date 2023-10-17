@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class ContextOverflowError extends JsonLdError { // LINE: 35
+public class ContextOverflowError extends JsonLdError {
   ContextOverflowError() { };
   ContextOverflowError(String msg) { super(msg); };
 }

@@ -35,84 +35,84 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ReadNode extends ReadCompound { // LINE: 564
+public class ReadNode extends ReadCompound {
   ReadNode(/*@Nullable*/ ParserState parent) { super(parent); };
-  public /*@Nullable*/ Map node; // LINE: 566
-  public /*@Nullable*/ String p; // LINE: 567
-  public /*@Nullable*/ Object lastValue; // LINE: 568
-  public Boolean openBrace = false; // LINE: 569
+  public /*@Nullable*/ Map node;
+  public /*@Nullable*/ String p;
+  public /*@Nullable*/ Object lastValue;
+  public Boolean openBrace = false;
 
-  public void fillNode(Object value) { // LINE: 571
-    if (this.p == null) { // LINE: 572
-      if ((value == null && ((Object) TYPE) == null || value != null && (value).equals(TYPE))) { // LINE: 573
-        this.p = TYPE; // LINE: 574
+  public void fillNode(Object value) {
+    if (this.p == null) {
+      if ((value == null && ((Object) TYPE) == null || value != null && (value).equals(TYPE))) {
+        this.p = TYPE;
       } else {
-        if (!(value instanceof Map)) { // LINE: 576
-          throw new NotationError("Unexpected predicate: " + value); // LINE: 577
+        if (!(value instanceof Map)) {
+          throw new NotationError("Unexpected predicate: " + value);
         }
-        this.p = (String) this.symbol((Map) value); // LINE: 578
+        this.p = (String) this.symbol((Map) value);
       }
-    } else if (this.lastValue == null) { // LINE: 579
-      if ((this.p == null && ((Object) TYPE) == null || this.p != null && (this.p).equals(TYPE))) { // LINE: 580
+    } else if (this.lastValue == null) {
+      if ((this.p == null && ((Object) TYPE) == null || this.p != null && (this.p).equals(TYPE))) {
         assert value instanceof Map;
-        value = ((String) this.symbol((Map) value)); // LINE: 582
+        value = ((String) this.symbol((Map) value));
       }
-      value = (Object) this.compactValue(value); // LINE: 584
-      /*@Nullable*/ Object given = (/*@Nullable*/ Object) this.node.get(this.p); // LINE: 586
-      if (given != null) { // LINE: 587
-        List values = (given instanceof List ? (List) given : new ArrayList<>(Arrays.asList(new Object[] {(Object) given}))); // LINE: 588
-        values.add(value); // LINE: 589
-        this.node.put(this.p, values); // LINE: 590
+      value = (Object) this.compactValue(value);
+      /*@Nullable*/ Object given = (/*@Nullable*/ Object) this.node.get(this.p);
+      if (given != null) {
+        List values = (given instanceof List ? (List) given : new ArrayList<>(Arrays.asList(new Object[] {(Object) given})));
+        values.add(value);
+        this.node.put(this.p, values);
       } else {
-        this.node.put(this.p, value); // LINE: 592
+        this.node.put(this.p, value);
       }
-      this.lastValue = value; // LINE: 593
-    } else if ((value instanceof Map && ((Map) value).containsKey(ANNOTATION))) { // LINE: 594
-      Object lastValue = (Object) this.lastValue; // LINE: 595
-      if ((this.p == null && ((Object) TYPE) == null || this.p != null && (this.p).equals(TYPE))) { // LINE: 596
-        lastValue = Builtins.mapOf(TYPE, lastValue); // LINE: 597
-      } else if (!(lastValue instanceof Map)) { // LINE: 598
-        lastValue = Builtins.mapOf(VALUE, lastValue); // LINE: 599
+      this.lastValue = value;
+    } else if ((value instanceof Map && ((Map) value).containsKey(ANNOTATION))) {
+      Object lastValue = (Object) this.lastValue;
+      if ((this.p == null && ((Object) TYPE) == null || this.p != null && (this.p).equals(TYPE))) {
+        lastValue = Builtins.mapOf(TYPE, lastValue);
+      } else if (!(lastValue instanceof Map)) {
+        lastValue = Builtins.mapOf(VALUE, lastValue);
       }
-      ((Map) lastValue).put(ANNOTATION, ((Map) value).get(ANNOTATION)); // LINE: 600
-      if (this.node.get(this.p) instanceof List) { // LINE: 601
-        List l = (List) this.node.get(this.p); // LINE: 602
-        l.set(l.size() - 1, (Map) lastValue); // LINE: 603
+      ((Map) lastValue).put(ANNOTATION, ((Map) value).get(ANNOTATION));
+      if (this.node.get(this.p) instanceof List) {
+        List l = (List) this.node.get(this.p);
+        l.set(l.size() - 1, (Map) lastValue);
       } else {
-        this.node.put(this.p, (Map) lastValue); // LINE: 605
+        this.node.put(this.p, (Map) lastValue);
       }
     } else {
-      throw new NotationError("Unexpected: " + value); // LINE: 607
+      throw new NotationError("Unexpected: " + value);
     }
   }
 
-  public Map.Entry<ParserState, Object> consumeNodeChar(String c) { // LINE: 609
-    Map.Entry<ParserState, Object> readspace = (Map.Entry<ParserState, Object>) this.readSpace(c); // LINE: 610
-    if (readspace != null) { // LINE: 611
-      return readspace; // LINE: 612
+  public Map.Entry<ParserState, Object> consumeNodeChar(String c) {
+    Map.Entry<ParserState, Object> readspace = (Map.Entry<ParserState, Object>) this.readSpace(c);
+    if (readspace != null) {
+      return readspace;
     }
-    if ((c == null && ((Object) "{") == null || c != null && (c).equals("{"))) { // LINE: 614
-      this.openBrace = true; // LINE: 615
-      return new KeyValue(this, null); // LINE: 616
-    } else if ((c == null && ((Object) "|") == null || c != null && (c).equals("|"))) { // LINE: 617
+    if ((c == null && ((Object) "{") == null || c != null && (c).equals("{"))) {
+      this.openBrace = true;
+      return new KeyValue(this, null);
+    } else if ((c == null && ((Object) "|") == null || c != null && (c).equals("|"))) {
       assert this.openBrace;
-      this.openBrace = false; // LINE: 619
-      return new KeyValue(new ReadAnnotation(this), null); // LINE: 620
-    } else if ((c == null && ((Object) "[") == null || c != null && (c).equals("["))) { // LINE: 621
-      return new KeyValue(new ReadBNode(this), null); // LINE: 622
-    } else if ((c == null && ((Object) "(") == null || c != null && (c).equals("("))) { // LINE: 623
-      return new KeyValue(new ReadCollection(this), null); // LINE: 624
-    } else if ((c == null && ((Object) ";") == null || c != null && (c).equals(";"))) { // LINE: 625
-      this.p = null; // LINE: 626
-      this.lastValue = null; // LINE: 627
-      return new KeyValue(this, null); // LINE: 628
-    } else if ((c == null && ((Object) ",") == null || c != null && (c).equals(","))) { // LINE: 629
-      this.lastValue = null; // LINE: 630
-      return new KeyValue(this, null); // LINE: 631
-    } else if (LITERAL_QUOTE_CHARS.contains(c)) { // LINE: 632
-      return new KeyValue(new ReadLiteral(this, c), null); // LINE: 633
+      this.openBrace = false;
+      return new KeyValue(new ReadAnnotation(this), null);
+    } else if ((c == null && ((Object) "[") == null || c != null && (c).equals("["))) {
+      return new KeyValue(new ReadBNode(this), null);
+    } else if ((c == null && ((Object) "(") == null || c != null && (c).equals("("))) {
+      return new KeyValue(new ReadCollection(this), null);
+    } else if ((c == null && ((Object) ";") == null || c != null && (c).equals(";"))) {
+      this.p = null;
+      this.lastValue = null;
+      return new KeyValue(this, null);
+    } else if ((c == null && ((Object) ",") == null || c != null && (c).equals(","))) {
+      this.lastValue = null;
+      return new KeyValue(this, null);
+    } else if (LITERAL_QUOTE_CHARS.contains(c)) {
+      return new KeyValue(new ReadLiteral(this, c), null);
     } else {
-      return new ReadSymbol(this).consume(c, null); // LINE: 635
+      return new ReadSymbol(this).consume(c, null);
     }
   }
 }

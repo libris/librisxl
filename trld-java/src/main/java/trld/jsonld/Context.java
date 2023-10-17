@@ -20,59 +20,59 @@ import static trld.Common.warning;
 import static trld.Common.resolveIri;
 import static trld.jsonld.Base.*;
 
-public class Context { // LINE: 68
+public class Context {
 
-  public static final String DEFAULT_PROCESSING_MODE = JSONLD11; // LINE: 6
-  public static final Integer MAX_REMOTE_CONTEXTS = 512; // LINE: 8
+  public static final String DEFAULT_PROCESSING_MODE = JSONLD11;
+  public static final Integer MAX_REMOTE_CONTEXTS = 512;
 
-  public Map</*@Nullable*/ String, Term> terms; // LINE: 70
-  public String baseIri; // LINE: 71
-  public /*@Nullable*/ String originalBaseUrl; // LINE: 72
-  public /*@Nullable*/ Map inverseContext; // LINE: 74
-  public /*@Nullable*/ String vocabularyMapping; // LINE: 76
-  public /*@Nullable*/ String defaultLanguage; // LINE: 77
-  public /*@Nullable*/ String defaultBaseDirection; // LINE: 78
-  public Boolean propagate; // LINE: 80
-  public /*@Nullable*/ Context previousContext; // LINE: 81
-  public String processingMode; // LINE: 83
-  public /*@Nullable*/ Double version; // LINE: 84
+  public Map</*@Nullable*/ String, Term> terms;
+  public String baseIri;
+  public /*@Nullable*/ String originalBaseUrl;
+  public /*@Nullable*/ Map inverseContext;
+  public /*@Nullable*/ String vocabularyMapping;
+  public /*@Nullable*/ String defaultLanguage;
+  public /*@Nullable*/ String defaultBaseDirection;
+  public Boolean propagate;
+  public /*@Nullable*/ Context previousContext;
+  public String processingMode;
+  public /*@Nullable*/ Double version;
 
   public Context(/*@Nullable*/ String baseIri) {
     this(baseIri, null);
   }
-  public Context(/*@Nullable*/ String baseIri, /*@Nullable*/ String originalBaseUrl) { // LINE: 88
-    this.initialize(baseIri, originalBaseUrl); // LINE: 89
+  public Context(/*@Nullable*/ String baseIri, /*@Nullable*/ String originalBaseUrl) {
+    this.initialize(baseIri, originalBaseUrl);
   }
 
   public void initialize(/*@Nullable*/ String baseIri) {
     this.initialize(baseIri, null);
   }
-  public void initialize(/*@Nullable*/ String baseIri, /*@Nullable*/ String originalBaseUrl) { // LINE: 91
-    this.terms = new HashMap<>(); // LINE: 92
-    this.baseIri = (baseIri == null ? "" : baseIri); // LINE: 94
-    if (originalBaseUrl != null) { // LINE: 95
-      this.originalBaseUrl = originalBaseUrl; // LINE: 96
+  public void initialize(/*@Nullable*/ String baseIri, /*@Nullable*/ String originalBaseUrl) {
+    this.terms = new HashMap<>();
+    this.baseIri = (baseIri == null ? "" : baseIri);
+    if (originalBaseUrl != null) {
+      this.originalBaseUrl = originalBaseUrl;
     } else {
-      this.originalBaseUrl = null; // LINE: 98
+      this.originalBaseUrl = null;
     }
-    this.vocabularyMapping = null; // LINE: 100
-    this.defaultLanguage = null; // LINE: 101
-    this.defaultBaseDirection = null; // LINE: 102
-    this.propagate = true; // LINE: 103
-    this.previousContext = null; // LINE: 104
-    this.processingMode = DEFAULT_PROCESSING_MODE; // LINE: 105
-    this.version = null; // LINE: 106
-    this.inverseContext = null; // LINE: 107
+    this.vocabularyMapping = null;
+    this.defaultLanguage = null;
+    this.defaultBaseDirection = null;
+    this.propagate = true;
+    this.previousContext = null;
+    this.processingMode = DEFAULT_PROCESSING_MODE;
+    this.version = null;
+    this.inverseContext = null;
   }
 
-  public Context copy() { // LINE: 110
-    Context cloned = new Context(this.baseIri, this.originalBaseUrl); // LINE: 111
-    cloned.terms = new HashMap(this.terms); // LINE: 112
-    cloned.vocabularyMapping = (String) this.vocabularyMapping; // LINE: 113
-    cloned.defaultLanguage = (String) this.defaultLanguage; // LINE: 114
-    cloned.defaultBaseDirection = (String) this.defaultBaseDirection; // LINE: 115
-    cloned.processingMode = (String) this.processingMode; // LINE: 116
-    return cloned; // LINE: 117
+  public Context copy() {
+    Context cloned = new Context(this.baseIri, this.originalBaseUrl);
+    cloned.terms = new HashMap(this.terms);
+    cloned.vocabularyMapping = (String) this.vocabularyMapping;
+    cloned.defaultLanguage = (String) this.defaultLanguage;
+    cloned.defaultBaseDirection = (String) this.defaultBaseDirection;
+    cloned.processingMode = (String) this.processingMode;
+    return cloned;
   }
 
   public Context getContext(Object contextData) {
@@ -87,76 +87,76 @@ public class Context { // LINE: 68
   public Context getContext(Object contextData, String baseUrl, Set<String> remoteContexts, Boolean overrideProtected) {
     return this.getContext(contextData, baseUrl, remoteContexts, overrideProtected, true);
   }
-  public Context getContext(Object contextData, String baseUrl, Set<String> remoteContexts, Boolean overrideProtected, Boolean validateScoped) { // LINE: 119
-    if (remoteContexts == null) { // LINE: 124
-      remoteContexts = new HashSet(); // LINE: 125
+  public Context getContext(Object contextData, String baseUrl, Set<String> remoteContexts, Boolean overrideProtected, Boolean validateScoped) {
+    if (remoteContexts == null) {
+      remoteContexts = new HashSet();
     }
-    Context localContext = (Context) this.copy(); // LINE: 127
-    if (contextData instanceof Map) { // LINE: 129
-      Object propagate = (Object) ((Map) contextData).get(PROPAGATE); // LINE: 130
-      if (propagate instanceof Boolean) { // LINE: 131
-        localContext.propagate = (Boolean) propagate; // LINE: 132
+    Context localContext = (Context) this.copy();
+    if (contextData instanceof Map) {
+      Object propagate = (Object) ((Map) contextData).get(PROPAGATE);
+      if (propagate instanceof Boolean) {
+        localContext.propagate = (Boolean) propagate;
       }
     }
-    if (localContext.previousContext == null) { // LINE: 138
-      localContext.previousContext = this; // LINE: 139
+    if (localContext.previousContext == null) {
+      localContext.previousContext = this;
     }
-    localContext.readContext(contextData, baseUrl, remoteContexts, overrideProtected, validateScoped); // LINE: 141
-    return localContext; // LINE: 144
+    localContext.readContext(contextData, baseUrl, remoteContexts, overrideProtected, validateScoped);
+    return localContext;
   }
 
-  protected void readContext(Object contextData, /*@Nullable*/ String baseUrl, Set<String> remoteContexts, Boolean overrideProtected, Boolean validateScoped) { // LINE: 146
-    List<Object> normalizedContextData; // LINE: 153
-    if (contextData instanceof List) { // LINE: 154
-      normalizedContextData = (List) contextData; // LINE: 155
+  protected void readContext(Object contextData, /*@Nullable*/ String baseUrl, Set<String> remoteContexts, Boolean overrideProtected, Boolean validateScoped) {
+    List<Object> normalizedContextData;
+    if (contextData instanceof List) {
+      normalizedContextData = (List) contextData;
     } else {
-      normalizedContextData = new ArrayList<>(Arrays.asList(new Object[] {(Object) contextData})); // LINE: 157
+      normalizedContextData = new ArrayList<>(Arrays.asList(new Object[] {(Object) contextData}));
     }
-    if (baseUrl == null) { // LINE: 159
-      baseUrl = (String) this.baseIri; // LINE: 160
+    if (baseUrl == null) {
+      baseUrl = (String) this.baseIri;
     }
-    for (Object context : normalizedContextData) { // LINE: 163
-      if (context == null) { // LINE: 165
-        if ((overrideProtected == false && this.terms.values().stream().anyMatch(term -> term.isProtected))) { // LINE: 167
-          throw new InvalidContextNullificationError(); // LINE: 169
+    for (Object context : normalizedContextData) {
+      if (context == null) {
+        if ((overrideProtected == false && this.terms.values().stream().anyMatch(term -> term.isProtected))) {
+          throw new InvalidContextNullificationError();
         }
-        /*@Nullable*/ Context prev = (this.propagate == false ? this.copy() : null); // LINE: 172
-        this.initialize(baseUrl, baseUrl); // LINE: 173
-        if (prev != null) { // LINE: 174
-          this.previousContext = prev; // LINE: 175
+        /*@Nullable*/ Context prev = (this.propagate == false ? this.copy() : null);
+        this.initialize(baseUrl, baseUrl);
+        if (prev != null) {
+          this.previousContext = prev;
         }
-        continue; // LINE: 177
+        continue;
       }
-      if (context instanceof String) { // LINE: 180
-        this.readContextLink((String) context, baseUrl, remoteContexts, overrideProtected, validateScoped); // LINE: 181
-      } else if (context instanceof Map) { // LINE: 184
-        this.readContextDefinition((Map) context, baseUrl, remoteContexts, overrideProtected, validateScoped); // LINE: 185
+      if (context instanceof String) {
+        this.readContextLink((String) context, baseUrl, remoteContexts, overrideProtected, validateScoped);
+      } else if (context instanceof Map) {
+        this.readContextDefinition((Map) context, baseUrl, remoteContexts, overrideProtected, validateScoped);
       } else {
-        throw new InvalidLocalContextError(); // LINE: 189
+        throw new InvalidLocalContextError();
       }
     }
   }
 
-  protected void readContextLink(String href, String baseUrl, Set<String> remoteContexts, Boolean overrideProtected, Boolean validateScoped) { // LINE: 191
-    try { // LINE: 195
-      href = resolveIri(baseUrl, href); // LINE: 196
-    } catch (Exception e) { // LINE: 197
-      throw new LoadingDocumentFailedError(); // LINE: 198
+  protected void readContextLink(String href, String baseUrl, Set<String> remoteContexts, Boolean overrideProtected, Boolean validateScoped) {
+    try {
+      href = resolveIri(baseUrl, href);
+    } catch (Exception e) {
+      throw new LoadingDocumentFailedError();
     }
-    if ((!(validateScoped) && remoteContexts.contains(href))) { // LINE: 200
-      return; // LINE: 201
+    if ((!(validateScoped) && remoteContexts.contains(href))) {
+      return;
     }
-    if (remoteContexts.size() > MAX_REMOTE_CONTEXTS) { // LINE: 203
-      throw new ContextOverflowError(); // LINE: 204
+    if (remoteContexts.size() > MAX_REMOTE_CONTEXTS) {
+      throw new ContextOverflowError();
     } else {
-      remoteContexts.add(href); // LINE: 206
+      remoteContexts.add(href);
     }
-    Object contextDocument = (Object) this.loadDocument(href); // LINE: 208
-    if ((!(contextDocument instanceof Map) || !((Map) contextDocument).containsKey(CONTEXT))) { // LINE: 210
-      throw new InvalidRemoteContextError(); // LINE: 211
+    Object contextDocument = (Object) this.loadDocument(href);
+    if ((!(contextDocument instanceof Map) || !((Map) contextDocument).containsKey(CONTEXT))) {
+      throw new InvalidRemoteContextError();
     }
-    Object loaded = (Object) ((Map) contextDocument).get(CONTEXT); // LINE: 213
-    this.readContext(loaded, href, new HashSet(remoteContexts), overrideProtected, validateScoped); // LINE: 216
+    Object loaded = (Object) ((Map) contextDocument).get(CONTEXT);
+    this.readContext(loaded, href, new HashSet(remoteContexts), overrideProtected, validateScoped);
   }
 
   protected Object loadDocument(String href) {
@@ -165,129 +165,129 @@ public class Context { // LINE: 68
   protected Object loadDocument(String href, String profile) {
     return this.loadDocument(href, profile, JSONLD_CONTEXT_RELATION);
   }
-  protected Object loadDocument(String href, String profile, String requestProfile) { // LINE: 224
-    /* ... */; // LINE: 234
-    return loadJson(href); // LINE: 236
+  protected Object loadDocument(String href, String profile, String requestProfile) {
+    /* ... */;
+    return loadJson(href);
   }
 
-  protected void readContextDefinition(Map<String, Object> context, String baseUrl, Set<String> remoteContexts, Boolean overrideProtected, Boolean validateScoped) { // LINE: 238
-    Object version = (Object) context.get(VERSION); // LINE: 244
-    if (version != null) { // LINE: 245
-      if ((this.processingMode == null && ((Object) JSONLD10) == null || this.processingMode != null && (this.processingMode).equals(JSONLD10))) { // LINE: 246
-        throw new ProcessingModeConflictError(); // LINE: 247
+  protected void readContextDefinition(Map<String, Object> context, String baseUrl, Set<String> remoteContexts, Boolean overrideProtected, Boolean validateScoped) {
+    Object version = (Object) context.get(VERSION);
+    if (version != null) {
+      if ((this.processingMode == null && ((Object) JSONLD10) == null || this.processingMode != null && (this.processingMode).equals(JSONLD10))) {
+        throw new ProcessingModeConflictError();
       }
-      if ((version instanceof Double && (version == null && ((Object) 1.1) == null || version != null && (version).equals(1.1)))) { // LINE: 248
-        this.version = (Double) version; // LINE: 249
+      if ((version instanceof Double && (version == null && ((Object) 1.1) == null || version != null && (version).equals(1.1)))) {
+        this.version = (Double) version;
       } else {
-        throw new InvalidVersionValueError(); // LINE: 251
+        throw new InvalidVersionValueError();
       }
     }
-    if (context.containsKey(IMPORT)) { // LINE: 254
-      context = this.handleImport(context, baseUrl); // LINE: 255
+    if (context.containsKey(IMPORT)) {
+      context = this.handleImport(context, baseUrl);
     }
-    if ((context.containsKey(BASE) && remoteContexts.size() == 0)) { // LINE: 258
-      Object base = (Object) context.get(BASE); // LINE: 260
-      if (base == null) { // LINE: 262
-        this.baseIri = ""; // LINE: 264
-      } else if ((this.baseIri != null && base instanceof String)) { // LINE: 267
-        this.baseIri = resolveIri(this.baseIri, (String) base); // LINE: 268
-      } else if ((base instanceof String && isIri((String) base))) { // LINE: 269
-        this.baseIri = (String) base; // LINE: 270
+    if ((context.containsKey(BASE) && remoteContexts.size() == 0)) {
+      Object base = (Object) context.get(BASE);
+      if (base == null) {
+        this.baseIri = "";
+      } else if ((this.baseIri != null && base instanceof String)) {
+        this.baseIri = resolveIri(this.baseIri, (String) base);
+      } else if ((base instanceof String && isIri((String) base))) {
+        this.baseIri = (String) base;
       } else {
-        throw new InvalidBaseIriError(); // LINE: 273
+        throw new InvalidBaseIriError();
       }
     }
-    if (context.containsKey(VOCAB)) { // LINE: 276
-      Object vocab = (Object) context.get(VOCAB); // LINE: 278
-      if (vocab == null) { // LINE: 280
-        this.vocabularyMapping = null; // LINE: 281
-      } else if ((vocab instanceof String && (isIriRef((String) vocab) || isBlank((String) vocab)))) { // LINE: 283
-        this.vocabularyMapping = (String) this.expandDocRelativeVocabIri((String) vocab); // LINE: 284
+    if (context.containsKey(VOCAB)) {
+      Object vocab = (Object) context.get(VOCAB);
+      if (vocab == null) {
+        this.vocabularyMapping = null;
+      } else if ((vocab instanceof String && (isIriRef((String) vocab) || isBlank((String) vocab)))) {
+        this.vocabularyMapping = (String) this.expandDocRelativeVocabIri((String) vocab);
       } else {
-        throw new InvalidVocabMappingError(); // LINE: 288
+        throw new InvalidVocabMappingError();
       }
     }
-    if (context.containsKey(LANGUAGE)) { // LINE: 291
-      Object lang = (Object) context.get(LANGUAGE); // LINE: 292
-      if (lang == null) { // LINE: 293
-        this.defaultLanguage = null; // LINE: 294
-      } else if (lang instanceof String) { // LINE: 295
-        if (!(isLangTag((String) lang))) { // LINE: 296
-          warning("Language tag " + lang + " in context is not well-formed"); // LINE: 297
+    if (context.containsKey(LANGUAGE)) {
+      Object lang = (Object) context.get(LANGUAGE);
+      if (lang == null) {
+        this.defaultLanguage = null;
+      } else if (lang instanceof String) {
+        if (!(isLangTag((String) lang))) {
+          warning("Language tag " + lang + " in context is not well-formed");
         }
-        this.defaultLanguage = ((String) lang).toLowerCase(); // LINE: 298
+        this.defaultLanguage = ((String) lang).toLowerCase();
       } else {
-        throw new InvalidDefaultLanguageError(); // LINE: 300
+        throw new InvalidDefaultLanguageError();
       }
     }
-    if (context.containsKey(DIRECTION)) { // LINE: 303
-      Object direction = (Object) context.get(DIRECTION); // LINE: 304
-      if ((direction == null || (direction instanceof String && DIRECTIONS.contains(direction)))) { // LINE: 305
-        this.defaultBaseDirection = (String) direction; // LINE: 306
+    if (context.containsKey(DIRECTION)) {
+      Object direction = (Object) context.get(DIRECTION);
+      if ((direction == null || (direction instanceof String && DIRECTIONS.contains(direction)))) {
+        this.defaultBaseDirection = (String) direction;
       } else {
-        throw new InvalidBaseDirectionError(direction.toString()); // LINE: 308
+        throw new InvalidBaseDirectionError(direction.toString());
       }
     }
-    if (context.containsKey(PROPAGATE)) { // LINE: 311
-      Object propagate = (Object) context.get(PROPAGATE); // LINE: 312
-      if ((this.processingMode == null && ((Object) JSONLD10) == null || this.processingMode != null && (this.processingMode).equals(JSONLD10))) { // LINE: 314
-        throw new InvalidContextEntryError(); // LINE: 315
+    if (context.containsKey(PROPAGATE)) {
+      Object propagate = (Object) context.get(PROPAGATE);
+      if ((this.processingMode == null && ((Object) JSONLD10) == null || this.processingMode != null && (this.processingMode).equals(JSONLD10))) {
+        throw new InvalidContextEntryError();
       }
-      if (!(propagate instanceof Boolean)) { // LINE: 317
-        throw new InvalidPropagateValueError(propagate.toString()); // LINE: 318
+      if (!(propagate instanceof Boolean)) {
+        throw new InvalidPropagateValueError(propagate.toString());
       }
     }
-    Map<String, Boolean> defined = new HashMap<>(); // LINE: 323
-    for (Map.Entry<String, Object> key_value : context.entrySet()) { // LINE: 326
+    Map<String, Boolean> defined = new HashMap<>();
+    for (Map.Entry<String, Object> key_value : context.entrySet()) {
       String key = key_value.getKey();
       Object value = key_value.getValue();
-      if (CONTEXT_KEYWORDS.contains(key)) { // LINE: 327
-        continue; // LINE: 328
+      if (CONTEXT_KEYWORDS.contains(key)) {
+        continue;
       }
-      Boolean isprotected = (Boolean) ((Boolean) context.get(PROTECTED)); // LINE: 338
-      new Term(this, context, key, value, defined, baseUrl, isprotected, overrideProtected); // LINE: 339
+      Boolean isprotected = (Boolean) ((Boolean) context.get(PROTECTED));
+      new Term(this, context, key, value, defined, baseUrl, isprotected, overrideProtected);
     }
   }
 
-  protected Map handleImport(Map<String, Object> context, String baseUrl) { // LINE: 341
-    Object importValue = (Object) context.get(IMPORT); // LINE: 342
-    if ((this.processingMode == null && ((Object) JSONLD10) == null || this.processingMode != null && (this.processingMode).equals(JSONLD10))) { // LINE: 344
-      throw new InvalidContextEntryError(); // LINE: 345
+  protected Map handleImport(Map<String, Object> context, String baseUrl) {
+    Object importValue = (Object) context.get(IMPORT);
+    if ((this.processingMode == null && ((Object) JSONLD10) == null || this.processingMode != null && (this.processingMode).equals(JSONLD10))) {
+      throw new InvalidContextEntryError();
     }
-    if (!(importValue instanceof String)) { // LINE: 347
-      throw new InvalidImportValueError(importValue.toString()); // LINE: 348
+    if (!(importValue instanceof String)) {
+      throw new InvalidImportValueError(importValue.toString());
     }
-    importValue = resolveIri(baseUrl, (String) importValue); // LINE: 350
-    Object contextDocument = (Object) this.loadDocument((String) importValue); // LINE: 352
-    if ((!(contextDocument instanceof Map) || !((Map) contextDocument).containsKey(CONTEXT))) { // LINE: 356
-      throw new InvalidRemoteContextError(); // LINE: 357
+    importValue = resolveIri(baseUrl, (String) importValue);
+    Object contextDocument = (Object) this.loadDocument((String) importValue);
+    if ((!(contextDocument instanceof Map) || !((Map) contextDocument).containsKey(CONTEXT))) {
+      throw new InvalidRemoteContextError();
     }
-    Object importContext = (Object) ((Map) contextDocument).get(CONTEXT); // LINE: 358
-    if (!(importContext instanceof Map)) { // LINE: 359
-      throw new InvalidRemoteContextError(); // LINE: 360
+    Object importContext = (Object) ((Map) contextDocument).get(CONTEXT);
+    if (!(importContext instanceof Map)) {
+      throw new InvalidRemoteContextError();
     }
-    if (((Map) importContext).containsKey(IMPORT)) { // LINE: 362
-      throw new InvalidContextEntryError(); // LINE: 363
+    if (((Map) importContext).containsKey(IMPORT)) {
+      throw new InvalidContextEntryError();
     }
-    ((Map) importContext).putAll(context); // LINE: 365
-    ((Map) importContext).remove(IMPORT); // LINE: 366
-    return (Map) importContext; // LINE: 367
+    ((Map) importContext).putAll(context);
+    ((Map) importContext).remove(IMPORT);
+    return (Map) importContext;
   }
 
-  public /*@Nullable*/ String expandVocabIri(String value) { // LINE: 369
-    return this.expandIri(value, null, null, false, true); // LINE: 370
+  public /*@Nullable*/ String expandVocabIri(String value) {
+    return this.expandIri(value, null, null, false, true);
   }
 
-  public /*@Nullable*/ String expandDocRelativeIri(String value) { // LINE: 372
-    return this.expandIri(value, null, null, true, false); // LINE: 373
+  public /*@Nullable*/ String expandDocRelativeIri(String value) {
+    return this.expandIri(value, null, null, true, false);
   }
 
-  public /*@Nullable*/ String expandDocRelativeVocabIri(String value) { // LINE: 375
-    return this.expandIri(value, null, null, true, true); // LINE: 376
+  public /*@Nullable*/ String expandDocRelativeVocabIri(String value) {
+    return this.expandIri(value, null, null, true, true);
   }
 
-  protected /*@Nullable*/ String expandInitVocabIri(String value, Map<String, Object> localContext, Map<String, Boolean> defined) { // LINE: 378
-    return this.expandIri(value, localContext, defined, false, true); // LINE: 383
+  protected /*@Nullable*/ String expandInitVocabIri(String value, Map<String, Object> localContext, Map<String, Boolean> defined) {
+    return this.expandIri(value, localContext, defined, false, true);
   }
 
   public /*@Nullable*/ String expandIri(String value) {
@@ -302,49 +302,49 @@ public class Context { // LINE: 68
   public /*@Nullable*/ String expandIri(String value, /*@Nullable*/ Map<String, Object> localContext, /*@Nullable*/ Map<String, Boolean> defined, Boolean docRelative) {
     return this.expandIri(value, localContext, defined, docRelative, false);
   }
-  public /*@Nullable*/ String expandIri(String value, /*@Nullable*/ Map<String, Object> localContext, /*@Nullable*/ Map<String, Boolean> defined, Boolean docRelative, Boolean vocab) { // LINE: 386
-    if ((KEYWORDS.contains(value) || value == null)) { // LINE: 393
-      return value; // LINE: 394
+  public /*@Nullable*/ String expandIri(String value, /*@Nullable*/ Map<String, Object> localContext, /*@Nullable*/ Map<String, Boolean> defined, Boolean docRelative, Boolean vocab) {
+    if ((KEYWORDS.contains(value) || value == null)) {
+      return value;
     }
-    if (hasKeywordForm(value)) { // LINE: 397
-      warning("Id " + value + " looks like a keyword"); // LINE: 398
-      return null; // LINE: 399
+    if (hasKeywordForm(value)) {
+      warning("Id " + value + " looks like a keyword");
+      return null;
     }
-    if ((localContext != null && localContext.containsKey(value) && defined != null && (!defined.containsKey(value) || defined.get(value) != true))) { // LINE: 402
-      new Term(this, localContext, value, localContext.get(value), defined); // LINE: 403
+    if ((localContext != null && localContext.containsKey(value) && defined != null && (!defined.containsKey(value) || defined.get(value) != true))) {
+      new Term(this, localContext, value, localContext.get(value), defined);
     }
-    /*@Nullable*/ Term iriTerm = (/*@Nullable*/ Term) this.terms.get(value); // LINE: 405
-    if ((iriTerm != null && KEYWORDS.contains(iriTerm.iri))) { // LINE: 408
-      return iriTerm.iri; // LINE: 409
+    /*@Nullable*/ Term iriTerm = (/*@Nullable*/ Term) this.terms.get(value);
+    if ((iriTerm != null && KEYWORDS.contains(iriTerm.iri))) {
+      return iriTerm.iri;
     }
-    if ((vocab && iriTerm != null)) { // LINE: 412
-      return iriTerm.iri; // LINE: 413
+    if ((vocab && iriTerm != null)) {
+      return iriTerm.iri;
     }
-    if ((value.length() > 1 && value.substring(1).contains(":"))) { // LINE: 416
-      Integer idx = (Integer) value.indexOf(":"); // LINE: 418
-      String prefix = value.substring(0, idx); // LINE: 419
-      String suffix = value.substring(idx + 1); // LINE: 420
-      if (((prefix == null && ((Object) "_") == null || prefix != null && (prefix).equals("_")) || suffix.startsWith("//"))) { // LINE: 423
-        return value; // LINE: 424
+    if ((value.length() > 1 && value.substring(1).contains(":"))) {
+      Integer idx = (Integer) value.indexOf(":");
+      String prefix = value.substring(0, idx);
+      String suffix = value.substring(idx + 1);
+      if (((prefix == null && ((Object) "_") == null || prefix != null && (prefix).equals("_")) || suffix.startsWith("//"))) {
+        return value;
       }
-      if ((localContext != null && localContext.containsKey(prefix) && defined != null)) { // LINE: 428
-        if ((!defined.containsKey(prefix) || defined.get(prefix) != true)) { // LINE: 429
-          new Term(this, localContext, prefix, localContext.get(prefix), defined); // LINE: 430
+      if ((localContext != null && localContext.containsKey(prefix) && defined != null)) {
+        if ((!defined.containsKey(prefix) || defined.get(prefix) != true)) {
+          new Term(this, localContext, prefix, localContext.get(prefix), defined);
         }
       }
-      /*@Nullable*/ Term pfxTerm = (/*@Nullable*/ Term) this.terms.get(prefix); // LINE: 433
-      if ((pfxTerm != null && pfxTerm.iri != null && pfxTerm.isPrefix)) { // LINE: 434
-        return pfxTerm.iri + suffix; // LINE: 435
+      /*@Nullable*/ Term pfxTerm = (/*@Nullable*/ Term) this.terms.get(prefix);
+      if ((pfxTerm != null && pfxTerm.iri != null && pfxTerm.isPrefix)) {
+        return pfxTerm.iri + suffix;
       }
-      if ((!(value.startsWith("#")) && isIri(value))) { // LINE: 439
-        return value; // LINE: 440
+      if ((!(value.startsWith("#")) && isIri(value))) {
+        return value;
       }
     }
-    if ((vocab && this.vocabularyMapping != null)) { // LINE: 443
-      return this.vocabularyMapping + value; // LINE: 444
-    } else if (docRelative) { // LINE: 447
-      return resolveIri(this.baseIri, value); // LINE: 448
+    if ((vocab && this.vocabularyMapping != null)) {
+      return this.vocabularyMapping + value;
+    } else if (docRelative) {
+      return resolveIri(this.baseIri, value);
     }
-    return value; // LINE: 451
+    return value;
   }
 }

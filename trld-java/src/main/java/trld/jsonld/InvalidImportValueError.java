@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class InvalidImportValueError extends JsonLdError { // LINE: 27
+public class InvalidImportValueError extends JsonLdError {
   InvalidImportValueError() { };
   InvalidImportValueError(String msg) { super(msg); };
 }

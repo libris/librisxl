@@ -40,19 +40,19 @@ import static trld.Rdfterms.I18N;
 import static trld.jsonld.Rdf.*;
 
 
-public class RdfGraph { // LINE: 53
-  public /*@Nullable*/ String name; // LINE: 54
-  public List<RdfTriple> triples; // LINE: 55
+public class RdfGraph {
+  public /*@Nullable*/ String name;
+  public List<RdfTriple> triples;
 
   public RdfGraph() {
     this(null);
   }
-  public RdfGraph(/*@Nullable*/ String name) { // LINE: 57
-    this.name = name; // LINE: 58
-    this.triples = new ArrayList<>(); // LINE: 59
+  public RdfGraph(/*@Nullable*/ String name) {
+    this.name = name;
+    this.triples = new ArrayList<>();
   }
 
-  public void add(RdfTriple triple) { // LINE: 61
-    this.triples.add(triple); // LINE: 62
+  public void add(RdfTriple triple) {
+    this.triples.add(triple);
   }
 }

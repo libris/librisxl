@@ -35,14 +35,14 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ConsumeComment extends BaseParserState { // LINE: 118
+public class ConsumeComment extends BaseParserState {
   ConsumeComment(/*@Nullable*/ ParserState parent) { super(parent); };
 
-  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 120
-    if ((c == null && ((Object) "\n") == null || c != null && (c).equals("\n"))) { // LINE: 121
-      return new KeyValue(this.parent, null); // LINE: 122
+  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) {
+    if ((c == null && ((Object) "\n") == null || c != null && (c).equals("\n"))) {
+      return new KeyValue(this.parent, null);
     } else {
-      return new KeyValue(this, null); // LINE: 124
+      return new KeyValue(this, null);
     }
   }
 }

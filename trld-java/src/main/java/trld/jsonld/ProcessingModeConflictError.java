@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class ProcessingModeConflictError extends JsonLdError { // LINE: 11
+public class ProcessingModeConflictError extends JsonLdError {
   ProcessingModeConflictError() { };
   ProcessingModeConflictError(String msg) { super(msg); };
 }

@@ -22,7 +22,7 @@ import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
-public class LoadingDocumentFailedError extends JsonLdError { // LINE: 33
+public class LoadingDocumentFailedError extends JsonLdError {
   LoadingDocumentFailedError() { };
   LoadingDocumentFailedError(String msg) { super(msg); };
 }

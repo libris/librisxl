@@ -34,16 +34,16 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.trig.Serializer.*;
 
 
-public class Settings { // LINE: 18
-  public Boolean turtleOnly = false; // LINE: 19
-  public Boolean turtleDropNamed = false; // LINE: 20
-  public Boolean dropRdfstar = false; // LINE: 21
-  public String indentChars = "  "; // LINE: 22
-  public Boolean useGraphKeyword = true; // LINE: 23
-  public Boolean upcaseKeywords = false; // LINE: 24
-  public Boolean predicateRepeatNewLine = true; // LINE: 26
-  public Boolean bracketEndNewLine = false; // LINE: 28
-  public Integer prologueEndLine = 1; // LINE: 30
+public class Settings {
+  public Boolean turtleOnly = false;
+  public Boolean turtleDropNamed = false;
+  public Boolean dropRdfstar = false;
+  public String indentChars = "  ";
+  public Boolean useGraphKeyword = true;
+  public Boolean upcaseKeywords = false;
+  public Boolean predicateRepeatNewLine = true;
+  public Boolean bracketEndNewLine = false;
+  public Integer prologueEndLine = 1;
   public Settings() {
     this(false, false, false, "  ", true, false, true, false, 1);
   }
