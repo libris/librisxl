@@ -74,8 +74,7 @@ class NotificationSender extends HouseKeeper {
                     String heldBy = request["heldBy"]
                     if (!heldByToUserSettings.containsKey(heldBy))
                         heldByToUserSettings.put(heldBy, [])
-                    List userSettingsForThisHeldBy = heldByToUserSettings[heldBy]
-                    userSettingsForThisHeldBy.add(settings)
+                    heldByToUserSettings[heldBy].add(settings)
                 }
             }
         }
