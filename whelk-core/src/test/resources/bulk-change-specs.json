@@ -1,0 +1,985 @@
+{
+  "specs": [
+    {
+      "name": "Uppdatera/rätta URL:er i poster",
+      "mappings": {
+        "https://isf.se/download/18.189daaed179f5fc31c617bbe/1623652126321/Rapport%202021-6%20Placerade%20barn%20och%20socialf%C3%B6rs%C3%A4kringen.pdf": "Ny länk 1",
+        "https://isf.se/download/18.7f524f34179f5c40e962656b/1623849792822/Behovsanst%C3%A4lld%20utan%20sjukl%C3%B6n%20ISF%20skrivelse%202021.pdf": "Ny länk 2"
+      },
+      "test": {
+        "before": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "mainEntity": {
+                  "@id": "TEMP_ID#it"
+                }
+              },
+              {
+                "@id": "TEMP_ID#it",
+                "identifiedBy": {
+                  "@type": "URI",
+                  "value": "https://isf.se/download/18.189daaed179f5fc31c617bbe/1623652126321/Rapport%202021-6%20Placerade%20barn%20och%20socialf%C3%B6rs%C3%A4kringen.pdf"
+                }
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "mainEntity": {
+                  "@id": "TEMP_ID#it"
+                }
+              },
+              {
+                "@id": "TEMP_ID#it",
+                "identifiedBy": {
+                  "@type": "URI",
+                  "value": "Ny länk 1"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Länka upp lokal entitet",
+      "graph": {
+        "@graph": [
+          {
+            "@id": "TEMP_ID",
+            "mainEntity": {
+              "@id": "TEMP_ID#it"
+            }
+          },
+          {
+            "@id": "TEMP_ID#it",
+            "instanceOf": {
+              "contribution": [
+                {
+                  "agent": {
+                    "@type": "Person",
+                    "givenName": "Carla",
+                    "familyName": "Hansen"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "modifyAtPath": [
+        "@graph",
+        1,
+        "instanceOf",
+        "contribution"
+      ],
+      "delete": {
+        "agent": {
+          "@type": "Person",
+          "givenName": "Carla",
+          "familyName": "Hansen"
+        }
+      },
+      "insert": {
+        "agent": {
+          "@id": "https://libris-qa.kb.se/xf2vb0qpv49p5br7#it"
+        }
+      },
+      "test": {
+        "before": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "mainEntity": {
+                  "@id": "TEMP_ID#it"
+                }
+              },
+              {
+                "@id": "TEMP_ID#it",
+                "instanceOf": {
+                  "contribution": [
+                    {
+                      "agent": {
+                        "@type": "Person",
+                        "givenName": "Carla",
+                        "familyName": "Hansen"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "mainEntity": {
+                  "@id": "TEMP_ID#it"
+                }
+              },
+              {
+                "@id": "TEMP_ID#it",
+                "instanceOf": {
+                  "contribution": [
+                    {
+                      "agent": {
+                        "@id": "https://libris-qa.kb.se/xf2vb0qpv49p5br7#it"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Ändra literaler utifrån uppladdade mappningar",
+      "mappings": {
+        "Carla": "Calle",
+        "Vilhelm": "Ville"
+      },
+      "graph": {
+        "@graph": [
+          {
+            "@id": "TEMP_ID",
+            "mainEntity": {
+              "@id": "TEMP_ID#it"
+            }
+          },
+          {
+            "@id": "TEMP_ID#it",
+            "instanceOf": {
+              "contribution": [
+                {
+                  "agent": {
+                    "@type": "Person",
+                    "givenName": "MAPPINGS_PLACEHOLDER",
+                    "familyName": "Hansen"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "modifyAtPath": [
+        "@graph",
+        1,
+        "instanceOf",
+        "contribution",
+        "agent"
+      ],
+      "delete": {
+        "givenName": "MAPPINGS_PLACEHOLDER"
+      },
+      "insert": {
+        "givenName": "MAPPINGS_PLACEHOLDER"
+      },
+      "test": {
+        "before": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "mainEntity": {
+                  "@id": "TEMP_ID#it"
+                }
+              },
+              {
+                "@id": "TEMP_ID#it",
+                "instanceOf": {
+                  "contribution": [
+                    {
+                      "agent": {
+                        "@type": "Person",
+                        "givenName": "Carla",
+                        "familyName": "Hansen"
+                      }
+                    },
+                    {
+                      "agent": {
+                        "@type": "Person",
+                        "givenName": "Vilhelm",
+                        "familyName": "Hansen"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "mainEntity": {
+                  "@id": "TEMP_ID#it"
+                }
+              },
+              {
+                "@id": "TEMP_ID#it",
+                "instanceOf": {
+                  "contribution": [
+                    {
+                      "agent": {
+                        "@type": "Person",
+                        "givenName": "Calle",
+                        "familyName": "Hansen"
+                      }
+                    },
+                    {
+                      "agent": {
+                        "@type": "Person",
+                        "givenName": "Ville",
+                        "familyName": "Hansen"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Ersätt en länkad entitet med en annan",
+      "graph": {
+        "@graph": [
+          {
+            "@id": "TEMP_ID",
+            "mainEntity": {
+              "@id": "TEMP_ID#it"
+            }
+          },
+          {
+            "@id": "TEMP_ID#it",
+            "instanceOf": {
+              "subject": [
+                {
+                  "@id": "https://id.kb.se/term/sao/H%C3%A4star"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "modifyAtPath": [
+        "@graph",
+        1,
+        "instanceOf"
+      ],
+      "delete": {
+        "subject": {
+          "@id": "https://id.kb.se/term/sao/H%C3%A4star"
+        }
+      },
+      "insert": {
+        "subject": {
+          "@id": "https://id.kb.se/term/sao/%C3%85snor"
+        }
+      },
+      "test": {
+        "before": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "mainEntity": {
+                  "@id": "TEMP_ID#it"
+                }
+              },
+              {
+                "@id": "TEMP_ID#it",
+                "instanceOf": {
+                  "subject": [
+                    {
+                      "@id": "https://id.kb.se/term/sao/H%C3%A4star"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "mainEntity": {
+                  "@id": "TEMP_ID#it"
+                }
+              },
+              {
+                "@id": "TEMP_ID#it",
+                "instanceOf": {
+                  "subject": [
+                    {
+                      "@id": "https://id.kb.se/term/sao/%C3%85snor"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Flytta värde till ny egenskap",
+      "graph": {
+        "@graph": [
+          {
+            "@id": "TEMP_ID",
+            "mainEntity": {
+              "@id": "TEMP_ID#it"
+            }
+          },
+          {
+            "@id": "TEMP_ID#it",
+            "@type": "Item",
+            "heldBy": {
+              "@id": "https://libris.kb.se/library/Ue"
+            },
+            "hasNote": [
+              {
+                "@type": "Note",
+                "label": "Pliktex"
+              }
+            ]
+          }
+        ]
+      },
+      "modifyAtPath": [
+        "@graph",
+        1
+      ],
+      "delete": {
+        "hasNote": {
+          "@type": "Note",
+          "label": "Pliktex"
+        }
+      },
+      "insert": {
+        "immediateAcquisition": {
+          "@type": "ImmediateAcquisition",
+          "marc:sourceOfAcquisition": "Pliktex."
+        }
+      },
+      "test": {
+        "before": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "mainEntity": {
+                  "@id": "TEMP_ID#it"
+                }
+              },
+              {
+                "@id": "TEMP_ID#it",
+                "@type": "Item",
+                "heldBy": {
+                  "@id": "https://libris.kb.se/library/Ue"
+                },
+                "hasNote": [
+                  {
+                    "@type": "Note",
+                    "label": "Pliktex"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "mainEntity": {
+                  "@id": "TEMP_ID#it"
+                }
+              },
+              {
+                "@id": "TEMP_ID#it",
+                "@type": "Item",
+                "heldBy": {
+                  "@id": "https://libris.kb.se/library/Ue"
+                },
+                "immediateAcquisition": {
+                  "@type": "ImmediateAcquisition",
+                  "marc:sourceOfAcquisition": "Pliktex."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Ta bort entitet med specifikt värde",
+      "graph": {
+        "@graph": [
+          {
+            "@id": "TEMP_ID",
+            "technicalNote": [
+              {
+                "@type": "TechnicalNote",
+                "label": "Maskinellt genererad post. Ändra kod för fullständighetsnivå (leader/17), annars kommer manuellt gjorda ändringar att försvinna."
+              }
+            ]
+          }
+        ]
+      },
+      "modifyAtPath": [
+        "@graph",
+        0
+      ],
+      "delete": {
+        "technicalNote": {
+          "@type": "TechnicalNote",
+          "label": "Maskinellt genererad post. Ändra kod för fullständighetsnivå (leader/17), annars kommer manuellt gjorda ändringar att försvinna."
+        }
+      },
+      "test": {
+        "before": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "@type": "Record",
+                "technicalNote": [
+                  {
+                    "@type": "TechnicalNote",
+                    "label": "Maskinellt genererad post. Ändra kod för fullständighetsnivå (leader/17), annars kommer manuellt gjorda ändringar att försvinna."
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "@type": "Record"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Lägg till entitet/värde i egenskap",
+      "graph": {
+        "@graph": [
+          {
+            "@id": "TEMP_ID",
+            "mainEntity": {
+              "@id": "TTEMP_ID#it"
+            }
+          },
+          {
+            "@id": "TEMP_ID#it",
+            "@type": "Item",
+            "heldBy": {
+              "@id": "https://libris.kb.se/library/Ue"
+            },
+            "hasComponent": [
+              {
+                "@type": "Item"
+              }
+            ]
+          }
+        ]
+      },
+      "modifyAtPath": [
+        "@graph",
+        1,
+        "hasComponent"
+      ],
+      "insert": {
+        "availability": {
+          "@id": "https://id.kb.se/term/enum/NotForILL"
+        }
+      },
+      "test": {
+        "before": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "mainEntity": {
+                  "@id": "TEMP_ID#it"
+                }
+              },
+              {
+                "@id": "TEMP_ID#it",
+                "@type": "Item",
+                "heldBy": {
+                  "@id": "https://libris.kb.se/library/Ue"
+                },
+                "hasComponent": [
+                  {
+                    "@type": "Item"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "mainEntity": {
+                  "@id": "TEMP_ID#it"
+                }
+              },
+              {
+                "@id": "TEMP_ID#it",
+                "@type": "Item",
+                "heldBy": {
+                  "@id": "https://libris.kb.se/library/Ue"
+                },
+                "hasComponent": [
+                  {
+                    "@type": "Item",
+                    "availability": {
+                      "@id": "https://id.kb.se/term/enum/NotForILL"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Radera del av bestånd",
+      "graph": {
+        "@graph": [
+          {
+            "@id": "TEMP_ID",
+            "mainEntity": {
+              "@id": "TEMP_ID#it"
+            }
+          },
+          {
+            "@id": "TEMP_ID#it",
+            "@type": "Item",
+            "heldBy": {
+              "@id": "https://libris.kb.se/library/LnuK"
+            },
+            "hasComponent": [
+              {
+                "@type": "Item",
+                "heldBy": {
+                  "@id": "https://libris.kb.se/library/LnuK"
+                },
+                "hasNote": [
+                  {
+                    "label": "Placering Designutbildningen, Nybro"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "modifyAtPath": [
+        "@graph",
+        1
+      ],
+      "delete": {
+        "hasComponent": {
+          "@type": "Item",
+          "heldBy": {
+            "@id": "https://libris.kb.se/library/LnuK"
+          },
+          "hasNote": [
+            {
+              "label": "Placering Designutbildningen, Nybro"
+            }
+          ]
+        }
+      },
+      "test": {
+        "before": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "mainEntity": {
+                  "@id": "TEMP_ID#it"
+                }
+              },
+              {
+                "@id": "TEMP_ID#it",
+                "@type": "Item",
+                "heldBy": {
+                  "@id": "https://libris.kb.se/library/LnuK"
+                },
+                "hasComponent": [
+                  {
+                    "@type": "Item"
+                  },
+                  {
+                    "@type": "Item",
+                    "heldBy": {
+                      "@id": "https://libris.kb.se/library/LnuK"
+                    },
+                    "hasNote": [
+                      {
+                        "label": "Placering Designutbildningen, Nybro"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "mainEntity": {
+                  "@id": "TEMP_ID#it"
+                }
+              },
+              {
+                "@id": "TEMP_ID#it",
+                "@type": "Item",
+                "heldBy": {
+                  "@id": "https://libris.kb.se/library/LnuK"
+                },
+                "hasComponent": [
+                  {
+                    "@type": "Item"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Flytta bestånd från en sigel till en annan",
+      "graph": {
+        "@graph": [
+          {
+            "@id": "TEMP_ID",
+            "mainEntity": {
+              "@id": "TEMP_ID#it"
+            }
+          },
+          {
+            "@id": "TEMP_ID#it",
+            "@type": "Item",
+            "heldBy": {
+              "@id": "https://libris.kb.se/library/LnuK"
+            }
+          }
+        ]
+      },
+      "modifyAtPath": [
+        "@graph",
+        1
+      ],
+      "delete": {
+        "heldBy": {
+          "@id": "https://libris.kb.se/library/LnuK"
+        }
+      },
+      "insert": {
+        "heldBy": {
+          "@id": "https://libris.kb.se/library/Ue"
+        }
+      },
+      "test": {
+        "before": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "mainEntity": {
+                  "@id": "TEMP_ID#it"
+                }
+              },
+              {
+                "@id": "TEMP_ID#it",
+                "@type": "Item",
+                "heldBy": {
+                  "@id": "https://libris.kb.se/library/LnuK"
+                }
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "mainEntity": {
+                  "@id": "TEMP_ID#it"
+                }
+              },
+              {
+                "@id": "TEMP_ID#it",
+                "@type": "Item",
+                "heldBy": {
+                  "@id": "https://libris.kb.se/library/Ue"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Flytta bestånd mellan bibliografiska poster",
+      "graph": {
+        "@graph": [
+          {
+            "@id": "TEMP_ID",
+            "mainEntity": {
+              "@id": "TEMP_ID#it"
+            }
+          },
+          {
+            "@id": "TEMP_ID#it",
+            "@type": "Item",
+            "itemOf": {
+              "@id": "https://libris-qa.kb.se/5ngb7mch3g6w8s2#it"
+            }
+          }
+        ]
+      },
+      "modifyAtPath": [
+        "@graph",
+        1
+      ],
+      "delete": {
+        "itemOf": {
+          "@id": "https://libris-qa.kb.se/5ngb7mch3g6w8s2#it"
+        }
+      },
+      "insert": {
+        "itemOf": {
+          "@id": "https://libris-qa.kb.se/3gp73fbh10j1trm7#it"
+        }
+      },
+      "test": {
+        "before": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "mainEntity": {
+                  "@id": "TEMP_ID#it"
+                }
+              },
+              {
+                "@id": "TEMP_ID#it",
+                "@type": "Item",
+                "itemOf": {
+                  "@id": "https://libris-qa.kb.se/5ngb7mch3g6w8s2#it"
+                }
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "mainEntity": {
+                  "@id": "TEMP_ID#it"
+                }
+              },
+              {
+                "@id": "TEMP_ID#it",
+                "@type": "Item",
+                "itemOf": {
+                  "@id": "https://libris-qa.kb.se/3gp73fbh10j1trm7#it"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Ersätt ett värde/en textsträng i en eller flera entiteter med en länkad entitet",
+      "graph": {
+        "@graph": [
+          {
+            "@id": "TEMP_ID",
+            "mainEntity": {
+              "@id": "TEMP_ID#it"
+            }
+          },
+          {
+            "@id": "TEMP_ID#it",
+            "instanceOf": {
+              "subject": [
+                {
+                  "@type": "ComplexSubject",
+                  "inScheme": {
+                    "@id": "https://id.kb.se/term/barn"
+                  },
+                  "termComponentList": [
+                    {
+                      "@id": "https://id.kb.se/term/barn/Dinosaurier"
+                    },
+                    {
+                      "@type": "GenreSubdivision",
+                      "prefLabel": "barn och ungdomslitteratur"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "modifyAtPath": [
+        "@graph",
+        1,
+        "instanceOf"
+      ],
+      "delete": {
+        "subject": {
+          "@type": "ComplexSubject",
+          "inScheme": {
+            "@id": "https://id.kb.se/term/barn"
+          },
+          "termComponentList": [
+            {
+              "@id": "https://id.kb.se/term/barn/Dinosaurier"
+            },
+            {
+              "@type": "GenreSubdivision",
+              "prefLabel": "barn och ungdomslitteratur"
+            }
+          ]
+        }
+      },
+      "insert": {
+        "genreForm": {
+          "@id": "https://id.kb.se/term/barngf/Barn-%20och%20ungdomslitteratur"
+        },
+        "subject": {
+          "@id": "https://id.kb.se/term/barn/Dinosaurier"
+        }
+      },
+      "test": {
+        "before": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "mainEntity": {
+                  "@id": "TEMP_ID#it"
+                }
+              },
+              {
+                "@id": "TEMP_ID#it",
+                "instanceOf": {
+                  "subject": [
+                    {
+                      "@type": "ComplexSubject",
+                      "inScheme": {
+                        "@id": "https://id.kb.se/term/barn"
+                      },
+                      "termComponentList": [
+                        {
+                          "@id": "https://id.kb.se/term/barn/Dinosaurier"
+                        },
+                        {
+                          "@type": "GenreSubdivision",
+                          "prefLabel": "barn och ungdomslitteratur"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "@id": "TEMP_ID",
+            "@graph": [
+              {
+                "@id": "TEMP_ID",
+                "mainEntity": {
+                  "@id": "TEMP_ID#it"
+                }
+              },
+              {
+                "@id": "TEMP_ID#it",
+                "instanceOf": {
+                  "genreForm": {
+                    "@id": "https://id.kb.se/term/barngf/Barn-%20och%20ungdomslitteratur"
+                  },
+                  "subject": [
+                    {
+                      "@id": "https://id.kb.se/term/barn/Dinosaurier"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
