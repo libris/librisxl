@@ -156,6 +156,15 @@ class RomanizerSpec extends Specification {
         // https://libris.kb.se/5m0smjhb3d66cj4c#it
         "Бајке за дјецу" || "Bajke za djecu" // "Bajke za djecu" in record
     }
+
+    def "Bosnian with KR76"() {
+        expect:
+        new Romanizer().romanize(source, 'bs')['bs-Latn-t-bs-Cyrl-x0-kr76'] == target
+        where:
+        source           || target
+        // https://libris.kb.se/5m0smjhb3d66cj4c#it
+        "Бајке за дјецу" || "Bajke za djecu" // "Bajke za djecu" in record
+    }
     
     def "Bulgarian with ISO"() {
         expect:
@@ -196,6 +205,17 @@ class RomanizerSpec extends Specification {
     def "Serbian with ISO"() {
         expect:
         new Romanizer().romanize(source, 'sr')['sr-Latn-t-sr-Cyrl-m0-iso-1968'] == target
+        where:
+        source || target
+        // https://libris.kb.se/2dbbcc810dxjnk9l#it
+        "Узбуна у кући белих медведа" || "Uzbuna u kući belih medveda"
+        // https://libris.kb.se/dqnnpp1sbxm436wp#it
+        'Тиги, хаjдемо у шетњу' || 'Tigi, hajdemo u šetnju'
+    }
+
+    def "Serbian with KR76"() {
+        expect:
+        new Romanizer().romanize(source, 'sr')['sr-Latn-t-sr-Cyrl-x0-kr76'] == target
         where:
         source || target
         // https://libris.kb.se/2dbbcc810dxjnk9l#it

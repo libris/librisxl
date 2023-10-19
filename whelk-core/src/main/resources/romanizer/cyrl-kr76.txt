@@ -80,7 +80,6 @@ $soft_hard = [ь ъ Ь Ъ] ;
 \u041B > L ;
 \u043B > l ;
 
-# TODO not in russian table
 # Љ љ lj
 \u0409 } [:LowercaseLetter:] > Lj;
 \u0409 > LJ ;
@@ -94,7 +93,6 @@ $soft_hard = [ь ъ Ь Ъ] ;
 \u041D > N ;
 \u043D > n ;
 
-# TODO not in russian table
 # Њ њ nj
 \u040A } [:LowercaseLetter:] > Nj;
 \u040A > NJ ;
@@ -120,7 +118,6 @@ $soft_hard = [ь ъ Ь Ъ] ;
 \u0422 > T ;
 \u0442 > t ;
 
-# TODO not in russian table
 # Ћ ћ ć
 \u040B <> \u0106 ;
 \u045B <> \u0107 ;
@@ -137,12 +134,6 @@ $soft_hard = [ь ъ Ь Ъ] ;
 # Ф ф f
 \u0424 <> F ;
 \u0444 <> f ;
-
-# TODO not in russian table
-# Џ џ dž
-\u040F } [:LowercaseLetter:] <> D\u017E;
-\u040F <> D\u017D ;
-\u045F <> d\u017E ;
 
 # Ы ы y
 \u042B <> Y ;

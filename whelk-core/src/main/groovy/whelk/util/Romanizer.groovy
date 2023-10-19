@@ -25,6 +25,7 @@ class Romanizer {
             auto('bg-Cyrl',  'bg-Latn-t-bg-Cyrl-m0-iso-1968', ['bg-iso.txt', 'slavic-iso.txt']),
             auto('bg-Cyrl',  'bg-Latn-t-bg-Cyrl-x0-kr76', ['cyrl-kr76.txt', 'bg-kr76.txt']),
             auto('bs-Cyrl',  'bs-Latn-t-bs-Cyrl-m0-iso-1968', ['bs-sr-iso.txt', 'slavic-iso.txt']),
+            auto('bs-Cyrl',  'bs-Latn-t-bs-Cyrl-x0-kr76', ['cyrl-kr76.txt', 'bs-sr-kr76.txt']),
             auto('el'     ,  'el-Latn-t-el-Grek-x0-btj', ['el-btj.txt']),
             auto('grc'    ,  'grc-Latn-t-grc-Grek-x0-skr-1980', ['grc-skr.txt']),
             auto('yi-Hebr',  'yi-Latn-t-yi-Hebr-x0-yivo', ['yi-yivo.txt']),
@@ -35,6 +36,7 @@ class Romanizer {
             auto('ru-Cyrl',  'ru-Latn-t-ru-Cyrl-m0-iso-1968', ['ru-iso.txt', 'slavic-iso.txt']),
             auto('ru-Cyrl',  'ru-Latn-t-ru-Cyrl-x0-kr76', ['cyrl-kr76.txt', 'ru-kr76.txt']),
             auto('sr-Cyrl',  'sr-Latn-t-sr-Cyrl-m0-iso-1968', ['bs-sr-iso.txt', 'slavic-iso.txt']),
+            auto('sr-Cyrl',  'sr-Latn-t-sr-Cyrl-x0-kr76', ['cyrl-kr76.txt', 'bs-sr-kr76.txt']),
             auto('uk-Cyrl',  'uk-Latn-t-uk-Cyrl-m0-iso-1968', ['uk-iso.txt', 'slavic-iso.txt']),
 
             // Converted from LOC mappings
