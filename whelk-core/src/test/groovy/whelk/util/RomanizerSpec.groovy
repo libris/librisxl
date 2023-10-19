@@ -301,7 +301,7 @@ class RomanizerSpec extends Specification {
     
     def "Tigrinya with ALA-LOC"() {
         expect:
-        new Romanizer().romanize(source, 'tir')['tir-Latn-t-tir-Ethi-m0-alaloc'] == target
+        new Romanizer().romanize(source, 'ti')['ti-Latn-t-ti-Ethi-m0-alaloc'] == target
         where:
         source         || target
         // zh9lf7193q7n08w

@@ -2,7 +2,7 @@
 # Source: https://raw.githubusercontent.com/lcnetdev/transliterator/main/scriptshifter/tables/data/kyrgyz.yml
 # ICU transform rules
 
-# kir-Latn-t-kir-Cyrl-m0-alaloc
+# ky-Latn-t-ky-Cyrl-m0-alaloc
 
 # script_to_roman
 'Є' > 'I︠E︡' ;
