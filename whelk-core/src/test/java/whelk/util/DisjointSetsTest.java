@@ -1,11 +1,12 @@
-package datatool.util;
+package whelk.util;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import whelk.util.DisjointSets;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 public class DisjointSetsTest {
 
