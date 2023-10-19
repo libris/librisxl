@@ -7,24 +7,28 @@ import org.apache.jena.query.QueryExecution
 import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.query.ResultSet
 
+import static java.nio.charset.StandardCharsets.UTF_8
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.RECORD_KEY
 import static whelk.JsonLd.THING_KEY
 
 import static whelk.JsonLd.asList
 
 class BulkChange {
-    private static final String GRAPH = 'graph'
+    private static final String FORM = 'form'
+    private static final String OPERATIONS = 'operations'
+    private static final String PROPERTY = 'property'
     private static final String DELETE = 'delete'
     private static final String INSERT = 'insert'
-
     private static final String MAPPINGS = 'mappings'
-    private static final String MODIFY_AT_PATH = 'modifyAtPath'
+    private static final String PATH = 'path'
 
     private static final String GRAPH_TMP_ID = "TEMP_ID"
     private static final String THING_TMP_ID = "TEMP_ID#it"
-
     private static final String MAPPINGS_PLACEHOLDER = "MAPPINGS_PLACEHOLDER"
+
+    private static final String GRAPH = 'graph'
 
     private static final int LIMIT = 3
 
@@ -34,25 +38,24 @@ class BulkChange {
 
     List<String> ids
     List<Map> data
-    Map modifiedData
+    List<Map> modifiedData
 
     BulkChange(Whelk whelk, Map spec, List<String> ids = [], boolean deleteRecords = false) {
         this.spec = spec
         this.whelk = whelk
         this.comparator = new DocumentComparator()
-        this.ids = loadIds(ids, spec[GRAPH], whelk.jsonld.context)
+        this.ids = loadIds(ids, spec[FORM], whelk.jsonld.getContext())
         if (deleteRecords) {
             deleteSelection(whelk, this.ids)
         } else {
             this.data = loadData(whelk, this.ids)
-            this.modifiedData = modify(data, spec, this.comparator)
-            // TODO: Show diff, save new versions if diff looks ok
+            this.modifiedData = modify(data, spec, this.comparator, whelk.jsonld.getRepeatableTerms())
         }
     }
 
-    static List<String> loadIds(List<String> inputIds, Map graph, Map context) {
-        if (graph) {
-            def queriedIds = sparqlQueryIds(graph, context)
+    static List<String> loadIds(List<String> inputIds, Map form, Map context) {
+        if (form) {
+            def queriedIds = sparqlQueryIds(form, context)
             return inputIds ? queriedIds.intersect(inputIds) : queriedIds
         }
         return inputIds
@@ -67,13 +70,15 @@ class BulkChange {
 
     static List<Map> loadData(Whelk whelk, List<String> ids) {
         return whelk.bulkLoad(ids).collect { id, doc ->
-            doc.data[ID_KEY] = id
-            doc.data
+            def (record, thing) = doc.data[GRAPH_KEY]
+            thing[RECORD_KEY] = record
+            doc.data = thing
+            return thing
         }
     }
 
-    static List<String> sparqlQueryIds(Map graph, Map context, Map mappings = null) {
-        def ttl = toTurtle(graph, context)
+    static List<String> sparqlQueryIds(Map form, Map context, Map mappings = null) {
+        def ttl = toTurtle(form, context)
         def (prefixes, ttlGraph) = separatePrefixes(ttl)
         def graphPattern = sparqlify(ttlGraph)
         def valuesClause = ""
@@ -101,7 +106,9 @@ class BulkChange {
             queryString += "\nLIMIT ${LIMIT}"
         }
 
-        QueryExecution qe = QueryExecutionFactory.sparqlService(Document.BASE_URI.toString() + "sparql", queryString)
+        //TODO: Get sparql endpoint for environment properly (not via document base uri)
+        def endpoint = Document.BASE_URI.toString() + "sparql"
+        QueryExecution qe = QueryExecutionFactory.sparqlService(endpoint, queryString)
         ResultSet res = qe.execSelect()
         return res.collect { it.get(GRAPH).toString() }
     }
@@ -112,9 +119,10 @@ class BulkChange {
                 .collect { it.join('\n') }
     }
 
-    static String toTurtle(Map data, Map context = null) {
-        def bytes = JsonLdToTrigSerializer.toTurtle(context, data).toByteArray()
-        return new String(bytes, "UTF-8")
+    static String toTurtle(Map thing, Map context = null) {
+        def atGraphForm = [thing.remove(RECORD_KEY), thing]
+        def bytes = JsonLdToTrigSerializer.toTurtle(context, atGraphForm).toByteArray()
+        return new String(bytes, UTF_8)
     }
 
     static String sparqlify(String ttl) {
@@ -125,76 +133,82 @@ class BulkChange {
         return ttl.replace(substitutions)
     }
 
-    static modify(List<Map> data, Map spec, DocumentComparator c) {
+    static modify(List<Map> data, Map spec, DocumentComparator c, Set<String> repeatableTerms) {
         def updated = []
-        def mappings = spec[MAPPINGS]
-        def template = spec[GRAPH]
-        data.each { d ->
-            if (mappings && !template) {
-                def modified = DocumentUtil.traverse(d) { value, path ->
-                    if (value instanceof String && mappings[value]) {
-                        new DocumentUtil.Replace(mappings[value])
-                    }
-                }
-                if (modified) {
-                    updated.add(d)
-                }
-                return
-            }
-            if (template && isSubSet(c, template, d, mappings.asBoolean())) {
-                def delete = spec[DELETE]
-                def insert = spec[INSERT]
-                def modified = false
-                asList(DocumentUtil.getAtPath(d, spec[MODIFY_AT_PATH], [], false)).each { Map modifyAt ->
-                    if (delete && insert) {
-                        if (mappings) {
-                            def prop = delete.keySet().find()
-                            for (entry in mappings) {
-                                def del = [(prop): entry.key]
-                                def ins = [(prop): entry.value]
-                                if (replace(modifyAt, del, ins, c)) {
-                                    return modified = true
+        def globalMappings = spec[MAPPINGS]
+        def form = spec[FORM]
+        data.each { thing ->
+            def modified = false
+            if (form && isSubSet(c, form, thing)) {
+                def allOpsSuccessful = spec[OPERATIONS].every { op ->
+                    def path = op[PATH].findAll { it instanceof String }
+                    def property = op[PROPERTY]
+                    def repeatable = property in repeatableTerms
+                    def delete = op[DELETE]
+                    def insert = op[INSERT]
+                    def localMappings = op[MAPPINGS]
+                    def obj = DocumentUtil.getAtPath(thing, path, [], false)
+                    if (localMappings) {
+                        def anySuccessful = false
+                        asList(obj).each { Map node ->
+                            for (entry in localMappings) {
+                                if (replace(node, property, entry.key, entry.value, c, repeatable)) {
+                                    return anySuccessful = true
                                 }
                             }
-                        } else if (replace(modifyAt, delete, insert, c)) {
-                            cleanUpEmpty(d)
-                            modified = true
                         }
-                    } else if (delete) {
-                        if (doDelete(modifyAt, delete, c)) {
-                            cleanUpEmpty(d)
-                            modified = true
-                        }
-                    } else if (insert) {
-                        if (doInsert(modifyAt, insert, c)) {
-                            modified = true
+                        return anySuccessful
+                    }
+                    for (Map node in asList(obj)) {
+                        if (delete && insert) {
+                            if (replace(node, property, delete, insert, c, repeatable)) {
+                                return true
+                            }
+                        } else if (delete) {
+                            if (doDelete(node, property, delete, c)) {
+                                return true
+                            }
+                        } else if (insert) {
+                            if (doInsert(node, property, insert, c, repeatable)) {
+                                return true
+                            }
                         }
                     }
                 }
-                if (modified) {
-                    updated.add(d)
+                if (allOpsSuccessful) {
+                    cleanUpEmpty(thing)
+                    modified = true
                 }
             }
+            if (globalMappings) {
+                modified = DocumentUtil.traverse(thing) { value, path ->
+                    if (value instanceof String && globalMappings[value]) {
+                        new DocumentUtil.Replace(globalMappings[value])
+                    }
+                }
+            }
+            if (modified) {
+                updated.add(thing)
+            }
         }
+
         return updated
     }
 
-    static boolean isSubSet(DocumentComparator c, Map template, Map data, boolean mappings) {
-        def copy = Document.deepCopy(template)
-        def (record, thing) = copy[GRAPH_KEY]
-        record.remove(ID_KEY)
-        record.remove(THING_KEY)
-        if (thing) {
-            thing.remove(ID_KEY)
+    static boolean isSubSet(DocumentComparator c, Map form, Map thing) {
+        def copy = Document.deepCopy(form)
+        def meta = copy[RECORD_KEY]
+        if (meta) {
+            meta.remove(ID_KEY)
+            meta.remove(THING_KEY)
         }
-        if (mappings) {
-            DocumentUtil.traverse(copy) { value, path ->
-                if (value instanceof String && value == MAPPINGS_PLACEHOLDER) {
-                    new DocumentUtil.Remove()
-                }
+        copy.remove(ID_KEY)
+        DocumentUtil.traverse(copy) { value, path ->
+            if (value instanceof String && value == MAPPINGS_PLACEHOLDER) {
+                new DocumentUtil.Remove()
             }
         }
-        return c.isSubset(copy, data)
+        return c.isSubset(copy, thing)
     }
 
     static boolean cleanUpEmpty(Map data) {
@@ -207,49 +221,60 @@ class BulkChange {
         }
     }
 
-    static boolean replace(Map modifyAt, Map delete, Map insert, DocumentComparator c) {
-        return doDelete(modifyAt, delete, c) && doInsert(modifyAt, insert, c)
+    static boolean replace(Map node, String property, Object delete, Object insert, DocumentComparator c, boolean repeatable) {
+        return doDelete(node, property, delete, c) && doInsert(node, property, insert, c, repeatable)
     }
 
-    static boolean doDelete(Map node, Map delete, DocumentComparator c) {
-        def deleteKey = delete.keySet().find()
-        def deleteAt = node[deleteKey]
-        def deleteValue = delete[deleteKey]
-        if (deleteValue instanceof String) {
-            if (asList(deleteAt) == asList(deleteValue)) {
-                node.remove(deleteKey)
+    static boolean doDelete(Map node, String property, Object delete, DocumentComparator c) {
+        def current = node[property]
+        if (delete instanceof String) {
+            if (asList(current) == asList(delete)) {
+                node.remove(property)
                 return true
             }
-        } else if (deleteValue instanceof Map) {
-            if (deleteAt instanceof List && deleteAt.removeAll { c.isEqual(it, deleteValue) }) {
+        } else if (delete instanceof Map) {
+            if (current instanceof List && current.removeAll { c.isEqual(it, delete) }) {
                 return true
-            } else if (deleteAt instanceof Map && c.isEqual(deleteAt, deleteValue)) {
-                node.remove(deleteKey)
+            } else if (current instanceof Map && c.isEqual(current, delete)) {
+                node.remove(property)
+                return true
+            }
+        } else if (delete instanceof List && current instanceof List) {
+            def matching = current.findIndexValues { Map m -> delete.any { c.isEqual(m, it) } }
+            if (matching.size() == delete.size()) {
+                matching.reverse().each { i ->
+                    current.remove(i.intValue())
+                }
                 return true
             }
         }
         return false
     }
 
-    static boolean doInsert(Map node, Map insert, DocumentComparator c) {
-        def modified = false
-        insert.each { k, v ->
-            if (node[k] instanceof List) {
-                if (!node[k].any { c.isEqual(it, v) }) {
-                    node[k].add(v)
-                    modified = true
-                }
-            } else if (!node[k]) {
-                // TODO: asList if should be list
-                node[k] = v
-                modified = true
-            } else if (!c.isEqual(node[k], v)) {
-                // TODO: Check if multiple values allowed
-                node[k] = [node[k], v]
-                modified = true
-            }
+    static boolean doInsert(Map node, String property, Object insert, DocumentComparator c, boolean repeatable) {
+        def current = node[property]
+
+        if (insert instanceof String && current && asList(current) != asList(insert)) {
+            return false
         }
-        return modified
+        if (insert instanceof Map && current instanceof Map && !c.isEqual(current, insert) && !repeatable) {
+            return false
+        }
+        if (current instanceof List && !repeatable && !current.any { c.isEqual(it, insert) }) {
+            return false
+        }
+
+        if (current instanceof List) {
+            asList(insert).each { Map m ->
+                if (!current.any { c.isEqual(m, it) }) {
+                    current.add(m)
+                }
+            }
+        } else {
+            node[property] = repeatable ? asList(insert) : insert
+        }
+
+        return true
     }
 }
 
