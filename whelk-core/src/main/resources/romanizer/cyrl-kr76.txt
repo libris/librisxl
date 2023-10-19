@@ -1,0 +1,192 @@
+# ICU transform rules
+
+# Common base for transcription of cyrillic script.
+# "KR76 (Kjellberg) - Transkribering av kyrilliska alfabetet (folkbibliotekens praxis)"
+# https://metadatabyran.kb.se/download/18.6945cdaa174b74a2c361604/1601918194487/Transkriberingsschema_Kyrilliska%20alfabet_2015.pdf
+# https://metadatabyran.kb.se/beskrivning/specialanvisningar/mangsprak/libris-romaniseringspraxis#h-Kyrilliskskrift
+
+$vowel = [а у о ы и э я ю ё е А У О Ы И Э Я Ю Ё Е] ;
+$s_t = [с т С Т] ;
+$soft_hard = [ь ъ Ь Ъ] ;
+
+# А а a
+\u0410 > A ;
+\u0430 > a ;
+
+# Б б b
+\u0411 > B ;
+\u0431 > b ;
+
+# В в v
+\u0412 > V ;
+\u0432 > v ;
+
+# Г г g
+\u0413 > G ;
+\u0433 > g ;
+
+# TODO not in table
+# Ѓ ѓ g
+\u0403 > G ;
+\u0453 > g ;
+
+# TODO not in table
+# Ґ ґ g
+\u0490 > G ;
+\u0491 > g ;
+
+# Д д d
+\u0414 > D ;
+\u0434 > d ;
+
+# TODO serbocroatian
+# Ђ ђ đ
+\u0402 > \u0110 ;
+\u0452 > \u0111 ;
+
+# З з z
+\u0417 > Z ;
+\u0437 > z ;
+
+# Й й j
+\u0419 > J ;
+\u0439 > j ;
+
+# І і і
+# 3) tillhör den äldre ortografin
+\u0406 > I ;
+\u0456 > i ;
+
+# TODO not in table
+# Ї ї ï
+\u0407 > \u00CF ;
+\u0457 > \u00EF ;
+
+# TODO no in russian table
+# J j j
+\u0408 > J ;
+\u0458 > j ;
+
+# К к k
+\u041A > K ;
+\u043A > k ;
+
+# TODO not in table
+# Ќ ќ ḱ
+\u040C > \u1E30 ;
+\u045C > \u1E31 ;
+
+# Л л l
+\u041B > L ;
+\u043B > l ;
+
+# TODO not in russian table
+# Љ љ lj
+\u0409 } [:LowercaseLetter:] > Lj;
+\u0409 > LJ ;
+\u0459 > lj ;
+
+# М м m
+\u041C > M ;
+\u043C > m ;
+
+# Н н n
+\u041D > N ;
+\u043D > n ;
+
+# TODO not in russian table
+# Њ њ nj
+\u040A } [:LowercaseLetter:] > Nj;
+\u040A > NJ ;
+\u045A > nj ;
+
+# О о o
+\u041E > O ;
+\u043E > o ;
+
+# П п p
+\u041F > P ;
+\u043F > p ;
+
+# Р р r
+\u0420 > R ;
+\u0440 > r ;
+
+# С с s
+\u0421 > S ;
+\u0441 > s ;
+
+# Т т t
+\u0422 > T ;
+\u0442 > t ;
+
+# TODO not in russian table
+# Ћ ћ ć
+\u040B <> \u0106 ;
+\u045B <> \u0107 ;
+
+# У у u
+\u0423 <> U ;
+\u0443 <> u ;
+
+# TODO not in table
+# Ў ў ŭ
+\u040E <> \u016C ;
+\u045E <> \u016D ;
+
+# Ф ф f
+\u0424 <> F ;
+\u0444 <> f ;
+
+# TODO not in russian table
+# Џ џ dž
+\u040F } [:LowercaseLetter:] <> D\u017E;
+\u040F <> D\u017D ;
+\u045F <> d\u017E ;
+
+# Ы ы y
+\u042B <> Y ;
+\u044B <> y ;
+
+# Ь ь
+# 4) återges ej; se dock not 1
+# 6) återges ej
+\u042C > ;
+\u044C > ;
+
+# Э э e
+\u042D > E ;
+\u044D > e ;
+
+# Ю ю ju
+# 8) iu efter с, т och з
+[с т з С Т З] { \u042E } [:LowercaseLetter:] <> Iu;
+[с т з С Т З] { \u042E <> IU ;
+[с т з С Т З] { \u044E <> iu ;
+\u042E } [:LowercaseLetter:] <> Ju;
+\u042E <> JU ;
+\u044E <> ju ;
+
+# Я я ja
+# 9) ia efter с, т och з
+[с т з С Т З] { \u042F } [:LowercaseLetter:] <> Ia;
+[с т з С Т З] { \u042F <> IA ;
+[с т з С Т З] { \u044F <> ia ;
+\u042F } [[:LowercaseLetter:][:^Letter:]] <> Ja;
+\u042F <> JA ;
+\u044F <> ja ;
+
+# Ө ө f
+# 3) tillhör den äldre ortografin
+\u04E8 > F ;
+\u04E9 > f ;
+
+# Ѵ ѵ i
+# 3) tillhör den äldre ortografin
+\u0474 > I ;
+\u0475 > i ;
+
+# Ѫ ѫ ă
+# 3) tillhör den äldre ortografin
+\u046A <> \u0102 ;
+\u046B <> \u0103 ;

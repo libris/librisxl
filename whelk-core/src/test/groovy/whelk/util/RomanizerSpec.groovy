@@ -116,6 +116,22 @@ class RomanizerSpec extends Specification {
         'Ё' || 'E'
     }
 
+    def "Russian with KR76"() {
+        expect:
+        new Romanizer().romanize(source, 'ru')['ru-Latn-t-ru-Cyrl-x0-kr76'] == target
+        where:
+        source || target
+        // https://libris.kb.se/dr3t6tk7btsm1xpm#it
+        'Маша и медведь'           || 'Masja i medved'
+        'Русские народные сказки' || 'Russkie narodnye skazki'
+        // Hard sign
+        'съесть' || 'sest'
+        'съ'     || 's'
+        // Yo
+        'сёрфингист' || 'serfingist'
+        'Ё' || 'E'
+    }
+
     def "Belarusian with ISO"() {
         expect:
         new Romanizer().romanize(source, 'be')['be-Latn-t-be-Cyrl-m0-iso-1968'] == target
@@ -152,6 +168,17 @@ class RomanizerSpec extends Specification {
         "Белия зъб" || "Belija zăb"
         // https://libris.kb.se/097g4pxsxddft0s7
         "Ще се удавят в сълзите на майките си" || "Šte se udavjat v sălzite na majkite si"
+    }
+
+    def "Bulgarian with KR76"() {
+        expect:
+        new Romanizer().romanize(source, 'bg')['bg-Latn-t-bg-Cyrl-x0-kr76'] == target
+        where:
+        source || target
+        // https://libris.kb.se/fzr6pkkr2vnc152#it
+        'Баба праща поздрави и се извинява' || 'Baba prasjta pozdravi i se izvinjava'
+        // https://libris.kb.se/jxqb93w0gxhtbf7d#it
+        "Белия зъб" || "Belija zăb"
     }
 
     def "Macedonian with ISO"() {

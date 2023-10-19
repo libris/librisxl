@@ -1,0 +1,58 @@
+# ICU transform rules
+
+# Bulgarian
+# See also: cyrl-kr76.txt
+
+# Е е e
+\u0415 > E ;
+\u0435 > e ;
+
+# NOTE not in table
+# Ё ё e
+\u0401 > E ;
+\u0451 > e ;
+
+# Ж ж zj
+\u0416 } [:LowercaseLetter:] > Zj ;
+\u0416 > ZJ ;
+\u0436 > zj ;
+
+# И и i
+\u0418 > I ;
+\u0438 > i ;
+
+# Х х ch
+\u0425 } [:LowercaseLetter:] <> Ch;
+\u0425 <> CH ;
+\u0445 <> ch ;
+
+# Ц ц ts
+\u0426 } [:LowercaseLetter:] <> Ts ;
+\u0426 <> TS ;
+\u0446 <> ts ;
+
+# Ч ч tj
+\u0427 } [:LowercaseLetter:] <> Tj ;
+\u0427 <> TJ ;
+\u0447 <> tj ;
+
+# Ш ш sj
+\u0428 } [:LowercaseLetter:] <> Sj ;
+\u0428 <> SJ ;
+\u0448 <> sj ;
+
+# Щ щ sjt
+\u0429 } [:LowercaseLetter:] <> Sjt ;
+\u0429 <> SJT ;
+\u0449 <> sjt ;
+
+# Ъ ъ ă
+# 5) återges ej då den enligt äldre ortografi står i ordslut
+\u042A } [:^Letter:] <> ;
+\u042A <> \u0102 ;
+\u044A } [:^Letter:] <> ;
+\u044A <> \u0103 ;
+
+# Ѣ ѣ e
+\u0462 > E ;
+\u0463 > e ;

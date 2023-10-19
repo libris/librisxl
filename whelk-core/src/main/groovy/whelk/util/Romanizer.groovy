@@ -23,6 +23,7 @@ class Romanizer {
     private static final List<Transform> AUTO = [
             auto('be-Cyrl',  'be-Latn-t-be-Cyrl-m0-iso-1968', ['be-iso.txt', 'slavic-iso.txt']),
             auto('bg-Cyrl',  'bg-Latn-t-bg-Cyrl-m0-iso-1968', ['bg-iso.txt', 'slavic-iso.txt']),
+            auto('bg-Cyrl',  'bg-Latn-t-bg-Cyrl-x0-kr76', ['cyrl-kr76.txt', 'bg-kr76.txt']),
             auto('bs-Cyrl',  'bs-Latn-t-bs-Cyrl-m0-iso-1968', ['bs-sr-iso.txt', 'slavic-iso.txt']),
             auto('el'     ,  'el-Latn-t-el-Grek-x0-btj', ['el-btj.txt']),
             auto('grc'    ,  'grc-Latn-t-grc-Grek-x0-skr-1980', ['grc-skr.txt']),
@@ -32,6 +33,7 @@ class Romanizer {
             auto('mk-Cyrl',  'mk-Latn-t-mk-Cyrl-m0-iso-1968', ['mk-iso.txt', 'slavic-iso.txt']),
             auto('mn-Cyrl',  'mn-Latn-t-mn-Cyrl-x0-lessing', ['mn-lessing.txt']),
             auto('ru-Cyrl',  'ru-Latn-t-ru-Cyrl-m0-iso-1968', ['ru-iso.txt', 'slavic-iso.txt']),
+            auto('ru-Cyrl',  'ru-Latn-t-ru-Cyrl-x0-kr76', ['cyrl-kr76.txt', 'ru-kr76.txt']),
             auto('sr-Cyrl',  'sr-Latn-t-sr-Cyrl-m0-iso-1968', ['bs-sr-iso.txt', 'slavic-iso.txt']),
             auto('uk-Cyrl',  'uk-Latn-t-uk-Cyrl-m0-iso-1968', ['uk-iso.txt', 'slavic-iso.txt']),
 
