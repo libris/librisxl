@@ -39,11 +39,6 @@ $soft_hard = [ь ъ Ь Ъ] ;
 \u0414 > D ;
 \u0434 > d ;
 
-# TODO serbocroatian
-# Ђ ђ đ
-\u0402 > \u0110 ;
-\u0452 > \u0111 ;
-
 # З з z
 \u0417 > Z ;
 \u0437 > z ;
@@ -62,7 +57,6 @@ $soft_hard = [ь ъ Ь Ъ] ;
 \u0407 > \u00CF ;
 \u0457 > \u00EF ;
 
-# TODO no in russian table
 # J j j
 \u0408 > J ;
 \u0458 > j ;
