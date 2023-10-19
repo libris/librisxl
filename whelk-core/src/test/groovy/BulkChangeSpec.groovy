@@ -1,11 +1,11 @@
 import spock.lang.Specification
 import whelk.BulkChange
-import whelk.util.DocumentComparator2
+import whelk.util.DocumentComparator
 
 import static whelk.util.Jackson.mapper
 
 class BulkChangeSpec extends Specification {
-    static DocumentComparator2 comparator = new DocumentComparator2()
+    static DocumentComparator comparator = new DocumentComparator()
     static List<Map> specs = BulkChangeSpec.class.getClassLoader()
             .getResourceAsStream('bulk-change-specs.json')
             .with { mapper.readValue(it, Map)['specs'] }

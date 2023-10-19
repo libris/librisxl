@@ -2,7 +2,7 @@ package whelk
 
 import whelk.converter.JsonLdToTrigSerializer
 import whelk.util.DocumentUtil
-import whelk.util.DocumentComparator2
+import whelk.util.DocumentComparator
 import org.apache.jena.query.QueryExecution
 import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.query.ResultSet
@@ -30,7 +30,7 @@ class BulkChange {
 
     Whelk whelk
     Map spec
-    DocumentComparator2 comparator
+    DocumentComparator comparator
 
     List<String> ids
     List<Map> data
@@ -39,10 +39,8 @@ class BulkChange {
     BulkChange(Whelk whelk, Map spec, List<String> ids = [], boolean deleteRecords = false) {
         this.spec = spec
         this.whelk = whelk
-        this.comparator = new DocumentComparator2()
-        if (ids.isEmpty()) {
-            this.ids = sparqlQueryIds(spec[GRAPH], whelk.jsonld.context)
-        }
+        this.comparator = new DocumentComparator()
+        this.ids = loadIds(ids, spec[GRAPH], whelk.jsonld.context)
         if (deleteRecords) {
             deleteSelection(whelk, this.ids)
         } else {
@@ -50,6 +48,14 @@ class BulkChange {
             this.modifiedData = modify(data, spec, this.comparator)
             // TODO: Show diff, save new versions if diff looks ok
         }
+    }
+
+    static List<String> loadIds(List<String> inputIds, Map graph, Map context) {
+        if (graph) {
+            def queriedIds = sparqlQueryIds(graph, context)
+            return inputIds ? queriedIds.intersect(inputIds) : queriedIds
+        }
+        return inputIds
     }
 
     static void deleteSelection(Whelk whelk, List<String> ids) {
@@ -119,7 +125,7 @@ class BulkChange {
         return ttl.replace(substitutions)
     }
 
-    static modify(List<Map> data, Map spec, DocumentComparator2 c) {
+    static modify(List<Map> data, Map spec, DocumentComparator c) {
         def updated = []
         def mappings = spec[MAPPINGS]
         def template = spec[GRAPH]
@@ -173,7 +179,7 @@ class BulkChange {
         return updated
     }
 
-    static boolean isSubSet(DocumentComparator2 c, Map template, Map data, boolean mappings) {
+    static boolean isSubSet(DocumentComparator c, Map template, Map data, boolean mappings) {
         def copy = Document.deepCopy(template)
         def (record, thing) = copy[GRAPH_KEY]
         record.remove(ID_KEY)
@@ -201,11 +207,11 @@ class BulkChange {
         }
     }
 
-    static boolean replace(Map modifyAt, Map delete, Map insert, DocumentComparator2 c) {
+    static boolean replace(Map modifyAt, Map delete, Map insert, DocumentComparator c) {
         return doDelete(modifyAt, delete, c) && doInsert(modifyAt, insert, c)
     }
 
-    static boolean doDelete(Map node, Map delete, DocumentComparator2 c) {
+    static boolean doDelete(Map node, Map delete, DocumentComparator c) {
         def deleteKey = delete.keySet().find()
         def deleteAt = node[deleteKey]
         def deleteValue = delete[deleteKey]
@@ -225,7 +231,7 @@ class BulkChange {
         return false
     }
 
-    static boolean doInsert(Map node, Map insert, DocumentComparator2 c) {
+    static boolean doInsert(Map node, Map insert, DocumentComparator c) {
         def modified = false
         insert.each { k, v ->
             if (node[k] instanceof List) {
