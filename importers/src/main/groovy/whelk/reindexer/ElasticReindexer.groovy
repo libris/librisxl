@@ -50,7 +50,7 @@ class ElasticReindexer {
                         counter++
                         if (counter % BATCH_SIZE == 0) {
                             double docsPerSec = ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000))
-                            println("Indexing $docsPerSec documents per second (running average since process start). Total count: $counter.")
+                            log.info("Indexing ${String.format("%.1f", docsPerSec)} documents per second (running average since process start). Total count: $counter.")
                             bulkIndexWithRetries(documents, whelk)
                             documents = []
                         }
@@ -60,14 +60,14 @@ class ElasticReindexer {
                 }
             }
         } catch (Throwable e) {
-            println("Reindex failed with:\n" + e.toString() + "\ncallstack:\n" + e.printStackTrace())
+            log.error("Reindex failed with: ${e}", e)
         }
     }
 
     void reindex(String suppliedCollection, int numberOfThreads) {
         BlockingThreadPool.SimplePool threadPool
+        int counter = 0
         try {
-            int counter = 0
             startTime = System.currentTimeMillis()
             List<String> collections = suppliedCollection ? [suppliedCollection] : whelk.storage.loadCollections()
             threadPool = BlockingThreadPool.simplePool(numberOfThreads)
@@ -79,7 +79,7 @@ class ElasticReindexer {
                         counter++
                         if (counter % BATCH_SIZE == 0) {
                             double docsPerSec = ((double) counter) / ((double) ((System.currentTimeMillis() - startTime) / 1000))
-                            println("Indexing $docsPerSec documents per second (running average since process start). Total count: $counter.")
+                            log.info("Indexing ${String.format("%.1f", docsPerSec)} documents per second (running average since process start). Total count: $counter.")
                             def batch = documents
                             threadPool.submit({ bulkIndexWithRetries(batch, whelk) })
                             documents = []
@@ -90,11 +90,13 @@ class ElasticReindexer {
                     bulkIndexWithRetries(documents, whelk)
                 }
             }
-            println("Done! $counter documents reindexed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
-            println("New number of mappings/fields in ES: ${whelk.elastic.getFieldCount()}")
+
+            threadPool.awaitAllAndShutdown()
+            log.info("Done! $counter documents reindexed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
+            log.info("New number of mappings/fields in ES: ${whelk.elastic.getFieldCount()}")
             whelk.storage.logStats()
         } catch (Throwable e) {
-            println("Reindex failed with:\n" + e.toString() + "\ncallstack:\n" + e.printStackTrace())
+            log.error("Reindex failed with: ${e}", e)
         } finally {
             threadPool.awaitAllAndShutdown()
         }
