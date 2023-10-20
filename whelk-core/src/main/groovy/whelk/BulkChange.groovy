@@ -133,27 +133,40 @@ class BulkChange {
         return ttl.replace(substitutions)
     }
 
+    // TODO: Refactor
     static modify(List<Map> data, Map spec, DocumentComparator c, Set<String> repeatableTerms) {
         def updated = []
         def globalMappings = spec[MAPPINGS]
         def form = spec[FORM]
+        def normalizedForm = form ? normalizedForm(form) : null
         data.each { thing ->
-            def modified = false
-            if (form && isSubSet(c, form, thing)) {
+            def saveChanges = false
+            if (form && c.isSubset(normalizedForm, thing)) {
                 def allOpsSuccessful = spec[OPERATIONS].every { op ->
-                    def path = op[PATH].findAll { it instanceof String }
                     def property = op[PROPERTY]
                     def repeatable = property in repeatableTerms
                     def delete = op[DELETE]
                     def insert = op[INSERT]
                     def localMappings = op[MAPPINGS]
-                    def obj = DocumentUtil.getAtPath(thing, path, [], false)
+                    def targetEntity = DocumentUtil.getAtPath(form, op[PATH])
+                    def genericPath = op[PATH].findAll { it instanceof String }
+                    def obj = DocumentUtil.getAtPath(thing, genericPath, [], false)
+                    def anySuccessful = false
                     if (localMappings) {
-                        def anySuccessful = false
-                        asList(obj).each { Map node ->
+                        def placeholderPath = getPlaceholderPath(targetEntity)
+                        def targetEntityCopy = Document.deepCopy(targetEntity)
+                        for (Map node in asList(obj)) {
                             for (entry in localMappings) {
+                                replacePlaceholder(targetEntityCopy, placeholderPath, entry.key)
+                                if (!c.isSubset(targetEntityCopy, node)) {
+                                    putBackPlaceholder(targetEntityCopy, placeholderPath)
+                                    continue
+                                }
                                 if (replace(node, property, entry.key, entry.value, c, repeatable)) {
-                                    return anySuccessful = true
+                                    anySuccessful = true
+                                    break
+                                } else {
+                                    return false
                                 }
                             }
                         }
@@ -161,33 +174,46 @@ class BulkChange {
                     }
                     for (Map node in asList(obj)) {
                         if (delete && insert) {
+                            if (!c.isSubset(targetEntity, node)) {
+                                continue
+                            }
                             if (replace(node, property, delete, insert, c, repeatable)) {
-                                return true
+                                anySuccessful = true
+                            } else {
+                                return false
                             }
                         } else if (delete) {
+                            if (!c.isSubset(targetEntity, node)) {
+                                continue
+                            }
                             if (doDelete(node, property, delete, c)) {
-                                return true
+                                anySuccessful = true
+                            } else {
+                                return false
                             }
                         } else if (insert) {
                             if (doInsert(node, property, insert, c, repeatable)) {
-                                return true
+                                anySuccessful = true
+                            } else {
+                                return false
                             }
                         }
                     }
+                    return anySuccessful
                 }
                 if (allOpsSuccessful) {
                     cleanUpEmpty(thing)
-                    modified = true
+                    saveChanges = true
                 }
             }
             if (globalMappings) {
-                modified = DocumentUtil.traverse(thing) { value, path ->
+                saveChanges = DocumentUtil.traverse(thing) { value, path ->
                     if (value instanceof String && globalMappings[value]) {
                         new DocumentUtil.Replace(globalMappings[value])
                     }
                 }
             }
-            if (modified) {
+            if (saveChanges) {
                 updated.add(thing)
             }
         }
@@ -195,7 +221,30 @@ class BulkChange {
         return updated
     }
 
-    static boolean isSubSet(DocumentComparator c, Map form, Map thing) {
+    static void replacePlaceholder(Map m, List path, String value) {
+        DocumentUtil.getAtPath(m, path.dropRight(1)).with {
+            it[path.last()] = value
+        }
+    }
+
+    static void putBackPlaceholder(Map m, List path) {
+        DocumentUtil.getAtPath(m, path.dropRight(1)).with {
+            it[path.last()] = MAPPINGS_PLACEHOLDER
+        }
+    }
+
+    static List getPlaceholderPath(Map m) {
+        def path = []
+        DocumentUtil.traverse(m) { value, p ->
+            if (value instanceof String && value == MAPPINGS_PLACEHOLDER) {
+                path = p.collect()
+                return DocumentUtil.NOP
+            }
+        }
+        return path
+    }
+
+    static Map normalizedForm(Map form) {
         def copy = Document.deepCopy(form)
         def meta = copy[RECORD_KEY]
         if (meta) {
@@ -208,7 +257,7 @@ class BulkChange {
                 new DocumentUtil.Remove()
             }
         }
-        return c.isSubset(copy, thing)
+        return copy
     }
 
     static boolean cleanUpEmpty(Map data) {
