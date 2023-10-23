@@ -2585,7 +2585,7 @@ class PostgreSQLComponent {
 
     void remove(String identifier, String changedIn, String changedBy, boolean force=false) {
         if (versioning) {
-            if(!force && !followDependers(identifier).isEmpty())
+            if(!force && !followDependers(identifier, JsonLd.ALLOW_LINK_TO_DELETED).isEmpty())
                 throw new RuntimeException("Deleting depended upon records is not allowed.")
 
             log.debug("Marking document with ID ${identifier} as deleted.")
