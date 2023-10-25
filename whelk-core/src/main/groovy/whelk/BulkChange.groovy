@@ -148,22 +148,21 @@ class BulkChange {
                     def delete = op[DELETE]
                     def insert = op[INSERT]
                     def localMappings = op[MAPPINGS]
-                    def targetEntity = DocumentUtil.getAtPath(form, op[PATH])
+                    def parentForm = DocumentUtil.getAtPath(normalizedForm, op[PATH])
                     def genericPath = op[PATH].findAll { it instanceof String }
                     def obj = DocumentUtil.getAtPath(thing, genericPath, [], false)
                     def anySuccessful = false
                     if (localMappings) {
-                        def placeholderPath = getPlaceholderPath(targetEntity)
-                        def targetEntityCopy = Document.deepCopy(targetEntity)
                         for (Map node in asList(obj)) {
                             for (entry in localMappings) {
-                                replacePlaceholder(targetEntityCopy, placeholderPath, entry.key)
-                                if (!c.isSubset(targetEntityCopy, node)) {
-                                    putBackPlaceholder(targetEntityCopy, placeholderPath)
+                                parentForm[property] = entry.key
+                                if (!c.isSubset(parentForm, node)) {
+                                    parentForm.remove(property)
                                     continue
                                 }
                                 if (replace(node, property, entry.key, entry.value, c, repeatable)) {
                                     anySuccessful = true
+                                    parentForm.remove(property)
                                     break
                                 } else {
                                     return false
@@ -173,20 +172,25 @@ class BulkChange {
                         return anySuccessful
                     }
                     for (Map node in asList(obj)) {
+                        if (!c.isSubset(parentForm, node)) {
+                            continue
+                        }
                         if (delete && insert) {
-                            if (!c.isSubset(targetEntity, node)) {
+                            if (!isDeletable(node[property], delete, c)) {
                                 continue
                             }
                             if (replace(node, property, delete, insert, c, repeatable)) {
+                                adjustForm(parentForm, property, delete)
                                 anySuccessful = true
                             } else {
                                 return false
                             }
                         } else if (delete) {
-                            if (!c.isSubset(targetEntity, node)) {
+                            if (!isDeletable(node[property], delete, c)) {
                                 continue
                             }
                             if (doDelete(node, property, delete, c)) {
+                                adjustForm(parentForm, property, delete)
                                 anySuccessful = true
                             } else {
                                 return false
@@ -221,27 +225,19 @@ class BulkChange {
         return updated
     }
 
-    static void replacePlaceholder(Map m, List path, String value) {
-        DocumentUtil.getAtPath(m, path.dropRight(1)).with {
-            it[path.last()] = value
-        }
-    }
-
-    static void putBackPlaceholder(Map m, List path) {
-        DocumentUtil.getAtPath(m, path.dropRight(1)).with {
-            it[path.last()] = MAPPINGS_PLACEHOLDER
-        }
-    }
-
-    static List getPlaceholderPath(Map m) {
-        def path = []
-        DocumentUtil.traverse(m) { value, p ->
-            if (value instanceof String && value == MAPPINGS_PLACEHOLDER) {
-                path = p.collect()
-                return DocumentUtil.NOP
+    static void adjustForm(Map form, String property, Object delete) {
+        if (form[property] instanceof List) {
+            form[property] -= delete
+            if (form[property].isEmpty()) {
+                form.remove(property)
             }
+        } else {
+            form.remove(property)
         }
-        return path
+    }
+
+    static boolean isDeletable(Object obj, Object delete, DocumentComparator c) {
+        asList(delete).every { d -> asList(obj).any { c.isEqual(["x": it], ["x": d]) } }
     }
 
     static Map normalizedForm(Map form) {

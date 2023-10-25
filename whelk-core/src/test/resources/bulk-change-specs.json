@@ -371,7 +371,8 @@
       "operations": [
         {
           "path": [
-            "hasComponent"
+            "hasComponent",
+            0
           ],
           "property": "availability",
           "insert": {
@@ -689,14 +690,6 @@
       },
       "form": {
         "@id": "TEMP_ID#it",
-        "identifiedBy": [
-          {
-            "value": "x1"
-          },
-          {
-            "value": "x2"
-          }
-        ],
         "instanceOf": {
           "contribution": [
             {
