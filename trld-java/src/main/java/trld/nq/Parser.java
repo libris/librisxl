@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Input;
-import static trld.Common.dumpJson;
+import static trld.platform.Common.jsonEncode;
+import trld.platform.Input;
 import trld.jsonld.RdfDataset;
 import trld.jsonld.RdfGraph;
 import trld.jsonld.RdfTriple;
@@ -24,6 +24,9 @@ import trld.jsonld.RdfLiteral;
 import static trld.jsonld.Rdf.toJsonld;
 import static trld.trig.Parser.ESC_CHARS;
 import trld.trig.ReadTerm;
+
+
+
 
 public class Parser {
   public static final Integer READ_STMT = 0;
@@ -38,7 +41,6 @@ public class Parser {
   public static final Integer READ_LITERAL_FINISH = 9;
   public static final Integer READ_COMMENT = 10;
   public static final ReadTerm READ_ESCAPES = new ReadTerm(null);
-
   public static void load(RdfDataset dataset, Input inp) {
     Object state = (Object) READ_STMT;
     Object prevState = -1;
@@ -158,7 +160,6 @@ public class Parser {
       throw new RuntimeException("Trailing data: chars=" + String.join("", chars) + ", terms=" + terms);
     }
   }
-
   public static void handleStatement(RdfDataset dataset, List terms) {
     if ((terms.size() < 3 || terms.size() > 4)) {
       throw new RuntimeException("Invalid NQuads statement " + terms.toString());
@@ -181,7 +182,6 @@ public class Parser {
     }
     graph.add(new RdfTriple(s, p, o));
   }
-
   public static Object parse(Input inp) {
     RdfDataset dataset = new RdfDataset();
     load(dataset, inp);

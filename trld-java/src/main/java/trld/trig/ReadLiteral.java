@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Input;
-import static trld.Common.dumpJson;
+import static trld.platform.Common.jsonEncode;
+import trld.platform.Input;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.LANGUAGE;
@@ -28,6 +28,8 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 import static trld.Rdfterms.RDF_TYPE;
 import static trld.Rdfterms.XSD;
 import static trld.Rdfterms.XSD_DOUBLE;
@@ -93,6 +95,7 @@ public class ReadLiteral extends ReadTerm {
       return this.parent.consume(c, value);
     }
     if (this.handleEscape(c)) {
+      this.collectQuotechars();
       return new KeyValue(this, null);
     }
     if ((c == null && ((Object) this.quotechar) == null || c != null && (c).equals(this.quotechar))) {
@@ -104,14 +107,18 @@ public class ReadLiteral extends ReadTerm {
       }
       return new KeyValue(this, null);
     }
+    this.collectQuotechars();
+    this.collect(c);
+    return new KeyValue(this, null);
+  }
+
+  protected void collectQuotechars() {
     if (this.multiline > 1) {
       for (int i = 0; i < this.multiline - 1; i++) {
         this.collect(this.quotechar);
       }
       this.multiline = 1;
     }
-    this.collect(c);
-    return new KeyValue(this, null);
   }
 
   public void noAfterLiteral(Object kind, Object prevValue) {

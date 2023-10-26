@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Input;
-import static trld.Common.dumpJson;
+import static trld.platform.Common.jsonEncode;
+import trld.platform.Input;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.LANGUAGE;
@@ -28,6 +28,8 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 import static trld.Rdfterms.RDF_TYPE;
 import static trld.Rdfterms.XSD;
 import static trld.Rdfterms.XSD_DOUBLE;
@@ -36,13 +38,14 @@ import static trld.trig.Parser.*;
 
 
 public class ReadNode extends ReadCompound {
-  ReadNode(/*@Nullable*/ ParserState parent) { super(parent); };
+  public ReadNode(/*@Nullable*/ ParserState parent) { super(parent); };
   public /*@Nullable*/ Map node;
   public /*@Nullable*/ String p;
   public /*@Nullable*/ Object lastValue;
   public Boolean openBrace = false;
 
   public void fillNode(Object value) {
+    assert this.node != null;
     if (this.p == null) {
       if ((value == null && ((Object) TYPE) == null || value != null && (value).equals(TYPE))) {
         this.p = TYPE;
@@ -70,7 +73,7 @@ public class ReadNode extends ReadCompound {
     } else if ((value instanceof Map && ((Map) value).containsKey(ANNOTATION))) {
       Object lastValue = (Object) this.lastValue;
       if ((this.p == null && ((Object) TYPE) == null || this.p != null && (this.p).equals(TYPE))) {
-        lastValue = Builtins.mapOf(TYPE, lastValue);
+        lastValue = Builtins.mapOf(ANNOTATED_TYPE_KEY, lastValue);
       } else if (!(lastValue instanceof Map)) {
         lastValue = Builtins.mapOf(VALUE, lastValue);
       }
@@ -103,6 +106,9 @@ public class ReadNode extends ReadCompound {
     } else if ((c == null && ((Object) "(") == null || c != null && (c).equals("("))) {
       return new KeyValue(new ReadCollection(this), null);
     } else if ((c == null && ((Object) ";") == null || c != null && (c).equals(";"))) {
+      if (this.node == null) {
+        throw new NotationError("Unexpected: " + c);
+      }
       this.p = null;
       this.lastValue = null;
       return new KeyValue(this, null);

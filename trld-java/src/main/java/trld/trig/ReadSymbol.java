@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Input;
-import static trld.Common.dumpJson;
+import static trld.platform.Common.jsonEncode;
+import trld.platform.Input;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.LANGUAGE;
@@ -28,6 +28,8 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 import static trld.Rdfterms.RDF_TYPE;
 import static trld.Rdfterms.XSD;
 import static trld.Rdfterms.XSD_DOUBLE;
@@ -36,7 +38,7 @@ import static trld.trig.Parser.*;
 
 
 public class ReadSymbol extends ReadTerm {
-  ReadSymbol(/*@Nullable*/ ParserState parent) { super(parent); };
+  public ReadSymbol(/*@Nullable*/ ParserState parent) { super(parent); };
   public static final Pattern MATCH = (Pattern) Pattern.compile("[^\\]\\[{}^<>\\\"\\s~!$&'()*,;=/?#]");
   public Boolean justEscaped;
 
@@ -70,36 +72,35 @@ public class ReadSymbol extends ReadTerm {
       this.collect(c);
       return new KeyValue(this, null);
     }
-    Object value = (Object) this.pop();
-    assert value instanceof String;
+    String v = (String) this.pop();
     Boolean lastDot = false;
-    if ((!(justEscaped) && ((String) value).endsWith("."))) {
-      value = ((String) value).substring(0, ((String) value).length() - 1);
+    if ((!(justEscaped) && v.endsWith("."))) {
+      v = (v.length() >= 0 ? v.substring(0, v.length() - 1) : "");
       lastDot = true;
     }
-    if (new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) "true", "false"}))).contains(value)) {
-      value = ((Boolean) (value == null && ((Object) "true") == null || value != null && (value).equals("true")));
-    } else if ((value == null && ((Object) "a") == null || value != null && (value).equals("a"))) {
-      value = TYPE;
-    } else if (!AT_KEYWORDS.contains(value)) {
-      String lowered = (String) ((String) value).toLowerCase();
+    Object value = (Object) v;
+    if (new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) "true", "false"}))).contains(v)) {
+      value = ((Boolean) (v == null && ((Object) "true") == null || v != null && (v).equals("true")));
+    } else if ((v == null && ((Object) "a") == null || v != null && (v).equals("a"))) {
+      value = (Object) TYPE;
+    } else if (!AT_KEYWORDS.contains(v)) {
+      String lowered = (String) v.toLowerCase();
       if (RQ_KEYWORDS.contains(lowered)) {
-        value = lowered;
+        value = (Object) lowered;
       } else {
-        if (!value.equals("")) {
-          if (!((String) value).contains(":")) {
-            throw new NotationError("Expected PNname, got " + value);
-          } else if ((((String) value).substring(0, 0 + 1) == null && ((Object) ":") == null || ((String) value).substring(0, 0 + 1) != null && (((String) value).substring(0, 0 + 1)).equals(":"))) {
-            value = ((String) value).substring(1);
+        if (!v.equals("")) {
+          if (!v.contains(":")) {
+            throw new NotationError("Expected PNname, got " + v);
+          } else if ((v.substring(0, 0 + 1) == null && ((Object) ":") == null || v.substring(0, 0 + 1) != null && (v.substring(0, 0 + 1)).equals(":"))) {
+            v = (v.length() >= 1 ? v.substring(1) : "");
           }
         }
-        value = ((Map) Builtins.mapOf(SYMBOL, value));
+        value = ((Map) Builtins.mapOf(SYMBOL, v));
       }
     }
-    assert value instanceof Object;
     if (lastDot) {
-      return this.backtrack(".", c, (Object) value);
+      return this.backtrack(".", c, value);
     }
-    return this.parent.consume(c, (Object) value);
+    return this.parent.consume(c, value);
   }
 }

@@ -15,9 +15,11 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import static trld.Common.loadJson;
-import static trld.Common.warning;
-import static trld.Common.resolveIri;
+import trld.jsonld.LoadDocumentCallback;
+import trld.jsonld.LoadDocumentOptions;
+import static trld.jsonld.Docloader.getDocumentLoader;
+import static trld.platform.Common.resolveIri;
+import static trld.platform.Common.warning;
 import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
@@ -42,19 +44,19 @@ public class Term {
   public Term(Context activeContext, Map<String, Object> localContext, String term, Object value, Map<String, Boolean> defined) {
     this(activeContext, localContext, term, value, defined, null);
   }
-  public Term(Context activeContext, Map<String, Object> localContext, String term, Object value, Map<String, Boolean> defined, String baseUrl) {
+  public Term(Context activeContext, Map<String, Object> localContext, String term, Object value, Map<String, Boolean> defined, /*@Nullable*/ String baseUrl) {
     this(activeContext, localContext, term, value, defined, baseUrl, false);
   }
-  public Term(Context activeContext, Map<String, Object> localContext, String term, Object value, Map<String, Boolean> defined, String baseUrl, Boolean isprotected) {
+  public Term(Context activeContext, Map<String, Object> localContext, String term, Object value, Map<String, Boolean> defined, /*@Nullable*/ String baseUrl, Boolean isprotected) {
     this(activeContext, localContext, term, value, defined, baseUrl, isprotected, false);
   }
-  public Term(Context activeContext, Map<String, Object> localContext, String term, Object value, Map<String, Boolean> defined, String baseUrl, Boolean isprotected, Boolean overrideProtected) {
+  public Term(Context activeContext, Map<String, Object> localContext, String term, Object value, Map<String, Boolean> defined, /*@Nullable*/ String baseUrl, Boolean isprotected, Boolean overrideProtected) {
     this(activeContext, localContext, term, value, defined, baseUrl, isprotected, overrideProtected, null);
   }
-  public Term(Context activeContext, Map<String, Object> localContext, String term, Object value, Map<String, Boolean> defined, String baseUrl, Boolean isprotected, Boolean overrideProtected, Set remoteContexts) {
+  public Term(Context activeContext, Map<String, Object> localContext, String term, Object value, Map<String, Boolean> defined, /*@Nullable*/ String baseUrl, Boolean isprotected, Boolean overrideProtected, /*@Nullable*/ Set remoteContexts) {
     this(activeContext, localContext, term, value, defined, baseUrl, isprotected, overrideProtected, remoteContexts, true);
   }
-  public Term(Context activeContext, Map<String, Object> localContext, String term, Object value, Map<String, Boolean> defined, String baseUrl, Boolean isprotected, Boolean overrideProtected, Set remoteContexts, Boolean validateScoped) {
+  public Term(Context activeContext, Map<String, Object> localContext, String term, Object value, Map<String, Boolean> defined, /*@Nullable*/ String baseUrl, Boolean isprotected, Boolean overrideProtected, /*@Nullable*/ Set remoteContexts, Boolean validateScoped) {
     this.isPrefix = false;
     this.isProtected = (isprotected instanceof Boolean ? (Boolean) isprotected : false);
     this.isReverseProperty = false;
@@ -178,7 +180,7 @@ public class Term {
         if ((this.iri == null && ((Object) CONTEXT) == null || this.iri != null && (this.iri).equals(CONTEXT))) {
           throw new InvalidKeywordAliasError();
         }
-        if ((term.substring(1, term.length() - 1).contains(":") || term.contains("/"))) {
+        if (((term.length() >= 1 ? term.substring(1, term.length() - 1) : "").contains(":") || term.contains("/"))) {
           defined.put(term, true);
           if (!activeContext.expandInitVocabIri(term, localContext, defined).equals(this.iri)) {
           }
@@ -186,10 +188,10 @@ public class Term {
           this.isPrefix = true;
         }
       }
-    } else if (term.substring(1).contains(":")) {
+    } else if ((term.length() >= 1 ? term.substring(1) : "").contains(":")) {
       Integer idx = (Integer) term.indexOf(":");
-      String prefix = term.substring(0, idx);
-      String suffix = term.substring(idx + 1);
+      String prefix = (term.length() >= 0 ? term.substring(0, idx) : "");
+      String suffix = (term.length() >= idx + 1 ? term.substring(idx + 1) : "");
       if (localContext.containsKey(prefix)) {
         new Term(activeContext, localContext, prefix, localContext.get(prefix), defined);
       }

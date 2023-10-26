@@ -1,9 +1,16 @@
-package trld;
+package trld.platform;
 
 import java.util.*;
 import java.io.*;
 
+import trld.Mimetypes;
+
 public class Input implements Closeable {
+
+    public /*@Nullable*/ String documentUrl;
+    public /*@Nullable*/ String contentType;
+    public /*@Nullable*/ String profile;
+    public /*@Nullable*/ String contextUrl;
 
     private BufferedReader reader;
     private InputStream ins;
@@ -13,15 +20,34 @@ public class Input implements Closeable {
     }
 
     public Input(String path) {
+        this(path, null);
+    }
+
+    public Input(String path, /*@Nullable*/ Map<String, String> headers) {
         this(sneakyFileInputStream(path));
+        this.documentUrl = path;
+        this.contentType = Mimetypes.guessMimeType(path);
     }
 
     public Input(InputStream ins) {
+        this(ins, null);
+    }
+
+    public Input(InputStream ins, /*@Nullable*/ Map<String, String> headers) {
         this.ins = ins;
         try {
             reader = new BufferedReader(new InputStreamReader(ins, "utf-8"));
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+        if (this.contentType == null && headers != null) {
+            String accepts = headers.get("Accept");
+            if (accepts != null) {
+                String firstAccept = Mimetypes.getFirstMimeType(accepts);
+                if (firstAccept.equals(accepts)) {
+                    this.contentType = firstAccept;
+                }
+            }
         }
     }
 
@@ -90,10 +116,23 @@ public class Input implements Closeable {
 
     static FileInputStream sneakyFileInputStream(String path) {
         try {
-            path = Common.removeFileProtocol(path);
+            path = removeFileProtocol(path);
             return new FileInputStream(path);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static String removeFileProtocol(String ref) {
+        if (ref.startsWith("file:///")) {
+            return ref.substring(7);
+        } else if (ref.startsWith("file:/")) {
+            return ref.substring(5);
+        }
+        return ref;
+    }
+
+    public Object loadJson() {
+        return Common.jsonDecode(read());
     }
 }

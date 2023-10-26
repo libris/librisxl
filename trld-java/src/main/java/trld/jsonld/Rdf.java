@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import static trld.Common.dumpCanonicalJson;
-import static trld.Common.parseJson;
+import static trld.platform.Common.jsonEncodeCanonical;
+import static trld.platform.Common.jsonDecode;
 import static trld.jsonld.Base.*;
 import trld.jsonld.InvalidBaseDirectionError;
 import trld.jsonld.InvalidLanguageTaggedStringError;
@@ -38,13 +38,21 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.Rdfterms.XSD_STRING;
 import static trld.Rdfterms.I18N;
 
+
+
+
+
+
+
+
+
+
 public class Rdf {
   public static final Double MAX_INT = Math.pow(10, 21);
   public static final String COMPOUND_LITERAL = "compound-literal";
   public static final String I18N_DATATYPE = "i18n-datatype";
   public static final String USAGES = "usages";
   static String processingMode = JSONLD11;
-
   public static RdfDataset toRdfDataset(Object data) {
     return toRdfDataset(data, null);
   }
@@ -56,7 +64,6 @@ public class Rdf {
     jsonldToRdfDataset(nodeMap, dataset, bnodes, rdfDirection);
     return dataset;
   }
-
   public static void jsonldToRdfDataset(Map<String, Map<String, Object>> nodeMap, RdfDataset dataset, BNodes bnodes) {
     jsonldToRdfDataset(nodeMap, dataset, bnodes, null);
   }
@@ -105,7 +112,6 @@ public class Rdf {
       }
     }
   }
-
   public static /*@Nullable*/ Object objectToRdfData(Map<String, Object> item, List listTriples, BNodes bnodes) {
     return objectToRdfData(item, listTriples, bnodes, null);
   }
@@ -129,7 +135,7 @@ public class Rdf {
       return null;
     }
     if ((datatype == null && ((Object) JSON) == null || datatype != null && (datatype).equals(JSON))) {
-      value = (Object) dumpCanonicalJson(value);
+      value = (Object) jsonEncodeCanonical(value);
       datatype = RDF_JSON;
     }
     if (value instanceof Boolean) {
@@ -172,7 +178,6 @@ public class Rdf {
     }
     return literal;
   }
-
   public static String listToRdfList(List<Map<String, Object>> l, List listTriples, BNodes bnodes) {
     return listToRdfList(l, listTriples, bnodes, null);
   }
@@ -197,7 +202,6 @@ public class Rdf {
     }
     return (i > 0 ? first : RDF_NIL);
   }
-
   public static List<Map<String, Object>> toJsonld(RdfDataset dataset) {
     return toJsonld(dataset, false);
   }
@@ -276,10 +280,10 @@ public class Rdf {
           if (!(clEntry instanceof Usage)) {
             continue;
           }
-          Map<String, Object> c_node = (Map<String, Object>) ((Usage) clEntry).node;
-          String c_property = (String) ((Usage) clEntry).property;
+          Map<String, Object> cNode = (Map<String, Object>) ((Usage) clEntry).node;
+          String cProperty = (String) ((Usage) clEntry).property;
           Map<String, Object> clNode = ((Map<String, Object>) graphObject.remove(cl));
-          for (Object clRef : ((List) c_node.get(c_property))) {
+          for (Object clRef : ((List) cNode.get(cProperty))) {
             assert clRef instanceof Map;
             if (!((((Map) clRef).get(ID) == null && ((Object) cl) == null || ((Map) clRef).get(ID) != null && (((Map) clRef).get(ID)).equals(cl)))) {
               continue;
@@ -342,11 +346,11 @@ public class Rdf {
       Collections.sort(subjects);
     }
     for (String subject : subjects) {
-      Map<String, Object> s_node = ((Map<String, Object>) defaultGraph.get(subject));
+      Map<String, Object> sNode = ((Map<String, Object>) defaultGraph.get(subject));
       if (graphMap.containsKey(subject)) {
         Map<String, Map<String, Object>> subjectGraph = (Map<String, Map<String, Object>>) graphMap.get(subject);
         List namedGraphs = new ArrayList<>();
-        s_node.put(GRAPH, namedGraphs);
+        sNode.put(GRAPH, namedGraphs);
         List graphNames = new ArrayList(subjectGraph.keySet());
         if (ordered) {
           Collections.sort(graphNames);
@@ -361,16 +365,15 @@ public class Rdf {
           }
         }
       }
-      if (s_node.containsKey(USAGES)) {
-        s_node.remove(USAGES);
+      if (sNode.containsKey(USAGES)) {
+        sNode.remove(USAGES);
       }
-      if ((!(s_node.size() == 1) && s_node.containsKey(ID))) {
-        result.add(s_node);
+      if ((!(sNode.size() == 1) && sNode.containsKey(ID))) {
+        result.add(sNode);
       }
     }
     return result;
   }
-
   public static Map<String, Object> toJsonldObject(Object value, /*@Nullable*/ String rdfDirection, Boolean useNativeTypes) {
     if (value instanceof String) {
       return Builtins.mapOf(ID, value);
@@ -402,19 +405,19 @@ public class Rdf {
       }
     } else if (((literal.datatype == null && ((Object) RDF_JSON) == null || literal.datatype != null && (literal.datatype).equals(RDF_JSON)) && !processingMode.equals(JSONLD10))) {
       try {
-        convertedValue = ((Object) parseJson(literal.value));
+        convertedValue = ((Object) jsonDecode(literal.value));
       } catch (Exception e) {
       }
       rtype = JSON;
     } else if (((rdfDirection == null && ((Object) I18N_DATATYPE) == null || rdfDirection != null && (rdfDirection).equals(I18N_DATATYPE)) && literal.datatype != null && literal.datatype.startsWith(I18N))) {
       convertedValue = (Object) literal.value;
-      String fragId = (String) literal.datatype.substring(I18N.length());
+      String fragId = (literal.datatype.length() >= I18N.length() ? literal.datatype.substring(I18N.length()) : "");
       Integer i = (Integer) fragId.indexOf("_");
       String lang = fragId;
       String direction = "";
       if (i > -1) {
-        lang = fragId.substring(0, i);
-        direction = fragId.substring(i + 1);
+        lang = (fragId.length() >= 0 ? fragId.substring(0, i) : "");
+        direction = (fragId.length() >= i + 1 ? fragId.substring(i + 1) : "");
       }
       if (lang.length() > 0) {
         result.put(LANGUAGE, lang);
@@ -433,15 +436,12 @@ public class Rdf {
     }
     return result;
   }
-
   public static boolean isIriOrBlank(String iri) {
     return (isIri(iri) || isBlank(iri));
   }
-
   public static boolean isWellFormedList(Map<String, Object> node) {
     return (isBlank(((String) node.get(ID))) && hasListWithOneItem(node, RDF_FIRST) && hasListWithOneItem(node, RDF_REST) && (node.size() == 3 || (node.size() == 4 && node.containsKey(TYPE) && (asList(node.get(TYPE)).get(0) == null && ((Object) RDF_LIST) == null || asList(node.get(TYPE)).get(0) != null && (asList(node.get(TYPE)).get(0)).equals(RDF_LIST)))));
   }
-
   protected static boolean hasListWithOneItem(Map<String, Object> node, Object p) {
     return (node.containsKey(p) && node.get(p) instanceof List && ((List) node.get(p)).size() == 1);
   }

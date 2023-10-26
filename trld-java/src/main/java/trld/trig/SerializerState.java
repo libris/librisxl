@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Output;
-import static trld.Common.uuid4;
+import static trld.platform.Common.uuid4;
+import trld.platform.Output;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.CONTAINER;
 import static trld.jsonld.Base.CONTEXT;
@@ -25,12 +25,15 @@ import static trld.jsonld.Base.ID;
 import static trld.jsonld.Base.INDEX;
 import static trld.jsonld.Base.LANGUAGE;
 import static trld.jsonld.Base.LIST;
+import static trld.jsonld.Base.NONE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
 import static trld.jsonld.Base.REVERSE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.VOCAB;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 import static trld.trig.Serializer.*;
 
 
@@ -55,7 +58,7 @@ public class SerializerState {
   public SerializerState(Output out, Settings settings, /*@Nullable*/ Object context, /*@Nullable*/ String baseIri) {
     this(out, settings, context, baseIri, null);
   }
-  public SerializerState(Output out, Settings settings, /*@Nullable*/ Object context, /*@Nullable*/ String baseIri, SerializerState parent) {
+  public SerializerState(Output out, Settings settings, /*@Nullable*/ Object context, /*@Nullable*/ String baseIri, /*@Nullable*/ SerializerState parent) {
     this.out = (out != null ? out : ((SerializerState) parent).out);
     this.baseIri = baseIri;
     this.parent = parent;
@@ -195,12 +198,13 @@ public class SerializerState {
     }
     if ((viaKey != null && this.isLangContainer(viaKey) && obj instanceof Map)) {
       Boolean first = true;
-      for (Map.Entry<String, Object> lang_value : ((Map<String, Object>) obj).entrySet()) {
-        String lang = lang_value.getKey();
-        Object value = lang_value.getValue();
+      for (Map.Entry<String, Object> langkey_value : ((Map<String, Object>) obj).entrySet()) {
+        String langkey = langkey_value.getKey();
+        Object value = langkey_value.getValue();
         if (!(first)) {
           this.write(" , ");
         }
+        /*@Nullable*/ String lang = (/*@Nullable*/ String) ((langkey == null && ((Object) NONE) == null || langkey != null && (langkey).equals(NONE)) ? null : langkey);
         this.toLiteral(Builtins.mapOf(this.aliases.value, value, this.aliases.lang, lang), viaKey);
         first = false;
       }
@@ -210,14 +214,10 @@ public class SerializerState {
       this.toLiteral(((Object) obj), viaKey);
       return new ArrayList<>();
     }
-    Boolean explicitList = (Boolean) ((Map) obj).containsKey(this.aliases.list);
     if ((viaKey != null && this.isListContainer(viaKey))) {
       obj = Builtins.mapOf(this.aliases.list, obj);
     }
     /*@Nullable*/ String s = (/*@Nullable*/ String) ((/*@Nullable*/ String) ((Map) obj).get(this.aliases.id));
-    Boolean isList = (Boolean) ((Map) obj).containsKey(this.aliases.list);
-    Boolean startedList = isList;
-    Boolean isBracketed = (Boolean) (isList || (viaKey == null && ((Object) this.aliases.annotation) == null || viaKey != null && (viaKey).equals(this.aliases.annotation)));
     if (((Map) obj).containsKey(this.aliases.graph)) {
       if ((s != null && this.settings.turtleDropNamed)) {
         return new ArrayList<>();
@@ -228,27 +228,25 @@ public class SerializerState {
       this.writeGraph(s, ((Map) obj).get(this.aliases.graph), depth);
       return new ArrayList<>();
     }
-    if (explicitList) {
-      this.write("( ");
-    }
+    return this.emitContents(viaKey, depth, (Map) obj, s);
+  }
+
+  protected List<Map<String, Object>> emitContents(/*@Nullable*/ String viaKey, Integer depth, Map obj, /*@Nullable*/ String s) {
     Boolean inGraph = (Boolean) ((viaKey == null && ((Object) this.aliases.graph) == null || viaKey != null && (viaKey).equals(this.aliases.graph)) && !(this.settings.turtleOnly));
     Integer inGraphAdd = (inGraph ? 1 : 0);
-    if (((s != null || depth == 0) && this.hasKeys((Map) obj, 2))) {
-      if (s == null) {
-        this.write("[]");
-      } else {
-        if (depth == 0) {
-          this.writeln();
-        }
-        if (inGraphAdd > 0) {
-          this.write(this.getIndent(0));
-        }
-        this.write(this.refRepr(s));
-      }
+    Boolean atTop = depth == 0;
+    Boolean notLinked = (atTop || inGraph);
+    Boolean isList = (Boolean) obj.containsKey(this.aliases.list);
+    Boolean startedList = isList;
+    Boolean isBracketed = (Boolean) (isList || (viaKey == null && ((Object) this.aliases.annotation) == null || viaKey != null && (viaKey).equals(this.aliases.annotation)));
+    Boolean subjectStarted = false;
+    Integer maxKeys = (obj.containsKey(ID) ? 2 : 1);
+    if (((s != null || notLinked) && this.hasKeys(obj, maxKeys))) {
     } else if (depth > 0) {
       if (!(isBracketed)) {
         depth += 1;
         this.write("[");
+        subjectStarted = true;
       }
     } else {
       return new ArrayList<>();
@@ -285,12 +283,43 @@ public class SerializerState {
       if (vs.size() == 0) {
         continue;
       }
+      if (this.isLangContainer(key)) {
+        if ((vo instanceof Map && ((Map) vo).size() == 0)) {
+          continue;
+        }
+        vs = (List) vs.stream().filter((x) -> (!(x instanceof Map) || ((Map) x).size() > 0)).collect(Collectors.toList());
+      }
+      if (!(subjectStarted)) {
+        subjectStarted = true;
+        if (depth == 0) {
+          this.writeln();
+        }
+        if (isList) {
+          if (notLinked) {
+            this.write("()");
+            isList = false;
+            startedList = false;
+          } else {
+            this.write("(");
+          }
+        } else if (!(isBracketed)) {
+          if (s == null) {
+            this.write(this.getIndent(depth - (inGraph ? 0 : 1)));
+            this.write("[]");
+          } else {
+            if (inGraphAdd > 0) {
+              this.write(this.getIndent(0));
+            }
+            this.write(this.refRepr(s));
+          }
+        }
+      }
       Boolean inList = (isList || this.isListContainer(key));
       /*@Nullable*/ Map<String, Object> revContainer = null;
       if ((term == null && ((Object) this.aliases.reverse) == null || term != null && (term).equals(this.aliases.reverse))) {
-        revContainer = ((/*@Nullable*/ Map<String, Object>) ((Map) obj).get(key));
+        revContainer = ((/*@Nullable*/ Map<String, Object>) obj.get(key));
       } else if (revKey != null) {
-        revContainer = (Map<String, Object>) Builtins.mapOf(revKey, ((Map) obj).get(key));
+        revContainer = Builtins.mapOf(revKey, obj.get(key));
       }
       if (revContainer != null) {
         for (Map.Entry<String, Object> revkey_rvo : revContainer.entrySet()) {
@@ -357,7 +386,7 @@ public class SerializerState {
         }
       }
     }
-    if ((explicitList || ((!(isList) && startedList) && !(endedList)))) {
+    if (((isList || startedList) && !(endedList))) {
       this.write(" )");
     }
     if (depth == 0) {
@@ -369,11 +398,11 @@ public class SerializerState {
       }
       return new ArrayList<>();
     } else {
-      indent = this.getIndent(nestedDepth - 1 + inGraphAdd);
       if (this.settings.bracketEndNewLine) {
+        indent = this.getIndent(nestedDepth - 1 + inGraphAdd);
         this.writeln();
         this.write(indent);
-      } else {
+      } else if (!(isList)) {
         this.write(" ");
       }
       if (!(isBracketed)) {
@@ -391,7 +420,7 @@ public class SerializerState {
       Map<String, Object> annotation = (Map<String, Object>) ((Map) v).get(this.aliases.annotation);
       if (annotation != null) {
         this.write(" {|");
-        this.writeObject(annotation, depth + 2, this.aliases.annotation);
+        this.emitContents(this.aliases.annotation, depth + 2, annotation, null);
         this.write("|}");
       }
     }
@@ -403,7 +432,7 @@ public class SerializerState {
   public void toLiteral(Object obj, /*@Nullable*/ String viaKey) {
     this.toLiteral(obj, viaKey, null);
   }
-  public void toLiteral(Object obj, /*@Nullable*/ String viaKey, Function write) {
+  public void toLiteral(Object obj, /*@Nullable*/ String viaKey, /*@Nullable*/ Function write) {
     if (write == null) {
       write = (s) -> this.write(s);
     }
@@ -475,8 +504,9 @@ public class SerializerState {
       String quote = "\"";
       if (escaped.indexOf("\n") > -1) {
         quote = "\"\"\"";
-        if (escaped.endsWith("\"")) {
-          escaped = escaped.substring(0, escaped.length() - 1) + "\\\"";
+        escaped = escaped.replace("\"\"\"", "\\\"\\\"\\\"");
+        if ((escaped.endsWith("\"") && !(escaped.endsWith("\\\"")))) {
+          escaped = (escaped.length() >= 0 ? escaped.substring(0, escaped.length() - 1) : "") + "\\\"";
         }
       } else {
         escaped = escaped.replace("\"", "\\\"");
@@ -548,7 +578,7 @@ public class SerializerState {
   }
 
   public String reprType(Object t) {
-    String tstr = (String) (t instanceof String ? (String) t : ((String) ((Map) t).get(TYPE)));
+    String tstr = (String) (t instanceof String ? (String) t : ((String) ((Map) t).get(ANNOTATED_TYPE_KEY)));
     return this.toValidTerm(((String) this.termFor(tstr)));
   }
 
@@ -563,36 +593,38 @@ public class SerializerState {
       return this.reprTriple((Map) refobj);
     }
     String ref = (String) ((String) refobj);
-    Integer c_i = (Integer) ref.indexOf(":");
-    if (c_i > -1) {
-      String pfx = ref.substring(0, c_i);
+    Integer cI = (Integer) ref.indexOf(":");
+    if (cI > -1) {
+      String pfx = (ref.length() >= 0 ? ref.substring(0, cI) : "");
+      String local = (ref.length() >= cI + 1 ? ref.substring(cI + 1) : "");
       if ((pfx == null && ((Object) "_") == null || pfx != null && (pfx).equals("_"))) {
         String nodeId = ref + this.uniqueBnodeSuffix;
         if (this.bnodeSkolemBase != null) {
-          ref = this.bnodeSkolemBase + nodeId.substring(2);
+          ref = this.bnodeSkolemBase + (nodeId.length() >= 2 ? nodeId.substring(2) : "");
         } else {
           return this.toValidTerm(nodeId);
         }
-      } else if (this.context.containsKey(pfx)) {
-        String local = ref.substring(c_i + 1);
+      } else if ((this.context.containsKey(pfx) && !(local.startsWith("//")))) {
         return pfx + ":" + this.escapePnameLocal(local);
       }
     } else if ((useVocab && ref.indexOf("/") == -1)) {
       return ":" + ref;
     }
     if ((this.context.containsKey(VOCAB) && ref.startsWith(((String) this.context.get(VOCAB))))) {
-      return ":" + ref.substring(((String) this.context.get(VOCAB)).length());
+      return ":" + (ref.length() >= ((String) this.context.get(VOCAB)).length() ? ref.substring(((String) this.context.get(VOCAB)).length()) : "");
     }
     ref = (String) this.cleanValue(ref);
-    c_i = (Integer) ref.indexOf(":");
-    if (c_i > -1) {
-      String pfx = ref.substring(0, c_i);
-      String rest = (String) ref.substring(c_i);
-      if (this.context.containsKey(pfx)) {
-        return ref;
-      }
-      if ((this.context.size() > 0 && rest.indexOf(":") == -1 && (WORD_START.matcher(rest).matches() ? rest : null) != null && (WORD_START.matcher(pfx).matches() ? pfx : null) != null)) {
-        return ref;
+    cI = (Integer) ref.indexOf(":");
+    if (cI > -1) {
+      String pfx = (ref.length() >= 0 ? ref.substring(0, cI) : "");
+      String rest = (ref.length() >= cI + 1 ? ref.substring(cI + 1) : "");
+      if (!(rest.startsWith("//"))) {
+        if (this.context.containsKey(pfx)) {
+          return ref;
+        }
+        if ((this.context.size() > 0 && rest.indexOf(":") == -1 && (WORD_START.matcher(rest).matches() ? rest : null) != null && (WORD_START.matcher(pfx).matches() ? pfx : null) != null)) {
+          return ref;
+        }
       }
     }
     return "<" + ref + ">";
@@ -643,13 +675,13 @@ public class SerializerState {
 
   public String toValidTerm(String term) {
     term = (String) this.cleanValue(term);
-    Integer c_i = (Integer) term.indexOf(":");
-    /*@Nullable*/ String pfx = (c_i > -1 ? term.substring(0, c_i) : null);
+    Integer cI = (Integer) term.indexOf(":");
+    /*@Nullable*/ String pfx = (cI > -1 ? (term.length() >= 0 ? term.substring(0, cI) : "") : null);
     if ((!(this.context.containsKey(pfx)) && (term.indexOf("/") > -1 || term.indexOf("#") > -1 || (pfx != null && term.lastIndexOf(":") > pfx.length())))) {
       return "<" + term + ">";
     }
     if (pfx != null) {
-      String local = term.substring(c_i + 1);
+      String local = (term.length() >= cI + 1 ? term.substring(cI + 1) : "");
       return pfx + ":" + this.escapePnameLocal(local);
     }
     return this.escapePnameLocal(term);

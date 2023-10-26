@@ -15,7 +15,7 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import static trld.Common.warning;
+import static trld.platform.Common.warning;
 import static trld.jsonld.Base.*;
 import static trld.jsonld.Flattening.*;
 

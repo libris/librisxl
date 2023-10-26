@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Input;
-import static trld.Common.dumpJson;
+import static trld.platform.Common.jsonEncode;
+import trld.platform.Input;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.LANGUAGE;
@@ -28,6 +28,8 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 import static trld.Rdfterms.RDF_TYPE;
 import static trld.Rdfterms.XSD;
 import static trld.Rdfterms.XSD_DOUBLE;
@@ -36,7 +38,7 @@ import static trld.trig.Parser.*;
 
 
 public class ReadNodes extends ReadNode {
-  ReadNodes(/*@Nullable*/ ParserState parent) { super(parent); };
+  public ReadNodes(/*@Nullable*/ ParserState parent) { super(parent); };
   public List<Map> nodes;
   public Boolean expectGraph;
 
@@ -55,19 +57,21 @@ public class ReadNodes extends ReadNode {
   public Map.Entry<ParserState, Object> consume(String c, Object prevValue) {
     if (prevValue != null) {
       if (prevValue instanceof String) {
+        String prevStr = (String) prevValue;
         Boolean finalDot = false;
-        if (AT_KEYWORDS.contains(prevValue)) {
-          prevValue = ((String) prevValue).substring(1);
+        if (AT_KEYWORDS.contains(prevStr)) {
+          prevStr = (prevStr.length() >= 1 ? prevStr.substring(1) : "");
           finalDot = true;
         }
-        if ((prevValue == null && ((Object) RQ_PREFIX) == null || prevValue != null && (prevValue).equals(RQ_PREFIX))) {
+        if ((prevStr == null && ((Object) RQ_PREFIX) == null || prevStr != null && (prevStr).equals(RQ_PREFIX))) {
           return new ReadPrefix(this, finalDot).consume(c, null);
-        } else if ((prevValue == null && ((Object) RQ_BASE) == null || prevValue != null && (prevValue).equals(RQ_BASE))) {
+        } else if ((prevStr == null && ((Object) RQ_BASE) == null || prevStr != null && (prevStr).equals(RQ_BASE))) {
           return new ReadBase(this, finalDot).consume(c, null);
-        } else if ((prevValue == null && ((Object) RQ_GRAPH) == null || prevValue != null && (prevValue).equals(RQ_GRAPH))) {
+        } else if ((prevStr == null && ((Object) RQ_GRAPH) == null || prevStr != null && (prevStr).equals(RQ_GRAPH))) {
           this.expectGraph = true;
           return new KeyValue(this, null);
         }
+        prevValue = prevStr;
       }
       if (this.node == null) {
         assert prevValue instanceof Map;

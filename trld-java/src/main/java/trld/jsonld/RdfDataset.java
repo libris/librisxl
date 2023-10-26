@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import static trld.Common.dumpCanonicalJson;
-import static trld.Common.parseJson;
+import static trld.platform.Common.jsonEncodeCanonical;
+import static trld.platform.Common.jsonDecode;
 import static trld.jsonld.Base.*;
 import trld.jsonld.InvalidBaseDirectionError;
 import trld.jsonld.InvalidLanguageTaggedStringError;
@@ -40,7 +40,7 @@ import static trld.Rdfterms.I18N;
 import static trld.jsonld.Rdf.*;
 
 
-public class RdfDataset implements Iterable<RdfGraph> {
+public class RdfDataset  implements Iterable<RdfGraph> {
   public RdfGraph defaultGraph;
   public Map<String, RdfGraph> namedGraphs;
 

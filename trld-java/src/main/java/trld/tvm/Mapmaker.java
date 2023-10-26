@@ -25,6 +25,18 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.jsonld.Base.asList;
 import static trld.jsonld.extras.Index.makeIndex;
 
+
+
+
+
+
+
+
+
+
+
+
+
 public class Mapmaker {
   public static final String RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
   static String RDF_Property = RDF + "Property";
@@ -58,7 +70,6 @@ public class Mapmaker {
   static String SKOS_narrowMatch = SKOS + "narrowMatch";
   static String SKOS_mappingRelation = SKOS + "mappingRelation";
   public static final Set<String> SYMMETRIC = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) OWL_equivalentClass, OWL_equivalentProperty, SKOS_closeMatch, SKOS_exactMatch})));
-
   public static Map makeTargetMap(Object vocab, Object target) {
     Map<String, Object> targetDfn = new LinkedHashMap();
     if (target instanceof String) {
@@ -74,13 +85,18 @@ public class Mapmaker {
     List<Map<String, Object>> graph = (List<Map<String, Object>>) (vocab instanceof List ? (List) vocab : ((List) ((Map) vocab).get(GRAPH)));
     Map<String, Map<String, Object>> vocabIndex = (Map<String, Map<String, Object>>) makeIndex(graph);
     Map<String, Object> targetMap = new HashMap<>();
+    Map<String, String> identityMap = new HashMap<>();
     for (Map<String, Object> obj : graph) {
       /*@Nullable*/ String id = ((/*@Nullable*/ String) obj.get(ID));
       processClassRelations(obj, vocabIndex, targetDfn, targetMap);
       processPropertyRelations(obj, vocabIndex, targetDfn, targetMap);
       processReifiedForms(obj, vocabIndex, targetMap);
+      if ((id != null && !targetMap.containsKey(id))) {
+        if (getTargetPriority(targetDfn, id) > 0) {
+          identityMap.put(id, id);
+        }
+      }
     }
-    Map<String, String> identityMap = new HashMap<>();
     for (Map.Entry<String, Object> key_rule : targetMap.entrySet()) {
       String key = key_rule.getKey();
       Object rule = key_rule.getValue();
@@ -98,7 +114,6 @@ public class Mapmaker {
     targetMap.putAll(identityMap);
     return targetMap;
   }
-
   protected static void processClassRelations(Map obj, Map vocabIndex, Map<String, Object> target, Map targetMap) {
     List<String> rels = new ArrayList<>(Arrays.asList(new String[] {(String) OWL_equivalentClass, RDFS_subClassOf}));
     List<BaseRelation> baseRels = new ArrayList<>();
@@ -148,7 +163,6 @@ public class Mapmaker {
       }
     }
   }
-
   protected static void processPropertyRelations(Map obj, Map vocabIndex, Map<String, Object> target, Map targetMap) {
     List<String> rels = new ArrayList<>(Arrays.asList(new String[] {(String) OWL_equivalentProperty, RDFS_subPropertyOf}));
     if (!obj.containsKey(ID)) {
@@ -192,7 +206,6 @@ public class Mapmaker {
     }
     processPropertyChain(obj, target, targetMap, candidateProp, baseprops);
   }
-
   protected static boolean processPropertyChain(Map obj, Map<String, Object> target, Map targetMap, /*@Nullable*/ String candidateProp, List<Map.Entry<Integer, String>> baseprops) {
     if (!obj.containsKey(OWL_propertyChainAxiom)) {
       return false;
@@ -229,7 +242,6 @@ public class Mapmaker {
     }
     return false;
   }
-
   protected static List<Map.Entry</*@Nullable*/ String, Map>> collectCandidates(Map obj, List<String> rels) {
     List<Map.Entry</*@Nullable*/ String, Map>> candidates = new ArrayList<>();
     for (String rel : rels) {
@@ -240,7 +252,6 @@ public class Mapmaker {
     }
     return candidates;
   }
-
   protected static void extendCandidates(List<Map.Entry</*@Nullable*/ String, Map>> candidates, Map candidate, List<String> rels) {
     for (String rel : rels) {
       /*@Nullable*/ List<Map> superrefs = ((/*@Nullable*/ List<Map>) candidate.get(rel));
@@ -253,7 +264,6 @@ public class Mapmaker {
       }
     }
   }
-
   protected static void processReifiedForms(Map obj, Map vocabIndex, Map<String, Object> targetMap) {
     /*@Nullable*/ Map prop = traceInverseOfSubject(obj, vocabIndex);
     if (prop != null) {
@@ -287,7 +297,6 @@ public class Mapmaker {
       }
     }
   }
-
   protected static /*@Nullable*/ Map traceInverseOfSubject(Map obj, Map vocabIndex) {
     /*@Nullable*/ List<Map> invs = ((/*@Nullable*/ List<Map>) obj.get(OWL_inverseOf));
     if (invs != null) {
@@ -309,7 +318,6 @@ public class Mapmaker {
     }
     return null;
   }
-
   protected static void addRule(Map<String, Object> targetMap, String sourceId, Object rule) {
     addRule(targetMap, sourceId, rule, 0);
   }
@@ -333,11 +341,9 @@ public class Mapmaker {
       }
     }
   }
-
   protected static Map ruleFrom(/*@Nullable*/ String property, /*@Nullable*/ String propertyFrom, /*@Nullable*/ String valueFrom, /*@Nullable*/ Map<String, String> match) {
     return Builtins.mapOf("property", property, "propertyFrom", propertyFrom, "valueFrom", valueFrom, "match", match);
   }
-
   protected static Integer getTargetPriority(Map<String, Object> target, String id) {
     Integer topPrio = (Integer) target.size();
     Integer prio = topPrio * 3;
@@ -359,7 +365,6 @@ public class Mapmaker {
     }
     return 0;
   }
-
   public static boolean leadsTo(Map s, Map vocabIndex, String rel, Object o) {
     if ((s.get(ID) == null && ((Object) o) == null || s.get(ID) != null && (s.get(ID)).equals(o))) {
       return true;

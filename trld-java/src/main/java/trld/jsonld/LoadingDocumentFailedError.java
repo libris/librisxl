@@ -15,14 +15,16 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import static trld.Common.loadJson;
-import static trld.Common.warning;
-import static trld.Common.resolveIri;
+import trld.jsonld.LoadDocumentCallback;
+import trld.jsonld.LoadDocumentOptions;
+import static trld.jsonld.Docloader.getDocumentLoader;
+import static trld.platform.Common.resolveIri;
+import static trld.platform.Common.warning;
 import static trld.jsonld.Base.*;
 import static trld.jsonld.Context.*;
 
 
 public class LoadingDocumentFailedError extends JsonLdError {
-  LoadingDocumentFailedError() { };
-  LoadingDocumentFailedError(String msg) { super(msg); };
+  public LoadingDocumentFailedError() { };
+  public LoadingDocumentFailedError(String msg) { super(msg); };
 }

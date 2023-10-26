@@ -16,6 +16,19 @@ import trld.Builtins;
 import trld.KeyValue;
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 public class Base {
   public static final Set<String> PREFIX_DELIMS = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) ":", "/", "?", "#", "[", "]", "@"})));
   public static final String BASE = "@base";
@@ -54,34 +67,27 @@ public class Base {
   public static final String JSONLD10 = "json-ld-1.0";
   public static final String JSONLD11 = "json-ld-1.1";
   public static final String JSONLD_CONTEXT_RELATION = "http://www.w3.org/ns/json-ld#context";
-
   public static boolean isIri(/*@Nullable*/ String value) {
     return (value != null && value.contains(":") && isIriRef(value));
   }
-
   public static boolean isIriRef(/*@Nullable*/ String value) {
     /* ... */;
     return (value != null && !value.contains(" ") && !(isBlank(value)));
   }
-
   public static boolean isBlank(String value) {
     /* ... */;
     return value.startsWith("_:");
   }
-
   public static boolean hasKeywordForm(String s) {
-    return (s.startsWith("@") && s.substring(1).matches("^\\w+$"));
+    return (s.startsWith("@") && (s.length() >= 1 ? s.substring(1) : "").matches("^\\w+$"));
   }
-
   public static boolean isLangTag(/*@Nullable*/ String value) {
     /* ... */;
     return (value != null && value.substring(0, 0 + 1).matches("^\\w+$") && !value.contains(" "));
   }
-
   public static boolean isScalar(Object o) {
     return o instanceof String || o instanceof Integer || o instanceof Double || o instanceof Boolean;
   }
-
   public static boolean isGraphObject(Map<String, Object> o) {
     if (o.containsKey(GRAPH)) {
       if (o.containsKey(ID)) {
@@ -97,18 +103,15 @@ public class Base {
     }
     return false;
   }
-
   public static boolean isSimpleGraphObject(Map<String, Object> o) {
     if (o.containsKey(GRAPH)) {
       return (o.containsKey(INDEX) ? o.size() == 2 : o.size() == 1);
     }
     return false;
   }
-
   public static void addValueAsList(Map map, String key, Object value) {
     addValue(map, key, value, true);
   }
-
   public static void addValue(Map map, String key, Object value) {
     addValue(map, key, value, false);
   }
@@ -133,27 +136,25 @@ public class Base {
       }
     }
   }
-
   public static List asList(Object obj) {
     return (obj instanceof List ? (List) obj : new ArrayList<>(Arrays.asList(new Object[] {(Object) obj})));
   }
-
   public static String relativiseIri(String base, String iri) {
     if (iri.startsWith(base + "#")) {
-      return iri.substring(base.length());
+      return (iri.length() >= base.length() ? iri.substring(base.length()) : "");
     }
     if ((iri.contains("?") && iri.startsWith(base))) {
-      return iri.substring(base.length());
+      return (iri.length() >= base.length() ? iri.substring(base.length()) : "");
     }
     if (!(base.endsWith("/"))) {
       Integer last = (Integer) base.lastIndexOf("/");
-      base = base.substring(0, last + 1);
+      base = (base.length() >= 0 ? base.substring(0, last + 1) : "");
     }
     if (iri.startsWith(base)) {
-      return iri.substring(base.length());
+      return (iri.length() >= base.length() ? iri.substring(base.length()) : "");
     }
-    String parentbase = base.substring(0, base.lastIndexOf("/"));
-    String leaf = iri.substring(iri.lastIndexOf("/") + 1);
+    String parentbase = (base.length() >= 0 ? base.substring(0, base.lastIndexOf("/")) : "");
+    String leaf = (iri.length() >= iri.lastIndexOf("/") + 1 ? iri.substring(iri.lastIndexOf("/") + 1) : "");
     List<String> relativeto = new ArrayList<>();
     while ((parentbase.contains("/") && !(parentbase.endsWith(":/")))) {
       if (iri.startsWith(parentbase)) {
@@ -161,11 +162,10 @@ public class Base {
         return String.join("/", relativeto);
       }
       relativeto.add("..");
-      parentbase = parentbase.substring(0, parentbase.lastIndexOf("/"));
+      parentbase = (parentbase.length() >= 0 ? parentbase.substring(0, parentbase.lastIndexOf("/")) : "");
     }
     return iri;
   }
-
   public static boolean nodeEquals(Object a, Object b) {
     if (isScalar(a)) {
       return ((a.getClass() == null && ((Object) b.getClass()) == null || a.getClass() != null && (a.getClass()).equals(b.getClass())) && (a == null && ((Object) b) == null || a != null && (a).equals(b)));

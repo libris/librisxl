@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Input;
-import static trld.Common.dumpJson;
+import static trld.platform.Common.jsonEncode;
+import trld.platform.Input;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.LANGUAGE;
@@ -28,6 +28,8 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 import static trld.Rdfterms.RDF_TYPE;
 import static trld.Rdfterms.XSD;
 import static trld.Rdfterms.XSD_DOUBLE;
@@ -36,7 +38,7 @@ import static trld.trig.Parser.*;
 
 
 public class ReadCollection extends ReadCompound {
-  ReadCollection(/*@Nullable*/ ParserState parent) { super(parent); };
+  public ReadCollection(/*@Nullable*/ ParserState parent) { super(parent); };
   public List<Object> nodes;
 
   public void init() {
@@ -56,6 +58,8 @@ public class ReadCollection extends ReadCompound {
       return readspace;
     } else if ((c == null && ((Object) EOF) == null || c != null && (c).equals(EOF))) {
       throw new NotationError("Unexpected EOF in collection.");
+    } else if ((c == null && ((Object) ";") == null || c != null && (c).equals(";"))) {
+      throw new NotationError("Unexpected \";\" in collection.");
     } else if ((c == null && ((Object) "[") == null || c != null && (c).equals("["))) {
       return new KeyValue(new ReadBNode(this), null);
     } else if ((c == null && ((Object) "(") == null || c != null && (c).equals("("))) {

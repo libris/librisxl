@@ -20,8 +20,9 @@ import static trld.jsonld.Base.GRAPH;
 import static trld.jsonld.Base.REVERSE;
 import static trld.jsonld.Base.asList;
 
-public class Index {
 
+
+public class Index {
   public static Map<String, Map<String, Object>> makeIndex(List<Map<String, Object>> graph) {
     return makeIndex(graph, true);
   }
@@ -38,13 +39,12 @@ public class Index {
     }
     return index;
   }
-
   protected static void indexReverses(Map<String, Map<String, Object>> index) {
     for (Map<String, Object> item : index.values()) {
       if (!item.containsKey(ID)) {
         continue;
       }
-      for (String link : item.keySet()) {
+      for (Object link : new ArrayList(item.keySet())) {
         List refs = (List) asList(item.get(link));
         for (Object ref : refs) {
           if (!(ref instanceof Map)) {

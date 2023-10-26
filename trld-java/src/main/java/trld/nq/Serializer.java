@@ -15,7 +15,7 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Output;
+import trld.platform.Output;
 import static trld.jsonld.Base.isBlank;
 import trld.jsonld.RdfDataset;
 import trld.jsonld.RdfGraph;
@@ -23,14 +23,16 @@ import trld.jsonld.RdfTriple;
 import trld.jsonld.RdfLiteral;
 import static trld.Rdfterms.XSD_STRING;
 
-public class Serializer {
 
+
+
+
+public class Serializer {
   public static void serialize(RdfDataset dataset, Output out) {
     for (RdfGraph graph : dataset) {
       writeGraph(graph, out);
     }
   }
-
   public static void writeGraph(RdfGraph graph, Output out) {
     for (RdfTriple triple : graph.triples) {
       if ((triple.s == null || triple.p == null || triple.o == null)) {
@@ -39,7 +41,6 @@ public class Serializer {
       out.writeln(reprQuad(triple, graph.name));
     }
   }
-
   public static String reprQuad(RdfTriple triple, /*@Nullable*/ String graphName) {
     String s = (String) reprTerm(triple.s);
     String p = (String) reprTerm(triple.p);
@@ -48,7 +49,6 @@ public class Serializer {
     String quad = (graphName != null ? spo + " " + reprTerm(graphName) : spo);
     return quad + " .";
   }
-
   public static String reprTerm(Object t) {
     if (t instanceof String) {
       if (isBlank((String) t)) {

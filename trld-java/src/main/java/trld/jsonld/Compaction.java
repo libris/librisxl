@@ -15,16 +15,24 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import static trld.Common.warning;
+import static trld.platform.Common.warning;
 import static trld.jsonld.Base.*;
 import trld.jsonld.Context;
 import trld.jsonld.Term;
 import trld.jsonld.InvalidNestValueError;
 import static trld.jsonld.Invcontext.getInverseContext;
 
+
+
+
+
+
+
+
+
+
 public class Compaction {
   public static final String PRESERVE = "@preserve";
-
   public static Object compact(Object context, Object docData) {
     return compact(context, docData, null);
   }
@@ -55,7 +63,6 @@ public class Compaction {
     }
     return result;
   }
-
   public static Object compaction(Context activeContext, /*@Nullable*/ String activeProperty, Object element) {
     return compaction(activeContext, activeProperty, element, false);
   }
@@ -216,7 +223,8 @@ public class Compaction {
             addValue(nestResult, itemActiveProperty, (Map) compactedItem, asArray);
             continue;
           } else if (activeProperty != null) {
-            nestResult.put(activeProperty, (List) compactedItem);
+            nestResult.put(itemActiveProperty, (List) compactedItem);
+            continue;
           }
         }
         Map<String, Object> mapObject;
@@ -302,7 +310,6 @@ public class Compaction {
     }
     return result;
   }
-
   protected static /*@Nullable*/ String getMapKeyAndDepleteContainerKey(Map<String, Object> compactedItem, String containerKey, Boolean asArray) {
     List<String> containerKeyValues = (List<String>) asList(compactedItem.get(containerKey));
     Object keyValue = (Object) containerKeyValues.remove(0);
@@ -322,7 +329,6 @@ public class Compaction {
     }
     return mapKey;
   }
-
   protected static Map<String, Object> getNestResult(Context activeContext, /*@Nullable*/ Term itemActiveTerm, Map<String, Object> resultMap) {
     Map<String, Object> nestResult;
     if ((itemActiveTerm != null && itemActiveTerm.nestValue != null)) {
@@ -337,7 +343,6 @@ public class Compaction {
       return resultMap;
     }
   }
-
   public static /*@Nullable*/ String maybeIriCompaction(Context activeContext, /*@Nullable*/ String iri) {
     return maybeIriCompaction(activeContext, iri, null);
   }
@@ -353,11 +358,9 @@ public class Compaction {
     }
     return iriCompaction(activeContext, iri, value, vocab, reverse);
   }
-
   public static String shortenIri(Context activeContext, String iri) {
     return iriCompaction(activeContext, iri, null, false);
   }
-
   public static String iriCompaction(Context activeContext, String iri) {
     return iriCompaction(activeContext, iri, null);
   }
@@ -535,7 +538,7 @@ public class Compaction {
       for (String pv : ((List<String>) new ArrayList(preferredValues))) {
         Integer idx = (Integer) pv.indexOf("_");
         if (idx > -1) {
-          preferredValues.add(pv.substring(idx));
+          preferredValues.add((pv.length() >= idx ? pv.substring(idx) : ""));
         }
       }
       /*@Nullable*/ String termKey = termSelection(activeContext, iri, containers, typeOrLanguage, preferredValues);
@@ -545,7 +548,7 @@ public class Compaction {
     }
     if ((vocab && activeContext.vocabularyMapping != null)) {
       if (iri.startsWith(activeContext.vocabularyMapping)) {
-        String suffix = (String) iri.substring(activeContext.vocabularyMapping.length());
+        String suffix = (iri.length() >= activeContext.vocabularyMapping.length() ? iri.substring(activeContext.vocabularyMapping.length()) : "");
         if ((suffix.length() > 0 && !activeContext.terms.containsKey(suffix))) {
           return suffix;
         }
@@ -558,7 +561,7 @@ public class Compaction {
       if ((termDfn.iri == null || (termDfn.iri == null && ((Object) iri) == null || termDfn.iri != null && (termDfn.iri).equals(iri)) || !(iri.startsWith(termDfn.iri)) || !(termDfn.isPrefix))) {
         continue;
       }
-      String candidate = key + ":" + iri.substring(termDfn.iri.length());
+      String candidate = key + ":" + (iri.length() >= termDfn.iri.length() ? iri.substring(termDfn.iri.length()) : "");
       if ((compactIri == null || (candidate.length() <= compactIri.length() && candidate.compareTo(compactIri) < 0))) {
         if ((!activeContext.terms.containsKey(candidate) || ((activeContext.terms.get(candidate).iri == null && ((Object) iri) == null || activeContext.terms.get(candidate).iri != null && (activeContext.terms.get(candidate).iri).equals(iri)) && value == null))) {
           compactIri = candidate;
@@ -570,7 +573,7 @@ public class Compaction {
     }
     Integer colonx = (Integer) iri.indexOf(":");
     if ((colonx > -1 && !iri.contains("//"))) {
-      /*@Nullable*/ Term term = activeContext.terms.get(iri.substring(0, colonx));
+      /*@Nullable*/ Term term = activeContext.terms.get((iri.length() >= 0 ? iri.substring(0, colonx) : ""));
       if ((term != null && term.isPrefix)) {
         throw new IRIConfusedWithPrefixError(iri.toString());
       }
@@ -580,7 +583,6 @@ public class Compaction {
     }
     return iri;
   }
-
   public static /*@Nullable*/ String termSelection(Context activeContext, String keywordOrIri, List<String> containers, String typeOrLanguage, List<String> preferredValues) {
     Map inverseContext = (Map) getInverseContext(activeContext);
     Map<String, Object> containerMap = ((Map<String, Object>) inverseContext.get(keywordOrIri));
@@ -599,7 +601,6 @@ public class Compaction {
     }
     return null;
   }
-
   public static Object valueCompaction(Context activeContext, /*@Nullable*/ Term activeTerm, Map<String, Object> value) {
     Object result = new HashMap(value);
     Map inverseContext = (Map) getInverseContext(activeContext);

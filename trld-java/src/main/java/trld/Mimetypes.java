@@ -16,15 +16,29 @@ import trld.Builtins;
 import trld.KeyValue;
 
 
-public class Mimetypes {
-  public static final Map<String, String> SUFFIX_MIME_TYPE_MAP = Builtins.mapOf("ttl", "text/turtle", "trig", "application/trig", "jsonld", "application/ld+json", "xml", "application/rdf+xml", "rdf", "application/rdf+xml", "rdfs", "application/rdf+xml", "owl", "application/rdf+xml", "html", "text/html");
 
+
+public class Mimetypes {
+  public static final Map<String, String> SUFFIX_MIME_TYPE_MAP = Builtins.mapOf("trig", "application/trig", "ttl", "text/turtle", "jsonld", "application/ld+json", "xml", "application/rdf+xml", "rdf", "application/rdf+xml", "rdfs", "application/rdf+xml", "owl", "application/rdf+xml", "nq", "application/n-quads", "nt", "application/n-triples", "html", "text/html");
+  public static final String JSONLD_MIME_TYPE = (String) SUFFIX_MIME_TYPE_MAP.get("jsonld");
+  public static final Set<String> JSON_MIME_TYPES = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) JSONLD_MIME_TYPE, "application/json"})));
   public static /*@Nullable*/ String guessMimeType(String ref) {
     Integer i = (Integer) ref.lastIndexOf(".");
     if (i == -1) {
       return null;
     }
-    String suffix = ref.substring(i + 1);
+    String suffix = (ref.length() >= i + 1 ? ref.substring(i + 1) : "");
     return SUFFIX_MIME_TYPE_MAP.get(suffix);
+  }
+  public static String getFirstMimeType(String accepts) {
+    Integer idx = (Integer) accepts.indexOf(",");
+    if (idx > 0) {
+      accepts = (accepts.length() >= 0 ? accepts.substring(0, idx) : "");
+    }
+    idx = (Integer) accepts.indexOf(";");
+    if (idx > 0) {
+      accepts = (accepts.length() >= 0 ? accepts.substring(0, idx) : "");
+    }
+    return accepts.strip();
   }
 }

@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Output;
-import static trld.Common.uuid4;
+import static trld.platform.Common.uuid4;
+import trld.platform.Output;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.CONTAINER;
 import static trld.jsonld.Base.CONTEXT;
@@ -25,18 +25,23 @@ import static trld.jsonld.Base.ID;
 import static trld.jsonld.Base.INDEX;
 import static trld.jsonld.Base.LANGUAGE;
 import static trld.jsonld.Base.LIST;
+import static trld.jsonld.Base.NONE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
 import static trld.jsonld.Base.REVERSE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.VOCAB;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
+
+
+
+
 
 public class Serializer {
-  public static final String ANNOTATION = "@annotation";
   public static final Pattern WORD_START = (Pattern) Pattern.compile("^\\w*$");
   public static final Pattern PNAME_LOCAL_ESC = (Pattern) Pattern.compile("([~!$&'()*+,;=/?#@%]|^[.-]|[.-]$)");
-
   public static void serialize(Map<String, Object> data, Output out) {
     serialize(data, out, null);
   }
@@ -46,12 +51,11 @@ public class Serializer {
   public static void serialize(Map<String, Object> data, Output out, /*@Nullable*/ Map context, /*@Nullable*/ String baseIri) {
     serialize(data, out, context, baseIri, null);
   }
-  public static void serialize(Map<String, Object> data, Output out, /*@Nullable*/ Map context, /*@Nullable*/ String baseIri, Settings settings) {
+  public static void serialize(Map<String, Object> data, Output out, /*@Nullable*/ Map context, /*@Nullable*/ String baseIri, /*@Nullable*/ Settings settings) {
     settings = (settings != null ? settings : new Settings());
     SerializerState state = new SerializerState(out, settings, context, baseIri);
     state.serialize(data);
   }
-
   public static void serializeTurtle(Map<String, Object> data, Output out) {
     serializeTurtle(data, out, null);
   }
@@ -65,7 +69,6 @@ public class Serializer {
     Settings settings = new Settings(true, !(union));
     serialize(data, out, context, baseIri, settings);
   }
-
   public static Map<String, String> collectPrefixes(/*@Nullable*/ Object context) {
     if (!(context instanceof Map)) {
       return new HashMap<>();
@@ -82,7 +85,6 @@ public class Serializer {
     }
     return prefixes;
   }
-
   public static List asList(Object value) {
     return (value instanceof List ? (List) value : new ArrayList<>(Arrays.asList(new Object[] {(Object) value})));
   }

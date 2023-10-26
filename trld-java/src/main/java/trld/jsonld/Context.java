@@ -15,9 +15,11 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import static trld.Common.loadJson;
-import static trld.Common.warning;
-import static trld.Common.resolveIri;
+import trld.jsonld.LoadDocumentCallback;
+import trld.jsonld.LoadDocumentOptions;
+import static trld.jsonld.Docloader.getDocumentLoader;
+import static trld.platform.Common.resolveIri;
+import static trld.platform.Common.warning;
 import static trld.jsonld.Base.*;
 
 public class Context {
@@ -36,11 +38,16 @@ public class Context {
   public /*@Nullable*/ Context previousContext;
   public String processingMode;
   public /*@Nullable*/ Double version;
+  public LoadDocumentCallback documentLoader;
 
   public Context(/*@Nullable*/ String baseIri) {
     this(baseIri, null);
   }
   public Context(/*@Nullable*/ String baseIri, /*@Nullable*/ String originalBaseUrl) {
+    this(baseIri, originalBaseUrl, null);
+  }
+  public Context(/*@Nullable*/ String baseIri, /*@Nullable*/ String originalBaseUrl, /*@Nullable*/ LoadDocumentCallback documentLoader) {
+    this.documentLoader = (documentLoader != null ? documentLoader : getDocumentLoader((originalBaseUrl != null ? originalBaseUrl : baseIri)));
     this.initialize(baseIri, originalBaseUrl);
   }
 
@@ -78,16 +85,16 @@ public class Context {
   public Context getContext(Object contextData) {
     return this.getContext(contextData, null);
   }
-  public Context getContext(Object contextData, String baseUrl) {
+  public Context getContext(Object contextData, /*@Nullable*/ String baseUrl) {
     return this.getContext(contextData, baseUrl, null);
   }
-  public Context getContext(Object contextData, String baseUrl, Set<String> remoteContexts) {
+  public Context getContext(Object contextData, /*@Nullable*/ String baseUrl, /*@Nullable*/ Set<String> remoteContexts) {
     return this.getContext(contextData, baseUrl, remoteContexts, false);
   }
-  public Context getContext(Object contextData, String baseUrl, Set<String> remoteContexts, Boolean overrideProtected) {
+  public Context getContext(Object contextData, /*@Nullable*/ String baseUrl, /*@Nullable*/ Set<String> remoteContexts, Boolean overrideProtected) {
     return this.getContext(contextData, baseUrl, remoteContexts, overrideProtected, true);
   }
-  public Context getContext(Object contextData, String baseUrl, Set<String> remoteContexts, Boolean overrideProtected, Boolean validateScoped) {
+  public Context getContext(Object contextData, /*@Nullable*/ String baseUrl, /*@Nullable*/ Set<String> remoteContexts, Boolean overrideProtected, Boolean validateScoped) {
     if (remoteContexts == null) {
       remoteContexts = new HashSet();
     }
@@ -166,8 +173,12 @@ public class Context {
     return this.loadDocument(href, profile, JSONLD_CONTEXT_RELATION);
   }
   protected Object loadDocument(String href, String profile, String requestProfile) {
-    /* ... */;
-    return loadJson(href);
+    try {
+      LoadDocumentOptions options = new LoadDocumentOptions(profile, requestProfile);
+      return this.documentLoader.apply(href, options).document;
+    } catch (RuntimeException e) {
+      throw new LoadingRemoteContextFailedError("Could not load remote context: " + href + ". Cause: " + e);
+    }
   }
 
   protected void readContextDefinition(Map<String, Object> context, String baseUrl, Set<String> remoteContexts, Boolean overrideProtected, Boolean validateScoped) {
@@ -244,7 +255,7 @@ public class Context {
       if (CONTEXT_KEYWORDS.contains(key)) {
         continue;
       }
-      Boolean isprotected = (Boolean) ((Boolean) context.get(PROTECTED));
+      Boolean isprotected = (Boolean) ((Boolean) context.getOrDefault(PROTECTED, false));
       new Term(this, context, key, value, defined, baseUrl, isprotected, overrideProtected);
     }
   }
@@ -320,10 +331,10 @@ public class Context {
     if ((vocab && iriTerm != null)) {
       return iriTerm.iri;
     }
-    if ((value.length() > 1 && value.substring(1).contains(":"))) {
+    if ((value.length() > 1 && (value.length() >= 1 ? value.substring(1) : "").contains(":"))) {
       Integer idx = (Integer) value.indexOf(":");
-      String prefix = value.substring(0, idx);
-      String suffix = value.substring(idx + 1);
+      String prefix = (value.length() >= 0 ? value.substring(0, idx) : "");
+      String suffix = (value.length() >= idx + 1 ? value.substring(idx + 1) : "");
       if (((prefix == null && ((Object) "_") == null || prefix != null && (prefix).equals("_")) || suffix.startsWith("//"))) {
         return value;
       }

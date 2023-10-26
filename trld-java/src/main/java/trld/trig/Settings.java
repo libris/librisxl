@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Output;
-import static trld.Common.uuid4;
+import static trld.platform.Common.uuid4;
+import trld.platform.Output;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.CONTAINER;
 import static trld.jsonld.Base.CONTEXT;
@@ -25,12 +25,15 @@ import static trld.jsonld.Base.ID;
 import static trld.jsonld.Base.INDEX;
 import static trld.jsonld.Base.LANGUAGE;
 import static trld.jsonld.Base.LIST;
+import static trld.jsonld.Base.NONE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
 import static trld.jsonld.Base.REVERSE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.VOCAB;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 import static trld.trig.Serializer.*;
 
 

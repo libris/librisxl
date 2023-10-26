@@ -15,18 +15,21 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Input;
-import trld.Output;
-import static trld.Common.loadJson;
-import static trld.jsonld.Base.*;
-import static trld.jsonld.Expansion.expand;
+import static trld.nq.Parser.load;
+import static trld.nq.Serializer.serialize;
+import trld.platform.Input;
+import trld.platform.Output;
+import static trld.jsonld.Base.CONTEXT;
+import static trld.jsonld.Base.ID;
+import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Compaction.compact;
+import trld.jsonld.LoadDocumentCallback;
+import static trld.jsonld.Docloader.getDocumentLoader;
+import static trld.jsonld.Expansion.expand;
 import static trld.jsonld.Flattening.flatten;
 import trld.jsonld.RdfDataset;
 import static trld.jsonld.Rdf.toJsonld;
 import static trld.jsonld.Rdf.toRdfDataset;
-import static trld.nq.Parser.load;
-import static trld.nq.Serializer.serialize;
 import static trld.jsonld.Testbase.*;
 
 
@@ -95,6 +98,7 @@ public class TestCase {
   public Object runFromRdfTest() {
     RdfDataset inData = new RdfDataset();
     try (Input inp = new Input(this.indocPath)) {
+      load(inData, inp);
     }
     Boolean ordered = true;
     /*@Nullable*/ String rdfDirection = ((/*@Nullable*/ String) this.options.get("rdfDirection"));
@@ -118,6 +122,7 @@ public class TestCase {
       assert this.testtype.contains("jld:PositiveEvaluationTest");
       if (this.expectdocPath.endsWith(".nq")) {
         try (Input inp = new Input(this.expectdocPath)) {
+          return inp.read();
         }
       } else {
         Object expectData = (Object) loadJson(this.expectdocPath);

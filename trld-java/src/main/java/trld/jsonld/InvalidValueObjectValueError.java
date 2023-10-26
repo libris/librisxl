@@ -15,7 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import static trld.Common.warning;
+import trld.jsonld.LoadDocumentCallback;
+import static trld.platform.Common.warning;
 import static trld.jsonld.Base.*;
 import trld.jsonld.Context;
 import trld.jsonld.Term;
@@ -25,6 +26,6 @@ import static trld.jsonld.Expansion.*;
 
 
 public class InvalidValueObjectValueError extends JsonLdError {
-  InvalidValueObjectValueError() { };
-  InvalidValueObjectValueError(String msg) { super(msg); };
+  public InvalidValueObjectValueError() { };
+  public InvalidValueObjectValueError(String msg) { super(msg); };
 }

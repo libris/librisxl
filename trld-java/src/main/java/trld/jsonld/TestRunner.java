@@ -3,11 +3,12 @@ package trld.jsonld;
 import java.util.*;
 
 import trld.Builtins;
-import trld.Common;
-import trld.Input;
+import trld.platform.Common;
 
 import static trld.jsonld.Base.CONTEXT;
 import static trld.jsonld.Base.JSONLD10;
+import static trld.jsonld.Docloader.setDocumentLoader;
+import static trld.jsonld.Docloader.loadAnyDocument;
 import static trld.jsonld.Testbase.TESTS_URL;
 
 public class TestRunner {
@@ -17,8 +18,13 @@ public class TestRunner {
     static void runManifest(String manifestFile) {
         report("Running test suite: " + manifestFile);
 
-        Common.setDocumentLoader(url -> new Input(url.replace(TESTS_URL, testsuiteDir)));
-        Map manifest = (Map) Common.loadJson(testsuiteDir + "/" + manifestFile);
+        setDocumentLoader(new LoadDocumentCallback() {
+            public RemoteDocument apply(String url, LoadDocumentOptions options) {
+                System.out.println("DEBUG: " + url.replace(TESTS_URL, testsuiteDir));
+                return loadAnyDocument(url.replace(TESTS_URL, testsuiteDir));
+            }
+        });
+        Map manifest = (Map) loadAnyDocument(testsuiteDir + "/" + manifestFile).document;
 
         int runs = 0;
         int oks = 0;
@@ -85,7 +91,7 @@ public class TestRunner {
     static Object datarepr(Object data) {
         if (data instanceof String)
             return String.join("\n", Builtins.sorted(Arrays.asList(((String) data).split("\\n"))));
-        return data; // Common.dumpJson(data, true);
+        return data; // Common.jsonEncode(data, true);
     }
 
     public static void main(String[] args) {

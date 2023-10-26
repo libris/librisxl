@@ -15,12 +15,17 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import static trld.Common.warning;
+import trld.jsonld.LoadDocumentCallback;
+import static trld.platform.Common.warning;
 import static trld.jsonld.Base.*;
 import trld.jsonld.Context;
 import trld.jsonld.Term;
 import trld.jsonld.InvalidBaseDirectionError;
 import trld.jsonld.InvalidNestValueError;
+
+
+
+
 
 public class Expansion {
   public static final String EMBED = "@embed";
@@ -28,15 +33,17 @@ public class Expansion {
   public static final String OMIT_DEFAULT = "@omit_default";
   public static final String REQUIRES_ALL = "@requires_all";
   public static final Set<String> FRAMING_KEYWORDS = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) DEFAULT, EMBED, EXPLICIT, OMIT_DEFAULT, REQUIRES_ALL})));
-
   public static List expand(Object docData, String baseIri) {
     return expand(docData, baseIri, null);
   }
-  public static List expand(Object docData, String baseIri, String expandContext) {
+  public static List expand(Object docData, String baseIri, /*@Nullable*/ String expandContext) {
     return expand(docData, baseIri, expandContext, false);
   }
-  public static List expand(Object docData, String baseIri, String expandContext, Boolean ordered) {
-    Context ctx = new Context(baseIri);
+  public static List expand(Object docData, String baseIri, /*@Nullable*/ String expandContext, Boolean ordered) {
+    return expand(docData, baseIri, expandContext, ordered, null);
+  }
+  public static List expand(Object docData, String baseIri, /*@Nullable*/ String expandContext, Boolean ordered, /*@Nullable*/ LoadDocumentCallback documentLoader) {
+    Context ctx = new Context(baseIri, null, documentLoader);
     if (expandContext != null) {
       ctx = ctx.getContext(expandContext, expandContext);
     }
@@ -49,7 +56,6 @@ public class Expansion {
     }
     return asList(result);
   }
-
   public static /*@Nullable*/ Object expansion(Context activeContext, /*@Nullable*/ String activeProperty, /*@Nullable*/ Object element, String baseUrl) {
     return expansion(activeContext, activeProperty, element, baseUrl, false);
   }
@@ -177,7 +183,6 @@ public class Expansion {
     }
     return result;
   }
-
   protected static void expandElement(Context activeContext, Context typeScopedContext, /*@Nullable*/ String activeProperty, Map<String, /*@Nullable*/ Object> element, Map<String, /*@Nullable*/ Object> result, Map<String, Object> nests, /*@Nullable*/ String inputType, String baseUrl) {
     expandElement(activeContext, typeScopedContext, activeProperty, element, result, nests, inputType, baseUrl, false);
   }
@@ -263,7 +268,8 @@ public class Expansion {
             throw new InvalidIncludedValueError();
           }
           if (result.containsKey(INCLUDED)) {
-            expandedValue = Stream.concat(asList(result.get(INCLUDED)).stream(), expandedList.stream()).collect(Collectors.toList());
+            List l = (List) asList(result.get(INCLUDED));
+            expandedValue = Stream.concat(l.stream(), expandedList.stream()).collect(Collectors.toList());
           }
         } else if ((expandedProperty == null && ((Object) VALUE) == null || expandedProperty != null && (expandedProperty).equals(VALUE))) {
           if ((inputType == null && ((Object) JSON) == null || inputType != null && (inputType).equals(JSON))) {
@@ -500,7 +506,6 @@ public class Expansion {
       }
     }
   }
-
   public static Object valueExpansion(Context activeContext, String activeProperty, Object value) {
     /*@Nullable*/ Term activeTerm = (/*@Nullable*/ Term) activeContext.terms.get(activeProperty);
     if ((activeTerm != null && (activeTerm.typeMapping == null && ((Object) ID) == null || activeTerm.typeMapping != null && (activeTerm.typeMapping).equals(ID)) && value instanceof String)) {

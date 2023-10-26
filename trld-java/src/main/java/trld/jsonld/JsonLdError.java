@@ -19,6 +19,6 @@ import static trld.jsonld.Base.*;
 
 
 public class JsonLdError extends RuntimeException {
-  JsonLdError() { };
-  JsonLdError(String msg) { super(msg); };
+  public JsonLdError() { };
+  public JsonLdError(String msg) { super(msg); };
 }

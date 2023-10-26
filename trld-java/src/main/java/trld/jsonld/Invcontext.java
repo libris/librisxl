@@ -19,15 +19,15 @@ import static trld.jsonld.Base.*;
 import trld.jsonld.Context;
 import trld.jsonld.Term;
 
-public class Invcontext {
 
+
+public class Invcontext {
   public static Map getInverseContext(Context activeContext) {
     if (activeContext.inverseContext == null) {
       activeContext.inverseContext = (Map) createInverseContext(activeContext);
     }
     return activeContext.inverseContext;
   }
-
   public static Map<String, Object> createInverseContext(Context activeContext) {
     Map<String, Object> result = new HashMap<>();
     String defaultLanguage = (activeContext.defaultLanguage != null ? activeContext.defaultLanguage : NONE);

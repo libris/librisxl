@@ -15,11 +15,13 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import static trld.Common.warning;
+import static trld.platform.Common.warning;
 import static trld.jsonld.Base.*;
 
-public class Flattening {
 
+
+
+public class Flattening {
   public static Object flatten(Object element) {
     return flatten(element, false);
   }
@@ -72,7 +74,6 @@ public class Flattening {
     }
     return flattened;
   }
-
   public static void makeNodeMap(BNodes bnodes, Object element, Map<String, Map<String, Object>> nodeMap) {
     makeNodeMap(bnodes, element, nodeMap, DEFAULT);
   }
@@ -224,8 +225,7 @@ public class Flattening {
       }
     }
   }
-
-  public static void mergeNodeMaps(Map<String, Map<String, Map<String, Object>>> nodeMaps) {
+  public static Map<String, Object> mergeNodeMaps(Map<String, Map<String, Map<String, Object>>> nodeMaps) {
     Map<String, Object> result = new HashMap<>();
     for (Map.Entry<String, Map<String, Map<String, Object>>> graphName_nodeMap : nodeMaps.entrySet()) {
       String graphName = graphName_nodeMap.getKey();
@@ -248,6 +248,6 @@ public class Flattening {
         }
       }
     }
-    return;
+    return result;
   }
 }

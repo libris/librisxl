@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Input;
-import static trld.Common.dumpJson;
+import static trld.platform.Common.jsonEncode;
+import trld.platform.Input;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.LANGUAGE;
@@ -28,6 +28,8 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 import static trld.Rdfterms.RDF_TYPE;
 import static trld.Rdfterms.XSD;
 import static trld.Rdfterms.XSD_DOUBLE;
@@ -36,7 +38,7 @@ import static trld.trig.Parser.*;
 
 
 public class ReadNumber extends ReadTerm {
-  ReadNumber(/*@Nullable*/ ParserState parent) { super(parent); };
+  public ReadNumber(/*@Nullable*/ ParserState parent) { super(parent); };
   public final Set<String> EXP = new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) "E", "e"})));
   public /*@Nullable*/ String whole;
   public String dot;

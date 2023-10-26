@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import static trld.Common.dumpCanonicalJson;
-import static trld.Common.parseJson;
+import static trld.platform.Common.jsonEncodeCanonical;
+import static trld.platform.Common.jsonDecode;
 import static trld.jsonld.Base.*;
 import trld.jsonld.InvalidBaseDirectionError;
 import trld.jsonld.InvalidLanguageTaggedStringError;

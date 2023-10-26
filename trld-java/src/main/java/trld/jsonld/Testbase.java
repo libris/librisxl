@@ -15,19 +15,27 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Input;
-import trld.Output;
-import static trld.Common.loadJson;
-import static trld.jsonld.Base.*;
-import static trld.jsonld.Expansion.expand;
+import static trld.nq.Parser.load;
+import static trld.nq.Serializer.serialize;
+import trld.platform.Input;
+import trld.platform.Output;
+import static trld.jsonld.Base.CONTEXT;
+import static trld.jsonld.Base.ID;
+import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Compaction.compact;
+import trld.jsonld.LoadDocumentCallback;
+import static trld.jsonld.Docloader.getDocumentLoader;
+import static trld.jsonld.Expansion.expand;
 import static trld.jsonld.Flattening.flatten;
 import trld.jsonld.RdfDataset;
 import static trld.jsonld.Rdf.toJsonld;
 import static trld.jsonld.Rdf.toRdfDataset;
-import static trld.nq.Parser.load;
-import static trld.nq.Serializer.serialize;
+
 
 public class Testbase {
   public static final String TESTS_URL = "https://w3c.github.io/json-ld-api/tests";
+  public static Object loadJson(String source) {
+    LoadDocumentCallback loader = (LoadDocumentCallback) getDocumentLoader();
+    return loader.apply(source).document;
+  }
 }

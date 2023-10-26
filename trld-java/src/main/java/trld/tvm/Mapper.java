@@ -22,8 +22,11 @@ import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.VOCAB;
 import static trld.jsonld.Base.asList;
 
-public class Mapper {
 
+
+
+
+public class Mapper {
   public static Object mapTo(Map targetMap, Object indata) {
     return mapTo(targetMap, indata, false);
   }
@@ -32,7 +35,6 @@ public class Mapper {
     modify(targetMap, indata, result, dropUnmapped);
     return result;
   }
-
   protected static void modify(Map targetMap, Object ino, Object outo, Boolean dropUnmapped) {
     if (ino instanceof Map) {
       for (Map.Entry<String, Object> k_v : ((Map<String, Object>) ino).entrySet()) {
@@ -48,7 +50,6 @@ public class Mapper {
       }
     }
   }
-
   protected static void modifyPair(Map targetMap, Object k, Object v, Object outo, Boolean dropUnmapped) {
     Map<Object, Object> mapo = map(targetMap, k, v, dropUnmapped);
     for (Map.Entry<Object, Object> mapk_mapv : mapo.entrySet()) {
@@ -76,7 +77,6 @@ public class Mapper {
       }
     }
   }
-
   protected static Map map(Map targetMap, Object key, Object value) {
     return map(targetMap, key, value, false);
   }
