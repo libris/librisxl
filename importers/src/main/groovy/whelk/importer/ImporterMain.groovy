@@ -251,7 +251,10 @@ class ImporterMain {
 
         if (data instanceof Map) {
             data.removeAll { entry ->
-                return entry.key.startsWith("generic") || entry.key.equals("marc:hasGovernmentDocumentClassificationNumber") || (entry.key.equals("encodingLevel") && entry.value instanceof String && entry.value.contains(" "))
+                return entry.key.startsWith("generic") ||
+                        entry.key.equals("marc:hasGovernmentDocumentClassificationNumber") ||
+                        (entry.key.equals("encodingLevel") && entry.value instanceof String && entry.value.contains(" ")) ||
+                        !entry.value
             }
             data.keySet().each { property ->
                 filterProblematicData(id, data[property])
