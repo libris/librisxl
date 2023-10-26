@@ -83,6 +83,7 @@ class BulkChange {
         def graphPattern = sparqlify(ttlGraph)
         def valuesClause = ""
         def altPattern = ""
+        // TODO: Allow multiple mappings (both local and global)
         if (mappings) {
             valuesClause = "VALUES ?${MAPPINGS} { " + mappings.collect { from, to -> "\"$from\"" }.join(' ') + " }"
             altPattern = graphPattern
