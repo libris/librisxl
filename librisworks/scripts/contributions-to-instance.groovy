@@ -77,6 +77,10 @@ selectByIds(clusters.flatten()) { bib ->
             if (id in keepIllustratorOnWorkForIds[illustrator]) {
                 toInstance.remove(ill)
             }
+            def pu = asList(contribution.role).find { it == [(ID_KEY): Relator.PRIMARY_RIGHTS_HOLDER.iri] }
+            if (pu) {
+                toInstance.add(pu)
+            }
         }
         if (toInstance) {
             instance['contribution'] = asList(instance['contribution']) + c.clone().tap { it['role'] = toInstance }
@@ -102,14 +106,6 @@ selectByIds(clusters.flatten()) { bib ->
 boolean isPrimaryContribution(Map contribution) {
     contribution[TYPE_KEY] == 'PrimaryContribution'
 }
-
-//boolean has9pu(Map contribution) {
-//    asList(contribution.role).contains([(ID_KEY): Relator.PRIMARY_RIGHTS_HOLDER.iri])
-//}
-//
-//boolean isStillImage(Map work) {
-//    asList(work.contentType).contains([(ID_KEY): 'https://id.kb.se/term/rda/StillImage'])
-//}
 
 boolean isPictureBook(Map work) {
     def picBookTerms = [
