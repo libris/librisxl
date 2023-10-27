@@ -114,11 +114,14 @@ class NotificationGenerator extends HouseKeeper {
                 "precededBy",
                 "succeededBy",
                 "contribution",
+                "agent",
         ]
         Document instanceAfterChange = whelk.getStorage().loadAsOf(instanceId, Timestamp.from(after))
         historicEmbellish(instanceAfterChange, propertiesToEmbellish, after)
         Document instanceBeforeChange = whelk.getStorage().loadAsOf(instanceId, Timestamp.from(before))
         historicEmbellish(instanceBeforeChange, propertiesToEmbellish, before);
+
+        //System.err.println(" ******* NOW SCANNING " + instanceId + " FOR IMPLICIT CHANGES!\n\n");
 
         // Check for primary contribution changes
         {
