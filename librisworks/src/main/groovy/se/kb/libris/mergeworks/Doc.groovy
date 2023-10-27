@@ -96,6 +96,10 @@ class Doc {
         document.getThingIdentifiers().first()
     }
 
+    String recordIri() {
+        document.getCompleteSystemId()
+    }
+
     String encodingLevel() {
         return record()['encodingLevel'] ?: ''
     }
