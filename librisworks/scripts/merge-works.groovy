@@ -57,11 +57,11 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
             if (workDoc.existsInStorage) {
                 if (instanceDocs) {
                     replaceWorkData(workDoc, c.merge([workDoc] + instanceDocs))
-                    // TODO: Add adminmetadata
+                    // TODO: Update adminMetadata? To say that additional instances may have contributed to the linked work.
                     writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.UPDATED)
                 }
             } else {
-                addTechnicalNote(workDoc, WorkStatus.NEW) //TODO: Add more/better adminmetadata
+                addAdminMetadata(workDoc, instanceDocs.collect { ['@id': it.recordIri()] })
                 writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.NEW)
             }
             addCloseMatch(workDoc, linkableWorkIris)
@@ -119,17 +119,15 @@ Doc createNewWork(Map workData) {
     return new Doc(create(data))
 }
 
-void addTechnicalNote(Doc doc, WorkStatus workStatus) {
-    def reportUri = "http://xlbuild.libris.kb.se/works/${reportsDir.getPath()}/${workStatus.status}/${doc.shortId()}.html"
-
-    doc.record()['technicalNote'] = [[
-                                             "@type"  : "TechnicalNote",
-                                             "hasNote": [[
-                                                                 "@type": "Note",
-                                                                 "label": ["Maskinellt utbrutet verk... TODO"]
-                                                         ]],
-                                             "uri"    : [reportUri]
-                                     ]]
+void addAdminMetadata(Doc doc, List<Map> derivedFrom) {
+    doc.record()['hasChangeNote'] = [
+            [
+                    '@type': 'CreateNote',
+                    'tool' : ['@id': 'https://id.kb.se/generator/mergeworks']
+            ]
+    ]
+    doc.record()['derivedFrom'] = derivedFrom
+    doc.record()['descriptionLanguage'] = ['@id': 'https://id.kb.se/language/swe']
 }
 
 void writeWorkReport(Collection<Doc> titleCluster, Doc derivedWork, Collection<Doc> derivedFrom, WorkStatus workStatus) {
