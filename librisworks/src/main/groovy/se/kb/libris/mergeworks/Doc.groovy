@@ -318,4 +318,9 @@ class Doc {
         workData.remove('_editionStatement')
         workData.remove('_numPages')
     }
+
+    void sortContribution() {
+        // PrimaryContribution first
+        contribution()?.sort {it['@type'] != 'PrimaryContribution' }
+    }
 }

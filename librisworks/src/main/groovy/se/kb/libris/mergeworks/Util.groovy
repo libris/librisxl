@@ -311,7 +311,14 @@ class Util {
         }.with { preferredComparisonOrder(it) }
 
         def workClusters = partition(docs, { Doc a, Doc b -> c.sameWork(a, b) })
-                .each { work -> work.each { doc -> doc.removeComparisonProps() } }
+                .each { work ->
+                    work.each { doc ->
+                        doc.removeComparisonProps()
+                        // List order may be shuffled when comparing works.
+                        // Make sure PrimaryContribution always comes first in contribution.
+                        doc.sortContribution()
+                    }
+                }
 
         return workClusters
     }
