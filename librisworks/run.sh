@@ -38,7 +38,7 @@ NO_ANONYMOUS_TRANSLATIONS=$CLUSTERS_DIR/5-no-anonymous-translations
 mkdir -p $CLUSTERS_DIR $NORMALIZATIONS_DIR $MERGED_WORKS_DIR $ALL $MERGED $TITLES $SWEDISH_FICTION $NO_ANONYMOUS_TRANSLATIONS
 
 LANGUAGE_IN_TITLE=$NORMALIZATIONS_DIR/1-titles-with-language
-ELIB_DESIGNERS=$NORMALIZATIONS_DIR/2-elib-cover-designer
+ILL_CONTENT=$NORMALIZATIONS_DIR/2-illustrative-content
 DEDUPLICATE_CONTRIBUTIONS=$NORMALIZATIONS_DIR/3-deduplicate-contributions
 ADD_MISSING_CONTRIBUTION_DATA=$NORMALIZATIONS_DIR/4-add-missing-contribution-data
 ROLES_TO_INSTANCE=$NORMALIZATIONS_DIR/5-roles-to-instance
@@ -94,10 +94,10 @@ time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDIS
 echo "$(count_lines $LANGUAGE_IN_TITLE/MODIFIED.txt) records affected, report in $LANGUAGE_IN_TITLE"
 
 echo
-echo "Specifying designer roles in Elib records..." # NOTE: Not dependent on clustering, can be run anytime after ContributionByRoleStep has been deployed.
+echo "Moving illustrativeContent to instance..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -jar $JAR_FILE \
-  $ARGS --report $ELIB_DESIGNERS $SCRIPTS_DIR/elib-unspecified-contributor.groovy 2>/dev/null
-echo "$(count_lines $ELIB_DESIGNERS/MODIFIED.txt) records affected, report in $ELIB_DESIGNERS"
+  $ARGS --report $ILL_CONTENT $SCRIPTS_DIR/lxl-4221-move-illustrativecontent-to-instance.groovy 2>/dev/null
+echo "$(count_lines $ILL_CONTENT/MODIFIED.txt) records affected, report in $ILL_CONTENT"
 
 echo
 echo "Merging contribution objects with same agent..."
