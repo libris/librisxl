@@ -15,6 +15,8 @@ import static whelk.util.Jackson.mapper
  */
 @Log
 class HttpTools {
+    final static int SC_TOO_MANY_REQUESTS = 429
+    
     static void sendResponse(HttpServletResponse response, Map data, String contentType, int statusCode = 200) {
         if (data == null) {
             sendResponse(response, new byte[0], contentType, statusCode)
@@ -86,6 +88,16 @@ class HttpTools {
 
         return baseUri
     }
+    
+    static Optional<String> getRemoteIp(HttpServletRequest request, List<String> proxyIps) {
+        List remoteIps = []
+        request.getHeaders('X-Forwarded-For').each {
+            it.split(',').each { ip -> remoteIps.add(it.trim()) }
+        }
+        
+        
+        return Optional.empty()
+    } 
     
     enum DisplayMode {
         DOCUMENT, META, RAW

@@ -3,6 +3,9 @@ package whelk.rest.api
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.util.logging.Log4j2 as Log
+
+import whelk.util.RateLimiter
+
 import org.apache.http.entity.ContentType
 import whelk.Document
 import whelk.IdGenerator
@@ -58,8 +61,19 @@ class Crud extends HttpServlet {
 
     SiteSearch siteSearch
 
-    Map<String, Tuple2<Document, String>> cachedFetches = [:]
 
+    Map<String, Tuple2<Document, String>> cachedFetches = [:]
+    
+    enum RequestType { READ, WRITE, FIND
+    }
+ 
+    // TODO: make configurable
+    Map<RequestType, RateLimiter> rateLimiters = [
+            RequestType.READ : new RateLimiter(100),
+            RequestType.WRITE: new RateLimiter(10),
+            RequestType.FIND : new RateLimiter(100),
+    ]
+    
     Crud() {
         // Do nothing - only here for Tomcat to have something to call
     }
@@ -113,14 +127,17 @@ class Crud extends HttpServlet {
 
     void doGet2(HttpServletRequest request, HttpServletResponse response) {
         RestMetrics.Measurement measurement = null
+
         try {
             if (request.pathInfo == "/") {
                 measurement = metrics.measure('INDEX')
                 displayInfo(response)
             } else if (siteSearch.isSearchResource(request.pathInfo)) {
+                rateLimit(request, RequestType.FIND)
                 measurement = metrics.measure('FIND')
                 handleQuery(request, response)
             } else {
+                rateLimit(request, RequestType.READ)
                 measurement = metrics.measure('GET')
                 handleGetRequest(CrudGetRequest.parse(request), response)
             }
@@ -514,7 +531,8 @@ class Crud extends HttpServlet {
         if (!isSupportedContentType(request.getContentType())) {
             throw new BadRequestException("Content-Type not supported.")
         }
-
+        rateLimit(request, RequestType.WRITE)
+                
         Map requestBody = getRequestBody(request)
 
         if (isEmptyInput(requestBody)) {
@@ -600,7 +618,8 @@ class Crud extends HttpServlet {
         if (!isSupportedContentType(request.getContentType())) {
             throw new BadRequestException("Content-Type not supported.")
         }
-
+        rateLimit(request, RequestType.WRITE)
+        
         Map requestBody = getRequestBody(request)
 
         if (isEmptyInput(requestBody)) {
@@ -832,7 +851,15 @@ class Crud extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_NO_CONTENT)
         }
     }
-
+    
+    void rateLimit(HttpServletRequest request, RequestType requestType) {
+        HttpTools.getRemoteIp(request, [/*TODO*/]).ifPresent { ip ->
+            if (!rateLimiters[requestType].isOk(ip)) {
+                throw new RateLimitException('TODO')
+            }
+        }
+    }
+    
     static void sendError(HttpServletRequest request, HttpServletResponse response, Exception e) {
         int code = mapError(e)
         metrics.failedRequests.labels(request.getMethod(), code.toString()).inc()
@@ -855,6 +882,9 @@ class Crud extends HttpServlet {
             case UnsupportedContentTypeException:
                 return HttpServletResponse.SC_NOT_ACCEPTABLE
             
+            case RateLimitException:
+                return HttpTools.SC_TOO_MANY_REQUESTS
+            
             case WhelkRuntimeException:
                 return HttpServletResponse.SC_INTERNAL_SERVER_ERROR
 
@@ -864,7 +894,7 @@ class Crud extends HttpServlet {
           
             case OtherStatusException:
                 return ((OtherStatusException) e).code
-
+            
             default: 
                 return HttpServletResponse.SC_INTERNAL_SERVER_ERROR
         }
@@ -881,6 +911,12 @@ class Crud extends HttpServlet {
         OtherStatusException(String msg, int code, Throwable cause = null) {
             super(msg, cause)
             this.code = code
+        }
+    }
+
+    static class RateLimitException extends NoStackTraceException {
+        RateLimitException(String msg) {
+            super(msg)
         }
     }
 
