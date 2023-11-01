@@ -109,17 +109,6 @@ class Util {
         return Unicode.removeDiacritics(Unicode.normalizeForSearch(StringUtils.normalizeSpace(" $s ".toLowerCase().replace(noise))))
     }
 
-    static Object getPathSafe(item, path, defaultTo = null) {
-        for (p in path) {
-            if ((item instanceof Collection || item instanceof Map) && item[p] != null) {
-                item = item[p]
-            } else {
-                return defaultTo
-            }
-        }
-        return item
-    }
-
     static List<String> getFlatTitle(List hasTitle) {
         flatTitles(hasTitle)
                 .grep(isTitle)

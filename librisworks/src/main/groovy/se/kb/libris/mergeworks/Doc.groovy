@@ -4,6 +4,7 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.datatool.DocumentItem
+import whelk.util.DocumentUtil
 
 import static Util.asList
 import static Util.Relator
@@ -181,7 +182,7 @@ class Doc {
     }
 
     int numPages() {
-        String extent = Util.getPathSafe(extent(), [0, 'label', 0]) ?: Util.getPathSafe(extent(), [0, 'label'], '')
+        String extent = DocumentUtil.getAtPath(extent(), [0, 'label', 0]) ?: DocumentUtil.getAtPath(extent(), [0, 'label'], '')
         return numPages(extent)
     }
 
