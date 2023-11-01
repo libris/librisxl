@@ -1,16 +1,14 @@
 package whelk.housekeeping
 
-import org.simplejavamail.api.email.Email
-import org.simplejavamail.api.mailer.Mailer
-import org.simplejavamail.email.EmailBuilder
-import org.simplejavamail.mailer.MailerBuilder
+import org.apache.jena.ext.com.google.common.collect.Lists
 import whelk.Document
+import whelk.IdGenerator
 import whelk.JsonLd
 import whelk.Whelk
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
-import whelk.util.PropertyLoader
 
+import java.sql.Array
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -20,6 +18,8 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+
+import static whelk.util.Jackson.mapper
 
 @CompileStatic
 @Log
@@ -57,7 +57,7 @@ class NotificationGenerator extends HouseKeeper {
         connection.setAutoCommit(false)
         try {
             // Fetch all changed IDs within the interval
-            String sql = "SELECT id FROM lddb WHERE collection IN ('bib', 'auth') AND ( modified > ? AND modified <= ? );"
+            String sql = "SELECT id, ARRAY_AGG(data#>>'{@graph,0,hasChangeNote}') as changeNotes FROM lddb__versions WHERE collection IN ('bib', 'auth') AND ( modified > ? AND modified <= ? ) group by id;"
             connection.setAutoCommit(false)
             statement = connection.prepareStatement(sql)
             statement.setTimestamp(1, from)
@@ -69,7 +69,17 @@ class NotificationGenerator extends HouseKeeper {
             Set affectedInstanceIDs = []
             while (resultSet.next()) {
                 String id = resultSet.getString("id")
-                generateNotificationsForChangedID(id, from.toInstant(),
+
+                Array changeNotesArray = resultSet.getArray("changeNotes")
+
+                // There is some groovy type-nonsense going on with the array types, simply doing
+                // List changeNotes = Arrays.asList( changeNotesArray.getArray() ) won't work.
+                List changeNotes = []
+                for (Object o : changeNotesArray.getArray()) {
+                    changeNotes.add(o)
+                }
+
+                generateNotificationsForChangedID(id, changeNotes, from.toInstant(),
                         until.toInstant(), affectedInstanceIDs)
             }
         } catch (Throwable e) {
@@ -87,7 +97,7 @@ class NotificationGenerator extends HouseKeeper {
      * Based on the fact that 'id' has been updated, generate (if the change resulted in a ChangeNotice)
      * relevant notification-records
      */
-    private void generateNotificationsForChangedID(String id, Instant from, Instant until, Set affectedInstanceIDs) {
+    private void generateNotificationsForChangedID(String id, List changeNotes, Instant from, Instant until, Set affectedInstanceIDs) {
         List<Tuple2<String, String>> dependers = whelk.getStorage().followDependers(id, ["itemOf"])
         dependers.add(new Tuple2(id, null)) // This ID too, not _only_ the dependers!
         dependers.each {
@@ -97,13 +107,13 @@ class NotificationGenerator extends HouseKeeper {
                 // If we've not already sent a notification for this instance!
                 if (!affectedInstanceIDs.contains(dependerID)) {
                     affectedInstanceIDs.add(dependerID)
-                    generateNotificationsForAffectedInstance(dependerID, from, until)
+                    generateNotificationsForAffectedInstance(dependerID, changeNotes, from, until)
                 }
             }
         }
     }
 
-    private void generateNotificationsForAffectedInstance(String instanceId, Instant before, Instant after) {
+    private void generateNotificationsForAffectedInstance(String instanceId, List changeNotes, Instant before, Instant after) {
         List<String> propertiesToEmbellish = [
                 "mainEntity",
                 "instanceOf",
@@ -137,13 +147,67 @@ class NotificationGenerator extends HouseKeeper {
                                                 contributionsBefore["agent"]["givenName"] != contributionsAfter["agent"]["givenName"] ||
                                                 contributionsBefore["agent"]["lifeSpan"] != contributionsAfter["agent"]["lifeSpan"]
                                 )
-                                    System.err.println("MAKING PRIM. CONTR. NOTIFICATION!")
+                                    makeChangeObservation(instanceId, changeNotes, "https://id.kb.se/changenote/primarycontribution", (Map) contrBefore, (Map) contrAfter)
                             }
                         }
                     }
                 }
             }
         }
+    }
+
+    private void makeChangeObservation(String instanceId, List changeNotes, String categoryUri, Map oldValue, Map newValue) {
+        String newId = IdGenerator.generate()
+        String metadataUri = Document.BASE_URI.toString() + newId
+        String mainEntityUri = metadataUri+"#it"
+
+        Map observationData = [ "@graph":[
+                [
+                        "@id" : metadataUri,
+                        "@type" : "Record",
+                        "mainEntity" : ["@id" : mainEntityUri],
+                ],
+                [
+                        "@id" : mainEntityUri,
+                        "@type" : "ChangeObservation",
+                        "about" : ["@id" : Document.BASE_URI.toString() + instanceId],
+                        "representationBefore" : oldValue,
+                        "representationAfter" : newValue,
+                ]
+        ]]
+
+        List<String> comments = extractComments(changeNotes)
+        if (comments) {
+            observationData["@graph"][1]["comment"] = comments
+        }
+
+        Document observationDocument = new Document(observationData)
+
+        System.err.println(" ** Made change observation for instance: " + instanceId + " , category: " + categoryUri + " , notes: " + changeNotes +
+                "\n     resulting document: " + observationDocument.getDataAsString())
+
+        if (!whelk.createDocument(observationDocument, "NotificationGenerator", "SEK", "none", false)) {
+            log.error("Failed to create ChangeObservation for $instanceId ($categoryUri).")
+        }
+    }
+
+    private List<String> extractComments(List changeNotes) {
+        List<String> comments = []
+        for (Object changeNote : changeNotes) {
+            if ( ! (changeNote instanceof String) )
+                continue
+            Map changeNoteMap = mapper.readValue( (String) changeNote, Map)
+            comments.addAll( asList(changeNoteMap["comment"]) )
+        }
+        return comments
+    }
+
+    private List asList(Object o) {
+        if (o == null)
+            return []
+        if (o instanceof List)
+            return o
+        return [o]
     }
 
     /**
