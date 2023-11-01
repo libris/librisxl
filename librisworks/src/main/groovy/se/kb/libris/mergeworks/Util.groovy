@@ -164,7 +164,7 @@ class Util {
             null
     ]
 
-    static Map appendTitlePartsToMainTitle(Map title, String partNumber, String partName = null) {
+    static void appendTitlePartsToMainTitle(Map title, String partNumber, String partName = null) {
         if (partNumber && partName) {
             title['mainTitle'] += ". $partNumber, $partName"
         } else if (partNumber) {
@@ -172,12 +172,6 @@ class Util {
         } else if (partName) {
             title['mainTitle'] += ". $partName"
         }
-
-        title.remove('partNumber')
-        title.remove('partName')
-        title.remove('hasPart')
-
-        return title
     }
 
     static String findTitlePart(List<Map> title, String prop) {
@@ -188,7 +182,6 @@ class Util {
 
     // Return the most common title for the best encodingLevel
     static def bestTitle(Collection<Doc> docs) {
-        // TODO: which title to pick when matched with already existing linked work?
         def linkedWorkTitle = docs.findResult { it.workIri() ? it.workData['hasTitle'] : null }
         if (linkedWorkTitle) {
             return linkedWorkTitle
@@ -200,11 +193,15 @@ class Util {
         def partNumber = findTitlePart(bestInstanceTitle, 'partNumber')
         def partName = findTitlePart(bestInstanceTitle, 'partName')
 
+        def workTitleShape = { it.subMap(['@type', 'mainTitle', 'source']) }
+
         if (bestWorkTitle) {
-            return bestWorkTitle.collect { appendTitlePartsToMainTitle(it, partNumber) }
+            return bestWorkTitle.each { appendTitlePartsToMainTitle(it, partNumber) }
+                    .collect(workTitleShape)
         }
 
-        return bestInstanceTitle.collect { appendTitlePartsToMainTitle(it, partNumber, partName) }
+        return bestInstanceTitle.each { appendTitlePartsToMainTitle(it, partNumber, partName) }
+                .collect(workTitleShape)
     }
 
     static def mostCommonHighestEncodingLevel(Collection<Doc> docs, Closure<Collection<Doc>> findMostCommon) {
