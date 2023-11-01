@@ -36,10 +36,6 @@ class Util {
         }
     }
 
-    private static Set<String> IGNORED_SUBTITLES = Util.class.getClassLoader()
-            .getResourceAsStream('merge-works/ignored-subtitles.txt')
-            .readLines().grep().collect(Util.&normalize) as Set
-
     private static Set<String> GENERIC_TITLES = Util.class.getClassLoader()
             .getResourceAsStream('merge-works/generic-titles.txt')
             .readLines().grep().collect(Util.&normalize) as Set
@@ -85,30 +81,20 @@ class Util {
         hasTitle.any { it['mainTitle'] && normalize((String) it['mainTitle']) in GENERIC_TITLES }
     }
 
-    static List dropGenericSubTitles(List hasTitle) {
+    static List dropSubtitles(List hasTitle) {
         hasTitle.collect {
             def copy = new TreeMap(it)
-            if (copy['subtitle'] || copy['titleRemainder']) {
-                DocumentUtil.traverse(copy) { value, path ->
-                    if (('subtitle' in path || 'titleRemainder' in path) && value instanceof String) {
-                        if (genericSubtitle(value)) {
-                            new DocumentUtil.Remove()
-                        } else {
-                            ((List) value.split(':')).with {
-                                if (it.size() > 1 && genericSubtitle(it.last().trim())) {
-                                    new DocumentUtil.Replace(value.replaceFirst(~/\s*:.+$/, ''))
-                                }
-                            }
-                        }
-                    }
+            DocumentUtil.traverse(copy) { value, path ->
+                if (('subtitle' in path || 'titleRemainder' in path) && value instanceof String) {
+                    new DocumentUtil.Remove()
                 }
             }
-            copy
+            return copy
         }
     }
 
     static List flatTitles(List hasTitle) {
-        dropGenericSubTitles(hasTitle).collect {
+        dropSubtitles(hasTitle).collect {
             def title = new TreeMap<>()
             title['flatTitle'] = normalize(DisplayDoc.flatten(it, titleComponents))
             if (it['@type']) {
@@ -117,14 +103,6 @@ class Util {
 
             title
         }
-    }
-
-    private static boolean genericSubtitle(String s) {
-        s = Util.normalize(s)
-        if (s.startsWith("en ")) {
-            s = s.substring("en ".length())
-        }
-        return s in IGNORED_SUBTITLES
     }
 
     static String normalize(String s) {
@@ -261,7 +239,7 @@ class Util {
     static def mostCommonWorkTitle(Collection<Doc> docs, Closure getTitle = { it.workTitle().findAll(isTitle) }) {
         def workTitles = docs.collect(getTitle)
                 .grep()
-                .collect { dropGenericSubTitles(it) }
+                .collect { dropSubtitles(it) }
 
         if (workTitles) {
             return mostCommon(workTitles)
@@ -276,7 +254,7 @@ class Util {
         }
 
         def instanceTitles = docs.collect { it.instanceTitle().findAll(isTitle) }
-                .collect { dropGenericSubTitles(it) }
+                .collect { dropSubtitles(it) }
 
         if (instanceTitles.grep()) {
             def instanceTitleToDoc = [instanceTitles, docs].transpose().collectEntries()
