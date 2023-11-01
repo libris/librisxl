@@ -21,7 +21,7 @@ def process = { bib ->
 
         List ids = queryIds(q).collect()
 
-        if (ids.size() > 200) {
+        if (ids.size() > 1000) {
             tooLargeResult.println("Results: ${ids.size()} Query: ${q}")
         }
         else if (ids.size() > 1) {
