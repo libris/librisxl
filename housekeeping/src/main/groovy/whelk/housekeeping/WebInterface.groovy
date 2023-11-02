@@ -34,20 +34,22 @@ public abstract class HouseKeeper {
 @CompileStatic
 @Log
 public class WebInterface extends HttpServlet {
-    private List<HouseKeeper> houseKeepers = []
+    private Map<String, HouseKeeper> houseKeepersById = [:]
     Scheduler cronScheduler = new Scheduler()
 
     public void init() {
         Whelk whelk = Whelk.createLoadedCoreWhelk()
 
-        houseKeepers = []
-        houseKeepers.add(new NotificationGenerator(whelk))
-        houseKeepers.add(new NotificationSender(whelk))
+        List<HouseKeeper> houseKeepers = [
+                new NotificationGenerator(whelk),
+                new NotificationSender(whelk)
+        ]
 
         houseKeepers.each { hk ->
-            cronScheduler.schedule(hk.getCronSchedule(), {
+            String id = cronScheduler.schedule(hk.getCronSchedule(), {
                 hk._trigger()
             })
+            houseKeepersById.put(id, hk)
         }
         cronScheduler.start()
     }
@@ -58,9 +60,10 @@ public class WebInterface extends HttpServlet {
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) {
         StringBuilder sb = new StringBuilder()
-        sb.append("Active housekeepers: " + houseKeepers.size() + "\n")
+        sb.append("Active housekeepers: " + houseKeepersById.size() + "\n")
         sb.append("--------------\n")
-        for (HouseKeeper hk : houseKeepers) {
+        for (String key : houseKeepersById.keySet()) {
+            HouseKeeper hk = houseKeepersById[key]
             sb.append(hk.getName() + "\n")
             if (hk.lastRunAt)
                 sb.append("last run at: " + hk.lastRunAt + "\n")
@@ -72,10 +75,16 @@ public class WebInterface extends HttpServlet {
                 sb.append("no failures\n")
             sb.append("status:\n")
             sb.append(hk.statusDescription+"\n")
+            sb.append("To force immediate execution, POST to:\n" + req.getRequestURL() + key + "\n")
             sb.append("--------------\n")
         }
         res.setStatus(HttpServletResponse.SC_OK)
         res.setContentType("text/plain")
         res.getOutputStream().print(sb.toString())
+    }
+
+    public void doPost(HttpServletRequest req, HttpServletResponse res) {
+        String key = req.getRequestURI().split("/").last()
+        houseKeepersById[key]._trigger()
     }
 }
