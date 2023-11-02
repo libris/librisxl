@@ -96,7 +96,9 @@ class NotificationSender extends HouseKeeper {
         Map generationState = whelk.getStorage().getState(NotificationGenerator.STATE_KEY)
         if (generationState && generationState.lastGenerationTime)
             until = Timestamp.from( ZonedDateTime.parse( (String) generationState.lastGenerationTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant() )
-        if (!until)
+        if (until == (Object) null) // Groovy...
+            return
+        if (until.toInstant().isBefore(from.toInstant()))
             return
 
 
