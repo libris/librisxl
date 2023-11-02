@@ -6,47 +6,54 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
-
 import java.time.ZonedDateTime
+import it.sauronsoftware.cron4j.Scheduler
 
 @CompileStatic
+@Log
 public abstract class HouseKeeper {
     public abstract String getName()
     public abstract String getStatusDescription()
+    public abstract String getCronSchedule()
     public abstract void trigger()
 
     public ZonedDateTime lastFailAt = null
     public ZonedDateTime lastRunAt = null
+
+    synchronized void _trigger() {
+        try {
+            trigger()
+            lastRunAt = ZonedDateTime.now()
+        } catch (Throwable e) {
+            log.error("Could not handle throwable in Housekeeper TimerTask.", e)
+            lastFailAt = ZonedDateTime.now()
+        }
+    }
 }
 
 @CompileStatic
 @Log
 public class WebInterface extends HttpServlet {
-    private static final long PERIODIC_TRIGGER_MS = 10 * 1000
-    private final Timer timer = new Timer("Housekeeper-timer", true)
     private List<HouseKeeper> houseKeepers = []
+    Scheduler cronScheduler = new Scheduler()
 
     public void init() {
         Whelk whelk = Whelk.createLoadedCoreWhelk()
 
         houseKeepers = []
         houseKeepers.add(new NotificationGenerator(whelk))
+        houseKeepers.add(new NotificationSender(whelk))
 
-        for (HouseKeeper hk : houseKeepers) {
-            timer.scheduleAtFixedRate({
-                try {
-                    hk.trigger()
-                    hk.lastRunAt = ZonedDateTime.now()
-                } catch (Throwable e) {
-                    log.error("Could not handle throwable in Housekeeper TimerTask.", e)
-                    hk.lastFailAt = ZonedDateTime.now()
-                }
-            }, PERIODIC_TRIGGER_MS, PERIODIC_TRIGGER_MS)
+        houseKeepers.each { hk ->
+            cronScheduler.schedule(hk.getCronSchedule(), {
+                hk._trigger()
+            })
         }
-
+        cronScheduler.start()
     }
 
     public void destroy() {
+        cronScheduler.stop()
     }
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) {

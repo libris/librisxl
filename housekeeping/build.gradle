@@ -41,6 +41,10 @@ dependencies {
 
     // Email
     implementation group: 'org.simplejavamail', name: 'simple-java-mail', version: '8.2.0'
+
+    // Cron
+    implementation group: 'it.sauronsoftware.cron4j', name: 'cron4j', version: '2.2.5'
+
 }
 
 gretty {

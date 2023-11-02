@@ -1,6 +1,5 @@
 package whelk.housekeeping
 
-import org.apache.jena.ext.com.google.common.collect.Lists
 import whelk.Document
 import whelk.IdGenerator
 import whelk.JsonLd
@@ -25,7 +24,7 @@ import static whelk.util.Jackson.mapper
 @Log
 class NotificationGenerator extends HouseKeeper {
 
-    private final String STATE_KEY = "Email notifications"
+    public static final String STATE_KEY = "CXZ notification generator"
     private String status = "OK"
     private final Whelk whelk
 
@@ -41,12 +40,16 @@ class NotificationGenerator extends HouseKeeper {
         return status
     }
 
+    public String getCronSchedule() {
+        return "* * * * *"
+    }
+
     public void trigger() {
         // Determine the time interval of changes for which to generate notifications.
         Timestamp from = Timestamp.from(Instant.now().minus(1, ChronoUnit.DAYS)) // Default to last 24h if first time.
         Map state = whelk.getStorage().getState(STATE_KEY)
-        if (state && state.lastEmailTime)
-            from = Timestamp.from( ZonedDateTime.parse( (String) state.lastEmailTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant() )
+        if (state && state.lastGenerationTime)
+            from = Timestamp.from( ZonedDateTime.parse( (String) state.lastGenerationTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant() )
         Timestamp until = Timestamp.from(Instant.now())
 
         Connection connection
@@ -88,7 +91,7 @@ class NotificationGenerator extends HouseKeeper {
         } finally {
             connection.close()
             Map newState = new HashMap()
-            newState.lastEmailTime = until.toInstant().atOffset(ZoneOffset.UTC).toString()
+            newState.lastGenerationTime = until.toInstant().atOffset(ZoneOffset.UTC).toString()
             whelk.getStorage().putState(STATE_KEY, newState)
         }
     }
@@ -130,8 +133,6 @@ class NotificationGenerator extends HouseKeeper {
         historicEmbellish(instanceAfterChange, propertiesToEmbellish, after)
         Document instanceBeforeChange = whelk.getStorage().loadAsOf(instanceId, Timestamp.from(before))
         historicEmbellish(instanceBeforeChange, propertiesToEmbellish, before);
-
-        //System.err.println(" ******* NOW SCANNING " + instanceId + " FOR IMPLICIT CHANGES!\n\n");
 
         // Check for primary contribution changes
         {
@@ -183,8 +184,8 @@ class NotificationGenerator extends HouseKeeper {
 
         Document observationDocument = new Document(observationData)
 
-        System.err.println(" ** Made change observation for instance: " + instanceId + " , category: " + categoryUri + " , notes: " + changeNotes +
-                "\n     resulting document: " + observationDocument.getDataAsString())
+        //System.err.println(" ** Made change observation for instance: " + instanceId + " , category: " + categoryUri + " , notes: " + changeNotes +
+        //        "\n     resulting document: " + observationDocument.getDataAsString())
 
         if (!whelk.createDocument(observationDocument, "NotificationGenerator", "SEK", "none", false)) {
             log.error("Failed to create ChangeObservation for $instanceId ($categoryUri).")
