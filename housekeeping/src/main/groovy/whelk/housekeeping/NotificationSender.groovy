@@ -91,33 +91,22 @@ class NotificationSender extends HouseKeeper {
         // Determine the time interval of ChangeObservations to consider
         Timestamp from = Timestamp.from(Instant.now().minus(1, ChronoUnit.DAYS)) // Default to last 24h if first time.
         Map sendState = whelk.getStorage().getState(STATE_KEY)
-        if (sendState && sendState.lastEmailTime)
-            from = Timestamp.from( ZonedDateTime.parse( (String) sendState.lastEmailTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant() )
-
-        Timestamp until = null
-        Map generationState = whelk.getStorage().getState(NotificationGenerator.STATE_KEY)
-        if (generationState && generationState.lastGenerationTime)
-            until = Timestamp.from( ZonedDateTime.parse( (String) generationState.lastGenerationTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant() )
-        if (until == (Object) null) // Groovy...
-            return
-        if (until.toInstant().isBefore(from.toInstant()))
-            return
-
+        if (sendState && sendState.notifiedChangesUpTo)
+            from = Timestamp.from( ZonedDateTime.parse( (String) sendState.notifiedChangesUpTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant() )
 
         Connection connection
         PreparedStatement statement
         ResultSet resultSet
 
+        Instant notifiedChangesUpTo = Instant.EPOCH
+
         connection = whelk.getStorage().getOuterConnection()
         connection.setAutoCommit(false)
         try {
-            // Fetch all changed IDs within the interval
-            //String sql = "SELECT id, data FROM lddb WHERE data#>>'{@graph,1,@type}' = 'ChangeObservation' AND ( created > ? AND created <= ? );"
-            String sql = "SELECT data#>>'{@graph,1,about,@id}' as instanceUri, ARRAY_AGG(data::text) as data FROM lddb WHERE data#>>'{@graph,1,@type}' = 'ChangeObservation' AND ( created > ? AND created <= ? ) GROUP BY data#>>'{@graph,1,about,@id}';"
+            String sql = "SELECT MAX(created) as lastChange, data#>>'{@graph,1,about,@id}' as instanceUri, ARRAY_AGG(data::text) as data FROM lddb WHERE data#>>'{@graph,1,@type}' = 'ChangeObservation' AND created > ? GROUP BY data#>>'{@graph,1,about,@id}';"
             connection.setAutoCommit(false)
             statement = connection.prepareStatement(sql)
             statement.setTimestamp(1, from)
-            statement.setTimestamp(2, until)
             System.err.println("  **  Searching for Observations: " + statement)
             statement.setFetchSize(512)
             resultSet = statement.executeQuery()
@@ -134,6 +123,10 @@ class NotificationSender extends HouseKeeper {
                 System.err.println("About to email for instance: " + instanceUri)
 
                 sendFor(instanceUri, heldByToUserSettings, changeObservationsForInstance)
+
+                Instant lastChangeObservationForInstance = resultSet.getTimestamp("lastChange").toInstant()
+                if (lastChangeObservationForInstance.isAfter(notifiedChangesUpTo))
+                    notifiedChangesUpTo = lastChangeObservationForInstance
             }
         } catch (Throwable e) {
             status = "Failed with:\n" + e + "\nat:\n" + e.getStackTrace().toString()
@@ -141,7 +134,7 @@ class NotificationSender extends HouseKeeper {
         } finally {
             connection.close()
             Map newState = new HashMap()
-            newState.lastEmailTime = until.toInstant().atOffset(ZoneOffset.UTC).toString()
+            newState.notifiedChangesUpTo = notifiedChangesUpTo.atOffset(ZoneOffset.UTC).toString()
             whelk.getStorage().putState(STATE_KEY, newState)
         }
 
