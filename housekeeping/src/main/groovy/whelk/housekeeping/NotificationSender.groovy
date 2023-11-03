@@ -19,7 +19,6 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 
 import static whelk.util.Jackson.mapper
 
@@ -89,7 +88,7 @@ class NotificationSender extends HouseKeeper {
         }
 
         // Determine the time interval of ChangeObservations to consider
-        Timestamp from = Timestamp.from(Instant.now().minus(1, ChronoUnit.DAYS)) // Default to last 24h if first time.
+        Timestamp from = Timestamp.from(Instant.EPOCH)
         Map sendState = whelk.getStorage().getState(STATE_KEY)
         if (sendState && sendState.notifiedChangesUpTo)
             from = Timestamp.from( ZonedDateTime.parse( (String) sendState.notifiedChangesUpTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant() )
@@ -133,9 +132,11 @@ class NotificationSender extends HouseKeeper {
             throw e
         } finally {
             connection.close()
-            Map newState = new HashMap()
-            newState.notifiedChangesUpTo = notifiedChangesUpTo.atOffset(ZoneOffset.UTC).toString()
-            whelk.getStorage().putState(STATE_KEY, newState)
+            if (notifiedChangesUpTo.isAfter(from.toInstant())) {
+                Map newState = new HashMap()
+                newState.notifiedChangesUpTo = notifiedChangesUpTo.atOffset(ZoneOffset.UTC).toString()
+                whelk.getStorage().putState(STATE_KEY, newState)
+            }
         }
 
     }
