@@ -21,6 +21,8 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
+import static whelk.util.Jackson.mapper
+
 @CompileStatic
 @Log4j2
 class NotificationSender extends HouseKeeper {
@@ -110,7 +112,8 @@ class NotificationSender extends HouseKeeper {
         connection.setAutoCommit(false)
         try {
             // Fetch all changed IDs within the interval
-            String sql = "SELECT id, data FROM lddb WHERE data#>>'{@graph,1,@type}' = 'ChangeObservation' AND ( created > ? AND created <= ? );"
+            //String sql = "SELECT id, data FROM lddb WHERE data#>>'{@graph,1,@type}' = 'ChangeObservation' AND ( created > ? AND created <= ? );"
+            String sql = "SELECT data#>>'{@graph,1,about,@id}' as instanceUri, ARRAY_AGG(data::text) as data FROM lddb WHERE data#>>'{@graph,1,@type}' = 'ChangeObservation' AND ( created > ? AND created <= ? ) GROUP BY data#>>'{@graph,1,about,@id}';"
             connection.setAutoCommit(false)
             statement = connection.prepareStatement(sql)
             statement.setTimestamp(1, from)
@@ -120,8 +123,17 @@ class NotificationSender extends HouseKeeper {
             resultSet = statement.executeQuery()
 
             while (resultSet.next()) {
-                String id = resultSet.getString("id")
-                System.err.println("  ******  ChangeObservation: " + id + " picked up for emailing!")
+                String instanceUri = resultSet.getString("instanceUri")
+                Array changeObservationsArray = resultSet.getArray("data")
+                // Groovy..
+                List changeObservationsForInstance = []
+                for (Object o : changeObservationsArray.getArray()) {
+                    changeObservationsForInstance.add(o)
+                }
+
+                System.err.println("About to email for instance: " + instanceUri)
+
+                sendFor(instanceUri, heldByToUserSettings, changeObservationsForInstance)
             }
         } catch (Throwable e) {
             status = "Failed with:\n" + e + "\nat:\n" + e.getStackTrace().toString()
@@ -135,13 +147,10 @@ class NotificationSender extends HouseKeeper {
 
     }
 
-    /**
-     * Generate notifications for an affected bibliographic instance. Beware: fromVersion and untilVersion may not be
-     * _of this document_ (id), but rather of a document this instance depends on!
-     */
+    private void sendFor(String instanceUri, Map<String, List<Map>> heldByToUserSettings, List changeObservationsForInstance) {
+        String instanceId = whelk.getStorage().getSystemIdByIri(instanceUri)
+        List<String> libraries = whelk.getStorage().getAllLibrariesHolding(instanceId)
 
-    private void generateNotificationsForAffectedInstance(String id, Map heldByToUserSettings, Instant from, Instant until) {
-        List<String> libraries = whelk.getStorage().getAllLibrariesHolding(id)
         for (String library : libraries) {
             List<Map> users = (List<Map>) heldByToUserSettings[library]
             if (users) {
@@ -154,70 +163,45 @@ class NotificationSender extends HouseKeeper {
                             {
                                 "heldBy": "https://libris.kb.se/library/Utb1",
                                 "triggers": [
-                                    "https://id.kb.se/changenote/primarytitle"
+                                    "https://id.kb.se/changecategory/primarycontribution"
                                 ]
                             }
                         ],
-                        "email": "noreply@kb.se"
+                        "notificationEmail": "noreply@kb.se"
                     }*/
 
-                    List<String> triggered = changeMatchesAnyTrigger(
-                            id, from,
-                            until, user, library)
-                    if (triggered) {
+                    List<String> triggeredCategories = []
 
-                        /*
-                        if (!notificationsByUser.containsKey(user.notificationEmail))
-                            notificationsByUser.put((String)user.notificationEmail, [])
-                        notificationsByUser[user.notificationEmail].add(generateEmailBody(id, triggered))
-                        */
-                        System.err.println("DO IT, MAKE A NOTIFICATION RECORD FOR INSTANCE " + id + " : " + triggered)
+                    user?.requestedNotifications?.each { Map request ->
+                        request?.triggers?.each { String trigger ->
+                            if (matches(trigger, changeObservationsForInstance)) {
+                                triggeredCategories.add(trigger)
+                            }
+                        }
+                    }
+
+                    if (!triggeredCategories.isEmpty() && user.notificationEmail && user.notificationEmail instanceof String) {
+                        String body = generateEmailBody(instanceId, triggeredCategories)
+                        sendEmail(senderAddress, (String) user.notificationEmail, "CXZ", body)
+
+                        System.err.println("Now send email to " + user.notificationEmail + "\n\t" + body)
                     }
                 }
             }
         }
+
     }
 
-    /**
-     * 'from' and 'until' are the instants of writing for the changed record (the previous and current versions)
-     * 'user' is the user-data map for a user (which includes their selection of triggers).
-     * 'library' is a library ("sigel") holding the instance in question.
-     *
-     * This function answers the question: Has 'user' requested to be notified of the occurred changes between
-     * 'from' and 'until' for instances held by 'heldBy'?
-     *
-     * Returns the URIs of all triggered rules/triggers.
-     */
-    private List<String> changeMatchesAnyTrigger(String instanceId, Instant from, Instant until, Map user, String heldBy) {
-
-        List<String> triggeredTriggers = []
-
-        user.requestedNotifications.each { request ->
-
-            // This stuff (the request) comes from a user, so we must be super paranoid about it being correctly formed.
-
-            if (! request instanceof Map)
-                return
-
-            if (! request["heldBy"] instanceof String)
-                return
-
-            if (request["heldBy"] != heldBy)
-                return
-
-            if (! request["triggers"] instanceof List)
-                return
-
-            for (Object triggerObject : request["triggers"]) {
-                if (! triggerObject instanceof String)
-                    return
-                String triggerUri = (String) triggerObject
-                /*if (triggerIsTriggered(instanceId, from, until, triggerUri))
-                    triggeredTriggers.add(triggerUri)*/
-            }
+    private boolean matches(String trigger, List changeObservationsForInstance) {
+        for (Object obj : changeObservationsForInstance) {
+            Map changeObservationMap = mapper.readValue( (String) obj, Map )
+            List graphList = changeObservationMap["@graph"]
+            Map mainEntity = graphList?[1]
+            String category = mainEntity?.category
+            if (category && category == trigger)
+                return true
         }
-
-        return triggeredTriggers
+        return false
     }
 
     private void sendEmail(String sender, String recipient, String subject, String body) {
@@ -237,24 +221,6 @@ class NotificationSender extends HouseKeeper {
     }
 
     private String generateEmailBody(String changedInstanceId, List<String> triggeredCategories) {
-        Document changed = whelk.getStorage().load(changedInstanceId)
-        String mainTitle = Document._get(["@graph", 1, "hasTitle", 0, "mainTitle"], changed.data)
-        if (mainTitle == null)
-            mainTitle = "Ingen huvudtitel"
-
-        String changeCategories = ""
-        for (String categoryUri : triggeredCategories) {
-            Document categoryDoc = whelk.getStorage().loadDocumentByMainId(categoryUri)
-            String swedishLabel = Document._get(["@graph", 1, "prefLabelByLand", "sv"], categoryDoc.data)
-            if (swedishLabel) {
-                changeCategories += swedishLabel + " "
-            } else {
-                changeCategories += categoryUri + " "
-            }
-        }
-
-        return "Instansbeskrivning har ändrats\n\tInstans: " + Document.BASE_URI.resolve(changedInstanceId) +
-                "(" + mainTitle + ")\n\t" +
-                "Ändring har skett med avseende på: " + changeCategories + "\n\n"
+        return "Ändring av " + changedInstanceId + " kategorier: " + triggeredCategories
     }
 }

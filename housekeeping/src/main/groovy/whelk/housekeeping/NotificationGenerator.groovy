@@ -148,7 +148,7 @@ class NotificationGenerator extends HouseKeeper {
                                                 contributionsBefore["agent"]["givenName"] != contributionsAfter["agent"]["givenName"] ||
                                                 contributionsBefore["agent"]["lifeSpan"] != contributionsAfter["agent"]["lifeSpan"]
                                 )
-                                    makeChangeObservation(instanceId, changeNotes, "https://id.kb.se/changenote/primarycontribution", (Map) contrBefore, (Map) contrAfter)
+                                    makeChangeObservation(instanceId, changeNotes, "https://id.kb.se/changecategory/primarycontribution", (Map) contrBefore, (Map) contrAfter)
                             }
                         }
                     }
@@ -174,6 +174,7 @@ class NotificationGenerator extends HouseKeeper {
                         "about" : ["@id" : Document.BASE_URI.toString() + instanceId],
                         "representationBefore" : oldValue,
                         "representationAfter" : newValue,
+                        "category" : categoryUri,
                 ]
         ]]
 

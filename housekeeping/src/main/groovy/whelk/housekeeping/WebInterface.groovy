@@ -38,7 +38,7 @@ public class WebInterface extends HttpServlet {
     Scheduler cronScheduler = new Scheduler()
 
     public void init() {
-        Whelk whelk = Whelk.createLoadedCoreWhelk()
+        Whelk whelk = Whelk.createLoadedSearchWhelk()
 
         List<HouseKeeper> houseKeepers = [
                 new NotificationGenerator(whelk),
