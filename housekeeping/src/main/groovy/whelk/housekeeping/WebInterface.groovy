@@ -66,15 +66,17 @@ public class WebInterface extends HttpServlet {
             HouseKeeper hk = houseKeepersById[key]
             sb.append(hk.getName() + "\n")
             if (hk.lastRunAt)
-                sb.append("last run at: " + hk.lastRunAt + "\n")
+                sb.append("Last run at: " + hk.lastRunAt + "\n")
             else
-                sb.append("has never run\n")
+                sb.append("Has never run\n")
             if (hk.lastFailAt)
-                sb.append("last failed at: " + hk.lastFailAt + "\n")
+                sb.append("Last failed at: " + hk.lastFailAt + "\n")
             else
-                sb.append("no failures\n")
-            sb.append("status:\n")
+                sb.append("No failures\n")
+            sb.append("Status:\n")
             sb.append(hk.statusDescription+"\n")
+            sb.append("Execution schedule:\n")
+            sb.append(hk.cronSchedule+"\n")
             sb.append("To force immediate execution, POST to:\n" + req.getRequestURL() + key + "\n")
             sb.append("--------------\n")
         }

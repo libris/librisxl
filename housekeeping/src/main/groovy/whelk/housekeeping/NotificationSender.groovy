@@ -7,6 +7,7 @@ import org.simplejavamail.api.mailer.Mailer
 import org.simplejavamail.email.EmailBuilder
 import org.simplejavamail.mailer.MailerBuilder
 import whelk.Document
+import whelk.JsonLd
 import whelk.Whelk
 import whelk.util.PropertyLoader
 
@@ -165,18 +166,19 @@ class NotificationSender extends HouseKeeper {
                         "notificationEmail": "noreply@kb.se"
                     }*/
 
-                    List<String> triggeredCategories = []
+                    List<Map> matchedObservations = []
 
                     user?.requestedNotifications?.each { Map request ->
                         request?.triggers?.each { String trigger ->
-                            if (matches(trigger, changeObservationsForInstance)) {
-                                triggeredCategories.add(trigger)
+                            Map triggeredObservation = matches(trigger, changeObservationsForInstance)
+                            if (triggeredObservation != null) {
+                                matchedObservations.add(triggeredObservation)
                             }
                         }
                     }
 
-                    if (!triggeredCategories.isEmpty() && user.notificationEmail && user.notificationEmail instanceof String) {
-                        String body = generateEmailBody(instanceId, triggeredCategories)
+                    if (!matchedObservations.isEmpty() && user.notificationEmail && user.notificationEmail instanceof String) {
+                        String body = generateEmailBody(instanceId, matchedObservations)
                         sendEmail(senderAddress, (String) user.notificationEmail, "CXZ", body)
 
                         System.err.println("Now send email to " + user.notificationEmail + "\n\t" + body)
@@ -187,16 +189,16 @@ class NotificationSender extends HouseKeeper {
 
     }
 
-    private boolean matches(String trigger, List changeObservationsForInstance) {
+    private Map matches(String trigger, List changeObservationsForInstance) {
         for (Object obj : changeObservationsForInstance) {
             Map changeObservationMap = mapper.readValue( (String) obj, Map )
             List graphList = changeObservationMap["@graph"]
             Map mainEntity = graphList?[1]
-            String category = mainEntity?.category
+            String category = mainEntity?.category["@id"]
             if (category && category == trigger)
-                return true
+                return changeObservationMap
         }
-        return false
+        return null
     }
 
     private void sendEmail(String sender, String recipient, String subject, String body) {
@@ -215,7 +217,21 @@ class NotificationSender extends HouseKeeper {
         }
     }
 
-    private String generateEmailBody(String changedInstanceId, List<String> triggeredCategories) {
-        return "Ändring av " + changedInstanceId + " kategorier: " + triggeredCategories
+    private String generateEmailBody(String changedInstanceId, List<Map> triggeredObservations) {
+        StringBuilder sb = new StringBuilder()
+        for (Map observation : triggeredObservations) {
+            String observationUri = Document._get(["@graph", 1, "@id"], observation)
+            if (!observationUri)
+                continue
+
+            String observationId = whelk.getStorage().getSystemIdByIri(observationUri)
+            Document embellishedObservation = whelk.loadEmbellished(observationId)
+            //Map mainEntity = (Map) Document._get(["@graph", 1], embellishedObservation.data)
+            Map framed = JsonLd.frame(observationUri, embellishedObservation.data)
+            Map filtered = whelk.getJsonld().applyLensAsMapByLang(framed, ["sv", "en"] as Set, [], ["cards", "chips"])
+            sb.append("For observation " + observationId + ":\n\t" + filtered)
+        }
+
+        return sb.toString()
     }
 }

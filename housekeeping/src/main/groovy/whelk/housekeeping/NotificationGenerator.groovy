@@ -83,7 +83,7 @@ class NotificationGenerator extends HouseKeeper {
                     changeNotes.add(o)
                 }
 
-                generateNotificationsForChangedID(id, changeNotes, from.toInstant(),
+                generateObservationsForChangedID(id, changeNotes, from.toInstant(),
                         until.toInstant(), affectedInstanceIDs)
             }
         } catch (Throwable e) {
@@ -101,7 +101,7 @@ class NotificationGenerator extends HouseKeeper {
      * Based on the fact that 'id' has been updated, generate (if the change resulted in a ChangeNotice)
      * relevant notification-records
      */
-    private void generateNotificationsForChangedID(String id, List changeNotes, Instant from, Instant until, Set affectedInstanceIDs) {
+    private void generateObservationsForChangedID(String id, List changeNotes, Instant from, Instant until, Set affectedInstanceIDs) {
 
         List<Document> resultingChangeObservations = []
 
@@ -114,7 +114,7 @@ class NotificationGenerator extends HouseKeeper {
                 // If we've not already made an observation for this instance!
                 if (!affectedInstanceIDs.contains(dependerID)) {
                     affectedInstanceIDs.add(dependerID)
-                    resultingChangeObservations.addAll( generateNotificationsForAffectedInstance(dependerID, changeNotes, from, until) )
+                    resultingChangeObservations.addAll( generateObservationsForAffectedInstance(dependerID, changeNotes, from, until) )
                     if (resultingChangeObservations.size() > MAX_OBSERVATIONS_PER_CHANGE) {
                         log.warn("Discarding ChangeObservations for instances related to $id, which was changed. Observations would be too many.")
                         return
@@ -132,7 +132,7 @@ class NotificationGenerator extends HouseKeeper {
         }
     }
 
-    private List<Document> generateNotificationsForAffectedInstance(String instanceId, List changeNotes, Instant before, Instant after) {
+    private List<Document> generateObservationsForAffectedInstance(String instanceId, List changeNotes, Instant before, Instant after) {
         List<Document> generatedObservations = []
         List<String> propertiesToEmbellish = [
                 "mainEntity",
