@@ -124,10 +124,10 @@ class NotificationGenerator extends HouseKeeper {
         }
 
         for (Document observation : resultingChangeObservations) {
-            System.err.println(" ** Made change observation :${observation?.data}")
+            //System.err.println(" ** Made change observation:\n${observation.getDataAsString()}")
 
             if (!whelk.createDocument(observation, "NotificationGenerator", "SEK", "none", false)) {
-                log.error("Failed to create ChangeObservation for ${observation?.data[1]["about"]["@id"]} (${observation?.data[1]["category"]["@id"]}).")
+                log.error("Failed to create ChangeObservation:\n${observation.getDataAsString()}")
             }
         }
     }
