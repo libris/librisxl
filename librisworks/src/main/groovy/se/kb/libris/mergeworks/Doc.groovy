@@ -260,7 +260,7 @@ class Doc {
     }
 
     boolean isSabFiction() {
-        classification().any { it.inScheme?.code =~ /[Kk]ssb/ && it.code =~ /^(H|uH|ufH|ugH)/ }
+        classification().any { it.inScheme?.code =~ /[Kk]ssb/ && it.code =~ /^(H|h|uH|ufH|ugH)/ }
     }
 
     boolean isNotFiction() {

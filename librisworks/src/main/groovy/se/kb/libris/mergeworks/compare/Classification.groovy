@@ -1,13 +1,7 @@
 package se.kb.libris.mergeworks.compare
 
 class Classification extends StuffSet {
-    // Terms that will be merged (values precede keys)
-    private static def norm = [
-            'uHc'                                                        : ['Hc,u'],
-            'uHce'                                                       : ['Hce,u'],
-            'Hc'                                                         : ['Hc.01', 'Hc.02', 'Hc.03'],
-            'Hc,u'                                                       : ['Hcf', 'Hcg']
-    ]
+    private static def sabPrecedenceRules = loadSabPrecedenceRules()
 
     @Override
     Object merge(Object a, Object b) {
@@ -17,17 +11,17 @@ class Classification extends StuffSet {
             if (!code1 || !code2) {
                 return
             }
-            code1 = code1.replaceAll(/\s+/, "")
-            code2 = code2.replaceAll(/\s+/, "")
 
             if (isSab(c1) && isSab(c2)) {
-                def code = code1 == code2 || n(code2, code1)
-                        ? code1
-                        : (n(code1, code2) ? code2 : null)
-                if (code) {
+                code1 = normalizeSabCode(code1)
+                code2 = normalizeSabCode(code2)
+
+                def mergedCode = tryMergeSabCodes(code1, code2)
+
+                if (mergedCode) {
                     def result = [
                             '@type' : 'Classification',
-                            'code'  : code1,
+                            'code'  : mergedCode,
                             inScheme: [
                                     '@type': 'ConceptScheme',
                                     'code' : 'kssb'
@@ -56,7 +50,7 @@ class Classification extends StuffSet {
     }
 
     boolean isSab(Map c) {
-        c['inScheme'] && c['inScheme']['code'] == 'kssb'
+        c['inScheme'] && c['inScheme']['code'] =~ 'kssb'
     }
 
     String maxSabVersion(c1, c2) {
@@ -79,7 +73,94 @@ class Classification extends StuffSet {
         Integer.parseInt((edition ?: "0").replaceAll("[^0-9]", ""))
     }
 
-    boolean n(a, b) {
-        norm[a]?.any { it == b || n(it, b) }
+    static String normalizeSabCode(String sab) {
+        sab.replaceFirst(~/^h/, 'H').with {
+            it =~ /bf:|z/ ? it : it.replaceAll(~/\s+/, '')
+        }
+    }
+
+    static String tryMergeSabCodes(String a, String b) {
+        if (a == b) {
+            return a
+        }
+        if (sabPrecedes(a, b)) {
+            return a
+        }
+        if (sabPrecedes(b, a)) {
+            return b
+        }
+        return null
+    }
+
+    static sabPrecedes(String a, String b) {
+        def (equal, startsWith) = sabPrecedenceRules
+        def startsWithExceptions = ~/^Hcb|^Hdab/
+        def preferred = equal[b] ?: startsWith.find { b.startsWith(it.key) }?.value
+        if (preferred && !(a =~ startsWithExceptions)) {
+            if (preferred['equals'] && a in preferred['equals']) {
+                return true
+            }
+            if (preferred['startsWith'] && preferred['startsWith'].any { a.startsWith(it) }) {
+                return true
+            }
+        }
+        return false
+    }
+
+    /**
+     * Loads rules for how to merge SAB codes from file into a Map.
+     * The code in the first column is preferred over the other codes in the same row.
+     * The codes can contain wildcard characters '?' (anywhere in the string) or '*' (at the end)
+     * The asterisk represents any sequence of characters (zero or more)
+     * The question mark represents zero or one of the characters '6', '7' and '8'.
+     * Examples:
+     * Hcd* | Hcbd*
+     *  --> Any code starting with Hcd is picked over any code starting with Hcbd
+     * Hda.01?=c | Hda.01? | Hda=c
+     *  --> Hda.01=c, Hda.016=c, Hda.017=c, Hda.018=c and Hda=c are all picked over over Hda.01, Hda.016, Hda.017, Hda.018 and Hda=c
+     * Hcee.03 | Hce.03 | Hcee
+     *  --> Hcee.03 is picked over Hce.03 and Hcee
+     */
+    static Tuple2<Map<String, Map>, Map<String, Map>> loadSabPrecedenceRules() {
+        Map equal = [:]
+        Map startsWith = [:]
+
+        def questionMarkSubstitutes = ['6', '7', '8', '']
+
+        Classification.class.getClassLoader()
+                .getResourceAsStream('merge-works/sab-precedence-rules.tsv')
+                .splitEachLine('\t') {
+                    def preferred = it.first()
+                    def preferredStartsWith = preferred.endsWith('*') ? preferred[0..<-1] : null
+                    def preferredEquals = preferred.contains('?')
+                            ? questionMarkSubstitutes.collect { preferred.replace('?', it) }
+                            : (preferredStartsWith ? null : [preferred])
+
+                    def addPreferred = { Map pref ->
+                        if (preferredStartsWith) {
+                            pref.computeIfAbsent('startsWith', f -> [] as Set).add(preferredStartsWith)
+                        }
+                        if (preferredEquals) {
+                            pref.computeIfAbsent('equals', f -> [] as Set).addAll(preferredEquals)
+                        }
+                    }
+
+                    def overwrite = it.drop(1)
+                    overwrite.each { s ->
+                        if (s.endsWith('*')) {
+                            def leading = s[0..<-1]
+                            startsWith.computeIfAbsent(leading, f -> [:]).with(addPreferred)
+                        } else if (s.contains('?')) {
+                            questionMarkSubstitutes.each {
+                                def substituted = s.replace('?', it)
+                                equal.computeIfAbsent(substituted, f -> [:]).with(addPreferred)
+                            }
+                        } else {
+                            equal.computeIfAbsent(s, f -> [:]).with(addPreferred)
+                        }
+                    }
+                }
+
+        return new Tuple2(equal, startsWith)
     }
 }
