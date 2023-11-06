@@ -1,0 +1,107 @@
+H*	H				
+Hc*	Hc				
+Hcd*	Hcbd*				
+Hcq*	Hcbq*				
+Hc,u	H,u	uHc	uH		
+Hce*	Hce				
+Hce,u	H,u	Hc,u	uHce		
+Hcf*	Hc,u	uHc	Hcf		
+Hcg*	Hc,u	uHc	Hcg		
+Hci,u	Hci				
+Hd*	Hd				
+Hda*	Hda				
+Hdb*	Hdb				
+He*	He				
+Hf*	Hf				
+Hg*	Hg				
+Hi*	Hi				
+Hj*	Hj				
+Hk*	Hk				
+Hl*	Hl				
+Hm*	Hm				
+Hma*	Hma				
+Hmb*	Hmb				
+Hmc*	Hmc				
+Hmd*	Hmd				
+Hsg*	Hsg				
+Hub*	Hua	Hub			
+Hva*	Hva				
+Hxj*	Hxj				
+Hc.01?	Hc.01				
+Hcd.01?	Hcd.01	Hc.01	Hcd		
+Hcd.03	Hc.03	Hcd			
+Hce.01?	Hce.01				
+Hceda.01?	Hceda.01	Hce.01	Hced	Hceda	
+Hceda.03	Hce.03	Hced	Hceda		
+Hcedb.01?	Hcedb.01	Hce.01?	Hced	Hcedb	
+Hcedb.03	Hce.03	Hced	Hcedb		
+Hcee.01?	Hcee.01	Hce.01?	Hcee		
+Hcee.03	Hce.03	Hcee			
+Hceeq.01?	Hceeq.01	Hcee.01?	Hce.01?	Hcee	Hceeq
+Hceeq.03	Hcee.03	Hce.03	Hcee	Hceeq	
+Hcef.01?	Hcef.01	Hce.01?	Hcef		
+Hcef.03	Hce.03	Hcef			
+Hceg.01?	Hceg.01	Hce.01?	Hceg		
+Hceg.03	Hce.03	Hceg			
+Hcei.01?	Hcei.01	Hce.01?	Hcei		
+Hcei.03	Hce.03	Hcei			
+Hcej.01?	Hcej.01	Hce.01?	Hcej		
+Hcej.03	Hce.03	Hcej			
+Hcek.01?	Hcek.01	Hce.01?	Hcek		
+Hcek.03	Hce.03	Hcek			
+Hcekq.01?	Hcekq.01	Hcek.01?	Hce.01?	Hcek	Hcekq
+Hcekq.03	Hcek.03	Hce.03	Hcek	Hcekq	
+Hcel.01?	Hcel.01	Hce.01?	Hcel		
+Hcel.03	Hce.03	Hcel			
+Hcema.01?	Hcema.01	Hce.01?	Hcem	Hcema	
+Hcema.03	Hce.03	Hcem	Hcema		
+Hcemb.01?	Hcemb.01	Hce.01?	Hcem	Hcema	
+Hcemb.03	Hce.03	Hcem	Hcemb		
+Hcemc.01?	Hcemc.01	Hce.01?	Hcem	Hcemc	
+Hcemc.03	Hce.03	Hcem	Hcmec
+Hcemd.01?	Hcemd.01	Hce.01?	Hcem	Hcemd	
+Hcemd.03	Hce.03	Hcem	Hcemd		
+Hcesg.01?	Hcesg.01	Hce.01?	Hcesg		
+Hcesg.03	Hce.03	Hces	Hcesg		
+Hceub.01?	Hceub.01	Hce.01?	Hceub		
+Hceub.03	Hce.03	Hceu	Hceub		
+Hceva.01?	Hceva.01	Hce.01?	Hceva		
+Hceva.03	Hce.03	Hcev	Hceva		
+Hcexj.01?	Hcexj.01	Hce.01?	Hcexj		
+Hcexj.03	Hce.03	Hcex	Hcexj		
+Hda.01?=c	Hda.01?	Hda=c			
+Hda.03=c	Hda.03	Hda=c			
+Hdb.01?=c	Hdb.01?	Hdb=c			
+Hdb.03=c	Hdb.03	Hdb=c			
+He.01?=c	He.01?	He=c
+He.03=c	He.03	He=c			
+Heq.01?=c	Heq.01=c	Heq.01?	Heq=c	He.01?	He=c	He.01?=c
+Heq.03=c	Heq.03	Heq=c	He.03*	He=c	
+Hf.01?=c	Hf.01?	Hf=c			
+Hf.03=c	Hf.03	Hf=c			
+Hi.01?=c	Hi.01?	Hi=c			
+Hi.03=c	Hi.03	Hi=c			
+Hj.01?=c	Hj.01?	Hj=c			
+Hj.03=c	Hj.03	Hj=c			
+Hk.01?=c	Hk.01?	Hk=c			
+Hk.03=c	Hk.03	Hk=c			
+Hkq.01?=c	Hkq.01=c	Hkq.01?	Hkq=c	Hk.01?	Hk=c	Hk.01?=c
+Hkq.03=c	Hkq.03	Hkq=c	Hk.03*	Hk=c	
+Hl.01?=	Hl.01?	Hl=c			
+Hl.03=c	Hl.03	Hl=c			
+Hma.01?=c	Hma.01?	Hma=c			
+Hma.03=c	Hma.03	Hma=c			
+Hmb.01?=c	Hmb.01?	Hmb=c			
+Hmb.03=c	Hmd.03	Hmb=c			
+Hmc.01?=c	Hmc.01?	Hmc=c			
+Hmc.03=c	Hmc.03	Hmc=c			
+Hmd.01?=c	Hmd.01?	Hmd=c			
+Hmd.03=c	Hmd.03	Hmd=c			
+Hsg.01?=c	Hsg.01?	Hsg=c			
+Hsg.03=c	Hsg.03	Hsg=c			
+Hub.01?=c	Hub.01?	Hub=c			
+Hub.03=c	Hub.03	Hub=c			
+Hva.01?=c	Hva.01?	Hva=c			
+Hva.03=c	Hva.03	Hva=c			
+Hxj.01?=c	Hxj.01?	Hxj=c			
+Hxj.03=c	Hxj.03	Hxj=c			
