@@ -25,6 +25,7 @@ import static whelk.util.Jackson.mapper
 class NotificationGenerator extends HouseKeeper {
 
     public static final String STATE_KEY = "CXZ notification generator"
+    private static final int MAX_OBSERVATIONS_PER_CHANGE = 100
     private String status = "OK"
     private final Whelk whelk
 
@@ -101,22 +102,38 @@ class NotificationGenerator extends HouseKeeper {
      * relevant notification-records
      */
     private void generateNotificationsForChangedID(String id, List changeNotes, Instant from, Instant until, Set affectedInstanceIDs) {
+
+        List<Document> resultingChangeObservations = []
+
         List<Tuple2<String, String>> dependers = whelk.getStorage().followDependers(id, ["itemOf"])
         dependers.add(new Tuple2(id, null)) // This ID too, not _only_ the dependers!
         dependers.each {
             String dependerID =  it[0]
             String dependerMainEntityType = whelk.getStorage().getMainEntityTypeBySystemID(dependerID)
             if (whelk.getJsonld().isSubClassOf(dependerMainEntityType, "Instance")) {
-                // If we've not already sent a notification for this instance!
+                // If we've not already made an observation for this instance!
                 if (!affectedInstanceIDs.contains(dependerID)) {
                     affectedInstanceIDs.add(dependerID)
-                    generateNotificationsForAffectedInstance(dependerID, changeNotes, from, until)
+                    resultingChangeObservations.addAll( generateNotificationsForAffectedInstance(dependerID, changeNotes, from, until) )
+                    if (resultingChangeObservations.size() > MAX_OBSERVATIONS_PER_CHANGE) {
+                        log.warn("Discarding ChangeObservations for instances related to $id, which was changed. Observations would be too many.")
+                        return
+                    }
                 }
+            }
+        }
+
+        for (Document observation : resultingChangeObservations) {
+            System.err.println(" ** Made change observation :${observation?.data}")
+
+            if (!whelk.createDocument(observation, "NotificationGenerator", "SEK", "none", false)) {
+                log.error("Failed to create ChangeObservation for ${observation?.data[1]["about"]["@id"]} (${observation?.data[1]["category"]["@id"]}).")
             }
         }
     }
 
-    private void generateNotificationsForAffectedInstance(String instanceId, List changeNotes, Instant before, Instant after) {
+    private List<Document> generateNotificationsForAffectedInstance(String instanceId, List changeNotes, Instant before, Instant after) {
+        List<Document> generatedObservations = []
         List<String> propertiesToEmbellish = [
                 "mainEntity",
                 "instanceOf",
@@ -148,16 +165,21 @@ class NotificationGenerator extends HouseKeeper {
                                                 contributionsBefore["agent"]["givenName"] != contributionsAfter["agent"]["givenName"] ||
                                                 contributionsBefore["agent"]["lifeSpan"] != contributionsAfter["agent"]["lifeSpan"]
                                 )
-                                    makeChangeObservation(instanceId, changeNotes, "https://id.kb.se/changecategory/primarycontribution", (Map) contrBefore, (Map) contrAfter)
+                                    generatedObservations.add(
+                                            makeChangeObservation(instanceId, changeNotes,
+                                                    "https://id.kb.se/changecategory/primarycontribution",
+                                                    (Map) contrBefore, (Map) contrAfter))
                             }
                         }
                     }
                 }
             }
         }
+
+        return generatedObservations
     }
 
-    private void makeChangeObservation(String instanceId, List changeNotes, String categoryUri, Map oldValue, Map newValue) {
+    private Document makeChangeObservation(String instanceId, List changeNotes, String categoryUri, Map oldValue, Map newValue) {
         String newId = IdGenerator.generate()
         String metadataUri = Document.BASE_URI.toString() + newId
         String mainEntityUri = metadataUri+"#it"
@@ -174,7 +196,7 @@ class NotificationGenerator extends HouseKeeper {
                         "about" : ["@id" : Document.BASE_URI.toString() + instanceId],
                         "representationBefore" : oldValue,
                         "representationAfter" : newValue,
-                        "category" : categoryUri,
+                        "category" : ["@id" : categoryUri],
                 ]
         ]]
 
@@ -183,14 +205,7 @@ class NotificationGenerator extends HouseKeeper {
             observationData["@graph"][1]["comment"] = comments
         }
 
-        Document observationDocument = new Document(observationData)
-
-        //System.err.println(" ** Made change observation for instance: " + instanceId + " , category: " + categoryUri + " , notes: " + changeNotes +
-        //        "\n     resulting document: " + observationDocument.getDataAsString())
-
-        if (!whelk.createDocument(observationDocument, "NotificationGenerator", "SEK", "none", false)) {
-            log.error("Failed to create ChangeObservation for $instanceId ($categoryUri).")
-        }
+        return new Document(observationData)
     }
 
     private List<String> extractComments(List changeNotes) {
