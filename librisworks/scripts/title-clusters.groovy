@@ -24,7 +24,7 @@ static Collection<Collection<Doc>> partitionByTitle(Collection<Doc> docs) {
     return partition(docs) { Doc a, Doc b ->
         def aTitles = a.flatInstanceTitle() + a.flatWorkTitle()
         def bTitles = b.flatInstanceTitle() + b.flatWorkTitle()
-        aTitles.intersect(bTitles).isEmpty()
+        !aTitles.intersect(bTitles).isEmpty()
     }
 }
 
