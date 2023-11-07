@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eu
 
 count_lines() {
   if [ -f $1 ]; then
