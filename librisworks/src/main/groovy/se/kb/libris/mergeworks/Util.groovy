@@ -8,10 +8,7 @@ import whelk.util.Unicode
 import static se.kb.libris.mergeworks.compare.IntendedAudience.preferredComparisonOrder
 
 class Util {
-    static def titleComponents = ['mainTitle', 'titleRemainder', 'subtitle', 'hasPart', 'partNumber', 'partName', 'marc:parallelTitle', 'marc:equalTitle']
-
-    static def titleVariant = ['Title', 'ParallelTitle']
-    // removed 'VariantTitle', 'CoverTitle' since they sometimes contain random generic stuff like "Alibis filmroman", "Kompisböcker för de yngsta"
+    static def titleComponents = ['mainTitle', 'hasPart', 'partNumber', 'partName']
 
     static enum Relator {
         TRANSLATOR('https://id.kb.se/relator/translator'),
@@ -94,7 +91,7 @@ class Util {
     }
 
     static List flatTitles(List hasTitle) {
-        dropSubtitles(hasTitle).collect {
+        hasTitle.collect {
             def title = new TreeMap<>()
             title['flatTitle'] = normalize(DisplayDoc.flatten(it, titleComponents))
             if (it['@type']) {
