@@ -68,7 +68,7 @@ class Doc {
     void setData() {
         if (mainEntity()['instanceOf']) {
             instanceData = mainEntity()
-            workData = instanceData['instanceOf']
+            workData = asList(instanceData['instanceOf']).find()
         } else {
             workData = mainEntity()
         }
