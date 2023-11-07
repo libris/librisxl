@@ -22,7 +22,9 @@ Collection<Collection<Doc>> titleClusters(Collection<Doc> docs) {
 
 static Collection<Collection<Doc>> partitionByTitle(Collection<Doc> docs) {
     return partition(docs) { Doc a, Doc b ->
-        !a.flatInstanceTitle().intersect(b.flatInstanceTitle()).isEmpty()
+        def aTitles = a.flatInstanceTitle() + a.flatWorkTitle()
+        def bTitles = b.flatInstanceTitle() + b.flatWorkTitle()
+        aTitles.intersect(bTitles).isEmpty()
     }
 }
 

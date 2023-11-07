@@ -41,6 +41,7 @@ class Doc {
     Map workData
 
     List<String> flatInstanceTitle
+    List<String> flatWorkTitle
 
     DisplayDoc display
 
@@ -111,6 +112,14 @@ class Doc {
 
     List<Map> workTitle() {
         asList(workData['hasTitle'])
+    }
+
+    List<String> flatWorkTitle() {
+        if (!flatWorkTitle) {
+            flatWorkTitle = Util.getFlatTitle(workTitle())
+        }
+
+        return flatWorkTitle
     }
 
     List<Map> instanceTitle() {
