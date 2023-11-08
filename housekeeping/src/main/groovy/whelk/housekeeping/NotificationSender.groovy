@@ -121,8 +121,6 @@ class NotificationSender extends HouseKeeper {
                     changeObservationsForInstance.add(o)
                 }
 
-                System.err.println("About to email for instance: " + instanceUri)
-
                 sendFor(instanceUri, heldByToUserSettings, changeObservationsForInstance)
 
                 Instant lastChangeObservationForInstance = resultSet.getTimestamp("lastChange").toInstant()
@@ -226,10 +224,15 @@ class NotificationSender extends HouseKeeper {
 
             String observationId = whelk.getStorage().getSystemIdByIri(observationUri)
             Document embellishedObservation = whelk.loadEmbellished(observationId)
-            //Map mainEntity = (Map) Document._get(["@graph", 1], embellishedObservation.data)
             Map framed = JsonLd.frame(observationUri, embellishedObservation.data)
-            Map filtered = whelk.getJsonld().applyLensAsMapByLang(framed, ["sv", "en"] as Set, [], ["cards", "chips"])
-            sb.append("For observation " + observationId + ":\n\t" + filtered)
+
+            //Document temp = new Document(framed)
+            //System.err.println("Framed emb observation:\n\t"+temp.getDataAsString()+"\n\n")
+
+            Map category = whelk.getJsonld().applyLensAsMapByLang( (Map) framed["category"], ["sv"] as Set, [], ["chips"])
+            Map before = whelk.getJsonld().applyLensAsMapByLang( (Map) framed["representationBefore"], ["sv"] as Set, [], ["chips"])
+            Map after = whelk.getJsonld().applyLensAsMapByLang( (Map) framed["representationAfter"], ["sv"] as Set, [], ["chips"])
+            sb.append("For observation " + observationId + ":\n\t" + category + "\n\t" + before + "\n\t" + after)
         }
 
         return sb.toString()

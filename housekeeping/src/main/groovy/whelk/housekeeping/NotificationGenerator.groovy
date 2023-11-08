@@ -47,11 +47,12 @@ class NotificationGenerator extends HouseKeeper {
 
     public void trigger() {
         // Determine the time interval of changes for which to generate notifications.
-        Timestamp from = Timestamp.from(Instant.now().minus(1, ChronoUnit.DAYS)) // Default to last 24h if first time.
+        Instant now = Instant.now()
+        Timestamp from = Timestamp.from(now) // First run? Default to now (=do nothing but set the timestamp for next run)
         Map state = whelk.getStorage().getState(STATE_KEY)
         if (state && state.lastGenerationTime)
             from = Timestamp.from( ZonedDateTime.parse( (String) state.lastGenerationTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant() )
-        Timestamp until = Timestamp.from(Instant.now())
+        Timestamp until = Timestamp.from(now)
 
         Connection connection
         PreparedStatement statement
@@ -149,6 +150,9 @@ class NotificationGenerator extends HouseKeeper {
         Document instanceAfterChange = whelk.getStorage().loadAsOf(instanceId, Timestamp.from(after))
         historicEmbellish(instanceAfterChange, propertiesToEmbellish, after)
         Document instanceBeforeChange = whelk.getStorage().loadAsOf(instanceId, Timestamp.from(before))
+        if (instanceBeforeChange == null) { // This instance is new, and did not exist at 'before'.
+            return generatedObservations
+        }
         historicEmbellish(instanceBeforeChange, propertiesToEmbellish, before);
 
         // Check for primary contribution changes
@@ -159,16 +163,16 @@ class NotificationGenerator extends HouseKeeper {
                 for (Object contrBefore : contributionsBefore) {
                     for (Object contrAfter : contributionsAfter) {
                         if (contrBefore["@type"].equals("PrimaryContribution") && contrAfter["@type"].equals("PrimaryContribution")) {
-                            if (contributionsBefore["agent"] != null && contributionsAfter["agent"] != null) {
+                            if (contrBefore["agent"] != null && contrAfter["agent"] != null) {
                                 if (
-                                        contributionsBefore["agent"]["familyName"] != contributionsAfter["agent"]["familyName"] ||
-                                                contributionsBefore["agent"]["givenName"] != contributionsAfter["agent"]["givenName"] ||
-                                                contributionsBefore["agent"]["lifeSpan"] != contributionsAfter["agent"]["lifeSpan"]
+                                        contrBefore["agent"]["familyName"] != contrAfter["agent"]["familyName"] ||
+                                                contrBefore["agent"]["givenName"] != contrAfter["agent"]["givenName"] ||
+                                                contrBefore["agent"]["lifeSpan"] != contrAfter["agent"]["lifeSpan"]
                                 )
                                     generatedObservations.add(
                                             makeChangeObservation(instanceId, changeNotes,
                                                     "https://id.kb.se/changecategory/primarycontribution",
-                                                    (Map) contrBefore, (Map) contrAfter))
+                                                    (Map) contrBefore["agent"], (Map) contrAfter["agent"]))
                             }
                         }
                     }
@@ -184,6 +188,12 @@ class NotificationGenerator extends HouseKeeper {
         String metadataUri = Document.BASE_URI.toString() + newId
         String mainEntityUri = metadataUri+"#it"
 
+        // If the @id is left, the object is considered a link, and the actual data (which we want) is removed when storing this as a record.
+        Map oldValueEmbedded = new HashMap(oldValue)
+        oldValueEmbedded.remove("@id")
+        Map newValueEmbedded = new HashMap(newValue)
+        newValueEmbedded.remove("@id")
+
         Map observationData = [ "@graph":[
                 [
                         "@id" : metadataUri,
@@ -194,15 +204,16 @@ class NotificationGenerator extends HouseKeeper {
                         "@id" : mainEntityUri,
                         "@type" : "ChangeObservation",
                         "about" : ["@id" : Document.BASE_URI.toString() + instanceId],
-                        "representationBefore" : oldValue,
-                        "representationAfter" : newValue,
+                        "representationBefore" : oldValueEmbedded,
+                        "representationAfter" : newValueEmbedded,
                         "category" : ["@id" : categoryUri],
                 ]
         ]]
 
         List<String> comments = extractComments(changeNotes)
         if (comments) {
-            observationData["@graph"][1]["comment"] = comments
+            Map mainEntity = (Map) observationData["@graph"][1]
+            mainEntity.put("comment", comments)
         }
 
         return new Document(observationData)
