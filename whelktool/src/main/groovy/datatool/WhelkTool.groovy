@@ -693,7 +693,7 @@ class WhelkTool {
         }
         if (errorDetected) {
             log "Script terminated due to an error, see $reportsDir/ERRORS.txt for more info"
-            System.exit(2)
+            System.exit(1)
         }
         log "Done!"
     }
