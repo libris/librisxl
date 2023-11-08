@@ -1955,7 +1955,10 @@ class PostgreSQLComponent {
         }
     }
 
-    boolean iriIsLinkable(String iri) {
+    boolean iriIsLinkable(String iri, String path) {
+        if (path in JsonLd.ALLOW_LINK_TO_DELETED) {
+            return true
+        }
         withDbConnection {
             PreparedStatement preparedStatement = null
             ResultSet rs = null
