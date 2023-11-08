@@ -25,7 +25,7 @@ import static whelk.util.Jackson.mapper
 class NotificationGenerator extends HouseKeeper {
 
     public static final String STATE_KEY = "CXZ notification generator"
-    private static final int MAX_OBSERVATIONS_PER_CHANGE = 100
+    private static final int MAX_OBSERVATIONS_PER_CHANGE = 20
     private String status = "OK"
     private final Whelk whelk
 

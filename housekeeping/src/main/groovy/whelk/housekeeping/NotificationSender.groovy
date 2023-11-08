@@ -108,7 +108,7 @@ class NotificationSender extends HouseKeeper {
             connection.setAutoCommit(false)
             statement = connection.prepareStatement(sql)
             statement.setTimestamp(1, from)
-            System.err.println("  **  Searching for Observations: " + statement)
+            //System.err.println("  **  Searching for Observations: " + statement)
             statement.setFetchSize(512)
             resultSet = statement.executeQuery()
 
@@ -211,12 +211,22 @@ class NotificationSender extends HouseKeeper {
             log.info("Sending notification (cxz) email to " + recipient)
             mailer.sendMail(email)
         } else {
-            log.info("Should now have sent notification (cxz) email to " + recipient + " but SMTP not configured.")
+            log.info("Should now have sent notification (cxz) email to " + recipient + " but SMTP is not configured.")
         }
     }
 
     private String generateEmailBody(String changedInstanceId, List<Map> triggeredObservations) {
+
+        Document current = whelk.getStorage().load(changedInstanceId)
+        String mainTitle = Document._get(["@graph", 1, "hasTitle", 0, "mainTitle"], current.data)
+
         StringBuilder sb = new StringBuilder()
+        sb.append("Ändringar har skett i instans: " + Document.BASE_URI.resolve(changedInstanceId).toString())
+        if (mainTitle)
+            sb.append(" (" + mainTitle + ")\n")
+        else
+            sb.append("\n")
+
         for (Map observation : triggeredObservations) {
             String observationUri = Document._get(["@graph", 1, "@id"], observation)
             if (!observationUri)
@@ -226,13 +236,19 @@ class NotificationSender extends HouseKeeper {
             Document embellishedObservation = whelk.loadEmbellished(observationId)
             Map framed = JsonLd.frame(observationUri, embellishedObservation.data)
 
-            //Document temp = new Document(framed)
-            //System.err.println("Framed emb observation:\n\t"+temp.getDataAsString()+"\n\n")
-
             Map category = whelk.getJsonld().applyLensAsMapByLang( (Map) framed["category"], ["sv"] as Set, [], ["chips"])
             Map before = whelk.getJsonld().applyLensAsMapByLang( (Map) framed["representationBefore"], ["sv"] as Set, [], ["chips"])
             Map after = whelk.getJsonld().applyLensAsMapByLang( (Map) framed["representationAfter"], ["sv"] as Set, [], ["chips"])
-            sb.append("For observation " + observationId + ":\n\t" + category + "\n\t" + before + "\n\t" + after)
+            sb.append("\tÄndring avser kategorin: "+ category["sv"])
+            sb.append("\n\t\tInnan ändring: " + before["sv"])
+            sb.append("\n\t\tEfter ändring: " + after["sv"])
+
+            if (observation["comment"]) {
+                sb.append("\n\t\tTillhörande kommentarer:")
+                for (String comment : observation["comment"])
+                    sb.append("\n\t\t\t"+comment)
+            }
+            sb.append("\n\n")
         }
 
         return sb.toString()
