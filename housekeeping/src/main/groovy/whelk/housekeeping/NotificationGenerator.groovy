@@ -140,13 +140,13 @@ class NotificationGenerator extends HouseKeeper {
             return generatedObservations
         }
         historicEmbellish(instanceBeforeChange, propertiesToEmbellish, before)
-
+        String agentId = instanceAfterChange.data?['descriptionLastModifier']?['@id'] // TODO? not necessarily the correct agent if multiple versions
         Tuple comparisonResult = primaryContributionChanged(instanceBeforeChange, instanceAfterChange)
         if (comparisonResult[0]) {
             generatedObservations.add(
                     makeChangeObservation(
                             instanceId, changeNotes, "https://id.kb.se/changecategory/primarycontribution",
-                            (Map) comparisonResult[1], (Map) comparisonResult[2])
+                            (Map) comparisonResult[1], (Map) comparisonResult[2], agentId)
             )
         }
 
@@ -175,7 +175,7 @@ class NotificationGenerator extends HouseKeeper {
         return new Tuple(false, null, null)
     }
 
-    private Document makeChangeObservation(String instanceId, List changeNotes, String categoryUri, Map oldValue, Map newValue) {
+    private Document makeChangeObservation(String instanceId, List changeNotes, String categoryUri, Map oldValue, Map newValue, String agentId) {
         String newId = IdGenerator.generate()
         String metadataUri = Document.BASE_URI.toString() + newId
         String mainEntityUri = metadataUri+"#it"
@@ -199,6 +199,7 @@ class NotificationGenerator extends HouseKeeper {
                         "representationBefore" : oldValueEmbedded,
                         "representationAfter" : newValueEmbedded,
                         "category" : ["@id" : categoryUri],
+                        "agent" : ["@id" : agentId],
                 ]
         ]]
 
