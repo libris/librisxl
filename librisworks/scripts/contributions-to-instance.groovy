@@ -12,12 +12,13 @@ report = getReportWriter('report.tsv')
 def clusters = new File(System.getProperty('clusters')).collect { it.split('\t').collect { it.trim() } }
 
 def whelk = getWhelk()
-def instanceRolesByDomain = whelk.resourceCache.relators.findResults {
+def instanceRolesByDomain = whelk.resourceCache.relatorResources.relators.findResults {
     if (it.domain) {
         def domain = whelk.jsonld.toTermKey(it.domain[ID_KEY])
         if (whelk.jsonld.isSubClassOf(domain, 'Embodiment')) it.subMap([ID_KEY])
     }
 }
+
 def instanceRoles = instanceRolesByDomain + [Relator.ILLUSTRATOR, Relator.AUTHOR_OF_INTRO, Relator.AUTHOR_OF_AFTERWORD].collect { [(ID_KEY): it.iri] }
 def ill = [(ID_KEY): Relator.ILLUSTRATOR.iri]
 
