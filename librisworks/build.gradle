@@ -5,6 +5,9 @@ sourceSets {
     scripts {
         groovy { srcDir 'scripts' }
     }
+    test {
+        groovy { srcDir 'src/test/groovy/' }
+    }
 }
 
 repositories {
@@ -17,6 +20,11 @@ dependencies {
     compileOnly project(':whelk-core')
     scriptsCompileOnly sourceSets.main.output
     scriptsCompileOnly project(':whelk-core')
+    testImplementation "org.spockframework:spock-core:${spockVersion}"
+}
+
+test {
+    useJUnitPlatform()
 }
 
 jar {
