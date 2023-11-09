@@ -75,9 +75,6 @@ class NotificationGenerator extends HouseKeeper {
                 String id = resultSet.getString("id")
 
                 Array changeNotesArray = resultSet.getArray("changeNotes")
-
-                // There is some groovy type-nonsense going on with the array types, simply doing
-                // List changeNotes = Arrays.asList( changeNotesArray.getArray() ) won't work.
                 List changeNotes = []
                 for (Object o : changeNotesArray.getArray()) {
                     if (o != null)
@@ -102,9 +99,11 @@ class NotificationGenerator extends HouseKeeper {
                 List<Document> resultingChangeObservations = generateObservationsForAffectedInstance(
                                 instanceId, changedInstanceIDsWithComments[instanceId], from.toInstant(), until.toInstant())
 
-                for (Document observation : resultingChangeObservations) {
-                    if (!whelk.createDocument(observation, "NotificationGenerator", "SEK", "none", false)) {
-                        log.error("Failed to create ChangeObservation:\n${observation.getDataAsString()}")
+                if (resultingChangeObservations.size() <= MAX_OBSERVATIONS_PER_CHANGE) {
+                    for (Document observation : resultingChangeObservations) {
+                        if (!whelk.createDocument(observation, "NotificationGenerator", "SEK", "none", false)) {
+                            log.error("Failed to create ChangeObservation:\n${observation.getDataAsString()}")
+                        }
                     }
                 }
             }
@@ -140,34 +139,40 @@ class NotificationGenerator extends HouseKeeper {
         if (instanceBeforeChange == null) { // This instance is new, and did not exist at 'before'.
             return generatedObservations
         }
-        historicEmbellish(instanceBeforeChange, propertiesToEmbellish, before);
+        historicEmbellish(instanceBeforeChange, propertiesToEmbellish, before)
 
-        // Check for primary contribution changes
-        {
-            Object contributionsAfter = Document._get(["mainEntity", "instanceOf", "contribution"], instanceAfterChange.data)
-            Object contributionsBefore = Document._get(["mainEntity", "instanceOf", "contribution"], instanceBeforeChange.data)
-            if (contributionsBefore != null && contributionsAfter != null && contributionsBefore instanceof List && contributionsAfter instanceof List) {
-                for (Object contrBefore : contributionsBefore) {
-                    for (Object contrAfter : contributionsAfter) {
-                        if (contrBefore["@type"].equals("PrimaryContribution") && contrAfter["@type"].equals("PrimaryContribution")) {
-                            if (contrBefore["agent"] != null && contrAfter["agent"] != null) {
-                                if (
-                                        contrBefore["agent"]["familyName"] != contrAfter["agent"]["familyName"] ||
-                                                contrBefore["agent"]["givenName"] != contrAfter["agent"]["givenName"] ||
-                                                contrBefore["agent"]["lifeSpan"] != contrAfter["agent"]["lifeSpan"]
-                                )
-                                    generatedObservations.add(
-                                            makeChangeObservation(instanceId, changeNotes,
-                                                    "https://id.kb.se/changecategory/primarycontribution",
-                                                    (Map) contrBefore["agent"], (Map) contrAfter["agent"]))
-                            }
+        Tuple comparisonResult = primaryContributionChanged(instanceBeforeChange, instanceAfterChange)
+        if (comparisonResult[0]) {
+            generatedObservations.add(
+                    makeChangeObservation(
+                            instanceId, changeNotes, "https://id.kb.se/changecategory/primarycontribution",
+                            (Map) comparisonResult[1], (Map) comparisonResult[2])
+            )
+        }
+
+        return generatedObservations
+    }
+
+    private static Tuple primaryContributionChanged(Document instanceBeforeChange, Document instanceAfterChange) {
+        Object contributionsAfter = Document._get(["mainEntity", "instanceOf", "contribution"], instanceAfterChange.data)
+        Object contributionsBefore = Document._get(["mainEntity", "instanceOf", "contribution"], instanceBeforeChange.data)
+        if (contributionsBefore != null && contributionsAfter != null && contributionsBefore instanceof List && contributionsAfter instanceof List) {
+            for (Object contrBefore : contributionsBefore) {
+                for (Object contrAfter : contributionsAfter) {
+                    if (contrBefore["@type"].equals("PrimaryContribution") && contrAfter["@type"].equals("PrimaryContribution")) {
+                        if (contrBefore["agent"] != null && contrAfter["agent"] != null) {
+                            if (
+                                    contrBefore["agent"]["familyName"] != contrAfter["agent"]["familyName"] ||
+                                            contrBefore["agent"]["givenName"] != contrAfter["agent"]["givenName"] ||
+                                            contrBefore["agent"]["lifeSpan"] != contrAfter["agent"]["lifeSpan"]
+                            )
+                                return new Tuple(true, contrBefore["agent"], contrAfter["agent"])
                         }
                     }
                 }
             }
         }
-
-        return generatedObservations
+        return new Tuple(false, null, null)
     }
 
     private Document makeChangeObservation(String instanceId, List changeNotes, String categoryUri, Map oldValue, Map newValue) {
