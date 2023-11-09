@@ -104,7 +104,7 @@ class NotificationSender extends HouseKeeper {
         connection = whelk.getStorage().getOuterConnection()
         connection.setAutoCommit(false)
         try {
-            String sql = "SELECT MAX(created) as lastChange, data#>>'{@graph,1,about,@id}' as instanceUri, ARRAY_AGG(data::text) as data FROM lddb WHERE data#>>'{@graph,1,@type}' = 'ChangeObservation' AND created > ? GROUP BY data#>>'{@graph,1,about,@id}';"
+            String sql = "SELECT MAX(created) as lastChange, data#>>'{@graph,1,concerning,@id}' as instanceUri, ARRAY_AGG(data::text) as data FROM lddb WHERE data#>>'{@graph,1,@type}' = 'ChangeObservation' AND created > ? GROUP BY data#>>'{@graph,1,concerning,@id}';"
             connection.setAutoCommit(false)
             statement = connection.prepareStatement(sql)
             statement.setTimestamp(1, from)
@@ -243,9 +243,11 @@ class NotificationSender extends HouseKeeper {
             sb.append("\n\t\tInnan ändring: " + before["sv"])
             sb.append("\n\t\tEfter ändring: " + after["sv"])
 
-            if (observation["comment"]) {
+            Object comments = Document._get(["@graph", 1, "comment"], observation)
+
+            if (comments instanceof List) {
                 sb.append("\n\t\tTillhörande kommentarer:")
-                for (String comment : observation["comment"])
+                for (String comment : comments)
                     sb.append("\n\t\t\t"+comment)
             }
             sb.append("\n\n")

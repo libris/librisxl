@@ -58,6 +58,8 @@ class NotificationGenerator extends HouseKeeper {
         PreparedStatement statement
         ResultSet resultSet
 
+        Map<String, List<String>> changedInstanceIDsWithComments = [:]
+
         connection = whelk.getStorage().getOuterConnection()
         connection.setAutoCommit(false)
         try {
@@ -69,9 +71,6 @@ class NotificationGenerator extends HouseKeeper {
             statement.setTimestamp(2, until)
             statement.setFetchSize(512)
             resultSet = statement.executeQuery()
-            // If both an instance and one of it's dependencies are affected within the same interval, we will
-            // (without this check) try to generate notifications for said instance twice.
-            Set affectedInstanceIDs = []
             while (resultSet.next()) {
                 String id = resultSet.getString("id")
 
@@ -81,12 +80,35 @@ class NotificationGenerator extends HouseKeeper {
                 // List changeNotes = Arrays.asList( changeNotesArray.getArray() ) won't work.
                 List changeNotes = []
                 for (Object o : changeNotesArray.getArray()) {
-                    changeNotes.add(o)
+                    if (o != null)
+                        changeNotes.add(o)
                 }
 
-                generateObservationsForChangedID(id, changeNotes, from.toInstant(),
-                        until.toInstant(), affectedInstanceIDs)
+                List<Tuple2<String, String>> dependers = whelk.getStorage().followDependers(id, ["itemOf"])
+                dependers.add(new Tuple2(id, null)) // This ID too, not _only_ the dependers!
+                dependers.each {
+                    String dependerID =  it[0]
+                    String dependerMainEntityType = whelk.getStorage().getMainEntityTypeBySystemID(dependerID)
+                    if (whelk.getJsonld().isSubClassOf(dependerMainEntityType, "Instance")) {
+                        if (!changedInstanceIDsWithComments.containsKey(dependerID)) {
+                            changedInstanceIDsWithComments.put(dependerID, [])
+                        }
+                        changedInstanceIDsWithComments[dependerID].addAll(changeNotes)
+                    }
+                }
             }
+
+            for (String instanceId : changedInstanceIDsWithComments.keySet()) {
+                List<Document> resultingChangeObservations = generateObservationsForAffectedInstance(
+                                instanceId, changedInstanceIDsWithComments[instanceId], from.toInstant(), until.toInstant())
+
+                for (Document observation : resultingChangeObservations) {
+                    if (!whelk.createDocument(observation, "NotificationGenerator", "SEK", "none", false)) {
+                        log.error("Failed to create ChangeObservation:\n${observation.getDataAsString()}")
+                    }
+                }
+            }
+
         } catch (Throwable e) {
             status = "Failed with:\n" + e + "\nat:\n" + e.getStackTrace().toString()
             throw e
@@ -95,41 +117,6 @@ class NotificationGenerator extends HouseKeeper {
             Map newState = new HashMap()
             newState.lastGenerationTime = until.toInstant().atOffset(ZoneOffset.UTC).toString()
             whelk.getStorage().putState(STATE_KEY, newState)
-        }
-    }
-
-    /**
-     * Based on the fact that 'id' has been updated, generate (if the change resulted in a ChangeNotice)
-     * relevant notification-records
-     */
-    private void generateObservationsForChangedID(String id, List changeNotes, Instant from, Instant until, Set affectedInstanceIDs) {
-
-        List<Document> resultingChangeObservations = []
-
-        List<Tuple2<String, String>> dependers = whelk.getStorage().followDependers(id, ["itemOf"])
-        dependers.add(new Tuple2(id, null)) // This ID too, not _only_ the dependers!
-        dependers.each {
-            String dependerID =  it[0]
-            String dependerMainEntityType = whelk.getStorage().getMainEntityTypeBySystemID(dependerID)
-            if (whelk.getJsonld().isSubClassOf(dependerMainEntityType, "Instance")) {
-                // If we've not already made an observation for this instance!
-                if (!affectedInstanceIDs.contains(dependerID)) {
-                    affectedInstanceIDs.add(dependerID)
-                    resultingChangeObservations.addAll( generateObservationsForAffectedInstance(dependerID, changeNotes, from, until) )
-                    if (resultingChangeObservations.size() > MAX_OBSERVATIONS_PER_CHANGE) {
-                        log.warn("Discarding ChangeObservations for instances related to $id, which was changed. Observations would be too many.")
-                        return
-                    }
-                }
-            }
-        }
-
-        for (Document observation : resultingChangeObservations) {
-            //System.err.println(" ** Made change observation:\n${observation.getDataAsString()}")
-
-            if (!whelk.createDocument(observation, "NotificationGenerator", "SEK", "none", false)) {
-                log.error("Failed to create ChangeObservation:\n${observation.getDataAsString()}")
-            }
         }
     }
 
@@ -203,7 +190,7 @@ class NotificationGenerator extends HouseKeeper {
                 [
                         "@id" : mainEntityUri,
                         "@type" : "ChangeObservation",
-                        "about" : ["@id" : Document.BASE_URI.toString() + instanceId],
+                        "concerning" : ["@id" : Document.BASE_URI.toString() + instanceId],
                         "representationBefore" : oldValueEmbedded,
                         "representationAfter" : newValueEmbedded,
                         "category" : ["@id" : categoryUri],
