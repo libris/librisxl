@@ -9,7 +9,11 @@ selectByIds(ids) {
 
     if (!work || work['@id']) return
 
-    instance['illustrativeContent'] = (asList(instance['illustrativeContent']) + asList(work.remove('illustrativeContent'))).unique()
+    def illContent = work.remove('illustrativeContent')
 
-    it.scheduleSave()
+    if (illContent) {
+        instance['illustrativeContent'] = (asList(instance['illustrativeContent']) + asList(illContent)).unique()
+
+        it.scheduleSave()
+    }
 }
