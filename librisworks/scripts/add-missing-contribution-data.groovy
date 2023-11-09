@@ -290,6 +290,7 @@ boolean tryAddLifeSpanToLocalAgent(Map contribution, String id) {
     def agent = asList(contribution.agent).find()
     if (agent instanceof Map && !agent[ID_KEY] && !agent.lifeSpan) {
         def names = agentToNames[toString(agent)]
+        if (!names) return
         def matchingLocalAgentsWithLifeSpan = nameToAgents.subMap(names).values().flatten().toSet().findAll { a ->
             !looksLikeIri(a) && localAgentToLifeSpansToIds[a]
         }
