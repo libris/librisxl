@@ -31,8 +31,8 @@ NORMALIZATIONS_DIR=$REPORT_DIR/normalizations
 MERGED_WORKS_DIR=$REPORT_DIR/merged-works
 
 ALL=$CLUSTERS_DIR/1-all
-MERGED=$CLUSTERS_DIR/2-merged
-TITLES=$CLUSTERS_DIR/3-titles
+TITLES=$CLUSTERS_DIR/2-titles
+MERGED=$CLUSTERS_DIR/3-merged
 SWEDISH_FICTION=$CLUSTERS_DIR/4-swedish-fiction
 NO_ANONYMOUS_TRANSLATIONS=$CLUSTERS_DIR/5-no-anonymous-translations
 
@@ -44,7 +44,7 @@ DEDUPLICATE_CONTRIBUTIONS=$NORMALIZATIONS_DIR/3-deduplicate-contributions
 ADD_MISSING_CONTRIBUTION_DATA=$NORMALIZATIONS_DIR/4-add-missing-contribution-data
 ROLES_TO_INSTANCE=$NORMALIZATIONS_DIR/5-roles-to-instance
 
-# Clustering step 1 TODO: run only on recently updated records after first run
+# Clustering TODO: run only on recently updated records after first run
 echo "Finding new clusters..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -jar $JAR_FILE \
   $ARGS --report $ALL/$WHELKTOOL_REPORT $SCRIPTS_DIR/find-work-clusters.groovy >$ALL/$CLUSTER_TSV 2>/dev/null
@@ -54,21 +54,12 @@ if [ $NUM_CLUSTERS == 0 ]; then
   exit 0
 fi
 
-# Clustering step 2
-echo
-echo "Merging clusters..."
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$ALL/$CLUSTER_TSV -jar $JAR_FILE \
-  $ARGS --report $MERGED/$WHELKTOOL_REPORT $SCRIPTS_DIR/merge-clusters.groovy >$MERGED/$CLUSTER_TSV 2>/dev/null
-NUM_CLUSTERS=$(count_lines $MERGED/$CLUSTER_TSV)
-echo "Merged into $NUM_CLUSTERS clusters"
-if [ $NUM_CLUSTERS == 0 ]; then
-  exit 0
-fi
+# Filter out duplicates
+sort -uo $ALL/$CLUSTER_TSV $ALL/$CLUSTER_TSV
 
-# Clustering step 3
 echo
 echo "Finding title clusters..."
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$MERGED/$CLUSTER_TSV -jar $JAR_FILE \
+time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$ALL/$CLUSTER_TSV -jar $JAR_FILE \
   $ARGS --report $TITLES/$WHELKTOOL_REPORT $SCRIPTS_DIR/title-clusters.groovy >$TITLES/$CLUSTER_TSV 2>/dev/null
 NUM_CLUSTERS=$(count_lines $TITLES/$CLUSTER_TSV)
 echo "$NUM_CLUSTERS title clusters found"
@@ -76,10 +67,20 @@ if [ $NUM_CLUSTERS == 0 ]; then
   exit 0
 fi
 
+echo
+echo "Merging clusters..."
+time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$TITLES/$CLUSTER_TSV -jar $JAR_FILE \
+  $ARGS --report $MERGED/$WHELKTOOL_REPORT $SCRIPTS_DIR/merge-clusters.groovy >$MERGED/$CLUSTER_TSV 2>/dev/null
+NUM_CLUSTERS=$(count_lines $MERGED/$CLUSTER_TSV)
+echo "Merged into $NUM_CLUSTERS clusters"
+if [ $NUM_CLUSTERS == 0 ]; then
+  exit 0
+fi
+
 # Filter: Swedish fiction
 echo
 echo "Filtering on Swedish fiction..."
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$TITLES/$CLUSTER_TSV -jar $JAR_FILE \
+time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$MERGED/$CLUSTER_TSV -jar $JAR_FILE \
   $ARGS --report $SWEDISH_FICTION/$WHELKTOOL_REPORT $SCRIPTS_DIR/swedish-fiction.groovy >$SWEDISH_FICTION/$CLUSTER_TSV 2>/dev/null
 NUM_CLUSTERS=$(count_lines $SWEDISH_FICTION/$CLUSTER_TSV)
 echo "Found $NUM_CLUSTERS title clusters with Swedish fiction"

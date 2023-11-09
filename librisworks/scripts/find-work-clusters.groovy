@@ -2,17 +2,10 @@
  * (When running, redirect STDERR to avoid annoying prints from whelktool)
  */
 
-import java.util.concurrent.ConcurrentHashMap
-
 PrintWriter failedQueries = getReportWriter("failed-queries")
 PrintWriter tooLargeResult = getReportWriter("too-large-result")
 
-visited = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>())
-
 def process = { bib ->
-    if (!visited.add(bib.doc.shortId))
-        return
-
     try {
         def instance = bib.graph[1]
         def work = loadIfLink(instance.instanceOf)
@@ -34,8 +27,7 @@ def process = { bib ->
         if (ids.size() > 1000) {
             tooLargeResult.println("Results: ${ids.size()} Id: ${bib.doc.shortId} Titles: ${titles}")
         } else if (ids.size() > 1) {
-            visited.addAll(ids)
-            println(ids.join('\t'))
+            println(ids.sort().join('\t'))
         }
     }
     catch (Exception e) {
