@@ -195,7 +195,7 @@ class NotificationGenerator extends HouseKeeper {
                 [
                         "@id" : mainEntityUri,
                         "@type" : "ChangeObservation",
-                        "concerning" : ["@id" : Document.BASE_URI.toString() + instanceId],
+                        "concerning" : ["@id" : Document.BASE_URI.toString() + instanceId + '#it'],
                         "representationBefore" : oldValueEmbedded,
                         "representationAfter" : newValueEmbedded,
                         "category" : ["@id" : categoryUri],
