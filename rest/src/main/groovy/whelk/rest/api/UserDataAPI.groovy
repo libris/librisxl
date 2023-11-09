@@ -16,7 +16,7 @@ import java.util.stream.Collectors
 class UserDataAPI extends HttpServlet {
     private Whelk whelk
     private static final int POST_MAX_SIZE = 1000000
-    private static final String ID_HASH_FUNCTION = "SHA-256"
+    static final String ID_HASH_FUNCTION = "SHA-256"
 
     UserDataAPI() {
     }

@@ -1,0 +1,61 @@
+apply plugin: 'war'
+apply plugin: 'groovy'
+apply from: '../gretty.plugin'
+
+repositories {
+    mavenCentral()
+}
+
+// Don't blame me for this TRAVESTY. It is a necessity because of the versioning of xml-apis (2.0.2 which gradle otherwise chooses is OLDER (and broken) despite the version.)
+configurations.all {
+    resolutionStrategy {
+        force "xml-apis:xml-apis:1.4.01"
+    }
+}
+
+sourceSets {
+    main {
+        java { srcDirs = [] }
+        groovy { srcDirs = ['src/main/java', 'src/main/groovy'] }
+    }
+    test {
+        groovy { srcDir 'src/test/groovy/' }
+    }
+}
+
+
+dependencies {
+    // XL dependencies
+    implementation(project(':whelk-core'))
+
+    // Logging
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
+
+    // metrics
+    implementation "io.prometheus:simpleclient:${prometheusVersion}"
+    implementation "io.prometheus:simpleclient_servlet:${prometheusVersion}"
+
+    //implementation 'org.apache.commons:commons-lang3:3.3.2'
+    implementation "org.codehaus.groovy:groovy:${groovyVersion}"
+
+    // Email
+    implementation group: 'org.simplejavamail', name: 'simple-java-mail', version: '8.2.0'
+
+    // Cron
+    implementation group: 'it.sauronsoftware.cron4j', name: 'cron4j', version: '2.2.5'
+
+}
+
+gretty {
+    jvmArgs = ['-XX:+UseParallelGC']
+    systemProperties = ['xl.secret.properties': System.getProperty("xl.secret.properties")]
+    httpPort = 8589
+    scanInterval = 0
+    afterEvaluate {
+        appRunDebug {
+            debugPort = 5006
+            debugSuspend = false
+        }
+    }
+}

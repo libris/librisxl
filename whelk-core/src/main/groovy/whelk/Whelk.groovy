@@ -22,6 +22,7 @@ import whelk.search.ElasticFind
 import whelk.util.PropertyLoader
 import whelk.util.Romanizer
 
+import java.time.Instant
 import java.time.ZoneId
 
 /**
@@ -258,7 +259,7 @@ class Whelk {
         return doc
     }
 
-    Map<String, Document> bulkLoad(Collection<String> ids) {
+    Map<String, Document> bulkLoad(Collection<String> ids, Instant asOf = null) {
         def idMap = [:]
         def otherIris = []
         List<String> systemIds = []
@@ -281,7 +282,7 @@ class Whelk {
             idMap.putAll(idToIri)
         }
 
-        return storage.bulkLoad(systemIds)
+        return storage.bulkLoad(systemIds, asOf)
                 .findAll { id, doc -> !doc.deleted }
                 .collectEntries { id, doc -> [(idMap.getOrDefault(id, id)): doc] }
     }
