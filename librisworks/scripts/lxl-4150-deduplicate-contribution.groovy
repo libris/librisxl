@@ -14,19 +14,16 @@ selectByIds(ids) { bib ->
                 ? primaryContributionIdx
                 : contribution.findIndexOf { asList(it.agent) == d }
         def mergeInto = contribution[mergeIntoIdx]
-        def roles = []
 
+        def roles = contribution.findResults { asList(it.agent) == d ? asList(it.role) : null }.flatten().unique()
+        if (roles) mergeInto['role'] = roles
+
+        def idx = 0
         contribution.removeAll {
-            if (asList(it.agent) == d) {
-                roles += asList(it.role)
-                return true
-            }
-            return false
+            def removeIf = asList(it.agent) == d && idx != mergeIntoIdx
+            idx += 1
+            return removeIf
         }
-
-        if (roles) mergeInto['role'] = roles.unique()
-
-        contribution.add(mergeIntoIdx, mergeInto)
     }
 
     if (duplicates) {
