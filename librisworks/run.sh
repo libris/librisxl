@@ -97,7 +97,7 @@ echo "$(count_lines $LANGUAGE_IN_TITLE/MODIFIED.txt) records affected, report in
 
 echo
 echo "Moving illustrativeContent to instance..."
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -jar $JAR_FILE \
+time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION/$CLUSTER_TSV -jar $JAR_FILE \
   $ARGS --report $ILL_CONTENT $SCRIPTS_DIR/lxl-4221-move-illustrativecontent-to-instance.groovy 2>/dev/null
 echo "$(count_lines $ILL_CONTENT/MODIFIED.txt) records affected, report in $ILL_CONTENT"
 
