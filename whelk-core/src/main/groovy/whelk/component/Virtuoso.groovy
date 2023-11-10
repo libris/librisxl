@@ -4,9 +4,6 @@ import com.google.common.base.Preconditions
 import groovy.util.logging.Log4j2 as Log
 import org.apache.http.HttpResponse
 import org.apache.http.StatusLine
-import org.apache.http.auth.AuthScope
-import org.apache.http.auth.UsernamePasswordCredentials
-import org.apache.http.client.CredentialsProvider
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpDelete
@@ -14,7 +11,6 @@ import org.apache.http.client.methods.HttpPut
 import org.apache.http.client.methods.HttpRequestBase
 import org.apache.http.conn.HttpClientConnectionManager
 import org.apache.http.entity.StringEntity
-import org.apache.http.impl.client.BasicCredentialsProvider
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
@@ -37,6 +33,8 @@ class Virtuoso {
     private static final int READ_TIMEOUT_MS = 5 * 1000
     
     private final String sparqlCrudEndpoint
+    private final String sparqlUser
+    private final String sparqlPass
 
     private final CloseableHttpClient httpClient
     private final Map ctx
@@ -48,7 +46,9 @@ class Virtuoso {
         Preconditions.checkNotNull(cm)
         Preconditions.checkNotNull(user, "user was null")
         Preconditions.checkNotNull(pass, "password was null")
-        this.httpClient = buildHttpClient(cm, user, pass)
+        this.httpClient = buildHttpClient(cm)
+        this.sparqlUser = user
+        this.sparqlPass = pass
     }
 
     void deleteNamedGraph(Document doc) {
@@ -63,6 +63,8 @@ class Virtuoso {
         HttpRequestBase request = buildRequest(method, doc)
         try {
             Metrics.clientTimer.labels(Virtuoso.class.getSimpleName(), method.toString()).time {
+                String credentials = "${this.sparqlUser}:${this.sparqlPass}".bytes.encodeBase64().toString()
+                request.setHeader("Authorization", "Basic " + credentials)
                 CloseableHttpResponse response = httpClient.execute(request)
                 try {
                     handleResponse(response, method, doc)
@@ -138,20 +140,16 @@ class Virtuoso {
         return new String(bytes, StandardCharsets.UTF_8)
     }
     
-    private static CloseableHttpClient buildHttpClient(HttpClientConnectionManager cm, String user, String password) {
+    private static CloseableHttpClient buildHttpClient(HttpClientConnectionManager cm) {
         RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectTimeout(CONNECT_TIMEOUT_MS)
                 .setConnectionRequestTimeout(CONNECT_TIMEOUT_MS)
                 .setSocketTimeout(READ_TIMEOUT_MS)
                 .build()
 
-        CredentialsProvider provider = new BasicCredentialsProvider()
-        provider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, password))
-
         CloseableHttpClient httpClient = HttpClients.custom()
                 .setConnectionManager(cm)
                 .setDefaultRequestConfig(requestConfig)
-                .setDefaultCredentialsProvider(provider)
                 .build()
 
         return httpClient
