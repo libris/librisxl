@@ -227,6 +227,14 @@ class NotificationSender extends HouseKeeper {
         else
             sb.append("\n")
 
+        Object comments = Document._get(["@graph", 1, "comment"], observation)
+
+        if (comments instanceof List) {
+            sb.append("\n\tTillhörande kommentarer:")
+            for (String comment : comments)
+                sb.append("\n\t\t"+comment)
+        }
+
         for (Map observation : triggeredObservations) {
             String observationUri = Document._get(["@graph", 1, "@id"], observation)
             if (!observationUri)
@@ -237,19 +245,26 @@ class NotificationSender extends HouseKeeper {
             Map framed = JsonLd.frame(observationUri, embellishedObservation.data)
 
             Map category = whelk.getJsonld().applyLensAsMapByLang( (Map) framed["category"], ["sv"] as Set, [], ["chips"])
-            Map before = whelk.getJsonld().applyLensAsMapByLang( (Map) framed["representationBefore"], ["sv"] as Set, [], ["chips"])
-            Map after = whelk.getJsonld().applyLensAsMapByLang( (Map) framed["representationAfter"], ["sv"] as Set, [], ["chips"])
             sb.append("\tÄndring avser kategorin: "+ category["sv"])
-            sb.append("\n\t\tInnan ändring: " + before["sv"])
-            sb.append("\n\t\tEfter ändring: " + after["sv"])
 
-            Object comments = Document._get(["@graph", 1, "comment"], observation)
-
-            if (comments instanceof List) {
-                sb.append("\n\t\tTillhörande kommentarer:")
-                for (String comment : comments)
-                    sb.append("\n\t\t\t"+comment)
+            if (framed["representationBefore"] instanceof Map && framed["representationAfter"] instanceof Map) {
+                Map before = whelk.getJsonld().applyLensAsMapByLang((Map) framed["representationBefore"], ["sv"] as Set, [], ["chips"])
+                Map after = whelk.getJsonld().applyLensAsMapByLang((Map) framed["representationAfter"], ["sv"] as Set, [], ["chips"])
+                sb.append("\n\t\tInnan ändring: " + before["sv"])
+                sb.append("\n\t\tEfter ändring: " + after["sv"])
+            } else if (framed["representationBefore"] instanceof List && framed["representationAfter"] instanceof List) {
+                sb.append("\n\t\tInnan ändring: ")
+                for (Object item : framed["representationBefore"]) {
+                    Map before = whelk.getJsonld().applyLensAsMapByLang((Map) item, ["sv"] as Set, [], ["chips"])
+                    sb.append((String) before["sv"] + ", ")
+                }
+                sb.append("\n\t\tEfter ändring: ")
+                for (Object item : framed["representationAfter"]) {
+                    Map after = whelk.getJsonld().applyLensAsMapByLang((Map) item, ["sv"] as Set, [], ["chips"])
+                    sb.append((String) after["sv"] + ", ")
+                }
             }
+
             sb.append("\n\n")
         }
 

@@ -16,7 +16,6 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 
 import static whelk.util.Jackson.mapper
 
@@ -141,12 +140,35 @@ class NotificationGenerator extends HouseKeeper {
         }
         historicEmbellish(instanceBeforeChange, propertiesToEmbellish, before)
         String agentId = instanceAfterChange.data?['descriptionLastModifier']?['@id'] // TODO? not necessarily the correct agent if multiple versions
-        Tuple comparisonResult = primaryContributionChanged(instanceBeforeChange, instanceAfterChange)
+        Tuple comparisonResult
+
+        // Primary Contribution
+        comparisonResult = primaryContributionChanged(instanceBeforeChange, instanceAfterChange)
         if (comparisonResult[0]) {
             generatedObservations.add(
                     makeChangeObservation(
                             instanceId, changeNotes, "https://id.kb.se/changecategory/primarycontribution",
-                            (Map) comparisonResult[1], (Map) comparisonResult[2], agentId)
+                            comparisonResult[1], comparisonResult[2], agentId)
+            )
+        }
+
+        // Intended Audience
+        comparisonResult = intendedAudienceChanged(instanceBeforeChange, instanceAfterChange)
+        if (comparisonResult[0]) {
+            generatedObservations.add(
+                    makeChangeObservation(
+                            instanceId, changeNotes, "https://id.kb.se/changecategory/intendedaudience",
+                            comparisonResult[1], comparisonResult[2], agentId)
+            )
+        }
+
+        // Main Title
+        comparisonResult = mainTitleChanged(instanceBeforeChange, instanceAfterChange)
+        if (comparisonResult[0]) {
+            generatedObservations.add(
+                    makeChangeObservation(
+                            instanceId, changeNotes, "https://id.kb.se/changecategory/maintitle",
+                            comparisonResult[1], comparisonResult[2], agentId)
             )
         }
 
@@ -175,16 +197,56 @@ class NotificationGenerator extends HouseKeeper {
         return new Tuple(false, null, null)
     }
 
-    private Document makeChangeObservation(String instanceId, List changeNotes, String categoryUri, Map oldValue, Map newValue, String agentId) {
+    private static Tuple intendedAudienceChanged(Document instanceBeforeChange, Document instanceAfterChange) {
+        Object valueBefore = Document._get(["mainEntity", "instanceOf", "intendedAudience"], instanceBeforeChange.data)
+        Object valueAfter = Document._get(["mainEntity", "instanceOf", "intendedAudience"], instanceAfterChange.data)
+
+        if (valueBefore != null && valueAfter != null && valueBefore instanceof List && valueAfter instanceof List) {
+            if (valueAfter as Set != valueBefore as Set)
+                return new Tuple(true, valueBefore, valueAfter)
+        }
+        return new Tuple(false, null, null)
+    }
+
+    private static Tuple mainTitleChanged(Document instanceBeforeChange, Document instanceAfterChange) {
+        Object titlesBefore = Document._get(["mainEntity", "hasTitle"], instanceBeforeChange.data)
+        Object titlesAfter = Document._get(["mainEntity", "hasTitle"], instanceAfterChange.data)
+
+        Map oldMainTitle = null
+        Map newMainTitle = null
+
+        if (titlesBefore != null && titlesAfter != null && titlesBefore instanceof List && titlesAfter instanceof List) {
+
+            for (Object oBefore : titlesBefore) {
+                Map titleBefore = (Map) oBefore
+                if (titleBefore["mainTitle"] && titleBefore["@type"] && titleBefore["@type"] == "Title")
+                    oldMainTitle = titleBefore
+            }
+
+            for (Object oAfter : titlesAfter) {
+                Map titleAfter = (Map) oAfter
+                if (titleAfter["mainTitle"] && titleAfter["@type"] && titleAfter["@type"] == "Title")
+                    newMainTitle = titleAfter
+            }
+
+            if (newMainTitle != null && oldMainTitle != null && !newMainTitle.equals(oldMainTitle))
+                return new Tuple(true, oldMainTitle, newMainTitle)
+        }
+        return new Tuple(false, null, null)
+    }
+
+    private Document makeChangeObservation(String instanceId, List changeNotes, String categoryUri, Object oldValue, Object newValue, String agentId) {
         String newId = IdGenerator.generate()
         String metadataUri = Document.BASE_URI.toString() + newId
         String mainEntityUri = metadataUri+"#it"
 
         // If the @id is left, the object is considered a link, and the actual data (which we want) is removed when storing this as a record.
-        Map oldValueEmbedded = new HashMap(oldValue)
-        oldValueEmbedded.remove("@id")
-        Map newValueEmbedded = new HashMap(newValue)
-        newValueEmbedded.remove("@id")
+        if (oldValue instanceof Map && newValue instanceof Map) {
+            oldValue = new HashMap(oldValue)
+            oldValue.remove("@id")
+            newValue = new HashMap(newValue)
+            newValue.remove("@id")
+        }
 
         Map observationData = [ "@graph":[
                 [
@@ -196,8 +258,8 @@ class NotificationGenerator extends HouseKeeper {
                         "@id" : mainEntityUri,
                         "@type" : "ChangeObservation",
                         "concerning" : ["@id" : Document.BASE_URI.toString() + instanceId + '#it'],
-                        "representationBefore" : oldValueEmbedded,
-                        "representationAfter" : newValueEmbedded,
+                        "representationBefore" : oldValue,
+                        "representationAfter" : newValue,
                         "category" : ["@id" : categoryUri],
                         "agent" : ["@id" : agentId],
                 ]
