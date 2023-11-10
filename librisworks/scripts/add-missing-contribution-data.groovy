@@ -61,7 +61,7 @@ selectByIds(clusters.flatten()) { bib ->
         asList(c.agent).each { Map agent ->
             def agentStr = toString(agent)
             def loadedAgent = loadIfLink(agent)
-            if (agent.lifeSpan) {
+            if (loadedAgent.lifeSpan) {
                 if (agent.containsKey(ID_KEY)) {
                     linkedAgentToLifeSpan.computeIfAbsent(agentStr, f -> lifeSpan(loadedAgent))
                 } else {
