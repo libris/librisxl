@@ -227,18 +227,22 @@ class NotificationSender extends HouseKeeper {
         else
             sb.append("\n")
 
-        Object comments = Document._get(["@graph", 1, "comment"], observation)
-
-        if (comments instanceof List) {
-            sb.append("\n\tTillhörande kommentarer:")
-            for (String comment : comments)
-                sb.append("\n\t\t"+comment)
-        }
-
+        boolean commentsRendered = false
         for (Map observation : triggeredObservations) {
             String observationUri = Document._get(["@graph", 1, "@id"], observation)
             if (!observationUri)
                 continue
+
+            if (!commentsRendered) {
+                commentsRendered = true
+                Object comments = Document._get(["@graph", 1, "comment"], observation)
+
+                if (comments instanceof List) {
+                    sb.append("\n\tTillhörande kommentarer:")
+                    for (String comment : comments)
+                        sb.append("\n\t\t" + comment + "\n\n")
+                }
+            }
 
             String observationId = whelk.getStorage().getSystemIdByIri(observationUri)
             Document embellishedObservation = whelk.loadEmbellished(observationId)
