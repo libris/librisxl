@@ -8,7 +8,7 @@ import whelk.util.Unicode
 import static se.kb.libris.mergeworks.compare.IntendedAudience.preferredComparisonOrder
 
 class Util {
-    static def titleComponents = ['mainTitle', 'hasPart', 'partNumber', 'partName']
+    static def titleComponents = ['mainTitle', 'titleRemainder', 'subtitle', 'hasPart', 'partNumber', 'partName']
 
     static enum Relator {
         TRANSLATOR('https://id.kb.se/relator/translator'),
@@ -32,6 +32,10 @@ class Util {
             this.iri = iri
         }
     }
+
+    private static Set<String> IGNORED_SUBTITLES = Util.class.getClassLoader()
+            .getResourceAsStream('merge-works/ignored-subtitles.txt')
+            .readLines().grep().collect(Util.&normalize) as Set
 
     private static Set<String> GENERIC_TITLES = Util.class.getClassLoader()
             .getResourceAsStream('merge-works/generic-titles.txt')
@@ -78,20 +82,30 @@ class Util {
         hasTitle.any { it['mainTitle'] && normalize((String) it['mainTitle']) in GENERIC_TITLES }
     }
 
-    static List dropSubtitles(List hasTitle) {
+    static List dropGenericSubTitles(List hasTitle) {
         hasTitle.collect {
             def copy = new TreeMap(it)
-            DocumentUtil.traverse(copy) { value, path ->
-                if (('subtitle' in path || 'titleRemainder' in path) && value instanceof String) {
-                    new DocumentUtil.Remove()
+            if (copy['subtitle'] || copy['titleRemainder']) {
+                DocumentUtil.traverse(copy) { value, path ->
+                    if (('subtitle' in path || 'titleRemainder' in path) && value instanceof String) {
+                        if (genericSubtitle(value)) {
+                            new DocumentUtil.Remove()
+                        } else {
+                            ((List) value.split(':')).with {
+                                if (it.size() > 1 && genericSubtitle(it.last().trim())) {
+                                    new DocumentUtil.Replace(value.replaceFirst(~/\s*:.+$/, ''))
+                                }
+                            }
+                        }
+                    }
                 }
             }
-            return copy
+            copy
         }
     }
 
     static List flatTitles(List hasTitle) {
-        hasTitle.collect {
+        dropGenericSubTitles(hasTitle).collect {
             def title = new TreeMap<>()
             title['flatTitle'] = normalize(DisplayDoc.flatten(it, titleComponents))
             if (it['@type']) {
@@ -110,6 +124,14 @@ class Util {
         flatTitles(hasTitle)
                 .grep(isTitle)
                 .collect { it['flatTitle'] }
+    }
+
+    private static boolean genericSubtitle(String s) {
+        s = Util.normalize(s)
+        if (s.startsWith("en ")) {
+            s = s.substring("en ".length())
+        }
+        return s in IGNORED_SUBTITLES
     }
 
     static String chipString(def thing, Whelk whelk) {
@@ -182,7 +204,7 @@ class Util {
         def partNumber = findTitlePart(bestInstanceTitle, 'partNumber')
         def partName = findTitlePart(bestInstanceTitle, 'partName')
 
-        def workTitleShape = { it.subMap(['@type', 'mainTitle', 'source']) }
+        def workTitleShape = { it.subMap(['@type', 'mainTitle', 'subtitle', 'titleRemainder', 'source']) }
 
         if (bestWorkTitle) {
             return bestWorkTitle.each { appendTitlePartsToMainTitle(it, partNumber) }
@@ -225,7 +247,7 @@ class Util {
     static def mostCommonWorkTitle(Collection<Doc> docs, Closure getTitle = { it.workTitle().findAll(isTitle) }) {
         def workTitles = docs.collect(getTitle)
                 .grep()
-                .collect { dropSubtitles(it) }
+                .collect { dropGenericSubTitles(it) }
 
         if (workTitles) {
             return mostCommon(workTitles)
@@ -240,7 +262,7 @@ class Util {
         }
 
         def instanceTitles = docs.collect { it.instanceTitle().findAll(isTitle) }
-                .collect { dropSubtitles(it) }
+                .collect { dropGenericSubTitles(it) }
 
         if (instanceTitles.grep()) {
             def instanceTitleToDoc = [instanceTitles, docs].transpose().collectEntries()
