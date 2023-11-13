@@ -151,12 +151,15 @@ class Util {
     ]
 
     static void appendTitlePartsToMainTitle(Map title, String partNumber, String partName = null) {
+        if (title['mainTitle'][-1] != '.') {
+            title['mainTitle'] += '.'
+        }
         if (partNumber && partName) {
-            title['mainTitle'] += ". $partNumber, $partName"
+            title['mainTitle'] += " $partNumber, $partName"
         } else if (partNumber) {
-            title['mainTitle'] += ". $partNumber"
+            title['mainTitle'] += " $partNumber"
         } else if (partName) {
-            title['mainTitle'] += ". $partName"
+            title['mainTitle'] += " $partName"
         }
     }
 
