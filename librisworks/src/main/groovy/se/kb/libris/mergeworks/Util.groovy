@@ -116,6 +116,14 @@ class Util {
         }
     }
 
+    private static boolean genericSubtitle(String s) {
+        s = Util.normalize(s)
+        if (s.startsWith("en ")) {
+            s = s.substring("en ".length())
+        }
+        return s in IGNORED_SUBTITLES
+    }
+
     static String normalize(String s) {
         return Unicode.removeDiacritics(Unicode.normalizeForSearch(StringUtils.normalizeSpace(" $s ".toLowerCase().replace(noise))))
     }
@@ -124,14 +132,6 @@ class Util {
         flatTitles(hasTitle)
                 .grep(isTitle)
                 .collect { it['flatTitle'] }
-    }
-
-    private static boolean genericSubtitle(String s) {
-        s = Util.normalize(s)
-        if (s.startsWith("en ")) {
-            s = s.substring("en ".length())
-        }
-        return s in IGNORED_SUBTITLES
     }
 
     static String chipString(def thing, Whelk whelk) {
