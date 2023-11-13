@@ -172,6 +172,46 @@ class NotificationGenerator extends HouseKeeper {
             )
         }
 
+        // Primary Title
+        comparisonResult = primaryTitleChanged(instanceBeforeChange, instanceAfterChange)
+        if (comparisonResult[0]) {
+            generatedObservations.add(
+                    makeChangeObservation(
+                            instanceId, changeNotes, "https://id.kb.se/changecategory/primarytitle",
+                            comparisonResult[1], comparisonResult[2], agentId)
+            )
+        }
+
+        // Primary Publication
+        comparisonResult = primaryPublicationChanged(instanceBeforeChange, instanceAfterChange)
+        if (comparisonResult[0]) {
+            generatedObservations.add(
+                    makeChangeObservation(
+                            instanceId, changeNotes, "https://id.kb.se/changecategory/priamrypublication",
+                            comparisonResult[1], comparisonResult[2], agentId)
+            )
+        }
+
+        // DDC classification
+        comparisonResult = DDCChanged(instanceBeforeChange, instanceAfterChange)
+        if (comparisonResult[0]) {
+            generatedObservations.add(
+                    makeChangeObservation(
+                            instanceId, changeNotes, "https://id.kb.se/changecategory/ddcclassification",
+                            comparisonResult[1], comparisonResult[2], agentId)
+            )
+        }
+
+        // SAB classification
+        comparisonResult = SABChanged(instanceBeforeChange, instanceAfterChange)
+        if (comparisonResult[0]) {
+            generatedObservations.add(
+                    makeChangeObservation(
+                            instanceId, changeNotes, "https://id.kb.se/changecategory/sabclassification",
+                            comparisonResult[1], comparisonResult[2], agentId)
+            )
+        }
+
         return generatedObservations
     }
 
@@ -189,6 +229,23 @@ class NotificationGenerator extends HouseKeeper {
                                             contrBefore["agent"]["lifeSpan"] != contrAfter["agent"]["lifeSpan"]
                             )
                                 return new Tuple(true, contrBefore["agent"], contrAfter["agent"])
+                        }
+                    }
+                }
+            }
+        }
+        return new Tuple(false, null, null)
+    }
+
+    private static Tuple primaryPublicationChanged(Document instanceBeforeChange, Document instanceAfterChange) {
+        Object publicationsAfter = Document._get(["mainEntity", "publication"], instanceAfterChange.data)
+        Object publicationsBefore = Document._get(["mainEntity", "publication"], instanceBeforeChange.data)
+        if (publicationsBefore != null && publicationsAfter != null && publicationsBefore instanceof List && publicationsAfter instanceof List) {
+            for (Object pubBefore : publicationsBefore) {
+                for (Object pubAfter : publicationsAfter) {
+                    if (pubBefore["@type"].equals("PrimaryPublication") && pubAfter["@type"].equals("PrimaryPublication")) {
+                        if (!pubBefore["year"].equals(pubAfter["year"])) {
+                            return new Tuple(true, pubBefore["year"], pubAfter["year"])
                         }
                     }
                 }
@@ -219,18 +276,101 @@ class NotificationGenerator extends HouseKeeper {
 
             for (Object oBefore : titlesBefore) {
                 Map titleBefore = (Map) oBefore
-                if (titleBefore["mainTitle"] && titleBefore["@type"] && titleBefore["@type"] == "Title")
+                if (titleBefore["mainTitle"])
                     oldMainTitle = titleBefore
             }
 
             for (Object oAfter : titlesAfter) {
                 Map titleAfter = (Map) oAfter
-                if (titleAfter["mainTitle"] && titleAfter["@type"] && titleAfter["@type"] == "Title")
+                if (titleAfter["mainTitle"])
                     newMainTitle = titleAfter
             }
 
             if (newMainTitle != null && oldMainTitle != null && !newMainTitle.equals(oldMainTitle))
                 return new Tuple(true, oldMainTitle, newMainTitle)
+        }
+        return new Tuple(false, null, null)
+    }
+
+    private static Tuple primaryTitleChanged(Document instanceBeforeChange, Document instanceAfterChange) {
+        Object titlesBefore = Document._get(["mainEntity", "hasTitle"], instanceBeforeChange.data)
+        Object titlesAfter = Document._get(["mainEntity", "hasTitle"], instanceAfterChange.data)
+
+        Map oldPrimaryTitle = null
+        Map newPrimaryTitle = null
+
+        if (titlesBefore != null && titlesAfter != null && titlesBefore instanceof List && titlesAfter instanceof List) {
+
+            for (Object oBefore : titlesBefore) {
+                Map titleBefore = (Map) oBefore
+                if (titleBefore["@type"] && titleBefore["@type"] == "Title")
+                    oldPrimaryTitle = titleBefore
+            }
+
+            for (Object oAfter : titlesAfter) {
+                Map titleAfter = (Map) oAfter
+                if (titleAfter["@type"] && titleAfter["@type"] == "Title")
+                    newPrimaryTitle = titleAfter
+            }
+
+            if (newPrimaryTitle != null && oldPrimaryTitle != null && !newPrimaryTitle.equals(oldPrimaryTitle))
+                return new Tuple(true, oldPrimaryTitle, newPrimaryTitle)
+        }
+        return new Tuple(false, null, null)
+    }
+
+    private static Tuple DDCChanged(Document instanceBeforeChange, Document instanceAfterChange) {
+        Object classificationsBefore = Document._get(["mainEntity", "instanceOf", "classification"], instanceBeforeChange.data)
+        Object classificationsAfter = Document._get(["mainEntity", "instanceOf", "classification"], instanceAfterChange.data)
+
+        Map oldDDC = null
+        Map newDDC = null
+
+        if (classificationsBefore != null && classificationsAfter != null && classificationsBefore instanceof List && classificationsAfter instanceof List) {
+
+            for (Object oBefore : classificationsBefore) {
+                Map classificationBefore = (Map) oBefore
+                if (classificationBefore["@type"] && classificationBefore["@type"] == "ClassificationDdc")
+                    oldDDC = classificationBefore
+            }
+
+            for (Object oAfter : classificationsAfter) {
+                Map classificationAfter = (Map) oAfter
+                if (classificationAfter["@type"] && classificationAfter["@type"] == "ClassificationDdc")
+                    newDDC = classificationAfter
+            }
+
+            if (newDDC != null && oldDDC != null && !newDDC.equals(oldDDC))
+                return new Tuple(true, oldDDC, newDDC)
+        }
+        return new Tuple(false, null, null)
+    }
+
+    private static Tuple SABChanged(Document instanceBeforeChange, Document instanceAfterChange) {
+        Object classificationsBefore = Document._get(["mainEntity", "instanceOf", "classification"], instanceBeforeChange.data)
+        Object classificationsAfter = Document._get(["mainEntity", "instanceOf", "classification"], instanceAfterChange.data)
+
+        Map oldSAB = null
+        Map newSAB = null
+
+        if (classificationsBefore != null && classificationsAfter != null && classificationsBefore instanceof List && classificationsAfter instanceof List) {
+
+            for (Object oBefore : classificationsBefore) {
+                Map classificationBefore = (Map) oBefore
+                if (classificationBefore["inScheme"] && classificationBefore["inScheme"]["code"] &&
+                        classificationBefore["inScheme"]["code"] == "kssb")
+                    oldSAB = classificationBefore
+            }
+
+            for (Object oAfter : classificationsAfter) {
+                Map classificationAfter = (Map) oAfter
+                if (classificationAfter["inScheme"] && classificationAfter["inScheme"]["code"] &&
+                        classificationAfter["inScheme"]["code"] == "kssb")
+                    newSAB = classificationAfter
+            }
+
+            if (newSAB != null && oldSAB != null && !newSAB.equals(oldSAB))
+                return new Tuple(true, oldSAB, newSAB)
         }
         return new Tuple(false, null, null)
     }
