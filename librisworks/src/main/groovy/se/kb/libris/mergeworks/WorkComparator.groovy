@@ -68,6 +68,8 @@ class WorkComparator {
             }
         }
 
+        Classification.moveAdditionalDewey(result, docs)
+
         return result
     }
 
