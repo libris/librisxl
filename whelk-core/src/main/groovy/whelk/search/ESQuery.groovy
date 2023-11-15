@@ -94,7 +94,7 @@ class ESQuery {
     @CompileStatic(TypeCheckingMode.SKIP)
     Map doQuery(Map<String, String[]> queryParameters, suggest = null) {
         Map esQuery = getESQuery(queryParameters, suggest)
-        Map esResponse = hideKeywordFields(liftFilteredAggregations(whelk.elastic.query(esQuery)))
+        Map esResponse = hideKeywordFields(moveFilteredAggregationsToTopLevel(whelk.elastic.query(esQuery)))
         if ('esQuery' in queryParameters.get('_debug')) {
             esResponse._debug = [esQuery: esQuery]
         }
@@ -104,7 +104,7 @@ class ESQuery {
     @CompileStatic(TypeCheckingMode.SKIP)
     Map doQueryIds(Map<String, String[]> queryParameters) {
         Map esQuery = getESQuery(queryParameters)
-        Map esResponse = hideKeywordFields(liftFilteredAggregations(whelk.elastic.queryIds(esQuery)))
+        Map esResponse = hideKeywordFields(moveFilteredAggregationsToTopLevel(whelk.elastic.queryIds(esQuery)))
         if ('esQuery' in queryParameters.get('_debug')) {
             esResponse._debug = [esQuery: esQuery]
         }
@@ -961,7 +961,7 @@ class ESQuery {
         return result
     }
 
-    static Map liftFilteredAggregations(Map esResponse) {
+    static Map moveFilteredAggregationsToTopLevel(Map esResponse) {
         if (!esResponse['aggregations']) {
             return esResponse
         }

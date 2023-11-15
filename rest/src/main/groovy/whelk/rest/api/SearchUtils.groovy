@@ -187,7 +187,7 @@ class SearchUtils {
             stats = buildStats(lookup, aggregations,
                                makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)),
                                (total > 0 && !predicates) ? reverseObject : null,
-                                multiSelectable.collectEntries{[(it) : selectedFacets[it] ?: []] } as Map<String, List>)
+                                multiSelectable.collectEntries{ [(it) : selectedFacets[it] ?: []] } as Map<String, List>)
         }
         if (!stats) {
             log.debug("No stats found for query: ${queryParameters}")
