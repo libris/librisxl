@@ -53,23 +53,26 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
     List<String> linkableWorkIris = uniqueWorksAndTheirInstances.findResults { it.getV1().workIri() }
 
     uniqueWorksAndTheirInstances.each { Doc workDoc, List<Doc> instanceDocs ->
-        if (!workDoc.instanceData) {
-            if (workDoc.existsInStorage) {
-                if (instanceDocs) {
-                    replaceWorkData(workDoc, c.merge([workDoc] + instanceDocs))
-                    // TODO: Update adminMetadata? To say that additional instances may have contributed to the linked work.
-                    writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.UPDATED)
-                }
-            } else {
-                addAdminMetadata(workDoc, instanceDocs.collect { ['@id': it.recordIri()] })
-                writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.NEW)
-            }
+        // Link more instances to existing linked work
+        if (workDoc.existsInStorage && !workDoc.instanceData && instanceDocs) {
+            replaceWorkData(workDoc, c.merge([workDoc] + instanceDocs))
+            // TODO: Update adminMetadata? To say that additional instances may have contributed to the linked work.
             addCloseMatch(workDoc, linkableWorkIris)
             saveAndLink(workDoc, instanceDocs, workDoc.existsInStorage)
-        } else {
-            if (addCloseMatch(workDoc, linkableWorkIris)) {
-                saveAndLink(workDoc)
-            }
+            writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.UPDATED)
+            return
+        }
+        // New merged work
+        if (!workDoc.existsInStorage && !workDoc.instanceData) {
+            addAdminMetadata(workDoc, instanceDocs.collect { ['@id': it.recordIri()] })
+            addCloseMatch(workDoc, linkableWorkIris)
+            saveAndLink(workDoc, instanceDocs, workDoc.existsInStorage)
+            writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.NEW)
+            return
+        }
+        // Local work, save if new closeMatch links created
+        if (workDoc.instanceData && addCloseMatch(workDoc, linkableWorkIris)) {
+            saveAndLink(workDoc)
         }
     }
 
@@ -96,9 +99,11 @@ void saveAndLink(Doc workDoc, Collection<Doc> instanceDocs = [], boolean existsI
         }
     }
 
-    selectByIds(instanceDocs.collect { it.shortId() }) {
-        it.graph[1]['instanceOf'] = ['@id': workDoc.thingIri()]
-        it.scheduleSave(changedBy: changedBy, generationProcess: generationProcess)
+    if (!instanceDocs.isEmpty()) {
+        selectByIds(instanceDocs.collect { it.shortId() }) {
+            it.graph[1]['instanceOf'] = ['@id': workDoc.thingIri()]
+            it.scheduleSave(changedBy: changedBy, generationProcess: generationProcess)
+        }
     }
 }
 
