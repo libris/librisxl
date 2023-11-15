@@ -225,7 +225,7 @@ class Doc {
     boolean isMaybeAggregate() {
         hasPart()
                 || classification().any { it.inScheme?.code =~ /[Kk]ssb/ && it.code?.contains('(s)') }
-                || !contribution().any { it['@type'] == 'PrimaryContribution' }
+                || !contribution().any { it['@type'] == 'PrimaryContribution' && it['agent'] }
                 || hasRelationshipWithContribution()
     }
 
