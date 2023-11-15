@@ -212,6 +212,26 @@ class NotificationGenerator extends HouseKeeper {
             )
         }
 
+        // Serial relation
+        comparisonResult = SerialRelationChanged(instanceBeforeChange, instanceAfterChange)
+        if (comparisonResult[0]) {
+            generatedObservations.add(
+                    makeChangeObservation(
+                            instanceId, changeNotes, "https://id.kb.se/changecategory/serialrelation",
+                            comparisonResult[1], comparisonResult[2], agentId)
+            )
+        }
+
+        // Serial termination
+        comparisonResult = SerialTerminationChanged(instanceBeforeChange, instanceAfterChange)
+        if (comparisonResult[0]) {
+            generatedObservations.add(
+                    makeChangeObservation(
+                            instanceId, changeNotes, "https://id.kb.se/changecategory/serialtermination",
+                            comparisonResult[1], comparisonResult[2], agentId)
+            )
+        }
+
         return generatedObservations
     }
 
@@ -251,6 +271,53 @@ class NotificationGenerator extends HouseKeeper {
                 }
             }
         }
+        return new Tuple(false, null, null)
+    }
+
+    private static Tuple SerialRelationChanged(Document instanceBeforeChange, Document instanceAfterChange) {
+
+        if (!Document._get(["issuanceType"], instanceBeforeChange.data).equals("Serial"))
+            return new Tuple(false, null, null)
+        if (!Document._get(["issuanceType"], instanceAfterChange.data).equals("Serial"))
+            return new Tuple(false, null, null)
+
+        Object precededBefore = Document._get(["precededBy"], instanceBeforeChange.data)
+        Object precededAfter = Document._get(["precededBy"], instanceAfterChange.data)
+        if (precededBefore != null && precededAfter != null && precededBefore instanceof List && precededAfter instanceof List) {
+            if (precededAfter as Set != precededBefore as Set)
+                return new Tuple(true, precededBefore, precededAfter)
+        }
+
+        Object succeededBefore = Document._get(["succeededBy"], instanceBeforeChange.data)
+        Object succeededAfter = Document._get(["succeededBy"], instanceAfterChange.data)
+        if (succeededBefore != null && succeededAfter != null && succeededBefore instanceof List && succeededAfter instanceof List) {
+            if (succeededAfter as Set != succeededBefore as Set)
+                return new Tuple(true, succeededBefore, succeededAfter)
+        }
+
+        return new Tuple(false, null, null)
+    }
+
+    private static Tuple SerialTerminationChanged(Document instanceBeforeChange, Document instanceAfterChange) {
+
+        if (!Document._get(["issuanceType"], instanceBeforeChange.data).equals("Serial"))
+            return new Tuple(false, null, null)
+        if (!Document._get(["issuanceType"], instanceAfterChange.data).equals("Serial"))
+            return new Tuple(false, null, null)
+
+        Object publicationsBefore = Document._get(["publication"], instanceBeforeChange.data)
+        Object publicationsAfter = Document._get(["publication"], instanceAfterChange.data)
+
+        if (publicationsBefore instanceof List && publicationsAfter instanceof List &&
+                publicationsBefore.size() == publicationsAfter.size()) {
+            List beforeList = (List) publicationsBefore
+            List afterList = (List) publicationsAfter
+            for (int i = 0; i < beforeList.size(); ++i)
+                if (!beforeList[i]["endYear"].equals(afterList[i]["endYear"])) {
+                    return new Tuple(true, beforeList[i]["endYear"], afterList[i]["endYear"])
+                }
+        }
+
         return new Tuple(false, null, null)
     }
 
