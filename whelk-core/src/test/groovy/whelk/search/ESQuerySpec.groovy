@@ -68,8 +68,10 @@ class ESQuerySpec extends Specification {
     }
 
     def "should get filters"(Map<String, String[]> params, List result) {
+        given:
+        def (filters, postFilters) = es.getFilters(params)
         expect:
-        es.getFilters(params) == result
+        filters == result
         where:
         params                  | result
         [:]                     | null

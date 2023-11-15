@@ -16,9 +16,11 @@ import whelk.search.ElasticFind
 import whelk.search.RangeParameterPrefix
 import whelk.util.DocumentUtil
 
+import static whelk.search.ESQuery.Connective.AND
+import static whelk.search.ESQuery.Connective.OR
+
 @Log
 class SearchUtils {
-
     final static int DEFAULT_LIMIT = 200
     final static int MAX_LIMIT = 4000
     final static int DEFAULT_OFFSET = 0
@@ -165,10 +167,16 @@ class SearchUtils {
                 return item
             }
         }
-        
+
+        def multiSelectable = ESQuery.multiSelectFacets(queryParameters)
         def aggregations = ((Map) esResult['aggregations'])
-        def selectedFacets = ((Map) mappingsAndPageParams.v2)
+        def selectedFacets = ((Map<String,?>) mappingsAndPageParams.v2)
+
+        // Filter out already selected facets (if not in multi-select group)
         selectedFacets.each { k, v ->
+            if (k in multiSelectable) {
+                return
+            }
             k = stripPrefix((String) k, ESQuery.AND_PREFIX)
             k = stripPrefix((String) k, ESQuery.OR_PREFIX)
             ((List) aggregations[k]?['buckets'])?.removeIf { it['key'] in v }
@@ -178,7 +186,8 @@ class SearchUtils {
         if (addStats == null || (addStats == 'true' || addStats == 'on')) {
             stats = buildStats(lookup, aggregations,
                                makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)),
-                               (total > 0 && !predicates) ? reverseObject : null)
+                               (total > 0 && !predicates) ? reverseObject : null,
+                                multiSelectable.collectEntries{[(it) : selectedFacets[it] ?: []] } as Map<String, List>)
         }
         if (!stats) {
             log.debug("No stats found for query: ${queryParameters}")
@@ -341,11 +350,11 @@ class SearchUtils {
      * Build aggregation statistics for ES result.
      *
      */
-    private Map buildStats(Lookup lookup, Map aggregations, String baseUrl, String reverseObject) {
-        return addSlices(lookup, [:], aggregations, baseUrl, reverseObject)
+    private Map buildStats(Lookup lookup, Map aggregations, String baseUrl, String reverseObject, Map<String, List> multiSelected) {
+        return addSlices(lookup, [:], aggregations, baseUrl, reverseObject, multiSelected)
     }
 
-    private Map addSlices(Lookup lookup, Map stats, Map aggregations, String baseUrl, String reverseObject) {
+    private Map addSlices(Lookup lookup, Map stats, Map aggregations, String baseUrl, String reverseObject, Map<String, List> multiSelected) {
         Map sliceMap = aggregations.inject([:]) { acc, key, aggregation ->
             String baseUrlForKey = removeWildcardForKey(baseUrl, key)
             List observations = []
@@ -354,13 +363,30 @@ class SearchUtils {
 
             aggregation['buckets'].each { bucket ->
                 String itemId = bucket['key']
-                String searchPageUrl = "${baseUrlForKey}&${ESQuery.AND_PREFIX}${makeParam(key, itemId)}"
 
-                Map observation = ['totalItems': bucket.getAt('doc_count'),
-                                   'view': [(JsonLd.ID_KEY): searchPageUrl],
-                                   'object': lookup.chip(itemId)]
-                
-                observations << observation
+                if (key in multiSelected.keySet()) {
+                    String param = makeParam(key, itemId)
+                    boolean isSelected = escapeQueryParam(itemId) in multiSelected[key]
+                    String searchPageUrl = isSelected
+                        ? baseUrlForKey.replace("&${param}", '') // FIXME: generate up-link in a cleaner way
+                        : "${baseUrlForKey}&${param}"
+
+                    Map observation = ['totalItems': bucket.getAt('doc_count'),
+                                       'view': [(JsonLd.ID_KEY): searchPageUrl],
+                                       'selected': isSelected,
+                                       'object': lookup.chip(itemId)]
+
+                    observations << observation
+                }
+                else {
+                    String searchPageUrl = "${baseUrlForKey}&${ESQuery.AND_PREFIX}${makeParam(key, itemId)}"
+
+                    Map observation = ['totalItems': bucket.getAt('doc_count'),
+                                       'view': [(JsonLd.ID_KEY): searchPageUrl],
+                                       'object': lookup.chip(itemId)]
+
+                    observations << observation
+                }
             }
 
             if (observations) {
@@ -803,7 +829,8 @@ class SearchUtils {
             }
             String key = path.join('.')
             int limit = slice['itemLimit']
-            statsfind[key] = ['sort': 'value', 'sortOrder': 'desc', 'size': limit]
+            def connective = slice['connective']?.equals(OR.toString()) ? OR : AND
+            statsfind[key] = ['sort': 'value', 'sortOrder': 'desc', 'size': limit, 'connective': connective]
         }
         return statsfind
     }
