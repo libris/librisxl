@@ -33,6 +33,9 @@ class Util {
         }
     }
 
+    static def noise =
+            [",", '"', "'", "ʹ", "ʼ", '[', ']', ',', '.', '.', ':', ';', '-', '(', ')', ' the ', '-', '–', '+', '!', '?',].collectEntries { [it, ' '] }
+
     private static Set<String> IGNORED_SUBTITLES = Util.class.getClassLoader()
             .getResourceAsStream('merge-works/ignored-subtitles.txt')
             .readLines().grep().collect(Util.&normalize) as Set
@@ -40,9 +43,6 @@ class Util {
     private static Set<String> GENERIC_TITLES = Util.class.getClassLoader()
             .getResourceAsStream('merge-works/generic-titles.txt')
             .readLines().grep().collect(Util.&normalize) as Set
-
-    static def noise =
-            [",", '"', "'", "ʹ", "ʼ", '[', ']', ',', '.', '.', ':', ';', '-', '(', ')', ' the ', '-', '–', '+', '!', '?',].collectEntries { [it, ' '] }
 
 
     static List asList(Object o) {
