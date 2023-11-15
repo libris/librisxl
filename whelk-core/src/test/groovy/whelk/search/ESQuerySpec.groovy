@@ -1,5 +1,6 @@
 package whelk.search
 
+import groovy.json.JsonOutput
 import spock.lang.Specification
 import whelk.JsonLd
 
@@ -181,22 +182,14 @@ class ESQuerySpec extends Specification {
         Map emptyAggs = [:]
         Map emptyAggsResult = [(JsonLd.TYPE_KEY): ['terms': ['field': JsonLd.TYPE_KEY]]]
         Map simpleAggs = ['_statsrepr': ['{"foo": {"sort": "key", "sortOrder": "desc", "size": 5}}']]
-        Map simpleAggsResult = ['foo': ['terms': ['field': 'foo', 'size': 5, 'order': ['_key': 'desc']]]]
+        Map simpleAggsResult = ['foo':['aggs':['a':['terms':['field':'foo', 'size':5, 'order':['_key':'desc']]]], 'filter':['bool':['must':[]]]]]
         Map subAggs = ['_statsrepr': ['{"bar": {"subItems": {"foo": {"sort": "key"}}}}']]
         // `bar` has a keyword field in the mappings
-        Map subAggsResult = ['bar.keyword': ['terms': ['field': 'bar.keyword',
-                                               'size': 10,
-                                               'order': ['_count': 'desc']],
-                                     'aggs': [
-                                        'foo': ['terms': ['field': 'foo',
-                                                          'size': 10,
-                                                          'order': ['_key': 'desc']]]
-                                     ]]]
-
+        Map subAggsResult = ['bar.keyword':[aggs:[foo:[aggs:[a:[terms:[field:'foo', size:10, order:[_key:'desc']]]], filter:[bool:[must:[]]]]], filter:[bool:[must:[]]]]]
         then:
-        es.getAggQuery(emptyAggs) == emptyAggsResult
-        es.getAggQuery(simpleAggs) == simpleAggsResult
-        es.getAggQuery(subAggs) == subAggsResult
+        es.getAggQuery(emptyAggs, [:]) == emptyAggsResult
+        JsonOutput.toJson(es.getAggQuery(simpleAggs, [:])) == JsonOutput.toJson(simpleAggsResult)
+        JsonOutput.toJson(es.getAggQuery(subAggs, [:])) == JsonOutput.toJson(subAggsResult)
     }
 
     def "should get keyword fields"() {
