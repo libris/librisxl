@@ -7469,15 +7469,8 @@
     },
 
     "240": {
+      "IMPORTANT": "Actual results are subsequently modified by the NormalizeWorkTitles postProcessing step!",
       "match": [
-        {
-          "when": {
-            "NOTE": "Ignore title with source",
-            "IMPORTANT": "As this is defined, *any* title with source blocks *all* titles from reverting to 240. This is OK as things stand, since titles using source are only added if there is no formal title on the work.",
-            "onRevert": {"hasTitle": [{"source": []}]}
-          },
-          "ignored": true
-        },
         {
           "when": {
             "NOTE": "Drop undefined language label",
@@ -7499,6 +7492,26 @@
             "onRevert": {"language": {"label": []}}
           },
           "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label", "infer": false}
+        },
+        {
+          "when": {
+            "NOTE": "A translation with a title: keep title and use language label",
+            "onRevert": {"translationOf": {"hasTitle": []}}
+          }
+        },
+        {
+          "when": {
+            "NOTE": "Continue as usual if title is already processed by NormalizeWorkTitlesStep",
+            "onRevert": {"hasTitle": [{"_revertedBy": "NormalizeWorkTitlesStep"}]}
+          }
+        },
+        {
+          "when": {
+            "NOTE": "Ignore title with source",
+            "IMPORTANT": "As this is defined, *any* title with source blocks *all* titles from reverting to 240; unless a translationOf with a title is present. This is OK as things stand, since titles using source are only added if there is no formal title on the work.",
+            "onRevert": {"hasTitle": [{"source": []}]}
+          },
+          "ignored": true
         },
         {
           "when": {
@@ -7838,21 +7851,170 @@
           }
         },
         {
-          "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "hasTitle": [{
-                "@type": "Title",
-                "mainTitle": "En bok",
-                "subtitle": "med undertitel",
-                "source": [
-                  {"@id": "https://libris.kb.se/x#it"}
-                ]
-              }]
-            }
-          }},
+          "name": "Work title with source is supressed",
           "normalized": [
-          ]
+            {
+              "008": "|     |        |  |||||||||||000 ||swe| "
+            },
+            {
+              "041": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "swe"}
+                ]
+              }
+            }
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "hasTitle": [
+                  {
+                    "@type": "Title",
+                    "mainTitle": "The lord of the rings.",
+                    "source": [
+                      {"@id": "https://libris.kb.se/x#it"}
+                    ]
+                  }
+                ],
+                "language": [
+                  {
+                    "@id" : "https://id.kb.se/language/swe",
+                    "code" : "swe"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "name": "Work title with source is kept if translated title is present",
+          "normalized": [
+            {
+              "008": "|     |        |  |||||||||||000 ||swe| "
+            },
+            {
+              "041": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "swe"},
+                  {"h": "eng"}
+                ]
+              }
+            },
+            {
+              "240": {
+                "ind1": "1",
+                "ind2": "0",
+                "subfields": [
+                  {"a": "Härskarringen"}
+                ]
+              }
+            }
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "hasTitle": [
+                  {
+                    "@type": "Title",
+                    "mainTitle": "Härskarringen",
+                    "source": [
+                      {"@id": "https://libris.kb.se/x#it"}
+                    ]
+                  }
+                ],
+                "language": [
+                  {
+                    "@id" : "https://id.kb.se/language/swe",
+                    "code" : "swe"
+                  }
+                ],
+                "translationOf": [
+                  {
+                    "@type" : "Work",
+                    "hasTitle": [
+                      {
+                        "@type": "Title",
+                        "mainTitle": "The lord of the rings"
+                      }
+                    ],
+                    "language" : [ {
+                      "@id" : "https://id.kb.se/language/eng",
+                      "code" : "eng"
+                      } ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "name": "Work title with source is kept if translated title is used after NormalizeWorkTitlesStep",
+          "normalized": [
+            {
+              "008": "|     |        |  |||||||||||000 ||swe| "
+            },
+            {
+              "041": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "swe"},
+                  {"h": "eng"}
+                ]
+              }
+            },
+            {
+              "240": {
+                "ind1": "1",
+                "ind2": "0",
+                "subfields": [
+                  {"a": "The lord of the rings"}
+                ]
+              }
+            }
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "hasTitle": [
+                  {
+                    "@type": "Title",
+                    "mainTitle": "Härskarringen",
+                    "_revertedBy": "NormalizeWorkTitlesStep",
+                    "source": [
+                      {"@id": "https://libris.kb.se/x#it"}
+                    ]
+                  },
+                  {
+                    "@type": "Title",
+                    "mainTitle": "The lord of the rings"
+                  }
+                ],
+                "language": [
+                  {
+                    "@id" : "https://id.kb.se/language/swe",
+                    "code" : "swe"
+                  }
+                ],
+                "translationOf": [
+                  {
+                    "@type" : "Work",
+                    "language" : [ {
+                      "@id" : "https://id.kb.se/language/eng",
+                      "code" : "eng"
+                      } ]
+                  }
+                ]
+              }
+            }
+          }
         }
       ]
     },
