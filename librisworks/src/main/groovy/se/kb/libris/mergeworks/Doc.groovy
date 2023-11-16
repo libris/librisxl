@@ -178,6 +178,10 @@ class Doc {
         asList(instanceData?.reproductionOf)
     }
 
+    Map primaryContributor() {
+        contribution().findResult { it['@type'] == 'PrimaryContribution' ? asList(it.agent).find() : null }
+    }
+
     String editionStatement() {
         instanceData?.editionStatement
     }
