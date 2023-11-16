@@ -119,6 +119,7 @@ class LinkFinder {
 
         String id = data.get("@id")
         if (id != null && data.keySet().size() == 1) {
+            // Path to same form as in lddb__dependencies.relation
             String normalizedPath = (path.take(2) == Document.recordPath
                     ? [JsonLd.RECORD_KEY] + path.drop(2)
                     : (path.take(2) == Document.thingPath ? path.drop(2) : path)
@@ -167,7 +168,7 @@ class LinkFinder {
         if (postgres.iriIsLinkable(mainIri, path))
             return mainIri
 
-        throw new LinkValidationException("Not allowed to link to the deleted resource: " + mainIri)
+        throw new LinkValidationException("Forbidden link to deleted resource $mainIri found at $path")
     }
 
     /**
