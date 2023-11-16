@@ -39,10 +39,9 @@ NO_ANONYMOUS_TRANSLATIONS=$CLUSTERS_DIR/5-no-anonymous-translations
 mkdir -p $CLUSTERS_DIR $NORMALIZATIONS_DIR $MERGED_WORKS_DIR $ALL $MERGED $TITLES $SWEDISH_FICTION $NO_ANONYMOUS_TRANSLATIONS
 
 LANGUAGE_IN_TITLE=$NORMALIZATIONS_DIR/1-titles-with-language
-ILL_CONTENT=$NORMALIZATIONS_DIR/2-illustrative-content
-DEDUPLICATE_CONTRIBUTIONS=$NORMALIZATIONS_DIR/3-deduplicate-contributions
-ADD_MISSING_CONTRIBUTION_DATA=$NORMALIZATIONS_DIR/4-add-missing-contribution-data
-ROLES_TO_INSTANCE=$NORMALIZATIONS_DIR/5-roles-to-instance
+DEDUPLICATE_CONTRIBUTIONS=$NORMALIZATIONS_DIR/2-deduplicate-contributions
+ADD_MISSING_CONTRIBUTION_DATA=$NORMALIZATIONS_DIR/3-add-missing-contribution-data
+ROLES_TO_INSTANCE=$NORMALIZATIONS_DIR/4-roles-to-instance
 
 # Clustering TODO: run only on recently updated records after first run
 echo "Finding new clusters..."
@@ -94,12 +93,6 @@ echo "Removing language from work titles..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION/$CLUSTER_TSV -jar $JAR_FILE \
   $ARGS --report $LANGUAGE_IN_TITLE $SCRIPTS_DIR/language-in-work-title.groovy 2>/dev/null
 echo "$(count_lines $LANGUAGE_IN_TITLE/MODIFIED.txt) records affected, report in $LANGUAGE_IN_TITLE"
-
-echo
-echo "Moving illustrativeContent to instance..."
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION/$CLUSTER_TSV -jar $JAR_FILE \
-  $ARGS --report $ILL_CONTENT $SCRIPTS_DIR/lxl-4221-move-illustrativecontent-to-instance.groovy 2>/dev/null
-echo "$(count_lines $ILL_CONTENT/MODIFIED.txt) records affected, report in $ILL_CONTENT"
 
 echo
 echo "Merging contribution objects with same agent..."
