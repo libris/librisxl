@@ -4,6 +4,7 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.datatool.DocumentItem
+import whelk.util.DocumentUtil
 
 import static Util.asList
 import static Util.Relator
@@ -40,6 +41,7 @@ class Doc {
     Map workData
 
     List<String> flatInstanceTitle
+    List<String> flatWorkTitle
 
     DisplayDoc display
 
@@ -66,7 +68,7 @@ class Doc {
     void setData() {
         if (mainEntity()['instanceOf']) {
             instanceData = mainEntity()
-            workData = instanceData['instanceOf']
+            workData = asList(instanceData['instanceOf']).find()
         } else {
             workData = mainEntity()
         }
@@ -110,6 +112,14 @@ class Doc {
 
     List<Map> workTitle() {
         asList(workData['hasTitle'])
+    }
+
+    List<String> flatWorkTitle() {
+        if (!flatWorkTitle) {
+            flatWorkTitle = Util.getFlatTitle(workTitle())
+        }
+
+        return flatWorkTitle
     }
 
     List<Map> instanceTitle() {
@@ -181,7 +191,7 @@ class Doc {
     }
 
     int numPages() {
-        String extent = Util.getPathSafe(extent(), [0, 'label', 0]) ?: Util.getPathSafe(extent(), [0, 'label'], '')
+        String extent = DocumentUtil.getAtPath(extent(), [0, 'label', 0]) ?: DocumentUtil.getAtPath(extent(), [0, 'label'], '')
         return numPages(extent)
     }
 
@@ -215,7 +225,7 @@ class Doc {
     boolean isMaybeAggregate() {
         hasPart()
                 || classification().any { it.inScheme?.code =~ /[Kk]ssb/ && it.code?.contains('(s)') }
-                || !contribution().any { it['@type'] == 'PrimaryContribution' }
+                || !contribution().any { it['@type'] == 'PrimaryContribution' && it['agent'] }
                 || hasRelationshipWithContribution()
     }
 
@@ -317,5 +327,10 @@ class Doc {
     void removeComparisonProps() {
         workData.remove('_editionStatement')
         workData.remove('_numPages')
+    }
+
+    void sortContribution() {
+        // PrimaryContribution first
+        contribution()?.sort {it['@type'] != 'PrimaryContribution' }
     }
 }

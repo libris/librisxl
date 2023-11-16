@@ -1,5 +1,6 @@
 import groovy.transform.Memoized
 import org.apache.commons.lang3.StringUtils
+
 import whelk.Document
 
 import java.util.concurrent.ConcurrentHashMap
@@ -20,6 +21,9 @@ linkedFoundInCluster.println(['id', 'matched agent', 'agent occurs in (examples)
 roleAddedFromRespStatement = getReportWriter("role-added-from-respStatement.tsv")
 roleAddedFromRespStatement.println(['id', 'agent name', 'added roles', 'resp statement'].join('\t'))
 
+lifeSpanFoundInCluster = getReportWriter("life-span-found-in-cluster.tsv")
+lifeSpanFoundInCluster.println(['id', 'agent name', 'lifeSpan', 'agent occurs with lifeSpan in (examples)'].join('\t'))
+
 respStatementLinkedAgentFoundInCluster = getReportWriter("respStatement-linked-agent-found-in-cluster.tsv")
 respStatementLinkedAgentFoundInCluster.println(['id', 'agent name', 'matched agent', 'resp statement roles', 'agent occurs in (examples)', 'resp statement'].join('\t'))
 
@@ -37,15 +41,13 @@ titleMovedToTranslationOf = getReportWriter("title-moved-to-translationOf.tsv")
 originalWorkFoundInCluster = getReportWriter("original-work-found-in-cluster.tsv")
 originalWorkFoundInCluster.println(['id', 'added translationOf', 'translationOf occurs in (examples)'].join('\t'))
 
-illVsTrl = getReportWriter("ill-vs-trl.tsv")
-illVsTrl.println(['id', 'removed/replaced role', 'agent name', 'resp statement'].join('\t'))
-
 def clusters = new File(System.getProperty('clusters')).collect { it.split('\t').collect { it.trim() } }
 
 idToCluster = initIdToCluster(clusters)
 nameToAgents = new ConcurrentHashMap<String, ConcurrentHashMap>()
 agentToRolesToIds = new ConcurrentHashMap<String, ConcurrentHashMap<Map, ConcurrentHashMap>>()
-agentToLifeSpan = new ConcurrentHashMap<String, String>()
+linkedAgentToLifeSpan = new ConcurrentHashMap<String, String>()
+localAgentToLifeSpansToIds = new ConcurrentHashMap<String, ConcurrentHashMap<String, ConcurrentHashMap>>()
 idToTranslationOf = new ConcurrentHashMap<String, Object>()
 
 // Populate maps
@@ -59,8 +61,13 @@ selectByIds(clusters.flatten()) { bib ->
         asList(c.agent).each { Map agent ->
             def agentStr = toString(agent)
             def loadedAgent = loadIfLink(agent)
-            if (agent.containsKey(ID_KEY)) {
-                agentToLifeSpan.computeIfAbsent(agentStr, f -> lifeSpan(loadedAgent))
+            if (loadedAgent.lifeSpan) {
+                if (agent.containsKey(ID_KEY)) {
+                    linkedAgentToLifeSpan.computeIfAbsent(agentStr, f -> lifeSpan(loadedAgent))
+                } else {
+                    def lifeSpansToIds = localAgentToLifeSpansToIds.computeIfAbsent(agentStr, f -> new ConcurrentHashMap())
+                    lifeSpansToIds.computeIfAbsent(agent.lifeSpan, f -> new ConcurrentHashMap().newKeySet()).add(id)
+                }
             }
             ([loadedAgent] + asList(loadedAgent.hasVariant)).each { a ->
                 String agentName = name(a)
@@ -125,6 +132,7 @@ selectByIds(clusters.flatten()) { bib ->
         modified |= tryLinkAgent(c, id)
         // if there are more roles stated in responsibilityStatement other than the existing ones in this contribution, add those
         modified |= tryAddRolesFromRespStatement(c, contributionsInRespStatement, respStatement, id)
+        modified |= tryAddLifeSpanToLocalAgent(c, id)
     }
 
     // drop "implicit authors", e.g. Astrid Lindgren in "Astrid Lindgren ; illustrerad av Ilon Wikland" (likely to already exist)
@@ -202,7 +210,7 @@ boolean tryLinkAgent(Map contribution, String id) {
             if (!names) return
             // get linked agents with matching name
             def matchingLinkedAgents = nameToAgents.subMap(names).values().flatten().toSet().findAll { a ->
-                looksLikeIri(a) && !yearMismatch(lifeSpan(agent), agentToLifeSpan[a])
+                looksLikeIri(a) && !yearMismatch(lifeSpan(agent), linkedAgentToLifeSpan[a])
             }
             for (agentIri in matchingLinkedAgents) {
                 // roles that the linked agent appears as and in which records respectively
@@ -260,15 +268,6 @@ boolean tryAddRolesFromRespStatement(Map contribution, Map contributionsInRespSt
     }
 
     def modified = false
-
-    def incorrectIllOrTrl = findIncorrectIllVsTrl(currentRoles, rolesOfInterest)
-    if (incorrectIllOrTrl) {
-        currentRoles.remove(toIdMap(incorrectIllOrTrl))
-        contribution['role'] = currentRoles
-        roleToIds[toIdMap(incorrectIllOrTrl)].remove(id)
-        illVsTrl.println([id, roleShort(incorrectIllOrTrl), name, respStatement].join('\t'))
-        modified = true
-    }
     def newRoles = rolesOfInterest - currentRoles
     if (newRoles) {
         // add new roles (replace existing unspecifiedContributor)
@@ -285,6 +284,28 @@ boolean tryAddRolesFromRespStatement(Map contribution, Map contributionsInRespSt
     }
 
     return modified
+}
+
+boolean tryAddLifeSpanToLocalAgent(Map contribution, String id) {
+    def agent = asList(contribution.agent).find()
+    if (agent instanceof Map && !agent[ID_KEY] && !agent.lifeSpan) {
+        def names = agentToNames[toString(agent)]
+        if (!names) return
+        def matchingLocalAgentsWithLifeSpan = nameToAgents.subMap(names).values().flatten().toSet().findAll { a ->
+            !looksLikeIri(a) && localAgentToLifeSpansToIds[a]
+        }
+        for (localAgent in matchingLocalAgentsWithLifeSpan) {
+            def lifeSpanToIds = localAgentToLifeSpansToIds[localAgent]
+            def lifeSpanInCluster = lifeSpanToIds.find { _, ids -> idToCluster[id].intersect(ids) }?.key
+            if (lifeSpanInCluster) {
+                agent['lifeSpan'] = lifeSpanInCluster
+                def examples = idToCluster[id].intersect(lifeSpanToIds[lifeSpanInCluster]).take(3)
+                lifeSpanFoundInCluster.println([id, name(agent), lifeSpanInCluster, examples].join('\t'))
+                return true
+            }
+        }
+    }
+    return false
 }
 
 boolean tryAddLinkedAgentContributionsFromRespStatement(List<Map> contribution, Map contributionsInRespStatement, String respStatement, String id) {
@@ -431,13 +452,6 @@ boolean tryAddRole(Map contribution, String id) {
                 || r == toIdMap(Relator.PRIMARY_RIGHTS_HOLDER.iri)
                 || (r in adapterEditor && currentRoles.intersect(adapterEditor)))
     }.collect { it.key }
-
-    def illAndTrl = [toIdMap(Relator.TRANSLATOR.iri), toIdMap(Relator.ILLUSTRATOR.iri)]
-
-    if ((currentRoles + rolesInCluster).containsAll(illAndTrl)) {
-        rolesInCluster -= illAndTrl
-    }
-
     def newRoles = rolesInCluster - currentRoles
     if (newRoles) {
         contribution['role'] = noRole(currentRoles) ? newRoles : currentRoles + newRoles
@@ -645,17 +659,6 @@ static List<Character> initials(List nameParts) {
 
 static List<String> nameParts(String s) {
     s.split(' ').findAll()
-}
-
-static String findIncorrectIllVsTrl(List currentRoles, List rolesInRespStatement) {
-    if ((currentRoles + rolesInRespStatement)[ID_KEY].containsAll([Relator.ILLUSTRATOR.iri, Relator.TRANSLATOR.iri])) {
-        if (!rolesInRespStatement[ID_KEY].contains(Relator.ILLUSTRATOR.iri)) {
-            return Relator.ILLUSTRATOR.iri
-        }
-        if (!rolesInRespStatement[ID_KEY].contains(Relator.TRANSLATOR.iri)) {
-            return Relator.TRANSLATOR.iri
-        }
-    }
 }
 
 def toIdMap(String iri) {

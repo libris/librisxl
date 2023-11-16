@@ -2,6 +2,7 @@ package se.kb.libris.mergeworks
 
 import whelk.Document
 import whelk.JsonLd
+import whelk.util.DocumentUtil
 
 class DisplayDoc {
     Doc doc
@@ -75,7 +76,7 @@ class DisplayDoc {
 
     private List contributorStrings() {
         List path = doc.instanceData ? ['instanceOf', 'contribution'] : ['contribution']
-        List contribution = Util.getPathSafe(getFramed(), path, [])
+        List contribution = DocumentUtil.getAtPath(getFramed(), path, [])
 
         return contribution.collect { Map c ->
             contributionStr(c)
@@ -101,7 +102,7 @@ class DisplayDoc {
 
     List classificationStrings() {
         List path = doc.instanceData ? ['instanceOf', 'classification'] : ['classification']
-        List classification = Util.getPathSafe(getFramed(), path, [])
+        List classification = DocumentUtil.getAtPath(getFramed(), path, [])
 
         classification.collect { c ->
             StringBuilder s = new StringBuilder()
@@ -146,13 +147,9 @@ class DisplayDoc {
 
     Map getFramed() {
         if (!framed) {
-            if (doc.existsInStorage) {
-                framed = JsonLd.frame(doc.thingIri(), doc.whelk.loadEmbellished(doc.shortId()).data)
-            } else {
-                Document copy = doc.document.clone()
-                doc.whelk.embellish(copy)
-                framed = JsonLd.frame(doc.thingIri(), copy.data)
-            }
+            Document copy = doc.document.clone()
+            doc.whelk.embellish(copy)
+            framed = JsonLd.frame(doc.thingIri(), copy.data)
         }
 
         return framed

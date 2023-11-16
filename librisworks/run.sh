@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eu
 
 count_lines() {
   if [ -f $1 ]; then
@@ -30,20 +31,20 @@ NORMALIZATIONS_DIR=$REPORT_DIR/normalizations
 MERGED_WORKS_DIR=$REPORT_DIR/merged-works
 
 ALL=$CLUSTERS_DIR/1-all
-MERGED=$CLUSTERS_DIR/2-merged
-TITLES=$CLUSTERS_DIR/3-titles
+TITLES=$CLUSTERS_DIR/2-titles
+MERGED=$CLUSTERS_DIR/3-merged
 SWEDISH_FICTION=$CLUSTERS_DIR/4-swedish-fiction
 NO_ANONYMOUS_TRANSLATIONS=$CLUSTERS_DIR/5-no-anonymous-translations
 
 mkdir -p $CLUSTERS_DIR $NORMALIZATIONS_DIR $MERGED_WORKS_DIR $ALL $MERGED $TITLES $SWEDISH_FICTION $NO_ANONYMOUS_TRANSLATIONS
 
 LANGUAGE_IN_TITLE=$NORMALIZATIONS_DIR/1-titles-with-language
-ELIB_DESIGNERS=$NORMALIZATIONS_DIR/2-elib-cover-designer
+ILL_CONTENT=$NORMALIZATIONS_DIR/2-illustrative-content
 DEDUPLICATE_CONTRIBUTIONS=$NORMALIZATIONS_DIR/3-deduplicate-contributions
 ADD_MISSING_CONTRIBUTION_DATA=$NORMALIZATIONS_DIR/4-add-missing-contribution-data
 ROLES_TO_INSTANCE=$NORMALIZATIONS_DIR/5-roles-to-instance
 
-# Clustering step 1 TODO: run only on recently updated records after first run
+# Clustering TODO: run only on recently updated records after first run
 echo "Finding new clusters..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -jar $JAR_FILE \
   $ARGS --report $ALL/$WHELKTOOL_REPORT $SCRIPTS_DIR/find-work-clusters.groovy >$ALL/$CLUSTER_TSV 2>/dev/null
@@ -53,21 +54,12 @@ if [ $NUM_CLUSTERS == 0 ]; then
   exit 0
 fi
 
-# Clustering step 2
-echo
-echo "Merging clusters..."
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$ALL/$CLUSTER_TSV -jar $JAR_FILE \
-  $ARGS --report $MERGED/$WHELKTOOL_REPORT $SCRIPTS_DIR/merge-clusters.groovy >$MERGED/$CLUSTER_TSV 2>/dev/null
-NUM_CLUSTERS=$(count_lines $MERGED/$CLUSTER_TSV)
-echo "Merged into $NUM_CLUSTERS clusters"
-if [ $NUM_CLUSTERS == 0 ]; then
-  exit 0
-fi
+# Filter out duplicates
+sort -uo $ALL/$CLUSTER_TSV $ALL/$CLUSTER_TSV
 
-# Clustering step 3
 echo
 echo "Finding title clusters..."
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$MERGED/$CLUSTER_TSV -jar $JAR_FILE \
+time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$ALL/$CLUSTER_TSV -jar $JAR_FILE \
   $ARGS --report $TITLES/$WHELKTOOL_REPORT $SCRIPTS_DIR/title-clusters.groovy >$TITLES/$CLUSTER_TSV 2>/dev/null
 NUM_CLUSTERS=$(count_lines $TITLES/$CLUSTER_TSV)
 echo "$NUM_CLUSTERS title clusters found"
@@ -75,10 +67,20 @@ if [ $NUM_CLUSTERS == 0 ]; then
   exit 0
 fi
 
+echo
+echo "Merging clusters..."
+time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$TITLES/$CLUSTER_TSV -jar $JAR_FILE \
+  $ARGS --report $MERGED/$WHELKTOOL_REPORT $SCRIPTS_DIR/merge-clusters.groovy >$MERGED/$CLUSTER_TSV 2>/dev/null
+NUM_CLUSTERS=$(count_lines $MERGED/$CLUSTER_TSV)
+echo "Merged into $NUM_CLUSTERS clusters"
+if [ $NUM_CLUSTERS == 0 ]; then
+  exit 0
+fi
+
 # Filter: Swedish fiction
 echo
 echo "Filtering on Swedish fiction..."
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$TITLES/$CLUSTER_TSV -jar $JAR_FILE \
+time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$MERGED/$CLUSTER_TSV -jar $JAR_FILE \
   $ARGS --report $SWEDISH_FICTION/$WHELKTOOL_REPORT $SCRIPTS_DIR/swedish-fiction.groovy >$SWEDISH_FICTION/$CLUSTER_TSV 2>/dev/null
 NUM_CLUSTERS=$(count_lines $SWEDISH_FICTION/$CLUSTER_TSV)
 echo "Found $NUM_CLUSTERS title clusters with Swedish fiction"
@@ -94,10 +96,10 @@ time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDIS
 echo "$(count_lines $LANGUAGE_IN_TITLE/MODIFIED.txt) records affected, report in $LANGUAGE_IN_TITLE"
 
 echo
-echo "Specifying designer roles in Elib records..." # NOTE: Not dependent on clustering, can be run anytime after ContributionByRoleStep has been deployed.
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -jar $JAR_FILE \
-  $ARGS --report $ELIB_DESIGNERS $SCRIPTS_DIR/elib-unspecified-contributor.groovy 2>/dev/null
-echo "$(count_lines $ELIB_DESIGNERS/MODIFIED.txt) records affected, report in $ELIB_DESIGNERS"
+echo "Moving illustrativeContent to instance..."
+time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION/$CLUSTER_TSV -jar $JAR_FILE \
+  $ARGS --report $ILL_CONTENT $SCRIPTS_DIR/lxl-4221-move-illustrativecontent-to-instance.groovy 2>/dev/null
+echo "$(count_lines $ILL_CONTENT/MODIFIED.txt) records affected, report in $ILL_CONTENT"
 
 echo
 echo "Merging contribution objects with same agent..."

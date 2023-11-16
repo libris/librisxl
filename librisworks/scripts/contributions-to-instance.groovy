@@ -12,12 +12,13 @@ report = getReportWriter('report.tsv')
 def clusters = new File(System.getProperty('clusters')).collect { it.split('\t').collect { it.trim() } }
 
 def whelk = getWhelk()
-def instanceRolesByDomain = whelk.resourceCache.relators.findResults {
+def instanceRolesByDomain = whelk.resourceCache.relatorResources.relators.findResults {
     if (it.domain) {
         def domain = whelk.jsonld.toTermKey(it.domain[ID_KEY])
         if (whelk.jsonld.isSubClassOf(domain, 'Embodiment')) it.subMap([ID_KEY])
     }
 }
+
 def instanceRoles = instanceRolesByDomain + [Relator.ILLUSTRATOR, Relator.AUTHOR_OF_INTRO, Relator.AUTHOR_OF_AFTERWORD].collect { [(ID_KEY): it.iri] }
 def ill = [(ID_KEY): Relator.ILLUSTRATOR.iri]
 
@@ -77,6 +78,10 @@ selectByIds(clusters.flatten()) { bib ->
             if (id in keepIllustratorOnWorkForIds[illustrator]) {
                 toInstance.remove(ill)
             }
+            def pu = asList(contribution.role).find { it == [(ID_KEY): Relator.PRIMARY_RIGHTS_HOLDER.iri] }
+            if (pu) {
+                toInstance.add(pu)
+            }
         }
         if (toInstance) {
             instance['contribution'] = asList(instance['contribution']) + c.clone().tap { it['role'] = toInstance }
@@ -102,14 +107,6 @@ selectByIds(clusters.flatten()) { bib ->
 boolean isPrimaryContribution(Map contribution) {
     contribution[TYPE_KEY] == 'PrimaryContribution'
 }
-
-//boolean has9pu(Map contribution) {
-//    asList(contribution.role).contains([(ID_KEY): Relator.PRIMARY_RIGHTS_HOLDER.iri])
-//}
-//
-//boolean isStillImage(Map work) {
-//    asList(work.contentType).contains([(ID_KEY): 'https://id.kb.se/term/rda/StillImage'])
-//}
 
 boolean isPictureBook(Map work) {
     def picBookTerms = [
