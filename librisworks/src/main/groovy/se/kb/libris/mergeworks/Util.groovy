@@ -91,6 +91,8 @@ class Util {
                         if (genericSubtitle(value)) {
                             new DocumentUtil.Remove()
                         } else {
+                            // Remove substring after colon if identified as generic
+                            // Example: "klanen Kennedy : roman" -> "klanen Kennedy"
                             ((List) value.split(':')).with {
                                 if (it.size() > 1 && genericSubtitle(it.last().trim())) {
                                     new DocumentUtil.Replace(value.replaceFirst(~/\s*:.+$/, ''))
