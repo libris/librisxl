@@ -63,7 +63,7 @@ class NotificationSender extends HouseKeeper {
     }
 
     public String getCronSchedule() {
-        return "* * * * *"
+        return "0 6 * * *"
     }
 
     @Override

@@ -7,11 +7,8 @@ import whelk.Whelk
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
-import java.sql.SQLType
 import java.sql.Timestamp
-import java.sql.Types
 import java.time.Instant
-import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 
 @CompileStatic
@@ -34,7 +31,7 @@ class NotificationCleaner extends HouseKeeper {
     }
 
     public String getCronSchedule() {
-        return "* * * * *"
+        return "0 4 * * *"
     }
 
     public void trigger() {
