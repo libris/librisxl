@@ -27,14 +27,9 @@ public class ApixSearchServlet extends HttpServlet
     {
         Set<String> resultingIDs = search(request);
 
-        Map<String, Document> resultingDocumentsMap = Utils.s_whelk.bulkLoad(new ArrayList<>(resultingIDs));
-        List<Document> resultingDocuments = new ArrayList<>();
-        for (String key : resultingDocumentsMap.keySet())
-            resultingDocuments.add(resultingDocumentsMap.get(key));
-
         boolean includeHold = request.getParameter("x-holdings") != null && request.getParameter("x-holdings").equalsIgnoreCase("true");
 
-        Utils.send200Response(response, Xml.formatApixSearchResponse(resultingDocuments, includeHold, request.getParameterMap()));
+        Utils.send200Response(response, Xml.formatApixSearchResponse(new ArrayList<>(resultingIDs), includeHold, request.getParameterMap()));
     }
 
     private Set<String> search(HttpServletRequest request)
