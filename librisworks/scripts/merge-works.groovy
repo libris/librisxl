@@ -50,14 +50,14 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
         }
     }
 
-    List<String> linkableWorkIris = uniqueWorksAndTheirInstances.findResults { it.getV1().workIri() }
+    List<Doc> linkableWorks = uniqueWorksAndTheirInstances.findResults { workDoc, _ -> workDoc.workIri() ? workDoc : null }
 
     uniqueWorksAndTheirInstances.each { Doc workDoc, List<Doc> instanceDocs ->
         // Link more instances to existing linked work
         if (workDoc.existsInStorage && !workDoc.instanceData && instanceDocs) {
             replaceWorkData(workDoc, c.merge([workDoc] + instanceDocs))
             // TODO: Update adminMetadata? To say that additional instances may have contributed to the linked work.
-            addCloseMatch(workDoc, linkableWorkIris)
+            addCloseMatch(workDoc, linkableWorks)
             saveAndLink(workDoc, instanceDocs, workDoc.existsInStorage)
             writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.UPDATED)
             return
@@ -65,13 +65,13 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
         // New merged work
         if (!workDoc.existsInStorage && !workDoc.instanceData) {
             addAdminMetadata(workDoc, instanceDocs.collect { ['@id': it.recordIri()] })
-            addCloseMatch(workDoc, linkableWorkIris)
+            addCloseMatch(workDoc, linkableWorks)
             saveAndLink(workDoc, instanceDocs, workDoc.existsInStorage)
             writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.NEW)
             return
         }
         // Local work, save if new closeMatch links created
-        if (workDoc.instanceData && addCloseMatch(workDoc, linkableWorkIris)) {
+        if (workDoc.instanceData && addCloseMatch(workDoc, linkableWorks)) {
             saveAndLink(workDoc)
         }
     }
@@ -171,12 +171,16 @@ static void replaceWorkData(Doc workDoc, Map replacement) {
     workDoc.workData.putAll(replacement)
 }
 
-boolean addCloseMatch(Doc workDoc, List<String> workIris) {
-    def linkable = (workIris - workDoc.thingIri()).collect { ['@id': it] }
+boolean addCloseMatch(Doc workDoc, List<Doc> linkableWorks) {
+    def linkTo = linkableWorks.findAll { d ->
+        d.workIri() != workDoc.thingIri()
+                && d.primaryContributor() == workDoc.primaryContributor()
+    }.collect { ['@id': it.workIri()] }
+
     def closeMatch = asList(workDoc.workData['closeMatch'])
 
-    if (linkable && !closeMatch.containsAll(linkable)) {
-        workDoc.workData['closeMatch'] = (closeMatch + linkable).unique()
+    if (linkTo && !closeMatch.containsAll(linkTo)) {
+        workDoc.workData['closeMatch'] = (closeMatch + linkTo).unique()
         return true
     }
 
