@@ -43,6 +43,7 @@ public class WebInterface extends HttpServlet {
         List<HouseKeeper> houseKeepers = [
                 new NotificationGenerator(whelk),
                 new NotificationSender(whelk),
+                new InquirySender(whelk),
                 new NotificationCleaner(whelk),
         ]
 

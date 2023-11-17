@@ -31,25 +31,9 @@ class NotificationSender extends HouseKeeper {
     private final String STATE_KEY = "CXZ notification email sender"
     private String status = "OK"
     private final Whelk whelk
-    private final Mailer mailer
-    private final String senderAddress
 
     public NotificationSender(Whelk whelk) {
         this.whelk = whelk
-        Properties props = PropertyLoader.loadProperties("secret")
-        if (props.containsKey("smtpServer") &&
-                props.containsKey("smtpPort") &&
-                props.containsKey("smtpSender") &&
-                props.containsKey("smtpUser") &&
-                props.containsKey("smtpPassword"))
-            mailer = MailerBuilder
-                    .withSMTPServer(
-                            (String) props.get("smtpServer"),
-                            Integer.parseInt((String)props.get("smtpPort")),
-                            (String) props.get("smtpUser"),
-                            (String) props.get("smtpPassword")
-                    ).buildMailer()
-        senderAddress = props.get("smtpSender")
     }
 
     @Override
@@ -68,26 +52,7 @@ class NotificationSender extends HouseKeeper {
 
     @Override
     void trigger() {
-        // Build a multi-map of library -> list of settings objects for that library's users
-        Map<String, List<Map>> heldByToUserSettings = new HashMap<>();
-        {
-            List<Map> allUserSettingStrings = whelk.getStorage().getAllUserData()
-            for (Map settings : allUserSettingStrings) {
-                if (!settings["notificationEmail"])
-                    continue
-                settings?.requestedNotifications?.each { request ->
-                    if (!request instanceof Map)
-                        return
-                    if (!request["heldBy"])
-                        return
-
-                    String heldBy = request["heldBy"]
-                    if (!heldByToUserSettings.containsKey(heldBy))
-                        heldByToUserSettings.put(heldBy, [])
-                    heldByToUserSettings[heldBy].add(settings)
-                }
-            }
-        }
+        Map<String, List<Map>> heldByToUserSettings = NotificationUtils.getAllSubscribingUsers(whelk)
 
         // Determine the time interval of ChangeObservations to consider
         Timestamp from = Timestamp.from(Instant.now().minus(1, ChronoUnit.DAYS)) // Default to last 24h if first time.
@@ -177,9 +142,7 @@ class NotificationSender extends HouseKeeper {
 
                     if (!matchedObservations.isEmpty() && user.notificationEmail && user.notificationEmail instanceof String) {
                         String body = generateEmailBody(instanceId, matchedObservations)
-                        sendEmail(senderAddress, (String) user.notificationEmail, "CXZ", body)
-
-                        System.err.println("Now send email to " + user.notificationEmail + "\n\t" + body)
+                        NotificationUtils.sendEmail((String) user.notificationEmail, "CXZ", body)
                     }
                 }
             }
@@ -197,22 +160,6 @@ class NotificationSender extends HouseKeeper {
                 return changeObservationMap
         }
         return null
-    }
-
-    private void sendEmail(String sender, String recipient, String subject, String body) {
-        if (mailer) {
-            Email email  = EmailBuilder.startingBlank()
-                    .to(recipient)
-                    .withSubject(subject)
-                    .from(sender)
-                    .withPlainText(body)
-                    .buildEmail()
-
-            log.info("Sending notification (cxz) email to " + recipient)
-            mailer.sendMail(email)
-        } else {
-            log.info("Should now have sent notification (cxz) email to " + recipient + " but SMTP is not configured.")
-        }
     }
 
     private String generateEmailBody(String changedInstanceId, List<Map> triggeredObservations) {
