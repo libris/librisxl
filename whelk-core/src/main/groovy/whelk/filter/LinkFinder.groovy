@@ -114,11 +114,19 @@ class LinkFinder {
         items[0][JsonLd.THING_KEY]['@id'] = items[1]['@id']
     }
 
-    private void replaceSameAsLinksWithPrimaries(Map data) {
+    private void replaceSameAsLinksWithPrimaries(Map data, List path = []) {
         // If this is a link (an object containing _only_ an id)
+
         String id = data.get("@id")
         if (id != null && data.keySet().size() == 1) {
-            String primaryId = lookupPrimaryId(id)
+            // Path to same form as in lddb__dependencies.relation
+            String normalizedPath = (path.take(2) == Document.recordPath
+                    ? [JsonLd.RECORD_KEY] + path.drop(2)
+                    : (path.take(2) == Document.thingPath ? path.drop(2) : path)
+            )
+                    .findAll { it instanceof String }
+                    .join('.')
+            String primaryId = lookupPrimaryId(id, normalizedPath)
             if (primaryId != null)
                 data.put("@id", primaryId)
         }
@@ -134,30 +142,33 @@ class LinkFinder {
             Object value = data.get(key)
 
             if (value instanceof List)
-                replaceSameAsLinksWithPrimaries( (List) value )
+                replaceSameAsLinksWithPrimaries( (List) value, path + keyString )
             if (value instanceof Map)
-                replaceSameAsLinksWithPrimaries( (Map) value )
+                replaceSameAsLinksWithPrimaries( (Map) value, path + keyString )
         }
     }
 
-    private void replaceSameAsLinksWithPrimaries(List data) {
+    private void replaceSameAsLinksWithPrimaries(List data, List path) {
+        int idx = 0
         for (Object element : data){
             if (element instanceof List)
-                replaceSameAsLinksWithPrimaries( (List) element )
+                replaceSameAsLinksWithPrimaries( (List) element, path + idx )
             else if (element instanceof Map)
-                replaceSameAsLinksWithPrimaries( (Map) element )
+                replaceSameAsLinksWithPrimaries( (Map) element, path + idx )
+            idx += 1
         }
     }
 
-    private String lookupPrimaryId(String id) {
+    private String lookupPrimaryId(String id, String path) {
         String mainIri = postgres.getMainId(id)
 
         if (mainIri == null)
             return null
 
-        if (postgres.iriIsLinkable(mainIri))
+        if (postgres.iriIsLinkable(mainIri, path))
             return mainIri
-        throw new LinkValidationException("Not allowed to link to the deleted resource: " + mainIri)
+
+        throw new LinkValidationException("Forbidden link to deleted resource $mainIri found at $path")
     }
 
     /**
