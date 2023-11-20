@@ -13,7 +13,7 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) {cluster ->
                 && !doc.isMaybeAggregate()
                 && doc.encodingLevel() != 'marc:PartialPreliminaryLevel'
                 && doc.encodingLevel() != 'marc:PrepublicationLevel'
-                && !doc.isTactile()
+                && !doc.isNotRegularText()
                 && !doc.isDrama()
                 && !doc.isThesis()
                 && !doc.isInSb17Bibliography()
