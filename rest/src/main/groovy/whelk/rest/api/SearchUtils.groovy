@@ -373,7 +373,7 @@ class SearchUtils {
 
                     Map observation = ['totalItems': bucket.getAt('doc_count'),
                                        'view': [(JsonLd.ID_KEY): searchPageUrl],
-                                       'selected': isSelected,
+                                       '_selected': isSelected,
                                        'object': lookup.chip(itemId)]
 
                     observations << observation
