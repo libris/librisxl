@@ -56,7 +56,7 @@ class InquirySender extends HouseKeeper {
         connection = whelk.getStorage().getOuterConnection()
         connection.setAutoCommit(false)
         try {
-            String sql = "SELECT modified, data FROM lddb WHERE data#>>'{@graph,1,@type}' IN ('InquiryAction', 'ChangeNotice') AND modified > ?;"
+            String sql = "SELECT modified, data FROM lddb WHERE deleted = false AND data#>>'{@graph,1,@type}' IN ('InquiryAction', 'ChangeNotice') AND modified > ?;"
             connection.setAutoCommit(false)
             statement = connection.prepareStatement(sql)
             statement.setTimestamp(1, from)

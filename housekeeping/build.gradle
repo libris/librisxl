@@ -45,7 +45,19 @@ dependencies {
     // Cron
     implementation group: 'it.sauronsoftware.cron4j', name: 'cron4j', version: '2.2.5'
 
+    // Testing
+    testImplementation "org.spockframework:spock-core:${spockVersion}"
 }
+
+test {
+    useJUnitPlatform()
+}
+
+test.testLogging {
+    showStandardStreams = true
+    exceptionFormat = "full"
+}
+
 
 gretty {
     jvmArgs = ['-XX:+UseParallelGC']

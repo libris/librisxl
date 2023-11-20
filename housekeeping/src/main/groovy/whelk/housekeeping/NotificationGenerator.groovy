@@ -63,7 +63,7 @@ class NotificationGenerator extends HouseKeeper {
         connection.setAutoCommit(false)
         try {
             // Fetch all changed IDs within the interval
-            String sql = "SELECT id, ARRAY_AGG(data#>>'{@graph,0,hasChangeNote}') as changeNotes FROM lddb__versions WHERE collection IN ('bib', 'auth') AND ( modified > ? AND modified <= ? ) group by id;"
+            String sql = "SELECT id, ARRAY_AGG(data#>>'{@graph,0,hasChangeNote}') as changeNotes FROM lddb__versions WHERE collection IN ('bib', 'auth') AND deleted = false AND ( modified > ? AND modified <= ? ) group by id;"
             connection.setAutoCommit(false)
             statement = connection.prepareStatement(sql)
             statement.setTimestamp(1, from)
