@@ -80,10 +80,10 @@ class Classification extends StuffSet {
 
             def preferredDewey = findPreferredDewey(deweyOnMerged, allDewey)
 
-            deweyOnMerged.remove(preferredDewey)
+            def additionalDewey = deweyOnMerged - preferredDewey
 
-            mergedWork['classification'] = asList(mergedWork['classification']) - deweyOnMerged
-            mergedWork['additionalClassificationDdc'] = (asList(mergedWork['additionalClassificationDdc']) + deweyOnMerged).unique()
+            mergedWork['classification'] = asList(mergedWork['classification']) - additionalDewey
+            mergedWork['additionalClassificationDdc'] = (asList(mergedWork['additionalClassificationDdc']) + additionalDewey).unique()
         }
     }
 
