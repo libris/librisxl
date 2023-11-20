@@ -8,7 +8,6 @@ import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
-import whelk.component.DocumentNormalizer
 import whelk.exception.InvalidQueryException
 import whelk.exception.WhelkRuntimeException
 import whelk.search.ESQuery
@@ -831,6 +830,9 @@ class SearchUtils {
             int limit = slice['itemLimit']
             def connective = slice['connective']?.equals(OR.toString()) ? OR : AND
             statsfind[key] = ['sort': 'value', 'sortOrder': 'desc', 'size': limit, 'connective': connective]
+            if (slice['_matchMissing']) { // FIXME: what should it be called?
+                statsfind[key]['_matchMissing'] = slice['_matchMissing']
+            }
         }
         return statsfind
     }

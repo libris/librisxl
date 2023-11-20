@@ -559,14 +559,14 @@ class ESQuery {
         }
 
         Set multiSelectable = multiSelectFacets(queryParameters)
+        Map<String, String> matchMissing = matchMissing(queryParameters)
         getOrGroups(notNested).each { Map<String, ?> m ->
             if (m.size() == 1 && m.keySet().first() in multiSelectable) {
-                multiSelectFilters[m.keySet().first()] = createBoolFilter(m)
+                multiSelectFilters[m.keySet().first()] = createBoolFilter(addMissingMatch(m, matchMissing))
             }
             else {
-                filters << createBoolFilter(m)
+                filters << createBoolFilter(addMissingMatch(m, matchMissing))
             }
-
         }
         notNestedGroupsForNot.each { m ->
             filtersForNot << createBoolFilter(m)
@@ -581,6 +581,14 @@ class ESQuery {
         }
 
         return new Tuple2(allFilters ? [['bool': allFilters]] : null, multiSelectFilters)
+    }
+
+    private static Map addMissingMatch(Map m, Map matchMissing) {
+        if (m.size() == 1 && m.keySet().first() in matchMissing) {
+            String field = matchMissing[m.keySet().first()]
+            m.put(EXISTS_PREFIX + field, ['false'])
+        }
+        return m
     }
 
     private getPrefixIfExists(String key) {
@@ -642,6 +650,7 @@ class ESQuery {
         if (p.size() > 0) {
             result.add(p)
         }
+
         return result
     }
 
@@ -834,6 +843,13 @@ class ESQuery {
         getStatsRepr(queryParameters).findResults { key, value ->
             value['connective'] == Connective.OR.toString() ? key : null
         } as Set<String>
+    }
+
+    @CompileStatic(TypeCheckingMode.SKIP)
+    static Map<String, String> matchMissing(Map queryParameters) {
+        getStatsRepr(queryParameters)
+                .findAll { key, value -> value['_matchMissing'] }
+                .collectEntries { key, value -> [key, value['_matchMissing'] as String]}
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
