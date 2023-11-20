@@ -1,5 +1,9 @@
 package se.kb.libris.mergeworks.compare
 
+import se.kb.libris.mergeworks.Doc
+
+import static se.kb.libris.mergeworks.Util.asList
+
 class Classification extends StuffSet {
     private static def sabPrecedenceRules = loadSabPrecedenceRules()
 
@@ -34,9 +38,9 @@ class Classification extends StuffSet {
                     return result
                 }
             } else if (isDewey(c1) && isDewey(c2)) {
-                def code = code1.startsWith(code2.replace("/", ""))
+                def code = deweyPrecedes(code1, code2)
                         ? code1
-                        : (code2.startsWith(code1.replace("/", "")) ? code2 : null)
+                        : (deweyPrecedes(code2, code1) ? code2 : null)
                 if (code) {
                     Map result = [:]
                     result.putAll(c1)
@@ -49,18 +53,12 @@ class Classification extends StuffSet {
         }
     }
 
-    boolean isSab(Map c) {
-        c['inScheme'] && c['inScheme']['code'] =~ 'kssb'
-    }
-
-    String maxSabVersion(c1, c2) {
-        def v1 = c1['inScheme']['version'] ?: "-1"
-        def v2 = c2['inScheme']['version'] ?: "-1"
-        Integer.parseInt(v1) > Integer.parseInt(v2) ? v1 : v2
-    }
-
-    boolean isDewey(Map c) {
+    static boolean isDewey(Map c) {
         c['@type'] == 'ClassificationDdc'
+    }
+
+    static boolean deweyPrecedes(String a, String b) {
+        a.startsWith(b.replace("/", ""))
     }
 
     String maxDeweyEdition(c1, c2) {
@@ -69,8 +67,57 @@ class Classification extends StuffSet {
         deweyEdition(v1) > deweyEdition(v2) ? v1 : v2
     }
 
-    int deweyEdition(String edition) {
+    static int deweyEdition(String edition) {
         Integer.parseInt((edition ?: "0").replaceAll("[^0-9]", ""))
+    }
+
+    static void moveAdditionalDewey(Map mergedWork, Collection<Doc> instanceDocs) {
+        def deweyOnMerged = asList(mergedWork['classification']).findAll { Map c -> isDewey(c) }
+        if (deweyOnMerged.size() > 1) {
+            def allDewey = instanceDocs.collect { it.classification() }
+                    .flatten()
+                    .findAll { Map c -> isDewey(c) }
+
+            def preferredDewey = findPreferredDewey(deweyOnMerged, allDewey)
+
+            def additionalDewey = deweyOnMerged - preferredDewey
+
+            mergedWork['classification'] = asList(mergedWork['classification']) - additionalDewey
+            mergedWork['additionalClassificationDdc'] = (asList(mergedWork['additionalClassificationDdc']) + additionalDewey).unique()
+        }
+    }
+
+    static Map findPreferredDewey(List<Map> deweyOnMerged, List<Map> allDewey) {
+        def occurrenceCount = deweyOnMerged.collectEntries { Map dom ->
+            def numOccurrences = allDewey.count { Map d ->
+                def code1 = d['code']
+                def code2 = dom['code']
+                code1 && code2 && (deweyPrecedes(code1, code2) || deweyPrecedes(code2, code1))
+            }
+            [dom, numOccurrences]
+        }
+
+        def maxOccurrences = occurrenceCount.max { it.value }.value
+
+        def preferred = occurrenceCount.findResults { k, v -> v == maxOccurrences ? k : null }
+                .sort { a, b ->
+                    def aEdition = a['editionEnumeration']
+                    def bEdition = b['editionEnumeration']
+                    deweyEdition(bEdition) <=> deweyEdition(aEdition)
+                            ?: bEdition?.contains('swe') <=> aEdition?.contains('swe')
+                }.first()
+
+        return preferred
+    }
+
+    boolean isSab(Map c) {
+        c['inScheme'] && c['inScheme']['code'] =~ 'kssb'
+    }
+
+    String maxSabVersion(c1, c2) {
+        def v1 = c1['inScheme']['version'] ?: "-1"
+        def v2 = c2['inScheme']['version'] ?: "-1"
+        Integer.parseInt(v1) > Integer.parseInt(v2) ? v1 : v2
     }
 
     static String normalizeSabCode(String sab) {

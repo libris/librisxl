@@ -19,4 +19,26 @@ class ClassificationSpec extends Specification {
         'Hda.017=c' || 'Hda.018' || 'Hda.017=c'
         'He'        || 'Hc'      || null
     }
+
+    def "find which of multiple Dewey codes to keep in classification"() {
+        given:
+        def onMerged = (0..<editionsOnMerged.size()).collect { i ->
+            [
+                    'code'              : "x" + i,
+                    'editionEnumeration': editionsOnMerged[i]
+            ]
+        }
+        def all = allCodes.collect { ['code': it] }
+
+        expect:
+        Classification.findPreferredDewey(onMerged, all) == result
+
+        where:
+        editionsOnMerged     || allCodes                       || result
+        ['23/swe', '23/swe'] || ['x0', 'x0', 'x1', 'x1', 'x1'] || ['code': 'x1', 'editionEnumeration': '23/swe']
+        [null, '23/swe']     || ['x0', 'x0', 'x1', 'x1', null] || ['code': 'x1', 'editionEnumeration': '23/swe']
+        ['23', '22/swe']     || ['x0', 'x0', 'x1', 'x1']       || ['code': 'x0', 'editionEnumeration': '23']
+        ['23/swe', '23']     || ['x0', 'x0', 'x1', 'x1']       || ['code': 'x0', 'editionEnumeration': '23/swe']
+        ['22', '23/swe']     || ['x0', 'x0', 'x0', 'x1', 'x1'] || ['code': 'x0', 'editionEnumeration': '22']
+    }
 }
