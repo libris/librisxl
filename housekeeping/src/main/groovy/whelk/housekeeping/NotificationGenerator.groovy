@@ -131,6 +131,7 @@ class NotificationGenerator extends HouseKeeper {
                 "succeededBy",
                 "contribution",
                 "agent",
+                "isPartOf",
         ]
         Document instanceAfterChange = whelk.getStorage().loadAsOf(instanceId, Timestamp.from(after))
         historicEmbellish(instanceAfterChange, propertiesToEmbellish, after)

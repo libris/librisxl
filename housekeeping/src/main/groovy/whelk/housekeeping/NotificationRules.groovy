@@ -3,6 +3,7 @@ package whelk.housekeeping
 import whelk.Document
 
 class NotificationRules {
+
     static Tuple primaryContributionChanged(Document instanceBeforeChange, Document instanceAfterChange) {
         Object contributionsAfter = Document._get(["mainEntity", "instanceOf", "contribution"], instanceAfterChange.data)
         Object contributionsBefore = Document._get(["mainEntity", "instanceOf", "contribution"], instanceBeforeChange.data)
@@ -11,12 +12,38 @@ class NotificationRules {
                 for (Object contrAfter : contributionsAfter) {
                     if (contrBefore["@type"].equals("PrimaryContribution") && contrAfter["@type"].equals("PrimaryContribution")) {
                         if (contrBefore["agent"] != null && contrAfter["agent"] != null) {
-                            if (
-                                    contrBefore["agent"]["familyName"] != contrAfter["agent"]["familyName"] ||
-                                            contrBefore["agent"]["givenName"] != contrAfter["agent"]["givenName"] ||
-                                            contrBefore["agent"]["lifeSpan"] != contrAfter["agent"]["lifeSpan"]
-                            )
-                                return new Tuple(true, contrBefore["agent"], contrAfter["agent"])
+
+                            // Person
+                            if (contrBefore["agent"]["@type"] == "Person" && contrAfter["agent"]["@type"] == "Person") {
+                                if (
+                                        contrBefore["agent"]["familyName"] != contrAfter["agent"]["familyName"] ||
+                                                contrBefore["agent"]["givenName"] != contrAfter["agent"]["givenName"] ||
+                                                contrBefore["agent"]["name"] != contrAfter["agent"]["name"] ||
+                                                (contrBefore["agent"]["lifeSpan"] && contrBefore["agent"]["lifeSpan"] != contrAfter["agent"]["lifeSpan"]) // Change should trigger, add should not.
+                                )
+                                    return new Tuple(true, contrBefore["agent"], contrAfter["agent"])
+                            }
+
+                            // Organization
+                            if (contrBefore["agent"]["@type"] == "Organization" && contrAfter["agent"]["@type"] == "Organization") {
+                                if (
+                                        contrBefore["agent"]["name"] != contrAfter["agent"]["name"] ||
+                                                contrBefore["agent"]["isPartOf"]["name"] != contrAfter["agent"]["isPartOf"]["name"] ||
+                                                contrBefore["agent"]["marc:subordinateUnit"] != contrAfter["agent"]["marc:subordinateUnit"]
+                                )
+                                    return new Tuple(true, contrBefore["agent"], contrAfter["agent"])
+                            }
+
+                            // Meeting
+                            if (contrBefore["agent"]["@type"] == "Meeting" && contrAfter["agent"]["@type"] == "Meeting") {
+                                if (
+                                        contrBefore["agent"]["place"] != contrAfter["agent"]["place"] ||
+                                                contrBefore["agent"]["date"] != contrAfter["agent"]["date"] ||
+                                                contrBefore["agent"]["name"] != contrAfter["agent"]["name"]
+                                )
+                                    return new Tuple(true, contrBefore["agent"], contrAfter["agent"])
+                            }
+
                         }
                     }
                 }
@@ -209,4 +236,5 @@ class NotificationRules {
         }
         return new Tuple(false, null, null)
     }
+
 }
