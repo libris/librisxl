@@ -450,4 +450,154 @@ class NotificationRulesSpec extends Specification {
         result[0] == true
     }
 
+    def "Change agent subject"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "subject" : [
+                                        [
+                                                "@type": "Person",
+                                                "familyName": "aaa",
+                                                "givenName": "bbb",
+                                                "name": "ccc",
+                                                "lifeSpan": "2022-2023"
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "subject" : [
+                                        [
+                                                "@type": "Person",
+                                                "familyName": "ddd",
+                                                "givenName": "bbb",
+                                                "name": "ccc",
+                                                "lifeSpan": "2022-2023"
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Tuple result = NotificationRules.subjectChanged(framedBefore, framedAfter)
+
+        expect:
+        result[0] == true
+    }
+
+    def "Add agent subject"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "subject" : [
+                                        [
+                                                "@type": "Person",
+                                                "name": "aaa",
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "subject" : [
+                                        [
+                                                "@type": "Person",
+                                                "name": "aaa",
+                                        ],
+                                        [
+                                                "@type": "Person",
+                                                "name": "bbb",
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Tuple result = NotificationRules.subjectChanged(framedBefore, framedAfter)
+
+        expect:
+        result[0] == true
+    }
+
+    def "Remove agent subject"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "subject" : [
+                                        [
+                                                "@type": "Person",
+                                                "name": "aaa",
+                                        ],
+                                        [
+                                                "@type": "Person",
+                                                "name": "bbb",
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "subject" : [
+                                        [
+                                                "@type": "Person",
+                                                "name": "aaa",
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Tuple result = NotificationRules.subjectChanged(framedBefore, framedAfter)
+
+        expect:
+        result[0] == true
+    }
+
+    def "Flip agent subject order"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "subject" : [
+                                        [
+                                                "@type": "Person",
+                                                "name": "aaa",
+                                        ],
+                                        [
+                                                "@type": "Person",
+                                                "name": "bbb",
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "subject" : [
+                                        [
+                                                "@type": "Person",
+                                                "name": "bbb",
+                                        ],
+                                        [
+                                                "@type": "Person",
+                                                "name": "aaa",
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Tuple result = NotificationRules.subjectChanged(framedBefore, framedAfter)
+
+        expect:
+        result[0] == false
+    }
+
 }
