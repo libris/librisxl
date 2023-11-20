@@ -308,9 +308,21 @@ class Doc {
         asList(genreForm()).any { it['@id'] in DRAMA_GF }
     }
 
-    boolean isTactile() {
+    boolean isNotRegularText() {
+        Set barnGfs = [
+                'https://id.kb.se/term/barngf/Mekaniska%20b%C3%B6cker',
+                'https://id.kb.se/term/barngf/Pop-up-b%C3%B6cker',
+                'https://id.kb.se/term/barngf/TAKK',
+                'https://id.kb.se/term/barngf/Taktila%20b%C3%B6cker',
+                'https://id.kb.se/term/barngf/Taktila%20illustrationer',
+                'https://id.kb.se/term/barngf/Teckenspr%C3%A5k',
+                'https://id.kb.se/term/barngf/Tecken%20som%20st%C3%B6d%20till%20talet',
+                'https://id.kb.se/term/barngf/Bliss%20%28symbolspr%C3%A5k%29'
+        ] as Set
+
         asList(workData['contentType']).contains(['@id': 'https://id.kb.se/term/rda/TactileText'])
                 || asList(instanceData?.carrierType).any { it['@id'] in ['https://id.kb.se/marc/Braille', 'https://id.kb.se/marc/TacMaterialType-b'] }
+                || genreForm().any {it['@id'] in barnGfs || whelk.relations.isImpliedBy('https://id.kb.se/term/saogf/Taktila%20verk', it['@id']) }
     }
 
     boolean isThesis() {
