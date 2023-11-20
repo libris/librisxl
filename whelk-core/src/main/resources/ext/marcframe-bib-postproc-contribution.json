@@ -113,8 +113,8 @@
             "contribution": [
               {
                 "role": [
-                  {"@id": "https://id.kb.se/relator/author"},
-                  {"@id": "https://id.kb.se/relator/publisher"}
+                  {"@id": "https://id.kb.se/relator/aut"},
+                  {"@id": "https://id.kb.se/relator/pbl"}
                 ],
                 "@type": "PrimaryContribution",
                 "agent": {"@id": "x"}
@@ -131,7 +131,7 @@
             "contribution": [
               {
                 "role": [
-                  {"@id": "https://id.kb.se/relator/author"}
+                  {"@id": "https://id.kb.se/relator/aut"}
                 ],
                 "@type": "PrimaryContribution",
                 "agent": {"@id": "x"}
@@ -141,7 +141,7 @@
           "contribution": [
               {
                 "role": [
-                  {"@id": "https://id.kb.se/relator/publisher"}
+                  {"@id": "https://id.kb.se/relator/pbl"}
                 ],
                 "@type": "Contribution",
                 "agent": {"@id": "x"}
@@ -157,14 +157,14 @@
             "contribution": [
               {
                 "role": [
-                  {"@id": "https://id.kb.se/relator/author"}
+                  {"@id": "https://id.kb.se/relator/aut"}
                 ],
                 "@type": "PrimaryContribution",
                 "agent": {"@id": "x"}
               },
               {
                 "role": [
-                  {"@id": "https://id.kb.se/relator/publisher"}
+                  {"@id": "https://id.kb.se/relator/pbl"}
                 ],
                 "@type": "Contribution",
                 "agent": {"@id": "x"}
