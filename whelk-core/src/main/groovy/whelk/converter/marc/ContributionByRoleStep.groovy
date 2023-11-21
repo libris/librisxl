@@ -31,10 +31,10 @@ class ContributionByRoleStep extends MarcFramePostProcStepBase {
             if (domainRef) {
               def domain = ld.toTermKey(domainRef)
               if (ld.isSubClassOf(domain, 'Embodiment')) {
-                return it[ID]
+                return [it[ID]] + it['sameAs'].collect { it[ID] }
               }
             }
-        } as Set
+        }.flatten() as Set
         log.debug "Using as instance relations: $instanceRelators"
     }
 
