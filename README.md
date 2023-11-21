@@ -77,10 +77,10 @@ for e.g. Fedora/CentOS/RHEL with minor adjustments.
     sudo apt install openjdk-17-jdk # or openjdk-17-headless
     ```
 
-5. [Apache](https://httpd.apache.org/)
+5. [nginx](https://nginx.org/)
 
     ```
-    sudo apt install apache2
+    sudo apt install nginx
     ```
 
 ## Setup
@@ -238,114 +238,27 @@ id.kb.se web app (follow the README in each):
 * [id.kb.se](https://github.com/libris/lxlviewer/tree/develop/nuxt-app)
 
 At this point, you should have the LXLViewer cataloging client running on port 8080
-and the id.kb.se app running on port 3000, but they won't work yet. Next, edit
-`/etc/apache2/sites-enabled/000-default.conf` and add the following:
+and the id.kb.se app running on port 3000, but they won't work yet.
 
+Next, add these lines to `/etc/hosts`
 ```
-<VirtualHost *:5000>
-    ServerName libris.kb.se.localhost
-    ProxyRequests Off
-    ProxyPreserveHost On
-
-    RewriteEngine On
-
-    <LocationMatch "^/([bcdfghjklmnpqrstvwxz0-9]{15,16})$">
-        ProxyPreserveHost Off
-        RewriteCond %{HTTP_ACCEPT} (text/html|application/xhtml|\*/\*|^$)
-        RewriteCond %{REQUEST_METHOD} GET
-        RewriteRule ([^/]+)$ http://id.kb.se.localhost:5000/$1 [P]
-    </LocationMatch>
-
-    <Location /_nuxt>
-        ProxyPreserveHost Off
-        ProxyPass http://id.kb.se.localhost:5000/_nuxt
-    </Location>
-    
-    ProxyPass        /katalogisering     http://localhost:8080/katalogisering                   
-    ProxyPassReverse /katalogisering     http://localhost:8080/katalogisering
-
-    ProxyPassMatch ^/vocab/(data.*) http://localhost:8180/https://id.kb.se/vocab//$1
-    ProxyPass /vocab http://localhost:8180/https://id.kb.se/vocab
-    ProxyPass /context.jsonld http://localhost:8180/https://id.kb.se/vocab/context
-
-    RewriteCond %{REQUEST_METHOD} ^(POST|PUT|DELETE|OPTIONS)$
-    RewriteRule ^/data(.*)$ http://localhost:8180/$1 [P,L]
-
-    ProxyPass / http://localhost:8180/
-
-    AddOutputFilterByType DEFLATE text/css text/html text/plain text/xml
-    AddOutputFilterByType DEFLATE application/x-javascript text/x-component application/javascript
-    AddOutputFilterByType DEFLATE application/json application/ld+json
-</VirtualHost>
-
-<VirtualHost *:5000>
-    ServerName id.kb.se.localhost
-    ProxyRequests Off
-    ProxyPreserveHost On
-
-    RewriteEngine On
-
-    RewriteCond %{HTTP_ACCEPT} (text/html|application/xhtml|\*/\*) [OR]
-    RewriteCond %{HTTP_ACCEPT} ^$
-    RewriteCond %{HTTP_ACCEPT} !^(text/turtle|application/trig|application/ld\+json|application/rdf\+xml)($|.+/x?html;q=0.*)
-    RewriteCond %{REQUEST_URI} !\.(json|jsonld)$
-    RewriteCond %{REQUEST_URI} !data\..+$
-    RewriteCond %{REQUEST_URI} !/maintenance.html
-    RewriteCond %{REQUEST_URI} !/robots.txt
-    RewriteRule ^/(.*)$ http://localhost:3000/$1 [P,L]
-    
-    ProxyPass /_nuxt http://localhost:3000/_nuxt
-    ProxyPass /_loading http://localhost:3000/_loading
-    ProxyPass /__webpack_hmr http://localhost:3000/__webpack_hmr
-
-    # NOTE: The double slash is needed because of an "ambitious" sameAs on the vocab resource.
-    ProxyPassMatch ^/vocab/(data.*) http://localhost:8180/https://id.kb.se/vocab//$1
-    ProxyPass /vocab http://localhost:8180/https://id.kb.se/vocab
-    ProxyPass /vocab/display/data.jsonld http://localhost:8180/https://id.kb.se/vocab/display
-    ProxyPass /context.jsonld http://localhost:8180/https://id.kb.se/vocab/context/data.jsonld
-
-    ProxyPassMatch ^/(data.*)$ http://localhost:8180/$1
-    ProxyPassMatch ^/find(.*) http://localhost:8180/find$1
-
-    ProxyPassMatch ^/(http.*)$ http://localhost:8180/$1 nocanon
-    ProxyPassMatch ^/([bcdfghjklmnpqrstvwxz0-9]{15,16}) http://localhost:8180/$1
-    ProxyPassMatch ^/library/(.*) http://localhost:8180/https://libris.kb.se/library/$1 nocanon
-    ProxyPassMatch ^/(.*) http://localhost:8180/https://id.kb.se/$1 nocanon
-
-    AddOutputFilterByType DEFLATE text/css text/html text/plain text/xml
-    AddOutputFilterByType DEFLATE application/x-javascript text/x-component application/javascript
-    AddOutputFilterByType DEFLATE application/json application/ld+json
-</VirtualHost>
-```
-
-Edit `/etc/apache2/ports.conf` and add the following line:
-
-```
-Listen 5000
-```
-
-Add these lines to `/etc/hosts`:
-
-```
+# These might be unnecessary (but harmless) in some environments
 127.0.0.1 libris.kb.se.localhost
 127.0.0.1 id.kb.se.localhost
 ```
 
-Make sure some necessary Apache modules are enabled:
-
+Finally, in devops again (with the fab virtual environment activated),
+run the following:
 ```
-a2enmod rewrite proxy proxy_http
-```
-
-Now (re)start Apache:
-
-```
-systemctl restart apache2
+fab xl_local app.lxlviewer.configure_nginx app.idkbse.configure_nginx
 ```
 
-You should now be able to visit http://id.kb.se.localhost:5000, and use the cataloging client
-on http://libris.kb.se.localhost:5000/katalogisering/. The XL API itself is available on
-http://libris.kb.se.localhost:5000 (proxied via Apache), or directly on http://localhost:8180.
+This will place some nginx configuration files in `/etc/nginx/conf.d` and (re)start nginx.
+
+If everything went well, you should now be able to visit http://id.kb.se.localhost:5000
+and use the cataloging client on http://libris.kb.se.localhost:5000/katalogisering/.
+The XL API itself is available on http://libris.kb.se.localhost:5000 (proxied via nginx),
+or directly on http://localhost:8180.
 
 ## Maintenance
 
