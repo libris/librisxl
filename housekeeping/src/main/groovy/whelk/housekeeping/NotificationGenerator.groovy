@@ -41,7 +41,7 @@ class NotificationGenerator extends HouseKeeper {
     }
 
     public String getCronSchedule() {
-        return "0 5 * * *"
+        return "* * * * *"
     }
 
     public void trigger() {
