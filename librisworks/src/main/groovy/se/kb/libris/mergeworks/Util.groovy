@@ -175,7 +175,7 @@ class Util {
     ]
 
     static void appendTitlePartsToMainTitle(Map title, String partNumber, String partName = null) {
-        def part = [partNumber, partName].grep().join(', ') ?: ""
+        def part = [partNumber, partName].grep().join(', ')
         if (part) {
             title['mainTitle'] += "${title['mainTitle'][-1] == '.' ? '' : '.'} $part"
         }
