@@ -261,12 +261,19 @@ class ESQuery {
             query['from'] = offset
         }
 
+        // FIXME: How should these be filtered?
+        // Never index them at all?
+        // not-meta.@type=AdminRecord ?
+        def recordFilter = [['bool': ['must_not': createBoolFilter(['@type': ['HandleAction']])]]]
+
         if (filters && siteFilter) {
-            query['query']['bool']['filter'] = filters + siteFilter
+            query['query']['bool']['filter'] = recordFilter + filters + siteFilter
         } else if (filters) {
-            query['query']['bool']['filter'] = filters
+            query['query']['bool']['filter'] = recordFilter + filters
         } else if (siteFilter) {
-            query['query']['bool']['filter'] = siteFilter
+            query['query']['bool']['filter'] = recordFilter + siteFilter
+        } else {
+            query['query']['bool']['filter'] = recordFilter
         }
 
         if (sortBy) {
