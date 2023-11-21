@@ -40,6 +40,7 @@ import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 
 
 public class Serializer {
+  public static final Pattern LINEBREAK = (Pattern) Pattern.compile("[\n\r]");
   public static final Pattern WORD_START = (Pattern) Pattern.compile("^\\w*$");
   public static final Pattern PNAME_LOCAL_ESC = (Pattern) Pattern.compile("([~!$&'()*+,;=/?#@%]|^[.-]|[.-]$)");
   public static void serialize(Map<String, Object> data, Output out) {

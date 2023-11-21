@@ -502,7 +502,7 @@ public class SerializerState {
       List<String> parts = new ArrayList<>();
       String escaped = (String) ((String) v).replace("\\", "\\\\");
       String quote = "\"";
-      if (escaped.indexOf("\n") > -1) {
+      if ((LINEBREAK.matcher(escaped).find() ? escaped : null) != null) {
         quote = "\"\"\"";
         escaped = escaped.replace("\"\"\"", "\\\"\\\"\\\"");
         if ((escaped.endsWith("\"") && !(escaped.endsWith("\\\"")))) {
