@@ -2,8 +2,10 @@ package trld.trig;
 
 import java.util.Map;
 
-import trld.Common;
-import trld.Output;
+import trld.platform.Input;
+import trld.platform.Output;
+
+import static trld.jsonld.Cmd.loadJson;
 
 public class serialize {
 
@@ -19,7 +21,7 @@ public class serialize {
                 turtleUnion = true;
                 continue;
             }
-            Object inp = Common.loadJson(arg);
+            Object inp = loadJson(arg);
             Output out = new Output(System.out);
             if (turtleOnly) {
                 Serializer.serializeTurtle((Map) inp, out, null, null, turtleUnion);

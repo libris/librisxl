@@ -2,7 +2,7 @@ package trld.jsonld;
 
 import java.util.*;
 
-import trld.Common;
+import trld.platform.Common;
 
 
 public class Cmd {
@@ -24,7 +24,7 @@ public class Cmd {
                 continue;
             }
             if (nextIsContext) {
-                contextData = Common.loadJson(arg);
+                contextData = loadJson(arg);
                 nextIsContext = false;
                 configs++;
                 continue;
@@ -35,7 +35,7 @@ public class Cmd {
             if ((args.length - configs) > 1) {
                 System.err.println("// File: " + src);
             }
-            Object source = Common.loadJson(src);
+            Object source = loadJson(src);
             try {
                 Object result = Expansion.expand(source, src);
                 if (contextData != null) {
@@ -44,7 +44,7 @@ public class Cmd {
                 if (useFlatten) {
                     result = Flattening.flatten(result, true);
                 }
-                System.out.println(Common.dumpJson(result, true));
+                System.out.println(Common.jsonEncode(result, true));
             } catch (StackOverflowError e) {
                 System.err.println("// ERROR: " + e.getClass());
             } catch (Exception e) {
@@ -55,5 +55,9 @@ public class Cmd {
                 else throw e;
             }
         }
+    }
+
+    public static Object loadJson(String ref) {
+        return (Object) Docloader.loadAnyDocument(ref).document;
     }
 }

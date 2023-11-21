@@ -15,121 +15,126 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Input;
-import trld.Output;
-import static trld.Common.loadJson;
-import static trld.jsonld.Base.*;
-import static trld.jsonld.Expansion.expand;
+import static trld.nq.Parser.load;
+import static trld.nq.Serializer.serialize;
+import trld.platform.Input;
+import trld.platform.Output;
+import static trld.jsonld.Base.CONTEXT;
+import static trld.jsonld.Base.ID;
+import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Compaction.compact;
+import trld.jsonld.LoadDocumentCallback;
+import static trld.jsonld.Docloader.getDocumentLoader;
+import static trld.jsonld.Expansion.expand;
 import static trld.jsonld.Flattening.flatten;
 import trld.jsonld.RdfDataset;
 import static trld.jsonld.Rdf.toJsonld;
 import static trld.jsonld.Rdf.toRdfDataset;
-import static trld.nq.Parser.load;
-import static trld.nq.Serializer.serialize;
 import static trld.jsonld.Testbase.*;
 
 
-public class TestCase { // LINE: 18
-  public List<String> testtype; // LINE: 20
-  public String testid; // LINE: 21
-  public String name; // LINE: 22
-  public Map<String, Object> options; // LINE: 23
-  public String indocPath; // LINE: 24
-  public String baseUri; // LINE: 25
-  public Boolean compactArrays; // LINE: 27
-  public /*@Nullable*/ String expectedError; // LINE: 28
-  public /*@Nullable*/ String expectdocPath; // LINE: 29
-  public /*@Nullable*/ String expandContext; // LINE: 30
-  public /*@Nullable*/ String contextPath; // LINE: 31
-  public Object compactContext; // LINE: 32
+public class TestCase {
+  public List<String> testtype;
+  public String testid;
+  public String name;
+  public Map<String, Object> options;
+  public String indocPath;
+  public String baseUri;
+  public Boolean compactArrays;
+  public /*@Nullable*/ String expectedError;
+  public /*@Nullable*/ String expectdocPath;
+  public /*@Nullable*/ String expandContext;
+  public /*@Nullable*/ String contextPath;
+  public Object compactContext;
 
-  public TestCase(String suitedir, Map tcData) { // LINE: 34
-    this.testtype = (List<String>) tcData.get(TYPE); // LINE: 35
-    this.testid = ((String) tcData.get(ID)).replace("#t", ""); // LINE: 36
-    this.name = (String) tcData.get("name"); // LINE: 37
-    this.options = ((Map) tcData.getOrDefault("option", new HashMap<>())); // LINE: 39
-    this.indocPath = suitedir + "/" + tcData.get("input"); // LINE: 41
-    String baseUri = this.indocPath.replace(suitedir, TESTS_URL); // LINE: 43
-    this.baseUri = ((String) this.options.getOrDefault("base", baseUri)); // LINE: 44
-    this.compactArrays = ((Boolean) this.options.getOrDefault("compactArrays", true)); // LINE: 46
-    this.expectedError = (String) tcData.get("expectErrorCode"); // LINE: 48
-    this.expectdocPath = null; // LINE: 50
-    /*@Nullable*/ String expectdocPath = (/*@Nullable*/ String) tcData.get("expect"); // LINE: 51
-    if (expectdocPath != null) { // LINE: 52
-      this.expectdocPath = suitedir + "/" + expectdocPath; // LINE: 53
+  public TestCase(String suitedir, Map tcData) {
+    this.testtype = (List<String>) tcData.get(TYPE);
+    this.testid = ((String) tcData.get(ID)).replace("#t", "");
+    this.name = (String) tcData.get("name");
+    this.options = ((Map) tcData.getOrDefault("option", new HashMap<>()));
+    this.indocPath = suitedir + "/" + tcData.get("input");
+    String baseUri = this.indocPath.replace(suitedir, TESTS_URL);
+    this.baseUri = ((String) this.options.getOrDefault("base", baseUri));
+    this.compactArrays = ((Boolean) this.options.getOrDefault("compactArrays", true));
+    this.expectedError = (String) tcData.get("expectErrorCode");
+    this.expectdocPath = null;
+    /*@Nullable*/ String expectdocPath = (/*@Nullable*/ String) tcData.get("expect");
+    if (expectdocPath != null) {
+      this.expectdocPath = suitedir + "/" + expectdocPath;
     }
-    this.expandContext = null; // LINE: 55
-    /*@Nullable*/ String expandContext = ((/*@Nullable*/ String) this.options.get("expandContext")); // LINE: 56
-    if (expandContext != null) { // LINE: 57
-      this.expandContext = suitedir + "/" + expandContext; // LINE: 58
+    this.expandContext = null;
+    /*@Nullable*/ String expandContext = ((/*@Nullable*/ String) this.options.get("expandContext"));
+    if (expandContext != null) {
+      this.expandContext = suitedir + "/" + expandContext;
     }
-    this.contextPath = null; // LINE: 60
-    this.compactContext = null; // LINE: 61
-    String contextPath = (String) ((String) tcData.get("context")); // LINE: 62
-    if (contextPath != null) { // LINE: 63
-      this.contextPath = suitedir + "/" + contextPath; // LINE: 64
-      this.compactContext = (Object) loadJson(this.contextPath.toString()); // LINE: 65
+    this.contextPath = null;
+    this.compactContext = null;
+    String contextPath = (String) ((String) tcData.get("context"));
+    if (contextPath != null) {
+      this.contextPath = suitedir + "/" + contextPath;
+      this.compactContext = (Object) loadJson(this.contextPath.toString());
     }
   }
 
-  public Map.Entry<Object, Object> run() { // LINE: 67
-    Object outData = null; // LINE: 68
-    if (this.testtype.contains("jld:FromRDFTest")) { // LINE: 69
-      outData = (Object) this.runFromRdfTest(); // LINE: 70
-    } else if (this.testtype.contains("jld:ToRDFTest")) { // LINE: 72
-      outData = (Object) this.runToRdfTest(); // LINE: 73
-    } else if ((this.testtype.contains("jld:ExpandTest") || this.testtype.contains("jld:CompactTest") || this.testtype.contains("jld:FlattenTest"))) { // LINE: 75
-      Object inData = (Object) loadJson(this.indocPath); // LINE: 78
-      outData = (Object) expand(((Object) inData), this.baseUri, this.expandContext, true); // LINE: 79
+  public Map.Entry<Object, Object> run() {
+    Object outData = null;
+    if (this.testtype.contains("jld:FromRDFTest")) {
+      outData = (Object) this.runFromRdfTest();
+    } else if (this.testtype.contains("jld:ToRDFTest")) {
+      outData = (Object) this.runToRdfTest();
+    } else if ((this.testtype.contains("jld:ExpandTest") || this.testtype.contains("jld:CompactTest") || this.testtype.contains("jld:FlattenTest"))) {
+      Object inData = (Object) loadJson(this.indocPath);
+      outData = (Object) expand(((Object) inData), this.baseUri, this.expandContext, true);
     }
-    if (this.testtype.contains("jld:FlattenTest")) { // LINE: 82
-      outData = (Object) flatten(((Object) outData), true); // LINE: 83
+    if (this.testtype.contains("jld:FlattenTest")) {
+      outData = (Object) flatten(((Object) outData), true);
     }
-    if (this.compactContext != null) { // LINE: 85
-      outData = (Object) compact(this.compactContext, ((Object) outData), this.baseUri, this.compactArrays, true); // LINE: 86
+    if (this.compactContext != null) {
+      outData = (Object) compact(this.compactContext, ((Object) outData), this.baseUri, this.compactArrays, true);
     }
-    return new KeyValue(outData, this.loadExpectData()); // LINE: 90
+    return new KeyValue(outData, this.loadExpectData());
   }
 
-  public Object runFromRdfTest() { // LINE: 92
-    RdfDataset inData = new RdfDataset(); // LINE: 93
+  public Object runFromRdfTest() {
+    RdfDataset inData = new RdfDataset();
     try (Input inp = new Input(this.indocPath)) {
+      load(inData, inp);
     }
-    Boolean ordered = true; // LINE: 96
-    /*@Nullable*/ String rdfDirection = ((/*@Nullable*/ String) this.options.get("rdfDirection")); // LINE: 97
-    Boolean useNativeTypes = (Boolean) ((Boolean) this.options.getOrDefault("useNativeTypes", false)); // LINE: 98
-    Boolean useRdfType = (Boolean) ((Boolean) this.options.getOrDefault("useRdfType", false)); // LINE: 99
-    return toJsonld(inData, ordered, rdfDirection, useNativeTypes, useRdfType); // LINE: 100
+    Boolean ordered = true;
+    /*@Nullable*/ String rdfDirection = ((/*@Nullable*/ String) this.options.get("rdfDirection"));
+    Boolean useNativeTypes = (Boolean) ((Boolean) this.options.getOrDefault("useNativeTypes", false));
+    Boolean useRdfType = (Boolean) ((Boolean) this.options.getOrDefault("useRdfType", false));
+    return toJsonld(inData, ordered, rdfDirection, useNativeTypes, useRdfType);
   }
 
-  public Object runToRdfTest() { // LINE: 103
-    Output out = new Output(); // LINE: 104
-    Object inData = (Object) ((Object) loadJson(this.indocPath)); // LINE: 105
-    inData = expand(inData, this.baseUri, this.expandContext, true); // LINE: 106
-    /*@Nullable*/ String rdfDirection = ((/*@Nullable*/ String) this.options.get("rdfDirection")); // LINE: 109
-    RdfDataset dataset = toRdfDataset(inData, rdfDirection); // LINE: 110
-    serialize(dataset, out); // LINE: 111
-    return out.getValue(); // LINE: 112
+  public Object runToRdfTest() {
+    Output out = new Output();
+    Object inData = (Object) ((Object) loadJson(this.indocPath));
+    inData = expand(inData, this.baseUri, this.expandContext, true);
+    /*@Nullable*/ String rdfDirection = ((/*@Nullable*/ String) this.options.get("rdfDirection"));
+    RdfDataset dataset = toRdfDataset(inData, rdfDirection);
+    serialize(dataset, out);
+    return out.getValue();
   }
 
-  protected /*@Nullable*/ Object loadExpectData() { // LINE: 114
-    if (this.expectdocPath != null) { // LINE: 115
+  protected /*@Nullable*/ Object loadExpectData() {
+    if (this.expectdocPath != null) {
       assert this.testtype.contains("jld:PositiveEvaluationTest");
-      if (this.expectdocPath.endsWith(".nq")) { // LINE: 117
+      if (this.expectdocPath.endsWith(".nq")) {
         try (Input inp = new Input(this.expectdocPath)) {
+          return inp.read();
         }
       } else {
-        Object expectData = (Object) loadJson(this.expectdocPath); // LINE: 121
-        if ((this.contextPath != null && expectData instanceof Map)) { // LINE: 122
-          ((Map) expectData).remove(CONTEXT); // LINE: 123
+        Object expectData = (Object) loadJson(this.expectdocPath);
+        if ((this.contextPath != null && expectData instanceof Map)) {
+          ((Map) expectData).remove(CONTEXT);
         }
-        return expectData; // LINE: 124
+        return expectData;
       }
-    } else if (this.testtype.contains("jld:PositiveSyntaxTest")) { // LINE: 125
+    } else if (this.testtype.contains("jld:PositiveSyntaxTest")) {
     } else {
       assert this.testtype.contains("jld:NegativeEvaluationTest");
     }
-    return null; // LINE: 129
+    return null;
   }
 }

@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Input;
-import static trld.Common.dumpJson;
+import static trld.platform.Common.jsonEncode;
+import trld.platform.Input;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.LANGUAGE;
@@ -28,6 +28,8 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 import static trld.Rdfterms.RDF_TYPE;
 import static trld.Rdfterms.XSD;
 import static trld.Rdfterms.XSD_DOUBLE;
@@ -35,11 +37,11 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ParserState { // LINE: 75
-  public ParserState parent; // LINE: 77
-  public Map<String, Object> context; // LINE: 78
+public class ParserState {
+  public ParserState parent;
+  public Map<String, Object> context;
 
-  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 80
-    throw new RuntimeException(); // LINE: 81
+  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) {
+    throw new RuntimeException();
   }
 }

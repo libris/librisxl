@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Input;
-import static trld.Common.dumpJson;
+import static trld.platform.Common.jsonEncode;
+import trld.platform.Input;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.LANGUAGE;
@@ -28,6 +28,8 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 import static trld.Rdfterms.RDF_TYPE;
 import static trld.Rdfterms.XSD;
 import static trld.Rdfterms.XSD_DOUBLE;
@@ -35,26 +37,26 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class BaseParserState extends ParserState { // LINE: 84
+public class BaseParserState extends ParserState {
 
-  public BaseParserState(/*@Nullable*/ ParserState parent) { // LINE: 86
-    super(); // LINE: 87
-    this.parent = (parent != null ? parent : new ParserState()); // LINE: 88
-    this.context = (this.parent instanceof BaseParserState ? ((BaseParserState) this.parent).context : new HashMap<>()); // LINE: 89
-    this.init(); // LINE: 90
+  public BaseParserState(/*@Nullable*/ ParserState parent) {
+    super();
+    this.parent = (parent != null ? parent : new ParserState());
+    this.context = (this.parent instanceof BaseParserState ? ((BaseParserState) this.parent).context : new HashMap<>());
+    this.init();
   }
 
-  public void init() { // LINE: 92
+  public void init() {
   }
 
-  public String symbol(Map<String, String> value) { // LINE: 95
-    if (value.containsKey(SYMBOL)) { // LINE: 96
-      String sym = (String) value.get(SYMBOL); // LINE: 97
-      if (this.context.containsKey(sym)) { // LINE: 98
-        sym = ((String) this.context.get(VOCAB)) + sym; // LINE: 99
+  public String symbol(Map<String, String> value) {
+    if (value.containsKey(SYMBOL)) {
+      String sym = (String) value.get(SYMBOL);
+      if (this.context.containsKey(sym)) {
+        sym = ((String) this.context.get(VOCAB)) + sym;
       }
-      return sym; // LINE: 100
+      return sym;
     }
-    return value.get(ID); // LINE: 101
+    return value.get(ID);
   }
 }

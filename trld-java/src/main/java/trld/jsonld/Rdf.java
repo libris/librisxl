@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import static trld.Common.dumpCanonicalJson;
-import static trld.Common.parseJson;
+import static trld.platform.Common.jsonEncodeCanonical;
+import static trld.platform.Common.jsonDecode;
 import static trld.jsonld.Base.*;
 import trld.jsonld.InvalidBaseDirectionError;
 import trld.jsonld.InvalidLanguageTaggedStringError;
@@ -38,66 +38,73 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.Rdfterms.XSD_STRING;
 import static trld.Rdfterms.I18N;
 
-public class Rdf {
-  public static final Double MAX_INT = Math.pow(10, 21); // LINE: 26
-  public static final String COMPOUND_LITERAL = "compound-literal"; // LINE: 28
-  public static final String I18N_DATATYPE = "i18n-datatype"; // LINE: 29
-  public static final String USAGES = "usages"; // LINE: 31
-  static String processingMode = JSONLD11; // LINE: 35
 
+
+
+
+
+
+
+
+
+public class Rdf {
+  public static final Double MAX_INT = Math.pow(10, 21);
+  public static final String COMPOUND_LITERAL = "compound-literal";
+  public static final String I18N_DATATYPE = "i18n-datatype";
+  public static final String USAGES = "usages";
+  static String processingMode = JSONLD11;
   public static RdfDataset toRdfDataset(Object data) {
     return toRdfDataset(data, null);
   }
-  public static RdfDataset toRdfDataset(Object data, /*@Nullable*/ String rdfDirection) { // LINE: 90
-    BNodes bnodes = new BNodes(); // LINE: 92
-    RdfDataset dataset = new RdfDataset(); // LINE: 93
-    Map<String, Map<String, Object>> nodeMap = Builtins.mapOf(DEFAULT, new HashMap<>()); // LINE: 94
-    makeNodeMap(bnodes, data, nodeMap); // LINE: 95
-    jsonldToRdfDataset(nodeMap, dataset, bnodes, rdfDirection); // LINE: 97
-    return dataset; // LINE: 99
+  public static RdfDataset toRdfDataset(Object data, /*@Nullable*/ String rdfDirection) {
+    BNodes bnodes = new BNodes();
+    RdfDataset dataset = new RdfDataset();
+    Map<String, Map<String, Object>> nodeMap = Builtins.mapOf(DEFAULT, new HashMap<>());
+    makeNodeMap(bnodes, data, nodeMap);
+    jsonldToRdfDataset(nodeMap, dataset, bnodes, rdfDirection);
+    return dataset;
   }
-
   public static void jsonldToRdfDataset(Map<String, Map<String, Object>> nodeMap, RdfDataset dataset, BNodes bnodes) {
     jsonldToRdfDataset(nodeMap, dataset, bnodes, null);
   }
-  public static void jsonldToRdfDataset(Map<String, Map<String, Object>> nodeMap, RdfDataset dataset, BNodes bnodes, /*@Nullable*/ String rdfDirection) { // LINE: 102
-    for (String graphName : ((List<String>) Builtins.sorted(nodeMap.keySet()))) { // LINE: 105
-      Map graph = (Map) nodeMap.get(graphName); // LINE: 106
-      if (!((isIri(graphName) || isBlank(graphName) || (graphName == null && ((Object) DEFAULT) == null || graphName != null && (graphName).equals(DEFAULT))))) { // LINE: 108
-        continue; // LINE: 109
+  public static void jsonldToRdfDataset(Map<String, Map<String, Object>> nodeMap, RdfDataset dataset, BNodes bnodes, /*@Nullable*/ String rdfDirection) {
+    for (String graphName : ((List<String>) Builtins.sorted(nodeMap.keySet()))) {
+      Map graph = (Map) nodeMap.get(graphName);
+      if (!((isIri(graphName) || isBlank(graphName) || (graphName == null && ((Object) DEFAULT) == null || graphName != null && (graphName).equals(DEFAULT))))) {
+        continue;
       }
-      RdfGraph triples; // LINE: 111
-      if ((graphName == null && ((Object) DEFAULT) == null || graphName != null && (graphName).equals(DEFAULT))) { // LINE: 112
-        triples = (RdfGraph) dataset.defaultGraph; // LINE: 113
+      RdfGraph triples;
+      if ((graphName == null && ((Object) DEFAULT) == null || graphName != null && (graphName).equals(DEFAULT))) {
+        triples = (RdfGraph) dataset.defaultGraph;
       } else {
-        triples = new RdfGraph(graphName); // LINE: 115
-        dataset.add(triples); // LINE: 116
+        triples = new RdfGraph(graphName);
+        dataset.add(triples);
       }
-      for (String subject : ((Iterable<String>) Builtins.sorted(graph.keySet()))) { // LINE: 118
-        Map<String, Object> node = (Map<String, Object>) graph.get(subject); // LINE: 119
-        if (!(isIriOrBlank(subject))) { // LINE: 121
-          continue; // LINE: 122
+      for (String subject : ((Iterable<String>) Builtins.sorted(graph.keySet()))) {
+        Map<String, Object> node = (Map<String, Object>) graph.get(subject);
+        if (!(isIriOrBlank(subject))) {
+          continue;
         }
-        for (String property : ((Iterable<String>) Builtins.sorted(node.keySet()))) { // LINE: 124
-          List<Object> values = (List<Object>) asList(node.get(property)); // LINE: 127
-          if ((property == null && ((Object) TYPE) == null || property != null && (property).equals(TYPE))) { // LINE: 129
-            for (Object type : values) { // LINE: 130
-              triples.add(new RdfTriple(subject, RDF_TYPE, ((String) type))); // LINE: 131
+        for (String property : ((Iterable<String>) Builtins.sorted(node.keySet()))) {
+          List<Object> values = (List<Object>) asList(node.get(property));
+          if ((property == null && ((Object) TYPE) == null || property != null && (property).equals(TYPE))) {
+            for (Object type : values) {
+              triples.add(new RdfTriple(subject, RDF_TYPE, ((String) type)));
             }
-          } else if (KEYWORDS.contains(property)) { // LINE: 133
-            continue; // LINE: 134
-          } else if (isBlank(property)) { // LINE: 136
-            continue; // LINE: 137
-          } else if (!(isIriOrBlank(property))) { // LINE: 139
-            continue; // LINE: 140
+          } else if (KEYWORDS.contains(property)) {
+            continue;
+          } else if (isBlank(property)) {
+            continue;
+          } else if (!(isIriOrBlank(property))) {
+            continue;
           } else {
-            for (Object item : values) { // LINE: 143
+            for (Object item : values) {
               assert item instanceof Map;
-              List<RdfTriple> listTriples = new ArrayList<>(); // LINE: 146
-              Object rdfObject = (Object) ((Object) objectToRdfData((Map) item, listTriples, bnodes, rdfDirection)); // LINE: 148
-              listTriples.add(new RdfTriple(subject, property, rdfObject)); // LINE: 150
-              for (RdfTriple triple : listTriples) { // LINE: 152
-                triples.add(triple); // LINE: 153
+              List<RdfTriple> listTriples = new ArrayList<>();
+              Object rdfObject = (Object) ((Object) objectToRdfData((Map) item, listTriples, bnodes, rdfDirection));
+              listTriples.add(new RdfTriple(subject, property, rdfObject));
+              for (RdfTriple triple : listTriples) {
+                triples.add(triple);
               }
             }
           }
@@ -105,99 +112,96 @@ public class Rdf {
       }
     }
   }
-
   public static /*@Nullable*/ Object objectToRdfData(Map<String, Object> item, List listTriples, BNodes bnodes) {
     return objectToRdfData(item, listTriples, bnodes, null);
   }
-  public static /*@Nullable*/ Object objectToRdfData(Map<String, Object> item, List listTriples, BNodes bnodes, /*@Nullable*/ String rdfDirection) { // LINE: 156
-    if ((item.containsKey(ID) && !(isIriOrBlank(((String) item.get(ID)))))) { // LINE: 159
-      return null; // LINE: 160
+  public static /*@Nullable*/ Object objectToRdfData(Map<String, Object> item, List listTriples, BNodes bnodes, /*@Nullable*/ String rdfDirection) {
+    if ((item.containsKey(ID) && !(isIriOrBlank(((String) item.get(ID)))))) {
+      return null;
     }
-    if (item.containsKey(ID)) { // LINE: 162
-      return ((String) item.get(ID)); // LINE: 163
+    if (item.containsKey(ID)) {
+      return ((String) item.get(ID));
     }
-    if (item.containsKey(LIST)) { // LINE: 165
-      return listToRdfList(((List) item.get(LIST)), listTriples, bnodes, rdfDirection); // LINE: 166
+    if (item.containsKey(LIST)) {
+      return listToRdfList(((List) item.get(LIST)), listTriples, bnodes, rdfDirection);
     }
     assert item.containsKey(VALUE);
-    Object value = (Object) item.get(VALUE); // LINE: 169
-    /*@Nullable*/ String datatype = ((/*@Nullable*/ String) item.get(TYPE)); // LINE: 171
-    if ((datatype != null && !(isIri(datatype)) && !((datatype == null && ((Object) JSON) == null || datatype != null && (datatype).equals(JSON))))) { // LINE: 173
-      return null; // LINE: 174
+    Object value = (Object) item.get(VALUE);
+    /*@Nullable*/ String datatype = ((/*@Nullable*/ String) item.get(TYPE));
+    if ((datatype != null && !(isIri(datatype)) && !((datatype == null && ((Object) JSON) == null || datatype != null && (datatype).equals(JSON))))) {
+      return null;
     }
-    if ((item.containsKey(LANGUAGE) && !(isLangTag(((String) item.get(LANGUAGE)))))) { // LINE: 176
-      return null; // LINE: 177
+    if ((item.containsKey(LANGUAGE) && !(isLangTag(((String) item.get(LANGUAGE)))))) {
+      return null;
     }
-    if ((datatype == null && ((Object) JSON) == null || datatype != null && (datatype).equals(JSON))) { // LINE: 179
-      value = (Object) dumpCanonicalJson(value); // LINE: 180
-      datatype = RDF_JSON; // LINE: 181
+    if ((datatype == null && ((Object) JSON) == null || datatype != null && (datatype).equals(JSON))) {
+      value = (Object) jsonEncodeCanonical(value);
+      datatype = RDF_JSON;
     }
-    if (value instanceof Boolean) { // LINE: 183
-      value = ((Boolean) value ? "true" : "false"); // LINE: 184
-      if (datatype == null) { // LINE: 185
-        datatype = XSD_BOOLEAN; // LINE: 186
+    if (value instanceof Boolean) {
+      value = ((Boolean) value ? "true" : "false");
+      if (datatype == null) {
+        datatype = XSD_BOOLEAN;
       }
-    } else if ((value instanceof Integer || value instanceof Double && ((((Double) value) % 1 > 0 || ((Double) value) >= MAX_INT) || (datatype == null && ((Object) XSD_DOUBLE) == null || datatype != null && (datatype).equals(XSD_DOUBLE))))) { // LINE: 188
-      value = (Object) value.toString(); // LINE: 189
-      if (datatype == null) { // LINE: 190
-        datatype = XSD_DOUBLE; // LINE: 191
+    } else if ((value instanceof Integer || value instanceof Double && ((((Double) value) % 1 > 0 || ((Double) value) >= MAX_INT) || (datatype == null && ((Object) XSD_DOUBLE) == null || datatype != null && (datatype).equals(XSD_DOUBLE))))) {
+      value = (Object) value.toString();
+      if (datatype == null) {
+        datatype = XSD_DOUBLE;
       }
-    } else if (value instanceof Integer || value instanceof Double) { // LINE: 193
-      value = (Object) value.toString(); // LINE: 194
-      if (datatype == null) { // LINE: 195
-        datatype = XSD_INTEGER; // LINE: 196
+    } else if (value instanceof Integer || value instanceof Double) {
+      value = (Object) value.toString();
+      if (datatype == null) {
+        datatype = XSD_INTEGER;
       }
-    } else if (datatype == null) { // LINE: 198
-      datatype = (item.containsKey(LANGUAGE) ? RDF_LANGSTRING : XSD_STRING); // LINE: 199
+    } else if (datatype == null) {
+      datatype = (item.containsKey(LANGUAGE) ? RDF_LANGSTRING : XSD_STRING);
     }
     assert value instanceof String;
-    /*@Nullable*/ Object literal = null; // LINE: 202
-    if ((item.containsKey(DIRECTION) && rdfDirection != null)) { // LINE: 203
-      String language = (String) ((String) item.getOrDefault(LANGUAGE, "")); // LINE: 205
-      language = (String) language.toLowerCase(); // LINE: 206
-      if ((rdfDirection == null && ((Object) I18N_DATATYPE) == null || rdfDirection != null && (rdfDirection).equals(I18N_DATATYPE))) { // LINE: 208
-        datatype = I18N + language + "_" + item.get(DIRECTION); // LINE: 209
-        literal = (Object) new RdfLiteral((String) value, datatype); // LINE: 210
-      } else if ((rdfDirection == null && ((Object) COMPOUND_LITERAL) == null || rdfDirection != null && (rdfDirection).equals(COMPOUND_LITERAL))) { // LINE: 212
-        String nodeid = (String) bnodes.makeBnodeId(); // LINE: 214
-        literal = (Object) nodeid; // LINE: 215
-        listTriples.add(new RdfTriple(nodeid, RDF_VALUE, new RdfLiteral((String) value))); // LINE: 218
-        if (item.containsKey(LANGUAGE)) { // LINE: 220
-          listTriples.add(new RdfTriple(nodeid, RDF_LANGUAGE, new RdfLiteral(((String) item.get(LANGUAGE))))); // LINE: 221
+    /*@Nullable*/ Object literal = null;
+    if ((item.containsKey(DIRECTION) && rdfDirection != null)) {
+      String language = (String) ((String) item.getOrDefault(LANGUAGE, ""));
+      language = (String) language.toLowerCase();
+      if ((rdfDirection == null && ((Object) I18N_DATATYPE) == null || rdfDirection != null && (rdfDirection).equals(I18N_DATATYPE))) {
+        datatype = I18N + language + "_" + item.get(DIRECTION);
+        literal = (Object) new RdfLiteral((String) value, datatype);
+      } else if ((rdfDirection == null && ((Object) COMPOUND_LITERAL) == null || rdfDirection != null && (rdfDirection).equals(COMPOUND_LITERAL))) {
+        String nodeid = (String) bnodes.makeBnodeId();
+        literal = (Object) nodeid;
+        listTriples.add(new RdfTriple(nodeid, RDF_VALUE, new RdfLiteral((String) value)));
+        if (item.containsKey(LANGUAGE)) {
+          listTriples.add(new RdfTriple(nodeid, RDF_LANGUAGE, new RdfLiteral(((String) item.get(LANGUAGE)))));
         }
-        listTriples.add(new RdfTriple(nodeid, RDF_DIRECTION, new RdfLiteral(((String) item.get(DIRECTION))))); // LINE: 223
+        listTriples.add(new RdfTriple(nodeid, RDF_DIRECTION, new RdfLiteral(((String) item.get(DIRECTION)))));
       }
     } else {
-      literal = (Object) new RdfLiteral((String) value, datatype, ((/*@Nullable*/ String) item.get(LANGUAGE))); // LINE: 226
+      literal = (Object) new RdfLiteral((String) value, datatype, ((/*@Nullable*/ String) item.get(LANGUAGE)));
     }
-    return literal; // LINE: 228
+    return literal;
   }
-
   public static String listToRdfList(List<Map<String, Object>> l, List listTriples, BNodes bnodes) {
     return listToRdfList(l, listTriples, bnodes, null);
   }
-  public static String listToRdfList(List<Map<String, Object>> l, List listTriples, BNodes bnodes, /*@Nullable*/ String rdfDirection) { // LINE: 231
-    if (l.size() == 0) { // LINE: 234
-      return RDF_NIL; // LINE: 235
+  public static String listToRdfList(List<Map<String, Object>> l, List listTriples, BNodes bnodes, /*@Nullable*/ String rdfDirection) {
+    if (l.size() == 0) {
+      return RDF_NIL;
     }
-    String subject = (String) bnodes.makeBnodeId(); // LINE: 239
-    String first = subject; // LINE: 240
-    Integer i = 0; // LINE: 241
-    for (Map<String, Object> item : l) { // LINE: 242
-      List embeddedTriples = new ArrayList<>(); // LINE: 244
-      /*@Nullable*/ Object obj = objectToRdfData(item, embeddedTriples, bnodes, rdfDirection); // LINE: 246
-      if (obj != null) { // LINE: 248
-        listTriples.add(new RdfTriple(subject, RDF_FIRST, obj)); // LINE: 249
+    String subject = (String) bnodes.makeBnodeId();
+    String first = subject;
+    Integer i = 0;
+    for (Map<String, Object> item : l) {
+      List embeddedTriples = new ArrayList<>();
+      /*@Nullable*/ Object obj = objectToRdfData(item, embeddedTriples, bnodes, rdfDirection);
+      if (obj != null) {
+        listTriples.add(new RdfTriple(subject, RDF_FIRST, obj));
       }
       i += 1;
-      String nextSubject = (i < l.size() ? bnodes.makeBnodeId() : RDF_NIL); // LINE: 252
-      listTriples.add(new RdfTriple(subject, RDF_REST, nextSubject)); // LINE: 253
-      subject = nextSubject; // LINE: 254
+      String nextSubject = (i < l.size() ? bnodes.makeBnodeId() : RDF_NIL);
+      listTriples.add(new RdfTriple(subject, RDF_REST, nextSubject));
+      subject = nextSubject;
       listTriples.addAll(embeddedTriples);
     }
-    return (i > 0 ? first : RDF_NIL); // LINE: 258
+    return (i > 0 ? first : RDF_NIL);
   }
-
   public static List<Map<String, Object>> toJsonld(RdfDataset dataset) {
     return toJsonld(dataset, false);
   }
@@ -210,239 +214,235 @@ public class Rdf {
   public static List<Map<String, Object>> toJsonld(RdfDataset dataset, Boolean ordered, /*@Nullable*/ String rdfDirection, Boolean useNativeTypes) {
     return toJsonld(dataset, ordered, rdfDirection, useNativeTypes, false);
   }
-  public static List<Map<String, Object>> toJsonld(RdfDataset dataset, Boolean ordered, /*@Nullable*/ String rdfDirection, Boolean useNativeTypes, Boolean useRdfType) { // LINE: 261
-    Map<String, Map<String, Object>> defaultGraph = new HashMap<>(); // LINE: 267
-    Map<String, Map<String, Map<String, Object>>> graphMap = Builtins.mapOf(DEFAULT, defaultGraph); // LINE: 269
-    Map<String, Object> referencedOnce = new HashMap<>(); // LINE: 271
-    Map<String, Set<String>> compoundLiteralSubjects = new HashMap<>(); // LINE: 273
-    for (RdfGraph graph : dataset) { // LINE: 276
-      String name = (graph.name == null ? DEFAULT : graph.name); // LINE: 278
+  public static List<Map<String, Object>> toJsonld(RdfDataset dataset, Boolean ordered, /*@Nullable*/ String rdfDirection, Boolean useNativeTypes, Boolean useRdfType) {
+    Map<String, Map<String, Object>> defaultGraph = new HashMap<>();
+    Map<String, Map<String, Map<String, Object>>> graphMap = Builtins.mapOf(DEFAULT, defaultGraph);
+    Map<String, Object> referencedOnce = new HashMap<>();
+    Map<String, Set<String>> compoundLiteralSubjects = new HashMap<>();
+    for (RdfGraph graph : dataset) {
+      String name = (graph.name == null ? DEFAULT : graph.name);
       if (!graphMap.containsKey(name)) graphMap.put(name, new HashMap<>());
-      graphMap.get(name); // LINE: 280
+      graphMap.get(name);
       if (!compoundLiteralSubjects.containsKey(name)) compoundLiteralSubjects.put(name, new HashSet());
-      compoundLiteralSubjects.get(name); // LINE: 282
-      if (!name.equals(DEFAULT)) { // LINE: 284
+      compoundLiteralSubjects.get(name);
+      if (!name.equals(DEFAULT)) {
         if (!defaultGraph.containsKey(name)) defaultGraph.put(name, Builtins.mapOf(ID, name));
-        defaultGraph.get(name); // LINE: 285
+        defaultGraph.get(name);
       }
-      Map<String, Map<String, Object>> nodeMap = ((Map<String, Map<String, Object>>) graphMap.get(name)); // LINE: 287
-      Set<String> compounds = (Set<String>) compoundLiteralSubjects.get(name); // LINE: 289
-      for (RdfTriple triple : graph.triples) { // LINE: 292
-        if (!nodeMap.containsKey(triple.s)) { // LINE: 294
-          nodeMap.put(triple.s, Builtins.mapOf(ID, triple.s)); // LINE: 295
+      Map<String, Map<String, Object>> nodeMap = ((Map<String, Map<String, Object>>) graphMap.get(name));
+      Set<String> compounds = (Set<String>) compoundLiteralSubjects.get(name);
+      for (RdfTriple triple : graph.triples) {
+        if (!nodeMap.containsKey(triple.s)) {
+          nodeMap.put(triple.s, Builtins.mapOf(ID, triple.s));
         }
-        Map<String, Object> node = (Map<String, Object>) nodeMap.get(triple.s); // LINE: 297
-        if (((rdfDirection == null && ((Object) COMPOUND_LITERAL) == null || rdfDirection != null && (rdfDirection).equals(COMPOUND_LITERAL)) && (triple.p == null && ((Object) RDF_DIRECTION) == null || triple.p != null && (triple.p).equals(RDF_DIRECTION)))) { // LINE: 299
-          compounds.add(triple.s); // LINE: 300
+        Map<String, Object> node = (Map<String, Object>) nodeMap.get(triple.s);
+        if (((rdfDirection == null && ((Object) COMPOUND_LITERAL) == null || rdfDirection != null && (rdfDirection).equals(COMPOUND_LITERAL)) && (triple.p == null && ((Object) RDF_DIRECTION) == null || triple.p != null && (triple.p).equals(RDF_DIRECTION)))) {
+          compounds.add(triple.s);
         }
-        if ((triple.o instanceof String && !nodeMap.containsKey(triple.o))) { // LINE: 302
-          nodeMap.put((String) triple.o, Builtins.mapOf(ID, triple.o)); // LINE: 303
+        if ((triple.o instanceof String && !nodeMap.containsKey(triple.o))) {
+          nodeMap.put((String) triple.o, Builtins.mapOf(ID, triple.o));
         }
-        if (((triple.p == null && ((Object) RDF_TYPE) == null || triple.p != null && (triple.p).equals(RDF_TYPE)) && !(useRdfType) && triple.o instanceof String)) { // LINE: 305
+        if (((triple.p == null && ((Object) RDF_TYPE) == null || triple.p != null && (triple.p).equals(RDF_TYPE)) && !(useRdfType) && triple.o instanceof String)) {
           if (!node.containsKey(TYPE)) node.put(TYPE, new ArrayList<>());
-          List types = (List) ((List) node.get(TYPE)); // LINE: 306
-          if (!(types.stream().anyMatch(t -> (t == null && ((Object) triple.o) == null || t != null && (t).equals(triple.o))))) { // LINE: 307
-            types.add((String) triple.o); // LINE: 308
+          List types = (List) ((List) node.get(TYPE));
+          if (!(types.stream().anyMatch(t -> (t == null && ((Object) triple.o) == null || t != null && (t).equals(triple.o))))) {
+            types.add((String) triple.o);
           }
-          continue; // LINE: 309
+          continue;
         }
-        Map<String, Object> value = toJsonldObject(triple.o, rdfDirection, useNativeTypes); // LINE: 311
+        Map<String, Object> value = toJsonldObject(triple.o, rdfDirection, useNativeTypes);
         if (!node.containsKey(triple.p)) node.put(triple.p, new ArrayList<>());
-        List<Object> values = (List<Object>) ((List) node.get(triple.p)); // LINE: 313
-        if (values.stream().anyMatch(v -> nodeEquals(v, value))) { // LINE: 317
-          continue; // LINE: 318
+        List<Object> values = (List<Object>) ((List) node.get(triple.p));
+        if (values.stream().anyMatch(v -> nodeEquals(v, value))) {
+          continue;
         }
-        values.add(value); // LINE: 319
-        if ((triple.o == null && ((Object) RDF_NIL) == null || triple.o != null && (triple.o).equals(RDF_NIL))) { // LINE: 321
-          Map<String, Object> obj = (Map<String, Object>) nodeMap.get(((String) triple.o)); // LINE: 323
+        values.add(value);
+        if ((triple.o == null && ((Object) RDF_NIL) == null || triple.o != null && (triple.o).equals(RDF_NIL))) {
+          Map<String, Object> obj = (Map<String, Object>) nodeMap.get(((String) triple.o));
           if (!obj.containsKey(USAGES)) obj.put(USAGES, new ArrayList<>());
-          List objUsages = (List) ((List) obj.get(USAGES)); // LINE: 324
-          objUsages.add(new Usage(node, triple.p, value)); // LINE: 326
-        } else if (referencedOnce.containsKey(triple.o)) { // LINE: 328
-          referencedOnce.put(((String) triple.o), false); // LINE: 329
-        } else if ((triple.o instanceof String && isBlank((String) triple.o))) { // LINE: 331
-          Usage usage = new Usage(node, triple.p, value); // LINE: 333
-          referencedOnce.put((String) triple.o, usage); // LINE: 334
+          List objUsages = (List) ((List) obj.get(USAGES));
+          objUsages.add(new Usage(node, triple.p, value));
+        } else if (referencedOnce.containsKey(triple.o)) {
+          referencedOnce.put(((String) triple.o), false);
+        } else if ((triple.o instanceof String && isBlank((String) triple.o))) {
+          Usage usage = new Usage(node, triple.p, value);
+          referencedOnce.put((String) triple.o, usage);
         }
       }
     }
-    for (Map.Entry<String, Map<String, Map<String, Object>>> name_graphObject : graphMap.entrySet()) { // LINE: 339
+    for (Map.Entry<String, Map<String, Map<String, Object>>> name_graphObject : graphMap.entrySet()) {
       String name = name_graphObject.getKey();
       Map<String, Map<String, Object>> graphObject = name_graphObject.getValue();
-      if (compoundLiteralSubjects.containsKey(name)) { // LINE: 341
-        Set<String> graphCompounds = (Set<String>) compoundLiteralSubjects.get(name); // LINE: 343
-        for (String cl : graphCompounds) { // LINE: 344
-          Object clEntry = (Object) referencedOnce.get(cl); // LINE: 346
-          if (!(clEntry instanceof Usage)) { // LINE: 347
-            continue; // LINE: 348
+      if (compoundLiteralSubjects.containsKey(name)) {
+        Set<String> graphCompounds = (Set<String>) compoundLiteralSubjects.get(name);
+        for (String cl : graphCompounds) {
+          Object clEntry = (Object) referencedOnce.get(cl);
+          if (!(clEntry instanceof Usage)) {
+            continue;
           }
-          Map<String, Object> c_node = (Map<String, Object>) ((Usage) clEntry).node; // LINE: 350
-          String c_property = (String) ((Usage) clEntry).property; // LINE: 352
-          Map<String, Object> clNode = ((Map<String, Object>) graphObject.remove(cl)); // LINE: 357
-          for (Object clRef : ((List) c_node.get(c_property))) { // LINE: 359
+          Map<String, Object> cNode = (Map<String, Object>) ((Usage) clEntry).node;
+          String cProperty = (String) ((Usage) clEntry).property;
+          Map<String, Object> clNode = ((Map<String, Object>) graphObject.remove(cl));
+          for (Object clRef : ((List) cNode.get(cProperty))) {
             assert clRef instanceof Map;
-            if (!((((Map) clRef).get(ID) == null && ((Object) cl) == null || ((Map) clRef).get(ID) != null && (((Map) clRef).get(ID)).equals(cl)))) { // LINE: 361
-              continue; // LINE: 362
+            if (!((((Map) clRef).get(ID) == null && ((Object) cl) == null || ((Map) clRef).get(ID) != null && (((Map) clRef).get(ID)).equals(cl)))) {
+              continue;
             }
-            ((Map) clRef).remove(ID); // LINE: 364
-            ((Map) clRef).put(VALUE, ((Map) ((List) clNode.get(RDF_VALUE)).get(0)).get(VALUE)); // LINE: 366
-            if (clNode.containsKey(RDF_LANGUAGE)) { // LINE: 368
-              ((Map) clRef).put(LANGUAGE, ((Map) ((List) clNode.get(RDF_LANGUAGE)).get(0)).get(VALUE)); // LINE: 369
-              if (!(isLangTag(((String) ((Map) clRef).get(LANGUAGE))))) { // LINE: 370
-                throw new InvalidLanguageTaggedStringError(((Map) clRef).get(LANGUAGE).toString()); // LINE: 371
+            ((Map) clRef).remove(ID);
+            ((Map) clRef).put(VALUE, ((Map) ((List) clNode.get(RDF_VALUE)).get(0)).get(VALUE));
+            if (clNode.containsKey(RDF_LANGUAGE)) {
+              ((Map) clRef).put(LANGUAGE, ((Map) ((List) clNode.get(RDF_LANGUAGE)).get(0)).get(VALUE));
+              if (!(isLangTag(((String) ((Map) clRef).get(LANGUAGE))))) {
+                throw new InvalidLanguageTaggedStringError(((Map) clRef).get(LANGUAGE).toString());
               }
             }
-            if (clNode.containsKey(RDF_DIRECTION)) { // LINE: 373
-              ((Map) clRef).put(DIRECTION, ((Map) ((List) clNode.get(RDF_DIRECTION)).get(0)).get(VALUE)); // LINE: 374
-              if (!(DIRECTIONS.contains(((Map) clRef).get(DIRECTION)))) { // LINE: 375
-                throw new InvalidBaseDirectionError(((Map) clRef).get(DIRECTION).toString()); // LINE: 376
+            if (clNode.containsKey(RDF_DIRECTION)) {
+              ((Map) clRef).put(DIRECTION, ((Map) ((List) clNode.get(RDF_DIRECTION)).get(0)).get(VALUE));
+              if (!(DIRECTIONS.contains(((Map) clRef).get(DIRECTION)))) {
+                throw new InvalidBaseDirectionError(((Map) clRef).get(DIRECTION).toString());
               }
             }
           }
         }
       }
-      if (!graphObject.containsKey(RDF_NIL)) { // LINE: 378
-        continue; // LINE: 379
+      if (!graphObject.containsKey(RDF_NIL)) {
+        continue;
       }
-      Map<String, Object> nil = ((Map<String, Object>) graphObject.get(RDF_NIL)); // LINE: 381
-      if (!nil.containsKey(USAGES)) { // LINE: 383
-        continue; // LINE: 384
+      Map<String, Object> nil = ((Map<String, Object>) graphObject.get(RDF_NIL));
+      if (!nil.containsKey(USAGES)) {
+        continue;
       }
-      for (Usage usage : ((List<Usage>) nil.get(USAGES))) { // LINE: 385
-        Map<String, Object> unode = (Map<String, Object>) usage.node; // LINE: 387
-        String uproperty = (String) usage.property; // LINE: 388
-        Map<String, Object> head = (Map<String, Object>) usage.value; // LINE: 389
-        List listValues = new ArrayList<>(); // LINE: 391
-        List listNodes = new ArrayList<>(); // LINE: 392
-        while (((uproperty == null && ((Object) RDF_REST) == null || uproperty != null && (uproperty).equals(RDF_REST)) && isWellFormedList(unode))) { // LINE: 394
-          Object nodeUsage = (Object) referencedOnce.get(((String) unode.get(ID))); // LINE: 396
-          if (!(nodeUsage instanceof Usage)) { // LINE: 397
-            break; // LINE: 398
+      for (Usage usage : ((List<Usage>) nil.get(USAGES))) {
+        Map<String, Object> unode = (Map<String, Object>) usage.node;
+        String uproperty = (String) usage.property;
+        Map<String, Object> head = (Map<String, Object>) usage.value;
+        List listValues = new ArrayList<>();
+        List listNodes = new ArrayList<>();
+        while (((uproperty == null && ((Object) RDF_REST) == null || uproperty != null && (uproperty).equals(RDF_REST)) && isWellFormedList(unode))) {
+          Object nodeUsage = (Object) referencedOnce.get(((String) unode.get(ID)));
+          if (!(nodeUsage instanceof Usage)) {
+            break;
           }
-          listValues.add(((List) unode.get(RDF_FIRST)).get(0)); // LINE: 400
-          listNodes.add(unode.get(ID)); // LINE: 402
-          unode = ((Usage) nodeUsage).node; // LINE: 404
-          uproperty = ((Usage) nodeUsage).property; // LINE: 405
-          head = ((Usage) nodeUsage).value; // LINE: 406
-          if (isIri(((String) unode.get(ID)))) { // LINE: 408
-            break; // LINE: 409
+          listValues.add(((List) unode.get(RDF_FIRST)).get(0));
+          listNodes.add(unode.get(ID));
+          unode = ((Usage) nodeUsage).node;
+          uproperty = ((Usage) nodeUsage).property;
+          head = ((Usage) nodeUsage).value;
+          if (isIri(((String) unode.get(ID)))) {
+            break;
           }
         }
-        head.remove(ID); // LINE: 411
-        Collections.reverse(listValues); // LINE: 413
-        head.put(LIST, listValues); // LINE: 415
-        for (Object nodeId : listNodes) { // LINE: 417
-          graphObject.remove(nodeId); // LINE: 418
+        head.remove(ID);
+        Collections.reverse(listValues);
+        head.put(LIST, listValues);
+        for (Object nodeId : listNodes) {
+          graphObject.remove(nodeId);
         }
       }
     }
-    List<Map<String, Object>> result = new ArrayList<>(); // LINE: 421
-    List<String> subjects = new ArrayList(defaultGraph.keySet()); // LINE: 423
-    if (ordered) { // LINE: 424
-      Collections.sort(subjects); // LINE: 425
+    List<Map<String, Object>> result = new ArrayList<>();
+    List<String> subjects = new ArrayList(defaultGraph.keySet());
+    if (ordered) {
+      Collections.sort(subjects);
     }
-    for (String subject : subjects) { // LINE: 426
-      Map<String, Object> s_node = ((Map<String, Object>) defaultGraph.get(subject)); // LINE: 427
-      if (graphMap.containsKey(subject)) { // LINE: 429
-        Map<String, Map<String, Object>> subjectGraph = (Map<String, Map<String, Object>>) graphMap.get(subject); // LINE: 430
-        List namedGraphs = new ArrayList<>(); // LINE: 432
-        s_node.put(GRAPH, namedGraphs); // LINE: 433
-        List graphNames = new ArrayList(subjectGraph.keySet()); // LINE: 435
-        if (ordered) { // LINE: 436
-          Collections.sort(graphNames); // LINE: 437
+    for (String subject : subjects) {
+      Map<String, Object> sNode = ((Map<String, Object>) defaultGraph.get(subject));
+      if (graphMap.containsKey(subject)) {
+        Map<String, Map<String, Object>> subjectGraph = (Map<String, Map<String, Object>>) graphMap.get(subject);
+        List namedGraphs = new ArrayList<>();
+        sNode.put(GRAPH, namedGraphs);
+        List graphNames = new ArrayList(subjectGraph.keySet());
+        if (ordered) {
+          Collections.sort(graphNames);
         }
-        for (Object graphName : graphNames) { // LINE: 438
-          Map<String, Object> named = ((Map<String, Object>) subjectGraph.get(graphName)); // LINE: 439
-          if (named.containsKey(USAGES)) { // LINE: 440
-            named.remove(USAGES); // LINE: 441
+        for (Object graphName : graphNames) {
+          Map<String, Object> named = ((Map<String, Object>) subjectGraph.get(graphName));
+          if (named.containsKey(USAGES)) {
+            named.remove(USAGES);
           }
-          if ((!(named.size() == 1) && named.containsKey(ID))) { // LINE: 442
-            namedGraphs.add(named); // LINE: 443
+          if ((!(named.size() == 1) && named.containsKey(ID))) {
+            namedGraphs.add(named);
           }
         }
       }
-      if (s_node.containsKey(USAGES)) { // LINE: 445
-        s_node.remove(USAGES); // LINE: 446
+      if (sNode.containsKey(USAGES)) {
+        sNode.remove(USAGES);
       }
-      if ((!(s_node.size() == 1) && s_node.containsKey(ID))) { // LINE: 447
-        result.add(s_node); // LINE: 448
+      if ((!(sNode.size() == 1) && sNode.containsKey(ID))) {
+        result.add(sNode);
       }
     }
-    return result; // LINE: 450
+    return result;
   }
-
-  public static Map<String, Object> toJsonldObject(Object value, /*@Nullable*/ String rdfDirection, Boolean useNativeTypes) { // LINE: 453
-    if (value instanceof String) { // LINE: 457
-      return Builtins.mapOf(ID, value); // LINE: 458
+  public static Map<String, Object> toJsonldObject(Object value, /*@Nullable*/ String rdfDirection, Boolean useNativeTypes) {
+    if (value instanceof String) {
+      return Builtins.mapOf(ID, value);
     }
-    RdfLiteral literal = (RdfLiteral) value; // LINE: 461
-    Map<String, Object> result = new HashMap<>(); // LINE: 463
-    Object convertedValue = (Object) literal.value; // LINE: 466
-    /*@Nullable*/ String rtype = null; // LINE: 468
-    if (useNativeTypes) { // LINE: 471
-      if ((literal.datatype == null && ((Object) XSD_STRING) == null || literal.datatype != null && (literal.datatype).equals(XSD_STRING))) { // LINE: 472
-        convertedValue = (Object) literal.value; // LINE: 473
-      } else if ((literal.datatype == null && ((Object) XSD_BOOLEAN) == null || literal.datatype != null && (literal.datatype).equals(XSD_BOOLEAN))) { // LINE: 474
-        if ((literal.value == null && ((Object) "true") == null || literal.value != null && (literal.value).equals("true"))) { // LINE: 475
-          convertedValue = true; // LINE: 476
-        } else if ((literal.value == null && ((Object) "false") == null || literal.value != null && (literal.value).equals("false"))) { // LINE: 477
-          convertedValue = false; // LINE: 478
+    RdfLiteral literal = (RdfLiteral) value;
+    Map<String, Object> result = new HashMap<>();
+    Object convertedValue = (Object) literal.value;
+    /*@Nullable*/ String rtype = null;
+    if (useNativeTypes) {
+      if ((literal.datatype == null && ((Object) XSD_STRING) == null || literal.datatype != null && (literal.datatype).equals(XSD_STRING))) {
+        convertedValue = (Object) literal.value;
+      } else if ((literal.datatype == null && ((Object) XSD_BOOLEAN) == null || literal.datatype != null && (literal.datatype).equals(XSD_BOOLEAN))) {
+        if ((literal.value == null && ((Object) "true") == null || literal.value != null && (literal.value).equals("true"))) {
+          convertedValue = true;
+        } else if ((literal.value == null && ((Object) "false") == null || literal.value != null && (literal.value).equals("false"))) {
+          convertedValue = false;
         } else {
-          rtype = XSD_BOOLEAN; // LINE: 480
+          rtype = XSD_BOOLEAN;
         }
-      } else if (((literal.datatype == null && ((Object) XSD_INTEGER) == null || literal.datatype != null && (literal.datatype).equals(XSD_INTEGER)) && literal.value.matches("^\\d+$"))) { // LINE: 481
-        convertedValue = (Object) Integer.valueOf(literal.value); // LINE: 482
-      } else if ((literal.datatype == null && ((Object) XSD_DOUBLE) == null || literal.datatype != null && (literal.datatype).equals(XSD_DOUBLE))) { // LINE: 483
-        try { // LINE: 484
-          convertedValue = (Object) Double.parseDouble(literal.value); // LINE: 485
-        } catch (NumberFormatException e) { // LINE: 486
+      } else if (((literal.datatype == null && ((Object) XSD_INTEGER) == null || literal.datatype != null && (literal.datatype).equals(XSD_INTEGER)) && literal.value.matches("^\\d+$"))) {
+        convertedValue = (Object) Integer.valueOf(literal.value);
+      } else if ((literal.datatype == null && ((Object) XSD_DOUBLE) == null || literal.datatype != null && (literal.datatype).equals(XSD_DOUBLE))) {
+        try {
+          convertedValue = (Object) Double.parseDouble(literal.value);
+        } catch (NumberFormatException e) {
         }
-      } else if (!literal.datatype.equals(XSD_STRING)) { // LINE: 489
-        rtype = (String) literal.datatype; // LINE: 490
+      } else if (!literal.datatype.equals(XSD_STRING)) {
+        rtype = (String) literal.datatype;
       }
-    } else if (((literal.datatype == null && ((Object) RDF_JSON) == null || literal.datatype != null && (literal.datatype).equals(RDF_JSON)) && !processingMode.equals(JSONLD10))) { // LINE: 492
-      try { // LINE: 493
-        convertedValue = ((Object) parseJson(literal.value)); // LINE: 494
-      } catch (Exception e) { // LINE: 495
+    } else if (((literal.datatype == null && ((Object) RDF_JSON) == null || literal.datatype != null && (literal.datatype).equals(RDF_JSON)) && !processingMode.equals(JSONLD10))) {
+      try {
+        convertedValue = ((Object) jsonDecode(literal.value));
+      } catch (Exception e) {
       }
-      rtype = JSON; // LINE: 497
-    } else if (((rdfDirection == null && ((Object) I18N_DATATYPE) == null || rdfDirection != null && (rdfDirection).equals(I18N_DATATYPE)) && literal.datatype != null && literal.datatype.startsWith(I18N))) { // LINE: 499
-      convertedValue = (Object) literal.value; // LINE: 501
-      String fragId = (String) literal.datatype.substring(I18N.length()); // LINE: 503
-      Integer i = (Integer) fragId.indexOf("_"); // LINE: 504
-      String lang = fragId; // LINE: 505
-      String direction = ""; // LINE: 506
-      if (i > -1) { // LINE: 507
-        lang = fragId.substring(0, i); // LINE: 508
-        direction = fragId.substring(i + 1); // LINE: 509
+      rtype = JSON;
+    } else if (((rdfDirection == null && ((Object) I18N_DATATYPE) == null || rdfDirection != null && (rdfDirection).equals(I18N_DATATYPE)) && literal.datatype != null && literal.datatype.startsWith(I18N))) {
+      convertedValue = (Object) literal.value;
+      String fragId = (literal.datatype.length() >= I18N.length() ? literal.datatype.substring(I18N.length()) : "");
+      Integer i = (Integer) fragId.indexOf("_");
+      String lang = fragId;
+      String direction = "";
+      if (i > -1) {
+        lang = (fragId.length() >= 0 ? fragId.substring(0, i) : "");
+        direction = (fragId.length() >= i + 1 ? fragId.substring(i + 1) : "");
       }
-      if (lang.length() > 0) { // LINE: 510
-        result.put(LANGUAGE, lang); // LINE: 511
+      if (lang.length() > 0) {
+        result.put(LANGUAGE, lang);
       }
-      if (direction.length() > 0) { // LINE: 513
-        result.put(DIRECTION, direction); // LINE: 514
+      if (direction.length() > 0) {
+        result.put(DIRECTION, direction);
       }
-    } else if (literal.language != null) { // LINE: 516
-      result.put(LANGUAGE, literal.language); // LINE: 517
-    } else if ((literal.datatype != null && !literal.datatype.equals(XSD_STRING))) { // LINE: 519
-      rtype = (String) literal.datatype; // LINE: 520
+    } else if (literal.language != null) {
+      result.put(LANGUAGE, literal.language);
+    } else if ((literal.datatype != null && !literal.datatype.equals(XSD_STRING))) {
+      rtype = (String) literal.datatype;
     }
-    result.put(VALUE, convertedValue); // LINE: 523
-    if (rtype != null) { // LINE: 525
-      result.put(TYPE, rtype); // LINE: 526
+    result.put(VALUE, convertedValue);
+    if (rtype != null) {
+      result.put(TYPE, rtype);
     }
-    return result; // LINE: 529
+    return result;
   }
-
-  public static boolean isIriOrBlank(String iri) { // LINE: 532
-    return (isIri(iri) || isBlank(iri)); // LINE: 533
+  public static boolean isIriOrBlank(String iri) {
+    return (isIri(iri) || isBlank(iri));
   }
-
-  public static boolean isWellFormedList(Map<String, Object> node) { // LINE: 536
-    return (isBlank(((String) node.get(ID))) && hasListWithOneItem(node, RDF_FIRST) && hasListWithOneItem(node, RDF_REST) && (node.size() == 3 || (node.size() == 4 && node.containsKey(TYPE) && (asList(node.get(TYPE)).get(0) == null && ((Object) RDF_LIST) == null || asList(node.get(TYPE)).get(0) != null && (asList(node.get(TYPE)).get(0)).equals(RDF_LIST))))); // LINE: 537
+  public static boolean isWellFormedList(Map<String, Object> node) {
+    return (isBlank(((String) node.get(ID))) && hasListWithOneItem(node, RDF_FIRST) && hasListWithOneItem(node, RDF_REST) && (node.size() == 3 || (node.size() == 4 && node.containsKey(TYPE) && (asList(node.get(TYPE)).get(0) == null && ((Object) RDF_LIST) == null || asList(node.get(TYPE)).get(0) != null && (asList(node.get(TYPE)).get(0)).equals(RDF_LIST)))));
   }
-
-  protected static boolean hasListWithOneItem(Map<String, Object> node, Object p) { // LINE: 544
-    return (node.containsKey(p) && node.get(p) instanceof List && ((List) node.get(p)).size() == 1); // LINE: 545
+  protected static boolean hasListWithOneItem(Map<String, Object> node, Object p) {
+    return (node.containsKey(p) && node.get(p) instanceof List && ((List) node.get(p)).size() == 1);
   }
 }

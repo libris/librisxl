@@ -6,7 +6,7 @@ import groovy.util.logging.Log4j2 as Log
 import org.apache.jena.iri.IRI
 import org.apache.jena.iri.IRIFactory
 
-import trld.Output
+import trld.platform.Output
 import trld.trig.SerializerState
 import trld.trig.Settings
 

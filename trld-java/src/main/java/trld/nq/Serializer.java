@@ -15,7 +15,7 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Output;
+import trld.platform.Output;
 import static trld.jsonld.Base.isBlank;
 import trld.jsonld.RdfDataset;
 import trld.jsonld.RdfGraph;
@@ -23,52 +23,52 @@ import trld.jsonld.RdfTriple;
 import trld.jsonld.RdfLiteral;
 import static trld.Rdfterms.XSD_STRING;
 
+
+
+
+
 public class Serializer {
-
-  public static void serialize(RdfDataset dataset, Output out) { // LINE: 8
-    for (RdfGraph graph : dataset) { // LINE: 9
-      writeGraph(graph, out); // LINE: 10
+  public static void serialize(RdfDataset dataset, Output out) {
+    for (RdfGraph graph : dataset) {
+      writeGraph(graph, out);
     }
   }
-
-  public static void writeGraph(RdfGraph graph, Output out) { // LINE: 13
-    for (RdfTriple triple : graph.triples) { // LINE: 14
-      if ((triple.s == null || triple.p == null || triple.o == null)) { // LINE: 15
-        continue; // LINE: 16
+  public static void writeGraph(RdfGraph graph, Output out) {
+    for (RdfTriple triple : graph.triples) {
+      if ((triple.s == null || triple.p == null || triple.o == null)) {
+        continue;
       }
-      out.writeln(reprQuad(triple, graph.name)); // LINE: 17
+      out.writeln(reprQuad(triple, graph.name));
     }
   }
-
-  public static String reprQuad(RdfTriple triple, /*@Nullable*/ String graphName) { // LINE: 20
-    String s = (String) reprTerm(triple.s); // LINE: 21
-    String p = (String) reprTerm(triple.p); // LINE: 22
-    String o = (String) reprTerm(triple.o); // LINE: 23
-    String spo = s + " " + p + " " + o; // LINE: 24
-    String quad = (graphName != null ? spo + " " + reprTerm(graphName) : spo); // LINE: 25
-    return quad + " ."; // LINE: 26
+  public static String reprQuad(RdfTriple triple, /*@Nullable*/ String graphName) {
+    String s = (String) reprTerm(triple.s);
+    String p = (String) reprTerm(triple.p);
+    String o = (String) reprTerm(triple.o);
+    String spo = s + " " + p + " " + o;
+    String quad = (graphName != null ? spo + " " + reprTerm(graphName) : spo);
+    return quad + " .";
   }
-
-  public static String reprTerm(Object t) { // LINE: 29
-    if (t instanceof String) { // LINE: 30
-      if (isBlank((String) t)) { // LINE: 31
-        return (String) t; // LINE: 32
+  public static String reprTerm(Object t) {
+    if (t instanceof String) {
+      if (isBlank((String) t)) {
+        return (String) t;
       } else {
-        return "<" + t + ">"; // LINE: 34
+        return "<" + t + ">";
       }
     } else {
       assert t instanceof RdfLiteral;
-      String v = (String) ((RdfLiteral) t).value; // LINE: 37
-      v = v.replace("\\", "\\\\"); // LINE: 38
-      v = v.replace("\"", "\\\""); // LINE: 39
-      v = "\"" + v + "\""; // LINE: 40
-      if (((RdfLiteral) t).language != null) { // LINE: 41
-        return v + "@" + ((RdfLiteral) t).language; // LINE: 42
-      } else if ((((RdfLiteral) t).datatype != null && !((RdfLiteral) t).datatype.equals(XSD_STRING))) { // LINE: 43
-        String dt = (String) reprTerm(((RdfLiteral) t).datatype); // LINE: 44
-        return v + "^^" + dt; // LINE: 45
+      String v = (String) ((RdfLiteral) t).value;
+      v = v.replace("\\", "\\\\");
+      v = v.replace("\"", "\\\"");
+      v = "\"" + v + "\"";
+      if (((RdfLiteral) t).language != null) {
+        return v + "@" + ((RdfLiteral) t).language;
+      } else if ((((RdfLiteral) t).datatype != null && !((RdfLiteral) t).datatype.equals(XSD_STRING))) {
+        String dt = (String) reprTerm(((RdfLiteral) t).datatype);
+        return v + "^^" + dt;
       } else {
-        return v; // LINE: 47
+        return v;
       }
     }
   }

@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Input;
-import static trld.Common.dumpJson;
+import static trld.platform.Common.jsonEncode;
+import trld.platform.Input;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.LANGUAGE;
@@ -28,6 +28,8 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 import static trld.Rdfterms.RDF_TYPE;
 import static trld.Rdfterms.XSD;
 import static trld.Rdfterms.XSD_DOUBLE;
@@ -35,71 +37,70 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ReadSymbol extends ReadTerm { // LINE: 218
-  ReadSymbol(/*@Nullable*/ ParserState parent) { super(parent); };
-  public static final Pattern MATCH = (Pattern) Pattern.compile("[^\\]\\[{}^<>\\\"\\s~!$&'()*,;=/?#]"); // LINE: 220
-  public Boolean justEscaped; // LINE: 222
+public class ReadSymbol extends ReadTerm {
+  public ReadSymbol(/*@Nullable*/ ParserState parent) { super(parent); };
+  public static final Pattern MATCH = (Pattern) Pattern.compile("[^\\]\\[{}^<>\\\"\\s~!$&'()*,;=/?#]");
+  public Boolean justEscaped;
 
-  public void init() { // LINE: 224
-    this.escapeChars = RESERVED_CHARS.stream().collect(Collectors.toMap((c) -> c, (c) -> c)); // LINE: 225
-    this.justEscaped = false; // LINE: 226
+  public void init() {
+    this.escapeChars = RESERVED_CHARS.stream().collect(Collectors.toMap((c) -> c, (c) -> c));
+    this.justEscaped = false;
   }
 
-  public boolean accept(String c) { // LINE: 228
-    if ((this.MATCH.matcher(c).matches() ? c : null) == null) { // LINE: 229
-      return false; // LINE: 230
+  public boolean accept(String c) {
+    if ((this.MATCH.matcher(c).matches() ? c : null) == null) {
+      return false;
     }
-    if (((c == null && ((Object) ":") == null || c != null && (c).equals(":")) && this.collected.size() > 1 && ((this.collected.get(0) == null && ((Object) "_") == null || this.collected.get(0) != null && (this.collected.get(0)).equals("_")) && (this.collected.get(1) == null && ((Object) ":") == null || this.collected.get(1) != null && (this.collected.get(1)).equals(":"))))) { // LINE: 231
-      return false; // LINE: 233
+    if (((c == null && ((Object) ":") == null || c != null && (c).equals(":")) && this.collected.size() > 1 && ((this.collected.get(0) == null && ((Object) "_") == null || this.collected.get(0) != null && (this.collected.get(0)).equals("_")) && (this.collected.get(1) == null && ((Object) ":") == null || this.collected.get(1) != null && (this.collected.get(1)).equals(":"))))) {
+      return false;
     }
-    return true; // LINE: 234
+    return true;
   }
 
-  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 236
-    if ((this.collected.size() == 0 && (c == null && ((Object) "<") == null || c != null && (c).equals("<")))) { // LINE: 237
-      return new KeyValue(new ReadIRI(this.parent), null); // LINE: 238
-    } else if ((this.collected.size() == 0 && (NUMBER_LEAD_CHARS.matcher(c).matches() ? c : null) != null)) { // LINE: 239
-      return new ReadNumber(this.parent).consume(c, null); // LINE: 240
-    } else if (this.handleEscape(c)) { // LINE: 241
-      this.justEscaped = true; // LINE: 242
-      return new KeyValue(this, null); // LINE: 243
+  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) {
+    if ((this.collected.size() == 0 && (c == null && ((Object) "<") == null || c != null && (c).equals("<")))) {
+      return new KeyValue(new ReadIRI(this.parent), null);
+    } else if ((this.collected.size() == 0 && (NUMBER_LEAD_CHARS.matcher(c).matches() ? c : null) != null)) {
+      return new ReadNumber(this.parent).consume(c, null);
+    } else if (this.handleEscape(c)) {
+      this.justEscaped = true;
+      return new KeyValue(this, null);
     }
-    Boolean justEscaped = (Boolean) this.justEscaped; // LINE: 245
-    this.justEscaped = false; // LINE: 246
-    if (this.accept(c)) { // LINE: 248
-      this.collect(c); // LINE: 249
-      return new KeyValue(this, null); // LINE: 250
+    Boolean justEscaped = (Boolean) this.justEscaped;
+    this.justEscaped = false;
+    if (this.accept(c)) {
+      this.collect(c);
+      return new KeyValue(this, null);
     }
-    Object value = (Object) this.pop(); // LINE: 252
-    assert value instanceof String;
-    Boolean lastDot = false; // LINE: 255
-    if ((!(justEscaped) && ((String) value).endsWith("."))) { // LINE: 256
-      value = ((String) value).substring(0, ((String) value).length() - 1); // LINE: 257
-      lastDot = true; // LINE: 258
+    String v = (String) this.pop();
+    Boolean lastDot = false;
+    if ((!(justEscaped) && v.endsWith("."))) {
+      v = (v.length() >= 0 ? v.substring(0, v.length() - 1) : "");
+      lastDot = true;
     }
-    if (new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) "true", "false"}))).contains(value)) { // LINE: 260
-      value = ((Boolean) (value == null && ((Object) "true") == null || value != null && (value).equals("true"))); // LINE: 261
-    } else if ((value == null && ((Object) "a") == null || value != null && (value).equals("a"))) { // LINE: 262
-      value = TYPE; // LINE: 263
-    } else if (!AT_KEYWORDS.contains(value)) { // LINE: 264
-      String lowered = (String) ((String) value).toLowerCase(); // LINE: 265
-      if (RQ_KEYWORDS.contains(lowered)) { // LINE: 266
-        value = lowered; // LINE: 267
+    Object value = (Object) v;
+    if (new HashSet(new ArrayList<>(Arrays.asList(new String[] {(String) "true", "false"}))).contains(v)) {
+      value = ((Boolean) (v == null && ((Object) "true") == null || v != null && (v).equals("true")));
+    } else if ((v == null && ((Object) "a") == null || v != null && (v).equals("a"))) {
+      value = (Object) TYPE;
+    } else if (!AT_KEYWORDS.contains(v)) {
+      String lowered = (String) v.toLowerCase();
+      if (RQ_KEYWORDS.contains(lowered)) {
+        value = (Object) lowered;
       } else {
-        if (!value.equals("")) { // LINE: 269
-          if (!((String) value).contains(":")) { // LINE: 270
-            throw new NotationError("Expected PNname, got " + value); // LINE: 271
-          } else if ((((String) value).substring(0, 0 + 1) == null && ((Object) ":") == null || ((String) value).substring(0, 0 + 1) != null && (((String) value).substring(0, 0 + 1)).equals(":"))) { // LINE: 272
-            value = ((String) value).substring(1); // LINE: 273
+        if (!v.equals("")) {
+          if (!v.contains(":")) {
+            throw new NotationError("Expected PNname, got " + v);
+          } else if ((v.substring(0, 0 + 1) == null && ((Object) ":") == null || v.substring(0, 0 + 1) != null && (v.substring(0, 0 + 1)).equals(":"))) {
+            v = (v.length() >= 1 ? v.substring(1) : "");
           }
         }
-        value = ((Map) Builtins.mapOf(SYMBOL, value)); // LINE: 274
+        value = ((Map) Builtins.mapOf(SYMBOL, v));
       }
     }
-    assert value instanceof Object;
-    if (lastDot) { // LINE: 278
-      return this.backtrack(".", c, (Object) value); // LINE: 279
+    if (lastDot) {
+      return this.backtrack(".", c, value);
     }
-    return this.parent.consume(c, (Object) value); // LINE: 281
+    return this.parent.consume(c, value);
   }
 }

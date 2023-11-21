@@ -4,8 +4,8 @@ import groovy.transform.CompileStatic
 
 import trld.jsonld.Compaction
 import trld.jsonld.Expansion
-import trld.Output
-import trld.Input
+import trld.platform.Output
+import trld.platform.Input
 import trld.trig.Parser
 
 @CompileStatic

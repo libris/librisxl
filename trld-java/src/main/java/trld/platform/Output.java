@@ -1,4 +1,4 @@
-package trld;
+package trld.platform;
 
 import java.util.*;
 import java.io.*;

@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Input;
-import static trld.Common.dumpJson;
+import static trld.platform.Common.jsonEncode;
+import trld.platform.Input;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.LANGUAGE;
@@ -28,6 +28,8 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 import static trld.Rdfterms.RDF_TYPE;
 import static trld.Rdfterms.XSD;
 import static trld.Rdfterms.XSD_DOUBLE;
@@ -35,14 +37,14 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ConsumeComment extends BaseParserState { // LINE: 118
-  ConsumeComment(/*@Nullable*/ ParserState parent) { super(parent); };
+public class ConsumeComment extends BaseParserState {
+  public ConsumeComment(/*@Nullable*/ ParserState parent) { super(parent); };
 
-  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 120
-    if ((c == null && ((Object) "\n") == null || c != null && (c).equals("\n"))) { // LINE: 121
-      return new KeyValue(this.parent, null); // LINE: 122
+  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) {
+    if ((c == null && ((Object) "\n") == null || c != null && (c).equals("\n"))) {
+      return new KeyValue(this.parent, null);
     } else {
-      return new KeyValue(this, null); // LINE: 124
+      return new KeyValue(this, null);
     }
   }
 }

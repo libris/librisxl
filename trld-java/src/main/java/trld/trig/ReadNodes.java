@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Input;
-import static trld.Common.dumpJson;
+import static trld.platform.Common.jsonEncode;
+import trld.platform.Input;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.LANGUAGE;
@@ -28,6 +28,8 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 import static trld.Rdfterms.RDF_TYPE;
 import static trld.Rdfterms.XSD;
 import static trld.Rdfterms.XSD_DOUBLE;
@@ -35,74 +37,76 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ReadNodes extends ReadNode { // LINE: 712
-  ReadNodes(/*@Nullable*/ ParserState parent) { super(parent); };
-  public List<Map> nodes; // LINE: 714
-  public Boolean expectGraph; // LINE: 715
+public class ReadNodes extends ReadNode {
+  public ReadNodes(/*@Nullable*/ ParserState parent) { super(parent); };
+  public List<Map> nodes;
+  public Boolean expectGraph;
 
-  public void init() { // LINE: 717
-    this.nodes = new ArrayList<>(); // LINE: 718
-    this.reset(); // LINE: 719
+  public void init() {
+    this.nodes = new ArrayList<>();
+    this.reset();
   }
 
-  public void reset() { // LINE: 721
-    this.node = null; // LINE: 722
-    this.p = null; // LINE: 723
-    this.lastValue = null; // LINE: 724
-    this.expectGraph = false; // LINE: 725
+  public void reset() {
+    this.node = null;
+    this.p = null;
+    this.lastValue = null;
+    this.expectGraph = false;
   }
 
-  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 727
-    if (prevValue != null) { // LINE: 728
-      if (prevValue instanceof String) { // LINE: 729
-        Boolean finalDot = false; // LINE: 730
-        if (AT_KEYWORDS.contains(prevValue)) { // LINE: 731
-          prevValue = ((String) prevValue).substring(1); // LINE: 732
-          finalDot = true; // LINE: 733
+  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) {
+    if (prevValue != null) {
+      if (prevValue instanceof String) {
+        String prevStr = (String) prevValue;
+        Boolean finalDot = false;
+        if (AT_KEYWORDS.contains(prevStr)) {
+          prevStr = (prevStr.length() >= 1 ? prevStr.substring(1) : "");
+          finalDot = true;
         }
-        if ((prevValue == null && ((Object) RQ_PREFIX) == null || prevValue != null && (prevValue).equals(RQ_PREFIX))) { // LINE: 734
-          return new ReadPrefix(this, finalDot).consume(c, null); // LINE: 735
-        } else if ((prevValue == null && ((Object) RQ_BASE) == null || prevValue != null && (prevValue).equals(RQ_BASE))) { // LINE: 736
-          return new ReadBase(this, finalDot).consume(c, null); // LINE: 737
-        } else if ((prevValue == null && ((Object) RQ_GRAPH) == null || prevValue != null && (prevValue).equals(RQ_GRAPH))) { // LINE: 738
-          this.expectGraph = true; // LINE: 739
-          return new KeyValue(this, null); // LINE: 740
+        if ((prevStr == null && ((Object) RQ_PREFIX) == null || prevStr != null && (prevStr).equals(RQ_PREFIX))) {
+          return new ReadPrefix(this, finalDot).consume(c, null);
+        } else if ((prevStr == null && ((Object) RQ_BASE) == null || prevStr != null && (prevStr).equals(RQ_BASE))) {
+          return new ReadBase(this, finalDot).consume(c, null);
+        } else if ((prevStr == null && ((Object) RQ_GRAPH) == null || prevStr != null && (prevStr).equals(RQ_GRAPH))) {
+          this.expectGraph = true;
+          return new KeyValue(this, null);
         }
+        prevValue = prevStr;
       }
-      if (this.node == null) { // LINE: 742
+      if (this.node == null) {
         assert prevValue instanceof Map;
-        this.node = (Map) this.nodeWithId((Map) prevValue); // LINE: 744
+        this.node = (Map) this.nodeWithId((Map) prevValue);
       } else {
-        if ((this.p == null && this.expectGraph && this.node != null)) { // LINE: 746
-          throw new NotationError("Expected graph notation to follow, got " + prevValue); // LINE: 747
+        if ((this.p == null && this.expectGraph && this.node != null)) {
+          throw new NotationError("Expected graph notation to follow, got " + prevValue);
         }
-        this.fillNode(prevValue); // LINE: 749
+        this.fillNode(prevValue);
       }
     }
-    if ((c == null && ((Object) EOF) == null || c != null && (c).equals(EOF))) { // LINE: 751
-      Map<String, Object> result = Builtins.mapOf(CONTEXT, this.context, GRAPH, this.nodes); // LINE: 752
-      return new KeyValue(this.parent, result); // LINE: 753
-    } else if (((c == null && ((Object) ".") == null || c != null && (c).equals(".")) && (this.p == null || this.lastValue != null))) { // LINE: 754
-      this.nextNode(); // LINE: 755
-      return new KeyValue(this, null); // LINE: 756
+    if ((c == null && ((Object) EOF) == null || c != null && (c).equals(EOF))) {
+      Map<String, Object> result = Builtins.mapOf(CONTEXT, this.context, GRAPH, this.nodes);
+      return new KeyValue(this.parent, result);
+    } else if (((c == null && ((Object) ".") == null || c != null && (c).equals(".")) && (this.p == null || this.lastValue != null))) {
+      this.nextNode();
+      return new KeyValue(this, null);
     } else {
-      if (this.openBrace) { // LINE: 758
-        if (!c.equals("|")) { // LINE: 759
-          this.openBrace = false; // LINE: 760
-          this.expectGraph = false; // LINE: 761
-          ReadGraph state = new ReadGraph(this); // LINE: 762
-          return state.consume(c, prevValue); // LINE: 763
+      if (this.openBrace) {
+        if (!c.equals("|")) {
+          this.openBrace = false;
+          this.expectGraph = false;
+          ReadGraph state = new ReadGraph(this);
+          return state.consume(c, prevValue);
         }
       }
-      return this.consumeNodeChar(c); // LINE: 764
+      return this.consumeNodeChar(c);
     }
   }
 
-  public void nextNode() { // LINE: 766
-    if ((this.node == null || (this.p == null && (!this.node.containsKey(GRAPH) && (this.node.containsKey(ID) && this.node.size() == 1))))) { // LINE: 767
-      throw new NotationError("Incomplete triple for node: " + this.node); // LINE: 770
+  public void nextNode() {
+    if ((this.node == null || (this.p == null && (!this.node.containsKey(GRAPH) && (this.node.containsKey(ID) && this.node.size() == 1))))) {
+      throw new NotationError("Incomplete triple for node: " + this.node);
     }
-    this.nodes.add(this.node); // LINE: 771
-    this.reset(); // LINE: 772
+    this.nodes.add(this.node);
+    this.reset();
   }
 }

@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Output;
-import static trld.Common.uuid4;
+import static trld.platform.Common.uuid4;
+import trld.platform.Output;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.CONTAINER;
 import static trld.jsonld.Base.CONTEXT;
@@ -25,25 +25,28 @@ import static trld.jsonld.Base.ID;
 import static trld.jsonld.Base.INDEX;
 import static trld.jsonld.Base.LANGUAGE;
 import static trld.jsonld.Base.LIST;
+import static trld.jsonld.Base.NONE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
 import static trld.jsonld.Base.REVERSE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.VOCAB;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 import static trld.trig.Serializer.*;
 
 
-public class Settings { // LINE: 18
-  public Boolean turtleOnly = false; // LINE: 19
-  public Boolean turtleDropNamed = false; // LINE: 20
-  public Boolean dropRdfstar = false; // LINE: 21
-  public String indentChars = "  "; // LINE: 22
-  public Boolean useGraphKeyword = true; // LINE: 23
-  public Boolean upcaseKeywords = false; // LINE: 24
-  public Boolean predicateRepeatNewLine = true; // LINE: 26
-  public Boolean bracketEndNewLine = false; // LINE: 28
-  public Integer prologueEndLine = 1; // LINE: 30
+public class Settings {
+  public Boolean turtleOnly = false;
+  public Boolean turtleDropNamed = false;
+  public Boolean dropRdfstar = false;
+  public String indentChars = "  ";
+  public Boolean useGraphKeyword = true;
+  public Boolean upcaseKeywords = false;
+  public Boolean predicateRepeatNewLine = true;
+  public Boolean bracketEndNewLine = false;
+  public Integer prologueEndLine = 1;
   public Settings() {
     this(false, false, false, "  ", true, false, true, false, 1);
   }

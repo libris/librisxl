@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Input;
-import static trld.Common.dumpJson;
+import static trld.platform.Common.jsonEncode;
+import trld.platform.Input;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.LANGUAGE;
@@ -28,6 +28,8 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 import static trld.Rdfterms.RDF_TYPE;
 import static trld.Rdfterms.XSD;
 import static trld.Rdfterms.XSD_DOUBLE;
@@ -35,21 +37,21 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ParserError extends RuntimeException { // LINE: 58
-  ParserError() { };
-  ParserError(String msg) { super(msg); };
-  public NotationError error; // LINE: 60
-  public Integer lno; // LINE: 61
-  public Integer cno; // LINE: 62
+public class ParserError extends RuntimeException {
+  public ParserError() { };
+  public ParserError(String msg) { super(msg); };
+  public NotationError error;
+  public Integer lno;
+  public Integer cno;
 
-  public ParserError(NotationError error, Integer lno, Integer cno) { // LINE: 64
-    super(error.toString()); // LINE: 65
-    this.error = error; // LINE: 66
-    this.lno = lno; // LINE: 67
-    this.cno = cno; // LINE: 68
+  public ParserError(NotationError error, Integer lno, Integer cno) {
+    super(error.toString());
+    this.error = error;
+    this.lno = lno;
+    this.cno = cno;
   }
 
-  public String toString() { // LINE: 70
-    return "Notation error at line " + this.lno + ", column " + this.cno + ": " + this.error; // LINE: 71
+  public String toString() {
+    return "Notation error at line " + this.lno + ", column " + this.cno + ": " + this.error;
   }
 }

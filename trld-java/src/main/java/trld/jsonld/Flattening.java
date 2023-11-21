@@ -15,64 +15,65 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import static trld.Common.warning;
+import static trld.platform.Common.warning;
 import static trld.jsonld.Base.*;
 
-public class Flattening {
 
+
+
+public class Flattening {
   public static Object flatten(Object element) {
     return flatten(element, false);
   }
   public static Object flatten(Object element, Boolean ordered) {
     return flatten(element, ordered, null);
   }
-  public static Object flatten(Object element, Boolean ordered, /*@Nullable*/ BNodes bnodes) { // LINE: 30
-    if (bnodes == null) { // LINE: 31
-      bnodes = new BNodes(); // LINE: 32
+  public static Object flatten(Object element, Boolean ordered, /*@Nullable*/ BNodes bnodes) {
+    if (bnodes == null) {
+      bnodes = new BNodes();
     }
-    Map<String, Map<String, Object>> nodeMap = Builtins.mapOf(DEFAULT, new HashMap<>()); // LINE: 35
-    makeNodeMap(bnodes, element, nodeMap); // LINE: 37
-    Map defaultGraph = (Map) nodeMap.get(DEFAULT); // LINE: 39
-    List<String> graphNames = new ArrayList(nodeMap.keySet()); // LINE: 41
-    if (ordered) { // LINE: 42
-      Collections.sort(graphNames); // LINE: 43
+    Map<String, Map<String, Object>> nodeMap = Builtins.mapOf(DEFAULT, new HashMap<>());
+    makeNodeMap(bnodes, element, nodeMap);
+    Map defaultGraph = (Map) nodeMap.get(DEFAULT);
+    List<String> graphNames = new ArrayList(nodeMap.keySet());
+    if (ordered) {
+      Collections.sort(graphNames);
     }
-    for (String graphName : graphNames) { // LINE: 44
-      if ((graphName == null && ((Object) DEFAULT) == null || graphName != null && (graphName).equals(DEFAULT))) { // LINE: 45
-        continue; // LINE: 46
+    for (String graphName : graphNames) {
+      if ((graphName == null && ((Object) DEFAULT) == null || graphName != null && (graphName).equals(DEFAULT))) {
+        continue;
       }
-      Map<String, Object> graph = ((Map<String, Object>) nodeMap.get(graphName)); // LINE: 47
-      if (!defaultGraph.containsKey(graphName)) { // LINE: 49
-        defaultGraph.put(graphName, Builtins.mapOf(ID, graphName)); // LINE: 50
+      Map<String, Object> graph = ((Map<String, Object>) nodeMap.get(graphName));
+      if (!defaultGraph.containsKey(graphName)) {
+        defaultGraph.put(graphName, Builtins.mapOf(ID, graphName));
       }
-      Map<String, Object> entry = ((Map<String, Object>) defaultGraph.get(graphName)); // LINE: 52
-      List<Map<String, Object>> entryGraph = new ArrayList<>(); // LINE: 54
-      entry.put(GRAPH, entryGraph); // LINE: 55
-      List<String> nodeIds = new ArrayList(graph.keySet()); // LINE: 57
-      if (ordered) { // LINE: 58
-        Collections.sort(nodeIds); // LINE: 59
+      Map<String, Object> entry = ((Map<String, Object>) defaultGraph.get(graphName));
+      List<Map<String, Object>> entryGraph = new ArrayList<>();
+      entry.put(GRAPH, entryGraph);
+      List<String> nodeIds = new ArrayList(graph.keySet());
+      if (ordered) {
+        Collections.sort(nodeIds);
       }
-      for (String nodeId : nodeIds) { // LINE: 60
-        Map<String, Object> node = ((Map<String, Object>) graph.get(nodeId)); // LINE: 61
-        if ((node.size() > 1 || !node.containsKey(ID))) { // LINE: 62
-          entryGraph.add(node); // LINE: 63
+      for (String nodeId : nodeIds) {
+        Map<String, Object> node = ((Map<String, Object>) graph.get(nodeId));
+        if ((node.size() > 1 || !node.containsKey(ID))) {
+          entryGraph.add(node);
         }
       }
     }
-    List<Map<String, Object>> flattened = new ArrayList<>(); // LINE: 65
-    List<String> topNodeIds = new ArrayList(defaultGraph.keySet()); // LINE: 67
-    if (ordered) { // LINE: 68
-      Collections.sort(topNodeIds); // LINE: 69
+    List<Map<String, Object>> flattened = new ArrayList<>();
+    List<String> topNodeIds = new ArrayList(defaultGraph.keySet());
+    if (ordered) {
+      Collections.sort(topNodeIds);
     }
-    for (String nodeId : topNodeIds) { // LINE: 70
-      Map<String, Object> topNode = ((Map<String, Object>) defaultGraph.get(nodeId)); // LINE: 71
-      if ((topNode.size() > 1 || !topNode.containsKey(ID))) { // LINE: 72
-        flattened.add(topNode); // LINE: 73
+    for (String nodeId : topNodeIds) {
+      Map<String, Object> topNode = ((Map<String, Object>) defaultGraph.get(nodeId));
+      if ((topNode.size() > 1 || !topNode.containsKey(ID))) {
+        flattened.add(topNode);
       }
     }
-    return flattened; // LINE: 75
+    return flattened;
   }
-
   public static void makeNodeMap(BNodes bnodes, Object element, Map<String, Map<String, Object>> nodeMap) {
     makeNodeMap(bnodes, element, nodeMap, DEFAULT);
   }
@@ -85,169 +86,168 @@ public class Flattening {
   public static void makeNodeMap(BNodes bnodes, Object element, Map<String, Map<String, Object>> nodeMap, String activeGraph, /*@Nullable*/ Object activeSubject, /*@Nullable*/ String activeProperty) {
     makeNodeMap(bnodes, element, nodeMap, activeGraph, activeSubject, activeProperty, null);
   }
-  public static void makeNodeMap(BNodes bnodes, Object element, Map<String, Map<String, Object>> nodeMap, String activeGraph, /*@Nullable*/ Object activeSubject, /*@Nullable*/ String activeProperty, /*@Nullable*/ Map<String, Object> listMap) { // LINE: 78
-    if (element instanceof List) { // LINE: 86
-      for (Object item : (List) element) { // LINE: 87
-        makeNodeMap(bnodes, item, nodeMap, activeGraph, activeSubject, activeProperty, listMap); // LINE: 89
+  public static void makeNodeMap(BNodes bnodes, Object element, Map<String, Map<String, Object>> nodeMap, String activeGraph, /*@Nullable*/ Object activeSubject, /*@Nullable*/ String activeProperty, /*@Nullable*/ Map<String, Object> listMap) {
+    if (element instanceof List) {
+      for (Object item : (List) element) {
+        makeNodeMap(bnodes, item, nodeMap, activeGraph, activeSubject, activeProperty, listMap);
       }
-      return; // LINE: 91
+      return;
     }
     assert element instanceof Map;
     if (!nodeMap.containsKey(activeGraph)) nodeMap.put(activeGraph, new HashMap<>());
-    Map<String, Object> graph = (Map<String, Object>) nodeMap.get(activeGraph); // LINE: 97
-    /*@Nullable*/ Map<String, Object> subjectNode = null; // LINE: 98
-    if (activeSubject instanceof String) { // LINE: 99
-      subjectNode = ((Map<String, Object>) graph.get((String) activeSubject)); // LINE: 100
+    Map<String, Object> graph = (Map<String, Object>) nodeMap.get(activeGraph);
+    /*@Nullable*/ Map<String, Object> subjectNode = null;
+    if (activeSubject instanceof String) {
+      subjectNode = ((Map<String, Object>) graph.get((String) activeSubject));
     }
-    if (((Map) element).containsKey(TYPE)) { // LINE: 103
-      Object etype = (Object) ((Map) element).get(TYPE); // LINE: 104
-      List mappedTypes = new ArrayList<>(); // LINE: 105
-      for (String item : ((List<String>) asList(etype))) { // LINE: 106
-        if (isBlank(item)) { // LINE: 108
-          item = (String) bnodes.makeBnodeId(item); // LINE: 109
+    if (((Map) element).containsKey(TYPE)) {
+      Object etype = (Object) ((Map) element).get(TYPE);
+      List mappedTypes = new ArrayList<>();
+      for (String item : ((List<String>) asList(etype))) {
+        if (isBlank(item)) {
+          item = (String) bnodes.makeBnodeId(item);
         }
-        mappedTypes.add(item); // LINE: 110
+        mappedTypes.add(item);
       }
-      ((Map) element).put(TYPE, (etype instanceof List ? mappedTypes : mappedTypes.get(0))); // LINE: 111
+      ((Map) element).put(TYPE, (etype instanceof List ? mappedTypes : mappedTypes.get(0)));
     }
-    if (((Map) element).containsKey(VALUE)) { // LINE: 114
+    if (((Map) element).containsKey(VALUE)) {
       assert subjectNode != null;
       assert activeProperty instanceof String;
-      if (listMap == null) { // LINE: 118
-        if (!subjectNode.containsKey(activeProperty)) { // LINE: 120
-          subjectNode.put((String) activeProperty, new ArrayList<>(Arrays.asList(new Map[] {(Map) element}))); // LINE: 121
+      if (listMap == null) {
+        if (!subjectNode.containsKey(activeProperty)) {
+          subjectNode.put((String) activeProperty, new ArrayList<>(Arrays.asList(new Map[] {(Map) element})));
         } else {
-          List<Object> elements = ((List<Object>) subjectNode.get(activeProperty)); // LINE: 124
-          if (!(elements.stream().anyMatch(el -> nodeEquals((Map) element, el)))) { // LINE: 125
-            elements.add((Map) element); // LINE: 126
+          List<Object> elements = ((List<Object>) subjectNode.get(activeProperty));
+          if (!(elements.stream().anyMatch(el -> nodeEquals((Map) element, el)))) {
+            elements.add((Map) element);
           }
         }
       } else {
-        ((List<Object>) listMap.get(LIST)).add((Map) element); // LINE: 129
+        ((List<Object>) listMap.get(LIST)).add((Map) element);
       }
-    } else if (((Map) element).containsKey(LIST)) { // LINE: 132
+    } else if (((Map) element).containsKey(LIST)) {
       assert subjectNode != null;
       assert activeProperty instanceof String;
-      Map<String, Object> result = Builtins.mapOf(LIST, new ArrayList<>()); // LINE: 136
-      makeNodeMap(bnodes, ((Map) element).get(LIST), nodeMap, activeGraph, activeSubject, (String) activeProperty, result); // LINE: 138
-      if (listMap == null) { // LINE: 141
-        ((List<Object>) subjectNode.get(activeProperty)).add(result); // LINE: 142
+      Map<String, Object> result = Builtins.mapOf(LIST, new ArrayList<>());
+      makeNodeMap(bnodes, ((Map) element).get(LIST), nodeMap, activeGraph, activeSubject, (String) activeProperty, result);
+      if (listMap == null) {
+        ((List<Object>) subjectNode.get(activeProperty)).add(result);
       } else {
-        ((List<Object>) listMap.get(LIST)).add(result); // LINE: 145
+        ((List<Object>) listMap.get(LIST)).add(result);
       }
     } else {
-      String eid; // LINE: 150
-      if (((Map) element).containsKey(ID)) { // LINE: 151
-        eid = ((String) ((Map) element).remove(ID)); // LINE: 152
-        if ((eid == null || isBlank(eid))) { // LINE: 153
-          eid = (String) bnodes.makeBnodeId(eid); // LINE: 154
+      String eid;
+      if (((Map) element).containsKey(ID)) {
+        eid = ((String) ((Map) element).remove(ID));
+        if ((eid == null || isBlank(eid))) {
+          eid = (String) bnodes.makeBnodeId(eid);
         }
       } else {
-        eid = (String) bnodes.makeBnodeId(null); // LINE: 157
+        eid = (String) bnodes.makeBnodeId(null);
       }
-      if (!graph.containsKey(eid)) { // LINE: 159
-        graph.put(eid, Builtins.mapOf(ID, eid)); // LINE: 160
+      if (!graph.containsKey(eid)) {
+        graph.put(eid, Builtins.mapOf(ID, eid));
       }
-      Map<String, Object> node = ((Map<String, Object>) graph.get(eid)); // LINE: 162
-      if (activeSubject instanceof Map) { // LINE: 164
+      Map<String, Object> node = ((Map<String, Object>) graph.get(eid));
+      if (activeSubject instanceof Map) {
         assert activeProperty instanceof String;
-        if (!node.containsKey(activeProperty)) { // LINE: 167
-          node.put((String) activeProperty, new ArrayList<>(Arrays.asList(new Map[] {(Map) activeSubject}))); // LINE: 168
+        if (!node.containsKey(activeProperty)) {
+          node.put((String) activeProperty, new ArrayList<>(Arrays.asList(new Map[] {(Map) activeSubject})));
         } else {
-          List<Map<String, Object>> subjects = ((List<Map<String, Object>>) node.get(activeProperty)); // LINE: 171
-          if (!(subjects.stream().anyMatch(subj -> nodeEquals((Map) activeSubject, subj)))) { // LINE: 172
-            subjects.add((Map) activeSubject); // LINE: 173
+          List<Map<String, Object>> subjects = ((List<Map<String, Object>>) node.get(activeProperty));
+          if (!(subjects.stream().anyMatch(subj -> nodeEquals((Map) activeSubject, subj)))) {
+            subjects.add((Map) activeSubject);
           }
         }
-      } else if (activeProperty != null) { // LINE: 176
+      } else if (activeProperty != null) {
         assert subjectNode != null;
-        Map<String, Object> reference = Builtins.mapOf(ID, eid); // LINE: 179
-        if (listMap == null) { // LINE: 181
-          if (!subjectNode.containsKey(activeProperty)) { // LINE: 183
-            subjectNode.put(activeProperty, new ArrayList<>(Arrays.asList(new Object[] {reference}))); // LINE: 184
+        Map<String, Object> reference = Builtins.mapOf(ID, eid);
+        if (listMap == null) {
+          if (!subjectNode.containsKey(activeProperty)) {
+            subjectNode.put(activeProperty, new ArrayList<>(Arrays.asList(new Object[] {reference})));
           }
-          List<Map<String, Object>> objects = ((List<Map<String, Object>>) subjectNode.get(activeProperty)); // LINE: 186
-          if (!objects.contains(reference)) { // LINE: 187
-            objects.add(reference); // LINE: 188
+          List<Map<String, Object>> objects = ((List<Map<String, Object>>) subjectNode.get(activeProperty));
+          if (!objects.contains(reference)) {
+            objects.add(reference);
           }
         } else {
-          ((List<Object>) listMap.get(LIST)).add(reference); // LINE: 191
+          ((List<Object>) listMap.get(LIST)).add(reference);
         }
       }
-      if (((Map) element).containsKey(TYPE)) { // LINE: 194
+      if (((Map) element).containsKey(TYPE)) {
         if (!node.containsKey(TYPE)) node.put(TYPE, new ArrayList<>());
-        List ntypes = (List) ((List) node.get(TYPE)); // LINE: 196
-        for (Object ntype : asList(((Map) element).get(TYPE))) { // LINE: 197
-          if (!ntypes.contains(ntype)) { // LINE: 198
-            ntypes.add(ntype); // LINE: 199
+        List ntypes = (List) ((List) node.get(TYPE));
+        for (Object ntype : asList(((Map) element).get(TYPE))) {
+          if (!ntypes.contains(ntype)) {
+            ntypes.add(ntype);
           }
         }
-        ((Map) element).remove(TYPE); // LINE: 200
+        ((Map) element).remove(TYPE);
       }
-      if (((Map) element).containsKey(INDEX)) { // LINE: 203
-        if ((node.containsKey(INDEX) && !node.get(INDEX).equals(((Map) element).get(INDEX)))) { // LINE: 204
-          throw new ConflictingIndexesError(node.get(INDEX).toString()); // LINE: 205
+      if (((Map) element).containsKey(INDEX)) {
+        if ((node.containsKey(INDEX) && !node.get(INDEX).equals(((Map) element).get(INDEX)))) {
+          throw new ConflictingIndexesError(node.get(INDEX).toString());
         }
-        node.put(INDEX, ((Map) element).remove(INDEX)); // LINE: 206
+        node.put(INDEX, ((Map) element).remove(INDEX));
       }
-      if (((Map) element).containsKey(REVERSE)) { // LINE: 209
-        Map<String, Object> referencedNode = Builtins.mapOf(ID, eid); // LINE: 211
-        Map<String, Object> reverseMap = (Map<String, Object>) ((Map<String, Object>) ((Map) element).get(REVERSE)); // LINE: 213
-        for (Map.Entry<String, Object> property_values : reverseMap.entrySet()) { // LINE: 215
+      if (((Map) element).containsKey(REVERSE)) {
+        Map<String, Object> referencedNode = Builtins.mapOf(ID, eid);
+        Map<String, Object> reverseMap = (Map<String, Object>) ((Map<String, Object>) ((Map) element).get(REVERSE));
+        for (Map.Entry<String, Object> property_values : reverseMap.entrySet()) {
           String property = property_values.getKey();
           Object values = property_values.getValue();
-          for (Object value : ((List) values)) { // LINE: 217
-            makeNodeMap(bnodes, value, nodeMap, activeGraph, referencedNode, property); // LINE: 219
+          for (Object value : ((List) values)) {
+            makeNodeMap(bnodes, value, nodeMap, activeGraph, referencedNode, property);
           }
         }
-        ((Map) element).remove(REVERSE); // LINE: 222
+        ((Map) element).remove(REVERSE);
       }
-      if (((Map) element).containsKey(GRAPH)) { // LINE: 225
-        makeNodeMap(bnodes, ((Map) element).get(GRAPH), nodeMap, eid); // LINE: 226
-        ((Map) element).remove(GRAPH); // LINE: 227
+      if (((Map) element).containsKey(GRAPH)) {
+        makeNodeMap(bnodes, ((Map) element).get(GRAPH), nodeMap, eid);
+        ((Map) element).remove(GRAPH);
       }
-      if (((Map) element).containsKey(INCLUDED)) { // LINE: 230
-        makeNodeMap(bnodes, ((Map) element).get(INCLUDED), nodeMap, activeGraph); // LINE: 231
-        ((Map) element).remove(INCLUDED); // LINE: 232
+      if (((Map) element).containsKey(INCLUDED)) {
+        makeNodeMap(bnodes, ((Map) element).get(INCLUDED), nodeMap, activeGraph);
+        ((Map) element).remove(INCLUDED);
       }
-      List<String> properties = (List<String>) new ArrayList(((Map) element).keySet()); // LINE: 235
-      Collections.sort(properties); // LINE: 236
-      for (String property : properties) { // LINE: 237
-        Object evalue = (Object) ((Map) element).get(property); // LINE: 238
-        if (isBlank(property)) { // LINE: 240
-          property = (String) bnodes.makeBnodeId(property); // LINE: 241
+      List<String> properties = (List<String>) new ArrayList(((Map) element).keySet());
+      Collections.sort(properties);
+      for (String property : properties) {
+        Object evalue = (Object) ((Map) element).get(property);
+        if (isBlank(property)) {
+          property = (String) bnodes.makeBnodeId(property);
         }
-        if (!node.containsKey(property)) { // LINE: 243
-          node.put(property, new ArrayList<>()); // LINE: 244
+        if (!node.containsKey(property)) {
+          node.put(property, new ArrayList<>());
         }
-        makeNodeMap(bnodes, evalue, nodeMap, activeGraph, eid, property); // LINE: 246
+        makeNodeMap(bnodes, evalue, nodeMap, activeGraph, eid, property);
       }
     }
   }
-
-  public static void mergeNodeMaps(Map<String, Map<String, Map<String, Object>>> nodeMaps) { // LINE: 249
-    Map<String, Object> result = new HashMap<>(); // LINE: 251
-    for (Map.Entry<String, Map<String, Map<String, Object>>> graphName_nodeMap : nodeMaps.entrySet()) { // LINE: 253
+  public static Map<String, Object> mergeNodeMaps(Map<String, Map<String, Map<String, Object>>> nodeMaps) {
+    Map<String, Object> result = new HashMap<>();
+    for (Map.Entry<String, Map<String, Map<String, Object>>> graphName_nodeMap : nodeMaps.entrySet()) {
       String graphName = graphName_nodeMap.getKey();
       Map<String, Map<String, Object>> nodeMap = graphName_nodeMap.getValue();
-      for (Map.Entry<String, Map<String, Object>> nodeId_node : nodeMap.entrySet()) { // LINE: 254
+      for (Map.Entry<String, Map<String, Object>> nodeId_node : nodeMap.entrySet()) {
         String nodeId = nodeId_node.getKey();
         Map<String, Object> node = nodeId_node.getValue();
         if (!result.containsKey(nodeId)) result.put(nodeId, Builtins.mapOf(ID, nodeId));
-        Map<String, Object> mergedNode = ((Map<String, Object>) result.get(nodeId)); // LINE: 256
-        for (Map.Entry<String, Object> property_values : node.entrySet()) { // LINE: 259
+        Map<String, Object> mergedNode = ((Map<String, Object>) result.get(nodeId));
+        for (Map.Entry<String, Object> property_values : node.entrySet()) {
           String property = property_values.getKey();
           Object values = property_values.getValue();
-          if ((!property.equals(TYPE) && KEYWORDS.contains(property))) { // LINE: 261
-            mergedNode.put(property, values); // LINE: 262
+          if ((!property.equals(TYPE) && KEYWORDS.contains(property))) {
+            mergedNode.put(property, values);
           } else {
             if (!mergedNode.containsKey(property)) mergedNode.put(property, new ArrayList<>());
-            List existing = (List) ((List) mergedNode.get(property)); // LINE: 266
+            List existing = (List) ((List) mergedNode.get(property));
             existing.addAll(((List) values));
           }
         }
       }
     }
-    return; // LINE: 270
+    return result;
   }
 }
