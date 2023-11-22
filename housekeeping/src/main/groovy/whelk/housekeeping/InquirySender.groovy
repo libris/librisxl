@@ -132,9 +132,11 @@ class InquirySender extends HouseKeeper {
                 }
 
                 // Send
-                String body = generateEmailBody(concerningSystemIDs, NotificationUtils.asList(data["comment"]))
+                String noticeSystemId = whelk.getStorage().getSystemIdByIri((String) data["@id"])
+                String body = generateEmailBody(noticeSystemId, concerningSystemIDs, NotificationUtils.asList(data["comment"]))
+                log.info("Sending ${recipients.size()} emails for $noticeSystemId")
                 for (String recipient : recipients) {
-                    NotificationUtils.sendEmail(recipient, "CXZ", body)
+                    NotificationUtils.sendEmail(recipient, NotificationUtils.emailHeader, body)
                 }
 
                 Instant lastChangeObservationForInstance = resultSet.getTimestamp("modified").toInstant()
@@ -155,24 +157,21 @@ class InquirySender extends HouseKeeper {
 
     }
 
-    private String generateEmailBody(List<String> concerningSystemIDs, List<String> comments) {
+    // TODO
+    private String generateEmailBody(String noticeSystemId, List<String> concerningSystemIDs, List<String> comments) {
         StringBuilder sb = new StringBuilder()
-        sb.append("Angående:\n\t")
-
-        for (String systemId : concerningSystemIDs) {
-            sb.append( Document.BASE_URI.resolve(systemId).toString() )
-            Document concerningDocument = whelk.getStorage().load(systemId)
-            String mainTitle = Document._get(["@graph", 1, "hasTitle", 0, "mainTitle"], concerningDocument.data)
-            String prefLabel = Document._get(["@graph", 1, "prefLabel"], concerningDocument.data)
-            if (mainTitle != null)
-                sb.append(" ($mainTitle)")
-            else if (prefLabel != null)
-                sb.append(" ($prefLabel)")
-            sb.append("\n")
-        }
-
         for (String comment : comments) {
-            sb.append(comment+"\n")
+            sb.append("- ").append(comment).append("\n")
+        }
+        sb.append("\n")
+        sb.append( NotificationUtils.makeLink(noticeSystemId) )
+
+        sb.append("\n")
+        sb.append("\n")
+        for (String systemId : concerningSystemIDs) {
+            sb.append("\t").append(NotificationUtils.describe(whelk.loadEmbellished(systemId), whelk)).append("\n")
+            sb.append("\t").append(NotificationUtils.makeLink(systemId)).append("\n")
+            sb.append("\n")
         }
 
         return sb.toString()

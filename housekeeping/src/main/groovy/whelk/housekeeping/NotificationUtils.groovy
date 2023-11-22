@@ -6,12 +6,16 @@ import org.simplejavamail.api.email.Email
 import org.simplejavamail.api.mailer.Mailer
 import org.simplejavamail.email.EmailBuilder
 import org.simplejavamail.mailer.MailerBuilder
+import whelk.Document
+import whelk.JsonLd
 import whelk.Whelk
 import whelk.util.PropertyLoader
 
 @CompileStatic
 @Log4j2
 class NotificationUtils {
+
+    public static String emailHeader = "[CXZ]"
 
     /**
      * Get all user settings and arrange them by requested library-uri, so that you
@@ -81,5 +85,18 @@ class NotificationUtils {
         } else {
             log.info("Should now have sent notification (cxz) email to " + recipient + " but SMTP is not configured.")
         }
+    }
+
+    // FIXME
+    static String describe(Document doc, Whelk whelk) {
+        JsonLd ld = whelk.jsonld
+        Map data = JsonLd.frame(doc.getThingIdentifiers().first(), doc.data)
+        def strings = ld.applyLensAsMapByLang(data, whelk.locales as Set, [], ['chips'])
+        return strings['sv'] // ???
+    }
+
+    // FIXME
+    static String makeLink(String systemId) {
+        Document.BASE_URI.toString() + 'katalogisering/' + systemId // ???
     }
 }
