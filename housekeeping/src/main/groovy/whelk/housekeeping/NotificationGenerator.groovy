@@ -24,7 +24,7 @@ import static whelk.util.Jackson.mapper
 class NotificationGenerator extends HouseKeeper {
 
     public static final String STATE_KEY = "CXZ notification generator"
-    private static final int MAX_OBSERVATIONS_PER_CHANGE = 20
+    private static final int MAX_OBSERVATIONS_PER_CHANGE = 2
     private String status = "OK"
     private final Whelk whelk
 
@@ -57,8 +57,6 @@ class NotificationGenerator extends HouseKeeper {
         PreparedStatement statement
         ResultSet resultSet
 
-        Map<String, List<String>> changedInstanceIDsWithComments = [:]
-
         connection = whelk.getStorage().getOuterConnection()
         connection.setAutoCommit(false)
         try {
@@ -73,12 +71,16 @@ class NotificationGenerator extends HouseKeeper {
             while (resultSet.next()) {
                 String id = resultSet.getString("id")
 
+                List<Document> resultingChangeObservations = []
+
                 Array changeNotesArray = resultSet.getArray("changeNotes")
                 List changeNotes = []
                 for (Object o : changeNotesArray.getArray()) {
                     if (o != null)
                         changeNotes.add(o)
                 }
+
+                Map<String, List<String>> changedInstanceIDsWithComments = [:]
 
                 List<Tuple2<String, String>> dependers = whelk.getStorage().followDependers(id, ["itemOf"])
                 dependers.add(new Tuple2(id, null)) // This ID too, not _only_ the dependers!
@@ -92,18 +94,21 @@ class NotificationGenerator extends HouseKeeper {
                         changedInstanceIDsWithComments[dependerID].addAll(changeNotes)
                     }
                 }
-            }
 
-            for (String instanceId : changedInstanceIDsWithComments.keySet()) {
-                List<Document> resultingChangeObservations = generateObservationsForAffectedInstance(
-                                instanceId, changedInstanceIDsWithComments[instanceId], from.toInstant(), until.toInstant())
+                for (String instanceId : changedInstanceIDsWithComments.keySet()) {
+                    resultingChangeObservations.addAll( generateObservationsForAffectedInstance(
+                            instanceId, changedInstanceIDsWithComments[instanceId], from.toInstant(), until.toInstant()) )
+                }
 
-                if (resultingChangeObservations.size() <= MAX_OBSERVATIONS_PER_CHANGE) {
+                String changedMainEntityType = whelk.getStorage().getMainEntityTypeBySystemID(id)
+                if (resultingChangeObservations.size() <= MAX_OBSERVATIONS_PER_CHANGE || whelk.getJsonld().isSubClassOf(changedMainEntityType, "Work")) {
                     for (Document observation : resultingChangeObservations) {
                         if (!whelk.createDocument(observation, "NotificationGenerator", "SEK", "none", false)) {
                             log.error("Failed to create ChangeObservation:\n${observation.getDataAsString()}")
                         }
                     }
+                } else {
+                    log.info("Changes to " + id + " would result in too many ChangeObservations, skipping instead.")
                 }
             }
 
