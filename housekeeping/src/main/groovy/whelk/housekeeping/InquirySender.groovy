@@ -2,6 +2,7 @@ package whelk.housekeeping
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2
+import whelk.Document
 import whelk.Whelk
 
 import java.sql.Connection
@@ -130,8 +131,8 @@ class InquirySender extends HouseKeeper {
                     }
                 }
 
+                // Send
                 String body = generateEmailBody(concerningSystemIDs, NotificationUtils.asList(data["comment"]))
-
                 for (String recipient : recipients) {
                     NotificationUtils.sendEmail(recipient, "CXZ", body)
                 }
@@ -155,6 +156,25 @@ class InquirySender extends HouseKeeper {
     }
 
     private String generateEmailBody(List<String> concerningSystemIDs, List<String> comments) {
-        return "concerning: "+concerningSystemIDs + "\ncomments: "+comments
+        StringBuilder sb = new StringBuilder()
+        sb.append("Angående:\n\t")
+
+        for (String systemId : concerningSystemIDs) {
+            sb.append( Document.BASE_URI.resolve(systemId).toString() )
+            Document concerningDocument = whelk.getStorage().load(systemId)
+            String mainTitle = Document._get(["@graph", 1, "hasTitle", 0, "mainTitle"], concerningDocument.data)
+            String prefLabel = Document._get(["@graph", 1, "prefLabel"], concerningDocument.data)
+            if (mainTitle != null)
+                sb.append(" ($mainTitle)")
+            else if (prefLabel != null)
+                sb.append(" ($prefLabel)")
+            sb.append("\n")
+        }
+
+        for (String comment : comments) {
+            sb.append(comment+"\n")
+        }
+
+        return sb.toString()
     }
 }

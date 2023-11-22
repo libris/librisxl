@@ -185,9 +185,9 @@ class NotificationSender extends HouseKeeper {
                 Object comments = Document._get(["@graph", 1, "comment"], observation)
 
                 if (comments instanceof List) {
-                    sb.append("\n\tTillhörande kommentarer:")
+                    sb.append("\n\tTillhörande kommentarer\n:")
                     for (String comment : comments)
-                        sb.append("\n\t\t" + comment + "\n\n")
+                        sb.append("\t\t" + comment + "\n")
                 }
             }
 
