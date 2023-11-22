@@ -100,7 +100,7 @@ class DocumentUtil {
 
         for (int i = 0; i < path.size(); i++) {
             def p = path[i]
-            if (p == '*') {
+            if (p.equals('*')) {
                 if (item instanceof Collection) {
                     return item.collect { getAtPath(it, path.drop(i + 1), []) }.flatten()
                 } else {
