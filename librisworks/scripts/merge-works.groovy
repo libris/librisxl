@@ -59,7 +59,7 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
             // TODO: Update adminMetadata? To say that additional instances may have contributed to the linked work.
             addCloseMatch(workDoc, linkableWorks)
             saveAndLink(workDoc, instanceDocs, workDoc.existsInStorage)
-            writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.UPDATED)
+//            writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.UPDATED)
             return
         }
         // New merged work
@@ -67,7 +67,7 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
             addAdminMetadata(workDoc, instanceDocs.collect { ['@id': it.recordIri()] })
             addCloseMatch(workDoc, linkableWorks)
             saveAndLink(workDoc, instanceDocs, workDoc.existsInStorage)
-            writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.NEW)
+//            writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.NEW)
             return
         }
         // Local work, save if new closeMatch links created
