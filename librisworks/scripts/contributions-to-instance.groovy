@@ -80,7 +80,10 @@ selectByIds(clusters.flatten()) { bib ->
                 toInstance.remove(ill)
                 toInstance.remove(ninePu)
             }
+        } else if (toInstance.contains(ninePu)) {
+            toInstance.remove(ninePu)
         }
+
         if (toInstance) {
             instance['contribution'] = asList(instance['contribution']) + c.clone().tap { it['role'] = toInstance }
             c['role'] = asList(c.role) - toInstance
