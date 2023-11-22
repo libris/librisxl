@@ -2,7 +2,6 @@ package whelk.housekeeping
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2
-import whelk.Document
 import whelk.Whelk
 
 import java.sql.Connection
@@ -102,6 +101,7 @@ class InquirySender extends HouseKeeper {
 
                 // Figure out who to send to
                 Set<String> recipients = []
+                String moreSubject = ""
                 boolean sendToAll = true
                 concerningSystemIDs.each { String concerningSystemID ->
                     String type = whelk.getStorage().getMainEntityTypeBySystemID(concerningSystemID)
@@ -117,6 +117,7 @@ class InquirySender extends HouseKeeper {
                                 }
                             }
                         }
+                        moreSubject = ' ' + NotificationUtils.recipientCollections(libraries)
                     }
                 }
                 if (sendToAll) {
@@ -136,7 +137,7 @@ class InquirySender extends HouseKeeper {
                 String body = generateEmailBody(noticeSystemId, concerningSystemIDs, NotificationUtils.asList(data["comment"]))
                 log.info("Sending ${recipients.size()} emails for $noticeSystemId")
                 for (String recipient : recipients) {
-                    NotificationUtils.sendEmail(recipient, NotificationUtils.emailHeader, body)
+                    NotificationUtils.sendEmail(recipient, NotificationUtils.emailHeader + moreSubject, body)
                 }
 
                 Instant lastChangeObservationForInstance = resultSet.getTimestamp("modified").toInstant()

@@ -2,20 +2,11 @@ package whelk.housekeeping
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2
-import org.simplejavamail.api.email.Email
-import org.simplejavamail.api.mailer.Mailer
-import org.simplejavamail.email.EmailBuilder
-import org.simplejavamail.mailer.MailerBuilder
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
-import whelk.util.PropertyLoader
 
-import java.sql.Array
-import java.sql.Connection
-import java.sql.PreparedStatement
-import java.sql.ResultSet
-import java.sql.Timestamp
+import java.sql.*
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -109,6 +100,7 @@ class NotificationSender extends HouseKeeper {
     private void sendFor(String instanceUri, Map<String, List<Map>> heldByToUserSettings, List changeObservationsForInstance) {
         String instanceId = whelk.getStorage().getSystemIdByIri(instanceUri)
         List<String> libraries = whelk.getStorage().getAllLibrariesHolding(instanceId)
+        String subject = NotificationUtils.emailHeader + ' ' + NotificationUtils.recipientCollections(libraries)
 
         for (String library : libraries) {
             List<Map> users = (List<Map>) heldByToUserSettings[library]
@@ -142,7 +134,7 @@ class NotificationSender extends HouseKeeper {
 
                     if (!matchedObservations.isEmpty() && user.notificationEmail && user.notificationEmail instanceof String) {
                         String body = generateEmailBody(instanceId, matchedObservations)
-                        NotificationUtils.sendEmail((String) user.notificationEmail, "CXZ", body)
+                        NotificationUtils.sendEmail((String) user.notificationEmail, subject, body)
                     }
                 }
             }

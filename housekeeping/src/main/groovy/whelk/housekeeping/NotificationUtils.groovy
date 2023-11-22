@@ -9,6 +9,7 @@ import org.simplejavamail.mailer.MailerBuilder
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 
 @CompileStatic
@@ -84,7 +85,13 @@ class NotificationUtils {
             mailer.sendMail(email)
         } else {
             log.info("Should now have sent notification (cxz) email to " + recipient + " but SMTP is not configured.")
+            log.info(subject)
+            log.info("\n" + body)
         }
+    }
+
+    static String recipientCollections(Collection<String> libraryUris) {
+        libraryUris.findResults { LegacyIntegrationTools.uriToLegacySigel(it) }.unique().sort().join(' ')
     }
 
     // FIXME
