@@ -19,8 +19,9 @@ def instanceRolesByDomain = whelk.resourceCache.relatorResources.relators.findRe
     }
 }
 
-def instanceRoles = instanceRolesByDomain + [Relator.ILLUSTRATOR, Relator.AUTHOR_OF_INTRO, Relator.AUTHOR_OF_AFTERWORD].collect { [(ID_KEY): it.iri] }
 def ill = [(ID_KEY): Relator.ILLUSTRATOR.iri]
+def ninePu = [(ID_KEY): Relator.PRIMARY_RIGHTS_HOLDER.iri]
+def instanceRoles = instanceRolesByDomain + [ill, ninePu]
 
 def keepIllustratorOnWorkForIds = [:]
 
@@ -77,12 +78,12 @@ selectByIds(clusters.flatten()) { bib ->
             if (!illustrator) return
             if (id in keepIllustratorOnWorkForIds[illustrator]) {
                 toInstance.remove(ill)
+                toInstance.remove(ninePu)
             }
-            def pu = asList(contribution.role).find { it == [(ID_KEY): Relator.PRIMARY_RIGHTS_HOLDER.iri] }
-            if (pu) {
-                toInstance.add(pu)
-            }
+        } else if (toInstance.contains(ninePu)) {
+            toInstance.remove(ninePu)
         }
+
         if (toInstance) {
             instance['contribution'] = asList(instance['contribution']) + c.clone().tap { it['role'] = toInstance }
             c['role'] = asList(c.role) - toInstance
