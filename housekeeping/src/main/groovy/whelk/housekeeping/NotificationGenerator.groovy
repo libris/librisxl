@@ -207,7 +207,7 @@ class NotificationGenerator extends HouseKeeper {
         }
 
         // Key Title
-        comparisonResult = NotificationRules.mainTitleChanged(instanceBeforeChange, instanceAfterChange)
+        comparisonResult = NotificationRules.keyTitleChanged(instanceBeforeChange, instanceAfterChange)
         if (comparisonResult[0]) {
             generatedObservations.add(
                     makeChangeObservation(

@@ -25,12 +25,14 @@ class NotificationRules {
             return false
 
         if (agentBefore["@type"] == "Organization" && agentAfter["@type"] == "Organization") {
-            if (
-                    agentBefore["name"] != agentAfter["name"] ||
-                            agentBefore["isPartOf"]["name"] != agentAfter["isPartOf"]["name"] ||
-                            agentBefore["marc:subordinateUnit"] != agentAfter["marc:subordinateUnit"]
-            )
+            if (agentBefore["name"] != agentAfter["name"])
                 return true
+            if (agentBefore["isPartOf"] != null && agentAfter["isPartOf"] != null) {
+                if (agentBefore["isPartOf"]["name"] != agentAfter["isPartOf"]["name"] ||
+                        agentBefore["marc:subordinateUnit"] != agentAfter["marc:subordinateUnit"] )
+                    return true
+            }
+
         }
         return false
     }
