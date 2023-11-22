@@ -200,7 +200,7 @@ class Util {
         def partNumber = findTitlePart(bestInstanceTitle, 'partNumber')
         def partName = findTitlePart(bestInstanceTitle, 'partName')
 
-        def workTitleShape = { it.subMap(['@type', 'mainTitle', 'subtitle', 'titleRemainder', 'source']) }
+        def workTitleShape = { it.subMap(['@type', 'mainTitle', 'subtitle', 'titleRemainder', 'source', 'marc:nonfilingChars']) }
 
         if (bestWorkTitle) {
             return bestWorkTitle.each { appendTitlePartsToMainTitle(it, partNumber) }
