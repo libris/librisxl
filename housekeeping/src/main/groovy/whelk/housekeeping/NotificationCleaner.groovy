@@ -14,7 +14,7 @@ import java.time.temporal.ChronoUnit
 @CompileStatic
 @Log4j2
 class NotificationCleaner extends HouseKeeper {
-    private static final int DAYS_TO_KEEP_INACTIVE = 14
+    private static final int DAYS_TO_KEEP_INACTIVE = 60
     private String status = "OK"
     private final Whelk whelk
 
