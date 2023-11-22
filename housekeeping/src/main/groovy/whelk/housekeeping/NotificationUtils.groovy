@@ -40,6 +40,14 @@ class NotificationUtils {
         return libraryToUserSettings
     }
 
+    static List asList(Object o) {
+        if (o == null)
+            return []
+        if (o instanceof List)
+            return o
+        return [o]
+    }
+
     static Mailer mailer = null
     static String senderAddress
     static synchronized void sendEmail(String recipient, String subject, String body) {

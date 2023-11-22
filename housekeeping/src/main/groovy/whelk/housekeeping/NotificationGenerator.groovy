@@ -41,7 +41,7 @@ class NotificationGenerator extends HouseKeeper {
     }
 
     public String getCronSchedule() {
-        return "* * * * *"
+        return "0 5 * * *"
     }
 
     public void trigger() {
@@ -284,17 +284,9 @@ class NotificationGenerator extends HouseKeeper {
             if ( ! (changeNote instanceof String) )
                 continue
             Map changeNoteMap = mapper.readValue( (String) changeNote, Map)
-            comments.addAll( asList(changeNoteMap["comment"]) )
+            comments.addAll( NotificationUtils.asList(changeNoteMap["comment"]) )
         }
         return comments
-    }
-
-    private List asList(Object o) {
-        if (o == null)
-            return []
-        if (o instanceof List)
-            return o
-        return [o]
     }
 
     /**
