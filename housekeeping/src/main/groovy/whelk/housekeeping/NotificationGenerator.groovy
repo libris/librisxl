@@ -133,6 +133,8 @@ class NotificationGenerator extends HouseKeeper {
                 "agent",
                 "isPartOf",
                 "subject",
+                "continuedBy",
+                "continues",
         ]
         Document instanceAfterChange = whelk.getStorage().loadAsOf(instanceId, Timestamp.from(after))
         historicEmbellish(instanceAfterChange, propertiesToEmbellish, after)
@@ -164,32 +166,12 @@ class NotificationGenerator extends HouseKeeper {
             )
         }
 
-        // Main Title
-        comparisonResult = NotificationRules.mainTitleChanged(instanceBeforeChange, instanceAfterChange)
+        // Subject (agent)
+        comparisonResult = NotificationRules.subjectChanged(instanceBeforeChange, instanceAfterChange)
         if (comparisonResult[0]) {
             generatedObservations.add(
                     makeChangeObservation(
-                            instanceId, changeNotes, "https://id.kb.se/changecategory/maintitle",
-                            comparisonResult[1], comparisonResult[2], agentId)
-            )
-        }
-
-        // Primary Title
-        comparisonResult = NotificationRules.primaryTitleChanged(instanceBeforeChange, instanceAfterChange)
-        if (comparisonResult[0]) {
-            generatedObservations.add(
-                    makeChangeObservation(
-                            instanceId, changeNotes, "https://id.kb.se/changecategory/primarytitle",
-                            comparisonResult[1], comparisonResult[2], agentId)
-            )
-        }
-
-        // Primary Publication
-        comparisonResult = NotificationRules.primaryPublicationChanged(instanceBeforeChange, instanceAfterChange)
-        if (comparisonResult[0]) {
-            generatedObservations.add(
-                    makeChangeObservation(
-                            instanceId, changeNotes, "https://id.kb.se/changecategory/priamrypublication",
+                            instanceId, changeNotes, "https://id.kb.se/changecategory/agentassubject",
                             comparisonResult[1], comparisonResult[2], agentId)
             )
         }
@@ -214,8 +196,28 @@ class NotificationGenerator extends HouseKeeper {
             )
         }
 
+        // Main Title
+        comparisonResult = NotificationRules.mainTitleChanged(instanceBeforeChange, instanceAfterChange)
+        if (comparisonResult[0]) {
+            generatedObservations.add(
+                    makeChangeObservation(
+                            instanceId, changeNotes, "https://id.kb.se/changecategory/maintitle",
+                            comparisonResult[1], comparisonResult[2], agentId)
+            )
+        }
+
+        // Key Title
+        comparisonResult = NotificationRules.mainTitleChanged(instanceBeforeChange, instanceAfterChange)
+        if (comparisonResult[0]) {
+            generatedObservations.add(
+                    makeChangeObservation(
+                            instanceId, changeNotes, "https://id.kb.se/changecategory/keytitle",
+                            comparisonResult[1], comparisonResult[2], agentId)
+            )
+        }
+
         // Serial relation
-        comparisonResult = NotificationRules.SerialRelationChanged(instanceBeforeChange, instanceAfterChange)
+        comparisonResult = NotificationRules.serialRelationChanged(instanceBeforeChange, instanceAfterChange)
         if (comparisonResult[0]) {
             generatedObservations.add(
                     makeChangeObservation(
@@ -225,11 +227,11 @@ class NotificationGenerator extends HouseKeeper {
         }
 
         // Serial termination
-        comparisonResult = NotificationRules.SerialTerminationChanged(instanceBeforeChange, instanceAfterChange)
+        comparisonResult = NotificationRules.serialTerminationChanged(instanceBeforeChange, instanceAfterChange)
         if (comparisonResult[0]) {
             generatedObservations.add(
                     makeChangeObservation(
-                            instanceId, changeNotes, "https://id.kb.se/changecategory/serialtermination",
+                            instanceId, changeNotes, "https://id.kb.se/changecategory/endserial",
                             comparisonResult[1], comparisonResult[2], agentId)
             )
         }

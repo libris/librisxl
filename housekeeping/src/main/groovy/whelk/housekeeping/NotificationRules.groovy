@@ -156,56 +156,40 @@ class NotificationRules {
         return new Tuple(false, null, null)
     }
 
-    static Tuple primaryPublicationChanged(Document instanceBeforeChange, Document instanceAfterChange) {
-        Object publicationsAfter = Document._get(["mainEntity", "publication"], instanceAfterChange.data)
+    // NOT YET COMPLETE, CHECK ONLY THE TITLES
+    static Tuple serialRelationChanged(Document instanceBeforeChange, Document instanceAfterChange) {
+        if (!Document._get(["mainEntity", "issuanceType"], instanceBeforeChange.data).equals("Serial"))
+            return new Tuple(false, null, null)
+        if (!Document._get(["mainEntity", "issuanceType"], instanceAfterChange.data).equals("Serial"))
+            return new Tuple(false, null, null)
+
+        Object continuedByBefore = Document._get(["mainEntity", "continuedBy"], instanceBeforeChange.data)
+        Object continuedByAfter = Document._get(["mainEntity", "continuedBy"], instanceAfterChange.data)
+        //System.err.println("COMPARING:\n\t" + continuedByAfter + "\n\t" + continuedByBefore)
+        if (continuedByBefore != null && continuedByAfter != null && continuedByBefore instanceof List && continuedByAfter instanceof List) {
+            if (continuedByAfter as Set != continuedByBefore as Set)
+                return new Tuple(true, continuedByBefore, continuedByAfter)
+        }
+
+        Object continuesBefore = Document._get(["mainEntity", "continues"], instanceBeforeChange.data)
+        Object continuesAfter = Document._get(["mainEntity", "continues"], instanceAfterChange.data)
+        if (continuesBefore != null && continuesAfter != null && continuesBefore instanceof List && continuesAfter instanceof List) {
+            if (continuesAfter as Set != continuesBefore as Set)
+                return new Tuple(true, continuesBefore, continuesAfter)
+        }
+
+        return new Tuple(false, null, null)
+    }
+
+    static Tuple serialTerminationChanged(Document instanceBeforeChange, Document instanceAfterChange) {
+
+        if (!Document._get(["mainEntity", "issuanceType"], instanceBeforeChange.data).equals("Serial"))
+            return new Tuple(false, null, null)
+        if (!Document._get(["mainEntity", "issuanceType"], instanceAfterChange.data).equals("Serial"))
+            return new Tuple(false, null, null)
+
         Object publicationsBefore = Document._get(["mainEntity", "publication"], instanceBeforeChange.data)
-        if (publicationsBefore != null && publicationsAfter != null && publicationsBefore instanceof List && publicationsAfter instanceof List) {
-            for (Object pubBefore : publicationsBefore) {
-                for (Object pubAfter : publicationsAfter) {
-                    if (pubBefore["@type"].equals("PrimaryPublication") && pubAfter["@type"].equals("PrimaryPublication")) {
-                        if (!pubBefore["year"].equals(pubAfter["year"])) {
-                            return new Tuple(true, pubBefore["year"], pubAfter["year"])
-                        }
-                    }
-                }
-            }
-        }
-        return new Tuple(false, null, null)
-    }
-
-    static Tuple SerialRelationChanged(Document instanceBeforeChange, Document instanceAfterChange) {
-
-        if (!Document._get(["issuanceType"], instanceBeforeChange.data).equals("Serial"))
-            return new Tuple(false, null, null)
-        if (!Document._get(["issuanceType"], instanceAfterChange.data).equals("Serial"))
-            return new Tuple(false, null, null)
-
-        Object precededBefore = Document._get(["precededBy"], instanceBeforeChange.data)
-        Object precededAfter = Document._get(["precededBy"], instanceAfterChange.data)
-        if (precededBefore != null && precededAfter != null && precededBefore instanceof List && precededAfter instanceof List) {
-            if (precededAfter as Set != precededBefore as Set)
-                return new Tuple(true, precededBefore, precededAfter)
-        }
-
-        Object succeededBefore = Document._get(["succeededBy"], instanceBeforeChange.data)
-        Object succeededAfter = Document._get(["succeededBy"], instanceAfterChange.data)
-        if (succeededBefore != null && succeededAfter != null && succeededBefore instanceof List && succeededAfter instanceof List) {
-            if (succeededAfter as Set != succeededBefore as Set)
-                return new Tuple(true, succeededBefore, succeededAfter)
-        }
-
-        return new Tuple(false, null, null)
-    }
-
-    static Tuple SerialTerminationChanged(Document instanceBeforeChange, Document instanceAfterChange) {
-
-        if (!Document._get(["issuanceType"], instanceBeforeChange.data).equals("Serial"))
-            return new Tuple(false, null, null)
-        if (!Document._get(["issuanceType"], instanceAfterChange.data).equals("Serial"))
-            return new Tuple(false, null, null)
-
-        Object publicationsBefore = Document._get(["publication"], instanceBeforeChange.data)
-        Object publicationsAfter = Document._get(["publication"], instanceAfterChange.data)
+        Object publicationsAfter = Document._get(["mainEntity", "publication"], instanceAfterChange.data)
 
         if (publicationsBefore instanceof List && publicationsAfter instanceof List &&
                 publicationsBefore.size() == publicationsAfter.size()) {
@@ -242,13 +226,13 @@ class NotificationRules {
 
             for (Object oBefore : titlesBefore) {
                 Map titleBefore = (Map) oBefore
-                if (titleBefore["mainTitle"])
+                if (titleBefore["mainTitle"] && titleBefore["@type"] == "Title")
                     oldMainTitle = titleBefore
             }
 
             for (Object oAfter : titlesAfter) {
                 Map titleAfter = (Map) oAfter
-                if (titleAfter["mainTitle"])
+                if (titleAfter["mainTitle"] && titleAfter["@type"] == "Title")
                     newMainTitle = titleAfter
             }
 
@@ -258,29 +242,29 @@ class NotificationRules {
         return new Tuple(false, null, null)
     }
 
-    static Tuple primaryTitleChanged(Document instanceBeforeChange, Document instanceAfterChange) {
+    static Tuple keyTitleChanged(Document instanceBeforeChange, Document instanceAfterChange) {
         Object titlesBefore = Document._get(["mainEntity", "hasTitle"], instanceBeforeChange.data)
         Object titlesAfter = Document._get(["mainEntity", "hasTitle"], instanceAfterChange.data)
 
-        Map oldPrimaryTitle = null
-        Map newPrimaryTitle = null
+        Map oldMainTitle = null
+        Map newMainTitle = null
 
         if (titlesBefore != null && titlesAfter != null && titlesBefore instanceof List && titlesAfter instanceof List) {
 
             for (Object oBefore : titlesBefore) {
                 Map titleBefore = (Map) oBefore
-                if (titleBefore["@type"] && titleBefore["@type"] == "Title")
-                    oldPrimaryTitle = titleBefore
+                if (titleBefore["mainTitle"] && titleBefore["@type"] == "KeyTitle")
+                    oldMainTitle = titleBefore
             }
 
             for (Object oAfter : titlesAfter) {
                 Map titleAfter = (Map) oAfter
-                if (titleAfter["@type"] && titleAfter["@type"] == "Title")
-                    newPrimaryTitle = titleAfter
+                if (titleAfter["mainTitle"] && titleAfter["@type"] == "KeyTitle")
+                    newMainTitle = titleAfter
             }
 
-            if (newPrimaryTitle != null && oldPrimaryTitle != null && !newPrimaryTitle.equals(oldPrimaryTitle))
-                return new Tuple(true, oldPrimaryTitle, newPrimaryTitle)
+            if (newMainTitle != null && oldMainTitle != null && !newMainTitle.equals(oldMainTitle))
+                return new Tuple(true, oldMainTitle, newMainTitle)
         }
         return new Tuple(false, null, null)
     }

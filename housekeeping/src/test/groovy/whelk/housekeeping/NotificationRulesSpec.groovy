@@ -600,4 +600,104 @@ class NotificationRulesSpec extends Specification {
         result[0] == false
     }
 
+    def "Change main title"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "hasTitle" : [
+                                ["@type": "Title", "mainTitle": "aaa"]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "hasTitle" : [
+                                ["@type": "Title", "mainTitle": "bbb"]
+                        ]
+                ]
+        ])
+        Tuple result = NotificationRules.mainTitleChanged(framedBefore, framedAfter)
+
+        expect:
+        result[0] == true
+    }
+
+    def "Change main title, dont trigger key title"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "hasTitle" : [
+                                ["@type": "Title", "mainTitle": "aaa"]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "hasTitle" : [
+                                ["@type": "Title", "mainTitle": "bbb"]
+                        ]
+                ]
+        ])
+        Tuple result = NotificationRules.keyTitleChanged(framedBefore, framedAfter)
+
+        expect:
+        result[0] == false
+    }
+
+    def "Change key title"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "hasTitle" : [
+                                ["@type": "KeyTitle", "mainTitle": "aaa"]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "hasTitle" : [
+                                ["@type": "KeyTitle", "mainTitle": "bbb"]
+                        ]
+                ]
+        ])
+        Tuple result = NotificationRules.keyTitleChanged(framedBefore, framedAfter)
+
+        expect:
+        result[0] == true
+    }
+
+    def "Change serial relation"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "continuedBy": [
+                                [
+                                        "@type" : "Instance",
+                                        "hasTitle" : [
+                                                [ "@type" : "Title", "mainTitle" : "aaa" ]
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "continuedBy": [
+                                [
+                                        "@type" : "Instance",
+                                        "hasTitle" : [
+                                                [ "@type" : "Title", "mainTitle" : "bbb" ]
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Tuple result = NotificationRules.serialRelationChanged(framedBefore, framedAfter)
+
+        expect:
+        result[0] == true
+    }
+
 }
