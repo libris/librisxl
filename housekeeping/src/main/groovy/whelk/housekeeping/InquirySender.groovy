@@ -108,7 +108,7 @@ class InquirySender extends HouseKeeper {
                         sendToAll = false
                         List<String> libraries = whelk.getStorage().getAllLibrariesHolding(concerningSystemID)
                         for (String library : libraries) {
-                            List<Map> usersSubbedToLibrary = heldByToUserSettings[library]
+                            List<Map> usersSubbedToLibrary = heldByToUserSettings[library] ?: []
                             for (Map user : usersSubbedToLibrary) {
                                 Object email = user["notificationEmail"]
                                 if (email != null && email instanceof String) {
