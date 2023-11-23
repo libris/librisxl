@@ -795,4 +795,136 @@ class NotificationRulesSpec extends Specification {
         result[0] == true
     }
 
+    def "Instance DDC change"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "classification" : [
+                                [
+                                        "@type" : "ClassificationDdc",
+                                        "edition" : "full"
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "classification" : [
+                                [
+                                        "@type" : "ClassificationDdc",
+                                        "edition" : "full",
+                                        "someOtherProp": "whatever"
+                                ]
+                        ]
+                ]
+        ])
+        Tuple result = NotificationRules.DDCChanged(framedBefore, framedAfter)
+
+        expect:
+        result[0] == true
+    }
+
+    def "Work DDC change"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "classification" : [
+                                        [
+                                                "@type" : "ClassificationDdc",
+                                                "edition" : "full"
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "classification" : [
+                                        [
+                                                "@type" : "ClassificationDdc",
+                                                "edition" : "full",
+                                                "someOtherProp" : "whatever"
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Tuple result = NotificationRules.DDCChanged(framedBefore, framedAfter)
+
+        expect:
+        result[0] == true
+    }
+
+    def "Instance SAB class change"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "classification" : [
+                                [
+                                        "@type" : "Classification",
+                                        "inScheme" : [
+                                                "code" : "kssb"
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "classification" : [
+                                [
+                                        "@type" : "Classification",
+                                        "inScheme" : [
+                                                "code" : "kssb"
+                                        ],
+                                        "someOtherProp" : "whatever"
+                                ]
+                        ]
+                ]
+        ])
+        Tuple result = NotificationRules.SABChanged(framedBefore, framedAfter)
+
+        expect:
+        result[0] == true
+    }
+
+    def "Work SAB class change"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                            "classification" : [
+                                    [
+                                            "@type" : "Classification",
+                                            "inScheme" : [
+                                                    "code" : "kssb"
+                                            ]
+                                    ]
+                            ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "classification" : [
+                                        [
+                                                "@type" : "Classification",
+                                                "inScheme" : [
+                                                        "code" : "kssb"
+                                                ],
+                                                "someOtherProp" : "whatever"
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Tuple result = NotificationRules.SABChanged(framedBefore, framedAfter)
+
+        expect:
+        result[0] == true
+    }
+
 }

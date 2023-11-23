@@ -270,56 +270,84 @@ class NotificationRules {
     }
 
     static Tuple DDCChanged(Document instanceBeforeChange, Document instanceAfterChange) {
-        Object classificationsBefore = Document._get(["mainEntity", "instanceOf", "classification"], instanceBeforeChange.data)
-        Object classificationsAfter = Document._get(["mainEntity", "instanceOf", "classification"], instanceAfterChange.data)
+        Object workClassificationsBefore = Document._get(["mainEntity", "instanceOf", "classification"], instanceBeforeChange.data)
+        Object workClassificationsAfter = Document._get(["mainEntity", "instanceOf", "classification"], instanceAfterChange.data)
+        Object instanceClassificationsBefore = Document._get(["mainEntity", "classification"], instanceBeforeChange.data)
+        Object instanceClassificationsAfter = Document._get(["mainEntity", "classification"], instanceAfterChange.data)
 
-        Map oldDDC = null
-        Map newDDC = null
+        List classificationsBefore = []
+        if (workClassificationsBefore != null && workClassificationsBefore instanceof List)
+            classificationsBefore.addAll(workClassificationsBefore)
+        if (instanceClassificationsBefore != null && instanceClassificationsBefore instanceof List)
+            classificationsBefore.addAll(instanceClassificationsBefore)
 
-        if (classificationsBefore != null && classificationsAfter != null && classificationsBefore instanceof List && classificationsAfter instanceof List) {
+        List classificationsAfter = []
+        if (workClassificationsAfter != null && workClassificationsAfter instanceof List)
+            classificationsAfter.addAll(workClassificationsAfter)
+        if (instanceClassificationsAfter != null && instanceClassificationsAfter instanceof List)
+            classificationsAfter.addAll(instanceClassificationsAfter)
+
+        Set oldDDC = []
+        Set newDDC = []
+
+        if (!classificationsBefore.isEmpty() && !classificationsAfter.isEmpty()) {
 
             for (Object oBefore : classificationsBefore) {
                 Map classificationBefore = (Map) oBefore
                 if (classificationBefore["@type"] && classificationBefore["@type"] == "ClassificationDdc")
-                    oldDDC = classificationBefore
+                    oldDDC.add(classificationBefore)
             }
 
             for (Object oAfter : classificationsAfter) {
                 Map classificationAfter = (Map) oAfter
                 if (classificationAfter["@type"] && classificationAfter["@type"] == "ClassificationDdc")
-                    newDDC = classificationAfter
+                    newDDC.add(classificationAfter)
             }
 
-            if (newDDC != null && oldDDC != null && !newDDC.equals(oldDDC))
+            if (newDDC != oldDDC)
                 return new Tuple(true, oldDDC, newDDC)
         }
         return new Tuple(false, null, null)
     }
 
     static Tuple SABChanged(Document instanceBeforeChange, Document instanceAfterChange) {
-        Object classificationsBefore = Document._get(["mainEntity", "instanceOf", "classification"], instanceBeforeChange.data)
-        Object classificationsAfter = Document._get(["mainEntity", "instanceOf", "classification"], instanceAfterChange.data)
+        Object workClassificationsBefore = Document._get(["mainEntity", "instanceOf", "classification"], instanceBeforeChange.data)
+        Object workClassificationsAfter = Document._get(["mainEntity", "instanceOf", "classification"], instanceAfterChange.data)
+        Object instanceClassificationsBefore = Document._get(["mainEntity", "classification"], instanceBeforeChange.data)
+        Object instanceClassificationsAfter = Document._get(["mainEntity", "classification"], instanceAfterChange.data)
 
-        Map oldSAB = null
-        Map newSAB = null
+        List classificationsBefore = []
+        if (workClassificationsBefore != null && workClassificationsBefore instanceof List)
+            classificationsBefore.addAll(workClassificationsBefore)
+        if (instanceClassificationsBefore != null && instanceClassificationsBefore instanceof List)
+            classificationsBefore.addAll(instanceClassificationsBefore)
 
-        if (classificationsBefore != null && classificationsAfter != null && classificationsBefore instanceof List && classificationsAfter instanceof List) {
+        List classificationsAfter = []
+        if (workClassificationsAfter != null && workClassificationsAfter instanceof List)
+            classificationsAfter.addAll(workClassificationsAfter)
+        if (instanceClassificationsAfter != null && instanceClassificationsAfter instanceof List)
+            classificationsAfter.addAll(instanceClassificationsAfter)
+
+        Set oldSAB = []
+        Set newSAB = []
+
+        if (!classificationsBefore.isEmpty() && !classificationsAfter.isEmpty()) {
 
             for (Object oBefore : classificationsBefore) {
                 Map classificationBefore = (Map) oBefore
                 if (classificationBefore["inScheme"] && classificationBefore["inScheme"]["code"] &&
                         classificationBefore["inScheme"]["code"] == "kssb")
-                    oldSAB = classificationBefore
+                    oldSAB.add(classificationBefore)
             }
 
             for (Object oAfter : classificationsAfter) {
                 Map classificationAfter = (Map) oAfter
                 if (classificationAfter["inScheme"] && classificationAfter["inScheme"]["code"] &&
                         classificationAfter["inScheme"]["code"] == "kssb")
-                    newSAB = classificationAfter
+                    newSAB.add(classificationAfter)
             }
 
-            if (newSAB != null && oldSAB != null && !newSAB.equals(oldSAB))
+            if (newSAB != oldSAB)
                 return new Tuple(true, oldSAB, newSAB)
         }
         return new Tuple(false, null, null)
