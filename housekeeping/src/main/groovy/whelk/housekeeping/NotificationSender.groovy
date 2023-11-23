@@ -121,7 +121,7 @@ class NotificationSender extends HouseKeeper {
                         "notificationEmail": "noreply@kb.se"
                     }*/
 
-                    List<Map> matchedObservations = []
+                    Set<Map> matchedObservations = new LinkedHashSet<>()
 
                     user?.requestedNotifications?.each { Map request ->
                         request?.triggers?.each { String trigger ->
@@ -154,7 +154,7 @@ class NotificationSender extends HouseKeeper {
         return null
     }
 
-    private String generateEmailBody(String changedInstanceId, List<Map> triggeredObservations) {
+    private String generateEmailBody(String changedInstanceId, Set<Map> triggeredObservations) {
 
         Document current = whelk.getStorage().load(changedInstanceId)
         String mainTitle = Document._get(["@graph", 1, "hasTitle", 0, "mainTitle"], current.data)
@@ -164,7 +164,7 @@ class NotificationSender extends HouseKeeper {
 
         if (mainTitle)
             sb.append(" (" + mainTitle + ")")
-        sb.append(" ").append(current.getControlNumber())
+        sb.append(" ").append(current.getControlNumber()).append("\n")
         sb.append("\n")
 
         boolean commentsRendered = false
