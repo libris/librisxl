@@ -155,16 +155,11 @@ class NotificationSender extends HouseKeeper {
     }
 
     private String generateEmailBody(String changedInstanceId, Set<Map> triggeredObservations) {
-
         Document current = whelk.getStorage().load(changedInstanceId)
-        String mainTitle = Document._get(["@graph", 1, "hasTitle", 0, "mainTitle"], current.data)
-
         StringBuilder sb = new StringBuilder()
-        sb.append("Ändringar har skett i instans: " + Document.BASE_URI.resolve(changedInstanceId).toString())
-
-        if (mainTitle)
-            sb.append(" (" + mainTitle + ")")
-        sb.append(" ").append(current.getControlNumber()).append("\n")
+        sb.append(NotificationUtils.describe(current, whelk)).append('\n')
+        sb.append(current.getControlNumber()).append("\n")
+        sb.append(NotificationUtils.makeLink(changedInstanceId)).append("\n")
         sb.append("\n")
 
         boolean commentsRendered = false
@@ -178,10 +173,11 @@ class NotificationSender extends HouseKeeper {
                 Object comments = Document._get(["@graph", 1, "comment"], observation)
 
                 if (comments instanceof List) {
-                    sb.append("\n\tTillhörande kommentarer\n:")
+                    sb.append("\n\tÄndringsanmärkningar\n")
                     for (String comment : comments)
-                        sb.append("\t\t" + comment + "\n")
+                        sb.append('\t\t- ' + comment.replace('\n', '\n\t\t') + "\n")
                 }
+                sb.append("\n")
             }
 
             String observationId = whelk.getStorage().getSystemIdByIri(observationUri)
@@ -189,20 +185,20 @@ class NotificationSender extends HouseKeeper {
             Map framed = JsonLd.frame(observationUri, embellishedObservation.data)
 
             Map category = whelk.getJsonld().applyLensAsMapByLang( (Map) framed["category"], ["sv"] as Set, [], ["chips"])
-            sb.append("\tÄndring avser kategorin: "+ category["sv"])
+            sb.append("\t" + category["sv"])
 
             if (framed["representationBefore"] instanceof Map && framed["representationAfter"] instanceof Map) {
                 Map before = whelk.getJsonld().applyLensAsMapByLang((Map) framed["representationBefore"], ["sv"] as Set, [], ["chips"])
                 Map after = whelk.getJsonld().applyLensAsMapByLang((Map) framed["representationAfter"], ["sv"] as Set, [], ["chips"])
-                sb.append("\n\t\tInnan ändring: " + before["sv"])
-                sb.append("\n\t\tEfter ändring: " + after["sv"])
+                sb.append("\n\t\tInnan: " + before["sv"])
+                sb.append("\n\t\tEfter: " + after["sv"])
             } else if (framed["representationBefore"] instanceof List && framed["representationAfter"] instanceof List) {
-                sb.append("\n\t\tInnan ändring: ")
+                sb.append("\n\t\tInnan: ")
                 for (Object item : framed["representationBefore"]) {
                     Map before = whelk.getJsonld().applyLensAsMapByLang((Map) item, ["sv"] as Set, [], ["chips"])
                     sb.append((String) before["sv"] + ", ")
                 }
-                sb.append("\n\t\tEfter ändring: ")
+                sb.append("\n\t\tEfter: ")
                 for (Object item : framed["representationAfter"]) {
                     Map after = whelk.getJsonld().applyLensAsMapByLang((Map) item, ["sv"] as Set, [], ["chips"])
                     sb.append((String) after["sv"] + ", ")
