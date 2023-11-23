@@ -238,7 +238,7 @@ class NotificationRules {
                     newMainTitle = titleAfter
             }
 
-            if (newMainTitle != null && oldMainTitle != null && !newMainTitle.equals(oldMainTitle))
+            if (newMainTitle != null && oldMainTitle != null && !newMainTitle["mainTitle"].equals(oldMainTitle["mainTitle"]))
                 return new Tuple(true, oldMainTitle, newMainTitle)
         }
         return new Tuple(false, null, null)
@@ -265,7 +265,7 @@ class NotificationRules {
                     newMainTitle = titleAfter
             }
 
-            if (newMainTitle != null && oldMainTitle != null && !newMainTitle.equals(oldMainTitle))
+            if (newMainTitle != null && oldMainTitle != null && !newMainTitle["mainTitle"].equals(oldMainTitle["mainTitle"]))
                 return new Tuple(true, oldMainTitle, newMainTitle)
         }
         return new Tuple(false, null, null)
