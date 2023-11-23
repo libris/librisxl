@@ -700,4 +700,99 @@ class NotificationRulesSpec extends Specification {
         result[0] == true
     }
 
+    def "Change continuedBy but not a title"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "continuedBy": [
+                                [
+                                        "@type" : "Instance",
+                                        "someOtherProperty" : "aaa",
+                                        "hasTitle" : [
+                                                [ "@type" : "Title", "mainTitle" : "aaa" ]
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "continuedBy": [
+                                [
+                                        "@type" : "Instance",
+                                        "someOtherProperty" : "bbb",
+                                        "hasTitle" : [
+                                                [ "@type" : "Title", "mainTitle" : "aaa" ]
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Tuple result = NotificationRules.serialRelationChanged(framedBefore, framedAfter)
+
+        expect:
+        result[0] == false
+    }
+
+    def "Change serial termination"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "publication" : [
+                                [
+                                        "@type" : "PrimaryPublication",
+                                        "endYear" : "2022"
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "publication" : [
+                                [
+                                        "@type" : "PrimaryPublication",
+                                        "endYear" : "2023"
+                                ]
+                        ]
+                ]
+        ])
+        Tuple result = NotificationRules.serialTerminationChanged(framedBefore, framedAfter)
+
+        expect:
+        result[0] == true
+    }
+
+    def "Add serial termination"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "publication" : [
+                                [
+                                        "@type" : "PrimaryPublication"
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "publication" : [
+                                [
+                                        "@type" : "PrimaryPublication",
+                                        "endYear" : "2023"
+                                ]
+                        ]
+                ]
+        ])
+        Tuple result = NotificationRules.serialTerminationChanged(framedBefore, framedAfter)
+
+        expect:
+        result[0] == true
+    }
+
 }

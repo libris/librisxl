@@ -158,7 +158,6 @@ class NotificationRules {
         return new Tuple(false, null, null)
     }
 
-    // NOT YET COMPLETE, CHECK ONLY THE TITLES
     static Tuple serialRelationChanged(Document instanceBeforeChange, Document instanceAfterChange) {
         if (!Document._get(["mainEntity", "issuanceType"], instanceBeforeChange.data).equals("Serial"))
             return new Tuple(false, null, null)
@@ -167,16 +166,15 @@ class NotificationRules {
 
         Object continuedByBefore = Document._get(["mainEntity", "continuedBy"], instanceBeforeChange.data)
         Object continuedByAfter = Document._get(["mainEntity", "continuedBy"], instanceAfterChange.data)
-        //System.err.println("COMPARING:\n\t" + continuedByAfter + "\n\t" + continuedByBefore)
         if (continuedByBefore != null && continuedByAfter != null && continuedByBefore instanceof List && continuedByAfter instanceof List) {
-            if (continuedByAfter as Set != continuedByBefore as Set)
+            if (continuedByAfter.collect { it["hasTitle"] } as Set != continuedByBefore.collect { it["hasTitle"] } as Set)
                 return new Tuple(true, continuedByBefore, continuedByAfter)
         }
 
         Object continuesBefore = Document._get(["mainEntity", "continues"], instanceBeforeChange.data)
         Object continuesAfter = Document._get(["mainEntity", "continues"], instanceAfterChange.data)
         if (continuesBefore != null && continuesAfter != null && continuesBefore instanceof List && continuesAfter instanceof List) {
-            if (continuesAfter as Set != continuesBefore as Set)
+            if (continuesAfter.collect { it["hasTitle"] } as Set != continuesBefore.collect { it["hasTitle"] } as Set)
                 return new Tuple(true, continuesBefore, continuesAfter)
         }
 
