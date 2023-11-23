@@ -122,6 +122,8 @@ class InquirySender extends HouseKeeper {
                 }
                 if (sendToAll) {
                     heldByToUserSettings.keySet().each { String library ->
+                        if (library == "none")
+                            return
                         List<Map> usersSubbedToLibrary = heldByToUserSettings[library]
                         for (Map user : usersSubbedToLibrary) {
                             Object email = user["notificationEmail"]
