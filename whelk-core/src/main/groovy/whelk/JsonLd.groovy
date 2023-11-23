@@ -52,6 +52,7 @@ class JsonLd {
         'meta.derivedFrom', 'hasTitle.source',
         /* following are combinations only needed while there are local unlinked works */
          'translationOf.hasTitle.source', 'instanceOf.hasTitle.source', 'instanceOf.translationOf.hasTitle.source']
+    static final String CATEGORY_DEPENDENT = 'dependent'
 
     static final Set<String> LD_KEYS
 
@@ -699,6 +700,10 @@ class JsonLd {
     
     Set<String> getCategoryMembers(String category) {
         return categories.get(category, Collections.EMPTY_SET)
+    }
+
+    Set <String> cascadingDeleteRelations() {
+        getCategoryMembers(CATEGORY_DEPENDENT)
     }
 
     Set<String> getInRange(String type) {

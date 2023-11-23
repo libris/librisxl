@@ -2657,7 +2657,8 @@ class PostgreSQLComponent {
     void remove(String identifier, String changedIn, String changedBy, boolean force=false) {
         if (versioning) {
             if (!force) {
-                def referencedBy = followDependers(identifier, JsonLd.ALLOW_LINK_TO_DELETED)
+                def allow = JsonLd.ALLOW_LINK_TO_DELETED + (jsonld?.cascadingDeleteRelations() ?: Collections.EMPTY_SET)
+                def referencedBy = followDependers(identifier, allow)
                 if (!referencedBy.isEmpty()) {
                     def referencedByStr = referencedBy.collect { shortId, path -> "$shortId at $path" }.join(', ')
                     throw new RuntimeException("Deleting depended upon records is not allowed. Referenced by: $referencedByStr")

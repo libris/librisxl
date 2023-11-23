@@ -824,7 +824,7 @@ class Crud extends HttpServlet {
         } else if (doc && doc.deleted) {
             throw new OtherStatusException("Document has been deleted.", HttpServletResponse.SC_GONE)
         } else {
-            def referencedBy = whelk.storage.followDependers(doc.getShortId(), JsonLd.ALLOW_LINK_TO_DELETED)
+            def referencedBy = whelk.storage.followDependers(doc.getShortId(), JsonLd.ALLOW_LINK_TO_DELETED + jsonld.cascadingDeleteRelations())
             if (!referencedBy.isEmpty()) {
                 def referencedByStr = referencedBy.collect { shortId, path -> "$shortId at $path" }.join(', ')
                 throw new OtherStatusException("This record may not be deleted, because it is referenced by other records: " + referencedByStr, HttpServletResponse.SC_FORBIDDEN)
