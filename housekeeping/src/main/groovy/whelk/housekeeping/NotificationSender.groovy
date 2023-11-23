@@ -161,10 +161,11 @@ class NotificationSender extends HouseKeeper {
 
         StringBuilder sb = new StringBuilder()
         sb.append("Ändringar har skett i instans: " + Document.BASE_URI.resolve(changedInstanceId).toString())
+
         if (mainTitle)
-            sb.append(" (" + mainTitle + ")\n")
-        else
-            sb.append("\n")
+            sb.append(" (" + mainTitle + ")")
+        sb.append(" ").append(current.getControlNumber())
+        sb.append("\n")
 
         boolean commentsRendered = false
         for (Map observation : triggeredObservations) {

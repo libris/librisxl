@@ -2,6 +2,7 @@ package whelk.housekeeping
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2
+import whelk.Document
 import whelk.Whelk
 
 import java.sql.Connection
@@ -172,7 +173,9 @@ class InquirySender extends HouseKeeper {
         sb.append("\n")
         sb.append("\n")
         for (String systemId : concerningSystemIDs) {
-            sb.append("\t").append(NotificationUtils.describe(whelk.loadEmbellished(systemId), whelk)).append("\n")
+            Document doc = whelk.loadEmbellished(systemId)
+            sb.append("\t").append(NotificationUtils.describe(doc, whelk)).append("\n")
+            sb.append("\t").append(doc.getControlNumber()).append("\n")
             sb.append("\t").append(NotificationUtils.makeLink(systemId)).append("\n")
             sb.append("\n")
         }
