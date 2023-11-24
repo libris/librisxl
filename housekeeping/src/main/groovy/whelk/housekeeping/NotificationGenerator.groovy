@@ -87,7 +87,7 @@ class NotificationGenerator extends HouseKeeper {
                 dependers.each {
                     String dependerID =  it[0]
                     String dependerMainEntityType = whelk.getStorage().getMainEntityTypeBySystemID(dependerID)
-                    if (whelk.getJsonld().isSubClassOf(dependerMainEntityType, "Instance")) {
+                    if (whelk.getJsonld().isSubClassOf(dependerMainEntityType, "Instance") && !dependerMainEntityType.equals("Electronic")) {
                         if (!changedInstanceIDsWithComments.containsKey(dependerID)) {
                             changedInstanceIDsWithComments.put(dependerID, [])
                         }

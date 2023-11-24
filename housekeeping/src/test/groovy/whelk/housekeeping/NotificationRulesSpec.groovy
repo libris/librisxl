@@ -622,6 +622,36 @@ class NotificationRulesSpec extends Specification {
         result[0] == true
     }
 
+    def "Change irrelevant part of main title"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "hasTitle" : [
+                                [
+                                        "@type": "Title",
+                                        "mainTitle": "aaa",
+                                        "marc:nonfilingChars": "4"
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "hasTitle" : [
+                                [
+                                        "@type": "Title",
+                                        "mainTitle": "aaa",
+                                        "marc:nonfilingChars": "2"
+                                ]
+                        ]
+                ]
+        ])
+        Tuple result = NotificationRules.mainTitleChanged(framedBefore, framedAfter)
+
+        expect:
+        result[0] == false
+    }
+
     def "Change main title, dont trigger key title"() {
         given:
         Document framedBefore = new Document([
