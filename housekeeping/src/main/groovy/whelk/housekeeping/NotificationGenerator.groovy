@@ -86,8 +86,25 @@ class NotificationGenerator extends HouseKeeper {
                 dependers.add(new Tuple2(id, null)) // This ID too, not _only_ the dependers!
                 dependers.each {
                     String dependerID =  it[0]
-                    String dependerMainEntityType = whelk.getStorage().getMainEntityTypeBySystemID(dependerID)
-                    if (whelk.getJsonld().isSubClassOf(dependerMainEntityType, "Instance") && !dependerMainEntityType.equals("Electronic")) {
+                    Document dependerDocument = whelk.getStorage().load(dependerID)
+
+                    // Filter out certain groups of instances, which we do not want observations for
+                    boolean filtered = false
+                    String dependerMainEntityType = dependerDocument.getThingType()
+                    if (dependerMainEntityType == null)
+                        filtered = true
+                    else if (dependerMainEntityType.equals("Electronic"))
+                        filtered = true
+                    String encodingLevel = dependerDocument.getEncodingLevel()
+                    if (encodingLevel == null)
+                        filtered = true
+                    else{
+                        if ( encodingLevel.equals("marc:PartialPreliminaryLevel") || encodingLevel.equals("marc:PrepublicationLevel") ) {
+                            filtered = true
+                        }
+                    }
+
+                    if (dependerMainEntityType != null && whelk.getJsonld().isSubClassOf(dependerMainEntityType, "Instance") && !filtered) {
                         if (!changedInstanceIDsWithComments.containsKey(dependerID)) {
                             changedInstanceIDsWithComments.put(dependerID, [])
                         }
