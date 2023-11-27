@@ -12,7 +12,7 @@ class Relations {
     }
 
     boolean isImpliedBy(String broaderIri, String narrowerIri) {
-        return broaderIri == narrowerIri ?: isReachable(narrowerIri, broaderIri, BROADER_RELATIONS)
+        return isReachable(narrowerIri, broaderIri, BROADER_RELATIONS)
     }
 
     Set<String> followReverseBroader(String iri) {
