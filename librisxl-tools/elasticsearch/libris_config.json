@@ -7,8 +7,8 @@
                     "limit": 100000
                 }
             },
-            "number_of_shards": 6,
-            "number_of_replicas": 1
+            "number_of_shards": 15,
+            "number_of_replicas": 2
         },
         "index.query.default_field": "_all",
         "analysis": {
@@ -310,6 +310,9 @@
                 "type": "text",
                 "store": false,
                 "analyzer": "softmatcher"
+            },
+            "_es_id": {
+                "type": "keyword"
             }
         },
         "date_detection": false,

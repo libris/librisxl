@@ -891,6 +891,7 @@
       },
       "Text": {
         "[1] [2] [3] [4]": {
+          "TODO": "Clean up these and deprecate? Text/hasPart/illustrativeContent seems *mostly* identical to 008 illustrativeContent",
           "link": "illustrativeContent",
           "uriTemplate": "https://id.kb.se/marc/BooksIllustrationsType-{_}",
           "matchUriToken": "^[abcdefghijklmop]$"
@@ -2398,8 +2399,6 @@
 
       "Text": {
         "[18] [19] [20] [21]": {
-          "aboutEntity": "?work",
-          "TODO": "Decide if it is Work or Instance?",
           "link": "illustrativeContent",
           "uriTemplate": "https://id.kb.se/marc/BooksIllustrationsType-{_}",
           "matchUriToken": "^[abcdefghijklmop]$"
@@ -2952,6 +2951,12 @@
                 "year": "1977",
                 "country": [{"@id": "https://id.kb.se/country/sw"}]
               },
+              "illustrativeContent": [
+                {"@id": "https://id.kb.se/marc/BooksIllustrationsType-a"},
+                {"@id": "https://id.kb.se/marc/BooksIllustrationsType-b"},
+                {"@id": "https://id.kb.se/marc/BooksIllustrationsType-c"},
+                {"@id": "https://id.kb.se/marc/BooksIllustrationsType-d"}
+              ],
               "instanceOf": {
                 "@type": "Text",
                 "language": [{"@id": "https://id.kb.se/language/swe"}],
@@ -2964,12 +2969,6 @@
                 "genreForm": [{"@id": "https://id.kb.se/marc/BooksContentsType-e"},
                               {"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"},
                               {"@id": "https://id.kb.se/marc/BooksBiographyType-a"}
-                ],
-                "illustrativeContent": [
-                  {"@id": "https://id.kb.se/marc/BooksIllustrationsType-a"},
-                  {"@id": "https://id.kb.se/marc/BooksIllustrationsType-b"},
-                  {"@id": "https://id.kb.se/marc/BooksIllustrationsType-c"},
-                  {"@id": "https://id.kb.se/marc/BooksIllustrationsType-d"}
                 ]
               }
             }
@@ -7470,15 +7469,8 @@
     },
 
     "240": {
+      "IMPORTANT": "Actual results are subsequently modified by the NormalizeWorkTitles postProcessing step!",
       "match": [
-        {
-          "when": {
-            "NOTE": "Ignore title with source",
-            "IMPORTANT": "As this is defined, *any* title with source blocks *all* titles from reverting to 240. This is OK as things stand, since titles using source are only added if there is no formal title on the work.",
-            "onRevert": {"hasTitle": [{"source": []}]}
-          },
-          "ignored": true
-        },
         {
           "when": {
             "NOTE": "Drop undefined language label",
@@ -7500,6 +7492,26 @@
             "onRevert": {"language": {"label": []}}
           },
           "$l": {"about": "_:work", "link": "language", "resourceType": "Language", "property": "label", "infer": false}
+        },
+        {
+          "when": {
+            "NOTE": "A translation with a title: keep title and use language label",
+            "onRevert": {"translationOf": {"hasTitle": []}}
+          }
+        },
+        {
+          "when": {
+            "NOTE": "Continue as usual if title is already processed by NormalizeWorkTitlesStep",
+            "onRevert": {"hasTitle": [{"_revertedBy": "NormalizeWorkTitlesStep"}]}
+          }
+        },
+        {
+          "when": {
+            "NOTE": "Ignore title with source",
+            "IMPORTANT": "As this is defined, *any* title with source blocks *all* titles from reverting to 240; unless a translationOf with a title is present. This is OK as things stand, since titles using source are only added if there is no formal title on the work.",
+            "onRevert": {"hasTitle": [{"source": []}]}
+          },
+          "ignored": true
         },
         {
           "when": {
@@ -7839,21 +7851,170 @@
           }
         },
         {
-          "result": {"mainEntity": {
-            "instanceOf": {
-              "@type": "Text",
-              "hasTitle": [{
-                "@type": "Title",
-                "mainTitle": "En bok",
-                "subtitle": "med undertitel",
-                "source": [
-                  {"@id": "https://libris.kb.se/x#it"}
-                ]
-              }]
-            }
-          }},
+          "name": "Work title with source is supressed",
           "normalized": [
-          ]
+            {
+              "008": "|     |        |  |||||||||||000 ||swe| "
+            },
+            {
+              "041": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "swe"}
+                ]
+              }
+            }
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "hasTitle": [
+                  {
+                    "@type": "Title",
+                    "mainTitle": "The lord of the rings.",
+                    "source": [
+                      {"@id": "https://libris.kb.se/x#it"}
+                    ]
+                  }
+                ],
+                "language": [
+                  {
+                    "@id" : "https://id.kb.se/language/swe",
+                    "code" : "swe"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "name": "Work title with source is kept if translated title is present",
+          "normalized": [
+            {
+              "008": "|     |        |  |||||||||||000 ||swe| "
+            },
+            {
+              "041": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "swe"},
+                  {"h": "eng"}
+                ]
+              }
+            },
+            {
+              "240": {
+                "ind1": "1",
+                "ind2": "0",
+                "subfields": [
+                  {"a": "Härskarringen"}
+                ]
+              }
+            }
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "hasTitle": [
+                  {
+                    "@type": "Title",
+                    "mainTitle": "Härskarringen",
+                    "source": [
+                      {"@id": "https://libris.kb.se/x#it"}
+                    ]
+                  }
+                ],
+                "language": [
+                  {
+                    "@id" : "https://id.kb.se/language/swe",
+                    "code" : "swe"
+                  }
+                ],
+                "translationOf": [
+                  {
+                    "@type" : "Work",
+                    "hasTitle": [
+                      {
+                        "@type": "Title",
+                        "mainTitle": "The lord of the rings"
+                      }
+                    ],
+                    "language" : [ {
+                      "@id" : "https://id.kb.se/language/eng",
+                      "code" : "eng"
+                      } ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "name": "Work title with source is kept if translated title is used after NormalizeWorkTitlesStep",
+          "normalized": [
+            {
+              "008": "|     |        |  |||||||||||000 ||swe| "
+            },
+            {
+              "041": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {"a": "swe"},
+                  {"h": "eng"}
+                ]
+              }
+            },
+            {
+              "240": {
+                "ind1": "1",
+                "ind2": "0",
+                "subfields": [
+                  {"a": "The lord of the rings"}
+                ]
+              }
+            }
+          ],
+          "result": {
+            "mainEntity": {
+              "instanceOf": {
+                "@type": "Text",
+                "hasTitle": [
+                  {
+                    "@type": "Title",
+                    "mainTitle": "Härskarringen",
+                    "_revertedBy": "NormalizeWorkTitlesStep",
+                    "source": [
+                      {"@id": "https://libris.kb.se/x#it"}
+                    ]
+                  },
+                  {
+                    "@type": "Title",
+                    "mainTitle": "The lord of the rings"
+                  }
+                ],
+                "language": [
+                  {
+                    "@id" : "https://id.kb.se/language/swe",
+                    "code" : "swe"
+                  }
+                ],
+                "translationOf": [
+                  {
+                    "@type" : "Work",
+                    "language" : [ {
+                      "@id" : "https://id.kb.se/language/eng",
+                      "code" : "eng"
+                      } ]
+                  }
+                ]
+              }
+            }
+          }
         }
       ]
     },
@@ -9248,6 +9409,7 @@
       },
       "$6": {"ignored": true, "NOTE:LC": "ignore (v1.6)"},
       "$8": {"about": "_:extent", "property": "marc:groupid"},
+      "subfieldOrder": "3 ... ",
       "_spec": [
         {
           "Name": "Huvudsaklig resurs och medföljande",
@@ -9290,6 +9452,26 @@
                   "@type": "Resource",
                   "label": "1 CD-ROM"
                 }
+            }
+          }
+        },
+        {
+          "Name": "Medföljs av",
+          "source": [
+            {"300": {"ind1": " ", "ind2": " ", "subfields": [{"3": "correspondence"},{"a": "3"},{"f": "boxes"}]}}
+          ],
+          "result": {
+            "mainEntity": 
+            {
+              "extent" : [ {
+                "@type" : "Extent",
+                "appliesTo" : {
+                  "@type" : "Resource",
+                  "label" : "correspondence"
+                },
+                "label" : "3",
+                "typeNote" : "boxes"
+              } ]
             }
           }
         },

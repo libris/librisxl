@@ -43,7 +43,7 @@
               },
               {
                 "role": [
-                  {"@id": "https://id.kb.se/relator/publisher"}
+                  {"code": "pbl"}
                 ],
                 "@type": "Contribution",
                 "agent": {"@id": "y"}
@@ -78,7 +78,101 @@
           ]
         }
       },
-      "back": "source"
+      "back": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "contribution": [
+              {
+                "role": [
+                  {"@id": "https://id.kb.se/relator/author"}
+                ],
+                "@type": "Contribution",
+                "agent": {"@id": "x"}
+              },
+              {
+                "role": [
+                  {"@id": "https://id.kb.se/relator/publisher"}
+                ],
+                "@type": "Contribution",
+                "agent": {"@id": "y"}
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "Split publisher from author and move",
+      "source": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "contribution": [
+              {
+                "role": [
+                  {"@id": "https://id.kb.se/relator/aut"},
+                  {"@id": "https://id.kb.se/relator/pbl"}
+                ],
+                "@type": "PrimaryContribution",
+                "agent": {"@id": "x"}
+              }
+            ]
+          }
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "contribution": [
+              {
+                "role": [
+                  {"@id": "https://id.kb.se/relator/aut"}
+                ],
+                "@type": "PrimaryContribution",
+                "agent": {"@id": "x"}
+              }
+            ]
+          },
+          "contribution": [
+              {
+                "role": [
+                  {"@id": "https://id.kb.se/relator/pbl"}
+                ],
+                "@type": "Contribution",
+                "agent": {"@id": "x"}
+              }
+          ]
+        }
+      },
+      "back": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "contribution": [
+              {
+                "role": [
+                  {"@id": "https://id.kb.se/relator/aut"}
+                ],
+                "@type": "PrimaryContribution",
+                "agent": {"@id": "x"}
+              },
+              {
+                "role": [
+                  {"@id": "https://id.kb.se/relator/pbl"}
+                ],
+                "@type": "Contribution",
+                "agent": {"@id": "x"}
+              }
+            ]
+          }
+        }
+      }
     }
   ]
 }

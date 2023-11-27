@@ -46,28 +46,32 @@ class ElasticSearch {
     
     String defaultIndex = null
     private List<String> elasticHosts
-    private String elasticCluster
+    private String elasticUser
+    private String elasticPassword
     private ElasticClient client
     private ElasticClient bulkClient
     private boolean isPitApiAvailable = false
+    private static final int ES_LOG_MIN_DURATION = 2000 // Only log queries taking at least this amount of milliseconds
 
     private final Queue<Runnable> indexingRetryQueue = new LinkedBlockingQueue<>()
 
     ElasticSearch(Properties props) {
         this(
                 props.getProperty("elasticHost"),
-                props.getProperty("elasticCluster"),
-                props.getProperty("elasticIndex")
+                props.getProperty("elasticIndex"),
+                props.getProperty("elasticUser"),
+                props.getProperty("elasticPassword")
         )
     }
 
-    ElasticSearch(String elasticHost, String elasticCluster, String elasticIndex) {
+    ElasticSearch(String elasticHost, String elasticIndex, String elasticUser, String elasticPassword) {
         this.elasticHosts = getElasticHosts(elasticHost)
-        this.elasticCluster = elasticCluster
         this.defaultIndex = elasticIndex
+        this.elasticUser = elasticUser
+        this.elasticPassword = elasticPassword
 
-        client = ElasticClient.withDefaultHttpClient(elasticHosts)
-        bulkClient = ElasticClient.withBulkHttpClient(elasticHosts)
+        client = ElasticClient.withDefaultHttpClient(elasticHosts, elasticUser, elasticPassword)
+        bulkClient = ElasticClient.withBulkHttpClient(elasticHosts, elasticUser, elasticPassword)
 
         new Timer("ElasticIndexingRetries", true).schedule(new TimerTask() {
             void run() {
@@ -119,7 +123,7 @@ class ElasticSearch {
             host = host.trim()
             if (!host.contains(":"))
                 host += ":9200"
-            hosts.add("http://" + host)
+            hosts.add("https://" + host)
         }
         return hosts
     }
@@ -207,9 +211,13 @@ class ElasticSearch {
                 }
             }.join('')
 
-            String response = bulkClient.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE)
-            Map responseMap = mapper.readValue(response, Map)
-            log.info("Bulk indexed ${docs.count{it}} docs in ${responseMap.took} ms")
+            if (bulkString) {
+                String response = bulkClient.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE)
+                Map responseMap = mapper.readValue(response, Map)
+                log.info("Bulk indexed ${docs.count{it}} docs in ${responseMap.took} ms")
+            } else {
+                log.warn("Refused bulk indexing ${docs.count{it}} docs because body was empty")
+            }
         }
     }
 
@@ -386,6 +394,12 @@ class ElasticSearch {
             }
         }
 
+        // In ES up until 7.8 we could use the _id field for aggregations and sorting, but it was discouraged
+        // for performance reasons. In 7.9 such use was deprecated, and since 8.x it's no longer supported, so
+        // we follow the advice and use a separate field.
+        // (https://www.elastic.co/guide/en/elasticsearch/reference/8.8/mapping-id-field.html).
+        framed["_es_id"] =  toElasticId(copy.getShortId())
+
         if (log.isTraceEnabled()) {
             log.trace("Framed data: ${framed}")
         }
@@ -521,7 +535,7 @@ class ElasticSearch {
         Map query = [
                 'bool': ['should': t1 + t2 ]
         ]
-        
+
         Scroll<String> ids = new DefaultScroll(query)
         try {
             ids.hasNext()
@@ -553,7 +567,9 @@ class ElasticSearch {
             def duration = System.currentTimeMillis() - start
             Map responseMap = mapper.readValue(responseBody, Map)
 
-            log.info("ES query took ${duration} (${responseMap.took} server-side)")
+            if (duration >= ES_LOG_MIN_DURATION) {
+                log.info("ES query took ${duration} (${responseMap.took} server-side)")
+            }
 
             def results = [:]
 
@@ -608,8 +624,7 @@ class ElasticSearch {
     private abstract class Scroll<T> implements Iterator<T> {
         final int FETCH_SIZE = 500
 
-        // TODO: change to _shard_doc when we upgrade to ES 7.12+
-        protected final List SORT = [['_id': 'asc']]
+        protected final List SORT = [['_es_id': 'asc']]
         protected final List FILTER_PATH = ['took', 'hits.hits.sort', 'pit_id', 'hits.total.value']
 
         Iterator<T> fetchedItems

@@ -22,6 +22,7 @@ import whelk.search.ElasticFind
 import whelk.util.PropertyLoader
 import whelk.util.Romanizer
 
+import java.time.Instant
 import java.time.ZoneId
 
 /**
@@ -220,6 +221,7 @@ class Whelk {
     private void initDocumentNormalizers(ElasticFind elasticFind) {
         LanguageLinker languageLinker = new LanguageLinker()
         Normalizers.loadDefinitions(languageLinker, this)
+        Collection<DocumentNormalizer> heuristicLinkers = Normalizers.heuristicLinkers(this, languageLinker.getTypes())
         normalizer = new NormalizerChain(
                 [
                         Normalizers.nullRemover(),
@@ -227,22 +229,25 @@ class Whelk {
                         Normalizers.typeSingularity(jsonld),
                         Normalizers.language(languageLinker),
                         Normalizers.identifiedBy(),
-                ] + Normalizers.heuristicLinkers(this, languageLinker.getTypes())
+                ] + heuristicLinkers
         )
 
         def idsToThings = { String type ->
             bulkLoad(elasticFind.findIds([(JsonLd.TYPE_KEY): [type]]).collect())
-            .collect { _, doc -> (doc.data[JsonLd.GRAPH_KEY] as List)[1] }
-            .collectEntries { [it[JsonLd.ID_KEY], it] }
+                    .collect { _, doc -> (doc.data[JsonLd.GRAPH_KEY] as List)[1] }
+                    .collectEntries { [it[JsonLd.ID_KEY], it] }
         }
 
         resourceCache = new ResourceCache(
-            relators: elasticFind.find(['@type': ['Role']]),
-            languageResources: new ResourceCache.LanguageResources(
-                    languageLinker: languageLinker,
-                    languages: idsToThings('Language'),
-                    transformedLanguageForms: idsToThings('TransformedLanguageForm')
-            )
+                relatorResources: new ResourceCache.RelatorResources(
+                        relatorLinker: heuristicLinkers.findResult { it.getLinker()?.types == ['Role'] ? it.getLinker() : null },
+                        relators: elasticFind.find(['@type': ['Role']])
+                ),
+                languageResources: new ResourceCache.LanguageResources(
+                        languageLinker: languageLinker,
+                        languages: idsToThings('Language'),
+                        transformedLanguageForms: idsToThings('TransformedLanguageForm')
+                )
         )
     }
 
@@ -254,7 +259,7 @@ class Whelk {
         return doc
     }
 
-    Map<String, Document> bulkLoad(Collection<String> ids) {
+    Map<String, Document> bulkLoad(Collection<String> ids, Instant asOf = null) {
         def idMap = [:]
         def otherIris = []
         List<String> systemIds = []
@@ -277,7 +282,7 @@ class Whelk {
             idMap.putAll(idToIri)
         }
 
-        return storage.bulkLoad(systemIds)
+        return storage.bulkLoad(systemIds, asOf)
                 .findAll { id, doc -> !doc.deleted }
                 .collectEntries { id, doc -> [(idMap.getOrDefault(id, id)): doc] }
     }

@@ -1,5 +1,8 @@
 // LXL-2512: Move contribution by relator domain
+
 import whelk.converter.marc.ContributionByRoleStep
+
+unhandled = getReportWriter('unhandled.txt')
 
 ruleSets = getWhelk().marcFrameConverter.conversion.marcRuleSets
 contribStep = ruleSets.bib.postProcSteps.find { it instanceof ContributionByRoleStep }
@@ -12,8 +15,12 @@ def where = """
 
 selectBySqlWhere(where) {
     def instance = it.graph[1]
-    def instanceType = instance[TYPE]
-    if (contribStep.moveRoles(instance)) {
-        it.scheduleSave()
+
+    try {
+        if (contribStep.moveRoles(instance)) {
+            it.scheduleSave()
+        }
+    } catch (Exception e) {
+        unhandled.println("${it.doc.shortId}: ${e}")
     }
 }

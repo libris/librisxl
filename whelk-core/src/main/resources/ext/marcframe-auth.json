@@ -866,11 +866,14 @@
     "NOTE:record-count": 0
   },
   "065": {
+    "onRevertPrefer": "083",
+    "NOTE:local": "onRevertPrefer makes sure ClassificationDDC with broadMatch not get converted to 065",
     "inherit": "bib:084",
     "aboutEntity": "?thing",
     "addLink": "broadMatch",
     "$c": {"property": "marc:explanatoryTerm"},
-    "_spec": [{
+    "_spec": [
+      {
         "source": {
           "065": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "Ykk"},
@@ -939,6 +942,7 @@
   "083" : {
     "aboutEntity": "?thing",
     "addLink": "closeMatch",
+    "allowLinkOnRevert": ["broadMatch", "narrowMatch"],
     "resourceType": "ClassificationDdc",
     "TODO:match": [
       {
@@ -950,10 +954,6 @@
         "aboutType": "Concept"
       }
     ],
-    "TODO:computeLinks": {
-      "use": "$c",
-      "mapping": {"BroadMatch": "broadMatch", "NarrowMatch": "narrowMatch", "*": "closeMatch"}
-    },
     "i1": {"marcDefault": "0"},
     "i2": {"marcDefault": "4"},
     "$a": {"property": "code", "required": true},
@@ -1007,6 +1007,40 @@
           "mainEntity": {
             "@type": "Identity",
             "closeMatch": [{
+              "@type": "ClassificationDdc",
+              "code":  "617.66",
+              "edition":  "23/swe"
+            }]
+          }
+        }
+      },
+      {
+        "normalized": {
+          "083": {"ind1": "0", "ind2": "4", "subfields": [
+            {"a": "617.66"},
+            {"2": "23/swe"}
+          ]}},
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "broadMatch": [{
+              "@type": "ClassificationDdc",
+              "code":  "617.66",
+              "edition":  "23/swe"
+            }]
+          }
+        }
+      },
+      {
+        "normalized": {
+          "083": {"ind1": "0", "ind2": "4", "subfields": [
+            {"a": "617.66"},
+            {"2": "23/swe"}
+          ]}},
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "narrowMatch": [{
               "@type": "ClassificationDdc",
               "code":  "617.66",
               "edition":  "23/swe"
@@ -2148,6 +2182,33 @@
     "$6": {"property": "marc:fieldref"},
     "_spec": [
       {
+        "name": "(R)epeatability",
+         "source": [
+           {"400": {"ind1": "1", "ind2": " ", "subfields": [{"a": "B, A,"},{"d": "Date1"}]}},
+           {"400": {"ind1": "1", "ind2": " ", "subfields": [{"a": "D, C,"},{"d": "Date2"}]}}
+         ],
+
+         "result": {
+           "mainEntity": {
+             "@type": "Identity",
+             "hasVariant": [ 
+               {
+                 "@type": "Person",
+                 "givenName": "A",
+                 "familyName": "B",
+                 "lifeSpan": "Date1"
+              },
+              {
+               "@type": "Person",
+               "givenName": "C",
+               "familyName": "D",
+               "lifeSpan": "Date2"
+             } 
+             ]
+           }
+         }
+       },
+      {
         "source": {
           "400": {"ind1": "1", "ind2": " ", "subfields": [
             {"a": "Singh, Bhagat,"},
@@ -3271,6 +3332,35 @@
     "subfieldOrder": "w i a b c q d j e 4 g t m n r p k l s f o v x y z 0",
     "$h": {"ignored": true},
     "_spec": [
+      {
+       "name": "FIXME: (R)epeatability",
+        "source": [
+          {"500": {"ind1": "1", "ind2": " ", "subfields": [{"a": "B, A"},{"d": "Date1"}]}},
+          {"500": {"ind1": "1", "ind2": " ", "subfields": [{"a": "D, C"},{"d": "Date2"}]}}
+        ],
+        "normalized": [
+          {"500": {"ind1": "1", "ind2": " ", "subfields": [{"a": "B, A"},{"a": "D, C,"},{"d": "Date1,"},{"d": "Date2"}]}}
+        ],
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "seeAlso": [ 
+              {
+                "@type": "Person",
+                "givenName": "A",
+                "familyName": "B",
+                "lifeSpan": "Date1"
+             },
+             {
+              "@type": "Person",
+              "givenName": "C",
+              "familyName": "D",
+              "lifeSpan": "Date2"
+            } 
+            ]
+          }
+        }
+      },
       {
         "source": {
           "500": {"ind1": "3", "ind2": " ", "subfields": [

@@ -2,7 +2,7 @@ import se.kb.libris.mergeworks.Doc
 import se.kb.libris.mergeworks.Html
 import se.kb.libris.mergeworks.WorkComparator
 
-import static se.kb.libris.mergeworks.Util.partition
+import static se.kb.libris.mergeworks.Util.workClusters
 
 htmlReport = getReportWriter('works.html')
 
@@ -27,15 +27,6 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
 }
 
 htmlReport.println(Html.END)
-
-Collection<Collection<Doc>> workClusters(Collection<Doc> docs, WorkComparator c) {
-    docs.each { it.addComparisonProps() }
-
-    def workClusters = partition(docs, { Doc a, Doc b -> c.sameWork(a, b) })
-            .each { work -> work.each { doc -> doc.removeComparisonProps() } }
-
-    return workClusters
-}
 
 Doc createNewWork(Map workData) {
     workData['@id'] = "TEMPID#it"

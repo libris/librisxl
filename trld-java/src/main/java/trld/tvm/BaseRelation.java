@@ -27,10 +27,10 @@ import static trld.jsonld.extras.Index.makeIndex;
 import static trld.tvm.Mapmaker.*;
 
 
-public class BaseRelation { // LINE: 55
-  public /*@Nullable*/ String rel; // LINE: 56
-  public String base; // LINE: 57
-  public Integer priority = -1; // LINE: 58
+public class BaseRelation {
+  public /*@Nullable*/ String rel;
+  public String base;
+  public Integer priority = -1;
   public BaseRelation(String rel, String base) {
     this(rel, base, -1);
   }

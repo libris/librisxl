@@ -15,7 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import static trld.Common.warning;
+import trld.jsonld.LoadDocumentCallback;
+import static trld.platform.Common.warning;
 import static trld.jsonld.Base.*;
 import trld.jsonld.Context;
 import trld.jsonld.Term;
@@ -24,7 +25,7 @@ import trld.jsonld.InvalidNestValueError;
 import static trld.jsonld.Expansion.*;
 
 
-public class InvalidIncludedValueError extends JsonLdError { // LINE: 27
-  InvalidIncludedValueError() { };
-  InvalidIncludedValueError(String msg) { super(msg); };
+public class InvalidIncludedValueError extends JsonLdError {
+  public InvalidIncludedValueError() { };
+  public InvalidIncludedValueError(String msg) { super(msg); };
 }

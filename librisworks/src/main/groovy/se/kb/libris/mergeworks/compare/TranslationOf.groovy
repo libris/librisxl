@@ -14,7 +14,7 @@ class TranslationOf implements ValuePicker {
         // We assume that there are never more than one object in translationOf
         a = Util.asList(a)[0]
         b = Util.asList(b)[0]
-        (!a && !b) || (a && b && c.isEqual(noTypeNoTitle(a), noTypeNoTitle(b)) && noTitleOrSameTitle(a, b))
+        a && b && c.isEqual(noTypeNoTitle(a), noTypeNoTitle(b)) && noTitleOrSameTitle(a, b)
     }
 
     @Override

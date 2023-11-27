@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Input;
-import static trld.Common.dumpJson;
+import static trld.platform.Common.jsonEncode;
+import trld.platform.Input;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.LANGUAGE;
@@ -28,6 +28,8 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 import static trld.Rdfterms.RDF_TYPE;
 import static trld.Rdfterms.XSD;
 import static trld.Rdfterms.XSD_DOUBLE;
@@ -35,19 +37,19 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ConsumeWs extends BaseParserState { // LINE: 104
-  ConsumeWs(/*@Nullable*/ ParserState parent) { super(parent); };
-  public static final Pattern MATCH = (Pattern) Pattern.compile("\\s"); // LINE: 106
+public class ConsumeWs extends BaseParserState {
+  public ConsumeWs(/*@Nullable*/ ParserState parent) { super(parent); };
+  public static final Pattern MATCH = (Pattern) Pattern.compile("\\s");
 
-  public boolean accept(String c) { // LINE: 108
-    return (this.MATCH.matcher(c).matches() ? c : null) != null; // LINE: 109
+  public boolean accept(String c) {
+    return (this.MATCH.matcher(c).matches() ? c : null) != null;
   }
 
-  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 111
-    if (this.accept(c)) { // LINE: 112
-      return new KeyValue(this, null); // LINE: 113
+  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) {
+    if (this.accept(c)) {
+      return new KeyValue(this, null);
     } else {
-      return this.parent.consume(c, prevValue); // LINE: 115
+      return this.parent.consume(c, prevValue);
     }
   }
 }

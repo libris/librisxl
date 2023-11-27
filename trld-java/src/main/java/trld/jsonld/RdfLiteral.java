@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import static trld.Common.dumpCanonicalJson;
-import static trld.Common.parseJson;
+import static trld.platform.Common.jsonEncodeCanonical;
+import static trld.platform.Common.jsonDecode;
 import static trld.jsonld.Base.*;
 import trld.jsonld.InvalidBaseDirectionError;
 import trld.jsonld.InvalidLanguageTaggedStringError;
@@ -40,10 +40,10 @@ import static trld.Rdfterms.I18N;
 import static trld.jsonld.Rdf.*;
 
 
-public class RdfLiteral { // LINE: 38
-  public String value; // LINE: 39
-  public /*@Nullable*/ String datatype = null; // LINE: 40
-  public /*@Nullable*/ String language = null; // LINE: 41
+public class RdfLiteral {
+  public String value;
+  public /*@Nullable*/ String datatype = null;
+  public /*@Nullable*/ String language = null;
   public RdfLiteral(String value) {
     this(value, null, null);
   }

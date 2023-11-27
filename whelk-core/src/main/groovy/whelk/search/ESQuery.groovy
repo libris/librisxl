@@ -7,7 +7,6 @@ import groovy.transform.TypeCheckingMode
 import groovy.util.logging.Log4j2 as Log
 import whelk.JsonLd
 import whelk.Whelk
-import whelk.component.ElasticSearch
 import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
@@ -18,6 +17,11 @@ import static whelk.util.Jackson.mapper
 @CompileStatic
 @Log
 class ESQuery {
+    enum Connective {
+        AND,
+        OR
+    }
+
     private Whelk whelk
     private JsonLd jsonld
     private Set keywordFields
@@ -33,6 +37,8 @@ class ESQuery {
     public static final String OR_PREFIX = 'or-'
     private static final String NOT_PREFIX = 'not-'
     private static final String EXISTS_PREFIX = 'exists-'
+
+    private static final String FILTERED_AGG = 'a'
 
     private static final Map recordsOverCacheRecordsBoost = [
             'bool': ['should': [
@@ -88,7 +94,7 @@ class ESQuery {
     @CompileStatic(TypeCheckingMode.SKIP)
     Map doQuery(Map<String, String[]> queryParameters, suggest = null) {
         Map esQuery = getESQuery(queryParameters, suggest)
-        Map esResponse = hideKeywordFields(whelk.elastic.query(esQuery))
+        Map esResponse = hideKeywordFields(moveFilteredAggregationsToTopLevel(whelk.elastic.query(esQuery)))
         if ('esQuery' in queryParameters.get('_debug')) {
             esResponse._debug = [esQuery: esQuery]
         }
@@ -98,7 +104,7 @@ class ESQuery {
     @CompileStatic(TypeCheckingMode.SKIP)
     Map doQueryIds(Map<String, String[]> queryParameters) {
         Map esQuery = getESQuery(queryParameters)
-        Map esResponse = hideKeywordFields(whelk.elastic.queryIds(esQuery))
+        Map esResponse = hideKeywordFields(moveFilteredAggregationsToTopLevel(whelk.elastic.queryIds(esQuery)))
         if ('esQuery' in queryParameters.get('_debug')) {
             esResponse._debug = [esQuery: esQuery]
         }
@@ -122,6 +128,7 @@ class ESQuery {
         List siteFilter
         //   any k=v param - FILTER query (same key => OR, different key => AND)
         List filters
+        Map multiSelectFilters
 
         if (suggest && !whelk.jsonld.locales.contains(suggest)) {
             throw new InvalidQueryException("Parameter '_suggest' value '${suggest}' invalid, must be one of ${whelk.jsonld.locales}")
@@ -136,13 +143,13 @@ class ESQuery {
         if (queryParameters.containsKey('o')) {
             queryParameters.put('_links', queryParameters.get('o'))
         }
-        
+
         q = Unicode.normalizeForSearch(getQueryString(queryParameters))
         (limit, offset) = getPaginationParams(queryParameters)
         sortBy = getSortClauses(queryParameters)
         siteFilter = getSiteFilter(queryParameters)
-        aggQuery = getAggQuery(queryParameters)
-        filters = getFilters(queryParameters)
+        (filters, multiSelectFilters) = getFilters(queryParameters)
+        aggQuery = getAggQuery(queryParameters, multiSelectFilters)
 
         def isSimple = isSimple(q)
         String queryMode = isSimple ? 'simple_query_string' : 'query_string'
@@ -254,12 +261,19 @@ class ESQuery {
             query['from'] = offset
         }
 
+        // FIXME: How should these be filtered?
+        // Never index them at all?
+        // not-meta.@type=AdminRecord ?
+        def recordFilter = [['bool': ['must_not': createBoolFilter(['@type': ['HandleAction']])]]]
+
         if (filters && siteFilter) {
-            query['query']['bool']['filter'] = filters + siteFilter
+            query['query']['bool']['filter'] = recordFilter + filters + siteFilter
         } else if (filters) {
-            query['query']['bool']['filter'] = filters
+            query['query']['bool']['filter'] = recordFilter + filters
         } else if (siteFilter) {
-            query['query']['bool']['filter'] = siteFilter
+            query['query']['bool']['filter'] = recordFilter + siteFilter
+        } else {
+            query['query']['bool']['filter'] = recordFilter
         }
 
         if (sortBy) {
@@ -268,6 +282,10 @@ class ESQuery {
 
         if (aggQuery) {
             query['aggs'] = aggQuery
+        }
+
+        if (multiSelectFilters) {
+            query['post_filter'] = ['bool': ['must' : multiSelectFilters.values()]]
         }
 
         query['track_total_hits'] = true
@@ -515,10 +533,11 @@ class ESQuery {
      *
      */
     @CompileStatic(TypeCheckingMode.SKIP)
-    List getFilters(Map<String, String[]> queryParameters) {
+    Tuple2<List, Map> getFilters(Map<String, String[]> queryParameters) {
         def queryParametersCopy = new HashMap<>(queryParameters)
         List filters = []
         List filtersForNot = []
+        Map multiSelectFilters = [:]
 
         def (handledParameters, rangeFilters) = makeRangeFilters(queryParametersCopy)
         handledParameters.each {queryParametersCopy.remove(it)}
@@ -546,8 +565,15 @@ class ESQuery {
             }
         }
 
-        getOrGroups(notNested).each { m ->
-            filters << createBoolFilter(m)
+        Set multiSelectable = multiSelectFacets(queryParameters)
+        Map<String, String> matchMissing = matchMissing(queryParameters)
+        getOrGroups(notNested).each { Map<String, ?> m ->
+            if (m.size() == 1 && m.keySet().first() in multiSelectable) {
+                multiSelectFilters[m.keySet().first()] = createBoolFilter(addMissingMatch(m, matchMissing))
+            }
+            else {
+                filters << createBoolFilter(addMissingMatch(m, matchMissing))
+            }
         }
         notNestedGroupsForNot.each { m ->
             filtersForNot << createBoolFilter(m)
@@ -561,11 +587,15 @@ class ESQuery {
             allFilters['must_not'] = filtersForNot
         }
 
-        if (allFilters) {
-            return [['bool': allFilters]]
-        } else {
-            return null
+        return new Tuple2(allFilters ? [['bool': allFilters]] : null, multiSelectFilters)
+    }
+
+    private static Map addMissingMatch(Map m, Map matchMissing) {
+        if (m.size() == 1 && m.keySet().first() in matchMissing) {
+            String field = matchMissing[m.keySet().first()]
+            m.put(EXISTS_PREFIX + field, ['false'])
         }
+        return m
     }
 
     private getPrefixIfExists(String key) {
@@ -627,6 +657,7 @@ class ESQuery {
         if (p.size() > 0) {
             result.add(p)
         }
+
         return result
     }
 
@@ -771,25 +802,20 @@ class ESQuery {
      *
      */
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map getAggQuery(Map queryParameters) {
-        if (!('_statsrepr' in queryParameters)) {
+    Map getAggQuery(Map queryParameters, Map multiSelectFilters) {
+        Map statsrepr = getStatsRepr(queryParameters)
+        if (statsrepr.isEmpty()) {
             Map defaultQuery = [(JsonLd.TYPE_KEY): ['terms': ['field': JsonLd.TYPE_KEY]]]
             return defaultQuery
         }
-
-        Map statsrepr = mapper.readValue(queryParameters.get('_statsrepr')[0], Map)
-
-        return buildAggQuery(statsrepr)
+        return buildAggQuery(statsrepr, multiSelectFilters)
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    private Map buildAggQuery(def tree, int size=10) {
+    private Map buildAggQuery(def tree, Map multiSelectFilters, int size=10) {
         Map query = [:]
         List keys = []
 
-        // In Python, the syntax for iterating over each item in a
-        // list and for iterating over each key in a dict is the
-        // same. That's not the case for Groovy, hence the following
         if (tree instanceof Map) {
             keys = tree.keySet() as List
         } else if (tree instanceof List) {
@@ -799,16 +825,43 @@ class ESQuery {
         keys.each { key ->
             String sort = tree[key]?.sort =='key' ? '_key' : '_count'
             def sortOrder = tree[key]?.sortOrder =='asc' ? 'asc' : 'desc'
+            def filters = multiSelectFilters.findAll { it.key != key }.values()
             String termPath = getInferredTermPath(key)
-            query[termPath] = ['terms': [
-                    'field': termPath,
-                    'size': tree[key]?.size ?: size,
-                    'order': [(sort):sortOrder]]]
+
+            query[termPath] = [
+                'aggs' : [
+                    (FILTERED_AGG): ['terms': [
+                        'field': termPath,
+                        'size' : tree[key]?.size ?: size,
+                        'order': [(sort): sortOrder]]
+                    ]
+                ],
+                'filter': ['bool': ['must': filters]]
+            ]
             if (tree[key].subItems instanceof Map) {
-                query[termPath]['aggs'] = buildAggQuery(tree[key].subItems, size)
+                query[termPath]['aggs'] = buildAggQuery(tree[key].subItems, multiSelectFilters, size)
             }
         }
         return query
+    }
+
+    @CompileStatic(TypeCheckingMode.SKIP)
+    static Set<String> multiSelectFacets(Map queryParameters) {
+        getStatsRepr(queryParameters).findResults { key, value ->
+            value['connective'] == Connective.OR.toString() ? key : null
+        } as Set<String>
+    }
+
+    @CompileStatic(TypeCheckingMode.SKIP)
+    static Map<String, String> matchMissing(Map queryParameters) {
+        getStatsRepr(queryParameters)
+                .findAll { key, value -> value['_matchMissing'] }
+                .collectEntries { key, value -> [key, value['_matchMissing'] as String]}
+    }
+
+    @CompileStatic(TypeCheckingMode.SKIP)
+    private static Map getStatsRepr(Map queryParameters) {
+        mapper.readValue(queryParameters.get('_statsrepr')?[0] ?: '{}', Map)
     }
 
     /**
@@ -929,6 +982,21 @@ class ESQuery {
             result += getKeywordFieldsFromProperties(properties, currentField)
         }
         return result
+    }
+
+    static Map moveFilteredAggregationsToTopLevel(Map esResponse) {
+        if (!esResponse['aggregations']) {
+            return esResponse
+        }
+
+        Map aggregations = (Map) esResponse['aggregations']
+        aggregations.keySet().each { k ->
+            if (aggregations[k][FILTERED_AGG]) {
+                aggregations[k] = aggregations[k][FILTERED_AGG]
+            }
+        }
+
+        return esResponse
     }
 
     /**

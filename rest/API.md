@@ -213,7 +213,7 @@ $ curl -XDELETE
 ```
 * `<token>` - An active and valid bearer token (e.g. hW3IHc9PexxxFP2IkAAbqKvjLbW4thQ)
 * `<sigel>` - A sigel that is connected to your oauth client (e.g. T)
-* `<id>` - Record ID (e.g. https://libris-qa.kb.se/s93ns5h436dxqsh)
+* `<id>` - Record ID (e.g. s93ns5h436dxqsh)
 
 ## Other API endpoints
 

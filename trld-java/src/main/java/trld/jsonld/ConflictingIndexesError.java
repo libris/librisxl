@@ -15,12 +15,12 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import static trld.Common.warning;
+import static trld.platform.Common.warning;
 import static trld.jsonld.Base.*;
 import static trld.jsonld.Flattening.*;
 
 
-public class ConflictingIndexesError extends JsonLdError { // LINE: 9
-  ConflictingIndexesError() { };
-  ConflictingIndexesError(String msg) { super(msg); };
+public class ConflictingIndexesError extends JsonLdError {
+  public ConflictingIndexesError() { };
+  public ConflictingIndexesError(String msg) { super(msg); };
 }

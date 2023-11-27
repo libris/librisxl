@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import static trld.Common.dumpCanonicalJson;
-import static trld.Common.parseJson;
+import static trld.platform.Common.jsonEncodeCanonical;
+import static trld.platform.Common.jsonDecode;
 import static trld.jsonld.Base.*;
 import trld.jsonld.InvalidBaseDirectionError;
 import trld.jsonld.InvalidLanguageTaggedStringError;
@@ -40,27 +40,27 @@ import static trld.Rdfterms.I18N;
 import static trld.jsonld.Rdf.*;
 
 
-public class RdfDataset implements Iterable<RdfGraph> { // LINE: 65
-  public RdfGraph defaultGraph; // LINE: 66
-  public Map<String, RdfGraph> namedGraphs; // LINE: 67
+public class RdfDataset  implements Iterable<RdfGraph> {
+  public RdfGraph defaultGraph;
+  public Map<String, RdfGraph> namedGraphs;
 
-  public RdfDataset() { // LINE: 69
-    this.defaultGraph = new RdfGraph(); // LINE: 70
-    this.namedGraphs = new HashMap<>(); // LINE: 71
+  public RdfDataset() {
+    this.defaultGraph = new RdfGraph();
+    this.namedGraphs = new HashMap<>();
   }
 
-  public void add(RdfGraph graph) { // LINE: 73
-    if (graph.name != null) { // LINE: 74
-      this.namedGraphs.put(graph.name, graph); // LINE: 75
+  public void add(RdfGraph graph) {
+    if (graph.name != null) {
+      this.namedGraphs.put(graph.name, graph);
     } else {
-      this.defaultGraph = graph; // LINE: 77
+      this.defaultGraph = graph;
     }
   }
 
-  public Iterator<RdfGraph> iterator() { // LINE: 79
+  public Iterator<RdfGraph> iterator() {
     List<RdfGraph> iter = new ArrayList();
-    iter.add(this.defaultGraph); // LINE: 80
-    iter.addAll(this.namedGraphs.values()); // LINE: 81
+    iter.add(this.defaultGraph);
+    iter.addAll(this.namedGraphs.values());
     return iter.iterator();
   }
 }

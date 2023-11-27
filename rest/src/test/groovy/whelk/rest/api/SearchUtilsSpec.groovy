@@ -6,6 +6,10 @@ import spock.lang.Specification
 import whelk.JsonLd
 import whelk.exception.InvalidQueryException
 import whelk.rest.api.SearchUtils.SearchType
+import whelk.search.ESQuery
+
+import static whelk.search.ESQuery.Connective.AND
+import static whelk.search.ESQuery.Connective.OR
 
 class SearchUtilsSpec extends Specification {
 
@@ -313,17 +317,17 @@ class SearchUtilsSpec extends Specification {
         def slices = [
           [ "dimensionChain": [["inverseOfTerm": "itemOf"], "heldBy"], "itemLimit": 1000 ],
           [ "dimensionChain": ["instanceOf", "language"], "itemLimit": 100 ],
-          [ "dimensionChain": ["publication", "year"], "itemLimit": 500 ],
+          [ "dimensionChain": ["publication", "year"], "itemLimit": 500, connective: "OR" ],
           [ "dimensionChain": ["rdf:type"], "itemLimit": 100 ],
           [ "dimensionChain": ["inScheme"], "itemLimit": 100 ],
         ]
         def expected = [
-            // NOTE: the .@id should be added if the leafs are defined as ObjectProperty
-            '@reverse.itemOf.heldBy': [sort: 'value', sortOrder: 'desc', size:1000], // .@id
-            'instanceOf.language': [sort: 'value', sortOrder: 'desc', size:100], // .@id
-            'publication.year': [sort: 'value', sortOrder: 'desc', size:500],
-            '@type': [sort: 'value', sortOrder: 'desc', size:100],
-            'inScheme': [sort: 'value', sortOrder: 'desc', size:100], // .@id
+                // NOTE: the .@id should be added if the leafs are defined as ObjectProperty
+            '@reverse.itemOf.heldBy': [sort: 'value', sortOrder: 'desc', size:1000, connective: AND], // .@id
+            'instanceOf.language': [sort: 'value', sortOrder: 'desc', size:100, connective: AND], // .@id
+            'publication.year': [sort: 'value', sortOrder: 'desc', size:500, connective: OR],
+            '@type': [sort: 'value', sortOrder: 'desc', size:100, connective: AND],
+            'inScheme': [sort: 'value', sortOrder: 'desc', size:100, connective: AND], // .@id
         ]
         expect:
         search.buildStatsReprFromSliceSpec(slices) == expected

@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Input;
-import static trld.Common.dumpJson;
+import static trld.platform.Common.jsonEncode;
+import trld.platform.Input;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.LANGUAGE;
@@ -28,6 +28,8 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 import static trld.Rdfterms.RDF_TYPE;
 import static trld.Rdfterms.XSD;
 import static trld.Rdfterms.XSD_DOUBLE;
@@ -35,44 +37,44 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ReadDecl extends ReadCompound { // LINE: 478
-  public Boolean finalDot; // LINE: 480
-  public Boolean completed; // LINE: 481
+public class ReadDecl extends ReadCompound {
+  public Boolean finalDot;
+  public Boolean completed;
 
-  public ReadDecl(ReadNodes parent, Boolean finalDot) { // LINE: 483
-    super(parent); // LINE: 484
-    this.finalDot = finalDot; // LINE: 485
-    this.completed = false; // LINE: 486
+  public ReadDecl(ReadNodes parent, Boolean finalDot) {
+    super(parent);
+    this.finalDot = finalDot;
+    this.completed = false;
   }
 
-  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 488
-    if (prevValue instanceof Map) { // LINE: 489
-      if (!(this.moreParts((Map) prevValue))) { // LINE: 490
-        this.completed = true; // LINE: 491
-        if (!(this.finalDot)) { // LINE: 492
-          this.declare(); // LINE: 493
-          return this.parent.consume(c, null); // LINE: 494
+  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) {
+    if (prevValue instanceof Map) {
+      if (!(this.moreParts((Map) prevValue))) {
+        this.completed = true;
+        if (!(this.finalDot)) {
+          this.declare();
+          return this.parent.consume(c, null);
         }
       }
     }
-    Map.Entry<ParserState, Object> readspace = (Map.Entry<ParserState, Object>) this.readSpace(c); // LINE: 496
-    if (readspace != null) { // LINE: 497
-      return readspace; // LINE: 498
+    Map.Entry<ParserState, Object> readspace = (Map.Entry<ParserState, Object>) this.readSpace(c);
+    if (readspace != null) {
+      return readspace;
     }
-    if ((c == null && ((Object) ".") == null || c != null && (c).equals("."))) { // LINE: 500
-      this.declare(); // LINE: 501
-      return new KeyValue(this.parent, null); // LINE: 502
-    } else if ((this.completed && this.finalDot)) { // LINE: 503
-      throw new NotationError("Expected a final dot"); // LINE: 504
+    if ((c == null && ((Object) ".") == null || c != null && (c).equals("."))) {
+      this.declare();
+      return new KeyValue(this.parent, null);
+    } else if ((this.completed && this.finalDot)) {
+      throw new NotationError("Expected a final dot");
     }
-    return new ReadSymbol(this).consume(c, null); // LINE: 506
+    return new ReadSymbol(this).consume(c, null);
   }
 
-  public boolean moreParts(Map value) { // LINE: 508
-    throw new RuntimeException(); // LINE: 509
+  public boolean moreParts(Map value) {
+    throw new RuntimeException();
   }
 
-  public void declare() { // LINE: 511
-    throw new RuntimeException(); // LINE: 512
+  public void declare() {
+    throw new RuntimeException();
   }
 }

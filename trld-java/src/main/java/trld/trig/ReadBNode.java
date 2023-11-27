@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Input;
-import static trld.Common.dumpJson;
+import static trld.platform.Common.jsonEncode;
+import trld.platform.Input;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.LANGUAGE;
@@ -28,6 +28,8 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 import static trld.Rdfterms.RDF_TYPE;
 import static trld.Rdfterms.XSD;
 import static trld.Rdfterms.XSD_DOUBLE;
@@ -35,29 +37,29 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ReadBNode extends ReadNode { // LINE: 638
-  ReadBNode(/*@Nullable*/ ParserState parent) { super(parent); };
+public class ReadBNode extends ReadNode {
+  public ReadBNode(/*@Nullable*/ ParserState parent) { super(parent); };
 
-  public void init() { // LINE: 640
-    this.reset(); // LINE: 641
+  public void init() {
+    this.reset();
   }
 
-  public void reset() { // LINE: 643
-    this.node = new HashMap<>(); // LINE: 644
-    this.p = null; // LINE: 645
-    this.lastValue = null; // LINE: 646
+  public void reset() {
+    this.node = new HashMap<>();
+    this.p = null;
+    this.lastValue = null;
   }
 
-  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 648
-    if (prevValue != null) { // LINE: 649
-      this.fillNode(prevValue); // LINE: 650
+  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) {
+    if (prevValue != null) {
+      this.fillNode(prevValue);
     }
-    if ((c == null && ((Object) EOF) == null || c != null && (c).equals(EOF))) { // LINE: 652
-      throw new NotationError("Unexpected " + c + " in bnode."); // LINE: 653
-    } else if ((c == null && ((Object) "]") == null || c != null && (c).equals("]"))) { // LINE: 654
-      return new KeyValue(this.parent, this.node); // LINE: 655
+    if ((c == null && ((Object) EOF) == null || c != null && (c).equals(EOF))) {
+      throw new NotationError("Unexpected " + c + " in bnode.");
+    } else if ((c == null && ((Object) "]") == null || c != null && (c).equals("]"))) {
+      return new KeyValue(this.parent, this.node);
     } else {
-      return this.consumeNodeChar(c); // LINE: 657
+      return this.consumeNodeChar(c);
     }
   }
 }

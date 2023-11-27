@@ -169,6 +169,12 @@ class DatasetImporter {
         List<String> needsRetry = []
         long deletedCount = removeDeleted(idsInInput, needsRetry)
 
+        // FIXME: this is a workaround for lddb__dependers not being populated correctly when a doc in a
+        // dataset links to another doc in the dataset that has not yet been imported.
+        // A symptom is for example @reverse/broader not being calculated correctly.
+        // Should be fixed by merging PlaceholderRecord handling?
+        idsInInput.each { whelk.storage.recalculateDependencies(whelk.getDocument(it)) }
+
         System.err.println("Created: " + createdCount +" new,\n" +
                 "updated: " + updatedCount + " existing and\n" +
                 "deleted: " + deletedCount + " old records (should have been: " + (deletedCount + needsRetry.size()) + "),\n" +
@@ -473,5 +479,4 @@ class DatasetImporter {
             same << [(ID): id]
         }
     }
-
 }

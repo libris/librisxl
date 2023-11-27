@@ -342,6 +342,9 @@ class PostgreSQLComponent {
     private static final String GET_COLLECTION_BY_SYSTEM_ID =
             "SELECT collection FROM lddb where id = ?"
 
+    private static final String GET_MAINENTITY_TYPE_BY_SYSTEM_ID =
+            "SELECT data#>>'{@graph,1,@type}' FROM lddb WHERE id = ?"
+
     /** This query does the same as LOAD_COLLECTIONS = "SELECT DISTINCT collection FROM lddb"
         but much faster because postgres does not yet have 'loose indexscan' aka 'index skip scan'
         https://wiki.postgresql.org/wiki/Loose_indexscan' */
@@ -411,8 +414,21 @@ class PostgreSQLComponent {
             SELECT id FROM lddb WHERE data#>'{@graph,0,inDataset}' @> ?::jsonb AND deleted = false
         """.stripIndent()
 
+    private static final String GET_STATE =
+            "SELECT value FROM lddb__state WHERE key = ?"
+
+    private static final String UPSERT_STATE = """
+            INSERT INTO lddb__state (key, value)
+            VALUES (?, ?)
+            ON CONFLICT (key) DO UPDATE
+            SET (key, value) = (EXCLUDED.key, EXCLUDED.value)
+            """.stripIndent()
+
     private static final String GET_USER_DATA =
             "SELECT data FROM lddb__user_data WHERE id = ?"
+
+    private static final String GET_ALL_USER_DATA =
+            "SELECT id, data FROM lddb__user_data"
 
     private static final String UPSERT_USER_DATA = """
             INSERT INTO lddb__user_data (id, data, modified)
@@ -429,6 +445,11 @@ class PostgreSQLComponent {
             FROM lddb__identifiers
             JOIN lddb ON lddb__identifiers.id = lddb.id WHERE lddb__identifiers.iri = ?
             """.stripIndent()
+
+    private static final String GET_ALL_LIBRARIES_HOLDING_ID = """
+            SELECT l.data#>>'{@graph,1,heldBy,@id}' FROM lddb__dependencies d
+            LEFT JOIN lddb l ON d.id = l.id
+            WHERE d.dependsonid = ? AND d.relation = 'itemOf'"""
 
     private HikariDataSource connectionPool
     private HikariDataSource outerConnectionPool
@@ -1406,7 +1427,28 @@ class PostgreSQLComponent {
         storeCard(cardEntry)
         return cardEntry.getCard().data
     }
-    
+
+    List<String> getAllLibrariesHolding(String id) {
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            try {
+                preparedStatement = connection.prepareStatement(GET_ALL_LIBRARIES_HOLDING_ID)
+                preparedStatement.setString(1, id)
+
+                rs = preparedStatement.executeQuery()
+                List<String> results = []
+                while(rs.next()) {
+                    results.add(rs.getString(1))
+                }
+                return results
+            } finally {
+                close(rs, preparedStatement)
+            }
+        }
+    }
+
     void recalculateDependencies(Document doc) {
         withDbConnection {
             saveDependencies(doc, getMyConnection())
@@ -1867,6 +1909,32 @@ class PostgreSQLComponent {
         }
     }
 
+    String getMainEntityTypeBySystemID(String id) {
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            return getMainEntityTypeBySystemID(id, connection)
+        }
+    }
+
+    String getMainEntityTypeBySystemID(String id, Connection connection) {
+        PreparedStatement selectStatement = null
+        ResultSet resultSet = null
+
+        try {
+            selectStatement = connection.prepareStatement(GET_MAINENTITY_TYPE_BY_SYSTEM_ID)
+            selectStatement.setString(1, id)
+            resultSet = selectStatement.executeQuery()
+
+            if (resultSet.next()) {
+                return resultSet.getString(1)
+            }
+            return null
+        }
+        finally {
+            close(resultSet, selectStatement)
+        }
+    }
+
     Document load(String id) {
         return load(id, null)
     }
@@ -1955,7 +2023,10 @@ class PostgreSQLComponent {
         }
     }
 
-    boolean iriIsLinkable(String iri) {
+    boolean iriIsLinkable(String iri, String path) {
+        if (path in JsonLd.ALLOW_LINK_TO_DELETED) {
+            return true
+        }
         withDbConnection {
             PreparedStatement preparedStatement = null
             ResultSet rs = null
@@ -2585,8 +2656,14 @@ class PostgreSQLComponent {
 
     void remove(String identifier, String changedIn, String changedBy, boolean force=false) {
         if (versioning) {
-            if(!force && !followDependers(identifier).isEmpty())
-                throw new RuntimeException("Deleting depended upon records is not allowed.")
+            if (!force) {
+                def allow = JsonLd.ALLOW_LINK_TO_DELETED + (jsonld?.cascadingDeleteRelations() ?: Collections.EMPTY_SET)
+                def referencedBy = followDependers(identifier, allow)
+                if (!referencedBy.isEmpty()) {
+                    def referencedByStr = referencedBy.collect { shortId, path -> "$shortId at $path" }.join(', ')
+                    throw new RuntimeException("Deleting depended upon records is not allowed. Referenced by: $referencedByStr")
+                }
+            }
 
             log.debug("Marking document with ID ${identifier} as deleted.")
             try {
@@ -2615,6 +2692,72 @@ class PostgreSQLComponent {
                 log.debug("Removed $numRemoved dependencies for id ${identifier}")
             } finally {
                 close(removeDependencies)
+            }
+        }
+    }
+
+    void putState(String key, Map value) {
+        withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement preparedStatement = null
+            try {
+                PGobject jsonb = new PGobject()
+                jsonb.setType("jsonb")
+                jsonb.setValue( mapper.writeValueAsString(value) )
+
+                preparedStatement = connection.prepareStatement(UPSERT_STATE)
+                preparedStatement.setString(1, key)
+                preparedStatement.setObject(2, jsonb)
+
+                preparedStatement.executeUpdate()
+            } finally {
+                close(preparedStatement)
+            }
+        }
+    }
+
+    Map getState(String key) {
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            try {
+                preparedStatement = connection.prepareStatement(GET_STATE)
+                preparedStatement.setString(1, key)
+
+                rs = preparedStatement.executeQuery()
+                if (rs.next()) {
+                    return mapper.readValue(rs.getString("value"), Map)
+                }
+                else {
+                    return null
+                }
+            } finally {
+                close(rs, preparedStatement)
+            }
+        }
+    }
+
+    /**
+     * Returns the user-data map for each user _with the user id_ also inserted into the map.
+     */
+    List<Map> getAllUserData() {
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            List<Map> result = []
+            try {
+                preparedStatement = connection.prepareStatement(GET_ALL_USER_DATA)
+                rs = preparedStatement.executeQuery()
+                while (rs.next()) {
+                    Map userdata = mapper.readValue(rs.getString("data"), Map)
+                    userdata.put("id", rs.getString("id"))
+                    result.add(userdata)
+                }
+                return result
+            } finally {
+                close(rs, preparedStatement)
             }
         }
     }

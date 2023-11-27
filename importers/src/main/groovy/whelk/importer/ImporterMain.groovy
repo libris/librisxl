@@ -239,9 +239,24 @@ class ImporterMain {
     }
 
     private static void filterProblematicData(id, data) {
+        if (data instanceof Collection || data instanceof LinkedHashMap) {
+            data.eachWithIndex { it, index ->
+                // Virtuoso bulk load doesn't like some unusual characters, such as 0x02,
+                // so remove invisible control characters and unused code points
+                if (it instanceof String) {
+                    data[index] = cleanStringForVirtuoso(it)
+                } else if (it instanceof Map.Entry && it.value instanceof String) {
+                    it.value = cleanStringForVirtuoso(it.value)
+                }
+            }
+        }
+
         if (data instanceof Map) {
             data.removeAll { entry ->
-                return entry.key.startsWith("generic") || entry.key.equals("marc:hasGovernmentDocumentClassificationNumber")
+                return entry.key.startsWith("generic") ||
+                        entry.key.equals("marc:hasGovernmentDocumentClassificationNumber") ||
+                        (entry.key.equals("encodingLevel") && entry.value instanceof String && entry.value.contains(" ")) ||
+                        !entry.value
             }
             data.keySet().each { property ->
                 filterProblematicData(id, data[property])
@@ -254,6 +269,10 @@ class ImporterMain {
                 filterProblematicData(id, it)
             }
         }
+    }
+
+    private static String cleanStringForVirtuoso(String data) {
+        return data.replaceAll(/[\x00-\x08\x0B-\x0C\x0E-\x1F]/, "")
     }
 
     static Map COMMANDS = getMethods().findAll {

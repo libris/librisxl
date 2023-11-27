@@ -15,7 +15,7 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import static trld.Common.warning;
+import static trld.platform.Common.warning;
 import static trld.jsonld.Base.*;
 import trld.jsonld.Context;
 import trld.jsonld.Term;
@@ -24,7 +24,7 @@ import static trld.jsonld.Invcontext.getInverseContext;
 import static trld.jsonld.Compaction.*;
 
 
-public class IRIConfusedWithPrefixError extends JsonLdError { // LINE: 11
-  IRIConfusedWithPrefixError() { };
-  IRIConfusedWithPrefixError(String msg) { super(msg); };
+public class IRIConfusedWithPrefixError extends JsonLdError {
+  public IRIConfusedWithPrefixError() { };
+  public IRIConfusedWithPrefixError(String msg) { super(msg); };
 }

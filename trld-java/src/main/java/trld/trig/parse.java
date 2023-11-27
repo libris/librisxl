@@ -3,8 +3,8 @@ package trld.trig;
 import java.util.ArrayList;
 import java.util.List;
 
-import trld.Common;
-import trld.Input;
+import trld.platform.Common;
+import trld.platform.Input;
 
 public class parse {
 
@@ -16,7 +16,7 @@ public class parse {
         for (String src : sources) {
             Input inp = new Input(src);
             Object result = Parser.parse(inp);
-            System.out.println(Common.dumpJson(result, true));
+            System.out.println(Common.jsonEncode(result, true));
         }
     }
 }

@@ -8,9 +8,9 @@ import java.util.stream.Collectors;
 import java.io.*;
 import static java.util.AbstractMap.SimpleEntry;
 
-import trld.Input;
+import trld.platform.Input;
 import trld.jsonld.RdfDataset;
-import static trld.Common.dumpCanonicalJson;
+import static trld.platform.Common.jsonEncodeCanonical;
 import static trld.jsonld.Base.CONTEXT;
 import static trld.jsonld.Base.GRAPH;
 import static trld.jsonld.Base.ID;
@@ -114,7 +114,7 @@ public class Test {
     RdfDataset dataset = toRdfDataset(data);
     data = (Object) toJsonld(dataset);
     data = compact(context, data, "", true);
-    return dumpCanonicalJson(data);
+    return jsonEncodeCanonical(data);
   }
 
   public static void main(String[] args) {

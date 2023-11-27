@@ -2,6 +2,7 @@ package whelk.converter.marc
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
+import whelk.filter.BlankNodeLinker
 
 import static whelk.JsonLd.asList
 
@@ -15,23 +16,33 @@ class ContributionByRoleStep extends MarcFramePostProcStepBase {
 
     boolean requiresResources = true
     Set<String> instanceRelators
+    BlankNodeLinker relatorLinker
 
     void init() {
+        def relatorResources = resourceCache?.relatorResources
+
+        if (!relatorResources) return
+
+        relatorLinker = relatorResources.relatorLinker
         // NOTE: Assuming OK to move role with a non-Instance Embodiment domain (Item
         // or Representation) to Instance (an instance is an embodiment, a work isn't).
-        instanceRelators = resourceCache?.relators?.findResults {
+        instanceRelators = relatorResources.relators.findResults {
             def domainRef = it.domain?[ID]
             if (domainRef) {
               def domain = ld.toTermKey(domainRef)
               if (ld.isSubClassOf(domain, 'Embodiment')) {
-                return it[ID]
+                return [it[ID]] + it['sameAs'].collect { it[ID] }
               }
             }
-        } as Set
-        log.debug "Using as instance relations: $INSTANCE_RELATORS"
+        }.flatten() as Set
+        log.debug "Using as instance relations: $instanceRelators"
     }
 
     void modify(Map record, Map thing) {
+        if (!relatorLinker || !instanceRelators) {
+            log.error("Conversion failed: Missing required resources")
+            return
+        }
         moveRoles(thing)
     }
 
@@ -51,6 +62,7 @@ class ContributionByRoleStep extends MarcFramePostProcStepBase {
         asList(work.contribution).each {
             var instanceRoles = []
             var workRoles = []
+            relatorLinker.linkAll(it, 'role')
             asList(it.role).each {
                 if (it[ID] in instanceRelators) {
                     instanceRoles << it
@@ -58,14 +70,16 @@ class ContributionByRoleStep extends MarcFramePostProcStepBase {
                     workRoles << it
                 }
             }
-            def contrib = it.clone()
+
             if (instanceRoles) {
+              def contrib = it.clone()
                 contrib.role = instanceRoles
+                setToPlainContribution(contrib)
                 instanceContribs << contrib
-            } else {
-                if (workRoles) {
-                    contrib.role = workRoles
-                }
+            }
+            if (workRoles) {
+                def contrib = it.clone()
+                contrib.role = workRoles
                 workContribs << contrib
             }
         }
@@ -76,10 +90,12 @@ class ContributionByRoleStep extends MarcFramePostProcStepBase {
             } else {
                 work.contribution = workContribs
             }
+
             if (!instance.contribution) {
                 instance.contribution = []
             }
             instance.contribution += instanceContribs
+
             return true
         } else {
             return false
@@ -101,7 +117,14 @@ class ContributionByRoleStep extends MarcFramePostProcStepBase {
         } else if (work.contribution !instanceof List) {
             work.contribution = [work.contribution]
         }
-        work.contribution += asList(instance.contribution)
-        instance.remove('contribution')
+        var instanceContribs = asList(instance.remove('contribution'))
+        instanceContribs.each { setToPlainContribution(it) }
+        work.contribution += instanceContribs
+    }
+
+    void setToPlainContribution(contrib) {
+      if (contrib[TYPE] != 'Contribution') {
+        contrib[TYPE] = 'Contribution'
+      }
     }
 }

@@ -15,7 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import static trld.Common.warning;
+import trld.jsonld.LoadDocumentCallback;
+import static trld.platform.Common.warning;
 import static trld.jsonld.Base.*;
 import trld.jsonld.Context;
 import trld.jsonld.Term;
@@ -24,7 +25,7 @@ import trld.jsonld.InvalidNestValueError;
 import static trld.jsonld.Expansion.*;
 
 
-public class InvalidSetOrListObjectError extends JsonLdError { // LINE: 35
-  InvalidSetOrListObjectError() { };
-  InvalidSetOrListObjectError(String msg) { super(msg); };
+public class InvalidSetOrListObjectError extends JsonLdError {
+  public InvalidSetOrListObjectError() { };
+  public InvalidSetOrListObjectError(String msg) { super(msg); };
 }

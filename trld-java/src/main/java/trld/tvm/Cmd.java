@@ -3,8 +3,11 @@ package trld.tvm;
 import java.util.*;
 import java.io.*;
 
-import trld.Common;
-import trld.jsonld.*;
+import trld.jsonld.Compaction;
+import trld.jsonld.Expansion;
+import trld.platform.Common;
+
+import static trld.jsonld.Cmd.loadJson;
 
 
 public class Cmd {
@@ -13,11 +16,11 @@ public class Cmd {
         Object target = args.length > 1 ? args[1] : null;
         String inFile = args.length > 2 ? args[2] : null;
 
-        Object vocab = Common.loadJson(vocabFile);
+        Object vocab = loadJson(vocabFile);
         vocab = Expansion.expand(vocab, vocabFile);
 
         if (target instanceof String && new File((String) target).isFile()) {
-            target = Common.loadJson((String) target);
+            target = loadJson((String) target);
         } else {
             Map ctx = new HashMap();
             ctx.put("@vocab", target);
@@ -29,7 +32,7 @@ public class Cmd {
         Object data = targetMap;
 
         if (inFile != null) {
-            Object indata = Common.loadJson(inFile);
+            Object indata = loadJson(inFile);
             indata = Expansion.expand(indata, inFile);
 
             Object outdata = Mapper.mapTo(targetMap, indata);
@@ -37,6 +40,6 @@ public class Cmd {
             data = outdata;
         }
 
-        System.out.println(Common.dumpJson(data, true));
+        System.out.println(Common.jsonEncode(data, true));
     }
 }

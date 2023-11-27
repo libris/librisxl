@@ -1,8 +1,8 @@
 /**
  * This script bumps the year for "year based" ShelfMarkSequences
  * 
- * Any ShelfMarkSequence with YY or YYYY in the label (e.g. "Sv2021") will be replacedBy
- * a new sequence starting at 1 and with the new year in the label (e.g. "Sv2022").
+ * Any ShelfMarkSequence with YY or YYYY in the label/qualifier (e.g. "Sv2021") will be replacedBy
+ * a new sequence starting at 1 and with the new year in the label/qualifier (e.g. "Sv2022").
  * 
  * To be scheduled at New Year's Eve 🎆
  */
@@ -33,36 +33,61 @@ selectByIds(queryIds(["@type": ["ShelfMarkSequence"]]).collect()) { s ->
     if (thing.shelfMarkStatus != "ActiveShelfMark") {
         return
     }
-    
-    def label = thing.label 
+
+    def modified = false
+    def newItem = create(s.doc.clone().data)
+    def label = thing.label
+
     if (label instanceof String) {
         if (label.contains(oldFull)) {
-            replaceShelfMarkSequence(s, label.replace(oldFull, newFull))
+            modified = replaceShelfMarkSequence(s, newItem, label.replace(oldFull, newFull), 'label')
+        } else if (label.contains(oldShort)) {
+            modified = replaceShelfMarkSequence(s, newItem, label.replace(oldShort, newShort), 'label')
         }
-        else if (label.contains(oldShort)) {
-            replaceShelfMarkSequence(s, label.replace(oldShort, newShort))
+    }
+
+    def qualifier = thing.qualifier
+    def newQualifier = asList(qualifier).findResults {
+        if (it instanceof String) {
+            if (it.contains(oldFull)) {
+                return it.replace(oldFull, newFull)
+            } else if (it.contains(oldShort)) {
+                return it.replace(oldShort, newShort)
+            } else { // NOP
+                return it
+            }
         }
-    } 
+    }
+
+    newQualifier = qualifier instanceof String ?  newQualifier.pop() : newQualifier
+    if (newQualifier && newQualifier != qualifier) {
+        modified = replaceShelfMarkSequence(s, newItem, newQualifier, 'qualifier')
+    }
+
+    if (modified) {
+        createNewAndUpdateOld(s, newItem)
+    }
 }
 
-void replaceShelfMarkSequence(old, String newLabel) {
-    def newItem = create(old.doc.clone().data)
-
-    newItem.graph[1]['label'] = newLabel
+boolean replaceShelfMarkSequence(old, newItem, newLabel, String prop) {
+    newItem.graph[1][prop] = newLabel
     newItem.graph[1]['nextShelfControlNumber'] = 1
 
+    report.println("${old.graph[1][prop]} -> $newLabel ($old.doc.shortId -> $newItem.doc.shortId)")
+    return true
+}
+
+void createNewAndUpdateOld(old, newItem) {
     selectFromIterable([newItem], { it.scheduleSave() })
     selectByIds([newItem.doc.shortId], {
         // ShelfMarkSequences are access controlled on meta.descriptionCreator.
         // But we cannot set that while creating, update it afterwards instead.
-        it.graph[0].descriptionCreator = old.graph[0].descriptionCreator 
+        it.graph[0].descriptionCreator = old.graph[0].descriptionCreator
         it.scheduleSave()
     })
 
     old.graph[1]['replacedBy'] = ['@id': newItem.doc.getThingIdentifiers().first()]
     old.graph[1]['shelfMarkStatus'] = "InactiveShelfMark"
-    
+
     old.scheduleSave()
-    
-    report.println("${old.graph[1]['label']} -> $newLabel ($old.doc.shortId -> $newItem.doc.shortId)")
 }

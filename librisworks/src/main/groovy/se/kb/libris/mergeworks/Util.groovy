@@ -5,11 +5,10 @@ import whelk.Whelk
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
-class Util {
-    static def titleComponents = ['mainTitle', 'titleRemainder', 'subtitle', 'hasPart', 'partNumber', 'partName', 'marc:parallelTitle', 'marc:equalTitle']
+import static se.kb.libris.mergeworks.compare.IntendedAudience.preferredComparisonOrder
 
-    static def titleVariant = ['Title', 'ParallelTitle']
-    // removed 'VariantTitle', 'CoverTitle' since they sometimes contain random generic stuff like "Alibis filmroman", "Kompisböcker för de yngsta"
+class Util {
+    static def titleComponents = ['mainTitle', 'titleRemainder', 'subtitle', 'hasPart', 'partNumber', 'partName']
 
     static enum Relator {
         TRANSLATOR('https://id.kb.se/relator/translator'),
@@ -34,6 +33,9 @@ class Util {
         }
     }
 
+    static def noise =
+            [",", '"', "'", "ʹ", "ʼ", '[', ']', ',', '.', '.', ':', ';', '-', '(', ')', ' the ', '-', '–', '+', '!', '?',].collectEntries { [it, ' '] }
+
     private static Set<String> IGNORED_SUBTITLES = Util.class.getClassLoader()
             .getResourceAsStream('merge-works/ignored-subtitles.txt')
             .readLines().grep().collect(Util.&normalize) as Set
@@ -41,9 +43,6 @@ class Util {
     private static Set<String> GENERIC_TITLES = Util.class.getClassLoader()
             .getResourceAsStream('merge-works/generic-titles.txt')
             .readLines().grep().collect(Util.&normalize) as Set
-
-    static def noise =
-            [",", '"', "'", "ʹ", "ʼ", '[', ']', ',', '.', '.', ':', ';', '-', '(', ')', ' the ', '-', '–', '+', '!', '?',].collectEntries { [it, ' '] }
 
 
     static List asList(Object o) {
@@ -92,6 +91,8 @@ class Util {
                         if (genericSubtitle(value)) {
                             new DocumentUtil.Remove()
                         } else {
+                            // Remove substring after colon if identified as generic
+                            // Example: "klanen Kennedy : roman" -> "klanen Kennedy"
                             ((List) value.split(':')).with {
                                 if (it.size() > 1 && genericSubtitle(it.last().trim())) {
                                     new DocumentUtil.Replace(value.replaceFirst(~/\s*:.+$/, ''))
@@ -127,17 +128,6 @@ class Util {
 
     static String normalize(String s) {
         return Unicode.removeDiacritics(Unicode.normalizeForSearch(StringUtils.normalizeSpace(" $s ".toLowerCase().replace(noise))))
-    }
-
-    static Object getPathSafe(item, path, defaultTo = null) {
-        for (p in path) {
-            if ((item instanceof Collection || item instanceof Map) && item[p] != null) {
-                item = item[p]
-            } else {
-                return defaultTo
-            }
-        }
-        return item
     }
 
     static List<String> getFlatTitle(List hasTitle) {
@@ -184,55 +174,51 @@ class Util {
             null
     ]
 
-    static def toWorkTitleForm = { Map title ->
-        // partName/partNumber is usually in hasPart but not always
-        def partName = title['partName']
-        def partNumber = title['partNumber']
-
-        def hasPart = title['hasPart']
-        if (hasPart) {
-            partName = hasPart[0]['partName']
-            partNumber = hasPart[0]['partNumber']
+    static void appendTitlePartsToMainTitle(Map title, String partNumber, String partName = null) {
+        def part = [partNumber, partName].grep().join(', ')
+        if (part) {
+            title['mainTitle'] += "${title['mainTitle'][-1] == '.' ? '' : '.'} $part"
         }
+    }
 
-        partName = asList(partName)[0]
-        partNumber = asList(partNumber)[0]
-
-        if (partNumber && partName) {
-            title['mainTitle'] += ". $partNumber, $partName"
-        } else if (partNumber) {
-            title['mainTitle'] += ". $partNumber"
-        } else if (partName) {
-            title['mainTitle'] += ". $partName"
-        }
-
-        return title.subMap(['@type', 'mainTitle', 'source'])
+    static String findTitlePart(List<Map> title, String prop) {
+        // partName/partNumber is usually found in hasPart but not always
+        def partNumber = title.findResult { Map t -> t[prop] ?: t['hasPart'].findResult { it[prop] } }
+        return asList(partNumber).find()
     }
 
     // Return the most common title for the best encodingLevel
     static def bestTitle(Collection<Doc> docs) {
-        // TODO: which title to pick when matched with already existing linked work?
         def linkedWorkTitle = docs.findResult { it.workIri() ? it.workData['hasTitle'] : null }
         if (linkedWorkTitle) {
             return linkedWorkTitle
         }
 
-        for (def level : bestEncodingLevel) {
-            def onLevel = docs.findAll { it.encodingLevel() == level }
-            def bestWorkTitle = mostCommonWorkTitle(onLevel)
-            if (bestWorkTitle) {
-                return bestWorkTitle
-            }
+        def bestInstanceTitle = mostCommonHighestEncodingLevel(docs, this.&mostCommonInstanceTitle)
+        def bestWorkTitle = mostCommonHighestEncodingLevel(docs, this.&mostCommonWorkTitle)
+
+        def partNumber = findTitlePart(bestInstanceTitle, 'partNumber')
+        def partName = findTitlePart(bestInstanceTitle, 'partName')
+
+        def workTitleShape = { it.subMap(['@type', 'mainTitle', 'subtitle', 'titleRemainder', 'source', 'marc:nonfilingChars']) }
+
+        if (bestWorkTitle) {
+            return bestWorkTitle.each { appendTitlePartsToMainTitle(it, partNumber) }
+                    .collect(workTitleShape)
         }
 
+        return bestInstanceTitle.each { appendTitlePartsToMainTitle(it, partNumber, partName) }
+                .collect(workTitleShape)
+    }
+
+    static def mostCommonHighestEncodingLevel(Collection<Doc> docs, Closure<Collection<Doc>> findMostCommon) {
         for (def level : bestEncodingLevel) {
             def onLevel = docs.findAll { it.encodingLevel() == level }
-            def bestInstanceTitle = mostCommonInstanceTitle(onLevel)
-            if (bestInstanceTitle) {
-                return bestInstanceTitle.collect(toWorkTitleForm)
+            def mostCommonTitle = findMostCommon(onLevel)
+            if (mostCommonTitle) {
+                return mostCommonTitle
             }
         }
-
         return null
     }
 
@@ -293,19 +279,29 @@ class Util {
 
     static def isTitle = { it.'@type' == 'Title' }
 
-    static boolean nameMatch(Object local, Map agent) {
-        def variants = [agent] + asList(agent.hasVariant)
-
-        def localName = local instanceof Map ? name(local) : normalize(local)
-
-        localName && variants.any {
-            name(it) && localName == name(it)
-        }
-    }
-
     static String name(Map agent) {
         (agent.givenName && agent.familyName)
                 ? normalize("${agent.givenName} ${agent.familyName}")
                 : agent.name ? normalize("${agent.name}") : null
+    }
+
+    static Collection<Collection<Doc>> workClusters(Collection<Doc> docs, WorkComparator c) {
+        docs.each {
+            if (it.instanceData) {
+                it.addComparisonProps()
+            }
+        }.with { preferredComparisonOrder(it) }
+
+        def workClusters = partition(docs, { Doc a, Doc b -> c.sameWork(a, b) })
+                .each { work ->
+                    work.each { doc ->
+                        doc.removeComparisonProps()
+                        // List order may be shuffled when comparing works.
+                        // Make sure PrimaryContribution always comes first in contribution.
+                        doc.sortContribution()
+                    }
+                }
+
+        return workClusters
     }
 }

@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Output;
-import static trld.Common.uuid4;
+import static trld.platform.Common.uuid4;
+import trld.platform.Output;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.CONTAINER;
 import static trld.jsonld.Base.CONTEXT;
@@ -25,25 +25,28 @@ import static trld.jsonld.Base.ID;
 import static trld.jsonld.Base.INDEX;
 import static trld.jsonld.Base.LANGUAGE;
 import static trld.jsonld.Base.LIST;
+import static trld.jsonld.Base.NONE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
 import static trld.jsonld.Base.REVERSE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.VOCAB;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 import static trld.trig.Serializer.*;
 
 
-public class KeyAliases { // LINE: 34
-  public String id = ID; // LINE: 35
-  public String value = VALUE; // LINE: 36
-  public String type = TYPE; // LINE: 37
-  public String lang = LANGUAGE; // LINE: 38
-  public String graph = GRAPH; // LINE: 39
-  public String list = LIST; // LINE: 40
-  public String reverse = REVERSE; // LINE: 41
-  public String index = INDEX; // LINE: 42
-  public String annotation = ANNOTATION; // LINE: 43
+public class KeyAliases {
+  public String id = ID;
+  public String value = VALUE;
+  public String type = TYPE;
+  public String lang = LANGUAGE;
+  public String graph = GRAPH;
+  public String list = LIST;
+  public String reverse = REVERSE;
+  public String index = INDEX;
+  public String annotation = ANNOTATION;
   public KeyAliases() {
     this(ID, VALUE, TYPE, LANGUAGE, GRAPH, LIST, REVERSE, INDEX, ANNOTATION);
   }

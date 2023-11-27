@@ -281,12 +281,7 @@ class WhelkTool {
     }
 
     private void select(Iterable<Document> selection, Closure process,
-                        int batchSize = DEFAULT_BATCH_SIZE, boolean newItems = false) {
-        if (errorDetected) {
-            log "Error detected, refusing further processing."
-            return
-        }
-
+                        int batchSize = DEFAULT_BATCH_SIZE, boolean newItems = false) throws Exception {
         int batchCount = 0
         Batch batch = new Batch(number: ++batchCount)
 
@@ -303,6 +298,7 @@ class WhelkTool {
                     err.printStackTrace errorLog
                     errorLog.println "-" * 20
                     errorLog.flush()
+                    errorDetected = err
             }
         }
 
@@ -351,6 +347,11 @@ class WhelkTool {
             log()
         }
         loggerFuture?.cancel(true)
+
+        if (errorDetected) {
+            log "Error detected, refusing further processing."
+            throw new Exception()
+        }
     }
 
     private def createExecutorService() {
@@ -663,7 +664,6 @@ class WhelkTool {
         if (whelk.elastic) {
             log "  ElasticSearch:"
             log "    hosts:   ${whelk.elastic.elasticHosts}"
-            log "    cluster: ${whelk.elastic.elasticCluster}"
             log "    index:   ${whelk.elastic.defaultIndex}"
         }
         log "Using script: $scriptFile"
@@ -677,9 +677,12 @@ class WhelkTool {
         log()
 
         bindings = createMainBindings()
-        script.eval(bindings)
 
-        finish()
+        try {
+            script.eval(bindings)
+        } finally {
+            finish()
+        }
     }
 
     private void finish() {
@@ -687,6 +690,10 @@ class WhelkTool {
         logWriters.each {
             it.flush()
             it.close()
+        }
+        if (errorDetected) {
+            log "Script terminated due to an error, see $reportsDir/ERRORS.txt for more info"
+            System.exit(1)
         }
         log "Done!"
     }

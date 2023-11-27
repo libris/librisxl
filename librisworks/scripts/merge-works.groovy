@@ -2,7 +2,7 @@ import se.kb.libris.mergeworks.Html
 import se.kb.libris.mergeworks.WorkComparator
 import se.kb.libris.mergeworks.Doc
 
-import static se.kb.libris.mergeworks.Util.partition
+import static se.kb.libris.mergeworks.Util.workClusters
 
 maybeDuplicates = getReportWriter("maybe-duplicate-linked-works.tsv")
 multiWorkReport = getReportWriter("multi-work-clusters.html")
@@ -46,30 +46,33 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
             uniqueWorksAndTheirInstances.add(new Tuple2(linkedWorks.find(), localWorks))
         } else {
             maybeDuplicates.println(linkedWorks.collect { it.shortId() }.join('\t'))
-            System.err.println("Local works ${localWorks.collect { it.shortId() }} match multiple linked works: ${linkedWorks.collect { it.shortId() }}. Duplicate linked works?")
+            System.err.println("Local works ${localWorks.collect { it.shortId() }} match multiple linked works: ${linkedWorks.collect { it.shortId() }}. Duplicated linked works?")
         }
     }
 
-    List<String> linkableWorkIris = uniqueWorksAndTheirInstances.findResults { it.getV1().workIri() }
+    List<Doc> linkableWorks = uniqueWorksAndTheirInstances.findResults { workDoc, _ -> workDoc.workIri() ? workDoc : null }
 
     uniqueWorksAndTheirInstances.each { Doc workDoc, List<Doc> instanceDocs ->
-        if (!workDoc.instanceData) {
-            if (workDoc.existsInStorage) {
-                if (instanceDocs) {
-                    replaceWorkData(workDoc, c.merge([workDoc] + instanceDocs))
-                    // TODO: Add adminmetadata
-                    writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.UPDATED)
-                }
-            } else {
-                addTechnicalNote(workDoc, WorkStatus.NEW) //TODO: Add more/better adminmetadata
-                writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.NEW)
-            }
-            addCloseMatch(workDoc, linkableWorkIris)
+        // Link more instances to existing linked work
+        if (workDoc.existsInStorage && !workDoc.instanceData && instanceDocs) {
+            replaceWorkData(workDoc, c.merge([workDoc] + instanceDocs))
+            // TODO: Update adminMetadata? To say that additional instances may have contributed to the linked work.
+            addCloseMatch(workDoc, linkableWorks)
             saveAndLink(workDoc, instanceDocs, workDoc.existsInStorage)
-        } else {
-            if (addCloseMatch(workDoc, linkableWorkIris)) {
-                saveAndLink(workDoc)
-            }
+//            writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.UPDATED)
+            return
+        }
+        // New merged work
+        if (!workDoc.existsInStorage && !workDoc.instanceData) {
+            addAdminMetadata(workDoc, instanceDocs.collect { ['@id': it.recordIri()] })
+            addCloseMatch(workDoc, linkableWorks)
+            saveAndLink(workDoc, instanceDocs, workDoc.existsInStorage)
+//            writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.NEW)
+            return
+        }
+        // Local work, save if new closeMatch links created
+        if (workDoc.instanceData && addCloseMatch(workDoc, linkableWorks)) {
+            saveAndLink(workDoc)
         }
     }
 
@@ -96,23 +99,12 @@ void saveAndLink(Doc workDoc, Collection<Doc> instanceDocs = [], boolean existsI
         }
     }
 
-    selectByIds(instanceDocs.collect { it.shortId() }) {
-        it.graph[1]['instanceOf'] = ['@id': workDoc.thingIri()]
-        it.scheduleSave(changedBy: changedBy, generationProcess: generationProcess)
-    }
-}
-
-Collection<Collection<Doc>> workClusters(Collection<Doc> docs, WorkComparator c) {
-    docs.each {
-        if (it.instanceData) {
-            it.addComparisonProps()
+    if (!instanceDocs.isEmpty()) {
+        selectByIds(instanceDocs.collect { it.shortId() }) {
+            it.graph[1]['instanceOf'] = ['@id': workDoc.thingIri()]
+            it.scheduleSave(changedBy: changedBy, generationProcess: generationProcess)
         }
     }
-
-    def workClusters = partition(docs, { Doc a, Doc b -> c.sameWork(a, b) })
-            .each { work -> work.each { doc -> doc.removeComparisonProps() } }
-
-    return workClusters
 }
 
 Doc createNewWork(Map workData) {
@@ -132,17 +124,15 @@ Doc createNewWork(Map workData) {
     return new Doc(create(data))
 }
 
-void addTechnicalNote(Doc doc, WorkStatus workStatus) {
-    def reportUri = "http://xlbuild.libris.kb.se/works/${reportsDir.getPath()}/${workStatus.status}/${doc.shortId()}.html"
-
-    doc.record()['technicalNote'] = [[
-                                             "@type"  : "TechnicalNote",
-                                             "hasNote": [[
-                                                                 "@type": "Note",
-                                                                 "label": ["Maskinellt utbrutet verk... TODO"]
-                                                         ]],
-                                             "uri"    : [reportUri]
-                                     ]]
+void addAdminMetadata(Doc doc, List<Map> derivedFrom) {
+    doc.record()['hasChangeNote'] = [
+            [
+                    '@type': 'CreateNote',
+                    'tool' : ['@id': 'https://id.kb.se/generator/mergeworks']
+            ]
+    ]
+    doc.record()['derivedFrom'] = derivedFrom
+    doc.record()['descriptionLanguage'] = ['@id': 'https://id.kb.se/language/swe']
 }
 
 void writeWorkReport(Collection<Doc> titleCluster, Doc derivedWork, Collection<Doc> derivedFrom, WorkStatus workStatus) {
@@ -181,12 +171,16 @@ static void replaceWorkData(Doc workDoc, Map replacement) {
     workDoc.workData.putAll(replacement)
 }
 
-boolean addCloseMatch(Doc workDoc, List<String> workIris) {
-    def linkable = (workIris - workDoc.thingIri()).collect { ['@id': it] }
+boolean addCloseMatch(Doc workDoc, List<Doc> linkableWorks) {
+    def linkTo = linkableWorks.findAll { d ->
+        d.workIri() != workDoc.thingIri()
+                && d.primaryContributor() == workDoc.primaryContributor()
+    }.collect { ['@id': it.workIri()] }
+
     def closeMatch = asList(workDoc.workData['closeMatch'])
 
-    if (linkable && !closeMatch.containsAll(linkable)) {
-        workDoc.workData['closeMatch'] = (closeMatch + linkable).unique()
+    if (linkTo && !closeMatch.containsAll(linkTo)) {
+        workDoc.workData['closeMatch'] = (closeMatch + linkTo).unique()
         return true
     }
 

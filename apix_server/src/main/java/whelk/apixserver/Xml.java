@@ -113,7 +113,7 @@ public class Xml
         return docToString(xmlDoc);
     }
 
-    public static String formatApixSearchResponse(List<whelk.Document> resultingDocuments,
+    public static String formatApixSearchResponse(List<String> resultingIDs,
                                                   boolean includeHold, Map<String, String[]> parameterMap)
             throws TransformerException, IOException, SAXException
     {
@@ -143,8 +143,9 @@ public class Xml
 
         Element records = xmlDoc.createElement("records");
         result.appendChild(records);
-        for (whelk.Document document : resultingDocuments)
+        for (String id : resultingIDs)
         {
+            whelk.Document document = Utils.s_whelk.loadEmbellished(id);
             Element record = xmlDoc.createElement("record");
             records.appendChild(record);
 

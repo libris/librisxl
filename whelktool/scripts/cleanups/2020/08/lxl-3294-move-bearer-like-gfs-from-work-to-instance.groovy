@@ -1,5 +1,5 @@
 /**
- * Move bearer-like genre/form terms from work to instance.
+ * Move bearer-like genre/form terms from work to instance. (also including some imported ebook gfs)
  *
  * See LXL-3294 for more information.
  */
@@ -17,7 +17,15 @@ gfsToMove = [
         "Talbok Daisy",
         "Talbok kassett",
         "Video dvd",
-        "Video vhs"]
+        "Video vhs",
+        "Historiska faksimil",
+        "Deckare & spänning",
+        "Fantasy & SF",
+        "Idrott & friluftsaktiviteter",
+        "Hus & hem",
+        "Medicin & hälsa",
+        "Resor & geografi",
+        "Samhälle & politik"]
 
 class Script {
     static PrintWriter report

@@ -92,7 +92,7 @@ class MarcFrameConverter implements FormatConverter {
         initialize()
         if (data['@graph']) {
             def entryId = data['@graph'][0]['@id']
-            data = JsonLd.frame(entryId, data)
+            data = JsonLd.frame(entryId, data, 3)
         } else if (data[JsonLd.RECORD_KEY]) {
             // Reshape a framed top-level thing with a meta record
             Map thing = data.clone()
@@ -214,6 +214,8 @@ class MarcConversion {
             procStep = new CopyOnRevertStep(props); break
             case 'InjectWhenMatchingOnRevert':
             procStep = new InjectWhenMatchingOnRevertStep(props); break
+            case 'NormalizeContentType':
+            procStep = new NormalizeContentTypeStep(props); break
             case 'ContributionByRole':
             procStep = new ContributionByRoleStep(props); break
             case 'Romanization':

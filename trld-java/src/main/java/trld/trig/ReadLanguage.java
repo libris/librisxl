@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Input;
-import static trld.Common.dumpJson;
+import static trld.platform.Common.jsonEncode;
+import trld.platform.Input;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.LANGUAGE;
@@ -28,6 +28,8 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 import static trld.Rdfterms.RDF_TYPE;
 import static trld.Rdfterms.XSD;
 import static trld.Rdfterms.XSD_DOUBLE;
@@ -35,22 +37,22 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ReadLanguage extends ReadTerm { // LINE: 425
-  ReadLanguage(/*@Nullable*/ ParserState parent) { super(parent); };
-  public static final Pattern MATCH = (Pattern) Pattern.compile("[A-Za-z0-9-]"); // LINE: 427
+public class ReadLanguage extends ReadTerm {
+  public ReadLanguage(/*@Nullable*/ ParserState parent) { super(parent); };
+  public static final Pattern MATCH = (Pattern) Pattern.compile("[A-Za-z0-9-]");
 
-  public boolean accept(String c) { // LINE: 429
-    return (this.MATCH.matcher(c).matches() ? c : null) != null; // LINE: 430
+  public boolean accept(String c) {
+    return (this.MATCH.matcher(c).matches() ? c : null) != null;
   }
 
-  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) { // LINE: 432
-    if (this.accept(c)) { // LINE: 433
-      this.collect(c); // LINE: 434
-      return new KeyValue(this, null); // LINE: 435
+  public Map.Entry<ParserState, Object> consume(String c, Object prevValue) {
+    if (this.accept(c)) {
+      this.collect(c);
+      return new KeyValue(this, null);
     } else {
-      String value = (String) this.pop(); // LINE: 437
-      this.collected = new ArrayList<>(); // LINE: 438
-      return this.parent.consume(c, Builtins.mapOf(LANGUAGE, value)); // LINE: 439
+      String value = (String) this.pop();
+      this.collected = new ArrayList<>();
+      return this.parent.consume(c, Builtins.mapOf(LANGUAGE, value));
     }
   }
 }

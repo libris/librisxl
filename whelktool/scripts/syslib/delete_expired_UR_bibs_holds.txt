@@ -1,0 +1,52 @@
+//231115 KP, deletes bibs and holds for records with expired valid dates
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+
+LocalDate now = LocalDate.now()
+
+String ur_bibs = """
+        collection = 'bib' 
+        and data#>>'{@graph,0,bibliography,0,@id}' = 'https://libris.kb.se/library/UR' 
+        and deleted = false
+        """
+
+def datepattern = DateTimeFormatter.ofPattern("uuuuMMdd")
+
+selectBySqlWhere(ur_bibs) { d ->
+	def bib = d.getGraph()
+	def id = bib[0].'@id'
+	def eodv = bib[1].'marc:hasSpecialCodedDates'?.'marc:endOfDateValid'
+	if ( eodv instanceof List ) {
+		eodv = eodv[0]
+	}
+	if ( eodv != null ) {
+		eodv = LocalDate.parse(eodv, datepattern)
+		if ( eodv.isBefore(now) ) {
+			println('I: ' + id + ' '  + eodv + ' before')
+			delete_holds(id)
+			d.scheduleDelete()
+		} else {
+			println('I: ' + id + ' '  + eodv + ' after')
+		}
+	} else {
+		println('I: ' + id + ' '  + eodv )
+		delete_holds(id)
+		d.scheduleDelete()
+	}
+}
+
+def delete_holds(String delbib) {
+	String bib = "${delbib}#it"
+	String bib_holds = """
+        	collection = 'hold' 
+        	and data#>>'{@graph,1,itemOf,@id}' = '${bib}' 
+        	and deleted = false
+        	"""
+	selectBySqlWhere(bib_holds) { dd ->
+		def hold = dd.getGraph()
+		def id = hold[0].'@id'
+		def heldBy = hold[1].'heldBy'.'@id'
+		println("D: ${bib} ${id} ${heldBy}")
+		dd.scheduleDelete()
+	}
+}

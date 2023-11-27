@@ -823,13 +823,17 @@ class Crud extends HttpServlet {
             throw new OtherStatusException("You do not have sufficient privileges to perform this operation.", HttpServletResponse.SC_FORBIDDEN)
         } else if (doc && doc.deleted) {
             throw new OtherStatusException("Document has been deleted.", HttpServletResponse.SC_GONE)
-        } else if(!whelk.storage.followDependers(doc.getShortId()).isEmpty()) {
-            throw new OtherStatusException("This record may not be deleted, because it is referenced by other records.", HttpServletResponse.SC_FORBIDDEN)
         } else {
-            log.debug("Removing resource at ${doc.getShortId()}")
-            String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
-            whelk.remove(doc.getShortId(), "xl", activeSigel)
-            response.setStatus(HttpServletResponse.SC_NO_CONTENT)
+            def referencedBy = whelk.storage.followDependers(doc.getShortId(), JsonLd.ALLOW_LINK_TO_DELETED + jsonld.cascadingDeleteRelations())
+            if (!referencedBy.isEmpty()) {
+                def referencedByStr = referencedBy.collect { shortId, path -> "$shortId at $path" }.join(', ')
+                throw new OtherStatusException("This record may not be deleted, because it is referenced by other records: " + referencedByStr, HttpServletResponse.SC_FORBIDDEN)
+            } else {
+                log.debug("Removing resource at ${doc.getShortId()}")
+                String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER)
+                whelk.remove(doc.getShortId(), "xl", activeSigel)
+                response.setStatus(HttpServletResponse.SC_NO_CONTENT)
+            }
         }
     }
 

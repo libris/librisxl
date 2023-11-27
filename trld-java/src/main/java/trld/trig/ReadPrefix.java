@@ -15,8 +15,8 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
-import trld.Input;
-import static trld.Common.dumpJson;
+import static trld.platform.Common.jsonEncode;
+import trld.platform.Input;
 import static trld.jsonld.Base.VALUE;
 import static trld.jsonld.Base.TYPE;
 import static trld.jsonld.Base.LANGUAGE;
@@ -28,6 +28,8 @@ import static trld.jsonld.Base.VOCAB;
 import static trld.jsonld.Base.BASE;
 import static trld.jsonld.Base.PREFIX;
 import static trld.jsonld.Base.PREFIX_DELIMS;
+import static trld.jsonld.Star.ANNOTATION;
+import static trld.jsonld.Star.ANNOTATED_TYPE_KEY;
 import static trld.Rdfterms.RDF_TYPE;
 import static trld.Rdfterms.XSD;
 import static trld.Rdfterms.XSD_DOUBLE;
@@ -35,41 +37,42 @@ import static trld.Rdfterms.XSD_INTEGER;
 import static trld.trig.Parser.*;
 
 
-public class ReadPrefix extends ReadDecl { // LINE: 515
-  ReadPrefix(ReadNodes parent, Boolean finalDot) { super(parent, finalDot); };
-  public /*@Nullable*/ String pfx; // LINE: 517
-  public /*@Nullable*/ String ns; // LINE: 518
+public class ReadPrefix extends ReadDecl {
+  public ReadPrefix(ReadNodes parent, Boolean finalDot) { super(parent, finalDot); };
+  public /*@Nullable*/ String pfx;
+  public /*@Nullable*/ String ns;
 
-  public void init() { // LINE: 520
-    this.pfx = null; // LINE: 521
-    this.ns = null; // LINE: 522
+  public void init() {
+    this.pfx = null;
+    this.ns = null;
   }
 
-  public boolean moreParts(Map value) { // LINE: 524
-    if (this.pfx == null) { // LINE: 525
-      String pfx = (String) ((String) value.get(SYMBOL)); // LINE: 526
-      if (!pfx.equals("")) { // LINE: 527
-        if (pfx.endsWith(":")) { // LINE: 528
-          pfx = pfx.substring(0, pfx.length() - 1); // LINE: 529
+  public boolean moreParts(Map value) {
+    if (this.pfx == null) {
+      String pfx = (String) ((String) value.get(SYMBOL));
+      if (!pfx.equals("")) {
+        if (pfx.endsWith(":")) {
+          pfx = (pfx.length() >= 0 ? pfx.substring(0, pfx.length() - 1) : "");
         } else {
-          throw new NotationError("Invalid prefix " + pfx); // LINE: 531
+          throw new NotationError("Invalid prefix " + pfx);
         }
       }
-      this.pfx = pfx; // LINE: 532
-      return true; // LINE: 533
+      this.pfx = pfx;
+      return true;
     }
-    if (this.ns == null) { // LINE: 535
-      this.ns = (String) value.get(ID); // LINE: 536
+    if (this.ns == null) {
+      this.ns = (String) value.get(ID);
     }
-    return false; // LINE: 538
+    return false;
   }
 
-  public void declare() { // LINE: 540
-    Object ns = (Object) this.ns; // LINE: 541
-    if ((!this.pfx.equals("") && !this.ns.equals("") && !(PREFIX_DELIMS.contains(this.ns.substring(this.ns.length() - 1, this.ns.length() - 1 + 1))))) { // LINE: 542
-      ns = Builtins.mapOf(ID, this.ns, PREFIX, true); // LINE: 543
+  public void declare() {
+    assert this.ns != null;
+    Object ns = (Object) this.ns;
+    if ((!this.pfx.equals("") && !this.ns.equals("") && !(PREFIX_DELIMS.contains(this.ns.substring(this.ns.length() - 1, this.ns.length() - 1 + 1))))) {
+      ns = Builtins.mapOf(ID, this.ns, PREFIX, true);
     }
-    String key = ((this.pfx != null && !this.pfx.equals("")) ? this.pfx : VOCAB); // LINE: 544
-    this.parent.context.put(key, ns); // LINE: 545
+    String key = ((this.pfx != null && !this.pfx.equals("")) ? this.pfx : VOCAB);
+    this.parent.context.put(key, ns);
   }
 }

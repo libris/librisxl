@@ -1,3 +1,5 @@
+from __future__ import annotations
+from datetime import datetime
 import json
 import os
 
@@ -68,33 +70,54 @@ def count_value(k, v, shape):
         shape[k] = stats + 1
 
 
+def isodatetime(s):
+    # NOTE: fromisoformat with zulu time requires Python 3.11+
+    if s.endswith('Z'):
+        s = s[:-1] + '+00:00'
+    return datetime.fromisoformat(s)
+
+
 if __name__ == '__main__':
-    from time import time
-    import sys
     from pathlib import Path
+    from time import time
+    import argparse
+    import sys
 
-    args = sys.argv[:]
-    cmd = args.pop(0)
-    if not args:
-        print(f'USAGE: {cmd} OUT_DIR', file=sys.stderr)
-        sys.exit(1)
+    argp = argparse.ArgumentParser()
+    argp.add_argument('-d', '--debug', action='store_true', default=False)
+    argp.add_argument('-c', '--min-created')  # inclusive
+    argp.add_argument('-C', '--max-created')  # exclusive
+    argp.add_argument('outdir', metavar='OUT_DIR')
 
-    outpath = Path(args.pop(0))
+    args = argp.parse_args()
+
     SUFFIX = '.json'
+
+    outpath: Path|None = Path(args.outdir)
+    assert outpath
+
     if outpath.suffix == SUFFIX:
         outdir = outpath.parent
     else:
         outdir = outpath
         outpath = None
+
     if not outdir.is_dir():
         outdir.mkdir(parents=True, exist_ok=True)
 
-    index = {}
-    work_by_type_index = {}
-    instance_index = {}
-    work_index = {}
+    min_inc_created: datetime | None = isodatetime(args.min_created) if args.min_created else None
+    max_ex_created: datetime | None = isodatetime(args.max_created) if args.max_created else None
+    if min_inc_created:
+        print(f"Filter - min created (inclusive): {min_inc_created}", file=sys.stderr)
+    if max_ex_created:
+        print(f"Filter - max created (exclusive): {max_ex_created}", file=sys.stderr)
 
-    t_last = 0
+    index: dict = {}
+    work_by_type_index: dict = {}
+    instance_index: dict = {}
+    work_index: dict = {}
+
+    t_last = 0.0
     cr = '\r'
     for i, l in enumerate(sys.stdin):
         if not l.rstrip():
@@ -109,6 +132,17 @@ if __name__ == '__main__':
 
         try:
             data = json.loads(l)
+
+            if (min_inc_created or max_ex_created) and '@graph' in data:
+                try:
+                    created = isodatetime(data['@graph'][0]['created'])
+                    if min_inc_created and created < min_inc_created:
+                        continue
+                    if max_ex_created and created >= max_ex_created:
+                        continue
+                except (KeyError, ValueError):
+                    pass
+
             thing, work = reshape(data)
             compute_shape(thing, index)
             if work:
@@ -117,7 +151,7 @@ if __name__ == '__main__':
                 compute_shape(work, work_index, type_key='Work')
 
         except (ValueError, AttributeError) as e:
-            print(f'ERROR at: {i} in data:', file=sys.stderr)
+            print(f'ERROR at: {i + 1} in data:', file=sys.stderr)
             print(l, file=sys.stderr)
             print(e, file=sys.stderr)
 
