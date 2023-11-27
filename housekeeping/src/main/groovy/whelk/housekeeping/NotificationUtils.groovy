@@ -30,13 +30,13 @@ class NotificationUtils {
         for (Map settings : allUserSettingStrings) {
             if (!settings["notificationEmail"])
                 continue
-            settings?.requestedNotifications?.each { request ->
+            settings?.notificationCollections?.each { request ->
                 if (!request instanceof Map)
                     return
-                if (!request["heldBy"])
+                if (!request["@id"])
                     return
 
-                String heldBy = request["heldBy"]
+                String heldBy = request["@id"]
                 if (!libraryToUserSettings.containsKey(heldBy))
                     libraryToUserSettings.put(heldBy, [])
                 libraryToUserSettings[heldBy].add(settings)

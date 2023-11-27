@@ -106,25 +106,29 @@ class NotificationSender extends HouseKeeper {
             List<Map> users = (List<Map>) heldByToUserSettings[library]
             if (users) {
                 for (Map user : users) {
-                    /*
-                    'user' is now a map looking something like this:
+                    /* 'user' is now a map looking something like this:
                     {
-                        "id": "sldknfslkdnsdlkgnsdkjgnb"
-                        "requestedNotifications": [
+                        "notificationEmail": "...",
+                        "notificationCategories": [
                             {
-                                "heldBy": "https://libris.kb.se/library/Utb1",
-                                "triggers": [
-                                    "https://id.kb.se/changecategory/primarycontribution"
-                                ]
-                            }
+                                "@id": "https://id.kb.se/changecategory/maintitle"
+                            },
+                            ...
                         ],
-                        "notificationEmail": "noreply@kb.se"
-                    }*/
+                        "notificationCollections": [
+                            {
+                                "@id": "https://libris.kb.se/library/Utb1"
+                            },
+                            ...
+                        ]
+                    }
+                    */
 
                     Set<Map> matchedObservations = new LinkedHashSet<>()
 
-                    user?.requestedNotifications?.each { Map request ->
-                        request?.triggers?.each { String trigger ->
+                    user?.notificationCategories?.each { Map request ->
+                        String trigger = request?["@id"]
+                        if (trigger != null) {
                             Map triggeredObservation = matches(trigger, changeObservationsForInstance)
                             if (triggeredObservation != null) {
                                 matchedObservations.add(triggeredObservation)
