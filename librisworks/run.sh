@@ -12,7 +12,7 @@ count_lines() {
   fi
 }
 
-if ! [[ "$1" =~ ^(local|dev|dev2|qa|stg|prod)$ ]]; then
+if ! [[ "$1" =~ ^(local|dev|dev2|qa|stg|prod|edu)$ ]]; then
   echo "Missing or invalid environment"
   exit 1
 fi
