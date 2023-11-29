@@ -1,3 +1,7 @@
+/**
+ * Drop works that are translations but lacking a translator in contribution from clusters.
+ */
+
 import se.kb.libris.mergeworks.Doc
 
 new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->

@@ -4,6 +4,7 @@ import datatool.util.DocumentComparator
 import se.kb.libris.mergeworks.compare.*
 
 import static Util.bestTitle
+import static se.kb.libris.mergeworks.Util.HAS_TITLE
 
 class WorkComparator {
     Set<String> fields
@@ -22,6 +23,7 @@ class WorkComparator {
             '@id'             : new Id()
     ]
 
+    // These properties are not considered when comparing works, nor are they included when merging
     static Set<String> ignore = ['closeMatch']
 
     static FieldHandler DEFAULT = new Default()
@@ -61,19 +63,20 @@ class WorkComparator {
             }
         }
 
-        if (!result['hasTitle']) {
+        // Usually none of the works that are merged have a title already, so hasTitle needs to be added separately.
+        if (!result[HAS_TITLE]) {
             def bestTitle = bestTitle(docs)
             if (bestTitle) {
-                result['hasTitle'] = bestTitle
+                result[HAS_TITLE] = bestTitle
             }
         }
 
+        // There is only room for one Dewey code in the classification property. Move any additional to additionalClassificationDdc.
         Classification.moveAdditionalDewey(result, docs)
 
         return result
     }
 
-    // TODO: preserve order? e.g. subject
     private Object mergeField(String field, FieldHandler h, Collection<Doc> docs) {
         Object value = docs.first().workData.get(field)
         def rest = docs.drop(1)

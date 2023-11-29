@@ -1,3 +1,8 @@
+/**
+ * Remove language appearing as a substring of work main title if already described in the language property.
+ * E.g. "Pippi Långstrump (Svenska)" --> "Pippi Långstrump" when work.language = [{'@id': 'https://id.kb.se/language/swe'}]
+ */
+
 import groovy.transform.Memoized
 import whelk.util.DocumentUtil
 

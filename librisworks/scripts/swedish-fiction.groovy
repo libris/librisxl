@@ -1,3 +1,8 @@
+/**
+ * Filter clusters: Keep only clusters that are part of the SVSK selection.
+ * SVSK ≈ fiction in Swedish, see detailed criteria in script.
+ */
+
 import se.kb.libris.mergeworks.Doc
 
 new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) {cluster ->

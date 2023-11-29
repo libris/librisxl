@@ -2,7 +2,36 @@ package se.kb.libris.mergeworks
 
 import whelk.Document
 import whelk.JsonLd
+import whelk.Whelk
 import whelk.util.DocumentUtil
+
+import static Util.AGENT
+import static Util.CLASSIFICATION
+import static Util.CODE
+import static Util.CONTRIBUTION
+import static Util.EDITION_STATEMENT
+import static Util.ENCODING_LEVEL
+import static Util.EXTENT
+import static Util.FAMILY_NAME
+import static Util.FLAT_TITLE
+import static Util.GIVEN_NAME
+import static Util.HAS_TITLE
+import static Util.IDENTIFIED_BY
+import static Util.IN_SCHEME
+import static Util.LABEL
+import static Util.LIFE_SPAN
+import static Util.NAME
+import static Util.PHYS_NOTE
+import static Util.PRIMARY
+import static Util.PUBLICATION
+import static Util.REPRODUCTION_OF
+import static Util.RESP_STATEMENT
+import static Util.ROLE
+import static Util.VERSION
+import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.TYPE_KEY
+import static whelk.JsonLd.WORK_KEY
+
 
 class DisplayDoc {
     Doc doc
@@ -13,58 +42,74 @@ class DisplayDoc {
     }
 
     private static String displayTitle(Map thing) {
-        thing['hasTitle'].collect { it['@type'] + ": " + it['flatTitle'] }.join(', ')
+        thing[HAS_TITLE].collect { it[TYPE_KEY] + ": " + it[FLAT_TITLE] }.join(', ')
     }
 
     String instanceDisplayTitle() {
-        displayTitle(['hasTitle': Util.flatTitles(doc.instanceTitle())])
+        displayTitle([(HAS_TITLE): Util.flatTitles(doc.instanceTitle())])
     }
 
-    // TODO...
     String getDisplayText(String field) {
-        if (field == 'contribution') {
+        if (field == CONTRIBUTION) {
             return contributorStrings().join("<br>")
-        } else if (field == 'classification') {
+        } else if (field == CLASSIFICATION) {
             return classificationStrings().join("<br>")
         } else if (field == 'instance title') {
             return doc.instanceTitle() ?: ''
         } else if (field == 'instance type') {
             return doc.instanceType() ?: ''
-        } else if (field == 'editionStatement') {
+        } else if (field == EDITION_STATEMENT) {
             return doc.editionStatement() ?: ''
-        } else if (field == 'responsibilityStatement') {
+        } else if (field == RESP_STATEMENT) {
             return doc.responsibilityStatement() ?: ''
-        } else if (field == 'encodingLevel') {
+        } else if (field == ENCODING_LEVEL) {
             return doc.encodingLevel()
-        } else if (field == 'publication') {
+        } else if (field == PUBLICATION) {
             return chipString(doc.publication())
-        } else if (field == 'identifiedBy') {
+        } else if (field == IDENTIFIED_BY) {
             return chipString(doc.identifiedBy())
-        } else if (field == 'extent') {
+        } else if (field == EXTENT) {
             return chipString(doc.extent() ?: [])
-        } else if (field == 'reproductionOf') {
+        } else if (field == REPRODUCTION_OF) {
             return reproductionOfLink()
-        } else if (field == 'physicalDetailsNote') {
+        } else if (field == PHYS_NOTE) {
             return doc.physicalDetailsNote() ?: ''
         } else {
             return chipString(doc.workData.getOrDefault(field, []))
         }
     }
 
-    protected String chipString(def thing) {
-        Util.chipString(thing, doc.whelk)
+    private String chipString(def thing) {
+        if (thing instanceof Integer) {
+            return thing
+        }
+
+        def chips = doc.whelk.jsonld.toChip(thing)
+        if (chips.size() < 2) {
+            chips = thing
+        }
+        if (chips instanceof List) {
+            return chips.collect { valuesString(it) }.sort().join('<br>')
+        }
+        return valuesString(chips)
+    }
+
+    private String valuesString(def thing) {
+        if (thing instanceof List) {
+            return thing.collect { valuesString(it) }.join(' • ')
+        }
+        if (thing instanceof Map) {
+            return thing.findAll { k, v -> k != TYPE_KEY }.values().collect { valuesString(it) }.join(' • ')
+        }
+        return thing.toString()
     }
 
     private String reproductionOfLink() {
         def base = Document.getBASE_URI().toString()
         def shortId = doc.reproductionOf()
-                ? doc.reproductionOf()[0]['@id'].substring(base.length()).replace('#it', '')
+                ? doc.reproductionOf()[0][ID_KEY].substring(base.length()).replace('#it', '')
                 : ''
         return "<a href=\"#$shortId\">$shortId</a>"
-    }
-
-    String tooltip(String string, String tooltip) {
-        """<abbr title="${tooltip}">${string}</abbr>"""
     }
 
     String link() {
@@ -75,7 +120,7 @@ class DisplayDoc {
     }
 
     private List contributorStrings() {
-        List path = doc.instanceData ? ['instanceOf', 'contribution'] : ['contribution']
+        List path = doc.instanceData ? [WORK_KEY, CONTRIBUTION] : [CONTRIBUTION]
         List contribution = DocumentUtil.getAtPath(getFramed(), path, [])
 
         return contribution.collect { Map c ->
@@ -86,14 +131,14 @@ class DisplayDoc {
     private String contributionStr(Map contribution) {
         StringBuilder s = new StringBuilder()
 
-        if (contribution['@type'] == 'PrimaryContribution') {
+        if (contribution[TYPE_KEY] == PRIMARY) {
             s.append('<b>')
         }
 
-        s.append(flatMaybeLinked(contribution['role'], ['code', 'label']).with { it.isEmpty() ? it : it + ': ' })
-        s.append(flatMaybeLinked(contribution['agent'], ['givenName', 'familyName', 'lifeSpan', 'name']))
+        s.append(flatMaybeLinked(contribution[ROLE], [CODE, LABEL]).with { it.isEmpty() ? it : it + ': ' })
+        s.append(flatMaybeLinked(contribution[AGENT], [GIVEN_NAME, FAMILY_NAME, LIFE_SPAN, NAME]))
 
-        if (contribution['@type'] == 'PrimaryContribution') {
+        if (contribution[TYPE_KEY] == PRIMARY) {
             s.append('</b>')
         }
 
@@ -101,13 +146,13 @@ class DisplayDoc {
     }
 
     List classificationStrings() {
-        List path = doc.instanceData ? ['instanceOf', 'classification'] : ['classification']
+        List path = doc.instanceData ? [WORK_KEY, CLASSIFICATION] : [CLASSIFICATION]
         List classification = DocumentUtil.getAtPath(getFramed(), path, [])
 
         classification.collect { c ->
             StringBuilder s = new StringBuilder()
-            s.append(flatMaybeLinked(c['inScheme'], ['code', 'version']).with { it.isEmpty() ? it : it + ': ' })
-            s.append(flatMaybeLinked(c, ['code']))
+            s.append(flatMaybeLinked(c[IN_SCHEME], [CODE, VERSION]).with { it.isEmpty() ? it : it + ': ' })
+            s.append(flatMaybeLinked(c, [CODE]))
             return s.toString()
         }
     }
@@ -121,8 +166,8 @@ class DisplayDoc {
         }
         String s = flatten(thing, order, ', ')
 
-        thing['@id']
-                ? """<a href="${thing['@id']}">$s</a>"""
+        thing[ID_KEY]
+                ? """<a href="${thing[ID_KEY]}">$s</a>"""
                 : s
     }
 

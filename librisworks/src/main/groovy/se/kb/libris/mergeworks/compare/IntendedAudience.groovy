@@ -14,6 +14,8 @@ class IntendedAudience extends StuffSet {
                 || !(asList(a) + asList(b)).findResults { it == ADULT }.containsAll([true, false])
     }
 
+    // Sort docs so that those with marc:Adult, marc:General or nothing in intendedAudience come first,
+    // since we prefer marc:Adult rather than e.g. marc:Juvenile clustered with marc:General/empty.
     static void preferredComparisonOrder(Collection<Doc> docs) {
         docs.sort { Doc d ->
             d.intendedAudience().with {

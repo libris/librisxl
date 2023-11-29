@@ -1,6 +1,9 @@
 #!/bin/bash
 set -eu
 
+# Find, match and merge work descriptions that describe the same work.
+# Usage example: ./run.sh qa --num-threads 8
+
 count_lines() {
   if [ -f $1 ]; then
     wc -l $1 | cut -d ' ' -f 1
@@ -47,14 +50,15 @@ ROLES_TO_INSTANCE=$NORMALIZATIONS_DIR/4-roles-to-instance
 echo "Finding new clusters..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -jar $JAR_FILE \
   $ARGS --report $ALL/$WHELKTOOL_REPORT $SCRIPTS_DIR/find-work-clusters.groovy >$ALL/$CLUSTER_TSV 2>/dev/null
+
+# Filter out duplicates
+sort -uo $ALL/$CLUSTER_TSV $ALL/$CLUSTER_TSV
+
 NUM_CLUSTERS=$(count_lines $ALL/$CLUSTER_TSV)
 echo "$NUM_CLUSTERS clusters found"
 if [ $NUM_CLUSTERS == 0 ]; then
   exit 0
 fi
-
-# Filter out duplicates
-sort -uo $ALL/$CLUSTER_TSV $ALL/$CLUSTER_TSV
 
 echo
 echo "Finding title clusters..."

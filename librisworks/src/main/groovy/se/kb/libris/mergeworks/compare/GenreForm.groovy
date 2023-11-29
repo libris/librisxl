@@ -1,29 +1,27 @@
 package se.kb.libris.mergeworks.compare
 
-import datatool.util.DocumentComparator
+import static whelk.JsonLd.ID_KEY
 
-//FIXME
 class GenreForm extends StuffSet {
-    private static final DocumentComparator c = new DocumentComparator()
-
-    // Terms that will be merged (values precede keys)
-    private static def norm = [
-            (['@id': 'https://id.kb.se/marc/NotFictionNotFurtherSpecified']): [
-                    ['@id': 'https://id.kb.se/marc/FictionNotFurtherSpecified'],
-                    ['@id': 'https://id.kb.se/marc/Autobiography'],
-                    ['@id': 'https://id.kb.se/marc/Biography']
+    // When merging, the values in this map are preferred over the keys.
+    // E.g. 'https://id.kb.se/marc/Novel' overwrites 'https://id.kb.se/marc/FictionNotFurtherSpecified'
+    private static def precedenceRules = [
+            ([(ID_KEY): 'https://id.kb.se/marc/NotFictionNotFurtherSpecified']): [
+                    [(ID_KEY): 'https://id.kb.se/marc/FictionNotFurtherSpecified'],
+                    [(ID_KEY): 'https://id.kb.se/marc/Autobiography'],
+                    [(ID_KEY): 'https://id.kb.se/marc/Biography']
             ],
-            (['@id': 'https://id.kb.se/marc/FictionNotFurtherSpecified'])   : [
-                    ['@id': 'https://id.kb.se/marc/Poetry'],
-                    ['@id': 'https://id.kb.se/marc/Novel']
+            ([(ID_KEY): 'https://id.kb.se/marc/FictionNotFurtherSpecified'])   : [
+                    [(ID_KEY): 'https://id.kb.se/marc/Poetry'],
+                    [(ID_KEY): 'https://id.kb.se/marc/Novel']
             ],
     ]
 
     @Override
     boolean isCompatible(Object a, Object b) {
         def lattLast = {
-            it['@id'] == 'https://id.kb.se/term/saogf/L%C3%A4ttl%C3%A4st'
-                    || it['@id'] == 'https://id.kb.se/term/barngf/L%C3%A4ttl%C3%A4sta%20b%C3%B6cker'
+            it[ID_KEY] == 'https://id.kb.se/term/saogf/L%C3%A4ttl%C3%A4st'
+                    || it[ID_KEY] == 'https://id.kb.se/term/barngf/L%C3%A4ttl%C3%A4sta%20b%C3%B6cker'
                     || it['prefLabel'] == 'Lättläst'
         }
         a.any(lattLast) == b.any(lattLast)
@@ -32,15 +30,15 @@ class GenreForm extends StuffSet {
     @Override
     Object merge(Object a, Object b) {
         return mergeCompatibleElements(super.merge(a, b)) { gf1, gf2 ->
-            if (n(gf1, gf2)) {
-                gf2
-            } else if (n(gf2, gf1)) {
+            if (precedes(gf1, gf2)) {
                 gf1
+            } else if (precedes(gf2, gf1)) {
+                gf2
             }
         }
     }
 
-    boolean n(a, b) {
-        norm[a]?.any { it == b || n(it, b) }
+    boolean precedes(a, b) {
+        precedenceRules[b]?.any { it == a || precedes(a, it) }
     }
 }

@@ -1,8 +1,27 @@
+/**
+ * Match and merge works.
+ *
+ * First create clusters of works that are considered equal according to given criteria.
+ * If a work cluster contains only local works (two or more), merge those and create a new linkable work.
+ * If a work cluster contains exactly one linked work and at least one local work, merge the local work(s) into the linked one.
+ * If a work cluster contains two or more linked works, report. There should be no duplicate linked works.
+ *
+ * If multiple work clusters are found, add closeMatch links from each unique work to each resulting linked work.
+ *
+ * See script for details.
+ */
+
 import se.kb.libris.mergeworks.Html
 import se.kb.libris.mergeworks.WorkComparator
 import se.kb.libris.mergeworks.Doc
 
+import static whelk.JsonLd.GRAPH_KEY
+import static whelk.JsonLd.ID_KEY
+
 import static se.kb.libris.mergeworks.Util.workClusters
+import static whelk.JsonLd.THING_KEY
+import static whelk.JsonLd.TYPE_KEY
+import static whelk.JsonLd.WORK_KEY
 
 maybeDuplicates = getReportWriter("maybe-duplicate-linked-works.tsv")
 multiWorkReport = getReportWriter("multi-work-clusters.html")
@@ -34,6 +53,7 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
     List<Tuple2<Doc, Collection<Doc>>> uniqueWorksAndTheirInstances = []
 
     workClusters(docs, c).each { wc ->
+        // Only local works have instance data in the same record
         def (localWorks, linkedWorks) = wc.split { it.instanceData }
         if (linkedWorks.isEmpty()) {
             if (localWorks.size() == 1) {
@@ -64,7 +84,7 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
         }
         // New merged work
         if (!workDoc.existsInStorage && !workDoc.instanceData) {
-            addAdminMetadata(workDoc, instanceDocs.collect { ['@id': it.recordIri()] })
+            addAdminMetadata(workDoc, instanceDocs.collect { [(ID_KEY): it.recordIri()] })
             addCloseMatch(workDoc, linkableWorks)
             saveAndLink(workDoc, instanceDocs, workDoc.existsInStorage)
 //            writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.NEW)
@@ -76,6 +96,7 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
         }
     }
 
+    // Multiple unique works in same title cluster, save report showing how they differ.
     if (uniqueWorksAndTheirInstances.size() > 1) {
         def (workDocs, instanceDocs) = uniqueWorksAndTheirInstances.transpose()
         multiWorkReport.print(Html.hubTable(workDocs, instanceDocs) + Html.HORIZONTAL_RULE)
@@ -101,20 +122,20 @@ void saveAndLink(Doc workDoc, Collection<Doc> instanceDocs = [], boolean existsI
 
     if (!instanceDocs.isEmpty()) {
         selectByIds(instanceDocs.collect { it.shortId() }) {
-            it.graph[1]['instanceOf'] = ['@id': workDoc.thingIri()]
+            it.graph[1][WORK_KEY] = [(ID_KEY): workDoc.thingIri()]
             it.scheduleSave(changedBy: changedBy, generationProcess: generationProcess)
         }
     }
 }
 
 Doc createNewWork(Map workData) {
-    workData['@id'] = "TEMPID#it"
+    workData[ID_KEY] = "TEMPID#it"
     Map data = [
-            "@graph": [
+            (GRAPH_KEY): [
                     [
-                            "@id"       : "TEMPID",
-                            "@type"     : "Record",
-                            "mainEntity": ["@id": "TEMPID#it"],
+                            (ID_KEY)   : "TEMPID",
+                            (TYPE_KEY) : "Record",
+                            (THING_KEY): [(ID_KEY): "TEMPID#it"],
 
                     ],
                     workData
@@ -127,12 +148,12 @@ Doc createNewWork(Map workData) {
 void addAdminMetadata(Doc doc, List<Map> derivedFrom) {
     doc.record()['hasChangeNote'] = [
             [
-                    '@type': 'CreateNote',
+                    (ID_KEY): 'CreateNote',
                     'tool' : ['@id': 'https://id.kb.se/generator/mergeworks']
             ]
     ]
     doc.record()['derivedFrom'] = derivedFrom
-    doc.record()['descriptionLanguage'] = ['@id': 'https://id.kb.se/language/swe']
+    doc.record()['descriptionLanguage'] = [(ID_KEY): 'https://id.kb.se/language/swe']
 }
 
 void writeWorkReport(Collection<Doc> titleCluster, Doc derivedWork, Collection<Doc> derivedFrom, WorkStatus workStatus) {
@@ -175,7 +196,7 @@ boolean addCloseMatch(Doc workDoc, List<Doc> linkableWorks) {
     def linkTo = linkableWorks.findAll { d ->
         d.workIri() != workDoc.thingIri()
                 && d.primaryContributor() == workDoc.primaryContributor()
-    }.collect { ['@id': it.workIri()] }
+    }.collect { [(ID_KEY): it.workIri()] }
 
     def closeMatch = asList(workDoc.workData['closeMatch'])
 

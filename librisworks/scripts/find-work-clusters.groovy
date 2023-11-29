@@ -1,6 +1,20 @@
 /**
+ * Find clusters of records that may contain descriptions of the same work.
+ * In short, similar descriptions are found by, for each bib record, querying Elastic for other records
+ * having the same instance or work title and the same agent(s) in work contribution.
+ * The ids found by the query becomes a cluster.
+ * See script for more details.
+ *
  * (When running, redirect STDERR to avoid annoying prints from whelktool)
  */
+
+import static se.kb.libris.mergeworks.Util.AGENT
+import static se.kb.libris.mergeworks.Util.HAS_TITLE
+import static se.kb.libris.mergeworks.Util.MAIN_TITLE
+import static se.kb.libris.mergeworks.Util.PRIMARY
+import static se.kb.libris.mergeworks.Util.CONTRIBUTION
+import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.TYPE_KEY
 
 PrintWriter failedQueries = getReportWriter("failed-queries")
 PrintWriter tooLargeResult = getReportWriter("too-large-result")
@@ -12,6 +26,7 @@ def process = { bib ->
 
         if (!work) return
 
+        // Get mainTitle from both instance and work (we want to search for both when they differ)
         def titles = [instance, work].grep().collect { title(it) }.grep().unique()
 
         Set ids = []
@@ -27,6 +42,7 @@ def process = { bib ->
         if (ids.size() > 1000) {
             tooLargeResult.println("Results: ${ids.size()} Id: ${bib.doc.shortId} Titles: ${titles}")
         } else if (ids.size() > 1) {
+            // Sort so that duplicate clusters can easily be identified
             println(ids.sort().join('\t'))
         }
     }
@@ -51,6 +67,7 @@ Map<String, List<String>> buildQuery(Map work, String title) {
     insertLinkedAgents(work)
     def card = getWhelk().jsonld.toCard(work, false, true)
 
+    // If there is a primary contributor, include only that in agent in the query
     def author = primaryContributor(card).collect { esSafe(it) }
     if (author) {
         query["or-instanceOf.contribution._str"] = author
@@ -58,6 +75,7 @@ Map<String, List<String>> buildQuery(Map work, String title) {
         return query
     }
 
+    // If no primary contributor, include all agents in the query
     def allContributors = contributors(card).collect { esSafe(it) }
     if (allContributors) {
         query["or-instanceOf.contribution._str"] = allContributors
@@ -69,29 +87,29 @@ Map<String, List<String>> buildQuery(Map work, String title) {
 }
 
 private void insertLinkedAgents(work) {
-    asList(work['contribution']).each {
-        def agent = asList(it.agent).find()
-        if (agent && agent['@id']) {
-            it.agent = loadThing(agent['@id'])
+    asList(work[CONTRIBUTION]).each {
+        def agent = asList(it[AGENT]).find()
+        if (agent && agent[ID_KEY]) {
+            it.agent = loadThing(agent[ID_KEY])
         }
     }
 }
 
 private String title(Map thing) {
-    return getAtPath(thing, ['hasTitle', 0, 'mainTitle'])
+    return getAtPath(thing, [HAS_TITLE, 0, MAIN_TITLE])
 }
 
 private List primaryContributor(work) {
-    contributorStrings(asList(work['contribution']).find { it['@type'] == "PrimaryContribution" })
+    contributorStrings(asList(work[CONTRIBUTION]).find { it[TYPE_KEY] == PRIMARY })
 }
 
 private List contributors(work) {
-    asList(work['contribution']).collect { contributorStrings(it) }.grep().flatten()
+    asList(work[CONTRIBUTION]).collect { contributorStrings(it) }.grep().flatten()
 }
 
 //getAtPath(contribution, ['_str'])?.with { String s -> s.replaceAll(/[^ \p{IsAlphabetic}]/, '') }
 private List contributorStrings(contribution) {
-    List variants = asList(contribution?.agent) + asList(getAtPath(contribution, ['agent', 'hasVariant']))
+    List variants = asList(contribution?[AGENT]) + asList(getAtPath(contribution, [AGENT, 'hasVariant']))
 
     variants.grep().collect { name(it) }.grep()
 }
@@ -108,7 +126,7 @@ private String esSafe(String s) {
 }
 
 private loadIfLink(Map work) {
-    work?['@id'] ? loadThing(work['@id']) : work
+    work?[ID_KEY] ? loadThing(work[ID_KEY]) : work
 }
 
 private Map loadThing(def id) {

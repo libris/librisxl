@@ -1,3 +1,8 @@
+/**
+ * Use various methods for completing and normalizing contributions within a work cluster.
+ * See individual methods for details.
+ */
+
 import groovy.transform.Memoized
 import org.apache.commons.lang3.StringUtils
 
@@ -132,6 +137,7 @@ selectByIds(clusters.flatten()) { bib ->
         modified |= tryLinkAgent(c, id)
         // if there are more roles stated in responsibilityStatement other than the existing ones in this contribution, add those
         modified |= tryAddRolesFromRespStatement(c, contributionsInRespStatement, respStatement, id)
+        // if two local agents match on name and one of them has lifeSpan and the other doesn't, add that lifeSpan to the one missing it.
         modified |= tryAddLifeSpanToLocalAgent(c, id)
     }
 

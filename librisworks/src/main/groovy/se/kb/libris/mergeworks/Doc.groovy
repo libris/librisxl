@@ -1,14 +1,49 @@
 package se.kb.libris.mergeworks
 
 import whelk.Document
-import whelk.JsonLd
 import whelk.Whelk
 import whelk.datatool.DocumentItem
 import whelk.util.DocumentUtil
 
 import static Util.asList
 import static Util.Relator
+import static Util.AGENT
+import static Util.CLASSIFICATION
+import static Util.CODE
+import static Util.CONTENT_TYPE
+import static Util.CONTRIBUTION
+import static Util.EDITION_STATEMENT
+import static Util.ENCODING_LEVEL
+import static Util.EXTENT
+import static Util.GENRE_FORM
+import static Util.HAS_PART
+import static Util.HAS_TITLE
+import static Util.IDENTIFIED_BY
+import static Util.INTENDED_AUDIENCE
+import static Util.IN_SCHEME
+import static Util.LABEL
+import static Util.MAIN_TITLE
+import static Util.PART_NAME
+import static Util.PART_NUMBER
+import static Util.PHYS_NOTE
+import static Util.PRIMARY
+import static Util.PUBLICATION
+import static Util.REPRODUCTION_OF
+import static Util.RESP_STATEMENT
+import static Util.ROLE
+import static Util.SUBTITLE
+import static Util.TITLE
+import static Util.TITLE_REMAINDER
+import static Util.TRANSLATION_OF
+import static whelk.JsonLd.GRAPH_KEY
+import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.TYPE_KEY
+import static whelk.JsonLd.WORK_KEY
 
+
+/**
+ * Wrapper around a whelk.Document for easy access to various entities/properties
+ */
 class Doc {
     public static final String SAOGF_SKÖN = 'https://id.kb.se/term/saogf/Sk%C3%B6nlitteratur'
     public static final List MARC_FICTION = [
@@ -66,9 +101,9 @@ class Doc {
     }
 
     void setData() {
-        if (mainEntity()['instanceOf']) {
+        if (mainEntity()[WORK_KEY]) {
             instanceData = mainEntity()
-            workData = asList(instanceData['instanceOf']).find()
+            workData = asList(instanceData[WORK_KEY]).find()
         } else {
             workData = mainEntity()
         }
@@ -83,11 +118,11 @@ class Doc {
     }
 
     Map record() {
-        document.data['@graph'][0]
+        document.data[GRAPH_KEY][0]
     }
 
     Map mainEntity() {
-        document.data['@graph'][1]
+        document.data[GRAPH_KEY][1]
     }
 
     String shortId() {
@@ -103,15 +138,15 @@ class Doc {
     }
 
     String encodingLevel() {
-        return record()['encodingLevel'] ?: ''
+        return record()[ENCODING_LEVEL] ?: ''
     }
 
     String workIri() {
-        workData['@id']
+        workData[ID_KEY]
     }
 
     List<Map> workTitle() {
-        asList(workData['hasTitle'])
+        asList(workData[HAS_TITLE])
     }
 
     List<String> flatWorkTitle() {
@@ -123,7 +158,7 @@ class Doc {
     }
 
     List<Map> instanceTitle() {
-        asList(instanceData?.hasTitle)
+        asList(instanceData?[HAS_TITLE])
     }
 
     List<String> flatInstanceTitle() {
@@ -135,67 +170,67 @@ class Doc {
     }
 
     String workType() {
-        workData['@type']
+        workData[TYPE_KEY]
     }
 
     String instanceType() {
-        instanceData?.'@type'
+        instanceData?[TYPE_KEY]
     }
 
     List<Map> translationOf() {
-        asList(workData['translationOf'])
+        asList(workData[TRANSLATION_OF])
     }
 
     List<Map> contribution() {
-        asList(workData['contribution'])
+        asList(workData[CONTRIBUTION])
     }
 
     List<Map> classification() {
-        asList(workData['classification'])
+        asList(workData[CLASSIFICATION])
     }
 
     List<Map> genreForm() {
-        asList(workData['genreForm'])
+        asList(workData[GENRE_FORM])
     }
 
     List<Map> intendedAudience() {
-        asList(workData['intendedAudience'])
+        asList(workData[INTENDED_AUDIENCE])
     }
 
     List<Map> publication() {
-        asList(instanceData?.publication)
+        asList(instanceData?[PUBLICATION])
     }
 
     List<Map> identifiedBy() {
-        asList(instanceData?.identifiedBy)
+        asList(instanceData?[IDENTIFIED_BY])
     }
 
     List<Map> extent() {
-        asList(instanceData?.extent)
+        asList(instanceData?[EXTENT])
     }
 
     List<Map> reproductionOf() {
-        asList(instanceData?.reproductionOf)
+        asList(instanceData?[REPRODUCTION_OF])
     }
 
     Map primaryContributor() {
-        contribution().findResult { it['@type'] == 'PrimaryContribution' ? asList(it.agent).find() : null }
+        contribution().findResult { it[TYPE_KEY] == PRIMARY ? asList(it[AGENT]).find() : null }
     }
 
     String editionStatement() {
-        instanceData?.editionStatement
+        instanceData?[EDITION_STATEMENT]
     }
 
     String responsibilityStatement() {
-        instanceData?.responsibilityStatement
+        instanceData?[RESP_STATEMENT]
     }
 
     String physicalDetailsNote() {
-        instanceData?.physicalDetailsNote
+        instanceData?[PHYS_NOTE]
     }
 
     int numPages() {
-        String extent = DocumentUtil.getAtPath(extent(), [0, 'label', 0]) ?: DocumentUtil.getAtPath(extent(), [0, 'label'], '')
+        String extent = DocumentUtil.getAtPath(extent(), [0, LABEL, 0]) ?: DocumentUtil.getAtPath(extent(), [0, LABEL], '')
         return numPages(extent)
     }
 
@@ -219,40 +254,41 @@ class Doc {
     }
 
     boolean isManuscript() {
-        instanceType() == 'Manuscript' || [['@id': 'https://id.kb.se/term/saogf/Manuskript'], ['@id': 'https://id.kb.se/term/saogf/Handskrifter']].intersect(genreForm())
+        instanceType() == 'Manuscript' || [[(ID_KEY): 'https://id.kb.se/term/saogf/Manuskript'], [(ID_KEY): 'https://id.kb.se/term/saogf/Handskrifter']].intersect(genreForm())
     }
 
     boolean isInSb17Bibliography() {
-        asList(record()['bibliography']).contains(['@id': 'https://libris.kb.se/library/SB17'])
+        asList(record()['bibliography']).contains([(ID_KEY): 'https://libris.kb.se/library/SB17'])
     }
 
     boolean isMaybeAggregate() {
-        hasPart()
-                || classification().any { it.inScheme?.code =~ /[Kk]ssb/ && it.code?.contains('(s)') }
-                || !contribution().any { it['@type'] == 'PrimaryContribution' && it['agent'] }
+        hasParts()
+                // (s) means "samlingsverk"
+                || classification().any { it[IN_SCHEME]?[CODE] =~ /[Kk]ssb/ && it[CODE]?.contains('(s)') }
+                || !contribution().any { it[TYPE_KEY] == PRIMARY && it[AGENT] }
                 || hasRelationshipWithContribution()
     }
 
     boolean intendedForMarcPreAdolescent() {
-        intendedAudience().contains(['@id': 'https://id.kb.se/marc/PreAdolescent'])
+        intendedAudience().contains([(ID_KEY): 'https://id.kb.se/marc/PreAdolescent'])
     }
 
-    boolean hasPart() {
-        workData['hasPart'] || instanceData['hasTitle'].findAll { it['@type'] == 'Title' }.any {
-            it.hasPart?.size() > 1
-                    || it.hasPart?.any { p -> asList(p.partName).size() > 1
-                    || asList(p.partNumber).size() > 1 }
+    boolean hasParts() {
+        workData[HAS_PART] || instanceData[HAS_TITLE].findAll { it[TYPE_KEY] == TITLE }.any {
+            it[HAS_PART]?.size() > 1
+                    || it[HAS_PART]?.any { p -> asList(p[PART_NAME]).size() > 1
+                    || asList(p[PART_NUMBER]).size() > 1 }
                     // space+semicolon indicates an aggregate if it is not preceded by a slash
                     // aggregate: Måsen ; Onkel Vanja ; Körsbärsträdgården
                     // not aggregate: En visa för de döda / Patrick Dunne ; översättning: Hans Lindeberg
-                    || [it.mainTitle, it.titleRemainder, it.subtitle].findAll().toString() =~ /(?<!\/.+)(\s+;)/
+                    || [it[MAIN_TITLE], it[TITLE_REMAINDER], it[SUBTITLE]].findAll().toString() =~ /(?<!\/.+)(\s+;)/
         }
     }
 
     boolean hasRelationshipWithContribution() {
         asList(workData['relationship']).any { r ->
             asList(r['entity']).any { e ->
-                e.containsKey('contribution')
+                e.containsKey(CONTRIBUTION)
             }
         }
     }
@@ -262,19 +298,19 @@ class Doc {
     }
 
     boolean isMarcFiction() {
-        genreForm().any { it['@id'] in MARC_FICTION }
+        genreForm().any { it[ID_KEY] in MARC_FICTION }
     }
 
     boolean isMarcNotFiction() {
-        genreForm().any { it['@id'] in MARC_NOT_FICTION }
+        genreForm().any { it[ID_KEY] in MARC_NOT_FICTION }
     }
 
     boolean isSaogfFiction() {
-        genreForm().any { it['@id'] == SAOGF_SKÖN || whelk.relations.isImpliedBy(SAOGF_SKÖN, it['@id'] ?: '') }
+        genreForm().any { whelk.relations.isImpliedBy(SAOGF_SKÖN, it[ID_KEY] ?: '') }
     }
 
     boolean isSabFiction() {
-        classification().any { it.inScheme?.code =~ /[Kk]ssb/ && it.code =~ /^(H|h|uH|ufH|ugH)/ }
+        classification().any { it[IN_SCHEME]?[CODE] =~ /[Kk]ssb/ && it[CODE] =~ /^(H|h|uH|ufH|ugH)/ }
     }
 
     boolean isNotFiction() {
@@ -283,7 +319,7 @@ class Doc {
     }
 
     boolean isText() {
-        workData['@type'] == 'Text'
+        workData[TYPE_KEY] == 'Text'
     }
 
     boolean isAnonymousTranslation() {
@@ -292,7 +328,7 @@ class Doc {
 
     boolean hasAnyRole(List<Relator> relators) {
         contribution().any {
-            asList(it['role']).intersect(relators.collect { [(JsonLd.ID_KEY): it.iri] })
+            asList(it[ROLE]).intersect(relators.collect { [(ID_KEY): it.iri] })
         }
     }
 
@@ -301,11 +337,11 @@ class Doc {
     }
 
     boolean isSabDrama() {
-        classification().any { it.code?.contains('Hc.02') || it.code?.contains('Hce.02') }
+        classification().any { it[CODE]?.contains('Hc.02') || it[CODE]?.contains('Hce.02') }
     }
 
     boolean isGfDrama() {
-        asList(genreForm()).any { it['@id'] in DRAMA_GF }
+        asList(genreForm()).any { it[ID_KEY] in DRAMA_GF }
     }
 
     boolean isNotRegularText() {
@@ -320,24 +356,23 @@ class Doc {
                 'https://id.kb.se/term/barngf/Bliss%20%28symbolspr%C3%A5k%29'
         ] as Set
 
-        def saogfTactile = 'https://id.kb.se/term/saogf/Taktila%20verk'
-
-        asList(workData['contentType']).contains(['@id': 'https://id.kb.se/term/rda/TactileText'])
-                || asList(instanceData?.carrierType).any { it['@id'] in ['https://id.kb.se/marc/Braille', 'https://id.kb.se/marc/TacMaterialType-b'] }
-                || genreForm().any {it['@id'] in barnGfs || it['@id'] == saogfTactile ||  whelk.relations.isImpliedBy(saogfTactile, it['@id']) }
+        asList(workData[CONTENT_TYPE]).contains([(ID_KEY): 'https://id.kb.se/term/rda/TactileText'])
+                || asList(instanceData?.carrierType).any { it[ID_KEY] in ['https://id.kb.se/marc/Braille', 'https://id.kb.se/marc/TacMaterialType-b'] }
+                || genreForm().any {it[ID_KEY] in barnGfs
+                || whelk.relations.isImpliedBy('https://id.kb.se/term/saogf/Taktila%20verk', it[ID_KEY]) }
     }
 
     boolean isThesis() {
-        genreForm().any { it == ['@id': 'https://id.kb.se/marc/Thesis'] }
+        genreForm().any { it == [(ID_KEY): 'https://id.kb.se/marc/Thesis'] }
     }
 
     boolean hasDistinguishingEdition() {
-        (instanceData?.editionStatement ?: '').toString().toLowerCase().contains("förk")
+        (instanceData?[EDITION_STATEMENT] ?: '').toString().toLowerCase().contains("förk")
     }
 
     void addComparisonProps() {
         if (hasDistinguishingEdition()) {
-            workData['_editionStatement'] = instanceData['editionStatement']
+            workData['_editionStatement'] = instanceData[EDITION_STATEMENT]
         }
         workData['_numPages'] = numPages()
     }
@@ -349,6 +384,6 @@ class Doc {
 
     void sortContribution() {
         // PrimaryContribution first
-        contribution()?.sort {it['@type'] != 'PrimaryContribution' }
+        contribution()?.sort { it[TYPE_KEY] != PRIMARY }
     }
 }

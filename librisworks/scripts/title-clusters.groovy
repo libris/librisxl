@@ -1,3 +1,7 @@
+/**
+ * Partition each cluster into smaller clusters based on strict title matching.
+ */
+
 import se.kb.libris.mergeworks.Doc
 
 import static se.kb.libris.mergeworks.Util.partition
@@ -15,6 +19,7 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) {cluster ->
 Collection<Collection<Doc>> titleClusters(Collection<Doc> docs) {
     return partitionByTitle(docs)
             .findAll { !it.any { doc -> doc.hasGenericTitle() } }
+            // Replace instances sharing the same linked work with only the linked work
             .collect { loadUniqueLinkedWorks(it) + it.findAll {d -> !d.workIri() } }
             .findAll { it.size() > 1 }
             .sort { a, b -> a.first().view.instanceDisplayTitle() <=> b.first().view.instanceDisplayTitle() }
