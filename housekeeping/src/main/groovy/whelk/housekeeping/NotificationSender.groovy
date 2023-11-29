@@ -60,7 +60,7 @@ class NotificationSender extends HouseKeeper {
         connection = whelk.getStorage().getOuterConnection()
         connection.setAutoCommit(false)
         try {
-            String sql = "SELECT MAX(created) as lastChange, data#>>'{@graph,1,concerning,@id}' as instanceUri, ARRAY_AGG(data::text) as data FROM lddb WHERE data#>>'{@graph,1,@type}' = 'ChangeObservation' AND created > ? GROUP BY data#>>'{@graph,1,concerning,@id}';"
+            String sql = "SELECT MAX(created) as lastChange, data#>>'{@graph,1,concerning,@id}' as concerningUri, ARRAY_AGG(data::text) as data FROM lddb WHERE data#>>'{@graph,1,@type}' = 'ChangeObservation' AND created > ? GROUP BY data#>>'{@graph,1,concerning,@id}';"
             connection.setAutoCommit(false)
             statement = connection.prepareStatement(sql)
             statement.setTimestamp(1, from)
@@ -69,15 +69,15 @@ class NotificationSender extends HouseKeeper {
             resultSet = statement.executeQuery()
 
             while (resultSet.next()) {
-                String instanceUri = resultSet.getString("instanceUri")
+                String concerningUri = resultSet.getString("concerningUri")
                 Array changeObservationsArray = resultSet.getArray("data")
                 // Groovy..
-                List changeObservationsForInstance = []
+                List changeObservationsForConcerned = []
                 for (Object o : changeObservationsArray.getArray()) {
-                    changeObservationsForInstance.add(o)
+                    changeObservationsForConcerned.add(o)
                 }
 
-                sendFor(instanceUri, heldByToUserSettings, changeObservationsForInstance)
+                sendFor(concerningUri, heldByToUserSettings, changeObservationsForConcerned)
 
                 Instant lastChangeObservationForInstance = resultSet.getTimestamp("lastChange").toInstant()
                 if (lastChangeObservationForInstance.isAfter(notifiedChangesUpTo))
@@ -97,8 +97,46 @@ class NotificationSender extends HouseKeeper {
 
     }
 
-    private void sendFor(String instanceUri, Map<String, List<Map>> heldByToUserSettings, List changeObservationsForInstance) {
-        String instanceId = whelk.getStorage().getSystemIdByIri(instanceUri)
+    private void sendFor(String concerningUri, Map<String, List<Map>> heldByToUserSettings, List changeObservationsForConcerned) {
+        String concerningSystemId = whelk.getStorage().getSystemIdByIri(concerningUri)
+        String type = whelk.getStorage().getMainEntityTypeBySystemID(concerningSystemId)
+
+        if (whelk.getJsonld().isSubClassOf(type, "Instance"))
+            sendForInstance(concerningSystemId, heldByToUserSettings, changeObservationsForConcerned)
+        else if (whelk.getJsonld().isSubClassOf(type, "Agent"))
+            sendForAgent(concerningSystemId, heldByToUserSettings, changeObservationsForConcerned)
+    }
+
+    private void sendForAgent(String concerningId, Map<String, List<Map>> heldByToUserSettings, List changeObservationsForConcerned) {
+        List<String> concernedLibraries = whelk.getStorage().followLibrariesConcernedWith(concerningId)
+        String subject = NotificationUtils.emailHeader + ' ' + NotificationUtils.recipientCollections(concernedLibraries)
+
+        List<Map> changeObservationMaps = []
+        for (String observationDataString : changeObservationsForConcerned) {
+            Map changeObservationMap = mapper.readValue( (String) observationDataString, Map )
+            if (changeObservationMap != null)
+                changeObservationMaps.add(changeObservationMap)
+        }
+
+        for (String library : concernedLibraries) {
+            List<Map> users = (List<Map>) heldByToUserSettings[library]
+            if (users) {
+                for (Map user : users) {
+                    if ( user?.notificationCategories?.find { it["@id"] == "https://id.kb.se/changecategory/agent" } != null ) {
+
+                        if (!changeObservationMaps.isEmpty() && user.notificationEmail && user.notificationEmail instanceof String) {
+                            String body = generateEmailBody(concerningId, changeObservationMaps as Set)
+                            NotificationUtils.sendEmail((String) user.notificationEmail, subject, body)
+                        }
+
+                    }
+                }
+            }
+        }
+
+    }
+
+    private void sendForInstance(String instanceId, Map<String, List<Map>> heldByToUserSettings, List changeObservationsForInstance) {
         List<String> libraries = whelk.getStorage().getAllLibrariesHolding(instanceId)
         String subject = NotificationUtils.emailHeader + ' ' + NotificationUtils.recipientCollections(libraries)
 

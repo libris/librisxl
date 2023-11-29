@@ -78,6 +78,20 @@ class NotificationRules {
         return false
     }
 
+    static Tuple agentRecordChanged(Document recordBeforeChange, Document recordAfterChange) {
+        Object agentBefore = Document._get(["mainEntity"], recordBeforeChange.data)
+        Object agentAfter = Document._get(["mainEntity"], recordAfterChange.data)
+
+        if (personChanged(agentBefore, agentAfter) ||
+                meetingChanged(agentBefore, agentAfter) ||
+                organizationChanged(agentBefore, agentAfter) ||
+                familyChanged(agentBefore, agentAfter) ||
+                jurisdictionChanged(agentBefore, agentAfter)) {
+            return new Tuple(true, agentBefore, agentAfter)
+        }
+        return new Tuple(false, null, null)
+    }
+
     static Tuple primaryContributionChanged(Document instanceBeforeChange, Document instanceAfterChange) {
         Object contributionsAfter = Document._get(["mainEntity", "instanceOf", "contribution"], instanceAfterChange.data)
         Object contributionsBefore = Document._get(["mainEntity", "instanceOf", "contribution"], instanceBeforeChange.data)

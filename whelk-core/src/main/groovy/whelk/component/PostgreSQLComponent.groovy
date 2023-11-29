@@ -243,6 +243,20 @@ class PostgreSQLComponent {
             ) SELECT * FROM deps
             """.stripIndent()
 
+    private static final String FOLLOW_ALL_CONCERNED_LIBRARIES = """
+            WITH RECURSIVE deps(i) AS (  
+                    VALUES (?) 
+                UNION  
+                    SELECT d.id
+                    FROM lddb__dependencies d
+                    INNER JOIN deps deps1 ON d.dependsonid = i
+            )
+            SELECT distinct(lddb.data#>>'{@graph,1,heldBy,@id}') as library FROM
+            deps
+            LEFT JOIN
+            lddb ON deps.i = lddb.id AND lddb.collection='hold'
+            """.stripIndent()
+
     private static final String GET_INCOMING_LINK_COUNT =
             "SELECT COUNT(id) FROM lddb__dependencies WHERE dependsOnId = ?"
 
@@ -2146,6 +2160,33 @@ class PostgreSQLComponent {
                     dependencies.add( new Tuple2<String, String>(rs.getString(1), rs.getString(2)) )
             }
             dependencies.sort { it.v1 }
+            return dependencies
+        }
+        finally {
+            close(rs, preparedStatement)
+        }
+    }
+
+    List<String> followLibrariesConcernedWith(String id) {
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            followLibrariesConcernedWith(id, connection)
+        }
+    }
+
+    List<String> followLibrariesConcernedWith(String id, Connection connection) {
+        PreparedStatement preparedStatement = null
+        ResultSet rs = null
+        try {
+            preparedStatement = connection.prepareStatement(FOLLOW_ALL_CONCERNED_LIBRARIES)
+            preparedStatement.setString(1, id)
+            rs = preparedStatement.executeQuery()
+            List<String> dependencies = []
+            while (rs.next()) {
+                String library = rs.getString(1)
+                if (library != null && library != "")
+                    dependencies.add(library)
+            }
             return dependencies
         }
         finally {
