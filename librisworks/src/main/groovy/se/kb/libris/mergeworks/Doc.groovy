@@ -306,7 +306,7 @@ class Doc {
     }
 
     boolean isSaogfFiction() {
-        genreForm().any { whelk.relations.isImpliedBy(SAOGF_SKÖN, it[ID_KEY] ?: '') }
+        genreForm().any { it[ID_KEY] == SAOGF_SKÖN || whelk.relations.isImpliedBy(SAOGF_SKÖN, it[ID_KEY] ?: '') }
     }
 
     boolean isSabFiction() {
@@ -356,10 +356,11 @@ class Doc {
                 'https://id.kb.se/term/barngf/Bliss%20%28symbolspr%C3%A5k%29'
         ] as Set
 
+        def saoGfTactile = 'https://id.kb.se/term/saogf/Taktila%20verk'
+
         asList(workData[CONTENT_TYPE]).contains([(ID_KEY): 'https://id.kb.se/term/rda/TactileText'])
                 || asList(instanceData?.carrierType).any { it[ID_KEY] in ['https://id.kb.se/marc/Braille', 'https://id.kb.se/marc/TacMaterialType-b'] }
-                || genreForm().any {it[ID_KEY] in barnGfs
-                || whelk.relations.isImpliedBy('https://id.kb.se/term/saogf/Taktila%20verk', it[ID_KEY]) }
+                || genreForm().any {it[ID_KEY] in barnGfs || it[ID_KEY] == saoGfTactile ||  whelk.relations.isImpliedBy(saoGfTactile, it[ID_KEY]) }
     }
 
     boolean isThesis() {
