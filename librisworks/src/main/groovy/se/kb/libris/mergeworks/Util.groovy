@@ -6,9 +6,53 @@ import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
 import static se.kb.libris.mergeworks.compare.IntendedAudience.preferredComparisonOrder
+import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.TYPE_KEY
 
 class Util {
-    static def titleComponents = ['mainTitle', 'titleRemainder', 'subtitle', 'hasPart', 'partNumber', 'partName']
+    static final String CLASSIFICATION = 'classification'
+    static final String IN_SCHEME = 'inScheme'
+    static final String VERSION = 'version'
+
+    static final String PRIMARY = 'PrimaryContribution'
+    static final String CONTRIBUTION = 'contribution'
+    static final String AGENT = 'agent'
+    static final String GIVEN_NAME = 'givenName'
+    static final String FAMILY_NAME = 'familyName'
+    static final String NAME = 'name'
+    static final String ROLE = 'role'
+    static final String LIFE_SPAN = 'lifeSpan'
+
+    static final String TITLE = 'Title'
+    static final String HAS_TITLE = 'hasTitle'
+    static final String MAIN_TITLE = 'mainTitle'
+    static final String SUBTITLE = 'subtitle'
+    static final String TITLE_REMAINDER = 'titleRemainder'
+    static final String PART_NUMBER = 'partNumber'
+    static final String PART_NAME = 'partName'
+    static final String FLAT_TITLE = 'flatTitle'
+    static final String SOURCE = 'source'
+
+    static final String CODE = 'code'
+    static final String LABEL = 'label'
+    static final String HAS_PART = 'hasPart'
+
+    static final String TRANSLATION_OF = 'translationOf'
+    static final String GENRE_FORM = 'genreForm'
+    static final String INTENDED_AUDIENCE = 'intendedAudience'
+    static final String CONTENT_TYPE = 'contentType'
+
+    static final String PUBLICATION = 'publication'
+    static final String EXTENT = 'extent'
+    static final String REPRODUCTION_OF = 'reproductionOf'
+    static final String IDENTIFIED_BY = 'identifiedBy'
+    static final String EDITION_STATEMENT = 'editionStatement'
+    static final String RESP_STATEMENT = 'responsibilityStatement'
+    static final String PHYS_NOTE = 'physicalDetailsNote'
+
+    static final String ENCODING_LEVEL = 'encodingLevel'
+
+    static def titleComponents = [MAIN_TITLE, TITLE_REMAINDER, SUBTITLE, HAS_PART, PART_NUMBER, PART_NAME]
 
     static enum Relator {
         TRANSLATOR('https://id.kb.se/relator/translator'),
@@ -79,15 +123,15 @@ class Util {
     }
 
     static boolean hasGenericTitle(List hasTitle) {
-        hasTitle.any { it['mainTitle'] && normalize((String) it['mainTitle']) in GENERIC_TITLES }
+        hasTitle.any { it[MAIN_TITLE] && normalize((String) it[MAIN_TITLE]) in GENERIC_TITLES }
     }
 
     static List dropGenericSubTitles(List hasTitle) {
         hasTitle.collect {
             def copy = new TreeMap(it)
-            if (copy['subtitle'] || copy['titleRemainder']) {
+            if (copy[SUBTITLE] || copy[TITLE_REMAINDER]) {
                 DocumentUtil.traverse(copy) { value, path ->
-                    if (('subtitle' in path || 'titleRemainder' in path) && value instanceof String) {
+                    if ((SUBTITLE in path || TITLE_REMAINDER in path) && value instanceof String) {
                         if (genericSubtitle(value)) {
                             new DocumentUtil.Remove()
                         } else {
@@ -109,9 +153,9 @@ class Util {
     static List flatTitles(List hasTitle) {
         dropGenericSubTitles(hasTitle).collect {
             def title = new TreeMap<>()
-            title['flatTitle'] = normalize(DisplayDoc.flatten(it, titleComponents))
-            if (it['@type']) {
-                title['@type'] = it['@type']
+            title[FLAT_TITLE] = normalize(DisplayDoc.flatten(it, titleComponents))
+            if (it[TYPE_KEY]) {
+                title[TYPE_KEY] = it[TYPE_KEY]
             }
 
             title
@@ -133,32 +177,7 @@ class Util {
     static List<String> getFlatTitle(List hasTitle) {
         flatTitles(hasTitle)
                 .grep(isTitle)
-                .collect { it['flatTitle'] }
-    }
-
-    static String chipString(def thing, Whelk whelk) {
-        if (thing instanceof Integer) {
-            return thing
-        }
-
-        def chips = whelk.jsonld.toChip(thing)
-        if (chips.size() < 2) {
-            chips = thing
-        }
-        if (chips instanceof List) {
-            return chips.collect { valuesString(it) }.sort().join('<br>')
-        }
-        return valuesString(chips)
-    }
-
-    private static String valuesString(def thing) {
-        if (thing instanceof List) {
-            return thing.collect { valuesString(it) }.join(' • ')
-        }
-        if (thing instanceof Map) {
-            return thing.findAll { k, v -> k != '@type' }.values().collect { valuesString(it) }.join(' • ')
-        }
-        return thing.toString()
+                .collect { it[FLAT_TITLE] }
     }
 
     // (docs on some of these levels are normally filtered out before we reach here)
@@ -177,19 +196,20 @@ class Util {
     static void appendTitlePartsToMainTitle(Map title, String partNumber, String partName = null) {
         def part = [partNumber, partName].grep().join(', ')
         if (part) {
-            title['mainTitle'] += "${title['mainTitle'][-1] == '.' ? '' : '.'} $part"
+            title[MAIN_TITLE] += "${title[MAIN_TITLE][-1] == '.' ? '' : '.'} $part"
         }
     }
 
     static String findTitlePart(List<Map> title, String prop) {
         // partName/partNumber is usually found in hasPart but not always
-        def partNumber = title.findResult { Map t -> t[prop] ?: t['hasPart'].findResult { it[prop] } }
-        return asList(partNumber).find()
+        def titlePart = title.findResult { Map t -> t[prop] ?: t[HAS_PART].findResult { it[prop] } }
+        return asList(titlePart).find()
     }
 
     // Return the most common title for the best encodingLevel
     static def bestTitle(Collection<Doc> docs) {
-        def linkedWorkTitle = docs.findResult { it.workIri() ? it.workData['hasTitle'] : null }
+        // Always keep title on existing linked work as is
+        def linkedWorkTitle = docs.findResult { it.workIri() ? it.workData[HAS_TITLE] : null }
         if (linkedWorkTitle) {
             return linkedWorkTitle
         }
@@ -197,12 +217,14 @@ class Util {
         def bestInstanceTitle = mostCommonHighestEncodingLevel(docs, this.&mostCommonInstanceTitle)
         def bestWorkTitle = mostCommonHighestEncodingLevel(docs, this.&mostCommonWorkTitle)
 
-        def partNumber = findTitlePart(bestInstanceTitle, 'partNumber')
-        def partName = findTitlePart(bestInstanceTitle, 'partName')
+        def partNumber = findTitlePart(bestInstanceTitle, PART_NUMBER)
+        def partName = findTitlePart(bestInstanceTitle, PART_NAME)
 
-        def workTitleShape = { it.subMap(['@type', 'mainTitle', 'subtitle', 'titleRemainder', 'source', 'marc:nonfilingChars']) }
+        def workTitleShape = { it.subMap([TYPE_KEY, MAIN_TITLE, SUBTITLE, TITLE_REMAINDER, SOURCE, 'marc:nonfilingChars']) }
 
+        // Prefer existing work title over instance titles
         if (bestWorkTitle) {
+            // Include part number in work title if present in instance titles.
             return bestWorkTitle.each { appendTitlePartsToMainTitle(it, partNumber) }
                     .collect(workTitleShape)
         }
@@ -236,7 +258,7 @@ class Util {
 
     static def mostCommonOriginalTitle(Collection<Doc> docs) {
         return mostCommonWorkTitle(docs) { Doc d ->
-            d.translationOf().findResult { it['hasTitle'] }?.findAll(isTitle)
+            d.translationOf().findResult { it[HAS_TITLE] }?.findAll(isTitle)
         }
     }
 
@@ -254,7 +276,7 @@ class Util {
 
     static def mostCommonInstanceTitle(Collection<Doc> docs) {
         def addSource = { t, d ->
-            return t.collect { it.plus(['source': [d.instanceData.subMap('@id')]]) }
+            return t.collect { it.plus([(SOURCE): [d.instanceData.subMap(ID_KEY)]]) }
         }
 
         def instanceTitles = docs.collect { it.instanceTitle().findAll(isTitle) }
@@ -263,6 +285,7 @@ class Util {
         if (instanceTitles.grep()) {
             def instanceTitleToDoc = [instanceTitles, docs].transpose().collectEntries()
             def best = mostCommon(instanceTitles.grep())
+            // Source is picked arbitrary among the instances having the most common title
             return addSource(best, instanceTitleToDoc[best])
         }
 
@@ -277,14 +300,15 @@ class Util {
                 .first()
     }
 
-    static def isTitle = { it.'@type' == 'Title' }
+    static def isTitle = { it[TYPE_KEY] == TITLE }
 
     static String name(Map agent) {
-        (agent.givenName && agent.familyName)
-                ? normalize("${agent.givenName} ${agent.familyName}")
-                : agent.name ? normalize("${agent.name}") : null
+        (agent[GIVEN_NAME] && agent[FAMILY_NAME])
+                ? normalize("${agent[GIVEN_NAME]} ${agent[FAMILY_NAME]}")
+                : agent[NAME] ? normalize("${agent[NAME]}") : null
     }
 
+    // Cluster records that seem to describe the same work
     static Collection<Collection<Doc>> workClusters(Collection<Doc> docs, WorkComparator c) {
         docs.each {
             if (it.instanceData) {

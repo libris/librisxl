@@ -1,3 +1,12 @@
+/**
+ * Move contribution to instance if the role's domain is (or is subclass of) Embodiment.
+ * Also move illustrator to instance if none of the following criteria is met:
+ *  - The illustrator is the primary contributor (PrimaryContribution)
+ *  - Classification indicates a picture book or comics
+ *  - Genre/form indicates a picture book or comics
+ * See isComics() and isPictureBook() below for details.
+ */
+
 import whelk.Whelk
 
 import java.util.concurrent.ConcurrentHashMap
