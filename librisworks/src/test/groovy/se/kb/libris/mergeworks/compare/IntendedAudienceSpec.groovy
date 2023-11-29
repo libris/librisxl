@@ -11,6 +11,15 @@ class IntendedAudienceSpec extends Specification {
     private static def juvenile = ['@id': 'https://id.kb.se/marc/Juvenile']
     private static def blank = ['label': 'x']
 
+    static def whelk = null
+    static {
+        try {
+            whelk = Whelk.createLoadedSearchWhelk()
+        } catch (Exception e) {
+            System.err.println("Unable to instantiate whelk: $e")
+        }
+    }
+
     def "is compatible"() {
         expect:
         new IntendedAudience().isCompatible(a, b) == result
@@ -31,7 +40,7 @@ class IntendedAudienceSpec extends Specification {
 
     def "preferred comparison order"() {
         given:
-        Whelk whelk = Whelk.createLoadedSearchWhelk()
+//        Whelk whelk = Whelk.createLoadedSearchWhelk()
         def intendedAudience = [[juvenile], [adult], [juvenile], [], [adult], [general]]
         List<Doc> docs = intendedAudience.collect {
             def data = ['@graph': [[], ['instanceOf': ['intendedAudience': it]]]]
