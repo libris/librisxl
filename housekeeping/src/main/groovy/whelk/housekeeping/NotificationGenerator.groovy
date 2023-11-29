@@ -126,7 +126,7 @@ class NotificationGenerator extends HouseKeeper {
                     }
                 } else {
                     if (whelk.getJsonld().isSubClassOf(changedMainEntityType, "Agent")) {
-                        log.info("Changes to " + id + " would result in too many ChangeObservations, making an agent-ChangeObservation instead.")
+                        log.info("Changes to " + id + " would result in too many Instance-ChangeObservations, making an Agent-ChangeObservation instead.")
                         Document observation = generateObservationForChangedAgent(id, changeNotes, from.toInstant(), until.toInstant())
                         if (!whelk.createDocument(observation, "NotificationGenerator", "SEK", "none", false)) {
                             log.error("Failed to create ChangeObservation:\n${observation.getDataAsString()}")

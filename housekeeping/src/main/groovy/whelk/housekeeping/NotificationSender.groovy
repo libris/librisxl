@@ -118,15 +118,19 @@ class NotificationSender extends HouseKeeper {
                 changeObservationMaps.add(changeObservationMap)
         }
 
+        Set alreadySentTo = [] as Set
+
         for (String library : concernedLibraries) {
             List<Map> users = (List<Map>) heldByToUserSettings[library]
             if (users) {
                 for (Map user : users) {
                     if ( user?.notificationCategories?.find { it["@id"] == "https://id.kb.se/changecategory/agent" } != null ) {
 
-                        if (!changeObservationMaps.isEmpty() && user.notificationEmail && user.notificationEmail instanceof String) {
+                        if (!changeObservationMaps.isEmpty() && user.notificationEmail &&
+                                user.notificationEmail instanceof String && !alreadySentTo.contains(user.notificationEmail)) {
                             String body = generateEmailBody(concerningId, changeObservationMaps as Set)
                             NotificationUtils.sendEmail((String) user.notificationEmail, subject, body)
+                            alreadySentTo.add(user.notificationEmail)
                         }
 
                     }
