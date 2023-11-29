@@ -2,7 +2,7 @@
  * Find clusters of records that may contain descriptions of the same work.
  * In short, similar descriptions are found by, for each bib record, querying Elastic for other records
  * having the same instance or work title and the same agent(s) in work contribution.
- * The ids found by the query becomes a cluster.
+ * The ids found by the query become a cluster.
  * See script for more details.
  *
  * (When running, redirect STDERR to avoid annoying prints from whelktool)
