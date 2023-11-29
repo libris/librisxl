@@ -27,6 +27,7 @@ WHELKTOOL_REPORT=whelktool-report
 CLUSTER_TSV=clusters.tsv
 
 SCRIPTS_DIR=scripts
+SVSK_DIR=$SCRIPTS_DIR/svsk
 REPORT_DIR=reports/merge-works/$ENV-$(date +%Y%m%d)
 
 CLUSTERS_DIR=$REPORT_DIR/clusters
@@ -84,7 +85,7 @@ fi
 echo
 echo "Filtering on Swedish fiction..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$MERGED/$CLUSTER_TSV -jar $JAR_FILE \
-  $ARGS --report $SWEDISH_FICTION/$WHELKTOOL_REPORT $SCRIPTS_DIR/swedish-fiction.groovy >$SWEDISH_FICTION/$CLUSTER_TSV 2>/dev/null
+  $ARGS --report $SWEDISH_FICTION/$WHELKTOOL_REPORT $SVSK_DIR/swedish-fiction.groovy >$SWEDISH_FICTION/$CLUSTER_TSV 2>/dev/null
 NUM_CLUSTERS=$(count_lines $SWEDISH_FICTION/$CLUSTER_TSV)
 echo "Found $NUM_CLUSTERS title clusters with Swedish fiction"
 if [ $NUM_CLUSTERS == 0 ]; then
@@ -95,31 +96,31 @@ fi
 echo
 echo "Removing language from work titles..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION/$CLUSTER_TSV -jar $JAR_FILE \
-  $ARGS --report $LANGUAGE_IN_TITLE $SCRIPTS_DIR/language-in-work-title.groovy 2>/dev/null
+  $ARGS --report $LANGUAGE_IN_TITLE $SVSK_DIR/language-in-work-title.groovy 2>/dev/null
 echo "$(count_lines $LANGUAGE_IN_TITLE/MODIFIED.txt) records affected, report in $LANGUAGE_IN_TITLE"
 
 echo
 echo "Merging contribution objects with same agent..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION/$CLUSTER_TSV -jar $JAR_FILE \
-  $ARGS --report $DEDUPLICATE_CONTRIBUTIONS $SCRIPTS_DIR/lxl-4150-deduplicate-contribution.groovy 2>/dev/null
+  $ARGS --report $DEDUPLICATE_CONTRIBUTIONS $SVSK_DIR/lxl-4150-deduplicate-contribution.groovy 2>/dev/null
 echo "$(count_lines $DEDUPLICATE_CONTRIBUTIONS/MODIFIED.txt) records affected, report in $DEDUPLICATE_CONTRIBUTIONS"
 
 echo
 echo "Adding missing contribution data..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION/$CLUSTER_TSV -jar $JAR_FILE \
-  $ARGS --report $ADD_MISSING_CONTRIBUTION_DATA $SCRIPTS_DIR/add-missing-contribution-data.groovy 2>/dev/null
+  $ARGS --report $ADD_MISSING_CONTRIBUTION_DATA $SVSK_DIR/add-missing-contribution-data.groovy 2>/dev/null
 echo "$(count_lines $ADD_MISSING_CONTRIBUTION_DATA/MODIFIED.txt) records affected, report in $ADD_MISSING_CONTRIBUTION_DATA"
 
 echo
 echo "Moving roles to instance..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION/$CLUSTER_TSV -jar $JAR_FILE \
-  $ARGS --report $ROLES_TO_INSTANCE $SCRIPTS_DIR/contributions-to-instance.groovy 2>/dev/null
+  $ARGS --report $ROLES_TO_INSTANCE $SVSK_DIR/contributions-to-instance.groovy 2>/dev/null
 echo "$(count_lines $ROLES_TO_INSTANCE/MODIFIED.txt) records affected, report in $ROLES_TO_INSTANCE"
 
 # Filter: Drop anonymous translations
 echo "Filtering out anonymous translations..."
 time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$SWEDISH_FICTION/$CLUSTER_TSV -jar $JAR_FILE \
-  $ARGS --report $NO_ANONYMOUS_TRANSLATIONS/$WHELKTOOL_REPORT $SCRIPTS_DIR/drop-anonymous-translations.groovy \
+  $ARGS --report $NO_ANONYMOUS_TRANSLATIONS/$WHELKTOOL_REPORT $SVSK_DIR/drop-anonymous-translations.groovy \
   >$NO_ANONYMOUS_TRANSLATIONS/$CLUSTER_TSV 2>/dev/null
 NUM_CLUSTERS=$(count_lines $NO_ANONYMOUS_TRANSLATIONS/$CLUSTER_TSV)
 echo "$NUM_CLUSTERS clusters ready for merge"
