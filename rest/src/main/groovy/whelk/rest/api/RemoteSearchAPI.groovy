@@ -12,6 +12,7 @@ import whelk.IdGenerator
 import whelk.Whelk
 import whelk.converter.MarcJSONConverter
 import whelk.converter.marc.MarcFrameConverter
+import whelk.filter.LinkFinder
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 import whelk.util.WhelkFactory
@@ -39,6 +40,7 @@ class RemoteSearchAPI extends HttpServlet {
     final String DEFAULT_DATABASE = "LC"
 
     private Whelk whelk
+    private LinkFinder linkFinder
 
     private Set<String> m_undesirableFields
     private Set<String> m_undesirableFieldsAuth
@@ -54,6 +56,7 @@ class RemoteSearchAPI extends HttpServlet {
             whelk = WhelkFactory.getSingletonWhelk()
         }
         marcFrameConverter = whelk.getMarcFrameConverter()
+        linkFinder = new LinkFinder(whelk.storage)
 
         m_undesirableFields = new HashSet<>()
 
@@ -346,6 +349,7 @@ class RemoteSearchAPI extends HttpServlet {
                         log.trace("Marcframeconverter done")
 
                         Document doc = new Document(jsonDoc)
+                        linkFinder.normalizeIdentifiers(doc);
                         whelk.normalize(doc)
                         whelk.embellish(doc)
                         results.addHit(doc)
