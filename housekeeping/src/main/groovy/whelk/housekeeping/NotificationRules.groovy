@@ -210,8 +210,10 @@ class NotificationRules {
             List beforeList = (List) publicationsBefore
             List afterList = (List) publicationsAfter
             for (int i = 0; i < beforeList.size(); ++i)
-                if (!beforeList[i]["endYear"].equals(afterList[i]["endYear"])) {
-                    return new Tuple(true, beforeList[i]["endYear"], afterList[i]["endYear"])
+                if (beforeList[i]["endYear"] != afterList[i]["endYear"]) {
+                    def before = beforeList[i]["endYear"] ? beforeList[i] : null
+                    def after = afterList[i]
+                    return new Tuple(true, before, after)
                 }
         }
 
