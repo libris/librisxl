@@ -13,7 +13,7 @@ PrintWriter dup = getReportWriter("Duplicate-input-${currentDate}.txt")
 File lastRunFile = new File(System.getProperty("last-run-file", new File(scriptDir, "lastRun.Date").toString()))
 def lastRunDate = lastRunFile.exists() ? lastRunFile.readLines().first() : ""
 println("Using last run timestamp: $lastRunDate")
-url = "http://devill.libris.kb.se/nb/export.php?timestamp=$lastRunDate" // url för att hämta data från applikationen
+url = "https://inv.kb.se/nb/export.php?timestamp=$lastRunDate" // url för att hämta data från applikationen
 
 inputRows = new URL(url).text
 List<String> ProgramLines = inputRows.readLines()
