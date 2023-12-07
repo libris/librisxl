@@ -48,8 +48,7 @@ class ESQuerySpec extends Specification {
         // `bar` has a keyword field in the mappings
         ['_sort': ['foo,-bar']] | [['foo': ['order': 'asc']], ['bar.keyword': ['order': 'desc']]]
         ['_sort': ['hasTitle.mainTitle']] | [['hasTitle.mainTitle': ['order': 'asc',
-                                                                     'nested_path': 'hasTitle',
-                                                                     'nested_filter': ['term': ['hasTitle.@type': 'Title']]]]]
+                                                                     'nested': ['path': 'hasTitle', 'filter': ['term': ['hasTitle.@type': 'Title']]]]]]
     }
 
     def "should get site filter"() {
