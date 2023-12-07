@@ -480,9 +480,13 @@ class ESQuery {
         def (String field, String sortOrder) = getFieldAndSortOrder(sortParam)
         String termPath = getInferredTermPath(field)
         Map clause = [(termPath): ['order': sortOrder]]
+        // FIXME: this should be based on if the path is inside nested, not hardcoded to hasTitle.mainTitle
+        // what about the filter condition then?
         if (field == 'hasTitle.mainTitle' || field == 'hasTitle.mainTitle.keyword') {
-            clause[termPath]['nested_path'] = 'hasTitle'
-            clause[termPath]['nested_filter'] = ['term': ['hasTitle.@type': 'Title']]
+            clause[termPath]['nested'] = [
+                'path': 'hasTitle',
+                'filter': ['term': ['hasTitle.@type': 'Title']]
+            ]
         }
         return clause
     }
