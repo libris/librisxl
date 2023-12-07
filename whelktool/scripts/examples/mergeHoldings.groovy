@@ -64,10 +64,17 @@ void combineMap(Map target, Map incoming, List<String> propertiesToMerge, List<S
 
     for (String propToMerge : propertiesToMerge) {
         if (target[propToMerge] && incoming[propToMerge]) {
-            if (incoming[propToMerge] instanceof Map && target[propToMerge] instanceof Map)
+            if (incoming[propToMerge] instanceof Map && target[propToMerge] instanceof Map) {
                 mergeMap((Map) target[propToMerge], (Map) incoming[propToMerge])
-            else if (incoming[propToMerge] instanceof List && target[propToMerge] instanceof List)
+            }
+            else if (incoming[propToMerge] instanceof List && target[propToMerge] instanceof List) {
                 mergeList((List) target[propToMerge], (List) incoming[propToMerge])
+            }
+            else if ((incoming[propToMerge] instanceof List && target[propToMerge] instanceof Map) ||
+                    (incoming[propToMerge] instanceof Map && target[propToMerge] instanceof List))
+            {
+                System.err.println("Warning, $propToMerge held mismatching types (Map/List). $propToMerge was not merged.")
+            }
         }
     }
 }
@@ -89,8 +96,13 @@ void mergeMap(Map into, Map from) {
             if (into[key] instanceof Map && from[key] instanceof Map ) {
                 mergeMap( (Map) into[key], (Map) from[key])
             }
-            if (into[key] instanceof List && from[key] instanceof List ) {
+            else if (into[key] instanceof List && from[key] instanceof List ) {
                 mergeList( (List) into[key], (List) from[key])
+            }
+            else if ((into[key] instanceof List && from[key] instanceof Map) ||
+                    (into[key] instanceof Map && from[key] instanceof List))
+            {
+                System.err.println("Warning, $key held mismatching types (Map/List). $key was not merged.")
             }
         }
     }
