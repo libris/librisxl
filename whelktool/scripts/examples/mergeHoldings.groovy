@@ -89,6 +89,9 @@ void mergeMap(Map into, Map from) {
             if (into[key] instanceof Map && from[key] instanceof Map ) {
                 mergeMap( (Map) into[key], (Map) from[key])
             }
+            if (into[key] instanceof List && from[key] instanceof List ) {
+                mergeList( (List) into[key], (List) from[key])
+            }
         }
     }
 }
