@@ -100,11 +100,12 @@ class Html {
     }
 
     private static def fieldRows(Collection<Doc> cluster, String cls) {
-        { field ->
+        cluster = cluster.collect { [it, it.view.getFramed()] }
+        return { field ->
             """
             <tr class="${cls}">
                 <td>${field}</td>
-                ${cluster.collect { "<td>${it.view.getDisplayText(field)}</td>" }.join('\n')}   
+                ${ cluster.collect { doc, framed -> "<td>${ doc.view.getDisplayText(field, framed) }</td>" }.join('\n') }
             </tr> """.stripIndent()
         }
     }

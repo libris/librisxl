@@ -9,7 +9,7 @@ count_lines() {
   fi
 }
 
-if ! [[ "$1" =~ ^(local|dev|dev2|qa|stg|prod)$ ]]; then
+if ! [[ "$1" =~ ^(local|dev|dev2|qa|stg|prod|edu)$ ]]; then
   echo "Missing or invalid environment"
   exit 1
 fi
@@ -126,6 +126,6 @@ fi
 # Merge
 echo
 echo "Merging..."
-time java -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$NO_ANONYMOUS_TRANSLATIONS/$CLUSTER_TSV -jar $JAR_FILE \
+time java -Xmx4G -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dclusters=$NO_ANONYMOUS_TRANSLATIONS/$CLUSTER_TSV -jar $JAR_FILE \
   $ARGS --report $MERGED_WORKS_DIR $SCRIPTS_DIR/merge-works.groovy 2>/dev/null
 echo "Done! See reports in $MERGED_WORKS_DIR"
