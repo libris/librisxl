@@ -6,7 +6,6 @@ import whelk.util.DocumentUtil
 
 class DisplayDoc {
     Doc doc
-    Map framed
 
     DisplayDoc(Doc doc) {
         this.doc = doc
@@ -21,11 +20,11 @@ class DisplayDoc {
     }
 
     // TODO...
-    String getDisplayText(String field) {
+    String getDisplayText(String field, Map framed) {
         if (field == 'contribution') {
-            return contributorStrings().join("<br>")
+            return contributorStrings(framed).join("<br>")
         } else if (field == 'classification') {
-            return classificationStrings().join("<br>")
+            return classificationStrings(framed).join("<br>")
         } else if (field == 'instance title') {
             return doc.instanceTitle() ?: ''
         } else if (field == 'instance type') {
@@ -74,9 +73,9 @@ class DisplayDoc {
         return base + kat + id
     }
 
-    private List contributorStrings() {
+    private List contributorStrings(Map framed) {
         List path = doc.instanceData ? ['instanceOf', 'contribution'] : ['contribution']
-        List contribution = DocumentUtil.getAtPath(getFramed(), path, [])
+        List contribution = DocumentUtil.getAtPath(framed, path, [])
 
         return contribution.collect { Map c ->
             contributionStr(c)
@@ -100,9 +99,9 @@ class DisplayDoc {
         return s.toString()
     }
 
-    List classificationStrings() {
+    List classificationStrings(Map framed) {
         List path = doc.instanceData ? ['instanceOf', 'classification'] : ['classification']
-        List classification = DocumentUtil.getAtPath(getFramed(), path, [])
+        List classification = DocumentUtil.getAtPath(framed, path, [])
 
         classification.collect { c ->
             StringBuilder s = new StringBuilder()
@@ -146,12 +145,8 @@ class DisplayDoc {
     }
 
     Map getFramed() {
-        if (!framed) {
-            Document copy = doc.document.clone()
-            doc.whelk.embellish(copy)
-            framed = JsonLd.frame(doc.thingIri(), copy.data)
-        }
-
-        return framed
+        Document copy = doc.document.clone()
+        doc.whelk.embellish(copy)
+        return JsonLd.frame(doc.thingIri(), copy.data)
     }
 }
