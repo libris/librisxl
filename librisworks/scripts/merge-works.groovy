@@ -6,7 +6,6 @@ import static se.kb.libris.mergeworks.Util.workClusters
 
 maybeDuplicates = getReportWriter("maybe-duplicate-linked-works.tsv")
 multiWorkReport = getReportWriter("multi-work-clusters.html")
-multiWorkReport.print(Html.START)
 
 enum WorkStatus {
     NEW('new'),
@@ -23,12 +22,17 @@ WorkStatus.values().each {
     new File(reportsDir, it.status).with { it.mkdirs() }
 }
 
-new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
-    def docs = Collections.synchronizedList([])
-    selectByIds(cluster) {
-        docs.add(new Doc(it))
-    }
+def changedBy = 'SEK'
+def generationProcess = 'https://libris.kb.se/sys/merge-works'
 
+def newWorks = []
+def idToUpdatedWorkData = [:]
+def instanceIdToWorkId = [:]
+def dataForReports = []
+def dataForMultiWorkReport = []
+
+def clusters = new File(System.getProperty('clusters')).collect {it.split(/[\t ]+/) as List }
+loadDocs(clusters).each { docs ->
     WorkComparator c = new WorkComparator(WorkComparator.allFields(docs))
 
     List<Tuple2<Doc, Collection<Doc>>> uniqueWorksAndTheirInstances = []
@@ -58,54 +62,51 @@ new File(System.getProperty('clusters')).splitEachLine(~/[\t ]+/) { cluster ->
             replaceWorkData(workDoc, c.merge([workDoc] + instanceDocs))
             // TODO: Update adminMetadata? To say that additional instances may have contributed to the linked work.
             addCloseMatch(workDoc, linkableWorks)
-            saveAndLink(workDoc, instanceDocs, workDoc.existsInStorage)
-//            writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.UPDATED)
+            idToUpdatedWorkData[workDoc.shortId()] = workDoc.document.data
+            instanceDocs.each {instanceIdToWorkId[it.shortId()] = workDoc.thingIri() }
+            dataForReports.add([docs, workDoc, instanceDocs, WorkStatus.UPDATED])
             return
         }
         // New merged work
         if (!workDoc.existsInStorage && !workDoc.instanceData) {
             addAdminMetadata(workDoc, instanceDocs.collect { ['@id': it.recordIri()] })
             addCloseMatch(workDoc, linkableWorks)
-            saveAndLink(workDoc, instanceDocs, workDoc.existsInStorage)
-//            writeWorkReport(docs, workDoc, instanceDocs, WorkStatus.NEW)
+            newWorks.add(workDoc.docItem)
+            instanceDocs.each {instanceIdToWorkId[it.shortId()] = workDoc.thingIri() }
+            dataForReports.add([docs, workDoc, instanceDocs, WorkStatus.NEW])
             return
         }
         // Local work, save if new closeMatch links created
         if (workDoc.instanceData && addCloseMatch(workDoc, linkableWorks)) {
-            saveAndLink(workDoc)
+            idToUpdatedWorkData[workDoc.shortId()] = workDoc.document.data
         }
     }
 
     if (uniqueWorksAndTheirInstances.size() > 1) {
-        def (workDocs, instanceDocs) = uniqueWorksAndTheirInstances.transpose()
-        multiWorkReport.print(Html.hubTable(workDocs, instanceDocs) + Html.HORIZONTAL_RULE)
+        dataForMultiWorkReport.add(uniqueWorksAndTheirInstances.transpose())
     }
 }
 
-multiWorkReport.print(Html.END)
+selectFromIterable(newWorks) {
+    it.scheduleSave(changedBy: changedBy, generationProcess: generationProcess)
+}
 
-void saveAndLink(Doc workDoc, Collection<Doc> instanceDocs = [], boolean existsInStorage = true) {
-    def changedBy = 'SEK'
-    def generationProcess = 'https://libris.kb.se/sys/merge-works'
-
-    if (existsInStorage) {
-        selectByIds([workDoc.shortId()]) {
-            it.doc.data = workDoc.document.data
-            it.scheduleSave(changedBy: changedBy, generationProcess: generationProcess)
-        }
-    } else {
-        selectFromIterable([workDoc.docItem]) {
-            it.scheduleSave(changedBy: changedBy, generationProcess: generationProcess)
-        }
-    }
-
-    if (!instanceDocs.isEmpty()) {
-        selectByIds(instanceDocs.collect { it.shortId() }) {
-            it.graph[1]['instanceOf'] = ['@id': workDoc.thingIri()]
-            it.scheduleSave(changedBy: changedBy, generationProcess: generationProcess)
-        }
+selectByIds(idToUpdatedWorkData.keySet()) {
+    if (idToUpdatedWorkData[it.doc.shortId]) {
+        it.doc.data = idToUpdatedWorkData[it.doc.shortId]
+        it.scheduleSave(changedBy: changedBy, generationProcess: generationProcess)
     }
 }
+
+selectByIds(instanceIdToWorkId.keySet()) {
+    if (instanceIdToWorkId[it.doc.shortId]) {
+        it.graph[1]['instanceOf'] = ['@id': instanceIdToWorkId[it.doc.shortId]]
+        it.scheduleSave(changedBy: changedBy, generationProcess: generationProcess)
+    }
+}
+
+writeMultiWorkReport(dataForMultiWorkReport)
+writeIndividualWorkReports(dataForReports)
 
 Doc createNewWork(Map workData) {
     workData['@id'] = "TEMPID#it"
@@ -135,10 +136,20 @@ void addAdminMetadata(Doc doc, List<Map> derivedFrom) {
     doc.record()['descriptionLanguage'] = ['@id': 'https://id.kb.se/language/swe']
 }
 
-void writeWorkReport(Collection<Doc> titleCluster, Doc derivedWork, Collection<Doc> derivedFrom, WorkStatus workStatus) {
-    String report = htmlReport(titleCluster, derivedWork, derivedFrom)
-    getReportWriter("${workStatus.status}/${derivedWork.shortId()}.html").print(report)
-    incrementStats("num derivedFrom (${workStatus.status} works)", "${derivedFrom.size()}", derivedWork.shortId())
+void writeIndividualWorkReports(List data) {
+    data.each { cluster, work, derivedFrom, workStatus ->
+        String report = htmlReport(cluster, work, derivedFrom)
+        getReportWriter("${workStatus.status}/${work.shortId()}.html").print(report)
+        incrementStats("num derivedFrom (${workStatus.status} works)", "${derivedFrom.size()}", work.shortId())
+    }
+}
+
+void writeMultiWorkReport(List data) {
+    multiWorkReport.print(Html.START)
+    data.each { workDocs, instanceDocs ->
+        multiWorkReport.print(Html.hubTable(workDocs, instanceDocs) + Html.HORIZONTAL_RULE)
+    }
+    multiWorkReport.print(Html.END)
 }
 
 static String htmlReport(Collection<Doc> titleCluster, Doc work, Collection<Doc> instances) {
@@ -185,4 +196,12 @@ boolean addCloseMatch(Doc workDoc, List<Doc> linkableWorks) {
     }
 
     return false
+}
+
+Collection<Collection<Doc>> loadDocs(Collection<Collection<String>> clusters) {
+    def idToDoc = Collections.synchronizedMap([:])
+    selectByIds(clusters.flatten()) {
+        idToDoc[it.doc.shortId] = new Doc(it)
+    }
+    return clusters.collect { c -> c.collect { id -> idToDoc[id] }.findAll() }.grep()
 }
