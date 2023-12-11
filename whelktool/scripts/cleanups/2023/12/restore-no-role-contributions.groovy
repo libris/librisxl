@@ -24,9 +24,15 @@ selectBySqlWhere("collection = 'bib' and deleted = false") { bib ->
         noRole.each {
             if (!work['contribution'].contains(it)) {
                 if (it['@type'] == 'PrimaryContribution') {
-                    work['contribution'] = [it] + work['contribution']
+                    // Find where to insert PrimaryContribution (when there is already one)
+                    def idx = work['contribution'].findIndexOf { it['@type'] != 'PrimaryContribution' }
+                    if (idx == -1) {
+                        work['contribution'].add(it)
+                    } else {
+                        work['contribution'].add(idx, it)
+                    }
                 } else {
-                    work['contribution'] += it
+                    work['contribution'].add(it)
                 }
                 bib.scheduleSave()
             }
