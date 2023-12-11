@@ -1,3 +1,5 @@
+// Restore contributions that were accidently lost in LXL-2512
+
 def scriptId = "https://libris.kb.se/sys/globalchanges/2023/05/lxl-2512-move-contribution-by-relator-domain/script.groovy"
 
 selectBySqlWhere("collection = 'bib' and deleted = false") { bib ->
@@ -13,6 +15,7 @@ selectBySqlWhere("collection = 'bib' and deleted = false") { bib ->
 
     def versionBefore = newestToOldestVersion[versionAfterMovedIdx + 1]
     def workContributionBefore = versionBefore.data['@graph'][1]['instanceOf']['contribution']
+    // Only contributions without roles were lost
     def noRole = workContributionBefore?.findAll { !it.role }
 
     if (!noRole) return
@@ -38,7 +41,4 @@ selectBySqlWhere("collection = 'bib' and deleted = false") { bib ->
             }
         }
     }
-
-    println(bib.doc.shortId)
-    println(work['contribution'])
 }
