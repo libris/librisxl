@@ -13,7 +13,7 @@ selectBySqlWhere("collection = 'bib' and deleted = false") { bib ->
 
     def versionBefore = newestToOldestVersion[versionAfterMovedIdx + 1]
     def workContributionBefore = versionBefore.data['@graph'][1]['instanceOf']['contribution']
-    def noRole = workContributionBefore?.collect { !it.role }
+    def noRole = workContributionBefore?.findAll { !it.role }
 
     if (!noRole) return
 
