@@ -27,6 +27,114 @@
       }
     },
     {
+      "name": "Keep role-less agents 1",
+      "source": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "contribution": [
+              {
+                "@type": "Contribution",
+                "agent": {"@id": "x"}
+              },
+              {
+                "role": [
+                  {"@id": "https://id.kb.se/relator/publisher"}
+                ],
+                "@type": "Contribution",
+                "agent": {"@id": "y"}
+              }
+            ]
+          }
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "@type": "Instance",
+          "contribution": [
+            {
+              "role": [
+                {"@id": "https://id.kb.se/relator/publisher"}
+              ],
+              "@type": "Contribution",
+              "agent": {"@id": "y"}
+            }
+          ],
+          "instanceOf": {
+            "@type": "Text",
+            "contribution": [
+              {
+                "@type": "Contribution",
+                "agent": {"@id": "x"}
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "Keep role-less agents 2",
+      "source": {
+        "mainEntity": {
+          "@type": "Instance",
+          "instanceOf": {
+            "@type": "Text",
+            "contribution": [
+              {
+                "@type": "PrimaryContribution",
+                "role": [
+                  {"@id": "https://id.kb.se/relator/author"}
+                ],
+                "agent": {"@id": "x"}
+              },
+              {
+                "role": [
+                  {"@id": "https://id.kb.se/relator/publisher"}
+                ],
+                "@type": "Contribution",
+                "agent": {"@id": "y"}
+              },
+              {
+                "@type": "Contribution",
+                "agent": {"@id": "z"}
+              }
+            ]
+          }
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "@type": "Instance",
+          "contribution": [
+            {
+              "role": [
+                {"@id": "https://id.kb.se/relator/publisher"}
+              ],
+              "@type": "Contribution",
+              "agent": {"@id": "y"}
+            }
+          ],
+          "instanceOf": {
+            "@type": "Text",
+            "contribution": [
+              {
+                "@type": "PrimaryContribution",
+                "role": [
+                  {"@id": "https://id.kb.se/relator/author"}
+                ],
+                "agent": {"@id": "x"}
+              },
+              {
+                "@type": "Contribution",
+                "agent": {"@id": "z"}
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
       "name": "Move publisher",
       "source": {
         "mainEntity": {
