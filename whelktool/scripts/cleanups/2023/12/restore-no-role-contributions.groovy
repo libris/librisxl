@@ -2,7 +2,7 @@
 
 unhandled = getReportWriter('unhandled.txt')
 
-def scriptId = "https://libris.kb.se/sys/globalchanges/2023/05/lxl-2512-move-contribution-by-relator-domain/script.groovy"
+scriptId = "https://libris.kb.se/sys/globalchanges/2023/05/lxl-2512-move-contribution-by-relator-domain/script.groovy"
 
 selectBySqlWhere("collection = 'bib' and deleted = false") { bib ->
     try {
