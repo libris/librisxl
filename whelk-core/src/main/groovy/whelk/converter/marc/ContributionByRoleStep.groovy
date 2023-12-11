@@ -71,16 +71,23 @@ class ContributionByRoleStep extends MarcFramePostProcStepBase {
                 }
             }
 
+            Map contrib = null
+
             if (instanceRoles) {
-              def contrib = it.clone()
+                contrib = it.clone()
                 contrib.role = instanceRoles
                 setToPlainContribution(contrib)
                 instanceContribs << contrib
             }
+
             if (workRoles) {
-                def contrib = it.clone()
+                contrib = it.clone()
                 contrib.role = workRoles
                 workContribs << contrib
+            }
+
+            if (contrib == null) {
+                workContribs << it
             }
         }
 
