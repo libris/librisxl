@@ -1,8 +1,18 @@
 // Restore contributions that were accidently lost in LXL-2512
 
+unhandled = getReportWriter('unhandled.txt')
+
 def scriptId = "https://libris.kb.se/sys/globalchanges/2023/05/lxl-2512-move-contribution-by-relator-domain/script.groovy"
 
 selectBySqlWhere("collection = 'bib' and deleted = false") { bib ->
+    try {
+        process(bib)
+    } catch (Exception e) {
+        unhandled.println("${bib.doc.shortId}: ${e}")
+    }
+}
+
+def process(bib) {
     def instance = bib.graph[1]
     def work = instance.instanceOf
 
