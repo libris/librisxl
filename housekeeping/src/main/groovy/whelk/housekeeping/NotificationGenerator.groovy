@@ -114,8 +114,12 @@ class NotificationGenerator extends HouseKeeper {
                 }
 
                 for (String instanceId : changedInstanceIDsWithComments.keySet()) {
-                    resultingChangeObservations.addAll( generateObservationsForAffectedInstance(
-                            instanceId, changedInstanceIDsWithComments[instanceId], from.toInstant(), until.toInstant()) )
+                    try {
+                        resultingChangeObservations.addAll(generateObservationsForAffectedInstance(
+                                instanceId, changedInstanceIDsWithComments[instanceId], from.toInstant(), until.toInstant()))
+                    } catch (Throwable e) {
+                        log.error("Failed to check an embellished instance ($instanceId) for effects caused changes to $id.", e)
+                    }
                 }
 
                 String changedMainEntityType = whelk.getStorage().getMainEntityTypeBySystemID(id)
