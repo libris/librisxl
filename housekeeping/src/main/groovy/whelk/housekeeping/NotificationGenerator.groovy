@@ -1,5 +1,6 @@
 package whelk.housekeeping
 
+import org.codehaus.jackson.map.JsonMappingException
 import whelk.Document
 import whelk.IdGenerator
 import whelk.JsonLd
@@ -334,8 +335,12 @@ class NotificationGenerator extends HouseKeeper {
         for (Object changeNote : changeNotes) {
             if ( ! (changeNote instanceof String) )
                 continue
-            Map changeNoteMap = mapper.readValue( (String) changeNote, Map)
-            comments.addAll( NotificationUtils.asList(changeNoteMap["comment"]) )
+            Map changeNoteMap = null
+            try {
+                changeNoteMap = mapper.readValue((String) changeNote, Map)
+            } catch (JsonMappingException e) { /* ignore - this can happen when a list appears in hasChangeNote. We're not interested in those notes. */ }
+            if (changeNoteMap != null)
+                comments.addAll( NotificationUtils.asList(changeNoteMap["comment"]) )
         }
         return comments
     }
