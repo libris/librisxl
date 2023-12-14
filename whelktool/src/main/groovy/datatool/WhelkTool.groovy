@@ -472,6 +472,7 @@ class WhelkTool {
                     }
                     counter.countModified()
                 } else {
+                    assert allowLoud: "To save *new* records, loud changes need to be explicitly allowed. These cannot be silent - there is no old modified-time to preserve."
                     doSaveNew(item)
                     counter.countNewSaved()
                 }
