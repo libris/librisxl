@@ -87,7 +87,7 @@ void addGfToInstance(bib) {
 
     if (!versionBeforeLinked) return
 
-    def addThese = asList(versionBeforeLinked.data['@graph'][1]['instanceOf']['genreForm']).collect { it.prefLabel in gfsToMove }
+    def addThese = asList(versionBeforeLinked.data['@graph'][1]['instanceOf']['genreForm']).findAll { it.prefLabel in gfsToMove }
 
     if (addThese) {
         instance['genreForm'] = (asList(instance['genreForm']) + addThese).unique()
