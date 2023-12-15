@@ -11,12 +11,23 @@ allprojects {
     gradleLint.rules = ['all-dependency']
     gradleLint.alwaysRun = false
 
+
     configurations.all {
         // commons-logging and jcl-over-slf4j pulled in by different deps
         // resulting in duplicate org.apache.commons.logging.impl.* classes
-        exclude group:"commons-logging", module:"commons-logging"
+        exclude group: "commons-logging", module: "commons-logging"
 
         // Not needed since Java 6
-        exclude group:"stax", module:"stax-api"
+        exclude group: "stax", module: "stax-api"
+    }
+
+    apply plugin: 'codenarc'
+    codenarc {
+        configFile = new File("${project.projectDir}/../codenarc.config")
+        ignoreFailures = true
+        dependencies {
+            codenarc('org.codenarc:CodeNarc:3.3.0')
+            codenarc('org.codehaus.groovy:groovy-all:3.0.7')
+        }
     }
 }
