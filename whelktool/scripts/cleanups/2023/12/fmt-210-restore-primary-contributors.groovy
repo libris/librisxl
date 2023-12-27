@@ -5,8 +5,7 @@
  * See FMT-210 for details.
  */
 
-unhandled = getReportWriter('unhandled.txt')
-addedRole = getReportWriter('added-role.tsv')
+unhandled = getReportWriter('unhandled.tsv')
 addedPrimary = getReportWriter('added-primary.tsv')
 
 def roles = [
@@ -47,6 +46,8 @@ selectBySqlWhere("collection = 'bib' and deleted = false and data#>>'{@graph,1,c
 
     // Reaching here means that one of the concerned roles was moved from PrimaryContribution on work to "just" Contribution on instance by lxl-2512.
 
+    def currentPrimary = work['contribution']?.find { it['@type'] == 'PrimaryContribution' && it['agent'] == primaryBefore['agent'] }
+
     // Decide which role should be in PrimaryContribution based on work type.
     def newPrimaryRole = work['@type'] == 'StillImage'
             ? ['@id': 'https://id.kb.se/relator/artist']
@@ -54,18 +55,17 @@ selectBySqlWhere("collection = 'bib' and deleted = false and data#>>'{@graph,1,c
 
     if (!newPrimaryRole) {
         // Unable to decide which role to put in PrimaryContribution
-        unhandled.println(id)
+        unhandled.println([id, work['@type'], asList(currentPrimary?['role']).collect(roleShort)].join('\t'))
         return
     }
 
     def roleShort = { it['@id'].replaceAll(".*/", "") }
-    def currentPrimary = work['contribution']?.find { it['@type'] == 'PrimaryContribution' && it['agent'] == primaryBefore['agent'] }
+
     if (currentPrimary) {
-        // The agent is still present in work PrimaryContribution, only add relevant role if missing.
+        // The agent is still present in work PrimaryContribution
         if (!asList(currentPrimary['role']).contains(newPrimaryRole)) {
-            currentPrimary['role'] = asList(currentPrimary['role']) + newPrimaryRole
-            addedRole.println([id, currentPrimary['agent'], asList(currentPrimary['role']).collect(roleShort)].join('\t'))
-            bib.scheduleSave()
+            // The current role(s) is neither artist nor cartographer, report.
+            unhandled.println([id, work['@type'], asList(currentPrimary['role']).collect(roleShort)].join('\t'))
         }
     } else {
         // The agent is no longer present in work PrimaryContribution, readd it with relevant role.
