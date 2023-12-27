@@ -53,13 +53,13 @@ selectBySqlWhere("collection = 'bib' and deleted = false and data#>>'{@graph,1,c
             ? ['@id': 'https://id.kb.se/relator/artist']
             : (work['@type'] == 'Cartography' ? ['@id': 'https://id.kb.se/relator/cartographer'] : null)
 
+    def roleShort = { it['@id'].replaceAll(".*/", "") }
+
     if (!newPrimaryRole) {
         // Unable to decide which role to put in PrimaryContribution
         unhandled.println([id, work['@type'], asList(currentPrimary?['role']).collect(roleShort)].join('\t'))
         return
     }
-
-    def roleShort = { it['@id'].replaceAll(".*/", "") }
 
     if (currentPrimary) {
         // The agent is still present in work PrimaryContribution
