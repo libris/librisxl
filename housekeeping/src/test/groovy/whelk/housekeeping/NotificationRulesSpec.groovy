@@ -675,7 +675,9 @@ class NotificationRulesSpec extends Specification {
         'title'     | "title."    || false
         'a  title'  | "a title"   || false
         'Desideria' | 'Désidéria' || false
-        'Aker'      | 'Åker'      || true
+        'tilte'     | 'Title'     || false
+        'Aker'      | 'Åker'      || false
+        'Akerbar'   | 'Åkerbär'   || true
     }
 
     def "Change main title, dont trigger key title"() {

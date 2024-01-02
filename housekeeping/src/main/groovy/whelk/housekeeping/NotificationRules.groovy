@@ -371,7 +371,14 @@ class NotificationRules {
     }
 
     private static boolean stringChanged(String before, String after) {
-        normalize(before) != normalize(after)
+        def a = normalize(before)
+        def b = normalize(after)
+        if (a.size() > Unicode.MAX_LEVENSHTEIN_LENGTH || b.size() > Unicode.MAX_LEVENSHTEIN_LENGTH) {
+            return a != b
+        }
+        else {
+            return Unicode.damerauLevenshteinDistance(a, b) > 1
+        }
     }
 
     private static String normalize(String s) {

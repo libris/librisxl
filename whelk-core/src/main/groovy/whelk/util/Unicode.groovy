@@ -1,10 +1,12 @@
 package whelk.util
 
+
 import java.text.Normalizer
 import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.Pattern
 
 class Unicode {
+    public static final int MAX_LEVENSHTEIN_LENGTH = 100
 
     /**
      * Additional characters we want to normalize that are not covered by NFC.
@@ -198,5 +200,86 @@ class Unicode {
      */
     static String removeDiacritics(String s) {
         removeAllDiacritics(s.replace(C_SAVE)).replace(C_RESTORE)
+    }
+
+    /**
+     * Computes the Levenshtein distance for two strings
+     * Copied from lxl-1931-merge-series-membership.groovy
+     */
+    static int levenshteinDistance(String a, String b) {
+        int rows = a.size() + 1
+        int cols = b.size() + 1
+
+        int[][] d = new int[rows][cols]
+
+        for (i in 0..<rows) {
+            for (j in 0..<cols) {
+                if (i == 0)
+                    d[i][j] = j
+                else if (j == 0)
+                    d[i][j] = i
+                else if (a[i-1] == b[j-1]) {
+                    d[i][j] = d[i-1][j-1]
+                } else {
+                    d[i][j] = 1 + [d[i][j-1],  // deletion
+                                   d[i-1][j],  // insertion
+                                   d[i-1][j-1] // substitution
+                                  ].min()
+                }
+            }
+        }
+
+        return d[rows-1][cols-1]
+    }
+
+    /**
+     * Computes the Damerau–Levenshtein distance for two strings
+     * Naive implementation of https://en.wikipedia.org/wiki/Damerau%E2%80%93Levenshtein_distance#Distance_with_adjacent_transpositions
+     */
+    static int damerauLevenshteinDistance(String a, String b, int maxLen = MAX_LEVENSHTEIN_LENGTH) {
+        if (a.size() > maxLen || b.size() > maxLen) {
+            throw new IllegalArgumentException("String too long. Max length:${maxLen}. Was:${a.length()}, ${b.length()}")
+        }
+
+        int rows = a.size() + 2
+        int cols = b.size() + 2
+
+        Map<String, Integer> da = ((a + b) as List).unique().collectEntries(c -> [c, 0])
+
+        int[][] d = new int[rows][cols]
+
+        def maxDist = a.size() + b.size()
+        d[0][0] = maxDist
+        for (i in 0..a.size()) {
+            d[i+1][0] = maxDist
+            d[i+1][1] = i
+        }
+        for (j in 0..b.size()) {
+            d[0][j+1] = maxDist
+            d[1][j+1] = j
+        }
+
+        for (int i = 2 ; i < rows; i++) {
+            def ix = i - 2
+            def db = 0
+            for (int j = 2 ; j < cols ; j++) {
+                def jx = j - 2
+                def k = da[b[jx]]
+                def l = db
+                def cost = a[ix] == b[jx] ? 0 : 1
+                if (a[ix] == b[jx]) {
+                  db = j
+                }
+
+                d[i][j] = [d[i]  [j-1] + 1,    // insertion
+                           d[i-1][j]   + 1,    // deletion
+                           d[i-1][j-1] + cost, // substitution
+                           d[k-1][l-1] + (i-k-1) + 1 + (j-l-1) // transposition
+                          ].min()
+                da[a[ix]] = i
+            }
+        }
+
+        return d[rows-1][cols-1]
     }
 }
