@@ -52,6 +52,7 @@ class Unicode {
     }
 
     private static final Pattern UNICODE_MARK = Pattern.compile('\\p{M}')
+    private static final char PRIVATE_USE_AREA = '\uE000' as char
     
     static boolean isNormalized(String s) {
         return Normalizer.isNormalized(s, Normalizer.Form.NFC) && !EXTRA_NORMALIZATION_MAP.keySet().any{ s.contains(it) }
@@ -184,7 +185,18 @@ class Unicode {
     /**
      * Removes all diacritics from a string, including those of proper letters like å, ä and ö.
      */
-    static String removeDiacritics(String s) {
+    static String removeAllDiacritics(String s) {
         return Normalizer.normalize(s, Normalizer.Form.NFD).replaceAll(UNICODE_MARK, '')
+    }
+
+    private static def PRESERVE_CHARS = ['å', 'ä', 'ö', 'Å', 'Ä', 'Ö']
+    private static Map<String, String> C_SAVE = PRESERVE_CHARS.withIndex().collectEntries() { c, i -> [c, PRIVATE_USE_AREA + i as String]}
+    private static Map<String, String> C_RESTORE = C_SAVE.collectEntries { k, v -> [v, k] }
+
+    /**
+     * Removes diacritics from a string, but preserves _some_ proper letters like å, ä and ö.
+     */
+    static String removeDiacritics(String s) {
+        removeAllDiacritics(s.replace(C_SAVE)).replace(C_RESTORE)
     }
 }

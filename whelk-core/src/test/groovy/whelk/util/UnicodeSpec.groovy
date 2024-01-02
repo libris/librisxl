@@ -110,6 +110,17 @@ class UnicodeSpec extends Specification {
         Unicode.normalize(s) == nfc
     }
 
+    def "removeAllDiacritics"() {
+        expect:
+        Unicode.removeAllDiacritics(in) == out
+
+        where:
+        in               | out
+        'Désidéria'      | 'Desideria'
+        'Антон Павлович' | 'Антон Павлович'
+        'Åkerbärsfrön'   | 'Akerbarsfron'
+    }
+
     def "removeDiacritics"() {
         expect:
         Unicode.removeDiacritics(in) == out
@@ -118,6 +129,6 @@ class UnicodeSpec extends Specification {
         in               | out
         'Désidéria'      | 'Desideria'
         'Антон Павлович' | 'Антон Павлович'
-        'Åkerbärsfrön'   | 'Akerbarsfron'
+        'Åkerbärsfrön'   | 'Åkerbärsfrön'
     }
 }
