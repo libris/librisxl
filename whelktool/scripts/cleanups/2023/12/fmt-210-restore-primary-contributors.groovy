@@ -27,18 +27,18 @@ selectBySqlWhere("collection = 'bib' and deleted = false and data#>>'{@graph,1,c
 
     if (!work || work['@id']) return
 
-    def newestToOldestVersion
+    def oldestToNewestVersion
     try {
-        newestToOldestVersion = bib.getVersions().reverse()
+        oldestToNewestVersion = bib.getVersions()
     } catch (Exception e) {
         println(e.getStackTrace())
         return
     }
-    def versionTouchedByScriptIdx = newestToOldestVersion.findIndexOf { it.data['@graph'][0]['generationProcess']?['@id'] == scriptId }
+    def versionTouchedByScriptIdx = oldestToNewestVersion.findIndexOf { it.data['@graph'][0]['generationProcess']?['@id'] == scriptId }
 
     if (versionTouchedByScriptIdx == -1) return
 
-    def versionBefore = newestToOldestVersion[versionTouchedByScriptIdx + 1]
+    def versionBefore = oldestToNewestVersion[versionTouchedByScriptIdx - 1]
     def workContributionBefore = versionBefore.data['@graph'][1]['instanceOf']['contribution']
     def primaryBefore = workContributionBefore.find { it['@type'] == 'PrimaryContribution' }
 
