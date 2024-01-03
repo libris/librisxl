@@ -652,6 +652,34 @@ class NotificationRulesSpec extends Specification {
         result[0] == false
     }
 
+    def "Minor title changes"() {
+        expect:
+        Tuple result = NotificationRules.mainTitleChanged(
+                new Document(["mainEntity": ["hasTitle": [["@type": "Title", "mainTitle": before]]]]),
+                new Document(["mainEntity": ["hasTitle": [["@type": "Title", "mainTitle": after]]]])
+        )
+        Tuple result2 = NotificationRules.keyTitleChanged(
+                new Document(["mainEntity": ["hasTitle": [["@type": "KeyTitle", "mainTitle": before]]]]),
+                new Document(["mainEntity": ["hasTitle": [["@type": "KeyTitle", "mainTitle": after]]]])
+        )
+
+        changed == result[0]
+        changed == result2[0]
+
+        where:
+        before      | after       || changed
+        'title'     | "Title"     || false
+        'title '    | "title"     || false
+        ' title'    | "title"     || false
+        'title.'    | "title"     || false
+        'title'     | "title."    || false
+        'a  title'  | "a title"   || false
+        'Desideria' | 'Désidéria' || false
+        'tilte'     | 'Title'     || false
+        'Aker'      | 'Åker'      || false
+        'Akerbar'   | 'Åkerbär'   || true
+    }
+
     def "Change main title, dont trigger key title"() {
         given:
         Document framedBefore = new Document([

@@ -127,7 +127,7 @@ class Util {
     }
 
     static String normalize(String s) {
-        return Unicode.removeDiacritics(Unicode.normalizeForSearch(StringUtils.normalizeSpace(" $s ".toLowerCase().replace(noise))))
+        return Unicode.removeAllDiacritics(Unicode.normalizeForSearch(StringUtils.normalizeSpace(" $s ".toLowerCase().replace(noise))))
     }
 
     static List<String> getFlatTitle(List hasTitle) {

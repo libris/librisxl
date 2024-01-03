@@ -1,6 +1,7 @@
 package whelk.housekeeping
 
 import whelk.Document
+import whelk.util.Unicode
 
 class NotificationRules {
 
@@ -252,7 +253,7 @@ class NotificationRules {
                     newMainTitle = titleAfter
             }
 
-            if (newMainTitle != null && oldMainTitle != null && !newMainTitle["mainTitle"].equals(oldMainTitle["mainTitle"]))
+            if (newMainTitle != null && oldMainTitle != null && stringChanged(newMainTitle["mainTitle"] as String, oldMainTitle["mainTitle"] as String))
                 return new Tuple(true, oldMainTitle, newMainTitle)
         }
         return new Tuple(false, null, null)
@@ -279,7 +280,7 @@ class NotificationRules {
                     newMainTitle = titleAfter
             }
 
-            if (newMainTitle != null && oldMainTitle != null && !newMainTitle["mainTitle"].equals(oldMainTitle["mainTitle"]))
+            if (newMainTitle != null && oldMainTitle != null && stringChanged(newMainTitle["mainTitle"] as String, oldMainTitle["mainTitle"] as String))
                 return new Tuple(true, oldMainTitle, newMainTitle)
         }
         return new Tuple(false, null, null)
@@ -369,4 +370,18 @@ class NotificationRules {
         return new Tuple(false, null, null)
     }
 
+    private static boolean stringChanged(String before, String after) {
+        def a = normalize(before)
+        def b = normalize(after)
+        if (a.size() > Unicode.MAX_LEVENSHTEIN_LENGTH || b.size() > Unicode.MAX_LEVENSHTEIN_LENGTH) {
+            return a != b
+        }
+        else {
+            return Unicode.damerauLevenshteinDistance(a, b) > 1
+        }
+    }
+
+    private static String normalize(String s) {
+        Unicode.removeDiacritics(s.toLowerCase()).replaceAll(/[^\p{Alnum}]/, '')
+    }
 }
