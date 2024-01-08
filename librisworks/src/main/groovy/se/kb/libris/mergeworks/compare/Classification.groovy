@@ -32,7 +32,7 @@ class Classification extends StuffSet {
                             ]
                     ]
                     def version = maxSabVersion(c1, c2)
-                    if (version) {
+                    if (version != "-1") {
                         result['inScheme']['version'] = version
                     }
                     return result
