@@ -1,0 +1,196 @@
+package whelk.xlql;
+
+import java.util.*;
+
+public class Lex {
+    public static class MutableInteger
+    {
+        public MutableInteger(int i) { value = i; }
+        public void increase(int with) { value += with; }
+        int value;
+    }
+
+    public enum TokenName {
+        OPERATOR,
+        KEYWORD,
+        STRING,
+    }
+
+    public record Symbol (TokenName name, String value, int offset) {}
+
+    public static class LexerException extends Exception {
+        public LexerException(String s) {
+            super(s);
+        }
+    }
+
+    public static LinkedList<Symbol> lexQuery(String queryString) throws LexerException
+    {
+        LinkedList<Symbol> symbols = new LinkedList<>();
+        StringBuilder query = new StringBuilder(queryString);
+        MutableInteger offset = new MutableInteger(0);
+
+        for (Symbol symbol = getNextSymbol(query, offset); symbol != null; symbol = getNextSymbol(query, offset))
+            symbols.add(symbol);
+
+        return symbols;
+    }
+
+    private static void consumeWhiteSpace(StringBuilder query, MutableInteger offset) {
+        if (query.isEmpty())
+            return;
+        while (Character.isWhitespace(query.charAt(0))) {
+            query.deleteCharAt(0);
+            offset.increase(1);
+        }
+    }
+
+    private static List reservedCharsInString = Arrays.asList('!', '<', '>', '=', '~', '/', '(', ')');
+
+    private static Symbol getNextSymbol(StringBuilder query, MutableInteger offset) throws LexerException {
+        consumeWhiteSpace(query, offset);
+        if (query.isEmpty())
+            return null;
+
+        int symbolOffset = offset.value;
+
+        // Special symbols that need not be whitespace separated:
+        if (query.length() >= 2) {
+            if (query.substring(0, 2).equals("==")) {
+                query.deleteCharAt(0);
+                query.deleteCharAt(0);
+                offset.increase(2);
+                return new Symbol(TokenName.OPERATOR, "==", symbolOffset);
+            }
+            if (query.substring(0, 2).equals(">=")) {
+                query.deleteCharAt(0);
+                query.deleteCharAt(0);
+                offset.increase(2);
+                return new Symbol(TokenName.OPERATOR, ">=", symbolOffset);
+            }
+            if (query.substring(0, 2).equals("<=")) {
+                query.deleteCharAt(0);
+                query.deleteCharAt(0);
+                offset.increase(2);
+                return new Symbol(TokenName.OPERATOR, "<=", symbolOffset);
+            }
+            if (query.substring(0, 2).equals("<>")) {
+                query.deleteCharAt(0);
+                query.deleteCharAt(0);
+                offset.increase(2);
+                return new Symbol(TokenName.OPERATOR, "<>", symbolOffset);
+            }
+        }
+        if (query.length() >= 1) {
+            if (query.substring(0, 1).equals("=")) {
+                query.deleteCharAt(0);
+                offset.increase(1);
+                return new Symbol(TokenName.OPERATOR, "=", symbolOffset);
+            }
+            if (query.substring(0, 1).equals("!")) {
+                query.deleteCharAt(0);
+                offset.increase(1);
+                return new Symbol(TokenName.OPERATOR, "!", symbolOffset);
+            }
+            if (query.substring(0, 1).equals("~")) {
+                query.deleteCharAt(0);
+                offset.increase(1);
+                return new Symbol(TokenName.OPERATOR, "~", symbolOffset);
+            }
+            if (query.substring(0, 1).equals("<")) {
+                query.deleteCharAt(0);
+                offset.increase(1);
+                return new Symbol(TokenName.OPERATOR, "<", symbolOffset);
+            }
+            if (query.substring(0, 1).equals(">")) {
+                query.deleteCharAt(0);
+                offset.increase(1);
+                return new Symbol(TokenName.OPERATOR, ">", symbolOffset);
+            }
+            if (query.substring(0, 1).equals("(")) {
+                query.deleteCharAt(0);
+                offset.increase(1);
+                return new Symbol(TokenName.OPERATOR, "(", symbolOffset);
+            }
+            if (query.substring(0, 1).equals(")")) {
+                query.deleteCharAt(0);
+                offset.increase(1);
+                return new Symbol(TokenName.OPERATOR, ")", symbolOffset);
+            }
+            if (query.substring(0, 1).equals("/")) {
+                query.deleteCharAt(0);
+                offset.increase(1);
+                return new Symbol(TokenName.OPERATOR, "/", symbolOffset);
+            }
+        }
+
+        // quoted strings
+        if (query.charAt(0) == '"'){
+            query.deleteCharAt(0);
+            offset.increase(1);
+
+            StringBuilder symbolValue = new StringBuilder();
+            while (true) {
+                if (query.isEmpty())
+                    throw new LexerException("Lexer error: Unclosed double quote, started at character index: " + symbolOffset);
+                char c = query.charAt(0);
+                query.deleteCharAt(0);
+                offset.increase(1);
+                if (c == '"')
+                    return new Symbol(TokenName.STRING, symbolValue.toString(), symbolOffset);
+                else if (c == '\\') { // char escaping ...
+                    char escapedC = query.charAt(0);
+                    query.deleteCharAt(0);
+                    offset.increase(1);
+                    if (query.isEmpty())
+                        throw new LexerException("Lexer error: Escaped EOF at character index: " + symbolOffset);
+                    symbolValue.append(escapedC);
+                } else {
+                    symbolValue.append(c);
+                }
+            }
+        }
+
+        // whitespace separated strings
+        {
+            StringBuilder symbolValue = new StringBuilder();
+            while (true) {
+                char c = query.charAt(0);
+                if (c == '"')
+                    throw new LexerException("Lexer error: Double quote illegal at character index: " + offset.value);
+                if (reservedCharsInString.contains(c))
+                    break;
+                query.deleteCharAt(0);
+                offset.increase(1);
+                if (Character.isWhitespace(c))
+                    break;
+                symbolValue.append(c);
+                if (query.isEmpty())
+                    break;
+            }
+            TokenName name;
+
+            // These words (when not quoted) are keywords
+            switch (symbolValue.toString()){
+                case "and":
+                case "or":
+                case "not":
+                case "prox":
+                case "sortby":
+                case "AND":
+                case "OR":
+                case "NOT":
+                case "PROX":
+                case "SORTBY":
+                    name = TokenName.KEYWORD;
+                    symbolValue = new StringBuilder(symbolValue.toString().toLowerCase());
+                    break;
+                default:
+                    name = TokenName.STRING;
+            }
+
+            return new Symbol(name, symbolValue.toString(), symbolOffset);
+        }
+    }
+
+}
