@@ -45,7 +45,7 @@ public class Lex {
         }
     }
 
-    private static List reservedCharsInString = Arrays.asList('!', '<', '>', '=', '~', '/', '(', ')');
+    private static List reservedCharsInString = Arrays.asList('!', '<', '>', '=', '~', '(', ')');
 
     private static Symbol getNextSymbol(StringBuilder query, MutableInteger offset) throws LexerException {
         consumeWhiteSpace(query, offset);
@@ -116,11 +116,6 @@ public class Lex {
                 query.deleteCharAt(0);
                 offset.increase(1);
                 return new Symbol(TokenName.OPERATOR, ")", symbolOffset);
-            }
-            if (query.substring(0, 1).equals("/")) {
-                query.deleteCharAt(0);
-                offset.increase(1);
-                return new Symbol(TokenName.OPERATOR, "/", symbolOffset);
             }
         }
 

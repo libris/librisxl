@@ -9,7 +9,7 @@ class ParseSpec extends Specification {
         def input = "A OR B OR C"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.parseQuery(lexedSymbols)
-        
+
         expect:
         false
     }

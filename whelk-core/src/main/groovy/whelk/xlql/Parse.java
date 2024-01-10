@@ -24,8 +24,13 @@ public class Parse
         AND,
         OR,
         NOT,
-        UNION,
     }
+
+    public record Group() {} // TODO
+    public record AndComb(List<Term> ts) {} // TODO
+    public record Term (String s, Uoperator uop, Term t, Group g) {}
+    public record Code (String s) {}
+    public record Uoperator (String s, Code c) {}
 
     public static void parseQuery(LinkedList<Lex.Symbol> symbols) {
         LinkedList<Object> stack = new LinkedList<>();
@@ -38,6 +43,7 @@ public class Parse
             while(reductionWasPossible);
         }
         // SPECIAL IDEA FOR HANDLING * (lists), do them "second order", only when there are no more reductions (OR SHIFTS!) possible.
+        // Actually just flip the input order and consider it the stack. No need for shifting. Just reduce right to left
 
         System.out.println("Parse termination.");
     }
@@ -52,28 +58,14 @@ public class Parse
             System.out.println();
     }
 
-    public record Term (String s) {}
-    public record Code (String s) {}
-
-
     private static boolean reduce(LinkedList<Object> stack) {
 
-        // term
-        {
-            Object top = stack.peek();
-            if (top instanceof Lex.Symbol symbol) {
-                if (symbol.name() == Lex.TokenName.STRING) {
-                    stack.pop();
-                    stack.push(new Term(symbol.value()));
-                    return true;
-                }
-            }
-        }
-
-        // code
+        // CODE: [STRING ending in ":"] // OK FOR NOW BUT INCORRECT! "CODE" NEEDS TO BE LEXED SEPARATELY, NEVER A STRING
         {
             if (stack.size() >= 1) {
-                if (stack.get(0) instanceof Lex.Symbol s && s.value().endsWith(":")) {
+                if (stack.get(0) instanceof Lex.Symbol s &&
+                        s.name() == Lex.TokenName.STRING &&
+                        s.value().endsWith(":")) {
                     stack.pop();
                     stack.push(new Code(s.value()));
                     return true;
@@ -81,21 +73,74 @@ public class Parse
             }
         }
 
-        /*// modifier 	::= 	'/' term comparisonList
+        // UOPERATOR: "!" | "~" | "NOT" | CODE
         {
-            if (stack.size() >= 3) {
+            if (stack.size() >= 1) {
                 if (stack.get(0) instanceof Lex.Symbol s &&
-                        stack.get(1) instanceof Term t &&
-                        stack.get(2) instanceof ComparisonList l) {
-                    if (s.name() == Lex.TokenName.OPERATOR && s.value().equals("/")) {
+                        s.name() == Lex.TokenName.STRING &&
+                        ( s.value().equals("!") || s.value().equals("~") ) ) {
+                    stack.pop();
+                    stack.push(new Uoperator(s.value(), null));
+                    return true;
+                }
+                else if (stack.get(0) instanceof Code c) {
+                    stack.pop();
+                    stack.push(new Uoperator(null, c));
+                    return true;
+                }
+            }
+        }
+
+        // TERM: STRING | UOPERATOR TERM | UOPERATOR GROUP
+        {
+            if (stack.size() >= 2) {
+                if (stack.get(0) instanceof Uoperator uop) {
+                    if (stack.get(1) instanceof Term t) {
                         stack.pop();
                         stack.pop();
-                        stack.pop();
-                        stack.push(new Modifier(t, l));
+                        stack.push(new Term(null, uop, t, null));
                     }
                 }
             }
-        }*/
+            if (stack.size() >= 1) {
+                if (stack.get(0) instanceof Lex.Symbol s &&
+                        s.name() == Lex.TokenName.STRING) {
+                    stack.pop();
+                    stack.push(new Term(s.value(), null, null, null));
+                    return true;
+                }
+            }
+        }
+
+        // ANDCOMB: TERM ( "AND" TERM | TERM )*
+        {
+            if (stack.size() >= 1) {
+                if (stack.get(0) instanceof Term t) {
+
+                    List<Term> terms = new ArrayList<>();
+                    terms.add(t);
+                    stack.pop();
+                    stack.push(new AndComb(terms));
+
+                    boolean stillChewing = false;
+                    do {
+                        if (stack.get(0) instanceof Term nextTerm) {
+                            stack.pop();
+                            terms.add(nextTerm);
+                            stillChewing = true;
+                        } else if (stack.get(0) instanceof Lex.Symbol s &&
+                                s.name() == Lex.TokenName.KEYWORD &&
+                                s.value().equals("and") &&
+                                stack.get(1) instanceof Term nextTerm) {
+                            stack.pop();
+                            stack.pop();
+                            terms.add(nextTerm);
+                            stillChewing = true;
+                        }
+                    } while (stillChewing);
+                }
+            }
+        }
 
         return false;
     }
