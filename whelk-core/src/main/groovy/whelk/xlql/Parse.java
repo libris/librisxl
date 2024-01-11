@@ -38,12 +38,26 @@ public class Parse
             shift(stack, symbols);
             boolean reductionWasPossible;
             do {
-                reductionWasPossible = reduce(stack);
+                Lex.Symbol lookahead = null;
+                if (!symbols.isEmpty())
+                    lookahead = symbols.get(0);
+                reductionWasPossible = reduce(stack, lookahead);
+
+
+                System.out.println("After reduction, stack and next symbols:\n\tstack:");//\n\t stack: " + stack);
+                for (Object o : stack) {
+                    System.out.println("\t\t"+o.toString());
+                }
+                if (!symbols.isEmpty())
+                    System.out.println("\t next: " + lookahead + "\n");
+                else
+                    System.out.println();
+
+
             }
             while(reductionWasPossible);
         }
         // SPECIAL IDEA FOR HANDLING * (lists), do them "second order", only when there are no more reductions (OR SHIFTS!) possible.
-        // Actually just flip the input order and consider it the stack. No need for shifting. Just reduce right to left
 
         System.out.println("Parse termination.");
     }
@@ -51,14 +65,9 @@ public class Parse
     // Note to self, the front of the list counts as the top!
     private static void shift(LinkedList<Object> stack, LinkedList<Lex.Symbol> symbols) {
         stack.push( symbols.poll() );
-        System.out.print("Stack and next symbols:\n\t stack: " + stack);
-        if (!symbols.isEmpty())
-            System.out.println("\n\t next: " + symbols.getFirst());
-        else
-            System.out.println();
     }
 
-    private static boolean reduce(LinkedList<Object> stack) {
+    private static boolean reduce(LinkedList<Object> stack, Lex.Symbol lookahead) {
 
         // CODE: [STRING ending in ":"] // OK FOR NOW BUT INCORRECT! "CODE" NEEDS TO BE LEXED SEPARATELY, NEVER A STRING
         {
@@ -117,27 +126,52 @@ public class Parse
             if (stack.size() >= 1) {
                 if (stack.get(0) instanceof Term t) {
 
-                    List<Term> terms = new ArrayList<>();
-                    terms.add(t);
-                    stack.pop();
-                    stack.push(new AndComb(terms));
+                    // This is where the 1 in LALR(1) comes in, because of the implicit AND.
+                    // We must check that we have everything that goes into the list, *on*
+                    // the stack before reducing. In other words, our lookahead must be
+                    // something that cannot be part of the list (or EOF) before we reduce.
 
-                    boolean stillChewing = false;
-                    do {
-                        if (stack.get(0) instanceof Term nextTerm) {
-                            stack.pop();
-                            terms.add(nextTerm);
-                            stillChewing = true;
-                        } else if (stack.get(0) instanceof Lex.Symbol s &&
-                                s.name() == Lex.TokenName.KEYWORD &&
-                                s.value().equals("and") &&
-                                stack.get(1) instanceof Term nextTerm) {
-                            stack.pop();
-                            stack.pop();
-                            terms.add(nextTerm);
-                            stillChewing = true;
-                        }
-                    } while (stillChewing);
+                    boolean wholeListOnStack = true; // Assumption
+                    if (lookahead != null) {
+                        if (lookahead.name() == Lex.TokenName.STRING)
+                            wholeListOnStack = false;
+                        if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals("!"))
+                            wholeListOnStack = false;
+                        if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals("~"))
+                            wholeListOnStack = false;
+                        if (lookahead.name() == Lex.TokenName.KEYWORD && lookahead.value().equals("not"))
+                            wholeListOnStack = false;
+                    }
+
+                    //System.out.println("Reduce list? wholeOnstack: " + wholeListOnStack);
+
+                    if (wholeListOnStack) {
+                        List<Term> terms = new ArrayList<>();
+                        terms.add(t);
+                        stack.pop();
+
+                        // Chew the whole list all at once
+                        boolean stillChewing;
+                        do {
+                            stillChewing = false;
+                            //System.out.println("\tOk to chew extra term into list? : " + stack.size());
+                            if (!stack.isEmpty() && stack.get(0) instanceof Term nextTerm) {
+                                stack.pop();
+                                terms.add(nextTerm);
+                                stillChewing = true;
+                            } else if (!stack.isEmpty() && stack.get(0) instanceof Lex.Symbol s &&
+                                    s.name() == Lex.TokenName.KEYWORD &&
+                                    s.value().equals("and") &&
+                                    stack.get(1) instanceof Term nextTerm) {
+                                stack.pop();
+                                stack.pop();
+                                terms.add(nextTerm);
+                                stillChewing = true;
+                            }
+                        } while (stillChewing);
+
+                        stack.push(new AndComb(terms));
+                    }
                 }
             }
         }
