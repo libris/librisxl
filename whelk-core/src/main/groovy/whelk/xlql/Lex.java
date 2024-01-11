@@ -14,6 +14,7 @@ public class Lex {
         OPERATOR,
         KEYWORD,
         STRING,
+        CODE,
     }
 
     public record Symbol (TokenName name, String value, int offset) {}
@@ -45,7 +46,7 @@ public class Lex {
         }
     }
 
-    private static List reservedCharsInString = Arrays.asList('!', '<', '>', '=', '~', '(', ')');
+    private static List reservedCharsInString = Arrays.asList('!', '<', '>', '=', '~', '(', ')', ':');
 
     private static Symbol getNextSymbol(StringBuilder query, MutableInteger offset) throws LexerException {
         consumeWhiteSpace(query, offset);
@@ -153,8 +154,14 @@ public class Lex {
                 char c = query.charAt(0);
                 if (c == '"')
                     throw new LexerException("Lexer error: Double quote illegal at character index: " + offset.value);
-                if (reservedCharsInString.contains(c))
+                if (reservedCharsInString.contains(c)) {
+                    if (c == ':') {
+                        symbolValue.append(c);
+                        query.deleteCharAt(0);
+                        offset.increase(1);
+                    }
                     break;
+                }
                 query.deleteCharAt(0);
                 offset.increase(1);
                 if (Character.isWhitespace(c))
@@ -181,7 +188,10 @@ public class Lex {
                     symbolValue = new StringBuilder(symbolValue.toString().toLowerCase());
                     break;
                 default:
-                    name = TokenName.STRING;
+                    if (symbolValue.toString().endsWith(":"))
+                        name = TokenName.CODE;
+                    else
+                        name = TokenName.STRING;
             }
 
             return new Symbol(name, symbolValue.toString(), symbolOffset);

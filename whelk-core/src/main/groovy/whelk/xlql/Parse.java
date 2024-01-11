@@ -28,8 +28,7 @@ public class Parse
     public record OrComb(List<AndComb> andCombs) {}
     public record AndComb(List<Term> ts) {}
     public record Term (String s, Uoperator uop, Term t, Group g) {}
-    public record Code (String s) {}
-    public record Uoperator (String s, Code c) {}
+    public record Uoperator (String s, String c) {}
 
     public static OrComb parseQuery(LinkedList<Lex.Symbol> symbols) throws ParseException {
         LinkedList<Object> stack = new LinkedList<>();
@@ -72,19 +71,6 @@ public class Parse
 
     private static boolean reduce(LinkedList<Object> stack, Lex.Symbol lookahead) {
 
-        // CODE: [STRING ending in ":"] // OK FOR NOW BUT INCORRECT! "CODE" NEEDS TO BE LEXED SEPARATELY, NEVER A STRING
-        {
-            if (stack.size() >= 1) {
-                if (stack.get(0) instanceof Lex.Symbol s &&
-                        s.name() == Lex.TokenName.STRING &&
-                        s.value().endsWith(":")) {
-                    stack.pop();
-                    stack.push(new Code(s.value()));
-                    return true;
-                }
-            }
-        }
-
         // UOPERATOR: "!" | "~" | "NOT" | CODE
         {
             if (stack.size() >= 1) {
@@ -95,9 +81,9 @@ public class Parse
                     stack.push(new Uoperator(s.value(), null));
                     return true;
                 }
-                else if (stack.get(0) instanceof Code c) {
+                else if (stack.get(0) instanceof Lex.Symbol c && c.name() == Lex.TokenName.CODE) {
                     stack.pop();
-                    stack.push(new Uoperator(null, c));
+                    stack.push(new Uoperator(null, c.value()));
                     return true;
                 }
             }
@@ -107,7 +93,7 @@ public class Parse
         {
             if (stack.size() >= 2) {
                 if (stack.get(1) instanceof Uoperator uop) {
-                    if (stack.get(1) instanceof Term t) {
+                    if (stack.get(0) instanceof Term t) {
                         stack.pop();
                         stack.pop();
                         stack.push(new Term(null, uop, t, null));
@@ -148,7 +134,9 @@ public class Parse
 
                     boolean wholeListOnStack = true; // Assumption
                     if (lookahead != null) {
-                        if (lookahead.name() == Lex.TokenName.STRING) // TODO: ALSO "CODE", WHEN IT IS A SEPARATE SYMBOL
+                        if (lookahead.name() == Lex.TokenName.STRING)
+                            wholeListOnStack = false;
+                        if (lookahead.name() == Lex.TokenName.CODE)
                             wholeListOnStack = false;
                         if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals("!"))
                             wholeListOnStack = false;
