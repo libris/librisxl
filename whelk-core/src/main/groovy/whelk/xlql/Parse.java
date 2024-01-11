@@ -6,19 +6,23 @@ import java.util.function.Function;
 public class Parse
 {
     /**
-     * Grammar:
+     * LALR(1) EBNF
+     * (ORCOMB is the root node)
      *
-     * QUERY: ( PART )*
-     * PART: ORCOMB | ANDCOMB | GROUP
-     * GROUP: "(" ORCOMB | ANDCOMB | GROUP ")"
      * ORCOMB: ANDCOMB ( "OR" ANDCOMB )*
+     * GROUP: "(" ORCOMB | ANDCOMB | GROUP ")"
      * ANDCOMB: TERM ( "AND" TERM | TERM )*
      * TERM: STRING | GROUP | UOPERATOR TERM | UOPERATOR GROUP
      * UOPERATOR: "!" | "~" | "NOT" | CODE
      * CODE: [STRING ending in ":"]
      * STRING: ...
-     *
      */
+
+    public static class ParseException extends Exception {
+        public ParseException(String s) {
+            super(s);
+        }
+    }
 
     public record Group(OrComb o, AndComb a, Group g) {}
     public record OrComb(List<AndComb> andCombs) {}
@@ -27,7 +31,7 @@ public class Parse
     public record Code (String s) {}
     public record Uoperator (String s, Code c) {}
 
-    public static void parseQuery(LinkedList<Lex.Symbol> symbols) {
+    public static OrComb parseQuery(LinkedList<Lex.Symbol> symbols) throws ParseException {
         LinkedList<Object> stack = new LinkedList<>();
         while (!symbols.isEmpty()) {
             shift(stack, symbols);
@@ -54,6 +58,11 @@ public class Parse
         }
 
         System.out.println("Parse termination.");
+        if (symbols.isEmpty() && stack.size() == 1 && stack.get(0) instanceof OrComb) {
+            return (OrComb) stack.get(0);
+        }
+
+        throw new ParseException("TODO");
     }
 
     // Note to self, the front of the list counts as the top!
@@ -97,14 +106,14 @@ public class Parse
         // TERM: STRING | GROUP | UOPERATOR TERM | UOPERATOR GROUP
         {
             if (stack.size() >= 2) {
-                if (stack.get(0) instanceof Uoperator uop) {
+                if (stack.get(1) instanceof Uoperator uop) {
                     if (stack.get(1) instanceof Term t) {
                         stack.pop();
                         stack.pop();
                         stack.push(new Term(null, uop, t, null));
                         return true;
                     }
-                    if (stack.get(1) instanceof Group g) {
+                    if (stack.get(0) instanceof Group g) {
                         stack.pop();
                         stack.pop();
                         stack.push(new Term(null, uop, null, g));
