@@ -13,14 +13,14 @@ public class Parse
      * GROUP: "(" ORCOMB | ANDCOMB | GROUP ")"
      * ORCOMB: ANDCOMB ( "OR" ANDCOMB )*
      * ANDCOMB: TERM ( "AND" TERM | TERM )*
-     * TERM: STRING | UOPERATOR TERM | UOPERATOR GROUP
+     * TERM: STRING | GROUP | UOPERATOR TERM | UOPERATOR GROUP
      * UOPERATOR: "!" | "~" | "NOT" | CODE
      * CODE: [STRING ending in ":"]
      * STRING: ...
      *
      */
 
-    public record Group() {} // TODO
+    public record Group(OrComb o, AndComb a, Group g) {}
     public record OrComb(List<AndComb> andCombs) {}
     public record AndComb(List<Term> ts) {}
     public record Term (String s, Uoperator uop, Term t, Group g) {}
@@ -52,7 +52,6 @@ public class Parse
             }
             while(reductionWasPossible);
         }
-        // SPECIAL IDEA FOR HANDLING * (lists), do them "second order", only when there are no more reductions (OR SHIFTS!) possible.
 
         System.out.println("Parse termination.");
     }
@@ -95,7 +94,7 @@ public class Parse
             }
         }
 
-        // TERM: STRING | UOPERATOR TERM | UOPERATOR GROUP
+        // TERM: STRING | GROUP | UOPERATOR TERM | UOPERATOR GROUP
         {
             if (stack.size() >= 2) {
                 if (stack.get(0) instanceof Uoperator uop) {
@@ -103,6 +102,13 @@ public class Parse
                         stack.pop();
                         stack.pop();
                         stack.push(new Term(null, uop, t, null));
+                        return true;
+                    }
+                    if (stack.get(1) instanceof Group g) {
+                        stack.pop();
+                        stack.pop();
+                        stack.push(new Term(null, uop, null, g));
+                        return true;
                     }
                 }
             }
@@ -111,6 +117,11 @@ public class Parse
                         s.name() == Lex.TokenName.STRING) {
                     stack.pop();
                     stack.push(new Term(s.value(), null, null, null));
+                    return true;
+                }
+                if (stack.get(0) instanceof Group g) {
+                    stack.pop();
+                    stack.push(new Term(null, null, null, g));
                     return true;
                 }
             }
@@ -171,7 +182,7 @@ public class Parse
             }
         }
 
-        //ORCOMB: ANDCOMB ( "OR" ANDCOMB )*
+        // ORCOMB: ANDCOMB ( "OR" ANDCOMB )*
         {
             if (stack.size() >= 1) {
                 if (stack.get(0) instanceof AndComb ac) {
@@ -205,6 +216,42 @@ public class Parse
                         stack.push(new OrComb(ACs));
                         return true;
                     }
+                }
+            }
+        }
+
+        // GROUP: "(" ORCOMB | ANDCOMB | GROUP ")"
+        {
+            if (stack.size() >= 3) {
+                if (stack.get(0) instanceof Lex.Symbol s1 &&
+                        s1.name() == Lex.TokenName.OPERATOR &&
+                        s1.value().equals(")") &&
+                        stack.get(2) instanceof Lex.Symbol s2 &&
+                        s2.name() == Lex.TokenName.OPERATOR &&
+                        s2.value().equals("(")) {
+
+                    if (stack.get(1) instanceof OrComb oc) {
+                        stack.pop();
+                        stack.pop();
+                        stack.pop();
+                        stack.push(new Group(oc, null, null));
+                        return true;
+                    }
+                    if (stack.get(1) instanceof AndComb ac) {
+                        stack.pop();
+                        stack.pop();
+                        stack.pop();
+                        stack.push(new Group(null, ac, null));
+                        return true;
+                    }
+                    if (stack.get(1) instanceof Group g) {
+                        stack.pop();
+                        stack.pop();
+                        stack.pop();
+                        stack.push(new Group(null, null, g));
+                        return true;
+                    }
+
                 }
             }
         }
