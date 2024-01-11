@@ -20,14 +20,9 @@ public class Parse
      *
      */
 
-    public enum OPERATORKEYWORD {
-        AND,
-        OR,
-        NOT,
-    }
-
     public record Group() {} // TODO
-    public record AndComb(List<Term> ts) {} // TODO
+    public record OrComb(List<AndComb> andCombs) {}
+    public record AndComb(List<Term> ts) {}
     public record Term (String s, Uoperator uop, Term t, Group g) {}
     public record Code (String s) {}
     public record Uoperator (String s, Code c) {}
@@ -126,14 +121,14 @@ public class Parse
             if (stack.size() >= 1) {
                 if (stack.get(0) instanceof Term t) {
 
-                    // This is where the 1 in LALR(1) comes in, because of the implicit AND.
+                    // This is where the 1 in LALR(1) comes in.
                     // We must check that we have everything that goes into the list, *on*
                     // the stack before reducing. In other words, our lookahead must be
                     // something that cannot be part of the list (or EOF) before we reduce.
 
                     boolean wholeListOnStack = true; // Assumption
                     if (lookahead != null) {
-                        if (lookahead.name() == Lex.TokenName.STRING)
+                        if (lookahead.name() == Lex.TokenName.STRING) // TODO: ALSO "CODE", WHEN IT IS A SEPARATE SYMBOL
                             wholeListOnStack = false;
                         if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals("!"))
                             wholeListOnStack = false;
@@ -141,9 +136,9 @@ public class Parse
                             wholeListOnStack = false;
                         if (lookahead.name() == Lex.TokenName.KEYWORD && lookahead.value().equals("not"))
                             wholeListOnStack = false;
+                        if (lookahead.name() == Lex.TokenName.KEYWORD && lookahead.value().equals("and"))
+                            wholeListOnStack = false;
                     }
-
-                    //System.out.println("Reduce list? wholeOnstack: " + wholeListOnStack);
 
                     if (wholeListOnStack) {
                         List<Term> terms = new ArrayList<>();
@@ -154,12 +149,11 @@ public class Parse
                         boolean stillChewing;
                         do {
                             stillChewing = false;
-                            //System.out.println("\tOk to chew extra term into list? : " + stack.size());
                             if (!stack.isEmpty() && stack.get(0) instanceof Term nextTerm) {
                                 stack.pop();
                                 terms.add(nextTerm);
                                 stillChewing = true;
-                            } else if (!stack.isEmpty() && stack.get(0) instanceof Lex.Symbol s &&
+                            } else if (stack.size() >= 2 && stack.get(0) instanceof Lex.Symbol s &&
                                     s.name() == Lex.TokenName.KEYWORD &&
                                     s.value().equals("and") &&
                                     stack.get(1) instanceof Term nextTerm) {
@@ -171,6 +165,45 @@ public class Parse
                         } while (stillChewing);
 
                         stack.push(new AndComb(terms));
+                        return true;
+                    }
+                }
+            }
+        }
+
+        //ORCOMB: ANDCOMB ( "OR" ANDCOMB )*
+        {
+            if (stack.size() >= 1) {
+                if (stack.get(0) instanceof AndComb ac) {
+
+                    boolean wholeListOnStack = true; // Assumption
+                    if (lookahead != null) {
+                        if (lookahead.name() == Lex.TokenName.KEYWORD && lookahead.value().equals("or"))
+                            wholeListOnStack = false;
+                    }
+
+                    if (wholeListOnStack) {
+                        List<AndComb> ACs = new ArrayList<>();
+                        ACs.add(ac);
+                        stack.pop();
+
+                        // Chew the whole list all at once
+                        boolean stillChewing;
+                        do {
+                            stillChewing = false;
+                            if (stack.size() >= 2 && stack.get(0) instanceof Lex.Symbol s &&
+                                    s.name() == Lex.TokenName.KEYWORD &&
+                                    s.value().equals("or") &&
+                                    stack.get(1) instanceof AndComb nextAc) {
+                                stack.pop();
+                                stack.pop();
+                                ACs.add(nextAc);
+                                stillChewing = true;
+                            }
+                        } while (stillChewing);
+
+                        stack.push(new OrComb(ACs));
+                        return true;
                     }
                 }
             }
