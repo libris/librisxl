@@ -12,7 +12,7 @@ public class Parse
      * ORCOMB: ANDCOMB ( "OR" ANDCOMB )*
      * GROUP: "(" ORCOMB | ANDCOMB | GROUP ")"
      * ANDCOMB: TERM ( "AND" TERM | TERM )*
-     * TERM: STRING | GROUP | UOPERATOR TERM | UOPERATOR GROUP
+     * TERM: STRING | GROUP | UOPERATOR TERM | UOPERATOR GROUP | STRING "<" STRING | STRING ">" STRING | STRING "=" STRING
      * UOPERATOR: "!" | "~" | "NOT" | CODE
      * CODE: [STRING ending in ":"]
      * STRING: ...
@@ -75,8 +75,15 @@ public class Parse
         {
             if (stack.size() >= 1) {
                 if (stack.get(0) instanceof Lex.Symbol s &&
-                        s.name() == Lex.TokenName.STRING &&
+                        s.name() == Lex.TokenName.OPERATOR &&
                         ( s.value().equals("!") || s.value().equals("~") ) ) {
+                    stack.pop();
+                    stack.push(new Uoperator(s.value(), null));
+                    return true;
+                }
+                if (stack.get(0) instanceof Lex.Symbol s &&
+                        s.name() == Lex.TokenName.KEYWORD &&
+                        s.value().equals("not") ) {
                     stack.pop();
                     stack.push(new Uoperator(s.value(), null));
                     return true;
@@ -89,7 +96,7 @@ public class Parse
             }
         }
 
-        // TERM: STRING | GROUP | UOPERATOR TERM | UOPERATOR GROUP
+        // TERM: STRING | GROUP | UOPERATOR TERM | UOPERATOR GROUP | STRING "<" STRING | STRING ">" STRING | STRING "=" STRING
         {
             if (stack.size() >= 2) {
                 if (stack.get(1) instanceof Uoperator uop) {

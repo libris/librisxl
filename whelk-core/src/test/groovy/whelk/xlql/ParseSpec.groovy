@@ -15,6 +15,26 @@ class ParseSpec extends Specification {
         parseTree != null
     }
 
+    def "parse negative"() {
+        given:
+        def input = "!AAA"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+
+        expect:
+        parseTree != null
+    }
+
+    def "parse negative2"() {
+        given:
+        def input = "not AAA"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+
+        expect:
+        parseTree != null
+    }
+
     def "crazy grouping"() {
         given:
         def input = "AAA BBB and (CCC or DDD or (EEE) AND (FFF OR GGG))"
