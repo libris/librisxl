@@ -180,4 +180,35 @@ class ParseSpec extends Specification {
         then:
         thrown ParseException
     }
+
+    def "code binop"() {
+        given:
+        def input = "published: < 2022"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+
+        expect:
+        parseTree != null
+    }
+
+    def "code binop2"() {
+        given:
+        def input = "published: = 2022"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+
+        expect:
+        parseTree != null
+    }
+
+    def "bad code binop"() {
+        given:
+        def input = "published: = (2022)"
+        def lexedSymbols = Lex.lexQuery(input)
+
+        when:
+        Parse.parseQuery(lexedSymbols)
+        then:
+        thrown ParseException
+    }
 }

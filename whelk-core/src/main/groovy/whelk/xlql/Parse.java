@@ -12,8 +12,8 @@ public class Parse
      * ORCOMB: ANDCOMB ( "OR" ANDCOMB )*
      * GROUP: "(" ORCOMB | ANDCOMB | GROUP ")"
      * ANDCOMB: TERM ( "AND" TERM | TERM )*
-     * TERM: STRING | GROUP | UOPERATOR TERM | UOPERATOR GROUP | STRING "<" STRING | STRING ">" STRING | STRING "=" STRING
-     * UOPERATOR: "!" | "~" | "NOT" | CODE
+     * TERM: STRING | GROUP | UOPERATOR TERM | CODE TERM | CODE "<" STRING | CODE ">" STRING | CODE "=" STRING
+     * UOPERATOR: "!" | "~" | "NOT" |
      * CODE: [STRING ending in ":"]
      * STRING: ...
      */
@@ -27,7 +27,7 @@ public class Parse
     public record Group(OrComb o, AndComb a, Group g) {}
     public record OrComb(List<AndComb> andCombs) {}
     public record AndComb(List<Term> ts) {}
-    public record Term (String s, Uoperator uop, Term t, Group g) {}
+    public record Term (String s, Uoperator uop, Term term, Group group, String code, String binop) {}
     public record Uoperator (String s, String c) {}
 
     public static OrComb parseQuery(LinkedList<Lex.Symbol> symbols) throws ParseException {
@@ -41,7 +41,7 @@ public class Parse
                     lookahead = symbols.get(0);
                 reductionWasPossible = reduce(stack, lookahead);
 
-
+                /*
                 System.out.println("After reduction, stack and next symbols:\n\tstack:");//\n\t stack: " + stack);
                 for (Object o : stack) {
                     System.out.println("\t\t"+o.toString());
@@ -50,13 +50,12 @@ public class Parse
                     System.out.println("\t next: " + lookahead + "\n");
                 else
                     System.out.println();
-
+                */
 
             }
             while(reductionWasPossible);
         }
 
-        System.out.println("Parse termination.");
         if (symbols.isEmpty() && stack.size() == 1 && stack.get(0) instanceof OrComb) {
             return (OrComb) stack.get(0);
         }
@@ -71,7 +70,7 @@ public class Parse
 
     private static boolean reduce(LinkedList<Object> stack, Lex.Symbol lookahead) {
 
-        // UOPERATOR: "!" | "~" | "NOT" | CODE
+        // UOPERATOR: "!" | "~" | "NOT"
         {
             if (stack.size() >= 1) {
                 if (stack.get(0) instanceof Lex.Symbol s &&
@@ -88,22 +87,39 @@ public class Parse
                     stack.push(new Uoperator(s.value(), null));
                     return true;
                 }
-                else if (stack.get(0) instanceof Lex.Symbol c && c.name() == Lex.TokenName.CODE) {
-                    stack.pop();
-                    stack.push(new Uoperator(null, c.value()));
-                    return true;
-                }
             }
         }
 
-        // TERM: STRING | GROUP | UOPERATOR TERM | STRING "<" STRING | STRING ">" STRING | STRING "=" STRING
+        // TERM: STRING | GROUP | UOPERATOR TERM | CODE TERM | CODE "<" STRING | CODE ">" STRING | CODE "=" STRING
         {
+            if (stack.size() >= 3) {
+                if (stack.get(2) instanceof Lex.Symbol s1 && s1.name() == Lex.TokenName.CODE) {
+                    if (stack.get(1) instanceof Lex.Symbol s2 && s2.name() == Lex.TokenName.OPERATOR && "<>=".contains(s2.value())) {
+                        if (stack.get(0) instanceof Lex.Symbol s3 && s3.name() == Lex.TokenName.STRING) {
+                            stack.pop();
+                            stack.pop();
+                            stack.pop();
+                            stack.push(new Term(s3.value(), null, null, null, s1.value(), s2.value()));
+                            return true;
+                        }
+                    }
+                }
+            }
             if (stack.size() >= 2) {
                 if (stack.get(1) instanceof Uoperator uop) {
                     if (stack.get(0) instanceof Term t) {
                         stack.pop();
                         stack.pop();
-                        stack.push(new Term(null, uop, t, null));
+                        stack.push(new Term(null, uop, t, null, null, null));
+                        return true;
+                    }
+                }
+
+                if (stack.get(1) instanceof Lex.Symbol s && s.name() == Lex.TokenName.CODE) {
+                    if (stack.get(0) instanceof Term t) {
+                        stack.pop();
+                        stack.pop();
+                        stack.push(new Term(null, null, t, null, s.value(), null));
                         return true;
                     }
                 }
@@ -112,12 +128,12 @@ public class Parse
                 if (stack.get(0) instanceof Lex.Symbol s &&
                         s.name() == Lex.TokenName.STRING) {
                     stack.pop();
-                    stack.push(new Term(s.value(), null, null, null));
+                    stack.push(new Term(s.value(), null, null, null, null, null));
                     return true;
                 }
                 if (stack.get(0) instanceof Group g) {
                     stack.pop();
-                    stack.push(new Term(null, null, null, g));
+                    stack.push(new Term(null, null, null, g, null, null));
                     return true;
                 }
             }
