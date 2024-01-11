@@ -96,7 +96,7 @@ public class Parse
             }
         }
 
-        // TERM: STRING | GROUP | UOPERATOR TERM | UOPERATOR GROUP | STRING "<" STRING | STRING ">" STRING | STRING "=" STRING
+        // TERM: STRING | GROUP | UOPERATOR TERM | STRING "<" STRING | STRING ">" STRING | STRING "=" STRING
         {
             if (stack.size() >= 2) {
                 if (stack.get(1) instanceof Uoperator uop) {
@@ -104,12 +104,6 @@ public class Parse
                         stack.pop();
                         stack.pop();
                         stack.push(new Term(null, uop, t, null));
-                        return true;
-                    }
-                    if (stack.get(0) instanceof Group g) {
-                        stack.pop();
-                        stack.pop();
-                        stack.push(new Term(null, uop, null, g));
                         return true;
                     }
                 }
