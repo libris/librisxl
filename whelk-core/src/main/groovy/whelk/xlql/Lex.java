@@ -14,7 +14,6 @@ public class Lex {
         OPERATOR,
         KEYWORD,
         STRING,
-        CODE,
     }
 
     public record Symbol (TokenName name, String value, int offset) {}
@@ -155,10 +154,11 @@ public class Lex {
                 if (c == '"')
                     throw new LexerException("Lexer error: Double quote illegal at character index: " + offset.value);
                 if (reservedCharsInString.contains(c)) {
-                    if (c == ':') {
+                    if (symbolValue.isEmpty()) {
                         symbolValue.append(c);
                         query.deleteCharAt(0);
                         offset.increase(1);
+                        return new Symbol(TokenName.OPERATOR, symbolValue.toString(), symbolOffset);
                     }
                     break;
                 }
@@ -177,21 +177,14 @@ public class Lex {
                 case "and":
                 case "or":
                 case "not":
-                case "prox":
-                case "sortby":
                 case "AND":
                 case "OR":
                 case "NOT":
-                case "PROX":
-                case "SORTBY":
                     name = TokenName.KEYWORD;
                     symbolValue = new StringBuilder(symbolValue.toString().toLowerCase());
                     break;
                 default:
-                    if (symbolValue.toString().endsWith(":"))
-                        name = TokenName.CODE;
-                    else
-                        name = TokenName.STRING;
+                    name = TokenName.STRING;
             }
 
             return new Symbol(name, symbolValue.toString(), symbolOffset);
