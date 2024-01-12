@@ -7,7 +7,6 @@ class LexSpec extends Specification {
 
     def "operator no whitspace"() {
         given:
-        //def input = "published:(2022)"
         def input = "AAA:BBB"
         def lexedSymbols = Lex.lexQuery(input)
 
@@ -21,7 +20,6 @@ class LexSpec extends Specification {
 
     def "operator with whitspace"() {
         given:
-        //def input = "published:(2022)"
         def input = "AAA = BBB"
         def lexedSymbols = Lex.lexQuery(input)
 
@@ -38,16 +36,6 @@ class LexSpec extends Specification {
         def input = "published:(2022)"
         def lexedSymbols = Lex.lexQuery(input)
 
-        /*
-        System.err.println([
-                new Lex.Symbol(Lex.TokenName.STRING, "published", 0),
-                new Lex.Symbol(Lex.TokenName.OPERATOR, ":", 10),
-                new Lex.Symbol(Lex.TokenName.OPERATOR, "(", 11),
-                new Lex.Symbol(Lex.TokenName.STRING, "2022", 12),
-                new Lex.Symbol(Lex.TokenName.OPERATOR, ")", 16),
-        ])
-        System.err.println(lexedSymbols)*/
-
         expect:
         lexedSymbols as List == [
                 new Lex.Symbol(Lex.TokenName.STRING, "published", 0),
@@ -58,14 +46,4 @@ class LexSpec extends Specification {
         ]
     }
 
-    /*
-    given:
-        def input = "published: = (2022)"
-        def lexedSymbols = Lex.lexQuery(input)
-
-        when:
-        Parse.parseQuery(lexedSymbols)
-        then:
-        thrown ParseException
-     */
 }
