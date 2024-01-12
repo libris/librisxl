@@ -59,11 +59,11 @@ public class Parse
             while(reductionWasPossible);
         }
 
-        if (symbols.isEmpty() && stack.size() == 1 && stack.get(0) instanceof OrComb) {
+        if (stack.size() == 1 && stack.get(0) instanceof OrComb) {
             return (OrComb) stack.get(0);
         }
 
-        throw new ParseException("TODO");
+        throw new ParseException("Syntax error");
     }
 
     // Note to self, the front of the list counts as the top!

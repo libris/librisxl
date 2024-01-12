@@ -97,6 +97,16 @@ class ParseSpec extends Specification {
         parseTree != null
     }
 
+    def "basic code2"() {
+        given:
+        def input = "förf=AAA"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+
+        expect:
+        parseTree != null
+    }
+
     def "quoted code"() {
         given:
         def input = "förf:\"AAA\""
@@ -224,6 +234,39 @@ class ParseSpec extends Specification {
     def "Fail compare with group"() {
         given:
         def input = "AAA < (CCC)"
+        def lexedSymbols = Lex.lexQuery(input)
+
+        when:
+        Parse.parseQuery(lexedSymbols)
+        then:
+        thrown ParseException
+    }
+
+    def "Fail compare with not"() {
+        given:
+        def input = "AAA < ! CCC"
+        def lexedSymbols = Lex.lexQuery(input)
+
+        when:
+        Parse.parseQuery(lexedSymbols)
+        then:
+        thrown ParseException
+    }
+
+    def "Fail compare with not2"() {
+        given:
+        def input = "AAA < NOT CCC"
+        def lexedSymbols = Lex.lexQuery(input)
+
+        when:
+        Parse.parseQuery(lexedSymbols)
+        then:
+        thrown ParseException
+    }
+
+    def "Fail compare with like"() {
+        given:
+        def input = "AAA < ~ CCC"
         def lexedSymbols = Lex.lexQuery(input)
 
         when:
