@@ -12,9 +12,10 @@ public class Parse
      * ORCOMB: ANDCOMB ( "OR" ANDCOMB )*
      * GROUP: "(" ORCOMB | ANDCOMB | GROUP ")"
      * ANDCOMB: TERM ( "AND" TERM | TERM )*
-     * TERM: STRING | GROUP | UOPERATOR TERM | CODE TERM | CODE "<" STRING | CODE ">" STRING | CODE "=" STRING
+     * TERM: STRING | GROUP | UOPERATOR TERM | STRING BOPERATOR STRING | STRING BOPERATOREQ TERM
      * UOPERATOR: "!" | "~" | "NOT" |
-     * CODE: [STRING ending in ":"]
+     * BOPERATOR: "<" | ">"
+     * BOPERATOREQ: ":" | "="
      * STRING: ...
      */
 
@@ -27,8 +28,10 @@ public class Parse
     public record Group(OrComb o, AndComb a, Group g) {}
     public record OrComb(List<AndComb> andCombs) {}
     public record AndComb(List<Term> ts) {}
-    public record Term (String s, Uoperator uop, Term term, Group group, String code, String binop) {}
+    public record Term (String string1, Uoperator uop, Term term, Group group, Boperator bop, BoperatorEq bopeq, String string2) {}
     public record Uoperator (String s, String c) {}
+    public record Boperator (String op) {}
+    public record BoperatorEq () {}
 
     public static OrComb parseQuery(LinkedList<Lex.Symbol> symbols) throws ParseException {
         LinkedList<Object> stack = new LinkedList<>();
@@ -70,6 +73,32 @@ public class Parse
 
     private static boolean reduce(LinkedList<Object> stack, Lex.Symbol lookahead) {
 
+        // BOPERATOR: "<" | ">"
+        {
+            if (stack.size() >= 1) {
+                if (stack.get(0) instanceof Lex.Symbol s &&
+                        s.name() == Lex.TokenName.OPERATOR &&
+                        ( s.value().equals("<") || s.value().equals(">") ) ) {
+                    stack.pop();
+                    stack.push(new Boperator(s.value()));
+                    return true;
+                }
+            }
+        }
+
+        // BOPERATOREQ: ":" | "="
+        {
+            if (stack.size() >= 1) {
+                if (stack.get(0) instanceof Lex.Symbol s &&
+                        s.name() == Lex.TokenName.OPERATOR &&
+                        ( s.value().equals("=") || s.value().equals(":") ) ) {
+                    stack.pop();
+                    stack.push(new BoperatorEq());
+                    return true;
+                }
+            }
+        }
+
         // UOPERATOR: "!" | "~" | "NOT"
         {
             if (stack.size() >= 1) {
@@ -90,16 +119,31 @@ public class Parse
             }
         }
 
-        // TERM: STRING | GROUP | UOPERATOR TERM | CODE TERM | CODE "<" STRING | CODE ">" STRING | CODE "=" STRING
+        // TERM: STRING | GROUP | UOPERATOR TERM | STRING BOPERATOR STRING | STRING BOPERATOREQ TERM
         {
             if (stack.size() >= 3) {
-                if (stack.get(2) instanceof Lex.Symbol s1 && s1.name() == Lex.TokenName.CODE) {
-                    if (stack.get(1) instanceof Lex.Symbol s2 && s2.name() == Lex.TokenName.OPERATOR && "<>=".contains(s2.value())) {
+
+                // STRING BOPERATOR STRING
+                if (stack.get(2) instanceof Lex.Symbol s1 && s1.name() == Lex.TokenName.STRING) {
+                    if (stack.get(1) instanceof Boperator bop) {
                         if (stack.get(0) instanceof Lex.Symbol s3 && s3.name() == Lex.TokenName.STRING) {
                             stack.pop();
                             stack.pop();
                             stack.pop();
-                            stack.push(new Term(s3.value(), null, null, null, s1.value(), s2.value()));
+                            stack.push(new Term(s3.value(), null, null, null, bop, null, s1.value())); // TODO: CHECK ORDER!!
+                            return true;
+                        }
+                    }
+                }
+
+                // STRING BOPERATOREQ TERM
+                if (stack.get(2) instanceof Lex.Symbol s1 && s1.name() == Lex.TokenName.STRING) {
+                    if (stack.get(1) instanceof BoperatorEq bop) {
+                        if (stack.get(0) instanceof Term t) {
+                            stack.pop();
+                            stack.pop();
+                            stack.pop();
+                            stack.push(new Term(null, null, t, null, null, bop, s1.value())); // TODO: CHECK ORDER!!
                             return true;
                         }
                     }
@@ -110,16 +154,7 @@ public class Parse
                     if (stack.get(0) instanceof Term t) {
                         stack.pop();
                         stack.pop();
-                        stack.push(new Term(null, uop, t, null, null, null));
-                        return true;
-                    }
-                }
-
-                if (stack.get(1) instanceof Lex.Symbol s && s.name() == Lex.TokenName.CODE) {
-                    if (stack.get(0) instanceof Term t) {
-                        stack.pop();
-                        stack.pop();
-                        stack.push(new Term(null, null, t, null, s.value(), null));
+                        stack.push(new Term(null, uop, t, null, null, null, null));
                         return true;
                     }
                 }
@@ -127,13 +162,28 @@ public class Parse
             if (stack.size() >= 1) {
                 if (stack.get(0) instanceof Lex.Symbol s &&
                         s.name() == Lex.TokenName.STRING) {
-                    stack.pop();
-                    stack.push(new Term(s.value(), null, null, null, null, null));
-                    return true;
+
+                    boolean okToReduce = true; // Assumption
+                    if (lookahead != null) {
+                        if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals("<"))
+                            okToReduce = false;
+                        if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals(">"))
+                            okToReduce = false;
+                        if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals("="))
+                            okToReduce = false;
+                        if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals(":"))
+                            okToReduce = false;
+                    }
+
+                    if (okToReduce) {
+                        stack.pop();
+                        stack.push(new Term(s.value(), null, null, null, null, null, null));
+                        return true;
+                    }
                 }
                 if (stack.get(0) instanceof Group g) {
                     stack.pop();
-                    stack.push(new Term(null, null, null, g, null, null));
+                    stack.push(new Term(null, null, null, g, null, null, null));
                     return true;
                 }
             }
@@ -144,7 +194,6 @@ public class Parse
             if (stack.size() >= 1) {
                 if (stack.get(0) instanceof Term t) {
 
-                    // This is where the 1 in LALR(1) comes in.
                     // We must check that we have everything that goes into the list, *on*
                     // the stack before reducing. In other words, our lookahead must be
                     // something that cannot be part of the list (or EOF) before we reduce.
@@ -153,11 +202,13 @@ public class Parse
                     if (lookahead != null) {
                         if (lookahead.name() == Lex.TokenName.STRING)
                             wholeListOnStack = false;
-                        if (lookahead.name() == Lex.TokenName.CODE)
-                            wholeListOnStack = false;
                         if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals("!"))
                             wholeListOnStack = false;
                         if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals("~"))
+                            wholeListOnStack = false;
+                        if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals(":"))
+                            wholeListOnStack = false;
+                        if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals("="))
                             wholeListOnStack = false;
                         if (lookahead.name() == Lex.TokenName.KEYWORD && lookahead.value().equals("not"))
                             wholeListOnStack = false;

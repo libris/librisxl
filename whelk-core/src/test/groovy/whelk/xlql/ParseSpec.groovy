@@ -183,7 +183,7 @@ class ParseSpec extends Specification {
 
     def "code binop"() {
         given:
-        def input = "published: < 2022"
+        def input = "published: 2022"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
 
@@ -193,7 +193,7 @@ class ParseSpec extends Specification {
 
     def "code binop2"() {
         given:
-        def input = "published: = 2022"
+        def input = "published:2022"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
 
@@ -201,9 +201,29 @@ class ParseSpec extends Specification {
         parseTree != null
     }
 
-    def "bad code binop"() {
+    def "code binop3"() {
         given:
-        def input = "published: = (2022)"
+        def input = "published=2022"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+
+        expect:
+        parseTree != null
+    }
+
+    def "code binop4"() {
+        given:
+        def input = "published<2022"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+
+        expect:
+        parseTree != null
+    }
+
+    def "Fail compare with group"() {
+        given:
+        def input = "AAA < (CCC)"
         def lexedSymbols = Lex.lexQuery(input)
 
         when:
@@ -211,4 +231,5 @@ class ParseSpec extends Specification {
         then:
         thrown ParseException
     }
+
 }
