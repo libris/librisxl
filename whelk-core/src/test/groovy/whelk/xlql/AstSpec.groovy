@@ -27,7 +27,7 @@ class AstSpec extends Specification {
         expect:
         ast == new Ast.And(
                 [
-                        new String("svarta hål"),
+                        "svarta hål",
                         new Ast.Not(new Ast.CodeLesserGreaterThan("published", "<", "2023")),
                         new Ast.CodeEquals("subject", "lcsh:Physics")
                 ]
