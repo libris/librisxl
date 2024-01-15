@@ -130,7 +130,7 @@ public class Parse
                             stack.pop();
                             stack.pop();
                             stack.pop();
-                            stack.push(new Term(s3.value(), null, null, null, bop, null, s1.value())); // TODO: CHECK ORDER!!
+                            stack.push(new Term(s3.value(), null, null, null, bop, null, s1.value()));
                             return true;
                         }
                     }
@@ -143,7 +143,7 @@ public class Parse
                             stack.pop();
                             stack.pop();
                             stack.pop();
-                            stack.push(new Term(null, null, t, null, null, bop, s1.value())); // TODO: CHECK ORDER!!
+                            stack.push(new Term(null, null, t, null, null, bop, s1.value()));
                             return true;
                         }
                     }

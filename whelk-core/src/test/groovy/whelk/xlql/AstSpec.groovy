@@ -11,10 +11,27 @@ class AstSpec extends Specification {
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
         Object ast = Ast.buildFrom(parseTree)
 
-        System.err.println(ast)
+        //System.err.println(ast)
+        expect:
+        ast == new Ast.And([new Ast.Or(["DDD", "CCC"]), "BBB", "AAA"])
+    }
+
+
+    def "normal query"() {
+        given:
+        def input = "subject: \"lcsh:Physics\" AND NOT published < 2023 AND \"svarta hål\""
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+        Object ast = Ast.buildFrom(parseTree)
 
         expect:
-        ast != null
+        ast == new Ast.And(
+                [
+                        new String("svarta hål"),
+                        new Ast.Not(new Ast.CodeLesserGreaterThan("published", "<", "2023")),
+                        new Ast.CodeEquals("subject", "lcsh:Physics")
+                ]
+        )
     }
 
 }
