@@ -127,6 +127,26 @@ class ParseSpec extends Specification {
         parseTree != null
     }
 
+    def "quoted code3"() {
+        given:
+        def input = "\"förf:\":\"AAA\""
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+
+        expect:
+        parseTree != null
+    }
+
+    def "quoted code4"() {
+        given:
+        def input = "\"Kod: författare och annat:\":(\"AAA\" OR BBB)"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+
+        expect:
+        parseTree != null
+    }
+
     def "code group"() {
         given:
         def input = "förf:(AAA)"
