@@ -34,4 +34,20 @@ class AstSpec extends Specification {
         )
     }
 
+    def "normal query2"() {
+        given:
+        def input = "subject: (\"lcsh:Physics\" OR Fysik) AND NOT published < 2023"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+        Object ast = Ast.buildFrom(parseTree)
+
+        expect:
+        ast == new Ast.And(
+                [
+                        new Ast.Not(new Ast.CodeLesserGreaterThan("published", "<", "2023")),
+                        new Ast.CodeEquals("subject", new Ast.Or(["Fysik", "lcsh:Physics"]))
+                ]
+        )
+    }
+
 }
