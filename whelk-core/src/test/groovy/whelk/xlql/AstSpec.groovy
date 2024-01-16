@@ -50,4 +50,20 @@ class AstSpec extends Specification {
         )
     }
 
+    def "codes and quotes"() {
+        given:
+        def input = "\"bf:subject\":\"lcsh:Physics\" AND \"bf:subject\""
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+        Object ast = Ast.buildFrom(parseTree)
+        
+        expect:
+        ast == new Ast.And(
+                [
+                        "bf:subject",
+                        new Ast.CodeEquals("bf:subject", "lcsh:Physics")
+                ]
+        )
+    }
+
 }
