@@ -5,6 +5,31 @@ import whelk.util.Unicode
 
 class NotificationRules {
 
+    private static boolean lifeSpanChanged(Object lifeSpanBefore, Object lifeSpanAfter) {
+        if ( (lifeSpanBefore == null && lifeSpanAfter != null) || (lifeSpanBefore != null && lifeSpanAfter == null) )
+            return false
+        if (! (lifeSpanBefore instanceof String) || ! (lifeSpanAfter instanceof String))
+            return false
+        if (lifeSpanAfter == lifeSpanBefore == null)
+            return false
+
+        int dashAtIndexBefore = lifeSpanBefore.indexOf('-')
+        String birthBefore = lifeSpanBefore.substring(0, dashAtIndexBefore).trim()
+        String deathBefore = lifeSpanBefore.substring(dashAtIndexBefore+1).trim()
+
+        int dashAtIndexAfter = lifeSpanAfter.indexOf('-')
+        String birthAfter = lifeSpanAfter.substring(0, dashAtIndexAfter).trim()
+        String deathAfter = lifeSpanAfter.substring(dashAtIndexAfter+1).trim()
+
+        if (!birthBefore.isEmpty() && !birthBefore.equals(birthAfter))
+            return true
+
+        if (!deathBefore.isEmpty() && !deathBefore.equals(deathAfter))
+            return true
+
+        return false
+    }
+
     private static boolean personChanged(Object agentBefore, Object agentAfter) {
         if (!(agentBefore instanceof Map) || !(agentAfter instanceof Map))
             return false
@@ -14,7 +39,7 @@ class NotificationRules {
             agentBefore["familyName"] != agentAfter["familyName"] ||
                     agentBefore["givenName"] != agentAfter["givenName"] ||
                     agentBefore["name"] != agentAfter["name"] ||
-                    (agentBefore["lifeSpan"] && agentBefore["lifeSpan"] != agentAfter["lifeSpan"]) // Change should trigger, add should not.
+                    lifeSpanChanged(agentBefore["lifeSpan"], agentAfter["lifeSpan"])
             )
                 return true
         }
