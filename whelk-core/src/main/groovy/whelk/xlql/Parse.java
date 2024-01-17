@@ -14,7 +14,7 @@ public class Parse
      * ANDCOMB: TERM ( "AND" TERM | TERM )*
      * TERM: STRING | GROUP | UOPERATOR TERM | STRING BOPERATOR STRING | STRING BOPERATOREQ TERM
      * UOPERATOR: "!" | "~" | "NOT" |
-     * BOPERATOR: "<" | ">"
+     * BOPERATOR: "<" | ">" | "<=" | ">="
      * BOPERATOREQ: ":" | "="
      * STRING: ...
      */
@@ -73,12 +73,12 @@ public class Parse
 
     private static boolean reduce(LinkedList<Object> stack, Lex.Symbol lookahead) {
 
-        // BOPERATOR: "<" | ">"
+        // BOPERATOR: "<" | ">" | "<=" | ">="
         {
             if (stack.size() >= 1) {
                 if (stack.get(0) instanceof Lex.Symbol s &&
                         s.name() == Lex.TokenName.OPERATOR &&
-                        ( s.value().equals("<") || s.value().equals(">") ) ) {
+                        ( s.value().equals("<") || s.value().equals(">") || s.value().equals("<=") || s.value().equals(">=")) ) {
                     stack.pop();
                     stack.push(new Boperator(s.value()));
                     return true;
@@ -168,6 +168,10 @@ public class Parse
                         if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals("<"))
                             okToReduce = false;
                         if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals(">"))
+                            okToReduce = false;
+                        if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals("<="))
+                            okToReduce = false;
+                        if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals(">="))
                             okToReduce = false;
                         if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals("="))
                             okToReduce = false;

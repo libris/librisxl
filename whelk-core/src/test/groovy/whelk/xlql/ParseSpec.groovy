@@ -251,6 +251,16 @@ class ParseSpec extends Specification {
         parseTree != null
     }
 
+    def "code binop5"() {
+        given:
+        def input = "published>=2022"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+
+        expect:
+        parseTree != null
+    }
+
     def "Fail compare with group"() {
         given:
         def input = "AAA < (CCC)"

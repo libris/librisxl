@@ -16,7 +16,6 @@ class AstSpec extends Specification {
         ast == new Ast.And([new Ast.Or(["DDD", "CCC"]), "BBB", "AAA"])
     }
 
-
     def "normal query"() {
         given:
         def input = "subject: \"lcsh:Physics\" AND NOT published < 2023 AND \"svarta hål\""
@@ -62,6 +61,34 @@ class AstSpec extends Specification {
                 [
                         "bf:subject",
                         new Ast.CodeEquals("bf:subject", "lcsh:Physics")
+                ]
+        )
+    }
+
+    def "comparison"() {
+        given:
+        def input = "published >= 2000"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+        Object ast = Ast.buildFrom(parseTree)
+
+        expect:
+        ast == new Ast.CodeLesserGreaterThan("published", ">=", "2000")
+    }
+
+    def "comparison2"() {
+        given:
+        def input = "Pippi author=\"Astrid Lindgren\" published<=1970"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+        Object ast = Ast.buildFrom(parseTree)
+
+        expect:
+        ast == new Ast.And(
+                [
+                        new Ast.CodeLesserGreaterThan("published", "<=", "1970"),
+                        new Ast.CodeEquals("author", "Astrid Lindgren"),
+                        "Pippi"
                 ]
         )
     }

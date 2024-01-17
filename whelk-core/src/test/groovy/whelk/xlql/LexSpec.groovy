@@ -72,4 +72,56 @@ class LexSpec extends Specification {
         ]
     }
 
+    def "two-char operators"() {
+        given:
+        def input = "AAA<=BBB"
+        def lexedSymbols = Lex.lexQuery(input)
+
+        expect:
+        lexedSymbols as List == [
+                new Lex.Symbol(Lex.TokenName.STRING, "AAA", 0),
+                new Lex.Symbol(Lex.TokenName.OPERATOR, "<=", 3),
+                new Lex.Symbol(Lex.TokenName.STRING, "BBB", 5),
+        ]
+    }
+
+    def "two-char operators with whitespace"() {
+        given:
+        def input = "AAA <= BBB"
+        def lexedSymbols = Lex.lexQuery(input)
+
+        expect:
+        lexedSymbols as List == [
+                new Lex.Symbol(Lex.TokenName.STRING, "AAA", 0),
+                new Lex.Symbol(Lex.TokenName.OPERATOR, "<=", 4),
+                new Lex.Symbol(Lex.TokenName.STRING, "BBB", 7),
+        ]
+    }
+
+    def "two-char operators with whitespace 2"() {
+        given:
+        def input = "AAA<= BBB"
+        def lexedSymbols = Lex.lexQuery(input)
+
+        expect:
+        lexedSymbols as List == [
+                new Lex.Symbol(Lex.TokenName.STRING, "AAA", 0),
+                new Lex.Symbol(Lex.TokenName.OPERATOR, "<=", 3),
+                new Lex.Symbol(Lex.TokenName.STRING, "BBB", 6),
+        ]
+    }
+
+    def "two-char operators with whitespace 3"() {
+        given:
+        def input = "AAA <=BBB"
+        def lexedSymbols = Lex.lexQuery(input)
+
+        expect:
+        lexedSymbols as List == [
+                new Lex.Symbol(Lex.TokenName.STRING, "AAA", 0),
+                new Lex.Symbol(Lex.TokenName.OPERATOR, "<=", 4),
+                new Lex.Symbol(Lex.TokenName.STRING, "BBB", 6),
+        ]
+    }
+
 }
