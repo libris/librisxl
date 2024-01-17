@@ -56,12 +56,6 @@ public class Lex {
 
         // Special symbols that need not be whitespace separated:
         if (query.length() >= 2) {
-            if (query.substring(0, 2).equals("==")) {
-                query.deleteCharAt(0);
-                query.deleteCharAt(0);
-                offset.increase(2);
-                return new Symbol(TokenName.OPERATOR, "==", symbolOffset);
-            }
             if (query.substring(0, 2).equals(">=")) {
                 query.deleteCharAt(0);
                 query.deleteCharAt(0);
@@ -73,12 +67,6 @@ public class Lex {
                 query.deleteCharAt(0);
                 offset.increase(2);
                 return new Symbol(TokenName.OPERATOR, "<=", symbolOffset);
-            }
-            if (query.substring(0, 2).equals("<>")) {
-                query.deleteCharAt(0);
-                query.deleteCharAt(0);
-                offset.increase(2);
-                return new Symbol(TokenName.OPERATOR, "<>", symbolOffset);
             }
         }
         if (query.length() >= 1) {
