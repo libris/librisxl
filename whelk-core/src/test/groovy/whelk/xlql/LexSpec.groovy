@@ -5,7 +5,7 @@ import whelk.xlql.Lex.LexerException
 
 class LexSpec extends Specification {
 
-    def "operator no whitspace"() {
+    def "operator no whitespace"() {
         given:
         def input = "AAA:BBB"
         def lexedSymbols = Lex.lexQuery(input)
@@ -18,7 +18,7 @@ class LexSpec extends Specification {
         ]
     }
 
-    def "operator with whitspace"() {
+    def "operator with whitespace"() {
         given:
         def input = "AAA = BBB"
         def lexedSymbols = Lex.lexQuery(input)
@@ -43,6 +43,32 @@ class LexSpec extends Specification {
                 new Lex.Symbol(Lex.TokenName.OPERATOR, "(", 10),
                 new Lex.Symbol(Lex.TokenName.STRING, "2022", 11),
                 new Lex.Symbol(Lex.TokenName.OPERATOR, ")", 15),
+        ]
+    }
+
+    def "escaped quote in quoted string"() {
+        given:
+        def input = "AAA:\"BB\\\"B\""
+        def lexedSymbols = Lex.lexQuery(input)
+
+        expect:
+        lexedSymbols as List == [
+                new Lex.Symbol(Lex.TokenName.STRING, "AAA", 0),
+                new Lex.Symbol(Lex.TokenName.OPERATOR, ":", 3),
+                new Lex.Symbol(Lex.TokenName.STRING, "BB\"B", 4),
+        ]
+    }
+
+    def "escaped escape in quoted string"() {
+        given:
+        def input = "AAA:\"BB\\\\B\""
+        def lexedSymbols = Lex.lexQuery(input)
+
+        expect:
+        lexedSymbols as List == [
+                new Lex.Symbol(Lex.TokenName.STRING, "AAA", 0),
+                new Lex.Symbol(Lex.TokenName.OPERATOR, ":", 3),
+                new Lex.Symbol(Lex.TokenName.STRING, "BB\\B", 4),
         ]
     }
 
