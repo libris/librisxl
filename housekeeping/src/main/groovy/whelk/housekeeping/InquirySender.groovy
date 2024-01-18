@@ -71,6 +71,7 @@ class InquirySender extends HouseKeeper {
             while (resultSet.next()) {
                 String dataString = resultSet.getString("data")
                 Map data = mapper.readValue( dataString, Map )
+                var messageType = NotificationUtils.NotificationType.valueOf((String) data['@type'])
 
                 /* Assume data:
                     {
@@ -102,7 +103,7 @@ class InquirySender extends HouseKeeper {
 
                 // Figure out who to send to
                 Set<String> recipients = []
-                String moreSubject = ""
+                String subject = NotificationUtils.subject(whelk, messageType)
                 boolean sendToAll = true
                 concerningSystemIDs.each { String concerningSystemID ->
                     String type = whelk.getStorage().getMainEntityTypeBySystemID(concerningSystemID)
@@ -118,7 +119,7 @@ class InquirySender extends HouseKeeper {
                                 }
                             }
                         }
-                        moreSubject = ' ' + NotificationUtils.recipientCollections(libraries)
+                        subject = NotificationUtils.subject(whelk, messageType, libraries)
                     }
                 }
                 if (sendToAll) {
@@ -140,7 +141,7 @@ class InquirySender extends HouseKeeper {
                 String body = generateEmailBody(noticeSystemId, concerningSystemIDs, NotificationUtils.asList(data["comment"]))
                 log.info("Sending ${recipients.size()} emails for $noticeSystemId")
                 for (String recipient : recipients) {
-                    NotificationUtils.sendEmail(recipient, NotificationUtils.emailHeader + moreSubject, body)
+                    NotificationUtils.sendEmail(recipient, subject, body)
                 }
 
                 Instant lastChangeObservationForInstance = resultSet.getTimestamp("modified").toInstant()

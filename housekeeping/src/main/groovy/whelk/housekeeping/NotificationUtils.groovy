@@ -16,7 +16,28 @@ import whelk.util.PropertyLoader
 @Log4j2
 class NotificationUtils {
 
-    public static String emailHeader = "[CXZ]"
+    private static String emailHeader = "[CXZ]"
+
+    enum NotificationType {
+        ChangeObservation,
+        ChangeNotice,
+        InquiryAction
+    }
+
+    static String subject(Whelk whelk, NotificationType notificationType, List<String> libraryUris = []) {
+        var typeLabel = whelk.jsonld.vocabIndex[notificationType.toString()]?['labelByLang']?['sv'] ?: ""
+
+        /*
+                [
+                'ChangeObservation': "Ändring",
+                'InquiryAction': "Förfrågan",
+                'ChangeNotice': "Ändringsmeddelande"
+        ].getOrDefault(notificationType.toString(), "")
+*/
+
+        String collections = recipientCollections(libraryUris)
+        return "$emailHeader ${typeLabel}.${collections ? ' ' : ''}${collections}"
+    }
 
     /**
      * Get all user settings and arrange them by requested library-uri, so that you
@@ -74,6 +95,9 @@ class NotificationUtils {
         }
 
         if (mailer) {
+            // unclear if simplejavamail checks subject length
+            subject = subject.substring(0, Math.min(subject.length(), 800))
+
             Email email = EmailBuilder.startingBlank()
                     .to(recipient)
                     .withSubject(subject)
