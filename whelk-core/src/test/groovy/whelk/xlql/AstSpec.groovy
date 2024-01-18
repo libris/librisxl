@@ -105,4 +105,87 @@ class AstSpec extends Specification {
         thrown BadQueryException
     }
 
+    def "Flatten code groups"() {
+        given:
+        def input = "AAA:(BBB and CCC)"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+        Object ast = Ast.buildFrom(parseTree)
+        Object flattened = Analysis.flattenCodes(ast)
+
+        expect:
+        flattened == new Ast.And(
+                [
+                        new Ast.CodeEquals("AAA", "CCC"),
+                        new Ast.CodeEquals("AAA", "BBB"),
+                ]
+        )
+    }
+
+    def "Flatten code groups2"() {
+        given:
+        def input = "author:(Alice and (Bob or Cecilia))"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+        Object ast = Ast.buildFrom(parseTree)
+        Object flattened = Analysis.flattenCodes(ast)
+
+        expect:
+        flattened == new Ast.And(
+                [
+                        new Ast.Or([
+                                new Ast.CodeEquals("author", "Cecilia"),
+                                new Ast.CodeEquals("author", "Bob"),
+                        ]),
+                        new Ast.CodeEquals("author", "Alice"),
+                ]
+        )
+    }
+
+    def "Flatten code groups3"() {
+        given:
+        def input = "author:(Alice and (Bob or Cecilia) and not David)"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+        Object ast = Ast.buildFrom(parseTree)
+        Object flattened = Analysis.flattenCodes(ast)
+
+        expect:
+        flattened == new Ast.And(
+                [
+                        new Ast.Not(new Ast.CodeEquals("author", "David")),
+                        new Ast.Or([
+                                new Ast.CodeEquals("author", "Cecilia"),
+                                new Ast.CodeEquals("author", "Bob"),
+                        ]),
+                        new Ast.CodeEquals("author", "Alice"),
+                ]
+        )
+    }
+
+    def "Flatten code groups4"() {
+        given:
+        def input = "\"everything\" or author:(Alice and (Bob or Cecilia) and not David)"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+        Object ast = Ast.buildFrom(parseTree)
+        Object flattened = Analysis.flattenCodes(ast)
+
+        expect:
+        flattened == new Ast.Or(
+                [
+                        new Ast.And(
+                        [
+                                new Ast.Not(new Ast.CodeEquals("author", "David")),
+                                new Ast.Or([
+                                        new Ast.CodeEquals("author", "Cecilia"),
+                                        new Ast.CodeEquals("author", "Bob"),
+                                ]),
+                                new Ast.CodeEquals("author", "Alice"),
+                        ]),
+                        "everything"
+                ]
+        )
+    }
+
 }
