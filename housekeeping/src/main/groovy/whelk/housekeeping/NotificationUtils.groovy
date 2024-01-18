@@ -16,7 +16,14 @@ import whelk.util.PropertyLoader
 @Log4j2
 class NotificationUtils {
 
-    private static String emailHeader = "[CXZ]"
+    private static final String emailHeader = "[CXZ]"
+    static final String EMAIL_FOOTER = """
+        
+        ----------------------------------------------------------------------------------------------------------
+        Läs mer om CXZ-meddelanden på kb.se
+        https://www.kb.se/samverkan-och-utveckling/libris/librissamarbetet/sandlistor/andringsmeddelanden-cxz.html
+    
+        """.stripIndent()
 
     enum NotificationType {
         ChangeObservation,

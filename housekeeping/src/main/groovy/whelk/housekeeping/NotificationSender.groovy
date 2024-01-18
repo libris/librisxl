@@ -254,6 +254,9 @@ class NotificationSender extends HouseKeeper {
             sb.append("\n\n")
         }
 
+
+        sb.append(NotificationUtils.EMAIL_FOOTER)
+
         return sb.toString()
     }
 }

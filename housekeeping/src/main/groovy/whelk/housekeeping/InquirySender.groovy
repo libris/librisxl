@@ -180,6 +180,7 @@ class InquirySender extends HouseKeeper {
             sb.append("\t").append(NotificationUtils.makeLink(systemId)).append("\n")
             sb.append("\n")
         }
+        sb.append(NotificationUtils.EMAIL_FOOTER)
 
         return sb.toString()
     }
