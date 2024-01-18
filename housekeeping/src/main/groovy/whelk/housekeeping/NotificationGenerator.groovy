@@ -321,7 +321,7 @@ class NotificationGenerator extends HouseKeeper {
                         "representationBefore" : oldValue,
                         "representationAfter" : newValue,
                         "category" : ["@id" : categoryUri],
-                        "agent" : ["@id" : agentId],
+                        "descriptionLastModifier" : ["@id" : agentId],
                 ]
         ]]
 
