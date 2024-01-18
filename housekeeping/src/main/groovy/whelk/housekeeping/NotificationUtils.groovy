@@ -17,9 +17,10 @@ import whelk.util.PropertyLoader
 class NotificationUtils {
 
     private static final String emailHeader = "[CXZ]"
+    static final String DIVIDER = '----------------------------------------------------------------------------------------------------------'
     static final String EMAIL_FOOTER = """
         
-        ----------------------------------------------------------------------------------------------------------
+        $DIVIDER
         Läs mer om CXZ-meddelanden på kb.se
         https://www.kb.se/samverkan-och-utveckling/libris/librissamarbetet/sandlistor/andringsmeddelanden-cxz.html
     
@@ -127,10 +128,29 @@ class NotificationUtils {
 
     // FIXME
     static String describe(Document doc, Whelk whelk) {
-        JsonLd ld = whelk.jsonld
+        whelk.embellish(doc)
         Map data = JsonLd.frame(doc.getThingIdentifiers().first(), doc.data)
-        def strings = ld.applyLensAsMapByLang(data, whelk.locales as Set, [], ['chips'])
-        return strings['sv'] // ???
+        StringBuilder s = new StringBuilder()
+        s.append(chipString(data, whelk))
+
+        ['responsibilityStatement', 'publication', 'extent'].each {p ->
+            asList(data[p]).each { s.append("\n").append(chipString(it, whelk)) }
+        }
+        s.append("\n").append("Kontrollnummer: ").append(doc.getControlNumber())
+
+        return s.toString()
+    }
+
+    static String chipString(Object data, Whelk whelk) {
+        if (data !instanceof Map) {
+            return data
+        }
+
+        try {
+            return whelk.jsonld.applyLensAsMapByLang(data, whelk.locales as Set, [], ['chips'])['sv']
+        } catch (Exception ignored) {
+            return ""
+        }
     }
 
     // FIXME
