@@ -1,7 +1,6 @@
 package whelk.xlql
 
 import spock.lang.Specification
-import whelk.xlql.Parse.ParseException
 
 class ParseSpec extends Specification {
 
@@ -64,7 +63,7 @@ class ParseSpec extends Specification {
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
 
         then:
-        thrown ParseException
+        thrown BadQueryException
     }
 
     def "super basic parse"() {
@@ -175,7 +174,7 @@ class ParseSpec extends Specification {
         when:
         Parse.parseQuery(lexedSymbols)
         then:
-        thrown ParseException
+        thrown BadQueryException
     }
 
     def "Bad use of code2"() {
@@ -186,7 +185,7 @@ class ParseSpec extends Specification {
         when:
         Parse.parseQuery(lexedSymbols)
         then:
-        thrown ParseException
+        thrown BadQueryException
     }
 
     def "Don't parse missing or-tail"() {
@@ -197,7 +196,7 @@ class ParseSpec extends Specification {
         when:
         Parse.parseQuery(lexedSymbols)
         then:
-        thrown ParseException
+        thrown BadQueryException
     }
 
     def "Don't parse missing and-tail"() {
@@ -208,7 +207,7 @@ class ParseSpec extends Specification {
         when:
         Parse.parseQuery(lexedSymbols)
         then:
-        thrown ParseException
+        thrown BadQueryException
     }
 
     def "code binop"() {
@@ -269,7 +268,7 @@ class ParseSpec extends Specification {
         when:
         Parse.parseQuery(lexedSymbols)
         then:
-        thrown ParseException
+        thrown BadQueryException
     }
 
     def "Fail compare with not"() {
@@ -280,7 +279,7 @@ class ParseSpec extends Specification {
         when:
         Parse.parseQuery(lexedSymbols)
         then:
-        thrown ParseException
+        thrown BadQueryException
     }
 
     def "Fail compare with not2"() {
@@ -291,7 +290,7 @@ class ParseSpec extends Specification {
         when:
         Parse.parseQuery(lexedSymbols)
         then:
-        thrown ParseException
+        thrown BadQueryException
     }
 
     def "Fail compare with like"() {
@@ -302,7 +301,7 @@ class ParseSpec extends Specification {
         when:
         Parse.parseQuery(lexedSymbols)
         then:
-        thrown ParseException
+        thrown BadQueryException
     }
 
 }

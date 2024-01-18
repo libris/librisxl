@@ -19,12 +19,6 @@ public class Parse
      * STRING: ...
      */
 
-    public static class ParseException extends Exception {
-        public ParseException(String s) {
-            super(s);
-        }
-    }
-
     public record Group(OrComb o, AndComb a, Group g) {}
     public record OrComb(List<AndComb> andCombs) {}
     public record AndComb(List<Term> ts) {}
@@ -33,7 +27,7 @@ public class Parse
     public record Boperator (String op) {}
     public record BoperatorEq () {}
 
-    public static OrComb parseQuery(LinkedList<Lex.Symbol> symbols) throws ParseException {
+    public static OrComb parseQuery(LinkedList<Lex.Symbol> symbols) throws BadQueryException {
         LinkedList<Object> stack = new LinkedList<>();
         while (!symbols.isEmpty()) {
             shift(stack, symbols);
@@ -63,7 +57,7 @@ public class Parse
             return (OrComb) stack.get(0);
         }
 
-        throw new ParseException("Syntax error");
+        throw new BadQueryException("Syntax error");
     }
 
     // Note to self, the front of the list counts as the top!

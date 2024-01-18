@@ -11,8 +11,10 @@ public class Ast {
     public record CodeEquals (String code, Object operand) {}
     public record CodeLesserGreaterThan (String code, String operator, String operand) {}
 
-    public static Object buildFrom(Parse.OrComb orComb) {
-        return reduce(orComb);
+    public static Object buildFrom(Parse.OrComb orComb) throws BadQueryException {
+        Object ast = reduce(orComb);
+        Analysis.checkSemantics(ast);
+        return ast;
     }
 
     private static Object reduce(Parse.OrComb orComb) {
@@ -122,4 +124,5 @@ public class Ast {
 
         throw new RuntimeException("XLQL Error when reducing: " + group); // Should not be reachable. This is a bug.
     }
+
 }

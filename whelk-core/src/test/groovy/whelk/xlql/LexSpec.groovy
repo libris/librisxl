@@ -1,7 +1,6 @@
 package whelk.xlql
 
 import spock.lang.Specification
-import whelk.xlql.Lex.LexerException
 
 class LexSpec extends Specification {
 
