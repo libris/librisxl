@@ -138,7 +138,7 @@ class InquirySender extends HouseKeeper {
 
                 // Send
                 String noticeSystemId = whelk.getStorage().getSystemIdByIri((String) data["@id"])
-                String body = generateEmailBody(noticeSystemId, concerningSystemIDs, NotificationUtils.asList(data["comment"]))
+                String body = generateEmailBody(messageType, noticeSystemId, concerningSystemIDs, NotificationUtils.asList(data["comment"]))
                 log.info("Sending ${recipients.size()} emails for $noticeSystemId")
                 for (String recipient : recipients) {
                     NotificationUtils.sendEmail(recipient, subject, body)
@@ -163,21 +163,53 @@ class InquirySender extends HouseKeeper {
     }
 
     // TODO
-    private String generateEmailBody(String noticeSystemId, List<String> concerningSystemIDs, List<String> comments) {
+    private String generateEmailBody(NotificationUtils.NotificationType messageType, String noticeSystemId, List<String> concerningSystemIDs, List<String> comments) {
         StringBuilder sb = new StringBuilder()
-        for (String comment : comments) {
-            sb.append("- ").append(comment).append("\n")
+        if (messageType == NotificationUtils.NotificationType.ChangeNotice) {
+            sb.append("Ändringsmeddelande\n")
+            sb.append("==================\n")
+            sb.append("\n")
+            for (String comment : comments) {
+                sb.append("- ").append(comment).append("\n")
+            }
+            sb.append("\n")
+            sb.append("Länk till meddelande:\n")
+            sb.append( NotificationUtils.makeLink(noticeSystemId) ).append('\n')
         }
-        sb.append("\n")
-        sb.append( NotificationUtils.makeLink(noticeSystemId) )
+        if (messageType == NotificationUtils.NotificationType.InquiryAction) {
+            if (comments.size() < 2) {
+                sb.append("Förfrågan\n")
+                sb.append("=========\n")
+                sb.append("\n")
+                for (String comment : comments) {
+                    sb.append("- ").append(comment).append("\n")
+                }
+            } else {
+                sb.append("Svar\n")
+                sb.append("====\n")
+                sb.append("\n")
+                sb.append("Senaste:\n")
+                sb.append("- ").append(comments.last()).append("\n")
+                sb.append("\n")
+                sb.append("Alla:\n")
+                for (String comment : comments) {
+                    sb.append("- ").append(comment).append("\n")
+                }
+            }
 
-        sb.append("\n")
-        sb.append("\n")
+            sb.append("\n")
+            sb.append("Länk till förfrågan:\n")
+            sb.append( NotificationUtils.makeLink(noticeSystemId) ).append('\n')
+        }
+
+        sb.append('\n')
+        sb.append(NotificationUtils.DIVIDER).append('\n')
+        sb.append("Gäller:").append('\n')
+        sb.append('\n')
         for (String systemId : concerningSystemIDs) {
             Document doc = whelk.loadEmbellished(systemId)
-            sb.append("\t").append(NotificationUtils.describe(doc, whelk)).append("\n")
-            sb.append("\t").append(doc.getControlNumber()).append("\n")
-            sb.append("\t").append(NotificationUtils.makeLink(systemId)).append("\n")
+            sb.append(NotificationUtils.describe(doc, whelk)).append('\n')
+            sb.append(NotificationUtils.makeLink(systemId)).append("\n")
             sb.append("\n")
         }
         sb.append(NotificationUtils.EMAIL_FOOTER)

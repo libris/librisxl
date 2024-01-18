@@ -128,7 +128,6 @@ class NotificationUtils {
 
     // FIXME
     static String describe(Document doc, Whelk whelk) {
-        whelk.embellish(doc)
         Map data = JsonLd.frame(doc.getThingIdentifiers().first(), doc.data)
         StringBuilder s = new StringBuilder()
         s.append(chipString(data, whelk))

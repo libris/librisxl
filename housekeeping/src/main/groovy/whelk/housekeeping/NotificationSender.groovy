@@ -259,10 +259,10 @@ class NotificationSender extends HouseKeeper {
 
         sb.append('\n')
         sb.append("Gäller").append('\n')
-        sb.append("------").append('\n\n')
-
+        sb.append("------").append('\n')
+        sb.append('\n')
+        whelk.embellish(current)
         sb.append(NotificationUtils.describe(current, whelk)).append('\n')
-        //sb.append("Länk till ändrad post:\n")
         sb.append(NotificationUtils.makeLink(changedInstanceId)).append("\n")
         sb.append(NotificationUtils.EMAIL_FOOTER)
 
