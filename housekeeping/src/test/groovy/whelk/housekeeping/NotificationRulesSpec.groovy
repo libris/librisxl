@@ -763,6 +763,8 @@ class NotificationRulesSpec extends Specification {
         'title'     | "title."    || false
         'a  title'  | "a title"   || false
         'Desideria' | 'Désidéria' || false
+        'titl'      | 'Title'     || false
+        'titlx'     | 'Title'     || false
         'tilte'     | 'Title'     || false
         'Aker'      | 'Åker'      || false
         'Akerbar'   | 'Åkerbär'   || true
