@@ -233,24 +233,27 @@ class NotificationSender extends HouseKeeper {
             Map category = whelk.getJsonld().applyLensAsMapByLang( (Map) framed["category"], ["sv"] as Set, [], ["chips"])
             sb.append("\t" + category["sv"])
 
-            if (framed["representationBefore"] instanceof Map && framed["representationAfter"] instanceof Map) {
-                Map before = whelk.getJsonld().applyLensAsMapByLang((Map) framed["representationBefore"], ["sv"] as Set, [], ["chips"])
+            if (framed["representationAfter"] instanceof Map) {
                 Map after = whelk.getJsonld().applyLensAsMapByLang((Map) framed["representationAfter"], ["sv"] as Set, [], ["chips"])
-                sb.append("\n\t\tInnan: " + before["sv"])
-                sb.append("\n\t\tEfter: " + after["sv"])
-            } else if (framed["representationBefore"] instanceof List && framed["representationAfter"] instanceof List) {
-                sb.append("\n\t\tInnan: ")
-                for (Object item : framed["representationBefore"]) {
-                    Map before = whelk.getJsonld().applyLensAsMapByLang((Map) item, ["sv"] as Set, [], ["chips"])
-                    sb.append((String) before["sv"] + ", ")
-                }
-                sb.append("\n\t\tEfter: ")
+                sb.append("\n\t\tNytt värde: " + after["sv"])
+            } else if (framed["representationAfter"] instanceof List) {
+                sb.append("\n\t\tNytt värde: ")
                 for (Object item : framed["representationAfter"]) {
                     Map after = whelk.getJsonld().applyLensAsMapByLang((Map) item, ["sv"] as Set, [], ["chips"])
                     sb.append((String) after["sv"] + ", ")
                 }
             }
 
+            if (framed["representationBefore"] instanceof Map) {
+                Map before = whelk.getJsonld().applyLensAsMapByLang((Map) framed["representationBefore"], ["sv"] as Set, [], ["chips"])
+                sb.append("\n\t\tTidigare värde: " + before["sv"])
+            } else if (framed["representationBefore"] instanceof List) {
+                sb.append("\n\t\tTidigare värde: ")
+                for (Object item : framed["representationBefore"]) {
+                    Map before = whelk.getJsonld().applyLensAsMapByLang((Map) item, ["sv"] as Set, [], ["chips"])
+                    sb.append((String) before["sv"] + ", ")
+                }
+            }
             sb.append("\n\n")
         }
 
