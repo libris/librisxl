@@ -4,12 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Ast {
+    interface Comp {
+        String code();
+        Object operand();
+    }
     public record And (List<Object> operands) {}
     public record Or (List<Object> operands) {}
     public record Not (Object operand) {}
     public record Like (Object operand) {}
-    public record CodeEquals (String code, Object operand) {}
-    public record CodeLesserGreaterThan (String code, String operator, String operand) {}
+    public record CodeEquals (String code, Object operand) implements Comp {}
+    public record CodeLesserGreaterThan (String code, String operator, String operand) implements Comp {}
 
     public static Object buildFrom(Parse.OrComb orComb) throws BadQueryException {
         Object ast = reduce(orComb);
