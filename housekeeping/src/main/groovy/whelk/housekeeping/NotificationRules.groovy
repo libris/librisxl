@@ -36,9 +36,9 @@ class NotificationRules {
 
         if (agentBefore["@type"] == "Person" && agentAfter["@type"] == "Person") {
             if (
-            agentBefore["familyName"] != agentAfter["familyName"] ||
-                    agentBefore["givenName"] != agentAfter["givenName"] ||
-                    agentBefore["name"] != agentAfter["name"] ||
+                    stringChanged(agentBefore["familyName"] as String, agentAfter["familyName"] as String) ||
+                    stringChanged(agentBefore["givenName"] as String, agentAfter["givenName"] as String) ||
+                    stringChanged(agentBefore["name"] as String, agentAfter["name"] as String) ||
                     lifeSpanChanged(agentBefore["lifeSpan"], agentAfter["lifeSpan"])
             )
                 return true
@@ -396,6 +396,13 @@ class NotificationRules {
     }
 
     private static boolean stringChanged(String before, String after) {
+        if (before == null && after != null)
+            return true
+        if (before != null && after == null)
+            return true
+        if (before == null && after == null)
+            return false
+
         def a = normalize(before)
         def b = normalize(after)
         if (a.size() > Unicode.MAX_LEVENSHTEIN_LENGTH || b.size() > Unicode.MAX_LEVENSHTEIN_LENGTH) {

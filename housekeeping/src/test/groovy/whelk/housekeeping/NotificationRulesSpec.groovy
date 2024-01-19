@@ -5,7 +5,7 @@ import whelk.Document
 
 class NotificationRulesSpec extends Specification {
 
-    def "Change PrimaryContribution familyName"() {
+    def "Barely change PrimaryContribution familyName"() {
         given:
         Document framedBefore = new Document([
                 "mainEntity" : [
@@ -34,6 +34,50 @@ class NotificationRulesSpec extends Specification {
                                                 "agent" : [
                                                         "@type": "Person",
                                                         "familyName": "aab",
+                                                        "givenName": "bbb",
+                                                        "name": "ccc",
+                                                        "lifeSpan": "2022-2023"
+                                                ]
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Tuple result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
+
+        expect:
+        result[0] == false
+    }
+
+    def "Change PrimaryContribution familyName"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "contribution" : [
+                                        [
+                                                "@type" : "PrimaryContribution",
+                                                "agent" : [
+                                                        "@type": "Person",
+                                                        "familyName": "aaa",
+                                                        "givenName": "bbb",
+                                                        "name": "ccc",
+                                                        "lifeSpan": "2022-2023"
+                                                ]
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "contribution" : [
+                                        [
+                                                "@type" : "PrimaryContribution",
+                                                "agent" : [
+                                                        "@type": "Person",
+                                                        "familyName": "ddd",
                                                         "givenName": "bbb",
                                                         "name": "ccc",
                                                         "lifeSpan": "2022-2023"
@@ -78,7 +122,7 @@ class NotificationRulesSpec extends Specification {
                                                 "agent" : [
                                                         "@type": "Person",
                                                         "familyName": "aaa",
-                                                        "givenName": "bbc",
+                                                        "givenName": "fff",
                                                         "name": "ccc",
                                                         "lifeSpan": "2022-2023"
                                                 ]
@@ -123,7 +167,7 @@ class NotificationRulesSpec extends Specification {
                                                         "@type": "Person",
                                                         "familyName": "aaa",
                                                         "givenName": "bbb",
-                                                        "name": "ccd",
+                                                        "name": "ddd",
                                                         "lifeSpan": "2022-2023"
                                                 ]
                                         ]
