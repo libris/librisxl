@@ -14,10 +14,14 @@ class NotificationRules {
             return false
 
         int dashAtIndexBefore = lifeSpanBefore.indexOf('-')
+        if (dashAtIndexBefore == -1)
+            return false
         String birthBefore = lifeSpanBefore.substring(0, dashAtIndexBefore).trim()
         String deathBefore = lifeSpanBefore.substring(dashAtIndexBefore+1).trim()
 
         int dashAtIndexAfter = lifeSpanAfter.indexOf('-')
+        if (dashAtIndexAfter == -1)
+            return false
         String birthAfter = lifeSpanAfter.substring(0, dashAtIndexAfter).trim()
         String deathAfter = lifeSpanAfter.substring(dashAtIndexAfter+1).trim()
 
