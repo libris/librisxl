@@ -30,7 +30,7 @@ public class Analysis {
                 return new Ast.Not(wrapAllChildrenInCode(code, ((Ast.Not) operand).operand()));
             }
             if (operand instanceof Ast.Like) {
-                return new Ast.Not(wrapAllChildrenInCode(code, ((Ast.Like) operand).operand()));
+                return new Ast.Like(wrapAllChildrenInCode(code, ((Ast.Like) operand).operand()));
             }
 
         }
@@ -54,7 +54,7 @@ public class Analysis {
             return new Ast.Not(flattenCodes(((Ast.Not) astNode).operand()));
         }
         if (astNode instanceof Ast.Like) {
-            return new Ast.Not(flattenCodes(((Ast.Like) astNode).operand()));
+            return new Ast.Like(flattenCodes(((Ast.Like) astNode).operand()));
         }
 
         return astNode; // leafs, like String, no more checking needed
@@ -78,7 +78,7 @@ public class Analysis {
         } else if (astNode instanceof Ast.Not) {
             return new Ast.Not(wrapAllChildrenInCode(code, ((Ast.Not) astNode).operand()));
         } else if (astNode instanceof Ast.Like) {
-            return new Ast.Not(wrapAllChildrenInCode(code, ((Ast.Like) astNode).operand()));
+            return new Ast.Like(wrapAllChildrenInCode(code, ((Ast.Like) astNode).operand()));
         }
         throw new RuntimeException("XLQL Error when flattening: " + astNode); // Should not be reachable. This is a bug.
     }
