@@ -232,9 +232,9 @@ class NotificationSender extends HouseKeeper {
 
             if (framed["representationAfter"] instanceof Map) {
                 Map after = whelk.getJsonld().applyLensAsMapByLang((Map) framed["representationAfter"], ["sv"] as Set, [], ["chips"])
-                sb.append("\n  Nu:\t\t" + after["sv"])
+                sb.append("\n  Nu:\t\t\t" + after["sv"])
             } else if (framed["representationAfter"] instanceof List) {
-                sb.append("\n  Nu:\t\t")
+                sb.append("\n  Nu:\t\t\t")
                 for (Object item : framed["representationAfter"]) {
                     Map after = whelk.getJsonld().applyLensAsMapByLang((Map) item, ["sv"] as Set, [], ["chips"])
                     sb.append((String) after["sv"] + ", ")
