@@ -17,13 +17,11 @@ import whelk.util.PropertyLoader
 class NotificationUtils {
 
     private static final String emailHeader = "[CXZ]"
-    static final String DIVIDER = '----------------------------------------------------------------------------------------------------------'
+    static final String DIVIDER = '-------------------------------------------'
     static final String EMAIL_FOOTER = """
-        
         $DIVIDER
-        Läs mer om CXZ-meddelanden på kb.se
+        Läs mer om CXZ-meddelanden:
         https://www.kb.se/samverkan-och-utveckling/libris/librissamarbetet/sandlistor/andringsmeddelanden-cxz.html
-    
         """.stripIndent()
 
     enum NotificationType {

@@ -203,11 +203,8 @@ class NotificationSender extends HouseKeeper {
     private String generateEmailBody(String changedInstanceId, Set<Map> triggeredObservations) {
         Document current = whelk.getStorage().load(changedInstanceId)
         StringBuilder sb = new StringBuilder()
-        sb.append("Automatiskt ändringsmeddelande\n")
-        sb.append("==============================\n")
+        sb.append("** Automatiskt ändringsmeddelande **\n")
         sb.append("\n")
-        sb.append("Ändringar").append('\n')
-        sb.append("---------").append('\n')
         boolean commentsRendered = false
         for (Map observation : triggeredObservations) {
             String observationUri = Document._get(["@graph", 1, "@id"], observation)
@@ -219,7 +216,7 @@ class NotificationSender extends HouseKeeper {
                 Object comments = Document._get(["@graph", 1, "comment"], observation)
 
                 if (comments instanceof List) {
-                    sb.append("\nÄndringsanmärkningar\n")
+                    sb.append("\nÄndringsanmärkningar:\n")
                     for (String comment : comments)
                         sb.append('\t- ' + comment.replace('\n', '\n\t') + "\n")
                 }
@@ -235,9 +232,9 @@ class NotificationSender extends HouseKeeper {
 
             if (framed["representationAfter"] instanceof Map) {
                 Map after = whelk.getJsonld().applyLensAsMapByLang((Map) framed["representationAfter"], ["sv"] as Set, [], ["chips"])
-                sb.append("\n\tNytt värde:     " + after["sv"])
+                sb.append("\n  Nu:\t\t" + after["sv"])
             } else if (framed["representationAfter"] instanceof List) {
-                sb.append("\n\tNytt värde:     ")
+                sb.append("\n  Nu:\t\t")
                 for (Object item : framed["representationAfter"]) {
                     Map after = whelk.getJsonld().applyLensAsMapByLang((Map) item, ["sv"] as Set, [], ["chips"])
                     sb.append((String) after["sv"] + ", ")
@@ -246,9 +243,9 @@ class NotificationSender extends HouseKeeper {
 
             if (framed["representationBefore"] instanceof Map) {
                 Map before = whelk.getJsonld().applyLensAsMapByLang((Map) framed["representationBefore"], ["sv"] as Set, [], ["chips"])
-                sb.append("\n\tTidigare värde: " + before["sv"])
+                sb.append("\n  Tidigare:\t" + before["sv"])
             } else if (framed["representationBefore"] instanceof List) {
-                sb.append("\n\tTidigare värde: ")
+                sb.append("\n  Tidigare:\t")
                 for (Object item : framed["representationBefore"]) {
                     Map before = whelk.getJsonld().applyLensAsMapByLang((Map) item, ["sv"] as Set, [], ["chips"])
                     sb.append((String) before["sv"] + ", ")
@@ -258,8 +255,8 @@ class NotificationSender extends HouseKeeper {
         }
 
         sb.append('\n')
-        sb.append("Gäller").append('\n')
-        sb.append("------").append('\n')
+        sb.append(NotificationUtils.DIVIDER).append('\n')
+        sb.append("Gäller:").append('\n')
         sb.append('\n')
         whelk.embellish(current)
         sb.append(NotificationUtils.describe(current, whelk)).append('\n')
