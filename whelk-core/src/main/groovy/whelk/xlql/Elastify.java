@@ -37,41 +37,40 @@ public class Elastify {
 //        Set<String> instanceCompatibleDomains = intersect(getInstanceCompatibleTypes(), domains);
 //
 //        boolean searchInstances = !givenInstanceTypes.isEmpty() || !instanceCompatibleDomains.isEmpty() || domains.contains(UNKNOWN);
-        return reduceToAndOrTree(ast, false, false);
+        return reduceToAndOrTree(ast, false);
     }
 
-    private Object reduceToAndOrTree(Object node, boolean searchInstances, boolean negate) {
+    private Object reduceToAndOrTree(Object node, boolean searchInstances) {
+        // Assuming flattened codes and negations
         if (node instanceof Ast.And) {
             List<Object> operands = ((Ast.And) node).operands()
                     .stream()
-                    .map(o -> reduceToAndOrTree(o, searchInstances, negate))
+                    .map(o -> reduceToAndOrTree(o, searchInstances))
                     .toList();
-            return negate ? new Ast.Or(operands) : new Ast.And(operands);
+            return new Ast.And(operands);
         } else if (node instanceof Ast.Or) {
             List<Object> operands = ((Ast.Or) node).operands()
                     .stream()
-                    .map(o -> reduceToAndOrTree(o, searchInstances, negate))
+                    .map(o -> reduceToAndOrTree(o, searchInstances))
                     .toList();
-            return negate ? new Ast.And(operands) : new Ast.Or(operands);
-        } else if (node instanceof Ast.Not) {
-            return reduceToAndOrTree(((Ast.Not) node).operand(), searchInstances, !negate);
+            return new Ast.Or(operands);
         }
 //        else if (node instanceof Ast.Like) {
 //            return new Ast.Like(collectSearchPathTree(((Ast.Like) node).operand(), searchInstances));
 //        }
         else if (node instanceof Ast.Comp) {
-            return elastifyCodeNode((Ast.Comp) node, searchInstances, negate);
+            return elastifyCodeNode((Ast.Comp) node, searchInstances);
         }
         return node;
     }
 
-    private Object elastifyCodeNode(Ast.Comp node, boolean searchInstances, boolean negate) {
+    private Object elastifyCodeNode(Ast.Comp node, boolean searchInstances) {
         String code = node.code();
-        // TODO: Maybe not always String...
         String value = Disambiguate.expandPrefixed((String) node.operand()) ;
         Optional<String> operator = node instanceof Ast.CodeLesserGreaterThan
                 ? Optional.of(((Ast.CodeLesserGreaterThan) node).operator())
                 : Optional.empty();
+        boolean negate = node instanceof Ast.NotCodeEquals;
 
 
         String property = disambiguate.mapToKbvProperty(code.toLowerCase());

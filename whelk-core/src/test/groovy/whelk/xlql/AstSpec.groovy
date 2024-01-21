@@ -20,7 +20,7 @@ class AstSpec extends Specification {
         given:
         def input = "subject: \"lcsh:Physics\" AND NOT published < 2023 AND \"svarta hål\""
         def lexedSymbols = Lex.lexQuery(input)
-        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+            Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
         Object ast = Ast.buildFrom(parseTree)
 
         expect:
@@ -188,4 +188,57 @@ class AstSpec extends Specification {
         )
     }
 
+    def "flatten negations"() {
+        def input = "\"everything\" and not (author:Alice and published > 2022)"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+        Object ast = Ast.buildFrom(parseTree)
+        Object flattened = Analysis.flattenNegations(ast)
+
+        expect:
+        flattened == new Ast.And(
+                [
+                        new Ast.Or(
+                                [
+                                        new Ast.CodeLesserGreaterThan("published", "<=", "2022"),
+                                        new Ast.NotCodeEquals("author", "Alice")
+                                ]
+                        ),
+                        "everything"
+                ]
+        )
+    }
+
+    def "flatten negations 2"() {
+        def input = "\"everything\" and !(author:Alice and not published: 2022)"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+        Object ast = Ast.buildFrom(parseTree)
+        Object flattened = Analysis.flattenNegations(ast)
+
+        expect:
+        flattened == new Ast.And(
+                [
+                        new Ast.Or(
+                                [
+                                        new Ast.CodeEquals("published", "2022"),
+                                        new Ast.NotCodeEquals("author", "Alice")
+                                ]
+                        ),
+                        "everything"
+                ]
+        )
+    }
+
+    def "flatten negations 3: fail when trying to negate free text"() {
+        def input = "author:Alice and not \"everything\""
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+        Object ast = Ast.buildFrom(parseTree)
+
+        when:
+        Analysis.flattenNegations(ast)
+        then:
+        thrown BadQueryException
+    }
 }

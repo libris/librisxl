@@ -1,9 +1,66 @@
 package whelk.xlql;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Analysis {
+    static Map<String, String> operatorOpposites = operatorOpposites();
+
+    static Object flattenNegations(Object astNode) throws BadQueryException {
+        return flattenNegations(astNode, false);
+    }
+
+    private static Object flattenNegations(Object astNode, boolean negate) throws BadQueryException {
+        if (astNode instanceof Ast.And) {
+            List<Object> operands = new ArrayList<>();
+            for (Object o : ((Ast.And) astNode).operands()) {
+                operands.add(flattenNegations(o, negate));
+            }
+            return negate ? new Ast.Or(operands) : new Ast.And(operands);
+        } else if (astNode instanceof Ast.Or) {
+            List<Object> operands = new ArrayList<>();
+            for (Object o : ((Ast.Or) astNode).operands()) {
+                operands.add(flattenNegations(o, negate));
+            }
+            return negate ? new Ast.And(operands) : new Ast.Or(operands);
+        } else if (astNode instanceof Ast.Not) {
+            return flattenNegations(((Ast.Not) astNode).operand(), !negate);
+        }
+        // TODO
+//        else if (astNode instanceof Ast.Like) {
+//            return new Ast.Like(flattenNegations(((Ast.Like) astNode).operand(), negate));
+//        }
+        else if (astNode instanceof Ast.CodeEquals) {
+            if (negate) {
+                Ast.CodeEquals equalsNode = (Ast.CodeEquals) astNode;
+                // Assuming operand is String (flattened)
+                return new Ast.NotCodeEquals(equalsNode.code(), (String) equalsNode.operand());
+            } else {
+                return astNode;
+            }
+        } else if (astNode instanceof Ast.CodeLesserGreaterThan) {
+            if (negate) {
+                Ast.CodeLesserGreaterThan codeNode = (Ast.CodeLesserGreaterThan) astNode;
+                String newOperator = operatorOpposites.get(codeNode.operator());
+                return new Ast.CodeLesserGreaterThan(codeNode.code(), newOperator, codeNode.operand());
+            }
+            return astNode;
+        } else if (negate) {
+            throw new BadQueryException("Negating free text values is not possible");
+        }
+        return astNode;
+    }
+
+    static Map<String, String> operatorOpposites() {
+        Map<String, String> opposites = new HashMap<>();
+        opposites.put("<", ">=");
+        opposites.put(">=", "<");
+        opposites.put(">", "<=");
+        opposites.put("<=", ">");
+        return opposites;
+    }
 
     static Object flattenCodes(Object astNode) {
 

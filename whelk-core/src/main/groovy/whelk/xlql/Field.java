@@ -54,12 +54,8 @@ public class Field {
 
     String buildSearchKey() {
         String pathStr = toString(path);
-        if (operator.isPresent() && negate) {
-            ElasticOperator eop = getOperatorMappings().get(operator.get());
-            ElasticOperator reverseComp = getOperatorOpposites().get(eop);
-            return reverseComp.prefix + pathStr;
-        } else if (operator.isPresent()) {
-            return getOperatorMappings().get(operator.get()).prefix + pathStr;
+        if (operator.isPresent()) {
+            return operator.get() + pathStr;
         } else if (negate) {
             return ElasticOperator.NOT.prefix + pathStr;
         }

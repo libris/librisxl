@@ -13,6 +13,7 @@ public class Ast {
     public record Not (Object operand) {}
     public record Like (Object operand) {}
     public record CodeEquals (String code, Object operand) implements Comp {}
+    public record NotCodeEquals(String code, String operand) implements Comp {}
     public record CodeLesserGreaterThan (String code, String operator, String operand) implements Comp {}
 
     public static Object buildFrom(Parse.OrComb orComb) throws BadQueryException {
