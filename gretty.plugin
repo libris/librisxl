@@ -1,12 +1,10 @@
-// SOURCE: https://raw.githubusercontent.com/gretty-gradle-plugin/gretty/master/pluginScripts/gretty-3.0.3.plugin
-
 buildscript {
   repositories {
     mavenCentral()
   }
 
   dependencies {
-    classpath 'org.gretty:gretty:3.0.6'
+    classpath 'org.gretty:gretty:3.1.2'
   }
 }
 
@@ -14,7 +12,5 @@ repositories {
   mavenCentral()
 }
 
-if (!project.plugins.findPlugin(org.akhikhl.gretty.GrettyPlugin)) {
+if (!project.plugins.findPlugin(org.akhikhl.gretty.GrettyPlugin))
   project.apply(plugin: org.akhikhl.gretty.GrettyPlugin)
-  project.gretty.servletContainer = 'jetty9.4'
-}
