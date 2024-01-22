@@ -1,5 +1,6 @@
+import groovy.xml.XmlSlurper
 import groovy.xml.StreamingMarkupBuilder
-import groovy.util.slurpersupport.GPathResult
+import groovy.xml.slurpersupport.GPathResult
 
 class ExerciseOaipmh {
 
