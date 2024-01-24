@@ -1,5 +1,5 @@
 
-File bibIDs = new File(scriptDir, "a1.txt")
+File bibIDs = new File(scriptDir, "affishx.txt")
 
 selectByIds( bibIDs.readLines() ) { bib ->
 
