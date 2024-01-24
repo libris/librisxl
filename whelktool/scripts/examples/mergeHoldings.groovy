@@ -52,7 +52,7 @@ void combine(Document target, Document incoming, List<String> propertiesToMerge,
     combineMap(incomingMainEntity, targetMainEntity, propertiesToMerge, propertiesToReplace)
     if (incomingMainEntity["hasComponent"] && incomingMainEntity["hasComponent"] instanceof List && incomingMainEntity["hasComponent"][0] &&
             targetMainEntity["hasComponent"] && targetMainEntity["hasComponent"] instanceof List && targetMainEntity["hasComponent"][0])
-        combineMap(incomingMainEntity["hasComponent"][0], targetMainEntity["hasComponent"][0], propertiesToMerge, propertiesToReplace)
+        combineMap(targetMainEntity["hasComponent"][0], incomingMainEntity["hasComponent"][0], propertiesToMerge, propertiesToReplace)
 }
 
 void combineMap(Map target, Map incoming, List<String> propertiesToMerge, List<String> propertiesToReplace) {
