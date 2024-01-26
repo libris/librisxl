@@ -480,7 +480,7 @@ class ESQuery {
     @CompileStatic(TypeCheckingMode.SKIP)
     private Map getSortClause(String sortParam) {
         def (String field, String sortOrder) = getFieldAndSortOrder(sortParam)
-        String termPath = getInferredTermPath(field)
+        String termPath = getInferredSortTermPath(field)
         Map clause = [(termPath): ['order': sortOrder]]
         // FIXME: this should be based on if the path is inside nested, not hardcoded to hasTitle.mainTitle
         // what about the filter condition then?
@@ -502,6 +502,15 @@ class ESQuery {
     }
 
     private String getInferredTermPath(String termPath) {
+        termPath = expandLangMapKeys(termPath)
+        if (termPath in keywordFields) {
+            return "${termPath}.keyword"
+        } else {
+            return termPath
+        }
+    }
+
+    private String getInferredSortTermPath(String termPath) {
         termPath = expandLangMapKeys(termPath)
         if (termPath in keywordFields && termPath !in numericExtractorFields) {
             return "${termPath}.keyword"
