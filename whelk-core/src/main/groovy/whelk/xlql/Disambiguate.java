@@ -100,9 +100,17 @@ public class Disambiguate {
     }
 
     public static boolean isProperty(Map termDefinition) {
+        return isObjectProperty(termDefinition) || isDatatypeProperty(termDefinition);
+    }
+
+    public static boolean isObjectProperty(Map termDefinition) {
         Object type = termDefinition.get(JsonLd.getTYPE_KEY());
-        // TODO: type subClassOf rdf:Property?
-        return "ObjectProperty".equals(type) || "DatatypeProperty".equals(type);
+        return "ObjectProperty".equals(type);
+    }
+
+    public static boolean isDatatypeProperty(Map termDefinition) {
+        Object type = termDefinition.get(JsonLd.getTYPE_KEY());
+        return "DatatypeProperty".equals(type);
     }
 
     public static String toPrefixed(String iri) {

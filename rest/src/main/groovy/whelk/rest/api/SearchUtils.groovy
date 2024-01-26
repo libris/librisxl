@@ -13,6 +13,7 @@ import whelk.exception.WhelkRuntimeException
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
 import whelk.search.RangeParameterPrefix
+import whelk.search.XLQLQuery
 import whelk.util.DocumentUtil
 
 import static whelk.search.ESQuery.Connective.AND
@@ -36,6 +37,7 @@ class SearchUtils {
     Whelk whelk
     JsonLd ld
     ESQuery esQuery
+    XLQLQuery xlqlQuery
     URI vocabUri
 
     SearchUtils(Whelk whelk) {
@@ -132,7 +134,9 @@ class SearchUtils {
         // TODO Only manipulate `_limit` in one place
         queryParameters['_limit'] = [limit.toString()]
 
-        Map esResult = esQuery.doQuery(queryParameters, suggest)
+        Map esResult = queryParameters.containsKey('_q')
+                ? esQuery.doQuery(queryParameters, suggest)
+                : xlqlQuery.doQuery(queryParameters)
         Lookup lookup = new Lookup()
         
         List<Map> mappings = []

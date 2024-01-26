@@ -6,9 +6,20 @@ import whelk.Whelk;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class Elastify {
-    // For testing
-    public record ElastifiedField(String searchKey, String value) {}
+public class QueryTree {
+    public record And(List<Object> conjuncts) {}
+    public record Or(List<Object> disjuncts) {}
+    public record FreeText(String value, Operator operator) {}
+    public record Field(Path path, Operator operator, String value) {}
+    public enum Operator {
+        EQUALS,
+        NOT_EQUALS,
+        GREATER_THAN_OR_EQUAL,
+        GREATER_THAN,
+        LESS_THAN_OR_EQUAL,
+        LESS_THAN;
+    }
+
     private JsonLd jsonLd;
     private Disambiguate disambiguate;
     private Map<String, String> domainByProperty;
@@ -19,114 +30,167 @@ public class Elastify {
 
     private static final String UNKNOWN = "Unknown";
 
-    Elastify(Whelk whelk) {
+    public QueryTree(Whelk whelk) {
         this.jsonLd = whelk.getJsonld();
         this.disambiguate = new Disambiguate(whelk);
         this.domainByProperty = loadDomainByProperty(whelk);
     }
 
-    public Object reduceToAndOrTree(Object ast) {
-        // For when grouping is possible in Elastic...
-//        Set<String> givenProperties = collectGivenProperties(ast);
-//        Set<String> givenTypes = givenProperties.contains(JsonLd.getTYPE_KEY()) ? collectGivenTypes(ast) : Collections.emptySet();
-//        Set<String> domains = givenProperties.stream()
-//                .map(p -> domainByProperty.getOrDefault(p, UNKNOWN))
-//                .collect(Collectors.toSet());
-//
-//        Set<String> givenInstanceTypes = intersect(getInstanceSubtypes(), givenTypes);
-//        Set<String> instanceCompatibleDomains = intersect(getInstanceCompatibleTypes(), domains);
-//
-//        boolean searchInstances = !givenInstanceTypes.isEmpty() || !instanceCompatibleDomains.isEmpty() || domains.contains(UNKNOWN);
-        return reduceToAndOrTree(ast, false);
+    public Object toQueryTree(String queryString) throws BadQueryException {
+        LinkedList<Lex.Symbol> lexedSymbols = Lex.lexQuery(queryString);
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols);
+        Object ast = Ast.buildFrom(parseTree);
+        return astToQt(ast);
     }
 
-    private Object reduceToAndOrTree(Object node, boolean searchInstances) {
+    public Object astToQt(Object ast) throws BadQueryException {
+        ast = Analysis.flattenCodes(ast);
+        ast = Analysis.flattenNegations(ast);
+        Set<String> givenProperties = collectGivenProperties(ast);
+        Set<String> givenTypes = givenProperties.contains(JsonLd.getTYPE_KEY()) ? collectGivenTypes(ast) : Collections.emptySet();
+        Set<String> domains = givenProperties.stream()
+                .map(p -> domainByProperty.getOrDefault(p, UNKNOWN))
+                .collect(Collectors.toSet());
+
+        Set<String> givenInstanceTypes = intersect(getInstanceSubtypes(), givenTypes);
+        Set<String> instanceCompatibleDomains = intersect(getInstanceCompatibleTypes(), domains);
+
+        boolean searchInstances = !givenInstanceTypes.isEmpty() || !instanceCompatibleDomains.isEmpty() || domains.contains(UNKNOWN);
+
+//        return toAndOrQueryTree(ast, searchInstances);
+        return astToQt(ast, false);
+    }
+
+    private Object astToQt(Object node, boolean searchInstances) throws BadQueryException {
         // Assuming flattened codes and negations
         if (node instanceof Ast.And) {
-            List<Object> operands = ((Ast.And) node).operands()
-                    .stream()
-                    .map(o -> reduceToAndOrTree(o, searchInstances))
-                    .toList();
-            return new Ast.And(operands);
+            List<Object> conjuncts = new ArrayList<>();
+            for (Object o : ((Ast.And) node).operands()) {
+                conjuncts.add(astToQt(o, searchInstances));
+            }
+            return new And(conjuncts);
         } else if (node instanceof Ast.Or) {
-            List<Object> operands = ((Ast.Or) node).operands()
-                    .stream()
-                    .map(o -> reduceToAndOrTree(o, searchInstances))
-                    .toList();
-            return new Ast.Or(operands);
+            List<Object> disjuncts = new ArrayList<>();
+            for (Object o : ((Ast.Or) node).operands()) {
+                disjuncts.add(astToQt(o, searchInstances));
+            }
+            return new Or(disjuncts);
         }
 //        else if (node instanceof Ast.Like) {
 //            return new Ast.Like(collectSearchPathTree(((Ast.Like) node).operand(), searchInstances));
 //        }
         else if (node instanceof Ast.Comp) {
-            return elastifyCodeNode((Ast.Comp) node, searchInstances);
+            return codeNodeToField((Ast.Comp) node, searchInstances);
         }
-        return node;
+        else if (node instanceof Ast.Not) {
+            String value = (String) ((Ast.Not) node).operand();
+            return new FreeText(value, Operator.NOT_EQUALS);
+        }
+        return new FreeText((String) node, Operator.EQUALS);
     }
 
-    private Object elastifyCodeNode(Ast.Comp node, boolean searchInstances) {
+    private Object codeNodeToField(Ast.Comp node, boolean searchInstances) throws BadQueryException {
         String code = node.code();
-        String value = Disambiguate.expandPrefixed((String) node.operand()) ;
-        Optional<String> operator = node instanceof Ast.CodeLesserGreaterThan
-                ? Optional.of(((Ast.CodeLesserGreaterThan) node).operator())
-                : Optional.empty();
-        boolean negate = node instanceof Ast.NotCodeEquals;
-
+        String value = (String) node.operand();
 
         String property = disambiguate.mapToKbvProperty(code.toLowerCase());
         if (property == null) {
-            // TODO: Handle bad code?
-            return value;
+            throw new BadQueryException("Unrecognized property alias: " + code);
         }
 
-        Field field = new Field(property, value, operator, negate);
-        field.expandChainAxiom(jsonLd);
+        Path path = new Path(property);
+        path.expandChainAxiom(jsonLd);
         if (getAdminMetadataSubtypes().contains(getDomain(property))) {
-            field.prependMeta();
+            path.prependMeta();
         }
-        if (JsonLd.looksLikeIri(value)) {
-            field.appendId();
+        List<Path> alternatePaths = new ArrayList<>(List.of(path));
+
+        Map propertyDefinition = jsonLd.getVocabIndex().get(property);
+        if (Disambiguate.isObjectProperty(propertyDefinition)) {
+            value = Disambiguate.expandPrefixed(value);
+            /*
+            Add ._str or .@id as an alternative paths but keep the "normal" path since sometimes the value of ObjectProperty
+            is a string, e.g. issuanceType: "Serial" or encodingLevel: "marc:FullLevel".
+            (Can we skip one of the paths with better disambiguation?)
+             */
+            if (JsonLd.looksLikeIri(value)) {
+                Path copy = path.copy();
+                copy.appendId();
+                alternatePaths.add(copy);
+            } else {
+                Path copy = path.copy();
+                copy.appendUnderscoreStr();
+                alternatePaths.add(copy);
+            }
         }
 
-        // TODO: More alternate paths...
-        //  If value is a literal then label, code, prefLabel etc. (or just _str?)
-        //  If value is a link then e.g. exactMatch
+        Operator operator = getOperator(node);
+
         if (searchInstances) {
-            List<ElastifiedField> alternatePaths = collectAlternateFields(field).stream()
-                    .map(f -> new ElastifiedField(f.buildSearchKey(), f.value))
-                    .toList();
-            return new Ast.Or(Collections.singletonList(alternatePaths));
-        } else {
-            return new ElastifiedField(field.buildSearchKey(), field.value);
+            List<Path> instanceVsWorkPaths = new ArrayList<>();
+            for (Path ap : alternatePaths) {
+                instanceVsWorkPaths.addAll(collectInstanceVsWorkPaths(ap));
+            }
+            alternatePaths.addAll(instanceVsWorkPaths);
         }
+
+        List<Object> searchFields = new ArrayList<>();
+        for (Path p : alternatePaths) {
+            searchFields.add(new Field(p, operator, value));
+        }
+
+        if (searchFields.size() == 1) {
+            return new Field(path, operator, value);
+        }
+        return operator == Operator.NOT_EQUALS ? new And(searchFields) : new Or(searchFields);
     }
 
-    private List<Field> collectAlternateFields(Field field) {
-        String domain = domainByProperty.get(field.property);
+    private Operator getOperator(Ast.Comp node) throws RuntimeException {
+        if (node instanceof Ast.CodeLesserGreaterThan) {
+            String operator = ((Ast.CodeLesserGreaterThan) node).operator();
+            if (">".equals(operator)) {
+                return Operator.GREATER_THAN;
+            } else if (">=".equals(operator)) {
+                return Operator.GREATER_THAN_OR_EQUAL;
+            } else if ("<".equals(operator)) {
+                return Operator.LESS_THAN;
+            } else if ("<=".equals(operator)) {
+                return Operator.LESS_THAN_OR_EQUAL;
+            }
+        } else if (node instanceof Ast.NotCodeEquals) {
+            return Operator.NOT_EQUALS;
+        } else if (node instanceof Ast.CodeEquals) {
+            return Operator.EQUALS;
+        }
+        throw new RuntimeException("Unable to decide operator for AST node with code: " + node.code()); // Shouldn't be reachable
+    }
 
-        boolean isInstanceBound = domain != null && instanceSubtypes.contains(domain);
-        boolean isWorkBound = domain != null && workSubtypes.contains(domain);
+    private List<Path> collectInstanceVsWorkPaths(Path p) {
+        String domain = domainByProperty.get(p.property);
 
-        List<Field> fields = new ArrayList<>(Arrays.asList(field));
+        boolean isInstanceBound = domain != null && getInstanceSubtypes().contains(domain);
+        boolean isWorkBound = domain != null && getWorkSubtypes().contains(domain);
+
+        List<Path> paths = new ArrayList<>();
 
         if (isInstanceBound) {
-            Field copy = field.copy();
-            copy.setInstanceToWorkPath();
-            fields.add(copy);
-        } else if (isWorkBound) {
-            Field copy = field.copy();
+            Path copy = p.copy();
             copy.setWorkToInstancePath();
-            fields.add(copy);
+            paths.add(copy);
+        } else if (isWorkBound) {
+            Path copy = p.copy();
+            copy.setInstanceToWorkPath();
+            paths.add(copy);
         } else {
-            Field copy1 = field.copy();
+            Path copy1 = p.copy();
             copy1.setInstanceToWorkPath();
-            fields.add(copy1);
-            Field copy2 = field.copy();
+            paths.add(copy1);
+            Path copy2 = p.copy();
             copy2.setWorkToInstancePath();
-            fields.add(copy2);
+            paths.add(copy2);
         }
 
-        return fields;
+        return paths;
     }
 
     public Set<String> collectGivenProperties(Object ast) {
@@ -172,6 +236,7 @@ public class Elastify {
         } else if (ast instanceof Ast.Or) {
             ((Ast.Or) ast).operands().forEach(o -> collectGivenTypes(o, types));
         } else if (ast instanceof Ast.Not) {
+            // TODO: Should not add to given types if negated
             collectGivenTypes(((Ast.Not) ast).operand(), types);
         } else if (ast instanceof Ast.Like) {
             collectGivenTypes(((Ast.Like) ast).operand(), types);

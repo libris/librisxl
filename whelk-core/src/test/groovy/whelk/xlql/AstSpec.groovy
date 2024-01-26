@@ -230,15 +230,19 @@ class AstSpec extends Specification {
         )
     }
 
-    def "flatten negations 3: fail when trying to negate free text"() {
-        def input = "author:Alice and not \"everything\""
+    def "flatten negations 3"() {
+        def input = "!(author:Alice and \"everything\")"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
         Object ast = Ast.buildFrom(parseTree)
+        Object flattened = Analysis.flattenNegations(ast)
 
-        when:
-        Analysis.flattenNegations(ast)
-        then:
-        thrown BadQueryException
+        expect:
+        flattened == new Ast.Or(
+                [
+                        new Ast.Not("everything"),
+                        new Ast.NotCodeEquals("author", "Alice")
+                ]
+        )
     }
 }

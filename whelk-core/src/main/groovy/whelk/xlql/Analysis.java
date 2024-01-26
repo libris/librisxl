@@ -48,7 +48,8 @@ public class Analysis {
             }
             return astNode;
         } else if (negate) {
-            throw new BadQueryException("Negating free text values is not possible");
+            // astNode is String
+            return new Ast.Not(astNode);
         }
         return astNode;
     }
