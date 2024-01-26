@@ -35,38 +35,48 @@ class QueryTreeSpec extends Specification {
         givenTypes == ["Electronic"] as Set
     }
 
-    def "AST to QT: normal tree"() {
+    def "Construct tree: free text only"() {
         given:
         def input = "AAA BBB and (CCC or DDD)"
-        def lexedSymbols = Lex.lexQuery(input)
-        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
-        Object ast = Ast.buildFrom(parseTree)
-        Object qt = queryTree.astToQt(ast)
 
         expect:
-        qt == ast
+        queryTree.toQueryTree(input) == new QueryTree.And(
+                [
+                        new QueryTree.Or(
+                                [
+                                        new QueryTree.FreeText("DDD", QueryTree.Operator.EQUALS),
+                                        new QueryTree.FreeText("CCC", QueryTree.Operator.EQUALS)
+                                ]
+                        ),
+                        new QueryTree.FreeText("BBB", QueryTree.Operator.EQUALS),
+                        new QueryTree.FreeText("AAA", QueryTree.Operator.EQUALS),
+                ]
+        )
     }
 
-    def "AST to QT: normal query"() {
+    def "Construct tree: fields + free text"() {
         given:
         def input = "subject: \"sao:Fysik\" AND NOT tillkomsttid < 2023 AND \"svarta hål\""
-        def lexedSymbols = Lex.lexQuery(input)
-        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
-        Object ast = Ast.buildFrom(parseTree)
-        QueryTree.And qtTopLevel = queryTree.astToQt(ast)
-        List<Object> conjuncts = qtTopLevel.conjuncts()
+        QueryTree.And qt = queryTree.toQueryTree(input)
+        List conjuncts = qt.conjuncts()
+        QueryTree.Field originDateField = conjuncts[1]
+        QueryTree.Or subjectFields = conjuncts[2]
+        QueryTree.Field subjectField1 = subjectFields.disjuncts()[0]
+        QueryTree.Field subjectField2 = subjectFields.disjuncts()[1]
 
         expect:
-        conjuncts[0] == "svarta hål"
-                && ((QueryTree.Field) conjuncts[1]).with {
-            it.path().stringify() == "originDate"
-                    && it.operator() == QueryTree.Operator.GREATER_THAN_OR_EQUAL
-                    && it.value() == "2023"
-        }
-                && ((QueryTree.Field) conjuncts[2]).with {
-            it.path().stringify() == "subject.@id"
-                    && it.operator() == QueryTree.Operator.EQUALS
-                    && it.value() == "https://id.kb.se/term/sao/Fysik"
-        }
+        conjuncts[0] == new QueryTree.FreeText("svarta hål", QueryTree.Operator.EQUALS)
+
+        originDateField.path().stringify() == "originDate"
+        originDateField.operator() == QueryTree.Operator.GREATER_THAN_OR_EQUAL
+        originDateField.value() == "2023"
+
+        subjectField1.path().stringify() == "subject"
+        subjectField1.operator() == QueryTree.Operator.EQUALS
+        subjectField1.value() == "sao:Fysik"
+
+        subjectField2.path().stringify() == "subject.@id"
+        subjectField2.operator() == QueryTree.Operator.EQUALS
+        subjectField2.value() == "https://id.kb.se/term/sao/Fysik"
     }
 }

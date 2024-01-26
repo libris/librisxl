@@ -104,6 +104,7 @@ public class QueryTree {
         if (getAdminMetadataSubtypes().contains(getDomain(property))) {
             path.prependMeta();
         }
+
         List<Object> searchFields = new ArrayList<>(List.of(new Field(path, operator, value)));
 
         Map propertyDefinition = jsonLd.getVocabIndex().get(property);

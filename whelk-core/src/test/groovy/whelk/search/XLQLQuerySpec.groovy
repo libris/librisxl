@@ -168,4 +168,26 @@ class XLQLQuerySpec extends Specification {
         xlqlEsResponse['totalHits'] == classicEsResponse['totalHits']
         xlqlEsResponse['items'].size() == classicEsResponse['items'].size()
     }
+
+    def "Free text + fields + grouping"() {
+        given:
+        def classicInput = [
+                'q': ['fåglar'] as String[],
+                'issuanceType': ['Serial', 'Monograph'] as String[],
+                'meta.encodingLevel': ['marc:FullLevel'],
+                '_debug': ['esQuery'] as String[]
+        ]
+        def xlqlInput = [
+                '_q': ['fåglar and utgivningssätt: (Serial or Monograph) and beskrivningsnivå="marc:FullLevel"'] as String[],
+                '_debug': ['esQuery'] as String[]
+        ]
+
+        Map classicEsResponse = xlqlQuery.esQuery.doQuery(classicInput)
+        Map xlqlEsResponse = xlqlQuery.doQuery(xlqlInput)
+
+        expect:
+        xlqlEsResponse['totalHits'] > 0
+        xlqlEsResponse['totalHits'] == classicEsResponse['totalHits']
+        xlqlEsResponse['items'].size() == classicEsResponse['items'].size()
+    }
 }
