@@ -774,7 +774,7 @@ class ESQuery {
                     boolean isSimple = isSimple(val)
                     clauses.add([(isSimple ? 'simple_query_string' : 'query_string'): [
                             'query'           : isSimple ? val : escapeNonSimpleQueryString(val),
-                            'fields'          : [expandLangMapKeys(field)],
+                            'fields'          : [getInferredTermPath(expandLangMapKeys(field))],
                             'default_operator': 'AND'
                     ]])
                 }
