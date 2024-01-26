@@ -44,6 +44,7 @@ class SearchUtils {
         this(whelk.jsonld)
         this.whelk = whelk
         this.esQuery = new ESQuery(whelk)
+        this.xlqlQuery = new XLQLQuery(whelk)
     }
 
     SearchUtils(JsonLd jsonld) {
@@ -135,8 +136,8 @@ class SearchUtils {
         queryParameters['_limit'] = [limit.toString()]
 
         Map esResult = queryParameters.containsKey('_q')
-                ? esQuery.doQuery(queryParameters, suggest)
-                : xlqlQuery.doQuery(queryParameters)
+                ? xlqlQuery.doQuery(queryParameters)
+                : esQuery.doQuery(queryParameters, suggest);
         Lookup lookup = new Lookup()
         
         List<Map> mappings = []

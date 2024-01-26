@@ -20,7 +20,7 @@ public class XLQLQuery
         this.queryTree = new QueryTree(whelk);
     }
 
-    public Map doQuery(Map<String, List<String>> queryParameters) throws BadQueryException {
+    public Map doQuery(Map<String, String[]> queryParameters) throws BadQueryException {
         if (!queryParameters.containsKey("_q")) {
             throw new RuntimeException("Missing _q parameter");
         }
@@ -28,10 +28,10 @@ public class XLQLQuery
         Map query = toEsQuery(queryTree);
         // TODO
         // This is a shortcut to a complete ES query. Only temporary.
-        Map ogEsQuery = this.esQuery.getESQuery(stringArrayCopy(queryParameters));
+        Map ogEsQuery = this.esQuery.getESQuery(queryParameters);
         ogEsQuery.put("query", query);
         Map esResponse = esQuery.hideKeywordFields(esQuery.moveFilteredAggregationsToTopLevel(this.whelk.elastic.query(ogEsQuery)));
-        if (queryParameters.get("_debug").contains("esQuery")) {
+        if (Arrays.asList(queryParameters.get("_debug")).contains("esQuery")) {
             esResponse.put("_debug", newParent("esQuery", ogEsQuery));
         }
         return esResponse;
@@ -191,9 +191,9 @@ public class XLQLQuery
         throw new RuntimeException("Invalid operator"); // Not reachable
     }
 
-    private static String getQueryString(Map<String, List<String>> queryParameters) {
-        List<String> q = queryParameters.get("_q");
-        return q.get(0);
+    private static String getQueryString(Map<String, String[]> queryParameters) {
+        String[] q = queryParameters.get("_q");
+        return q[0];
     }
 
     private static Map mustWrap(List o) {
@@ -228,14 +228,5 @@ public class XLQLQuery
 
     private static String quoteIfPhrase(String s) {
         return s.matches(".*\\s.*") ? "\"" + s + "\"" : s;
-    }
-
-    private static Map<String, String[]> stringArrayCopy(Map<String, List<String>> m) {
-        Map copy = new HashMap<>();
-        for (String k : m.keySet()) {
-            List<String> v = m.get(k);
-            copy.put(k, v.toArray(new String[v.size()]));
-        }
-        return copy;
     }
 }

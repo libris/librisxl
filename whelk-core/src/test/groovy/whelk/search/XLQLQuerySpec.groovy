@@ -10,8 +10,8 @@ class XLQLQuerySpec extends Specification {
     // The following assume a static dataset
     def "Simple free text string"() {
         given:
-        def classicInput = ['q': ["Kalle"], '_debug': ['esQuery']]
-        def xlqlInput = ['_q': ["Kalle"], '_debug': ['esQuery']]
+        def classicInput = ['q': ["Kalle"] as String[], '_debug': ['esQuery'] as String[]]
+        def xlqlInput = ['_q': ["Kalle"] as String[], '_debug': ['esQuery'] as String[]]
 
         Map classicEsResponse = xlqlQuery.esQuery.doQuery(classicInput)
         Map xlqlEsResponse = xlqlQuery.doQuery(xlqlInput)
@@ -24,8 +24,8 @@ class XLQLQuerySpec extends Specification {
 
     def "Simple free text phrase"() {
         given:
-        def classicInput = ['q': ["\"Kalle Anka\""], '_debug': ['esQuery']]
-        def xlqlInput = ['_q': ["\"Kalle Anka\""], '_debug': ['esQuery']]
+        def classicInput = ['q': ["\"Kalle Anka\""] as String[], '_debug': ['esQuery'] as String[]]
+        def xlqlInput = ['_q': ["\"Kalle Anka\""] as String[], '_debug': ['esQuery'] as String[]]
 
         Map classicEsResponse = xlqlQuery.esQuery.doQuery(classicInput)
         Map xlqlEsResponse = xlqlQuery.doQuery(xlqlInput)
@@ -38,8 +38,8 @@ class XLQLQuerySpec extends Specification {
 
     def "Simple free text conjunction"() {
         given:
-        def classicInput = ['q': ['Kalle Anka'], '_debug': ['esQuery']]
-        def xlqlInput = ['_q': ['Kalle Anka'], '_debug': ['esQuery']]
+        def classicInput = ['q': ['Kalle Anka'] as String[], '_debug': ['esQuery'] as String[]]
+        def xlqlInput = ['_q': ['Kalle Anka'] as String[], '_debug': ['esQuery'] as String[]]
 
         Map classicEsResponse = xlqlQuery.esQuery.doQuery(classicInput)
         Map xlqlEsResponse = xlqlQuery.doQuery(xlqlInput)
@@ -52,8 +52,8 @@ class XLQLQuerySpec extends Specification {
 
     def "Simple free text disjunction"() {
         given:
-        def classicInput = ['q': ["Kalle | Anka"], '_debug': ['esQuery']]
-        def xlqlInput = ['_q': ["Kalle or Anka"], '_debug': ['esQuery']]
+        def classicInput = ['q': ["Kalle | Anka"] as String[], '_debug': ['esQuery'] as String[]]
+        def xlqlInput = ['_q': ["Kalle or Anka"] as String[], '_debug': ['esQuery'] as String[]]
 
         Map classicEsResponse = xlqlQuery.esQuery.doQuery(classicInput)
         Map xlqlEsResponse = xlqlQuery.doQuery(xlqlInput)
@@ -66,8 +66,8 @@ class XLQLQuerySpec extends Specification {
 
     def "Simple free text negation"() {
         given:
-        def classicInput = ['q': ["-Sverige"], '_debug': ['esQuery']]
-        def xlqlInput = ['_q': ["not Sverige"], '_debug': ['esQuery']]
+        def classicInput = ['q': ["-Sverige"] as String[], '_debug': ['esQuery'] as String[]]
+        def xlqlInput = ['_q': ["not Sverige"] as String[], '_debug': ['esQuery'] as String[]]
 
         Map classicEsResponse = xlqlQuery.esQuery.doQuery(classicInput)
         Map xlqlEsResponse = xlqlQuery.doQuery(xlqlInput)
@@ -87,8 +87,8 @@ class XLQLQuerySpec extends Specification {
 
     def "Free text negation"() {
         given:
-        def classicInput = ['q': ["Anka -Kalle"], '_debug': ['esQuery']]
-        def xlqlInput = ['_q': ["Anka not Kalle"], '_debug': ['esQuery']]
+        def classicInput = ['q': ["Anka -Kalle"] as String[], '_debug': ['esQuery'] as String[]]
+        def xlqlInput = ['_q': ["Anka not Kalle"] as String[], '_debug': ['esQuery'] as String[]]
 
         Map classicEsResponse = xlqlQuery.esQuery.doQuery(classicInput)
         Map xlqlEsResponse = xlqlQuery.doQuery(xlqlInput)
@@ -101,8 +101,8 @@ class XLQLQuerySpec extends Specification {
 
     def "Free text grouping 1"() {
         given:
-        def classicInput = ['q': ["Bamse | (Kalle Anka)"], '_debug': ['esQuery']]
-        def xlqlInput = ['_q': ["Bamse or (Kalle Anka)"], '_debug': ['esQuery']]
+        def classicInput = ['q': ["Bamse | (Kalle Anka)"] as String[], '_debug': ['esQuery'] as String[]]
+        def xlqlInput = ['_q': ["Bamse or (Kalle Anka)"] as String[], '_debug': ['esQuery'] as String[]]
 
         Map classicEsResponse = xlqlQuery.esQuery.doQuery(classicInput)
         Map xlqlEsResponse = xlqlQuery.doQuery(xlqlInput)
@@ -115,8 +115,8 @@ class XLQLQuerySpec extends Specification {
 
     def "Free text grouping 2"() {
         given:
-        def classicInput = ['q': ["(Kalle|Musse) (Pigg|Anka)"], '_debug': ['esQuery']]
-        def xlqlInput = ['_q': ["(Musse or Kalle) and (Pigg or Anka)"], '_debug': ['esQuery']]
+        def classicInput = ['q': ["(Kalle|Musse) (Pigg|Anka)"] as String[], '_debug': ['esQuery'] as String[]]
+        def xlqlInput = ['_q': ["(Musse or Kalle) and (Pigg or Anka)"] as String[], '_debug': ['esQuery'] as String[]]
 
         Map classicEsResponse = xlqlQuery.esQuery.doQuery(classicInput)
         Map xlqlEsResponse = xlqlQuery.doQuery(xlqlInput)
@@ -129,8 +129,8 @@ class XLQLQuerySpec extends Specification {
 
     def "Free text nested"() {
         given:
-        def classicInput = ['q': ["(Kalle (Anka|Blomkvist)) (Disney|Astrid) -Sverige"], '_debug': ['esQuery']]
-        def xlqlInput = ['_q': ["(Kalle and (Anka or Blomkvist) not Sverige) and (Disney or Astrid)"], '_debug': ['esQuery']]
+        def classicInput = ['q': ["(Kalle (Anka|Blomkvist)) (Disney|Astrid) -Sverige"] as String[], '_debug': ['esQuery'] as String[]]
+        def xlqlInput = ['_q': ["(Kalle and (Anka or Blomkvist) not Sverige) and (Disney or Astrid)"] as String[], '_debug': ['esQuery'] as String[]]
 
         Map classicEsResponse = xlqlQuery.esQuery.doQuery(classicInput)
         Map xlqlEsResponse = xlqlQuery.doQuery(xlqlInput)
@@ -143,8 +143,8 @@ class XLQLQuerySpec extends Specification {
 
     def "Simple field"() {
         given:
-        def classicInput = ['issuanceType': ['Serial'], '_debug': ['esQuery']]
-        def xlqlInput = ['_q': ['issuanceType: Serial'], '_debug': ['esQuery']]
+        def classicInput = ['issuanceType': ['Serial'] as String[], '_debug': ['esQuery'] as String[]]
+        def xlqlInput = ['_q': ['issuanceType: Serial'] as String[], '_debug': ['esQuery'] as String[]]
 
         Map classicEsResponse = xlqlQuery.esQuery.doQuery(classicInput)
         Map xlqlEsResponse = xlqlQuery.doQuery(xlqlInput)
@@ -157,8 +157,8 @@ class XLQLQuerySpec extends Specification {
 
     def "Combined fields + disambiguation"() {
         given:
-        def classicInput = ['issuanceType': ['Serial'], 'meta.encodingLevel': ['marc:FullLevel'], '_debug': ['esQuery']]
-        def xlqlInput = ['_q': ['utgivningssätt: Serial and beskrivningsnivå="marc:FullLevel"'], '_debug': ['esQuery']]
+        def classicInput = ['issuanceType': ['Serial'] as String[], 'meta.encodingLevel': ['marc:FullLevel'], '_debug': ['esQuery'] as String[]]
+        def xlqlInput = ['_q': ['utgivningssätt: Serial and beskrivningsnivå="marc:FullLevel"'] as String[], '_debug': ['esQuery'] as String[]]
 
         Map classicEsResponse = xlqlQuery.esQuery.doQuery(classicInput)
         Map xlqlEsResponse = xlqlQuery.doQuery(xlqlInput)
