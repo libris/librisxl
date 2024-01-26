@@ -43,7 +43,7 @@ public class QueryTree {
         return astToQt(ast);
     }
 
-    public Object astToQt(Object ast) throws BadQueryException {
+    private Object astToQt(Object ast) throws BadQueryException {
         ast = Analysis.flattenCodes(ast);
         ast = Analysis.flattenNegations(ast);
         Set<String> givenProperties = collectGivenProperties(ast);
@@ -92,6 +92,7 @@ public class QueryTree {
     private Object codeNodeToField(Ast.Comp node, boolean searchInstances) throws BadQueryException {
         String code = node.code();
         String value = (String) node.operand();
+        Operator operator = getOperator(node);
 
         String property = disambiguate.mapToKbvProperty(code.toLowerCase());
         if (property == null) {
@@ -103,44 +104,40 @@ public class QueryTree {
         if (getAdminMetadataSubtypes().contains(getDomain(property))) {
             path.prependMeta();
         }
-        List<Path> alternatePaths = new ArrayList<>(List.of(path));
+        List<Object> searchFields = new ArrayList<>(List.of(new Field(path, operator, value)));
 
         Map propertyDefinition = jsonLd.getVocabIndex().get(property);
         if (Disambiguate.isObjectProperty(propertyDefinition)) {
-            value = Disambiguate.expandPrefixed(value);
+            String expanded = Disambiguate.expandPrefixed(value);
             /*
             Add ._str or .@id as an alternative paths but keep the "normal" path since sometimes the value of ObjectProperty
             is a string, e.g. issuanceType: "Serial" or encodingLevel: "marc:FullLevel".
-            (Can we skip one of the paths with better disambiguation?)
+            (Can we skip either path with better disambiguation?)
              */
-            if (JsonLd.looksLikeIri(value)) {
+            if (JsonLd.looksLikeIri(expanded)) {
                 Path copy = path.copy();
                 copy.appendId();
-                alternatePaths.add(copy);
+                searchFields.add(new Field(copy, operator, expanded));
             } else {
                 Path copy = path.copy();
                 copy.appendUnderscoreStr();
-                alternatePaths.add(copy);
+                searchFields.add(new Field(copy, operator, value));
             }
         }
-
-        Operator operator = getOperator(node);
 
         if (searchInstances) {
-            List<Path> instanceVsWorkPaths = new ArrayList<>();
-            for (Path ap : alternatePaths) {
-                instanceVsWorkPaths.addAll(collectInstanceVsWorkPaths(ap));
+            List<Field> instanceVsWorkFields = new ArrayList<>();
+            for (Object sf : searchFields) {
+                Field field = (Field) sf;
+                collectInstanceVsWorkPaths(field.path()).stream()
+                        .map(p -> new Field(p, field.operator(), field.value()))
+                        .forEach(f -> instanceVsWorkFields.add(f));
             }
-            alternatePaths.addAll(instanceVsWorkPaths);
-        }
-
-        List<Object> searchFields = new ArrayList<>();
-        for (Path p : alternatePaths) {
-            searchFields.add(new Field(p, operator, value));
+            searchFields.addAll(instanceVsWorkFields);
         }
 
         if (searchFields.size() == 1) {
-            return new Field(path, operator, value);
+            return searchFields.get(0);
         }
         return operator == Operator.NOT_EQUALS ? new And(searchFields) : new Or(searchFields);
     }
