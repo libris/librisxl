@@ -27,7 +27,8 @@ class ESQuery {
     private Set keywordFields
     private Set dateFields
     private Set nestedFields
-    
+    private Set numericExtractorFields
+
     private static final int DEFAULT_PAGE_SIZE = 50
     private static final List RESERVED_PARAMS = [
         'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens', '_stats', '_suggest', '_site'
@@ -74,7 +75,8 @@ class ESQuery {
             this.keywordFields =  getKeywordFields(mappings)
             this.dateFields = getFieldsOfType('date', mappings)
             this.nestedFields = getFieldsOfType('nested', mappings)
-            
+            this.numericExtractorFields = getFieldsWithAnalyzer('numeric_extractor', mappings)
+
             if (mappings['properties']['__prefLabel']) {
                 whelk.elastic.ENABLE_SMUSH_LANG_TAGGED_PROPS = true
                 log.info("ENABLE_SMUSH_LANG_TAGGED_PROPS = true")
@@ -501,7 +503,7 @@ class ESQuery {
 
     private String getInferredTermPath(String termPath) {
         termPath = expandLangMapKeys(termPath)
-        if (termPath in keywordFields) {
+        if (termPath in keywordFields && termPath !in numericExtractorFields) {
             return "${termPath}.keyword"
         } else {
             return termPath
@@ -929,9 +931,17 @@ class ESQuery {
     }
 
     static Set getFieldsOfType(String type, Map mappings) {
+        getFieldsWithSetting('type', type, mappings)
+    }
+
+    static Set getFieldsWithAnalyzer(String analyzer, Map mappings) {
+        getFieldsWithSetting('analyzer', analyzer, mappings)
+    }
+
+    static Set getFieldsWithSetting(String setting, String value, Map mappings) {
         Set fields = [] as Set
-        DocumentUtil.findKey(mappings['properties'], 'type') { value, path ->
-            if (value == type) {
+        DocumentUtil.findKey(mappings['properties'], setting) { v, path ->
+            if (v == value) {
                 fields.add(path.dropRight(1).findAll{ it != 'properties'}.join('.'))
             }
             DocumentUtil.NOP
