@@ -17,10 +17,10 @@ final boolean isLoud = false
 // Move some stuff from mainEntity to mainEntity.hasComponent[0] before doing the merging/replacing ?
 final List<String> propertiesToMoveToFirstComponent = ["shelfMark"]
 
-// Which policy should apply to which properties (under mainEntity and hasComponent[0]) ?
+// Which policy should apply to which properties (under mainEntity) ?
 // Properties that are not listed (default) will keep their current values (of the record we're trying to merge into).
-final List<String> propertiesToMerge = []
-final List<String> propertiesToReplace = ["shelfMark"]
+final List<String> propertiesToMerge = ["hasComponent"]
+final List<String> propertiesToReplace = []
 
 
 
@@ -49,10 +49,7 @@ void combine(Document target, Document incoming, List<String> propertiesToMerge,
     moveToComponent(incomingMainEntity, propertiesToMoveToFirstComponent)
     moveToComponent(targetMainEntity, propertiesToMoveToFirstComponent)
 
-    combineMap(incomingMainEntity, targetMainEntity, propertiesToMerge, propertiesToReplace)
-    if (incomingMainEntity["hasComponent"] && incomingMainEntity["hasComponent"] instanceof List && incomingMainEntity["hasComponent"][0] &&
-            targetMainEntity["hasComponent"] && targetMainEntity["hasComponent"] instanceof List && targetMainEntity["hasComponent"][0])
-        combineMap(targetMainEntity["hasComponent"][0], incomingMainEntity["hasComponent"][0], propertiesToMerge, propertiesToReplace)
+    combineMap(targetMainEntity, incomingMainEntity, propertiesToMerge, propertiesToReplace)
 }
 
 void combineMap(Map target, Map incoming, List<String> propertiesToMerge, List<String> propertiesToReplace) {
