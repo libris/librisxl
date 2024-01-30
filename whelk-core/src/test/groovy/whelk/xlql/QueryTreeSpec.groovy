@@ -27,8 +27,9 @@ class QueryTreeSpec extends Specification {
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
         Object ast = Ast.buildFrom(parseTree)
-        Set<String> givenProperties = queryTree.collectGivenProperties(ast)
-        Set<Object> givenTypes = queryTree.collectGivenTypes(ast)
+        Object disambiguated = queryTree.disambiguateAst(ast)
+        Set<String> givenProperties = queryTree.collectGivenProperties(disambiguated)
+        Set<Object> givenTypes = queryTree.collectGivenTypes(disambiguated)
 
         expect:
         givenProperties == ["@type", "publication", "contentType", "title", "bibliography"] as Set

@@ -40,7 +40,12 @@ public class QueryTree {
         LinkedList<Lex.Symbol> lexedSymbols = Lex.lexQuery(queryString);
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols);
         Object ast = Ast.buildFrom(parseTree);
-        return astToQt(ast);
+        Object disambiguated = disambiguateAst(ast);
+        return astToQt(disambiguated);
+    }
+
+    public Object disambiguateAst(Object ast) throws BadQueryException {
+        return disambiguate.toDisambiguatedTree(ast);
     }
 
     private Object astToQt(Object ast) throws BadQueryException {
@@ -90,14 +95,9 @@ public class QueryTree {
     }
 
     private Object codeNodeToField(Ast.Comp node, boolean searchInstances) throws BadQueryException {
-        String code = node.code();
+        String property = node.code();
         String value = (String) node.operand();
         Operator operator = getOperator(node);
-
-        String property = disambiguate.mapToKbvProperty(code.toLowerCase());
-        if (property == null) {
-            throw new BadQueryException("Unrecognized property alias: " + code);
-        }
 
         Path path = new Path(property);
         path.expandChainAxiom(jsonLd);
@@ -107,6 +107,7 @@ public class QueryTree {
 
         List<Object> searchFields = new ArrayList<>(List.of(new Field(path, operator, value)));
 
+        // TODO: @type not in vocab, needs special handling
         Map propertyDefinition = jsonLd.getVocabIndex().get(property);
         if (Disambiguate.isObjectProperty(propertyDefinition)) {
             String expanded = Disambiguate.expandPrefixed(value);
@@ -191,69 +192,57 @@ public class QueryTree {
         return paths;
     }
 
-    public Set<String> collectGivenProperties(Object ast) {
-        return collectGivenPropertyAliases(ast).stream()
-                .map(String::toLowerCase)
-                .map(disambiguate::mapToKbvProperty)
-                // TODO: Abort if any bad alias?
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
+    public static Set<String> collectGivenProperties(Object ast) {
+        return collectGivenProperties(ast, new HashSet<>());
     }
 
-    private static Set<String> collectGivenPropertyAliases(Object ast) {
-        Set<String> aliases = new HashSet<>();
-        collectGivenPropertyAliases(ast, aliases);
-        return aliases;
-    }
-
-    public Set<String> collectGivenTypes(Object ast) {
+    public static Set<String> collectGivenTypes(Object ast) {
         Set<String> givenTypes = new HashSet<>();
         collectGivenTypes(ast, givenTypes);
         return givenTypes;
     }
 
-    private static void collectGivenPropertyAliases(Object ast, Set<String> properties) {
+    private static Set<String> collectGivenProperties(Object ast, Set<String> properties) {
         if (ast instanceof Ast.And) {
-            ((Ast.And) ast).operands().forEach(o -> collectGivenPropertyAliases(o, properties));
+            ((Ast.And) ast).operands().forEach(o -> collectGivenProperties(o, properties));
         } else if (ast instanceof Ast.Or) {
-            ((Ast.Or) ast).operands().forEach(o -> collectGivenPropertyAliases(o, properties));
+            ((Ast.Or) ast).operands().forEach(o -> collectGivenProperties(o, properties));
         } else if (ast instanceof Ast.Not) {
-            collectGivenPropertyAliases(((Ast.Not) ast).operand(), properties);
+            collectGivenProperties(((Ast.Not) ast).operand(), properties);
         } else if (ast instanceof Ast.Like) {
-            collectGivenPropertyAliases(((Ast.Like) ast).operand(), properties);
+            collectGivenProperties(((Ast.Like) ast).operand(), properties);
         } else if (ast instanceof Ast.CodeEquals) {
             properties.add(((Ast.CodeEquals) ast).code());
         } else if (ast instanceof Ast.CodeLesserGreaterThan) {
             properties.add(((Ast.CodeLesserGreaterThan) ast).code());
         }
+        return properties;
     }
 
-    private void collectGivenTypes(Object ast, Set<String> types) {
+    private static Set<String> collectGivenTypes(Object ast, Set<String> types) {
         if (ast instanceof Ast.And) {
             ((Ast.And) ast).operands().forEach(o -> collectGivenTypes(o, types));
         } else if (ast instanceof Ast.Or) {
             ((Ast.Or) ast).operands().forEach(o -> collectGivenTypes(o, types));
         } else if (ast instanceof Ast.Not) {
-            // TODO: Should not add to given types if negated
             collectGivenTypes(((Ast.Not) ast).operand(), types);
         } else if (ast instanceof Ast.Like) {
             collectGivenTypes(((Ast.Like) ast).operand(), types);
         } else if (ast instanceof Ast.CodeEquals) {
             Ast.CodeEquals codeEquals = (Ast.CodeEquals) ast;
-            String code = codeEquals.code();
-            String property = disambiguate.mapToKbvProperty(code);
+            String property = codeEquals.code();
             if (JsonLd.getTYPE_KEY().equals(property)) {
-                // TODO: Handle non-String operand?
+                // Assume operand is String
                 types.add((String) codeEquals.operand());
             }
         } else if (ast instanceof Ast.CodeLesserGreaterThan) {
             Ast.CodeLesserGreaterThan codeLesserGreaterThan = (Ast.CodeLesserGreaterThan) ast;
-            String code = codeLesserGreaterThan.code();
-            String property = disambiguate.mapToKbvProperty(code);
+            String property = codeLesserGreaterThan.code();
             if (JsonLd.getTYPE_KEY().equals(property)) {
                 types.add(codeLesserGreaterThan.operand());
             }
         }
+        return types;
     }
 
     public String getDomain(String property) {

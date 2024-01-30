@@ -5,6 +5,7 @@ import whelk.Whelk;
 
 import java.util.*;
 
+// TODO: Disambiguate values too (not only properties)
 public class Disambiguate {
     private JsonLd jsonLd;
 
@@ -19,8 +20,49 @@ public class Disambiguate {
         loadPropertyMappings(whelk);
     }
 
+    public Object toDisambiguatedTree(Object ast) throws BadQueryException {
+        if (ast instanceof Ast.And) {
+            List<Object> operands = new ArrayList<>();
+            for (Object o : ((Ast.And) ast).operands()) {
+                operands.add(toDisambiguatedTree(o));
+            }
+            return new Ast.And(operands);
+        }
+        if (ast instanceof Ast.Or) {
+            List<Object> operands = new ArrayList<>();
+            for (Object o : ((Ast.Or) ast).operands()) {
+                operands.add(toDisambiguatedTree(o));
+            }
+            return new Ast.Or(operands);
+        }
+        if (ast instanceof Ast.Not) {
+            return new Ast.Not(toDisambiguatedTree(((Ast.Not) ast).operand()));
+        }
+        if (ast instanceof Ast.Like) {
+            return new Ast.Like(toDisambiguatedTree(((Ast.Like) ast).operand()));
+        }
+        if (ast instanceof Ast.CodeEquals) {
+            Ast.CodeEquals ce = (Ast.CodeEquals) ast;
+            String kbvProperty = mapToKbvProperty(ce.code());
+            if (kbvProperty == null) {
+                throw new BadQueryException("Unrecognized property alias: " + ce.code());
+            }
+            return new Ast.CodeEquals(kbvProperty, ce.operand());
+        }
+        if (ast instanceof Ast.CodeLesserGreaterThan) {
+            Ast.CodeLesserGreaterThan clgt = (Ast.CodeLesserGreaterThan) ast;
+            String kbvProperty = mapToKbvProperty(clgt.code());
+            if (kbvProperty == null) {
+                throw new BadQueryException("Unrecognized property alias: " + clgt.code());
+            }
+            return new Ast.CodeLesserGreaterThan(kbvProperty, clgt.operator(), clgt.operand());
+        }
+        // String
+        return ast;
+    }
+
     public String mapToKbvProperty(String alias) {
-        return propertyAliasMappings.get(alias);
+        return propertyAliasMappings.get(alias.toLowerCase());
     }
 
     private void loadPropertyMappings(Whelk whelk) {
