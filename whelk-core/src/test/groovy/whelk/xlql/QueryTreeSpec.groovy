@@ -40,14 +40,14 @@ class QueryTreeSpec extends Specification {
         expect:
         queryTree.toQueryTree(input) == new QueryTree.And(
                 [
+                        new QueryTree.FreeText("AAA", QueryTree.Operator.EQUALS),
+                        new QueryTree.FreeText("BBB", QueryTree.Operator.EQUALS),
                         new QueryTree.Or(
                                 [
-                                        new QueryTree.FreeText("DDD", QueryTree.Operator.EQUALS),
-                                        new QueryTree.FreeText("CCC", QueryTree.Operator.EQUALS)
+                                        new QueryTree.FreeText("CCC", QueryTree.Operator.EQUALS),
+                                        new QueryTree.FreeText("DDD", QueryTree.Operator.EQUALS)
                                 ]
-                        ),
-                        new QueryTree.FreeText("BBB", QueryTree.Operator.EQUALS),
-                        new QueryTree.FreeText("AAA", QueryTree.Operator.EQUALS),
+                        )
                 ]
         )
     }
@@ -57,13 +57,13 @@ class QueryTreeSpec extends Specification {
         def input = "subject: \"sao:Fysik\" AND NOT tillkomsttid < 2023 AND \"svarta hål\""
         QueryTree.And qt = queryTree.toQueryTree(input)
         List conjuncts = qt.conjuncts()
-        QueryTree.Field originDateField = conjuncts[1]
-        QueryTree.Or subjectFields = conjuncts[2]
+        QueryTree.Or subjectFields = conjuncts[0]
         QueryTree.Field subjectField1 = subjectFields.disjuncts()[0]
         QueryTree.Field subjectField2 = subjectFields.disjuncts()[1]
+        QueryTree.Field originDateField = conjuncts[1]
 
         expect:
-        conjuncts[0] == new QueryTree.FreeText("svarta hål", QueryTree.Operator.EQUALS)
+        conjuncts[2] == new QueryTree.FreeText("svarta hål", QueryTree.Operator.EQUALS)
 
         originDateField.path().stringify() == "originDate"
         originDateField.operator() == QueryTree.Operator.GREATER_THAN_OR_EQUAL

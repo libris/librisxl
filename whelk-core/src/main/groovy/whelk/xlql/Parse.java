@@ -216,7 +216,7 @@ public class Parse
 
                     if (wholeListOnStack) {
                         List<Term> terms = new ArrayList<>();
-                        terms.add(t);
+                        terms.add(0, t);
                         stack.pop();
 
                         // Chew the whole list all at once
@@ -225,7 +225,7 @@ public class Parse
                             stillChewing = false;
                             if (!stack.isEmpty() && stack.get(0) instanceof Term nextTerm) {
                                 stack.pop();
-                                terms.add(nextTerm);
+                                terms.add(0, nextTerm);
                                 stillChewing = true;
                             } else if (stack.size() >= 2 && stack.get(0) instanceof Lex.Symbol s &&
                                     s.name() == Lex.TokenName.KEYWORD &&
@@ -233,7 +233,7 @@ public class Parse
                                     stack.get(1) instanceof Term nextTerm) {
                                 stack.pop();
                                 stack.pop();
-                                terms.add(nextTerm);
+                                terms.add(0, nextTerm);
                                 stillChewing = true;
                             }
                         } while (stillChewing);
@@ -258,7 +258,7 @@ public class Parse
 
                     if (wholeListOnStack) {
                         List<AndComb> ACs = new ArrayList<>();
-                        ACs.add(ac);
+                        ACs.add(0, ac);
                         stack.pop();
 
                         // Chew the whole list all at once
@@ -271,7 +271,7 @@ public class Parse
                                     stack.get(1) instanceof AndComb nextAc) {
                                 stack.pop();
                                 stack.pop();
-                                ACs.add(nextAc);
+                                ACs.add(0, nextAc);
                                 stillChewing = true;
                             }
                         } while (stillChewing);

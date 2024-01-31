@@ -60,13 +60,13 @@ public class XLQLQuery {
         } else if (sqtNode instanceof QueryTree.And) {
             List<Object> and = new ArrayList<>();
             for (Object c : ((QueryTree.And) sqtNode).conjuncts()) {
-                and.add(0, buildMappings(sqt, c, new LinkedHashMap()));
+                and.add(buildMappings(sqt, c, new LinkedHashMap()));
             }
             mappingsNode.put("and", and);
         } else if (sqtNode instanceof QueryTree.Or) {
             List<Object> or = new ArrayList<>();
             for (Object c : ((QueryTree.Or) sqtNode).disjuncts()) {
-                or.add(0, buildMappings(sqt, c, new LinkedHashMap()));
+                or.add(buildMappings(sqt, c, new LinkedHashMap()));
             }
             mappingsNode.put("or", or);
         }
@@ -110,7 +110,7 @@ public class XLQLQuery {
             for (Object c : ((QueryTree.And) tree).conjuncts()) {
                 Object elem = excludeFromTree(nodeToExclude, c);
                 if (elem != null) {
-                    and.add(0, elem);
+                    and.add(elem);
                 }
             }
             return and.size() > 1 ? new QueryTree.And(and) : and.get(0);
@@ -120,7 +120,7 @@ public class XLQLQuery {
             for (Object c : ((QueryTree.Or) tree).disjuncts()) {
                 Object elem = excludeFromTree(nodeToExclude, c);
                 if (elem != null) {
-                    or.add(0, elem);
+                    or.add(elem);
                 }
             }
             return or.size() > 1 ? new QueryTree.Or(or) : or.get(0);

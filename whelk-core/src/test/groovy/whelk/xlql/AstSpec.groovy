@@ -13,7 +13,7 @@ class AstSpec extends Specification {
 
         //System.err.println(ast)
         expect:
-        ast == new Ast.And([new Ast.Or(["DDD", "CCC"]), "BBB", "AAA"])
+        ast == new Ast.And("AAA", "BBB", [new Ast.Or(["CCC", "DDD"])])
     }
 
     def "normal query"() {
@@ -26,9 +26,9 @@ class AstSpec extends Specification {
         expect:
         ast == new Ast.And(
                 [
-                        "svarta hål",
+                        new Ast.CodeEquals("subject", "lcsh:Physics"),
                         new Ast.Not(new Ast.CodeLesserGreaterThan("published", "<", "2023")),
-                        new Ast.CodeEquals("subject", "lcsh:Physics")
+                        "svarta hål"
                 ]
         )
     }
@@ -43,8 +43,8 @@ class AstSpec extends Specification {
         expect:
         ast == new Ast.And(
                 [
-                        new Ast.Not(new Ast.CodeLesserGreaterThan("published", "<", "2023")),
-                        new Ast.CodeEquals("subject", new Ast.Or(["Fysik", "lcsh:Physics"]))
+                        new Ast.CodeEquals("subject", new Ast.Or(["lcsh:Physics", "Fysik"])),
+                        new Ast.Not(new Ast.CodeLesserGreaterThan("published", "<", "2023"))
                 ]
         )
     }
@@ -59,8 +59,8 @@ class AstSpec extends Specification {
         expect:
         ast == new Ast.And(
                 [
-                        "bf:subject",
-                        new Ast.CodeEquals("bf:subject", "lcsh:Physics")
+                        new Ast.CodeEquals("bf:subject", "lcsh:Physics"),
+                        "bf:subject"
                 ]
         )
     }
@@ -86,9 +86,9 @@ class AstSpec extends Specification {
         expect:
         ast == new Ast.And(
                 [
-                        new Ast.CodeLesserGreaterThan("published", "<=", "1970"),
+                        "Pippi",
                         new Ast.CodeEquals("author", "Astrid Lindgren"),
-                        "Pippi"
+                        new Ast.CodeLesserGreaterThan("published", "<=", "1970")
                 ]
         )
     }
@@ -116,8 +116,8 @@ class AstSpec extends Specification {
         expect:
         flattened == new Ast.And(
                 [
-                        new Ast.CodeEquals("AAA", "CCC"),
                         new Ast.CodeEquals("AAA", "BBB"),
+                        new Ast.CodeEquals("AAA", "CCC")
                 ]
         )
     }
@@ -133,11 +133,11 @@ class AstSpec extends Specification {
         expect:
         flattened == new Ast.And(
                 [
-                        new Ast.Or([
-                                new Ast.CodeEquals("author", "Cecilia"),
-                                new Ast.CodeEquals("author", "Bob"),
-                        ]),
                         new Ast.CodeEquals("author", "Alice"),
+                        new Ast.Or([
+                                new Ast.CodeEquals("author", "Bob"),
+                                new Ast.CodeEquals("author", "Cecilia")
+                        ])
                 ]
         )
     }
@@ -153,12 +153,12 @@ class AstSpec extends Specification {
         expect:
         flattened == new Ast.And(
                 [
-                        new Ast.Not(new Ast.CodeEquals("author", "David")),
-                        new Ast.Or([
-                                new Ast.CodeEquals("author", "Cecilia"),
-                                new Ast.CodeEquals("author", "Bob"),
-                        ]),
                         new Ast.CodeEquals("author", "Alice"),
+                        new Ast.Or([
+                                new Ast.CodeEquals("author", "Bob"),
+                                new Ast.CodeEquals("author", "Cecilia")
+                        ]),
+                        new Ast.Not(new Ast.CodeEquals("author", "David"))
                 ]
         )
     }
@@ -174,16 +174,16 @@ class AstSpec extends Specification {
         expect:
         flattened == new Ast.Or(
                 [
+                        "everything",
                         new Ast.And(
                         [
-                                new Ast.Not(new Ast.CodeEquals("author", "David")),
-                                new Ast.Or([
-                                        new Ast.CodeEquals("author", "Cecilia"),
-                                        new Ast.CodeEquals("author", "Bob"),
-                                ]),
                                 new Ast.CodeEquals("author", "Alice"),
-                        ]),
-                        "everything"
+                                new Ast.Or([
+                                        new Ast.CodeEquals("author", "Bob"),
+                                        new Ast.CodeEquals("author", "Cecilia")
+                                ]),
+                                new Ast.Not(new Ast.CodeEquals("author", "David"))
+                        ])
                 ]
         )
     }
@@ -198,13 +198,13 @@ class AstSpec extends Specification {
         expect:
         flattened == new Ast.And(
                 [
+                        "everything",
                         new Ast.Or(
                                 [
-                                        new Ast.CodeLesserGreaterThan("published", "<=", "2022"),
-                                        new Ast.NotCodeEquals("author", "Alice")
+                                        new Ast.NotCodeEquals("author", "Alice"),
+                                        new Ast.CodeLesserGreaterThan("published", "<=", "2022")
                                 ]
-                        ),
-                        "everything"
+                        )
                 ]
         )
     }
@@ -219,13 +219,13 @@ class AstSpec extends Specification {
         expect:
         flattened == new Ast.And(
                 [
+                        "everything",
                         new Ast.Or(
                                 [
-                                        new Ast.CodeEquals("published", "2022"),
-                                        new Ast.NotCodeEquals("author", "Alice")
+                                        new Ast.NotCodeEquals("author", "Alice"),
+                                        new Ast.CodeEquals("published", "2022")
                                 ]
-                        ),
-                        "everything"
+                        )
                 ]
         )
     }
@@ -240,8 +240,8 @@ class AstSpec extends Specification {
         expect:
         flattened == new Ast.Or(
                 [
-                        new Ast.Not("everything"),
-                        new Ast.NotCodeEquals("author", "Alice")
+                        new Ast.NotCodeEquals("author", "Alice"),
+                        new Ast.Not("everything")
                 ]
         )
     }
