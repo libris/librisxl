@@ -7,10 +7,21 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class QueryTree {
-    public record And(List<Object> conjuncts) {}
-    public record Or(List<Object> disjuncts) {}
-    public record FreeText(String value, Operator operator) {}
-    public record Field(Path path, Operator operator, String value) {}
+    public record And(List<Object> conjuncts) {
+    }
+
+    public record Or(List<Object> disjuncts) {
+    }
+
+    public record FreeText(String value, Operator operator) {
+    }
+
+    public record Field(Path path, Operator operator, String value) {
+    }
+
+    public record SimpleField(String property, Operator operator, String value) {
+    }
+
     public enum Operator {
         EQUALS,
         NOT_EQUALS,
@@ -37,20 +48,26 @@ public class QueryTree {
     }
 
     public Object toQueryTree(String queryString) throws BadQueryException {
-        LinkedList<Lex.Symbol> lexedSymbols = Lex.lexQuery(queryString);
-        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols);
-        Object ast = Ast.buildFrom(parseTree);
-        Object disambiguated = disambiguateAst(ast);
+        Object disambiguated = toDisambiguatedAst(queryString);
         return astToQt(disambiguated);
     }
 
-    public Object disambiguateAst(Object ast) throws BadQueryException {
+    public Object toSimpleQueryTree(String queryString) throws BadQueryException {
+        Object disambiguated = toDisambiguatedAst(queryString);
+        return astToSimpleQt(disambiguated);
+    }
+
+    public Object toDisambiguatedAst(String queryString) throws BadQueryException {
+        LinkedList<Lex.Symbol> lexedSymbols = Lex.lexQuery(queryString);
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols);
+        Object ast = Ast.buildFrom(parseTree);
+        // TODO: Review necessity of flattenCodes/flattenNegations
+        ast = Analysis.flattenCodes(ast);
+        ast = Analysis.flattenNegations(ast);
         return disambiguate.toDisambiguatedTree(ast);
     }
 
-    private Object astToQt(Object ast) throws BadQueryException {
-        ast = Analysis.flattenCodes(ast);
-        ast = Analysis.flattenNegations(ast);
+    private Object astToQt(Object ast) {
         Set<String> givenProperties = collectGivenProperties(ast);
         Set<String> givenTypes = givenProperties.contains(JsonLd.getTYPE_KEY()) ? collectGivenTypes(ast) : Collections.emptySet();
         Set<String> domains = givenProperties.stream()
@@ -62,22 +79,26 @@ public class QueryTree {
 
         boolean searchInstances = !givenInstanceTypes.isEmpty() || !instanceCompatibleDomains.isEmpty() || domains.contains(UNKNOWN);
 
-//        return toAndOrQueryTree(ast, searchInstances);
-        return astToQt(ast, false);
+//        return astToQt(ast, searchInstances, false);
+        return astToQt(ast, false, false);
     }
 
-    private Object astToQt(Object node, boolean searchInstances) throws BadQueryException {
+    private Object astToSimpleQt(Object ast) {
+        return astToQt(ast, false, true);
+    }
+
+    private Object astToQt(Object node, boolean searchInstances, boolean simpleTree) {
         // Assuming flattened codes and negations
         if (node instanceof Ast.And) {
             List<Object> conjuncts = new ArrayList<>();
             for (Object o : ((Ast.And) node).operands()) {
-                conjuncts.add(astToQt(o, searchInstances));
+                conjuncts.add(astToQt(o, searchInstances, simpleTree));
             }
             return new And(conjuncts);
         } else if (node instanceof Ast.Or) {
             List<Object> disjuncts = new ArrayList<>();
             for (Object o : ((Ast.Or) node).operands()) {
-                disjuncts.add(astToQt(o, searchInstances));
+                disjuncts.add(astToQt(o, searchInstances, simpleTree));
             }
             return new Or(disjuncts);
         }
@@ -85,16 +106,18 @@ public class QueryTree {
 //            return new Ast.Like(collectSearchPathTree(((Ast.Like) node).operand(), searchInstances));
 //        }
         else if (node instanceof Ast.Comp) {
-            return codeNodeToField((Ast.Comp) node, searchInstances);
-        }
-        else if (node instanceof Ast.Not) {
+            Ast.Comp compNode = (Ast.Comp) node;
+            return simpleTree
+                    ? new SimpleField(compNode.code(), getOperator(compNode), (String) compNode.operand())
+                    : compNodeToField(compNode, searchInstances);
+        } else if (node instanceof Ast.Not) {
             String value = (String) ((Ast.Not) node).operand();
             return new FreeText(value, Operator.NOT_EQUALS);
         }
         return new FreeText((String) node, Operator.EQUALS);
     }
 
-    private Object codeNodeToField(Ast.Comp node, boolean searchInstances) throws BadQueryException {
+    private Object compNodeToField(Ast.Comp node, boolean searchInstances) {
         String property = node.code();
         String value = (String) node.operand();
         Operator operator = getOperator(node);

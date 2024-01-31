@@ -2,6 +2,7 @@ package whelk.search
 
 import spock.lang.Specification
 import whelk.Whelk
+import whelk.xlql.QueryTree
 
 class XLQLQuerySpec extends Specification {
     private static Whelk whelk = Whelk.createLoadedSearchWhelk()
@@ -172,13 +173,13 @@ class XLQLQuerySpec extends Specification {
     def "Free text + fields + grouping"() {
         given:
         def classicInput = [
-                'q': ['fåglar'] as String[],
-                'issuanceType': ['Serial', 'Monograph'] as String[],
+                'q'                 : ['fåglar'] as String[],
+                'issuanceType'      : ['Serial', 'Monograph'] as String[],
                 'meta.encodingLevel': ['marc:FullLevel'],
-                '_debug': ['esQuery'] as String[]
+                '_debug'            : ['esQuery'] as String[]
         ]
         def xlqlInput = [
-                '_q': ['fåglar and utgivningssätt: (Serial or Monograph) and beskrivningsnivå="marc:FullLevel"'] as String[],
+                '_q'    : ['fåglar and utgivningssätt: (Serial or Monograph) and beskrivningsnivå="marc:FullLevel"'] as String[],
                 '_debug': ['esQuery'] as String[]
         ]
 
@@ -189,5 +190,150 @@ class XLQLQuerySpec extends Specification {
         xlqlEsResponse['totalHits'] > 0
         xlqlEsResponse['totalHits'] == classicEsResponse['totalHits']
         xlqlEsResponse['items'].size() == classicEsResponse['items'].size()
+    }
+
+    def "Mapping: Simple free text"() {
+        given:
+        def input = "Kalle"
+        def sqt = xlqlQuery.queryTree.toSimpleQueryTree(input)
+
+        expect:
+        xlqlQuery.toMappings(sqt) == [
+                'variable' : 'textQuery',
+                'predicate': whelk.jsonld.vocabIndex['textQuery'],
+                'value'    : 'Kalle',
+                'operator' : QueryTree.Operator.EQUALS,
+                'up'       : '/find?q=*'
+        ]
+    }
+
+    def "Mapping: Simple phrase"() {
+        given:
+        def input = "\"Kalle Anka\""
+        def sqt = xlqlQuery.queryTree.toSimpleQueryTree(input)
+
+        expect:
+        xlqlQuery.toMappings(sqt) == [
+                'variable' : 'textQuery',
+                'predicate': whelk.jsonld.vocabIndex['textQuery'],
+                'value'    : 'Kalle Anka',
+                'operator' : QueryTree.Operator.EQUALS,
+                'up'       : '/find?q=*'
+        ]
+    }
+
+    def "Mapping: Free text conjunction"() {
+        given:
+        def input = "Kalle Anka"
+        def sqt = xlqlQuery.queryTree.toSimpleQueryTree(input)
+
+        expect:
+        xlqlQuery.toMappings(sqt) == [
+                'and': [
+                        [
+                                'variable' : 'textQuery',
+                                'predicate': whelk.jsonld.vocabIndex['textQuery'],
+                                'value'    : 'Kalle',
+                                'operator' : QueryTree.Operator.EQUALS,
+                                'up'       : '/find?_q=Anka'
+                        ],
+                        [
+                                'variable' : 'textQuery',
+                                'predicate': whelk.jsonld.vocabIndex['textQuery'],
+                                'value'    : 'Anka',
+                                'operator' : QueryTree.Operator.EQUALS,
+                                'up'       : '/find?_q=Kalle'
+                        ]
+                ],
+                'up' : '/find?q=*'
+        ]
+    }
+
+    def "Mapping: Free text grouping + nested"() {
+        given:
+        def input = "(Kalle and not (Anka or Blomqvist)) or Bosse"
+        def sqt = xlqlQuery.queryTree.toSimpleQueryTree(input)
+
+        expect:
+        // TODO: Review necessity of flattenCodes/flattenNegations
+        xlqlQuery.toMappings(sqt) == [
+                'or': [
+                        [
+                                'and': [
+                                        [
+                                                'variable' : 'textQuery',
+                                                'predicate': whelk.jsonld.vocabIndex['textQuery'],
+                                                'value'    : 'Kalle',
+                                                'operator' : QueryTree.Operator.EQUALS,
+                                                'up'       : '/find?_q=(NOT Anka AND NOT Blomqvist) OR Bosse'
+                                        ],
+                                        [
+                                                'and': [
+                                                        [
+                                                                'variable' : 'textQuery',
+                                                                'predicate': whelk.jsonld.vocabIndex['textQuery'],
+                                                                'value'    : 'Anka',
+                                                                'operator' : QueryTree.Operator.NOT_EQUALS,
+                                                                'up'       : '/find?_q=(Kalle AND NOT Blomqvist) OR Bosse'
+                                                        ],
+                                                        [
+                                                                'variable' : 'textQuery',
+                                                                'predicate': whelk.jsonld.vocabIndex['textQuery'],
+                                                                'value'    : 'Blomqvist',
+                                                                'operator' : QueryTree.Operator.NOT_EQUALS,
+                                                                'up'       : '/find?_q=(Kalle AND NOT Anka) OR Bosse'
+                                                        ]
+                                                ],
+                                                'up' : '/find?_q=Kalle OR Bosse'
+                                        ]
+                                ],
+                                'up' : '/find?_q=Bosse'
+                        ],
+                        [
+                                'variable' : 'textQuery',
+                                'predicate': whelk.jsonld.vocabIndex['textQuery'],
+                                'value'    : 'Bosse',
+                                'operator' : QueryTree.Operator.EQUALS,
+                                'up'       : '/find?_q=Kalle AND (NOT Anka AND NOT Blomqvist)'
+                        ]
+                ],
+                'up': '/find?q=*'
+        ]
+    }
+
+    def "Mapping: Free text + fields"() {
+        given:
+        def input = "Kalle år > 2020 not ämne: Hästar"
+        def sqt = xlqlQuery.queryTree.toSimpleQueryTree(input)
+        def mappings = xlqlQuery.toMappings(sqt)
+
+        expect:
+        // TODO: Kolla disambiguate? ämne: Hästar
+        mappings == [
+                'and': [
+                        [
+                                'variable' : 'textQuery',
+                                'predicate': whelk.jsonld.vocabIndex['textQuery'],
+                                'value'    : 'Kalle',
+                                'operator' : QueryTree.Operator.EQUALS,
+                                'up'       : '/find?_q=year > 2020 AND NOT subject: Hästar'
+                        ],
+                        [
+                                'variable' : 'year',
+                                'predicate': whelk.jsonld.vocabIndex['year'],
+                                'value'    : '2020',
+                                'operator' : QueryTree.Operator.GREATER_THAN,
+                                'up'       : '/find?_q=Kalle AND NOT subject: Hästar'
+                        ],
+                        [
+                                'variable' : 'subject',
+                                'predicate': whelk.jsonld.vocabIndex['subject'],
+                                'value'    : 'Hästar',
+                                'operator' : QueryTree.Operator.NOT_EQUALS,
+                                'up'       : '/find?_q=Kalle AND year > 2020'
+                        ]
+                ],
+                'up' : '/find?q=*'
+        ]
     }
 }

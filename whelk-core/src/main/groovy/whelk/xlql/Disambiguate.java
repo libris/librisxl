@@ -49,6 +49,14 @@ public class Disambiguate {
             }
             return new Ast.CodeEquals(kbvProperty, ce.operand());
         }
+        if (ast instanceof Ast.NotCodeEquals) {
+            Ast.NotCodeEquals nce = (Ast.NotCodeEquals) ast;
+            String kbvProperty = mapToKbvProperty(nce.code());
+            if (kbvProperty == null) {
+                throw new BadQueryException("Unrecognized property alias: " + nce.code());
+            }
+            return new Ast.NotCodeEquals(kbvProperty, nce.operand());
+        }
         if (ast instanceof Ast.CodeLesserGreaterThan) {
             Ast.CodeLesserGreaterThan clgt = (Ast.CodeLesserGreaterThan) ast;
             String kbvProperty = mapToKbvProperty(clgt.code());

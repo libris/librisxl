@@ -24,10 +24,7 @@ class QueryTreeSpec extends Specification {
     def "collect given properties and types from query"() {
         given:
         def input = "type: Electronic AND utgivning: aaa AND (contentType: bbb OR title: ccc) AND bibliography: ddd"
-        def lexedSymbols = Lex.lexQuery(input)
-        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
-        Object ast = Ast.buildFrom(parseTree)
-        Object disambiguated = queryTree.disambiguateAst(ast)
+        Object disambiguated = queryTree.toDisambiguatedAst(input)
         Set<String> givenProperties = queryTree.collectGivenProperties(disambiguated)
         Set<Object> givenTypes = queryTree.collectGivenTypes(disambiguated)
 

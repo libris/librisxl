@@ -7,12 +7,12 @@ import whelk.xlql.BadQueryException;
 import whelk.xlql.QueryTree;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-public class XLQLQuery
-{
+public class XLQLQuery {
     private Whelk whelk;
     private ESQuery esQuery;
-    private QueryTree queryTree;
+    public QueryTree queryTree;
 
     XLQLQuery(Whelk whelk) {
         this.whelk = whelk;
@@ -47,6 +47,136 @@ public class XLQLQuery
         }
         return buildEsQuery(queryTree, new HashMap<>());
     }
+
+    public Map toMappings(Object sqt) {
+        return buildMappings(sqt, sqt, new LinkedHashMap());
+    }
+
+    private Map buildMappings(Object sqt, Object sqtNode, Map mappingsNode) {
+        if (sqtNode instanceof QueryTree.FreeText) {
+            mappingsNode = freeTextMapping((QueryTree.FreeText) sqtNode);
+        } else if (sqtNode instanceof QueryTree.SimpleField) {
+            mappingsNode = fieldMapping((QueryTree.SimpleField) sqtNode);
+        } else if (sqtNode instanceof QueryTree.And) {
+            List<Object> and = new ArrayList<>();
+            for (Object c : ((QueryTree.And) sqtNode).conjuncts()) {
+                and.add(0, buildMappings(sqt, c, new LinkedHashMap()));
+            }
+            mappingsNode.put("and", and);
+        } else if (sqtNode instanceof QueryTree.Or) {
+            List<Object> or = new ArrayList<>();
+            for (Object c : ((QueryTree.Or) sqtNode).disjuncts()) {
+                or.add(0, buildMappings(sqt, c, new LinkedHashMap()));
+            }
+            mappingsNode.put("or", or);
+        }
+
+        Optional<Object> reducedTree = getReducedTree(sqt, sqtNode);
+        // TODO: Empty tree --> ???
+        String upUrl = reducedTree.isPresent() ? "/find?_q=" + treeToQueryString(reducedTree.get()) : "/find?q=*";
+        mappingsNode.put("up", upUrl);
+
+        return mappingsNode;
+    }
+
+    private Map mapping(String property, String value, QueryTree.Operator operator) {
+        Map m = new LinkedHashMap();
+        m.put("variable", property);
+        m.put("predicate", whelk.getJsonld().getVocabIndex().get(property));
+        m.put("value", value);
+        // TODO: use string instead of enum (Operator)
+        m.put("operator", operator);
+        return m;
+    }
+
+    private Map freeTextMapping(QueryTree.FreeText ft) {
+        return mapping("textQuery", ft.value(), ft.operator());
+    }
+
+    private Map fieldMapping(QueryTree.SimpleField f) {
+        return mapping(f.property(), f.value(), f.operator());
+    }
+
+    private Optional<Object> getReducedTree(Object qt, Object qtNode) {
+        return Optional.ofNullable(excludeFromTree(qtNode, qt));
+    }
+
+    private Object excludeFromTree(Object nodeToExclude, Object tree) {
+        if (nodeToExclude.equals(tree)) {
+            return null;
+        }
+        if (tree instanceof QueryTree.And) {
+            List<Object> and = new ArrayList<>();
+            for (Object c : ((QueryTree.And) tree).conjuncts()) {
+                Object elem = excludeFromTree(nodeToExclude, c);
+                if (elem != null) {
+                    and.add(0, elem);
+                }
+            }
+            return and.size() > 1 ? new QueryTree.And(and) : and.get(0);
+        }
+        if (tree instanceof QueryTree.Or) {
+            List<Object> or = new ArrayList<>();
+            for (Object c : ((QueryTree.Or) tree).disjuncts()) {
+                Object elem = excludeFromTree(nodeToExclude, c);
+                if (elem != null) {
+                    or.add(0, elem);
+                }
+            }
+            return or.size() > 1 ? new QueryTree.Or(or) : or.get(0);
+        }
+        return tree;
+    }
+
+    private String treeToQueryString(Object sqt) {
+        return buildQueryString(sqt, true);
+    }
+
+    private String buildQueryString(Object sqt, boolean topLevel) {
+        if (sqt instanceof QueryTree.And) {
+            String andClause = ((QueryTree.And) sqt).conjuncts()
+                    .stream()
+                    .map(this::buildQueryString)
+                    .collect(Collectors.joining(" AND "));
+            return topLevel ? andClause : "(" + andClause + ")";
+        }
+        if (sqt instanceof QueryTree.Or) {
+            String orClause = ((QueryTree.Or) sqt).disjuncts()
+                    .stream()
+                    .map(this::buildQueryString)
+                    .collect(Collectors.joining(" OR "));
+            return topLevel ? orClause : "(" + orClause + ")";
+        }
+        if (sqt instanceof QueryTree.FreeText) {
+            return freeTextToString((QueryTree.FreeText) sqt);
+        }
+        if (sqt instanceof QueryTree.SimpleField) {
+            return fieldToString((QueryTree.SimpleField) sqt);
+        }
+        throw new RuntimeException("Unknown class of query tree node: " + sqt.getClass()); // Shouldn't be reachable
+    }
+
+    private String buildQueryString(Object qt) {
+        return buildQueryString(qt, false);
+    }
+
+    private String freeTextToString(QueryTree.FreeText ft) {
+        return ft.operator() == QueryTree.Operator.NOT_EQUALS ? "NOT " + ft.value() : ft.value();
+    }
+
+    private String fieldToString(QueryTree.SimpleField f) {
+        String sep = switch (f.operator()) {
+            case EQUALS -> ": ";
+            case NOT_EQUALS -> ": ";
+            case GREATER_THAN_OR_EQUAL -> " >= ";
+            case GREATER_THAN -> " > ";
+            case LESS_THAN_OR_EQUAL -> " <= ";
+            case LESS_THAN -> " < ";
+        };
+        String not = f.operator() == QueryTree.Operator.NOT_EQUALS ? "NOT " : "";
+        return not + f.property() + sep + f.value();
+    }
+
     private Map buildEsQuery(Object qtNode, Map esQueryNode) {
         if (qtNode instanceof QueryTree.And) {
             List<Object> must = new ArrayList<>();
@@ -79,29 +209,14 @@ public class XLQLQuery
     private Map esFilter(QueryTree.Field f) {
         String path = f.path().stringify();
         String value = quoteIfPhrase(f.value());
-        switch (f.operator()) {
-            case EQUALS -> {
-                return equalsFilter(path, value);
-            }
-            case NOT_EQUALS -> {
-                return notEqualsFilter(path, value);
-            }
-            case LESS_THAN -> {
-                return rangeFilter(path, value, "lt");
-            }
-            case LESS_THAN_OR_EQUAL -> {
-                return rangeFilter(path, value, "lte");
-            }
-            case GREATER_THAN -> {
-                return rangeFilter(path, value, "gt");
-            }
-            case GREATER_THAN_OR_EQUAL -> {
-                return rangeFilter(path, value, "gte");
-            }
-            default -> {
-                throw new RuntimeException("Unknown operator"); // Not reachable
-            }
-        }
+        return switch (f.operator()) {
+            case EQUALS -> equalsFilter(path, value);
+            case NOT_EQUALS -> notEqualsFilter(path, value);
+            case LESS_THAN -> rangeFilter(path, value, "lt");
+            case LESS_THAN_OR_EQUAL -> rangeFilter(path, value, "lte");
+            case GREATER_THAN -> rangeFilter(path, value, "gt");
+            case GREATER_THAN_OR_EQUAL -> rangeFilter(path, value, "gte");
+        };
     }
 
     private static Map equalsFilter(String path, String value) {
