@@ -41,8 +41,9 @@ public class WebInterface extends HttpServlet {
         Whelk whelk = Whelk.createLoadedSearchWhelk()
 
         List<HouseKeeper> houseKeepers = [
-                new NotificationGenerator(whelk),
-                new NotificationSender(whelk),
+                // Automatic generation is disabled for now, may need design changes approved before activation.
+                //new NotificationGenerator(whelk),
+                //new NotificationSender(whelk),
                 new InquirySender(whelk),
                 new NotificationCleaner(whelk),
         ]
