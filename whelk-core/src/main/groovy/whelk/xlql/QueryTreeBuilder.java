@@ -6,7 +6,7 @@ import whelk.Whelk;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class QueryTree {
+public class QueryTreeBuilder {
     public record And(List<Object> conjuncts) {
     }
 
@@ -41,20 +41,18 @@ public class QueryTree {
 
     private static final String UNKNOWN = "Unknown";
 
-    public QueryTree(Whelk whelk) {
+    public QueryTreeBuilder(Whelk whelk) {
         this.jsonLd = whelk.getJsonld();
         this.disambiguate = new Disambiguate(whelk);
         this.domainByProperty = loadDomainByProperty(whelk);
     }
 
-    public Object toQueryTree(String queryString) throws BadQueryException {
-        Object disambiguated = toDisambiguatedAst(queryString);
-        return astToQt(disambiguated);
+    public Object toQueryTree(Object disambiguatedAst) {
+        return astToQt(disambiguatedAst);
     }
 
-    public Object toSimpleQueryTree(String queryString) throws BadQueryException {
-        Object disambiguated = toDisambiguatedAst(queryString);
-        return astToSimpleQt(disambiguated);
+    public Object toSimpleQueryTree(Object disambiguatedAst) {
+        return astToSimpleQt(disambiguatedAst);
     }
 
     public Object toDisambiguatedAst(String queryString) throws BadQueryException {

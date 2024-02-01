@@ -4,7 +4,7 @@ import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.util.Unicode;
 import whelk.xlql.BadQueryException;
-import whelk.xlql.QueryTree;
+import whelk.xlql.QueryTreeBuilder;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -12,19 +12,19 @@ import java.util.stream.Collectors;
 public class XLQLQuery {
     private Whelk whelk;
     private ESQuery esQuery;
-    public QueryTree queryTree;
+    public QueryTreeBuilder queryTreeBuilder;
 
-    XLQLQuery(Whelk whelk) {
+    public XLQLQuery(Whelk whelk) {
         this.whelk = whelk;
         this.esQuery = new ESQuery(whelk);
-        this.queryTree = new QueryTree(whelk);
+        this.queryTreeBuilder = new QueryTreeBuilder(whelk);
     }
 
-    public Map doQuery(Map<String, String[]> queryParameters) throws BadQueryException {
+    public Map doQuery(Map<String, String[]> queryParameters) {
         if (!queryParameters.containsKey("_q")) {
             throw new RuntimeException("Missing _q parameter");
         }
-        Object queryTree = this.queryTree.toQueryTree(getQueryString(queryParameters));
+        Object queryTree = this.queryTreeBuilder.toQueryTree(getQueryString(queryParameters));
         Map query = toEsQuery(queryTree);
         // TODO
         // This is a shortcut to a complete ES query. Only temporary.
@@ -39,11 +39,11 @@ public class XLQLQuery {
 
     // TODO: Unit tests
     public Map toEsQuery(Object queryTree) {
-        if (queryTree instanceof QueryTree.FreeText) {
-            return esFreeText((QueryTree.FreeText) queryTree);
+        if (queryTree instanceof QueryTreeBuilder.FreeText) {
+            return esFreeText((QueryTreeBuilder.FreeText) queryTree);
         }
-        if (queryTree instanceof QueryTree.Field) {
-            return esFilter((QueryTree.Field) queryTree);
+        if (queryTree instanceof QueryTreeBuilder.Field) {
+            return esFilter((QueryTreeBuilder.Field) queryTree);
         }
         return buildEsQuery(queryTree, new HashMap<>());
     }
@@ -53,19 +53,19 @@ public class XLQLQuery {
     }
 
     private Map buildMappings(Object sqt, Object sqtNode, Map mappingsNode) {
-        if (sqtNode instanceof QueryTree.FreeText) {
-            mappingsNode = freeTextMapping((QueryTree.FreeText) sqtNode);
-        } else if (sqtNode instanceof QueryTree.SimpleField) {
-            mappingsNode = fieldMapping((QueryTree.SimpleField) sqtNode);
-        } else if (sqtNode instanceof QueryTree.And) {
+        if (sqtNode instanceof QueryTreeBuilder.FreeText) {
+            mappingsNode = freeTextMapping((QueryTreeBuilder.FreeText) sqtNode);
+        } else if (sqtNode instanceof QueryTreeBuilder.SimpleField) {
+            mappingsNode = fieldMapping((QueryTreeBuilder.SimpleField) sqtNode);
+        } else if (sqtNode instanceof QueryTreeBuilder.And) {
             List<Object> and = new ArrayList<>();
-            for (Object c : ((QueryTree.And) sqtNode).conjuncts()) {
+            for (Object c : ((QueryTreeBuilder.And) sqtNode).conjuncts()) {
                 and.add(buildMappings(sqt, c, new LinkedHashMap()));
             }
             mappingsNode.put("and", and);
-        } else if (sqtNode instanceof QueryTree.Or) {
+        } else if (sqtNode instanceof QueryTreeBuilder.Or) {
             List<Object> or = new ArrayList<>();
-            for (Object c : ((QueryTree.Or) sqtNode).disjuncts()) {
+            for (Object c : ((QueryTreeBuilder.Or) sqtNode).disjuncts()) {
                 or.add(buildMappings(sqt, c, new LinkedHashMap()));
             }
             mappingsNode.put("or", or);
@@ -79,7 +79,7 @@ public class XLQLQuery {
         return mappingsNode;
     }
 
-    private Map mapping(String property, String value, QueryTree.Operator operator) {
+    private Map mapping(String property, String value, QueryTreeBuilder.Operator operator) {
         Map m = new LinkedHashMap();
         m.put("variable", property);
         m.put("predicate", whelk.getJsonld().getVocabIndex().get(property));
@@ -89,11 +89,11 @@ public class XLQLQuery {
         return m;
     }
 
-    private Map freeTextMapping(QueryTree.FreeText ft) {
+    private Map freeTextMapping(QueryTreeBuilder.FreeText ft) {
         return mapping("textQuery", ft.value(), ft.operator());
     }
 
-    private Map fieldMapping(QueryTree.SimpleField f) {
+    private Map fieldMapping(QueryTreeBuilder.SimpleField f) {
         return mapping(f.property(), f.value(), f.operator());
     }
 
@@ -105,25 +105,25 @@ public class XLQLQuery {
         if (nodeToExclude.equals(tree)) {
             return null;
         }
-        if (tree instanceof QueryTree.And) {
+        if (tree instanceof QueryTreeBuilder.And) {
             List<Object> and = new ArrayList<>();
-            for (Object c : ((QueryTree.And) tree).conjuncts()) {
+            for (Object c : ((QueryTreeBuilder.And) tree).conjuncts()) {
                 Object elem = excludeFromTree(nodeToExclude, c);
                 if (elem != null) {
                     and.add(elem);
                 }
             }
-            return and.size() > 1 ? new QueryTree.And(and) : and.get(0);
+            return and.size() > 1 ? new QueryTreeBuilder.And(and) : and.get(0);
         }
-        if (tree instanceof QueryTree.Or) {
+        if (tree instanceof QueryTreeBuilder.Or) {
             List<Object> or = new ArrayList<>();
-            for (Object c : ((QueryTree.Or) tree).disjuncts()) {
+            for (Object c : ((QueryTreeBuilder.Or) tree).disjuncts()) {
                 Object elem = excludeFromTree(nodeToExclude, c);
                 if (elem != null) {
                     or.add(elem);
                 }
             }
-            return or.size() > 1 ? new QueryTree.Or(or) : or.get(0);
+            return or.size() > 1 ? new QueryTreeBuilder.Or(or) : or.get(0);
         }
         return tree;
     }
@@ -133,25 +133,25 @@ public class XLQLQuery {
     }
 
     private String buildQueryString(Object sqt, boolean topLevel) {
-        if (sqt instanceof QueryTree.And) {
-            String andClause = ((QueryTree.And) sqt).conjuncts()
+        if (sqt instanceof QueryTreeBuilder.And) {
+            String andClause = ((QueryTreeBuilder.And) sqt).conjuncts()
                     .stream()
                     .map(this::buildQueryString)
                     .collect(Collectors.joining(" AND "));
             return topLevel ? andClause : "(" + andClause + ")";
         }
-        if (sqt instanceof QueryTree.Or) {
-            String orClause = ((QueryTree.Or) sqt).disjuncts()
+        if (sqt instanceof QueryTreeBuilder.Or) {
+            String orClause = ((QueryTreeBuilder.Or) sqt).disjuncts()
                     .stream()
                     .map(this::buildQueryString)
                     .collect(Collectors.joining(" OR "));
             return topLevel ? orClause : "(" + orClause + ")";
         }
-        if (sqt instanceof QueryTree.FreeText) {
-            return freeTextToString((QueryTree.FreeText) sqt);
+        if (sqt instanceof QueryTreeBuilder.FreeText) {
+            return freeTextToString((QueryTreeBuilder.FreeText) sqt);
         }
-        if (sqt instanceof QueryTree.SimpleField) {
-            return fieldToString((QueryTree.SimpleField) sqt);
+        if (sqt instanceof QueryTreeBuilder.SimpleField) {
+            return fieldToString((QueryTreeBuilder.SimpleField) sqt);
         }
         throw new RuntimeException("Unknown class of query tree node: " + sqt.getClass()); // Shouldn't be reachable
     }
@@ -160,11 +160,11 @@ public class XLQLQuery {
         return buildQueryString(qt, false);
     }
 
-    private String freeTextToString(QueryTree.FreeText ft) {
-        return ft.operator() == QueryTree.Operator.NOT_EQUALS ? "NOT " + ft.value() : ft.value();
+    private String freeTextToString(QueryTreeBuilder.FreeText ft) {
+        return ft.operator() == QueryTreeBuilder.Operator.NOT_EQUALS ? "NOT " + ft.value() : ft.value();
     }
 
-    private String fieldToString(QueryTree.SimpleField f) {
+    private String fieldToString(QueryTreeBuilder.SimpleField f) {
         String sep = switch (f.operator()) {
             case EQUALS -> ": ";
             case NOT_EQUALS -> ": ";
@@ -173,30 +173,30 @@ public class XLQLQuery {
             case LESS_THAN_OR_EQUAL -> " <= ";
             case LESS_THAN -> " < ";
         };
-        String not = f.operator() == QueryTree.Operator.NOT_EQUALS ? "NOT " : "";
+        String not = f.operator() == QueryTreeBuilder.Operator.NOT_EQUALS ? "NOT " : "";
         return not + f.property() + sep + f.value();
     }
 
     private Map buildEsQuery(Object qtNode, Map esQueryNode) {
-        if (qtNode instanceof QueryTree.And) {
+        if (qtNode instanceof QueryTreeBuilder.And) {
             List<Object> must = new ArrayList<>();
-            for (Object c : ((QueryTree.And) qtNode).conjuncts()) {
-                if (c instanceof QueryTree.FreeText) {
-                    must.add(esFreeText((QueryTree.FreeText) c));
-                } else if (c instanceof QueryTree.Field) {
-                    must.add(esFilter((QueryTree.Field) c));
+            for (Object c : ((QueryTreeBuilder.And) qtNode).conjuncts()) {
+                if (c instanceof QueryTreeBuilder.FreeText) {
+                    must.add(esFreeText((QueryTreeBuilder.FreeText) c));
+                } else if (c instanceof QueryTreeBuilder.Field) {
+                    must.add(esFilter((QueryTreeBuilder.Field) c));
                 } else {
                     must.add(buildEsQuery(c, new HashMap<>()));
                 }
             }
             esQueryNode.putAll(mustWrap(must));
-        } else if (qtNode instanceof QueryTree.Or) {
+        } else if (qtNode instanceof QueryTreeBuilder.Or) {
             List should = new ArrayList<>();
-            for (Object d : ((QueryTree.Or) qtNode).disjuncts()) {
-                if (d instanceof QueryTree.FreeText) {
-                    should.add(esFreeText((QueryTree.FreeText) d));
-                } else if (d instanceof QueryTree.Field) {
-                    should.add(esFilter((QueryTree.Field) d));
+            for (Object d : ((QueryTreeBuilder.Or) qtNode).disjuncts()) {
+                if (d instanceof QueryTreeBuilder.FreeText) {
+                    should.add(esFreeText((QueryTreeBuilder.FreeText) d));
+                } else if (d instanceof QueryTreeBuilder.Field) {
+                    should.add(esFilter((QueryTreeBuilder.Field) d));
                 } else {
                     should.add(buildEsQuery(d, new HashMap<>()));
                 }
@@ -206,7 +206,7 @@ public class XLQLQuery {
         return esQueryNode;
     }
 
-    private Map esFilter(QueryTree.Field f) {
+    private Map esFilter(QueryTreeBuilder.Field f) {
         String path = f.path().stringify();
         String value = quoteIfPhrase(f.value());
         return switch (f.operator()) {
@@ -243,7 +243,7 @@ public class XLQLQuery {
         return filterWrap(rangeWrap(newParent(path, m)));
     }
 
-    private Map esFreeText(QueryTree.FreeText ft) {
+    private Map esFreeText(QueryTreeBuilder.FreeText ft) {
         String s = ft.value();
         s = Unicode.normalizeForSearch(s);
         s = quoteIfPhrase(s);
@@ -261,10 +261,10 @@ public class XLQLQuery {
         List<String> boostedFields = esQuery.getBoostFields(null, null);
 
         if (boostedFields.isEmpty()) {
-            if (ft.operator() == QueryTree.Operator.EQUALS) {
+            if (ft.operator() == QueryTreeBuilder.Operator.EQUALS) {
                 return simpleQuery;
             }
-            if (ft.operator() == QueryTree.Operator.NOT_EQUALS) {
+            if (ft.operator() == QueryTreeBuilder.Operator.NOT_EQUALS) {
                 return mustNotWrap(simpleQuery);
             }
         }
@@ -290,10 +290,10 @@ public class XLQLQuery {
         bs.put("analyze_wildcard", true);
 
         List<Map> shouldClause = new ArrayList<>(Arrays.asList(boostedExact, boostedSoft, simpleQuery));
-        if (ft.operator() == QueryTree.Operator.EQUALS) {
+        if (ft.operator() == QueryTreeBuilder.Operator.EQUALS) {
             return shouldWrap(shouldClause);
         }
-        if (ft.operator() == QueryTree.Operator.NOT_EQUALS) {
+        if (ft.operator() == QueryTreeBuilder.Operator.NOT_EQUALS) {
             /*
             Better with { must: [must_not:{}, must_not:{}, must_not:{}] }?
             https://opster.com/guides/elasticsearch/search-apis/elasticsearch-query-bool/

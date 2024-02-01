@@ -2,7 +2,7 @@ package whelk.search
 
 import spock.lang.Specification
 import whelk.Whelk
-import whelk.xlql.QueryTree
+import whelk.xlql.QueryTreeBuilder
 
 class XLQLQuerySpec extends Specification {
     private static Whelk whelk = Whelk.createLoadedSearchWhelk()
@@ -195,14 +195,14 @@ class XLQLQuerySpec extends Specification {
     def "Mapping: Simple free text"() {
         given:
         def input = "Kalle"
-        def sqt = xlqlQuery.queryTree.toSimpleQueryTree(input)
+        def sqt = xlqlQuery.queryTreeBuilder.toSimpleQueryTree(input)
 
         expect:
         xlqlQuery.toMappings(sqt) == [
                 'variable' : 'textQuery',
                 'predicate': whelk.jsonld.vocabIndex['textQuery'],
                 'value'    : 'Kalle',
-                'operator' : QueryTree.Operator.EQUALS,
+                'operator' : QueryTreeBuilder.Operator.EQUALS,
                 'up'       : '/find?q=*'
         ]
     }
@@ -210,14 +210,14 @@ class XLQLQuerySpec extends Specification {
     def "Mapping: Simple phrase"() {
         given:
         def input = "\"Kalle Anka\""
-        def sqt = xlqlQuery.queryTree.toSimpleQueryTree(input)
+        def sqt = xlqlQuery.queryTreeBuilder.toSimpleQueryTree(input)
 
         expect:
         xlqlQuery.toMappings(sqt) == [
                 'variable' : 'textQuery',
                 'predicate': whelk.jsonld.vocabIndex['textQuery'],
                 'value'    : 'Kalle Anka',
-                'operator' : QueryTree.Operator.EQUALS,
+                'operator' : QueryTreeBuilder.Operator.EQUALS,
                 'up'       : '/find?q=*'
         ]
     }
@@ -225,7 +225,7 @@ class XLQLQuerySpec extends Specification {
     def "Mapping: Free text conjunction"() {
         given:
         def input = "Kalle Anka"
-        def sqt = xlqlQuery.queryTree.toSimpleQueryTree(input)
+        def sqt = xlqlQuery.queryTreeBuilder.toSimpleQueryTree(input)
 
         expect:
         xlqlQuery.toMappings(sqt) == [
@@ -234,14 +234,14 @@ class XLQLQuerySpec extends Specification {
                                 'variable' : 'textQuery',
                                 'predicate': whelk.jsonld.vocabIndex['textQuery'],
                                 'value'    : 'Kalle',
-                                'operator' : QueryTree.Operator.EQUALS,
+                                'operator' : QueryTreeBuilder.Operator.EQUALS,
                                 'up'       : '/find?_q=Anka'
                         ],
                         [
                                 'variable' : 'textQuery',
                                 'predicate': whelk.jsonld.vocabIndex['textQuery'],
                                 'value'    : 'Anka',
-                                'operator' : QueryTree.Operator.EQUALS,
+                                'operator' : QueryTreeBuilder.Operator.EQUALS,
                                 'up'       : '/find?_q=Kalle'
                         ]
                 ],
@@ -252,7 +252,7 @@ class XLQLQuerySpec extends Specification {
     def "Mapping: Free text grouping + nested"() {
         given:
         def input = "(Kalle and not (Anka or Blomqvist)) or Bosse"
-        def sqt = xlqlQuery.queryTree.toSimpleQueryTree(input)
+        def sqt = xlqlQuery.queryTreeBuilder.toSimpleQueryTree(input)
 
         expect:
         // TODO: Review necessity of flattenCodes/flattenNegations
@@ -264,7 +264,7 @@ class XLQLQuerySpec extends Specification {
                                                 'variable' : 'textQuery',
                                                 'predicate': whelk.jsonld.vocabIndex['textQuery'],
                                                 'value'    : 'Kalle',
-                                                'operator' : QueryTree.Operator.EQUALS,
+                                                'operator' : QueryTreeBuilder.Operator.EQUALS,
                                                 'up'       : '/find?_q=(NOT Anka AND NOT Blomqvist) OR Bosse'
                                         ],
                                         [
@@ -273,14 +273,14 @@ class XLQLQuerySpec extends Specification {
                                                                 'variable' : 'textQuery',
                                                                 'predicate': whelk.jsonld.vocabIndex['textQuery'],
                                                                 'value'    : 'Anka',
-                                                                'operator' : QueryTree.Operator.NOT_EQUALS,
+                                                                'operator' : QueryTreeBuilder.Operator.NOT_EQUALS,
                                                                 'up'       : '/find?_q=(Kalle AND NOT Blomqvist) OR Bosse'
                                                         ],
                                                         [
                                                                 'variable' : 'textQuery',
                                                                 'predicate': whelk.jsonld.vocabIndex['textQuery'],
                                                                 'value'    : 'Blomqvist',
-                                                                'operator' : QueryTree.Operator.NOT_EQUALS,
+                                                                'operator' : QueryTreeBuilder.Operator.NOT_EQUALS,
                                                                 'up'       : '/find?_q=(Kalle AND NOT Anka) OR Bosse'
                                                         ]
                                                 ],
@@ -293,7 +293,7 @@ class XLQLQuerySpec extends Specification {
                                 'variable' : 'textQuery',
                                 'predicate': whelk.jsonld.vocabIndex['textQuery'],
                                 'value'    : 'Bosse',
-                                'operator' : QueryTree.Operator.EQUALS,
+                                'operator' : QueryTreeBuilder.Operator.EQUALS,
                                 'up'       : '/find?_q=Kalle AND (NOT Anka AND NOT Blomqvist)'
                         ]
                 ],
@@ -304,32 +304,31 @@ class XLQLQuerySpec extends Specification {
     def "Mapping: Free text + fields"() {
         given:
         def input = "Kalle år > 2020 not ämne: Hästar"
-        def sqt = xlqlQuery.queryTree.toSimpleQueryTree(input)
+        def sqt = xlqlQuery.queryTreeBuilder.toSimpleQueryTree(input)
         def mappings = xlqlQuery.toMappings(sqt)
 
         expect:
-        // TODO: Kolla disambiguate? ämne: Hästar
         mappings == [
                 'and': [
                         [
                                 'variable' : 'textQuery',
                                 'predicate': whelk.jsonld.vocabIndex['textQuery'],
                                 'value'    : 'Kalle',
-                                'operator' : QueryTree.Operator.EQUALS,
+                                'operator' : QueryTreeBuilder.Operator.EQUALS,
                                 'up'       : '/find?_q=year > 2020 AND NOT subject: Hästar'
                         ],
                         [
                                 'variable' : 'year',
                                 'predicate': whelk.jsonld.vocabIndex['year'],
                                 'value'    : '2020',
-                                'operator' : QueryTree.Operator.GREATER_THAN,
+                                'operator' : QueryTreeBuilder.Operator.GREATER_THAN,
                                 'up'       : '/find?_q=Kalle AND NOT subject: Hästar'
                         ],
                         [
                                 'variable' : 'subject',
                                 'predicate': whelk.jsonld.vocabIndex['subject'],
                                 'value'    : 'Hästar',
-                                'operator' : QueryTree.Operator.NOT_EQUALS,
+                                'operator' : QueryTreeBuilder.Operator.NOT_EQUALS,
                                 'up'       : '/find?_q=Kalle AND year > 2020'
                         ]
                 ],

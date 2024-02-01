@@ -1,6 +1,8 @@
 package whelk.xlql;
 
-public class BadQueryException extends Exception {
+import whelk.exception.InvalidQueryException;
+
+public class BadQueryException extends InvalidQueryException {
     public BadQueryException(String s) {
         super(s);
     }
