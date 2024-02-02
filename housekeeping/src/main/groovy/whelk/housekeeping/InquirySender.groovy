@@ -165,7 +165,6 @@ class InquirySender extends HouseKeeper {
     private String generateEmailBody(NotificationUtils.NotificationType messageType, String noticeSystemId, List<String> concerningSystemIDs, List<String> comments) {
         StringBuilder sb = new StringBuilder()
         if (messageType == NotificationUtils.NotificationType.ChangeNotice) {
-            sb.append("\n")
             for (String comment : comments) {
                 sb.append("- ").append(comment).append("\n")
             }
@@ -175,12 +174,10 @@ class InquirySender extends HouseKeeper {
         }
         if (messageType == NotificationUtils.NotificationType.InquiryAction) {
             if (comments.size() < 2) {
-                sb.append("\n")
                 for (String comment : comments) {
                     sb.append("- ").append(comment).append("\n")
                 }
             } else {
-                sb.append("\n")
                 sb.append("Senaste:\n")
                 sb.append("- ").append(comments.last()).append("\n")
                 sb.append("\n")
