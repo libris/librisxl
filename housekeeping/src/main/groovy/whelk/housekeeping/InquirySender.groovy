@@ -3,7 +3,9 @@ package whelk.housekeeping
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2
 import whelk.Document
+import whelk.JsonLd
 import whelk.Whelk
+import whelk.util.DocumentUtil
 
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -138,7 +140,13 @@ class InquirySender extends HouseKeeper {
 
                 // Send
                 String noticeSystemId = whelk.getStorage().getSystemIdByIri((String) data["@id"])
-                String body = generateEmailBody(messageType, noticeSystemId, concerningSystemIDs, NotificationUtils.asList(data["comment"]))
+                var creatorId = Optional.ofNullable(DocumentUtil.getAtPath(data, ['descriptionCreator', JsonLd.ID_KEY]) as String)
+                String body = generateEmailBody(
+                        messageType,
+                        noticeSystemId,
+                        concerningSystemIDs,
+                        NotificationUtils.asList(data["comment"]),
+                        creatorId)
                 log.info("Sending ${recipients.size()} emails for $noticeSystemId")
                 for (String recipient : recipients) {
                     NotificationUtils.sendEmail(recipient, subject, body)
@@ -162,7 +170,7 @@ class InquirySender extends HouseKeeper {
 
     }
 
-    private String generateEmailBody(NotificationUtils.NotificationType messageType, String noticeSystemId, List<String> concerningSystemIDs, List<String> comments) {
+    private String generateEmailBody(NotificationUtils.NotificationType messageType, String noticeSystemId, List<String> concerningSystemIDs, List<String> comments, Optional<String> creatorId) {
         StringBuilder sb = new StringBuilder()
         if (messageType == NotificationUtils.NotificationType.ChangeNotice) {
             for (String comment : comments) {
@@ -192,6 +200,12 @@ class InquirySender extends HouseKeeper {
             sb.append( NotificationUtils.makeLink(noticeSystemId) ).append('\n')
         }
         sb.append('\n')
+        creatorId.ifPresent {
+            var creatorLabel = whelk.jsonld.vocabIndex['descriptionCreator']?['labelByLang']?['sv'] ?: ""
+            var creator = NotificationUtils.chipString(DocumentUtil.getAtPath(whelk.loadData(it), [JsonLd.getGRAPH_KEY(), 1]), whelk)
+            sb.append(creatorLabel).append(': ').append(creator).append('\n')
+            sb.append('\n')
+        }
         if (concerningSystemIDs) {
             sb.append(NotificationUtils.DIVIDER).append('\n')
             sb.append("Gäller:").append('\n')
