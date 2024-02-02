@@ -33,14 +33,6 @@ class NotificationUtils {
     static String subject(Whelk whelk, NotificationType notificationType, List<String> libraryUris = []) {
         var typeLabel = whelk.jsonld.vocabIndex[notificationType.toString()]?['labelByLang']?['sv'] ?: ""
 
-        /*
-                [
-                'ChangeObservation': "Ändring",
-                'InquiryAction': "Förfrågan",
-                'ChangeNotice': "Ändringsmeddelande"
-        ].getOrDefault(notificationType.toString(), "")
-*/
-
         String collections = recipientCollections(libraryUris)
         return "$emailHeader ${typeLabel}.${collections ? ' ' : ''}${collections}"
     }
@@ -124,7 +116,7 @@ class NotificationUtils {
         libraryUris.findResults { LegacyIntegrationTools.uriToLegacySigel(it) }.unique().sort().join(' ')
     }
 
-    // FIXME
+    // TODO use fresnel:Format mechanism here when stable
     static String describe(Document doc, Whelk whelk) {
         Map data = JsonLd.frame(doc.getThingIdentifiers().first(), doc.data)
         StringBuilder s = new StringBuilder()
@@ -138,6 +130,7 @@ class NotificationUtils {
         return s.toString()
     }
 
+    // TODO use fresnel:Format mechanism here when stable
     static String chipString(Object data, Whelk whelk) {
         if (data !instanceof Map) {
             return data

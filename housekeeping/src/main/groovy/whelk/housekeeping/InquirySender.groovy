@@ -161,7 +161,7 @@ class InquirySender extends HouseKeeper {
         }
 
     }
-    
+
     private String generateEmailBody(NotificationUtils.NotificationType messageType, String noticeSystemId, List<String> concerningSystemIDs, List<String> comments) {
         StringBuilder sb = new StringBuilder()
         if (messageType == NotificationUtils.NotificationType.ChangeNotice) {
