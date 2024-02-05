@@ -1,7 +1,9 @@
 package whelk.xlql;
 
+import whelk.exception.InvalidQueryException;
+
 public class Analysis {
-    static void checkSemantics(Ast.Node ast) throws BadQueryException {
+    static void checkSemantics(Ast.Node ast) throws InvalidQueryException {
         checkNoCodeWithinCode(ast, false);
     }
 
@@ -9,7 +11,7 @@ public class Analysis {
      * Language constructs like for example code:("something" and code:"whatever") pass parsing, but make no
      * sense and should be considered bad queries.
      */
-    private static void checkNoCodeWithinCode(Ast.Node astNode, boolean inCodeGroup) throws BadQueryException {
+    private static void checkNoCodeWithinCode(Ast.Node astNode, boolean inCodeGroup) throws InvalidQueryException {
         switch (astNode) {
             case Ast.And and -> {
                 for (Ast.Node child : and.operands()) {
@@ -26,18 +28,18 @@ public class Analysis {
             }
             case Ast.CodeEquals ce -> {
                 if (inCodeGroup) {
-                    throw new BadQueryException("Codes within code groups are not allowed.");
+                    throw new InvalidQueryException("Codes within code groups are not allowed.");
                 }
                 checkNoCodeWithinCode(ce.operand(), true);
             }
             case Ast.CodeEqualsLeaf ignored -> {
                 if (inCodeGroup) {
-                    throw new BadQueryException("Codes within code groups are not allowed.");
+                    throw new InvalidQueryException("Codes within code groups are not allowed.");
                 }
             }
             case Ast.CodeLesserGreaterThan ignored -> {
                 if (inCodeGroup) {
-                    throw new BadQueryException("Codes within code groups are not allowed.");
+                    throw new InvalidQueryException("Codes within code groups are not allowed.");
                 }
             }
             case Ast.Leaf ignored -> {

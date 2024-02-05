@@ -1,5 +1,7 @@
 package whelk.xlql;
 
+import whelk.exception.InvalidQueryException;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,11 +13,11 @@ public class SimpleQueryTree {
     public record FreeText(Operator operator, String value) implements Node {}
     public Node tree;
             
-    public SimpleQueryTree(FlattenedAst ast, Disambiguate disambiguate) throws BadQueryException {
+    public SimpleQueryTree(FlattenedAst ast, Disambiguate disambiguate) throws InvalidQueryException {
         this.tree = buildTree(ast.tree, disambiguate);
     }
 
-    private static Node buildTree(FlattenedAst.Node ast, Disambiguate disambiguate) throws BadQueryException {
+    private static Node buildTree(FlattenedAst.Node ast, Disambiguate disambiguate) throws InvalidQueryException {
         switch (ast) {
             case FlattenedAst.And and -> {
                 List<Node> conjuncts = new ArrayList<>();
@@ -40,7 +42,7 @@ public class SimpleQueryTree {
             case FlattenedAst.Code c -> {
                 String kbvProperty = disambiguate.mapToKbvProperty(c.code());
                 if (kbvProperty == null) {
-                    throw new BadQueryException("Unrecognized property alias: " + c);
+                    throw new InvalidQueryException("Unrecognized property alias: " + c);
                 }
                 // TODO: Disambiguate value too
                 return new PropertyValue(kbvProperty, c.operator(), c.value());

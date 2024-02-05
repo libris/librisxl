@@ -102,7 +102,7 @@ class AstSpec extends Specification {
         when:
         Ast.buildFrom(parseTree)
         then:
-        thrown BadQueryException
+        thrown InvalidQueryException
     }
 
     def "Flatten code groups"() {

@@ -1,7 +1,6 @@
 package whelk.xlql;
 
 import java.util.*;
-import java.util.function.Function;
 
 public class Parse
 {
@@ -27,7 +26,7 @@ public class Parse
     public record Boperator (String op) {}
     public record BoperatorEq () {}
 
-    public static OrComb parseQuery(LinkedList<Lex.Symbol> symbols) throws BadQueryException {
+    public static OrComb parseQuery(LinkedList<Lex.Symbol> symbols) throws InvalidQueryException {
         LinkedList<Object> stack = new LinkedList<>();
         while (!symbols.isEmpty()) {
             shift(stack, symbols);
@@ -57,7 +56,7 @@ public class Parse
             return (OrComb) stack.get(0);
         }
 
-        throw new BadQueryException("Syntax error");
+        throw new InvalidQueryException("Syntax error");
     }
 
     // Note to self, the front of the list counts as the top!

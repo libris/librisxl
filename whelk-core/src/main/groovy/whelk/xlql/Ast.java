@@ -1,5 +1,7 @@
 package whelk.xlql;
 
+import whelk.exception.InvalidQueryException;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,17 +18,17 @@ public class Ast {
 
     Node tree;
 
-    public Ast(Parse.OrComb orComb) throws BadQueryException {
+    public Ast(Parse.OrComb orComb) throws InvalidQueryException {
         this.tree = buildFrom(orComb);
     }
 
-    public static Node buildFrom(Parse.OrComb orComb) throws BadQueryException {
+    public static Node buildFrom(Parse.OrComb orComb) throws InvalidQueryException {
         Node ast = reduce(orComb);
         Analysis.checkSemantics(ast);
         return ast;
     }
 
-    private static Node reduce(Parse.OrComb orComb) throws BadQueryException {
+    private static Node reduce(Parse.OrComb orComb) throws InvalidQueryException {
         // public record OrComb(List<AndComb> andCombs) {}
 
         if (orComb.andCombs().size() > 1) {
@@ -41,7 +43,7 @@ public class Ast {
         }
     }
 
-    private static Node reduce(Parse.AndComb andComb) throws BadQueryException {
+    private static Node reduce(Parse.AndComb andComb) throws InvalidQueryException {
         // public record AndComb(List<Term> ts) {}
 
         if (andComb.ts().size() > 1) {
@@ -55,7 +57,7 @@ public class Ast {
         }
     }
 
-    private static Node reduce (Parse.Term term) throws BadQueryException {
+    private static Node reduce (Parse.Term term) throws InvalidQueryException {
         // public record Term (String string1, Uoperator uop, Term term, Group group, Boperator bop, BoperatorEq bopeq, String string2) {}
 
         // Ordinary string term
@@ -92,7 +94,7 @@ public class Ast {
             if ( term.uop().s().equals("!") || term.uop().s().equals("not")) {
                 return new Not(reduce(term.term()));
             } else if ( term.uop().s().equals("~") ) {
-                throw new BadQueryException("Like operator (~) not yet supported");
+                throw new InvalidQueryException("Like operator (~) not yet supported");
 //                return new Like(reduce(term.term()));
             }
         }
@@ -122,7 +124,7 @@ public class Ast {
         throw new RuntimeException("XLQL Error when reducing: " + term); // Should not be reachable. This is a bug.
     }
 
-    private static Node reduce(Parse.Group group) throws BadQueryException {
+    private static Node reduce(Parse.Group group) throws InvalidQueryException {
         // public record Group(OrComb o, AndComb a, Group g) {}
         if (group.g() != null) {
             return reduce(group.g());
