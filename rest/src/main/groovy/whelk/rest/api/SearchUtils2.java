@@ -7,6 +7,7 @@ import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.exception.WhelkRuntimeException;
 import whelk.search.XLQLQuery;
+import whelk.xlql.*;
 
 import java.util.*;
 
@@ -40,8 +41,8 @@ public class SearchUtils2 {
         int offset;
         Optional<String> sortBy;
         String queryString;
-        Object disambiguatedAst;
-        Object queryTree;
+        SimpleQueryTree simpleQueryTree;
+        QueryTree queryTree;
 //    Optional<List> predicates;
 //    Optional<String> object;
 //    Optional<String> value;
@@ -54,13 +55,13 @@ public class SearchUtils2 {
             this.sortBy = getOptionalSingle("_sort", queryParameters);
             this.limit = getLimit(queryParameters);
             this.offset = getOffset(queryParameters);
-            this.disambiguatedAst = xlqlQuery.queryTreeBuilder.toDisambiguatedAst(queryString);
-            this.queryTree = xlqlQuery.queryTreeBuilder.toQueryTree(disambiguatedAst);
+            this.simpleQueryTree = xlqlQuery.getSimpleQueryTree(queryString);
+            this.queryTree = xlqlQuery.getQueryTree(simpleQueryTree);
         }
 
         public Map toEsQueryDsl() {
             Map queryDsl = new HashMap<>();
-            queryDsl.put("query", xlqlQuery.toEsQuery(queryTree));
+            queryDsl.put("query", xlqlQuery.getEsQuery(queryTree));
             queryDsl.put("size", limit);
             queryDsl.put("from", offset);
             sortBy.ifPresent(s -> queryDsl.put("sort", getSortClauses(s)));
@@ -137,7 +138,7 @@ public class SearchUtils2 {
         }
 
         private List<Map> toMappings() {
-            return List.of(xlqlQuery.toMappings(xlqlQuery.queryTreeBuilder.toSimpleQueryTree(disambiguatedAst)));
+            return List.of(xlqlQuery.toMappings(simpleQueryTree));
         }
 
         private static String escapeQueryParam(String input) {

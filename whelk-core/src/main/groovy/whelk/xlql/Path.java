@@ -19,8 +19,8 @@ public class Path {
         this.path = new ArrayList<>(path);
     }
 
-    Path(Path field) {
-        this(field.property, field.path);
+    Path(Path p) {
+        this(p.property, p.path);
     }
 
     Path copy() {
@@ -48,40 +48,8 @@ public class Path {
         path.add(0, JsonLd.getWORK_KEY());
     }
 
-    // TODO: Handle owl:Restriction
-    public void expandChainAxiom(JsonLd jsonLd) {
-        List<String> extended = new ArrayList<>();
-
-        for (String p : path) {
-            Map<String, Object> termDefinition = jsonLd.getVocabIndex().get(p);
-            if (!termDefinition.containsKey("propertyChainAxiom")) {
-                extended.add(p);
-                continue;
-            }
-            List<Map> pca = (List<Map>) termDefinition.get("propertyChainAxiom");
-            for (Map prop : pca) {
-                boolean added = false;
-                if (prop.containsKey(JsonLd.getID_KEY())) {
-                    String propId = (String) prop.get(JsonLd.getID_KEY());
-                    added = extended.add(jsonLd.toTermKey(propId));
-                } else if (prop.containsKey("subPropertyOf")) {
-                    List superProp = (List) prop.get("subPropertyOf");
-                    if (superProp.size() == 1) {
-                        Map superPropLink = (Map) superProp.get(0);
-                        if (superPropLink.containsKey(JsonLd.getID_KEY())) {
-                            String superPropId = (String) superPropLink.get(JsonLd.getID_KEY());
-                            added = extended.add(jsonLd.toTermKey(superPropId));
-                        }
-                    }
-                }
-                if (!added) {
-                    System.out.println("Failed to expand chain axiom for property " + p);
-                    return;
-                }
-            }
-        }
-
-        this.path = extended;
+    public void expandChainAxiom(Disambiguate disambiguate) {
+        this.path = disambiguate.expandChainAxiom(path);
     }
 
     public String stringify() {

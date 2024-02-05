@@ -14,66 +14,102 @@ public class Disambiguate {
     private Map<String, String> propertyAliasMappings;
     // TODO: Handle ambiguous aliases
     private Map<String, Set<String>> ambiguousPropertyAliases;
+    private Map<String, String> domainByProperty;
 
-    Disambiguate(Whelk whelk) {
-        this.jsonLd = whelk.getJsonld();
-        loadPropertyMappings(whelk);
+    private Set<String> adminMetadataTypes;
+    private Set<String> workTypes;
+    private Set<String> instanceTypes;
+    private Set<String> instanceSuperTypes;
+
+    public enum DomainGroup {
+        ADMIN_METADATA,
+        WORK,
+        INSTANCE,
+        INSTANCE_SUPER,
+        OTHER
     }
 
-    public Object toDisambiguatedTree(Object ast) throws BadQueryException {
-        if (ast instanceof Ast.And) {
-            List<Object> operands = new ArrayList<>();
-            for (Object o : ((Ast.And) ast).operands()) {
-                operands.add(toDisambiguatedTree(o));
-            }
-            return new Ast.And(operands);
-        }
-        if (ast instanceof Ast.Or) {
-            List<Object> operands = new ArrayList<>();
-            for (Object o : ((Ast.Or) ast).operands()) {
-                operands.add(toDisambiguatedTree(o));
-            }
-            return new Ast.Or(operands);
-        }
-        if (ast instanceof Ast.Not) {
-            return new Ast.Not(toDisambiguatedTree(((Ast.Not) ast).operand()));
-        }
-        if (ast instanceof Ast.Like) {
-            return new Ast.Like(toDisambiguatedTree(((Ast.Like) ast).operand()));
-        }
-        if (ast instanceof Ast.CodeEquals) {
-            Ast.CodeEquals ce = (Ast.CodeEquals) ast;
-            String kbvProperty = mapToKbvProperty(ce.code());
-            if (kbvProperty == null) {
-                throw new BadQueryException("Unrecognized property alias: " + ce.code());
-            }
-            return new Ast.CodeEquals(kbvProperty, ce.operand());
-        }
-        if (ast instanceof Ast.NotCodeEquals) {
-            Ast.NotCodeEquals nce = (Ast.NotCodeEquals) ast;
-            String kbvProperty = mapToKbvProperty(nce.code());
-            if (kbvProperty == null) {
-                throw new BadQueryException("Unrecognized property alias: " + nce.code());
-            }
-            return new Ast.NotCodeEquals(kbvProperty, nce.operand());
-        }
-        if (ast instanceof Ast.CodeLesserGreaterThan) {
-            Ast.CodeLesserGreaterThan clgt = (Ast.CodeLesserGreaterThan) ast;
-            String kbvProperty = mapToKbvProperty(clgt.code());
-            if (kbvProperty == null) {
-                throw new BadQueryException("Unrecognized property alias: " + clgt.code());
-            }
-            return new Ast.CodeLesserGreaterThan(kbvProperty, clgt.operator(), clgt.operand());
-        }
-        // String
-        return ast;
+    public static final String UNKNOWN_DOMAIN = "Unknown domain";
+
+    public Disambiguate(Whelk whelk) {
+        this.jsonLd = whelk.getJsonld();
+        setPropertyAliasMappings(whelk);
+        this.domainByProperty = loadDomainByProperty(whelk);
+        setDomainGroups(jsonLd);
     }
 
     public String mapToKbvProperty(String alias) {
         return propertyAliasMappings.get(alias.toLowerCase());
     }
 
-    private void loadPropertyMappings(Whelk whelk) {
+    public String getDomain(String property) {
+        // TODO: @type not in vocab, needs special handling
+        return domainByProperty.getOrDefault(property, UNKNOWN_DOMAIN);
+    }
+
+    public DomainGroup getDomainGroup(String domain) {
+        if (adminMetadataTypes.contains(domain)) {
+            return DomainGroup.ADMIN_METADATA;
+        }
+        if (workTypes.contains(domain)) {
+            return DomainGroup.WORK;
+        }
+        if (instanceTypes.contains(domain)) {
+            return DomainGroup.INSTANCE;
+        }
+        if (instanceSuperTypes.contains(domain)) {
+            return DomainGroup.INSTANCE_SUPER;
+        }
+        return DomainGroup.OTHER;
+    }
+
+    // TODO: Handle owl:Restriction
+    public List<String> expandChainAxiom(List<String> path) {
+        List<String> extended = new ArrayList<>();
+
+        for (String p : path) {
+            Map<String, Object> termDefinition = jsonLd.getVocabIndex().get(p);
+
+            if (!termDefinition.containsKey("propertyChainAxiom")) {
+                extended.add(p);
+                continue;
+            }
+
+            List<Map> pca = (List<Map>) termDefinition.get("propertyChainAxiom");
+            for (Map prop : pca) {
+                boolean added = false;
+
+                if (prop.containsKey(JsonLd.getID_KEY())) {
+                    String propId = (String) prop.get(JsonLd.getID_KEY());
+                    added = extended.add(jsonLd.toTermKey(propId));
+                } else if (prop.containsKey(JsonLd.getSUB_PROPERTY_OF())) {
+                    List superProp = (List) prop.get(JsonLd.getSUB_PROPERTY_OF());
+                    if (superProp.size() == 1) {
+                        Map superPropLink = (Map) superProp.get(0);
+                        if (superPropLink.containsKey(JsonLd.getID_KEY())) {
+                            String superPropId = (String) superPropLink.get(JsonLd.getID_KEY());
+                            added = extended.add(jsonLd.toTermKey(superPropId));
+                        }
+                    }
+                }
+
+                if (!added) {
+                    throw new RuntimeException("Failed to expand chain axiom for property " + p);
+                }
+            }
+        }
+
+        return extended;
+    }
+
+    private void setDomainGroups(JsonLd jsonLd) {
+        this.adminMetadataTypes = getSubtypes("AdminMetadata", jsonLd);
+        this.workTypes = getSubtypes("Work", jsonLd);
+        this.instanceTypes = getSubtypes("Instance", jsonLd);
+        this.instanceSuperTypes = getSupertypes("Instance", jsonLd);
+    }
+
+    private void setPropertyAliasMappings(Whelk whelk) {
         this.propertyAliasMappings = new TreeMap<>();
         this.ambiguousPropertyAliases = new TreeMap<>();
 
@@ -109,6 +145,71 @@ public class Disambiguate {
                 }
             }
         }
+    }
+
+    private Map<String, String> loadDomainByProperty(Whelk whelk) {
+        Map<String, String> domainByProperty = new TreeMap<>();
+        jsonLd.getVocabIndex().entrySet()
+                .stream()
+                .filter(e -> isKbvTerm(e.getValue()) && isProperty(e.getValue()))
+                .forEach(e -> findDomain(e.getValue(), whelk)
+                        .ifPresent(domain -> domainByProperty.put(jsonLd.toTermKey(e.getKey()), jsonLd.toTermKey(domain)))
+                );
+        return domainByProperty;
+    }
+
+    // TODO: BFS + review order
+    private Optional<String> findDomain(Map propDefinition, Whelk whelk) {
+        if (propDefinition.containsKey("domain")) {
+            return Optional.of(propDefinition.get("domain"))
+                    .map(d -> ((List) d).get(0))
+                    .map(link -> (String) ((Map) link).get(JsonLd.getID_KEY()));
+        } else if (propDefinition.containsKey("subPropertyOf")) {
+            List<Map> subProperty = (List<Map>) propDefinition.get("subPropertyOf");
+            for (Map sp : subProperty) {
+                Optional<Map> spDefinition = getDefinition(sp, whelk);
+                if (spDefinition.isPresent()) {
+                    Optional<String> domain = findDomain(spDefinition.get(), whelk);
+                    if (domain.isPresent()) {
+                        return domain;
+                    }
+                }
+            }
+        } else if (propDefinition.containsKey("equivalentProperty")) {
+            List<Map> equivProperty = (List<Map>) propDefinition.get("equivalentProperty");
+            for (Map ep : equivProperty) {
+                Optional<Map> epDefinition = getDefinition(ep, whelk);
+                if (epDefinition.isPresent()) {
+                    Optional<String> domain = findDomain(epDefinition.get(), whelk);
+                    if (domain.isPresent()) {
+                        return domain;
+                    }
+                }
+            }
+        } else if (propDefinition.containsKey("propertyChainAxiom")) {
+            List pca = (List) propDefinition.get("propertyChainAxiom");
+            Map first = (Map) pca.get(0);
+            Optional<Map> pcaDefinition = getDefinition(first, whelk);
+            if (pcaDefinition.isPresent()) {
+                return findDomain(pcaDefinition.get(), whelk);
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    Optional<Map> getDefinition(Map object, Whelk whelk) {
+        if (!object.containsKey(JsonLd.getID_KEY())) {
+            return Optional.of(object);
+        }
+        String propId = (String) object.get(JsonLd.getID_KEY());
+        String propKey = jsonLd.toTermKey(propId);
+        Optional<Map> propDefinition = Optional.ofNullable(jsonLd.getVocabIndex().get(propKey));
+        return propDefinition.isPresent()
+                ? propDefinition
+                : Optional.ofNullable(whelk.loadData(propId))
+                .map(data -> data.get(JsonLd.getGRAPH_KEY()))
+                .map(graph -> (Map) ((List) graph).get(1));
     }
 
     private void addMappings(Map fromTermData, String toTermKey) {
@@ -153,12 +254,17 @@ public class Disambiguate {
         return isObjectProperty(termDefinition) || isDatatypeProperty(termDefinition);
     }
 
-    public static boolean isObjectProperty(Map termDefinition) {
+    public boolean isObjectProperty(String termKey) {
+        Map termDefinition = jsonLd.getVocabIndex().get(termKey);
+        return isObjectProperty(termDefinition);
+    }
+
+    private static boolean isObjectProperty(Map termDefinition) {
         Object type = termDefinition.get(JsonLd.getTYPE_KEY());
         return "ObjectProperty".equals(type);
     }
 
-    public static boolean isDatatypeProperty(Map termDefinition) {
+    private static boolean isDatatypeProperty(Map termDefinition) {
         Object type = termDefinition.get(JsonLd.getTYPE_KEY());
         return "DatatypeProperty".equals(type);
     }
@@ -201,5 +307,17 @@ public class Disambiguate {
         }
 
         return s;
+    }
+
+    private static Set<String> getSupertypes(String baseClass, JsonLd jsonLd) {
+        List<String> superClasses = new ArrayList<>();
+        jsonLd.getSuperClasses("Instance", superClasses);
+        return new HashSet<>(superClasses);
+    }
+
+    private static Set<String> getSubtypes(String baseClass, JsonLd jsonLd) {
+        Set<String> subtypes = jsonLd.getSubClasses(baseClass);
+        subtypes.add(baseClass);
+        return subtypes;
     }
 }
