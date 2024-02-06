@@ -36,14 +36,16 @@ test.testLogging {
     exceptionFormat = "full"
 }
 
-mainClassName = 'whelk.importer.Main'
+application {
+    mainClass = 'whelk.importer.Main'
+}
 
 jar {
     dependsOn ':whelk-core:jar'
     manifest {
         attributes 'Implementation-Title':'Libris XL metadata importer',
                 'Implementation-Version': '1.0',
-                'Main-class': mainClassName,
+                'Main-class': application.mainClass,
                 // log4j uses multi-release to ship different stack walking implementations for different java
                 // versions. Since we repackage everything as a fat jar, that jar must also be multi-release.
                 "Multi-Release": true
