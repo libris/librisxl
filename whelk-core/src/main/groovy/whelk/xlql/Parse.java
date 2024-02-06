@@ -1,5 +1,7 @@
 package whelk.xlql;
 
+import whelk.exception.InvalidQueryException;
+
 import java.util.*;
 
 public class Parse
