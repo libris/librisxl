@@ -584,10 +584,10 @@ class JsonLd {
     }
 
     static List<List<String>> findPaths(Map obj, String key, Set<String> values) {
-        List paths = []
-        new DFS().search(obj, { List path, v ->
+        List<List<String>> paths = []
+        new DFS().search(obj, { List<String> path, v ->
             if (v in values && key == path[-1]) {
-                paths << new ArrayList(path)
+                paths << (List<String>) path.collect()
             }
         })
         return paths
@@ -728,7 +728,7 @@ class JsonLd {
         if (type == null)
             return
 
-        List subTerms = (List) (superTermOf[type])
+        List<String> subTerms = superTermOf[type]
         if (subTerms == null)
             return
 
@@ -747,7 +747,7 @@ class JsonLd {
             return jsonLd
         }
 
-        List graphItems = jsonLd.get(GRAPH_KEY)
+        List graphItems = (List) jsonLd.get(GRAPH_KEY)
 
         additionalObjects.each { object ->
             if (object instanceof Map) {
@@ -868,8 +868,8 @@ class JsonLd {
      * [<language>, <property value>] pairs.
      */
     private List applyLensAsListByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris, String lensToUse) {
-        Map lensGroups = displayData.get('lensGroups')
-        Map lensGroup = lensGroups.get(lensToUse)
+        Map lensGroups = (Map) displayData.get('lensGroups')
+        Map lensGroup = (Map) lensGroups.get(lensToUse)
         Map lens = getLensFor((Map)thing, lensGroup)
         List parts = []
 
@@ -956,12 +956,12 @@ class JsonLd {
        be displayed on the frontend. Mainly for use as search keys.
      */
     Map applyLensAsMapByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris, List<String> lensesToTry) {
-        Map lensGroups = displayData.get('lensGroups')
+        Map lensGroups = (Map) displayData.get('lensGroups')
         Map lens = null
         String initialLens
 
         for (String lensToTry : lensesToTry) {
-            Map lensGroup = lensGroups?.get(lensToTry)
+            Map lensGroup = (Map) lensGroups?.get(lensToTry)
             lens = getLensFor((Map)thing, lensGroup)
             if (lens) {
                 initialLens = lensToTry
@@ -1020,8 +1020,8 @@ class JsonLd {
     }
 
     List makeSearchKeyParts(Map object) {
-        Map lensGroups = displayData.get('lensGroups')
-        Map lensGroup = lensGroups?.get('chips')
+        Map lensGroups = (Map) displayData.get('lensGroups')
+        Map lensGroup = (Map) lensGroups?.get('chips')
         Map lens = getLensFor(object, lensGroup)
         List parts = []
         def type = object.get(TYPE_KEY)
@@ -1066,8 +1066,8 @@ class JsonLd {
             return new LinkedHashSet(((List) data[GRAPH_KEY]).collect{ getInverseProperties((Map) it, lensType) }.flatten())
         }
 
-        Map lensGroups = displayData.get('lensGroups')
-        Map lensGroup = lensGroups?.get(lensType)
+        Map lensGroups = (Map) displayData.get('lensGroups')
+        Map lensGroup = (Map) lensGroups?.get(lensType)
         Map lens = getLensFor(data, lensGroup)
         return new LinkedHashSet((List) lens?.get('inverseProperties') ?: [])
     }
@@ -1090,7 +1090,7 @@ class JsonLd {
     }
 
     private Map getLens(Map thing, List<String> lensTypes) {
-        Map lensGroups = displayData.get('lensGroups')
+        Map lensGroups = (Map) displayData.get('lensGroups')
         if (lensGroups == null) {
             return
         }
@@ -1159,8 +1159,8 @@ class JsonLd {
     }
 
     private Map findLensForType(String typeKey, Map lensGroup) {
-        def lenses = lensGroup['lenses']
-        Map lens = ((Map)lenses).get(typeKey)
+        Map lenses = (Map) lensGroup['lenses']
+        Map lens = (Map) lenses.get(typeKey)
         if (lens)
             return lens
         def typedfn = vocabIndex.get(typeKey)
@@ -1323,7 +1323,7 @@ class JsonLd {
             if (obj) {
                 int i = oId ? 1 : 0
                 return depth < depthLimit
-                        ? embed(oId, obj, idMap, new HashSet<String>(embedChain), depth + i, depthLimit)
+                        ? embed(oId, obj, idMap, embedChain.collect() as Set, depth + i, depthLimit)
                         : obj
             }
         }
