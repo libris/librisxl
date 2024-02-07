@@ -47,25 +47,31 @@ public class QueryTree {
                                     case WORK -> false;
                                 }
                         );
+        /*
+        If any given "property" is rather a property path (containing period), assume that the user knows what she's
+        doing and interpret each property as is, i.e. don't apply any heuristic for finding alternative paths.
+        (See buildField method.)
+         */
+        boolean exactPaths = givenProperties.stream().anyMatch(x -> x.contains("."));
 
         // TODO: Review heuristic for which entities to search for
-//        return sqtToQt(sqt, disambiguate, searchInstances);
-        return sqtToQt(sqt, disambiguate, false);
+//        return sqtToQt(sqt, disambiguate, exactPaths, searchInstances);
+        return sqtToQt(sqt, disambiguate, exactPaths, false);
     }
 
-    private static Node sqtToQt(SimpleQueryTree.Node dtNode, Disambiguate disambiguate, boolean searchInstances) {
+    private static Node sqtToQt(SimpleQueryTree.Node dtNode, Disambiguate disambiguate, boolean exactPaths, boolean searchInstances) {
         switch (dtNode) {
             case SimpleQueryTree.And and -> {
                 List<Node> conjuncts = and.conjuncts()
                         .stream()
-                        .map(c -> sqtToQt(c, disambiguate, searchInstances))
+                        .map(c -> sqtToQt(c, disambiguate, exactPaths, searchInstances))
                         .toList();
                 return new And(conjuncts);
             }
             case SimpleQueryTree.Or or -> {
                 List<Node> disjuncts = or.disjuncts()
                         .stream()
-                        .map(d -> sqtToQt(d, disambiguate, searchInstances))
+                        .map(d -> sqtToQt(d, disambiguate, exactPaths, searchInstances))
                         .toList();
                 return new Or(disjuncts);
             }
@@ -73,12 +79,20 @@ public class QueryTree {
                 return new FreeText(ft.operator(), ft.value());
             }
             case SimpleQueryTree.PropertyValue pv -> {
-                return buildField(pv, disambiguate, searchInstances);
+                return buildField(pv, disambiguate, exactPaths, searchInstances);
             }
         }
     }
 
-    private static Node buildField(SimpleQueryTree.PropertyValue pv, Disambiguate disambiguate, boolean searchInstances) {
+    private static Node buildField(SimpleQueryTree.PropertyValue pv, Disambiguate disambiguate, boolean exactPath, boolean searchInstances) {
+        if (exactPath) {
+            Path path = new Path(pv.property(), List.of(pv.property().split("\\.")));
+            String value = pv.property().endsWith(JsonLd.getID_KEY())
+                    ? Disambiguate.expandPrefixed(pv.value())
+                    : pv.value();
+            return new Field(path, pv.operator(), value);
+        }
+
         Path path = new Path(pv.property());
 
         path.expandChainAxiom(disambiguate);

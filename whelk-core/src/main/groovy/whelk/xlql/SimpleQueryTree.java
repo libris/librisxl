@@ -1,9 +1,12 @@
 package whelk.xlql;
 
+import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class SimpleQueryTree {
     public sealed interface Node permits And, Or, PropertyValue, FreeText {}
@@ -41,12 +44,26 @@ public class SimpleQueryTree {
                 return new FreeText(Operator.EQUALS, l.value());
             }
             case FlattenedAst.Code c -> {
-                String kbvProperty = disambiguate.mapToKbvProperty(c.code());
-                if (kbvProperty == null) {
+                List<String> disambiguated = Arrays.stream(c.code().split("\\."))
+                        // Exclude @id and _str from disambiguation
+                        .filter(x -> !Set.of(JsonLd.getID_KEY(), JsonLd.getSEARCH_KEY()).contains(x))
+                        .map(disambiguate::mapToKbvProperty)
+                        .collect(Collectors.toList());
+
+                if (disambiguated.contains(null)) {
                     throw new InvalidQueryException("Unrecognized property alias: " + c);
                 }
+
+                if (c.code().endsWith(JsonLd.getID_KEY())) {
+                    disambiguated.add(JsonLd.getID_KEY());
+                } else if (c.code().endsWith(JsonLd.getSEARCH_KEY())) {
+                    disambiguated.add(JsonLd.getSEARCH_KEY());
+                }
+
+                String propertyPath = String.join(".", disambiguated);
+
                 // TODO: Disambiguate value too
-                return new PropertyValue(kbvProperty, c.operator(), c.value());
+                return new PropertyValue(propertyPath, c.operator(), c.value());
             }
         }
     }

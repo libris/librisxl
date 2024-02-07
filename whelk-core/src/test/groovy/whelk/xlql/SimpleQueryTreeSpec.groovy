@@ -93,4 +93,12 @@ class SimpleQueryTreeSpec extends Specification {
         then:
         thrown(InvalidQueryException)
     }
+
+    def "property path"() {
+        def query = "instanceOf.ämne.@id=\"sao:Hästar\""
+        SimpleQueryTree sqt = getTree(query)
+
+        expect:
+        sqt.tree == new SimpleQueryTree.PropertyValue("instanceOf.subject.@id", Operator.EQUALS, "sao:Hästar")
+    }
 }

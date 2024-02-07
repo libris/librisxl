@@ -81,5 +81,30 @@ class QueryTreeSpec extends Specification {
         subjectField2.value() == "https://id.kb.se/term/sao/Fysik"
     }
 
+    def "exact fields"() {
+        given:
+        String queryString = "instanceOf.subject.@id: \"sao:Fysik\" AND instanceOf.subject._str: rymd and utgivningssätt: Monograph"
+        SimpleQueryTree sqt = getSimpleQueryTree(queryString)
+        QueryTree qt = new QueryTree(sqt, disambiguate)
+        QueryTree.And topNode = qt.tree
+        List conjuncts = topNode.conjuncts()
+        QueryTree.Field subjectField = conjuncts[0]
+        QueryTree.Field subjectField2 = conjuncts[1]
+        QueryTree.Field issuanceTypeField = conjuncts[2]
+
+        expect:
+        subjectField.path().stringify() == "instanceOf.subject.@id"
+        subjectField.operator() == Operator.EQUALS
+        subjectField.value() == "https://id.kb.se/term/sao/Fysik"
+
+        subjectField2.path().stringify() == "instanceOf.subject._str"
+        subjectField2.operator() == Operator.EQUALS
+        subjectField2.value() == "rymd"
+
+        issuanceTypeField.path().stringify() == "issuanceType"
+        issuanceTypeField.operator() == Operator.EQUALS
+        issuanceTypeField.value() == "Monograph"
+    }
+
     // TODO: More tests when settled which alternative paths to search for each property
 }
