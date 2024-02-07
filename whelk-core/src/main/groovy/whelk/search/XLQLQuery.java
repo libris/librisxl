@@ -44,7 +44,7 @@ public class XLQLQuery {
                         .stream()
                         .map(c -> buildEsQuery(c, new HashMap<>()))
                         .toList();
-                esQueryNode.put("must", mustClause);
+                esQueryNode.putAll(mustWrap(mustClause));
                 return esQueryNode;
             }
             case QueryTree.Or or -> {
@@ -52,7 +52,7 @@ public class XLQLQuery {
                         .stream()
                         .map(d -> buildEsQuery(d, new HashMap<>()))
                         .toList();
-                esQueryNode.put("should", shouldClause);
+                esQueryNode.putAll(shouldWrap(shouldClause));
                 return esQueryNode;
             }
 
@@ -146,14 +146,6 @@ public class XLQLQuery {
     }
 
     private Map buildMappings(SimpleQueryTree.Node sqtNode, SimpleQueryTree sqt, Map mappingsNode) {
-        Optional<SimpleQueryTree.Node> reducedTree = getReducedTree(sqt, sqtNode);
-        // TODO: Empty tree --> ???
-        if (reducedTree.isPresent()) {
-            // TODO: Include other params in url, e.g. _limit
-            String upUrl = "/find?_q=" + treeToQueryString(reducedTree.get());
-            mappingsNode.put("up", upUrl);
-        }
-
         switch (sqtNode) {
             case SimpleQueryTree.And and -> {
                 List<Map> andClause = and.conjuncts()
@@ -161,7 +153,6 @@ public class XLQLQuery {
                         .map(c -> buildMappings(c, sqt, new LinkedHashMap()))
                         .toList();
                 mappingsNode.put("and", andClause);
-                return mappingsNode;
             }
             case SimpleQueryTree.Or or -> {
                 List<Map> orClause = or.disjuncts()
@@ -169,15 +160,22 @@ public class XLQLQuery {
                         .map(d -> buildMappings(d, sqt, new LinkedHashMap()))
                         .toList();
                 mappingsNode.put("or", orClause);
-                return mappingsNode;
             }
             case SimpleQueryTree.FreeText ft -> {
-                return freeTextMapping(ft);
+                mappingsNode = freeTextMapping(ft);
             }
             case SimpleQueryTree.PropertyValue pv -> {
-                return propertyValueMapping(pv);
+                mappingsNode = propertyValueMapping(pv);
             }
         }
+
+        Optional<SimpleQueryTree.Node> reducedTree = getReducedTree(sqt, sqtNode);
+        // TODO: Empty tree --> ???
+        // TODO: Include other params in url, e.g. _limit
+        String upUrl = reducedTree.isPresent() ? "/find?_q=" + treeToQueryString(reducedTree.get()) : "/find?_q=*";
+        mappingsNode.put("up", upUrl);
+
+        return mappingsNode;
     }
 
     private Map mapping(String property, String value, Operator operator) {
@@ -221,7 +219,7 @@ public class XLQLQuery {
                         .map(d -> excludeFromTree(nodeToExclude, d))
                         .filter(Objects::nonNull)
                         .toList();
-                return orClause.size() > 1 ? new SimpleQueryTree.And(orClause) : orClause.get(0);
+                return orClause.size() > 1 ? new SimpleQueryTree.Or(orClause) : orClause.get(0);
             }
             case SimpleQueryTree.FreeText ignored -> {
                 return tree;
@@ -249,7 +247,7 @@ public class XLQLQuery {
                 String orClause = or.disjuncts()
                         .stream()
                         .map(this::buildQueryString)
-                        .collect(Collectors.joining(" AND "));
+                        .collect(Collectors.joining(" OR "));
                 return topLevel ? orClause : "(" + orClause + ")";
             }
             case SimpleQueryTree.FreeText ft -> {
@@ -302,6 +300,10 @@ public class XLQLQuery {
 
     private static Map rangeFilter(String path, String value, String key) {
         return filterWrap(rangeWrap(Map.of(path, Map.of(key, value))));
+    }
+
+    private static Map mustWrap(List l) {
+        return boolWrap(Map.of("must", l));
     }
 
     private static Map mustNotWrap(Object o) {

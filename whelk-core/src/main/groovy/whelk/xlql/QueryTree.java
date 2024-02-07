@@ -24,13 +24,13 @@ public class QueryTree {
 
     public Node tree;
 
-    public QueryTree(SimpleQueryTree dt, Disambiguate disambiguate) {
-        this.tree = dtToQt(dt.tree, disambiguate);
+    public QueryTree(SimpleQueryTree sqt, Disambiguate disambiguate) {
+        this.tree = sqtToQt(sqt.tree, disambiguate);
     }
 
-    private static Node dtToQt(SimpleQueryTree.Node dtNode, Disambiguate disambiguate) {
-        Set<String> givenProperties = collectGivenProperties(dtNode);
-        Set<String> givenTypes = givenProperties.contains(JsonLd.getTYPE_KEY()) ? collectGivenTypes(dtNode) : Collections.emptySet();
+    private static Node sqtToQt(SimpleQueryTree.Node sqt, Disambiguate disambiguate) {
+        Set<String> givenProperties = collectGivenProperties(sqt);
+        Set<String> givenTypes = givenProperties.contains(JsonLd.getTYPE_KEY()) ? collectGivenTypes(sqt) : Collections.emptySet();
         Set<String> domains = givenProperties.stream()
                 .map(disambiguate::getDomain)
                 .collect(Collectors.toSet());
@@ -49,23 +49,23 @@ public class QueryTree {
                         );
 
         // TODO: Review heuristic for which entities to search for
-//        return dtToQt(dtNode, disambiguate, searchInstances);
-        return dtToQt(dtNode, disambiguate, false);
+//        return sqtToQt(sqt, disambiguate, searchInstances);
+        return sqtToQt(sqt, disambiguate, false);
     }
 
-    private static Node dtToQt(SimpleQueryTree.Node dtNode, Disambiguate disambiguate, boolean searchInstances) {
+    private static Node sqtToQt(SimpleQueryTree.Node dtNode, Disambiguate disambiguate, boolean searchInstances) {
         switch (dtNode) {
             case SimpleQueryTree.And and -> {
                 List<Node> conjuncts = and.conjuncts()
                         .stream()
-                        .map(c -> dtToQt(c, disambiguate, searchInstances))
+                        .map(c -> sqtToQt(c, disambiguate, searchInstances))
                         .toList();
                 return new And(conjuncts);
             }
             case SimpleQueryTree.Or or -> {
                 List<Node> disjuncts = or.disjuncts()
                         .stream()
-                        .map(d -> dtToQt(d, disambiguate, searchInstances))
+                        .map(d -> sqtToQt(d, disambiguate, searchInstances))
                         .toList();
                 return new Or(disjuncts);
             }
@@ -89,7 +89,7 @@ public class QueryTree {
             path.prependMeta();
         }
 
-        List<Field> fields = new ArrayList<>(List.of(new Field(path, pv.operator(), pv.value())));
+        List<Node> fields = new ArrayList<>(List.of(new Field(path, pv.operator(), pv.value())));
 
         if (disambiguate.isObjectProperty(pv.property())) {
             String expanded = Disambiguate.expandPrefixed(pv.value());
@@ -111,7 +111,7 @@ public class QueryTree {
 
         if (searchInstances) {
             fields = fields.stream()
-                    .flatMap(f -> collectAltFields(f, domainGroup).stream())
+                    .flatMap(f -> collectAltFields((Field) f, domainGroup).stream())
                     .toList();
         }
 
@@ -122,8 +122,8 @@ public class QueryTree {
         return pv.operator() == Operator.NOT_EQUALS ? new And(fields) : new Or(fields);
     }
 
-    private static List<Field> collectAltFields(Field f, Disambiguate.DomainGroup domainGroup) {
-        List<Field> fields = new ArrayList<>();
+    private static List<Node> collectAltFields(Field f, Disambiguate.DomainGroup domainGroup) {
+        List<Node> fields = new ArrayList<>();
         fields.add(f);
         Path copy = f.path().copy();
 
@@ -148,12 +148,12 @@ public class QueryTree {
         return fields;
     }
 
-    public static Set<String> collectGivenProperties(SimpleQueryTree.Node dtNode) {
-        return collectGivenProperties(dtNode, new HashSet<>());
+    public static Set<String> collectGivenProperties(SimpleQueryTree.Node sqt) {
+        return collectGivenProperties(sqt, new HashSet<>());
     }
 
-    private static Set<String> collectGivenProperties(SimpleQueryTree.Node dtNode, Set<String> properties) {
-        switch (dtNode) {
+    private static Set<String> collectGivenProperties(SimpleQueryTree.Node sqtNode, Set<String> properties) {
+        switch (sqtNode) {
             case SimpleQueryTree.And and -> {
                 and.conjuncts().forEach(c -> collectGivenProperties(c, properties));
             }
@@ -171,17 +171,17 @@ public class QueryTree {
         return properties;
     }
 
-    public static Set<String> collectGivenTypes(SimpleQueryTree.Node dtNode) {
-        return collectGivenTypes(dtNode, new HashSet<>());
+    public static Set<String> collectGivenTypes(SimpleQueryTree.Node sqt) {
+        return collectGivenTypes(sqt, new HashSet<>());
     }
 
-    private static Set<String> collectGivenTypes(SimpleQueryTree.Node dtNode, Set<String> types) {
-        switch (dtNode) {
+    private static Set<String> collectGivenTypes(SimpleQueryTree.Node sqtNode, Set<String> types) {
+        switch (sqtNode) {
             case SimpleQueryTree.And and -> {
-                and.conjuncts().forEach(c -> collectGivenProperties(c, types));
+                and.conjuncts().forEach(c -> collectGivenTypes(c, types));
             }
             case SimpleQueryTree.Or or -> {
-                or.disjuncts().forEach(d -> collectGivenProperties(d, types));
+                or.disjuncts().forEach(d -> collectGivenTypes(d, types));
             }
             case SimpleQueryTree.PropertyValue pv -> {
                 if (JsonLd.getTYPE_KEY().equals(pv.property())) {
@@ -194,13 +194,5 @@ public class QueryTree {
         }
 
         return types;
-    }
-
-    private static boolean overlap(Collection<String> a, Collection<String> b) {
-        return a.stream().anyMatch(x -> b.contains(x));
-    }
-
-    private static Set<String> intersection(Collection<String> a, Collection<String> b) {
-        return a.stream().filter(x -> b.contains(x)).collect(Collectors.toSet());
     }
 }

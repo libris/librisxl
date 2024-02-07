@@ -63,7 +63,7 @@ public class Disambiguate {
         return DomainGroup.OTHER;
     }
 
-    // TODO: Handle owl:Restriction
+    // TODO: Handle owl:Restriction / range
     public List<String> expandChainAxiom(List<String> path) {
         List<String> extended = new ArrayList<>();
 
@@ -277,6 +277,7 @@ public class Disambiguate {
         nsToPrefix.put("http://purl.org/dc/terms/", "dc:");
         nsToPrefix.put("http://schema.org/", "sdo:");
         nsToPrefix.put("https://id.kb.se/term/sao/", "sao:");
+        nsToPrefix.put("https://id.kb.se/marc/", "marc:");
 
         for (String ns : nsToPrefix.keySet()) {
             if (iri.startsWith(ns)) {
@@ -298,6 +299,7 @@ public class Disambiguate {
         nsToPrefix.put("http://purl.org/dc/terms/", "dc:");
         nsToPrefix.put("http://schema.org/", "sdo:");
         nsToPrefix.put("https://id.kb.se/term/sao/", "sao:");
+        nsToPrefix.put("https://id.kb.se/marc/", "marc:");
 
         for (String ns : nsToPrefix.keySet()) {
             String prefix = nsToPrefix.get(ns);

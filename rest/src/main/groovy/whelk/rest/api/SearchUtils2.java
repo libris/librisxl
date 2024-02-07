@@ -71,7 +71,7 @@ public class SearchUtils2 {
 
         public Map getPartialCollectionView(Map esResponse) {
             int numHits = (int) esResponse.getOrDefault("totalHits", 0);
-
+            // TODO: LinkedHashMap with appropriate key order
             Map view = new HashMap();
             view.put(JsonLd.getTYPE_KEY(), "PartialCollectionView");
             view.put(JsonLd.getID_KEY(), makeFindUrl(offset));

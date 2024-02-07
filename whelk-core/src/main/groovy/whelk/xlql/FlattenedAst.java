@@ -53,7 +53,7 @@ public class FlattenedAst {
                 for (Ast.Node o : or.operands()) {
                     operands.add(flattenNegations(o, negate));
                 }
-                return negate ? new Or(operands) : new And(operands);
+                return negate ? new And(operands) : new Or(operands);
             }
             case Ast.Not not -> {
                 return flattenNegations(not.operand(), !negate);
@@ -99,7 +99,12 @@ public class FlattenedAst {
                     case Ast.Not not -> {
                         return new Ast.Not(wrapAllChildrenInCode(code, not.operand()));
                     }
-                    default -> throw new IllegalStateException("Unexpected value: " + ce.operand());
+                    case Ast.Leaf l -> {
+                        return wrapAllChildrenInCode(code, l);
+                    }
+                    default -> {
+                        throw new RuntimeException("XLQL Error when flattening: " + astNode); // Should not be reachable. This is a bug.
+                    }
                 }
             }
             // Until a CodeEquals is found, recreate as is
@@ -128,9 +133,6 @@ public class FlattenedAst {
 
     private static Ast.Node wrapAllChildrenInCode(String code, Ast.Node astNode) {
         switch (astNode) {
-            case Ast.Leaf l -> {
-                return new Ast.CodeEqualsLeaf(code, l);
-            }
             case Ast.And and -> {
                 List<Ast.Node> replacementOperands = new ArrayList<>();
                 for (Ast.Node child : and.operands()) {
@@ -147,6 +149,9 @@ public class FlattenedAst {
             }
             case Ast.Not not -> {
                 return new Ast.Not(wrapAllChildrenInCode(code, not.operand()));
+            }
+            case Ast.Leaf l -> {
+                return new Ast.CodeEqualsLeaf(code, l);
             }
             default ->
                     throw new RuntimeException("XLQL Error when flattening: " + astNode); // Should not be reachable. This is a bug.

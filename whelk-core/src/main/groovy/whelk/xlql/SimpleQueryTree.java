@@ -11,6 +11,7 @@ public class SimpleQueryTree {
     public record Or (List<Node> disjuncts) implements Node {}
     public record PropertyValue(String property, Operator operator, String value) implements Node {}
     public record FreeText(Operator operator, String value) implements Node {}
+
     public Node tree;
             
     public SimpleQueryTree(FlattenedAst ast, Disambiguate disambiguate) throws InvalidQueryException {
