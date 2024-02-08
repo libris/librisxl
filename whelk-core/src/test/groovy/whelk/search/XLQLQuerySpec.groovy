@@ -157,7 +157,7 @@ class XLQLQuerySpec extends Specification {
                 'variable' : 'textQuery',
                 'predicate': whelk.jsonld.vocabIndex['textQuery'],
                 'value'    : 'Kalle',
-                'operator' : Operator.EQUALS,
+                'operator' : Operator.EQUALS.termKey,
                 'up'       : '/find?_q=*'
         ]
     }
@@ -172,7 +172,7 @@ class XLQLQuerySpec extends Specification {
                 'variable' : 'textQuery',
                 'predicate': whelk.jsonld.vocabIndex['textQuery'],
                 'value'    : 'Kalle Anka',
-                'operator' : Operator.EQUALS,
+                'operator' : Operator.EQUALS.termKey,
                 'up'       : '/find?_q=*'
         ]
     }
@@ -189,14 +189,14 @@ class XLQLQuerySpec extends Specification {
                                 'variable' : 'textQuery',
                                 'predicate': whelk.jsonld.vocabIndex['textQuery'],
                                 'value'    : 'Kalle',
-                                'operator' : Operator.EQUALS,
+                                'operator' : Operator.EQUALS.termKey,
                                 'up'       : '/find?_q=Anka'
                         ],
                         [
                                 'variable' : 'textQuery',
                                 'predicate': whelk.jsonld.vocabIndex['textQuery'],
                                 'value'    : 'Anka',
-                                'operator' : Operator.EQUALS,
+                                'operator' : Operator.EQUALS.termKey,
                                 'up'       : '/find?_q=Kalle'
                         ]
                 ],
@@ -219,7 +219,7 @@ class XLQLQuerySpec extends Specification {
                                                 'variable' : 'textQuery',
                                                 'predicate': whelk.jsonld.vocabIndex['textQuery'],
                                                 'value'    : 'Kalle',
-                                                'operator' : Operator.EQUALS,
+                                                'operator' : Operator.EQUALS.termKey,
                                                 'up'       : '/find?_q=(NOT Anka AND NOT Blomqvist) OR Bosse'
                                         ],
                                         [
@@ -228,14 +228,14 @@ class XLQLQuerySpec extends Specification {
                                                                 'variable' : 'textQuery',
                                                                 'predicate': whelk.jsonld.vocabIndex['textQuery'],
                                                                 'value'    : 'Anka',
-                                                                'operator' : Operator.NOT_EQUALS,
+                                                                'operator' : Operator.NOT_EQUALS.termKey,
                                                                 'up'       : '/find?_q=(Kalle AND NOT Blomqvist) OR Bosse'
                                                         ],
                                                         [
                                                                 'variable' : 'textQuery',
                                                                 'predicate': whelk.jsonld.vocabIndex['textQuery'],
                                                                 'value'    : 'Blomqvist',
-                                                                'operator' : Operator.NOT_EQUALS,
+                                                                'operator' : Operator.NOT_EQUALS.termKey,
                                                                 'up'       : '/find?_q=(Kalle AND NOT Anka) OR Bosse'
                                                         ]
                                                 ],
@@ -248,7 +248,7 @@ class XLQLQuerySpec extends Specification {
                                 'variable' : 'textQuery',
                                 'predicate': whelk.jsonld.vocabIndex['textQuery'],
                                 'value'    : 'Bosse',
-                                'operator' : Operator.EQUALS,
+                                'operator' : Operator.EQUALS.termKey,
                                 'up'       : '/find?_q=Kalle AND (NOT Anka AND NOT Blomqvist)'
                         ]
                 ],
@@ -268,21 +268,21 @@ class XLQLQuerySpec extends Specification {
                                 'variable' : 'textQuery',
                                 'predicate': whelk.jsonld.vocabIndex['textQuery'],
                                 'value'    : 'Kalle',
-                                'operator' : Operator.EQUALS,
+                                'operator' : Operator.EQUALS.termKey,
                                 'up'       : '/find?_q=year > 2020 AND NOT subject: Hästar'
                         ],
                         [
                                 'variable' : 'year',
                                 'predicate': whelk.jsonld.vocabIndex['year'],
                                 'value'    : '2020',
-                                'operator' : Operator.GREATER_THAN,
+                                'operator' : Operator.GREATER_THAN.termKey,
                                 'up'       : '/find?_q=Kalle AND NOT subject: Hästar'
                         ],
                         [
                                 'variable' : 'subject',
                                 'predicate': whelk.jsonld.vocabIndex['subject'],
                                 'value'    : 'Hästar',
-                                'operator' : Operator.NOT_EQUALS,
+                                'operator' : Operator.NOT_EQUALS.termKey,
                                 'up'       : '/find?_q=Kalle AND year > 2020'
                         ]
                 ],
