@@ -9,11 +9,6 @@ public class Path {
     public String property;
     public List<String> path;
 
-    Path(String property) {
-        this.property = property;
-        this.path = new ArrayList<>(Arrays.asList(property));
-    }
-
     Path(String property, List<String> path) {
         this.property = property;
         this.path = new ArrayList<>(path);

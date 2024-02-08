@@ -179,13 +179,33 @@ public class XLQLQuery {
     }
 
     private Map mapping(String property, String value, Operator operator) {
+        return mapping(property, value, operator, Collections.emptyList());
+    }
+
+    private Map mapping(String property, String value, Operator operator, List<String> propertyPath) {
         Map m = new LinkedHashMap();
-        m.put("variable", property);
-        m.put("predicate", whelk.getJsonld().getVocabIndex().get(property));
+        if (propertyPath.size() > 1) {
+            m.put("variable", String.join(".", propertyPath));
+            // Include "@id" / "_str" in chainAxiom?
+            List propertyChainAxiom = propertyPath.stream()
+                    .map(p -> getDefinition(p))
+                    .filter(Objects::nonNull)
+                    .toList();
+            Map predicate = propertyChainAxiom.size() > 1
+                    ? Map.of("propertyChainAxiom", propertyChainAxiom)
+                    : getDefinition(property);
+            m.put("predicate", predicate);
+        } else {
+            m.put("variable", property);
+            m.put("predicate", getDefinition(property));
+        }
         m.put("value", value);
-        // TODO: use string instead of enum (Operator)
-        m.put("operator", operator);
+        m.put("operator", operator.termKey);
         return m;
+    }
+
+    private Map getDefinition(String property) {
+        return whelk.getJsonld().getVocabIndex().get(property);
     }
 
     private Map freeTextMapping(SimpleQueryTree.FreeText ft) {
@@ -193,41 +213,11 @@ public class XLQLQuery {
     }
 
     private Map propertyValueMapping(SimpleQueryTree.PropertyValue pv) {
-        return mapping(pv.property(), pv.value(), pv.operator());
+        return mapping(pv.property(), pv.value(), pv.operator(), pv.propertyPath());
     }
 
     private Optional<SimpleQueryTree.Node> getReducedTree(SimpleQueryTree sqt, SimpleQueryTree.Node qtNode) {
-        return Optional.ofNullable(excludeFromTree(qtNode, sqt.tree));
-    }
-
-    private SimpleQueryTree.Node excludeFromTree(SimpleQueryTree.Node nodeToExclude, SimpleQueryTree.Node tree) {
-        if (nodeToExclude.equals(tree)) {
-            return null;
-        }
-        switch (tree) {
-            case SimpleQueryTree.And and -> {
-                List<SimpleQueryTree.Node> andClause = and.conjuncts()
-                        .stream()
-                        .map(c -> excludeFromTree(nodeToExclude, c))
-                        .filter(Objects::nonNull)
-                        .toList();
-                return andClause.size() > 1 ? new SimpleQueryTree.And(andClause) : andClause.get(0);
-            }
-            case SimpleQueryTree.Or or -> {
-                List<SimpleQueryTree.Node> orClause = or.disjuncts()
-                        .stream()
-                        .map(d -> excludeFromTree(nodeToExclude, d))
-                        .filter(Objects::nonNull)
-                        .toList();
-                return orClause.size() > 1 ? new SimpleQueryTree.Or(orClause) : orClause.get(0);
-            }
-            case SimpleQueryTree.FreeText ignored -> {
-                return tree;
-            }
-            case SimpleQueryTree.PropertyValue ignored -> {
-                return tree;
-            }
-        }
+        return Optional.ofNullable(SimpleQueryTree.excludeFromTree(qtNode, sqt.tree));
     }
 
     private String treeToQueryString(SimpleQueryTree.Node sqtNode) {
@@ -264,7 +254,7 @@ public class XLQLQuery {
     }
 
     private String freeTextToString(SimpleQueryTree.FreeText ft) {
-        return ft.operator() == Operator.NOT_EQUALS ? "NOT " + ft.value() : ft.value();
+        return ft.operator() == Operator.NOT_EQUALS ? "NOT " + ft.value() : quoteIfPhraseOrColon(ft.value());
     }
 
     private String propertyValueToString(SimpleQueryTree.PropertyValue pv) {
@@ -277,7 +267,7 @@ public class XLQLQuery {
             case LESS_THAN -> " < ";
         };
         String not = pv.operator() == Operator.NOT_EQUALS ? "NOT " : "";
-        return not + pv.property() + sep + pv.value();
+        return not + String.join(".", pv.propertyPath()) + sep + quoteIfPhraseOrColon(pv.value());
     }
 
     private static Map equalsFilter(String path, String value) {
@@ -329,4 +319,6 @@ public class XLQLQuery {
     private static String quoteIfPhrase(String s) {
         return s.matches(".*\\s.*") ? "\"" + s + "\"" : s;
     }
+
+    private static String quoteIfPhraseOrColon(String s) { return s.matches(".*[\s:].*") ? "\"" + s + "\"" : s; }
 }

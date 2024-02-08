@@ -4,15 +4,12 @@ import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
 
 import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class SimpleQueryTree {
     public sealed interface Node permits And, Or, PropertyValue, FreeText {}
     public record And (List<Node> conjuncts) implements Node {}
     public record Or (List<Node> disjuncts) implements Node {}
-    public record PropertyValue(String property, Operator operator, String value) implements Node {}
+    public record PropertyValue(String property, List<String> propertyPath, Operator operator, String value) implements Node {}
     public record FreeText(Operator operator, String value) implements Node {}
 
     public Node tree;
@@ -44,26 +41,52 @@ public class SimpleQueryTree {
                 return new FreeText(Operator.EQUALS, l.value());
             }
             case FlattenedAst.Code c -> {
-                List<String> disambiguated = Arrays.stream(c.code().split("\\."))
-                        // Exclude @id and _str from disambiguation
-                        .filter(x -> !Set.of(JsonLd.getID_KEY(), JsonLd.getSEARCH_KEY()).contains(x))
-                        .map(disambiguate::mapToKbvProperty)
-                        .collect(Collectors.toList());
-
-                if (disambiguated.contains(null)) {
-                    throw new InvalidQueryException("Unrecognized property alias: " + c);
+                String property = null;
+                List<String> propertyPath = new ArrayList<>();
+                for (String part : c.code().split("\\.")) {
+                    if (JsonLd.getID_KEY().equals(part) || JsonLd.getSEARCH_KEY().equals(part)) {
+                        propertyPath.add(part);
+                        continue;
+                    }
+                    property = disambiguate.mapToKbvProperty(part);
+                    if (property == null) {
+                        throw new InvalidQueryException("Unrecognized property alias: " + c);
+                    }
+                    propertyPath.add(property);
                 }
-
-                if (c.code().endsWith(JsonLd.getID_KEY())) {
-                    disambiguated.add(JsonLd.getID_KEY());
-                } else if (c.code().endsWith(JsonLd.getSEARCH_KEY())) {
-                    disambiguated.add(JsonLd.getSEARCH_KEY());
-                }
-
-                String propertyPath = String.join(".", disambiguated);
 
                 // TODO: Disambiguate value too
-                return new PropertyValue(propertyPath, c.operator(), c.value());
+                return new PropertyValue(property, propertyPath, c.operator(), c.value());
+            }
+        }
+    }
+
+    public static Node excludeFromTree(Node nodeToExclude, Node tree) {
+        if (nodeToExclude.equals(tree)) {
+            return null;
+        }
+        switch (tree) {
+            case And and -> {
+                List<Node> andClause = and.conjuncts()
+                        .stream()
+                        .map(c -> excludeFromTree(nodeToExclude, c))
+                        .filter(Objects::nonNull)
+                        .toList();
+                return andClause.size() > 1 ? new And(andClause) : andClause.get(0);
+            }
+            case Or or -> {
+                List<Node> orClause = or.disjuncts()
+                        .stream()
+                        .map(d -> excludeFromTree(nodeToExclude, d))
+                        .filter(Objects::nonNull)
+                        .toList();
+                return orClause.size() > 1 ? new Or(orClause) : orClause.get(0);
+            }
+            case FreeText ignored -> {
+                return tree;
+            }
+            case PropertyValue ignored -> {
+                return tree;
             }
         }
     }

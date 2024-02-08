@@ -256,9 +256,9 @@ class XLQLQuerySpec extends Specification {
         ]
     }
 
-    def "Mapping: Free text + fields"() {
+    def "Mapping: Free text phrase + fields"() {
         given:
-        String queryString = "Kalle år > 2020 not ämne: Hästar"
+        String queryString = "\"Kalle Anka\" år > 2020 not ämne: Hästar"
         SimpleQueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
 
         expect:
@@ -267,7 +267,7 @@ class XLQLQuerySpec extends Specification {
                         [
                                 'variable' : 'textQuery',
                                 'predicate': whelk.jsonld.vocabIndex['textQuery'],
-                                'value'    : 'Kalle',
+                                'value'    : 'Kalle Anka',
                                 'operator' : Operator.EQUALS.termKey,
                                 'up'       : '/find?_q=year > 2020 AND NOT subject: Hästar'
                         ],
@@ -276,14 +276,51 @@ class XLQLQuerySpec extends Specification {
                                 'predicate': whelk.jsonld.vocabIndex['year'],
                                 'value'    : '2020',
                                 'operator' : Operator.GREATER_THAN.termKey,
-                                'up'       : '/find?_q=Kalle AND NOT subject: Hästar'
+                                'up'       : '/find?_q="Kalle Anka" AND NOT subject: Hästar'
                         ],
                         [
                                 'variable' : 'subject',
                                 'predicate': whelk.jsonld.vocabIndex['subject'],
                                 'value'    : 'Hästar',
                                 'operator' : Operator.NOT_EQUALS.termKey,
-                                'up'       : '/find?_q=Kalle AND year > 2020'
+                                'up'       : '/find?_q="Kalle Anka" AND year > 2020'
+                        ]
+                ],
+                'up' : '/find?_q=*'
+        ]
+    }
+
+    def "Mapping: Property path"() {
+        given:
+        String queryString = "instanceOf.subject.@id: \"sao:Fysik\" and instanceOf.subject._str: rymd"
+        SimpleQueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
+
+        expect:
+        xlqlQuery.toMappings(sqt) == [
+                'and': [
+                        [
+                                'variable' : 'instanceOf.subject.@id',
+                                'predicate': [
+                                        'propertyChainAxiom': [
+                                                whelk.jsonld.vocabIndex['instanceOf'],
+                                                whelk.jsonld.vocabIndex['subject'],
+                                        ]
+                                ],
+                                'value'    : "sao:Fysik",
+                                'operator' : Operator.EQUALS.termKey,
+                                'up'       : '/find?_q=instanceOf.subject._str: rymd'
+                        ],
+                        [
+                                'variable' : 'instanceOf.subject._str',
+                                'predicate': [
+                                        'propertyChainAxiom': [
+                                                whelk.jsonld.vocabIndex['instanceOf'],
+                                                whelk.jsonld.vocabIndex['subject'],
+                                        ]
+                                ],
+                                'value'    : 'rymd',
+                                'operator' : Operator.EQUALS.termKey,
+                                'up'       : '/find?_q=instanceOf.subject.@id: "sao:Fysik"'
                         ]
                 ],
                 'up' : '/find?_q=*'

@@ -42,7 +42,7 @@ class SimpleQueryTreeSpec extends Specification {
         expect:
         sqt.tree == new SimpleQueryTree.And(
                 [
-                        new SimpleQueryTree.PropertyValue("subject", Operator.EQUALS, "lcsh:Physics"),
+                        new SimpleQueryTree.PropertyValue("subject", ["subject"], Operator.EQUALS, "lcsh:Physics"),
                         new SimpleQueryTree.FreeText(Operator.EQUALS, "svarta hål")
                 ]
         )
@@ -55,7 +55,7 @@ class SimpleQueryTreeSpec extends Specification {
         expect:
         sqt.tree == new SimpleQueryTree.Or(
                 [
-                        new SimpleQueryTree.PropertyValue("originDate", Operator.LESS_THAN, "2023"),
+                        new SimpleQueryTree.PropertyValue("originDate", ["originDate"] ,Operator.LESS_THAN, "2023"),
                         new SimpleQueryTree.FreeText(Operator.EQUALS, "svarta hål")
                 ]
         )
@@ -71,14 +71,14 @@ class SimpleQueryTreeSpec extends Specification {
                 [
                         new SimpleQueryTree.Or(
                                 [
-                                        new SimpleQueryTree.PropertyValue("responsibilityStatement", Operator.EQUALS, "Tolkien"),
-                                        new SimpleQueryTree.PropertyValue("responsibilityStatement", Operator.EQUALS, "Verne"),
+                                        new SimpleQueryTree.PropertyValue("responsibilityStatement", ["responsibilityStatement"], Operator.EQUALS, "Tolkien"),
+                                        new SimpleQueryTree.PropertyValue("responsibilityStatement", ["responsibilityStatement"], Operator.EQUALS, "Verne"),
                                 ]
                         ),
                         new SimpleQueryTree.Or(
                                 [
-                                        new SimpleQueryTree.PropertyValue("genreForm", Operator.EQUALS, "Fantasy"),
-                                        new SimpleQueryTree.PropertyValue("genreForm", Operator.EQUALS, "Äventyr")
+                                        new SimpleQueryTree.PropertyValue("genreForm", ["genreForm"], Operator.EQUALS, "Fantasy"),
+                                        new SimpleQueryTree.PropertyValue("genreForm", ["genreForm"], Operator.EQUALS, "Äventyr")
                                 ]
                         )
                 ]
@@ -98,6 +98,6 @@ class SimpleQueryTreeSpec extends Specification {
         SimpleQueryTree sqt = getTree(query)
 
         expect:
-        sqt.tree == new SimpleQueryTree.PropertyValue("instanceOf.subject.@id", Operator.EQUALS, "sao:Hästar")
+        sqt.tree == new SimpleQueryTree.PropertyValue("subject", ["instanceOf", "subject", "@id"], Operator.EQUALS, "sao:Hästar")
     }
 }

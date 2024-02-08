@@ -48,11 +48,11 @@ public class QueryTree {
                                 }
                         );
         /*
-        If any given "property" is rather a property path (containing period), assume that the user knows what she's
-        doing and interpret each property as is, i.e. don't apply any heuristic for finding alternative paths.
+        If any given property path consists of more than one key (separated by period), assume that the user knows what
+        she's doing and interpret each property as is, i.e. don't apply any heuristic for finding alternative paths.
         (See buildField method.)
          */
-        boolean exactPaths = givenProperties.stream().anyMatch(x -> x.contains("."));
+        boolean exactPaths = anyCompositePath(sqt);
 
         // TODO: Review heuristic for which entities to search for
 //        return sqtToQt(sqt, disambiguate, exactPaths, searchInstances);
@@ -86,14 +86,14 @@ public class QueryTree {
 
     private static Node buildField(SimpleQueryTree.PropertyValue pv, Disambiguate disambiguate, boolean exactPath, boolean searchInstances) {
         if (exactPath) {
-            Path path = new Path(pv.property(), List.of(pv.property().split("\\.")));
-            String value = pv.property().endsWith(JsonLd.getID_KEY())
+            Path path = new Path(pv.property(), pv.propertyPath());
+            String value = JsonLd.getID_KEY().equals(pv.propertyPath().getLast())
                     ? Disambiguate.expandPrefixed(pv.value())
                     : pv.value();
             return new Field(path, pv.operator(), value);
         }
 
-        Path path = new Path(pv.property());
+        Path path = new Path(pv.property(), pv.propertyPath());
 
         path.expandChainAxiom(disambiguate);
 
@@ -208,5 +208,25 @@ public class QueryTree {
         }
 
         return types;
+    }
+
+    private static boolean anyCompositePath(SimpleQueryTree.Node sqtNode) {
+        switch (sqtNode) {
+            case SimpleQueryTree.And and -> {
+                return and.conjuncts().stream().anyMatch(QueryTree::anyCompositePath);
+            }
+            case SimpleQueryTree.Or or -> {
+                return or.disjuncts().stream().anyMatch(QueryTree::anyCompositePath);
+            }
+            case SimpleQueryTree.PropertyValue pv -> {
+                if (pv.propertyPath().size() > 1) {
+                    return true;
+                }
+            }
+            case SimpleQueryTree.FreeText ignored -> {
+                // Nothing to do here
+            }
+        }
+        return false;
     }
 }
