@@ -256,7 +256,7 @@ class XLQLQuerySpec extends Specification {
         ]
     }
 
-    def "Mapping: Mapping: Free text + fields"() {
+    def "Mapping: Free text + fields"() {
         given:
         String queryString = "Kalle år > 2020 not ämne: Hästar"
         SimpleQueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
