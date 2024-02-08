@@ -2,8 +2,6 @@ package whelk.rest.api
 
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
-import groovy.transform.TypeChecked
-import groovy.transform.TypeCheckingMode
 import groovy.util.logging.Log4j2 as Log
 import org.apache.http.entity.ContentType
 import whelk.Document
@@ -227,13 +225,12 @@ class Crud extends HttpServlet {
         setVary(response)
         response.setHeader("ETag", eTag.toString())
         response.setHeader("Server-Start-Time", "" + ManagementFactory.getRuntimeMXBean().getStartTime())
-        sendError(response, HttpServletResponse.SC_NOT_MODIFIED, "Document has not been modified.")
+        HttpTools.sendError(response, HttpServletResponse.SC_NOT_MODIFIED, "Document has not been modified.")
     }
 
-    @TypeChecked(TypeCheckingMode.SKIP)
     private static void sendNotFound(HttpServletRequest request, HttpServletResponse response) {
         metrics.failedRequests.labels(request.getMethod(), HttpServletResponse.SC_NOT_FOUND.toString()).inc()
-        sendError(response, HttpServletResponse.SC_NOT_FOUND, "Document not found.")
+        HttpTools.sendError(response, HttpServletResponse.SC_NOT_FOUND, "Document not found.")
     }
 
     private Object getFormattedResponseBody(CrudGetRequest request, Document doc, String profileId) {
@@ -846,7 +843,7 @@ class Crud extends HttpServlet {
         if (log.isDebugEnabled()) {
             log.debug("Sending error $code : ${e.getMessage()} for ${request.getRequestURI()}")
         }
-        sendError(response, code, e.getMessage(), e)
+        HttpTools.sendError(response, code, e.getMessage(), e)
     }
     
     static private int mapError(Exception e) {
