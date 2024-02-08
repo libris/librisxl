@@ -1,6 +1,7 @@
 package whelk.xlql
 
 import spock.lang.Specification
+import whelk.exception.InvalidQueryException
 
 class ParseSpec extends Specification {
 

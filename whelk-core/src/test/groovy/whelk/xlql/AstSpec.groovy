@@ -50,8 +50,8 @@ class AstSpec extends Specification {
         expect:
         ast == new Ast.And(
                 [
-                        new Ast.CodeEquals("subject", new Ast.Or(["lcsh:Physics", "Fysik"])),
-                        new Ast.Not(new Ast.CodeLesserGreaterThan("published", "<", "2023"))
+                        new Ast.CodeEquals("subject", new Ast.Or([new Ast.Leaf("lcsh:Physics"), new Ast.Leaf("Fysik")])),
+                        new Ast.Not(new Ast.CodeLesserGreaterThan("published", "<", new Ast.Leaf("2023")))
                 ]
         )
     }

@@ -1,6 +1,5 @@
 package whelk.xlql
 
-import org.apache.xerces.impl.xs.util.ShortListImpl
 import spock.lang.Specification
 import whelk.Whelk
 import whelk.exception.InvalidQueryException
