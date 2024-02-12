@@ -31,7 +31,7 @@ public class SearchUtils2 {
             throw new WhelkRuntimeException("ElasticSearch not configured.");
         }
         Query query = new Query(queryParameters);
-        Map esResponse = whelk.elastic.query(query.toEsQueryDsl());
+        Map esResponse = whelk.elastic.query(query.getEsQueryDsl());
         return query.getPartialCollectionView(esResponse);
     }
 
@@ -40,9 +40,11 @@ public class SearchUtils2 {
         int limit;
         int offset;
         Optional<String> sortBy;
+        boolean debug;
         String queryString;
         SimpleQueryTree simpleQueryTree;
         QueryTree queryTree;
+        Map esQueryDsl;
 //    Optional<List> predicates;
 //    Optional<String> object;
 //    Optional<String> value;
@@ -53,14 +55,16 @@ public class SearchUtils2 {
         Query(Map<String, String[]> queryParameters) throws InvalidQueryException {
             this.queryString = queryParameters.get("_q")[0];
             this.sortBy = getOptionalSingle("_sort", queryParameters);
+            this.debug = queryParameters.containsKey("_debug"); // Different debug modes needed?
             this.limit = getLimit(queryParameters);
             this.offset = getOffset(queryParameters);
             this.simpleQueryTree = xlqlQuery.getSimpleQueryTree(queryString);
             this.queryTree = xlqlQuery.getQueryTree(simpleQueryTree);
+            this.esQueryDsl = getEsQueryDsl();
         }
 
-        public Map toEsQueryDsl() {
-            Map queryDsl = new HashMap<>();
+        public Map getEsQueryDsl() {
+            Map queryDsl = new LinkedHashMap();
             queryDsl.put("query", xlqlQuery.getEsQuery(queryTree));
             queryDsl.put("size", limit);
             queryDsl.put("from", offset);
@@ -71,8 +75,7 @@ public class SearchUtils2 {
 
         public Map getPartialCollectionView(Map esResponse) {
             int numHits = (int) esResponse.getOrDefault("totalHits", 0);
-            // TODO: LinkedHashMap with appropriate key order
-            Map view = new HashMap();
+            Map view = new LinkedHashMap();
             view.put(JsonLd.getTYPE_KEY(), "PartialCollectionView");
             view.put(JsonLd.getID_KEY(), makeFindUrl(offset));
             view.put("itemOffset", offset);
@@ -80,8 +83,12 @@ public class SearchUtils2 {
             view.put("totalItems", numHits);
             view.put("search", Map.of("mapping", toMappings()));
             view.putAll(makePaginationLinks(numHits));
-            if (esResponse.containsKey("_debug")) {
-                view.put("_debug", esResponse.get("_debug"));
+            if (esResponse.containsKey("items")) {
+                view.put("items", esResponse.get("items"));
+            }
+            // TODO: Stats?
+            if (debug) {
+                view.put("_debug", Map.of("esQuery", esQueryDsl));
             }
             view.put("maxItems", whelk.elastic.maxResultWindow);
 
@@ -94,7 +101,7 @@ public class SearchUtils2 {
                 return Collections.EMPTY_MAP;
             }
 
-            Map result = new HashMap();
+            Map result = new LinkedHashMap();
 
             Offsets offsets = new Offsets(Math.min(numHits, maxItems()), limit, offset);
 
@@ -127,11 +134,11 @@ public class SearchUtils2 {
                 params.add(makeParam("_offset", offset));
             }
             params.add(makeParam("_limit", limit));
-            return "/find?_q=" + String.join("&", params);
+            return "/find?" + String.join("&", params);
         }
 
         private static String makeParam(String key, String value) {
-            return String.format("%s=&s", escapeQueryParam(key), escapeQueryParam(value));
+            return String.format("%s=%s", escapeQueryParam(key), escapeQueryParam(value));
         }
         private static String makeParam(String key, int value) {
             return makeParam(key, "" + value);
