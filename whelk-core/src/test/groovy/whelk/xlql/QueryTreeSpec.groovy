@@ -60,25 +60,20 @@ class QueryTreeSpec extends Specification {
         QueryTree qt = new QueryTree(sqt, disambiguate)
         QueryTree.And topNode = qt.tree
         List conjuncts = topNode.conjuncts()
-        QueryTree.Or subjectFields = conjuncts[0]
-        QueryTree.Field subjectField1 = subjectFields.disjuncts()[0]
-        QueryTree.Field subjectField2 = subjectFields.disjuncts()[1]
+        QueryTree.Field subjectField = conjuncts[0]
         QueryTree.Field originDateField = conjuncts[1]
+        QueryTree.FreeText freeText = conjuncts[2]
 
         expect:
-        conjuncts[2] == new QueryTree.FreeText(Operator.EQUALS, "svarta hål")
+        subjectField.path().stringify() == "subject.@id"
+        subjectField.operator() == Operator.EQUALS
+        subjectField.value() == "https://id.kb.se/term/sao/Fysik"
 
         originDateField.path().stringify() == "originDate"
         originDateField.operator() == Operator.LESS_THAN
         originDateField.value() == "2023"
 
-        subjectField1.path().stringify() == "subject"
-        subjectField1.operator() == Operator.EQUALS
-        subjectField1.value() == "sao:Fysik"
-
-        subjectField2.path().stringify() == "subject.@id"
-        subjectField2.operator() == Operator.EQUALS
-        subjectField2.value() == "https://id.kb.se/term/sao/Fysik"
+        freeText == new QueryTree.FreeText(Operator.EQUALS, "svarta hål")
     }
 
     def "exact fields"() {

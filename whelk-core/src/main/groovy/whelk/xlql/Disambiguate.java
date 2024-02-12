@@ -63,6 +63,10 @@ public class Disambiguate {
         return DomainGroup.OTHER;
     }
 
+    public boolean isVocabTerm(String property) {
+        return jsonLd.isVocabTerm(property);
+    }
+
     // TODO: Handle owl:Restriction / range
     public List<String> expandChainAxiom(List<String> path) {
         List<String> extended = new ArrayList<>();

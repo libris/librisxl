@@ -103,37 +103,31 @@ public class QueryTree {
             path.prependMeta();
         }
 
-        List<Node> fields = new ArrayList<>(List.of(new Field(path, pv.operator(), pv.value())));
+        String value = pv.value();
 
-        if (disambiguate.isObjectProperty(pv.property())) {
-            String expanded = Disambiguate.expandPrefixed(pv.value());
+        if (disambiguate.isObjectProperty(pv.property()) && !disambiguate.isVocabTerm(pv.property())) {
             /*
-            Add ._str or .@id as alternative paths but keep the "normal" path since sometimes the value of ObjectProperty
-            is a string, e.g. issuanceType: "Serial" or encodingLevel: "marc:FullLevel".
-            (Can we skip either path with better disambiguation?)
+             If "vocab term" interpret the value as is, e.g. issuanceType: "Serial" or encodingLevel: "marc:FullLevel".
+             Otherwise, when object property, append either @id or _str to the path.
              */
+            String expanded = Disambiguate.expandPrefixed(pv.value());
             if (JsonLd.looksLikeIri(expanded)) {
-                Path copy = path.copy();
-                copy.appendId();
-                fields.add(new Field(copy, pv.operator(), expanded));
+                path.appendId();
+                value = expanded;
             } else {
-                Path copy = path.copy();
-                copy.appendUnderscoreStr();
-                fields.add(new Field(copy, pv.operator(), pv.value()));
+                path.appendUnderscoreStr();
             }
+
         }
+
+        Field field = new Field(path, pv.operator(), value);
 
         if (searchInstances) {
-            fields = fields.stream()
-                    .flatMap(f -> collectAltFields((Field) f, domainGroup).stream())
-                    .toList();
+            List<Node> fields = collectAltFields(field, domainGroup);
+            return pv.operator() == Operator.NOT_EQUALS ? new And(fields) : new Or(fields);
         }
 
-        if (fields.size() == 1) {
-            return fields.get(0);
-        }
-
-        return pv.operator() == Operator.NOT_EQUALS ? new And(fields) : new Or(fields);
+        return field;
     }
 
     private static List<Node> collectAltFields(Field f, Disambiguate.DomainGroup domainGroup) {
