@@ -1,6 +1,4 @@
 /**
- * LXL-4441
- *
  * Remove incorrect data originally coming from local works in Elib records and consequently ended up on linked works in
  * the automatic work merging.
  * The terms to remove are:
@@ -50,7 +48,7 @@ selectBySqlWhere(where) { workDocItem ->
                 workDocItem.scheduleSave()
             }
             if (hasMarcJuv && !anyNonElibMarcJuvenile) {
-                work['genreForm'].remove(['@id': MARC_JUVENILE])
+                work['intendedAudience'].remove(['@id': MARC_JUVENILE])
                 if (work['intendedAudience'].isEmpty()) {
                     work.remove('intendedAudience')
                 }
