@@ -51,8 +51,8 @@ selectBySqlWhere(where) { workDocItem ->
             }
             if (hasMarcJuv && !anyNonElibMarcJuvenile) {
                 work['genreForm'].remove(['@id': MARC_JUVENILE])
-                if (work['genreForm'].isEmpty()) {
-                    work.remove('genreForm')
+                if (work['intendedAudience'].isEmpty()) {
+                    work.remove('intendedAudience')
                 }
                 workDocItem.scheduleSave()
             }
