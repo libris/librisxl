@@ -111,26 +111,24 @@ class XLQLQuerySpec extends Specification {
 
     def "Query tree to ES query: Simple field"() {
         given:
-        String queryString = "issuanceType: Serial"
+        String queryString = "upphovsuppgift: \"Astrid Lindgren\""
         QueryTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
         Map esQuery = xlqlQuery.getEsQuery(qt)
 
         expect:
-        esQuery['bool']['should'][0]['bool']['filter']['simple_query_string'] == ['query': 'Serial', 'fields': ['issuanceType']]
-        esQuery['bool']['should'][1]['bool']['filter']['simple_query_string'] == ['query': 'Serial', 'fields': ['issuanceType._str']]
+        esQuery == ['bool': ['filter': ['simple_query_string': ['query': 'Astrid Lindgren', 'fields': ['responsibilityStatement']]]]]
+
     }
 
-    def "Query tree to ES query: Combined fields + disambiguation"() {
+    def "Query tree to ES query: Combined @vocab fields"() {
         given:
         String queryString = "utgivningssätt: Serial and beskrivningsnivå=\"marc:FullLevel\""
         QueryTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
         Map esQuery = xlqlQuery.getEsQuery(qt)
 
         expect:
-        esQuery['bool']['must'][0]['bool']['should'][0]['bool']['filter']['simple_query_string'] == ['query': 'Serial', 'fields': ['issuanceType']]
-        esQuery['bool']['must'][0]['bool']['should'][1]['bool']['filter']['simple_query_string'] == ['query': 'Serial', 'fields': ['issuanceType._str']]
-        esQuery['bool']['must'][1]['bool']['should'][0]['bool']['filter']['simple_query_string'] == ['query': 'marc:FullLevel', 'fields': ['meta.encodingLevel']]
-        esQuery['bool']['must'][1]['bool']['should'][1]['bool']['filter']['simple_query_string'] == ['query': 'https://id.kb.se/marc/FullLevel', 'fields': ['meta.encodingLevel.@id']]
+        esQuery['bool']['must'][0]['bool']['filter']['simple_query_string'] == ['query': 'Serial', 'fields': ['issuanceType']]
+        esQuery['bool']['must'][1]['bool']['filter']['simple_query_string'] == ['query': 'marc:FullLevel', 'fields': ['meta.encodingLevel']]
     }
 
     def "Query tree to ES query: Free text + range"() {
