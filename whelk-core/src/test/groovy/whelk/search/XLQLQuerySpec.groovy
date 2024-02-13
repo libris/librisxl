@@ -160,18 +160,18 @@ class XLQLQuerySpec extends Specification {
         ]
     }
 
-    def "Mapping: Simple phrase"() {
+    def "Mapping: Simple phrase + limit"() {
         given:
         String queryString = "\"Kalle Anka\""
         SimpleQueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
 
         expect:
-        xlqlQuery.toMappings(sqt) == [
+        xlqlQuery.toMappings(sqt, ['_limit=20']) == [
                 'variable' : 'textQuery',
                 'predicate': whelk.jsonld.vocabIndex['textQuery'],
                 'value'    : 'Kalle Anka',
                 'operator' : Operator.EQUALS.termKey,
-                'up'       : '/find?_q=*'
+                'up'       : '/find?_q=*&_limit=20'
         ]
     }
 

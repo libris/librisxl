@@ -128,13 +128,19 @@ public class SearchUtils2 {
         }
 
         private String makeFindUrl(int offset) {
-            var params = new ArrayList<String>();
+            List<String> params = new ArrayList<>();
             params.add(makeParam("_q", queryString));
+            params.addAll(makeNonQueryParams(offset));
+            return "/find?" + String.join("&", params);
+        }
+
+        private List<String> makeNonQueryParams(int offset) {
+            List<String> params = new ArrayList<>();
             if (offset > 0) {
                 params.add(makeParam("_offset", offset));
             }
             params.add(makeParam("_limit", limit));
-            return "/find?" + String.join("&", params);
+            return params;
         }
 
         private static String makeParam(String key, String value) {
@@ -145,7 +151,7 @@ public class SearchUtils2 {
         }
 
         private List<Map> toMappings() {
-            return List.of(xlqlQuery.toMappings(simpleQueryTree));
+            return List.of(xlqlQuery.toMappings(simpleQueryTree, makeNonQueryParams(0)));
         }
 
         private static String escapeQueryParam(String input) {

@@ -142,22 +142,26 @@ public class XLQLQuery {
     }
 
     public Map toMappings(SimpleQueryTree sqt) {
-        return buildMappings(sqt.tree, sqt, new LinkedHashMap());
+        return toMappings(sqt, Collections.emptyList());
     }
 
-    private Map buildMappings(SimpleQueryTree.Node sqtNode, SimpleQueryTree sqt, Map mappingsNode) {
+    public Map toMappings(SimpleQueryTree sqt, List<String> urlParams) {
+        return buildMappings(sqt.tree, sqt, new LinkedHashMap(), urlParams);
+    }
+
+    private Map buildMappings(SimpleQueryTree.Node sqtNode, SimpleQueryTree sqt, Map mappingsNode, List<String> urlParams) {
         switch (sqtNode) {
             case SimpleQueryTree.And and -> {
                 List<Map> andClause = and.conjuncts()
                         .stream()
-                        .map(c -> buildMappings(c, sqt, new LinkedHashMap()))
+                        .map(c -> buildMappings(c, sqt, new LinkedHashMap(), urlParams))
                         .toList();
                 mappingsNode.put("and", andClause);
             }
             case SimpleQueryTree.Or or -> {
                 List<Map> orClause = or.disjuncts()
                         .stream()
-                        .map(d -> buildMappings(d, sqt, new LinkedHashMap()))
+                        .map(d -> buildMappings(d, sqt, new LinkedHashMap(), urlParams))
                         .toList();
                 mappingsNode.put("or", orClause);
             }
@@ -171,8 +175,10 @@ public class XLQLQuery {
 
         Optional<SimpleQueryTree.Node> reducedTree = getReducedTree(sqt, sqtNode);
         // TODO: Empty tree --> ???
-        // TODO: Include other params in url, e.g. _limit
         String upUrl = reducedTree.isPresent() ? "/find?_q=" + treeToQueryString(reducedTree.get()) : "/find?_q=*";
+        upUrl += urlParams.stream()
+                .map(p -> "&" + p)
+                .collect(Collectors.joining(""));
         mappingsNode.put("up", upUrl);
 
         return mappingsNode;
