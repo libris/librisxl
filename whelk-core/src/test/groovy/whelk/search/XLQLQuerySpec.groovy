@@ -116,7 +116,7 @@ class XLQLQuerySpec extends Specification {
         Map esQuery = xlqlQuery.getEsQuery(qt)
 
         expect:
-        esQuery == ['bool': ['filter': ['simple_query_string': ['query': 'Astrid Lindgren', 'fields': ['responsibilityStatement']]]]]
+        esQuery == ['bool': ['filter': ['simple_query_string': ['query': '"Astrid Lindgren"', 'fields': ['responsibilityStatement']]]]]
 
     }
 
