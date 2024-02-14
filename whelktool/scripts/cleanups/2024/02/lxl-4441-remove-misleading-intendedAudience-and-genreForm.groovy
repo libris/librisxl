@@ -4,10 +4,11 @@
  * The terms to remove are:
  *  - "https://id.kb.se/term/barngf/Barn-%20och%20ungdomslitteratur" from genreForm
  *  - "https://id.kb.se/marc/Juvenile" from intendedAudience
- * unless coming from a non-Elib record, in that case keep.
+ * unless either coming from a non-Elib record, in that case keep both.
  */
 
-BARN_UNGDOM = "https://id.kb.se/term/barngf/Barn-%20och%20ungdomslitteratur"
+BARN_NS = "https://id.kb.se/term/barn/"
+BARN_GF_NS = "https://id.kb.se/term/barngf/"
 MARC_JUVENILE = "https://id.kb.se/marc/Juvenile"
 
 def where = """
@@ -18,13 +19,10 @@ def where = """
 
 selectBySqlWhere(where) { workDocItem ->
     def (record, work) = workDocItem.graph
-    def hasMarcJuv = hasMarcJuvenile(work)
-    def hasBarnUng = hasBarnUngdom(work)
 
-    if (hasMarcJuv || hasBarnUng) {
+    if (hasMarcJuvenile(work) || hasBarnGf(work) || hasBarnSubject(work)) {
         def anyElib = false
-        def anyNonElibBarnUngdom = false
-        def anyNonElibMarcJuvenile = false
+        def anyNonElib = false
 
         selectByIds(record['derivedFrom'].collect { it['@id'] }) { dfDocItem ->
             def versionBeforeWorkExtraction = dfDocItem.getVersions().reverse().find { !it.data['@graph'][1]['instanceOf']['@id'] }
@@ -35,31 +33,53 @@ selectBySqlWhere(where) { workDocItem ->
                 return
             }
 
-            anyNonElibBarnUngdom |= hasBarnUngdom(dfInstance['instanceOf'])
-            anyNonElibMarcJuvenile |= hasMarcJuvenile(dfInstance['instanceOf'])
+            def dfWork = dfInstance['instanceOf']
+
+            anyNonElib |= (hasMarcJuvenile(dfWork) || hasBarnGf(dfWork) || hasBarnSubject(dfWork))
         }
 
-        if (anyElib) {
-            if (hasBarnUng && !anyNonElibBarnUngdom) {
-                work['genreForm'].remove(['@id': BARN_UNGDOM])
-                if (work['genreForm'].isEmpty()) {
-                    work.remove('genreForm')
+        if (anyElib && !anyNonElib) {
+            work['intendedAudience'].removeAll {
+                if (it['@id'] == MARC_JUVENILE || it['label'] in ['9-12 år', '6-9 år', '12-15 år', '3-6 år', '15', '0-3 år']) {
+                    incrementStats('intendedAudience', it)
+                    return true
                 }
-                workDocItem.scheduleSave()
             }
-            if (hasMarcJuv && !anyNonElibMarcJuvenile) {
-                work['intendedAudience'].remove(['@id': MARC_JUVENILE])
-                if (work['intendedAudience'].isEmpty()) {
-                    work.remove('intendedAudience')
+            if (work['intendedAudience'].isEmpty()) {
+                work.remove('intendedAudience')
+            }
+
+            work['genreForm']?.removeAll {
+                if (it['@id']?.startsWith(BARN_GF_NS)) {
+                    incrementStats('genreForm', it)
+                    return true
                 }
-                workDocItem.scheduleSave()
             }
+            if (work['genreForm']?.isEmpty()) {
+                work.remove('genreForm')
+            }
+
+            work['subject']?.removeAll {
+                if (it['@id']?.startsWith(BARN_NS)) {
+                    incrementStats('subject', it)
+                    return true
+                }
+            }
+            if (work['subject']?.isEmpty()) {
+                work.remove('subject')
+            }
+
+            workDocItem.scheduleSave()
         }
     }
 }
 
-def hasBarnUngdom(Map work) {
-    asList(work['genreForm']).any { it['@id'] == BARN_UNGDOM }
+def hasBarnSubject(Map work) {
+    asList(work['subject']).any { it['@id']?.startsWith(BARN_NS) }
+}
+
+def hasBarnGf(Map work) {
+    asList(work['genreForm']).any { it['@id']?.startsWith(BARN_GF_NS) }
 }
 
 def hasMarcJuvenile(Map work) {
