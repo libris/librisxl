@@ -39,7 +39,7 @@ selectBySqlWhere(where) { workDocItem ->
         }
 
         if (anyElib && !anyNonElib) {
-            work['intendedAudience'].removeAll {
+            work['intendedAudience']?.removeAll {
                 if (it['@id'] == MARC_JUVENILE || it['label'] in ['9-12 år', '6-9 år', '12-15 år', '3-6 år', '15', '0-3 år']) {
                     incrementStats('intendedAudience', it)
                     return true
