@@ -45,7 +45,7 @@ selectBySqlWhere(where) { workDocItem ->
                     return true
                 }
             }
-            if (work['intendedAudience'].isEmpty()) {
+            if (work['intendedAudience']?.isEmpty()) {
                 work.remove('intendedAudience')
             }
 
