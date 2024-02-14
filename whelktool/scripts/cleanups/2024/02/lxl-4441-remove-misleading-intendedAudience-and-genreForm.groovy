@@ -27,7 +27,9 @@ selectBySqlWhere(where) { workDocItem ->
         def anyNonElib = false
 
         selectByIds(record['derivedFrom'].collect { it['@id'] }) { dfDocItem ->
-            def versionBeforeWorkExtraction = dfDocItem.getVersions().reverse().find { !it.data['@graph'][1]['instanceOf']['@id'] }
+            def versionBeforeWorkExtraction = dfDocItem.getVersions().reverse().find {
+                it.data['@graph'][1]['instanceOf'].with { it && !it['@id'] }
+            }
             def (dfRecord, dfInstance) = versionBeforeWorkExtraction.data['@graph']
 
             if (isElib(dfRecord)) {
