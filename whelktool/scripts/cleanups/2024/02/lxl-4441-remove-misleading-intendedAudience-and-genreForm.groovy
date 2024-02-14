@@ -20,6 +20,8 @@ def where = """
 selectBySqlWhere(where) { workDocItem ->
     def (record, work) = workDocItem.graph
 
+    def hasMarcJuv = hasMarcJuvenile(work)
+
     if (hasMarcJuvenile(work) || hasBarnGf(work) || hasBarnSubject(work)) {
         def anyElib = false
         def anyNonElib = false
@@ -51,7 +53,11 @@ selectBySqlWhere(where) { workDocItem ->
 
             work['genreForm']?.removeAll {
                 if (it['@id']?.startsWith(BARN_GF_NS)) {
-                    incrementStats('genreForm', it)
+                    if (hasMarcJuv) {
+                        incrementStats('genreForm', it)
+                    } else {
+                        incrementStats('genreForm - no intendedAudience', it)
+                    }
                     return true
                 }
             }
@@ -61,7 +67,11 @@ selectBySqlWhere(where) { workDocItem ->
 
             work['subject']?.removeAll {
                 if (it['@id']?.startsWith(BARN_NS)) {
-                    incrementStats('subject', it)
+                    if (hasMarcJuv) {
+                        incrementStats('subject', it)
+                    } else {
+                        incrementStats('subject - no intendedAudience', it)
+                    }
                     return true
                 }
             }
