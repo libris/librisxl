@@ -51,17 +51,19 @@ class DisambiguateSpec extends Specification {
         "isbn"         | "Resource"
     }
 
-    def "get domain group"() {
+    def "get domain category"() {
         expect:
-        disambiguate.getDomainGroup(domain) == group
+        disambiguate.getDomainCategory(domain) == category
 
         where:
-        domain       | group
-        "Print"      | Disambiguate.DomainGroup.INSTANCE
-        "Embodiment" | Disambiguate.DomainGroup.INSTANCE_SUPER
-        "Person"     | Disambiguate.DomainGroup.OTHER
-        "Text"       | Disambiguate.DomainGroup.WORK
-        "Record"     | Disambiguate.DomainGroup.ADMIN_METADATA
+        domain           | category
+        "Print"          | Disambiguate.DomainCategory.INSTANCE
+        "Embodiment"     | Disambiguate.DomainCategory.EMBODIMENT
+        "Person"         | Disambiguate.DomainCategory.OTHER
+        "Text"           | Disambiguate.DomainCategory.WORK
+        "Creation"       | Disambiguate.DomainCategory.CREATION_SUPER
+        "Record"         | Disambiguate.DomainCategory.ADMIN_METADATA
+        "Unknown domain" | Disambiguate.DomainCategory.UNKNOWN
     }
 
     def "expand propertyChainAxiom"() {

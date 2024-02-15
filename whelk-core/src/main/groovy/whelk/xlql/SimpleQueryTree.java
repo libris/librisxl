@@ -13,7 +13,7 @@ public class SimpleQueryTree {
     public record FreeText(Operator operator, String value) implements Node {}
 
     public Node tree;
-            
+
     public SimpleQueryTree(FlattenedAst ast, Disambiguate disambiguate) throws InvalidQueryException {
         this.tree = buildTree(ast.tree, disambiguate);
     }
@@ -44,7 +44,7 @@ public class SimpleQueryTree {
                 String property = null;
                 List<String> propertyPath = new ArrayList<>();
                 for (String part : c.code().split("\\.")) {
-                    if (JsonLd.getID_KEY().equals(part) || JsonLd.getSEARCH_KEY().equals(part)) {
+                    if (disambiguate.isLdKey(part)) {
                         propertyPath.add(part);
                         continue;
                     }

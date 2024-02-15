@@ -17,50 +17,83 @@ public class Disambiguate {
     private Map<String, String> domainByProperty;
 
     private Set<String> adminMetadataTypes;
+    private Set<String> creationSuperTypes;
     private Set<String> workTypes;
     private Set<String> instanceTypes;
-    private Set<String> instanceSuperTypes;
 
-    public enum DomainGroup {
+    public enum OutsetType {
+        INSTANCE,
+        WORK,
+        RESOURCE
+    }
+
+    public enum DomainCategory {
         ADMIN_METADATA,
         WORK,
         INSTANCE,
-        INSTANCE_SUPER,
+        CREATION_SUPER,
+        EMBODIMENT,
+        UNKNOWN,
         OTHER
     }
 
     public static final String UNKNOWN_DOMAIN = "Unknown domain";
 
+    private static final Set<String> LD_KEYS = Set.of(JsonLd.getID_KEY(), JsonLd.getSEARCH_KEY(), JsonLd.getREVERSE_KEY());
+
     public Disambiguate(Whelk whelk) {
         this.jsonLd = whelk.getJsonld();
         setPropertyAliasMappings(whelk);
         this.domainByProperty = loadDomainByProperty(whelk);
-        setDomainGroups(jsonLd);
+        setTypeSets(jsonLd);
     }
 
     public String mapToKbvProperty(String alias) {
         return propertyAliasMappings.get(alias.toLowerCase());
     }
 
+    public boolean isLdKey(String s) {
+        return LD_KEYS.contains(s);
+    }
+
     public String getDomain(String property) {
-        // TODO: @type not in vocab, needs special handling
+        // TODO: @type not in vocab, needs special handling, hardcode for now
+        if (property == JsonLd.getTYPE_KEY()) {
+            return "Resource";
+        }
         return domainByProperty.getOrDefault(property, UNKNOWN_DOMAIN);
     }
 
-    public DomainGroup getDomainGroup(String domain) {
+    public OutsetType getOutsetType(String type) {
+        if (workTypes.contains(type)) {
+            return OutsetType.WORK;
+        }
+        if (instanceTypes.contains(type)) {
+            return OutsetType.INSTANCE;
+        }
+        return OutsetType.RESOURCE;
+    }
+
+    public DomainCategory getDomainCategory(String domain) {
         if (adminMetadataTypes.contains(domain)) {
-            return DomainGroup.ADMIN_METADATA;
+            return DomainCategory.ADMIN_METADATA;
         }
         if (workTypes.contains(domain)) {
-            return DomainGroup.WORK;
+            return DomainCategory.WORK;
         }
         if (instanceTypes.contains(domain)) {
-            return DomainGroup.INSTANCE;
+            return DomainCategory.INSTANCE;
         }
-        if (instanceSuperTypes.contains(domain)) {
-            return DomainGroup.INSTANCE_SUPER;
+        if (creationSuperTypes.contains(domain)) {
+            return DomainCategory.CREATION_SUPER;
         }
-        return DomainGroup.OTHER;
+        if (domain == "Embodiment") {
+            return DomainCategory.EMBODIMENT;
+        }
+        if (domain == UNKNOWN_DOMAIN) {
+            return DomainCategory.UNKNOWN;
+        }
+        return DomainCategory.OTHER;
     }
 
     public boolean isVocabTerm(String property) {
@@ -106,11 +139,11 @@ public class Disambiguate {
         return extended;
     }
 
-    private void setDomainGroups(JsonLd jsonLd) {
+    private void setTypeSets(JsonLd jsonLd) {
         this.adminMetadataTypes = getSubtypes("AdminMetadata", jsonLd);
+        this.creationSuperTypes = getSupertypes("Creation", jsonLd);
         this.workTypes = getSubtypes("Work", jsonLd);
         this.instanceTypes = getSubtypes("Instance", jsonLd);
-        this.instanceSuperTypes = getSupertypes("Instance", jsonLd);
     }
 
     private void setPropertyAliasMappings(Whelk whelk) {
@@ -315,9 +348,10 @@ public class Disambiguate {
         return s;
     }
 
-    private static Set<String> getSupertypes(String baseClass, JsonLd jsonLd) {
+    private static Set<String> getSupertypes(String cls, JsonLd jsonLd) {
         List<String> superClasses = new ArrayList<>();
-        jsonLd.getSuperClasses("Instance", superClasses);
+        jsonLd.getSuperClasses(cls, superClasses);
+        superClasses.add(cls);
         return new HashSet<>(superClasses);
     }
 

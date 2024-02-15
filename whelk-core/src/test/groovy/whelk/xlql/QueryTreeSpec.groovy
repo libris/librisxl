@@ -15,15 +15,6 @@ class QueryTreeSpec extends Specification {
         return new SimpleQueryTree(flattened, disambiguate)
     }
 
-    def "collect given properties from query"() {
-        given:
-        def input = "type: Electronic AND utgivning: aaa AND (contentType: bbb OR title: ccc) AND bibliography: ddd"
-        SimpleQueryTree sqt = getSimpleQueryTree(input)
-
-        expect:
-        QueryTree.collectGivenProperties(sqt.tree) == ["@type", "publication", "contentType", "title", "bibliography"] as Set
-    }
-
     def "collect given types from query"() {
         given:
         def input = "type: (Electronic OR Print) AND utgivning: aaa"
@@ -101,5 +92,74 @@ class QueryTreeSpec extends Specification {
         issuanceTypeField.value() == "Monograph"
     }
 
-    // TODO: More tests when settled which alternative paths to search for each property
+    def "work type + path inference"() {
+        given:
+        String queryString = "typ:Text upphovsuppgift:Någon tillkomsttid<2020 language:\"https://id.kb.se/language/swe\""
+        SimpleQueryTree sqt = getSimpleQueryTree(queryString)
+        QueryTree qt = new QueryTree(sqt, disambiguate)
+        QueryTree.And topNode = qt.tree
+        List conjuncts = topNode.conjuncts()
+        QueryTree.Field typeField = conjuncts[0]
+        QueryTree.Field respStatementField = conjuncts[1]
+        QueryTree.Field originDateField = conjuncts[2]
+        QueryTree.Or languageFields = conjuncts[3]
+        QueryTree.Field langField1 = languageFields.disjuncts()[0]
+        QueryTree.Field langField2 = languageFields.disjuncts()[1]
+
+        expect:
+        typeField.path().stringify() == "@type"
+        typeField.operator() == Operator.EQUALS
+        typeField.value() == "Text"
+
+        respStatementField.path().stringify() == "@reverse.instanceOf.responsibilityStatement"
+        respStatementField.operator() == Operator.EQUALS
+        respStatementField.value() == "Någon"
+
+        originDateField.path().stringify() == "originDate"
+        originDateField.operator() == Operator.LESS_THAN
+        originDateField.value() == "2020"
+
+        langField1.path().stringify() == "language.@id"
+        langField1.operator() == Operator.EQUALS
+        langField1.value() == "https://id.kb.se/language/swe"
+
+        langField2.path().stringify() == "@reverse.instanceOf.language.@id"
+        langField2.operator() == Operator.EQUALS
+        langField2.value() == "https://id.kb.se/language/swe"
+    }
+    def "instance type + path inference"() {
+        given:
+        String queryString = "typ:Print upphovsuppgift:Någon tillkomsttid<2020 language:\"https://id.kb.se/language/swe\""
+        SimpleQueryTree sqt = getSimpleQueryTree(queryString)
+        QueryTree qt = new QueryTree(sqt, disambiguate)
+        QueryTree.And topNode = qt.tree
+        List conjuncts = topNode.conjuncts()
+        QueryTree.Field typeField = conjuncts[0]
+        QueryTree.Field respStatementField = conjuncts[1]
+        QueryTree.Field originDateField = conjuncts[2]
+        QueryTree.Or languageFields = conjuncts[3]
+        QueryTree.Field langField1 = languageFields.disjuncts()[0]
+        QueryTree.Field langField2 = languageFields.disjuncts()[1]
+
+        expect:
+        typeField.path().stringify() == "@type"
+        typeField.operator() == Operator.EQUALS
+        typeField.value() == "Print"
+
+        respStatementField.path().stringify() == "responsibilityStatement"
+        respStatementField.operator() == Operator.EQUALS
+        respStatementField.value() == "Någon"
+
+        originDateField.path().stringify() == "instanceOf.originDate"
+        originDateField.operator() == Operator.LESS_THAN
+        originDateField.value() == "2020"
+
+        langField1.path().stringify() == "language.@id"
+        langField1.operator() == Operator.EQUALS
+        langField1.value() == "https://id.kb.se/language/swe"
+
+        langField2.path().stringify() == "instanceOf.language.@id"
+        langField2.operator() == Operator.EQUALS
+        langField2.value() == "https://id.kb.se/language/swe"
+    }
 }
