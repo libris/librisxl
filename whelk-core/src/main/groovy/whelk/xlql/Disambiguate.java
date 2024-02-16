@@ -153,33 +153,36 @@ public class Disambiguate {
         Map<String, Map> vocab = jsonLd.getVocabIndex();
 
         // Hardcoding these for now...
+        addMapping("@type", "@type");
         addMapping("type", "@type");
         addMapping("typ", "@type");
         addMapping("rdf:type", "@type");
 
         for (String termKey : vocab.keySet()) {
             Map termDefinition = vocab.get(termKey);
+
             if (isKbvTerm(termDefinition) && isProperty(termDefinition)) {
                 addMapping(termKey, termKey);
                 addMappings(termDefinition, termKey);
-                if (termDefinition.containsKey("equivalentProperty")) {
-                    List<Map> equivProperty = (List<Map>) termDefinition.get("equivalentProperty");
-                    for (Map ep : equivProperty) {
-                        String equivPropId = (String) ep.get(JsonLd.getID_KEY());
-                        String equivPropKey = jsonLd.toTermKey(equivPropId);
-                        if (!vocab.containsKey(equivPropKey)) {
-                            Map equivPropData = whelk.loadData(equivPropKey);
-                            if (equivPropData == null) {
-                                addMapping(equivPropId, termKey);
-                                addMapping(toPrefixed(equivPropId), termKey);
-                            } else {
-                                List graph = (List) equivPropData.get(JsonLd.getGRAPH_KEY());
-                                Map equivPropDefinition = (Map) graph.get(1);
-                                addMappings(equivPropDefinition, termKey);
-                            }
-                        }
-                    }
-                }
+
+                Optional.ofNullable((List<Map>) termDefinition.get("equivalentProperty"))
+                        .orElse(Collections.emptyList())
+                        .forEach(ep -> {
+                                    String equivPropId = (String) ep.get(JsonLd.getID_KEY());
+                                    String equivPropKey = jsonLd.toTermKey(equivPropId);
+
+                                    if (!vocab.containsKey(equivPropKey)) {
+                                        loadThing(equivPropId, whelk).ifPresentOrElse(
+                                                (equivPropDef) ->
+                                                        addMappings(equivPropDef, termKey),
+                                                () -> {
+                                                    addMapping(equivPropId, termKey);
+                                                    addMapping(toPrefixed(equivPropId), termKey);
+                                                }
+                                        );
+                                    }
+                                }
+                        );
             }
         }
     }
@@ -190,79 +193,91 @@ public class Disambiguate {
                 .stream()
                 .filter(e -> isKbvTerm(e.getValue()) && isProperty(e.getValue()))
                 .forEach(e -> findDomain(e.getValue(), whelk)
-                        .ifPresent(domain -> domainByProperty.put(jsonLd.toTermKey(e.getKey()), jsonLd.toTermKey(domain)))
+                        .ifPresent(domain ->
+                                domainByProperty.put(jsonLd.toTermKey(e.getKey()), jsonLd.toTermKey(domain))
+                        )
                 );
         return domainByProperty;
     }
 
-    // TODO: BFS + review order
-    private Optional<String> findDomain(Map propDefinition, Whelk whelk) {
-        if (propDefinition.containsKey("domain")) {
-            return Optional.of(propDefinition.get("domain"))
-                    .map(d -> ((List) d).get(0))
-                    .map(link -> (String) ((Map) link).get(JsonLd.getID_KEY()));
-        } else if (propDefinition.containsKey("subPropertyOf")) {
-            List<Map> subProperty = (List<Map>) propDefinition.get("subPropertyOf");
-            for (Map sp : subProperty) {
-                Optional<Map> spDefinition = getDefinition(sp, whelk);
-                if (spDefinition.isPresent()) {
-                    Optional<String> domain = findDomain(spDefinition.get(), whelk);
-                    if (domain.isPresent()) {
-                        return domain;
-                    }
-                }
-            }
-        } else if (propDefinition.containsKey("equivalentProperty")) {
-            List<Map> equivProperty = (List<Map>) propDefinition.get("equivalentProperty");
-            for (Map ep : equivProperty) {
-                Optional<Map> epDefinition = getDefinition(ep, whelk);
-                if (epDefinition.isPresent()) {
-                    Optional<String> domain = findDomain(epDefinition.get(), whelk);
-                    if (domain.isPresent()) {
-                        return domain;
-                    }
-                }
-            }
-        } else if (propDefinition.containsKey("propertyChainAxiom")) {
-            List pca = (List) propDefinition.get("propertyChainAxiom");
-            Map first = (Map) pca.get(0);
-            Optional<Map> pcaDefinition = getDefinition(first, whelk);
-            if (pcaDefinition.isPresent()) {
-                return findDomain(pcaDefinition.get(), whelk);
-            }
-        }
-
-        return Optional.empty();
+    private Optional<String> findDomain(Map propertyDefinition, Whelk whelk) {
+        return findDomain(new LinkedList<>(List.of(propertyDefinition)), whelk);
     }
 
-    Optional<Map> getDefinition(Map object, Whelk whelk) {
-        if (!object.containsKey(JsonLd.getID_KEY())) {
-            return Optional.of(object);
+    private Optional<String> findDomain(LinkedList<Map> queue, Whelk whelk) {
+        if (queue.isEmpty()) {
+            return Optional.empty();
         }
-        String propId = (String) object.get(JsonLd.getID_KEY());
-        String propKey = jsonLd.toTermKey(propId);
-        Optional<Map> propDefinition = Optional.ofNullable(jsonLd.getVocabIndex().get(propKey));
-        return propDefinition.isPresent()
-                ? propDefinition
-                : Optional.ofNullable(whelk.loadData(propId))
+
+        Map propertyDefinition = queue.pop();
+
+        Optional<String> domain = getDomainIri(propertyDefinition);
+        if (domain.isPresent()) {
+            return domain;
+        }
+
+        queue.addAll(collectInheritable(propertyDefinition, whelk));
+
+        return findDomain(queue, whelk);
+    }
+
+    List<Map> collectInheritable(Map propertyDefinition, Whelk whelk) {
+        List<Map> inheritable = new ArrayList<>();
+
+        Optional.ofNullable((List<Map>) propertyDefinition.get("equivalentProperty"))
+                .orElse(Collections.emptyList())
+                .forEach(ep -> getDefinition(ep, whelk).ifPresent(inheritable::add));
+
+        Optional.ofNullable((List<Map>) propertyDefinition.get("propertyChainAxiom"))
+                .map(List::getFirst)
+                .flatMap(firstInChain -> getDefinition(firstInChain, whelk))
+                .ifPresent(inheritable::add);
+
+        Optional.ofNullable((List<Map>) propertyDefinition.get("subPropertyOf"))
+                .orElse(Collections.emptyList())
+                .forEach(superProp -> getDefinition(superProp, whelk).ifPresent(inheritable::add));
+
+        return inheritable;
+    }
+
+    private Optional<String> getDomainIri(Map propertyDefinition) {
+        return Optional.ofNullable(propertyDefinition.get("domain"))
+                .map(d -> ((List) d).get(0))
+                .map(link -> (String) ((Map) link).get(JsonLd.getID_KEY()));
+    }
+
+    private Optional<Map> getDefinition(Map node, Whelk whelk) {
+        return Optional.ofNullable((String) node.get(JsonLd.getID_KEY()))
+                .map(id ->
+                        Optional.ofNullable(jsonLd.getVocabIndex().get(jsonLd.toTermKey(id)))
+                                .orElse(loadThing(id, whelk).orElse(null))
+                );
+    }
+
+    private Optional<Map> loadThing(String id, Whelk whelk) {
+        return Optional.ofNullable(whelk.loadData(id))
                 .map(data -> data.get(JsonLd.getGRAPH_KEY()))
                 .map(graph -> (Map) ((List) graph).get(1));
     }
 
     private void addMappings(Map fromTermData, String toTermKey) {
         String fromTermId = (String) fromTermData.get(JsonLd.getID_KEY());
+
         addMapping(fromTermId, toTermKey);
         addMapping(toPrefixed(fromTermId), toTermKey);
+
         for (String prop : notatingProps) {
             if (fromTermData.containsKey(prop)) {
                 addMapping((String) fromTermData.get(prop), toTermKey);
             }
+
             String alias = (String) jsonLd.getLangContainerAlias().get(prop);
+
             if (fromTermData.containsKey(alias)) {
                 Map byLang = (Map) fromTermData.get(alias);
                 for (String lang : jsonLd.getLocales()) {
-                    List values = JsonLd.asList(byLang.get(lang));
-                    values.forEach(v -> addMapping((String) v, toTermKey));
+                    List<String> values = JsonLd.asList(byLang.get(lang));
+                    values.forEach(v -> addMapping(v, toTermKey));
                 }
             }
         }
@@ -282,12 +297,12 @@ public class Disambiguate {
         }
     }
 
-    public static boolean isKbvTerm(Map termDefinition) {
+    private static boolean isKbvTerm(Map termDefinition) {
         Map definedBy = (Map) termDefinition.get("isDefinedBy");
         return definedBy != null && definedBy.get("@id").equals("https://id.kb.se/vocab/");
     }
 
-    public static boolean isProperty(Map termDefinition) {
+    private static boolean isProperty(Map termDefinition) {
         return isObjectProperty(termDefinition) || isDatatypeProperty(termDefinition);
     }
 
