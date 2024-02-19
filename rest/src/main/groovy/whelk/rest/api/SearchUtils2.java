@@ -76,8 +76,8 @@ public class SearchUtils2 {
         public Map getPartialCollectionView(Map esResponse) {
             int numHits = (int) esResponse.getOrDefault("totalHits", 0);
             Map view = new LinkedHashMap();
-            view.put(JsonLd.getTYPE_KEY(), "PartialCollectionView");
-            view.put(JsonLd.getID_KEY(), makeFindUrl(offset));
+            view.put(JsonLd.TYPE_KEY, "PartialCollectionView");
+            view.put(JsonLd.ID_KEY, makeFindUrl(offset));
             view.put("itemOffset", offset);
             view.put("itemsPerPage", limit);
             view.put("totalItems", numHits);
@@ -105,19 +105,19 @@ public class SearchUtils2 {
 
             Offsets offsets = new Offsets(Math.min(numHits, maxItems()), limit, offset);
 
-            result.put("first", Map.of(JsonLd.getID_KEY(), makeFindUrl(0)));
-            result.put("last", Map.of(JsonLd.getID_KEY(), makeFindUrl(offsets.last)));
+            result.put("first", Map.of(JsonLd.ID_KEY, makeFindUrl(0)));
+            result.put("last", Map.of(JsonLd.ID_KEY, makeFindUrl(offsets.last)));
 
             if (offsets.prev != null) {
                 if (offsets.prev == 0) {
                     result.put("previous", result.get("first"));
                 } else {
-                    result.put("previous", Map.of(JsonLd.getID_KEY(), makeFindUrl(offsets.prev)));
+                    result.put("previous", Map.of(JsonLd.ID_KEY, makeFindUrl(offsets.prev)));
                 }
             }
 
             if (offsets.next != null) {
-                result.put("next", Map.of(JsonLd.getID_KEY(), makeFindUrl(offsets.next)));
+                result.put("next", Map.of(JsonLd.ID_KEY, makeFindUrl(offsets.next)));
             }
 
             return result;
