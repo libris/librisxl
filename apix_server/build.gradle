@@ -18,10 +18,7 @@ dependencies {
     implementation(project(':whelk-core'))
 
     // Jetty
-    implementation "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
     implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
-    implementation "org.eclipse.jetty:jetty-http:${jettyVersion}"
-    implementation "org.eclipse.jetty:jetty-io:${jettyVersion}"
 
     // Logging
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"

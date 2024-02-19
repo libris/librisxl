@@ -1,18 +1,8 @@
 apply plugin: 'groovy'
 apply plugin: 'war'
 apply plugin: 'jacoco'
-apply from: '../gretty.plugin'
 
-def getGitVersion() {
-	def stdout = new ByteArrayOutputStream()
-	exec {
-		commandLine 'git', 'describe', '--tags'
-		standardOutput = stdout
-	}
-	return stdout.toString().trim()
-}
-
-def version = getGitVersion()
+def mainClassName = "whelk.XlServer"
 
 sourceSets {
     main {
@@ -55,10 +45,6 @@ repositories {
     maven { url "https://jitpack.io/" }
 }
 
-configurations {
-    executableWarDeps
-}
-
 // Don't blame me for this TRAVESTY. It is a necessity because of the versioning of xml-apis (2.0.2 which gradle otherwise chooses is OLDER (and broken) despite the version.)
 configurations.all {
     resolutionStrategy {
@@ -78,13 +64,6 @@ dependencies {
     implementation "com.google.guava:guava:${guavaVersion}"
     implementation "org.apache.httpcomponents:httpclient:${httpComponentsClientVersion}"
     implementation "org.apache.httpcomponents:httpcore:${httpComponentsCoreVersion}"
-    
-    // Standalone
-    implementation "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
-    implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
-    // Servlet dependencies
-    implementation 'com.thetransactioncompany:cors-filter:2.1.2'
-    providedCompile 'javax.servlet:javax.servlet-api:3.0.0'
 
     // metrics
     implementation "io.prometheus:simpleclient:${prometheusVersion}"
@@ -98,66 +77,55 @@ dependencies {
     testImplementation "org.spockframework:spock-core:${spockVersion}"
     testImplementation 'cglib:cglib-nodep:3.1'
 
+    // Servlet dependencies
+    implementation 'com.thetransactioncompany:cors-filter:2.1.2'
+    providedCompile 'jakarta.servlet:jakarta.servlet-api:4.0.3'
+
     // Standalone
-    executableWarDeps "org.eclipse.jetty:jetty-server:${jettyVersion}"
-    executableWarDeps "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
-    executableWarDeps "org.codehaus.groovy:groovy-all:${groovyVersion}"
-    executableWarDeps 'commons-cli:commons-cli:1.2'
+    implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
+    implementation "org.eclipse.jetty:jetty-rewrite:${jettyVersion}"
+    implementation "org.eclipse.jetty.ee8:jetty-ee8-servlet:${jettyVersion}"
+    implementation "org.codehaus.groovy:groovy-all:${groovyVersion}"
+    implementation 'commons-cli:commons-cli:1.2'
     implementation "org.codehaus.groovy:groovy-xml:${groovyVersion}"
     implementation "org.codehaus.groovy:groovy:${groovyVersion}"
     implementation 'org.codehaus.jackson:jackson-core-asl:1.9.13'
     implementation 'xml-apis:xml-apis:1.4.01'
 }
 
-project.afterEvaluate {
-    war {
-        archiveBaseName = "whelk"
+jar {
+    manifest {
+        attributes "Main-Class": mainClassName,
+                // log4j uses multi-release to ship different stack walking implementations for different java
+                // versions. Since we repackage everything as a fat jar, that jar must also be multi-release.
+                "Multi-Release": true
+    }
 
-        from {
-            configurations.executableWarDeps.collect {
-                it.isDirectory() ? it : project.zipTree(it).matching {
-                    exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
-                }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : project.zipTree(it).matching {
+                exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA','build','.gradle/**','build.gradle','gradle','gradlew','gradlew.bat','test'
             }
         }
-        from "$buildDir/classes/main"
-
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        def manifestClasspath = configurations.runtimeClasspath.collect { "/WEB-INF/lib/${it.getName()}" }.join(',')
-
-        manifest {
-            attributes 'Implementation-Title': 'Standalone Whelk',
-            'Implementation-Version': version,
-            'Main-Class': 'whelk.component.support.JettyServer',
-            'Class-Path': manifestClasspath
-        }
-    }
-}
-
-gretty {
-    httpPort = 8180
-    contextPath = '/'
-    systemProperties = ['xl.secret.properties': System.getProperty("xl.secret.properties")]
-    afterEvaluate {
-        appRunDebug {
-            debugPort = 5005
-            debugSuspend = false
-        }
     }
 
-    scanInterval = 0
-    interactiveMode = 'rebuildAndRestartOnKeyPress'
 }
 
-task(groovy, dependsOn: "classes", type: JavaExec) {
-    description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
+task(appRun, dependsOn: "classes", type: JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
-    mainClass = "groovy.ui.GroovyMain"
+    mainClass = mainClassName
+    minHeapSize = "1g"
+    maxHeapSize = "4g"
+    systemProperties(
+            'xl.secret.properties': System.getProperty("xl.secret.properties")
+    )
     args(System.getProperty("args", "").split() as String[])
-}
 
-task(console, dependsOn: 'classes', type: JavaExec) {
-  description "Launch a Groovy Console"
-  classpath = sourceSets.main.runtimeClasspath
-  mainClass = 'groovy.ui.Console'
+    debugOptions {
+        enabled = true
+        port = 5005
+        server = true
+        suspend = false
+    }
 }

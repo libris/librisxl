@@ -19,10 +19,7 @@ dependencies {
     implementation(project(':whelk-core'))
 
     // Jetty
-    implementation "org.eclipse.jetty:jetty-webapp:${jettyVersion}"
     implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
-    implementation "org.eclipse.jetty:jetty-http:${jettyVersion}"
-    implementation "org.eclipse.jetty:jetty-io:${jettyVersion}"
 
     // Necessary for inlining XML into XMLStreamWriter
     implementation group: 'org.apache.cxf', name: 'cxf-core', version: '3.0.2'
