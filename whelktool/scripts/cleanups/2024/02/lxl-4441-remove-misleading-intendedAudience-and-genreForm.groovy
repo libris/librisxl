@@ -22,7 +22,15 @@ def where = """
     AND data#>'{@graph,0,hasChangeNote}' @> '[{"tool": {"@id":"https://id.kb.se/generator/mergeworks"}}]'
 """
 
-selectBySqlWhere(where) { workDocItem ->
+selectBySqlWhere(where) {
+    try {
+        process(it)
+    } catch (Exception e) {
+        println("Unable to process record ${it.doc.shortId} due to $e")
+    }
+}
+
+def process(workDocItem) {
     def (record, work) = workDocItem.graph
 
     def hasMarcJuv = hasMarcJuvenile(work)
