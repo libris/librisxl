@@ -48,7 +48,8 @@ class DisambiguateSpec extends Specification {
         "bibliography" | "Record"
         "subject"      | Disambiguate.UNKNOWN_DOMAIN
         "publisher"    | "Instance"
-        "isbn"         | "Resource"
+        "isbn"         | "Instance"
+        "author"       | "Work"
     }
 
     def "get domain category"() {
@@ -68,13 +69,24 @@ class DisambiguateSpec extends Specification {
 
     def "expand propertyChainAxiom"() {
         expect:
-        disambiguate.expandChainAxiom(path) == expanded
+        disambiguate.expandChainAxiom(path).path() == extendedPath
 
         where:
-        path                   | expanded
-        ['hasTitle']           | ['hasTitle'] // Nothing to expand
+        path                   | extendedPath
+        ['hasTitle']           | ['hasTitle']
         ['title']              | ['hasTitle', 'mainTitle']
         ['meta', 'changeNote'] | ['meta', 'hasChangeNote', 'label']
-        ['isbn']               | ['identifiedBy', 'value']
+    }
+
+    def "expand complex propertyChainAxiom"() {
+        expect:
+        disambiguate.expandChainAxiom(path).with {
+            it.path() == extendedPath && it.defaultFields() == defaultFields
+        }
+
+        where:
+        path       | extendedPath              | defaultFields
+        ['isbn']   | ['identifiedBy', 'value'] | [new DefaultField(['identifiedBy', '@type'], "ISBN")]
+        ['author'] | ['contribution', 'agent'] | [new DefaultField(['contribution', 'role'], "https://id.kb.se/relator/author")]
     }
 }

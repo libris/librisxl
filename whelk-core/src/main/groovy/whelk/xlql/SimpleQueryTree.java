@@ -44,7 +44,7 @@ public class SimpleQueryTree {
                 String property = null;
                 List<String> propertyPath = new ArrayList<>();
                 for (String part : c.code().split("\\.")) {
-                    if (disambiguate.isLdKey(part)) {
+                    if (Disambiguate.isLdKey(part) || JsonLd.SEARCH_KEY.equals(part)) {
                         propertyPath.add(part);
                         continue;
                     }

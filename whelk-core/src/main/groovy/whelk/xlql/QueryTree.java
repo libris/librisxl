@@ -96,7 +96,7 @@ public class QueryTree {
                 return new FreeText(ft.operator(), ft.value());
             }
             case SimpleQueryTree.PropertyValue pv -> {
-                return pv.property() == JsonLd.getTYPE_KEY()
+                return pv.property() == JsonLd.TYPE_KEY
                         ? buildField(pv)
                         : buildField(pv, disambiguate, outset);
             }
@@ -105,7 +105,7 @@ public class QueryTree {
 
     private static Field buildField(SimpleQueryTree.PropertyValue pv) {
         Path path = new Path(pv.property(), pv.propertyPath());
-        String value = JsonLd.getID_KEY().equals(pv.propertyPath().getLast())
+        String value = JsonLd.ID_KEY.equals(pv.propertyPath().getLast())
                 ? Disambiguate.expandPrefixed(pv.value())
                 : pv.value();
         return new Field(path, pv.operator(), value);
@@ -139,7 +139,17 @@ public class QueryTree {
             }
         }
 
-        return switch (outset) {
+        List<Field> defaultFields = path.defaultFields.stream()
+                .map(df -> {
+                            Path dfPath = new Path(df.path());
+                            if (JsonLd.looksLikeIri(df.value())) {
+                                dfPath.appendId();
+                            }
+                            return new Field(new Path(df.path()), Operator.EQUALS, df.value());
+                        })
+                .toList();
+
+        Node fields = switch (outset) {
             case WORK -> {
                 switch (domainCategory) {
                     case INSTANCE, EMBODIMENT -> {
@@ -149,12 +159,12 @@ public class QueryTree {
                     }
                     case CREATION_SUPER, UNKNOWN -> {
                         // The property p may appear on instance, add alternative path @reverse.instanceOf.p...
-                        List<Node> fields = new ArrayList<>();
+                        List<Node> altFields = new ArrayList<>();
                         Path copy = path.copy();
                         copy.setWorkToInstancePath();
-                        fields.add(new Field(path, operator, value));
-                        fields.add(new Field(copy, operator, value));
-                        yield operator == Operator.NOT_EQUALS ? new And(fields) : new Or(fields);
+                        altFields.add(new Field(path, operator, value));
+                        altFields.add(new Field(copy, operator, value));
+                        yield operator == Operator.NOT_EQUALS ? new And(altFields) : new Or(altFields);
                     }
                     default -> {
                         yield new Field(path, operator, value);
@@ -170,12 +180,12 @@ public class QueryTree {
                     }
                     case CREATION_SUPER, UNKNOWN -> {
                         // The property p may appear on work, add alternative path instanceOf.p...
-                        List<Node> fields = new ArrayList<>();
+                        List<Node> altFields = new ArrayList<>();
                         Path copy = path.copy();
                         copy.setInstanceToWorkPath();
-                        fields.add(new Field(path, operator, value));
-                        fields.add(new Field(copy, operator, value));
-                        yield operator == Operator.NOT_EQUALS ? new And(fields) : new Or(fields);
+                        altFields.add(new Field(path, operator, value));
+                        altFields.add(new Field(copy, operator, value));
+                        yield operator == Operator.NOT_EQUALS ? new And(altFields) : new Or(altFields);
                     }
                     default -> {
                         yield new Field(path, operator, value);
@@ -184,6 +194,14 @@ public class QueryTree {
             }
             case RESOURCE -> new Field(path, operator, value);
         };
+
+        if (!defaultFields.isEmpty()) {
+            List<Node> newConjuncts = new ArrayList<>(fields instanceof And ? ((And) fields).conjuncts() : List.of(fields));
+            newConjuncts.addAll(defaultFields);
+            return new And(newConjuncts);
+        }
+
+        return fields;
     }
 
     public static Set<String> collectGivenTypes(SimpleQueryTree.Node sqt) {
@@ -192,14 +210,10 @@ public class QueryTree {
 
     private static Set<String> collectGivenTypes(SimpleQueryTree.Node sqtNode, Set<String> types) {
         switch (sqtNode) {
-            case SimpleQueryTree.And and -> {
-                and.conjuncts().forEach(c -> collectGivenTypes(c, types));
-            }
-            case SimpleQueryTree.Or or -> {
-                or.disjuncts().forEach(d -> collectGivenTypes(d, types));
-            }
+            case SimpleQueryTree.And and -> and.conjuncts().forEach(c -> collectGivenTypes(c, types));
+            case SimpleQueryTree.Or or -> or.disjuncts().forEach(d -> collectGivenTypes(d, types));
             case SimpleQueryTree.PropertyValue pv -> {
-                if (JsonLd.getTYPE_KEY().equals(pv.property())) {
+                if (JsonLd.TYPE_KEY.equals(pv.property())) {
                     types.add(pv.value());
                 }
             }

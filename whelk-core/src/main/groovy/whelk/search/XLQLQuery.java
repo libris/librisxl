@@ -92,10 +92,10 @@ public class XLQLQuery {
         }
 
         List<String> softFields = boostedFields.stream()
-                .filter(f -> f.contains(JsonLd.getSEARCH_KEY()))
+                .filter(f -> f.contains(JsonLd.SEARCH_KEY))
                 .toList();
         List<String> exactFields = boostedFields.stream()
-                .map(f -> f.replace(JsonLd.getSEARCH_KEY(), JsonLd.getSEARCH_KEY() + ".exact"))
+                .map(f -> f.replace(JsonLd.SEARCH_KEY, JsonLd.SEARCH_KEY + ".exact"))
                 .toList();
 
         Map<String, Map> boostedExact = new HashMap<>();
@@ -194,7 +194,7 @@ public class XLQLQuery {
             m.put("variable", String.join(".", propertyPath));
             // Include "@id" / "_str" in chainAxiom?
             List propertyChainAxiom = propertyPath.stream()
-                    .map(p -> getDefinition(p))
+                    .map(this::getDefinition)
                     .filter(Objects::nonNull)
                     .toList();
             Map predicate = propertyChainAxiom.size() > 1
@@ -211,7 +211,7 @@ public class XLQLQuery {
     }
 
     private Map getDefinition(String property) {
-        return whelk.getJsonld().getVocabIndex().get(property);
+        return whelk.getJsonld().vocabIndex.get(property);
     }
 
     private Map freeTextMapping(SimpleQueryTree.FreeText ft) {
