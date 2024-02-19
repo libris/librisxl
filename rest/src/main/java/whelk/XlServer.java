@@ -3,6 +3,8 @@ package whelk;
 import com.thetransactioncompany.cors.CORSFilter;
 
 import io.prometheus.client.exporter.MetricsServlet;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.ee8.servlet.FilterHolder;
 import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.http.UriCompliance;
@@ -11,6 +13,7 @@ import org.eclipse.jetty.rewrite.handler.RewriteHandler;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 
+import whelk.meta.WhelkConstants;
 import whelk.rest.api.ConverterAPI;
 import whelk.rest.api.Crud;
 import whelk.rest.api.DuplicatesAPI;
@@ -29,23 +32,24 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Map;
 
-public class XlServer {
+import static whelk.meta.WhelkConstants.HTTP_PORT_PARAMETER;
 
-    private static final String PORT_PARAMETER = "xl.server.port";
-    private static final int DEFAULT_PORT = 8180;
+public class XlServer {
+    private final static Logger log = LogManager.getLogger(XlServer.class);
 
     private static final String REMOTE_SEARCH_PATH = "/_remotesearch";
     private static final String USERDATA_PATH = "/_userdata/*";
     private Server server;
 
     public void run() throws Exception {
-        int port = Integer.parseInt(System.getProperty(PORT_PARAMETER, "" + DEFAULT_PORT));
+        int port = WhelkConstants.getHttpPort();
 
         server = new Server(port);
 
         configure(server);
 
         server.start();
+        log.info("Started server on port {}", port);
         server.join();
     }
 

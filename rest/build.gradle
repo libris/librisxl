@@ -79,7 +79,7 @@ dependencies {
 
     // Servlet dependencies
     implementation 'com.thetransactioncompany:cors-filter:2.1.2'
-    api 'jakarta.servlet:jakarta.servlet-api:4.0.3'
+    api "jakarta.servlet:jakarta.servlet-api:${servletApiVersion}"
 
     // Standalone
     implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
@@ -109,7 +109,6 @@ jar {
             }
         }
     }
-
 }
 
 task(appRun, dependsOn: "classes", type: JavaExec) {

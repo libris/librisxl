@@ -1,6 +1,7 @@
-apply plugin: 'war'
 apply plugin: 'groovy'
-apply from: '../gretty.plugin'
+apply plugin: 'java-library'
+
+def mainClassName = "whelk.XlServer"
 
 repositories {
     mavenCentral()
@@ -28,6 +29,12 @@ dependencies {
     // XL dependencies
     implementation(project(':whelk-core'))
 
+    // HTTP
+    api "jakarta.servlet:jakarta.servlet-api:${servletApiVersion}"
+    implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
+    implementation "org.eclipse.jetty:jetty-rewrite:${jettyVersion}"
+    implementation "org.eclipse.jetty.ee8:jetty-ee8-servlet:${jettyVersion}"
+
     // Logging
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
@@ -36,7 +43,6 @@ dependencies {
     implementation "io.prometheus:simpleclient:${prometheusVersion}"
     implementation "io.prometheus:simpleclient_servlet:${prometheusVersion}"
 
-    //implementation 'org.apache.commons:commons-lang3:3.3.2'
     implementation "org.codehaus.groovy:groovy:${groovyVersion}"
 
     // Email
@@ -58,16 +64,39 @@ test.testLogging {
     exceptionFormat = "full"
 }
 
+jar {
+    manifest {
+        attributes "Main-Class": mainClassName,
+                // log4j uses multi-release to ship different stack walking implementations for different java
+                // versions. Since we repackage everything as a fat jar, that jar must also be multi-release.
+                "Multi-Release": true
+    }
 
-gretty {
-    jvmArgs = ['-XX:+UseParallelGC']
-    systemProperties = ['xl.secret.properties': System.getProperty("xl.secret.properties")]
-    httpPort = 8589
-    scanInterval = 0
-    afterEvaluate {
-        appRunDebug {
-            debugPort = 5006
-            debugSuspend = false
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : project.zipTree(it).matching {
+                exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA','build','.gradle/**','build.gradle','gradle','gradlew','gradlew.bat','test'
+            }
         }
+    }
+}
+
+task(appRun, dependsOn: "classes", type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = mainClassName
+    minHeapSize = "1g"
+    maxHeapSize = "4g"
+    systemProperties(
+            'xl.secret.properties': System.getProperty("xl.secret.properties"),
+            'xl.http.port': System.getProperty("xl.http.port", "8589")
+    )
+    args(System.getProperty("args", "").split() as String[])
+
+    debugOptions {
+        enabled = true
+        port = 5006
+        server = true
+        suspend = false
     }
 }

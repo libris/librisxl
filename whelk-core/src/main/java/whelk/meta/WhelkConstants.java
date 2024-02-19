@@ -9,4 +9,11 @@ package whelk.meta;
 
 public class WhelkConstants {
     public static final String BATCH_THREAD_GROUP = "whelk-batch";
+
+    private static final String HTTP_PORT_PARAMETER = "xl.http.port";
+    private static final int DEFAULT_HTTP_PORT = 8180;
+
+    public static int getHttpPort() {
+        return Integer.parseInt(System.getProperty(HTTP_PORT_PARAMETER, "" + DEFAULT_HTTP_PORT));
+    }
 }
