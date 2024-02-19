@@ -12,6 +12,7 @@ import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
+import whelk.XlServer;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.util.BlockingThreadPool;
 import whelk.util.BlockingThreadPool.SimplePool;
@@ -62,10 +63,16 @@ public class MarcCliExport
     }
 
     public static void main(String[] args)
-            throws IOException, SQLException, InterruptedException
-    {
+            throws Exception {
         if (args.length != 2 && args.length != 1)
             printUsageAndExit();
+
+        if (args[0].equals("--server"))
+        {
+            var xlServer = new XlServer();
+            xlServer.run();
+            return;
+        }
 
         if (args[0].equals("--sao"))
         {

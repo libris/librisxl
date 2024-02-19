@@ -1,5 +1,6 @@
-apply plugin: 'war'
-apply from: '../gretty.plugin'
+apply plugin: 'java-library'
+
+def mainClassName = "whelk.XlServer"
 
 repositories {
     mavenCentral()
@@ -17,8 +18,11 @@ dependencies {
     // XL dependencies
     implementation(project(':whelk-core'))
 
-    // Jetty
+    // HTTP
+    api "jakarta.servlet:jakarta.servlet-api:${servletApiVersion}"
     implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
+    implementation "org.eclipse.jetty:jetty-rewrite:${jettyVersion}"
+    implementation "org.eclipse.jetty.ee8:jetty-ee8-servlet:${jettyVersion}"
 
     // Logging
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
@@ -32,18 +36,39 @@ dependencies {
     testImplementation 'junit:junit:4.12'
 }
 
-gretty {
-    httpPort = 8280
-    contextPath = '/apix'
+jar {
+    manifest {
+        attributes "Main-Class": mainClassName,
+                // log4j uses multi-release to ship different stack walking implementations for different java
+                // versions. Since we repackage everything as a fat jar, that jar must also be multi-release.
+                "Multi-Release": true
+    }
 
-    afterEvaluate {
-        appRunDebug {
-            debugPort = 5007
-            debugSuspend = false
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : project.zipTree(it).matching {
+                exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA','build','.gradle/**','build.gradle','gradle','gradlew','gradlew.bat','test'
+            }
         }
     }
 }
 
-war {
-    archiveFileName = 'apix.war'
+task(appRun, dependsOn: "classes", type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = mainClassName
+    minHeapSize = "1g"
+    maxHeapSize = "4g"
+    systemProperties(
+            'xl.secret.properties': System.getProperty("xl.secret.properties"),
+            'xl.http.port': System.getProperty("xl.http.port", "8280")
+    )
+    args(System.getProperty("args", "").split() as String[])
+
+    debugOptions {
+        enabled = true
+        port = 5009
+        server = true
+        suspend = false
+    }
 }
