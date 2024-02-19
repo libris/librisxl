@@ -16,7 +16,26 @@ import whelk.util.PropertyLoader
 @Log4j2
 class NotificationUtils {
 
-    public static String emailHeader = "[CXZ]"
+    private static final String emailHeader = "[CXZ]"
+    static final String DIVIDER = '-------------------------------------------'
+    static final String EMAIL_FOOTER = """
+        $DIVIDER
+        Läs mer om CXZ-meddelanden:
+        https://www.kb.se/samverkan-och-utveckling/libris/librissamarbetet/sandlistor/andringsmeddelanden-cxz.html
+        """.stripIndent()
+
+    enum NotificationType {
+        ChangeObservation,
+        ChangeNotice,
+        InquiryAction
+    }
+
+    static String subject(Whelk whelk, NotificationType notificationType, List<String> libraryUris = []) {
+        var typeLabel = whelk.jsonld.vocabIndex[notificationType.toString()]?['labelByLang']?['sv'] ?: ""
+
+        String collections = recipientCollections(libraryUris)
+        return "$emailHeader ${typeLabel}.${collections ? ' ' : ''}${collections}"
+    }
 
     /**
      * Get all user settings and arrange them by requested library-uri, so that you
@@ -30,13 +49,13 @@ class NotificationUtils {
         for (Map settings : allUserSettingStrings) {
             if (!settings["notificationEmail"])
                 continue
-            settings?.requestedNotifications?.each { request ->
+            settings?.notificationCollections?.each { request ->
                 if (!request instanceof Map)
                     return
-                if (!request["heldBy"])
+                if (!request["@id"])
                     return
 
-                String heldBy = request["heldBy"]
+                String heldBy = request["@id"]
                 if (!libraryToUserSettings.containsKey(heldBy))
                     libraryToUserSettings.put(heldBy, [])
                 libraryToUserSettings[heldBy].add(settings)
@@ -74,6 +93,9 @@ class NotificationUtils {
         }
 
         if (mailer) {
+            // unclear if simplejavamail checks subject length
+            subject = subject.substring(0, Math.min(subject.length(), 800))
+
             Email email = EmailBuilder.startingBlank()
                     .to(recipient)
                     .withSubject(subject)
@@ -94,12 +116,31 @@ class NotificationUtils {
         libraryUris.findResults { LegacyIntegrationTools.uriToLegacySigel(it) }.unique().sort().join(' ')
     }
 
-    // FIXME
+    // TODO use fresnel:Format mechanism here when stable
     static String describe(Document doc, Whelk whelk) {
-        JsonLd ld = whelk.jsonld
         Map data = JsonLd.frame(doc.getThingIdentifiers().first(), doc.data)
-        def strings = ld.applyLensAsMapByLang(data, whelk.locales as Set, [], ['chips'])
-        return strings['sv'] // ???
+        StringBuilder s = new StringBuilder()
+        s.append(chipString(data, whelk))
+
+        ['responsibilityStatement', 'publication', 'extent'].each {p ->
+            asList(data[p]).each { s.append("\n").append(chipString(it, whelk)) }
+        }
+        s.append("\n").append("Kontrollnummer: ").append(doc.getControlNumber())
+
+        return s.toString()
+    }
+
+    // TODO use fresnel:Format mechanism here when stable
+    static String chipString(Object data, Whelk whelk) {
+        if (data !instanceof Map) {
+            return data
+        }
+
+        try {
+            return whelk.jsonld.applyLensAsMapByLang(data, whelk.locales as Set, [], ['chips'])['sv']
+        } catch (Exception ignored) {
+            return ""
+        }
     }
 
     // FIXME

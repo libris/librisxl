@@ -1,5 +1,6 @@
 package whelk.housekeeping
 
+import org.codehaus.jackson.map.JsonMappingException
 import whelk.Document
 import whelk.IdGenerator
 import whelk.JsonLd
@@ -113,8 +114,12 @@ class NotificationGenerator extends HouseKeeper {
                 }
 
                 for (String instanceId : changedInstanceIDsWithComments.keySet()) {
-                    resultingChangeObservations.addAll( generateObservationsForAffectedInstance(
-                            instanceId, changedInstanceIDsWithComments[instanceId], from.toInstant(), until.toInstant()) )
+                    try {
+                        resultingChangeObservations.addAll(generateObservationsForAffectedInstance(
+                                instanceId, changedInstanceIDsWithComments[instanceId], from.toInstant(), until.toInstant()))
+                    } catch (Throwable e) {
+                        log.error("Failed to check an embellished instance ($instanceId) for effects caused changes to $id.", e)
+                    }
                 }
 
                 String changedMainEntityType = whelk.getStorage().getMainEntityTypeBySystemID(id)
@@ -125,8 +130,17 @@ class NotificationGenerator extends HouseKeeper {
                         }
                     }
                 } else {
-                    log.info("Changes to " + id + " would result in too many ChangeObservations, skipping instead.")
+                    if (whelk.getJsonld().isSubClassOf(changedMainEntityType, "Agent")) {
+                        log.info("Changes to " + id + " would result in too many Instance-ChangeObservations, making an Agent-ChangeObservation instead.")
+                        Document observation = generateObservationForChangedAgent(id, changeNotes, from.toInstant(), until.toInstant())
+                        if (!whelk.createDocument(observation, "NotificationGenerator", "SEK", "none", false)) {
+                            log.error("Failed to create ChangeObservation:\n${observation.getDataAsString()}")
+                        }
+                    } else {
+                        log.info("Changes to " + id + " would result in too many ChangeObservations, skipping instead.")
+                    }
                 }
+
             }
 
         } catch (Throwable e) {
@@ -138,6 +152,26 @@ class NotificationGenerator extends HouseKeeper {
             newState.lastGenerationTime = until.toInstant().atOffset(ZoneOffset.UTC).toString()
             whelk.getStorage().putState(STATE_KEY, newState)
         }
+    }
+
+    private Document generateObservationForChangedAgent(String agentId, List changeNotes, Instant before, Instant after) {
+        List<String> propertiesToEmbellish = [] // No properties, we're only abusing historicEmbellish for the (identical-to-the-instance-case)-framing
+        Document agentBefore = whelk.getStorage().loadAsOf(agentId, Timestamp.from(before))
+        if (agentBefore == null) { // This instance is new, and did not exist at 'before'.
+            return null
+        }
+        historicEmbellish(agentBefore, propertiesToEmbellish, before)
+        Document agentAfter = whelk.getStorage().loadAsOf(agentId, Timestamp.from(after))
+        historicEmbellish(agentAfter, propertiesToEmbellish, after)
+
+        Tuple comparisonResult = NotificationRules.agentRecordChanged(agentBefore, agentAfter)
+        if (comparisonResult[0]) {
+            return makeChangeObservation(
+                            agentId, changeNotes, "https://id.kb.se/changecategory/agent",
+                            comparisonResult[1], comparisonResult[2], agentId)
+        }
+
+        return null
     }
 
     private List<Document> generateObservationsForAffectedInstance(String instanceId, List changeNotes, Instant before, Instant after) {
@@ -287,7 +321,7 @@ class NotificationGenerator extends HouseKeeper {
                         "representationBefore" : oldValue,
                         "representationAfter" : newValue,
                         "category" : ["@id" : categoryUri],
-                        "agent" : ["@id" : agentId],
+                        "descriptionLastModifier" : ["@id" : agentId],
                 ]
         ]]
 
@@ -305,8 +339,12 @@ class NotificationGenerator extends HouseKeeper {
         for (Object changeNote : changeNotes) {
             if ( ! (changeNote instanceof String) )
                 continue
-            Map changeNoteMap = mapper.readValue( (String) changeNote, Map)
-            comments.addAll( NotificationUtils.asList(changeNoteMap["comment"]) )
+            Map changeNoteMap = null
+            try {
+                changeNoteMap = mapper.readValue((String) changeNote, Map)
+            } catch (JsonMappingException e) { /* ignore - this can happen when a list appears in hasChangeNote. We're not interested in those notes. */ }
+            if (changeNoteMap != null)
+                comments.addAll( NotificationUtils.asList(changeNoteMap["comment"]) )
         }
         return comments
     }

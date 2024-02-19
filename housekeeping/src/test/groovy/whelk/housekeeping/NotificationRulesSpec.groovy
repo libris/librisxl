@@ -5,7 +5,7 @@ import whelk.Document
 
 class NotificationRulesSpec extends Specification {
 
-    def "Change PrimaryContribution familyName"() {
+    def "Barely change PrimaryContribution familyName"() {
         given:
         Document framedBefore = new Document([
                 "mainEntity" : [
@@ -34,6 +34,50 @@ class NotificationRulesSpec extends Specification {
                                                 "agent" : [
                                                         "@type": "Person",
                                                         "familyName": "aab",
+                                                        "givenName": "bbb",
+                                                        "name": "ccc",
+                                                        "lifeSpan": "2022-2023"
+                                                ]
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Tuple result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
+
+        expect:
+        result[0] == false
+    }
+
+    def "Change PrimaryContribution familyName"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "contribution" : [
+                                        [
+                                                "@type" : "PrimaryContribution",
+                                                "agent" : [
+                                                        "@type": "Person",
+                                                        "familyName": "aaa",
+                                                        "givenName": "bbb",
+                                                        "name": "ccc",
+                                                        "lifeSpan": "2022-2023"
+                                                ]
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "contribution" : [
+                                        [
+                                                "@type" : "PrimaryContribution",
+                                                "agent" : [
+                                                        "@type": "Person",
+                                                        "familyName": "ddd",
                                                         "givenName": "bbb",
                                                         "name": "ccc",
                                                         "lifeSpan": "2022-2023"
@@ -78,7 +122,7 @@ class NotificationRulesSpec extends Specification {
                                                 "agent" : [
                                                         "@type": "Person",
                                                         "familyName": "aaa",
-                                                        "givenName": "bbc",
+                                                        "givenName": "fff",
                                                         "name": "ccc",
                                                         "lifeSpan": "2022-2023"
                                                 ]
@@ -123,7 +167,7 @@ class NotificationRulesSpec extends Specification {
                                                         "@type": "Person",
                                                         "familyName": "aaa",
                                                         "givenName": "bbb",
-                                                        "name": "ccd",
+                                                        "name": "ddd",
                                                         "lifeSpan": "2022-2023"
                                                 ]
                                         ]
@@ -222,6 +266,94 @@ class NotificationRulesSpec extends Specification {
 
         expect:
         result[0] == true
+    }
+
+    def "Add PrimaryContribution date of death"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "contribution" : [
+                                        [
+                                                "@type" : "PrimaryContribution",
+                                                "agent" : [
+                                                        "@type": "Person",
+                                                        "familyName": "aaa",
+                                                        "givenName": "bbb",
+                                                        "name": "ccc",
+                                                        "lifeSpan": "2022-"
+                                                ]
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "contribution" : [
+                                        [
+                                                "@type" : "PrimaryContribution",
+                                                "agent" : [
+                                                        "@type": "Person",
+                                                        "familyName": "aaa",
+                                                        "givenName": "bbb",
+                                                        "name": "ccc",
+                                                        "lifeSpan": "2022-2023"
+                                                ]
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Tuple result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
+
+        expect:
+        result[0] == false
+    }
+
+    def "Add PrimaryContribution date of birth"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "contribution" : [
+                                        [
+                                                "@type" : "PrimaryContribution",
+                                                "agent" : [
+                                                        "@type": "Person",
+                                                        "familyName": "aaa",
+                                                        "givenName": "bbb",
+                                                        "name": "ccc",
+                                                        "lifeSpan": "-2023"
+                                                ]
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "contribution" : [
+                                        [
+                                                "@type" : "PrimaryContribution",
+                                                "agent" : [
+                                                        "@type": "Person",
+                                                        "familyName": "aaa",
+                                                        "givenName": "bbb",
+                                                        "name": "ccc",
+                                                        "lifeSpan": "2022-2023"
+                                                ]
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Tuple result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
+
+        expect:
+        result[0] == false
     }
 
     def "Change PrimaryContribution (org) name change"() {
@@ -650,6 +782,36 @@ class NotificationRulesSpec extends Specification {
 
         expect:
         result[0] == false
+    }
+
+    def "Minor title changes"() {
+        expect:
+        Tuple result = NotificationRules.mainTitleChanged(
+                new Document(["mainEntity": ["hasTitle": [["@type": "Title", "mainTitle": before]]]]),
+                new Document(["mainEntity": ["hasTitle": [["@type": "Title", "mainTitle": after]]]])
+        )
+        Tuple result2 = NotificationRules.keyTitleChanged(
+                new Document(["mainEntity": ["hasTitle": [["@type": "KeyTitle", "mainTitle": before]]]]),
+                new Document(["mainEntity": ["hasTitle": [["@type": "KeyTitle", "mainTitle": after]]]])
+        )
+
+        changed == result[0]
+        changed == result2[0]
+
+        where:
+        before      | after       || changed
+        'title'     | "Title"     || false
+        'title '    | "title"     || false
+        ' title'    | "title"     || false
+        'title.'    | "title"     || false
+        'title'     | "title."    || false
+        'a  title'  | "a title"   || false
+        'Desideria' | 'Désidéria' || false
+        'titl'      | 'Title'     || false
+        'titlx'     | 'Title'     || false
+        'tilte'     | 'Title'     || false
+        'Aker'      | 'Åker'      || false
+        'Akerbar'   | 'Åkerbär'   || true
     }
 
     def "Change main title, dont trigger key title"() {

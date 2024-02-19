@@ -1,8 +1,38 @@
 package whelk.housekeeping
 
 import whelk.Document
+import whelk.util.Unicode
 
 class NotificationRules {
+
+    private static boolean lifeSpanChanged(Object lifeSpanBefore, Object lifeSpanAfter) {
+        if ( (lifeSpanBefore == null && lifeSpanAfter != null) || (lifeSpanBefore != null && lifeSpanAfter == null) )
+            return false
+        if (! (lifeSpanBefore instanceof String) || ! (lifeSpanAfter instanceof String))
+            return false
+        if (lifeSpanAfter == lifeSpanBefore == null)
+            return false
+
+        int dashAtIndexBefore = lifeSpanBefore.indexOf('-')
+        if (dashAtIndexBefore == -1)
+            return false
+        String birthBefore = lifeSpanBefore.substring(0, dashAtIndexBefore).trim()
+        String deathBefore = lifeSpanBefore.substring(dashAtIndexBefore+1).trim()
+
+        int dashAtIndexAfter = lifeSpanAfter.indexOf('-')
+        if (dashAtIndexAfter == -1)
+            return false
+        String birthAfter = lifeSpanAfter.substring(0, dashAtIndexAfter).trim()
+        String deathAfter = lifeSpanAfter.substring(dashAtIndexAfter+1).trim()
+
+        if (!birthBefore.isEmpty() && !birthBefore.equals(birthAfter))
+            return true
+
+        if (!deathBefore.isEmpty() && !deathBefore.equals(deathAfter))
+            return true
+
+        return false
+    }
 
     private static boolean personChanged(Object agentBefore, Object agentAfter) {
         if (!(agentBefore instanceof Map) || !(agentAfter instanceof Map))
@@ -10,10 +40,10 @@ class NotificationRules {
 
         if (agentBefore["@type"] == "Person" && agentAfter["@type"] == "Person") {
             if (
-            agentBefore["familyName"] != agentAfter["familyName"] ||
-                    agentBefore["givenName"] != agentAfter["givenName"] ||
-                    agentBefore["name"] != agentAfter["name"] ||
-                    (agentBefore["lifeSpan"] && agentBefore["lifeSpan"] != agentAfter["lifeSpan"]) // Change should trigger, add should not.
+                    stringChanged(agentBefore["familyName"] as String, agentAfter["familyName"] as String) ||
+                    stringChanged(agentBefore["givenName"] as String, agentAfter["givenName"] as String) ||
+                    stringChanged(agentBefore["name"] as String, agentAfter["name"] as String) ||
+                    lifeSpanChanged(agentBefore["lifeSpan"], agentAfter["lifeSpan"])
             )
                 return true
         }
@@ -76,6 +106,20 @@ class NotificationRules {
                 return true
         }
         return false
+    }
+
+    static Tuple agentRecordChanged(Document recordBeforeChange, Document recordAfterChange) {
+        Object agentBefore = Document._get(["mainEntity"], recordBeforeChange.data)
+        Object agentAfter = Document._get(["mainEntity"], recordAfterChange.data)
+
+        if (personChanged(agentBefore, agentAfter) ||
+                meetingChanged(agentBefore, agentAfter) ||
+                organizationChanged(agentBefore, agentAfter) ||
+                familyChanged(agentBefore, agentAfter) ||
+                jurisdictionChanged(agentBefore, agentAfter)) {
+            return new Tuple(true, agentBefore, agentAfter)
+        }
+        return new Tuple(false, null, null)
     }
 
     static Tuple primaryContributionChanged(Document instanceBeforeChange, Document instanceAfterChange) {
@@ -196,8 +240,10 @@ class NotificationRules {
             List beforeList = (List) publicationsBefore
             List afterList = (List) publicationsAfter
             for (int i = 0; i < beforeList.size(); ++i)
-                if (!beforeList[i]["endYear"].equals(afterList[i]["endYear"])) {
-                    return new Tuple(true, beforeList[i]["endYear"], afterList[i]["endYear"])
+                if (beforeList[i]["endYear"] != afterList[i]["endYear"]) {
+                    def before = beforeList[i]["endYear"] ? beforeList[i] : null
+                    def after = afterList[i]
+                    return new Tuple(true, before, after)
                 }
         }
 
@@ -236,7 +282,7 @@ class NotificationRules {
                     newMainTitle = titleAfter
             }
 
-            if (newMainTitle != null && oldMainTitle != null && !newMainTitle["mainTitle"].equals(oldMainTitle["mainTitle"]))
+            if (newMainTitle != null && oldMainTitle != null && stringChanged(newMainTitle["mainTitle"] as String, oldMainTitle["mainTitle"] as String))
                 return new Tuple(true, oldMainTitle, newMainTitle)
         }
         return new Tuple(false, null, null)
@@ -263,7 +309,7 @@ class NotificationRules {
                     newMainTitle = titleAfter
             }
 
-            if (newMainTitle != null && oldMainTitle != null && !newMainTitle["mainTitle"].equals(oldMainTitle["mainTitle"]))
+            if (newMainTitle != null && oldMainTitle != null && stringChanged(newMainTitle["mainTitle"] as String, oldMainTitle["mainTitle"] as String))
                 return new Tuple(true, oldMainTitle, newMainTitle)
         }
         return new Tuple(false, null, null)
@@ -353,4 +399,25 @@ class NotificationRules {
         return new Tuple(false, null, null)
     }
 
+    private static boolean stringChanged(String before, String after) {
+        if (before == null && after != null)
+            return true
+        if (before != null && after == null)
+            return true
+        if (before == null && after == null)
+            return false
+
+        def a = normalize(before)
+        def b = normalize(after)
+        if (a.size() > Unicode.MAX_LEVENSHTEIN_LENGTH || b.size() > Unicode.MAX_LEVENSHTEIN_LENGTH) {
+            return a != b
+        }
+        else {
+            return Unicode.damerauLevenshteinDistance(a, b) > 1
+        }
+    }
+
+    private static String normalize(String s) {
+        Unicode.removeDiacritics(s.toLowerCase()).replaceAll(/[^\p{Alnum}]/, '')
+    }
 }

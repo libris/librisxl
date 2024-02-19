@@ -110,6 +110,17 @@ class UnicodeSpec extends Specification {
         Unicode.normalize(s) == nfc
     }
 
+    def "removeAllDiacritics"() {
+        expect:
+        Unicode.removeAllDiacritics(in) == out
+
+        where:
+        in               | out
+        'Désidéria'      | 'Desideria'
+        'Антон Павлович' | 'Антон Павлович'
+        'Åkerbärsfrön'   | 'Akerbarsfron'
+    }
+
     def "removeDiacritics"() {
         expect:
         Unicode.removeDiacritics(in) == out
@@ -118,6 +129,40 @@ class UnicodeSpec extends Specification {
         in               | out
         'Désidéria'      | 'Desideria'
         'Антон Павлович' | 'Антон Павлович'
-        'Åkerbärsfrön'   | 'Akerbarsfron'
+        'Åkerbärsfrön'   | 'Åkerbärsfrön'
+    }
+
+    def "levenshtein"() {
+        expect:
+        Unicode.levenshteinDistance(a, b) == distance
+
+        where:
+        a        | b         || distance
+        ''       | ''        || 0
+        'abc'    | 'abc'     || 0
+        'ab'     | 'abc'     || 1
+        'abc'    | 'ab'      || 1
+        'abc'    | 'abd'     || 1
+        'acb'    | 'abc'     || 2
+        'kitten' | 'sitting' || 3
+        'abc'    | '1234567' || 7
+    }
+
+    def "damerauLevenshtein"() {
+        expect:
+        Unicode.damerauLevenshteinDistance(a, b) == distance
+
+        where:
+        a        | b         || distance
+        ''       | ''        || 0
+        'abc'    | 'abc'     || 0
+        'ab'     | 'abc'     || 1
+        'abc'    | 'ab'      || 1
+        'acb'    | 'abc'     || 1
+        'acb'    | 'abc'     || 1
+        'kitten' | 'sitting' || 3
+        '124356' | '123456'  || 1
+        '143256' | '123456'  || 2
+        'abc'    | '1234567' || 7
     }
 }

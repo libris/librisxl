@@ -60,7 +60,7 @@ class NotificationSender extends HouseKeeper {
         connection = whelk.getStorage().getOuterConnection()
         connection.setAutoCommit(false)
         try {
-            String sql = "SELECT MAX(created) as lastChange, data#>>'{@graph,1,concerning,@id}' as instanceUri, ARRAY_AGG(data::text) as data FROM lddb WHERE data#>>'{@graph,1,@type}' = 'ChangeObservation' AND created > ? GROUP BY data#>>'{@graph,1,concerning,@id}';"
+            String sql = "SELECT MAX(created) as lastChange, data#>>'{@graph,1,concerning,@id}' as concerningUri, ARRAY_AGG(data::text) as data FROM lddb WHERE data#>>'{@graph,1,@type}' = 'ChangeObservation' AND created > ? GROUP BY data#>>'{@graph,1,concerning,@id}';"
             connection.setAutoCommit(false)
             statement = connection.prepareStatement(sql)
             statement.setTimestamp(1, from)
@@ -69,15 +69,15 @@ class NotificationSender extends HouseKeeper {
             resultSet = statement.executeQuery()
 
             while (resultSet.next()) {
-                String instanceUri = resultSet.getString("instanceUri")
+                String concerningUri = resultSet.getString("concerningUri")
                 Array changeObservationsArray = resultSet.getArray("data")
                 // Groovy..
-                List changeObservationsForInstance = []
+                List changeObservationsForConcerned = []
                 for (Object o : changeObservationsArray.getArray()) {
-                    changeObservationsForInstance.add(o)
+                    changeObservationsForConcerned.add(o)
                 }
 
-                sendFor(instanceUri, heldByToUserSettings, changeObservationsForInstance)
+                sendFor(concerningUri, heldByToUserSettings, changeObservationsForConcerned)
 
                 Instant lastChangeObservationForInstance = resultSet.getTimestamp("lastChange").toInstant()
                 if (lastChangeObservationForInstance.isAfter(notifiedChangesUpTo))
@@ -97,34 +97,80 @@ class NotificationSender extends HouseKeeper {
 
     }
 
-    private void sendFor(String instanceUri, Map<String, List<Map>> heldByToUserSettings, List changeObservationsForInstance) {
-        String instanceId = whelk.getStorage().getSystemIdByIri(instanceUri)
+    private void sendFor(String concerningUri, Map<String, List<Map>> heldByToUserSettings, List changeObservationsForConcerned) {
+        String concerningSystemId = whelk.getStorage().getSystemIdByIri(concerningUri)
+        String type = whelk.getStorage().getMainEntityTypeBySystemID(concerningSystemId)
+
+        if (whelk.getJsonld().isSubClassOf(type, "Instance"))
+            sendForInstance(concerningSystemId, heldByToUserSettings, changeObservationsForConcerned)
+        else if (whelk.getJsonld().isSubClassOf(type, "Agent"))
+            sendForAgent(concerningSystemId, heldByToUserSettings, changeObservationsForConcerned)
+    }
+
+    private void sendForAgent(String concerningId, Map<String, List<Map>> heldByToUserSettings, List changeObservationsForConcerned) {
+        List<String> concernedLibraries = whelk.getStorage().followLibrariesConcernedWith(concerningId)
+        String subject = NotificationUtils.subject(whelk, NotificationUtils.NotificationType.ChangeObservation, concernedLibraries)
+
+        List<Map> changeObservationMaps = []
+        for (String observationDataString : changeObservationsForConcerned) {
+            Map changeObservationMap = mapper.readValue( (String) observationDataString, Map )
+            if (changeObservationMap != null)
+                changeObservationMaps.add(changeObservationMap)
+        }
+
+        Set alreadySentTo = [] as Set
+
+        for (String library : concernedLibraries) {
+            List<Map> users = (List<Map>) heldByToUserSettings[library]
+            if (users) {
+                for (Map user : users) {
+                    if ( user?.notificationCategories?.find { it["@id"] == "https://id.kb.se/changecategory/agent" } != null ) {
+
+                        if (!changeObservationMaps.isEmpty() && user.notificationEmail &&
+                                user.notificationEmail instanceof String && !alreadySentTo.contains(user.notificationEmail)) {
+                            String body = generateEmailBody(concerningId, changeObservationMaps as Set)
+                            NotificationUtils.sendEmail((String) user.notificationEmail, subject, body)
+                            alreadySentTo.add(user.notificationEmail)
+                        }
+
+                    }
+                }
+            }
+        }
+
+    }
+
+    private void sendForInstance(String instanceId, Map<String, List<Map>> heldByToUserSettings, List changeObservationsForInstance) {
         List<String> libraries = whelk.getStorage().getAllLibrariesHolding(instanceId)
-        String subject = NotificationUtils.emailHeader + ' ' + NotificationUtils.recipientCollections(libraries)
+        String subject = NotificationUtils.subject(whelk, NotificationUtils.NotificationType.ChangeObservation, libraries)
 
         for (String library : libraries) {
             List<Map> users = (List<Map>) heldByToUserSettings[library]
             if (users) {
                 for (Map user : users) {
-                    /*
-                    'user' is now a map looking something like this:
+                    /* 'user' is now a map looking something like this:
                     {
-                        "id": "sldknfslkdnsdlkgnsdkjgnb"
-                        "requestedNotifications": [
+                        "notificationEmail": "...",
+                        "notificationCategories": [
                             {
-                                "heldBy": "https://libris.kb.se/library/Utb1",
-                                "triggers": [
-                                    "https://id.kb.se/changecategory/primarycontribution"
-                                ]
-                            }
+                                "@id": "https://id.kb.se/changecategory/maintitle"
+                            },
+                            ...
                         ],
-                        "notificationEmail": "noreply@kb.se"
-                    }*/
+                        "notificationCollections": [
+                            {
+                                "@id": "https://libris.kb.se/library/Utb1"
+                            },
+                            ...
+                        ]
+                    }
+                    */
 
                     Set<Map> matchedObservations = new LinkedHashSet<>()
 
-                    user?.requestedNotifications?.each { Map request ->
-                        request?.triggers?.each { String trigger ->
+                    user?.notificationCategories?.each { Map request ->
+                        String trigger = request?["@id"]
+                        if (trigger != null) {
                             Map triggeredObservation = matches(trigger, changeObservationsForInstance)
                             if (triggeredObservation != null) {
                                 matchedObservations.add(triggeredObservation)
@@ -157,11 +203,8 @@ class NotificationSender extends HouseKeeper {
     private String generateEmailBody(String changedInstanceId, Set<Map> triggeredObservations) {
         Document current = whelk.getStorage().load(changedInstanceId)
         StringBuilder sb = new StringBuilder()
-        sb.append(NotificationUtils.describe(current, whelk)).append('\n')
-        sb.append(current.getControlNumber()).append("\n")
-        sb.append(NotificationUtils.makeLink(changedInstanceId)).append("\n")
+        sb.append("** Automatiskt ändringsmeddelande **\n")
         sb.append("\n")
-
         boolean commentsRendered = false
         for (Map observation : triggeredObservations) {
             String observationUri = Document._get(["@graph", 1, "@id"], observation)
@@ -173,9 +216,9 @@ class NotificationSender extends HouseKeeper {
                 Object comments = Document._get(["@graph", 1, "comment"], observation)
 
                 if (comments instanceof List) {
-                    sb.append("\n\tÄndringsanmärkningar\n")
+                    sb.append("\nÄndringsanmärkningar:\n")
                     for (String comment : comments)
-                        sb.append('\t\t- ' + comment.replace('\n', '\n\t\t') + "\n")
+                        sb.append('\t- ' + comment.replace('\n', '\n\t') + "\n")
                 }
                 sb.append("\n")
             }
@@ -185,28 +228,40 @@ class NotificationSender extends HouseKeeper {
             Map framed = JsonLd.frame(observationUri, embellishedObservation.data)
 
             Map category = whelk.getJsonld().applyLensAsMapByLang( (Map) framed["category"], ["sv"] as Set, [], ["chips"])
-            sb.append("\t" + category["sv"])
+            sb.append(category["sv"])
 
-            if (framed["representationBefore"] instanceof Map && framed["representationAfter"] instanceof Map) {
-                Map before = whelk.getJsonld().applyLensAsMapByLang((Map) framed["representationBefore"], ["sv"] as Set, [], ["chips"])
+            if (framed["representationAfter"] instanceof Map) {
                 Map after = whelk.getJsonld().applyLensAsMapByLang((Map) framed["representationAfter"], ["sv"] as Set, [], ["chips"])
-                sb.append("\n\t\tInnan: " + before["sv"])
-                sb.append("\n\t\tEfter: " + after["sv"])
-            } else if (framed["representationBefore"] instanceof List && framed["representationAfter"] instanceof List) {
-                sb.append("\n\t\tInnan: ")
-                for (Object item : framed["representationBefore"]) {
-                    Map before = whelk.getJsonld().applyLensAsMapByLang((Map) item, ["sv"] as Set, [], ["chips"])
-                    sb.append((String) before["sv"] + ", ")
-                }
-                sb.append("\n\t\tEfter: ")
+                sb.append("\n  Nu:" + after["sv"])
+            } else if (framed["representationAfter"] instanceof List) {
+                sb.append("\n  Nu: ")
                 for (Object item : framed["representationAfter"]) {
                     Map after = whelk.getJsonld().applyLensAsMapByLang((Map) item, ["sv"] as Set, [], ["chips"])
                     sb.append((String) after["sv"] + ", ")
                 }
             }
 
+            if (framed["representationBefore"] instanceof Map) {
+                Map before = whelk.getJsonld().applyLensAsMapByLang((Map) framed["representationBefore"], ["sv"] as Set, [], ["chips"])
+                sb.append("\n  Tidigare: " + before["sv"])
+            } else if (framed["representationBefore"] instanceof List) {
+                sb.append("\n  Tidigare: ")
+                for (Object item : framed["representationBefore"]) {
+                    Map before = whelk.getJsonld().applyLensAsMapByLang((Map) item, ["sv"] as Set, [], ["chips"])
+                    sb.append((String) before["sv"] + ", ")
+                }
+            }
             sb.append("\n\n")
         }
+
+        sb.append('\n')
+        sb.append(NotificationUtils.DIVIDER).append('\n')
+        sb.append("Gäller:").append('\n')
+        sb.append('\n')
+        whelk.embellish(current)
+        sb.append(NotificationUtils.describe(current, whelk)).append('\n')
+        sb.append(NotificationUtils.makeLink(changedInstanceId)).append("\n")
+        sb.append(NotificationUtils.EMAIL_FOOTER)
 
         return sb.toString()
     }

@@ -3,7 +3,9 @@ package whelk.housekeeping
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2
 import whelk.Document
+import whelk.JsonLd
 import whelk.Whelk
+import whelk.util.DocumentUtil
 
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -71,6 +73,7 @@ class InquirySender extends HouseKeeper {
             while (resultSet.next()) {
                 String dataString = resultSet.getString("data")
                 Map data = mapper.readValue( dataString, Map )
+                var messageType = NotificationUtils.NotificationType.valueOf((String) data['@type'])
 
                 /* Assume data:
                     {
@@ -102,7 +105,7 @@ class InquirySender extends HouseKeeper {
 
                 // Figure out who to send to
                 Set<String> recipients = []
-                String moreSubject = ""
+                String subject = NotificationUtils.subject(whelk, messageType)
                 boolean sendToAll = true
                 concerningSystemIDs.each { String concerningSystemID ->
                     String type = whelk.getStorage().getMainEntityTypeBySystemID(concerningSystemID)
@@ -118,7 +121,7 @@ class InquirySender extends HouseKeeper {
                                 }
                             }
                         }
-                        moreSubject = ' ' + NotificationUtils.recipientCollections(libraries)
+                        subject = NotificationUtils.subject(whelk, messageType, libraries)
                     }
                 }
                 if (sendToAll) {
@@ -137,10 +140,16 @@ class InquirySender extends HouseKeeper {
 
                 // Send
                 String noticeSystemId = whelk.getStorage().getSystemIdByIri((String) data["@id"])
-                String body = generateEmailBody(noticeSystemId, concerningSystemIDs, NotificationUtils.asList(data["comment"]))
+                var creatorId = Optional.ofNullable(DocumentUtil.getAtPath(data, ['descriptionCreator', JsonLd.ID_KEY]) as String)
+                String body = generateEmailBody(
+                        messageType,
+                        noticeSystemId,
+                        concerningSystemIDs,
+                        NotificationUtils.asList(data["comment"]),
+                        creatorId)
                 log.info("Sending ${recipients.size()} emails for $noticeSystemId")
                 for (String recipient : recipients) {
-                    NotificationUtils.sendEmail(recipient, NotificationUtils.emailHeader + moreSubject, body)
+                    NotificationUtils.sendEmail(recipient, subject, body)
                 }
 
                 Instant lastChangeObservationForInstance = resultSet.getTimestamp("modified").toInstant()
@@ -161,24 +170,51 @@ class InquirySender extends HouseKeeper {
 
     }
 
-    // TODO
-    private String generateEmailBody(String noticeSystemId, List<String> concerningSystemIDs, List<String> comments) {
+    private String generateEmailBody(NotificationUtils.NotificationType messageType, String noticeSystemId, List<String> concerningSystemIDs, List<String> comments, Optional<String> creatorId) {
         StringBuilder sb = new StringBuilder()
-        for (String comment : comments) {
-            sb.append("- ").append(comment).append("\n")
-        }
-        sb.append("\n")
-        sb.append( NotificationUtils.makeLink(noticeSystemId) )
 
-        sb.append("\n")
-        sb.append("\n")
-        for (String systemId : concerningSystemIDs) {
-            Document doc = whelk.loadEmbellished(systemId)
-            sb.append("\t").append(NotificationUtils.describe(doc, whelk)).append("\n")
-            sb.append("\t").append(doc.getControlNumber()).append("\n")
-            sb.append("\t").append(NotificationUtils.makeLink(systemId)).append("\n")
+        if (comments.size() < 2) {
+            for (String comment : comments) {
+                sb.append("- ").append(comment).append("\n")
+            }
+        } else {
+            sb.append("Senaste:\n")
+            sb.append("- ").append(comments.last()).append("\n")
             sb.append("\n")
+            sb.append("Alla:\n")
+            for (String comment : comments) {
+                sb.append("- ").append(comment).append("\n")
+            }
         }
+        sb.append("\n")
+
+        if (messageType == NotificationUtils.NotificationType.InquiryAction) {
+            sb.append("Länk till förfrågan:\n")
+        } else if (messageType == NotificationUtils.NotificationType.ChangeNotice) {
+            sb.append("Länk till meddelande:\n")
+        }
+        sb.append( NotificationUtils.makeLink(noticeSystemId) ).append('\n')
+
+        sb.append('\n')
+        creatorId.ifPresent {
+            var creatorLabel = whelk.jsonld.vocabIndex['descriptionCreator']?['labelByLang']?['sv'] ?: ""
+            var creator = NotificationUtils.chipString(DocumentUtil.getAtPath(whelk.loadData(it), [JsonLd.getGRAPH_KEY(), 1]), whelk)
+            sb.append(creatorLabel).append(': ').append(creator).append('\n')
+            sb.append('\n')
+        }
+        if (concerningSystemIDs) {
+            sb.append(NotificationUtils.DIVIDER).append('\n')
+            sb.append("Gäller:").append('\n')
+            sb.append('\n')
+            for (String systemId : concerningSystemIDs) {
+                Document doc = whelk.loadEmbellished(systemId)
+                sb.append(NotificationUtils.describe(doc, whelk)).append('\n')
+                sb.append(NotificationUtils.makeLink(systemId)).append("\n")
+                sb.append("\n")
+                sb.append("\n")
+            }
+        }
+        sb.append(NotificationUtils.EMAIL_FOOTER)
 
         return sb.toString()
     }

@@ -142,7 +142,8 @@ class SearchUtils {
                          'value'    : query]
         }
 
-        Tuple2 mappingsAndPageParams = mapParams(lookup, queryParameters)
+        def multiSelectable = ESQuery.multiSelectFacets(queryParameters)
+        Tuple2 mappingsAndPageParams = mapParams(lookup, queryParameters, multiSelectable)
         mappings.addAll(mappingsAndPageParams.v1)
         pageParams << mappingsAndPageParams.v2
 
@@ -167,7 +168,6 @@ class SearchUtils {
             }
         }
 
-        def multiSelectable = ESQuery.multiSelectFacets(queryParameters)
         def aggregations = ((Map) esResult['aggregations'])
         def selectedFacets = ((Map<String,?>) mappingsAndPageParams.v2)
 
@@ -735,7 +735,7 @@ class SearchUtils {
      * filtered out.
      *
      */
-    private Tuple2 mapParams(Lookup lookup, Map params) {
+    private Tuple2 mapParams(Lookup lookup, Map params, Set<String> multiSelectable) {
         List result = []
         Map pageParams = [:]
         List reservedParams = getReservedParameters()
@@ -769,7 +769,7 @@ class SearchUtils {
                     'variable': param,
                     'predicate': lookup.chip(termKey),
                     (valueProp): value
-                ]
+                ] + (param as String in multiSelectable ? ['_selected': true] : [:])
 
                 if (!(param in pageParams)) {
                     pageParams[param] = []

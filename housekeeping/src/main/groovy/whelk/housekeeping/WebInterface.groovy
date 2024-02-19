@@ -41,8 +41,9 @@ public class WebInterface extends HttpServlet {
         Whelk whelk = Whelk.createLoadedSearchWhelk()
 
         List<HouseKeeper> houseKeepers = [
+                // Automatic generation is disabled for now, may need design changes approved before activation.
                 //new NotificationGenerator(whelk),
-                new NotificationSender(whelk),
+                //new NotificationSender(whelk),
                 new InquirySender(whelk),
                 new NotificationCleaner(whelk),
         ]
@@ -80,6 +81,7 @@ public class WebInterface extends HttpServlet {
             sb.append("Execution schedule:\n")
             sb.append(hk.cronSchedule+"\n")
             sb.append("To force immediate execution, POST to:\n" + req.getRequestURL() + key + "\n")
+            sb.append(req.getRequestURL() + hk.class.getSimpleName() + "\n")
             sb.append("--------------\n")
         }
         res.setStatus(HttpServletResponse.SC_OK)
@@ -89,6 +91,12 @@ public class WebInterface extends HttpServlet {
 
     public void doPost(HttpServletRequest req, HttpServletResponse res) {
         String key = req.getRequestURI().split("/").last()
-        houseKeepersById[key]._trigger()
+        if (houseKeepersById[key]) {
+            houseKeepersById[key]._trigger()
+        } else {
+            houseKeepersById.values()
+                    .findAll{ it.class.getSimpleName() == key }
+                    .each {it.trigger() }
+        }
     }
 }
