@@ -1,7 +1,5 @@
 apply plugin: 'groovy'
 apply plugin: 'application'
-apply plugin: 'war'
-apply from: '../gretty.plugin'
 
 loadConfiguration()
 def loadConfiguration() {
@@ -151,15 +149,6 @@ task(doRun, dependsOn: "classes", type: JavaExec) {
     minHeapSize = "1g"
     maxHeapSize = "4g"
     args(System.getProperty("args", "").split() as String[])
-}
-
-gretty {
-    httpPort = 8181
-    contextPath = '/'
-    systemProperties(
-        'xl.secret.properties': System.getProperty("xl.secret.properties"),
-        'xl.mysql.properties' : System.getProperty("xl.mysql.properties")
-    )
 }
 
 task(groovy, dependsOn: "classes", type: JavaExec) {
