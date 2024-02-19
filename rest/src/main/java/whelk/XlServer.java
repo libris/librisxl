@@ -32,19 +32,16 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Map;
 
-import static whelk.meta.WhelkConstants.HTTP_PORT_PARAMETER;
-
 public class XlServer {
     private final static Logger log = LogManager.getLogger(XlServer.class);
 
     private static final String REMOTE_SEARCH_PATH = "/_remotesearch";
     private static final String USERDATA_PATH = "/_userdata/*";
-    private Server server;
 
     public void run() throws Exception {
         int port = WhelkConstants.getHttpPort();
 
-        server = new Server(port);
+        var server = new Server(port);
 
         configure(server);
 
