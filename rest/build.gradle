@@ -1,5 +1,5 @@
 apply plugin: 'groovy'
-apply plugin: 'war'
+apply plugin: 'java-library'
 apply plugin: 'jacoco'
 
 def mainClassName = "whelk.XlServer"
@@ -79,7 +79,7 @@ dependencies {
 
     // Servlet dependencies
     implementation 'com.thetransactioncompany:cors-filter:2.1.2'
-    providedCompile 'jakarta.servlet:jakarta.servlet-api:4.0.3'
+    api 'jakarta.servlet:jakarta.servlet-api:4.0.3'
 
     // Standalone
     implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
