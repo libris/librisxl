@@ -20,6 +20,7 @@ class CrudUtils {
     final static MediaType TRIG = MediaType.parse(MimeTypes.TRIG)
     final static MediaType RDFXML = MediaType.parse(MimeTypes.RDF)
     final static MediaType N3 = MediaType.parse(MimeTypes.N3)
+    final static MediaType ATOM = MediaType.parse(MimeTypes.ATOM)
 
     static final Map ALLOWED_MEDIA_TYPES_BY_EXT = [
             '': [JSONLD, JSON],
@@ -29,7 +30,8 @@ class CrudUtils {
             'ttl': [TURTLE],
             'rdf': [RDFXML],
             'xml': [RDFXML],
-            'n3': [N3]
+            'n3': [N3],
+            'atom': [ATOM],
     ]
 
     static Map EXTENSION_BY_MEDIA_TYPE = [:]
@@ -43,7 +45,7 @@ class CrudUtils {
         }
     }
 
-    static final List ALLOWED_MEDIA_TYPES = [JSON, JSONLD, TRIG, TURTLE, RDFXML, N3]
+    static final List ALLOWED_MEDIA_TYPES = [JSON, JSONLD, TRIG, TURTLE, RDFXML, N3, ATOM]
 
     static String getBestContentType(String acceptHeader, String resourcePath) {
         def desired = parseAcceptHeader(acceptHeader)

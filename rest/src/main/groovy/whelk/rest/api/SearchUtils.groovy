@@ -765,6 +765,12 @@ class SearchUtils {
                 termKey = stripPrefix(termKey, ESQuery.AND_PREFIX)
                 termKey = stripPrefix(termKey, ESQuery.OR_PREFIX)
 
+                if (termKey.startsWith(ESQuery.EXISTS_PREFIX)) {
+                  termKey = stripPrefix(termKey, ESQuery.EXISTS_PREFIX)
+                  valueProp = 'value'
+                  value = ESQuery.parseBoolean(termKey, val)
+                }
+
                 result << [
                     'variable': param,
                     'predicate': lookup.chip(termKey),

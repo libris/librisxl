@@ -107,12 +107,18 @@ class SiteSearch {
             if (!queryParameters['_statsrepr'] && searchSettings['statsindex']) {
                 queryParameters.put('_statsrepr', [mapper.writeValueAsString(searchSettings['statsindex'])] as String[])
             }
-            return toDataIndexDescription(appsIndex["${activeSite}data" as String], queryParameters)
+            var appDesc = appsIndex["${activeSite}data" as String]
+            return toDataIndexDescription(appDesc, queryParameters)
         } else {
             if (!queryParameters['_statsrepr'] && searchSettings['statsfind']) {
                 queryParameters.put('_statsrepr', [mapper.writeValueAsString(searchSettings['statsfind'])] as String[])
             }
-            return search.doSearch(queryParameters)
+            var results = search.doSearch(queryParameters)
+
+            var appDesc = appsIndex["${activeSite}find" as String]
+            results['titleByLang'] = appDesc['titleByLang']
+
+            return results
         }
     }
 
