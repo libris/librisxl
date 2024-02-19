@@ -31,14 +31,25 @@ import java.util.Map;
 
 public class XlServer {
 
+    private static final String PORT_PARAMETER = "xl.server.port";
+    private static final int DEFAULT_PORT = 8180;
 
     private static final String REMOTE_SEARCH_PATH = "/_remotesearch";
     private static final String USERDATA_PATH = "/_userdata/*";
     private Server server;
 
     public void run() throws Exception {
-        server = new Server(8180);
+        int port = Integer.parseInt(System.getProperty(PORT_PARAMETER, "" + DEFAULT_PORT));
 
+        server = new Server(port);
+
+        configure(server);
+
+        server.start();
+        server.join();
+    }
+
+    protected void configure(Server server ) {
         ServletContextHandler context = new ServletContextHandler();
         context.setContextPath("/");
 
@@ -66,9 +77,9 @@ public class XlServer {
         // TODO: configure mockAuthentication
         context.addFilter(AuthenticationFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST))
                 .setInitParameters(Map.of(
-                "supportedMethods", "POST, PUT, DELETE",
-                "whitelistedPostEndpoints", "/_convert,/_transliterate",
-                "mockAuthentication", "false"
+                        "supportedMethods", "POST, PUT, DELETE",
+                        "whitelistedPostEndpoints", "/_convert,/_transliterate",
+                        "mockAuthentication", "false"
                 ));
 
         var authenticationGet = new FilterHolder(AuthenticationFilter.class);
@@ -101,9 +112,6 @@ public class XlServer {
         context.addServlet(se.kb.libris.digi.DigitalReproductionAPI.class, "/_reproduction");
 
         context.addEventListener(new MarcFrameConverterInitializer());
-
-        server.start();
-        server.join();
     }
 
     public static void main(String[] args) throws Exception {
