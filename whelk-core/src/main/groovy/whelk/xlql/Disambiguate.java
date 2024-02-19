@@ -348,6 +348,7 @@ public class Disambiguate {
         nsToPrefix.put("http://schema.org/", "sdo:");
         nsToPrefix.put("https://id.kb.se/term/sao/", "sao:");
         nsToPrefix.put("https://id.kb.se/marc/", "marc:");
+        nsToPrefix.put("https://id.kb.se/term/saogf/", "saogf:");
 
         for (String ns : nsToPrefix.keySet()) {
             if (iri.startsWith(ns)) {
@@ -370,6 +371,7 @@ public class Disambiguate {
         nsToPrefix.put("http://schema.org/", "sdo:");
         nsToPrefix.put("https://id.kb.se/term/sao/", "sao:");
         nsToPrefix.put("https://id.kb.se/marc/", "marc:");
+        nsToPrefix.put("https://id.kb.se/term/saogf/", "saogf:");
 
         for (String ns : nsToPrefix.keySet()) {
             String prefix = nsToPrefix.get(ns);
