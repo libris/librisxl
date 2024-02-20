@@ -5,14 +5,17 @@ import com.thetransactioncompany.cors.CORSFilter;
 import io.prometheus.client.exporter.MetricsServlet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jetty.ee8.servlet.DefaultServlet;
 import org.eclipse.jetty.ee8.servlet.FilterHolder;
 import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.rewrite.handler.CompactPathRule;
 import org.eclipse.jetty.rewrite.handler.RewriteHandler;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 
+import org.eclipse.jetty.util.resource.PathResourceFactory;
 import whelk.meta.WhelkConstants;
 import whelk.rest.api.ConverterAPI;
 import whelk.rest.api.Crud;
@@ -50,7 +53,7 @@ public class XlServer {
         server.join();
     }
 
-    protected void configure(Server server ) {
+    protected void configure(Server server) {
         ServletContextHandler context = new ServletContextHandler();
         context.setContextPath("/");
 
@@ -111,6 +114,12 @@ public class XlServer {
         context.addServlet(DuplicatesAPI.class, "/_duplicates");
 
         context.addServlet(se.kb.libris.digi.DigitalReproductionAPI.class, "/_reproduction");
+
+        ServletHolder staticContent = new ServletHolder("static", DefaultServlet.class);
+        staticContent.setInitParameter("resourceBase", WhelkConstants.getStaticContentDir());
+        staticContent.setInitParameter("dirAllowed", "true");
+        staticContent.setInitParameter("pathInfoOnly", "true");
+        context.addServlet(staticContent, "/static/*");
 
         context.addEventListener(new MarcFrameConverterInitializer());
     }

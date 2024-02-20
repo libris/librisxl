@@ -23,7 +23,7 @@ public class XlServer {
         server.join();
     }
 
-    protected void configure(Server server ) {
+    protected void configure(Server server) {
         ServletContextHandler context = new ServletContextHandler();
         context.setContextPath("/");
 
