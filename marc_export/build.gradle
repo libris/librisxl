@@ -17,7 +17,10 @@ dependencies {
     // XL dependencies
     implementation(project(':whelk-core'))
 
-    // HTTP
+    // Groovy
+    implementation "org.codehaus.groovy:groovy:${groovyVersion}"
+
+    // Servlet
     api "jakarta.servlet:jakarta.servlet-api:${servletApiVersion}"
     implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
     implementation "org.eclipse.jetty:jetty-rewrite:${jettyVersion}"
@@ -31,6 +34,10 @@ dependencies {
     implementation "io.prometheus:simpleclient:${prometheusVersion}"
     implementation "io.prometheus:simpleclient_servlet:${prometheusVersion}"
 
+    // Tools
+    implementation group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
+    implementation 'org.apache.commons:commons-lang3:3.3.2'
+
     // Dependencies inherited from classic libris, due to profile handling
     implementation group: 'com.ibm.icu', name: 'icu4j', version: '4.8.1.1'
     implementation(group: 'org.dspace', name: 'xoai', version: '3.2.10') {
@@ -41,9 +48,7 @@ dependencies {
         // org.w3c.dom.UserDataHandler scanned from multiple locations: xml-apis, jaxen
         exclude group: 'jaxen', module: 'jaxen'
     }
-    implementation group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
-    implementation 'org.apache.commons:commons-lang3:3.3.2'
-    implementation "org.codehaus.groovy:groovy:${groovyVersion}"
+
 }
 
 jar {

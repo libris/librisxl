@@ -29,7 +29,10 @@ dependencies {
     // XL dependencies
     implementation(project(':whelk-core'))
 
-    // HTTP
+    // Groovy
+    implementation "org.codehaus.groovy:groovy:${groovyVersion}"
+
+    // Servlet
     api "jakarta.servlet:jakarta.servlet-api:${servletApiVersion}"
     implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
     implementation "org.eclipse.jetty.ee8:jetty-ee8-servlet:${jettyVersion}"
@@ -41,8 +44,6 @@ dependencies {
     // metrics
     implementation "io.prometheus:simpleclient:${prometheusVersion}"
     implementation "io.prometheus:simpleclient_servlet:${prometheusVersion}"
-
-    implementation "org.codehaus.groovy:groovy:${groovyVersion}"
 
     // Email
     implementation group: 'org.simplejavamail', name: 'simple-java-mail', version: '8.2.0'

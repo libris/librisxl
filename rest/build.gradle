@@ -53,17 +53,31 @@ configurations.all {
 }
 
 dependencies {
-    // KB libs
+    // XL
     implementation(project(':whelk-core'))
 
-    // Common tools
+    // Groovy
     implementation "org.codehaus.groovy:groovy-all:${groovyVersion}"
     implementation "org.codehaus.groovy:groovy-dateutil:${groovyVersion}"
-    implementation 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
-    implementation 'commons-io:commons-io:2.11.0'
+    implementation "org.codehaus.groovy:groovy-xml:${groovyVersion}"
+    implementation "org.codehaus.groovy:groovy:${groovyVersion}"
+
+    // Servlet
+    api "jakarta.servlet:jakarta.servlet-api:${servletApiVersion}"
+    implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
+    implementation "org.eclipse.jetty:jetty-rewrite:${jettyVersion}"
+    implementation "org.eclipse.jetty.ee8:jetty-ee8-servlet:${jettyVersion}"
+    implementation 'com.thetransactioncompany:cors-filter:2.1.2'
+
+    // Common tools
     implementation "com.google.guava:guava:${guavaVersion}"
     implementation "org.apache.httpcomponents:httpclient:${httpComponentsClientVersion}"
     implementation "org.apache.httpcomponents:httpcore:${httpComponentsCoreVersion}"
+    implementation 'commons-cli:commons-cli:1.2'
+    implementation 'commons-io:commons-io:2.11.0'
+    implementation 'org.codehaus.jackson:jackson-core-asl:1.9.13'
+    implementation 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
+    implementation 'xml-apis:xml-apis:1.4.01'
 
     // metrics
     implementation "io.prometheus:simpleclient:${prometheusVersion}"
@@ -76,21 +90,6 @@ dependencies {
     // profiling and test
     testImplementation "org.spockframework:spock-core:${spockVersion}"
     testImplementation 'cglib:cglib-nodep:3.1'
-
-    // Servlet dependencies
-    implementation 'com.thetransactioncompany:cors-filter:2.1.2'
-    api "jakarta.servlet:jakarta.servlet-api:${servletApiVersion}"
-
-    // Standalone
-    implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
-    implementation "org.eclipse.jetty:jetty-rewrite:${jettyVersion}"
-    implementation "org.eclipse.jetty.ee8:jetty-ee8-servlet:${jettyVersion}"
-    implementation "org.codehaus.groovy:groovy-all:${groovyVersion}"
-    implementation 'commons-cli:commons-cli:1.2'
-    implementation "org.codehaus.groovy:groovy-xml:${groovyVersion}"
-    implementation "org.codehaus.groovy:groovy:${groovyVersion}"
-    implementation 'org.codehaus.jackson:jackson-core-asl:1.9.13'
-    implementation 'xml-apis:xml-apis:1.4.01'
 }
 
 jar {
