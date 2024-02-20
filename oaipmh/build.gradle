@@ -22,7 +22,6 @@ dependencies {
     // HTTP
     api "jakarta.servlet:jakarta.servlet-api:${servletApiVersion}"
     implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
-    implementation "org.eclipse.jetty:jetty-rewrite:${jettyVersion}"
     implementation "org.eclipse.jetty.ee8:jetty-ee8-servlet:${jettyVersion}"
 
     // Necessary for inlining XML into XMLStreamWriter
@@ -65,6 +64,7 @@ task(appRun, dependsOn: "classes", type: JavaExec) {
     maxHeapSize = "4g"
     systemProperties(
             'xl.secret.properties': System.getProperty("xl.secret.properties"),
+            'xl.logRoot': System.getProperty("xl.logRoot", "."),
             'xl.http.port': System.getProperty("xl.http.port", "8588")
     )
     args(System.getProperty("args", "").split() as String[])

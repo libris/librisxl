@@ -61,6 +61,7 @@ task(appRun, dependsOn: "classes", type: JavaExec) {
     maxHeapSize = "4g"
     systemProperties(
             'xl.secret.properties': System.getProperty("xl.secret.properties"),
+            'xl.logRoot': System.getProperty("xl.logRoot", "."),
             'xl.apix-users.properties': System.getProperty("xl.apix-users.properties"),
             'xl.http.port': System.getProperty("xl.http.port", "8280")
     )
@@ -68,7 +69,7 @@ task(appRun, dependsOn: "classes", type: JavaExec) {
 
     debugOptions {
         enabled = true
-        port = 5009
+        port = 5008
         server = true
         suspend = false
     }

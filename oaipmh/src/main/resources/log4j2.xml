@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
     <Properties>
-        <Property name="catalina.base">.</Property>
+        <Property name="xl.logRoot">.</Property>
     </Properties>
 
     <Appenders>
         <Console name="STDOUT" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{ISO8601} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
-        <File name="File" fileName="${sys:catalina.base}/logs/whelk.log">
+        <File name="File" fileName="${sys:xl.logRoot}/logs/whelk.log">
             <PatternLayout pattern="%d{ISO8601} [%t] %-5level %logger{36} - %msg%n"/>
         </File>
     </Appenders>

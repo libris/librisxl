@@ -71,6 +71,7 @@ task(appRun, dependsOn: "classes", type: JavaExec) {
     maxHeapSize = "4g"
     systemProperties(
             'xl.secret.properties': System.getProperty("xl.secret.properties"),
+            'xl.logRoot': System.getProperty("xl.logRoot", "."),
             'xl.http.port': System.getProperty("xl.http.port", "8580")
     )
     args(System.getProperty("args", "--server").split() as String[])
