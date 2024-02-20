@@ -64,7 +64,6 @@ dependencies {
     implementation(project(':whelk-core'))
 
     // Common tools
-    providedCompile 'javax.servlet:servlet-api:2.5'
     implementation "org.codehaus.groovy:groovy-all:${groovyVersion}"
     implementation 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
 
@@ -106,37 +105,6 @@ jar {
         }
     }
 
-}
-
-
-
-configurations {
-    executableWarDeps
-}
-
-project.afterEvaluate {
-    war {
-        archivesBaseName = "xlimporter"
-
-        from {
-            configurations.executableWarDeps.collect {
-                //it.isDirectory() ? it : project.zipTree(it)
-                it.isDirectory() ? it : project.zipTree(it).matching {
-                }
-            }
-        }
-
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        def manifestClasspath = configurations.runtimeClasspath.collect {
-            "/WEB-INF/lib/${it.getName()}"
-        }.join(',')
-
-        manifest {
-            attributes 'Implementation-Title': 'Standalone Whelk Importer',
-                    'Implementation-Version': versionNumber,
-                    'Class-Path': manifestClasspath
-        }
-    }
 }
 
 task(doRun, dependsOn: "classes", type: JavaExec) {
