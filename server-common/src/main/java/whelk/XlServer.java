@@ -6,37 +6,61 @@ import org.eclipse.jetty.ee8.servlet.DefaultServlet;
 import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import org.eclipse.jetty.server.AsyncRequestLogWriter;
+import org.eclipse.jetty.server.ConnectionLimit;
+import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.CustomRequestLog;
-import org.eclipse.jetty.server.RequestLog;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
-import whelk.meta.WhelkConstants;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.util.thread.ExecutorThreadPool;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.TimeZone;
+import java.util.concurrent.ArrayBlockingQueue;
 
 public abstract class XlServer {
     private final static Logger log = LogManager.getLogger(XlServer.class);
 
     public void run() throws Exception {
-        int port = Configuration.getHttpPort();
-
-        var server = new Server(port);
-
+        var server = createServer();
         configure(server);
-
         server.start();
-        log.info("Started server on port {}", port);
         server.join();
     }
+
+    protected abstract void configureHandlers(Server server);
 
     protected void configure(Server server) throws IOException {
         configureHandlers(server);
         setupAccessLogging(server);
     }
 
-    protected abstract void configureHandlers(Server server);
+    // TODO: review this...
+    protected Server createServer() {
+        int maxConnections = Configuration.getMaxConnections();
+        var queue = new ArrayBlockingQueue<Runnable>(1);
+        var pool = new ExecutorThreadPool(maxConnections, Math.min(10, maxConnections), queue);
+
+        var server = new Server(pool);
+
+        int port = Configuration.getHttpPort();
+
+        var httpConfig = new HttpConfiguration();
+        httpConfig.setIdleTimeout(20000);
+        try (var http = new ServerConnector(server, new HttpConnectionFactory(httpConfig))) {
+            http.setPort(port);
+            http.setAcceptQueueSize(0);
+            server.setConnectors(new Connector[]{ http });
+            log.info("Started server on port {}", port);
+        }
+
+        server.addBean(new ConnectionLimit(maxConnections, server));
+
+        return server;
+    }
 
     protected void setupAccessLogging(Server server) throws IOException {
         Path logRoot = Configuration.getLogRoot();

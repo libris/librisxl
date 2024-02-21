@@ -12,6 +12,9 @@ public class Configuration {
     private static final String STATIC_DIR_PARAMETER = "xl.http.static";
     private static final String DEFAULT_STATIC_DIR = "/srv/static";
 
+    private static final String MAX_CONNECTIONS_PARAMETER = "xl.http.maxConnections";
+    private static final int DEFAULT_MAX_CONNECTIONS = 500;
+
     private static final String LOG_ROOT_PARAMETER = "xl.logRoot";
     private static final String DEFAULT_LOG_ROOT = "./logs";
 
@@ -25,5 +28,9 @@ public class Configuration {
 
     public static Path getLogRoot() {
         return FileSystems.getDefault().getPath(System.getProperty(LOG_ROOT_PARAMETER, DEFAULT_LOG_ROOT));
+    }
+
+    public static int getMaxConnections() {
+        return Integer.parseInt(System.getProperty(MAX_CONNECTIONS_PARAMETER, "" + DEFAULT_MAX_CONNECTIONS));
     }
 }
