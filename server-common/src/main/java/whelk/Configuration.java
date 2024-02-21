@@ -4,8 +4,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 
 public class Configuration {
-    public static final String BATCH_THREAD_GROUP = "whelk-batch";
-
     private static final String HTTP_PORT_PARAMETER = "xl.http.port";
     private static final int DEFAULT_HTTP_PORT = 8180;
 
