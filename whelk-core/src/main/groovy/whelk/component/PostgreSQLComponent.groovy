@@ -1190,8 +1190,8 @@ class PostgreSQLComponent {
             }
 
         getSystemIds(linksByIri.keySet(), connection) { String iri, String systemId, boolean deleted ->
-            if (deleted) // doc refers to a deleted document which is not ok.
-                throw new LinkValidationException("Record supposedly depends on deleted record: ${systemId}, which is not allowed.")
+            if (deleted && !JsonLd.ALLOW_LINK_TO_DELETED.containsAll(linksByIri[iri]*.relation))
+                throw new LinkValidationException("Forbidden link(s) to deleted resource ${systemId} found in ${linksByIri[iri]*.relation}")
 
             if (systemId != doc.getShortId()) // Exclude A -> A (self-references)
                 dependencies.addAll(linksByIri[iri].collect { [it.relation, systemId] as String[] })
