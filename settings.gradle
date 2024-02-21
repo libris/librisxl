@@ -1,4 +1,17 @@
 rootProject.name = 'librisxl'
-include('apix_export', 'apix_server', 'batchimport', 'importers',
-        'marc_export', 'oaipmh', 'rest', 'whelk-core', 'whelktool',
-        'gui-whelktool', 'trld-java', 'librisworks', 'housekeeping', 'server-common')
+include(
+        'apix_export',
+        'apix_server',
+        'batchimport',
+        'gui-whelktool',
+        'housekeeping',
+        'importers',
+        'librisworks',
+        'marc_export',
+        'oaipmh',
+        'rest',
+        'server-common',
+        'trld-java',
+        'whelk-core',
+        'whelktool',
+)
