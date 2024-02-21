@@ -21,8 +21,8 @@ public class Disambiguate {
 
     private Set<String> adminMetadataTypes;
     private Set<String> creationSuperTypes;
-    private Set<String> workTypes;
-    private Set<String> instanceTypes;
+    public Set<String> workTypes;
+    public Set<String> instanceTypes;
 
     public enum OutsetType {
         INSTANCE,

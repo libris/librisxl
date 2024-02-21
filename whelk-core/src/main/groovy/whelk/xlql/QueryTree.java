@@ -96,11 +96,32 @@ public class QueryTree {
                 return new FreeText(ft.operator(), ft.value());
             }
             case SimpleQueryTree.PropertyValue pv -> {
-                return pv.property() == JsonLd.TYPE_KEY
-                        ? buildField(pv)
+                return JsonLd.TYPE_KEY.equals(pv.property())
+                        ? buildTypeField(pv, disambiguate)
                         : buildField(pv, disambiguate, outset);
             }
         }
+    }
+
+    private static Node buildTypeField(SimpleQueryTree.PropertyValue type, Disambiguate disambiguate) {
+        Set<String> altTypes = "Work".equals(type.value())
+                ? disambiguate.workTypes
+                : ("Instance".equals(type.value()) ? disambiguate.instanceTypes : Collections.emptySet());
+
+        if (altTypes.isEmpty()) {
+            return buildField(type);
+        }
+
+        List<Node> altFields = altTypes.stream()
+                .sorted()
+                .map(QueryTree::typeField)
+                .toList();
+
+        return new Or(altFields);
+    }
+
+    private static Node typeField(String type) {
+        return new Field(new Path(List.of(JsonLd.TYPE_KEY)), Operator.EQUALS, type);
     }
 
     private static Field buildField(SimpleQueryTree.PropertyValue pv) {

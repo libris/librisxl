@@ -92,7 +92,7 @@ class QueryTreeSpec extends Specification {
         issuanceTypeField.value() == "Monograph"
     }
 
-    def "work type + path inference"() {
+    def "work subtype + path inference"() {
         given:
         String queryString = "typ:Text upphovsuppgift:Någon tillkomsttid<2020 language:\"https://id.kb.se/language/swe\""
         SimpleQueryTree sqt = getSimpleQueryTree(queryString)
@@ -129,12 +129,12 @@ class QueryTreeSpec extends Specification {
     }
     def "instance type + path inference"() {
         given:
-        String queryString = "typ:Print upphovsuppgift:Någon tillkomsttid<2020 language:\"https://id.kb.se/language/swe\""
+        String queryString = "typ:Instance upphovsuppgift:Någon tillkomsttid<2020 language:\"https://id.kb.se/language/swe\""
         SimpleQueryTree sqt = getSimpleQueryTree(queryString)
         QueryTree qt = new QueryTree(sqt, disambiguate)
         QueryTree.And topNode = qt.tree
         List conjuncts = topNode.conjuncts()
-        QueryTree.Field typeField = conjuncts[0]
+        QueryTree.Or typeFields = conjuncts[0]
         QueryTree.Field respStatementField = conjuncts[1]
         QueryTree.Field originDateField = conjuncts[2]
         QueryTree.Or languageFields = conjuncts[3]
@@ -142,9 +142,7 @@ class QueryTreeSpec extends Specification {
         QueryTree.Field langField2 = languageFields.disjuncts()[1]
 
         expect:
-        typeField.path().stringify() == "@type"
-        typeField.operator() == Operator.EQUALS
-        typeField.value() == "Print"
+        typeFields.disjuncts().size() == disambiguate.instanceTypes.size()
 
         respStatementField.path().stringify() == "responsibilityStatement"
         respStatementField.operator() == Operator.EQUALS
