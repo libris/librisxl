@@ -2,7 +2,7 @@ apply plugin: 'groovy'
 apply plugin: 'java-library'
 apply plugin: 'jacoco'
 
-def mainClassName = "whelk.XlServer"
+def mainClassName = "whelk.RestServer"
 
 sourceSets {
     main {
@@ -55,6 +55,7 @@ configurations.all {
 dependencies {
     // XL
     implementation(project(':whelk-core'))
+    implementation(project(':server-common'))
 
     // Groovy
     implementation "org.codehaus.groovy:groovy-all:${groovyVersion}"

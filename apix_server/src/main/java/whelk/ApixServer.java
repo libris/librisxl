@@ -14,27 +14,14 @@ import org.eclipse.jetty.util.resource.PathResourceFactory;
 import org.eclipse.jetty.util.resource.Resource;
 import whelk.apixserver.ApixCatServlet;
 import whelk.apixserver.ApixSearchServlet;
-import whelk.meta.WhelkConstants;
 
-public class XlServer {
-    private static final Logger log = LogManager.getLogger(XlServer.class);
+public class ApixServer extends XlServer {
+    private static final Logger log = LogManager.getLogger(ApixServer.class);
 
     private static final String USER_PROPERTIES_PATH_PARAMETER = "xl.apix-users.properties";
 
-    public void run() throws Exception {
-        int port = WhelkConstants.getHttpPort();
-
-        var server = new Server(port);
-
-        configure(server);
-
-        server.start();
-        log.info("Started server on port {}", port);
-        server.join();
-    }
-
-    protected void configure(Server server) {
-
+    @Override
+    protected void configureHandlers(Server server) {
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SECURITY);
         context.setContextPath("/");
 

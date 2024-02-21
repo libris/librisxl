@@ -1,7 +1,7 @@
 apply plugin: 'groovy'
 apply plugin: 'java-library'
 
-def mainClassName = "whelk.XlServer"
+def mainClassName = "whelk.HouseKeepingServer"
 
 repositories {
     mavenCentral()
@@ -28,6 +28,7 @@ sourceSets {
 dependencies {
     // XL dependencies
     implementation(project(':whelk-core'))
+    implementation(project(':server-common'))
 
     // Groovy
     implementation "org.codehaus.groovy:groovy:${groovyVersion}"

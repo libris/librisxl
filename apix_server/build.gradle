@@ -17,6 +17,7 @@ configurations.all {
 dependencies {
     // XL dependencies
     implementation(project(':whelk-core'))
+    implementation(project(':server-common'))
 
     // HTTP
     api "jakarta.servlet:jakarta.servlet-api:${servletApiVersion}"

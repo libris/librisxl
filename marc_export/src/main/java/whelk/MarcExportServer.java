@@ -8,22 +8,10 @@ import org.eclipse.jetty.server.Server;
 import whelk.export.marc.MarcHttpExport;
 import whelk.meta.WhelkConstants;
 
-public class XlServer {
-    private final static Logger log = LogManager.getLogger(XlServer.class);
+public class MarcExportServer extends XlServer {
 
-    public void run() throws Exception {
-        int port = WhelkConstants.getHttpPort();
-
-        var server = new Server(port);
-
-        configure(server);
-
-        server.start();
-        log.info("Started server on port {}", port);
-        server.join();
-    }
-
-    protected void configure(Server server) {
+    @Override
+    protected void configureHandlers(Server server) {
         ServletContextHandler context = new ServletContextHandler();
         context.setContextPath("/");
 
@@ -34,7 +22,6 @@ public class XlServer {
     }
 
     public static void main(String[] args) throws Exception {
-        var xlServer = new XlServer();
-        xlServer.run();
+        new MarcExportServer().run();
     }
 }

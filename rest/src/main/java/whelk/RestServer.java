@@ -40,26 +40,14 @@ import java.util.Map;
 
 import static whelk.meta.WhelkConstants.getLogRoot;
 
-public class XlServer {
+public class RestServer extends XlServer {
     private final static Logger log = LogManager.getLogger(XlServer.class);
 
     private static final String REMOTE_SEARCH_PATH = "/_remotesearch";
     private static final String USERDATA_PATH = "/_userdata/*";
 
-    public void run() throws Exception {
-        int port = WhelkConstants.getHttpPort();
-
-        var server = new Server(port);
-
-        configure(server);
-        setupAccessLogging(server);
-
-        server.start();
-        log.info("Started server on port {}", port);
-        server.join();
-    }
-
-    protected void configure(Server server) {
+    @Override
+    protected void configureHandlers(Server server) {
         ServletContextHandler context = new ServletContextHandler();
         context.setContextPath("/");
 
@@ -130,21 +118,7 @@ public class XlServer {
         context.addEventListener(new MarcFrameConverterInitializer());
     }
 
-    private void setupAccessLogging(Server server) throws IOException {
-        Path logRoot = getLogRoot();
-        if (!Files.isDirectory(logRoot)) {
-            Files.createDirectories(logRoot);
-        }
-        AsyncRequestLogWriter requestLogWriter = new AsyncRequestLogWriter();
-        requestLogWriter.setAppend(true);
-        requestLogWriter.setFilename(logRoot.resolve("access.log").toString());
-        requestLogWriter.setRetainDays(3);
-        RequestLog requestLog = new CustomRequestLog(requestLogWriter, CustomRequestLog.EXTENDED_NCSA_FORMAT);
-        server.setRequestLog(requestLog);
-    }
-
     public static void main(String[] args) throws Exception {
-        var xlServer = new XlServer();
-        xlServer.run();
+        new RestServer().run();
     }
 }

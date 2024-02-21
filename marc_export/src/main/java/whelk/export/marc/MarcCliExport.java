@@ -11,6 +11,7 @@ import se.kb.libris.util.marc.io.MarcXmlRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
 import whelk.Document;
 import whelk.JsonLd;
+import whelk.MarcExportServer;
 import whelk.Whelk;
 import whelk.XlServer;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
@@ -69,8 +70,7 @@ public class MarcCliExport
 
         if (args[0].equals("--server"))
         {
-            var xlServer = new XlServer();
-            xlServer.run();
+            new MarcExportServer().run();
             return;
         }
 
