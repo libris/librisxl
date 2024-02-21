@@ -1,12 +1,9 @@
 package whelk;
 
 import io.prometheus.client.exporter.MetricsServlet;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.server.Server;
 import whelk.export.marc.MarcHttpExport;
-import whelk.meta.WhelkConstants;
 
 public class MarcExportServer extends XlServer {
 
