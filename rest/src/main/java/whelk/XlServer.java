@@ -1,7 +1,6 @@
 package whelk;
 
 import com.thetransactioncompany.cors.CORSFilter;
-
 import io.prometheus.client.exporter.MetricsServlet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,10 +11,11 @@ import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.rewrite.handler.CompactPathRule;
 import org.eclipse.jetty.rewrite.handler.RewriteHandler;
+import org.eclipse.jetty.server.AsyncRequestLogWriter;
+import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.RequestLog;
 import org.eclipse.jetty.server.Server;
-
-import org.eclipse.jetty.util.resource.PathResourceFactory;
 import whelk.meta.WhelkConstants;
 import whelk.rest.api.ConverterAPI;
 import whelk.rest.api.Crud;
@@ -31,9 +31,14 @@ import whelk.rest.api.TransliterationAPI;
 import whelk.rest.api.UserDataAPI;
 
 import javax.servlet.DispatcherType;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Map;
+
+import static whelk.meta.WhelkConstants.getLogRoot;
 
 public class XlServer {
     private final static Logger log = LogManager.getLogger(XlServer.class);
@@ -47,6 +52,7 @@ public class XlServer {
         var server = new Server(port);
 
         configure(server);
+        setupAccessLogging(server);
 
         server.start();
         log.info("Started server on port {}", port);
@@ -122,6 +128,19 @@ public class XlServer {
         context.addServlet(staticContent, "/static/*");
 
         context.addEventListener(new MarcFrameConverterInitializer());
+    }
+
+    private void setupAccessLogging(Server server) throws IOException {
+        Path logRoot = getLogRoot();
+        if (!Files.isDirectory(logRoot)) {
+            Files.createDirectories(logRoot);
+        }
+        AsyncRequestLogWriter requestLogWriter = new AsyncRequestLogWriter();
+        requestLogWriter.setAppend(true);
+        requestLogWriter.setFilename(logRoot.resolve("access.log").toString());
+        requestLogWriter.setRetainDays(3);
+        RequestLog requestLog = new CustomRequestLog(requestLogWriter, CustomRequestLog.EXTENDED_NCSA_FORMAT);
+        server.setRequestLog(requestLog);
     }
 
     public static void main(String[] args) throws Exception {

@@ -1,5 +1,8 @@
 package whelk.meta;
 
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+
 /**
  * This class is meant for constants that need to be visible to several modules
  * that are not seeing each others code.
@@ -16,11 +19,18 @@ public class WhelkConstants {
     private static final String STATIC_DIR_PARAMETER = "xl.http.static";
     private static final String DEFAULT_STATIC_DIR = "/srv/static";
 
+    private static final String LOG_ROOT_PARAMETER = "xl.logRoot";
+    private static final String DEFAULT_LOG_ROOT = "./logs";
+
     public static int getHttpPort() {
         return Integer.parseInt(System.getProperty(HTTP_PORT_PARAMETER, "" + DEFAULT_HTTP_PORT));
     }
 
     public static String getStaticContentDir() {
         return System.getProperty(STATIC_DIR_PARAMETER, DEFAULT_STATIC_DIR);
+    }
+
+    public static Path getLogRoot() {
+        return FileSystems.getDefault().getPath(System.getProperty(LOG_ROOT_PARAMETER, DEFAULT_LOG_ROOT));
     }
 }
