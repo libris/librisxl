@@ -14,6 +14,7 @@ import whelk.meta.WhelkConstants;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.TimeZone;
 
 public abstract class XlServer {
     private final static Logger log = LogManager.getLogger(XlServer.class);
@@ -42,11 +43,12 @@ public abstract class XlServer {
         if (!Files.isDirectory(logRoot)) {
             Files.createDirectories(logRoot);
         }
-        AsyncRequestLogWriter requestLogWriter = new AsyncRequestLogWriter();
+        var requestLogWriter = new AsyncRequestLogWriter();
         requestLogWriter.setAppend(true);
-        requestLogWriter.setFilename(logRoot.resolve("access.log").toString());
-        requestLogWriter.setRetainDays(3);
-        RequestLog requestLog = new CustomRequestLog(requestLogWriter, CustomRequestLog.EXTENDED_NCSA_FORMAT);
+        requestLogWriter.setFilename(logRoot.resolve("access_log.yyyy_MM_dd.txt").toString());
+        requestLogWriter.setTimeZone(TimeZone.getDefault().getID());
+        requestLogWriter.setRetainDays(14);
+        var requestLog = new CustomRequestLog(requestLogWriter, CustomRequestLog.EXTENDED_NCSA_FORMAT);
         server.setRequestLog(requestLog);
     }
 
