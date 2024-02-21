@@ -4,19 +4,13 @@ import com.thetransactioncompany.cors.CORSFilter;
 import io.prometheus.client.exporter.MetricsServlet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.jetty.ee8.servlet.DefaultServlet;
 import org.eclipse.jetty.ee8.servlet.FilterHolder;
 import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
-import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.rewrite.handler.CompactPathRule;
 import org.eclipse.jetty.rewrite.handler.RewriteHandler;
-import org.eclipse.jetty.server.AsyncRequestLogWriter;
-import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.RequestLog;
 import org.eclipse.jetty.server.Server;
-import whelk.meta.WhelkConstants;
 import whelk.rest.api.ConverterAPI;
 import whelk.rest.api.Crud;
 import whelk.rest.api.DuplicatesAPI;
@@ -31,14 +25,9 @@ import whelk.rest.api.TransliterationAPI;
 import whelk.rest.api.UserDataAPI;
 
 import javax.servlet.DispatcherType;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Map;
-
-import static whelk.meta.WhelkConstants.getLogRoot;
 
 public class RestServer extends XlServer {
     private final static Logger log = LogManager.getLogger(XlServer.class);
@@ -109,11 +98,7 @@ public class RestServer extends XlServer {
 
         context.addServlet(se.kb.libris.digi.DigitalReproductionAPI.class, "/_reproduction");
 
-        ServletHolder staticContent = new ServletHolder("static", DefaultServlet.class);
-        staticContent.setInitParameter("resourceBase", WhelkConstants.getStaticContentDir());
-        staticContent.setInitParameter("dirAllowed", "true");
-        staticContent.setInitParameter("pathInfoOnly", "true");
-        context.addServlet(staticContent, "/static/*");
+        serveStaticContent(context);
 
         context.addEventListener(new MarcFrameConverterInitializer());
     }

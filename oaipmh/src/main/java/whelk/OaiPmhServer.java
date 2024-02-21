@@ -16,6 +16,7 @@ public class OaiPmhServer extends XlServer {
 
         context.addServlet(MetricsServlet.class, "/metrics");
         context.addServlet(OaiPmh.class, "/");
+        serveStaticContent(context);
     }
 
     public static void main(String[] args) throws Exception {

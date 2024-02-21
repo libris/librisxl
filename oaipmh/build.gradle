@@ -1,6 +1,6 @@
 apply plugin: 'java-library'
 
-def mainClassName = "whelk.XlServer"
+def mainClassName = "whelk.OaiPmhServer"
 
 repositories {
     mavenCentral()

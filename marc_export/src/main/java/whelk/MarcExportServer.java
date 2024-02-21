@@ -16,6 +16,7 @@ public class MarcExportServer extends XlServer {
 
         context.addServlet(MetricsServlet.class, "/metrics");
         context.addServlet(MarcHttpExport.class, "/");
+        serveStaticContent(context);
     }
 
     public static void main(String[] args) throws Exception {

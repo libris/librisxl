@@ -13,6 +13,7 @@ public class HouseKeepingServer extends XlServer {
         server.setHandler(context);
 
         context.addServlet(WebInterface.class, "/");
+        serveStaticContent(context);
     }
 
     public static void main(String[] args) throws Exception {

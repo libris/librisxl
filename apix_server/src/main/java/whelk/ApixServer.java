@@ -61,11 +61,12 @@ public class ApixServer extends XlServer {
         context.addServlet(ApixCatServlet.class, "/apix/0.1/cat/*");
         context.addServlet(ApixSearchServlet.class, "/apix/0.1/cat/libris/search");
 
+        serveStaticContent(context);
+
         server.setHandler(context);
     }
 
     public static void main(String[] args) throws Exception {
-        var xlServer = new XlServer();
-        xlServer.run();
+        new ApixServer().run();
     }
 }
