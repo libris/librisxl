@@ -3994,8 +3994,8 @@
           "i1": null,
           "$2": {
             "property": "@type",
+            "NOTE": "NB! Order is significant. The last key for the same value will be used on revert",
             "tokenMap": {
-              "NOTE": "NB! Order is significant. The last key for the same value will be used on revert",
               "ANSI": "Ansi",
               "ansi": "Ansi",
               "danacode": "Danacode",
