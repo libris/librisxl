@@ -1,8 +1,5 @@
 package whelk.meta;
 
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-
 /**
  * This class is meant for constants that need to be visible to several modules
  * that are not seeing each others code.
