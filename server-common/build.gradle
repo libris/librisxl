@@ -1,0 +1,50 @@
+apply plugin: 'java-library'
+apply plugin: 'groovy'
+
+repositories {
+    mavenCentral()
+}
+
+sourceSets {
+    main {
+        java { srcDirs = [] }
+        groovy { srcDirs = ['src/main/java', 'src/main/groovy'] }
+    }
+    test {
+        groovy { srcDir 'src/test/groovy/' }
+    }
+}
+
+
+dependencies {
+    // XL dependencies
+    implementation(project(':whelk-core'))
+
+    // Groovy
+    implementation "org.codehaus.groovy:groovy:${groovyVersion}"
+
+    // Servlet
+    api "jakarta.servlet:jakarta.servlet-api:${servletApiVersion}"
+    implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
+    implementation "org.eclipse.jetty.ee8:jetty-ee8-servlet:${jettyVersion}"
+
+    // Logging
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
+
+    // metrics
+    implementation "io.prometheus:simpleclient:${prometheusVersion}"
+    implementation "io.prometheus:simpleclient_servlet:${prometheusVersion}"
+
+    // Testing
+    testImplementation "org.spockframework:spock-core:${spockVersion}"
+}
+
+test {
+    useJUnitPlatform()
+}
+
+test.testLogging {
+    showStandardStreams = true
+    exceptionFormat = "full"
+}

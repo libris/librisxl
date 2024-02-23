@@ -458,7 +458,7 @@ class XL {
 }
 
 class Util {
-    static final String JSONLD = 'application/ld+json'
+    public static final String JSONLD = 'application/ld+json'
     
     static List asList(Object o) {
         (o instanceof List) ? (List) o : (o ? [o] : [])
