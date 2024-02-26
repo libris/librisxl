@@ -89,6 +89,8 @@ dependencies {
 
 // Include dependent libraries in archive.
 jar {
+    archivesBaseName = 'xlimporter'
+	
     manifest {
         attributes "Main-Class": "whelk.importer.ImporterMain",
                 // log4j uses multi-release to ship different stack walking implementations for different java
