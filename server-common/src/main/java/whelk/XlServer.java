@@ -42,7 +42,7 @@ public abstract class XlServer {
     protected Server createServer() {
         int maxConnections = Configuration.getMaxConnections();
         var queue = new ArrayBlockingQueue<Runnable>(1);
-        var pool = new ExecutorThreadPool(maxConnections, Math.min(10, maxConnections), queue);
+        var pool = new ExecutorThreadPool(maxConnections, maxConnections, queue);
 
         var server = new Server(pool);
 
