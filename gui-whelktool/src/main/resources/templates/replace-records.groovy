@@ -49,7 +49,7 @@ for (String job : bibids.readLines()) {
         disappearingRecordIDs = disappearingRecordIDs.subList(1, disappearingRecordIDs.size())
         disappearingThingIDs = item.doc.getThingIdentifiers()
     })
-    if (disappearingRecordIDs.isEmpty() || disappearingThingIDs.isEmpty()) {
+    if (disappearingRecordIDs == null || disappearingThingIDs == null || disappearingRecordIDs.isEmpty() || disappearingThingIDs.isEmpty()) {
         System.err.println("Could not find any suitable URIs on the disappearing record: " + idToBeReplaced)
         continue
     }
