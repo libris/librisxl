@@ -29,14 +29,14 @@ test.testLogging {
 
 jacoco {
     toolVersion = "$jacocoVersion"
-    reportsDirectory = file("$buildDir/coverage_report")
+    reportsDirectory = layout.buildDirectory.dir("coverage_report")
 }
 
 jacocoTestReport {
     reports {
         xml.required = false
         csv.required = false
-        html.destination file("${buildDir}/coverage_report/html")
+        html.outputLocation = layout.buildDirectory.dir("coverage_report/html")
     }
 }
 

@@ -34,14 +34,14 @@ test.testLogging {
 
 jacoco {
     toolVersion = "$jacocoVersion"
-    reportsDirectory = file("$buildDir/coverage_report")
+    reportsDirectory = layout.buildDirectory.dir("coverage_report")
 }
 
 jacocoTestReport {
     reports {
         xml.required = false
         csv.required = false
-        html.destination file("${buildDir}/coverage_report/html")
+        html.outputLocation = layout.buildDirectory.dir("coverage_report/html")
     }
 }
 
@@ -139,10 +139,10 @@ task integTest(type: Test) {
         showStandardStreams = true
         exceptionFormat = "full"
     }
-    binaryResultsDirectory.set(file("$buildDir/integration-test-results/binary/integTest"))
+    binaryResultsDirectory.set(layout.buildDirectory.dir("integration-test-results/binary/integTest"))
     reports {
-        html.destination = file("$buildDir/reports/integration-test")
-        junitXml.destination = file("$buildDir/integration-test-results")
+        html.outputLocation = layout.buildDirectory.dir("reports/integration-test")
+        junitXml.outputLocation = layout.buildDirectory.dir("integration-test-results")
     }
     mustRunAfter tasks.test
 }
