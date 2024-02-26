@@ -16,8 +16,7 @@ repositories {
 
 dependencies {
     implementation project(':whelktool')
-    compileOnly "org.codehaus.groovy:groovy:${groovyVersion}"
-    compileOnly project(':whelk-core')
+    implementation project(':whelk-core')
     scriptsCompileOnly sourceSets.main.output
     scriptsCompileOnly project(':whelk-core')
     testImplementation "org.spockframework:spock-core:${spockVersion}"
