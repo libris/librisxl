@@ -106,8 +106,10 @@ class NotificationGenerator extends HouseKeeper {
                     }
 
                     if (dependerMainEntityType != null && whelk.getJsonld().isSubClassOf(dependerMainEntityType, "Instance") && !filtered) {
-                        ((List) changedInstanceIDsWithComments.computeIfAbsent(dependerID, f -> []))
-                                .addAll(changeNotes)
+                        if (!changedInstanceIDsWithComments.containsKey(dependerID)) {
+                            changedInstanceIDsWithComments.put(dependerID, [])
+                        }
+                        changedInstanceIDsWithComments[dependerID].addAll(changeNotes)
                     }
                 }
 
@@ -342,7 +344,7 @@ class NotificationGenerator extends HouseKeeper {
                 changeNoteMap = mapper.readValue((String) changeNote, Map)
             } catch (JsonMappingException e) { /* ignore - this can happen when a list appears in hasChangeNote. We're not interested in those notes. */ }
             if (changeNoteMap != null)
-                comments.addAll( (List<String>) NotificationUtils.asList(changeNoteMap["comment"]) )
+                comments.addAll( NotificationUtils.asList(changeNoteMap["comment"]) )
         }
         return comments
     }

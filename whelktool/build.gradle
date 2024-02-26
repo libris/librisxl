@@ -38,9 +38,7 @@ sourceSets {
     }
 }
 
-application {
-    mainClass = "whelk.datatool.WhelkTool"
-}
+mainClassName = "whelk.datatool.WhelkTool"
 
 test.testLogging {
     showStandardStreams = true

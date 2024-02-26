@@ -4,10 +4,8 @@ plugins {
 
 allprojects {
     apply plugin: 'java'
-    java {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
+    sourceCompatibility = 17
+    targetCompatibility = 17
     // Run manually with "./gradlew autoLintGradle"
     // Unused dependency warning cannot always be trusted, always verify ("this dependency is unused and can be removed")
     gradleLint.rules = ['all-dependency']
@@ -29,7 +27,7 @@ allprojects {
         ignoreFailures = true
         dependencies {
             codenarc('org.codenarc:CodeNarc:3.3.0')
-            codenarc('org.codehaus.groovy:groovy-all:3.0.20')
+            codenarc('org.codehaus.groovy:groovy-all:3.0.7')
         }
     }
 }

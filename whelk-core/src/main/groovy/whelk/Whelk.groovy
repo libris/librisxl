@@ -134,15 +134,15 @@ class Whelk {
     }
 
     static Map<String, Map<String, String>> collectNamedApplications(Properties configuration) {
-        Map<String, Map<String, String>> apps = [:]
+        Map apps = [:]
         for (int i = 0; true; i++) {
-            String appId = (String) configuration["namedApplications[${i}].id" as String]
+            def appId = configuration["namedApplications[${i}].id" as String]
             if (!appId) {
                 break
             }
 
-            Map app = [id: appId]
-            String alias = configuration["namedApplications[${i}].alias" as String]
+            def app = [id: appId]
+            def alias = configuration["namedApplications[${i}].alias" as String]
             if (alias) {
                 app['alias'] = alias
             }

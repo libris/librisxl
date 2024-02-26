@@ -225,12 +225,12 @@ class Crud extends HttpServlet {
         setVary(response)
         response.setHeader("ETag", eTag.toString())
         response.setHeader("Server-Start-Time", "" + ManagementFactory.getRuntimeMXBean().getStartTime())
-        HttpTools.sendError(response, HttpServletResponse.SC_NOT_MODIFIED, "Document has not been modified.")
+        sendError(response, HttpServletResponse.SC_NOT_MODIFIED, "Document has not been modified.")
     }
 
     private static void sendNotFound(HttpServletRequest request, HttpServletResponse response) {
         metrics.failedRequests.labels(request.getMethod(), HttpServletResponse.SC_NOT_FOUND.toString()).inc()
-        HttpTools.sendError(response, HttpServletResponse.SC_NOT_FOUND, "Document not found.")
+        sendError(response, HttpServletResponse.SC_NOT_FOUND, "Document not found.")
     }
 
     private Object getFormattedResponseBody(CrudGetRequest request, Document doc, String profileId) {
@@ -843,7 +843,7 @@ class Crud extends HttpServlet {
         if (log.isDebugEnabled()) {
             log.debug("Sending error $code : ${e.getMessage()} for ${request.getRequestURI()}")
         }
-        HttpTools.sendError(response, code, e.getMessage(), e)
+        sendError(response, code, e.getMessage(), e)
     }
     
     static private int mapError(Exception e) {

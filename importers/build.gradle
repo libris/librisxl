@@ -15,10 +15,7 @@ def loadConfiguration() {
     System.setProperty 'whelk.environment', environment
 }
 
-application {
-    mainClass = "whelk.importer.ImporterMain"
-}
-
+mainClassName = "whelk.importer.ImporterMain"
 
 def getGitVersion() {
 	def stdout = new ByteArrayOutputStream()
