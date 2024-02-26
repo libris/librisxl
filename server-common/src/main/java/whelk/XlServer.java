@@ -49,7 +49,7 @@ public abstract class XlServer {
         int port = Configuration.getHttpPort();
 
         var httpConfig = new HttpConfiguration();
-        httpConfig.setIdleTimeout(20000);
+        httpConfig.setIdleTimeout(90 * 1000); // more than nginx keepalive_timeout
         try (var http = new ServerConnector(server, new HttpConnectionFactory(httpConfig))) {
             http.setPort(port);
             http.setAcceptQueueSize(0);
