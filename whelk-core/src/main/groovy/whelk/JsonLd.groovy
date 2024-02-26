@@ -579,15 +579,15 @@ class JsonLd {
         s && (s.startsWith('https://') || s.startsWith('http://'))
     }
 
-    static List<List<String>> findPaths(Map obj, String key, String value) {
+    static List<List> findPaths(Map obj, String key, String value) {
         return findPaths(obj, key, [value].toSet())
     }
 
-    static List<List<String>> findPaths(Map obj, String key, Set<String> values) {
-        List<List<String>> paths = []
-        new DFS().search(obj, { List<String> path, v ->
+    static List<List> findPaths(Map obj, String key, Set<String> values) {
+        List<List> paths = []
+        new DFS().search(obj, { List path, v ->
             if (v in values && key == path[-1]) {
-                paths << (List<String>) path.collect()
+                paths << (List) path.collect()
             }
         })
         return paths
