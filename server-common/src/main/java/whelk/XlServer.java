@@ -50,6 +50,7 @@ public abstract class XlServer {
 
         var httpConfig = new HttpConfiguration();
         httpConfig.setIdleTimeout(90 * 1000); // more than nginx keepalive_timeout
+        httpConfig.setPersistentConnectionsEnabled(true);
         try (var http = new ServerConnector(server, new HttpConnectionFactory(httpConfig))) {
             http.setPort(port);
             http.setAcceptQueueSize(0);
