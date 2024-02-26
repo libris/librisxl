@@ -31,7 +31,7 @@ jobs:
       with:
         java-version: '21'
         distribution: 'microsoft'
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
     - name: Build with Gradle
-      run: ./gradlew build
+      uses: gradle/gradle-build-action@v2.4.2
+      with:
+        arguments: build
