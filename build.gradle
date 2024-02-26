@@ -29,7 +29,7 @@ allprojects {
         ignoreFailures = true
         dependencies {
             codenarc('org.codenarc:CodeNarc:3.3.0')
-            codenarc('org.codehaus.groovy:groovy-all:3.0.7')
+            codenarc('org.codehaus.groovy:groovy-all:3.0.20')
         }
     }
 }
