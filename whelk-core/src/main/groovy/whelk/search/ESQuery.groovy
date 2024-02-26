@@ -48,6 +48,10 @@ class ESQuery {
                             'boost': 1000.0
                     ]],
                     ['constant_score': [
+                            'filter': [ 'term': [ (JsonLd.RECORD_KEY + '.' + JsonLd.TYPE_KEY) : JsonLd.VIRTUAL_RECORD_TYPE ]],
+                            'boost': 900.0
+                    ]],
+                    ['constant_score': [
                             'filter': [ 'term': [ (JsonLd.RECORD_KEY + '.' + JsonLd.TYPE_KEY) : JsonLd.CACHE_RECORD_TYPE ]],
                             'boost': 1.0
                     ]]

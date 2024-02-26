@@ -920,7 +920,7 @@ class Document {
         
         record["mainEntity"]["@id"] = workId
         record["@id"] = record["@id"] + "#work-record"
-        // record["@type"] = "VirtualRecord"
+        record["@type"] = JsonLd.VIRTUAL_RECORD_TYPE
         
         instance.remove('instanceOf')
         

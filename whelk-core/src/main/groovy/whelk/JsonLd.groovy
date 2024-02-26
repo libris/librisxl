@@ -42,7 +42,8 @@ class JsonLd {
 
     static final String RECORD_TYPE = 'Record'
     static final String CACHE_RECORD_TYPE = 'CacheRecord'
-    
+    static final String VIRTUAL_RECORD_TYPE = 'VirtualRecord'
+
     static final String SEARCH_KEY = "_str"
 
     static final List<String> NS_SEPARATORS = ['#', '/', ':']
