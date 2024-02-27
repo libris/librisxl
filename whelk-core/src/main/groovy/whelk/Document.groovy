@@ -902,7 +902,7 @@ class Document {
 
     Set<String> getVirtualRecordIds() {
         Map work = get(["@graph", 1, "instanceOf"])
-        return (!work || JsonLd.isLink(work) || isSuppressedRecord()) 
+        return (!work || JsonLd.isLink(work) || isSuppressedRecord() || work instanceof List)
             ? []
             : [ "${getShortId()}#work-record" ]
     }
