@@ -232,9 +232,9 @@ class NotificationSender extends HouseKeeper {
 
             if (framed["representationAfter"] instanceof Map) {
                 Map after = whelk.getJsonld().applyLensAsMapByLang((Map) framed["representationAfter"], ["sv"] as Set, [], ["chips"])
-                sb.append("\n  Nu:\t\t\t" + after["sv"])
+                sb.append("\n  Nu:" + after["sv"])
             } else if (framed["representationAfter"] instanceof List) {
-                sb.append("\n  Nu:\t\t\t")
+                sb.append("\n  Nu: ")
                 for (Object item : framed["representationAfter"]) {
                     Map after = whelk.getJsonld().applyLensAsMapByLang((Map) item, ["sv"] as Set, [], ["chips"])
                     sb.append((String) after["sv"] + ", ")
@@ -243,9 +243,9 @@ class NotificationSender extends HouseKeeper {
 
             if (framed["representationBefore"] instanceof Map) {
                 Map before = whelk.getJsonld().applyLensAsMapByLang((Map) framed["representationBefore"], ["sv"] as Set, [], ["chips"])
-                sb.append("\n  Tidigare:\t" + before["sv"])
+                sb.append("\n  Tidigare: " + before["sv"])
             } else if (framed["representationBefore"] instanceof List) {
-                sb.append("\n  Tidigare:\t")
+                sb.append("\n  Tidigare: ")
                 for (Object item : framed["representationBefore"]) {
                     Map before = whelk.getJsonld().applyLensAsMapByLang((Map) item, ["sv"] as Set, [], ["chips"])
                     sb.append((String) before["sv"] + ", ")

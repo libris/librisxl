@@ -17,10 +17,10 @@ final boolean isLoud = false
 // Move some stuff from mainEntity to mainEntity.hasComponent[0] before doing the merging/replacing ?
 final List<String> propertiesToMoveToFirstComponent = ["shelfMark"]
 
-// Which policy should apply to which properties (under mainEntity and hasComponent[0]) ?
+// Which policy should apply to which properties (under mainEntity) ?
 // Properties that are not listed (default) will keep their current values (of the record we're trying to merge into).
-final List<String> propertiesToMerge = []
-final List<String> propertiesToReplace = ["shelfMark"]
+final List<String> propertiesToMerge = ["hasComponent"]
+final List<String> propertiesToReplace = []
 
 
 
@@ -34,7 +34,7 @@ for (String bibId : bibIds) {
                 silent: false, { targetHold ->
 
             //Document targetHoldBefore = targetHold.doc.clone()
-            combine(targetHold.doc, incomingHold.doc, propertiesToMerge, propertiesToReplace, propertiesToMoveToFirstComponent)
+            combine(targetHold.doc, incomingHold.doc, propertiesToMerge, propertiesToReplace, propertiesToMoveToFirstComponent, libraryToMoveTo)
             //System.err.println("Before merge:\n\t" + targetHoldBefore.getDataAsString() + "\nAfter merge:\n\t" + targetHold.doc.getDataAsString() + "\n")
             targetHold.scheduleSave(loud: isLoud)
         })
@@ -42,17 +42,15 @@ for (String bibId : bibIds) {
     })
 }
 
-void combine(Document target, Document incoming, List<String> propertiesToMerge, List<String> propertiesToReplace, List<String> propertiesToMoveToFirstComponent) {
+void combine(Document target, Document incoming, List<String> propertiesToMerge, List<String> propertiesToReplace, List<String> propertiesToMoveToFirstComponent, String libraryToMoveTo) {
     Map incomingMainEntity = incoming.data["@graph"][1]
     Map targetMainEntity = target.data["@graph"][1]
 
     moveToComponent(incomingMainEntity, propertiesToMoveToFirstComponent)
     moveToComponent(targetMainEntity, propertiesToMoveToFirstComponent)
+    setTargetHeldBy(incomingMainEntity, libraryToMoveTo)
 
-    combineMap(incomingMainEntity, targetMainEntity, propertiesToMerge, propertiesToReplace)
-    if (incomingMainEntity["hasComponent"] && incomingMainEntity["hasComponent"] instanceof List && incomingMainEntity["hasComponent"][0] &&
-            targetMainEntity["hasComponent"] && targetMainEntity["hasComponent"] instanceof List && targetMainEntity["hasComponent"][0])
-        combineMap(targetMainEntity["hasComponent"][0], incomingMainEntity["hasComponent"][0], propertiesToMerge, propertiesToReplace)
+    combineMap(targetMainEntity, incomingMainEntity, propertiesToMerge, propertiesToReplace)
 }
 
 void combineMap(Map target, Map incoming, List<String> propertiesToMerge, List<String> propertiesToReplace) {
@@ -63,7 +61,16 @@ void combineMap(Map target, Map incoming, List<String> propertiesToMerge, List<S
     }
 
     for (String propToMerge : propertiesToMerge) {
-        if (target[propToMerge] && incoming[propToMerge]) {
+
+        // If "incoming" exists, and "target" does not, make an empty target that we can merge into
+        if (incoming[propToMerge] != null && target[propToMerge] == null) {
+            if (incoming[propToMerge] instanceof Map)
+                target[propToMerge] = [:]
+            else if (incoming[propToMerge] instanceof List)
+                target[propToMerge] = []
+        }
+
+        if (target[propToMerge] != null && incoming[propToMerge] != null) {
             if (incoming[propToMerge] instanceof Map && target[propToMerge] instanceof Map) {
                 mergeMap((Map) target[propToMerge], (Map) incoming[propToMerge])
             }
@@ -124,5 +131,14 @@ void moveToComponent(Map mainEntity, List<String> propertiesToMoveToFirstCompone
 
     if (component.isEmpty()) {
         mainEntity.remove("hasComponent")
+    }
+}
+
+void setTargetHeldBy(Map mainEntity, String libraryToMoveTo) {
+    mainEntity["heldBy"] = ["@id": libraryToMoveTo]
+    if (mainEntity["hasComponent"] && mainEntity["hasComponent"] instanceof List) {
+        mainEntity["hasComponent"].each { component ->
+            component["heldBy"] = ["@id": libraryToMoveTo]
+        }
     }
 }

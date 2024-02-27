@@ -1,5 +1,6 @@
-apply plugin: 'war'
-apply from: '../gretty.plugin'
+apply plugin: 'java-library'
+
+def mainClassName = "whelk.export.marc.MarcCliExport"
 
 repositories {
     mavenCentral()
@@ -15,6 +16,16 @@ configurations.all {
 dependencies {
     // XL dependencies
     implementation(project(':whelk-core'))
+    implementation(project(':server-common'))
+
+    // Groovy
+    implementation "org.codehaus.groovy:groovy:${groovyVersion}"
+
+    // Servlet
+    api "jakarta.servlet:jakarta.servlet-api:${servletApiVersion}"
+    implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
+    implementation "org.eclipse.jetty:jetty-rewrite:${jettyVersion}"
+    implementation "org.eclipse.jetty.ee8:jetty-ee8-servlet:${jettyVersion}"
 
     // Logging
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
@@ -23,6 +34,10 @@ dependencies {
     // metrics
     implementation "io.prometheus:simpleclient:${prometheusVersion}"
     implementation "io.prometheus:simpleclient_servlet:${prometheusVersion}"
+
+    // Tools
+    implementation group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
+    implementation 'org.apache.commons:commons-lang3:3.3.2'
 
     // Dependencies inherited from classic libris, due to profile handling
     implementation group: 'com.ibm.icu', name: 'icu4j', version: '4.8.1.1'
@@ -34,34 +49,17 @@ dependencies {
         // org.w3c.dom.UserDataHandler scanned from multiple locations: xml-apis, jaxen
         exclude group: 'jaxen', module: 'jaxen'
     }
-    implementation group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
-    implementation 'org.apache.commons:commons-lang3:3.3.2'
-    implementation "org.codehaus.groovy:groovy:${groovyVersion}"
-}
 
-gretty {
-    jvmArgs = ['-XX:+UseParallelGC']
-    systemProperties = ['xl.secret.properties': System.getProperty("xl.secret.properties")]
-    httpPort = 8580
-    scanInterval = 0
-    afterEvaluate {
-        appRunDebug {
-            debugPort = 5006
-            debugSuspend = false
-        }
-    }
 }
 
 jar {
-    dependsOn ':whelk-core:jar'
+    dependsOn ':server-common:jar'
 
-    // 'Multi-Release': 'true' is needed because log4j2-api is a 'Multi-Release' jar and selects "StackLocator"
-    // implementation based on JDK version. If we build our fat jar without 'Multi-Release' it will not find the 
-    // JDK9+ version and log a warning to STDOUT (not STDERR...) messing up the output of this program.
-    // "WARNING: sun.reflect.Reflection.getCallerClass is not supported. This will impact performance."
     manifest {
-        attributes "Main-Class": "whelk.export.marc.MarcCliExport", 
-                'Multi-Release': 'true' 
+        attributes "Main-Class": mainClassName,
+                // log4j uses multi-release to ship different stack walking implementations for different java
+                // versions. Since we repackage everything as a fat jar, that jar must also be multi-release.
+                "Multi-Release": true
     }
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -71,5 +69,25 @@ jar {
                 exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA','build','.gradle/**','build.gradle','gradle','gradlew','gradlew.bat','test'
             }
         }
+    }
+}
+
+task(appRun, dependsOn: "classes", type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = mainClassName
+    minHeapSize = "1g"
+    maxHeapSize = "4g"
+    systemProperties(
+            'xl.secret.properties': System.getProperty("xl.secret.properties"),
+            'xl.logRoot': System.getProperty("xl.logRoot", "./logs"),
+            'xl.http.port': System.getProperty("xl.http.port", "8183")
+    )
+    args(System.getProperty("args", "--server").split() as String[])
+
+    debugOptions {
+        enabled = true
+        port = 5008
+        server = true
+        suspend = false
     }
 }
