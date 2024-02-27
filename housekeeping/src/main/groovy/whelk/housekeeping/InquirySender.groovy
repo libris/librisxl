@@ -198,7 +198,7 @@ class InquirySender extends HouseKeeper {
         sb.append('\n')
         creatorId.ifPresent {
             var creatorLabel = whelk.jsonld.vocabIndex['descriptionCreator']?['labelByLang']?['sv'] ?: ""
-            var creator = NotificationUtils.chipString(DocumentUtil.getAtPath(whelk.loadData(it), [JsonLd.getGRAPH_KEY(), 1]), whelk)
+            var creator = NotificationUtils.chipString(DocumentUtil.getAtPath(whelk.loadData(it), [JsonLd.GRAPH_KEY, 1]), whelk)
             sb.append(creatorLabel).append(': ').append(creator).append('\n')
             sb.append('\n')
         }
