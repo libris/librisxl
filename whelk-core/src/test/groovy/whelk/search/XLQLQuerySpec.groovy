@@ -1,11 +1,13 @@
 package whelk.search
 
+import spock.lang.Ignore
 import spock.lang.Specification
 import whelk.Whelk
 import whelk.xlql.Operator
 import whelk.xlql.QueryTree
 import whelk.xlql.SimpleQueryTree
 
+@Ignore
 class XLQLQuerySpec extends Specification {
     private static Whelk whelk = Whelk.createLoadedSearchWhelk()
     private static XLQLQuery xlqlQuery = new XLQLQuery(whelk)

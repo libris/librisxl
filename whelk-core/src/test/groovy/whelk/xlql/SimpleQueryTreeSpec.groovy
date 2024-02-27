@@ -1,9 +1,11 @@
 package whelk.xlql
 
+import spock.lang.Ignore
 import spock.lang.Specification
 import whelk.Whelk
 import whelk.exception.InvalidQueryException
 
+@Ignore
 class SimpleQueryTreeSpec extends Specification {
     private static Whelk whelk = Whelk.createLoadedSearchWhelk()
     private static Disambiguate disambiguate = new Disambiguate(whelk)

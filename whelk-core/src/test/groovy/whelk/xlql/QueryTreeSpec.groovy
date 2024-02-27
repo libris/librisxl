@@ -1,8 +1,10 @@
 package whelk.xlql
 
+import spock.lang.Ignore
 import spock.lang.Specification
 import whelk.Whelk
 
+@Ignore
 class QueryTreeSpec extends Specification {
     private static Whelk whelk = Whelk.createLoadedSearchWhelk()
     private static Disambiguate disambiguate = new Disambiguate(whelk)

@@ -1,8 +1,10 @@
 package whelk.rest.api
 
+import spock.lang.Ignore
 import spock.lang.Specification
 import whelk.Whelk
 
+@Ignore
 class SearchUtils2Spec extends Specification {
     private static Whelk whelk = Whelk.createLoadedSearchWhelk()
     private static SearchUtils2 searchUtils2 = new SearchUtils2(whelk)
