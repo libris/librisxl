@@ -920,6 +920,11 @@ class Document {
         
         record["mainEntity"]["@id"] = workId
         record["@id"] = record["@id"] + "#work-record"
+        // TODO
+        // For now these will not be found by the search API since it has a boost on RECORD_TYPE and CACHE_RECORD_TYPE
+        // This is what we want since VirtualRecords should not be visible in the cataloguing interface.
+        // When we have unified the new "query language" search API with the current search API we need a different mechanism
+        // for separating them
         record["@type"] = JsonLd.VIRTUAL_RECORD_TYPE
         
         instance.remove('instanceOf')
