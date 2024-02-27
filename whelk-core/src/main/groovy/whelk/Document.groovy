@@ -899,4 +899,52 @@ class Document {
     public String toVerboseString() {
         return "{completeId=" + getCompleteId() + ", baseUri=" + baseUri.toString() + ", base identifiers:" + getRecordIdentifiers().join(',');
     }
+
+    Set<String> getVirtualRecordIds() {
+        Map work = get(["@graph", 1, "instanceOf"])
+        return (!work || JsonLd.isLink(work) || isSuppressedRecord() || work instanceof List)
+            ? []
+            : [ "${getShortId()}#work-record" ]
+    }
+    
+    Document getVirtualRecord(String id) {
+        if ("${getShortId()}#work-record" != id) {
+            throw new IllegalArgumentException(id)
+        }
+        
+        Document doc = clone()
+        Map record = doc.get(["@graph", 0])
+        Map work = doc.get(["@graph", 1, "instanceOf"])
+        Map instance = doc.get(["@graph", 1])
+        def workId = instance["@id"].replace('#it', '') + "#work"
+        
+        record["mainEntity"]["@id"] = workId
+        record["@id"] = record["@id"] + "#work-record"
+        // TODO
+        // For now these will not be found by the search API since it has a boost on RECORD_TYPE and CACHE_RECORD_TYPE
+        // This is what we want since VirtualRecords should not be visible in the cataloguing interface.
+        // When we have unified the new "query language" search API with the current search API we need a different mechanism
+        // for separating them
+        record["@type"] = JsonLd.VIRTUAL_RECORD_TYPE
+        
+        instance.remove('instanceOf')
+        
+        work["@id"] = workId
+        work["@reverse"] = ["instanceOf": [instance]]
+        
+        // TODO...
+        if (!work['hasTitle']) {
+            work['hasTitle'] = (instance['hasTitle'] ?: []).findAll{ it['@type'] == 'Title' || it['@type'] == 'KeyTitle' }
+        }
+
+        doc.set(["@graph", 1], work)
+        
+        return doc
+    }
+
+    private boolean isSuppressedRecord() {
+        (get(["@graph", 0, "technicalNote"]) ?: []).any {
+            it instanceof Map && it.label == 'SUPPRESSRECORD' && it[JsonLd.TYPE_KEY] == 'TechnicalNote'
+        }
+    }
 }
