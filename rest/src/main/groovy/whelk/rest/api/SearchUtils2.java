@@ -37,14 +37,14 @@ public class SearchUtils2 {
 
     class Query {
         //        static Set<String> reservedParameters = getReservedParameters();
-        int limit;
-        int offset;
-        Optional<String> sortBy;
-        boolean debug;
-        String queryString;
-        SimpleQueryTree simpleQueryTree;
-        QueryTree queryTree;
-        Map esQueryDsl;
+        private final int limit;
+        private final int offset;
+        private final Optional<String> sortBy;
+        private final boolean debug;
+        private final String queryString;
+        private final SimpleQueryTree simpleQueryTree;
+        private final QueryTree queryTree;
+        private final Map esQueryDsl;
 //    Optional<List> predicates;
 //    Optional<String> object;
 //    Optional<String> value;
