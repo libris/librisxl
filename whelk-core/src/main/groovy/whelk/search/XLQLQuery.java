@@ -179,7 +179,7 @@ public class XLQLQuery {
         upUrl += urlParams.stream()
                 .map(p -> "&" + p)
                 .collect(Collectors.joining(""));
-        mappingsNode.put("up", upUrl);
+        mappingsNode.put("up", Map.of(JsonLd.ID_KEY, upUrl));
 
         return mappingsNode;
     }
