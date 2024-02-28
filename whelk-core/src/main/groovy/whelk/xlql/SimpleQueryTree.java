@@ -45,10 +45,10 @@ public class SimpleQueryTree {
                 return new Or(disjuncts);
             }
             case FlattenedAst.Not not -> {
-                return new FreeText(Operator.NOT_EQUALS, not.value());
+                return new FreeText(Operator.NOT_EQUAL, not.value());
             }
             case FlattenedAst.Leaf l -> {
-                return new FreeText(Operator.EQUALS, l.value());
+                return new FreeText(Operator.EQUAL, l.value());
             }
             case FlattenedAst.Code c -> {
                 String property = null;

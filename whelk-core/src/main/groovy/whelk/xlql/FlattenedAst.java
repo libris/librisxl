@@ -59,7 +59,7 @@ public class FlattenedAst {
                 return flattenNegations(not.operand(), !negate);
             }
             case Ast.CodeEqualsLeaf cel -> {
-                return new Code(cel.code(), negate ? Operator.NOT_EQUALS : Operator.EQUALS, cel.operand().value());
+                return new Code(cel.code(), negate ? Operator.NOT_EQUAL : Operator.EQUAL, cel.operand().value());
             }
             case Ast.CodeLesserGreaterThan clgt -> {
                 Operator operator = Optional.of(OPERATOR_MAPPINGS.get(clgt.operator()))

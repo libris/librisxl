@@ -83,10 +83,10 @@ public class XLQLQuery {
         List<String> boostedFields = lensBoost.computeBoostFieldsFromLenses(new String[0]);
 
         if (boostedFields.isEmpty()) {
-            if (ft.operator() == Operator.EQUALS) {
+            if (ft.operator() == Operator.EQUAL) {
                 return simpleQuery;
             }
-            if (ft.operator() == Operator.NOT_EQUALS) {
+            if (ft.operator() == Operator.NOT_EQUAL) {
                 return mustNotWrap(simpleQuery);
             }
         }
@@ -112,10 +112,10 @@ public class XLQLQuery {
         bs.put("analyze_wildcard", true);
 
         List<Map> shouldClause = new ArrayList<>(Arrays.asList(boostedExact, boostedSoft, simpleQuery));
-        if (ft.operator() == Operator.EQUALS) {
+        if (ft.operator() == Operator.EQUAL) {
             return shouldWrap(shouldClause);
         }
-        if (ft.operator() == Operator.NOT_EQUALS) {
+        if (ft.operator() == Operator.NOT_EQUAL) {
             /*
             Better with { must: [must_not:{}, must_not:{}, must_not:{}] }?
             https://opster.com/guides/elasticsearch/search-apis/elasticsearch-query-bool/
@@ -132,8 +132,8 @@ public class XLQLQuery {
         String path = f.path().stringify();
         String value = quoteIfPhrase(f.value());
         return switch (f.operator()) {
-            case EQUALS -> equalsFilter(path, value);
-            case NOT_EQUALS -> notEqualsFilter(path, value);
+            case EQUAL -> equalsFilter(path, value);
+            case NOT_EQUAL -> notEqualsFilter(path, value);
             case LESS_THAN -> rangeFilter(path, value, "lt");
             case LESS_THAN_OR_EQUAL -> rangeFilter(path, value, "lte");
             case GREATER_THAN -> rangeFilter(path, value, "gt");
@@ -260,19 +260,19 @@ public class XLQLQuery {
     }
 
     private String freeTextToString(SimpleQueryTree.FreeText ft) {
-        return ft.operator() == Operator.NOT_EQUALS ? "NOT " + ft.value() : quoteIfPhraseOrColon(ft.value());
+        return ft.operator() == Operator.NOT_EQUAL ? "NOT " + ft.value() : quoteIfPhraseOrColon(ft.value());
     }
 
     private String propertyValueToString(SimpleQueryTree.PropertyValue pv) {
         String sep = switch (pv.operator()) {
-            case EQUALS -> ": ";
-            case NOT_EQUALS -> ": ";
+            case EQUAL -> ": ";
+            case NOT_EQUAL -> ": ";
             case GREATER_THAN_OR_EQUAL -> " >= ";
             case GREATER_THAN -> " > ";
             case LESS_THAN_OR_EQUAL -> " <= ";
             case LESS_THAN -> " < ";
         };
-        String not = pv.operator() == Operator.NOT_EQUALS ? "NOT " : "";
+        String not = pv.operator() == Operator.NOT_EQUAL ? "NOT " : "";
         return not + String.join(".", pv.propertyPath()) + sep + quoteIfPhraseOrColon(pv.value());
     }
 

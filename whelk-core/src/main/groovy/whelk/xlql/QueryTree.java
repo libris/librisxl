@@ -121,7 +121,7 @@ public class QueryTree {
     }
 
     private static Node typeField(String type) {
-        return new Field(new Path(List.of(JsonLd.TYPE_KEY)), Operator.EQUALS, type);
+        return new Field(new Path(List.of(JsonLd.TYPE_KEY)), Operator.EQUAL, type);
     }
 
     private static Field buildField(SimpleQueryTree.PropertyValue pv) {
@@ -166,7 +166,7 @@ public class QueryTree {
                             if (JsonLd.looksLikeIri(df.value())) {
                                 dfPath.appendId();
                             }
-                            return new Field(new Path(df.path()), Operator.EQUALS, df.value());
+                            return new Field(new Path(df.path()), Operator.EQUAL, df.value());
                         })
                 .toList();
 
@@ -185,7 +185,7 @@ public class QueryTree {
                         copy.setWorkToInstancePath();
                         altFields.add(new Field(path, operator, value));
                         altFields.add(new Field(copy, operator, value));
-                        yield operator == Operator.NOT_EQUALS ? new And(altFields) : new Or(altFields);
+                        yield operator == Operator.NOT_EQUAL ? new And(altFields) : new Or(altFields);
                     }
                     default -> {
                         yield new Field(path, operator, value);
@@ -206,7 +206,7 @@ public class QueryTree {
                         copy.setInstanceToWorkPath();
                         altFields.add(new Field(path, operator, value));
                         altFields.add(new Field(copy, operator, value));
-                        yield operator == Operator.NOT_EQUALS ? new And(altFields) : new Or(altFields);
+                        yield operator == Operator.NOT_EQUAL ? new And(altFields) : new Or(altFields);
                     }
                     default -> {
                         yield new Field(path, operator, value);

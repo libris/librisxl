@@ -35,12 +35,12 @@ class QueryTreeSpec extends Specification {
         expect:
         qt.tree == new QueryTree.And(
                 [
-                        new QueryTree.FreeText(Operator.EQUALS, "AAA"),
-                        new QueryTree.FreeText(Operator.EQUALS, "BBB"),
+                        new QueryTree.FreeText(Operator.EQUAL, "AAA"),
+                        new QueryTree.FreeText(Operator.EQUAL, "BBB"),
                         new QueryTree.Or(
                                 [
-                                        new QueryTree.FreeText(Operator.EQUALS, "CCC"),
-                                        new QueryTree.FreeText(Operator.EQUALS, "DDD")
+                                        new QueryTree.FreeText(Operator.EQUAL, "CCC"),
+                                        new QueryTree.FreeText(Operator.EQUAL, "DDD")
                                 ]
                         )
                 ]
@@ -59,14 +59,14 @@ class QueryTreeSpec extends Specification {
 
         expect:
         subjectField.path().stringify() == "subject.@id"
-        subjectField.operator() == Operator.EQUALS
+        subjectField.operator() == Operator.EQUAL
         subjectField.value() == "https://id.kb.se/term/sao/Fysik"
 
         originDateField.path().stringify() == "originDate"
         originDateField.operator() == Operator.LESS_THAN
         originDateField.value() == "2023"
 
-        freeText == new QueryTree.FreeText(Operator.EQUALS, "svarta hål")
+        freeText == new QueryTree.FreeText(Operator.EQUAL, "svarta hål")
     }
 
     def "exact fields"() {
@@ -82,15 +82,15 @@ class QueryTreeSpec extends Specification {
 
         expect:
         subjectField.path().stringify() == "instanceOf.subject.@id"
-        subjectField.operator() == Operator.EQUALS
+        subjectField.operator() == Operator.EQUAL
         subjectField.value() == "https://id.kb.se/term/sao/Fysik"
 
         subjectField2.path().stringify() == "instanceOf.subject._str"
-        subjectField2.operator() == Operator.EQUALS
+        subjectField2.operator() == Operator.EQUAL
         subjectField2.value() == "rymd"
 
         issuanceTypeField.path().stringify() == "issuanceType"
-        issuanceTypeField.operator() == Operator.EQUALS
+        issuanceTypeField.operator() == Operator.EQUAL
         issuanceTypeField.value() == "Monograph"
     }
 
@@ -110,11 +110,11 @@ class QueryTreeSpec extends Specification {
 
         expect:
         typeField.path().stringify() == "@type"
-        typeField.operator() == Operator.EQUALS
+        typeField.operator() == Operator.EQUAL
         typeField.value() == "Text"
 
         respStatementField.path().stringify() == "@reverse.instanceOf.responsibilityStatement"
-        respStatementField.operator() == Operator.EQUALS
+        respStatementField.operator() == Operator.EQUAL
         respStatementField.value() == "Någon"
 
         originDateField.path().stringify() == "originDate"
@@ -122,11 +122,11 @@ class QueryTreeSpec extends Specification {
         originDateField.value() == "2020"
 
         langField1.path().stringify() == "language.@id"
-        langField1.operator() == Operator.EQUALS
+        langField1.operator() == Operator.EQUAL
         langField1.value() == "https://id.kb.se/language/swe"
 
         langField2.path().stringify() == "@reverse.instanceOf.language.@id"
-        langField2.operator() == Operator.EQUALS
+        langField2.operator() == Operator.EQUAL
         langField2.value() == "https://id.kb.se/language/swe"
     }
     def "instance type + path inference"() {
@@ -147,7 +147,7 @@ class QueryTreeSpec extends Specification {
         typeFields.disjuncts().size() == disambiguate.instanceTypes.size()
 
         respStatementField.path().stringify() == "responsibilityStatement"
-        respStatementField.operator() == Operator.EQUALS
+        respStatementField.operator() == Operator.EQUAL
         respStatementField.value() == "Någon"
 
         originDateField.path().stringify() == "instanceOf.originDate"
@@ -155,11 +155,11 @@ class QueryTreeSpec extends Specification {
         originDateField.value() == "2020"
 
         langField1.path().stringify() == "language.@id"
-        langField1.operator() == Operator.EQUALS
+        langField1.operator() == Operator.EQUAL
         langField1.value() == "https://id.kb.se/language/swe"
 
         langField2.path().stringify() == "instanceOf.language.@id"
-        langField2.operator() == Operator.EQUALS
+        langField2.operator() == Operator.EQUAL
         langField2.value() == "https://id.kb.se/language/swe"
     }
 }
