@@ -7,9 +7,15 @@ import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.exception.WhelkRuntimeException;
 import whelk.search.XLQLQuery;
-import whelk.xlql.*;
+import whelk.xlql.QueryTree;
+import whelk.xlql.SimpleQueryTree;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public class SearchUtils2 {
     final static int DEFAULT_LIMIT = 200;
@@ -26,12 +32,13 @@ public class SearchUtils2 {
         this.xlqlQuery = new XLQLQuery(whelk);
     }
 
-    Map doSearch(Map<String, String[]> queryParameters) throws InvalidQueryException {
+    Map<String, Object> doSearch(Map<String, String[]> queryParameters) throws InvalidQueryException {
         if (whelk.elastic == null) {
             throw new WhelkRuntimeException("ElasticSearch not configured.");
         }
         Query query = new Query(queryParameters);
-        Map esResponse = whelk.elastic.query(query.getEsQueryDsl());
+        @SuppressWarnings("unchecked")
+        var esResponse = (Map<String, Object>) whelk.elastic.query(query.getEsQueryDsl());
         return query.getPartialCollectionView(esResponse);
     }
 
@@ -44,7 +51,7 @@ public class SearchUtils2 {
         private final String queryString;
         private final SimpleQueryTree simpleQueryTree;
         private final QueryTree queryTree;
-        private final Map esQueryDsl;
+        private final Map<String, Object> esQueryDsl;
 //    Optional<List> predicates;
 //    Optional<String> object;
 //    Optional<String> value;
@@ -63,8 +70,8 @@ public class SearchUtils2 {
             this.esQueryDsl = getEsQueryDsl();
         }
 
-        public Map getEsQueryDsl() {
-            Map queryDsl = new LinkedHashMap();
+        public Map<String, Object> getEsQueryDsl() {
+            var queryDsl = new LinkedHashMap<String, Object>();
             queryDsl.put("query", xlqlQuery.getEsQuery(queryTree));
             queryDsl.put("size", limit);
             queryDsl.put("from", offset);
@@ -73,9 +80,9 @@ public class SearchUtils2 {
             return queryDsl;
         }
 
-        public Map getPartialCollectionView(Map esResponse) {
+        public Map<String, Object> getPartialCollectionView(Map<String, Object> esResponse) {
             int numHits = (int) esResponse.getOrDefault("totalHits", 0);
-            Map view = new LinkedHashMap();
+            var view = new LinkedHashMap<String, Object>();
             view.put(JsonLd.TYPE_KEY, "PartialCollectionView");
             view.put(JsonLd.ID_KEY, makeFindUrl(offset));
             view.put("itemOffset", offset);
@@ -95,13 +102,13 @@ public class SearchUtils2 {
             return view;
         }
 
-        private Map makePaginationLinks(int numHits) {
+        private Map<String, Map<String, String>> makePaginationLinks(int numHits) {
             if (limit == 0) {
                 // we don't have anything to paginate over
-                return Collections.EMPTY_MAP;
+                return Collections.emptyMap();
             }
 
-            Map result = new LinkedHashMap();
+            var result = new LinkedHashMap<String, Map<String, String>>();
 
             Offsets offsets = new Offsets(Math.min(numHits, maxItems()), limit, offset);
 
@@ -150,7 +157,7 @@ public class SearchUtils2 {
             return makeParam(key, "" + value);
         }
 
-        private List<Map> toMappings() {
+        private List<Map<?, ?>> toMappings() {
             return List.of(xlqlQuery.toMappings(simpleQueryTree, makeNonQueryParams(0)));
         }
 
@@ -163,7 +170,7 @@ public class SearchUtils2 {
                     .replace("%40", "@");
         }
 
-        List getSortClauses(String sortBy) {
+        List<Map<String, Object>> getSortClauses(String sortBy) {
             // TODO
             return List.of(Map.of(
                     "meta.modified", Map.of("order", "asc")
@@ -212,13 +219,6 @@ public class SearchUtils2 {
             } catch (NumberFormatException ignored) {
                 return defaultTo;
             }
-        }
-
-        /*
-         * Return a list of reserved query params
-         */
-        private static Set<String> getReservedParameters() {
-            return new HashSet<>(Arrays.asList("q", "p", "o", "value", "_limit", "_offset", "_suggest"));
         }
     }
 

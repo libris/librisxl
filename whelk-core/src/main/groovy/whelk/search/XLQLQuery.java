@@ -145,7 +145,7 @@ public class XLQLQuery {
         return toMappings(sqt, Collections.emptyList());
     }
 
-    public Map toMappings(SimpleQueryTree sqt, List<String> urlParams) {
+    public Map<?, ?> toMappings(SimpleQueryTree sqt, List<String> urlParams) {
         return buildMappings(sqt.tree, sqt, new LinkedHashMap(), urlParams);
     }
 
