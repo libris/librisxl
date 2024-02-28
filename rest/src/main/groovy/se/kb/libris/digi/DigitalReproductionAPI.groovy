@@ -101,7 +101,7 @@ class DigitalReproductionAPI extends HttpServlet {
                 .findAll{ it.toLowerCase() in FORWARD_HEADERS }
                 .collectEntries { [(it) : request.getHeader(it as String)] }
 
-        def service = new ReproductionService(xl : new XL(headers : forwardHeaders, apiLocation: getXlAPI(request)))
+        def service = new ReproductionService(xl : new XL(headers : forwardHeaders, apiLocation: getXlAPI()))
 
         try {
             boolean extractWork = !Boolean.parseBoolean(request.getParameter("dont-extract-work"))
@@ -178,12 +178,9 @@ class DigitalReproductionAPI extends HttpServlet {
         mapper.writeValue(response.getOutputStream(), ['code': code, 'msg' : msg ?: ''])
     }
 
-    static String getXlAPI(HttpServletRequest request) {
+    static String getXlAPI() {
         //FIXME
-        int port = request.getServerPort()
-        if (port == 443) {
-            port = Configuration.getHttpPort()
-        }
+        int port = Configuration.getHttpPort()
         "http://localhost:${port}/"
     }
 }
