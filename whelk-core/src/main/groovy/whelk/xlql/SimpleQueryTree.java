@@ -6,11 +6,21 @@ import whelk.exception.InvalidQueryException;
 import java.util.*;
 
 public class SimpleQueryTree {
-    public sealed interface Node permits And, Or, PropertyValue, FreeText {}
-    public record And (List<Node> conjuncts) implements Node {}
-    public record Or (List<Node> disjuncts) implements Node {}
-    public record PropertyValue(String property, List<String> propertyPath, Operator operator, String value) implements Node {}
-    public record FreeText(Operator operator, String value) implements Node {}
+    public sealed interface Node permits And, Or, PropertyValue, FreeText {
+    }
+
+    public record And(List<Node> conjuncts) implements Node {
+    }
+
+    public record Or(List<Node> disjuncts) implements Node {
+    }
+
+    public record PropertyValue(String property, List<String> propertyPath, Operator operator,
+                                String value) implements Node {
+    }
+
+    public record FreeText(Operator operator, String value) implements Node {
+    }
 
     public Node tree;
 
@@ -42,21 +52,45 @@ public class SimpleQueryTree {
             }
             case FlattenedAst.Code c -> {
                 String property = null;
+                String value = c.value();
                 List<String> propertyPath = new ArrayList<>();
+
                 for (String part : c.code().split("\\.")) {
                     if (Disambiguate.isLdKey(part) || JsonLd.SEARCH_KEY.equals(part)) {
+                        if (JsonLd.TYPE_KEY.equals(part)) {
+                            property = JsonLd.TYPE_KEY;
+                        }
                         propertyPath.add(part);
                         continue;
                     }
-                    property = disambiguate.mapToKbvProperty(part);
-                    if (property == null) {
-                        throw new InvalidQueryException("Unrecognized property alias: " + c);
+                    Optional<String> mappedProperty = disambiguate.mapToKbvProperty(part);
+                    if (mappedProperty.isPresent()) {
+                        property = mappedProperty.get();
+                        propertyPath.add(property);
+                    } else {
+                        throw new InvalidQueryException("Unrecognized property alias: " + part);
                     }
-                    propertyPath.add(property);
                 }
 
-                // TODO: Disambiguate value too
-                return new PropertyValue(property, propertyPath, c.operator(), c.value());
+                if (JsonLd.TYPE_KEY.equals(property)) {
+                    Optional<String> mappedType = disambiguate.mapToKbvClass(value);
+                    if (mappedType.isPresent()) {
+                        value = mappedType.get();
+                    } else {
+                        throw new InvalidQueryException("Unrecognized type: " + value);
+                    }
+                }
+
+                if (disambiguate.isVocabTerm(property)) {
+                    Optional<String> mappedEnum = disambiguate.mapToEnum(value);
+                    if (mappedEnum.isPresent()) {
+                        value = mappedEnum.get();
+                    } else {
+                        throw new InvalidQueryException("Invalid value " + value + " for property " + property);
+                    }
+                }
+
+                return new PropertyValue(property, propertyPath, c.operator(), value);
             }
         }
     }

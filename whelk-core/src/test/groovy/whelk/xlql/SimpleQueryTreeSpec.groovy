@@ -102,4 +102,36 @@ class SimpleQueryTreeSpec extends Specification {
         expect:
         sqt.tree == new SimpleQueryTree.PropertyValue("subject", ["instanceOf", "subject", "@id"], Operator.EQUALS, "sao:Hästar")
     }
+
+    def "disambiguate type"() {
+        def query = "typ: Tryck"
+        SimpleQueryTree sqt = getTree(query)
+
+        expect:
+        sqt.tree == new SimpleQueryTree.PropertyValue("@type", ["@type"], Operator.EQUALS, "Print")
+    }
+
+    def "unrecognized type"() {
+        when:
+        getTree("type: UnknownType")
+
+        then:
+        thrown(InvalidQueryException)
+    }
+
+    def "disambiguate enum"() {
+        def query = "utgivningssätt: \"Seriell resurs\""
+        SimpleQueryTree sqt = getTree(query)
+
+        expect:
+        sqt.tree == new SimpleQueryTree.PropertyValue("issuanceType", ["issuanceType"], Operator.EQUALS, "Serial")
+    }
+
+    def "unrecognized enum"() {
+        when:
+        getTree("utgivningssätt: \"Tryck\"")
+
+        then:
+        thrown(InvalidQueryException)
+    }
 }
