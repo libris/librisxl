@@ -214,6 +214,7 @@ public class Disambiguate {
 
             if (isMarc(termKey) && isProperty(termDefinition)) {
                 addMapping(termKey, termKey, TermType.PROPERTY);
+                addMapping(jsonLd.toTermId(termKey), termKey, TermType.PROPERTY);
             }
 
             if (isEnum(termDefinition)) {
