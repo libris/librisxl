@@ -20,7 +20,9 @@ public class Path {
     }
 
     Path(Path p) {
-        this(p.property, p.path);
+        this.property = p.property;
+        this.path = new ArrayList<>(p.path);
+        this.defaultFields = new ArrayList<>(p.defaultFields);
     }
 
     Path copy() {
@@ -40,12 +42,23 @@ public class Path {
     }
 
     public void setWorkToInstancePath() {
-        path.add(0, JsonLd.WORK_KEY);
-        path.add(0, JsonLd.REVERSE_KEY);
+        path.addFirst(JsonLd.WORK_KEY);
+        path.addFirst(JsonLd.REVERSE_KEY);
+        if (defaultFields != null) {
+            defaultFields.forEach(df ->
+                    {
+                        df.path().addFirst(JsonLd.WORK_KEY);
+                        df.path().addFirst(JsonLd.REVERSE_KEY);
+                    }
+            );
+        }
     }
 
     public void setInstanceToWorkPath() {
-        path.add(0, JsonLd.WORK_KEY);
+        path.addFirst(JsonLd.WORK_KEY);
+        if (defaultFields != null) {
+            defaultFields.forEach(df -> df.path().addFirst(JsonLd.WORK_KEY));
+        }
     }
 
     public void expandChainAxiom(Disambiguate disambiguate) {

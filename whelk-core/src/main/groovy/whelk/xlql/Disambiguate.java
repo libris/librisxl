@@ -161,6 +161,7 @@ public class Disambiguate {
                                             .forEach(sc ->
                                                     getAsOptionalMap(sc, "onProperty")
                                                             .flatMap(Disambiguate::getLinkedValue)
+                                                            .map(jsonLd::toTermKey)
                                                             .flatMap(onProperty ->
                                                                     getAsOptionalMap(sc, "hasValue")
                                                                             .flatMap(Disambiguate::getLinkedValue)

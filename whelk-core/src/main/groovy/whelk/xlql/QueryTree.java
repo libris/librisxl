@@ -160,35 +160,25 @@ public class QueryTree {
             }
         }
 
-        List<Field> defaultFields = path.defaultFields.stream()
-                .map(df -> {
-                            Path dfPath = new Path(df.path());
-                            if (JsonLd.looksLikeIri(df.value())) {
-                                dfPath.appendId();
-                            }
-                            return new Field(new Path(df.path()), Operator.EQUAL, df.value());
-                        })
-                .toList();
-
-        Node fields = switch (outset) {
+        return switch (outset) {
             case WORK -> {
                 switch (domainCategory) {
                     case INSTANCE, EMBODIMENT -> {
                         // The property p appears only on instance, modify path to @reverse.instanceOf.p...
                         path.setWorkToInstancePath();
-                        yield new Field(path, operator, value);
+                        yield newFields(path, operator, value, disambiguate);
                     }
                     case CREATION_SUPER, UNKNOWN -> {
                         // The property p may appear on instance, add alternative path @reverse.instanceOf.p...
                         List<Node> altFields = new ArrayList<>();
                         Path copy = path.copy();
                         copy.setWorkToInstancePath();
-                        altFields.add(new Field(path, operator, value));
-                        altFields.add(new Field(copy, operator, value));
+                        altFields.add(newFields(path, operator, value, disambiguate));
+                        altFields.add(newFields(copy, operator, value, disambiguate));
                         yield operator == Operator.NOT_EQUAL ? new And(altFields) : new Or(altFields);
                     }
                     default -> {
-                        yield new Field(path, operator, value);
+                        yield newFields(path, operator, value, disambiguate);
                     }
                 }
             }
@@ -197,33 +187,47 @@ public class QueryTree {
                     case WORK -> {
                         // The property p appears only work, modify path to instanceOf.p...
                         path.setInstanceToWorkPath();
-                        yield new Field(path, operator, value);
+                        yield newFields(path, operator, value, disambiguate);
                     }
                     case CREATION_SUPER, UNKNOWN -> {
                         // The property p may appear on work, add alternative path instanceOf.p...
                         List<Node> altFields = new ArrayList<>();
                         Path copy = path.copy();
                         copy.setInstanceToWorkPath();
-                        altFields.add(new Field(path, operator, value));
-                        altFields.add(new Field(copy, operator, value));
+                        altFields.add(newFields(path, operator, value, disambiguate));
+                        altFields.add(newFields(copy, operator, value, disambiguate));
                         yield operator == Operator.NOT_EQUAL ? new And(altFields) : new Or(altFields);
                     }
                     default -> {
-                        yield new Field(path, operator, value);
+                        yield newFields(path, operator, value, disambiguate);
                     }
                 }
             }
-            case RESOURCE -> new Field(path, operator, value);
+            case RESOURCE -> newFields(path, operator, value, disambiguate);
         };
+    }
 
-        if (!defaultFields.isEmpty()) {
-            List<Node> newConjuncts = new ArrayList<>(fields instanceof And ? ((And) fields).conjuncts() : List.of(fields));
-            newConjuncts.addAll(defaultFields);
-            return new And(newConjuncts);
+    static Node newFields(Path path, Operator operator, String value, Disambiguate disambiguate) {
+        Field f = new Field(path, operator, value);
+
+        if (path.defaultFields.isEmpty()) {
+            return f;
         }
 
-        return fields;
+        List<Node> fields = new ArrayList<>(List.of(f));
+
+        path.defaultFields.forEach(df -> {
+                    Path dfPath = new Path(df.path());
+                    if (disambiguate.isObjectProperty(df.path().getLast()) && JsonLd.looksLikeIri(df.value())) {
+                        dfPath.appendId();
+                    }
+                    fields.add(new Field(dfPath, operator, df.value()));
+                }
+        );
+
+        return operator == Operator.NOT_EQUAL ? new Or(fields) : new And(fields);
     }
+
 
     public static Set<String> collectGivenTypes(SimpleQueryTree.Node sqt) {
         return collectGivenTypes(sqt, new HashSet<>());
