@@ -3,7 +3,6 @@ package whelk.xlql;
 import whelk.JsonLd;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Path {
     public List<DefaultField> defaultFields;
@@ -30,7 +29,7 @@ public class Path {
     }
 
     public void prependMeta() {
-        path.add(0, JsonLd.RECORD_KEY);
+        path.addFirst(JsonLd.RECORD_KEY);
     }
 
     public void appendId() {
@@ -68,6 +67,6 @@ public class Path {
     }
 
     public String stringify() {
-        return path.stream().collect(Collectors.joining("."));
+        return String.join(".", path);
     }
 }

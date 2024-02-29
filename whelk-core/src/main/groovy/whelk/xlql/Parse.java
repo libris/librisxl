@@ -4,12 +4,12 @@ import whelk.exception.InvalidQueryException;
 
 import java.util.*;
 
-public class Parse
-{
+public class Parse {
     /**
      * LALR(1) EBNF
      * (ORCOMB is the root node)
      *
+     * <p>
      * ORCOMB: ANDCOMB ( "OR" ANDCOMB )*
      * GROUP: "(" ORCOMB | ANDCOMB | GROUP ")"
      * ANDCOMB: TERM ( "AND" TERM | TERM )*
@@ -20,13 +20,27 @@ public class Parse
      * STRING: ...
      */
 
-    public record Group(OrComb o, AndComb a, Group g) {}
-    public record OrComb(List<AndComb> andCombs) {}
-    public record AndComb(List<Term> ts) {}
-    public record Term (String string1, Uoperator uop, Term term, Group group, Boperator bop, BoperatorEq bopeq, String string2) {}
-    public record Uoperator (String s, String c) {}
-    public record Boperator (String op) {}
-    public record BoperatorEq () {}
+    public record Group(OrComb o, AndComb a, Group g) {
+    }
+
+    public record OrComb(List<AndComb> andCombs) {
+    }
+
+    public record AndComb(List<Term> ts) {
+    }
+
+    public record Term(String string1, Uoperator uop, Term term, Group group, Boperator bop, BoperatorEq bopeq,
+                       String string2) {
+    }
+
+    public record Uoperator(String s, String c) {
+    }
+
+    public record Boperator(String op) {
+    }
+
+    public record BoperatorEq() {
+    }
 
     public static OrComb parseQuery(LinkedList<Lex.Symbol> symbols) throws InvalidQueryException {
         LinkedList<Object> stack = new LinkedList<>();
@@ -36,7 +50,7 @@ public class Parse
             do {
                 Lex.Symbol lookahead = null;
                 if (!symbols.isEmpty())
-                    lookahead = symbols.get(0);
+                    lookahead = symbols.getFirst();
                 reductionWasPossible = reduce(stack, lookahead);
 
                 /*
@@ -51,11 +65,11 @@ public class Parse
                 */
 
             }
-            while(reductionWasPossible);
+            while (reductionWasPossible);
         }
 
-        if (stack.size() == 1 && stack.get(0) instanceof OrComb) {
-            return (OrComb) stack.get(0);
+        if (stack.size() == 1 && stack.getFirst() instanceof OrComb) {
+            return (OrComb) stack.getFirst();
         }
 
         throw new InvalidQueryException("Syntax error");
@@ -63,17 +77,17 @@ public class Parse
 
     // Note to self, the front of the list counts as the top!
     private static void shift(LinkedList<Object> stack, LinkedList<Lex.Symbol> symbols) {
-        stack.push( symbols.poll() );
+        stack.push(symbols.poll());
     }
 
     private static boolean reduce(LinkedList<Object> stack, Lex.Symbol lookahead) {
 
         // BOPERATOR: "<" | ">" | "<=" | ">="
         {
-            if (stack.size() >= 1) {
-                if (stack.get(0) instanceof Lex.Symbol s &&
+            if (!stack.isEmpty()) {
+                if (stack.getFirst() instanceof Lex.Symbol s &&
                         s.name() == Lex.TokenName.OPERATOR &&
-                        ( s.value().equals("<") || s.value().equals(">") || s.value().equals("<=") || s.value().equals(">=")) ) {
+                        (s.value().equals("<") || s.value().equals(">") || s.value().equals("<=") || s.value().equals(">="))) {
                     stack.pop();
                     stack.push(new Boperator(s.value()));
                     return true;
@@ -83,10 +97,10 @@ public class Parse
 
         // BOPERATOREQ: ":" | "="
         {
-            if (stack.size() >= 1) {
-                if (stack.get(0) instanceof Lex.Symbol s &&
+            if (!stack.isEmpty()) {
+                if (stack.getFirst() instanceof Lex.Symbol s &&
                         s.name() == Lex.TokenName.OPERATOR &&
-                        ( s.value().equals("=") || s.value().equals(":") ) ) {
+                        (s.value().equals("=") || s.value().equals(":"))) {
                     stack.pop();
                     stack.push(new BoperatorEq());
                     return true;
@@ -96,17 +110,17 @@ public class Parse
 
         // UOPERATOR: "!" | "~" | "NOT"
         {
-            if (stack.size() >= 1) {
-                if (stack.get(0) instanceof Lex.Symbol s &&
+            if (!stack.isEmpty()) {
+                if (stack.getFirst() instanceof Lex.Symbol s &&
                         s.name() == Lex.TokenName.OPERATOR &&
-                        ( s.value().equals("!") || s.value().equals("~") ) ) {
+                        (s.value().equals("!") || s.value().equals("~"))) {
                     stack.pop();
                     stack.push(new Uoperator(s.value(), null));
                     return true;
                 }
-                if (stack.get(0) instanceof Lex.Symbol s &&
+                if (stack.getFirst() instanceof Lex.Symbol s &&
                         s.name() == Lex.TokenName.KEYWORD &&
-                        s.value().equals("not") ) {
+                        s.value().equals("not")) {
                     stack.pop();
                     stack.push(new Uoperator(s.value(), null));
                     return true;
@@ -121,7 +135,7 @@ public class Parse
                 // STRING BOPERATOR STRING
                 if (stack.get(2) instanceof Lex.Symbol s1 && s1.name() == Lex.TokenName.STRING) {
                     if (stack.get(1) instanceof Boperator bop) {
-                        if (stack.get(0) instanceof Lex.Symbol s3 && s3.name() == Lex.TokenName.STRING) {
+                        if (stack.getFirst() instanceof Lex.Symbol s3 && s3.name() == Lex.TokenName.STRING) {
                             stack.pop();
                             stack.pop();
                             stack.pop();
@@ -134,7 +148,7 @@ public class Parse
                 // STRING BOPERATOREQ TERM
                 if (stack.get(2) instanceof Lex.Symbol s1 && s1.name() == Lex.TokenName.STRING) {
                     if (stack.get(1) instanceof BoperatorEq bop) {
-                        if (stack.get(0) instanceof Term t) {
+                        if (stack.getFirst() instanceof Term t) {
                             stack.pop();
                             stack.pop();
                             stack.pop();
@@ -146,7 +160,7 @@ public class Parse
             }
             if (stack.size() >= 2) {
                 if (stack.get(1) instanceof Uoperator uop) {
-                    if (stack.get(0) instanceof Term t) {
+                    if (stack.getFirst() instanceof Term t) {
                         stack.pop();
                         stack.pop();
                         stack.push(new Term(null, uop, t, null, null, null, null));
@@ -154,8 +168,8 @@ public class Parse
                     }
                 }
             }
-            if (stack.size() >= 1) {
-                if (stack.get(0) instanceof Lex.Symbol s &&
+            if (!stack.isEmpty()) {
+                if (stack.getFirst() instanceof Lex.Symbol s &&
                         s.name() == Lex.TokenName.STRING) {
 
                     boolean okToReduce = true; // Assumption
@@ -180,7 +194,7 @@ public class Parse
                         return true;
                     }
                 }
-                if (stack.get(0) instanceof Group g) {
+                if (stack.getFirst() instanceof Group g) {
                     stack.pop();
                     stack.push(new Term(null, null, null, g, null, null, null));
                     return true;
@@ -190,7 +204,7 @@ public class Parse
 
         // ANDCOMB: TERM ( "AND" TERM | TERM )*
         {
-            if (stack.size() >= 1) {
+            if (!stack.isEmpty()) {
                 if (stack.get(0) instanceof Term t) {
 
                     // We must check that we have everything that goes into the list, *on*
@@ -217,7 +231,7 @@ public class Parse
 
                     if (wholeListOnStack) {
                         List<Term> terms = new ArrayList<>();
-                        terms.add(0, t);
+                        terms.addFirst(t);
                         stack.pop();
 
                         // Chew the whole list all at once
@@ -226,7 +240,7 @@ public class Parse
                             stillChewing = false;
                             if (!stack.isEmpty() && stack.get(0) instanceof Term nextTerm) {
                                 stack.pop();
-                                terms.add(0, nextTerm);
+                                terms.addFirst(nextTerm);
                                 stillChewing = true;
                             } else if (stack.size() >= 2 && stack.get(0) instanceof Lex.Symbol s &&
                                     s.name() == Lex.TokenName.KEYWORD &&
@@ -234,7 +248,7 @@ public class Parse
                                     stack.get(1) instanceof Term nextTerm) {
                                 stack.pop();
                                 stack.pop();
-                                terms.add(0, nextTerm);
+                                terms.addFirst(nextTerm);
                                 stillChewing = true;
                             }
                         } while (stillChewing);
@@ -248,7 +262,7 @@ public class Parse
 
         // ORCOMB: ANDCOMB ( "OR" ANDCOMB )*
         {
-            if (stack.size() >= 1) {
+            if (!stack.isEmpty()) {
                 if (stack.get(0) instanceof AndComb ac) {
 
                     boolean wholeListOnStack = true; // Assumption
@@ -259,7 +273,7 @@ public class Parse
 
                     if (wholeListOnStack) {
                         List<AndComb> ACs = new ArrayList<>();
-                        ACs.add(0, ac);
+                        ACs.addFirst(ac);
                         stack.pop();
 
                         // Chew the whole list all at once
@@ -272,7 +286,7 @@ public class Parse
                                     stack.get(1) instanceof AndComb nextAc) {
                                 stack.pop();
                                 stack.pop();
-                                ACs.add(0, nextAc);
+                                ACs.addFirst(nextAc);
                                 stillChewing = true;
                             }
                         } while (stillChewing);

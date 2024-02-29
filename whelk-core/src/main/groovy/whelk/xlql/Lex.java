@@ -5,10 +5,15 @@ import whelk.exception.InvalidQueryException;
 import java.util.*;
 
 public class Lex {
-    public static class MutableInteger
-    {
-        public MutableInteger(int i) { value = i; }
-        public void increase(int with) { value += with; }
+    public static class MutableInteger {
+        public MutableInteger(int i) {
+            value = i;
+        }
+
+        public void increase(int with) {
+            value += with;
+        }
+
         int value;
     }
 
@@ -18,10 +23,10 @@ public class Lex {
         STRING,
     }
 
-    public record Symbol (TokenName name, String value, int offset) {}
+    public record Symbol(TokenName name, String value, int offset) {
+    }
 
-    public static LinkedList<Symbol> lexQuery(String queryString) throws InvalidQueryException
-    {
+    public static LinkedList<Symbol> lexQuery(String queryString) throws InvalidQueryException {
         LinkedList<Symbol> symbols = new LinkedList<>();
         StringBuilder query = new StringBuilder(queryString);
         MutableInteger offset = new MutableInteger(0);
@@ -41,7 +46,7 @@ public class Lex {
         }
     }
 
-    private static List reservedCharsInString = Arrays.asList('!', '<', '>', '=', '~', '(', ')', ':');
+    private static final List<Character> reservedCharsInString = Arrays.asList('!', '<', '>', '=', '~', '(', ')', ':');
 
     private static Symbol getNextSymbol(StringBuilder query, MutableInteger offset) throws InvalidQueryException {
         consumeWhiteSpace(query, offset);
@@ -65,7 +70,7 @@ public class Lex {
                 return new Symbol(TokenName.OPERATOR, "<=", symbolOffset);
             }
         }
-        if (query.length() >= 1) {
+        if (!query.isEmpty()) {
             if (query.substring(0, 1).equals("=")) {
                 query.deleteCharAt(0);
                 offset.increase(1);
@@ -104,7 +109,7 @@ public class Lex {
         }
 
         // quoted strings
-        if (query.charAt(0) == '"'){
+        if (query.charAt(0) == '"') {
             query.deleteCharAt(0);
             offset.increase(1);
 
@@ -157,7 +162,7 @@ public class Lex {
             TokenName name;
 
             // These words (when not quoted) are keywords
-            switch (symbolValue.toString()){
+            switch (symbolValue.toString()) {
                 case "and":
                 case "or":
                 case "not":

@@ -23,9 +23,7 @@ public class Analysis {
                     checkNoCodeWithinCode(child, inCodeGroup);
                 }
             }
-            case Ast.Not not -> {
-                checkNoCodeWithinCode(not.operand(), inCodeGroup);
-            }
+            case Ast.Not not -> checkNoCodeWithinCode(not.operand(), inCodeGroup);
             case Ast.CodeEquals ce -> {
                 if (inCodeGroup) {
                     throw new InvalidQueryException("Codes within code groups are not allowed.");

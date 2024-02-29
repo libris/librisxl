@@ -106,7 +106,7 @@ public class SimpleQueryTree {
                         .map(c -> excludeFromTree(nodeToExclude, c))
                         .filter(Objects::nonNull)
                         .toList();
-                return andClause.size() > 1 ? new And(andClause) : andClause.get(0);
+                return andClause.size() > 1 ? new And(andClause) : andClause.getFirst();
             }
             case Or or -> {
                 List<Node> orClause = or.disjuncts()
@@ -114,7 +114,7 @@ public class SimpleQueryTree {
                         .map(d -> excludeFromTree(nodeToExclude, d))
                         .filter(Objects::nonNull)
                         .toList();
-                return orClause.size() > 1 ? new Or(orClause) : orClause.get(0);
+                return orClause.size() > 1 ? new Or(orClause) : orClause.getFirst();
             }
             case FreeText ignored -> {
                 return tree;

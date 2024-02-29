@@ -6,15 +6,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Ast {
-    public sealed interface Node permits And, Or, Not, CodeEquals, CodeLesserGreaterThan, CodeEqualsLeaf, Leaf {}
-    public record And (List<Node> operands) implements Node {}
-    public record Or (List<Node> operands) implements Node {}
-    public record Not (Node operand) implements Node {}
-//    public record Like (Node operand) implements Node {}
-    public record CodeEquals (String code, Node operand) implements Node {}
-    public record CodeEqualsLeaf(String code, Leaf operand) implements Node {}
-    public record CodeLesserGreaterThan (String code, String operator, Leaf operand) implements Node {}
-    public record Leaf(String value) implements Node {}
+    public sealed interface Node permits And, Or, Not, CodeEquals, CodeLesserGreaterThan, CodeEqualsLeaf, Leaf {
+    }
+
+    public record And(List<Node> operands) implements Node {
+    }
+
+    public record Or(List<Node> operands) implements Node {
+    }
+
+    public record Not(Node operand) implements Node {
+    }
+
+    //    public record Like (Node operand) implements Node {}
+    public record CodeEquals(String code, Node operand) implements Node {
+    }
+
+    public record CodeEqualsLeaf(String code, Leaf operand) implements Node {
+    }
+
+    public record CodeLesserGreaterThan(String code, String operator, Leaf operand) implements Node {
+    }
+
+    public record Leaf(String value) implements Node {
+    }
 
     Node tree;
 
@@ -37,9 +52,8 @@ public class Ast {
                 result.add(reduce(andComb));
             }
             return new Or(result);
-        }
-        else {
-            return reduce(orComb.andCombs().get(0));
+        } else {
+            return reduce(orComb.andCombs().getFirst());
         }
     }
 
@@ -53,11 +67,11 @@ public class Ast {
             }
             return new And(result);
         } else {
-            return reduce(andComb.ts().get(0));
+            return reduce(andComb.ts().getFirst());
         }
     }
 
-    private static Node reduce (Parse.Term term) throws InvalidQueryException {
+    private static Node reduce(Parse.Term term) throws InvalidQueryException {
         // public record Term (String string1, Uoperator uop, Term term, Group group, Boperator bop, BoperatorEq bopeq, String string2) {}
 
         // Ordinary string term
@@ -91,9 +105,9 @@ public class Ast {
                 term.bopeq() == null &&
                 term.string2() == null) {
 
-            if ( term.uop().s().equals("!") || term.uop().s().equals("not")) {
+            if (term.uop().s().equals("!") || term.uop().s().equals("not")) {
                 return new Not(reduce(term.term()));
-            } else if ( term.uop().s().equals("~") ) {
+            } else if (term.uop().s().equals("~")) {
                 throw new InvalidQueryException("Like operator (~) not yet supported");
 //                return new Like(reduce(term.term()));
             }

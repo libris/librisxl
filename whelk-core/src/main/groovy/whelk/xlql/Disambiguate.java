@@ -12,7 +12,10 @@ public class Disambiguate {
 
     // :category :heuristicIdentifier too broad...?
     private static final Set<String> notatingProps = new HashSet<>(Arrays.asList("label", "prefLabel", "altLabel", "code", "librisQueryCode"));
-    private JsonLd jsonLd;
+
+    private final JsonLd jsonLd;
+    private final Map<String, String> domainByProperty;
+
     private Map<String, String> propertyAliasMappings;
     // TODO: Handle ambiguous aliases
     private Map<String, Set<String>> ambiguousPropertyAliases;
@@ -20,7 +23,7 @@ public class Disambiguate {
     private Map<String, Set<String>> ambiguousClassAliases;
     private Map<String, String> enumAliasMappings;
     private Map<String, Set<String>> ambiguousEnumAliases;
-    private Map<String, String> domainByProperty;
+
     private Set<String> adminMetadataTypes;
     private Set<String> creationSuperTypes;
     public Set<String> workTypes;
@@ -52,8 +55,8 @@ public class Disambiguate {
 
     public Disambiguate(Whelk whelk) {
         this.jsonLd = whelk.getJsonld();
-        setAliasMappings(whelk);
         this.domainByProperty = loadDomainByProperty(whelk);
+        setAliasMappings(whelk);
         setTypeSets(jsonLd);
     }
 
@@ -122,7 +125,7 @@ public class Disambiguate {
         List<DefaultField> defaultFields = new ArrayList<>();
 
         for (String p : path) {
-            Map<String, Object> termDefinition = jsonLd.vocabIndex.get(p);
+            var termDefinition = jsonLd.vocabIndex.get(p);
 
             // TODO: All short forms should be marked with :category :shortHand?
             //  Not the case at the moment, therefore isShorthand doesn't apply
@@ -199,7 +202,7 @@ public class Disambiguate {
         addMapping("rdf:type", "@type", TermType.PROPERTY);
 
         for (String termKey : jsonLd.vocabIndex.keySet()) {
-            Map termDefinition = jsonLd.vocabIndex.get(termKey);
+            var termDefinition = jsonLd.vocabIndex.get(termKey);
 
             if (isKbvTerm(termDefinition)) {
                 if (isClass(termDefinition)) {
@@ -215,13 +218,13 @@ public class Disambiguate {
         }
     }
 
-    private void addAllMappings(Map termDefinition, String termKey, TermType termType, Whelk whelk) {
+    private void addAllMappings(Map<?, ?> termDefinition, String termKey, TermType termType, Whelk whelk) {
         addMapping(termKey, termKey, termType);
         addMappings(termDefinition, termKey, termType);
         addEquivTermMappings(termDefinition, termKey, termType, whelk);
     }
 
-    private void addEquivTermMappings(Map termDefinition, String termKey, TermType termType, Whelk whelk) {
+    private void addEquivTermMappings(Map<?, ?> termDefinition, String termKey, TermType termType, Whelk whelk) {
         String mappingProperty = switch (termType) {
             case CLASS, ENUM -> "equivalentClass";
             case PROPERTY -> "equivalentProperty";
@@ -259,16 +262,16 @@ public class Disambiguate {
         return domainByProperty;
     }
 
-    private Optional<String> findDomain(Map propertyDefinition, Whelk whelk) {
+    private Optional<String> findDomain(Map<?, ?> propertyDefinition, Whelk whelk) {
         return findDomain(new LinkedList<>(List.of(propertyDefinition)), whelk);
     }
 
-    private Optional<String> findDomain(LinkedList<Map> queue, Whelk whelk) {
+    private Optional<String> findDomain(LinkedList<Map<?, ?>> queue, Whelk whelk) {
         if (queue.isEmpty()) {
             return Optional.empty();
         }
 
-        Map propertyDefinition = queue.pop();
+        var propertyDefinition = queue.pop();
 
         Optional<String> domain = getDomainIri(propertyDefinition);
         if (domain.isPresent()) {
@@ -280,8 +283,8 @@ public class Disambiguate {
         return findDomain(queue, whelk);
     }
 
-    List<Map> collectInheritable(Map propertyDefinition, Whelk whelk) {
-        List<Map> inheritable = new ArrayList<>();
+    List<Map<?, ?>> collectInheritable(Map<?, ?> propertyDefinition, Whelk whelk) {
+        List<Map<?, ?>> inheritable = new ArrayList<>();
 
         getAsList(propertyDefinition, "equivalentProperty")
                 .forEach(ep -> getDefinition(ep, whelk).ifPresent(inheritable::add));
@@ -297,27 +300,28 @@ public class Disambiguate {
         return inheritable;
     }
 
-    private Optional<String> getDomainIri(Map propertyDefinition) {
+    private Optional<String> getDomainIri(Map<?, ?> propertyDefinition) {
         return getAsOptionalList(propertyDefinition, "domain")
                 .map(List::getFirst)
                 .flatMap(Disambiguate::getLinkedValue);
     }
 
-    private Optional<Map> getDefinition(Map node, Whelk whelk) {
+    private Optional<Map<?, ?>> getDefinition(Map<?, ?> node, Whelk whelk) {
         return getLinkedValue(node)
-                .map(id ->
-                        Optional.ofNullable(jsonLd.vocabIndex.get(jsonLd.toTermKey(id)))
-                                .orElse(loadThing(id, whelk).orElse(null))
+                .flatMap(id -> {
+                            var fromVocab = Optional.ofNullable((Map<?, ?>) jsonLd.vocabIndex.get(jsonLd.toTermKey(id)));
+                            return fromVocab.isPresent() ? fromVocab : loadThing(id, whelk);
+                        }
                 );
     }
 
-    private Optional<Map> loadThing(String id, Whelk whelk) {
+    private Optional<Map<?, ?>> loadThing(String id, Whelk whelk) {
         return Optional.ofNullable(whelk.loadData(id))
                 .map(data -> data.get(JsonLd.GRAPH_KEY))
-                .map(graph -> (Map) ((List) graph).get(1));
+                .map(graph -> (Map<?, ?>) ((List<?>) graph).get(1));
     }
 
-    private void addMappings(Map fromTermData, String toTermKey, TermType termType) {
+    private void addMappings(Map<?, ?> fromTermData, String toTermKey, TermType termType) {
         String fromTermId = (String) fromTermData.get(JsonLd.ID_KEY);
 
         addMapping(fromTermId, toTermKey, termType);
@@ -331,10 +335,10 @@ public class Disambiguate {
             String alias = (String) jsonLd.langContainerAlias.get(prop);
 
             if (fromTermData.containsKey(alias)) {
-                Map byLang = (Map) fromTermData.get(alias);
+                Map<?, ?> byLang = (Map<?, ?>) fromTermData.get(alias);
                 for (String lang : jsonLd.locales) {
-                    List<String> values = JsonLd.asList(byLang.get(lang));
-                    values.forEach(v -> addMapping(v, toTermKey, termType));
+                    List<?> values = JsonLd.asList(byLang.get(lang));
+                    values.forEach(v -> addMapping((String) v, toTermKey, termType));
                 }
             }
         }
@@ -366,16 +370,18 @@ public class Disambiguate {
         }
     }
 
-    private static boolean isKbvTerm(Map termDefinition) {
-        Map definedBy = (Map) termDefinition.get("isDefinedBy");
-        return definedBy != null && definedBy.get("@id").equals("https://id.kb.se/vocab/");
+    private static boolean isKbvTerm(Map<?, ?> termDefinition) {
+        return getAsOptionalMap(termDefinition, "isDefinedBy")
+                .flatMap(Disambiguate::getLinkedValue)
+                .filter("https://id.kb.se/vocab/"::equals)
+                .isPresent();
     }
 
-    private boolean isClass(Map termDefinition) {
+    private boolean isClass(Map<?, ?> termDefinition) {
         return getTypes(termDefinition).stream().anyMatch(type -> jsonLd.isSubClassOf(type, "Class"));
     }
 
-    private boolean isEnum(Map termDefinition) {
+    private boolean isEnum(Map<?, ?> termDefinition) {
         return getTypes(termDefinition).stream()
                 .map(type -> plusElem(getSuperclasses(type, jsonLd), type))
                 .flatMap(Set::stream)
@@ -391,7 +397,7 @@ public class Disambiguate {
                 .orElse(false);
     }
 
-    private static boolean isProperty(Map termDefinition) {
+    private static boolean isProperty(Map<?, ?> termDefinition) {
         return isObjectProperty(termDefinition) || isDatatypeProperty(termDefinition);
     }
 
@@ -401,15 +407,15 @@ public class Disambiguate {
                 .orElse(false);
     }
 
-    private static boolean isObjectProperty(Map termDefinition) {
+    private static boolean isObjectProperty(Map<?, ?> termDefinition) {
         return getTypes(termDefinition).stream().anyMatch("ObjectProperty"::equals);
     }
 
-    private static boolean isDatatypeProperty(Map termDefinition) {
+    private static boolean isDatatypeProperty(Map<?, ?> termDefinition) {
         return getTypes(termDefinition).stream().anyMatch("DatatypeProperty"::equals);
     }
 
-    private static List<String> getTypes(Map termDefinition) {
+    private static List<String> getTypes(Map<?, ?> termDefinition) {
         return JsonLd.asList(termDefinition.get(JsonLd.TYPE_KEY));
     }
 
@@ -478,23 +484,23 @@ public class Disambiguate {
         return l;
     }
 
-    private static Optional<String> getLinkedValue(Map m) {
+    private static Optional<String> getLinkedValue(Map<?, ?> m) {
         return Optional.ofNullable((String) m.get(JsonLd.ID_KEY));
     }
 
-    private static List<Map> getAsList(Map m, String property) {
+    private static List<Map<?, ?>> getAsList(Map<?, ?> m, String property) {
         return getAsOptionalList(m, property).orElse(Collections.emptyList());
     }
 
-    private static Optional<List<Map>> getAsOptionalList(Map m, String property) {
-        return Optional.ofNullable((List<Map>) m.get(property));
+    private static Optional<List<Map<?, ?>>> getAsOptionalList(Map<?, ?> m, String property) {
+        return Optional.ofNullable((List<Map<?, ?>>) m.get(property));
     }
 
-    private static Optional<Map> getAsOptionalMap(Map m, String property) {
-        return Optional.ofNullable((Map) m.get(property));
+    private static Optional<Map<?, ?>> getAsOptionalMap(Map<?, ?> m, String property) {
+        return Optional.ofNullable((Map<?, ?>) m.get(property));
     }
 
-    private static boolean isShorthand(Map termDefinition) {
+    private static boolean isShorthand(Map<?, ?> termDefinition) {
         return getAsOptionalMap(termDefinition, "category")
                 .flatMap(Disambiguate::getLinkedValue)
                 .filter("https://id.kb.se/vocab/shorthand"::equals)

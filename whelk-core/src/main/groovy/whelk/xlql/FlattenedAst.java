@@ -70,9 +70,8 @@ public class FlattenedAst {
             case Ast.Leaf l -> {
                 return negate ? new Not(l.value()) : new Leaf(l.value());
             }
-            case Ast.CodeEquals ignored -> {
-                throw new RuntimeException("CodeEquals not allowed here. Run flattenCodes to eliminate this from the AST");
-            }
+            case Ast.CodeEquals ignored ->
+                    throw new RuntimeException("CodeEquals not allowed here. Run flattenCodes to eliminate this from the AST");
         }
     }
 
@@ -102,9 +101,8 @@ public class FlattenedAst {
                     case Ast.Leaf l -> {
                         return wrapAllChildrenInCode(code, l);
                     }
-                    default -> {
-                        throw new RuntimeException("XLQL Error when flattening: " + astNode); // Should not be reachable. This is a bug.
-                    }
+                    default ->
+                            throw new RuntimeException("XLQL Error when flattening: " + astNode); // Should not be reachable. This is a bug.
                 }
             }
             // Until a CodeEquals is found, recreate as is

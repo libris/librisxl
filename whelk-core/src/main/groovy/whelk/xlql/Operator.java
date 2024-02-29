@@ -10,7 +10,7 @@ public enum Operator {
     LESS_THAN_OR_EQUAL("LessThanOrEqual"),
     LESS_THAN("LessThan");
 
-    public String termKey;
+    public final String termKey;
 
     Operator(String termKey) {
         this.termKey = termKey;
