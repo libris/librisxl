@@ -212,6 +212,10 @@ public class Disambiguate {
                 }
             }
 
+            if (isMarc(termKey) && isProperty(termDefinition)) {
+                addMapping(termKey, termKey, TermType.PROPERTY);
+            }
+
             if (isEnum(termDefinition)) {
                 addAllMappings(termDefinition, termKey, TermType.ENUM, whelk);
             }
@@ -375,6 +379,10 @@ public class Disambiguate {
                 .flatMap(Disambiguate::getLinkedValue)
                 .filter("https://id.kb.se/vocab/"::equals)
                 .isPresent();
+    }
+
+    private boolean isMarc(String termKey) {
+        return termKey.startsWith("marc:");
     }
 
     private boolean isClass(Map<?, ?> termDefinition) {

@@ -26,6 +26,8 @@ class DisambiguateSpec extends Specification {
         "översättning av"                | "translationOf"
         "förf"                           | "author"
         "unknown term"                   | null
+        "marc:jurisdiction"              | "marc:jurisdiction"
+        "jurisdiction"                   | null
     }
 
     def "expandPrefixed"() {
