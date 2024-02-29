@@ -32,15 +32,14 @@ public class XLQLQuery {
         return new SimpleQueryTree(flattened, disambiguate);
     }
 
-    // TODO: Unit tests
-    public Map getEsQuery(QueryTree queryTree) {
+    public Map<String, Object> getEsQuery(QueryTree queryTree) {
         return buildEsQuery(queryTree.tree, new HashMap<>());
     }
 
-    private Map buildEsQuery(QueryTree.Node qtNode, Map esQueryNode) {
+    private Map<String, Object> buildEsQuery(QueryTree.Node qtNode, Map<String, Object> esQueryNode) {
         switch (qtNode) {
             case QueryTree.And and -> {
-                List<Map> mustClause = and.conjuncts()
+                var mustClause = and.conjuncts()
                         .stream()
                         .map(c -> buildEsQuery(c, new HashMap<>()))
                         .toList();
@@ -48,7 +47,7 @@ public class XLQLQuery {
                 return esQueryNode;
             }
             case QueryTree.Or or -> {
-                List<Map> shouldClause = or.disjuncts()
+                var shouldClause = or.disjuncts()
                         .stream()
                         .map(d -> buildEsQuery(d, new HashMap<>()))
                         .toList();
@@ -65,7 +64,7 @@ public class XLQLQuery {
         }
     }
 
-    private Map esFreeText(QueryTree.FreeText ft) {
+    private Map<String, Object> esFreeText(QueryTree.FreeText ft) {
         String s = ft.value();
         s = Unicode.normalizeForSearch(s);
         s = quoteIfPhrase(s);
@@ -74,10 +73,8 @@ public class XLQLQuery {
         if (!isSimple) {
             s = ESQuery.escapeNonSimpleQueryString(s);
         }
-        Map<String, Map> simpleQuery = new HashMap<>();
-        Map sq = simpleQuery.computeIfAbsent(queryMode, v -> new HashMap<>());
-        sq.put("query", s);
-        sq.put("analyze_wildcard", true);
+        Map<String, Object> simpleQuery = new HashMap<>();
+        simpleQuery.put(queryMode, Map.of("query", s, "analyze_wildcard", true));
 
         // TODO: Boost by type
         List<String> boostedFields = lensBoost.computeBoostFieldsFromLenses(new String[0]);
@@ -98,20 +95,24 @@ public class XLQLQuery {
                 .map(f -> f.replace(JsonLd.SEARCH_KEY, JsonLd.SEARCH_KEY + ".exact"))
                 .toList();
 
-        Map<String, Map> boostedExact = new HashMap<>();
-        Map be = boostedExact.computeIfAbsent(queryMode, v -> new HashMap<>());
-        be.put("query", s);
-        be.put("fields", exactFields);
-        be.put("analyze_wildcard", true);
+        var boostedExact = new HashMap<>();
+        var be = Map.of(
+                "query", s,
+                "fields", exactFields,
+                "analyze_wildcard", true
+        );
+        boostedExact.put(queryMode, be);
 
-        Map<String, Map> boostedSoft = new HashMap<>();
-        Map bs = boostedSoft.computeIfAbsent(queryMode, v -> new HashMap<>());
-        bs.put("query", s);
-        bs.put("fields", softFields);
-        bs.put("quote_field_suffix", ".exact");
-        bs.put("analyze_wildcard", true);
+        var boostedSoft = new HashMap<>();
+        var bs = Map.of(
+                "query", s,
+                "fields", softFields,
+                "quote_field_suffix", ".exact",
+                "analyze_wildcard", true
+        );
+        boostedSoft.put(queryMode, bs);
 
-        List<Map> shouldClause = new ArrayList<>(Arrays.asList(boostedExact, boostedSoft, simpleQuery));
+        var shouldClause = new ArrayList<>(Arrays.asList(boostedExact, boostedSoft, simpleQuery));
         if (ft.operator() == Operator.EQUAL) {
             return shouldWrap(shouldClause);
         }
@@ -128,7 +129,7 @@ public class XLQLQuery {
         throw new RuntimeException("Invalid operator"); // Not reachable
     }
 
-    private Map esFilter(QueryTree.Field f) {
+    private Map<String, Object> esFilter(QueryTree.Field f) {
         String path = f.path().stringify();
         String value = quoteIfPhrase(f.value());
         return switch (f.operator()) {
@@ -141,41 +142,37 @@ public class XLQLQuery {
         };
     }
 
-    public Map toMappings(SimpleQueryTree sqt) {
+    public Map<String, Object> toMappings(SimpleQueryTree sqt) {
         return toMappings(sqt, Collections.emptyList());
     }
 
-    public Map<?, ?> toMappings(SimpleQueryTree sqt, List<String> urlParams) {
-        return buildMappings(sqt.tree, sqt, new LinkedHashMap(), urlParams);
+    public Map<String, Object> toMappings(SimpleQueryTree sqt, List<String> urlParams) {
+        return buildMappings(sqt.tree, sqt, new LinkedHashMap<>(), urlParams);
     }
 
-    private Map buildMappings(SimpleQueryTree.Node sqtNode, SimpleQueryTree sqt, Map mappingsNode, List<String> urlParams) {
+    private Map<String, Object> buildMappings(SimpleQueryTree.Node sqtNode, SimpleQueryTree sqt, Map<String, Object> mappingsNode, List<String> urlParams) {
         switch (sqtNode) {
             case SimpleQueryTree.And and -> {
-                List<Map> andClause = and.conjuncts()
+                var andClause = and.conjuncts()
                         .stream()
-                        .map(c -> buildMappings(c, sqt, new LinkedHashMap(), urlParams))
+                        .map(c -> buildMappings(c, sqt, new LinkedHashMap<>(), urlParams))
                         .toList();
                 mappingsNode.put("and", andClause);
             }
             case SimpleQueryTree.Or or -> {
-                List<Map> orClause = or.disjuncts()
+                var orClause = or.disjuncts()
                         .stream()
-                        .map(d -> buildMappings(d, sqt, new LinkedHashMap(), urlParams))
+                        .map(d -> buildMappings(d, sqt, new LinkedHashMap<>(), urlParams))
                         .toList();
                 mappingsNode.put("or", orClause);
             }
-            case SimpleQueryTree.FreeText ft -> {
-                mappingsNode = freeTextMapping(ft);
-            }
-            case SimpleQueryTree.PropertyValue pv -> {
-                mappingsNode = propertyValueMapping(pv);
-            }
+            case SimpleQueryTree.FreeText ft -> mappingsNode = freeTextMapping(ft);
+            case SimpleQueryTree.PropertyValue pv -> mappingsNode = propertyValueMapping(pv);
         }
 
         Optional<SimpleQueryTree.Node> reducedTree = getReducedTree(sqt, sqtNode);
         // TODO: Empty tree --> ???
-        String upUrl = reducedTree.isPresent() ? "/find?_q=" + treeToQueryString(reducedTree.get()) : "/find?_q=*";
+        String upUrl = reducedTree.map(node -> "/find?_q=" + treeToQueryString(node)).orElse("/find?_q=*");
         upUrl += urlParams.stream()
                 .map(p -> "&" + p)
                 .collect(Collectors.joining(""));
@@ -184,20 +181,24 @@ public class XLQLQuery {
         return mappingsNode;
     }
 
-    private Map mapping(String property, String value, Operator operator) {
-        return mapping(property, value, operator, Collections.emptyList());
+    private Map<String, Object> freeTextMapping(SimpleQueryTree.FreeText ft) {
+        return mapping("textQuery", ft.value(), ft.operator(), Collections.emptyList());
     }
 
-    private Map mapping(String property, String value, Operator operator, List<String> propertyPath) {
-        Map m = new LinkedHashMap();
+    private Map<String, Object> propertyValueMapping(SimpleQueryTree.PropertyValue pv) {
+        return mapping(pv.property(), pv.value(), pv.operator(), pv.propertyPath());
+    }
+
+    private Map<String, Object> mapping(String property, String value, Operator operator, List<String> propertyPath) {
+        Map<String, Object> m = new LinkedHashMap<>();
         if (propertyPath.size() > 1) {
             m.put("variable", String.join(".", propertyPath));
             // Include "@id" / "_str" in chainAxiom?
-            List propertyChainAxiom = propertyPath.stream()
+            var propertyChainAxiom = propertyPath.stream()
                     .map(this::getDefinition)
                     .filter(Objects::nonNull)
                     .toList();
-            Map predicate = propertyChainAxiom.size() > 1
+            var predicate = propertyChainAxiom.size() > 1
                     ? Map.of("propertyChainAxiom", propertyChainAxiom)
                     : getDefinition(property);
             m.put("predicate", predicate);
@@ -210,16 +211,8 @@ public class XLQLQuery {
         return m;
     }
 
-    private Map getDefinition(String property) {
+    private Map<?, ?> getDefinition(String property) {
         return whelk.getJsonld().vocabIndex.get(property);
-    }
-
-    private Map freeTextMapping(SimpleQueryTree.FreeText ft) {
-        return mapping("textQuery", ft.value(), ft.operator());
-    }
-
-    private Map propertyValueMapping(SimpleQueryTree.PropertyValue pv) {
-        return mapping(pv.property(), pv.value(), pv.operator(), pv.propertyPath());
     }
 
     private Optional<SimpleQueryTree.Node> getReducedTree(SimpleQueryTree sqt, SimpleQueryTree.Node qtNode) {
@@ -265,8 +258,7 @@ public class XLQLQuery {
 
     private String propertyValueToString(SimpleQueryTree.PropertyValue pv) {
         String sep = switch (pv.operator()) {
-            case EQUAL -> ": ";
-            case NOT_EQUAL -> ": ";
+            case EQUAL, NOT_EQUAL -> ": ";
             case GREATER_THAN_OR_EQUAL -> " >= ";
             case GREATER_THAN -> " > ";
             case LESS_THAN_OR_EQUAL -> " <= ";
@@ -276,49 +268,50 @@ public class XLQLQuery {
         return not + String.join(".", pv.propertyPath()) + sep + quoteIfPhraseOrColon(pv.value());
     }
 
-    private static Map equalsFilter(String path, String value) {
+    private static Map<String, Object> equalsFilter(String path, String value) {
         return equalsFilter(path, value, false);
     }
 
-    private static Map notEqualsFilter(String path, String value) {
+    private static Map<String, Object> notEqualsFilter(String path, String value) {
         return equalsFilter(path, value, true);
     }
 
-    private static Map equalsFilter(String path, String value, boolean negate) {
-        Map<String, Map> clause = new HashMap<>();
+    private static Map<String, Object> equalsFilter(String path, String value, boolean negate) {
+        var clause = new HashMap<>();
         boolean isSimple = ESQuery.isSimple(value);
         String queryMode = isSimple ? "simple_query_string" : "query_string";
-        Map sq = clause.computeIfAbsent(queryMode, v -> new HashMap<>());
+        var sq = new HashMap<>();
         sq.put("query", isSimple ? value : ESQuery.escapeNonSimpleQueryString(value));
         sq.put("fields", new ArrayList<>(List.of(path)));
+        clause.put(queryMode, sq);
         return negate ? filterWrap(mustNotWrap(clause)) : filterWrap(clause);
     }
 
-    private static Map rangeFilter(String path, String value, String key) {
+    private static Map<String, Object> rangeFilter(String path, String value, String key) {
         return filterWrap(rangeWrap(Map.of(path, Map.of(key, value))));
     }
 
-    private static Map mustWrap(List l) {
+    private static Map<String, Object> mustWrap(Object l) {
         return boolWrap(Map.of("must", l));
     }
 
-    private static Map mustNotWrap(Object o) {
+    private static Map<String, Object> mustNotWrap(Object o) {
         return boolWrap(Map.of("must_not", o));
     }
 
-    private static Map shouldWrap(List l) {
+    private static Map<String, Object> shouldWrap(List<?> l) {
         return boolWrap(Map.of("should", l));
     }
 
-    private static Map boolWrap(Map m) {
+    private static Map<String, Object> boolWrap(Map<?, ?> m) {
         return Map.of("bool", m);
     }
 
-    private static Map filterWrap(Map m) {
+    private static Map<String, Object> filterWrap(Map<?, ?> m) {
         return boolWrap(Map.of("filter", m));
     }
 
-    private static Map rangeWrap(Map m) {
+    private static Map<String, Object> rangeWrap(Map<?, ?> m) {
         return Map.of("range", m);
     }
 
@@ -326,5 +319,7 @@ public class XLQLQuery {
         return s.matches(".*\\s.*") ? "\"" + s + "\"" : s;
     }
 
-    private static String quoteIfPhraseOrColon(String s) { return s.matches(".*[\s:].*") ? "\"" + s + "\"" : s; }
+    private static String quoteIfPhraseOrColon(String s) {
+        return s.matches(".*[ :].*") ? "\"" + s + "\"" : s;
+    }
 }
