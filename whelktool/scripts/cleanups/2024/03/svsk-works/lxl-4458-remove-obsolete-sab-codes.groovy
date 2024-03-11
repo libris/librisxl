@@ -20,9 +20,9 @@ selectByIds(ids) { docItem ->
         work['classification']?.each {
             if (isSab(it) && isBadCode(it.code)) {
                 if (it.code.startsWith('Hcb')) {
-                    it['code'] = 'Hc'
+                    it['code'] = 'Hc' + (it.code =~ /\.\d+$/).with {it ? it[0] : '' }
                 } else if (it.code.startsWith('Hdab')) {
-                    it['code'] = 'Hda'
+                    it['code'] = 'Hda' + (it.code =~ /\.\d+$/).with {it ? it[0] : '' }
                 }
                 docItem.scheduleSave()
                 changed.println(id)
