@@ -40,6 +40,7 @@ import java.sql.SQLException
 import java.sql.Statement
 import java.sql.Timestamp
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.concurrent.atomic.AtomicLong
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -603,7 +604,11 @@ class PostgreSQLComponent {
             Document document = load(id)
             if (document) {
                 embellish(document) // will open a connection
-                cacheEmbellishedDocument(id, document)
+
+                // There is no point caching records changed long ago. The purpose of this cache is to not have to embellish
+                // the same record 100 times _just after it was changed_, when it needs to be exported to all client libraries.
+                if (document.getModifiedTimestamp().isAfter(Instant.now().minus(2, ChronoUnit.DAYS)))
+                    cacheEmbellishedDocument(id, document)
             }
             else {
                 log.error("loadEmbellished. No document with $id")
