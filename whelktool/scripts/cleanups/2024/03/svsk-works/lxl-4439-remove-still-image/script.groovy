@@ -10,7 +10,7 @@ selectByIds(new File(scriptDir, 'MODIFIED.txt').readLines()) { docItem ->
 
     if (isLink(work)) {
         def workId = work['@id']
-        if (!handledWorks.contains(workId)) {
+        if (handledWorks.add(workId)) {
             selectByIds([workId]) {
                 def linkedWork = it.graph[1]
                 if (hasStillImage(linkedWork) && !hasIllustrator(linkedWork)) {
@@ -18,7 +18,6 @@ selectByIds(new File(scriptDir, 'MODIFIED.txt').readLines()) { docItem ->
                     it.scheduleSave()
                 }
             }
-            handledWorks.add(workId)
         }
     } else {
         if (hasStillImage(work) && !hasIllustrator(work)) {
