@@ -3,21 +3,28 @@ package whelk.search;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
+
 import whelk.util.Unicode;
 import whelk.xlql.*;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static whelk.util.DocumentUtil.findKey;
+import static whelk.util.DocumentUtil.NOP;
+
 public class XLQLQuery {
-    private Whelk whelk;
-    private Disambiguate disambiguate;
-    private ESQueryLensBoost lensBoost;
+    private final Whelk whelk;
+    private final Disambiguate disambiguate;
+    private final ESQueryLensBoost lensBoost;
+    private final Set<String> esNestedFields;
 
     public XLQLQuery(Whelk whelk) {
         this.whelk = whelk;
         this.disambiguate = new Disambiguate(whelk);
         this.lensBoost = new ESQueryLensBoost(whelk.getJsonld());
+        this.esNestedFields = getEsNestedFields(whelk.elastic.getMappings());
     }
 
     public QueryTree getQueryTree(SimpleQueryTree sqt) {
@@ -54,7 +61,9 @@ public class XLQLQuery {
                 esQueryNode.putAll(shouldWrap(shouldClause));
                 return esQueryNode;
             }
-
+            case QueryTree.Nested n -> {
+                return esNestedFilter(n);
+            }
             case QueryTree.FreeText ft -> {
                 return esFreeText(ft);
             }
@@ -140,6 +149,52 @@ public class XLQLQuery {
             case GREATER_THAN -> rangeFilter(path, value, "gt");
             case GREATER_THAN_OR_EQUAL -> rangeFilter(path, value, "gte");
         };
+    }
+
+    private Map<String, Object> esNestedFilter(QueryTree.Nested n) {
+        var paths = n.fields()
+                .stream()
+                .map(f -> f.path().path)
+                .toList();
+
+        int shortestPath = paths.stream()
+                .mapToInt(List::size)
+                .min()
+                .orElseThrow();
+
+        List<String> stem = new ArrayList<>();
+        for (int i = 0 ; i < shortestPath ; i++) {
+            int idx = i;
+            var unique = paths.stream()
+                    .map(p -> p.get(idx))
+                    .collect(Collectors.toSet());
+            if (unique.size() == 1) {
+                stem.add(unique.iterator().next());
+            }
+        }
+
+        if (stem.isEmpty() || !esNestedFields.contains(stem.getLast())) {
+            // Treat as regular fields
+            var clause = n.fields()
+                    .stream()
+                    .map(this::esFilter)
+                    .toList();
+            return n.operator() == Operator.NOT_EQUAL ? shouldWrap(clause) : mustWrap(clause);
+        }
+
+        var musts = n.fields()
+                .stream()
+                .map(f -> Map.of("match", Map.of(f.path().stringify(), f.value())))
+                .toList();
+
+        Map<String, Object> nested = Map.of(
+                "nested", Map.of(
+                        "path", String.join(".", stem),
+                        "query", mustWrap(musts)
+                )
+        );
+
+        return n.operator() == Operator.NOT_EQUAL ? mustNotWrap(nested) : mustWrap(nested);
     }
 
     public Map<String, Object> toMappings(SimpleQueryTree sqt) {
@@ -321,5 +376,22 @@ public class XLQLQuery {
 
     private static String quoteIfPhraseOrColon(String s) {
         return s.matches(".*[ :].*") ? "\"" + s + "\"" : s;
+    }
+
+    private Set<String> getEsNestedFields(Map<?, ?> mappings) {
+        Set<String> fields = new HashSet<>();
+
+        findKey(mappings.get("properties"), "type", (Object v, List<Object> path) -> {
+            if ("nested".equals(v)) {
+                String field = path.subList(0, path.size() - 1).stream()
+                        .filter(Predicate.not("properties"::equals))
+                        .map(String.class::cast)
+                        .collect(Collectors.joining("."));
+                fields.add(field);
+            }
+            return NOP;
+        });
+
+        return fields;
     }
 }

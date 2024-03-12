@@ -6,13 +6,16 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class QueryTree {
-    public sealed interface Node permits And, Or, Field, FreeText {
+    public sealed interface Node permits And, Or, Nested, Field, FreeText {
     }
 
     public record And(List<Node> conjuncts) implements Node {
     }
 
     public record Or(List<Node> disjuncts) implements Node {
+    }
+
+    public record Nested(List<Field> fields, Operator operator) implements Node {
     }
 
     public record Field(Path path, Operator operator, String value) implements Node {
@@ -214,7 +217,7 @@ public class QueryTree {
             return f;
         }
 
-        List<Node> fields = new ArrayList<>(List.of(f));
+        List<Field> fields = new ArrayList<>(List.of(f));
 
         path.defaultFields.forEach(df -> {
                     Path dfPath = new Path(df.path());
@@ -225,7 +228,7 @@ public class QueryTree {
                 }
         );
 
-        return operator == Operator.NOT_EQUAL ? new Or(fields) : new And(fields);
+        return new Nested(fields, operator);
     }
 
 
