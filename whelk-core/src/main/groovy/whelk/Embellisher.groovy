@@ -17,6 +17,7 @@ class Embellisher {
     JsonLd jsonld
     Collection<String> embellishLevels = DEFAULT_EMBELLISH_LEVELS
     Collection<String> integralRelations = DEFAULT_INTEGRAL_RELATIONS
+    Collection<String> inverseIntegralRelations = []
     boolean followInverse = true
 
     Function<Iterable<String>, Iterable<Map>> getDocs
@@ -36,7 +37,7 @@ class Embellisher {
         
         def integral = jsonld.getCategoryMembers('integral')
         if (integral) {
-            this.integralRelations = integral
+            setIntegralRelations(integral)
         }
     }
 
@@ -49,8 +50,9 @@ class Embellisher {
         this.embellishLevels = embellishLevels.collect()
     }
 
-    void setIntegralRelations(List<String> integralRelations) {
+    void setIntegralRelations(Collection<String> integralRelations) {
         this.integralRelations = integralRelations.collect()
+        this.inverseIntegralRelations = integralRelations.collect{ jsonld.getInverseProperty(it) }.grep()
     }
 
     void setFollowInverse(boolean followInverse) {
@@ -67,6 +69,7 @@ class Embellisher {
         Set<String> visitedIris = new HashSet<>()
         visitedIris.addAll(plusWithoutHash(document.getThingIdentifiers()))
 
+        // TODO: don't hardcode 'full'? could be 'cards' for index
         def docs = fetchIntegral('full', start, integral(getAllLinks(start)), visitedIris).collect()
 
         List result = docs.collect()
@@ -77,7 +80,7 @@ class Embellisher {
         for (String lens : embellishLevels) {
             docs = fetchNonVisited(lens, uniqueIris(links), visitedIris)
             links = getAllLinks(docs)
-            
+
             def integralDocs = fetchIntegral(lens, docs, integral(links), visitedIris)
             docs += integralDocs
             links += getAllLinks(integralDocs)
@@ -211,7 +214,11 @@ class Embellisher {
 
             theThing[JsonLd.REVERSE_KEY][relation] = irisLinkingHere.collect { [(JsonLd.ID_KEY): it] }
             if (applyLens) {
-                cards.addAll(fetchNonVisited(applyLens, irisLinkingHere, visitedIris))
+                if (relation in inverseIntegralRelations) {
+                    cards.addAll(fetchNonVisited(forLens, irisLinkingHere, visitedIris))
+                } else {
+                    cards.addAll(fetchNonVisited(applyLens, irisLinkingHere, visitedIris))
+                }
             }
         }
         return cards
