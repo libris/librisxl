@@ -11,7 +11,7 @@ class DisambiguateSpec extends Specification {
 
     def "map property alias to kbv term"() {
         expect:
-        disambiguate.mapToKbvProperty(alias) == Optional.ofNullable(property)
+        disambiguate.mapToProperty(alias) == Optional.ofNullable(property)
 
         where:
         alias                            | property

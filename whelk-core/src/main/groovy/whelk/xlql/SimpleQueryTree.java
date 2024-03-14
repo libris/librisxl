@@ -56,23 +56,18 @@ public class SimpleQueryTree {
                 List<String> propertyPath = new ArrayList<>();
 
                 for (String part : c.code().split("\\.")) {
-                    if (Disambiguate.isLdKey(part) || JsonLd.SEARCH_KEY.equals(part)) {
-                        if (JsonLd.TYPE_KEY.equals(part)) {
-                            property = JsonLd.TYPE_KEY;
-                        }
-                        propertyPath.add(part);
-                        continue;
-                    }
-                    Optional<String> mappedProperty = disambiguate.mapToKbvProperty(part);
+                    Optional<String> mappedProperty = disambiguate.mapToProperty(part);
                     if (mappedProperty.isPresent()) {
                         property = mappedProperty.get();
                         propertyPath.add(property);
+                    } else if (Disambiguate.isLdKey(part) || JsonLd.SEARCH_KEY.equals(part)) {
+                        propertyPath.add(part);
                     } else {
                         throw new InvalidQueryException("Unrecognized property alias: " + part);
                     }
                 }
 
-                if (JsonLd.TYPE_KEY.equals(property)) {
+                if ("rdf:type".equals(property)) {
                     Optional<String> mappedType = disambiguate.mapToKbvClass(value);
                     if (mappedType.isPresent()) {
                         value = mappedType.get();

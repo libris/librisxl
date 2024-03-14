@@ -6,26 +6,27 @@ import java.util.*;
 
 public class Path {
     public List<DefaultField> defaultFields;
-    public String property;
     public List<String> path;
 
-    Path(String property, List<String> path) {
-        this.property = property;
-        this.path = new ArrayList<>(path);
-    }
+    private static final Map<String, String> substitutions = Map.of("rdf:type", JsonLd.TYPE_KEY);
 
     Path(List<String> path) {
-        this.path = new ArrayList<>(path);
+        this.path = getLdPath(path);
     }
 
     Path(Path p) {
-        this.property = p.property;
-        this.path = new ArrayList<>(p.path);
+        this.path = getLdPath(p.path);
         this.defaultFields = new ArrayList<>(p.defaultFields);
     }
 
     Path copy() {
         return new Path(this);
+    }
+
+    private List<String> getLdPath(List<String> path) {
+        return path.stream()
+                .map(p -> Optional.ofNullable(substitutions.get(p)).orElse(p))
+                .toList();
     }
 
     public void prependMeta() {

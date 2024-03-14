@@ -99,44 +99,27 @@ public class QueryTree {
                 return new FreeText(ft.operator(), ft.value());
             }
             case SimpleQueryTree.PropertyValue pv -> {
-                return JsonLd.TYPE_KEY.equals(pv.property())
+                return "rdf:type".equals(pv.property())
                         ? buildTypeField(pv, disambiguate)
                         : buildField(pv, disambiguate, outset);
             }
         }
     }
 
-    private static Node buildTypeField(SimpleQueryTree.PropertyValue type, Disambiguate disambiguate) {
-        Set<String> altTypes = "Work".equals(type.value())
-                ? disambiguate.workTypes
-                : ("Instance".equals(type.value()) ? disambiguate.instanceTypes : Collections.emptySet());
-
-        if (altTypes.isEmpty()) {
-            return buildField(type);
-        }
-
-        List<Node> altFields = altTypes.stream()
-                .sorted()
-                .map(QueryTree::typeField)
-                .toList();
-
-        return new Or(altFields);
-    }
-
-    private static Node typeField(String type) {
-        return new Field(new Path(List.of(JsonLd.TYPE_KEY)), Operator.EQUALS, type);
-    }
-
     private static Field buildField(SimpleQueryTree.PropertyValue pv) {
-        Path path = new Path(pv.property(), pv.propertyPath());
+        Path path = new Path(pv.propertyPath());
         String value = JsonLd.ID_KEY.equals(pv.propertyPath().getLast())
                 ? Disambiguate.expandPrefixed(pv.value())
                 : pv.value();
         return new Field(path, pv.operator(), value);
     }
 
+    private static Node buildField(SimpleQueryTree.PropertyValue pv, String altValue) {
+        return new Field(new Path(pv.propertyPath()), pv.operator(), altValue);
+    }
+
     private static Node buildField(SimpleQueryTree.PropertyValue pv, Disambiguate disambiguate, Disambiguate.OutsetType outset) {
-        Path path = new Path(pv.property(), pv.propertyPath());
+        Path path = new Path(pv.propertyPath());
         Operator operator = pv.operator();
         String value = pv.value();
 
@@ -231,6 +214,22 @@ public class QueryTree {
         return new Nested(fields, operator);
     }
 
+    private static Node buildTypeField(SimpleQueryTree.PropertyValue pv, Disambiguate disambiguate) {
+        Set<String> altTypes = "Work".equals(pv.value())
+                ? disambiguate.workTypes
+                : ("Instance".equals(pv.value()) ? disambiguate.instanceTypes : Collections.emptySet());
+
+        if (altTypes.isEmpty()) {
+            return buildField(pv);
+        }
+
+        List<Node> altFields = altTypes.stream()
+                .sorted()
+                .map(type -> buildField(pv, type))
+                .toList();
+
+        return pv.operator() == Operator.NOT_EQUALS ? new And(altFields) : new Or(altFields);
+    }
 
     public static Set<String> collectGivenTypes(SimpleQueryTree.Node sqt) {
         return collectGivenTypes(sqt, new HashSet<>());
@@ -241,7 +240,7 @@ public class QueryTree {
             case SimpleQueryTree.And and -> and.conjuncts().forEach(c -> collectGivenTypes(c, types));
             case SimpleQueryTree.Or or -> or.disjuncts().forEach(d -> collectGivenTypes(d, types));
             case SimpleQueryTree.PropertyValue pv -> {
-                if (JsonLd.TYPE_KEY.equals(pv.property())) {
+                if ("rdf:type".equals(pv.property())) {
                     types.add(pv.value());
                 }
             }

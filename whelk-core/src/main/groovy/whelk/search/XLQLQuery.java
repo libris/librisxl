@@ -248,7 +248,7 @@ public class XLQLQuery {
         Map<String, Object> m = new LinkedHashMap<>();
         if (propertyPath.size() > 1) {
             var propertyChainAxiom = propertyPath.stream()
-                    .map(this::getDefinition) //TODO: x.@type ska funka också
+                    .map(this::getDefinition)
                     .filter(Objects::nonNull)
                     .toList();
             var propDef = propertyChainAxiom.size() > 1

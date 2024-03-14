@@ -60,7 +60,7 @@ public class Disambiguate {
         setTypeSets(jsonLd);
     }
 
-    public Optional<String> mapToKbvProperty(String alias) {
+    public Optional<String> mapToProperty(String alias) {
         return Optional.ofNullable(propertyAliasMappings.get(alias.toLowerCase()));
     }
 
@@ -77,10 +77,6 @@ public class Disambiguate {
     }
 
     public String getDomain(String property) {
-        // TODO: @type not in vocab, needs special handling, hardcode for now
-        if (JsonLd.TYPE_KEY.equals(property)) {
-            return "Resource";
-        }
         return domainByProperty.getOrDefault(property, UNKNOWN_DOMAIN);
     }
 
@@ -195,12 +191,6 @@ public class Disambiguate {
         this.enumAliasMappings = new TreeMap<>();
         this.ambiguousEnumAliases = new TreeMap<>();
 
-        // Hardcoding these for now...
-        addMapping("@type", "@type", TermType.PROPERTY);
-        addMapping("type", "@type", TermType.PROPERTY);
-        addMapping("typ", "@type", TermType.PROPERTY);
-        addMapping("rdf:type", "@type", TermType.PROPERTY);
-
         for (String termKey : jsonLd.vocabIndex.keySet()) {
             var termDefinition = jsonLd.vocabIndex.get(termKey);
 
@@ -219,6 +209,11 @@ public class Disambiguate {
 
             if (isEnum(termDefinition)) {
                 addAllMappings(termDefinition, termKey, TermType.ENUM, whelk);
+            }
+
+            if ("rdf:type".equals(termKey)) {
+                addMapping("@type", termKey, TermType.PROPERTY);
+                addAllMappings(termDefinition, termKey, TermType.PROPERTY, whelk);
             }
         }
     }
