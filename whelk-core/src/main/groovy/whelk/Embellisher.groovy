@@ -69,6 +69,8 @@ class Embellisher {
         Set<String> visitedIris = new HashSet<>()
         visitedIris.addAll(plusWithoutHash(document.getThingIdentifiers()))
 
+        // TODO? reach doc from same doc via integral and non-integral
+        // TODO reach doc vn non-integral and inverse integral
         // TODO: don't hardcode 'full'? could be 'cards' for index
         def docs = fetchIntegral('full', start, integral(getAllLinks(start)), visitedIris).collect()
 
@@ -214,11 +216,7 @@ class Embellisher {
 
             theThing[JsonLd.REVERSE_KEY][relation] = irisLinkingHere.collect { [(JsonLd.ID_KEY): it] }
             if (applyLens) {
-                if (relation in inverseIntegralRelations) {
-                    cards.addAll(fetchNonVisited(forLens, irisLinkingHere, visitedIris))
-                } else {
-                    cards.addAll(fetchNonVisited(applyLens, irisLinkingHere, visitedIris))
-                }
+                cards.addAll(fetchNonVisited(applyLens, irisLinkingHere, visitedIris))
             }
         }
         return cards

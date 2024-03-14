@@ -10,6 +10,7 @@ import whelk.exception.FramingException
 import whelk.exception.WhelkRuntimeException
 import whelk.util.DocumentUtil
 
+import javax.annotation.Nullable
 import java.util.regex.Matcher
 
 @CompileStatic
@@ -566,8 +567,12 @@ class JsonLd {
         }
     }
 
+    @Nullable
     String getInverseProperty(String propertyName) {
         Map relDescription = vocabIndex[propertyName]
+        if (!relDescription) {
+            return null
+        }
         // NOTE: resilient in case we add inverseOf as a direct term
         def inverseOf = relDescription['owl:inverseOf'] ?: relDescription.inverseOf
         List revIds = asList(inverseOf)?.collect {
