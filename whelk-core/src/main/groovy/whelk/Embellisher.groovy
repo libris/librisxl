@@ -139,7 +139,11 @@ class Embellisher {
     private Iterable<Map> fetchIntegral(String lens, Iterable<Map> docs, Set<Link> integralLinks, Set<String> visitedIris) {
         List<Map> result = []
         while(true) {
+            var previousDocs = docs
             docs = fetchNonVisited(lens, uniqueIris(integralLinks), visitedIris)
+            for (Map doc in previousDocs) {
+                docs += insertInverseIntegral(lens, doc, lens, visitedIris)
+            }
             integralLinks = integral(getAllLinks(docs))
 
             if (docs.isEmpty()) {
@@ -186,7 +190,20 @@ class Embellisher {
     }
 
     private Iterable<Map> insertInverse(String forLens, Map thing, String applyLens, Set<String> visitedIris) {
+        _insertInverse(forLens, thing, applyLens, visitedIris, false)
+    }
+
+    private Iterable<Map> insertInverseIntegral(String forLens, Map thing, String applyLens, Set<String> visitedIris) {
+        _insertInverse(forLens, thing, applyLens, visitedIris, true)
+    }
+
+    private Iterable<Map> _insertInverse(String forLens, Map thing, String applyLens, Set<String> visitedIris, boolean onlyIntegral) {
         Set<String> inverseRelations = jsonld.getInverseProperties(thing, forLens)
+        if (onlyIntegral) {
+            inverseRelations = inverseIntegralRelations.intersect(inverseRelations) as Set
+        } else {
+            inverseRelations -= inverseIntegralRelations // they should already have been handled
+        }
         if (inverseRelations.isEmpty()) {
             return Collections.EMPTY_LIST
         }

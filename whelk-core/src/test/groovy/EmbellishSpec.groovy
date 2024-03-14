@@ -871,7 +871,7 @@ digraph {
         given:
         def ld = new JsonLd(CONTEXT_DATA, DISPLAY_DATA, VOCAB_DATA)
 
-        def doc = ['@graph': [['@type': 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
+        def doc = ['@graph': [
                               ['@type': 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
                               ['@type': 'X', '@id': '/thing',
                                'px1' : ['@id': '/thingX0']]
