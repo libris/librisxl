@@ -3,7 +3,7 @@ package whelk.xlql;
 // TODO: Add these to vocab (platform terms)
 //  e.g. https://id.kb.se/vocab/equals)
 public enum Operator {
-    EQUALS("Equal"),
+    EQUALS("equals"),
     NOT_EQUALS("notEquals"),
     GREATER_THAN_OR_EQUALS("greaterThanOrEqual"),
     GREATER_THAN("greaterThan"),
