@@ -23,6 +23,7 @@ class EmbellishSpec extends Specification {
                     ["@id": "https://example.org/ns/pr1"],
                     ["@id": "https://example.org/ns/px1"],
                     ["@id": "https://example.org/ns/px2"],
+                    ["@id": "https://example.org/ns/px3"],
                     ["@id": "https://example.org/ns/py1"],
                     ["@id": "https://example.org/ns/CR",
                      "category": ["@id": "integral"]],
@@ -47,7 +48,7 @@ class EmbellishSpec extends Specification {
                                      ],
                                      'X': ['@type'         : 'fresnel:Lens',
                                            '@id'           : 'X-chips',
-                                           'showProperties': ['px1', ['inverseOf': 'py1'], 'CR', 'CR2', ['inverseOf': 'CR3']]
+                                           'showProperties': ['px1', ['inverseOf': 'py1'], 'CR', 'CR2', ['inverseOf': 'CR3'], ['inverseOf': 'px3']]
                                      ],
                                      'Y': ['@type'         : 'fresnel:Lens',
                                            '@id'           : 'Y-chips',
@@ -823,6 +824,81 @@ digraph {
         expect:
         lens(find(result, '/thingX0')) == 'full'
         //lens(find(result, '/thingX1')) == 'full'
+
+        result['@graph'].size() == 2 + 1
+    }
+
+
+
+
+    /*
+
+┌−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−┐
+╎            embellish            ╎
+╎                                 ╎
+╎         ┌─────────────┐         ╎
+╎   ┌───▶ │  X0 (full)  │ ─┐      ╎
+╎   │     └─────────────┘  │      ╎
+╎   │       │              │      ╎
+╎   │ px1   │ CR3          │ px3  ╎
+╎   │       ▼              │      ╎
+╎   │     ┌─────────────┐  │      ╎
+╎   └──── │ doc (START) │ ◀┘      ╎
+╎         └─────────────┘         ╎
+╎                                 ╎
+└−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−┘
+
+Generated with: https://dot-to-ascii.ggerganov.com/
+
+.dot:
+digraph {
+    subgraph cluster_0 {
+        X0 -> doc [ label = "CR3" ];
+        X0 -> doc [ label = "px3" ];
+        doc -> X0 [ label = "px1" ];
+
+        label = "embellish";
+    }
+
+    doc [label = "doc (START)"];
+    X0 [label = "X0 (full)"];
+}
+
+
+    */
+
+    def "should follow inverse integral relations before other relations"() {
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, DISPLAY_DATA, VOCAB_DATA)
+
+        def doc = ['@graph': [['@type': 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
+                              ['@type': 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
+                              ['@type': 'X', '@id': '/thing',
+                               'px1' : ['@id': '/thingX0']]
+        ]]
+
+        def docs = [
+                ['@graph': [['@type': 'R', '@id': '/recordX0', 'mainEntity': ['@id': '/thingX0']],
+                            ['@type': 'X', '@id': '/thingX0',
+                             'CR3': [['@id': '/thing']],
+                             'px3': [['@id': '/thing']],
+                             'px1': 'foo',
+                             'px2': 'foo']]]
+        ]
+
+        def storage = new TestStorage(ld)
+        storage.add(doc)
+        docs.each(storage.&add)
+
+        def embellisher = new Embellisher(ld, storage.&getFull, storage.&getCards, storage.&getReverseLinks)
+
+        Document document = new Document(doc)
+
+        embellisher.embellish(document)
+        def result = document.data
+
+        expect:
+        lens(find(result, '/thingX0')) == 'full'
 
         result['@graph'].size() == 2 + 1
     }
