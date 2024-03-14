@@ -3,12 +3,12 @@ package whelk.xlql;
 // TODO: Add these to vocab (platform terms)
 //  e.g. https://id.kb.se/vocab/equals)
 public enum Operator {
-    EQUAL("Equal"),
-    NOT_EQUAL("NotEqual"),
-    GREATER_THAN_OR_EQUAL("GreaterThanOrEqual"),
-    GREATER_THAN("GreaterThan"),
-    LESS_THAN_OR_EQUAL("LessThanOrEqual"),
-    LESS_THAN("LessThan");
+    EQUALS("Equal"),
+    NOT_EQUALS("notEquals"),
+    GREATER_THAN_OR_EQUALS("greaterThanOrEqual"),
+    GREATER_THAN("greaterThan"),
+    LESS_THAN_OR_EQUALS("lessThanOrEquals"),
+    LESS_THAN("lessThan");
 
     public final String termKey;
 

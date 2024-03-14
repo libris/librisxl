@@ -25,12 +25,12 @@ class SimpleQueryTreeSpec extends Specification {
         expect:
         sqt.tree == new SimpleQueryTree.And(
                 [
-                        new SimpleQueryTree.FreeText(Operator.EQUAL, "AAA"),
-                        new SimpleQueryTree.FreeText(Operator.EQUAL, "BBB"),
+                        new SimpleQueryTree.FreeText(Operator.EQUALS, "AAA"),
+                        new SimpleQueryTree.FreeText(Operator.EQUALS, "BBB"),
                         new SimpleQueryTree.Or(
                                 [
-                                        new SimpleQueryTree.FreeText(Operator.EQUAL, "CCC"),
-                                        new SimpleQueryTree.FreeText(Operator.EQUAL, "DDD")
+                                        new SimpleQueryTree.FreeText(Operator.EQUALS, "CCC"),
+                                        new SimpleQueryTree.FreeText(Operator.EQUALS, "DDD")
                                 ]
                         )
                 ]
@@ -44,8 +44,8 @@ class SimpleQueryTreeSpec extends Specification {
         expect:
         sqt.tree == new SimpleQueryTree.And(
                 [
-                        new SimpleQueryTree.PropertyValue("subject", ["subject"], Operator.EQUAL, "lcsh:Physics"),
-                        new SimpleQueryTree.FreeText(Operator.EQUAL, "svarta hål")
+                        new SimpleQueryTree.PropertyValue("subject", ["subject"], Operator.EQUALS, "lcsh:Physics"),
+                        new SimpleQueryTree.FreeText(Operator.EQUALS, "svarta hål")
                 ]
         )
     }
@@ -58,7 +58,7 @@ class SimpleQueryTreeSpec extends Specification {
         sqt.tree == new SimpleQueryTree.Or(
                 [
                         new SimpleQueryTree.PropertyValue("originDate", ["originDate"] ,Operator.LESS_THAN, "2023"),
-                        new SimpleQueryTree.FreeText(Operator.EQUAL, "svarta hål")
+                        new SimpleQueryTree.FreeText(Operator.EQUALS, "svarta hål")
                 ]
         )
     }
@@ -73,14 +73,14 @@ class SimpleQueryTreeSpec extends Specification {
                 [
                         new SimpleQueryTree.Or(
                                 [
-                                        new SimpleQueryTree.PropertyValue("responsibilityStatement", ["responsibilityStatement"], Operator.EQUAL, "Tolkien"),
-                                        new SimpleQueryTree.PropertyValue("responsibilityStatement", ["responsibilityStatement"], Operator.EQUAL, "Verne"),
+                                        new SimpleQueryTree.PropertyValue("responsibilityStatement", ["responsibilityStatement"], Operator.EQUALS, "Tolkien"),
+                                        new SimpleQueryTree.PropertyValue("responsibilityStatement", ["responsibilityStatement"], Operator.EQUALS, "Verne"),
                                 ]
                         ),
                         new SimpleQueryTree.Or(
                                 [
-                                        new SimpleQueryTree.PropertyValue("genreForm", ["genreForm"], Operator.EQUAL, "Fantasy"),
-                                        new SimpleQueryTree.PropertyValue("genreForm", ["genreForm"], Operator.EQUAL, "Äventyr")
+                                        new SimpleQueryTree.PropertyValue("genreForm", ["genreForm"], Operator.EQUALS, "Fantasy"),
+                                        new SimpleQueryTree.PropertyValue("genreForm", ["genreForm"], Operator.EQUALS, "Äventyr")
                                 ]
                         )
                 ]
@@ -100,7 +100,7 @@ class SimpleQueryTreeSpec extends Specification {
         SimpleQueryTree sqt = getTree(query)
 
         expect:
-        sqt.tree == new SimpleQueryTree.PropertyValue("subject", ["instanceOf", "subject", "@id"], Operator.EQUAL, "sao:Hästar")
+        sqt.tree == new SimpleQueryTree.PropertyValue("subject", ["instanceOf", "subject", "@id"], Operator.EQUALS, "sao:Hästar")
     }
 
     def "disambiguate type"() {
@@ -108,7 +108,7 @@ class SimpleQueryTreeSpec extends Specification {
         SimpleQueryTree sqt = getTree(query)
 
         expect:
-        sqt.tree == new SimpleQueryTree.PropertyValue("@type", ["@type"], Operator.EQUAL, "Print")
+        sqt.tree == new SimpleQueryTree.PropertyValue("@type", ["@type"], Operator.EQUALS, "Print")
     }
 
     def "unrecognized type"() {
@@ -124,7 +124,7 @@ class SimpleQueryTreeSpec extends Specification {
         SimpleQueryTree sqt = getTree(query)
 
         expect:
-        sqt.tree == new SimpleQueryTree.PropertyValue("issuanceType", ["issuanceType"], Operator.EQUAL, "Serial")
+        sqt.tree == new SimpleQueryTree.PropertyValue("issuanceType", ["issuanceType"], Operator.EQUALS, "Serial")
     }
 
     def "unrecognized enum"() {

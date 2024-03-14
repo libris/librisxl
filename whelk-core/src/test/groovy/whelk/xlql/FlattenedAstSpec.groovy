@@ -95,8 +95,8 @@ class FlattenedAstSpec extends Specification {
                         new FlattenedAst.Leaf("everything"),
                         new FlattenedAst.Or(
                                 [
-                                        new FlattenedAst.Code("author", Operator.NOT_EQUAL, "Alice"),
-                                        new FlattenedAst.Code("published", Operator.LESS_THAN_OR_EQUAL, "2022")
+                                        new FlattenedAst.Code("author", Operator.NOT_EQUALS, "Alice"),
+                                        new FlattenedAst.Code("published", Operator.LESS_THAN_OR_EQUALS, "2022")
                                 ]
                         )
                 ]
@@ -115,8 +115,8 @@ class FlattenedAstSpec extends Specification {
                         new FlattenedAst.Leaf("everything"),
                         new FlattenedAst.Or(
                                 [
-                                        new FlattenedAst.Code("author", Operator.NOT_EQUAL, "Alice"),
-                                        new FlattenedAst.Code("published", Operator.EQUAL, "2022")
+                                        new FlattenedAst.Code("author", Operator.NOT_EQUALS, "Alice"),
+                                        new FlattenedAst.Code("published", Operator.EQUALS, "2022")
                                 ]
                         )
                 ]
@@ -132,7 +132,7 @@ class FlattenedAstSpec extends Specification {
         expect:
         FlattenedAst.flattenNegations(ast) == new FlattenedAst.Or(
                 [
-                        new FlattenedAst.Code("author", Operator.NOT_EQUAL, "Alice"),
+                        new FlattenedAst.Code("author", Operator.NOT_EQUALS, "Alice"),
                         new FlattenedAst.Not("everything"),
                         new FlattenedAst.Leaf("something")
                 ]

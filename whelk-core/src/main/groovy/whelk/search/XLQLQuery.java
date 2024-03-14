@@ -89,10 +89,10 @@ public class XLQLQuery {
         List<String> boostedFields = lensBoost.computeBoostFieldsFromLenses(new String[0]);
 
         if (boostedFields.isEmpty()) {
-            if (ft.operator() == Operator.EQUAL) {
+            if (ft.operator() == Operator.EQUALS) {
                 return simpleQuery;
             }
-            if (ft.operator() == Operator.NOT_EQUAL) {
+            if (ft.operator() == Operator.NOT_EQUALS) {
                 return mustNotWrap(simpleQuery);
             }
         }
@@ -122,10 +122,10 @@ public class XLQLQuery {
         boostedSoft.put(queryMode, bs);
 
         var shouldClause = new ArrayList<>(Arrays.asList(boostedExact, boostedSoft, simpleQuery));
-        if (ft.operator() == Operator.EQUAL) {
+        if (ft.operator() == Operator.EQUALS) {
             return shouldWrap(shouldClause);
         }
-        if (ft.operator() == Operator.NOT_EQUAL) {
+        if (ft.operator() == Operator.NOT_EQUALS) {
             /*
             Better with { must: [must_not:{}, must_not:{}, must_not:{}] }?
             https://opster.com/guides/elasticsearch/search-apis/elasticsearch-query-bool/
@@ -142,12 +142,12 @@ public class XLQLQuery {
         String path = f.path().stringify();
         String value = quoteIfPhrase(f.value());
         return switch (f.operator()) {
-            case EQUAL -> equalsFilter(path, value);
-            case NOT_EQUAL -> notEqualsFilter(path, value);
+            case EQUALS -> equalsFilter(path, value);
+            case NOT_EQUALS -> notEqualsFilter(path, value);
             case LESS_THAN -> rangeFilter(path, value, "lt");
-            case LESS_THAN_OR_EQUAL -> rangeFilter(path, value, "lte");
+            case LESS_THAN_OR_EQUALS -> rangeFilter(path, value, "lte");
             case GREATER_THAN -> rangeFilter(path, value, "gt");
-            case GREATER_THAN_OR_EQUAL -> rangeFilter(path, value, "gte");
+            case GREATER_THAN_OR_EQUALS -> rangeFilter(path, value, "gte");
         };
     }
 
@@ -179,7 +179,7 @@ public class XLQLQuery {
                     .stream()
                     .map(this::esFilter)
                     .toList();
-            return n.operator() == Operator.NOT_EQUAL ? shouldWrap(clause) : mustWrap(clause);
+            return n.operator() == Operator.NOT_EQUALS ? shouldWrap(clause) : mustWrap(clause);
         }
 
         var musts = n.fields()
@@ -194,7 +194,7 @@ public class XLQLQuery {
                 )
         );
 
-        return n.operator() == Operator.NOT_EQUAL ? mustNotWrap(nested) : mustWrap(nested);
+        return n.operator() == Operator.NOT_EQUALS ? mustNotWrap(nested) : mustWrap(nested);
     }
 
     public Map<String, Object> toMappings(SimpleQueryTree sqt) {
@@ -304,18 +304,18 @@ public class XLQLQuery {
     }
 
     private String freeTextToString(SimpleQueryTree.FreeText ft) {
-        return ft.operator() == Operator.NOT_EQUAL ? "NOT " + ft.value() : quoteIfPhraseOrColon(ft.value());
+        return ft.operator() == Operator.NOT_EQUALS ? "NOT " + ft.value() : quoteIfPhraseOrColon(ft.value());
     }
 
     private String propertyValueToString(SimpleQueryTree.PropertyValue pv) {
         String sep = switch (pv.operator()) {
-            case EQUAL, NOT_EQUAL -> ": ";
-            case GREATER_THAN_OR_EQUAL -> " >= ";
+            case EQUALS, NOT_EQUALS -> ": ";
+            case GREATER_THAN_OR_EQUALS -> " >= ";
             case GREATER_THAN -> " > ";
-            case LESS_THAN_OR_EQUAL -> " <= ";
+            case LESS_THAN_OR_EQUALS -> " <= ";
             case LESS_THAN -> " < ";
         };
-        String not = pv.operator() == Operator.NOT_EQUAL ? "NOT " : "";
+        String not = pv.operator() == Operator.NOT_EQUALS ? "NOT " : "";
         return not + String.join(".", pv.propertyPath()) + sep + quoteIfPhraseOrColon(pv.value());
     }
 
