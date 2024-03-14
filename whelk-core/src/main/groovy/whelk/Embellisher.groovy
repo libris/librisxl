@@ -212,12 +212,7 @@ class Embellisher {
 
             theThing[JsonLd.REVERSE_KEY][relation] = irisLinkingHere.collect { [(JsonLd.ID_KEY): it] }
             if (applyLens) {
-                if (relation in inverseIntegralRelations) {
-                    cards.addAll(fetchNonVisited(forLens, irisLinkingHere, visitedIris))
-                } else {
-                    cards.addAll(fetchNonVisited(applyLens, irisLinkingHere, visitedIris))
-                }
-                //cards.addAll(fetchNonVisited(applyLens, irisLinkingHere, visitedIris))
+                cards.addAll(fetchNonVisited(applyLens, irisLinkingHere, visitedIris))
             }
         }
         return cards
