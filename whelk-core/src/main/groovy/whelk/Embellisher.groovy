@@ -67,8 +67,8 @@ class Embellisher {
 
         // TODO? reach doc from same doc via integral and non-integral
         // TODO reach doc vn non-integral and inverse integral
-        // TODO: don't hardcode 'full' as start? could be 'cards' for ES index
-        def docs = fetchIntegral('full', integral(getAllLinks(start)), visitedIris).collect()
+        // TODO: don't hardcode 'full'? could be 'cards' for index
+        def docs = fetchIntegral('full', start, integral(getAllLinks(start)), visitedIris).collect()
 
         List result = docs.collect()
         Set<Link> links = getAllLinks(start + docs)
@@ -79,7 +79,7 @@ class Embellisher {
             docs = fetchNonVisited(lens, uniqueIris(links), visitedIris)
             links = getAllLinks(docs)
 
-            def integralDocs = fetchIntegral(lens, integral(links), visitedIris)
+            def integralDocs = fetchIntegral(lens, docs, integral(links), visitedIris)
             docs += integralDocs
             links += getAllLinks(integralDocs)
 
@@ -136,9 +136,8 @@ class Embellisher {
         return data
     }
 
-    private Iterable<Map> fetchIntegral(String lens, Set<Link> integralLinks, Set<String> visitedIris) {
+    private Iterable<Map> fetchIntegral(String lens, Iterable<Map> docs, Set<Link> integralLinks, Set<String> visitedIris) {
         List<Map> result = []
-        Iterable<Map> docs
         while(true) {
             docs = fetchNonVisited(lens, uniqueIris(integralLinks), visitedIris)
             integralLinks = integral(getAllLinks(docs))
