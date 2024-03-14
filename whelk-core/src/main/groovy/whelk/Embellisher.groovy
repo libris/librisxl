@@ -37,7 +37,8 @@ class Embellisher {
         
         def integral = jsonld.getCategoryMembers('integral')
         if (integral) {
-            setIntegralRelations(integral)
+            this.integralRelations = integral
+            this.inverseIntegralRelations = integralRelations.collect{ jsonld.getInverseProperty(it) }.grep()
         }
     }
 
@@ -48,11 +49,6 @@ class Embellisher {
 
     void setEmbellishLevels(List<String> embellishLevels) {
         this.embellishLevels = embellishLevels.collect()
-    }
-
-    void setIntegralRelations(Collection<String> integralRelations) {
-        this.integralRelations = integralRelations.collect()
-        this.inverseIntegralRelations = integralRelations.collect{ jsonld.getInverseProperty(it) }.grep()
     }
 
     void setFollowInverse(boolean followInverse) {

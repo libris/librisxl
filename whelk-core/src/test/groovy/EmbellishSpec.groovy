@@ -8,6 +8,27 @@ import whelk.Link
 import whelk.util.JsonLdSpec
 
 class EmbellishSpec extends Specification {
+    static final Map CONTEXT_DATA = [
+            "@context": [
+                    "@vocab": "https://example.org/ns/",
+                    "pfx": "https://example.org/pfx/"
+            ]
+    ]
+    
+    static final Map VOCAB_DATA = [
+            "@graph": [
+                    ["@id": "https://example.org/ns/R"],
+                    ["@id": "https://example.org/ns/X"],
+                    ["@id": "https://example.org/ns/Y"],
+                    ["@id": "https://example.org/ns/pr1"],
+                    ["@id": "https://example.org/ns/px1"],
+                    ["@id": "https://example.org/ns/px2"],
+                    ["@id": "https://example.org/ns/py1"],
+                    ["@id": "https://example.org/ns/CR", "category": ["@id": "integral"]],
+                    ["@id": "https://example.org/ns/CR2", "category": ["@id": "integral"]],
+            ]
+    ]
+
     static final Map DISPLAY_DATA = [
             'lensGroups':
                     ['chips':
@@ -128,7 +149,7 @@ digraph {
 
     def "should by default embellish recursively, two levels, using cards, chips"() {
         given:
-        def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, DISPLAY_DATA, JsonLdSpec.VOCAB_DATA)
+        def ld = new JsonLd(CONTEXT_DATA, DISPLAY_DATA, VOCAB_DATA)
 
         def doc = ['@graph': [['@type': 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
                               ['@type': 'X', '@id': '/thing', 'px1': ['@id': '/thingX1']]
@@ -264,7 +285,7 @@ digraph {
 
     def "should handle integral relations"() {
         given:
-        def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, DISPLAY_DATA, JsonLdSpec.VOCAB_DATA)
+        def ld = new JsonLd(CONTEXT_DATA, DISPLAY_DATA, VOCAB_DATA)
 
         def doc = ['@graph': [['@type': 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
                               ['@type': 'X', '@id': '/thing', 'CR': ['@id': '/thingX0'], 'px1': ['@id': '/thingX1']]
@@ -314,7 +335,6 @@ digraph {
         docs.each(storage.&add)
 
         def embellisher = new Embellisher(ld, storage.&getFull, storage.&getCards, storage.&getReverseLinks)
-        embellisher.setIntegralRelations(['CR'])
 
         Document document = new Document(doc)
 
@@ -409,7 +429,7 @@ digraph {
 
     def "should handle multi-level integral relations"() {
         given:
-        def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, DISPLAY_DATA, JsonLdSpec.VOCAB_DATA)
+        def ld = new JsonLd(CONTEXT_DATA, DISPLAY_DATA, VOCAB_DATA)
 
         def doc = ['@graph': [['@type': 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
                               ['@type': 'X', '@id': '/thing', 'CR': ['@id': '/thingX0'], 'px1': ['@id': '/thingX1']]
@@ -467,7 +487,6 @@ digraph {
         docs.each(storage.&add)
 
         def embellisher = new Embellisher(ld, storage.&getFull, storage.&getCards, storage.&getReverseLinks)
-        embellisher.setIntegralRelations(['CR', 'CR2'])
 
         Document document = new Document(doc)
 
@@ -532,7 +551,7 @@ digraph {
 
     def "should follow integral relations before other relations"() {
         given:
-        def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, DISPLAY_DATA, JsonLdSpec.VOCAB_DATA)
+        def ld = new JsonLd(CONTEXT_DATA, DISPLAY_DATA, VOCAB_DATA)
 
         def doc = ['@graph': [['@type': 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
                               ['@type': 'X', '@id': '/thing', 'CR': ['@id': '/thingX0'], 'px1': ['@id': '/thingX0']]
@@ -550,7 +569,6 @@ digraph {
         docs.each(storage.&add)
 
         def embellisher = new Embellisher(ld, storage.&getFull, storage.&getCards, storage.&getReverseLinks)
-        embellisher.setIntegralRelations(['CR', 'CR2'])
 
         Document document = new Document(doc)
 
@@ -602,7 +620,7 @@ digraph {
 
     def "should follow integral relations before other relations (also when shorter path exists)"() {
         given:
-        def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, DISPLAY_DATA, JsonLdSpec.VOCAB_DATA)
+        def ld = new JsonLd(CONTEXT_DATA, DISPLAY_DATA, VOCAB_DATA)
 
         def doc = ['@graph': [
                 ['@type': 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
@@ -629,7 +647,6 @@ digraph {
         docs.each(storage.&add)
 
         def embellisher = new Embellisher(ld, storage.&getFull, storage.&getCards, storage.&getReverseLinks)
-        embellisher.setIntegralRelations(['CR', 'CR2'])
 
         Document document = new Document(doc)
 
@@ -728,7 +745,7 @@ digraph {
 
     def "should embellish recursively, three levels, using cards, chips, chips"() {
         given:
-        def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, DISPLAY_DATA, JsonLdSpec.VOCAB_DATA)
+        def ld = new JsonLd(CONTEXT_DATA, DISPLAY_DATA, VOCAB_DATA)
 
         def doc = ['@graph': [['@type': 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
                               ['@type': 'X', '@id': '/thing', 'px1': ['@id': '/thingX1']]
@@ -807,7 +824,7 @@ digraph {
 
     def "should understand sameAs when avoiding loops in embellish graph"() {
         given:
-        def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, DISPLAY_DATA, JsonLdSpec.VOCAB_DATA)
+        def ld = new JsonLd(CONTEXT_DATA, DISPLAY_DATA, VOCAB_DATA)
 
         def doc = ['@graph': [['@type' : 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
                               ['@type' : 'X',
