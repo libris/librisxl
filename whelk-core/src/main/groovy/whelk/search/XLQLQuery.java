@@ -247,22 +247,18 @@ public class XLQLQuery {
     private Map<String, Object> mapping(String property, String value, Operator operator, List<String> propertyPath) {
         Map<String, Object> m = new LinkedHashMap<>();
         if (propertyPath.size() > 1) {
-            m.put("variable", String.join(".", propertyPath));
-            // Include "@id" / "_str" in chainAxiom?
             var propertyChainAxiom = propertyPath.stream()
-                    .map(this::getDefinition)
+                    .map(this::getDefinition) //TODO: x.@type ska funka också
                     .filter(Objects::nonNull)
                     .toList();
-            var predicate = propertyChainAxiom.size() > 1
+            var propDef = propertyChainAxiom.size() > 1
                     ? Map.of("propertyChainAxiom", propertyChainAxiom)
                     : getDefinition(property);
-            m.put("predicate", predicate);
+            m.put("property", propDef);
         } else {
-            m.put("variable", property);
-            m.put("predicate", getDefinition(property));
+            m.put("property", getDefinition(property));
         }
-        m.put("value", value);
-        m.put("operator", operator.termKey);
+        m.put(operator.termKey, value);
         return m;
     }
 
