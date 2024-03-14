@@ -65,9 +65,7 @@ class Embellisher {
         Set<String> visitedIris = new HashSet<>()
         visitedIris.addAll(plusWithoutHash(document.getThingIdentifiers()))
 
-        // TODO? reach doc from same doc via integral and non-integral
-        // TODO reach doc vn non-integral and inverse integral
-        // TODO: don't hardcode 'full'? could be 'cards' for index
+        // TODO? don't hardcode 'full'? could be 'cards' for index
         def docs = fetchIntegral('full', start, integral(getAllLinks(start)), visitedIris).collect()
 
         List result = docs.collect()
