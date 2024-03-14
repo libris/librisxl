@@ -498,6 +498,156 @@ digraph {
 
     /*
 
+┌−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−┐
+╎                 embellish               ╎
+╎                                         ╎
+╎                 px1                     ╎
+╎   ┌─────────────────────────┐           ╎
+╎   │                         ▼           ╎
+╎ ┌─────────────┐  CR       ┌───────────┐ ╎
+╎ │ doc (START) │ ────────▶ │ X0 (full) │ ╎
+╎ └─────────────┘           └───────────┘ ╎
+╎                                         ╎
+└−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−┘
+
+Generated with: https://dot-to-ascii.ggerganov.com/
+
+.dot:
+digraph {
+    rankdir=LR;
+    subgraph cluster_0 {
+        doc -> X0 [ label = "CR" ];
+        doc -> X0 [ label = "px1" ];
+
+
+        label = "embellish";
+    }
+
+    doc [label = "doc (START)"];
+    X0 [label = "X0 (full)"];
+}
+
+
+    */
+
+    def "should follow integral relations before other relations"() {
+        given:
+        def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, DISPLAY_DATA, JsonLdSpec.VOCAB_DATA)
+
+        def doc = ['@graph': [['@type': 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
+                              ['@type': 'X', '@id': '/thing', 'CR': ['@id': '/thingX0'], 'px1': ['@id': '/thingX0']]
+        ]]
+
+        def docs = [
+                ['@graph': [['@type': 'R', '@id': '/recordX0', 'mainEntity': ['@id': '/thingX0']],
+                            ['@type': 'X', '@id': '/thingX0',
+                             'px1': 'foo',
+                             'px2': 'foo']]]
+        ]
+
+        def storage = new TestStorage(ld)
+        storage.add(doc)
+        docs.each(storage.&add)
+
+        def embellisher = new Embellisher(ld, storage.&getFull, storage.&getCards, storage.&getReverseLinks)
+        embellisher.setIntegralRelations(['CR', 'CR2'])
+
+        Document document = new Document(doc)
+
+        embellisher.embellish(document)
+        def result = document.data
+
+        expect:
+        lens(find(result, '/thingX0')) == 'full'
+
+        result['@graph'].size() == 2 + 1
+    }
+
+
+
+
+    /*
+
+┌−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−┐
+╎                         embellish                       ╎
+╎                                                         ╎
+╎                 px1                                     ╎
+╎   ┌─────────────────────────────────────────┐           ╎
+╎   │                                         ▼           ╎
+╎ ┌─────────────┐  CR   ┌───────────┐  CR   ┌───────────┐ ╎
+╎ │ doc (START) │ ────▶ │ X0 (full) │ ────▶ │ X1 (full) │ ╎
+╎ └─────────────┘       └───────────┘       └───────────┘ ╎
+╎                                                         ╎
+└−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−┘
+
+Generated with: https://dot-to-ascii.ggerganov.com/
+
+.dot:
+digraph {
+    rankdir=LR;
+    subgraph cluster_0 {
+        doc -> X0 [ label = "CR" ];
+        doc -> X1 [ label = "px1" ];
+        X0 -> X1 [ label = "CR" ];
+
+        label = "embellish";
+    }
+
+    doc [label = "doc (START)"];
+    X0 [label = "X0 (full)"];
+    X1 [label = "X1 (full)"];
+}
+
+    */
+
+    def "should follow integral relations before other relations (also when shorter path exists)"() {
+        given:
+        def ld = new JsonLd(JsonLdSpec.CONTEXT_DATA, DISPLAY_DATA, JsonLdSpec.VOCAB_DATA)
+
+        def doc = ['@graph': [
+                ['@type': 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
+                ['@type': 'X', '@id': '/thing',
+                 'CR' : ['@id': '/thingX0'],
+                 'px1': ['@id': '/thingX1']]
+        ]]
+
+        def docs = [
+                ['@graph': [['@type': 'R', '@id': '/recordX0', 'mainEntity': ['@id': '/thingX0']],
+                            ['@type': 'X', '@id': '/thingX0',
+                             'CR'   : [['@id': '/thingX1']],
+                             'px1'  : 'foo',
+                             'px2'  : 'foo']]],
+
+                ['@graph': [['@type': 'R', '@id': '/recordX1', 'mainEntity': ['@id': '/thingX1']],
+                            ['@type': 'X', '@id': '/thingX1',
+                             'px1'  : 'foo',
+                             'px2'  : 'foo']]],
+        ]
+
+        def storage = new TestStorage(ld)
+        storage.add(doc)
+        docs.each(storage.&add)
+
+        def embellisher = new Embellisher(ld, storage.&getFull, storage.&getCards, storage.&getReverseLinks)
+        embellisher.setIntegralRelations(['CR', 'CR2'])
+
+        Document document = new Document(doc)
+
+        embellisher.embellish(document)
+        def result = document.data
+
+        expect:
+        lens(find(result, '/thingX0')) == 'full'
+        lens(find(result, '/thingX1')) == 'full'
+
+        result['@graph'].size() == 2 + 2
+    }
+
+
+
+
+    /*
+
                        ┌−−−−−−−−−−−−−−−−−┐
                        ╎    embellish    ╎
                        ╎                 ╎
