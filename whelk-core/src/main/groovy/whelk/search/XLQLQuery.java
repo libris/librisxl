@@ -330,8 +330,11 @@ public class XLQLQuery {
             case LESS_THAN_OR_EQUALS -> " <= ";
             case LESS_THAN -> " < ";
         };
+
         String not = pv.operator() == Operator.NOT_EQUALS ? "NOT " : "";
-        return not + String.join(".", pv.propertyPath()) + sep + quoteIfPhraseOrColon(pv.value());
+        String path = String.join(".", pv.propertyPath());
+
+        return not + quoteIfPhraseOrColon(path) + sep + quoteIfPhraseOrColon(pv.value());
     }
 
     private static Map<String, Object> equalsFilter(String path, String value) {
