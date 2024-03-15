@@ -10,6 +10,7 @@ import whelk.exception.FramingException
 import whelk.exception.WhelkRuntimeException
 import whelk.util.DocumentUtil
 
+import javax.annotation.Nullable
 import java.util.regex.Matcher
 
 @CompileStatic
@@ -553,14 +554,8 @@ class JsonLd {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     void applyInverses(Map thing) {
-        thing[REVERSE_KEY]?.each { rel, subjects ->
-            Map relDescription = vocabIndex[rel]
-            // NOTE: resilient in case we add inverseOf as a direct term
-            def inverseOf = relDescription['owl:inverseOf'] ?: relDescription.inverseOf
-            List revIds = asList(inverseOf)?.collect {
-                toTermKey((String) it[ID_KEY])
-            }
-            String rev = revIds.find { it in vocabIndex }
+        thing[REVERSE_KEY]?.each { String rel, subjects ->
+            String rev = getInverseProperty(rel)
             if (rev) {
                 thing[rev] = asList(thing.get(rev, []))
                 thing[rev].addAll(asList(subjects))
@@ -570,6 +565,20 @@ class JsonLd {
                 }
             }
         }
+    }
+
+    @Nullable
+    String getInverseProperty(String propertyName) {
+        Map relDescription = vocabIndex[propertyName]
+        if (!relDescription) {
+            return null
+        }
+        // NOTE: resilient in case we add inverseOf as a direct term
+        def inverseOf = relDescription['owl:inverseOf'] ?: relDescription.inverseOf
+        List revIds = asList(inverseOf)?.collect {
+            toTermKey((String) it[ID_KEY])
+        }
+        return revIds.find { it in vocabIndex }
     }
 
     static List asList(o) {
