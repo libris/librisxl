@@ -3,6 +3,7 @@ package whelk.xlql;
 import whelk.JsonLd;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Path {
     public List<DefaultField> defaultFields;
@@ -24,7 +25,7 @@ public class Path {
     }
 
     private List<String> getLdPath(List<String> path) {
-        return path.stream().map(this::substitute).toList();
+        return path.stream().map(this::substitute).collect(Collectors.toList());
     }
 
     private String substitute(String property) {
