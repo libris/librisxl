@@ -315,7 +315,7 @@ public class Disambiguate {
                 );
     }
 
-    private Optional<Map<?, ?>> loadThing(String id, Whelk whelk) {
+    public Optional<Map<?, ?>> loadThing(String id, Whelk whelk) {
         return Optional.ofNullable(whelk.loadData(id))
                 .map(data -> data.get(JsonLd.GRAPH_KEY))
                 .map(graph -> (Map<?, ?>) ((List<?>) graph).get(1));

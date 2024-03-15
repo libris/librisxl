@@ -258,12 +258,27 @@ public class XLQLQuery {
         } else {
             m.put("property", getDefinition(property));
         }
-        m.put(operator.termKey, value);
+        m.put(operator.termKey, lookUp(value).orElse(value));
         return m;
     }
 
-    private Map<?, ?> getDefinition(String property) {
-        return whelk.getJsonld().vocabIndex.get(property);
+    private Optional<Object> lookUp(String value) {
+        Optional<Object> vocabTerm = Optional.ofNullable(getDefinition(value));
+        if (vocabTerm.isPresent()) {
+            return vocabTerm;
+        }
+
+        value = Disambiguate.expandPrefixed(value);
+        if (JsonLd.looksLikeIri(value)) {
+            return disambiguate.loadThing(value, whelk)
+                    .map(whelk.getJsonld()::toChip);
+        }
+
+        return Optional.empty();
+    }
+
+    private Map<?, ?> getDefinition(String term) {
+        return whelk.getJsonld().vocabIndex.get(term);
     }
 
     private Optional<SimpleQueryTree.Node> getReducedTree(SimpleQueryTree sqt, SimpleQueryTree.Node qtNode) {
