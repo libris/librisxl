@@ -24,9 +24,11 @@ public class Path {
     }
 
     private List<String> getLdPath(List<String> path) {
-        return path.stream()
-                .map(p -> Optional.ofNullable(substitutions.get(p)).orElse(p))
-                .toList();
+        return path.stream().map(this::substitute).toList();
+    }
+
+    private String substitute(String property) {
+        return Optional.ofNullable(substitutions.get(property)).orElse(property);
     }
 
     public void prependMeta() {
