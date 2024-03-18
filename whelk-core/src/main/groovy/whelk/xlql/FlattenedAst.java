@@ -32,7 +32,43 @@ public class FlattenedAst {
 
     static Node flatten(Ast ast) {
         Ast.Node flattenedCodes = flattenCodes(ast.tree);
-        return flattenNegations(flattenedCodes);
+        Node flattenedNegations = flattenNegations(flattenedCodes);
+        return mergeLeaves(flattenedNegations);
+    }
+
+    static Node mergeLeaves(Node astNode) {
+        return switch (astNode) {
+            case And and -> {
+                List<Node> newOperands = new ArrayList<>();
+                List<String> leafValues = new ArrayList<>();
+                for (Node node : and.operands()) {
+                    switch (node) {
+                        case Leaf l -> leafValues.add(quoteIfPhrase(l.value()));
+                        default -> {
+                            if (!leafValues.isEmpty()) {
+                                newOperands.add(new Leaf(String.join(" ", leafValues)));
+                                leafValues.clear();
+                            }
+                            newOperands.add(node);
+                        }
+                    }
+                }
+                if (!leafValues.isEmpty()) {
+                    newOperands.add(new Leaf(String.join(" ", leafValues)));
+                }
+                yield newOperands.size() > 1 ? new And(newOperands) : newOperands.getFirst();
+            }
+            case Or or -> {
+                List<Node> newOperands = or.operands()
+                        .stream()
+                        .map(FlattenedAst::mergeLeaves)
+                        .toList();
+                yield new Or(newOperands);
+            }
+            case Not not -> new Not(quoteIfPhrase(not.value()));
+            case Code code -> code;
+            case Leaf leaf -> new Leaf(quoteIfPhrase(leaf.value()));
+        };
     }
 
     static Node flattenNegations(Ast.Node ast) {
@@ -172,5 +208,9 @@ public class FlattenedAst {
                 Operator.GREATER_THAN_OR_EQUALS, Operator.LESS_THAN,
                 Operator.GREATER_THAN, Operator.LESS_THAN_OR_EQUALS
         );
+    }
+
+    private static String quoteIfPhrase(String s) {
+        return s.matches(".*\\s.*") ? "\"" + s + "\"" : s;
     }
 }

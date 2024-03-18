@@ -9,6 +9,8 @@ import whelk.xlql.*;
 
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static whelk.util.DocumentUtil.findKey;
@@ -76,14 +78,18 @@ public class XLQLQuery {
     private Map<String, Object> esFreeText(QueryTree.FreeText ft) {
         String s = ft.value();
         s = Unicode.normalizeForSearch(s);
-        s = quoteIfPhrase(s);
         boolean isSimple = ESQuery.isSimple(s);
         String queryMode = isSimple ? "simple_query_string" : "query_string";
         if (!isSimple) {
             s = ESQuery.escapeNonSimpleQueryString(s);
         }
         Map<String, Object> simpleQuery = new HashMap<>();
-        simpleQuery.put(queryMode, Map.of("query", s, "analyze_wildcard", true));
+        simpleQuery.put(queryMode,
+                Map.of("query", s,
+                        "analyze_wildcard", true,
+                        "default_operator", "AND"
+                )
+        );
 
         // TODO: Boost by type
         List<String> boostedFields = lensBoost.computeBoostFieldsFromLenses(new String[0]);
@@ -108,7 +114,8 @@ public class XLQLQuery {
         var be = Map.of(
                 "query", s,
                 "fields", exactFields,
-                "analyze_wildcard", true
+                "analyze_wildcard", true,
+                "default_operator", "AND"
         );
         boostedExact.put(queryMode, be);
 
@@ -117,7 +124,8 @@ public class XLQLQuery {
                 "query", s,
                 "fields", softFields,
                 "quote_field_suffix", ".exact",
-                "analyze_wildcard", true
+                "analyze_wildcard", true,
+                "default_operator", "AND"
         );
         boostedSoft.put(queryMode, bs);
 
@@ -319,7 +327,11 @@ public class XLQLQuery {
     }
 
     private String freeTextToString(SimpleQueryTree.FreeText ft) {
-        return ft.operator() == Operator.NOT_EQUALS ? "NOT " + ft.value() : quoteIfPhraseOrColon(ft.value());
+        String s = quoteColon(ft.value());
+        if (ft.operator() == Operator.NOT_EQUALS) {
+            s = "NOT " + s;
+        }
+        return s;
     }
 
     private String propertyValueToString(SimpleQueryTree.PropertyValue pv) {
@@ -390,6 +402,21 @@ public class XLQLQuery {
 
     private static String quoteIfPhraseOrColon(String s) {
         return s.matches(".*[ :].*") ? "\"" + s + "\"" : s;
+    }
+
+    private static String quoteColon(String s) {
+        List<Integer> insertQuoteAtIdx = new ArrayList<>();
+        Matcher matcher = Pattern.compile("[^ ]*:[^ ]*").matcher(s);
+        while (matcher.find()) {
+            if (!matcher.group().matches("^\".*\"$")) {
+                insertQuoteAtIdx.addFirst(matcher.start());
+                insertQuoteAtIdx.addFirst(matcher.end());
+            }
+        }
+        for (int i : insertQuoteAtIdx) {
+            s = s.substring(0, i) + "\"" + s.substring(i);
+        }
+        return s;
     }
 
     private Set<String> getEsNestedFields(Map<?, ?> mappings) {
