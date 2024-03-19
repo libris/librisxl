@@ -171,7 +171,7 @@ public class XLQLQuery {
                 .orElseThrow();
 
         List<String> stem = new ArrayList<>();
-        for (int i = 0 ; i < shortestPath ; i++) {
+        for (int i = 0; i < shortestPath; i++) {
             int idx = i;
             var unique = paths.stream()
                     .map(p -> p.get(idx))
@@ -327,7 +327,7 @@ public class XLQLQuery {
     }
 
     private String freeTextToString(SimpleQueryTree.FreeText ft) {
-        String s = quoteColon(ft.value());
+        String s = quoteSpecialSymbolsWithinFreeTextString(ft.value());
         if (ft.operator() == Operator.NOT_EQUALS) {
             s = "NOT " + s;
         }
@@ -336,17 +336,17 @@ public class XLQLQuery {
 
     private String propertyValueToString(SimpleQueryTree.PropertyValue pv) {
         String sep = switch (pv.operator()) {
-            case EQUALS, NOT_EQUALS -> ": ";
-            case GREATER_THAN_OR_EQUALS -> " >= ";
-            case GREATER_THAN -> " > ";
-            case LESS_THAN_OR_EQUALS -> " <= ";
-            case LESS_THAN -> " < ";
+            case EQUALS, NOT_EQUALS -> ":";
+            case GREATER_THAN_OR_EQUALS -> ">=";
+            case GREATER_THAN -> ">";
+            case LESS_THAN_OR_EQUALS -> "<=";
+            case LESS_THAN -> "<";
         };
 
         String not = pv.operator() == Operator.NOT_EQUALS ? "NOT " : "";
         String path = String.join(".", pv.propertyPath());
 
-        return not + quoteIfPhraseOrColon(path) + sep + quoteIfPhraseOrColon(pv.value());
+        return not + quoteIfPhraseOrContainsSpecialSymbol(path) + sep + quoteIfPhraseOrContainsSpecialSymbol(pv.value());
     }
 
     private static Map<String, Object> equalsFilter(String path, String value) {
@@ -400,22 +400,33 @@ public class XLQLQuery {
         return s.matches(".*\\s.*") ? "\"" + s + "\"" : s;
     }
 
-    private static String quoteIfPhraseOrColon(String s) {
-        return s.matches(".*[ :].*") ? "\"" + s + "\"" : s;
+    private static String quoteIfPhraseOrContainsSpecialSymbol(String s) {
+        return s.matches(".*(>=|<=|[=!~<>(): ]).*") ? "\"" + s + "\"" : s;
     }
 
-    private static String quoteColon(String s) {
+    private static String quoteSpecialSymbolsWithinFreeTextString(String s) {
+        Matcher quotedMatcher = Pattern.compile("\".*?\"").matcher(s);
+        List<List<Integer>> quotedIntervals = new ArrayList<>();
+        while (quotedMatcher.find()) {
+            quotedIntervals.add(List.of(quotedMatcher.start(), quotedMatcher.end()));
+        }
+
         List<Integer> insertQuoteAtIdx = new ArrayList<>();
-        Matcher matcher = Pattern.compile("[^ ]*:[^ ]*").matcher(s);
-        while (matcher.find()) {
-            if (!matcher.group().matches("^\".*\"$")) {
-                insertQuoteAtIdx.addFirst(matcher.start());
-                insertQuoteAtIdx.addFirst(matcher.end());
+        Matcher specialSymbolMatcher = Pattern.compile("[^ \"]*(>=|<=|[=!~<>():])[^ \"]*").matcher(s);
+        while (specialSymbolMatcher.find()) {
+            boolean isAlreadyQuoted = quotedIntervals.stream().anyMatch(interval ->
+                    interval.getFirst() < specialSymbolMatcher.start() && interval.getLast() > specialSymbolMatcher.end()
+            );
+            if (!isAlreadyQuoted) {
+                insertQuoteAtIdx.addFirst(specialSymbolMatcher.start());
+                insertQuoteAtIdx.addFirst(specialSymbolMatcher.end());
             }
         }
+
         for (int i : insertQuoteAtIdx) {
             s = s.substring(0, i) + "\"" + s.substring(i);
         }
+
         return s;
     }
 
