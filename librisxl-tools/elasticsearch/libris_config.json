@@ -339,6 +339,14 @@
                 }
             },
             {
+                "reverse_itemOf_template": {
+                    "path_match": ["@reverse.itemOf", "@reverse.instanceOf.@reverse.itemOf"],
+                    "mapping": {
+                        "type": "nested"
+                    }
+                }
+            },
+            {
                 "unknown_template": {
                     "path_match": "_marc*.*.subfields.*",
                     "mapping": {
