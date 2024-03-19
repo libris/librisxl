@@ -31,42 +31,8 @@ public class QueryTree {
     }
 
     private static Node sqtToQt(SimpleQueryTree.Node sqt, Disambiguate disambiguate) {
-        /*
-        If any given property path consists of more than one key (separated by period), assume that the user knows what
-        she's doing and interpret each property as is, i.e. don't apply any heuristic for finding alternative paths.
-        (See buildField method.)
-         */
-        if (anyCompositePath(sqt)) {
-            return sqtToQt(sqt);
-        }
-
         Disambiguate.OutsetType outset = decideOutset(sqt, disambiguate);
         return sqtToQt(sqt, disambiguate, outset);
-    }
-
-    private static Node sqtToQt(SimpleQueryTree.Node sqtNode) {
-        switch (sqtNode) {
-            case SimpleQueryTree.And and -> {
-                List<Node> conjuncts = and.conjuncts()
-                        .stream()
-                        .map(QueryTree::sqtToQt)
-                        .toList();
-                return new And(conjuncts);
-            }
-            case SimpleQueryTree.Or or -> {
-                List<Node> disjuncts = or.disjuncts()
-                        .stream()
-                        .map(QueryTree::sqtToQt)
-                        .toList();
-                return new Or(disjuncts);
-            }
-            case SimpleQueryTree.FreeText ft -> {
-                return new FreeText(ft.operator(), ft.value());
-            }
-            case SimpleQueryTree.PropertyValue pv -> {
-                return buildField(pv);
-            }
-        }
     }
 
     private static Disambiguate.OutsetType decideOutset(SimpleQueryTree.Node sqtNode, Disambiguate disambiguate) {
@@ -119,18 +85,11 @@ public class QueryTree {
     }
 
     private static Node buildField(SimpleQueryTree.PropertyValue pv, Disambiguate disambiguate, Disambiguate.OutsetType outset) {
+        boolean isAccuratePath = pv.propertyPath().size() > 1;
+
         Path path = new Path(pv.propertyPath());
         Operator operator = pv.operator();
         String value = pv.value();
-
-        path.expandChainAxiom(disambiguate);
-
-        String domain = disambiguate.getDomain(pv.property());
-
-        Disambiguate.DomainCategory domainCategory = disambiguate.getDomainCategory(domain);
-        if (domainCategory == Disambiguate.DomainCategory.ADMIN_METADATA) {
-            path.prependMeta();
-        }
 
         if (disambiguate.isObjectProperty(pv.property()) && !disambiguate.isVocabTerm(pv.property())) {
             /*
@@ -144,6 +103,19 @@ public class QueryTree {
             } else {
                 path.appendUnderscoreStr();
             }
+        }
+
+        if (isAccuratePath) {
+            return new Field(path, operator, value);
+        }
+
+        path.expandChainAxiom(disambiguate);
+
+        String domain = disambiguate.getDomain(pv.property());
+
+        Disambiguate.DomainCategory domainCategory = disambiguate.getDomainCategory(domain);
+        if (domainCategory == Disambiguate.DomainCategory.ADMIN_METADATA) {
+            path.prependMeta();
         }
 
         return switch (outset) {
@@ -240,7 +212,7 @@ public class QueryTree {
             case SimpleQueryTree.And and -> and.conjuncts().forEach(c -> collectGivenTypes(c, types));
             case SimpleQueryTree.Or or -> or.disjuncts().forEach(d -> collectGivenTypes(d, types));
             case SimpleQueryTree.PropertyValue pv -> {
-                if ("rdf:type".equals(pv.property())) {
+                if (List.of("rdf:type").equals(pv.propertyPath())) {
                     types.add(pv.value());
                 }
             }
@@ -250,25 +222,5 @@ public class QueryTree {
         }
 
         return types;
-    }
-
-    private static boolean anyCompositePath(SimpleQueryTree.Node sqtNode) {
-        switch (sqtNode) {
-            case SimpleQueryTree.And and -> {
-                return and.conjuncts().stream().anyMatch(QueryTree::anyCompositePath);
-            }
-            case SimpleQueryTree.Or or -> {
-                return or.disjuncts().stream().anyMatch(QueryTree::anyCompositePath);
-            }
-            case SimpleQueryTree.PropertyValue pv -> {
-                if (pv.propertyPath().size() > 1) {
-                    return true;
-                }
-            }
-            case SimpleQueryTree.FreeText ignored -> {
-                // Nothing to do here
-            }
-        }
-        return false;
     }
 }

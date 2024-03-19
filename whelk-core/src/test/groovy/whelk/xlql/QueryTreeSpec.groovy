@@ -68,18 +68,23 @@ class QueryTreeSpec extends Specification {
         freeText == new QueryTree.FreeText(Operator.EQUALS, "\"svarta hål\"")
     }
 
-    def "exact fields"() {
+    def "accurate fields"() {
         given:
-        String queryString = "instanceOf.subject.@id: \"sao:Fysik\" AND instanceOf.subject._str: rymd and utgivningssätt: Monograph"
+        String queryString = "typ:Tryck instanceOf.subject:\"sao:Fysik\" AND instanceOf.subject._str:rymd and tillkomsttid:2022"
         SimpleQueryTree sqt = getSimpleQueryTree(queryString)
         QueryTree qt = new QueryTree(sqt, disambiguate)
         QueryTree.And topNode = qt.tree
         List conjuncts = topNode.conjuncts()
-        QueryTree.Field subjectField = conjuncts[0]
-        QueryTree.Field subjectField2 = conjuncts[1]
-        QueryTree.Field issuanceTypeField = conjuncts[2]
+        QueryTree.Field typeField = conjuncts[0]
+        QueryTree.Field subjectField = conjuncts[1]
+        QueryTree.Field subjectField2 = conjuncts[2]
+        QueryTree.Field issuanceTypeField = conjuncts[3]
 
         expect:
+        typeField.path().stringify() == "@type"
+        typeField.operator() == Operator.EQUALS
+        typeField.value() == "Print"
+
         subjectField.path().stringify() == "instanceOf.subject.@id"
         subjectField.operator() == Operator.EQUALS
         subjectField.value() == "https://id.kb.se/term/sao/Fysik"
@@ -88,9 +93,9 @@ class QueryTreeSpec extends Specification {
         subjectField2.operator() == Operator.EQUALS
         subjectField2.value() == "rymd"
 
-        issuanceTypeField.path().stringify() == "issuanceType"
+        issuanceTypeField.path().stringify() == "instanceOf.originDate"
         issuanceTypeField.operator() == Operator.EQUALS
-        issuanceTypeField.value() == "Monograph"
+        issuanceTypeField.value() == "2022"
     }
 
     def "work subtype + path inference"() {

@@ -37,11 +37,15 @@ public class Path {
     }
 
     public void appendId() {
-        path.add(JsonLd.ID_KEY);
+        if (!path.getLast().equals(JsonLd.ID_KEY)) {
+            path.add(JsonLd.ID_KEY);
+        }
     }
 
     public void appendUnderscoreStr() {
-        path.add(JsonLd.SEARCH_KEY);
+        if (!path.getLast().equals(JsonLd.SEARCH_KEY)) {
+            path.add(JsonLd.SEARCH_KEY);
+        }
     }
 
     public void setWorkToInstancePath() {
