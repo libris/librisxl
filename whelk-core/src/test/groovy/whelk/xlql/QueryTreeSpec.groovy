@@ -35,15 +35,14 @@ class QueryTreeSpec extends Specification {
         expect:
         qt.tree == new QueryTree.And(
                 [
-                        new QueryTree.FreeText(Operator.EQUALS, "AAA"),
-                        new QueryTree.FreeText(Operator.EQUALS, "BBB"),
+                        new QueryTree.FreeText(Operator.EQUALS, "AAA BBB"),
                         new QueryTree.Or(
                                 [
                                         new QueryTree.FreeText(Operator.EQUALS, "CCC"),
                                         new QueryTree.FreeText(Operator.EQUALS, "DDD")
                                 ]
                         )
-                ]
+                ] as List<QueryTree.Node>
         )
     }
 
@@ -66,7 +65,7 @@ class QueryTreeSpec extends Specification {
         originDateField.operator() == Operator.LESS_THAN
         originDateField.value() == "2023"
 
-        freeText == new QueryTree.FreeText(Operator.EQUALS, "svarta hål")
+        freeText == new QueryTree.FreeText(Operator.EQUALS, "\"svarta hål\"")
     }
 
     def "exact fields"() {
@@ -129,6 +128,7 @@ class QueryTreeSpec extends Specification {
         langField2.operator() == Operator.EQUALS
         langField2.value() == "https://id.kb.se/language/swe"
     }
+
     def "instance type + path inference"() {
         given:
         String queryString = "typ:Instance upphovsuppgift:Någon tillkomsttid<2020 language:\"https://id.kb.se/language/swe\""
@@ -161,5 +161,53 @@ class QueryTreeSpec extends Specification {
         langField2.path().stringify() == "instanceOf.language.@id"
         langField2.operator() == Operator.EQUALS
         langField2.value() == "https://id.kb.se/language/swe"
+    }
+
+    def "nested"() {
+        given:
+        String queryString = "author:x not isbn:y"
+        SimpleQueryTree sqt = getSimpleQueryTree(queryString)
+        QueryTree qt = new QueryTree(sqt, disambiguate)
+        QueryTree.And topNode = qt.tree
+        List conjuncts = topNode.conjuncts()
+        QueryTree.Nested author = conjuncts[0]
+        QueryTree.Nested isbn = conjuncts[1]
+
+        expect:
+        author.operator() == Operator.EQUALS
+        author.fields()[0].path().stringify() == "contribution.agent._str"
+        author.fields()[0].value() == "x"
+        author.fields()[1].path().stringify() == "contribution.role.@id"
+        author.fields()[1].value() == "https://id.kb.se/relator/author"
+
+        isbn.operator() == Operator.NOT_EQUALS
+        isbn.fields()[0].path().stringify() == "identifiedBy.value"
+        isbn.fields()[0].value() == "y"
+        isbn.fields()[1].path().stringify() == "identifiedBy.@type"
+        isbn.fields()[1].value() == "ISBN"
+    }
+
+    def "nested + path by type inference"() {
+        given:
+        String queryString = "type:Text author:x not isbn:y"
+        SimpleQueryTree sqt = getSimpleQueryTree(queryString)
+        QueryTree qt = new QueryTree(sqt, disambiguate)
+        QueryTree.And topNode = qt.tree
+        List conjuncts = topNode.conjuncts()
+        QueryTree.Nested author = conjuncts[1]
+        QueryTree.Nested isbn = conjuncts[2]
+
+        expect:
+        author.operator() == Operator.EQUALS
+        author.fields()[0].path().stringify() == "contribution.agent._str"
+        author.fields()[0].value() == "x"
+        author.fields()[1].path().stringify() == "contribution.role.@id"
+        author.fields()[1].value() == "https://id.kb.se/relator/author"
+
+        isbn.operator() == Operator.NOT_EQUALS
+        isbn.fields()[0].path().stringify() == "@reverse.instanceOf.identifiedBy.value"
+        isbn.fields()[0].value() == "y"
+        isbn.fields()[1].path().stringify() == "@reverse.instanceOf.identifiedBy.@type"
+        isbn.fields()[1].value() == "ISBN"
     }
 }

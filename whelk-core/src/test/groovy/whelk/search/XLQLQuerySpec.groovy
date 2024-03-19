@@ -43,11 +43,9 @@ class XLQLQuerySpec extends Specification {
         Map esQuery = xlqlQuery.getEsQuery(qt)
 
         expect:
-        esQuery['bool']['must'][0]['bool']['should'].every { s ->
-            s['simple_query_string']['query'] == "Kalle"
-        }
-        esQuery['bool']['must'][1]['bool']['should'].every { s ->
-            s['simple_query_string']['query'] == "Anka"
+        esQuery['bool']['should'].every { s ->
+            s['simple_query_string']['query'] == "Kalle Anka"
+            s['simple_query_string']['default_operator'] == "AND"
         }
     }
 
@@ -93,9 +91,9 @@ class XLQLQuerySpec extends Specification {
         }
     }
 
-    def "Query tree to ES query: Free text grouping"() {
+    def "Query tree to ES query: Free text disjunction"() {
         given:
-        String queryString = "Bamse or (Kalle Anka)"
+        String queryString = "Bamse or Kalle Anka"
         QueryTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
         Map esQuery = xlqlQuery.getEsQuery(qt)
 
@@ -103,11 +101,8 @@ class XLQLQuerySpec extends Specification {
         esQuery['bool']['should'][0]['bool']['should'].every { s ->
             s['simple_query_string']['query'] == "Bamse"
         }
-        esQuery['bool']['should'][1]['bool']['must'][0]['bool']['should'].every { s ->
-            s['simple_query_string']['query'] == "Kalle"
-        }
-        esQuery['bool']['should'][1]['bool']['must'][1]['bool']['should'].every { s ->
-            s['simple_query_string']['query'] == "Anka"
+        esQuery['bool']['should'][1]['bool']['should'].every { s ->
+            s['simple_query_string']['query'] == "Kalle Anka"
         }
     }
 
@@ -154,11 +149,9 @@ class XLQLQuerySpec extends Specification {
 
         expect:
         xlqlQuery.toMappings(sqt) == [
-                'variable' : 'textQuery',
-                'predicate': whelk.jsonld.vocabIndex['textQuery'],
-                'value'    : 'Kalle',
-                'operator' : Operator.EQUALS.termKey,
-                'up'       : ['@id': '/find?_q=*']
+                'property': whelk.jsonld.vocabIndex['textQuery'],
+                'equals'  : 'Kalle',
+                'up'      : ['@id': '/find?_q=*']
         ]
     }
 
@@ -169,121 +162,90 @@ class XLQLQuerySpec extends Specification {
 
         expect:
         xlqlQuery.toMappings(sqt, ['_limit=20']) == [
-                'variable' : 'textQuery',
-                'predicate': whelk.jsonld.vocabIndex['textQuery'],
-                'value'    : 'Kalle Anka',
-                'operator' : Operator.EQUALS.termKey,
-                'up'       : ['@id': '/find?_q=*&_limit=20']
+                'property': whelk.jsonld.vocabIndex['textQuery'],
+                'equals'  : '"Kalle Anka"',
+                'up'      : ['@id': '/find?_q=*&_limit=20']
         ]
     }
 
-    def "Mapping: Free text conjunction"() {
+    def "Mapping: Free text"() {
         given:
         String queryString = "Kalle Anka"
         SimpleQueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
 
         expect:
         xlqlQuery.toMappings(sqt) == [
-                'and': [
-                        [
-                                'variable' : 'textQuery',
-                                'predicate': whelk.jsonld.vocabIndex['textQuery'],
-                                'value'    : 'Kalle',
-                                'operator' : Operator.EQUALS.termKey,
-                                'up'       : ['@id': '/find?_q=Anka']
-                        ],
-                        [
-                                'variable' : 'textQuery',
-                                'predicate': whelk.jsonld.vocabIndex['textQuery'],
-                                'value'    : 'Anka',
-                                'operator' : Operator.EQUALS.termKey,
-                                'up'       : ['@id': '/find?_q=Kalle']
-                        ]
-                ],
-                'up' : ['@id': '/find?_q=*']
+                'property': whelk.jsonld.vocabIndex['textQuery'],
+                'equals'  : 'Kalle Anka',
+                'up'      : ['@id': '/find?_q=*']
         ]
     }
 
-    def "Mapping: Free text grouping + nested"() {
+    def "Mapping: Free text grouping"() {
         given:
-        String queryString = "(Kalle and not (Anka or Blomqvist)) or Bosse"
+        String queryString = "(Kalle and not (Anka or Blomqvist)) or \"Bosse Persson\""
         SimpleQueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
 
         expect:
-        // TODO: Review necessity of flattenCodes/flattenNegations
         xlqlQuery.toMappings(sqt) == [
                 'or': [
                         [
                                 'and': [
                                         [
-                                                'variable' : 'textQuery',
-                                                'predicate': whelk.jsonld.vocabIndex['textQuery'],
-                                                'value'    : 'Kalle',
-                                                'operator' : Operator.EQUALS.termKey,
-                                                'up'       : ['@id': '/find?_q=(NOT Anka AND NOT Blomqvist) OR Bosse']
+                                                'property': whelk.jsonld.vocabIndex['textQuery'],
+                                                'equals'  : 'Kalle',
+                                                'up'      : ['@id': '/find?_q=(NOT Anka AND NOT Blomqvist) OR "Bosse Persson"']
                                         ],
                                         [
                                                 'and': [
                                                         [
-                                                                'variable' : 'textQuery',
-                                                                'predicate': whelk.jsonld.vocabIndex['textQuery'],
-                                                                'value'    : 'Anka',
-                                                                'operator' : Operator.NOT_EQUALS.termKey,
-                                                                'up'       : ['@id': '/find?_q=(Kalle AND NOT Blomqvist) OR Bosse']
+                                                                'property' : whelk.jsonld.vocabIndex['textQuery'],
+                                                                'notEquals': 'Anka',
+                                                                'up'       : ['@id': '/find?_q=(Kalle AND NOT Blomqvist) OR "Bosse Persson"']
                                                         ],
                                                         [
-                                                                'variable' : 'textQuery',
-                                                                'predicate': whelk.jsonld.vocabIndex['textQuery'],
-                                                                'value'    : 'Blomqvist',
-                                                                'operator' : Operator.NOT_EQUALS.termKey,
-                                                                'up'       : ['@id': '/find?_q=(Kalle AND NOT Anka) OR Bosse']
+                                                                'property' : whelk.jsonld.vocabIndex['textQuery'],
+                                                                'notEquals': 'Blomqvist',
+                                                                'up'       : ['@id': '/find?_q=(Kalle AND NOT Anka) OR "Bosse Persson"']
                                                         ]
                                                 ],
-                                                'up' : ['@id': '/find?_q=Kalle OR Bosse']
+                                                'up' : ['@id': '/find?_q=Kalle OR "Bosse Persson"']
                                         ]
                                 ],
-                                'up' : ['@id': '/find?_q=Bosse']
+                                'up' : ['@id': '/find?_q="Bosse Persson"']
                         ],
                         [
-                                'variable' : 'textQuery',
-                                'predicate': whelk.jsonld.vocabIndex['textQuery'],
-                                'value'    : 'Bosse',
-                                'operator' : Operator.EQUALS.termKey,
-                                'up'       : ['@id': '/find?_q=Kalle AND (NOT Anka AND NOT Blomqvist)']
+                                'property': whelk.jsonld.vocabIndex['textQuery'],
+                                'equals'  : '"Bosse Persson"',
+                                'up'      : ['@id': '/find?_q=Kalle AND (NOT Anka AND NOT Blomqvist)']
                         ]
                 ],
                 'up': ['@id': '/find?_q=*']
         ]
     }
 
-    def "Mapping: Free text phrase + fields"() {
+    def "Mapping: Free text + fields"() {
         given:
-        String queryString = "\"Kalle Anka\" år > 2020 not ämne: Hästar"
+        String queryString = "Kalle Anka år > 2020 not ämne: Hästar"
         SimpleQueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
 
         expect:
         xlqlQuery.toMappings(sqt) == [
                 'and': [
                         [
-                                'variable' : 'textQuery',
-                                'predicate': whelk.jsonld.vocabIndex['textQuery'],
-                                'value'    : 'Kalle Anka',
-                                'operator' : Operator.EQUALS.termKey,
-                                'up'       : ['@id': '/find?_q=year > 2020 AND NOT subject: Hästar']
+                                'property': whelk.jsonld.vocabIndex['textQuery'],
+                                'equals'  : 'Kalle Anka',
+                                'up'      : ['@id': '/find?_q=year>2020 AND NOT subject:Hästar']
                         ],
                         [
-                                'variable' : 'year',
-                                'predicate': whelk.jsonld.vocabIndex['year'],
-                                'value'    : '2020',
-                                'operator' : Operator.GREATER_THAN.termKey,
-                                'up'       : ['@id': '/find?_q="Kalle Anka" AND NOT subject: Hästar']
+                                'property'   : whelk.jsonld.vocabIndex['year'],
+                                'greaterThan': '2020',
+                                'up'         : ['@id': '/find?_q=Kalle Anka AND NOT subject:Hästar']
                         ],
                         [
-                                'variable' : 'subject',
-                                'predicate': whelk.jsonld.vocabIndex['subject'],
-                                'value'    : 'Hästar',
-                                'operator' : Operator.NOT_EQUALS.termKey,
-                                'up'       : ['@id': '/find?_q="Kalle Anka" AND year > 2020']
+                                'property' : whelk.jsonld.vocabIndex['subject'],
+                                'notEquals': 'Hästar',
+                                'up'       : ['@id': '/find?_q=Kalle Anka AND year>2020']
                         ]
                 ],
                 'up' : ['@id': '/find?_q=*']
@@ -299,31 +261,38 @@ class XLQLQuerySpec extends Specification {
         xlqlQuery.toMappings(sqt) == [
                 'and': [
                         [
-                                'variable' : 'instanceOf.subject.@id',
-                                'predicate': [
+                                'property': [
                                         'propertyChainAxiom': [
                                                 whelk.jsonld.vocabIndex['instanceOf'],
                                                 whelk.jsonld.vocabIndex['subject'],
                                         ]
                                 ],
-                                'value'    : "sao:Fysik",
-                                'operator' : Operator.EQUALS.termKey,
-                                'up'       : ['@id': '/find?_q=instanceOf.subject._str: rymd']
+                                'equals'  : xlqlQuery.lookUp("sao:Fysik").get(),
+                                'up'      : ['@id': '/find?_q=instanceOf.subject._str:rymd']
                         ],
                         [
-                                'variable' : 'instanceOf.subject._str',
-                                'predicate': [
+                                'property': [
                                         'propertyChainAxiom': [
                                                 whelk.jsonld.vocabIndex['instanceOf'],
                                                 whelk.jsonld.vocabIndex['subject'],
                                         ]
                                 ],
-                                'value'    : 'rymd',
-                                'operator' : Operator.EQUALS.termKey,
-                                'up'       : ['@id': '/find?_q=instanceOf.subject.@id: "sao:Fysik"']
+                                'equals'  : 'rymd',
+                                'up'      : ['@id': '/find?_q=instanceOf.subject.@id:"sao:Fysik"']
                         ]
                 ],
                 'up' : ['@id': '/find?_q=*']
         ]
+    }
+
+    def "quoting in up url"() {
+        given:
+        String queryString = '"har titel":"x!" or a b "c:d" f "g h i>j" k l'
+        SimpleQueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
+        Map mappings = xlqlQuery.toMappings(sqt)
+
+        expect:
+        mappings['or'][0]['up']['@id'] =='/find?_q=a b "c:d" f "g h i>j" k l'
+        mappings['or'][1]['up']['@id'] =='/find?_q=hasTitle:"x!"'
     }
 }

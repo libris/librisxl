@@ -28,6 +28,7 @@ class DisambiguateSpec extends Specification {
         "unknown term"                   | null
         "marc:jurisdiction"              | "marc:jurisdiction"
         "jurisdiction"                   | null
+        "type"                           | "rdf:type"
     }
 
     def "expandPrefixed"() {

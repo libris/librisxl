@@ -1,6 +1,6 @@
-package whelk.xlql;
+package whelk.xlql
 
-import spock.lang.Specification;
+import spock.lang.Specification
 
 class FlattenedAstSpec extends Specification {
 
@@ -35,7 +35,7 @@ class FlattenedAstSpec extends Specification {
                                 new Ast.CodeEqualsLeaf("author", new Ast.Leaf("Bob")),
                                 new Ast.CodeEqualsLeaf("author", new Ast.Leaf("Cecilia"))
                         ])
-                ]
+                ] as List<Ast.Node>
         )
     }
 
@@ -55,7 +55,7 @@ class FlattenedAstSpec extends Specification {
                                 new Ast.CodeEqualsLeaf("author", new Ast.Leaf("Cecilia"))
                         ]),
                         new Ast.Not(new Ast.CodeEqualsLeaf("author", new Ast.Leaf("David")))
-                ]
+                ] as List<Ast.Node>
         )
     }
 
@@ -78,12 +78,13 @@ class FlattenedAstSpec extends Specification {
                                                 new Ast.CodeEqualsLeaf("author", new Ast.Leaf("Cecilia"))
                                         ]),
                                         new Ast.Not(new Ast.CodeEqualsLeaf("author", new Ast.Leaf("David")))
-                                ])
-                ]
+                                ] as List<Ast.Node>)
+                ] as List<Ast.Node>
         )
     }
 
     def "flatten negations"() {
+        given:
         def input = "\"everything\" and not (author:Alice and published > 2022)"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
@@ -99,11 +100,12 @@ class FlattenedAstSpec extends Specification {
                                         new FlattenedAst.Code("published", Operator.LESS_THAN_OR_EQUALS, "2022")
                                 ]
                         )
-                ]
+                ] as List<FlattenedAst.Node>
         )
     }
 
     def "flatten negations 2"() {
+        given:
         def input = "\"everything\" and !(author:Alice and not published: 2022)"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
@@ -119,11 +121,12 @@ class FlattenedAstSpec extends Specification {
                                         new FlattenedAst.Code("published", Operator.EQUALS, "2022")
                                 ]
                         )
-                ]
+                ] as List<FlattenedAst.Node>
         )
     }
 
     def "flatten negations 3"() {
+        given:
         def input = "!(author:Alice and \"everything\" and not \"something\")"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
@@ -135,7 +138,27 @@ class FlattenedAstSpec extends Specification {
                         new FlattenedAst.Code("author", Operator.NOT_EQUALS, "Alice"),
                         new FlattenedAst.Not("everything"),
                         new FlattenedAst.Leaf("something")
-                ]
+                ] as List<FlattenedAst.Node>
+        )
+    }
+
+    def "merge leaves"() {
+        given:
+        def input = "x y z \"a b c\" d p:v \"e:f\" not g h i"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+        Ast ast = new Ast(parseTree)
+        FlattenedAst flattenedAst = new FlattenedAst(ast)
+
+        expect:
+        flattenedAst.tree == new FlattenedAst.And(
+                [
+                        new FlattenedAst.Leaf("x y z \"a b c\" d"),
+                        new FlattenedAst.Code("p", Operator.EQUALS, "v"),
+                        new FlattenedAst.Leaf("e:f"),
+                        new FlattenedAst.Not("g"),
+                        new FlattenedAst.Leaf("h i")
+                ] as List<FlattenedAst.Node>
         )
     }
 }

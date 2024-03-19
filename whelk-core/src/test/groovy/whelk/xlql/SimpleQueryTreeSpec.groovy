@@ -25,15 +25,14 @@ class SimpleQueryTreeSpec extends Specification {
         expect:
         sqt.tree == new SimpleQueryTree.And(
                 [
-                        new SimpleQueryTree.FreeText(Operator.EQUALS, "AAA"),
-                        new SimpleQueryTree.FreeText(Operator.EQUALS, "BBB"),
+                        new SimpleQueryTree.FreeText(Operator.EQUALS, "AAA BBB"),
                         new SimpleQueryTree.Or(
                                 [
                                         new SimpleQueryTree.FreeText(Operator.EQUALS, "CCC"),
                                         new SimpleQueryTree.FreeText(Operator.EQUALS, "DDD")
                                 ]
                         )
-                ]
+                ] as List<SimpleQueryTree.Node>
         )
     }
 
@@ -45,8 +44,8 @@ class SimpleQueryTreeSpec extends Specification {
         sqt.tree == new SimpleQueryTree.And(
                 [
                         new SimpleQueryTree.PropertyValue("subject", ["subject"], Operator.EQUALS, "lcsh:Physics"),
-                        new SimpleQueryTree.FreeText(Operator.EQUALS, "svarta hål")
-                ]
+                        new SimpleQueryTree.FreeText(Operator.EQUALS, "\"svarta hål\"")
+                ] as List<SimpleQueryTree.Node>
         )
     }
 
@@ -57,9 +56,9 @@ class SimpleQueryTreeSpec extends Specification {
         expect:
         sqt.tree == new SimpleQueryTree.Or(
                 [
-                        new SimpleQueryTree.PropertyValue("originDate", ["originDate"] ,Operator.LESS_THAN, "2023"),
-                        new SimpleQueryTree.FreeText(Operator.EQUALS, "svarta hål")
-                ]
+                        new SimpleQueryTree.PropertyValue("originDate", ["originDate"] , Operator.LESS_THAN, "2023"),
+                        new SimpleQueryTree.FreeText(Operator.EQUALS, "\"svarta hål\"")
+                ] as List<SimpleQueryTree.Node>
         )
     }
 
@@ -108,7 +107,7 @@ class SimpleQueryTreeSpec extends Specification {
         SimpleQueryTree sqt = getTree(query)
 
         expect:
-        sqt.tree == new SimpleQueryTree.PropertyValue("@type", ["@type"], Operator.EQUALS, "Print")
+        sqt.tree == new SimpleQueryTree.PropertyValue("rdf:type", ["rdf:type"], Operator.EQUALS, "Print")
     }
 
     def "unrecognized type"() {
