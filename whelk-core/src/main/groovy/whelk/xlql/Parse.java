@@ -208,6 +208,8 @@ public class Parse
                             wholeListOnStack = false;
                         if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals("="))
                             wholeListOnStack = false;
+                        if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals("("))
+                            wholeListOnStack = false;
                         if (lookahead.name() == Lex.TokenName.KEYWORD && lookahead.value().equals("not"))
                             wholeListOnStack = false;
                         if (lookahead.name() == Lex.TokenName.KEYWORD && lookahead.value().equals("and"))
