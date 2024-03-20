@@ -63,10 +63,9 @@
       "1": "marc:JurisdictionName",
       "2": "marc:NameInDirectOrder"
     },
-
+    "NOTE-TypeOfRecordType": "Position b OBSOLETE since 1995, TODO:warn/fallback?",
     "TypeOfRecordType": {
       "a": "Text",
-      "b": "ArchivalUnit",
       "c": "NotatedMusic",
       "d": "ManuscriptNotatedMusic",
       "e": "Cartography",
@@ -315,12 +314,9 @@
         "property": "issuanceType"
       },
       "[8]": {
-        "aboutEntity": "?record",
-        "link": "marc:typeOfControl",
-        "uriTemplate": "https://id.kb.se/marc/TypeOfControlType-{_}",
-        "matchUriToken": "^[a]$",
-        "fixedDefault": " ",
-        "TODO": "BF2: I - rdf:type - Archival"
+        "NOTE": "Type of control - # - No specified type",
+        "ignored": true,
+        "fixedDefault": " "
       },
       "[9]": {
         "NOTE": "Character coding scheme - a - UCS/Unicode",
