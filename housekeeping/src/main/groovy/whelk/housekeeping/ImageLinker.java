@@ -1,6 +1,7 @@
 package whelk.housekeeping;
 
 import whelk.Whelk;
+import whelk.component.PostgreSQLComponent;
 
 import java.sql.*;
 import java.time.Instant;
@@ -8,6 +9,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
@@ -80,6 +82,23 @@ public class ImageLinker extends HouseKeeper {
                         linkedNewImagesUpTo = created;
 
                     System.err.println("New image: " + imageUri + " on: " + indirectIDsObjects + " / on-direct : " + imageOfUriObjects);
+
+                    List<String> recordsThatShouldLinkToImage = new ArrayList<>();
+                    for (Object imageOf : imageOfUriObjects) {
+                        if (imageOf instanceof Map imageOfMap) {
+                            recordsThatShouldLinkToImage.add( (String) imageOfMap.get("@id") );
+                        }
+                    }
+                    for (Object indirectID : indirectIDsObjects) {
+                        if (indirectID instanceof Map indirectIDmap) {
+                            if (indirectIDmap.get("@type").equals("ISBN")) {
+                                List<String> uris = getUrisByISBN((String) indirectIDmap.get("value"));
+                                recordsThatShouldLinkToImage.addAll(uris);
+                            }
+                        }
+                    }
+
+                    System.err.println("Should link the following to " + imageUri + " : " + recordsThatShouldLinkToImage);
                 }
             }
         } catch (Throwable e) {
@@ -93,6 +112,36 @@ public class ImageLinker extends HouseKeeper {
             newState.put(IMAGES_STATE_KEY, linkedNewImagesUpTo.atOffset(ZoneOffset.UTC).toString());
             whelk.getStorage().putState(getName(), newState);
         }*/
+    }
+
+    private List<String> getUrisByISBN(String isbn) {
+        List<String> result = new ArrayList<>();
+
+        String getByISBNsql = """
+                SELECT
+                  data#>>'{@graph,1,@id}' as uri
+                FROM
+                  lddb
+                WHERE
+                  deleted = false AND
+                  collection = 'bib' AND
+                  data#>'{@graph,1,identifiedBy}' @> ?
+                """.stripIndent();
+
+        try(PostgreSQLComponent.ConnectionContext ignored = new PostgreSQLComponent.ConnectionContext(whelk.getStorage().connectionContextTL)) {
+            try (PreparedStatement statement = whelk.getStorage().getMyConnection().prepareStatement(getByISBNsql)) {
+                statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + isbn + "\"}]", java.sql.Types.OTHER);
+                ResultSet resultSet = statement.executeQuery();
+                while (resultSet.next()) {
+                    result.add( resultSet.getString("uri") );
+                }
+            }
+        } catch (Throwable e) {
+            status = "Failed with:\n" + e + "\nat:\n" + e.getStackTrace().toString();
+            throw new RuntimeException(e);
+        }
+
+        return result;
     }
 
     private void linkImage(String linkingRecordUri, String imageUri) {
