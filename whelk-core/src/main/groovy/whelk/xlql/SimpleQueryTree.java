@@ -4,6 +4,7 @@ import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class SimpleQueryTree {
     public sealed interface Node permits And, Or, PropertyValue, FreeText {
@@ -118,5 +119,26 @@ public class SimpleQueryTree {
                 return tree;
             }
         }
+    }
+
+    public Set<String> collectGivenTypes() {
+        return collectGivenTypes(tree, new HashSet<>());
+    }
+
+    private static Set<String> collectGivenTypes(SimpleQueryTree.Node sqtNode, Set<String> types) {
+        switch (sqtNode) {
+            case And and -> and.conjuncts().forEach(c -> collectGivenTypes(c, types));
+            case Or or -> or.disjuncts().forEach(d -> collectGivenTypes(d, types));
+            case PropertyValue pv -> {
+                if (List.of("rdf:type").equals(pv.propertyPath())) {
+                    types.add(pv.value());
+                }
+            }
+            case FreeText ignored -> {
+                // Nothing to do here
+            }
+        }
+
+        return types;
     }
 }

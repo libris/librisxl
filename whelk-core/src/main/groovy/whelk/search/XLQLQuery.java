@@ -22,6 +22,10 @@ public class XLQLQuery {
     private final ESQueryLensBoost lensBoost;
     private final Set<String> esNestedFields;
 
+    private Map<String, String> pathToProperty = new HashMap<>();
+
+    private static final String FILTERED_AGG = "a";
+
     public XLQLQuery(Whelk whelk) {
         this.whelk = whelk;
         this.disambiguate = new Disambiguate(whelk);
@@ -31,6 +35,10 @@ public class XLQLQuery {
 
     public QueryTree getQueryTree(SimpleQueryTree sqt) {
         return new QueryTree(sqt, disambiguate);
+    }
+
+    public QueryTree getQueryTree(SimpleQueryTree sqt, Disambiguate.OutsetType outsetType) {
+        return new QueryTree(sqt, disambiguate, outsetType);
     }
 
     public SimpleQueryTree getSimpleQueryTree(String queryString) throws InvalidQueryException {
@@ -449,5 +457,58 @@ public class XLQLQuery {
         });
 
         return fields;
+    }
+
+    public Map<String, Object> getAggQuery(Map<?, ?> statsRepr, Disambiguate.OutsetType outsetType) {
+        if (statsRepr.isEmpty()) {
+            return Map.of(JsonLd.TYPE_KEY,
+                    Map.of("terms",
+                            Map.of("field", JsonLd.TYPE_KEY)));
+        }
+        return buildAggQuery(statsRepr, outsetType);
+    }
+
+    private Map<String, Object> buildAggQuery(Map<?, ?> tree, Disambiguate.OutsetType outsetType) {
+        return buildAggQuery(tree, outsetType, 10);
+    }
+
+    private Map<String, Object> buildAggQuery(Map<?, ?> tree, Disambiguate.OutsetType outsetType, int defaultSize) {
+        Map<String, Object> query = new LinkedHashMap<>();
+
+        tree.keySet()
+                .stream()
+                .map(String.class::cast)
+                .forEach(key -> {
+                    var value = (Map<?, ?>) tree.get(key);
+
+                    String sort = "key".equals(value.get("sort")) ? "_key" : "_count";
+                    String sortOrder = "asc".equals(value.get("sort")) ? "asc" : "desc";
+
+                    List<String> path = Arrays.asList(key.split("\\."));
+
+                    List<String> altPaths = new Path(path).expand(path.getFirst(), disambiguate, outsetType)
+                            .stream()
+                            .map(Path::stringify)
+                            .toList();
+
+                    int size = Optional.ofNullable((Integer) value.get("size")).orElse(defaultSize);
+
+                    for (String p : altPaths) {
+                        var aggs = Map.of(FILTERED_AGG,
+                                        Map.of("terms",
+                                                Map.of("field", p,
+                                                        "size", size,
+                                                        "order", Map.of(sort, sortOrder))));
+                        var filter = mustWrap(Collections.emptyList());
+                        query.put(p, Map.of("aggs", aggs, "filter", filter));
+                        pathToProperty.put(p, key);
+                    }
+                });
+
+        return query;
+    }
+
+    public Disambiguate.OutsetType getOutsetType(SimpleQueryTree sqt) {
+        return disambiguate.decideOutset(sqt);
     }
 }

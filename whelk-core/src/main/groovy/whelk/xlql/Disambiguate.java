@@ -4,8 +4,8 @@ import whelk.JsonLd;
 import whelk.Whelk;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-// TODO: Disambiguate values too (not only properties)
 public class Disambiguate {
     public record PropertyChain(List<String> path, List<DefaultField> defaultFields) {
     }
@@ -80,7 +80,17 @@ public class Disambiguate {
         return domainByProperty.getOrDefault(property, UNKNOWN_DOMAIN);
     }
 
-    public OutsetType getOutsetType(String type) {
+    public Disambiguate.OutsetType decideOutset(SimpleQueryTree sqt) {
+        Set<Disambiguate.OutsetType> outset = sqt.collectGivenTypes()
+                .stream()
+                .map(this::getOutsetType)
+                .collect(Collectors.toSet());
+
+        // TODO: Review this (for now default to Resource)
+        return outset.size() == 1 ? outset.stream().findFirst().get() : Disambiguate.OutsetType.RESOURCE;
+    }
+
+    private OutsetType getOutsetType(String type) {
         if (workTypes.contains(type)) {
             return OutsetType.WORK;
         }
@@ -126,7 +136,7 @@ public class Disambiguate {
             // TODO: All short forms should be marked with :category :shortHand?
             //  Not the case at the moment, therefore isShorthand doesn't apply
 //            if (!isShorthand(termDefinition)) {
-            if (!termDefinition.containsKey("propertyChainAxiom")) {
+            if (termDefinition == null || !termDefinition.containsKey("propertyChainAxiom")) {
                 extendedPath.add(p);
                 continue;
             }
