@@ -1,5 +1,9 @@
 package whelk.housekeeping;
 
+import org.apache.jena.atlas.logging.Log;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import whelk.Document;
 import whelk.Whelk;
 import whelk.component.PostgreSQLComponent;
 
@@ -21,6 +25,7 @@ public class ImageLinker extends HouseKeeper {
     private final String INSTANCES_STATE_KEY = "linkedNewInstancesUpTo";
     private String status = "OK";
     private final Whelk whelk;
+    private final Logger logger = LogManager.getLogger(this.getClass());
 
     public ImageLinker(Whelk whelk) {
         this.whelk = whelk;
@@ -238,6 +243,14 @@ public class ImageLinker extends HouseKeeper {
     }
 
     private void linkImage(String instanceUri, String imageUri) {
-        System.err.println("Should link " + instanceUri + " to " + imageUri);
+        String instanceId = whelk.getStorage().getSystemIdByIri(instanceUri);
+
+        System.err.println("About to link: " + instanceId + "=" + instanceUri + " to image " + imageUri);
+
+        whelk.storeAtomicUpdate(instanceId, true, false, "ImageLinker", "SEK",
+                (Document doc) -> {
+                    doc.addImage(imageUri);
+                });
+        logger.info("Linked " + instanceId + " to image " + imageUri);
     }
 }
