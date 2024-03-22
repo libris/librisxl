@@ -42,7 +42,7 @@ class SiteSearch {
             }
         }
 
-        var appIds = [whelk.applicationId]
+        var appIds = [whelk.applicationId, "https://beta.libris.kb.se/"]
         appIds += whelk.namedApplications.keySet() as List<String>
 
         appIds.each { appId ->
@@ -111,6 +111,7 @@ class SiteSearch {
             }
             return toDataIndexDescription(appsIndex["${activeSite}data" as String], queryParameters)
         } else if ("_q" in queryParameters) {
+            searchSettings = searchStatsReprs["https://beta.libris.kb.se/"]
             if (!queryParameters['_statsrepr'] && searchSettings['statsfind']) {
                 queryParameters.put('_statsrepr', [mapper.writeValueAsString(searchSettings['statsfind'])] as String[])
             }

@@ -22,9 +22,10 @@ public class XLQLQuery {
     private final ESQueryLensBoost lensBoost;
     private final Set<String> esNestedFields;
 
-    private Map<String, String> pathToProperty = new HashMap<>();
+    private Map<String, String> expandedToOrigPath = new HashMap<>();
 
     private static final String FILTERED_AGG = "a";
+    private static final int DEFAULT_BUCKET_SIZE = 10;
 
     public XLQLQuery(Whelk whelk) {
         this.whelk = whelk;
@@ -468,44 +469,156 @@ public class XLQLQuery {
         return buildAggQuery(statsRepr, outsetType);
     }
 
-    private Map<String, Object> buildAggQuery(Map<?, ?> tree, Disambiguate.OutsetType outsetType) {
-        return buildAggQuery(tree, outsetType, 10);
-    }
-
-    private Map<String, Object> buildAggQuery(Map<?, ?> tree, Disambiguate.OutsetType outsetType, int defaultSize) {
+    private Map<String, Object> buildAggQuery(Map<?, ?> statsRepr, Disambiguate.OutsetType outsetType) {
         Map<String, Object> query = new LinkedHashMap<>();
 
-        tree.keySet()
-                .stream()
-                .map(String.class::cast)
-                .forEach(key -> {
-                    var value = (Map<?, ?>) tree.get(key);
+        for (var entry : statsRepr.entrySet()) {
+            var key = (String) entry.getKey();
+            var value = (Map<?, ?>) entry.getValue();
 
-                    String sort = "key".equals(value.get("sort")) ? "_key" : "_count";
-                    String sortOrder = "asc".equals(value.get("sort")) ? "asc" : "desc";
+            String sort = "key".equals(value.get("sort")) ? "_key" : "_count";
+            String sortOrder = "asc".equals(value.get("sort")) ? "asc" : "desc";
 
-                    List<String> path = Arrays.asList(key.split("\\."));
+            List<String> path = Arrays.asList(key.split("\\."));
+            String property = path.getFirst();
 
-                    List<String> altPaths = new Path(path).expand(path.getFirst(), disambiguate, outsetType)
-                            .stream()
-                            .map(Path::stringify)
-                            .toList();
+            List<String> altPaths = new Path(path).expand(property, disambiguate, outsetType)
+                    .stream()
+                    .map(Path::stringify)
+                    .toList();
 
-                    int size = Optional.ofNullable((Integer) value.get("size")).orElse(defaultSize);
+            int size = Optional.ofNullable((Integer) value.get("size")).orElse(DEFAULT_BUCKET_SIZE);
 
-                    for (String p : altPaths) {
-                        var aggs = Map.of(FILTERED_AGG,
-                                        Map.of("terms",
-                                                Map.of("field", p,
-                                                        "size", size,
-                                                        "order", Map.of(sort, sortOrder))));
-                        var filter = mustWrap(Collections.emptyList());
-                        query.put(p, Map.of("aggs", aggs, "filter", filter));
-                        pathToProperty.put(p, key);
-                    }
-                });
+            for (String p : altPaths) {
+                var aggs = Map.of(FILTERED_AGG,
+                        Map.of("terms",
+                                Map.of("field", p,
+                                        "size", size,
+                                        "order", Map.of(sort, sortOrder))));
+                var filter = mustWrap(Collections.emptyList());
+                query.put(p, Map.of("aggs", aggs, "filter", filter));
+                expandedToOrigPath.put(p, key);
+            }
+        }
 
         return query;
+    }
+
+    public Map<String, Object> getStats(Map<String, Object> esResponse, Map<String, Object> statsRepr, SimpleQueryTree sqt, List<String> urlParams) {
+        var aggs = collectAggs(esResponse, statsRepr);
+        return buildStats(aggs, sqt, urlParams);
+    }
+
+    private Map<String, Object> buildStats(Map<String, Map<String, Integer>> aggs, SimpleQueryTree sqt, List<String> urlParams) {
+        var sliceByDimension = new LinkedHashMap<>();
+
+        aggs.forEach((property, buckets) -> {
+            var sliceNode = new LinkedHashMap<>();
+            // TODO: dimension/dimensionChain redundant
+            sliceNode.put("dimension", property);
+            sliceNode.put("dimensionChain", List.of(property));
+            sliceNode.put("observation", getObservations(property, buckets, sqt, urlParams));
+            sliceByDimension.put(property, sliceNode);
+        });
+
+        return Map.of(JsonLd.ID_KEY, "#stats",
+                "sliceByDimension", sliceByDimension);
+    }
+
+    private List<Map<String, Object>> getObservations(String property, Map<String, Integer> buckets, SimpleQueryTree sqt, List<String> urlParams) {
+        List<Map<String, Object>> observations = new ArrayList<>();
+
+        String urlTail = urlParams.stream()
+                .map(p -> "&" + p)
+                .collect(Collectors.joining(""));
+
+        buckets.forEach((value, count) -> {
+            Map<String, Object> observation = new LinkedHashMap<>();
+            observation.put("totalItems", count);
+            String url = "/find?_q=" + treeToQueryString(addSimpleFilterToTree(sqt, property, value)) + urlTail;
+            observation.put("view", Map.of(JsonLd.ID_KEY, url));
+            observation.put("_selected", false); // TODO: get selected
+            observation.put("object", lookUp(value).orElse(value));
+            observations.add(observation);
+        });
+
+        return observations;
+    }
+
+    private SimpleQueryTree.Node addSimpleFilterToTree(SimpleQueryTree sqt, String property, String value) {
+        SimpleQueryTree.PropertyValue newNode = new SimpleQueryTree.PropertyValue(property, List.of(property), Operator.EQUALS, value);
+        return new SimpleQueryTree.And(List.of(sqt.tree, newNode));
+    }
+
+    // Problem: Same value in different fields will be counted twice, e.g. contribution.agent + instanceOf.contribution.agent
+    private Map<String, Map<String, Integer>> collectAggs(Map<String, Object> esResponse, Map<String, Object> statsRepr) {
+        Map<String, Map<String, Integer>> newAggs = new LinkedHashMap<>();
+
+        if (esResponse.containsKey("aggregations")) {
+            var aggs = (Map<?, ?>) esResponse.get("aggregations");
+            Map<String, Integer> propertyToBucketSize = new HashMap<>();
+
+            for (var entry : aggs.entrySet()) {
+                var path = (String) entry.getKey();
+                var value = (Map<?, ?>) entry.getValue();
+
+                var filteredAgg = (Map<?, ?>) value.get(FILTERED_AGG);
+                if (filteredAgg == null) {
+                    continue;
+                }
+
+                var origPath = expandedToOrigPath.get(path);
+                var property = origPath.replaceFirst("\\.@id$", "");;
+
+                if (newAggs.containsKey(property)) {
+                    Map<String, Integer> buckets = newAggs.get(property);
+                    ((List<?>) filteredAgg.get("buckets"))
+                            .stream()
+                            .map(Map.class::cast)
+                            .forEach(b -> {
+                                var val = (String) b.get("key");
+                                var count = (Integer) b.get("doc_count");
+                                if (buckets.containsKey(val)) {
+                                    buckets.put(val, buckets.get(val) + count);
+                                } else {
+                                    buckets.put(val, count);
+                                }
+                            });
+                } else {
+                    Map<String, Integer> buckets = new LinkedHashMap<>();
+                    ((List<?>) filteredAgg.get("buckets"))
+                            .stream()
+                            .map(Map.class::cast)
+                            .forEach(b -> buckets.put((String) b.get("key"), (Integer) b.get("doc_count")));
+                    newAggs.put(property, buckets);
+                }
+
+                int size = Optional.ofNullable((Integer) ((Map<?, ?>) statsRepr.get(origPath)).get("size"))
+                        .orElse(DEFAULT_BUCKET_SIZE);
+                propertyToBucketSize.put(property, size);
+            }
+
+            for (var entry : newAggs.entrySet()) {
+                String property = entry.getKey();
+
+                Map<String, Integer> newBuckets = new LinkedHashMap<>();
+
+                List<Map.Entry<String, Integer>> sorted = entry.getValue()
+                        .entrySet()
+                        .stream()
+                        .sorted(Map.Entry.comparingByValue())
+                        .toList()
+                        .reversed();
+
+                int bucketSize = propertyToBucketSize.get(property);
+                (bucketSize >= sorted.size() ? sorted : sorted.subList(0, bucketSize))
+                        .forEach(b -> newBuckets.put(b.getKey(), b.getValue()));
+
+                newAggs.put(property, newBuckets);
+            }
+        }
+
+        return newAggs;
     }
 
     public Disambiguate.OutsetType getOutsetType(SimpleQueryTree sqt) {

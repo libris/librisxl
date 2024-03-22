@@ -43,23 +43,16 @@ public class SearchUtils2 {
     }
 
     class Query {
-        //        static Set<String> reservedParameters = getReservedParameters();
         private final int limit;
         private final int offset;
         private final Optional<String> sortBy;
-        private final Map<?, ?> statsRepr;
+        private final Map<String, Object> statsRepr;
         private final boolean debug;
         private final String queryString;
         private final SimpleQueryTree simpleQueryTree;
         private final Disambiguate.OutsetType outsetType;
         private final QueryTree queryTree;
         private final Map<String, Object> esQueryDsl;
-//    Optional<List> predicates;
-//    Optional<String> object;
-//    Optional<String> value;
-//    Optional<String> lens;
-//    Optional<String> addStats;
-//    Optional<String> suggest;
 
         Query(Map<String, String[]> queryParameters) throws InvalidQueryException, IOException {
             this.queryString = queryParameters.get("_q")[0];
@@ -98,7 +91,7 @@ public class SearchUtils2 {
             if (esResponse.containsKey("items")) {
                 view.put("items", esResponse.get("items"));
             }
-            // TODO: Stats?
+            view.put("stats", xlqlQuery.getStats(esResponse, statsRepr, simpleQueryTree, makeNonQueryParams(0)));
             if (debug) {
                 view.put("_debug", Map.of("esQuery", esQueryDsl));
             }
@@ -158,6 +151,7 @@ public class SearchUtils2 {
         private static String makeParam(String key, String value) {
             return String.format("%s=%s", escapeQueryParam(key), escapeQueryParam(value));
         }
+
         private static String makeParam(String key, int value) {
             return makeParam(key, "" + value);
         }
@@ -226,12 +220,21 @@ public class SearchUtils2 {
             }
         }
 
-        private static Map<?,?> getStatsRepr(Map<String, String[]> queryParameters) throws IOException {
+        private static Map<String, Object> getStatsRepr(Map<String, String[]> queryParameters) throws IOException {
+            Map<String, Object> statsRepr = new LinkedHashMap<>();
+
             var statsJson = Optional.ofNullable(queryParameters.get("_statsrepr"))
                     .map(x -> x[0])
                     .orElse("{}");
 
-            return mapper.readValue(statsJson, Map.class);
+
+            // TODO: Replace ESQuery.buildStatsReprFromSliceSpec() with something more fitting
+            Map<?, ?> statsMap = mapper.readValue(statsJson, LinkedHashMap.class);
+            for (var entry : statsMap.entrySet()) {
+                statsRepr.put((String) entry.getKey(), entry.getValue());
+            }
+
+            return statsRepr;
         }
     }
 
