@@ -57,7 +57,7 @@ public class ImageLinker extends HouseKeeper {
 
         String newImagesSql = """
                 SELECT
-                  data#>'{@graph,1,@id}' as instanceUri, data#>>'{@graph,1,identifiedBy}' as identifiedBy, created
+                  data#>>'{@graph,1,@id}' as instanceUri, data#>>'{@graph,1,identifiedBy}' as identifiedBy, created
                 FROM
                   lddb
                 WHERE
@@ -243,9 +243,10 @@ public class ImageLinker extends HouseKeeper {
     }
 
     private void linkImage(String instanceUri, String imageUri) {
-        String instanceId = whelk.getStorage().getSystemIdByIri(instanceUri);
+        if (instanceUri.startsWith("/")) // A relative URI
+            instanceUri = Document.getBASE_URI().resolve(instanceUri).toString();
 
-        System.err.println("About to link: " + instanceId + "=" + instanceUri + " to image " + imageUri);
+        String instanceId = whelk.getStorage().getSystemIdByIri(instanceUri);
 
         whelk.storeAtomicUpdate(instanceId, true, false, "ImageLinker", "SEK",
                 (Document doc) -> {
