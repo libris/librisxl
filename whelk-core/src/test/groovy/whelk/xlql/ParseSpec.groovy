@@ -15,6 +15,16 @@ class ParseSpec extends Specification {
         parseTree != null
     }
 
+    def "implicit and group"() {
+        given:
+        def input = "AAA BBB (CCC or DDD)"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+
+        expect:
+        parseTree != null
+    }
+
     def "parse negative"() {
         given:
         def input = "!AAA"

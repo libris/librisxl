@@ -271,7 +271,7 @@ class Crud extends HttpServlet {
     }
 
     private static Map frameRecord(Document document) {
-        return JsonLd.frame(document.getCompleteId(), document.data)
+        return JsonLd.frame(document.getCompleteId(), document.data, 3)
     }
 
     private static Map frameThing(Document document) {

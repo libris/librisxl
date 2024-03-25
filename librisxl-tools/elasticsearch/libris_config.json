@@ -191,49 +191,6 @@
                     }
                 }
             },
-            "publication": {
-                "properties": {
-                    "year": {
-                        "fields": {
-                            "keyword": {
-                                "index": true,
-                                "type": "keyword"
-                            }
-                        },
-                        "analyzer": "numeric_extractor",
-                        "index": true,
-                        "type": "text",
-                        "fielddata": true,
-                        "copy_to": "_all"
-                    },
-                    "startYear": {
-                        "fields": {
-                            "keyword": {
-                                "index": true,
-                                "type": "keyword"
-                            }
-                        },
-                        "analyzer": "numeric_extractor",
-                        "index": true,
-                        "type": "text",
-                        "fielddata": true,
-                        "copy_to": "_all"
-                    },
-                    "endYear": {
-                        "fields": {
-                            "keyword": {
-                                "index": true,
-                                "type": "keyword"
-                            }
-                        },
-                        "analyzer": "numeric_extractor",
-                        "index": true,
-                        "type": "text",
-                        "fielddata": true,
-                        "copy_to": "_all"
-                    }
-                }
-            },
             "hasTitle": {
                 "type": "nested",
                 "include_in_parent": true,
@@ -354,6 +311,24 @@
                     "mapping": {
                         "index": true,
                         "type": "text",
+                        "copy_to": "_all"
+                    }
+                }
+            },
+            {
+                "year_template": {
+                    "match": ["year", "startYear", "endYear"],
+                    "mapping": {
+                        "fields": {
+                            "keyword": {
+                                "index": true,
+                                "type": "keyword"
+                            }
+                        },
+                        "analyzer": "numeric_extractor",
+                        "index": true,
+                        "type": "text",
+                        "fielddata": true,
                         "copy_to": "_all"
                     }
                 }

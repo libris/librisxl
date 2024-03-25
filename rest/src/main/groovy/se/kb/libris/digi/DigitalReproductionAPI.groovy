@@ -4,6 +4,7 @@ import groovy.transform.MapConstructor
 import groovy.util.logging.Log4j2 as Log
 import org.codehaus.jackson.JsonParseException
 import org.codehaus.jackson.map.ObjectMapper
+import whelk.Configuration
 
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServlet
@@ -100,7 +101,7 @@ class DigitalReproductionAPI extends HttpServlet {
                 .findAll{ it.toLowerCase() in FORWARD_HEADERS }
                 .collectEntries { [(it) : request.getHeader(it as String)] }
 
-        def service = new ReproductionService(xl : new XL(headers : forwardHeaders, apiLocation: getXlAPI(request)))
+        def service = new ReproductionService(xl : new XL(headers : forwardHeaders, apiLocation: getXlAPI()))
 
         try {
             boolean extractWork = !Boolean.parseBoolean(request.getParameter("dont-extract-work"))
@@ -177,12 +178,9 @@ class DigitalReproductionAPI extends HttpServlet {
         mapper.writeValue(response.getOutputStream(), ['code': code, 'msg' : msg ?: ''])
     }
 
-    static String getXlAPI(HttpServletRequest request) {
+    static String getXlAPI() {
         //FIXME
-        int port = request.getServerPort()
-        if (port == 443) {
-            port = 8080
-        }
+        int port = Configuration.getHttpPort()
         "http://localhost:${port}/"
     }
 }
