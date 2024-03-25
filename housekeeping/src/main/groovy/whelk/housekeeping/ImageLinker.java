@@ -77,23 +77,23 @@ public class ImageLinker extends HouseKeeper {
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
                     Instant created = resultSet.getTimestamp("created").toInstant();
+                    if (created.isAfter(linkedNewInstancesUpTo))
+                        linkedNewInstancesUpTo = created;
                     String instanceUri = resultSet.getString("instanceUri");
                     String identifiedByString = resultSet.getString("identifiedBy");
 
-                    List identifiedByObject = mapper.readValue(identifiedByString, List.class);
-
                     List<String> imagesToLink = new ArrayList<>();
-                    for (Object indirectID : identifiedByObject) {
-                        if (indirectID instanceof Map identifiedByMap) {
-                            if (identifiedByMap.get("@type").equals("ISBN")) {
-                                List<String> uris = getImagesByISBN((String) identifiedByMap.get("value"));
-                                imagesToLink.addAll(uris);
+                    if (identifiedByString != null) {
+                        List identifiedByObject = mapper.readValue(identifiedByString, List.class);
+                        for (Object indirectID : identifiedByObject) {
+                            if (indirectID instanceof Map identifiedByMap) {
+                                if (identifiedByMap.get("@type").equals("ISBN")) {
+                                    List<String> uris = getImagesByISBN((String) identifiedByMap.get("value"));
+                                    imagesToLink.addAll(uris);
+                                }
                             }
                         }
                     }
-
-                    if (created.isAfter(linkedNewInstancesUpTo))
-                        linkedNewInstancesUpTo = created;
 
                     for (String imageUri : imagesToLink) {
                         linkImage(instanceUri, imageUri);
@@ -145,27 +145,31 @@ public class ImageLinker extends HouseKeeper {
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
                     Instant created = resultSet.getTimestamp("created").toInstant();
+                    if (created.isAfter(linkedNewImagesUpTo))
+                        linkedNewImagesUpTo = created;
+
                     String imageUri = resultSet.getString("imageUri");
                     String imageOfUriString = resultSet.getString("imageOf");
                     String indirectIDsString = resultSet.getString("indirectlyIdentifiedBy");
 
-                    List imageOfUriObjects = mapper.readValue(imageOfUriString, List.class);
-                    List indirectIDsObjects = mapper.readValue(indirectIDsString, List.class);
-
-                    if (created.isAfter(linkedNewImagesUpTo))
-                        linkedNewImagesUpTo = created;
-
                     List<String> instancesThatShouldLinkToImage = new ArrayList<>();
-                    for (Object imageOf : imageOfUriObjects) {
-                        if (imageOf instanceof Map imageOfMap) {
-                            instancesThatShouldLinkToImage.add( (String) imageOfMap.get("@id") );
+                    if (imageOfUriString != null) {
+                        List imageOfUriObjects = mapper.readValue(imageOfUriString, List.class);
+                        for (Object imageOf : imageOfUriObjects) {
+                            if (imageOf instanceof Map imageOfMap) {
+                                instancesThatShouldLinkToImage.add( (String) imageOfMap.get("@id") );
+                            }
                         }
                     }
-                    for (Object indirectID : indirectIDsObjects) {
-                        if (indirectID instanceof Map indirectIDmap) {
-                            if (indirectIDmap.get("@type").equals("ISBN")) {
-                                List<String> uris = getInstancesByISBN((String) indirectIDmap.get("value"));
-                                instancesThatShouldLinkToImage.addAll(uris);
+
+                    if (indirectIDsString != null) {
+                        List indirectIDsObjects = mapper.readValue(indirectIDsString, List.class);
+                        for (Object indirectID : indirectIDsObjects) {
+                            if (indirectID instanceof Map indirectIDmap) {
+                                if (indirectIDmap.get("@type").equals("ISBN")) {
+                                    List<String> uris = getInstancesByISBN((String) indirectIDmap.get("value"));
+                                    instancesThatShouldLinkToImage.addAll(uris);
+                                }
                             }
                         }
                     }
