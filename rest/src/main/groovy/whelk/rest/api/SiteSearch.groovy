@@ -15,6 +15,7 @@ class SiteSearch {
 
     Whelk whelk
     SearchUtils search
+    SearchUtils2 search2
 
     Map<String, Map> appsIndex = [:]
     Map<String, String> siteAlias = [:]
@@ -23,6 +24,7 @@ class SiteSearch {
     SiteSearch(Whelk whelk) {
         this.whelk = whelk
         search = new SearchUtils(whelk)
+        search2 = new SearchUtils2(whelk)
         setupApplicationSearchData()
     }
 
@@ -108,6 +110,11 @@ class SiteSearch {
                 queryParameters.put('_statsrepr', [mapper.writeValueAsString(searchSettings['statsindex'])] as String[])
             }
             return toDataIndexDescription(appsIndex["${activeSite}data" as String], queryParameters)
+        } else if ("_q" in queryParameters) {
+            if (!queryParameters['_statsrepr'] && searchSettings['statsfind']) {
+                queryParameters.put('_statsrepr', [mapper.writeValueAsString(searchSettings['statsfind'])] as String[])
+            }
+            return search2.doSearch(queryParameters)
         } else {
             if (!queryParameters['_statsrepr'] && searchSettings['statsfind']) {
                 queryParameters.put('_statsrepr', [mapper.writeValueAsString(searchSettings['statsfind'])] as String[])

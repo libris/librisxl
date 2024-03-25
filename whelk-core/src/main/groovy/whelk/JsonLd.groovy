@@ -16,47 +16,47 @@ import java.util.regex.Matcher
 @CompileStatic
 class JsonLd {
 
-    static final String GRAPH_KEY = "@graph"
-    static final String CONTEXT_KEY = "@context"
-    static final String VOCAB_KEY = "@vocab"
-    static final String ID_KEY = "@id"
-    static final String TYPE_KEY = "@type"
-    static final String VALUE_KEY = "@value"
-    static final String LANGUAGE_KEY = "@language"
-    static final String CONTAINER_KEY = "@container"
-    static final String SET_KEY = "@set"
-    static final String LIST_KEY = "@list"
-    static final String REVERSE_KEY = "@reverse"
+    public static final String GRAPH_KEY = "@graph"
+    public static final String CONTEXT_KEY = "@context"
+    public static final String VOCAB_KEY = "@vocab"
+    public static final String ID_KEY = "@id"
+    public static final String TYPE_KEY = "@type"
+    public static final String VALUE_KEY = "@value"
+    public static final String LANGUAGE_KEY = "@language"
+    public static final String CONTAINER_KEY = "@container"
+    public static final String SET_KEY = "@set"
+    public static final String LIST_KEY = "@list"
+    public static final String REVERSE_KEY = "@reverse"
     // JSON-LD 1.1
-    static final String PREFIX_KEY = "@prefix"
+    public static final String PREFIX_KEY = "@prefix"
 
-    static final String DISPLAY_KEY = "dataDisplay"
-    static final String THING_KEY = "mainEntity"
-    static final String WORK_KEY = "instanceOf"
-    static final String RECORD_KEY = "meta"
-    static final String CREATED_KEY = "created"
-    static final String MODIFIED_KEY = "modified"
-    static final String RECORD_STATUS_KEY = "recordStatus"
-    static final String NON_JSON_CONTENT_KEY = "content"
-    static final String JSONLD_ALT_ID_KEY = "sameAs"
-    static final String ABOUT_KEY = "mainEntity"
+    public static final String DISPLAY_KEY = "dataDisplay"
+    public static final String THING_KEY = "mainEntity"
+    public static final String WORK_KEY = "instanceOf"
+    public static final String RECORD_KEY = "meta"
+    public static final String CREATED_KEY = "created"
+    public static final String MODIFIED_KEY = "modified"
+    public static final String RECORD_STATUS_KEY = "recordStatus"
+    public static final String NON_JSON_CONTENT_KEY = "content"
+    public static final String JSONLD_ALT_ID_KEY = "sameAs"
+    public static final String ABOUT_KEY = "mainEntity"
 
-    static final String RECORD_TYPE = 'Record'
-    static final String CACHE_RECORD_TYPE = 'CacheRecord'
-    static final String VIRTUAL_RECORD_TYPE = 'VirtualRecord'
+    public static final String RECORD_TYPE = 'Record'
+    public static final String CACHE_RECORD_TYPE = 'CacheRecord'
+    public static final String VIRTUAL_RECORD_TYPE = 'VirtualRecord'
+    
+    public static final String SEARCH_KEY = "_str"
 
-    static final String SEARCH_KEY = "_str"
+    public static final List<String> NS_SEPARATORS = ['#', '/', ':']
 
-    static final List<String> NS_SEPARATORS = ['#', '/', ':']
-
-    static final List<String> NON_DEPENDANT_RELATIONS = ['narrower', 'broader', 'expressionOf', 'related', 'derivedFrom']
-    static final List<String> ALLOW_LINK_TO_DELETED = [
+    public static final List<String> NON_DEPENDANT_RELATIONS = ['narrower', 'broader', 'expressionOf', 'related', 'derivedFrom']
+    public static final List<String> ALLOW_LINK_TO_DELETED = [
         'meta.derivedFrom', 'hasTitle.source',
         /* following are combinations only needed while there are local unlinked works */
          'translationOf.hasTitle.source', 'instanceOf.hasTitle.source', 'instanceOf.translationOf.hasTitle.source']
-    static final String CATEGORY_DEPENDENT = 'dependent'
+    public static final String CATEGORY_DEPENDENT = 'dependent'
 
-    static final Set<String> LD_KEYS
+    public static final Set<String> LD_KEYS
 
     static {
         LD_KEYS = [
@@ -73,17 +73,17 @@ class JsonLd {
         ] as Set
     }
 
-    static final String SUB_PROPERTY_OF = 'subPropertyOf'
-    static final String ALTERNATE_PROPERTIES = 'alternateProperties'
-    static final String RANGE = 'range'
+    public static final String SUB_PROPERTY_OF = 'subPropertyOf'
+    public static final String ALTERNATE_PROPERTIES = 'alternateProperties'
+    public static final String RANGE = 'range'
 
     private static Logger log = LogManager.getLogger(JsonLd.class)
 
-    Map<String, Map> context
-    Map displayData
-    Map vocabIndex
+    public Map<String, Map> context
+    public Map displayData
+    public Map<String, Map> vocabIndex
 
-    List<String> locales
+    public List<String> locales
     private String vocabId
     private Map<String, String> nsToPrefixMap = [:]
     private Map<String, String> prefixToNsMap = [:]
@@ -95,14 +95,14 @@ class JsonLd {
     private Map<String, Set<String>> categories
     private Map<String, Set<String>> inRange
 
-    Map langContainerAlias = [:]
-    Map langContainerAliasInverted
+    public Map langContainerAlias = [:]
+    public Map langContainerAliasInverted
 
     /**
      * This includes terms that are declared as either set or list containers
      * in the context.
      */
-    Set<String> repeatableTerms
+    public Set<String> repeatableTerms
 
     /**
      * Make an instance to encapsulate model driven behaviour.

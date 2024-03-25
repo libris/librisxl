@@ -35,7 +35,7 @@ import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
 class Whelk {
     ThreadGroup indexers = new ThreadGroup("dep-reindex")
     PostgreSQLComponent storage
-    ElasticSearch elastic
+    public ElasticSearch elastic
     SparqlUpdater sparqlUpdater
 
     boolean completeCore = false

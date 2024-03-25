@@ -43,7 +43,7 @@ public class Utils
     {
         try
         {
-            return (String) s_toMarcConverter.convert(document.data, document.getShortId()).get(JsonLd.getNON_JSON_CONTENT_KEY());
+            return (String) s_toMarcConverter.convert(document.data, document.getShortId()).get(JsonLd.NON_JSON_CONTENT_KEY);
         }
         catch (Exception | Error e)
         {
