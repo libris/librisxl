@@ -271,12 +271,16 @@ public class ImageLinker extends HouseKeeper {
 
         String instanceId = whelk.getStorage().getSystemIdByIri(instanceUri);
 
-        whelk.storeAtomicUpdate(instanceId, true, false, "ImageLinker", "SEK",
-                (Document doc) -> {
-                    doc.addImage(imageUri);
-                    doc.setGenerationDate(new Date());
-                    doc.setGenerationProcess("http://id.kb.se/imagelinker");
-                });
-        logger.info("Linked " + instanceId + " to image " + imageUri);
+        if (instanceId != null) {
+            whelk.storeAtomicUpdate(instanceId, true, false, "ImageLinker", "SEK",
+                    (Document doc) -> {
+                        doc.addImage(imageUri);
+                        doc.setGenerationDate(new Date());
+                        doc.setGenerationProcess("http://id.kb.se/imagelinker");
+                    });
+            logger.info("Linked " + instanceId + " to image " + imageUri);
+        } else {
+            logger.warn("No ID for instance uri: " + instanceUri);
+        }
     }
 }
