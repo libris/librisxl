@@ -7,6 +7,8 @@ import whelk.Document;
 import whelk.Whelk;
 import whelk.component.PostgreSQLComponent;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.*;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -14,6 +16,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
@@ -98,7 +101,11 @@ public class ImageLinker extends HouseKeeper {
                 }
             }
         } catch (Throwable e) {
-            status = "Failed with:\n" + e + "\nat:\n" + e.getStackTrace().toString();
+            StringWriter w = new StringWriter();
+            PrintWriter p = new PrintWriter(w);
+            e.printStackTrace(p);
+            String stacktrace = w.toString();
+            status = "Failed with:\n" + e + "\nat:\n" + stacktrace;
             throw new RuntimeException(e);
         }
 
@@ -169,7 +176,11 @@ public class ImageLinker extends HouseKeeper {
                 }
             }
         } catch (Throwable e) {
-            status = "Failed with:\n" + e + "\nat:\n" + e.getStackTrace().toString();
+            StringWriter w = new StringWriter();
+            PrintWriter p = new PrintWriter(w);
+            e.printStackTrace(p);
+            String stacktrace = w.toString();
+            status = "Failed with:\n" + e + "\nat:\n" + stacktrace;
             throw new RuntimeException(e);
         }
 
@@ -203,7 +214,11 @@ public class ImageLinker extends HouseKeeper {
                 }
             }
         } catch (Throwable e) {
-            status = "Failed with:\n" + e + "\nat:\n" + e.getStackTrace().toString();
+            StringWriter w = new StringWriter();
+            PrintWriter p = new PrintWriter(w);
+            e.printStackTrace(p);
+            String stacktrace = w.toString();
+            status = "Failed with:\n" + e + "\nat:\n" + stacktrace;
             throw new RuntimeException(e);
         }
 
@@ -235,7 +250,11 @@ public class ImageLinker extends HouseKeeper {
                 }
             }
         } catch (Throwable e) {
-            status = "Failed with:\n" + e + "\nat:\n" + e.getStackTrace().toString();
+            StringWriter w = new StringWriter();
+            PrintWriter p = new PrintWriter(w);
+            e.printStackTrace(p);
+            String stacktrace = w.toString();
+            status = "Failed with:\n" + e + "\nat:\n" + stacktrace;
             throw new RuntimeException(e);
         }
 
@@ -251,6 +270,8 @@ public class ImageLinker extends HouseKeeper {
         whelk.storeAtomicUpdate(instanceId, true, false, "ImageLinker", "SEK",
                 (Document doc) -> {
                     doc.addImage(imageUri);
+                    doc.setGenerationDate(new Date());
+                    doc.setGenerationProcess("http://id.kb.se/imagelinker");
                 });
         logger.info("Linked " + instanceId + " to image " + imageUri);
     }
