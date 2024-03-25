@@ -26,7 +26,7 @@ public class XLQLQuery {
         this.whelk = whelk;
         this.disambiguate = new Disambiguate(whelk);
         this.lensBoost = new ESQueryLensBoost(whelk.getJsonld());
-        this.esNestedFields = getEsNestedFields(whelk.elastic.getMappings());
+        this.esNestedFields = getEsNestedFields(whelk);
     }
 
     public QueryTree getQueryTree(SimpleQueryTree sqt) {
@@ -430,10 +430,14 @@ public class XLQLQuery {
         return s;
     }
 
-    private Set<String> getEsNestedFields(Map<?, ?> mappings) {
+    private Set<String> getEsNestedFields(Whelk whelk) {
+        if (whelk.elastic == null) {
+            return Collections.emptySet();
+        }
+
         Set<String> fields = new HashSet<>();
 
-        findKey(mappings.get("properties"), "type", (Object v, List<Object> path) -> {
+        findKey(whelk.elastic.getMappings().get("properties"), "type", (Object v, List<Object> path) -> {
             if ("nested".equals(v)) {
                 String field = path.subList(0, path.size() - 1).stream()
                         .filter(Predicate.not("properties"::equals))
