@@ -239,8 +239,6 @@ public class SearchUtils2 {
                     .map(x -> x[0])
                     .orElse("{}");
 
-
-            // TODO: Replace ESQuery.buildStatsReprFromSliceSpec() with something more fitting
             Map<?, ?> statsMap = mapper.readValue(statsJson, LinkedHashMap.class);
             for (var entry : statsMap.entrySet()) {
                 statsRepr.put((String) entry.getKey(), entry.getValue());
