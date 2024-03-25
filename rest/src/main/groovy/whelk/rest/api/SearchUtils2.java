@@ -13,7 +13,6 @@ import whelk.xlql.SimpleQueryTree;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static whelk.util.Jackson.mapper;
 
@@ -40,6 +39,19 @@ public class SearchUtils2 {
         @SuppressWarnings("unchecked")
         var esResponse = (Map<String, Object>) whelk.elastic.query(query.getEsQueryDsl());
         return query.getPartialCollectionView(esResponse);
+    }
+
+    public Map<String, Object> buildStatsReprFromSliceSpec(List<Map<String,Object>> sliceList) {
+        Map<String,Object> statsfind = new LinkedHashMap<>();
+        for (Map<String, Object> slice : sliceList) {
+            String key = (String) ((List<?>) slice.get("dimensionChain")).getFirst();
+            int limit = (Integer) slice.get("itemLimit");
+            var m = Map.of("sort", "value",
+                    "sortOrder", "desc",
+                    "size", limit);
+            statsfind.put(key, m);
+        }
+        return statsfind;
     }
 
     class Query {

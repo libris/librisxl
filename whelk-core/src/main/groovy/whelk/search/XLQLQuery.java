@@ -22,7 +22,7 @@ public class XLQLQuery {
     private final ESQueryLensBoost lensBoost;
     private final Set<String> esNestedFields;
 
-    private Map<String, String> expandedToOrigPath = new HashMap<>();
+    private Map<String, String> expandedPathToProperty = new HashMap<>();
 
     private static final String FILTERED_AGG = "a";
     private static final int DEFAULT_BUCKET_SIZE = 10;
@@ -473,16 +473,19 @@ public class XLQLQuery {
         Map<String, Object> query = new LinkedHashMap<>();
 
         for (var entry : statsRepr.entrySet()) {
-            var key = (String) entry.getKey();
+            var property = (String) entry.getKey();
             var value = (Map<?, ?>) entry.getValue();
 
             String sort = "key".equals(value.get("sort")) ? "_key" : "_count";
             String sortOrder = "asc".equals(value.get("sort")) ? "asc" : "desc";
 
-            List<String> path = Arrays.asList(key.split("\\."));
-            String property = path.getFirst();
+            Path path = new Path(List.of(property));
 
-            List<String> altPaths = new Path(path).expand(property, disambiguate, outsetType)
+            if (disambiguate.isObjectProperty(property) && !"rdf:type".equals(property)) {
+                path.appendId();
+            }
+
+            List<String> altPaths = path.expand(property, disambiguate, outsetType)
                     .stream()
                     .map(Path::stringify)
                     .toList();
@@ -497,57 +500,11 @@ public class XLQLQuery {
                                         "order", Map.of(sort, sortOrder))));
                 var filter = mustWrap(Collections.emptyList());
                 query.put(p, Map.of("aggs", aggs, "filter", filter));
-                expandedToOrigPath.put(p, key);
+                expandedPathToProperty.put(p, property);
             }
         }
 
         return query;
-    }
-
-    public Map<String, Object> getStats(Map<String, Object> esResponse, Map<String, Object> statsRepr, SimpleQueryTree sqt, List<String> urlParams) {
-        var aggs = collectAggs(esResponse, statsRepr);
-        return buildStats(aggs, sqt, urlParams);
-    }
-
-    private Map<String, Object> buildStats(Map<String, Map<String, Integer>> aggs, SimpleQueryTree sqt, List<String> urlParams) {
-        var sliceByDimension = new LinkedHashMap<>();
-
-        aggs.forEach((property, buckets) -> {
-            var sliceNode = new LinkedHashMap<>();
-            // TODO: dimension/dimensionChain redundant
-            sliceNode.put("dimension", property);
-            sliceNode.put("dimensionChain", List.of(property));
-            sliceNode.put("observation", getObservations(property, buckets, sqt, urlParams));
-            sliceByDimension.put(property, sliceNode);
-        });
-
-        return Map.of(JsonLd.ID_KEY, "#stats",
-                "sliceByDimension", sliceByDimension);
-    }
-
-    private List<Map<String, Object>> getObservations(String property, Map<String, Integer> buckets, SimpleQueryTree sqt, List<String> urlParams) {
-        List<Map<String, Object>> observations = new ArrayList<>();
-
-        String urlTail = urlParams.stream()
-                .map(p -> "&" + p)
-                .collect(Collectors.joining(""));
-
-        buckets.forEach((value, count) -> {
-            Map<String, Object> observation = new LinkedHashMap<>();
-            observation.put("totalItems", count);
-            String url = "/find?_q=" + treeToQueryString(addSimpleFilterToTree(sqt, property, value)) + urlTail;
-            observation.put("view", Map.of(JsonLd.ID_KEY, url));
-            observation.put("_selected", false); // TODO: get selected
-            observation.put("object", lookUp(value).orElse(value));
-            observations.add(observation);
-        });
-
-        return observations;
-    }
-
-    private SimpleQueryTree.Node addSimpleFilterToTree(SimpleQueryTree sqt, String property, String value) {
-        SimpleQueryTree.PropertyValue newNode = new SimpleQueryTree.PropertyValue(property, List.of(property), Operator.EQUALS, value);
-        return new SimpleQueryTree.And(List.of(sqt.tree, newNode));
     }
 
     // Problem: Same value in different fields will be counted twice, e.g. contribution.agent + instanceOf.contribution.agent
@@ -567,8 +524,7 @@ public class XLQLQuery {
                     continue;
                 }
 
-                var origPath = expandedToOrigPath.get(path);
-                var property = origPath.replaceFirst("\\.@id$", "");;
+                var property = expandedPathToProperty.get(path);
 
                 if (newAggs.containsKey(property)) {
                     Map<String, Integer> buckets = newAggs.get(property);
@@ -593,7 +549,7 @@ public class XLQLQuery {
                     newAggs.put(property, buckets);
                 }
 
-                int size = Optional.ofNullable((Integer) ((Map<?, ?>) statsRepr.get(origPath)).get("size"))
+                int size = Optional.ofNullable((Integer) ((Map<?, ?>) statsRepr.get(property)).get("size"))
                         .orElse(DEFAULT_BUCKET_SIZE);
                 propertyToBucketSize.put(property, size);
             }
@@ -619,6 +575,54 @@ public class XLQLQuery {
         }
 
         return newAggs;
+    }
+
+    public Map<String, Object> getStats(Map<String, Object> esResponse, Map<String, Object> statsRepr, SimpleQueryTree sqt, List<String> urlParams) {
+        var aggs = collectAggs(esResponse, statsRepr);
+        return buildStats(aggs, sqt, urlParams);
+    }
+
+    private Map<String, Object> buildStats(Map<String, Map<String, Integer>> aggs, SimpleQueryTree sqt, List<String> urlParams) {
+        var sliceByDimension = new LinkedHashMap<>();
+
+        aggs.forEach((property, buckets) -> {
+            var sliceNode = new LinkedHashMap<>();
+            var observations = getObservations(property, buckets, sqt, urlParams);
+            if (!observations.isEmpty()) {
+                // TODO: dimension/dimensionChain redundant
+                //  Add property definition here to provide labels?
+                sliceNode.put("dimension", property);
+                sliceNode.put("dimensionChain", List.of(property));
+                sliceNode.put("observation", observations);
+                sliceByDimension.put(property, sliceNode);
+            }
+        });
+
+        return Map.of(JsonLd.ID_KEY, "#stats",
+                "sliceByDimension", sliceByDimension);
+    }
+
+    private List<Map<String, Object>> getObservations(String property, Map<String, Integer> buckets, SimpleQueryTree sqt, List<String> urlParams) {
+        List<Map<String, Object>> observations = new ArrayList<>();
+
+        String urlTail = urlParams.stream()
+                .map(p -> "&" + p)
+                .collect(Collectors.joining(""));
+
+        buckets.forEach((value, count) -> {
+            Map<String, Object> observation = new LinkedHashMap<>();
+            SimpleQueryTree.PropertyValue pvNode = new SimpleQueryTree.PropertyValue(property, List.of(property), Operator.EQUALS, value);
+            boolean queried = sqt.getTopLevelPvNodes().contains(pvNode);
+            if (!queried) {
+                observation.put("totalItems", count);
+                String url = "/find?_q=" + treeToQueryString(new SimpleQueryTree.And(List.of(sqt.tree, pvNode))) + urlTail;
+                observation.put("view", Map.of(JsonLd.ID_KEY, url));
+                observation.put("object", lookUp(value).orElse(value));
+                observations.add(observation);
+            }
+        });
+
+        return observations;
     }
 
     public Disambiguate.OutsetType getOutsetType(SimpleQueryTree sqt) {

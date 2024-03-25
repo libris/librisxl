@@ -52,8 +52,8 @@ class SiteSearch {
                 var dataDesc = getAndIndexDescription("${appId}data")
                 searchStatsReprs[appId] = [
                     (JsonLd.ID_KEY): appId,
-                    'statsfind': buildStatsReprFromSliceSpec(findDesc),
-                    'statsindex': buildStatsReprFromSliceSpec(dataDesc),
+                    'statsfind': buildStatsReprFromSliceSpec(findDesc, appId),
+                    'statsindex': buildStatsReprFromSliceSpec(dataDesc, appId),
                     'domain': appId.replaceAll('^https?://([^/]+)/', '$1')
                 ]
             }
@@ -140,9 +140,15 @@ class SiteSearch {
         return results
     }
 
-    protected Map buildStatsReprFromSliceSpec(Map desc) {
+    protected Map buildStatsReprFromSliceSpec(Map desc, String appId) {
         var stats = (Map) desc.get('statistics')
         var sliceList = (List) stats?.get('sliceList')
-        return sliceList ? search.buildStatsReprFromSliceSpec(sliceList) : null
+        if (sliceList) {
+            if (appId == "https://beta.libris.kb.se/") {
+                return search2.buildStatsReprFromSliceSpec(sliceList)
+            }
+            return search.buildStatsReprFromSliceSpec(sliceList)
+        }
+        return null
     }
 }

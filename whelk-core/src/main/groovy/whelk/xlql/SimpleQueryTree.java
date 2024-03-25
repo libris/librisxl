@@ -4,7 +4,6 @@ import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class SimpleQueryTree {
     public sealed interface Node permits And, Or, PropertyValue, FreeText {
@@ -24,6 +23,8 @@ public class SimpleQueryTree {
     }
 
     public Node tree;
+
+    public List<PropertyValue> topPvNodes;
 
     public SimpleQueryTree(FlattenedAst ast, Disambiguate disambiguate) throws InvalidQueryException {
         this.tree = buildTree(ast.tree, disambiguate);
@@ -86,6 +87,11 @@ public class SimpleQueryTree {
                     }
                 }
 
+                //TODO: e.g. https://id.kb.se/term/barn/Hästar -> https://id.kb.se/term/barn/H%C3%A4star
+//                if (disambiguate.isObjectProperty(property) && JsonLd.looksLikeIri(value)) {
+//                    value = normalizeUri(value);
+//                }
+
                 return new PropertyValue(property, propertyPath, c.operator(), value);
             }
         }
@@ -140,5 +146,22 @@ public class SimpleQueryTree {
         }
 
         return types;
+    }
+
+    public List<PropertyValue> getTopLevelPvNodes() {
+        if (topPvNodes == null) {
+            topPvNodes = switch (this.tree) {
+                case And and -> and.conjuncts()
+                        .stream()
+                        .filter(node -> node instanceof PropertyValue)
+                        .map(PropertyValue.class::cast)
+                        .toList();
+                case Or ignored -> Collections.emptyList(); //TODO
+                case PropertyValue pv -> List.of(pv);
+                case FreeText ignored -> Collections.emptyList();
+            };
+        }
+
+        return topPvNodes;
     }
 }
