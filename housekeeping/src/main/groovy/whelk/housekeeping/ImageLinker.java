@@ -200,7 +200,7 @@ public class ImageLinker extends HouseKeeper {
 
         String getByISBNsql = """
                 SELECT
-                  data#>>'{@graph,1,@id}' as uri
+                  data#>'{@graph,1,@id}' as uri
                 FROM
                   lddb
                 WHERE
