@@ -3,6 +3,8 @@ package whelk.xlql;
 import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class SimpleQueryTree {
@@ -87,10 +89,16 @@ public class SimpleQueryTree {
                     }
                 }
 
-                //TODO: e.g. https://id.kb.se/term/barn/Hästar -> https://id.kb.se/term/barn/H%C3%A4star
-//                if (disambiguate.isObjectProperty(property) && JsonLd.looksLikeIri(value)) {
-//                    value = normalizeUri(value);
-//                }
+                // Expand and encode URIs, e.g. sao:Hästar -> https://id.kb.se/term/sao/H%C3%A4star
+                if (disambiguate.isObjectProperty(property)) {
+                    String expanded = Disambiguate.expandPrefixed(value);
+                    if (JsonLd.looksLikeIri(expanded)) {
+                        value = URLEncoder.encode(value, StandardCharsets.UTF_8)
+                                .replaceAll("\\+", "%20")
+                                .replaceAll("%2F", "/")
+                                .replaceAll("%3A", ":");
+                    }
+                }
 
                 return new PropertyValue(property, propertyPath, c.operator(), value);
             }

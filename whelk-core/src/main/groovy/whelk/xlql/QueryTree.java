@@ -85,10 +85,8 @@ public class QueryTree {
              If "vocab term" interpret the value as is, e.g. issuanceType: "Serial" or encodingLevel: "marc:FullLevel".
              Otherwise, when object property, append either @id or _str to the path.
              */
-            String expanded = Disambiguate.expandPrefixed(pv.value());
-            if (JsonLd.looksLikeIri(expanded)) {
+            if (JsonLd.looksLikeIri(value)) {
                 path.appendId();
-                value = expanded;
             } else {
                 path.appendUnderscoreStr();
             }
@@ -98,12 +96,10 @@ public class QueryTree {
             return new Field(path, operator, value);
         }
 
-        List<Path> altPaths = path.expand(pv.property(), disambiguate, outset);
-
-        List<Node> altFields = new ArrayList<>();
-        for (Path p : altPaths) {
-            altFields.add(newFields(p, operator, value, disambiguate));
-        }
+        List<Node> altFields = path.expand(pv.property(), disambiguate, outset)
+                .stream()
+                .map(p -> newFields(p, operator, value, disambiguate))
+                .collect(Collectors.toList());
 
         if (altFields.size() == 1) {
             return altFields.getFirst();
