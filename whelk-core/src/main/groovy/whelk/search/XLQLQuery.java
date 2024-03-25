@@ -509,72 +509,80 @@ public class XLQLQuery {
 
     // Problem: Same value in different fields will be counted twice, e.g. contribution.agent + instanceOf.contribution.agent
     private Map<String, Map<String, Integer>> collectAggs(Map<String, Object> esResponse, Map<String, Object> statsRepr) {
-        Map<String, Map<String, Integer>> newAggs = new LinkedHashMap<>();
-
-        if (esResponse.containsKey("aggregations")) {
-            var aggs = (Map<?, ?>) esResponse.get("aggregations");
-            Map<String, Integer> propertyToBucketSize = new HashMap<>();
-
-            for (var entry : aggs.entrySet()) {
-                var path = (String) entry.getKey();
-                var value = (Map<?, ?>) entry.getValue();
-
-                var filteredAgg = (Map<?, ?>) value.get(FILTERED_AGG);
-                if (filteredAgg == null) {
-                    continue;
-                }
-
-                var property = expandedPathToProperty.get(path);
-
-                if (newAggs.containsKey(property)) {
-                    Map<String, Integer> buckets = newAggs.get(property);
-                    ((List<?>) filteredAgg.get("buckets"))
-                            .stream()
-                            .map(Map.class::cast)
-                            .forEach(b -> {
-                                var val = (String) b.get("key");
-                                var count = (Integer) b.get("doc_count");
-                                if (buckets.containsKey(val)) {
-                                    buckets.put(val, buckets.get(val) + count);
-                                } else {
-                                    buckets.put(val, count);
-                                }
-                            });
-                } else {
-                    Map<String, Integer> buckets = new LinkedHashMap<>();
-                    ((List<?>) filteredAgg.get("buckets"))
-                            .stream()
-                            .map(Map.class::cast)
-                            .forEach(b -> buckets.put((String) b.get("key"), (Integer) b.get("doc_count")));
-                    newAggs.put(property, buckets);
-                }
-
-                int size = Optional.ofNullable((Integer) ((Map<?, ?>) statsRepr.get(property)).get("size"))
-                        .orElse(DEFAULT_BUCKET_SIZE);
-                propertyToBucketSize.put(property, size);
-            }
-
-            for (var entry : newAggs.entrySet()) {
-                String property = entry.getKey();
-
-                Map<String, Integer> newBuckets = new LinkedHashMap<>();
-
-                List<Map.Entry<String, Integer>> sorted = entry.getValue()
-                        .entrySet()
-                        .stream()
-                        .sorted(Map.Entry.comparingByValue())
-                        .toList()
-                        .reversed();
-
-                int bucketSize = propertyToBucketSize.get(property);
-                (bucketSize >= sorted.size() ? sorted : sorted.subList(0, bucketSize))
-                        .forEach(b -> newBuckets.put(b.getKey(), b.getValue()));
-
-                newAggs.put(property, newBuckets);
-            }
+        if (!esResponse.containsKey("aggregations")) {
+            return Collections.emptyMap();
         }
 
-        return newAggs;
+        var aggs = (Map<?, ?>) esResponse.get("aggregations");
+
+        Map<String, Map<String, Integer>> mergedAggs = new LinkedHashMap<>();
+        Map<String, Integer> propertyToBucketSize = new HashMap<>();
+
+        for (var entry : aggs.entrySet()) {
+            var path = (String) entry.getKey();
+            var value = (Map<?, ?>) entry.getValue();
+
+            var filteredAgg = (Map<?, ?>) value.get(FILTERED_AGG);
+            if (filteredAgg == null) {
+                continue;
+            }
+
+            var property = expandedPathToProperty.get(path);
+
+            if (mergedAggs.containsKey(property)) {
+                Map<String, Integer> buckets = mergedAggs.get(property);
+                ((List<?>) filteredAgg.get("buckets"))
+                        .stream()
+                        .map(Map.class::cast)
+                        .forEach(b -> {
+                            var val = (String) b.get("key");
+                            var count = (Integer) b.get("doc_count");
+                            if (buckets.containsKey(val)) {
+                                buckets.put(val, buckets.get(val) + count);
+                            } else {
+                                buckets.put(val, count);
+                            }
+                        });
+            } else {
+                Map<String, Integer> buckets = new LinkedHashMap<>();
+                ((List<?>) filteredAgg.get("buckets"))
+                        .stream()
+                        .map(Map.class::cast)
+                        .forEach(b -> buckets.put((String) b.get("key"), (Integer) b.get("doc_count")));
+                mergedAggs.put(property, buckets);
+            }
+
+            int size = Optional.ofNullable((Integer) ((Map<?, ?>) statsRepr.get(property)).get("size"))
+                    .orElse(DEFAULT_BUCKET_SIZE);
+            propertyToBucketSize.put(property, size);
+        }
+
+        for (var entry : mergedAggs.entrySet()) {
+            String property = entry.getKey();
+
+            Map<String, Integer> newBuckets = new LinkedHashMap<>();
+
+            List<Map.Entry<String, Integer>> sorted = entry.getValue()
+                    .entrySet()
+                    .stream()
+                    .sorted(Map.Entry.comparingByValue())
+                    .toList()
+                    .reversed();
+
+            int bucketSize = propertyToBucketSize.get(property);
+            (bucketSize >= sorted.size() ? sorted : sorted.subList(0, bucketSize))
+                    .forEach(b -> newBuckets.put(b.getKey(), b.getValue()));
+
+            mergedAggs.put(property, newBuckets);
+        }
+
+        Map<String, Map<String, Integer>> mergedAggsOrdered = new LinkedHashMap<>();
+        for (String property : statsRepr.keySet()) {
+            Optional.ofNullable(mergedAggs.get(property))
+                    .ifPresent(buckets -> mergedAggsOrdered.put(property, buckets));
+        }
+
+        return mergedAggsOrdered;
     }
 
     public Map<String, Object> getStats(Map<String, Object> esResponse, Map<String, Object> statsRepr, SimpleQueryTree sqt, List<String> urlParams) {
