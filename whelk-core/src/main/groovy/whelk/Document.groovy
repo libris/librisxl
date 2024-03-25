@@ -69,6 +69,7 @@ class Document {
     static final List descriptionCreatorPath = ["@graph", 0, "descriptionCreator", "@id"]
     static final List descriptionLastModifierPath = ["@graph", 0, "descriptionLastModifier", "@id"]
     static final List categoryPath = ["@graph", 1, "category"]
+    static final List imagePath = ["@graph", 1, "image"]
 
     URI baseUri = BASE_URI
 
@@ -123,6 +124,7 @@ class Document {
             set(datasetPath, datasetList)
         } else if ( ! (datasetList instanceof List) ) {
             datasetList = [datasetList]
+            set(datasetPath, datasetList)
         }
 
         // Add to list, if not there already
@@ -136,6 +138,32 @@ class Document {
         if (dataset instanceof List)
             return dataset
         return [dataset]
+    }
+
+    void addImage(String imageUri) {
+
+        // Make imagePath point to a list
+        preparePath(imagePath)
+        Object imageList = get(imagePath)
+        if (imageList == null) {
+            imageList = []
+            set(imagePath, imageList)
+        } else if ( ! (imageList instanceof List) ) {
+            imageList = [imageList]
+            set(imagePath, imageList)
+        }
+
+        // Add to list, if not there already
+        Map idObject = ["@id" : imageUri]
+        if (!imageList.contains(idObject))
+            imageList.add( idObject )
+    }
+
+    List getImages() {
+        def images = get(imagePath)
+        if (images instanceof List)
+            return images
+        return [images]
     }
 
     void setControlNumber(controlNumber) { set(controlNumberPath, controlNumber) }
