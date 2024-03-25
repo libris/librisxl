@@ -1006,18 +1006,27 @@ class ConversionPart {
             Object highPrioValue = keepAll[key]
             Object lowPrioValue = keepSome[key]
 
-            if (!highPrioValue && lowPrioValue)
+            if (!highPrioValue && lowPrioValue) {
                 result.put(key, lowPrioValue)
-            else if (highPrioValue && !lowPrioValue)
+            } else if (highPrioValue && !lowPrioValue) {
                 result.put(key, highPrioValue)
-            else if (highPrioValue && lowPrioValue) {
-                if (highPrioValue instanceof Map && lowPrioValue instanceof Map) {
-                    result.put(key, deepMergedClone((Map)lowPrioValue, (Map)highPrioValue))
+            } else if (highPrioValue && lowPrioValue) {
+                if (highPrioValue instanceof Map) {
+                    if (lowPrioValue instanceof Map) {
+                      result.put(key, deepMergedClone((Map)lowPrioValue, (Map)highPrioValue))
+                    } else {
+                      highPrioValue = [highPrioValue]
+                    }
                 }
-                else if (highPrioValue instanceof List && lowPrioValue instanceof List) {
+
+                if (highPrioValue instanceof List) {
                     List resultingList = []
-                    resultingList.addAll( (List) highPrioValue )
-                    resultingList.addAll( (List) lowPrioValue )
+                    resultingList.addAll(highPrioValue)
+                    if (lowPrioValue instanceof List) {
+                      resultingList.addAll(lowPrioValue)
+                    } else {
+                      resultingList.add(lowPrioValue)
+                    }
                     result.put(key, resultingList)
                 }
             }
