@@ -12,6 +12,8 @@ import whelk.xlql.QueryTree;
 import whelk.xlql.SimpleQueryTree;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static whelk.util.Jackson.mapper;
@@ -67,7 +69,7 @@ public class SearchUtils2 {
         private final Map<String, Object> esQueryDsl;
 
         Query(Map<String, String[]> queryParameters) throws InvalidQueryException, IOException {
-            this.queryString = queryParameters.get("_q")[0];
+            this.queryString = URLDecoder.decode(queryParameters.get("_q")[0], StandardCharsets.UTF_8); //TODO: Decoding shouldn't be necessary here, make sure the query string decoded already
             this.sortBy = getOptionalSingle("_sort", queryParameters);
             this.debug = queryParameters.containsKey("_debug"); // Different debug modes needed?
             this.limit = getLimit(queryParameters);
