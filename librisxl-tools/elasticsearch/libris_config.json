@@ -175,10 +175,6 @@
                     }
                 }
             },
-            "issuanceType": {
-              "type": "keyword",
-              "copy_to": "_all"
-            },
             "identifiedBy": {
                 "type": "nested",
                 "include_in_parent": true,
@@ -311,6 +307,15 @@
                     "mapping": {
                         "index": true,
                         "type": "text",
+                        "copy_to": "_all"
+                    }
+                }
+            },
+            {
+                "issuanceType_template": {
+                    "match": ["issuanceType"],
+                    "mapping": {
+                        "type": "keyword",
                         "copy_to": "_all"
                     }
                 }
