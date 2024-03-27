@@ -126,7 +126,7 @@ public class Disambiguate {
             // TODO: All short forms should be marked with :category :shortHand?
             //  Not the case at the moment, therefore isShorthand doesn't apply
 //            if (!isShorthand(termDefinition)) {
-            if (!termDefinition.containsKey("propertyChainAxiom")) {
+            if (termDefinition == null || !termDefinition.containsKey("propertyChainAxiom")) {
                 extendedPath.add(p);
                 continue;
             }
