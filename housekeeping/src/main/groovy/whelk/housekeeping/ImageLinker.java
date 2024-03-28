@@ -60,7 +60,7 @@ public class ImageLinker extends HouseKeeper {
 
         String newImagesSql = """
                 SELECT
-                  data#>'{@graph,1,@id}' as instanceUri, data#>>'{@graph,1,identifiedBy}' as identifiedBy, created
+                  data#>>'{@graph,1,@id}' as instanceUri, data#>>'{@graph,1,identifiedBy}' as identifiedBy, created
                 FROM
                   lddb
                 WHERE
@@ -126,7 +126,7 @@ public class ImageLinker extends HouseKeeper {
 
         String newImagesSql = """
                 SELECT
-                  data#>'{@graph,1,@id}' as imageUri, data#>>'{@graph,1,indirectlyIdentifiedBy}' as indirectlyIdentifiedBy, data#>>'{@graph,1,imageOf}' as imageOf, created
+                  data#>>'{@graph,1,@id}' as imageUri, data#>>'{@graph,1,indirectlyIdentifiedBy}' as indirectlyIdentifiedBy, data#>>'{@graph,1,imageOf}' as imageOf, created
                 FROM
                   lddb
                 WHERE
@@ -200,7 +200,7 @@ public class ImageLinker extends HouseKeeper {
 
         String getByISBNsql = """
                 SELECT
-                  data#>'{@graph,1,@id}' as uri
+                  data#>>'{@graph,1,@id}' as uri
                 FROM
                   lddb
                 WHERE
@@ -234,7 +234,7 @@ public class ImageLinker extends HouseKeeper {
 
         String getByISBNsql = """
                 SELECT
-                  data#>'{@graph,1,@id}' as uri
+                  data#>>'{@graph,1,@id}' as uri
                 FROM
                   lddb
                 WHERE
