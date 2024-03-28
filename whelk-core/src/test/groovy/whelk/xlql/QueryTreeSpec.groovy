@@ -17,16 +17,6 @@ class QueryTreeSpec extends Specification {
         return new SimpleQueryTree(flattened, disambiguate)
     }
 
-    def "collect given types from query"() {
-        given:
-        def input = "type: (Electronic OR Print) AND utgivning: aaa"
-        SimpleQueryTree sqt = getSimpleQueryTree(input)
-        Set<Object> givenTypes = QueryTree.collectGivenTypes(sqt.tree)
-
-        expect:
-        givenTypes == ["Electronic", "Print"] as Set
-    }
-
     def "free text tree"() {
         given:
         SimpleQueryTree sqt = getSimpleQueryTree("AAA BBB and (CCC or DDD)")
@@ -49,7 +39,8 @@ class QueryTreeSpec extends Specification {
     def "object property + datatype property + free text"() {
         given:
         SimpleQueryTree sqt = getSimpleQueryTree("subject: \"sao:Fysik\" AND tillkomsttid < 2023 AND \"svarta hål\"")
-        QueryTree qt = new QueryTree(sqt, disambiguate)
+        Disambiguate.OutsetType outsetType = disambiguate.decideOutset(sqt)
+        QueryTree qt = new QueryTree(sqt, disambiguate, outsetType)
         QueryTree.And topNode = qt.tree
         List conjuncts = topNode.conjuncts()
         QueryTree.Field subjectField = conjuncts[0]
@@ -72,7 +63,8 @@ class QueryTreeSpec extends Specification {
         given:
         String queryString = "typ:Tryck instanceOf.subject:\"sao:Fysik\" AND instanceOf.subject._str:rymd and tillkomsttid:2022"
         SimpleQueryTree sqt = getSimpleQueryTree(queryString)
-        QueryTree qt = new QueryTree(sqt, disambiguate)
+        Disambiguate.OutsetType outsetType = disambiguate.decideOutset(sqt)
+        QueryTree qt = new QueryTree(sqt, disambiguate, outsetType)
         QueryTree.And topNode = qt.tree
         List conjuncts = topNode.conjuncts()
         QueryTree.Field typeField = conjuncts[0]
@@ -102,7 +94,8 @@ class QueryTreeSpec extends Specification {
         given:
         String queryString = "typ:Text upphovsuppgift:Någon tillkomsttid<2020 language:\"https://id.kb.se/language/swe\""
         SimpleQueryTree sqt = getSimpleQueryTree(queryString)
-        QueryTree qt = new QueryTree(sqt, disambiguate)
+        Disambiguate.OutsetType outsetType = disambiguate.decideOutset(sqt)
+        QueryTree qt = new QueryTree(sqt, disambiguate, outsetType)
         QueryTree.And topNode = qt.tree
         List conjuncts = topNode.conjuncts()
         QueryTree.Field typeField = conjuncts[0]
@@ -138,7 +131,8 @@ class QueryTreeSpec extends Specification {
         given:
         String queryString = "typ:Instance upphovsuppgift:Någon tillkomsttid<2020 language:\"https://id.kb.se/language/swe\""
         SimpleQueryTree sqt = getSimpleQueryTree(queryString)
-        QueryTree qt = new QueryTree(sqt, disambiguate)
+        Disambiguate.OutsetType outsetType = disambiguate.decideOutset(sqt)
+        QueryTree qt = new QueryTree(sqt, disambiguate, outsetType)
         QueryTree.And topNode = qt.tree
         List conjuncts = topNode.conjuncts()
         QueryTree.Or typeFields = conjuncts[0]
@@ -172,7 +166,8 @@ class QueryTreeSpec extends Specification {
         given:
         String queryString = "author:x not isbn:y"
         SimpleQueryTree sqt = getSimpleQueryTree(queryString)
-        QueryTree qt = new QueryTree(sqt, disambiguate)
+        Disambiguate.OutsetType outsetType = disambiguate.decideOutset(sqt)
+        QueryTree qt = new QueryTree(sqt, disambiguate, outsetType)
         QueryTree.And topNode = qt.tree
         List conjuncts = topNode.conjuncts()
         QueryTree.Nested author = conjuncts[0]
@@ -196,7 +191,8 @@ class QueryTreeSpec extends Specification {
         given:
         String queryString = "type:Text author:x not isbn:y"
         SimpleQueryTree sqt = getSimpleQueryTree(queryString)
-        QueryTree qt = new QueryTree(sqt, disambiguate)
+        Disambiguate.OutsetType outsetType = disambiguate.decideOutset(sqt)
+        QueryTree qt = new QueryTree(sqt, disambiguate, outsetType)
         QueryTree.And topNode = qt.tree
         List conjuncts = topNode.conjuncts()
         QueryTree.Nested author = conjuncts[1]

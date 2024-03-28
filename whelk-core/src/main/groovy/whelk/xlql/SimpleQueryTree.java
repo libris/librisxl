@@ -3,6 +3,8 @@ package whelk.xlql;
 import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class SimpleQueryTree {
@@ -23,6 +25,8 @@ public class SimpleQueryTree {
     }
 
     public Node tree;
+
+    public List<PropertyValue> topPvNodes;
 
     public SimpleQueryTree(FlattenedAst ast, Disambiguate disambiguate) throws InvalidQueryException {
         this.tree = buildTree(ast.tree, disambiguate);
@@ -85,6 +89,17 @@ public class SimpleQueryTree {
                     }
                 }
 
+                // Expand and encode URIs, e.g. sao:Hästar -> https://id.kb.se/term/sao/H%C3%A4star
+                if (disambiguate.isObjectProperty(property)) {
+                    String expanded = Disambiguate.expandPrefixed(value);
+                    if (JsonLd.looksLikeIri(expanded)) {
+                        value = URLEncoder.encode(value, StandardCharsets.UTF_8)
+                                .replaceAll("\\+", "%20")
+                                .replaceAll("%2F", "/")
+                                .replaceAll("%3A", ":");
+                    }
+                }
+
                 return new PropertyValue(property, propertyPath, c.operator(), value);
             }
         }
@@ -118,5 +133,43 @@ public class SimpleQueryTree {
                 return tree;
             }
         }
+    }
+
+    public Set<String> collectGivenTypes() {
+        return collectGivenTypes(tree, new HashSet<>());
+    }
+
+    private static Set<String> collectGivenTypes(SimpleQueryTree.Node sqtNode, Set<String> types) {
+        switch (sqtNode) {
+            case And and -> and.conjuncts().forEach(c -> collectGivenTypes(c, types));
+            case Or or -> or.disjuncts().forEach(d -> collectGivenTypes(d, types));
+            case PropertyValue pv -> {
+                if (List.of("rdf:type").equals(pv.propertyPath())) {
+                    types.add(pv.value());
+                }
+            }
+            case FreeText ignored -> {
+                // Nothing to do here
+            }
+        }
+
+        return types;
+    }
+
+    public List<PropertyValue> getTopLevelPvNodes() {
+        if (topPvNodes == null) {
+            topPvNodes = switch (this.tree) {
+                case And and -> and.conjuncts()
+                        .stream()
+                        .filter(node -> node instanceof PropertyValue)
+                        .map(PropertyValue.class::cast)
+                        .toList();
+                case Or ignored -> Collections.emptyList(); //TODO
+                case PropertyValue pv -> List.of(pv);
+                case FreeText ignored -> Collections.emptyList();
+            };
+        }
+
+        return topPvNodes;
     }
 }

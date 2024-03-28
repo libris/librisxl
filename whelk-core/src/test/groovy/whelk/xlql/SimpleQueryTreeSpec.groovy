@@ -133,4 +133,14 @@ class SimpleQueryTreeSpec extends Specification {
         then:
         thrown(InvalidQueryException)
     }
+
+    def "collect given types from query"() {
+        given:
+        def input = "type: (Electronic OR Print) AND utgivning: aaa"
+        SimpleQueryTree sqt = getTree(input)
+        Set<Object> givenTypes = sqt.collectGivenTypes()
+
+        expect:
+        givenTypes == ["Electronic", "Print"] as Set
+    }
 }

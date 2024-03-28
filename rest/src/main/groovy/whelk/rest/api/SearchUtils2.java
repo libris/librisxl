@@ -7,15 +7,16 @@ import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.exception.WhelkRuntimeException;
 import whelk.search.XLQLQuery;
+import whelk.xlql.Disambiguate;
 import whelk.xlql.QueryTree;
 import whelk.xlql.SimpleQueryTree;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+
+import static whelk.util.Jackson.mapper;
 
 public class SearchUtils2 {
     final static int DEFAULT_LIMIT = 200;
@@ -32,7 +33,7 @@ public class SearchUtils2 {
         this.xlqlQuery = new XLQLQuery(whelk);
     }
 
-    Map<String, Object> doSearch(Map<String, String[]> queryParameters) throws InvalidQueryException {
+    Map<String, Object> doSearch(Map<String, String[]> queryParameters) throws InvalidQueryException, IOException {
         if (whelk.elastic == null) {
             throw new WhelkRuntimeException("ElasticSearch not configured.");
         }
@@ -42,31 +43,41 @@ public class SearchUtils2 {
         return query.getPartialCollectionView(esResponse);
     }
 
+    public Map<String, Object> buildStatsReprFromSliceSpec(List<Map<String,Object>> sliceList) {
+        Map<String,Object> statsfind = new LinkedHashMap<>();
+        for (Map<String, Object> slice : sliceList) {
+            String key = (String) ((List<?>) slice.get("dimensionChain")).getFirst();
+            int limit = (Integer) slice.get("itemLimit");
+            var m = Map.of("sort", "value",
+                    "sortOrder", "desc",
+                    "size", limit);
+            statsfind.put(key, m);
+        }
+        return statsfind;
+    }
+
     class Query {
-        //        static Set<String> reservedParameters = getReservedParameters();
         private final int limit;
         private final int offset;
         private final Optional<String> sortBy;
+        private final Map<String, Object> statsRepr;
         private final boolean debug;
         private final String queryString;
         private final SimpleQueryTree simpleQueryTree;
+        private final Disambiguate.OutsetType outsetType;
         private final QueryTree queryTree;
         private final Map<String, Object> esQueryDsl;
-//    Optional<List> predicates;
-//    Optional<String> object;
-//    Optional<String> value;
-//    Optional<String> lens;
-//    Optional<String> addStats;
-//    Optional<String> suggest;
 
-        Query(Map<String, String[]> queryParameters) throws InvalidQueryException {
-            this.queryString = queryParameters.get("_q")[0];
+        Query(Map<String, String[]> queryParameters) throws InvalidQueryException, IOException {
+            this.queryString = URLDecoder.decode(queryParameters.get("_q")[0], StandardCharsets.UTF_8); //TODO: Decoding shouldn't be necessary here, make sure the query string decoded already
             this.sortBy = getOptionalSingle("_sort", queryParameters);
             this.debug = queryParameters.containsKey("_debug"); // Different debug modes needed?
             this.limit = getLimit(queryParameters);
             this.offset = getOffset(queryParameters);
+            this.statsRepr = getStatsRepr(queryParameters);
             this.simpleQueryTree = xlqlQuery.getSimpleQueryTree(queryString);
-            this.queryTree = xlqlQuery.getQueryTree(simpleQueryTree);
+            this.outsetType = xlqlQuery.getOutsetType(simpleQueryTree);
+            this.queryTree = xlqlQuery.getQueryTree(simpleQueryTree, outsetType);
             this.esQueryDsl = getEsQueryDsl();
         }
 
@@ -76,6 +87,7 @@ public class SearchUtils2 {
             queryDsl.put("size", limit);
             queryDsl.put("from", offset);
             sortBy.ifPresent(s -> queryDsl.put("sort", getSortClauses(s)));
+            queryDsl.put("aggs", xlqlQuery.getAggQuery(statsRepr, outsetType));
             queryDsl.put("track_total_hits", true);
             return queryDsl;
         }
@@ -93,7 +105,7 @@ public class SearchUtils2 {
             if (esResponse.containsKey("items")) {
                 view.put("items", esResponse.get("items"));
             }
-            // TODO: Stats?
+            view.put("stats", xlqlQuery.getStats(esResponse, statsRepr, simpleQueryTree, makeNonQueryParams(0)));
             if (debug) {
                 view.put("_debug", Map.of("esQuery", esQueryDsl));
             }
@@ -153,6 +165,7 @@ public class SearchUtils2 {
         private static String makeParam(String key, String value) {
             return String.format("%s=%s", escapeQueryParam(key), escapeQueryParam(value));
         }
+
         private static String makeParam(String key, int value) {
             return makeParam(key, "" + value);
         }
@@ -180,7 +193,7 @@ public class SearchUtils2 {
         private Optional<String> getOptionalSingle(String name, Map<String, String[]> queryParameters) {
             return Optional.ofNullable(queryParameters.get(name))
                     .map(x -> x[0])
-                    .filter(x -> !"".equals(x));
+                    .filter(x -> !x.isEmpty());
         }
 
         private int getLimit(Map<String, String[]> queryParameters) throws InvalidQueryException {
@@ -219,6 +232,21 @@ public class SearchUtils2 {
             } catch (NumberFormatException ignored) {
                 return defaultTo;
             }
+        }
+
+        private static Map<String, Object> getStatsRepr(Map<String, String[]> queryParameters) throws IOException {
+            Map<String, Object> statsRepr = new LinkedHashMap<>();
+
+            var statsJson = Optional.ofNullable(queryParameters.get("_statsrepr"))
+                    .map(x -> x[0])
+                    .orElse("{}");
+
+            Map<?, ?> statsMap = mapper.readValue(statsJson, LinkedHashMap.class);
+            for (var entry : statsMap.entrySet()) {
+                statsRepr.put((String) entry.getKey(), entry.getValue());
+            }
+
+            return statsRepr;
         }
     }
 

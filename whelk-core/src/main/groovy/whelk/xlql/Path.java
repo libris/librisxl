@@ -9,14 +9,17 @@ public class Path {
     public List<DefaultField> defaultFields;
     public List<String> path;
 
-    private static final Map<String, String> substitutions = Map.of("rdf:type", JsonLd.TYPE_KEY);
+    private static final Map<String, String> substitutions = Map.of(
+            "rdf:type", JsonLd.TYPE_KEY,
+            "hasItem", String.format("%s.itemOf", JsonLd.REVERSE_KEY)
+    );
 
-    Path(List<String> path) {
-        this.path = getLdPath(path);
+    public Path(List<String> path) {
+        this.path = new ArrayList<>(path);
     }
 
     Path(Path p) {
-        this.path = getLdPath(p.path);
+        this.path = new ArrayList<>(p.path);
         this.defaultFields = new ArrayList<>(p.defaultFields);
     }
 
@@ -24,12 +27,46 @@ public class Path {
         return new Path(this);
     }
 
-    private List<String> getLdPath(List<String> path) {
-        return path.stream().map(this::substitute).collect(Collectors.toList());
-    }
+    public List<Path> expand(String property, Disambiguate disambiguate, Disambiguate.OutsetType outsetType) {
+        expandChainAxiom(disambiguate);
 
-    private String substitute(String property) {
-        return Optional.ofNullable(substitutions.get(property)).orElse(property);
+        String domain = disambiguate.getDomain(property);
+
+        Disambiguate.DomainCategory domainCategory = disambiguate.getDomainCategory(domain);
+        if (domainCategory == Disambiguate.DomainCategory.ADMIN_METADATA) {
+            prependMeta();
+        }
+
+        List<Path> altPaths = new ArrayList<>(List.of(this));
+
+        switch (outsetType) {
+            case WORK -> {
+                switch (domainCategory) {
+                    // The property p appears only on instance, modify path to @reverse.instanceOf.p...
+                    case INSTANCE, EMBODIMENT -> setWorkToInstancePath();
+                    case CREATION_SUPER, UNKNOWN -> {
+                        // The property p may appear on instance, add alternative path @reverse.instanceOf.p...
+                        Path copy = copy();
+                        copy.setWorkToInstancePath();
+                        altPaths.add(copy);
+                    }
+                }
+            }
+            case INSTANCE -> {
+                switch (domainCategory) {
+                    // The property p appears only work, modify path to instanceOf.p...
+                    case WORK -> setInstanceToWorkPath();
+                    case CREATION_SUPER, UNKNOWN -> {
+                        // The property p may appear on work, add alternative path instanceOf.p...
+                        Path copy = copy();
+                        copy.setInstanceToWorkPath();
+                        altPaths.add(copy);
+                    }
+                }
+            }
+        }
+
+        return altPaths;
     }
 
     public void prependMeta() {
@@ -75,6 +112,10 @@ public class Path {
     }
 
     public String stringify() {
-        return String.join(".", path);
+        return path.stream().map(this::substitute).collect(Collectors.joining("."));
+    }
+
+    private String substitute(String property) {
+        return Optional.ofNullable(substitutions.get(property)).orElse(property);
     }
 }
