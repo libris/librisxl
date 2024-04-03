@@ -46,6 +46,7 @@ void createHold(String bibId, String sigel) {
                             "@id"             : "TEMPID#it",
                             "@type"           : "Item",
                             "heldBy"          : ["@id": "https://libris.kb.se/library/${sigel}".toString()],
+                            "inventoryLevel"  : 1,
                             "itemOf"          : ["@id": bibId],
                             'associatedMedia' : ASSOCIATED_MEDIA[sigel]
                     ]
