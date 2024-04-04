@@ -3,7 +3,7 @@ import whelk.util.DocumentUtil
 /*
  * For all records in bibliography UR
  * - Move hasTitle.subtitle to hasTitle.hasPart.partName
- * - For all holdings: remove all marc:publicNote matching "YYMMDD - YYMMDD"
+ * - For all holdings: remove all marc:publicNote matching "YYMYYMDD - YYYYMMDD"
  *
  * See LXL-4462 for more info.
  *
