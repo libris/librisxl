@@ -7,7 +7,6 @@ import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.ee8.servlet.FilterHolder;
 import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.http.UriCompliance;
-import org.eclipse.jetty.rewrite.handler.CompactPathRule;
 import org.eclipse.jetty.rewrite.handler.RewriteHandler;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
@@ -50,9 +49,7 @@ public class RestServer extends XlServer {
                 }
         );
         var rewriteHandler = new RewriteHandler();
-        rewriteHandler.addRule(new CompactPathRule());
         rewriteHandler.setHandler(context);
-
         server.setHandler(rewriteHandler);
 
         context.addFilter(CORSFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST))
