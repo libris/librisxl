@@ -9,6 +9,7 @@
 import whelk.component.PostgreSQLComponent.ConflictingHoldException
 
 failedHoldIDs = getReportWriter("failed-holdIDs")
+noUrId = getReportWriter("no-UR-id")
 
 ASSOCIATED_MEDIA = [
         'DalE': [
@@ -31,10 +32,19 @@ String where = """
 """
 
 selectBySqlWhere(where) { bib ->
-    ASSOCIATED_MEDIA.keySet().each { createHold(bib.graph[1]["@id"], it) }
+    var bibId = bib.graph[1]["@id"]
+
+    String urId = getAtPath(bib.graph, [0, 'identifiedBy', '*', 'value']).find{ String id -> id.startsWith('UR') }
+    if (!urId) {
+        noUrId.println(bibId)
+        return
+    }
+    urId = urId.substring(2)
+
+    ASSOCIATED_MEDIA.keySet().each { createHold(bibId, it, urId) }
 }
 
-void createHold(String bibId, String sigel) {
+void createHold(String bibId, String sigel, String urId) {
     def holdData =
             ["@graph": [
                     [
@@ -48,7 +58,7 @@ void createHold(String bibId, String sigel) {
                             "heldBy"          : ["@id": "https://libris.kb.se/library/${sigel}".toString()],
                             "inventoryLevel"  : 1,
                             "itemOf"          : ["@id": bibId],
-                            'associatedMedia' : ASSOCIATED_MEDIA[sigel]
+                            'associatedMedia' : buildAssociatedMedia(sigel, urId)
                     ]
             ]]
 
@@ -62,4 +72,10 @@ void createHold(String bibId, String sigel) {
             }
         })
     })
+}
+
+Map buildAssociatedMedia(String sigel, String urId) {
+    var a = new HashMap(ASSOCIATED_MEDIA[sigel])
+    a.uri = a.uri.collect { it + urId }
+    return a
 }
