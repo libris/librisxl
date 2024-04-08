@@ -7507,14 +7507,6 @@
         },
         {
           "when": {
-            "NOTE": "Ignore title with source",
-            "IMPORTANT": "As this is defined, *any* title with source blocks *all* titles from reverting to 240; unless a translationOf with a title is present. This is OK as things stand, since titles using source are only added if there is no formal title on the work.",
-            "onRevert": {"hasTitle": [{"source": []}]}
-          },
-          "ignored": true
-        },
-        {
-          "when": {
             "NOTE": "Sign of translation: use language label",
             "onRevert": {"translationOf": {}}
           }
@@ -7851,7 +7843,7 @@
           }
         },
         {
-          "name": "Work title with source is supressed",
+          "name": "Work title with source is no longer supressed",
           "normalized": [
             {
               "008": "|     |        |  |||||||||||000 ||swe| "
@@ -7863,6 +7855,15 @@
                 "subfields": [
                   {"a": "swe"}
                 ]
+              }
+            },
+            {
+              "240" : {
+                "ind1" : "1",
+                "ind2" : "0",
+                "subfields" : [ {
+                  "a" : "The lord of the rings."
+                } ]
               }
             }
           ],
