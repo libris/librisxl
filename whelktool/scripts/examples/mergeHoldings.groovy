@@ -48,7 +48,8 @@ void combine(Document target, Document incoming, List<String> propertiesToMerge,
 
     moveToComponent(incomingMainEntity, propertiesToMoveToFirstComponent)
     moveToComponent(targetMainEntity, propertiesToMoveToFirstComponent)
-    setTargetHeldBy(incomingMainEntity, libraryToMoveTo)
+    setComponent(incomingMainEntity, libraryToMoveTo)
+    setComponent(targetMainEntity, libraryToMoveTo)
 
     combineMap(targetMainEntity, incomingMainEntity, propertiesToMerge, propertiesToReplace)
 }
@@ -134,7 +135,7 @@ void moveToComponent(Map mainEntity, List<String> propertiesToMoveToFirstCompone
     }
 }
 
-void setTargetHeldBy(Map mainEntity, String libraryToMoveTo) {
+void setComponent(Map mainEntity, String libraryToMoveTo) {
     mainEntity["heldBy"] = ["@id": libraryToMoveTo]
     if (mainEntity["hasComponent"] && mainEntity["hasComponent"] instanceof List) {
         mainEntity["hasComponent"].each { component ->
