@@ -1,6 +1,7 @@
 package whelk;
 
 import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import org.eclipse.jetty.server.Server;
 import whelk.housekeeping.WebInterface;
 
@@ -12,7 +13,9 @@ public class HouseKeepingServer extends XlServer {
 
         server.setHandler(context);
 
-        context.addServlet(WebInterface.class, "/");
+        ServletHolder holder = new ServletHolder(WebInterface.class);
+        holder.setInitOrder(0);
+        context.addServlet(holder, "/");
         serveStaticContent(context);
     }
 
