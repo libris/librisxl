@@ -106,7 +106,6 @@ class InquirySender extends HouseKeeper {
                 // Figure out who to send to
                 Set<String> recipients = []
                 String subject = NotificationUtils.subject(whelk, messageType)
-                //concerningSystemIDs.each { String concerningSystemID ->
                 for (String concerningSystemID : concerningSystemIDs) {
                     String type = whelk.getStorage().getMainEntityTypeBySystemID(concerningSystemID)
                     if (whelk.getJsonld().isSubClassOf(type, "Instance")) { // Send to all holders of said instance
