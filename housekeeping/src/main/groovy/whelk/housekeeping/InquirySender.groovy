@@ -108,20 +108,14 @@ class InquirySender extends HouseKeeper {
                 String subject = NotificationUtils.subject(whelk, messageType)
                 for (String concerningSystemID : concerningSystemIDs) {
                     String type = whelk.getStorage().getMainEntityTypeBySystemID(concerningSystemID)
-                    if (whelk.getJsonld().isSubClassOf(type, "Instance")) { // Send to all holders of said instance
+                    if (whelk.getJsonld().isSubClassOf(type, "Instance")) { // Send to all holders of said instance (including Electronic)
                         List<String> libraries = whelk.getStorage().getAllLibrariesHolding(concerningSystemID)
                         recipients.addAll( getRecipientsForLibraries(libraries, heldByToUserSettings) )
 
                         subject = NotificationUtils.subject(whelk, messageType, libraries)
-                    } else if (whelk.getJsonld().isSubClassOf(type, "Work")) { // Send to all holders of non-electronic instances of said work
-                        List<String> instances = getNonElectronicInstancesOf(concerningSystemID)
-                        for (String instanceID : instances) {
-                            List<String> libraries = whelk.getStorage().getAllLibrariesHolding(instanceID)
-                            recipients.addAll( getRecipientsForLibraries(libraries, heldByToUserSettings) )
-                        }
                     }
-                    else { // Usually an Agent, but anything goes. Send to all holders of something affected
-                        List<String> libraries = whelk.getStorage().followLibrariesConcernedWith(concerningSystemID)
+                    else { // Send to all holders of non-electronic instances linking (in any number of steps) to whatever the message was about
+                        List<String> libraries = whelk.getStorage().followLibrariesConcernedWith(concerningSystemID, ["Electronic"])
                         recipients.addAll( getRecipientsForLibraries(libraries, heldByToUserSettings) )
                     }
                 }
@@ -170,32 +164,6 @@ class InquirySender extends HouseKeeper {
             }
         }
         return recipients
-    }
-
-    private List<String> getNonElectronicInstancesOf(String workId) {
-        List<String> result = []
-        String sql = """
-            SELECT
-              l.id, l.data#>>'{@graph,1,@type}'
-            FROM
-              lddb__dependencies d
-            LEFT JOIN
-              lddb l on d.id = l.id
-            WHERE
-              l.deleted = false AND
-              d.dependsonid = ? AND
-              d.relation = 'instanceOf' AND
-              l.data#>>'{@graph,1,@type}' <> 'Electronic'
-            """.stripIndent()
-        whelk.getStorage().withDbConnection({
-            PreparedStatement statement = whelk.getStorage().getMyConnection().prepareStatement(sql)
-            statement.setString(1, workId)
-            ResultSet resultSet = statement.executeQuery()
-            while (resultSet.next()) {
-                result.add( resultSet.getString("id") )
-            }
-        })
-        return result
     }
 
     private String generateEmailBody(NotificationUtils.NotificationType messageType, String noticeSystemId, List<String> concerningSystemIDs, List<String> comments, Optional<String> creatorId) {

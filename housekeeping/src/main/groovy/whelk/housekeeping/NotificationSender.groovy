@@ -108,7 +108,7 @@ class NotificationSender extends HouseKeeper {
     }
 
     private void sendForAgent(String concerningId, Map<String, List<Map>> heldByToUserSettings, List changeObservationsForConcerned) {
-        List<String> concernedLibraries = whelk.getStorage().followLibrariesConcernedWith(concerningId)
+        List<String> concernedLibraries = whelk.getStorage().followLibrariesConcernedWith(concerningId, ["Electronic"])
         String subject = NotificationUtils.subject(whelk, NotificationUtils.NotificationType.ChangeObservation, concernedLibraries)
 
         List<Map> changeObservationMaps = []
