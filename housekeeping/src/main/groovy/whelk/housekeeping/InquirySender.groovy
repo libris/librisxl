@@ -106,35 +106,23 @@ class InquirySender extends HouseKeeper {
                 // Figure out who to send to
                 Set<String> recipients = []
                 String subject = NotificationUtils.subject(whelk, messageType)
-                boolean sendToAll = true
-                concerningSystemIDs.each { String concerningSystemID ->
+                for (String concerningSystemID : concerningSystemIDs) {
                     String type = whelk.getStorage().getMainEntityTypeBySystemID(concerningSystemID)
-                    if (whelk.getJsonld().isSubClassOf(type, "Instance")) {
-                        sendToAll = false
+                    if (whelk.getJsonld().isSubClassOf(type, "Instance")) { // Send to all holders of said instance
                         List<String> libraries = whelk.getStorage().getAllLibrariesHolding(concerningSystemID)
-                        for (String library : libraries) {
-                            List<Map> usersSubbedToLibrary = heldByToUserSettings[library] ?: []
-                            for (Map user : usersSubbedToLibrary) {
-                                Object email = user["notificationEmail"]
-                                if (email != null && email instanceof String) {
-                                    recipients.add(email)
-                                }
-                            }
-                        }
+                        recipients.addAll( getRecipientsForLibraries(libraries, heldByToUserSettings) )
+
                         subject = NotificationUtils.subject(whelk, messageType, libraries)
-                    }
-                }
-                if (sendToAll) {
-                    heldByToUserSettings.keySet().each { String library ->
-                        if (library == "none")
-                            return
-                        List<Map> usersSubbedToLibrary = heldByToUserSettings[library]
-                        for (Map user : usersSubbedToLibrary) {
-                            Object email = user["notificationEmail"]
-                            if (email != null && email instanceof String) {
-                                recipients.add(email)
-                            }
+                    } else if (whelk.getJsonld().isSubClassOf(type, "Work")) { // Send to all holders of non-electronic instances of said work
+                        List<String> instances = getNonElectronicInstancesOf(concerningSystemID)
+                        for (String instanceID : instances) {
+                            List<String> libraries = whelk.getStorage().getAllLibrariesHolding(instanceID)
+                            recipients.addAll( getRecipientsForLibraries(libraries, heldByToUserSettings) )
                         }
+                    }
+                    else { // Usually an Agent, but anything goes. Send to all holders of something affected
+                        List<String> libraries = whelk.getStorage().followLibrariesConcernedWith(concerningSystemID)
+                        recipients.addAll( getRecipientsForLibraries(libraries, heldByToUserSettings) )
                     }
                 }
 
@@ -168,6 +156,46 @@ class InquirySender extends HouseKeeper {
             }
         }
 
+    }
+
+    private List<String> getRecipientsForLibraries(List<String> libraries, Map<String, List<Map>> heldByToUserSettings) {
+        List<String> recipients = []
+        for (String library : libraries) {
+            List<Map> usersSubbedToLibrary = heldByToUserSettings[library] ?: []
+            for (Map user : usersSubbedToLibrary) {
+                Object email = user["notificationEmail"]
+                if (email != null && email instanceof String) {
+                    recipients.add(email)
+                }
+            }
+        }
+        return recipients
+    }
+
+    private List<String> getNonElectronicInstancesOf(String workId) {
+        List<String> result = []
+        String sql = """
+            SELECT
+              l.id, l.data#>>'{@graph,1,@type}'
+            FROM
+              lddb__dependencies d
+            LEFT JOIN
+              lddb l on d.id = l.id
+            WHERE
+              l.deleted = false AND
+              d.dependsonid = ? AND
+              d.relation = 'instanceOf' AND
+              l.data#>>'{@graph,1,@type}' <> 'Electronic'
+            """.stripIndent()
+        whelk.getStorage().withDbConnection({
+            PreparedStatement statement = whelk.getStorage().getMyConnection().prepareStatement(sql)
+            statement.setString(1, workId)
+            ResultSet resultSet = statement.executeQuery()
+            while (resultSet.next()) {
+                result.add( resultSet.getString("id") )
+            }
+        })
+        return result
     }
 
     private String generateEmailBody(NotificationUtils.NotificationType messageType, String noticeSystemId, List<String> concerningSystemIDs, List<String> comments, Optional<String> creatorId) {
