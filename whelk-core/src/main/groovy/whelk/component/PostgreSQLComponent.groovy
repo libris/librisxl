@@ -251,6 +251,8 @@ class PostgreSQLComponent {
                     SELECT d.id
                     FROM lddb__dependencies d
                     INNER JOIN deps deps1 ON d.dependsonid = i
+                    LEFT JOIN lddb l on d.id = l.id
+                    WHERE l.data#>>'{@graph,1,@type}' NOT IN (€)
             )
             SELECT distinct(lddb.data#>>'{@graph,1,heldBy,@id}') as library FROM
             deps
@@ -2172,18 +2174,31 @@ class PostgreSQLComponent {
         }
     }
 
-    List<String> followLibrariesConcernedWith(String id) {
+    /**
+     * Follow links recursively to figure out which libraries are affected by a change to 'id'.
+     *
+     * excludeTypes is a list of types from which we should not keep searching.
+     * So for example, setting this to ["Electronic"] means, libraries with only holdings on
+     * electronic instances linking to whatever was changed will not be included in the result.
+     *
+     * excludeTypes must not be empty as this will be interpreted as a syntax error by postgresql.
+     * If you want to exclude nothing, pass something like ["nothing"].
+     */
+    List<String> followLibrariesConcernedWith(String id, List<String> excludeTypes) {
         return withDbConnection {
             Connection connection = getMyConnection()
-            followLibrariesConcernedWith(id, connection)
+            followLibrariesConcernedWith(id, excludeTypes, connection)
         }
     }
 
-    List<String> followLibrariesConcernedWith(String id, Connection connection) {
+    List<String> followLibrariesConcernedWith(String id, List<String> excludeTypes, Connection connection) {
         PreparedStatement preparedStatement = null
         ResultSet rs = null
         try {
-            preparedStatement = connection.prepareStatement(FOLLOW_ALL_CONCERNED_LIBRARIES)
+            String query = FOLLOW_ALL_CONCERNED_LIBRARIES
+            String replacement = "'" + excludeTypes.join("', '") + "'"
+            query = query.replace("€", replacement)
+            preparedStatement = connection.prepareStatement(query)
             preparedStatement.setString(1, id)
             rs = preparedStatement.executeQuery()
             List<String> dependencies = []
