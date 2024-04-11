@@ -77,8 +77,9 @@ public class SearchUtils2 {
             this.offset = getOffset(queryParameters);
             this.statsRepr = getStatsRepr(queryParameters);
             this.simpleQueryTree = xlqlQuery.getSimpleQueryTree(queryString);
-            this.outsetType = xlqlQuery.getOutsetType(simpleQueryTree);
-            this.queryTree = xlqlQuery.getQueryTree(xlqlQuery.addFilters(simpleQueryTree, DEFAULT_FILTERS), outsetType);
+            SimpleQueryTree filteredTree = xlqlQuery.addFilters(simpleQueryTree, DEFAULT_FILTERS);
+            this.outsetType = xlqlQuery.getOutsetType(filteredTree);
+            this.queryTree = xlqlQuery.getQueryTree(filteredTree, outsetType);
             this.esQueryDsl = getEsQueryDsl();
         }
 

@@ -52,8 +52,10 @@ public class XLQLQuery {
 
     public SimpleQueryTree addFilters(SimpleQueryTree sqt, List<SimpleQueryTree.PropertyValue> filters) {
         SimpleQueryTree.Node tree = sqt.tree;
-        for (SimpleQueryTree.Node pv : filters) {
-            tree = SimpleQueryTree.andExtend(tree, pv);
+        for (SimpleQueryTree.PropertyValue pv : filters) {
+            if (sqt.getTopLevelPvNodes().stream().noneMatch(n -> n.property().equals(pv.property()))) {
+                tree = SimpleQueryTree.andExtend(tree, pv);
+            }
         }
         return new SimpleQueryTree(tree);
     }

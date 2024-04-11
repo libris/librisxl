@@ -80,17 +80,17 @@ public class Disambiguate {
         return domainByProperty.getOrDefault(property, UNKNOWN_DOMAIN);
     }
 
-    public Disambiguate.OutsetType decideOutset(SimpleQueryTree sqt) {
-        Set<Disambiguate.OutsetType> outset = sqt.collectGivenTypes()
+    public OutsetType decideOutset(SimpleQueryTree sqt) {
+        Set<OutsetType> outset = sqt.collectGivenTypes()
                 .stream()
                 .map(this::getOutsetType)
                 .collect(Collectors.toSet());
 
         // TODO: Review this (for now default to Resource)
-        return outset.size() == 1 ? outset.stream().findFirst().get() : Disambiguate.OutsetType.RESOURCE;
+        return outset.size() == 1 ? outset.stream().findFirst().get() : OutsetType.RESOURCE;
     }
 
-    public OutsetType getOutsetType(String type) {
+    private OutsetType getOutsetType(String type) {
         if (workTypes.contains(type)) {
             return OutsetType.WORK;
         }
