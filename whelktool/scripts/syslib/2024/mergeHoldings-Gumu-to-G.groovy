@@ -38,7 +38,7 @@ for (String bibId : bibIds) {
             //System.err.println("Before merge:\n\t" + targetHoldBefore.getDataAsString() + "\nAfter merge:\n\t" + targetHold.doc.getDataAsString() + "\n")
             targetHold.scheduleSave(loud: isLoud)
         })
-        //incomingHold.scheduleDelete(loud: isLoud)
+        incomingHold.scheduleDelete(loud: isLoud)
     })
 }
 
