@@ -25,6 +25,7 @@ public class SearchUtils2 {
 
     private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper();
 
+
     Whelk whelk;
     XLQLQuery xlqlQuery;
 
@@ -43,8 +44,8 @@ public class SearchUtils2 {
         return query.getPartialCollectionView(esResponse);
     }
 
-    public Map<String, Object> buildStatsReprFromSliceSpec(List<Map<String,Object>> sliceList) {
-        Map<String,Object> statsfind = new LinkedHashMap<>();
+    public Map<String, Object> buildStatsReprFromSliceSpec(List<Map<String, Object>> sliceList) {
+        Map<String, Object> statsfind = new LinkedHashMap<>();
         for (Map<String, Object> slice : sliceList) {
             String key = (String) ((List<?>) slice.get("dimensionChain")).getFirst();
             int limit = (Integer) slice.get("itemLimit");
@@ -159,6 +160,7 @@ public class SearchUtils2 {
                 params.add(makeParam("_offset", offset));
             }
             params.add(makeParam("_limit", limit));
+            params.add(makeParam("_i", XLQLQuery.quoteSpecialSymbolsWithinFreeTextString(simpleQueryTree.getFreeTextPart().orElse("*"))));
             return params;
         }
 

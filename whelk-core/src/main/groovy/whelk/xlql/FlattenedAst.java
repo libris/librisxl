@@ -44,17 +44,11 @@ public class FlattenedAst {
                 for (Node node : and.operands()) {
                     switch (node) {
                         case Leaf l -> leafValues.add(quoteIfPhrase(l.value()));
-                        default -> {
-                            if (!leafValues.isEmpty()) {
-                                newOperands.add(new Leaf(String.join(" ", leafValues)));
-                                leafValues.clear();
-                            }
-                            newOperands.add(node);
-                        }
+                        default -> newOperands.add(mergeLeaves(node));
                     }
                 }
                 if (!leafValues.isEmpty()) {
-                    newOperands.add(new Leaf(String.join(" ", leafValues)));
+                    newOperands.addFirst(new Leaf(String.join(" ", leafValues)));
                 }
                 yield newOperands.size() > 1 ? new And(newOperands) : newOperands.getFirst();
             }

@@ -90,7 +90,7 @@ public class Disambiguate {
         return outset.size() == 1 ? outset.stream().findFirst().get() : Disambiguate.OutsetType.RESOURCE;
     }
 
-    private OutsetType getOutsetType(String type) {
+    public OutsetType getOutsetType(String type) {
         if (workTypes.contains(type)) {
             return OutsetType.WORK;
         }

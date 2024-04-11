@@ -26,10 +26,27 @@ public class SimpleQueryTree {
 
     public Node tree;
 
-    public List<PropertyValue> topPvNodes;
+    private List<PropertyValue> topPvNodes;
+
+    private String freeTextPart;
 
     public SimpleQueryTree(FlattenedAst ast, Disambiguate disambiguate) throws InvalidQueryException {
         this.tree = buildTree(ast.tree, disambiguate);
+    }
+
+    public static Node andExtend(Node tree, Node node) {
+        var conjuncts = switch (tree) {
+            case And and -> {
+                var copy = new ArrayList<>(and.conjuncts());
+                if (!copy.contains(node)) {
+                    copy.add(node);
+                }
+                yield copy;
+            }
+            default -> tree.equals(node) ? List.of(tree) : List.of(tree, node);
+        };
+
+        return conjuncts.size() == 1 ? conjuncts.getFirst() : new And(conjuncts);
     }
 
     private static Node buildTree(FlattenedAst.Node ast, Disambiguate disambiguate) throws InvalidQueryException {
@@ -171,5 +188,32 @@ public class SimpleQueryTree {
         }
 
         return topPvNodes;
+    }
+
+    public static PropertyValue pvEquals(String property, String value) {
+        return new PropertyValue(property, List.of(property), Operator.EQUALS, value);
+    }
+
+    public Optional<String> getFreeTextPart() {
+        if (freeTextPart == null) {
+            switch (tree) {
+                case And and -> and.conjuncts()
+                        .stream()
+                        .filter(c -> c instanceof FreeText)
+                        .map(FreeText.class::cast)
+                        .filter(ft -> ft.operator() == Operator.EQUALS)
+                        .map(FreeText::value)
+                        .findFirst()
+                        .ifPresent(ft -> freeTextPart = ft);
+                case SimpleQueryTree.FreeText ft -> {
+                    if (ft.operator() == Operator.EQUALS) {
+                        freeTextPart = ft.value();
+                    }
+                }
+                default -> {}
+            }
+        }
+
+        return Optional.ofNullable(freeTextPart);
     }
 }

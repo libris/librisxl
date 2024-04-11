@@ -413,7 +413,7 @@ public class XLQLQuery {
         return s.matches(".*(>=|<=|[=!~<>(): ]).*") ? "\"" + s + "\"" : s;
     }
 
-    private static String quoteSpecialSymbolsWithinFreeTextString(String s) {
+    public static String quoteSpecialSymbolsWithinFreeTextString(String s) {
         Matcher quotedMatcher = Pattern.compile("\".*?\"").matcher(s);
         List<List<Integer>> quotedIntervals = new ArrayList<>();
         while (quotedMatcher.find()) {
@@ -619,11 +619,11 @@ public class XLQLQuery {
 
         buckets.forEach((value, count) -> {
             Map<String, Object> observation = new LinkedHashMap<>();
-            var pvNode = new SimpleQueryTree.PropertyValue(property, List.of(property), Operator.EQUALS, value);
+            var pvNode = SimpleQueryTree.pvEquals(property, value);
             boolean queried = sqt.getTopLevelPvNodes().contains(pvNode);
             if (!queried) {
                 observation.put("totalItems", count);
-                String url = "/find?_q=" + treeToQueryString(addFilterToTree(sqt, pvNode)) + urlTail;
+                String url = "/find?_q=" + treeToQueryString(SimpleQueryTree.andExtend(sqt.tree, pvNode)) + urlTail;
                 observation.put("view", Map.of(JsonLd.ID_KEY, url));
                 observation.put("object", lookUp(value).orElse(value));
                 observations.add(observation);
@@ -631,19 +631,6 @@ public class XLQLQuery {
         });
 
         return observations;
-    }
-
-    SimpleQueryTree.And addFilterToTree(SimpleQueryTree sqt, SimpleQueryTree.PropertyValue pvNode) {
-        var conjuncts = switch (sqt.tree) {
-            case SimpleQueryTree.And and -> {
-                var copy  = new ArrayList<>(and.conjuncts());
-                copy.add(pvNode);
-                yield copy;
-            }
-            default -> List.of(sqt.tree, pvNode);
-        };
-
-        return new SimpleQueryTree.And(conjuncts);
     }
 
     public Disambiguate.OutsetType getOutsetType(SimpleQueryTree sqt) {
