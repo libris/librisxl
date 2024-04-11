@@ -50,6 +50,14 @@ public class XLQLQuery {
         return new SimpleQueryTree(flattened, disambiguate);
     }
 
+    public SimpleQueryTree addFilters(SimpleQueryTree sqt, List<SimpleQueryTree.PropertyValue> filters) {
+        SimpleQueryTree.Node tree = sqt.tree;
+        for (SimpleQueryTree.Node pv : filters) {
+            tree = SimpleQueryTree.andExtend(tree, pv);
+        }
+        return new SimpleQueryTree(tree);
+    }
+
     public Map<String, Object> getEsQuery(QueryTree queryTree) {
         return buildEsQuery(queryTree.tree, new HashMap<>());
     }

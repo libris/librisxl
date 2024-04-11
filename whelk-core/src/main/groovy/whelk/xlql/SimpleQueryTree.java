@@ -34,6 +34,10 @@ public class SimpleQueryTree {
         this.tree = buildTree(ast.tree, disambiguate);
     }
 
+    public SimpleQueryTree(SimpleQueryTree.Node tree) {
+        this.tree = tree;
+    }
+
     public static Node andExtend(Node tree, Node node) {
         var conjuncts = switch (tree) {
             case And and -> {

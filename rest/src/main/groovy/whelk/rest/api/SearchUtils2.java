@@ -24,7 +24,7 @@ public class SearchUtils2 {
     final static int DEFAULT_OFFSET = 0;
 
     private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper();
-
+    private static final List<SimpleQueryTree.PropertyValue> DEFAULT_FILTERS = List.of(SimpleQueryTree.pvEquals("rdf:type", "Work"));
 
     Whelk whelk;
     XLQLQuery xlqlQuery;
@@ -78,7 +78,7 @@ public class SearchUtils2 {
             this.statsRepr = getStatsRepr(queryParameters);
             this.simpleQueryTree = xlqlQuery.getSimpleQueryTree(queryString);
             this.outsetType = xlqlQuery.getOutsetType(simpleQueryTree);
-            this.queryTree = xlqlQuery.getQueryTree(simpleQueryTree, outsetType);
+            this.queryTree = xlqlQuery.getQueryTree(xlqlQuery.addFilters(simpleQueryTree, DEFAULT_FILTERS), outsetType);
             this.esQueryDsl = getEsQueryDsl();
         }
 
