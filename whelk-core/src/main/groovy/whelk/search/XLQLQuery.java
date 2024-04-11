@@ -322,7 +322,7 @@ public class XLQLQuery {
                 String andClause = and.conjuncts()
                         .stream()
                         .map(this::buildQueryString)
-                        .collect(Collectors.joining(" AND "));
+                        .collect(Collectors.joining(" "));
                 return topLevel ? andClause : "(" + andClause + ")";
             }
             case SimpleQueryTree.Or or -> {
