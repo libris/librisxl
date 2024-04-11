@@ -502,7 +502,7 @@ class Crud extends HttpServlet {
             sendError(request, response, e)
         } finally {
             measurement.complete()
-            log.debug("Sending POST response with status " +
+            log.info("Sending POST response with status " +
                      "${response.getStatus()} for ${request.pathInfo}")
         }
     }
@@ -587,7 +587,7 @@ class Crud extends HttpServlet {
             sendError(request, response, e)
         } finally {
             measurement.complete()
-            log.debug("Sending PUT response with status " +
+            log.info("Sending PUT response with status " +
                      "${response.getStatus()} for ${request.pathInfo}")
         }
 
