@@ -161,7 +161,7 @@ public class SearchUtils2 {
                 params.add(makeParam("_offset", offset));
             }
             params.add(makeParam("_limit", limit));
-            params.add(makeParam("_i", XLQLQuery.quoteSpecialSymbolsWithinFreeTextString(simpleQueryTree.getFreeTextPart().orElse("*"))));
+            params.add(makeParam("_i", simpleQueryTree.getFreeTextPart().orElse("*")));
             return params;
         }
 

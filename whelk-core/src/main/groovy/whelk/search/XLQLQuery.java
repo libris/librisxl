@@ -346,7 +346,7 @@ public class XLQLQuery {
     }
 
     private String freeTextToString(SimpleQueryTree.FreeText ft) {
-        String s = quoteSpecialSymbolsWithinFreeTextString(ft.value());
+        String s = ft.value();
         if (ft.operator() == Operator.NOT_EQUALS) {
             s = "NOT " + s;
         }
@@ -419,34 +419,8 @@ public class XLQLQuery {
         return s.matches(".*\\s.*") ? "\"" + s + "\"" : s;
     }
 
-    private static String quoteIfPhraseOrContainsSpecialSymbol(String s) {
+    public static String quoteIfPhraseOrContainsSpecialSymbol(String s) {
         return s.matches(".*(>=|<=|[=!~<>(): ]).*") ? "\"" + s + "\"" : s;
-    }
-
-    public static String quoteSpecialSymbolsWithinFreeTextString(String s) {
-        Matcher quotedMatcher = Pattern.compile("\".*?\"").matcher(s);
-        List<List<Integer>> quotedIntervals = new ArrayList<>();
-        while (quotedMatcher.find()) {
-            quotedIntervals.add(List.of(quotedMatcher.start(), quotedMatcher.end()));
-        }
-
-        List<Integer> insertQuoteAtIdx = new ArrayList<>();
-        Matcher specialSymbolMatcher = Pattern.compile("[^ \"]*(>=|<=|[=!~<>():])[^ \"]*").matcher(s);
-        while (specialSymbolMatcher.find()) {
-            boolean isAlreadyQuoted = quotedIntervals.stream().anyMatch(interval ->
-                    interval.getFirst() < specialSymbolMatcher.start() && interval.getLast() > specialSymbolMatcher.end()
-            );
-            if (!isAlreadyQuoted) {
-                insertQuoteAtIdx.addFirst(specialSymbolMatcher.start());
-                insertQuoteAtIdx.addFirst(specialSymbolMatcher.end());
-            }
-        }
-
-        for (int i : insertQuoteAtIdx) {
-            s = s.substring(0, i) + "\"" + s.substring(i);
-        }
-
-        return s;
     }
 
     private Set<String> getEsNestedFields(Whelk whelk) {
