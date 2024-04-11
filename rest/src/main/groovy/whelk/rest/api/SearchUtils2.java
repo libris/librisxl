@@ -60,23 +60,38 @@ public class SearchUtils2 {
     class Query {
         private final int limit;
         private final int offset;
-        private final Optional<String> sortBy;
+        private final String sortBy;
         private final Map<String, Object> statsRepr;
         private final boolean debug;
         private final String queryString;
+        private final String freeText;
         private final SimpleQueryTree simpleQueryTree;
         private final Disambiguate.OutsetType outsetType;
         private final QueryTree queryTree;
         private final Map<String, Object> esQueryDsl;
 
         Query(Map<String, String[]> queryParameters) throws InvalidQueryException, IOException {
-            this.queryString = URLDecoder.decode(queryParameters.get("_q")[0], StandardCharsets.UTF_8); //TODO: Decoding shouldn't be necessary here, make sure the query string decoded already
-            this.sortBy = getOptionalSingle("_sort", queryParameters);
+            this.sortBy = getOptionalSingle("_sort", queryParameters).orElse(null);
             this.debug = queryParameters.containsKey("_debug"); // Different debug modes needed?
             this.limit = getLimit(queryParameters);
             this.offset = getOffset(queryParameters);
             this.statsRepr = getStatsRepr(queryParameters);
+
+            //TODO: Decoding shouldn't be necessary here, make sure the query string is decoded already
+            var q = getOptionalSingle("_q", queryParameters)
+                    .map(x -> URLDecoder.decode(x, StandardCharsets.UTF_8));
+            var i = getOptionalSingle("_i", queryParameters)
+                    .map(x -> URLDecoder.decode(x, StandardCharsets.UTF_8));
+
+            this.queryString = q.orElseGet(i::get);
             this.simpleQueryTree = xlqlQuery.getSimpleQueryTree(queryString);
+            this.freeText = simpleQueryTree.getFreeTextPart().orElse("*");
+
+            if (q.isEmpty() || i.isEmpty()) {
+                //TODO: Trigger redirect in a proper way (or preferably avoid doing a redirect)
+                throw new Crud.RedirectException(makeFindUrl(0));
+            }
+
             SimpleQueryTree filteredTree = xlqlQuery.addFilters(simpleQueryTree, DEFAULT_FILTERS);
             this.outsetType = xlqlQuery.getOutsetType(filteredTree);
             this.queryTree = xlqlQuery.getQueryTree(filteredTree, outsetType);
@@ -88,7 +103,9 @@ public class SearchUtils2 {
             queryDsl.put("query", xlqlQuery.getEsQuery(queryTree));
             queryDsl.put("size", limit);
             queryDsl.put("from", offset);
-            sortBy.ifPresent(s -> queryDsl.put("sort", getSortClauses(s)));
+            if (sortBy != null) {
+                queryDsl.put("sort", getSortClauses(sortBy));
+            }
             queryDsl.put("aggs", xlqlQuery.getAggQuery(statsRepr, outsetType));
             queryDsl.put("track_total_hits", true);
             return queryDsl;
@@ -161,7 +178,7 @@ public class SearchUtils2 {
                 params.add(makeParam("_offset", offset));
             }
             params.add(makeParam("_limit", limit));
-            params.add(makeParam("_i", simpleQueryTree.getFreeTextPart().orElse("*")));
+            params.add(makeParam("_i", freeText));
             return params;
         }
 
@@ -193,7 +210,7 @@ public class SearchUtils2 {
             ));
         }
 
-        private Optional<String> getOptionalSingle(String name, Map<String, String[]> queryParameters) {
+        private static Optional<String> getOptionalSingle(String name, Map<String, String[]> queryParameters) {
             return Optional.ofNullable(queryParameters.get(name))
                     .map(x -> x[0])
                     .filter(x -> !x.isEmpty());
