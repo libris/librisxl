@@ -2,10 +2,13 @@ package whelk.xlql;
 
 import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
+import whelk.search.XLQLQuery;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class SimpleQueryTree {
     public sealed interface Node permits And, Or, PropertyValue, FreeText {
@@ -36,21 +39,6 @@ public class SimpleQueryTree {
 
     public SimpleQueryTree(SimpleQueryTree.Node tree) {
         this.tree = tree;
-    }
-
-    public static Node andExtend(Node tree, Node node) {
-        var conjuncts = switch (tree) {
-            case And and -> {
-                var copy = new ArrayList<>(and.conjuncts());
-                if (!copy.contains(node)) {
-                    copy.add(node);
-                }
-                yield copy;
-            }
-            default -> tree.equals(node) ? List.of(tree) : List.of(tree, node);
-        };
-
-        return conjuncts.size() == 1 ? conjuncts.getFirst() : new And(conjuncts);
     }
 
     private static Node buildTree(FlattenedAst.Node ast, Disambiguate disambiguate) throws InvalidQueryException {
@@ -126,7 +114,26 @@ public class SimpleQueryTree {
         }
     }
 
-    public static Node excludeFromTree(Node nodeToExclude, Node tree) {
+    public SimpleQueryTree andExtend(Node node) {
+        var conjuncts = switch (tree) {
+            case And and -> {
+                var copy = new ArrayList<>(and.conjuncts());
+                if (!copy.contains(node)) {
+                    copy.add(node);
+                }
+                yield copy;
+            }
+            default -> tree.equals(node) ? List.of(tree) : List.of(tree, node);
+        };
+
+        return new SimpleQueryTree(conjuncts.size() == 1 ? conjuncts.getFirst() : new And(conjuncts));
+    }
+
+    public SimpleQueryTree excludeFromTree(Node node) {
+        return new SimpleQueryTree(excludeFromTree(node, tree));
+    }
+
+    private static Node excludeFromTree(Node nodeToExclude, Node tree) {
         if (nodeToExclude.equals(tree)) {
             return null;
         }
@@ -177,6 +184,14 @@ public class SimpleQueryTree {
         return types;
     }
 
+    public boolean isEmpty() {
+        return tree == null;
+    }
+
+    public boolean isFreeText() {
+        return tree instanceof FreeText && ((FreeText) tree).operator().equals(Operator.EQUALS);
+    }
+
     public List<PropertyValue> getTopLevelPvNodes() {
         if (topPvNodes == null) {
             topPvNodes = switch (this.tree) {
@@ -198,26 +213,92 @@ public class SimpleQueryTree {
         return new PropertyValue(property, List.of(property), Operator.EQUALS, value);
     }
 
-    public Optional<String> getFreeTextPart() {
+    public String getFreeTextPart() {
         if (freeTextPart == null) {
-            switch (tree) {
-                case And and -> and.conjuncts()
+            if (tree instanceof And) {
+                freeTextPart = ((And) tree).conjuncts()
                         .stream()
                         .filter(c -> c instanceof FreeText)
                         .map(FreeText.class::cast)
                         .filter(ft -> ft.operator() == Operator.EQUALS)
                         .map(FreeText::value)
                         .findFirst()
-                        .ifPresent(ft -> freeTextPart = ft);
-                case SimpleQueryTree.FreeText ft -> {
-                    if (ft.operator() == Operator.EQUALS) {
-                        freeTextPart = ft.value();
-                    }
-                }
-                default -> {}
+                        .orElse("");
+            } else if (isFreeText()) {
+                freeTextPart = ((FreeText) tree).value();
+            } else {
+                freeTextPart = "";
             }
         }
 
-        return Optional.ofNullable(freeTextPart);
+        return freeTextPart;
+    }
+
+    public String toQueryString() {
+        return buildQueryString(tree, true);
+    }
+
+    private String buildQueryString(Node node, boolean topLevel) {
+        switch (node) {
+            case And and -> {
+                String andClause = and.conjuncts()
+                        .stream()
+                        .map(this::buildQueryString)
+                        .collect(Collectors.joining(" "));
+                return topLevel ? andClause : "(" + andClause + ")";
+            }
+            case Or or -> {
+                String orClause = or.disjuncts()
+                        .stream()
+                        .map(this::buildQueryString)
+                        .collect(Collectors.joining(" OR "));
+                return topLevel ? orClause : "(" + orClause + ")";
+            }
+            case FreeText ft -> {
+                return freeTextToString(ft);
+            }
+            case PropertyValue pv -> {
+                return propertyValueToString(pv);
+            }
+        }
+    }
+
+    private String buildQueryString(Node node) {
+        return buildQueryString(node, false);
+    }
+
+    private String freeTextToString(FreeText ft) {
+        String s = ft.value();
+        if (ft.operator() == Operator.NOT_EQUALS) {
+            s = "NOT " + s;
+        }
+        return s;
+    }
+
+    private String propertyValueToString(PropertyValue pv) {
+        String sep = switch (pv.operator()) {
+            case EQUALS, NOT_EQUALS -> ":";
+            case GREATER_THAN_OR_EQUALS -> ">=";
+            case GREATER_THAN -> ">";
+            case LESS_THAN_OR_EQUALS -> "<=";
+            case LESS_THAN -> "<";
+        };
+
+        String not = pv.operator() == Operator.NOT_EQUALS ? "NOT " : "";
+        String path = String.join(".", pv.propertyPath());
+
+        return not + XLQLQuery.quoteIfPhraseOrContainsSpecialSymbol(path) + sep + XLQLQuery.quoteIfPhraseOrContainsSpecialSymbol(pv.value());
+    }
+
+    public void replaceTopLevelFreeText(String replacement) {
+        if (isFreeText()) {
+            this.tree = new FreeText(Operator.EQUALS, replacement);
+        } else if (tree instanceof And) {
+            List<Node> newConjuncts = ((And) tree).conjuncts().stream()
+                    .filter(Predicate.not(c -> c instanceof FreeText && ((FreeText) c).operator().equals(Operator.EQUALS)))
+                    .toList();
+            newConjuncts.addFirst(new FreeText(Operator.EQUALS, replacement));
+            this.tree = new And(newConjuncts);
+        }
     }
 }

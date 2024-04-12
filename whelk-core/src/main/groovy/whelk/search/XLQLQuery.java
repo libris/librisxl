@@ -1,5 +1,7 @@
 package whelk.search;
 
+import com.google.common.escape.Escaper;
+import com.google.common.net.UrlEscapers;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
@@ -26,6 +28,8 @@ public class XLQLQuery {
 
     private static final String FILTERED_AGG = "a";
     private static final int DEFAULT_BUCKET_SIZE = 10;
+    private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper();
+
 
     public XLQLQuery(Whelk whelk) {
         this.whelk = whelk;
@@ -51,13 +55,12 @@ public class XLQLQuery {
     }
 
     public SimpleQueryTree addFilters(SimpleQueryTree sqt, List<SimpleQueryTree.PropertyValue> filters) {
-        SimpleQueryTree.Node tree = sqt.tree;
         for (SimpleQueryTree.PropertyValue pv : filters) {
             if (sqt.getTopLevelPvNodes().stream().noneMatch(n -> n.property().equals(pv.property()))) {
-                tree = SimpleQueryTree.andExtend(tree, pv);
+                sqt = sqt.andExtend(pv);
             }
         }
-        return new SimpleQueryTree(tree);
+        return sqt;
     }
 
     public Map<String, Object> getEsQuery(QueryTree queryTree) {
@@ -228,23 +231,23 @@ public class XLQLQuery {
         return toMappings(sqt, Collections.emptyList());
     }
 
-    public Map<String, Object> toMappings(SimpleQueryTree sqt, List<String> urlParams) {
-        return buildMappings(sqt.tree, sqt, new LinkedHashMap<>(), urlParams);
+    public Map<String, Object> toMappings(SimpleQueryTree sqt, List<String> nonQueryParams) {
+        return buildMappings(sqt.tree, sqt, new LinkedHashMap<>(), nonQueryParams);
     }
 
-    private Map<String, Object> buildMappings(SimpleQueryTree.Node sqtNode, SimpleQueryTree sqt, Map<String, Object> mappingsNode, List<String> urlParams) {
+    private Map<String, Object> buildMappings(SimpleQueryTree.Node sqtNode, SimpleQueryTree sqt, Map<String, Object> mappingsNode, List<String> nonQueryParams) {
         switch (sqtNode) {
             case SimpleQueryTree.And and -> {
                 var andClause = and.conjuncts()
                         .stream()
-                        .map(c -> buildMappings(c, sqt, new LinkedHashMap<>(), urlParams))
+                        .map(c -> buildMappings(c, sqt, new LinkedHashMap<>(), nonQueryParams))
                         .toList();
                 mappingsNode.put("and", andClause);
             }
             case SimpleQueryTree.Or or -> {
                 var orClause = or.disjuncts()
                         .stream()
-                        .map(d -> buildMappings(d, sqt, new LinkedHashMap<>(), urlParams))
+                        .map(d -> buildMappings(d, sqt, new LinkedHashMap<>(), nonQueryParams))
                         .toList();
                 mappingsNode.put("or", orClause);
             }
@@ -252,15 +255,35 @@ public class XLQLQuery {
             case SimpleQueryTree.PropertyValue pv -> mappingsNode = propertyValueMapping(pv);
         }
 
-        Optional<SimpleQueryTree.Node> reducedTree = getReducedTree(sqt, sqtNode);
-        // TODO: Empty tree --> ???
-        String upUrl = reducedTree.map(node -> "/find?_q=" + treeToQueryString(node)).orElse("/find?_q=*");
-        upUrl += urlParams.stream()
-                .map(p -> "&" + p)
-                .collect(Collectors.joining(""));
+        SimpleQueryTree reducedTree = sqt.excludeFromTree(sqtNode);
+        String upUrl = reducedTree.isEmpty()
+                ? "/find?_i=*&_q=*"
+                : makeFindUrl(reducedTree, nonQueryParams);
+
         mappingsNode.put("up", Map.of(JsonLd.ID_KEY, upUrl));
 
         return mappingsNode;
+    }
+
+    private String makeFindUrl(SimpleQueryTree sqt, List<String> nonQueryParams) {
+        List<String> params = new ArrayList<>();
+        params.add(makeParam("_i", sqt.getFreeTextPart()));
+        params.add(makeParam("_q", sqt.toQueryString()));
+        params.addAll(nonQueryParams);
+        return "/find?" + String.join("&", params);
+    }
+
+    public static String makeParam(String key, String value) {
+        return String.format("%s=%s", escapeQueryParam(key), escapeQueryParam(value));
+    }
+
+    private static String escapeQueryParam(String input) {
+        return QUERY_ESCAPER.escape(input)
+                // We want pretty URIs, restore some characters which are inside query strings
+                // https://tools.ietf.org/html/rfc3986#section-3.4
+                .replace("%3A", ":")
+                .replace("%2F", "/")
+                .replace("%40", "@");
     }
 
     private Map<String, Object> freeTextMapping(SimpleQueryTree.FreeText ft) {
@@ -306,66 +329,6 @@ public class XLQLQuery {
 
     private Map<?, ?> getDefinition(String term) {
         return whelk.getJsonld().vocabIndex.get(term);
-    }
-
-    private Optional<SimpleQueryTree.Node> getReducedTree(SimpleQueryTree sqt, SimpleQueryTree.Node qtNode) {
-        return Optional.ofNullable(SimpleQueryTree.excludeFromTree(qtNode, sqt.tree));
-    }
-
-    private String treeToQueryString(SimpleQueryTree.Node sqtNode) {
-        return buildQueryString(sqtNode, true);
-    }
-
-    private String buildQueryString(SimpleQueryTree.Node sqtNode, boolean topLevel) {
-        switch (sqtNode) {
-            case SimpleQueryTree.And and -> {
-                String andClause = and.conjuncts()
-                        .stream()
-                        .map(this::buildQueryString)
-                        .collect(Collectors.joining(" "));
-                return topLevel ? andClause : "(" + andClause + ")";
-            }
-            case SimpleQueryTree.Or or -> {
-                String orClause = or.disjuncts()
-                        .stream()
-                        .map(this::buildQueryString)
-                        .collect(Collectors.joining(" OR "));
-                return topLevel ? orClause : "(" + orClause + ")";
-            }
-            case SimpleQueryTree.FreeText ft -> {
-                return freeTextToString(ft);
-            }
-            case SimpleQueryTree.PropertyValue pv -> {
-                return propertyValueToString(pv);
-            }
-        }
-    }
-
-    private String buildQueryString(SimpleQueryTree.Node sqtNode) {
-        return buildQueryString(sqtNode, false);
-    }
-
-    private String freeTextToString(SimpleQueryTree.FreeText ft) {
-        String s = ft.value();
-        if (ft.operator() == Operator.NOT_EQUALS) {
-            s = "NOT " + s;
-        }
-        return s;
-    }
-
-    private String propertyValueToString(SimpleQueryTree.PropertyValue pv) {
-        String sep = switch (pv.operator()) {
-            case EQUALS, NOT_EQUALS -> ":";
-            case GREATER_THAN_OR_EQUALS -> ">=";
-            case GREATER_THAN -> ">";
-            case LESS_THAN_OR_EQUALS -> "<=";
-            case LESS_THAN -> "<";
-        };
-
-        String not = pv.operator() == Operator.NOT_EQUALS ? "NOT " : "";
-        String path = String.join(".", pv.propertyPath());
-
-        return not + quoteIfPhraseOrContainsSpecialSymbol(path) + sep + quoteIfPhraseOrContainsSpecialSymbol(pv.value());
     }
 
     private static Map<String, Object> equalsFilter(String path, String value) {
@@ -569,9 +532,9 @@ public class XLQLQuery {
         return mergedAggsOrdered;
     }
 
-    public Map<String, Object> getStats(Map<String, Object> esResponse, Map<String, Object> statsRepr, SimpleQueryTree sqt, List<String> urlParams) {
+    public Map<String, Object> getStats(Map<String, Object> esResponse, Map<String, Object> statsRepr, SimpleQueryTree sqt, List<String> nonQueryParams) {
         var aggs = collectAggs(esResponse, statsRepr);
-        return buildStats(aggs, sqt, urlParams);
+        return buildStats(aggs, sqt, nonQueryParams);
     }
 
     private Map<String, Object> buildStats(Map<String, Map<String, Integer>> aggs, SimpleQueryTree sqt, List<String> urlParams) {
@@ -594,12 +557,8 @@ public class XLQLQuery {
                 "sliceByDimension", sliceByDimension);
     }
 
-    private List<Map<String, Object>> getObservations(String property, Map<String, Integer> buckets, SimpleQueryTree sqt, List<String> urlParams) {
+    private List<Map<String, Object>> getObservations(String property, Map<String, Integer> buckets, SimpleQueryTree sqt, List<String> nonQueryParams) {
         List<Map<String, Object>> observations = new ArrayList<>();
-
-        String urlTail = urlParams.stream()
-                .map(p -> "&" + p)
-                .collect(Collectors.joining(""));
 
         buckets.forEach((value, count) -> {
             Map<String, Object> observation = new LinkedHashMap<>();
@@ -607,7 +566,7 @@ public class XLQLQuery {
             boolean queried = sqt.getTopLevelPvNodes().contains(pvNode);
             if (!queried) {
                 observation.put("totalItems", count);
-                String url = "/find?_q=" + treeToQueryString(SimpleQueryTree.andExtend(sqt.tree, pvNode)) + urlTail;
+                String url = makeFindUrl(sqt.andExtend(pvNode), nonQueryParams);
                 observation.put("view", Map.of(JsonLd.ID_KEY, url));
                 observation.put("object", lookUp(value).orElse(value));
                 observations.add(observation);
