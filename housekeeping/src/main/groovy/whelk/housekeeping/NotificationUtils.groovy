@@ -126,6 +126,12 @@ class NotificationUtils {
             asList(data[p]).each { s.append("\n").append(chipString(it, whelk)) }
         }
         s.append("\n").append("Kontrollnummer: ").append(doc.getControlNumber())
+        List<String> isbnValues = doc.getIsbnValues()
+        if (isbnValues) {
+            for (String isbn : isbnValues) {
+                s.append("\n").append("ISBN: ").append(isbn)
+            }
+        }
 
         return s.toString()
     }
