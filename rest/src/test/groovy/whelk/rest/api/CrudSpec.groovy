@@ -489,17 +489,17 @@ class CrudSpec extends Specification {
         response.getStatus() == status
 
         where:
-        // checksum             -1856152111
-        // checksum embellished -5620206737
+        // checksum             22135556
+        // checksum embellished -4485029982
 
         embellished | eTag                      || status
-        false       | '-1856152111'             || SC_NOT_MODIFIED
-        false       | "-1856152111:-5620206737" || SC_NOT_MODIFIED
-        false       | "-1856152111:other"       || SC_NOT_MODIFIED
+        false       | '22135556'             || SC_NOT_MODIFIED
+        false       | "22135556:-4485029982" || SC_NOT_MODIFIED
+        false       | "22135556:other"       || SC_NOT_MODIFIED
         false       | "other"                   || SC_OK
 
-        true        | '-1856152111'             || SC_OK
-        true        | '-1856152111:-5620206737' || SC_NOT_MODIFIED
+        true        | '22135556'             || SC_OK
+        true        | '22135556:-4485029982' || SC_NOT_MODIFIED
         true        | "-1856151741:other"       || SC_OK
         true        | "other"                   || SC_OK
     }
