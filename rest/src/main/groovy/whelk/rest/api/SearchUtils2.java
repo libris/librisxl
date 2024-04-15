@@ -67,7 +67,7 @@ public class SearchUtils2 {
         private final Map<String, Object> esQueryDsl;
 
         Query(Map<String, String[]> queryParameters) throws InvalidQueryException, IOException {
-            this.sortBy = getOptionalSingle("_sort", queryParameters).orElse(null);
+            this.sortBy = getOptionalSingleFilterEmpty("_sort", queryParameters).orElse(null);
             this.debug = queryParameters.containsKey("_debug"); // Different debug modes needed?
             this.limit = getLimit(queryParameters);
             this.offset = getOffset(queryParameters);
@@ -79,7 +79,7 @@ public class SearchUtils2 {
 
             if (q.isPresent() && i.isPresent()) {
                 var iSqt = xlqlQuery.getSimpleQueryTree(i.get());
-                if (iSqt.isFreeText()) {
+                if (iSqt.isEmpty() || iSqt.isFreeText()) {
                     var qSqt = xlqlQuery.getSimpleQueryTree(q.get());
                     if (i.get().equals(qSqt.getFreeTextPart())) {
                         // The acceptable case
@@ -211,14 +211,17 @@ public class SearchUtils2 {
             ));
         }
 
+        private static Optional<String> getOptionalSingleFilterEmpty(String name, Map<String, String[]> queryParameters) {
+            return getOptionalSingle(name, queryParameters).filter(String::isEmpty);
+        }
+
         private static Optional<String> getOptionalSingle(String name, Map<String, String[]> queryParameters) {
             return Optional.ofNullable(queryParameters.get(name))
-                    .map(x -> x[0])
-                    .filter(x -> !x.isEmpty());
+                    .map(x -> x[0]);
         }
 
         private int getLimit(Map<String, String[]> queryParameters) throws InvalidQueryException {
-            int limit = getOptionalSingle("_limit", queryParameters)
+            int limit = getOptionalSingleFilterEmpty("_limit", queryParameters)
                     .map(x -> parseInt(x, DEFAULT_LIMIT))
                     .orElse(DEFAULT_LIMIT);
 
@@ -235,7 +238,7 @@ public class SearchUtils2 {
         }
 
         private int getOffset(Map<String, String[]> queryParameters) throws InvalidQueryException {
-            int offset = getOptionalSingle("_offset", queryParameters)
+            int offset = getOptionalSingleFilterEmpty("_offset", queryParameters)
                     .map(x -> parseInt(x, DEFAULT_OFFSET))
                     .orElse(DEFAULT_OFFSET);
 

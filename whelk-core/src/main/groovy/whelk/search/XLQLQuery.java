@@ -47,6 +47,9 @@ public class XLQLQuery {
     }
 
     public SimpleQueryTree getSimpleQueryTree(String queryString) throws InvalidQueryException {
+        if (queryString.isEmpty()) {
+            return new SimpleQueryTree(null);
+        }
         LinkedList<Lex.Symbol> lexedSymbols = Lex.lexQuery(queryString);
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols);
         Ast ast = new Ast(parseTree);

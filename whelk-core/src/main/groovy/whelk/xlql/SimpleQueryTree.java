@@ -297,8 +297,10 @@ public class SimpleQueryTree {
             List<Node> newConjuncts = ((And) tree).conjuncts().stream()
                     .filter(Predicate.not(c -> c instanceof FreeText && ((FreeText) c).operator().equals(Operator.EQUALS)))
                     .collect(Collectors.toList());
-            newConjuncts.addFirst(new FreeText(Operator.EQUALS, replacement));
-            this.tree = new And(newConjuncts);
+            if (!replacement.isEmpty()) {
+                newConjuncts.addFirst(new FreeText(Operator.EQUALS, replacement));
+            }
+            this.tree = newConjuncts.size() == 1 ? newConjuncts.getFirst() : new And(newConjuncts);
         }
     }
 }
