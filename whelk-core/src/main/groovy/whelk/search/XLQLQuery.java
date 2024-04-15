@@ -11,8 +11,6 @@ import whelk.xlql.*;
 
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static whelk.util.DocumentUtil.findKey;
@@ -28,7 +26,7 @@ public class XLQLQuery {
 
     private static final String FILTERED_AGG = "a";
     private static final int DEFAULT_BUCKET_SIZE = 10;
-    private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper();
+    public static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper();
 
 
     public XLQLQuery(Whelk whelk) {

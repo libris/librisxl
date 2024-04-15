@@ -10,8 +10,6 @@ import whelk.xlql.QueryTree;
 import whelk.xlql.SimpleQueryTree;
 
 import java.io.IOException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static whelk.util.Jackson.mapper;
@@ -73,7 +71,6 @@ public class SearchUtils2 {
             this.offset = getOffset(queryParameters);
             this.statsRepr = getStatsRepr(queryParameters);
 
-            // TODO: Distinguish between empty param and no param
             var q = getOptionalSingle("_q", queryParameters);
             var i = getOptionalSingle("_i", queryParameters);
 

@@ -4,8 +4,6 @@ import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
 import whelk.search.XLQLQuery;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -101,12 +99,10 @@ public class SimpleQueryTree {
                 // Expand and encode URIs, e.g. sao:Hästar -> https://id.kb.se/term/sao/H%C3%A4star
                 if (disambiguate.isObjectProperty(property)) {
                     String expanded = Disambiguate.expandPrefixed(value);
-                    if (JsonLd.looksLikeIri(expanded)) {
-                        value = URLEncoder.encode(value, StandardCharsets.UTF_8)
-                                .replaceAll("\\+", "%20")
-                                .replaceAll("%2F", "/")
-                                .replaceAll("%3A", ":");
-                    }
+                    int lastSlashIdx = expanded.lastIndexOf("/");
+                    String slug = value.substring(lastSlashIdx + 1);
+                    String ns = value.substring(0, lastSlashIdx + 1);
+                    value = ns + XLQLQuery.QUERY_ESCAPER.escape(slug).replace("%23", "#");
                 }
 
                 return new PropertyValue(property, propertyPath, c.operator(), value);
