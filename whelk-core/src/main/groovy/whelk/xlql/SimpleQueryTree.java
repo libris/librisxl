@@ -296,7 +296,7 @@ public class SimpleQueryTree {
         } else if (tree instanceof And) {
             List<Node> newConjuncts = ((And) tree).conjuncts().stream()
                     .filter(Predicate.not(c -> c instanceof FreeText && ((FreeText) c).operator().equals(Operator.EQUALS)))
-                    .toList();
+                    .collect(Collectors.toList());
             newConjuncts.addFirst(new FreeText(Operator.EQUALS, replacement));
             this.tree = new And(newConjuncts);
         }
