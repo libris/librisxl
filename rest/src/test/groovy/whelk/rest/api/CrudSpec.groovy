@@ -462,7 +462,7 @@ class CrudSpec extends Specification {
     @Unroll
     def "GET document with If-None-Match should return 200 Ok or 304 Not Modified"() {
         given:
-        def id = BASE_URI.resolve("/1234").toString()
+        def id = "https://example.com/1234"
         def doc = new Document(["@graph": [
                 ['@id': id, 'mainEntity': ['@id': "$id#it"]], 
                 ['@id': "$id#it", '@type': 'Instance', 'prop1': ['@id': 'https://foo']]
@@ -489,18 +489,18 @@ class CrudSpec extends Specification {
         response.getStatus() == status
 
         where:
-        // checksum             1429150478
-        // checksum embellished -3078015060
+        // checksum             2208314632
+        // checksum embellished -2298850906
 
         embellished | eTag                      || status
-        false       | '1429150478'              || SC_NOT_MODIFIED
-        false       | "1429150478:-3078015060"  || SC_NOT_MODIFIED
-        false       | "1429150478:other"        || SC_NOT_MODIFIED
+        false       | '2208314632'              || SC_NOT_MODIFIED
+        false       | "2208314632:-2298850906"  || SC_NOT_MODIFIED
+        false       | "2208314632:other"        || SC_NOT_MODIFIED
         false       | "other"                   || SC_OK
 
-        true        | '1429150478'              || SC_OK
-        true        | '1429150478:-3078015060'  || SC_NOT_MODIFIED
-        true        | "1429150478:other"        || SC_OK
+        true        | '2208314632'              || SC_OK
+        true        | '2208314632:-2298850906'  || SC_NOT_MODIFIED
+        true        | "2208314632:other"        || SC_OK
         true        | "other"                   || SC_OK
     }
 
