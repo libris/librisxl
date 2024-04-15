@@ -105,14 +105,14 @@ class InquirySender extends HouseKeeper {
 
                 // Figure out who to send to
                 Set<String> recipients = []
-                String subject = NotificationUtils.subject(whelk, messageType)
+                String subject = NotificationUtils.subject(whelk, messageType, concerningSystemIDs)
                 for (String concerningSystemID : concerningSystemIDs) {
                     String type = whelk.getStorage().getMainEntityTypeBySystemID(concerningSystemID)
                     if (whelk.getJsonld().isSubClassOf(type, "Instance")) { // Send to all holders of said instance (including Electronic)
                         List<String> libraries = whelk.getStorage().getAllLibrariesHolding(concerningSystemID)
                         recipients.addAll( getRecipientsForLibraries(libraries, heldByToUserSettings) )
 
-                        subject = NotificationUtils.subject(whelk, messageType, libraries)
+                        subject = NotificationUtils.subject(whelk, messageType, concerningSystemIDs, libraries)
                     }
                     else { // Send to all holders of non-electronic instances linking (in any number of steps) to whatever the message was about
                         List<String> libraries = whelk.getStorage().followLibrariesConcernedWith(concerningSystemID, ["Electronic"])

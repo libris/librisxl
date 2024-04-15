@@ -109,7 +109,7 @@ class NotificationSender extends HouseKeeper {
 
     private void sendForAgent(String concerningId, Map<String, List<Map>> heldByToUserSettings, List changeObservationsForConcerned) {
         List<String> concernedLibraries = whelk.getStorage().followLibrariesConcernedWith(concerningId, ["Electronic"])
-        String subject = NotificationUtils.subject(whelk, NotificationUtils.NotificationType.ChangeObservation, concernedLibraries)
+        String subject = NotificationUtils.subject(whelk, NotificationUtils.NotificationType.ChangeObservation, [concerningId], concernedLibraries)
 
         List<Map> changeObservationMaps = []
         for (String observationDataString : changeObservationsForConcerned) {
@@ -142,7 +142,7 @@ class NotificationSender extends HouseKeeper {
 
     private void sendForInstance(String instanceId, Map<String, List<Map>> heldByToUserSettings, List changeObservationsForInstance) {
         List<String> libraries = whelk.getStorage().getAllLibrariesHolding(instanceId)
-        String subject = NotificationUtils.subject(whelk, NotificationUtils.NotificationType.ChangeObservation, libraries)
+        String subject = NotificationUtils.subject(whelk, NotificationUtils.NotificationType.ChangeObservation, [instanceId], libraries)
 
         for (String library : libraries) {
             List<Map> users = (List<Map>) heldByToUserSettings[library]
