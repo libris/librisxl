@@ -484,23 +484,23 @@ class CrudSpec extends Specification {
             }
         }
         crud.doGet(request, response)
-        
+
         expect:
         response.getStatus() == status
 
         where:
-        // checksum             22135556
-        // checksum embellished -4485029982
+        // checksum             1429150478
+        // checksum embellished -3078015060
 
         embellished | eTag                      || status
-        false       | '22135556'             || SC_NOT_MODIFIED
-        false       | "22135556:-4485029982" || SC_NOT_MODIFIED
-        false       | "22135556:other"       || SC_NOT_MODIFIED
+        false       | '1429150478'              || SC_NOT_MODIFIED
+        false       | "1429150478:-3078015060"  || SC_NOT_MODIFIED
+        false       | "1429150478:other"        || SC_NOT_MODIFIED
         false       | "other"                   || SC_OK
 
-        true        | '22135556'             || SC_OK
-        true        | '22135556:-4485029982' || SC_NOT_MODIFIED
-        true        | "-1856151741:other"       || SC_OK
+        true        | '1429150478'              || SC_OK
+        true        | '1429150478:-3078015060'  || SC_NOT_MODIFIED
+        true        | "1429150478:other"        || SC_OK
         true        | "other"                   || SC_OK
     }
 
