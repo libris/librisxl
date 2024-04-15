@@ -27,22 +27,11 @@ public class QueryTree {
     public Node tree;
 
     public QueryTree(SimpleQueryTree sqt, Disambiguate disambiguate) {
-        this.tree = sqtToQt(sqt.tree, disambiguate);
+        this.tree = sqtToQt(sqt.tree, disambiguate, Disambiguate.OutsetType.RESOURCE);
     }
 
-    private static Node sqtToQt(SimpleQueryTree.Node sqt, Disambiguate disambiguate) {
-        Disambiguate.OutsetType outset = decideOutset(sqt, disambiguate);
-        return sqtToQt(sqt, disambiguate, outset);
-    }
-
-    private static Disambiguate.OutsetType decideOutset(SimpleQueryTree.Node sqtNode, Disambiguate disambiguate) {
-        Set<String> givenTypes = collectGivenTypes(sqtNode);
-        Set<Disambiguate.OutsetType> outset = givenTypes.stream()
-                .map(disambiguate::getOutsetType)
-                .collect(Collectors.toSet());
-
-        // TODO: Review this (for now default to Resource)
-        return outset.size() == 1 ? outset.stream().findFirst().get() : Disambiguate.OutsetType.RESOURCE;
+    public QueryTree(SimpleQueryTree sqt, Disambiguate disambiguate, Disambiguate.OutsetType outsetType) {
+        this.tree = sqtToQt(sqt.tree, disambiguate, outsetType);
     }
 
     private static Node sqtToQt(SimpleQueryTree.Node sqtNode, Disambiguate disambiguate, Disambiguate.OutsetType outset) {
@@ -96,10 +85,8 @@ public class QueryTree {
              If "vocab term" interpret the value as is, e.g. issuanceType: "Serial" or encodingLevel: "marc:FullLevel".
              Otherwise, when object property, append either @id or _str to the path.
              */
-            String expanded = Disambiguate.expandPrefixed(pv.value());
-            if (JsonLd.looksLikeIri(expanded)) {
+            if (JsonLd.looksLikeIri(value)) {
                 path.appendId();
-                value = expanded;
             } else {
                 path.appendUnderscoreStr();
             }
@@ -109,60 +96,16 @@ public class QueryTree {
             return new Field(path, operator, value);
         }
 
-        path.expandChainAxiom(disambiguate);
+        List<Node> altFields = path.expand(pv.property(), disambiguate, outset)
+                .stream()
+                .map(p -> newFields(p, operator, value, disambiguate))
+                .collect(Collectors.toList());
 
-        String domain = disambiguate.getDomain(pv.property());
-
-        Disambiguate.DomainCategory domainCategory = disambiguate.getDomainCategory(domain);
-        if (domainCategory == Disambiguate.DomainCategory.ADMIN_METADATA) {
-            path.prependMeta();
+        if (altFields.size() == 1) {
+            return altFields.getFirst();
         }
 
-        return switch (outset) {
-            case WORK -> {
-                switch (domainCategory) {
-                    case INSTANCE, EMBODIMENT -> {
-                        // The property p appears only on instance, modify path to @reverse.instanceOf.p...
-                        path.setWorkToInstancePath();
-                        yield newFields(path, operator, value, disambiguate);
-                    }
-                    case CREATION_SUPER, UNKNOWN -> {
-                        // The property p may appear on instance, add alternative path @reverse.instanceOf.p...
-                        List<Node> altFields = new ArrayList<>();
-                        Path copy = path.copy();
-                        copy.setWorkToInstancePath();
-                        altFields.add(newFields(path, operator, value, disambiguate));
-                        altFields.add(newFields(copy, operator, value, disambiguate));
-                        yield operator == Operator.NOT_EQUALS ? new And(altFields) : new Or(altFields);
-                    }
-                    default -> {
-                        yield newFields(path, operator, value, disambiguate);
-                    }
-                }
-            }
-            case INSTANCE -> {
-                switch (domainCategory) {
-                    case WORK -> {
-                        // The property p appears only work, modify path to instanceOf.p...
-                        path.setInstanceToWorkPath();
-                        yield newFields(path, operator, value, disambiguate);
-                    }
-                    case CREATION_SUPER, UNKNOWN -> {
-                        // The property p may appear on work, add alternative path instanceOf.p...
-                        List<Node> altFields = new ArrayList<>();
-                        Path copy = path.copy();
-                        copy.setInstanceToWorkPath();
-                        altFields.add(newFields(path, operator, value, disambiguate));
-                        altFields.add(newFields(copy, operator, value, disambiguate));
-                        yield operator == Operator.NOT_EQUALS ? new And(altFields) : new Or(altFields);
-                    }
-                    default -> {
-                        yield newFields(path, operator, value, disambiguate);
-                    }
-                }
-            }
-            case RESOURCE -> newFields(path, operator, value, disambiguate);
-        };
+        return operator == Operator.NOT_EQUALS ? new And(altFields) : new Or(altFields);
     }
 
     static Node newFields(Path path, Operator operator, String value, Disambiguate disambiguate) {
@@ -201,26 +144,5 @@ public class QueryTree {
                 .toList();
 
         return pv.operator() == Operator.NOT_EQUALS ? new And(altFields) : new Or(altFields);
-    }
-
-    public static Set<String> collectGivenTypes(SimpleQueryTree.Node sqt) {
-        return collectGivenTypes(sqt, new HashSet<>());
-    }
-
-    private static Set<String> collectGivenTypes(SimpleQueryTree.Node sqtNode, Set<String> types) {
-        switch (sqtNode) {
-            case SimpleQueryTree.And and -> and.conjuncts().forEach(c -> collectGivenTypes(c, types));
-            case SimpleQueryTree.Or or -> or.disjuncts().forEach(d -> collectGivenTypes(d, types));
-            case SimpleQueryTree.PropertyValue pv -> {
-                if (List.of("rdf:type").equals(pv.propertyPath())) {
-                    types.add(pv.value());
-                }
-            }
-            case SimpleQueryTree.FreeText ignored -> {
-                // Nothing to do here
-            }
-        }
-
-        return types;
     }
 }

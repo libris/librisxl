@@ -1,28 +1,24 @@
 package whelk.rest.api;
 
-import com.google.common.escape.Escaper;
-import com.google.common.net.UrlEscapers;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.exception.WhelkRuntimeException;
 import whelk.search.XLQLQuery;
+import whelk.xlql.Disambiguate;
 import whelk.xlql.QueryTree;
 import whelk.xlql.SimpleQueryTree;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.io.IOException;
+import java.util.*;
+
+import static whelk.util.Jackson.mapper;
 
 public class SearchUtils2 {
     final static int DEFAULT_LIMIT = 200;
     final static int MAX_LIMIT = 4000;
     final static int DEFAULT_OFFSET = 0;
-
-    private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper();
+    private static final List<SimpleQueryTree.PropertyValue> DEFAULT_FILTERS = List.of(SimpleQueryTree.pvEquals("rdf:type", "Work"));
 
     Whelk whelk;
     XLQLQuery xlqlQuery;
@@ -32,7 +28,7 @@ public class SearchUtils2 {
         this.xlqlQuery = new XLQLQuery(whelk);
     }
 
-    Map<String, Object> doSearch(Map<String, String[]> queryParameters) throws InvalidQueryException {
+    Map<String, Object> doSearch(Map<String, String[]> queryParameters) throws InvalidQueryException, IOException {
         if (whelk.elastic == null) {
             throw new WhelkRuntimeException("ElasticSearch not configured.");
         }
@@ -42,32 +38,71 @@ public class SearchUtils2 {
         return query.getPartialCollectionView(esResponse);
     }
 
+    public Map<String, Object> buildStatsReprFromSliceSpec(List<Map<String, Object>> sliceList) {
+        Map<String, Object> statsfind = new LinkedHashMap<>();
+        for (Map<String, Object> slice : sliceList) {
+            String key = (String) ((List<?>) slice.get("dimensionChain")).getFirst();
+            int limit = (Integer) slice.get("itemLimit");
+            var m = Map.of("sort", "value",
+                    "sortOrder", "desc",
+                    "size", limit);
+            statsfind.put(key, m);
+        }
+        return statsfind;
+    }
+
     class Query {
-        //        static Set<String> reservedParameters = getReservedParameters();
         private final int limit;
         private final int offset;
-        private final Optional<String> sortBy;
+        private final String sortBy;
+        private final Map<String, Object> statsRepr;
         private final boolean debug;
         private final String queryString;
+        private final String freeText;
         private final SimpleQueryTree simpleQueryTree;
+        private final Disambiguate.OutsetType outsetType;
         private final QueryTree queryTree;
         private final Map<String, Object> esQueryDsl;
-//    Optional<List> predicates;
-//    Optional<String> object;
-//    Optional<String> value;
-//    Optional<String> lens;
-//    Optional<String> addStats;
-//    Optional<String> suggest;
 
-        Query(Map<String, String[]> queryParameters) throws InvalidQueryException {
-            this.queryString = queryParameters.get("_q")[0];
-            this.sortBy = getOptionalSingle("_sort", queryParameters);
+        Query(Map<String, String[]> queryParameters) throws InvalidQueryException, IOException {
+            this.sortBy = getOptionalSingleFilterEmpty("_sort", queryParameters).orElse(null);
             this.debug = queryParameters.containsKey("_debug"); // Different debug modes needed?
             this.limit = getLimit(queryParameters);
             this.offset = getOffset(queryParameters);
-            this.simpleQueryTree = xlqlQuery.getSimpleQueryTree(queryString);
-            this.queryTree = xlqlQuery.getQueryTree(simpleQueryTree);
-            this.esQueryDsl = getEsQueryDsl();
+            this.statsRepr = getStatsRepr(queryParameters);
+
+            var q = getOptionalSingle("_q", queryParameters);
+            var i = getOptionalSingle("_i", queryParameters);
+
+            if (q.isPresent() && i.isPresent()) {
+                var iSqt = xlqlQuery.getSimpleQueryTree(i.get());
+                if (iSqt.isEmpty() || iSqt.isFreeText()) {
+                    var qSqt = xlqlQuery.getSimpleQueryTree(q.get());
+                    if (i.get().equals(qSqt.getFreeTextPart())) {
+                        // The acceptable case
+                        this.queryString = q.get();
+                        this.freeText = i.get();
+                        this.simpleQueryTree = qSqt;
+                        SimpleQueryTree filteredTree = xlqlQuery.addFilters(simpleQueryTree, DEFAULT_FILTERS);
+                        this.outsetType = xlqlQuery.getOutsetType(filteredTree);
+                        this.queryTree = xlqlQuery.getQueryTree(filteredTree, outsetType);
+                        this.esQueryDsl = getEsQueryDsl();
+                    } else {
+                        qSqt.replaceTopLevelFreeText(i.get());
+                        throw new Crud.RedirectException(makeFindUrl(i.get(), qSqt.toQueryString()));
+                    }
+                } else {
+                    throw new Crud.RedirectException(makeFindUrl(iSqt.getFreeTextPart(), i.get()));
+                }
+            } else if (q.isPresent()) {
+                var qSqt = xlqlQuery.getSimpleQueryTree(q.get());
+                throw new Crud.RedirectException(makeFindUrl(qSqt.getFreeTextPart(), q.get()));
+            } else if (i.isPresent()) {
+                var iSqt = xlqlQuery.getSimpleQueryTree(i.get());
+                throw new Crud.RedirectException(makeFindUrl(iSqt.getFreeTextPart(), i.get()));
+            } else {
+                throw new InvalidQueryException("Missing required query parameters");
+            }
         }
 
         public Map<String, Object> getEsQueryDsl() {
@@ -75,7 +110,10 @@ public class SearchUtils2 {
             queryDsl.put("query", xlqlQuery.getEsQuery(queryTree));
             queryDsl.put("size", limit);
             queryDsl.put("from", offset);
-            sortBy.ifPresent(s -> queryDsl.put("sort", getSortClauses(s)));
+            if (sortBy != null) {
+                queryDsl.put("sort", getSortClauses(sortBy));
+            }
+            queryDsl.put("aggs", xlqlQuery.getAggQuery(statsRepr, outsetType));
             queryDsl.put("track_total_hits", true);
             return queryDsl;
         }
@@ -84,7 +122,7 @@ public class SearchUtils2 {
             int numHits = (int) esResponse.getOrDefault("totalHits", 0);
             var view = new LinkedHashMap<String, Object>();
             view.put(JsonLd.TYPE_KEY, "PartialCollectionView");
-            view.put(JsonLd.ID_KEY, makeFindUrl(offset));
+            view.put(JsonLd.ID_KEY, makeFindUrl(freeText, queryString, offset));
             view.put("itemOffset", offset);
             view.put("itemsPerPage", limit);
             view.put("totalItems", numHits);
@@ -93,7 +131,7 @@ public class SearchUtils2 {
             if (esResponse.containsKey("items")) {
                 view.put("items", esResponse.get("items"));
             }
-            // TODO: Stats?
+            view.put("stats", xlqlQuery.getStats(esResponse, statsRepr, simpleQueryTree, makeNonQueryParams(0)));
             if (debug) {
                 view.put("_debug", Map.of("esQuery", esQueryDsl));
             }
@@ -112,19 +150,19 @@ public class SearchUtils2 {
 
             Offsets offsets = new Offsets(Math.min(numHits, maxItems()), limit, offset);
 
-            result.put("first", Map.of(JsonLd.ID_KEY, makeFindUrl(0)));
-            result.put("last", Map.of(JsonLd.ID_KEY, makeFindUrl(offsets.last)));
+            result.put("first", Map.of(JsonLd.ID_KEY, makeFindUrl(freeText, queryString)));
+            result.put("last", Map.of(JsonLd.ID_KEY, makeFindUrl(freeText, queryString, offsets.last)));
 
             if (offsets.prev != null) {
                 if (offsets.prev == 0) {
                     result.put("previous", result.get("first"));
                 } else {
-                    result.put("previous", Map.of(JsonLd.ID_KEY, makeFindUrl(offsets.prev)));
+                    result.put("previous", Map.of(JsonLd.ID_KEY, makeFindUrl(freeText, queryString, offsets.prev)));
                 }
             }
 
             if (offsets.next != null) {
-                result.put("next", Map.of(JsonLd.ID_KEY, makeFindUrl(offsets.next)));
+                result.put("next", Map.of(JsonLd.ID_KEY, makeFindUrl(freeText, queryString, offsets.next)));
             }
 
             return result;
@@ -134,9 +172,14 @@ public class SearchUtils2 {
             return whelk.elastic.maxResultWindow;
         }
 
-        private String makeFindUrl(int offset) {
+        private String makeFindUrl(String i, String q) {
+            return makeFindUrl(i, q, 0);
+        }
+
+        private String makeFindUrl(String i, String q, int offset) {
             List<String> params = new ArrayList<>();
-            params.add(makeParam("_q", queryString));
+            params.add(XLQLQuery.makeParam("_i", i));
+            params.add(XLQLQuery.makeParam("_q", q));
             params.addAll(makeNonQueryParams(offset));
             return "/find?" + String.join("&", params);
         }
@@ -150,24 +193,12 @@ public class SearchUtils2 {
             return params;
         }
 
-        private static String makeParam(String key, String value) {
-            return String.format("%s=%s", escapeQueryParam(key), escapeQueryParam(value));
-        }
         private static String makeParam(String key, int value) {
-            return makeParam(key, "" + value);
+            return XLQLQuery.makeParam(key, "" + value);
         }
 
         private List<Map<?, ?>> toMappings() {
             return List.of(xlqlQuery.toMappings(simpleQueryTree, makeNonQueryParams(0)));
-        }
-
-        private static String escapeQueryParam(String input) {
-            return QUERY_ESCAPER.escape(input)
-                    // We want pretty URIs, restore some characters which are inside query strings
-                    // https://tools.ietf.org/html/rfc3986#section-3.4
-                    .replace("%3A", ":")
-                    .replace("%2F", "/")
-                    .replace("%40", "@");
         }
 
         List<Map<String, Object>> getSortClauses(String sortBy) {
@@ -177,14 +208,17 @@ public class SearchUtils2 {
             ));
         }
 
-        private Optional<String> getOptionalSingle(String name, Map<String, String[]> queryParameters) {
+        private static Optional<String> getOptionalSingleFilterEmpty(String name, Map<String, String[]> queryParameters) {
+            return getOptionalSingle(name, queryParameters).filter(String::isEmpty);
+        }
+
+        private static Optional<String> getOptionalSingle(String name, Map<String, String[]> queryParameters) {
             return Optional.ofNullable(queryParameters.get(name))
-                    .map(x -> x[0])
-                    .filter(x -> !"".equals(x));
+                    .map(x -> x[0]);
         }
 
         private int getLimit(Map<String, String[]> queryParameters) throws InvalidQueryException {
-            int limit = getOptionalSingle("_limit", queryParameters)
+            int limit = getOptionalSingleFilterEmpty("_limit", queryParameters)
                     .map(x -> parseInt(x, DEFAULT_LIMIT))
                     .orElse(DEFAULT_LIMIT);
 
@@ -201,7 +235,7 @@ public class SearchUtils2 {
         }
 
         private int getOffset(Map<String, String[]> queryParameters) throws InvalidQueryException {
-            int offset = getOptionalSingle("_offset", queryParameters)
+            int offset = getOptionalSingleFilterEmpty("_offset", queryParameters)
                     .map(x -> parseInt(x, DEFAULT_OFFSET))
                     .orElse(DEFAULT_OFFSET);
 
@@ -219,6 +253,21 @@ public class SearchUtils2 {
             } catch (NumberFormatException ignored) {
                 return defaultTo;
             }
+        }
+
+        private static Map<String, Object> getStatsRepr(Map<String, String[]> queryParameters) throws IOException {
+            Map<String, Object> statsRepr = new LinkedHashMap<>();
+
+            var statsJson = Optional.ofNullable(queryParameters.get("_statsrepr"))
+                    .map(x -> x[0])
+                    .orElse("{}");
+
+            Map<?, ?> statsMap = mapper.readValue(statsJson, LinkedHashMap.class);
+            for (var entry : statsMap.entrySet()) {
+                statsRepr.put((String) entry.getKey(), entry.getValue());
+            }
+
+            return statsRepr;
         }
     }
 

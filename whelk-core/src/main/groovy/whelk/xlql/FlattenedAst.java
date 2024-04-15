@@ -1,5 +1,7 @@
 package whelk.xlql;
 
+import whelk.search.XLQLQuery;
+
 import java.util.*;
 
 public class FlattenedAst {
@@ -43,18 +45,12 @@ public class FlattenedAst {
                 List<String> leafValues = new ArrayList<>();
                 for (Node node : and.operands()) {
                     switch (node) {
-                        case Leaf l -> leafValues.add(quoteIfPhrase(l.value()));
-                        default -> {
-                            if (!leafValues.isEmpty()) {
-                                newOperands.add(new Leaf(String.join(" ", leafValues)));
-                                leafValues.clear();
-                            }
-                            newOperands.add(node);
-                        }
+                        case Leaf l -> leafValues.add(XLQLQuery.quoteIfPhraseOrContainsSpecialSymbol(l.value()));
+                        default -> newOperands.add(mergeLeaves(node));
                     }
                 }
                 if (!leafValues.isEmpty()) {
-                    newOperands.add(new Leaf(String.join(" ", leafValues)));
+                    newOperands.addFirst(new Leaf(String.join(" ", leafValues)));
                 }
                 yield newOperands.size() > 1 ? new And(newOperands) : newOperands.getFirst();
             }
@@ -65,9 +61,9 @@ public class FlattenedAst {
                         .toList();
                 yield new Or(newOperands);
             }
-            case Not not -> new Not(quoteIfPhrase(not.value()));
+            case Not not -> new Not(XLQLQuery.quoteIfPhraseOrContainsSpecialSymbol(not.value()));
             case Code code -> code;
-            case Leaf leaf -> new Leaf(quoteIfPhrase(leaf.value()));
+            case Leaf leaf -> new Leaf(XLQLQuery.quoteIfPhraseOrContainsSpecialSymbol(leaf.value()));
         };
     }
 
@@ -208,9 +204,5 @@ public class FlattenedAst {
                 Operator.GREATER_THAN_OR_EQUALS, Operator.LESS_THAN,
                 Operator.GREATER_THAN, Operator.LESS_THAN_OR_EQUALS
         );
-    }
-
-    private static String quoteIfPhrase(String s) {
-        return s.matches(".*\\s.*") ? "\"" + s + "\"" : s;
     }
 }

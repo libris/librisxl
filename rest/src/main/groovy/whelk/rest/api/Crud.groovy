@@ -158,6 +158,8 @@ class Crud extends HttpServlet {
         } catch (InvalidQueryException e) {
             log.warn("Invalid query: ${queryParameters}")
             throw new BadRequestException("Invalid query, please check the documentation. ${e.getMessage()}")
+        } catch (RedirectException e) {
+            sendRedirect(request, response, e.getMessage())
         }
     }
 
@@ -900,6 +902,12 @@ class Crud extends HttpServlet {
         
         protected NoStackTraceException(String msg, Throwable cause) {
             super(msg, cause, true, false)
+        }
+    }
+
+    static class RedirectException extends NoStackTraceException {
+        RedirectException(String msg) {
+            super(msg)
         }
     }
 }

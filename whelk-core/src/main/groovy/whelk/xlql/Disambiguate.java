@@ -4,8 +4,8 @@ import whelk.JsonLd;
 import whelk.Whelk;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
-// TODO: Disambiguate values too (not only properties)
 public class Disambiguate {
     public record PropertyChain(List<String> path, List<DefaultField> defaultFields) {
     }
@@ -80,7 +80,17 @@ public class Disambiguate {
         return domainByProperty.getOrDefault(property, UNKNOWN_DOMAIN);
     }
 
-    public OutsetType getOutsetType(String type) {
+    public OutsetType decideOutset(SimpleQueryTree sqt) {
+        Set<OutsetType> outset = sqt.collectGivenTypes()
+                .stream()
+                .map(this::getOutsetType)
+                .collect(Collectors.toSet());
+
+        // TODO: Review this (for now default to Resource)
+        return outset.size() == 1 ? outset.stream().findFirst().get() : OutsetType.RESOURCE;
+    }
+
+    private OutsetType getOutsetType(String type) {
         if (workTypes.contains(type)) {
             return OutsetType.WORK;
         }

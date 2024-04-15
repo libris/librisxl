@@ -153,11 +153,9 @@ class FlattenedAstSpec extends Specification {
         expect:
         flattenedAst.tree == new FlattenedAst.And(
                 [
-                        new FlattenedAst.Leaf("x y z \"a b c\" d"),
+                        new FlattenedAst.Leaf("x y z \"a b c\" d \"e:f\" h i"),
                         new FlattenedAst.Code("p", Operator.EQUALS, "v"),
-                        new FlattenedAst.Leaf("e:f"),
-                        new FlattenedAst.Not("g"),
-                        new FlattenedAst.Leaf("h i")
+                        new FlattenedAst.Not("g")
                 ] as List<FlattenedAst.Node>
         )
     }
