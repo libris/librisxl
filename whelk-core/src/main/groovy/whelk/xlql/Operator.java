@@ -5,7 +5,7 @@ package whelk.xlql;
 public enum Operator {
     EQUALS("equals"),
     NOT_EQUALS("notEquals"),
-    GREATER_THAN_OR_EQUALS("greaterThanOrEqual"),
+    GREATER_THAN_OR_EQUALS("greaterThanOrEquals"),
     GREATER_THAN("greaterThan"),
     LESS_THAN_OR_EQUALS("lessThanOrEquals"),
     LESS_THAN("lessThan");
