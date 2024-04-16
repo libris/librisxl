@@ -462,7 +462,8 @@ class CrudSpec extends Specification {
     @Unroll
     def "GET document with If-None-Match should return 200 Ok or 304 Not Modified"() {
         given:
-        def id = BASE_URI.resolve("/1234").toString()
+        def BASE_URI_IGNORE_SECRETS = new URI("https://libris.kb.se/")
+        def id = BASE_URI_IGNORE_SECRETS.resolve("/1234").toString()
         def doc = new Document(["@graph": [
                 ['@id': id, 'mainEntity': ['@id': "$id#it"]], 
                 ['@id': "$id#it", '@type': 'Instance', 'prop1': ['@id': 'https://foo']]
