@@ -12,7 +12,8 @@ public class FeatureFlags {
     final static Logger log = LogManager.getLogger(FeatureFlags.class);
     
     public enum Flag {
-        INDEX_BLANK_WORKS
+        INDEX_BLANK_WORKS,
+        CONCERNING_ISSUANCE_TYPE_FILTER
     }
 
     private Set<Flag> enabled = new HashSet<>();

@@ -5,6 +5,7 @@ import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.transform.TypeCheckingMode
 import groovy.util.logging.Log4j2 as Log
+import whelk.FeatureFlags
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.InvalidQueryException
@@ -822,6 +823,10 @@ class ESQuery {
         if (statsrepr.isEmpty()) {
             Map defaultQuery = [(JsonLd.TYPE_KEY): ['terms': ['field': JsonLd.TYPE_KEY]]]
             return defaultQuery
+        }
+        if (!whelk.features.isEnabled(FeatureFlags.Flag.CONCERNING_ISSUANCE_TYPE_FILTER)) {
+            // needs updated index config with concerning.issuanceType.keyword
+            statsrepr.remove("concerning.issuanceType")
         }
         return buildAggQuery(statsrepr, multiSelectFilters)
     }
