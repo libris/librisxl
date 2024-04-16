@@ -11,6 +11,7 @@ import whelk.xlql.SimpleQueryTree;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Predicate;
 
 import static whelk.util.Jackson.mapper;
 
@@ -209,7 +210,7 @@ public class SearchUtils2 {
         }
 
         private static Optional<String> getOptionalSingleFilterEmpty(String name, Map<String, String[]> queryParameters) {
-            return getOptionalSingle(name, queryParameters).filter(String::isEmpty);
+            return getOptionalSingle(name, queryParameters).filter(Predicate.not(String::isEmpty));
         }
 
         private static Optional<String> getOptionalSingle(String name, Map<String, String[]> queryParameters) {
