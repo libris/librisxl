@@ -409,6 +409,15 @@ class DocumentSpec extends Specification {
         implicitList1.getChecksum(jsonld) != implicitList2.getChecksum(jsonld)
     }
 
+    def "checksum is affected by values moving from one key to another on the same level"() {
+        given:
+        def set1 = new Document(["@graph": [["@id": "/id", "@type": "Record"], ["@id": "/itemId", "@type": "Work", "prop1": "19uu", "prop2":"[19??]"]]])
+        def set2 = new Document(["@graph": [["@id": "/id", "@type": "Record"], ["@id": "/itemId", "@type": "Work", "prop2": "19uu", "prop1":"[19??]"]]])
+
+        expect:
+        set1.getChecksum(jsonld) != set2.getChecksum(jsonld)
+    }
+
     static String readFile(String filename) {
         return DocumentSpec.class.getClassLoader()
                 .getResourceAsStream(filename).getText("UTF-8")

@@ -876,32 +876,32 @@ class Document {
     }
 
     String getChecksum(JsonLd jsonLd) {
-        long checksum = calculateCheckSum(data, 1, null, jsonLd)
+        long checksum = calculateCheckSum(data, 1, null, jsonLd, 1)
         return Long.toString(checksum)
     }
 
     @CompileStatic
-    private long calculateCheckSum(node, int depth, String parentKey, JsonLd jsonLd) {
+    private long calculateCheckSum(node, int depth, String parentKey, JsonLd jsonLd, int offsetFactor) {
         long term = 0
 
         if (node == null)
             return term
         else if (node instanceof String)
-            return node.hashCode() * depth
+            return node.hashCode() * depth * offsetFactor
         else if (node instanceof GString)
-            return node.toString().hashCode() * depth
+            return node.toString().hashCode() * depth * offsetFactor
         else if (node instanceof Boolean)
             return node.booleanValue() ? depth : term
         else if (node instanceof Integer)
-            return node.intValue() * depth
+            return node.intValue() * depth * offsetFactor
         else if (node instanceof Long)
-            return node.longValue() * depth
+            return node.longValue() * depth * offsetFactor
         else if (node instanceof Map) {
             for (String key : node.keySet()) {
                 if (key != JsonLd.MODIFIED_KEY && key != JsonLd.CREATED_KEY && key != JsonLd.RECORD_STATUS_KEY) {
 
                     term += key.hashCode() * depth
-                    term += calculateCheckSum(node[key], depth + 1, key, jsonLd)
+                    term += calculateCheckSum(node[key], depth + 1, key, jsonLd, key.hashCode())
                 }
             }
         }
@@ -909,9 +909,9 @@ class Document {
             int i = 1
             for (entry in node)
                 if (isSet(parentKey, jsonLd))
-                    term += calculateCheckSum(entry, depth, null, jsonLd)
+                    term += calculateCheckSum(entry, depth, null, jsonLd, 1)
                 else
-                    term += calculateCheckSum(entry, depth + (i++), null, jsonLd)
+                    term += calculateCheckSum(entry, depth + (i++), null, jsonLd, 1)
         }
         else {
             return node.hashCode() * depth
