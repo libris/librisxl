@@ -567,8 +567,8 @@ class ESQuery {
         var nested = getNestedParams(groups)
         Map notNested = (groups - nested).collect { it.value }.sum([:])
 
-        // If both nested and notNested contains explicit OR they need to be moved to not nested
-        // If two different nested contains explicit or they need to be moved to not nested
+        // If both nested and notNested contains explicit OR they should be moved to notNested
+        // If two different nested contains explicit OR they should be moved to not notNested
         boolean explicitOrInDifferentNested = nested.values()
                 .findAll{ it.keySet().any{ k -> k.startsWith(OR_PREFIX)} }
                 .size() > 1
