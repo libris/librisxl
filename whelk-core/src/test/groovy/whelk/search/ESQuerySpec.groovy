@@ -285,6 +285,13 @@ class ESQuerySpec extends Specification {
                                                [simple_query_string:[query:'qux', fields:['nested_field.c'], default_operator:'AND']]]]]]
                 ]]]]
         ]]]]
+
+        //
+        ['nested_field_not_really.a': ['foo'], 'nested_field_not_really.b': ['bar']] | [[bool:[must:[
+                [bool:[should:[[simple_query_string:[query:'foo', fields:['nested_field_not_really.a'], default_operator:'AND']]]]],
+                [bool:[should:[[simple_query_string:[query:'bar', fields:['nested_field_not_really.b'], default_operator:'AND']]]]]
+        ]]]]
+
     }
 
     def "should create bool filter"(String key, String[] vals, Map result) {

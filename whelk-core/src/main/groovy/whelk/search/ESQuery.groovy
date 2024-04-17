@@ -629,7 +629,7 @@ class ESQuery {
     private static getPrefixGroup(String key, Set<String> nestedFields) {
         if (key.contains('.')) {
             (QUERY_PREFIXES.find{ key.startsWith(it) } ?: "").with { String prefix ->
-                String nested = nestedFields.find{ key.startsWith(prefix + it) }
+                String nested = nestedFields.find{ key.startsWith(prefix + it + '.') }
                 if (nested) {
                     return key.substring(prefix.length(), prefix.length() + nested.length())
                 }
