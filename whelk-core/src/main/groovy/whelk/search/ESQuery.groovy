@@ -569,13 +569,11 @@ class ESQuery {
 
         // If both nested and notNested contains explicit OR they need to be moved to not nested
         // If two different nested contains explicit or they need to be moved to not nested
-        // TODO handle not_in_parent
         boolean explicitOrInDifferentNested = nested.values()
                 .findAll{ it.keySet().any{ k -> k.startsWith(OR_PREFIX)} }
                 .size() > 1
 
         if (notNested.keySet().any { it.startsWith(OR_PREFIX) } || explicitOrInDifferentNested) {
-            // TODO
             nested.values().each { n ->
                 n.keySet().findAll{ it.startsWith(OR_PREFIX) }.each {
                     notNested.put(it, n.remove(it))
