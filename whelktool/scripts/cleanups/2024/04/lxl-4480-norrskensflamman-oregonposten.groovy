@@ -4,7 +4,7 @@ var NORRSKENSFLAMMAN_ID = 'https://libris.kb.se/fzr371qr0cl7pgp#it'
 String where = """
   collection = 'bib' 
   AND deleted = false
-  AND data#>'{@graph,1,isIssueOf}' @> '[{"@id": "${OREGONPOSTEN_ID}"]'
+  AND data#>'{@graph,1,isIssueOf}' @> '[{"@id": "${OREGONPOSTEN_ID}"}]'
 """
 
 selectBySqlWhere(where) { bib ->
