@@ -480,6 +480,22 @@ class XL
                 break;
         }
 
+        // Filter duplicate list on compatible instance types.
+        Iterator<String> it = duplicateIDs.iterator();
+        while (it.hasNext()) {
+            String candidateID = it.next();
+            Document candidate = m_whelk.getStorage().load(candidateID);
+
+            String incomingInstanceType = rdfDoc.getThingType();
+            String existingInstanceType = candidate.getThingType();
+
+            if (!existingInstanceType.equals(incomingInstanceType)
+                    && !existingInstanceType.equals("Instance")
+                    && !incomingInstanceType.equals("Instance")) {
+                it.remove();
+            }
+        }
+
         return duplicateIDs;
     }
 
