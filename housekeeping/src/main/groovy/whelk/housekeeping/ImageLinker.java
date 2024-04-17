@@ -72,6 +72,9 @@ public class ImageLinker extends HouseKeeper {
         try (Connection connection = whelk.getStorage().getOuterConnection();
              PreparedStatement statement = connection.prepareStatement(newImagesSql)) {
 
+            connection.setAutoCommit(false);
+            statement.setFetchSize(512);
+
             statement.setTimestamp(1, linkNewInstancesSince);
 
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -139,6 +142,9 @@ public class ImageLinker extends HouseKeeper {
 
         try (Connection connection = whelk.getStorage().getOuterConnection();
              PreparedStatement statement = connection.prepareStatement(newImagesSql)) {
+
+            connection.setAutoCommit(false);
+            statement.setFetchSize(512);
 
             statement.setTimestamp(1, linkNewImagesSince);
 
