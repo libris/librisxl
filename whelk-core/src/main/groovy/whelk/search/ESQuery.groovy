@@ -733,6 +733,10 @@ class ESQuery {
             Example
             prefix: "@reverse.itemOf"
             nestedQuery: ["and-@reverse.itemOf.heldBy.@id":[".../library/A", ".../library/A]]
+
+            Example
+            prefix: "@reverse.itemOf"
+            nestedQuery: ["@reverse.itemOf.heldBy.@id":[".../library/A"], "not-@reverse.itemOf.availability.@id": ["X"] ]
         */
         var ands = nestedQuery.findAll { it.key.startsWith(AND_PREFIX) }
         var nots = nestedQuery.findAll { it.key.startsWith(NOT_PREFIX) }
