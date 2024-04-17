@@ -1,7 +1,6 @@
 package whelk.search
 
 import groovy.json.JsonOutput
-import spock.lang.Ignore
 import spock.lang.Specification
 import whelk.JsonLd
 

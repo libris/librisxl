@@ -728,12 +728,12 @@ class ESQuery {
         /*
             Example
             prefix: "identifiedBy"
-            nestedQuery: ["identifiedBy.@type":["ISBN","LCCN"], "identifiedBy.value":["1234","5678"]]
+            nestedQuery: ["and-identifiedBy.@type":["ISBN","LCCN"], "and-identifiedBy.value":["1234","5678"]]
 
             Example
-            prefix: "identifiedBy"
-            nestedQuery: ["and-@reverse.itemOf.heldBy.@id":["https://libris.kb.se/library/Mtm", "https://libris.kb.se/library/S]]
-         */
+            prefix: "@reverse.itemOf"
+            nestedQuery: ["and-@reverse.itemOf.heldBy.@id":[".../library/A", ".../library/A]]
+        */
         var ands = nestedQuery.findAll { it.key.startsWith(AND_PREFIX) }
         var nots = nestedQuery.findAll { it.key.startsWith(NOT_PREFIX) }
         var rest = nestedQuery.findAll { !(it.key in nots.keySet() || it.key in ands.keySet()) }
