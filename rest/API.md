@@ -3,6 +3,12 @@
 The APIs in this document are not versioned and hence this interface might
 change in the future.
 
+### Glossary
+
+`embellished` is a term used to specify that a record should be delivered with not only it's own data, but also with any relevant data that the record links to. The boundaries for where any one record ends and another begins shift over time. Generally the trend is that more and more data is broken out of the records that used to hold them, into new records of their own, in order to make that data reusable for many records. It is often a good idea to request your data `embellished` as that means you will not be affected by these shifting boundaries.
+
+`framed` is a term meaning that any extra data delivered with your requested record (generally due to linking) should be embedded in every location where it is referenced within the JSON-LD-structure. If you request data that is not `framed` it is instead delivered as a list of separate entities.
+
 ## CRUD API
 
 Libris XL uses JSON-LD as data format, and we provide an API to create, read,
