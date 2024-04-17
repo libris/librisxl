@@ -27,8 +27,9 @@ class ESQuery {
     private JsonLd jsonld
     private Set keywordFields
     private Set dateFields
-    private Set nestedFields
-    private Set numericExtractorFields
+    private Set<String> nestedFields
+    private Set<String> nestedNotInParentFields
+    private Set<String> numericExtractorFields
 
     private static final int DEFAULT_PAGE_SIZE = 50
     private static final List RESERVED_PARAMS = [
@@ -40,7 +41,11 @@ class ESQuery {
     private static final String NOT_PREFIX = 'not-'
     private static final String EXISTS_PREFIX = 'exists-'
 
-    private static final String FILTERED_AGG = 'a'
+    private static final List<String> QUERY_PREFIXES = [AND_PREFIX, AND_MATCHES_PREFIX, OR_PREFIX,
+                                                        NOT_PREFIX, EXISTS_PREFIX]
+
+    private static final String FILTERED_AGG_NAME = 'a'
+    private static final String NESTED_AGG_NAME = 'n'
 
     private static final Map recordsOverCacheRecordsBoost = [
             'bool': ['should': [
@@ -76,6 +81,7 @@ class ESQuery {
             this.keywordFields =  getKeywordFields(mappings)
             this.dateFields = getFieldsOfType('date', mappings)
             this.nestedFields = getFieldsOfType('nested', mappings)
+            this.nestedNotInParentFields = nestedFields - getFieldsWithSetting('include_in_parent', true, mappings)
             this.numericExtractorFields = getFieldsWithAnalyzer('numeric_extractor', mappings)
 
             if (mappings['properties']['__prefLabel']) {
@@ -97,7 +103,7 @@ class ESQuery {
     @CompileStatic(TypeCheckingMode.SKIP)
     Map doQuery(Map<String, String[]> queryParameters, suggest = null) {
         Map esQuery = getESQuery(queryParameters, suggest)
-        Map esResponse = hideKeywordFields(moveFilteredAggregationsToTopLevel(whelk.elastic.query(esQuery)))
+        Map esResponse = hideKeywordFields(moveAggregationsToTopLevel(whelk.elastic.query(esQuery)))
         if ('esQuery' in queryParameters.get('_debug')) {
             esResponse._debug = [esQuery: esQuery]
         }
@@ -107,7 +113,7 @@ class ESQuery {
     @CompileStatic(TypeCheckingMode.SKIP)
     Map doQueryIds(Map<String, String[]> queryParameters) {
         Map esQuery = getESQuery(queryParameters)
-        Map esResponse = hideKeywordFields(moveFilteredAggregationsToTopLevel(whelk.elastic.queryIds(esQuery)))
+        Map esResponse = hideKeywordFields(moveAggregationsToTopLevel(whelk.elastic.queryIds(esQuery)))
         if ('esQuery' in queryParameters.get('_debug')) {
             esResponse._debug = [esQuery: esQuery]
         }
@@ -552,16 +558,31 @@ class ESQuery {
     Tuple2<List, Map> getFilters(Map<String, String[]> queryParameters) {
         def queryParametersCopy = new HashMap<>(queryParameters)
         List filters = []
-        List filtersForNot = []
         Map multiSelectFilters = [:]
 
         def (handledParameters, rangeFilters) = makeRangeFilters(queryParametersCopy)
         handledParameters.each {queryParametersCopy.remove(it)}
         filters.addAll(rangeFilters)
         
-        Map groups = queryParametersCopy.groupBy { p -> getPrefixIfExists(p.key) }
-        Map nested = getNestedParams(groups)
+        var groups = queryParametersCopy.groupBy { p -> getPrefixGroup(p.key, nestedFields) }
+        var nested = getNestedParams(groups)
         Map notNested = (groups - nested).collect { it.value }.sum([:])
+
+        // If both nested and notNested contains explicit OR they should be moved to notNested
+        // If two different nested contains explicit OR they should be moved to not notNested
+        boolean explicitOrInDifferentNested = nested.values()
+                .findAll{ it.keySet().any{ k -> k.startsWith(OR_PREFIX)} }
+                .size() > 1
+
+        if (notNested.keySet().any { it.startsWith(OR_PREFIX) } || explicitOrInDifferentNested) {
+            nested.values().each { n ->
+                n.keySet().findAll{ it.startsWith(OR_PREFIX) }.each {
+                    notNested.put(it, n.remove(it))
+                }
+            }
+            nested.removeAll { it.value.isEmpty() }
+        }
+
         nested.each { key, vals ->
             filters.addAll(createNestedBoolFilters(key, vals))
         }
@@ -588,22 +609,14 @@ class ESQuery {
                 multiSelectFilters[m.keySet().first()] = createBoolFilter(addMissingMatch(m, matchMissing))
             }
             else {
-                filters << createBoolFilter(addMissingMatch(m, matchMissing))
+                filters << wrapNestedNotInParent(createBoolFilter(addMissingMatch(m, matchMissing)))
             }
         }
-        notNestedGroupsForNot.each { m ->
-            filtersForNot << createBoolFilter(m)
-        }
 
-        Map allFilters = [:]
-        if (filters) {
-            allFilters['must'] = filters
-        }
-        if (filtersForNot) {
-            allFilters['must_not'] = filtersForNot
-        }
+        var mustNots = notNestedGroupsForNot.collect { createBoolFilter(it) }
+        var filter = Q.bool(filters, mustNots).with { it.bool ? [it] : null }
 
-        return new Tuple2(allFilters ? [['bool': allFilters]] : null, multiSelectFilters)
+        return new Tuple2(filter, multiSelectFilters)
     }
 
     private static Map addMissingMatch(Map m, Map matchMissing) {
@@ -614,12 +627,35 @@ class ESQuery {
         return m
     }
 
-    private getPrefixIfExists(String key) {
+    private static getPrefixGroup(String key, Set<String> nestedFields) {
         if (key.contains('.')) {
-            return key.substring(0, key.indexOf('.'))
+            (QUERY_PREFIXES.find{ key.startsWith(it) } ?: "").with { String prefix ->
+                String nested = nestedFields.find{ key.startsWith(prefix + it + '.') }
+                if (nested) {
+                    return key.substring(prefix.length(), prefix.length() + nested.length())
+                }
+                else {
+                    return key.substring(0, key.indexOf('.'))
+                }
+            }
         } else {
             return key
         }
+    }
+
+    private Map wrapNestedNotInParent(Map boolFilter) {
+        var nested = { String f -> nestedNotInParentFields.find{ (f ?: '').startsWith(it + '.') } }
+
+        var fields = DocumentUtil.getAtPath(boolFilter, ['bool', 'should', '*', 'simple_query_string', 'fields', 0], [])
+
+        if (fields.any(nested)) {
+            boolFilter.bool['should'] = boolFilter.bool['should'].collect { Map q ->
+                String n = nested((String) DocumentUtil.getAtPath(q, ['simple_query_string', 'fields', 0]))
+                n ? Q.nested(n, q) : q
+            }
+        }
+
+        return boolFilter
     }
 
     /**
@@ -678,46 +714,96 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    private Map getNestedParams(Map<String, Map<String, String[]>> groups) {
+    private Map<String, Map<String, String[]>> getNestedParams(Map<String, Map<String, String[]>> groups) {
         Map nested = groups.findAll { g ->
-            // More than one property or more than one value for some property
-            g.key in nestedFields && (g.value.size() > 1 || g.value.values().any{ it.length > 1})
+            // If included in parent: More than one property or more than one value for some property
+            g.key in nestedNotInParentFields
+                    || (g.key in nestedFields && (g.value.size() > 1 || g.value.values().any{ it.length > 1 }))
         }
         return nested
     }
 
+    @PackageScope
     @CompileStatic(TypeCheckingMode.SKIP)
-    private List<Map> createNestedBoolFilters(String prefix, Map<String, String[]> nestedQuery) {
+    List<Map> createNestedBoolFilters(String prefix, Map<String, String[]> nestedQuery) {
         /*
             Example
             prefix: "identifiedBy"
-            nestedQuery: ["identifiedBy.@type":["ISBN","LCCN"], "identifiedBy.value":["1234","5678"]]
-         */
-        
-        int maxLen = nestedQuery.collect { it.value }.collect { it.length }.max()
-        
-        List result = []
-        for (int i = 0 ; i < maxLen ; i++) {
-            List<Map> musts = nestedQuery.findResults {
-                it.value.length > i 
-                    ? ['match': [(expandLangMapKeys(it.key)): it.value[i]]]
-                    : null
+            nestedQuery: ["and-identifiedBy.@type":["ISBN","LCCN"], "and-identifiedBy.value":["1234","5678"]]
+
+            Example
+            prefix: "@reverse.itemOf"
+            nestedQuery: ["and-@reverse.itemOf.heldBy.@id":[".../library/A", ".../library/A]]
+
+            Example
+            prefix: "@reverse.itemOf"
+            nestedQuery: ["@reverse.itemOf.heldBy.@id":[".../library/A"], "not-@reverse.itemOf.availability.@id": ["X"] ]
+        */
+        var ands = nestedQuery.findAll { it.key.startsWith(AND_PREFIX) }
+        var nots = nestedQuery.findAll { it.key.startsWith(NOT_PREFIX) }
+        var rest = nestedQuery.findAll { !(it.key in nots.keySet() || it.key in ands.keySet()) }
+
+        if (nots && !ands && !rest) {
+            return nots.collect {
+                String prop = stripPrefix(it.key, NOT_PREFIX)
+                Q.not([Q.nested(prefix, createBoolFilter([(prop): it.value]))])
             }
-            
-            result << [ 'nested': [
-                            'path': prefix, 
-                            'query': ['bool': ['must': musts]]]]
         }
 
-        // Implicit OR
-        // identifiedBy.value=A&identifiedBy.value=B is expected to work the same way as for non-nested docs 
-        if (nestedQuery.size() == 1 && nestedQuery[nestedQuery.keySet().first()].size() > 1) {
-            result = [['bool': ['should': result]]]
+        int numberOfReferencedDocs = ands.collect { it.value }.collect { it.length }?.max() ?: 1
+
+        List<Map> result = []
+        for (int i = 0 ; i < numberOfReferencedDocs ; i++) {
+            List<Map> musts = []
+            List<Map> mustNots = null
+
+            if (i == 0) {
+                getOrGroups(rest).each {
+                    musts.add(createBoolFilter(it))
+                }
+                mustNots = nots.collect {
+                    String prop = stripPrefix(it.key, NOT_PREFIX)
+                    createBoolFilter([(prop): it.value])
+                }
+            }
+
+            musts.addAll(ands.findResults {
+                it.value.length > i
+                        ? createBoolFilter([ (stripPrefix(it.key, AND_PREFIX)): [it.value[i]] ])
+                        : null
+            })
+            
+            result << Q.nested(prefix, Q.bool(musts, mustNots))
         }
 
         return result
     }
-    
+
+    private static String stripPrefix(String s, String prefix) {
+        s.startsWith(prefix) ? s.substring(prefix.length()) : s
+    }
+
+    private static class Q {
+        static Map not(List mustNots) {
+            return bool(null, mustNots)
+        }
+
+        static Map bool(List must, List mustNot) {
+            Map b = [:]
+            if (must) {
+                b['must'] = must
+            }
+            if (mustNot) {
+                b['must_not'] = mustNot
+            }
+            return ['bool': b]
+        }
+
+        static Map nested(String prefix, Map query) {
+            ['nested': ['path': prefix, 'query': query]]
+        }
+    }
+
     /**
      * Can this query string be handled by ES simple_query_string?
      */
@@ -782,6 +868,7 @@ class ESQuery {
             }
         }
 
+        // FIXME? "should" wrapper is not needed if values/clauses.size == 1
         return ['bool': ['should': clauses]]
     }
     
@@ -848,16 +935,27 @@ class ESQuery {
             def filters = multiSelectFilters.findAll { it.key != key }.values()
             String termPath = getInferredTermPath(key)
 
+            // Core agg query
+            query[termPath] = ['terms': [
+                    'field': termPath,
+                    'size' : tree[key]?.size ?: size,
+                    'order': [(sort): sortOrder]]
+            ]
+
+            // If field is nested, wrap agg query with nested
+            nestedFields.find{ key.startsWith(it) }?.with { nestedField ->
+                query[termPath] = [
+                        'nested': [ 'path': nestedField ],
+                        'aggs'  : [ (NESTED_AGG_NAME): query[termPath] ]
+                ]
+            }
+
+            // Wrap agg query with a filter so that we can get counts for multi select filters
             query[termPath] = [
-                'aggs' : [
-                    (FILTERED_AGG): ['terms': [
-                        'field': termPath,
-                        'size' : tree[key]?.size ?: size,
-                        'order': [(sort): sortOrder]]
-                    ]
-                ],
+                'aggs'  : [ (FILTERED_AGG_NAME): query[termPath] ],
                 'filter': ['bool': ['must': filters]]
             ]
+
             if (tree[key].subItems instanceof Map) {
                 query[termPath]['aggs'] = buildAggQuery(tree[key].subItems, multiSelectFilters, size)
             }
@@ -952,7 +1050,7 @@ class ESQuery {
         getFieldsWithSetting('analyzer', analyzer, mappings)
     }
 
-    static Set getFieldsWithSetting(String setting, String value, Map mappings) {
+    static Set getFieldsWithSetting(String setting, value, Map mappings) {
         Set fields = [] as Set
         DocumentUtil.findKey(mappings['properties'], setting) { v, path ->
             if (v == value) {
@@ -1012,15 +1110,18 @@ class ESQuery {
         return result
     }
 
-    static Map moveFilteredAggregationsToTopLevel(Map esResponse) {
+    static Map moveAggregationsToTopLevel(Map esResponse) {
         if (!esResponse['aggregations']) {
             return esResponse
         }
 
         Map aggregations = (Map) esResponse['aggregations']
         aggregations.keySet().each { k ->
-            if (aggregations[k][FILTERED_AGG]) {
-                aggregations[k] = aggregations[k][FILTERED_AGG]
+            if (aggregations[k][FILTERED_AGG_NAME]) {
+                aggregations[k] = aggregations[k][FILTERED_AGG_NAME]
+            }
+            if (aggregations[k][NESTED_AGG_NAME]) {
+                aggregations[k] = aggregations[k][NESTED_AGG_NAME]
             }
         }
 
