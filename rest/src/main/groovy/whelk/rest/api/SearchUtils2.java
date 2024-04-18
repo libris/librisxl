@@ -56,6 +56,7 @@ public class SearchUtils2 {
         private final int limit;
         private final int offset;
         private final String sortBy;
+        private final String object;
         private final Map<String, Object> statsRepr;
         private final boolean debug;
         private final String queryString;
@@ -67,6 +68,7 @@ public class SearchUtils2 {
 
         Query(Map<String, String[]> queryParameters) throws InvalidQueryException, IOException {
             this.sortBy = getOptionalSingleFilterEmpty("_sort", queryParameters).orElse(null);
+            this.object = getOptionalSingleFilterEmpty("_o", queryParameters).orElse(null);
             this.debug = queryParameters.containsKey("_debug"); // Different debug modes needed?
             this.limit = getLimit(queryParameters);
             this.offset = getOffset(queryParameters);
@@ -84,7 +86,7 @@ public class SearchUtils2 {
                         this.queryString = q.get();
                         this.freeText = i.get();
                         this.simpleQueryTree = qSqt;
-                        SimpleQueryTree filteredTree = xlqlQuery.addFilters(simpleQueryTree, DEFAULT_FILTERS);
+                        SimpleQueryTree filteredTree = getFilteredTree();
                         this.outsetType = xlqlQuery.getOutsetType(filteredTree);
                         this.queryTree = xlqlQuery.getQueryTree(filteredTree, outsetType);
                         this.esQueryDsl = getEsQueryDsl();
@@ -101,6 +103,8 @@ public class SearchUtils2 {
             } else if (i.isPresent()) {
                 var iSqt = xlqlQuery.getSimpleQueryTree(i.get());
                 throw new Crud.RedirectException(makeFindUrl(iSqt.getFreeTextPart(), i.get()));
+            } else if (object != null) {
+                throw new Crud.RedirectException(makeFindUrl("*", "*"));
             } else {
                 throw new InvalidQueryException("Missing required query parameters");
             }
@@ -139,6 +143,14 @@ public class SearchUtils2 {
             view.put("maxItems", whelk.elastic.maxResultWindow);
 
             return view;
+        }
+
+        private SimpleQueryTree getFilteredTree() {
+            var filters = new ArrayList<>(DEFAULT_FILTERS);
+            if (object != null) {
+                filters.add(SimpleQueryTree.pvEquals("_links", object));
+            }
+            return xlqlQuery.addFilters(simpleQueryTree, filters);
         }
 
         private Map<String, Map<String, String>> makePaginationLinks(int numHits) {
@@ -191,11 +203,18 @@ public class SearchUtils2 {
                 params.add(makeParam("_offset", offset));
             }
             params.add(makeParam("_limit", limit));
+            if (object != null) {
+                params.add(makeParam("_o", object));
+            }
             return params;
         }
 
         private static String makeParam(String key, int value) {
-            return XLQLQuery.makeParam(key, "" + value);
+            return makeParam(key, "" + value);
+        }
+
+        private static String makeParam(String key, String value) {
+            return XLQLQuery.makeParam(key, value);
         }
 
         private List<Map<?, ?>> toMappings() {
