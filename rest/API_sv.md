@@ -9,6 +9,11 @@ De API:er som är dokumenterade här är inte versionerade och kan komma att
 
 `framed` är en term som beskriver att den extra data som följer med en post på grund av länkningar ska monteras in på de ställen där datan används i JSON-LD-strukturen. Om data inte är `framed` så levereras den i stället som en lista av entiter.
 
+`lens` är en term som beskriver en mekanism för att filtrera bort allt utom den viktigaste informationen i en post. Precis vad som filtreras bort beror på vilken typ av post/entitet man ber om. Det finns för tillfället tre värden för `lens` att välja mellan:
+* `chip` är den mest filtrerade varianten. Används den, så är ofta det enda som blir kvar t ex entitetens namn (om ett sådant finns)
+* `card` är mellan-nivån. Här inkluderas allting som finns på `chip`-nivån och viss ytterligare information. Det kan t ex vara variant-namn, eller identifikatorer.
+* `none` innebär att ingen data filtreras bort.
+
 ## CRUD-API
 
 Libris XL använder JSON-LD som dataformat och vi tillhandahåller ett API för

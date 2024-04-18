@@ -9,6 +9,11 @@ change in the future.
 
 `framed` is a term meaning that any extra data delivered with your requested record (generally due to linking) should be embedded in every location where it is referenced within the JSON-LD-structure. If you request data that is not `framed` it is instead delivered as a list of separate entities.
 
+`lens` is a term for selecting how much of a records information you want filtered out of the response. Exactly which information is filtered depends on the type of record/entity you are requesting. At present there are three levels of filtering available:
+* `chip` is the most filtered variant. On this level, often the only thing remaining will be an entities name (if there is one).
+* `card` is the mid-level of filtering, it includes whatever was at the `chip`-level and a little bit more. For example it could be variant-names and other forms of identifiers.
+* `none` means no data is filtered.
+
 ## CRUD API
 
 Libris XL uses JSON-LD as data format, and we provide an API to create, read,
