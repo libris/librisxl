@@ -85,7 +85,7 @@ public class QueryTree {
     }
 
     static Node newFields(SimpleQueryTree.PropertyValue pv, Path path, Disambiguate disambiguate) {
-        if (disambiguate.isType(pv.property())) {
+        if ("rdf:type".equals(pv.property())) {
             return buildTypeField(pv, path, disambiguate);
         }
 
