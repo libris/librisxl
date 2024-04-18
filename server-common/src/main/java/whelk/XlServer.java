@@ -9,6 +9,7 @@ import org.eclipse.jetty.server.AsyncRequestLogWriter;
 import org.eclipse.jetty.server.ConnectionLimit;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.CustomRequestLog;
+import org.eclipse.jetty.server.ForwardedRequestCustomizer;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
@@ -18,6 +19,7 @@ import org.eclipse.jetty.util.thread.ExecutorThreadPool;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -51,6 +53,8 @@ public abstract class XlServer {
         var httpConfig = new HttpConfiguration();
         httpConfig.setIdleTimeout(5 * 60 * 1000); // more than nginx keepalive_timeout
         httpConfig.setPersistentConnectionsEnabled(true);
+        httpConfig.setCustomizers(List.of(new ForwardedRequestCustomizer()));
+
         try (var http = new ServerConnector(server, new HttpConnectionFactory(httpConfig))) {
             http.setPort(port);
             http.setAcceptQueueSize(maxConnections);

@@ -932,7 +932,6 @@ class ESQuery {
         keys.each { key ->
             String sort = tree[key]?.sort =='key' ? '_key' : '_count'
             def sortOrder = tree[key]?.sortOrder =='asc' ? 'asc' : 'desc'
-            def filters = multiSelectFilters.findAll { it.key != key }.values()
             String termPath = getInferredTermPath(key)
 
             // Core agg query
@@ -951,6 +950,7 @@ class ESQuery {
             }
 
             // Wrap agg query with a filter so that we can get counts for multi select filters
+            def filters = multiSelectFilters.findAll { it.key != key }.values()
             query[termPath] = [
                 'aggs'  : [ (FILTERED_AGG_NAME): query[termPath] ],
                 'filter': ['bool': ['must': filters]]
