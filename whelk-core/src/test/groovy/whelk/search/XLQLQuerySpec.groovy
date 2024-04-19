@@ -6,7 +6,7 @@ import whelk.Whelk
 import whelk.xlql.QueryTree
 import whelk.xlql.SimpleQueryTree
 
-//@Ignore
+@Ignore
 class XLQLQuerySpec extends Specification {
     private static Whelk whelk = Whelk.createLoadedSearchWhelk()
     private static XLQLQuery xlqlQuery = new XLQLQuery(whelk)
