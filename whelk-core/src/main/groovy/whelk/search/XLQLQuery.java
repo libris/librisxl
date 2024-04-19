@@ -9,6 +9,8 @@ import whelk.exception.InvalidQueryException;
 import whelk.util.Unicode;
 import whelk.xlql.*;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -26,7 +28,7 @@ public class XLQLQuery {
 
     private static final String FILTERED_AGG = "a";
     private static final int DEFAULT_BUCKET_SIZE = 10;
-    public static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper();
+    private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper();
 
 
     public XLQLQuery(Whelk whelk) {
@@ -285,6 +287,13 @@ public class XLQLQuery {
                 .replace("%3A", ":")
                 .replace("%2F", "/")
                 .replace("%40", "@");
+    }
+
+    public static String encodeUri(String uri) {
+        String decoded = URLDecoder.decode(uri.replace("+", "%2B"), StandardCharsets.UTF_8);
+        return escapeQueryParam(decoded)
+                .replace("%23", "#")
+                .replace("+", "%20");
     }
 
     private Map<String, Object> freeTextMapping(SimpleQueryTree.FreeText ft) {

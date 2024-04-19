@@ -2,11 +2,13 @@ package whelk.xlql;
 
 import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
-import whelk.search.XLQLQuery;
 
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import static whelk.search.XLQLQuery.encodeUri;
+import static whelk.search.XLQLQuery.quoteIfPhraseOrContainsSpecialSymbol;
 
 public class SimpleQueryTree {
     public sealed interface Node permits And, Or, PropertyValue, FreeText {
@@ -85,9 +87,7 @@ public class SimpleQueryTree {
                     } else {
                         throw new InvalidQueryException("Unrecognized type: " + value);
                     }
-                }
-
-                if (disambiguate.isVocabTerm(property)) {
+                } else if (disambiguate.isVocabTerm(property)) {
                     Optional<String> mappedEnum = disambiguate.mapToEnum(value);
                     if (mappedEnum.isPresent()) {
                         value = mappedEnum.get();
@@ -95,14 +95,12 @@ public class SimpleQueryTree {
                         throw new InvalidQueryException("Invalid value " + value + " for property " + property);
                     }
                 }
-
                 // Expand and encode URIs, e.g. sao:Hästar -> https://id.kb.se/term/sao/H%C3%A4star
-                if (disambiguate.isObjectProperty(property)) {
+                else if (disambiguate.isObjectProperty(property)) {
                     String expanded = Disambiguate.expandPrefixed(value);
-                    int lastSlashIdx = expanded.lastIndexOf("/");
-                    String slug = value.substring(lastSlashIdx + 1);
-                    String ns = value.substring(0, lastSlashIdx + 1);
-                    value = ns + XLQLQuery.QUERY_ESCAPER.escape(slug).replace("%23", "#");
+                    if (JsonLd.looksLikeIri(expanded)) {
+                        value = encodeUri(expanded);
+                    }
                 }
 
                 return new PropertyValue(property, propertyPath, c.operator(), value);
@@ -283,7 +281,7 @@ public class SimpleQueryTree {
         String not = pv.operator() == Operator.NOT_EQUALS ? "NOT " : "";
         String path = String.join(".", pv.propertyPath());
 
-        return not + XLQLQuery.quoteIfPhraseOrContainsSpecialSymbol(path) + sep + XLQLQuery.quoteIfPhraseOrContainsSpecialSymbol(pv.value());
+        return not + quoteIfPhraseOrContainsSpecialSymbol(path) + sep + quoteIfPhraseOrContainsSpecialSymbol(pv.value());
     }
 
     public void replaceTopLevelFreeText(String replacement) {
