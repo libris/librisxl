@@ -57,6 +57,7 @@ public class SearchUtils2 {
         private final int offset;
         private final String sortBy;
         private final String object;
+        private final String mode;
         private final Map<String, Object> statsRepr;
         private final boolean debug;
         private final String queryString;
@@ -69,6 +70,7 @@ public class SearchUtils2 {
         Query(Map<String, String[]> queryParameters) throws InvalidQueryException, IOException {
             this.sortBy = getOptionalSingleFilterEmpty("_sort", queryParameters).orElse(null);
             this.object = getOptionalSingleFilterEmpty("_o", queryParameters).orElse(null);
+            this.mode = getOptionalSingleFilterEmpty("_x", queryParameters).orElse(null);
             this.debug = queryParameters.containsKey("_debug"); // Different debug modes needed?
             this.limit = getLimit(queryParameters);
             this.offset = getOffset(queryParameters);
@@ -205,6 +207,9 @@ public class SearchUtils2 {
             params.add(makeParam("_limit", limit));
             if (object != null) {
                 params.add(makeParam("_o", object));
+            }
+            if (mode != null) {
+                params.add(makeParam("_x", mode));
             }
             return params;
         }
