@@ -1,11 +1,13 @@
 package whelk.search;
 
+import com.github.jsonldjava.utils.Obj;
 import com.google.common.escape.Escaper;
 import com.google.common.net.UrlEscapers;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 
+import whelk.util.DocumentUtil;
 import whelk.util.Unicode;
 import whelk.xlql.*;
 
@@ -32,6 +34,8 @@ public class XLQLQuery {
 
     private Map<String, String> expandedPathToProperty = new HashMap<>();
 
+    private final EsMappings esMappings;
+
     private static final String FILTERED_AGG = "a";
     private static final int DEFAULT_BUCKET_SIZE = 10;
     private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper();
@@ -41,6 +45,7 @@ public class XLQLQuery {
         this.disambiguate = new Disambiguate(whelk);
         this.lensBoost = new ESQueryLensBoost(whelk.getJsonld());
         this.esNestedFields = getEsNestedFields(whelk);
+        this.esMappings = new EsMappings(whelk.elastic.getMappings());
     }
 
     public QueryTree getQueryTree(SimpleQueryTree sqt) {
@@ -619,5 +624,62 @@ public class XLQLQuery {
 
     public Disambiguate.OutsetType getOutsetType(SimpleQueryTree sqt) {
         return disambiguate.decideOutset(sqt);
+    }
+
+    public class EsMappings {
+        private final Set<String> keywordFields;
+        private final Set<String> dateFields;
+        private final Set<String> nestedFields;
+        private final Set<String> nestedNotInParentFields;
+        private final Set<String> numericExtractorFields;
+
+        public EsMappings(Map<?, ?> mappings) {
+            this.keywordFields = getKeywordFields(mappings);
+            this.dateFields = getFieldsOfType("date", mappings);
+            this.nestedFields = getFieldsOfType("nested", mappings);
+            this.nestedNotInParentFields = new HashSet<>(nestedFields);
+            this.nestedNotInParentFields.removeAll(getFieldsWithSetting("include_in_parent", true, mappings));
+            this.numericExtractorFields = getFieldsWithAnalyzer("numeric_extractor", mappings);
+        }
+
+        private static Set<String> getKeywordFields(Map<?, ?> mappings) {
+            Predicate<Object> test = v -> v instanceof Map && ((Map<?, ?>) v).containsKey("keyword");
+            return getFieldsWithSetting("fields", test, mappings);
+        }
+
+        private static Set<String> getFieldsOfType(String type, Map<?, ?> mappings) {
+            return getFieldsWithSetting("type", type, mappings);
+        }
+
+        private static Set<String> getFieldsWithAnalyzer(String analyzer, Map<?, ?> mappings) {
+            return getFieldsWithSetting("analyzer", analyzer, mappings);
+        }
+
+        private static Set<String> getFieldsWithSetting(String setting, Object value, Map<?, ?> mappings) {
+            return getFieldsWithSetting(setting, value::equals, mappings);
+        }
+
+        private static Set<String> getFieldsWithSetting(String setting, Predicate<Object> cmp, Map<?, ?> mappings) {
+            Set<String> fields = new HashSet<>();
+            DocumentUtil.Visitor visitor = (v, path) -> {
+                if (cmp.test(v)) {
+                    var p = dropLast(path).stream()
+                            .filter(s -> !"properties".equals(s))
+                            .map(Object::toString)
+                            .toList();
+                    var field = String.join(".", p);
+                    fields.add(field);
+                }
+                return NOP;
+            };
+            DocumentUtil.findKey(mappings.get("properties"), setting, visitor);
+            return fields;
+        }
+
+        static <V> List<V> dropLast(List<V> list) {
+            var l = new ArrayList<>(list);
+            l.removeLast();
+            return l;
+        }
     }
 }
