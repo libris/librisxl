@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static whelk.component.ElasticSearch.flattenedLangMapKey;
 import static whelk.util.DocumentUtil.findKey;
 import static whelk.util.DocumentUtil.NOP;
 
@@ -24,12 +25,16 @@ public class XLQLQuery {
     private final ESQueryLensBoost lensBoost;
     private final Set<String> esNestedFields;
 
+    // TODO
+    private final Set<String> esKeywordFields = Collections.emptySet();
+    // TODO
+    private final Set<String> esNumericExtractorFields = Collections.emptySet();
+
     private Map<String, String> expandedPathToProperty = new HashMap<>();
 
     private static final String FILTERED_AGG = "a";
     private static final int DEFAULT_BUCKET_SIZE = 10;
     private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper();
-
 
     public XLQLQuery(Whelk whelk) {
         this.whelk = whelk;
@@ -584,6 +589,32 @@ public class XLQLQuery {
         });
 
         return observations;
+    }
+
+    private String expandLangMapKeys(String field) {
+        if (whelk != null && whelk.elastic != null && !whelk.elastic.ENABLE_SMUSH_LANG_TAGGED_PROPS) {
+            return field;
+        }
+
+        var parts = field.split("\\.");
+        if (parts.length > 0) {
+            assert whelk != null;
+            var lastIx = parts.length - 1;
+            if (whelk.getJsonld().langContainerAlias.containsKey(parts[lastIx])) {
+                parts[lastIx] = flattenedLangMapKey(parts[lastIx]);
+                return String.join(".", parts);
+            }
+        }
+        return field;
+    }
+
+    public String getInferredSortTermPath(String termPath) {
+        var path = expandLangMapKeys(termPath);
+        if (esKeywordFields.contains(path) && !esNumericExtractorFields.contains(path)) {
+            return String.format("%s.keyword", path);
+        } else {
+            return termPath;
+        }
     }
 
     public Disambiguate.OutsetType getOutsetType(SimpleQueryTree sqt) {
