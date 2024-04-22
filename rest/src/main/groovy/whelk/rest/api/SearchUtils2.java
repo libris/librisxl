@@ -337,7 +337,7 @@ public class SearchUtils2 {
 
         private record ParameterOrder(String parameter, Order order) {
             public Map<?, ?> toSortClause(XLQLQuery xlqlQuery) {
-                // TODO nested
+                // TODO nested?
                 return Map.of(
                         xlqlQuery.getSortField(parameter), Map.of("order", order)
                 );
