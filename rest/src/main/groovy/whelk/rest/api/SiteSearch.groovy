@@ -123,7 +123,6 @@ class SiteSearch {
             }
         }
         if (path == "/data" || path.startsWith("/data.")) {
-            log.info("/data baseUri:${baseUri} activeSite:${activeSite}")
             if (!queryParameters['_statsrepr'] && searchSettings['statsindex']) {
                 queryParameters.put('_statsrepr', [mapper.writeValueAsString(searchSettings['statsindex'])] as String[])
             }
