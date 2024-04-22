@@ -299,6 +299,10 @@ public class SimpleQueryTree {
         String path = String.join(".", pv.propertyPath());
         String value = pv.value().string();
 
+        if (pv.value() instanceof Link) {
+            value = Disambiguate.toPrefixed(value);
+        }
+
         return not + quoteIfPhraseOrContainsSpecialSymbol(path) + sep + quoteIfPhraseOrContainsSpecialSymbol(value);
     }
 
