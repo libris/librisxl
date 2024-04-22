@@ -1,40 +1,49 @@
 package whelk.search;
 
-import com.github.jsonldjava.utils.Obj;
 import com.google.common.escape.Escaper;
 import com.google.common.net.UrlEscapers;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
-
 import whelk.util.DocumentUtil;
 import whelk.util.Unicode;
-import whelk.xlql.*;
+import whelk.xlql.Ast;
+import whelk.xlql.Disambiguate;
+import whelk.xlql.FlattenedAst;
+import whelk.xlql.Lex;
+import whelk.xlql.Operator;
+import whelk.xlql.Parse;
+import whelk.xlql.Path;
+import whelk.xlql.QueryTree;
+import whelk.xlql.SimpleQueryTree;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static whelk.component.ElasticSearch.flattenedLangMapKey;
-import static whelk.util.DocumentUtil.findKey;
 import static whelk.util.DocumentUtil.NOP;
 
 public class XLQLQuery {
     private final Whelk whelk;
     private final Disambiguate disambiguate;
     private final ESQueryLensBoost lensBoost;
-    private final Set<String> esNestedFields;
-
-    // TODO
-    private final Set<String> esKeywordFields = Collections.emptySet();
-    // TODO
-    private final Set<String> esNumericExtractorFields = Collections.emptySet();
-
     private Map<String, String> expandedPathToProperty = new HashMap<>();
 
-    private final EsMappings esMappings;
+    public final EsMappings esMappings;
 
     private static final String FILTERED_AGG = "a";
     private static final int DEFAULT_BUCKET_SIZE = 10;
@@ -44,8 +53,7 @@ public class XLQLQuery {
         this.whelk = whelk;
         this.disambiguate = new Disambiguate(whelk);
         this.lensBoost = new ESQueryLensBoost(whelk.getJsonld());
-        this.esNestedFields = getEsNestedFields(whelk);
-        this.esMappings = new EsMappings(whelk.elastic.getMappings());
+        this.esMappings = new EsMappings(whelk.elastic != null ? whelk.elastic.getMappings() : Collections.emptyMap());
     }
 
     public QueryTree getQueryTree(SimpleQueryTree sqt) {
@@ -216,7 +224,7 @@ public class XLQLQuery {
             }
         }
 
-        if (stem.isEmpty() || !esNestedFields.contains(stem.getLast())) {
+        if (stem.isEmpty() || !esMappings.isNestedField(stem.getLast())) {
             // Treat as regular fields
             var clause = n.fields()
                     .stream()
@@ -406,27 +414,6 @@ public class XLQLQuery {
         return s.matches(".*(>=|<=|[=!~<>(): ]).*") ? "\"" + s + "\"" : s;
     }
 
-    private Set<String> getEsNestedFields(Whelk whelk) {
-        if (whelk.elastic == null) {
-            return Collections.emptySet();
-        }
-
-        Set<String> fields = new HashSet<>();
-
-        findKey(whelk.elastic.getMappings().get("properties"), "type", (Object v, List<Object> path) -> {
-            if ("nested".equals(v)) {
-                String field = path.subList(0, path.size() - 1).stream()
-                        .filter(Predicate.not("properties"::equals))
-                        .map(String.class::cast)
-                        .collect(Collectors.joining("."));
-                fields.add(field);
-            }
-            return NOP;
-        });
-
-        return fields;
-    }
-
     public Map<String, Object> getAggQuery(Map<?, ?> statsRepr, Disambiguate.OutsetType outsetType) {
         if (statsRepr.isEmpty()) {
             return Map.of(JsonLd.TYPE_KEY,
@@ -613,9 +600,9 @@ public class XLQLQuery {
         return field;
     }
 
-    public String getInferredSortTermPath(String termPath) {
+    public String getSortField(String termPath) {
         var path = expandLangMapKeys(termPath);
-        if (esKeywordFields.contains(path) && !esNumericExtractorFields.contains(path)) {
+        if (esMappings.isKeywordField(path) && !esMappings.isFourDigitField(path)) {
             return String.format("%s.keyword", path);
         } else {
             return termPath;
@@ -640,6 +627,26 @@ public class XLQLQuery {
             this.nestedNotInParentFields = new HashSet<>(nestedFields);
             this.nestedNotInParentFields.removeAll(getFieldsWithSetting("include_in_parent", true, mappings));
             this.numericExtractorFields = getFieldsWithAnalyzer("numeric_extractor", mappings);
+        }
+
+        public boolean isKeywordField(String fieldPath) {
+            return keywordFields.contains(fieldPath);
+        }
+
+        public boolean isDateField(String fieldPath) {
+            return dateFields.contains(fieldPath);
+        }
+
+        public boolean isNestedField(String fieldPath) {
+            return nestedFields.contains(fieldPath);
+        }
+
+        public boolean isNestedNotInParentField(String fieldPath) {
+            return nestedNotInParentFields.contains(fieldPath);
+        }
+
+        public boolean isFourDigitField(String fieldPath) {
+            return numericExtractorFields.contains(fieldPath);
         }
 
         private static Set<String> getKeywordFields(Map<?, ?> mappings) {

@@ -339,7 +339,7 @@ public class SearchUtils2 {
             public Map<?, ?> toSortClause(XLQLQuery xlqlQuery) {
                 // TODO nested
                 return Map.of(
-                        xlqlQuery.getInferredSortTermPath(parameter), Map.of("order", order)
+                        xlqlQuery.getSortField(parameter), Map.of("order", order)
                 );
             }
 
@@ -348,7 +348,6 @@ public class SearchUtils2 {
                         ? "-" + parameter
                         : parameter;
             }
-
         }
 
         List<ParameterOrder> parameters;
