@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import static whelk.search.XLQLQuery.encodeUri;
 import static whelk.search.XLQLQuery.quoteIfPhraseOrContainsSpecialSymbol;
 
+
 public class SimpleQueryTree {
     public sealed interface Node permits And, Or, PropertyValue, FreeText {
     }
@@ -21,10 +22,20 @@ public class SimpleQueryTree {
     }
 
     public record PropertyValue(String property, List<String> propertyPath, Operator operator,
-                                String value) implements Node {
+                                Value value) implements Node {
     }
 
     public record FreeText(Operator operator, String value) implements Node {
+    }
+
+    public sealed interface Value permits Link, Literal {
+        String string();
+    }
+
+    public record Literal(String string) implements Value {
+    }
+
+    public record Link(String string) implements Value {
     }
 
     public Node tree;
@@ -37,7 +48,7 @@ public class SimpleQueryTree {
         this.tree = buildTree(ast.tree, disambiguate);
     }
 
-    public SimpleQueryTree(SimpleQueryTree.Node tree) {
+    public SimpleQueryTree(Node tree) {
         this.tree = tree;
     }
 
@@ -80,17 +91,19 @@ public class SimpleQueryTree {
                     }
                 }
 
+                Value v;
+
                 if ("rdf:type".equals(property)) {
                     Optional<String> mappedType = disambiguate.mapToKbvClass(value);
                     if (mappedType.isPresent()) {
-                        value = mappedType.get();
+                        v = new Literal(mappedType.get());
                     } else {
                         throw new InvalidQueryException("Unrecognized type: " + value);
                     }
                 } else if (disambiguate.isVocabTerm(property)) {
                     Optional<String> mappedEnum = disambiguate.mapToEnum(value);
                     if (mappedEnum.isPresent()) {
-                        value = mappedEnum.get();
+                        v = new Literal(mappedEnum.get());
                     } else {
                         throw new InvalidQueryException("Invalid value " + value + " for property " + property);
                     }
@@ -98,12 +111,12 @@ public class SimpleQueryTree {
                 // Expand and encode URIs, e.g. sao:Hästar -> https://id.kb.se/term/sao/H%C3%A4star
                 else if (disambiguate.isObjectProperty(property)) {
                     String expanded = Disambiguate.expandPrefixed(value);
-                    if (JsonLd.looksLikeIri(expanded)) {
-                        value = encodeUri(expanded);
-                    }
+                    v = JsonLd.looksLikeIri(expanded) ? new Link(encodeUri(expanded)) : new Literal(value);
+                } else {
+                    v = new Literal(value);
                 }
 
-                return new PropertyValue(property, propertyPath, c.operator(), value);
+                return new PropertyValue(property, propertyPath, c.operator(), v);
             }
         }
     }
@@ -161,13 +174,13 @@ public class SimpleQueryTree {
         return collectGivenTypes(tree, new HashSet<>());
     }
 
-    private static Set<String> collectGivenTypes(SimpleQueryTree.Node sqtNode, Set<String> types) {
+    private static Set<String> collectGivenTypes(Node sqtNode, Set<String> types) {
         switch (sqtNode) {
             case And and -> and.conjuncts().forEach(c -> collectGivenTypes(c, types));
             case Or or -> or.disjuncts().forEach(d -> collectGivenTypes(d, types));
             case PropertyValue pv -> {
                 if (List.of("rdf:type").equals(pv.propertyPath())) {
-                    types.add(pv.value());
+                    types.add(pv.value().string());
                 }
             }
             case FreeText ignored -> {
@@ -203,8 +216,12 @@ public class SimpleQueryTree {
         return topPvNodes;
     }
 
-    public static PropertyValue pvEquals(String property, String value) {
-        return new PropertyValue(property, List.of(property), Operator.EQUALS, value);
+    public static PropertyValue pvEqualsLiteral(String property, String value) {
+        return new PropertyValue(property, List.of(property), Operator.EQUALS, new Literal(value));
+    }
+
+    public static PropertyValue pvEqualsLink(String property, String uri) {
+        return new PropertyValue(property, List.of(property), Operator.EQUALS, new Link(uri));
     }
 
     public String getFreeTextPart() {
@@ -280,8 +297,9 @@ public class SimpleQueryTree {
 
         String not = pv.operator() == Operator.NOT_EQUALS ? "NOT " : "";
         String path = String.join(".", pv.propertyPath());
+        String value = pv.value().string();
 
-        return not + quoteIfPhraseOrContainsSpecialSymbol(path) + sep + quoteIfPhraseOrContainsSpecialSymbol(pv.value());
+        return not + quoteIfPhraseOrContainsSpecialSymbol(path) + sep + quoteIfPhraseOrContainsSpecialSymbol(value);
     }
 
     public void replaceTopLevelFreeText(String replacement) {

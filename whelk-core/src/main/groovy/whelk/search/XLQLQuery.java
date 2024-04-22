@@ -321,44 +321,44 @@ public class XLQLQuery {
     }
 
     private Map<String, Object> freeTextMapping(SimpleQueryTree.FreeText ft) {
-        return mapping("textQuery", ft.value(), ft.operator(), Collections.emptyList());
+        Map<String, Object> m = new LinkedHashMap();
+        m.put("property", getDefinition("textQuery"));
+        m.put(ft.operator().termKey, ft.value());
+        return m;
     }
 
     private Map<String, Object> propertyValueMapping(SimpleQueryTree.PropertyValue pv) {
-        return mapping(pv.property(), pv.value(), pv.operator(), pv.propertyPath());
-    }
-
-    private Map<String, Object> mapping(String property, String value, Operator operator, List<String> propertyPath) {
         Map<String, Object> m = new LinkedHashMap<>();
-        if (propertyPath.size() > 1) {
-            var propertyChainAxiom = propertyPath.stream()
+
+        if (pv.propertyPath().size() > 1) {
+            var propertyChainAxiom = pv.propertyPath().stream()
                     .map(this::getDefinition)
                     .filter(Objects::nonNull)
                     .toList();
             var propDef = propertyChainAxiom.size() > 1
                     ? Map.of("propertyChainAxiom", propertyChainAxiom)
-                    : getDefinition(property);
+                    : getDefinition(pv.property());
             m.put("property", propDef);
         } else {
-            m.put("property", getDefinition(property));
+            m.put("property", getDefinition(pv.property()));
         }
-        m.put(operator.termKey, lookUp(value).orElse(value));
+
+        m.put(pv.operator().termKey, lookUp(pv.value()));
+
         return m;
     }
 
-    private Optional<Object> lookUp(String value) {
-        Optional<Object> vocabTerm = Optional.ofNullable(getDefinition(value));
-        if (vocabTerm.isPresent()) {
+    private Object lookUp(SimpleQueryTree.Value value) {
+        var vocabTerm = getDefinition(value.string());
+        if (vocabTerm != null) {
             return vocabTerm;
         }
-
-        value = Disambiguate.expandPrefixed(value);
-        if (JsonLd.looksLikeIri(value)) {
-            return disambiguate.loadThing(value, whelk)
-                    .map(whelk.getJsonld()::toChip);
+        if (value instanceof SimpleQueryTree.Link) {
+            return disambiguate.loadThing(value.string(), whelk)
+                    .map(whelk.getJsonld()::toChip)
+                    .orElse(value.string());
         }
-
-        return Optional.empty();
+        return value.string();
     }
 
     private Map<?, ?> getDefinition(String term) {
@@ -468,94 +468,75 @@ public class XLQLQuery {
     }
 
     // Problem: Same value in different fields will be counted twice, e.g. contribution.agent + instanceOf.contribution.agent
-    private Map<String, Map<String, Integer>> collectAggs(Map<String, Object> esResponse, Map<String, Object> statsRepr) {
+    private Map<String, Map<SimpleQueryTree.PropertyValue, Integer>> collectBuckets(Map<String, Object> esResponse, Map<String, Object> statsRepr) {
         if (!esResponse.containsKey("aggregations")) {
             return Collections.emptyMap();
         }
 
         var aggs = (Map<?, ?>) esResponse.get("aggregations");
 
-        Map<String, Map<String, Integer>> mergedAggs = new LinkedHashMap<>();
-        Map<String, Integer> propertyToBucketSize = new HashMap<>();
+        Map<String, Map<SimpleQueryTree.PropertyValue, Integer>> propertyToBuckets = new HashMap<>();
+        Map<String, Integer> propertyToMaxBuckets = new HashMap<>();
 
         for (var entry : aggs.entrySet()) {
             var path = (String) entry.getKey();
-            var value = (Map<?, ?>) entry.getValue();
+            var m = (Map<?, ?>) entry.getValue();
 
-            var filteredAgg = (Map<?, ?>) value.get(FILTERED_AGG);
+            var filteredAgg = (Map<?, ?>) m.get(FILTERED_AGG);
             if (filteredAgg == null) {
                 continue;
             }
 
             var property = expandedPathToProperty.get(path);
+            boolean isLinked = path.endsWith(JsonLd.ID_KEY);
 
-            if (mergedAggs.containsKey(property)) {
-                Map<String, Integer> buckets = mergedAggs.get(property);
-                ((List<?>) filteredAgg.get("buckets"))
-                        .stream()
-                        .map(Map.class::cast)
-                        .forEach(b -> {
-                            var val = (String) b.get("key");
-                            var count = (Integer) b.get("doc_count");
-                            if (buckets.containsKey(val)) {
-                                buckets.put(val, buckets.get(val) + count);
-                            } else {
-                                buckets.put(val, count);
-                            }
-                        });
-            } else {
-                Map<String, Integer> buckets = new LinkedHashMap<>();
-                ((List<?>) filteredAgg.get("buckets"))
-                        .stream()
-                        .map(Map.class::cast)
-                        .forEach(b -> buckets.put((String) b.get("key"), (Integer) b.get("doc_count")));
-                mergedAggs.put(property, buckets);
-            }
-
-            int size = Optional.ofNullable((Integer) ((Map<?, ?>) statsRepr.get(property)).get("size"))
-                    .orElse(DEFAULT_BUCKET_SIZE);
-            propertyToBucketSize.put(property, size);
-        }
-
-        for (var entry : mergedAggs.entrySet()) {
-            String property = entry.getKey();
-
-            Map<String, Integer> newBuckets = new LinkedHashMap<>();
-
-            List<Map.Entry<String, Integer>> sorted = entry.getValue()
-                    .entrySet()
+            ((List<?>) filteredAgg.get("buckets"))
                     .stream()
-                    .sorted(Map.Entry.comparingByValue())
-                    .toList()
-                    .reversed();
+                    .map(Map.class::cast)
+                    .forEach(b -> {
+                        var value = (String) b.get("key");
+                        var count = (Integer) b.get("doc_count");
+                        var pv = isLinked
+                                ? SimpleQueryTree.pvEqualsLink(property, value)
+                                : SimpleQueryTree.pvEqualsLiteral(property, value);
+                        var buckets = propertyToBuckets.computeIfAbsent(property, x -> new HashMap<>());
+                        buckets.compute(pv, (k, v) -> (v == null) ? count : v + count);
+                    });
 
-            int bucketSize = propertyToBucketSize.get(property);
-            (bucketSize >= sorted.size() ? sorted : sorted.subList(0, bucketSize))
-                    .forEach(b -> newBuckets.put(b.getKey(), b.getValue()));
+            int bucketSize = Optional.ofNullable((Integer) ((Map<?, ?>) statsRepr.get(property)).get("size"))
+                    .orElse(DEFAULT_BUCKET_SIZE);
 
-            mergedAggs.put(property, newBuckets);
+            propertyToMaxBuckets.put(property, bucketSize);
         }
 
-        Map<String, Map<String, Integer>> mergedAggsOrdered = new LinkedHashMap<>();
         for (String property : statsRepr.keySet()) {
-            Optional.ofNullable(mergedAggs.get(property))
-                    .ifPresent(buckets -> mergedAggsOrdered.put(property, buckets));
+            var buckets = propertyToBuckets.remove(property);
+            if (buckets != null) {
+                int maxBuckets = propertyToMaxBuckets.get(property);
+                Map<SimpleQueryTree.PropertyValue, Integer> newBuckets = new LinkedHashMap<>();
+                buckets.entrySet()
+                        .stream()
+                        .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                        .limit(Math.min(maxBuckets, buckets.size()))
+                        .forEach(entry -> newBuckets.put(entry.getKey(), entry.getValue()));
+                propertyToBuckets.put(property, newBuckets);
+            }
         }
 
-        return mergedAggsOrdered;
+        return propertyToBuckets;
     }
 
     public Map<String, Object> getStats(Map<String, Object> esResponse, Map<String, Object> statsRepr, SimpleQueryTree sqt, List<String> nonQueryParams) {
-        var aggs = collectAggs(esResponse, statsRepr);
-        return buildStats(aggs, sqt, nonQueryParams);
+        var buckets = collectBuckets(esResponse, statsRepr);
+        return buildStats(buckets, sqt, nonQueryParams);
     }
 
-    private Map<String, Object> buildStats(Map<String, Map<String, Integer>> aggs, SimpleQueryTree sqt, List<String> urlParams) {
+    private Map<String, Object> buildStats(Map<String, Map<SimpleQueryTree.PropertyValue, Integer>> propToBuckets, SimpleQueryTree sqt, List<String> urlParams) {
         var sliceByDimension = new LinkedHashMap<>();
 
-        aggs.forEach((property, buckets) -> {
+        propToBuckets.forEach((property, buckets) -> {
             var sliceNode = new LinkedHashMap<>();
-            var observations = getObservations(property, buckets, sqt, urlParams);
+            var observations = getObservations(buckets, sqt, urlParams);
             if (!observations.isEmpty()) {
                 // TODO: dimension/dimensionChain redundant
                 //  Add property definition here to provide labels?
@@ -570,18 +551,17 @@ public class XLQLQuery {
                 "sliceByDimension", sliceByDimension);
     }
 
-    private List<Map<String, Object>> getObservations(String property, Map<String, Integer> buckets, SimpleQueryTree sqt, List<String> nonQueryParams) {
+    private List<Map<String, Object>> getObservations(Map<SimpleQueryTree.PropertyValue, Integer> buckets, SimpleQueryTree sqt, List<String> nonQueryParams) {
         List<Map<String, Object>> observations = new ArrayList<>();
 
-        buckets.forEach((value, count) -> {
+        buckets.forEach((pv, count) -> {
             Map<String, Object> observation = new LinkedHashMap<>();
-            var pvNode = SimpleQueryTree.pvEquals(property, value);
-            boolean queried = sqt.getTopLevelPvNodes().contains(pvNode);
+            boolean queried = sqt.getTopLevelPvNodes().contains(pv);
             if (!queried) {
                 observation.put("totalItems", count);
-                String url = makeFindUrl(sqt.andExtend(pvNode), nonQueryParams);
+                var url = makeFindUrl(sqt.andExtend(pv), nonQueryParams);
                 observation.put("view", Map.of(JsonLd.ID_KEY, url));
-                observation.put("object", lookUp(value).orElse(value));
+                observation.put("object", lookUp(pv.value()));
                 observations.add(observation);
             }
         });

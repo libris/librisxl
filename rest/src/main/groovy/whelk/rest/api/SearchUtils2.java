@@ -19,7 +19,7 @@ public class SearchUtils2 {
     final static int DEFAULT_LIMIT = 200;
     final static int MAX_LIMIT = 4000;
     final static int DEFAULT_OFFSET = 0;
-    private static final List<SimpleQueryTree.PropertyValue> DEFAULT_FILTERS = List.of(SimpleQueryTree.pvEquals("rdf:type", "Work"));
+    private static final List<SimpleQueryTree.PropertyValue> DEFAULT_FILTERS = List.of(SimpleQueryTree.pvEqualsLiteral("rdf:type", "Work"));
 
     Whelk whelk;
     XLQLQuery xlqlQuery;
@@ -148,7 +148,7 @@ public class SearchUtils2 {
         private SimpleQueryTree getFilteredTree() {
             var filters = new ArrayList<>(DEFAULT_FILTERS);
             if (object != null) {
-                filters.add(SimpleQueryTree.pvEquals("_links", object));
+                filters.add(SimpleQueryTree.pvEqualsLiteral("_links", object));
             }
             return xlqlQuery.addFilters(simpleQueryTree, filters);
         }
