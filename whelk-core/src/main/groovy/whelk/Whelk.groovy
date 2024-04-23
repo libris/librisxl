@@ -25,6 +25,8 @@ import whelk.util.Romanizer
 import java.time.Instant
 import java.time.ZoneId
 
+import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
+
 /**
  * The Whelk is the root component of the XL system.
  */
@@ -33,7 +35,7 @@ import java.time.ZoneId
 class Whelk {
     ThreadGroup indexers = new ThreadGroup("dep-reindex")
     PostgreSQLComponent storage
-    ElasticSearch elastic
+    public ElasticSearch elastic
     SparqlUpdater sparqlUpdater
 
     boolean completeCore = false
@@ -59,6 +61,7 @@ class Whelk {
     Relations relations
     DocumentNormalizer normalizer
     Romanizer romanizer
+    FeatureFlags features
 
     URI baseUri = null
     boolean skipIndex = false
@@ -127,6 +130,8 @@ class Whelk {
         if (configuration.locales) {
             locales = ((String) configuration.locales).split(',').collect { it.trim() }
         }
+        
+        features = new FeatureFlags(configuration)
 
         loadCoreData(systemContextUri)
 
@@ -134,15 +139,15 @@ class Whelk {
     }
 
     static Map<String, Map<String, String>> collectNamedApplications(Properties configuration) {
-        Map apps = [:]
+        Map<String, Map<String, String>> apps = [:]
         for (int i = 0; true; i++) {
-            def appId = configuration["namedApplications[${i}].id" as String]
+            String appId = (String) configuration["namedApplications[${i}].id" as String]
             if (!appId) {
                 break
             }
 
-            def app = [id: appId]
-            def alias = configuration["namedApplications[${i}].alias" as String]
+            Map app = [id: appId]
+            String alias = configuration["namedApplications[${i}].alias" as String]
             if (alias) {
                 app['alias'] = alias
             }
@@ -290,7 +295,10 @@ class Whelk {
     private void reindexUpdated(Document updated, Document preUpdateDoc) {
         indexAsyncOrSync {
             elastic.index(updated, this)
-
+            if (features.isEnabled(INDEX_BLANK_WORKS)) {
+                (preUpdateDoc.getVirtualRecordIds() - updated.getVirtualRecordIds()).each { elastic.remove(it) }
+                updated.getVirtualRecordIds().each {elastic.index(updated.getVirtualRecord(it), this) }
+            }
             if (!skipIndexDependers) {
                 if (hasChangedMainEntityId(updated, preUpdateDoc)) {
                     reindexAllLinks(updated.shortId)
@@ -437,6 +445,9 @@ class Whelk {
         if (success) {
             indexAsyncOrSync {
                 elastic.index(document, this)
+                if (features.isEnabled(INDEX_BLANK_WORKS)) {
+                    document.getVirtualRecordIds().each {elastic.index(document.getVirtualRecord(it), this) }
+                }
                 if (!skipIndexDependers) {
                     reindexAffected(document, new TreeSet<>(), document.getExternalRefs())
                 }
@@ -508,6 +519,9 @@ class Whelk {
             storage.remove(id, changedIn, changedBy, force)
             indexAsyncOrSync {
                 elastic.remove(id)
+                if (features.isEnabled(INDEX_BLANK_WORKS)) {
+                    doc.getVirtualRecordIds().each { elastic.remove(it) }
+                }
                 if (!skipIndexDependers) {
                     reindexAffected(doc, doc.getExternalRefs(), Collections.emptySet())
                 }

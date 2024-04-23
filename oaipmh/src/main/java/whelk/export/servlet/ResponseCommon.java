@@ -116,7 +116,7 @@ public class ResponseCommon
         {
             try
             {
-                convertedText = (String) formatDescription.converter.convert(jsonLDdoc.data, jsonLDdoc.getShortId()).get(JsonLd.getNON_JSON_CONTENT_KEY());
+                convertedText = (String) formatDescription.converter.convert(jsonLDdoc.data, jsonLDdoc.getShortId()).get(JsonLd.NON_JSON_CONTENT_KEY);
             }
             catch (Exception | Error e) // Depending on the converter, a variety of problems may arise here
             {

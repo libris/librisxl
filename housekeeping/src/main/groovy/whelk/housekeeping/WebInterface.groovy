@@ -46,6 +46,7 @@ public class WebInterface extends HttpServlet {
                 //new NotificationSender(whelk),
                 new InquirySender(whelk),
                 new NotificationCleaner(whelk),
+                new ImageLinker(whelk),
         ]
 
         houseKeepers.each { hk ->

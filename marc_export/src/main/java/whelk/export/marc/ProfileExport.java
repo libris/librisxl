@@ -327,7 +327,7 @@ public class ProfileExport
 
     private Collection<String> getAffectedBibIdsForAuth(String authId, ExportProfile profile) {
         List<String> allIds = m_whelk.getStorage()
-                .followDependers(authId, JsonLd.getNON_DEPENDANT_RELATIONS())
+                .followDependers(authId, JsonLd.NON_DEPENDANT_RELATIONS)
                 .stream().map(Tuple2::getFirst).collect(Collectors.toList());
 
         if (profile.shouldExportAllLocations()) {

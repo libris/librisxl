@@ -1,12 +1,23 @@
 package whelk.xlql
 
 import spock.lang.Specification
+import whelk.exception.InvalidQueryException
 
 class ParseSpec extends Specification {
 
     def "normal parse"() {
         given:
         def input = "AAA BBB and (CCC or DDD)"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+
+        expect:
+        parseTree != null
+    }
+
+    def "implicit and group"() {
+        given:
+        def input = "AAA BBB (CCC or DDD)"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
 
@@ -63,7 +74,7 @@ class ParseSpec extends Specification {
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
 
         then:
-        thrown BadQueryException
+        thrown InvalidQueryException
     }
 
     def "super basic parse"() {
@@ -174,7 +185,7 @@ class ParseSpec extends Specification {
         when:
         Parse.parseQuery(lexedSymbols)
         then:
-        thrown BadQueryException
+        thrown InvalidQueryException
     }
 
     def "Bad use of code2"() {
@@ -185,7 +196,7 @@ class ParseSpec extends Specification {
         when:
         Parse.parseQuery(lexedSymbols)
         then:
-        thrown BadQueryException
+        thrown InvalidQueryException
     }
 
     def "Don't parse missing or-tail"() {
@@ -196,7 +207,7 @@ class ParseSpec extends Specification {
         when:
         Parse.parseQuery(lexedSymbols)
         then:
-        thrown BadQueryException
+        thrown InvalidQueryException
     }
 
     def "Don't parse missing and-tail"() {
@@ -207,7 +218,7 @@ class ParseSpec extends Specification {
         when:
         Parse.parseQuery(lexedSymbols)
         then:
-        thrown BadQueryException
+        thrown InvalidQueryException
     }
 
     def "code binop"() {
@@ -268,7 +279,7 @@ class ParseSpec extends Specification {
         when:
         Parse.parseQuery(lexedSymbols)
         then:
-        thrown BadQueryException
+        thrown InvalidQueryException
     }
 
     def "Fail compare with not"() {
@@ -279,7 +290,7 @@ class ParseSpec extends Specification {
         when:
         Parse.parseQuery(lexedSymbols)
         then:
-        thrown BadQueryException
+        thrown InvalidQueryException
     }
 
     def "Fail compare with not2"() {
@@ -290,7 +301,7 @@ class ParseSpec extends Specification {
         when:
         Parse.parseQuery(lexedSymbols)
         then:
-        thrown BadQueryException
+        thrown InvalidQueryException
     }
 
     def "Fail compare with like"() {
@@ -301,7 +312,7 @@ class ParseSpec extends Specification {
         when:
         Parse.parseQuery(lexedSymbols)
         then:
-        thrown BadQueryException
+        thrown InvalidQueryException
     }
 
 }

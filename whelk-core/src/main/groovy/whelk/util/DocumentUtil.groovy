@@ -6,7 +6,7 @@ class DocumentUtil {
     public final static Operation NOP = new Nop()
 
     interface Visitor {
-        Operation visitElement(def value, List path)
+        Operation visitElement(def value, List<Object> path)
     }
 
     interface Linker {

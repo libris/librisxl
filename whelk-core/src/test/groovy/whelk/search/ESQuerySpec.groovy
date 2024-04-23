@@ -14,6 +14,8 @@ class ESQuerySpec extends Specification {
         Map display = [:]
         Map vocab = [:]
         es.jsonld = new JsonLd(context, display, vocab)
+        es.nestedNotInParentFields = ['nested_not_in_parent_field', 'deeper.deeper_nested_not_in_parent_field'] as Set
+        es.nestedFields = ['nested_field', 'deeper.deeper_nested_field'] + es.nestedNotInParentFields as Set
     }
 
     def "should get query string"() {
@@ -69,7 +71,7 @@ class ESQuerySpec extends Specification {
 
     def "should get filters"(Map<String, String[]> params, List result) {
         given:
-        def (filters, postFilters) = es.getFilters(params)
+        def (filters, postFilters) = es.getFilters(params.collectEntries { k, v -> [(k), v as String[]] })
         expect:
         filters == result
         where:
@@ -153,6 +155,143 @@ class ESQuerySpec extends Specification {
                                                         ['simple_query_string' : ['query': 'baz',
                                                                                   'fields': ['__langAliased'],
                                                                                   'default_operator': 'AND']]]]]]]]]
+
+    }
+
+    def "should get filters for nested docs"(Map<String, String[]> params, List result) {
+        given:
+        def (filters, postFilters) = es.getFilters(params.collectEntries { k, v -> [(k), v as String[]] })
+        expect:
+        filters == result
+        where:
+        params                                          | result
+
+        // Explicit AND - Matching two different nested objects - nested_field: [{ a: foo, b: baz }, { a: bar, b: qux }]
+        ['and-nested_field.a': ['foo', 'bar'],
+         'and-nested_field.b': ['baz', 'qux']] | [[bool:[must:[
+                [nested: [path:'nested_field', query:[bool:[must:[
+                        [bool:[should:[[simple_query_string:[query:'foo', fields:['nested_field.a'], default_operator:'AND']]]]],
+                        [bool:[should:[[simple_query_string:[query:'baz', fields:['nested_field.b'], default_operator:'AND']]]]]
+                ]]]]],
+                [nested: [path:'nested_field', query:[bool:[must:[
+                        [bool:[should:[[simple_query_string:[query:'bar', fields:['nested_field.a'], default_operator:'AND']]]]],
+                        [bool:[should:[[simple_query_string:[query:'qux', fields:['nested_field.b'], default_operator:'AND']]]]]
+                ]]]]]
+        ]]]]
+
+        ['and-deeper.deeper_nested_field.a': ['foo', 'bar'],
+         'and-deeper.deeper_nested_field.b': ['baz', 'qux']] | [[bool:[must:[
+                [nested:[path:'deeper.deeper_nested_field', query:[bool:[must:[
+                        [bool:[should:[[simple_query_string:[query:'baz', fields:['deeper.deeper_nested_field.b'], default_operator:'AND']]]]],
+                        [bool:[should:[[simple_query_string:[query:'foo', fields:['deeper.deeper_nested_field.a'], default_operator:'AND']]]]]
+                ]]]]],
+                [nested:[path:'deeper.deeper_nested_field', query:[bool:[must:[
+                        [bool:[should:[[simple_query_string:[query:'qux', fields:['deeper.deeper_nested_field.b'], default_operator:'AND']]]]],
+                        [bool:[should:[[simple_query_string:[query:'bar', fields:['deeper.deeper_nested_field.a'], default_operator:'AND']]]]]
+                ]]]]]
+        ]]]]
+
+        // Implicit AND and OR - matches same nested object
+        ['nested_field.a': ['foo', 'bar'],
+         'nested_field.b': ['baz', 'qux']] | [[bool:[must:[
+                [nested: [path:'nested_field', query:[bool:[must:[
+                        [bool:[should:[[simple_query_string:[query:'baz', fields:['nested_field.b'], default_operator:'AND']],
+                                       [simple_query_string:[query:'qux', fields:['nested_field.b'], default_operator:'AND']]]]],
+                        [bool:[should:[[simple_query_string:[query:'foo', fields:['nested_field.a'], default_operator:'AND']],
+                                       [simple_query_string:[query:'bar', fields:['nested_field.a'], default_operator:'AND']]]]],
+                ]]]]],
+        ]]]]
+
+
+        // Implicit OR
+        ['nested_field.a': ['foo', 'bar']] | [[bool:[must:[
+                [nested:[path:'nested_field', query:[bool:[must:[[bool:[should:[
+                        [simple_query_string:[query:'foo', fields:['nested_field.a'], default_operator:'AND']],
+                        [simple_query_string:[query:'bar', fields:['nested_field.a'], default_operator:'AND']]
+                ]]]]]]]]
+        ]]]]
+
+
+        // Single filter on nested doc doesn't need a nested query
+        ['nested_field.a': ['foo']] | [[bool:[must:[
+                [bool:[should:[[simple_query_string:[query:'foo', fields:['nested_field.a'], default_operator:'AND']]]]]
+        ]]]]
+
+        ['deeper.deeper_nested_field.a': ['foo']] | [[bool:[must:[
+                [bool:[should:[[simple_query_string:[query:'foo', fields:['deeper.deeper_nested_field.a'], default_operator:'AND']]]]]
+        ]]]]
+
+
+        // Unless the nested document isn't included in parent
+        ['nested_not_in_parent_field.a': ['foo']] | [[bool:[must:[
+                [nested:[path:'nested_not_in_parent_field', query:[bool:[must:[
+                        [bool:[should:[[simple_query_string:[query:'foo', fields:['nested_not_in_parent_field.a'], default_operator:'AND']]]]]
+                ]]]]]
+        ]]]]
+
+        ['deeper.deeper_nested_not_in_parent_field.a': ['foo']] | [[bool:[must:[
+                [nested:[path:'deeper.deeper_nested_not_in_parent_field', query:[bool:[must:[
+                        [bool:[should:[[simple_query_string:[query:'foo', fields:['deeper.deeper_nested_not_in_parent_field.a'], default_operator:'AND']]]]]
+                ]]]]]
+        ]]]]
+
+        // Implicit AND
+        ['nested_field.a': ['foo'], 'nested_field.b': ['bar']] | [[bool:[must:[
+                [nested:[path:'nested_field', query:[bool:[must:[
+                        [bool:[should:[[simple_query_string:[query:'bar', fields:['nested_field.b'], default_operator:'AND']]]]],
+                        [bool:[should:[[simple_query_string:[query:'foo', fields:['nested_field.a'], default_operator:'AND']]]]]
+                ]]]]]
+        ]]]]
+
+        // Explicit OR inside and outside nested document
+        ['or-nested_not_in_parent_field.a': ['foo'], 'or-not_nested.a': ['bar']] | [[bool:[must:[
+                [bool:[should:[
+                        [simple_query_string:[query:'bar', fields:['not_nested.a'], default_operator:'AND']],
+                        [nested:[path:'nested_not_in_parent_field', query:[simple_query_string:[query:'foo', fields:['nested_not_in_parent_field.a'], default_operator:'AND']]]]
+                ]]]
+        ]]]]
+
+        ['or-deeper.deeper_nested_not_in_parent_field.a': ['foo'], 'or-not_nested.a': ['bar']] | [[bool:[must:[
+                [bool:[should:[
+                        [simple_query_string:[query:'bar', fields:['not_nested.a'], default_operator:'AND']],
+                        [nested:[path:'deeper.deeper_nested_not_in_parent_field', query:[simple_query_string:[query:'foo', fields:['deeper.deeper_nested_not_in_parent_field.a'], default_operator:'AND']]]]
+                ]]]
+        ]]]]
+
+        ['or-nested_field.a': ['foo'], 'or-not_nested.a': ['bar']] | [[bool:[must:[
+                [bool:[should:[
+                        [simple_query_string:[query:'bar', fields:['not_nested.a'], default_operator:'AND']],
+                        [simple_query_string:[query:'foo', fields:['nested_field.a'], default_operator:'AND']]
+                ]]]
+        ]]]]
+
+        ['or-deeper.deeper_nested_field.a': ['foo'], 'or-not_nested.a': ['bar']] | [[bool:[must:[
+                [bool:[should:[
+                        [simple_query_string:[query:'bar', fields:['not_nested.a'], default_operator:'AND']],
+                        [simple_query_string:[query:'foo', fields:['deeper.deeper_nested_field.a'], default_operator:'AND']]
+                ]]]
+        ]]]]
+
+        // Multiple conditions on same nested document
+        ['nested_field.a': ['foo'],
+         'nested_field.b': ['bar'],
+         'not-nested_field.c': ['baz', 'qux']] | [[bool:[must:[
+                [nested:[path:'nested_field', query:[bool:[
+                        must:[
+                                [bool:[should:[[simple_query_string:[query:'bar', fields:['nested_field.b'], default_operator:'AND']]]]],
+                                [bool:[should:[[simple_query_string:[query:'foo', fields:['nested_field.a'], default_operator:'AND']]]]]],
+                        must_not:[
+                                [bool:[should:[[simple_query_string:[query:'baz', fields:['nested_field.c'], default_operator:'AND']],
+                                               [simple_query_string:[query:'qux', fields:['nested_field.c'], default_operator:'AND']]]]]]
+                ]]]]
+        ]]]]
+
+        //
+        ['nested_field_not_really.a': ['foo'], 'nested_field_not_really.b': ['bar']] | [[bool:[must:[
+                [bool:[should:[[simple_query_string:[query:'foo', fields:['nested_field_not_really.a'], default_operator:'AND']]]]],
+                [bool:[should:[[simple_query_string:[query:'bar', fields:['nested_field_not_really.b'], default_operator:'AND']]]]]
+        ]]]]
+
     }
 
     def "should create bool filter"(String key, String[] vals, Map result) {

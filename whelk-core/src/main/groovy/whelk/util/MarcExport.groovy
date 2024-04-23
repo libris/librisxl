@@ -96,7 +96,7 @@ class MarcExport {
      */
     static String toXmlString(Document doc, JsonLD2MarcXMLConverter toMarcXmlConverter) {
         try {
-            return (String) toMarcXmlConverter.convert(doc.data, doc.getShortId()).get(JsonLd.getNON_JSON_CONTENT_KEY())
+            return (String) toMarcXmlConverter.convert(doc.data, doc.getShortId()).get(JsonLd.NON_JSON_CONTENT_KEY)
         }
         catch (Exception | Error e) { // Depending on the converter, a variety of problems may arise here
             log.error("Conversion error for: " + doc.getCompleteId() + " cause: ", e)

@@ -175,10 +175,6 @@
                     }
                 }
             },
-            "issuanceType": {
-              "type": "keyword",
-              "copy_to": "_all"
-            },
             "identifiedBy": {
                 "type": "nested",
                 "include_in_parent": true,
@@ -187,49 +183,6 @@
                     "value": {
                         "type": "text",
                         "analyzer": "isbn_analyzer",
-                        "copy_to": "_all"
-                    }
-                }
-            },
-            "publication": {
-                "properties": {
-                    "year": {
-                        "fields": {
-                            "keyword": {
-                                "index": true,
-                                "type": "keyword"
-                            }
-                        },
-                        "analyzer": "numeric_extractor",
-                        "index": true,
-                        "type": "text",
-                        "fielddata": true,
-                        "copy_to": "_all"
-                    },
-                    "startYear": {
-                        "fields": {
-                            "keyword": {
-                                "index": true,
-                                "type": "keyword"
-                            }
-                        },
-                        "analyzer": "numeric_extractor",
-                        "index": true,
-                        "type": "text",
-                        "fielddata": true,
-                        "copy_to": "_all"
-                    },
-                    "endYear": {
-                        "fields": {
-                            "keyword": {
-                                "index": true,
-                                "type": "keyword"
-                            }
-                        },
-                        "analyzer": "numeric_extractor",
-                        "index": true,
-                        "type": "text",
-                        "fielddata": true,
                         "copy_to": "_all"
                     }
                 }
@@ -355,6 +308,41 @@
                         "index": true,
                         "type": "text",
                         "copy_to": "_all"
+                    }
+                }
+            },
+            {
+                "issuanceType_template": {
+                    "match": ["issuanceType"],
+                    "mapping": {
+                        "type": "keyword",
+                        "copy_to": "_all"
+                    }
+                }
+            },
+            {
+                "year_template": {
+                    "match": ["year", "startYear", "endYear"],
+                    "mapping": {
+                        "fields": {
+                            "keyword": {
+                                "index": true,
+                                "type": "keyword"
+                            }
+                        },
+                        "analyzer": "numeric_extractor",
+                        "index": true,
+                        "type": "text",
+                        "fielddata": true,
+                        "copy_to": "_all"
+                    }
+                }
+            },
+            {
+                "reverse_itemOf_template": {
+                    "path_match": ["@reverse.itemOf", "@reverse.instanceOf.@reverse.itemOf"],
+                    "mapping": {
+                        "type": "nested"
                     }
                 }
             },

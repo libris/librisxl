@@ -70,8 +70,10 @@ class ElasticReindexer {
         try {
             startTime = System.currentTimeMillis()
             List<String> collections = suppliedCollection ? [suppliedCollection] : whelk.storage.loadCollections()
+            log.info("Collection(s) to be indexed: ${collections}")
             threadPool = BlockingThreadPool.simplePool(numberOfThreads)
             collections.each { collection ->
+                log.info("Indexing collection ${collection}")
                 List<Document> documents = []
                 for (document in whelk.storage.loadAll(collection)) {
                     if ( ! document.getDeleted() ) {

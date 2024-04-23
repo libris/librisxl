@@ -333,6 +333,8 @@ class RemoteSearchAPI extends HttpServlet {
                 } catch (NumberFormatException nfe) {
                     def emessageElement = xmlRecords.'zs:diagnostics'.'diag:diagnostic'.'diag:message'
                     errorMessage = emessageElement.text()
+                } catch (Throwable e) {
+                    errorMessage = "zs:numberOfRecords appears to be a bad integer: ${xmlRecords.'zs:numberOfRecords'}"
                 }
                 if (!errorMessage) {
                     docStrings = getXMLRecordStrings(xmlRecords)

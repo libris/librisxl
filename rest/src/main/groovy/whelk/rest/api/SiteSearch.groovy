@@ -2,7 +2,6 @@ package whelk.rest.api
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
-import static groovy.transform.TypeCheckingMode.SKIP
 
 import whelk.JsonLd
 import whelk.Whelk
@@ -15,15 +14,20 @@ class SiteSearch {
 
     Whelk whelk
     SearchUtils search
+    SearchUtils2 search2
 
     Map<String, Map> appsIndex = [:]
     Map<String, String> siteAlias = [:]
     Map<String, Map> searchStatsReprs = [:]
+    Map<String, Map> searchStatsReprs2 = [:]
 
     SiteSearch(Whelk whelk) {
         this.whelk = whelk
         search = new SearchUtils(whelk)
         setupApplicationSearchData()
+
+        search2 = new SearchUtils2(whelk)
+        setupApplicationSearchData2()
     }
 
     String getDefaultSite() {
@@ -55,6 +59,21 @@ class SiteSearch {
                     'domain': appId.replaceAll('^https?://([^/]+)/', '$1')
                 ]
             }
+        }
+    }
+
+    protected synchronized void setupApplicationSearchData2() {
+        var appId = "https://beta.libris.kb.se/"
+        var appDesc = getAndIndexDescription(appId)
+        if (appDesc) {
+            var findDesc = getAndIndexDescription("${appId}find")
+            var dataDesc = getAndIndexDescription("${appId}data")
+            searchStatsReprs2[appId] = [
+                    (JsonLd.ID_KEY): appId,
+                    'statsfind': buildStatsReprFromSliceSpec2(findDesc),
+                    'statsindex': buildStatsReprFromSliceSpec2(dataDesc),
+                    'domain': appId.replaceAll('^https?://([^/]+)/', '$1')
+            ]
         }
     }
 
@@ -108,6 +127,12 @@ class SiteSearch {
                 queryParameters.put('_statsrepr', [mapper.writeValueAsString(searchSettings['statsindex'])] as String[])
             }
             return toDataIndexDescription(appsIndex["${activeSite}data" as String], queryParameters)
+        } else if ("_q" in queryParameters || "_i" in queryParameters || "_o" in queryParameters) {
+            searchSettings = searchStatsReprs2["https://beta.libris.kb.se/"]
+            if (!queryParameters['_statsrepr'] && searchSettings['statsfind']) {
+                queryParameters.put('_statsrepr', [mapper.writeValueAsString(searchSettings['statsfind'])] as String[])
+            }
+            return search2.doSearch(queryParameters)
         } else {
             if (!queryParameters['_statsrepr'] && searchSettings['statsfind']) {
                 queryParameters.put('_statsrepr', [mapper.writeValueAsString(searchSettings['statsfind'])] as String[])
@@ -136,5 +161,11 @@ class SiteSearch {
         var stats = (Map) desc.get('statistics')
         var sliceList = (List) stats?.get('sliceList')
         return sliceList ? search.buildStatsReprFromSliceSpec(sliceList) : null
+    }
+
+    protected Map buildStatsReprFromSliceSpec2(Map desc) {
+        var stats = (Map) desc.get('statistics')
+        var sliceList = (List) stats?.get('sliceList')
+        return sliceList ? search2.buildStatsReprFromSliceSpec(sliceList) : null
     }
 }

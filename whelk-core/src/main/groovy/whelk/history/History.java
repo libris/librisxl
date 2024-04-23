@@ -145,7 +145,7 @@ public class History {
                     var curr = m_lastVersion.doc.data;
                     
                     for (var parent : added.stream().map(History::parent).collect(Collectors.toSet())) {
-                        boolean isLangContainer = jsonLd.getLangContainerAliasInverted().containsKey(last(parent));
+                        boolean isLangContainer = jsonLd.langContainerAliasInverted.containsKey(last(parent));
                         if (!isLangContainer && isAllChanged(getAtPath(prev, parent), getAtPath(curr, parent))) {
                             added.removeIf(p -> isSubList(parent, p));
                             added.add(parent);
@@ -153,7 +153,7 @@ public class History {
                     }
                     
                     for (var parent : removed.stream().map(History::parent).collect(Collectors.toSet())) {
-                        boolean isLangContainer = jsonLd.getLangContainerAliasInverted().containsKey(last(parent));
+                        boolean isLangContainer = jsonLd.langContainerAliasInverted.containsKey(last(parent));
                         if (!isLangContainer && isAllChanged(getAtPath(prev, parent), getAtPath(curr, parent))) {
                             removed.removeIf(p -> isSubList(parent, p));
                             removed.add(parent);

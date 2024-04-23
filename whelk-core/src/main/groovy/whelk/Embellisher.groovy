@@ -17,6 +17,7 @@ class Embellisher {
     JsonLd jsonld
     Collection<String> embellishLevels = DEFAULT_EMBELLISH_LEVELS
     Collection<String> integralRelations = DEFAULT_INTEGRAL_RELATIONS
+    Collection<String> inverseIntegralRelations = []
     boolean followInverse = true
 
     Function<Iterable<String>, Iterable<Map>> getDocs
@@ -37,6 +38,7 @@ class Embellisher {
         def integral = jsonld.getCategoryMembers('integral')
         if (integral) {
             this.integralRelations = integral
+            this.inverseIntegralRelations = integralRelations.collect{ jsonld.getInverseProperty(it) }.grep()
         }
     }
 
@@ -47,10 +49,6 @@ class Embellisher {
 
     void setEmbellishLevels(List<String> embellishLevels) {
         this.embellishLevels = embellishLevels.collect()
-    }
-
-    void setIntegralRelations(List<String> integralRelations) {
-        this.integralRelations = integralRelations.collect()
     }
 
     void setFollowInverse(boolean followInverse) {
@@ -67,6 +65,7 @@ class Embellisher {
         Set<String> visitedIris = new HashSet<>()
         visitedIris.addAll(plusWithoutHash(document.getThingIdentifiers()))
 
+        // TODO? don't hardcode 'full'? could be 'cards' for index
         def docs = fetchIntegral('full', start, integral(getAllLinks(start)), visitedIris).collect()
 
         List result = docs.collect()
@@ -77,7 +76,7 @@ class Embellisher {
         for (String lens : embellishLevels) {
             docs = fetchNonVisited(lens, uniqueIris(links), visitedIris)
             links = getAllLinks(docs)
-            
+
             def integralDocs = fetchIntegral(lens, docs, integral(links), visitedIris)
             docs += integralDocs
             links += getAllLinks(integralDocs)
@@ -138,7 +137,11 @@ class Embellisher {
     private Iterable<Map> fetchIntegral(String lens, Iterable<Map> docs, Set<Link> integralLinks, Set<String> visitedIris) {
         List<Map> result = []
         while(true) {
+            var previousDocs = docs
             docs = fetchNonVisited(lens, uniqueIris(integralLinks), visitedIris)
+            for (Map doc in previousDocs) {
+                docs += insertInverseIntegral(lens, doc, lens, visitedIris)
+            }
             integralLinks = integral(getAllLinks(docs))
 
             if (docs.isEmpty()) {
@@ -185,7 +188,20 @@ class Embellisher {
     }
 
     private Iterable<Map> insertInverse(String forLens, Map thing, String applyLens, Set<String> visitedIris) {
+        _insertInverse(forLens, thing, applyLens, visitedIris, false)
+    }
+
+    private Iterable<Map> insertInverseIntegral(String forLens, Map thing, String applyLens, Set<String> visitedIris) {
+        _insertInverse(forLens, thing, applyLens, visitedIris, true)
+    }
+
+    private Iterable<Map> _insertInverse(String forLens, Map thing, String applyLens, Set<String> visitedIris, boolean onlyIntegral) {
         Set<String> inverseRelations = jsonld.getInverseProperties(thing, forLens)
+        if (onlyIntegral) {
+            inverseRelations = inverseIntegralRelations.intersect(inverseRelations) as Set
+        } else {
+            inverseRelations -= inverseIntegralRelations // they should already have been handled
+        }
         if (inverseRelations.isEmpty()) {
             return Collections.EMPTY_LIST
         }

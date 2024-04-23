@@ -158,6 +158,8 @@ class Crud extends HttpServlet {
         } catch (InvalidQueryException e) {
             log.warn("Invalid query: ${queryParameters}")
             throw new BadRequestException("Invalid query, please check the documentation. ${e.getMessage()}")
+        } catch (RedirectException e) {
+            sendRedirect(request, response, e.getMessage())
         }
     }
 
@@ -225,12 +227,12 @@ class Crud extends HttpServlet {
         setVary(response)
         response.setHeader("ETag", eTag.toString())
         response.setHeader("Server-Start-Time", "" + ManagementFactory.getRuntimeMXBean().getStartTime())
-        sendError(response, HttpServletResponse.SC_NOT_MODIFIED, "Document has not been modified.")
+        HttpTools.sendError(response, HttpServletResponse.SC_NOT_MODIFIED, "Document has not been modified.")
     }
 
     private static void sendNotFound(HttpServletRequest request, HttpServletResponse response) {
         metrics.failedRequests.labels(request.getMethod(), HttpServletResponse.SC_NOT_FOUND.toString()).inc()
-        sendError(response, HttpServletResponse.SC_NOT_FOUND, "Document not found.")
+        HttpTools.sendError(response, HttpServletResponse.SC_NOT_FOUND, "Document not found.")
     }
 
     private Object getFormattedResponseBody(CrudGetRequest request, Document doc, String profileId) {
@@ -271,7 +273,7 @@ class Crud extends HttpServlet {
     }
 
     private static Map frameRecord(Document document) {
-        return JsonLd.frame(document.getCompleteId(), document.data)
+        return JsonLd.frame(document.getCompleteId(), document.data, 3)
     }
 
     private static Map frameThing(Document document) {
@@ -502,7 +504,7 @@ class Crud extends HttpServlet {
             sendError(request, response, e)
         } finally {
             measurement.complete()
-            log.debug("Sending POST response with status " +
+            log.info("Sending POST response with status " +
                      "${response.getStatus()} for ${request.pathInfo}")
         }
     }
@@ -587,7 +589,7 @@ class Crud extends HttpServlet {
             sendError(request, response, e)
         } finally {
             measurement.complete()
-            log.debug("Sending PUT response with status " +
+            log.info("Sending PUT response with status " +
                      "${response.getStatus()} for ${request.pathInfo}")
         }
 
@@ -843,7 +845,7 @@ class Crud extends HttpServlet {
         if (log.isDebugEnabled()) {
             log.debug("Sending error $code : ${e.getMessage()} for ${request.getRequestURI()}")
         }
-        sendError(response, code, e.getMessage(), e)
+        HttpTools.sendError(response, code, e.getMessage(), e)
     }
     
     static private int mapError(Exception e) {
@@ -900,6 +902,12 @@ class Crud extends HttpServlet {
         
         protected NoStackTraceException(String msg, Throwable cause) {
             super(msg, cause, true, false)
+        }
+    }
+
+    static class RedirectException extends NoStackTraceException {
+        RedirectException(String msg) {
+            super(msg)
         }
     }
 }

@@ -105,36 +105,18 @@ class InquirySender extends HouseKeeper {
 
                 // Figure out who to send to
                 Set<String> recipients = []
-                String subject = NotificationUtils.subject(whelk, messageType)
-                boolean sendToAll = true
-                concerningSystemIDs.each { String concerningSystemID ->
+                String subject = NotificationUtils.subject(whelk, messageType, concerningSystemIDs)
+                for (String concerningSystemID : concerningSystemIDs) {
                     String type = whelk.getStorage().getMainEntityTypeBySystemID(concerningSystemID)
-                    if (whelk.getJsonld().isSubClassOf(type, "Instance")) {
-                        sendToAll = false
+                    if (whelk.getJsonld().isSubClassOf(type, "Instance")) { // Send to all holders of said instance (including Electronic)
                         List<String> libraries = whelk.getStorage().getAllLibrariesHolding(concerningSystemID)
-                        for (String library : libraries) {
-                            List<Map> usersSubbedToLibrary = heldByToUserSettings[library] ?: []
-                            for (Map user : usersSubbedToLibrary) {
-                                Object email = user["notificationEmail"]
-                                if (email != null && email instanceof String) {
-                                    recipients.add(email)
-                                }
-                            }
-                        }
-                        subject = NotificationUtils.subject(whelk, messageType, libraries)
+                        recipients.addAll( getRecipientsForLibraries(libraries, heldByToUserSettings) )
+
+                        subject = NotificationUtils.subject(whelk, messageType, concerningSystemIDs, libraries)
                     }
-                }
-                if (sendToAll) {
-                    heldByToUserSettings.keySet().each { String library ->
-                        if (library == "none")
-                            return
-                        List<Map> usersSubbedToLibrary = heldByToUserSettings[library]
-                        for (Map user : usersSubbedToLibrary) {
-                            Object email = user["notificationEmail"]
-                            if (email != null && email instanceof String) {
-                                recipients.add(email)
-                            }
-                        }
+                    else { // Send to all holders of non-electronic instances linking (in any number of steps) to whatever the message was about
+                        List<String> libraries = whelk.getStorage().followLibrariesConcernedWith(concerningSystemID, ["Electronic"])
+                        recipients.addAll( getRecipientsForLibraries(libraries, heldByToUserSettings) )
                     }
                 }
 
@@ -170,6 +152,20 @@ class InquirySender extends HouseKeeper {
 
     }
 
+    private List<String> getRecipientsForLibraries(List<String> libraries, Map<String, List<Map>> heldByToUserSettings) {
+        List<String> recipients = []
+        for (String library : libraries) {
+            List<Map> usersSubbedToLibrary = heldByToUserSettings[library] ?: []
+            for (Map user : usersSubbedToLibrary) {
+                Object email = user["notificationEmail"]
+                if (email != null && email instanceof String) {
+                    recipients.add(email)
+                }
+            }
+        }
+        return recipients
+    }
+
     private String generateEmailBody(NotificationUtils.NotificationType messageType, String noticeSystemId, List<String> concerningSystemIDs, List<String> comments, Optional<String> creatorId) {
         StringBuilder sb = new StringBuilder()
 
@@ -198,7 +194,7 @@ class InquirySender extends HouseKeeper {
         sb.append('\n')
         creatorId.ifPresent {
             var creatorLabel = whelk.jsonld.vocabIndex['descriptionCreator']?['labelByLang']?['sv'] ?: ""
-            var creator = NotificationUtils.chipString(DocumentUtil.getAtPath(whelk.loadData(it), [JsonLd.getGRAPH_KEY(), 1]), whelk)
+            var creator = NotificationUtils.chipString(DocumentUtil.getAtPath(whelk.loadData(it), [JsonLd.GRAPH_KEY, 1]), whelk)
             sb.append(creatorLabel).append(': ').append(creator).append('\n')
             sb.append('\n')
         }

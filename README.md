@@ -71,10 +71,10 @@ for e.g. Fedora/CentOS/RHEL with minor adjustments.
     Windows:
     Download and install https://www.postgresql.org/download/windows/
 
-4. [Java](https://openjdk.java.net/) (version 17)
+4. [Java](https://openjdk.java.net/) (version 21)
 
     ```
-    sudo apt install openjdk-17-jdk # or openjdk-17-headless
+    sudo apt install openjdk-21-jdk # or openjdk-21-headless
     ```
 
 5. [nginx](https://nginx.org/)

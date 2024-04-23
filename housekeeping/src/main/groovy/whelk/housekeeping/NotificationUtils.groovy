@@ -30,11 +30,25 @@ class NotificationUtils {
         InquiryAction
     }
 
-    static String subject(Whelk whelk, NotificationType notificationType, List<String> libraryUris = []) {
+    static String subject(Whelk whelk, NotificationType notificationType, List<String> concerningSystemIDs, List<String> libraryUris = []) {
         var typeLabel = whelk.jsonld.vocabIndex[notificationType.toString()]?['labelByLang']?['sv'] ?: ""
 
+        List<String> concernedLibrisIDs = []
+        if (concerningSystemIDs) {
+            for (String systemId : concerningSystemIDs) {
+                Document doc = whelk.loadEmbellished(systemId)
+                if ( whelk.getJsonld().isSubClassOf(doc.getThingType(), "Instance") ) {
+                    concernedLibrisIDs.add( doc.getControlNumber() )
+                }
+            }
+        }
+        String librisIDs = String.join(", ", concernedLibrisIDs)
+        if (librisIDs.length() > 0) {
+            librisIDs = " Libris-ID " + librisIDs
+        }
+
         String collections = recipientCollections(libraryUris)
-        return "$emailHeader ${typeLabel}.${collections ? ' ' : ''}${collections}"
+        return "$emailHeader ${typeLabel}.${librisIDs}${collections ? ' ' : ''}${collections}"
     }
 
     /**
@@ -126,6 +140,12 @@ class NotificationUtils {
             asList(data[p]).each { s.append("\n").append(chipString(it, whelk)) }
         }
         s.append("\n").append("Kontrollnummer: ").append(doc.getControlNumber())
+        List<String> isbnValues = doc.getIsbnValues()
+        if (isbnValues) {
+            for (String isbn : isbnValues) {
+                s.append("\n").append("ISBN: ").append(isbn)
+            }
+        }
 
         return s.toString()
     }

@@ -207,7 +207,7 @@ class JsonLdValidator {
     }
 
     private void validateRepeatability(String key, value, validation) {
-        boolean expectRepeat = key == jsonLd.GRAPH_KEY || key in jsonLd.getRepeatableTerms()
+        boolean expectRepeat = key == jsonLd.GRAPH_KEY || key in jsonLd.repeatableTerms
         if (expectRepeat && !isRepeated(value)) {
             handleError(new Error(Error.Type.ARRAY_EXPECTED, key, value), validation)
         } else if (!expectRepeat && isRepeated(value)) {

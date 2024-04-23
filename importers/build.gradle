@@ -1,7 +1,5 @@
 apply plugin: 'groovy'
 apply plugin: 'application'
-apply plugin: 'war'
-apply from: '../gretty.plugin'
 
 loadConfiguration()
 def loadConfiguration() {
@@ -17,7 +15,10 @@ def loadConfiguration() {
     System.setProperty 'whelk.environment', environment
 }
 
-mainClassName = "whelk.importer.ImporterMain"
+application {
+    mainClass = "whelk.importer.ImporterMain"
+}
+
 
 def getGitVersion() {
 	def stdout = new ByteArrayOutputStream()
@@ -66,7 +67,6 @@ dependencies {
     implementation(project(':whelk-core'))
 
     // Common tools
-    providedCompile 'javax.servlet:servlet-api:2.5'
     implementation "org.codehaus.groovy:groovy-all:${groovyVersion}"
     implementation 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
 
@@ -92,6 +92,8 @@ dependencies {
 
 // Include dependent libraries in archive.
 jar {
+    archivesBaseName = 'xlimporter'
+	
     manifest {
         attributes "Main-Class": "whelk.importer.ImporterMain",
                 // log4j uses multi-release to ship different stack walking implementations for different java
@@ -110,37 +112,6 @@ jar {
 
 }
 
-
-
-configurations {
-    executableWarDeps
-}
-
-project.afterEvaluate {
-    war {
-        archivesBaseName = "xlimporter"
-
-        from {
-            configurations.executableWarDeps.collect {
-                //it.isDirectory() ? it : project.zipTree(it)
-                it.isDirectory() ? it : project.zipTree(it).matching {
-                }
-            }
-        }
-
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        def manifestClasspath = configurations.runtimeClasspath.collect {
-            "/WEB-INF/lib/${it.getName()}"
-        }.join(',')
-
-        manifest {
-            attributes 'Implementation-Title': 'Standalone Whelk Importer',
-                    'Implementation-Version': versionNumber,
-                    'Class-Path': manifestClasspath
-        }
-    }
-}
-
 task(doRun, dependsOn: "classes", type: JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
     mainClass = "whelk.importer.ImporterMain"
@@ -151,15 +122,6 @@ task(doRun, dependsOn: "classes", type: JavaExec) {
     minHeapSize = "1g"
     maxHeapSize = "4g"
     args(System.getProperty("args", "").split() as String[])
-}
-
-gretty {
-    httpPort = 8181
-    contextPath = '/'
-    systemProperties(
-        'xl.secret.properties': System.getProperty("xl.secret.properties"),
-        'xl.mysql.properties' : System.getProperty("xl.mysql.properties")
-    )
 }
 
 task(groovy, dependsOn: "classes", type: JavaExec) {

@@ -1006,18 +1006,27 @@ class ConversionPart {
             Object highPrioValue = keepAll[key]
             Object lowPrioValue = keepSome[key]
 
-            if (!highPrioValue && lowPrioValue)
+            if (!highPrioValue && lowPrioValue) {
                 result.put(key, lowPrioValue)
-            else if (highPrioValue && !lowPrioValue)
+            } else if (highPrioValue && !lowPrioValue) {
                 result.put(key, highPrioValue)
-            else if (highPrioValue && lowPrioValue) {
-                if (highPrioValue instanceof Map && lowPrioValue instanceof Map) {
-                    result.put(key, deepMergedClone((Map)lowPrioValue, (Map)highPrioValue))
+            } else if (highPrioValue && lowPrioValue) {
+                if (highPrioValue instanceof Map) {
+                    if (lowPrioValue instanceof Map) {
+                      result.put(key, deepMergedClone((Map)lowPrioValue, (Map)highPrioValue))
+                    } else {
+                      highPrioValue = [highPrioValue]
+                    }
                 }
-                else if (highPrioValue instanceof List && lowPrioValue instanceof List) {
+
+                if (highPrioValue instanceof List) {
                     List resultingList = []
-                    resultingList.addAll( (List) highPrioValue )
-                    resultingList.addAll( (List) lowPrioValue )
+                    resultingList.addAll(highPrioValue)
+                    if (lowPrioValue instanceof List) {
+                      resultingList.addAll(lowPrioValue)
+                    } else {
+                      resultingList.add(lowPrioValue)
+                    }
                     result.put(key, resultingList)
                 }
             }
@@ -1378,7 +1387,7 @@ class MarcFixedFieldHandler {
     static boolean isColKey(key) { ((String) key)?.startsWith('[') }
 
     static List<Tuple2<Integer, Integer>> parseColumnNumbers(key) {
-        List colNums = []
+        List<Tuple2<Integer, Integer>> colNums = []
         (key =~ /\[(\d+)(?::(\d+))?\]\s*/).each { List<String> m ->
             Integer start = m[1].toInteger()
             Integer end = m[2]?.toInteger() ?: start + 1
@@ -2172,8 +2181,8 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
 
             if (pending.absorbSingle) {
                 def link = (String) (pending.link ?: pending.addLink)
-                def parent = (Map) (pending.about ? localEntities[pending.about] : entity)
-                def items = (List<Map>) parent[link]
+                Map parent = (Map) (pending.about ? localEntities[pending.about] : entity)
+                List<Map> items = (List<Map>) parent[link]
                 if (items instanceof List && items.size() == 1) {
                     parent.remove(link)
                     parent.putAll(items[0])

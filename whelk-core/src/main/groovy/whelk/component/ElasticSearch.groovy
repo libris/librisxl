@@ -17,6 +17,7 @@ import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
 
+import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
 import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
@@ -211,6 +212,28 @@ class ElasticSearch {
                 }
             }.join('')
 
+            if (whelk.features.isEnabled(INDEX_BLANK_WORKS)) {
+                String bulkString2 = docs
+                        .collect { doc -> doc.getVirtualRecordIds().collect {doc.getVirtualRecord(it) } }
+                        .flatten()
+                        .findResults{ Document doc ->
+                            try {
+                                String shapedData = getShapeForIndex(doc, whelk)
+                                String action = createActionRow(doc)
+                                return "${action}\n${shapedData}\n"
+                            } catch (Exception e) {
+                                if (doc.getShortId() == null) {
+                                    log.error("Document has null shortId, something is wrong. Some details: " + doc.toVerboseString(), e);
+                                } else {
+                                    log.error("Failed to index ${doc.getShortId()} in elastic: $e", e)
+                                }
+                                return null
+                            }
+                        }.join('')
+
+                bulkString += bulkString2
+            }
+
             if (bulkString) {
                 String response = bulkClient.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE)
                 Map responseMap = mapper.readValue(response, Map)
@@ -227,7 +250,7 @@ class ElasticSearch {
             bulkIndex(docs, whelk)
         } catch (Exception e) {
             if (!isBadRequest(e)) {
-                log.error("Failed to index batch ${ids} in elastic, placing in retry queue: $e", e)
+                log.info("Failed to index batch ${ids} in elastic, placing in retry queue: $e", e)
                 indexingRetryQueue.add({ -> bulkIndexWithRetry(ids, whelk) })
             }
             else {
@@ -607,7 +630,7 @@ class ElasticSearch {
         if (id.contains("/")) {
             return Base64.encodeBase64URLSafeString(id.getBytes("UTF-8"))
         } else {
-            return id // If XL-minted identifier, use the same charsequence
+            return id.replace('#', '_') // If XL-minted identifier, use the same charsequence
         }
     }
     

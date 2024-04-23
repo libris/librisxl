@@ -70,7 +70,7 @@ class XL
         verbose = m_parameters.getVerbose();
         m_properties = PropertyLoader.loadProperties("secret");
         m_whelk = Whelk.createLoadedSearchWhelk(m_properties);
-        m_repeatableTerms = m_whelk.getJsonld().getRepeatableTerms();
+        m_repeatableTerms = m_whelk.getJsonld().repeatableTerms;
         m_marcFrameConverter = m_whelk.getMarcFrameConverter();
         m_linkfinder = new LinkFinder(m_whelk.getStorage());
         if (parameters.getMergeRuleFile() != null) {

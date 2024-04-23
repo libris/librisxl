@@ -10,51 +10,53 @@ import whelk.exception.FramingException
 import whelk.exception.WhelkRuntimeException
 import whelk.util.DocumentUtil
 
+import javax.annotation.Nullable
 import java.util.regex.Matcher
 
 @CompileStatic
 class JsonLd {
 
-    static final String GRAPH_KEY = "@graph"
-    static final String CONTEXT_KEY = "@context"
-    static final String VOCAB_KEY = "@vocab"
-    static final String ID_KEY = "@id"
-    static final String TYPE_KEY = "@type"
-    static final String VALUE_KEY = "@value"
-    static final String LANGUAGE_KEY = "@language"
-    static final String CONTAINER_KEY = "@container"
-    static final String SET_KEY = "@set"
-    static final String LIST_KEY = "@list"
-    static final String REVERSE_KEY = "@reverse"
+    public static final String GRAPH_KEY = "@graph"
+    public static final String CONTEXT_KEY = "@context"
+    public static final String VOCAB_KEY = "@vocab"
+    public static final String ID_KEY = "@id"
+    public static final String TYPE_KEY = "@type"
+    public static final String VALUE_KEY = "@value"
+    public static final String LANGUAGE_KEY = "@language"
+    public static final String CONTAINER_KEY = "@container"
+    public static final String SET_KEY = "@set"
+    public static final String LIST_KEY = "@list"
+    public static final String REVERSE_KEY = "@reverse"
     // JSON-LD 1.1
-    static final String PREFIX_KEY = "@prefix"
+    public static final String PREFIX_KEY = "@prefix"
 
-    static final String DISPLAY_KEY = "dataDisplay"
-    static final String THING_KEY = "mainEntity"
-    static final String WORK_KEY = "instanceOf"
-    static final String RECORD_KEY = "meta"
-    static final String CREATED_KEY = "created"
-    static final String MODIFIED_KEY = "modified"
-    static final String RECORD_STATUS_KEY = "recordStatus"
-    static final String NON_JSON_CONTENT_KEY = "content"
-    static final String JSONLD_ALT_ID_KEY = "sameAs"
-    static final String ABOUT_KEY = "mainEntity"
+    public static final String DISPLAY_KEY = "dataDisplay"
+    public static final String THING_KEY = "mainEntity"
+    public static final String WORK_KEY = "instanceOf"
+    public static final String RECORD_KEY = "meta"
+    public static final String CREATED_KEY = "created"
+    public static final String MODIFIED_KEY = "modified"
+    public static final String RECORD_STATUS_KEY = "recordStatus"
+    public static final String NON_JSON_CONTENT_KEY = "content"
+    public static final String JSONLD_ALT_ID_KEY = "sameAs"
+    public static final String ABOUT_KEY = "mainEntity"
 
-    static final String RECORD_TYPE = 'Record'
-    static final String CACHE_RECORD_TYPE = 'CacheRecord'
+    public static final String RECORD_TYPE = 'Record'
+    public static final String CACHE_RECORD_TYPE = 'CacheRecord'
+    public static final String VIRTUAL_RECORD_TYPE = 'VirtualRecord'
     
-    static final String SEARCH_KEY = "_str"
+    public static final String SEARCH_KEY = "_str"
 
-    static final List<String> NS_SEPARATORS = ['#', '/', ':']
+    public static final List<String> NS_SEPARATORS = ['#', '/', ':']
 
-    static final List<String> NON_DEPENDANT_RELATIONS = ['narrower', 'broader', 'expressionOf', 'related', 'derivedFrom']
-    static final List<String> ALLOW_LINK_TO_DELETED = [
+    public static final List<String> NON_DEPENDANT_RELATIONS = ['narrower', 'broader', 'expressionOf', 'related', 'derivedFrom']
+    public static final List<String> ALLOW_LINK_TO_DELETED = [
         'meta.derivedFrom', 'hasTitle.source',
         /* following are combinations only needed while there are local unlinked works */
          'translationOf.hasTitle.source', 'instanceOf.hasTitle.source', 'instanceOf.translationOf.hasTitle.source']
-    static final String CATEGORY_DEPENDENT = 'dependent'
+    public static final String CATEGORY_DEPENDENT = 'dependent'
 
-    static final Set<String> LD_KEYS
+    public static final Set<String> LD_KEYS
 
     static {
         LD_KEYS = [
@@ -71,17 +73,17 @@ class JsonLd {
         ] as Set
     }
 
-    static final String SUB_PROPERTY_OF = 'subPropertyOf'
-    static final String ALTERNATE_PROPERTIES = 'alternateProperties'
-    static final String RANGE = 'range'
+    public static final String SUB_PROPERTY_OF = 'subPropertyOf'
+    public static final String ALTERNATE_PROPERTIES = 'alternateProperties'
+    public static final String RANGE = 'range'
 
     private static Logger log = LogManager.getLogger(JsonLd.class)
 
-    Map<String, Map> context
-    Map displayData
-    Map vocabIndex
+    public Map<String, Map> context
+    public Map displayData
+    public Map<String, Map> vocabIndex
 
-    List<String> locales
+    public List<String> locales
     private String vocabId
     private Map<String, String> nsToPrefixMap = [:]
     private Map<String, String> prefixToNsMap = [:]
@@ -93,14 +95,14 @@ class JsonLd {
     private Map<String, Set<String>> categories
     private Map<String, Set<String>> inRange
 
-    Map langContainerAlias = [:]
-    Map langContainerAliasInverted
+    public Map langContainerAlias = [:]
+    public Map langContainerAliasInverted
 
     /**
      * This includes terms that are declared as either set or list containers
      * in the context.
      */
-    Set<String> repeatableTerms
+    public Set<String> repeatableTerms
 
     /**
      * Make an instance to encapsulate model driven behaviour.
@@ -552,14 +554,8 @@ class JsonLd {
 
     @TypeChecked(TypeCheckingMode.SKIP)
     void applyInverses(Map thing) {
-        thing[REVERSE_KEY]?.each { rel, subjects ->
-            Map relDescription = vocabIndex[rel]
-            // NOTE: resilient in case we add inverseOf as a direct term
-            def inverseOf = relDescription['owl:inverseOf'] ?: relDescription.inverseOf
-            List revIds = asList(inverseOf)?.collect {
-                toTermKey((String) it[ID_KEY])
-            }
-            String rev = revIds.find { it in vocabIndex }
+        thing[REVERSE_KEY]?.each { String rel, subjects ->
+            String rev = getInverseProperty(rel)
             if (rev) {
                 thing[rev] = asList(thing.get(rev, []))
                 thing[rev].addAll(asList(subjects))
@@ -571,6 +567,20 @@ class JsonLd {
         }
     }
 
+    @Nullable
+    String getInverseProperty(String propertyName) {
+        Map relDescription = vocabIndex[propertyName]
+        if (!relDescription) {
+            return null
+        }
+        // NOTE: resilient in case we add inverseOf as a direct term
+        def inverseOf = relDescription['owl:inverseOf'] ?: relDescription.inverseOf
+        List revIds = asList(inverseOf)?.collect {
+            toTermKey((String) it[ID_KEY])
+        }
+        return revIds.find { it in vocabIndex }
+    }
+
     static List asList(o) {
         return (o instanceof List) ? (List) o : o != null ? [o] : []
     }
@@ -579,15 +589,15 @@ class JsonLd {
         s && (s.startsWith('https://') || s.startsWith('http://'))
     }
 
-    static List<List<String>> findPaths(Map obj, String key, String value) {
+    static List<List> findPaths(Map obj, String key, String value) {
         return findPaths(obj, key, [value].toSet())
     }
 
-    static List<List<String>> findPaths(Map obj, String key, Set<String> values) {
-        List paths = []
+    static List<List> findPaths(Map obj, String key, Set<String> values) {
+        List<List> paths = []
         new DFS().search(obj, { List path, v ->
             if (v in values && key == path[-1]) {
-                paths << new ArrayList(path)
+                paths << (List) path.collect()
             }
         })
         return paths
@@ -728,7 +738,7 @@ class JsonLd {
         if (type == null)
             return
 
-        List subTerms = (List) (superTermOf[type])
+        List<String> subTerms = superTermOf[type]
         if (subTerms == null)
             return
 
@@ -747,7 +757,7 @@ class JsonLd {
             return jsonLd
         }
 
-        List graphItems = jsonLd.get(GRAPH_KEY)
+        List graphItems = (List) jsonLd.get(GRAPH_KEY)
 
         additionalObjects.each { object ->
             if (object instanceof Map) {
@@ -868,8 +878,8 @@ class JsonLd {
      * [<language>, <property value>] pairs.
      */
     private List applyLensAsListByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris, String lensToUse) {
-        Map lensGroups = displayData.get('lensGroups')
-        Map lensGroup = lensGroups.get(lensToUse)
+        Map lensGroups = (Map) displayData.get('lensGroups')
+        Map lensGroup = (Map) lensGroups.get(lensToUse)
         Map lens = getLensFor((Map)thing, lensGroup)
         List parts = []
 
@@ -956,12 +966,12 @@ class JsonLd {
        be displayed on the frontend. Mainly for use as search keys.
      */
     Map applyLensAsMapByLang(Map thing, Set<String> languagesToKeep, List<String> removableBaseUris, List<String> lensesToTry) {
-        Map lensGroups = displayData.get('lensGroups')
+        Map lensGroups = (Map) displayData.get('lensGroups')
         Map lens = null
         String initialLens
 
         for (String lensToTry : lensesToTry) {
-            Map lensGroup = lensGroups?.get(lensToTry)
+            Map lensGroup = (Map) lensGroups?.get(lensToTry)
             lens = getLensFor((Map)thing, lensGroup)
             if (lens) {
                 initialLens = lensToTry
@@ -1020,8 +1030,8 @@ class JsonLd {
     }
 
     List makeSearchKeyParts(Map object) {
-        Map lensGroups = displayData.get('lensGroups')
-        Map lensGroup = lensGroups?.get('chips')
+        Map lensGroups = (Map) displayData.get('lensGroups')
+        Map lensGroup = (Map) lensGroups?.get('chips')
         Map lens = getLensFor(object, lensGroup)
         List parts = []
         def type = object.get(TYPE_KEY)
@@ -1066,8 +1076,8 @@ class JsonLd {
             return new LinkedHashSet(((List) data[GRAPH_KEY]).collect{ getInverseProperties((Map) it, lensType) }.flatten())
         }
 
-        Map lensGroups = displayData.get('lensGroups')
-        Map lensGroup = lensGroups?.get(lensType)
+        Map lensGroups = (Map) displayData.get('lensGroups')
+        Map lensGroup = (Map) lensGroups?.get(lensType)
         Map lens = getLensFor(data, lensGroup)
         return new LinkedHashSet((List) lens?.get('inverseProperties') ?: [])
     }
@@ -1090,7 +1100,7 @@ class JsonLd {
     }
 
     private Map getLens(Map thing, List<String> lensTypes) {
-        Map lensGroups = displayData.get('lensGroups')
+        Map lensGroups = (Map) displayData.get('lensGroups')
         if (lensGroups == null) {
             return
         }
@@ -1159,8 +1169,8 @@ class JsonLd {
     }
 
     private Map findLensForType(String typeKey, Map lensGroup) {
-        def lenses = lensGroup['lenses']
-        Map lens = ((Map)lenses).get(typeKey)
+        Map lenses = (Map) lensGroup['lenses']
+        Map lens = (Map) lenses.get(typeKey)
         if (lens)
             return lens
         def typedfn = vocabIndex.get(typeKey)
@@ -1323,7 +1333,7 @@ class JsonLd {
             if (obj) {
                 int i = oId ? 1 : 0
                 return depth < depthLimit
-                        ? embed(oId, obj, idMap, new HashSet<String>(embedChain), depth + i, depthLimit)
+                        ? embed(oId, obj, idMap, embedChain.collect() as Set, depth + i, depthLimit)
                         : obj
             }
         }

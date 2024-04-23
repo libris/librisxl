@@ -3994,8 +3994,8 @@
           "i1": null,
           "$2": {
             "property": "@type",
+            "NOTE": "NB! Order is significant. The last key for the same value will be used on revert",
             "tokenMap": {
-              "NOTE": "NB! Order is significant. The last key for the same value will be used on revert",
               "ANSI": "Ansi",
               "ansi": "Ansi",
               "danacode": "Danacode",
@@ -7507,14 +7507,6 @@
         },
         {
           "when": {
-            "NOTE": "Ignore title with source",
-            "IMPORTANT": "As this is defined, *any* title with source blocks *all* titles from reverting to 240; unless a translationOf with a title is present. This is OK as things stand, since titles using source are only added if there is no formal title on the work.",
-            "onRevert": {"hasTitle": [{"source": []}]}
-          },
-          "ignored": true
-        },
-        {
-          "when": {
             "NOTE": "Sign of translation: use language label",
             "onRevert": {"translationOf": {}}
           }
@@ -7851,7 +7843,7 @@
           }
         },
         {
-          "name": "Work title with source is supressed",
+          "name": "Work title with source is no longer supressed",
           "normalized": [
             {
               "008": "|     |        |  |||||||||||000 ||swe| "
@@ -7863,6 +7855,15 @@
                 "subfields": [
                   {"a": "swe"}
                 ]
+              }
+            },
+            {
+              "240" : {
+                "ind1" : "1",
+                "ind2" : "0",
+                "subfields" : [ {
+                  "a" : "The lord of the rings."
+                } ]
               }
             }
           ],
@@ -15467,6 +15468,66 @@
           "TODO:": {"mainEntity": {
             "instanceOf": {
               "@type": "Text"
+            }
+          }}
+        },
+        {
+          "name": "Revert GenreForm from both Work and Instance",
+          "normalized": [
+            {"655": {"ind1": " ", "ind2": "7", "subfields": [
+              {"a": "Kärleksskildringar"},
+              {"2": "saogf"}
+            ]}},
+            {"655": {"ind1": " ", "ind2": "4", "subfields": [
+              {"a": "E-böcker"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "genreForm": [
+                {
+                  "@id": "https://id.kb.se/term/saogf/K%C3%A4rleksskildringar",
+                  "@type": "GenreForm",
+                  "inScheme": {"@id": "https://id.kb.se/term/saogf"},
+                  "prefLabel": "Kärleksskildringar"
+                }
+              ]
+            },
+            "genreForm": [
+              {
+                "@type": "GenreForm",
+                "prefLabel": "E-böcker"
+              }
+            ]
+          }}
+        },
+        {
+          "name": "Revert GenreForm from both Work (given as array), and Instance (just one object)",
+          "normalized": [
+            {"655": {"ind1": " ", "ind2": "7", "subfields": [
+              {"a": "Kärleksskildringar"},
+              {"2": "saogf"}
+            ]}},
+            {"655": {"ind1": " ", "ind2": "4", "subfields": [
+              {"a": "E-böcker"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "genreForm": [
+                {
+                  "@id": "https://id.kb.se/term/saogf/K%C3%A4rleksskildringar",
+                  "@type": "GenreForm",
+                  "inScheme": {"@id": "https://id.kb.se/term/saogf"},
+                  "prefLabel": "Kärleksskildringar"
+                }
+              ]
+            },
+            "genreForm": {
+              "@type": "GenreForm",
+              "prefLabel": "E-böcker"
             }
           }}
         }

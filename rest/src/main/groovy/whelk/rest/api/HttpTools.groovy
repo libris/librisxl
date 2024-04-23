@@ -80,7 +80,7 @@ class HttpTools {
         if (request.getScheme() == 'https') {
             baseUri = request.getScheme() + '://' +
                     request.getServerName() +
-                    ((request.getServerPort() == 443) ? '' : ':' + request.getServerPort()) +
+                    (((request.getServerPort() == 80) || (request.getServerPort() == 443)) ? '' : ':' + request.getServerPort()) +
                     '/'
         }
 
