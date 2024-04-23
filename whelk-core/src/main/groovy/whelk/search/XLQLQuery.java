@@ -38,8 +38,6 @@ import java.util.stream.Stream;
 import static whelk.component.ElasticSearch.flattenedLangMapKey;
 import static whelk.util.DocumentUtil.NOP;
 
-import static java.util.Comparator.reverseOrder;
-
 public class XLQLQuery {
     private final Whelk whelk;
     private final Disambiguate disambiguate;
@@ -527,7 +525,7 @@ public class XLQLQuery {
                 Map<SimpleQueryTree.PropertyValue, Integer> newBuckets = new LinkedHashMap<>();
                 buckets.entrySet()
                         .stream()
-                        .sorted(Map.Entry.comparingByValue(reverseOrder()))
+                        .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                         .limit(Math.min(maxBuckets, buckets.size()))
                         .forEach(entry -> newBuckets.put(entry.getKey(), entry.getValue()));
                 propertyToBuckets.put(property, newBuckets);
