@@ -123,8 +123,16 @@ public class Disambiguate {
         return DomainCategory.OTHER;
     }
 
+    public boolean hasEnumValue(String property) {
+        return isVocabTerm(property) || isType(property);
+    }
+
     public boolean isVocabTerm(String property) {
         return jsonLd.isVocabTerm(property);
+    }
+
+    public boolean isType(String property) {
+        return "rdf:type".equals(property);
     }
 
     public PropertyChain expandChainAxiom(List<String> path) {

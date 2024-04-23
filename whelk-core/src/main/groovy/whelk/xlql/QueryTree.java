@@ -54,7 +54,7 @@ public class QueryTree {
                 return new FreeText(ft.operator(), ft.value());
             }
             case SimpleQueryTree.PropertyValue pv -> {
-                return "rdf:type".equals(pv.property())
+                return disambiguate.isType(pv.property())
                         ? buildTypeField(pv, disambiguate)
                         : buildField(pv, disambiguate, outset);
             }
@@ -80,6 +80,7 @@ public class QueryTree {
             switch (pv.value()) {
                 case SimpleQueryTree.Link ignored -> path.appendId();
                 case SimpleQueryTree.Literal ignored -> path.appendUnderscoreStr();
+                case SimpleQueryTree.Enum ignored -> {}
             }
         }
 
@@ -110,7 +111,8 @@ public class QueryTree {
 
         path.defaultFields.forEach(df -> {
                     Path dfPath = new Path(df.path());
-                    if (disambiguate.isObjectProperty(df.path().getLast()) && JsonLd.looksLikeIri(df.value())) {
+                    String property = df.path().getLast();
+                    if (disambiguate.isObjectProperty(property) && !disambiguate.hasEnumValue(property)) {
                         dfPath.appendId();
                     }
                     fields.add(new Field(dfPath, operator, df.value()));
