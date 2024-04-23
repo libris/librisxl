@@ -685,7 +685,9 @@ public class XLQLQuery {
 
         static <V> List<V> dropLast(List<V> list) {
             var l = new ArrayList<>(list);
-            l.removeLast();
+            if (!l.isEmpty()) {
+                l.removeLast();
+            }
             return l;
         }
     }
