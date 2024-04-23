@@ -68,7 +68,7 @@ public class SearchUtils2 {
         private final Map<String, Object> esQueryDsl;
 
         Query(Map<String, String[]> queryParameters) throws InvalidQueryException, IOException {
-            this.sortBy = getOptionalSingleFilterEmpty("_sort", queryParameters).map(Sort::parse).orElse(Sort.defaultSort());
+            this.sortBy = Sort.fromString(getOptionalSingleFilterEmpty("_sort", queryParameters).orElse(""));
             this.object = getOptionalSingleFilterEmpty("_o", queryParameters).orElse(null);
             this.mode = getOptionalSingleFilterEmpty("_x", queryParameters).orElse(null);
             this.debug = queryParameters.containsKey("_debug"); // Different debug modes needed?
@@ -362,11 +362,7 @@ public class SearchUtils2 {
                     .toList();
         }
 
-        static Sort defaultSort() {
-            return new Sort("");
-        }
-
-        static Sort parse(String s) {
+        static Sort fromString(String s) {
             return new Sort(s);
         }
 
