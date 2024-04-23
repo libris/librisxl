@@ -300,6 +300,13 @@ public class XLQLQuery {
         return "/find?" + String.join("&", params);
     }
 
+    public static List<String> makeParams(Map<String, String> params) {
+        return params.entrySet()
+                .stream()
+                .map(entry -> makeParam(entry.getKey(), entry.getValue()))
+                .toList();
+    }
+
     public static String makeParam(String key, String value) {
         return String.format("%s=%s", escapeQueryParam(key), escapeQueryParam(value));
     }
@@ -526,17 +533,17 @@ public class XLQLQuery {
         return propertyToBuckets;
     }
 
-    public Map<String, Object> getStats(Map<String, Object> esResponse, Map<String, Object> statsRepr, SimpleQueryTree sqt, List<String> nonQueryParams) {
+    public Map<String, Object> getStats(Map<String, Object> esResponse, Map<String, Object> statsRepr, SimpleQueryTree sqt, Map<String, String> nonQueryParams) {
         var buckets = collectBuckets(esResponse, statsRepr);
         return buildStats(buckets, sqt, nonQueryParams);
     }
 
-    private Map<String, Object> buildStats(Map<String, Map<SimpleQueryTree.PropertyValue, Integer>> propToBuckets, SimpleQueryTree sqt, List<String> urlParams) {
+    private Map<String, Object> buildStats(Map<String, Map<SimpleQueryTree.PropertyValue, Integer>> propToBuckets, SimpleQueryTree sqt, Map<String, String> nonQueryParams) {
         var sliceByDimension = new LinkedHashMap<>();
 
         propToBuckets.forEach((property, buckets) -> {
             var sliceNode = new LinkedHashMap<>();
-            var observations = getObservations(buckets, sqt, urlParams);
+            var observations = getObservations(buckets, sqt, nonQueryParams);
             if (!observations.isEmpty()) {
                 // TODO: dimension/dimensionChain redundant
                 //  Add property definition here to provide labels?
@@ -551,15 +558,15 @@ public class XLQLQuery {
                 "sliceByDimension", sliceByDimension);
     }
 
-    private List<Map<String, Object>> getObservations(Map<SimpleQueryTree.PropertyValue, Integer> buckets, SimpleQueryTree sqt, List<String> nonQueryParams) {
+    private List<Map<String, Object>> getObservations(Map<SimpleQueryTree.PropertyValue, Integer> buckets, SimpleQueryTree sqt, Map<String, String> nonQueryParams) {
         List<Map<String, Object>> observations = new ArrayList<>();
 
         buckets.forEach((pv, count) -> {
             Map<String, Object> observation = new LinkedHashMap<>();
-            boolean queried = sqt.getTopLevelPvNodes().contains(pv);
+            boolean queried = sqt.getTopLevelPvNodes().contains(pv) || pv.value().string().equals(nonQueryParams.get("_o"));
             if (!queried) {
                 observation.put("totalItems", count);
-                var url = makeFindUrl(sqt.andExtend(pv), nonQueryParams);
+                var url = makeFindUrl(sqt.andExtend(pv), makeParams(nonQueryParams));
                 observation.put("view", Map.of(JsonLd.ID_KEY, url));
                 observation.put("object", lookUp(pv.value()));
                 observations.add(observation);
