@@ -55,7 +55,7 @@ public class SearchUtils2 {
     class Query {
         private final int limit;
         private final int offset;
-        private final String sortBy;
+        private final Sort sortBy;
         private final String object;
         private final String mode;
         private final Map<String, Object> statsRepr;
@@ -68,7 +68,7 @@ public class SearchUtils2 {
         private final Map<String, Object> esQueryDsl;
 
         Query(Map<String, String[]> queryParameters) throws InvalidQueryException, IOException {
-            this.sortBy = getOptionalSingleFilterEmpty("_sort", queryParameters).orElse(null);
+            this.sortBy = Sort.fromString(getOptionalSingleFilterEmpty("_sort", queryParameters).orElse(""));
             this.object = getOptionalSingleFilterEmpty("_o", queryParameters).orElse(null);
             this.mode = getOptionalSingleFilterEmpty("_x", queryParameters).orElse(null);
             this.debug = queryParameters.containsKey("_debug"); // Different debug modes needed?
@@ -117,9 +117,7 @@ public class SearchUtils2 {
             queryDsl.put("query", xlqlQuery.getEsQuery(queryTree));
             queryDsl.put("size", limit);
             queryDsl.put("from", offset);
-            if (sortBy != null) {
-                queryDsl.put("sort", getSortClauses(sortBy));
-            }
+            sortBy.insertSortClauses(queryDsl, xlqlQuery);
             queryDsl.put("aggs", xlqlQuery.getAggQuery(statsRepr, outsetType));
             queryDsl.put("track_total_hits", true);
             return queryDsl;
@@ -211,6 +209,10 @@ public class SearchUtils2 {
             if (mode != null) {
                 params.add(makeParam("_x", mode));
             }
+            var sort = sortBy.asString();
+            if (!sort.isEmpty()) {
+                params.add(makeParam("_sort", sort));
+            }
             return params;
         }
 
@@ -224,13 +226,6 @@ public class SearchUtils2 {
 
         private List<Map<?, ?>> toMappings() {
             return List.of(xlqlQuery.toMappings(simpleQueryTree, makeNonQueryParams(0)));
-        }
-
-        List<Map<String, Object>> getSortClauses(String sortBy) {
-            // TODO
-            return List.of(Map.of(
-                    "meta.modified", Map.of("order", "asc")
-            ));
         }
 
         private static Optional<String> getOptionalSingleFilterEmpty(String name, Map<String, String[]> queryParameters) {
@@ -331,6 +326,54 @@ public class SearchUtils2 {
                     this.last = total - (total % limit);
                 }
             }
+        }
+    }
+
+    static class Sort {
+        private enum Order {
+            asc,
+            desc
+        }
+
+        private record ParameterOrder(String parameter, Order order) {
+            public Map<?, ?> toSortClause(XLQLQuery xlqlQuery) {
+                // TODO nested?
+                return Map.of(
+                        xlqlQuery.getSortField(parameter), Map.of("order", order)
+                );
+            }
+
+            public String asString() {
+                return order == Order.desc
+                        ? "-" + parameter
+                        : parameter;
+            }
+        }
+
+        List<ParameterOrder> parameters;
+
+        public Sort(String sort) {
+            parameters = Arrays.stream(sort.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(s -> s.startsWith("-")
+                            ? new ParameterOrder(s.substring(1), Order.desc)
+                            : new ParameterOrder(s, Order.asc))
+                    .toList();
+        }
+
+        static Sort fromString(String s) {
+            return new Sort(s);
+        }
+
+        void insertSortClauses(Map<String, Object> queryDsl, XLQLQuery xlqlQuery) {
+            if (!parameters.isEmpty()) {
+                queryDsl.put("sort", parameters.stream().map(f -> f.toSortClause(xlqlQuery)).toList());
+            }
+        }
+
+        String asString() {
+            return String.join(",", parameters.stream().map(ParameterOrder::asString).toList());
         }
     }
 }
