@@ -28,7 +28,7 @@ public class SimpleQueryTree {
     public record FreeText(Operator operator, String value) implements Node {
     }
 
-    public sealed interface Value permits Link, Literal, Enum {
+    public sealed interface Value permits Link, Literal {
         String string();
     }
 
@@ -36,9 +36,6 @@ public class SimpleQueryTree {
     }
 
     public record Link(String string) implements Value {
-    }
-
-    public record Enum(String string) implements Value {
     }
 
     public Node tree;
@@ -96,17 +93,17 @@ public class SimpleQueryTree {
 
                 Value v;
 
-                if (disambiguate.isType(property)) {
+                if ("rdf:type".equals(property)) {
                     Optional<String> mappedType = disambiguate.mapToKbvClass(value);
                     if (mappedType.isPresent()) {
-                        v = new Enum(mappedType.get());
+                        v = new Literal(mappedType.get());
                     } else {
                         throw new InvalidQueryException("Unrecognized type: " + value);
                     }
                 } else if (disambiguate.isVocabTerm(property)) {
                     Optional<String> mappedEnum = disambiguate.mapToEnum(value);
                     if (mappedEnum.isPresent()) {
-                        v = new Enum(mappedEnum.get());
+                        v = new Literal(mappedEnum.get());
                     } else {
                         throw new InvalidQueryException("Invalid value " + value + " for property " + property);
                     }
@@ -225,10 +222,6 @@ public class SimpleQueryTree {
 
     public static PropertyValue pvEqualsLink(String property, String uri) {
         return new PropertyValue(property, List.of(property), Operator.EQUALS, new Link(uri));
-    }
-
-    public static PropertyValue pvEqualsEnum(String property, String value) {
-        return new PropertyValue(property, List.of(property), Operator.EQUALS, new Enum(value));
     }
 
     public String getFreeTextPart() {
