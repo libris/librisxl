@@ -479,7 +479,7 @@ public class XLQLQuery {
 
         var aggs = (Map<?, ?>) esResponse.get("aggregations");
 
-        Map<String, Map<SimpleQueryTree.PropertyValue, Integer>> propertyToBuckets = new HashMap<>();
+        Map<String, Map<SimpleQueryTree.PropertyValue, Integer>> propertyToBuckets = new LinkedHashMap<>();
         Map<String, Integer> propertyToMaxBuckets = new HashMap<>();
 
         for (var entry : aggs.entrySet()) {
