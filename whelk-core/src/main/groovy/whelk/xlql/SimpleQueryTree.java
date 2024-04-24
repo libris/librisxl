@@ -295,6 +295,8 @@ public class SimpleQueryTree {
                 newConjuncts.addFirst(new FreeText(Operator.EQUALS, replacement));
             }
             this.tree = newConjuncts.size() == 1 ? newConjuncts.getFirst() : new And(newConjuncts);
+        } else {
+            this.tree = new And(List.of(new FreeText(Operator.EQUALS, replacement), tree));
         }
     }
 }
