@@ -215,7 +215,7 @@ public class SearchUtils2 {
             }
             var sort = sortBy.asString();
             if (!sort.isEmpty()) {
-                params.add(makeParam("_sort", sort));
+                params.put("_sort", sort);
             }
             return params;
         }
