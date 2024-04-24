@@ -32,11 +32,11 @@ public class Path {
     public List<Path> expand(String property, Disambiguate disambiguate, Disambiguate.OutsetType outsetType) {
         List<Path> altPaths = new ArrayList<>(List.of(this));
 
-        if ("rdf:type".equals(property)) {
+        expandChainAxiom(disambiguate);
+
+        if (disambiguate.isType(property)) {
             return altPaths;
         }
-
-        expandChainAxiom(disambiguate);
 
         String domain = disambiguate.getDomain(property);
 
