@@ -1,5 +1,6 @@
 package whelk.xlql;
 
+import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
 
@@ -122,8 +123,16 @@ public class Disambiguate {
         return DomainCategory.OTHER;
     }
 
+    public boolean hasVocabValue(String property) {
+        return isVocabTerm(property) || isType(property);
+    }
+
     public boolean isVocabTerm(String property) {
         return jsonLd.isVocabTerm(property);
+    }
+
+    public boolean isType(String property) {
+        return "rdf:type".equals(property);
     }
 
     public PropertyChain expandChainAxiom(List<String> path) {
@@ -443,6 +452,9 @@ public class Disambiguate {
         nsToPrefix.put("https://id.kb.se/term/sao/", "sao:");
         nsToPrefix.put("https://id.kb.se/marc/", "marc:");
         nsToPrefix.put("https://id.kb.se/term/saogf/", "saogf:");
+        nsToPrefix.put("https://id.kb.se/term/barn/", "barn:");
+        nsToPrefix.put("https://id.kb.se/term/barngf/", "barngf:");
+        nsToPrefix.put(Document.getBASE_URI().toString(), "libris:");
 
         for (String ns : nsToPrefix.keySet()) {
             if (iri.startsWith(ns)) {
@@ -466,6 +478,9 @@ public class Disambiguate {
         nsToPrefix.put("https://id.kb.se/term/sao/", "sao:");
         nsToPrefix.put("https://id.kb.se/marc/", "marc:");
         nsToPrefix.put("https://id.kb.se/term/saogf/", "saogf:");
+        nsToPrefix.put("https://id.kb.se/term/barn/", "barn:");
+        nsToPrefix.put("https://id.kb.se/term/barngf/", "barngf:");
+        nsToPrefix.put(Document.getBASE_URI().toString(), "libris:");
 
         for (String ns : nsToPrefix.keySet()) {
             String prefix = nsToPrefix.get(ns);

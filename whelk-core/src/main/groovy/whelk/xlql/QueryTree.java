@@ -1,7 +1,5 @@
 package whelk.xlql;
 
-import whelk.JsonLd;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -54,23 +52,19 @@ public class QueryTree {
                 return new FreeText(ft.operator(), ft.value());
             }
             case SimpleQueryTree.PropertyValue pv -> {
-                return "rdf:type".equals(pv.property())
+                return disambiguate.isType(pv.property())
                         ? buildTypeField(pv, disambiguate)
                         : buildField(pv, disambiguate, outset);
             }
         }
     }
 
-    private static Field buildField(SimpleQueryTree.PropertyValue pv) {
-        Path path = new Path(pv.propertyPath());
-        String value = JsonLd.ID_KEY.equals(pv.propertyPath().getLast())
-                ? Disambiguate.expandPrefixed(pv.value())
-                : pv.value();
-        return new Field(path, pv.operator(), value);
+    private static Node buildField(SimpleQueryTree.PropertyValue pv) {
+        return buildField(pv, pv.value().string());
     }
 
-    private static Node buildField(SimpleQueryTree.PropertyValue pv, String altValue) {
-        return new Field(new Path(pv.propertyPath()), pv.operator(), altValue);
+    private static Node buildField(SimpleQueryTree.PropertyValue pv, String value) {
+        return new Field(new Path(pv.propertyPath()), pv.operator(), value);
     }
 
     private static Node buildField(SimpleQueryTree.PropertyValue pv, Disambiguate disambiguate, Disambiguate.OutsetType outset) {
@@ -78,17 +72,13 @@ public class QueryTree {
 
         Path path = new Path(pv.propertyPath());
         Operator operator = pv.operator();
-        String value = pv.value();
+        String value = pv.value().string();
 
-        if (disambiguate.isObjectProperty(pv.property()) && !disambiguate.isVocabTerm(pv.property())) {
-            /*
-             If "vocab term" interpret the value as is, e.g. issuanceType: "Serial" or encodingLevel: "marc:FullLevel".
-             Otherwise, when object property, append either @id or _str to the path.
-             */
-            if (JsonLd.looksLikeIri(value)) {
-                path.appendId();
-            } else {
-                path.appendUnderscoreStr();
+        if (disambiguate.isObjectProperty(pv.property())) {
+            switch (pv.value()) {
+                case SimpleQueryTree.Link ignored -> path.appendId();
+                case SimpleQueryTree.Literal ignored -> path.appendUnderscoreStr();
+                case SimpleQueryTree.VocabTerm ignored -> {}
             }
         }
 
@@ -119,7 +109,8 @@ public class QueryTree {
 
         path.defaultFields.forEach(df -> {
                     Path dfPath = new Path(df.path());
-                    if (disambiguate.isObjectProperty(df.path().getLast()) && JsonLd.looksLikeIri(df.value())) {
+                    String property = df.path().getLast();
+                    if (disambiguate.isObjectProperty(property) && !disambiguate.hasVocabValue(property)) {
                         dfPath.appendId();
                     }
                     fields.add(new Field(dfPath, operator, df.value()));
@@ -130,9 +121,9 @@ public class QueryTree {
     }
 
     private static Node buildTypeField(SimpleQueryTree.PropertyValue pv, Disambiguate disambiguate) {
-        Set<String> altTypes = "Work".equals(pv.value())
+        Set<String> altTypes = "Work".equals(pv.value().string())
                 ? disambiguate.workTypes
-                : ("Instance".equals(pv.value()) ? disambiguate.instanceTypes : Collections.emptySet());
+                : ("Instance".equals(pv.value().string()) ? disambiguate.instanceTypes : Collections.emptySet());
 
         if (altTypes.isEmpty()) {
             return buildField(pv);

@@ -19,7 +19,7 @@ public class SearchUtils2 {
     final static int DEFAULT_LIMIT = 200;
     final static int MAX_LIMIT = 4000;
     final static int DEFAULT_OFFSET = 0;
-    private static final List<SimpleQueryTree.PropertyValue> DEFAULT_FILTERS = List.of(SimpleQueryTree.pvEquals("rdf:type", "Work"));
+    private static final List<SimpleQueryTree.PropertyValue> DEFAULT_FILTERS = List.of(SimpleQueryTree.pvEqualsVocabTerm("rdf:type", "Work"));
 
     Whelk whelk;
     XLQLQuery xlqlQuery;
@@ -136,7 +136,7 @@ public class SearchUtils2 {
             if (esResponse.containsKey("items")) {
                 view.put("items", esResponse.get("items"));
             }
-            view.put("stats", xlqlQuery.getStats(esResponse, statsRepr, simpleQueryTree, makeNonQueryParams(0)));
+            view.put("stats", xlqlQuery.getStats(esResponse, statsRepr, simpleQueryTree, getNonQueryParams(0)));
             if (debug) {
                 view.put("_debug", Map.of("esQuery", esQueryDsl));
             }
@@ -148,7 +148,7 @@ public class SearchUtils2 {
         private SimpleQueryTree getFilteredTree() {
             var filters = new ArrayList<>(DEFAULT_FILTERS);
             if (object != null) {
-                filters.add(SimpleQueryTree.pvEquals("_links", object));
+                filters.add(SimpleQueryTree.pvEqualsLiteral("_links", object));
             }
             return xlqlQuery.addFilters(simpleQueryTree, filters);
         }
@@ -198,30 +198,26 @@ public class SearchUtils2 {
         }
 
         private List<String> makeNonQueryParams(int offset) {
-            List<String> params = new ArrayList<>();
+            return XLQLQuery.makeParams(getNonQueryParams(offset));
+        }
+
+        private Map<String, String> getNonQueryParams(int offset) {
+            Map<String, String> params = new LinkedHashMap<>();
             if (offset > 0) {
-                params.add(makeParam("_offset", offset));
+                params.put("_offset", "" + offset);
             }
-            params.add(makeParam("_limit", limit));
+            params.put("_limit", "" + limit);
             if (object != null) {
-                params.add(makeParam("_o", object));
+                params.put("_o", object);
             }
             if (mode != null) {
-                params.add(makeParam("_x", mode));
+                params.put("_x", mode);
             }
             var sort = sortBy.asString();
             if (!sort.isEmpty()) {
-                params.add(makeParam("_sort", sort));
+                params.put("_sort", sort);
             }
             return params;
-        }
-
-        private static String makeParam(String key, int value) {
-            return makeParam(key, "" + value);
-        }
-
-        private static String makeParam(String key, String value) {
-            return XLQLQuery.makeParam(key, value);
         }
 
         private List<Map<?, ?>> toMappings() {
