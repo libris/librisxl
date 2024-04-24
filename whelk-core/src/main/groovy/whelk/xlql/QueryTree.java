@@ -33,38 +33,24 @@ public class QueryTree {
     }
 
     private static Node sqtToQt(SimpleQueryTree.Node sqtNode, Disambiguate disambiguate, Disambiguate.OutsetType outset) {
-        switch (sqtNode) {
+        return switch (sqtNode) {
             case SimpleQueryTree.And and -> {
                 List<Node> conjuncts = and.conjuncts()
                         .stream()
                         .map(c -> sqtToQt(c, disambiguate, outset))
                         .toList();
-                return new And(conjuncts);
+                yield new And(conjuncts);
             }
             case SimpleQueryTree.Or or -> {
                 List<Node> disjuncts = or.disjuncts()
                         .stream()
                         .map(d -> sqtToQt(d, disambiguate, outset))
                         .toList();
-                return new Or(disjuncts);
+                yield new Or(disjuncts);
             }
-            case SimpleQueryTree.FreeText ft -> {
-                return new FreeText(ft.operator(), ft.value());
-            }
-            case SimpleQueryTree.PropertyValue pv -> {
-                return disambiguate.isType(pv.property())
-                        ? buildTypeField(pv, disambiguate)
-                        : buildField(pv, disambiguate, outset);
-            }
-        }
-    }
-
-    private static Node buildField(SimpleQueryTree.PropertyValue pv) {
-        return buildField(pv, pv.value().string());
-    }
-
-    private static Node buildField(SimpleQueryTree.PropertyValue pv, String value) {
-        return new Field(new Path(pv.propertyPath()), pv.operator(), value);
+            case SimpleQueryTree.FreeText ft -> new FreeText(ft.operator(), ft.value());
+            case SimpleQueryTree.PropertyValue pv -> buildField(pv, disambiguate, outset);
+        };
     }
 
     private static Node buildField(SimpleQueryTree.PropertyValue pv, Disambiguate disambiguate, Disambiguate.OutsetType outset) {
@@ -88,7 +74,7 @@ public class QueryTree {
 
         List<Node> altFields = path.expand(pv.property(), disambiguate, outset)
                 .stream()
-                .map(p -> newFields(p, operator, value, disambiguate))
+                .map(p -> newFields(pv, p, disambiguate))
                 .collect(Collectors.toList());
 
         if (altFields.size() == 1) {
@@ -98,8 +84,12 @@ public class QueryTree {
         return operator == Operator.NOT_EQUALS ? new And(altFields) : new Or(altFields);
     }
 
-    static Node newFields(Path path, Operator operator, String value, Disambiguate disambiguate) {
-        Field f = new Field(path, operator, value);
+    static Node newFields(SimpleQueryTree.PropertyValue pv, Path path, Disambiguate disambiguate) {
+        if (disambiguate.isType(pv.property())) {
+            return buildTypeField(pv, path, disambiguate);
+        }
+
+        Field f = new Field(path, pv.operator(), pv.value().string());
 
         if (path.defaultFields.isEmpty()) {
             return f;
@@ -113,25 +103,25 @@ public class QueryTree {
                     if (disambiguate.isObjectProperty(property) && !disambiguate.hasVocabValue(property)) {
                         dfPath.appendId();
                     }
-                    fields.add(new Field(dfPath, operator, df.value()));
+                    fields.add(new Field(dfPath, pv.operator(), df.value()));
                 }
         );
 
-        return new Nested(fields, operator);
+        return new Nested(fields, pv.operator());
     }
 
-    private static Node buildTypeField(SimpleQueryTree.PropertyValue pv, Disambiguate disambiguate) {
+    private static Node buildTypeField(SimpleQueryTree.PropertyValue pv, Path path, Disambiguate disambiguate) {
         Set<String> altTypes = "Work".equals(pv.value().string())
                 ? disambiguate.workTypes
                 : ("Instance".equals(pv.value().string()) ? disambiguate.instanceTypes : Collections.emptySet());
 
         if (altTypes.isEmpty()) {
-            return buildField(pv);
+            return new Field(path, pv.operator(), pv.value().string());
         }
 
         List<Node> altFields = altTypes.stream()
                 .sorted()
-                .map(type -> buildField(pv, type))
+                .map(type -> (Node) new Field(path, pv.operator(), type))
                 .toList();
 
         return pv.operator() == Operator.NOT_EQUALS ? new And(altFields) : new Or(altFields);

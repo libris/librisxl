@@ -9,9 +9,11 @@ public class Path {
     public List<DefaultField> defaultFields;
     public List<String> path;
 
+    // TODO: Get substituions from context instead?
     private static final Map<String, String> substitutions = Map.of(
             "rdf:type", JsonLd.TYPE_KEY,
-            "hasItem", String.format("%s.itemOf", JsonLd.REVERSE_KEY)
+            "hasItem", String.format("%s.itemOf", JsonLd.REVERSE_KEY),
+            "hasInstance", String.format("%s.instanceOf", JsonLd.REVERSE_KEY)
     );
 
     public Path(List<String> path) {
@@ -28,6 +30,12 @@ public class Path {
     }
 
     public List<Path> expand(String property, Disambiguate disambiguate, Disambiguate.OutsetType outsetType) {
+        List<Path> altPaths = new ArrayList<>(List.of(this));
+
+        if ("rdf:type".equals(property)) {
+            return altPaths;
+        }
+
         expandChainAxiom(disambiguate);
 
         String domain = disambiguate.getDomain(property);
@@ -36,8 +44,6 @@ public class Path {
         if (domainCategory == Disambiguate.DomainCategory.ADMIN_METADATA) {
             prependMeta();
         }
-
-        List<Path> altPaths = new ArrayList<>(List.of(this));
 
         switch (outsetType) {
             case WORK -> {
