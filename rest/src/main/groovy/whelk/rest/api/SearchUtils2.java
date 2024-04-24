@@ -136,7 +136,7 @@ public class SearchUtils2 {
             if (esResponse.containsKey("items")) {
                 view.put("items", esResponse.get("items"));
             }
-            view.put("stats", xlqlQuery.getStats(esResponse, statsRepr, simpleQueryTree, getNonQueryParams(0)));
+            view.put("stats", xlqlQuery.getStats(esResponse, statsRepr, simpleQueryTree, getNonQueryParams(0), outsetType));
             if (debug) {
                 view.put("_debug", Map.of("esQuery", esQueryDsl));
             }

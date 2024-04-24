@@ -329,7 +329,7 @@ public class XLQLQuery {
     }
 
     private Map<String, Object> freeTextMapping(SimpleQueryTree.FreeText ft) {
-        Map<String, Object> m = new LinkedHashMap();
+        Map<String, Object> m = new LinkedHashMap<>();
         m.put("property", getDefinition("textQuery"));
         m.put(ft.operator().termKey, ft.value());
         return m;
@@ -501,7 +501,7 @@ public class XLQLQuery {
                     .forEach(b -> {
                         var value = (String) b.get("key");
                         var count = (Integer) b.get("doc_count");
-                        SimpleQueryTree.PropertyValue pv = null;
+                        SimpleQueryTree.PropertyValue pv;
                         if (isLinked) {
                             pv = SimpleQueryTree.pvEqualsLink(property, value);
                         } else if (disambiguate.hasVocabValue(property)) {
@@ -536,23 +536,38 @@ public class XLQLQuery {
         return propertyToBuckets;
     }
 
-    public Map<String, Object> getStats(Map<String, Object> esResponse, Map<String, Object> statsRepr, SimpleQueryTree sqt, Map<String, String> nonQueryParams) {
+    public Map<String, Object> getStats(Map<String, Object> esResponse, Map<String, Object> statsRepr, SimpleQueryTree sqt, Map<String, String> nonQueryParams, Disambiguate.OutsetType outsetType) {
         var buckets = collectBuckets(esResponse, statsRepr);
-        return buildStats(buckets, sqt, nonQueryParams);
+        return buildStats(buckets, sqt, nonQueryParams, outsetType);
     }
 
-    private Map<String, Object> buildStats(Map<String, Map<SimpleQueryTree.PropertyValue, Integer>> propToBuckets, SimpleQueryTree sqt, Map<String, String> nonQueryParams) {
+    private Map<String, Object> buildStats(Map<String, Map<SimpleQueryTree.PropertyValue, Integer>> propToBuckets, SimpleQueryTree sqt, Map<String, String> nonQueryParams, Disambiguate.OutsetType outsetType) {
         var sliceByDimension = new LinkedHashMap<>();
 
         propToBuckets.forEach((property, buckets) -> {
             var sliceNode = new LinkedHashMap<>();
             var observations = getObservations(buckets, sqt, nonQueryParams);
             if (!observations.isEmpty()) {
-                // TODO: dimension/dimensionChain redundant
-                //  Add property definition here to provide labels?
                 sliceNode.put("dimension", property);
-                sliceNode.put("dimensionChain", List.of(property));
                 sliceNode.put("observation", observations);
+                if (disambiguate.isType(property)) {
+                    switch (outsetType) {
+                        case INSTANCE -> {
+                            if ("rdf:type".equals(property)) {
+                                sliceNode.put("alias", "instanceType");
+                            } else if ("instanceOfType".equals(property)) {
+                                sliceNode.put("alias", "workType");
+                            }
+                        }
+                        case WORK -> {
+                            if ("rdf:type".equals(property)) {
+                                sliceNode.put("alias", "workType");
+                            } else if ("hasInstanceType".equals(property)) {
+                                sliceNode.put("alias", "instanceType");
+                            }
+                        }
+                    }
+                }
                 sliceByDimension.put(property, sliceNode);
             }
         });
