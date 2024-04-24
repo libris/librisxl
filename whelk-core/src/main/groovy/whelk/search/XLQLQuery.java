@@ -33,6 +33,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static whelk.component.ElasticSearch.flattenedLangMapKey;
 import static whelk.util.DocumentUtil.NOP;
@@ -278,7 +279,8 @@ public class XLQLQuery {
 
         SimpleQueryTree reducedTree = sqt.excludeFromTree(sqtNode);
         String upUrl = reducedTree.isEmpty()
-                ? "/find?_i=*&_q=*"
+                ? makeFindUrl(Stream.concat(Stream.of(makeParam("_i", "*"), makeParam("_q", "*")), nonQueryParams.stream())
+                                .toList())
                 : makeFindUrl(reducedTree, nonQueryParams);
 
         mappingsNode.put("up", Map.of(JsonLd.ID_KEY, upUrl));
@@ -291,6 +293,10 @@ public class XLQLQuery {
         params.add(makeParam("_i", sqt.getFreeTextPart()));
         params.add(makeParam("_q", sqt.toQueryString()));
         params.addAll(nonQueryParams);
+        return makeFindUrl(params);
+    }
+
+    private String makeFindUrl(List<String> params) {
         return "/find?" + String.join("&", params);
     }
 
