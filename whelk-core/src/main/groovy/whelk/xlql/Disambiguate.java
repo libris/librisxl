@@ -123,7 +123,7 @@ public class Disambiguate {
         return DomainCategory.OTHER;
     }
 
-    public boolean hasEnumValue(String property) {
+    public boolean hasVocabValue(String property) {
         return isVocabTerm(property) || isType(property);
     }
 

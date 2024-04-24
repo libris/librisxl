@@ -357,7 +357,7 @@ public class XLQLQuery {
 
     private Object lookUp(SimpleQueryTree.Value value) {
         return switch (value) {
-            case SimpleQueryTree.Enum anEnum -> getDefinition(anEnum.string());
+            case SimpleQueryTree.VocabTerm vocabTerm -> getDefinition(vocabTerm.string());
             case SimpleQueryTree.Link link -> disambiguate.loadThing(value.string(), whelk)
                     .map(whelk.getJsonld()::toChip)
                     .orElse(link.string());
@@ -445,7 +445,7 @@ public class XLQLQuery {
 
             Path path = new Path(List.of(property));
 
-            if (disambiguate.isObjectProperty(property) && !disambiguate.hasEnumValue(property)) {
+            if (disambiguate.isObjectProperty(property) && !disambiguate.hasVocabValue(property)) {
                 path.appendId();
             }
 
@@ -503,8 +503,8 @@ public class XLQLQuery {
                         SimpleQueryTree.PropertyValue pv = null;
                         if (isLinked) {
                             pv = SimpleQueryTree.pvEqualsLink(property, value);
-                        } else if (disambiguate.hasEnumValue(property)) {
-                            pv = SimpleQueryTree.pvEqualsEnum(property, value);
+                        } else if (disambiguate.hasVocabValue(property)) {
+                            pv = SimpleQueryTree.pvEqualsVocabTerm(property, value);
                         } else {
                             pv = SimpleQueryTree.pvEqualsLiteral(property, value);
                         }

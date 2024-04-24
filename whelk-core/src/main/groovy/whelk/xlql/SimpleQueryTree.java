@@ -28,7 +28,7 @@ public class SimpleQueryTree {
     public record FreeText(Operator operator, String value) implements Node {
     }
 
-    public sealed interface Value permits Link, Literal, Enum {
+    public sealed interface Value permits Link, Literal, VocabTerm {
         String string();
     }
 
@@ -38,7 +38,7 @@ public class SimpleQueryTree {
     public record Link(String string) implements Value {
     }
 
-    public record Enum(String string) implements Value {
+    public record VocabTerm(String string) implements Value {
     }
 
     public Node tree;
@@ -99,14 +99,14 @@ public class SimpleQueryTree {
                 if (disambiguate.isType(property)) {
                     Optional<String> mappedType = disambiguate.mapToKbvClass(value);
                     if (mappedType.isPresent()) {
-                        v = new Enum(mappedType.get());
+                        v = new VocabTerm(mappedType.get());
                     } else {
                         throw new InvalidQueryException("Unrecognized type: " + value);
                     }
                 } else if (disambiguate.isVocabTerm(property)) {
                     Optional<String> mappedEnum = disambiguate.mapToEnum(value);
                     if (mappedEnum.isPresent()) {
-                        v = new Enum(mappedEnum.get());
+                        v = new VocabTerm(mappedEnum.get());
                     } else {
                         throw new InvalidQueryException("Invalid value " + value + " for property " + property);
                     }
@@ -227,8 +227,8 @@ public class SimpleQueryTree {
         return new PropertyValue(property, List.of(property), Operator.EQUALS, new Link(uri));
     }
 
-    public static PropertyValue pvEqualsEnum(String property, String value) {
-        return new PropertyValue(property, List.of(property), Operator.EQUALS, new Enum(value));
+    public static PropertyValue pvEqualsVocabTerm(String property, String value) {
+        return new PropertyValue(property, List.of(property), Operator.EQUALS, new VocabTerm(value));
     }
 
     public String getFreeTextPart() {

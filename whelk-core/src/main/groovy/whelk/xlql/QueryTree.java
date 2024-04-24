@@ -1,7 +1,5 @@
 package whelk.xlql;
 
-import whelk.JsonLd;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -80,7 +78,7 @@ public class QueryTree {
             switch (pv.value()) {
                 case SimpleQueryTree.Link ignored -> path.appendId();
                 case SimpleQueryTree.Literal ignored -> path.appendUnderscoreStr();
-                case SimpleQueryTree.Enum ignored -> {}
+                case SimpleQueryTree.VocabTerm ignored -> {}
             }
         }
 
@@ -112,7 +110,7 @@ public class QueryTree {
         path.defaultFields.forEach(df -> {
                     Path dfPath = new Path(df.path());
                     String property = df.path().getLast();
-                    if (disambiguate.isObjectProperty(property) && !disambiguate.hasEnumValue(property)) {
+                    if (disambiguate.isObjectProperty(property) && !disambiguate.hasVocabValue(property)) {
                         dfPath.appendId();
                     }
                     fields.add(new Field(dfPath, operator, df.value()));
