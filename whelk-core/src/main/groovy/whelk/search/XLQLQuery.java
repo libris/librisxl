@@ -356,16 +356,13 @@ public class XLQLQuery {
     }
 
     private Object lookUp(SimpleQueryTree.Value value) {
-        var vocabTerm = getDefinition(value.string());
-        if (vocabTerm != null) {
-            return vocabTerm;
-        }
-        if (value instanceof SimpleQueryTree.Link) {
-            return disambiguate.loadThing(value.string(), whelk)
+        return switch (value) {
+            case SimpleQueryTree.Enum anEnum -> getDefinition(anEnum.string());
+            case SimpleQueryTree.Link link -> disambiguate.loadThing(value.string(), whelk)
                     .map(whelk.getJsonld()::toChip)
-                    .orElse(value.string());
-        }
-        return value.string();
+                    .orElse(link.string());
+            case SimpleQueryTree.Literal literal -> literal.string();
+        };
     }
 
     private Map<?, ?> getDefinition(String term) {
@@ -448,7 +445,7 @@ public class XLQLQuery {
 
             Path path = new Path(List.of(property));
 
-            if (disambiguate.isObjectProperty(property) && !"rdf:type".equals(property)) {
+            if (disambiguate.isObjectProperty(property) && !disambiguate.hasEnumValue(property)) {
                 path.appendId();
             }
 
@@ -503,9 +500,14 @@ public class XLQLQuery {
                     .forEach(b -> {
                         var value = (String) b.get("key");
                         var count = (Integer) b.get("doc_count");
-                        var pv = isLinked
-                                ? SimpleQueryTree.pvEqualsLink(property, value)
-                                : SimpleQueryTree.pvEqualsLiteral(property, value);
+                        SimpleQueryTree.PropertyValue pv = null;
+                        if (isLinked) {
+                            pv = SimpleQueryTree.pvEqualsLink(property, value);
+                        } else if (disambiguate.hasEnumValue(property)) {
+                            pv = SimpleQueryTree.pvEqualsEnum(property, value);
+                        } else {
+                            pv = SimpleQueryTree.pvEqualsLiteral(property, value);
+                        }
                         var buckets = propertyToBuckets.computeIfAbsent(property, x -> new HashMap<>());
                         buckets.compute(pv, (k, v) -> (v == null) ? count : v + count);
                     });
