@@ -81,12 +81,7 @@ public class QueryTree {
             }
         };
 
-        return new Iterable<>() {
-            @Override
-            public Iterator<Node> iterator() {
-                return i;
-            }
-        };
+        return () -> i;
     }
 
     private static Node sqtToQt(SimpleQueryTree.Node sqtNode, Disambiguate disambiguate, Disambiguate.OutsetType outset) {
