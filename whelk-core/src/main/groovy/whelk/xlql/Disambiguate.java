@@ -36,6 +36,7 @@ public class Disambiguate {
         ENUM
     }
 
+    //TODO: Abstract away the need for OutsetType/DomainCategory
     public enum OutsetType {
         INSTANCE,
         WORK,
