@@ -57,18 +57,18 @@ public class QueryTree {
      * There is no freetext or all freetext nodes are "*"
      */
     public boolean isWild() {
-        return StreamSupport.stream(allNodes().spliterator(), false)
+        return StreamSupport.stream(allDescendants(tree).spliterator(), false)
                 .noneMatch(n -> n instanceof FreeText && !((FreeText) n).isWild());
     }
 
-    private Iterable<Node> allNodes() {
+    private static Iterable<Node> allDescendants(Node node) {
         Iterator<Node> i = new Iterator<>() {
             List<Node> nodes;
             @Override
             public boolean hasNext() {
                 if (nodes == null) {
                     nodes = new LinkedList<>();
-                    nodes.add(tree);
+                    nodes.add(node);
                 }
                 return !nodes.isEmpty();
             }
