@@ -276,7 +276,7 @@ class CrudUtils {
         }
 
         private static String cleanEtag(String str) {
-            return stripQuotes(str)?.replaceAll('W/', '')
+            return stripQuotes(str)?.replaceAll('W/', '')?.replaceAll('-gzip', '')
         }
 
         private static String stripQuotes(String str) {
