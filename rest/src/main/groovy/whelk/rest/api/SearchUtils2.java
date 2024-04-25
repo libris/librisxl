@@ -125,18 +125,19 @@ public class SearchUtils2 {
 
         public Map<String, Object> getPartialCollectionView(Map<String, Object> esResponse) {
             int numHits = (int) esResponse.getOrDefault("totalHits", 0);
+            var aliases = XLQLQuery.getAliasMappings(outsetType);
             var view = new LinkedHashMap<String, Object>();
             view.put(JsonLd.TYPE_KEY, "PartialCollectionView");
             view.put(JsonLd.ID_KEY, makeFindUrl(freeText, queryString, offset));
             view.put("itemOffset", offset);
             view.put("itemsPerPage", limit);
             view.put("totalItems", numHits);
-            view.put("search", Map.of("mapping", toMappings()));
+            view.put("search", Map.of("mapping", toMappings(aliases)));
             view.putAll(makePaginationLinks(numHits));
             if (esResponse.containsKey("items")) {
                 view.put("items", esResponse.get("items"));
             }
-            view.put("stats", xlqlQuery.getStats(esResponse, statsRepr, simpleQueryTree, getNonQueryParams(0), outsetType));
+            view.put("stats", xlqlQuery.getStats(esResponse, statsRepr, simpleQueryTree, getNonQueryParams(0), aliases));
             if (debug) {
                 view.put("_debug", Map.of("esQuery", esQueryDsl));
             }
@@ -220,8 +221,8 @@ public class SearchUtils2 {
             return params;
         }
 
-        private List<Map<?, ?>> toMappings() {
-            return List.of(xlqlQuery.toMappings(simpleQueryTree, makeNonQueryParams(0)));
+        private List<Map<?, ?>> toMappings(Map<String, String> aliases) {
+            return List.of(xlqlQuery.toMappings(simpleQueryTree, aliases, makeNonQueryParams(0)));
         }
 
         private static Optional<String> getOptionalSingleFilterEmpty(String name, Map<String, String[]> queryParameters) {
