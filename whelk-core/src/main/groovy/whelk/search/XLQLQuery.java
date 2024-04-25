@@ -251,37 +251,41 @@ public class XLQLQuery {
     }
 
     public Map<String, Object> toMappings(SimpleQueryTree sqt) {
-        return toMappings(sqt, Collections.emptyList());
+        return toMappings(sqt, Collections.emptyMap(), Collections.emptyList());
     }
 
-    public Map<String, Object> toMappings(SimpleQueryTree sqt, List<String> nonQueryParams) {
-        return buildMappings(sqt.tree, sqt, new LinkedHashMap<>(), nonQueryParams);
+    public Map<String, Object> toMappings(SimpleQueryTree sqt, Map<String, String> aliases, List<String> nonQueryParams) {
+        return buildMappings(sqt.tree, sqt, new LinkedHashMap<>(), aliases, nonQueryParams);
     }
 
-    private Map<String, Object> buildMappings(SimpleQueryTree.Node sqtNode, SimpleQueryTree sqt, Map<String, Object> mappingsNode, List<String> nonQueryParams) {
+    private Map<String, Object> buildMappings(SimpleQueryTree.Node sqtNode,
+                                              SimpleQueryTree sqt,
+                                              Map<String, Object> mappingsNode,
+                                              Map<String, String> aliases,
+                                              List<String> nonQueryParams) {
         switch (sqtNode) {
             case SimpleQueryTree.And and -> {
                 var andClause = and.conjuncts()
                         .stream()
-                        .map(c -> buildMappings(c, sqt, new LinkedHashMap<>(), nonQueryParams))
+                        .map(c -> buildMappings(c, sqt, new LinkedHashMap<>(), aliases, nonQueryParams))
                         .toList();
                 mappingsNode.put("and", andClause);
             }
             case SimpleQueryTree.Or or -> {
                 var orClause = or.disjuncts()
                         .stream()
-                        .map(d -> buildMappings(d, sqt, new LinkedHashMap<>(), nonQueryParams))
+                        .map(d -> buildMappings(d, sqt, new LinkedHashMap<>(), aliases, nonQueryParams))
                         .toList();
                 mappingsNode.put("or", orClause);
             }
             case SimpleQueryTree.FreeText ft -> mappingsNode = freeTextMapping(ft);
-            case SimpleQueryTree.PropertyValue pv -> mappingsNode = propertyValueMapping(pv);
+            case SimpleQueryTree.PropertyValue pv -> mappingsNode = propertyValueMapping(pv, aliases);
         }
 
         SimpleQueryTree reducedTree = sqt.excludeFromTree(sqtNode);
         String upUrl = reducedTree.isEmpty()
                 ? makeFindUrl(Stream.concat(Stream.of(makeParam("_i", "*"), makeParam("_q", "*")), nonQueryParams.stream())
-                                .toList())
+                .toList())
                 : makeFindUrl(reducedTree, nonQueryParams);
 
         mappingsNode.put("up", Map.of(JsonLd.ID_KEY, upUrl));
@@ -329,13 +333,13 @@ public class XLQLQuery {
     }
 
     private Map<String, Object> freeTextMapping(SimpleQueryTree.FreeText ft) {
-        Map<String, Object> m = new LinkedHashMap();
+        Map<String, Object> m = new LinkedHashMap<>();
         m.put("property", getDefinition("textQuery"));
         m.put(ft.operator().termKey, ft.value());
         return m;
     }
 
-    private Map<String, Object> propertyValueMapping(SimpleQueryTree.PropertyValue pv) {
+    private Map<String, Object> propertyValueMapping(SimpleQueryTree.PropertyValue pv, Map<String, String> aliases) {
         Map<String, Object> m = new LinkedHashMap<>();
 
         if (pv.propertyPath().size() > 1) {
@@ -349,6 +353,7 @@ public class XLQLQuery {
             m.put("property", propDef);
         } else {
             m.put("property", getDefinition(pv.property()));
+            Optional.ofNullable(aliases.get(pv.property())).ifPresent(a -> m.put("alias", a));
         }
 
         m.put(pv.operator().termKey, lookUp(pv.value()));
@@ -501,7 +506,7 @@ public class XLQLQuery {
                     .forEach(b -> {
                         var value = (String) b.get("key");
                         var count = (Integer) b.get("doc_count");
-                        SimpleQueryTree.PropertyValue pv = null;
+                        SimpleQueryTree.PropertyValue pv;
                         if (isLinked) {
                             pv = SimpleQueryTree.pvEqualsLink(property, value);
                         } else if (disambiguate.hasVocabValue(property)) {
@@ -536,23 +541,21 @@ public class XLQLQuery {
         return propertyToBuckets;
     }
 
-    public Map<String, Object> getStats(Map<String, Object> esResponse, Map<String, Object> statsRepr, SimpleQueryTree sqt, Map<String, String> nonQueryParams) {
+    public Map<String, Object> getStats(Map<String, Object> esResponse, Map<String, Object> statsRepr, SimpleQueryTree sqt, Map<String, String> aliases, Map<String, String> nonQueryParams) {
         var buckets = collectBuckets(esResponse, statsRepr);
-        return buildStats(buckets, sqt, nonQueryParams);
+        return buildStats(buckets, sqt, nonQueryParams, aliases);
     }
 
-    private Map<String, Object> buildStats(Map<String, Map<SimpleQueryTree.PropertyValue, Integer>> propToBuckets, SimpleQueryTree sqt, Map<String, String> nonQueryParams) {
+    private Map<String, Object> buildStats(Map<String, Map<SimpleQueryTree.PropertyValue, Integer>> propToBuckets, SimpleQueryTree sqt, Map<String, String> aliases, Map<String, String> nonQueryParams) {
         var sliceByDimension = new LinkedHashMap<>();
 
         propToBuckets.forEach((property, buckets) -> {
             var sliceNode = new LinkedHashMap<>();
             var observations = getObservations(buckets, sqt, nonQueryParams);
             if (!observations.isEmpty()) {
-                // TODO: dimension/dimensionChain redundant
-                //  Add property definition here to provide labels?
                 sliceNode.put("dimension", property);
-                sliceNode.put("dimensionChain", List.of(property));
                 sliceNode.put("observation", observations);
+                Optional.ofNullable(aliases.get(property)).ifPresent(a -> sliceNode.put("alias", a));
                 sliceByDimension.put(property, sliceNode);
             }
         });
@@ -577,6 +580,23 @@ public class XLQLQuery {
         });
 
         return observations;
+    }
+
+    public static Map<String, String> getAliasMappings(Disambiguate.OutsetType outsetType) {
+        Map<String, String> m = new HashMap<>();
+
+        switch (outsetType) {
+            case INSTANCE -> {
+                m.put("rdf:type", "instanceType");
+                m.put("instanceOfType", "workType");
+            }
+            case WORK -> {
+                m.put("rdf:type", "workType");
+                m.put("hasInstanceType", "instanceType");
+            }
+        }
+
+        return m;
     }
 
     private String expandLangMapKeys(String field) {

@@ -36,6 +36,7 @@ public class Disambiguate {
         ENUM
     }
 
+    //TODO: Abstract away the need for OutsetType/DomainCategory
     public enum OutsetType {
         INSTANCE,
         WORK,
@@ -132,7 +133,7 @@ public class Disambiguate {
     }
 
     public boolean isType(String property) {
-        return "rdf:type".equals(property);
+        return "rdf:type".equals(property) || jsonLd.getSubProperties("rdf:type").contains(property);
     }
 
     public PropertyChain expandChainAxiom(List<String> path) {
