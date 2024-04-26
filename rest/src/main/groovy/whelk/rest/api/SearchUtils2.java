@@ -117,7 +117,12 @@ public class SearchUtils2 {
             queryDsl.put("query", xlqlQuery.getEsQuery(queryTree));
             queryDsl.put("size", limit);
             queryDsl.put("from", offset);
-            sortBy.insertSortClauses(queryDsl, xlqlQuery);
+            if (queryTree.isWild()) {
+                // Stable sort order if there is no meaningful relevancy
+                Sort.BY_DOC_ID.insertSortClauses(queryDsl, xlqlQuery);
+            } else {
+                sortBy.insertSortClauses(queryDsl, xlqlQuery);
+            }
             queryDsl.put("aggs", xlqlQuery.getAggQuery(statsRepr, outsetType));
             queryDsl.put("track_total_hits", true);
             return queryDsl;
@@ -327,6 +332,9 @@ public class SearchUtils2 {
     }
 
     static class Sort {
+        public static Sort DEFAULT_BY_RELEVANCY = new Sort("");
+        public static Sort BY_DOC_ID = new Sort("_es_id");
+
         private enum Order {
             asc,
             desc
@@ -349,7 +357,7 @@ public class SearchUtils2 {
 
         List<ParameterOrder> parameters;
 
-        public Sort(String sort) {
+        private Sort(String sort) {
             parameters = Arrays.stream(sort.split(","))
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
@@ -360,7 +368,9 @@ public class SearchUtils2 {
         }
 
         static Sort fromString(String s) {
-            return new Sort(s);
+            return (s == null || s.isBlank())
+                    ? DEFAULT_BY_RELEVANCY
+                    : new Sort(s);
         }
 
         void insertSortClauses(Map<String, Object> queryDsl, XLQLQuery xlqlQuery) {
