@@ -1,6 +1,9 @@
 var OREGONPOSTEN_ID = getWhelk().getBaseUri().resolve('/4ngsxq4g22nlgbn#it').toString()
 var NORRSKENSFLAMMAN_ID = getWhelk().getBaseUri().resolve('/fzr371qr0cl7pgp#it').toString()
 
+println(OREGONPOSTEN_ID)
+println(NORRSKENSFLAMMAN_ID)
+
 String where = """
   collection = 'bib' 
   AND deleted = false
