@@ -124,4 +124,14 @@ public class Path {
     private String substitute(String property) {
         return Optional.ofNullable(substitutions.get(property)).orElse(property);
     }
+
+    @Override
+    public String toString() {
+        var s = new StringBuilder();
+        s.append(path);
+        if (!defaultFields.isEmpty()) {
+            s.append("(defaultFields: ").append(defaultFields).append(")");
+        }
+        return s.toString();
+    }
 }

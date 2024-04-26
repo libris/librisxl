@@ -39,7 +39,7 @@ public class QueryTree {
 
     public record FreeText(Operator operator, String value) implements Node {
         public boolean isWild() {
-            return operator == EQUALS && "*".equals(value);
+            return operator == EQUALS && Operator.WILDCARD.equals(value);
         }
     }
 
