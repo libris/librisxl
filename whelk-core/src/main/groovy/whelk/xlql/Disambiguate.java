@@ -455,6 +455,7 @@ public class Disambiguate {
         nsToPrefix.put("https://id.kb.se/term/saogf/", "saogf:");
         nsToPrefix.put("https://id.kb.se/term/barn/", "barn:");
         nsToPrefix.put("https://id.kb.se/term/barngf/", "barngf:");
+        nsToPrefix.put("https://libris.kb.se/library/", "sigel:");
         nsToPrefix.put(Document.getBASE_URI().toString(), "libris:");
 
         for (String ns : nsToPrefix.keySet()) {
@@ -481,6 +482,7 @@ public class Disambiguate {
         nsToPrefix.put("https://id.kb.se/term/saogf/", "saogf:");
         nsToPrefix.put("https://id.kb.se/term/barn/", "barn:");
         nsToPrefix.put("https://id.kb.se/term/barngf/", "barngf:");
+        nsToPrefix.put("https://libris.kb.se/library/", "sigel:");
         nsToPrefix.put(Document.getBASE_URI().toString(), "libris:");
 
         for (String ns : nsToPrefix.keySet()) {
