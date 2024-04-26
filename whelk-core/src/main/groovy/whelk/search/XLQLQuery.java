@@ -193,6 +193,15 @@ public class XLQLQuery {
 
     private Map<String, Object> esFilter(QueryTree.Field f) {
         String path = f.path().stringify();
+
+        if (Operator.WILDCARD.equals(f.value())) {
+            return switch (f.operator()) {
+                case EQUALS -> existsFilter(path);
+                case NOT_EQUALS -> notExistsFilter(path);
+                default -> notExistsFilter(path); // TODO?
+            };
+        }
+
         String value = quoteIfPhrase(f.value());
         return switch (f.operator()) {
             case EQUALS -> equalsFilter(path, value);
@@ -396,6 +405,14 @@ public class XLQLQuery {
 
     private static Map<String, Object> rangeFilter(String path, String value, String key) {
         return filterWrap(rangeWrap(Map.of(path, Map.of(key, value))));
+    }
+
+    private static Map<String, Object> notExistsFilter(String path) {
+        return mustNotWrap(existsFilter(path));
+    }
+
+    private static Map<String, Object> existsFilter(String path) {
+        return Map.of("exists", Map.of("field", path));
     }
 
     private static Map<String, Object> mustWrap(Object l) {
