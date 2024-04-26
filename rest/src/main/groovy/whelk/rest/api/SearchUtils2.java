@@ -117,7 +117,7 @@ public class SearchUtils2 {
             queryDsl.put("query", xlqlQuery.getEsQuery(queryTree));
             queryDsl.put("size", limit);
             queryDsl.put("from", offset);
-            if (queryTree.isWild()) {
+            if (sortBy == Sort.DEFAULT_BY_RELEVANCY && queryTree.isWild()) {
                 // Stable sort order if there is no meaningful relevancy
                 Sort.BY_DOC_ID.insertSortClauses(queryDsl, xlqlQuery);
             } else {
