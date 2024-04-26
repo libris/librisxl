@@ -1,5 +1,5 @@
-var OREGONPOSTEN_ID = 'https://libris.kb.se/4ngsxq4g22nlgbn#it'
-var NORRSKENSFLAMMAN_ID = 'https://libris.kb.se/fzr371qr0cl7pgp#it'
+var OREGONPOSTEN_ID = getWhelk().getBaseUri().resolve('/4ngsxq4g22nlgbn#it').toString()
+var NORRSKENSFLAMMAN_ID = getWhelk().getBaseUri().resolve('/fzr371qr0cl7pgp#it').toString()
 
 String where = """
   collection = 'bib' 
