@@ -1,4 +1,4 @@
-File bibIDs = new File(scriptDir, "Li-3.txt")
+File bibIDs = new File(scriptDir, "Li-4.txt")
 
 selectByIds( bibIDs.readLines() ) { hold ->
 def item = hold.graph[1]
