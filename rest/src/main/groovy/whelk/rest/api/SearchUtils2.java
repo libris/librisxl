@@ -57,6 +57,7 @@ public class SearchUtils2 {
         private final int offset;
         private final Sort sortBy;
         private final String object;
+        private final List<String> predicates;
         private final String mode;
         private final Map<String, Object> statsRepr;
         private final boolean debug;
@@ -68,9 +69,10 @@ public class SearchUtils2 {
         private final Map<String, Object> esQueryDsl;
 
         Query(Map<String, String[]> queryParameters) throws InvalidQueryException, IOException {
-            this.sortBy = Sort.fromString(getOptionalSingleFilterEmpty("_sort", queryParameters).orElse(""));
-            this.object = getOptionalSingleFilterEmpty("_o", queryParameters).orElse(null);
-            this.mode = getOptionalSingleFilterEmpty("_x", queryParameters).orElse(null);
+            this.sortBy = Sort.fromString(getOptionalSingleNonEmpty("_sort", queryParameters).orElse(""));
+            this.object = getOptionalSingleNonEmpty("_o", queryParameters).orElse(null);
+            this.predicates = getMultiple("_p", queryParameters);
+            this.mode = getOptionalSingleNonEmpty("_x", queryParameters).orElse(null);
             this.debug = queryParameters.containsKey("_debug"); // Different debug modes needed?
             this.limit = getLimit(queryParameters);
             this.offset = getOffset(queryParameters);
@@ -154,7 +156,11 @@ public class SearchUtils2 {
         private SimpleQueryTree getFilteredTree() {
             var filters = new ArrayList<>(DEFAULT_FILTERS);
             if (object != null) {
-                filters.add(SimpleQueryTree.pvEqualsLiteral("_links", object));
+                if (predicates.isEmpty()) {
+                    filters.add(SimpleQueryTree.pvEqualsLink("_links", object));
+                } else {
+                    filters.addAll(predicates.stream().map(p -> SimpleQueryTree.pvEqualsLink(p, object)).toList());
+                }
             }
             return xlqlQuery.addFilters(simpleQueryTree, filters);
         }
@@ -216,6 +222,9 @@ public class SearchUtils2 {
             if (object != null) {
                 params.put("_o", object);
             }
+            if (!predicates.isEmpty()) {
+                params.put("_p", String.join(",", predicates));
+            }
             if (mode != null) {
                 params.put("_x", mode);
             }
@@ -233,7 +242,7 @@ public class SearchUtils2 {
             return List.of(xlqlQuery.toMappings(simpleQueryTree, aliases, makeNonQueryParams(0)));
         }
 
-        private static Optional<String> getOptionalSingleFilterEmpty(String name, Map<String, String[]> queryParameters) {
+        private static Optional<String> getOptionalSingleNonEmpty(String name, Map<String, String[]> queryParameters) {
             return getOptionalSingle(name, queryParameters).filter(Predicate.not(String::isEmpty));
         }
 
@@ -242,8 +251,16 @@ public class SearchUtils2 {
                     .map(x -> x[0]);
         }
 
+        private static List<String> getMultiple(String name, Map<String, String[]> queryParameters) {
+            return Optional.ofNullable(queryParameters.get(name))
+                    .map(Arrays::asList).orElse(Collections.emptyList())
+                    .stream()
+                    .flatMap((s -> Arrays.stream(s.split(",")).map(String::trim)))
+                    .toList();
+        }
+
         private int getLimit(Map<String, String[]> queryParameters) throws InvalidQueryException {
-            int limit = getOptionalSingleFilterEmpty("_limit", queryParameters)
+            int limit = getOptionalSingleNonEmpty("_limit", queryParameters)
                     .map(x -> parseInt(x, DEFAULT_LIMIT))
                     .orElse(DEFAULT_LIMIT);
 
@@ -260,7 +277,7 @@ public class SearchUtils2 {
         }
 
         private int getOffset(Map<String, String[]> queryParameters) throws InvalidQueryException {
-            int offset = getOptionalSingleFilterEmpty("_offset", queryParameters)
+            int offset = getOptionalSingleNonEmpty("_offset", queryParameters)
                     .map(x -> parseInt(x, DEFAULT_OFFSET))
                     .orElse(DEFAULT_OFFSET);
 
