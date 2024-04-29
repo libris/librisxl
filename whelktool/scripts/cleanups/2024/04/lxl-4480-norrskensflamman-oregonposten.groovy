@@ -17,5 +17,7 @@ selectBySqlWhere(where) { bib ->
     if (mainEntity.isIssueOf == [['@id': OREGONPOSTEN_ID]] && mainTitle.startsWith("NORRSKENSFLAMMAN ")) {
         mainEntity.isIssueOf = [['@id': NORRSKENSFLAMMAN_ID]]
         bib.scheduleSave(loud: true)
+    } else {
+        println("mainTitle: |${mainTitle}| isIssueOf:|${mainEntity.isIssueOf}| ")
     }
 }
