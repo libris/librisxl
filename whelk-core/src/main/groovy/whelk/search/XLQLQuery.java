@@ -302,15 +302,19 @@ public class XLQLQuery {
         return mappingsNode;
     }
 
-    private String makeFindUrl(SimpleQueryTree sqt, List<String> nonQueryParams) {
+    private static String makeFindUrl(SimpleQueryTree sqt, List<String> nonQueryParams) {
+        return makeFindUrl(sqt.getFreeTextPart(), sqt.toQueryString(), nonQueryParams);
+    }
+
+    private static String makeFindUrl(String i, String q, List<String> nonQueryParams) {
         List<String> params = new ArrayList<>();
-        params.add(makeParam("_i", sqt.getFreeTextPart()));
-        params.add(makeParam("_q", sqt.toQueryString()));
+        params.add(makeParam("_i", i));
+        params.add(makeParam("_q", q));
         params.addAll(nonQueryParams);
         return makeFindUrl(params);
     }
 
-    private String makeFindUrl(List<String> params) {
+    private static String makeFindUrl(List<String> params) {
         return "/find?" + String.join("&", params);
     }
 
@@ -560,16 +564,25 @@ public class XLQLQuery {
 
     public Map<String, Object> getStats(Map<String, Object> esResponse, Map<String, Object> statsRepr, SimpleQueryTree sqt, Map<String, String> aliases, Map<String, String> nonQueryParams) {
         var buckets = collectBuckets(esResponse, statsRepr);
-        return buildStats(buckets, sqt, nonQueryParams, aliases);
+        var rangeProps = getRangeProperties(statsRepr);
+        return buildStats(buckets, sqt, nonQueryParams, aliases, rangeProps);
     }
 
-    private Map<String, Object> buildStats(Map<String, Map<SimpleQueryTree.PropertyValue, Integer>> propToBuckets, SimpleQueryTree sqt, Map<String, String> aliases, Map<String, String> nonQueryParams) {
+    private Map<String, Object> buildStats(
+            Map<String, Map<SimpleQueryTree.PropertyValue, Integer>> propToBuckets,
+            SimpleQueryTree sqt,
+            Map<String, String> aliases,
+            Map<String, String> nonQueryParams,
+            Set<String> rangeProps) {
         var sliceByDimension = new LinkedHashMap<>();
 
         propToBuckets.forEach((property, buckets) -> {
             var sliceNode = new LinkedHashMap<>();
             var observations = getObservations(buckets, sqt, nonQueryParams);
             if (!observations.isEmpty()) {
+                if (rangeProps.contains(property)) {
+                    sliceNode.put("search", getRangeTemplate(property, sqt, makeParams(nonQueryParams)));
+                }
                 sliceNode.put("dimension", property);
                 sliceNode.put("observation", observations);
                 Optional.ofNullable(aliases.get(property)).ifPresent(a -> sliceNode.put("alias", a));
@@ -579,6 +592,14 @@ public class XLQLQuery {
 
         return Map.of(JsonLd.ID_KEY, "#stats",
                 "sliceByDimension", sliceByDimension);
+    }
+
+    private Set<String> getRangeProperties(Map<String, Object> statsRepr) {
+        return statsRepr.entrySet()
+                .stream()
+                .filter(e -> ((Map<?, ?>) e.getValue()).containsKey("range"))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
     }
 
     private List<Map<String, Object>> getObservations(Map<SimpleQueryTree.PropertyValue, Integer> buckets, SimpleQueryTree sqt, Map<String, String> nonQueryParams) {
@@ -597,6 +618,55 @@ public class XLQLQuery {
         });
 
         return observations;
+    }
+
+    private static Map<String, Object> getRangeTemplate(String property, SimpleQueryTree sqt, List<String> nonQueryParams) {
+        var GtLtNodes = sqt.getTopLevelPvNodes().stream()
+                .filter(pv -> pv.property().equals(property))
+                .filter(pv -> switch (pv.operator()) {
+                    case EQUALS -> false;
+                    case NOT_EQUALS -> false;
+                    case GREATER_THAN_OR_EQUALS -> true;
+                    case GREATER_THAN -> true;
+                    case LESS_THAN_OR_EQUALS -> true;
+                    case LESS_THAN -> true;
+                })
+                .filter(pv -> pv.value().isNumeric())
+                .toList();
+
+        String min = null;
+        String max = null;
+
+        for (var pv : GtLtNodes) {
+            var orEquals = pv.toOrEquals();
+            if (orEquals.operator() == Operator.GREATER_THAN_OR_EQUALS && min == null) {
+                min = orEquals.value().string();
+            } else if (orEquals.operator() == Operator.LESS_THAN_OR_EQUALS && max == null) {
+                max = orEquals.value().string();
+            } else {
+                // Not a proper range, reset and abort
+                min = null;
+                max = null;
+                break;
+            }
+        }
+
+        var tree = sqt.removeTopLevelPvNodes(property);
+
+        Map<String, Object> template = new LinkedHashMap<>();
+
+        var placeholderNode = new SimpleQueryTree.FreeText(Operator.EQUALS, String.format("{?%s}", property));
+        var templateQueryString = tree.andExtend(placeholderNode).toQueryString();
+        var templateUrl = makeFindUrl(tree.getFreeTextPart(), templateQueryString, nonQueryParams);
+        template.put("template", templateUrl);
+
+        var mapping = new LinkedHashMap<>();
+        mapping.put("variable", property);
+        mapping.put(Operator.GREATER_THAN_OR_EQUALS.termKey, Objects.toString(min, ""));
+        mapping.put(Operator.LESS_THAN_OR_EQUALS.termKey, Objects.toString(max, ""));
+        template.put("mapping", mapping);
+
+        return template;
     }
 
     public static Map<String, String> getAliasMappings(Disambiguate.OutsetType outsetType) {
