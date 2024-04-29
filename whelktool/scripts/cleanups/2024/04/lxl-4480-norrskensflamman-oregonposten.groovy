@@ -1,6 +1,8 @@
 var OREGONPOSTEN_ID = getWhelk().getBaseUri().resolve('/4ngsxq4g22nlgbn#it').toString()
 var NORRSKENSFLAMMAN_ID = getWhelk().getBaseUri().resolve('/fzr371qr0cl7pgp#it').toString()
 
+skipped = getReportWriter("skipped")
+
 println(OREGONPOSTEN_ID)
 println(NORRSKENSFLAMMAN_ID)
 
@@ -12,12 +14,12 @@ String where = """
 
 selectBySqlWhere(where) { bib ->
     def (_, mainEntity) = bib.graph
-    def mainTitle = getAtPath(mainEntity, ['hasTitle', '0', 'mainTitle'], "")
+    def mainTitle = getAtPath(mainEntity, ['hasTitle', 0, 'mainTitle'], "")
 
     if (mainEntity.isIssueOf == [['@id': OREGONPOSTEN_ID]] && mainTitle.startsWith("NORRSKENSFLAMMAN ")) {
         mainEntity.isIssueOf = [['@id': NORRSKENSFLAMMAN_ID]]
         bib.scheduleSave(loud: true)
     } else {
-        println("mainTitle: |${mainTitle}| isIssueOf:|${mainEntity.isIssueOf}| ")
+        skipped.println("${mainEntity['@id']} mainTitle: |${mainTitle}| isIssueOf:|${mainEntity.isIssueOf}| ")
     }
 }
