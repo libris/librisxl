@@ -223,6 +223,9 @@ public class SearchUtils2 {
             if (!sort.isEmpty()) {
                 params.put("_sort", sort);
             }
+            if (debug) {
+                params.put("_debug", "");
+            }
             return params;
         }
 
