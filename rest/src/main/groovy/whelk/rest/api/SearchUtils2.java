@@ -24,6 +24,23 @@ public class SearchUtils2 {
     Whelk whelk;
     XLQLQuery xlqlQuery;
 
+    private static class P {
+        public static final String QUERY = "_q";
+        public static final String SIMPLE_FREETEXT = "_i";
+        public static final String SORT = "_sort";
+        public static final String LIMIT = "_limit";
+        public static final String OFFSET = "offSet";
+        public static final String OBJECT = "_o";
+        public static final String PREDICATES = "_p";
+        public static final String EXTRA = "_x";
+        public static final String DEBUG = "_debug";
+        public static final String STATS_REPRESENTATION = "_statsrepr";
+    }
+
+    private static class Debug {
+        public static final String ES_QUERY = "esQuery";
+    }
+
     SearchUtils2(Whelk whelk) {
         this.whelk = whelk;
         this.xlqlQuery = new XLQLQuery(whelk);
@@ -60,7 +77,7 @@ public class SearchUtils2 {
         private final List<String> predicates;
         private final String mode;
         private final Map<String, Object> statsRepr;
-        private final boolean debug;
+        private final List<String> debug;
         private final String queryString;
         private final String freeText;
         private final SimpleQueryTree simpleQueryTree;
@@ -69,17 +86,17 @@ public class SearchUtils2 {
         private final Map<String, Object> esQueryDsl;
 
         Query(Map<String, String[]> queryParameters) throws InvalidQueryException, IOException {
-            this.sortBy = Sort.fromString(getOptionalSingleNonEmpty("_sort", queryParameters).orElse(""));
-            this.object = getOptionalSingleNonEmpty("_o", queryParameters).orElse(null);
-            this.predicates = getMultiple("_p", queryParameters);
-            this.mode = getOptionalSingleNonEmpty("_x", queryParameters).orElse(null);
-            this.debug = queryParameters.containsKey("_debug"); // Different debug modes needed?
+            this.sortBy = Sort.fromString(getOptionalSingleNonEmpty(P.SORT, queryParameters).orElse(""));
+            this.object = getOptionalSingleNonEmpty(P.OBJECT, queryParameters).orElse(null);
+            this.predicates = getMultiple(P.PREDICATES, queryParameters);
+            this.mode = getOptionalSingleNonEmpty(P.EXTRA, queryParameters).orElse(null);
+            this.debug = getMultiple(P.DEBUG, queryParameters);
             this.limit = getLimit(queryParameters);
             this.offset = getOffset(queryParameters);
             this.statsRepr = getStatsRepr(queryParameters);
 
-            var q = getOptionalSingle("_q", queryParameters);
-            var i = getOptionalSingle("_i", queryParameters);
+            var q = getOptionalSingle(P.QUERY, queryParameters);
+            var i = getOptionalSingle(P.SIMPLE_FREETEXT, queryParameters);
 
             if (q.isPresent() && i.isPresent()) {
                 var iSqt = xlqlQuery.getSimpleQueryTree(i.get());
@@ -145,8 +162,8 @@ public class SearchUtils2 {
                 view.put("items", esResponse.get("items"));
             }
             view.put("stats", xlqlQuery.getStats(esResponse, statsRepr, simpleQueryTree, getNonQueryParams(0), aliases));
-            if (debug) {
-                view.put("_debug", Map.of("esQuery", esQueryDsl));
+            if (debug.contains(Debug.ES_QUERY)) {
+                view.put(P.DEBUG, Map.of(Debug.ES_QUERY, esQueryDsl));
             }
             view.put("maxItems", whelk.elastic.maxResultWindow);
 
@@ -203,8 +220,8 @@ public class SearchUtils2 {
 
         private String makeFindUrl(String i, String q, int offset) {
             List<String> params = new ArrayList<>();
-            params.add(XLQLQuery.makeParam("_i", i));
-            params.add(XLQLQuery.makeParam("_q", q));
+            params.add(XLQLQuery.makeParam(P.SIMPLE_FREETEXT, i));
+            params.add(XLQLQuery.makeParam(P.QUERY, q));
             params.addAll(makeNonQueryParams(offset));
             return "/find?" + String.join("&", params);
         }
@@ -216,24 +233,24 @@ public class SearchUtils2 {
         private Map<String, String> getNonQueryParams(int offset) {
             Map<String, String> params = new LinkedHashMap<>();
             if (offset > 0) {
-                params.put("_offset", "" + offset);
+                params.put(P.OFFSET, "" + offset);
             }
-            params.put("_limit", "" + limit);
+            params.put(P.LIMIT, "" + limit);
             if (object != null) {
-                params.put("_o", object);
+                params.put(P.OBJECT, object);
             }
             if (!predicates.isEmpty()) {
-                params.put("_p", String.join(",", predicates));
+                params.put(P.PREDICATES, String.join(",", predicates));
             }
             if (mode != null) {
-                params.put("_x", mode);
+                params.put(P.EXTRA, mode);
             }
             var sort = sortBy.asString();
             if (!sort.isEmpty()) {
-                params.put("_sort", sort);
+                params.put(P.SORT, sort);
             }
-            if (debug) {
-                params.put("_debug", "");
+            if (!debug.isEmpty()) {
+                params.put(P.DEBUG, String.join(",", debug));
             }
             return params;
         }
@@ -260,7 +277,7 @@ public class SearchUtils2 {
         }
 
         private int getLimit(Map<String, String[]> queryParameters) throws InvalidQueryException {
-            int limit = getOptionalSingleNonEmpty("_limit", queryParameters)
+            int limit = getOptionalSingleNonEmpty(P.LIMIT, queryParameters)
                     .map(x -> parseInt(x, DEFAULT_LIMIT))
                     .orElse(DEFAULT_LIMIT);
 
@@ -270,20 +287,20 @@ public class SearchUtils2 {
             }
 
             if (limit < 0) {
-                throw new InvalidQueryException("\"_limit\" query parameter can't be negative.");
+                throw new InvalidQueryException(P.LIMIT + " query parameter can't be negative.");
             }
 
             return limit;
         }
 
         private int getOffset(Map<String, String[]> queryParameters) throws InvalidQueryException {
-            int offset = getOptionalSingleNonEmpty("_offset", queryParameters)
+            int offset = getOptionalSingleNonEmpty(P.OFFSET, queryParameters)
                     .map(x -> parseInt(x, DEFAULT_OFFSET))
                     .orElse(DEFAULT_OFFSET);
 
             //TODO: Copied from old SearchUtils
             if (offset < 0) {
-                throw new InvalidQueryException("\"_offset\" query parameter can't be negative.");
+                throw new InvalidQueryException(P.OFFSET + " query parameter can't be negative.");
             }
 
             return offset;
@@ -300,7 +317,7 @@ public class SearchUtils2 {
         private static Map<String, Object> getStatsRepr(Map<String, String[]> queryParameters) throws IOException {
             Map<String, Object> statsRepr = new LinkedHashMap<>();
 
-            var statsJson = Optional.ofNullable(queryParameters.get("_statsrepr"))
+            var statsJson = Optional.ofNullable(queryParameters.get(P.STATS_REPRESENTATION))
                     .map(x -> x[0])
                     .orElse("{}");
 
