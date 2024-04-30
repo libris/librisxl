@@ -1,16 +1,22 @@
 package whelk.rest.api;
 
+import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.exception.WhelkRuntimeException;
 import whelk.search.XLQLQuery;
+import whelk.util.DocumentUtil;
 import whelk.xlql.Disambiguate;
 import whelk.xlql.QueryTree;
 import whelk.xlql.SimpleQueryTree;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static whelk.util.Jackson.mapper;
@@ -30,6 +36,7 @@ public class SearchUtils2 {
         public static final String SORT = "_sort";
         public static final String LIMIT = "_limit";
         public static final String OFFSET = "offSet";
+        public static final String LENS = "_lens";
         public static final String OBJECT = "_o";
         public static final String PREDICATES = "_p";
         public static final String EXTRA = "_x";
@@ -80,6 +87,7 @@ public class SearchUtils2 {
         private final List<String> debug;
         private final String queryString;
         private final String freeText;
+        private final String lens;
         private final SimpleQueryTree simpleQueryTree;
         private final Disambiguate.OutsetType outsetType;
         private final QueryTree queryTree;
@@ -93,6 +101,7 @@ public class SearchUtils2 {
             this.debug = getMultiple(P.DEBUG, queryParameters);
             this.limit = getLimit(queryParameters);
             this.offset = getOffset(queryParameters);
+            this.lens = getOptionalSingleNonEmpty(P.LENS, queryParameters).orElse("cards");
             this.statsRepr = getStatsRepr(queryParameters);
 
             var q = getOptionalSingle(P.QUERY, queryParameters);
@@ -159,7 +168,9 @@ public class SearchUtils2 {
             view.put("search", Map.of("mapping", toMappings(aliases)));
             view.putAll(makePaginationLinks(numHits));
             if (esResponse.containsKey("items")) {
-                view.put("items", esResponse.get("items"));
+                @SuppressWarnings("unchecked")
+                var esItems = ((List<Map<String, ?>>) esResponse.get("items"));
+                view.put("items", esItems.stream().map(this::shapeResultItem).toList());
             }
             view.put("stats", xlqlQuery.getStats(esResponse, statsRepr, simpleQueryTree, getNonQueryParams(0), aliases));
             if (debug.contains(Debug.ES_QUERY)) {
@@ -328,6 +339,56 @@ public class SearchUtils2 {
             }
 
             return statsRepr;
+        }
+
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        private <V> Map<String, V> shapeResultItem(Map<String, V> esItem) {
+            var item = applyLens(esItem, lens, object);
+
+            // ISNIs and ORCIDs are indexed with and without spaces, remove the one with spaces.
+            List<Map> identifiedBy = (List<Map>) item.get("identifiedBy");
+            if (identifiedBy != null) {
+                Function<Object, String> toStr = s -> s != null ? s.toString() : "";
+                identifiedBy.removeIf( id -> (Document.isIsni(id) || Document.isOrcid(id))
+                        && toStr.apply(id.get("value")).length() == 16 + 3 );
+            }
+
+            // reverseLinks must be re-added because they might get filtered out in applyLens().
+            if (esItem.containsKey("reverseLinks")) {
+                Map r = (Map) esItem.get("reverseLinks");
+                r.put(JsonLd.ID_KEY, makeFindOLink((String) esItem.get(JsonLd.ID_KEY)));
+                item.put("reverseLinks", (V) r);
+            }
+
+            return item;
+        }
+
+        @SuppressWarnings("unchecked")
+        private <V> Map<String, V> applyLens(Map<String, V> framedThing, String lens, @Nullable String preserveId) {
+            @SuppressWarnings("rawtypes")
+            List<List> preservedPaths = preserveId != null ? JsonLd.findPaths(framedThing, "@id", preserveId) : Collections.emptyList();
+
+            return switch (lens) {
+                case "chips" -> (Map<String, V>) whelk.getJsonld().toChip(framedThing, preservedPaths);
+                case "full" -> removeSystemInternalProperties(framedThing);
+                default -> whelk.getJsonld().toCard(framedThing, false, false, false, preservedPaths, true);
+            };
+        }
+
+        private String makeFindOLink(String iri) {
+            return Document.getBASE_URI()
+                    .resolve("find?o=" + URLEncoder.encode(iri, StandardCharsets.UTF_8))
+                    .toString();
+        }
+
+        private <V> Map<String, V> removeSystemInternalProperties(Map<String, V> framedThing) {
+            DocumentUtil.traverse(framedThing, (value, path) -> {
+                if (!path.isEmpty() && ((String) path.getLast()).startsWith("_")) {
+                    return new DocumentUtil.Remove();
+                }
+                return DocumentUtil.NOP;
+            });
+            return framedThing;
         }
     }
 
