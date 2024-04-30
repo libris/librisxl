@@ -68,7 +68,7 @@ public class SearchUtils2 {
         for (Map<String, Object> slice : sliceList) {
             String key = (String) ((List<?>) slice.get("dimensionChain")).getFirst();
             int limit = (Integer) slice.get("itemLimit");
-            String range = (String) slice.get("range");
+            Boolean range = (Boolean) slice.get("range");
             var m = new HashMap<>();
             m.put("sort", "value");
             m.put("sortOrder", "desc");
