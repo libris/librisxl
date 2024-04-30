@@ -38,7 +38,7 @@ public class ExportSizePredictor extends HouseKeeper {
 
         int items = countChanged("Item");
         int instances = countChanged("Instance");
-        int works = countChanged("Works");
+        int works = countChanged("Work");
         int topics = countChanged("Topic");
         int agents = countChanged("Agent");
 
