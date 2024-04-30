@@ -23,16 +23,75 @@ public class SimpleQueryTree {
 
     public record PropertyValue(String property, List<String> propertyPath, Operator operator,
                                 Value value) implements Node {
+        public PropertyValue toOrEquals() {
+            return switch (operator()) {
+                case GREATER_THAN ->
+                        new PropertyValue(property(), propertyPath(), Operator.GREATER_THAN_OR_EQUALS, value().increment());
+                case LESS_THAN ->
+                        new PropertyValue(property(), propertyPath(), Operator.LESS_THAN_OR_EQUALS, value().decrement());
+                default -> this;
+            };
+        }
+
+        public String toString() {
+            String sep = switch (operator()) {
+                case EQUALS, NOT_EQUALS -> ":";
+                case GREATER_THAN_OR_EQUALS -> ">=";
+                case GREATER_THAN -> ">";
+                case LESS_THAN_OR_EQUALS -> "<=";
+                case LESS_THAN -> "<";
+            };
+
+            String not = operator() == Operator.NOT_EQUALS ? "NOT " : "";
+            String path = String.join(".", propertyPath());
+            String value = value().string();
+
+            if (value() instanceof Link) {
+                value = Disambiguate.toPrefixed(value);
+            }
+
+            return not + quoteIfPhraseOrContainsSpecialSymbol(path) + sep + quoteIfPhraseOrContainsSpecialSymbol(value);
+        }
     }
 
     public record FreeText(Operator operator, String value) implements Node {
+        public String toString() {
+            String s = value();
+            if (operator() == Operator.NOT_EQUALS) {
+                s = "NOT " + s;
+            }
+            return s;
+        }
     }
 
     public sealed interface Value permits Link, Literal, VocabTerm {
         String string();
+
+        default boolean isNumeric() {
+            return false;
+        }
+
+        default Value increment() {
+            return this;
+        }
+
+        default Value decrement() {
+            return this;
+        }
     }
 
     public record Literal(String string) implements Value {
+        public boolean isNumeric() {
+            return string().matches("\\d+");
+        }
+
+        public Literal increment() {
+            return isNumeric() ? new Literal(Integer.toString(Integer.parseInt(string()) + 1)) : this;
+        }
+
+        public Literal decrement() {
+            return isNumeric() ? new Literal(Integer.toString(Integer.parseInt(string()) - 1)) : this;
+        }
     }
 
     public record Link(String string) implements Value {
@@ -126,6 +185,7 @@ public class SimpleQueryTree {
 
     public SimpleQueryTree andExtend(Node node) {
         var conjuncts = switch (tree) {
+            case null -> List.of(node);
             case And and -> {
                 var copy = new ArrayList<>(and.conjuncts());
                 if (!copy.contains(node)) {
@@ -171,6 +231,30 @@ public class SimpleQueryTree {
                 return tree;
             }
         }
+    }
+
+    public SimpleQueryTree removeTopLevelPvNodes(String property) {
+        return new SimpleQueryTree(removeTopLevelPvNodes(property, tree));
+    }
+
+    private static Node removeTopLevelPvNodes(String property, Node tree) {
+        return switch (tree) {
+            case And and -> {
+                List<Node> conjuncts = and.conjuncts()
+                        .stream()
+                        .filter(n -> !(n instanceof PropertyValue && ((PropertyValue) n).property().equals(property)))
+                        .collect(Collectors.toList());
+                if (conjuncts.isEmpty()) {
+                    yield null;
+                } else if (conjuncts.size() == 1) {
+                    yield conjuncts.getFirst();
+                } else {
+                    yield new And(conjuncts);
+                }
+            }
+            case PropertyValue pv -> pv.property().equals(property) ? null : pv;
+            default -> tree;
+        };
     }
 
     public Set<String> collectGivenTypes() {
@@ -257,60 +341,28 @@ public class SimpleQueryTree {
     }
 
     private String buildQueryString(Node node, boolean topLevel) {
-        switch (node) {
+        return switch (node) {
             case And and -> {
                 String andClause = and.conjuncts()
                         .stream()
                         .map(this::buildQueryString)
                         .collect(Collectors.joining(" "));
-                return topLevel ? andClause : "(" + andClause + ")";
+                yield topLevel ? andClause : "(" + andClause + ")";
             }
             case Or or -> {
                 String orClause = or.disjuncts()
                         .stream()
                         .map(this::buildQueryString)
                         .collect(Collectors.joining(" OR "));
-                return topLevel ? orClause : "(" + orClause + ")";
+                yield topLevel ? orClause : "(" + orClause + ")";
             }
-            case FreeText ft -> {
-                return freeTextToString(ft);
-            }
-            case PropertyValue pv -> {
-                return propertyValueToString(pv);
-            }
-        }
+            case FreeText ft -> ft.toString();
+            case PropertyValue pv -> pv.toString();
+        };
     }
 
     private String buildQueryString(Node node) {
         return buildQueryString(node, false);
-    }
-
-    private String freeTextToString(FreeText ft) {
-        String s = ft.value();
-        if (ft.operator() == Operator.NOT_EQUALS) {
-            s = "NOT " + s;
-        }
-        return s;
-    }
-
-    private String propertyValueToString(PropertyValue pv) {
-        String sep = switch (pv.operator()) {
-            case EQUALS, NOT_EQUALS -> ":";
-            case GREATER_THAN_OR_EQUALS -> ">=";
-            case GREATER_THAN -> ">";
-            case LESS_THAN_OR_EQUALS -> "<=";
-            case LESS_THAN -> "<";
-        };
-
-        String not = pv.operator() == Operator.NOT_EQUALS ? "NOT " : "";
-        String path = String.join(".", pv.propertyPath());
-        String value = pv.value().string();
-
-        if (pv.value() instanceof Link) {
-            value = Disambiguate.toPrefixed(value);
-        }
-
-        return not + quoteIfPhraseOrContainsSpecialSymbol(path) + sep + quoteIfPhraseOrContainsSpecialSymbol(value);
     }
 
     public void replaceTopLevelFreeText(String replacement) {

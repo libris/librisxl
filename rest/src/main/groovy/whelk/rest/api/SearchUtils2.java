@@ -61,9 +61,14 @@ public class SearchUtils2 {
         for (Map<String, Object> slice : sliceList) {
             String key = (String) ((List<?>) slice.get("dimensionChain")).getFirst();
             int limit = (Integer) slice.get("itemLimit");
-            var m = Map.of("sort", "value",
-                    "sortOrder", "desc",
-                    "size", limit);
+            String range = (String) slice.get("range");
+            var m = new HashMap<>();
+            m.put("sort", "value");
+            m.put("sortOrder", "desc");
+            m.put("size", limit);
+            if (range != null) {
+                m.put("range", range);
+            }
             statsfind.put(key, m);
         }
         return statsfind;
