@@ -174,7 +174,8 @@ public class SearchUtils2 {
             var filters = new ArrayList<>(DEFAULT_FILTERS);
             if (object != null) {
                 if (predicates.isEmpty()) {
-                    filters.add(SimpleQueryTree.pvEqualsLink("_links", object));
+                    // TODO: this also generates for instance "filter": { "simple_query_string": { "fields": ["@reverse.instanceOf._links"
+                    filters.add(SimpleQueryTree.pvEqualsLiteral("_links", object));
                 } else {
                     filters.addAll(predicates.stream().map(p -> SimpleQueryTree.pvEqualsLink(p, object)).toList());
                 }
