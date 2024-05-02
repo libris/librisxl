@@ -9,7 +9,7 @@ selectBySqlWhere(where) { DocumentItem bib ->
 
     if (record && work && instance) {
         record['mainEntity']['@id'] = instance['@id']
-        workId = work.remove('@id')
+        var workId = work.remove('@id')
         work.remove('sameAs')
         instance['instanceOf'] = work
         instance['sameAs'] = asList(instance['sameAs']) + [['@id': workId]]
