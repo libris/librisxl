@@ -9,9 +9,10 @@ selectBySqlWhere(where) { DocumentItem bib ->
 
     if (record && work && instance) {
         record['mainEntity']['@id'] = instance['@id']
-        work.remove('@id')
+        workId = work.remove('@id')
         work.remove('sameAs')
         instance['instanceOf'] = work
+        instance['sameAs'] = asList(instance['sameAs']) + [['@id': workId]]
         bib.doc.data['@graph'] = [record, instance]
         bib.scheduleSave(loud: true)
     } else {
