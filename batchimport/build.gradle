@@ -46,7 +46,7 @@ shadowJar {
 }
 
 jar {
-    dependsOn ':server-common:jar'
+    dependsOn ':whelk-core:jar'
     dependsOn(shadowJar)
 
     manifest {
