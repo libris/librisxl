@@ -12,6 +12,7 @@ if (item["hasComponent"] && item["hasComponent"]?.size() > 1) {
         if (c['shelfMark'] instanceof List) {
             def removedShelfMark = c['shelfMark'].removeAll { n ->
                 asList(n['label']).any { it.contains('Ref') }
+                change = true
             }
             if (c['shelfMark'].isEmpty()) {
                 c.remove('shelfMark')
