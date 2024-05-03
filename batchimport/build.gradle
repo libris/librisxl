@@ -59,4 +59,5 @@ jar {
     }
 
     archiveClassifier = "nonfat"
+    enabled = false
 }

@@ -69,6 +69,7 @@ jar {
     }
 
     archiveClassifier = "nonfat"
+    enabled = false
 }
 
 task(appRun, dependsOn: "classes", type: JavaExec) {
