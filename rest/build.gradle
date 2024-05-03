@@ -1,6 +1,11 @@
+plugins {
+    id "nebula.lint" version "16.16.0"
+}
+
 apply plugin: 'groovy'
 apply plugin: 'java-library'
 apply plugin: 'jacoco'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 def mainClassName = "whelk.RestServer"
 
@@ -93,8 +98,14 @@ dependencies {
     testImplementation 'cglib:cglib-nodep:3.1'
 }
 
+shadowJar {
+    mergeServiceFiles()
+    archiveClassifier = null // removes `-all` in the filename of the created .jar
+}
+
 jar {
     dependsOn ':server-common:jar'
+    dependsOn(shadowJar)
 
     manifest {
         attributes "Main-Class": mainClassName,
@@ -103,14 +114,7 @@ jar {
                 "Multi-Release": true
     }
 
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from {
-        configurations.runtimeClasspath.collect {
-            it.isDirectory() ? it : project.zipTree(it).matching {
-                exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA','build','.gradle/**','build.gradle','gradle','gradlew','gradlew.bat','test'
-            }
-        }
-    }
+    archiveClassifier = "nonfat"
 }
 
 task(appRun, dependsOn: "classes", type: JavaExec) {

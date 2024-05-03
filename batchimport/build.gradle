@@ -1,5 +1,6 @@
 apply plugin: 'application'
 apply plugin: 'groovy'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 repositories {
     mavenCentral()
@@ -40,8 +41,14 @@ application {
     mainClass = 'whelk.importer.Main'
 }
 
+shadowJar {
+    archiveClassifier = null // removes `-all` in the filename of the created .jar
+}
+
 jar {
     dependsOn ':whelk-core:jar'
+    dependsOn(shadowJar)
+
     manifest {
         attributes 'Implementation-Title':'Libris XL metadata importer',
                 'Implementation-Version': '1.0',
@@ -51,8 +58,5 @@ jar {
                 "Multi-Release": true
     }
 
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from {
-        configurations.runtimeClasspath.collect {it.isDirectory() ? it : zipTree(it) }
-    }
+    archiveClassifier = "nonfat"
 }
