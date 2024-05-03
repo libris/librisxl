@@ -127,8 +127,10 @@ class MarcFrameConverter implements FormatConverter {
 @Log
 class MarcConversion {
 
-    static MARC_CATEGORIES = ['bib', 'auth', 'hold']
-    static Map<String, Integer> ENTITY_ORDER = ['?record': 0, '?thing': 1]
+    static final MARC_CATEGORIES = ['bib', 'auth', 'hold']
+    static final Map<String, Integer> ENTITY_ORDER = Collections.unmodifiableMap(
+        ['?record': 0, '?thing': 1]
+    )
 
     MarcFrameConverter converter
     List<MarcFramePostProcStep> sharedPostProcSteps
@@ -412,7 +414,7 @@ class MarcConversion {
         ArrayList entities = []
 
         state.entityMap.entrySet().sort {
-            ENTITY_ORDER.get(it.key, ENTITY_ORDER.size())
+            ENTITY_ORDER.getOrDefault(it.key, ENTITY_ORDER.size())
         }.findResults {
             if (!marcRuleSet.topPendingResources[it.key].embedded) {
                 entities << it.value
