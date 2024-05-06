@@ -1,4 +1,7 @@
+def mainClassName = "whelk.gui.GuiWhelkTool"
+
 apply plugin: 'application'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 repositories {
     mavenCentral()
@@ -6,22 +9,25 @@ repositories {
 
 dependencies {
     implementation project(':whelktool')
+    implementation project(':whelk-core')
+}
+
+shadowJar {
+    archiveClassifier = null // removes `-all` in the filename of the created .jar
+    project.setProperty("mainClassName", mainClassName)
 }
 
 jar {
+    dependsOn ':server-common:jar'
+    dependsOn(shadowJar)
+
     manifest {
-        attributes "Main-Class": "whelk.gui.GuiWhelkTool",
+        attributes "Main-Class": mainClassName,
                 // log4j uses multi-release to ship different stack walking implementations for different java
                 // versions. Since we repackage everything as a fat jar, that jar must also be multi-release.
                 "Multi-Release": true
     }
 
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-    from {
-        configurations.runtimeClasspath.collect {
-            it.isDirectory() ? it : project.zipTree(it).matching {
-            }
-        }
-    }
+    archiveClassifier = "nonfat"
+    enabled = false
 }
