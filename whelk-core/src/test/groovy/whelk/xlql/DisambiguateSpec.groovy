@@ -84,14 +84,16 @@ class DisambiguateSpec extends Specification {
     }
 
     def "expand complex propertyChainAxiom"() {
+        given:
+        def p = new Path(before)
+        disambiguate.expandChainAxiom(p)
+
         expect:
-        disambiguate.expandChainAxiom(path).with {
-            it.path() == extendedPath && it.defaultFields() == defaultFields
-        }
+        p.stem == stem && p.branches as Set == branches
 
         where:
-        path       | extendedPath              | defaultFields
-        ['isbn']   | ['identifiedBy', 'value'] | [new DefaultField(['identifiedBy', '@type'], "ISBN")]
-        ['author'] | ['contribution', 'agent'] | [new DefaultField(['contribution', 'role'], "https://id.kb.se/relator/author")]
+        before     | stem             | branches
+        ['isbn']   | ['identifiedBy'] | [new Path.Branch(['value']), new Path.Branch(['rdf:type'], new SimpleQueryTree.VocabTerm("ISBN"))] as Set
+        ['author'] | ['contribution'] | [new Path.Branch(['agent']), new Path.Branch(['role'], new SimpleQueryTree.Link("https://id.kb.se/relator/author"))] as Set
     }
 }
