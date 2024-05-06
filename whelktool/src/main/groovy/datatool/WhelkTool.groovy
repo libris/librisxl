@@ -73,6 +73,7 @@ class WhelkTool {
     private String chosenAnswer = 'y'
 
     boolean allowLoud
+    boolean allowIdRemoval
 
     private Throwable errorDetected
 
@@ -658,6 +659,9 @@ class WhelkTool {
 
     private void run() {
         whelk.setSkipIndex(skipIndex)
+        if (allowIdRemoval) {
+            whelk.storage.doVerifyDocumentIdRetention = false
+        }
 
         log "Running Whelk against:"
         log "  PostgreSQL:"
@@ -675,6 +679,7 @@ class WhelkTool {
         if (noThreads) log "  noThreads"
         if (limit > -1) log "  limit: $limit"
         if (allowLoud) log "  allowLoud"
+        if (allowIdRemoval) log "  allowIdRemoval"
         log()
 
         bindings = createMainBindings()
@@ -729,6 +734,7 @@ class WhelkTool {
         cli.s(longOpt: 'step', 'Change one document at a time, prompting to continue.')
         cli.l(longOpt: 'limit', args: 1, argName: 'LIMIT', 'Amount of documents to process.')
         cli.a(longOpt: 'allow-loud', 'Allow scripts to do loud modifications.')
+        cli.idchg(longOpt: 'allow-id-removal', '[UNSAFE] Allow script to remove document ids, e.g. sameAs.')
         cli.n(longOpt: 'stats-num-ids', args: 1, 'Number of ids to print per entry in STATISTICS.txt.')
 
         def options = cli.parse(args)
@@ -748,6 +754,7 @@ class WhelkTool {
         tool.numThreads = options.t ? Integer.parseInt(options.t) : -1
         tool.limit = options.l ? Integer.parseInt(options.l) : -1
         tool.allowLoud = options.a
+        tool.allowIdRemoval = options.idchg
         tool.run()
     }
 
