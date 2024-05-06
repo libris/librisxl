@@ -4,4 +4,7 @@ selectBySqlWhere(where) { doc ->
     if (doc.graph[1]['sameAs'].removeIf{ it['@id'].endsWith('#work') }) {
         doc.scheduleSave()
     }
+    if (doc.graph[1]['sameAs'].isEmpty()) {
+        doc.graph[1].remove('sameAs')
+    }
 }
