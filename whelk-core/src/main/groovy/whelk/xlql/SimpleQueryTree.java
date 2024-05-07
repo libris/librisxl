@@ -51,7 +51,7 @@ public class SimpleQueryTree {
                 value = Disambiguate.toPrefixed(value);
             }
 
-            if (propertyPath().size() == 1) {
+            if (path().size() == 1) {
                 path = disambiguate.getQueryCode(property()).orElse(path);
             }
 
