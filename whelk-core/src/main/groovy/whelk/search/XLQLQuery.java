@@ -651,13 +651,14 @@ public class XLQLQuery {
 
         Map<String, Object> template = new LinkedHashMap<>();
 
-        var placeholderNode = new SimpleQueryTree.FreeText(Operator.EQUALS, String.format("{?%s}", property));
+        var variable = disambiguate.getQueryCode(property).orElse(property);
+        var placeholderNode = new SimpleQueryTree.FreeText(Operator.EQUALS, String.format("{?%s}", variable));
         var templateQueryString = tree.andExtend(placeholderNode).toQueryString(disambiguate);
         var templateUrl = makeFindUrl(tree.getFreeTextPart(), templateQueryString, nonQueryParams);
         template.put("template", templateUrl);
 
         var mapping = new LinkedHashMap<>();
-        mapping.put("variable", property);
+        mapping.put("variable", variable);
         mapping.put(Operator.GREATER_THAN_OR_EQUALS.termKey, Objects.toString(min, ""));
         mapping.put(Operator.LESS_THAN_OR_EQUALS.termKey, Objects.toString(max, ""));
         template.put("mapping", mapping);
