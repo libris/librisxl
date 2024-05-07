@@ -302,6 +302,7 @@ public class SimpleQueryTree {
     public List<PropertyValue> getTopLevelPvNodes() {
         if (topPvNodes == null) {
             topPvNodes = switch (this.tree) {
+                case null -> Collections.emptyList();
                 case And and -> and.conjuncts()
                         .stream()
                         .filter(node -> node instanceof PropertyValue)
