@@ -35,7 +35,7 @@ public class SearchUtils2 {
         public static final String SIMPLE_FREETEXT = "_i";
         public static final String SORT = "_sort";
         public static final String LIMIT = "_limit";
-        public static final String OFFSET = "offSet";
+        public static final String OFFSET = "_offset";
         public static final String LENS = "_lens";
         public static final String OBJECT = "_o";
         public static final String PREDICATES = "_p";
