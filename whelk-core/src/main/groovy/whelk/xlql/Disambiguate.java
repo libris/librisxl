@@ -248,6 +248,16 @@ public class Disambiguate {
                 addAllMappings(termDefinition, termKey, TermType.PROPERTY, whelk);
             }
         }
+
+        for (var m : ambiguousPropertyAliases.entrySet()) {
+            for (String prop : m.getValue()) {
+                Map<?, ?> propDef = jsonLd.vocabIndex.get(prop);
+                String queryCode = (String) propDef.get("librisQueryCode");
+                if (m.getKey().toUpperCase().equals(queryCode)) {
+                    propertyAliasMappings.put(m.getKey(), prop);
+                }
+            }
+        }
     }
 
     private void addAllMappings(Map<?, ?> termDefinition, String termKey, TermType termType, Whelk whelk) {
