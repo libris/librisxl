@@ -574,9 +574,10 @@ public class XLQLQuery {
 
         propToBuckets.forEach((property, buckets) -> {
             var sliceNode = new LinkedHashMap<>();
-            var observations = getObservations(buckets, sqt, nonQueryParams);
+            var isRange = rangeProps.contains(property);
+            var observations = getObservations(buckets, isRange ? sqt.removeTopLevelRangeNodes(property) : sqt, nonQueryParams);
             if (!observations.isEmpty()) {
-                if (rangeProps.contains(property)) {
+                if (isRange) {
                     sliceNode.put("search", getRangeTemplate(property, sqt, makeParams(nonQueryParams)));
                 }
                 sliceNode.put("dimension", property);

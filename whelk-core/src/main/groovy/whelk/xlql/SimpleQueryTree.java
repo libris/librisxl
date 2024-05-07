@@ -238,16 +238,24 @@ public class SimpleQueryTree {
         }
     }
 
-    public SimpleQueryTree removeTopLevelPvNodes(String property) {
-        return new SimpleQueryTree(removeTopLevelPvNodes(property, tree));
+    public SimpleQueryTree removeTopLevelRangeNodes(String property) {
+        var rangeOps = Set.of(Operator.GREATER_THAN_OR_EQUALS, Operator.GREATER_THAN, Operator.LESS_THAN, Operator.LESS_THAN_OR_EQUALS);
+        return new SimpleQueryTree(removeTopLevelPvNodes(property, tree, rangeOps));
     }
 
-    private static Node removeTopLevelPvNodes(String property, Node tree) {
+    public SimpleQueryTree removeTopLevelPvNodes(String property) {
+        return new SimpleQueryTree(removeTopLevelPvNodes(property, tree, Collections.emptySet()));
+    }
+
+    private static Node removeTopLevelPvNodes(String property, Node tree, Set<Operator> operators) {
         return switch (tree) {
             case And and -> {
                 List<Node> conjuncts = and.conjuncts()
                         .stream()
-                        .filter(n -> !(n instanceof PropertyValue && ((PropertyValue) n).property().equals(property)))
+                        .filter(n -> !(n instanceof PropertyValue
+                                && ((PropertyValue) n).property().equals(property)
+                                && (operators.isEmpty() || operators.contains(((PropertyValue) n).operator())))
+                        )
                         .collect(Collectors.toList());
                 if (conjuncts.isEmpty()) {
                     yield null;
