@@ -251,9 +251,7 @@ public class Disambiguate {
 
         for (var m : ambiguousPropertyAliases.entrySet()) {
             for (String prop : m.getValue()) {
-                Map<?, ?> propDef = jsonLd.vocabIndex.get(prop);
-                String queryCode = (String) propDef.get("librisQueryCode");
-                if (m.getKey().toUpperCase().equals(queryCode)) {
+                if (getQueryCode(prop).filter(m.getKey().toUpperCase()::equals).isPresent()) {
                     propertyAliasMappings.put(m.getKey(), prop);
                 }
             }
@@ -340,6 +338,11 @@ public class Disambiguate {
                 .forEach(superProp -> getDefinition(superProp, whelk).ifPresent(inheritable::add));
 
         return inheritable;
+    }
+
+    public Optional<String> getQueryCode(String property) {
+        return Optional.ofNullable((Map<?, ?>) jsonLd.vocabIndex.get(property))
+                .map(propDef -> (String) propDef.get("librisQueryCode"));
     }
 
     private Optional<String> getDomainIri(Map<?, ?> propertyDefinition) {

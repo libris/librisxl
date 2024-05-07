@@ -76,6 +76,10 @@ public class XLQLQuery {
         return new SimpleQueryTree(flattened, disambiguate);
     }
 
+    public String sqtToQueryString(SimpleQueryTree sqt) {
+        return sqt.toQueryString(disambiguate);
+    }
+
     public SimpleQueryTree addFilters(SimpleQueryTree sqt, List<SimpleQueryTree.PropertyValue> filters) {
         for (SimpleQueryTree.PropertyValue pv : filters) {
             if (sqt.getTopLevelPvNodes().stream().noneMatch(n -> n.property().equals(pv.property()))) {
@@ -271,8 +275,8 @@ public class XLQLQuery {
         return mappingsNode;
     }
 
-    private static String makeFindUrl(SimpleQueryTree sqt, List<String> nonQueryParams) {
-        return makeFindUrl(sqt.getFreeTextPart(), sqt.toQueryString(), nonQueryParams);
+    private String makeFindUrl(SimpleQueryTree sqt, List<String> nonQueryParams) {
+        return makeFindUrl(sqt.getFreeTextPart(), sqt.toQueryString(disambiguate), nonQueryParams);
     }
 
     private static String makeFindUrl(String i, String q, List<String> nonQueryParams) {
@@ -612,7 +616,7 @@ public class XLQLQuery {
         return observations;
     }
 
-    private static Map<String, Object> getRangeTemplate(String property, SimpleQueryTree sqt, List<String> nonQueryParams) {
+    private Map<String, Object> getRangeTemplate(String property, SimpleQueryTree sqt, List<String> nonQueryParams) {
         var GtLtNodes = sqt.getTopLevelPvNodes().stream()
                 .filter(pv -> pv.property().equals(property))
                 .filter(pv -> switch (pv.operator()) {
@@ -648,7 +652,7 @@ public class XLQLQuery {
         Map<String, Object> template = new LinkedHashMap<>();
 
         var placeholderNode = new SimpleQueryTree.FreeText(Operator.EQUALS, String.format("{?%s}", property));
-        var templateQueryString = tree.andExtend(placeholderNode).toQueryString();
+        var templateQueryString = tree.andExtend(placeholderNode).toQueryString(disambiguate);
         var templateUrl = makeFindUrl(tree.getFreeTextPart(), templateQueryString, nonQueryParams);
         template.put("template", templateUrl);
 
