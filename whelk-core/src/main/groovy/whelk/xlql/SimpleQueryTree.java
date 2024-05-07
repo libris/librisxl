@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import static whelk.search.XLQLQuery.encodeUri;
 import static whelk.search.XLQLQuery.quoteIfPhraseOrContainsSpecialSymbol;
 
+import static whelk.xlql.Disambiguate.RDF_TYPE;
 
 public class SimpleQueryTree {
     public sealed interface Node permits And, Or, PropertyValue, FreeText {
@@ -21,14 +22,14 @@ public class SimpleQueryTree {
     public record Or(List<Node> disjuncts) implements Node {
     }
 
-    public record PropertyValue(String property, List<String> propertyPath, Operator operator,
+    public record PropertyValue(String property, List<String> path, Operator operator,
                                 Value value) implements Node {
         public PropertyValue toOrEquals() {
             return switch (operator()) {
                 case GREATER_THAN ->
-                        new PropertyValue(property(), propertyPath(), Operator.GREATER_THAN_OR_EQUALS, value().increment());
+                        new PropertyValue(property(), path(), Operator.GREATER_THAN_OR_EQUALS, value().increment());
                 case LESS_THAN ->
-                        new PropertyValue(property(), propertyPath(), Operator.LESS_THAN_OR_EQUALS, value().decrement());
+                        new PropertyValue(property(), path(), Operator.LESS_THAN_OR_EQUALS, value().decrement());
                 default -> this;
             };
         }
@@ -43,7 +44,7 @@ public class SimpleQueryTree {
             };
 
             String not = operator() == Operator.NOT_EQUALS ? "NOT " : "";
-            String path = String.join(".", propertyPath());
+            String path = String.join(".", path());
             String value = value().string();
 
             if (value() instanceof Link) {
@@ -266,7 +267,7 @@ public class SimpleQueryTree {
             case And and -> and.conjuncts().forEach(c -> collectGivenTypes(c, types));
             case Or or -> or.disjuncts().forEach(d -> collectGivenTypes(d, types));
             case PropertyValue pv -> {
-                if (List.of("rdf:type").equals(pv.propertyPath())) {
+                if (List.of(RDF_TYPE).equals(pv.path())) {
                     types.add(pv.value().string());
                 }
             }

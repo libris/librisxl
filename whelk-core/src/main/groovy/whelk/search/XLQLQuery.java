@@ -39,6 +39,8 @@ import java.util.stream.Stream;
 import static whelk.component.ElasticSearch.flattenedLangMapKey;
 import static whelk.util.DocumentUtil.NOP;
 
+import static whelk.xlql.Disambiguate.RDF_TYPE;
+
 public class XLQLQuery {
     private final Whelk whelk;
     private final Disambiguate disambiguate;
@@ -47,7 +49,8 @@ public class XLQLQuery {
 
     public final EsMappings esMappings;
 
-    private static final String FILTERED_AGG = "a";
+    private static final String FILTERED_AGG_NAME = "a";
+    private static final String NESTED_AGG_NAME = "n";
     private static final int DEFAULT_BUCKET_SIZE = 10;
     private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper();
 
@@ -58,12 +61,8 @@ public class XLQLQuery {
         this.esMappings = new EsMappings(whelk.elastic != null ? whelk.elastic.getMappings() : Collections.emptyMap());
     }
 
-    public QueryTree getQueryTree(SimpleQueryTree sqt) {
-        return new QueryTree(sqt, disambiguate);
-    }
-
     public QueryTree getQueryTree(SimpleQueryTree sqt, Disambiguate.OutsetType outsetType) {
-        return new QueryTree(sqt, disambiguate, outsetType);
+        return new QueryTree(sqt, disambiguate, outsetType, esMappings.nestedFields);
     }
 
     public SimpleQueryTree getSimpleQueryTree(String queryString) throws InvalidQueryException {
@@ -192,7 +191,7 @@ public class XLQLQuery {
     }
 
     private Map<String, Object> esFilter(QueryTree.Field f) {
-        String path = f.path().stringify();
+        String path = f.path();
 
         if (Operator.WILDCARD.equals(f.value())) {
             return switch (f.operator()) {
@@ -214,44 +213,14 @@ public class XLQLQuery {
     }
 
     private Map<String, Object> esNestedFilter(QueryTree.Nested n) {
-        var paths = n.fields()
-                .stream()
-                .map(f -> f.path().path)
-                .toList();
-
-        int shortestPath = paths.stream()
-                .mapToInt(List::size)
-                .min()
-                .orElseThrow();
-
-        List<String> stem = new ArrayList<>();
-        for (int i = 0; i < shortestPath; i++) {
-            int idx = i;
-            var unique = paths.stream()
-                    .map(p -> p.get(idx))
-                    .collect(Collectors.toSet());
-            if (unique.size() == 1) {
-                stem.add(unique.iterator().next());
-            }
-        }
-
-        if (stem.isEmpty() || !esMappings.isNestedField(stem.getLast())) {
-            // Treat as regular fields
-            var clause = n.fields()
-                    .stream()
-                    .map(this::esFilter)
-                    .toList();
-            return n.operator() == Operator.NOT_EQUALS ? shouldWrap(clause) : mustWrap(clause);
-        }
-
         var musts = n.fields()
                 .stream()
-                .map(f -> Map.of("match", Map.of(f.path().stringify(), f.value())))
+                .map(f -> Map.of("match", Map.of(f.path(), f.value())))
                 .toList();
 
         Map<String, Object> nested = Map.of(
                 "nested", Map.of(
-                        "path", String.join(".", stem),
+                        "path", String.join(".", n.stem()),
                         "query", mustWrap(musts)
                 )
         );
@@ -355,8 +324,8 @@ public class XLQLQuery {
     private Map<String, Object> propertyValueMapping(SimpleQueryTree.PropertyValue pv, Map<String, String> aliases) {
         Map<String, Object> m = new LinkedHashMap<>();
 
-        if (pv.propertyPath().size() > 1) {
-            var propertyChainAxiom = pv.propertyPath().stream()
+        if (pv.path().size() > 1) {
+            var propertyChainAxiom = pv.path().stream()
                     .map(this::getDefinition)
                     .filter(Objects::nonNull)
                     .toList();
@@ -470,32 +439,57 @@ public class XLQLQuery {
             String sort = "key".equals(value.get("sort")) ? "_key" : "_count";
             String sortOrder = "asc".equals(value.get("sort")) ? "asc" : "desc";
 
-            Path path = new Path(List.of(property));
-
-            if (disambiguate.isObjectProperty(property) && !disambiguate.hasVocabValue(property)) {
-                path.appendId();
-            }
-
-            List<String> altPaths = path.expand(property, disambiguate, outsetType)
-                    .stream()
-                    .map(Path::stringify)
-                    .toList();
-
             int size = Optional.ofNullable((Integer) value.get("size")).orElse(DEFAULT_BUCKET_SIZE);
 
-            for (String p : altPaths) {
-                var aggs = Map.of(FILTERED_AGG,
-                        Map.of("terms",
-                                Map.of("field", p,
-                                        "size", size,
-                                        "order", Map.of(sort, sortOrder))));
+            Path path = new Path(List.of(property));
+            path.expand(property, disambiguate, outsetType);
+
+            for (Path stem : path.getAltStems()) {
+                var altPaths = path.branches.stream().map(stem::attachBranch).toList();
+                var p = switch (altPaths.size()) {
+                    case 0 -> stem.stringify();
+                    case 1 -> altPaths.getFirst().stringify();
+                    // TODO: E.g. author (combining contribution.role and contribution.agent)
+                    default -> throw new RuntimeException("Can't handle combined fields in aggs query");
+                };
+
+                // Core agg query
+                var aggs = Map.of("terms",
+                        Map.of("field", p,
+                                "size", size,
+                                "order", Map.of(sort, sortOrder)));
+
+                // If field is nested, wrap agg query with nested
+                var nested = getNestedPath(p);
+                if (nested.isPresent()) {
+                    aggs = Map.of("nested", Map.of("path", nested.get()),
+                            "aggs", Map.of(NESTED_AGG_NAME, aggs));
+                }
+
+                // Wrap agg query with a filter
                 var filter = mustWrap(Collections.emptyList());
-                query.put(p, Map.of("aggs", aggs, "filter", filter));
+                aggs = Map.of("aggs", Map.of(FILTERED_AGG_NAME, aggs),
+                        "filter", filter);
+
+                query.put(p, aggs);
                 expandedPathToProperty.put(p, property);
             }
         }
 
         return query;
+    }
+
+    private Optional<String> getNestedPath(String path) {
+        if (esMappings.isNestedField(path)) {
+            return Optional.of(path);
+        }
+        return esMappings.nestedFields.stream().filter(path::startsWith).findFirst();
+    }
+
+    public Map<String, Object> getStats(Map<String, Object> esResponse, Map<String, Object> statsRepr, SimpleQueryTree sqt, Map<String, String> nonQueryParams, Map<String, String> aliases) {
+        var buckets = collectBuckets(esResponse, statsRepr);
+        var rangeProps = getRangeProperties(statsRepr);
+        return buildStats(buckets, sqt, nonQueryParams, aliases, rangeProps);
     }
 
     // Problem: Same value in different fields will be counted twice, e.g. contribution.agent + instanceOf.contribution.agent
@@ -513,15 +507,19 @@ public class XLQLQuery {
             var path = (String) entry.getKey();
             var m = (Map<?, ?>) entry.getValue();
 
-            var filteredAgg = (Map<?, ?>) m.get(FILTERED_AGG);
-            if (filteredAgg == null) {
+            var agg = (Map<?, ?>) m.get(FILTERED_AGG_NAME);
+            if (agg == null) {
                 continue;
+            }
+
+            if (agg.containsKey(NESTED_AGG_NAME)) {
+                agg = (Map<?, ?>) agg.get(NESTED_AGG_NAME);
             }
 
             var property = expandedPathToProperty.get(path);
             boolean isLinked = path.endsWith(JsonLd.ID_KEY);
 
-            ((List<?>) filteredAgg.get("buckets"))
+            ((List<?>) agg.get("buckets"))
                     .stream()
                     .map(Map.class::cast)
                     .forEach(b -> {
@@ -562,17 +560,11 @@ public class XLQLQuery {
         return propertyToBuckets;
     }
 
-    public Map<String, Object> getStats(Map<String, Object> esResponse, Map<String, Object> statsRepr, SimpleQueryTree sqt, Map<String, String> aliases, Map<String, String> nonQueryParams) {
-        var buckets = collectBuckets(esResponse, statsRepr);
-        var rangeProps = getRangeProperties(statsRepr);
-        return buildStats(buckets, sqt, nonQueryParams, aliases, rangeProps);
-    }
-
     private Map<String, Object> buildStats(
             Map<String, Map<SimpleQueryTree.PropertyValue, Integer>> propToBuckets,
             SimpleQueryTree sqt,
-            Map<String, String> aliases,
             Map<String, String> nonQueryParams,
+            Map<String, String> aliases,
             Set<String> rangeProps) {
         var sliceByDimension = new LinkedHashMap<>();
 
@@ -674,11 +666,11 @@ public class XLQLQuery {
 
         switch (outsetType) {
             case INSTANCE -> {
-                m.put("rdf:type", "instanceType");
+                m.put(RDF_TYPE, "instanceType");
                 m.put("instanceOfType", "workType");
             }
             case WORK -> {
-                m.put("rdf:type", "workType");
+                m.put(RDF_TYPE, "workType");
                 m.put("hasInstanceType", "instanceType");
             }
         }

@@ -20,12 +20,13 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static whelk.util.Jackson.mapper;
+import static whelk.xlql.Disambiguate.RDF_TYPE;
 
 public class SearchUtils2 {
     final static int DEFAULT_LIMIT = 200;
     final static int MAX_LIMIT = 4000;
     final static int DEFAULT_OFFSET = 0;
-    private static final List<SimpleQueryTree.PropertyValue> DEFAULT_FILTERS = List.of(SimpleQueryTree.pvEqualsVocabTerm("rdf:type", "Work"));
+    private static final List<SimpleQueryTree.PropertyValue> DEFAULT_FILTERS = List.of(SimpleQueryTree.pvEqualsVocabTerm(RDF_TYPE, "Work"));
 
     Whelk whelk;
     XLQLQuery xlqlQuery;

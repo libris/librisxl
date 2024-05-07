@@ -5,11 +5,15 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
+
 import java.util.stream.StreamSupport;
 
 import static whelk.xlql.Operator.EQUALS;
+
+import static whelk.xlql.Disambiguate.RDF_TYPE;
+
 
 public class QueryTree {
     public sealed interface Node permits And, Or, Nested, Field, FreeText {
@@ -31,10 +35,10 @@ public class QueryTree {
         }
     }
 
-    public record Nested(List<Field> fields, Operator operator) implements Node {
+    public record Nested(List<Field> fields, Operator operator, String stem) implements Node {
     }
 
-    public record Field(Path path, Operator operator, String value) implements Node {
+    public record Field(String path, Operator operator, String value) implements Node {
     }
 
     public record FreeText(Operator operator, String value) implements Node {
@@ -43,13 +47,12 @@ public class QueryTree {
         }
     }
 
+    private final Set<String> esNestedFields;
+
     public Node tree;
 
-    public QueryTree(SimpleQueryTree sqt, Disambiguate disambiguate) {
-        this.tree = sqtToQt(sqt.tree, disambiguate, Disambiguate.OutsetType.RESOURCE);
-    }
-
-    public QueryTree(SimpleQueryTree sqt, Disambiguate disambiguate, Disambiguate.OutsetType outsetType) {
+    public QueryTree(SimpleQueryTree sqt, Disambiguate disambiguate, Disambiguate.OutsetType outsetType, Set<String> esNestedFields) {
+        this.esNestedFields = esNestedFields;
         this.tree = sqtToQt(sqt.tree, disambiguate, outsetType);
     }
 
@@ -64,6 +67,7 @@ public class QueryTree {
     private static Iterable<Node> allDescendants(Node node) {
         Iterator<Node> i = new Iterator<>() {
             List<Node> nodes;
+
             @Override
             public boolean hasNext() {
                 if (nodes == null) {
@@ -84,9 +88,10 @@ public class QueryTree {
         return () -> i;
     }
 
-    private static Node sqtToQt(SimpleQueryTree.Node sqtNode, Disambiguate disambiguate, Disambiguate.OutsetType outset) {
+    private Node sqtToQt(SimpleQueryTree.Node sqtNode, Disambiguate disambiguate, Disambiguate.OutsetType outset) {
         return switch (sqtNode) {
             case SimpleQueryTree.And and -> {
+                // TODO: merge nested fields? E.g. itemHeldBy + hasItem.x
                 List<Node> conjuncts = and.conjuncts()
                         .stream()
                         .map(c -> sqtToQt(c, disambiguate, outset))
@@ -105,29 +110,39 @@ public class QueryTree {
         };
     }
 
-    private static Node buildField(SimpleQueryTree.PropertyValue pv, Disambiguate disambiguate, Disambiguate.OutsetType outset) {
-        boolean isAccuratePath = pv.propertyPath().size() > 1;
+    private Node buildField(SimpleQueryTree.PropertyValue pv, Disambiguate disambiguate, Disambiguate.OutsetType outset) {
+        boolean isAccuratePath = pv.path().size() > 1;
 
-        Path path = new Path(pv.propertyPath());
+        Path path = new Path(pv.path());
         Operator operator = pv.operator();
         String value = pv.value().string();
 
-        if (disambiguate.isObjectProperty(pv.property())) {
-            switch (pv.value()) {
-                case SimpleQueryTree.Link ignored -> path.appendId();
-                case SimpleQueryTree.Literal ignored -> path.appendUnderscoreStr();
-                case SimpleQueryTree.VocabTerm ignored -> {}
+        if (isAccuratePath) {
+            return new Field(path.stringify(), operator, value);
+        }
+
+        if (RDF_TYPE.equals(pv.property())) {
+            return buildTypeField(pv, path.stringify(), disambiguate);
+        }
+
+        path.expand(pv.property(), disambiguate, outset, pv.value());
+
+        List<Node> altFields = new ArrayList<>();
+        for (Path stem : path.getAltStems()) {
+            var fields = path.branches.isEmpty()
+                    ? List.of(new Field(stem.stringify(), operator, value))
+                    : path.branches.stream()
+                    .map(b -> new Field(stem.attachBranch(b).stringify(), operator, b.value().string()))
+                    .toList();
+            var nested = getNestedPath(stem.stringify());
+            if (nested.isPresent()) {
+                altFields.add(new Nested(fields, operator, nested.get()));
+            } else {
+                altFields.add(fields.size() > 1
+                        ? new And(fields.stream().map(Node.class::cast).toList())
+                        : fields.getFirst());
             }
         }
-
-        if (isAccuratePath) {
-            return new Field(path, operator, value);
-        }
-
-        List<Node> altFields = path.expand(pv.property(), disambiguate, outset)
-                .stream()
-                .map(p -> newFields(pv, p, disambiguate))
-                .collect(Collectors.toList());
 
         if (altFields.size() == 1) {
             return altFields.getFirst();
@@ -136,33 +151,7 @@ public class QueryTree {
         return operator == Operator.NOT_EQUALS ? new And(altFields) : new Or(altFields);
     }
 
-    static Node newFields(SimpleQueryTree.PropertyValue pv, Path path, Disambiguate disambiguate) {
-        if ("rdf:type".equals(pv.property())) {
-            return buildTypeField(pv, path, disambiguate);
-        }
-
-        Field f = new Field(path, pv.operator(), pv.value().string());
-
-        if (path.defaultFields.isEmpty()) {
-            return f;
-        }
-
-        List<Field> fields = new ArrayList<>(List.of(f));
-
-        path.defaultFields.forEach(df -> {
-                    Path dfPath = new Path(df.path());
-                    String property = df.path().getLast();
-                    if (disambiguate.isObjectProperty(property) && !disambiguate.hasVocabValue(property)) {
-                        dfPath.appendId();
-                    }
-                    fields.add(new Field(dfPath, pv.operator(), df.value()));
-                }
-        );
-
-        return new Nested(fields, pv.operator());
-    }
-
-    private static Node buildTypeField(SimpleQueryTree.PropertyValue pv, Path path, Disambiguate disambiguate) {
+    private static Node buildTypeField(SimpleQueryTree.PropertyValue pv, String path, Disambiguate disambiguate) {
         Set<String> altTypes = "Work".equals(pv.value().string())
                 ? disambiguate.workTypes
                 : ("Instance".equals(pv.value().string()) ? disambiguate.instanceTypes : Collections.emptySet());
@@ -177,5 +166,12 @@ public class QueryTree {
                 .toList();
 
         return pv.operator() == Operator.NOT_EQUALS ? new And(altFields) : new Or(altFields);
+    }
+
+    private Optional<String> getNestedPath(String path) {
+        if (esNestedFields.contains(path)) {
+            return Optional.of(path);
+        }
+        return esNestedFields.stream().filter(path::startsWith).findFirst();
     }
 }
