@@ -248,14 +248,15 @@ public class SimpleQueryTree {
     }
 
     private static Node removeTopLevelPvNodes(String property, Node tree, Set<Operator> operators) {
+        Predicate<Node> p = (node -> node instanceof PropertyValue
+                && ((PropertyValue) node).property().equals(property)
+                && (operators.isEmpty() || operators.contains(((PropertyValue) node).operator())));
+
         return switch (tree) {
             case And and -> {
                 List<Node> conjuncts = and.conjuncts()
                         .stream()
-                        .filter(n -> !(n instanceof PropertyValue
-                                && ((PropertyValue) n).property().equals(property)
-                                && (operators.isEmpty() || operators.contains(((PropertyValue) n).operator())))
-                        )
+                        .filter(Predicate.not(p))
                         .collect(Collectors.toList());
                 if (conjuncts.isEmpty()) {
                     yield null;
@@ -265,8 +266,7 @@ public class SimpleQueryTree {
                     yield new And(conjuncts);
                 }
             }
-            case PropertyValue pv -> pv.property().equals(property) ? null : pv;
-            default -> tree;
+            default -> p.test(tree) ? null : tree;
         };
     }
 
