@@ -440,7 +440,7 @@ public class Disambiguate {
                 .anyMatch(this::isVocabTerm);
     }
 
-    private boolean isProperty(String termKey) {
+    public boolean isProperty(String termKey) {
         return Optional.ofNullable(jsonLd.vocabIndex.get(termKey))
                 .map(Disambiguate::isProperty)
                 .orElse(false);

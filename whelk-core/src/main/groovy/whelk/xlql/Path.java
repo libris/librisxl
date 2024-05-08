@@ -41,7 +41,7 @@ public class Path {
     public void expand(String property, Disambiguate disambiguate, Disambiguate.OutsetType outsetType, SimpleQueryTree.Value value) {
         expandChainAxiom(disambiguate);
 
-        if (!disambiguate.isType(property)) {
+        if (disambiguate.isProperty(property) && !disambiguate.isType(property)) {
             String domain = disambiguate.getDomain(property);
 
             Disambiguate.DomainCategory domainCategory = disambiguate.getDomainCategory(domain);
