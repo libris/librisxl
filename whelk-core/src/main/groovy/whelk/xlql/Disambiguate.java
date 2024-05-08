@@ -248,6 +248,14 @@ public class Disambiguate {
                 addAllMappings(termDefinition, termKey, TermType.PROPERTY, whelk);
             }
         }
+
+        for (var m : ambiguousPropertyAliases.entrySet()) {
+            for (String prop : m.getValue()) {
+                if (getQueryCode(prop).filter(m.getKey().toUpperCase()::equals).isPresent()) {
+                    propertyAliasMappings.put(m.getKey(), prop);
+                }
+            }
+        }
     }
 
     private void addAllMappings(Map<?, ?> termDefinition, String termKey, TermType termType, Whelk whelk) {
@@ -330,6 +338,11 @@ public class Disambiguate {
                 .forEach(superProp -> getDefinition(superProp, whelk).ifPresent(inheritable::add));
 
         return inheritable;
+    }
+
+    public Optional<String> getQueryCode(String property) {
+        return Optional.ofNullable((Map<?, ?>) jsonLd.vocabIndex.get(property))
+                .map(propDef -> (String) propDef.get("librisQueryCode"));
     }
 
     private Optional<String> getDomainIri(Map<?, ?> propertyDefinition) {
@@ -468,6 +481,7 @@ public class Disambiguate {
         nsToPrefix.put("https://id.kb.se/term/barn/", "barn:");
         nsToPrefix.put("https://id.kb.se/term/barngf/", "barngf:");
         nsToPrefix.put("https://libris.kb.se/library/", "sigel:");
+        nsToPrefix.put("https://id.kb.se/language/", "lang:");
         nsToPrefix.put(Document.getBASE_URI().toString(), "libris:");
 
         for (String ns : nsToPrefix.keySet()) {
@@ -495,6 +509,7 @@ public class Disambiguate {
         nsToPrefix.put("https://id.kb.se/term/barn/", "barn:");
         nsToPrefix.put("https://id.kb.se/term/barngf/", "barngf:");
         nsToPrefix.put("https://libris.kb.se/library/", "sigel:");
+        nsToPrefix.put("https://id.kb.se/language/", "lang:");
         nsToPrefix.put(Document.getBASE_URI().toString(), "libris:");
 
         for (String ns : nsToPrefix.keySet()) {

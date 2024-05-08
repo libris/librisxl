@@ -128,7 +128,7 @@ public class SearchUtils2 {
                         this.esQueryDsl = getEsQueryDsl();
                     } else {
                         qSqt.replaceTopLevelFreeText(i.get());
-                        throw new Crud.RedirectException(makeFindUrl(i.get(), qSqt.toQueryString()));
+                        throw new Crud.RedirectException(makeFindUrl(i.get(), xlqlQuery.sqtToQueryString(qSqt)));
                     }
                 } else {
                     throw new Crud.RedirectException(makeFindUrl(iSqt.getFreeTextPart(), i.get()));

@@ -34,7 +34,7 @@ public class SimpleQueryTree {
             };
         }
 
-        public String toString() {
+        public String asString(Disambiguate disambiguate) {
             String sep = switch (operator()) {
                 case EQUALS, NOT_EQUALS -> ":";
                 case GREATER_THAN_OR_EQUALS -> ">=";
@@ -51,12 +51,16 @@ public class SimpleQueryTree {
                 value = Disambiguate.toPrefixed(value);
             }
 
+            if (path().size() == 1) {
+                path = disambiguate.getQueryCode(property()).orElse(path);
+            }
+
             return not + quoteIfPhraseOrContainsSpecialSymbol(path) + sep + quoteIfPhraseOrContainsSpecialSymbol(value);
         }
     }
 
     public record FreeText(Operator operator, String value) implements Node {
-        public String toString() {
+        public String asString() {
             String s = value();
             if (operator() == Operator.NOT_EQUALS) {
                 s = "NOT " + s;
@@ -234,16 +238,25 @@ public class SimpleQueryTree {
         }
     }
 
-    public SimpleQueryTree removeTopLevelPvNodes(String property) {
-        return new SimpleQueryTree(removeTopLevelPvNodes(property, tree));
+    public SimpleQueryTree removeTopLevelRangeNodes(String property) {
+        var rangeOps = Set.of(Operator.GREATER_THAN_OR_EQUALS, Operator.GREATER_THAN, Operator.LESS_THAN, Operator.LESS_THAN_OR_EQUALS);
+        return new SimpleQueryTree(removeTopLevelPvNodes(property, tree, rangeOps));
     }
 
-    private static Node removeTopLevelPvNodes(String property, Node tree) {
+    public SimpleQueryTree removeTopLevelPvNodes(String property) {
+        return new SimpleQueryTree(removeTopLevelPvNodes(property, tree, Collections.emptySet()));
+    }
+
+    private static Node removeTopLevelPvNodes(String property, Node tree, Set<Operator> operators) {
+        Predicate<Node> p = (node -> node instanceof PropertyValue
+                && ((PropertyValue) node).property().equals(property)
+                && (operators.isEmpty() || operators.contains(((PropertyValue) node).operator())));
+
         return switch (tree) {
             case And and -> {
                 List<Node> conjuncts = and.conjuncts()
                         .stream()
-                        .filter(n -> !(n instanceof PropertyValue && ((PropertyValue) n).property().equals(property)))
+                        .filter(Predicate.not(p))
                         .collect(Collectors.toList());
                 if (conjuncts.isEmpty()) {
                     yield null;
@@ -253,8 +266,7 @@ public class SimpleQueryTree {
                     yield new And(conjuncts);
                 }
             }
-            case PropertyValue pv -> pv.property().equals(property) ? null : pv;
-            default -> tree;
+            default -> p.test(tree) ? null : tree;
         };
     }
 
@@ -290,6 +302,7 @@ public class SimpleQueryTree {
     public List<PropertyValue> getTopLevelPvNodes() {
         if (topPvNodes == null) {
             topPvNodes = switch (this.tree) {
+                case null -> Collections.emptyList();
                 case And and -> and.conjuncts()
                         .stream()
                         .filter(node -> node instanceof PropertyValue)
@@ -337,33 +350,29 @@ public class SimpleQueryTree {
         return freeTextPart;
     }
 
-    public String toQueryString() {
-        return buildQueryString(tree, true);
+    public String toQueryString(Disambiguate disambiguate) {
+        return buildQueryString(tree, disambiguate, true);
     }
 
-    private String buildQueryString(Node node, boolean topLevel) {
+    private String buildQueryString(Node node, Disambiguate disambiguate, boolean topLevel) {
         return switch (node) {
             case And and -> {
                 String andClause = and.conjuncts()
                         .stream()
-                        .map(this::buildQueryString)
+                        .map(n -> buildQueryString(n, disambiguate, false))
                         .collect(Collectors.joining(" "));
                 yield topLevel ? andClause : "(" + andClause + ")";
             }
             case Or or -> {
                 String orClause = or.disjuncts()
                         .stream()
-                        .map(this::buildQueryString)
+                        .map(n -> buildQueryString(n, disambiguate, false))
                         .collect(Collectors.joining(" OR "));
                 yield topLevel ? orClause : "(" + orClause + ")";
             }
-            case FreeText ft -> ft.toString();
-            case PropertyValue pv -> pv.toString();
+            case FreeText ft -> ft.asString();
+            case PropertyValue pv -> pv.asString(disambiguate);
         };
-    }
-
-    private String buildQueryString(Node node) {
-        return buildQueryString(node, false);
     }
 
     public void replaceTopLevelFreeText(String replacement) {

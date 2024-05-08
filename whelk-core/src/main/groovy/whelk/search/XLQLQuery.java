@@ -76,6 +76,10 @@ public class XLQLQuery {
         return new SimpleQueryTree(flattened, disambiguate);
     }
 
+    public String sqtToQueryString(SimpleQueryTree sqt) {
+        return sqt.toQueryString(disambiguate);
+    }
+
     public SimpleQueryTree addFilters(SimpleQueryTree sqt, List<SimpleQueryTree.PropertyValue> filters) {
         for (SimpleQueryTree.PropertyValue pv : filters) {
             if (sqt.getTopLevelPvNodes().stream().noneMatch(n -> n.property().equals(pv.property()))) {
@@ -271,8 +275,8 @@ public class XLQLQuery {
         return mappingsNode;
     }
 
-    private static String makeFindUrl(SimpleQueryTree sqt, List<String> nonQueryParams) {
-        return makeFindUrl(sqt.getFreeTextPart(), sqt.toQueryString(), nonQueryParams);
+    private String makeFindUrl(SimpleQueryTree sqt, List<String> nonQueryParams) {
+        return makeFindUrl(sqt.getFreeTextPart(), sqt.toQueryString(disambiguate), nonQueryParams);
     }
 
     private static String makeFindUrl(String i, String q, List<String> nonQueryParams) {
@@ -570,9 +574,10 @@ public class XLQLQuery {
 
         propToBuckets.forEach((property, buckets) -> {
             var sliceNode = new LinkedHashMap<>();
-            var observations = getObservations(buckets, sqt, nonQueryParams);
+            var isRange = rangeProps.contains(property);
+            var observations = getObservations(buckets, isRange ? sqt.removeTopLevelRangeNodes(property) : sqt, nonQueryParams);
             if (!observations.isEmpty()) {
-                if (rangeProps.contains(property)) {
+                if (isRange) {
                     sliceNode.put("search", getRangeTemplate(property, sqt, makeParams(nonQueryParams)));
                 }
                 sliceNode.put("dimension", property);
@@ -612,7 +617,7 @@ public class XLQLQuery {
         return observations;
     }
 
-    private static Map<String, Object> getRangeTemplate(String property, SimpleQueryTree sqt, List<String> nonQueryParams) {
+    private Map<String, Object> getRangeTemplate(String property, SimpleQueryTree sqt, List<String> nonQueryParams) {
         var GtLtNodes = sqt.getTopLevelPvNodes().stream()
                 .filter(pv -> pv.property().equals(property))
                 .filter(pv -> switch (pv.operator()) {
@@ -647,13 +652,14 @@ public class XLQLQuery {
 
         Map<String, Object> template = new LinkedHashMap<>();
 
-        var placeholderNode = new SimpleQueryTree.FreeText(Operator.EQUALS, String.format("{?%s}", property));
-        var templateQueryString = tree.andExtend(placeholderNode).toQueryString();
+        var variable = disambiguate.getQueryCode(property).orElse(property);
+        var placeholderNode = new SimpleQueryTree.FreeText(Operator.EQUALS, String.format("{?%s}", variable));
+        var templateQueryString = tree.andExtend(placeholderNode).toQueryString(disambiguate);
         var templateUrl = makeFindUrl(tree.getFreeTextPart(), templateQueryString, nonQueryParams);
         template.put("template", templateUrl);
 
         var mapping = new LinkedHashMap<>();
-        mapping.put("variable", property);
+        mapping.put("variable", variable);
         mapping.put(Operator.GREATER_THAN_OR_EQUALS.termKey, Objects.toString(min, ""));
         mapping.put(Operator.LESS_THAN_OR_EQUALS.termKey, Objects.toString(max, ""));
         template.put("mapping", mapping);
