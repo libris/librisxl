@@ -72,7 +72,7 @@ for (String operation : ProgramLines) {
     // Om exakt en bib-post matchar kan vi gå fortsätta med denna
     selectByIds(bibIds, {bib ->
         def bibMainEntity = bib.graph[1]["@id"]
-        def title = bib.graph[1]["hasTitle"][0]["mainTitle"]
+        def title = getAtPath(bib.graph, [1, "hasTitle", 0, "maintitle"], "<saknas>")
         List ISBN = []
         List IISBN = []
         
