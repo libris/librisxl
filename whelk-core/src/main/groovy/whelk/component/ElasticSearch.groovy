@@ -271,7 +271,7 @@ class ElasticSearch {
         try {
             String response = client.performRequest(
                     'PUT',
-                    "/${indexName}/_doc/${toElasticId(doc.getShortId())}",
+                    "/${indexName}/_doc/${toElasticId(doc.isVirtual() ? doc.getShortId() + "#work-record" : doc.getShortId())}",
                     getShapeForIndex(doc, whelk))
             if (log.isDebugEnabled()) {
                 Map responseMap = mapper.readValue(response, Map)
@@ -379,7 +379,7 @@ class ElasticSearch {
 
         setComputedProperties(copy, links, whelk)
         copy.setThingMeta(document.getCompleteId())
-        List<String> thingIds = document.getThingIdentifiers()
+        List<String> thingIds = copy.getThingIdentifiers()
         if (thingIds.isEmpty()) {
             log.warn("Missing mainEntity? In: " + document.getCompleteId())
             return copy.data
@@ -487,7 +487,11 @@ class ElasticSearch {
 
         getFormattedIsnis(doc.getOrcidValues()) // ORCID is a subset of ISNI, same format
                 .each { doc.addTypedThingIdentifier('ORCID', it) }
-        
+
+        if (doc.isVirtual()) {
+            doc.centerOnVirtual()
+        }
+
         doc.data['@graph'][1]['_links'] = links
         doc.data['@graph'][1]['_outerEmbellishments'] = doc.getEmbellishments() - links
 

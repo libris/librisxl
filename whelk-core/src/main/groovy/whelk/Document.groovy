@@ -76,6 +76,8 @@ class Document {
     public Map data = [:]
     public int version = 0
 
+    private String virtualCenterID = null
+
     Document(Map data) {
         this.data = data
         updateRecordStatus()
@@ -87,7 +89,9 @@ class Document {
 
     Document clone() {
         Map clonedDate = deepCopy(data)
-        return new Document(clonedDate)
+        Document clone = new Document(clonedDate)
+        clone.virtualCenterID = virtualCenterID
+        return clone
     }
 
     void normalizeUnicode() {
@@ -934,16 +938,30 @@ class Document {
             ? []
             : [ "${getShortId()}#work-record" ]
     }
+
+    boolean isVirtual() {
+        return virtualCenterID != null
+    }
     
     Document getVirtualRecord(String id) {
         if ("${getShortId()}#work-record" != id) {
             throw new IllegalArgumentException(id)
         }
-        
+
         Document doc = clone()
-        Map record = doc.get(["@graph", 0])
-        Map work = doc.get(["@graph", 1, "instanceOf"])
-        Map instance = doc.get(["@graph", 1])
+        doc.virtualCenterID = doc.get(["@graph", 1])["@id"].replace('#it', '') + "#work"
+        return doc
+
+    }
+
+    void centerOnVirtual() {
+        if (!isVirtual()) {
+            throw new IllegalStateException()
+        }
+
+        Map record = get(["@graph", 0])
+        Map work = get(["@graph", 1, "instanceOf"])
+        Map instance = get(["@graph", 1])
         def workId = instance["@id"].replace('#it', '') + "#work"
         
         record["mainEntity"]["@id"] = workId
@@ -959,15 +977,13 @@ class Document {
         
         work["@id"] = workId
         work["@reverse"] = ["instanceOf": [instance]]
-        
+
         // TODO...
         if (!work['hasTitle']) {
             work['hasTitle'] = (instance['hasTitle'] ?: []).findAll{ it['@type'] == 'Title' || it['@type'] == 'KeyTitle' }
         }
 
-        doc.set(["@graph", 1], work)
-        
-        return doc
+        set(["@graph", 1], work)
     }
 
     private boolean isSuppressedRecord() {
