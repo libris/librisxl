@@ -76,8 +76,6 @@ class Document {
     public Map data = [:]
     public int version = 0
 
-    private String virtualCenterID = null
-
     Document(Map data) {
         this.data = data
         updateRecordStatus()
@@ -89,9 +87,7 @@ class Document {
 
     Document clone() {
         Map clonedDate = deepCopy(data)
-        Document clone = new Document(clonedDate)
-        clone.virtualCenterID = virtualCenterID
-        return clone
+        return new Document(clonedDate)
     }
 
     void normalizeUnicode() {
@@ -932,6 +928,7 @@ class Document {
         return "{completeId=" + getCompleteId() + ", baseUri=" + baseUri.toString() + ", base identifiers:" + getRecordIdentifiers().join(',');
     }
 
+    // All these "virtual record" methods are hardcoded for blank Works
     Set<String> getVirtualRecordIds() {
         def work = get(["@graph", 1, "instanceOf"])
         return (!work || work !instanceof Map || JsonLd.isLink(work) || isSuppressedRecord())
@@ -939,22 +936,26 @@ class Document {
             : [ "${getShortId()}#work-record" ]
     }
 
-    boolean isVirtual() {
-        return virtualCenterID != null
-    }
-    
+    // All these "virtual record" methods are hardcoded for blank Works
     Document getVirtualRecord(String id) {
         if ("${getShortId()}#work-record" != id) {
             throw new IllegalArgumentException(id)
         }
 
         Document doc = clone()
-        doc.virtualCenterID = doc.get(["@graph", 1])["@id"].replace('#it', '') + "#work"
-        return doc
+        doc.set(recordIdPath, get(recordIdPath) + "#work-record")
+        doc.get(recordPath).remove(JsonLd.JSONLD_ALT_ID_KEY)
 
+        return doc
     }
 
-    void centerOnVirtual() {
+    // All these "virtual record" methods are hardcoded for blank Works
+    boolean isVirtual() {
+        return getRecordIdentifiers().first().endsWith("#work-record")
+    }
+
+    // All these "virtual record" methods are hardcoded for blank Works
+    void centerOnVirtualMainEntity() {
         if (!isVirtual()) {
             throw new IllegalStateException()
         }
@@ -965,7 +966,6 @@ class Document {
         def workId = instance["@id"].replace('#it', '') + "#work"
         
         record["mainEntity"]["@id"] = workId
-        record["@id"] = record["@id"] + "#work-record"
         // TODO
         // For now these will not be found by the search API since it has a boost on RECORD_TYPE and CACHE_RECORD_TYPE
         // This is what we want since VirtualRecords should not be visible in the cataloguing interface.

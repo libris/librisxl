@@ -271,7 +271,7 @@ class ElasticSearch {
         try {
             String response = client.performRequest(
                     'PUT',
-                    "/${indexName}/_doc/${toElasticId(doc.isVirtual() ? doc.getShortId() + "#work-record" : doc.getShortId())}",
+                    "/${indexName}/_doc/${toElasticId(doc.getShortId())}",
                     getShapeForIndex(doc, whelk))
             if (log.isDebugEnabled()) {
                 Map responseMap = mapper.readValue(response, Map)
@@ -489,7 +489,7 @@ class ElasticSearch {
                 .each { doc.addTypedThingIdentifier('ORCID', it) }
 
         if (doc.isVirtual()) {
-            doc.centerOnVirtual()
+            doc.centerOnVirtualMainEntity()
         }
 
         doc.data['@graph'][1]['_links'] = links
