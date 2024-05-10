@@ -156,7 +156,7 @@ class Crud extends HttpServlet {
             throw new OtherStatusException("Attempted to use elastic for query, but no elastic component is configured.",
                     HttpServletResponse.SC_NOT_IMPLEMENTED)
         } catch (InvalidQueryException e) {
-            log.warn("Invalid query: ${queryParameters}")
+            log.info("Invalid query: ${queryParameters}")
             throw new BadRequestException("Invalid query, please check the documentation. ${e.getMessage()}")
         } catch (RedirectException e) {
             sendRedirect(request, response, e.getMessage())
@@ -686,7 +686,7 @@ class Crud extends HttpServlet {
 
                     // You are not allowed to change collection when updating a record
                     if (collection != whelk.storage.getCollectionBySystemID(doc.getShortId())) {
-                        log.warn("Refused API update of document due to changed 'collection'")
+                        log.info("Refused API update of document due to changed 'collection'")
                         throw new BadRequestException("Cannot change legacy collection for document. Legacy collection is mapped from entity @type.")
                     }
 
