@@ -497,7 +497,11 @@ class ElasticSearch {
 
         doc.data['@graph'][1]['reverseLinks'] = [
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',
-                'totalItems' : whelk.getStorage().getIncomingLinkCount(doc.getShortId())]
+                'totalItems' : whelk.getStorage().getIncomingLinkCount(stripHash(doc.getShortId()))]
+    }
+
+    private static String stripHash(String s) {
+        s.contains('#') ?s .substring(0, s.indexOf('#')) : s
     }
 
     private static Collection<String> getOtherIsbns(List<String> isbns) {
