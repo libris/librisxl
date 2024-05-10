@@ -16,6 +16,7 @@ import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.function.Function
 
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
 import static whelk.JsonLd.asList
@@ -476,17 +477,18 @@ class ElasticSearch {
     }
 
     private static void setComputedProperties(Document doc, Set<String> links, Whelk whelk) {
-        getOtherIsbns(doc.getIsbnValues())
-                .each { doc.addTypedThingIdentifier('ISBN', it) }
+        DocumentUtil.findKey(doc.data, ["identifiedBy", "indirectlyIdentifiedBy"]) { value, path ->
+            if (value !instanceof Collection) {
+                return
+            }
 
-        getOtherIsbns(doc.getIsbnHiddenValues())
-                .each { doc.addIndirectTypedThingIdentifier('ISBN', it) }
+            var ids = (Collection<Map>) value
+            addIdentifierForms(ids, 'ISBN', this::getOtherIsbns)
+            addIdentifierForms(ids, 'ISNI', this::getFormattedIsnis)
+            addIdentifierForms(ids, 'ORCID', this::getFormattedIsnis) // ORCID is a subset of ISNI, same format
 
-        getFormattedIsnis(doc.getIsniValues())
-                .each { doc.addTypedThingIdentifier('ISNI', it) }
-
-        getFormattedIsnis(doc.getOrcidValues()) // ORCID is a subset of ISNI, same format
-                .each { doc.addTypedThingIdentifier('ORCID', it) }
+            return DocumentUtil.NOP
+        }
 
         if (doc.isVirtual()) {
             doc.centerOnVirtualMainEntity()
@@ -500,7 +502,18 @@ class ElasticSearch {
                 'totalItems' : whelk.getStorage().getIncomingLinkCount(doc.getShortId())]
     }
 
-    private static Collection<String> getOtherIsbns(List<String> isbns) {
+    private static void addIdentifierForms(
+            Collection<Map> ids,
+            String type,
+            Closure<Collection<String>> transform)
+    {
+        var values = ids
+                .findAll { (it instanceof Map && it[JsonLd.TYPE_KEY] == type) }
+                .collect{ it['value'] }
+        ids.addAll(transform(values).collect{ [(JsonLd.TYPE_KEY): type, value: it] })
+    }
+
+    private static Collection<String> getOtherIsbns(Collection<String> isbns) {
         isbns.findResults { getOtherIsbnForm(it) }
                 .findAll { !isbns.contains(it) }
     }
