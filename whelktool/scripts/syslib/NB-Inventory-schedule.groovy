@@ -20,7 +20,7 @@ List<String> ProgramLines = inputRows.readLines()
 
 def itemList = Collections.synchronizedList([])
 
-IDreport.println("Inventarienummer;Input ISBN;Matching bib;identifiedBy;indirectlyIdentifiedBy;Nr of holdings;Sigel S Holding;New holding record;Comments;Save copy?")
+IDreport.println("Inventarienummer;Titel;Input ISBN;Matching bib;identifiedBy;indirectlyIdentifiedBy;Nr of holdings;Sigel S Holding;New holding record;Comments;Save copy?")
 manCheck.println("Inventarienummer;Input ISBN;Matching bib;identifiedBy;indirectlyIdentifiedBy;Nr of holdings;Sigel S Holding;New holding record;Comments;Save copy?")
 
 for (String operation : ProgramLines) {
@@ -57,14 +57,14 @@ for (String operation : ProgramLines) {
 
     if (bibIds.isEmpty()) {
         // Om inga bib-poster kunde hittas, logga och hoppa vidare till nästa rad i for-loopen
-        IDreport.println("$lopnr;$fuzzyID;NO MATCHING RECORD;;;;;;")
+        IDreport.println("$lopnr;;$fuzzyID;NO MATCHING RECORD;;;;;;")
             manCheck.println("$lopnr;$fuzzyID;NO MATCHING RECORD;;;;;;Not found in Libris")
         continue
     }
 
     if (bibIds.size() > 1) {
         // Om flera bib-poster matchar, logga och hoppa sen vidare till nästa rad i for-loopen
-        IDreport.println("$lopnr;$fuzzyID;MULTIPLE HITS: $bibIds;;;;;;")
+        IDreport.println("$lopnr;;$fuzzyID;MULTIPLE HITS: $bibIds;;;;;;")
             manCheck.println("$lopnr;$fuzzyID;MULTIPLE HITS: $bibIds;;;;;;More than one bib found")
         continue
     }
@@ -72,6 +72,7 @@ for (String operation : ProgramLines) {
     // Om exakt en bib-post matchar kan vi gå fortsätta med denna
     selectByIds(bibIds, {bib ->
         def bibMainEntity = bib.graph[1]["@id"]
+        def title = getAtPath(bib.graph, [1, "hasTitle", 0, "maintitle"], "<saknas>")
         List ISBN = []
         List IISBN = []
         
@@ -106,7 +107,7 @@ for (String operation : ProgramLines) {
  
             if (hold.doc.getHeldBySigel() == "S" && !ISBN) {
                 foundHold = true
-                IDreport.println("$lopnr;$fuzzyID;${bib.doc.shortId};$ISBN;$IISBN;$HC;${hold.doc.shortId};;No ISBN in identifiedBy")           
+                IDreport.println("$lopnr;$title;$fuzzyID;${bib.doc.shortId};$ISBN;$IISBN;$HC;${hold.doc.shortId};;No ISBN in identifiedBy")           
                     manCheck.println("$lopnr;$fuzzyID;${bib.doc.shortId};$ISBN;$IISBN;$HC;${hold.doc.shortId};;No ISBN in identifiedBy")
             }
  
@@ -125,13 +126,13 @@ for (String operation : ProgramLines) {
                 
                 if (HT) { // Boken kan saknas i KB:s pliktsvit och ska därför manuellt kontrolleras
                     
-                        IDreport.println("$lopnr;$fuzzyID;${bib.doc.shortId};$ISBN;$IISBN;$HC;${hold.doc.shortId};;S holding found;Boken saknas ev i pliktsviten KB. Kontrollera!")
+                        IDreport.println("$lopnr;$title;$fuzzyID;${bib.doc.shortId};$ISBN;$IISBN;$HC;${hold.doc.shortId};;S holding found;Boken saknas ev i pliktsviten KB. Kontrollera!")
                             if (ISBN.size() > 1) {
                                 manCheck.println("$lopnr;$fuzzyID;${bib.doc.shortId};$ISBN;$IISBN;$HC;${hold.doc.shortId};;Multiple ISBN;Boken saknas ev i pliktsviten KB. Kontrollera!")    
                         }
                 }
                 else{
-                        IDreport.println("$lopnr;$fuzzyID;${bib.doc.shortId};$ISBN;$IISBN;$HC;${hold.doc.shortId};;S holding found")
+                        IDreport.println("$lopnr;$title;$fuzzyID;${bib.doc.shortId};$ISBN;$IISBN;$HC;${hold.doc.shortId};;S holding found")
                             if (ISBN.size() > 1) {
                                 manCheck.println("$lopnr;$fuzzyID;${bib.doc.shortId};$ISBN;$IISBN;$HC;${hold.doc.shortId};;Multiple ISBN")    
                         }
@@ -140,7 +141,7 @@ for (String operation : ProgramLines) {
             })       
 
         if (!foundHold && !ISBN) { // Om det saknas S-bestånd och inget ISBN i identifiedBy (ingen entydig träff), logga endast
-            IDreport.println("$lopnr;$fuzzyID;${bib.doc.shortId};$ISBN;$IISBN;$HC;;;No ISBN in identifiedBy")
+            IDreport.println("$lopnr;$title;$fuzzyID;${bib.doc.shortId};$ISBN;$IISBN;$HC;;;No ISBN in identifiedBy")
                 manCheck.println("$lopnr;$fuzzyID;${bib.doc.shortId};$ISBN;$IISBN;$HC;;;No ISBN in identifiedBy")
         }    
 
@@ -177,7 +178,7 @@ for (String operation : ProgramLines) {
             def item = create(holdData)
             itemList.add(item)
 
-                IDreport.println("$lopnr;$fuzzyID;${bib.doc.shortId};$ISBN;$IISBN;$HC;;${item.doc.shortId};New holding created")
+                IDreport.println("$lopnr;$title;$fuzzyID;${bib.doc.shortId};$ISBN;$IISBN;$HC;;${item.doc.shortId};New holding created")
                     if (ISBN.size() > 1) {
                         manCheck.println("$lopnr;$fuzzyID;${bib.doc.shortId};$ISBN;$IISBN;$HC;;${item.doc.shortId};Multiple ISBN")   
                     }      
