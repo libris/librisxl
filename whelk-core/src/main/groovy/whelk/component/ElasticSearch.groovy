@@ -513,7 +513,7 @@ class ElasticSearch {
     {
         var values = ids
                 .findAll { (it instanceof Map && it[JsonLd.TYPE_KEY] == type) }
-                .collect{ it['value'] }
+                .findResults{ it['value'] }
         ids.addAll(transform(values).collect{ [(JsonLd.TYPE_KEY): type, value: it] })
     }
 
