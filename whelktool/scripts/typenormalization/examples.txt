@@ -1,0 +1,253 @@
+# Aniara
+<https://libris.kb.se/2kczlqcd33467pn#it>
+<https://libris.kb.se/dxqtmzrq3wdx48n#it>
+<https://libris.kb.se/btmh4b6n3mlk8l2#it>
+<https://libris.kb.se/dxqtmzrq3wdx48n#it> # Pjäsen
+#<https://smdb.kb.se/catalog/id/001875433/28> # Annan inspelning av Pjäs
+
+# CodexGigas
+<https://libris.kb.se/h1t7600t09w06w0#it>
+
+# MTM-bok
+<https://libris.kb.se/p3n5x5g0m8jq33c4#it>
+# "Boken ingår i serien: Sagan om isfolket ; 1" (47 böcker: <https://sv.wikipedia.org/wiki/Sagan_om_Isfolket>)
+
+# LOTR
+## Sagan om ringen (Åke Ohlmarks)
+<https://libris.kb.se/n5ftk39xlxc7vs6g#it>
+## Trilogin om härskarringen (Åke Ohlmarks)
+<https://libris.kb.se/vc521d465rndg4d#it>
+<https://libris.kb.se/1jb6xqvc3zfgls4#it>
+## Ringarnas herre [ :hasPart Ringens brödraskap + De två tornen + Konungens återkomst ]
+<https://libris.kb.se/6qjrkxsj5p573t3#it> # ... MultiVolumeBook
+<https://libris.kb.se/3ldcz1gf1k4h787#it> # Ringens brödraskap
+<https://libris.kb.se/2ldvvm1d019rfph#it>
+<https://libris.kb.se/0h98zsrb5dv83b5#it> # De två tornen
+<https://libris.kb.se/6qj00r2j0g9v1fb#it> # De två tornen (storpocket)
+<https://libris.kb.se/5phltjhh3cc8sq8#it>
+<https://libris.kb.se/6qjmvkjj085n5w8#it> # Konungens återkomst
+<https://libris.kb.se/h0srn4bt3kj0mrw#it> # Konungens återkomst
+<https://libris.kb.se/p71hh8m11644h3k#it> # Konungens återkomst (storpocket)
+
+# type:TextAndImagesOnUSBStick (PackagedEbook?)
+<https://libris.kb.se/bvnzz86n402dl57#it>
+
+# Alice i underlandet
+<https://libris.kb.se/8pcv2lbm6d2mprcn#it>
+<https://libris.kb.se/4ngr0ckg0vwjh8l#it>
+<https://libris.kb.se/fxqldknr2v809xf#it>
+<https://libris.kb.se/dwpkck4q55dkhz6#it>
+<https://libris.kb.se/sb45q6d43vz0df3#it>
+<https://libris.kb.se/xf734hr828rgls7#it>
+<https://libris.kb.se/l3wh60lx1174xkh#it>
+<https://libris.kb.se/5ngcjmdh0sjdfbl#it>
+<https://libris.kb.se/tb41sd155ssbd5p#it>
+<https://libris.kb.se/tb7f51pnrhk9rc61#it>
+<https://libris.kb.se/wd62td975m4xsbp#it>
+## ill. av Tove Jansson:
+<https://libris.kb.se/cwp2z0np1lc7ql3#it> # EBook
+
+# Fyra nyanser av PDF ...
+<https://libris.kb.se/vd6mrs8650wpjz8#it> # (Akademisk avhandling ; diva-urn-nbn-medialandningssida [som leder till pdf:en])
+
+# Photocopy - Fotostatkopia av Avhandling (Handskrift)
+<https://libris.kb.se/k3w7fpxw49hgw6n#it>
+# Särtryck (egen artikel ur publikation; issuanceType?)
+<https://libris.kb.se/tb43t8s53jjz7r3#it>
+
+# KRISTIANSTADSBLADET 2018-08-06
+<https://libris.kb.se/jsr018hfgnw8vwnj#it>
+
+# Gösta Berlings Saga - instanceOf https://libris.kb.se/n5ftk3xsl6z9lzvx#it
+<https://libris.kb.se/4m6f2rxv2497zrt0#it>
+<https://libris.kb.se/zh9f2rt91bq62v2#it>
+<https://libris.kb.se/gzrf458s4m8bw86#it>
+<https://libris.kb.se/3mfsq7rf3f1v0lh#it>
+<https://libris.kb.se/2ldfxbjd4xl4mhr#it>
+
+# Låt den rätte komma in - instanceOf https://libris-qa.kb.se/r8v1nln5pkp114w3
+<https://libris.kb.se/btml9kfn12mmjh5#it>
+<https://libris.kb.se/g0s2gb4s1k7q13w#it>
+
+# Mio min Mio -  instanceOf https://libris-qa.kb.se/katalogisering/gzkqbvltd91h5zd1
+<https://libris.kb.se/zh9flff92qf92b9#it>
+<https://libris.kb.se/1jb8fwgc0nhlwpr#it>
+<https://libris.kb.se/2dh6072m0zsc8jr7#it>
+<https://libris.kb.se/z85tt4ggwt7d853p#it>
+<https://libris.kb.se/1kcg8gbc0q13sfb#it>
+<https://libris.kb.se/n5ztl2000l08t78#it>
+
+# Lysande Landning - instanceOf https://libris-qa.kb.se/katalogisering/8rcj5frv6scrt055
+<https://libris.kb.se/tb40mtc50r3sl97#it>
+<https://libris.kb.se/xf7xsf081fwpqlx#it>
+<https://libris.kb.se/5ng3l4ch5kt91f8#it>
+
+# Agnes Cecilia bearbetad lättläst - instanceOf https://libris-qa.kb.se/h0lsgkfhfmphb6cc
+<https://libris.kb.se/n117254ll8sv2bnm#it>
+<https://libris.kb.se/2f8n01sb09966spc#it>
+#it>
+# Agnes Cecilia - instanceOf https://libris-qa.kb.se/jx711m2bg48ff7hq
+<https://libris.kb.se/l3pwknjljqgfmnc9#it>
+<https://libris.kb.se/l4xzj00x2265h8x#it>
+<https://libris.kb.se/3mfntkkf4nxnpqf#it>
+
+# Brandbilen som försvann - instanceOf https://libris-qa.kb.se/katalogisering/4m7d1knb2jvq08lb
+<https://libris.kb.se/2kcbgl7d4t6sr4w#it>
+<https://libris.kb.se/9slg4n3m5mq4vx3#it>
+<https://libris.kb.se/fxql7p3r1fndtqn#it>
+<https://libris.kb.se/1kcfr66c12s7bxz#it>
+
+# Translation: Räddaren i nöden - instanceOf https://libris-qa.kb.se/1j49xzgczpngbc17
+<https://libris.kb.se/fxqnzf2r3t063cf#it>
+<https://libris.kb.se/gzrnfs4s56bvdgf#it>
+<https://libris.kb.se/q71wjq222pg32wr#it>
+<https://libris.kb.se/q71m7bs24g2752g#it>
+
+# Translation: På västfronten intet nytt
+<https://libris.kb.se/9slljzjm2m8qpmd#it>
+<https://libris.kb.se/s930743425hc69x#it>
+<https://libris.kb.se/vd6f6xg65fn16xr#it>
+<https://libris.kb.se/4mf92n9g4f8m3gn#it>
+
+# a :NotatedMusic
+# Babblarnas låtar • noter & texter
+<https://libris.kb.se/w77j9j1nts7lbpb0#it>
+# Svenska allsånger
+<https://libris.kb.se/brpdg25s8pdm9vx9#it>
+
+# a :MovingImage
+# En man som heter Ove
+<https://libris.kb.se/l4x8ctfx36r8mb1#it>
+# Sagan om Karl-Bertil Jonssons julafton
+<https://libris.kb.se/3j0jjqwq1strmthx#it>
+
+# Bamses julalbum
+<https://libris.kb.se/wd6339675g3dqdr#it> # 1102-4534
+<https://libris.kb.se/wf7hs3v745v37c7> # nr 25
+
+# Skurken i Muminhuset
+<https://libris.kb.se/k2vr7f1w5cdgjj2#it> # textverk
+<https://libris.kb.se/5phj3vzh45m5sqb#it> # textverk
+<https://libris.kb.se/0h95z42b31vw06t#it> # textverk
+<https://libris.kb.se/7rkmqf8k2c64ksj#it> # 1 CD-R
+<https://libris.kb.se/1gzrjv6xz1jw371s#it> # koreanska
+<https://libris.kb.se/l4x5zsqx0bj8458#it> # finska
+#<https://libris.kb.se/4nggcg2g0k6rgr7#it> #  - diabilder BORTA (gallrad?) :(
+
+# Spirited Away
+<https://libris.kb.se/zbmn5511wg5w3lwd#it> # vykortsbok
+
+# Drakar och demoner
+## Target Games 1982
+<https://libris.kb.se/btm706mn03ld7dc#it>
+## remake (riot games)
+<https://libris.kb.se/2f7l0j0q0bxz0dzg#it>
+# fria ligan
+<https://libris.kb.se/q6ghf4r2n5c659t8#it>
+
+# NotatedMusic
+## 3e quatuor pour 2 violons, alto et violoncelle (op. 18)
+<https://libris.kb.se/zd7zkx4sw828hgjk#it>
+
+# SOU 1997:51
+<https://libris.kb.se/r82xq6n35b15m70#it> # Print
+<https://libris.kb.se/dxq1cnqq0c54cvg#it> # DigitalReproduction
+#<https://libris.kb.se/gdsvzrv0094grdt#it> # SOU Series
+
+# Affisch
+## Hauff rullfilm filmpack
+<https://libris.kb.se/j1trg6xv00bw18m#it> # :StillImageInstance
+<https://libris.kb.se/j1trg6xv00bw18m#it> # :Print
+<https://libris.kb.se/j1trg6xv00bw18m#it> # :PrintedSheet
+
+# Artikel
+# "Apoteket i Knivsta förr och nu"
+<https://libris.kb.se/jx871f70gjg10jls#it>
+
+# Paket med Punktskriftsbok och Tal-CD (DAISY) : se <https://jira.kb.se/browse/FMT-151>
+#<https://libris.kb.se/9n9p50vk79wdhwk9#it>
+# Bundlar <https://libris-stg.kb.se/tc59c1q5053hvqn#it> med en braille-bok
+# Står 9786047881093 men det är en annan bok.
+
+# Eböcker (en instans”typ”)? Vilken Genre har respektive exempel?
+## Sökning på Text, electronic, Monografi + kbrda:OnlineResource,  marc:OnlineResource NOT EPUB och e-böcker (https://api.triplydb.com/s/-rJy8zRn6)
+<https://libris.kb.se/lwgdn31wjgbcxg8v#it>
+<https://libris.kb.se/2ldn29cd222r3jf#it> # Det tryckta orginalet...
+## Pdf på nätet gf:government publication
+<https://libris.kb.se/5f71skr83jpqdw5q#it>
+## Digitisering pdf med scannade bilder,  Grefve Platens skugga på Ramundershäll, den 26 september 1832. Af J. P. Tollstorp. {:produktion :DigitalReproduction} ingen gf
+<https://libris.kb.se/q45flntvnlh9sgxq#it>
+<https://libris.kb.se/7qj6wfmk5gfv9c3#it> # source
+## Avhandling i pdf Synthesis and In Situ ToF-LEIS Analysis of Ultrathin Silicides and Ti-based Films gf:Akademisk avhandling
+<https://libris.kb.se/0gp1tpnrx4t8zr9n#it>
+## Artikel i pdf format {:extent 8 sidor} ingen gf
+<https://libris.kb.se/n383b6vklr2461n1#it>
+## e-plikt (=vad som helst) Ekosystemtjänster 2 sidor {:bibliography EPLK} ingen gf
+<https://libris.kb.se/q82fnsx22hxf8x8#it>
+## en pdf på 30 cm Grafisk industri
+<https://libris.kb.se/0jbbd3zb18d5wwx#it>
+## ebok från länkserver (ebok i detta fall = Text, electronic, Monografi +  <https://id.kb.se/marc/OnlineResource>)
+<https://libris.kb.se/n6pfb6zplrvphctq#it>
+## Några skräckposter:
+### The compleat gentleman
+<https://libris.kb.se/p6000cm1056cd92#it>
+### Philadelphia harmony
+<https://libris.kb.se/7rks1ztk1qkdqn8#it>
+
+# Ljudböcker
+### Onlineresurs
+<https://libris.kb.se/fx7r1fjjc2msg8g1#it> # (EPLK)
+<https://libris.kb.se/5phlvnhh29ld141#it> # (Elib)
+<https://libris.kb.se/x9g40cj8v72m79xh#it> # (BOKR)
+### CD-Audio
+<https://libris.kb.se/p6lb7g1pmcgbx83z#it>
+<https://libris.kb.se/s2734nt2qnbvrdpv#it>
+<https://libris.kb.se/5phmpz9h2wxwl32#it> # (BOKR)
+### CD-R
+<https://libris.kb.se/9pdk0vr97gmndk2n#it> # (MTM)
+<https://libris.kb.se/l4x03mtx1t6g0td#it> # ? (MTM)
+### CD med mp3
+<https://libris.kb.se/n60bnrk045sd5p2#it>
+<https://libris.kb.se/1jbbn5wc2z9xc89#it>
+
+### LP
+<https://libris.kb.se/4dtt322n2hw3r1kc#it>
+### kompaktkassett
+<https://libris.kb.se/j2vwg6wv2fdqj21#it>
+<https://libris.kb.se/4ngjhmlg4fs8pd5#it> # (AVM)
+### mp3-spelare med ljudbok (bestånd: 0)
+<https://libris.kb.se/0jbrgkhb09b8k1f#it>
+### Talbok + text
+<https://libris.kb.se/m5z08g9z13kp6r6#it#it>
+### SMDB
+<https://libris.kb.se/0h98z1nb1jk6qfr#it>
+### ? CD-äänilevy
+<https://libris.kb.se/n608dbf02swkb1j#it>
+
+## *Inte* ljudböcker
+### Termen ljudbok används även för uppläsningar i radio:
+<https://smdb.kb.se/catalog/id/004193610/55>
+### Radioprogram - UR
+<https://libris.kb.se/n5ml8mjqlmxvxh9g#it> # (role <https://id.kb.se/relator/producer>)
+### eplikt
+<https://libris.kb.se/5k66sxs7378p9mvd#it>
+### Poddar
+<https://libris.kb.se/n29ktcz6lsrsvcxv#it>
+### Musik
+<https://libris.kb.se/hw8gjqqffn1l4l5m#it> # (digitiserade vaxcylindrar data.kb.se)
+
+# nya exempel från eliben 240508:
+<https://libris.kb.se/dnhmsbcrbcrhx17h#it> # (TAKK)
+<https://libris.kb.se/t7c5wgf8rtr4cw23#it> # (handskrift)
+<https://libris.kb.se/k0gkmwzgh09wpq26#it> # (handskrift)
+<https://libris.kb.se/0jbn1cnb4n8q8q2#it> # (handskrift)
+<https://libris.kb.se/7pmv3rlv54k0d5t1#it> # (handskrift, ritning)
+<https://libris.kb.se/wd6w9mf73fdj7w2#it> # (handskrift, karta)
+<https://libris.kb.se/2g5pr3lh08jz22th#it> # (handskrift, karta)
+<https://libris.kb.se/3lv7pdbj1wnmbghf#it> # (handskrift, musik) (4 st)
+<https://libris.kb.se/9s1hpw5t74jjvt0z#it> # (klassbok)
+<https://libris.kb.se/m4xt6nfz4nn1nxv#it> # (föremål)
+
+# sju sorters kakor (Kokbok)
+<https://libris.kb.se/zh9mpd893jh0f6l#it> # Paket
+<https://libris.kb.se/j2v4k4hv4k7bjcn#it> # Inbunden
