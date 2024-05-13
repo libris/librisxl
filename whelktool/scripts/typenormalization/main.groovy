@@ -34,7 +34,7 @@ class TypeNormalizer {
     (KBRDA + "PerformedMusic"): "PerformedMusic",
     (KBRDA + "SpokenWord"): "SpokenWord",
     // 'StillImage' ...
-    (KBRDA + "TwoDimensionalMovingImage"): 'MovingImage', 
+    (KBRDA + "TwoDimensionalMovingImage"): 'MovingImage',
   ]
 
   static List reduceSymbols(List symbols) {
@@ -62,61 +62,62 @@ class TypeNormalizer {
     return false
   }
 
-  static void normalize(Map thing) {
-    interpretClassification(thing)
-    simplifyTyped(thing)
+  static void normalize(Map instance, Map work) {
+    interpretClassification(instance)
+    interpretClassification(work)
+    simplifyTyped(instance, work)
   }
 
-  static void simplifyTyped(Map thing) {
+  static void simplifyTyped(Map instance, Map work) {
     var isNonSingleunit = false
-    if (thing.containsKey("issuanceType")) {
-      isNonSingleunit = convertIssuancetype(thing)
+    if (instance.containsKey("issuanceType")) {
+      isNonSingleunit = convertIssuancetype(instance, work)
     }
     if (isNonSingleunit) {
       return
     }
-    if (thing.containsKey("instanceOf")) {
-      simplifySingleunitInstance(thing)
-      simplifyAssociatedMedia(thing)  // TODO: move to separate normalization.
-      simplifySingleunitWork(thing.get("instanceOf"), thing)
-    }
-    if (thing.containsKey("itemOf")) {
-      /* ... */
-    } else {
-      /* ... */
-      simplifySingleunitWork(thing)
-    }
+
+    simplifySingleunitInstance(instance)
+    // simplifyAssociatedMedia(instance)  // TODO: move to separate normalization.
+
+    simplifySingleunitWork(work)
   }
 
   static void interpretClassification(Map thing) {
     /* ... */
   }
 
-  static boolean convertIssuancetype(Map thing) {
-    var collectiontype = (String) thing.remove("issuanceType")
+  static boolean convertIssuancetype(Map instance, Map work) {
+    var collectiontype = (String) instance.remove("issuanceType")
     if ((collectiontype && !collectiontype.equals("Monograph"))) {
-      thing['collectsType'] = thing.get(TYPE)
-      thing[TYPE] = collectiontype
-      return true
+      // TODO: check genres and heuristics (some Serial are mistyped!)
+      if ('collectsType' in work) {
+        assert work['collectsType'] == instance.get(TYPE)
+        assert work[TYPE] == collectiontype
+      } else {
+        work['collectsType'] = work.get(TYPE)
+        work[TYPE] = collectiontype
+        return true
+      }
     }
     return false
   }
 
-  static void simplifySingleunitWork(Map thing, Map simpleinstance=null) {
-    var refSize = thing.containsKey(ANNOTATION) ? 2 : 1
-    if (thing.containsKey(ID) && thing.size() == refSize) {
+  static void simplifySingleunitWork(Map work) {
+    var refSize = work.containsKey(ANNOTATION) ? 2 : 1
+    if (work.containsKey(ID) && work.size() == refSize) {
       return
     }
 
-    var rtype = (String) thing.get(TYPE)
-    var genreforms = (List) reduceSymbols(asList(thing.get("genreForm")))
+    var rtype = (String) work.get(TYPE)
+    var genreforms = (List) reduceSymbols(asList(work.get("genreForm")))
     // TODO: drop from picklist...?
     var gfPicklist = genreforms.stream().filter(
         (it) -> (it.containsKey(ID) &&
                  !(it.get(ID).startsWith(SAOGF) || it.get(ID).startsWith(BARNGF)))
       ).collect(Collectors.toList())
 
-    var contenttypes = (List) reduceSymbols(asList(thing.get("contentType")))
+    var contenttypes = (List) reduceSymbols(asList(work.get("contentType")))
 
     if (contenttypes.size() == 1) {
       String ctypeid = contenttypes.get(0).get(ID)
@@ -125,9 +126,9 @@ class TypeNormalizer {
         (contentbasictype == rtype || contentbasictype in baseEqualOrSubMap[rtype])
       ) {
         if (contentbasictype != rtype) {
-          thing.put(TYPE, contentbasictype)
+          work.put(TYPE, contentbasictype)
         }
-        thing.remove("contentType")
+        work.remove("contentType")
       }
     }
 
@@ -140,42 +141,42 @@ class TypeNormalizer {
         ].find { iri -> genreforms.find { it[ID] == iri } }
         || matches(genreforms, "b%C3%B6cker")
     ) {
-      if (thing.get(TYPE) == "Text") {
-        thing.put(TYPE, "WrittenBook")
-      } else if (thing.get(TYPE) == "Audio") {
-        thing.put(TYPE, "AudioBook")
-      } else if (thing.get(TYPE) == "Tactile") {
-        thing.put(TYPE, "TactileBook")
+      if (work.get(TYPE) == "Text") {
+        work.put(TYPE, "WrittenBook")
+      } else if (work.get(TYPE) == "Audio") {
+        work.put(TYPE, "AudioBook")
+      } else if (work.get(TYPE) == "Tactile") {
+        work.put(TYPE, "TactileBook")
       }
     }
 
     if (genreforms.size() > 0) {
-      thing.put("genreForm", genreforms)
+      work.put("genreForm", genreforms)
     } else {
-      thing.remove("genreForm")
+      work.remove("genreForm")
     }
 
-    if (contenttypes.size() > 0 && thing.containsKey("contentType")) {
-      thing.put("contentType", contenttypes)
+    if (contenttypes.size() > 0 && work.containsKey("contentType")) {
+      work.put("contentType", contenttypes)
     } else {
-      thing.remove("contentType")
+      work.remove("contentType")
     }
   }
 
-  static void simplifySingleunitInstance(Map thing) {
-    var type = thing.get(TYPE)
-    var carriertypes = reduceSymbols(asList(thing["carrierType"]), "CarrierType")
-    var isSoundRecording = thing[TYPE] == "SoundRecording"
-    var isVideoRecording = thing[TYPE] == "VideoRecording"
+  static void simplifySingleunitInstance(Map instance) {
+    var type = instance.get(TYPE)
+    var carriertypes = reduceSymbols(asList(instance["carrierType"]), "CarrierType")
+    var isSoundRecording = instance[TYPE] == "SoundRecording"
+    var isVideoRecording = instance[TYPE] == "VideoRecording"
     var isElectronic = type == "Electronic"
     if ((isElectronic && matches(carriertypes, "Online"))) {
       carriertypes = carriertypes.stream().filter((x) -> !x.getOrDefault(ID, "").contains("Online")).collect(Collectors.toList())
       if ((carriertypes.size() > 1 || !(matches(carriertypes, "Electronic")))) {
-        thing.put("carrierType", carriertypes)
+        instance.put("carrierType", carriertypes)
       } else {
-        thing.remove("carrierType")
+        instance.remove("carrierType")
       }
-      thing.put(TYPE, "DigitalDocument")
+      instance.put(TYPE, "DigitalDocument")
     }
 
     def tuples = [
@@ -189,22 +190,22 @@ class TypeNormalizer {
       List gotMatches = matchTokens.findAll { matches(carriertypes, it) }
       if (isIt && gotMatches.size() > 0) {
         isElectronic = true
-        thing.put(TYPE, useType)
+        instance.put(TYPE, useType)
         if (carriertypes.size() == gotMatches.size()) {
-          thing.remove("carrierType")
+          instance.remove("carrierType")
         }
       }
     }
 
-    var isVolume = matches(carriertypes, "Volume") || looksLikeVolume(thing)
+    var isVolume = matches(carriertypes, "Volume") || looksLikeVolume(instance)
 
-    if (thing.get(TYPE) == "Instance") {
+    if (instance.get(TYPE) == "Instance") {
       if ((carriertypes.size() == 1 && matches(carriertypes, "Electronic"))) {
         isElectronic = true
-        thing.put(TYPE, "Electronic")
-        thing.remove("carrierType")
+        instance.put(TYPE, "Electronic")
+        instance.remove("carrierType")
       } else if (isVolume) {
-        thing.put(TYPE, "Volume")
+        instance.put(TYPE, "Volume")
       } else {
         /* ... */
       }
@@ -212,61 +213,61 @@ class TypeNormalizer {
 
     if (!isElectronic) {
       if (carriertypes.size() == 1) {
-        thing.remove("carrierType")
+        instance.remove("carrierType")
       }
       if (type == "Print" && isVolume) {
-        thing.put(TYPE, "PrintedVolume")
+        instance.put(TYPE, "PrintedVolume")
       } else if (type == "Instance") {
         if (!(isVolume)) {
-          thing.put(TYPE, "Monograph")
-        } else if ((thing.get("identifiedBy").stream().anyMatch(x -> x.get(TYPE).equals("ISBN")))
-                   || thing.containsKey("publication")) {
-          thing.put(TYPE, "PrintedVolume")
+          instance.put(TYPE, "Monograph")
+        } else if ((instance.get("identifiedBy").stream().anyMatch(x -> x.get(TYPE).equals("ISBN")))
+                   || instance.containsKey("publication")) {
+          instance.put(TYPE, "PrintedVolume")
         } else {
-          thing.put(TYPE, "Volume")
+          instance.put(TYPE, "Volume")
         }
       }
     }
 
-    List instanceGfs = asList(thing.get("genreForm"))
-    var mediaterm = (String) thing.get("marc:mediaTerm")
+    List instanceGfs = asList(instance.get("genreForm"))
+    var mediaterm = (String) instance.get("marc:mediaTerm")
     if (mediaterm) {
       if (mediaterm.toLowerCase() == "affisch") {
-        thing.remove("marc:mediaTerm")
+        instance.remove("marc:mediaTerm")
         assert matches(carriertypes, "Sheet")
-        thing.put(TYPE, "PosterSheet")
+        instance.put(TYPE, "PosterSheet")
         List reducedGfs = instanceGfs.stream().filter((it) -> !it.get(ID).equals("${MARC}Print")).collect(Collectors.toList())
         if (reducedGfs == null) {
-          thing.remove("genreForm")
+          instance.remove("genreForm")
         } else {
-          thing.put("genreForm", reducedGfs)
+          instance.put("genreForm", reducedGfs)
         }
       } else if (isElectronic && mediaterm.matches(/(?i)elektronisk (resurs|utgåva)/)) {
-        thing.remove("marc:mediaTerm")
+        instance.remove("marc:mediaTerm")
       } else if ((isSoundRecording && mediaterm.matches(/(?i)ljudupptagning/))) {
-        thing.remove("marc:mediaTerm")
+        instance.remove("marc:mediaTerm")
       } else if ((isVideoRecording && mediaterm.matches(/(?i)videoupptagning/))) {
-        thing.remove("marc:mediaTerm")
-      } else if (thing.get(TYPE).equals("Tactile") && mediaterm.matches(/(?i)punktskrift/)) {
+        instance.remove("marc:mediaTerm")
+      } else if (instance.get(TYPE).equals("Tactile") && mediaterm.matches(/(?i)punktskrift/)) {
         if (isVolume) {
-          thing.put(TYPE, "BrailleVolume")
+          instance.put(TYPE, "BrailleVolume")
         } else {
-          thing.put(TYPE, "BrailleResource")
+          instance.put(TYPE, "BrailleResource")
         }
         var toDrop = [KBRDA + "Volume", MARC + "Braille", MARC + "TacMaterialType-b"] as Set
         carriertypes = carriertypes.findAll { !toDrop.contains(it.get(ID)) }
         if (carriertypes == null) {
-          thing.remove("carrierType")
+          instance.remove("carrierType")
         } else {
-          thing.put("carrierType", carriertypes)
+          instance.put("carrierType", carriertypes)
         }
-        thing.remove("marc:mediaTerm")
+        instance.remove("marc:mediaTerm")
       }
     }
   }
 
-  static boolean looksLikeVolume(Map thing) {
-    for (extent in asList(thing.get("extent"))) {
+  static boolean looksLikeVolume(Map instance) {
+    for (extent in asList(instance.get("extent"))) {
       for (label in asList(extent.get("label"))) {
         if (label instanceof String && label.matches(/(?i).*\s(s|p|sidor|pages|vol(ym(er)?)?)\b\.?/)) {
           return true
@@ -276,13 +277,13 @@ class TypeNormalizer {
     return false
   }
 
-  static void simplifyAssociatedMedia(Map thing) {
+  static void simplifyAssociatedMedia(Map instance) {
     for (tuple in [
       ["associatedMedia", "hasRepresentation"],
       ["isPrimaryTopicOf", "associatedMedia"]
     ]) {
       def (givenRel, mediaRel) = tuple
-      for (Object qualification : asList(thing.get(givenRel))) {
+      for (Object qualification : asList(instance.get(givenRel))) {
         def uri = qualification.get("uri")
         if (uri) {
           if (uri instanceof Map) {
@@ -296,7 +297,7 @@ class TypeNormalizer {
             uri = uri[0]
           }
           var mediaObj = [(ID): uri]
-          thing.put(mediaRel, mediaObj)
+          instance.put(mediaRel, mediaObj)
           var scope = qualification.get("appliesTo")
           Map annot
           if ((scope instanceof Map && scope.containsKey("label"))) {
@@ -313,7 +314,7 @@ class TypeNormalizer {
         }
         continue
       }
-      thing.remove(givenRel)
+      instance.remove(givenRel)
     }
   }
 
@@ -333,37 +334,47 @@ boolean debug = true
 PrintWriter fullInput = debug ? getReportWriter("full-input.ndjson") : null
 PrintWriter fullOutput = debug ? getReportWriter("full-output.ndjson") : null
 
-seenWorks = java.util.concurrent.ConcurrentHashMap.newKeySet()
+// TODO: if instance and work codepend; fetch work and normalize that in tandem;
+// if so, store work id in mem to avoid converting again?
+// (or is the mem-overhead worse than read(+attempting to convert) twice?)
+convertedWorks = java.util.concurrent.ConcurrentHashMap.newKeySet()
 
 selectByIds(ids) {
-  def (record, thing) = it.graph
+  def (record, instance) = it.graph
+  def work = null
+  def loadedWorkId = null
 
-  if (debug) fullInput.println mapper.writeValueAsString(thing)
-  TypeNormalizer.normalize(thing)
-  if (debug) fullOutput.println mapper.writeValueAsString(thing)
-
-  if ('instanceOf' in thing) {
-    // TODO: if instance and work codepend; fetch work and normalize that in tandem;
-    // if so, store work id in mem to avoid converting again?
-    // (or is the mem-overhead worse than read(+attempting to convert) twice?)
-    if (ID !in thing.instanceOf) {
-      TypeNormalizer.normalize(thing.instanceOf)
+  if ('instanceOf' in instance) {
+    if (ID !in instance.instanceOf) {
+      work = instance.instanceOf
     } else {
-      def workId = thing.instanceOf[ID]
-      if (workId !in seenWorks) {
-        seenWorks << workId
+      loadedWorkId = instance.instanceOf[ID]
+      // TODO: normalize both in this block?
+      //selectByIds([instance.instanceOf[ID]]) {
+      //  ...
+      //  workItem.scheduleSave()
+      //}
+      def workRecordData = load(loadedWorkId)
+      work = workRecordData[GRAPH][1]
+    }
 
-        //selectByIds([thing.instanceOf[ID]]) {
-        //}
-        def workRecordData = load(workId)
-        def work = workRecordData[GRAPH][1]
-
-        if (debug) fullInput.println mapper.writeValueAsString(work)
-        TypeNormalizer.normalize(work)
-        if (debug) fullOutput.println mapper.writeValueAsString(work)
+    if (debug) {
+      fullInput.println mapper.writeValueAsString(instance)
+      if (loadedWorkId && loadedWorkId !in convertedWorks) {
+        fullInput.println mapper.writeValueAsString(work)
       }
     }
-  }
 
-  //it.scheduleSave()
+    TypeNormalizer.normalize(instance, work)
+
+    if (debug) {
+      fullOutput.println mapper.writeValueAsString(instance)
+      if (loadedWorkId && loadedWorkId !in convertedWorks) {
+        fullOutput.println mapper.writeValueAsString(work)
+        convertedWorks << loadedWorkId
+      }
+    }
+
+    //it.scheduleSave()
+  }
 }
