@@ -236,18 +236,44 @@
 ### Musik
 <https://libris.kb.se/hw8gjqqffn1l4l5m#it> # (digitiserade vaxcylindrar data.kb.se)
 
-# nya exempel från eliben 240508:
-<https://libris.kb.se/dnhmsbcrbcrhx17h#it> # (TAKK)
-<https://libris.kb.se/t7c5wgf8rtr4cw23#it> # (handskrift)
-<https://libris.kb.se/k0gkmwzgh09wpq26#it> # (handskrift)
-<https://libris.kb.se/0jbn1cnb4n8q8q2#it> # (handskrift)
-<https://libris.kb.se/7pmv3rlv54k0d5t1#it> # (handskrift, ritning)
-<https://libris.kb.se/wd6w9mf73fdj7w2#it> # (handskrift, karta)
-<https://libris.kb.se/2g5pr3lh08jz22th#it> # (handskrift, karta)
-<https://libris.kb.se/3lv7pdbj1wnmbghf#it> # (handskrift, musik) (4 st)
-<https://libris.kb.se/9s1hpw5t74jjvt0z#it> # (klassbok)
-<https://libris.kb.se/m4xt6nfz4nn1nxv#it> # (föremål)
+# Nya exempel 240508:
+<https://libris.kb.se/dnhmsbcrbcrhx17h#it> # TAKK
+<https://libris.kb.se/t7c5wgf8rtr4cw23#it> # handskrift
+<https://libris.kb.se/k0gkmwzgh09wpq26#it> # handskrift
+<https://libris.kb.se/0jbn1cnb4n8q8q2#it> # handskrift
+<https://libris.kb.se/7pmv3rlv54k0d5t1#it> # handskrift, ritning
+<https://libris.kb.se/wd6w9mf73fdj7w2#it> # handskrift, karta
+<https://libris.kb.se/2g5pr3lh08jz22th#it> # handskrift, karta
+<https://libris.kb.se/3lv7pdbj1wnmbghf#it> # handskrift, musik (4 st)
+<https://libris.kb.se/9s1hpw5t74jjvt0z#it> # klassbok
+<https://libris.kb.se/m4xt6nfz4nn1nxv#it> # föremål
 
 # sju sorters kakor (Kokbok)
 <https://libris.kb.se/zh9mpd893jh0f6l#it> # Paket
 <https://libris.kb.se/j2v4k4hv4k7bjcn#it> # Inbunden
+
+<https://libris.kb.se/fxqdc7vr0w93zw7#it> # tidskrift
+<https://libris.kb.se/zg86l5f936t52sk#it> # tidskrift
+<https://libris.kb.se/l3ww3m4x10bmh0j#it> # seriell, ljud
+<https://libris.kb.se/k2vqm64w4s4mstl#it> # atlas
+<https://libris.kb.se/xg883bz83sf01d9#it> # atlas
+<https://libris.kb.se/tc58r9j53zlqj5t#it> # samling vykort
+<https://libris.kb.se/r933p2535f4827h#it> # sah
+<https://libris.kb.se/7rkthknk23cw7mg#it> # sah digital
+<https://libris.kb.se/q71zqw622cppssb#it> # karta
+<https://libris.kb.se/t402t7cvr5jsw1wh#it> # karta digital
+<https://libris.kb.se/4mffxcdg2qmsp85#it> # karta - del av sammansatt resurs
+<https://libris.kb.se/m5z6x4mz229lhg8#it> # karta digital - del av sammansatt resurs
+
+<https://libris.kb.se/zh9rrn891tbhzjr#it> # bilderbok
+<https://libris.kb.se/vd6gdks60sj2j8f#it> # bok med ljud
+<https://libris.kb.se/0jbn8t8b0lzm1nf#it> # handskrift
+<https://libris.kb.se/sb4hjbd41m05rqf#it> # samma handskrift digitiserad
+
+<https://libris.kb.se/7qp7c1c9562176p5#it> # Vanlig e-bok
+<https://libris.kb.se/dxq1999q1dc8j3f#it> # En webbsida via e-plikt
+<https://libris.kb.se/8sfz2fl46c40c630#it> # Digitiserad bok
+<https://libris.kb.se/l4x02bgx295r7jn#it> # E-tidskriftsnummer
+<https://libris.kb.se/m5zcg5kz22x0pl5#it> # en bok online i många pdf
+<https://libris.kb.se/7rkmrclk193bmfv#it> # Databas
+<https://libris.kb.se/ctx7wv5b9rnpgtlr#it> # e-artikel
