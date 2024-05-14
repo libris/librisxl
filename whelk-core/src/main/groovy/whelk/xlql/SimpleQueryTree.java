@@ -113,10 +113,12 @@ public class SimpleQueryTree {
 
     public SimpleQueryTree(FlattenedAst ast, Disambiguate disambiguate) throws InvalidQueryException {
         this.tree = buildTree(ast.tree, disambiguate);
+        removeNeedlessWildcard();
     }
 
     public SimpleQueryTree(Node tree) {
         this.tree = tree;
+        removeNeedlessWildcard();
     }
 
     private static Node buildTree(FlattenedAst.Node ast, Disambiguate disambiguate) throws InvalidQueryException {
@@ -388,6 +390,12 @@ public class SimpleQueryTree {
             this.tree = newConjuncts.size() == 1 ? newConjuncts.getFirst() : new And(newConjuncts);
         } else {
             this.tree = new And(List.of(new FreeText(Operator.EQUALS, replacement), tree));
+        }
+    }
+
+    private void removeNeedlessWildcard() {
+        if (!isFreeText() && Operator.WILDCARD.equals(getFreeTextPart())) {
+            this.tree = excludeFromTree(new FreeText(Operator.EQUALS, Operator.WILDCARD), tree);
         }
     }
 }

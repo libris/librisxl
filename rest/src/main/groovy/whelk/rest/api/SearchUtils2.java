@@ -8,6 +8,7 @@ import whelk.exception.WhelkRuntimeException;
 import whelk.search.XLQLQuery;
 import whelk.util.DocumentUtil;
 import whelk.xlql.Disambiguate;
+import whelk.xlql.Operator;
 import whelk.xlql.QueryTree;
 import whelk.xlql.SimpleQueryTree;
 
@@ -117,11 +118,11 @@ public class SearchUtils2 {
                 var iSqt = xlqlQuery.getSimpleQueryTree(i.get());
                 if (iSqt.isEmpty() || iSqt.isFreeText()) {
                     var qSqt = xlqlQuery.getSimpleQueryTree(q.get());
-                    if (i.get().equals(qSqt.getFreeTextPart())) {
+                    if (compatibleFreeText(i.get(), qSqt.getFreeTextPart())) {
                         // The acceptable case
-                        this.queryString = q.get();
-                        this.freeText = i.get();
                         this.simpleQueryTree = qSqt;
+                        this.queryString = xlqlQuery.sqtToQueryString(qSqt);
+                        this.freeText = qSqt.getFreeTextPart();
                         SimpleQueryTree filteredTree = getFilteredTree();
                         this.outsetType = xlqlQuery.getOutsetType(filteredTree);
                         this.queryTree = xlqlQuery.getQueryTree(filteredTree, outsetType);
@@ -185,6 +186,11 @@ public class SearchUtils2 {
             view.put("maxItems", whelk.elastic.maxResultWindow);
 
             return view;
+        }
+
+        private boolean compatibleFreeText(String a, String b) {
+            return Objects.equals(a, b)
+                    || (a.isEmpty() || Operator.WILDCARD.equals(a)) && (b.isEmpty() || Operator.WILDCARD.equals(b));
         }
 
         private SimpleQueryTree getFilteredTree() {
