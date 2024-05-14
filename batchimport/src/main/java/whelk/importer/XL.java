@@ -634,7 +634,7 @@ class XL
             throws SQLException, IsbnException
     {
         boolean hyphens = false;
-        if (isbn == null)
+        if (isbn == null || isbn.length() == 0)
             return new ArrayList<>();
 
         List<String> duplicateIDs = new ArrayList<>();
