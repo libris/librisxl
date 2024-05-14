@@ -266,7 +266,7 @@ public class XLQLQuery {
 
         SimpleQueryTree reducedTree = sqt.excludeFromTree(sqtNode);
         String upUrl = reducedTree.isEmpty()
-                ? makeFindUrl(Stream.concat(Stream.of(makeParam("_i", "*"), makeParam("_q", "*")), nonQueryParams.stream())
+                ? makeFindUrl(Stream.concat(Stream.of(makeParam("_i", ""), makeParam("_q", "*")), nonQueryParams.stream())
                 .toList())
                 : makeFindUrl(reducedTree, nonQueryParams);
 
