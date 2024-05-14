@@ -398,7 +398,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
         if (nextArrayPath.isEmpty()) {
             return false
         }
-        def obj = asList(getAtPath(thing, nextArrayPath))
+        def obj = asList(DocumentUtil.getAtPath(thing, nextArrayPath))
         if (obj.size() > 1) {
             return true
         }
