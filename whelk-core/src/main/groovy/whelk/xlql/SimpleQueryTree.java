@@ -352,6 +352,10 @@ public class SimpleQueryTree {
         return freeTextPart;
     }
 
+    private void resetFreeTextPart() {
+        this.freeTextPart = null;
+    }
+
     public String toQueryString(Disambiguate disambiguate) {
         return buildQueryString(tree, disambiguate, true);
     }
@@ -396,6 +400,7 @@ public class SimpleQueryTree {
     private void removeNeedlessWildcard() {
         if (!isFreeText() && Operator.WILDCARD.equals(getFreeTextPart())) {
             this.tree = excludeFromTree(new FreeText(Operator.EQUALS, Operator.WILDCARD), tree);
+            resetFreeTextPart();
         }
     }
 }
