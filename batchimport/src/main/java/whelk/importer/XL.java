@@ -647,7 +647,13 @@ class XL
             duplicateIDs.addAll( collectIDs(resultSet) );
         }
 
-        Isbn typedIsbn = IsbnParser.parse(isbn);
+        Isbn typedIsbn;
+        try {
+            typedIsbn = IsbnParser.parse(isbn);
+        } catch (Exception e) {
+            // Bad ISBN values can occur, we should ignore them, but not crash.
+            return duplicateIDs;
+        }
         if (typedIsbn == null)
             return duplicateIDs;
 
