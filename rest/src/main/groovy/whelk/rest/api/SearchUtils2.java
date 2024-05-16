@@ -96,6 +96,7 @@ public class SearchUtils2 {
         private final List<String> predicates;
         private final String mode;
         private final Map<String, Object> statsRepr;
+        private final Map<String, Map<String, Object>> defaultBoolFilters;
         private final List<String> debug;
         private final String queryString;
         private final String freeText;
@@ -115,40 +116,28 @@ public class SearchUtils2 {
             this.offset = getOffset(queryParameters);
             this.lens = getOptionalSingleNonEmpty(P.LENS, queryParameters).orElse("cards");
             this.statsRepr = getStatsRepr(queryParameters);
+            this.defaultBoolFilters = getDefaultBoolFilters();
 
-            var q = getOptionalSingle(P.QUERY, queryParameters);
-            var i = getOptionalSingle(P.SIMPLE_FREETEXT, queryParameters);
+            var q = getOptionalSingleNonEmpty(P.QUERY, queryParameters);
+            var i = getOptionalSingleNonEmpty(P.SIMPLE_FREETEXT, queryParameters);
 
-            if (q.isPresent() && i.isPresent()) {
-                var iSqt = xlqlQuery.getSimpleQueryTree(i.get(), getDefaultBoolFilters());
-                if (iSqt.isEmpty() || iSqt.isFreeText()) {
-                    var qSqt = xlqlQuery.getSimpleQueryTree(q.get(), getDefaultBoolFilters());
-                    if (i.get().equals(qSqt.getFreeTextPart())) {
-                        // The acceptable case
-                        this.queryString = q.get();
-                        this.freeText = i.get();
-                        this.simpleQueryTree = qSqt;
-                        SimpleQueryTree filteredTree = getFilteredTree();
-                        this.outsetType = xlqlQuery.getOutsetType(filteredTree);
-                        this.queryTree = xlqlQuery.getQueryTree(filteredTree, outsetType);
-                        this.esQueryDsl = getEsQueryDsl();
-                    } else {
-                        qSqt.replaceTopLevelFreeText(i.get());
-                        throw new Crud.RedirectException(makeFindUrl(i.get(), xlqlQuery.sqtToQueryString(qSqt)));
-                    }
+            if (q.isPresent()) {
+                var sqt = xlqlQuery.getSimpleQueryTree(q.get(), defaultBoolFilters);
+                if (i.isEmpty() || xlqlQuery.getSimpleQueryTree(i.get(), defaultBoolFilters).isFreeText()) {
+                    this.queryString = xlqlQuery.sqtToQueryString(sqt);
+                    this.freeText = sqt.getFreeTextPart();
+                    this.simpleQueryTree = sqt;
+                    SimpleQueryTree filteredTree = getFilteredTree();
+                    this.outsetType = xlqlQuery.getOutsetType(filteredTree);
+                    this.queryTree = xlqlQuery.getQueryTree(filteredTree, outsetType);
+                    this.esQueryDsl = getEsQueryDsl();
                 } else {
-                    throw new Crud.RedirectException(makeFindUrl(iSqt.getFreeTextPart(), i.get()));
+                    throw new Crud.RedirectException(makeFindUrl(sqt.getFreeTextPart(), xlqlQuery.sqtToQueryString(sqt)));
                 }
-            } else if (q.isPresent()) {
-                var qSqt = xlqlQuery.getSimpleQueryTree(q.get());
-                throw new Crud.RedirectException(makeFindUrl(qSqt.getFreeTextPart(), q.get()));
-            } else if (i.isPresent()) {
-                var iSqt = xlqlQuery.getSimpleQueryTree(i.get());
-                throw new Crud.RedirectException(makeFindUrl(iSqt.getFreeTextPart(), i.get()));
             } else if (object != null) {
-                throw new Crud.RedirectException(makeFindUrl("*", "*"));
+                throw new Crud.RedirectException(makeFindUrl("", "*"));
             } else {
-                throw new InvalidQueryException("Missing required query parameters");
+                throw new InvalidQueryException("Missing required query parameter: _q");
             }
         }
 
@@ -202,7 +191,7 @@ public class SearchUtils2 {
                     filters.addAll(predicates.stream().map(p -> SimpleQueryTree.pvEqualsLink(p, object)).toList());
                 }
             }
-            return xlqlQuery.addFilters(xlqlQuery.setBoolFilters(simpleQueryTree, getDefaultBoolFilters()), filters);
+            return xlqlQuery.addFilters(xlqlQuery.setBoolFilters(simpleQueryTree, defaultBoolFilters), filters);
         }
 
         private Map<String, Map<String, String>> makePaginationLinks(int numHits) {
@@ -353,6 +342,7 @@ public class SearchUtils2 {
         }
 
         private Map<String, Map<String, Object>> getDefaultBoolFilters() throws InvalidQueryException {
+            // TODO: get from apps.jsonld
             Map<String, Map<String, Object>> m = new HashMap<>();
             for (var bf : BOOL_FILTERS) {
                 String alias = bf.get("alias");
