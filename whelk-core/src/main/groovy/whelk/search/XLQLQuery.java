@@ -9,6 +9,7 @@ import whelk.util.DocumentUtil;
 import whelk.util.Unicode;
 import whelk.xlql.Ast;
 import whelk.xlql.Disambiguate;
+import whelk.xlql.FilterStatus;
 import whelk.xlql.FlattenedAst;
 import whelk.xlql.Lex;
 import whelk.xlql.Operator;
@@ -66,6 +67,10 @@ public class XLQLQuery {
     }
 
     public SimpleQueryTree getSimpleQueryTree(String queryString) throws InvalidQueryException {
+        return getSimpleQueryTree(queryString, Collections.emptyMap());
+    }
+
+    public SimpleQueryTree getSimpleQueryTree(String queryString, Map<String, Map<String, Object>> defaultBoolFilters) throws InvalidQueryException {
         if (queryString.isEmpty()) {
             return new SimpleQueryTree(null);
         }
@@ -73,11 +78,22 @@ public class XLQLQuery {
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols);
         Ast ast = new Ast(parseTree);
         FlattenedAst flattened = new FlattenedAst(ast);
-        return new SimpleQueryTree(flattened, disambiguate);
+        return new SimpleQueryTree(flattened, disambiguate, defaultBoolFilters);
     }
-
     public String sqtToQueryString(SimpleQueryTree sqt) {
         return sqt.toQueryString(disambiguate);
+    }
+
+    public SimpleQueryTree setBoolFilters(SimpleQueryTree sqt, Map<String, Map<String, Object>> defaultBoolFilters) {
+        var explicitFilters = sqt.getBoolFilterAliases();
+        for (var entry : defaultBoolFilters.entrySet()) {
+            String alias = entry.getKey();
+            FilterStatus status = (FilterStatus) entry.getValue().get("status");
+            if (FilterStatus.ACTIVE.equals(status) && !explicitFilters.contains(alias)) {
+                sqt = sqt.andExtend(new SimpleQueryTree.BoolFilter(alias, status, (SimpleQueryTree.Node) entry.getValue().get("filter")));
+            }
+        }
+        return sqt.expandActiveBoolFilters();
     }
 
     public SimpleQueryTree addFilters(SimpleQueryTree sqt, List<SimpleQueryTree.PropertyValue> filters) {
@@ -262,6 +278,7 @@ public class XLQLQuery {
             }
             case SimpleQueryTree.FreeText ft -> mappingsNode = freeTextMapping(ft);
             case SimpleQueryTree.PropertyValue pv -> mappingsNode = propertyValueMapping(pv, aliases);
+            case SimpleQueryTree.BoolFilter ignored -> mappingsNode = Collections.emptyMap(); //TODO
         }
 
         SimpleQueryTree reducedTree = sqt.excludeFromTree(sqtNode);
@@ -621,12 +638,8 @@ public class XLQLQuery {
         var GtLtNodes = sqt.getTopLevelPvNodes().stream()
                 .filter(pv -> pv.property().equals(property))
                 .filter(pv -> switch (pv.operator()) {
-                    case EQUALS -> false;
-                    case NOT_EQUALS -> false;
-                    case GREATER_THAN_OR_EQUALS -> true;
-                    case GREATER_THAN -> true;
-                    case LESS_THAN_OR_EQUALS -> true;
-                    case LESS_THAN -> true;
+                    case EQUALS, NOT_EQUALS -> false;
+                    case GREATER_THAN_OR_EQUALS, GREATER_THAN, LESS_THAN_OR_EQUALS, LESS_THAN -> true;
                 })
                 .filter(pv -> pv.value().isNumeric())
                 .toList();

@@ -14,7 +14,6 @@ import static whelk.xlql.Operator.EQUALS;
 
 import static whelk.xlql.Disambiguate.RDF_TYPE;
 
-
 public class QueryTree {
     public sealed interface Node permits And, Or, Nested, Field, FreeText {
         default List<Node> children() {
@@ -107,6 +106,7 @@ public class QueryTree {
             }
             case SimpleQueryTree.FreeText ft -> new FreeText(ft.operator(), ft.value());
             case SimpleQueryTree.PropertyValue pv -> buildField(pv, disambiguate, outset);
+            case SimpleQueryTree.BoolFilter ignored -> throw new RuntimeException("Failed to create QueryTree. Tree must not contain unexpanded bool filters."); // Should never be reached.
         };
     }
 

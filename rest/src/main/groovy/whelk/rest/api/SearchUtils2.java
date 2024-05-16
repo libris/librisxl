@@ -8,6 +8,7 @@ import whelk.exception.WhelkRuntimeException;
 import whelk.search.XLQLQuery;
 import whelk.util.DocumentUtil;
 import whelk.xlql.Disambiguate;
+import whelk.xlql.FilterStatus;
 import whelk.xlql.QueryTree;
 import whelk.xlql.SimpleQueryTree;
 
@@ -28,6 +29,11 @@ public class SearchUtils2 {
     final static int DEFAULT_OFFSET = 0;
     private static final List<SimpleQueryTree.PropertyValue> DEFAULT_FILTERS = List.of(SimpleQueryTree.pvEqualsVocabTerm(RDF_TYPE, "Work"));
 
+    private static final List<Map<String, String>> BOOL_FILTERS = List.of(
+            Map.of("alias", "excludeEplikt", "filter", "NOT bibliography:\"sigel:EPLK\"", "status", "active"),
+            Map.of("alias", "excludePreliminary", "filter", "NOT encodingLevel:(\"marc:PartialPreliminaryLevel\" OR \"marc:PrepublicationLevel\")", "status", "active"),
+            Map.of("alias", "existsCoverImage", "filter", "image:*", "status", "inactive")
+    );
     Whelk whelk;
     XLQLQuery xlqlQuery;
 
@@ -114,9 +120,9 @@ public class SearchUtils2 {
             var i = getOptionalSingle(P.SIMPLE_FREETEXT, queryParameters);
 
             if (q.isPresent() && i.isPresent()) {
-                var iSqt = xlqlQuery.getSimpleQueryTree(i.get());
+                var iSqt = xlqlQuery.getSimpleQueryTree(i.get(), getDefaultBoolFilters());
                 if (iSqt.isEmpty() || iSqt.isFreeText()) {
-                    var qSqt = xlqlQuery.getSimpleQueryTree(q.get());
+                    var qSqt = xlqlQuery.getSimpleQueryTree(q.get(), getDefaultBoolFilters());
                     if (i.get().equals(qSqt.getFreeTextPart())) {
                         // The acceptable case
                         this.queryString = q.get();
@@ -187,7 +193,7 @@ public class SearchUtils2 {
             return view;
         }
 
-        private SimpleQueryTree getFilteredTree() {
+        private SimpleQueryTree getFilteredTree() throws InvalidQueryException {
             var filters = new ArrayList<>(DEFAULT_FILTERS);
             if (object != null) {
                 if (predicates.isEmpty()) {
@@ -196,7 +202,7 @@ public class SearchUtils2 {
                     filters.addAll(predicates.stream().map(p -> SimpleQueryTree.pvEqualsLink(p, object)).toList());
                 }
             }
-            return xlqlQuery.addFilters(simpleQueryTree, filters);
+            return xlqlQuery.addFilters(xlqlQuery.setBoolFilters(simpleQueryTree, getDefaultBoolFilters()), filters);
         }
 
         private Map<String, Map<String, String>> makePaginationLinks(int numHits) {
@@ -346,6 +352,17 @@ public class SearchUtils2 {
             return statsRepr;
         }
 
+        private Map<String, Map<String, Object>> getDefaultBoolFilters() throws InvalidQueryException {
+            Map<String, Map<String, Object>> m = new HashMap<>();
+            for (var bf : BOOL_FILTERS) {
+                String alias = bf.get("alias");
+                SimpleQueryTree.Node filter = xlqlQuery.getSimpleQueryTree(bf.get("filter")).tree;
+                FilterStatus status = FilterStatus.valueOf(bf.get("status").toUpperCase());
+                m.put(alias, Map.of("filter", filter, "status", status));
+            }
+            return m;
+        }
+
         @SuppressWarnings({"rawtypes", "unchecked"})
         private <V> Map<String, V> shapeResultItem(Map<String, V> esItem) {
             var item = applyLens(esItem, lens, object);
@@ -354,8 +371,8 @@ public class SearchUtils2 {
             List<Map> identifiedBy = (List<Map>) item.get("identifiedBy");
             if (identifiedBy != null) {
                 Function<Object, String> toStr = s -> s != null ? s.toString() : "";
-                identifiedBy.removeIf( id -> (Document.isIsni(id) || Document.isOrcid(id))
-                        && toStr.apply(id.get("value")).length() == 16 + 3 );
+                identifiedBy.removeIf(id -> (Document.isIsni(id) || Document.isOrcid(id))
+                        && toStr.apply(id.get("value")).length() == 16 + 3);
             }
 
             // reverseLinks must be re-added because they might get filtered out in applyLens().
