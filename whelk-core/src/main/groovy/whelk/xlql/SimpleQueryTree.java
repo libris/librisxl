@@ -377,15 +377,24 @@ public class SimpleQueryTree {
     }
 
     public Set<String> getBoolFilterAliases() {
-        return switch (tree) {
-            case And and -> and.conjuncts()
-                    .stream()
-                    .map(node -> node instanceof BoolFilter ? ((BoolFilter) node).alias() : null)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toSet());
-            case BoolFilter bf -> Set.of(bf.alias());
-            default -> Collections.emptySet();
-        };
+        return getBoolFiltersByAlias().keySet();
+    }
+
+    public Map<String, BoolFilter> getBoolFiltersByAlias() {
+        Map<String, BoolFilter> bfByAlias = new HashMap<>();
+
+        switch (tree) {
+            case And and -> and.conjuncts().forEach(node -> {
+                if (node instanceof BoolFilter n) {
+                    bfByAlias.put(n.alias(), n);
+                }
+            });
+            case BoolFilter bf -> bfByAlias.put(bf.alias(), bf);
+            default -> {
+            }
+        }
+
+        return bfByAlias;
     }
 
     public List<PropertyValue> getTopLevelPvNodes() {

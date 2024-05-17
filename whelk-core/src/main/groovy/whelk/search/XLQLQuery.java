@@ -278,14 +278,11 @@ public class XLQLQuery {
             }
             case SimpleQueryTree.FreeText ft -> mappingsNode = freeTextMapping(ft);
             case SimpleQueryTree.PropertyValue pv -> mappingsNode = propertyValueMapping(pv, aliases);
-            case SimpleQueryTree.BoolFilter ignored -> mappingsNode = Collections.emptyMap(); //TODO
+            case SimpleQueryTree.BoolFilter bf -> mappingsNode = boolFilterMapping(bf);
         }
 
         SimpleQueryTree reducedTree = sqt.excludeFromTree(sqtNode);
-        String upUrl = reducedTree.isEmpty()
-                ? makeFindUrl(Stream.concat(Stream.of(makeParam("_i", "*"), makeParam("_q", "*")), nonQueryParams.stream())
-                .toList())
-                : makeFindUrl(reducedTree, nonQueryParams);
+        String upUrl = makeFindUrl(reducedTree, nonQueryParams);
 
         mappingsNode.put("up", Map.of(JsonLd.ID_KEY, upUrl));
 
@@ -293,7 +290,9 @@ public class XLQLQuery {
     }
 
     private String makeFindUrl(SimpleQueryTree sqt, List<String> nonQueryParams) {
-        return makeFindUrl(sqt.getFreeTextPart(), sqt.toQueryString(disambiguate), nonQueryParams);
+        return sqt.isEmpty()
+                ? makeFindUrl("", "*", nonQueryParams)
+                : makeFindUrl(sqt.getFreeTextPart(), sqt.toQueryString(disambiguate), nonQueryParams);
     }
 
     private static String makeFindUrl(String i, String q, List<String> nonQueryParams) {
@@ -339,6 +338,14 @@ public class XLQLQuery {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("property", getDefinition("textQuery"));
         m.put(ft.operator().termKey, ft.value());
+        return m;
+    }
+
+    // FIXME
+    private Map<String, Object> boolFilterMapping(SimpleQueryTree.BoolFilter bf) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("property", getDefinition("textQuery"));
+        m.put(Operator.EQUALS.termKey, bf.alias());
         return m;
     }
 
@@ -507,10 +514,11 @@ public class XLQLQuery {
         return esMappings.nestedFields.stream().filter(path::startsWith).findFirst();
     }
 
-    public Map<String, Object> getStats(Map<String, Object> esResponse, Map<String, Object> statsRepr, SimpleQueryTree sqt, Map<String, String> nonQueryParams, Map<String, String> aliases) {
+    public Map<String, Object> getStats(Map<String, Object> esResponse, Map<String, Object> statsRepr, SimpleQueryTree sqt, Map<String, String> nonQueryParams, Map<String, String> aliases) throws InvalidQueryException {
         var buckets = collectBuckets(esResponse, statsRepr);
         var rangeProps = getRangeProperties(statsRepr);
-        return buildStats(buckets, sqt, nonQueryParams, aliases, rangeProps);
+        var boolFilters = getDefaultBoolFilters(statsRepr);
+        return buildStats(buckets, sqt, nonQueryParams, aliases, rangeProps, boolFilters);
     }
 
     // Problem: Same value in different fields will be counted twice, e.g. contribution.agent + instanceOf.contribution.agent
@@ -586,7 +594,8 @@ public class XLQLQuery {
             SimpleQueryTree sqt,
             Map<String, String> nonQueryParams,
             Map<String, String> aliases,
-            Set<String> rangeProps) {
+            Set<String> rangeProps,
+            Map<String, Map<String, Object>> defaultBoolFilters) {
         var sliceByDimension = new LinkedHashMap<>();
 
         propToBuckets.forEach((property, buckets) -> {
@@ -604,11 +613,75 @@ public class XLQLQuery {
             }
         });
 
+        if (!defaultBoolFilters.isEmpty()) {
+            var observations = new ArrayList<>();
+            var existing = sqt.getBoolFiltersByAlias();
+
+            for (var entry : defaultBoolFilters.entrySet()) {
+                var alias = entry.getKey();
+                var filter = (SimpleQueryTree.Node) entry.getValue().get("filter");
+                var defaultStatus = (FilterStatus) entry.getValue().get("status");
+                var bfNode = existing.get(alias);
+
+                SimpleQueryTree newTree;
+                boolean isSelected;
+
+                if (bfNode == null || defaultStatus.equals(bfNode.status())) {
+                    var newStatus = switch (defaultStatus) {
+                        case INACTIVE -> FilterStatus.ACTIVE;
+                        case ACTIVE -> FilterStatus.INACTIVE;
+                    };
+                    newTree = sqt.andExtend(new SimpleQueryTree.BoolFilter(alias, newStatus, filter));
+                    isSelected = false;
+                } else {
+                    newTree = sqt.excludeFromTree(bfNode);
+                    isSelected = true;
+                }
+
+                var observation = new LinkedHashMap<>();
+                // TODO: fix form
+                observation.put("totalItems", 0);
+                observation.put("object", entry.getValue().get("selectHeader"));
+                observation.put("view", Map.of(JsonLd.ID_KEY, makeFindUrl(newTree, makeParams(nonQueryParams))));
+                observation.put("_selected", isSelected);
+
+                observations.add(observation);
+            }
+
+            var sliceNode = new LinkedHashMap<>();
+            sliceNode.put("dimension", "moreFilters"); //TODO
+            sliceNode.put("observation", observations);
+
+            sliceByDimension.put("moreFilters", sliceNode);
+        }
+
+
         return Map.of(JsonLd.ID_KEY, "#stats",
                 "sliceByDimension", sliceByDimension);
     }
 
-    private Set<String> getRangeProperties(Map<String, Object> statsRepr) {
+    public Map<String, Map<String, Object>> getDefaultBoolFilters(Map<String, Object> statsRepr) throws InvalidQueryException {
+        // TODO: get from apps.jsonld
+        List<Map<String, String>> boolFilters = List.of(
+                Map.of("alias", "excludeEplikt", "filter", "NOT bibliography:\"sigel:EPLK\"", "status", "active", "selectHeader", "Visa e-pliktsmaterial"),
+                Map.of("alias", "excludePreliminary", "filter", "NOT encodingLevel:(\"marc:PartialPreliminaryLevel\" OR \"marc:PrepublicationLevel\")", "status", "active", "selectHeader", "Visa kommande"),
+                Map.of("alias", "hasImage", "filter", "image:*", "status", "inactive", "selectHeader", "Dölj resurser utan bild")
+        );
+
+        Map<String, Map<String, Object>> m = new LinkedHashMap<>();
+
+        for (var bf : boolFilters) {
+            String alias = bf.get("alias");
+            SimpleQueryTree.Node filter = getSimpleQueryTree(bf.get("filter")).tree;
+            FilterStatus status = FilterStatus.valueOf(bf.get("status").toUpperCase());
+            String selectHeader = bf.get("selectHeader");
+            m.put(alias, Map.of("filter", filter, "status", status, "selectHeader", selectHeader));
+        }
+
+        return m;
+    }
+
+    private static Set<String> getRangeProperties(Map<String, Object> statsRepr) {
         return statsRepr.entrySet()
                 .stream()
                 .filter(e -> ((Map<?, ?>) e.getValue()).containsKey("range"))

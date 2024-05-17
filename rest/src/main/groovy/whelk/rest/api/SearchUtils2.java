@@ -29,11 +29,6 @@ public class SearchUtils2 {
     final static int DEFAULT_OFFSET = 0;
     private static final List<SimpleQueryTree.PropertyValue> DEFAULT_FILTERS = List.of(SimpleQueryTree.pvEqualsVocabTerm(RDF_TYPE, "Work"));
 
-    private static final List<Map<String, String>> BOOL_FILTERS = List.of(
-            Map.of("alias", "excludeEplikt", "filter", "NOT bibliography:\"sigel:EPLK\"", "status", "active"),
-            Map.of("alias", "excludePreliminary", "filter", "NOT encodingLevel:(\"marc:PartialPreliminaryLevel\" OR \"marc:PrepublicationLevel\")", "status", "active"),
-            Map.of("alias", "existsCoverImage", "filter", "image:*", "status", "inactive")
-    );
     Whelk whelk;
     XLQLQuery xlqlQuery;
 
@@ -157,7 +152,7 @@ public class SearchUtils2 {
             return queryDsl;
         }
 
-        public Map<String, Object> getPartialCollectionView(Map<String, Object> esResponse) {
+        public Map<String, Object> getPartialCollectionView(Map<String, Object> esResponse) throws InvalidQueryException {
             int numHits = (int) esResponse.getOrDefault("totalHits", 0);
             var aliases = XLQLQuery.getAliasMappings(outsetType);
             var view = new LinkedHashMap<String, Object>();
@@ -182,7 +177,7 @@ public class SearchUtils2 {
             return view;
         }
 
-        private SimpleQueryTree getFilteredTree() throws InvalidQueryException {
+        private SimpleQueryTree getFilteredTree() {
             var filters = new ArrayList<>(DEFAULT_FILTERS);
             if (object != null) {
                 if (predicates.isEmpty()) {
@@ -342,15 +337,7 @@ public class SearchUtils2 {
         }
 
         private Map<String, Map<String, Object>> getDefaultBoolFilters() throws InvalidQueryException {
-            // TODO: get from apps.jsonld
-            Map<String, Map<String, Object>> m = new HashMap<>();
-            for (var bf : BOOL_FILTERS) {
-                String alias = bf.get("alias");
-                SimpleQueryTree.Node filter = xlqlQuery.getSimpleQueryTree(bf.get("filter")).tree;
-                FilterStatus status = FilterStatus.valueOf(bf.get("status").toUpperCase());
-                m.put(alias, Map.of("filter", filter, "status", status));
-            }
-            return m;
+            return xlqlQuery.getDefaultBoolFilters(statsRepr);
         }
 
         @SuppressWarnings({"rawtypes", "unchecked"})
