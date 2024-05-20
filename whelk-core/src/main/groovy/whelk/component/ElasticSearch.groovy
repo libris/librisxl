@@ -324,7 +324,7 @@ class ElasticSearch {
             }
             else {
                 log.warn("Failed to update reverse link counter ($deltaCount) for $shortId: $e, placing in retry queue.", e)
-                indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, deltaCount) })
+                indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, relation, deltaCount) })
             }
         }
     }
