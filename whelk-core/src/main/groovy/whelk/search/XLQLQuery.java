@@ -86,6 +86,7 @@ public class XLQLQuery {
 
     public SimpleQueryTree setBoolFilters(SimpleQueryTree sqt, Map<String, Map<String, Object>> defaultBoolFilters) {
         var explicitFilters = sqt.getBoolFilterAliases();
+
         for (var entry : defaultBoolFilters.entrySet()) {
             String alias = entry.getKey();
             FilterStatus status = (FilterStatus) entry.getValue().get("status");
@@ -93,6 +94,7 @@ public class XLQLQuery {
                 sqt = sqt.andExtend(new SimpleQueryTree.BoolFilter(alias, status, (SimpleQueryTree.Node) entry.getValue().get("filter")));
             }
         }
+
         return sqt.expandActiveBoolFilters();
     }
 
@@ -626,7 +628,7 @@ public class XLQLQuery {
                 SimpleQueryTree newTree;
                 boolean isSelected;
 
-                if (bfNode == null || defaultStatus.equals(bfNode.status())) {
+                if (bfNode == null) {
                     var newStatus = switch (defaultStatus) {
                         case INACTIVE -> FilterStatus.ACTIVE;
                         case ACTIVE -> FilterStatus.INACTIVE;

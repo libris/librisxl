@@ -139,26 +139,46 @@ public class SimpleQueryTree {
             case FlattenedAst.And and -> {
                 List<Node> conjuncts = new ArrayList<>();
                 for (FlattenedAst.Node o : and.operands()) {
-                    conjuncts.add(buildTree(o, disambiguate, defaultBoolFilters));
+                    var c = buildTree(o, disambiguate, defaultBoolFilters);
+                    if (c != null) {
+                        conjuncts.add(c);
+                    }
                 }
-                return new And(conjuncts);
+                return switch (conjuncts.size()) {
+                    case 0 -> null;
+                    case 1 -> conjuncts.getFirst();
+                    default -> new And(conjuncts);
+                };
             }
             case FlattenedAst.Or or -> {
                 List<Node> disjuncts = new ArrayList<>();
                 for (FlattenedAst.Node o : or.operands()) {
-                    disjuncts.add(buildTree(o, disambiguate, defaultBoolFilters));
+                    var d = buildTree(o, disambiguate, defaultBoolFilters);
+                    if (d != null) {
+                        disjuncts.add(d);
+                    }
                 }
-                return new Or(disjuncts);
+                return switch (disjuncts.size()) {
+                    case 0 -> null;
+                    case 1 -> disjuncts.getFirst();
+                    default -> new Or(disjuncts);
+                };
             }
             case FlattenedAst.Not not -> {
-                return defaultBoolFilters.containsKey(not.value())
-                        ? new BoolFilter(not.value(), FilterStatus.INACTIVE, (Node) defaultBoolFilters.get(not.value()).get("filter"))
-                        : new FreeText(Operator.NOT_EQUALS, not.value());
+                if (defaultBoolFilters.containsKey(not.value())) {
+                    return defaultBoolFilters.get(not.value()).get("status").equals(FilterStatus.INACTIVE)
+                            ? null
+                            : new BoolFilter(not.value(), FilterStatus.INACTIVE, (Node) defaultBoolFilters.get(not.value()).get("filter"));
+                }
+                return new FreeText(Operator.NOT_EQUALS, not.value());
             }
             case FlattenedAst.Leaf l -> {
-                return defaultBoolFilters.containsKey(l.value())
-                        ? new BoolFilter(l.value(), FilterStatus.ACTIVE, (Node) defaultBoolFilters.get(l.value()).get("filter"))
-                        : new FreeText(Operator.EQUALS, l.value());
+                if (defaultBoolFilters.containsKey(l.value())) {
+                    return defaultBoolFilters.get(l.value()).get("status").equals(FilterStatus.ACTIVE)
+                            ? null
+                            : new BoolFilter(l.value(), FilterStatus.ACTIVE, (Node) defaultBoolFilters.get(l.value()).get("filter"));
+                }
+                return new FreeText(Operator.EQUALS, l.value());
             }
             case FlattenedAst.Code c -> {
                 String property = null;
@@ -236,7 +256,7 @@ public class SimpleQueryTree {
                 yield new Or(disjuncts);
             }
             case FreeText ft -> new FreeText(ft.operator(), quoteIfPhraseOrContainsSpecialSymbol(ft.value()));
-            default -> node;
+            case null, default -> node;
         };
     }
 
@@ -326,6 +346,7 @@ public class SimpleQueryTree {
                 && (operators.isEmpty() || operators.contains(((PropertyValue) node).operator())));
 
         return switch (tree) {
+            case null -> null;
             case And and -> {
                 List<Node> conjuncts = and.conjuncts()
                         .stream()
@@ -390,7 +411,7 @@ public class SimpleQueryTree {
                 }
             });
             case BoolFilter bf -> bfByAlias.put(bf.alias(), bf);
-            default -> {
+            case null, default ->  {
             }
         }
 
@@ -448,7 +469,7 @@ public class SimpleQueryTree {
     }
 
     public String toQueryString(Disambiguate disambiguate) {
-        return buildQueryString(tree, disambiguate, true);
+        return isEmpty() ? "*" : buildQueryString(tree, disambiguate, true);
     }
 
     private String buildQueryString(Node node, Disambiguate disambiguate, boolean topLevel) {
