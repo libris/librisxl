@@ -289,19 +289,19 @@ class ElasticSearch {
         }
     }
 
-    void incrementReverseLinks(String shortId) {
-        updateReverseLinkCounter(shortId, 1)
+    void incrementReverseLinks(String shortId, String relation) {
+        updateReverseLinkCounter(shortId, relation, 1)
     }
 
-    void decrementReverseLinks(String shortId) {
-        updateReverseLinkCounter(shortId, -1)
+    void decrementReverseLinks(String shortId, String relation) {
+        updateReverseLinkCounter(shortId, relation, -1)
     }
 
-    private void updateReverseLinkCounter(String shortId, int deltaCount) {
+    private void updateReverseLinkCounter(String shortId, String relation, int deltaCount) {
         String body = """
         {
             "script" : {
-                "source": "ctx._source.reverseLinks.totalItems += $deltaCount",
+                "source": "ctx._source.reverseLinks.totalItems += $deltaCount; ctx._source.reverseLinks.totalItemsByRelation['$relation'] += $deltaCount",
                 "lang": "painless"
             }
         }
@@ -497,9 +497,14 @@ class ElasticSearch {
         doc.data['@graph'][1]['_links'] = links
         doc.data['@graph'][1]['_outerEmbellishments'] = doc.getEmbellishments() - links
 
+        Map<String, Long> incomingLinkCountByRelation = whelk.getStorage().getIncomingLinkCountByIdAndRelation(stripHash(doc.getShortId()))
         doc.data['@graph'][1]['reverseLinks'] = [
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',
-                'totalItems' : whelk.getStorage().getIncomingLinkCount(stripHash(doc.getShortId()))]
+                'totalItems': incomingLinkCountByRelation.values().sum(0),
+        ]
+        if (incomingLinkCountByRelation) {
+            doc.data['@graph'][1]['reverseLinks']['totalItemsByRelation'] = incomingLinkCountByRelation
+        }
     }
 
     private static String stripHash(String s) {
