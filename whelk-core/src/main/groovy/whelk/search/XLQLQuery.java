@@ -455,7 +455,6 @@ public class XLQLQuery {
         var types = new ArrayList<String>();
         types.add(object.rdfType);
         whelk.getJsonld().getSuperClasses(object.rdfType, types);
-        System.out.println(types);
         return types.stream()
                 .filter(typeToRelations::containsKey)
                 .findFirst().map(typeToRelations::get)
@@ -705,7 +704,7 @@ public class XLQLQuery {
         return template;
     }
 
-    public List<Map<?, ?>> predicateLinks (Map<String, Object> esResponse, Map<String, String> nonQueryParams) {
+    public List<Map<?, ?>> predicateLinks (Map<String, Object> esResponse, Entity object, Map<String, String> nonQueryParams) {
         var result = new ArrayList<Map<?, ?>>();
         // FIXME Use constant for _p
         Set<String> selected = new HashSet<>();
@@ -713,21 +712,26 @@ public class XLQLQuery {
             selected.add(nonQueryParams.get("_p"));
         }
         Map<String, ?> counts = (Map<String, ?>) DocumentUtil.getAtPath(esResponse, List.of("aggregations", "_p", "buckets"), Collections.emptyMap());
-        counts.forEach((k, v) -> {
-            int count = (int) ((Map) v).get("doc_count");
+
+        for (String p : curatedPredicates(object)) {
+            if (!counts.containsKey(p)) {
+                continue;
+            }
+
+            int count = (int) ((Map) counts.get(p)).get("doc_count");
 
             if (count > 0) {
                 Map<String, String> params = new HashMap<>(nonQueryParams);
-                params.put("_p", k);
+                params.put("_p", p);
                 result.add(Map.of(
                         "totalItems", count,
                         "view", Map.of(JsonLd.ID_KEY, makeFindUrl(makeParams(params))),
-                        "object", lookUp(new SimpleQueryTree.VocabTerm(k)),
-                        "_selected", selected.contains(k)
+                        "object", lookUp(new SimpleQueryTree.VocabTerm(p)),
+                        "_selected", selected.contains(p)
                 ));
             }
+        }
 
-        });
         return result;
     }
 

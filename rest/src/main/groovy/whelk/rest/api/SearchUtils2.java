@@ -174,7 +174,7 @@ public class SearchUtils2 {
                 return Collections.emptyList();
             }
             var esResponse = (Map<String, Object>) whelk.elastic.query(getCuratedPredicateEsQueryDsl(o));
-            return xlqlQuery.predicateLinks(esResponse, getNonQueryParams(0));
+            return xlqlQuery.predicateLinks(esResponse, o, getNonQueryParams(0));
         }
 
         public Map<String, Object> getCuratedPredicateEsQueryDsl(XLQLQuery.Entity o) {
