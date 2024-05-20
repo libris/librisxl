@@ -21,6 +21,7 @@ import java.util.function.Predicate;
 
 import static whelk.util.Jackson.mapper;
 import static whelk.xlql.Disambiguate.RDF_TYPE;
+import static whelk.xlql.SimpleQueryTree.pvEqualsLink;
 
 public class SearchUtils2 {
     final static int DEFAULT_LIMIT = 200;
@@ -31,7 +32,7 @@ public class SearchUtils2 {
     Whelk whelk;
     XLQLQuery xlqlQuery;
 
-    private static class P {
+    public static class P {
         public static final String QUERY = "_q";
         public static final String SIMPLE_FREETEXT = "_i";
         public static final String SORT = "_sort";
@@ -60,8 +61,13 @@ public class SearchUtils2 {
         }
         Query query = new Query(queryParameters);
         @SuppressWarnings("unchecked")
+
+        // TODO: Use Multi search API instead of doing two elastic roundtrips?
+        // https://www.elastic.co/guide/en/elasticsearch/reference/current/search-multi-search.html
+        var predicateLinks = query.getCuratedPredicateLinks();
+
         var esResponse = (Map<String, Object>) whelk.elastic.query(query.getEsQueryDsl());
-        return query.getPartialCollectionView(esResponse);
+        return query.getPartialCollectionView(esResponse, predicateLinks);
     }
 
     public Map<String, Object> buildStatsReprFromSliceSpec(List<Map<String, Object>> sliceList) {
@@ -162,7 +168,37 @@ public class SearchUtils2 {
             return queryDsl;
         }
 
-        public Map<String, Object> getPartialCollectionView(Map<String, Object> esResponse) {
+        private List<Map<?, ?>> getCuratedPredicateLinks() {
+            var o = getObject();
+            if (o == null) {
+                return Collections.emptyList();
+            }
+            var esResponse = (Map<String, Object>) whelk.elastic.query(getCuratedPredicateEsQueryDsl(o));
+            return xlqlQuery.predicateLinks(esResponse, getNonQueryParams(0));
+        }
+
+        public Map<String, Object> getCuratedPredicateEsQueryDsl(XLQLQuery.Entity o) {
+            var queryDsl = new LinkedHashMap<String, Object>();
+            queryDsl.put("query", xlqlQuery.getEsQuery(xlqlQuery.getQueryTree(new SimpleQueryTree(SimpleQueryTree.pvEqualsLiteral("_links", o.id())), outsetType)));
+            queryDsl.put("size", 0);
+            queryDsl.put("from", 0);
+            queryDsl.put("aggs", xlqlQuery.pAgg(o, outsetType));
+            queryDsl.put("track_total_hits", true);
+            return queryDsl;
+        }
+
+        private XLQLQuery.Entity getObject() {
+            if (object != null) {
+                @SuppressWarnings("unchecked")
+                List<String> types = (List<String>) JsonLd.asList(DocumentUtil.getAtPath(whelk.loadData(object), List.of(JsonLd.GRAPH_KEY, 1, JsonLd.TYPE_KEY), null));
+                if (!types.isEmpty()) {
+                    return new XLQLQuery.Entity(object, types.getFirst());
+                }
+            }
+            return null;
+        }
+
+        public Map<String, Object> getPartialCollectionView(Map<String, Object> esResponse, List<Map<?, ?>> predicateLinks) {
             int numHits = (int) esResponse.getOrDefault("totalHits", 0);
             var aliases = XLQLQuery.getAliasMappings(outsetType);
             var view = new LinkedHashMap<String, Object>();
@@ -178,7 +214,12 @@ public class SearchUtils2 {
                 var esItems = ((List<Map<String, ?>>) esResponse.get("items"));
                 view.put("items", esItems.stream().map(this::shapeResultItem).toList());
             }
-            view.put("stats", xlqlQuery.getStats(esResponse, statsRepr, simpleQueryTree, getNonQueryParams(0), aliases));
+            var stats = new HashMap<>(xlqlQuery.getStats(esResponse, statsRepr, simpleQueryTree, getNonQueryParams(0), aliases));
+            stats.put("_predicates", predicateLinks);
+            view.put("stats", stats);
+
+            // TODO naming things
+
             if (debug.contains(Debug.ES_QUERY)) {
                 view.put(P.DEBUG, Map.of(Debug.ES_QUERY, esQueryDsl));
             }
@@ -188,7 +229,10 @@ public class SearchUtils2 {
         }
 
         private SimpleQueryTree getFilteredTree() {
-            var filters = new ArrayList<>(DEFAULT_FILTERS);
+            var filters = new ArrayList<SimpleQueryTree.PropertyValue>();
+            if (object == null) {
+                filters.addAll(DEFAULT_FILTERS);
+            }
             if (object != null) {
                 if (predicates.isEmpty()) {
                     filters.add(SimpleQueryTree.pvEqualsLiteral("_links", object));
