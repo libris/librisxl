@@ -298,10 +298,13 @@ class ElasticSearch {
     }
 
     private void updateReverseLinkCounter(String shortId, String relation, int deltaCount) {
+        // An indexed document will always have reverseLinks.totalItems set to an integer,
+        // and reverseLinks.totalItemsByRelation set to a map, but reverseLinks.totalItemsByRelation['foo']
+        // doesn't necessarily exist at this time; hence the null check before trying to update the link counter.
         String body = """
         {
             "script" : {
-                "source": "ctx._source.reverseLinks.totalItems += $deltaCount; ctx._source.reverseLinks.totalItemsByRelation['$relation'] += $deltaCount",
+                "source": "ctx._source.reverseLinks.totalItems += $deltaCount; if (ctx._source.reverseLinks.totalItemsByRelation['$relation'] == null) { if ($deltaCount > 0) { ctx._source.reverseLinks.totalItemsByRelation['$relation'] = $deltaCount; } } else { ctx._source.reverseLinks.totalItemsByRelation['$relation'] += $deltaCount; }",
                 "lang": "painless"
             }
         }
@@ -501,10 +504,8 @@ class ElasticSearch {
         doc.data['@graph'][1]['reverseLinks'] = [
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',
                 'totalItems': incomingLinkCountByRelation.values().sum(0),
+                'totalItemsByRelation': incomingLinkCountByRelation,
         ]
-        if (incomingLinkCountByRelation) {
-            doc.data['@graph'][1]['reverseLinks']['totalItemsByRelation'] = incomingLinkCountByRelation
-        }
     }
 
     private static String stripHash(String s) {

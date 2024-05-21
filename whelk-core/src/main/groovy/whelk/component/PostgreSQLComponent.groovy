@@ -260,9 +260,6 @@ class PostgreSQLComponent {
             lddb ON deps.i = lddb.id AND lddb.collection='hold'
             """.stripIndent()
 
-    private static final String GET_INCOMING_LINK_COUNT =
-            "SELECT COUNT(id) FROM lddb__dependencies WHERE dependsOnId = ?"
-
     private static final String GET_INCOMING_LINK_COUNT_BY_ID_AND_RELATION =
             "SELECT relation, count(id) FROM lddb__dependencies WHERE dependsOnId = ? GROUP BY relation"
 
@@ -2243,23 +2240,6 @@ class PostgreSQLComponent {
 
     Set<String> getByReverseRelation(String iri, String relation) {
         return dependencyCache.getDependersOfType(iri, relation)
-    }
-
-    long getIncomingLinkCount(String id) {
-        return withDbConnection {
-            Connection connection = getMyConnection()
-            PreparedStatement preparedStatement = null
-            ResultSet rs = null
-            try {
-                preparedStatement = connection.prepareStatement(GET_INCOMING_LINK_COUNT)
-                preparedStatement.setString(1, id)
-                rs = preparedStatement.executeQuery()
-                rs.next()
-                return rs.getInt(1)
-            } finally {
-                close(rs, preparedStatement)
-            }
-        }
     }
 
     Map<String, Long> getIncomingLinkCountByIdAndRelation(String id) {
