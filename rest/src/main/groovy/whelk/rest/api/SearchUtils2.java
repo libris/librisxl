@@ -168,6 +168,7 @@ public class SearchUtils2 {
             return queryDsl;
         }
 
+        // TODO naming things "curated predicate links" ??
         private List<Map<?, ?>> getCuratedPredicateLinks() {
             var o = getObject();
             if (o == null) {
@@ -215,10 +216,9 @@ public class SearchUtils2 {
                 view.put("items", esItems.stream().map(this::shapeResultItem).toList());
             }
             var stats = new HashMap<>(xlqlQuery.getStats(esResponse, statsRepr, simpleQueryTree, getNonQueryParams(0), aliases));
+            // TODO naming things
             stats.put("_predicates", predicateLinks);
             view.put("stats", stats);
-
-            // TODO naming things
 
             if (debug.contains(Debug.ES_QUERY)) {
                 view.put(P.DEBUG, Map.of(Debug.ES_QUERY, esQueryDsl));
