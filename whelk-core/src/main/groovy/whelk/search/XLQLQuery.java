@@ -516,10 +516,17 @@ public class XLQLQuery {
     }
 
     public Map<String, Object> getStats(Map<String, Object> esResponse, Map<String, Object> statsRepr, SimpleQueryTree sqt, Map<String, String> nonQueryParams, Map<String, String> aliases) throws InvalidQueryException {
+        var sliceByDimension = getSliceByDimension(esResponse, statsRepr, sqt, nonQueryParams, aliases);
+        var boolFilters = getBoolFilters(statsRepr, sqt, nonQueryParams);
+        return Map.of(JsonLd.ID_KEY, "#stats",
+                "sliceByDimension", sliceByDimension,
+                "_boolFilters", boolFilters);
+    }
+
+    private Map<String, Object> getSliceByDimension(Map<String, Object> esResponse, Map<String, Object> statsRepr, SimpleQueryTree sqt, Map<String, String> nonQueryParams, Map<String, String> aliases) {
         var buckets = collectBuckets(esResponse, statsRepr);
         var rangeProps = getRangeProperties(statsRepr);
-        var boolFilters = getDefaultBoolFilters(statsRepr);
-        return buildStats(buckets, sqt, nonQueryParams, aliases, rangeProps, boolFilters);
+        return buildSliceByDimension(buckets, sqt, nonQueryParams, aliases, rangeProps);
     }
 
     // Problem: Same value in different fields will be counted twice, e.g. contribution.agent + instanceOf.contribution.agent
@@ -590,14 +597,13 @@ public class XLQLQuery {
         return propertyToBuckets;
     }
 
-    private Map<String, Object> buildStats(
+    private Map<String, Object> buildSliceByDimension(
             Map<String, Map<SimpleQueryTree.PropertyValue, Integer>> propToBuckets,
             SimpleQueryTree sqt,
             Map<String, String> nonQueryParams,
             Map<String, String> aliases,
-            Set<String> rangeProps,
-            Map<String, Map<String, Object>> defaultBoolFilters) {
-        var sliceByDimension = new LinkedHashMap<>();
+            Set<String> rangeProps) {
+        Map<String, Object> sliceByDimension = new LinkedHashMap<>();
 
         propToBuckets.forEach((property, buckets) -> {
             var sliceNode = new LinkedHashMap<>();
@@ -614,51 +620,45 @@ public class XLQLQuery {
             }
         });
 
-        if (!defaultBoolFilters.isEmpty()) {
-            var observations = new ArrayList<>();
-            var existing = sqt.getBoolFiltersByAlias();
+        return sliceByDimension;
+    }
 
-            for (var entry : defaultBoolFilters.entrySet()) {
-                var alias = entry.getKey();
-                var filter = (SimpleQueryTree.Node) entry.getValue().get("filter");
-                var defaultStatus = (FilterStatus) entry.getValue().get("status");
-                var bfNode = existing.get(alias);
+    private List<Map<String,Object>> getBoolFilters(Map<String, Object> statsRepr, SimpleQueryTree sqt, Map<String, String> nonQueryParams) throws InvalidQueryException {
+        var defaultBoolFilters = getDefaultBoolFilters(statsRepr);
+        var existing = sqt.getBoolFiltersByAlias();
+        List<Map<String, Object>> results = new ArrayList<>();
 
-                SimpleQueryTree newTree;
-                boolean isSelected;
+        for (var entry : defaultBoolFilters.entrySet()) {
+            var alias = entry.getKey();
+            var filter = (SimpleQueryTree.Node) entry.getValue().get("filter");
+            var defaultStatus = (FilterStatus) entry.getValue().get("status");
+            var bfNode = existing.get(alias);
 
-                if (bfNode == null) {
-                    var newStatus = switch (defaultStatus) {
-                        case INACTIVE -> FilterStatus.ACTIVE;
-                        case ACTIVE -> FilterStatus.INACTIVE;
-                    };
-                    newTree = sqt.andExtend(new SimpleQueryTree.BoolFilter(alias, newStatus, filter));
-                    isSelected = false;
-                } else {
-                    newTree = sqt.excludeFromTree(bfNode);
-                    isSelected = true;
-                }
+            SimpleQueryTree newTree;
+            boolean isSelected;
 
-                var observation = new LinkedHashMap<>();
-                // TODO: fix form
-                observation.put("totalItems", 0);
-                observation.put("object", entry.getValue().get("selectHeader"));
-                observation.put("view", Map.of(JsonLd.ID_KEY, makeFindUrl(newTree, makeParams(nonQueryParams))));
-                observation.put("_selected", isSelected);
-
-                observations.add(observation);
+            if (bfNode == null) {
+                var newStatus = switch (defaultStatus) {
+                    case INACTIVE -> FilterStatus.ACTIVE;
+                    case ACTIVE -> FilterStatus.INACTIVE;
+                };
+                newTree = sqt.andExtend(new SimpleQueryTree.BoolFilter(alias, newStatus, filter));
+                isSelected = false;
+            } else {
+                newTree = sqt.excludeFromTree(bfNode);
+                isSelected = true;
             }
 
-            var sliceNode = new LinkedHashMap<>();
-            sliceNode.put("dimension", "moreFilters"); //TODO
-            sliceNode.put("observation", observations);
+            Map<String, Object> res = new LinkedHashMap<>();
+            // TODO: fix form
+            res.put("_selectHeader", entry.getValue().get("selectHeader"));
+            res.put("view", Map.of(JsonLd.ID_KEY, makeFindUrl(newTree, makeParams(nonQueryParams))));
+            res.put("_selected", isSelected);
 
-            sliceByDimension.put("moreFilters", sliceNode);
+            results.add(res);
         }
 
-
-        return Map.of(JsonLd.ID_KEY, "#stats",
-                "sliceByDimension", sliceByDimension);
+        return results;
     }
 
     public Map<String, Map<String, Object>> getDefaultBoolFilters(Map<String, Object> statsRepr) throws InvalidQueryException {
