@@ -707,6 +707,7 @@ public class XLQLQuery {
     public List<Map<?, ?>> predicateLinks (Map<String, Object> esResponse, Entity object, Map<String, String> nonQueryParams) {
         var result = new ArrayList<Map<?, ?>>();
         // FIXME Use constant for _p
+        // whelk-core should not deal with query parameters at all? Should be handled in rest module?
         Set<String> selected = new HashSet<>();
         if (nonQueryParams.containsKey("_p")) {
             selected.add(nonQueryParams.get("_p"));
