@@ -664,9 +664,11 @@ public class XLQLQuery {
     public Map<String, Map<String, Object>> getDefaultBoolFilters(Map<String, Object> statsRepr) throws InvalidQueryException {
         // TODO: get from apps.jsonld
         List<Map<String, String>> boolFilters = List.of(
-                Map.of("alias", "excludeEplikt", "filter", "NOT bibliography:\"sigel:EPLK\"", "status", "active", "selectHeader", "Visa e-pliktsmaterial"),
-                Map.of("alias", "excludePreliminary", "filter", "NOT encodingLevel:(\"marc:PartialPreliminaryLevel\" OR \"marc:PrepublicationLevel\")", "status", "active", "selectHeader", "Visa kommande"),
-                Map.of("alias", "hasImage", "filter", "image:*", "status", "inactive", "selectHeader", "Dölj resurser utan bild")
+                Map.of("alias", "excludeEplikt", "filter", "NOT bibliography:\"sigel:EPLK\"", "status", "active", "selectHeader", "Inkludera e-plikt"),
+                Map.of("alias", "excludePreliminary", "filter", "NOT encodingLevel:(\"marc:PartialPreliminaryLevel\" OR \"marc:PrepublicationLevel\")", "status", "active", "selectHeader", "Inkludera kommande publiceringar"),
+//                Map.of("alias", "availableOnline", "filter", "_TODO", "status", "inactive", "selectHeader", "Endast material som finns online"),
+//                Map.of("alias", "isDigital", "filter", "_TODO", "status", "inactive", "selectHeader", "Endast digitalt material"),
+                Map.of("alias", "hasImage", "filter", "image:*", "status", "inactive", "selectHeader", "Endast resurser med bild")
         );
 
         Map<String, Map<String, Object>> m = new LinkedHashMap<>();
