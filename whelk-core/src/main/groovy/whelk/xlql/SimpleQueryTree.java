@@ -128,10 +128,12 @@ public class SimpleQueryTree {
     public SimpleQueryTree(FlattenedAst ast, Disambiguate disambiguate, Map<String, Map<String, Object>> defaultBoolFilters) throws InvalidQueryException {
         this.tree = buildTree(ast.tree, disambiguate, defaultBoolFilters);
         normalizeFreeText();
+        removeNeedlessWildcard();
     }
 
     public SimpleQueryTree(Node tree) {
         this.tree = tree;
+        removeNeedlessWildcard();
     }
 
     private static Node buildTree(FlattenedAst.Node ast, Disambiguate disambiguate, Map<String, Map<String, Object>> defaultBoolFilters) throws InvalidQueryException {
@@ -468,6 +470,10 @@ public class SimpleQueryTree {
         return freeTextPart;
     }
 
+    private void resetFreeTextPart() {
+        this.freeTextPart = null;
+    }
+
     public String toQueryString(Disambiguate disambiguate) {
         return isEmpty() ? "*" : buildQueryString(tree, disambiguate, true);
     }
@@ -492,5 +498,12 @@ public class SimpleQueryTree {
             case PropertyValue pv -> pv.asString(disambiguate);
             case BoolFilter bf -> bf.asString();
         };
+    }
+
+    private void removeNeedlessWildcard() {
+        if (!isFreeText() && Operator.WILDCARD.equals(getFreeTextPart())) {
+            this.tree = excludeFromTree(new FreeText(Operator.EQUALS, Operator.WILDCARD), tree);
+            resetFreeTextPart();
+        }
     }
 }
