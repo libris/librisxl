@@ -8,7 +8,6 @@ import whelk.exception.WhelkRuntimeException;
 import whelk.search.XLQLQuery;
 import whelk.util.DocumentUtil;
 import whelk.xlql.Disambiguate;
-import whelk.xlql.FilterStatus;
 import whelk.xlql.QueryTree;
 import whelk.xlql.SimpleQueryTree;
 

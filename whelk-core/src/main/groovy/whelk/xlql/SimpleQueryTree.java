@@ -493,20 +493,4 @@ public class SimpleQueryTree {
             case BoolFilter bf -> bf.asString();
         };
     }
-
-    public void replaceTopLevelFreeText(String replacement) {
-        if (isFreeText()) {
-            this.tree = new FreeText(Operator.EQUALS, replacement);
-        } else if (tree instanceof And) {
-            List<Node> newConjuncts = ((And) tree).conjuncts().stream()
-                    .filter(Predicate.not(c -> c instanceof FreeText && ((FreeText) c).operator().equals(Operator.EQUALS)))
-                    .collect(Collectors.toList());
-            if (!replacement.isEmpty()) {
-                newConjuncts.addFirst(new FreeText(Operator.EQUALS, replacement));
-            }
-            this.tree = newConjuncts.size() == 1 ? newConjuncts.getFirst() : new And(newConjuncts);
-        } else {
-            this.tree = new And(List.of(new FreeText(Operator.EQUALS, replacement), tree));
-        }
-    }
 }
