@@ -447,9 +447,9 @@ public class XLQLQuery {
         // TODO don't hardcode
         Map<String, List<String>> typeToRelations =
                 Map.of(
-                        "Agent", List.of("subject", "contributor", "publisher"),
+                        "Agent", List.of("contributor", "subject", "publisher"),
                         "Concept", List.of("subject", "genreForm", "hasOccupation", "fieldOfActivity"),
-                        "Work", List.of("subject", "contributor")
+                        "Work", List.of("subject")
                 );
 
         var types = new ArrayList<String>();
