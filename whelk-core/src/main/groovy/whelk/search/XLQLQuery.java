@@ -291,9 +291,7 @@ public class XLQLQuery {
     }
 
     private String makeFindUrl(SimpleQueryTree sqt, List<String> nonQueryParams) {
-        return sqt.isEmpty()
-                ? makeFindUrl("", "*", nonQueryParams)
-                : makeFindUrl(sqt.getFreeTextPart(), sqt.toQueryString(disambiguate), nonQueryParams);
+        return makeFindUrl(sqt.getFreeTextPart(), sqt.toQueryString(disambiguate), nonQueryParams);
     }
 
     private static String makeFindUrl(String i, String q, List<String> nonQueryParams) {
