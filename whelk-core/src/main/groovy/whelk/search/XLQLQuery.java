@@ -434,7 +434,7 @@ public class XLQLQuery {
                 .stream()
                 .collect(Collectors.toMap(
                         Function.identity(),
-                        r -> getEsQuery(new QueryTree(new SimpleQueryTree(pvEqualsLink(r, object.id)), disambiguate, outsetType, esMappings.nestedFields))));
+                        p -> getEsQuery(new QueryTree(new SimpleQueryTree(pvEqualsLink(p, object.id)), disambiguate, outsetType, esMappings.nestedFields))));
 
         if (!filters.isEmpty()) {
             query.put("_p", Map.of("filters", Map.of("filters", filters)));
