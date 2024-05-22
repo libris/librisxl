@@ -301,10 +301,12 @@ class ElasticSearch {
         // An indexed document will always have reverseLinks.totalItems set to an integer,
         // and reverseLinks.totalItemsByRelation set to a map, but reverseLinks.totalItemsByRelation['foo']
         // doesn't necessarily exist at this time; hence the null check before trying to update the link counter.
+        // The outer "if (ctx._source.reverseLinks.totalItemsByRelation) {}" can be removed once we've
+        // reindexed once; it's just there so as to not break things too much before that.
         String body = """
         {
             "script" : {
-                "source": "ctx._source.reverseLinks.totalItems += $deltaCount; if (ctx._source.reverseLinks.totalItemsByRelation['$relation'] == null) { if ($deltaCount > 0) { ctx._source.reverseLinks.totalItemsByRelation['$relation'] = $deltaCount; } } else { ctx._source.reverseLinks.totalItemsByRelation['$relation'] += $deltaCount; }",
+                "source": "ctx._source.reverseLinks.totalItems += $deltaCount; if (ctx._source.reverseLinks.totalItemsByRelation != null) { if (ctx._source.reverseLinks.totalItemsByRelation['$relation'] == null) { if ($deltaCount > 0) { ctx._source.reverseLinks.totalItemsByRelation['$relation'] = $deltaCount; } } else { ctx._source.reverseLinks.totalItemsByRelation['$relation'] += $deltaCount; } }",
                 "lang": "painless"
             }
         }
