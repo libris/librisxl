@@ -289,19 +289,24 @@ class ElasticSearch {
         }
     }
 
-    void incrementReverseLinks(String shortId) {
-        updateReverseLinkCounter(shortId, 1)
+    void incrementReverseLinks(String shortId, String relation) {
+        updateReverseLinkCounter(shortId, relation, 1)
     }
 
-    void decrementReverseLinks(String shortId) {
-        updateReverseLinkCounter(shortId, -1)
+    void decrementReverseLinks(String shortId, String relation) {
+        updateReverseLinkCounter(shortId, relation, -1)
     }
 
-    private void updateReverseLinkCounter(String shortId, int deltaCount) {
+    private void updateReverseLinkCounter(String shortId, String relation, int deltaCount) {
+        // An indexed document will always have reverseLinks.totalItems set to an integer,
+        // and reverseLinks.totalItemsByRelation set to a map, but reverseLinks.totalItemsByRelation['foo']
+        // doesn't necessarily exist at this time; hence the null check before trying to update the link counter.
+        // The outer "if (ctx._source.reverseLinks.totalItemsByRelation) {}" can be removed once we've
+        // reindexed once; it's just there so as to not break things too much before that.
         String body = """
         {
             "script" : {
-                "source": "ctx._source.reverseLinks.totalItems += $deltaCount",
+                "source": "ctx._source.reverseLinks.totalItems += $deltaCount; if (ctx._source.reverseLinks.totalItemsByRelation != null) { if (ctx._source.reverseLinks.totalItemsByRelation['$relation'] == null) { if ($deltaCount > 0) { ctx._source.reverseLinks.totalItemsByRelation['$relation'] = $deltaCount; } } else { ctx._source.reverseLinks.totalItemsByRelation['$relation'] += $deltaCount; } }",
                 "lang": "painless"
             }
         }
@@ -324,7 +329,7 @@ class ElasticSearch {
             }
             else {
                 log.warn("Failed to update reverse link counter ($deltaCount) for $shortId: $e, placing in retry queue.", e)
-                indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, deltaCount) })
+                indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, relation, deltaCount) })
             }
         }
     }
@@ -497,9 +502,12 @@ class ElasticSearch {
         doc.data['@graph'][1]['_links'] = links
         doc.data['@graph'][1]['_outerEmbellishments'] = doc.getEmbellishments() - links
 
+        Map<String, Long> incomingLinkCountByRelation = whelk.getStorage().getIncomingLinkCountByIdAndRelation(stripHash(doc.getShortId()))
         doc.data['@graph'][1]['reverseLinks'] = [
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',
-                'totalItems' : whelk.getStorage().getIncomingLinkCount(stripHash(doc.getShortId()))]
+                'totalItems': incomingLinkCountByRelation.values().sum(0),
+                'totalItemsByRelation': incomingLinkCountByRelation,
+        ]
     }
 
     private static String stripHash(String s) {
