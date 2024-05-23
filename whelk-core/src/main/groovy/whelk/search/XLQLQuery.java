@@ -278,40 +278,42 @@ public class XLQLQuery {
     }
 
     public Map<String, Object> toMappings(SimpleQueryTree sqt) {
-        return toMappings(sqt, Collections.emptyMap(), Collections.emptyList());
+        return toMappings(sqt, Collections.emptyMap(), Collections.emptyList(), Collections.emptyList());
     }
 
     public Map<String, Object> toMappings(SimpleQueryTree sqt,
                                           Map<String, String> aliases,
+                                          List<Map<String, Object>> filters,
                                           List<String> nonQueryParams) {
         return sqt.isEmpty()
                 ? Collections.emptyMap()
-                : buildMappings(sqt.tree, sqt, new LinkedHashMap<>(), aliases, nonQueryParams);
+                : buildMappings(sqt.tree, sqt, new LinkedHashMap<>(), aliases, filters, nonQueryParams);
     }
 
     private Map<String, Object> buildMappings(SimpleQueryTree.Node sqtNode,
                                               SimpleQueryTree sqt,
                                               Map<String, Object> mappingsNode,
                                               Map<String, String> aliases,
+                                              List<Map<String, Object>> filters,
                                               List<String> nonQueryParams) {
         switch (sqtNode) {
             case SimpleQueryTree.And and -> {
                 var andClause = and.conjuncts()
                         .stream()
-                        .map(c -> buildMappings(c, sqt, new LinkedHashMap<>(), aliases, nonQueryParams))
+                        .map(c -> buildMappings(c, sqt, new LinkedHashMap<>(), aliases, filters, nonQueryParams))
                         .toList();
                 mappingsNode.put("and", andClause);
             }
             case SimpleQueryTree.Or or -> {
                 var orClause = or.disjuncts()
                         .stream()
-                        .map(d -> buildMappings(d, sqt, new LinkedHashMap<>(), aliases, nonQueryParams))
+                        .map(d -> buildMappings(d, sqt, new LinkedHashMap<>(), aliases, filters, nonQueryParams))
                         .toList();
                 mappingsNode.put("or", orClause);
             }
             case SimpleQueryTree.FreeText ft -> mappingsNode = freeTextMapping(ft);
             case SimpleQueryTree.PropertyValue pv -> mappingsNode = propertyValueMapping(pv, aliases);
-            case SimpleQueryTree.BoolFilter bf -> mappingsNode = boolFilterMapping(bf);
+            case SimpleQueryTree.BoolFilter bf -> mappingsNode = boolFilterMapping(bf, filters);
         }
 
         SimpleQueryTree reducedTree = sqt.excludeFromTree(sqtNode);
@@ -372,11 +374,15 @@ public class XLQLQuery {
         return m;
     }
 
-    // FIXME
-    private Map<String, Object> boolFilterMapping(SimpleQueryTree.BoolFilter bf) {
+    private Map<String, Object> boolFilterMapping(SimpleQueryTree.BoolFilter bf, List<Map<String, Object>> filters) {
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("property", getDefinition("textQuery"));
-        m.put(Operator.EQUALS.termKey, bf.alias());
+
+        filters.stream().filter(f -> f.get("filter") instanceof SimpleQueryTree.BoolFilter)
+                .filter(f -> bf.alias().equals(((SimpleQueryTree.BoolFilter) f.get("filter")).alias()))
+                .map(f -> Map.of("prefLabelByLang", f.get("prefLabelByLang")))
+                .findFirst()
+                .ifPresentOrElse(o -> m.put("object", o), () -> m.put("value", bf.alias()));
+
         return m;
     }
 

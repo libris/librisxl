@@ -156,7 +156,7 @@ public class SearchUtils2 {
             view.put("itemOffset", offset);
             view.put("itemsPerPage", limit);
             view.put("totalItems", numHits);
-            view.put("search", Map.of("mapping", toMappings(aliases)));
+            view.put("search", Map.of("mapping", toMappings(aliases, statsRepr.availableBoolFilters)));
             view.putAll(makePaginationLinks(numHits));
             if (esResponse.containsKey("items")) {
                 @SuppressWarnings("unchecked")
@@ -257,8 +257,8 @@ public class SearchUtils2 {
             return params;
         }
 
-        private List<Map<?, ?>> toMappings(Map<String, String> aliases) {
-            return List.of(xlqlQuery.toMappings(simpleQueryTree, aliases, makeNonQueryParams(0)));
+        private List<Map<?, ?>> toMappings(Map<String, String> aliases, List<Map<String, Object>> filters) {
+            return List.of(xlqlQuery.toMappings(simpleQueryTree, aliases, filters, makeNonQueryParams(0)));
         }
 
         private static Optional<String> getOptionalSingleNonEmpty(String name, Map<String, String[]> queryParameters) {
