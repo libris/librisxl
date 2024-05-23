@@ -20,13 +20,11 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static whelk.util.Jackson.mapper;
-import static whelk.xlql.Disambiguate.RDF_TYPE;
 
 public class SearchUtils2 {
     final static int DEFAULT_LIMIT = 200;
     final static int MAX_LIMIT = 4000;
     final static int DEFAULT_OFFSET = 0;
-    private static final List<SimpleQueryTree.PropertyValue> DEFAULT_FILTERS = List.of(SimpleQueryTree.pvEqualsVocabTerm(RDF_TYPE, "Work"));
 
     Whelk whelk;
     XLQLQuery xlqlQuery;
@@ -89,8 +87,7 @@ public class SearchUtils2 {
         private final String object;
         private final List<String> predicates;
         private final String mode;
-        private final Map<String, Object> statsRepr;
-        private final Map<String, Map<String, Object>> defaultBoolFilters;
+        private final XLQLQuery.StatsRepr statsRepr;
         private final List<String> debug;
         private final String queryString;
         private final String freeText;
@@ -110,17 +107,16 @@ public class SearchUtils2 {
             this.offset = getOffset(queryParameters);
             this.lens = getOptionalSingleNonEmpty(P.LENS, queryParameters).orElse("cards");
             this.statsRepr = getStatsRepr(queryParameters);
-            this.defaultBoolFilters = getDefaultBoolFilters();
 
             var q = getOptionalSingleNonEmpty(P.QUERY, queryParameters);
             var i = getOptionalSingleNonEmpty(P.SIMPLE_FREETEXT, queryParameters);
 
             if (q.isPresent()) {
-                var sqt = xlqlQuery.getSimpleQueryTree(q.get(), defaultBoolFilters);
-                if (i.isEmpty() || xlqlQuery.getSimpleQueryTree(i.get(), defaultBoolFilters).isFreeText()) {
+                var sqt = xlqlQuery.normalizeFilters(xlqlQuery.getSimpleQueryTree(q.get(), statsRepr.aliasedFilters), statsRepr);
+                if (i.isEmpty() || xlqlQuery.getSimpleQueryTree(i.get(), statsRepr.aliasedFilters).isFreeText()) {
+                    this.simpleQueryTree = sqt;
                     this.queryString = xlqlQuery.sqtToQueryString(sqt);
                     this.freeText = sqt.getFreeTextPart();
-                    this.simpleQueryTree = sqt;
                     SimpleQueryTree filteredTree = getFilteredTree();
                     this.outsetType = xlqlQuery.getOutsetType(filteredTree);
                     this.queryTree = xlqlQuery.getQueryTree(filteredTree, outsetType);
@@ -146,12 +142,12 @@ public class SearchUtils2 {
             } else {
                 sortBy.insertSortClauses(queryDsl, xlqlQuery);
             }
-            queryDsl.put("aggs", xlqlQuery.getAggQuery(statsRepr, outsetType));
+            queryDsl.put("aggs", xlqlQuery.getAggQuery(statsRepr.statsRepr, outsetType));
             queryDsl.put("track_total_hits", true);
             return queryDsl;
         }
 
-        public Map<String, Object> getPartialCollectionView(Map<String, Object> esResponse) throws InvalidQueryException {
+        public Map<String, Object> getPartialCollectionView(Map<String, Object> esResponse) {
             int numHits = (int) esResponse.getOrDefault("totalHits", 0);
             var aliases = XLQLQuery.getAliasMappings(outsetType);
             var view = new LinkedHashMap<String, Object>();
@@ -177,7 +173,7 @@ public class SearchUtils2 {
         }
 
         private SimpleQueryTree getFilteredTree() {
-            var filters = new ArrayList<>(DEFAULT_FILTERS);
+            var filters = new ArrayList<>(statsRepr.siteDefaultFilters);
             if (object != null) {
                 if (predicates.isEmpty()) {
                     filters.add(SimpleQueryTree.pvEqualsLiteral("_links", object));
@@ -185,7 +181,7 @@ public class SearchUtils2 {
                     filters.addAll(predicates.stream().map(p -> SimpleQueryTree.pvEqualsLink(p, object)).toList());
                 }
             }
-            return xlqlQuery.addFilters(xlqlQuery.setBoolFilters(simpleQueryTree, defaultBoolFilters), filters);
+            return xlqlQuery.addDefaultFilters(simpleQueryTree, filters).expandActiveBoolFilters();
         }
 
         private Map<String, Map<String, String>> makePaginationLinks(int numHits) {
@@ -320,7 +316,7 @@ public class SearchUtils2 {
             }
         }
 
-        private static Map<String, Object> getStatsRepr(Map<String, String[]> queryParameters) throws IOException {
+        private XLQLQuery.StatsRepr getStatsRepr(Map<String, String[]> queryParameters) throws IOException, InvalidQueryException {
             Map<String, Object> statsRepr = new LinkedHashMap<>();
 
             var statsJson = Optional.ofNullable(queryParameters.get(P.STATS_REPRESENTATION))
@@ -332,11 +328,7 @@ public class SearchUtils2 {
                 statsRepr.put((String) entry.getKey(), entry.getValue());
             }
 
-            return statsRepr;
-        }
-
-        private Map<String, Map<String, Object>> getDefaultBoolFilters() throws InvalidQueryException {
-            return xlqlQuery.getDefaultBoolFilters(statsRepr);
+            return xlqlQuery.new StatsRepr(statsRepr);
         }
 
         @SuppressWarnings({"rawtypes", "unchecked"})

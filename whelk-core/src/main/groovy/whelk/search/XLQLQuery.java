@@ -9,7 +9,6 @@ import whelk.util.DocumentUtil;
 import whelk.util.Unicode;
 import whelk.xlql.Ast;
 import whelk.xlql.Disambiguate;
-import whelk.xlql.FilterStatus;
 import whelk.xlql.FlattenedAst;
 import whelk.xlql.Lex;
 import whelk.xlql.Operator;
@@ -17,6 +16,7 @@ import whelk.xlql.Parse;
 import whelk.xlql.Path;
 import whelk.xlql.QueryTree;
 import whelk.xlql.SimpleQueryTree;
+
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -65,11 +65,7 @@ public class XLQLQuery {
         return new QueryTree(sqt, disambiguate, outsetType, esMappings.nestedFields);
     }
 
-    public SimpleQueryTree getSimpleQueryTree(String queryString) throws InvalidQueryException {
-        return getSimpleQueryTree(queryString, Collections.emptyMap());
-    }
-
-    public SimpleQueryTree getSimpleQueryTree(String queryString, Map<String, Map<String, Object>> defaultBoolFilters) throws InvalidQueryException {
+    public SimpleQueryTree getSimpleQueryTree(String queryString, Map<String, SimpleQueryTree.Node> aliasedFilters) throws InvalidQueryException {
         if (queryString.isEmpty()) {
             return new SimpleQueryTree(null);
         }
@@ -77,32 +73,64 @@ public class XLQLQuery {
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols);
         Ast ast = new Ast(parseTree);
         FlattenedAst flattened = new FlattenedAst(ast);
-        return new SimpleQueryTree(flattened, disambiguate, defaultBoolFilters);
+        return new SimpleQueryTree(flattened, disambiguate, aliasedFilters);
     }
+
     public String sqtToQueryString(SimpleQueryTree sqt) {
         return sqt.toQueryString(disambiguate);
     }
 
-    public SimpleQueryTree setBoolFilters(SimpleQueryTree sqt, Map<String, Map<String, Object>> defaultBoolFilters) {
-        var explicitFilters = sqt.getBoolFilterAliases();
+    public SimpleQueryTree addDefaultFilters(SimpleQueryTree sqt, List<SimpleQueryTree.Node> filters) {
+        var currentPvNodes = sqt.getTopLevelPvNodes();
+        var currentBfNodes = sqt.getTopLevelBfNodes();
+        var newTree = sqt;
 
-        for (var entry : defaultBoolFilters.entrySet()) {
-            String alias = entry.getKey();
-            FilterStatus status = (FilterStatus) entry.getValue().get("status");
-            if (FilterStatus.ACTIVE.equals(status) && !explicitFilters.contains(alias)) {
-                sqt = sqt.andExtend(new SimpleQueryTree.BoolFilter(alias, status, (SimpleQueryTree.Node) entry.getValue().get("filter")));
+        for (var node : filters) {
+            switch (node) {
+                case SimpleQueryTree.PropertyValue pv -> {
+                    if (currentPvNodes.stream().noneMatch(n -> n.property().equals(pv.property()))) {
+                        newTree = newTree.andExtend(pv);
+                    }
+                }
+                case SimpleQueryTree.BoolFilter bf -> {
+                    if (currentBfNodes.stream().noneMatch(n -> n.getConcernedAliases().contains(bf.alias()))) {
+                        newTree = newTree.andExtend(bf);
+                    }
+                }
+                default -> {}
             }
         }
 
-        return sqt.expandActiveBoolFilters();
+        return newTree;
     }
 
-    public SimpleQueryTree addFilters(SimpleQueryTree sqt, List<SimpleQueryTree.PropertyValue> filters) {
-        for (SimpleQueryTree.PropertyValue pv : filters) {
-            if (sqt.getTopLevelPvNodes().stream().noneMatch(n -> n.property().equals(pv.property()))) {
-                sqt = sqt.andExtend(pv);
+    public SimpleQueryTree normalizeFilters(SimpleQueryTree sqt, StatsRepr statsRepr) throws InvalidQueryException {
+        // Map to alias if possible, e.g. "NOT excludeEplikt" -> "includeEplikt"
+        for (var node : sqt.getTopLevelNodes()) {
+            var matchingAliased = statsRepr.aliasedFilters.entrySet()
+                    .stream()
+                    .filter(entry -> entry.getValue().equals(node)) // TODO: Improve equality check
+                    .findFirst();
+            if (matchingAliased.isPresent()) {
+                var aliasNode = getSimpleQueryTree(matchingAliased.get().getKey(), statsRepr.aliasedFilters).tree;
+                sqt = sqt.removeTopLevelNode(node).andExtend(aliasNode);
             }
         }
+
+        // Remove any default filter from the explicit query
+        sqt = sqt.removeTopLevelNodes(statsRepr.siteDefaultFilters);
+
+        // Remove meaningless negations, e.g. "NOT includeEplikt" if "includeEplikt" is an available filter
+        var negatedAvailableFilters = sqt.getTopLevelNodes().stream()
+                .filter(n -> n instanceof SimpleQueryTree.BoolFilter)
+                .filter(n -> !((SimpleQueryTree.BoolFilter) n).isActive())
+                .filter(n -> statsRepr.availableBoolFilters.stream()
+                        .map(f -> f.get("filter"))
+                        .filter(f -> f instanceof SimpleQueryTree.BoolFilter)
+                        .anyMatch(f -> ((SimpleQueryTree.BoolFilter) f).alias().equals(((SimpleQueryTree.BoolFilter) n).alias())))
+                .toList();
+        sqt = sqt.removeTopLevelNodes(negatedAvailableFilters);
+
         return sqt;
     }
 
@@ -253,8 +281,12 @@ public class XLQLQuery {
         return toMappings(sqt, Collections.emptyMap(), Collections.emptyList());
     }
 
-    public Map<String, Object> toMappings(SimpleQueryTree sqt, Map<String, String> aliases, List<String> nonQueryParams) {
-        return buildMappings(sqt.tree, sqt, new LinkedHashMap<>(), aliases, nonQueryParams);
+    public Map<String, Object> toMappings(SimpleQueryTree sqt,
+                                          Map<String, String> aliases,
+                                          List<String> nonQueryParams) {
+        return sqt.isEmpty()
+                ? Collections.emptyMap()
+                : buildMappings(sqt.tree, sqt, new LinkedHashMap<>(), aliases, nonQueryParams);
     }
 
     private Map<String, Object> buildMappings(SimpleQueryTree.Node sqtNode,
@@ -513,9 +545,10 @@ public class XLQLQuery {
         return esMappings.nestedFields.stream().filter(path::startsWith).findFirst();
     }
 
-    public Map<String, Object> getStats(Map<String, Object> esResponse, Map<String, Object> statsRepr, SimpleQueryTree sqt, Map<String, String> nonQueryParams, Map<String, String> aliases) throws InvalidQueryException {
-        var sliceByDimension = getSliceByDimension(esResponse, statsRepr, sqt, nonQueryParams, aliases);
-        var boolFilters = getBoolFilters(statsRepr, sqt, nonQueryParams);
+    public Map<String, Object> getStats(Map<String, Object> esResponse, StatsRepr statsRepr, SimpleQueryTree sqt, Map<String, String> nonQueryParams, Map<String, String> aliases) {
+        var sliceByDimension = getSliceByDimension(esResponse, statsRepr.statsRepr, sqt, nonQueryParams, aliases);
+        var boolFilters = getBoolFilters(sqt, statsRepr.availableBoolFilters, nonQueryParams);
+        sliceByDimension.put("boolFilters", Map.of("dimension", "boolFilters", "observation", boolFilters));
         return Map.of(JsonLd.ID_KEY, "#stats",
                 "sliceByDimension", sliceByDimension,
                 "_boolFilters", boolFilters);
@@ -606,7 +639,7 @@ public class XLQLQuery {
         propToBuckets.forEach((property, buckets) -> {
             var sliceNode = new LinkedHashMap<>();
             var isRange = rangeProps.contains(property);
-            var observations = getObservations(buckets, isRange ? sqt.removeTopLevelRangeNodes(property) : sqt, nonQueryParams);
+            var observations = getObservations(buckets, isRange ? sqt.removeTopLevelPvRangeNodes(property) : sqt, nonQueryParams);
             if (!observations.isEmpty()) {
                 if (isRange) {
                     sliceNode.put("search", getRangeTemplate(property, sqt, makeParams(nonQueryParams)));
@@ -621,35 +654,28 @@ public class XLQLQuery {
         return sliceByDimension;
     }
 
-    private List<Map<String,Object>> getBoolFilters(Map<String, Object> statsRepr, SimpleQueryTree sqt, Map<String, String> nonQueryParams) throws InvalidQueryException {
-        var defaultBoolFilters = getDefaultBoolFilters(statsRepr);
-        var existing = sqt.getBoolFiltersByAlias();
+    private List<Map<String,Object>> getBoolFilters(SimpleQueryTree sqt, List<Map<String, Object>> availableBoolFilters, Map<String, String> nonQueryParams) {
+        var existing = sqt.getTopLevelNodes();
         List<Map<String, Object>> results = new ArrayList<>();
 
-        for (var entry : defaultBoolFilters.entrySet()) {
-            var alias = entry.getKey();
-            var filter = (SimpleQueryTree.Node) entry.getValue().get("filter");
-            var defaultStatus = (FilterStatus) entry.getValue().get("status");
-            var bfNode = existing.get(alias);
+        for (var bf : availableBoolFilters) {
+            SimpleQueryTree.Node filterNode = (SimpleQueryTree.Node) bf.get("filter");
 
             SimpleQueryTree newTree;
             boolean isSelected;
 
-            if (bfNode == null) {
-                var newStatus = switch (defaultStatus) {
-                    case INACTIVE -> FilterStatus.ACTIVE;
-                    case ACTIVE -> FilterStatus.INACTIVE;
-                };
-                newTree = sqt.andExtend(new SimpleQueryTree.BoolFilter(alias, newStatus, filter));
-                isSelected = false;
-            } else {
-                newTree = sqt.excludeFromTree(bfNode);
+            if (existing.contains(filterNode)) {
+                newTree = sqt.removeTopLevelNode(filterNode);
                 isSelected = true;
+            } else {
+                newTree = sqt.andExtend(filterNode);
+                isSelected = false;
             }
 
             Map<String, Object> res = new LinkedHashMap<>();
             // TODO: fix form
-            res.put("_selectHeader", entry.getValue().get("selectHeader"));
+            res.put("totalItems", 0);
+            res.put("object", Map.of(JsonLd.TYPE_KEY, "Resource", "prefLabelByLang", bf.get("prefLabelByLang")));
             res.put("view", Map.of(JsonLd.ID_KEY, makeFindUrl(newTree, makeParams(nonQueryParams))));
             res.put("_selected", isSelected);
 
@@ -657,29 +683,6 @@ public class XLQLQuery {
         }
 
         return results;
-    }
-
-    public Map<String, Map<String, Object>> getDefaultBoolFilters(Map<String, Object> statsRepr) throws InvalidQueryException {
-        // TODO: get from apps.jsonld
-        List<Map<String, String>> boolFilters = List.of(
-                Map.of("alias", "excludeEplikt", "filter", "NOT bibliography:\"sigel:EPLK\"", "status", "active", "selectHeader", "Inkludera e-plikt"),
-                Map.of("alias", "excludePreliminary", "filter", "NOT encodingLevel:(\"marc:PartialPreliminaryLevel\" OR \"marc:PrepublicationLevel\")", "status", "active", "selectHeader", "Inkludera kommande publiceringar"),
-//                Map.of("alias", "availableOnline", "filter", "_TODO", "status", "inactive", "selectHeader", "Endast material som finns online"),
-//                Map.of("alias", "isDigital", "filter", "_TODO", "status", "inactive", "selectHeader", "Endast digitalt material"),
-                Map.of("alias", "hasImage", "filter", "image:*", "status", "inactive", "selectHeader", "Endast resurser med bild")
-        );
-
-        Map<String, Map<String, Object>> m = new LinkedHashMap<>();
-
-        for (var bf : boolFilters) {
-            String alias = bf.get("alias");
-            SimpleQueryTree.Node filter = getSimpleQueryTree(bf.get("filter")).tree;
-            FilterStatus status = FilterStatus.valueOf(bf.get("status").toUpperCase());
-            String selectHeader = bf.get("selectHeader");
-            m.put(alias, Map.of("filter", filter, "status", status, "selectHeader", selectHeader));
-        }
-
-        return m;
     }
 
     private static Set<String> getRangeProperties(Map<String, Object> statsRepr) {
@@ -735,7 +738,7 @@ public class XLQLQuery {
             }
         }
 
-        var tree = sqt.removeTopLevelPvNodes(property);
+        var tree = sqt.removeTopLevelPvNodesByOperator(property);
 
         Map<String, Object> template = new LinkedHashMap<>();
 
@@ -875,6 +878,63 @@ public class XLQLQuery {
             var l = new ArrayList<>(list);
             l.removeLast();
             return l;
+        }
+    }
+
+    public class StatsRepr {
+        public final Map<String, Object> statsRepr;
+        public final List<SimpleQueryTree.Node> siteDefaultFilters;
+
+        public final Map<String, SimpleQueryTree.Node> aliasedFilters;
+
+        public final List<Map<String, Object>> availableBoolFilters;
+
+        public StatsRepr(Map<String, Object> statsRepr) throws InvalidQueryException {
+            this.statsRepr = statsRepr;
+            this.aliasedFilters = getAliasedFilters();
+            this.siteDefaultFilters = getSiteDefaultFilters();
+            this.availableBoolFilters = getAvailableBoolFilters();
+        }
+
+        private List<SimpleQueryTree.Node> getSiteDefaultFilters() throws InvalidQueryException {
+            // TODO: get from apps.jsonld
+            var defaultFilters = new ArrayList<SimpleQueryTree.Node>();
+
+            for (String s : List.of("\"rdf:type\":Work", "excludeEplikt", "excludePreliminary", "NOT inCollection:\"https://id.kb.se/term/uniformWorkTitle\"")) {
+                defaultFilters.add(getSimpleQueryTree(s, aliasedFilters).tree);
+            }
+
+            return defaultFilters;
+        }
+
+        private Map<String, SimpleQueryTree.Node> getAliasedFilters() throws InvalidQueryException {
+            // TODO: get from apps.jsonld
+            Map<String, SimpleQueryTree.Node> aliasedFilters = new HashMap<>();
+
+            for (Map<String, String> m : List.of(
+                    Map.of("alias", "excludeEplikt", "filter", "NOT bibliography:\"sigel:EPLK\""),
+                    Map.of("alias", "includeEplikt", "filter", "NOT excludeEplikt"),
+                    Map.of("alias", "excludePreliminary", "filter", "NOT encodingLevel:(\"marc:PartialPreliminaryLevel\" OR \"marc:PrepublicationLevel\")"),
+                    Map.of("alias", "includePreliminary", "filter", "NOT excludePreliminary")
+            )) {
+                aliasedFilters.put(m.get("alias"), getSimpleQueryTree(m.get("filter"), aliasedFilters).tree);
+            }
+
+            return aliasedFilters;
+        }
+
+        private List<Map<String, Object>> getAvailableBoolFilters() throws InvalidQueryException {
+            // TODO: get from apps.jsonld
+            return List.of(
+                    Map.of("filter", getSimpleQueryTree("includeEplikt", aliasedFilters).tree,
+                            "prefLabelByLang", Map.of("sv", "Inkludera e-plikt", "en", "Include electronic legal deposit")),
+                    Map.of("filter", getSimpleQueryTree("includePreliminary", aliasedFilters).tree,
+                            "prefLabelByLang", Map.of("sv", "Inkludera kommande publiceringar", "en", "Include upcoming publications")),
+                    Map.of("filter", getSimpleQueryTree("image:*", aliasedFilters).tree,
+                            "prefLabelByLang", Map.of("sv", "Endast resurser med omslags-/miniatyrbild", "en", "Resources with Cover/thumbnail only"))
+//                Map.of("filter", "_TODO", "selectHeader", Map.of("sv", "Endast material som finns online", "en", "Only material available online")),
+//                Map.of("filter", "_TODO", "selectHeader", Map.of("sv", "Endast digitalt material", "en", "Digital material only"))
+            );
         }
     }
 }

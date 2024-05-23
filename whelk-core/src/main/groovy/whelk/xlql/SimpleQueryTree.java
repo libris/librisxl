@@ -71,12 +71,30 @@ public class SimpleQueryTree {
 
     public record BoolFilter(String alias, FilterStatus status, Node filter) implements Node {
         public String asString() {
-            String s = alias();
-            if (status() == FilterStatus.INACTIVE) {
-                s = "NOT " + s;
-            }
-            return s;
+            return isActive()
+                    ? alias()
+                    : "NOT " + alias();
         }
+
+        public Set<String> getConcernedAliases() {
+            var aliases = new HashSet<>(Set.of(alias()));
+            if (filter() instanceof BoolFilter) {
+                aliases.addAll(((BoolFilter) filter()).getConcernedAliases());
+            }
+            return aliases;
+        }
+
+        public boolean isActive() {
+            return switch (status()) {
+                case ACTIVE -> true;
+                case INACTIVE -> false;
+            };
+        }
+    }
+
+    private enum FilterStatus {
+        ACTIVE,
+        INACTIVE
     }
 
     public sealed interface Value permits Link, Literal, VocabTerm {
@@ -117,16 +135,14 @@ public class SimpleQueryTree {
 
     public Node tree;
 
-    private List<PropertyValue> topPvNodes;
-
     private String freeTextPart;
 
     public SimpleQueryTree(FlattenedAst ast, Disambiguate disambiguate) throws InvalidQueryException {
         this(ast, disambiguate, Collections.emptyMap());
     }
 
-    public SimpleQueryTree(FlattenedAst ast, Disambiguate disambiguate, Map<String, Map<String, Object>> defaultBoolFilters) throws InvalidQueryException {
-        this.tree = buildTree(ast.tree, disambiguate, defaultBoolFilters);
+    public SimpleQueryTree(FlattenedAst ast, Disambiguate disambiguate, Map<String, Node> aliasedFilters) throws InvalidQueryException {
+        this.tree = buildTree(ast.tree, disambiguate, aliasedFilters);
         normalizeFreeText();
         removeNeedlessWildcard();
     }
@@ -136,12 +152,12 @@ public class SimpleQueryTree {
         removeNeedlessWildcard();
     }
 
-    private static Node buildTree(FlattenedAst.Node ast, Disambiguate disambiguate, Map<String, Map<String, Object>> defaultBoolFilters) throws InvalidQueryException {
+    private static Node buildTree(FlattenedAst.Node ast, Disambiguate disambiguate, Map<String, Node> aliasedFilters) throws InvalidQueryException {
         switch (ast) {
             case FlattenedAst.And and -> {
                 List<Node> conjuncts = new ArrayList<>();
                 for (FlattenedAst.Node o : and.operands()) {
-                    var c = buildTree(o, disambiguate, defaultBoolFilters);
+                    var c = buildTree(o, disambiguate, aliasedFilters);
                     if (c != null) {
                         conjuncts.add(c);
                     }
@@ -155,7 +171,7 @@ public class SimpleQueryTree {
             case FlattenedAst.Or or -> {
                 List<Node> disjuncts = new ArrayList<>();
                 for (FlattenedAst.Node o : or.operands()) {
-                    var d = buildTree(o, disambiguate, defaultBoolFilters);
+                    var d = buildTree(o, disambiguate, aliasedFilters);
                     if (d != null) {
                         disjuncts.add(d);
                     }
@@ -167,20 +183,14 @@ public class SimpleQueryTree {
                 };
             }
             case FlattenedAst.Not not -> {
-                if (defaultBoolFilters.containsKey(not.value())) {
-                    return defaultBoolFilters.get(not.value()).get("status").equals(FilterStatus.INACTIVE)
-                            ? null
-                            : new BoolFilter(not.value(), FilterStatus.INACTIVE, (Node) defaultBoolFilters.get(not.value()).get("filter"));
-                }
-                return new FreeText(Operator.NOT_EQUALS, not.value());
+                return aliasedFilters.containsKey(not.value())
+                        ? new BoolFilter(not.value(), FilterStatus.INACTIVE, aliasedFilters.get(not.value()))
+                        : new FreeText(Operator.NOT_EQUALS, not.value());
             }
             case FlattenedAst.Leaf l -> {
-                if (defaultBoolFilters.containsKey(l.value())) {
-                    return defaultBoolFilters.get(l.value()).get("status").equals(FilterStatus.ACTIVE)
-                            ? null
-                            : new BoolFilter(l.value(), FilterStatus.ACTIVE, (Node) defaultBoolFilters.get(l.value()).get("filter"));
-                }
-                return new FreeText(Operator.EQUALS, l.value());
+                return aliasedFilters.containsKey(l.value())
+                        ? new BoolFilter(l.value(), FilterStatus.ACTIVE, aliasedFilters.get(l.value()))
+                        : new FreeText(Operator.EQUALS, l.value());
             }
             case FlattenedAst.Code c -> {
                 String property = null;
@@ -282,7 +292,9 @@ public class SimpleQueryTree {
             }
             case BoolFilter bf -> switch (bf.status()) {
                 case INACTIVE -> null;
-                case ACTIVE -> bf.filter();
+                case ACTIVE -> bf.filter() instanceof BoolFilter
+                        ? expandActiveBoolFilters(bf.filter())
+                        : bf.filter();
             };
             default -> node;
         };
@@ -333,16 +345,43 @@ public class SimpleQueryTree {
         };
     }
 
-    public SimpleQueryTree removeTopLevelRangeNodes(String property) {
+    public SimpleQueryTree removeTopLevelNode(Node node) {
+        return removeTopLevelNodes(List.of(node));
+    }
+
+    public SimpleQueryTree removeTopLevelNodes(Collection<Node> nodes) {
+        if (nodes.isEmpty()) {
+            return this;
+        }
+
+        var newTree = switch (tree) {
+            case And and -> {
+                var conjuncts = and.conjuncts()
+                        .stream()
+                        .filter(Predicate.not(nodes::contains))
+                        .toList();
+                yield switch (conjuncts.size()) {
+                    case 0 -> null;
+                    case 1 -> conjuncts.getFirst();
+                    default -> new And(conjuncts);
+                };
+            }
+            default -> nodes.contains(tree) ? null : tree;
+        };
+
+        return new SimpleQueryTree(newTree);
+    }
+
+    public SimpleQueryTree removeTopLevelPvRangeNodes(String property) {
         var rangeOps = Set.of(Operator.GREATER_THAN_OR_EQUALS, Operator.GREATER_THAN, Operator.LESS_THAN, Operator.LESS_THAN_OR_EQUALS);
-        return new SimpleQueryTree(removeTopLevelPvNodes(property, tree, rangeOps));
+        return new SimpleQueryTree(removeTopLevelPvNodesByOperator(property, tree, rangeOps));
     }
 
-    public SimpleQueryTree removeTopLevelPvNodes(String property) {
-        return new SimpleQueryTree(removeTopLevelPvNodes(property, tree, Collections.emptySet()));
+    public SimpleQueryTree removeTopLevelPvNodesByOperator(String property) {
+        return new SimpleQueryTree(removeTopLevelPvNodesByOperator(property, tree, Collections.emptySet()));
     }
 
-    private static Node removeTopLevelPvNodes(String property, Node tree, Set<Operator> operators) {
+    private static Node removeTopLevelPvNodesByOperator(String property, Node tree, Set<Operator> operators) {
         Predicate<Node> p = (node -> node instanceof PropertyValue
                 && ((PropertyValue) node).property().equals(property)
                 && (operators.isEmpty() || operators.contains(((PropertyValue) node).operator())));
@@ -413,28 +452,35 @@ public class SimpleQueryTree {
                 }
             });
             case BoolFilter bf -> bfByAlias.put(bf.alias(), bf);
-            case null, default ->  {
+            case null, default -> {
             }
         }
 
         return bfByAlias;
     }
 
-    public List<PropertyValue> getTopLevelPvNodes() {
-        if (topPvNodes == null) {
-            topPvNodes = switch (tree) {
-                case And and -> and.conjuncts()
-                        .stream()
-                        .filter(node -> node instanceof PropertyValue)
-                        .map(PropertyValue.class::cast)
-                        .toList();
-                case Or ignored -> Collections.emptyList(); //TODO
-                case PropertyValue pv -> List.of(pv);
-                case null, default -> Collections.emptyList();
-            };
-        }
+    public Set<BoolFilter> getTopLevelBfNodes() {
+        return getTopLevelNodes().stream()
+                .filter(n -> n instanceof BoolFilter)
+                .map(BoolFilter.class::cast)
+                .collect(Collectors.toSet());
+    }
 
-        return topPvNodes;
+
+    public List<PropertyValue> getTopLevelPvNodes() {
+        return getTopLevelNodes().stream()
+                .filter(n -> n instanceof PropertyValue)
+                .map(PropertyValue.class::cast)
+                .toList();
+    }
+
+    public Set<Node> getTopLevelNodes() {
+        return switch (tree) {
+            case And and -> new HashSet<>(and.conjuncts());
+            case PropertyValue pv -> Set.of(pv);
+            case BoolFilter bf -> Set.of(bf);
+            case null, default -> Collections.emptySet();
+        };
     }
 
     public static PropertyValue pvEqualsLiteral(String property, String value) {
