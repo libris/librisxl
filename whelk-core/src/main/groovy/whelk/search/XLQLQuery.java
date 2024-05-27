@@ -379,7 +379,7 @@ public class XLQLQuery {
 
         filters.stream().filter(f -> f.get("filter") instanceof SimpleQueryTree.BoolFilter)
                 .filter(f -> bf.alias().equals(((SimpleQueryTree.BoolFilter) f.get("filter")).alias()))
-                .map(f -> Map.of("prefLabelByLang", f.get("prefLabelByLang")))
+                .map(f -> Map.of("prefLabelByLang", f.get("prefLabelByLang"), JsonLd.TYPE_KEY, "Resource"))
                 .findFirst()
                 .ifPresentOrElse(o -> m.put("object", o), () -> m.put("value", bf.alias()));
 
@@ -554,7 +554,6 @@ public class XLQLQuery {
     public Map<String, Object> getStats(Map<String, Object> esResponse, StatsRepr statsRepr, SimpleQueryTree sqt, Map<String, String> nonQueryParams, Map<String, String> aliases) {
         var sliceByDimension = getSliceByDimension(esResponse, statsRepr.statsRepr, sqt, nonQueryParams, aliases);
         var boolFilters = getBoolFilters(sqt, statsRepr.availableBoolFilters, nonQueryParams);
-        sliceByDimension.put("boolFilters", Map.of("dimension", "boolFilters", "observation", boolFilters));
         return Map.of(JsonLd.ID_KEY, "#stats",
                 "sliceByDimension", sliceByDimension,
                 "_boolFilters", boolFilters);
@@ -937,7 +936,7 @@ public class XLQLQuery {
                     Map.of("filter", getSimpleQueryTree("includePreliminary", aliasedFilters).tree,
                             "prefLabelByLang", Map.of("sv", "Inkludera kommande publiceringar", "en", "Include upcoming publications")),
                     Map.of("filter", getSimpleQueryTree("image:*", aliasedFilters).tree,
-                            "prefLabelByLang", Map.of("sv", "Endast resurser med omslags-/miniatyrbild", "en", "Resources with Cover/thumbnail only"))
+                            "prefLabelByLang", Map.of("sv", "Resurser med omslags-/miniatyrbild", "en", "Only resources with cover/thumbnail"))
 //                Map.of("filter", "_TODO", "selectHeader", Map.of("sv", "Endast material som finns online", "en", "Only material available online")),
 //                Map.of("filter", "_TODO", "selectHeader", Map.of("sv", "Endast digitalt material", "en", "Digital material only"))
             );
