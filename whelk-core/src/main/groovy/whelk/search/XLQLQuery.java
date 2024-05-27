@@ -958,6 +958,7 @@ public class XLQLQuery {
     public class StatsRepr {
         public final Map<String, Object> statsRepr;
         public final List<SimpleQueryTree.Node> siteDefaultFilters;
+        public final List<SimpleQueryTree.Node> siteDefaultTypeFilters;
 
         public final Map<String, SimpleQueryTree.Node> aliasedFilters;
 
@@ -967,6 +968,7 @@ public class XLQLQuery {
             this.statsRepr = statsRepr;
             this.aliasedFilters = getAliasedFilters();
             this.siteDefaultFilters = getSiteDefaultFilters();
+            this.siteDefaultTypeFilters = getDefaultTypeFilters();
             this.availableBoolFilters = getAvailableBoolFilters();
         }
 
@@ -974,7 +976,18 @@ public class XLQLQuery {
             // TODO: get from apps.jsonld
             var defaultFilters = new ArrayList<SimpleQueryTree.Node>();
 
-            for (String s : List.of("\"rdf:type\":Work", "excludeEplikt", "excludePreliminary", "NOT inCollection:\"https://id.kb.se/term/uniformWorkTitle\"")) {
+            for (String s : List.of("excludeEplikt", "excludePreliminary", "NOT inCollection:\"https://id.kb.se/term/uniformWorkTitle\"")) {
+                defaultFilters.add(getSimpleQueryTree(s, aliasedFilters).tree);
+            }
+
+            return defaultFilters;
+        }
+
+        public List<SimpleQueryTree.Node> getDefaultTypeFilters() throws InvalidQueryException {
+            // TODO: get from apps.jsonld
+            var defaultFilters = new ArrayList<SimpleQueryTree.Node>();
+
+            for (String s : List.of("\"rdf:type\":Work")) {
                 defaultFilters.add(getSimpleQueryTree(s, aliasedFilters).tree);
             }
 

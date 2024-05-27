@@ -215,9 +215,9 @@ public class SearchUtils2 {
         }
 
         private SimpleQueryTree getFilteredTree() {
-            var filters = new ArrayList<SimpleQueryTree.PropertyValue>();
+            var filters = new ArrayList<>(statsRepr.siteDefaultFilters);
             if (object == null) {
-                filters.addAll(statsRepr.siteDefaultFilters);
+                filters.addAll(statsRepr.siteDefaultTypeFilters);
             }
             if (object != null) {
                 if (predicates.isEmpty()) {
