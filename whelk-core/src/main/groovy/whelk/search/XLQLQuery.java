@@ -33,13 +33,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static whelk.component.ElasticSearch.flattenedLangMapKey;
 import static whelk.util.DocumentUtil.NOP;
-
 import static whelk.xlql.Disambiguate.RDF_TYPE;
+import static whelk.xlql.SimpleQueryTree.pvEqualsLink;
 
 public class XLQLQuery {
     private final Whelk whelk;
@@ -53,6 +54,8 @@ public class XLQLQuery {
     private static final String NESTED_AGG_NAME = "n";
     private static final int DEFAULT_BUCKET_SIZE = 10;
     private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper();
+
+    public record Entity(String id, String rdfType) {}
 
     public XLQLQuery(Whelk whelk) {
         this.whelk = whelk;
@@ -485,6 +488,40 @@ public class XLQLQuery {
         return s.matches(".*(>=|<=|[=!~<>(): ]).*") ? "\"" + s + "\"" : s;
     }
 
+    public Map<String, Object> pAgg(Entity object, Disambiguate.OutsetType outsetType) {
+        Map<String, Object> query = new LinkedHashMap<>();
+
+        var filters = curatedPredicates(object)
+                .stream()
+                .collect(Collectors.toMap(
+                        Function.identity(),
+                        p -> getEsQuery(new QueryTree(new SimpleQueryTree(pvEqualsLink(p, object.id)), disambiguate, outsetType, esMappings.nestedFields))));
+
+        if (!filters.isEmpty()) {
+            query.put("_p", Map.of("filters", Map.of("filters", filters)));
+        }
+
+        return query;
+    }
+
+    private List<String> curatedPredicates(Entity object) {
+        // TODO don't hardcode
+        Map<String, List<String>> typeToRelations =
+                Map.of(
+                        "Agent", List.of("contributor", "subject", "publisher"),
+                        "Concept", List.of("subject", "genreForm", "hasOccupation", "fieldOfActivity"),
+                        "Work", List.of("subject")
+                );
+
+        var types = new ArrayList<String>();
+        types.add(object.rdfType);
+        whelk.getJsonld().getSuperClasses(object.rdfType, types);
+        return types.stream()
+                .filter(typeToRelations::containsKey)
+                .findFirst().map(typeToRelations::get)
+                .orElse(Collections.emptyList());
+    }
+
     public Map<String, Object> getAggQuery(Map<?, ?> statsRepr, Disambiguate.OutsetType outsetType) {
         if (statsRepr.isEmpty()) {
             return Map.of(JsonLd.TYPE_KEY,
@@ -600,7 +637,7 @@ public class XLQLQuery {
                         var count = (Integer) b.get("doc_count");
                         SimpleQueryTree.PropertyValue pv;
                         if (isLinked) {
-                            pv = SimpleQueryTree.pvEqualsLink(property, value);
+                            pv = pvEqualsLink(property, value);
                         } else if (disambiguate.hasVocabValue(property)) {
                             pv = SimpleQueryTree.pvEqualsVocabTerm(property, value);
                         } else {
@@ -760,6 +797,38 @@ public class XLQLQuery {
         template.put("mapping", mapping);
 
         return template;
+    }
+
+    public List<Map<?, ?>> predicateLinks (Map<String, Object> esResponse, Entity object, Map<String, String> nonQueryParams) {
+        var result = new ArrayList<Map<?, ?>>();
+        // FIXME Use constant for _p
+        // whelk-core should not deal with query parameters at all? Should be handled in rest module?
+        Set<String> selected = new HashSet<>();
+        if (nonQueryParams.containsKey("_p")) {
+            selected.add(nonQueryParams.get("_p"));
+        }
+        Map<String, ?> counts = (Map<String, ?>) DocumentUtil.getAtPath(esResponse, List.of("aggregations", "_p", "buckets"), Collections.emptyMap());
+
+        for (String p : curatedPredicates(object)) {
+            if (!counts.containsKey(p)) {
+                continue;
+            }
+
+            int count = (int) ((Map) counts.get(p)).get("doc_count");
+
+            if (count > 0) {
+                Map<String, String> params = new HashMap<>(nonQueryParams);
+                params.put("_p", p);
+                result.add(Map.of(
+                        "totalItems", count,
+                        "view", Map.of(JsonLd.ID_KEY, makeFindUrl(makeParams(params))),
+                        "object", lookUp(new SimpleQueryTree.VocabTerm(p)),
+                        "_selected", selected.contains(p)
+                ));
+            }
+        }
+
+        return result;
     }
 
     public static Map<String, String> getAliasMappings(Disambiguate.OutsetType outsetType) {

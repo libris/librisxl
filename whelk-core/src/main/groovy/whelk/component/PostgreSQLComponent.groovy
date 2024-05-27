@@ -260,8 +260,8 @@ class PostgreSQLComponent {
             lddb ON deps.i = lddb.id AND lddb.collection='hold'
             """.stripIndent()
 
-    private static final String GET_INCOMING_LINK_COUNT =
-            "SELECT COUNT(id) FROM lddb__dependencies WHERE dependsOnId = ?"
+    private static final String GET_INCOMING_LINK_COUNT_BY_ID_AND_RELATION =
+            "SELECT relation, count(id) FROM lddb__dependencies WHERE dependsOnId = ? GROUP BY relation"
 
     private static final String GET_INCOMING_LINK_COUNT_BY_RELATION = """
             SELECT d.relation, count(d.id)
@@ -2242,17 +2242,21 @@ class PostgreSQLComponent {
         return dependencyCache.getDependersOfType(iri, relation)
     }
 
-    long getIncomingLinkCount(String id) {
+    Map<String, Long> getIncomingLinkCountByIdAndRelation(String id) {
         return withDbConnection {
             Connection connection = getMyConnection()
             PreparedStatement preparedStatement = null
             ResultSet rs = null
+            def result = new TreeMap<String, Long>()
             try {
-                preparedStatement = connection.prepareStatement(GET_INCOMING_LINK_COUNT)
+                preparedStatement = connection.prepareStatement(GET_INCOMING_LINK_COUNT_BY_ID_AND_RELATION)
+
                 preparedStatement.setString(1, id)
                 rs = preparedStatement.executeQuery()
-                rs.next()
-                return rs.getInt(1)
+                while (rs.next()) {
+                    result[rs.getString(1)] = (long) rs.getInt(2)
+                }
+                return result
             } finally {
                 close(rs, preparedStatement)
             }

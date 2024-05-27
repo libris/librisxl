@@ -50,6 +50,11 @@ public class QueryTree {
 
     public Node tree;
 
+    public QueryTree(Node tree, Set<String> esNestedFields) {
+        this.tree = tree;
+        this.esNestedFields = esNestedFields;
+    }
+
     public QueryTree(SimpleQueryTree sqt, Disambiguate disambiguate, Disambiguate.OutsetType outsetType, Set<String> esNestedFields) {
         this.esNestedFields = esNestedFields;
         this.tree = sqtToQt(sqt.tree, disambiguate, outsetType);

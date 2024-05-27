@@ -347,8 +347,12 @@ class Whelk {
         Set<Link> addedLinks = (postUpdateLinks - preUpdateLinks)
         Set<Link> removedLinks = (preUpdateLinks - postUpdateLinks)
 
-        removedLinks.findResults { storage.getSystemIdByIri(it.iri) }
-                .each { id -> elastic.decrementReverseLinks(id) }
+        removedLinks.each { link ->
+            String id = storage.getSystemIdByIri(link.iri)
+            if (id) {
+                elastic.decrementReverseLinks(id, link.relation)
+            }
+        }
 
         addedLinks.each { link ->
             String id = storage.getSystemIdByIri(link.iri)
@@ -361,7 +365,7 @@ class Whelk {
                     elastic.index(doc, this)
                 } else {
                     // just update link counter
-                    elastic.incrementReverseLinks(id)
+                    elastic.incrementReverseLinks(id, link.relation)
                 }
             }
         }
