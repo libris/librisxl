@@ -205,6 +205,23 @@
                     }
                 }
             },
+            "reverseLinks": {
+              "properties": {
+                "@type": {
+                  "type": "keyword",
+                  "copy_to": [
+                    "_all"
+                  ]
+                },
+                "totalItems": {
+                  "type": "long"
+                },
+                "totalItemsByRelation": {
+                  "type": "object",
+                  "subobjects": false
+                }
+              }
+            },
             "__prefLabel": {
                 "type": "text",
                 "fields": {
