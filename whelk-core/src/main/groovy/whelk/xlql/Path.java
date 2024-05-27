@@ -68,9 +68,7 @@ public class Path {
                 }
             }
 
-            if (value instanceof SimpleQueryTree.Literal && !Objects.equals(value.string(), Operator.WILDCARD)) {
-                addSuffixAndValue(disambiguate, value);
-            }
+            addSuffixAndValue(disambiguate, value);
         }
     }
 
