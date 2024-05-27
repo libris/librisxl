@@ -238,7 +238,21 @@ class ElasticSearch {
             if (bulkString) {
                 String response = bulkClient.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE)
                 Map responseMap = mapper.readValue(response, Map)
-                log.info("Bulk indexed ${docs.count{it}} docs in ${responseMap.took} ms")
+                int numFailed = 0
+                if (responseMap.errors) {
+                    responseMap.items?.each { item ->
+                        if (item.index?.error) {
+                            log.error("Failed indexing document: ${item.index}")
+                            numFailed++
+                        }
+                    }
+                }
+                int docsCount = docs.count{it}
+                if (numFailed) {
+                    log.warn("Tried bulk indexing ${docsCount} docs: ${docsCount - numFailed} succeeded, ${numFailed} failed. Took ${responseMap.took} ms")
+                } else {
+                    log.info("Bulk indexed ${docsCount} docs in ${responseMap.took} ms")
+                }
             } else {
                 log.warn("Refused bulk indexing ${docs.count{it}} docs because body was empty")
             }
