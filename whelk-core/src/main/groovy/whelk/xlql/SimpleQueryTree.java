@@ -13,7 +13,7 @@ import static whelk.search.XLQLQuery.quoteIfPhraseOrContainsSpecialSymbol;
 import static whelk.xlql.Disambiguate.RDF_TYPE;
 
 public class SimpleQueryTree {
-    public sealed interface Node permits And, Or, PropertyValue, FreeText {
+    public sealed interface Node permits And, BoolFilter, FreeText, Or, PropertyValue {
     }
 
     public record And(List<Node> conjuncts) implements Node {
@@ -69,6 +69,34 @@ public class SimpleQueryTree {
         }
     }
 
+    public record BoolFilter(String alias, FilterStatus status, Node filter) implements Node {
+        public String asString() {
+            return isActive()
+                    ? alias()
+                    : "NOT " + alias();
+        }
+
+        public Set<String> getConcernedAliases() {
+            var aliases = new HashSet<>(Set.of(alias()));
+            if (filter() instanceof BoolFilter) {
+                aliases.addAll(((BoolFilter) filter()).getConcernedAliases());
+            }
+            return aliases;
+        }
+
+        public boolean isActive() {
+            return switch (status()) {
+                case ACTIVE -> true;
+                case INACTIVE -> false;
+            };
+        }
+    }
+
+    private enum FilterStatus {
+        ACTIVE,
+        INACTIVE
+    }
+
     public sealed interface Value permits Link, Literal, VocabTerm {
         String string();
 
@@ -107,39 +135,62 @@ public class SimpleQueryTree {
 
     public Node tree;
 
-    private List<PropertyValue> topPvNodes;
-
     private String freeTextPart;
 
     public SimpleQueryTree(FlattenedAst ast, Disambiguate disambiguate) throws InvalidQueryException {
-        this.tree = buildTree(ast.tree, disambiguate);
+        this(ast, disambiguate, Collections.emptyMap());
+    }
+
+    public SimpleQueryTree(FlattenedAst ast, Disambiguate disambiguate, Map<String, Node> aliasedFilters) throws InvalidQueryException {
+        this.tree = buildTree(ast.tree, disambiguate, aliasedFilters);
+        normalizeFreeText();
+        removeNeedlessWildcard();
     }
 
     public SimpleQueryTree(Node tree) {
         this.tree = tree;
+        removeNeedlessWildcard();
     }
 
-    private static Node buildTree(FlattenedAst.Node ast, Disambiguate disambiguate) throws InvalidQueryException {
+    private static Node buildTree(FlattenedAst.Node ast, Disambiguate disambiguate, Map<String, Node> aliasedFilters) throws InvalidQueryException {
         switch (ast) {
             case FlattenedAst.And and -> {
                 List<Node> conjuncts = new ArrayList<>();
                 for (FlattenedAst.Node o : and.operands()) {
-                    conjuncts.add(buildTree(o, disambiguate));
+                    var c = buildTree(o, disambiguate, aliasedFilters);
+                    if (c != null) {
+                        conjuncts.add(c);
+                    }
                 }
-                return new And(conjuncts);
+                return switch (conjuncts.size()) {
+                    case 0 -> null;
+                    case 1 -> conjuncts.getFirst();
+                    default -> new And(conjuncts);
+                };
             }
             case FlattenedAst.Or or -> {
                 List<Node> disjuncts = new ArrayList<>();
                 for (FlattenedAst.Node o : or.operands()) {
-                    disjuncts.add(buildTree(o, disambiguate));
+                    var d = buildTree(o, disambiguate, aliasedFilters);
+                    if (d != null) {
+                        disjuncts.add(d);
+                    }
                 }
-                return new Or(disjuncts);
+                return switch (disjuncts.size()) {
+                    case 0 -> null;
+                    case 1 -> disjuncts.getFirst();
+                    default -> new Or(disjuncts);
+                };
             }
             case FlattenedAst.Not not -> {
-                return new FreeText(Operator.NOT_EQUALS, not.value());
+                return aliasedFilters.containsKey(not.value())
+                        ? new BoolFilter(not.value(), FilterStatus.INACTIVE, aliasedFilters.get(not.value()))
+                        : new FreeText(Operator.NOT_EQUALS, not.value());
             }
             case FlattenedAst.Leaf l -> {
-                return new FreeText(Operator.EQUALS, l.value());
+                return aliasedFilters.containsKey(l.value())
+                        ? new BoolFilter(l.value(), FilterStatus.ACTIVE, aliasedFilters.get(l.value()))
+                        : new FreeText(Operator.EQUALS, l.value());
             }
             case FlattenedAst.Code c -> {
                 String property = null;
@@ -188,6 +239,67 @@ public class SimpleQueryTree {
         }
     }
 
+    private void normalizeFreeText() {
+        this.tree = normalizeFreeText(tree);
+    }
+
+    private static Node normalizeFreeText(Node node) {
+        return switch (node) {
+            case And and -> {
+                List<Node> conjuncts = new ArrayList<>();
+                List<String> ftStrings = new ArrayList<>();
+                for (Node n : and.conjuncts()) {
+                    if (isFreeText(n)) {
+                        ftStrings.add(quoteIfPhraseOrContainsSpecialSymbol(((FreeText) n).value()));
+                    } else {
+                        conjuncts.add(normalizeFreeText(n));
+                    }
+                }
+                if (!ftStrings.isEmpty()) {
+                    conjuncts.addFirst(new FreeText(Operator.EQUALS, String.join(" ", ftStrings)));
+                }
+                yield conjuncts.size() > 1 ? new And(conjuncts) : conjuncts.getFirst();
+            }
+            case Or or -> {
+                List<Node> disjuncts = or.disjuncts()
+                        .stream()
+                        .map(SimpleQueryTree::normalizeFreeText)
+                        .toList();
+                yield new Or(disjuncts);
+            }
+            case FreeText ft -> new FreeText(ft.operator(), quoteIfPhraseOrContainsSpecialSymbol(ft.value()));
+            case null, default -> node;
+        };
+    }
+
+    public SimpleQueryTree expandActiveBoolFilters() {
+        return new SimpleQueryTree(expandActiveBoolFilters(tree));
+    }
+
+    private static Node expandActiveBoolFilters(Node node) {
+        return switch (node) {
+            case And and -> {
+                var conjuncts = and.conjuncts()
+                        .stream()
+                        .map(SimpleQueryTree::expandActiveBoolFilters)
+                        .filter(Objects::nonNull)
+                        .toList();
+                yield switch (conjuncts.size()) {
+                    case 0 -> null;
+                    case 1 -> conjuncts.getFirst();
+                    default -> new And(conjuncts);
+                };
+            }
+            case BoolFilter bf -> switch (bf.status()) {
+                case INACTIVE -> null;
+                case ACTIVE -> bf.filter() instanceof BoolFilter
+                        ? expandActiveBoolFilters(bf.filter())
+                        : bf.filter();
+            };
+            default -> node;
+        };
+    }
+
     public SimpleQueryTree andExtend(Node node) {
         var conjuncts = switch (tree) {
             case null -> List.of(node);
@@ -212,14 +324,14 @@ public class SimpleQueryTree {
         if (nodeToExclude.equals(tree)) {
             return null;
         }
-        switch (tree) {
+        return switch (tree) {
             case And and -> {
                 List<Node> andClause = and.conjuncts()
                         .stream()
                         .map(c -> excludeFromTree(nodeToExclude, c))
                         .filter(Objects::nonNull)
                         .toList();
-                return andClause.size() > 1 ? new And(andClause) : andClause.getFirst();
+                yield andClause.size() > 1 ? new And(andClause) : andClause.getFirst();
             }
             case Or or -> {
                 List<Node> orClause = or.disjuncts()
@@ -227,32 +339,55 @@ public class SimpleQueryTree {
                         .map(d -> excludeFromTree(nodeToExclude, d))
                         .filter(Objects::nonNull)
                         .toList();
-                return orClause.size() > 1 ? new Or(orClause) : orClause.getFirst();
+                yield orClause.size() > 1 ? new Or(orClause) : orClause.getFirst();
             }
-            case FreeText ignored -> {
-                return tree;
-            }
-            case PropertyValue ignored -> {
-                return tree;
-            }
+            default -> tree;
+        };
+    }
+
+    public SimpleQueryTree removeTopLevelNode(Node node) {
+        return removeTopLevelNodes(List.of(node));
+    }
+
+    public SimpleQueryTree removeTopLevelNodes(Collection<Node> nodes) {
+        if (nodes.isEmpty()) {
+            return this;
         }
+
+        var newTree = switch (tree) {
+            case And and -> {
+                var conjuncts = and.conjuncts()
+                        .stream()
+                        .filter(Predicate.not(nodes::contains))
+                        .toList();
+                yield switch (conjuncts.size()) {
+                    case 0 -> null;
+                    case 1 -> conjuncts.getFirst();
+                    default -> new And(conjuncts);
+                };
+            }
+            default -> nodes.contains(tree) ? null : tree;
+        };
+
+        return new SimpleQueryTree(newTree);
     }
 
-    public SimpleQueryTree removeTopLevelRangeNodes(String property) {
+    public SimpleQueryTree removeTopLevelPvRangeNodes(String property) {
         var rangeOps = Set.of(Operator.GREATER_THAN_OR_EQUALS, Operator.GREATER_THAN, Operator.LESS_THAN, Operator.LESS_THAN_OR_EQUALS);
-        return new SimpleQueryTree(removeTopLevelPvNodes(property, tree, rangeOps));
+        return new SimpleQueryTree(removeTopLevelPvNodesByOperator(property, tree, rangeOps));
     }
 
-    public SimpleQueryTree removeTopLevelPvNodes(String property) {
-        return new SimpleQueryTree(removeTopLevelPvNodes(property, tree, Collections.emptySet()));
+    public SimpleQueryTree removeTopLevelPvNodesByOperator(String property) {
+        return new SimpleQueryTree(removeTopLevelPvNodesByOperator(property, tree, Collections.emptySet()));
     }
 
-    private static Node removeTopLevelPvNodes(String property, Node tree, Set<Operator> operators) {
+    private static Node removeTopLevelPvNodesByOperator(String property, Node tree, Set<Operator> operators) {
         Predicate<Node> p = (node -> node instanceof PropertyValue
                 && ((PropertyValue) node).property().equals(property)
                 && (operators.isEmpty() || operators.contains(((PropertyValue) node).operator())));
 
         return switch (tree) {
+            case null -> null;
             case And and -> {
                 List<Node> conjuncts = and.conjuncts()
                         .stream()
@@ -283,7 +418,7 @@ public class SimpleQueryTree {
                     types.add(pv.value().string());
                 }
             }
-            case FreeText ignored -> {
+            default -> {
                 // Nothing to do here
             }
         }
@@ -296,25 +431,56 @@ public class SimpleQueryTree {
     }
 
     public boolean isFreeText() {
-        return tree instanceof FreeText && ((FreeText) tree).operator().equals(Operator.EQUALS);
+        return isFreeText(tree);
     }
 
-    public List<PropertyValue> getTopLevelPvNodes() {
-        if (topPvNodes == null) {
-            topPvNodes = switch (this.tree) {
-                case null -> Collections.emptyList();
-                case And and -> and.conjuncts()
-                        .stream()
-                        .filter(node -> node instanceof PropertyValue)
-                        .map(PropertyValue.class::cast)
-                        .toList();
-                case Or ignored -> Collections.emptyList(); //TODO
-                case PropertyValue pv -> List.of(pv);
-                case FreeText ignored -> Collections.emptyList();
-            };
+    private static boolean isFreeText(Node node) {
+        return node instanceof FreeText && ((FreeText) node).operator().equals(Operator.EQUALS);
+    }
+
+    public Set<String> getBoolFilterAliases() {
+        return getBoolFiltersByAlias().keySet();
+    }
+
+    public Map<String, BoolFilter> getBoolFiltersByAlias() {
+        Map<String, BoolFilter> bfByAlias = new HashMap<>();
+
+        switch (tree) {
+            case And and -> and.conjuncts().forEach(node -> {
+                if (node instanceof BoolFilter n) {
+                    bfByAlias.put(n.alias(), n);
+                }
+            });
+            case BoolFilter bf -> bfByAlias.put(bf.alias(), bf);
+            case null, default -> {
+            }
         }
 
-        return topPvNodes;
+        return bfByAlias;
+    }
+
+    public Set<BoolFilter> getTopLevelBfNodes() {
+        return getTopLevelNodes().stream()
+                .filter(n -> n instanceof BoolFilter)
+                .map(BoolFilter.class::cast)
+                .collect(Collectors.toSet());
+    }
+
+
+    public List<PropertyValue> getTopLevelPvNodes() {
+        return getTopLevelNodes().stream()
+                .filter(n -> n instanceof PropertyValue)
+                .map(PropertyValue.class::cast)
+                .toList();
+    }
+
+    public Set<Node> getTopLevelNodes() {
+        return switch (tree) {
+            case And and -> new HashSet<>(and.conjuncts());
+            case PropertyValue pv -> Set.of(pv);
+            case BoolFilter bf -> Set.of(bf);
+            case null, default -> Collections.emptySet();
+        };
     }
 
     public static PropertyValue pvEqualsLiteral(String property, String value) {
@@ -350,8 +516,12 @@ public class SimpleQueryTree {
         return freeTextPart;
     }
 
+    private void resetFreeTextPart() {
+        this.freeTextPart = null;
+    }
+
     public String toQueryString(Disambiguate disambiguate) {
-        return buildQueryString(tree, disambiguate, true);
+        return isEmpty() ? "*" : buildQueryString(tree, disambiguate, true);
     }
 
     private String buildQueryString(Node node, Disambiguate disambiguate, boolean topLevel) {
@@ -372,22 +542,14 @@ public class SimpleQueryTree {
             }
             case FreeText ft -> ft.asString();
             case PropertyValue pv -> pv.asString(disambiguate);
+            case BoolFilter bf -> bf.asString();
         };
     }
 
-    public void replaceTopLevelFreeText(String replacement) {
-        if (isFreeText()) {
-            this.tree = new FreeText(Operator.EQUALS, replacement);
-        } else if (tree instanceof And) {
-            List<Node> newConjuncts = ((And) tree).conjuncts().stream()
-                    .filter(Predicate.not(c -> c instanceof FreeText && ((FreeText) c).operator().equals(Operator.EQUALS)))
-                    .collect(Collectors.toList());
-            if (!replacement.isEmpty()) {
-                newConjuncts.addFirst(new FreeText(Operator.EQUALS, replacement));
-            }
-            this.tree = newConjuncts.size() == 1 ? newConjuncts.getFirst() : new And(newConjuncts);
-        } else {
-            this.tree = new And(List.of(new FreeText(Operator.EQUALS, replacement), tree));
+    private void removeNeedlessWildcard() {
+        if (!isFreeText() && Operator.WILDCARD.equals(getFreeTextPart())) {
+            this.tree = excludeFromTree(new FreeText(Operator.EQUALS, Operator.WILDCARD), tree);
+            resetFreeTextPart();
         }
     }
 }

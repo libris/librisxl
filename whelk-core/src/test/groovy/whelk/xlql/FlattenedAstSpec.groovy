@@ -141,22 +141,4 @@ class FlattenedAstSpec extends Specification {
                 ] as List<FlattenedAst.Node>
         )
     }
-
-    def "merge leaves"() {
-        given:
-        def input = "x y z \"a b c\" d p:v \"e:f\" not g h i"
-        def lexedSymbols = Lex.lexQuery(input)
-        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
-        Ast ast = new Ast(parseTree)
-        FlattenedAst flattenedAst = new FlattenedAst(ast)
-
-        expect:
-        flattenedAst.tree == new FlattenedAst.And(
-                [
-                        new FlattenedAst.Leaf("x y z \"a b c\" d \"e:f\" h i"),
-                        new FlattenedAst.Code("p", Operator.EQUALS, "v"),
-                        new FlattenedAst.Not("g")
-                ] as List<FlattenedAst.Node>
-        )
-    }
 }

@@ -27,7 +27,6 @@ public class SearchUtils2 {
     final static int DEFAULT_LIMIT = 200;
     final static int MAX_LIMIT = 4000;
     final static int DEFAULT_OFFSET = 0;
-    private static final List<SimpleQueryTree.PropertyValue> DEFAULT_FILTERS = List.of(SimpleQueryTree.pvEqualsVocabTerm(RDF_TYPE, "Work"));
 
     Whelk whelk;
     XLQLQuery xlqlQuery;
@@ -95,7 +94,7 @@ public class SearchUtils2 {
         private final String object;
         private final List<String> predicates;
         private final String mode;
-        private final Map<String, Object> statsRepr;
+        private final XLQLQuery.StatsRepr statsRepr;
         private final List<String> debug;
         private final String queryString;
         private final String freeText;
@@ -116,39 +115,26 @@ public class SearchUtils2 {
             this.lens = getOptionalSingleNonEmpty(P.LENS, queryParameters).orElse("cards");
             this.statsRepr = getStatsRepr(queryParameters);
 
-            var q = getOptionalSingle(P.QUERY, queryParameters);
-            var i = getOptionalSingle(P.SIMPLE_FREETEXT, queryParameters);
+            var q = getOptionalSingleNonEmpty(P.QUERY, queryParameters);
+            var i = getOptionalSingleNonEmpty(P.SIMPLE_FREETEXT, queryParameters);
 
-            if (q.isPresent() && i.isPresent()) {
-                var iSqt = xlqlQuery.getSimpleQueryTree(i.get());
-                if (iSqt.isEmpty() || iSqt.isFreeText()) {
-                    var qSqt = xlqlQuery.getSimpleQueryTree(q.get());
-                    if (i.get().equals(qSqt.getFreeTextPart())) {
-                        // The acceptable case
-                        this.queryString = q.get();
-                        this.freeText = i.get();
-                        this.simpleQueryTree = qSqt;
-                        SimpleQueryTree filteredTree = getFilteredTree();
-                        this.outsetType = xlqlQuery.getOutsetType(filteredTree);
-                        this.queryTree = xlqlQuery.getQueryTree(filteredTree, outsetType);
-                        this.esQueryDsl = getEsQueryDsl();
-                    } else {
-                        qSqt.replaceTopLevelFreeText(i.get());
-                        throw new Crud.RedirectException(makeFindUrl(i.get(), xlqlQuery.sqtToQueryString(qSqt)));
-                    }
+            if (q.isPresent()) {
+                var sqt = xlqlQuery.normalizeFilters(xlqlQuery.getSimpleQueryTree(q.get(), statsRepr.aliasedFilters), statsRepr);
+                if (i.isEmpty() || xlqlQuery.getSimpleQueryTree(i.get(), statsRepr.aliasedFilters).isFreeText()) {
+                    this.simpleQueryTree = sqt;
+                    this.queryString = xlqlQuery.sqtToQueryString(sqt);
+                    this.freeText = sqt.getFreeTextPart();
+                    SimpleQueryTree filteredTree = getFilteredTree();
+                    this.outsetType = xlqlQuery.getOutsetType(filteredTree);
+                    this.queryTree = xlqlQuery.getQueryTree(filteredTree, outsetType);
+                    this.esQueryDsl = getEsQueryDsl();
                 } else {
-                    throw new Crud.RedirectException(makeFindUrl(iSqt.getFreeTextPart(), i.get()));
+                    throw new Crud.RedirectException(makeFindUrl(sqt.getFreeTextPart(), xlqlQuery.sqtToQueryString(sqt)));
                 }
-            } else if (q.isPresent()) {
-                var qSqt = xlqlQuery.getSimpleQueryTree(q.get());
-                throw new Crud.RedirectException(makeFindUrl(qSqt.getFreeTextPart(), q.get()));
-            } else if (i.isPresent()) {
-                var iSqt = xlqlQuery.getSimpleQueryTree(i.get());
-                throw new Crud.RedirectException(makeFindUrl(iSqt.getFreeTextPart(), i.get()));
             } else if (object != null) {
-                throw new Crud.RedirectException(makeFindUrl("*", "*"));
+                throw new Crud.RedirectException(makeFindUrl("", "*"));
             } else {
-                throw new InvalidQueryException("Missing required query parameters");
+                throw new InvalidQueryException("Missing required query parameter: _q");
             }
         }
 
@@ -163,7 +149,7 @@ public class SearchUtils2 {
             } else {
                 sortBy.insertSortClauses(queryDsl, xlqlQuery);
             }
-            queryDsl.put("aggs", xlqlQuery.getAggQuery(statsRepr, outsetType));
+            queryDsl.put("aggs", xlqlQuery.getAggQuery(statsRepr.statsRepr, outsetType));
             queryDsl.put("track_total_hits", true);
             return queryDsl;
         }
@@ -208,7 +194,7 @@ public class SearchUtils2 {
             view.put("itemOffset", offset);
             view.put("itemsPerPage", limit);
             view.put("totalItems", numHits);
-            view.put("search", Map.of("mapping", toMappings(aliases)));
+            view.put("search", Map.of("mapping", toMappings(aliases, statsRepr.availableBoolFilters)));
             view.putAll(makePaginationLinks(numHits));
             if (esResponse.containsKey("items")) {
                 @SuppressWarnings("unchecked")
@@ -229,9 +215,9 @@ public class SearchUtils2 {
         }
 
         private SimpleQueryTree getFilteredTree() {
-            var filters = new ArrayList<SimpleQueryTree.PropertyValue>();
+            var filters = new ArrayList<>(statsRepr.siteDefaultFilters);
             if (object == null) {
-                filters.addAll(DEFAULT_FILTERS);
+                filters.addAll(statsRepr.siteDefaultTypeFilters);
             }
             if (object != null) {
                 if (predicates.isEmpty()) {
@@ -240,7 +226,7 @@ public class SearchUtils2 {
                     filters.addAll(predicates.stream().map(p -> SimpleQueryTree.pvEqualsLink(p, object)).toList());
                 }
             }
-            return xlqlQuery.addFilters(simpleQueryTree, filters);
+            return xlqlQuery.addDefaultFilters(simpleQueryTree, filters).expandActiveBoolFilters();
         }
 
         private Map<String, Map<String, String>> makePaginationLinks(int numHits) {
@@ -316,8 +302,8 @@ public class SearchUtils2 {
             return params;
         }
 
-        private List<Map<?, ?>> toMappings(Map<String, String> aliases) {
-            return List.of(xlqlQuery.toMappings(simpleQueryTree, aliases, makeNonQueryParams(0)));
+        private List<Map<?, ?>> toMappings(Map<String, String> aliases, List<Map<String, Object>> filters) {
+            return List.of(xlqlQuery.toMappings(simpleQueryTree, aliases, filters, makeNonQueryParams(0)));
         }
 
         private static Optional<String> getOptionalSingleNonEmpty(String name, Map<String, String[]> queryParameters) {
@@ -375,7 +361,7 @@ public class SearchUtils2 {
             }
         }
 
-        private static Map<String, Object> getStatsRepr(Map<String, String[]> queryParameters) throws IOException {
+        private XLQLQuery.StatsRepr getStatsRepr(Map<String, String[]> queryParameters) throws IOException, InvalidQueryException {
             Map<String, Object> statsRepr = new LinkedHashMap<>();
 
             var statsJson = Optional.ofNullable(queryParameters.get(P.STATS_REPRESENTATION))
@@ -387,7 +373,7 @@ public class SearchUtils2 {
                 statsRepr.put((String) entry.getKey(), entry.getValue());
             }
 
-            return statsRepr;
+            return xlqlQuery.new StatsRepr(statsRepr);
         }
 
         @SuppressWarnings({"rawtypes", "unchecked"})
@@ -398,8 +384,8 @@ public class SearchUtils2 {
             List<Map> identifiedBy = (List<Map>) item.get("identifiedBy");
             if (identifiedBy != null) {
                 Function<Object, String> toStr = s -> s != null ? s.toString() : "";
-                identifiedBy.removeIf( id -> (Document.isIsni(id) || Document.isOrcid(id))
-                        && toStr.apply(id.get("value")).length() == 16 + 3 );
+                identifiedBy.removeIf(id -> (Document.isIsni(id) || Document.isOrcid(id))
+                        && toStr.apply(id.get("value")).length() == 16 + 3);
             }
 
             // reverseLinks must be re-added because they might get filtered out in applyLens().
