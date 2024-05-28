@@ -244,8 +244,9 @@ public class XLQLQuery {
 
     private Map<String, Object> esFilter(QueryTree.Field f) {
         String path = f.path();
+        String value = f.value();
 
-        if (Operator.WILDCARD.equals(f.value())) {
+        if (Operator.WILDCARD.equals(value)) {
             return switch (f.operator()) {
                 case EQUALS -> existsFilter(path);
                 case NOT_EQUALS -> notExistsFilter(path);
@@ -253,7 +254,6 @@ public class XLQLQuery {
             };
         }
 
-        String value = quoteIfPhrase(f.value());
         return switch (f.operator()) {
             case EQUALS -> equalsFilter(path, value);
             case NOT_EQUALS -> notEqualsFilter(path, value);
@@ -267,7 +267,8 @@ public class XLQLQuery {
     private Map<String, Object> esNestedFilter(QueryTree.Nested n) {
         var musts = n.fields()
                 .stream()
-                .map(f -> Map.of("match", Map.of(f.path(), f.value())))
+                .flatMap(f -> Arrays.stream(f.value().split("\\s+"))
+                        .map(word -> Map.of("match", Map.of(f.path(), word))))
                 .toList();
 
         Map<String, Object> nested = Map.of(
@@ -440,6 +441,7 @@ public class XLQLQuery {
         var sq = new HashMap<>();
         sq.put("query", isSimple ? value : ESQuery.escapeNonSimpleQueryString(value));
         sq.put("fields", new ArrayList<>(List.of(path)));
+        sq.put("default_operator", "AND");
         clause.put(queryMode, sq);
         return negate ? filterWrap(mustNotWrap(clause)) : filterWrap(clause);
     }
