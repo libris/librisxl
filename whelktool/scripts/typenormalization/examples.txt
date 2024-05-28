@@ -277,3 +277,17 @@
 <https://libris.kb.se/m5zcg5kz22x0pl5#it> # en bok online i många pdf
 <https://libris.kb.se/7rkmrclk193bmfv#it> # Databas
 <https://libris.kb.se/ctx7wv5b9rnpgtlr#it> # e-artikel
+
+# Handskrifter
+<https://libris.kb.se/t7c5wgf8rtr4cw23#it> ## bokmanuskript (Selma Lagerlöf)
+<https://libris.kb.se/7pmv3rlv54k0d5t1#it> ## ritning
+<https://libris.kb.se/r7vx4701p7djr7x3#it> ## gammal handskrift
+<https://libris.kb.se/3mfhk73f0kk89pl#it> ## maskin-skriven pjästext
+<https://libris.kb.se/3mfr390f3q0rqzt#it> ## notmanuskript (Peterson-Berger)
+<https://libris.kb.se/1kcp1bvc0hs5dr7#it> ## samma notmanuskript digitiserat (SMB)
+<https://libris.kb.se/h0sh08wt1tqz888#it> ## handritad karta
+<https://libris.kb.se/fw122pt3ccr4x892#it> ## samma karta digitiserad
+<https://libris.kb.se/5nggss8h5dtcn3s#it> ## handritad karta - instanstyp Map
+<https://libris.kb.se/x7fg95llvc9lwnmm#it> ## jordglob (troligen handgjord)
+<https://libris.kb.se/fqtr25m6cn2jscmn#it> ## himmels-glob
+<https://libris.kb.se/4ngphwqg0h9rm70#it> ## klipp-samling
