@@ -839,7 +839,7 @@ public class XLQLQuery {
                 m.put(RDF_TYPE, "instanceType");
                 m.put("instanceOfType", "workType");
             }
-            case WORK -> {
+            case WORK, RESOURCE -> {
                 m.put(RDF_TYPE, "workType");
                 m.put("hasInstanceType", "instanceType");
             }
