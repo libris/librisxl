@@ -1,5 +1,8 @@
 /*
 $ java -Dxl.secret.properties=../DEV2-secret.properties -jar build/libs/whelktool.jar --dry-run --step scripts/typenormalization/main.groovy
+$ trld reports/full-input.ndjson
+$ cat reports/full-input.ndjson | trld -indjson -ottl > reports/full-input.ttl
+$ cat reports/full-output.ndjson | trld -indjson -ottl > reports/full-output.ttl
 */
 
 import java.util.stream.Collectors
@@ -220,9 +223,9 @@ class TypeNormalizer {
       } else if (type == "Instance") {
         if (!(isVolume)) {
           instance.put(TYPE, "Monograph")
-        } else if ((instance.get("identifiedBy").stream().anyMatch(x -> x.get(TYPE).equals("ISBN")))
-                   || instance.containsKey("publication")) {
+        } else if (assumedToBePrint(instance)) {
           instance.put(TYPE, "PrintedVolume")
+          // TODO: if marc:RegularPrintReproduction, add production a Reproduction?
         } else {
           instance.put(TYPE, "Volume")
         }
@@ -264,6 +267,13 @@ class TypeNormalizer {
         instance.remove("marc:mediaTerm")
       }
     }
+  }
+
+  static boolean assumedToBePrint(Map instance) {
+    // TODO: carrierType == marc:RegularPrint || marc:RegularPrintReproduction
+    return (instance.get("identifiedBy").stream().anyMatch(
+        x -> x.get(TYPE).equals("ISBN"))
+      ) || instance.containsKey("publication")
   }
 
   static boolean looksLikeVolume(Map instance) {
