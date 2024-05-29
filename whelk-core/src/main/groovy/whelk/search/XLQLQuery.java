@@ -265,6 +265,7 @@ public class XLQLQuery {
     }
 
     private Map<String, Object> esNestedFilter(QueryTree.Nested n) {
+        // TODO: Use simple_query_string / query_string instead of match?
         var musts = n.fields()
                 .stream()
                 .flatMap(f -> Arrays.stream(f.value().split("\\s+"))
