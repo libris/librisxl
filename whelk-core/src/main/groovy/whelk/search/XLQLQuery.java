@@ -88,10 +88,17 @@ public class XLQLQuery {
         var currentBfNodes = sqt.getTopLevelBfNodes();
         var newTree = sqt;
 
+        Function<SimpleQueryTree.PropertyValue, Boolean> isTypeEquals = pv ->
+                pv.property().equals(RDF_TYPE) && pv.operator().equals(Operator.EQUALS);
+
         for (var node : filters) {
             switch (node) {
                 case SimpleQueryTree.PropertyValue pv -> {
-                    if (currentPvNodes.stream().noneMatch(n -> n.property().equals(pv.property()))) {
+                    if (isTypeEquals.apply(pv)) {
+                        if (currentPvNodes.stream().noneMatch(isTypeEquals::apply)) {
+                            newTree = newTree.andExtend(pv);
+                        }
+                    } else {
                         newTree = newTree.andExtend(pv);
                     }
                 }
