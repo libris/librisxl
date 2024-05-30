@@ -89,7 +89,7 @@ public class XLQLQuery {
         var newTree = sqt;
 
         Function<SimpleQueryTree.PropertyValue, Boolean> isTypeEquals = pv ->
-                pv.property().equals(JsonLd.TYPE_KEY) && pv.operator().equals(Operator.EQUALS);
+                pv.property().equals(RDF_TYPE) && pv.operator().equals(Operator.EQUALS);
 
         for (var node : filters) {
             switch (node) {
