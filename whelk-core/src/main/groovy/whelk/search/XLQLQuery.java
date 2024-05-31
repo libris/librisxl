@@ -329,7 +329,9 @@ public class XLQLQuery {
         }
 
         SimpleQueryTree reducedTree = sqt.excludeFromTree(sqtNode);
-        String upUrl = makeFindUrl(reducedTree, nonQueryParams);
+        String upUrl = reducedTree.isEmpty() && !sqt.isFreeText() && !sqt.getFreeTextPart().isEmpty()
+                ? makeFindUrl(sqt.getFreeTextPart(), sqt.getFreeTextPart(), nonQueryParams)
+                : makeFindUrl(reducedTree, nonQueryParams);
 
         mappingsNode.put("up", Map.of(JsonLd.ID_KEY, upUrl));
 
