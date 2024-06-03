@@ -67,6 +67,8 @@ class RomanizerSpec extends Specification {
         // https://libris.kb.se/7nnt5t5z5xtlzr37#it
         //'Ο Αϊ-Βασιλης στη Φυλακη με τους 83 αρουραίους'            | 'O Ai-Vasilis sti filaki me tous 83 aroureous'
         'Ο Αϊ-Βασιλης στη Φυλακη με τους 83 αρουραίους'            | 'O Ai-Vasilis sti Filaki me tous 83 aroureous'
+        // U+037E ; GREEK QUESTION MARK
+        'προικισμένοι;'                                            | 'prikismeni?'
     }
 
     def "Ancient greek"() {

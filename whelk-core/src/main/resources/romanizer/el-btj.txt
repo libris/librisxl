@@ -302,3 +302,5 @@ $vowel { ϋ } $vowel > j ;
 
 # Frågetecken skrivs i nygrekisk skrift med semikolon (;) och återges som frågetecken (?)
 ';' > '?';
+# ; U+037E GREEK QUESTION MARK
+\u037E > '?';
