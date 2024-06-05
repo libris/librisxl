@@ -2,6 +2,8 @@ package whelk.importer;
 
 import groovy.lang.Tuple;
 import io.prometheus.client.Counter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import se.kb.libris.util.marc.Datafield;
 import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcRecord;
@@ -45,6 +47,7 @@ import static whelk.util.Jackson.mapper;
 
 class XL
 {
+    private final Logger logger = LogManager.getLogger(this.getClass());
     public static final String ENC_PRELIMINARY_STATUS = "marc:PartialPreliminaryLevel"; // 5
     public static final String ENC_PREPUBLICATION_STATUS = "marc:PrepublicationLevel";  // 8
     public static final String ENC_ABBREVIVATED_STATUS = "marc:AbbreviatedLevel";  // 3
@@ -208,6 +211,10 @@ class XL
                 List<String> duplicateList = new ArrayList<>(duplicateIDs);
                 Collections.sort(duplicateList);
                 String selectedDuplicateId = duplicateList.get(0);
+
+                logger.info("Incoming record:\n" + incomingMarcRecord.toString() + "was matched with more than one record: " + duplicateList + "." +
+                        "Associated holdings will be added to: " + selectedDuplicateId);
+
                 if (!selectedDuplicateId.startsWith(Document.getBASE_URI().toString()))
                     selectedDuplicateId = Document.getBASE_URI().toString() + selectedDuplicateId;
                 resultingResourceId = m_whelk.getStorage().getThingId(selectedDuplicateId);
@@ -482,6 +489,7 @@ class XL
 
         // Filter duplicate list on compatible instance types.
         Iterator<String> it = duplicateIDs.iterator();
+        Set<String> disqualifiedIDs = new HashSet<>();
         while (it.hasNext()) {
             String candidateID = it.next();
             Document candidate = m_whelk.getStorage().load(candidateID);
@@ -492,8 +500,13 @@ class XL
             if (!existingInstanceType.equals(incomingInstanceType)
                     && !existingInstanceType.equals("Instance")
                     && !incomingInstanceType.equals("Instance")) {
+                disqualifiedIDs.add(candidateID);
                 it.remove();
             }
+        }
+        if (!disqualifiedIDs.isEmpty() && duplicateIDs.isEmpty()) {
+            logger.info("An incoming record was matched with: " + disqualifiedIDs + ", all of which were disqualified due to mismatching main entity types. " +
+                    "A new record with the correct main entity type will be created instead.");
         }
 
         return duplicateIDs;
