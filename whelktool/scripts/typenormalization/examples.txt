@@ -65,11 +65,11 @@
 <https://libris.kb.se/3mfsq7rf3f1v0lh#it>
 <https://libris.kb.se/2ldfxbjd4xl4mhr#it>
 
-# Låt den rätte komma in - instanceOf https://libris-qa.kb.se/r8v1nln5pkp114w3
+# Låt den rätte komma in - instanceOf https://libris.kb.se/r8v1nln5pkp114w3
 <https://libris.kb.se/btml9kfn12mmjh5#it>
 <https://libris.kb.se/g0s2gb4s1k7q13w#it>
 
-# Mio min Mio -  instanceOf https://libris-qa.kb.se/katalogisering/gzkqbvltd91h5zd1
+# Mio min Mio -  instanceOf https://libris.kb.se/gzkqbvltd91h5zd1#it
 <https://libris.kb.se/zh9flff92qf92b9#it>
 <https://libris.kb.se/1jb8fwgc0nhlwpr#it>
 <https://libris.kb.se/2dh6072m0zsc8jr7#it>
@@ -77,27 +77,27 @@
 <https://libris.kb.se/1kcg8gbc0q13sfb#it>
 <https://libris.kb.se/n5ztl2000l08t78#it>
 
-# Lysande Landning - instanceOf https://libris-qa.kb.se/katalogisering/8rcj5frv6scrt055
+# Lysande Landning - instanceOf https://libris.kb.se/8rcj5frv6scrt055#it
 <https://libris.kb.se/tb40mtc50r3sl97#it>
 <https://libris.kb.se/xf7xsf081fwpqlx#it>
 <https://libris.kb.se/5ng3l4ch5kt91f8#it>
 
-# Agnes Cecilia bearbetad lättläst - instanceOf https://libris-qa.kb.se/h0lsgkfhfmphb6cc
+# Agnes Cecilia bearbetad lättläst - instanceOf https://libris.kb.se/h0lsgkfhfmphb6cc
 <https://libris.kb.se/n117254ll8sv2bnm#it>
 <https://libris.kb.se/2f8n01sb09966spc#it>
 #it>
-# Agnes Cecilia - instanceOf https://libris-qa.kb.se/jx711m2bg48ff7hq
+# Agnes Cecilia - instanceOf https://libris.kb.se/jx711m2bg48ff7hq
 <https://libris.kb.se/l3pwknjljqgfmnc9#it>
 <https://libris.kb.se/l4xzj00x2265h8x#it>
 <https://libris.kb.se/3mfntkkf4nxnpqf#it>
 
-# Brandbilen som försvann - instanceOf https://libris-qa.kb.se/katalogisering/4m7d1knb2jvq08lb
+# Brandbilen som försvann - instanceOf https://libris.kb.se/4m7d1knb2jvq08lb#it
 <https://libris.kb.se/2kcbgl7d4t6sr4w#it>
 <https://libris.kb.se/9slg4n3m5mq4vx3#it>
 <https://libris.kb.se/fxql7p3r1fndtqn#it>
 <https://libris.kb.se/1kcfr66c12s7bxz#it>
 
-# Translation: Räddaren i nöden - instanceOf https://libris-qa.kb.se/1j49xzgczpngbc17
+# Translation: Räddaren i nöden - instanceOf https://libris.kb.se/1j49xzgczpngbc17
 <https://libris.kb.se/fxqnzf2r3t063cf#it>
 <https://libris.kb.se/gzrnfs4s56bvdgf#it>
 <https://libris.kb.se/q71wjq222pg32wr#it>
@@ -291,3 +291,131 @@
 <https://libris.kb.se/x7fg95llvc9lwnmm#it> ## jordglob (troligen handgjord)
 <https://libris.kb.se/fqtr25m6cn2jscmn#it> ## himmels-glob
 <https://libris.kb.se/4ngphwqg0h9rm70#it> ## klipp-samling
+
+# Från "Orangea rebusar" (tillagt 240607)
+
+# f:Almanac
+<https://libris.kb.se/4mf3j68g5g5mmc2#it>
+
+# :AlmanacIssue  # :Text | :StillImage
+<https://libris.kb.se/5phm2pwh31p6sp3#it>
+
+# :AlmanacSheet  # :Text | :StillImage
+<https://libris.kb.se/bqf78ds88qrv83hq#it>
+<https://libris.kb.se/xg8b9fj8335r3lv#it>
+
+# f:Calendar
+# #Relaterad till Almanackor. Inte överordnad adresskalendrar etc
+<https://libris.kb.se/j2vzsg8v5f6hzt3#it>
+<https://libris.kb.se/jzdm7w6cgp827q1x#it>
+<https://libris.kb.se/fzrv4f4r4rms5gk#it>
+<https://libris.kb.se/zg8t6h4936z703r#it>  # (seriell)
+
+# f:Catalogue
+<https://libris.kb.se/zg8xjb3940j5h02#it>  # (SHB)
+<https://libris.kb.se/s9333z345cq95l9#it>
+
+# f:Lexicon
+<https://libris.kb.se/8sllkr3l3hpdzvr#it>
+<https://libris.kb.se/1jb67hjc4gmbj6k#it>  # (Multimedia)
+
+# f:Encyclopedia
+
+# f:Atlas
+# “Atlaser med övervägande andel kartor - ska till kartsamlingen” = :Cartography
+# “Atlaser med övervägande andel text - ska till monografier” = :Text
+
+<https://libris.kb.se/zh9nwtv9030q1vk#it>
+<https://libris.kb.se/6ph5zfjj4xcdczp#it>  # (Text)
+
+# f:Globe
+<https://libris.kb.se/6qjz3g8j1q9m2ls#it>
+<https://libris.kb.se/nz2vsfmflf072sg8#it>
+
+# f:Map
+<https://libris.kb.se/8rkj0wql14q40gb#it>
+# :ManuscriptMap # :Cartography ; #Karthandskrift
+<https://libris.kb.se/tc59svb50tgb2sb#it>
+
+# f:Comic
+<https://libris.kb.se/q822ksp23b2nj68#it>  # (:Monogaph)
+<https://libris.kb.se/n5zzd4h03ft8phk#it>
+<https://libris.kb.se/zh9bvw890qzfldx#it>
+<https://libris.kb.se/vdvw6gwvslt9cz8q#it>  # (:Serial)
+
+# f:ComicIssue
+<https://libris.kb.se/vcm1r9ctszcds54w#it>  # (utbrutet verk med “teckande serier”-genrer)
+<https://libris.kb.se/8r1f5pgh6r5d20hn#it>  # (d:o)
+
+# f:Register
+# Verkar vara svårt att skilja på förteckning (lista) och uppslagsverk (korta beskrivningar av något)
+<https://libris.kb.se/2ldgftjd25qft0s#it>  # (korta artiklar om filmer)
+<https://libris.kb.se/q82d84r24gftqq0#it>  # (2465 smedsläktsnamn)
+<https://libris.kb.se/8rkffj1l50x4v66#it>  # (lista med namn på förintelseoffer)
+<https://libris.kb.se/wd6zzlq72zhlhbk#it>  # (korta artiklar om låtar)
+<https://libris.kb.se/wd60tb572wjz5n2#it>  # (Shorter Historical Works)
+
+# Avhandlingar / Riksdagstryck
+<https://libris.kb.se/mx4hdbcgkxdzn6mm#it>  # (avhandling)
+<https://libris.kb.se/fxkqftj6cb831dpf#it>  # (avhandling)
+<https://libris.kb.se/7rksc68k0g62x2d#it>  # (riksdagstryck, 89s)
+
+# f:Review
+<https://libris.kb.se/1jbbpjdc4pl7g18#it>
+<https://libris.kb.se/n26v0pgplrgqwqwz#it>  # (bok med recensioner)
+<https://libris.kb.se/sb4kmgx45cs5q61#it>  # (MovingImage)
+
+# f:Handwriting
+<https://libris.kb.se/7rks9nsk21p3f1p#it>  # (pjästext)
+<https://libris.kb.se/3lv7pdbj1wnmbghf#it>  # (:ManuscriptNotatedMusic)
+<https://libris.kb.se/6qjrwnsj4h23c5h#it>  # (:NotatedMusic)
+<https://libris.kb.se/3mfrm05f5n8q5tt#it>  # (:NotatedMusic - elektronisk)
+<https://libris.kb.se/3mfpcftf0cc91j0#it>  # (:StillImage) (för :StillImage används snarare gmgpcswe:Teckningar
+<https://libris.kb.se/n5zwthr045xkzw7#it>  # (:Microform)
+
+# f:Broschure # Publicerade, inte periodiska volymer utan pärm eller med bokomslag av papper. Vanligtvis 5 eller fler sidor men mindre än 49 sidor.
+# Väldigt instansigt
+<https://libris.kb.se/zddjq0gwwzj7k3dz#it>  # (stillbild på 1 blad)
+<https://libris.kb.se/2fs04mvb0tdlk4g3#it>  # (16 sidor)
+
+# :Puzzle # :Object | :StillImage | :Text | :Cartography
+<https://libris.kb.se/6pzpbk3m4dp0w89b#it>  # (:Object)
+<https://libris.kb.se/fx94269qcqzj9376#it>  # (:StillImage)
+<https://libris.kb.se/grbf73tmdk1q2c3l#it>  # (:Cartography)
+<https://libris.kb.se/9l85fz647446rtnq#it>  # (:Text)
+
+# :Postcard # :StillImage
+<https://libris.kb.se/3kbq64vr1sjlf4gk#it>
+<https://libris.kb.se/k3w7pwkw4lpss6w#it>
+<https://libris.kb.se/dwrx0pvlb22tzzlj#it>  # (vykortsalmanacka)
+<https://libris.kb.se/tc5j56z553rrgc8#it>  # (vykortshäfte)
+<https://libris.kb.se/tc58r9j53zlqj5t#it>  # (samling)
+
+# f:Poster
+# Affisch-definition (KB) https://confluence.kb.se/display/TRYCKPLIKT/Affischer
+<https://libris.kb.se/fzr775fr2qg3tss#it>  # (textaffisch 1904)
+<https://libris.kb.se/9tm32d6m02f9dgf#it>  # (bildaffisch)
+
+# f:Manual
+<https://libris.kb.se/xf758dj8185zrrz#it>
+<https://libris.kb.se/s9fh1m2wq0zrsk4b#it>  # (rollspel)
+<https://libris.kb.se/081wf11pxf24j250#it>  # (Audio)
+<https://libris.kb.se/l3wwzv3x34l27n0#it>  # (AudioBook)
+<https://libris.kb.se/7rkltjtk241r2xq#it>  # (MovingImage)
+<https://libris.kb.se/dxqqpvqq409jm6p#it>  # (Multimedia)
+<https://libris.kb.se/h1twv00t4tdzr35#it>  # (Notated Music)
+
+# f:MechanicalBook
+# :genreForm saogf:Mekaniska%20b%C3%B6cker | saogf:Pop-up-b%C3%B6cker | barngf:Pusselb%C3%B6cker
+# :contentType  rda:Text , rda:StillImage .
+# Also? barngf:Bilderb%C3%B6cker
+<https://libris.kb.se/1kcqf8nc1tzzzkt#it>
+<https://libris.kb.se/jzk72bvbg8g7dmvq#it>  # (leporello) (bilder på Amazon.com)
+<https://libris.kb.se/xg8jzsj858c4b09#it>  # (med ljudspelare)
+<https://libris.kb.se/bvnxf8vn4rrx3jn#it>  # (NotatedMusic)
+
+## More tricky NonBookText (tillagt 240610)
+<https://libris.kb.se/g0g6gg05d5lz8h2k#it>
+<https://id.kb.se/term/saogf/Dagb%C3%B6cker>  # 32 onumrerade sidor, häftad
+<https://libris.kb.se/cwpqgxjp5mcg4gw#it>  # saogf:Verksamhetsber%C3%A4ttelser
+<https://libris.kb.se/7rksc68k0g62x2d#it>  # saogf:F%C3%B6rteckningar
