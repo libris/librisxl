@@ -87,12 +87,15 @@ class WhelkTool {
     private ScheduledExecutorService timedLogger = MoreExecutors.getExitingScheduledExecutorService(
             Executors.newScheduledThreadPool(1))
 
-    WhelkTool(String scriptPath, File reportsDir = null, int statsNumIds) {
-        try {
-            whelk = Whelk.createLoadedSearchWhelk()
-        } catch (NullPointerException e) {
-            whelk = Whelk.createLoadedCoreWhelk()
+    WhelkTool(Whelk whelk, String scriptPath, File reportsDir = null, int statsNumIds) {
+        if (whelk == null) {
+            try {
+                whelk = Whelk.createLoadedSearchWhelk()
+            } catch (NullPointerException e) {
+                whelk = Whelk.createLoadedCoreWhelk()
+            }
         }
+        this.whelk = whelk
         initScript(scriptPath)
         this.reportsDir = reportsDir
         reportsDir.mkdirs()
@@ -724,6 +727,10 @@ class WhelkTool {
     }
 
     static void main(String[] args) {
+        main2(args, null)
+    }
+
+    static void main2(String[] args, Whelk preExistingWhelk) {
         def cli = new CliBuilder(usage: 'whelktool [options] <SCRIPT>')
         cli.h(longOpt: 'help', 'Print this help message and exit.')
         cli.r(longOpt: 'report', args: 1, argName: 'REPORT-DIR', 'Directory where reports are written (defaults to "reports").')
@@ -746,7 +753,7 @@ class WhelkTool {
         def scriptPath = options.arguments()[0]
 
         int statsNumIds = options.n ? Integer.parseInt(options.n) : 3
-        def tool = new WhelkTool(scriptPath, reportsDir, statsNumIds)
+        def tool = new WhelkTool(preExistingWhelk, scriptPath, reportsDir, statsNumIds)
         tool.skipIndex = options.I
         tool.dryRun = options.d
         tool.stepWise = options.s

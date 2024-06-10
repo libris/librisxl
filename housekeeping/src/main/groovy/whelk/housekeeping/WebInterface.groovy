@@ -44,10 +44,12 @@ public class WebInterface extends HttpServlet {
                 // Automatic generation is disabled for now, may need design changes approved before activation.
                 //new NotificationGenerator(whelk),
                 //new NotificationSender(whelk),
+
                 new InquirySender(whelk),
                 new NotificationCleaner(whelk),
                 new ImageLinker(whelk),
                 new ExportSizePredictor(whelk),
+                new ScriptRunner(whelk, "wikidatalinking.groovy", "0 19 10 1,3,5,7,9,11 *"),
         ]
 
         houseKeepers.each { hk ->
