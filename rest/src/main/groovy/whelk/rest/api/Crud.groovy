@@ -167,11 +167,17 @@ class Crud extends HttpServlet {
                           HttpServletResponse response) {
         Tuple2<Document, String> docAndLocation
 
-        if (request.getId() in cachedFetches) {
-            docAndLocation = cachedFetches[request.getId()]
+        // If a component-IRI is requested - we quietly and internally redirect the request to fetch the
+        // containing record instead.
+        // If there isn't one, fall back to whatever was expressly asked for (necessary for special iris like vocab).
+        String id = whelk.getStorage().getSystemIdByIri(Document.BASE_URI.toString() + request.getId())
+        if (id == null)
+            id = request.getId()
+
+        if (id in cachedFetches) {
+            docAndLocation = cachedFetches[id]
         } else {
-            docAndLocation = getDocumentFromStorage(
-                    request.getId(), request.getVersion().orElse(null))
+            docAndLocation = getDocumentFromStorage(id, request.getVersion().orElse(null))
         }
 
         Document doc = docAndLocation.v1
@@ -190,7 +196,7 @@ class Crud extends HttpServlet {
             History history = new History(whelk.storage.loadDocumentHistory(doc.getShortId()), jsonld)
             ETag eTag = ETag.plain(doc.getChecksum(jsonld))
             def body = history.m_changeSetsMap
-            sendGetResponse(response, body, eTag, request.getPath(), request.getContentType(), request.getId())
+            sendGetResponse(response, body, eTag, request.getPath(), request.getContentType(), id)
         } else {
             ETag eTag
             if (request.shouldEmbellish()) {
@@ -219,7 +225,7 @@ class Crud extends HttpServlet {
             String location = loc ?: doc.id
             addProposal25Headers(response, location, getDataURI(location, request))
 
-            sendGetResponse(response, body, eTag, request.getPath(), request.getContentType(), request.getId())
+            sendGetResponse(response, body, eTag, request.getPath(), request.getContentType(), id)
         }
     }
 

@@ -174,7 +174,7 @@ class LinkFinder {
     /**
      * A heavy-handed last line of defense against confusing embedded entities with references.
      * After running this, 'document' can no longer have both @id and other data in any same
-     * embedded entity (root entities are exempt).
+     * embedded entity (root entities and root entites under hasComponent are exempt).
      */
     private void clearReferenceAmbiguities(Document document) {
         List graphList = document.data.get(JsonLd.GRAPH_KEY)
@@ -217,19 +217,22 @@ class LinkFinder {
         for (Object key : data.keySet()) {
             Object value = data.get(key)
 
+            // Components must themselves be considered "root" entities, as they must be allowed both @id and data.
+            boolean viewNextAsRoot = key.equals("hasComponent")
+
             if (value instanceof List)
-                clearReferenceAmbiguities_internal( (List) value )
+                clearReferenceAmbiguities_internal( (List) value, viewNextAsRoot )
             if (value instanceof Map)
-                clearReferenceAmbiguities_internal( (Map) value, false )
+                clearReferenceAmbiguities_internal( (Map) value, viewNextAsRoot )
         }
     }
 
-    private void clearReferenceAmbiguities_internal(List data) {
+    private void clearReferenceAmbiguities_internal(List data, boolean isRootEntry) {
         for (Object element : data){
             if (element instanceof List)
-                clearReferenceAmbiguities_internal( (List) element )
+                clearReferenceAmbiguities_internal( (List) element, false )
             else if (element instanceof Map)
-                clearReferenceAmbiguities_internal( (Map) element, false )
+                clearReferenceAmbiguities_internal( (Map) element, isRootEntry )
         }
     }
 }

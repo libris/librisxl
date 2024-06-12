@@ -45,6 +45,7 @@ class Document {
     static final List thingIdPath2 = ["@graph", 1, "@id"]
     static final List thingTypePath = ["@graph", 1, "@type"]
     static final List thingSameAsPath = ["@graph", 1, "sameAs"]
+    static final List thingComponentPath = ["@graph", 1, "hasComponent"]
     static final List thingTypedIDsPath = ["@graph", 1, "identifiedBy"]
     static final List thingIndirectTypedIDsPath = ["@graph", 1, "indirectlyIdentifiedBy"]
     static final List thingCarrierTypesPath = ["@graph", 1, "carrierType"]
@@ -436,6 +437,18 @@ class Document {
         List sameAsObjects = get(thingSameAsPath)
         for (Map object : sameAsObjects) {
             ret.add(object.get("@id"))
+        }
+
+        return ret
+    }
+
+    List<String> getThingComponentIdentifiers() {
+        List<String> ret = []
+
+        List componentObjects = get(thingComponentPath)
+        for (Map object : componentObjects) {
+            if (object.get("@id") != null)
+                ret.add(object.get("@id"))
         }
 
         return ret
@@ -866,6 +879,15 @@ class Document {
 
                 node["@id"] = expectedNewDerivative
             }
+        }
+    }
+
+    void mintComponentIDs() {
+        List componentObjects = get(thingComponentPath)
+        for (Map object : componentObjects) {
+            Object existingId = object.get("@id")
+            if (existingId != null && existingId.equals(""))
+                object.put("@id", BASE_URI.toString() + IdGenerator.generate())
         }
     }
 
