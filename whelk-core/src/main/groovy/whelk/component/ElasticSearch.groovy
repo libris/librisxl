@@ -238,18 +238,28 @@ class ElasticSearch {
             if (bulkString) {
                 String response = bulkClient.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE)
                 Map responseMap = mapper.readValue(response, Map)
-                int numFailed = 0
+                int numFailedDueToDocError = 0
+                int numFailedDueToESError = 0
                 if (responseMap.errors) {
                     responseMap.items?.each { item ->
                         if (item.index?.error) {
                             log.error("Failed indexing document: ${item.index}")
-                            numFailed++
+                            if (item.index.status >= 500) {
+                                numFailedDueToESError++
+                            } else {
+                                numFailedDueToDocError++
+                            }
                         }
                     }
                 }
                 int docsCount = docs.count{it}
+                int numFailed = numFailedDueToDocError + numFailedDueToESError
                 if (numFailed) {
-                    log.warn("Tried bulk indexing ${docsCount} docs: ${docsCount - numFailed} succeeded, ${numFailed} failed. Took ${responseMap.took} ms")
+                    log.warn("Tried bulk indexing ${docsCount} docs: ${docsCount - numFailed} succeeded, ${numFailed} failed " +
+                            "(${numFailedDueToDocError} due to document error, ${numFailedDueToESError} due to ES error). Took ${responseMap.took} ms")
+                    if (numFailedDueToESError) {
+                        throw new UnexpectedHttpStatusException("Failed indexing documents due to ES error", 500)
+                    }
                 } else {
                     log.info("Bulk indexed ${docsCount} docs in ${responseMap.took} ms")
                 }
