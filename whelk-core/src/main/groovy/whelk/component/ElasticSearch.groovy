@@ -238,18 +238,31 @@ class ElasticSearch {
             if (bulkString) {
                 String response = bulkClient.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE)
                 Map responseMap = mapper.readValue(response, Map)
-                int numFailed = 0
+                List<String> idsFailedDueToDocError = []
+                List<String> idsFailedDueToESError = []
                 if (responseMap.errors) {
                     responseMap.items?.each { item ->
                         if (item.index?.error) {
                             log.error("Failed indexing document: ${item.index}")
-                            numFailed++
+                            if (item.index.status >= 500) {
+                                idsFailedDueToESError.add(item.index._id)
+                            } else {
+                                idsFailedDueToDocError.add(item.index._id)
+                            }
                         }
                     }
                 }
                 int docsCount = docs.count{it}
+                int numFailedDueToDocError = idsFailedDueToDocError.size()
+                int numFailedDueToESError = idsFailedDueToESError.size()
+                int numFailed = numFailedDueToDocError + numFailedDueToESError
+
                 if (numFailed) {
-                    log.warn("Tried bulk indexing ${docsCount} docs: ${docsCount - numFailed} succeeded, ${numFailed} failed. Took ${responseMap.took} ms")
+                    log.warn("Tried bulk indexing ${docsCount} docs: ${docsCount - numFailed} succeeded, ${numFailed} failed " +
+                            "(${numFailedDueToDocError} due to document error, ${numFailedDueToESError} due to ES error). Took ${responseMap.took} ms")
+                    if (idsFailedDueToESError) {
+                        throw new UnexpectedHttpStatusException("Failed indexing documents due to ES error", 500)
+                    }
                 } else {
                     log.info("Bulk indexed ${docsCount} docs in ${responseMap.took} ms")
                 }
