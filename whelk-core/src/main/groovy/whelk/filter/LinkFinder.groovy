@@ -134,9 +134,12 @@ class LinkFinder {
         // Keep looking for more links
         for (Object key : data.keySet()) {
 
-            // sameAs objects are not links per se, and must not be replaced
+            // sameAs objects are not links per se, and must not be replaced.
+            // itemUsed is used to target specific components of holding records. If we let those
+            // be upgraded, links to those specific components would be lost (replaced with links
+            // to the record as a whole). So we don't upgrade them. This is a cheat/hack. :(
             String keyString = (String) key
-            if (keyString == "sameAs")
+            if (keyString == "sameAs" || keyString == "itemUsed")
                 continue
 
             Object value = data.get(key)
