@@ -213,7 +213,7 @@ class XL
                 String selectedDuplicateId = duplicateList.get(0);
 
                 logger.info("Incoming record:\n" + incomingMarcRecord.toString() + "was matched with more than one record: " + duplicateList + "." +
-                        "Associated holdings will be added to: " + selectedDuplicateId);
+                        " Associated holdings will be added to: " + selectedDuplicateId);
 
                 if (!selectedDuplicateId.startsWith(Document.getBASE_URI().toString()))
                     selectedDuplicateId = Document.getBASE_URI().toString() + selectedDuplicateId;
