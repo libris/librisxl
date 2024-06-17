@@ -53,7 +53,7 @@ public class ImageLinker extends HouseKeeper {
 
     public void scanForNewInstances() {
         Timestamp linkNewInstancesSince = Timestamp.from(Instant.now().minus(2, ChronoUnit.DAYS));
-        Map linkerState = whelk.getStorage().getState(getName());
+        Map linkerState = whelk.getStorage().getState(INSTANCES_STATE_KEY);
         if (linkerState != null && linkerState.containsKey(INSTANCES_STATE_KEY))
             linkNewInstancesSince = Timestamp.from( ZonedDateTime.parse( (String) linkerState.get(INSTANCES_STATE_KEY), DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant() );
         Instant linkedNewInstancesUpTo = linkNewInstancesSince.toInstant();
@@ -115,14 +115,14 @@ public class ImageLinker extends HouseKeeper {
         if (linkedNewInstancesUpTo.isAfter(linkNewInstancesSince.toInstant())) {
             Map<String, String> newState = new HashMap<>();
             newState.put(INSTANCES_STATE_KEY, linkedNewInstancesUpTo.atOffset(ZoneOffset.UTC).toString());
-            whelk.getStorage().putState(getName() + "-" + INSTANCES_STATE_KEY, newState);
+            whelk.getStorage().putState(INSTANCES_STATE_KEY, newState);
         }
     }
 
     public void scanForNewImages() {
 
         Timestamp linkNewImagesSince = Timestamp.from(Instant.now().minus(2, ChronoUnit.DAYS));
-        Map linkerState = whelk.getStorage().getState(getName());
+        Map linkerState = whelk.getStorage().getState(IMAGES_STATE_KEY);
         if (linkerState != null && linkerState.containsKey(IMAGES_STATE_KEY))
             linkNewImagesSince = Timestamp.from( ZonedDateTime.parse( (String) linkerState.get(IMAGES_STATE_KEY), DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant() );
         Instant linkedNewImagesUpTo = linkNewImagesSince.toInstant();
@@ -197,7 +197,7 @@ public class ImageLinker extends HouseKeeper {
         if (linkedNewImagesUpTo.isAfter(linkNewImagesSince.toInstant())) {
             Map<String, String> newState = new HashMap<>();
             newState.put(IMAGES_STATE_KEY, linkedNewImagesUpTo.atOffset(ZoneOffset.UTC).toString());
-            whelk.getStorage().putState(getName() + "-" + IMAGES_STATE_KEY, newState);
+            whelk.getStorage().putState(IMAGES_STATE_KEY, newState);
         }
     }
 
