@@ -115,7 +115,7 @@ public class ImageLinker extends HouseKeeper {
         if (linkedNewInstancesUpTo.isAfter(linkNewInstancesSince.toInstant())) {
             Map<String, String> newState = new HashMap<>();
             newState.put(INSTANCES_STATE_KEY, linkedNewInstancesUpTo.atOffset(ZoneOffset.UTC).toString());
-            whelk.getStorage().putState(getName(), newState);
+            whelk.getStorage().putState(getName() + "-" + INSTANCES_STATE_KEY, newState);
         }
     }
 
@@ -197,7 +197,7 @@ public class ImageLinker extends HouseKeeper {
         if (linkedNewImagesUpTo.isAfter(linkNewImagesSince.toInstant())) {
             Map<String, String> newState = new HashMap<>();
             newState.put(IMAGES_STATE_KEY, linkedNewImagesUpTo.atOffset(ZoneOffset.UTC).toString());
-            whelk.getStorage().putState(getName(), newState);
+            whelk.getStorage().putState(getName() + "-" + IMAGES_STATE_KEY, newState);
         }
     }
 
