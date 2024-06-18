@@ -155,7 +155,7 @@ public class DeweyMapper {
     }
 
     private static String getURL() {
-        return System.getProperty("librisexport.deweysab_url", "http://export.libris.kb.se/DS/dewey_text.asp");
+        return System.getProperty("librisexport.deweysab_url", "https://libris.kb.se/api/dewey-sab/Dewey_SAB.txt");
     }
 
     private static String getCacheFile() {
