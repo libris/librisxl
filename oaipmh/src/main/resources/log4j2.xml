@@ -8,9 +8,15 @@
         <Console name="STDOUT" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{ISO8601} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
-        <File name="File" fileName="${sys:xl.logRoot}/whelk.log">
+        <!-- We have to use %i in filePattern, and no date, because otherwise DefaultRolloverStrategy won't delete old logs
+             (unless we use a hacky <Delete> solution.) -->
+        <RollingFile name="File" fileName="${sys:xl.logRoot}/whelk-oaipmh.log" filePattern="${sys:xl.logRoot}/whelk-apix.%i.log.gz">
             <PatternLayout pattern="%d{ISO8601} [%t] %-5level %logger{36} - %msg%n"/>
-        </File>
+            <DefaultRolloverStrategy max="30" />
+            <Policies>
+                <CronTriggeringPolicy schedule="0 0 0 * * ?"/>
+            </Policies>
+        </RollingFile>
     </Appenders>
 
     <Loggers>
