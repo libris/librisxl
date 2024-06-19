@@ -272,7 +272,7 @@ public class Disambiguate {
 
         getAsList(termDefinition, mappingProperty)
                 .forEach(ep -> {
-                            String equivPropId = getLinkedValue(ep).get();
+                        getLinkedValue(ep).ifPresent(equivPropId -> {
                             String equivPropKey = jsonLd.toTermKey(equivPropId);
 
                             if (!jsonLd.vocabIndex.containsKey(equivPropKey)) {
@@ -280,13 +280,13 @@ public class Disambiguate {
                                         (equivPropDef) ->
                                                 addMappings(equivPropDef, termKey, termType),
                                         () -> {
-                                            addMapping(equivPropId, termKey, termType);
-                                            addMapping(toPrefixed(equivPropId), termKey, termType);
+                                                addMapping(equivPropId, termKey, termType);
+                                                addMapping(toPrefixed(equivPropId), termKey, termType);
                                         }
                                 );
                             }
-                        }
-                );
+                        });
+                });
     }
 
     private Map<String, String> loadDomainByProperty(Whelk whelk) {
