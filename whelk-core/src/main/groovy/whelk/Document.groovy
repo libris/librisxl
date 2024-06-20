@@ -886,7 +886,7 @@ class Document {
         List componentObjects = get(thingComponentPath)
         for (Map object : componentObjects) {
             Object existingId = object.get("@id")
-            if (existingId != null && existingId.equals(""))
+            if (existingId != null && existingId.contains("TEMPID"))
                 object.put("@id", BASE_URI.toString() + IdGenerator.generate())
         }
     }
