@@ -141,7 +141,6 @@ class Document {
     }
 
     void addImage(String imageUri) {
-
         // Make imagePath point to a list
         preparePath(imagePath)
         Object imageList = get(imagePath)
@@ -161,6 +160,8 @@ class Document {
 
     List getImages() {
         def images = get(imagePath)
+        if (images == null)
+            return Collections.emptyList()
         if (images instanceof List)
             return images
         return [images]
