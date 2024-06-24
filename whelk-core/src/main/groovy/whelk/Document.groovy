@@ -161,7 +161,7 @@ class Document {
     List getImages() {
         def images = get(imagePath)
         if (images == null)
-            return null
+            return Collections.emptyList()
         if (images instanceof List)
             return images
         return [images]
