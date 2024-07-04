@@ -2,6 +2,9 @@ package whelk.xlql
 
 import spock.lang.Specification
 import whelk.exception.InvalidQueryException
+import whelk.search2.parse.Ast
+import whelk.search2.parse.Lex
+import whelk.search2.parse.Parse
 
 class AstSpec extends Specification {
 

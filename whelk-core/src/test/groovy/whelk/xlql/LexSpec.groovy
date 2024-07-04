@@ -1,6 +1,7 @@
 package whelk.xlql
 
 import spock.lang.Specification
+import whelk.search2.parse.Lex
 
 class LexSpec extends Specification {
 

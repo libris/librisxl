@@ -1,6 +1,11 @@
 package whelk.xlql
 
 import spock.lang.Specification
+import whelk.search2.parse.Ast
+import whelk.search2.parse.FlattenedAst
+import whelk.search2.parse.Lex
+import whelk.search2.Operator
+import whelk.search2.parse.Parse
 
 class FlattenedAstSpec extends Specification {
 

@@ -3,27 +3,34 @@ package whelk.xlql
 import spock.lang.Ignore
 import spock.lang.Specification
 import whelk.Whelk
+import whelk.exception.InvalidQueryException
+import whelk.search2.Disambiguate
+import whelk.search2.querytree.QueryTree
+import whelk.search2.parse.Ast
+import whelk.search2.parse.FlattenedAst
+import whelk.search2.parse.Lex
+import whelk.search2.Operator
+import whelk.search2.parse.Parse
 
 @Ignore
 class QueryTreeSpec extends Specification {
     private static Whelk whelk = Whelk.createLoadedSearchWhelk()
     private static Disambiguate disambiguate = new Disambiguate(whelk)
 
-    private SimpleQueryTree getSimpleQueryTree(String queryString) {
+    private QueryTree getTree(String queryString) {
         LinkedList<Lex.Symbol> lexedSymbols = Lex.lexQuery(queryString)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
         Ast ast = new Ast(parseTree)
         FlattenedAst flattened = new FlattenedAst(ast)
-        return new SimpleQueryTree(flattened, disambiguate)
+        return new QueryTree(flattened, disambiguate)
     }
 
     def "free text tree"() {
         given:
-        SimpleQueryTree sqt = getSimpleQueryTree("AAA BBB and (CCC or DDD)")
-        QueryTree qt = new QueryTree(sqt, disambiguate)
+        QueryTree sqt = getTree("AAA BBB and (CCC or DDD)")
 
         expect:
-        qt.tree == new QueryTree.And(
+        sqt.tree == new QueryTree.And(
                 [
                         new QueryTree.FreeText(Operator.EQUALS, "AAA BBB"),
                         new QueryTree.Or(
@@ -36,179 +43,127 @@ class QueryTreeSpec extends Specification {
         )
     }
 
-    def "object property + datatype property + free text"() {
+    def "aliased property + free text"() {
         given:
-        SimpleQueryTree sqt = getSimpleQueryTree("subject: \"sao:Fysik\" AND tillkomsttid < 2023 AND \"svarta hål\"")
-        Disambiguate.OutsetType outsetType = disambiguate.decideOutset(sqt)
-        QueryTree qt = new QueryTree(sqt, disambiguate, outsetType)
-        QueryTree.And topNode = qt.tree
-        List conjuncts = topNode.conjuncts()
-        QueryTree.Field subjectField = conjuncts[0]
-        QueryTree.Field originDateField = conjuncts[1]
-        QueryTree.FreeText freeText = conjuncts[2]
+        QueryTree sqt = getTree("ämne: \"lcsh:Physics\" AND \"svarta hål\"")
 
         expect:
-        subjectField.path().stringify() == "subject.@id"
-        subjectField.operator() == Operator.EQUALS
-        subjectField.value() == "https://id.kb.se/term/sao/Fysik"
-
-        originDateField.path().stringify() == "originDate"
-        originDateField.operator() == Operator.LESS_THAN
-        originDateField.value() == "2023"
-
-        freeText == new QueryTree.FreeText(Operator.EQUALS, "\"svarta hål\"")
+        sqt.tree == new QueryTree.And(
+                [
+                        new QueryTree.PropertyValue("subject", ["subject"], Operator.EQUALS, "lcsh:Physics"),
+                        new QueryTree.FreeText(Operator.EQUALS, "\"svarta hål\"")
+                ] as List<QueryTree.Node>
+        )
     }
 
-    def "accurate fields"() {
+    def "mapped property iri + free text"() {
         given:
-        String queryString = "typ:Tryck instanceOf.subject:\"sao:Fysik\" AND instanceOf.subject._str:rymd and tillkomsttid:2022"
-        SimpleQueryTree sqt = getSimpleQueryTree(queryString)
-        Disambiguate.OutsetType outsetType = disambiguate.decideOutset(sqt)
-        QueryTree qt = new QueryTree(sqt, disambiguate, outsetType)
-        QueryTree.And topNode = qt.tree
-        List conjuncts = topNode.conjuncts()
-        QueryTree.Field typeField = conjuncts[0]
-        QueryTree.Field subjectField = conjuncts[1]
-        QueryTree.Field subjectField2 = conjuncts[2]
-        QueryTree.Field issuanceTypeField = conjuncts[3]
+        QueryTree sqt = getTree("\"bf:originDate\" < 2023 OR \"svarta hål\"")
 
         expect:
-        typeField.path().stringify() == "@type"
-        typeField.operator() == Operator.EQUALS
-        typeField.value() == "Print"
-
-        subjectField.path().stringify() == "instanceOf.subject.@id"
-        subjectField.operator() == Operator.EQUALS
-        subjectField.value() == "https://id.kb.se/term/sao/Fysik"
-
-        subjectField2.path().stringify() == "instanceOf.subject._str"
-        subjectField2.operator() == Operator.EQUALS
-        subjectField2.value() == "rymd"
-
-        issuanceTypeField.path().stringify() == "instanceOf.originDate"
-        issuanceTypeField.operator() == Operator.EQUALS
-        issuanceTypeField.value() == "2022"
+        sqt.tree == new QueryTree.Or(
+                [
+                        new QueryTree.PropertyValue("originDate", ["originDate"], Operator.LESS_THAN, "2023"),
+                        new QueryTree.FreeText(Operator.EQUALS, "\"svarta hål\"")
+                ] as List<QueryTree.Node>
+        )
     }
 
-    def "work subtype + path inference"() {
+    def "grouping"() {
         given:
-        String queryString = "typ:Text upphovsuppgift:Någon tillkomsttid<2020 language:\"https://id.kb.se/language/swe\""
-        SimpleQueryTree sqt = getSimpleQueryTree(queryString)
-        Disambiguate.OutsetType outsetType = disambiguate.decideOutset(sqt)
-        QueryTree qt = new QueryTree(sqt, disambiguate, outsetType)
-        QueryTree.And topNode = qt.tree
-        List conjuncts = topNode.conjuncts()
-        QueryTree.Field typeField = conjuncts[0]
-        QueryTree.Field respStatementField = conjuncts[1]
-        QueryTree.Field originDateField = conjuncts[2]
-        QueryTree.Or languageFields = conjuncts[3]
-        QueryTree.Field langField1 = languageFields.disjuncts()[0]
-        QueryTree.Field langField2 = languageFields.disjuncts()[1]
+        def query = "upphovsuppgift:(Tolkien OR Verne) AND (genre/form: Fantasy OR genre/form: Äventyr)"
+        QueryTree sqt = getTree(query)
 
         expect:
-        typeField.path().stringify() == "@type"
-        typeField.operator() == Operator.EQUALS
-        typeField.value() == "Text"
-
-        respStatementField.path().stringify() == "@reverse.instanceOf.responsibilityStatement"
-        respStatementField.operator() == Operator.EQUALS
-        respStatementField.value() == "Någon"
-
-        originDateField.path().stringify() == "originDate"
-        originDateField.operator() == Operator.LESS_THAN
-        originDateField.value() == "2020"
-
-        langField1.path().stringify() == "language.@id"
-        langField1.operator() == Operator.EQUALS
-        langField1.value() == "https://id.kb.se/language/swe"
-
-        langField2.path().stringify() == "@reverse.instanceOf.language.@id"
-        langField2.operator() == Operator.EQUALS
-        langField2.value() == "https://id.kb.se/language/swe"
+        sqt.tree == new QueryTree.And(
+                [
+                        new QueryTree.Or(
+                                [
+                                        new QueryTree.PropertyValue("responsibilityStatement", ["responsibilityStatement"], Operator.EQUALS, "Tolkien"),
+                                        new QueryTree.PropertyValue("responsibilityStatement", ["responsibilityStatement"], Operator.EQUALS, "Verne"),
+                                ]
+                        ),
+                        new QueryTree.Or(
+                                [
+                                        new QueryTree.PropertyValue("genreForm", ["genreForm"], Operator.EQUALS, "Fantasy"),
+                                        new QueryTree.PropertyValue("genreForm", ["genreForm"], Operator.EQUALS, "Äventyr")
+                                ]
+                        )
+                ]
+        )
     }
 
-    def "instance type + path inference"() {
-        given:
-        String queryString = "typ:Instance upphovsuppgift:Någon tillkomsttid<2020 language:\"https://id.kb.se/language/swe\""
-        SimpleQueryTree sqt = getSimpleQueryTree(queryString)
-        Disambiguate.OutsetType outsetType = disambiguate.decideOutset(sqt)
-        QueryTree qt = new QueryTree(sqt, disambiguate, outsetType)
-        QueryTree.And topNode = qt.tree
-        List conjuncts = topNode.conjuncts()
-        QueryTree.Or typeFields = conjuncts[0]
-        QueryTree.Field respStatementField = conjuncts[1]
-        QueryTree.Field originDateField = conjuncts[2]
-        QueryTree.Or languageFields = conjuncts[3]
-        QueryTree.Field langField1 = languageFields.disjuncts()[0]
-        QueryTree.Field langField2 = languageFields.disjuncts()[1]
+    def "fail when unknown property alias"() {
+        when:
+        getTree("AAA and unknownAlias: BBB")
 
-        expect:
-        typeFields.disjuncts().size() == disambiguate.instanceTypes.size()
-
-        respStatementField.path().stringify() == "responsibilityStatement"
-        respStatementField.operator() == Operator.EQUALS
-        respStatementField.value() == "Någon"
-
-        originDateField.path().stringify() == "instanceOf.originDate"
-        originDateField.operator() == Operator.LESS_THAN
-        originDateField.value() == "2020"
-
-        langField1.path().stringify() == "language.@id"
-        langField1.operator() == Operator.EQUALS
-        langField1.value() == "https://id.kb.se/language/swe"
-
-        langField2.path().stringify() == "instanceOf.language.@id"
-        langField2.operator() == Operator.EQUALS
-        langField2.value() == "https://id.kb.se/language/swe"
+        then:
+        thrown(InvalidQueryException)
     }
 
-    def "nested"() {
-        given:
-        String queryString = "author:x not isbn:y"
-        SimpleQueryTree sqt = getSimpleQueryTree(queryString)
-        Disambiguate.OutsetType outsetType = disambiguate.decideOutset(sqt)
-        QueryTree qt = new QueryTree(sqt, disambiguate, outsetType)
-        QueryTree.And topNode = qt.tree
-        List conjuncts = topNode.conjuncts()
-        QueryTree.Nested author = conjuncts[0]
-        QueryTree.Nested isbn = conjuncts[1]
+    def "property path"() {
+        def query = "instanceOf.ämne.@id=\"sao:Hästar\""
+        QueryTree sqt = getTree(query)
 
         expect:
-        author.operator() == Operator.EQUALS
-        author.fields()[0].path().stringify() == "contribution.agent._str"
-        author.fields()[0].value() == "x"
-        author.fields()[1].path().stringify() == "contribution.role.@id"
-        author.fields()[1].value() == "https://id.kb.se/relator/author"
-
-        isbn.operator() == Operator.NOT_EQUALS
-        isbn.fields()[0].path().stringify() == "identifiedBy.value"
-        isbn.fields()[0].value() == "y"
-        isbn.fields()[1].path().stringify() == "identifiedBy.@type"
-        isbn.fields()[1].value() == "ISBN"
+        sqt.tree == new QueryTree.PropertyValue("subject", ["instanceOf", "subject", "@id"], Operator.EQUALS, "sao:Hästar")
     }
 
-    def "nested + path by type inference"() {
-        given:
-        String queryString = "type:Text author:x not isbn:y"
-        SimpleQueryTree sqt = getSimpleQueryTree(queryString)
-        Disambiguate.OutsetType outsetType = disambiguate.decideOutset(sqt)
-        QueryTree qt = new QueryTree(sqt, disambiguate, outsetType)
-        QueryTree.And topNode = qt.tree
-        List conjuncts = topNode.conjuncts()
-        QueryTree.Nested author = conjuncts[1]
-        QueryTree.Nested isbn = conjuncts[2]
+    def "disambiguate type"() {
+        def query = "typ: Tryck"
+        QueryTree sqt = getTree(query)
 
         expect:
-        author.operator() == Operator.EQUALS
-        author.fields()[0].path().stringify() == "contribution.agent._str"
-        author.fields()[0].value() == "x"
-        author.fields()[1].path().stringify() == "contribution.role.@id"
-        author.fields()[1].value() == "https://id.kb.se/relator/author"
+        sqt.tree == new QueryTree.PropertyValue("rdf:type", ["rdf:type"], Operator.EQUALS, "Print")
+    }
 
-        isbn.operator() == Operator.NOT_EQUALS
-        isbn.fields()[0].path().stringify() == "@reverse.instanceOf.identifiedBy.value"
-        isbn.fields()[0].value() == "y"
-        isbn.fields()[1].path().stringify() == "@reverse.instanceOf.identifiedBy.@type"
-        isbn.fields()[1].value() == "ISBN"
+    def "unrecognized type"() {
+        when:
+        getTree("type: UnknownType")
+
+        then:
+        thrown(InvalidQueryException)
+    }
+
+    def "disambiguate enum"() {
+        def query = "utgivningssätt: \"Seriell resurs\""
+        QueryTree sqt = getTree(query)
+
+        expect:
+        sqt.tree == new QueryTree.PropertyValue("issuanceType", ["issuanceType"], Operator.EQUALS, "Serial")
+    }
+
+    def "unrecognized enum"() {
+        when:
+        getTree("utgivningssätt: \"Tryck\"")
+
+        then:
+        thrown(InvalidQueryException)
+    }
+
+    def "collect given types from query"() {
+        given:
+        def input = "type: (Electronic OR Print) AND utgivning: aaa"
+        QueryTree sqt = getTree(input)
+        Set<Object> givenTypes = sqt.collectGivenTypes()
+
+        expect:
+        givenTypes == ["Electronic", "Print"] as Set
+    }
+
+    def "normalize free text"() {
+        given:
+        def input = "x y z \"a b c\" d label:l \"e:f\" not g h i"
+        def sqt = getTree(input)
+
+        expect:
+        sqt.tree == new QueryTree.And(
+                [
+                        new QueryTree.FreeText(Operator.EQUALS, "x y z \"a b c\" d \"e:f\" h i"),
+                        QueryTree.pvEqualsLiteral("label", "l"),
+                        new QueryTree.FreeText(Operator.NOT_EQUALS, "g"),
+
+                ] as List<QueryTree.Node>
+        )
     }
 }

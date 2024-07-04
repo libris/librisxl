@@ -1,0 +1,101 @@
+package whelk.search2;
+
+import whelk.Document;
+import whelk.JsonLd;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+public class QueryResult {
+    public final int numHits;
+    private final List<EsItem> esItems;
+    public final List<Aggs.Aggregation> aggs;
+    public final List<Aggs.Bucket> pAggs;
+
+    public QueryResult(Map<String, Object> esResponse) {
+        this.numHits = (int) esResponse.getOrDefault("totalHits", 0);
+        this.esItems = getEsItems(esResponse);
+        this.aggs = Aggs.collectAggResult(esResponse);
+        this.pAggs = Aggs.collectPAggResult(esResponse);
+    }
+
+    public List<Map<String, Object>> collectItems(Function<Map<String, Object>, Map<String, Object>> applyLens) {
+        return esItems.stream().map(item -> item.toLd(applyLens)).toList();
+    }
+
+    private static List<EsItem> getEsItems(Map<String, Object> esResponse) {
+        return getAsList(esResponse, "items")
+                .stream()
+                .map(QueryUtil::toStringObjectMap)
+                .map(EsItem::new)
+                .toList();
+    }
+
+    private static List<?> getAsList(Map<String, Object> m, String key) {
+        return ((List<?>) m.getOrDefault(key, Collections.emptyList()));
+    }
+
+    static class EsItem {
+        private final Map<String, Object> map;
+
+        EsItem(Map<String, Object> map) {
+            this.map = map;
+        }
+
+        private Map<String, Object> toLd(Function<Map<String, Object>, Map<String, Object>> applyLens) {
+            LdItem ldItem = new LdItem(applyLens.apply(map));
+            // ISNIs and ORCIDs are indexed with and without spaces, remove the one with spaces.
+            ldItem.normalizeIsniAndOrcid();
+            // reverseLinks must be re-added because they might get filtered out in applyLens().
+            getReverseLinks().ifPresent(ldItem::addReverseLinks);
+            return ldItem.map;
+        }
+
+        private Optional<Map<String, Object>> getReverseLinks() {
+            return Optional.ofNullable(map.get("reverseLinks"))
+                    .map(QueryUtil::toStringObjectMap);
+        }
+    }
+
+    static class LdItem {
+        private final Map<String, Object> map;
+
+        LdItem(Map<String, Object> map) {
+            this.map = map;
+        }
+
+        private void normalizeIsniAndOrcid() {
+            Function<Object, String> toStr = s -> s != null ? s.toString() : "";
+            List<Map<String, Object>> identifiedBy = getIdentifiedBy();
+            if (!identifiedBy.isEmpty()) {
+                identifiedBy.removeIf(id -> (Document.isIsni(id) || Document.isOrcid(id))
+                        && toStr.apply(id.get("value")).length() == 16 + 3);
+                map.put("identifiedBy", identifiedBy);
+            }
+        }
+
+        private List<Map<String, Object>> getIdentifiedBy() {
+            return getAsList(map, "identifiedBy")
+                    .stream()
+                    .map(QueryUtil::toStringObjectMap)
+                    .collect(Collectors.toList());
+        }
+
+        private void addReverseLinks(Map<String, Object> reverseLinks) {
+            reverseLinks.put(JsonLd.ID_KEY, makeFindOLink((String) map.get(JsonLd.ID_KEY)));
+            map.put("reverseLinks", reverseLinks);
+        };
+
+        private static String makeFindOLink(String iri) {
+            return Document.getBASE_URI()
+                    .resolve("find?o=" + URLEncoder.encode(iri, StandardCharsets.UTF_8))
+                    .toString();
+        }
+    }
+}

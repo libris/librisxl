@@ -3,13 +3,17 @@ package whelk.xlql
 import spock.lang.Ignore
 import spock.lang.Specification
 import whelk.Whelk
+import whelk.search2.Disambiguate
+import whelk.search2.Path
+import whelk.search2.querytree.QueryTree
 
+// Requires Whelk instance
 @Ignore
 class DisambiguateSpec extends Specification {
     private static Whelk whelk = Whelk.createLoadedSearchWhelk();
     private static Disambiguate disambiguate = new Disambiguate(whelk);
 
-    def "map property alias to kbv term"() {
+    def "map alias to kbv property"() {
         expect:
         disambiguate.mapToProperty(alias) == Optional.ofNullable(property)
 
@@ -27,8 +31,77 @@ class DisambiguateSpec extends Specification {
         "förf"                           | "author"
         "unknown term"                   | null
         "marc:jurisdiction"              | "marc:jurisdiction"
-        "jurisdiction"                   | null
+        "jurisdiction"                   | null // require marc: prefix for marc properties
         "type"                           | "rdf:type"
+        "format"                         | "format"
+        "hasformat"                      | "hasFormat"
+    }
+
+    def "map alias to kbv class"() {
+        expect:
+        disambiguate.mapToKbvClass(alias) == Optional.ofNullable(kbvClass)
+
+        where:
+        alias                                 | kbvClass
+        "Bibliografi"                         | "Bibliography"
+        "bibliography"                        | "Bibliography"
+        "kbv:bibliography"                    | "Bibliography"
+        "https://id.kb.se/vocab/bibliography" | "Bibliography"
+        "unknown term"                        | null
+        "text"                                | "Text"
+        "topic"                               | "Topic"
+        "allmänt ämnesord"                    | "Topic"
+        "agent"                               | "Agent"
+        "bibliographicagent"                  | "BibliographicAgent"
+    }
+
+    def "map alias to kbv enum class"() {
+        expect:
+        disambiguate.mapToEnum(alias) == Optional.ofNullable(enumClass)
+
+        where:
+        alias                                    | enumClass
+        "marc:AbbreviatedLevel"                  | "marc:AbbreviatedLevel"
+        "abbreviated level"                      | "marc:AbbreviatedLevel"
+        "3"                                      | "marc:AbbreviatedLevel"
+        "https://id.kb.se/marc/AbbreviatedLevel" | "marc:AbbreviatedLevel"
+        "miniminivå"                             | "marc:AbbreviatedLevel"
+        "monografisk resurs"                     | null // Ambiguous
+        "monograph"                              | "Monograph"
+        "seriell resurs"                         | "Serial"
+        "topic"                                  | null
+    }
+
+    def "get ambiguous property mapping"() {
+        expect:
+        disambiguate.getAmbiguousPropertyMapping(alias) == mapped as Set
+
+        where:
+        alias           | mapped
+        "identifikator" | ["identifier", "identifiedBy"]
+        "anmärkning"    | ["note", "hasNote"]
+        "ämne"          | [] // unambiguous
+    }
+
+    def "get ambiguous class mapping"() {
+        expect:
+        disambiguate.getAmbiguousClassMapping(alias) == mapped as Set
+
+        where:
+        alias   | mapped
+        "karta" | ["Map", "Cartography"]
+        "text"  | [] // unambiguous
+    }
+
+    def "get ambiguous enum mapping"() {
+        expect:
+        disambiguate.getAmbiguousEnumMapping(alias) == mapped as Set
+
+        where:
+        alias                | mapped
+        "minimal level"      | ["marc:AbbreviatedLevel", "marc:MinimalLevel"]
+        "monografisk resurs" | ["Monograph", "marc:SinglePartItemHolding"]
+        "miniminivå"         | [] // unambiguous
     }
 
     def "expandPrefixed"() {
@@ -73,11 +146,15 @@ class DisambiguateSpec extends Specification {
     }
 
     def "expand propertyChainAxiom"() {
+        given:
+        def p = new Path(path)
+        disambiguate.expandChainAxiom(p)
+
         expect:
-        disambiguate.expandChainAxiom(path).path() == extendedPath
+        p.stem == stem
 
         where:
-        path                   | extendedPath
+        path                   | stem
         ['hasTitle']           | ['hasTitle']
         ['title']              | ['hasTitle', 'mainTitle']
         ['meta', 'changeNote'] | ['meta', 'hasChangeNote', 'label']
@@ -93,7 +170,7 @@ class DisambiguateSpec extends Specification {
 
         where:
         before     | stem             | branches
-        ['isbn']   | ['identifiedBy'] | [new Path.Branch(['value']), new Path.Branch(['rdf:type'], new SimpleQueryTree.VocabTerm("ISBN"))] as Set
-        ['author'] | ['contribution'] | [new Path.Branch(['agent']), new Path.Branch(['role'], new SimpleQueryTree.Link("https://id.kb.se/relator/author"))] as Set
+        ['isbn']   | ['identifiedBy'] | [new Path.Branch(['value']), new Path.Branch(['rdf:type'], new QueryTree.VocabTerm("ISBN"))] as Set
+        ['author'] | ['contribution'] | [new Path.Branch(['agent']), new Path.Branch(['role'], new QueryTree.Link("https://id.kb.se/relator/author"))] as Set
     }
 }

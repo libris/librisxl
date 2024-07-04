@@ -3,8 +3,8 @@ package whelk.search
 import spock.lang.Ignore
 import spock.lang.Specification
 import whelk.Whelk
-import whelk.xlql.QueryTree
-import whelk.xlql.SimpleQueryTree
+import whelk.search2.EsTree
+import whelk.search2.querytree.QueryTree
 
 @Ignore
 class XLQLQuerySpec extends Specification {
@@ -14,7 +14,7 @@ class XLQLQuerySpec extends Specification {
     def "Query tree to ES query: Simple free text string"() {
         given:
         String queryString = "Kalle"
-        QueryTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
+        EsTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
         Map esQuery = xlqlQuery.getEsQuery(qt)
 
         expect:
@@ -26,7 +26,7 @@ class XLQLQuerySpec extends Specification {
     def "Query tree to ES query: Simple free text phrase"() {
         given:
         String queryString = "\"Kalle Anka\""
-        QueryTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
+        EsTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
         Map esQuery = xlqlQuery.getEsQuery(qt)
 
         expect:
@@ -38,7 +38,7 @@ class XLQLQuerySpec extends Specification {
     def "Query tree to ES query: Simple free text conjunction"() {
         given:
         String queryString = "Kalle Anka"
-        QueryTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
+        EsTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
         Map esQuery = xlqlQuery.getEsQuery(qt)
 
         expect:
@@ -51,7 +51,7 @@ class XLQLQuerySpec extends Specification {
     def "Query tree to ES query: Simple free text disjunction"() {
         given:
         String queryString = "Kalle or Anka"
-        QueryTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
+        EsTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
         Map esQuery = xlqlQuery.getEsQuery(qt)
 
         expect:
@@ -66,7 +66,7 @@ class XLQLQuerySpec extends Specification {
     def "Query tree to ES query: Simple free text negation"() {
         given:
         String queryString = "not Kalle"
-        QueryTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
+        EsTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
         Map esQuery = xlqlQuery.getEsQuery(qt)
 
         expect:
@@ -78,7 +78,7 @@ class XLQLQuerySpec extends Specification {
     def "Query tree to ES query: Free text negation"() {
         given:
         String queryString = "Kalle not Anka"
-        QueryTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
+        EsTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
         Map esQuery = xlqlQuery.getEsQuery(qt)
 
         expect:
@@ -93,7 +93,7 @@ class XLQLQuerySpec extends Specification {
     def "Query tree to ES query: Free text disjunction"() {
         given:
         String queryString = "Bamse or Kalle Anka"
-        QueryTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
+        EsTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
         Map esQuery = xlqlQuery.getEsQuery(qt)
 
         expect:
@@ -108,7 +108,7 @@ class XLQLQuerySpec extends Specification {
     def "Query tree to ES query: Simple field"() {
         given:
         String queryString = "upphovsuppgift: \"Astrid Lindgren\""
-        QueryTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
+        EsTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
         Map esQuery = xlqlQuery.getEsQuery(qt)
 
         expect:
@@ -119,7 +119,7 @@ class XLQLQuerySpec extends Specification {
     def "Query tree to ES query: Combined @vocab fields"() {
         given:
         String queryString = "utgivningssätt: Serial and beskrivningsnivå=\"marc:FullLevel\""
-        QueryTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
+        EsTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
         Map esQuery = xlqlQuery.getEsQuery(qt)
 
         expect:
@@ -130,7 +130,7 @@ class XLQLQuerySpec extends Specification {
     def "Query tree to ES query: Free text + range"() {
         given:
         String queryString = "fåglar and (year >= 2010 or year < 2020)"
-        QueryTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
+        EsTree qt = xlqlQuery.getQueryTree(xlqlQuery.getSimpleQueryTree(queryString))
         Map esQuery = xlqlQuery.getEsQuery(qt)
 
         expect:
@@ -144,7 +144,7 @@ class XLQLQuerySpec extends Specification {
     def "Mapping: Simple free text"() {
         given:
         String queryString = "Kalle"
-        SimpleQueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
+        QueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
 
         expect:
         xlqlQuery.toMappings(sqt) == [
@@ -157,7 +157,7 @@ class XLQLQuerySpec extends Specification {
     def "Mapping: Simple phrase + limit"() {
         given:
         String queryString = "\"Kalle Anka\""
-        SimpleQueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
+        QueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
 
         expect:
         xlqlQuery.toMappings(sqt, ['_limit=20']) == [
@@ -170,7 +170,7 @@ class XLQLQuerySpec extends Specification {
     def "Mapping: Free text"() {
         given:
         String queryString = "Kalle Anka"
-        SimpleQueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
+        QueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
 
         expect:
         xlqlQuery.toMappings(sqt) == [
@@ -183,7 +183,7 @@ class XLQLQuerySpec extends Specification {
     def "Mapping: Free text grouping"() {
         given:
         String queryString = "(Kalle and not (Anka or Blomqvist)) or \"Bosse Persson\""
-        SimpleQueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
+        QueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
 
         expect:
         xlqlQuery.toMappings(sqt) == [
@@ -226,7 +226,7 @@ class XLQLQuerySpec extends Specification {
     def "Mapping: Free text + fields"() {
         given:
         String queryString = "Kalle Anka år > 2020 not ämne: Hästar"
-        SimpleQueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
+        QueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
 
         expect:
         xlqlQuery.toMappings(sqt) == [
@@ -254,7 +254,7 @@ class XLQLQuerySpec extends Specification {
     def "Mapping: Property path"() {
         given:
         String queryString = "instanceOf.subject.@id: \"sao:Fysik\" and instanceOf.subject._str: rymd"
-        SimpleQueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
+        QueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
 
         expect:
         xlqlQuery.toMappings(sqt) == [
@@ -287,7 +287,7 @@ class XLQLQuerySpec extends Specification {
     def "quoting in up url"() {
         given:
         String queryString = '"har titel":"x!" or a b "c:d" f "g h i>j" k l'
-        SimpleQueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
+        QueryTree sqt = xlqlQuery.getSimpleQueryTree(queryString)
         Map mappings = xlqlQuery.toMappings(sqt)
 
         expect:

@@ -1,6 +1,6 @@
-package whelk.xlql;
+package whelk.search2.parse;
 
-import whelk.search.XLQLQuery;
+import whelk.search2.Operator;
 
 import java.util.*;
 
@@ -26,7 +26,7 @@ public class FlattenedAst {
     private static final Map<String, Operator> OPERATOR_MAPPINGS = operatorMappings();
     private static final Map<Operator, Operator> OPERATOR_OPPOSITES = operatorOpposites();
 
-    Node tree;
+    public Node tree;
 
     public FlattenedAst(Ast ast) {
         this.tree = flatten(ast);
