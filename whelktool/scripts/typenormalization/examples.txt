@@ -1,8 +1,7 @@
 # Aniara
 <https://libris.kb.se/2kczlqcd33467pn#it>
-<https://libris.kb.se/dxqtmzrq3wdx48n#it>
-<https://libris.kb.se/btmh4b6n3mlk8l2#it>
 <https://libris.kb.se/dxqtmzrq3wdx48n#it> # Pjäsen
+<https://libris.kb.se/btmh4b6n3mlk8l2#it>
 #<https://smdb.kb.se/catalog/id/001875433/28> # Annan inspelning av Pjäs
 
 # CodexGigas
@@ -157,8 +156,8 @@
 # Affisch
 ## Hauff rullfilm filmpack
 <https://libris.kb.se/j1trg6xv00bw18m#it> # :StillImageInstance
-<https://libris.kb.se/j1trg6xv00bw18m#it> # :Print
-<https://libris.kb.se/j1trg6xv00bw18m#it> # :PrintedSheet
+#<https://libris.kb.se/j1trg6xv00bw18m#it> # TODO: :Print
+#<https://libris.kb.se/j1trg6xv00bw18m#it> # :PrintedSheet
 
 # Artikel
 # "Apoteket i Knivsta förr och nu"
@@ -238,10 +237,8 @@
 
 # Nya exempel 240508:
 <https://libris.kb.se/dnhmsbcrbcrhx17h#it> # TAKK
-<https://libris.kb.se/t7c5wgf8rtr4cw23#it> # handskrift
 <https://libris.kb.se/k0gkmwzgh09wpq26#it> # handskrift
 <https://libris.kb.se/0jbn1cnb4n8q8q2#it> # handskrift
-<https://libris.kb.se/7pmv3rlv54k0d5t1#it> # handskrift, ritning
 <https://libris.kb.se/wd6w9mf73fdj7w2#it> # handskrift, karta
 <https://libris.kb.se/2g5pr3lh08jz22th#it> # handskrift, karta
 <https://libris.kb.se/3lv7pdbj1wnmbghf#it> # handskrift, musik (4 st)
@@ -257,7 +254,6 @@
 <https://libris.kb.se/l3ww3m4x10bmh0j#it> # seriell, ljud
 <https://libris.kb.se/k2vqm64w4s4mstl#it> # atlas
 <https://libris.kb.se/xg883bz83sf01d9#it> # atlas
-<https://libris.kb.se/tc58r9j53zlqj5t#it> # samling vykort
 <https://libris.kb.se/r933p2535f4827h#it> # sah
 <https://libris.kb.se/7rkthknk23cw7mg#it> # sah digital
 <https://libris.kb.se/q71zqw622cppssb#it> # karta
@@ -329,7 +325,6 @@
 <https://libris.kb.se/6ph5zfjj4xcdczp#it>  # (Text)
 
 # f:Globe
-<https://libris.kb.se/6qjz3g8j1q9m2ls#it>
 <https://libris.kb.se/nz2vsfmflf072sg8#it>
 
 # f:Map
@@ -358,7 +353,7 @@
 # Avhandlingar / Riksdagstryck
 <https://libris.kb.se/mx4hdbcgkxdzn6mm#it>  # (avhandling)
 <https://libris.kb.se/fxkqftj6cb831dpf#it>  # (avhandling)
-<https://libris.kb.se/7rksc68k0g62x2d#it>  # (riksdagstryck, 89s)
+<https://libris.kb.se/7rksc68k0g62x2d#it>  # (riksdagstryck, 89s); saogf:F%C3%B6rteckningar
 
 # f:Review
 <https://libris.kb.se/1jbbpjdc4pl7g18#it>
@@ -367,7 +362,6 @@
 
 # f:Handwriting
 <https://libris.kb.se/7rks9nsk21p3f1p#it>  # (pjästext)
-<https://libris.kb.se/3lv7pdbj1wnmbghf#it>  # (:ManuscriptNotatedMusic)
 <https://libris.kb.se/6qjrwnsj4h23c5h#it>  # (:NotatedMusic)
 <https://libris.kb.se/3mfrm05f5n8q5tt#it>  # (:NotatedMusic - elektronisk)
 <https://libris.kb.se/3mfpcftf0cc91j0#it>  # (:StillImage) (för :StillImage används snarare gmgpcswe:Teckningar
@@ -378,7 +372,7 @@
 <https://libris.kb.se/zddjq0gwwzj7k3dz#it>  # (stillbild på 1 blad)
 <https://libris.kb.se/2fs04mvb0tdlk4g3#it>  # (16 sidor)
 
-# :Puzzle # :Object | :StillImage | :Text | :Cartography
+# :Puzzle # :Object | :StillImage | :Text | :Cartography # PuzzleOrGame
 <https://libris.kb.se/6pzpbk3m4dp0w89b#it>  # (:Object)
 <https://libris.kb.se/fx94269qcqzj9376#it>  # (:StillImage)
 <https://libris.kb.se/grbf73tmdk1q2c3l#it>  # (:Cartography)
@@ -418,4 +412,129 @@
 <https://libris.kb.se/g0g6gg05d5lz8h2k#it>
 <https://id.kb.se/term/saogf/Dagb%C3%B6cker>  # 32 onumrerade sidor, häftad
 <https://libris.kb.se/cwpqgxjp5mcg4gw#it>  # saogf:Verksamhetsber%C3%A4ttelser
-<https://libris.kb.se/7rksc68k0g62x2d#it>  # saogf:F%C3%B6rteckningar
+
+## More tricky ones (tillagt 240612)
+<https://libris.kb.se/4hjfdvtv2rrpjvj6#it> # småtext
+
+## CartographicTactileImage (240704)
+<https://libris.kb.se/bt4hffz38lm79q22#it> # gjord som :Text
+<https://libris.kb.se/cv5jfdwc9xrltj0g#it> # gjord som :Text
+
+#TactileImage
+<https://libris.kb.se/p3j94jx1mxg0qgph#it> #bok med taktila bilder
+
+# Nya exempel 2024-06-14-2024-07-05
+
+#Photobook
+<https://libris.kb.se/p1nfd45rm1st84lw#it> #:Text
+<https://libris.kb.se/8sl1clgl13l848r#it> #:StillImage
+
+#Photograph
+<https://libris.kb.se/s42kqhswq13260sv#it>
+<https://libris.kb.se/p0jj7g22mh1n1kbc#it>
+<https://libris.kb.se/09s2t5c2xk18rglt#it> #samling
+
+#PerformedMusic
+<https://libris.kb.se/7qjj9z5k0npwb2j#it>
+<https://libris.kb.se/k3w057cw1d58w2t#it> #gf+sao
+<https://libris.kb.se/2kcc0zwd04fvrw8#it> #del av sammansatt resurs
+<https://libris.kb.se/btmm9kcn1tbl7bc#it> #del av sammansatt resurs
+
+#NonBookTextWithImages
+<https://libris.kb.se/cwpqr8pp2hbdfmh#it> #11 s avhandling
+<https://libris.kb.se/1jbbwsxc2xtz34x#it> #8 s
+<https://libris.kb.se/r667x3v8pn6dsgqn#it> #8 s
+<https://libris.kb.se/bvn3mdln1grl96g#it> #:ComponentPart
+<https://libris.kb.se/9tmnnh9m432gkvb#it> #:ComponentPart
+
+#Drawing
+<https://libris.kb.se/z92dgxkhwxn2m5rr#it> #:Cartography - handritad karta
+<https://libris.kb.se/bvnxln3n50rmt77#it> #:Cartography - elektronisk
+<https://libris.kb.se/3dtd39lh1p06p7fn#it> #:StillImage
+
+#Painting
+<https://libris.kb.se/kvv92c8mhxxmdkbx#it> #pennteckning
+<https://libris.kb.se/q36p1dzgn5147slq#it> #ComponentPart
+<https://libris.kb.se/n2512vqvlqm5m0tl#it> #handskrift
+<https://libris.kb.se/5h4g6rkk3v8w2ncs#it> #skissbok
+
+#Note
+<https://libris.kb.se/q825gwp22srkq4r#it> #mer genre än typ
+
+#Illustration
+<https://libris.kb.se/bvn01ccn127mtdp#it> #Beskow
+<https://libris.kb.se/3mfgtvmf39vr76g#it> #bokillustrationer
+
+#PuzzleOrGame
+<https://libris.kb.se/jx711mvggzqdtggf#it>
+
+#BoardGame
+<https://libris.kb.se/k2l4tk86h9lwx515#it>
+<https://libris.kb.se/fzr60txr1s0g9n9#it>
+
+#ComputerProgram/Software
+<https://libris.kb.se/5ngdkm8h0s9h4fn#it> #excelprogram, diskett
+<https://libris.kb.se/m4xvjr7z2kw721d#it>
+<https://libris.kb.se/l3wv5rtx4wjz0v1#it> #seriell
+
+#AudioProgram
+<https://libris.kb.se/j2vwfj9v20sq5zj#it>
+
+#NonMusicAudio
+<https://libris.kb.se/1b2pg5kvzzrm0q3h#it> #avslappning
+<https://libris.kb.se/9n5pwxck7lnn2hk9#it>
+<https://libris.kb.se/w8x8p7nltfvdfntg#it> #integrerande, text+ljud+video
+
+#SpokenWord
+<https://libris.kb.se/n2q1mpxhlpxv31ds#it> #eplikt, radioprogram?
+<https://libris.kb.se/sb65zv6bqj6tf27v#it> #eplikt
+
+#TVProgram
+<https://libris.kb.se/sb45jww41g5kf0s#it>
+
+#TVSeries
+<https://libris.kb.se/3httsj9h1mt8s2pc#it>
+<https://libris.kb.se/089487ggxvj097gn#it> #importerad från OCLC
+
+#CartographicImage
+<https://libris.kb.se/s93rsst41w79l26#it>
+<https://libris.kb.se/dxqzpwdq4pwsqdj#it> #digital
+<https://libris.kb.se/gzrc3q9s59ftgdk#it> #sjökort, seriell??
+
+#CartographicObject
+<https://libris.kb.se/fzrsdvnr0s1mcxp#it> #kartglob
+<https://libris.kb.se/fs1kvlprcxtmb1mp#it> #himmelsglob
+<https://libris.kb.se/6qjz3g8j1q9m2ls#it> #digitiserad
+
+#TactileNotatedMusic
+<https://libris.kb.se/bs6xf4mq8qg6dqrn#it> #gjord som :Text
+
+#TactileText
+<https://libris.kb.se/p71cs9p13ft35r4#it> #taktil text, taktil bild
+<https://libris.kb.se/v6gczlw6s4ng8ffn#it>
+
+#MTM taktilt
+<https://libris.kb.se/cwmb38t69h114f73#it> #text karta. instans :Tactile
+<https://libris.kb.se/bvn113cn0t6hs6b#it> #taktil bilderbok instans :Tactile
+<https://libris.kb.se/gwbl3mq3d13mpvtt#it> #taktil bild
+<https://libris.kb.se/7qpznbc255d9rtmv#it> #taktil text + talbok??
+<https://libris.kb.se/sb4hh8n41vdjkds#it> #taktil text taktil bild
+<https://libris.kb.se/gx8pdldfdj0xzjm2#it> #bilderbok, svällpapper
+
+#taktil bilderbok vs vanlig (olika verk?)
+<https://libris.kb.se/7qjd4f9k1p7zxq9#it>
+<https://libris.kb.se/tb4txgr558vl21n#it>
+
+#MTM talbok
+<https://libris.kb.se/0jbb63gb3fm7tgn#it> #Daisy, CD-R
+<https://libris.kb.se/tc5j1d354wn2lr6#it> #Daisy talbok_text_syntes
+
+#epub3
+<https://libris.kb.se/zct87nnjwwdp19h4#it> #epub3 anges i :summary
+
+#bok på CD
+<https://libris.kb.se/vd5kqg6lshzhn6lp#it>
+
+## Tapet/affisch/poster (240704)
+<https://libris.kb.se/wf7764g75pzv0vg#it> # Plan för tretton namngivna Gobelins tapeter i Stockholms slott
+<https://libris.kb.se/zh9rwv391s5fpfr#it> # Poster med tapetmönster av Ginko-trädblad
