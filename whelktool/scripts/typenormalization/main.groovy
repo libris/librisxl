@@ -1,10 +1,3 @@
-/*
-$ java -Dxl.secret.properties=../DEV2-secret.properties -jar build/libs/whelktool.jar --dry-run --step scripts/typenormalization/main.groovy
-$ trld reports/full-input.ndjson
-$ cat reports/full-input.ndjson | trld -indjson -ottl > reports/full-input.ttl
-$ cat reports/full-output.ndjson | trld -indjson -ottl > reports/full-output.ttl
-*/
-
 import java.util.stream.Collectors
 
 import static whelk.util.Jackson.mapper
@@ -25,10 +18,11 @@ class TypeNormalizer {
   static final var KBRDA = "https://id.kb.se/term/rda/"
   static final var TGM = "https://id.kb.se/term/gmgpc/swe/"
 
+  // Mixes subxlasses and subconcepts
   static Map<String, Set<String>> baseEqualOrSubMap = [
-    "${MARC}DirectElectronic": ["${MARC}ChipCartridge"] as Set,
-    "${MARC}Novel": ["${SAOGF}Romaner"] as Set,
-    "Audio": ["PerformedMusic", "SpokenWord"],
+    (MARC + 'DirectElectronic'): [MARC + 'ChipCartridge'] as Set,
+    (MARC + 'Novel'): [SAOGF + 'Romaner'] as Set,
+    'Audio': ['PerformedMusic', 'SpokenWord'] as Set,
   ]
 
   static Map<String, String> contentToTypeMap = [
@@ -45,13 +39,16 @@ class TypeNormalizer {
   }
 
   static List reduceSymbols(List symbols, String expectedtype) {
-    List mostSpecific = symbols.stream().filter((x) -> !(symbols.stream().anyMatch(y -> isbaseof(x, y)))).collect(Collectors.toList())
+    List mostSpecific = symbols.stream().filter(x -> !(symbols.stream().anyMatch(y -> isbaseof(x, y)))).collect(Collectors.toList())
     return mostSpecific
   }
 
   static boolean isbaseof(Object x, Object y) {
-    if (x instanceof Map && x instanceof Map) {
-      return y[ID] in baseEqualOrSubMap[x[ID]]
+    if (x instanceof Map && y instanceof Map) {
+      var subterms = baseEqualOrSubMap[x[ID]]
+      if (subterms) {
+        return y[ID] in subterms
+      }
     }
     return false
   }
@@ -65,34 +62,44 @@ class TypeNormalizer {
     return false
   }
 
-  static void normalize(Map instance, Map work) {
-    interpretClassification(instance)
-    interpretClassification(work)
-    simplifyTyped(instance, work)
+  static boolean normalize(Map instance, Map work) {
+    var modified = simplifyTyped(instance, work)
+    return modified
   }
 
-  static void simplifyTyped(Map instance, Map work) {
-    var isNonSingleunit = false
+  static boolean simplifyTyped(Map instance, Map work) {
+    var modified = false
+
+    var itype = (String) instance[TYPE]
+    if (itype == 'Map' || itype == 'Globe') {
+      instance[TYPE] = itype + 'Instance'
+      if (work[TYPE] == 'Cartography') {
+        work[TYPE] = itype
+        modified = true
+      }
+    }
+
+    modified |= simplifySingleunitInstance(instance)
+    modified |= simplifySingleunitWork(work)
+
     if (instance.containsKey("issuanceType")) {
-      isNonSingleunit = convertIssuancetype(instance, work)
-    }
-    if (isNonSingleunit) {
-      return
+      // work.genreForm marc:MapBoundAsPartOfAnotherWork
+      modified |= convertIssuancetype(instance, work)
     }
 
-    simplifySingleunitInstance(instance)
-    // simplifyAssociatedMedia(instance)  // TODO: move to separate normalization.
+    // modified |= simplifyAssociatedMedia(instance)  // TODO: move to separate normalization.
 
-    simplifySingleunitWork(work)
-  }
-
-  static void interpretClassification(Map thing) {
-    /* ... */
+    return modified
   }
 
   static boolean convertIssuancetype(Map instance, Map work) {
     var collectiontype = (String) instance.remove("issuanceType")
-    if ((collectiontype && !collectiontype.equals("Monograph"))) {
+    if (!collectiontype) {
+      return false
+    }
+    if (collectiontype.equals("ComponentPart")) {
+        instance[TYPE] += collectiontype
+    } else if ((!collectiontype.equals("Monograph"))) {
       // TODO: check genres and heuristics (some Serial are mistyped!)
       if ('collectsType' in work) {
         assert work['collectsType'] == instance.get(TYPE)
@@ -106,10 +113,10 @@ class TypeNormalizer {
     return false
   }
 
-  static void simplifySingleunitWork(Map work) {
+  static boolean simplifySingleunitWork(Map work) {
     var refSize = work.containsKey(ANNOTATION) ? 2 : 1
     if (work.containsKey(ID) && work.size() == refSize) {
-      return
+      return false
     }
 
     var rtype = (String) work.get(TYPE)
@@ -147,7 +154,7 @@ class TypeNormalizer {
       if (work.get(TYPE) == "Text") {
         work.put(TYPE, "WrittenBook")
       } else if (work.get(TYPE) == "Audio") {
-        work.put(TYPE, "AudioBook")
+        work.put(TYPE, "Audiobook")
       } else if (work.get(TYPE) == "Tactile") {
         work.put(TYPE, "TactileBook")
       }
@@ -164,10 +171,15 @@ class TypeNormalizer {
     } else {
       work.remove("contentType")
     }
+
+    // FIXME: if any change was actually made!
+    return true
   }
 
-  static void simplifySingleunitInstance(Map instance) {
+  static boolean simplifySingleunitInstance(Map instance) {
     var type = instance.get(TYPE)
+    // TODO: remove these if implied by type or carrier:
+    //var mediatypes = reduceSymbols(asList(instance["mediaType"]), "MediaType")
     var carriertypes = reduceSymbols(asList(instance["carrierType"]), "CarrierType")
     var isSoundRecording = instance[TYPE] == "SoundRecording"
     var isVideoRecording = instance[TYPE] == "VideoRecording"
@@ -179,7 +191,7 @@ class TypeNormalizer {
       } else {
         instance.remove("carrierType")
       }
-      instance.put(TYPE, "DigitalDocument")
+      instance.put(TYPE, "DigitalResource")
     }
 
     def tuples = [
@@ -238,9 +250,10 @@ class TypeNormalizer {
       if (mediaterm.toLowerCase() == "affisch") {
         instance.remove("marc:mediaTerm")
         assert matches(carriertypes, "Sheet")
-        instance.put(TYPE, "PosterSheet")
+        // TODO: work.genreForm = kbvgf:Poster (implies work.type = IllustratedWork | StillImage)
+        instance.put(TYPE, "Sheet")
         List reducedGfs = instanceGfs.stream().filter((it) -> !it.get(ID).equals("${MARC}Print")).collect(Collectors.toList())
-        if (reducedGfs == null) {
+        if (reducedGfs.size() == 0) {
           instance.remove("genreForm")
         } else {
           instance.put("genreForm", reducedGfs)
@@ -267,6 +280,9 @@ class TypeNormalizer {
         instance.remove("marc:mediaTerm")
       }
     }
+
+    // FIXME: if any change was actually made!
+    return true
   }
 
   static boolean assumedToBePrint(Map instance) {
@@ -287,7 +303,9 @@ class TypeNormalizer {
     return false
   }
 
-  static void simplifyAssociatedMedia(Map instance) {
+  static boolean simplifyAssociatedMedia(Map instance) {
+    var modified = false
+
     for (tuple in [
       ["associatedMedia", "hasRepresentation"],
       ["isPrimaryTopicOf", "associatedMedia"]
@@ -325,7 +343,10 @@ class TypeNormalizer {
         continue
       }
       instance.remove(givenRel)
+      modified = true
     }
+
+    return modified
   }
 
   static List asList(Object o) {
@@ -334,57 +355,69 @@ class TypeNormalizer {
 
 }
 
-File examplesFile = new File(scriptDir, 'examples.txt')
-List ids = examplesFile.iterator().findResults {
-  (it =~ /^[^#]*<([^>]+?(?:([^\/#]+)#it)?)>/).findResult { m, iri, xlid -> xlid }
-}
-
-boolean debug = true
-
-PrintWriter fullInput = debug ? getReportWriter("full-input.ndjson") : null
-PrintWriter fullOutput = debug ? getReportWriter("full-output.ndjson") : null
-
 // TODO: if instance and work codepend; fetch work and normalize that in tandem;
 // if so, store work id in mem to avoid converting again?
 // (or is the mem-overhead worse than read(+attempting to convert) twice?)
 convertedWorks = java.util.concurrent.ConcurrentHashMap.newKeySet()
 
+boolean debug = true
+
+PrintWriter fullInput = debug ? getReportWriter("full-input.ndjson") : null
+PrintWriter fullOutput = debug ? getReportWriter("full-output.ndjson") : null
+var debugPreChange = { instance, work ->
+  if (debug) {
+    fullInput.println mapper.writeValueAsString(instance)
+    def loadedWorkId = instance.instanceOf[ID]
+    if (loadedWorkId && loadedWorkId !in convertedWorks) {
+      fullInput.println mapper.writeValueAsString(work)
+    }
+  }
+}
+var debugPostChange = { instance, work ->
+  if (debug) {
+    def loadedWorkId = instance.instanceOf[ID]
+    fullOutput.println mapper.writeValueAsString(instance)
+    if (loadedWorkId && loadedWorkId !in convertedWorks) {
+      fullOutput.println mapper.writeValueAsString(work)
+    }
+  }
+}
+
+File examplesFile = new File(scriptDir, 'examples.txt')
+List ids = examplesFile.iterator().findResults {
+  (it =~ /^[^#]*<([^>]+?(?:([^\/#]+)#it)?)>/).findResult { m, iri, xlid -> xlid }
+}
+
+//ids = ['n117254ll8sv2bnm']
+
 selectByIds(ids) {
   def (record, instance) = it.graph
-  def work = null
-  def loadedWorkId = null
 
   if ('instanceOf' in instance) {
     if (ID !in instance.instanceOf) {
-      work = instance.instanceOf
+      def work = instance.instanceOf
+
+      debugPreChange(instance, work)
+      var modified = TypeNormalizer.normalize(instance, work)
+      debugPostChange(instance, work)
+
+      if (modified) it.scheduleSave()
     } else {
-      loadedWorkId = instance.instanceOf[ID]
-      // TODO: normalize both in this block?
-      //selectByIds([instance.instanceOf[ID]]) {
-      //  ...
-      //  workItem.scheduleSave()
-      //}
-      def workRecordData = load(loadedWorkId)
-      work = workRecordData[GRAPH][1]
-    }
+      def loadedWorkId = instance.instanceOf[ID]
+      selectByIds([loadedWorkId]) { workIt ->
+        def (workRecord, work) = workIt.graph
 
-    if (debug) {
-      fullInput.println mapper.writeValueAsString(instance)
-      if (loadedWorkId && loadedWorkId !in convertedWorks) {
-        fullInput.println mapper.writeValueAsString(work)
-      }
-    }
+        debugPreChange(instance, work)
+        var modified = TypeNormalizer.normalize(instance, work)
+        debugPostChange(instance, work)
 
-    TypeNormalizer.normalize(instance, work)
-
-    if (debug) {
-      fullOutput.println mapper.writeValueAsString(instance)
-      if (loadedWorkId && loadedWorkId !in convertedWorks) {
-        fullOutput.println mapper.writeValueAsString(work)
+        if (modified) {
+          it.scheduleSave()
+          if (loadedWorkId !in convertedWorks) workIt.scheduleSave()
+        }
         convertedWorks << loadedWorkId
       }
     }
 
-    //it.scheduleSave()
   }
 }
