@@ -3,7 +3,6 @@ package whelk.search2.querytree;
 import whelk.search2.Disambiguate;
 import whelk.search2.Operator;
 import whelk.search2.OutsetType;
-import whelk.search2.QueryUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,77 +19,112 @@ import java.util.stream.Stream;
 import static whelk.search2.QueryUtil.boolWrap;
 import static whelk.search2.QueryUtil.nestedWrap;
 
-public sealed interface Group extends Node permits And, Or {
+//
+public sealed abstract class Group implements Node permits And, Or {
     @Override
-    List<Node> children();
+    public abstract List<Node> children();
 
-    Group create(List<Node> children);
+    abstract Group newInstance(List<Node> children);
 
-    String delimiter();
+    abstract String delimiter();
 
-    String key();
+    abstract String key();
 
-    Map<String, Object> wrap(List<Map<String, Object>> esChildren);
+    abstract Map<String, Object> wrap(List<Map<String, Object>> esChildren);
+
+    // Abstract class does not allow records as subclasses, however when comparing nodes we want the same behaviour
+    // as for records, hence the following.
+    @Override
+    public boolean equals(Object o) {
+        return o.getClass() == this.getClass() && ((Group) o).children().equals(children());
+    }
 
     @Override
-    default Map<String, Object> toEs(List<String> boostedFields) {
+    public int hashCode() {
+        return Objects.hash(children());
+    }
+
+    @Override
+    public Map<String, Object> toEs(List<String> boostedFields) {
         List<List<PathValue>> nestedGroups = getNestedGroups();
         return nestedGroups.isEmpty() ? wrap(childrenToEs(boostedFields)) : toEsNested(nestedGroups, boostedFields);
     }
 
     @Override
-    default Map<String, Object> toSearchMapping(QueryTree qt, Function<Value, Object> lookUp, Map<String, String> nonQueryParams) {
+    public Map<String, Object> toSearchMapping(QueryTree qt, Map<String, String> nonQueryParams) {
         var m = new LinkedHashMap<String, Object>();
-        m.put(key(), mapToMap(c -> c.toSearchMapping(qt, lookUp, nonQueryParams)));
+        m.put(key(), mapToMap(c -> c.toSearchMapping(qt, nonQueryParams)));
         m.put("up", qt.makeUpLink(this, nonQueryParams));
         return m;
     }
 
     @Override
-    default Node expand(Disambiguate disambiguate, OutsetType outsetType) {
+    public Node expand(Disambiguate disambiguate, OutsetType outsetType) {
         return expandChildren(disambiguate, outsetType);
     }
 
     @Override
-    default Group insertValue(Value value) {
-        return mapAndRebuild(c -> c.insertValue(value));
+    public Group insertValue(Value value) {
+        return mapAndReinstantiate(c -> c.insertValue(value));
     }
 
     @Override
-    default Group insertOperator(Operator operator) {
-        return mapAndRebuild(c -> c.insertOperator(operator));
+    public Group insertOperator(Operator operator) {
+        return mapAndReinstantiate(c -> c.insertOperator(operator));
     }
 
     @Override
-    default Node insertNested(Function<String, Optional<String>> getNestedPath) {
-        return mapAndRebuild(c -> c.insertNested(getNestedPath));
+    public Node insertNested(Function<String, Optional<String>> getNestedPath) {
+        return mapAndReinstantiate(c -> c.insertNested(getNestedPath));
     }
 
     @Override
-    default String toString(boolean topLevel) {
+    public Node modifyAllPathValue(Function<PathValue, PathValue> modifier) {
+        return mapAndReinstantiate(c -> c.modifyAllPathValue(modifier));
+    }
+
+    @Override
+    public String toString(boolean topLevel) {
         String group = doMapToString(n -> n.toString(false))
                 .collect(Collectors.joining(delimiter()));
 
         return topLevel ? group : "(" + group + ")";
     }
 
-    default Group mapAndRebuild(Function<Node, Node> mapper) {
-        return create(mapToNode(mapper));
+    List<Node> flattenChildren(List<Node> children) {
+        return children.stream()
+                .flatMap(c -> switch (c) {
+                    case Group g -> g.getClass() == this.getClass()
+                            ? g.reinstantiate().children().stream()
+                            : Stream.of(g.reinstantiate());
+                    default -> Stream.of(c);
+                })
+                .distinct()
+                .toList();
     }
 
-    default Node mapAndRebuild(Function<Node, Node> mapper, Predicate<Node> filter) {
-        List<Node> children = mapToNode(mapper, filter);
-        return switch (children.size()) {
+    Group reinstantiate() {
+        return newInstance(children());
+    }
+
+    Node filterAndReinstantiate(Predicate<Node> p) {
+        return mapFilterAndReinstantiate(Function.identity(), p);
+    }
+
+    Group mapAndReinstantiate(Function<Node, Node> mapper) {
+        return newInstance(mapToNode(mapper));
+    }
+
+    Node mapFilterAndReinstantiate(Function<Node, Node> mapper, Predicate<Node> p) {
+        List<Node> newChildren = mapToNodeAndFilter(mapper, p);
+        return switch (newChildren.size()) {
             case 0 -> null;
-            case 1 -> children.getFirst();
-            default -> create(children);
+            case 1 -> newChildren.getFirst();
+            default -> newInstance(newChildren);
         };
     }
 
-    default List<Node> filter(Predicate<Node> p) {
-        return children().stream().filter(p).collect(Collectors.toList());
-    }
-
+    // TODO: Review/refine nested logic and proper tests
     private Map<String, Object> toEsNested(List<List<PathValue>> nestedGroups, List<String> boostedFields) {
         List<Map<String, Object>> esChildren = new ArrayList<>();
         List<Node> nonNested = new ArrayList<>(children());
@@ -121,6 +155,7 @@ public sealed interface Group extends Node permits And, Or {
         return esChildren.size() == 1 ? esChildren.getFirst() : wrap(esChildren);
     }
 
+    // TODO: Review/refine nested logic and proper tests
     private List<List<PathValue>> getNestedGroups() {
         return children().stream()
                 .filter(Group::childIsNested)
@@ -145,27 +180,27 @@ public sealed interface Group extends Node permits And, Or {
     }
 
     private Node expandChildren(Disambiguate disambiguate, OutsetType outsetType) {
-        return mapAndRebuild(c -> c.expand(disambiguate, outsetType), Objects::nonNull);
+        return mapFilterAndReinstantiate(c -> c.expand(disambiguate, outsetType), Objects::nonNull);
     }
 
     private List<Map<String, Object>> childrenToEs(List<String> boostedFields) {
-        return mapToMap(c -> c.toEs(boostedFields), Objects::nonNull);
+        return mapToMap(c -> c.toEs(boostedFields));
     }
 
     private List<Node> mapToNode(Function<Node, Node> mapper) {
-        return mapToNode(mapper, x -> true);
+        return mapToNodeAndFilter(mapper, x -> true);
     }
 
-    private List<Node> mapToNode(Function<Node, Node> mapper, Predicate<Node> filter) {
+    private List<Node> mapToNodeAndFilter(Function<Node, Node> mapper, Predicate<Node> filter) {
         return children().stream().map(mapper).filter(filter).collect(Collectors.toList());
     }
 
     private List<Map<String, Object>> mapToMap(Function<Node, Map<String, Object>> mapper) {
-        return mapToMap(mapper, x -> true);
+        return mapToMapAndFilter(mapper, x -> true);
     }
 
-    private List<Map<String, Object>> mapToMap(Function<Node, Map<String, Object>> mapper,
-                                         Predicate<Map<String, Object>> filter) {
+    private List<Map<String, Object>> mapToMapAndFilter(Function<Node, Map<String, Object>> mapper,
+                                                        Predicate<Map<String, Object>> filter) {
         return children().stream().map(mapper).filter(filter).collect(Collectors.toList());
     }
 

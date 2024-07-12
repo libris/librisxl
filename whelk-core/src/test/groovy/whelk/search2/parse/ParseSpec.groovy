@@ -1,4 +1,4 @@
-package whelk.xlql
+package whelk.search2.parse
 
 import spock.lang.Specification
 import whelk.exception.InvalidQueryException

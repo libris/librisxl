@@ -4,14 +4,15 @@ import whelk.JsonLd;
 import whelk.search2.Disambiguate;
 import whelk.search2.Operator;
 import whelk.search2.OutsetType;
-import whelk.search2.QueryUtil;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static whelk.search2.Disambiguate.RDF_TYPE;
 import static whelk.search2.QueryUtil.quoteIfPhraseOrContainsSpecialSymbol;
@@ -27,12 +28,12 @@ public record PropertyValue(Property property, Operator operator, Value value) i
     }
 
     @Override
-    public Map<String, Object> toSearchMapping(QueryTree qt, Function<Value, Object> lookUp, Map<String, String> nonQueryParams) {
+    public Map<String, Object> toSearchMapping(QueryTree qt, Map<String, String> nonQueryParams) {
         Map<String, Object> m = new LinkedHashMap<>();
 
-        m.put("property", lookUp.apply(new VocabTerm(property.name())));
-        QueryUtil.getAlias(property.name(), qt.getOutsetType()).ifPresent(a -> m.put("alias", a));
-        m.put(operator.termKey, lookUp.apply(value));
+        m.put("property", property.definition());
+        property.getAlias(qt.getOutsetType()).ifPresent(a -> m.put("alias", a));
+        m.put(operator.termKey, value.description());
         m.put("up", qt.makeUpLink(this, nonQueryParams));
 
         return m;
@@ -40,11 +41,12 @@ public record PropertyValue(Property property, Operator operator, Value value) i
 
     @Override
     public Node expand(Disambiguate disambiguate, OutsetType outsetType) {
-        return property.equals(RDF_TYPE)
-                ? buildTypeNode(disambiguate)
+        return property.isRdfType()
+                ? buildTypeNode(value, disambiguate).insertOperator(operator)
                 : property.expand(disambiguate, outsetType)
                 .insertOperator(operator)
-                .insertValue(value);
+                .insertValue(value)
+                .modifyAllPathValue(PathValue::appendSuffix);
     }
 
     public Node expand(Disambiguate disambiguate) {
@@ -62,18 +64,6 @@ public record PropertyValue(Property property, Operator operator, Value value) i
         return operator.format(p, v);
     }
 
-    public static PropertyValue equalsLiteral(String property, String value) {
-        return new PropertyValue(property, Operator.EQUALS, new Literal(value));
-    }
-
-    public static PropertyValue equalsLink(String property, String uri) {
-        return new PropertyValue(property, Operator.EQUALS, new Link(uri));
-    }
-
-    public static PropertyValue equalsVocabTerm(String property, String value) {
-        return new PropertyValue(property, Operator.EQUALS, new VocabTerm(value));
-    }
-
     public PropertyValue toOrEquals() {
         return switch (operator) {
             case GREATER_THAN ->
@@ -83,22 +73,20 @@ public record PropertyValue(Property property, Operator operator, Value value) i
         };
     }
 
-    private Node buildTypeNode(Disambiguate disambiguate) {
+    private static Node buildTypeNode(Value value, Disambiguate disambiguate) {
         Set<String> altTypes = "Work".equals(value.string())
                 ? disambiguate.workTypes
                 : ("Instance".equals(value.string()) ? disambiguate.instanceTypes : Collections.emptySet());
 
         if (altTypes.isEmpty()) {
-            return new PathValue(JsonLd.TYPE_KEY, operator, value);
+            return new PathValue(JsonLd.TYPE_KEY, null, value);
         }
 
         List<Node> altFields = altTypes.stream()
                 .sorted()
-                .map(type -> (Node) new PathValue(JsonLd.TYPE_KEY, operator, new VocabTerm(type)))
+                .map(type -> (Node) new PathValue(JsonLd.TYPE_KEY, null, new VocabTerm(type)))
                 .toList();
 
-        return operator == Operator.NOT_EQUALS
-                ? new And(altFields)
-                : new Or(altFields);
+        return new Or(altFields);
     }
 }

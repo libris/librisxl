@@ -2,10 +2,12 @@ package whelk.search2;
 
 import whelk.JsonLd;
 import whelk.search2.querytree.And;
+import whelk.search2.querytree.Link;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
 import whelk.search2.querytree.PathValue;
 import whelk.search2.querytree.Property;
+import whelk.search2.querytree.PropertyValue;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,10 +20,11 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static whelk.search2.QueryUtil.mustWrap;
-import static whelk.search2.querytree.PropertyValue.equalsLink;
 
 public class Aggs {
     private static final String NESTED_AGG_NAME = "n";
+
+    public static final Integer DEFAULT_BUCKET_SIZE = 10;
 
     public record Aggregation(String property, String path, List<Bucket> buckets) {
     }
@@ -42,8 +45,8 @@ public class Aggs {
         Map<String, Object> query = new LinkedHashMap<>();
 
         for (AppParams.Slice slice : statsRepr.sliceList()) {
-            String property = slice.property();
-            Node expanded = new Property(property).expand(disambiguate, outsetType);
+            Property property = slice.property();
+            Node expanded = property.expand(disambiguate, outsetType);
             List<Node> altPaths = expanded instanceof Or ? expanded.children() : List.of(expanded);
 
             for (Node n : altPaths) {
@@ -52,7 +55,7 @@ public class Aggs {
                     throw new RuntimeException("Can't handle combined fields in aggs query");
                 }
 
-                String path = ((PathValue) n).path().asString();
+                String path = ((PathValue) n).appendSuffix().path().toString();
 
                 // Core agg query
                 var aggs = Map.of("terms",
@@ -69,7 +72,7 @@ public class Aggs {
 
                 // Wrap agg query with a filter
                 var filter = mustWrap(Collections.emptyList());
-                aggs = Map.of("aggs", Map.of(property, aggs),
+                aggs = Map.of("aggs", Map.of(property.name(), aggs),
                         "filter", filter);
 
                 query.put(path, aggs);
@@ -88,7 +91,10 @@ public class Aggs {
                 .stream()
                 .collect(Collectors.toMap(
                         Function.identity(),
-                        p -> equalsLink(p, entity.id()).expand(disambiguate).toEs()));
+                        p -> new PropertyValue(new Property(p, disambiguate), Operator.EQUALS, new Link(entity.id()))
+                                .expand(disambiguate)
+                                .toEs())
+                );
 
         if (!filters.isEmpty()) {
             query.put(QueryParams.ApiParams.PREDICATES, Map.of("filters", Map.of("filters", filters)));
@@ -117,6 +123,9 @@ public class Aggs {
 
         for (var e : getAggregations(esResponse).entrySet()) {
             var path = e.getKey();
+            if (path.equals(QueryParams.ApiParams.PREDICATES)) {
+                continue;
+            }
             var property = e.getValue()
                     .keySet()
                     .stream()

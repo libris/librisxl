@@ -32,7 +32,7 @@ public class QueryResult {
     private static List<EsItem> getEsItems(Map<String, Object> esResponse) {
         return getAsList(esResponse, "items")
                 .stream()
-                .map(QueryUtil::toStringObjectMap)
+                .map(QueryUtil::castToStringObjectMap)
                 .map(EsItem::new)
                 .toList();
     }
@@ -59,7 +59,7 @@ public class QueryResult {
 
         private Optional<Map<String, Object>> getReverseLinks() {
             return Optional.ofNullable(map.get("reverseLinks"))
-                    .map(QueryUtil::toStringObjectMap);
+                    .map(QueryUtil::castToStringObjectMap);
         }
     }
 
@@ -83,7 +83,7 @@ public class QueryResult {
         private List<Map<String, Object>> getIdentifiedBy() {
             return getAsList(map, "identifiedBy")
                     .stream()
-                    .map(QueryUtil::toStringObjectMap)
+                    .map(QueryUtil::castToStringObjectMap)
                     .collect(Collectors.toList());
         }
 

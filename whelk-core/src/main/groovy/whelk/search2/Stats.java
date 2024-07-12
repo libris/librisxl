@@ -2,12 +2,15 @@ package whelk.search2;
 
 import whelk.JsonLd;
 import whelk.search2.querytree.FreeText;
+import whelk.search2.querytree.Link;
+import whelk.search2.querytree.Literal;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.PathValue;
+import whelk.search2.querytree.Property;
 import whelk.search2.querytree.PropertyValue;
 import whelk.search2.querytree.QueryTree;
+import whelk.search2.querytree.Value;
 import whelk.search2.querytree.VocabTerm;
-import whelk.util.DocumentUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,13 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static whelk.search2.querytree.PropertyValue.equalsLink;
-import static whelk.search2.querytree.PropertyValue.equalsLiteral;
-import static whelk.search2.querytree.PropertyValue.equalsVocabTerm;
-import static whelk.search2.QueryUtil.getAlias;
 import static whelk.search2.QueryUtil.makeFindUrl;
 import static whelk.search2.QueryUtil.makeParams;
 
@@ -70,42 +68,53 @@ public class Stats {
     }
 
     // Problem: Same value in different fields will be counted twice, e.g. contribution.agent + instanceOf.contribution.agent
-    private Map<String, Map<PropertyValue, Integer>> collectBuckets() {
-        Map<String, AppParams.Slice> sliceByProperty = appParams.statsRepr.getSliceByProperty();
+    private Map<Property, Map<PropertyValue, Integer>> collectBuckets() {
+        Map<String, AppParams.Slice> sliceByProperty = appParams.statsRepr.getSliceByPropertyName();
+        Map<String, Map<String, Integer>> propertyNameToBucketCounts = new LinkedHashMap<>();
 
-        Map<String, Map<PropertyValue, Integer>> propertyToBuckets = new LinkedHashMap<>();
+        // TODO: Decide how to handle properties that can appear at both instance and work level.
+        //  Probably not the best idea to just add the counts together like we do now, since it's both inconvenient
+        //  and not guaranteed to produce a correct number.
         for (var agg : queryResult.aggs) {
-            String property = agg.property();
-            boolean isObjectProperty = disambiguate.isObjectProperty(property);
-            boolean hasVocabValue = disambiguate.hasVocabValue(property);
-
             for (var b : agg.buckets()) {
-                PropertyValue pv = hasVocabValue
-                        ? equalsVocabTerm(property, b.value())
-                        : (isObjectProperty ? equalsLink(property, b.value()) : equalsLiteral(property, b.value()));
-                var buckets = propertyToBuckets.computeIfAbsent(property, x -> new HashMap<>());
-                buckets.compute(pv, (k, v) -> v == null ? b.count() : v + b.count());
+                var buckets = propertyNameToBucketCounts.computeIfAbsent(agg.property(), x -> new HashMap<>());
+                buckets.compute(b.value(), (k, v) -> v == null ? b.count() : v + b.count());
             }
         }
 
-        for (String property : sliceByProperty.keySet()) {
-            var buckets = propertyToBuckets.remove(property);
+        Map<Property, Map<PropertyValue, Integer>> propertyToBucketCounts = new LinkedHashMap<>();
+
+        for (String p : sliceByProperty.keySet()) {
+            var buckets = propertyNameToBucketCounts.get(p);
             if (buckets != null) {
-                int maxBuckets = sliceByProperty.get(property).size();
+                Property property = sliceByProperty.get(p).property();
+                int maxBuckets = sliceByProperty.get(p).size();
                 Map<PropertyValue, Integer> newBuckets = new LinkedHashMap<>();
                 buckets.entrySet()
                         .stream()
                         .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                         .limit(Math.min(maxBuckets, buckets.size()))
-                        .forEach(entry -> newBuckets.put(entry.getKey(), entry.getValue()));
-                propertyToBuckets.put(property, newBuckets);
+                        .forEach(entry -> {
+                            String bucketKey = entry.getKey();
+                            int count = entry.getValue();
+                            Value v;
+                            if (property.hasVocabValue()) {
+                                v = new VocabTerm(bucketKey, disambiguate.getDefinition(bucketKey));
+                            } else if (property.isObjectProperty()) {
+                                v = new Link(bucketKey, disambiguate.getChip(bucketKey));
+                            } else {
+                                v = new Literal(bucketKey);
+                            }
+                            newBuckets.put(new PropertyValue(property, Operator.EQUALS, v), count);
+                        });
+                propertyToBucketCounts.put(property, newBuckets);
             }
         }
 
-        return propertyToBuckets;
+        return propertyToBucketCounts;
     }
 
-    private Map<String, Object> buildSliceByDimension(Map<String, Map<PropertyValue, Integer>> propToBuckets, Set<String> rangeProps) {
+    private Map<String, Object> buildSliceByDimension(Map<Property, Map<PropertyValue, Integer>> propToBuckets, Set<Property> rangeProps) {
         Map<String, String> nonQueryParams = queryParams.getNonQueryParams(0);
 
         Map<String, Object> sliceByDimension = new LinkedHashMap<>();
@@ -113,15 +122,15 @@ public class Stats {
         propToBuckets.forEach((property, buckets) -> {
             var sliceNode = new LinkedHashMap<>();
             var isRange = rangeProps.contains(property);
-            var observations = getObservations(buckets, isRange ? queryTree.removeTopLevelPvRangeNodes(property) : queryTree, nonQueryParams);
+            var observations = getObservations(buckets, isRange ? queryTree.removeTopLevelPropValueWithRangeIfPropEquals(property) : queryTree, nonQueryParams);
             if (!observations.isEmpty()) {
                 if (isRange) {
                     sliceNode.put("search", getRangeTemplate(property, makeParams(nonQueryParams)));
                 }
-                sliceNode.put("dimension", property);
+                sliceNode.put("dimension", property.name());
                 sliceNode.put("observation", observations);
-                getAlias(property, queryTree.getOutsetType()).ifPresent(a -> sliceNode.put("alias", a));
-                sliceByDimension.put(property, sliceNode);
+                property.getAlias(queryTree.getOutsetType()).ifPresent(a -> sliceNode.put("alias", a));
+                sliceByDimension.put(property.name(), sliceNode);
             }
         });
 
@@ -133,12 +142,13 @@ public class Stats {
 
         buckets.forEach((pv, count) -> {
             Map<String, Object> observation = new LinkedHashMap<>();
-            boolean queried = qt.getTopLevelPvNodes().contains(pv) || pv.value().string().equals(nonQueryParams.get("_o"));
+            boolean queried = qt.getTopLevelPvNodes().contains(pv)
+                    || pv.value().string().equals(nonQueryParams.get(QueryParams.ApiParams.OBJECT));
             if (!queried) {
                 observation.put("totalItems", count);
-                var url = makeFindUrl(qt.andExtend(pv), nonQueryParams);
+                var url = makeFindUrl(qt.addToTopLevel(pv), nonQueryParams);
                 observation.put("view", Map.of(JsonLd.ID_KEY, url));
-                observation.put("object", queryUtil.lookUp(pv.value()));
+                observation.put("object", pv.value().description());
                 observations.add(observation);
             }
         });
@@ -146,7 +156,7 @@ public class Stats {
         return observations;
     }
 
-    private Map<String, Object> getRangeTemplate(String property, List<String> nonQueryParams) {
+    private Map<String, Object> getRangeTemplate(Property property, List<String> nonQueryParams) {
         var GtLtNodes = queryTree.getTopLevelPvNodes().stream()
                 .filter(pv -> pv.property().equals(property))
                 .filter(pv -> switch (pv.operator()) {
@@ -173,17 +183,17 @@ public class Stats {
             }
         }
 
-        var tree = queryTree.removeTopLevelPvNodesByOperator(property);
+        var tree = queryTree.removeTopLevelPropValueIfPropEquals(property);
 
         Map<String, Object> template = new LinkedHashMap<>();
 
-        var placeholderNode = new FreeText(Operator.EQUALS, String.format("{?%s}", property));
-        var templateQueryString = tree.andExtend(placeholderNode).toQueryString();
-        var templateUrl = makeFindUrl(tree.getFreeTextPart(), templateQueryString, nonQueryParams);
+        var placeholderNode = new FreeText(Operator.EQUALS, String.format("{?%s}", property.name()));
+        var templateQueryString = tree.addToTopLevel(placeholderNode).toString();
+        var templateUrl = makeFindUrl(tree.getTopLevelFreeText(), templateQueryString, nonQueryParams);
         template.put("template", templateUrl);
 
         var mapping = new LinkedHashMap<>();
-        mapping.put("variable", property);
+        mapping.put("variable", property.name());
         mapping.put(Operator.GREATER_THAN_OR_EQUALS.termKey, Objects.toString(min, ""));
         mapping.put(Operator.LESS_THAN_OR_EQUALS.termKey, Objects.toString(max, ""));
         template.put("mapping", mapping);
@@ -205,7 +215,7 @@ public class Stats {
                 newTree = queryTree.removeTopLevelNode(filter);
                 isSelected = true;
             } else {
-                newTree = queryTree.andExtend(filter);
+                newTree = queryTree.addToTopLevel(filter);
                 isSelected = false;
             }
 
@@ -223,12 +233,12 @@ public class Stats {
     }
 
     // TODO naming things "curated predicate links" ??
-    private List<Map<?, ?>> getCuratedPredicateLinks() {
+    private List<Map<String, Object>> getCuratedPredicateLinks() {
         var o = getObject(queryParams);
         if (o == null) {
             return Collections.emptyList();
         }
-        var curatedPredicates = queryUtil.curatedPredicates(o, appParams.relationFilters);
+        var curatedPredicates = curatedPredicates(o, appParams.relationFilters);
         if (curatedPredicates.isEmpty()) {
             return Collections.emptyList();
         }
@@ -236,9 +246,17 @@ public class Stats {
         return predicateLinks(queryRes.pAggs, o, queryParams.getNonQueryParams(0));
     }
 
+    private List<String> curatedPredicates(Entity object, Map<String, List<String>> relationFilters) {
+        return object.superclassesIncludingSelf()
+                .stream()
+                .filter(relationFilters::containsKey)
+                .findFirst().map(relationFilters::get)
+                .orElse(Collections.emptyList());
+    }
+
     private Map<String, Object> getCuratedPredicateEsQueryDsl(Entity o, List<String> curatedPredicates) {
         var queryDsl = new LinkedHashMap<String, Object>();
-        queryDsl.put("query", new PathValue("_links", o.id()).toEs());
+        queryDsl.put("query", new PathValue("_links", Operator.EQUALS, o.id()).toEs());
         queryDsl.put("size", 0);
         queryDsl.put("from", 0);
         queryDsl.put("aggs", Aggs.buildPAggQuery(o, curatedPredicates, disambiguate));
@@ -246,9 +264,9 @@ public class Stats {
         return queryDsl;
     }
 
-    private List<Map<?, ?>> predicateLinks(List<Aggs.Bucket> aggs, Entity object,
+    private List<Map<String, Object>> predicateLinks(List<Aggs.Bucket> aggs, Entity object,
                                            Map<String, String> nonQueryParams) {
-        var result = new ArrayList<Map<?, ?>>();
+        var result = new ArrayList<Map<String, Object>>();
         Set<String> selected = new HashSet<>();
         if (nonQueryParams.containsKey(QueryParams.ApiParams.PREDICATES)) {
             selected.add(nonQueryParams.get(QueryParams.ApiParams.PREDICATES));
@@ -256,7 +274,7 @@ public class Stats {
 
         Map<String, Integer> counts = aggs.stream().collect(Collectors.toMap(Aggs.Bucket::value, Aggs.Bucket::count));
 
-        for (String p : queryUtil.curatedPredicates(object, appParams.relationFilters)) {
+        for (String p : curatedPredicates(object, appParams.relationFilters)) {
             if (!counts.containsKey(p)) {
                 continue;
             }
@@ -269,7 +287,7 @@ public class Stats {
                 result.add(Map.of(
                         "totalItems", count,
                         "view", Map.of(JsonLd.ID_KEY, makeFindUrl(makeParams(params))),
-                        "object", queryUtil.lookUp(new VocabTerm(p)),
+                        "object", disambiguate.getDefinition(p),
                         "_selected", selected.contains(p)
                 ));
             }
@@ -284,7 +302,8 @@ public class Stats {
             return queryUtil.loadThing(object)
                     .map(thing -> thing.getOrDefault(JsonLd.TYPE_KEY, null))
                     .map(JsonLd::asList)
-                    .map(types -> new Entity(object, (String) types.getFirst()))
+                    .map(List::getFirst)
+                    .map(type -> new Entity(object, (String) type, disambiguate.getSuperclasses((String) type)))
                     .orElse(null);
         }
         return null;

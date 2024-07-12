@@ -1,8 +1,13 @@
 package whelk.search2.querytree;
 
 public record Literal(String string) implements Value {
+    @Override
+    public Object description() {
+        return string;
+    }
+
     public boolean isNumeric() {
-        return string().matches("\\d+");
+        return string.matches("\\d+");
     }
 
     public Literal increment() {

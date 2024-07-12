@@ -24,21 +24,11 @@ public class Analysis {
                 }
             }
             case Ast.Not not -> checkNoCodeWithinCode(not.operand(), inCodeGroup);
-            case Ast.CodeEquals ce -> {
+            case Ast.Code code -> {
                 if (inCodeGroup) {
                     throw new InvalidQueryException("Codes within code groups are not allowed.");
                 }
-                checkNoCodeWithinCode(ce.operand(), true);
-            }
-            case Ast.CodeEqualsLeaf ignored -> {
-                if (inCodeGroup) {
-                    throw new InvalidQueryException("Codes within code groups are not allowed.");
-                }
-            }
-            case Ast.CodeLesserGreaterThan ignored -> {
-                if (inCodeGroup) {
-                    throw new InvalidQueryException("Codes within code groups are not allowed.");
-                }
+                checkNoCodeWithinCode(code.operand(), true);
             }
             case Ast.Leaf ignored -> {
                 // Nothing to do here

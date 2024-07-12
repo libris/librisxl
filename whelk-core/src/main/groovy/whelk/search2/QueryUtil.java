@@ -5,11 +5,7 @@ import com.google.common.net.UrlEscapers;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.search.ESQueryLensBoost;
-import whelk.search2.querytree.Link;
-import whelk.search2.querytree.Literal;
 import whelk.search2.querytree.QueryTree;
-import whelk.search2.querytree.Value;
-import whelk.search2.querytree.VocabTerm;
 import whelk.util.DocumentUtil;
 
 import java.net.URLDecoder;
@@ -23,7 +19,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static whelk.component.ElasticSearch.flattenedLangMapKey;
-import static whelk.search2.Disambiguate.RDF_TYPE;
 
 public class QueryUtil {
     private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper();
@@ -39,15 +34,20 @@ public class QueryUtil {
     }
 
     public Map<String, Object> query(Map<String, Object> queryDsl) {
-        return toStringObjectMap(whelk.elastic.query(queryDsl));
+        return castToStringObjectMap(whelk.elastic.query(queryDsl));
     }
 
-    public static String quoteIfPhraseOrContainsSpecialSymbol(String s) {
-        return s.matches(".*(>=|<=|[=!~<>(): ]).*") ? "\"" + s + "\"" : s;
+    public boolean esIsConfigured() {
+        return whelk != null && whelk.elastic != null;
     }
 
     public int maxItems() {
         return whelk.elastic.maxResultWindow;
+    }
+
+    public static String quoteIfPhraseOrContainsSpecialSymbol(String s) {
+        // TODO: Don't hardcode
+        return s.matches(".*(>=|<=|[=!~<>(): ]).*") ? "\"" + s + "\"" : s;
     }
 
     public static String encodeUri(String uri) {
@@ -57,20 +57,10 @@ public class QueryUtil {
                 .replace("+", "%20");
     }
 
-    public static Map<String, Object> toStringObjectMap(Object o) {
+    public static Map<String, Object> castToStringObjectMap(Object o) {
         return ((Map<?, ?>) o).entrySet()
                 .stream()
                 .collect(Collectors.toMap(e -> (String) e.getKey(), e -> (Object) e.getValue()));
-    }
-
-    public Object lookUp(Value value) {
-        return switch (value) {
-            case VocabTerm vocabTerm -> whelk.getJsonld().vocabIndex.get(vocabTerm.string());
-            case Link link -> loadThing(value.string(), whelk)
-                    .map(whelk.getJsonld()::toChip)
-                    .orElse(link.string());
-            case Literal literal -> literal.string();
-        };
     }
 
     public Optional<Map<?, ?>> loadThing(String id) {
@@ -83,29 +73,12 @@ public class QueryUtil {
                 .map(graph -> (Map<?, ?>) ((List<?>) graph).get(1));
     }
 
-    public static Optional<String> getAlias(String property, OutsetType outsetType) {
-        var alias = switch (outsetType) {
-            case INSTANCE -> switch (property) {
-                case RDF_TYPE -> "instanceType";
-                case "instanceOfType" -> "workType";
-                default -> null;
-            };
-            case WORK, RESOURCE -> switch (property) {
-                case RDF_TYPE -> "workType";
-                case "hasInstanceType" -> "instanceType";
-                default -> null;
-            };
-        };
-
-        return Optional.ofNullable(alias);
-    }
-
     public static String makeFindUrl(String i, String q, Map<String, String> nonQueryParams) {
         return makeFindUrl(i, q, makeParams(nonQueryParams));
     }
 
     public static String makeFindUrl(QueryTree qt, Map<String, String> nonQueryParams) {
-        return makeFindUrl(qt.getFreeTextPart(), qt.toQueryString(), nonQueryParams);
+        return makeFindUrl(qt.getTopLevelFreeText(), qt.toString(), nonQueryParams);
     }
 
     public static String makeFindUrl(String i, String q, List<String> nonQueryParams) {
@@ -189,10 +162,6 @@ public class QueryUtil {
         return field;
     }
 
-    public boolean esIsConfigured() {
-        return whelk != null && whelk.elastic != null;
-    }
-
     @SuppressWarnings("unchecked")
     public Function<Map<String, Object>, Map<String, Object>> getApplyLensFunc(QueryParams queryParams) {
         return framedThing -> {
@@ -217,20 +186,5 @@ public class QueryUtil {
             return DocumentUtil.NOP;
         });
         return framedThing;
-    }
-
-    public List<String> curatedPredicates(Entity object, Map<String, List<String>> relationFilters) {
-        return getSuperClasses(object.rdfType())
-                .stream()
-                .filter(relationFilters::containsKey)
-                .findFirst().map(relationFilters::get)
-                .orElse(Collections.emptyList());
-    }
-
-    private List<String> getSuperClasses(String type) {
-        var types = new ArrayList<String>();
-        types.add(type);
-        whelk.getJsonld().getSuperClasses(type, types);
-        return types;
     }
 }

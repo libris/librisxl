@@ -55,6 +55,7 @@ public class SearchUtils2 {
         }
 
         qTree.addFilters(queryParams, appParams);
+        qTree.setOutsetType(disambiguate);
 
         Map<String, Object> esQueryDsl = getEsQueryDsl(qTree, queryParams, appParams.statsRepr);
 
@@ -86,8 +87,8 @@ public class SearchUtils2 {
                                                         QueryTree qt,
                                                         QueryParams queryParams,
                                                         AppParams appParams) {
-        var fullQuery = qt.toQueryString();
-        var freeText = qt.getFreeTextPart();
+        var fullQuery = qt.toString();
+        var freeText = qt.getTopLevelFreeText();
         var view = new LinkedHashMap<String, Object>();
 
         view.put(JsonLd.TYPE_KEY, "PartialCollectionView");
@@ -95,7 +96,8 @@ public class SearchUtils2 {
         view.put("itemOffset", queryParams.offset);
         view.put("itemsPerPage", queryParams.limit);
         view.put("totalItems", queryResult.numHits);
-        view.put("search", Map.of("mapping", List.of(qt.toSearchMapping(queryUtil::lookUp, queryParams.getNonQueryParams(0)))));
+        // TODO: Include _o search respresentation in search mapping?
+        view.put("search", Map.of("mapping", List.of(qt.toSearchMapping(queryParams.getNonQueryParams(0)))));
         view.putAll(Pagination.makeLinks(queryResult.numHits, queryUtil.maxItems(), freeText, fullQuery, queryParams));
         view.put("items", queryResult.collectItems(queryUtil.getApplyLensFunc(queryParams)));
         view.put("stats", new Stats(disambiguate, queryUtil, qt, queryResult, queryParams, appParams).build());

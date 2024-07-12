@@ -1,5 +1,8 @@
 package whelk.search2;
 
+import java.util.Map;
+import java.util.Set;
+
 // TODO: Add these to vocab (platform terms)
 //  e.g. https://id.kb.se/vocab/equals)
 public enum Operator {
@@ -22,5 +25,31 @@ public enum Operator {
 
     public String format(String property, String value) {
         return String.format(format, property, value);
+    }
+
+    public static Map<Operator, Operator> opposites() {
+        return Map.of(
+                EQUALS, NOT_EQUALS,
+                NOT_EQUALS, EQUALS,
+                GREATER_THAN_OR_EQUALS, LESS_THAN,
+                GREATER_THAN, LESS_THAN_OR_EQUALS,
+                LESS_THAN_OR_EQUALS, GREATER_THAN,
+                LESS_THAN, GREATER_THAN_OR_EQUALS
+        );
+    }
+
+    public static Map<String, Operator> symbolMappings() {
+        return Map.of(
+                "=", EQUALS,
+                "!=", NOT_EQUALS,
+                ">", GREATER_THAN,
+                ">=", GREATER_THAN_OR_EQUALS,
+                "<", LESS_THAN,
+                "<=", LESS_THAN_OR_EQUALS
+        );
+    }
+
+    public static Set<Operator> rangeOperators() {
+        return Set.of(Operator.GREATER_THAN_OR_EQUALS, Operator.GREATER_THAN, Operator.LESS_THAN, Operator.LESS_THAN_OR_EQUALS);
     }
 }

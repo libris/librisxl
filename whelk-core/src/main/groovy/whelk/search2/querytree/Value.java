@@ -3,6 +3,8 @@ package whelk.search2.querytree;
 public sealed interface Value permits Link, Literal, VocabTerm {
     String string();
 
+    Object description();
+
     default String canonicalForm() {
         return string();
     }

@@ -3,7 +3,8 @@ package whelk.search2;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.ActiveBoolFilter;
 import whelk.search2.querytree.Node;
-import whelk.search2.querytree.QueryTree;
+import whelk.search2.querytree.Property;
+import whelk.search2.querytree.QueryTreeBuilder;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,65 +16,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class AppParams {
-    public record StatsRepr(List<Slice> sliceList) {
-        Map<String, Slice> getSliceByProperty() {
-            var m = new LinkedHashMap<String, Slice>();
-            for (Slice s : sliceList()) {
-                m.put(s.property(), s);
-            }
-            return m;
-        }
-
-        public Set<String> getRangeProperties() {
-            return sliceList().stream()
-                    .filter(AppParams.Slice::isRange)
-                    .map(AppParams.Slice::property)
-                    .collect(Collectors.toSet());
-        }
-
-        boolean isEmpty() {
-            return sliceList().isEmpty();
-        }
-    }
-
-    public record SiteFilters(Map<String, Filter> aliasToFilter,
-                              List<Filter> defaultFilters,
-                              List<Filter> defaultTypeFilters,
-                              List<Filter> optionalFilters) {
-        public Set<String> getSelectableFilterAliases() {
-            return optionalFilters()
-                    .stream()
-                    .map(Filter::getAlias)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .map(n -> ((ActiveBoolFilter) n).alias())
-                    .collect(Collectors.toSet());
-        }
-
-        public List<Node> getAllDefaultFilterNodes() {
-            return new ArrayList<>() {
-                {
-                    addAll(getDefaultFilterNodes());
-                    addAll(getDefaultTypeFilterNodes());
-                }
-            };
-        }
-
-        public List<Node> getDefaultFilterNodes() {
-            return defaultFilters().stream().map(f -> f.getAlias().orElse(f.getExplicit())).toList();
-        }
-
-        public List<Node> getDefaultTypeFilterNodes() {
-            return defaultTypeFilters().stream().map(f -> f.getAlias().orElse(f.getExplicit())).toList();
-        }
-    }
-
     private final Disambiguate disambiguate;
     public final StatsRepr statsRepr;
     public final SiteFilters siteFilters;
     public final Map<String, List<String>> relationFilters;
-
-    private static final Integer DEFAULT_BUCKET_SIZE = 10;
 
     public AppParams(Map<String, Object> appConfig, Disambiguate disambiguate) {
         this.disambiguate = disambiguate;
@@ -82,10 +28,10 @@ public class AppParams {
         this.relationFilters = getRelationFilters(appConfig);
     }
 
-    private static StatsRepr getStatsRepr(Map<String, Object> appConfig) {
+    private StatsRepr getStatsRepr(Map<String, Object> appConfig) {
         return Optional.ofNullable((Map<?, ?>) appConfig.get("_statsRepr"))
                 .map(Map::entrySet)
-                .map(entries -> entries.stream().map(AppParams::getSlice).toList())
+                .map(entries -> entries.stream().map(this::getSlice).toList())
                 .map(StatsRepr::new)
                 .orElse(new StatsRepr(Collections.emptyList()));
     }
@@ -110,10 +56,10 @@ public class AppParams {
                 .orElse(Collections.emptyMap());
     }
 
-    private static Slice getSlice(Map.Entry<?, ?> statsReprEntry) {
-        var property = (String) statsReprEntry.getKey();
+    private Slice getSlice(Map.Entry<?, ?> statsReprEntry) {
+        var p = (String) statsReprEntry.getKey();
         var settings = (Map<?, ?>) statsReprEntry.getValue();
-        return new Slice(property, settings);
+        return new Slice(new Property(p, disambiguate), settings);
     }
 
     private Map<String, Filter> getAliasedFilters(Map<String, Object> appConfig) {
@@ -167,6 +113,59 @@ public class AppParams {
         return getAsList(appConfig, key).stream().map(Map.class::cast).toList();
     }
 
+    public record StatsRepr(List<Slice> sliceList) {
+        Map<String, Slice> getSliceByPropertyName() {
+            var m = new LinkedHashMap<String, Slice>();
+            for (Slice s : sliceList()) {
+                m.put(s.property().name(), s);
+            }
+            return m;
+        }
+
+        public Set<Property> getRangeProperties() {
+            return sliceList().stream()
+                    .filter(AppParams.Slice::isRange)
+                    .map(AppParams.Slice::property)
+                    .collect(Collectors.toSet());
+        }
+
+        boolean isEmpty() {
+            return sliceList().isEmpty();
+        }
+    }
+
+    public record SiteFilters(Map<String, Filter> aliasToFilter,
+                              List<Filter> defaultFilters,
+                              List<Filter> defaultTypeFilters,
+                              List<Filter> optionalFilters) {
+        public Set<String> getSelectableFilterAliases() {
+            return optionalFilters()
+                    .stream()
+                    .map(Filter::getAlias)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .map(n -> ((ActiveBoolFilter) n).alias())
+                    .collect(Collectors.toSet());
+        }
+
+        public List<Node> getAllDefaultFilterNodes() {
+            return new ArrayList<>() {
+                {
+                    addAll(getDefaultFilterNodes());
+                    addAll(getDefaultTypeFilterNodes());
+                }
+            };
+        }
+
+        public List<Node> getDefaultFilterNodes() {
+            return defaultFilters().stream().map(f -> f.getAlias().orElse(f.getExplicit())).toList();
+        }
+
+        public List<Node> getDefaultTypeFilterNodes() {
+            return defaultTypeFilters().stream().map(f -> f.getAlias().orElse(f.getExplicit())).toList();
+        }
+    }
+
     public class Filter {
         private final String explicit;
         private String alias;
@@ -186,7 +185,7 @@ public class AppParams {
         public Node getExplicit() {
             if (explicitNode == null) {
                 try {
-                    this.explicitNode = new QueryTree(explicit, disambiguate, AppParams.this.siteFilters.aliasToFilter()).tree;
+                    this.explicitNode = QueryTreeBuilder.buildTree(explicit, disambiguate, AppParams.this.siteFilters.aliasToFilter());
                 } catch (InvalidQueryException e) {
                     throw new RuntimeException(e);
                 }
@@ -200,7 +199,7 @@ public class AppParams {
             }
             if (aliasNode == null) {
                 try {
-                    this.aliasNode = new QueryTree(alias, disambiguate, AppParams.this.siteFilters.aliasToFilter()).tree;
+                    this.aliasNode = QueryTreeBuilder.buildTree(alias, disambiguate, AppParams.this.siteFilters.aliasToFilter());
                 } catch (InvalidQueryException e) {
                     throw new RuntimeException(e);
                 }
@@ -218,13 +217,13 @@ public class AppParams {
     }
 
     public static class Slice {
-        private final String property;
+        private final Property property;
         private final Sort.Order sortOrder;
         private final Sort.BucketSortKey bucketSortKey;
         private final int size;
         private final boolean isRange;
 
-        Slice(String property, Map<?, ?> settings) {
+        Slice(Property property, Map<?, ?> settings) {
             this.property = property;
             this.sortOrder = getSortOrder(settings);
             this.bucketSortKey = getBucketSortKey(settings);
@@ -232,7 +231,7 @@ public class AppParams {
             this.isRange = getRangeFlag(settings);
         }
 
-        public String property() {
+        public Property property() {
             return property;
         }
 
@@ -265,7 +264,7 @@ public class AppParams {
         }
 
         private int getSize(Map<?, ?> settings) {
-            return Optional.ofNullable((Integer) settings.get("size")).orElse(DEFAULT_BUCKET_SIZE);
+            return Optional.ofNullable((Integer) settings.get("size")).orElse(Aggs.DEFAULT_BUCKET_SIZE);
         }
 
         private boolean getRangeFlag(Map<?, ?> settings) {

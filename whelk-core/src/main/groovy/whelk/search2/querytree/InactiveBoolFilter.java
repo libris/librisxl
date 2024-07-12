@@ -15,7 +15,7 @@ public record InactiveBoolFilter(String alias) implements Node {
     }
 
     @Override
-    public Map<String, Object> toSearchMapping(QueryTree qt, Function<Value, Object> lookUp, Map<String, String> nonQueryParams) {
+    public Map<String, Object> toSearchMapping(QueryTree qt, Map<String, String> nonQueryParams) {
         throw new UnsupportedOperationException("Query tree must not contain inactive filters");
     }
 

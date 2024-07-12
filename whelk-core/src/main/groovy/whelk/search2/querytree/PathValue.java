@@ -3,7 +3,6 @@ package whelk.search2.querytree;
 import whelk.JsonLd;
 import whelk.search.ESQuery;
 import whelk.search2.Operator;
-import whelk.search2.QueryUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static whelk.search2.QueryUtil.boolWrap;
 import static whelk.search2.QueryUtil.mustNotWrap;
@@ -21,24 +21,16 @@ import static whelk.search2.QueryUtil.nestedWrap;
 import static whelk.search2.QueryUtil.quoteIfPhraseOrContainsSpecialSymbol;
 
 public record PathValue(Path path, Operator operator, Value value) implements Node {
-    public PathValue(List<String> path, Value value) {
-        this(path, null, value);
-    }
-
-    public PathValue(List<String> path) {
-        this(path, null, null);
-    }
-
-    public PathValue(String path, String value) {
-        this(path, Operator.EQUALS, new Literal(value));
+    public PathValue(List<Object> path, Operator operator, Value value) {
+        this(new Path(path), operator, value);
     }
 
     public PathValue(String path, Operator operator, Value value) {
         this(new Path(List.of(path)), operator, value);
     }
 
-    public PathValue(List<String> path, Operator operator, Value value) {
-        this(new Path(path), operator, value);
+    public PathValue(String path, Operator operator, String value) {
+        this(path, operator, new Literal(value));
     }
 
     @Override
@@ -49,17 +41,20 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     }
 
     @Override
-    public Map<String, Object> toSearchMapping(QueryTree qt, Function<Value, Object> lookUp, Map<String, String> nonQueryParams) {
+    public Map<String, Object> toSearchMapping(QueryTree qt, Map<String, String> nonQueryParams) {
         Map<String, Object> m = new LinkedHashMap<>();
 
         var propertyChainAxiom = new LinkedList<>();
 
         for (int i = getPath().size() - 1; i >= 0; i--) {
-            var property = lookUp.apply(new VocabTerm(getPath().get(i)));
-            if (property != null) {
+            var property = Optional.of(getPath().get(i))
+                    .filter(x -> x instanceof Property)
+                    .map(Property.class::cast);
+
+            if (property.isPresent()) {
                 propertyChainAxiom.push(i > 0 && getPath().get(i - 1).equals(JsonLd.REVERSE_KEY)
-                        ? Map.of("inverseOf", property)
-                        : property);
+                        ? Map.of("inverseOf", property.get().definition())
+                        : property.get().definition());
             }
         }
 
@@ -69,7 +64,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
             m.put("property", Map.of("propertyChainAxiom", propertyChainAxiom));
         }
 
-        m.put(operator.termKey, lookUp.apply(value));
+        m.put(operator.termKey, value.description());
         m.put("up", qt.makeUpLink(this, nonQueryParams));
 
         return m;
@@ -82,14 +77,15 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
     @Override
     public Node insertOperator(Operator o) {
+        if (operator != null) {
+            throw new UnsupportedOperationException("Operator already exists");
+        }
         return new PathValue(path, o, value);
     }
 
     @Override
     public Node insertValue(Value v) {
-        return value == null
-                ? new PathValue(path, operator, v)
-                : this;
+        return value == null ? new PathValue(path, operator, v) : this;
     }
 
     @Override
@@ -97,11 +93,16 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         return new PathValue(path.insertNested(getNestedPath), operator, value);
     }
 
+    @Override
+    public Node modifyAllPathValue(Function<PathValue, PathValue> modifier) {
+        return modifier.apply(this);
+    }
+
     public boolean isNested() {
         return path.nestedStem().isPresent();
     }
 
-    public List<String> getPath() {
+    public List<Object> getPath() {
         return path.path();
     }
 
@@ -110,13 +111,13 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     }
 
     private String asString() {
-        String p = quoteIfPhraseOrContainsSpecialSymbol(path.asString());
+        String p = quoteIfPhraseOrContainsSpecialSymbol(path.toString());
         String v = quoteIfPhraseOrContainsSpecialSymbol(value.canonicalForm());
         return operator.format(p, v);
     }
 
     public Map<String, Object> getEs() {
-        var p = path.asString();
+        var p = path.toString();
         var v = value.string();
 
         if (Operator.WILDCARD.equals(v)) {
@@ -143,16 +144,29 @@ public record PathValue(Path path, Operator operator, Value value) implements No
                 : mustWrap(nestedWrap(nestedPath, getEs()));
     }
 
-    public PathValue prepend(List<String> keys) {
-        return new PathValue(path.prepend(keys), operator, value);
+    public PathValue prepend(List<Object> subpath) {
+        return new PathValue(path.prepend(subpath), operator, value);
     }
 
-    public PathValue prepend(String key) {
-        return prepend(List.of(key));
+    public PathValue prepend(Object subpath) {
+        return prepend(List.of(subpath));
     }
 
-    public PathValue append(String key) {
-        return new PathValue(path.append(key), operator, value);
+    public PathValue append(Object subpath) {
+        return new PathValue(path.append(subpath), operator, value);
+    }
+
+    public PathValue appendSuffix() {
+        return getSuffix().map(this::append).orElse(this);
+    }
+
+    private Optional<String> getSuffix() {
+        return path.mainProperty()
+                .filter(Property::isObjectProperty)
+                .filter(Predicate.not(Property::hasVocabValue))
+                .map(x -> value instanceof Literal
+                        ? JsonLd.SEARCH_KEY
+                        : JsonLd.ID_KEY);
     }
 
     private static Map<String, Object> equalsFilter(String path, String value) {

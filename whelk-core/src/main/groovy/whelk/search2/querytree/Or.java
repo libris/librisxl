@@ -4,17 +4,23 @@ import whelk.search2.Operator;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static whelk.search2.QueryUtil.shouldWrap;
 
-public record Or(List<Node> children, Optional<String> nestedStem) implements Group {
+public final class Or extends Group {
+    private final List<Node> children;
+
     public Or(List<Node> children) {
-        this(children, Optional.empty());
+        this.children = flattenChildren(children);
     }
 
     @Override
-    public Group create(List<Node> children) {
+    public List<Node> children() {
+        return children;
+    }
+
+    @Override
+    public Group newInstance(List<Node> children) {
         return new Or(children);
     }
 
@@ -37,7 +43,7 @@ public record Or(List<Node> children, Optional<String> nestedStem) implements Gr
     public Group insertOperator(Operator operator) {
         return operator == Operator.NOT_EQUALS
                 ? new And(children).insertOperator(operator)
-                : Group.super.insertOperator(operator);
+                : super.insertOperator(operator);
     }
 }
 
