@@ -2,6 +2,7 @@ package whelk.importer
 
 import whelk.Document
 import whelk.Whelk
+import whelk.history.DocumentVersion
 import whelk.util.BlockingThreadPool
 import whelk.util.LegacyIntegrationTools
 
@@ -17,17 +18,20 @@ class WhelkCopier {
     List recordIds
     String additionalTypes
     boolean shouldExcludeItems
+    boolean shouldIncludeHistory
     BlockingThreadPool.SimplePool threadPool = BlockingThreadPool.simplePool(Runtime.getRuntime().availableProcessors())
     List<Document> saveQueue = []
 
     private int copied = 0
+    private int copiedVersions = 0
 
-    WhelkCopier(source, dest, recordIds, additionalTypes, shouldExcludeItems) {
+    WhelkCopier(Whelk source, Whelk dest, List<String> recordIds, String additionalTypes, boolean shouldExcludeItems, boolean shouldIncludeHistory) {
         this.source = source
         this.dest = dest
         this.recordIds = recordIds
         this.additionalTypes = additionalTypes
         this.shouldExcludeItems = shouldExcludeItems
+        this.shouldIncludeHistory = shouldIncludeHistory
 
         dest.storage.doVerifyDocumentIdRetention = false
     }
@@ -60,8 +64,8 @@ class WhelkCopier {
             }
         }
 
-        for (id in recordIds) {
-            def doc
+        for (String id in recordIds) {
+            Document doc
             if (id.contains("/")) {
                 doc = source.storage.getDocumentByIri(id)
             }
@@ -106,11 +110,35 @@ class WhelkCopier {
                 }
             }
         }
+
+        if (shouldIncludeHistory) {
+            source.storage.withDbConnection {
+                for (String shortId in alreadyImportedIDs) {
+                    source.storage.loadDocumentHistory(shortId).eachWithIndex { DocumentVersion docVersion, i ->
+                        // Skip the first (latest) version, it'll be added by quickCreateDocument
+                        if (i == 0) {
+                            return
+                        }
+                        docVersion.doc.baseUri = source.baseUri
+                        // Add some out-of-record data so we know what to do/use in save()
+                        docVersion.doc.data["_isVersion"] = true
+                        docVersion.doc.data["_changedBy"] = docVersion.changedBy
+                        docVersion.doc.data["_changedIn"] = docVersion.changedIn
+                        queueSave(docVersion.doc)
+                    }
+                }
+            }
+        }
+
         flushSaveQueue()
         threadPool.awaitAllAndShutdown()
 
         dest.storage.reDenormalize()
-        System.err.println "Copied $copied documents (from ${recordIds.size()} selected)."
+        if (shouldIncludeHistory) {
+            System.err.println("Copied ${copied} documents (from ${recordIds.size()} selected), including ${copiedVersions} historical versions.")
+        } else {
+            System.err.println("Copied ${copied} documents (from ${recordIds.size()} selected).")
+        }
     }
 
     Iterable<Document> selectBySqlWhere(whereClause) {
@@ -127,9 +155,13 @@ class WhelkCopier {
         source.storage.iterateDocuments(rs)
     }
 
-    void queueSave(doc) {
+    void queueSave(Document doc) {
         saveQueue.add(doc)
         copied++
+        if (shouldIncludeHistory && doc.data["_isVersion"]) {
+            copiedVersions++
+        }
+
         if (copied % 200 == 0)
             System.err.println "Records queued for copying: $copied"
         if (saveQueue.size() >= SAVE_BATCH_SIZE) {
@@ -146,7 +178,7 @@ class WhelkCopier {
         })
     }
 
-    void save(doc) {
+    void save(Document doc) {
         def libUriPlaceholder = "___TEMP_HARDCODED_LIB_BASEURI"
         def newDataRepr = doc.dataAsString.replaceAll( // Move all lib uris, to a temporary placeholder.
                 '"\\Q' + source.baseUri.resolve("library/").toString() + '\\E',
@@ -158,7 +190,7 @@ class WhelkCopier {
                 '"\\Q' + libUriPlaceholder + '\\E',
                 '"' + source.baseUri.resolve("library/").toString())
 
-        def newDoc = new Document(mapper.readValue(newDataRepr, Map))
+        Document newDoc = new Document(mapper.readValue(newDataRepr, Map))
 
         def newId = dest.baseUri.resolve(doc.shortId).toString()
         newDoc.id = newId
@@ -166,7 +198,15 @@ class WhelkCopier {
         def collection = LegacyIntegrationTools.determineLegacyCollection(newDoc, dest.jsonld)
         if (collection != "definitions") {
             try {
-                dest.quickCreateDocument(newDoc, "xl", "WhelkCopier", collection)
+                if (doc.data["_isVersion"]) {
+                    Date created = Date.from(doc.getCreatedTimestamp())
+                    Date modified = Date.from(doc.getModifiedTimestamp())
+                    String changedIn = doc.data["_changedIn"]
+                    String changedBy = doc.data["_changedBy"]
+                    dest.quickCreateDocumentVersion(newDoc, created, modified, changedIn, changedBy, collection)
+                } else {
+                    dest.quickCreateDocument(newDoc, "xl", "WhelkCopier", collection)
+                }
             } catch (Exception e) {
                 System.err.println("Could not save $doc.shortId due to: $e")
             }

@@ -137,18 +137,19 @@ class ImporterMain {
      * SOURCE_PROPERTIES RECORD_ID_FILE MovingImageInstance,Map
      */
     @Command(args='SOURCE_PROPERTIES RECORD_ID_FILE [<ADDITIONAL_TYPES | --all-types | ""> [--exclude-items]]')
-    void copywhelk(String sourcePropsFile, String recordsFile, additionalTypes=null, String excludeItems=null) {
+    void copywhelk(String sourcePropsFile, String recordsFile, String additionalTypes=null, String excludeItems=null, String includeHistory=null) {
         def sourceProps = new Properties()
         new File(sourcePropsFile).withInputStream { it
             sourceProps.load(it)
         }
-        def source = Whelk.createLoadedCoreWhelk(sourceProps)
-        def dest = Whelk.createLoadedSearchWhelk(props)
-        def recordIds = new File(recordsFile).collect {
+        Whelk source = Whelk.createLoadedCoreWhelk(sourceProps)
+        Whelk dest = Whelk.createLoadedSearchWhelk(props)
+        List<String> recordIds = new File(recordsFile).collect {
             it.split(/\t/)[0]
         }
         boolean shouldExcludeItems = excludeItems && excludeItems == '--exclude-items'
-        def copier = new WhelkCopier(source, dest, recordIds, additionalTypes, shouldExcludeItems)
+        boolean shouldIncludeHistory = includeHistory && includeHistory == '--include-history'
+        WhelkCopier copier = new WhelkCopier(source, dest, recordIds, additionalTypes, shouldExcludeItems, shouldIncludeHistory)
         copier.run()
     }
 
