@@ -17,21 +17,25 @@ class WhelkCopier {
     Whelk dest
     List recordIds
     String additionalTypes
+    String copyVersions
     boolean shouldExcludeItems
-    boolean shouldIncludeHistory
     BlockingThreadPool.SimplePool threadPool = BlockingThreadPool.simplePool(Runtime.getRuntime().availableProcessors())
     List<Document> saveQueue = []
 
     private int copied = 0
     private int copiedVersions = 0
+    private String additionalTypesPrefix = "--additional-types="
+    private String copyVersionsPrefix = "--copy-versions="
+    private List<String> versionTypes
+    private TreeSet<String> idsToCopyVersionsOf = new TreeSet<>()
 
-    WhelkCopier(Whelk source, Whelk dest, List<String> recordIds, String additionalTypes, boolean shouldExcludeItems, boolean shouldIncludeHistory) {
+    WhelkCopier(Whelk source, Whelk dest, List<String> recordIds, String additionalTypes, boolean shouldExcludeItems, String copyVersions) {
         this.source = source
         this.dest = dest
         this.recordIds = recordIds
         this.additionalTypes = additionalTypes
         this.shouldExcludeItems = shouldExcludeItems
-        this.shouldIncludeHistory = shouldIncludeHistory
+        this.copyVersions = copyVersions
 
         dest.storage.doVerifyDocumentIdRetention = false
     }
@@ -39,17 +43,32 @@ class WhelkCopier {
     void run() {
         TreeSet<String> alreadyImportedIDs = new TreeSet<>()
 
+        if (copyVersions) {
+            versionTypes = copyVersions.substring(copyVersionsPrefix.length()).split(",")
+            if ("none" in versionTypes) {
+                versionTypes.clear()
+            }
+        }
+        if (versionTypes) {
+            System.err.println("Old versions of the following types will be copied: $versionTypes")
+        }
+
         if (additionalTypes) {
             String whereClause
-            if (additionalTypes == "--all-types") {
+            List<String> types = additionalTypes.substring(additionalTypesPrefix.length()).split(",")
+
+            if ("all" in types) {
                 whereClause = "deleted = false"
                 if (shouldExcludeItems) {
                     whereClause += " and data#>>'{@graph,1,@type}' != 'Item'"
                 }
-            } else {
-                String[] types = additionalTypes.split(",")
+            } else if (types.size() > 0 && !("none" in types)) {
                 whereClause = "deleted = false and data#>>'{@graph,1,@type}' in (\n" +
                         "'" + types.join("','") + "'" + ")"
+            }
+
+            if (whereClause) {
+                System.err.println("The following WHERE clause will be used for copying additional types: ${whereClause}")
             }
 
             source.storage.withDbConnection {
@@ -58,6 +77,7 @@ class WhelkCopier {
                     doc.baseUri = source.baseUri
                     if (!alreadyImportedIDs.contains(doc.shortId)) {
                         alreadyImportedIDs.add(doc.shortId)
+                        maybeCopyVersions(doc)
                         queueSave(doc)
                     }
                 }
@@ -84,11 +104,13 @@ class WhelkCopier {
                     relDoc.baseUri = source.baseUri
                     if (!alreadyImportedIDs.contains(relDoc.shortId)) {
                         alreadyImportedIDs.add(relDoc.shortId)
+                        maybeCopyVersions(relDoc)
                         queueSave(relDoc)
                     }
                 }
                 if (!alreadyImportedIDs.contains(doc.shortId)) {
                     alreadyImportedIDs.add(doc.shortId)
+                    maybeCopyVersions(doc)
                     queueSave(doc)
                 }
             }
@@ -105,15 +127,16 @@ class WhelkCopier {
                     revDoc.baseUri = source.baseUri
                     if (!alreadyImportedIDs.contains(revDoc.shortId)) {
                         alreadyImportedIDs.add(revDoc.shortId)
+                        maybeCopyVersions(revDoc)
                         queueSave(revDoc)
                     }
                 }
             }
         }
 
-        if (shouldIncludeHistory) {
+        if (copyVersions) {
             source.storage.withDbConnection {
-                for (String shortId in alreadyImportedIDs) {
+                for (String shortId in idsToCopyVersionsOf) {
                     source.storage.loadDocumentHistory(shortId).eachWithIndex { DocumentVersion docVersion, i ->
                         // Skip the first (latest) version, it'll be added by quickCreateDocument
                         if (i == 0) {
@@ -134,10 +157,16 @@ class WhelkCopier {
         threadPool.awaitAllAndShutdown()
 
         dest.storage.reDenormalize()
-        if (shouldIncludeHistory) {
+        if (copyVersions) {
             System.err.println("Copied ${copied} documents (from ${recordIds.size()} selected), including ${copiedVersions} historical versions.")
         } else {
             System.err.println("Copied ${copied} documents (from ${recordIds.size()} selected).")
+        }
+    }
+
+    void maybeCopyVersions(Document doc) {
+        if (versionTypes && ("all" in versionTypes || doc.getThingType() in versionTypes)) {
+            idsToCopyVersionsOf.add(doc.shortId)
         }
     }
 
@@ -158,7 +187,7 @@ class WhelkCopier {
     void queueSave(Document doc) {
         saveQueue.add(doc)
         copied++
-        if (shouldIncludeHistory && doc.data["_isVersion"]) {
+        if (copyVersions && doc.data["_isVersion"]) {
             copiedVersions++
         }
 
