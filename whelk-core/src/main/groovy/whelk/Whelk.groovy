@@ -511,6 +511,14 @@ class Whelk {
         return storage.quickCreateDocument(document, changedIn, changedBy, collection)
     }
 
+    /**
+     * Like quickCreateDocument but for adding historical document versions. NOT to be used in production
+     * environments; for development purposes only.
+     */
+    boolean quickCreateDocumentVersion(Document document, Date createdTime, Date modTime, String changedIn, String changedBy, String collection) {
+        return storage.quickCreateDocumentVersion(document, createdTime, modTime, changedIn, changedBy, collection)
+    }
+
     void remove(String id, String changedIn, String changedBy, boolean force = false) {
         log.debug "Deleting ${id} from Whelk"
         Document doc

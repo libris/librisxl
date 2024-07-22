@@ -122,33 +122,44 @@ class ImporterMain {
     }
 
     /**
-     * The additional_types argument should be one of:
-     * - comma-separated list of types to include. Like so: Person,GenreForm
-     * - --all-types, to copy *all* types
-     * - "", to be able to use --exclude-items without specifying additional types
+     * The --additional-types argument can look like one of the following:
+     * --additional-types=all              # Copy all types
+     * --additional-types=none             # Don't copy additional types (default)
+     * --additional-types=Person,GenreForm # Copy specific types
+     *
+     * You can also optionally copy historical document versions (from lddb__versions)
+     * for certain types, all types, or not at all (default). "all" means
+     * "copy versions of all records selected by RECORD_ID_FILE":
+     * --copy-versions=all              # Copy history for every document added
+     * --copy-versions=Instance,Person  # Copy history only for specific types
+     * --copy-versions=none             # Don't copy history (default)
      *
      * E.g., copy everything except items (holdings):
-     * SOURCE_PROPERTIES RECORD_ID_FILE --all-types --exclude-items
+     * SOURCE_PROPERTIES RECORD_ID_FILE --additional-types=all --exclude-items
      *
      * Copy only what's in RECORD_ID_FILE, but exclude items:
-     * SOURCE_PROPERTIES RECORD_ID_FILE "" --exclude-items
+     * SOURCE_PROPERTIES RECORD_ID_FILE --additional-types=none --exclude-items
      *
-     * Copy what's in RECORD_ID_FILE and types MovingImageInstance and Map, don't exclude items:
-     * SOURCE_PROPERTIES RECORD_ID_FILE MovingImageInstance,Map
+     * Copy what's in RECORD_ID_FILE and types MovingImageInstance and Map, include items:
+     * SOURCE_PROPERTIES RECORD_ID_FILE --additional-types=MovingImageInstance,Map
+     *
+     * Copy what's in RECORD_ID_FILE and types MovingImageInstance and Map, include items,
+     * and copy historical versions of Instance and Map:
+     * SOURCE_PROPERTIES RECORD_ID_FILE --additional-types=MovingImageInstance,Map --include-items --copy-versions=Instance,Map
      */
-    @Command(args='SOURCE_PROPERTIES RECORD_ID_FILE [<ADDITIONAL_TYPES | --all-types | ""> [--exclude-items]]')
-    void copywhelk(String sourcePropsFile, String recordsFile, additionalTypes=null, String excludeItems=null) {
+    @Command(args='SOURCE_PROPERTIES RECORD_ID_FILE [--additional-types=<types>] [--exclude-items | --dont-exclude-items] [--copy-versions=<types>]')
+    void copywhelk(String sourcePropsFile, String recordsFile, String additionalTypes=null, String excludeItems=null, String copyVersions=null) {
         def sourceProps = new Properties()
         new File(sourcePropsFile).withInputStream { it
             sourceProps.load(it)
         }
-        def source = Whelk.createLoadedCoreWhelk(sourceProps)
-        def dest = Whelk.createLoadedSearchWhelk(props)
-        def recordIds = new File(recordsFile).collect {
+        Whelk source = Whelk.createLoadedCoreWhelk(sourceProps)
+        Whelk dest = Whelk.createLoadedSearchWhelk(props)
+        List<String> recordIds = new File(recordsFile).collect {
             it.split(/\t/)[0]
         }
         boolean shouldExcludeItems = excludeItems && excludeItems == '--exclude-items'
-        def copier = new WhelkCopier(source, dest, recordIds, additionalTypes, shouldExcludeItems)
+        WhelkCopier copier = new WhelkCopier(source, dest, recordIds, additionalTypes, shouldExcludeItems, copyVersions)
         copier.run()
     }
 

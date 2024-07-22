@@ -317,6 +317,10 @@ class Document {
         get(createdPath)
     }
 
+    Instant getCreatedTimestamp() {
+        ZonedDateTime.parse(getCreated(), DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant()
+    }
+
     void setModified(Date modified) {
         ZonedDateTime zdt = ZonedDateTime.ofInstant(modified.toInstant(), ZoneId.systemDefault())
         String formatedModified = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
