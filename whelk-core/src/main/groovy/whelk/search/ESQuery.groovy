@@ -33,7 +33,7 @@ class ESQuery {
 
     private static final int DEFAULT_PAGE_SIZE = 50
     private static final List RESERVED_PARAMS = [
-        'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens', '_stats', '_suggest', '_site'
+        'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens', '_stats', '_suggest', '_site', '_spell'
     ]
     public static final String AND_PREFIX = 'and-'
     public static final String AND_MATCHES_PREFIX = 'and-matches-'
@@ -46,6 +46,9 @@ class ESQuery {
 
     private static final String FILTERED_AGG_NAME = 'a'
     private static final String NESTED_AGG_NAME = 'n'
+
+    private static final String SPELL_CHECK_FIELD = '_sortKeyByLang.sv.trigram'
+    private static final String SPELL_CHECK_FIELD_REVERSE = '_sortKeyByLang.sv.reverse'
 
     private static final Map recordsOverCacheRecordsBoost = [
             'bool': ['should': [
@@ -101,8 +104,8 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map doQuery(Map<String, String[]> queryParameters, suggest = null) {
-        Map esQuery = getESQuery(queryParameters, suggest)
+    Map doQuery(Map<String, String[]> queryParameters, String suggest = null, String spell = false) {
+        Map esQuery = getESQuery(queryParameters, suggest, spell)
         Map esResponse = hideKeywordFields(moveAggregationsToTopLevel(whelk.elastic.query(esQuery)))
         if ('esQuery' in queryParameters.get('_debug')) {
             esResponse._debug = [esQuery: esQuery]
@@ -121,7 +124,7 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map getESQuery(Map<String, String[]> ogQueryParameters, suggest = null) {
+    Map getESQuery(Map<String, String[]> ogQueryParameters, String suggest = null, String spell = null) {
         Map<String, String[]> queryParameters = new HashMap<>(ogQueryParameters)
         // Legit params and their uses:
         //   q - query string, will be used as query_string or simple_query_string
@@ -138,6 +141,8 @@ class ESQuery {
         //   any k=v param - FILTER query (same key => OR, different key => AND)
         List filters
         Map multiSelectFilters
+        //  _spell - check spelling
+        Map spellQuery
 
         if (suggest && !whelk.jsonld.locales.contains(suggest)) {
             throw new InvalidQueryException("Parameter '_suggest' value '${suggest}' invalid, must be one of ${whelk.jsonld.locales}")
@@ -159,6 +164,15 @@ class ESQuery {
         siteFilter = getSiteFilter(queryParameters)
         (filters, multiSelectFilters) = getFilters(queryParameters)
         aggQuery = getAggQuery(queryParameters, multiSelectFilters)
+
+        if (spell && q) {
+            spellQuery = getSpellQuery(q)
+        }
+        // If the `_spell` query param is "only", return a query containing *only*
+        // the spell checking part
+        if (spell == "only" && q) {
+            return ['suggest': spellQuery]
+        }
 
         def isSimple = isSimple(q)
         String queryMode = isSimple ? 'simple_query_string' : 'query_string'
@@ -295,6 +309,10 @@ class ESQuery {
 
         if (multiSelectFilters) {
             query['post_filter'] = ['bool': ['must' : multiSelectFilters.values()]]
+        }
+
+        if (spell && q) {
+            query['suggest'] = spellQuery
         }
 
         query['track_total_hits'] = true
@@ -1168,5 +1186,33 @@ class ESQuery {
 
     int getMaxItems() {
         return whelk.elastic.maxResultWindow
+    }
+
+    static Map getSpellQuery(String q) {
+        return [
+            'text': q,
+            'simple_phrase': [
+                'phrase': [
+                    'field': SPELL_CHECK_FIELD,
+                    'size': 1,
+                    'direct_generator': [
+                        [
+                            'field': SPELL_CHECK_FIELD,
+                            'suggest_mode': 'always',
+                        ],
+                        [
+                            'field': SPELL_CHECK_FIELD_REVERSE,
+                            'suggest_mode': 'always',
+                            "pre_filter" : "reverse",
+                            "post_filter" : "reverse"
+                        ]
+                    ],
+                    'highlight': [
+                        'pre_tag': '<em>',
+                        'post_tag': '</em>'
+                    ]
+                ]
+            ]
+        ]
     }
 }
