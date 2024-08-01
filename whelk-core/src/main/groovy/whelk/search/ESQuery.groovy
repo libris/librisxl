@@ -1195,6 +1195,7 @@ class ESQuery {
                 'phrase': [
                     'field': SPELL_CHECK_FIELD,
                     'size': 1,
+                    'max_errors': 2,
                     'direct_generator': [
                         [
                             'field': SPELL_CHECK_FIELD,
