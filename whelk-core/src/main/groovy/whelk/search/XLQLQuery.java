@@ -861,10 +861,6 @@ public class XLQLQuery {
     }
 
     private String expandLangMapKeys(String field) {
-        if (whelk != null && whelk.elastic != null && !whelk.elastic.ENABLE_SMUSH_LANG_TAGGED_PROPS) {
-            return field;
-        }
-
         var parts = field.split("\\.");
         if (parts.length > 0) {
             assert whelk != null;
