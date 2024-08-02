@@ -230,7 +230,19 @@ class SearchUtils {
         }
 
         if (spell) {
-            result["_spell"] = esResult["spell"]
+            result['_spell'] = []
+            esResult["spell"].each { Map suggestion ->
+                result['_spell'] << [
+                        'label': suggestion['text'],
+                        'labelWithMarkup': suggestion['highlighted'],
+                        'view': [
+                                '@id': makeFindUrl(
+                                        SearchType.ELASTIC,
+                                        pageParams - ['q': pageParams['q']] + ['q': suggestion['text']],
+                                        offset)
+                        ]
+                ]
+            }
         }
 
         if (esResult['_debug']) {
