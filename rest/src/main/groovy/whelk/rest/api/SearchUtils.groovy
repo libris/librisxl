@@ -234,7 +234,7 @@ class SearchUtils {
             esResult["spell"].each { Map suggestion ->
                 result['_spell'] << [
                         'label': suggestion['text'],
-                        'labelWithMarkup': suggestion['highlighted'],
+                        'labelHTML': suggestion['highlighted'],
                         'view': [
                                 '@id': makeFindUrl(
                                         SearchType.ELASTIC,
