@@ -99,7 +99,7 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map doQuery(Map<String, String[]> queryParameters, String suggest = null, String spell = false) {
+    Map doQuery(Map<String, String[]> queryParameters, String suggest = null, String spell = null) {
         Map esQuery = getESQuery(queryParameters, suggest, spell)
         Map esResponse = hideKeywordFields(moveAggregationsToTopLevel(whelk.elastic.query(esQuery)))
         if ('esQuery' in queryParameters.get('_debug')) {
