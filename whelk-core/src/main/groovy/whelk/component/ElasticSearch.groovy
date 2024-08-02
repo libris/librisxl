@@ -649,6 +649,10 @@ class ElasticSearch {
             results.totalHits = responseMap.hits.total.value
             results.items = responseMap.hits.hits.collect(hitCollector)
             results.aggregations = responseMap.aggregations
+            // Spell checking
+            if (responseMap.suggest?.simple_phrase) {
+                results.spell = responseMap.suggest.simple_phrase[0].options
+            }
             return results
         }
         catch (Exception e) {

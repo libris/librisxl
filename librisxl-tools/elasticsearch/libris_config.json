@@ -83,6 +83,16 @@
                         "numeric_keeper"
                     ],
                     "tokenizer": "numeric_keeper_tokenizer"
+                },
+                "trigram": {
+                    "type": "custom",
+                    "tokenizer": "standard",
+                    "filter": ["lowercase","shingle"]
+                },
+                "reverse": {
+                    "type": "custom",
+                    "tokenizer": "standard",
+                    "filter": ["lowercase","reverse"]
                 }
             },
             "tokenizer": {
@@ -131,6 +141,11 @@
                     "type": "pattern_replace",
                     "pattern": "[\u0027|\u2019]",
                     "replacement": ""
+                },
+                "shingle": {
+                    "type": "shingle",
+                    "min_shingle_size": 2,
+                    "max_shingle_size": 3
                 }
             },
             "normalizer": {
@@ -257,6 +272,14 @@
                             "keyword": {
                                 "type": "keyword",
                                 "normalizer": "custom_case_insensitive"
+                            },
+                            "trigram": {
+                                "type": "text",
+                                "analyzer": "trigram"
+                            },
+                            "reverse": {
+                                "type": "text",
+                                "analyzer": "reverse"
                             }
                         }
                     },
