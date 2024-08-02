@@ -31,6 +31,7 @@ dependencies {
     // Logging
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j2-impl', version: "${log4jVersion}"
 
     // metrics
     implementation "io.prometheus:simpleclient:${prometheusVersion}"
