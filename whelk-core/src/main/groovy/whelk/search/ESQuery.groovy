@@ -66,6 +66,10 @@ class ESQuery {
     private Map<String, List<String>> boostFieldsByType = [:]
     private ESQueryLensBoost lensBoost
 
+    // TODO: temporary feature flag, to be removed
+    // this feature only works after a full reindex has been done, so we have to detect that
+    private boolean ENABLE_SPELL_CHECK = false
+
     ESQuery() {
         // NOTE: For unit tests only!
     }
@@ -86,6 +90,11 @@ class ESQuery {
             this.nestedFields = getFieldsOfType('nested', mappings)
             this.nestedNotInParentFields = nestedFields - getFieldsWithSetting('include_in_parent', true, mappings)
             this.numericExtractorFields = getFieldsWithAnalyzer('numeric_extractor', mappings)
+
+            if (DocumentUtil.getAtPath(mappings, ['properties', '_sortKeyByLang', 'properties', 'sv', 'fields', 'trigram'], null)) {
+                ENABLE_SPELL_CHECK = true
+            }
+            log.info("ENABLE_SPELL_CHECK = ${ENABLE_SPELL_CHECK}")
         } else {
             this.keywordFields = Collections.emptySet()
             this.dateFields = Collections.emptySet()
@@ -165,7 +174,7 @@ class ESQuery {
         }
         // If the `_spell` query param is "only", return a query containing *only*
         // the spell checking part
-        if (spell == "only" && q) {
+        if (ENABLE_SPELL_CHECK && spell == "only" && q) {
             return ['suggest': spellQuery]
         }
 
@@ -306,7 +315,7 @@ class ESQuery {
             query['post_filter'] = ['bool': ['must' : multiSelectFilters.values()]]
         }
 
-        if (spell && q) {
+        if (ENABLE_SPELL_CHECK && spell && q) {
             query['suggest'] = spellQuery
         }
 
