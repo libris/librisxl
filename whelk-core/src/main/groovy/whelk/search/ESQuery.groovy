@@ -83,11 +83,6 @@ class ESQuery {
             this.nestedFields = getFieldsOfType('nested', mappings)
             this.nestedNotInParentFields = nestedFields - getFieldsWithSetting('include_in_parent', true, mappings)
             this.numericExtractorFields = getFieldsWithAnalyzer('numeric_extractor', mappings)
-
-            if (mappings['properties']['__prefLabel']) {
-                whelk.elastic.ENABLE_SMUSH_LANG_TAGGED_PROPS = true
-                log.info("ENABLE_SMUSH_LANG_TAGGED_PROPS = true")
-            }
         } else {
             this.keywordFields = Collections.emptySet()
             this.dateFields = Collections.emptySet()
@@ -873,10 +868,6 @@ class ESQuery {
     }
     
     private String expandLangMapKeys(String field) {
-        if (whelk?.elastic && !whelk.elastic.ENABLE_SMUSH_LANG_TAGGED_PROPS) {
-            return field
-        }
-        
         var parts = field.split('\\.')
         if (parts && parts[-1] in jsonld.langContainerAlias.keySet()) {
             parts[-1] = flattenedLangMapKey(parts[-1])
@@ -910,10 +901,6 @@ class ESQuery {
         if (statsrepr.isEmpty()) {
             Map defaultQuery = [(JsonLd.TYPE_KEY): ['terms': ['field': JsonLd.TYPE_KEY]]]
             return defaultQuery
-        }
-        if (!whelk?.features?.isEnabled(FeatureFlags.Flag.CONCERNING_ISSUANCE_TYPE_FILTER)) {
-            // needs updated index config with concerning.issuanceType.keyword
-            statsrepr.remove("concerning.issuanceType")
         }
         return buildAggQuery(statsrepr, multiSelectFilters)
     }

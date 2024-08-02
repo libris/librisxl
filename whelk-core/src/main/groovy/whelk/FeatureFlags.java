@@ -13,7 +13,6 @@ public class FeatureFlags {
     
     public enum Flag {
         INDEX_BLANK_WORKS,
-        CONCERNING_ISSUANCE_TYPE_FILTER
     }
 
     private Set<Flag> enabled = new HashSet<>();

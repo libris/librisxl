@@ -38,10 +38,6 @@ class ElasticSearch {
             'http://id.kb.se/',
             'https://id.kb.se/',
     ]
-    
-    // TODO: temporary feature flag, to be removed
-    // this feature only works after a full reindex has been done, so we have to detect that
-    public boolean ENABLE_SMUSH_LANG_TAGGED_PROPS = false 
 
     public int maxResultWindow = 10000 // Elasticsearch default (fallback value)
     public int maxTermsCount = 65536 // Elasticsearch default (fallback value)
@@ -432,7 +428,7 @@ class ElasticSearch {
             // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" } }
             // -->
             // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" }, "__foo": ["FOO", "EN", "SV"] }
-            if (ENABLE_SMUSH_LANG_TAGGED_PROPS && value instanceof Map) {
+            if (value instanceof Map) {
                 var flattened = [:]
                 value.each { k, v ->
                     if (k in whelk.jsonld.langContainerAlias) {
