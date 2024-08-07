@@ -247,7 +247,7 @@ class XL
             Document libraryDoc = m_whelk.getDocument(librarySystemId);
             if (!libraryDoc.libraryIsRegistrant())
             {
-                logger.warn(String.format("%s does not have category Registrant. Not importing holding record for %s",
+                logger.info(String.format("%s does not have category Registrant. Not importing holding record for %s",
                         libraryUri, relatedWithBibResourceId));
                 return null;
             }
