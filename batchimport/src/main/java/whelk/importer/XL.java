@@ -240,11 +240,15 @@ class XL
             String librarySystemId = m_whelk.getStorage().getSystemIdByIri(libraryUri);
             if (librarySystemId == null)
             {
+                logger.warn(String.format("Could not find %s. Not importing holding record for %s",
+                        libraryUri, relatedWithBibResourceId));
                 return null;
             }
             Document libraryDoc = m_whelk.getDocument(librarySystemId);
             if (!libraryDoc.libraryIsRegistrant())
             {
+                logger.warn(String.format("%s does not have category Registrant. Not importing holding record for %s",
+                        libraryUri, relatedWithBibResourceId));
                 return null;
             }
             rdfDoc.setHoldingFor(relatedWithBibResourceId);
