@@ -1031,6 +1031,7 @@ class PostgreSQLComponent {
                 }
             }
 
+            doc.mintComponentIDs()
             if (doVerifyDocumentIdRetention) {
                 verifyDocumentIdRetention(preUpdateDoc, doc, connection)
             }
@@ -1121,11 +1122,13 @@ class PostgreSQLComponent {
         HashSet<String> oldIDs = new HashSet<>()
         oldIDs.addAll( preUpdateDoc.getRecordIdentifiers() )
         oldIDs.addAll( preUpdateDoc.getThingIdentifiers() )
+        oldIDs.addAll( preUpdateDoc.getThingComponentIdentifiers() )
 
         // Compile list of all new IDs
         HashSet<String> newIDs = new HashSet<>()
         newIDs.addAll( postUpdateDoc.getRecordIdentifiers() )
         newIDs.addAll( postUpdateDoc.getThingIdentifiers() )
+        newIDs.addAll( postUpdateDoc.getThingComponentIdentifiers() )
 
         // (#work identifiers integrity is not enforced, because doing so would disable breaking out works.)
 
@@ -1571,6 +1574,16 @@ class PostgreSQLComponent {
                     altIdInsert.setBoolean(4, false) // alternative ID
                     altIdInsert.addBatch()
                 }
+            }
+        }
+        for (altThingId in doc.getThingComponentIdentifiers()) {
+            // don't re-add thing identifiers if doc is deleted
+            if (!deleted) {
+                altIdInsert.setString(1, doc.getShortId())
+                altIdInsert.setString(2, altThingId)
+                altIdInsert.setInt(3, 1) // thing id -> graphIndex = 1
+                altIdInsert.setBoolean(4, false) // alternative ID
+                altIdInsert.addBatch()
             }
         }
         try {
