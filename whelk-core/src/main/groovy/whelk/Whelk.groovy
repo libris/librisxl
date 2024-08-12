@@ -363,6 +363,11 @@ class Whelk {
                 if (reverseRelations.contains(link.relation)) {
                     // we added a link to a document that includes us in its @reverse relations, reindex it
                     elastic.index(doc, this)
+                    if (features.isEnabled(INDEX_BLANK_WORKS)) {
+                        doc.getVirtualRecordIds().each {
+                            elastic.index(doc.getVirtualRecord(it), this)
+                        }
+                    }
                 } else {
                     // just update link counter
                     elastic.incrementReverseLinks(id, link.relation)

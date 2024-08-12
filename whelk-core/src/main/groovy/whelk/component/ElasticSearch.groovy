@@ -528,6 +528,13 @@ class ElasticSearch {
                 'totalItems': incomingLinkCountByRelation.values().sum(0),
                 'totalItemsByRelation': incomingLinkCountByRelation,
         ]
+        // TODO make this less hardcoded?
+        if (whelk.jsonld.isSubClassOf(doc.getThingType(), "Work")) {
+            var itemCount = doc.data['@graph']
+                    .findAll { DocumentUtil.getAtPath(it, [JsonLd.GRAPH_KEY, 1, JsonLd.TYPE_KEY]) == 'Item' }
+                    .size()
+            doc.data[JsonLd.GRAPH_KEY][1]['reverseLinks']['totalItemsByRelation']['itemOf/instanceOf'] = itemCount
+        }
     }
 
     private static String stripHash(String s) {
