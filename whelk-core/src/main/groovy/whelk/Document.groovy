@@ -370,7 +370,7 @@ class Document {
     }
 
     boolean isHolding(JsonLd jsonld) {
-        return ("hold" == getLegacyCollection(jsonld))
+        return "hold" == getLegacyCollection(jsonld) || jsonld.isSubClassOf(getThingType(), "Item")
     }
     
     String getLegacyCollection(JsonLd jsonld) {

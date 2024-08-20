@@ -1190,7 +1190,7 @@ class CrudSpec extends Specification {
                                     "@type": "Item",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["code": "Ting"]]]]
+                                            ["@id": "https://libris.kb.se/library/Ting"]]]]
         request.getInputStream() >> {
             new ServletInputStreamMock(mapper.writeValueAsBytes(postData))
         }
@@ -1201,7 +1201,7 @@ class CrudSpec extends Specification {
             "POST"
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "bib"
+            return "hold"
         }
         request.getContentType() >> {
             "application/ld+json"

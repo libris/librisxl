@@ -21,7 +21,10 @@ class LegacyIntegrationToolsSpec extends Specification {
              "category": [ ["@id": "http://example.org/ns/"] ]],
             ["@id": "http://example.org/ns/Paperback",
              "subClassOf": [ ["@id": "http://example.org/ns/Print"] ],
-             "category": ["@id": "http://example.org/ns/pending"]]
+             "category": ["@id": "http://example.org/ns/pending"]],
+            ["@id": "http://example.org/ns/None",
+             "subClassOf": [ ["@id": "http://example.org/ns/Instance"] ],
+             "category": [ ["@id": "$MARC/none"] ]],
         ]
     ]
 
@@ -31,14 +34,14 @@ class LegacyIntegrationToolsSpec extends Specification {
         expect:
         tool.getMarcCollectionForTerm([category: cats]) == id
         where:
-        id      | cats
-        'bib'   | ['@id': "$MARC/bib"]
-        'bib'   | [['@id': "$MARC/bib"], ['@id': "pending"]]
-        'auth'  | [['@id': "$MARC/auth"]]
-        'none'  | ['@id': 'other']
-        'none'  | [['@id': 'other']]
-        'none'  | []
-        'none'  | null
+        id          | cats
+        'bib'       | ['@id': "$MARC/bib"]
+        'bib'       | [['@id': "$MARC/bib"], ['@id': "pending"]]
+        'auth'      | [['@id': "$MARC/auth"]]
+        'undefined' | ['@id': 'other']
+        'undefined' | [['@id': 'other']]
+        'undefined' | []
+        'undefined' | null
     }
 
     def "should get marc collection for type"() {
@@ -51,6 +54,7 @@ class LegacyIntegrationToolsSpec extends Specification {
         'Print'     | 'bib'
         'Paperback' | 'bib'
         'Other'     | 'none'
+        'None'      | 'none'
     }
 
 }
