@@ -288,7 +288,7 @@ public class ImageLinker extends HouseKeeper {
         List<Map<String, String>> imageList = tempDoc.getImages();
         for (Map<String, String> image : imageList) {
             if (image.containsValue(imageUri)) {
-                logger.warn("{} already contains image {}; not linking", instanceId, imageUri);
+                logger.info("{} already contains image {}; not linking", instanceId, imageUri);
                 return;
             }
         }
