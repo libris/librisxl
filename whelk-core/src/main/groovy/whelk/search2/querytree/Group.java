@@ -95,16 +95,12 @@ public sealed abstract class Group implements Node permits And, Or {
         return children.stream()
                 .flatMap(c -> switch (c) {
                     case Group g -> g.getClass() == this.getClass()
-                            ? g.reinstantiate().children().stream()
-                            : Stream.of(g.reinstantiate());
+                            ? g.children().stream()
+                            : Stream.of(g);
                     default -> Stream.of(c);
                 })
                 .distinct()
                 .toList();
-    }
-
-    Group reinstantiate() {
-        return newInstance(children());
     }
 
     Node filterAndReinstantiate(Predicate<Node> p) {
