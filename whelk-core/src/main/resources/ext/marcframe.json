@@ -63,10 +63,9 @@
       "1": "marc:JurisdictionName",
       "2": "marc:NameInDirectOrder"
     },
-
+    "NOTE-TypeOfRecordType": "Position b OBSOLETE since 1995 (was ArchivalUnit)",
     "TypeOfRecordType": {
       "a": "Text",
-      "b": "ArchivalUnit",
       "c": "NotatedMusic",
       "d": "ManuscriptNotatedMusic",
       "e": "Cartography",
@@ -315,12 +314,9 @@
         "property": "issuanceType"
       },
       "[8]": {
-        "aboutEntity": "?record",
-        "link": "marc:typeOfControl",
-        "uriTemplate": "https://id.kb.se/marc/TypeOfControlType-{_}",
-        "matchUriToken": "^[a]$",
-        "fixedDefault": " ",
-        "TODO": "BF2: I - rdf:type - Archival"
+        "NOTE": "Type of control - # - No specified type (was marc:typeOfControl marc:TypeOfControlType-{_})",
+        "ignored": true,
+        "fixedDefault": " "
       },
       "[9]": {
         "NOTE": "Character coding scheme - a - UCS/Unicode",
@@ -413,25 +409,6 @@
               "issuanceType": "ComponentPart",
               "@id": "http://libris.kb.se/resource/bib/0000000",
               "instanceOf": {"@type": "Text"}
-            }
-          }
-        },
-        {
-          "name": "@type ArchivalUnit",
-          "originalLeader": "00887cbm a2200277 a 4500",
-          "source": {"leader": "     cbm a        a 4500", "fields": [{"001": "0000000"}]},
-          "result": {
-            "@type": "Record",
-            "@id": "http://libris.kb.se/bib/0000000",
-            "recordStatus": "marc:CorrectedOrRevised",
-            "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatFormType-a"}],
-            "controlNumber": "0000000",
-            "encodingLevel": "marc:FullLevel",
-            "mainEntity": {
-              "@type": "Instance",
-              "issuanceType": "Monograph",
-              "@id": "http://libris.kb.se/resource/bib/0000000",
-              "instanceOf": {"@type": "ArchivalUnit"}
             }
           }
         },
