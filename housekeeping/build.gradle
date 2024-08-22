@@ -68,6 +68,7 @@ test.testLogging {
 }
 
 shadowJar {
+    mergeServiceFiles()
     archiveClassifier = null // removes `-all` in the filename of the created .jar
 }
 

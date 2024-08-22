@@ -49,7 +49,7 @@ public class WebInterface extends HttpServlet {
                 new NotificationCleaner(whelk),
                 new ImageLinker(whelk),
                 new ExportSizePredictor(whelk),
-                new ScriptRunner(whelk, "wikidatalinking.groovy", "0 19 15 2,4,6,8,10,12 *"),
+                new ScriptRunner(whelk, "wikidatalinking.groovy", "0 19 22 2,4,6,8,10,12 *"),
         ]
 
         houseKeepers.each { hk ->
