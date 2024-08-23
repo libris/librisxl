@@ -81,7 +81,7 @@ class JsonLd {
 
     public Map<String, Map> context
     public Map displayData
-    public Map<String, Map> vocabIndex
+    public Map<String, Map<String, Object>> vocabIndex
 
     public List<String> locales
     private String vocabId
