@@ -48,6 +48,10 @@ public record Path(List<Object> path, Optional<String> nestedStem) {
         return new Path(path, getNestedPath.apply(toString()));
     }
 
+    public boolean hasIdOrSearchKey() {
+        return path.getLast().equals(JsonLd.ID_KEY) || path.getLast().equals(JsonLd.SEARCH_KEY);
+    }
+
     private String substitute(String property) {
         return Optional.ofNullable(substitutions.get(property)).orElse(property);
     }

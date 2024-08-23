@@ -1,5 +1,7 @@
 package whelk.search2.querytree;
 
+import whelk.search2.Operator;
+
 public record Literal(String string) implements Value {
     @Override
     public Object description() {
@@ -8,6 +10,10 @@ public record Literal(String string) implements Value {
 
     public boolean isNumeric() {
         return string.matches("\\d+");
+    }
+
+    public boolean isWildcard() {
+        return string.equals(Operator.WILDCARD);
     }
 
     public Literal increment() {

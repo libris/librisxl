@@ -55,7 +55,7 @@ public class Aggs {
                     throw new RuntimeException("Can't handle combined fields in aggs query");
                 }
 
-                String path = ((PathValue) n).appendSuffix().path().toString();
+                String path = ((PathValue) n).getFullSearchPath();
 
                 // Core agg query
                 var aggs = Map.of("terms",

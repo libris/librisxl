@@ -109,6 +109,9 @@ public class QueryTreeBuilder {
     }
 
     private static Value buildValue(Property property, String value, Disambiguate disambiguate) throws InvalidQueryException {
+        if (value.equals(Operator.WILDCARD)) {
+            return new Literal(value);
+        }
         if (property.isType()) {
             Optional<String> mappedType = disambiguate.mapToKbvClass(value);
             if (mappedType.isPresent()) {

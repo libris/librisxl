@@ -117,7 +117,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     }
 
     public Map<String, Object> getEs() {
-        var p = path.toString();
+        var p = getFullSearchPath();
         var v = value.string();
 
         if (Operator.WILDCARD.equals(v)) {
@@ -152,12 +152,10 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         return prepend(List.of(subpath));
     }
 
-    public PathValue append(Object subpath) {
-        return new PathValue(path.append(subpath), operator, value);
-    }
-
-    public PathValue appendSuffix() {
-        return getSuffix().map(this::append).orElse(this);
+    public String getFullSearchPath() {
+        return path.hasIdOrSearchKey()
+                ? path.toString()
+                : getSuffix().map(path::append).orElse(path).toString();
     }
 
     private Optional<String> getSuffix() {
@@ -165,7 +163,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
                 .filter(Property::isObjectProperty)
                 .filter(Predicate.not(Property::hasVocabValue))
                 .map(x -> value instanceof Literal
-                        ? JsonLd.SEARCH_KEY
+                        ? (((Literal) value).isWildcard() ? null : JsonLd.SEARCH_KEY)
                         : JsonLd.ID_KEY);
     }
 

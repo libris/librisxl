@@ -45,8 +45,7 @@ public record PropertyValue(Property property, Operator operator, Value value) i
                 ? buildTypeNode(value, disambiguate).insertOperator(operator)
                 : property.expand(disambiguate, outsetType)
                 .insertOperator(operator)
-                .insertValue(value)
-                .modifyAllPathValue(PathValue::appendSuffix);
+                .insertValue(value);
     }
 
     public Node expand(Disambiguate disambiguate) {
