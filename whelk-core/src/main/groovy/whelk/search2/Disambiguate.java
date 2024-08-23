@@ -47,6 +47,8 @@ public class Disambiguate {
 
     public static final String RDF_TYPE = "rdf:type";
 
+    public static Map<String, Object> freeTextDefinition = Collections.emptyMap();
+
     public Disambiguate(Whelk whelk) {
         this.whelk = whelk;
         this.jsonLd = whelk.getJsonld();
@@ -54,6 +56,10 @@ public class Disambiguate {
         this.domainByProperty = loadDomainByProperty(whelk);
         setAliasMappings(whelk);
         setTypeSets(jsonLd);
+        // FIXME: This should probably not be a static variable...
+        if (freeTextDefinition.isEmpty()) {
+            freeTextDefinition = getDefinition("textQuery");
+        }
     }
 
     // For test

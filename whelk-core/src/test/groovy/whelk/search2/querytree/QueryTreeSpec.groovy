@@ -37,7 +37,7 @@ import static DummyNodes.pathV3
 class QueryTreeSpec extends Specification {
     def "to search mapping"() {
         given:
-        FreeText.definition = ['prefLabel': 'freetext query']
+        Disambiguate.freeTextDefinition = ['prefLabel': 'freetext query']
         def tree = and([
                 ft1,
                 or([propV(prop1, neq, v1), propV2]),

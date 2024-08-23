@@ -2,6 +2,7 @@ package whelk.search2.querytree;
 
 import whelk.JsonLd;
 import whelk.search.ESQuery;
+import whelk.search2.Disambiguate;
 import whelk.search2.Operator;
 import whelk.search2.QueryUtil;
 import whelk.util.Unicode;
@@ -21,8 +22,6 @@ import static whelk.search2.QueryUtil.shouldWrap;
 import static whelk.search2.Operator.EQUALS;
 
 public record FreeText(Operator operator, String value) implements Node {
-    public static Map<String, Object> definition = Collections.emptyMap();
-
     @Override
     // TODO: Review/refine this. So far it's basically just copy-pasted from old search code (EsQuery)
     public Map<String, Object> toEs(List<String> boostedFields) {
@@ -96,7 +95,7 @@ public record FreeText(Operator operator, String value) implements Node {
     @Override
     public Map<String, Object> toSearchMapping(QueryTree qt, Map<String, String> nonQueryParams) {
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("property", definition);
+        m.put("property", Disambiguate.freeTextDefinition);
         m.put(operator.termKey, value);
         m.put("up", qt.makeUpLink(this, nonQueryParams));
         return m;

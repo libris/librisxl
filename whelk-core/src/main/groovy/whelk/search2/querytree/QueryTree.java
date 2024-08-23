@@ -30,9 +30,6 @@ public class QueryTree {
             this.tree = buildTree(queryString, disambiguate, aliasToFilter);
             normalizeFreeText();
             removeNeedlessWildcard();
-            if (FreeText.definition.isEmpty()) {
-                FreeText.definition = disambiguate.getDefinition("textQuery");
-            }
         }
     }
 
