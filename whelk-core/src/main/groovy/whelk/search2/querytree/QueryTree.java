@@ -124,6 +124,20 @@ public class QueryTree {
         };
     }
 
+    public QueryTree replaceFreeText(String replacement) {
+        if (isFreeText()) {
+            return new QueryTree(new FreeText(Operator.EQUALS, replacement));
+        }
+        if (tree instanceof And) {
+            return new QueryTree(
+                    ((And) tree).mapAndReinstantiate(n -> isFreeText(n)
+                            ? new FreeText(Operator.EQUALS, replacement)
+                            : n)
+            );
+        }
+        throw new RuntimeException("Failed to replace free text"); // Should never be reached
+    }
+
     public QueryTree addToTopLevel(Node node) {
         return new QueryTree(addToTopLevel(tree, node));
     }

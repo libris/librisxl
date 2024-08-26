@@ -25,6 +25,7 @@ public class QueryParams {
         public static final String LIMIT = "_limit";
         public static final String OFFSET = "_offset";
         public static final String LENS = "_lens";
+        public static final String SPELL = "_spell";
         public static final String OBJECT = "_o";
         public static final String PREDICATES = "_p";
         public static final String EXTRA = "_x";
@@ -44,6 +45,7 @@ public class QueryParams {
     public final String mode;
     public final List<String> debug;
     public final String lens;
+    public final Spell spell;
 
     public final String q;
     public final String i;
@@ -58,6 +60,7 @@ public class QueryParams {
         this.limit = getLimit(apiParameters);
         this.offset = getOffset(apiParameters);
         this.lens = getOptionalSingleNonEmpty(ApiParams.LENS, apiParameters).orElse("cards");
+        this.spell = new Spell(getOptionalSingleNonEmpty(ApiParams.SPELL, apiParameters).orElse(""));
         this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse("");
         this.i = getOptionalSingle(ApiParams.SIMPLE_FREETEXT, apiParameters).orElse("");
     }
@@ -80,6 +83,10 @@ public class QueryParams {
         }
         if (mode != null) {
             params.put(ApiParams.EXTRA, mode);
+        }
+        var spellP = spell.asString();
+        if (!spellP.isEmpty()) {
+            params.put(ApiParams.SPELL, spellP);
         }
         var sort = sortBy.asString();
         if (!sort.isEmpty()) {

@@ -4,6 +4,7 @@ import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.exception.WhelkRuntimeException;
+
 import whelk.search2.Aggs;
 import whelk.search2.AppParams;
 import whelk.search2.Disambiguate;
@@ -12,12 +13,14 @@ import whelk.search2.QueryParams;
 import whelk.search2.QueryResult;
 import whelk.search2.QueryUtil;
 import whelk.search2.Sort;
+import whelk.search2.Spell;
 import whelk.search2.Stats;
 import whelk.search2.querytree.QueryTree;
 
 import java.io.IOException;
 import java.util.*;
 
+import static whelk.search2.Spell.buildSpellSuggestions;
 import static whelk.util.Jackson.mapper;
 
 public class SearchUtils2 {
@@ -78,6 +81,16 @@ public class SearchUtils2 {
         queryDsl.put("sort", (queryParams.sortBy == Sort.DEFAULT_BY_RELEVANCY && queryTree.isWild()
                 ? Sort.BY_DOC_ID
                 : queryParams.sortBy).getSortClauses(queryUtil::getSortField));
+        if (queryParams.spell.suggest) {
+            var spellQuery = Spell.getSpellQuery(queryTree);
+            if (spellQuery.isPresent()) {
+                if (queryParams.spell.suggestOnly) {
+                    return Map.of("suggest", spellQuery.get());
+                } else {
+                    queryDsl.put("suggest", spellQuery.get());
+                }
+            }
+        }
         queryDsl.put("aggs", Aggs.buildAggQuery(statsRepr, disambiguate, queryTree.getOutsetType(), queryUtil::getNestedPath));
         queryDsl.put("track_total_hits", true);
         return queryDsl;
@@ -101,6 +114,9 @@ public class SearchUtils2 {
         view.putAll(Pagination.makeLinks(queryResult.numHits, queryUtil.maxItems(), freeText, fullQuery, queryParams));
         view.put("items", queryResult.collectItems(queryUtil.getApplyLensFunc(queryParams)));
         view.put("stats", new Stats(disambiguate, queryUtil, qt, queryResult, queryParams, appParams).build());
+        if (!queryResult.spell.isEmpty()) {
+            view.put("_spell", buildSpellSuggestions(queryResult, qt, queryParams.getNonQueryParams(0)));
+        }
         view.put("maxItems", queryUtil.maxItems());
 
         return view;
@@ -150,7 +166,7 @@ public class SearchUtils2 {
     private static Map<String, Object> buildStatsReprFromSliceSpec(List<?> sliceList) {
         Map<String, Object> statsRepr = new LinkedHashMap<>();
         for (var s : sliceList) {
-            var slice = ((Map<?,?>) s);
+            var slice = ((Map<?, ?>) s);
             String key = (String) ((List<?>) slice.get("dimensionChain")).getFirst();
             int limit = (Integer) slice.get("itemLimit");
             Boolean range = (Boolean) slice.get("range");
