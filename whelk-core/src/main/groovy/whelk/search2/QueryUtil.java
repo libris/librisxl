@@ -33,8 +33,8 @@ public class QueryUtil {
         this.lensBoost = new ESQueryLensBoost(whelk.getJsonld());
     }
 
-    public Map<String, Object> query(Map<String, Object> queryDsl) {
-        return castToStringObjectMap(whelk.elastic.query(queryDsl));
+    public Map<?, ?> query(Map<String, Object> queryDsl) {
+        return whelk.elastic.query(queryDsl);
     }
 
     public boolean esIsConfigured() {

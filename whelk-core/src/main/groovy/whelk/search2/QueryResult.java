@@ -6,6 +6,7 @@ import whelk.JsonLd;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -17,12 +18,15 @@ public class QueryResult {
     private final List<EsItem> esItems;
     public final List<Aggs.Aggregation> aggs;
     public final List<Aggs.Bucket> pAggs;
+    public final List<Spell.Suggestion> spell;
 
-    public QueryResult(Map<String, Object> esResponse) {
-        this.numHits = (int) esResponse.getOrDefault("totalHits", 0);
-        this.esItems = getEsItems(esResponse);
-        this.aggs = Aggs.collectAggResult(esResponse);
-        this.pAggs = Aggs.collectPAggResult(esResponse);
+    public QueryResult(Map<?, ?> esResponse) {
+        var normResponse = normalizeResponse(esResponse);
+        this.numHits = (int) normResponse.getOrDefault("totalHits", 0);
+        this.esItems = getEsItems(normResponse);
+        this.aggs = Aggs.collectAggResult(normResponse);
+        this.pAggs = Aggs.collectPAggResult(normResponse);
+        this.spell = Spell.collectSuggestions(normResponse);
     }
 
     public List<Map<String, Object>> collectItems(Function<Map<String, Object>, Map<String, Object>> applyLens) {
@@ -39,6 +43,18 @@ public class QueryResult {
 
     private static List<?> getAsList(Map<String, Object> m, String key) {
         return ((List<?>) m.getOrDefault(key, Collections.emptyList()));
+    }
+
+    private static Map<String, Object> normalizeResponse(Map<?, ?> esResponse) {
+        var norm = new LinkedHashMap<String, Object>();
+        esResponse.forEach((k, v) ->
+                {
+                    if (v != null) {
+                        norm.put((String) k, v);
+                    }
+                }
+        );
+        return norm;
     }
 
     static class EsItem {
@@ -90,7 +106,7 @@ public class QueryResult {
         private void addReverseLinks(Map<String, Object> reverseLinks) {
             reverseLinks.put(JsonLd.ID_KEY, makeFindOLink((String) map.get(JsonLd.ID_KEY)));
             map.put("reverseLinks", reverseLinks);
-        };
+        }
 
         private static String makeFindOLink(String iri) {
             return Document.getBASE_URI()
