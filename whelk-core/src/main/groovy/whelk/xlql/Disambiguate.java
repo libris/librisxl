@@ -1,5 +1,6 @@
 package whelk.xlql;
 
+import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
 
@@ -7,9 +8,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Disambiguate {
-    public record PropertyChain(List<String> path, List<DefaultField> defaultFields) {
-    }
-
     // :category :heuristicIdentifier too broad...?
     private static final Set<String> notatingProps = new HashSet<>(Arrays.asList("label", "prefLabel", "altLabel", "code", "librisQueryCode"));
 
@@ -35,6 +33,7 @@ public class Disambiguate {
         ENUM
     }
 
+    //TODO: Abstract away the need for OutsetType/DomainCategory
     public enum OutsetType {
         INSTANCE,
         WORK,
@@ -52,6 +51,8 @@ public class Disambiguate {
     }
 
     public static final String UNKNOWN_DOMAIN = "Unknown domain";
+
+    public static final String RDF_TYPE = "rdf:type";
 
     public Disambiguate(Whelk whelk) {
         this.jsonLd = whelk.getJsonld();
@@ -122,68 +123,89 @@ public class Disambiguate {
         return DomainCategory.OTHER;
     }
 
+    public boolean hasVocabValue(String property) {
+        return isVocabTerm(property) || isType(property);
+    }
+
     public boolean isVocabTerm(String property) {
         return jsonLd.isVocabTerm(property);
     }
 
-    public PropertyChain expandChainAxiom(List<String> path) {
-        List<String> extendedPath = new ArrayList<>();
-        List<DefaultField> defaultFields = new ArrayList<>();
+    public boolean isType(String property) {
+        return RDF_TYPE.equals(property) || jsonLd.getSubProperties(RDF_TYPE).contains(property);
+    }
 
-        for (String p : path) {
+    void expandChainAxiom(Path path) {
+        List<String> newStem = new ArrayList<>();
+
+        for (String p : path.stem) {
             var termDefinition = jsonLd.vocabIndex.get(p);
 
             // TODO: All short forms should be marked with :category :shortHand?
             //  Not the case at the moment, therefore isShorthand doesn't apply
 //            if (!isShorthand(termDefinition)) {
             if (termDefinition == null || !termDefinition.containsKey("propertyChainAxiom")) {
-                extendedPath.add(p);
+                newStem.add(p);
                 continue;
             }
 
-            getAsList(termDefinition, "propertyChainAxiom").forEach(prop ->
-                    {
-                        getLinkedValue(prop)
-                                .map(jsonLd::toTermKey)
-                                .ifPresentOrElse(extendedPath::add,
-                                        () -> getAsOptionalList(prop, JsonLd.SUB_PROPERTY_OF)
-                                                .map(List::getFirst)
-                                                .flatMap(Disambiguate::getLinkedValue)
-                                                .map(jsonLd::toTermKey)
-                                                .ifPresentOrElse(extendedPath::add,
-                                                        () -> {
-                                                            throw new RuntimeException("Failed to expand chain axiom for property " + p);
-                                                        })
-                                );
+            List<String> stem = new ArrayList<>();
+            List<Path.Branch> branches = new ArrayList<>();
 
-                        getAsList(prop, JsonLd.RANGE)
-                                .forEach(r -> {
-                                    getLinkedValue(r)
-                                            .map(jsonLd::toTermKey)
-                                            .filter(jsonLd.vocabIndex::containsKey)
-                                            .map(cls -> new DefaultField(plusElem(extendedPath, JsonLd.TYPE_KEY), cls))
-                                            .ifPresent(defaultFields::add);
-
-                                    getAsList(r, "subClassOf")
-                                            .stream()
-                                            .filter(sc -> "Restriction".equals(sc.get(JsonLd.TYPE_KEY)))
-                                            .forEach(sc ->
-                                                    getAsOptionalMap(sc, "onProperty")
-                                                            .flatMap(Disambiguate::getLinkedValue)
-                                                            .map(jsonLd::toTermKey)
-                                                            .flatMap(onProperty ->
-                                                                    getAsOptionalMap(sc, "hasValue")
-                                                                            .flatMap(Disambiguate::getLinkedValue)
-                                                                            .map(value -> new DefaultField(plusElem(extendedPath, onProperty), value))
-                                                            )
-                                                            .ifPresent(defaultFields::add)
-                                            );
-                                });
+            for (Map<?, ?> prop : getAsList(termDefinition, "propertyChainAxiom")) {
+                var property = getLinkedValue(prop).map(jsonLd::toTermKey);
+                if (property.isPresent()) {
+                    if (branches.isEmpty()) {
+                        stem.add(property.get());
+                    } else {
+                        branches.add(new Path.Branch(List.of(property.get())));
                     }
-            );
+                    continue;
+                }
+
+                property = getAsOptionalList(prop, JsonLd.SUB_PROPERTY_OF)
+                        .map(List::getFirst)
+                        .flatMap(Disambiguate::getLinkedValue)
+                        .map(jsonLd::toTermKey);
+
+                if (property.isEmpty()) {
+                    throw new RuntimeException("Failed to expand chain axiom for property " + p);
+                }
+
+                stem.add(property.get());
+
+                for (Map<?, ?> r : getAsList(prop, JsonLd.RANGE)) {
+                    getLinkedValue(r).map(jsonLd::toTermKey)
+                            .filter(jsonLd.vocabIndex::containsKey)
+                            .map(SimpleQueryTree.VocabTerm::new)
+                            .map(cls -> new Path.Branch(List.of(RDF_TYPE), cls))
+                            .ifPresent(branches::add);
+
+                    for (Map<?, ?> sc : getAsList(r, "subClassOf")) {
+                        if ("Restriction".equals(sc.get(JsonLd.TYPE_KEY))) {
+                            var onProperty = getAsOptionalMap(sc, "onProperty")
+                                    .flatMap(Disambiguate::getLinkedValue)
+                                    .map(jsonLd::toTermKey)
+                                    .map(List::of);
+                            var hasValue = getAsOptionalMap(sc, "hasValue")
+                                    .flatMap(Disambiguate::getLinkedValue)
+                                    .map(v -> jsonLd.vocabIndex.containsKey(jsonLd.toTermKey(v))
+                                            ? new SimpleQueryTree.VocabTerm(v)
+                                            : new SimpleQueryTree.Link(v)
+                                    );
+                            if (onProperty.isPresent() && hasValue.isPresent()) {
+                                branches.add(new Path.Branch(onProperty.get(), hasValue.get()));
+                            }
+                        }
+                    }
+                }
+            }
+
+            newStem.addAll(stem);
+            path.branches = branches;
         }
 
-        return new PropertyChain(extendedPath, defaultFields);
+        path.stem = newStem;
     }
 
     private void setTypeSets(JsonLd jsonLd) {
@@ -221,9 +243,17 @@ public class Disambiguate {
                 addAllMappings(termDefinition, termKey, TermType.ENUM, whelk);
             }
 
-            if ("rdf:type".equals(termKey)) {
-                addMapping("@type", termKey, TermType.PROPERTY);
+            if (RDF_TYPE.equals(termKey)) {
+                addMapping(JsonLd.TYPE_KEY, termKey, TermType.PROPERTY);
                 addAllMappings(termDefinition, termKey, TermType.PROPERTY, whelk);
+            }
+        }
+
+        for (var m : ambiguousPropertyAliases.entrySet()) {
+            for (String prop : m.getValue()) {
+                if (getQueryCode(prop).filter(m.getKey().toUpperCase()::equals).isPresent()) {
+                    propertyAliasMappings.put(m.getKey(), prop);
+                }
             }
         }
     }
@@ -242,7 +272,7 @@ public class Disambiguate {
 
         getAsList(termDefinition, mappingProperty)
                 .forEach(ep -> {
-                            String equivPropId = getLinkedValue(ep).get();
+                        getLinkedValue(ep).ifPresent(equivPropId -> {
                             String equivPropKey = jsonLd.toTermKey(equivPropId);
 
                             if (!jsonLd.vocabIndex.containsKey(equivPropKey)) {
@@ -250,13 +280,13 @@ public class Disambiguate {
                                         (equivPropDef) ->
                                                 addMappings(equivPropDef, termKey, termType),
                                         () -> {
-                                            addMapping(equivPropId, termKey, termType);
-                                            addMapping(toPrefixed(equivPropId), termKey, termType);
+                                                addMapping(equivPropId, termKey, termType);
+                                                addMapping(toPrefixed(equivPropId), termKey, termType);
                                         }
                                 );
                             }
-                        }
-                );
+                        });
+                });
     }
 
     private Map<String, String> loadDomainByProperty(Whelk whelk) {
@@ -308,6 +338,11 @@ public class Disambiguate {
                 .forEach(superProp -> getDefinition(superProp, whelk).ifPresent(inheritable::add));
 
         return inheritable;
+    }
+
+    public Optional<String> getQueryCode(String property) {
+        return Optional.ofNullable((Map<?, ?>) jsonLd.vocabIndex.get(property))
+                .map(propDef -> (String) propDef.get("librisQueryCode"));
     }
 
     private Optional<String> getDomainIri(Map<?, ?> propertyDefinition) {
@@ -405,7 +440,7 @@ public class Disambiguate {
                 .anyMatch(this::isVocabTerm);
     }
 
-    private boolean isProperty(String termKey) {
+    public boolean isProperty(String termKey) {
         return Optional.ofNullable(jsonLd.vocabIndex.get(termKey))
                 .map(Disambiguate::isProperty)
                 .orElse(false);
@@ -443,6 +478,11 @@ public class Disambiguate {
         nsToPrefix.put("https://id.kb.se/term/sao/", "sao:");
         nsToPrefix.put("https://id.kb.se/marc/", "marc:");
         nsToPrefix.put("https://id.kb.se/term/saogf/", "saogf:");
+        nsToPrefix.put("https://id.kb.se/term/barn/", "barn:");
+        nsToPrefix.put("https://id.kb.se/term/barngf/", "barngf:");
+        nsToPrefix.put("https://libris.kb.se/library/", "sigel:");
+        nsToPrefix.put("https://id.kb.se/language/", "lang:");
+        nsToPrefix.put(Document.getBASE_URI().toString(), "libris:");
 
         for (String ns : nsToPrefix.keySet()) {
             if (iri.startsWith(ns)) {
@@ -466,6 +506,11 @@ public class Disambiguate {
         nsToPrefix.put("https://id.kb.se/term/sao/", "sao:");
         nsToPrefix.put("https://id.kb.se/marc/", "marc:");
         nsToPrefix.put("https://id.kb.se/term/saogf/", "saogf:");
+        nsToPrefix.put("https://id.kb.se/term/barn/", "barn:");
+        nsToPrefix.put("https://id.kb.se/term/barngf/", "barngf:");
+        nsToPrefix.put("https://libris.kb.se/library/", "sigel:");
+        nsToPrefix.put("https://id.kb.se/language/", "lang:");
+        nsToPrefix.put(Document.getBASE_URI().toString(), "libris:");
 
         for (String ns : nsToPrefix.keySet()) {
             String prefix = nsToPrefix.get(ns);

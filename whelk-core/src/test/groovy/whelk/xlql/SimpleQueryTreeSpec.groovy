@@ -56,7 +56,7 @@ class SimpleQueryTreeSpec extends Specification {
         expect:
         sqt.tree == new SimpleQueryTree.Or(
                 [
-                        new SimpleQueryTree.PropertyValue("originDate", ["originDate"] , Operator.LESS_THAN, "2023"),
+                        new SimpleQueryTree.PropertyValue("originDate", ["originDate"], Operator.LESS_THAN, "2023"),
                         new SimpleQueryTree.FreeText(Operator.EQUALS, "\"svarta hål\"")
                 ] as List<SimpleQueryTree.Node>
         )
@@ -142,5 +142,21 @@ class SimpleQueryTreeSpec extends Specification {
 
         expect:
         givenTypes == ["Electronic", "Print"] as Set
+    }
+
+    def "normalize free text"() {
+        given:
+        def input = "x y z \"a b c\" d label:l \"e:f\" not g h i"
+        def sqt = getTree(input)
+
+        expect:
+        sqt.tree == new SimpleQueryTree.And(
+                [
+                        new SimpleQueryTree.FreeText(Operator.EQUALS, "x y z \"a b c\" d \"e:f\" h i"),
+                        SimpleQueryTree.pvEqualsLiteral("label", "l"),
+                        new SimpleQueryTree.FreeText(Operator.NOT_EQUALS, "g"),
+
+                ] as List<SimpleQueryTree.Node>
+        )
     }
 }

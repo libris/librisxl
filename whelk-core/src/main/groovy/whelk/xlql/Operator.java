@@ -10,6 +10,8 @@ public enum Operator {
     LESS_THAN_OR_EQUALS("lessThanOrEquals"),
     LESS_THAN("lessThan");
 
+    public static final String WILDCARD = "*";
+
     public final String termKey;
 
     Operator(String termKey) {

@@ -18,10 +18,12 @@ class LegacyIntegrationTools {
     static final Map<String, String> MARC_COLLECTION_BY_CATEGORY = [
         'https://id.kb.se/marc/auth': 'auth',
         'https://id.kb.se/marc/bib': 'bib',
-        'https://id.kb.se/marc/hold': 'hold'
+        'https://id.kb.se/marc/hold': 'hold',
+        'https://id.kb.se/marc/none': NO_MARC_COLLECTION
     ]
-    
+
     static final String NO_MARC_COLLECTION = 'none'
+    static final String UNDEFINED_MARC_COLLECTION = 'undefined'
 
     // FIXME: de-KBV/Libris-ify
     static final String BASE_LIBRARY_URI = "https://libris.kb.se/library/"
@@ -48,18 +50,23 @@ class LegacyIntegrationTools {
     }
 
     static String getMarcCollectionInHierarchy(String type, JsonLd jsonld) {
+        String collection = _getMarcCollectionInHierarchy(type, jsonld)
+        return collection == UNDEFINED_MARC_COLLECTION ? NO_MARC_COLLECTION : collection
+    }
+
+    static String _getMarcCollectionInHierarchy(String type, JsonLd jsonld) {
         Map termMap = jsonld.vocabIndex[type]
         if (termMap == null)
-            return NO_MARC_COLLECTION
+            return UNDEFINED_MARC_COLLECTION
 
         String marcCategory = getMarcCollectionForTerm(termMap)
-        if (marcCategory != NO_MARC_COLLECTION) {
+        if (marcCategory != UNDEFINED_MARC_COLLECTION) {
             return marcCategory
         }
 
         List superClasses = (List) termMap["subClassOf"]
         if (superClasses == null) {
-            return NO_MARC_COLLECTION
+            return UNDEFINED_MARC_COLLECTION
         }
 
         for (superClass in superClasses) {
@@ -67,12 +74,12 @@ class LegacyIntegrationTools {
                 continue
             }
             String superClassType = jsonld.toTermKey( (String) superClass["@id"] )
-            String category = getMarcCollectionInHierarchy(superClassType, jsonld)
-            if ( category != NO_MARC_COLLECTION )
+            String category = _getMarcCollectionInHierarchy(superClassType, jsonld)
+            if ( category != UNDEFINED_MARC_COLLECTION )
                 return category
         }
 
-        return NO_MARC_COLLECTION
+        return UNDEFINED_MARC_COLLECTION
     }
 
     static String getMarcCollectionForTerm(Map termMap) {
@@ -87,7 +94,7 @@ class LegacyIntegrationTools {
                 return collection
             }
         }
-        return NO_MARC_COLLECTION
+        return UNDEFINED_MARC_COLLECTION
     }
 
     /**

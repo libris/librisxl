@@ -30,6 +30,7 @@ dependencies {
     // XL dependencies
     implementation(project(':whelk-core'))
     implementation(project(':server-common'))
+    implementation(project(':whelktool'))
 
     // Groovy
     implementation "org.codehaus.groovy:groovy:${groovyVersion}"
@@ -67,6 +68,7 @@ test.testLogging {
 }
 
 shadowJar {
+    mergeServiceFiles()
     archiveClassifier = null // removes `-all` in the filename of the created .jar
 }
 

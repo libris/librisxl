@@ -141,7 +141,6 @@ class Document {
     }
 
     void addImage(String imageUri) {
-
         // Make imagePath point to a list
         preparePath(imagePath)
         Object imageList = get(imagePath)
@@ -161,6 +160,8 @@ class Document {
 
     List getImages() {
         def images = get(imagePath)
+        if (images == null)
+            return Collections.emptyList()
         if (images instanceof List)
             return images
         return [images]
@@ -316,6 +317,10 @@ class Document {
         get(createdPath)
     }
 
+    Instant getCreatedTimestamp() {
+        ZonedDateTime.parse(getCreated(), DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant()
+    }
+
     void setModified(Date modified) {
         ZonedDateTime zdt = ZonedDateTime.ofInstant(modified.toInstant(), ZoneId.systemDefault())
         String formatedModified = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
@@ -365,7 +370,7 @@ class Document {
     }
 
     boolean isHolding(JsonLd jsonld) {
-        return ("hold" == getLegacyCollection(jsonld))
+        return "hold" == getLegacyCollection(jsonld) || jsonld.isSubClassOf(getThingType(), "Item")
     }
     
     String getLegacyCollection(JsonLd jsonld) {
@@ -928,26 +933,44 @@ class Document {
         return "{completeId=" + getCompleteId() + ", baseUri=" + baseUri.toString() + ", base identifiers:" + getRecordIdentifiers().join(',');
     }
 
+    // All these "virtual record" methods are hardcoded for blank Works
     Set<String> getVirtualRecordIds() {
         def work = get(["@graph", 1, "instanceOf"])
         return (!work || work !instanceof Map || JsonLd.isLink(work) || isSuppressedRecord())
             ? []
             : [ "${getShortId()}#work-record" ]
     }
-    
+
+    // All these "virtual record" methods are hardcoded for blank Works
     Document getVirtualRecord(String id) {
         if ("${getShortId()}#work-record" != id) {
             throw new IllegalArgumentException(id)
         }
-        
+
         Document doc = clone()
-        Map record = doc.get(["@graph", 0])
-        Map work = doc.get(["@graph", 1, "instanceOf"])
-        Map instance = doc.get(["@graph", 1])
+        doc.set(recordIdPath, get(recordIdPath) + "#work-record")
+        doc.get(recordPath).remove(JsonLd.JSONLD_ALT_ID_KEY)
+
+        return doc
+    }
+
+    // All these "virtual record" methods are hardcoded for blank Works
+    boolean isVirtual() {
+        return getRecordIdentifiers().first().endsWith("#work-record")
+    }
+
+    // All these "virtual record" methods are hardcoded for blank Works
+    void centerOnVirtualMainEntity() {
+        if (!isVirtual()) {
+            throw new IllegalStateException()
+        }
+
+        Map record = get(["@graph", 0])
+        Map work = get(["@graph", 1, "instanceOf"])
+        Map instance = get(["@graph", 1])
         def workId = instance["@id"].replace('#it', '') + "#work"
         
         record["mainEntity"]["@id"] = workId
-        record["@id"] = record["@id"] + "#work-record"
         // TODO
         // For now these will not be found by the search API since it has a boost on RECORD_TYPE and CACHE_RECORD_TYPE
         // This is what we want since VirtualRecords should not be visible in the cataloguing interface.
@@ -959,15 +982,13 @@ class Document {
         
         work["@id"] = workId
         work["@reverse"] = ["instanceOf": [instance]]
-        
+
         // TODO...
         if (!work['hasTitle']) {
             work['hasTitle'] = (instance['hasTitle'] ?: []).findAll{ it['@type'] == 'Title' || it['@type'] == 'KeyTitle' }
         }
 
-        doc.set(["@graph", 1], work)
-        
-        return doc
+        set(["@graph", 1], work)
     }
 
     private boolean isSuppressedRecord() {

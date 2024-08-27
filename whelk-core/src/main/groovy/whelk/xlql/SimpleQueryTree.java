@@ -10,8 +10,10 @@ import java.util.stream.Collectors;
 import static whelk.search.XLQLQuery.encodeUri;
 import static whelk.search.XLQLQuery.quoteIfPhraseOrContainsSpecialSymbol;
 
+import static whelk.xlql.Disambiguate.RDF_TYPE;
+
 public class SimpleQueryTree {
-    public sealed interface Node permits And, Or, PropertyValue, FreeText {
+    public sealed interface Node permits And, BoolFilter, FreeText, Or, PropertyValue {
     }
 
     public record And(List<Node> conjuncts) implements Node {
@@ -20,48 +22,175 @@ public class SimpleQueryTree {
     public record Or(List<Node> disjuncts) implements Node {
     }
 
-    public record PropertyValue(String property, List<String> propertyPath, Operator operator,
-                                String value) implements Node {
+    public record PropertyValue(String property, List<String> path, Operator operator,
+                                Value value) implements Node {
+        public PropertyValue toOrEquals() {
+            return switch (operator()) {
+                case GREATER_THAN ->
+                        new PropertyValue(property(), path(), Operator.GREATER_THAN_OR_EQUALS, value().increment());
+                case LESS_THAN ->
+                        new PropertyValue(property(), path(), Operator.LESS_THAN_OR_EQUALS, value().decrement());
+                default -> this;
+            };
+        }
+
+        public String asString(Disambiguate disambiguate) {
+            String sep = switch (operator()) {
+                case EQUALS, NOT_EQUALS -> ":";
+                case GREATER_THAN_OR_EQUALS -> ">=";
+                case GREATER_THAN -> ">";
+                case LESS_THAN_OR_EQUALS -> "<=";
+                case LESS_THAN -> "<";
+            };
+
+            String not = operator() == Operator.NOT_EQUALS ? "NOT " : "";
+            String path = String.join(".", path());
+            String value = value().string();
+
+            if (value() instanceof Link) {
+                value = Disambiguate.toPrefixed(value);
+            }
+
+            if (path().size() == 1) {
+                path = disambiguate.getQueryCode(property()).orElse(path);
+            }
+
+            return not + quoteIfPhraseOrContainsSpecialSymbol(path) + sep + quoteIfPhraseOrContainsSpecialSymbol(value);
+        }
     }
 
     public record FreeText(Operator operator, String value) implements Node {
+        public String asString() {
+            String s = value();
+            if (operator() == Operator.NOT_EQUALS) {
+                s = "NOT " + s;
+            }
+            return s;
+        }
+    }
+
+    public record BoolFilter(String alias, FilterStatus status, Node filter) implements Node {
+        public String asString() {
+            return isActive()
+                    ? alias()
+                    : "NOT " + alias();
+        }
+
+        public Set<String> getConcernedAliases() {
+            var aliases = new HashSet<>(Set.of(alias()));
+            if (filter() instanceof BoolFilter) {
+                aliases.addAll(((BoolFilter) filter()).getConcernedAliases());
+            }
+            return aliases;
+        }
+
+        public boolean isActive() {
+            return switch (status()) {
+                case ACTIVE -> true;
+                case INACTIVE -> false;
+            };
+        }
+    }
+
+    private enum FilterStatus {
+        ACTIVE,
+        INACTIVE
+    }
+
+    public sealed interface Value permits Link, Literal, VocabTerm {
+        String string();
+
+        default boolean isNumeric() {
+            return false;
+        }
+
+        default Value increment() {
+            return this;
+        }
+
+        default Value decrement() {
+            return this;
+        }
+    }
+
+    public record Literal(String string) implements Value {
+        public boolean isNumeric() {
+            return string().matches("\\d+");
+        }
+
+        public Literal increment() {
+            return isNumeric() ? new Literal(Integer.toString(Integer.parseInt(string()) + 1)) : this;
+        }
+
+        public Literal decrement() {
+            return isNumeric() ? new Literal(Integer.toString(Integer.parseInt(string()) - 1)) : this;
+        }
+    }
+
+    public record Link(String string) implements Value {
+    }
+
+    public record VocabTerm(String string) implements Value {
     }
 
     public Node tree;
 
-    private List<PropertyValue> topPvNodes;
-
     private String freeTextPart;
 
     public SimpleQueryTree(FlattenedAst ast, Disambiguate disambiguate) throws InvalidQueryException {
-        this.tree = buildTree(ast.tree, disambiguate);
+        this(ast, disambiguate, Collections.emptyMap());
     }
 
-    public SimpleQueryTree(SimpleQueryTree.Node tree) {
+    public SimpleQueryTree(FlattenedAst ast, Disambiguate disambiguate, Map<String, Node> aliasedFilters) throws InvalidQueryException {
+        this.tree = buildTree(ast.tree, disambiguate, aliasedFilters);
+        normalizeFreeText();
+        removeNeedlessWildcard();
+    }
+
+    public SimpleQueryTree(Node tree) {
         this.tree = tree;
+        removeNeedlessWildcard();
     }
 
-    private static Node buildTree(FlattenedAst.Node ast, Disambiguate disambiguate) throws InvalidQueryException {
+    private static Node buildTree(FlattenedAst.Node ast, Disambiguate disambiguate, Map<String, Node> aliasedFilters) throws InvalidQueryException {
         switch (ast) {
             case FlattenedAst.And and -> {
                 List<Node> conjuncts = new ArrayList<>();
                 for (FlattenedAst.Node o : and.operands()) {
-                    conjuncts.add(buildTree(o, disambiguate));
+                    var c = buildTree(o, disambiguate, aliasedFilters);
+                    if (c != null) {
+                        conjuncts.add(c);
+                    }
                 }
-                return new And(conjuncts);
+                return switch (conjuncts.size()) {
+                    case 0 -> null;
+                    case 1 -> conjuncts.getFirst();
+                    default -> new And(conjuncts);
+                };
             }
             case FlattenedAst.Or or -> {
                 List<Node> disjuncts = new ArrayList<>();
                 for (FlattenedAst.Node o : or.operands()) {
-                    disjuncts.add(buildTree(o, disambiguate));
+                    var d = buildTree(o, disambiguate, aliasedFilters);
+                    if (d != null) {
+                        disjuncts.add(d);
+                    }
                 }
-                return new Or(disjuncts);
+                return switch (disjuncts.size()) {
+                    case 0 -> null;
+                    case 1 -> disjuncts.getFirst();
+                    default -> new Or(disjuncts);
+                };
             }
             case FlattenedAst.Not not -> {
-                return new FreeText(Operator.NOT_EQUALS, not.value());
+                return aliasedFilters.containsKey(not.value())
+                        ? new BoolFilter(not.value(), FilterStatus.INACTIVE, aliasedFilters.get(not.value()))
+                        : new FreeText(Operator.NOT_EQUALS, not.value());
             }
             case FlattenedAst.Leaf l -> {
-                return new FreeText(Operator.EQUALS, l.value());
+                return aliasedFilters.containsKey(l.value())
+                        ? new BoolFilter(l.value(), FilterStatus.ACTIVE, aliasedFilters.get(l.value()))
+                        : new FreeText(Operator.EQUALS, l.value());
             }
             case FlattenedAst.Code c -> {
                 String property = null;
@@ -80,17 +209,19 @@ public class SimpleQueryTree {
                     }
                 }
 
-                if ("rdf:type".equals(property)) {
+                Value v;
+
+                if (disambiguate.isType(property)) {
                     Optional<String> mappedType = disambiguate.mapToKbvClass(value);
                     if (mappedType.isPresent()) {
-                        value = mappedType.get();
+                        v = new VocabTerm(mappedType.get());
                     } else {
                         throw new InvalidQueryException("Unrecognized type: " + value);
                     }
                 } else if (disambiguate.isVocabTerm(property)) {
                     Optional<String> mappedEnum = disambiguate.mapToEnum(value);
                     if (mappedEnum.isPresent()) {
-                        value = mappedEnum.get();
+                        v = new VocabTerm(mappedEnum.get());
                     } else {
                         throw new InvalidQueryException("Invalid value " + value + " for property " + property);
                     }
@@ -98,18 +229,80 @@ public class SimpleQueryTree {
                 // Expand and encode URIs, e.g. sao:Hästar -> https://id.kb.se/term/sao/H%C3%A4star
                 else if (disambiguate.isObjectProperty(property)) {
                     String expanded = Disambiguate.expandPrefixed(value);
-                    if (JsonLd.looksLikeIri(expanded)) {
-                        value = encodeUri(expanded);
-                    }
+                    v = JsonLd.looksLikeIri(expanded) ? new Link(encodeUri(expanded)) : new Literal(value);
+                } else {
+                    v = new Literal(value);
                 }
 
-                return new PropertyValue(property, propertyPath, c.operator(), value);
+                return new PropertyValue(property, propertyPath, c.operator(), v);
             }
         }
     }
 
+    private void normalizeFreeText() {
+        this.tree = normalizeFreeText(tree);
+    }
+
+    private static Node normalizeFreeText(Node node) {
+        return switch (node) {
+            case And and -> {
+                List<Node> conjuncts = new ArrayList<>();
+                List<String> ftStrings = new ArrayList<>();
+                for (Node n : and.conjuncts()) {
+                    if (isFreeText(n)) {
+                        ftStrings.add(quoteIfPhraseOrContainsSpecialSymbol(((FreeText) n).value()));
+                    } else {
+                        conjuncts.add(normalizeFreeText(n));
+                    }
+                }
+                if (!ftStrings.isEmpty()) {
+                    conjuncts.addFirst(new FreeText(Operator.EQUALS, String.join(" ", ftStrings)));
+                }
+                yield conjuncts.size() > 1 ? new And(conjuncts) : conjuncts.getFirst();
+            }
+            case Or or -> {
+                List<Node> disjuncts = or.disjuncts()
+                        .stream()
+                        .map(SimpleQueryTree::normalizeFreeText)
+                        .toList();
+                yield new Or(disjuncts);
+            }
+            case FreeText ft -> new FreeText(ft.operator(), quoteIfPhraseOrContainsSpecialSymbol(ft.value()));
+            case null, default -> node;
+        };
+    }
+
+    public SimpleQueryTree expandActiveBoolFilters() {
+        return new SimpleQueryTree(expandActiveBoolFilters(tree));
+    }
+
+    private static Node expandActiveBoolFilters(Node node) {
+        return switch (node) {
+            case And and -> {
+                var conjuncts = and.conjuncts()
+                        .stream()
+                        .map(SimpleQueryTree::expandActiveBoolFilters)
+                        .filter(Objects::nonNull)
+                        .toList();
+                yield switch (conjuncts.size()) {
+                    case 0 -> null;
+                    case 1 -> conjuncts.getFirst();
+                    default -> new And(conjuncts);
+                };
+            }
+            case BoolFilter bf -> switch (bf.status()) {
+                case INACTIVE -> null;
+                case ACTIVE -> bf.filter() instanceof BoolFilter
+                        ? expandActiveBoolFilters(bf.filter())
+                        : bf.filter();
+            };
+            default -> node;
+        };
+    }
+
     public SimpleQueryTree andExtend(Node node) {
         var conjuncts = switch (tree) {
+            case null -> List.of(node);
             case And and -> {
                 var copy = new ArrayList<>(and.conjuncts());
                 if (!copy.contains(node)) {
@@ -131,14 +324,14 @@ public class SimpleQueryTree {
         if (nodeToExclude.equals(tree)) {
             return null;
         }
-        switch (tree) {
+        return switch (tree) {
             case And and -> {
                 List<Node> andClause = and.conjuncts()
                         .stream()
                         .map(c -> excludeFromTree(nodeToExclude, c))
                         .filter(Objects::nonNull)
                         .toList();
-                return andClause.size() > 1 ? new And(andClause) : andClause.getFirst();
+                yield andClause.size() > 1 ? new And(andClause) : andClause.getFirst();
             }
             case Or or -> {
                 List<Node> orClause = or.disjuncts()
@@ -146,31 +339,86 @@ public class SimpleQueryTree {
                         .map(d -> excludeFromTree(nodeToExclude, d))
                         .filter(Objects::nonNull)
                         .toList();
-                return orClause.size() > 1 ? new Or(orClause) : orClause.getFirst();
+                yield orClause.size() > 1 ? new Or(orClause) : orClause.getFirst();
             }
-            case FreeText ignored -> {
-                return tree;
-            }
-            case PropertyValue ignored -> {
-                return tree;
-            }
+            default -> tree;
+        };
+    }
+
+    public SimpleQueryTree removeTopLevelNode(Node node) {
+        return removeTopLevelNodes(List.of(node));
+    }
+
+    public SimpleQueryTree removeTopLevelNodes(Collection<Node> nodes) {
+        if (nodes.isEmpty()) {
+            return this;
         }
+
+        var newTree = switch (tree) {
+            case And and -> {
+                var conjuncts = and.conjuncts()
+                        .stream()
+                        .filter(Predicate.not(nodes::contains))
+                        .toList();
+                yield switch (conjuncts.size()) {
+                    case 0 -> null;
+                    case 1 -> conjuncts.getFirst();
+                    default -> new And(conjuncts);
+                };
+            }
+            default -> nodes.contains(tree) ? null : tree;
+        };
+
+        return new SimpleQueryTree(newTree);
+    }
+
+    public SimpleQueryTree removeTopLevelPvRangeNodes(String property) {
+        var rangeOps = Set.of(Operator.GREATER_THAN_OR_EQUALS, Operator.GREATER_THAN, Operator.LESS_THAN, Operator.LESS_THAN_OR_EQUALS);
+        return new SimpleQueryTree(removeTopLevelPvNodesByOperator(property, tree, rangeOps));
+    }
+
+    public SimpleQueryTree removeTopLevelPvNodesByOperator(String property) {
+        return new SimpleQueryTree(removeTopLevelPvNodesByOperator(property, tree, Collections.emptySet()));
+    }
+
+    private static Node removeTopLevelPvNodesByOperator(String property, Node tree, Set<Operator> operators) {
+        Predicate<Node> p = (node -> node instanceof PropertyValue
+                && ((PropertyValue) node).property().equals(property)
+                && (operators.isEmpty() || operators.contains(((PropertyValue) node).operator())));
+
+        return switch (tree) {
+            case null -> null;
+            case And and -> {
+                List<Node> conjuncts = and.conjuncts()
+                        .stream()
+                        .filter(Predicate.not(p))
+                        .collect(Collectors.toList());
+                if (conjuncts.isEmpty()) {
+                    yield null;
+                } else if (conjuncts.size() == 1) {
+                    yield conjuncts.getFirst();
+                } else {
+                    yield new And(conjuncts);
+                }
+            }
+            default -> p.test(tree) ? null : tree;
+        };
     }
 
     public Set<String> collectGivenTypes() {
         return collectGivenTypes(tree, new HashSet<>());
     }
 
-    private static Set<String> collectGivenTypes(SimpleQueryTree.Node sqtNode, Set<String> types) {
+    private static Set<String> collectGivenTypes(Node sqtNode, Set<String> types) {
         switch (sqtNode) {
             case And and -> and.conjuncts().forEach(c -> collectGivenTypes(c, types));
             case Or or -> or.disjuncts().forEach(d -> collectGivenTypes(d, types));
             case PropertyValue pv -> {
-                if (List.of("rdf:type").equals(pv.propertyPath())) {
-                    types.add(pv.value());
+                if (List.of(RDF_TYPE).equals(pv.path())) {
+                    types.add(pv.value().string());
                 }
             }
-            case FreeText ignored -> {
+            default -> {
                 // Nothing to do here
             }
         }
@@ -183,28 +431,68 @@ public class SimpleQueryTree {
     }
 
     public boolean isFreeText() {
-        return tree instanceof FreeText && ((FreeText) tree).operator().equals(Operator.EQUALS);
+        return isFreeText(tree);
     }
 
-    public List<PropertyValue> getTopLevelPvNodes() {
-        if (topPvNodes == null) {
-            topPvNodes = switch (this.tree) {
-                case And and -> and.conjuncts()
-                        .stream()
-                        .filter(node -> node instanceof PropertyValue)
-                        .map(PropertyValue.class::cast)
-                        .toList();
-                case Or ignored -> Collections.emptyList(); //TODO
-                case PropertyValue pv -> List.of(pv);
-                case FreeText ignored -> Collections.emptyList();
-            };
+    private static boolean isFreeText(Node node) {
+        return node instanceof FreeText && ((FreeText) node).operator().equals(Operator.EQUALS);
+    }
+
+    public Set<String> getBoolFilterAliases() {
+        return getBoolFiltersByAlias().keySet();
+    }
+
+    public Map<String, BoolFilter> getBoolFiltersByAlias() {
+        Map<String, BoolFilter> bfByAlias = new HashMap<>();
+
+        switch (tree) {
+            case And and -> and.conjuncts().forEach(node -> {
+                if (node instanceof BoolFilter n) {
+                    bfByAlias.put(n.alias(), n);
+                }
+            });
+            case BoolFilter bf -> bfByAlias.put(bf.alias(), bf);
+            case null, default -> {
+            }
         }
 
-        return topPvNodes;
+        return bfByAlias;
     }
 
-    public static PropertyValue pvEquals(String property, String value) {
-        return new PropertyValue(property, List.of(property), Operator.EQUALS, value);
+    public Set<BoolFilter> getTopLevelBfNodes() {
+        return getTopLevelNodes().stream()
+                .filter(n -> n instanceof BoolFilter)
+                .map(BoolFilter.class::cast)
+                .collect(Collectors.toSet());
+    }
+
+
+    public List<PropertyValue> getTopLevelPvNodes() {
+        return getTopLevelNodes().stream()
+                .filter(n -> n instanceof PropertyValue)
+                .map(PropertyValue.class::cast)
+                .toList();
+    }
+
+    public Set<Node> getTopLevelNodes() {
+        return switch (tree) {
+            case And and -> new HashSet<>(and.conjuncts());
+            case PropertyValue pv -> Set.of(pv);
+            case BoolFilter bf -> Set.of(bf);
+            case null, default -> Collections.emptySet();
+        };
+    }
+
+    public static PropertyValue pvEqualsLiteral(String property, String value) {
+        return new PropertyValue(property, List.of(property), Operator.EQUALS, new Literal(value));
+    }
+
+    public static PropertyValue pvEqualsLink(String property, String uri) {
+        return new PropertyValue(property, List.of(property), Operator.EQUALS, new Link(uri));
+    }
+
+    public static PropertyValue pvEqualsVocabTerm(String property, String value) {
+        return new PropertyValue(property, List.of(property), Operator.EQUALS, new VocabTerm(value));
     }
 
     public String getFreeTextPart() {
@@ -228,73 +516,40 @@ public class SimpleQueryTree {
         return freeTextPart;
     }
 
-    public String toQueryString() {
-        return buildQueryString(tree, true);
+    private void resetFreeTextPart() {
+        this.freeTextPart = null;
     }
 
-    private String buildQueryString(Node node, boolean topLevel) {
-        switch (node) {
+    public String toQueryString(Disambiguate disambiguate) {
+        return isEmpty() ? "*" : buildQueryString(tree, disambiguate, true);
+    }
+
+    private String buildQueryString(Node node, Disambiguate disambiguate, boolean topLevel) {
+        return switch (node) {
             case And and -> {
                 String andClause = and.conjuncts()
                         .stream()
-                        .map(this::buildQueryString)
+                        .map(n -> buildQueryString(n, disambiguate, false))
                         .collect(Collectors.joining(" "));
-                return topLevel ? andClause : "(" + andClause + ")";
+                yield topLevel ? andClause : "(" + andClause + ")";
             }
             case Or or -> {
                 String orClause = or.disjuncts()
                         .stream()
-                        .map(this::buildQueryString)
+                        .map(n -> buildQueryString(n, disambiguate, false))
                         .collect(Collectors.joining(" OR "));
-                return topLevel ? orClause : "(" + orClause + ")";
+                yield topLevel ? orClause : "(" + orClause + ")";
             }
-            case FreeText ft -> {
-                return freeTextToString(ft);
-            }
-            case PropertyValue pv -> {
-                return propertyValueToString(pv);
-            }
-        }
-    }
-
-    private String buildQueryString(Node node) {
-        return buildQueryString(node, false);
-    }
-
-    private String freeTextToString(FreeText ft) {
-        String s = ft.value();
-        if (ft.operator() == Operator.NOT_EQUALS) {
-            s = "NOT " + s;
-        }
-        return s;
-    }
-
-    private String propertyValueToString(PropertyValue pv) {
-        String sep = switch (pv.operator()) {
-            case EQUALS, NOT_EQUALS -> ":";
-            case GREATER_THAN_OR_EQUALS -> ">=";
-            case GREATER_THAN -> ">";
-            case LESS_THAN_OR_EQUALS -> "<=";
-            case LESS_THAN -> "<";
+            case FreeText ft -> ft.asString();
+            case PropertyValue pv -> pv.asString(disambiguate);
+            case BoolFilter bf -> bf.asString();
         };
-
-        String not = pv.operator() == Operator.NOT_EQUALS ? "NOT " : "";
-        String path = String.join(".", pv.propertyPath());
-
-        return not + quoteIfPhraseOrContainsSpecialSymbol(path) + sep + quoteIfPhraseOrContainsSpecialSymbol(pv.value());
     }
 
-    public void replaceTopLevelFreeText(String replacement) {
-        if (isFreeText()) {
-            this.tree = new FreeText(Operator.EQUALS, replacement);
-        } else if (tree instanceof And) {
-            List<Node> newConjuncts = ((And) tree).conjuncts().stream()
-                    .filter(Predicate.not(c -> c instanceof FreeText && ((FreeText) c).operator().equals(Operator.EQUALS)))
-                    .collect(Collectors.toList());
-            if (!replacement.isEmpty()) {
-                newConjuncts.addFirst(new FreeText(Operator.EQUALS, replacement));
-            }
-            this.tree = newConjuncts.size() == 1 ? newConjuncts.getFirst() : new And(newConjuncts);
+    private void removeNeedlessWildcard() {
+        if (!isFreeText() && Operator.WILDCARD.equals(getFreeTextPart())) {
+            this.tree = excludeFromTree(new FreeText(Operator.EQUALS, Operator.WILDCARD), tree);
+            resetFreeTextPart();
         }
     }
 }

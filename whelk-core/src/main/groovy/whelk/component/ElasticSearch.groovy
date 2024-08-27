@@ -16,6 +16,7 @@ import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.function.Function
 
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
 import static whelk.JsonLd.asList
@@ -37,10 +38,6 @@ class ElasticSearch {
             'http://id.kb.se/',
             'https://id.kb.se/',
     ]
-    
-    // TODO: temporary feature flag, to be removed
-    // this feature only works after a full reindex has been done, so we have to detect that
-    public boolean ENABLE_SMUSH_LANG_TAGGED_PROPS = false 
 
     public int maxResultWindow = 10000 // Elasticsearch default (fallback value)
     public int maxTermsCount = 65536 // Elasticsearch default (fallback value)
@@ -237,7 +234,31 @@ class ElasticSearch {
             if (bulkString) {
                 String response = bulkClient.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE)
                 Map responseMap = mapper.readValue(response, Map)
-                log.info("Bulk indexed ${docs.count{it}} docs in ${responseMap.took} ms")
+                int numFailedDueToDocError = 0
+                int numFailedDueToESError = 0
+                if (responseMap.errors) {
+                    responseMap.items?.each { item ->
+                        if (item.index?.error) {
+                            log.error("Failed indexing document: ${item.index}")
+                            if (item.index.status >= 500) {
+                                numFailedDueToESError++
+                            } else {
+                                numFailedDueToDocError++
+                            }
+                        }
+                    }
+                }
+                int docsCount = docs.count{it}
+                int numFailed = numFailedDueToDocError + numFailedDueToESError
+                if (numFailed) {
+                    log.warn("Tried bulk indexing ${docsCount} docs: ${docsCount - numFailed} succeeded, ${numFailed} failed " +
+                            "(${numFailedDueToDocError} due to document error, ${numFailedDueToESError} due to ES error). Took ${responseMap.took} ms")
+                    if (numFailedDueToESError) {
+                        throw new UnexpectedHttpStatusException("Failed indexing documents due to ES error", 500)
+                    }
+                } else {
+                    log.info("Bulk indexed ${docsCount} docs in ${responseMap.took} ms")
+                }
             } else {
                 log.warn("Refused bulk indexing ${docs.count{it}} docs because body was empty")
             }
@@ -288,19 +309,24 @@ class ElasticSearch {
         }
     }
 
-    void incrementReverseLinks(String shortId) {
-        updateReverseLinkCounter(shortId, 1)
+    void incrementReverseLinks(String shortId, String relation) {
+        updateReverseLinkCounter(shortId, relation, 1)
     }
 
-    void decrementReverseLinks(String shortId) {
-        updateReverseLinkCounter(shortId, -1)
+    void decrementReverseLinks(String shortId, String relation) {
+        updateReverseLinkCounter(shortId, relation, -1)
     }
 
-    private void updateReverseLinkCounter(String shortId, int deltaCount) {
+    private void updateReverseLinkCounter(String shortId, String relation, int deltaCount) {
+        // An indexed document will always have reverseLinks.totalItems set to an integer,
+        // and reverseLinks.totalItemsByRelation set to a map, but reverseLinks.totalItemsByRelation['foo']
+        // doesn't necessarily exist at this time; hence the null check before trying to update the link counter.
+        // The outer "if (ctx._source.reverseLinks.totalItemsByRelation) {}" can be removed once we've
+        // reindexed once; it's just there so as to not break things too much before that.
         String body = """
         {
             "script" : {
-                "source": "ctx._source.reverseLinks.totalItems += $deltaCount",
+                "source": "ctx._source.reverseLinks.totalItems += $deltaCount; if (ctx._source.reverseLinks.totalItemsByRelation != null) { if (ctx._source.reverseLinks.totalItemsByRelation['$relation'] == null) { if ($deltaCount > 0) { ctx._source.reverseLinks.totalItemsByRelation['$relation'] = $deltaCount; } } else { ctx._source.reverseLinks.totalItemsByRelation['$relation'] += $deltaCount; } }",
                 "lang": "painless"
             }
         }
@@ -323,7 +349,7 @@ class ElasticSearch {
             }
             else {
                 log.warn("Failed to update reverse link counter ($deltaCount) for $shortId: $e, placing in retry queue.", e)
-                indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, deltaCount) })
+                indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, relation, deltaCount) })
             }
         }
     }
@@ -379,7 +405,7 @@ class ElasticSearch {
 
         setComputedProperties(copy, links, whelk)
         copy.setThingMeta(document.getCompleteId())
-        List<String> thingIds = document.getThingIdentifiers()
+        List<String> thingIds = copy.getThingIdentifiers()
         if (thingIds.isEmpty()) {
             log.warn("Missing mainEntity? In: " + document.getCompleteId())
             return copy.data
@@ -402,7 +428,7 @@ class ElasticSearch {
             // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" } }
             // -->
             // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" }, "__foo": ["FOO", "EN", "SV"] }
-            if (ENABLE_SMUSH_LANG_TAGGED_PROPS && value instanceof Map) {
+            if (value instanceof Map) {
                 var flattened = [:]
                 value.each { k, v ->
                     if (k in whelk.jsonld.langContainerAlias) {
@@ -476,27 +502,50 @@ class ElasticSearch {
     }
 
     private static void setComputedProperties(Document doc, Set<String> links, Whelk whelk) {
-        getOtherIsbns(doc.getIsbnValues())
-                .each { doc.addTypedThingIdentifier('ISBN', it) }
+        DocumentUtil.findKey(doc.data, ["identifiedBy", "indirectlyIdentifiedBy"]) { value, path ->
+            if (value !instanceof Collection) {
+                return
+            }
 
-        getOtherIsbns(doc.getIsbnHiddenValues())
-                .each { doc.addIndirectTypedThingIdentifier('ISBN', it) }
+            var ids = (Collection<Map>) value
+            addIdentifierForms(ids, 'ISBN', this::getOtherIsbns)
+            addIdentifierForms(ids, 'ISNI', this::getFormattedIsnis)
+            addIdentifierForms(ids, 'ORCID', this::getFormattedIsnis) // ORCID is a subset of ISNI, same format
 
-        getFormattedIsnis(doc.getIsniValues())
-                .each { doc.addTypedThingIdentifier('ISNI', it) }
+            return DocumentUtil.NOP
+        }
 
-        getFormattedIsnis(doc.getOrcidValues()) // ORCID is a subset of ISNI, same format
-                .each { doc.addTypedThingIdentifier('ORCID', it) }
-        
+        if (doc.isVirtual()) {
+            doc.centerOnVirtualMainEntity()
+        }
+
         doc.data['@graph'][1]['_links'] = links
         doc.data['@graph'][1]['_outerEmbellishments'] = doc.getEmbellishments() - links
 
+        Map<String, Long> incomingLinkCountByRelation = whelk.getStorage().getIncomingLinkCountByIdAndRelation(stripHash(doc.getShortId()))
         doc.data['@graph'][1]['reverseLinks'] = [
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',
-                'totalItems' : whelk.getStorage().getIncomingLinkCount(doc.getShortId())]
+                'totalItems': incomingLinkCountByRelation.values().sum(0),
+                'totalItemsByRelation': incomingLinkCountByRelation,
+        ]
     }
 
-    private static Collection<String> getOtherIsbns(List<String> isbns) {
+    private static String stripHash(String s) {
+        s.contains('#') ?s .substring(0, s.indexOf('#')) : s
+    }
+
+    private static void addIdentifierForms(
+            Collection<Map> ids,
+            String type,
+            Closure<Collection<String>> transform)
+    {
+        var values = ids
+                .findAll { (it instanceof Map && it[JsonLd.TYPE_KEY] == type) }
+                .findResults{ it['value'] }
+        ids.addAll(transform(values).collect{ [(JsonLd.TYPE_KEY): type, value: it] })
+    }
+
+    private static Collection<String> getOtherIsbns(Collection<String> isbns) {
         isbns.findResults { getOtherIsbnForm(it) }
                 .findAll { !isbns.contains(it) }
     }
@@ -600,6 +649,10 @@ class ElasticSearch {
             results.totalHits = responseMap.hits.total.value
             results.items = responseMap.hits.hits.collect(hitCollector)
             results.aggregations = responseMap.aggregations
+            // Spell checking
+            if (responseMap.suggest?.simple_phrase) {
+                results.spell = responseMap.suggest.simple_phrase[0].options
+            }
             return results
         }
         catch (Exception e) {

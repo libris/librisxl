@@ -52,8 +52,10 @@ public class ImageLinker extends HouseKeeper {
     }
 
     public void scanForNewInstances() {
+        logger.debug("Scanning for new instances");
+
         Timestamp linkNewInstancesSince = Timestamp.from(Instant.now().minus(2, ChronoUnit.DAYS));
-        Map linkerState = whelk.getStorage().getState(getName());
+        Map linkerState = whelk.getStorage().getState(INSTANCES_STATE_KEY);
         if (linkerState != null && linkerState.containsKey(INSTANCES_STATE_KEY))
             linkNewInstancesSince = Timestamp.from( ZonedDateTime.parse( (String) linkerState.get(INSTANCES_STATE_KEY), DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant() );
         Instant linkedNewInstancesUpTo = linkNewInstancesSince.toInstant();
@@ -115,14 +117,15 @@ public class ImageLinker extends HouseKeeper {
         if (linkedNewInstancesUpTo.isAfter(linkNewInstancesSince.toInstant())) {
             Map<String, String> newState = new HashMap<>();
             newState.put(INSTANCES_STATE_KEY, linkedNewInstancesUpTo.atOffset(ZoneOffset.UTC).toString());
-            whelk.getStorage().putState(getName(), newState);
+            whelk.getStorage().putState(INSTANCES_STATE_KEY, newState);
         }
     }
 
     public void scanForNewImages() {
+        logger.debug("Scanning for new images");
 
         Timestamp linkNewImagesSince = Timestamp.from(Instant.now().minus(2, ChronoUnit.DAYS));
-        Map linkerState = whelk.getStorage().getState(getName());
+        Map linkerState = whelk.getStorage().getState(IMAGES_STATE_KEY);
         if (linkerState != null && linkerState.containsKey(IMAGES_STATE_KEY))
             linkNewImagesSince = Timestamp.from( ZonedDateTime.parse( (String) linkerState.get(IMAGES_STATE_KEY), DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant() );
         Instant linkedNewImagesUpTo = linkNewImagesSince.toInstant();
@@ -197,7 +200,7 @@ public class ImageLinker extends HouseKeeper {
         if (linkedNewImagesUpTo.isAfter(linkNewImagesSince.toInstant())) {
             Map<String, String> newState = new HashMap<>();
             newState.put(IMAGES_STATE_KEY, linkedNewImagesUpTo.atOffset(ZoneOffset.UTC).toString());
-            whelk.getStorage().putState(getName(), newState);
+            whelk.getStorage().putState(IMAGES_STATE_KEY, newState);
         }
     }
 
@@ -272,10 +275,23 @@ public class ImageLinker extends HouseKeeper {
     }
 
     private void linkImage(String instanceUri, String imageUri) {
+        logger.debug("Trying to link {} to image {}", instanceUri, imageUri);
+
         if (instanceUri.startsWith("/")) // A relative URI
             instanceUri = Document.getBASE_URI().resolve(instanceUri).toString();
 
-        String instanceId = whelk.getStorage().getSystemIdByIri(instanceUri);
+        Document tempDoc = whelk.getStorage().getDocumentByIri(instanceUri);
+        if (tempDoc == null) {
+            return;
+        }
+        String instanceId = tempDoc.getShortId();
+        List<Map<String, String>> imageList = tempDoc.getImages();
+        for (Map<String, String> image : imageList) {
+            if (image.containsValue(imageUri)) {
+                logger.info("{} already contains image {}; not linking", instanceId, imageUri);
+                return;
+            }
+        }
 
         if (instanceId != null) {
             whelk.storeAtomicUpdate(instanceId, true, false, "ImageLinker", "SEK",

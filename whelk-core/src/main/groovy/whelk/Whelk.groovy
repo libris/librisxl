@@ -347,8 +347,12 @@ class Whelk {
         Set<Link> addedLinks = (postUpdateLinks - preUpdateLinks)
         Set<Link> removedLinks = (preUpdateLinks - postUpdateLinks)
 
-        removedLinks.findResults { storage.getSystemIdByIri(it.iri) }
-                .each { id -> elastic.decrementReverseLinks(id) }
+        removedLinks.each { link ->
+            String id = storage.getSystemIdByIri(link.iri)
+            if (id) {
+                elastic.decrementReverseLinks(id, link.relation)
+            }
+        }
 
         addedLinks.each { link ->
             String id = storage.getSystemIdByIri(link.iri)
@@ -361,7 +365,7 @@ class Whelk {
                     elastic.index(doc, this)
                 } else {
                     // just update link counter
-                    elastic.incrementReverseLinks(id)
+                    elastic.incrementReverseLinks(id, link.relation)
                 }
             }
         }
@@ -419,8 +423,8 @@ class Whelk {
 
                     // We currently are not allowed to enforce typed identifier uniqueness. :(
                     // We can warn at least.
-                    log.warn("While testing " + document.getShortId() + " for collisions: Ignoring typed ID collision with : "
-                            + collisions + " on " + type + "," + graphIndex + "," + value + " for political reasons.")
+                    log.info("While testing " + document.getShortId() + " for collisions: Ignoring typed ID collision with : "
+                            + collisions + " on " + type + "," + graphIndex + "," + value)
                 }
             }
         }
@@ -505,6 +509,14 @@ class Whelk {
      */
     boolean quickCreateDocument(Document document, String changedIn, String changedBy, String collection) {
         return storage.quickCreateDocument(document, changedIn, changedBy, collection)
+    }
+
+    /**
+     * Like quickCreateDocument but for adding historical document versions. NOT to be used in production
+     * environments; for development purposes only.
+     */
+    boolean quickCreateDocumentVersion(Document document, Date createdTime, Date modTime, String changedIn, String changedBy, String collection) {
+        return storage.quickCreateDocumentVersion(document, createdTime, modTime, changedIn, changedBy, collection)
     }
 
     void remove(String id, String changedIn, String changedBy, boolean force = false) {
