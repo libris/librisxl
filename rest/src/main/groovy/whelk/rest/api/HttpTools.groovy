@@ -28,8 +28,19 @@ class HttpTools {
     }
 
     static void sendResponse(HttpServletResponse response, byte[] data, String contentType, int statusCode = 200) {
-        response.setHeader('Cache-Control', 'no-cache')
-        response.setStatus(statusCode)
+        try {
+            response.setHeader('Cache-Control', 'no-cache')
+            response.setStatus(statusCode)
+        } catch (Exception e) {
+            // Ignore. When an error occurs, after a response has already started sending, setting these
+            // results in an UnsupportedOperationException, which is not ideal. Just letting this go results
+            // In large log files filled with callstacks. We can't (really) remedy the problem, because doing so
+            // would require caching of the full response before we start sending any of it, which is even worse.
+            // This "silences" the problem, while letting the original problem (that caused the response to fail
+            // in the first place) be logged on its own.
+            // This whole thing is a symptom of the disease called "using exceptions for flow control".
+            return
+        }
         if (contentType) {
             response.setContentType(contentType)
             if (contentType.startsWith("text/") || contentType.startsWith("application/")) {
