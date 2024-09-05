@@ -104,6 +104,7 @@ class Crud extends HttpServlet {
         try {
             doGet2(request, response)
         } catch (Exception e) {
+            log.info("Attempting to send error response, after: ", e) // Possibly upgrade to a warning at a later time.
             sendError(request, response, e)
         } finally {
             log.debug("Sending GET response with status " +

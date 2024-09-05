@@ -300,7 +300,7 @@ class ElasticSearch {
             }
         } catch (Exception e) {
             if (!isBadRequest(e)) {
-                log.error("Failed to index ${doc.getShortId()} in elastic, placing in retry queue: $e", e)
+                log.info("Failed to index ${doc.getShortId()} in elastic, placing in retry queue: $e", e)
                 indexingRetryQueue.add({ -> index(doc, whelk) })
             }
             else {

@@ -81,11 +81,11 @@ class SparqlUpdater {
                 return HANDLED
             }
             catch (UnexpectedHttpStatusException e) {
-                log.warn("Failed, will requeue: $e")
+                log.info("Failed, will requeue: $e")
                 return FAIL_REQUEUE
             }
             catch (Exception e) {
-                log.warn("Failed, will retry: $e")
+                log.info("Failed, will retry: $e")
                 return FAIL_RETRY
             }
         }
