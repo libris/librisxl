@@ -104,7 +104,9 @@ class Crud extends HttpServlet {
         try {
             doGet2(request, response)
         } catch (Exception e) {
-            log.info("Attempting to send error response, after: ", e) // Possibly upgrade to a warning at a later time.
+            // Don't log a full callstack! This happens all the time when a user drops its connection
+            // without having first received what it asked for (typically a slow query).
+            log.info("Attempting to send error response, after catching: ${e.toString()}")
             sendError(request, response, e)
         } finally {
             log.debug("Sending GET response with status " +
