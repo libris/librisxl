@@ -1,5 +1,6 @@
 package whelk.housekeeping;
 
+import datatool.WhelkTool;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -57,7 +58,7 @@ public class ScriptRunner extends HouseKeeper {
                             reportPath.toString(),
                             scriptFilePath.toString(),
                     };
-            whelk.datatool.WhelkTool.main2(args, premadeWhelk);
+            WhelkTool.main2(args, premadeWhelk);
 
             Path errorLogPath = reportPath.resolve("ERRORS.txt");
             if (Files.size(errorLogPath) > 0) {

@@ -61,6 +61,7 @@ dependencies {
     // XL
     implementation(project(':whelk-core'))
     implementation(project(':server-common'))
+    implementation(project(':whelktool'))
 
     // Groovy
     implementation "org.codehaus.groovy:groovy-all:${groovyVersion}"

@@ -59,6 +59,18 @@ class UnicodeSpec extends Specification {
         
     }
 
+    def "stripPrefix"() {
+        expect:
+        Unicode.stripPrefix(s, prefix) == result
+        where:
+        s     | prefix || result
+        ""    | ""     || ""
+        "sss" | "ss"   || "s"
+        "sss" | "xx"   || "sss"
+        ""    | "xx"   || ""
+        "sss" | ""     || "sss"
+    }
+
     def "double quotation marks"() {
         expect:
         Unicode.isNormalizedDoubleQuotes(dirty) == (dirty == clean)

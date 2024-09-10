@@ -10,6 +10,7 @@ import org.eclipse.jetty.http.UriCompliance;
 import org.eclipse.jetty.rewrite.handler.RewriteHandler;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
+import whelk.rest.api.BulkChangePreviewAPI;
 import whelk.rest.api.ConverterAPI;
 import whelk.rest.api.Crud;
 import whelk.rest.api.DuplicatesAPI;
@@ -92,6 +93,8 @@ public class RestServer extends XlServer {
         context.addServlet(HoldAPI.class, "/_findhold");
         context.addServlet(RecordRelationAPI.class, "/_dependencies");
         context.addServlet(DuplicatesAPI.class, "/_duplicates");
+
+        context.addServlet(BulkChangePreviewAPI.class, "/_bulk-change/*");
 
         context.addServlet(se.kb.libris.digi.DigitalReproductionAPI.class, "/_reproduction");
 

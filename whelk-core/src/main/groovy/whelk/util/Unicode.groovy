@@ -100,6 +100,10 @@ class Unicode {
         s.replaceFirst(LEADING_SPACE, '').replaceFirst(TRAILING_SPACE, '')
     }
 
+    static String stripPrefix(String s, String prefix) {
+        s.startsWith(prefix) ? s.substring(prefix.length()) : s
+    }
+
     static Optional<Character.UnicodeScript> guessScript(String s) {
         s = s.replaceAll(~/\p{IsCommon}|\p{IsInherited}|\p{IsUnknown}/, '')
 
