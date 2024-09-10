@@ -624,63 +624,13 @@ class ElasticSearch {
         }
     }
 
-    Iterable<String> getPersonIds() {
-        /*
-        Map query = [
-                'bool': ['filter': ['bool': ['must': [
-                        "simple_query_string": [
-                                "query": "Person",
-                                "fields": [
-                                        "@type"
-                                ],
-                                "default_operator": "AND"
-                        ]
-                ]]] ]
-        ]
-
-         */
-
-        Map query = [
-                'bool': ['filter': [
-                        "bool": [
-                                "must": [
-                                        [
-                                                "nested": [
-                                                        "path": "@reverse.itemOf",
-                                                        "query": [
-                                                                "bool": [
-                                                                        "must": [
-                                                                                [
-                                                                                        "bool": [
-                                                                                                "should": [
-                                                                                                        [
-                                                                                                                "simple_query_string": [
-                                                                                                                        "query": "https://libris.kb.se/library/S",
-                                                                                                                        "fields": [
-                                                                                                                                "@reverse.itemOf.heldBy.@id"
-                                                                                                                        ],
-                                                                                                                        "default_operator": "AND"
-                                                                                                                ]
-                                                                                                        ]
-                                                                                                ]
-                                                                                        ]
-                                                                                ]
-                                                                        ]
-                                                                ]
-                                                        ]
-                                                ]
-                                        ]
-                                ]
-                        ]
-                ] ]
-        ]
-
-        Scroll<String> ids = new DefaultScroll(query)
+    Iterable<String> getIds(Map esQuery) {
+        Scroll<String> ids = new DefaultScroll(esQuery)
         try {
             ids.hasNext()
         }
         catch (TooManyResultsException e) {
-            ids = new SearchAfterScroll(query)
+            ids = new SearchAfterScroll(esQuery)
         }
 
         return new Iterable<String>() {
