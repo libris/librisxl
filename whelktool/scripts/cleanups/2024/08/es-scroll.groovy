@@ -9,6 +9,8 @@ var query = [
         '@type': ['Organization']
 ]
 
+println("Starting")
+
 var t1 = System.currentTimeMillis()
 /*find.findIds(query).forEach { id ->
     out.println(id)
