@@ -625,7 +625,7 @@ class ElasticSearch {
     }
 
     Iterable<String> getPersonIds() {
-        /*
+
         Map query = [
                 'bool': ['filter': ['bool': ['must': [
                         "simple_query_string": [
@@ -638,8 +638,8 @@ class ElasticSearch {
                 ]]] ]
         ]
 
-         */
-
+        
+/*
         Map query = [
                 'bool': ['filter': [
                         "bool": [
@@ -674,7 +674,7 @@ class ElasticSearch {
                         ]
                 ] ]
         ]
-
+*/
         Scroll<String> ids = new DefaultScroll(query)
         try {
             ids.hasNext()
