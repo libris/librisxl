@@ -1,4 +1,4 @@
-package datatool.bulkchange;
+package whelk.datatool.bulkchange;
 
 import whelk.Document;
 import whelk.JsonLd;

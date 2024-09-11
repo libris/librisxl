@@ -1,6 +1,6 @@
 package whelk.housekeeping;
 
-import datatool.bulkchange.BulkChange;
+import whelk.datatool.bulkchange.BulkChange;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import whelk.JsonLd;

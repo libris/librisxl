@@ -1,4 +1,4 @@
-package datatool.util;
+package whelk.datatool.util;
 
 import java.util.List;
 import java.util.ArrayList;

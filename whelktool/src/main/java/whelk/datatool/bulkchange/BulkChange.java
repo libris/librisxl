@@ -1,4 +1,4 @@
-package datatool.bulkchange;
+package whelk.datatool.bulkchange;
 
 import datatool.Script;
 import datatool.WhelkTool;

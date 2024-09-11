@@ -1,6 +1,6 @@
 package se.kb.libris.mergeworks.compare
 
-import datatool.util.DocumentComparator
+import whelk.datatool.util.DocumentComparator
 import se.kb.libris.mergeworks.Doc
 import se.kb.libris.mergeworks.Util
 import org.apache.commons.lang3.NotImplementedException

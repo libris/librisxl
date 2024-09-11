@@ -6,7 +6,7 @@
  * https://youtrack.jetbrains.com/articles/GROOVY-A-15796912
  */
 
-package datatool
+package whelk.datatool
 
 String ITEM = 'whelk.datatool.DocumentItem'
 String DC = "Closure<$ITEM>"
