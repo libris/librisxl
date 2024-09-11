@@ -64,6 +64,7 @@ class WhelkTool {
     int numThreads = -1
     boolean stepWise
     int limit = -1
+    Map<String, Object> scriptParams = Collections.emptyMap()
 
     private String chosenAnswer = 'y'
 
@@ -73,8 +74,6 @@ class WhelkTool {
     private Throwable errorDetected
 
     private def jsonWriter = mapper.writerWithDefaultPrettyPrinter()
-
-    Map<String, Closure> compiledScripts = [:]
 
     ElasticFind elasticFind
     Statistics statistics
@@ -120,6 +119,10 @@ class WhelkTool {
 
             [modifiedLogFile, createdLogFile, deletedLogFile].each { if (it.length() == 0) it.delete() }
         }
+    }
+
+    void setScriptParameters(Map<String, Object> params) {
+        scriptParams = Collections.unmodifiableMap(params)
     }
 
     boolean getUseThreads() { !noThreads && !stepWise }
@@ -604,6 +607,7 @@ class WhelkTool {
         bindings.put("baseUri", Document.BASE_URI)
         bindings.put("getReportWriter", this.&getReportWriter)
         bindings.put("reportsDir", reportsDir)
+        bindings.put("parameters", scriptParams)
         bindings.put("script", { String s -> script.compileSubScript(this, s) })
         bindings.put("selectByCollection", this.&selectByCollection)
         bindings.put("selectByIds", this.&selectByIds)

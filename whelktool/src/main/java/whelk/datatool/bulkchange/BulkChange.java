@@ -1,22 +1,28 @@
 package whelk.datatool.bulkchange;
 
-import datatool.Script;
-import datatool.WhelkTool;
+import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
 import whelk.Document;
 import whelk.Whelk;
 import whelk.component.PostgreSQLComponent;
+import whelk.datatool.Script;
+import whelk.datatool.WhelkTool;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static whelk.util.Unicode.stripPrefix;
 
 public class BulkChange implements Runnable {
-    //private static final Logger logger = Logger.getLogger(BulkChange.class);
+    private static final Logger logger = Logger.getLogger(BulkChange.class);
     private static final String REPORTS_DIR = "bulk-change-reports";
 
     public enum Status {
@@ -28,12 +34,18 @@ public class BulkChange implements Runnable {
     }
 
     public enum Type {
-        BulkChange
+        BulkChange,
+        FormSpecification
     }
 
     public enum Prop {
         bulkChangeStatus,
-        bulkChangeSpecification
+        bulkChangeSpecification,
+        comment,
+        label,
+
+        matchForm,
+        targetForm,
     }
 
     private String id;
@@ -60,30 +72,53 @@ public class BulkChange implements Runnable {
             });
 
             if (shouldRun.get()) {
-                var tool = buildWhelkTool();
+                var changeDoc = loadDocument();
+                var tool = buildWhelkTool(changeDoc);
+                var scriptLog = tool.getMainLog();
+
+                scriptLog.println(String.format("Running %s: %s", Type.BulkChange, id));
+                scriptLog.println(String.format("label: %s", changeDoc.getLabels()));
+                scriptLog.println(String.format("comment: %s", changeDoc.getComments()));
+                scriptLog.println();
+
+                logger.info(String.format("Running %s: %s", Type.BulkChange, id));
+                
                 tool.run();
+
                 storeUpdate(doc -> new BulkChangeDocument(doc.data).setStatus(Status.CompletedBulkChange));
             }
         } catch (Exception e) {
             // TODO
-            //logger.error(e);
+            logger.error(e);
             System.err.println(e);
             storeUpdate(doc -> new BulkChangeDocument(doc.data).setStatus(Status.FailedBulkChange));
         }
     }
 
-    WhelkTool buildWhelkTool() {
-        Script script = new Script("", id);
-        WhelkTool tool = new WhelkTool(whelk, script, reportDir(), WhelkTool.getDEFAULT_STATS_NUM_IDS());
-        tool.setAllowLoud(false);
-        return tool;
+    WhelkTool buildWhelkTool(BulkChangeDocument changeDoc) {
+        return switch (changeDoc.getSpecification()) {
+            case BulkChangeDocument.FormSpecification formSpecification -> {
+                Script script = new Script(loadClasspathScriptSource("form.groovy"), id);
+                WhelkTool tool = new WhelkTool(whelk, script, reportDir(), WhelkTool.getDEFAULT_STATS_NUM_IDS());
+                tool.setScriptParams(Map.of(
+                        Prop.matchForm.toString(), formSpecification.matchForm(),
+                        Prop.targetForm.toString(), formSpecification.targetForm()
+                ));
+                tool.setAllowLoud(changeDoc.isLoud());
+                yield tool;
+            }
+        };
+    }
+
+    BulkChangeDocument loadDocument() {
+        return new BulkChangeDocument(whelk.getDocument(systemId).data);
     }
 
     void storeUpdate(PostgreSQLComponent.UpdateAgent updateAgent) {
         var minorUpdate = true;
         var writeIdenticalVersions = false;
         var changedIn = "???";
-        var changedBy = whelk.getDocument(systemId).getDescriptionLastModifier();
+        var changedBy = loadDocument().getDescriptionLastModifier();
         whelk.storeAtomicUpdate(systemId, minorUpdate, writeIdenticalVersions, changedIn, changedBy, updateAgent);
     }
 
@@ -91,9 +126,20 @@ public class BulkChange implements Runnable {
         String now = LocalDateTime
                 .now(ZoneId.systemDefault())
                 .truncatedTo(ChronoUnit.SECONDS)
-                .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                .replace(":", "");
 
         String dir = String.format("%s-%s", now, systemId);
         return new File(new File (whelk.getLogRoot(), REPORTS_DIR), dir);
+    }
+
+    private String loadClasspathScriptSource(String scriptName) {
+        String path = "bulk-change-scripts/" + scriptName;
+        try (InputStream scriptStream = BulkChange.class.getClassLoader().getResourceAsStream(path)) {
+            assert scriptStream != null;
+            return IOUtils.toString(new InputStreamReader(scriptStream));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -3,7 +3,7 @@ package whelk.rest.api;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
-import whelk.datatool.BulkChangeDocument;
+import whelk.datatool.bulkchange.BulkChangeDocument;
 import whelk.util.WhelkFactory;
 
 import javax.servlet.ServletException;
