@@ -1,5 +1,6 @@
 package whelk.housekeeping;
 
+import whelk.Document;
 import whelk.datatool.bulkchange.BulkChange;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -53,6 +54,6 @@ public class BulkChangeRunner extends HouseKeeper {
 
     private void run(String id) {
         // TODO Improve housekeeping task execution, start, stop etc etc
-        new Thread(threadGroup, new BulkChange(whelk, id)).start();
+        new Thread(threadGroup, new BulkChange(whelk, Document.getBASE_URI() + id)).start();
     }
 }

@@ -99,7 +99,7 @@ public class BulkChange implements Runnable {
         return switch (changeDoc.getSpecification()) {
             case BulkChangeDocument.FormSpecification formSpecification -> {
                 Script script = new Script(loadClasspathScriptSource("form.groovy"), id);
-                WhelkTool tool = new WhelkTool(whelk, script, reportDir(), WhelkTool.getDEFAULT_STATS_NUM_IDS());
+                WhelkTool tool = new WhelkTool(whelk, script, reportDir(systemId), WhelkTool.getDEFAULT_STATS_NUM_IDS());
                 tool.setScriptParams(Map.of(
                         Prop.matchForm.toString(), formSpecification.matchForm(),
                         Prop.targetForm.toString(), formSpecification.targetForm()
@@ -122,14 +122,15 @@ public class BulkChange implements Runnable {
         whelk.storeAtomicUpdate(systemId, minorUpdate, writeIdenticalVersions, changedIn, changedBy, updateAgent);
     }
 
-    private File reportDir() {
+    private File reportDir(String baseName) {
         String now = LocalDateTime
                 .now(ZoneId.systemDefault())
                 .truncatedTo(ChronoUnit.SECONDS)
                 .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
                 .replace(":", "");
 
-        String dir = String.format("%s-%s", now, systemId);
+        String safeName = baseName.replaceAll("[^\\w.-]+", "");
+        String dir = String.format("%s-%s", safeName, now);
         return new File(new File (whelk.getLogRoot(), REPORTS_DIR), dir);
     }
 
