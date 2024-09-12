@@ -62,6 +62,7 @@ class Whelk {
     DocumentNormalizer normalizer
     Romanizer romanizer
     FeatureFlags features
+    File logRoot
 
     URI baseUri = null
     boolean skipIndex = false
@@ -132,6 +133,8 @@ class Whelk {
         }
         
         features = new FeatureFlags(configuration)
+
+        logRoot = new File(System.getProperty("xl.logRoot", "./logs"))
 
         loadCoreData(systemContextUri)
 

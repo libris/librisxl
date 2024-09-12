@@ -16,6 +16,7 @@ public class HouseKeepingServer extends XlServer {
         ServletHolder holder = new ServletHolder(WebInterface.class);
         holder.setInitOrder(0);
         context.addServlet(holder, "/");
+
         serveStaticContent(context);
     }
 

@@ -1,4 +1,4 @@
-package datatool.util;
+package whelk.datatool.util;
 
 import static org.junit.Assert.assertEquals;
 

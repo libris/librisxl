@@ -8,15 +8,14 @@ import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.StaleUpdateException
 import whelk.exception.WhelkException
+import whelk.meta.WhelkConstants
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
 import whelk.util.DocumentUtil
 import whelk.util.LegacyIntegrationTools
 import whelk.util.Statistics
-import whelk.meta.WhelkConstants
 
 import javax.script.Bindings
-import javax.script.Compilable
 import javax.script.CompiledScript
 import javax.script.ScriptEngineManager
 import javax.script.SimpleBindings
@@ -38,20 +37,17 @@ import static whelk.util.Jackson.mapper
 class WhelkTool {
     static final int DEFAULT_BATCH_SIZE = 500
     static final int DEFAULT_FETCH_SIZE = 100
+    static final int DEFAULT_STATS_NUM_IDS = 3
 
     Whelk whelk
 
-    private GroovyScriptEngineImpl engine
-
-    File scriptFile
-    CompiledScript script
-    String scriptJobUri
-
+    private Script script
     private Bindings bindings
 
     private boolean hasStoredScriptJob
 
     String changedIn = "xl"
+    String defaultChangedBy
 
     File reportsDir
     PrintWriter mainLog
@@ -69,6 +65,7 @@ class WhelkTool {
     int numThreads = -1
     boolean stepWise
     int limit = -1
+    Map<Object, Object> scriptParams = Collections.emptyMap()
 
     private String chosenAnswer = 'y'
 
@@ -79,15 +76,13 @@ class WhelkTool {
 
     private def jsonWriter = mapper.writerWithDefaultPrettyPrinter()
 
-    Map<String, Closure> compiledScripts = [:]
-
     ElasticFind elasticFind
     Statistics statistics
 
     private ScheduledExecutorService timedLogger = MoreExecutors.getExitingScheduledExecutorService(
             Executors.newScheduledThreadPool(1))
 
-    WhelkTool(Whelk whelk, String scriptPath, File reportsDir = null, int statsNumIds) {
+    WhelkTool(Whelk whelk, Script script, File reportsDir = null, int statsNumIds) {
         if (whelk == null) {
             try {
                 whelk = Whelk.createLoadedSearchWhelk()
@@ -96,7 +91,8 @@ class WhelkTool {
             }
         }
         this.whelk = whelk
-        initScript(scriptPath)
+        this.script = script
+        this.defaultChangedBy = script.scriptJobUri
         this.reportsDir = reportsDir
         reportsDir.mkdirs()
         mainLog = new PrintWriter(new File(reportsDir, "MAIN.txt"))
@@ -127,24 +123,8 @@ class WhelkTool {
         }
     }
 
-    private void initScript(String scriptPath) {
-        ScriptEngineManager manager = new ScriptEngineManager()
-        engine = (GroovyScriptEngineImpl) manager.getEngineByName("groovy")
-        scriptFile = new File(scriptPath)
-        String scriptSource = null
-        try {
-            scriptSource = scriptFile.getText("UTF-8")
-        }
-        catch (IOException e) {
-            System.err.println("Could not load script [$scriptPath] : $e")
-            System.exit(1)
-        }
-        script = ((Compilable) engine).compile(scriptSource)
-        def segment = '/scripts/'
-        def path = scriptFile.toURI().toString()
-        path = path.substring(path.lastIndexOf(segment) + segment.size())
-        // FIXME: de-KBV/Libris-ify
-        scriptJobUri = "https://libris.kb.se/sys/globalchanges/${path}"
+    void setScriptParameters(Map<Object, Object> params) {
+        scriptParams = Collections.unmodifiableMap(params)
     }
 
     boolean getUseThreads() { !noThreads && !stepWise }
@@ -420,12 +400,14 @@ class WhelkTool {
                 return false
             }
 
-            var newglobals = bindings.keySet() - globals
-            if (newglobals) {
-                System.err.println("FORBIDDEN - new bindings detected: ${newglobals}")
+            var newGlobals = bindings.keySet() - globals
+            if (newGlobals) {
+                String msg = "FORBIDDEN - new bindings detected: ${newGlobals}"
+                System.err.println(msg)
                 System.err.println("Adding new global bindings during record processing is forbidden (since they share state across threads).")
                 System.err.println("Aborting.")
-                System.exit(1)
+                errorDetected = new Exception(msg)
+                return false
             }
 
             if (!doContinue) {
@@ -500,7 +482,7 @@ class WhelkTool {
 
     private void doDeletion(DocumentItem item) {
         if (!dryRun) {
-            whelk.remove(item.doc.shortId, changedIn, scriptJobUri)
+            whelk.remove(item.doc.shortId, changedIn, item.changedBy ?: defaultChangedBy)
         }
         deletedLog.println(item.doc.shortId)
     }
@@ -548,9 +530,9 @@ class WhelkTool {
     private void doModification(DocumentItem item) {
         Document doc = item.doc
         doc.setGenerationDate(new Date())
-        doc.setGenerationProcess(item.generationProcess ?: scriptJobUri)
+        doc.setGenerationProcess(item.generationProcess ?: script.scriptJobUri)
         if (!dryRun) {
-            whelk.storeAtomicUpdate(doc, !item.loud, true, changedIn, item.changedBy ?: scriptJobUri, item.preUpdateChecksum)
+            whelk.storeAtomicUpdate(doc, !item.loud, true, changedIn, item.changedBy ?: defaultChangedBy, item.preUpdateChecksum)
         }
         modifiedLog.println(doc.shortId)
     }
@@ -559,10 +541,10 @@ class WhelkTool {
         Document doc = item.doc
         doc.setControlNumber(doc.getShortId())
         doc.setGenerationDate(new Date())
-        doc.setGenerationProcess(item.generationProcess ?: scriptJobUri)
+        doc.setGenerationProcess(item.generationProcess ?: script.scriptJobUri)
         if (!dryRun) {
             var collection = LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld())
-            if (!whelk.createDocument(doc, changedIn, item.changedBy ?: scriptJobUri, collection, false))
+            if (!whelk.createDocument(doc, changedIn, item.changedBy ?: defaultChangedBy, collection, false))
                 throw new WhelkException("Failed to save a new document. See general whelk log for details.")
         }
         createdLog.println(doc.shortId)
@@ -603,22 +585,6 @@ class WhelkTool {
         hasStoredScriptJob = true
     }
 
-    private Closure compileScript(String scriptPath) {
-        if (!compiledScripts.containsKey(scriptPath)) {
-            File scriptFile = new File(this.scriptFile.parent, scriptPath)
-            String scriptSource = scriptFile.getText("UTF-8")
-            CompiledScript script = ((Compilable) engine).compile(scriptSource)
-            Bindings bindings = createDefaultBindings()
-            Closure process = null
-            bindings.put("scriptDir", scriptFile.parent)
-            bindings.put("getReportWriter", this.&getReportWriter)
-            bindings.put("process", { process = it })
-            script.eval(bindings)
-            compiledScripts[scriptPath] = process
-        }
-        return compiledScripts[scriptPath]
-    }
-
     boolean isInstanceOf(Map entity, String baseType) {
         def type = entity['@type']
         if (type == null)
@@ -638,14 +604,15 @@ class WhelkTool {
         return bindings
     }
 
-    private Bindings createMainBindings() {
+    Bindings createMainBindings() {
         // Update Whelktool.gdsl when adding new bindings
         Bindings bindings = createDefaultBindings()
-        bindings.put("scriptDir", scriptFile.parent)
+        bindings.put("scriptDir", script.scriptDir)
         bindings.put("baseUri", Document.BASE_URI)
         bindings.put("getReportWriter", this.&getReportWriter)
         bindings.put("reportsDir", reportsDir)
-        bindings.put("script", this.&compileScript)
+        bindings.put("parameters", scriptParams)
+        bindings.put("script", { String s -> script.compileSubScript(this, s) })
         bindings.put("selectByCollection", this.&selectByCollection)
         bindings.put("selectByIds", this.&selectByIds)
         bindings.put("selectBySqlWhere", this.&selectBySqlWhere)
@@ -657,10 +624,11 @@ class WhelkTool {
         bindings.put("asList", JsonLd::asList)
         bindings.put("getAtPath", DocumentUtil::getAtPath)
         bindings.put("getWhelk", this.&getWhelk)
+        bindings.put("isLoudAllowed", this.allowLoud)
         return bindings
     }
 
-    private void run() {
+    public void run() {
         whelk.setSkipIndex(skipIndex)
         if (allowIdRemoval) {
             whelk.storage.doVerifyDocumentIdRetention = false
@@ -674,7 +642,7 @@ class WhelkTool {
             log "    hosts:   ${whelk.elastic.elasticHosts}"
             log "    index:   ${whelk.elastic.defaultIndex}"
         }
-        log "Using script: $scriptFile"
+        log "Using script: $script"
         log "Using report dir: $reportsDir"
         if (skipIndex) log "  skipIndex"
         if (dryRun) log "  dryRun"
@@ -688,7 +656,7 @@ class WhelkTool {
         bindings = createMainBindings()
 
         try {
-            script.eval(bindings)
+            script.compiledScript.eval(bindings)
         } finally {
             finish()
         }
@@ -702,7 +670,7 @@ class WhelkTool {
         }
         if (errorDetected) {
             log "Script terminated due to an error, see $reportsDir/ERRORS.txt for more info"
-            System.exit(1)
+            throw new RuntimeException("Script terminated due to an error", errorDetected)
         }
         log "Done!"
     }
@@ -752,8 +720,18 @@ class WhelkTool {
         def reportsDir = new File(options.r ?: 'reports')
         def scriptPath = options.arguments()[0]
 
-        int statsNumIds = options.n ? Integer.parseInt(options.n) : 3
-        def tool = new WhelkTool(preExistingWhelk, scriptPath, reportsDir, statsNumIds)
+        int statsNumIds = options.n ? Integer.parseInt(options.n) : DEFAULT_STATS_NUM_IDS
+
+        Script script = null
+        try {
+            script = new FileScript(scriptPath)
+        }
+        catch (IOException e) {
+            System.err.println("Could not load script [$scriptPath] : $e")
+            System.exit(1)
+        }
+
+        def tool = new WhelkTool(preExistingWhelk, script, reportsDir, statsNumIds)
         tool.skipIndex = options.I
         tool.dryRun = options.d
         tool.stepWise = options.s
@@ -762,11 +740,83 @@ class WhelkTool {
         tool.limit = options.l ? Integer.parseInt(options.l) : -1
         tool.allowLoud = options.a
         tool.allowIdRemoval = options.idchg
-        tool.run()
+        try {
+            tool.run()
+        } catch (Exception e) {
+            System.err.println(e.toString())
+            System.exit(1)
+        }
     }
 
 }
 
+class Script {
+    GroovyScriptEngineImpl engine
+    File scriptDir
+    CompiledScript compiledScript
+    String scriptJobUri
+
+    private Map<String, Closure> compiledScripts = [:]
+
+    Script(String source, String scriptJobUri) {
+        this(source, scriptJobUri, File.createTempDir())
+    }
+
+    Script(String source, String scriptJobUri, File scriptDir) {
+        this.scriptDir = scriptDir
+        this.scriptJobUri = scriptJobUri
+        this.scriptDir = scriptDir
+
+        ScriptEngineManager manager = new ScriptEngineManager()
+        this.engine = (GroovyScriptEngineImpl) manager.getEngineByName("groovy")
+        this.compiledScript = engine.compile(source)
+    }
+
+    Closure compileSubScript(WhelkTool tool, String scriptPath) {
+        if (!compiledScripts.containsKey(scriptPath)) {
+            File scriptFile = new File(scriptDir, scriptPath)
+            String scriptSource = scriptFile.getText("UTF-8")
+            CompiledScript script = engine.compile(scriptSource)
+            Bindings bindings = tool.createMainBindings()
+            Closure process = null
+            bindings.put("scriptDir", scriptDir)
+            bindings.put("getReportWriter", tool.&getReportWriter)
+            bindings.put("process", { process = it })
+            script.eval(bindings)
+            compiledScripts[scriptPath] = process
+        }
+        return compiledScripts[scriptPath]
+    }
+
+    @Override
+    String toString() {
+        return scriptJobUri
+    }
+}
+
+class FileScript extends Script {
+    String path
+
+    FileScript(String scriptPath) throws IOException {
+        super(new File(scriptPath).getText("UTF-8"), scriptJobUri(scriptPath), new File(scriptPath).parentFile)
+        this.path = scriptPath
+    }
+
+    private static String scriptJobUri(String scriptPath) {
+        var scriptFile = new File(scriptPath)
+
+        def segment = '/scripts/'
+        def path = scriptFile.toURI().toString()
+        path = path.substring(path.lastIndexOf(segment) + segment.size())
+        // FIXME: de-KBV/Libris-ify
+        return "https://libris.kb.se/sys/globalchanges/${path}"
+    }
+
+    @Override
+    String toString() {
+        return path
+    }
+}
 
 class DocumentItem {
     int number

@@ -14,10 +14,7 @@ import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.exception.ElasticIOException
 import whelk.exception.InvalidQueryException
-import whelk.exception.LinkValidationException
-import whelk.exception.ModelValidationException
 import whelk.exception.StaleUpdateException
-import whelk.exception.StorageCreateFailedException
 import whelk.exception.UnexpectedHttpStatusException
 import whelk.exception.WhelkRuntimeException
 import whelk.history.History
@@ -32,7 +29,6 @@ import java.lang.management.ManagementFactory
 
 import static whelk.rest.api.CrudUtils.ETag
 import static whelk.rest.api.HttpTools.getBaseUri
-import static whelk.rest.api.HttpTools.sendError
 import static whelk.rest.api.HttpTools.sendResponse
 import static whelk.util.Jackson.mapper
 
@@ -843,42 +839,14 @@ class Crud extends HttpServlet {
     }
 
     static void sendError(HttpServletRequest request, HttpServletResponse response, Exception e) {
-        int code = mapError(e)
+        int code = HttpTools.mapError(e)
         metrics.failedRequests.labels(request.getMethod(), code.toString()).inc()
         if (log.isDebugEnabled()) {
             log.debug("Sending error $code : ${e.getMessage()} for ${request.getRequestURI()}")
         }
         HttpTools.sendError(response, code, e.getMessage(), e)
     }
-    
-    static private int mapError(Exception e) {
-        switch(e) {
-            case BadRequestException:
-            case ModelValidationException:
-            case LinkValidationException:
-                return HttpServletResponse.SC_BAD_REQUEST
 
-            case NotFoundException:
-                return HttpServletResponse.SC_NOT_FOUND
-            
-            case UnsupportedContentTypeException:
-                return HttpServletResponse.SC_NOT_ACCEPTABLE
-            
-            case WhelkRuntimeException:
-                return HttpServletResponse.SC_INTERNAL_SERVER_ERROR
-
-            case PostgreSQLComponent.ConflictingHoldException:
-            case StorageCreateFailedException:
-                return HttpServletResponse.SC_CONFLICT
-          
-            case OtherStatusException:
-                return ((OtherStatusException) e).code
-
-            default: 
-                return HttpServletResponse.SC_INTERNAL_SERVER_ERROR
-        }
-    }
-    
     static class NotFoundException extends NoStackTraceException {
         NotFoundException(String msg) {
             super(msg)

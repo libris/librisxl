@@ -199,9 +199,18 @@ class DocumentUtilSpec extends Specification {
                 [key: [['@id': 8], ['@id': 9]]]
         ]
     }
-    
+
+    // Example enum
+    enum E {
+        a,
+        b,
+        x
+    }
+
     def "get at path"() {
         given:
+
+
         def data = [
                 a:  [ 
                         [b: [
@@ -232,6 +241,7 @@ class DocumentUtilSpec extends Specification {
         [1]                       | 'default' || 'default'
         ['*']                     | 'default' || []
         ['a', 4, 'b', 1, 'x']     | 'default' || 7
+        [E.a, 4, E.b, 1, E.x]     | 'default' || 7
         ['a', '*', 'b', 1, 'x']   | 'default' || [2, 7]
         ['a', '*', 'b', 3, 'x']   | 'default' || [4]
         ['a', '*', 'b', '*', 'x'] | 'default' || [1, 2, 3, 4, 5, 6, 7, 8]

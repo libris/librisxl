@@ -40,6 +40,8 @@ class Document {
         }
     }
 
+    public static final String HASH_IT = '#it'
+
     static final List thingPath = ["@graph", 1]
     static final List thingIdPath = ["@graph", 0, "mainEntity", "@id"]
     static final List thingIdPath2 = ["@graph", 1, "@id"]

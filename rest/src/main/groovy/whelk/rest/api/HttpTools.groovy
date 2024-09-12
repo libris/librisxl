@@ -3,6 +3,11 @@ package whelk.rest.api
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.codehaus.groovy.runtime.StackTraceUtils
+import whelk.component.PostgreSQLComponent
+import whelk.exception.LinkValidationException
+import whelk.exception.ModelValidationException
+import whelk.exception.StorageCreateFailedException
+import whelk.exception.WhelkRuntimeException
 
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -97,7 +102,35 @@ class HttpTools {
 
         return baseUri
     }
-    
+
+    static int mapError(Exception e) {
+        switch(e) {
+            case BadRequestException:
+            case ModelValidationException:
+            case LinkValidationException:
+                return HttpServletResponse.SC_BAD_REQUEST
+
+            case Crud.NotFoundException:
+                return HttpServletResponse.SC_NOT_FOUND
+
+            case UnsupportedContentTypeException:
+                return HttpServletResponse.SC_NOT_ACCEPTABLE
+
+            case WhelkRuntimeException:
+                return HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+
+            case PostgreSQLComponent.ConflictingHoldException:
+            case StorageCreateFailedException:
+                return HttpServletResponse.SC_CONFLICT
+
+            case Crud.OtherStatusException:
+                return ((Crud.OtherStatusException) e).code
+
+            default:
+                return HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+        }
+    }
+
     enum DisplayMode {
         DOCUMENT, META, RAW
     }
