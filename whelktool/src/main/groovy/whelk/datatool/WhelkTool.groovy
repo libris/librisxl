@@ -398,12 +398,14 @@ class WhelkTool {
                 return false
             }
 
-            var newglobals = bindings.keySet() - globals
-            if (newglobals) {
-                System.err.println("FORBIDDEN - new bindings detected: ${newglobals}")
+            var newGlobals = bindings.keySet() - globals
+            if (newGlobals) {
+                String msg = "FORBIDDEN - new bindings detected: ${newGlobals}"
+                System.err.println(msg)
                 System.err.println("Adding new global bindings during record processing is forbidden (since they share state across threads).")
                 System.err.println("Aborting.")
-                System.exit(1)
+                errorDetected = new Exception(msg)
+                return false
             }
 
             if (!doContinue) {
@@ -665,7 +667,7 @@ class WhelkTool {
         }
         if (errorDetected) {
             log "Script terminated due to an error, see $reportsDir/ERRORS.txt for more info"
-            System.exit(1)
+            throw new RuntimeException("Script terminated due to an error", errorDetected)
         }
         log "Done!"
     }
@@ -735,9 +737,13 @@ class WhelkTool {
         tool.limit = options.l ? Integer.parseInt(options.l) : -1
         tool.allowLoud = options.a
         tool.allowIdRemoval = options.idchg
-        tool.run()
+        try {
+            tool.run()
+        } catch (Exception e) {
+            System.err.println(e.toString())
+            System.exit(1)
+        }
     }
-
 
 }
 
