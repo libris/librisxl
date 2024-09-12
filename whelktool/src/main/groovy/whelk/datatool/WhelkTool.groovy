@@ -65,7 +65,7 @@ class WhelkTool {
     int numThreads = -1
     boolean stepWise
     int limit = -1
-    Map<String, Object> scriptParams = Collections.emptyMap()
+    Map<Object, Object> scriptParams = Collections.emptyMap()
 
     private String chosenAnswer = 'y'
 
@@ -123,7 +123,7 @@ class WhelkTool {
         }
     }
 
-    void setScriptParameters(Map<String, Object> params) {
+    void setScriptParameters(Map<Object, Object> params) {
         scriptParams = Collections.unmodifiableMap(params)
     }
 
@@ -624,6 +624,7 @@ class WhelkTool {
         bindings.put("asList", JsonLd::asList)
         bindings.put("getAtPath", DocumentUtil::getAtPath)
         bindings.put("getWhelk", this.&getWhelk)
+        bindings.put("isLoudAllowed", this.allowLoud)
         return bindings
     }
 

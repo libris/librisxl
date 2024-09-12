@@ -19,6 +19,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static whelk.datatool.bulkchange.BulkChange.Prop.targetForm;
 import static whelk.util.Unicode.stripPrefix;
 import static whelk.util.Unicode.stripSuffix;
 
@@ -34,6 +35,11 @@ public class BulkChange implements Runnable {
         FailedBulkChange,
     }
 
+    public enum MetaChanges {
+        LoudBulkChange,
+        SilentBulkChange,
+    }
+
     public enum Type {
         BulkChange,
         FormSpecification
@@ -41,6 +47,7 @@ public class BulkChange implements Runnable {
 
     public enum Prop {
         bulkChangeStatus,
+        bulkChangeMetaChanges,
         bulkChangeSpecification,
         comment,
         label,
@@ -105,8 +112,8 @@ public class BulkChange implements Runnable {
                 // TODO for now setting changedBy only works for loud changes (!minorChange in PostgreSQLComponent)
                 tool.setDefaultChangedBy(changeAgent);
                 tool.setScriptParams(Map.of(
-                        Prop.matchForm.toString(), formSpecification.matchForm(),
-                        Prop.targetForm.toString(), formSpecification.targetForm()
+                        Prop.matchForm, formSpecification.matchForm(),
+                        Prop.targetForm, formSpecification.targetForm()
                 ));
                 tool.setAllowLoud(changeDoc.isLoud());
                 yield tool;
