@@ -39,6 +39,10 @@ sourceSets {
     }
 }
 
+test {
+    useJUnitPlatform()
+}
+
 application {
     mainClass = "whelk.datatool.WhelkTool"
 }

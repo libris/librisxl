@@ -1,20 +1,25 @@
-package whelk
+package datatool.bulkchange
 
 import org.apache.jena.query.QueryExecution
 import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.query.ResultSet
+
+import whelk.Document
+import whelk.JsonLd
 import whelk.converter.JsonLdToTrigSerializer
 import whelk.history.DocumentVersion
 import whelk.history.History
-import whelk.util.DocumentComparator
 import whelk.util.DocumentUtil
+
+import datatool.util.DocumentComparator
 
 import static java.nio.charset.StandardCharsets.UTF_8
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.RECORD_KEY
 import static whelk.JsonLd.asList
 
-class BulkChange {
+// TODO: Better name for this class
+class FormBulkChange {
     private static final String MATCH_FORM = 'matchForm'
     private static final String TARGET_FORM = 'targetForm'
     private static final String ADD = 'add'
@@ -36,7 +41,7 @@ class BulkChange {
     private Map context
     private Set<String> repeatableTerms
 
-    BulkChange(String sparqlEndpoint, Map context, Set<String> repeatableTerms) {
+    FormBulkChange(String sparqlEndpoint, Map context, Set<String> repeatableTerms) {
         this.sparqlEndpoint = sparqlEndpoint
         this.context = context
         this.repeatableTerms = repeatableTerms

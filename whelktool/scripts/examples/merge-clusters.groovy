@@ -1,4 +1,4 @@
-import whelk.util.DisjointSets
+import datatool.util.DisjointSets
 
 String dir = System.getProperty('clustersDir')
 mergeClusters(

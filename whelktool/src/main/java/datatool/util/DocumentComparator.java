@@ -1,4 +1,4 @@
-package whelk.util;
+package datatool.util;
 
 import com.google.common.base.Preconditions;
 

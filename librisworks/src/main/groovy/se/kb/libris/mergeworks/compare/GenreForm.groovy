@@ -1,6 +1,6 @@
 package se.kb.libris.mergeworks.compare
 
-import whelk.util.DocumentComparator
+import datatool.util.DocumentComparator
 
 //FIXME
 class GenreForm extends StuffSet {

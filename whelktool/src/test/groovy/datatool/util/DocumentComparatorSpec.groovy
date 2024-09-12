@@ -1,8 +1,7 @@
-package whelk.util
+package datatool.util
 
 
 import spock.lang.Specification
-import whelk.util.DocumentComparator
 
 import static whelk.util.Jackson.mapper
 
