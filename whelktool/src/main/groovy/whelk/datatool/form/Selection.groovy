@@ -1,4 +1,4 @@
-package datatool.bulkchange
+package whelk.datatool.form
 
 import org.apache.jena.query.QueryExecution
 import org.apache.jena.query.QueryExecutionFactory

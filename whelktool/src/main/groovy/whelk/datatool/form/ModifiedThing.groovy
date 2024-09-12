@@ -1,7 +1,8 @@
-package datatool.bulkchange
+package whelk.datatool.form
 
-import datatool.util.DocumentComparator
+
 import whelk.Document
+import whelk.datatool.util.DocumentComparator
 import whelk.util.DocumentUtil
 
 import static whelk.JsonLd.ID_KEY

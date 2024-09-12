@@ -1,4 +1,4 @@
-package datatool.bulkchange
+package whelk.datatool.form
 
 import whelk.util.DocumentUtil
 
