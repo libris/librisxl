@@ -47,6 +47,7 @@ class WhelkTool {
     private boolean hasStoredScriptJob
 
     String changedIn = "xl"
+    String defaultChangedBy
 
     File reportsDir
     PrintWriter mainLog
@@ -91,6 +92,7 @@ class WhelkTool {
         }
         this.whelk = whelk
         this.script = script
+        this.defaultChangedBy = script.scriptJobUri
         this.reportsDir = reportsDir
         reportsDir.mkdirs()
         mainLog = new PrintWriter(new File(reportsDir, "MAIN.txt"))
@@ -480,7 +482,7 @@ class WhelkTool {
 
     private void doDeletion(DocumentItem item) {
         if (!dryRun) {
-            whelk.remove(item.doc.shortId, changedIn, script.scriptJobUri)
+            whelk.remove(item.doc.shortId, changedIn, item.changedBy ?: defaultChangedBy)
         }
         deletedLog.println(item.doc.shortId)
     }
@@ -530,7 +532,7 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(item.generationProcess ?: script.scriptJobUri)
         if (!dryRun) {
-            whelk.storeAtomicUpdate(doc, !item.loud, true, changedIn, item.changedBy ?: script.scriptJobUri, item.preUpdateChecksum)
+            whelk.storeAtomicUpdate(doc, !item.loud, true, changedIn, item.changedBy ?: defaultChangedBy, item.preUpdateChecksum)
         }
         modifiedLog.println(doc.shortId)
     }
@@ -542,7 +544,7 @@ class WhelkTool {
         doc.setGenerationProcess(item.generationProcess ?: script.scriptJobUri)
         if (!dryRun) {
             var collection = LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld())
-            if (!whelk.createDocument(doc, changedIn, item.changedBy ?: script.scriptJobUri, collection, false))
+            if (!whelk.createDocument(doc, changedIn, item.changedBy ?: defaultChangedBy, collection, false))
                 throw new WhelkException("Failed to save a new document. See general whelk log for details.")
         }
         createdLog.println(doc.shortId)

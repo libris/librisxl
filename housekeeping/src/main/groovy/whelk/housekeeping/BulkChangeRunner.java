@@ -52,8 +52,9 @@ public class BulkChangeRunner extends HouseKeeper {
         }
     }
 
-    private void run(String id) {
+    private void run(String systemId) {
+        String id = Document.getBASE_URI() + systemId + Document.HASH_IT;
         // TODO Improve housekeeping task execution, start, stop etc etc
-        new Thread(threadGroup, new BulkChange(whelk, Document.getBASE_URI() + id)).start();
+        new Thread(threadGroup, new BulkChange(whelk, id)).start();
     }
 }

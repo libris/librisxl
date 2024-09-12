@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static whelk.util.Unicode.stripPrefix;
+import static whelk.util.Unicode.stripSuffix;
 
 public class BulkChange implements Runnable {
     private static final Logger logger = Logger.getLogger(BulkChange.class);
@@ -55,7 +56,7 @@ public class BulkChange implements Runnable {
     public BulkChange(Whelk whelk, String id) {
         this.whelk = whelk;
         this.id = id;
-        this.systemId = stripPrefix(id, Document.getBASE_URI().toString());
+        this.systemId = stripSuffix(stripPrefix(id, Document.getBASE_URI().toString()), Document.HASH_IT);
     }
 
     @Override
@@ -73,10 +74,11 @@ public class BulkChange implements Runnable {
 
             if (shouldRun.get()) {
                 var changeDoc = loadDocument();
-                var tool = buildWhelkTool(changeDoc);
+                var changeAgent = changeDoc.getDescriptionLastModifier();
+                var tool = buildWhelkTool(changeDoc, changeAgent);
                 var scriptLog = tool.getMainLog();
 
-                scriptLog.println(String.format("Running %s: %s", Type.BulkChange, id));
+                scriptLog.println(String.format("Running %s: %s for %s", Type.BulkChange, id, changeAgent));
                 scriptLog.println(String.format("label: %s", changeDoc.getLabels()));
                 scriptLog.println(String.format("comment: %s", changeDoc.getComments()));
                 scriptLog.println();
@@ -95,11 +97,13 @@ public class BulkChange implements Runnable {
         }
     }
 
-    WhelkTool buildWhelkTool(BulkChangeDocument changeDoc) {
+    WhelkTool buildWhelkTool(BulkChangeDocument changeDoc, String changeAgent) {
         return switch (changeDoc.getSpecification()) {
             case BulkChangeDocument.FormSpecification formSpecification -> {
                 Script script = new Script(loadClasspathScriptSource("form.groovy"), id);
                 WhelkTool tool = new WhelkTool(whelk, script, reportDir(systemId), WhelkTool.getDEFAULT_STATS_NUM_IDS());
+                // TODO for now setting changedBy only works for loud changes (!minorChange in PostgreSQLComponent)
+                tool.setDefaultChangedBy(changeAgent);
                 tool.setScriptParams(Map.of(
                         Prop.matchForm.toString(), formSpecification.matchForm(),
                         Prop.targetForm.toString(), formSpecification.targetForm()

@@ -36,6 +36,7 @@ sourceSets {
     // "Mark directory as" > "Unmark as Sources root"
     whelktoolScripts {
         groovy { srcDir 'scripts' }
+        groovy { srcDir 'src/main/resources/bulk-change-scripts' }
     }
 }
 
