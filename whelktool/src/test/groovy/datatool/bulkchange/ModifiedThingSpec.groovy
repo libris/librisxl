@@ -15,7 +15,6 @@ class ModifiedThingSpec extends Specification {
         Map before = spec['matchForm']
         Map after = spec['targetForm']
         FormDiff formDiff = new FormDiff(spec['matchForm'], spec['targetForm'])
-//        Map formSpec = (Map) Document.deepCopy(spec.subMap(['matchForm', 'targetForm']))
 
         expect:
         new ModifiedThing(before, formDiff, [] as Set).after == after
