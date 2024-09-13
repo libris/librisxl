@@ -1,7 +1,6 @@
 package whelk.datatool.form
 
 import spock.lang.Specification
-import whelk.Document
 
 import static whelk.util.Jackson.mapper
 

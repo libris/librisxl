@@ -22,6 +22,10 @@ public class DocumentComparator {
         this.isOrderedList = Preconditions.checkNotNull(isOrderedList);
     }
 
+    public boolean isEqual(Object a, Object b) {
+        return isEqual(Map.of("x", a), Map.of("x", b));
+    }
+
     public boolean isEqual(Map<?, ?> a, Map<?, ?> b) {
         if (a == null || b == null || a.size() != b.size()) {
             return false;

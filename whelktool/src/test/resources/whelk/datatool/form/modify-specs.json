@@ -1,0 +1,26 @@
+{
+  "specs": [
+    {
+      "name": "Remove string",
+      "matchForm": {
+        "_id": "1",
+        "x1": "y1",
+        "x2": "y2"
+      },
+      "targetForm": {
+        "_id": "1",
+        "x1": "y1"
+      },
+      "before": {
+        "x1": "y1",
+        "x2": "y2"
+      },
+      "after": {
+        "x1": "y1"
+      }
+    }
+  ],
+  "TODO: make these pass": [
+
+  ]
+}
