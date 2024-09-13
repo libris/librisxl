@@ -191,6 +191,8 @@ class Document {
 
     String getThingInScheme() { get(thingInSchemePath) }
 
+    Map getThing() { get(thingPath) as Map }
+
     void setDescriptionCreator(creator) { set(descriptionCreatorPath, creator) }
 
     String getDescriptionCreator() { get(descriptionCreatorPath) }
