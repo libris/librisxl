@@ -5,6 +5,7 @@ import groovy.util.logging.Log4j2 as Log
 import org.apache.jena.query.QueryExecution
 import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.query.ResultSet
+import whelk.Document
 import whelk.JsonLd
 import whelk.converter.JsonLdToTrigSerializer
 
@@ -53,8 +54,13 @@ class SparqlQueryClient {
         ResultSet res = qe.execSelect()
         var ids = res.collect { it.get(GRAPH_VAR).toString() }
 
-        // TODO remove me - for testing locally without virtuoso
-        // ids = ids.stream().map(i -> i.replace("https://libris-dev.kb.se/", "http://libris.kb.se.localhost:5000/")).collect(Collectors.toList());
+        // for experimenting without a local Virtuoso installation
+        if ("true" == System.getProperty("xl.test.rewriteSparqlResultIds")) {
+            log.warn("Rewriting result ids to ${Document.getBASE_URI()}")
+            ids = ids.collect {
+                it.replaceFirst("https?://[^/]*/", Document.getBASE_URI().toString())
+            }
+        }
 
         return ids;
     }
