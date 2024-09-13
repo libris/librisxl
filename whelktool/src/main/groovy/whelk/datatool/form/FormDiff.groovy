@@ -1,5 +1,6 @@
 package whelk.datatool.form
 
+import whelk.Document
 import whelk.util.DocumentUtil
 
 import static whelk.JsonLd.TYPE_KEY
@@ -117,5 +118,11 @@ class FormDiff {
         DocumentUtil.findKey(o, '_id') { v, p ->
             new DocumentUtil.Remove()
         }
+    }
+
+    static Map withoutMarkerIds(Map form) {
+        var f = (Map) Document.deepCopy(form)
+        clearImplicitIds(f)
+        return f
     }
 }

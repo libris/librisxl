@@ -9,6 +9,7 @@ import whelk.component.DocumentNormalizer
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.component.PostgreSQLComponent.UpdateAgent
+import whelk.component.SparqlQueryClient
 import whelk.component.SparqlUpdater
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.StorageCreateFailedException
@@ -37,6 +38,7 @@ class Whelk {
     PostgreSQLComponent storage
     public ElasticSearch elastic
     SparqlUpdater sparqlUpdater
+    SparqlQueryClient sparqlQueryClient
 
     boolean completeCore = false
 
@@ -139,6 +141,7 @@ class Whelk {
         loadCoreData(systemContextUri)
 
         sparqlUpdater = SparqlUpdater.build(storage, jsonld.context, configuration)
+        sparqlQueryClient = new SparqlQueryClient(configuration.getProperty('sparqlEndpoint', null), jsonld);
     }
 
     static Map<String, Map<String, String>> collectNamedApplications(Properties configuration) {
