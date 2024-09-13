@@ -162,7 +162,7 @@ class WhelkTool {
             log "Select by form"
         }
 
-        var ids = Selection.byForm(form, whelk.sparqlQueryClient).recordIds
+        var ids = Selection.byForm(FormDiff.withoutMarkerIds(form), whelk.sparqlQueryClient).recordIds
 
         selectByIds(ids, process, batchSize, silent)
     }
