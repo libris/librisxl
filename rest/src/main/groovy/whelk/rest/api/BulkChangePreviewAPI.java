@@ -60,9 +60,6 @@ public class BulkChangePreviewAPI extends HttpServlet {
                     var ids = whelk.getSparqlQueryClient().queryIdsByForm(match);
                     var diff = new FormDiff(formSpecification.matchForm(), formSpecification.targetForm());
 
-                    // TODO remove me - for testing locally without virtuoso
-                    //ids = ids.stream().map(i -> i.replace("https://libris-dev.kb.se/", "http://libris.kb.se.localhost:5000/")).collect(Collectors.toList());
-
                     var itemIds = slice(ids, offset, offset + limit);
                     var items = whelk.bulkLoad(itemIds)
                             .values()

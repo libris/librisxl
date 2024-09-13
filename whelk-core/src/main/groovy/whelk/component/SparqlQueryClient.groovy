@@ -1,6 +1,5 @@
 package whelk.component
 
-
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import org.apache.jena.query.QueryExecution
@@ -52,7 +51,12 @@ class SparqlQueryClient {
 
         QueryExecution qe = QueryExecutionFactory.sparqlService(sparqlEndpoint, queryString)
         ResultSet res = qe.execSelect()
-        return res.collect { it.get(GRAPH_VAR).toString() }
+        var ids = res.collect { it.get(GRAPH_VAR).toString() }
+
+        // TODO remove me - for testing locally without virtuoso
+        // ids = ids.stream().map(i -> i.replace("https://libris-dev.kb.se/", "http://libris.kb.se.localhost:5000/")).collect(Collectors.toList());
+
+        return ids;
     }
 
     // TODO should this live here or together with whelk.datatool.form.Form?
