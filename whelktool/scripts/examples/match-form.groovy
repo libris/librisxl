@@ -1,7 +1,6 @@
 package examples
 
 Map matchForm = [
-        '_id': '1',
         '@type': 'Electronic'
 ]
 
@@ -15,8 +14,8 @@ Map targetForm = [
         ]
 ]
 
-selectByIds(['6qjj71mj2cws3nc']) { doc ->
-//selectByForm(matchForm) { doc ->
+//selectByIds(['6qjj71mj2cws3nc']) { doc ->
+selectByForm(matchForm) { doc ->
     doc.modify(matchForm, targetForm)
     doc.scheduleSave()
 }

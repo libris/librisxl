@@ -162,11 +162,7 @@ class WhelkTool {
             log "Select by form"
         }
 
-        if (!whelk.sparqlQueryUrl) {
-            throw new Exception('sparqlQueryUrl not configured')
-        }
-
-        var ids = Selection.byForm(form, whelk.sparqlQueryUrl, whelk.jsonld.context).recordIds
+        var ids = Selection.byForm(form, whelk.sparqlQueryClient).recordIds
 
         selectByIds(ids, process, batchSize, silent)
     }
