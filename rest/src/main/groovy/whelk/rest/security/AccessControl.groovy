@@ -3,6 +3,9 @@ package whelk.rest.security
 import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.JsonLd
+import whelk.datatool.bulkchange.BulkAccessControl
+import whelk.datatool.bulkchange.BulkChange
+import whelk.datatool.bulkchange.BulkChangeDocument
 import whelk.exception.ModelValidationException
 import whelk.util.LegacyIntegrationTools
 
@@ -47,6 +50,9 @@ class AccessControl {
             }
 
         }
+        else if (oldDoc.getThingType() == BulkChange.Type.BulkChange.toString()) {
+            BulkAccessControl.verify(oldDoc, newDoc)
+        }
 
         return checkDocument(newDoc, userPrivileges, jsonld) &&
                 checkDocument(oldDoc, userPrivileges, jsonld)
@@ -73,6 +79,11 @@ class AccessControl {
         else if (document.getThingType() == 'ShelfMarkSequence') {
             String ownedBySigel = LegacyIntegrationTools.uriToLegacySigel(document.getDescriptionCreator())
             return hasGlobalRegistrantPermission(userPrivileges) || hasPermissionForSigel(ownedBySigel, userPrivileges)
+        }
+        else if (document.getThingType() == BulkChange.Type.BulkChange.toString()) {
+            // TODO step 1, new sigel
+            // TODO step 2, configure in libris login
+            return hasPermissionForSigel("S", userPrivileges)
         }
         else {
             return hasCatalogingPermission(userPrivileges)

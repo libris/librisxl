@@ -19,7 +19,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static whelk.datatool.bulkchange.BulkChange.Prop.targetForm;
 import static whelk.util.Unicode.stripPrefix;
 import static whelk.util.Unicode.stripSuffix;
 
