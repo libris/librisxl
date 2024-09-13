@@ -1,10 +1,13 @@
 import static whelk.datatool.bulkchange.BulkChange.Prop.matchForm
+import static whelk.datatool.bulkchange.BulkChange.Prop.targetForm
 
 // TODO
 println("Hello from script! " + parameters.get(matchForm))
 
-selectByIds(['6qjj71mj2cws3nc']) { bib ->
-    bib.graph[1]['indirectlyIdentifiedBy'][0]['value'] = bib.graph[1]['indirectlyIdentifiedBy'][0]['value'] + '_5'
+Map matchForm = parameters.get(matchForm)
+Map targetForm = parameters.get(targetForm)
 
-    bib.scheduleSave(loud: isLoudAllowed)
+selectByForm(matchForm) { doc ->
+    doc.modify(matchForm, targetForm)
+    doc.scheduleSave(loud: isLoudAllowed)
 }

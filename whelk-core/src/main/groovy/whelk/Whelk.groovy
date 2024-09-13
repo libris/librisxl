@@ -37,6 +37,7 @@ class Whelk {
     PostgreSQLComponent storage
     public ElasticSearch elastic
     SparqlUpdater sparqlUpdater
+    String sparqlQueryUrl
 
     boolean completeCore = false
 
@@ -139,6 +140,7 @@ class Whelk {
         loadCoreData(systemContextUri)
 
         sparqlUpdater = SparqlUpdater.build(storage, jsonld.context, configuration)
+        sparqlQueryUrl = configuration.getProperty('sparqlQueryUrl', null);
     }
 
     static Map<String, Map<String, String>> collectNamedApplications(Properties configuration) {

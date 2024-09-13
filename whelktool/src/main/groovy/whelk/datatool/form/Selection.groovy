@@ -1,15 +1,16 @@
 package whelk.datatool.form
 
+import groovy.util.logging.Log4j2 as Log
 import org.apache.jena.query.QueryExecution
 import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.query.ResultSet
 import whelk.converter.JsonLdToTrigSerializer
 
-
 import static java.nio.charset.StandardCharsets.UTF_8
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.RECORD_KEY
 
+@Log
 class Selection {
     private static final String RECORD_TMP_ID = "TEMP_ID"
     private static final String THING_TMP_ID = "TEMP_ID#it"
@@ -30,7 +31,7 @@ class Selection {
 //        return new Selection(selectBySparqlWhere(toSparqlPattern(form)))
 //    }
 
-    Selection byForm(Map form, String sparqlEndpoint, Map context) {
+    static Selection byForm(Map form, String sparqlEndpoint, Map context) {
         return new Selection(sparqlQueryIdsByForm(form, sparqlEndpoint, context))
     }
 
@@ -40,10 +41,6 @@ class Selection {
 
     boolean isEmpty() {
         return recordIds.isEmpty()
-    }
-
-    List<String> getExampleIds() {
-        return recordIds.sort().take(ITEMS_PREVIEW_LIMIT)
     }
 
     static List<String> sparqlQueryIdsByForm(Map form, String sparqlEndpoint, Map context) {
@@ -64,6 +61,8 @@ class Selection {
         if (LIMIT > 0) {
             queryString += "\nLIMIT ${LIMIT}"
         }
+
+        log.debug(queryString)
 
         QueryExecution qe = QueryExecutionFactory.sparqlService(sparqlEndpoint, queryString)
         ResultSet res = qe.execSelect()

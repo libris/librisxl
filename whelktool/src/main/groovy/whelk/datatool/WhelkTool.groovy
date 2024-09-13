@@ -6,6 +6,9 @@ import whelk.Document
 import whelk.IdGenerator
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.datatool.form.FormDiff
+import whelk.datatool.form.ModifiedThing
+import whelk.datatool.form.Selection
 import whelk.exception.StaleUpdateException
 import whelk.exception.WhelkException
 import whelk.meta.WhelkConstants
@@ -151,6 +154,21 @@ class WhelkTool {
         }
         doSelectBySqlWhere("id IN ($idItems) AND deleted = false", process,
                 batchSize)
+    }
+
+    void selectByForm(Map form, Closure process,
+                     int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false) {
+        if (!silent) {
+            log "Select by form"
+        }
+
+        if (!whelk.sparqlQueryUrl) {
+            throw new Exception('sparqlQueryUrl not configured')
+        }
+
+        var ids = Selection.byForm(form, whelk.sparqlQueryUrl, whelk.jsonld.context).recordIds
+
+        selectByIds(ids, process, batchSize, silent)
     }
 
     DocumentItem create(Map data) {
@@ -616,6 +634,7 @@ class WhelkTool {
         bindings.put("selectByCollection", this.&selectByCollection)
         bindings.put("selectByIds", this.&selectByIds)
         bindings.put("selectBySqlWhere", this.&selectBySqlWhere)
+        bindings.put("selectByForm", this.&selectByForm)
         bindings.put("selectFromIterable", this.&selectFromIterable)
         bindings.put("create", this.&create)
         bindings.put("queryIds", this.&queryIds)
@@ -876,6 +895,16 @@ class DocumentItem {
 
     Map asCard(boolean withSearchKey = false) {
         return whelk.jsonld.toCard(doc.data, false, withSearchKey)
+    }
+    
+    void modify(Map matchForm, Map targetForm) {
+            var m = new ModifiedThing(
+                (Map) this.graph[1],
+                new FormDiff(matchForm, targetForm),
+                whelk.jsonld.repeatableTerms)
+
+        this.graph[1] = m.after
+
     }
 }
 
