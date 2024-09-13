@@ -3,7 +3,11 @@ package whelk.rest.api;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
+import whelk.datatool.Script;
+import whelk.datatool.WhelkTool;
+import whelk.datatool.bulkchange.BulkChange;
 import whelk.datatool.bulkchange.BulkChangeDocument;
+import whelk.datatool.form.FormDiff;
 import whelk.util.WhelkFactory;
 
 import javax.servlet.ServletException;
@@ -44,26 +48,36 @@ public class BulkChangePreviewAPI extends HttpServlet {
             int limit = parsePositiveInt(request, "_limit", 5);
             int offset = parsePositiveInt(request, "_offset", 0);
 
-            Document doc = whelk.getDocument(id);
-            if (doc == null) {
-                throw new Crud.NotFoundException("Document not found");
-            }
-            BulkChangeDocument bulkChangeDoc = new BulkChangeDocument(doc.data);
-            try {
-                bulkChangeDoc = new BulkChangeDocument(doc.data);
-            } catch (IllegalArgumentException e) {
-                throw new BadRequestException(e.getMessage());
-            }
+            var doc = load(id);
 
             Map<Object, Object> result = new HashMap<>();
             result.put(JsonLd.TYPE_KEY, BULK_CHANGE_PREVIEW_TYPE);
-            result.put("totalItems", 0);
-            result.put("items", Collections.emptyList());
+
+            switch (doc.getSpecification()) {
+                case BulkChangeDocument.FormSpecification formSpecification -> {
+                    var match = FormDiff.withoutMarkerIds(formSpecification.matchForm());
+                    var ids = whelk.getSparqlQueryClient().queryIdsByForm(match);
+                    result.put("totalItems", ids.size());
+                    result.put("items", Collections.emptyList());
+                }
+            }
 
             // TODO support turtle etc?
             HttpTools.sendResponse(response, result, (String) MimeTypes.getJSONLD());
         } catch (Exception e) {
             HttpTools.sendError(response, HttpTools.mapError(e), e.getMessage(), e);
+        }
+    }
+
+    private BulkChangeDocument load(String id) {
+        Document doc = whelk.getDocument(id);
+        if (doc == null) {
+            throw new Crud.NotFoundException("Document not found");
+        }
+        try {
+            return new BulkChangeDocument(doc.data);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException(e.getMessage());
         }
     }
 
