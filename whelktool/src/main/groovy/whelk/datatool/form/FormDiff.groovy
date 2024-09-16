@@ -90,7 +90,7 @@ class FormDiff {
         if (a instanceof List && b instanceof List) {
             def changedPaths = []
             a.eachWithIndex { elem, i ->
-                Map peer = (Map) b.find { it == elem || it instanceof Map && it[_ID] == elem[_ID] }
+                def peer = b.find { it == elem || it instanceof Map && it[_ID] == elem[_ID] }
                 changedPaths.addAll(peer ? collectChangedPaths(elem, peer, path + i) : [path + i])
             }
             return changedPaths
