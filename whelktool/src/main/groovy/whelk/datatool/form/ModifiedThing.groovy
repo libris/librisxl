@@ -55,7 +55,7 @@ class ModifiedThing {
             }
 
             if (m.valuesToRemove) {
-                 adjustForm(matchParentForm, property, m.valuesToRemove)
+                adjustForm(matchParentForm, property, m.valuesToRemove)
             }
         }
 
@@ -117,7 +117,7 @@ class ModifiedThing {
             }
         }
 
-        private remove(Map node, String property) {
+        private void remove(Map node, String property) {
             def current = node[property]
             // Assume that it has already been checked that current contains/matches all valuesToRemove
             valuesToRemove.each { v ->
@@ -134,15 +134,23 @@ class ModifiedThing {
             }
         }
 
-        private add(Map node, String property) {
+        private void add(Map node, String property) {
+            addRecursive(node, property, valuesToAdd)
+        }
+
+        private void addRecursive(Map node, String property, List valuesToAdd) {
             def current = node[property]
 
-            for (v in valuesToAdd) {
-                if (!asList(current).contains(v)) {
+            for (value in valuesToAdd) {
+                if (!asList(current).any { isEqual(it, value) }) {
                     if (current == null) {
-                        current = property in repeatableTerms ? [v] : v
+                        current = property in repeatableTerms ? [value] : value
                     } else if (property in repeatableTerms) {
-                        current = asList(current) + v
+                        current = asList(current) + value
+                    } else if (current instanceof Map && value instanceof Map) {
+                        ((Map) value).each { k, v ->
+                            addRecursive((Map) current, (String) k, asList(v))
+                        }
                     } else {
                         throw new Exception("Property $property is not repeatable.")
                     }
