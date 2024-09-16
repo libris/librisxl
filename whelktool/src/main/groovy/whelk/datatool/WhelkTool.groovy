@@ -17,6 +17,7 @@ import whelk.search.ElasticFind
 import whelk.util.DocumentUtil
 import whelk.util.LegacyIntegrationTools
 import whelk.util.Statistics
+import whelk.JsonLdValidator
 
 import javax.script.Bindings
 import javax.script.CompiledScript
@@ -74,6 +75,7 @@ class WhelkTool {
 
     boolean allowLoud
     boolean allowIdRemoval
+    boolean skipValidation = false
 
     private Throwable errorDetected
 
@@ -81,6 +83,7 @@ class WhelkTool {
 
     ElasticFind elasticFind
     Statistics statistics
+    JsonLdValidator validator
 
     private ScheduledExecutorService timedLogger = MoreExecutors.getExitingScheduledExecutorService(
             Executors.newScheduledThreadPool(1))
@@ -94,6 +97,7 @@ class WhelkTool {
             }
         }
         this.whelk = whelk
+        this.validator = JsonLdValidator.from(whelk.jsonld)
         this.script = script
         this.defaultChangedBy = script.scriptJobUri
         this.reportsDir = reportsDir
@@ -545,6 +549,11 @@ class WhelkTool {
         Document doc = item.doc
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(item.generationProcess ?: script.scriptJobUri)
+
+        if (!skipValidation) {
+            validateJsonLd(doc)
+        }
+
         if (!dryRun) {
             whelk.storeAtomicUpdate(doc, !item.loud, true, changedIn, item.changedBy ?: defaultChangedBy, item.preUpdateChecksum)
         }
@@ -556,12 +565,24 @@ class WhelkTool {
         doc.setControlNumber(doc.getShortId())
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(item.generationProcess ?: script.scriptJobUri)
+
+        if (!skipValidation) {
+            validateJsonLd(doc)
+        }
+
         if (!dryRun) {
             var collection = LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld())
             if (!whelk.createDocument(doc, changedIn, item.changedBy ?: defaultChangedBy, collection, false))
                 throw new WhelkException("Failed to save a new document. See general whelk log for details.")
         }
         createdLog.println(doc.shortId)
+    }
+
+    private void validateJsonLd(Document doc) {
+        List<JsonLdValidator.Error> errors = validator.validate(doc.data, doc.getLegacyCollection(whelk.jsonld))
+        if (errors) {
+            throw new Exception("Invalid JSON-LD. Errors: ${errors.collect{ it.toMap() }}")
+        }
     }
 
     private boolean confirmNextStep(String inJsonStr, Document doc) {
@@ -666,6 +687,7 @@ class WhelkTool {
         if (limit > -1) log "  limit: $limit"
         if (allowLoud) log "  allowLoud"
         if (allowIdRemoval) log "  allowIdRemoval"
+        if (skipValidation) log " skipValidation"
         log()
 
         bindings = createMainBindings()
@@ -725,6 +747,7 @@ class WhelkTool {
         cli.l(longOpt: 'limit', args: 1, argName: 'LIMIT', 'Amount of documents to process.')
         cli.a(longOpt: 'allow-loud', 'Allow scripts to do loud modifications.')
         cli.idchg(longOpt: 'allow-id-removal', '[UNSAFE] Allow script to remove document ids, e.g. sameAs.')
+        cli.sv(longOpt: 'skip-validation', '[UNSAFE] Skip JSON-LD validation before saving to database.')
         cli.n(longOpt: 'stats-num-ids', args: 1, 'Number of ids to print per entry in STATISTICS.txt.')
 
         def options = cli.parse(args)
@@ -755,6 +778,7 @@ class WhelkTool {
         tool.limit = options.l ? Integer.parseInt(options.l) : -1
         tool.allowLoud = options.a
         tool.allowIdRemoval = options.idchg
+        tool.skipValidation = options.sv
         try {
             tool.run()
         } catch (Exception e) {
