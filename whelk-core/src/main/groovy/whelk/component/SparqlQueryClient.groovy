@@ -12,6 +12,7 @@ import whelk.converter.JsonLdToTrigSerializer
 import static java.nio.charset.StandardCharsets.UTF_8
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.RECORD_KEY
+import static whelk.JsonLd.THING_KEY
 
 @Log
 @CompileStatic
@@ -82,6 +83,7 @@ class SparqlQueryClient {
 
         thing[ID_KEY] = THING_TMP_ID
         record[ID_KEY] = RECORD_TMP_ID
+        record[THING_KEY] = THING_TMP_ID
 
         def ttl = ((ByteArrayOutputStream) JsonLdToTrigSerializer.toTurtle(context, [record, thing]))
                 .toByteArray()
