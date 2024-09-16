@@ -1014,15 +1014,17 @@ class PostgreSQLComponent {
             if (collection == "hold") {
                 checkLinkedShelfMarkOwnership(doc, connection)
 
-                String heldBy = doc.getHeldBy()
-                if (heldBy == null) {
-                    log.warn("Was asked to save a holding record lacking a correct library/heldBy (so, did nothing).")
-                    return null
-                }
-                String libraryRecordId = getRecordId(heldBy, connection)
-                if (libraryRecordId == null) {
-                    log.warn("Was asked to save a holding record for a library that could not be located: " + heldBy + " (so, did nothing).")
-                    return null
+                if (!deleted) {
+                    String heldBy = doc.getHeldBy()
+                    if (heldBy == null) {
+                        log.warn("Was asked to save a holding record lacking a correct library/heldBy (so, did nothing).")
+                        return null
+                    }
+                    String libraryRecordId = getRecordId(heldBy, connection)
+                    if (libraryRecordId == null) {
+                        log.warn("Was asked to save a holding record for a library that could not be located: " + heldBy + " (so, did nothing).")
+                        return null
+                    }
                 }
 
                 String holdingFor = doc.getHoldingFor()
