@@ -118,19 +118,13 @@ class ModifiedThing {
         }
 
         private void remove(Map node, String property) {
-            def current = node[property]
-            // Assume that it has already been checked that current contains/matches all valuesToRemove
-            valuesToRemove.each { v ->
-                if (v instanceof String || v instanceof Map) {
-                    if (current instanceof List) {
-                        node[property] = current.findAll { !isEqual(it, v) }
-                        if (((List) node[property]).isEmpty()) {
-                            node.remove(property)
-                        }
-                    } else if (isEqual(current, v)) {
-                        node.remove(property)
-                    }
-                }
+            def current = asList(node[property])
+            // Assume that it has already been checked that current contains all valuesToRemove
+            valuesToRemove.each { v -> current = current.findAll { !isEqual(it, v) } }
+            if (current.isEmpty()) {
+                node.remove(property)
+            } else {
+                node[property] = current
             }
         }
 
