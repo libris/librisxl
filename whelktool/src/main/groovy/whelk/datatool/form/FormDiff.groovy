@@ -26,21 +26,21 @@ class FormDiff {
     List<Map> getChangeSets() {
         return [
                 [
-                        (TYPE_KEY): 'ChangeSet',
-                        'version'        : matchForm,
-                        'removedPaths'   : [],
-                        'addedPaths'     : []
+                        (TYPE_KEY)    : 'ChangeSet',
+                        'version'     : matchForm,
+                        'removedPaths': [],
+                        'addedPaths'  : []
                 ],
                 [
-                        (TYPE_KEY): 'ChangeSet',
-                        'version'        : targetForm,
-                        'removedPaths'   : removedPaths,
-                        'addedPaths'     : addedPaths
+                        (TYPE_KEY)    : 'ChangeSet',
+                        'version'     : targetForm,
+                        'removedPaths': removedPaths,
+                        'addedPaths'  : addedPaths
                 ]
         ]
     }
 
-   Map getRemovedAddedByPath() {
+    Map getRemovedAddedByPath() {
         if (removedAddedByPath == null) {
             removedAddedByPath = [:]
             Closure dropLastIndex = { List path -> path.last() instanceof Integer ? path.dropRight(1) : path }
@@ -113,8 +113,11 @@ class FormDiff {
     }
 
     private static void clearMarkerIds(Object o) {
-        DocumentUtil.findKey(o, '_id') { v, p ->
-            new DocumentUtil.Remove()
+        DocumentUtil.traverse(o) { v, p ->
+            if (v instanceof Map) {
+                v.remove(_ID)
+                return new DocumentUtil.Nop()
+            }
         }
     }
 
