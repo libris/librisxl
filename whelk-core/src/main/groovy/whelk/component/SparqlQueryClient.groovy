@@ -8,10 +8,15 @@ import org.apache.jena.query.ResultSet
 import whelk.Document
 import whelk.JsonLd
 import whelk.converter.JsonLdToTrigSerializer
+import whelk.util.DocumentUtil
 
 import static java.nio.charset.StandardCharsets.UTF_8
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.RECORD_KEY
+import static whelk.JsonLd.THING_KEY
+import static whelk.JsonLd.asList
+
+import static trld.trig.Serializer.collectPrefixes
 
 @Log
 @CompileStatic
@@ -20,13 +25,16 @@ class SparqlQueryClient {
 
     private static final String RECORD_TMP_ID = "TEMP_ID"
     private static final String THING_TMP_ID = "TEMP_ID#it"
+    private static final String EMPTY_BLANK_NODE_TMP_ID = "EMPTY_BN_ID"
 
     String sparqlEndpoint
     JsonLd jsonLd
+    String prefixes
 
     SparqlQueryClient(String sparqlEndpoint, JsonLd jsonLd) {
         this.sparqlEndpoint = sparqlEndpoint
         this.jsonLd = jsonLd
+        this.prefixes = getNsPrefixes(jsonLd.context)
     }
 
     List<String> queryIdsByPattern(String prefixes, String graphPattern, long limit = -1) {
@@ -66,41 +74,56 @@ class SparqlQueryClient {
     }
 
     // TODO should this live here or together with whelk.datatool.form.Form?
-    // TODO get prefixes in another way?
     List<String> queryIdsByForm(Map form) {
-        def ttl = toTurtle(form, jsonLd.context)
-        def strings = separatePrefixes(ttl)
-        def (prefixes, ttlGraph) = [strings[0], strings[1]]
-        def graphPattern = sparqlify(ttlGraph)
-
+        def graphPattern = sparqlify(form, jsonLd.context)
         return queryIdsByPattern(prefixes, graphPattern)
     }
 
-    static String toTurtle(Map form, Map context = null) {
+    private static String getNsPrefixes(Map context) {
+        String prefixes = ""
+        collectPrefixes(context).each { k, v ->
+            prefixes += "PREFIX $k: <$v>\n"
+        }
+        return prefixes
+    }
+
+    static String sparqlify(Map form, Map context) {
+        markUpEmpty(form)
+
         Map thing = new HashMap(form)
         Map record = new HashMap((Map) thing.remove(RECORD_KEY) ?: [:])
 
         thing[ID_KEY] = THING_TMP_ID
         record[ID_KEY] = RECORD_TMP_ID
+        record[THING_KEY] = [(ID_KEY): THING_TMP_ID]
 
-        def ttl = ((ByteArrayOutputStream) JsonLdToTrigSerializer.toTurtle(context, [record, thing]))
+        return ((ByteArrayOutputStream) JsonLdToTrigSerializer.toTurtle(context, [record, thing]))
                 .toByteArray()
                 .with { new String(it, UTF_8) }
-
-        return ttl
+        // Add skip prelude flag to JsonLdToTrigSerializer.toTurtle?
+                .with { withoutPrefixes(it) }
+                .with { insertVars(it) }
     }
 
-    static List<String> separatePrefixes(String ttl) {
+    private static String insertVars(String ttl) {
+        return ttl.replaceAll("<$RECORD_TMP_ID>", "?$GRAPH_VAR")
+                .replaceAll("<$THING_TMP_ID>", "?mainEntity")
+                .replaceAll("<$EMPTY_BLANK_NODE_TMP_ID>", "[]")
+    }
+
+    private static void markUpEmpty(Map form) {
+        DocumentUtil.traverse(form) { value, path ->
+            if (asList(value).grep().isEmpty()) {
+                return new DocumentUtil.Replace([(ID_KEY): EMPTY_BLANK_NODE_TMP_ID])
+            }
+        }
+    }
+
+    private static String withoutPrefixes(String ttl) {
         ttl.readLines()
-                .split { it.startsWith("prefix") }
-                .collect { it.join('\n') }
-    }
-
-    static String sparqlify(String ttl) {
-        var substitutions = [
-                ("<$RECORD_TMP_ID>".toString()): "?$GRAPH_VAR".toString(),
-                ("<$THING_TMP_ID>".toString()) : "?mainEntity",
-        ]
-        return ttl.replace(substitutions as Map<CharSequence, CharSequence>)
+                .split { it.startsWith('prefix') }
+                .get(1)
+                .join('\n')
+                .trim()
     }
 }

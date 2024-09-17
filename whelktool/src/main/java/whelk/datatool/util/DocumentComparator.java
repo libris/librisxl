@@ -22,6 +22,10 @@ public class DocumentComparator {
         this.isOrderedList = Preconditions.checkNotNull(isOrderedList);
     }
 
+    public boolean isEqual(Object a, Object b) {
+        return isEqual(Map.of("x", a), Map.of("x", b));
+    }
+
     public boolean isEqual(Map<?, ?> a, Map<?, ?> b) {
         if (a == null || b == null || a.size() != b.size()) {
             return false;
@@ -108,20 +112,20 @@ public class DocumentComparator {
     }
 
     private boolean isSubset(Object a, Object b, Object key) {
-        if (a == null || b == null || a.getClass() != b.getClass()) {
+        if (a == null || b == null) {
             return false;
-        }
-        else if (a instanceof Map) {
+        } else if (a.getClass() != b.getClass()) {
+            return (isSingleItemList(a) && isSubset(((List<?>) a).getFirst(), b, key)
+                    || (isSingleItemList(b) && isSubset(a, ((List<?>) b).getFirst(), key)));
+        } else if (a instanceof Map) {
             return isSubset((Map<?, ?>) a, (Map<?, ?>) b);
-        }
-        else if (a instanceof List) {
+        } else if (a instanceof List) {
             if (isOrderedList.apply(key)) {
                 return isOrderedSubset((List<?>) a, (List<?>) b);
             } else {
                 return isUnorderedSubset((List<?>) a, (List<?>) b);
             }
-        }
-        else {
+        } else {
             return a.equals(b);
         }
     }

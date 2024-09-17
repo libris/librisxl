@@ -25,14 +25,14 @@ class ModifiedThing {
     }
 
     private Map modify(Map thing) {
-        Map matchFormCopy = matchFormCopy()
+        Map matchFormCopy = formDiff.getMatchFormCopyWithoutMarkerIds()
 
         if (!comparator.isSubset(matchFormCopy, thing)) {
             throw new Exception("${thing[ID_KEY]} does not match specified form")
         }
 
         formDiff.getRemovedAddedByPath().each { path, removedAdded ->
-            Modification m = new Modification(removedAdded, matchFormCopy, formDiff.targetForm)
+            Modification m = new Modification(removedAdded, matchFormCopy, formDiff.getTargetFormCopyWithoutMarkerIds())
             String property = path.last()
             List parentPath = path.dropRight(1)
             Map matchParentForm = (Map) DocumentUtil.getAtPath(matchFormCopy, parentPath)
@@ -40,7 +40,6 @@ class ModifiedThing {
             List<Map> nodes = (List<Map>) DocumentUtil.getAtPath(thing, noIdxParentPath, [], false)
                     .with { asList(it) }
 
-            boolean anySuccessful = false
             for (Map node in nodes) {
                 // Make sure that we are operating on the right node
                 if (!comparator.isSubset(matchParentForm, node)
@@ -48,32 +47,21 @@ class ModifiedThing {
                     continue
                 }
 
-                m.executeModification(node, property)
-
-                if (m.failed) {
-                    throw new Exception("Failed to modify ${thing[ID_KEY]} at path ${path}")
-                } else {
-                    anySuccessful = true
+                try {
+                    m.executeModification(node, property)
+                } catch (Exception e) {
+                    throw new Exception("Failed to modify ${thing[ID_KEY]} at path ${path}: ${e.getMessage()}")
                 }
             }
 
-            if (anySuccessful) {
-                if (m.valuesToRemove) {
-                    adjustForm(matchParentForm, property, m.valuesToRemove)
-                }
-            } else {
-                throw new Exception("Failed to modify ${thing[ID_KEY]} at path ${path}")
+            if (m.valuesToRemove) {
+                adjustForm(matchParentForm, property, m.valuesToRemove)
             }
         }
 
-        // All operations were successful
         cleanUpEmpty(thing)
 
         return thing
-    }
-
-    private Map matchFormCopy() {
-        return (Map) Document.deepCopy(formDiff.matchForm)
     }
 
     private static boolean containsValues(Object obj, List valuesToRemove) {
@@ -81,7 +69,7 @@ class ModifiedThing {
     }
 
     private static boolean isEqual(Object a, Object b) {
-        return comparator.isEqual(["x": a], ["x": b])
+        return comparator.isEqual(a, b)
     }
 
     private static boolean cleanUpEmpty(Map data) {
@@ -107,15 +95,16 @@ class ModifiedThing {
 
 
     private class Modification {
-        boolean changed = false
-        boolean failed = false
-
         List valuesToRemove
         List valuesToAdd
 
         Modification(Map removedAdded, Map matchForm, Map targetForm) {
-            this.valuesToRemove = asList(removedAdded['remove']).collect { p -> DocumentUtil.getAtPath(matchForm, (List) p) }
-            this.valuesToAdd = asList(removedAdded['add']).collect { p -> DocumentUtil.getAtPath(targetForm, (List) p) }
+            this.valuesToRemove = removedAdded['remove']
+                    ?.collect { p -> DocumentUtil.getAtPath(matchForm, (List) p) }
+                    ?.flatten()
+            this.valuesToAdd = removedAdded['add']
+                    ?.collect { p -> DocumentUtil.getAtPath(targetForm, (List) p) }
+                    ?.flatten()
         }
 
         void executeModification(Map node, String property) {
@@ -129,117 +118,57 @@ class ModifiedThing {
         }
 
         private void remove(Map node, String property) {
-            try {
-                doRemove(node, property)
-            } catch (Exception ignored) {
-                failed = true
-            } finally {
-                changed = true
+            def current = asList(node[property])
+            // Assume that it has already been checked that current contains all valuesToRemove
+            valuesToRemove.each { v -> current = current.findAll { !isEqual(it, v) } }
+            if (current.isEmpty()) {
+                node.remove(property)
+            } else {
+                node[property] = current
             }
         }
 
         private void add(Map node, String property) {
-            try {
-                doAdd(node, property)
-            } catch (Exception ignored) {
-                failed = true
-            }
+            addRecursive(node, property, valuesToAdd)
         }
 
-        private void replace(Map node, String property) {
-            try {
-                doReplace(node, property)
-            } catch (Exception ignored) {
-                failed = true
-            } finally {
-                changed = true
-            }
-        }
-
-        private doRemove(Map node, String property) {
-            def current = node[property]
-            def removeVal = valuesToRemove.size() == 1 ? valuesToRemove[0] : valuesToRemove
-
-            if (removeVal instanceof String) {
-                node[property] = asList(current).findAll { it != removeVal }
-                if (((List) node[property]).isEmpty()) {
-                    node.remove(property)
-                }
-            } else if (removeVal instanceof Map) {
-                if (current instanceof List) {
-                    node[property] = current.findAll { !isEqual(it, removeVal) }
-                    if (((List) node[property]).isEmpty()) {
-                        node.remove(property)
-                    }
-                } else if (current instanceof Map) {
-                    node.remove(property)
-                }
-            } else if (removeVal instanceof List) {
-                // current must be List too since valuesToRemove holds at least two items and we assume that current
-                // contains all of these
-                node[property] = current.findAll { c -> !removeVal.any { isEqual(it, c) } }
-                if (((List) node[property]).isEmpty()) {
-                    node.remove(property)
-                }
-            }
-        }
-
-        private doAdd(Map node, String property) {
+        private void addRecursive(Map node, String property, List valuesToAdd) {
             def current = node[property]
 
-            for (v in valuesToAdd) {
-                if (!asList(current).contains(v)) {
+            for (value in valuesToAdd) {
+                if (!asList(current).any { isEqual(it, value) }) {
                     if (current == null) {
-                        current = property in repeatableTerms ? [v] : v
+                        current = property in repeatableTerms ? [value] : value
                     } else if (property in repeatableTerms) {
-                        current = asList(current) + v
+                        current = asList(current) + value
+                    } else if (current instanceof Map && value instanceof Map) {
+                        ((Map) value).each { k, v ->
+                            addRecursive((Map) current, (String) k, asList(v))
+                        }
                     } else {
-                        failed = true
-                        return
+                        throw new Exception("Property $property is not repeatable.")
                     }
-                    changed = true
                 }
             }
 
             node[property] = current
         }
 
-        private doReplace(Map node, String property) {
-            def current = node[property]
-            def removeVal = valuesToRemove.size() == 1 ? valuesToRemove[0] : valuesToRemove
+        private replace(Map node, String property) {
+            def current = asList(node[property])
 
-            if (removeVal instanceof String) {
-                if (valuesToAdd.size() != 1) {
-                    // Strings can only be added one at a time.
-                    failed = true
-                    return
-                }
-                String addVal = valuesToAdd[0]
-                if (current instanceof List) {
-                    node[property] = current.collect { it == removeVal ? addVal : it }
-                } else if (current instanceof String) {
-                    node[property] = addVal
-                }
-            } else if (removeVal instanceof Map) {
-                if (current instanceof List) {
-                    int updateAt = current.findIndexOf { isEqual(it, removeVal) }
-                    current.remove(updateAt)
-                    valuesToAdd.findAll { v -> !current.any { isEqual(it, v) } }
-                            .eachWithIndex { v, i -> current.add(updateAt + i, v) }
-                } else if (current instanceof Map) {
-                    node[property] = valuesToAdd.size() == 1 ? valuesToAdd.first() : valuesToAdd
-                }
-            } else if (removeVal instanceof List) {
-                current = (List<Map>) current
-                List<Number> removeAt = current.findIndexValues { c -> removeVal.any { isEqual(it, c) } }
-                int insertAt = removeAt.first().intValue()
-                removeAt.reverse().each { n ->
-                    current.remove(n.intValue())
-                }
-                valuesToAdd.eachWithIndex { v, i ->
-                    current.add(insertAt + i, (Map) v)
-                }
+            List<Number> removeAt = current.findIndexValues { c -> valuesToRemove.any { isEqual(it, c) } }
+            int insertAt = removeAt.first().intValue()
+
+            removeAt.reverse().each { n ->
+                current.remove(n.intValue())
             }
+            valuesToAdd.findAll { v -> !current.any { isEqual(it, v) } }
+                    .eachWithIndex { v, i -> current.add(insertAt + i, v) }
+
+            node[property] = current.size() == 1 && !repeatableTerms.contains(property)
+                    ? current.first()
+                    : current
         }
     }
 }

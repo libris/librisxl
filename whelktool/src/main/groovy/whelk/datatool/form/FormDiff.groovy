@@ -21,27 +21,26 @@ class FormDiff {
         this.targetForm = targetForm
         this.removedPaths = collectRemovedPaths()
         this.addedPaths = collectAddedPaths()
-        clearImplicitIds()
     }
 
     List<Map> getChangeSets() {
         return [
                 [
-                        (TYPE_KEY): 'ChangeSet',
-                        'version'        : matchForm,
-                        'removedPaths'   : [],
-                        'addedPaths'     : []
+                        (TYPE_KEY)    : 'ChangeSet',
+                        'version'     : matchForm,
+                        'removedPaths': [],
+                        'addedPaths'  : []
                 ],
                 [
-                        (TYPE_KEY): 'ChangeSet',
-                        'version'        : targetForm,
-                        'removedPaths'   : removedPaths,
-                        'addedPaths'     : addedPaths
+                        (TYPE_KEY)    : 'ChangeSet',
+                        'version'     : targetForm,
+                        'removedPaths': removedPaths,
+                        'addedPaths'  : addedPaths
                 ]
         ]
     }
 
-   Map getRemovedAddedByPath() {
+    Map getRemovedAddedByPath() {
         if (removedAddedByPath == null) {
             removedAddedByPath = [:]
             Closure dropLastIndex = { List path -> path.last() instanceof Integer ? path.dropRight(1) : path }
@@ -89,13 +88,9 @@ class FormDiff {
         }
 
         if (a instanceof List && b instanceof List) {
-            // Allow modifying list of strings? e.g. "label": ["x", "y"] -> ["x", "z"]
-            if (a.any { !(it instanceof Map) } || b.any { !(it instanceof Map) }) {
-                throw new Exception("Lists must only contain Map")
-            }
             def changedPaths = []
             a.eachWithIndex { elem, i ->
-                Map peer = (Map) b.find { it instanceof Map && it[_ID] == elem[_ID] }
+                def peer = b.find { it == elem || it instanceof Map && it[_ID] == elem[_ID] }
                 changedPaths.addAll(peer ? collectChangedPaths(elem, peer, path + i) : [path + i])
             }
             return changedPaths
@@ -109,20 +104,26 @@ class FormDiff {
         throw new Exception("Changing datatype of a value is not allowed.")
     }
 
-    private void clearImplicitIds() {
-        clearImplicitIds(matchForm)
-        clearImplicitIds(targetForm)
+    Map getMatchFormCopyWithoutMarkerIds() {
+        return withoutMarkerIds(matchForm)
     }
 
-    private static void clearImplicitIds(Object o) {
-        DocumentUtil.findKey(o, '_id') { v, p ->
-            new DocumentUtil.Remove()
+    Map getTargetFormCopyWithoutMarkerIds() {
+        return withoutMarkerIds(targetForm)
+    }
+
+    private static void clearMarkerIds(Object o) {
+        DocumentUtil.traverse(o) { v, p ->
+            if (v instanceof Map) {
+                v.remove(_ID)
+                return new DocumentUtil.Nop()
+            }
         }
     }
 
     static Map withoutMarkerIds(Map form) {
         var f = (Map) Document.deepCopy(form)
-        clearImplicitIds(f)
+        clearMarkerIds(f)
         return f
     }
 }

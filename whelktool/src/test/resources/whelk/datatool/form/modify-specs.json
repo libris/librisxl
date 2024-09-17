@@ -1,0 +1,247 @@
+{
+  "specs": [
+    {
+      "name": "Remove literal: non-repeatable property",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": "v2"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "before": {
+        "p1": "v1",
+        "p2": "v2"
+      },
+      "after": {
+        "p1": "v1"
+      }
+    },
+    {
+      "name": "Remove literal: repeatable property, single value",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          "v2"
+        ]
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "before": {
+        "p1": "v1",
+        "r1": "v2"
+      },
+      "after": {
+        "p1": "v1"
+      }
+    },
+    {
+      "name": "Remove literal: repeatable property, all values",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3",
+          "v4"
+        ]
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "before": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3",
+          "v4"
+        ]
+      },
+      "after": {
+        "p1": "v1"
+      }
+    },
+    {
+      "name": "Remove literal: repeatable property, some values",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3",
+          "v4"
+        ]
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          "v2"
+        ]
+      },
+      "before": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3",
+          "v4",
+          "v5"
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v5"
+        ]
+      }
+    },
+    {
+      "name": "Add value deeper in structure: property missing",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "r1": [
+            {
+              "@id": "https://id.kb.se/x"
+            }
+          ]
+        }
+      },
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": "v3"
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p3": "v3",
+          "r1": [
+            {
+              "@id": "https://id.kb.se/x"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Add value deeper in structure: property already exists",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "r1": [
+            {
+              "@id": "https://id.kb.se/y"
+            }
+          ]
+        }
+      },
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": "v3",
+          "r1": [
+            {
+              "@id": "https://id.kb.se/x"
+            }
+          ]
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p3": "v3",
+          "r1": [
+            {
+              "@id": "https://id.kb.se/x"
+            },
+            {
+              "@id": "https://id.kb.se/y"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "FAIL: Try add value deeper in structure: property not repeatable",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "@id": "https://id.kb.se/y"
+          }
+        }
+      },
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p1": "v2",
+          "p3": {
+            "@id": "https://id.kb.se/x"
+          }
+        }
+      },
+      "shouldFailWithException": true
+    },
+    {
+      "name": "Add nested object to repeatable property",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": {
+          "p2": {
+            "@id": "https://id.kb.se/term/y"
+          }
+        }
+      },
+      "before": {
+        "p1": "v1",
+        "r1": {
+          "p3": "v3"
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p3": "v3"
+          },
+          {
+            "p2": {
+              "@id": "https://id.kb.se/term/y"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "TODO: make these pass": [
+  ]
+}
