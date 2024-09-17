@@ -8,11 +8,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static whelk.datatool.bulkchange.BulkChange.Prop.bulkChangeSpecification;
+import static whelk.datatool.bulkchange.BulkChange.Status.CompletedBulkChange;
+import static whelk.datatool.bulkchange.BulkChange.Status.DraftBulkChange;
+import static whelk.datatool.bulkchange.BulkChange.Status.FailedBulkChange;
+import static whelk.datatool.bulkchange.BulkChange.Status.ReadyBulkChange;
+
 public class BulkAccessControl {
     private static final Map<BulkChange.Status, List<BulkChange.Status>> VALID_STATE_TRANSITIONS_BY_USER = Map.of(
-            BulkChange.Status.DraftBulkChange, List.of(BulkChange.Status.DraftBulkChange, BulkChange.Status.ReadyBulkChange),
-            BulkChange.Status.CompletedBulkChange, List.of(BulkChange.Status.ReadyBulkChange),
-            BulkChange.Status.FailedBulkChange, List.of(BulkChange.Status.ReadyBulkChange)
+            DraftBulkChange, List.of(DraftBulkChange, ReadyBulkChange),
+            CompletedBulkChange, List.of(ReadyBulkChange),
+            FailedBulkChange, List.of(ReadyBulkChange)
     );
 
     public static void verify(Document _oldDoc, Document _newDoc) {
@@ -27,10 +33,10 @@ public class BulkAccessControl {
             throw new ModelValidationException(msg);
         }
 
-        if (newDoc.getStatus() != BulkChange.Status.DraftBulkChange) {
+        if (newDoc.getStatus() != DraftBulkChange) {
             var isSameSpec = new DocumentComparator().isEqual(newDoc.getSpecificationRaw(), oldDoc.getSpecificationRaw());
             if (!isSameSpec) {
-                var msg = String.format("Cannot change %s when not a %s", BulkChange.Prop.bulkChangeSpecification, BulkChange.Status.DraftBulkChange);
+                var msg = String.format("Cannot change %s when not a %s", bulkChangeSpecification, DraftBulkChange);
                 throw new ModelValidationException(msg);
             }
         }
