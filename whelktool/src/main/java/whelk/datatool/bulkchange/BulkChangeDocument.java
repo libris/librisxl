@@ -2,6 +2,7 @@ package whelk.datatool.bulkchange;
 
 import whelk.Document;
 import whelk.JsonLd;
+import whelk.exception.ModelValidationException;
 import whelk.search2.parse.Ast;
 import whelk.util.DocumentUtil;
 
@@ -29,11 +30,15 @@ public class BulkChangeDocument extends Document {
     private static final List<Object> COMMENTS_PATH = List.of(JsonLd.GRAPH_KEY, 1, comment, "*");
     private static final List<Object> SPECIFICATION_PATH = List.of(JsonLd.GRAPH_KEY, 1, bulkChangeSpecification);
 
+    public BulkChangeDocument(Document doc) {
+        this(doc.data);
+    }
+
     public BulkChangeDocument(Map<?, ?> data) {
         super(data);
 
         if (!BulkChange.Type.BulkChange.toString().equals(getThingType())) {
-            throw new IllegalArgumentException("Document is not a " + BulkChange.Type.BulkChange);
+            throw new ModelValidationException("Document is not a " + BulkChange.Type.BulkChange);
         }
     }
 
@@ -61,10 +66,14 @@ public class BulkChangeDocument extends Document {
         return getMetaChanges() == BulkChange.MetaChanges.LoudBulkChange;
     }
 
+    public Map<String, Object> getSpecificationRaw() {
+        return get(SPECIFICATION_PATH, null);
+    }
+
     public Specification getSpecification() {
-        Map<String, Object> spec = get(SPECIFICATION_PATH, null);
+        Map<String, Object> spec = getSpecificationRaw();
         if (spec == null) {
-            throw new IllegalArgumentException("Nothing in " + SPECIFICATION_PATH);
+            throw new ModelValidationException("Nothing in " + SPECIFICATION_PATH);
         }
 
         if (BulkChange.Type.FormSpecification.toString().equals(spec.get(JsonLd.TYPE_KEY))) {
@@ -74,7 +83,7 @@ public class BulkChangeDocument extends Document {
             );
         }
 
-        throw new IllegalArgumentException(String.format("Bad %s: %s", bulkChangeSpecification, spec));
+        throw new ModelValidationException(String.format("Bad %s: %s", bulkChangeSpecification, spec));
     }
 
     private <T> T get(List<Object> path, T defaultTo) {
