@@ -61,7 +61,7 @@ public class BulkChangePreviewAPI extends HttpServlet {
                     var diff = new FormDiff(formSpecification.matchForm(), formSpecification.targetForm());
                     var match = diff.getMatchFormCopyWithoutMarkerIds();
                     // TODO use COUNT + LIMIT & OFFSET and don't fetch all ids every time
-                    var ids = whelk.getSparqlQueryClient().queryIdsByForm(match);
+                    var ids = whelk.getSparqlQueryClient().queryIdsByForm(match).stream().sorted().toList();
 
                     var itemIds = slice(ids, offset, offset + limit);
                     var items = whelk.bulkLoad(itemIds)
