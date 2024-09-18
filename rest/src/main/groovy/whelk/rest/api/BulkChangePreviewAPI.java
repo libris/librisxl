@@ -16,7 +16,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +25,9 @@ import static whelk.util.Unicode.stripPrefix;
 public class BulkChangePreviewAPI extends HttpServlet {
 
     private static final String BULK_CHANGE_PREVIEW_TYPE = "BulkChangePreview";
+    private static final String PREVIEW_API_PATH = "/_bulk-change/preview";
+    private static final int DEFAULT_LIMIT = 1;
+
 
     private Whelk whelk;
 
@@ -33,7 +36,6 @@ public class BulkChangePreviewAPI extends HttpServlet {
         whelk = WhelkFactory.getSingletonWhelk();
     }
 
-    // TODO generate @id / first / last / next / prev links
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
@@ -44,20 +46,21 @@ public class BulkChangePreviewAPI extends HttpServlet {
             if (!id.startsWith(Document.getBASE_URI().toString())) {
                 throw new Crud.NotFoundException("Document not found");
             }
-            id = stripPrefix(id, Document.getBASE_URI().toString());
+            var systemId = stripPrefix(id, Document.getBASE_URI().toString());
 
-            int limit = parsePositiveInt(request, "_limit", 5);
-            int offset = parsePositiveInt(request, "_offset", 0);
+            int limit = nonNegativeInt(request, "_limit", DEFAULT_LIMIT);
+            int offset = nonNegativeInt(request, "_offset", 0);
 
-            var changeDoc = load(id);
+            var changeDoc = load(systemId);
 
-            Map<Object, Object> result = new HashMap<>();
+            Map<Object, Object> result = new LinkedHashMap<>();
             result.put(JsonLd.TYPE_KEY, BULK_CHANGE_PREVIEW_TYPE);
 
             switch (changeDoc.getSpecification()) {
                 case BulkChangeDocument.FormSpecification formSpecification -> {
                     var diff = new FormDiff(formSpecification.matchForm(), formSpecification.targetForm());
                     var match = diff.getMatchFormCopyWithoutMarkerIds();
+                    // TODO use COUNT + LIMIT & OFFSET and don't fetch all ids every time
                     var ids = whelk.getSparqlQueryClient().queryIdsByForm(match);
 
                     var itemIds = slice(ids, offset, offset + limit);
@@ -67,7 +70,24 @@ public class BulkChangePreviewAPI extends HttpServlet {
                             .map(doc -> makePreviewChangeSet(doc, diff))
                             .toList();
 
-                    result.put("totalItems", ids.size());
+                    int totalItems = ids.size();
+                    Offsets offsets = new Offsets(totalItems, limit, offset);
+                    result.putAll(makeLink(id, offset, limit));
+                    if (offsets.hasFirst()) {
+                        result.put("first", makeLink(id, offsets.first, limit));
+                    }
+                    if (offsets.hasNext()) {
+                        result.put("next", makeLink(id, offsets.next, limit));
+                    }
+                    if (offsets.hasPrev()) {
+                        result.put("prev", makeLink(id, offsets.prev, limit));
+                    }
+                    if (offsets.hasLast()) {
+                        result.put("last", makeLink(id, offsets.last, limit));
+                    }
+                    result.put("itemOffset", offset);
+                    result.put("itemsPerPage", limit);
+                    result.put("totalItems", totalItems);
                     result.put("changeSets", diff.getChangeSets());
                     result.put("items", items);
                 }
@@ -78,6 +98,20 @@ public class BulkChangePreviewAPI extends HttpServlet {
         } catch (Exception e) {
             HttpTools.sendError(response, HttpTools.mapError(e), e.getMessage(), e);
         }
+    }
+
+    private static Map<String, String> makeLink(String id, int offset, int limit) {
+        var link = PREVIEW_API_PATH + "?" + JsonLd.ID_KEY + "=" + id;
+
+        if (offset != 0) {
+            link += "&_offset=" + offset;
+        }
+
+        if (limit != DEFAULT_LIMIT) {
+            link += "&_limit=" + limit;
+        }
+
+        return Map.of(JsonLd.ID_KEY, link);
     }
 
     // FIXME mangle the data in a more ergonomic way
@@ -119,7 +153,7 @@ public class BulkChangePreviewAPI extends HttpServlet {
         }
     }
 
-    static int parsePositiveInt(HttpServletRequest request, String param, int defaultValue) {
+    static int nonNegativeInt(HttpServletRequest request, String param, int defaultValue) {
         try {
             if (request.getParameter(param) == null) {
                 return defaultValue;
@@ -131,6 +165,66 @@ public class BulkChangePreviewAPI extends HttpServlet {
             return i;
         } catch (NumberFormatException e) {
             throw new BadRequestException(String.format("%s must be a positive integer", param));
+        }
+    }
+
+    // TODO class is duplicated in three places
+    static class Offsets {
+        Integer prev;
+        Integer next;
+        Integer first;
+        Integer last;
+
+        Offsets(int total, int limit, int offset) throws IllegalArgumentException {
+            if (limit < 0) {
+                throw new IllegalArgumentException("\"limit\" can't be negative.");
+            }
+
+            if (offset < 0) {
+                throw new IllegalArgumentException("\"offset\" can't be negative.");
+            }
+
+            if (limit == 0) {
+                return;
+            }
+
+            if (offset != 0) {
+                this.first = 0;
+            }
+
+            this.prev = offset - limit;
+            if (this.prev < 0) {
+                this.prev = null;
+            }
+
+            this.next = offset + limit;
+            if (this.next >= total) {
+                this.next = null;
+            } else if (offset == 0) {
+                this.next = limit;
+            }
+
+            if (total % limit == 0) {
+                this.last = total - limit;
+            } else {
+                this.last = total - (total % limit);
+            }
+        }
+
+        boolean hasNext() {
+            return this.next != null;
+        }
+
+        boolean hasPrev() {
+            return this.prev != null;
+        }
+
+        boolean hasLast() {
+            return this.last != null;
+        }
+
+        boolean hasFirst() {
+            return this.first != null;
         }
     }
 }
