@@ -240,6 +240,217 @@
           }
         ]
       }
+    },
+    {
+      "name": "Replace object",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "_id": "2",
+          "p3": {
+            "_id": "3",
+            "p1": "v2"
+          }
+        }
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "_id": "2",
+          "p3": {
+            "p4": {
+              "@id": "https://id.kb.se/x"
+            }
+          }
+        }
+      },
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "p1": "v2"
+          }
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "p4": {
+              "@id": "https://id.kb.se/x"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "UNCHANGED: Form matched but no exact matching object to replace in actual data",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "_id": "2",
+          "p3": {
+            "_id": "3",
+            "p1": "v2"
+          }
+        }
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "_id": "2",
+          "p3": {
+            "p4": {
+              "@id": "https://id.kb.se/x"
+            }
+          }
+        }
+      },
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "p1": "v2",
+            "r1": ["v3"]
+          }
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "p1": "v2",
+            "r1": ["v3"]
+          }
+        }
+      }
+    },
+    {
+      "name": "Remove any object",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "_id": "2",
+          "p3": {
+            "_id": "3"
+          }
+        }
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "_id": "2"
+        }
+      },
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "p1": "v2"
+          }
+        }
+      },
+      "after": {
+        "p1": "v1"
+      }
+    },
+    {
+      "name": "Add to any object",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "p1": "v2",
+          "_id": "2",
+          "p3": {
+            "_id": "3"
+          }
+        }
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "p1": "v2",
+          "_id": "2",
+          "p3": {
+            "_id": "3",
+            "p4": {
+              "@id": "https://id.kb.se/x"
+            }
+          }
+        }
+      },
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p1": "v2",
+          "p3": {
+            "p1": "v3"
+          }
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p1": "v2",
+          "p3": {
+            "p1": "v3",
+            "p4": {
+              "@id": "https://id.kb.se/x"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Replace any object",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "_id": "2",
+          "p3": {
+            "_id": "3"
+          }
+        }
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "_id": "2",
+          "p3": {
+            "p4": {
+              "@id": "https://id.kb.se/x"
+            }
+          }
+        }
+      },
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "p1": "v2"
+          }
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "p4": {
+              "@id": "https://id.kb.se/x"
+            }
+          }
+        }
+      }
     }
   ],
   "TODO: make these pass": [

@@ -43,7 +43,7 @@ class ModifiedThing {
             for (Map node in nodes) {
                 // Make sure that we are operating on the right node
                 if (!comparator.isSubset(matchParentForm, node)
-                        || (!m.valuesToRemove && !containsValues(node[property], m.valuesToRemove))) {
+                        || (!m.removeAny && m.valuesToRemove && !containsValues(node[property], m.valuesToRemove))) {
                     continue
                 }
 
@@ -97,6 +97,7 @@ class ModifiedThing {
     private class Modification {
         List valuesToRemove
         List valuesToAdd
+        boolean removeAny
 
         Modification(Map removedAdded, Map matchForm, Map targetForm) {
             this.valuesToRemove = removedAdded['remove']
@@ -105,6 +106,7 @@ class ModifiedThing {
             this.valuesToAdd = removedAdded['add']
                     ?.collect { p -> DocumentUtil.getAtPath(targetForm, (List) p) }
                     ?.flatten()
+            this.removeAny = valuesToRemove?.size() == 1 && !valuesToRemove.first()
         }
 
         void executeModification(Map node, String property) {
@@ -118,13 +120,17 @@ class ModifiedThing {
         }
 
         private void remove(Map node, String property) {
-            def current = asList(node[property])
-            // Assume that it has already been checked that current contains all valuesToRemove
-            valuesToRemove.each { v -> current = current.findAll { !isEqual(it, v) } }
-            if (current.isEmpty()) {
+            if (removeAny) {
                 node.remove(property)
             } else {
-                node[property] = current
+                def current = asList(node[property])
+                // Assume that it has already been checked that current contains all valuesToRemove
+                valuesToRemove.each { v -> current = current.findAll { !isEqual(it, v) } }
+                if (current.isEmpty()) {
+                    node.remove(property)
+                } else {
+                    node[property] = current
+                }
             }
         }
 
@@ -154,21 +160,27 @@ class ModifiedThing {
             node[property] = current
         }
 
-        private replace(Map node, String property) {
-            def current = asList(node[property])
+        private void replace(Map node, String property) {
+            if (removeAny) {
+                node[property] = valuesToAdd.size() == 1 && !repeatableTerms.contains(property)
+                        ? valuesToAdd.first()
+                        : valuesToAdd
+            } else {
+                def current = asList(node[property])
 
-            List<Number> removeAt = current.findIndexValues { c -> valuesToRemove.any { isEqual(it, c) } }
-            int insertAt = removeAt.first().intValue()
+                List<Number> removeAt = current.findIndexValues { c -> valuesToRemove.any { isEqual(it, c) } }
+                int insertAt = removeAt.first().intValue()
 
-            removeAt.reverse().each { n ->
-                current.remove(n.intValue())
+                removeAt.reverse().each { n ->
+                    current.remove(n.intValue())
+                }
+                valuesToAdd.findAll { v -> !current.any { isEqual(it, v) } }
+                        .eachWithIndex { v, i -> current.add(insertAt + i, v) }
+
+                node[property] = current.size() == 1 && !repeatableTerms.contains(property)
+                        ? current.first()
+                        : current
             }
-            valuesToAdd.findAll { v -> !current.any { isEqual(it, v) } }
-                    .eachWithIndex { v, i -> current.add(insertAt + i, v) }
-
-            node[property] = current.size() == 1 && !repeatableTerms.contains(property)
-                    ? current.first()
-                    : current
         }
     }
 }
