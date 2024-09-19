@@ -7,6 +7,7 @@ import whelk.util.DocumentUtil
 
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.asList
+import static whelk.util.DocumentUtil.getAtPath
 
 class ModifiedThing {
     private static final DocumentComparator comparator = new DocumentComparator()
@@ -25,19 +26,19 @@ class ModifiedThing {
     }
 
     private Map modify(Map thing) {
-        Map matchFormCopy = formDiff.getMatchFormCopyWithoutMarkerIds()
+        Map matchFormCopy = formDiff.getMatchFormWithoutMarkers()
 
-        if (!comparator.isSubset(matchFormCopy, thing)) {
-            throw new Exception("${thing[ID_KEY]} does not match specified form")
+        if (!isMatch(matchFormCopy, thing)) {
+            return thing
         }
 
         formDiff.getRemovedAddedByPath().each { path, removedAdded ->
-            Modification m = new Modification(removedAdded, matchFormCopy, formDiff.getTargetFormCopyWithoutMarkerIds())
+            Modification m = new Modification(removedAdded, matchFormCopy, formDiff.getTargetFormWithoutMarkers())
             String property = path.last()
             List parentPath = path.dropRight(1)
-            Map matchParentForm = (Map) DocumentUtil.getAtPath(matchFormCopy, parentPath)
+            Map matchParentForm = (Map) getAtPath(matchFormCopy, parentPath)
             List noIdxParentPath = parentPath.findAll { it instanceof String }
-            List<Map> nodes = (List<Map>) DocumentUtil.getAtPath(thing, noIdxParentPath, [], false)
+            List<Map> nodes = (List<Map>) getAtPath(thing, noIdxParentPath, [], false)
                     .with { asList(it) }
 
             for (Map node in nodes) {
@@ -93,6 +94,17 @@ class ModifiedThing {
         }
     }
 
+    boolean isMatch(Map matchForm, Map thing) {
+        if (!comparator.isSubset(matchForm, thing)) {
+            return false
+        }
+        return formDiff.exactMatchPaths.every {ep ->
+            getAtPath(thing, ep.collect { it instanceof String }, [], false)
+                    .with { asList(it) }
+                    .any { isEqual(getAtPath(matchForm, ep), it) }
+        }
+    }
+
 
     private class Modification {
         List valuesToRemove
@@ -101,10 +113,10 @@ class ModifiedThing {
 
         Modification(Map removedAdded, Map matchForm, Map targetForm) {
             this.valuesToRemove = removedAdded['remove']
-                    ?.collect { p -> DocumentUtil.getAtPath(matchForm, (List) p) }
+                    ?.collect { p -> getAtPath(matchForm, (List) p) }
                     ?.flatten()
             this.valuesToAdd = removedAdded['add']
-                    ?.collect { p -> DocumentUtil.getAtPath(targetForm, (List) p) }
+                    ?.collect { p -> getAtPath(targetForm, (List) p) }
                     ?.flatten()
             this.removeAny = valuesToRemove?.size() == 1 && !valuesToRemove.first()
         }

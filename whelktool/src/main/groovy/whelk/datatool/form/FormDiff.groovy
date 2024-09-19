@@ -7,9 +7,13 @@ import static whelk.JsonLd.TYPE_KEY
 
 class FormDiff {
     private static final String _ID = '_id'
+    private static final String _TYPE = '_type'
+    private static final String _EXACT_MATCH_TYPE = "_ExactMatch"
 
     final Map matchForm
     final Map targetForm
+
+    final List<List> exactMatchPaths
 
     final List<List> addedPaths
     final List<List> removedPaths
@@ -21,6 +25,7 @@ class FormDiff {
         this.targetForm = targetForm
         this.removedPaths = collectRemovedPaths()
         this.addedPaths = collectAddedPaths()
+        this.exactMatchPaths = collectExactMatchPaths()
     }
 
     List<Map> getChangeSets() {
@@ -66,6 +71,17 @@ class FormDiff {
         return collectChangedPaths(matchForm, targetForm, [])
     }
 
+    private List<List> collectExactMatchPaths() {
+        List paths = []
+        DocumentUtil.findKey(matchForm, _TYPE) { value, path ->
+            if (value == _EXACT_MATCH_TYPE) {
+                paths.add(path.dropRight(1))
+                return new DocumentUtil.Nop()
+            }
+        }
+        return paths
+    }
+
     private static List collectChangedPaths(Object a, Object b, List path) {
         if (a == b) {
             return []
@@ -104,26 +120,27 @@ class FormDiff {
         throw new Exception("Changing datatype of a value is not allowed.")
     }
 
-    Map getMatchFormCopyWithoutMarkerIds() {
-        return withoutMarkerIds(matchForm)
+    Map getMatchFormWithoutMarkers() {
+        return withoutMarkers(matchForm)
     }
 
-    Map getTargetFormCopyWithoutMarkerIds() {
-        return withoutMarkerIds(targetForm)
+    Map getTargetFormWithoutMarkers() {
+        return withoutMarkers(targetForm)
     }
 
-    private static void clearMarkerIds(Object o) {
+    private static void clearMarkers(Object o) {
         DocumentUtil.traverse(o) { v, p ->
             if (v instanceof Map) {
                 v.remove(_ID)
+                v.remove(_TYPE)
                 return new DocumentUtil.Nop()
             }
         }
     }
 
-    static Map withoutMarkerIds(Map form) {
+    static Map withoutMarkers(Map form) {
         var f = (Map) Document.deepCopy(form)
-        clearMarkerIds(f)
+        clearMarkers(f)
         return f
     }
 }
