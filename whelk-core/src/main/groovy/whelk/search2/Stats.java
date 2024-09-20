@@ -69,7 +69,7 @@ public class Stats {
 
     // Problem: Same value in different fields will be counted twice, e.g. contribution.agent + instanceOf.contribution.agent
     private Map<Property, Map<PropertyValue, Integer>> collectBuckets() {
-        Map<String, AppParams.Slice> sliceByProperty = appParams.statsRepr.getSliceByPropertyName();
+        Map<Property, AppParams.Slice> sliceParamsByProperty = appParams.statsRepr.getSliceByProperty();
         Map<String, Map<String, Integer>> propertyNameToBucketCounts = new LinkedHashMap<>();
 
         // TODO: Decide how to handle properties that can appear at both instance and work level.
@@ -84,11 +84,10 @@ public class Stats {
 
         Map<Property, Map<PropertyValue, Integer>> propertyToBucketCounts = new LinkedHashMap<>();
 
-        for (String p : sliceByProperty.keySet()) {
-            var buckets = propertyNameToBucketCounts.get(p);
+        for (Property property : sliceParamsByProperty.keySet()) {
+            var buckets = propertyNameToBucketCounts.get(property.name());
             if (buckets != null) {
-                Property property = sliceByProperty.get(p).property();
-                int maxBuckets = sliceByProperty.get(p).size();
+                int maxBuckets = sliceParamsByProperty.get(property).size();
                 Map<PropertyValue, Integer> newBuckets = new LinkedHashMap<>();
                 buckets.entrySet()
                         .stream()
@@ -116,6 +115,7 @@ public class Stats {
 
     private Map<String, Object> buildSliceByDimension(Map<Property, Map<PropertyValue, Integer>> propToBuckets, Set<Property> rangeProps) {
         Map<String, String> nonQueryParams = queryParams.getNonQueryParams(0);
+        Map<Property, AppParams.Slice> sliceParamsByProperty = appParams.statsRepr.getSliceByProperty();
 
         Map<String, Object> sliceByDimension = new LinkedHashMap<>();
 
@@ -129,6 +129,7 @@ public class Stats {
                 }
                 sliceNode.put("dimension", property.name());
                 sliceNode.put("observation", observations);
+                sliceNode.put("maxItems", sliceParamsByProperty.get(property).size());
                 property.getAlias(queryTree.getOutsetType()).ifPresent(a -> sliceNode.put("alias", a));
                 sliceByDimension.put(property.name(), sliceNode);
             }

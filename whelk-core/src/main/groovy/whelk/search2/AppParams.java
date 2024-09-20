@@ -114,10 +114,10 @@ public class AppParams {
     }
 
     public record StatsRepr(List<Slice> sliceList) {
-        Map<String, Slice> getSliceByPropertyName() {
-            var m = new LinkedHashMap<String, Slice>();
+        Map<Property, Slice> getSliceByProperty() {
+            var m = new LinkedHashMap<Property, Slice>();
             for (Slice s : sliceList()) {
-                m.put(s.property().name(), s);
+                m.put(s.property(), s);
             }
             return m;
         }
