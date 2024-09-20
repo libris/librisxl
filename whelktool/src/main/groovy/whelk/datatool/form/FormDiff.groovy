@@ -1,11 +1,16 @@
 package whelk.datatool.form
 
 import whelk.Document
+import whelk.datatool.util.DocumentComparator
 import whelk.util.DocumentUtil
 
 import static whelk.JsonLd.TYPE_KEY
+import static whelk.JsonLd.asList
+import static whelk.util.DocumentUtil.getAtPath
 
 class FormDiff {
+    private static final DocumentComparator comparator = new DocumentComparator()
+
     private static final String _ID = '_id'
     private static final String _TYPE = '_type'
     private static final String _EXACT_MATCH_TYPE = "_ExactMatch"
@@ -13,12 +18,17 @@ class FormDiff {
     final Map matchForm
     final Map targetForm
 
-    final List<List> exactMatchPaths
+    final Set<List> exactMatchPaths
 
     final List<List> addedPaths
     final List<List> removedPaths
 
-    private Map<List, Map> removedAddedByPath
+    Map<List, List<Change>> changesByPath
+
+    static enum MatchingMode {
+        EXACT,
+        SUBSET
+    }
 
     FormDiff(Map matchForm, Map targetForm) {
         this.matchForm = matchForm
@@ -45,22 +55,28 @@ class FormDiff {
         ]
     }
 
-    Map getRemovedAddedByPath() {
-        if (removedAddedByPath == null) {
-            removedAddedByPath = [:]
-            Closure dropLastIndex = { List path -> path.last() instanceof Integer ? path.dropRight(1) : path }
-            removedPaths.groupBy(dropLastIndex).each { path, exactPaths ->
-                removedAddedByPath[path] = ['remove': exactPaths]
-            }
-            addedPaths.groupBy(dropLastIndex).each { path, exactPaths ->
-                if (removedAddedByPath.containsKey(path)) {
-                    removedAddedByPath[path].put('add', exactPaths)
-                } else {
-                    removedAddedByPath[path] = [('add'): exactPaths]
-                }
-            }
+    Map<List, List<Change>> getChangesByPath() {
+        if (changesByPath == null) {
+            List<Change> changes = collectRemove() + collectAdd() as List<Change>
+            changesByPath = changes.groupBy { it.path() }
         }
-        return removedAddedByPath
+        return changesByPath
+    }
+
+    List<Remove> collectRemove() {
+        return (List<Remove>) removedPaths.collect { fullPath ->
+            asList(getAtPath(matchForm, fullPath)).collect { value ->
+                new Remove(fullPath, value)
+            }
+        }.flatten()
+    }
+
+    List<Add> collectAdd() {
+        return (List<Add>) addedPaths.collect { fullPath ->
+            asList(getAtPath(targetForm, fullPath)).collect { value ->
+                new Add(fullPath, value)
+            }
+        }.flatten()
     }
 
     private List<List> collectAddedPaths() {
@@ -71,8 +87,8 @@ class FormDiff {
         return collectChangedPaths(matchForm, targetForm, [])
     }
 
-    private List<List> collectExactMatchPaths() {
-        List paths = []
+    private Set<List> collectExactMatchPaths() {
+        Set paths = []
         DocumentUtil.findKey(matchForm, _TYPE) { value, path ->
             if (value == _EXACT_MATCH_TYPE) {
                 paths.add(path.dropRight(1))
@@ -124,10 +140,6 @@ class FormDiff {
         return withoutMarkers(matchForm)
     }
 
-    Map getTargetFormWithoutMarkers() {
-        return withoutMarkers(targetForm)
-    }
-
     private static void clearMarkers(Object o) {
         DocumentUtil.traverse(o) { v, p ->
             if (v instanceof Map) {
@@ -142,5 +154,69 @@ class FormDiff {
         var f = (Map) Document.deepCopy(form)
         clearMarkers(f)
         return f
+    }
+
+    static List dropLastIndex(List path) {
+        return path.last() instanceof Integer ? path.dropRight(1) : path
+    }
+
+    static interface Change {
+        List path()
+        Object value()
+    }
+
+    class Remove implements Change {
+        private final List path
+        private final Object value
+        private final MatchingMode matchingMode
+
+        Remove(List fullPath, Object value) {
+            if (value instanceof Map) {
+                this.value = withoutMarkers(value)
+                this.matchingMode = exactMatchPaths.contains(fullPath) ? MatchingMode.EXACT : MatchingMode.SUBSET
+            } else {
+                this.value = value
+                this.matchingMode = MatchingMode.EXACT
+            }
+            this.path = dropLastIndex(fullPath)
+        }
+
+        boolean matches(Object o) {
+            switch (matchingMode) {
+                case MatchingMode.EXACT: return comparator.isEqual(value, o)
+                case MatchingMode.SUBSET: return comparator.isSubset(value, o)
+            }
+        }
+
+        @Override
+        List path() {
+            return path
+        }
+
+        @Override
+        Object value() {
+            return value
+        }
+    }
+
+    static class Add implements Change {
+        private final List path
+        private final Object value
+
+        // Should matching mode apply to Add too?
+        Add(List fullPath, Object value) {
+            this.value = value instanceof Map ? withoutMarkers(value) : value
+            this.path = dropLastIndex(fullPath)
+        }
+
+        @Override
+        List path() {
+            return path
+        }
+
+        @Override
+        Object value() {
+            return value
+        }
     }
 }

@@ -99,6 +99,10 @@ public class DocumentComparator {
         return true;
     }
 
+    public boolean isSubset(Object a, Object b) {
+        return isSubset(Map.of("x", a), Map.of("x", b));
+    }
+
     public boolean isSubset(Map<?, ?> a, Map<?, ?> b) {
         if (a == null || b == null || a.size() > b.size()) {
             return false;

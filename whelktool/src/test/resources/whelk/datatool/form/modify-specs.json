@@ -207,7 +207,7 @@
       "shouldFailWithException": true
     },
     {
-      "name": "Add nested object to repeatable property",
+      "name": "Add nested value to repeatable property",
       "matchForm": {
         "_id": "1",
         "p1": "v1"
@@ -242,7 +242,7 @@
       }
     },
     {
-      "name": "Replace object",
+      "name": "Replace exact matching blank node",
       "matchForm": {
         "_id": "1",
         "p1": "v1",
@@ -250,6 +250,7 @@
           "_id": "2",
           "p3": {
             "_id": "3",
+            "_type": "_ExactMatch",
             "p1": "v2"
           }
         }
@@ -286,7 +287,54 @@
       }
     },
     {
-      "name": "UNCHANGED: Form matched but no exact matching object to replace in actual data",
+      "name": "Replace partly matching blank node",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "_id": "2",
+          "p3": {
+            "_id": "3",
+            "p1": "v2"
+          }
+        }
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "_id": "2",
+          "p3": {
+            "p4": {
+              "@id": "https://id.kb.se/x"
+            }
+          }
+        }
+      },
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "p1": "v2",
+            "r1": [
+              "v3"
+            ]
+          }
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "p4": {
+              "@id": "https://id.kb.se/x"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "UNCHANGED: Form matched but no exact matching blank node to replace in actual data",
       "matchForm": {
         "_id": "1",
         "p1": "v1",
@@ -335,7 +383,7 @@
       }
     },
     {
-      "name": "Remove any object",
+      "name": "Remove any blank node",
       "matchForm": {
         "_id": "1",
         "p1": "v1",
@@ -366,7 +414,7 @@
       }
     },
     {
-      "name": "Add to any object",
+      "name": "Add to any blank node",
       "matchForm": {
         "_id": "1",
         "p1": "v1",
@@ -415,7 +463,7 @@
       }
     },
     {
-      "name": "Replace any object",
+      "name": "Replace any blank node",
       "matchForm": {
         "_id": "1",
         "p1": "v1",
@@ -453,6 +501,58 @@
             "p4": {
               "@id": "https://id.kb.se/x"
             }
+          }
+        }
+      }
+    },
+    {
+      "name": "UNCHANGED: Form matched but no exact matching blank node to add to in actual data",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "_id": "2",
+          "p3": {
+            "_id": "3",
+            "_type": "_ExactMatch",
+            "p1": "v2"
+          }
+        }
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "_id": "2",
+          "p3": {
+            "_id": "3",
+            "_type": "_ExactMatch",
+            "p1": "v2",
+            "p4": {
+              "@id": "https://id.kb.se/x"
+            }
+          }
+        }
+      },
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "p1": "v2",
+            "r1": [
+              "v3"
+            ]
+          }
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "p1": "v2",
+            "r1": [
+              "v3"
+            ]
           }
         }
       }
