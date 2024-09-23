@@ -33,6 +33,11 @@ class ModifiedThing {
         }
 
         formDiff.getChangesByPath().each { path, changes ->
+            if (path.isEmpty()) {
+                thing = formDiff.getTargetFormWithoutMarkers()
+                return
+            }
+
             String property = path.last()
             List parentPath = path.dropRight(1)
             Map matchParentForm = (Map) getAtPath(matchFormCopy, parentPath)

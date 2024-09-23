@@ -556,6 +556,43 @@
           }
         }
       }
+    },
+    {
+      "name": "Replace top-level node",
+      "matchForm": {
+        "_id": "#1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/term/x",
+            "_id": "#2"
+          }
+        ]
+      },
+      "targetForm": {
+        "p2": "v2",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/term/y"
+          }
+        ]
+      },
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/term/x"
+          }
+        ]
+      },
+      "after": {
+        "p2": "v2",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/term/y"
+          }
+        ]
+      }
     }
   ],
   "TODO: make these pass": [

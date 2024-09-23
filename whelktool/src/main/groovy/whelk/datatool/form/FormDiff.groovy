@@ -140,6 +140,10 @@ class FormDiff {
         return withoutMarkers(matchForm)
     }
 
+    Map getTargetFormWithoutMarkers() {
+        return withoutMarkers(targetForm)
+    }
+
     private static void clearMarkers(Object o) {
         DocumentUtil.traverse(o) { v, p ->
             if (v instanceof Map) {
@@ -157,7 +161,7 @@ class FormDiff {
     }
 
     static List dropLastIndex(List path) {
-        return path.last() instanceof Integer ? path.dropRight(1) : path
+        return !path.isEmpty() && path.last() instanceof Integer ? path.dropRight(1) : path
     }
 
     static interface Change {
