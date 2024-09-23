@@ -32,41 +32,47 @@ class ModifiedThing {
             return thing
         }
 
-        formDiff.getChangesByPath().each { path, changes ->
-            if (path.isEmpty()) {
-                thing = formDiff.getTargetFormWithoutMarkers()
-                return
-            }
+        formDiff.getChangesByPath()
+        /*
+        Sort by path size to get the most deeply nested changes first so that list indexes in paths will still be
+        correct after we modify matchFormCopy (see adjustForm further down)
+        */
+                .sort { -it.key.size() }
+                .each { path, changes ->
+                    if (path.isEmpty()) {
+                        thing = formDiff.getTargetFormWithoutMarkers()
+                        return
+                    }
 
-            String property = path.last()
-            List parentPath = path.dropRight(1)
-            Map matchParentForm = (Map) getAtPath(matchFormCopy, parentPath)
-            List noIdxParentPath = parentPath.findAll { it instanceof String }
-            List<Map> nodes = (List<Map>) getAtPath(thing, noIdxParentPath, [], false)
-                    .with { asList(it) }
-            List<FormDiff.Remove> valuesToRemove = changes.findAll { it instanceof FormDiff.Remove } as List<FormDiff.Remove>
-            List<FormDiff.Add> valuesToAdd = changes.findAll { it instanceof FormDiff.Add } as List<FormDiff.Add>
+                    String property = path.last()
+                    List parentPath = path.dropRight(1)
+                    Map matchParentForm = (Map) getAtPath(matchFormCopy, parentPath)
+                    List noIdxParentPath = parentPath.findAll { it instanceof String }
+                    List<Map> nodes = (List<Map>) getAtPath(thing, noIdxParentPath, [], false)
+                            .with { asList(it) }
+                    List<FormDiff.Remove> valuesToRemove = changes.findAll { it instanceof FormDiff.Remove } as List<FormDiff.Remove>
+                    List<FormDiff.Add> valuesToAdd = changes.findAll { it instanceof FormDiff.Add } as List<FormDiff.Add>
 
-            for (Map node in nodes) {
-                // Make sure that we are operating on the right node
-                if ((parentPath in formDiff.exactMatchPaths && !isEqual(matchParentForm, node))
-                        || !isSubset(matchParentForm, node)
-                        || (!valuesToRemove.isEmpty() && !matchingValues(node[property], valuesToRemove))
-                ) {
-                    continue
+                    for (Map node in nodes) {
+                        // Make sure that we are operating on the right node
+                        if ((parentPath in formDiff.exactMatchPaths && !isEqual(matchParentForm, node))
+                                || !isSubset(matchParentForm, node)
+                                || (!valuesToRemove.isEmpty() && !matchingValues(node[property], valuesToRemove))
+                        ) {
+                            continue
+                        }
+
+                        try {
+                            executeModification(node, property, valuesToRemove, valuesToAdd)
+                        } catch (Exception e) {
+                            throw new Exception("Failed to modify ${thing[ID_KEY]} at path ${path}: ${e.getMessage()}")
+                        }
+                    }
+
+                    if (valuesToRemove) {
+                        adjustForm(matchParentForm, property, valuesToRemove.collect { it.value() })
+                    }
                 }
-
-                try {
-                    executeModification(node, property, valuesToRemove, valuesToAdd)
-                } catch (Exception e) {
-                    throw new Exception("Failed to modify ${thing[ID_KEY]} at path ${path}: ${e.getMessage()}")
-                }
-            }
-
-            if (valuesToRemove) {
-                adjustForm(matchParentForm, property, valuesToRemove.collect { it.value() })
-            }
-        }
 
         cleanUpEmpty(thing)
 
