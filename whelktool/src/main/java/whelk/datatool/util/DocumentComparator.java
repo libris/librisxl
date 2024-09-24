@@ -82,6 +82,9 @@ public class DocumentComparator {
             return false;
         }
 
+        a = new ArrayList<>(a);
+        b = new ArrayList<>(b);
+
         a.sort(BY_HASH);
         b.sort(BY_HASH);
         
