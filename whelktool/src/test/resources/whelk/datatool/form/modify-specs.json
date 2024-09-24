@@ -409,6 +409,110 @@
       }
     },
     {
+      "name": "Remove blank node: repeatable property, exact match some values",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "_id": "2",
+            "p2": "v2"
+          },
+          {
+            "_id": "3",
+            "p3": "v3"
+          },
+          {
+            "_id": "4",
+            "_match": "Exact",
+            "p4": "v4"
+          },
+          {
+            "_id": "5",
+            "_match": "Exact",
+            "p5": "v5"
+          }
+        ]
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "_id": "2",
+            "p2": "v2"
+          }
+        ]
+      },
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2",
+            "p4": "v4"
+          },
+          {
+            "p3": "v3",
+            "p4": "v4"
+          },
+          {
+            "p4": "v4"
+          },
+          {
+            "p5": "v5"
+          },
+          {
+            "p4": "v4",
+            "p5": "v5"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2",
+            "p4": "v4"
+          },
+          {
+            "p4": "v4",
+            "p5": "v5"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Remove any blank node",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "_id": "2",
+          "p3": {
+            "_id": "3"
+          }
+        }
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "_id": "2"
+        }
+      },
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "p1": "v2"
+          }
+        }
+      },
+      "after": {
+        "p1": "v1"
+      }
+    },
+    {
       "name": "Remove various",
       "matchForm": {
         "_id": "1",
@@ -453,7 +557,7 @@
           ]
         }
       },
-      "before":  {
+      "before": {
         "p1": {
           "r1": [
             "v2",
@@ -503,6 +607,501 @@
           ],
           "p10": "v10"
         }
+      }
+    },
+    {
+      "name": "Add literal: non-repeatable property",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": "v2"
+      },
+      "before": {
+        "p1": "v1"
+      },
+      "after": {
+        "p1": "v1",
+        "p2": "v2"
+      }
+    },
+    {
+      "name": "Add literal: repeatable property, single value",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          "v2"
+        ]
+      },
+      "before": {
+        "p1": "v1"
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          "v2"
+        ]
+      }
+    },
+    {
+      "name": "Add literal: repeatable property, multiple values",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3"
+        ]
+      },
+      "before": {
+        "p1": "v1"
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3"
+        ]
+      }
+    },
+    {
+      "name": "Add literal: repeatable property, multiple values, property already present",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3"
+        ]
+      },
+      "before": {
+        "p1": "v1",
+        "r1": [
+          "v4",
+          "v5"
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          "v4",
+          "v5",
+          "v2",
+          "v3"
+        ]
+      }
+    },
+    {
+      "name": "Add literal: repeatable property, overlapping values",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3",
+          "v4"
+        ]
+      },
+      "before": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3"
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3",
+          "v4"
+        ]
+      }
+    },
+    {
+      "name": "Add link: non-repeatable property",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "@id": "https://id.kb.se/x"
+        }
+      },
+      "before": {
+        "p1": "v1"
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "@id": "https://id.kb.se/x"
+        }
+      }
+    },
+    {
+      "name": "Add link: repeatable property, single value",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          }
+        ]
+      },
+      "before": {
+        "p1": "v1"
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Add link: repeatable property, multiple values",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          }
+        ]
+      },
+      "before": {
+        "p1": "v1"
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Add link: repeatable property, multiple values, property already present",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          }
+        ]
+      },
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          },
+          {
+            "@id": "https://id.kb.se/b"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          },
+          {
+            "@id": "https://id.kb.se/b"
+          },
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Add link: repeatable property, overlapping values",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          },
+          {
+            "@id": "https://id.kb.se/z"
+          }
+        ]
+      },
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          },
+          {
+            "@id": "https://id.kb.se/z"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Add blank node: non-repeatable property",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "p3": "v3"
+        }
+      },
+      "before": {
+        "p1": "v1"
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p3": "v3"
+        }
+      }
+    },
+    {
+      "name": "Add blank node: repeatable property, single value",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          }
+        ]
+      },
+      "before": {
+        "p1": "v1"
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Add blank node: repeatable property, multiple values",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3"
+          }
+        ]
+      },
+      "before": {
+        "p1": "v1"
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Add blank node: repeatable property, multiple values, property already present",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3"
+          }
+        ]
+      },
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p4": "v4",
+            "p2": "v2"
+          },
+          {
+            "p5": "v5",
+            "p3": "v3"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p4": "v4",
+            "p2": "v2"
+          },
+          {
+            "p5": "v5",
+            "p3": "v3"
+          },
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Add blank node: repeatable property, overlapping values",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3"
+          },
+          {
+            "p4": "v4"
+          }
+        ]
+      },
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3"
+          },
+          {
+            "p4": "v4",
+            "p2": "v2"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3"
+          },
+          {
+            "p4": "v4",
+            "p2": "v2"
+          },
+          {
+            "p4": "v4"
+          }
+        ]
       }
     },
     {
@@ -645,179 +1244,7 @@
       }
     },
     {
-      "name": "Replace exact matching blank node",
-      "matchForm": {
-        "_id": "1",
-        "p1": "v1",
-        "p2": {
-          "_id": "2",
-          "p3": {
-            "_id": "3",
-            "_type": "_ExactMatch",
-            "p1": "v2"
-          }
-        }
-      },
-      "targetForm": {
-        "_id": "1",
-        "p1": "v1",
-        "p2": {
-          "_id": "2",
-          "p3": {
-            "p4": {
-              "@id": "https://id.kb.se/x"
-            }
-          }
-        }
-      },
-      "before": {
-        "p1": "v1",
-        "p2": {
-          "p3": {
-            "p1": "v2"
-          }
-        }
-      },
-      "after": {
-        "p1": "v1",
-        "p2": {
-          "p3": {
-            "p4": {
-              "@id": "https://id.kb.se/x"
-            }
-          }
-        }
-      }
-    },
-    {
-      "name": "Replace partly matching blank node",
-      "matchForm": {
-        "_id": "1",
-        "p1": "v1",
-        "p2": {
-          "_id": "2",
-          "p3": {
-            "_id": "3",
-            "p1": "v2"
-          }
-        }
-      },
-      "targetForm": {
-        "_id": "1",
-        "p1": "v1",
-        "p2": {
-          "_id": "2",
-          "p3": {
-            "p4": {
-              "@id": "https://id.kb.se/x"
-            }
-          }
-        }
-      },
-      "before": {
-        "p1": "v1",
-        "p2": {
-          "p3": {
-            "p1": "v2",
-            "r1": [
-              "v3"
-            ]
-          }
-        }
-      },
-      "after": {
-        "p1": "v1",
-        "p2": {
-          "p3": {
-            "p4": {
-              "@id": "https://id.kb.se/x"
-            }
-          }
-        }
-      }
-    },
-    {
-      "name": "UNCHANGED: Form matched but no exact matching blank node to replace in actual data",
-      "matchForm": {
-        "_id": "1",
-        "p1": "v1",
-        "p2": {
-          "_id": "2",
-          "p3": {
-            "_id": "3",
-            "_type": "_ExactMatch",
-            "p1": "v2"
-          }
-        }
-      },
-      "targetForm": {
-        "_id": "1",
-        "p1": "v1",
-        "p2": {
-          "_id": "2",
-          "p3": {
-            "p4": {
-              "@id": "https://id.kb.se/x"
-            }
-          }
-        }
-      },
-      "before": {
-        "p1": "v1",
-        "p2": {
-          "p3": {
-            "p1": "v2",
-            "r1": [
-              "v3"
-            ]
-          }
-        }
-      },
-      "after": {
-        "p1": "v1",
-        "p2": {
-          "p3": {
-            "p1": "v2",
-            "r1": [
-              "v3"
-            ]
-          }
-        }
-      }
-    },
-    {
-      "name": "Remove any blank node",
-      "matchForm": {
-        "_id": "1",
-        "p1": "v1",
-        "p2": {
-          "_id": "2",
-          "p3": {
-            "_id": "3"
-          }
-        }
-      },
-      "targetForm": {
-        "_id": "1",
-        "p1": "v1",
-        "p2": {
-          "_id": "2"
-        }
-      },
-      "before": {
-        "p1": "v1",
-        "p2": {
-          "p3": {
-            "p1": "v2"
-          }
-        }
-      },
-      "after": {
-        "p1": "v1"
-      }
-    },
-    {
-      "name": "Add to any blank node",
+      "name": "Add value to any blank node",
       "matchForm": {
         "_id": "1",
         "p1": "v1",
@@ -866,6 +1293,805 @@
       }
     },
     {
+      "name": "Add various",
+      "matchForm": {
+        "_id": "1",
+        "p1": {
+          "_id": "2",
+          "r1": [
+            "v2"
+          ],
+          "r2": [
+            {
+              "_id": "3",
+              "p4": "v4"
+            },
+            {
+              "_id": "4"
+            }
+          ]
+        }
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": {
+          "_id": "2",
+          "r1": [
+            "v2",
+            "v3"
+          ],
+          "p2": "v2",
+          "p3": {
+            "@id": "https://id.kb.se/x"
+          },
+          "r2": [
+            {
+              "_id": "3",
+              "p4": "v4",
+              "p5": {
+                "@id": "https://id.kb.se/y"
+              },
+              "p6": "v6"
+            },
+            {
+              "_id": "4",
+              "p7": "v7"
+            },
+            {
+              "p8": "v8"
+            }
+          ]
+        }
+      },
+      "before": {
+        "p1": {
+          "r1": [
+            "v2",
+            "v4"
+          ],
+          "r2": [
+            {
+              "p4": "v4",
+              "p5": {
+                "@id": "https://id.kb.se/y"
+              }
+            },
+            {
+              "p9": "v9"
+            }
+          ],
+          "p10": "v10"
+        }
+      },
+      "after": {
+        "p1": {
+          "r1": [
+            "v2",
+            "v4",
+            "v3"
+          ],
+          "p2": "v2",
+          "p3": {
+            "@id": "https://id.kb.se/x"
+          },
+          "r2": [
+            {
+              "p4": "v4",
+              "p5": {
+                "@id": "https://id.kb.se/y"
+              },
+              "p6": "v6",
+              "p7": "v7"
+            },
+            {
+              "p9": "v9",
+              "p7": "v7"
+            },
+            {
+              "p8": "v8"
+            }
+          ],
+          "p10": "v10"
+        }
+      }
+    },
+    {
+      "name": "UNCHANGED: Add value: repeatable property, all values already present",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3"
+        ]
+      },
+      "before": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3"
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3"
+        ]
+      }
+    },
+    {
+      "name": "FAIL: Try add value: property not repeatable",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": "v2"
+      },
+      "before": {
+        "p1": "v1",
+        "p2": "v3"
+      },
+      "shouldFailWithException": true
+    },
+    {
+      "name": "Replace literal: non-repeatable property",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": "v2"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": "v3"
+      },
+      "before": {
+        "p1": "v1",
+        "p2": "v2"
+      },
+      "after": {
+        "p1": "v1",
+        "p2": "v3"
+      }
+    },
+    {
+      "name": "Replace literal: repeatable property, single value",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          "v2"
+        ]
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          "v3"
+        ]
+      },
+      "before": {
+        "p1": "v1",
+        "r1": "v2"
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          "v3"
+        ]
+      }
+    },
+    {
+      "name": "Replace literal: repeatable property, all values",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3",
+          "v4"
+        ]
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          "v5",
+          "v6",
+          "v7"
+        ]
+      },
+      "before": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3",
+          "v4"
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          "v5",
+          "v6",
+          "v7"
+        ]
+      }
+    },
+    {
+      "name": "Replace literal: repeatable property, some values",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3",
+          "v4"
+        ]
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v5",
+          "v6"
+        ]
+      },
+      "before": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3",
+          "v4",
+          "v5"
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v6",
+          "v5"
+        ]
+      }
+    },
+    {
+      "name": "Replace link: non-repeatable property",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "_id": "2",
+          "@id": "https://id.kb.se/x"
+        }
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "@id": "https://id.kb.se/y"
+        }
+      },
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "@id": "https://id.kb.se/x"
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "@id": "https://id.kb.se/y"
+        }
+      }
+    },
+    {
+      "name": "Replace link: repeatable property, single value",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "_id": "2",
+            "@id": "https://id.kb.se/x"
+          }
+        ]
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/y"
+          }
+        ]
+      },
+      "before": {
+        "p1": "v1",
+        "r1": {
+          "@id": "https://id.kb.se/x"
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/y"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Replace link: repeatable property, all values",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "_id": "2",
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "_id": "3",
+            "@id": "https://id.kb.se/y"
+          },
+          {
+            "_id": "4",
+            "@id": "https://id.kb.se/z"
+          }
+        ]
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          },
+          {
+            "@id": "https://id.kb.se/b"
+          },
+          {
+            "@id": "https://id.kb.se/c"
+          }
+        ]
+      },
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          },
+          {
+            "@id": "https://id.kb.se/z"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          },
+          {
+            "@id": "https://id.kb.se/b"
+          },
+          {
+            "@id": "https://id.kb.se/c"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Replace link: repeatable property, some values",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "_id": "2",
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "_id": "3",
+            "@id": "https://id.kb.se/y"
+          }
+        ]
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          },
+          {
+            "@id": "https://id.kb.se/b"
+          },
+          {
+            "@id": "https://id.kb.se/c"
+          }
+        ]
+      },
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          },
+          {
+            "@id": "https://id.kb.se/z"
+          },
+          {
+            "@id": "https://id.kb.se/a"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/b"
+          },
+          {
+            "@id": "https://id.kb.se/c"
+          },
+          {
+            "@id": "https://id.kb.se/z"
+          },
+          {
+            "@id": "https://id.kb.se/a"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Replace blank node: non-repeatable property",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "_id": "2",
+          "p3": "v3"
+        }
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "p4": "v4"
+        }
+      },
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": "v3",
+          "p5": "v5"
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p4": "v4"
+        }
+      }
+    },
+    {
+      "name": "Replace blank node: repeatable property, single value",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "_id": "2",
+            "p2": "v2"
+          }
+        ]
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "p3": "v3"
+          }
+        ]
+      },
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p3": "v3"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Replace blank node: repeatable property, all values",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "_id": "2",
+            "p2": "v2"
+          },
+          {
+            "_id": "3",
+            "p3": "v3"
+          },
+          {
+            "_id": "4",
+            "p4": "v4"
+          }
+        ]
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "p5": "v5"
+          },
+          {
+            "p6": "v6"
+          },
+          {
+            "p7": "v7"
+          }
+        ]
+      },
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3",
+            "p5": "v5"
+          },
+          {
+            "p4": "v4"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p5": "v5"
+          },
+          {
+            "p6": "v6"
+          },
+          {
+            "p7": "v7"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Replace blank node: repeatable property, some values",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "_id": "2",
+            "p2": "v2"
+          },
+          {
+            "_id": "3",
+            "p3": "v3"
+          },
+          {
+            "_id": "4",
+            "p4": "v4"
+          }
+        ]
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "_id": "4",
+            "p4": "v4"
+          },
+          {
+            "p5": "v5"
+          }
+        ]
+      },
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3",
+            "p4": "v4"
+          },
+          {
+            "p4": "v4"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p5": "v5"
+          },
+          {
+            "p4": "v4"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Replace blank node: repeatable property, exact match some values",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "_id": "2",
+            "p2": "v2"
+          },
+          {
+            "_id": "3",
+            "p3": "v3"
+          },
+          {
+            "_id": "4",
+            "_match": "Exact",
+            "p4": "v4"
+          },
+          {
+            "_id": "5",
+            "_match": "Exact",
+            "p5": "v5"
+          }
+        ]
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "_id": "3",
+            "p3": "v3"
+          },
+          {
+            "p4": "v4",
+            "p5": {
+              "@id": "https://id.kb.se/x"
+            }
+          }
+        ]
+      },
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3",
+            "p4": "v4"
+          },
+          {
+            "p2": "v2",
+            "p4": "v4"
+          },
+          {
+            "p3": "v3",
+            "p5": "v5"
+          },
+          {
+            "p4": "v4"
+          },
+          {
+            "p5": "v5"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p4": "v4",
+            "p5": {
+              "@id": "https://id.kb.se/x"
+            }
+          },
+          {
+            "p3": "v3",
+            "p4": "v4"
+          },
+          {
+            "p3": "v3",
+            "p5": "v5"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UNCHANGED: Form matched but no exact matching blank node to replace in actual data",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "_id": "2",
+          "p3": {
+            "_id": "3",
+            "_match": "Exact",
+            "p1": "v2"
+          }
+        }
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "_id": "2",
+          "p3": {
+            "p4": {
+              "@id": "https://id.kb.se/x"
+            }
+          }
+        }
+      },
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "p1": "v2",
+            "r1": [
+              "v3"
+            ]
+          }
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "p1": "v2",
+            "r1": [
+              "v3"
+            ]
+          }
+        }
+      }
+    },
+    {
       "name": "Replace any blank node",
       "matchForm": {
         "_id": "1",
@@ -909,58 +2135,6 @@
       }
     },
     {
-      "name": "UNCHANGED: Form matched but no exact matching blank node to add to in actual data",
-      "matchForm": {
-        "_id": "1",
-        "p1": "v1",
-        "p2": {
-          "_id": "2",
-          "p3": {
-            "_id": "3",
-            "_type": "_ExactMatch",
-            "p1": "v2"
-          }
-        }
-      },
-      "targetForm": {
-        "_id": "1",
-        "p1": "v1",
-        "p2": {
-          "_id": "2",
-          "p3": {
-            "_id": "3",
-            "_type": "_ExactMatch",
-            "p1": "v2",
-            "p4": {
-              "@id": "https://id.kb.se/x"
-            }
-          }
-        }
-      },
-      "before": {
-        "p1": "v1",
-        "p2": {
-          "p3": {
-            "p1": "v2",
-            "r1": [
-              "v3"
-            ]
-          }
-        }
-      },
-      "after": {
-        "p1": "v1",
-        "p2": {
-          "p3": {
-            "p1": "v2",
-            "r1": [
-              "v3"
-            ]
-          }
-        }
-      }
-    },
-    {
       "name": "Replace top-level node",
       "matchForm": {
         "_id": "#1",
@@ -996,8 +2170,202 @@
           }
         ]
       }
+    },
+    {
+      "name": "Replace various",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "_id": "2",
+            "_match": "Exact",
+            "r2": ["v1", "v2"]
+          },
+          {
+            "_id": "3",
+            "p2": {
+              "_id": "4",
+              "p3": {
+                "_id": "5",
+                "@id": "https://id.kb.se/x"
+              }
+            }
+          },
+          {
+            "_id": "6",
+            "p4": "v4"
+          }
+        ],
+        "p5": {
+          "_id": "7",
+          "p6": "v6",
+          "p7": "v7"
+        }
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v2",
+        "r1": [
+          {
+            "_id": "2",
+            "_match": "Exact",
+            "r2": ["v1", "v3"]
+          },
+          {
+            "_id": "3",
+            "p2": {
+              "_id": "4",
+              "p3": {
+                "@id": "https://id.kb.se/y"
+              }
+            }
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          }
+        ],
+        "p5": {
+          "@id": "https://id.kb.se/z"
+        }
+      },
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "r2": ["v1"]
+          },
+          {
+            "r2": ["v1", "v2"]
+          },
+          {
+            "p1": "v1",
+            "r2": ["v1", "v2"]
+          },
+          {
+            "p2": {
+              "p3": {
+                "@id": "https://id.kb.se/x"
+              },
+              "p4": "v4",
+              "p6": "v6"
+            }
+          },
+          {
+            "p4": "v4",
+            "p5": "v5"
+          }
+        ],
+        "p5": {
+          "p6": "v6",
+          "p7": "v7",
+          "r2": ["v1", "v2"]
+        }
+      },
+      "after": {
+        "p1": "v2",
+        "r1": [
+          {
+            "r2": ["v1"]
+          },
+          {
+            "r2": ["v1", "v3"]
+          },
+          {
+            "p1": "v1",
+            "r2": ["v1", "v2"]
+          },
+          {
+            "p2": {
+              "p3": {
+                "@id": "https://id.kb.se/y"
+              },
+              "p4": "v4",
+              "p6": "v6"
+            }
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          }
+        ],
+        "p5": {
+          "@id": "https://id.kb.se/z"
+        }
+      }
+    },
+    {
+      "name": "UNCHANGED: Form does not match actual data",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "_id": "2",
+          "p3": {
+            "_id": "3",
+            "_match": "Exact",
+            "p1": "v2"
+          },
+          "p4": "v4"
+        }
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "_id": "2",
+          "p3": {
+            "p4": {
+              "@id": "https://id.kb.se/x"
+            }
+          }
+        }
+      },
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "p1": "v2"
+          }
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "p1": "v2"
+          }
+        }
+      }
+    },
+    {
+      "name": "UNCHANGED: Form does not (exactly) match actual data",
+      "matchForm": {
+        "_id": "1",
+        "p1": "v1",
+        "p2": {
+          "_id": "2",
+          "_match": "Exact",
+          "p3": "v3"
+        }
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v1"
+      },
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": "v3",
+          "p4": "v4"
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p3": "v3",
+          "p4": "v4"
+        }
+      }
     }
-  ],
-  "TODO: make these pass": [
   ]
 }
