@@ -12,8 +12,7 @@ class FormDiff {
     private static final DocumentComparator comparator = new DocumentComparator()
 
     private static final String _ID = '_id'
-    private static final String _TYPE = '_type'
-    private static final String _EXACT_MATCH_TYPE = "_ExactMatch"
+    private static final String _MATCH = '_match'
 
     final Map matchForm
     final Map targetForm
@@ -26,8 +25,14 @@ class FormDiff {
     Map<List, List<Change>> changesByPath
 
     static enum MatchingMode {
-        EXACT,
-        SUBSET
+        EXACT('Exact'),
+        SUBSET('Subset')
+
+        String str
+
+        MatchingMode(String str) {
+            this.str = str
+        }
     }
 
     FormDiff(Map matchForm, Map targetForm) {
@@ -89,8 +94,8 @@ class FormDiff {
 
     private Set<List> collectExactMatchPaths() {
         Set paths = []
-        DocumentUtil.findKey(matchForm, _TYPE) { value, path ->
-            if (value == _EXACT_MATCH_TYPE) {
+        DocumentUtil.findKey(matchForm, _MATCH) { value, path ->
+            if (value == MatchingMode.EXACT.str) {
                 paths.add(path.dropRight(1))
                 return new DocumentUtil.Nop()
             }
@@ -148,7 +153,7 @@ class FormDiff {
         DocumentUtil.traverse(o) { v, p ->
             if (v instanceof Map) {
                 v.remove(_ID)
-                v.remove(_TYPE)
+                v.remove(_MATCH)
                 return new DocumentUtil.Nop()
             }
         }
