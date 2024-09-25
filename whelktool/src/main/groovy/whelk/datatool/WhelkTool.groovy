@@ -917,7 +917,7 @@ class DocumentItem {
         return whelk.jsonld.toCard(doc.data, false, withSearchKey)
     }
     
-    void modify(Map matchForm, Map targetForm) {
+    boolean modify(Map matchForm, Map targetForm) {
             var m = new ModifiedThing(
                 (Map) this.graph[1],
                 new FormDiff(matchForm, targetForm),
@@ -925,6 +925,7 @@ class DocumentItem {
 
         this.graph[1] = m.after
 
+        return m.isModified()
     }
 }
 

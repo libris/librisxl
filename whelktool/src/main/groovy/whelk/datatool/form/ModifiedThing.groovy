@@ -24,6 +24,10 @@ class ModifiedThing {
         this.after = modify(thing)
     }
 
+    boolean isModified() {
+        return !isEqual(before, after)
+    }
+
     private Map modify(Map thing) {
         Map matchFormCopy = formDiff.getMatchFormCopyWithoutMarkerIds()
 

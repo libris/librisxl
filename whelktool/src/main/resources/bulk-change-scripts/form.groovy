@@ -5,6 +5,8 @@ Map matchForm = parameters.get(matchForm)
 Map targetForm = parameters.get(targetForm)
 
 selectByForm(matchForm) { doc ->
-    doc.modify(matchForm, targetForm)
-    doc.scheduleSave(loud: isLoudAllowed)
+    if(doc.modify(matchForm, targetForm)) {
+        doc.scheduleSave(loud: isLoudAllowed)
+    }
+
 }
