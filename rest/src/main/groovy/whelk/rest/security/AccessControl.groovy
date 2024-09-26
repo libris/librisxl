@@ -81,9 +81,9 @@ class AccessControl {
             return hasGlobalRegistrantPermission(userPrivileges) || hasPermissionForSigel(ownedBySigel, userPrivileges)
         }
         else if (document.getThingType() == BulkChange.Type.BulkChange.toString()) {
-            // TODO step 1, new sigel
-            // TODO step 2, configure in libris login
-            return hasPermissionForSigel("S", userPrivileges)
+            // TODO step 1, new specific sigel instead
+            // TODO step 2, configure as permission on user instead (in libris login)
+            return hasPermissionForSigel("SEK", userPrivileges)
         }
         else {
             return hasCatalogingPermission(userPrivileges)
