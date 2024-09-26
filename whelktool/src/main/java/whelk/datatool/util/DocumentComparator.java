@@ -82,6 +82,9 @@ public class DocumentComparator {
             return false;
         }
 
+        a = new ArrayList<>(a);
+        b = new ArrayList<>(b);
+
         a.sort(BY_HASH);
         b.sort(BY_HASH);
         
@@ -97,6 +100,10 @@ public class DocumentComparator {
         }
 
         return true;
+    }
+
+    public boolean isSubset(Object a, Object b) {
+        return isSubset(Map.of("x", a), Map.of("x", b));
     }
 
     public boolean isSubset(Map<?, ?> a, Map<?, ?> b) {

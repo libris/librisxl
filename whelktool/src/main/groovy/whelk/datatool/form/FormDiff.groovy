@@ -1,26 +1,46 @@
 package whelk.datatool.form
 
 import whelk.Document
+import whelk.datatool.util.DocumentComparator
 import whelk.util.DocumentUtil
 
 import static whelk.JsonLd.TYPE_KEY
+import static whelk.JsonLd.asList
+import static whelk.util.DocumentUtil.getAtPath
 
 class FormDiff {
+    private static final DocumentComparator comparator = new DocumentComparator()
+
     private static final String _ID = '_id'
+    private static final String _MATCH = '_match'
 
     final Map matchForm
     final Map targetForm
 
+    final Set<List> exactMatchPaths
+
     final List<List> addedPaths
     final List<List> removedPaths
 
-    private Map<List, Map> removedAddedByPath
+    Map<List, List<Change>> changesByPath
+
+    static enum MatchingMode {
+        EXACT('Exact'),
+        SUBSET('Subset')
+
+        String str
+
+        MatchingMode(String str) {
+            this.str = str
+        }
+    }
 
     FormDiff(Map matchForm, Map targetForm) {
         this.matchForm = matchForm
         this.targetForm = targetForm
         this.removedPaths = collectRemovedPaths()
         this.addedPaths = collectAddedPaths()
+        this.exactMatchPaths = collectExactMatchPaths()
     }
 
     List<Map> getChangeSets() {
@@ -40,22 +60,28 @@ class FormDiff {
         ]
     }
 
-    Map getRemovedAddedByPath() {
-        if (removedAddedByPath == null) {
-            removedAddedByPath = [:]
-            Closure dropLastIndex = { List path -> path.last() instanceof Integer ? path.dropRight(1) : path }
-            removedPaths.groupBy(dropLastIndex).each { path, exactPaths ->
-                removedAddedByPath[path] = ['remove': exactPaths]
-            }
-            addedPaths.groupBy(dropLastIndex).each { path, exactPaths ->
-                if (removedAddedByPath.containsKey(path)) {
-                    removedAddedByPath[path].put('add', exactPaths)
-                } else {
-                    removedAddedByPath[path] = [('add'): exactPaths]
-                }
-            }
+    Map<List, List<Change>> getChangesByPath() {
+        if (changesByPath == null) {
+            List<Change> changes = collectRemove() + collectAdd() as List<Change>
+            changesByPath = changes.groupBy { it.path() }
         }
-        return removedAddedByPath
+        return changesByPath
+    }
+
+    List<Remove> collectRemove() {
+        return (List<Remove>) removedPaths.collect { fullPath ->
+            asList(getAtPath(matchForm, fullPath)).collect { value ->
+                new Remove(fullPath, value)
+            }
+        }.flatten()
+    }
+
+    List<Add> collectAdd() {
+        return (List<Add>) addedPaths.collect { fullPath ->
+            asList(getAtPath(targetForm, fullPath)).collect { value ->
+                new Add(fullPath, value)
+            }
+        }.flatten()
     }
 
     private List<List> collectAddedPaths() {
@@ -64,6 +90,17 @@ class FormDiff {
 
     private List<List> collectRemovedPaths() {
         return collectChangedPaths(matchForm, targetForm, [])
+    }
+
+    private Set<List> collectExactMatchPaths() {
+        Set paths = []
+        DocumentUtil.findKey(matchForm, _MATCH) { value, path ->
+            if (value == MatchingMode.EXACT.str) {
+                paths.add(path.dropRight(1))
+                return new DocumentUtil.Nop()
+            }
+        }
+        return paths
     }
 
     private static List collectChangedPaths(Object a, Object b, List path) {
@@ -104,26 +141,91 @@ class FormDiff {
         throw new Exception("Changing datatype of a value is not allowed.")
     }
 
-    Map getMatchFormCopyWithoutMarkerIds() {
-        return withoutMarkerIds(matchForm)
+    Map getMatchFormWithoutMarkers() {
+        return withoutMarkers(matchForm)
     }
 
-    Map getTargetFormCopyWithoutMarkerIds() {
-        return withoutMarkerIds(targetForm)
+    Map getTargetFormWithoutMarkers() {
+        return withoutMarkers(targetForm)
     }
 
-    private static void clearMarkerIds(Object o) {
+    private static void clearMarkers(Object o) {
         DocumentUtil.traverse(o) { v, p ->
             if (v instanceof Map) {
                 v.remove(_ID)
+                v.remove(_MATCH)
                 return new DocumentUtil.Nop()
             }
         }
     }
 
-    static Map withoutMarkerIds(Map form) {
+    static Map withoutMarkers(Map form) {
         var f = (Map) Document.deepCopy(form)
-        clearMarkerIds(f)
+        clearMarkers(f)
         return f
+    }
+
+    static List dropLastIndex(List path) {
+        return !path.isEmpty() && path.last() instanceof Integer ? path.dropRight(1) : path
+    }
+
+    static interface Change {
+        List path()
+        Object value()
+    }
+
+    class Remove implements Change {
+        private final List path
+        private final Object value
+        private final MatchingMode matchingMode
+
+        Remove(List fullPath, Object value) {
+            if (value instanceof Map) {
+                this.value = withoutMarkers(value)
+                this.matchingMode = exactMatchPaths.contains(fullPath) ? MatchingMode.EXACT : MatchingMode.SUBSET
+            } else {
+                this.value = value
+                this.matchingMode = MatchingMode.EXACT
+            }
+            this.path = dropLastIndex(fullPath)
+        }
+
+        boolean matches(Object o) {
+            switch (matchingMode) {
+                case MatchingMode.EXACT: return comparator.isEqual(value, o)
+                case MatchingMode.SUBSET: return comparator.isSubset(value, o)
+            }
+        }
+
+        @Override
+        List path() {
+            return path
+        }
+
+        @Override
+        Object value() {
+            return value
+        }
+    }
+
+    static class Add implements Change {
+        private final List path
+        private final Object value
+
+        // Should matching mode apply to Add too?
+        Add(List fullPath, Object value) {
+            this.value = value instanceof Map ? withoutMarkers(value) : value
+            this.path = dropLastIndex(fullPath)
+        }
+
+        @Override
+        List path() {
+            return path
+        }
+
+        @Override
+        Object value() {
+            return value
+        }
     }
 }

@@ -59,7 +59,8 @@ public class BulkChangePreviewAPI extends HttpServlet {
             switch (changeDoc.getSpecification()) {
                 case BulkChangeDocument.FormSpecification formSpecification -> {
                     var diff = new FormDiff(formSpecification.matchForm(), formSpecification.targetForm());
-                    var match = diff.getMatchFormCopyWithoutMarkerIds();
+
+                    var match = diff.getMatchFormWithoutMarkers();
                     // TODO use COUNT + LIMIT & OFFSET and don't fetch all ids every time
                     var ids = whelk.getSparqlQueryClient().queryIdsByForm(match).stream().sorted().toList();
 
