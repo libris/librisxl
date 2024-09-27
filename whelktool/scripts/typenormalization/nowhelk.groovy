@@ -1,7 +1,7 @@
 /*
 This script fakes input from a source jsonlines file, and writes results to another.
 
-It requires test data files in WORKDIR:
+It requires test data files in DATADIR:
 
 $ mkdir /var/tmp/kb
 $ cd /var/tmp/kb/
@@ -16,14 +16,25 @@ import java.util.zip.GZIPInputStream
 
 import static whelk.util.Jackson.mapper
 
-var WORKDIR = '/var/tmp/kb'
+var DATADIR = System.properties['nowhelk.datadir'] ?: '/var/tmp/kb'
+
+var name = System.properties['nowhelk.data'] ?: 'stg-lddb-bib-heldbyssb'
+var worksName = System.properties['nowhelk.works'] ?: 'stg-lddb-works-heldbyssb'
+
+var inDataFileName = "$DATADIR/${name}.jsonl.gz"
+var outDataFileName = "$DATADIR/${name}-NORMALIZED.jsonl"
+var workDataFileName = "$DATADIR/${worksName}.jsonl.gz"
+
+System.err.println inDataFileName
+System.err.println outDataFileName
+System.err.println workDataFileName
 
 Closure normalizeTypes = script('algorithm.groovy')
 
 Map workItems = [:]
 
 try (
-  var workDataInStream = new GZIPInputStream(new FileInputStream("$WORKDIR/stg-lddb-works-heldbyssb.jsonl.gz"))
+  var workDataInStream = new GZIPInputStream(new FileInputStream(workDataFileName))
 ) {
   workDataInStream.eachLine { line ->
     Map workData = mapper.readValue(line, Map)
@@ -39,8 +50,8 @@ Closure loadWorkItem = { String workId, Closure process ->
 }
 
 try (
-  var bibOutput = new PrintWriter(new File("$WORKDIR/stg-lddb-bib-heldbyssb-NORMALIZED.jsonl"))
-  var bibDataInStream = new GZIPInputStream(new FileInputStream("$WORKDIR/stg-lddb-bib-heldbyssb.jsonl.gz"))
+  var bibOutput = new PrintWriter(new File(outDataFileName))
+  var bibDataInStream = new GZIPInputStream(new FileInputStream(inDataFileName))
 ) {
   int i = 0
   bibDataInStream.eachLine { line ->
