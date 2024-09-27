@@ -115,6 +115,7 @@ public class BulkChange implements Runnable {
                         Prop.targetForm, formSpecification.targetForm()
                 ));
                 tool.setAllowLoud(changeDoc.isLoud());
+                tool.setNoThreads(false);
                 yield tool;
             }
         };
