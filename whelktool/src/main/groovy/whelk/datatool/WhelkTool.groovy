@@ -5,6 +5,7 @@ import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl
 import whelk.Document
 import whelk.IdGenerator
 import whelk.JsonLd
+import whelk.JsonLdValidator
 import whelk.Whelk
 import whelk.datatool.form.FormDiff
 import whelk.datatool.form.ModifiedThing
@@ -17,7 +18,6 @@ import whelk.search.ElasticFind
 import whelk.util.DocumentUtil
 import whelk.util.LegacyIntegrationTools
 import whelk.util.Statistics
-import whelk.JsonLdValidator
 
 import javax.script.Bindings
 import javax.script.CompiledScript
@@ -26,6 +26,7 @@ import javax.script.SimpleBindings
 import java.sql.SQLException
 import java.time.ZonedDateTime
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.ScheduledExecutorService
@@ -288,21 +289,7 @@ class WhelkTool {
         Batch batch = new Batch(number: ++batchCount)
 
         def executorService = useThreads && !isWorkerThread() ? createExecutorService() : null
-        if (executorService) {
-            Thread.setDefaultUncaughtExceptionHandler {
-                Thread thread, Throwable err ->
-                    log "Uncaught error: $err"
-
-                    executorService.shutdownNow()
-
-                    errorLog.println "Thread: $thread"
-                    errorLog.println "Error:"
-                    err.printStackTrace errorLog
-                    errorLog.println "-" * 20
-                    errorLog.flush()
-                    errorDetected = err
-            }
-        }
+        def catchUnexpected = { Runnable r -> internalExceptionHandler(r, executorService) }
 
         def loggerFuture = !stepWise ? setupTimedLogger(counter) : null
 
@@ -320,7 +307,7 @@ class WhelkTool {
             if (batch.items.size() == batchSize) {
                 def batchToProcess = batch
                 if (executorService) {
-                    executorService.submit {
+                    executorService.submit catchUnexpected {
                         if (!processBatch(process, batchToProcess, counter)) {
                             executorService.shutdownNow()
                         }
@@ -336,7 +323,7 @@ class WhelkTool {
         }
 
         if (executorService) {
-            executorService.submit {
+            executorService.submit catchUnexpected {
                 processBatch(process, batch, counter)
             }
             executorService.shutdown()
@@ -374,6 +361,25 @@ class WhelkTool {
         })
 
         return executorService
+    }
+
+    private Runnable internalExceptionHandler(Runnable r, ExecutorService executorService) {
+        return {
+            try {
+                r.run()
+            } catch (Exception e) {
+                String msg = "*** THIS IS A BUG IN WHELKTOOL ***"
+                log msg
+                log "Error: $e"
+                executorService.shutdownNow()
+                errorLog.println msg
+                errorLog.println "Error: "
+                e.printStackTrace errorLog
+                errorLog.println "-" * 20
+                errorLog.flush()
+                errorDetected = e
+            }
+        }
     }
 
     private static int defaultNumThreads() {
