@@ -7,7 +7,7 @@ import whelk.IdGenerator
 import whelk.JsonLd
 import whelk.JsonLdValidator
 import whelk.Whelk
-import whelk.datatool.form.FormDiff
+import whelk.datatool.form.Transform
 import whelk.datatool.form.ModifiedThing
 import whelk.datatool.form.Selection
 import whelk.exception.StaleUpdateException
@@ -167,7 +167,7 @@ class WhelkTool {
             log "Select by form"
         }
 
-        var ids = Selection.byForm(FormDiff.withoutMarkers(form), whelk.sparqlQueryClient).recordIds
+        var ids = Selection.byForm(Transform.withoutMarkers(form), whelk.sparqlQueryClient).recordIds
 
         selectByIds(ids, process, batchSize, silent)
     }
@@ -926,7 +926,7 @@ class DocumentItem {
     boolean modify(Map matchForm, Map targetForm) {
             var m = new ModifiedThing(
                 (Map) this.graph[1],
-                new FormDiff(matchForm, targetForm),
+                new Transform(matchForm, targetForm),
                 whelk.jsonld.repeatableTerms)
 
         this.graph[1] = m.after

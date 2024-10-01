@@ -8,7 +8,7 @@ import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
 import static whelk.util.DocumentUtil.getAtPath
 
-class FormDiff {
+class Transform {
     private static final DocumentComparator comparator = new DocumentComparator()
 
     private static final String _ID = '_id'
@@ -22,7 +22,7 @@ class FormDiff {
     final List<List> addedPaths
     final List<List> removedPaths
 
-    Map<List, List<Change>> changesByPath
+    List<ChangesByNode> changes
 
     static enum MatchingMode {
         EXACT('Exact'),
@@ -35,7 +35,7 @@ class FormDiff {
         }
     }
 
-    FormDiff(Map matchForm, Map targetForm) {
+    Transform(Map matchForm, Map targetForm) {
         this.matchForm = matchForm
         this.targetForm = targetForm
         this.removedPaths = collectRemovedPaths()
@@ -60,18 +60,27 @@ class FormDiff {
         ]
     }
 
-    Map<List, List<Change>> getChangesByPath() {
-        if (changesByPath == null) {
-            List<Change> changes = collectRemove() + collectAdd() as List<Change>
-            changesByPath = changes.groupBy { it.path() }
+    List<ChangesByNode> getChanges() {
+        if (changes == null) {
+            def matchFormClean = getMatchFormWithoutMarkers()
+            changes = (collectRemove() + collectAdd() as List<Change>)
+                    .groupBy { it.parentPath() }
+                    .collect { parentPath, changeList ->
+                        new ChangesByNode(dropIndexes(parentPath),
+                                getAtPath(matchFormClean, parentPath) as Map,
+                                changeList,
+                                parentPath in exactMatchPaths ? MatchingMode.EXACT : MatchingMode.SUBSET)
+                    }
         }
-        return changesByPath
+        return changes
     }
 
     List<Remove> collectRemove() {
         return (List<Remove>) removedPaths.collect { fullPath ->
             asList(getAtPath(matchForm, fullPath)).collect { value ->
-                new Remove(fullPath, value)
+                value instanceof Map
+                        ? new Remove(fullPath, withoutMarkers(value), exactMatchPaths.contains(fullPath) ? MatchingMode.EXACT : MatchingMode.SUBSET)
+                        : new Remove(fullPath, value, MatchingMode.EXACT)
             }
         }.flatten()
     }
@@ -79,7 +88,7 @@ class FormDiff {
     List<Add> collectAdd() {
         return (List<Add>) addedPaths.collect { fullPath ->
             asList(getAtPath(targetForm, fullPath)).collect { value ->
-                new Add(fullPath, value)
+                new Add(fullPath, value instanceof Map ? withoutMarkers(value) : value)
             }
         }.flatten()
     }
@@ -145,10 +154,6 @@ class FormDiff {
         return withoutMarkers(matchForm)
     }
 
-    Map getTargetFormWithoutMarkers() {
-        return withoutMarkers(targetForm)
-    }
-
     private static void clearMarkers(Object o) {
         DocumentUtil.traverse(o) { v, p ->
             if (v instanceof Map) {
@@ -169,25 +174,68 @@ class FormDiff {
         return !path.isEmpty() && path.last() instanceof Integer ? path.dropRight(1) : path
     }
 
-    static interface Change {
-        List path()
-        Object value()
+    static List<String> dropIndexes(List path) {
+        return path.findAll { it instanceof String } as List<String>
     }
 
-    class Remove implements Change {
-        private final List path
-        private final Object value
+    // Need a better name for this...
+    static class ChangesByNode {
+        List<String> propertyPath
+        Map form
+        List<Change> changeList
+        private MatchingMode matchingMode
+
+        ChangesByNode(List<String> propertyPath, Map form, List<Change> changeList, MatchingMode matchingMode) {
+            this.propertyPath = propertyPath
+            this.form = form
+            this.changeList = changeList
+            this.matchingMode = matchingMode
+        }
+
+        boolean matches(Map node) {
+            return formMatches(node) && removeMatches(node)
+        }
+
+        private formMatches(Map node) {
+            switch (matchingMode) {
+                case MatchingMode.EXACT: return comparator.isEqual(form, node)
+                case MatchingMode.SUBSET: return comparator.isSubset(form, node)
+            }
+        }
+
+        private removeMatches(Map node) {
+            return getRemoveList().every { Remove r -> asList(node[r.property()]).any { r.matches(it) } }
+        }
+
+        private List<Remove> getRemoveList() {
+            return changeList.findAll { it instanceof Remove } as List<Remove>
+        }
+    }
+
+    static abstract class Change {
+        List path
+        Object value
+
+        List<String> propertyPath() {
+            return dropIndexes(path)
+        }
+
+        List parentPath() {
+            return dropLastIndex(path).dropRight(1)
+        }
+
+        String property() {
+            return propertyPath().last()
+        }
+    }
+
+    static class Remove extends Change {
         private final MatchingMode matchingMode
 
-        Remove(List fullPath, Object value) {
-            if (value instanceof Map) {
-                this.value = withoutMarkers(value)
-                this.matchingMode = exactMatchPaths.contains(fullPath) ? MatchingMode.EXACT : MatchingMode.SUBSET
-            } else {
-                this.value = value
-                this.matchingMode = MatchingMode.EXACT
-            }
-            this.path = dropLastIndex(fullPath)
+        Remove(List path, Object value, MatchingMode matchingMode) {
+            this.path = path
+            this.value = value
+            this.matchingMode = matchingMode
         }
 
         boolean matches(Object o) {
@@ -196,36 +244,13 @@ class FormDiff {
                 case MatchingMode.SUBSET: return comparator.isSubset(value, o)
             }
         }
-
-        @Override
-        List path() {
-            return path
-        }
-
-        @Override
-        Object value() {
-            return value
-        }
     }
 
-    static class Add implements Change {
-        private final List path
-        private final Object value
-
+    static class Add extends Change {
         // Should matching mode apply to Add too?
-        Add(List fullPath, Object value) {
-            this.value = value instanceof Map ? withoutMarkers(value) : value
-            this.path = dropLastIndex(fullPath)
-        }
-
-        @Override
-        List path() {
-            return path
-        }
-
-        @Override
-        Object value() {
-            return value
+        Add(List path, Object value) {
+            this.path = path
+            this.value = value
         }
     }
 }
