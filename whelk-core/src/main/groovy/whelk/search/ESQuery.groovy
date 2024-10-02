@@ -41,8 +41,10 @@ class ESQuery {
     private static final String NOT_PREFIX = 'not-'
     private static final String EXISTS_PREFIX = 'exists-'
 
-    private static final List<String> QUERY_PREFIXES = [AND_PREFIX, AND_MATCHES_PREFIX, OR_PREFIX,
-                                                        NOT_PREFIX, EXISTS_PREFIX]
+    private static final List<String> QUERY_RANGE_PREFIXES = [AND_MATCHES_PREFIX] + RangeParameterPrefix.values().collect{ it.prefix }
+    // Prefixes are matched in this order so AND_MATCHES_PREFIX must be before AND_PREFIX.
+    private static final List<String> QUERY_PREFIXES = QUERY_RANGE_PREFIXES + [AND_PREFIX, OR_PREFIX, NOT_PREFIX,
+                                                                               EXISTS_PREFIX]
 
     private static final String FILTERED_AGG_NAME = 'a'
     private static final String NESTED_AGG_NAME = 'n'
@@ -582,10 +584,6 @@ class ESQuery {
         List filters = []
         Map multiSelectFilters = [:]
 
-        def (handledParameters, rangeFilters) = makeRangeFilters(queryParametersCopy)
-        handledParameters.each {queryParametersCopy.remove(it)}
-        filters.addAll(rangeFilters)
-        
         var groups = queryParametersCopy.groupBy { p -> getPrefixGroup(p.key, nestedFields) }
         var nested = getNestedParams(groups)
         Map notNested = (groups - nested).collect { it.value }.sum([:])
@@ -607,6 +605,11 @@ class ESQuery {
 
         nested.each { key, vals ->
             filters.addAll(createNestedBoolFilters(key, vals))
+        }
+
+        makeRangeFilters(notNested).with { handledParameters, List rangeFilters ->
+            handledParameters.each { notNested.remove(it) }
+            filters.addAll(rangeFilters)
         }
 
         List notNestedGroupsForNot = []
@@ -761,11 +764,12 @@ class ESQuery {
             prefix: "@reverse.itemOf"
             nestedQuery: ["@reverse.itemOf.heldBy.@id":[".../library/A"], "not-@reverse.itemOf.availability.@id": ["X"] ]
         */
-        var ands = nestedQuery.findAll { it.key.startsWith(AND_PREFIX) }
+        var ands = nestedQuery.findAll { it.key.startsWith(AND_PREFIX) && !it.key.startsWith(AND_MATCHES_PREFIX) }
         var nots = nestedQuery.findAll { it.key.startsWith(NOT_PREFIX) }
-        var rest = nestedQuery.findAll { !(it.key in nots.keySet() || it.key in ands.keySet()) }
+        var ranges = nestedQuery.findAll { e -> QUERY_RANGE_PREFIXES.any { p -> e.key.startsWith(p) } }
+        var rest = nestedQuery.findAll { !(it.key in nots.keySet() || it.key in ands.keySet() || it.key in ranges.keySet()) }
 
-        if (nots && !ands && !rest) {
+        if (nots && !ranges && !ands && !rest) {
             return nots.collect {
                 String prop = stripPrefix(it.key, NOT_PREFIX)
                 Q.not([Q.nested(prefix, createBoolFilter([(prop): it.value]))])
@@ -783,6 +787,11 @@ class ESQuery {
                 getOrGroups(rest).each {
                     musts.add(createBoolFilter(it))
                 }
+
+                makeRangeFilters(ranges).with { _, List rangeFilters ->
+                    musts.addAll(rangeFilters)
+                }
+
                 mustNots = nots.collect {
                     String prop = stripPrefix(it.key, NOT_PREFIX)
                     createBoolFilter([(prop): it.value])
