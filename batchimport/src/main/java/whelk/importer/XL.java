@@ -53,6 +53,19 @@ class XL
     public static final String ENC_ABBREVIVATED_STATUS = "marc:AbbreviatedLevel";  // 3
     public static final String ENC_MINMAL_STATUS = "marc:MinimalLevel";  // 7
 
+    // This is not pretty, but the alternatives are worse. The way this works is that the incoming data arrives in
+    // a sequence consisting of ONE bib, followed by zero or more holdings, which is then repeated for the next record and so on.
+    // Each record (bibs and holds alike) gets a call to the importISO2709() function, which in the bib-case will return
+    // the resulting bib id (which may be a pre-existing record, or one just created). That bib-ID will then be what the
+    // holdings that follow will attach to (the hold calls will return null, signalling that the current bib-ID is still what applies).
+    //
+    // Now here is the crux: There is (now) a case, where we want to *discard* holdings (where the bib didn't match, and we
+    // *don't* want to create a new one, because reasons).
+    // We can't just return null (this would just cause the next hold to attach to whatever the previous bib-ID was).
+    // Instead, we return this bogus bib-id which we will then keep an eye out for, knowing that any holding that wants
+    // to attach to it is to be discarded.
+    private static final String DISCARD_ATTACHED_HOLDINGS_MARKER = "__DISCARD HOLDINGS UNTIL NEXT BIB ARRIVES";
+
     private final Whelk m_whelk;
     private final LinkFinder m_linkfinder;
     private final Parameters m_parameters;
@@ -103,6 +116,12 @@ class XL
                 incomingMarcRecord.getLeader(6) == 'x' || incomingMarcRecord.getLeader(6) == 'y')
             collection = "hold";
 
+        if (collection.equals("hold") && relatedWithBibResourceId.equals(DISCARD_ATTACHED_HOLDINGS_MARKER))
+        {
+            // discard/ignore
+            return null;
+        }
+
         Set<String> duplicateIDs = getDuplicates(incomingMarcRecord, collection, relatedWithBibResourceId);
 
         String resultingResourceId = null;
@@ -119,6 +138,13 @@ class XL
 
         if (duplicateIDs.size() == 0) // No coinciding documents, simple import
         {
+            if (collection.equals("bib") && m_parameters.getIgnoreNewBib())
+            {
+                // We matched nothing, and have been asked to not create new bib records. Return a signal that any
+                // associated holdings must now be discarded.
+                return DISCARD_ATTACHED_HOLDINGS_MARKER;
+            }
+
             resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId, null);
 
             if (collection.equals("bib"))

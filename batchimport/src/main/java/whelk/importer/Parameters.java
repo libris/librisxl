@@ -24,6 +24,7 @@ class Parameters
     private boolean verbose = false;
     private boolean replaceHold = false;
     private boolean replaceBib = false;
+    private boolean ignoreNewBib = false;
     private String changedBy = null;
     private String changedIn = null;
     private boolean forceUpdate = false;
@@ -40,6 +41,7 @@ class Parameters
     boolean getVerbose() { return verbose; }
     boolean getReplaceHold() { return replaceHold; }
     boolean getReplaceBib() { return replaceBib; }
+    boolean getIgnoreNewBib() { return ignoreNewBib; }
     String getChangedBy() { return changedBy; }
     String getChangedIn() { return changedIn; }
     boolean getForceUpdate() { return forceUpdate; }
@@ -158,6 +160,11 @@ class Parameters
         System.err.println("--verbose     Verbose logging.");
         System.err.println();
         System.err.println("--replaceBib  If this flag is set, matching bibliographic records will be replaced.");
+        System.err.println();
+        System.err.println("--ignoreNewBib If this flag is set, no _new_ bibliographic records will be created");
+        System.err.println("              (existing ones may still optionally be replaced/merged).");
+        System.err.println("              any holding records associated with an incoming bibliographic record that did not match");
+        System.err.println("              and which cannot be created, because of this flag, will be discarded.");
         System.err.println();
         System.err.println("--replaceHold If this flag is set, matching holding records will be replaced.");
         System.err.println();
@@ -313,6 +320,9 @@ class Parameters
                 if (getMergeRuleFile() != null)
                     throw new IllegalArgumentException("Encrich/replace are mutually exclusive");
                 replaceBib = true;
+                break;
+            case "--ignoreNewBib":
+                ignoreNewBib = true;
                 break;
             case "--forceUpdate":
                 forceUpdate = true;
