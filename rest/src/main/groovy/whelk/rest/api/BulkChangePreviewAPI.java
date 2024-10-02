@@ -4,7 +4,7 @@ import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.datatool.bulkchange.BulkChangeDocument;
-import whelk.datatool.form.FormDiff;
+import whelk.datatool.form.Transform;
 import whelk.datatool.form.ModifiedThing;
 import whelk.history.DocumentVersion;
 import whelk.history.History;
@@ -58,9 +58,9 @@ public class BulkChangePreviewAPI extends HttpServlet {
 
             switch (changeDoc.getSpecification()) {
                 case BulkChangeDocument.FormSpecification formSpecification -> {
-                    var diff = new FormDiff(formSpecification.matchForm(), formSpecification.targetForm());
+                    var transform = new Transform(formSpecification.matchForm(), formSpecification.targetForm());
 
-                    var match = diff.getMatchFormWithoutMarkers();
+                    var match = transform.getMatchFormWithoutMarkers();
                     // TODO use COUNT + LIMIT & OFFSET and don't fetch all ids every time
                     var ids = whelk.getSparqlQueryClient().queryIdsByForm(match).stream().sorted().toList();
 
@@ -68,7 +68,7 @@ public class BulkChangePreviewAPI extends HttpServlet {
                     var items = whelk.bulkLoad(itemIds)
                             .values()
                             .stream()
-                            .map(doc -> makePreviewChangeSet(doc, diff))
+                            .map(doc -> makePreviewChangeSet(doc, transform))
                             .toList();
 
                     int totalItems = ids.size();
@@ -89,7 +89,7 @@ public class BulkChangePreviewAPI extends HttpServlet {
                     result.put("itemOffset", offset);
                     result.put("itemsPerPage", limit);
                     result.put("totalItems", totalItems);
-                    result.put("changeSets", diff.getChangeSets());
+                    result.put("changeSets", transform.getChangeSets());
                     result.put("items", items);
                 }
             }
@@ -117,8 +117,8 @@ public class BulkChangePreviewAPI extends HttpServlet {
 
     // FIXME mangle the data in a more ergonomic way
     @SuppressWarnings("unchecked")
-    private Map<?,?> makePreviewChangeSet(Document doc, FormDiff diff) {
-        var modified = new ModifiedThing(doc.getThing(), diff, whelk.getJsonld().repeatableTerms);
+    private Map<?,?> makePreviewChangeSet(Document doc, Transform transform) {
+        var modified = new ModifiedThing(doc.getThing(), transform, whelk.getJsonld().repeatableTerms);
         var beforeDoc = doc.clone();
         var afterDoc = doc.clone();
         ((List<Map<?,?>>) beforeDoc.data.get(JsonLd.GRAPH_KEY)).set(1, modified.getBefore());

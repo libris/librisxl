@@ -5,19 +5,19 @@ import spock.lang.Specification
 import static whelk.util.Jackson.mapper
 
 class ModifiedThingSpec extends Specification {
-    static List<Map> specs = FormDiffSpec.class.getClassLoader()
+    static List<Map> specs = ModifiedThingSpec.class.getClassLoader()
             .getResourceAsStream('whelk/datatool/form/modify-specs.json')
             .with { mapper.readValue((InputStream) it, Map)['specs'] }
     static repeatable = ['r1', 'r2'] as Set
 
     def "pass"() {
         given:
-        def formDiff = new FormDiff(spec["matchForm"], spec["targetForm"])
+        def transform = new Transform(spec["matchForm"], spec["targetForm"])
         def before = spec["before"]
         def after = spec["after"]
 
         expect:
-        new ModifiedThing(before, formDiff, repeatable).after == after
+        new ModifiedThing(before, transform, repeatable).after == after
 
         where:
         spec << specs.findAll { !it['shouldFailWithException'] }
@@ -25,11 +25,11 @@ class ModifiedThingSpec extends Specification {
 
     def "fail with exception"() {
         given:
-        def formDiff = new FormDiff(spec["matchForm"], spec["targetForm"])
+        def transform = new Transform(spec["matchForm"], spec["targetForm"])
         def before = spec["before"]
 
         when:
-        new ModifiedThing(before, formDiff, repeatable)
+        new ModifiedThing(before, transform, repeatable)
 
         then:
         thrown Exception

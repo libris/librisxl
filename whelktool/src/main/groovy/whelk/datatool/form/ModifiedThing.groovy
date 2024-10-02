@@ -12,14 +12,14 @@ import static whelk.util.DocumentUtil.getAtPath
 class ModifiedThing {
     private static final DocumentComparator comparator = new DocumentComparator()
 
-    private final FormDiff formDiff
+    private final Transform transform
     private final Set<String> repeatableTerms
 
     Map before
     Map after
 
-    ModifiedThing(Map thing, FormDiff formDiff, Set<String> repeatableTerms) {
-        this.formDiff = formDiff
+    ModifiedThing(Map thing, Transform transform, Set<String> repeatableTerms) {
+        this.transform = transform
         this.repeatableTerms = repeatableTerms
         this.before = (Map) Document.deepCopy(thing) // Maybe make it optional to keep an unmodified copy?
         this.after = modify(thing)
@@ -30,61 +30,34 @@ class ModifiedThing {
     }
 
     private Map modify(Map thing) {
-        Map matchFormCopy = formDiff.getMatchFormWithoutMarkers()
-
-        if (!isMatch(matchFormCopy, thing)) {
+        if (!isMatch(transform.getMatchFormWithoutMarkers(), thing)) {
             return thing
         }
 
-        formDiff.getChangesByPath()
-        /*
-        Sort by path size to get the most deeply nested changes first so that list indexes in paths will still be
-        correct after we modify matchFormCopy (see adjustForm further down)
-        */
-                .sort { -it.key.size() }
-                .each { path, changes ->
-                    if (path.isEmpty()) {
-                        thing = formDiff.getTargetFormWithoutMarkers()
-                        return
-                    }
+        // Map changes to nodes to which the changes are applicable (matching by form)
+        Map<Transform.ChangesForNode, List<Map>> changeMap = transform.getChanges().collectEntries { c ->
+            def candidateNodes = asList(getAtPath(thing, c.propertyPath, [], false)) as List<Map>
+            return [c, candidateNodes.findAll { p -> c.matches(p) }]
+        }
 
-                    String property = path.last()
-                    List parentPath = path.dropRight(1)
-                    Map matchParentForm = (Map) getAtPath(matchFormCopy, parentPath)
-                    List noIdxParentPath = parentPath.findAll { it instanceof String }
-                    List<Map> nodes = (List<Map>) getAtPath(thing, noIdxParentPath, [], false)
-                            .with { asList(it) }
-                    List<FormDiff.Remove> valuesToRemove = changes.findAll { it instanceof FormDiff.Remove } as List<FormDiff.Remove>
-                    List<FormDiff.Add> valuesToAdd = changes.findAll { it instanceof FormDiff.Add } as List<FormDiff.Add>
-
-                    for (Map node in nodes) {
-                        // Make sure that we are operating on the right node
-                        if ((parentPath in formDiff.exactMatchPaths && !isEqual(matchParentForm, node))
-                                || !isSubset(matchParentForm, node)
-                                || (!valuesToRemove.isEmpty() && !matchingValues(node[property], valuesToRemove))
-                        ) {
-                            continue
-                        }
-
-                        try {
-                            executeModification(node, property, valuesToRemove, valuesToAdd)
-                        } catch (Exception e) {
-                            throw new Exception("Failed to modify ${thing[ID_KEY]} at path ${path}: ${e.getMessage()}")
-                        }
-                    }
-
-                    if (valuesToRemove) {
-                        adjustForm(matchParentForm, property, valuesToRemove.collect { it.value() })
+        // Perform changes node by node, property by property
+        changeMap.each { c, matchingNodes ->
+            matchingNodes.each { node ->
+                c.changeList.groupBy { it.property() }.each { property, changeList ->
+                    def removeList = changeList.findAll { it instanceof Transform.Remove } as List<Transform.Remove>
+                    def addList = changeList.findAll { it instanceof Transform.Add } as List<Transform.Add>
+                    try {
+                        executeModification(node, property, removeList, addList)
+                    } catch (Exception e) {
+                        throw new Exception("Failed to modify ${thing[ID_KEY]} at path ${c.propertyPath + property}: ${e.getMessage()}")
                     }
                 }
+            }
+        }
 
         cleanUpEmpty(thing)
 
         return thing
-    }
-
-    private static boolean matchingValues(Object obj, List<FormDiff.Remove> valuesToRemove) {
-        return valuesToRemove.every { v -> asList(obj).any { v.matches(it) } }
     }
 
     private static boolean isSubset(Object a, Object b) {
@@ -105,30 +78,19 @@ class ModifiedThing {
         }
     }
 
-    private static void adjustForm(Map form, String property, List valuesToRemove) {
-        if (form[property] instanceof List) {
-            form[property].removeAll { x -> valuesToRemove.any { y -> isEqual(x, y) } }
-            if (form[property].isEmpty()) {
-                form.remove(property)
-            }
-        } else {
-            form.remove(property)
-        }
-    }
-
     boolean isMatch(Map form, Map thing) {
         if (!isSubset(form, thing)) {
             return false
         }
-        return formDiff.exactMatchPaths.every { ep ->
+        return transform.exactMatchPaths.every { ep ->
             getAtPath(thing, ep.findAll { it instanceof String }, [], false)
                     .with { asList(it) }
                     .any { isEqual(getAtPath(form, ep), it) }
         }
     }
 
-    private void executeModification(Map node, String property, List<FormDiff.Remove> valuesToRemove,
-                                     List<FormDiff.Add> valuesToAdd) {
+    private void executeModification(Map node, String property, List<Transform.Remove> valuesToRemove,
+                                     List<Transform.Add> valuesToAdd) {
         if (!valuesToRemove.isEmpty() && !valuesToAdd.isEmpty()) {
             replace(node, property, valuesToRemove, valuesToAdd)
         } else if (!valuesToRemove.isEmpty() && valuesToAdd.isEmpty()) {
@@ -138,7 +100,7 @@ class ModifiedThing {
         }
     }
 
-    private static void remove(Map node, String property, List<FormDiff.Remove> valuesToRemove) {
+    private static void remove(Map node, String property, List<Transform.Remove> valuesToRemove) {
         def current = asList(node[property])
         // Assume that it has already been checked that current contains all valuesToRemove
         valuesToRemove.each { v -> current.removeAll { v.matches(it) } }
@@ -149,8 +111,8 @@ class ModifiedThing {
         }
     }
 
-    private void add(Map node, String property, List<FormDiff.Add> valuesToAdd) {
-        addRecursive(node, property, valuesToAdd.collect { it.value() })
+    private void add(Map node, String property, List<Transform.Add> valuesToAdd) {
+        addRecursive(node, property, valuesToAdd.collect { it.value })
     }
 
     private void addRecursive(Map node, String property, List valuesToAdd) {
@@ -175,8 +137,8 @@ class ModifiedThing {
         node[property] = current
     }
 
-    private void replace(Map node, String property, List<FormDiff.Remove> valuesToRemove,
-                         List<FormDiff.Add> valuesToAdd) {
+    private void replace(Map node, String property, List<Transform.Remove> valuesToRemove,
+                         List<Transform.Add> valuesToAdd) {
         def current = asList(node[property])
 
         List<Number> removeAt = current.findIndexValues { c -> valuesToRemove.any { v -> v.matches(c) } }
@@ -185,7 +147,7 @@ class ModifiedThing {
         removeAt.reverse().each { n ->
             current.remove(n.intValue())
         }
-        valuesToAdd.collect { it.value() }
+        valuesToAdd.collect { it.value }
                 .findAll { v -> !current.any { isEqual(it, v) } }
                 .eachWithIndex { v, i -> current.add(insertAt + i, v) }
 
@@ -193,4 +155,5 @@ class ModifiedThing {
                 ? current.first()
                 : current
     }
+
 }
