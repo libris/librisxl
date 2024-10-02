@@ -22,7 +22,7 @@ class Transform {
     final List<List> addedPaths
     final List<List> removedPaths
 
-    List<ChangesByNode> changes
+    List<ChangesForNode> changes
 
     static enum MatchingMode {
         EXACT('Exact'),
@@ -60,13 +60,13 @@ class Transform {
         ]
     }
 
-    List<ChangesByNode> getChanges() {
+    List<ChangesForNode> getChanges() {
         if (changes == null) {
             def matchFormClean = getMatchFormWithoutMarkers()
             changes = (collectRemove() + collectAdd() as List<Change>)
                     .groupBy { it.parentPath() }
                     .collect { parentPath, changeList ->
-                        new ChangesByNode(dropIndexes(parentPath),
+                        new ChangesForNode(dropIndexes(parentPath),
                                 getAtPath(matchFormClean, parentPath) as Map,
                                 changeList,
                                 parentPath in exactMatchPaths ? MatchingMode.EXACT : MatchingMode.SUBSET)
@@ -75,7 +75,7 @@ class Transform {
         return changes
     }
 
-    List<Remove> collectRemove() {
+    private List<Remove> collectRemove() {
         return (List<Remove>) removedPaths.collect { fullPath ->
             asList(getAtPath(matchForm, fullPath)).collect { value ->
                 value instanceof Map
@@ -85,7 +85,7 @@ class Transform {
         }.flatten()
     }
 
-    List<Add> collectAdd() {
+    private List<Add> collectAdd() {
         return (List<Add>) addedPaths.collect { fullPath ->
             asList(getAtPath(targetForm, fullPath)).collect { value ->
                 new Add(fullPath, value instanceof Map ? withoutMarkers(value) : value)
@@ -179,13 +179,13 @@ class Transform {
     }
 
     // Need a better name for this...
-    static class ChangesByNode {
+    static class ChangesForNode {
         List<String> propertyPath
         Map form
         List<Change> changeList
         private MatchingMode matchingMode
 
-        ChangesByNode(List<String> propertyPath, Map form, List<Change> changeList, MatchingMode matchingMode) {
+        ChangesForNode(List<String> propertyPath, Map form, List<Change> changeList, MatchingMode matchingMode) {
             this.propertyPath = propertyPath
             this.form = form
             this.changeList = changeList

@@ -58,9 +58,9 @@ public class BulkChangePreviewAPI extends HttpServlet {
 
             switch (changeDoc.getSpecification()) {
                 case BulkChangeDocument.FormSpecification formSpecification -> {
-                    var diff = new Transform(formSpecification.matchForm(), formSpecification.targetForm());
+                    var transform = new Transform(formSpecification.matchForm(), formSpecification.targetForm());
 
-                    var match = diff.getMatchFormWithoutMarkers();
+                    var match = transform.getMatchFormWithoutMarkers();
                     // TODO use COUNT + LIMIT & OFFSET and don't fetch all ids every time
                     var ids = whelk.getSparqlQueryClient().queryIdsByForm(match).stream().sorted().toList();
 
@@ -68,7 +68,7 @@ public class BulkChangePreviewAPI extends HttpServlet {
                     var items = whelk.bulkLoad(itemIds)
                             .values()
                             .stream()
-                            .map(doc -> makePreviewChangeSet(doc, diff))
+                            .map(doc -> makePreviewChangeSet(doc, transform))
                             .toList();
 
                     int totalItems = ids.size();
@@ -89,7 +89,7 @@ public class BulkChangePreviewAPI extends HttpServlet {
                     result.put("itemOffset", offset);
                     result.put("itemsPerPage", limit);
                     result.put("totalItems", totalItems);
-                    result.put("changeSets", diff.getChangeSets());
+                    result.put("changeSets", transform.getChangeSets());
                     result.put("items", items);
                 }
             }

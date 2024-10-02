@@ -8,6 +8,7 @@ public enum RangeParameterPrefix {
     MATCHES("matches-");
 
     String prefix;
+    String prefix;
 
     RangeParameterPrefix(String prefix) {
         this.prefix = prefix;
