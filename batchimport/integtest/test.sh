@@ -185,45 +185,6 @@ if (( $rowCount != 3 )) ; then
 fi
 
 cleanup
-######## Electronic/Instance should not match. Batch 6 contains the same record, but work type is Multimedia instead of Text
-#java "$SECRET_PROPS" -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --live --changedIn=importtest
-#java "$SECRET_PROPS" -jar build/libs/batchimport.jar --path=./integtest/batch6.xml --format=xml --dupType=ISBNA --live --changedIn=importtest
-#rowCount=$($PSQL -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'bib'")
-#if (( $rowCount != 2 )) ; then
-#    fail "Expected 2 bib records after importing Instance and Electronic"
-#fi
-#rowCount=$($PSQL -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'hold'")
-#if (( $rowCount != 2 )) ; then
-#    fail "Expected 2 bib records after importing Instance and Electronic"
-#fi
-
-cleanup
-######## Electronic/Instance should not match. Batch 7 contains the same record, but instance type is electronic
-#java "$SECRET_PROPS" -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --live --changedIn=importtest
-#java "$SECRET_PROPS" -jar build/libs/batchimport.jar --path=./integtest/batch7.xml --format=xml --dupType=ISBNA --live --changedIn=importtest
-#rowCount=$($PSQL -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'bib'")
-#if (( $rowCount != 2 )) ; then
-#    fail "Expected 2 bib records after importing Instance and Electronic"
-#fi
-#rowCount=$($PSQL -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'hold'")
-#if (( $rowCount != 2 )) ; then
-#    fail "Expected 2 bib records after importing Instance and Electronic"
-#fi
-
-cleanup
-######## Electronic/Instance should not match. Batch 9 contains the same record, but instance type is electronic
-#java "$SECRET_PROPS" -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --live --changedIn=importtest
-#java "$SECRET_PROPS" -jar build/libs/batchimport.jar --path=./integtest/batch9.xml --format=xml --dupType=ISBNA --live --changedIn=importtest
-#rowCount=$($PSQL -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'bib'")
-#if (( $rowCount != 2 )) ; then
-#    fail "Expected 2 bib records after importing Instance and Electronic"
-#fi
-#rowCount=$($PSQL -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'hold'")
-#if (( $rowCount != 2 )) ; then
-#    fail "Expected 2 bib records after importing Instance and Electronic"
-#fi
-
-cleanup
 ######## ISBN $z 10/13 matching. Batch 4 and 8 contain the same data but with varying forms of the same ISBN in 020$z.
 java "$SECRET_PROPS" -jar build/libs/batchimport.jar --path=./integtest/batch4.xml --format=xml --live --changedIn=importtest --changedBy=Utb1
 java "$SECRET_PROPS" -jar build/libs/batchimport.jar --path=./integtest/batch8.xml --format=xml --dupType=ISBNZ --live --changedIn=importtest --changedBy=Utb1
@@ -295,6 +256,43 @@ summary=$($PSQL -qAt whelk_dev <<< "select data from lddb where changedIn = 'imp
 expect="\"En JÄTTEJÄTTEFIN sammanfattning\""
 if [ "$summary" != "$expect" ]; then
     fail "Merge: Data was not replaced!"
+fi
+
+
+cleanup
+# Test the --ignoreNewBib flag. Import the second time without matching any thing. No new bib should be created, and the associated holds should also be discarded.
+java "$SECRET_PROPS" -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --live --changedIn=importtest --changedBy=Utb1
+java "$SECRET_PROPS" -jar build/libs/batchimport.jar --path=./integtest/batch15.xml --format=xml --live --changedIn=importtest --changedBy=Utb1 --ignoreNewBib
+mainTitle=$($PSQL -qAt whelk_dev <<< "select data from lddb where changedIn = 'importtest' and collection = 'bib'" | jq '.["@graph"]|.[1]|.["hasTitle"]|.[0]|.["mainTitle"]')
+expect="\"ANNAN TITEL\""
+if [ "$mainTitle" == "$expect" ]; then
+    fail "Bib should not have been added/replaced/merged, yet the new title is there!"
+fi
+rowCount=$($PSQL -qAt whelk_dev <<< "select count(*) from lddb where changedIn = 'importtest' and collection = 'hold'")
+if (( $rowCount != 1 )) ; then
+    fail "Expected single hold record, as the other two holdings sat on a bib we're choosing to discard."
+fi
+
+
+#Rerun the simple bib-replace test, but with the --ignoreNewBib flag, to check that it does not interfere. batch1.xml contains the same data but with a changed title for the bib record and another 035$a
+java "$SECRET_PROPS" -jar build/libs/batchimport.jar --path=./integtest/batch0.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live --changedIn=importtest --changedBy=Utb1
+bibResourceId=$($PSQL -qAt whelk_dev <<< "select data from lddb where changedIn = 'importtest' and collection = 'bib'" | jq '.["@graph"]|.[1]|.["@id"]')
+java "$SECRET_PROPS" -jar build/libs/batchimport.jar --path=./integtest/batch1.xml --format=xml --dupType=ISBNA,ISBNZ,ISSNA,ISSNZ,035A --live --changedIn=importtest --replaceBib --ignoreNewBib --changedBy=Utb1
+newBibResourceId=$($PSQL -qAt whelk_dev <<< "select data from lddb where changedIn = 'importtest' and collection = 'bib'" | jq '.["@graph"]|.[1]|.["@id"]')
+if [ $newBibResourceId != $bibResourceId ]; then
+    fail "Bib-replace altered the ID!"
+fi
+mainTitle=$($PSQL -qAt whelk_dev <<< "select data from lddb where changedIn = 'importtest' and collection = 'bib'" | jq '.["@graph"]|.[1]|.["hasTitle"]|.[0]|.["mainTitle"]')
+expect="\"Polisbilen får INTE ett larm\""
+if [ "$mainTitle" != "$expect" ]; then
+    fail "Data was not replaced!"
+fi
+systemNumbers=$($PSQL -qAt whelk_dev <<< "select data from lddb where changedIn = 'importtest' and collection = 'bib'" | jq '.["@graph"]|.[0]|.["identifiedBy"]|.[]|.["value"]')
+if [[ "$systemNumbers" != *"NEW"* ]]; then
+    fail "Systemnumber was not added!"
+fi
+if [[ "$systemNumbers" != *"OLD"* ]]; then
+    fail "Systemnumber was not retained!"
 fi
 
 
