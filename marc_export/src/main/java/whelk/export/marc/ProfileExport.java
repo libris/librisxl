@@ -357,9 +357,11 @@ public class ProfileExport
 
         String profileName = profile.getProperty("name", "unknown");
         String systemId = document.getShortId();
-        if (exportedIDs.contains(systemId))
-            return;
-        exportedIDs.add(systemId);
+        synchronized (exportedIDs) {
+            if (exportedIDs.contains(systemId))
+                return;
+            exportedIDs.add(systemId);
+        }
         affectedCount.observe(1);
 
         DELETE_REASON deleteReason = DELETE_REASON.DELETED; // Default
@@ -496,7 +498,7 @@ public class ProfileExport
         
         BlockingThreadPool.Queue workQueue;
         
-        Set<String> exportedIDs = ConcurrentHashMap.newKeySet();
+        Set<String> exportedIDs = new HashSet<>();
         Map<String, DELETE_REASON> deletedNotifications = new ConcurrentHashMap<>();
 
         Parameters parameters;
