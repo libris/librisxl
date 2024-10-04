@@ -27,8 +27,8 @@ class CrudUtils {
             'json': [JSON],
             'trig': [TRIG],
             'ttl': [TURTLE],
-            'rdf': [RDFXML],
             'xml': [RDFXML],
+            'rdf': [RDFXML],
             'n3': [N3]
     ]
 
