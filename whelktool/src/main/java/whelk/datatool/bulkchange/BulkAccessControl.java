@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static whelk.datatool.bulkchange.BulkChange.Prop.bulkChangeMetaChanges;
 import static whelk.datatool.bulkchange.BulkChange.Prop.bulkChangeSpecification;
 import static whelk.datatool.bulkchange.BulkChange.Status.CompletedBulkChange;
 import static whelk.datatool.bulkchange.BulkChange.Status.DraftBulkChange;
@@ -39,6 +40,11 @@ public class BulkAccessControl {
                 var msg = String.format("Cannot change %s when not a %s", bulkChangeSpecification, DraftBulkChange);
                 throw new ModelValidationException(msg);
             }
+        }
+
+        if (oldDoc.getStatus() != DraftBulkChange && newDoc.isLoud() != oldDoc.isLoud()) {
+            var msg = String.format("Cannot change %s when already ran", bulkChangeMetaChanges);
+            throw new ModelValidationException(msg);
         }
     }
 }
