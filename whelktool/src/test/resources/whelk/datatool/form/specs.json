@@ -11,6 +11,13 @@
         "_id": "1",
         "p1": "v1"
       },
+      "removedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "addedPaths": [
+      ],
       "before": {
         "p1": "v1",
         "p2": "v2"
@@ -32,6 +39,13 @@
         "_id": "1",
         "p1": "v1"
       },
+      "removedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "addedPaths": [
+      ],
       "before": {
         "p1": "v1",
         "r1": "v2"
@@ -55,6 +69,13 @@
         "_id": "1",
         "p1": "v1"
       },
+      "removedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "addedPaths": [
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -85,6 +106,18 @@
           "v2"
         ]
       },
+      "removedPaths": [
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
+      "addedPaths": [
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -115,6 +148,13 @@
         "_id": "1",
         "p1": "v1"
       },
+      "removedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "addedPaths": [
+      ],
       "before": {
         "p1": "v1",
         "p2": {
@@ -140,6 +180,13 @@
         "_id": "1",
         "p1": "v1"
       },
+      "removedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "addedPaths": [
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -173,6 +220,13 @@
         "_id": "1",
         "p1": "v1"
       },
+      "removedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "addedPaths": [
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -213,10 +267,22 @@
         "p1": "v1",
         "r1": [
           {
-            "@id": "https://id.kb.se/a"
+            "@id": "https://id.kb.se/b"
           }
         ]
       },
+      "removedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
+      "addedPaths": [
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -238,7 +304,7 @@
         "p1": "v1",
         "r1": [
           {
-            "@id": "https://id.kb.se/a"
+            "@id": "https://id.kb.se/b"
           },
           {
             "@id": "https://id.kb.se/d"
@@ -260,6 +326,13 @@
         "_id": "1",
         "p1": "v1"
       },
+      "removedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "addedPaths": [
+      ],
       "before": {
         "p1": "v1",
         "p2": {
@@ -286,6 +359,13 @@
         "_id": "1",
         "p1": "v1"
       },
+      "removedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "addedPaths": [
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -322,6 +402,13 @@
         "_id": "1",
         "p1": "v1"
       },
+      "removedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "addedPaths": [
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -370,6 +457,18 @@
           }
         ]
       },
+      "removedPaths": [
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
+      "addedPaths": [
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -435,6 +534,22 @@
           }
         ]
       },
+      "removedPaths": [
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ],
+        [
+          "r1",
+          3
+        ]
+      ],
+      "addedPaths": [
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -491,6 +606,14 @@
           "_id": "2"
         }
       },
+      "removedPaths": [
+        [
+          "p2",
+          "p3"
+        ]
+      ],
+      "addedPaths": [
+      ],
       "before": {
         "p1": "v1",
         "p2": {
@@ -547,6 +670,34 @@
           ]
         }
       },
+      "removedPaths": [
+        [
+          "p1",
+          "r1",
+          1
+        ],
+        [
+          "p1",
+          "p2"
+        ],
+        [
+          "p1",
+          "p3"
+        ],
+        [
+          "p1",
+          "r2",
+          0
+        ],
+        [
+          "p1",
+          "r2",
+          1,
+          "p7"
+        ]
+      ],
+      "addedPaths": [
+      ],
       "before": {
         "p1": {
           "r1": [
@@ -610,6 +761,11 @@
         "p1": "v1",
         "p2": "v2"
       },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        ["p2"]
+      ],
       "before": {
         "p1": "v1"
       },
@@ -631,6 +787,13 @@
           "v2"
         ]
       },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
       "before": {
         "p1": "v1"
       },
@@ -655,6 +818,13 @@
           "v3"
         ]
       },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
       "before": {
         "p1": "v1"
       },
@@ -680,6 +850,13 @@
           "v3"
         ]
       },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -712,6 +889,13 @@
           "v4"
         ]
       },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -741,6 +925,13 @@
           "@id": "https://id.kb.se/x"
         }
       },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "p2"
+        ]
+      ],
       "before": {
         "p1": "v1"
       },
@@ -766,6 +957,13 @@
           }
         ]
       },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
       "before": {
         "p1": "v1"
       },
@@ -796,6 +994,13 @@
           }
         ]
       },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
       "before": {
         "p1": "v1"
       },
@@ -829,6 +1034,13 @@
           }
         ]
       },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -879,6 +1091,13 @@
           }
         ]
       },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -918,6 +1137,13 @@
           "p3": "v3"
         }
       },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "p2"
+        ]
+      ],
       "before": {
         "p1": "v1"
       },
@@ -943,6 +1169,13 @@
           }
         ]
       },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
       "before": {
         "p1": "v1"
       },
@@ -973,6 +1206,13 @@
           }
         ]
       },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
       "before": {
         "p1": "v1"
       },
@@ -1006,6 +1246,13 @@
           }
         ]
       },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -1060,6 +1307,13 @@
           }
         ]
       },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -1111,6 +1365,13 @@
           ]
         }
       },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "p2"
+        ]
+      ],
       "before": {
         "p1": "v1",
         "p2": {
@@ -1146,6 +1407,13 @@
           ]
         }
       },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "p2"
+        ]
+      ],
       "before": {
         "p1": "v1",
         "p2": {
@@ -1213,6 +1481,13 @@
           }
         }
       },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
       "before": {
         "p1": "v1",
         "r1": {
@@ -1260,6 +1535,15 @@
           }
         }
       },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "p2",
+          "p3",
+          "p4"
+        ]
+      ],
       "before": {
         "p1": "v1",
         "p2": {
@@ -1333,6 +1617,46 @@
           ]
         }
       },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "p1",
+          "r1",
+          1
+        ],
+        [
+          "p1",
+          "p2"
+        ],
+        [
+          "p1",
+          "p3"
+        ],
+        [
+          "p1",
+          "r2",
+          0,
+          "p5"
+        ],
+        [
+          "p1",
+          "r2",
+          0,
+          "p6"
+        ],
+        [
+          "p1",
+          "r2",
+          1,
+          "p7"
+        ],
+        [
+          "p1",
+          "r2",
+          2
+        ]
+      ],
       "before": {
         "p1": {
           "r1": [
@@ -1399,6 +1723,13 @@
           "v3"
         ]
       },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -1443,6 +1774,16 @@
         "p1": "v1",
         "p2": "v3"
       },
+      "removedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "p2"
+        ]
+      ],
       "before": {
         "p1": "v1",
         "p2": "v2"
@@ -1468,6 +1809,18 @@
           "v3"
         ]
       },
+      "removedPaths": [
+        [
+          "r1",
+          0
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1",
+          0
+        ]
+      ],
       "before": {
         "p1": "v1",
         "r1": "v2"
@@ -1499,6 +1852,34 @@
           "v7"
         ]
       },
+      "removedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -1536,6 +1917,26 @@
           "v6"
         ]
       },
+      "removedPaths": [
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -1570,6 +1971,16 @@
           "@id": "https://id.kb.se/y"
         }
       },
+      "removedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "p2"
+        ]
+      ],
       "before": {
         "p1": "v1",
         "p2": {
@@ -1603,6 +2014,18 @@
           }
         ]
       },
+      "removedPaths": [
+        [
+          "r1",
+          0
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1",
+          0
+        ]
+      ],
       "before": {
         "p1": "v1",
         "r1": {
@@ -1650,6 +2073,34 @@
           }
         ]
       },
+      "removedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -1708,6 +2159,30 @@
           }
         ]
       },
+      "removedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          1
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -1760,6 +2235,16 @@
           "p4": "v4"
         }
       },
+      "removedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "p2"
+        ]
+      ],
       "before": {
         "p1": "v1",
         "p2": {
@@ -1795,6 +2280,18 @@
           }
         ]
       },
+      "removedPaths": [
+        [
+          "r1",
+          0
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1",
+          0
+        ]
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -1847,6 +2344,34 @@
           }
         ]
       },
+      "removedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -1910,6 +2435,22 @@
           }
         ]
       },
+      "removedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          1
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1",
+          1
+        ]
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -1979,6 +2520,26 @@
           }
         ]
       },
+      "removedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          2
+        ],
+        [
+          "r1",
+          3
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1",
+          1
+        ]
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -2051,6 +2612,18 @@
           }
         }
       },
+      "removedPaths": [
+        [
+          "p2",
+          "p3"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "p2",
+          "p3"
+        ]
+      ],
       "before": {
         "p1": "v1",
         "p2": {
@@ -2098,6 +2671,18 @@
           }
         }
       },
+      "removedPaths": [
+        [
+          "p2",
+          "p3"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "p2",
+          "p3"
+        ]
+      ],
       "before": {
         "p1": "v1",
         "p2": {
@@ -2180,6 +2765,54 @@
           "@id": "https://id.kb.se/z"
         }
       },
+      "removedPaths": [
+        [
+          "p1"
+        ],
+        [
+          "r1",
+          0,
+          "r2",
+          1
+        ],
+        [
+          "r1",
+          1,
+          "p2",
+          "p3"
+        ],
+        [
+          "r1",
+          2
+        ],
+        [
+          "p5"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "p1"
+        ],
+        [
+          "r1",
+          0,
+          "r2",
+          1
+        ],
+        [
+          "r1",
+          1,
+          "p2",
+          "p3"
+        ],
+        [
+          "r1",
+          2
+        ],
+        [
+          "p5"
+        ]
+      ],
       "before": {
         "p1": "v1",
         "r1": [
@@ -2290,6 +2923,22 @@
           }
         }
       },
+      "removedPaths": [
+        [
+          "p2",
+          "p3"
+        ],
+        [
+          "p2",
+          "p4"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "p2",
+          "p3"
+        ]
+      ],
       "before": {
         "p1": "v1",
         "p2": {
@@ -2322,6 +2971,13 @@
         "_id": "1",
         "p1": "v1"
       },
+      "removedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "addedPaths": [
+      ],
       "before": {
         "p1": "v1",
         "p2": {
@@ -2374,6 +3030,28 @@
           ]
         }
       },
+      "removedPaths": [
+        [
+          "p1",
+          "r1",
+          0,
+          "p2"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "p1",
+          "r1",
+          0,
+          "p2"
+        ],
+        [
+          "p1",
+          "r1",
+          0,
+          "r2"
+        ]
+      ],
       "before": {
         "p1": {
           "r1": [
