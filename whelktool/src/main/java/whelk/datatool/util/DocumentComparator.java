@@ -23,20 +23,12 @@ public class DocumentComparator {
         this.isOrderedList = Preconditions.checkNotNull(isOrderedList);
     }
 
-    public boolean isEqual(Map<?, ?> a, Map<?, ?> b, BiFunction<Map<?, ?>, Map<?, ?>, Boolean> mapCompareFunc) {
-        return mapCompareFunc.apply(a, b);
-    }
-
     public boolean isEqual(Map<?, ?> a, Map<?, ?> b) {
-        return isEqual(a, b, this::_isEqual);
-    }
-
-    private boolean _isEqual(Map<?, ?> a, Map<?, ?> b) {
         if (a == null || b == null || a.size() != b.size()) {
             return false;
         }
         for (Object key : a.keySet()) {
-            if (!isEqual(a.get(key), b.get(key), key, this::_isEqual)) {
+            if (!isEqual(a.get(key), b.get(key), key, this::isEqual)) {
                 return false;
             }
         }

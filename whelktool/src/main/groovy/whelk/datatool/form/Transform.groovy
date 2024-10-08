@@ -187,7 +187,7 @@ class Transform {
     }
 
     static boolean isEqual(Object a, Object b) {
-        return comparator.isEqual(["x": a], ["x": b], Transform::isEqualNoType)
+        return isEqualNoType(["x": a], ["x": b])
     }
 
     private static boolean isEqualNoType(Map a, Map b) {
