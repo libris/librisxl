@@ -1,6 +1,7 @@
 package whelk.datatool.form
 
 import spock.lang.Specification
+import whelk.datatool.util.DocumentComparator
 
 import static whelk.util.Jackson.mapper
 
@@ -21,5 +22,21 @@ class TransformSpec extends Specification {
 
         where:
         spec << specs.findAll { (it["addedPaths"] || it["removedPaths"]) && !it['shouldFailWithException'] }
+    }
+
+    def "is equal"() {
+        given:
+        def a = ["p": ["x": "y"]]
+        def b = ["p": ["@type": "t1", "x": "y"]]
+        def c = ["p": ["@type": "t2", "x": "y"]]
+
+        expect:
+        Transform.isEqual(a, b)
+        Transform.isEqual(b, a)
+        Transform.isEqual(a, c)
+        !Transform.isEqual(b, c)
+        Transform.isEqual(["p": [["a":"b"], a]], ["p": [a, ["a":"b"]]])
+        Transform.isEqual(["p": [["a":"b"], a]], ["p": [b, ["a":"b"]]])
+        !Transform.isEqual(["p": [["a":"b"], c]], ["p": [b, ["a":"b"]]])
     }
 }

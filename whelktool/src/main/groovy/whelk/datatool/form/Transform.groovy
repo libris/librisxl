@@ -174,12 +174,45 @@ class Transform {
         return f
     }
 
-    static List dropLastIndex(List path) {
+    private static List dropLastIndex(List path) {
         return !path.isEmpty() && path.last() instanceof Integer ? path.dropRight(1) : path
     }
 
-    static List<String> dropIndexes(List path) {
+    private static List<String> dropIndexes(List path) {
         return path.findAll { it instanceof String } as List<String>
+    }
+
+    static boolean isSubset(Object a, Object b) {
+        return comparator.isSubset(a, b)
+    }
+
+    static boolean isEqual(Object a, Object b) {
+        return comparator.isEqual(["x": a], ["x": b], Transform::isEqualNoType)
+    }
+
+    private static boolean isEqualNoType(Map a, Map b) {
+        if (a == null || b == null) {
+            return false;
+        }
+        if (a.size() != b.size()) {
+            if (!a.containsKey(TYPE_KEY) && b.containsKey(TYPE_KEY)) {
+                b = new HashMap<>(b);
+                b.remove(TYPE_KEY);
+                return isEqualNoType(a, b);
+            }
+            if (a.containsKey(TYPE_KEY) && !b.containsKey(TYPE_KEY)) {
+                a = new HashMap<>(a);
+                a.remove(TYPE_KEY);
+                return isEqualNoType(a, b);
+            }
+            return false;
+        }
+        for (Object key : a.keySet()) {
+            if (!comparator.isEqual(a.get(key), b.get(key), key, Transform::isEqualNoType)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     // Need a better name for this...
@@ -202,8 +235,8 @@ class Transform {
 
         private formMatches(Map node) {
             switch (matchingMode) {
-                case MatchingMode.EXACT: return comparator.isEqual(form, node)
-                case MatchingMode.SUBSET: return comparator.isSubset(form, node)
+                case MatchingMode.EXACT: return isEqual(form, node)
+                case MatchingMode.SUBSET: return isSubset(form, node)
             }
         }
 
@@ -244,8 +277,8 @@ class Transform {
 
         boolean matches(Object o) {
             switch (matchingMode) {
-                case MatchingMode.EXACT: return comparator.isEqual(value, o)
-                case MatchingMode.SUBSET: return comparator.isSubset(value, o)
+                case MatchingMode.EXACT: return isEqual(value, o)
+                case MatchingMode.SUBSET: return isSubset(value, o)
             }
         }
     }
