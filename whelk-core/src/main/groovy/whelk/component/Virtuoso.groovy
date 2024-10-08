@@ -130,7 +130,7 @@ class Virtuoso {
                 throw new UnexpectedHttpStatusException(msg, statusCode)
             }
             else {
-                // Cannot recover from these, but the calling code (SparqlUpdater) will retry later.
+                // Cannot recover from these
                 log.info("$msg")
             }
         }
