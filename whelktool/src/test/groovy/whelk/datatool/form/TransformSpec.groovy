@@ -20,6 +20,6 @@ class TransformSpec extends Specification {
         transform.removedPaths == removedPaths
 
         where:
-        spec << specs.findAll { (it["addedPaths"] || it["removedPaths"]) && !it['shouldFailWithException'] }.drop(7)
+        spec << specs.findAll { (it["addedPaths"] || it["removedPaths"]) && !it['shouldFailWithException'] }
     }
 }
