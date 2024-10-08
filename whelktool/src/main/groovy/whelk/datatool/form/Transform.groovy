@@ -4,6 +4,7 @@ import whelk.Document
 import whelk.datatool.util.DocumentComparator
 import whelk.util.DocumentUtil
 
+import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
 import static whelk.util.DocumentUtil.getAtPath
@@ -135,9 +136,12 @@ class Transform {
 
         if (a instanceof List && b instanceof List) {
             def changedPaths = []
-            a.eachWithIndex { elem, i ->
-                def peer = b.find { it == elem || it instanceof Map && it[_ID] == elem[_ID] }
-                changedPaths.addAll(peer ? collectChangedPaths(elem, peer, path + i) : [path + i])
+            def sameNode = { x, y ->
+                x instanceof Map && y instanceof Map && ((x[_ID] && x[_ID] == y[_ID]) || (x[ID_KEY] && x[ID_KEY] == b[ID_KEY]))
+            }
+            a.eachWithIndex { aElem, i ->
+                def peer = b.find { bElem -> aElem == bElem || sameNode(aElem, bElem)}
+                changedPaths.addAll(peer ? collectChangedPaths(aElem, peer, path + i) : [path + i])
             }
             return changedPaths
         }

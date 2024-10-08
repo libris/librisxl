@@ -6,7 +6,7 @@ import static whelk.util.Jackson.mapper
 
 class ModifiedThingSpec extends Specification {
     static List<Map> specs = ModifiedThingSpec.class.getClassLoader()
-            .getResourceAsStream('whelk/datatool/form/modify-specs.json')
+            .getResourceAsStream('whelk/datatool/form/specs.json')
             .with { mapper.readValue((InputStream) it, Map)['specs'] }
     static repeatable = ['r1', 'r2'] as Set
 
@@ -20,7 +20,7 @@ class ModifiedThingSpec extends Specification {
         new ModifiedThing(before, transform, repeatable).after == after
 
         where:
-        spec << specs.findAll { !it['shouldFailWithException'] }
+        spec << specs.findAll { it["before"] && !it['shouldFailWithException'] }
     }
 
     def "fail with exception"() {
@@ -35,6 +35,6 @@ class ModifiedThingSpec extends Specification {
         thrown Exception
 
         where:
-        spec << specs.findAll { it['shouldFailWithException'] }
+        spec << specs.findAll { it["before"] && it['shouldFailWithException'] }
     }
 }
