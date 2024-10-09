@@ -27,15 +27,19 @@ public class DocumentComparator {
         if (a == null || b == null || a.size() != b.size()) {
             return false;
         }
+        return isEqual(a, b, this::isEqual);
+    }
+
+    public boolean isEqual(Map<?, ?> a, Map<?, ?> b, BiFunction<Map<?, ?>, Map<?, ?>, Boolean> mapCompareFunc) {
         for (Object key : a.keySet()) {
-            if (!isEqual(a.get(key), b.get(key), key, this::isEqual)) {
+            if (!isEqual(a.get(key), b.get(key), key, mapCompareFunc)) {
                 return false;
             }
         }
         return true;
     }
 
-    public boolean isEqual(Object a, Object b, Object key, BiFunction<Map<?, ?>, Map<?, ?>, Boolean> mapCompareFunc) {
+    private boolean isEqual(Object a, Object b, Object key, BiFunction<Map<?, ?>, Map<?, ?>, Boolean> mapCompareFunc) {
         if (a == null || b == null) {
             return false;
         }

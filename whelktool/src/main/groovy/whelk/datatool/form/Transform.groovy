@@ -187,7 +187,7 @@ class Transform {
     }
 
     static boolean isEqual(Object a, Object b) {
-        return isEqualNoType(["x": a], ["x": b])
+        return comparator.isEqual(["x": a], ["x": b], Transform::isEqualNoType)
     }
 
     private static boolean isEqualNoType(Map a, Map b) {
@@ -198,21 +198,16 @@ class Transform {
             if (!a.containsKey(TYPE_KEY) && b.containsKey(TYPE_KEY)) {
                 b = new HashMap<>(b);
                 b.remove(TYPE_KEY);
-                return isEqualNoType(a, b);
+                return comparator.isEqual(a, b, Transform::isEqualNoType)
             }
             if (a.containsKey(TYPE_KEY) && !b.containsKey(TYPE_KEY)) {
                 a = new HashMap<>(a);
                 a.remove(TYPE_KEY);
-                return isEqualNoType(a, b);
+                return comparator.isEqual(a, b, Transform::isEqualNoType)
             }
             return false;
         }
-        for (Object key : a.keySet()) {
-            if (!comparator.isEqual(a.get(key), b.get(key), key, Transform::isEqualNoType)) {
-                return false;
-            }
-        }
-        return true;
+        return comparator.isEqual(a, b, Transform::isEqualNoType)
     }
 
     // Need a better name for this...
