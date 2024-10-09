@@ -2422,6 +2422,7 @@
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/BooksContentsType-{_}",
           "matchUriToken": "^[abcdefgijklmnopqrstuvwyz256]$",
+          "NOTE:lcMarc2bfCodeMap": "marcgt",
           "silentRevert": false
         },
         "[28]": {
@@ -2459,6 +2460,7 @@
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/BooksLiteraryFormType-{_}",
           "matchUriToken": "^[01cdefhijmps]$",
+          "NOTE:lcMarc2bfCodeMap": "litform",
           "silentRevert": false
         },
         "[34]": {
@@ -2466,6 +2468,7 @@
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/BooksBiographyType-{_}",
           "matchUriToken": "^[abcd]$",
+          "NOTE:lcMarc2bfCodeMap": "bioform",
           "silentRevert": false
         }
       },
@@ -2492,6 +2495,7 @@
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/ComputerTypeOfFileType-{_}",
           "matchUriToken": "^[abcdefghijm]$",
+          "NOTE:lcMarc2bfCodeMap": "computerFileType",
           "silentRevert": false
         },
         "[27]": null,
@@ -2552,6 +2556,7 @@
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MapsFormatType-{_}",
+          "NOTE:lcMarc2bfCodeMap": "mapform",
           "matchUriToken": "^[ejklnopr]$",
           "silentRevert": false
         }
@@ -2572,6 +2577,7 @@
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MusicCompositionType-{_}",
+          "NOTE:lcMarc2bfCodeMap": "musicCompForm",
           "silentRevert": false
         },
         "[20]": {
@@ -2610,6 +2616,7 @@
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/MusicTextType-{_}",
           "matchUriToken": "^[abcdefghijklmoprst]$",
+          "NOTE:lcMarc2bfCodeMap": "musicTextForm",
           "fixedDefault": " ",
           "silentRevert": false
         },
@@ -2644,6 +2651,7 @@
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/SerialsTypeOfSerialType-{_}",
           "matchUriToken": "^[dlmnpw]$",
+          "NOTE:lcMarc2bfCodeMap": "crtype",
           "fixedDefault": " ",
           "silentRevert": false
         },
@@ -2663,6 +2671,7 @@
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/SerialsNatureType-{_}",
           "matchUriToken": "^[abcdefghiklmopqrstuvwxyz56]$",
+          "NOTE:lcMarc2bfCodeMap": "marcgt",
           "silentRevert": false
         },
         "[25] [26] [27]": {
@@ -2670,6 +2679,7 @@
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/SerialsContentsType-{_}",
           "matchUriToken": "^[abcdefghiklmopqrstuvwxyz56]$",
+          "NOTE:lcMarc2bfCodeMap": "marcgt",
           "silentRevert": false
         },
         "[28]": {
@@ -2734,6 +2744,7 @@
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/VisualMaterialType-{_}",
           "matchUriToken": "^[abcdfgiklmnopqrstvwyz]$",
+          "NOTE:lcMarc2bfCodeMap": "visualtype",
           "silentRevert": false
         },
         "[34]": {
