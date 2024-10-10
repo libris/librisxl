@@ -152,10 +152,8 @@ class WhelkTool {
         if (!silent) {
             log "Select by ${ids.size()} IDs"
         }
-        def iriToShortId = idLoader.findShortIdsForIris(ids.findAll { it.contains(':') })
-        def shortIds = ids.findResults { iriToShortId[it] ?: it }
 
-        def idItems = shortIds.collect { "'$it'" }.join(',\n')
+        def idItems = idLoader.collectXlShortIds(ids).collect { "'$it'" }.join(',\n')
         if (idItems.isEmpty()) {
             return
         }
@@ -168,11 +166,8 @@ class WhelkTool {
         if (!silent) {
             log "Select by ${ids.size()} IDs in collection $collection"
         }
-        def iriToShortId = idLoader.findShortIdsForIris(ids.findAll { it.contains(':') })
-        def voyagerIdToXlId = idLoader.findXlShortIdsForVoyagerIds(ids.findAll(IdLoader::isVoyagerId), collection)
-        def shortIds = ids.findResults { iriToShortId[it] ?: voyagerIdToXlId[it] ?: it }
 
-        def idItems = shortIds.collect { "'$it'" }.join(',\n')
+        def idItems = idLoader.collectXlShortIds(ids, collection).collect { "'$it'" }.join(',\n')
         if (idItems.isEmpty()) {
             return
         }

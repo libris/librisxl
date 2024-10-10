@@ -26,7 +26,7 @@ public class IdLoader {
     public IdLoader(PostgreSQLComponent storage) {
         this.storage = storage;
     }
-    
+
     public List<Id> loadAllIds(Collection<String> shortIds) {
         String where = String.format("id in ( '%s' )", String.join("','", shortIds));
         String q = String.format("""
@@ -47,7 +47,20 @@ public class IdLoader {
         }
     }
 
-    public Map<String, String> findXlShortIdsForVoyagerIds(Collection<String> voyagerIds, String marcCollection) {
+    public List<String> collectXlShortIds(Collection<String> xlIds) {
+        Map<String, String> iriToShortId = findShortIdsForIris(xlIds.stream().filter(id -> id.contains(":")).toList());
+        return xlIds.stream().map(id -> iriToShortId.getOrDefault(id, id)).toList();
+    }
+
+    public List<String> collectXlShortIds(Collection<String> ids, String marcCollection) {
+        Map<String, String> iriToShortId = findShortIdsForIris(ids.stream().filter(id -> id.contains(":")).toList());
+        Map<String, String> voyagerIdToXlShortID = findXlShortIdsForVoyagerIds(
+                ids.stream().filter(IdLoader::isVoyagerId).toList(),
+                marcCollection);
+        return ids.stream().map(id -> iriToShortId.getOrDefault(id, voyagerIdToXlShortID.getOrDefault(id, id))).toList();
+    }
+
+    private Map<String, String> findXlShortIdsForVoyagerIds(Collection<String> voyagerIds, String marcCollection) {
         if (voyagerIds.isEmpty()) {
             return Collections.emptyMap();
         }
@@ -81,11 +94,11 @@ public class IdLoader {
         }
     }
 
-    public static boolean isVoyagerId(String id) {
+    private static boolean isVoyagerId(String id) {
         return id.matches("[0-9]{1,13}");
     }
 
-    public Map<String, String> findShortIdsForIris(Collection<String> iris) {
+    private Map<String, String> findShortIdsForIris(Collection<String> iris) {
         if (iris.isEmpty()) {
             return Collections.emptyMap();
         }
