@@ -10,6 +10,8 @@ class TypeNormalizer {
   static final var ANNOTATION = "@annotation"
   static final var KBV = "https://id.kb.se/vocab/"
 
+  // FIXME: Use definitions data (loaded into XL) and remove these hard-coded mappings!
+
   static final var MARC = "https://id.kb.se/marc/"
   static final var SAO = "https://id.kb.se/term/sao/"
   static final var BARN = "https://id.kb.se/term/barn/"
@@ -19,10 +21,40 @@ class TypeNormalizer {
   static final var TGM = "https://id.kb.se/term/gmgpc/swe/"
 
   // Mixes subclasses and subconcepts
-  static Map<String, Set<String>> baseEqualOrSubMap = [
+  static Map<String, Set<String>> baseEqualOrSubMap = [ // matchesMap
     (MARC + 'DirectElectronic'): [MARC + 'ChipCartridge'] as Set,
     (MARC + 'Novel'): [SAOGF + 'Romaner'] as Set,
     'Audio': ['PerformedMusic', 'SpokenWord'] as Set,
+  ]
+
+  static var coordinationFormMap = [
+      ("${MARC}Atlas" as String): 'AtlasForm',
+      'https://id.kb.se/term/gmgpc/swe/Atlaser': 'AtlasForm',
+      ("${MARC}Novel" as String): 'BookForm',
+      ("${MARC}Fiction" as String): 'Fiction',
+      ("${SAOGF}Romaner" as String): 'BookForm',
+      ("${SAOGF}Pop-up-b%C3%B6cker" as String): 'PopupBook',
+      ("${SAOGF}%C3%85rsb%C3%B6cker" as String): 'Yearbook',
+      ("${SAOGF}Miniatyrb%C3%B6cker" as String): 'BookForm',
+      ("${SAOGF}Mekaniska%20b%C3%B6cker" as String): 'InteractiveBook',
+      ("${SAOGF}Pysselb%C3%B6cker" as String): 'BookForm',
+      ("${SAOGF}Målarb%C3%B6cker" as String): 'BookForm',
+      ("${SAOGF}Guideb%C3%B6cker" as String): 'BookForm',
+      ("${SAOGF}Pop-up-b%C3%B6cker" as String): 'InteractiveBook',
+      ("${SAOGF}Kokb%C3%B6cker" as String): 'BookForm',
+      ("${BARNGF}Kapitelb%C3%B6cker" as String): 'BookForm',
+      'https://id.kb.se/term/barngf/Bilderb%C3%B6cker': 'TextAndImagesBook',
+  ]
+
+  static var complexTypeMap = [
+      'Text': ['BookForm': 'WrittenBook', 'TextAndImagesBook': 'TextAndImagesBook'],
+      'Cartography': ['AtlasForm': 'Atlas'],
+      'Audio': ['BookForm': 'AudioBook', 'Fiction': 'AudioBook'],
+      'Tactile': ['BookForm': 'TactileBook'],
+  ]
+
+  static var impliedContentTypes = [
+      'Atlas': ["${KBRDA}CartographicImage" as String, "${KBRDA}Text" as String] as Set
   ]
 
   static Map<String, String> contentToTypeMap = [
@@ -32,6 +64,60 @@ class TypeNormalizer {
     (KBRDA + "SpokenWord"): "SpokenWord",
     // 'StillImage' ...
     (KBRDA + "TwoDimensionalMovingImage"): 'MovingImage',
+  ]
+
+  /*
+  prefix : <https://id.kb.se/vocab/>
+  prefix kbrda: <https://id.kb.se/term/rda/>
+  select ?carrier ?media where { ?carrier a :CarrierType ; :broader ?media }
+  */
+  static Map<String, String> carrierMediaMap = [
+    'https://id.kb.se/term/rda/OverheadTransparency': 'https://id.kb.se/term/rda/Projected',
+    'https://id.kb.se/term/rda/OnlineResource': 'https://id.kb.se/term/rda/Computer',
+    'https://id.kb.se/term/rda/Sheet': 'https://id.kb.se/term/rda/Unmediated',
+    'https://id.kb.se/term/rda/Volume': 'https://id.kb.se/term/rda/Unmediated',
+    'https://id.kb.se/term/rda/AudioDisc': 'https://id.kb.se/term/rda/Audio',
+    'https://id.kb.se/term/rda/ComputerDisc': 'https://id.kb.se/term/rda/Computer',
+    'https://id.kb.se/term/rda/MicrofilmReel': 'https://id.kb.se/term/rda/Microform',
+    'https://id.kb.se/term/rda/Audiocassette': 'https://id.kb.se/term/rda/Audio',
+    'https://id.kb.se/term/rda/Slide': 'https://id.kb.se/term/rda/Projected',
+    'https://id.kb.se/term/rda/Object': 'https://id.kb.se/term/rda/Unmediated',
+    'https://id.kb.se/term/rda/StereographCard': 'https://id.kb.se/term/rda/Stereographic',
+    'https://id.kb.se/term/rda/Card': 'https://id.kb.se/term/rda/Unmediated',
+    'https://id.kb.se/term/rda/Videodisc': 'https://id.kb.se/term/rda/Video',
+    'https://id.kb.se/term/rda/SoundTrackReel': 'https://id.kb.se/term/rda/Audio',
+    'https://id.kb.se/term/rda/ComputerChipCartridge': 'https://id.kb.se/term/rda/Computer',
+    'https://id.kb.se/term/rda/Microfiche': 'https://id.kb.se/term/rda/Microform',
+    'https://id.kb.se/term/rda/ComputerCard': 'https://id.kb.se/term/rda/Computer',
+    'https://id.kb.se/term/rda/Videocassette': 'https://id.kb.se/term/rda/Video',
+    'https://id.kb.se/term/rda/Roll': 'https://id.kb.se/term/rda/Unmediated',
+    'https://id.kb.se/term/rda/MicrofilmRoll': 'https://id.kb.se/term/rda/Microform',
+    'https://id.kb.se/term/rda/ComputerDiscCartridge': 'https://id.kb.se/term/rda/Computer',
+    'https://id.kb.se/term/rda/FilmCartridge': 'https://id.kb.se/term/rda/Projected',
+    'https://id.kb.se/term/rda/VideotapeReel': 'https://id.kb.se/term/rda/Video',
+    'https://id.kb.se/term/rda/ApertureCard': 'https://id.kb.se/term/rda/Microform',
+    'https://id.kb.se/term/rda/Filmslip': 'https://id.kb.se/term/rda/Projected',
+    'https://id.kb.se/term/rda/Filmstrip': 'https://id.kb.se/term/rda/Projected',
+    'https://id.kb.se/term/rda/Flipchart': 'https://id.kb.se/term/rda/Unmediated',
+    'https://id.kb.se/term/rda/Microopaque': 'https://id.kb.se/term/rda/Microform',
+    'https://id.kb.se/term/rda/MicroscopeSlide': 'https://id.kb.se/term/rda/Microscopic',
+    'https://id.kb.se/term/rda/AudioCartridge': 'https://id.kb.se/term/rda/Audio',
+    'https://id.kb.se/term/rda/AudioCylinder': 'https://id.kb.se/term/rda/Audio',
+    'https://id.kb.se/term/rda/AudioRoll': 'https://id.kb.se/term/rda/Audio',
+    'https://id.kb.se/term/rda/AudiotapeReel': 'https://id.kb.se/term/rda/Audio',
+    'https://id.kb.se/term/rda/ComputerTapeCartridge': 'https://id.kb.se/term/rda/Computer',
+    'https://id.kb.se/term/rda/ComputerTapeCassette': 'https://id.kb.se/term/rda/Computer',
+    'https://id.kb.se/term/rda/ComputerTapeReel': 'https://id.kb.se/term/rda/Computer',
+    'https://id.kb.se/term/rda/FilmCassette': 'https://id.kb.se/term/rda/Projected',
+    'https://id.kb.se/term/rda/FilmReel': 'https://id.kb.se/term/rda/Projected',
+    'https://id.kb.se/term/rda/FilmRoll': 'https://id.kb.se/term/rda/Projected',
+    'https://id.kb.se/term/rda/FilmstripCartridge': 'https://id.kb.se/term/rda/Projected',
+    'https://id.kb.se/term/rda/MicroficheCassette': 'https://id.kb.se/term/rda/Microform',
+    'https://id.kb.se/term/rda/MicrofilmCartridge': 'https://id.kb.se/term/rda/Microform',
+    'https://id.kb.se/term/rda/MicrofilmCassette': 'https://id.kb.se/term/rda/Microform',
+    'https://id.kb.se/term/rda/MicrofilmSlip': 'https://id.kb.se/term/rda/Microform',
+    'https://id.kb.se/term/rda/StereographDisc': 'https://id.kb.se/term/rda/Stereographic',
+    'https://id.kb.se/term/rda/VideoCartridge': 'https://id.kb.se/term/rda/Video',
   ]
 
   static List reduceSymbols(List symbols) {
@@ -107,6 +193,12 @@ class TypeNormalizer {
       } else {
         work['collectsType'] = work.get(TYPE)
         work[TYPE] = collectiontype
+        // FIXME:
+        // move instance['carrierType'] to 'collectsType' and set instance[TYPE] = 'Multipart'?
+        // Examples (e.g. "Samling av trycksaker"):
+        // select ?crt1 ?crt2 (count(?g) as ?count)  (sample(?g) as ?sample) {
+        //  graph ?g { ?s kbv:carrierType ?crt1, ?crt2 . FILTER(isIRI(?crt1) && isIRI(?crt2) && ?crt1 > ?crt2) }
+        //  } order by desc(?count)
         return true
       }
     }
@@ -119,7 +211,27 @@ class TypeNormalizer {
       return false
     }
 
-    var rtype = (String) work.get(TYPE)
+    var changed = false
+
+    var worktype = (String) work.get(TYPE)
+
+    // TODO: change this. This currently drops contenttypes; but we need to map its combo to a name, both ways.
+    var contenttypes = (List) reduceSymbols(asList(work.get("contentType")))
+    if (contenttypes.size() == 1) {
+      String ctypeid = contenttypes.get(0).get(ID)
+      var contentbasictype = contentToTypeMap[ctypeid]
+      if (contentbasictype &&
+        (contentbasictype == worktype || contentbasictype in baseEqualOrSubMap[worktype])
+      ) {
+        if (contentbasictype != worktype) {
+          work.put(TYPE, contentbasictype)
+          changed = true
+        }
+        work.remove("contentType")
+        changed = true
+      }
+    }
+
     var genreforms = (List) reduceSymbols(asList(work.get("genreForm")))
     // TODO: drop from picklist...?
     var gfPicklist = genreforms.stream().filter(
@@ -127,62 +239,62 @@ class TypeNormalizer {
                  !(it.get(ID).startsWith(SAOGF) || it.get(ID).startsWith(BARNGF)))
       ).collect(Collectors.toList())
 
-    var contenttypes = (List) reduceSymbols(asList(work.get("contentType")))
-
-    if (contenttypes.size() == 1) {
-      String ctypeid = contenttypes.get(0).get(ID)
-      var contentbasictype = contentToTypeMap[ctypeid]
-      if (contentbasictype &&
-        (contentbasictype == rtype || contentbasictype in baseEqualOrSubMap[rtype])
-      ) {
-        if (contentbasictype != rtype) {
-          work.put(TYPE, contentbasictype)
+    var formsToTypeMap = complexTypeMap.get(worktype)
+    if (formsToTypeMap) {
+      var coordinationForm = genreforms.findResult { coordinationFormMap[it[ID]] }
+      if (coordinationForm) {
+        var complexType = formsToTypeMap.get(coordinationForm)
+        if (complexType) {
+          work.put(TYPE, complexType)
+          var impliedCTs = impliedContentTypes[complexType]
+          if (impliedCTs && contenttypes.every { it[ID] in impliedCTs }) {
+            work.remove("contentType")
+          }
+          changed = true
         }
-        work.remove("contentType")
       }
     }
 
-    /* ... */
-    if (
-        [
-          "${SAOGF}Romaner",
-          "${MARC}Novel",
-          "${MARC}Fiction" /*only for Audio*/,
-        ].find { iri -> genreforms.find { it[ID] == iri } }
-        || matches(genreforms, "b%C3%B6cker")
-    ) {
-      if (work.get(TYPE) == "Text") {
-        work.put(TYPE, "WrittenBook")
-      } else if (work.get(TYPE) == "Audio") {
-        work.put(TYPE, "Audiobook")
-      } else if (work.get(TYPE) == "Tactile") {
-        work.put(TYPE, "TactileBook")
-      }
+    if (genreforms.removeIf { !it[ID] && it['prefLabel'] == 'DAISY'} ) {
+      // TODO: assert isA(instance[TYPE], 'SoundRecording')
+      work.put(TYPE, "AudioBook")
+      changed = true
     }
+
 
     if (genreforms.size() > 0) {
       work.put("genreForm", genreforms)
+      changed = true
     } else {
       work.remove("genreForm")
+      changed = true
     }
 
     if (contenttypes.size() > 0 && work.containsKey("contentType")) {
       work.put("contentType", contenttypes)
+      changed = true
     } else {
       work.remove("contentType")
+      changed = true
     }
 
-    // FIXME: if any change was actually made!
-    return true
+    return changed
   }
 
   static boolean simplifySingleunitInstance(Map instance) {
     var type = instance.get(TYPE)
-    // TODO: remove these if implied by type or carrier:
-    //var mediatypes = reduceSymbols(asList(instance["mediaType"]), "MediaType")
+
+    var mediatypes = reduceSymbols(asList(instance["mediaType"]), "MediaType")
     var carriertypes = reduceSymbols(asList(instance["carrierType"]), "CarrierType")
-    var isSoundRecording = instance[TYPE] == "SoundRecording"
-    var isVideoRecording = instance[TYPE] == "VideoRecording"
+
+    var changed = false
+
+    var impliedMediaIds = carriertypes.findResults { carrierMediaMap[it[ID]] } as Set
+    if (mediatypes.every { it[ID] in impliedMediaIds }) {
+      instance.remove("mediaType")
+      changed = true
+    }
+
     var isElectronic = type == "Electronic"
     if ((isElectronic && matches(carriertypes, "Online"))) {
       carriertypes = carriertypes.stream().filter((x) -> !x.getOrDefault(ID, "").contains("Online")).collect(Collectors.toList())
@@ -192,8 +304,11 @@ class TypeNormalizer {
         instance.remove("carrierType")
       }
       instance.put(TYPE, "DigitalResource")
+      changed = true
     }
 
+    var isSoundRecording = instance[TYPE] == "SoundRecording"
+    var isVideoRecording = instance[TYPE] == "VideoRecording"
     def tuples = [
       [isElectronic, ["ChipCartridge"], "ChipCartridge"],
       [isSoundRecording, ["${MARC}SoundDisc", "${KBRDA}AudioDisc"], "AudioDisc"],
@@ -206,6 +321,7 @@ class TypeNormalizer {
       if (isIt && gotMatches.size() > 0) {
         isElectronic = true
         instance.put(TYPE, useType)
+        changed = true
         if (carriertypes.size() == gotMatches.size()) {
           instance.remove("carrierType")
         }
@@ -219,32 +335,64 @@ class TypeNormalizer {
         isElectronic = true
         instance.put(TYPE, "Electronic")
         instance.remove("carrierType")
+        changed = true
       } else if (isVolume) {
         instance.put(TYPE, "Volume")
+        changed = true
       } else {
         /* ... */
       }
     }
 
+    var probablyPrint = assumedToBePrint(instance)
+
     if (!isElectronic) {
       if (carriertypes.size() == 1) {
         instance.remove("carrierType")
+        changed = true
       }
       if (type == "Print" && isVolume) {
         instance.put(TYPE, "PrintedVolume")
+        changed = true
       } else if (type == "Instance") {
-        if (!(isVolume)) {
-          instance.put(TYPE, "Monograph")
-        } else if (assumedToBePrint(instance)) {
-          instance.put(TYPE, "PrintedVolume")
-          // TODO: if marc:RegularPrintReproduction, add production a Reproduction?
+        if (isVolume) {
+          if (probablyPrint) {
+            instance.put(TYPE, "PrintedVolume")
+            changed = true
+            // TODO: if marc:RegularPrintReproduction, add production a Reproduction?
+          } else {
+            instance.put(TYPE, "Volume")
+            changed = true
+          }
         } else {
-          instance.put(TYPE, "Volume")
+          if (probablyPrint) {
+            instance.put(TYPE, "Print") // TODO: PartOfPrint ?
+            changed = true
+          } else {
+            instance.put(TYPE, "Monograph")
+            changed = true
+          }
         }
       }
     }
 
     List instanceGfs = asList(instance.get("genreForm"))
+    List reducedGfs = instanceGfs.stream().filter((it) -> !it.get(ID).equals("${MARC}Print")).collect(Collectors.toList())
+
+    if (isElectronic && reducedGfs.removeIf { it['prefLabel'] == 'E-böcker'}) {
+      // TODO: assert isA(work[TYPE], 'Book')
+      instance.put(TYPE, "EBook")
+      changed = true
+    }
+
+    if (reducedGfs.size() == 0) {
+      instance.remove("genreForm")
+      changed = true
+    } else {
+      instance.put("genreForm", reducedGfs)
+      changed = true
+    }
+
     var mediaterm = (String) instance.get("marc:mediaTerm")
     if (mediaterm) {
       if (mediaterm.toLowerCase() == "affisch") {
@@ -252,23 +400,23 @@ class TypeNormalizer {
         assert matches(carriertypes, "Sheet")
         // TODO: work.genreForm = kbvgf:Poster (implies work.type = IllustratedWork | StillImage)
         instance.put(TYPE, "Sheet")
-        List reducedGfs = instanceGfs.stream().filter((it) -> !it.get(ID).equals("${MARC}Print")).collect(Collectors.toList())
-        if (reducedGfs.size() == 0) {
-          instance.remove("genreForm")
-        } else {
-          instance.put("genreForm", reducedGfs)
-        }
+        changed = true
       } else if (isElectronic && mediaterm.matches(/(?i)elektronisk (resurs|utgåva)/)) {
         instance.remove("marc:mediaTerm")
+        changed = true
       } else if ((isSoundRecording && mediaterm.matches(/(?i)ljudupptagning/))) {
         instance.remove("marc:mediaTerm")
+        changed = true
       } else if ((isVideoRecording && mediaterm.matches(/(?i)videoupptagning/))) {
         instance.remove("marc:mediaTerm")
+        changed = true
       } else if (instance.get(TYPE).equals("Tactile") && mediaterm.matches(/(?i)punktskrift/)) {
         if (isVolume) {
           instance.put(TYPE, "BrailleVolume")
+          changed = true
         } else {
           instance.put(TYPE, "BrailleResource")
+          changed = true
         }
         var toDrop = [KBRDA + "Volume", MARC + "Braille", MARC + "TacMaterialType-b"] as Set
         carriertypes = carriertypes.findAll { !toDrop.contains(it.get(ID)) }
@@ -278,11 +426,11 @@ class TypeNormalizer {
           instance.put("carrierType", carriertypes)
         }
         instance.remove("marc:mediaTerm")
+        changed = true
       }
     }
 
-    // FIXME: if any change was actually made!
-    return true
+    return changed
   }
 
   static boolean assumedToBePrint(Map instance) {
