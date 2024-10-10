@@ -10,6 +10,7 @@ import whelk.Whelk
 import whelk.datatool.form.Transform
 import whelk.datatool.form.ModifiedThing
 import whelk.datatool.form.Selection
+import whelk.datatool.util.IdLoader
 import whelk.exception.StaleUpdateException
 import whelk.exception.WhelkException
 import whelk.meta.WhelkConstants
@@ -23,7 +24,6 @@ import javax.script.Bindings
 import javax.script.CompiledScript
 import javax.script.ScriptEngineManager
 import javax.script.SimpleBindings
-import java.sql.SQLException
 import java.time.ZonedDateTime
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
@@ -41,10 +41,11 @@ import static whelk.util.Jackson.mapper
 
 class WhelkTool {
     static final int DEFAULT_BATCH_SIZE = 500
-    static final int DEFAULT_FETCH_SIZE = 100
+    public static final int DEFAULT_FETCH_SIZE = 100
     static final int DEFAULT_STATS_NUM_IDS = 3
 
     Whelk whelk
+    IdLoader idLoader
 
     private Script script
     private Bindings bindings
@@ -98,6 +99,7 @@ class WhelkTool {
             }
         }
         this.whelk = whelk
+        this.idLoader = new IdLoader(whelk.storage)
         this.validator = JsonLdValidator.from(whelk.jsonld)
         this.script = script
         this.defaultChangedBy = script.scriptJobUri
@@ -150,14 +152,32 @@ class WhelkTool {
         if (!silent) {
             log "Select by ${ids.size()} IDs"
         }
-        def uriIdMap = findShortIdsForUris(ids.findAll { it.contains(':') })
-        def shortIds = ids.findResults { it.contains(':') ? uriIdMap[it] : it }
+        def iriToShortId = idLoader.findShortIdsForIris(ids.findAll { it.contains(':') })
+        def shortIds = ids.findResults { iriToShortId[it] ?: it }
 
         def idItems = shortIds.collect { "'$it'" }.join(',\n')
         if (idItems.isEmpty()) {
             return
         }
         doSelectBySqlWhere("id IN ($idItems) AND deleted = false", process,
+                batchSize)
+    }
+
+    void selectByIdsAndCollection(Collection<String> ids, String collection, Closure process,
+                                  int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false) {
+        if (!silent) {
+            log "Select by ${ids.size()} IDs in collection $collection"
+        }
+        def iriToShortId = idLoader.findShortIdsForIris(ids.findAll { it.contains(':') })
+        def voyagerIdToXlId = idLoader.findXlShortIdsForVoyagerIds(ids.findAll(IdLoader::isVoyagerId), collection)
+        def shortIds = ids.findResults { iriToShortId[it] ?: voyagerIdToXlId[it] ?: it }
+
+        def idItems = shortIds.collect { "'$it'" }.join(',\n')
+        if (idItems.isEmpty()) {
+            return
+        }
+
+        doSelectBySqlWhere("id IN ($idItems) AND collection = '$collection' AND deleted = false", process,
                 batchSize)
     }
 
@@ -178,41 +198,6 @@ class WhelkTool {
         DocumentItem item = new DocumentItem(number: counter.createdCount, doc: doc, whelk: whelk)
         item.existsInStorage = false
         return item
-    }
-
-    Map<String, String> findShortIdsForUris(Collection uris) {
-        def uriIdMap = [:]
-        if (!uris) {
-            return uriIdMap
-        }
-        def uriItems = uris.collect { "'$it'" }.join(',\n')
-        def query = """
-            SELECT id, iri
-            FROM lddb__identifiers
-            WHERE iri IN ($uriItems)
-            """
-        whelk.storage.withDbConnection {
-            def conn = whelk.storage.getMyConnection()
-            def stmt
-            def rs
-            try {
-                stmt = conn.prepareStatement(query)
-                rs = stmt.executeQuery()
-                while (rs.next()) {
-                    uriIdMap[rs.getString("iri")] = rs.getString("id")
-                }
-            } finally {
-                try {
-                    rs?.close()
-                } catch (SQLException e) {
-                }
-                try {
-                    stmt?.close()
-                } catch (SQLException e) {
-                }
-            }
-        }
-        return uriIdMap
     }
 
     void selectBySqlWhere(Map params, String whereClause, Closure process) {
@@ -656,6 +641,7 @@ class WhelkTool {
         bindings.put("script", { String s -> script.compileSubScript(this, s) })
         bindings.put("selectByCollection", this.&selectByCollection)
         bindings.put("selectByIds", this.&selectByIds)
+        bindings.put("selectByIdsAndCollection", this.&selectByIdsAndCollection)
         bindings.put("selectBySqlWhere", this.&selectBySqlWhere)
         bindings.put("selectByForm", this.&selectByForm)
         bindings.put("selectFromIterable", this.&selectFromIterable)
