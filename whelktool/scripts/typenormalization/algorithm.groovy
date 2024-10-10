@@ -157,10 +157,21 @@ class TypeNormalizer {
     var modified = false
 
     var itype = (String) instance[TYPE]
-    if (itype == 'Map' || itype == 'Globe') {
-      instance[TYPE] = itype + 'Instance'
+
+    if (itype == 'Map') {
       if (work[TYPE] == 'Cartography') {
-        work[TYPE] = itype
+        instance[TYPE] = 'Instance'
+        if (!instance['carrierType']) {
+          instance['carrierType'] = [ [(ID): "${MARC}Sheet" as String] ]
+        }
+        work[TYPE] = 'SingleMap'
+        // TODO: drop instance['genreForm'] marc:MapATwoDimensionalMap
+        modified = true
+      }
+    } else if (itype == 'Globe') {
+      if (work[TYPE] == 'Cartography') {
+        instance[TYPE] = 'Object'
+        work[TYPE] = 'Globe'
         modified = true
       }
     }
@@ -347,10 +358,6 @@ class TypeNormalizer {
     var probablyPrint = assumedToBePrint(instance)
 
     if (!isElectronic) {
-      if (carriertypes.size() == 1) {
-        instance.remove("carrierType")
-        changed = true
-      }
       if (type == "Print" && isVolume) {
         instance.put(TYPE, "PrintedVolume")
         changed = true
@@ -366,13 +373,26 @@ class TypeNormalizer {
           }
         } else {
           if (probablyPrint) {
-            instance.put(TYPE, "Print") // TODO: PartOfPrint ?
+            if (matches(carriertypes, "Sheet")) {
+              instance.put(TYPE, "PrintedSheet")
+            } else {
+              instance.put(TYPE, "Print") // TODO: may be PartOfPrint ?
+            }
             changed = true
           } else {
-            instance.put(TYPE, "Monograph")
+            if (matches(carriertypes, "Sheet")) {
+              instance.put(TYPE, "Sheet")
+            } else {
+              instance.put(TYPE, "Monograph")
+            }
             changed = true
           }
         }
+      }
+
+      if (carriertypes.size() == 1) {
+        instance.remove("carrierType")
+        changed = true
       }
     }
 
