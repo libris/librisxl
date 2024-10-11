@@ -4,6 +4,6 @@ var loadWorkItem = { String workId, Closure process ->
   selectByIds([workId], process)
 }
 
-selectByIds(['n117254ll8sv2bnm']) {
+selectByCollection('bib') {
   normalizeTypes(it, loadWorkItem)
 }
