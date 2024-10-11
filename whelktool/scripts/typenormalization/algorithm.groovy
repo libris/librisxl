@@ -417,9 +417,10 @@ class TypeNormalizer {
     if (mediaterm) {
       if (mediaterm.toLowerCase() == "affisch") {
         instance.remove("marc:mediaTerm")
-        assert matches(carriertypes, "Sheet")
-        // TODO: work.genreForm = kbvgf:Poster (implies work.type = IllustratedWork | StillImage)
-        instance.put(TYPE, "Sheet")
+        if (matches(carriertypes, "Sheet")) {
+          // TODO: work.genreForm = kbvgf:Poster (implies work.type = IllustratedWork | StillImage)
+          instance.put(TYPE, "Sheet")
+        }
         changed = true
       } else if (isElectronic && mediaterm.matches(/(?i)elektronisk (resurs|utgåva)/)) {
         instance.remove("marc:mediaTerm")
