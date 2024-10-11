@@ -1,19 +1,30 @@
 package whelk.datatool.form
 
 import whelk.Document
+import whelk.JsonLd
+import whelk.Whelk
 import whelk.datatool.util.DocumentComparator
+import whelk.datatool.util.IdLoader
 import whelk.util.DocumentUtil
 
 import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.RECORD_TYPE
 import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
 import static whelk.util.DocumentUtil.getAtPath
+import static whelk.util.LegacyIntegrationTools.getMarcCollectionInHierarchy
 
 class Transform {
     private static final DocumentComparator comparator = new DocumentComparator()
 
     private static final String _ID = '_id'
     private static final String _MATCH = '_match'
+    // The following keys are subject to change
+    private static final String _ID_LIST = '_idList'
+    private static final String VALUE = 'value'
+    private static final String VALUE_FROM = 'valueFrom'
+
+    private static final Set<String> IGNORE_CHANGED_VALUE = [_ID_LIST]
 
     final Map matchForm
     final Map targetForm
@@ -36,12 +47,19 @@ class Transform {
         }
     }
 
-    Transform(Map matchForm, Map targetForm) {
+    Transform(Map matchForm, Map targetForm, Whelk whelk) {
         this.matchForm = matchForm
         this.targetForm = targetForm
         this.removedPaths = collectRemovedPaths()
         this.addedPaths = collectAddedPaths()
         this.exactMatchPaths = collectExactMatchPaths()
+        if (whelk) {
+            processIdLists(whelk)
+        }
+    }
+
+    Transform(Map matchForm, Map targetForm) {
+        this(matchForm, targetForm, null)
     }
 
     List<Map> getChangeSets() {
@@ -123,6 +141,9 @@ class Transform {
         }
 
         if (a instanceof Map && b instanceof Map) {
+            a = withoutIgnored(a)
+            b = withoutIgnored(b)
+
             // Lack of implicit id means that there is a new node at this path
             if (!a[_ID] || !b[_ID]) {
                 return [path]
@@ -140,7 +161,7 @@ class Transform {
                 x instanceof Map && y instanceof Map && ((x[_ID] && x[_ID] == y[_ID]) || (x[ID_KEY] && x[ID_KEY] == b[ID_KEY]))
             }
             a.eachWithIndex { aElem, i ->
-                def peer = b.find { bElem -> aElem == bElem || sameNode(aElem, bElem)}
+                def peer = b.find { bElem -> aElem == bElem || sameNode(aElem, bElem) }
                 changedPaths.addAll(peer ? collectChangedPaths(aElem, peer, path + i) : [path + i])
             }
             return changedPaths
@@ -154,6 +175,14 @@ class Transform {
         throw new Exception("Changing datatype of a value is not allowed.")
     }
 
+    private static Map withoutIgnored(Map m) {
+        if (m.keySet().intersect(IGNORE_CHANGED_VALUE)) {
+            m = new HashMap(m)
+            m.removeAll { IGNORE_CHANGED_VALUE.contains(it.key) }
+        }
+        return m
+    }
+
     Map getMatchFormWithoutMarkers() {
         return withoutMarkers(matchForm)
     }
@@ -163,6 +192,7 @@ class Transform {
             if (v instanceof Map) {
                 v.remove(_ID)
                 v.remove(_MATCH)
+                v.remove(_ID_LIST)
                 return new DocumentUtil.Nop()
             }
         }
@@ -180,6 +210,40 @@ class Transform {
 
     static List<String> dropIndexes(List path) {
         return path.findAll { it instanceof String } as List<String>
+    }
+
+    private void processIdLists(Whelk whelk) {
+        def idLoader = new IdLoader(whelk.storage);
+        DocumentUtil.traverse(matchForm) { value, path ->
+            if (path && value instanceof Map && dropLastIndex(path).last() == _ID_LIST) {
+                def newValue = [:]
+                newValue.putAll(value)
+                if (value.containsKey(VALUE_FROM)) {
+                    newValue.put(VALUE, idLoader.fromFile((String) value[VALUE_FROM][ID_KEY]))
+                }
+                if (newValue.containsKey(VALUE)) {
+                    def (iris, shortIds) = ((List) newValue[VALUE]).split(JsonLd::looksLikeIri)
+                    // Assume given http strings to be valid iris and thus avoid the round trip of first finding the
+                    // short id (in lddb__identifiers) and then use the short id only to find (most likely) the same
+                    // thing/record iri (in lddb) that we started with.
+                    if (shortIds.isEmpty()) {
+                        return new DocumentUtil.Replace(newValue)
+                    }
+                    def node = getAtPath(matchForm, dropLastIndex(path).dropRight(1))
+                    def nodeType = node[TYPE_KEY]
+                    def marcCollection = nodeType ? getMarcCollectionInHierarchy((String) nodeType, whelk.jsonld) : null
+                    def xlShortIds = idLoader.collectXlShortIds(shortIds as List<String>, marcCollection)
+                    def parentProp = dropIndexes(path).reverse()[1]
+                    def isInRange = { type -> whelk.jsonld.getInRange(type).contains(parentProp) }
+                    // TODO: Fix hardcoding
+                    def isRecord = whelk.jsonld.isInstanceOf((Map) node, "AdminMetadata")
+                            || isInRange(RECORD_TYPE)
+                            || isInRange("AdminMetadata")
+                    newValue[VALUE] = iris + idLoader.loadAllIds(xlShortIds).collect { isRecord ? it.recordIri() : it.thingIri() }
+                    return new DocumentUtil.Replace(newValue)
+                }
+            }
+        }
     }
 
     // Need a better name for this...

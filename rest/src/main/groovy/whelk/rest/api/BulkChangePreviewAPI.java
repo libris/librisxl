@@ -58,7 +58,7 @@ public class BulkChangePreviewAPI extends HttpServlet {
 
             switch (changeDoc.getSpecification()) {
                 case BulkChangeDocument.FormSpecification formSpecification -> {
-                    var transform = new Transform(formSpecification.matchForm(), formSpecification.targetForm());
+                    var transform = new Transform(formSpecification.matchForm(), formSpecification.targetForm(), whelk);
 
                     var match = transform.getMatchFormWithoutMarkers();
                     // TODO use COUNT + LIMIT & OFFSET and don't fetch all ids every time

@@ -907,7 +907,7 @@ class DocumentItem {
     boolean modify(Map matchForm, Map targetForm) {
         var m = new ModifiedThing(
                 (Map) this.graph[1],
-                new Transform(matchForm, targetForm),
+                new Transform(matchForm, targetForm, whelk),
                 whelk.jsonld.repeatableTerms)
 
         this.graph[1] = m.after
