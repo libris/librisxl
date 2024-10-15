@@ -1,6 +1,5 @@
 package whelk.search2;
 
-import org.apache.jena.base.Sys;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
