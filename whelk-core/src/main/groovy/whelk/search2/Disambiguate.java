@@ -13,6 +13,7 @@ import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.VocabTerm;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -332,24 +333,26 @@ public class Disambiguate {
     }
 
     private Optional<String> findDomain(Map<?, ?> propertyDefinition, Whelk whelk) {
-        return findDomain(new LinkedList<>(List.of(propertyDefinition)), whelk);
+        return findDomain(new LinkedList<>(List.of(propertyDefinition)), whelk, new HashSet<>());
     }
 
-    private Optional<String> findDomain(LinkedList<Map<?, ?>> queue, Whelk whelk) {
+    private Optional<String> findDomain(LinkedList<Map<?, ?>> queue, Whelk whelk, Set<Map<?, ?>> seenDefs) {
         if (queue.isEmpty()) {
             return Optional.empty();
         }
 
         var propertyDefinition = queue.pop();
 
+        seenDefs.add(propertyDefinition);
+
         Optional<String> domain = getDomainIri(propertyDefinition);
         if (domain.isPresent()) {
             return domain;
         }
 
-        queue.addAll(collectInheritable(propertyDefinition, whelk));
+        queue.addAll(collectInheritable(propertyDefinition, whelk).stream().filter(Predicate.not(seenDefs::contains)).toList());
 
-        return findDomain(queue, whelk);
+        return findDomain(queue, whelk, seenDefs);
     }
 
     List<Map<?, ?>> collectInheritable(Map<?, ?> propertyDefinition, Whelk whelk) {
