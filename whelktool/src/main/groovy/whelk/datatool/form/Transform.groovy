@@ -43,6 +43,7 @@ class Transform {
     List<List> removedPaths
 
     Map<String, List<String>> nodeIdMappings
+    Map<String, List> nodeIdToPath
 
     List<ChangesForNode> changes
 
@@ -192,6 +193,63 @@ class Transform {
             m.removeAll { IGNORE_CHANGED_VALUE.contains(it.key) }
         }
         return m
+    }
+
+    Iterable<Map> getMatchFormVariants() {
+        Map variant = getMatchFormWithoutAnyMarkers()
+        Map bNodeIdToPath = [:]
+
+        DocumentUtil.findKey(matchForm, _ID) { value, path ->
+            if (nodeIdMappings.containsKey(value) && value != getThingTmpId() && value != getRecordTmpId()) {
+                bNodeIdToPath[value] = path.dropRight(1)
+                return new DocumentUtil.Nop()
+            }
+        }
+
+        if (bNodeIdToPath.isEmpty()) {
+            return [variant]
+        }
+
+        Iterator<Map> i = new Iterator<Map>() {
+            private def bNodeIds = bNodeIdToPath.keySet().toList()
+            private def idListLengths = bNodeIds.collect { nodeIdMappings[it].size() }
+            private def currentIndexes = bNodeIds.collect { 0 }
+            private def hasNext = true
+
+            @Override
+            boolean hasNext() {
+                return hasNext
+            }
+
+            @Override
+            Map next() {
+                // Set ids for current variant
+                [bNodeIds, currentIndexes].transpose().each { bNodeId, idx ->
+                    def path = bNodeIdToPath[bNodeId]
+                    def node = getAtPath(variant, path)
+                    def mappedId = nodeIdMappings[bNodeId][idx]
+                    node[ID_KEY] = mappedId
+                }
+
+                // Update cursors
+                for (i in idListLengths.size() - 1..0) {
+                    if (currentIndexes[i] == idListLengths[i] - 1) {
+                        currentIndexes[i] = 0
+                        if (i == 0) {
+                            hasNext = false
+                        }
+                    } else {
+                        currentIndexes[i] += 1
+                        break;
+                    }
+                }
+
+                // Return current variant
+                return variant
+            }
+        }
+
+        return () -> i
     }
 
     Map getMatchFormWithoutAnyMarkers() {
@@ -365,7 +423,7 @@ class Transform {
     }
 
     private String getRecordTmpId() {
-        return matchForm[RECORD_KEY]?[_ID] ?: "TEMP_ID"
+        return getAtPath(matchForm, [RECORD_KEY, _ID], "TEMP_ID")
     }
 
     // Need a better name for this...

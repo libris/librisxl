@@ -7,7 +7,6 @@ import whelk.component.SparqlQueryClient
 import static whelk.util.Jackson.mapper
 
 class TransformSpec extends Specification {
-//    static Whelk whelk = Whelk.createLoadedSearchWhelk()
     static List<Map> specs = TransformSpec.class.getClassLoader()
             .getResourceAsStream('whelk/datatool/form/specs.json')
             .with { mapper.readValue((InputStream) it, Map)['specs'] }

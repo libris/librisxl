@@ -1,34 +1,6 @@
 {
   "specs": [
     {
-      "name": "Test",
-      "matchForm": {
-        "_id": "1",
-        "_idList": [
-          {
-            "@type": "AnyOf",
-            "value": [
-              "222273",
-              "https://id.kb.se/term/sao/Ortnamn%20i%20litteraturen",
-              "http://libris.kb.se.localhost:5000/gw7q72d7ddfqwkn6#it",
-              "n3fx7vnrlhckfnkt"
-            ]
-          },
-          {
-            "@type": "AnyOf",
-            "valueFrom": {
-              "@id": "https://example.com/hejsan"
-            }
-          }
-        ],
-        "p1": "v1"
-      },
-      "targetForm": {
-        "_id": "1",
-        "p1": "v2"
-      }
-    },
-    {
       "name": "Remove literal: non-repeatable property",
       "matchForm": {
         "_id": "1",
@@ -3121,6 +3093,72 @@
             }
           ]
         }
+      }
+    },
+    {
+      "name": "UNCHANGED: Data does not match given ids",
+      "matchForm": {
+        "_id": "1",
+        "p1": {
+          "_id": "2",
+          "_idList": [
+            {
+              "@type": "AnyOf",
+              "value": [
+                "https://id.kb.se/x",
+                "https://id.kb.se/y",
+                "https://id.kb.se/z"
+              ]
+            }
+          ]
+        },
+        "p2": {
+          "_id": "3",
+          "_idList": [
+            {
+              "@type": "AnyOf",
+              "value": [
+                "https://id.kb.se/a",
+                "https://id.kb.se/b",
+                "https://id.kb.se/c"
+              ]
+            }
+          ]
+        },
+        "p3": "v3"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": {
+          "_id": "2"
+        },
+        "p2": {
+          "_id": "3"
+        }
+      },
+      "removedPaths": [
+        [
+          "p3"
+        ]
+      ],
+      "addedPaths": [],
+      "before": {
+        "p1": {
+          "@id": "https://id.kb.se/y"
+        },
+        "p2": {
+          "@id": "https://id.kb.se/d"
+        },
+        "p3": "v3"
+      },
+      "after": {
+        "p1": {
+          "@id": "https://id.kb.se/y"
+        },
+        "p2": {
+          "@id": "https://id.kb.se/d"
+        },
+        "p3": "v3"
       }
     }
   ]
