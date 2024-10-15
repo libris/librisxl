@@ -8,5 +8,4 @@ selectByForm(matchForm) { doc ->
     if(doc.modify(matchForm, targetForm)) {
         doc.scheduleSave(loud: isLoudAllowed)
     }
-
 }

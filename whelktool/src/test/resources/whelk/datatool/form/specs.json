@@ -1,6 +1,34 @@
 {
   "specs": [
     {
+      "name": "Test",
+      "matchForm": {
+        "_id": "1",
+        "_idList": [
+          {
+            "@type": "AnyOf",
+            "value": [
+              "222273",
+              "https://id.kb.se/term/sao/Ortnamn%20i%20litteraturen",
+              "http://libris.kb.se.localhost:5000/gw7q72d7ddfqwkn6#it",
+              "n3fx7vnrlhckfnkt"
+            ]
+          },
+          {
+            "@type": "AnyOf",
+            "valueFrom": {
+              "@id": "https://example.com/hejsan"
+            }
+          }
+        ],
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": "v2"
+      }
+    },
+    {
       "name": "Remove literal: non-repeatable property",
       "matchForm": {
         "_id": "1",
@@ -764,7 +792,9 @@
       "removedPaths": [
       ],
       "addedPaths": [
-        ["p2"]
+        [
+          "p2"
+        ]
       ],
       "before": {
         "p1": "v1"

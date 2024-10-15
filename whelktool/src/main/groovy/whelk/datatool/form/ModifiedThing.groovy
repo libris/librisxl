@@ -30,7 +30,7 @@ class ModifiedThing {
     }
 
     private Map modify(Map thing) {
-        if (!isMatch(transform.getMatchFormWithoutMarkers(), thing)) {
+        if (!isMatch(transform.getMatchFormWithoutAnyMarkers(), thing)) {
             return thing
         }
 

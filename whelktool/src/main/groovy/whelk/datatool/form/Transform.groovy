@@ -3,14 +3,19 @@ package whelk.datatool.form
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.converter.JsonLdToTrigSerializer
 import whelk.datatool.util.DocumentComparator
 import whelk.datatool.util.IdLoader
 import whelk.util.DocumentUtil
 
+import static java.nio.charset.StandardCharsets.UTF_8
 import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.RECORD_KEY
 import static whelk.JsonLd.RECORD_TYPE
+import static whelk.JsonLd.THING_KEY
 import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
+import static whelk.component.SparqlQueryClient.GRAPH_VAR
 import static whelk.util.DocumentUtil.getAtPath
 import static whelk.util.LegacyIntegrationTools.getMarcCollectionInHierarchy
 
@@ -26,13 +31,18 @@ class Transform {
 
     private static final Set<String> IGNORE_CHANGED_VALUE = [_ID_LIST]
 
-    final Map matchForm
-    final Map targetForm
+    private static final String EMPTY_BLANK_NODE_TMP_ID = "EMPTY_BN_ID"
 
-    final Set<List> exactMatchPaths
 
-    final List<List> addedPaths
-    final List<List> removedPaths
+    Map matchForm
+    Map targetForm
+
+    Set<List> exactMatchPaths
+
+    List<List> addedPaths
+    List<List> removedPaths
+
+    Map<String, List<String>> nodeIdMappings
 
     List<ChangesForNode> changes
 
@@ -53,13 +63,14 @@ class Transform {
         this.removedPaths = collectRemovedPaths()
         this.addedPaths = collectAddedPaths()
         this.exactMatchPaths = collectExactMatchPaths()
-        if (whelk) {
-            processIdLists(whelk)
-        }
+        this.nodeIdMappings = collectNodeIdMappings(whelk)
     }
 
     Transform(Map matchForm, Map targetForm) {
         this(matchForm, targetForm, null)
+    }
+
+    Transform() {
     }
 
     List<Map> getChangeSets() {
@@ -81,7 +92,7 @@ class Transform {
 
     List<ChangesForNode> getChanges() {
         if (changes == null) {
-            def matchFormClean = getMatchFormWithoutMarkers()
+            def matchFormClean = getMatchFormWithoutAnyMarkers()
             changes = (collectRemove() + collectAdd() as List<Change>)
                     .groupBy { it.parentPath() }
                     .collect { parentPath, changeList ->
@@ -98,7 +109,7 @@ class Transform {
         return (List<Remove>) removedPaths.collect { fullPath ->
             asList(getAtPath(matchForm, fullPath)).collect { value ->
                 value instanceof Map
-                        ? new Remove(fullPath, withoutMarkers(value), exactMatchPaths.contains(fullPath) ? MatchingMode.EXACT : MatchingMode.SUBSET)
+                        ? new Remove(fullPath, withoutAnyMarkers(value), exactMatchPaths.contains(fullPath) ? MatchingMode.EXACT : MatchingMode.SUBSET)
                         : new Remove(fullPath, value, MatchingMode.EXACT)
             }
         }.flatten()
@@ -107,7 +118,7 @@ class Transform {
     private List<Add> collectAdd() {
         return (List<Add>) addedPaths.collect { fullPath ->
             asList(getAtPath(targetForm, fullPath)).collect { value ->
-                new Add(fullPath, value instanceof Map ? withoutMarkers(value) : value)
+                new Add(fullPath, value instanceof Map ? withoutAnyMarkers(value) : value)
             }
         }.flatten()
     }
@@ -183,25 +194,43 @@ class Transform {
         return m
     }
 
-    Map getMatchFormWithoutMarkers() {
-        return withoutMarkers(matchForm)
+    Map getMatchFormWithoutAnyMarkers() {
+        return withoutAnyMarkers(matchForm)
     }
 
-    private static void clearMarkers(Object o) {
-        DocumentUtil.traverse(o) { v, p ->
-            if (v instanceof Map) {
-                v.remove(_ID)
-                v.remove(_MATCH)
-                v.remove(_ID_LIST)
-                return new DocumentUtil.Nop()
-            }
-        }
+    Map getMatchFormWithoutNonIdMarkers() {
+        return withoutNonIdMarkers(matchForm)
     }
 
-    static Map withoutMarkers(Map form) {
+    static Map withoutAnyMarkers(Map form) {
+        return withoutMarkers(form, this.&clearAllMarkers)
+    }
+
+    static Map withoutNonIdMarkers(Map form) {
+        return withoutMarkers(form, this.&clearNonIdMarkers)
+    }
+
+    private static withoutMarkers(Map form, Closure clearMarkers) {
         var f = (Map) Document.deepCopy(form)
         clearMarkers(f)
         return f
+    }
+
+    private static void clearAllMarkers(Object o) {
+        clearMarkers(o, [_ID, _MATCH, _ID_LIST] as Set)
+    }
+
+    private static void clearNonIdMarkers(Object o) {
+        clearMarkers(o, [_MATCH, _ID_LIST] as Set)
+    }
+
+    private static void clearMarkers(Object o, Set<String> markers) {
+        DocumentUtil.traverse(o) { v, p ->
+            if (v instanceof Map) {
+                v.removeAll { markers.contains(it.key) }
+                return new DocumentUtil.Nop()
+            }
+        }
     }
 
     static List dropLastIndex(List path) {
@@ -212,24 +241,105 @@ class Transform {
         return path.findAll { it instanceof String } as List<String>
     }
 
-    private void processIdLists(Whelk whelk) {
-        def idLoader = new IdLoader(whelk.storage);
-        DocumentUtil.traverse(matchForm) { value, path ->
-            if (path && value instanceof Map && dropLastIndex(path).last() == _ID_LIST) {
-                def newValue = [:]
-                newValue.putAll(value)
-                if (value.containsKey(VALUE_FROM)) {
-                    newValue.put(VALUE, idLoader.fromFile((String) value[VALUE_FROM][ID_KEY]))
+    String getSparqlPattern(Map context) {
+        Map form = getMatchFormWithoutNonIdMarkers()
+
+        putIds(form)
+
+        Map thing = form
+        Map record = (Map) thing.remove(RECORD_KEY) ?: [:]
+
+        record[ID_KEY] = getRecordTmpId()
+        thing[ID_KEY] = getThingTmpId()
+        record[THING_KEY] = [(ID_KEY): getThingTmpId()]
+
+        def ttl = ((ByteArrayOutputStream) JsonLdToTrigSerializer.toTurtle(context, [record, thing]))
+                .toByteArray()
+                .with { new String(it, UTF_8) }
+        // Add skip prelude flag to JsonLdToTrigSerializer.toTurtle?
+                .with { withoutPrefixes(it) }
+
+        return insertIdMappings(insertVars(ttl))
+    }
+
+    private String insertVars(String ttl) {
+        def substitutions = [
+                ("<" + getThingTmpId() + ">"): getVar(getThingTmpId()),
+                ("<" + getRecordTmpId() + ">"): getVar(getRecordTmpId()),
+                ("<" + EMPTY_BLANK_NODE_TMP_ID + ">"): "[]",
+        ]
+
+        nodeIdMappings.keySet().each {_id ->
+            substitutions.put("<" + _id + ">", getVar(_id))
+        }
+
+        return ttl.replace(substitutions)
+    }
+
+    private String insertIdMappings(String sparqlPattern) {
+        def valuesClauses = nodeIdMappings.collect {_id, ids ->
+            "VALUES ${getVar(_id)} { ${ ids.collect {"<$it>" }.join(" ") } }\n"
+        }.join()
+        return valuesClauses + sparqlPattern
+    }
+
+    String getVar(String _id) {
+        return _id == getRecordTmpId()
+                ? "?$GRAPH_VAR"
+                : "?${_id.replace('#', '')}"
+    }
+
+    private void putIds(Map form) {
+        DocumentUtil.traverse(form) { value, path ->
+            if (asList(value).isEmpty()) {
+                return new DocumentUtil.Replace([(ID_KEY): EMPTY_BLANK_NODE_TMP_ID])
+            } else if (value instanceof Map) {
+                def _id = value.remove(_ID)
+                if (nodeIdMappings.containsKey(_id)) {
+                    value[ID_KEY] = _id
+                    return new DocumentUtil.Nop()
+                } else if (value.isEmpty()) {
+                    return new DocumentUtil.Replace([(ID_KEY): EMPTY_BLANK_NODE_TMP_ID])
                 }
-                if (newValue.containsKey(VALUE)) {
-                    def (iris, shortIds) = ((List) newValue[VALUE]).split(JsonLd::looksLikeIri)
+            }
+        }
+    }
+
+    private static String withoutPrefixes(String ttl) {
+        ttl.readLines()
+                .split { it.startsWith('prefix') }
+                .get(1)
+                .join('\n')
+                .trim()
+    }
+
+    Map<String, List<String>> collectNodeIdMappings(Whelk whelk) {
+        Map<String, List<String>> nodeIdMappings = [:]
+
+        IdLoader idLoader = whelk ? new IdLoader(whelk.storage) : null
+
+        DocumentUtil.traverse(matchForm) { value, path ->
+            if (value instanceof Map && path && dropLastIndex(path).last() == _ID_LIST) {
+                def ids = value[VALUE] as List<String>
+                        ?: (value[VALUE_FROM] ? idLoader.fromFile((String) value[VALUE_FROM][ID_KEY]) : [])
+                if (ids) {
+                    def node = getAtPath(matchForm, dropLastIndex(path).dropRight(1))
+                    def nodeId = (String) node[_ID]
+
+                    if (!idLoader) {
+                        nodeIdMappings[nodeId] = ids
+                        return
+                    }
+
+                    def (iris, shortIds) = ids.split(JsonLd::looksLikeIri)
                     // Assume given http strings to be valid iris and thus avoid the round trip of first finding the
                     // short id (in lddb__identifiers) and then use the short id only to find (most likely) the same
                     // thing/record iri (in lddb) that we started with.
                     if (shortIds.isEmpty()) {
-                        return new DocumentUtil.Replace(newValue)
+                        nodeIdMappings[nodeId] = iris
+                        return
                     }
-                    def node = getAtPath(matchForm, dropLastIndex(path).dropRight(1))
+
                     def nodeType = node[TYPE_KEY]
                     def marcCollection = nodeType ? getMarcCollectionInHierarchy((String) nodeType, whelk.jsonld) : null
                     def xlShortIds = idLoader.collectXlShortIds(shortIds as List<String>, marcCollection)
@@ -239,11 +349,23 @@ class Transform {
                     def isRecord = whelk.jsonld.isInstanceOf((Map) node, "AdminMetadata")
                             || isInRange(RECORD_TYPE)
                             || isInRange("AdminMetadata")
-                    newValue[VALUE] = iris + idLoader.loadAllIds(xlShortIds).collect { isRecord ? it.recordIri() : it.thingIri() }
-                    return new DocumentUtil.Replace(newValue)
+                    nodeIdMappings[(String) node[_ID]] = iris + idLoader.loadAllIds(xlShortIds).collect {
+                        isRecord ? it.recordIri() : it.thingIri()
+                    }
+                    return new DocumentUtil.Nop()
                 }
             }
         }
+
+        return nodeIdMappings
+    }
+
+    private String getThingTmpId() {
+        return matchForm[_ID]
+    }
+
+    private String getRecordTmpId() {
+        return matchForm[RECORD_KEY]?[_ID] ?: "TEMP_ID"
     }
 
     // Need a better name for this...
@@ -319,6 +441,18 @@ class Transform {
         Add(List path, Object value) {
             this.path = path
             this.value = value
+        }
+    }
+
+    static class MatchForm extends Transform {
+        MatchForm(Map matchForm, Whelk whelk) {
+            super()
+            this.matchForm = matchForm
+            this.nodeIdMappings = collectNodeIdMappings(whelk)
+        }
+
+        MatchForm(Map matchForm) {
+            this(matchForm, null)
         }
     }
 }

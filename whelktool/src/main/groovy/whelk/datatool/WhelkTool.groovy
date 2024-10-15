@@ -9,7 +9,6 @@ import whelk.JsonLdValidator
 import whelk.Whelk
 import whelk.datatool.form.Transform
 import whelk.datatool.form.ModifiedThing
-import whelk.datatool.form.Selection
 import whelk.datatool.util.IdLoader
 import whelk.exception.StaleUpdateException
 import whelk.exception.WhelkException
@@ -182,7 +181,8 @@ class WhelkTool {
             log "Select by form"
         }
 
-        var ids = Selection.byForm(Transform.withoutMarkers(form), whelk.sparqlQueryClient).recordIds
+        var sparqlPattern = new Transform.MatchForm(form, whelk).getSparqlPattern(whelk.jsonld.context)
+        var ids = whelk.sparqlQueryClient.queryIdsByPattern(sparqlPattern)
 
         selectByIds(ids, process, batchSize, silent)
     }
