@@ -94,7 +94,7 @@ class ModifiedThing {
     private static void remove(Map node, String property, List<Transform.Remove> valuesToRemove) {
         def current = asList(node[property])
         // Assume that it has already been checked that current contains all valuesToRemove
-        valuesToRemove.each { v -> current.removeAll { v.matches(it) } }
+        valuesToRemove.each { v -> current.removeAll { v.matches(property, it) } }
         if (current.isEmpty()) {
             node.remove(property)
         } else {
@@ -132,7 +132,7 @@ class ModifiedThing {
                          List<Transform.Add> valuesToAdd) {
         def current = asList(node[property])
 
-        List<Number> removeAt = current.findIndexValues { c -> valuesToRemove.any { v -> v.matches(c) } }
+        List<Number> removeAt = current.findIndexValues { c -> valuesToRemove.any { v -> v.matches(property, c) } }
         int insertAt = removeAt.first().intValue()
 
         removeAt.reverse().each { n ->

@@ -277,17 +277,17 @@ class Transform {
     }
 
     private static void clearAllMarkers(Object o) {
-        clearMarkers(o, [_ID, _MATCH, _ID_LIST] as Set)
+        clearMarkers(o, [_ID, _MATCH, _ID_LIST] as Set, [(TYPE_KEY): "Any"])
     }
 
     private static void clearNonIdMarkers(Object o) {
-        clearMarkers(o, [_MATCH, _ID_LIST] as Set)
+        clearMarkers(o, [_MATCH, _ID_LIST] as Set, [(TYPE_KEY): "Any"])
     }
 
-    private static void clearMarkers(Object o, Set<String> markers) {
+    private static void clearMarkers(Object o, Set<String> keys, Map<String, Object> keyValuePairs) {
         DocumentUtil.traverse(o) { v, p ->
             if (v instanceof Map) {
-                v.removeAll { markers.contains(it.key) }
+                v.removeAll { keys.contains(it.key) || keyValuePairs[it.key] == it.value }
                 return new DocumentUtil.Nop()
             }
         }
@@ -518,8 +518,15 @@ class Transform {
             this.matchingMode = matchingMode
         }
 
+        boolean matches(String property, Object o) {
+            return property == this.property() && matches(o)
+        }
+
         boolean matches(Object o) {
-            return (value instanceof Map ? getFormVariants(value) : [value]).any {v ->
+            if (property() == TYPE_KEY && value == "Any") {
+                return true
+            }
+            return (value instanceof Map ? getFormVariants(value) : [value]).any { v ->
                 switch (matchingMode) {
                     case MatchingMode.EXACT: return isEqual(v, o)
                     case MatchingMode.SUBSET: return isSubset(v, o)
