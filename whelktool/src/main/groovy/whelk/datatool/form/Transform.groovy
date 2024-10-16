@@ -43,7 +43,6 @@ class Transform {
     List<List> removedPaths
 
     Map<String, List<String>> nodeIdMappings
-    Map<String, List> nodeIdToPath
 
     List<ChangesForNode> changes
 
@@ -243,7 +242,7 @@ class Transform {
                         }
                     } else {
                         currentIndexes[i] += 1
-                        break;
+                        break
                     }
                 }
 
@@ -294,11 +293,11 @@ class Transform {
         }
     }
 
-    static List dropLastIndex(List path) {
+    private static List dropLastIndex(List path) {
         return !path.isEmpty() && path.last() instanceof Integer ? path.dropRight(1) : path
     }
 
-    static List<String> dropIndexes(List path) {
+    private static List<String> dropIndexes(List path) {
         return path.findAll { it instanceof String } as List<String>
     }
 
@@ -429,6 +428,34 @@ class Transform {
         return getAtPath(matchForm, [RECORD_KEY, _ID], "TEMP_ID")
     }
 
+    static boolean isSubset(Object a, Object b) {
+        return comparator.isSubset(a, b)
+    }
+
+    static boolean isEqual(Object a, Object b) {
+        return comparator.isEqual(["x": a], ["x": b], Transform::isEqualNoType)
+    }
+
+    private static boolean isEqualNoType(Map a, Map b) {
+        if (a == null || b == null) {
+            return false
+        }
+        if (a.size() != b.size()) {
+            if (!a.containsKey(TYPE_KEY) && b.containsKey(TYPE_KEY)) {
+                b = new HashMap<>(b)
+                b.remove(TYPE_KEY)
+                return comparator.isEqual(a, b, Transform::isEqualNoType)
+            }
+            if (a.containsKey(TYPE_KEY) && !b.containsKey(TYPE_KEY)) {
+                a = new HashMap<>(a)
+                a.remove(TYPE_KEY)
+                return comparator.isEqual(a, b, Transform::isEqualNoType)
+            }
+            return false
+        }
+        return comparator.isEqual(a, b, Transform::isEqualNoType)
+    }
+
     // Need a better name for this...
     class ChangesForNode {
         List<String> propertyPath
@@ -450,8 +477,8 @@ class Transform {
         private formMatches(Map node) {
             getFormVariants(form).any {f ->
                 switch (matchingMode) {
-                    case MatchingMode.EXACT: return comparator.isEqual(f, node)
-                    case MatchingMode.SUBSET: return comparator.isSubset(f, node)
+                    case MatchingMode.EXACT: return isEqual(f, node)
+                    case MatchingMode.SUBSET: return isSubset(f, node)
                 }
             }
         }
@@ -494,8 +521,8 @@ class Transform {
         boolean matches(Object o) {
             return (value instanceof Map ? getFormVariants(value) : [value]).any {v ->
                 switch (matchingMode) {
-                    case MatchingMode.EXACT: return comparator.isEqual(v, o)
-                    case MatchingMode.SUBSET: return comparator.isSubset(v, o)
+                    case MatchingMode.EXACT: return isEqual(v, o)
+                    case MatchingMode.SUBSET: return isSubset(v, o)
                 }
             }
         }

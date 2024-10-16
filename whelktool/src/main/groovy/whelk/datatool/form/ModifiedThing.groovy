@@ -2,16 +2,15 @@ package whelk.datatool.form
 
 
 import whelk.Document
-import whelk.datatool.util.DocumentComparator
 import whelk.util.DocumentUtil
 
+import static whelk.datatool.form.Transform.isSubset
+import static whelk.datatool.form.Transform.isEqual
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.asList
 import static whelk.util.DocumentUtil.getAtPath
 
 class ModifiedThing {
-    private static final DocumentComparator comparator = new DocumentComparator()
-
     private final Transform transform
     private final Set<String> repeatableTerms
 
@@ -58,14 +57,6 @@ class ModifiedThing {
         cleanUpEmpty(thing)
 
         return thing
-    }
-
-    private static boolean isSubset(Object a, Object b) {
-        return comparator.isSubset(a, b)
-    }
-
-    private static boolean isEqual(Object a, Object b) {
-        return comparator.isEqual(a, b)
     }
 
     private static boolean cleanUpEmpty(Map data) {

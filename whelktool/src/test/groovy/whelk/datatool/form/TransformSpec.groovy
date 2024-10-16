@@ -1,8 +1,6 @@
 package whelk.datatool.form
 
 import spock.lang.Specification
-import whelk.Whelk
-import whelk.component.SparqlQueryClient
 
 import static whelk.util.Jackson.mapper
 
@@ -112,10 +110,10 @@ class TransformSpec extends Specification {
                                                   'https://id.kb.se/z#it']]
 
         def form = [
-                '_id': '#1',
+                '_id'    : '#1',
                 '_idList': thingIds,
-                'meta': ['_id': '#2', '_idList': recordIds],
-                'p1': ['_id': '#3', '_idList': values]
+                'meta'   : ['_id': '#2', '_idList': recordIds],
+                'p1'     : ['_id': '#3', '_idList': values]
         ]
 
         def expectedPattern = "VALUES ?1 { <https://libris.kb.se/x#it> <https://libris.kb.se/y#it> <https://libris.kb.se/z#it> }\n" +
@@ -127,5 +125,20 @@ class TransformSpec extends Specification {
 
         expect:
         new Transform.MatchForm(form).getSparqlPattern(context) == expectedPattern
+    }
+
+    def "is equal"() {
+        given:
+        def a = ["p": ["x": "y"]]
+        def b = ["p": ["@type": "t1", "x": "y"]]
+        def c = ["p": ["@type": "t2", "x": "y"]]
+
+        expect:
+        Transform.isEqual(a, b)
+        Transform.isEqual(b, a)
+        Transform.isEqual(a, c)
+        !Transform.isEqual(b, c)
+        Transform.isEqual(["p": [["a": "b"], a]], ["p": [a, ["a": "b"]]])
+        Transform.isEqual(["p": [["a": "b"], a]], ["p": [b, ["a": "b"]]])
     }
 }
