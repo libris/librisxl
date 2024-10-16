@@ -35,9 +35,9 @@ class ModifiedThing {
         }
 
         // Map changes to nodes to which the changes are applicable (matching by form)
-        Map<Transform.ChangesForNode, List<Map>> changeMap = transform.getChanges().collectEntries { c ->
-            def candidateNodes = asList(getAtPath(thing, c.propertyPath, [], false)) as List<Map>
-            return [c, candidateNodes.findAll { p -> c.matches(p) }]
+        Map<Transform.ChangesForNode, List<Map>> changeMap = transform.getChanges().collectEntries { cfn ->
+            def candidateNodes = asList(getAtPath(thing, cfn.propertyPath, [], false)) as List<Map>
+            return [cfn, candidateNodes.findAll { cNode -> cfn.matches(cNode) }]
         }
 
         // Perform changes node by node, property by property

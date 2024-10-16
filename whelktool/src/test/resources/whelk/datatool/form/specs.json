@@ -3160,6 +3160,214 @@
         },
         "p3": "v3"
       }
+    },
+    {
+      "name": "Remove any of given ids",
+      "matchForm": {
+        "_id": "1",
+        "p1": {
+          "_id": "2",
+          "_idList": [
+            {
+              "@type": "AnyOf",
+              "value": [
+                "https://id.kb.se/x",
+                "https://id.kb.se/y",
+                "https://id.kb.se/z"
+              ]
+            }
+          ]
+        },
+        "p2": "v2"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p2": "v2"
+      },
+      "removedPaths": [
+        [
+          "p1"
+        ]
+      ],
+      "addedPaths": [],
+      "before": {
+        "p1": {
+          "@id": "https://id.kb.se/x"
+        },
+        "p2": "v2"
+      },
+      "after": {
+        "p2": "v2"
+      }
+    },
+    {
+      "name": "Remove any of given ids from set",
+      "matchForm": {
+        "_id": "1",
+        "r1": [
+          {
+            "_id": "2",
+            "_idList": [
+              {
+                "@type": "AnyOf",
+                "value": [
+                  "https://id.kb.se/x",
+                  "https://id.kb.se/y",
+                  "https://id.kb.se/z"
+                ]
+              }
+            ]
+          }
+        ],
+        "p2": "v2"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p2": "v2"
+      },
+      "removedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "addedPaths": [],
+      "before": {
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          },
+          {
+            "@id": "https://id.kb.se/z"
+          }
+        ],
+        "p2": "v2"
+      },
+      "after": {
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          }
+        ],
+        "p2": "v2"
+      }
+    },
+    {
+      "name": "Replace any of given ids",
+      "matchForm": {
+        "_id": "1",
+        "p1": {
+          "_id": "2",
+          "_idList": [
+            {
+              "@type": "AnyOf",
+              "value": [
+                "https://id.kb.se/x",
+                "https://id.kb.se/y",
+                "https://id.kb.se/z"
+              ]
+            }
+          ]
+        },
+        "p2": "v2"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": {
+          "@id": "https://id.kb.se/a"
+        },
+        "p2": "v2"
+      },
+      "removedPaths": [
+        [
+          "p1"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "p1"
+        ]
+      ],
+      "before": {
+        "p1": {
+          "@id": "https://id.kb.se/y"
+        },
+        "p2": "v2"
+      },
+      "after": {
+        "p1": {
+          "@id": "https://id.kb.se/a"
+        },
+        "p2": "v2"
+      }
+    },
+    {
+      "name": "Replace any of given ids in set",
+      "matchForm": {
+        "_id": "1",
+        "r1": [
+          {
+            "_id": "2",
+            "_idList": [
+              {
+                "@type": "AnyOf",
+                "value": [
+                  "https://id.kb.se/x",
+                  "https://id.kb.se/y",
+                  "https://id.kb.se/z"
+                ]
+              }
+            ]
+          }
+        ],
+        "p2": "v2"
+      },
+      "targetForm": {
+        "_id": "1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          }
+        ],
+        "p2": "v2"
+      },
+      "removedPaths": [
+        [
+          "r1", 0
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1", 0
+        ]
+      ],
+      "before": {
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/b"
+          },
+          {
+            "@id": "https://id.kb.se/z"
+          }
+        ],
+        "p2": "v2"
+      },
+      "after": {
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          },
+          {
+            "@id": "https://id.kb.se/b"
+          }
+        ],
+        "p2": "v2"
+      }
     }
   ]
 }

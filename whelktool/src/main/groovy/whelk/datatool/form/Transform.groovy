@@ -93,12 +93,11 @@ class Transform {
 
     List<ChangesForNode> getChanges() {
         if (changes == null) {
-            def matchFormClean = getMatchFormWithoutAnyMarkers()
             changes = (collectRemove() + collectAdd() as List<Change>)
                     .groupBy { it.parentPath() }
                     .collect { parentPath, changeList ->
                         new ChangesForNode(dropIndexes(parentPath),
-                                getAtPath(matchFormClean, parentPath) as Map,
+                                getAtPath(matchForm, parentPath) as Map,
                                 changeList,
                                 parentPath in exactMatchPaths ? MatchingMode.EXACT : MatchingMode.SUBSET)
                     }
@@ -110,7 +109,7 @@ class Transform {
         return (List<Remove>) removedPaths.collect { fullPath ->
             asList(getAtPath(matchForm, fullPath)).collect { value ->
                 value instanceof Map
-                        ? new Remove(fullPath, withoutAnyMarkers(value), exactMatchPaths.contains(fullPath) ? MatchingMode.EXACT : MatchingMode.SUBSET)
+                        ? new Remove(fullPath, value, exactMatchPaths.contains(fullPath) ? MatchingMode.EXACT : MatchingMode.SUBSET)
                         : new Remove(fullPath, value, MatchingMode.EXACT)
             }
         }.flatten()
@@ -196,15 +195,19 @@ class Transform {
     }
 
     Iterable<Map> getMatchFormVariants() {
-        Map variant = getMatchFormWithoutAnyMarkers()
-        Map bNodeIdToPath = [:]
+        return getFormVariants(matchForm)
+    }
 
-        DocumentUtil.findKey(matchForm, _ID) { value, path ->
+    private Iterable<Map> getFormVariants(Map form) {
+        Map bNodeIdToPath = [:]
+        DocumentUtil.findKey(form, _ID) { value, path ->
             if (nodeIdMappings.containsKey(value) && value != getThingTmpId() && value != getRecordTmpId()) {
                 bNodeIdToPath[value] = path.dropRight(1)
                 return new DocumentUtil.Nop()
             }
         }
+
+        Map variant = withoutAnyMarkers(form)
 
         if (bNodeIdToPath.isEmpty()) {
             return [variant]
@@ -226,7 +229,7 @@ class Transform {
                 // Set ids for current variant
                 [bNodeIds, currentIndexes].transpose().each { bNodeId, idx ->
                     def path = bNodeIdToPath[bNodeId]
-                    def node = getAtPath(variant, path)
+                    def node = path.isEmpty() ? variant : getAtPath(variant, path)
                     def mappedId = nodeIdMappings[bNodeId][idx]
                     node[ID_KEY] = mappedId
                 }
@@ -427,7 +430,7 @@ class Transform {
     }
 
     // Need a better name for this...
-    static class ChangesForNode {
+    class ChangesForNode {
         List<String> propertyPath
         Map form
         List<Change> changeList
@@ -445,9 +448,11 @@ class Transform {
         }
 
         private formMatches(Map node) {
-            switch (matchingMode) {
-                case MatchingMode.EXACT: return comparator.isEqual(form, node)
-                case MatchingMode.SUBSET: return comparator.isSubset(form, node)
+            getFormVariants(form).any {f ->
+                switch (matchingMode) {
+                    case MatchingMode.EXACT: return comparator.isEqual(f, node)
+                    case MatchingMode.SUBSET: return comparator.isSubset(f, node)
+                }
             }
         }
 
@@ -477,7 +482,7 @@ class Transform {
         }
     }
 
-    static class Remove extends Change {
+    class Remove extends Change {
         private final MatchingMode matchingMode
 
         Remove(List path, Object value, MatchingMode matchingMode) {
@@ -487,9 +492,11 @@ class Transform {
         }
 
         boolean matches(Object o) {
-            switch (matchingMode) {
-                case MatchingMode.EXACT: return comparator.isEqual(value, o)
-                case MatchingMode.SUBSET: return comparator.isSubset(value, o)
+            return (value instanceof Map ? getFormVariants(value) : [value]).any {v ->
+                switch (matchingMode) {
+                    case MatchingMode.EXACT: return comparator.isEqual(v, o)
+                    case MatchingMode.SUBSET: return comparator.isSubset(v, o)
+                }
             }
         }
     }
