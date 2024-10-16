@@ -30,7 +30,7 @@ public class IdLoader {
     public List<String> fromFile(String fileLocation) {
         // TODO
         return Collections.emptyList();
-    };
+    }
 
     public List<Id> loadAllIds(Collection<String> shortIds) {
         String where = String.format("id in ( '%s' )", String.join("','", shortIds));
