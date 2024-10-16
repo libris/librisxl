@@ -81,7 +81,7 @@ public class SearchUtils2 {
         queryDsl.put("sort", (queryParams.sortBy == Sort.DEFAULT_BY_RELEVANCY && queryTree.isWild()
                 ? Sort.BY_DOC_ID
                 : queryParams.sortBy).getSortClauses(queryUtil::getSortField));
-        if (queryParams.spell.suggest) {
+        if (queryParams.spell.suggest && queryUtil.esMappings.isSpellCheckAvailable()) {
             var spellQuery = Spell.getSpellQuery(queryTree);
             if (spellQuery.isPresent()) {
                 if (queryParams.spell.suggestOnly) {
