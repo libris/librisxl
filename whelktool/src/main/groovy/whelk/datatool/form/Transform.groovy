@@ -287,7 +287,7 @@ class Transform {
     private static void clearMarkers(Object o, Set<String> keys, Map<String, Object> keyValuePairs) {
         DocumentUtil.traverse(o) { v, p ->
             if (v instanceof Map) {
-                v.removeAll { keys.contains(it.key) || keyValuePairs[it.key] == it.value }
+                v.removeAll { keys.contains(it.key) || (it.value != null && keyValuePairs[it.key] == it.value) }
                 return new DocumentUtil.Nop()
             }
         }
