@@ -127,6 +127,27 @@ class TransformSpec extends Specification {
         new Transform.MatchForm(form).getSparqlPattern(context) == expectedPattern
     }
 
+    def "form to sparql pattern: unspecified types"() {
+        given:
+        def form = [
+                '_id'  : '#1',
+                '@type': 'Any',
+                'p1'   : ['_id': '#2', '@type': 'Any'],
+                'p2'   : ['_id': '#3', '@type': 'Any', 'p': 'v'],
+                'marc:p'   : ['_id': '#4', '@type': 'marc:T', 'p': 'v']
+        ]
+
+        def expectedPattern = "?graph :mainEntity ?1 .\n" +
+                "\n" +
+                "?1 :p1 [] ;\n" +
+                "  :p2 [ :p \"v\" ] ;\n" +
+                "  marc:p [ a marc:T ;\n" +
+                "      :p \"v\" ] ."
+
+        expect:
+        new Transform.MatchForm(form).getSparqlPattern(context) == expectedPattern
+    }
+
     def "is equal"() {
         given:
         def a = ["p": ["x": "y"]]
