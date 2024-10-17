@@ -28,6 +28,7 @@ class Transform {
     private static final String _ID_LIST = '_idList'
     private static final String VALUE = 'value'
     private static final String VALUE_FROM = 'valueFrom'
+    private static final String ANY_TYPE = "Any"
 
     private static final Set<String> IGNORE_CHANGED_VALUE = [_ID_LIST]
 
@@ -277,11 +278,11 @@ class Transform {
     }
 
     private static void clearAllMarkers(Object o) {
-        clearMarkers(o, [_ID, _MATCH, _ID_LIST] as Set, [(TYPE_KEY): "Any"])
+        clearMarkers(o, [_ID, _MATCH, _ID_LIST] as Set, [(TYPE_KEY): ANY_TYPE])
     }
 
     private static void clearNonIdMarkers(Object o) {
-        clearMarkers(o, [_MATCH, _ID_LIST] as Set, [(TYPE_KEY): "Any"])
+        clearMarkers(o, [_MATCH, _ID_LIST] as Set, [(TYPE_KEY): ANY_TYPE])
     }
 
     private static void clearMarkers(Object o, Set<String> keys, Map<String, Object> keyValuePairs) {
@@ -523,7 +524,7 @@ class Transform {
         }
 
         boolean matches(Object o) {
-            if (property() == TYPE_KEY && value == "Any") {
+            if (property() == TYPE_KEY && value == ANY_TYPE) {
                 return true
             }
             return (value instanceof Map ? getFormVariants(value) : [value]).any { v ->
