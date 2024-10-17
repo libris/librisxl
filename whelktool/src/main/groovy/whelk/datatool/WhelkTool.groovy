@@ -160,6 +160,7 @@ class WhelkTool {
                 batchSize)
     }
 
+    // Use this for Voyager ids (which are unique only within respective marc collection)
     void selectByIdsAndCollection(Collection<String> ids, String collection, Closure process,
                                   int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false) {
         if (!silent) {
