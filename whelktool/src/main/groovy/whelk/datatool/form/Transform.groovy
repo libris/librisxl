@@ -393,9 +393,6 @@ class Transform {
                     }
 
                     def (iris, shortIds) = ids.split(JsonLd::looksLikeIri)
-                    // Assume given http strings to be valid iris and thus avoid the round trip of first finding the
-                    // short id (in lddb__identifiers) and then use the short id only to find (most likely) the same
-                    // thing/record iri (in lddb) that we started with.
                     if (shortIds.isEmpty()) {
                         nodeIdMappings[nodeId] = iris
                         return
@@ -410,9 +407,11 @@ class Transform {
                     def isRecord = whelk.jsonld.isInstanceOf((Map) node, "AdminMetadata")
                             || isInRange(RECORD_TYPE)
                             || isInRange("AdminMetadata")
-                    nodeIdMappings[(String) node[_ID]] = iris + idLoader.loadAllIds(xlShortIds).collect {
-                        isRecord ? it.recordIri() : it.thingIri()
+
+                    nodeIdMappings[(String) node[_ID]] = iris + xlShortIds.collect {
+                        Document.BASE_URI.toString() + it + (isRecord ? "" : Document.HASH_IT)
                     }
+
                     return new DocumentUtil.Nop()
                 }
             }
