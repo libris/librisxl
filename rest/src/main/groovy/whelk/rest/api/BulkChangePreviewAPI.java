@@ -16,10 +16,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static whelk.JsonLd.ID_KEY;
+import static whelk.JsonLd.RECORD_KEY;
 import static whelk.util.Unicode.stripPrefix;
 
 public class BulkChangePreviewAPI extends HttpServlet {
@@ -118,7 +121,12 @@ public class BulkChangePreviewAPI extends HttpServlet {
     // FIXME mangle the data in a more ergonomic way
     @SuppressWarnings("unchecked")
     private Map<?,?> makePreviewChangeSet(Document doc, Transform transform) {
-        var modified = new ModifiedThing(doc.getThing(), transform, whelk.getJsonld().repeatableTerms);
+        var thing = new LinkedHashMap<String, Object>(doc.getThing());
+        var record = new LinkedHashMap<String, Object>(doc.getRecord());
+        // Remove @id from record to prevent from being shown as a link in the diff view
+        record.remove(ID_KEY);
+        thing.put(RECORD_KEY, record);
+        var modified = new ModifiedThing(thing, transform, whelk.getJsonld().repeatableTerms);
         var beforeDoc = doc.clone();
         var afterDoc = doc.clone();
         ((List<Map<?,?>>) beforeDoc.data.get(JsonLd.GRAPH_KEY)).set(1, modified.getBefore());
@@ -127,9 +135,8 @@ public class BulkChangePreviewAPI extends HttpServlet {
                 new DocumentVersion(beforeDoc, "", ""),
                 new DocumentVersion(afterDoc, "", "")
         ), whelk.getJsonld());
-
         var result = history.m_changeSetsMap;
-        result.put(JsonLd.ID_KEY, beforeDoc.getCompleteId());
+        result.put(ID_KEY, beforeDoc.getCompleteId());
         ((Map<String,Object>) DocumentUtil.getAtPath(result, List.of("changeSets", 0))).put("version", modified.getBefore());
         ((Map<String,Object>) DocumentUtil.getAtPath(result, List.of("changeSets", 1))).put("version", modified.getAfter());
 
