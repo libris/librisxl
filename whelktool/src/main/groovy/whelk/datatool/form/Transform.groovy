@@ -382,7 +382,7 @@ class Transform {
         DocumentUtil.traverse(matchForm) { value, path ->
             if (value instanceof Map && path && dropLastIndex(path).last() == _ID_LIST) {
                 def ids = value[VALUE] as List<String>
-                        ?: (value[VALUE_FROM] ? idLoader.fromFile((String) value[VALUE_FROM][ID_KEY]) : [])
+                        ?: (value[VALUE_FROM] ? IdLoader.fromFile((String) value[VALUE_FROM][ID_KEY]) : [])
                 if (ids) {
                     def node = getAtPath(matchForm, dropLastIndex(path).dropRight(1))
                     def nodeId = (String) node[_ID]

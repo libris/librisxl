@@ -2,6 +2,11 @@ package whelk.datatool.util;
 
 import whelk.component.PostgreSQLComponent;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -27,9 +32,10 @@ public class IdLoader {
         this.storage = storage;
     }
 
-    public List<String> fromFile(String fileLocation) {
-        // TODO
-        return Collections.emptyList();
+    public static List<String> fromFile(String fileLocation) throws URISyntaxException, IOException {
+        return new BufferedReader(new InputStreamReader(new URI(fileLocation).toURL().openStream()))
+                .lines()
+                .toList();
     }
 
     public List<Id> loadAllIds(Collection<String> shortIds) {
