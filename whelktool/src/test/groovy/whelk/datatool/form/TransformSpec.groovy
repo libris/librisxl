@@ -160,6 +160,7 @@ class TransformSpec extends Specification {
         Transform.isEqual(a, c)
         !Transform.isEqual(b, c)
         Transform.isEqual(["p": [["a": "b"], a]], ["p": [a, ["a": "b"]]])
-        Transform.isEqual(["p": [["a": "b"], a]], ["p": [b, ["a": "b"]]])
+        Transform.isEqual(["p": [["a":"b"], a]], ["p": [b, ["a":"b"]]])
+        !Transform.isEqual(["p": [["a":"b"], c]], ["p": [b, ["a":"b"]]])
     }
 }
