@@ -35,6 +35,7 @@ public class IdLoader {
     public static List<String> fromFile(String fileLocation) throws URISyntaxException, IOException {
         return new BufferedReader(new InputStreamReader(new URI(fileLocation).toURL().openStream()))
                 .lines()
+                .map(String::trim)
                 .toList();
     }
 
