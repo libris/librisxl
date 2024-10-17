@@ -193,6 +193,8 @@ class Document {
 
     Map getThing() { get(thingPath) as Map }
 
+    Map getRecord() { get(recordPath) as Map }
+
     void setDescriptionCreator(creator) { set(descriptionCreatorPath, creator) }
 
     String getDescriptionCreator() { get(descriptionCreatorPath) }
