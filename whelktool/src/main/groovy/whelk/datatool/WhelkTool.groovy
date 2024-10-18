@@ -152,12 +152,11 @@ class WhelkTool {
             log "Select by ${ids.size()} IDs"
         }
 
-        def idItems = idLoader.collectXlShortIds(ids).collect { "'$it'" }.join(',\n')
+        def idItems = idLoader.collectXlShortIds(ids)
         if (idItems.isEmpty()) {
             return
         }
-        doSelectBySqlWhere("id IN ($idItems) AND deleted = false", process,
-                batchSize)
+        doSelectBySqlWhere("id = ANY(?) AND deleted = false", process, batchSize, [1: idItems])
     }
 
     // Use this for Voyager ids (which are unique only within respective marc collection)
@@ -167,13 +166,13 @@ class WhelkTool {
             log "Select by ${ids.size()} IDs in collection $collection"
         }
 
-        def idItems = idLoader.collectXlShortIds(ids, collection).collect { "'$it'" }.join(',\n')
+        def idItems = idLoader.collectXlShortIds(ids, collection)
         if (idItems.isEmpty()) {
             return
         }
 
-        doSelectBySqlWhere("id IN ($idItems) AND collection = '$collection' AND deleted = false", process,
-                batchSize)
+        doSelectBySqlWhere("id = ANY(?) AND collection = '$collection' AND deleted = false", process,
+                batchSize, [1: idItems])
     }
 
     void selectByForm(Map form, Closure process,
@@ -225,7 +224,7 @@ class WhelkTool {
     }
 
     private void doSelectBySqlWhere(String whereClause, Closure process,
-                                    int batchSize = DEFAULT_BATCH_SIZE) {
+                                    int batchSize = DEFAULT_BATCH_SIZE, Map<Integer, Object> params = [:]) {
         def query = """
             SELECT id, data, created, modified, deleted
             FROM lddb
@@ -238,6 +237,13 @@ class WhelkTool {
         try {
             conn.setAutoCommit(false)
             stmt = conn.prepareStatement(query)
+            params.each { i, obj ->
+                if (obj instanceof Collection) {
+                    stmt.setArray(i, conn.createArrayOf("TEXT", obj as String[]))
+                } else if (obj instanceof String) {
+                    stmt.setString(i, obj)
+                }
+            }
             stmt.setFetchSize(DEFAULT_FETCH_SIZE)
             rs = stmt.executeQuery()
             select(whelk.storage.iterateDocuments(rs), process, batchSize)
