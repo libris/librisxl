@@ -172,8 +172,8 @@ class WhelkTool {
             return
         }
 
-        doSelectBySqlWhere("id = ANY(?) AND collection = '$collection' AND deleted = false", process,
-                batchSize, [1: idItems])
+        doSelectBySqlWhere("id = ANY(?) AND collection = ? AND deleted = false", process,
+                batchSize, [1: idItems, 2: collection])
     }
 
     void selectByForm(Map form, Closure process,
