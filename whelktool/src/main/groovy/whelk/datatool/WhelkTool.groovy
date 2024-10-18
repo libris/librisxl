@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 import static java.util.concurrent.TimeUnit.SECONDS
+import static whelk.JsonLd.RECORD_KEY
 import static whelk.util.Jackson.mapper
 
 class WhelkTool {
@@ -912,12 +913,16 @@ class DocumentItem {
     }
     
     boolean modify(Map matchForm, Map targetForm) {
+        Map thing = (Map) this.graph[1]
+        thing[RECORD_KEY] = (Map) this.graph[0]
+
         var m = new ModifiedThing(
-                (Map) this.graph[1],
+                thing,
                 new Transform(matchForm, targetForm, whelk),
                 whelk.jsonld.repeatableTerms)
 
         this.graph[1] = m.after
+        this.graph[0] = m.after.remove(RECORD_KEY)
 
         return m.isModified()
     }

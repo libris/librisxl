@@ -18,6 +18,8 @@ public class EsMappings {
     private final Set<String> nestedNotInParentFields;
     private final Set<String> numericExtractorFields;
 
+    private final boolean isSpellCheckAvailable;
+
     public EsMappings(Map<?, ?> mappings) {
         this.keywordFields = getKeywordFields(mappings);
         this.dateFields = getFieldsOfType("date", mappings);
@@ -25,6 +27,10 @@ public class EsMappings {
         this.nestedNotInParentFields = new HashSet<>(nestedFields);
         this.nestedNotInParentFields.removeAll(getFieldsWithSetting("include_in_parent", true, mappings));
         this.numericExtractorFields = getFieldsWithAnalyzer("numeric_extractor", mappings);
+
+        // TODO: temporary feature flag, to be removed
+        // this feature only works after a full reindex has been done, so we have to detect that
+        this.isSpellCheckAvailable = DocumentUtil.getAtPath(mappings, List.of("properties", "_sortKeyByLang", "properties", "sv", "fields", "trigram"), null) != null;
     }
 
     public boolean isKeywordField(String fieldPath) {
@@ -49,6 +55,10 @@ public class EsMappings {
 
     public Set<String> getNestedFields() {
         return nestedFields;
+    }
+
+    public boolean isSpellCheckAvailable() {
+        return isSpellCheckAvailable;
     }
 
     private static Set<String> getKeywordFields(Map<?, ?> mappings) {
