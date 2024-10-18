@@ -595,6 +595,7 @@
         "p2": {
           "_id": "2",
           "p3": {
+            "@type": "Any",
             "_id": "3"
           }
         }
@@ -618,6 +619,7 @@
         "p1": "v1",
         "p2": {
           "p3": {
+            "@type": "T",
             "p1": "v2"
           }
         }
@@ -764,7 +766,9 @@
       "removedPaths": [
       ],
       "addedPaths": [
-        ["p2"]
+        [
+          "p2"
+        ]
       ],
       "before": {
         "p1": "v1"
@@ -1517,7 +1521,8 @@
           "p1": "v2",
           "_id": "2",
           "p3": {
-            "_id": "3"
+            "_id": "3",
+            "@type": "Any"
           }
         }
       },
@@ -1529,6 +1534,7 @@
           "_id": "2",
           "p3": {
             "_id": "3",
+            "@type": "Any",
             "p4": {
               "@id": "https://id.kb.se/x"
             }
@@ -1549,6 +1555,7 @@
         "p2": {
           "p1": "v2",
           "p3": {
+            "@type": "T",
             "p1": "v3"
           }
         }
@@ -1558,6 +1565,7 @@
         "p2": {
           "p1": "v2",
           "p3": {
+            "@type": "T",
             "p1": "v3",
             "p4": {
               "@id": "https://id.kb.se/x"
@@ -1581,7 +1589,8 @@
               "p4": "v4"
             },
             {
-              "_id": "4"
+              "_id": "4",
+              "@type": "Any"
             }
           ]
         }
@@ -1609,6 +1618,7 @@
             },
             {
               "_id": "4",
+              "@type": "Any",
               "p7": "v7"
             },
             {
@@ -1665,12 +1675,14 @@
           ],
           "r2": [
             {
+              "@type": "T1",
               "p4": "v4",
               "p5": {
                 "@id": "https://id.kb.se/y"
               }
             },
             {
+              "@type": "T2",
               "p9": "v9"
             }
           ],
@@ -1690,6 +1702,7 @@
           },
           "r2": [
             {
+              "@type": "T1",
               "p4": "v4",
               "p5": {
                 "@id": "https://id.kb.se/y"
@@ -1698,6 +1711,7 @@
               "p7": "v7"
             },
             {
+              "@type": "T2",
               "p9": "v9",
               "p7": "v7"
             },
@@ -2655,6 +2669,7 @@
         "p2": {
           "_id": "2",
           "p3": {
+            "@type": "Any",
             "_id": "3"
           }
         }
@@ -2665,6 +2680,7 @@
         "p2": {
           "_id": "2",
           "p3": {
+            "@type": "Any",
             "p4": {
               "@id": "https://id.kb.se/x"
             }
@@ -2687,6 +2703,7 @@
         "p1": "v1",
         "p2": {
           "p3": {
+            "@type": "T",
             "p1": "v2"
           }
         }
@@ -3091,6 +3108,349 @@
             }
           ]
         }
+      }
+    },
+    {
+      "name": "UNCHANGED: Data does not match given ids",
+      "matchForm": {
+        "_id": "1",
+        "p1": {
+          "_id": "2",
+          "_idList": [
+            {
+              "@type": "AnyOf",
+              "value": [
+                "https://id.kb.se/x",
+                "https://id.kb.se/y",
+                "https://id.kb.se/z"
+              ]
+            }
+          ]
+        },
+        "p2": {
+          "_id": "3",
+          "_idList": [
+            {
+              "@type": "AnyOf",
+              "value": [
+                "https://id.kb.se/a",
+                "https://id.kb.se/b",
+                "https://id.kb.se/c"
+              ]
+            }
+          ]
+        },
+        "p3": "v3"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": {
+          "_id": "2"
+        },
+        "p2": {
+          "_id": "3"
+        }
+      },
+      "removedPaths": [
+        [
+          "p3"
+        ]
+      ],
+      "addedPaths": [],
+      "before": {
+        "p1": {
+          "@id": "https://id.kb.se/y"
+        },
+        "p2": {
+          "@id": "https://id.kb.se/d"
+        },
+        "p3": "v3"
+      },
+      "after": {
+        "p1": {
+          "@id": "https://id.kb.se/y"
+        },
+        "p2": {
+          "@id": "https://id.kb.se/d"
+        },
+        "p3": "v3"
+      }
+    },
+    {
+      "name": "Remove any of given ids",
+      "matchForm": {
+        "_id": "1",
+        "p1": {
+          "_id": "2",
+          "_idList": [
+            {
+              "@type": "AnyOf",
+              "value": [
+                "https://id.kb.se/x",
+                "https://id.kb.se/y",
+                "https://id.kb.se/z"
+              ]
+            }
+          ]
+        },
+        "p2": "v2"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p2": "v2"
+      },
+      "removedPaths": [
+        [
+          "p1"
+        ]
+      ],
+      "addedPaths": [],
+      "before": {
+        "p1": {
+          "@id": "https://id.kb.se/x"
+        },
+        "p2": "v2"
+      },
+      "after": {
+        "p2": "v2"
+      }
+    },
+    {
+      "name": "Remove any of given ids from set",
+      "matchForm": {
+        "_id": "1",
+        "r1": [
+          {
+            "_id": "2",
+            "_idList": [
+              {
+                "@type": "AnyOf",
+                "value": [
+                  "https://id.kb.se/x",
+                  "https://id.kb.se/y",
+                  "https://id.kb.se/z"
+                ]
+              }
+            ]
+          }
+        ],
+        "p2": "v2"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p2": "v2"
+      },
+      "removedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "addedPaths": [],
+      "before": {
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          },
+          {
+            "@id": "https://id.kb.se/z"
+          }
+        ],
+        "p2": "v2"
+      },
+      "after": {
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          }
+        ],
+        "p2": "v2"
+      }
+    },
+    {
+      "name": "Replace any of given ids",
+      "matchForm": {
+        "_id": "1",
+        "p1": {
+          "_id": "2",
+          "_idList": [
+            {
+              "@type": "AnyOf",
+              "value": [
+                "https://id.kb.se/x",
+                "https://id.kb.se/y",
+                "https://id.kb.se/z"
+              ]
+            }
+          ]
+        },
+        "p2": "v2"
+      },
+      "targetForm": {
+        "_id": "1",
+        "p1": {
+          "@id": "https://id.kb.se/a"
+        },
+        "p2": "v2"
+      },
+      "removedPaths": [
+        [
+          "p1"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "p1"
+        ]
+      ],
+      "before": {
+        "p1": {
+          "@id": "https://id.kb.se/y"
+        },
+        "p2": "v2"
+      },
+      "after": {
+        "p1": {
+          "@id": "https://id.kb.se/a"
+        },
+        "p2": "v2"
+      }
+    },
+    {
+      "name": "Replace any of given ids in set",
+      "matchForm": {
+        "_id": "1",
+        "r1": [
+          {
+            "_id": "2",
+            "_idList": [
+              {
+                "@type": "AnyOf",
+                "value": [
+                  "https://id.kb.se/x",
+                  "https://id.kb.se/y",
+                  "https://id.kb.se/z"
+                ]
+              }
+            ]
+          }
+        ],
+        "p2": "v2"
+      },
+      "targetForm": {
+        "_id": "1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          }
+        ],
+        "p2": "v2"
+      },
+      "removedPaths": [
+        [
+          "r1", 0
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1", 0
+        ]
+      ],
+      "before": {
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/b"
+          },
+          {
+            "@id": "https://id.kb.se/z"
+          }
+        ],
+        "p2": "v2"
+      },
+      "after": {
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          },
+          {
+            "@id": "https://id.kb.se/b"
+          }
+        ],
+        "p2": "v2"
+      }
+    },
+    {
+      "name": "Match any type",
+      "matchForm": {
+        "_id": "1",
+        "@type": "Any",
+        "p1": "v1",
+        "p2": "v2"
+      },
+      "targetForm": {
+        "_id": "1",
+        "@type": "Any",
+        "p3": "v3"
+      },
+      "removedPaths": [
+        [
+          "p1"
+        ],
+        [
+          "p2"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "p3"
+        ]
+      ],
+      "before": {
+        "@type": "Work",
+        "p1": "v1",
+        "p2": "v2",
+        "p4": "v4"
+      },
+      "after": {
+        "@type": "Work",
+        "p3": "v3",
+        "p4": "v4"
+      }
+    },
+    {
+      "name": "Replace any type",
+      "matchForm": {
+        "_id": "1",
+        "@type": "Any",
+        "p1": "v1"
+      },
+      "targetForm": {
+        "_id": "1",
+        "@type": "T2",
+        "p1": "v1"
+      },
+      "removedPaths": [
+        [
+          "@type"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "@type"
+        ]
+      ],
+      "before": {
+        "@type": "T1",
+        "p1": "v1"
+      },
+      "after": {
+        "@type": "T2",
+        "p1": "v1"
       }
     }
   ]

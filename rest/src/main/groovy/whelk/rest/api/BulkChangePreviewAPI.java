@@ -61,11 +61,11 @@ public class BulkChangePreviewAPI extends HttpServlet {
 
             switch (changeDoc.getSpecification()) {
                 case BulkChangeDocument.FormSpecification formSpecification -> {
-                    var transform = new Transform(formSpecification.matchForm(), formSpecification.targetForm());
+                    var transform = new Transform(formSpecification.matchForm(), formSpecification.targetForm(), whelk);
 
-                    var match = transform.getMatchFormWithoutMarkers();
                     // TODO use COUNT + LIMIT & OFFSET and don't fetch all ids every time
-                    var ids = whelk.getSparqlQueryClient().queryIdsByForm(match).stream().sorted().toList();
+                    var sparqlPattern = transform.getSparqlPattern(whelk.getJsonld().context);
+                    var ids = whelk.getSparqlQueryClient().queryIdsByPattern(sparqlPattern).stream().sorted().toList();
 
                     var itemIds = slice(ids, offset, offset + limit);
                     var items = whelk.bulkLoad(itemIds)
