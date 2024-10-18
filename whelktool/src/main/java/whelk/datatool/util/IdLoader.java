@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -40,12 +41,11 @@ public class IdLoader {
     }
 
     public List<Id> loadAllIds(Collection<String> shortIds) {
-        String where = String.format("id in ( '%s' )", String.join("','", shortIds));
-        String q = String.format("""
+        String q = """
                 SELECT id, data#>>'{@graph,1,@id}' AS thingIri, data#>>'{@graph,0,@id}' AS recordIri
                 FROM lddb
-                WHERE %s
-                """, where);
+                WHERE id = ANY(?)
+                """;
 
         Function<ResultSet, List<Id>> collectResults = (rs) -> {
             List<Id> ids = new ArrayList<>();
@@ -60,7 +60,7 @@ public class IdLoader {
         };
 
         try {
-            return query(q, collectResults);
+            return query(q, collectResults, Map.of(1, shortIds));
         } catch (SQLException ignored) {
             return Collections.emptyList();
         }
@@ -87,15 +87,11 @@ public class IdLoader {
             return Collections.emptyMap();
         }
 
-        String where = String.format("collection = '%s' and data#>>'{@graph,0,controlNumber}' in ( '%s' )",
-                marcCollection,
-                String.join("','", voyagerIds));
-
-        String q = String.format("""
+        String q = """
                 SELECT id, data#>>'{@graph,0,controlNumber}' AS controlNumber
                 FROM lddb
-                WHERE %s
-                """, where);
+                WHERE collection = ? AND data#>>'{@graph,0,controlNumber}' = ANY(?)
+                """;
 
         Function<ResultSet, Map<String, String>> collectResults = (rs) -> {
             Map<String, String> voyagerIdToXlId = new HashMap<>();
@@ -110,7 +106,7 @@ public class IdLoader {
         };
 
         try {
-            return query(q, collectResults);
+            return query(q, collectResults, Map.of(1, marcCollection, 2, voyagerIds));
         } catch (SQLException ignored) {
             return Collections.emptyMap();
         }
@@ -124,11 +120,11 @@ public class IdLoader {
         if (iris.isEmpty()) {
             return Collections.emptyMap();
         }
-        String q = String.format("""
+        String q = """
                 SELECT id, iri
                 FROM lddb__identifiers
-                WHERE iri IN ( '%s' )
-                """, String.join("','", iris));
+                WHERE iri = ANY(?)
+                """;
 
         Function<ResultSet, Map<String, String>> collectResults = (rs) -> {
             Map<String, String> iriToShortId = new HashMap<>();
@@ -143,13 +139,13 @@ public class IdLoader {
         };
 
         try {
-            return query(q, collectResults);
+            return query(q, collectResults, Map.of(1, iris));
         } catch (SQLException ignored) {
             return Collections.emptyMap();
         }
     }
 
-    private <T> T query(String query, Function<ResultSet, T> collectResults) throws SQLException {
+    private <T> T query(String query, Function<ResultSet, T> collectResults, Map<Integer, Object> params) throws SQLException {
         Connection conn = storage.getOuterConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -157,6 +153,16 @@ public class IdLoader {
         try {
             conn.setAutoCommit(false);
             stmt = conn.prepareStatement(query);
+            for (var e : params.entrySet()) {
+                int i = e.getKey();
+                var obj = e.getValue();
+                if (obj instanceof Collection) {
+                    String[] values = ((Collection<?>) obj).stream().map(String.class::cast).toArray(String[]::new);
+                    stmt.setArray(i, conn.createArrayOf("TEXT", values));
+                } else if (obj instanceof String) {
+                    stmt.setString(i, (String) obj);
+                }
+            }
             stmt.setFetchSize(DEFAULT_FETCH_SIZE);
             rs = stmt.executeQuery();
             results = collectResults.apply(rs);
