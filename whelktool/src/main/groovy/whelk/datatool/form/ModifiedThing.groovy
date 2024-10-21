@@ -29,14 +29,14 @@ class ModifiedThing {
     }
 
     private Map modify(Map thing) {
-        if (!isMatch(transform.getMatchFormWithoutMarkers(), thing)) {
+        if (!transform.getMatchFormVariants().any { isMatch(it, thing) }) {
             return thing
         }
 
         // Map changes to nodes to which the changes are applicable (matching by form)
-        Map<Transform.ChangesForNode, List<Map>> changeMap = transform.getChanges().collectEntries { c ->
-            def candidateNodes = asList(getAtPath(thing, c.propertyPath, [], false)) as List<Map>
-            return [c, candidateNodes.findAll { p -> c.matches(p) }]
+        Map<Transform.ChangesForNode, List<Map>> changeMap = transform.getChanges().collectEntries { cfn ->
+            def candidateNodes = asList(getAtPath(thing, cfn.propertyPath, [], false)) as List<Map>
+            return [cfn, candidateNodes.findAll { cNode -> cfn.matches(cNode) }]
         }
 
         // Perform changes node by node, property by property
@@ -94,7 +94,7 @@ class ModifiedThing {
     private static void remove(Map node, String property, List<Transform.Remove> valuesToRemove) {
         def current = asList(node[property])
         // Assume that it has already been checked that current contains all valuesToRemove
-        valuesToRemove.each { v -> current.removeAll { v.matches(it) } }
+        valuesToRemove.each { v -> current.removeAll { v.matches(property, it) } }
         if (current.isEmpty()) {
             node.remove(property)
         } else {
@@ -132,7 +132,7 @@ class ModifiedThing {
                          List<Transform.Add> valuesToAdd) {
         def current = asList(node[property])
 
-        List<Number> removeAt = current.findIndexValues { c -> valuesToRemove.any { v -> v.matches(c) } }
+        List<Number> removeAt = current.findIndexValues { c -> valuesToRemove.any { v -> v.matches(property, c) } }
         int insertAt = removeAt.first().intValue()
 
         removeAt.reverse().each { n ->

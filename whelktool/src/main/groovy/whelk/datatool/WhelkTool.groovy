@@ -9,7 +9,7 @@ import whelk.JsonLdValidator
 import whelk.Whelk
 import whelk.datatool.form.Transform
 import whelk.datatool.form.ModifiedThing
-import whelk.datatool.form.Selection
+import whelk.datatool.util.IdLoader
 import whelk.exception.StaleUpdateException
 import whelk.exception.WhelkException
 import whelk.meta.WhelkConstants
@@ -23,7 +23,6 @@ import javax.script.Bindings
 import javax.script.CompiledScript
 import javax.script.ScriptEngineManager
 import javax.script.SimpleBindings
-import java.sql.SQLException
 import java.time.ZonedDateTime
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
@@ -42,10 +41,11 @@ import static whelk.util.Jackson.mapper
 
 class WhelkTool {
     static final int DEFAULT_BATCH_SIZE = 500
-    static final int DEFAULT_FETCH_SIZE = 100
+    public static final int DEFAULT_FETCH_SIZE = 100
     static final int DEFAULT_STATS_NUM_IDS = 3
 
     Whelk whelk
+    IdLoader idLoader
 
     private Script script
     private Bindings bindings
@@ -99,6 +99,7 @@ class WhelkTool {
             }
         }
         this.whelk = whelk
+        this.idLoader = new IdLoader(whelk.storage)
         this.validator = JsonLdValidator.from(whelk.jsonld)
         this.script = script
         this.defaultChangedBy = script.scriptJobUri
@@ -151,15 +152,28 @@ class WhelkTool {
         if (!silent) {
             log "Select by ${ids.size()} IDs"
         }
-        def uriIdMap = findShortIdsForUris(ids.findAll { it.contains(':') })
-        def shortIds = ids.findResults { it.contains(':') ? uriIdMap[it] : it }
 
-        def idItems = shortIds.collect { "'$it'" }.join(',\n')
+        def idItems = idLoader.collectXlShortIds(ids)
         if (idItems.isEmpty()) {
             return
         }
-        doSelectBySqlWhere("id IN ($idItems) AND deleted = false", process,
-                batchSize)
+        doSelectBySqlWhere("id = ANY(?) AND deleted = false", process, batchSize, [1: idItems])
+    }
+
+    // Use this for Voyager ids (which are unique only within respective marc collection)
+    void selectByIdsAndCollection(Collection<String> ids, String collection, Closure process,
+                                  int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false) {
+        if (!silent) {
+            log "Select by ${ids.size()} IDs in collection $collection"
+        }
+
+        def idItems = idLoader.collectXlShortIds(ids, collection)
+        if (idItems.isEmpty()) {
+            return
+        }
+
+        doSelectBySqlWhere("id = ANY(?) AND collection = ? AND deleted = false", process,
+                batchSize, [1: idItems, 2: collection])
     }
 
     void selectByForm(Map form, Closure process,
@@ -168,7 +182,8 @@ class WhelkTool {
             log "Select by form"
         }
 
-        var ids = Selection.byForm(Transform.withoutMarkers(form), whelk.sparqlQueryClient).recordIds
+        var sparqlPattern = new Transform.MatchForm(form, whelk).getSparqlPattern(whelk.jsonld.context)
+        var ids = whelk.sparqlQueryClient.queryIdsByPattern(sparqlPattern)
 
         selectByIds(ids, process, batchSize, silent)
     }
@@ -179,41 +194,6 @@ class WhelkTool {
         DocumentItem item = new DocumentItem(number: counter.createdCount, doc: doc, whelk: whelk)
         item.existsInStorage = false
         return item
-    }
-
-    Map<String, String> findShortIdsForUris(Collection uris) {
-        def uriIdMap = [:]
-        if (!uris) {
-            return uriIdMap
-        }
-        def uriItems = uris.collect { "'$it'" }.join(',\n')
-        def query = """
-            SELECT id, iri
-            FROM lddb__identifiers
-            WHERE iri IN ($uriItems)
-            """
-        whelk.storage.withDbConnection {
-            def conn = whelk.storage.getMyConnection()
-            def stmt
-            def rs
-            try {
-                stmt = conn.prepareStatement(query)
-                rs = stmt.executeQuery()
-                while (rs.next()) {
-                    uriIdMap[rs.getString("iri")] = rs.getString("id")
-                }
-            } finally {
-                try {
-                    rs?.close()
-                } catch (SQLException e) {
-                }
-                try {
-                    stmt?.close()
-                } catch (SQLException e) {
-                }
-            }
-        }
-        return uriIdMap
     }
 
     void selectBySqlWhere(Map params, String whereClause, Closure process) {
@@ -245,7 +225,7 @@ class WhelkTool {
     }
 
     private void doSelectBySqlWhere(String whereClause, Closure process,
-                                    int batchSize = DEFAULT_BATCH_SIZE) {
+                                    int batchSize = DEFAULT_BATCH_SIZE, Map<Integer, Object> params = [:]) {
         def query = """
             SELECT id, data, created, modified, deleted
             FROM lddb
@@ -258,6 +238,13 @@ class WhelkTool {
         try {
             conn.setAutoCommit(false)
             stmt = conn.prepareStatement(query)
+            params.each { i, obj ->
+                if (obj instanceof Collection) {
+                    stmt.setArray(i, conn.createArrayOf("TEXT", obj as String[]))
+                } else if (obj instanceof String) {
+                    stmt.setString(i, obj)
+                }
+            }
             stmt.setFetchSize(DEFAULT_FETCH_SIZE)
             rs = stmt.executeQuery()
             select(whelk.storage.iterateDocuments(rs), process, batchSize)
@@ -657,6 +644,7 @@ class WhelkTool {
         bindings.put("script", { String s -> script.compileSubScript(this, s) })
         bindings.put("selectByCollection", this.&selectByCollection)
         bindings.put("selectByIds", this.&selectByIds)
+        bindings.put("selectByIdsAndCollection", this.&selectByIdsAndCollection)
         bindings.put("selectBySqlWhere", this.&selectBySqlWhere)
         bindings.put("selectByForm", this.&selectByForm)
         bindings.put("selectFromIterable", this.&selectFromIterable)
@@ -930,7 +918,7 @@ class DocumentItem {
 
         var m = new ModifiedThing(
                 thing,
-                new Transform(matchForm, targetForm),
+                new Transform(matchForm, targetForm, whelk),
                 whelk.jsonld.repeatableTerms)
 
         this.graph[1] = m.after
