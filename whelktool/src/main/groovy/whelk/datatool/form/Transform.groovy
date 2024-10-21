@@ -1,5 +1,6 @@
 package whelk.datatool.form
 
+import groovy.transform.Memoized
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
@@ -24,16 +25,14 @@ class Transform {
 
     private static final String _ID = '_id'
     private static final String _MATCH = '_match'
-    // The following keys are subject to change
     private static final String _ID_LIST = '_idList'
     private static final String VALUE = 'value'
     private static final String VALUE_FROM = 'valueFrom'
     private static final String ANY_TYPE = "Any"
-
-    private static final Set<String> IGNORE_CHANGED_VALUE = [_ID_LIST]
+    private static final String BASE_TYPE = "BaseType"
 
     private static final String EMPTY_BLANK_NODE_TMP_ID = "EMPTY_BN_ID"
-
+    private static final String BASE_TYPE_TMP_PROP = '_baseTypeTmp'
 
     Map matchForm
     Map targetForm
@@ -43,7 +42,10 @@ class Transform {
     List<List> addedPaths
     List<List> removedPaths
 
+    Map<String, Map> blankNodes
+
     Map<String, List<String>> nodeIdMappings
+    Map<String, Set<String>> baseTypeMappings
 
     List<ChangesForNode> changes
 
@@ -63,8 +65,9 @@ class Transform {
         this.targetForm = targetForm
         this.removedPaths = collectRemovedPaths()
         this.addedPaths = collectAddedPaths()
-        this.exactMatchPaths = collectExactMatchPaths()
+        this.blankNodes = collectBlankNodes()
         this.nodeIdMappings = collectNodeIdMappings(whelk)
+        this.baseTypeMappings = collectBaseTypeMappings(whelk?.jsonld)
     }
 
     Transform(Map matchForm, Map targetForm) {
@@ -105,6 +108,21 @@ class Transform {
         return changes
     }
 
+    private Map<String, Map> collectBlankNodes() {
+        return collectBlankNodes(matchForm)
+    }
+
+    private static Map<String, Map> collectBlankNodes(Map form) {
+        Map<String, Map> bNodes = [:]
+        DocumentUtil.traverse(form) { value, path ->
+            if (value instanceof Map && value.containsKey(_ID)) {
+                bNodes[(String) value[_ID]] = value
+                return new DocumentUtil.Nop()
+            }
+        }
+        return bNodes
+    }
+
     private List<Remove> collectRemove() {
         return (List<Remove>) removedPaths.collect { fullPath ->
             asList(getAtPath(matchForm, fullPath)).collect { value ->
@@ -131,17 +149,6 @@ class Transform {
         return collectChangedPaths(matchForm, targetForm, [])
     }
 
-    private Set<List> collectExactMatchPaths() {
-        Set paths = []
-        DocumentUtil.findKey(matchForm, _MATCH) { value, path ->
-            if (value == MatchingMode.EXACT.str) {
-                paths.add(path.dropRight(1))
-                return new DocumentUtil.Nop()
-            }
-        }
-        return paths
-    }
-
     private static List collectChangedPaths(Object a, Object b, List path) {
         if (a == b) {
             return []
@@ -152,9 +159,6 @@ class Transform {
         }
 
         if (a instanceof Map && b instanceof Map) {
-            a = withoutIgnored(a)
-            b = withoutIgnored(b)
-
             // Lack of implicit id means that there is a new node at this path
             if (!a[_ID] || !b[_ID]) {
                 return [path]
@@ -186,12 +190,15 @@ class Transform {
         throw new Exception("Changing datatype of a value is not allowed.")
     }
 
-    private static Map withoutIgnored(Map m) {
-        if (m.keySet().intersect(IGNORE_CHANGED_VALUE)) {
-            m = new HashMap(m)
-            m.removeAll { IGNORE_CHANGED_VALUE.contains(it.key) }
+    private Set<List> collectExactMatchPaths() {
+        Set paths = []
+        DocumentUtil.findKey(matchForm, _MATCH) { value, path ->
+            if (value == MatchingMode.EXACT.str) {
+                paths.add(path.dropRight(1))
+                return new DocumentUtil.Nop()
+            }
         }
-        return m
+        return paths
     }
 
     Iterable<Map> getMatchFormVariants() {
@@ -255,20 +262,8 @@ class Transform {
         return () -> i
     }
 
-    Map getMatchFormWithoutAnyMarkers() {
-        return withoutAnyMarkers(matchForm)
-    }
-
-    Map getMatchFormWithoutNonIdMarkers() {
-        return withoutNonIdMarkers(matchForm)
-    }
-
     static Map withoutAnyMarkers(Map form) {
         return withoutMarkers(form, this.&clearAllMarkers)
-    }
-
-    static Map withoutNonIdMarkers(Map form) {
-        return withoutMarkers(form, this.&clearNonIdMarkers)
     }
 
     private static withoutMarkers(Map form, Closure clearMarkers) {
@@ -278,11 +273,7 @@ class Transform {
     }
 
     private static void clearAllMarkers(Object o) {
-        clearMarkers(o, [_ID, _MATCH, _ID_LIST] as Set, [(TYPE_KEY): ANY_TYPE])
-    }
-
-    private static void clearNonIdMarkers(Object o) {
-        clearMarkers(o, [_MATCH, _ID_LIST] as Set, [(TYPE_KEY): ANY_TYPE])
+        clearMarkers(o, [_ID, _MATCH, _ID_LIST, BASE_TYPE_TMP_PROP] as Set, [(TYPE_KEY): ANY_TYPE])
     }
 
     private static void clearMarkers(Object o, Set<String> keys, Map<String, Object> keyValuePairs) {
@@ -303,11 +294,7 @@ class Transform {
     }
 
     String getSparqlPattern(Map context) {
-        Map form = getMatchFormWithoutNonIdMarkers()
-
-        putIds(form)
-
-        Map thing = form
+        Map thing = getSparqlPreparedForm()
         Map record = (Map) thing.remove(RECORD_KEY) ?: [:]
 
         record[ID_KEY] = getRecordTmpId()
@@ -320,26 +307,62 @@ class Transform {
         // Add skip prelude flag to JsonLdToTrigSerializer.toTurtle?
                 .with { withoutPrefixes(it) }
 
-        return insertIdMappings(insertVars(ttl))
+        return insertTypeMappings(insertIdMappings(insertVars(ttl)))
+    }
+
+    private Map getSparqlPreparedForm() {
+        Map matchFormCopy = (Map) Document.deepCopy(matchForm)
+
+        collectBlankNodes(matchFormCopy).each { _id, node ->
+            node.remove(_ID)
+            node.remove(_ID_LIST)
+            if (node[TYPE_KEY] == ANY_TYPE) {
+                node.remove(TYPE_KEY)
+            }
+            def _match = asList(node.remove(_MATCH))
+            if (_match.contains(BASE_TYPE)) {
+                def baseType = node.remove(TYPE_KEY)
+                node[BASE_TYPE_TMP_PROP] = baseType
+            }
+            if (nodeIdMappings.containsKey(_id)) {
+                node[ID_KEY] = _id
+            }
+            if (node.isEmpty()) {
+                node[ID_KEY] = EMPTY_BLANK_NODE_TMP_ID
+            }
+        }
+
+        return matchFormCopy
     }
 
     private String insertVars(String ttl) {
         def substitutions = [
-                ("<" + getThingTmpId() + ">"): getVar(getThingTmpId()),
-                ("<" + getRecordTmpId() + ">"): getVar(getRecordTmpId()),
+                ("<" + getThingTmpId() + ">")        : getVar(getThingTmpId()),
+                ("<" + getRecordTmpId() + ">")       : getVar(getRecordTmpId()),
                 ("<" + EMPTY_BLANK_NODE_TMP_ID + ">"): "[]",
         ]
 
-        nodeIdMappings.keySet().each {_id ->
+        baseTypeMappings.keySet().each { baseType  ->
+            substitutions.put(":$BASE_TYPE_TMP_PROP \"$baseType\"".toString(), "a ?" + baseType)
+        }
+
+        nodeIdMappings.keySet().each { _id ->
             substitutions.put("<" + _id + ">", getVar(_id))
         }
 
         return ttl.replace(substitutions)
     }
 
+    private String insertTypeMappings(String sparqlPattern) {
+        def valuesClause = baseTypeMappings.collect { baseType, subTypes ->
+            "VALUES ?$baseType { ${([baseType] + subTypes).collect { ":$it" }.join(" ")} }\n"
+        }.join()
+        return valuesClause + sparqlPattern
+    }
+
     private String insertIdMappings(String sparqlPattern) {
-        def valuesClauses = nodeIdMappings.collect {_id, ids ->
-            "VALUES ${getVar(_id)} { ${ ids.collect {"<$it>" }.join(" ") } }\n"
+        def valuesClauses = nodeIdMappings.collect { _id, ids ->
+            "VALUES ${getVar(_id)} { ${ids.collect { "<$it>" }.join(" ")} }\n"
         }.join()
         return valuesClauses + sparqlPattern
     }
@@ -348,22 +371,6 @@ class Transform {
         return _id == getRecordTmpId()
                 ? "?$GRAPH_VAR"
                 : "?${_id.replace('#', '')}"
-    }
-
-    private void putIds(Map form) {
-        DocumentUtil.traverse(form) { value, path ->
-            if (asList(value).isEmpty()) {
-                return new DocumentUtil.Replace([(ID_KEY): EMPTY_BLANK_NODE_TMP_ID])
-            } else if (value instanceof Map) {
-                def _id = value.remove(_ID)
-                if (nodeIdMappings.containsKey(_id)) {
-                    value[ID_KEY] = _id
-                    return new DocumentUtil.Nop()
-                } else if (value.isEmpty()) {
-                    return new DocumentUtil.Replace([(ID_KEY): EMPTY_BLANK_NODE_TMP_ID])
-                }
-            }
-        }
     }
 
     private static String withoutPrefixes(String ttl) {
@@ -379,12 +386,12 @@ class Transform {
 
         IdLoader idLoader = whelk ? new IdLoader(whelk.storage) : null
 
-        DocumentUtil.traverse(matchForm) { value, path ->
-            if (value instanceof Map && path && dropLastIndex(path).last() == _ID_LIST) {
-                def ids = value[VALUE] as List<String>
-                        ?: (value[VALUE_FROM] ? IdLoader.fromFile((String) value[VALUE_FROM][ID_KEY]) : [])
+        DocumentUtil.traverse(matchForm) { node, path ->
+            if (node instanceof Map && node.containsKey(_ID_LIST)) {
+                def idList = node[_ID_LIST]
+                def ids = idList[VALUE] as List<String>
+                        ?: (idList[VALUE_FROM] ? IdLoader.fromFile((String) idList[VALUE_FROM][ID_KEY]) : [])
                 if (ids) {
-                    def node = getAtPath(matchForm, dropLastIndex(path).dropRight(1))
                     def nodeId = (String) node[_ID]
 
                     if (!idLoader) {
@@ -404,11 +411,11 @@ class Transform {
                     def parentProp = dropIndexes(path).reverse()[1]
                     def isInRange = { type -> whelk.jsonld.getInRange(type).contains(parentProp) }
                     // TODO: Fix hardcoding
-                    def isRecord = whelk.jsonld.isInstanceOf((Map) node, "AdminMetadata")
+                    def isRecord = whelk.jsonld.isInstanceOf(node, "AdminMetadata")
                             || isInRange(RECORD_TYPE)
                             || isInRange("AdminMetadata")
 
-                    nodeIdMappings[(String) node[_ID]] = iris + xlShortIds.collect {
+                    nodeIdMappings[nodeId] = iris + xlShortIds.collect {
                         Document.BASE_URI.toString() + it + (isRecord ? "" : Document.HASH_IT)
                     }
 
@@ -420,12 +427,40 @@ class Transform {
         return nodeIdMappings
     }
 
+    Map<String, Set<String>> collectBaseTypeMappings(JsonLd jsonLd) {
+        Map<String, Set<String>> mappings = [:]
+
+        if (jsonLd == null) {
+            return mappings
+        }
+
+        blankNodes.each { _id, node ->
+            if (node.containsKey(_MATCH) && ((List) node[_MATCH]).contains(BASE_TYPE)) {
+                def baseType = (String) node[TYPE_KEY]
+                Set<String> subTypes = getSubtypes(baseType, jsonLd) as Set
+                baseTypeMappings[baseType] = subTypes
+            }
+        }
+
+        return mappings
+    }
+
+    @Memoized
+    private static Set<String> getSubtypes(String type, JsonLd jsonLd) {
+        return jsonLd.getSubClasses(type)
+    }
+
     private String getThingTmpId() {
         return matchForm[_ID]
     }
 
     private String getRecordTmpId() {
         return getAtPath(matchForm, [RECORD_KEY, _ID], "TEMP_ID")
+    }
+
+    boolean matches(Map form, Map thing) {
+        // TODO
+        return true
     }
 
     static boolean isSubset(Object a, Object b) {
@@ -475,7 +510,7 @@ class Transform {
         }
 
         private formMatches(Map node) {
-            getFormVariants(form).any {f ->
+            getFormVariants(form).any { f ->
                 switch (matchingMode) {
                     case MatchingMode.EXACT: return isEqual(f, node)
                     case MatchingMode.SUBSET: return isSubset(f, node)
@@ -548,6 +583,7 @@ class Transform {
             super()
             this.matchForm = matchForm
             this.nodeIdMappings = collectNodeIdMappings(whelk)
+            this.baseTypeMappings = collectBaseTypeMappings(whelk?.jsonld)
         }
 
         MatchForm(Map matchForm) {

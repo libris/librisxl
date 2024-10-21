@@ -130,11 +130,11 @@ class TransformSpec extends Specification {
     def "form to sparql pattern: unspecified types"() {
         given:
         def form = [
-                '_id'  : '#1',
-                '@type': 'Any',
-                'p1'   : ['_id': '#2', '@type': 'Any'],
-                'p2'   : ['_id': '#3', '@type': 'Any', 'p': 'v'],
-                'marc:p'   : ['_id': '#4', '@type': 'marc:T', 'p': 'v']
+                '_id'   : '#1',
+                '@type' : 'Any',
+                'p1'    : ['_id': '#2', '@type': 'Any'],
+                'p2'    : ['_id': '#3', '@type': 'Any', 'p': 'v'],
+                'marc:p': ['_id': '#4', '@type': 'marc:T', 'p': 'v']
         ]
 
         def expectedPattern = "?graph :mainEntity ?1 .\n" +
@@ -146,6 +146,26 @@ class TransformSpec extends Specification {
 
         expect:
         new Transform.MatchForm(form).getSparqlPattern(context) == expectedPattern
+    }
+
+    def "form to sparql pattern: base types"() {
+        given:
+        def form = [
+                '_id'   : '#1',
+                '@type' : 'T1',
+                '_match': ['BaseType']
+        ]
+
+        def expectedPattern = "VALUES ?T1 { :T1 :T1x :T1y :T1z }\n" +
+                "?graph :mainEntity ?1 .\n" +
+                "\n" +
+                "?1 a ?T1 ."
+
+        def transform = new Transform.MatchForm(form)
+        transform.baseTypeMappings['T1'] = ['T1x', 'T1y', 'T1z'] as Set
+
+        expect:
+        transform.getSparqlPattern(context) == expectedPattern
     }
 
     def "is equal"() {
@@ -160,7 +180,7 @@ class TransformSpec extends Specification {
         Transform.isEqual(a, c)
         !Transform.isEqual(b, c)
         Transform.isEqual(["p": [["a": "b"], a]], ["p": [a, ["a": "b"]]])
-        Transform.isEqual(["p": [["a":"b"], a]], ["p": [b, ["a":"b"]]])
-        !Transform.isEqual(["p": [["a":"b"], c]], ["p": [b, ["a":"b"]]])
+        Transform.isEqual(["p": [["a": "b"], a]], ["p": [b, ["a": "b"]]])
+        !Transform.isEqual(["p": [["a": "b"], c]], ["p": [b, ["a": "b"]]])
     }
 }

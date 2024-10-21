@@ -29,6 +29,10 @@ class ModifiedThing {
     }
 
     private Map modify(Map thing) {
+        if (!transform.matches(thing)) {
+            return thing
+        }
+
         if (!transform.getMatchFormVariants().any { isMatch(it, thing) }) {
             return thing
         }
