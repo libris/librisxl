@@ -31,7 +31,6 @@ class Transform {
     private static final String ANY_TYPE = "Any"
     private static final String BASE_TYPE = "BaseType"
 
-    private static final String EMPTY_BLANK_NODE_TMP_ID = "EMPTY_BN_ID"
     private static final String BASE_TYPE_TMP_PROP = '_baseTypeTmp'
 
     Map matchForm
@@ -314,6 +313,11 @@ class Transform {
         Map matchFormCopy = (Map) Document.deepCopy(matchForm)
 
         collectBlankNodes(matchFormCopy).each { _id, node ->
+            node.keySet().each { k ->
+                if (asList(node[k]).isEmpty()) {
+                    node[k] = [:]
+                }
+            }
             node.remove(_ID)
             node.remove(_ID_LIST)
             if (node[TYPE_KEY] == ANY_TYPE) {
@@ -327,9 +331,6 @@ class Transform {
             if (nodeIdMappings.containsKey(_id)) {
                 node[ID_KEY] = _id
             }
-            if (node.isEmpty()) {
-                node[ID_KEY] = EMPTY_BLANK_NODE_TMP_ID
-            }
         }
 
         return matchFormCopy
@@ -338,11 +339,10 @@ class Transform {
     private String insertVars(String ttl) {
         def substitutions = [
                 ("<" + getThingTmpId() + ">")        : getVar(getThingTmpId()),
-                ("<" + getRecordTmpId() + ">")       : getVar(getRecordTmpId()),
-                ("<" + EMPTY_BLANK_NODE_TMP_ID + ">"): "[]",
+                ("<" + getRecordTmpId() + ">")       : getVar(getRecordTmpId())
         ]
 
-        baseTypeMappings.keySet().each { baseType  ->
+        baseTypeMappings.keySet().each { baseType ->
             substitutions.put(":$BASE_TYPE_TMP_PROP \"$baseType\"".toString(), "a ?" + baseType)
         }
 

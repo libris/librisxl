@@ -61,7 +61,7 @@ class TransformSpec extends Specification {
     def "form to sparql pattern: null/empty value"() {
         given:
         def form = ['_id': '#1', 'p1': v]
-        def expectedPattern = "?graph :mainEntity ?1 .\n\n?1 :p1 [] ."
+        def expectedPattern = "?graph :mainEntity ?1 .\n\n?1 :p1 [ ] ."
 
         expect:
         new Transform.MatchForm(form).getSparqlPattern(context) == expectedPattern
@@ -72,8 +72,8 @@ class TransformSpec extends Specification {
 
     def "form to sparql pattern: nested null/empty value"() {
         given:
-        def form = ['_id': '#1', 'p1': ['p2': v]]
-        def expectedPattern = "?graph :mainEntity ?1 .\n\n?1 :p1 [ :p2 [] ] ."
+        def form = ['_id': '#1', 'p1': ['_id': '#2', 'p2': v]]
+        def expectedPattern = "?graph :mainEntity ?1 .\n\n?1 :p1 [ :p2 [ ] ] ."
 
         expect:
         new Transform.MatchForm(form).getSparqlPattern(context) == expectedPattern
@@ -139,7 +139,7 @@ class TransformSpec extends Specification {
 
         def expectedPattern = "?graph :mainEntity ?1 .\n" +
                 "\n" +
-                "?1 :p1 [] ;\n" +
+                "?1 :p1 [ ] ;\n" +
                 "  :p2 [ :p \"v\" ] ;\n" +
                 "  marc:p [ a marc:T ;\n" +
                 "      :p \"v\" ] ."

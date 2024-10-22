@@ -3145,10 +3145,30 @@
       "targetForm": {
         "_id": "1",
         "p1": {
-          "_id": "2"
+          "_id": "2",
+          "_idList": [
+            {
+              "@type": "AnyOf",
+              "value": [
+                "https://id.kb.se/x",
+                "https://id.kb.se/y",
+                "https://id.kb.se/z"
+              ]
+            }
+          ]
         },
         "p2": {
-          "_id": "3"
+          "_id": "3",
+          "_idList": [
+            {
+              "@type": "AnyOf",
+              "value": [
+                "https://id.kb.se/a",
+                "https://id.kb.se/b",
+                "https://id.kb.se/c"
+              ]
+            }
+          ]
         }
       },
       "removedPaths": [
