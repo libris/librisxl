@@ -10,6 +10,8 @@ import java.util.Stack;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static whelk.JsonLd.asList;
+
 public class DocumentComparator {
     private static final Comparator<Object> BY_HASH = (o1, o2) -> o2.hashCode() - o1.hashCode();
 
@@ -42,24 +44,24 @@ public class DocumentComparator {
     private boolean isEqual(Object a, Object b, Object key, BiFunction<Map<?, ?>, Map<?, ?>, Boolean> mapCompareFunc) {
         if (a == null || b == null) {
             return false;
-        }
-        else if (a.getClass() != b.getClass()) {
-            return (isSingleItemList(a) && isEqual(((List<?>) a).get(0), b, key, mapCompareFunc)
-                    || (isSingleItemList(b) && isEqual(a, ((List<?>) b).get(0), key, mapCompareFunc)));
-        }
-        else if (a instanceof Map) {
+        } else if (a.getClass() != b.getClass()) {
+            return (isSingleItemList(a) && isEqual(((List<?>) a).get(0), b, key, mapCompareFunc))
+                    || (isSingleItemList(b) && isEqual(a, ((List<?>) b).get(0), key, mapCompareFunc));
+        } else if (a instanceof Map) {
             return mapCompareFunc.apply((Map<?, ?>) a, (Map<?, ?>) b);
-        }
-        else if (a instanceof List) {
+        } else if (a instanceof List) {
             if (isOrderedList.apply(key)) {
                 return isEqualOrdered((List<?>) a, (List<?>) b, mapCompareFunc);
             } else {
                 return isEqualUnordered((List<?>) a, (List<?>) b, mapCompareFunc);
             }
-        }
-        else {
+        } else {
             return a.equals(b);
         }
+    }
+
+    private boolean isSingleItem(Object o) {
+        return asList(o).size() == 1;
     }
 
     private boolean isSingleItemList(Object o) {
@@ -88,10 +90,11 @@ public class DocumentComparator {
 
         a.sort(BY_HASH);
         b.sort(BY_HASH);
-        
+
         List<Integer> taken = new ArrayList<>(a.size());
-        nextA: for (int i = 0 ; i < a.size() ; i++) {
-            for (int j = 0 ; j < b.size() ; j++) {
+        nextA:
+        for (int i = 0; i < a.size(); i++) {
+            for (int j = 0; j < b.size(); j++) {
                 if (!taken.contains(j) && isEqual(a.get(i), b.get(j), null, mapCompareFunc)) {
                     taken.add(j);
                     continue nextA;
@@ -123,8 +126,9 @@ public class DocumentComparator {
         if (a == null || b == null) {
             return false;
         } else if (a.getClass() != b.getClass()) {
-            return (isSingleItemList(a) && isSubset(((List<?>) a).getFirst(), b, key)
-                    || (isSingleItemList(b) && isSubset(a, ((List<?>) b).getFirst(), key)));
+            return (isSingleItem(a) && b instanceof List && isSubset(asList(a), b, key))
+                    || (isSingleItemList(a) && isSubset(((List<?>) a).getFirst(), b, key))
+                    || (isSingleItemList(b) && isSubset(a, ((List<?>) b).getFirst(), key));
         } else if (a instanceof Map) {
             return isSubset((Map<?, ?>) a, (Map<?, ?>) b);
         } else if (a instanceof List) {

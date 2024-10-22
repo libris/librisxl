@@ -6,7 +6,6 @@ import spock.lang.Specification
 import static whelk.util.Jackson.mapper
 
 class DocumentComparatorSpec extends Specification {
-    
     def "isEqual"() {
         given:
         DocumentComparator d = new DocumentComparator({ o -> ("ordered" == o) })
@@ -51,6 +50,10 @@ class DocumentComparatorSpec extends Specification {
         [1: 2]                                      | [1: 1]                                                          || false
         [:]                                         | [1: [2: 2]]                                                     || true
         [1: [:]]                                    | [1: [2: 2]]                                                     || true
+        ["x": "a"]                                  | ["x": ["a"]]                                                    || true
+        ["x": ["a"]]                                | ["x": "a"]                                                      || true
+        ["x": "a"]                                  | ["x": ["a", "b"]]                                               || true
+        ["x": ["a", "b"]]                           | ["x": "a"]                                                      || false
         ["x": ["b", "c"]]                           | ["x": ["a", "b", "c"]]                                          || true
         ["x": ["c", "a"]]                           | ["x": ["a", "b", "c"]]                                          || true
         ["x": ["a", "a"]]                           | ["x": ["a"]]                                                    || false
