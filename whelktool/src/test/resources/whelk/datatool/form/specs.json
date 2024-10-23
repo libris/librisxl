@@ -2680,7 +2680,6 @@
         "p2": {
           "_id": "2",
           "p3": {
-            "@type": "Any",
             "p4": {
               "@id": "https://id.kb.se/x"
             }
@@ -3116,29 +3115,25 @@
         "_id": "1",
         "p1": {
           "_id": "2",
-          "_idList": [
-            {
-              "@type": "AnyOf",
-              "value": [
-                "https://id.kb.se/x",
-                "https://id.kb.se/y",
-                "https://id.kb.se/z"
-              ]
-            }
-          ]
+          "_idList": {
+            "@type": "AnyOf",
+            "value": [
+              "https://id.kb.se/x",
+              "https://id.kb.se/y",
+              "https://id.kb.se/z"
+            ]
+          }
         },
         "p2": {
           "_id": "3",
-          "_idList": [
-            {
-              "@type": "AnyOf",
-              "value": [
-                "https://id.kb.se/a",
-                "https://id.kb.se/b",
-                "https://id.kb.se/c"
-              ]
-            }
-          ]
+          "_idList": {
+            "@type": "AnyOf",
+            "value": [
+              "https://id.kb.se/a",
+              "https://id.kb.se/b",
+              "https://id.kb.se/c"
+            ]
+          }
         },
         "p3": "v3"
       },
@@ -3146,29 +3141,25 @@
         "_id": "1",
         "p1": {
           "_id": "2",
-          "_idList": [
-            {
-              "@type": "AnyOf",
-              "value": [
-                "https://id.kb.se/x",
-                "https://id.kb.se/y",
-                "https://id.kb.se/z"
-              ]
-            }
-          ]
+          "_idList": {
+            "@type": "AnyOf",
+            "value": [
+              "https://id.kb.se/x",
+              "https://id.kb.se/y",
+              "https://id.kb.se/z"
+            ]
+          }
         },
         "p2": {
           "_id": "3",
-          "_idList": [
-            {
-              "@type": "AnyOf",
-              "value": [
-                "https://id.kb.se/a",
-                "https://id.kb.se/b",
-                "https://id.kb.se/c"
-              ]
-            }
-          ]
+          "_idList": {
+            "@type": "AnyOf",
+            "value": [
+              "https://id.kb.se/a",
+              "https://id.kb.se/b",
+              "https://id.kb.se/c"
+            ]
+          }
         }
       },
       "removedPaths": [
@@ -3202,16 +3193,14 @@
         "_id": "1",
         "p1": {
           "_id": "2",
-          "_idList": [
-            {
-              "@type": "AnyOf",
-              "value": [
-                "https://id.kb.se/x",
-                "https://id.kb.se/y",
-                "https://id.kb.se/z"
-              ]
-            }
-          ]
+          "_idList": {
+            "@type": "AnyOf",
+            "value": [
+              "https://id.kb.se/x",
+              "https://id.kb.se/y",
+              "https://id.kb.se/z"
+            ]
+          }
         },
         "p2": "v2"
       },
@@ -3242,16 +3231,14 @@
         "r1": [
           {
             "_id": "2",
-            "_idList": [
-              {
-                "@type": "AnyOf",
-                "value": [
-                  "https://id.kb.se/x",
-                  "https://id.kb.se/y",
-                  "https://id.kb.se/z"
-                ]
-              }
-            ]
+            "_idList": {
+              "@type": "AnyOf",
+              "value": [
+                "https://id.kb.se/x",
+                "https://id.kb.se/y",
+                "https://id.kb.se/z"
+              ]
+            }
           }
         ],
         "p2": "v2"
@@ -3295,16 +3282,14 @@
         "_id": "1",
         "p1": {
           "_id": "2",
-          "_idList": [
-            {
-              "@type": "AnyOf",
-              "value": [
-                "https://id.kb.se/x",
-                "https://id.kb.se/y",
-                "https://id.kb.se/z"
-              ]
-            }
-          ]
+          "_idList": {
+            "@type": "AnyOf",
+            "value": [
+              "https://id.kb.se/x",
+              "https://id.kb.se/y",
+              "https://id.kb.se/z"
+            ]
+          }
         },
         "p2": "v2"
       },
@@ -3345,16 +3330,14 @@
         "r1": [
           {
             "_id": "2",
-            "_idList": [
-              {
-                "@type": "AnyOf",
-                "value": [
-                  "https://id.kb.se/x",
-                  "https://id.kb.se/y",
-                  "https://id.kb.se/z"
-                ]
-              }
-            ]
+            "_idList": {
+              "@type": "AnyOf",
+              "value": [
+                "https://id.kb.se/x",
+                "https://id.kb.se/y",
+                "https://id.kb.se/z"
+              ]
+            }
           }
         ],
         "p2": "v2"
@@ -3370,12 +3353,14 @@
       },
       "removedPaths": [
         [
-          "r1", 0
+          "r1",
+          0
         ]
       ],
       "addedPaths": [
         [
-          "r1", 0
+          "r1",
+          0
         ]
       ],
       "before": {

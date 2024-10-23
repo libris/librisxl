@@ -168,19 +168,30 @@ class TransformSpec extends Specification {
         transform.getSparqlPattern(context) == expectedPattern
     }
 
-    def "is equal"() {
+    def "match data against form"() {
         given:
-        def a = ["p": ["x": "y"]]
-        def b = ["p": ["@type": "t1", "x": "y"]]
-        def c = ["p": ["@type": "t2", "x": "y"]]
+        def transform = new Transform()
+        transform.nodeIdMappings = ["#1": ["https://libris.kb.se/x#it", "https://libris.kb.se/y#it"] as Set]
+        transform.baseTypeMappings = ["T": ["Tx", "Ty"] as Set]
 
         expect:
-        Transform.isEqual(a, b)
-        Transform.isEqual(b, a)
-        Transform.isEqual(a, c)
-        !Transform.isEqual(b, c)
-        Transform.isEqual(["p": [["a": "b"], a]], ["p": [a, ["a": "b"]]])
-        Transform.isEqual(["p": [["a": "b"], a]], ["p": [b, ["a": "b"]]])
-        !Transform.isEqual(["p": [["a": "b"], c]], ["p": [b, ["a": "b"]]])
+        transform.matches(matchForm, node) == result
+
+        where:
+        matchForm                                                 | node                                        | result
+        "a"                                                       | "a"                                         | true
+        "a"                                                       | "b"                                         | false
+        "a"                                                       | ["a", "b"]                                  | true
+        ["x": "a"]                                                | ["x": ["a", "b"]]                           | true
+        ["x": "a", "_match": ["Exact"]]                           | ["x": ["a", "b"]]                           | false
+        ["x": ["a", "b"], "_match": ["Exact"]]                    | ["x": ["a", "b"]]                           | true
+        ["@type": "T", "_match": ["BaseType"], "a": "b"]          | ["@type": "Tx", "a": "b"]                   | true
+        ["@type": "T", "a": "b"]                                  | ["@type": "Tx", "a": "b"]                   | false
+        ["@type": "T", "_match": ["BaseType", "Exact"], "a": "b"] | ["@type": "Ty", "a": "b"]                   | true
+        ["@type": "T", "_match": ["BaseType", "Exact"], "a": "b"] | ["@type": "Ty", "a": "b", "c": "d"]         | false
+        ["@type": "Any", "a": "b"]                                | ["@type": "T", "a": "b", "c": "d"]          | true
+        ["@type": "Any", "a": "b", "_match": ["Exact"]]           | ["@type": "T", "a": "b", "c": "d"]          | false
+        ["x": ["_id": "#1"]]                                      | ["x": ["@id": "https://libris.kb.se/y#it"]] | true
+        ["x": ["_id": "#1"]]                                      | ["x": ["@id": "https://libris.kb.se/z#it"]] | false
     }
 }
