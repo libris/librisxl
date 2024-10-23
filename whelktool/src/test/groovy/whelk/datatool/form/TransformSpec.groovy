@@ -153,7 +153,7 @@ class TransformSpec extends Specification {
         def form = [
                 '_id'   : '#1',
                 '@type' : 'T1',
-                '_match': ['BaseType']
+                '_match': ['Subtypes']
         ]
 
         def expectedPattern = "VALUES ?T1 { :T1 :T1x :T1y :T1z }\n" +
@@ -185,10 +185,10 @@ class TransformSpec extends Specification {
         ["x": "a"]                                                | ["x": ["a", "b"]]                           | true
         ["x": "a", "_match": ["Exact"]]                           | ["x": ["a", "b"]]                           | false
         ["x": ["a", "b"], "_match": ["Exact"]]                    | ["x": ["a", "b"]]                           | true
-        ["@type": "T", "_match": ["BaseType"], "a": "b"]          | ["@type": "Tx", "a": "b"]                   | true
+        ["@type": "T", "_match": ["Subtypes"], "a": "b"]          | ["@type": "Tx", "a": "b"]                   | true
         ["@type": "T", "a": "b"]                                  | ["@type": "Tx", "a": "b"]                   | false
-        ["@type": "T", "_match": ["BaseType", "Exact"], "a": "b"] | ["@type": "Ty", "a": "b"]                   | true
-        ["@type": "T", "_match": ["BaseType", "Exact"], "a": "b"] | ["@type": "Ty", "a": "b", "c": "d"]         | false
+        ["@type": "T", "_match": ["Subtypes", "Exact"], "a": "b"] | ["@type": "Ty", "a": "b"]                   | true
+        ["@type": "T", "_match": ["Subtypes", "Exact"], "a": "b"] | ["@type": "Ty", "a": "b", "c": "d"]         | false
         ["@type": "Any", "a": "b"]                                | ["@type": "T", "a": "b", "c": "d"]          | true
         ["@type": "Any", "a": "b", "_match": ["Exact"]]           | ["@type": "T", "a": "b", "c": "d"]          | false
         ["x": ["_id": "#1"]]                                      | ["x": ["@id": "https://libris.kb.se/y#it"]] | true

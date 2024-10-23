@@ -29,8 +29,8 @@ class Transform {
     private static final String VALUE = 'value'
     private static final String VALUE_FROM = 'valueFrom'
     private static final String ANY_TYPE = "Any"
-    private static final String BASE_TYPE = "BaseType"
-    private static final String BASE_TYPE_TMP_PROP = '_baseTypeTmp'
+    private static final String SUBTYPES = "Subtypes"
+    private static final String HAS_BASE_TYPE_TMP = '_hasBaseTypeTmp'
     private static final String EXACT = 'Exact'
 
     Map matchForm
@@ -191,9 +191,9 @@ class Transform {
                 if (node[TYPE_KEY] == ANY_TYPE) {
                     node.remove(TYPE_KEY)
                 }
-                if (asList(node.remove(_MATCH)).contains(BASE_TYPE)) {
+                if (asList(node.remove(_MATCH)).contains(SUBTYPES)) {
                     def baseType = node.remove(TYPE_KEY)
-                    node[BASE_TYPE_TMP_PROP] = baseType
+                    node[HAS_BASE_TYPE_TMP] = baseType
                 }
                 if (nodeIdMappings.containsKey(_id)) {
                     node[ID_KEY] = _id
@@ -215,7 +215,7 @@ class Transform {
         ]
 
         baseTypeMappings.keySet().each { baseType ->
-            substitutions.put(":$BASE_TYPE_TMP_PROP \"$baseType\"".toString(), "a ?" + baseType)
+            substitutions.put(":$HAS_BASE_TYPE_TMP \"$baseType\"".toString(), "a ?" + baseType)
         }
 
         nodeIdMappings.keySet().each { _id ->
@@ -306,7 +306,7 @@ class Transform {
         }
 
         DocumentUtil.traverse(matchForm) { node, path ->
-            if (node instanceof Map && node.containsKey(_MATCH) && ((List) node[_MATCH]).contains(BASE_TYPE)) {
+            if (node instanceof Map && node.containsKey(_MATCH) && ((List) node[_MATCH]).contains(SUBTYPES)) {
                 def baseType = (String) node[TYPE_KEY]
                 Set<String> subTypes = getSubtypes(baseType, jsonLd) as Set
                 mappings[baseType] = subTypes
@@ -347,7 +347,7 @@ class Transform {
         if (match.contains(EXACT)) {
             return exactMatches(matchForm, bNode)
         }
-        if (match.contains(BASE_TYPE)) {
+        if (match.contains(SUBTYPES)) {
             String aType = matchForm[TYPE_KEY]
             String bType = bNode[TYPE_KEY]
             if (!(baseTypeMappings[aType] + aType).contains(bType)) {
@@ -377,7 +377,7 @@ class Transform {
         }
         matchForm = new HashMap(matchForm)
         bNode = new HashMap(bNode)
-        if (asList(matchForm.remove(_MATCH)).contains(BASE_TYPE)) {
+        if (asList(matchForm.remove(_MATCH)).contains(SUBTYPES)) {
             String aType = matchForm[TYPE_KEY]
             String bType = bNode[TYPE_KEY]
             if ((baseTypeMappings[aType] + aType).contains(bType)) {
