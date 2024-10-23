@@ -30,41 +30,25 @@ class Transform {
     private static final String VALUE_FROM = 'valueFrom'
     private static final String ANY_TYPE = "Any"
     private static final String BASE_TYPE = "BaseType"
-
     private static final String BASE_TYPE_TMP_PROP = '_baseTypeTmp'
+    private static final String EXACT = 'Exact'
 
     Map matchForm
     Map targetForm
 
-    Set<List> exactMatchPaths
-
     List<List> addedPaths
     List<List> removedPaths
 
-    Map<String, Map> blankNodes
-
-    Map<String, List<String>> nodeIdMappings
+    Map<String, Set<String>> nodeIdMappings
     Map<String, Set<String>> baseTypeMappings
 
     List<ChangesForNode> changes
-
-    static enum MatchingMode {
-        EXACT('Exact'),
-        SUBSET('Subset')
-
-        String str
-
-        MatchingMode(String str) {
-            this.str = str
-        }
-    }
 
     Transform(Map matchForm, Map targetForm, Whelk whelk) {
         this.matchForm = matchForm
         this.targetForm = targetForm
         this.removedPaths = collectRemovedPaths()
         this.addedPaths = collectAddedPaths()
-        this.blankNodes = collectBlankNodes()
         this.nodeIdMappings = collectNodeIdMappings(whelk)
         this.baseTypeMappings = collectBaseTypeMappings(whelk?.jsonld)
     }
@@ -100,34 +84,16 @@ class Transform {
                     .collect { parentPath, changeList ->
                         new ChangesForNode(dropIndexes(parentPath),
                                 getAtPath(matchForm, parentPath) as Map,
-                                changeList,
-                                parentPath in exactMatchPaths ? MatchingMode.EXACT : MatchingMode.SUBSET)
+                                changeList)
                     }
         }
         return changes
     }
 
-    private Map<String, Map> collectBlankNodes() {
-        return collectBlankNodes(matchForm)
-    }
-
-    private static Map<String, Map> collectBlankNodes(Map form) {
-        Map<String, Map> bNodes = [:]
-        DocumentUtil.traverse(form) { value, path ->
-            if (value instanceof Map && value.containsKey(_ID)) {
-                bNodes[(String) value[_ID]] = value
-                return new DocumentUtil.Nop()
-            }
-        }
-        return bNodes
-    }
-
     private List<Remove> collectRemove() {
         return (List<Remove>) removedPaths.collect { fullPath ->
             asList(getAtPath(matchForm, fullPath)).collect { value ->
-                value instanceof Map
-                        ? new Remove(fullPath, value, exactMatchPaths.contains(fullPath) ? MatchingMode.EXACT : MatchingMode.SUBSET)
-                        : new Remove(fullPath, value, MatchingMode.EXACT)
+                new Remove(fullPath, value)
             }
         }.flatten()
     }
@@ -135,7 +101,7 @@ class Transform {
     private List<Add> collectAdd() {
         return (List<Add>) addedPaths.collect { fullPath ->
             asList(getAtPath(targetForm, fullPath)).collect { value ->
-                new Add(fullPath, value instanceof Map ? withoutAnyMarkers(value) : value)
+                new Add(fullPath, value)
             }
         }.flatten()
     }
@@ -189,101 +155,6 @@ class Transform {
         throw new Exception("Changing datatype of a value is not allowed.")
     }
 
-    private Set<List> collectExactMatchPaths() {
-        Set paths = []
-        DocumentUtil.findKey(matchForm, _MATCH) { value, path ->
-            if (value == MatchingMode.EXACT.str) {
-                paths.add(path.dropRight(1))
-                return new DocumentUtil.Nop()
-            }
-        }
-        return paths
-    }
-
-    Iterable<Map> getMatchFormVariants() {
-        return getFormVariants(matchForm)
-    }
-
-    private Iterable<Map> getFormVariants(Map form) {
-        Map bNodeIdToPath = [:]
-        DocumentUtil.findKey(form, _ID) { value, path ->
-            if (nodeIdMappings.containsKey(value) && value != getThingTmpId() && value != getRecordTmpId()) {
-                bNodeIdToPath[value] = path.dropRight(1)
-                return new DocumentUtil.Nop()
-            }
-        }
-
-        Map variant = withoutAnyMarkers(form)
-
-        if (bNodeIdToPath.isEmpty()) {
-            return [variant]
-        }
-
-        Iterator<Map> i = new Iterator<Map>() {
-            private def bNodeIds = bNodeIdToPath.keySet().toList()
-            private def idListLengths = bNodeIds.collect { nodeIdMappings[it].size() }
-            private def currentIndexes = bNodeIds.collect { 0 }
-            private def hasNext = true
-
-            @Override
-            boolean hasNext() {
-                return hasNext
-            }
-
-            @Override
-            Map next() {
-                // Set ids for current variant
-                [bNodeIds, currentIndexes].transpose().each { bNodeId, idx ->
-                    def path = bNodeIdToPath[bNodeId]
-                    def node = path.isEmpty() ? variant : getAtPath(variant, path)
-                    def mappedId = nodeIdMappings[bNodeId][idx]
-                    node[ID_KEY] = mappedId
-                }
-
-                // Update cursors
-                for (i in idListLengths.size() - 1..0) {
-                    if (currentIndexes[i] == idListLengths[i] - 1) {
-                        currentIndexes[i] = 0
-                        if (i == 0) {
-                            hasNext = false
-                        }
-                    } else {
-                        currentIndexes[i] += 1
-                        break
-                    }
-                }
-
-                // Return current variant
-                return variant
-            }
-        }
-
-        return () -> i
-    }
-
-    static Map withoutAnyMarkers(Map form) {
-        return withoutMarkers(form, this.&clearAllMarkers)
-    }
-
-    private static withoutMarkers(Map form, Closure clearMarkers) {
-        var f = (Map) Document.deepCopy(form)
-        clearMarkers(f)
-        return f
-    }
-
-    private static void clearAllMarkers(Object o) {
-        clearMarkers(o, [_ID, _MATCH, _ID_LIST, BASE_TYPE_TMP_PROP] as Set, [(TYPE_KEY): ANY_TYPE])
-    }
-
-    private static void clearMarkers(Object o, Set<String> keys, Map<String, Object> keyValuePairs) {
-        DocumentUtil.traverse(o) { v, p ->
-            if (v instanceof Map) {
-                v.removeAll { keys.contains(it.key) || (it.value != null && keyValuePairs[it.key] == it.value) }
-                return new DocumentUtil.Nop()
-            }
-        }
-    }
-
     private static List dropLastIndex(List path) {
         return !path.isEmpty() && path.last() instanceof Integer ? path.dropRight(1) : path
     }
@@ -312,24 +183,22 @@ class Transform {
     private Map getSparqlPreparedForm() {
         Map matchFormCopy = (Map) Document.deepCopy(matchForm)
 
-        collectBlankNodes(matchFormCopy).each { _id, node ->
-            node.keySet().each { k ->
-                if (asList(node[k]).isEmpty()) {
-                    node[k] = [:]
+        DocumentUtil.traverse(matchFormCopy) { node, path ->
+            if (node instanceof Map) {
+                def _id = node.remove(_ID)
+                if (!_id) return
+                node.remove(_ID_LIST)
+                if (node[TYPE_KEY] == ANY_TYPE) {
+                    node.remove(TYPE_KEY)
                 }
-            }
-            node.remove(_ID)
-            node.remove(_ID_LIST)
-            if (node[TYPE_KEY] == ANY_TYPE) {
-                node.remove(TYPE_KEY)
-            }
-            def _match = asList(node.remove(_MATCH))
-            if (_match.contains(BASE_TYPE)) {
-                def baseType = node.remove(TYPE_KEY)
-                node[BASE_TYPE_TMP_PROP] = baseType
-            }
-            if (nodeIdMappings.containsKey(_id)) {
-                node[ID_KEY] = _id
+                if (asList(node.remove(_MATCH)).contains(BASE_TYPE)) {
+                    def baseType = node.remove(TYPE_KEY)
+                    node[BASE_TYPE_TMP_PROP] = baseType
+                }
+                if (nodeIdMappings.containsKey(_id)) {
+                    node[ID_KEY] = _id
+                }
+                return new DocumentUtil.Nop()
             }
         }
 
@@ -338,8 +207,8 @@ class Transform {
 
     private String insertVars(String ttl) {
         def substitutions = [
-                ("<" + getThingTmpId() + ">")        : getVar(getThingTmpId()),
-                ("<" + getRecordTmpId() + ">")       : getVar(getRecordTmpId())
+                ("<" + getThingTmpId() + ">") : getVar(getThingTmpId()),
+                ("<" + getRecordTmpId() + ">"): getVar(getRecordTmpId())
         ]
 
         baseTypeMappings.keySet().each { baseType ->
@@ -381,27 +250,26 @@ class Transform {
                 .trim()
     }
 
-    Map<String, List<String>> collectNodeIdMappings(Whelk whelk) {
-        Map<String, List<String>> nodeIdMappings = [:]
+    Map<String, Set<String>> collectNodeIdMappings(Whelk whelk) {
+        Map<String, Set<String>> nodeIdMappings = [:]
 
         IdLoader idLoader = whelk ? new IdLoader(whelk.storage) : null
 
         DocumentUtil.traverse(matchForm) { node, path ->
             if (node instanceof Map && node.containsKey(_ID_LIST)) {
                 def idList = node[_ID_LIST]
-                def ids = idList[VALUE] as List<String>
-                        ?: (idList[VALUE_FROM] ? IdLoader.fromFile((String) idList[VALUE_FROM][ID_KEY]) : [])
+                def ids = (idList[VALUE] ?: (idList[VALUE_FROM] ? IdLoader.fromFile((String) idList[VALUE_FROM][ID_KEY]) : [])) as Set<String>
                 if (ids) {
-                    def nodeId = (String) node[_ID]
-
-                    if (!idLoader) {
-                        nodeIdMappings[nodeId] = ids
-                        return
-                    }
+                    String nodeId = node[_ID]
 
                     def (iris, shortIds) = ids.split(JsonLd::looksLikeIri)
                     if (shortIds.isEmpty()) {
                         nodeIdMappings[nodeId] = iris
+                        return
+                    }
+
+                    if (!idLoader) {
+                        nodeIdMappings[nodeId] = iris + shortIds.collect { Document.BASE_URI.toString() + it + Document.HASH_IT }
                         return
                     }
 
@@ -434,11 +302,12 @@ class Transform {
             return mappings
         }
 
-        blankNodes.each { _id, node ->
-            if (node.containsKey(_MATCH) && ((List) node[_MATCH]).contains(BASE_TYPE)) {
+        DocumentUtil.traverse(matchForm) { node, path ->
+            if (node instanceof Map && node.containsKey(_MATCH) && ((List) node[_MATCH]).contains(BASE_TYPE)) {
                 def baseType = (String) node[TYPE_KEY]
                 Set<String> subTypes = getSubtypes(baseType, jsonLd) as Set
-                baseTypeMappings[baseType] = subTypes
+                mappings[baseType] = subTypes
+                return new DocumentUtil.Nop()
             }
         }
 
@@ -458,37 +327,76 @@ class Transform {
         return getAtPath(matchForm, [RECORD_KEY, _ID], "TEMP_ID")
     }
 
-    boolean matches(Map form, Map thing) {
-        // TODO
-        return true
+    boolean matches(Object node) {
+        return matches(matchForm, node)
     }
 
-    static boolean isSubset(Object a, Object b) {
-        return comparator.isSubset(a, b)
+    boolean matches(Object matchForm, Object node) {
+        return comparator.isSubset(["x": matchForm], ["x": node], this::_matches)
     }
 
-    static boolean isEqual(Object a, Object b) {
-        return comparator.isEqual(["x": a], ["x": b], Transform::isEqualNoType)
-    }
-
-    private static boolean isEqualNoType(Map a, Map b) {
-        if (a == null || b == null) {
+    private boolean _matches(Map matchForm, Map bNode) {
+        if (matchForm == null || bNode == null) {
             return false
         }
-        if (a.size() != b.size()) {
-            if (!a.containsKey(TYPE_KEY) && b.containsKey(TYPE_KEY)) {
-                b = new HashMap<>(b)
-                b.remove(TYPE_KEY)
-                return comparator.isEqual(a, b, Transform::isEqualNoType)
+        matchForm = new HashMap(matchForm)
+        def match = asList(matchForm[_MATCH])
+        if (match.contains(EXACT)) {
+            return exactMatches(matchForm, bNode)
+        }
+        if (match.contains(BASE_TYPE)) {
+            String aType = matchForm[TYPE_KEY]
+            String bType = bNode[TYPE_KEY]
+            if (!(baseTypeMappings[aType] + aType).contains(bType)) {
+                return false
+            } else {
+                matchForm.remove(TYPE_KEY)
             }
-            if (a.containsKey(TYPE_KEY) && !b.containsKey(TYPE_KEY)) {
-                a = new HashMap<>(a)
-                a.remove(TYPE_KEY)
-                return comparator.isEqual(a, b, Transform::isEqualNoType)
-            }
+        }
+        matchForm.remove(_MATCH)
+        if (matchForm[TYPE_KEY] == ANY_TYPE) {
+            matchForm.remove(TYPE_KEY)
+        }
+        def ids = nodeIdMappings[matchForm.remove(_ID)]
+        if (ids && !ids.contains(bNode[ID_KEY])) {
             return false
         }
-        return comparator.isEqual(a, b, Transform::isEqualNoType)
+        matchForm.remove(_ID_LIST)
+        if (matchForm.size() > bNode.size()) {
+            return false
+        }
+        return comparator.isSubset(matchForm, bNode, this::_matches)
+    }
+
+    private boolean exactMatches(Map matchForm, Map bNode) {
+        if (matchForm == null || bNode == null) {
+            return false
+        }
+        matchForm = new HashMap(matchForm)
+        bNode = new HashMap(bNode)
+        if (asList(matchForm.remove(_MATCH)).contains(BASE_TYPE)) {
+            String aType = matchForm[TYPE_KEY]
+            String bType = bNode[TYPE_KEY]
+            if ((baseTypeMappings[aType] + aType).contains(bType)) {
+                matchForm.remove(TYPE_KEY)
+                bNode.remove(TYPE_KEY)
+            } else {
+                return false
+            }
+        }
+        if (matchForm[TYPE_KEY] == ANY_TYPE) {
+            matchForm.remove(TYPE_KEY)
+            bNode.remove(TYPE_KEY)
+        }
+        def ids = nodeIdMappings[matchForm.remove(_ID)]
+        if (ids && !ids.contains(bNode[ID_KEY])) {
+            return false
+        }
+        matchForm.remove(_ID_LIST)
+        if (matchForm.size() != bNode.size()) {
+            return false
+        }
+        return comparator.isEqual(matchForm, bNode, this::exactMatches)
     }
 
     // Need a better name for this...
@@ -496,26 +404,15 @@ class Transform {
         List<String> propertyPath
         Map form
         List<Change> changeList
-        private MatchingMode matchingMode
 
-        ChangesForNode(List<String> propertyPath, Map form, List<Change> changeList, MatchingMode matchingMode) {
+        ChangesForNode(List<String> propertyPath, Map form, List<Change> changeList) {
             this.propertyPath = propertyPath
             this.form = form
             this.changeList = changeList
-            this.matchingMode = matchingMode
         }
 
         boolean matches(Map node) {
-            return formMatches(node) && removeMatches(node)
-        }
-
-        private formMatches(Map node) {
-            getFormVariants(form).any { f ->
-                switch (matchingMode) {
-                    case MatchingMode.EXACT: return isEqual(f, node)
-                    case MatchingMode.SUBSET: return isSubset(f, node)
-                }
-            }
+            return matches(form, node) && removeMatches(node)
         }
 
         private removeMatches(Map node) {
@@ -542,15 +439,14 @@ class Transform {
         String property() {
             return propertyPath().last()
         }
+
+        abstract boolean matches(Object o)
     }
 
     class Remove extends Change {
-        private final MatchingMode matchingMode
-
-        Remove(List path, Object value, MatchingMode matchingMode) {
+        Remove(List path, Object value) {
             this.path = path
             this.value = value
-            this.matchingMode = matchingMode
         }
 
         boolean matches(String property, Object o) {
@@ -558,15 +454,7 @@ class Transform {
         }
 
         boolean matches(Object o) {
-            if (property() == TYPE_KEY && value == ANY_TYPE) {
-                return true
-            }
-            return (value instanceof Map ? getFormVariants(value) : [value]).any { v ->
-                switch (matchingMode) {
-                    case MatchingMode.EXACT: return isEqual(v, o)
-                    case MatchingMode.SUBSET: return isSubset(v, o)
-                }
-            }
+            return Transform.this.matches(value, o) || (property() == TYPE_KEY && value == ANY_TYPE)
         }
     }
 
@@ -575,6 +463,14 @@ class Transform {
         Add(List path, Object value) {
             this.path = path
             this.value = value
+        }
+
+        Add(Object value) {
+            this(null, value)
+        }
+
+        boolean matches(Object o) {
+            return comparator.isEqual(["x": value], ["x": o])
         }
     }
 

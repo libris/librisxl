@@ -2,15 +2,16 @@ package whelk.datatool.form
 
 
 import whelk.Document
+import whelk.datatool.util.DocumentComparator
 import whelk.util.DocumentUtil
 
-import static whelk.datatool.form.Transform.isSubset
-import static whelk.datatool.form.Transform.isEqual
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.asList
 import static whelk.util.DocumentUtil.getAtPath
 
 class ModifiedThing {
+    private static final DocumentComparator comparator = new DocumentComparator()
+
     private final Transform transform
     private final Set<String> repeatableTerms
 
@@ -25,15 +26,11 @@ class ModifiedThing {
     }
 
     boolean isModified() {
-        return !isEqual(before, after)
+        return !comparator.isEqual(before, after)
     }
 
     private Map modify(Map thing) {
         if (!transform.matches(thing)) {
-            return thing
-        }
-
-        if (!transform.getMatchFormVariants().any { isMatch(it, thing) }) {
             return thing
         }
 
@@ -73,17 +70,6 @@ class ModifiedThing {
         }
     }
 
-    boolean isMatch(Map form, Map thing) {
-        if (!isSubset(form, thing)) {
-            return false
-        }
-        return transform.exactMatchPaths.every { ep ->
-            getAtPath(thing, ep.findAll { it instanceof String }, [], false)
-                    .with { asList(it) }
-                    .any { isEqual(getAtPath(form, ep), it) }
-        }
-    }
-
     private void executeModification(Map node, String property, List<Transform.Remove> valuesToRemove,
                                      List<Transform.Add> valuesToAdd) {
         if (!valuesToRemove.isEmpty() && !valuesToAdd.isEmpty()) {
@@ -107,21 +93,21 @@ class ModifiedThing {
     }
 
     private void add(Map node, String property, List<Transform.Add> valuesToAdd) {
-        addRecursive(node, property, valuesToAdd.collect { it.value })
+        addRecursive(node, property, valuesToAdd)
     }
 
-    private void addRecursive(Map node, String property, List valuesToAdd) {
+    private void addRecursive(Map node, String property, List<Transform.Add> valuesToAdd) {
         def current = node[property]
 
-        for (value in valuesToAdd) {
-            if (!asList(current).any { isEqual(value, it) }) {
+        for (add in valuesToAdd) {
+            if (!asList(current).any { add.matches(it) }) {
                 if (current == null) {
-                    current = property in repeatableTerms ? [value] : value
+                    current = property in repeatableTerms ? [add.value] : add.value
                 } else if (property in repeatableTerms) {
-                    current = asList(current) + value
-                } else if (current instanceof Map && value instanceof Map) {
-                    ((Map) value).each { k, v ->
-                        addRecursive((Map) current, (String) k, asList(v))
+                    current = asList(current) + add.value
+                } else if (current instanceof Map && add.value instanceof Map) {
+                    ((Map) add.value).each { k, v ->
+                        addRecursive((Map) current, (String) k, asList(v).collect { new Transform.Add(it) })
                     }
                 } else {
                     throw new Exception("Property $property is not repeatable.")
@@ -142,9 +128,8 @@ class ModifiedThing {
         removeAt.reverse().each { n ->
             current.remove(n.intValue())
         }
-        valuesToAdd.collect { it.value }
-                .findAll { v -> !current.any { isEqual(it, v) } }
-                .eachWithIndex { v, i -> current.add(insertAt + i, v) }
+        valuesToAdd.findAll { v -> !current.any { v.matches(it) } }
+                .eachWithIndex { v, i -> current.add(insertAt + i, v.value) }
 
         node[property] = current.size() == 1 && !repeatableTerms.contains(property)
                 ? current.first()
