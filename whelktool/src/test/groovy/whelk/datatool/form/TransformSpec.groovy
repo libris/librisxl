@@ -61,7 +61,7 @@ class TransformSpec extends Specification {
     def "form to sparql pattern: null/empty value"() {
         given:
         def form = ['_id': '#1', 'p1': v]
-        def expectedPattern = "?graph :mainEntity ?1 .\n\n?1 :p1 [] ."
+        def expectedPattern = "?graph :mainEntity ?1 .\n\n?1 :p1 [ ] ."
 
         expect:
         new Transform.MatchForm(form).getSparqlPattern(context) == expectedPattern
@@ -72,8 +72,8 @@ class TransformSpec extends Specification {
 
     def "form to sparql pattern: nested null/empty value"() {
         given:
-        def form = ['_id': '#1', 'p1': ['p2': v]]
-        def expectedPattern = "?graph :mainEntity ?1 .\n\n?1 :p1 [ :p2 [] ] ."
+        def form = ['_id': '#1', 'p1': ['_id': '#2', 'p2': v]]
+        def expectedPattern = "?graph :mainEntity ?1 .\n\n?1 :p1 [ :p2 [ ] ] ."
 
         expect:
         new Transform.MatchForm(form).getSparqlPattern(context) == expectedPattern
@@ -130,16 +130,16 @@ class TransformSpec extends Specification {
     def "form to sparql pattern: unspecified types"() {
         given:
         def form = [
-                '_id'  : '#1',
-                '@type': 'Any',
-                'p1'   : ['_id': '#2', '@type': 'Any'],
-                'p2'   : ['_id': '#3', '@type': 'Any', 'p': 'v'],
-                'marc:p'   : ['_id': '#4', '@type': 'marc:T', 'p': 'v']
+                '_id'   : '#1',
+                '@type' : 'Any',
+                'p1'    : ['_id': '#2', '@type': 'Any'],
+                'p2'    : ['_id': '#3', '@type': 'Any', 'p': 'v'],
+                'marc:p': ['_id': '#4', '@type': 'marc:T', 'p': 'v']
         ]
 
         def expectedPattern = "?graph :mainEntity ?1 .\n" +
                 "\n" +
-                "?1 :p1 [] ;\n" +
+                "?1 :p1 [ ] ;\n" +
                 "  :p2 [ :p \"v\" ] ;\n" +
                 "  marc:p [ a marc:T ;\n" +
                 "      :p \"v\" ] ."
@@ -148,19 +148,50 @@ class TransformSpec extends Specification {
         new Transform.MatchForm(form).getSparqlPattern(context) == expectedPattern
     }
 
-    def "is equal"() {
+    def "form to sparql pattern: base types"() {
         given:
-        def a = ["p": ["x": "y"]]
-        def b = ["p": ["@type": "t1", "x": "y"]]
-        def c = ["p": ["@type": "t2", "x": "y"]]
+        def form = [
+                '_id'   : '#1',
+                '@type' : 'T1',
+                '_match': ['Subtypes']
+        ]
+
+        def expectedPattern = "VALUES ?T1 { :T1 :T1x :T1y :T1z }\n" +
+                "?graph :mainEntity ?1 .\n" +
+                "\n" +
+                "?1 a ?T1 ."
+
+        def transform = new Transform.MatchForm(form)
+        transform.baseTypeMappings['T1'] = ['T1x', 'T1y', 'T1z'] as Set
 
         expect:
-        Transform.isEqual(a, b)
-        Transform.isEqual(b, a)
-        Transform.isEqual(a, c)
-        !Transform.isEqual(b, c)
-        Transform.isEqual(["p": [["a": "b"], a]], ["p": [a, ["a": "b"]]])
-        Transform.isEqual(["p": [["a":"b"], a]], ["p": [b, ["a":"b"]]])
-        !Transform.isEqual(["p": [["a":"b"], c]], ["p": [b, ["a":"b"]]])
+        transform.getSparqlPattern(context) == expectedPattern
+    }
+
+    def "match data against form"() {
+        given:
+        def transform = new Transform()
+        transform.nodeIdMappings = ["#1": ["https://libris.kb.se/x#it", "https://libris.kb.se/y#it"] as Set]
+        transform.baseTypeMappings = ["T": ["Tx", "Ty"] as Set]
+
+        expect:
+        transform.matches(matchForm, node) == result
+
+        where:
+        matchForm                                                 | node                                        | result
+        "a"                                                       | "a"                                         | true
+        "a"                                                       | "b"                                         | false
+        "a"                                                       | ["a", "b"]                                  | true
+        ["x": "a"]                                                | ["x": ["a", "b"]]                           | true
+        ["x": "a", "_match": ["Exact"]]                           | ["x": ["a", "b"]]                           | false
+        ["x": ["a", "b"], "_match": ["Exact"]]                    | ["x": ["a", "b"]]                           | true
+        ["@type": "T", "_match": ["Subtypes"], "a": "b"]          | ["@type": "Tx", "a": "b"]                   | true
+        ["@type": "T", "a": "b"]                                  | ["@type": "Tx", "a": "b"]                   | false
+        ["@type": "T", "_match": ["Subtypes", "Exact"], "a": "b"] | ["@type": "Ty", "a": "b"]                   | true
+        ["@type": "T", "_match": ["Subtypes", "Exact"], "a": "b"] | ["@type": "Ty", "a": "b", "c": "d"]         | false
+        ["@type": "Any", "a": "b"]                                | ["@type": "T", "a": "b", "c": "d"]          | true
+        ["@type": "Any", "a": "b", "_match": ["Exact"]]           | ["@type": "T", "a": "b", "c": "d"]          | false
+        ["x": ["_id": "#1"]]                                      | ["x": ["@id": "https://libris.kb.se/y#it"]] | true
+        ["x": ["_id": "#1"]]                                      | ["x": ["@id": "https://libris.kb.se/z#it"]] | false
     }
 }
