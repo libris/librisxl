@@ -200,6 +200,9 @@ class Transform {
                 }
                 return new DocumentUtil.Nop()
             }
+            if (asList(node).isEmpty()) {
+                return new DocumentUtil.Replace([:])
+            }
         }
 
         return matchFormCopy
