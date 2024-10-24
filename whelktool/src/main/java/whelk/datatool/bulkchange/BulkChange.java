@@ -41,7 +41,8 @@ public class BulkChange implements Runnable {
 
     public enum Type {
         BulkChange,
-        FormSpecification
+        FormSpecification,
+        DeleteSpecification
     }
 
     public enum Prop {
@@ -90,7 +91,7 @@ public class BulkChange implements Runnable {
                 scriptLog.println();
 
                 logger.info(String.format("Running %s: %s", Type.BulkChange, id));
-                
+
                 tool.run();
 
                 storeUpdate(doc -> new BulkChangeDocument(doc.data).setStatus(Status.CompletedBulkChange));
@@ -104,21 +105,27 @@ public class BulkChange implements Runnable {
     }
 
     WhelkTool buildWhelkTool(BulkChangeDocument changeDoc, String changeAgent) {
-        return switch (changeDoc.getSpecification()) {
-            case BulkChangeDocument.FormSpecification formSpecification -> {
-                Script script = new Script(loadClasspathScriptSource("form.groovy"), id);
-                WhelkTool tool = new WhelkTool(whelk, script, reportDir(systemId), WhelkTool.getDEFAULT_STATS_NUM_IDS());
-                // TODO for now setting changedBy only works for loud changes (!minorChange in PostgreSQLComponent)
-                tool.setDefaultChangedBy(changeAgent);
-                tool.setScriptParams(Map.of(
-                        Prop.matchForm, formSpecification.matchForm(),
-                        Prop.targetForm, formSpecification.targetForm()
-                ));
-                tool.setAllowLoud(changeDoc.isLoud());
-                tool.setNoThreads(false);
-                yield tool;
-            }
+        record ScriptData(String fileName, Map<Object, Object> params) {}
+
+        ScriptData scriptData = switch (changeDoc.getSpecification()) {
+            case BulkChangeDocument.FormSpecification formSpecification ->
+                    new ScriptData("transform.groovy",
+                            Map.of(Prop.matchForm, formSpecification.matchForm(), Prop.targetForm, formSpecification.targetForm())
+            );
+            case BulkChangeDocument.DeleteSpecification deleteSpecification ->
+                    new ScriptData("delete.groovy", Map.of(Prop.matchForm, deleteSpecification.matchForm())
+            );
         };
+
+        Script script = new Script(loadClasspathScriptSource(scriptData.fileName()), id);
+        WhelkTool tool = new WhelkTool(whelk, script, reportDir(systemId), WhelkTool.getDEFAULT_STATS_NUM_IDS());
+        // TODO for now setting changedBy only works for loud changes (!minorChange in PostgreSQLComponent)
+        tool.setDefaultChangedBy(changeAgent);
+        tool.setScriptParams(scriptData.params());
+        tool.setAllowLoud(changeDoc.isLoud());
+        tool.setNoThreads(false);
+
+        return tool;
     }
 
     BulkChangeDocument loadDocument() {
