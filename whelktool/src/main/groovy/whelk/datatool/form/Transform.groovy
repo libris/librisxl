@@ -488,5 +488,10 @@ class Transform {
         MatchForm(Map matchForm) {
             this(matchForm, null)
         }
+
+        @Override
+        List<Map> getChangeSets() {
+            return []
+        }
     }
 }

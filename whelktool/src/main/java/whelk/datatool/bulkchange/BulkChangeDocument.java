@@ -3,10 +3,8 @@ package whelk.datatool.bulkchange;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.exception.ModelValidationException;
-import whelk.search2.parse.Ast;
 import whelk.util.DocumentUtil;
 
-import javax.print.Doc;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -16,13 +14,16 @@ import static whelk.datatool.bulkchange.BulkChange.Prop.bulkChangeSpecification;
 import static whelk.datatool.bulkchange.BulkChange.Prop.bulkChangeStatus;
 import static whelk.datatool.bulkchange.BulkChange.Prop.comment;
 import static whelk.datatool.bulkchange.BulkChange.Prop.label;
+import static whelk.datatool.bulkchange.BulkChange.Type.FormSpecification;
+import static whelk.datatool.bulkchange.BulkChange.Type.DeleteSpecification;
 
 public class BulkChangeDocument extends Document {
 
-    public sealed interface Specification permits FormSpecification {
+    public sealed interface Specification permits FormSpecification, DeleteSpecification {
     }
 
     public record FormSpecification(Map<String, Object> matchForm, Map<String, Object> targetForm) implements Specification { }
+    public record DeleteSpecification(Map<String, Object> matchForm) implements Specification { }
 
     private static final List<Object> STATUS_PATH = List.of(JsonLd.GRAPH_KEY, 1, bulkChangeStatus.toString()); // FIXME used in _set so can't use enum directly
     private static final List<Object> META_PATH = List.of(JsonLd.GRAPH_KEY, 1, bulkChangeMetaChanges);
@@ -76,10 +77,16 @@ public class BulkChangeDocument extends Document {
             throw new ModelValidationException("Nothing in " + SPECIFICATION_PATH);
         }
 
-        if (BulkChange.Type.FormSpecification.toString().equals(spec.get(JsonLd.TYPE_KEY))) {
+        var specType = spec.get(JsonLd.TYPE_KEY);
+
+        if (FormSpecification.toString().equals(specType)) {
             return new FormSpecification(
                     get(spec, List.of(BulkChange.Prop.matchForm.toString()), Collections.emptyMap()),
                     get(spec, List.of(BulkChange.Prop.targetForm.toString()), Collections.emptyMap())
+            );
+        } else if (DeleteSpecification.toString().equals(specType)) {
+            return new DeleteSpecification(
+                    get(spec, List.of(BulkChange.Prop.matchForm.toString()), Collections.emptyMap())
             );
         }
 

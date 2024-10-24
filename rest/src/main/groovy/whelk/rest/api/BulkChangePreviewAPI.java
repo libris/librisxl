@@ -16,10 +16,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.RECORD_KEY;
@@ -59,43 +60,44 @@ public class BulkChangePreviewAPI extends HttpServlet {
             Map<Object, Object> result = new LinkedHashMap<>();
             result.put(JsonLd.TYPE_KEY, BULK_CHANGE_PREVIEW_TYPE);
 
-            switch (changeDoc.getSpecification()) {
-                case BulkChangeDocument.FormSpecification formSpecification -> {
-                    var transform = new Transform(formSpecification.matchForm(), formSpecification.targetForm(), whelk);
+            var transform = switch (changeDoc.getSpecification()) {
+                case BulkChangeDocument.FormSpecification formSpecification ->
+                        new Transform(formSpecification.matchForm(), formSpecification.targetForm(), whelk);
+                case BulkChangeDocument.DeleteSpecification deleteSpecification ->
+                        new Transform.MatchForm(deleteSpecification.matchForm(), whelk);
+            };
 
-                    // TODO use COUNT + LIMIT & OFFSET and don't fetch all ids every time
-                    var sparqlPattern = transform.getSparqlPattern(whelk.getJsonld().context);
-                    var ids = whelk.getSparqlQueryClient().queryIdsByPattern(sparqlPattern).stream().sorted().toList();
+            // TODO use COUNT + LIMIT & OFFSET and don't fetch all ids every time
+            var sparqlPattern = transform.getSparqlPattern(whelk.getJsonld().context);
+            var ids = whelk.getSparqlQueryClient().queryIdsByPattern(sparqlPattern).stream().sorted().toList();
 
-                    var itemIds = slice(ids, offset, offset + limit);
-                    var items = whelk.bulkLoad(itemIds)
-                            .values()
-                            .stream()
-                            .map(doc -> makePreviewChangeSet(doc, transform))
-                            .toList();
+            var itemIds = slice(ids, offset, offset + limit);
+            var items = whelk.bulkLoad(itemIds)
+                    .values()
+                    .stream()
+                    .map(doc -> makePreviewChangeSet(doc, transform))
+                    .toList();
 
-                    int totalItems = ids.size();
-                    Offsets offsets = new Offsets(totalItems, limit, offset);
-                    result.putAll(makeLink(id, offset, limit));
-                    if (offsets.hasFirst()) {
-                        result.put("first", makeLink(id, offsets.first, limit));
-                    }
-                    if (offsets.hasNext()) {
-                        result.put("next", makeLink(id, offsets.next, limit));
-                    }
-                    if (offsets.hasPrev()) {
-                        result.put("prev", makeLink(id, offsets.prev, limit));
-                    }
-                    if (offsets.hasLast()) {
-                        result.put("last", makeLink(id, offsets.last, limit));
-                    }
-                    result.put("itemOffset", offset);
-                    result.put("itemsPerPage", limit);
-                    result.put("totalItems", totalItems);
-                    result.put("changeSets", transform.getChangeSets());
-                    result.put("items", items);
-                }
+            int totalItems = ids.size();
+            Offsets offsets = new Offsets(totalItems, limit, offset);
+            result.putAll(makeLink(id, offset, limit));
+            if (offsets.hasFirst()) {
+                result.put("first", makeLink(id, offsets.first, limit));
             }
+            if (offsets.hasNext()) {
+                result.put("next", makeLink(id, offsets.next, limit));
+            }
+            if (offsets.hasPrev()) {
+                result.put("prev", makeLink(id, offsets.prev, limit));
+            }
+            if (offsets.hasLast()) {
+                result.put("last", makeLink(id, offsets.last, limit));
+            }
+            result.put("itemOffset", offset);
+            result.put("itemsPerPage", limit);
+            result.put("totalItems", totalItems);
+            result.put("changeSets", transform.getChangeSets());
+            result.put("items", items);
 
             // TODO support turtle etc?
             HttpTools.sendResponse(response, result, (String) MimeTypes.getJSONLD());
@@ -126,20 +128,32 @@ public class BulkChangePreviewAPI extends HttpServlet {
         // Remove @id from record to prevent from being shown as a link in the diff view
         record.remove(ID_KEY);
         thing.put(RECORD_KEY, record);
+        if (transform instanceof Transform.MatchForm) {
+            var result = getChangeSetsMap(List.of(doc));
+            ((Map<String,Object>) DocumentUtil.getAtPath(result, List.of("changeSets", 0))).put("version", doc.getThing());
+            return result;
+        }
         var modified = new ModifiedThing(thing, transform, whelk.getJsonld().repeatableTerms);
         var beforeDoc = doc.clone();
         var afterDoc = doc.clone();
         ((List<Map<?,?>>) beforeDoc.data.get(JsonLd.GRAPH_KEY)).set(1, modified.getBefore());
         ((List<Map<?,?>>) afterDoc.data.get(JsonLd.GRAPH_KEY)).set(1, modified.getAfter());
-        History history = new History(List.of(
-                new DocumentVersion(beforeDoc, "", ""),
-                new DocumentVersion(afterDoc, "", "")
-        ), whelk.getJsonld());
-        var result = history.m_changeSetsMap;
-        result.put(ID_KEY, beforeDoc.getCompleteId());
+        var result = getChangeSetsMap(List.of(beforeDoc, afterDoc));
         ((Map<String,Object>) DocumentUtil.getAtPath(result, List.of("changeSets", 0))).put("version", modified.getBefore());
         ((Map<String,Object>) DocumentUtil.getAtPath(result, List.of("changeSets", 1))).put("version", modified.getAfter());
 
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<?, ?> getChangeSetsMap(List<Document> docs) {
+        var beforeDoc = docs.getFirst();
+        var versions = docs.stream()
+                .map(version -> new DocumentVersion(version, "", ""))
+                .toList();
+        History history = new History(versions, whelk.getJsonld());
+        var result = history.m_changeSetsMap;
+        result.put(ID_KEY, beforeDoc.getCompleteId());
         return result;
     }
 
