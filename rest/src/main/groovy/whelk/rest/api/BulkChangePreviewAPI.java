@@ -19,8 +19,6 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.RECORD_KEY;
