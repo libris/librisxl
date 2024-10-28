@@ -3,7 +3,7 @@ package whelk.rest.api;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
-import whelk.datatool.bulkchange.BulkChangeDocument;
+import whelk.datatool.bulkchange.BulkJobDocument;
 import whelk.datatool.form.Transform;
 import whelk.datatool.form.ModifiedThing;
 import whelk.history.DocumentVersion;
@@ -16,7 +16,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,8 +59,8 @@ public class BulkChangePreviewAPI extends HttpServlet {
             result.put(JsonLd.TYPE_KEY, BULK_CHANGE_PREVIEW_TYPE);
 
             switch (changeDoc.getSpecification()) {
-                case BulkChangeDocument.FormSpecification formSpecification -> {
-                    var transform = new Transform(formSpecification.matchForm(), formSpecification.targetForm(), whelk);
+                case BulkJobDocument.Update spec -> {
+                    var transform = new Transform(spec.matchForm(), spec.targetForm(), whelk);
 
                     // TODO use COUNT + LIMIT & OFFSET and don't fetch all ids every time
                     var sparqlPattern = transform.getSparqlPattern(whelk.getJsonld().context);
@@ -94,6 +93,10 @@ public class BulkChangePreviewAPI extends HttpServlet {
                     result.put("totalItems", totalItems);
                     result.put("changeSets", transform.getChangeSets());
                     result.put("items", items);
+                }
+                case BulkJobDocument.Create spec -> {
+                }
+                case BulkJobDocument.Delete spec -> {
                 }
             }
 
@@ -149,13 +152,13 @@ public class BulkChangePreviewAPI extends HttpServlet {
         return l.subList(fromIx, toIx);
     }
 
-    private BulkChangeDocument load(String id) {
+    private BulkJobDocument load(String id) {
         Document doc = whelk.getDocument(id);
         if (doc == null) {
             throw new Crud.NotFoundException("Document not found");
         }
         try {
-            return new BulkChangeDocument(doc.data);
+            return new BulkJobDocument(doc.data);
         } catch (IllegalArgumentException e) {
             throw new BadRequestException(e.getMessage());
         }

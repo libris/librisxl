@@ -1,7 +1,7 @@
 package whelk.housekeeping;
 
 import whelk.Document;
-import whelk.datatool.bulkchange.BulkChange;
+import whelk.datatool.bulkchange.Bulk;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import whelk.JsonLd;
@@ -41,8 +41,8 @@ public class BulkChangeRunner extends HouseKeeper {
         logger.info(BulkChangeRunner.class.getSimpleName());
         try {
             var query = Map.of(
-                    JsonLd.TYPE_KEY, List.of(BulkChange.Type.BulkChange.toString()),
-                    BulkChange.Prop.bulkChangeStatus.toString(), List.of(BulkChange.Status.ReadyBulkChange.toString())
+                    JsonLd.TYPE_KEY, List.of(Bulk.Other.Job.toString()),
+                    Bulk.Other.status.toString(), List.of(Bulk.Status.Ready.toString())
             );
 
             find.findIds(query).forEach(this::run);
@@ -55,6 +55,6 @@ public class BulkChangeRunner extends HouseKeeper {
     private void run(String systemId) {
         String id = Document.getBASE_URI() + systemId + Document.HASH_IT;
         // TODO Improve housekeeping task execution, start, stop etc etc
-        new Thread(threadGroup, new BulkChange(whelk, id)).start();
+        new Thread(threadGroup, new Bulk(whelk, id)).start();
     }
 }

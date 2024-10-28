@@ -4,8 +4,7 @@ import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.JsonLd
 import whelk.datatool.bulkchange.BulkAccessControl
-import whelk.datatool.bulkchange.BulkChange
-import whelk.datatool.bulkchange.BulkChangeDocument
+import whelk.datatool.bulkchange.Bulk
 import whelk.exception.ModelValidationException
 import whelk.util.LegacyIntegrationTools
 
@@ -50,7 +49,7 @@ class AccessControl {
             }
 
         }
-        else if (oldDoc.getThingType() == BulkChange.Type.BulkChange.toString()) {
+        else if (oldDoc.getThingType() == Bulk.Other.Job.toString()) {
             BulkAccessControl.verify(oldDoc, newDoc)
         }
 
@@ -80,7 +79,7 @@ class AccessControl {
             String ownedBySigel = LegacyIntegrationTools.uriToLegacySigel(document.getDescriptionCreator())
             return hasGlobalRegistrantPermission(userPrivileges) || hasPermissionForSigel(ownedBySigel, userPrivileges)
         }
-        else if (document.getThingType() == BulkChange.Type.BulkChange.toString()) {
+        else if (document.getThingType() == Bulk.Other.Job.toString()) {
             // TODO step 1, new specific sigel instead
             // TODO step 2, configure as permission on user instead (in libris login)
             return hasPermissionForSigel("SEK", userPrivileges)

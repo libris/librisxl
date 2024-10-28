@@ -1,5 +1,5 @@
-import static whelk.datatool.bulkchange.BulkChange.Prop.matchForm
-import static whelk.datatool.bulkchange.BulkChange.Prop.targetForm
+import static whelk.datatool.bulkchange.Bulk.Other.matchForm
+import static whelk.datatool.bulkchange.Bulk.Other.targetForm
 
 Map matchForm = parameters.get(matchForm)
 Map targetForm = parameters.get(targetForm)

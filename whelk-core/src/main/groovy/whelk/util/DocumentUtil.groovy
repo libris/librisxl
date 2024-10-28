@@ -101,6 +101,9 @@ class DocumentUtil {
 
         for (int i = 0; i < path.size(); i++) {
             def p = path[i]
+            if (p instanceof JsonLdKey) {
+                p = p.key()
+            }
             if (p instanceof Enum) {
                 p = p.toString()
             }
