@@ -6,11 +6,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import whelk.JsonLd;
 import whelk.Whelk;
+import whelk.datatool.bulkchange.Bulk.Other;
 import whelk.search.ESQuery;
 import whelk.search.ElasticFind;
 
 import java.util.List;
 import java.util.Map;
+
+import static whelk.datatool.bulkchange.Bulk.Other.Job;
+import static whelk.datatool.bulkchange.Bulk.Other.status;
+import static whelk.datatool.bulkchange.Bulk.Status.Ready;
 
 public class BulkChangeRunner extends HouseKeeper {
     private static final Logger logger = LogManager.getLogger(BulkChangeRunner.class);
@@ -41,8 +46,8 @@ public class BulkChangeRunner extends HouseKeeper {
         logger.info(BulkChangeRunner.class.getSimpleName());
         try {
             var query = Map.of(
-                    JsonLd.TYPE_KEY, List.of(Bulk.Other.Job.toString()),
-                    Bulk.Other.status.toString(), List.of(Bulk.Status.Ready.toString())
+                    JsonLd.TYPE_KEY, List.of(Job.key()),
+                    Other.status.key(), List.of(Ready.key())
             );
 
             find.findIds(query).forEach(this::run);
