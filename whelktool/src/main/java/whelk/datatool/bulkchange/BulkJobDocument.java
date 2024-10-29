@@ -12,6 +12,7 @@ import java.util.Map;
 
 import static whelk.util.JsonLdKey.fromKey;
 
+// All terms are defined in https://github.com/libris/definitions/blob/develop/source/vocab/platform.ttl
 public class BulkJobDocument extends Document {
 
     public enum SpecType implements JsonLdKey {
@@ -59,7 +60,7 @@ public class BulkJobDocument extends Document {
     public static final String COMMENT_KEY = "comment";
     public static final String LABEL_KEY = "label";
 
-    private static final List<Object> STATUS_PATH = List.of(JsonLd.GRAPH_KEY, 1, STATUS_KEY); // FIXME used in _set so can't use enum directly
+    private static final List<Object> STATUS_PATH = List.of(JsonLd.GRAPH_KEY, 1, STATUS_KEY);
     private static final List<Object> UPDATE_TIMESTAMP_PATH = List.of(JsonLd.GRAPH_KEY, 1, SHOULD_UPDATE_TIMESTAMP_KEY);
     private static final List<Object> LABELS_PATH = List.of(JsonLd.GRAPH_KEY, 1, LABEL_KEY, "*");
     private static final List<Object> COMMENTS_PATH = List.of(JsonLd.GRAPH_KEY, 1, COMMENT_KEY, "*");
