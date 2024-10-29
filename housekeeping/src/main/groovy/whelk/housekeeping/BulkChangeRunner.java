@@ -1,21 +1,20 @@
 package whelk.housekeeping;
 
-import whelk.Document;
-import whelk.datatool.bulkchange.Bulk;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
-import whelk.datatool.bulkchange.Bulk.Other;
+import whelk.datatool.bulkchange.BulkJob;
 import whelk.search.ESQuery;
 import whelk.search.ElasticFind;
 
 import java.util.List;
 import java.util.Map;
 
-import static whelk.datatool.bulkchange.Bulk.Other.Job;
-import static whelk.datatool.bulkchange.Bulk.Other.status;
-import static whelk.datatool.bulkchange.Bulk.Status.Ready;
+import static whelk.datatool.bulkchange.BulkJobDocument.Status.Ready;
+import static whelk.datatool.bulkchange.BulkJobDocument.JOB_TYPE;
+import static whelk.datatool.bulkchange.BulkJobDocument.STATUS_KEY;
 
 public class BulkChangeRunner extends HouseKeeper {
     private static final Logger logger = LogManager.getLogger(BulkChangeRunner.class);
@@ -46,8 +45,8 @@ public class BulkChangeRunner extends HouseKeeper {
         logger.info(BulkChangeRunner.class.getSimpleName());
         try {
             var query = Map.of(
-                    JsonLd.TYPE_KEY, List.of(Job.key()),
-                    Other.status.key(), List.of(Ready.key())
+                    JsonLd.TYPE_KEY, List.of(JOB_TYPE),
+                    STATUS_KEY, List.of(Ready.key())
             );
 
             find.findIds(query).forEach(this::run);
@@ -60,6 +59,6 @@ public class BulkChangeRunner extends HouseKeeper {
     private void run(String systemId) {
         String id = Document.getBASE_URI() + systemId + Document.HASH_IT;
         // TODO Improve housekeeping task execution, start, stop etc etc
-        new Thread(threadGroup, new Bulk(whelk, id)).start();
+        new Thread(threadGroup, new BulkJob(whelk, id)).start();
     }
 }

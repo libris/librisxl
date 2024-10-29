@@ -2,8 +2,6 @@ package whelk.datatool.bulkchange;
 
 import whelk.Document;
 import whelk.JsonLd;
-import whelk.datatool.bulkchange.Bulk.Spec;
-import whelk.datatool.bulkchange.Bulk.Status;
 import whelk.exception.ModelValidationException;
 import whelk.util.DocumentUtil;
 import whelk.util.JsonLdKey;
@@ -12,16 +10,45 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static whelk.datatool.bulkchange.Bulk.Other.changeSpec;
-import static whelk.datatool.bulkchange.Bulk.Other.comment;
-import static whelk.datatool.bulkchange.Bulk.Other.label;
-import static whelk.datatool.bulkchange.Bulk.Other.matchForm;
-import static whelk.datatool.bulkchange.Bulk.Other.shouldUpdateModifiedTimestamp;
-import static whelk.datatool.bulkchange.Bulk.Other.status;
-import static whelk.datatool.bulkchange.Bulk.Other.targetForm;
 import static whelk.util.JsonLdKey.fromKey;
 
 public class BulkJobDocument extends Document {
+
+    public enum SpecType implements JsonLdKey {
+        Update("bulk:Update"),
+        Delete("bulk:Delete"),
+        Create("bulk:Create");
+
+        private final String key;
+
+        SpecType(String key) {
+            this.key = key;
+        }
+
+        @Override
+        public String key() {
+            return key;
+        }
+    }
+
+    public enum Status implements JsonLdKey {
+        Draft("bulk:Draft"),
+        Ready("bulk:Ready"),
+        Running("bulk:Running"),
+        Completed("bulk:Completed"),
+        Failed("bulk:Failed");
+
+        private final String key;
+
+        Status(String key) {
+            this.key = key;
+        }
+
+        @Override
+        public String key() {
+            return key;
+        }
+    }
 
     public sealed interface Specification permits Update, Create, Delete {
     }
@@ -30,11 +57,20 @@ public class BulkJobDocument extends Document {
     public record Create(Map<String, Object> targetForm) implements Specification { }
     public record Delete(Map<String, Object> matchForm) implements Specification { }
 
-    private static final List<Object> STATUS_PATH = List.of(JsonLd.GRAPH_KEY, 1, status.key()); // FIXME used in _set so can't use enum directly
-    private static final List<Object> UPDATE_TIMESTAMP_PATH = List.of(JsonLd.GRAPH_KEY, 1, shouldUpdateModifiedTimestamp);
-    private static final List<Object> LABELS_PATH = List.of(JsonLd.GRAPH_KEY, 1, label, "*");
-    private static final List<Object> COMMENTS_PATH = List.of(JsonLd.GRAPH_KEY, 1, comment, "*");
-    private static final List<Object> SPECIFICATION_PATH = List.of(JsonLd.GRAPH_KEY, 1, changeSpec);
+    public static final String JOB_TYPE = "bulk:Job";
+    public static final String STATUS_KEY = "bulk:status";
+    public static final String CHANGE_SPEC_KEY = "bulk:changeSpec";
+    public static final String SHOULD_UPDATE_TIMESTAMP_KEY = "bulk:shouldUpdateModifiedTimestamp";
+    public static final String MATCH_FORM_KEY = "bulk:matchForm";
+    public static final String TARGET_FORM_KEY = "bulk:targetForm";
+    public static final String COMMENT_KEY = "comment";
+    public static final String LABEL_KEY = "label";
+
+    private static final List<Object> STATUS_PATH = List.of(JsonLd.GRAPH_KEY, 1, STATUS_KEY); // FIXME used in _set so can't use enum directly
+    private static final List<Object> UPDATE_TIMESTAMP_PATH = List.of(JsonLd.GRAPH_KEY, 1, SHOULD_UPDATE_TIMESTAMP_KEY);
+    private static final List<Object> LABELS_PATH = List.of(JsonLd.GRAPH_KEY, 1, LABEL_KEY, "*");
+    private static final List<Object> COMMENTS_PATH = List.of(JsonLd.GRAPH_KEY, 1, COMMENT_KEY, "*");
+    private static final List<Object> SPECIFICATION_PATH = List.of(JsonLd.GRAPH_KEY, 1, CHANGE_SPEC_KEY);
 
     public BulkJobDocument(Document doc) {
         this(doc.data);
@@ -43,8 +79,8 @@ public class BulkJobDocument extends Document {
     public BulkJobDocument(Map<?, ?> data) {
         super(data);
 
-        if (!Bulk.Other.Job.toString().equals(getThingType())) {
-            throw new ModelValidationException("Document is not a " + Bulk.Other.Job);
+        if (!JOB_TYPE.equals(getThingType())) {
+            throw new ModelValidationException("Document is not a " + JOB_TYPE);
         }
     }
 
@@ -78,19 +114,20 @@ public class BulkJobDocument extends Document {
             throw new ModelValidationException("Nothing in " + SPECIFICATION_PATH);
         }
 
-        String type = get(spec, JsonLd.TYPE_KEY);
-        return switch(fromKey(Spec.class, type)) {
-            case Spec.Update -> new Update(
-                    get(spec, matchForm, Collections.emptyMap()),
-                    get(spec, targetForm, Collections.emptyMap())
+        String specType = get(spec, JsonLd.TYPE_KEY);
+        return switch(fromKey(SpecType.class, specType)) {
+            case SpecType.Update -> new Update(
+                    get(spec, TARGET_FORM_KEY, Collections.emptyMap()),
+                    get(spec, TARGET_FORM_KEY, Collections.emptyMap())
             );
-            case Spec.Delete -> new Delete(
-                    get(spec, matchForm, Collections.emptyMap())
+            case SpecType.Delete -> new Delete(
+                    get(spec, MATCH_FORM_KEY, Collections.emptyMap())
             );
-            case Spec.Create -> new Create(
-                    get(spec, targetForm, Collections.emptyMap())
+            case SpecType.Create -> new Create(
+                    get(spec, TARGET_FORM_KEY, Collections.emptyMap())
             );
-            case null -> throw new ModelValidationException(String.format("Bad %s: %s", changeSpec, spec));
+            case null -> throw new ModelValidationException(String.format("Bad %s %s: %s",
+                    CHANGE_SPEC_KEY, JsonLd.TYPE_KEY, specType));
         };
     }
 
@@ -112,6 +149,10 @@ public class BulkJobDocument extends Document {
     }
 
     private <T> T get(Object thing, String key) {
+        return get(thing, List.of(key), null);
+    }
+
+    private <T> T get(Object thing, String key, T defaultTo) {
         return get(thing, List.of(key), null);
     }
 }

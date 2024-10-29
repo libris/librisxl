@@ -1,6 +1,5 @@
-import static whelk.datatool.bulkchange.Bulk.Other.matchForm
-import static whelk.datatool.bulkchange.Bulk.Other.targetForm
+import static whelk.datatool.bulkchange.BulkJobDocument.TARGET_FORM_KEY
 
-Map targetForm = parameters.get(targetForm)
+Map targetForm = parameters.get(TARGET_FORM_KEY)
 
 // TODO
