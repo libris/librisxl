@@ -4,6 +4,7 @@ import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.datatool.bulkchange.BulkJobDocument;
+import whelk.datatool.bulkchange.Specification;
 import whelk.datatool.form.Transform;
 import whelk.datatool.form.ModifiedThing;
 import whelk.history.DocumentVersion;
@@ -58,8 +59,9 @@ public class BulkChangePreviewAPI extends HttpServlet {
             Map<Object, Object> result = new LinkedHashMap<>();
             result.put(JsonLd.TYPE_KEY, BULK_CHANGE_PREVIEW_TYPE);
 
+            // TODO? let Specifications create their own previews?
             switch (changeDoc.getSpecification()) {
-                case BulkJobDocument.Update spec -> {
+                case Specification.Update spec -> {
                     var transform = new Transform(spec.matchForm(), spec.targetForm(), whelk);
 
                     // TODO use COUNT + LIMIT & OFFSET and don't fetch all ids every time
@@ -94,9 +96,9 @@ public class BulkChangePreviewAPI extends HttpServlet {
                     result.put("changeSets", transform.getChangeSets());
                     result.put("items", items);
                 }
-                case BulkJobDocument.Create spec -> {
+                case Specification.Create spec -> {
                 }
-                case BulkJobDocument.Delete spec -> {
+                case Specification.Delete spec -> {
                 }
             }
 

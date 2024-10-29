@@ -50,13 +50,6 @@ public class BulkJobDocument extends Document {
         }
     }
 
-    public sealed interface Specification permits Update, Create, Delete {
-    }
-
-    public record Update(Map<String, Object> matchForm, Map<String, Object> targetForm) implements Specification { }
-    public record Create(Map<String, Object> targetForm) implements Specification { }
-    public record Delete(Map<String, Object> matchForm) implements Specification { }
-
     public static final String JOB_TYPE = "bulk:Job";
     public static final String STATUS_KEY = "bulk:status";
     public static final String CHANGE_SPEC_KEY = "bulk:changeSpec";
@@ -116,19 +109,23 @@ public class BulkJobDocument extends Document {
 
         String specType = get(spec, JsonLd.TYPE_KEY);
         return switch(fromKey(SpecType.class, specType)) {
-            case SpecType.Update -> new Update(
+            case SpecType.Update -> new Specification.Update(
                     get(spec, TARGET_FORM_KEY, Collections.emptyMap()),
                     get(spec, TARGET_FORM_KEY, Collections.emptyMap())
             );
-            case SpecType.Delete -> new Delete(
+            case SpecType.Delete -> new Specification.Delete(
                     get(spec, MATCH_FORM_KEY, Collections.emptyMap())
             );
-            case SpecType.Create -> new Create(
+            case SpecType.Create -> new Specification.Create(
                     get(spec, TARGET_FORM_KEY, Collections.emptyMap())
             );
             case null -> throw new ModelValidationException(String.format("Bad %s %s: %s",
                     CHANGE_SPEC_KEY, JsonLd.TYPE_KEY, specType));
         };
+    }
+
+    public String getChangeAgentId() {
+        return getDescriptionLastModifier();
     }
 
     @SuppressWarnings("unchecked")
@@ -140,19 +137,11 @@ public class BulkJobDocument extends Document {
         return get(thing, path, null);
     }
 
-    private <T> T get(Object thing, JsonLdKey key, T defaultTo) {
-        return get(thing, List.of(key), defaultTo);
-    }
-
-    private <T> T get(Object thing, JsonLdKey key) {
-        return get(thing, List.of(key), null);
-    }
-
     private <T> T get(Object thing, String key) {
         return get(thing, List.of(key), null);
     }
 
     private <T> T get(Object thing, String key, T defaultTo) {
-        return get(thing, List.of(key), null);
+        return get(thing, List.of(key), defaultTo);
     }
 }
