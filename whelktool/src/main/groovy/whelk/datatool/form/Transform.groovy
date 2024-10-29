@@ -475,6 +475,10 @@ class Transform {
         boolean matches(Object o) {
             return Transform.this.matches(value, o) || (property() == TYPE_KEY && value == ANY_TYPE)
         }
+
+        boolean hasId() {
+            value instanceof Map && value.containsKey(_ID_LIST)
+        }
     }
 
     static class Add extends Change {

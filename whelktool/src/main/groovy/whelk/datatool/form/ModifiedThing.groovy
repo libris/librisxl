@@ -102,7 +102,14 @@ class ModifiedThing {
     private static void remove(Map node, String property, List<Transform.Remove> valuesToRemove) {
         def current = asList(node[property])
         // Assume that it has already been checked that current contains all valuesToRemove
-        valuesToRemove.each { v -> current.find { v.matches(property, it) }.with { current.remove(it) } }
+        valuesToRemove.each { v ->
+            if (v.hasId()) {
+                current.removeAll { v.matches(property, it) }
+            } else {
+                current.find { v.matches(property, it) }
+                        .with { current.remove(it) }
+            }
+        }
         if (current.isEmpty()) {
             node.remove(property)
         } else {
@@ -141,6 +148,13 @@ class ModifiedThing {
         def current = asList(node[property])
         def removeAt = []
         valuesToRemove.each { v ->
+            if (v.hasId()) {
+                current.eachWithIndex { c, i ->
+                    if (!removeAt.contains(i) && v.matches(property, c)) {
+                        removeAt.add(i)
+                    }
+                }
+            }
             for (i in 0..<current.size()) {
                 if (!removeAt.contains(i) && v.matches(property, current[i])) {
                     removeAt.add(i)
