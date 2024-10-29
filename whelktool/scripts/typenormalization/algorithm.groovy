@@ -2,16 +2,14 @@ import java.util.stream.Collectors
 
 import static whelk.util.Jackson.mapper
 
-class TypeNormalizer {
+class Utils {
   static final var GRAPH = '@graph'
   static final var ID = '@id'
   static final var TYPE = '@type'
   static final var VALUE = '@value'
   static final var ANNOTATION = "@annotation"
+
   static final var KBV = "https://id.kb.se/vocab/"
-
-  // FIXME: Use definitions data (loaded into XL) and remove these hard-coded mappings!
-
   static final var MARC = "https://id.kb.se/marc/"
   static final var SAO = "https://id.kb.se/term/sao/"
   static final var BARN = "https://id.kb.se/term/barn/"
@@ -20,6 +18,143 @@ class TypeNormalizer {
   static final var KBRDA = "https://id.kb.se/term/rda/"
   static final var TGM = "https://id.kb.se/term/gmgpc/swe/"
 
+  static boolean matches(ArrayList<Map> typelikes, String value) {
+    for (Map ref : typelikes) {
+      if ((ref.containsKey(ID) && ref.get(ID).contains(value))) {
+        return true
+      }
+    }
+    return false
+  }
+
+  static List asList(Object o) {
+    return (o instanceof List ? (List) o : o == null ? [] : [o])
+  }
+}
+
+class MarcLegacy extends Utils {
+
+  static boolean fixMarcLegacyType(Map instance, Map work) {
+    var changed = false
+
+    var itype = (String) instance[TYPE]
+
+    if (itype == 'Map') {
+      if (work[TYPE] == 'Cartography') {
+        instance[TYPE] = 'Instance'
+        if (!instance['carrierType']) {
+          instance['carrierType'] = [ [(ID): "${MARC}Sheet" as String] ]
+        }
+        work[TYPE] = 'SingleMap'
+        // TODO: drop instance['genreForm'] marc:MapATwoDimensionalMap
+        changed = true
+      }
+    } else if (itype == 'Globe') {
+      if (work[TYPE] == 'Cartography') {
+        instance[TYPE] = 'Object'
+        work[TYPE] = 'Globe'
+        changed = true
+      }
+    }
+
+    def cleanupTypes =  [
+      'ProjectedImageInstance': ['ProjectedImage'],
+      'MovingImageInstance': ['MovingImage'],
+      'KitInstance': ['Kit'],
+      'NotatedMusicInstance': ['NotatedMusic'],
+      'TextInstance': ['Text', ['Volume', 'Electronic']],
+      'StillImageInstance': ['StillImage', ['Sheet', 'DigitalResource']],
+      'MapInstance': ['Map', ['Sheet', 'DigitalResource']],
+      'GlobeInstance': ['Globe', 'Object'],
+    ]
+
+    var mappedTypes = cleanupTypes[itype]
+    if (mappedTypes) {
+      work[TYPE] = mappedTypes[0]
+      instance[TYPE] = 'Instance' // TODO: use mappedTypes[1] as fallback hint(s)?
+    }
+
+    return changed
+  }
+
+  // TODO: Change to *set* types from mediaTerm? Or *suggest* type?
+  static boolean processMarcMediaTerm(
+    Map instance, isVolume, isSoundRecording, isVideoRecording, isElectronic, carriertypes
+  ) {
+    var changed = false
+
+    var mediaterm = (String) instance.get("marc:mediaTerm")
+    if (mediaterm) {
+      if (mediaterm.toLowerCase() == "affisch") {
+        instance.remove("marc:mediaTerm")
+        if (matches(carriertypes, "Sheet")) {
+          // TODO: work.genreForm = 'Poster' (implies work.type = IllustratedWork | StillImage)
+          instance.put(TYPE, "Sheet")
+        }
+        changed = true
+      } else if (isElectronic && mediaterm.matches(/(?i)elektronisk (resurs|utgåva)/)) {
+        instance.remove("marc:mediaTerm")
+        changed = true
+      } else if ((isSoundRecording && mediaterm.matches(/(?i)ljudupptagning/))) {
+        instance.remove("marc:mediaTerm")
+        changed = true
+      } else if ((isVideoRecording && mediaterm.matches(/(?i)videoupptagning/))) {
+        instance.remove("marc:mediaTerm")
+        changed = true
+      } else if (instance.get(TYPE).equals("Tactile") && mediaterm.matches(/(?i)punktskrift/)) {
+        if (isVolume) {
+          instance.put(TYPE, "BrailleVolume")
+          changed = true
+        } else {
+          instance.put(TYPE, "BrailleResource")
+          changed = true
+        }
+        var toDrop = [KBRDA + "Volume", MARC + "Braille", MARC + "TacMaterialType-b"] as Set
+        carriertypes = carriertypes.findAll { !toDrop.contains(it.get(ID)) }
+        if (carriertypes == null) {
+          instance.remove("carrierType")
+        } else {
+          instance.put("carrierType", carriertypes)
+        }
+        instance.remove("marc:mediaTerm")
+        changed = true
+      }
+    }
+
+    return changed
+  }
+
+  static boolean convertIssuanceType(Map instance, Map work) {
+    var collectiontype = (String) instance.remove("issuanceType")
+    if (!collectiontype) {
+      return false
+    }
+    if (collectiontype.equals("ComponentPart")) {
+        instance[TYPE] += collectiontype
+    } else if ((!collectiontype.equals("Monograph"))) {
+      // TODO: check genres and heuristics (some Serial are mistyped!)
+      if ('collectsType' in work) {
+        assert work['collectsType'] == instance.get(TYPE)
+        assert work[TYPE] == collectiontype
+      } else {
+        work['collectsType'] = work.get(TYPE)
+        work[TYPE] = collectiontype
+        // FIXME:
+        // move instance['carrierType'] to 'collectsType' and set instance[TYPE] = 'Multipart'?
+        // Examples (e.g. "Samling av trycksaker"):
+        // select ?crt1 ?crt2 (count(?g) as ?count)  (sample(?g) as ?sample) {
+        //  graph ?g { ?s kbv:carrierType ?crt1, ?crt2 . FILTER(isIRI(?crt1) && isIRI(?crt2) && ?crt1 > ?crt2) }
+        //  } order by desc(?count)
+        return true
+      }
+    }
+    return false
+  }
+
+}
+
+// FIXME: Process type and gf definitions loaded into XL and remove these hard-coded mappings!
+class TypeNormalizerUtils extends Utils {
   // Mixes subclasses and subconcepts
   static Map<String, Set<String>> baseEqualOrSubMap = [ // matchesMap
     (MARC + 'DirectElectronic'): [MARC + 'ChipCartridge'] as Set,
@@ -139,82 +274,35 @@ class TypeNormalizer {
     return false
   }
 
-  static boolean matches(ArrayList<Map> typelikes, String value) {
-    for (Map ref : typelikes) {
-      if ((ref.containsKey(ID) && ref.get(ID).contains(value))) {
-        return true
-      }
-    }
-    return false
-  }
+}
+
+class TypeNormalizer extends TypeNormalizerUtils {
 
   static boolean normalize(Map instance, Map work) {
-    var modified = simplifyTyped(instance, work)
-    return modified
-  }
+    var changed = false
 
-  static boolean simplifyTyped(Map instance, Map work) {
-    var modified = false
+    changed |= MarcLegacy.fixMarcLegacyType(instance, work)
 
-    var itype = (String) instance[TYPE]
-
-    if (itype == 'Map') {
-      if (work[TYPE] == 'Cartography') {
-        instance[TYPE] = 'Instance'
-        if (!instance['carrierType']) {
-          instance['carrierType'] = [ [(ID): "${MARC}Sheet" as String] ]
-        }
-        work[TYPE] = 'SingleMap'
-        // TODO: drop instance['genreForm'] marc:MapATwoDimensionalMap
-        modified = true
-      }
-    } else if (itype == 'Globe') {
-      if (work[TYPE] == 'Cartography') {
-        instance[TYPE] = 'Object'
-        work[TYPE] = 'Globe'
-        modified = true
-      }
-    }
-
-    modified |= simplifySingleunitInstance(instance)
-    modified |= simplifySingleunitWork(work)
+    changed |= foldType(instance, work)
 
     if (instance.containsKey("issuanceType")) {
       // work.genreForm marc:MapBoundAsPartOfAnotherWork
-      modified |= convertIssuancetype(instance, work)
+      changed |= MarcLegacy.convertIssuanceType(instance, work)
     }
 
-    return modified
+    return changed
   }
 
-  static boolean convertIssuancetype(Map instance, Map work) {
-    var collectiontype = (String) instance.remove("issuanceType")
-    if (!collectiontype) {
-      return false
-    }
-    if (collectiontype.equals("ComponentPart")) {
-        instance[TYPE] += collectiontype
-    } else if ((!collectiontype.equals("Monograph"))) {
-      // TODO: check genres and heuristics (some Serial are mistyped!)
-      if ('collectsType' in work) {
-        assert work['collectsType'] == instance.get(TYPE)
-        assert work[TYPE] == collectiontype
-      } else {
-        work['collectsType'] = work.get(TYPE)
-        work[TYPE] = collectiontype
-        // FIXME:
-        // move instance['carrierType'] to 'collectsType' and set instance[TYPE] = 'Multipart'?
-        // Examples (e.g. "Samling av trycksaker"):
-        // select ?crt1 ?crt2 (count(?g) as ?count)  (sample(?g) as ?sample) {
-        //  graph ?g { ?s kbv:carrierType ?crt1, ?crt2 . FILTER(isIRI(?crt1) && isIRI(?crt2) && ?crt1 > ?crt2) }
-        //  } order by desc(?count)
-        return true
-      }
-    }
-    return false
+  static boolean foldType(Map instance, Map work) {
+    var changed = false
+
+    changed |= foldTypeOfSingleUnitWork(work)
+    changed |= foldTypeOfSingleUnitInstance(instance)
+
+    return changed
   }
 
-  static boolean simplifySingleunitWork(Map work) {
+  static boolean foldTypeOfSingleUnitWork(Map work) {
     var refSize = work.containsKey(ANNOTATION) ? 2 : 1
     if (work.containsKey(ID) && work.size() == refSize) {
       return false
@@ -290,7 +378,7 @@ class TypeNormalizer {
     return changed
   }
 
-  static boolean simplifySingleunitInstance(Map instance) {
+  static boolean foldTypeOfSingleUnitInstance(Map instance) {
     var type = instance.get(TYPE)
 
     var mediatypes = reduceSymbols(asList(instance["mediaType"]), "MediaType")
@@ -411,49 +499,17 @@ class TypeNormalizer {
       changed = true
     }
 
-    var mediaterm = (String) instance.get("marc:mediaTerm")
-    if (mediaterm) {
-      if (mediaterm.toLowerCase() == "affisch") {
-        instance.remove("marc:mediaTerm")
-        if (matches(carriertypes, "Sheet")) {
-          // TODO: work.genreForm = kbvgf:Poster (implies work.type = IllustratedWork | StillImage)
-          instance.put(TYPE, "Sheet")
-        }
-        changed = true
-      } else if (isElectronic && mediaterm.matches(/(?i)elektronisk (resurs|utgåva)/)) {
-        instance.remove("marc:mediaTerm")
-        changed = true
-      } else if ((isSoundRecording && mediaterm.matches(/(?i)ljudupptagning/))) {
-        instance.remove("marc:mediaTerm")
-        changed = true
-      } else if ((isVideoRecording && mediaterm.matches(/(?i)videoupptagning/))) {
-        instance.remove("marc:mediaTerm")
-        changed = true
-      } else if (instance.get(TYPE).equals("Tactile") && mediaterm.matches(/(?i)punktskrift/)) {
-        if (isVolume) {
-          instance.put(TYPE, "BrailleVolume")
-          changed = true
-        } else {
-          instance.put(TYPE, "BrailleResource")
-          changed = true
-        }
-        var toDrop = [KBRDA + "Volume", MARC + "Braille", MARC + "TacMaterialType-b"] as Set
-        carriertypes = carriertypes.findAll { !toDrop.contains(it.get(ID)) }
-        if (carriertypes == null) {
-          instance.remove("carrierType")
-        } else {
-          instance.put("carrierType", carriertypes)
-        }
-        instance.remove("marc:mediaTerm")
-        changed = true
-      }
-    }
+    // TODO: see method definition
+    changed |= MarcLegacy.processMarcMediaTerm(
+      instance, isVolume, isSoundRecording, isVideoRecording, isElectronic, carriertypes
+    )
 
     return changed
   }
 
   static boolean assumedToBePrint(Map instance) {
     // TODO: carrierType == marc:RegularPrint || marc:RegularPrintReproduction
+    // TODO: this is added to AudioCD:s etc.!
     return (instance.get("identifiedBy").stream().anyMatch(
         x -> x.get(TYPE).equals("ISBN"))
       ) || instance.containsKey("publication")
@@ -468,10 +524,6 @@ class TypeNormalizer {
       }
     }
     return false
-  }
-
-  static List asList(Object o) {
-    return (o instanceof List ? (List) o : o == null ? [] : [o])
   }
 
 }
@@ -491,18 +543,18 @@ process { def doc, Closure loadWorkItem ->
         work = work[0]
       }
 
-      var modified = TypeNormalizer.normalize(instance, work)
+      var changed = TypeNormalizer.normalize(instance, work)
 
-      if (modified) doc.scheduleSave()
+      if (changed) doc.scheduleSave()
     } else {
       def loadedWorkId = instance.instanceOf[ID]
       // TODO: refactor very hacky solution...
       loadWorkItem(loadedWorkId) { workIt ->
         def (workRecord, work) = workIt.graph
 
-        var modified = TypeNormalizer.normalize(instance, work)
+        var changed = TypeNormalizer.normalize(instance, work)
 
-        if (modified) {
+        if (changed) {
           doc.scheduleSave()
           if (loadedWorkId !in convertedWorks) workIt.scheduleSave()
         }
