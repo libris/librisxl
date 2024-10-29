@@ -3649,6 +3649,135 @@
           }
         ]
       }
+    },
+    {
+      "name": "Prioritize removing nodes with higher specificity",
+      "matchForm": {
+        "_id": "#1",
+        "r1": [
+          {
+            "_id": "#2",
+            "p1": "v1"
+          },
+          {
+            "_id": "#3",
+            "@type": "Any"
+          },
+          {
+            "_id": "#4",
+            "_match": ["Exact"],
+            "p1": "v1",
+            "p2": "v2"
+          }
+        ]
+      },
+      "targetForm": {
+        "_id": "#1"
+      },
+      "before": {
+        "r1": [
+          {
+            "p1": "v1",
+            "p2": "v2"
+          },
+          {
+            "p1": "v1",
+            "p3": "v3"
+          },
+          {
+            "p4": "v4"
+          },
+          {
+            "p5": "v5"
+          }
+        ]
+      },
+      "after": {
+        "r1": [
+          {
+            "p5": "v5"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Prioritize changes for nodes with higher specificity",
+      "matchForm": {
+        "_id": "#1",
+        "r1": [
+          {
+            "_id": "#3",
+            "@type": "Any"
+          },
+          {
+            "_id": "#4",
+            "p2": "v2"
+          },
+          {
+            "_id": "#5",
+            "_match": ["Exact"],
+            "p2": "v2",
+            "p3": "v3"
+          }
+        ]
+      },
+      "targetForm": {
+        "_id": "#1",
+        "r1": [
+          {
+            "_id": "#3",
+            "@type": "Any",
+            "p1": "v1"
+          },
+          {
+            "_id": "#4",
+            "p2": "v3"
+          },
+          {
+            "_id": "#5",
+            "_match": ["Exact"],
+            "p2": "v2"
+          }
+        ]
+      },
+      "before": {
+        "r1": [
+          {
+            "p1": "v1",
+            "p2": "v2"
+          },
+          {
+            "p2": "v2",
+            "p3": "v3"
+          },
+          {
+            "p2": "v2",
+            "p4": "v4"
+          },
+          {
+            "p5": "v5"
+          }
+        ]
+      },
+      "after": {
+        "r1": [
+          {
+            "p1": "v1",
+            "p2": "v3"
+          },
+          {
+            "p2": "v2"
+          },
+          {
+            "p2": "v2",
+            "p4": "v4",
+            "p1": "v1"
+          },
+          {
+            "p5": "v5"
+          }
+        ]
+      }
     }
   ]
 }

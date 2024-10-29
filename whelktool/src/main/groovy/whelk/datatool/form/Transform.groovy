@@ -342,7 +342,7 @@ class Transform {
         if (matchForm == null || bNode == null) {
             return false
         }
-        matchForm = new HashMap(matchForm)
+        matchForm = new LinkedHashMap(matchForm)
         def match = asList(matchForm[_MATCH])
         if (match.contains(EXACT)) {
             return exactMatches(matchForm, bNode)
@@ -425,6 +425,14 @@ class Transform {
         private List<Remove> getRemoveList() {
             return changeList.findAll { it instanceof Remove } as List<Remove>
         }
+
+        boolean shouldMatchExact() {
+            return asList(form[_MATCH]).contains(EXACT)
+        }
+
+        boolean matchAnyType() {
+            form[TYPE_KEY] == ANY_TYPE
+        }
     }
 
     static abstract class Change {
@@ -441,6 +449,14 @@ class Transform {
 
         String property() {
             return propertyPath().last()
+        }
+
+        boolean shouldMatchExact() {
+            return value instanceof Map && asList(value[_MATCH]).contains(EXACT)
+        }
+
+        boolean matchAnyType() {
+            value instanceof Map && value[TYPE_KEY] == ANY_TYPE
         }
 
         abstract boolean matches(Object o)

@@ -34,22 +34,36 @@ class ModifiedThing {
             return thing
         }
 
+        def bySpecificitySort = { a, b ->
+            b.shouldMatchExact() <=> a.shouldMatchExact()
+                    ?: a.matchAnyType() <=> b.matchAnyType()
+        }
+
         // Map changes to a node to which the changes are applicable (matching by form)
         Map<Transform.ChangesForNode, Map> changeMap = [:]
-        transform.getChanges().each { cfn ->
-            def candidateNodes = asList(getAtPath(thing, cfn.propertyPath, [], false)) as List<Map>
-            def matchingNode = candidateNodes.find { cNode -> !cNode['_matched'] && cfn.matches(cNode) }
-            // Mark node temporarily as matched to avoid mapping different ChangesForNode objects to the same node
-            matchingNode['_matched'] = true
-            changeMap[cfn] = matchingNode
+        transform.getChanges().groupBy { it.propertyPath }.each { propPath, changes ->
+            Map<Transform.ChangesForNode, Map> changesAtPath = [:]
+            // Prioritize matching ChangesForNode objects with a narrower hit range
+            changes.sort(bySpecificitySort).each { cfn ->
+                def candidateNodes = asList(getAtPath(thing, cfn.propertyPath, [], false)) as List<Map>
+                def matchingNode = candidateNodes.find { cNode -> !cNode['_matched'] && cfn.matches(cNode) }
+                if (matchingNode) {
+                    // Mark node temporarily as matched to avoid mapping different ChangesForNode objects to the same node
+                    matchingNode['_matched'] = true
+                    changesAtPath[cfn] = matchingNode
+                }
+            }
+            // Remove temporary markers
+            changesAtPath.values().each { it.remove('_matched') }
+
+            changeMap.putAll(changesAtPath)
         }
-        // Remove temporary markers
-        changeMap.values().each { it.remove('_matched') }
 
         // Perform changes node by node, property by property
         changeMap.each { cfn, matchingNode ->
             cfn.changeList.groupBy { it.property() }.each { property, changeList ->
-                def removeList = changeList.findAll { it instanceof Transform.Remove } as List<Transform.Remove>
+                def removeList = changeList.findAll { it instanceof Transform.Remove }
+                        .sort(bySpecificitySort) as List<Transform.Remove>
                 def addList = changeList.findAll { it instanceof Transform.Add } as List<Transform.Add>
                 try {
                     executeModification(matchingNode, property, removeList, addList)
@@ -134,6 +148,7 @@ class ModifiedThing {
                 }
             }
         }
+        removeAt.sort(true)
         int insertAt = removeAt.first() as int
 
         removeAt.reverseEach { i -> current.remove(i) }
