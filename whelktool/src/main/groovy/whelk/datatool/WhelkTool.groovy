@@ -71,7 +71,6 @@ class WhelkTool {
     int numThreads = -1
     boolean stepWise
     int limit = -1
-    Map<Object, Object> scriptParams = Collections.emptyMap()
 
     private String chosenAnswer = 'y'
 
@@ -131,10 +130,6 @@ class WhelkTool {
 
             [modifiedLogFile, createdLogFile, deletedLogFile].each { if (it.length() == 0) it.delete() }
         }
-    }
-
-    void setScriptParameters(Map<Object, Object> params) {
-        scriptParams = Collections.unmodifiableMap(params)
     }
 
     boolean getUseThreads() { !noThreads && !stepWise }
@@ -640,7 +635,7 @@ class WhelkTool {
         bindings.put("baseUri", Document.BASE_URI)
         bindings.put("getReportWriter", this.&getReportWriter)
         bindings.put("reportsDir", reportsDir)
-        bindings.put("parameters", scriptParams)
+        bindings.put("parameters", script.scriptParams)
         bindings.put("script", { String s -> script.compileSubScript(this, s) })
         bindings.put("selectByCollection", this.&selectByCollection)
         bindings.put("selectByIds", this.&selectByIds)
@@ -790,6 +785,8 @@ class Script {
     CompiledScript compiledScript
     String scriptJobUri
 
+    private Map<Object, Object> scriptParams = Collections.emptyMap()
+
     private Map<String, Closure> compiledScripts = [:]
 
     Script(String source, String scriptJobUri) {
@@ -804,6 +801,10 @@ class Script {
         ScriptEngineManager manager = new ScriptEngineManager()
         this.engine = (GroovyScriptEngineImpl) manager.getEngineByName("groovy")
         this.compiledScript = engine.compile(source)
+    }
+
+    void setParameters(Map<Object, Object> scriptParams) {
+        this.scriptParams = Collections.unmodifiableMap(scriptParams)
     }
 
     Closure compileSubScript(WhelkTool tool, String scriptPath) {
