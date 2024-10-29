@@ -259,39 +259,43 @@ class Transform {
         IdLoader idLoader = whelk ? new IdLoader(whelk.storage) : null
 
         DocumentUtil.traverse(matchForm) { node, path ->
-            if (node instanceof Map && node.containsKey(_ID_LIST)) {
-                def idList = node[_ID_LIST]
-                def ids = (idList[VALUE] ?: (idList[VALUE_FROM] ? IdLoader.fromFile((String) idList[VALUE_FROM][ID_KEY]) : [])) as Set<String>
-                if (ids) {
-                    String nodeId = node[_ID]
+            if (!(node instanceof Map)) {
+                return
+            }
+            def anyOf = asList(node[_ID_LIST]).find { it[TYPE_KEY] == "AnyOf" }
+            if (!anyOf) {
+                return
+            }
+            def ids = (anyOf[VALUE] ?: (anyOf[VALUE_FROM] ? IdLoader.fromFile((String) anyOf[VALUE_FROM][ID_KEY]) : [])) as Set<String>
+            if (ids) {
+                String nodeId = node[_ID]
 
-                    def (iris, shortIds) = ids.split(JsonLd::looksLikeIri)
-                    if (shortIds.isEmpty()) {
-                        nodeIdMappings[nodeId] = iris
-                        return
-                    }
-
-                    if (!idLoader) {
-                        nodeIdMappings[nodeId] = iris + shortIds.collect { Document.BASE_URI.toString() + it + Document.HASH_IT }
-                        return
-                    }
-
-                    def nodeType = node[TYPE_KEY]
-                    def marcCollection = nodeType ? getMarcCollectionInHierarchy((String) nodeType, whelk.jsonld) : null
-                    def xlShortIds = idLoader.collectXlShortIds(shortIds as List<String>, marcCollection)
-                    def parentProp = dropIndexes(path).reverse()[1]
-                    def isInRange = { type -> whelk.jsonld.getInRange(type).contains(parentProp) }
-                    // TODO: Fix hardcoding
-                    def isRecord = whelk.jsonld.isInstanceOf(node, "AdminMetadata")
-                            || isInRange(RECORD_TYPE)
-                            || isInRange("AdminMetadata")
-
-                    nodeIdMappings[nodeId] = iris + xlShortIds.collect {
-                        Document.BASE_URI.toString() + it + (isRecord ? "" : Document.HASH_IT)
-                    }
-
-                    return new DocumentUtil.Nop()
+                def (iris, shortIds) = ids.split(JsonLd::looksLikeIri)
+                if (shortIds.isEmpty()) {
+                    nodeIdMappings[nodeId] = iris
+                    return
                 }
+
+                if (!idLoader) {
+                    nodeIdMappings[nodeId] = iris + shortIds.collect { Document.BASE_URI.toString() + it + Document.HASH_IT }
+                    return
+                }
+
+                def nodeType = node[TYPE_KEY]
+                def marcCollection = nodeType ? getMarcCollectionInHierarchy((String) nodeType, whelk.jsonld) : null
+                def xlShortIds = idLoader.collectXlShortIds(shortIds as List<String>, marcCollection)
+                def parentProp = dropIndexes(path).reverse()[1]
+                def isInRange = { type -> whelk.jsonld.getInRange(type).contains(parentProp) }
+                // TODO: Fix hardcoding
+                def isRecord = whelk.jsonld.isInstanceOf(node, "AdminMetadata")
+                        || isInRange(RECORD_TYPE)
+                        || isInRange("AdminMetadata")
+
+                nodeIdMappings[nodeId] = iris + xlShortIds.collect {
+                    Document.BASE_URI.toString() + it + (isRecord ? "" : Document.HASH_IT)
+                }
+
+                return new DocumentUtil.Nop()
             }
         }
 
