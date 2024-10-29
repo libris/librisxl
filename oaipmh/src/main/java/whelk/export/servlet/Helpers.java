@@ -100,11 +100,10 @@ public class Helpers
             {
                 String type = updated.getThingType();
 
-                if (requestedCollection.equals("auth") &&
-                        (type == null || !OaiPmh.workDerivativeTypes.contains(type))) {
-                    queueDocument(updated);
-                }
 
+                if (requestedCollection.equals("auth") &&
+                        (type == null || !OaiPmh.workDerivativeTypes.contains(type)))
+                    queueDocument(updated);
                 if (includeDependenciesInTimeInterval && (requestedCollection.equals("bib") || requestedCollection.equals("hold")) && hasCardChanged(updated))
                 {
                     List<Tuple2<String, String>> dependers = OaiPmh.s_whelk.getStorage().followDependers(updated.getShortId(), JsonLd.NON_DEPENDANT_RELATIONS);
