@@ -2,13 +2,13 @@
   "specs": [
     {
       "name": "Remove literal: non-repeatable property",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": "v2"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
       "removedPaths": [
@@ -28,15 +28,15 @@
     },
     {
       "name": "Remove literal: repeatable property, single value",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           "v2"
         ]
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
       "removedPaths": [
@@ -56,8 +56,8 @@
     },
     {
       "name": "Remove literal: repeatable property, all values",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           "v2",
@@ -65,8 +65,8 @@
           "v4"
         ]
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
       "removedPaths": [
@@ -90,8 +90,8 @@
     },
     {
       "name": "Remove literal: repeatable property, some values",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           "v2",
@@ -99,8 +99,8 @@
           "v4"
         ]
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           "v2"
@@ -137,15 +137,15 @@
     },
     {
       "name": "Remove link: non-repeatable property",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
           "@id": "https://id.kb.se/x"
         }
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
       "removedPaths": [
@@ -167,8 +167,8 @@
     },
     {
       "name": "Remove link: repeatable property, single value",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
@@ -176,8 +176,8 @@
           }
         ]
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
       "removedPaths": [
@@ -201,8 +201,8 @@
     },
     {
       "name": "Remove link: repeatable property, all values",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
@@ -216,8 +216,8 @@
           }
         ]
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
       "removedPaths": [
@@ -247,8 +247,8 @@
     },
     {
       "name": "Remove link: repeatable property, some values",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
@@ -262,8 +262,8 @@
           }
         ]
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
@@ -314,16 +314,16 @@
     },
     {
       "name": "Remove blank node: non-repeatable property",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
-          "_id": "2",
+          "bulk:formBlankNodeId": "2",
           "p3": "v3"
         }
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
       "removedPaths": [
@@ -345,18 +345,18 @@
     },
     {
       "name": "Remove blank node: repeatable property, single value",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
-            "_id": "2",
+            "bulk:formBlankNodeId": "2",
             "p2": "v2"
           }
         ]
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
       "removedPaths": [
@@ -380,26 +380,26 @@
     },
     {
       "name": "Remove blank node: repeatable property, all values",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
-            "_id": "2",
+            "bulk:formBlankNodeId": "2",
             "p2": "v2"
           },
           {
-            "_id": "3",
+            "bulk:formBlankNodeId": "3",
             "p3": "v3"
           },
           {
-            "_id": "4",
+            "bulk:formBlankNodeId": "4",
             "p4": "v4"
           }
         ]
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
       "removedPaths": [
@@ -429,30 +429,30 @@
     },
     {
       "name": "Remove blank node: repeatable property, some values",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
-            "_id": "2",
+            "bulk:formBlankNodeId": "2",
             "p2": "v2"
           },
           {
-            "_id": "3",
+            "bulk:formBlankNodeId": "3",
             "p3": "v3"
           },
           {
-            "_id": "4",
+            "bulk:formBlankNodeId": "4",
             "p4": "v4"
           }
         ]
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
-            "_id": "2",
+            "bulk:formBlankNodeId": "2",
             "p2": "v2"
           }
         ]
@@ -500,36 +500,36 @@
     },
     {
       "name": "Remove blank node: repeatable property, exact match some values",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
-            "_id": "2",
+            "bulk:formBlankNodeId": "2",
             "p2": "v2"
           },
           {
-            "_id": "3",
+            "bulk:formBlankNodeId": "3",
             "p3": "v3"
           },
           {
-            "_id": "4",
-            "_match": "Exact",
+            "bulk:formBlankNodeId": "4",
+            "bulk:matchingMode": "bulk:Exact",
             "p4": "v4"
           },
           {
-            "_id": "5",
-            "_match": "Exact",
+            "bulk:formBlankNodeId": "5",
+            "bulk:matchingMode": "bulk:Exact",
             "p5": "v5"
           }
         ]
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
-            "_id": "2",
+            "bulk:formBlankNodeId": "2",
             "p2": "v2"
           }
         ]
@@ -589,22 +589,22 @@
     },
     {
       "name": "Remove any blank node",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
-          "_id": "2",
+          "bulk:formBlankNodeId": "2",
           "p3": {
-            "@type": "Any",
-            "_id": "3"
+            "@type": "bulk:Any",
+            "bulk:formBlankNodeId": "3"
           }
         }
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
-          "_id": "2"
+          "bulk:formBlankNodeId": "2"
         }
       },
       "removedPaths": [
@@ -630,10 +630,10 @@
     },
     {
       "name": "Remove various",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": {
-          "_id": "2",
+          "bulk:formBlankNodeId": "2",
           "r1": [
             "v2",
             "v3"
@@ -644,11 +644,11 @@
           },
           "r2": [
             {
-              "_id": "4",
+              "bulk:formBlankNodeId": "4",
               "p5": "v5"
             },
             {
-              "_id": "5",
+              "bulk:formBlankNodeId": "5",
               "p6": "v6",
               "p7": {
                 "@id": "https://id.kb.se/y"
@@ -657,16 +657,16 @@
           ]
         }
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": {
-          "_id": "2",
+          "bulk:formBlankNodeId": "2",
           "r1": [
             "v2"
           ],
           "r2": [
             {
-              "_id": "5",
+              "bulk:formBlankNodeId": "5",
               "p6": "v6"
             }
           ]
@@ -754,12 +754,12 @@
     },
     {
       "name": "Add literal: non-repeatable property",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": "v2"
       },
@@ -780,12 +780,12 @@
     },
     {
       "name": "Add literal: repeatable property, single value",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           "v2"
@@ -810,12 +810,12 @@
     },
     {
       "name": "Add literal: repeatable property, multiple values",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           "v2",
@@ -842,12 +842,12 @@
     },
     {
       "name": "Add literal: repeatable property, multiple values, property already present",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           "v2",
@@ -880,12 +880,12 @@
     },
     {
       "name": "Add literal: repeatable property, overlapping values",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           "v2",
@@ -918,12 +918,12 @@
     },
     {
       "name": "Add link: non-repeatable property",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
           "@id": "https://id.kb.se/x"
@@ -948,12 +948,12 @@
     },
     {
       "name": "Add link: repeatable property, single value",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
@@ -982,12 +982,12 @@
     },
     {
       "name": "Add link: repeatable property, multiple values",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
@@ -1022,12 +1022,12 @@
     },
     {
       "name": "Add link: repeatable property, multiple values, property already present",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
@@ -1076,12 +1076,12 @@
     },
     {
       "name": "Add link: repeatable property, overlapping values",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
@@ -1130,12 +1130,12 @@
     },
     {
       "name": "Add blank node: non-repeatable property",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
           "p3": "v3"
@@ -1160,12 +1160,12 @@
     },
     {
       "name": "Add blank node: repeatable property, single value",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
@@ -1194,12 +1194,12 @@
     },
     {
       "name": "Add blank node: repeatable property, multiple values",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
@@ -1234,12 +1234,12 @@
     },
     {
       "name": "Add blank node: repeatable property, multiple values, property already present",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
@@ -1292,12 +1292,12 @@
     },
     {
       "name": "Add blank node: repeatable property, overlapping values",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
@@ -1354,12 +1354,12 @@
     },
     {
       "name": "Add value deeper in structure: property missing",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
           "r1": [
@@ -1396,12 +1396,12 @@
     },
     {
       "name": "Add value deeper in structure: property already exists",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
           "r1": [
@@ -1446,12 +1446,12 @@
     },
     {
       "name": "FAIL: Try add value deeper in structure: property not repeatable",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
           "p3": {
@@ -1472,12 +1472,12 @@
     },
     {
       "name": "Add nested value to repeatable property",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": {
           "p2": {
@@ -1514,27 +1514,27 @@
     },
     {
       "name": "Add value to any blank node",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
           "p1": "v2",
-          "_id": "2",
+          "bulk:formBlankNodeId": "2",
           "p3": {
-            "_id": "3",
-            "@type": "Any"
+            "bulk:formBlankNodeId": "3",
+            "@type": "bulk:Any"
           }
         }
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
           "p1": "v2",
-          "_id": "2",
+          "bulk:formBlankNodeId": "2",
           "p3": {
-            "_id": "3",
-            "@type": "Any",
+            "bulk:formBlankNodeId": "3",
+            "@type": "bulk:Any",
             "p4": {
               "@id": "https://id.kb.se/x"
             }
@@ -1576,29 +1576,29 @@
     },
     {
       "name": "Add various",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": {
-          "_id": "2",
+          "bulk:formBlankNodeId": "2",
           "r1": [
             "v2"
           ],
           "r2": [
             {
-              "_id": "3",
+              "bulk:formBlankNodeId": "3",
               "p4": "v4"
             },
             {
-              "_id": "4",
-              "@type": "Any"
+              "bulk:formBlankNodeId": "4",
+              "@type": "bulk:Any"
             }
           ]
         }
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": {
-          "_id": "2",
+          "bulk:formBlankNodeId": "2",
           "r1": [
             "v2",
             "v3"
@@ -1609,7 +1609,7 @@
           },
           "r2": [
             {
-              "_id": "3",
+              "bulk:formBlankNodeId": "3",
               "p4": "v4",
               "p5": {
                 "@id": "https://id.kb.se/y"
@@ -1617,8 +1617,8 @@
               "p6": "v6"
             },
             {
-              "_id": "4",
-              "@type": "Any",
+              "bulk:formBlankNodeId": "4",
+              "@type": "bulk:Any",
               "p7": "v7"
             },
             {
@@ -1724,12 +1724,12 @@
     },
     {
       "name": "UNCHANGED: Add value: repeatable property, all values already present",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           "v2",
@@ -1760,12 +1760,12 @@
     },
     {
       "name": "FAIL: Try add value: property not repeatable",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": "v2"
       },
@@ -1777,13 +1777,13 @@
     },
     {
       "name": "Replace literal: non-repeatable property",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": "v2"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": "v3"
       },
@@ -1808,15 +1808,15 @@
     },
     {
       "name": "Replace literal: repeatable property, single value",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           "v2"
         ]
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           "v3"
@@ -1847,8 +1847,8 @@
     },
     {
       "name": "Replace literal: repeatable property, all values",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           "v2",
@@ -1856,8 +1856,8 @@
           "v4"
         ]
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           "v5",
@@ -1912,8 +1912,8 @@
     },
     {
       "name": "Replace literal: repeatable property, some values",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           "v2",
@@ -1921,8 +1921,8 @@
           "v4"
         ]
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           "v2",
@@ -1970,15 +1970,15 @@
     },
     {
       "name": "Replace link: non-repeatable property",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
           "@id": "https://id.kb.se/x"
         }
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
           "@id": "https://id.kb.se/y"
@@ -2009,8 +2009,8 @@
     },
     {
       "name": "Replace link: repeatable property, single value",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
@@ -2018,8 +2018,8 @@
           }
         ]
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
@@ -2056,8 +2056,8 @@
     },
     {
       "name": "Replace link: repeatable property, all values",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
@@ -2071,8 +2071,8 @@
           }
         ]
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
@@ -2145,8 +2145,8 @@
     },
     {
       "name": "Replace link: repeatable property, some values",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
@@ -2157,8 +2157,8 @@
           }
         ]
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
@@ -2233,16 +2233,16 @@
     },
     {
       "name": "Replace blank node: non-repeatable property",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
-          "_id": "2",
+          "bulk:formBlankNodeId": "2",
           "p3": "v3"
         }
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
           "p4": "v4"
@@ -2274,18 +2274,18 @@
     },
     {
       "name": "Replace blank node: repeatable property, single value",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
-            "_id": "2",
+            "bulk:formBlankNodeId": "2",
             "p2": "v2"
           }
         ]
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
@@ -2324,26 +2324,26 @@
     },
     {
       "name": "Replace blank node: repeatable property, all values",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
-            "_id": "2",
+            "bulk:formBlankNodeId": "2",
             "p2": "v2"
           },
           {
-            "_id": "3",
+            "bulk:formBlankNodeId": "3",
             "p3": "v3"
           },
           {
-            "_id": "4",
+            "bulk:formBlankNodeId": "4",
             "p4": "v4"
           }
         ]
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
@@ -2417,30 +2417,30 @@
     },
     {
       "name": "Replace blank node: repeatable property, some values",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
-            "_id": "2",
+            "bulk:formBlankNodeId": "2",
             "p2": "v2"
           },
           {
-            "_id": "3",
+            "bulk:formBlankNodeId": "3",
             "p3": "v3"
           },
           {
-            "_id": "4",
+            "bulk:formBlankNodeId": "4",
             "p4": "v4"
           }
         ]
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
-            "_id": "4",
+            "bulk:formBlankNodeId": "4",
             "p4": "v4"
           },
           {
@@ -2493,36 +2493,36 @@
     },
     {
       "name": "Replace blank node: repeatable property, exact match some values",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
-            "_id": "2",
+            "bulk:formBlankNodeId": "2",
             "p2": "v2"
           },
           {
-            "_id": "3",
+            "bulk:formBlankNodeId": "3",
             "p3": "v3"
           },
           {
-            "_id": "4",
-            "_match": "Exact",
+            "bulk:formBlankNodeId": "4",
+            "bulk:matchingMode": "bulk:Exact",
             "p4": "v4"
           },
           {
-            "_id": "5",
-            "_match": "Exact",
+            "bulk:formBlankNodeId": "5",
+            "bulk:matchingMode": "bulk:Exact",
             "p5": "v5"
           }
         ]
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
-            "_id": "3",
+            "bulk:formBlankNodeId": "3",
             "p3": "v3"
           },
           {
@@ -2605,23 +2605,23 @@
     },
     {
       "name": "UNCHANGED: Form matched but no exact matching blank node to replace in actual data",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
-          "_id": "2",
+          "bulk:formBlankNodeId": "2",
           "p3": {
-            "_id": "3",
-            "_match": "Exact",
+            "bulk:formBlankNodeId": "3",
+            "bulk:matchingMode": "bulk:Exact",
             "p1": "v2"
           }
         }
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
-          "_id": "2",
+          "bulk:formBlankNodeId": "2",
           "p3": {
             "p4": {
               "@id": "https://id.kb.se/x"
@@ -2666,22 +2666,22 @@
     },
     {
       "name": "Replace any blank node",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
-          "_id": "2",
+          "bulk:formBlankNodeId": "2",
           "p3": {
-            "@type": "Any",
-            "_id": "3"
+            "@type": "bulk:Any",
+            "bulk:formBlankNodeId": "3"
           }
         }
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
-          "_id": "2",
+          "bulk:formBlankNodeId": "2",
           "p3": {
             "p4": {
               "@id": "https://id.kb.se/x"
@@ -2723,54 +2723,54 @@
     },
     {
       "name": "Replace various",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "r1": [
           {
-            "_id": "2",
-            "_match": "Exact",
+            "bulk:formBlankNodeId": "2",
+            "bulk:matchingMode": "bulk:Exact",
             "r2": [
               "v1",
               "v2"
             ]
           },
           {
-            "_id": "3",
+            "bulk:formBlankNodeId": "3",
             "p2": {
-              "_id": "4",
+              "bulk:formBlankNodeId": "4",
               "p3": {
                 "@id": "https://id.kb.se/x"
               }
             }
           },
           {
-            "_id": "6",
+            "bulk:formBlankNodeId": "6",
             "p4": "v4"
           }
         ],
         "p5": {
-          "_id": "7",
+          "bulk:formBlankNodeId": "7",
           "p6": "v6",
           "p7": "v7"
         }
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v2",
         "r1": [
           {
-            "_id": "2",
-            "_match": "Exact",
+            "bulk:formBlankNodeId": "2",
+            "bulk:matchingMode": "bulk:Exact",
             "r2": [
               "v1",
               "v3"
             ]
           },
           {
-            "_id": "3",
+            "bulk:formBlankNodeId": "3",
             "p2": {
-              "_id": "4",
+              "bulk:formBlankNodeId": "4",
               "p3": {
                 "@id": "https://id.kb.se/y"
               }
@@ -2917,24 +2917,24 @@
     },
     {
       "name": "UNCHANGED: Form does not match actual data",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
-          "_id": "2",
+          "bulk:formBlankNodeId": "2",
           "p3": {
-            "_id": "3",
-            "_match": "Exact",
+            "bulk:formBlankNodeId": "3",
+            "bulk:matchingMode": "bulk:Exact",
             "p1": "v2"
           },
           "p4": "v4"
         }
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
-          "_id": "2",
+          "bulk:formBlankNodeId": "2",
           "p3": {
             "p4": {
               "@id": "https://id.kb.se/x"
@@ -2977,17 +2977,17 @@
     },
     {
       "name": "UNCHANGED: Form does not (exactly) match actual data",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1",
         "p2": {
-          "_id": "2",
-          "_match": "Exact",
+          "bulk:formBlankNodeId": "2",
+          "bulk:matchingMode": "bulk:Exact",
           "p3": "v3"
         }
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": "v1"
       },
       "removedPaths": [
@@ -3014,15 +3014,15 @@
     },
     {
       "name": "Modify multiple properties on specific node in set",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": {
-          "_id": "2",
+          "bulk:formBlankNodeId": "2",
           "r1": [
             {
-              "_id": "3",
+              "bulk:formBlankNodeId": "3",
               "p2": {
-                "_id": "4",
+                "bulk:formBlankNodeId": "4",
                 "p3": "v3",
                 "p4": "v4"
               }
@@ -3030,13 +3030,13 @@
           ]
         }
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": {
-          "_id": "2",
+          "bulk:formBlankNodeId": "2",
           "r1": [
             {
-              "_id": "3",
+              "bulk:formBlankNodeId": "3",
               "p2": {
                 "@id": "https://id.kb.se/x"
               },
@@ -3114,12 +3114,12 @@
     },
     {
       "name": "UNCHANGED: Data does not match given ids",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": {
-          "_id": "2",
-          "_idList": {
-            "@type": "AnyOf",
+          "bulk:formBlankNodeId": "2",
+          "bulk:hasId": {
+            "@type": "bulk:AnyOf",
             "value": [
               "https://id.kb.se/x",
               "https://id.kb.se/y",
@@ -3128,9 +3128,9 @@
           }
         },
         "p2": {
-          "_id": "3",
-          "_idList": {
-            "@type": "AnyOf",
+          "bulk:formBlankNodeId": "3",
+          "bulk:hasId": {
+            "@type": "bulk:AnyOf",
             "value": [
               "https://id.kb.se/a",
               "https://id.kb.se/b",
@@ -3140,12 +3140,12 @@
         },
         "p3": "v3"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": {
-          "_id": "2",
-          "_idList": {
-            "@type": "AnyOf",
+          "bulk:formBlankNodeId": "2",
+          "bulk:hasId": {
+            "@type": "bulk:AnyOf",
             "value": [
               "https://id.kb.se/x",
               "https://id.kb.se/y",
@@ -3154,9 +3154,9 @@
           }
         },
         "p2": {
-          "_id": "3",
-          "_idList": {
-            "@type": "AnyOf",
+          "bulk:formBlankNodeId": "3",
+          "bulk:hasId": {
+            "@type": "bulk:AnyOf",
             "value": [
               "https://id.kb.se/a",
               "https://id.kb.se/b",
@@ -3192,12 +3192,12 @@
     },
     {
       "name": "Remove any of given ids",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": {
-          "_id": "2",
-          "_idList": {
-            "@type": "AnyOf",
+          "bulk:formBlankNodeId": "2",
+          "bulk:hasId": {
+            "@type": "bulk:AnyOf",
             "value": [
               "https://id.kb.se/x",
               "https://id.kb.se/y",
@@ -3207,8 +3207,8 @@
         },
         "p2": "v2"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p2": "v2"
       },
       "removedPaths": [
@@ -3229,13 +3229,13 @@
     },
     {
       "name": "Remove any of given ids from set",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "r1": [
           {
-            "_id": "2",
-            "_idList": {
-              "@type": "AnyOf",
+            "bulk:formBlankNodeId": "2",
+            "bulk:hasId": {
+              "@type": "bulk:AnyOf",
               "value": [
                 "https://id.kb.se/x",
                 "https://id.kb.se/y",
@@ -3246,8 +3246,8 @@
         ],
         "p2": "v2"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p2": "v2"
       },
       "removedPaths": [
@@ -3281,12 +3281,12 @@
     },
     {
       "name": "Replace any of given ids",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": {
-          "_id": "2",
-          "_idList": {
-            "@type": "AnyOf",
+          "bulk:formBlankNodeId": "2",
+          "bulk:hasId": {
+            "@type": "bulk:AnyOf",
             "value": [
               "https://id.kb.se/x",
               "https://id.kb.se/y",
@@ -3296,8 +3296,8 @@
         },
         "p2": "v2"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "p1": {
           "@id": "https://id.kb.se/a"
         },
@@ -3328,13 +3328,13 @@
     },
     {
       "name": "Replace any of given ids in set",
-      "matchForm": {
-        "_id": "1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
         "r1": [
           {
-            "_id": "2",
-            "_idList": {
-              "@type": "AnyOf",
+            "bulk:formBlankNodeId": "2",
+            "bulk:hasId": {
+              "@type": "bulk:AnyOf",
               "value": [
                 "https://id.kb.se/x",
                 "https://id.kb.se/y",
@@ -3345,8 +3345,8 @@
         ],
         "p2": "v2"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "r1": [
           {
             "@id": "https://id.kb.se/a"
@@ -3394,15 +3394,15 @@
     },
     {
       "name": "Match any type",
-      "matchForm": {
-        "_id": "1",
-        "@type": "Any",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "@type": "bulk:Any",
         "p1": "v1",
         "p2": "v2"
       },
-      "targetForm": {
-        "_id": "1",
-        "@type": "Any",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "@type": "bulk:Any",
         "p3": "v3"
       },
       "removedPaths": [
@@ -3432,13 +3432,13 @@
     },
     {
       "name": "Replace any type",
-      "matchForm": {
-        "_id": "1",
-        "@type": "Any",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "@type": "bulk:Any",
         "p1": "v1"
       },
-      "targetForm": {
-        "_id": "1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
         "@type": "T2",
         "p1": "v1"
       },
@@ -3463,24 +3463,24 @@
     },
     {
       "name": "Remove duplicate",
-      "matchForm": {
-        "_id": "#1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "#1",
         "r1": [
           {
-            "_id": "#2",
+            "bulk:formBlankNodeId": "#2",
             "p1": "v1"
           },
           {
-            "_id": "#3",
+            "bulk:formBlankNodeId": "#3",
             "p1": "v1"
           }
         ]
       },
-      "targetForm": {
-        "_id": "#1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "#1",
         "r1": [
           {
-            "_id": "#2",
+            "bulk:formBlankNodeId": "#2",
             "p1": "v1"
           }
         ]
@@ -3505,17 +3505,17 @@
     },
     {
       "name": "Remove only the first out of several matching nodes",
-      "matchForm": {
-        "_id": "#1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "#1",
         "r1": [
           {
-            "_id": "#2",
+            "bulk:formBlankNodeId": "#2",
             "p1": "v1"
           }
         ]
       },
-      "targetForm": {
-        "_id": "#1"
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "#1"
       },
       "before": {
         "r1": [
@@ -3540,17 +3540,17 @@
     },
     {
       "name": "Replace only the first out of several matching nodes",
-      "matchForm": {
-        "_id": "#1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "#1",
         "r1": [
           {
-            "_id": "#2",
+            "bulk:formBlankNodeId": "#2",
             "p1": "v1"
           }
         ]
       },
-      "targetForm": {
-        "_id": "#1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "#1",
         "r1": [
           {
             "@id": "https://id.kb.se/x"
@@ -3583,36 +3583,36 @@
     },
     {
       "name": "Remove the same number of nodes that differ between matchForm and targetForm",
-      "matchForm": {
-        "_id": "#1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "#1",
         "r1": [
           {
-            "_id": "#2",
+            "bulk:formBlankNodeId": "#2",
             "p1": "v1"
           },
           {
-            "_id": "#3",
+            "bulk:formBlankNodeId": "#3",
             "p2": "v2"
           },
           {
-            "_id": "#4",
+            "bulk:formBlankNodeId": "#4",
             "p3": "v3"
           },
           {
-            "_id": "#5",
+            "bulk:formBlankNodeId": "#5",
             "p4": "v4"
           }
         ]
       },
-      "targetForm": {
-        "_id": "#1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "#1",
         "r1": [
           {
-            "_id": "#3",
+            "bulk:formBlankNodeId": "#3",
             "p2": "v2"
           },
           {
-            "_id": "#4",
+            "bulk:formBlankNodeId": "#4",
             "p3": "v3"
           }
         ]
@@ -3652,27 +3652,27 @@
     },
     {
       "name": "Prioritize removing nodes with higher specificity",
-      "matchForm": {
-        "_id": "#1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "#1",
         "r1": [
           {
-            "_id": "#2",
+            "bulk:formBlankNodeId": "#2",
             "p1": "v1"
           },
           {
-            "_id": "#3",
-            "@type": "Any"
+            "bulk:formBlankNodeId": "#3",
+            "@type": "bulk:Any"
           },
           {
-            "_id": "#4",
-            "_match": ["Exact"],
+            "bulk:formBlankNodeId": "#4",
+            "bulk:matchingMode": ["bulk:Exact"],
             "p1": "v1",
             "p2": "v2"
           }
         ]
       },
-      "targetForm": {
-        "_id": "#1"
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "#1"
       },
       "before": {
         "r1": [
@@ -3702,40 +3702,40 @@
     },
     {
       "name": "Prioritize changes for nodes with higher specificity",
-      "matchForm": {
-        "_id": "#1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "#1",
         "r1": [
           {
-            "_id": "#3",
-            "@type": "Any"
+            "bulk:formBlankNodeId": "#3",
+            "@type": "bulk:Any"
           },
           {
-            "_id": "#4",
+            "bulk:formBlankNodeId": "#4",
             "p2": "v2"
           },
           {
-            "_id": "#5",
-            "_match": ["Exact"],
+            "bulk:formBlankNodeId": "#5",
+            "bulk:matchingMode": ["bulk:Exact"],
             "p2": "v2",
             "p3": "v3"
           }
         ]
       },
-      "targetForm": {
-        "_id": "#1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "#1",
         "r1": [
           {
-            "_id": "#3",
-            "@type": "Any",
+            "bulk:formBlankNodeId": "#3",
+            "@type": "bulk:Any",
             "p1": "v1"
           },
           {
-            "_id": "#4",
+            "bulk:formBlankNodeId": "#4",
             "p2": "v3"
           },
           {
-            "_id": "#5",
-            "_match": ["Exact"],
+            "bulk:formBlankNodeId": "#5",
+            "bulk:matchingMode": ["bulk:Exact"],
             "p2": "v2"
           }
         ]
@@ -3781,54 +3781,54 @@
     },
     {
       "name": "Remove/add to/change/replace duplicates",
-      "matchForm": {
-        "_id": "#1",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "#1",
         "r1": [
           {
-            "_id": "#2",
+            "bulk:formBlankNodeId": "#2",
             "p1": "v1"
           },
           {
-            "_id": "#3",
+            "bulk:formBlankNodeId": "#3",
             "p1": "v1"
           },
           {
-            "_id": "#4",
+            "bulk:formBlankNodeId": "#4",
             "p1": "v1"
           },
           {
-            "_id": "#5",
+            "bulk:formBlankNodeId": "#5",
             "p1": "v1"
           },
           {
-            "_id": "#6",
+            "bulk:formBlankNodeId": "#6",
             "p1": "v1"
           },
           {
-            "_id": "#7",
+            "bulk:formBlankNodeId": "#7",
             "p1": "v1"
           }
         ]
       },
-      "targetForm": {
-        "_id": "#1",
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "#1",
         "r1": [
           {
-            "_id": "#4",
+            "bulk:formBlankNodeId": "#4",
             "p1": "v1",
             "p2": "v2"
           },
           {
-            "_id": "#5",
+            "bulk:formBlankNodeId": "#5",
             "p1": "v1",
             "p3": "v3"
           },
           {
-            "_id": "#6",
+            "bulk:formBlankNodeId": "#6",
             "p1": "v2"
           },
           {
-            "_id": "#7",
+            "bulk:formBlankNodeId": "#7",
             "p1": "v3"
           },
           {

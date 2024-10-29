@@ -19,7 +19,7 @@ class TransformSpec extends Specification {
 
     def "collect changed paths"() {
         given:
-        def transform = new Transform((Map) spec["matchForm"], (Map) spec["targetForm"])
+        def transform = new Transform((Map) spec["bulk:matchForm"], (Map) spec["bulk:targetForm"])
         def addedPaths = spec["addedPaths"]
         def removedPaths = spec["removedPaths"]
 
@@ -33,7 +33,7 @@ class TransformSpec extends Specification {
 
     def "form to sparql pattern: literal value"() {
         given:
-        def form = ['_id': '#1', 'p1': 'x']
+        def form = ['bulk:formBlankNodeId': '#1', 'p1': 'x']
         def expectedPattern = "?graph :mainEntity ?1 .\n\n?1 :p1 \"x\" ."
 
         expect:
@@ -42,7 +42,7 @@ class TransformSpec extends Specification {
 
     def "form to sparql pattern: iri value"() {
         given:
-        def form = ['_id': '#1', 'p1': ['@id': 'https://libris.kb.se/x']]
+        def form = ['bulk:formBlankNodeId': '#1', 'p1': ['@id': 'https://libris.kb.se/x']]
         def expectedPattern = "?graph :mainEntity ?1 .\n\n?1 :p1 <https://libris.kb.se/x> ."
 
         expect:
@@ -51,7 +51,7 @@ class TransformSpec extends Specification {
 
     def "form to sparql pattern: marc property"() {
         given:
-        def form = ['_id': '#1', 'marc:p': 'x']
+        def form = ['bulk:formBlankNodeId': '#1', 'marc:p': 'x']
         def expectedPattern = "?graph :mainEntity ?1 .\n\n?1 marc:p \"x\" ."
 
         expect:
@@ -60,7 +60,7 @@ class TransformSpec extends Specification {
 
     def "form to sparql pattern: null/empty value"() {
         given:
-        def form = ['_id': '#1', 'p1': v]
+        def form = ['bulk:formBlankNodeId': '#1', 'p1': v]
         def expectedPattern = "?graph :mainEntity ?1 .\n\n?1 :p1 [ ] ."
 
         expect:
@@ -72,7 +72,7 @@ class TransformSpec extends Specification {
 
     def "form to sparql pattern: nested null/empty value"() {
         given:
-        def form = ['_id': '#1', 'p1': ['_id': '#2', 'p2': v]]
+        def form = ['bulk:formBlankNodeId': '#1', 'p1': ['bulk:formBlankNodeId': '#2', 'p2': v]]
         def expectedPattern = "?graph :mainEntity ?1 .\n\n?1 :p1 [ :p2 [ ] ] ."
 
         expect:
@@ -84,7 +84,7 @@ class TransformSpec extends Specification {
 
     def "form to sparql pattern: nested values"() {
         given:
-        def form = ['_id': '#1', 'p1': ['_id': '#2', 'p2': ['@id': 'https://libris.kb.se/x'], 'marc:p': "x"]]
+        def form = ['bulk:formBlankNodeId': '#1', 'p1': ['bulk:formBlankNodeId': '#2', 'p2': ['@id': 'https://libris.kb.se/x'], 'marc:p': "x"]]
         def expectedPattern = "?graph :mainEntity ?1 .\n\n?1 :p1 [ :p2 <https://libris.kb.se/x> ;\n      marc:p \"x\" ] ."
 
         expect:
@@ -93,7 +93,7 @@ class TransformSpec extends Specification {
 
     def "form to sparql pattern: ordered list value"() {
         given:
-        def form = ['_id': '#1', 'p3': [['_id': '#2', 'p1': 'x'], ['_id': '#3', 'p2': 'y']]]
+        def form = ['bulk:formBlankNodeId': '#1', 'p3': [['bulk:formBlankNodeId': '#2', 'p1': 'x'], ['bulk:formBlankNodeId': '#3', 'p2': 'y']]]
         def expectedPattern = "?graph :mainEntity ?1 .\n\n?1 :p3 ( ( [ :p1 \"x\" ] ) ( [ :p2 \"y\" ] ) ) ."
 
         expect:
@@ -102,18 +102,18 @@ class TransformSpec extends Specification {
 
     def "form to sparql pattern: id mappings"() {
         given:
-        def recordIds = ['@type': 'AnyOf', 'value': ['https://libris.kb.se/x', 'https://libris.kb.se/y',
-                                                     'https://libris.kb.se/z']]
-        def thingIds = ['@type': 'AnyOf', 'value': ['https://libris.kb.se/x#it', 'https://libris.kb.se/y#it',
-                                                    'https://libris.kb.se/z#it']]
-        def values = ['@type': 'AnyOf', 'value': ['https://id.kb.se/x', 'https://id.kb.se/y',
-                                                  'https://id.kb.se/z#it']]
+        def recordIds = ['@type': 'bulk:AnyOf', 'value': ['https://libris.kb.se/x', 'https://libris.kb.se/y',
+                                                          'https://libris.kb.se/z']]
+        def thingIds = ['@type': 'bulk:AnyOf', 'value': ['https://libris.kb.se/x#it', 'https://libris.kb.se/y#it',
+                                                         'https://libris.kb.se/z#it']]
+        def values = ['@type': 'bulk:AnyOf', 'value': ['https://id.kb.se/x', 'https://id.kb.se/y',
+                                                       'https://id.kb.se/z#it']]
 
         def form = [
-                '_id'    : '#1',
-                '_idList': thingIds,
-                'meta'   : ['_id': '#2', '_idList': recordIds],
-                'p1'     : ['_id': '#3', '_idList': values]
+                'bulk:formBlankNodeId': '#1',
+                'bulk:hasId'          : thingIds,
+                'meta'                : ['bulk:formBlankNodeId': '#2', 'bulk:hasId': recordIds],
+                'p1'                  : ['bulk:formBlankNodeId': '#3', 'bulk:hasId': values]
         ]
 
         def expectedPattern = "VALUES ?1 { <https://libris.kb.se/x#it> <https://libris.kb.se/y#it> <https://libris.kb.se/z#it> }\n" +
@@ -130,11 +130,11 @@ class TransformSpec extends Specification {
     def "form to sparql pattern: unspecified types"() {
         given:
         def form = [
-                '_id'   : '#1',
-                '@type' : 'Any',
-                'p1'    : ['_id': '#2', '@type': 'Any'],
-                'p2'    : ['_id': '#3', '@type': 'Any', 'p': 'v'],
-                'marc:p': ['_id': '#4', '@type': 'marc:T', 'p': 'v']
+                'bulk:formBlankNodeId': '#1',
+                '@type'               : 'bulk:Any',
+                'p1'                  : ['bulk:formBlankNodeId': '#2', '@type': 'bulk:Any'],
+                'p2'                  : ['bulk:formBlankNodeId': '#3', '@type': 'bulk:Any', 'p': 'v'],
+                'marc:p'              : ['bulk:formBlankNodeId': '#4', '@type': 'marc:T', 'p': 'v']
         ]
 
         def expectedPattern = "?graph :mainEntity ?1 .\n" +
@@ -151,9 +151,9 @@ class TransformSpec extends Specification {
     def "form to sparql pattern: base types"() {
         given:
         def form = [
-                '_id'   : '#1',
-                '@type' : 'T1',
-                '_match': ['Subtypes']
+                'bulk:formBlankNodeId': '#1',
+                '@type'               : 'T1',
+                'bulk:matchingMode'   : ['bulk:Subtypes']
         ]
 
         def expectedPattern = "VALUES ?T1 { :T1 :T1x :T1y :T1z }\n" +
@@ -178,20 +178,20 @@ class TransformSpec extends Specification {
         transform.matches(matchForm, node) == result
 
         where:
-        matchForm                                                 | node                                        | result
-        "a"                                                       | "a"                                         | true
-        "a"                                                       | "b"                                         | false
-        "a"                                                       | ["a", "b"]                                  | true
-        ["x": "a"]                                                | ["x": ["a", "b"]]                           | true
-        ["x": "a", "_match": ["Exact"]]                           | ["x": ["a", "b"]]                           | false
-        ["x": ["a", "b"], "_match": ["Exact"]]                    | ["x": ["a", "b"]]                           | true
-        ["@type": "T", "_match": ["Subtypes"], "a": "b"]          | ["@type": "Tx", "a": "b"]                   | true
-        ["@type": "T", "a": "b"]                                  | ["@type": "Tx", "a": "b"]                   | false
-        ["@type": "T", "_match": ["Subtypes", "Exact"], "a": "b"] | ["@type": "Ty", "a": "b"]                   | true
-        ["@type": "T", "_match": ["Subtypes", "Exact"], "a": "b"] | ["@type": "Ty", "a": "b", "c": "d"]         | false
-        ["@type": "Any", "a": "b"]                                | ["@type": "T", "a": "b", "c": "d"]          | true
-        ["@type": "Any", "a": "b", "_match": ["Exact"]]           | ["@type": "T", "a": "b", "c": "d"]          | false
-        ["x": ["_id": "#1"]]                                      | ["x": ["@id": "https://libris.kb.se/y#it"]] | true
-        ["x": ["_id": "#1"]]                                      | ["x": ["@id": "https://libris.kb.se/z#it"]] | false
+        matchForm                                                                      | node                                        | result
+        "a"                                                                            | "a"                                         | true
+        "a"                                                                            | "b"                                         | false
+        "a"                                                                            | ["a", "b"]                                  | true
+        ["x": "a"]                                                                     | ["x": ["a", "b"]]                           | true
+        ["x": "a", "bulk:matchingMode": ["bulk:Exact"]]                                | ["x": ["a", "b"]]                           | false
+        ["x": ["a", "b"], "bulk:matchingMode": ["bulk:Exact"]]                         | ["x": ["a", "b"]]                           | true
+        ["@type": "T", "bulk:matchingMode": ["bulk:Subtypes"], "a": "b"]               | ["@type": "Tx", "a": "b"]                   | true
+        ["@type": "T", "a": "b"]                                                       | ["@type": "Tx", "a": "b"]                   | false
+        ["@type": "T", "bulk:matchingMode": ["bulk:Subtypes", "bulk:Exact"], "a": "b"] | ["@type": "Ty", "a": "b"]                   | true
+        ["@type": "T", "bulk:matchingMode": ["bulk:Subtypes", "bulk:Exact"], "a": "b"] | ["@type": "Ty", "a": "b", "c": "d"]         | false
+        ["@type": "bulk:Any", "a": "b"]                                                | ["@type": "T", "a": "b", "c": "d"]          | true
+        ["@type": "bulk:Any", "a": "b", "bulk:matchingMode": ["bulk:Exact"]]           | ["@type": "T", "a": "b", "c": "d"]          | false
+        ["x": ["bulk:formBlankNodeId": "#1"]]                                          | ["x": ["@id": "https://libris.kb.se/y#it"]] | true
+        ["x": ["bulk:formBlankNodeId": "#1"]]                                          | ["x": ["@id": "https://libris.kb.se/z#it"]] | false
     }
 }

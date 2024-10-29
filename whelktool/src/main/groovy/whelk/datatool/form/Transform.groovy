@@ -23,15 +23,16 @@ import static whelk.util.LegacyIntegrationTools.getMarcCollectionInHierarchy
 class Transform {
     private static final DocumentComparator comparator = new DocumentComparator()
 
-    private static final String _ID = '_id'
-    private static final String _MATCH = '_match'
-    private static final String _ID_LIST = '_idList'
+    private static final String BNODE_ID = 'bulk:formBlankNodeId'
+    private static final String MATCHING_MODE = 'bulk:matchingMode'
+    private static final String HAS_ID = 'bulk:hasId'
     private static final String VALUE = 'value'
-    private static final String VALUE_FROM = 'valueFrom'
-    private static final String ANY_TYPE = "Any"
-    private static final String SUBTYPES = "Subtypes"
+    private static final String VALUE_FROM = 'bulk:valueFrom'
+    private static final String ANY_TYPE = "bulk:Any"
+    private static final String SUBTYPES = "bulk:Subtypes"
+    private static final String EXACT = 'bulk:Exact'
+    private static final String ANY_OF = 'bulk:AnyOf'
     private static final String HAS_BASE_TYPE_TMP = '_hasBaseTypeTmp'
-    private static final String EXACT = 'Exact'
 
     Map matchForm
     Map targetForm
@@ -124,7 +125,7 @@ class Transform {
 
         if (a instanceof Map && b instanceof Map) {
             // Lack of implicit id means that there is a new node at this path
-            if (!a[_ID] || !b[_ID]) {
+            if (!a[BNODE_ID] || !b[BNODE_ID]) {
                 return [path]
             }
             def changedPaths = []
@@ -137,7 +138,7 @@ class Transform {
         if (a instanceof List && b instanceof List) {
             def changedPaths = []
             def sameNode = { x, y ->
-                x instanceof Map && y instanceof Map && ((x[_ID] && x[_ID] == y[_ID]) || (x[ID_KEY] && x[ID_KEY] == b[ID_KEY]))
+                x instanceof Map && y instanceof Map && ((x[BNODE_ID] && x[BNODE_ID] == y[BNODE_ID]) || (x[ID_KEY] && x[ID_KEY] == b[ID_KEY]))
             }
             a.eachWithIndex { aElem, i ->
                 def peer = b.find { bElem -> aElem == bElem || sameNode(aElem, bElem) }
@@ -164,8 +165,8 @@ class Transform {
 
     private static Map<String, List> collectNodeIdToPath(Map form) {
         Map<String, List> nodeIdToPath = [:]
-        DocumentUtil.findKey(form, _ID) { _id, path ->
-            nodeIdToPath[(String) _id] = path.dropRight(1)
+        DocumentUtil.findKey(form, BNODE_ID) { nodeId, path ->
+            nodeIdToPath[(String) nodeId] = path.dropRight(1)
             return new DocumentUtil.Nop()
         }
         return nodeIdToPath
@@ -193,13 +194,13 @@ class Transform {
 
         DocumentUtil.traverse(matchFormCopy) { node, path ->
             if (node instanceof Map) {
-                def _id = node.remove(_ID)
+                def _id = node.remove(BNODE_ID)
                 if (!_id) return
-                node.remove(_ID_LIST)
+                node.remove(HAS_ID)
                 if (node[TYPE_KEY] == ANY_TYPE) {
                     node.remove(TYPE_KEY)
                 }
-                if (asList(node.remove(_MATCH)).contains(SUBTYPES)) {
+                if (asList(node.remove(MATCHING_MODE)).contains(SUBTYPES)) {
                     def baseType = node.remove(TYPE_KEY)
                     node[HAS_BASE_TYPE_TMP] = baseType
                 }
@@ -270,13 +271,13 @@ class Transform {
             if (!(node instanceof Map)) {
                 return
             }
-            def anyOf = asList(node[_ID_LIST]).find { it[TYPE_KEY] == "AnyOf" }
+            def anyOf = asList(node[HAS_ID]).find { it[TYPE_KEY] == ANY_OF }
             if (!anyOf) {
                 return
             }
             def ids = (anyOf[VALUE] ?: (anyOf[VALUE_FROM] ? IdLoader.fromFile((String) anyOf[VALUE_FROM][ID_KEY]) : [])) as Set<String>
             if (ids) {
-                String nodeId = node[_ID]
+                String nodeId = node[BNODE_ID]
 
                 def (iris, shortIds) = ids.split(JsonLd::looksLikeIri)
                 if (shortIds.isEmpty()) {
@@ -318,7 +319,7 @@ class Transform {
         }
 
         DocumentUtil.traverse(matchForm) { node, path ->
-            if (node instanceof Map && node.containsKey(_MATCH) && ((List) node[_MATCH]).contains(SUBTYPES)) {
+            if (node instanceof Map && node.containsKey(MATCHING_MODE) && ((List) node[MATCHING_MODE]).contains(SUBTYPES)) {
                 def baseType = (String) node[TYPE_KEY]
                 Set<String> subTypes = getSubtypes(baseType, jsonLd) as Set
                 mappings[baseType] = subTypes
@@ -335,11 +336,11 @@ class Transform {
     }
 
     private String getThingTmpId() {
-        return matchForm[_ID]
+        return matchForm[BNODE_ID]
     }
 
     private String getRecordTmpId() {
-        return getAtPath(matchForm, [RECORD_KEY, _ID], "TEMP_ID")
+        return getAtPath(matchForm, [RECORD_KEY, BNODE_ID], "TEMP_ID")
     }
 
     boolean matches(Object node) {
@@ -355,7 +356,7 @@ class Transform {
             return false
         }
         matchForm = new LinkedHashMap(matchForm)
-        def match = asList(matchForm[_MATCH])
+        def match = asList(matchForm[MATCHING_MODE])
         if (match.contains(EXACT)) {
             return exactMatches(matchForm, bNode)
         }
@@ -368,15 +369,15 @@ class Transform {
                 matchForm.remove(TYPE_KEY)
             }
         }
-        matchForm.remove(_MATCH)
+        matchForm.remove(MATCHING_MODE)
         if (matchForm[TYPE_KEY] == ANY_TYPE) {
             matchForm.remove(TYPE_KEY)
         }
-        def ids = nodeIdMappings[matchForm.remove(_ID)]
+        def ids = nodeIdMappings[matchForm.remove(BNODE_ID)]
         if (ids && !ids.contains(bNode[ID_KEY])) {
             return false
         }
-        matchForm.remove(_ID_LIST)
+        matchForm.remove(HAS_ID)
         if (matchForm.size() > bNode.size()) {
             return false
         }
@@ -389,7 +390,7 @@ class Transform {
         }
         matchForm = new HashMap(matchForm)
         bNode = new HashMap(bNode)
-        if (asList(matchForm.remove(_MATCH)).contains(SUBTYPES)) {
+        if (asList(matchForm.remove(MATCHING_MODE)).contains(SUBTYPES)) {
             String aType = matchForm[TYPE_KEY]
             String bType = bNode[TYPE_KEY]
             if ((baseTypeMappings[aType] + aType).contains(bType)) {
@@ -403,18 +404,18 @@ class Transform {
             matchForm.remove(TYPE_KEY)
             bNode.remove(TYPE_KEY)
         }
-        def ids = nodeIdMappings[matchForm.remove(_ID)]
+        def ids = nodeIdMappings[matchForm.remove(BNODE_ID)]
         if (ids && !ids.contains(bNode[ID_KEY])) {
             return false
         }
-        matchForm.remove(_ID_LIST)
+        matchForm.remove(HAS_ID)
         if (matchForm.size() != bNode.size()) {
             return false
         }
         return comparator.isEqual(matchForm, bNode, this::exactMatches)
     }
 
-    public Add newAddValue(Object value) {
+    Add newAddValue(Object value) {
         return new Add(null, value)
     }
 
@@ -443,7 +444,7 @@ class Transform {
         }
 
         boolean shouldMatchExact() {
-            return asList(form()[_MATCH]).contains(EXACT)
+            return asList(form()[MATCHING_MODE]).contains(EXACT)
         }
 
         boolean matchAnyType() {
@@ -472,7 +473,7 @@ class Transform {
         }
 
         boolean shouldMatchExact() {
-            return value instanceof Map && asList(value[_MATCH]).contains(EXACT)
+            return value instanceof Map && asList(value[MATCHING_MODE]).contains(EXACT)
         }
 
         boolean matchAnyType() {
@@ -499,11 +500,11 @@ class Transform {
         }
 
         String parentId() {
-            getAtPath(matchForm, parentPath())[_ID]
+            getAtPath(matchForm, parentPath())[BNODE_ID]
         }
 
         boolean hasId() {
-            value instanceof Map && value.containsKey(_ID_LIST)
+            value instanceof Map && value.containsKey(HAS_ID)
         }
     }
 
@@ -519,7 +520,7 @@ class Transform {
         }
 
         String parentId() {
-            getAtPath(targetForm, parentPath())[_ID]
+            getAtPath(targetForm, parentPath())[BNODE_ID]
         }
     }
 
