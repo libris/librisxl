@@ -13,6 +13,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 import static whelk.datatool.bulkchange.BulkJobDocument.JOB_TYPE;
 import static whelk.datatool.bulkchange.BulkJobDocument.Status.Completed;
@@ -41,10 +42,8 @@ public class BulkJob implements Runnable {
         try {
             AtomicBoolean shouldRun = new AtomicBoolean(false);
             storeUpdate(doc -> {
-                BulkJobDocument jobDoc = new BulkJobDocument(doc.data);
-
-                if (jobDoc.getStatus() == Ready) {
-                    jobDoc.setStatus(Running);
+                if (doc.getStatus() == Ready) {
+                    doc.setStatus(Running);
                     shouldRun.set(true);
                 }
             });
@@ -63,13 +62,13 @@ public class BulkJob implements Runnable {
 
                 tool.run();
 
-                storeUpdate(doc -> new BulkJobDocument(doc.data).setStatus(Completed));
+                storeUpdate(doc -> doc.setStatus(Completed));
             }
         } catch (Exception e) {
             // TODO
             logger.error(e);
             System.err.println(e);
-            storeUpdate(doc -> new BulkJobDocument(doc.data).setStatus(Failed));
+            storeUpdate(doc -> doc.setStatus(Failed));
         }
     }
 
@@ -88,11 +87,12 @@ public class BulkJob implements Runnable {
         return new BulkJobDocument(whelk.getDocument(systemId).data);
     }
 
-    void storeUpdate(PostgreSQLComponent.UpdateAgent updateAgent) {
+    void storeUpdate(Consumer<BulkJobDocument> updater) {
         var minorUpdate = true;
         var writeIdenticalVersions = false;
         var changedIn = "???";
         var changedBy = loadDocument().getDescriptionLastModifier();
+        PostgreSQLComponent.UpdateAgent updateAgent = doc -> updater.accept(new BulkJobDocument(doc.data));
         whelk.storeAtomicUpdate(systemId, minorUpdate, writeIdenticalVersions, changedIn, changedBy, updateAgent);
     }
 
@@ -107,6 +107,4 @@ public class BulkJob implements Runnable {
         String dir = String.format("%s-%s", safeName, now);
         return new File(new File(whelk.getLogRoot(), REPORTS_DIR), dir);
     }
-
-
 }
