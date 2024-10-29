@@ -111,7 +111,7 @@ public class BulkJobDocument extends Document {
         String specType = get(spec, JsonLd.TYPE_KEY);
         return switch(fromKey(SpecType.class, specType)) {
             case SpecType.Update -> new Specification.Update(
-                    get(spec, TARGET_FORM_KEY, Collections.emptyMap()),
+                    get(spec, MATCH_FORM_KEY, Collections.emptyMap()),
                     get(spec, TARGET_FORM_KEY, Collections.emptyMap())
             );
             case SpecType.Delete -> new Specification.Delete(
