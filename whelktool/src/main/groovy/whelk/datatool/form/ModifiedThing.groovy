@@ -68,7 +68,8 @@ class ModifiedThing {
                 try {
                     executeModification(matchingNode, property, removeList, addList)
                 } catch (Exception e) {
-                    throw new Exception("Failed to modify ${thing[ID_KEY]} at path ${cfn.propertyPath + property}: ${e.getMessage()}")
+                    throw new Exception("Failed to modify ${thing[ID_KEY]} at path ${cfn.propertyPath + property}: " +
+                            "${e.getMessage()}")
                 }
             }
         }
@@ -173,5 +174,4 @@ class ModifiedThing {
                 ? current.first()
                 : current
     }
-
 }
