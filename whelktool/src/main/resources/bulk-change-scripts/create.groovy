@@ -1,5 +1,6 @@
 import whelk.Document
 import whelk.datatool.form.Transform
+import whelk.util.DocumentUtil
 
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
@@ -7,6 +8,7 @@ import static whelk.JsonLd.RECORD_KEY
 import static whelk.JsonLd.THING_KEY
 import static whelk.JsonLd.TYPE_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.TARGET_FORM_KEY
+import static whelk.util.DocumentUtil.traverse
 
 Map targetForm = parameters.get(TARGET_FORM_KEY)
 
@@ -36,6 +38,8 @@ selectByIds(ids) {
     }
 }
 
+clearBulkTerms(targetForm)
+
 def docs = verifiedUris.collect { uri ->
     Map thing = Document.deepCopy(targetForm) as Map
     Map varyingNode = getAtPath(thing, varyingNodePath)
@@ -50,4 +54,13 @@ def docs = verifiedUris.collect { uri ->
 
 selectFromIterable(docs) {
     it.scheduleSave()
+}
+
+static void clearBulkTerms(Map form) {
+    traverse(form) { node, path ->
+        if (node instanceof Map) {
+            node.removeAll { ((String) it.key).startsWith("bulk:") }
+            return new DocumentUtil.Nop()
+        }
+    }
 }
