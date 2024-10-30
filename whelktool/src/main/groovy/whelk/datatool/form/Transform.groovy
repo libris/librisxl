@@ -162,7 +162,7 @@ class Transform {
         return path.findAll { it instanceof String } as List<String>
     }
 
-    private static Map<String, List> collectNodeIdToPath(Map form) {
+    static Map<String, List> collectNodeIdToPath(Map form) {
         Map<String, List> nodeIdToPath = [:]
         DocumentUtil.findKey(form, _ID) { _id, path ->
             nodeIdToPath[(String) _id] = path.dropRight(1)
@@ -262,11 +262,15 @@ class Transform {
     }
 
     Map<String, Set<String>> collectNodeIdMappings(Whelk whelk) {
+        return collectNodeIdMappings(matchForm, whelk)
+    }
+
+    static Map<String, Set<String>> collectNodeIdMappings(Map form, Whelk whelk) {
         Map<String, Set<String>> nodeIdMappings = [:]
 
         IdLoader idLoader = whelk ? new IdLoader(whelk.storage) : null
 
-        DocumentUtil.traverse(matchForm) { node, path ->
+        DocumentUtil.traverse(form) { node, path ->
             if (!(node instanceof Map)) {
                 return
             }
