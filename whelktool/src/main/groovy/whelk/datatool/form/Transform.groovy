@@ -194,8 +194,8 @@ class Transform {
 
         DocumentUtil.traverse(matchFormCopy) { node, path ->
             if (node instanceof Map) {
-                def _id = node.remove(BNODE_ID)
-                if (!_id) return
+                def bNodeId = node.remove(BNODE_ID)
+                if (!bNodeId) return
                 node.remove(HAS_ID)
                 if (node[TYPE_KEY] == ANY_TYPE) {
                     node.remove(TYPE_KEY)
@@ -204,8 +204,8 @@ class Transform {
                     def baseType = node.remove(TYPE_KEY)
                     node[HAS_BASE_TYPE_TMP] = baseType
                 }
-                if (nodeIdMappings.containsKey(_id)) {
-                    node[ID_KEY] = _id
+                if (nodeIdMappings.containsKey(bNodeId)) {
+                    node[ID_KEY] = bNodeId
                 }
                 return new DocumentUtil.Nop()
             }
@@ -248,10 +248,10 @@ class Transform {
         return valuesClauses + sparqlPattern
     }
 
-    String getVar(String _id) {
-        return _id == getRecordTmpId()
+    String getVar(String bNodeId) {
+        return bNodeId == getRecordTmpId()
                 ? "?$GRAPH_VAR"
-                : "?${_id.replace('#', '')}"
+                : "?${bNodeId.replace('#', '')}"
     }
 
     private static String withoutPrefixes(String ttl) {
