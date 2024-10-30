@@ -34,22 +34,40 @@ class ModifiedThing {
             return thing
         }
 
-        // Map changes to nodes to which the changes are applicable (matching by form)
-        Map<Transform.ChangesForNode, List<Map>> changeMap = transform.getChanges().collectEntries { cfn ->
-            def candidateNodes = asList(getAtPath(thing, cfn.propertyPath, [], false)) as List<Map>
-            return [cfn, candidateNodes.findAll { cNode -> cfn.matches(cNode) }]
+        def bySpecificitySort = { a, b ->
+            b.shouldMatchExact() <=> a.shouldMatchExact()
+                    ?: a.matchAnyType() <=> b.matchAnyType()
         }
 
-        // Perform changes node by node, property by property
-        changeMap.each { c, matchingNodes ->
-            matchingNodes.each { node ->
-                c.changeList.groupBy { it.property() }.each { property, changeList ->
-                    def removeList = changeList.findAll { it instanceof Transform.Remove } as List<Transform.Remove>
+        transform.getChanges().groupBy { it.propertyPath }.each { propPath, changes ->
+            // Map changes to a node to which the changes are applicable (matching by form)
+            Map<Transform.ChangesForNode, Map> changeMap = [:]
+
+            // Prioritize matching ChangesForNode objects with a narrower hit range
+            changes.sort(bySpecificitySort).each { cfn ->
+                def candidateNodes = asList(getAtPath(thing, cfn.propertyPath, [], false)) as List<Map>
+                def matchingNode = candidateNodes.find { cNode -> !cNode['_matched'] && cfn.matches(cNode) }
+                if (matchingNode) {
+                    // Mark node temporarily as matched to avoid mapping different ChangesForNode objects to the same node
+                    matchingNode['_matched'] = true
+                    changeMap[cfn] = matchingNode
+                }
+            }
+
+            // Remove temporary markers
+            changeMap.values().each { it.remove('_matched') }
+
+            // Perform changes node by node, property by property
+            changeMap.each { cfn, matchingNode ->
+                cfn.changeList.groupBy { it.property() }.each { property, changeList ->
+                    def removeList = changeList.findAll { it instanceof Transform.Remove }
+                            .sort(bySpecificitySort) as List<Transform.Remove>
                     def addList = changeList.findAll { it instanceof Transform.Add } as List<Transform.Add>
                     try {
-                        executeModification(node, property, removeList, addList)
+                        executeModification(matchingNode, property, removeList, addList)
                     } catch (Exception e) {
-                        throw new Exception("Failed to modify ${thing[ID_KEY]} at path ${c.propertyPath + property}: ${e.getMessage()}")
+                        throw new Exception("Failed to modify ${thing[ID_KEY]} at path ${cfn.propertyPath + property}: " +
+                                "${e.getMessage()}")
                     }
                 }
             }
@@ -84,7 +102,14 @@ class ModifiedThing {
     private static void remove(Map node, String property, List<Transform.Remove> valuesToRemove) {
         def current = asList(node[property])
         // Assume that it has already been checked that current contains all valuesToRemove
-        valuesToRemove.each { v -> current.removeAll { v.matches(property, it) } }
+        valuesToRemove.each { v ->
+            if (v.hasId()) {
+                current.removeAll { v.matches(property, it) }
+            } else {
+                current.find { v.matches(property, it) }
+                        .with { current.remove(it) }
+            }
+        }
         if (current.isEmpty()) {
             node.remove(property)
         } else {
@@ -107,7 +132,7 @@ class ModifiedThing {
                     current = asList(current) + add.value
                 } else if (current instanceof Map && add.value instanceof Map) {
                     ((Map) add.value).each { k, v ->
-                        addRecursive((Map) current, (String) k, asList(v).collect { new Transform.Add(it) })
+                        addRecursive((Map) current, (String) k, asList(v).collect { transform.newAddValue(it) })
                     }
                 } else {
                     throw new Exception("Property $property is not repeatable.")
@@ -121,13 +146,26 @@ class ModifiedThing {
     private void replace(Map node, String property, List<Transform.Remove> valuesToRemove,
                          List<Transform.Add> valuesToAdd) {
         def current = asList(node[property])
-
-        List<Number> removeAt = current.findIndexValues { c -> valuesToRemove.any { v -> v.matches(property, c) } }
-        int insertAt = removeAt.first().intValue()
-
-        removeAt.reverse().each { n ->
-            current.remove(n.intValue())
+        def removeAt = []
+        valuesToRemove.each { v ->
+            if (v.hasId()) {
+                current.eachWithIndex { c, i ->
+                    if (!removeAt.contains(i) && v.matches(property, c)) {
+                        removeAt.add(i)
+                    }
+                }
+            }
+            for (i in 0..<current.size()) {
+                if (!removeAt.contains(i) && v.matches(property, current[i])) {
+                    removeAt.add(i)
+                    break
+                }
+            }
         }
+        removeAt.sort(true)
+        int insertAt = removeAt.first() as int
+
+        removeAt.reverseEach { i -> current.remove(i) }
         valuesToAdd.findAll { v -> !current.any { v.matches(it) } }
                 .eachWithIndex { v, i -> current.add(insertAt + i, v.value) }
 
@@ -135,5 +173,4 @@ class ModifiedThing {
                 ? current.first()
                 : current
     }
-
 }

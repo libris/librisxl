@@ -39,6 +39,7 @@ class Transform {
     List<List> addedPaths
     List<List> removedPaths
 
+    Map<String, List> nodeIdToMatchFormPath
     Map<String, Set<String>> nodeIdMappings
     Map<String, Set<String>> baseTypeMappings
 
@@ -49,6 +50,7 @@ class Transform {
         this.targetForm = targetForm
         this.removedPaths = collectRemovedPaths()
         this.addedPaths = collectAddedPaths()
+        this.nodeIdToMatchFormPath = collectNodeIdToPath(matchForm)
         this.nodeIdMappings = collectNodeIdMappings(whelk)
         this.baseTypeMappings = collectBaseTypeMappings(whelk?.jsonld)
     }
@@ -80,12 +82,9 @@ class Transform {
     List<ChangesForNode> getChanges() {
         if (changes == null) {
             changes = (collectRemove() + collectAdd() as List<Change>)
-                    .groupBy { it.parentPath() }
-                    .collect { parentPath, changeList ->
-                        new ChangesForNode(dropIndexes(parentPath),
-                                getAtPath(matchForm, parentPath) as Map,
-                                changeList)
-                    }
+                    .groupBy { it.parentId() }
+                    .collect { nodeId, changeList -> new ChangesForNode(nodeId, changeList) }
+                    .sort {it.nodeId }
         }
         return changes
     }
@@ -161,6 +160,15 @@ class Transform {
 
     private static List<String> dropIndexes(List path) {
         return path.findAll { it instanceof String } as List<String>
+    }
+
+    private static Map<String, List> collectNodeIdToPath(Map form) {
+        Map<String, List> nodeIdToPath = [:]
+        DocumentUtil.findKey(form, _ID) { _id, path ->
+            nodeIdToPath[(String) _id] = path.dropRight(1)
+            return new DocumentUtil.Nop()
+        }
+        return nodeIdToPath
     }
 
     String getSparqlPattern(Map context) {
@@ -346,7 +354,7 @@ class Transform {
         if (matchForm == null || bNode == null) {
             return false
         }
-        matchForm = new HashMap(matchForm)
+        matchForm = new LinkedHashMap(matchForm)
         def match = asList(matchForm[_MATCH])
         if (match.contains(EXACT)) {
             return exactMatches(matchForm, bNode)
@@ -406,20 +414,24 @@ class Transform {
         return comparator.isEqual(matchForm, bNode, this::exactMatches)
     }
 
+    public Add newAddValue(Object value) {
+        return new Add(null, value)
+    }
+
     // Need a better name for this...
     class ChangesForNode {
-        List<String> propertyPath
-        Map form
+        String nodeId
         List<Change> changeList
+        List<String> propertyPath
 
-        ChangesForNode(List<String> propertyPath, Map form, List<Change> changeList) {
-            this.propertyPath = propertyPath
-            this.form = form
+        ChangesForNode(String nodeId, List<Change> changeList) {
+            this.nodeId = nodeId
             this.changeList = changeList
+            this.propertyPath = dropIndexes(nodeIdToMatchFormPath[nodeId])
         }
 
         boolean matches(Map node) {
-            return matches(form, node) && removeMatches(node)
+            return matches(form(), node) && removeMatches(node)
         }
 
         private removeMatches(Map node) {
@@ -428,6 +440,18 @@ class Transform {
 
         private List<Remove> getRemoveList() {
             return changeList.findAll { it instanceof Remove } as List<Remove>
+        }
+
+        boolean shouldMatchExact() {
+            return asList(form()[_MATCH]).contains(EXACT)
+        }
+
+        boolean matchAnyType() {
+            form()[TYPE_KEY] == ANY_TYPE
+        }
+
+        private Map form() {
+            return getAtPath(matchForm, nodeIdToMatchFormPath[nodeId]) as Map
         }
     }
 
@@ -447,7 +471,17 @@ class Transform {
             return propertyPath().last()
         }
 
+        boolean shouldMatchExact() {
+            return value instanceof Map && asList(value[_MATCH]).contains(EXACT)
+        }
+
+        boolean matchAnyType() {
+            value instanceof Map && value[TYPE_KEY] == ANY_TYPE
+        }
+
         abstract boolean matches(Object o)
+
+        abstract String parentId()
     }
 
     class Remove extends Change {
@@ -463,21 +497,29 @@ class Transform {
         boolean matches(Object o) {
             return Transform.this.matches(value, o) || (property() == TYPE_KEY && value == ANY_TYPE)
         }
+
+        String parentId() {
+            getAtPath(matchForm, parentPath())[_ID]
+        }
+
+        boolean hasId() {
+            value instanceof Map && value.containsKey(_ID_LIST)
+        }
     }
 
-    static class Add extends Change {
+    class Add extends Change {
         // Should matching mode apply to Add too?
         Add(List path, Object value) {
             this.path = path
             this.value = value
         }
 
-        Add(Object value) {
-            this(null, value)
-        }
-
         boolean matches(Object o) {
             return comparator.isEqual(["x": value], ["x": o])
+        }
+
+        String parentId() {
+            getAtPath(targetForm, parentPath())[_ID]
         }
     }
 
