@@ -84,6 +84,7 @@ class Transform {
             changes = (collectRemove() + collectAdd() as List<Change>)
                     .groupBy { it.parentId() }
                     .collect { nodeId, changeList -> new ChangesForNode(nodeId, changeList) }
+                    .sort {it.nodeId }
         }
         return changes
     }
@@ -409,6 +410,10 @@ class Transform {
         return comparator.isEqual(matchForm, bNode, this::exactMatches)
     }
 
+    public Add newAddValue(Object value) {
+        return new Add(null, value)
+    }
+
     // Need a better name for this...
     class ChangesForNode {
         String nodeId
@@ -503,10 +508,6 @@ class Transform {
         Add(List path, Object value) {
             this.path = path
             this.value = value
-        }
-
-        Add(Object value) {
-            this(null, value)
         }
 
         boolean matches(Object o) {
