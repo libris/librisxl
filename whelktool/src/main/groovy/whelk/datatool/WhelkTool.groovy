@@ -927,6 +927,12 @@ class DocumentItem {
 
         return m.isModified()
     }
+
+    boolean matches(Map matchForm) {
+        Map thing = (Map) this.graph[1]
+        thing[RECORD_KEY] = (Map) this.graph[0]
+        return new Transform.MatchForm(matchForm, whelk).matches(thing)
+    }
 }
 
 
