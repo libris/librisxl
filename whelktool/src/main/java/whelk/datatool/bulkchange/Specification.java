@@ -1,7 +1,9 @@
 package whelk.datatool.bulkchange;
 
 import org.apache.commons.io.IOUtils;
+import whelk.Whelk;
 import whelk.datatool.Script;
+import whelk.datatool.form.Transform;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,6 +16,7 @@ import static whelk.datatool.bulkchange.BulkJobDocument.TARGET_FORM_KEY;
 public sealed interface Specification permits Specification.Create, Specification.Delete, Specification.Update {
 
     Script getScript(String bulkJobId);
+    Transform getTransform(Whelk whelk);
 
     record Update(Map<String, Object> matchForm, Map<String, Object> targetForm) implements Specification {
         @Override
@@ -24,6 +27,11 @@ public sealed interface Specification permits Specification.Create, Specificatio
                     TARGET_FORM_KEY, targetForm
             ));
             return s;
+        }
+
+        @Override
+        public Transform getTransform(Whelk whelk) {
+            return new Transform(matchForm, targetForm, whelk);
         }
     }
 
@@ -36,6 +44,11 @@ public sealed interface Specification permits Specification.Create, Specificatio
             ));
             return s;
         }
+
+        @Override
+        public Transform.MatchForm getTransform(Whelk whelk) {
+            return new Transform.MatchForm(matchForm, whelk);
+        }
     }
 
     record Create(Map<String, Object> targetForm) implements Specification {
@@ -46,6 +59,12 @@ public sealed interface Specification permits Specification.Create, Specificatio
                     TARGET_FORM_KEY, targetForm
             ));
             return s;
+        }
+
+        @Override
+        public Transform getTransform(Whelk whelk) {
+            // TODO
+            return null;
         }
     }
 
