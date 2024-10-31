@@ -46,10 +46,12 @@ public class EmmServlet extends HttpServlet {
                 return;
             }
 
+            String ApiBaseUrl = req.getRequestURL().toString();
+
             // Send ChangeSet reply
             res.setCharacterEncoding("utf-8");
             res.setContentType("application/json");
-            EmmChangeSet.sendChangeSet(whelk, res, category, until);
+            EmmChangeSet.sendChangeSet(whelk, res, category, until, ApiBaseUrl);
 
         } catch (Exception e) {
             e.printStackTrace();
