@@ -635,7 +635,7 @@ class WhelkTool {
         bindings.put("baseUri", Document.BASE_URI)
         bindings.put("getReportWriter", this.&getReportWriter)
         bindings.put("reportsDir", reportsDir)
-        bindings.put("parameters", script.scriptParams)
+        bindings.put("parameters", script.getParameters())
         bindings.put("script", { String s -> script.compileSubScript(this, s) })
         bindings.put("selectByCollection", this.&selectByCollection)
         bindings.put("selectByIds", this.&selectByIds)
@@ -785,7 +785,7 @@ class Script {
     CompiledScript compiledScript
     String scriptJobUri
 
-    private Map<Object, Object> scriptParams = Collections.emptyMap()
+    protected Map<Object, Object> scriptParams = Collections.emptyMap()
 
     private Map<String, Closure> compiledScripts = [:]
 
@@ -805,6 +805,10 @@ class Script {
 
     void setParameters(Map<Object, Object> scriptParams) {
         this.scriptParams = Collections.unmodifiableMap(scriptParams)
+    }
+
+    Map<Object, Object> getParameters() {
+        return scriptParams;
     }
 
     Closure compileSubScript(WhelkTool tool, String scriptPath) {
