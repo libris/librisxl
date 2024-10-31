@@ -147,7 +147,6 @@ class WhelkTool {
         if (!silent) {
             log "Select by ${ids.size()} IDs"
         }
-
         def idItems = idLoader.collectXlShortIds(ids)
         if (idItems.isEmpty()) {
             return

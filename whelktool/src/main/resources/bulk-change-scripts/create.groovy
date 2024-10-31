@@ -2,9 +2,11 @@ import whelk.Document
 import whelk.datatool.form.Transform
 import whelk.util.DocumentUtil
 
+import static java.util.Collections.synchronizedSet;
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.RECORD_KEY
+import static whelk.JsonLd.RECORD_TYPE
 import static whelk.JsonLd.THING_KEY
 import static whelk.JsonLd.TYPE_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.TARGET_FORM_KEY
@@ -28,14 +30,12 @@ if (varyingNodePath == [] || varyingNodePath == [RECORD_KEY]) {
     return
 }
 
-def verifiedUris = Collections.synchronizedSet()
+def verifiedUris = synchronizedSet([] as Set)
 selectByIds(ids) {
     def (record, thing) = it.graph
     def recordId = record[ID_KEY]
     def thingId = thing[ID_KEY]
-    if (ids.contains(recordId)) {
-        verifiedUris.add(ids.contains(recordId) ? recordId : thingId)
-    }
+    verifiedUris.add(ids.contains(recordId) ? recordId : thingId)
 }
 
 clearBulkTerms(targetForm)
@@ -45,15 +45,15 @@ def docs = verifiedUris.collect { uri ->
     Map varyingNode = getAtPath(thing, varyingNodePath)
     varyingNode.clear()
     varyingNode[ID_KEY] = uri
-    Map record = (Map) thing.remove(RECORD_KEY) ?: [(TYPE_KEY): RECORD_KEY]
+    Map record = (Map) thing.remove(RECORD_KEY) ?: [(TYPE_KEY): RECORD_TYPE]
     thing[ID_KEY] = "TEMPID#it"
     record[ID_KEY] = "TEMPID"
     record[THING_KEY] = [(ID_KEY): "TEMPID#it"]
-    return create([(GRAPH_KEY): [thing, record]])
+    return create([(GRAPH_KEY): [record, thing]])
 }
 
 selectFromIterable(docs) {
-    it.scheduleSave()
+    it.scheduleSave(loud: true)
 }
 
 static void clearBulkTerms(Map form) {
