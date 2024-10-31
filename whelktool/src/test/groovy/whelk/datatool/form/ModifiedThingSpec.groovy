@@ -12,7 +12,7 @@ class ModifiedThingSpec extends Specification {
 
     def "pass"() {
         given:
-        def transform = new Transform(spec["matchForm"], spec["targetForm"])
+        def transform = new Transform(spec["bulk:matchForm"], spec["bulk:targetForm"])
         def before = spec["before"]
         def after = spec["after"]
 
@@ -25,7 +25,7 @@ class ModifiedThingSpec extends Specification {
 
     def "fail with exception"() {
         given:
-        def transform = new Transform(spec["matchForm"], spec["targetForm"])
+        def transform = new Transform(spec["bulk:matchForm"], spec["bulk:targetForm"])
         def before = spec["before"]
 
         when:
