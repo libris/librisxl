@@ -23,8 +23,7 @@ BEGIN
 
    -- ACTUAL SCHEMA CHANGES HERE:
 
-   -- This is an ammendment of migration #18, which did this for the lddb-table (including the totstz-function). We now need it for versions as well.
-   CREATE INDEX IF NOT EXISTS idx_lddb__versions_generation_date ON lddb__versions (totstz(data#>>'{@graph,0,generationDate}'));
+   CREATE INDEX IF NOT EXISTS idx_lddb__versions_generation_date ON lddb__versions (GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')));
    
 END$$;
 

@@ -84,18 +84,19 @@ public class EmmChangeSet {
             {
                 String sql = "SELECT" +
                         "  data#>>'{@graph,1,@id}'," +
-                        "  GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz)," +
+                        "  GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}'))," +
                         "  deleted," +
                         "  created," +
                         "  data#>>'{@graph,1,@type}'" +
                         " FROM" +
                         "  lddb__versions" +
-                        " WHERE GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) <= ? " +
-                        " ORDER BY GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) DESC LIMIT ? ".stripIndent();
+                        " WHERE GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) <= ? " +
+                        " ORDER BY GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) DESC LIMIT ? ".stripIndent();
                 PreparedStatement preparedStatement = connection.prepareStatement(sql);
                 preparedStatement.setTimestamp(1, untilTimeStamp);
                 preparedStatement.setInt(2, TARGET_HITS_PER_PAGE);
                 preparedStatement.setFetchSize(TARGET_HITS_PER_PAGE + 1);
+                System.err.println(preparedStatement);
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     while (resultSet.next()) {
                         String uri = resultSet.getString(1);
@@ -114,11 +115,11 @@ public class EmmChangeSet {
             {
                 String sql = "SELECT" +
                         "  data#>>'{@graph,1,@id}'," +
-                        "  GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz)," +
+                        "  GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}'))," +
                         "  deleted," +
                         "  created," +
                         "  data#>>'{@graph,1,@type}'" +
-                        " FROM lddb__versions WHERE GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) = ?".stripIndent();
+                        " FROM lddb__versions WHERE GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) = ?".stripIndent();
                 PreparedStatement preparedStatement = connection.prepareStatement(sql);
                 preparedStatement.setTimestamp(1, untilTimeStamp);
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
