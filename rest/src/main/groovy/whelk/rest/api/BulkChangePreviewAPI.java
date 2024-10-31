@@ -57,11 +57,12 @@ public class BulkChangePreviewAPI extends HttpServlet {
 
             var changeDoc = load(systemId);
 
-            // TODO? let Specifications create their own previews?
+            // TODO? let Specifications create their own previews? create preview in Whelktool instead?
             var result = switch (changeDoc.getSpecification()) {
                 case Specification.Update update -> makePreview(update, offset, limit, id);
                 case Specification.Delete delete -> makePreview(delete, offset, limit, id);
-                case Specification.Create create -> Collections.emptyMap(); //TODO
+                case Specification.Create ignored -> Collections.emptyMap();
+                case Specification.Merge ignored -> Collections.emptyMap();
             };
 
             // TODO support turtle etc?

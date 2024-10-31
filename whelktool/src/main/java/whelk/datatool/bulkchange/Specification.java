@@ -1,6 +1,7 @@
 package whelk.datatool.bulkchange;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.NotImplementedException;
 import whelk.Whelk;
 import whelk.datatool.Script;
 import whelk.datatool.form.Transform;
@@ -8,12 +9,15 @@ import whelk.datatool.form.Transform;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Collection;
 import java.util.Map;
 
+import static whelk.datatool.bulkchange.BulkJobDocument.KEEP_KEY;
 import static whelk.datatool.bulkchange.BulkJobDocument.MATCH_FORM_KEY;
+import static whelk.datatool.bulkchange.BulkJobDocument.DEPRECATE_KEY;
 import static whelk.datatool.bulkchange.BulkJobDocument.TARGET_FORM_KEY;
 
-public sealed interface Specification permits Specification.Create, Specification.Delete, Specification.Update {
+public sealed interface Specification permits Specification.Create, Specification.Delete, Specification.Merge, Specification.Update {
 
     Script getScript(String bulkJobId);
     Transform getTransform(Whelk whelk);
@@ -63,8 +67,24 @@ public sealed interface Specification permits Specification.Create, Specificatio
 
         @Override
         public Transform getTransform(Whelk whelk) {
-            // TODO
-            return null;
+            throw new NotImplementedException("");
+        }
+    }
+
+    record Merge(Collection<String> deprecate, String keep) implements Specification {
+        @Override
+        public Script getScript(String bulkJobId) {
+            Script s = new Script(loadClasspathScriptSource("merge.groovy"), bulkJobId);
+            s.setParameters(Map.of(
+                    DEPRECATE_KEY, deprecate,
+                    KEEP_KEY, keep
+            ));
+            return s;
+        }
+
+        @Override
+        public Transform getTransform(Whelk whelk) {
+            throw new NotImplementedException("");
         }
     }
 
