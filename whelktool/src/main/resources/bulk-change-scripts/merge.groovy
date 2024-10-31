@@ -1,5 +1,6 @@
 import whelk.util.DocumentUtil
 
+import static java.util.Collections.synchronizedSet
 import static whelk.JsonLd.ID_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.DEPRECATE_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.KEEP_KEY
@@ -7,30 +8,31 @@ import static whelk.datatool.bulkchange.BulkJobDocument.KEEP_KEY
 List<String> deprecate = parameters.get(DEPRECATE_KEY)
 String keep = parameters.get(KEEP_KEY)
 
-Set<String> allDeprecatedThingUris = Collections.synchronizedSet()
-selectByIds(deprecate) {
-    allDeprecatedThingUris.addAll(it.doc.getThingIdentifiers())
-}
-
-selectBySqlWhere("id in (select id from lddb__dependencies where dependsonid in ( '${deprecate.join("','")}' )") { docItem ->
-    def modified = DocumentUtil.traverse(docItem.graph) { value, path ->
-        if (path && path.last() == ID_KEY && allDeprecatedThingUris.contains(value)) {
-            return new DocumentUtil.Replace(keep)
+Set<String> allObsoleteThingUris = synchronizedSet([] as Set<String>)
+selectByIds(deprecate) { obsoleteDoc ->
+    def obsoleteThingUris = obsoleteDoc.doc.getThingIdentifiers()
+    selectByIds(obsoleteDoc.getDependers()) { dependingDoc ->
+        def modified = DocumentUtil.traverse(dependingDoc.graph) { value, path ->
+            // What if there are links to a record uri?
+            if (path && path.last() == ID_KEY && obsoleteThingUris.contains(value)) {
+                return new DocumentUtil.Replace(keep)
+            }
+        }
+        if (modified) {
+            dependingDoc.scheduleSave(loud: isLoudAllowed)
         }
     }
-    if (modified) {
-        docItem.scheduleSave(loud: isLoudAllowed)
-    }
+    allObsoleteThingUris.addAll(obsoleteThingUris)
 }
 
 selectByIds(deprecate) {
     it.scheduleDelete()
 }
 
-selectByIds([keep]) { docItem ->
-    allDeprecatedThingUris.each {uri ->
-        docItem.doc.addThingIdentifier(uri)
+selectByIds([keep]) {
+    allObsoleteThingUris.each {uri ->
+        it.doc.addThingIdentifier(uri)
     }
-    docItem.scheduleSave()
+    it.scheduleSave()
 }
 
