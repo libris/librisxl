@@ -1,17 +1,23 @@
 package whelk.datatool.bulkchange;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.NotImplementedException;
+import whelk.Document;
 import whelk.Whelk;
 import whelk.datatool.Script;
+import whelk.datatool.form.ModifiedThing;
 import whelk.datatool.form.Transform;
+import whelk.util.DocumentUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
+import static whelk.JsonLd.ID_KEY;
 import static whelk.datatool.bulkchange.BulkJobDocument.KEEP_KEY;
 import static whelk.datatool.bulkchange.BulkJobDocument.MATCH_FORM_KEY;
 import static whelk.datatool.bulkchange.BulkJobDocument.DEPRECATE_KEY;
@@ -20,9 +26,24 @@ import static whelk.datatool.bulkchange.BulkJobDocument.TARGET_FORM_KEY;
 public sealed interface Specification permits Specification.Create, Specification.Delete, Specification.Merge, Specification.Update {
 
     Script getScript(String bulkJobId);
-    Transform getTransform(Whelk whelk);
 
-    record Update(Map<String, Object> matchForm, Map<String, Object> targetForm) implements Specification {
+    List<String> findAffectedIds(Whelk whelk);
+
+    default Map<?, ?> getAfter(Map<String, Object> thing, Whelk whelk) {
+        return Collections.emptyMap();
+    }
+
+    final class Update implements Specification {
+        private final Map<String, Object> matchForm;
+        private final Map<String, Object> targetForm;
+
+        private Transform transform;
+
+        Update(Map<String, Object> matchForm, Map<String, Object> targetForm) {
+            this.matchForm = matchForm;
+            this.targetForm = targetForm;
+        }
+
         @Override
         public Script getScript(String bulkJobId) {
             Script s = new Script(loadClasspathScriptSource("update.groovy"), bulkJobId);
@@ -34,8 +55,20 @@ public sealed interface Specification permits Specification.Create, Specificatio
         }
 
         @Override
+        public List<String> findAffectedIds(Whelk whelk) {
+            return queryIdsByForm(getTransform(whelk), whelk);
+        }
+
+        @Override
+        public Map<?, ?> getAfter(Map<String, Object> thing, Whelk whelk) {
+            return new ModifiedThing(thing, getTransform(whelk), whelk.getJsonld().repeatableTerms).getAfter();
+        }
+
         public Transform getTransform(Whelk whelk) {
-            return new Transform(matchForm, targetForm, whelk);
+            if (transform == null) {
+                transform = new Transform(matchForm, targetForm, whelk);
+            }
+            return transform;
         }
     }
 
@@ -50,8 +83,8 @@ public sealed interface Specification permits Specification.Create, Specificatio
         }
 
         @Override
-        public Transform.MatchForm getTransform(Whelk whelk) {
-            return new Transform.MatchForm(matchForm, whelk);
+        public List<String> findAffectedIds(Whelk whelk) {
+            return queryIdsByForm(new Transform.MatchForm(matchForm, whelk), whelk);
         }
     }
 
@@ -66,12 +99,22 @@ public sealed interface Specification permits Specification.Create, Specificatio
         }
 
         @Override
-        public Transform getTransform(Whelk whelk) {
-            throw new NotImplementedException("");
+        public List<String> findAffectedIds(Whelk whelk) {
+            return Collections.emptyList();
         }
     }
 
-    record Merge(Collection<String> deprecate, String keep) implements Specification {
+    final class Merge() implements Specification {
+        Collection<String> deprecate;
+        String keep;
+
+        private List<String> obsoleteThingIdentifiers;
+
+        Merge(Collection<String> deprecate, String keep) {
+            this.deprecate = deprecate;
+            this.keep = keep;
+        }
+
         @Override
         public Script getScript(String bulkJobId) {
             Script s = new Script(loadClasspathScriptSource("merge.groovy"), bulkJobId);
@@ -83,8 +126,46 @@ public sealed interface Specification permits Specification.Create, Specificatio
         }
 
         @Override
-        public Transform getTransform(Whelk whelk) {
-            throw new NotImplementedException("");
+        public List<String> findAffectedIds(Whelk whelk) {
+            String queryString = String.format("VALUES ?deprecate { <%s> }\n[] [] ?deprecate .",
+                    String.join("> <", obsoleteThingIdentifiers));
+            List<String> dependerIds = whelk.getSparqlQueryClient().queryIdsByPattern(queryString);
+            return Stream.concat(Stream.of(keep), dependerIds.stream()).toList();
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public Map<?, ?> getAfter(Map<String, Object> thing, Whelk whelk) {
+            var copy = (Map<String, Object>) Document.deepCopy(thing);
+
+            if (keep.equals(thing.get(ID_KEY))) {
+                var origSameAs = (List<String>) thing.getOrDefault("sameAs", Collections.emptyList());
+                var newSameAs = Stream.concat(origSameAs.stream(), getObsoleteThingIdentifiers(whelk).stream().map(uri -> Map.of(ID_KEY, uri)))
+                        .distinct()
+                        .toList();
+                copy.put("sameAs", newSameAs);
+                return copy;
+            }
+
+            DocumentUtil.traverse(copy, (value, path) -> {
+                if (!path.isEmpty() && ID_KEY.equals(path.getLast()) && obsoleteThingIdentifiers.contains((String) value)) {
+                    return new DocumentUtil.Replace(keep);
+                }
+                return new DocumentUtil.Nop();
+            });
+
+            return copy;
+        }
+
+        private List<String> getObsoleteThingIdentifiers(Whelk whelk) {
+            if (obsoleteThingIdentifiers == null) {
+                this.obsoleteThingIdentifiers = whelk.bulkLoad(deprecate)
+                        .values()
+                        .stream()
+                        .flatMap(doc -> doc.getThingIdentifiers().stream())
+                        .toList();
+            }
+            return obsoleteThingIdentifiers;
         }
     }
 
@@ -96,5 +177,15 @@ public sealed interface Specification permits Specification.Create, Specificatio
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static List<String> queryIdsByForm(Transform transform, Whelk whelk) {
+        // TODO use COUNT + LIMIT & OFFSET and don't fetch all ids every time
+        var sparqlPattern = transform.getSparqlPattern(whelk.getJsonld().context);
+        return whelk.getSparqlQueryClient()
+                .queryIdsByPattern(sparqlPattern)
+                .stream()
+                .sorted()
+                .toList();
     }
 }

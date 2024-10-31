@@ -58,12 +58,7 @@ public class BulkChangePreviewAPI extends HttpServlet {
             var changeDoc = load(systemId);
 
             // TODO? let Specifications create their own previews? create preview in Whelktool instead?
-            var result = switch (changeDoc.getSpecification()) {
-                case Specification.Update update -> makePreview(update, offset, limit, id);
-                case Specification.Delete delete -> makePreview(delete, offset, limit, id);
-                case Specification.Create ignored -> Collections.emptyMap();
-                case Specification.Merge ignored -> Collections.emptyMap();
-            };
+            var result = makePreview(changeDoc.getSpecification(), offset, limit, id);
 
             // TODO support turtle etc?
             HttpTools.sendResponse(response, result, (String) MimeTypes.getJSONLD());
@@ -76,17 +71,13 @@ public class BulkChangePreviewAPI extends HttpServlet {
         Map<Object, Object> result = new LinkedHashMap<>();
         result.put(JsonLd.TYPE_KEY, BULK_CHANGE_PREVIEW_TYPE);
 
-        var transform = spec.getTransform(whelk);
-
-        // TODO use COUNT + LIMIT & OFFSET and don't fetch all ids every time
-        var sparqlPattern = transform.getSparqlPattern(whelk.getJsonld().context);
-        var ids = whelk.getSparqlQueryClient().queryIdsByPattern(sparqlPattern).stream().sorted().toList();
+        var ids = spec.findAffectedIds(whelk);
 
         var itemIds = slice(ids, offset, offset + limit);
         var items = whelk.bulkLoad(itemIds)
                 .values()
                 .stream()
-                .map(doc -> makePreviewChangeSet(doc, transform))
+                .map(doc -> makePreviewChangeSet(spec, doc))
                 .toList();
 
         int totalItems = ids.size();
@@ -108,7 +99,7 @@ public class BulkChangePreviewAPI extends HttpServlet {
         result.put("itemsPerPage", limit);
         result.put("totalItems", totalItems);
         if (spec instanceof Specification.Update) {
-            result.put("changeSets", transform.getChangeSets());
+            result.put("changeSets", ((Specification.Update) spec).getTransform(whelk).getChangeSets());
         }
         result.put("items", items);
 
@@ -131,25 +122,25 @@ public class BulkChangePreviewAPI extends HttpServlet {
 
     // FIXME mangle the data in a more ergonomic way
     @SuppressWarnings("unchecked")
-    private Map<?,?> makePreviewChangeSet(Document doc, Transform transform) {
+    private Map<?,?> makePreviewChangeSet(Specification spec, Document doc) {
         var thing = new LinkedHashMap<String, Object>(doc.getThing());
         var record = new LinkedHashMap<String, Object>(doc.getRecord());
         // Remove @id from record to prevent from being shown as a link in the diff view
         record.remove(ID_KEY);
         thing.put(RECORD_KEY, record);
-        if (transform instanceof Transform.MatchForm) {
+        var thingAfter = spec.getAfter(thing, whelk);
+        if (thingAfter.isEmpty()) {
             var result = getChangeSetsMap(List.of(doc));
-            ((Map<String,Object>) DocumentUtil.getAtPath(result, List.of("changeSets", 0))).put("version", doc.getThing());
+            ((Map<String,Object>) DocumentUtil.getAtPath(result, List.of("changeSets", 0))).put("version", thing);
             return result;
         }
-        var modified = new ModifiedThing(thing, transform, whelk.getJsonld().repeatableTerms);
         var beforeDoc = doc.clone();
         var afterDoc = doc.clone();
-        ((List<Map<?,?>>) beforeDoc.data.get(JsonLd.GRAPH_KEY)).set(1, modified.getBefore());
-        ((List<Map<?,?>>) afterDoc.data.get(JsonLd.GRAPH_KEY)).set(1, modified.getAfter());
+        ((List<Map<?,?>>) beforeDoc.data.get(JsonLd.GRAPH_KEY)).set(1, thing);
+        ((List<Map<?,?>>) afterDoc.data.get(JsonLd.GRAPH_KEY)).set(1, thingAfter);
         var result = getChangeSetsMap(List.of(beforeDoc, afterDoc));
-        ((Map<String,Object>) DocumentUtil.getAtPath(result, List.of("changeSets", 0))).put("version", modified.getBefore());
-        ((Map<String,Object>) DocumentUtil.getAtPath(result, List.of("changeSets", 1))).put("version", modified.getAfter());
+        ((Map<String,Object>) DocumentUtil.getAtPath(result, List.of("changeSets", 0))).put("version", thing);
+        ((Map<String,Object>) DocumentUtil.getAtPath(result, List.of("changeSets", 1))).put("version", thingAfter);
 
         return result;
     }
