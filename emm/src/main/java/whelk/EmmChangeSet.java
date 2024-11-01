@@ -37,8 +37,8 @@ public class EmmChangeSet {
         responseObject.put("type", "OrderedCollectionPage");
         responseObject.put("id", ApiBaseUrl+"?category="+category+"&until="+until);
         HashMap partOf = new HashMap();
-        partOf.put("type", "OrderedCollectionPage");
-        partOf.put("id", "TODO");
+        partOf.put("type", "OrderedCollection");
+        partOf.put("id", ApiBaseUrl+"?category="+category);
         responseObject.put("partOf", partOf);
         responseObject.put("next", ApiBaseUrl+"?category="+category+"&until="+nextTimeStamp.getTime());
         List orderedItems = new ArrayList();
