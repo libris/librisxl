@@ -40,7 +40,7 @@ public sealed interface Specification permits Specification.Create, Specificatio
         public Script getScript(String bulkJobId) {
             Script s = new Script(loadClasspathScriptSource("delete.groovy"), bulkJobId);
             s.setParameters(Map.of(
-                    TARGET_FORM_KEY, matchForm
+                    MATCH_FORM_KEY, matchForm
             ));
             return s;
         }
