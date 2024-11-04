@@ -352,10 +352,14 @@ class Transform {
     }
 
     boolean matches(Object matchForm, Object node) {
-        return comparator.isSubset(["x": matchForm], ["x": node], this::_matches)
+        return comparator.isSubset(["x": matchForm], ["x": node], this::mapMatches)
     }
 
-    private boolean _matches(Map matchForm, Map bNode) {
+    boolean mapMatches(Map matchForm, Map bNode) {
+        return _mapMatches(matchForm, bNode)
+    }
+
+    private boolean _mapMatches(Map matchForm, Map bNode) {
         if (matchForm == null || bNode == null) {
             return false
         }
@@ -385,7 +389,7 @@ class Transform {
         if (matchForm.size() > bNode.size()) {
             return false
         }
-        return comparator.isSubset(matchForm, bNode, this::_matches)
+        return comparator.isSubset(matchForm, bNode, this::_mapMatches)
     }
 
     private boolean exactMatches(Map matchForm, Map bNode) {
