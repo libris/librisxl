@@ -16,7 +16,7 @@ import java.util.List;
 import static whelk.util.Jackson.mapper;
 
 public class EmmChangeSet {
-    private static final int TARGET_HITS_PER_PAGE = 100;
+    public static final int TARGET_HITS_PER_PAGE = 100;
     private static final Logger logger = LogManager.getLogger(EmmChangeSet.class);
 
     static void sendChangeSet(Whelk whelk, HttpServletResponse res, String category, String until, String ApiBaseUrl) throws IOException {
@@ -91,12 +91,11 @@ public class EmmChangeSet {
                         " FROM" +
                         "  lddb__versions" +
                         " WHERE GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) <= ? " +
-                        " ORDER BY GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) DESC LIMIT ? ".stripIndent();
+                        " ORDER BY GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) DESC LIMIT ? ";
                 PreparedStatement preparedStatement = connection.prepareStatement(sql);
                 preparedStatement.setTimestamp(1, untilTimeStamp);
                 preparedStatement.setInt(2, TARGET_HITS_PER_PAGE);
                 preparedStatement.setFetchSize(TARGET_HITS_PER_PAGE + 1);
-                System.err.println(preparedStatement);
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     while (resultSet.next()) {
                         String uri = resultSet.getString(1);
@@ -119,7 +118,7 @@ public class EmmChangeSet {
                         "  deleted," +
                         "  created," +
                         "  data#>>'{@graph,1,@type}'" +
-                        " FROM lddb__versions WHERE GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) = ?".stripIndent();
+                        " FROM lddb__versions WHERE GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) = ?";
                 PreparedStatement preparedStatement = connection.prepareStatement(sql);
                 preparedStatement.setTimestamp(1, untilTimeStamp);
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {

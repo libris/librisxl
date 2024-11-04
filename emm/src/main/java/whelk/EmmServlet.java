@@ -32,14 +32,20 @@ public class EmmServlet extends HttpServlet {
     public void destroy() {
     }
 
-    public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
+    public void doGet(HttpServletRequest req, HttpServletResponse res) {
         try {
+            String dump = req.getParameter("dump");
             String category = req.getParameter("category");
             String until = req.getParameter("until");
             String ApiBaseUrl = req.getRequestURL().toString();
 
             res.setCharacterEncoding("utf-8");
             res.setContentType("application/json");
+
+            if (dump != null) {
+                Dump.sendDumpResponse(whelk, req, res);
+                return;
+            }
 
             if (!availableCategories.contains(category)) {
                 res.sendError(404);
@@ -55,13 +61,11 @@ public class EmmServlet extends HttpServlet {
                 responseObject.put("@context", contexts);
                 responseObject.put("type", "OrderedCollection");
                 responseObject.put("id", ApiBaseUrl+"?category="+category);
-
+                responseObject.put("url", ApiBaseUrl+"?dump=index");
                 HashMap first = new HashMap();
                 first.put("type", "OrderedCollectionPage");
                 first.put("id", ApiBaseUrl+"?category="+category+"&until="+System.currentTimeMillis());
-
                 responseObject.put("first", first);
-
 
                 String jsonResponse = mapper.writeValueAsString(responseObject);
                 BufferedWriter writer = new BufferedWriter( res.getWriter() );
