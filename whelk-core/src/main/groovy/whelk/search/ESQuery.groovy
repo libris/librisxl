@@ -948,16 +948,20 @@ class ESQuery {
         }
 
         keys.each { key ->
-            String sort = tree[key]?.sort =='key' ? '_key' : '_count'
-            def sortOrder = tree[key]?.sortOrder =='asc' ? 'asc' : 'desc'
+            Map treeNode = tree[key]
+            String sort = treeNode?.sort =='key' ? '_key' : '_count'
+            def sortOrder = treeNode?.sortOrder =='asc' ? 'asc' : 'desc'
             String termPath = getInferredTermPath(key)
 
             // Core agg query
-            query[termPath] = ['terms': [
+            def coreQuery = [
+                'terms': [
                     'field': termPath,
-                    'size' : tree[key]?.size ?: size,
-                    'order': [(sort): sortOrder]]
+                    'size' : treeNode?.size ?: size,
+                    'order': [(sort): sortOrder]
+                ]
             ]
+            query[termPath] = coreQuery
 
             // If field is nested, wrap agg query with nested
             nestedFields.find{ key.startsWith(it) }?.with { nestedField ->
@@ -974,8 +978,23 @@ class ESQuery {
                 'filter': ['bool': ['must': filters]]
             ]
 
-            if (tree[key].subItems instanceof Map) {
-                query[termPath]['aggs'] = buildAggQuery(tree[key].subItems, multiSelectFilters, size)
+            if (treeNode.subItems instanceof Map) {
+                def subAggQuery = buildAggQuery(treeNode.subItems, multiSelectFilters, size)
+                // TODO: factor out parts of buildAggQuery to avoid this reshuffle.
+                //coreQuery['aggs'] = subAggQuery
+                // TODO: handle multiple keys.
+                def iter = subAggQuery.iterator()
+                if (iter.hasNext()) {
+                    def entry = iter.next()
+                    def subkey = entry.getKey()
+                    def subvalue = entry.getValue()
+                    coreQuery['aggs'] = [
+                        (FILTERED_AGG_NAME): [
+                            'aggs': [ (subkey): subvalue['aggs'][FILTERED_AGG_NAME] ],
+                            'filter': subvalue['filter']
+                        ]
+                    ]
+                }
             }
         }
         return query
