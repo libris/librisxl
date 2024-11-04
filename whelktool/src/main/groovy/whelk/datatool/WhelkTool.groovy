@@ -912,10 +912,6 @@ class DocumentItem {
         whelk.storage.loadAllVersions(doc.shortId)
     }
 
-    def getDependers() {
-        whelk.storage.getDependers(doc.shortId)
-    }
-
     Map asCard(boolean withSearchKey = false) {
         return whelk.jsonld.toCard(doc.data, false, withSearchKey)
     }

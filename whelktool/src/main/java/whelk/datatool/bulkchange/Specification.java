@@ -13,8 +13,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
@@ -104,13 +108,14 @@ public sealed interface Specification permits Specification.Create, Specificatio
         }
     }
 
-    final class Merge() implements Specification {
+    final class Merge implements Specification {
         Collection<String> deprecate;
         String keep;
 
-        private List<String> obsoleteThingIdentifiers;
+        private Set<String> obsoleteThingIdentifiers;
+        private Map<String, String> thingUriToShortId;
 
-        Merge(Collection<String> deprecate, String keep) {
+        public Merge(Collection<String> deprecate, String keep) {
             this.deprecate = deprecate;
             this.keep = keep;
         }
@@ -127,43 +132,67 @@ public sealed interface Specification permits Specification.Create, Specificatio
 
         @Override
         public List<String> findAffectedIds(Whelk whelk) {
-            String queryString = String.format("VALUES ?deprecate { <%s> }\n[] [] ?deprecate .",
-                    String.join("> <", obsoleteThingIdentifiers));
-            List<String> dependerIds = whelk.getSparqlQueryClient().queryIdsByPattern(queryString);
-            return Stream.concat(Stream.of(keep), dependerIds.stream()).toList();
+            // Include deprecated? Have to be shown as removed in preview.
+            return Stream.concat(Stream.of(keep), getDependers(whelk).stream()).toList();
         }
 
         @SuppressWarnings("unchecked")
         @Override
         public Map<?, ?> getAfter(Map<String, Object> thing, Whelk whelk) {
             var copy = (Map<String, Object>) Document.deepCopy(thing);
-
             if (keep.equals(thing.get(ID_KEY))) {
-                var origSameAs = (List<String>) thing.getOrDefault("sameAs", Collections.emptyList());
-                var newSameAs = Stream.concat(origSameAs.stream(), getObsoleteThingIdentifiers(whelk).stream().map(uri -> Map.of(ID_KEY, uri)))
-                        .distinct()
-                        .toList();
-                copy.put("sameAs", newSameAs);
-                return copy;
+                addSameAsLinks(copy, whelk);
+            } else {
+                relink(copy, whelk);
             }
+            return copy;
+        }
 
-            DocumentUtil.traverse(copy, (value, path) -> {
-                if (!path.isEmpty() && ID_KEY.equals(path.getLast()) && obsoleteThingIdentifiers.contains((String) value)) {
+        @SuppressWarnings("unchecked")
+        public void addSameAsLinks(Map<String, Object> thing, Whelk whelk) {
+            var origSameAs = (List<String>) thing.getOrDefault("sameAs", Collections.emptyList());
+            var newSameAs = Stream.concat(origSameAs.stream(), getObsoleteThingIdentifiers(whelk).stream().map(uri -> Map.of(ID_KEY, uri)))
+                    .distinct()
+                    .toList();
+            thing.put("sameAs", newSameAs);
+        }
+
+        public List<String> getDependers(Whelk whelk) {
+            return deprecate.stream()
+                    .map(uri -> getShortId(uri, whelk))
+                    .map(whelk.getStorage()::getDependers)
+                    .flatMap(SortedSet::stream)
+                    .toList();
+        }
+
+        public boolean relink(Object data, Whelk whelk) {
+            return DocumentUtil.traverse(data, (value, path) -> {
+                if (!path.isEmpty() && ID_KEY.equals(path.getLast()) && getObsoleteThingIdentifiers(whelk).contains(value)) {
+                    // What if there are links to a record uri?
                     return new DocumentUtil.Replace(keep);
                 }
                 return new DocumentUtil.Nop();
             });
-
-            return copy;
         }
 
-        private List<String> getObsoleteThingIdentifiers(Whelk whelk) {
+        private String getShortId(String thingUri, Whelk whelk) {
+            if (thingUriToShortId == null) {
+                this.thingUriToShortId = new HashMap<>();
+            }
+            if (thingUriToShortId.get(thingUri) == null) {
+                String shortId = whelk.getStorage().getDocumentByIri(thingUri).getShortId();
+                this.thingUriToShortId.put(thingUri, shortId);
+            }
+            return thingUriToShortId.get(thingUri);
+        }
+
+        private Set<String> getObsoleteThingIdentifiers(Whelk whelk) {
             if (obsoleteThingIdentifiers == null) {
                 this.obsoleteThingIdentifiers = whelk.bulkLoad(deprecate)
                         .values()
                         .stream()
                         .flatMap(doc -> doc.getThingIdentifiers().stream())
-                        .toList();
+                        .collect(Collectors.toSet());
             }
             return obsoleteThingIdentifiers;
         }
