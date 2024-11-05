@@ -1,4 +1,4 @@
-package whelk.rest.api;
+package whelk.housekeeping;
 
 import whelk.Document;
 import whelk.JsonLd;
