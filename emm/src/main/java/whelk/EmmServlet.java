@@ -37,13 +37,13 @@ public class EmmServlet extends HttpServlet {
             String dump = req.getParameter("dump");
             String category = req.getParameter("category");
             String until = req.getParameter("until");
-            String ApiBaseUrl = req.getRequestURL().toString();
+            String apiBaseUrl = req.getRequestURL().toString();
 
             res.setCharacterEncoding("utf-8");
             res.setContentType("application/json");
 
             if (dump != null) {
-                Dump.sendDumpResponse(whelk, req, res);
+                Dump.sendDumpResponse(whelk, apiBaseUrl, req, res);
                 return;
             }
 
@@ -60,11 +60,11 @@ public class EmmServlet extends HttpServlet {
                 contexts.add("https://emm-spec.org/1.0/context.json");
                 responseObject.put("@context", contexts);
                 responseObject.put("type", "OrderedCollection");
-                responseObject.put("id", ApiBaseUrl+"?category="+category);
-                responseObject.put("url", ApiBaseUrl+"?dump=index");
+                responseObject.put("id", apiBaseUrl+"?category="+category);
+                responseObject.put("url", apiBaseUrl+"?dump=index");
                 HashMap first = new HashMap();
                 first.put("type", "OrderedCollectionPage");
-                first.put("id", ApiBaseUrl+"?category="+category+"&until="+System.currentTimeMillis());
+                first.put("id", apiBaseUrl+"?category="+category+"&until="+System.currentTimeMillis());
                 responseObject.put("first", first);
 
                 String jsonResponse = mapper.writeValueAsString(responseObject);
@@ -75,7 +75,7 @@ public class EmmServlet extends HttpServlet {
             }
 
             // Send ChangeSet reply
-            EmmChangeSet.sendChangeSet(whelk, res, category, until, ApiBaseUrl);
+            EmmChangeSet.sendChangeSet(whelk, res, category, until, apiBaseUrl);
 
         } catch (Exception e) {
             e.printStackTrace();

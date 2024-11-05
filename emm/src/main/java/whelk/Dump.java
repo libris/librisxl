@@ -12,16 +12,19 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import static whelk.util.Jackson.mapper;
 
 public class Dump {
     private static final Logger logger = LogManager.getLogger(Dump.class);
     private static final String DUMP_END_MARKER = "_DUMP_END_MARKER\n"; // Must be 17 bytes
 
-    public static void sendDumpResponse(Whelk whelk, HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException {
+    public static void sendDumpResponse(Whelk whelk, String apiBaseUrl, HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException {
         String dump = req.getParameter("dump");
         String offset = req.getParameter("offset");
         long offsetNumeric = Long.parseLong(offset);
-        System.err.println("offset: " + offsetNumeric);
 
         String tmpDir = System.getProperty("java.io.tmpdir");
         Path dumpsPath = Paths.get(tmpDir, "dumps");
@@ -31,11 +34,12 @@ public class Dump {
         invalidateIfOld(dumpFilePath);
         if (!Files.exists(dumpFilePath))
             generateDump(whelk, dumpFilePath);
-        sendDumpPageResponse(dumpFilePath, offsetNumeric, res);
+        sendDumpPageResponse(whelk, apiBaseUrl, dump, dumpFilePath, offsetNumeric, res);
     }
 
-    private static void sendDumpPageResponse(Path dumpFilePath, long offset, HttpServletResponse res) {
+    private static void sendDumpPageResponse(Whelk whelk, String apiBaseUrl, String dump, Path dumpFilePath, long offsetLines, HttpServletResponse res) throws IOException {
         ArrayList<String> recordIdsOnPage = new ArrayList<>(EmmChangeSet.TARGET_HITS_PER_PAGE);
+        Long totalEntityCount = null;
 
         try {
             // Has the dump not begun being written yet ?
@@ -54,8 +58,8 @@ public class Dump {
                 }
 
                 // Is there not enough data for a full page yet ?
-                long startOffsetBytes = 17 * offset;
-                while (!dumpFinished && file.length() < startOffsetBytes + (17 * (long)EmmChangeSet.TARGET_HITS_PER_PAGE)) {
+                long offsetBytes = 17 * offsetLines;
+                while (!dumpFinished && file.length() < offsetBytes + (17 * (long)EmmChangeSet.TARGET_HITS_PER_PAGE)) {
                     Thread.sleep(10);
 
                     if (file.length() >= 17) {
@@ -64,12 +68,16 @@ public class Dump {
                     }
                 }
 
+                if (dumpFinished) {
+                    totalEntityCount = file.length() / 17 - 1;
+                }
+
                 // We're ok to send a full page, or the end of the dump (which may be a partial page).
-                file.seek(startOffsetBytes);
-                int recordsToSend = Integer.min(EmmChangeSet.TARGET_HITS_PER_PAGE, (int)((file.length() - startOffsetBytes) / 17) - 1);
+                file.seek(offsetBytes);
+                int recordsToSend = Integer.min(EmmChangeSet.TARGET_HITS_PER_PAGE, (int)((file.length() - offsetBytes) / 17) - 1);
                 for (int i = 0; i < recordsToSend; ++i) {
                     if (17 == file.read(lineBuffer)) {
-                        recordIdsOnPage.add(new String(lineBuffer, StandardCharsets.UTF_8));
+                        recordIdsOnPage.add(new String(lineBuffer, StandardCharsets.UTF_8).trim());
                     } else {
                         logger.error("Suspected corrupt dump (non-17-byte line detected): " + dumpFilePath);
                         res.sendError(500);
@@ -82,12 +90,34 @@ public class Dump {
             logger.error("Failed reading dumpfile: " + dumpFilePath, e);
         }
 
-        sendFormattedResponse(recordIdsOnPage, res);
+        sendFormattedResponse(whelk, apiBaseUrl, dump, recordIdsOnPage, res, offsetLines + EmmChangeSet.TARGET_HITS_PER_PAGE, totalEntityCount);
     }
 
-    private static void sendFormattedResponse(ArrayList<String> recordIdsOnPage, HttpServletResponse res) {
-        for (String s : recordIdsOnPage)
-            System.err.println(s.trim());
+    private static void sendFormattedResponse(Whelk whelk, String apiBaseUrl, String dump, ArrayList<String> recordIdsOnPage, HttpServletResponse res, long nextLineOffset, Long totalEntityCount) throws IOException{
+        HashMap responseObject = new HashMap();
+
+        if (totalEntityCount == null)
+            responseObject.put("status", "generating");
+        else {
+            responseObject.put("status", "done");
+            responseObject.put("totalEntityCount", totalEntityCount);
+        }
+
+        if (nextLineOffset < totalEntityCount) {
+            responseObject.put("next", apiBaseUrl+"?dump="+dump+"&offset="+nextLineOffset);
+        }
+
+        ArrayList<Map> entitesList = new ArrayList<>(EmmChangeSet.TARGET_HITS_PER_PAGE);
+        responseObject.put("entities", entitesList);
+        Map<String, Document> idsAndRecords = whelk.bulkLoad(recordIdsOnPage);
+        for (Document doc : idsAndRecords.values()) {
+            entitesList.add(doc.getThing());
+        }
+
+        String jsonResponse = mapper.writeValueAsString(responseObject);
+        BufferedWriter writer = new BufferedWriter( res.getWriter() );
+        writer.write(jsonResponse);
+        writer.close();
     }
 
     private static void invalidateIfOld(Path dumpFilePath) {

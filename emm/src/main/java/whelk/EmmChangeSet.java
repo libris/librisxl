@@ -19,7 +19,7 @@ public class EmmChangeSet {
     public static final int TARGET_HITS_PER_PAGE = 100;
     private static final Logger logger = LogManager.getLogger(EmmChangeSet.class);
 
-    static void sendChangeSet(Whelk whelk, HttpServletResponse res, String category, String until, String ApiBaseUrl) throws IOException {
+    static void sendChangeSet(Whelk whelk, HttpServletResponse res, String category, String until, String apiBaseUrl) throws IOException {
 
         List<EmmActivity> activitiesOnPage = new ArrayList<>(TARGET_HITS_PER_PAGE+5);
         Timestamp nextTimeStamp = getPage(whelk, category, until, activitiesOnPage);
@@ -35,12 +35,12 @@ public class EmmChangeSet {
         contexts.add("https://emm-spec.org/1.0/context.json");
         responseObject.put("@context", contexts);
         responseObject.put("type", "OrderedCollectionPage");
-        responseObject.put("id", ApiBaseUrl+"?category="+category+"&until="+until);
+        responseObject.put("id", apiBaseUrl+"?category="+category+"&until="+until);
         HashMap partOf = new HashMap();
         partOf.put("type", "OrderedCollection");
-        partOf.put("id", ApiBaseUrl+"?category="+category);
+        partOf.put("id", apiBaseUrl+"?category="+category);
         responseObject.put("partOf", partOf);
-        responseObject.put("next", ApiBaseUrl+"?category="+category+"&until="+nextTimeStamp.getTime());
+        responseObject.put("next", apiBaseUrl+"?category="+category+"&until="+nextTimeStamp.getTime());
         List orderedItems = new ArrayList();
         responseObject.put("orderedItems", orderedItems);
 
