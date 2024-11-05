@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
-import static whelk.rest.api.HttpTools.sendResponse
+import static whelk.util.http.HttpTools.sendResponse
 
 @CompileStatic
 class MarcframeData extends HttpServlet {

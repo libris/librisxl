@@ -1,6 +1,6 @@
-package whelk.rest.api
+package whelk.util.http
 
-class BadRequestException extends Crud.NoStackTraceException {
+class BadRequestException extends NoStackTraceException {
     Map extraInfo
     BadRequestException(String msg, Map extraInfo = null) {
         super(msg)

@@ -1,4 +1,4 @@
-package whelk.rest.api
+package whelk.util.http
 
 /**
  * Created by markus on 2015-10-15.

@@ -11,6 +11,10 @@ import whelk.history.DocumentVersion;
 import whelk.history.History;
 import whelk.util.DocumentUtil;
 import whelk.util.WhelkFactory;
+import whelk.util.http.BadRequestException;
+import whelk.util.http.HttpTools;
+import whelk.util.http.MimeTypes;
+import whelk.util.http.NotFoundException;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -49,7 +53,7 @@ public class BulkChangePreviewAPI extends HttpServlet {
                 throw new BadRequestException("@id parameter is required");
             }
             if (!id.startsWith(Document.getBASE_URI().toString())) {
-                throw new Crud.NotFoundException("Document not found");
+                throw new NotFoundException("Document not found");
             }
             var systemId = stripPrefix(id, Document.getBASE_URI().toString());
 
@@ -215,7 +219,7 @@ public class BulkChangePreviewAPI extends HttpServlet {
     private BulkJobDocument load(String id) {
         Document doc = whelk.getDocument(id);
         if (doc == null) {
-            throw new Crud.NotFoundException("Document not found");
+            throw new NotFoundException("Document not found");
         }
         try {
             return new BulkJobDocument(doc.data);

@@ -1,4 +1,4 @@
-package whelk.rest.api
+package whelk.util.http
 
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.lang3.exception.ExceptionUtils
@@ -110,7 +110,7 @@ class HttpTools {
             case LinkValidationException:
                 return HttpServletResponse.SC_BAD_REQUEST
 
-            case Crud.NotFoundException:
+            case NotFoundException:
                 return HttpServletResponse.SC_NOT_FOUND
 
             case UnsupportedContentTypeException:
@@ -123,8 +123,8 @@ class HttpTools {
             case StorageCreateFailedException:
                 return HttpServletResponse.SC_CONFLICT
 
-            case Crud.OtherStatusException:
-                return ((Crud.OtherStatusException) e).code
+            case OtherStatusException:
+                return ((OtherStatusException) e).code
 
             default:
                 return HttpServletResponse.SC_INTERNAL_SERVER_ERROR

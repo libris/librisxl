@@ -1,4 +1,4 @@
-package whelk.rest.api
+package whelk.util.http
 
 class MimeTypes {
     static final JSONLD = "application/ld+json"
