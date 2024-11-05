@@ -64,15 +64,15 @@ public class AuthenticationFilter implements Filter {
             try {
                 String token = httpRequest.getHeader("Authorization");
                 if (token == null) {
-                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "No access token (Authorization header) in request");
-                    response_code = httpResponse.SC_UNAUTHORIZED;
+                    httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "No access token (Authorization header) in request");
+                    response_code = HttpServletResponse.SC_UNAUTHORIZED;
                     return;
                 }
                 log.debug("Verifying token " + token);
                 json = verifyToken(token.replace("Bearer ", ""));
                 if (json == null || json.isEmpty()) {
-                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Access token has expired");
-                    response_code = httpResponse.SC_UNAUTHORIZED;
+                    httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Access token has expired");
+                    response_code = HttpServletResponse.SC_UNAUTHORIZED;
                     return;
                 }
 
@@ -80,13 +80,13 @@ public class AuthenticationFilter implements Filter {
 
                 Object message = result.get("message");
                 if (message != null && message.toString().equals("Bearer token is expired.")) {
-                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Access token has expired");
-                    response_code = httpResponse.SC_UNAUTHORIZED;
+                    httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Access token has expired");
+                    response_code = HttpServletResponse.SC_UNAUTHORIZED;
                     return;
                 }
                 if (message != null && message.toString().equals("Bearer token not found.")) {
-                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED, "Bad access token.");
-                    response_code = httpResponse.SC_UNAUTHORIZED;
+                    httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Bad access token.");
+                    response_code = HttpServletResponse.SC_UNAUTHORIZED;
                     return;
                 }
 
@@ -100,17 +100,17 @@ public class AuthenticationFilter implements Filter {
                     request.setAttribute("user", user);
                     chain.doFilter(request, response);
                 } else {
-                    httpResponse.sendError(httpResponse.SC_UNAUTHORIZED);
-                    response_code = httpResponse.SC_UNAUTHORIZED;
+                    httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                    response_code = HttpServletResponse.SC_UNAUTHORIZED;
                 }
             } catch (org.codehaus.jackson.JsonParseException jpe) {
                 log.error("JsonParseException. Failed to parse:" + json, jpe);
-                httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR);
-                response_code = httpResponse.SC_INTERNAL_SERVER_ERROR;
+                httpResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                response_code = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
             } catch (Exception e) {
                 log.error("Exception: " + e, e);
-                httpResponse.sendError(httpResponse.SC_INTERNAL_SERVER_ERROR);
-                response_code = httpResponse.SC_INTERNAL_SERVER_ERROR;
+                httpResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                response_code = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
                 e.printStackTrace();
             } finally {
                 if (response_code != 0) {
