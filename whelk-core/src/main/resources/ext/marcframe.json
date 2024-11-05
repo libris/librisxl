@@ -3967,7 +3967,7 @@
       "include": ["identifier"],
       "match": [
         {
-          "when": "i1=7 & $2 =~ ansi|ANSI|danacode|doi|DOI|gtin-14|hdl|HDL|isan|ISAN|iso|ISO|istc|ISTC|iswc|ISWC|uri|URI|urn|URN",
+          "when": "i1=7 & $2 =~ ansi|ANSI|danacode|doi|DOI|GRID|GRid|grid|gtin-14|hdl|HDL|isan|ISAN|iso|ISO|istc|ISTC|iswc|ISWC|uri|URI|urn|URN",
           "i1": null,
           "$2": {
             "property": "@type",
@@ -3978,6 +3978,9 @@
               "danacode": "Danacode",
               "DOI": "DOI",
               "doi": "DOI",
+              "GRID": "GRID",
+              "GRid": "GRID",
+              "grid": "GRID",
               "gtin-14": "GTIN14",
               "HDL": "Hdl",
               "hdl": "Hdl",
