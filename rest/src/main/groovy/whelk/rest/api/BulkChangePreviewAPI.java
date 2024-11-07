@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static whelk.JsonLd.GRAPH_KEY;
 import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.RECORD_KEY;
 import static whelk.util.Unicode.stripPrefix;
@@ -55,10 +56,18 @@ public class BulkChangePreviewAPI extends HttpServlet {
             int limit = nonNegativeInt(request, "_limit", DEFAULT_LIMIT);
             int offset = nonNegativeInt(request, "_offset", 0);
 
-            var changeDoc = load(systemId);
+            var jobDoc = load(systemId);
+            var spec = jobDoc.getSpecification();
 
-            // TODO? let Specifications create their own previews? create preview in Whelktool instead?
-            var result = makePreview(changeDoc.getSpecification(), offset, limit, id);
+            // TODO: Fetch ready-made changes
+            var ids = getIds(spec);
+            var totalItems = ids.size();
+            List<RecordChange> recordChanges = getRecordChanges(spec, ids, offset, limit);
+
+            var result = makePreview(recordChanges, totalItems, offset, limit, id);
+            if (spec instanceof Specification.Update) {
+                result.put("changeSets", ((Specification.Update) spec).getTransform(whelk).getChangeSets());
+            }
 
             // TODO support turtle etc?
             HttpTools.sendResponse(response, result, (String) MimeTypes.getJSONLD());
@@ -67,20 +76,58 @@ public class BulkChangePreviewAPI extends HttpServlet {
         }
     }
 
-    private Map<Object, Object> makePreview(Specification spec, int offset, int limit, String id) {
+    // TODO: Should be defined elsewhere (Whelktool)
+    private record RecordChange(Document before, Document after) {}
+
+    private List<RecordChange> getRecordChanges(Specification spec, List<String> ids, int offset, int limit) {
+        return switch (spec) {
+            case Specification.Update update ->
+                whelk.bulkLoad(slice(ids, offset, offset + limit))
+                        .values()
+                        .stream()
+                        .map(before -> {
+                            var after = before.clone();
+                            update.modify(after, whelk);
+                            return new RecordChange(before, after);
+                        })
+                        .toList();
+            case Specification.Delete ignored ->
+                whelk.bulkLoad(slice(ids, offset, offset + limit))
+                        .values()
+                        .stream()
+                        .map(before -> new RecordChange(before, null))
+                        .toList();
+            case Specification.Create ignored -> Collections.emptyList();
+            case Specification.Merge ignored -> Collections.emptyList();
+        };
+    }
+
+    private List<String> getIds(Specification spec) {
+        return switch (spec) {
+            case Specification.Update update -> queryIdsByForm(update.getTransform(whelk));
+            case Specification.Delete delete -> queryIdsByForm(delete.getMatchForm(whelk));
+            case Specification.Create ignored -> Collections.emptyList();
+            case Specification.Merge ignored -> Collections.emptyList();
+        };
+    }
+
+    private List<String> queryIdsByForm(Transform transform) {
+        var sparqlPattern = transform.getSparqlPattern(whelk.getJsonld().context);
+        return whelk.getSparqlQueryClient()
+                .queryIdsByPattern(sparqlPattern)
+                .stream()
+                .sorted()
+                .toList();
+    }
+
+    private Map<Object, Object> makePreview(List<RecordChange> recordChanges, int totalItems, int offset, int limit, String id) {
         Map<Object, Object> result = new LinkedHashMap<>();
         result.put(JsonLd.TYPE_KEY, BULK_CHANGE_PREVIEW_TYPE);
 
-        var ids = spec.findAffectedIds(whelk);
-
-        var itemIds = slice(ids, offset, offset + limit);
-        var items = whelk.bulkLoad(itemIds)
-                .values()
-                .stream()
-                .map(doc -> makePreviewChangeSet(spec, doc))
+        var items = recordChanges.stream()
+                .map(this::makePreviewChangeSet)
                 .toList();
 
-        int totalItems = ids.size();
         Offsets offsets = new Offsets(totalItems, limit, offset);
         result.putAll(makeLink(id, offset, limit));
         if (offsets.hasFirst()) {
@@ -98,9 +145,6 @@ public class BulkChangePreviewAPI extends HttpServlet {
         result.put("itemOffset", offset);
         result.put("itemsPerPage", limit);
         result.put("totalItems", totalItems);
-        if (spec instanceof Specification.Update) {
-            result.put("changeSets", ((Specification.Update) spec).getTransform(whelk).getChangeSets());
-        }
         result.put("items", items);
 
         return result;
@@ -122,39 +166,43 @@ public class BulkChangePreviewAPI extends HttpServlet {
 
     // FIXME mangle the data in a more ergonomic way
     @SuppressWarnings("unchecked")
-    private Map<?,?> makePreviewChangeSet(Specification spec, Document doc) {
-        var thing = new LinkedHashMap<String, Object>(doc.getThing());
-        var record = new LinkedHashMap<String, Object>(doc.getRecord());
-        // Remove @id from record to prevent from being shown as a link in the diff view
-        record.remove(ID_KEY);
-        thing.put(RECORD_KEY, record);
-        var thingAfter = spec.getAfter(thing, whelk);
-        if (thingAfter.isEmpty()) {
-            var result = getChangeSetsMap(List.of(doc));
-            ((Map<String,Object>) DocumentUtil.getAtPath(result, List.of("changeSets", 0))).put("version", thing);
-            return result;
+    private Map<?,?> makePreviewChangeSet(RecordChange recordChange) {
+        Document before = recordChange.before();
+        Document after = recordChange.after();
+        String id = null;
+        if (before != null) {
+            // Remove @id from record to prevent from being shown as a link in the diff view
+            id = (String) before.getRecord().remove(ID_KEY);
+            before.getThing().put(RECORD_KEY, before.getRecord());
+        } else {
+            // If there is no before version, create one with an empty main entity
+            before = new Document(Map.of(GRAPH_KEY, List.of(after.getRecord(), Collections.emptyMap())));
         }
-        var beforeDoc = doc.clone();
-        var afterDoc = doc.clone();
-        ((List<Map<?,?>>) beforeDoc.data.get(JsonLd.GRAPH_KEY)).set(1, thing);
-        ((List<Map<?,?>>) afterDoc.data.get(JsonLd.GRAPH_KEY)).set(1, thingAfter);
-        var result = getChangeSetsMap(List.of(beforeDoc, afterDoc));
-        ((Map<String,Object>) DocumentUtil.getAtPath(result, List.of("changeSets", 0))).put("version", thing);
-        ((Map<String,Object>) DocumentUtil.getAtPath(result, List.of("changeSets", 1))).put("version", thingAfter);
+        if (after != null) {
+            id = (String) after.getRecord().remove(ID_KEY);
+            after.getThing().put(RECORD_KEY, before.getRecord());
+        } else {
+            // If there is no after version, create one with an empty main entity
+            after = new Document(Map.of(GRAPH_KEY, List.of(before.getRecord(), Collections.emptyMap())));
+        }
+        var result = getChangeSetsMap(before, after, id);
+        ((Map<String,Object>) DocumentUtil.getAtPath(result, List.of("changeSets", 0))).put("version",
+                before.getThing());
+        ((Map<String,Object>) DocumentUtil.getAtPath(result, List.of("changeSets", 1))).put("version",
+                after.getThing());
 
         return result;
     }
 
-
     @SuppressWarnings("unchecked")
-    private Map<?, ?> getChangeSetsMap(List<Document> docs) {
-        var beforeDoc = docs.getFirst();
-        var versions = docs.stream()
-                .map(version -> new DocumentVersion(version, "", ""))
-                .toList();
+    private Map<?, ?> getChangeSetsMap(Document before, Document after, String id) {
+        var versions = List.of(
+                new DocumentVersion(before, "", ""),
+                new DocumentVersion(after, "", "")
+        );
         History history = new History(versions, whelk.getJsonld());
         var result = history.m_changeSetsMap;
-        result.put(ID_KEY, beforeDoc.getCompleteId());
+        result.put(ID_KEY, id);
         return result;
     }
 

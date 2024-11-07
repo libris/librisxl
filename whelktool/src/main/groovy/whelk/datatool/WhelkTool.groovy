@@ -912,29 +912,12 @@ class DocumentItem {
         whelk.storage.loadAllVersions(doc.shortId)
     }
 
+    def getDependers() {
+        whelk.storage.getDependers(doc.shortId)
+    }
+
     Map asCard(boolean withSearchKey = false) {
         return whelk.jsonld.toCard(doc.data, false, withSearchKey)
-    }
-    
-    boolean modify(Map matchForm, Map targetForm) {
-        Map thing = (Map) this.graph[1]
-        thing[RECORD_KEY] = (Map) this.graph[0]
-
-        var m = new ModifiedThing(
-                thing,
-                new Transform(matchForm, targetForm, whelk),
-                whelk.jsonld.repeatableTerms)
-
-        this.graph[1] = m.after
-        this.graph[0] = m.after.remove(RECORD_KEY)
-
-        return m.isModified()
-    }
-
-    boolean matches(Map matchForm) {
-        Map thing = (Map) this.graph[1]
-        thing[RECORD_KEY] = (Map) this.graph[0]
-        return new Transform.MatchForm(matchForm, whelk).matches(thing)
     }
 }
 
