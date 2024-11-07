@@ -13,7 +13,7 @@ selectByIds(deprecate) { obsolete ->
     def obsoleteThingUris = obsolete.doc.getThingIdentifiers()
     selectByIds(obsolete.getDependers()) { depender ->
         def modified = DocumentUtil.traverse(depender.graph) { value, path ->
-            // What if there are links to a record uri?
+            // TODO: What if there are links to a record uri?
             if (path && path.last() == ID_KEY && obsoleteThingUris.contains(value)) {
                 return new DocumentUtil.Replace(keep)
             }
