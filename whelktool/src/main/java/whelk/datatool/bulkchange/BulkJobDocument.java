@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static whelk.JsonLd.ID_KEY;
 import static whelk.util.JsonLdKey.fromKey;
 
 // All terms are defined in https://github.com/libris/definitions/blob/develop/source/vocab/platform.ttl
@@ -18,7 +19,8 @@ public class BulkJobDocument extends Document {
     public enum SpecType implements JsonLdKey {
         Update("bulk:Update"),
         Delete("bulk:Delete"),
-        Create("bulk:Create");
+        Create("bulk:Create"),
+        Merge("bulk:Merge");
 
         private final String key;
 
@@ -59,6 +61,8 @@ public class BulkJobDocument extends Document {
     public static final String TARGET_FORM_KEY = "bulk:targetForm";
     public static final String COMMENT_KEY = "comment";
     public static final String LABEL_KEY = "label";
+    public static final String KEEP_KEY = "bulk:keep";
+    public static final String DEPRECATE_KEY = "bulk:deprecate";
 
     private static final List<Object> STATUS_PATH = List.of(JsonLd.GRAPH_KEY, 1, STATUS_KEY);
     private static final List<Object> UPDATE_TIMESTAMP_PATH = List.of(JsonLd.GRAPH_KEY, 1, SHOULD_UPDATE_TIMESTAMP_KEY);
@@ -119,6 +123,10 @@ public class BulkJobDocument extends Document {
             );
             case SpecType.Create -> new Specification.Create(
                     get(spec, TARGET_FORM_KEY, Collections.emptyMap())
+            );
+            case SpecType.Merge -> new Specification.Merge(
+                    get(spec, List.of(DEPRECATE_KEY, "*", ID_KEY), Collections.emptyList()),
+                    get(spec, List.of(KEEP_KEY, ID_KEY), "")
             );
             case null -> throw new ModelValidationException(String.format("Bad %s %s: %s",
                     CHANGE_SPEC_KEY, JsonLd.TYPE_KEY, specType));

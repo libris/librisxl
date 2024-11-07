@@ -356,10 +356,6 @@ class Transform {
     }
 
     boolean mapMatches(Map matchForm, Map bNode) {
-        return _mapMatches(matchForm, bNode)
-    }
-
-    private boolean _mapMatches(Map matchForm, Map bNode) {
         if (matchForm == null || bNode == null) {
             return false
         }
@@ -389,7 +385,7 @@ class Transform {
         if (matchForm.size() > bNode.size()) {
             return false
         }
-        return comparator.isSubset(matchForm, bNode, this::_mapMatches)
+        return comparator.isSubset(matchForm, bNode, this::mapMatches)
     }
 
     private boolean exactMatches(Map matchForm, Map bNode) {
