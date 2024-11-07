@@ -8,6 +8,7 @@ import whelk.datatool.Script;
 import whelk.datatool.WhelkTool;
 
 import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -15,6 +16,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
+import static whelk.Document.HASH_IT;
 import static whelk.datatool.bulkchange.BulkJobDocument.JOB_TYPE;
 import static whelk.datatool.bulkchange.BulkJobDocument.Status.Completed;
 import static whelk.datatool.bulkchange.BulkJobDocument.Status.Failed;
@@ -25,11 +27,11 @@ import static whelk.util.Unicode.stripSuffix;
 
 public class BulkJob implements Runnable {
     private static final Logger logger = Logger.getLogger(BulkJob.class);
-    private static final String REPORTS_DIR = "bulk-change-reports";
+    protected static final String REPORTS_DIR = "bulk-change-reports";
 
-    private final String id;
-    private final String systemId;
-    private final Whelk whelk;
+    protected final String id;
+    protected final String systemId;
+    protected final Whelk whelk;
 
     public BulkJob(Whelk whelk, String id) {
         this.whelk = whelk;
@@ -40,30 +42,26 @@ public class BulkJob implements Runnable {
     @Override
     public void run() {
         try {
-            AtomicBoolean shouldRun = new AtomicBoolean(false);
+            AtomicBoolean statusWasReady = new AtomicBoolean(false);
             storeUpdate(doc -> {
                 if (doc.getStatus() == Ready) {
                     doc.setStatus(Running);
-                    shouldRun.set(true);
+                    statusWasReady.set(true);
                 }
             });
 
-            if (shouldRun.get()) {
-                var jobDoc = loadDocument();
-                var tool = buildWhelkTool(jobDoc);
-                var scriptLog = tool.getMainLog();
-
-                scriptLog.println(String.format("Running %s: %s for %s", JOB_TYPE, id, jobDoc.getChangeAgentId()));
-                scriptLog.println(String.format("label: %s", jobDoc.getLabels()));
-                scriptLog.println(String.format("comment: %s", jobDoc.getComments()));
-                scriptLog.println();
-
-                logger.info(String.format("Running %s: %s", JOB_TYPE, id));
-
-                tool.run();
-
-                storeUpdate(doc -> doc.setStatus(Completed));
+            if (!statusWasReady.get()) {
+                return;
             }
+
+            var jobDoc = loadDocument();
+            var tool = buildWhelkTool(jobDoc);
+            printScriptLogHeader(tool, jobDoc);
+            logger.info(String.format("Running %s: %s", JOB_TYPE, id));
+
+            tool.run();
+
+            storeUpdate(doc -> doc.setStatus(Completed));
         } catch (Exception e) {
             // TODO
             logger.error(e);
@@ -72,8 +70,21 @@ public class BulkJob implements Runnable {
         }
     }
 
-    WhelkTool buildWhelkTool(BulkJobDocument jobDoc) {
-        Script script = jobDoc.getSpecification().getScript(id);
+    protected void printScriptLogHeader(WhelkTool tool, BulkJobDocument jobDoc) {
+        var scriptLog = tool.getMainLog();
+
+        scriptLog.println(String.format("Running %s: %s for %s", JOB_TYPE, id, jobDoc.getChangeAgentId()));
+        scriptLog.println(String.format("label: %s", jobDoc.getLabels()));
+        scriptLog.println(String.format("comment: %s", jobDoc.getComments()));
+        scriptLog.println();
+    }
+
+    protected WhelkTool buildWhelkTool(BulkJobDocument jobDoc) throws IOException {
+
+        // FIXME handle bulk job thing vs record id consistently
+        var bulkJobThingId = stripPrefix(id, HASH_IT) + HASH_IT;
+
+        Script script = jobDoc.getSpecification().getScript(bulkJobThingId);
         WhelkTool tool = new WhelkTool(whelk, script, reportDir(systemId), WhelkTool.getDEFAULT_STATS_NUM_IDS());
         // TODO for now setting changedBy only works for loud changes (!minorChange in PostgreSQLComponent)
         tool.setDefaultChangedBy(jobDoc.getChangeAgentId());
@@ -83,11 +94,11 @@ public class BulkJob implements Runnable {
         return tool;
     }
 
-    BulkJobDocument loadDocument() {
+    protected BulkJobDocument loadDocument() {
         return new BulkJobDocument(whelk.getDocument(systemId).data);
     }
 
-    void storeUpdate(Consumer<BulkJobDocument> updater) {
+    private void storeUpdate(Consumer<BulkJobDocument> updater) {
         var minorUpdate = true;
         var writeIdenticalVersions = false;
         var changedIn = "???";
@@ -96,7 +107,11 @@ public class BulkJob implements Runnable {
         whelk.storeAtomicUpdate(systemId, minorUpdate, writeIdenticalVersions, changedIn, changedBy, updateAgent);
     }
 
-    private File reportDir(String baseName) {
+    protected File reportDir(String baseName) throws IOException {
+        return new File(new File(whelk.getLogRoot(), REPORTS_DIR), reportLeafDir(baseName));
+    }
+
+    protected static String reportLeafDir(String baseName) {
         String now = LocalDateTime
                 .now(ZoneId.systemDefault())
                 .truncatedTo(ChronoUnit.SECONDS)
@@ -104,7 +119,6 @@ public class BulkJob implements Runnable {
                 .replace(":", "");
 
         String safeName = baseName.replaceAll("[^\\w.-]+", "");
-        String dir = String.format("%s-%s", safeName, now);
-        return new File(new File(whelk.getLogRoot(), REPORTS_DIR), dir);
+        return String.format("%s-%s", safeName, now);
     }
 }

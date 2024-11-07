@@ -1,14 +1,15 @@
 package whelk.datatool
 
 import com.google.common.util.concurrent.MoreExecutors
+import groovy.transform.Immutable
 import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl
 import whelk.Document
 import whelk.IdGenerator
 import whelk.JsonLd
 import whelk.JsonLdValidator
 import whelk.Whelk
-import whelk.datatool.form.Transform
 import whelk.datatool.form.ModifiedThing
+import whelk.datatool.form.Transform
 import whelk.datatool.util.IdLoader
 import whelk.exception.StaleUpdateException
 import whelk.exception.WhelkException
@@ -19,12 +20,14 @@ import whelk.util.DocumentUtil
 import whelk.util.LegacyIntegrationTools
 import whelk.util.Statistics
 
+import javax.print.Doc
 import javax.script.Bindings
 import javax.script.CompiledScript
 import javax.script.ScriptEngineManager
 import javax.script.SimpleBindings
 import java.time.ZonedDateTime
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
@@ -70,7 +73,10 @@ class WhelkTool {
     boolean noThreads = true
     int numThreads = -1
     boolean stepWise
-    int limit = -1
+    volatile int limit = -1
+
+    boolean recordChanges
+    int recordingLimit = -1
 
     private String chosenAnswer = 'y'
 
@@ -78,13 +84,16 @@ class WhelkTool {
     boolean allowIdRemoval
     boolean skipValidation = false
 
-    private Throwable errorDetected
+    Throwable errorDetected
 
     private def jsonWriter = mapper.writerWithDefaultPrettyPrinter()
 
     ElasticFind elasticFind
     Statistics statistics
     JsonLdValidator validator
+    volatile boolean finished
+
+    private Queue<RecordedChange> recordedChanges = new ConcurrentLinkedQueue<>()
 
     private ScheduledExecutorService timedLogger = MoreExecutors.getExitingScheduledExecutorService(
             Executors.newScheduledThreadPool(1))
@@ -130,6 +139,10 @@ class WhelkTool {
 
             [modifiedLogFile, createdLogFile, deletedLogFile].each { if (it.length() == 0) it.delete() }
         }
+    }
+
+    boolean isFinished() {
+        return finished
     }
 
     boolean getUseThreads() { !noThreads && !stepWise }
@@ -487,6 +500,9 @@ class WhelkTool {
     }
 
     private void doDeletion(DocumentItem item) {
+        if (recordChanges) {
+            recordChange(whelk.getDocument(item.doc.shortId), null, item.number)
+        }
         if (!dryRun) {
             whelk.remove(item.doc.shortId, changedIn, item.changedBy ?: defaultChangedBy)
         }
@@ -542,9 +558,13 @@ class WhelkTool {
             validateJsonLd(doc)
         }
 
+        if (recordChanges) {
+            recordChange(whelk.getDocument(doc.shortId), doc.clone(), item.number)
+        }
         if (!dryRun) {
             whelk.storeAtomicUpdate(doc, !item.loud, true, changedIn, item.changedBy ?: defaultChangedBy, item.preUpdateChecksum)
         }
+
         modifiedLog.println(doc.shortId)
     }
 
@@ -558,6 +578,9 @@ class WhelkTool {
             validateJsonLd(doc)
         }
 
+        if (recordChanges) {
+            recordChange(null, doc.clone(), item.number)
+        }
         if (!dryRun) {
             var collection = LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld())
             if (!whelk.createDocument(doc, changedIn, item.changedBy ?: defaultChangedBy, collection, false))
@@ -698,6 +721,7 @@ class WhelkTool {
             log "Script terminated due to an error, see $reportsDir/ERRORS.txt for more info"
             throw new RuntimeException("Script terminated due to an error", errorDetected)
         }
+        finished = true
         log "Done!"
     }
 
@@ -776,6 +800,19 @@ class WhelkTool {
         }
     }
 
+    void recordChange(Document before, Document after, int number) {
+        //if (recordingLimit >= 0 && number > recordingLimit) {
+        if (recordingLimit >= 0 && recordedChanges.size() > recordingLimit) {
+            recordedChanges.add(new RecordedChange(null, null, number))
+        } else {
+            recordedChanges.add(new RecordedChange(before, after, number))
+        }
+    }
+
+    List<RecordedChange> getRecordedChanges() {
+        //return recordedChanges.collect().toSorted()
+        return recordedChanges.collect()
+    }
 }
 
 class Script {

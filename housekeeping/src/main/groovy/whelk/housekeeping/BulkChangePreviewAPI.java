@@ -1,15 +1,20 @@
 package whelk.housekeeping;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import org.jetbrains.annotations.NotNull;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
+import whelk.datatool.RecordedChange;
 import whelk.datatool.bulkchange.BulkJobDocument;
+import whelk.datatool.bulkchange.BulkPreviewJob;
 import whelk.datatool.bulkchange.Specification;
-import whelk.datatool.form.Transform;
-import whelk.datatool.form.ModifiedThing;
 import whelk.history.DocumentVersion;
 import whelk.history.History;
 import whelk.util.DocumentUtil;
+import whelk.util.Offsets;
 import whelk.util.WhelkFactory;
 import whelk.util.http.BadRequestException;
 import whelk.util.http.HttpTools;
@@ -25,20 +30,37 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static whelk.JsonLd.GRAPH_KEY;
 import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.RECORD_KEY;
+import static whelk.datatool.bulkchange.BulkPreviewJob.RECORD_MAX_ITEMS;
 import static whelk.util.Unicode.stripPrefix;
 
 public class BulkChangePreviewAPI extends HttpServlet {
 
-    private static final String BULK_CHANGE_PREVIEW_TYPE = "BulkChangePreview";
+    private static final String BULK_CHANGE_PREVIEW_TYPE = "bulk:Preview";
     private static final String PREVIEW_API_PATH = "/_bulk-change/preview";
     private static final int DEFAULT_LIMIT = 1;
+    private static final ThreadGroup threadGroup = new ThreadGroup(BulkChangeRunner.class.getSimpleName());
+    private static final int TIMEOUT_MS = 7000;
 
+    private static final int CACHE_SIZE = 20;
+    private static final int CACHE_TIMEOUT_MINUTES = 10;
 
     private Whelk whelk;
+
+    private final LoadingCache<String, Preview> cache = CacheBuilder.newBuilder()
+            .maximumSize(CACHE_SIZE)
+            .expireAfterAccess(CACHE_TIMEOUT_MINUTES, TimeUnit.MINUTES)
+            .recordStats()
+            .build(new CacheLoader<>() {
+                @Override
+                public @NotNull Preview load(@NotNull String id) {
+                    return new Preview(id);
+                }
+            });
 
     @Override
     public void init() {
@@ -55,20 +77,16 @@ public class BulkChangePreviewAPI extends HttpServlet {
             if (!id.startsWith(Document.getBASE_URI().toString())) {
                 throw new NotFoundException("Document not found");
             }
-            var systemId = stripPrefix(id, Document.getBASE_URI().toString());
 
             int limit = nonNegativeInt(request, "_limit", DEFAULT_LIMIT);
             int offset = nonNegativeInt(request, "_offset", 0);
 
-            var jobDoc = load(systemId);
-            var spec = jobDoc.getSpecification();
+            var preview = cache.get(id);
+            var changes = preview.getChanges(offset + limit + 1, TIMEOUT_MS);
 
-            // TODO: Fetch ready-made changes
-            var ids = getIds(spec);
-            var totalItems = ids.size();
-            List<RecordChange> recordChanges = getRecordChanges(spec, ids, offset, limit);
+            var result = makePreview(changes, offset, limit, id, preview.isFinished());
 
-            var result = makePreview(recordChanges, totalItems, offset, limit, id);
+            var spec = preview.getSpec();
             if (spec instanceof Specification.Update) {
                 result.put("changeSets", ((Specification.Update) spec).getTransform(whelk).getChangeSets());
             }
@@ -80,59 +98,17 @@ public class BulkChangePreviewAPI extends HttpServlet {
         }
     }
 
-    // TODO: Should be defined elsewhere (Whelktool)
-    private record RecordChange(Document before, Document after) {}
-
-    private List<RecordChange> getRecordChanges(Specification spec, List<String> ids, int offset, int limit) {
-        return switch (spec) {
-            case Specification.Update update ->
-                whelk.bulkLoad(slice(ids, offset, offset + limit))
-                        .values()
-                        .stream()
-                        .map(before -> {
-                            var after = before.clone();
-                            update.modify(after, whelk);
-                            return new RecordChange(before, after);
-                        })
-                        .toList();
-            case Specification.Delete ignored ->
-                whelk.bulkLoad(slice(ids, offset, offset + limit))
-                        .values()
-                        .stream()
-                        .map(before -> new RecordChange(before, null))
-                        .toList();
-            case Specification.Create ignored -> Collections.emptyList();
-            case Specification.Merge ignored -> Collections.emptyList();
-        };
-    }
-
-    private List<String> getIds(Specification spec) {
-        return switch (spec) {
-            case Specification.Update update -> queryIdsByForm(update.getTransform(whelk));
-            case Specification.Delete delete -> queryIdsByForm(delete.getMatchForm(whelk));
-            case Specification.Create ignored -> Collections.emptyList();
-            case Specification.Merge ignored -> Collections.emptyList();
-        };
-    }
-
-    private List<String> queryIdsByForm(Transform transform) {
-        var sparqlPattern = transform.getSparqlPattern(whelk.getJsonld().context);
-        return whelk.getSparqlQueryClient()
-                .queryIdsByPattern(sparqlPattern)
-                .stream()
-                .sorted()
-                .toList();
-    }
-
-    private Map<Object, Object> makePreview(List<RecordChange> recordChanges, int totalItems, int offset, int limit, String id) {
+    private Map<Object, Object> makePreview(List<RecordedChange> changes, int offset, int limit, String id, boolean complete) {
         Map<Object, Object> result = new LinkedHashMap<>();
         result.put(JsonLd.TYPE_KEY, BULK_CHANGE_PREVIEW_TYPE);
 
-        var items = recordChanges.stream()
+        var totalItems = changes.size();
+
+        var items = slice(changes, offset, Math.min(offset + limit, RECORD_MAX_ITEMS)).stream()
                 .map(this::makePreviewChangeSet)
                 .toList();
 
-        Offsets offsets = new Offsets(totalItems, limit, offset);
+        Offsets offsets = new Offsets(Math.min(totalItems, RECORD_MAX_ITEMS), limit, offset);
         result.putAll(makeLink(id, offset, limit));
         if (offsets.hasFirst()) {
             result.put("first", makeLink(id, offsets.first, limit));
@@ -150,6 +126,8 @@ public class BulkChangePreviewAPI extends HttpServlet {
         result.put("itemsPerPage", limit);
         result.put("totalItems", totalItems);
         result.put("items", items);
+        result.put("maxItems", RECORD_MAX_ITEMS);
+        result.put("_complete", complete);
 
         return result;
     }
@@ -170,9 +148,9 @@ public class BulkChangePreviewAPI extends HttpServlet {
 
     // FIXME mangle the data in a more ergonomic way
     @SuppressWarnings("unchecked")
-    private Map<?,?> makePreviewChangeSet(RecordChange recordChange) {
-        Document before = recordChange.before();
-        Document after = recordChange.after();
+    private Map<?,?> makePreviewChangeSet(RecordedChange recordChange) {
+        Document before = recordChange.before() != null ? recordChange.before().clone() : null;
+        Document after = recordChange.after() != null ? recordChange.after().clone() : null;
         String id = null;
         if (before != null) {
             // Remove @id from record to prevent from being shown as a link in the diff view
@@ -180,11 +158,12 @@ public class BulkChangePreviewAPI extends HttpServlet {
             before.getThing().put(RECORD_KEY, before.getRecord());
         } else {
             // If there is no before version, create one with an empty main entity
+            assert after != null;
             before = new Document(Map.of(GRAPH_KEY, List.of(after.getRecord(), Collections.emptyMap())));
         }
         if (after != null) {
             id = (String) after.getRecord().remove(ID_KEY);
-            after.getThing().put(RECORD_KEY, before.getRecord());
+            after.getThing().put(RECORD_KEY, after.getRecord());
         } else {
             // If there is no after version, create one with an empty main entity
             after = new Document(Map.of(GRAPH_KEY, List.of(before.getRecord(), Collections.emptyMap())));
@@ -216,8 +195,8 @@ public class BulkChangePreviewAPI extends HttpServlet {
         return l.subList(fromIx, toIx);
     }
 
-    private BulkJobDocument load(String id) {
-        Document doc = whelk.getDocument(id);
+    private BulkJobDocument load(String systemId) {
+        Document doc = whelk.getDocument(systemId);
         if (doc == null) {
             throw new NotFoundException("Document not found");
         }
@@ -243,63 +222,59 @@ public class BulkChangePreviewAPI extends HttpServlet {
         }
     }
 
-    // TODO class is duplicated in three places
-    static class Offsets {
-        Integer prev;
-        Integer next;
-        Integer first;
-        Integer last;
+    class Preview {
+        String id;
+        String systemId;
+        BulkPreviewJob job;
 
-        Offsets(int total, int limit, int offset) throws IllegalArgumentException {
-            if (limit < 0) {
-                throw new IllegalArgumentException("\"limit\" can't be negative.");
-            }
-
-            if (offset < 0) {
-                throw new IllegalArgumentException("\"offset\" can't be negative.");
-            }
-
-            if (limit == 0) {
-                return;
-            }
-
-            if (offset != 0) {
-                this.first = 0;
-            }
-
-            this.prev = offset - limit;
-            if (this.prev < 0) {
-                this.prev = null;
-            }
-
-            this.next = offset + limit;
-            if (this.next >= total) {
-                this.next = null;
-            } else if (offset == 0) {
-                this.next = limit;
-            }
-
-            if (total % limit == 0) {
-                this.last = total - limit;
-            } else {
-                this.last = total - (total % limit);
-            }
+        Preview(String id) {
+            this.id = id;
+            this.systemId = stripPrefix(id, Document.getBASE_URI().toString());
         }
 
-        boolean hasNext() {
-            return this.next != null;
+        synchronized List<RecordedChange> getChanges(int minNumWanted, int timeoutMs) {
+            var jobDoc = load(systemId);
+            if (job!= null && !job.isSameVersion(jobDoc)) {
+                job.cancel();
+                job = null;
+            }
+            if (job == null) {
+                try {
+                    job = new BulkPreviewJob(whelk, id);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                new Thread(threadGroup, job).start();
+            }
+
+            long returnTime = System.currentTimeMillis() + timeoutMs;
+            while (System.currentTimeMillis() < returnTime) {
+                var changes = job.getChanges();
+                if (changes.size() < minNumWanted && !job.isFinished()) {
+                    sleep();
+                } else {
+                    return changes;
+                }
+            }
+
+            // TODO
+            return job.getChanges();
         }
 
-        boolean hasPrev() {
-            return this.prev != null;
+        // FIXME depends on getChanges being called before...
+        synchronized boolean isFinished() {
+            return job.isFinished();
         }
 
-        boolean hasLast() {
-            return this.last != null;
+        Specification getSpec() {
+            return load(systemId).getSpecification();
         }
 
-        boolean hasFirst() {
-            return this.first != null;
+        private void sleep() {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ignored) {}
         }
     }
+
 }

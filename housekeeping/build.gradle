@@ -54,6 +54,9 @@ dependencies {
     // Cron
     implementation group: 'it.sauronsoftware.cron4j', name: 'cron4j', version: '2.2.5'
 
+    // Utils
+    implementation "com.google.guava:guava:${guavaVersion}"
+
     // Testing
     testImplementation "org.spockframework:spock-core:${spockVersion}"
 }
