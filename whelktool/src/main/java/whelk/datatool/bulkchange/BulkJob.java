@@ -83,8 +83,8 @@ public class BulkJob implements Runnable {
 
         // FIXME handle bulk job thing vs record id consistently
         var bulkJobThingId = stripPrefix(id, HASH_IT) + HASH_IT;
-
         Script script = jobDoc.getSpecification().getScript(bulkJobThingId);
+
         WhelkTool tool = new WhelkTool(whelk, script, reportDir(systemId), WhelkTool.getDEFAULT_STATS_NUM_IDS());
         // TODO for now setting changedBy only works for loud changes (!minorChange in PostgreSQLComponent)
         tool.setDefaultChangedBy(jobDoc.getChangeAgentId());

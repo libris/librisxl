@@ -26,7 +26,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -179,6 +178,7 @@ public class BulkChangePreviewAPI extends HttpServlet {
         var id = (String) recordCopy.get(ID_KEY);
 
         var result = getChangeSetsMap(beforeDoc, afterDoc, id);
+
         ((Map<String,Object>) DocumentUtil.getAtPath(result, List.of("changeSets", 0))).put("version",
                 beforeDoc.getThing());
         ((Map<String,Object>) DocumentUtil.getAtPath(result, List.of("changeSets", 1))).put("version",
