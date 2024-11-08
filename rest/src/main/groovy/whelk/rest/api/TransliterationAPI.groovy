@@ -1,9 +1,9 @@
 package whelk.rest.api
 
 import groovy.util.logging.Log4j2 as Log
-import whelk.Whelk
 import whelk.util.Romanizer
 import whelk.util.WhelkFactory
+import whelk.util.http.HttpTools
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest

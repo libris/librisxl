@@ -25,8 +25,8 @@ import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND
 import static javax.servlet.http.HttpServletResponse.SC_NOT_MODIFIED
 import static javax.servlet.http.HttpServletResponse.SC_OK
-import static whelk.rest.api.MimeTypes.JSON
-import static whelk.rest.api.MimeTypes.JSONLD
+import static whelk.util.http.MimeTypes.JSON
+import static whelk.util.http.MimeTypes.JSONLD
 import static whelk.util.Jackson.mapper
 
 /**

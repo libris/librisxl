@@ -1,5 +1,9 @@
 package whelk.rest.api
 
+import whelk.util.http.BadRequestException
+import whelk.util.http.MimeTypes
+import whelk.util.http.NotFoundException
+
 import javax.servlet.http.HttpServletRequest
 
 import static whelk.rest.api.CrudUtils.*
@@ -90,7 +94,7 @@ class CrudGetRequest {
             dataLeaf = matcher[0][2]
             view = View.fromString(matcher[0][3])
         } else {
-            throw new Crud.NotFoundException("Not found:" + path)
+            throw new NotFoundException("Not found:" + path)
         }
     }
 

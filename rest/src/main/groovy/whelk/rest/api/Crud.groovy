@@ -21,6 +21,12 @@ import whelk.history.History
 import whelk.rest.api.CrudGetRequest.Lens
 import whelk.rest.security.AccessControl
 import whelk.util.WhelkFactory
+import whelk.util.http.BadRequestException
+import whelk.util.http.HttpTools
+import whelk.util.http.MimeTypes
+import whelk.util.http.NotFoundException
+import whelk.util.http.OtherStatusException
+import whelk.util.http.RedirectException
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
@@ -28,8 +34,8 @@ import javax.servlet.http.HttpServletResponse
 import java.lang.management.ManagementFactory
 
 import static whelk.rest.api.CrudUtils.ETag
-import static whelk.rest.api.HttpTools.getBaseUri
-import static whelk.rest.api.HttpTools.sendResponse
+import static whelk.util.http.HttpTools.getBaseUri
+import static whelk.util.http.HttpTools.sendResponse
 import static whelk.util.Jackson.mapper
 
 /**
@@ -620,7 +626,7 @@ class Crud extends HttpServlet {
         String location = docAndLoc.v2
 
         if (!existingDoc && !location) {
-            throw new Crud.NotFoundException("Document not found.")
+            throw new NotFoundException("Document not found.")
         } else if (!existingDoc && location) {
             sendRedirect(request, response, location)
             return
@@ -847,38 +853,5 @@ class Crud extends HttpServlet {
         HttpTools.sendError(response, code, e.getMessage(), e)
     }
 
-    static class NotFoundException extends NoStackTraceException {
-        NotFoundException(String msg) {
-            super(msg)
-        }
-    }
 
-    static class OtherStatusException extends NoStackTraceException {
-        int code
-        OtherStatusException(String msg, int code, Throwable cause = null) {
-            super(msg, cause)
-            this.code = code
-        }
-    }
-
-    /** "Don't use exceptions for flow control" in part comes from that exceptions in Java are
-     * expensive to create because building the stack trace is expensive. But in the context of 
-     * sending error responses in this API exceptions are pretty useful for flow control. 
-     * This is a base class for stack trace-less exceptions for common error flows.
-     */
-    static class NoStackTraceException extends RuntimeException {
-        protected NoStackTraceException(String msg) {
-            super(msg, null, true, false)
-        }
-        
-        protected NoStackTraceException(String msg, Throwable cause) {
-            super(msg, cause, true, false)
-        }
-    }
-
-    static class RedirectException extends NoStackTraceException {
-        RedirectException(String msg) {
-            super(msg)
-        }
-    }
 }

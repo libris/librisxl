@@ -16,6 +16,7 @@ import whelk.search2.Sort;
 import whelk.search2.Spell;
 import whelk.search2.Stats;
 import whelk.search2.querytree.QueryTree;
+import whelk.util.http.RedirectException;
 
 import java.io.IOException;
 import java.util.*;
@@ -43,7 +44,7 @@ public class SearchUtils2 {
             if (queryParams.object == null) {
                 throw new InvalidQueryException("Missing required query parameter: _q");
             } else {
-                throw new Crud.RedirectException(QueryUtil.makeFindUrl("", "*", queryParams.getNonQueryParams()));
+                throw new RedirectException(QueryUtil.makeFindUrl("", "*", queryParams.getNonQueryParams()));
             }
         }
 
@@ -54,7 +55,7 @@ public class SearchUtils2 {
         QueryTree iTree = new QueryTree(queryParams.i, disambiguate, appParams.siteFilters.aliasToFilter());
 
         if (!iTree.isEmpty() && !iTree.isFreeText()) {
-            throw new Crud.RedirectException(QueryUtil.makeFindUrl(qTree, queryParams.getNonQueryParams()));
+            throw new RedirectException(QueryUtil.makeFindUrl(qTree, queryParams.getNonQueryParams()));
         }
 
         qTree.addFilters(queryParams, appParams);
