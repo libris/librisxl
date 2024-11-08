@@ -23,7 +23,7 @@ import static whelk.component.ElasticSearch.flattenedLangMapKey;
 public class QueryUtil {
     private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper();
 
-    private final Whelk whelk;
+    public final Whelk whelk;
     public final EsMappings esMappings;
     public final ESQueryLensBoost lensBoost;
 
@@ -34,6 +34,7 @@ public class QueryUtil {
     }
 
     public Map<?, ?> query(Map<String, Object> queryDsl) {
+        //System.out.println(queryDsl.toString());
         return whelk.elastic.query(queryDsl);
     }
 

@@ -16,6 +16,7 @@ import whelk.search2.Sort;
 import whelk.search2.Spell;
 import whelk.search2.Stats;
 import whelk.search2.querytree.QueryTree;
+import whelk.search2.BoostedFields;
 
 import java.io.IOException;
 import java.util.*;
@@ -36,6 +37,10 @@ public class SearchUtils2 {
         if (!queryUtil.esIsConfigured()) {
             throw new WhelkRuntimeException("ElasticSearch not configured.");
         }
+
+        BoostedFields bf = new BoostedFields(queryUtil.whelk);
+
+        List<String> boostedfields = bf.boostedFields(queryParameters, queryUtil.lensBoost);
 
         QueryParams queryParams = new QueryParams(queryParameters);
 
@@ -60,7 +65,7 @@ public class SearchUtils2 {
         qTree.addFilters(queryParams, appParams);
         qTree.setOutsetType(disambiguate);
 
-        Map<String, Object> esQueryDsl = getEsQueryDsl(qTree, queryParams, appParams.statsRepr);
+        Map<String, Object> esQueryDsl = getEsQueryDsl(qTree, queryParams, appParams.statsRepr, boostedfields);
 
         QueryResult queryRes = new QueryResult(queryUtil.query(esQueryDsl));
 
@@ -73,9 +78,9 @@ public class SearchUtils2 {
         return partialCollectionView;
     }
 
-    private Map<String, Object> getEsQueryDsl(QueryTree queryTree, QueryParams queryParams, AppParams.StatsRepr statsRepr) {
+    private Map<String, Object> getEsQueryDsl(QueryTree queryTree, QueryParams queryParams, AppParams.StatsRepr statsRepr, List<String> boostedfields) {
         var queryDsl = new LinkedHashMap<String, Object>();
-        queryDsl.put("query", queryTree.toEs(queryUtil, disambiguate));
+        queryDsl.put("query", queryTree.toEs(queryUtil, disambiguate, boostedfields));
         queryDsl.put("size", queryParams.limit);
         queryDsl.put("from", queryParams.offset);
         queryDsl.put("sort", (queryParams.sortBy == Sort.DEFAULT_BY_RELEVANCY && queryTree.isWild()

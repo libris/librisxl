@@ -38,11 +38,12 @@ public class QueryTree {
         removeNeedlessWildcard();
     }
 
-    public Map<String, Object> toEs(QueryUtil queryUtil, Disambiguate disambiguate) {
+    public Map<String, Object> toEs(QueryUtil queryUtil, Disambiguate disambiguate, List<String> boostedfields) {
         return (isFiltered() ? filtered.tree : tree)
                 .expand(disambiguate, getOutsetType())
                 .insertNested(queryUtil::getNestedPath)
-                .toEs(queryUtil.lensBoost.computeBoostFieldsFromLenses(new String[0])); // TODO: Implement boosting
+                .toEs(boostedfields);
+                //.toEs(queryUtil.lensBoost.computeBoostFieldsFromLenses(new String[0])); // TODO: Implement boosting
     }
 
     public Map<String, Object> toSearchMapping(Map<String, String> nonQueryParams) {
