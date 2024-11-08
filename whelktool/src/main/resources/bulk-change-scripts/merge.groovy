@@ -5,8 +5,8 @@ import static whelk.JsonLd.ID_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.DEPRECATE_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.KEEP_KEY
 
-List<String> deprecate = ["https://id.kb.se/term/sao/M%C3%84V1"]//parameters.get(DEPRECATE_KEY)
-String keep = "https://id.kb.se/term/sao/M%C3%84V-NY" //parameters.get(KEEP_KEY)
+List<String> deprecate = parameters.get(DEPRECATE_KEY)
+String keep = parameters.get(KEEP_KEY)
 
 Set<String> allObsoleteThingUris = synchronizedSet([] as Set<String>)
 selectByIds(deprecate) { obsolete ->
@@ -30,10 +30,7 @@ selectByIds(deprecate) { obsolete ->
         }
     }
     allObsoleteThingUris.addAll(obsoleteThingUris)
-}
-
-selectByIds(deprecate) {
-    it.scheduleDelete()
+    obsolete.scheduleDelete()
 }
 
 selectByIds([keep]) {
