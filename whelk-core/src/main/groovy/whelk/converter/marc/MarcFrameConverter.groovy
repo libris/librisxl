@@ -495,7 +495,13 @@ class MarcConversion {
                 // with subfields in unhandled are now excluded to avoid field
                 // duplication).
                 if (!it.containsKey('_unhandled')) {
-                    fields << it.clone()
+                    Map field = it.clone()
+                    field.each { fieldNumber, fieldData ->
+                        if (fieldData instanceof Map && fieldData.subfields instanceof Map) {
+                            fieldData['subfields'] = [fieldData.subfields]
+                        }
+                    }
+                    fields << field
                 }
             }
         }
