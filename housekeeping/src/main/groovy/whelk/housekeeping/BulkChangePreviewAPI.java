@@ -27,10 +27,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import static whelk.JsonLd.GRAPH_KEY;
 import static whelk.JsonLd.ID_KEY;
@@ -149,30 +151,38 @@ public class BulkChangePreviewAPI extends HttpServlet {
     // FIXME mangle the data in a more ergonomic way
     @SuppressWarnings("unchecked")
     private Map<?,?> makePreviewChangeSet(RecordedChange recordChange) {
-        Document before = recordChange.before() != null ? recordChange.before().clone() : null;
-        Document after = recordChange.after() != null ? recordChange.after().clone() : null;
-        String id = null;
-        if (before != null) {
-            // Remove @id from record to prevent from being shown as a link in the diff view
-            id = (String) before.getRecord().remove(ID_KEY);
-            before.getThing().put(RECORD_KEY, before.getRecord());
-        } else {
-            // If there is no before version, create one with an empty main entity
-            assert after != null;
-            before = new Document(Map.of(GRAPH_KEY, List.of(after.getRecord(), Collections.emptyMap())));
-        }
-        if (after != null) {
-            id = (String) after.getRecord().remove(ID_KEY);
-            after.getThing().put(RECORD_KEY, after.getRecord());
-        } else {
-            // If there is no after version, create one with an empty main entity
-            after = new Document(Map.of(GRAPH_KEY, List.of(before.getRecord(), Collections.emptyMap())));
-        }
-        var result = getChangeSetsMap(before, after, id);
+        Function<Document, Map<Object, Object>> getThing = (Document doc) -> doc != null ?
+                new LinkedHashMap<Object, Object>(doc.getThing()) :
+                new HashMap<>();
+        Function<Document, Map<?, ?>> getRecord = (Document doc) -> doc != null ?
+                new LinkedHashMap<Object, Object>(doc.getRecord()) :
+                new HashMap<>();
+
+        var thingBefore = getThing.apply(recordChange.before());
+        var thingAfter = getThing.apply(recordChange.after());
+        var recordBefore = getRecord.apply(recordChange.before());
+        var recordAfter = getRecord.apply(recordChange.after());
+
+        var recordCopy = new LinkedHashMap<>(recordBefore.isEmpty() ? recordAfter : recordBefore);
+
+        // Remove @id from record to prevent it from being shown as a link in the diff view
+        recordBefore.remove(ID_KEY);
+        recordAfter.remove(ID_KEY);
+
+        // We want to compute the diff for a "framed" thing
+        thingBefore.put(RECORD_KEY, recordBefore);
+        thingAfter.put(RECORD_KEY, recordAfter);
+
+        // However when the diff is computed we need "@graph form", hence the same record copy at @graph,0 in both versions
+        var beforeDoc = new Document(Map.of(GRAPH_KEY, List.of(recordCopy, thingBefore)));
+        var afterDoc = new Document(Map.of(GRAPH_KEY, List.of(recordCopy, thingAfter)));
+        var id = (String) recordCopy.get(ID_KEY);
+
+        var result = getChangeSetsMap(beforeDoc, afterDoc, id);
         ((Map<String,Object>) DocumentUtil.getAtPath(result, List.of("changeSets", 0))).put("version",
-                before.getThing());
+                beforeDoc.getThing());
         ((Map<String,Object>) DocumentUtil.getAtPath(result, List.of("changeSets", 1))).put("version",
-                after.getThing());
+                afterDoc.getThing());
 
         return result;
     }
