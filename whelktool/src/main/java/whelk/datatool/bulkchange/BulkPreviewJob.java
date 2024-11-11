@@ -76,7 +76,7 @@ public class BulkPreviewJob extends BulkJob {
     }
 
     @Override
-    protected File reportDir(String baseName) throws IOException {
-        return new File(Files.createTempDirectory(REPORTS_DIR).toFile(), reportLeafDir(baseName));
+    protected File reportDir() throws IOException {
+        return new File(Files.createTempDirectory(REPORTS_DIR).toFile(), executionId);
     }
 }

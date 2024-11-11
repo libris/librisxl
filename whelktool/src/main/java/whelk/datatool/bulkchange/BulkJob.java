@@ -32,11 +32,13 @@ public class BulkJob implements Runnable {
     protected final String id;
     protected final String systemId;
     protected final Whelk whelk;
+    protected final String executionId;
 
     public BulkJob(Whelk whelk, String id) {
         this.whelk = whelk;
         this.id = id;
         this.systemId = stripSuffix(stripPrefix(id, Document.getBASE_URI().toString()), Document.HASH_IT);
+        this.executionId = executionId(systemId);
     }
 
     @Override
@@ -58,6 +60,8 @@ public class BulkJob implements Runnable {
             var tool = buildWhelkTool(jobDoc);
             printScriptLogHeader(tool, jobDoc);
             logger.info(String.format("Running %s: %s", JOB_TYPE, id));
+
+            storeUpdate(doc -> doc.setStatus(Completed));
 
             tool.run();
 
@@ -86,7 +90,8 @@ public class BulkJob implements Runnable {
 
         Script script = jobDoc.getSpecification().getScript(bulkJobThingId);
 
-        WhelkTool tool = new WhelkTool(whelk, script, reportDir(systemId), WhelkTool.getDEFAULT_STATS_NUM_IDS());
+        WhelkTool tool = new WhelkTool(whelk, script, reportDir(), WhelkTool.getDEFAULT_STATS_NUM_IDS());
+
         // TODO for now setting changedBy only works for loud changes (!minorChange in PostgreSQLComponent)
         tool.setDefaultChangedBy(jobDoc.getChangeAgentId());
         tool.setAllowLoud(jobDoc.shouldUpdateModifiedTimestamp());
@@ -108,11 +113,15 @@ public class BulkJob implements Runnable {
         whelk.storeAtomicUpdate(systemId, minorUpdate, writeIdenticalVersions, changedIn, changedBy, updateAgent);
     }
 
-    protected File reportDir(String baseName) throws IOException {
-        return new File(new File(whelk.getLogRoot(), REPORTS_DIR), reportLeafDir(baseName));
+    protected File reportDir() throws IOException {
+        return new File(reportBaseDir(whelk), executionId);
     }
 
-    protected static String reportLeafDir(String baseName) {
+    public static File reportBaseDir(Whelk whelk) throws IOException {
+        return new File(whelk.getLogRoot(), REPORTS_DIR);
+    }
+
+    protected static String executionId(String baseName) {
         String now = LocalDateTime
                 .now(ZoneId.systemDefault())
                 .truncatedTo(ChronoUnit.SECONDS)

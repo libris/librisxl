@@ -66,12 +66,14 @@ public class BulkJobDocument extends Document {
     public static final String DEPRECATE_KEY = "bulk:deprecate";
     public static final String SCRIPT_KEY = "bulk:script";
     public static final String RDF_VALUE = "value";
+    public static final String EXECUTION_KEY = "bulk:execution";
 
     private static final List<Object> STATUS_PATH = List.of(JsonLd.GRAPH_KEY, 1, STATUS_KEY);
     private static final List<Object> UPDATE_TIMESTAMP_PATH = List.of(JsonLd.GRAPH_KEY, 1, SHOULD_UPDATE_TIMESTAMP_KEY);
     private static final List<Object> LABELS_PATH = List.of(JsonLd.GRAPH_KEY, 1, LABEL_KEY, "*");
     private static final List<Object> COMMENTS_PATH = List.of(JsonLd.GRAPH_KEY, 1, COMMENT_KEY, "*");
     private static final List<Object> SPECIFICATION_PATH = List.of(JsonLd.GRAPH_KEY, 1, CHANGE_SPEC_KEY);
+    private static final List<Object> EXECUTION_PATH = List.of(JsonLd.GRAPH_KEY, 1, EXECUTION_KEY);
 
     public BulkJobDocument(Document doc) {
         this(doc.data);
@@ -90,7 +92,8 @@ public class BulkJobDocument extends Document {
     }
 
     public void setStatus(Status status) {
-        _set(STATUS_PATH, status.key(), data);
+        getThing().put(EXECUTION_KEY, status);
+        
     }
 
     public List<String> getLabels() {
@@ -107,6 +110,10 @@ public class BulkJobDocument extends Document {
 
     public Map<String, Object> getSpecificationRaw() {
         return get(data, SPECIFICATION_PATH);
+    }
+
+    public void addExecution(String executionId) {
+        _set(EXECUTION_PATH, executionId, data);
     }
 
     public Specification getSpecification() {
