@@ -1,3 +1,11 @@
+/**
+ * Remove all uses of a certain TopicSubdivision within ComplexSubject
+ *
+ * Parameters:
+ * bulk:deprecate - The subdivision(s) to be removed
+ * bulk:keep - If specified, add this regular Topic to :subject instead
+ */
+
 import whelk.JsonLd
 import whelk.util.DocumentUtil
 
@@ -8,11 +16,9 @@ import static whelk.datatool.bulkchange.BulkJobDocument.KEEP_KEY
 List deprecateLinks = asList(parameters.get(DEPRECATE_KEY))
 Map keepLink = parameters.get(KEEP_KEY)
 
-println(parameters)
-
 deprecateLinks.each { deprecate ->
-    selectByIds([deprecate[ID_KEY]]) { obsolete ->
-        selectByIds(obsolete.getDependers()) { depender ->
+    selectByIds([deprecate[ID_KEY]]) { obsoleteSubdivision ->
+        selectByIds(obsoleteSubdivision.getDependers()) { depender ->
             Map thing = depender.graph[1] as Map
 
             if (thing[JsonLd.TYPE_KEY] == 'ComplexSubject') {
