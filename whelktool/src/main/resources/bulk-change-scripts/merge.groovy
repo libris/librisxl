@@ -41,7 +41,6 @@ selectByIds([keep]) {
     allObsoleteThingUris.each { uri ->
         it.doc.addThingIdentifier(uri)
     }
-    // TODO: Don't normalize sameAs links on saving? bulk:deprecate should link to the deleted resource
     it.scheduleSave()
 }
 

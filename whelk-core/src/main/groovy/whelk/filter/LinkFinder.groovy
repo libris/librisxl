@@ -115,21 +115,22 @@ class LinkFinder {
     }
 
     private void replaceSameAsLinksWithPrimaries(Map data, List path = []) {
-        def exceptedProperties = ['bulk:deprecate'] as Set
+        def exceptedPaths = ['bulk:changeSpec.bulk:deprecate'] as Set
 
         // If this is a link (an object containing _only_ an id)
         String id = data.get("@id")
         if (id != null && data.keySet().size() == 1) {
             // Path to same form as in lddb__dependencies.relation
-            List<String> normalizedPath = (path.take(2) == Document.recordPath
+            String normalizedPath = (path.take(2) == Document.recordPath
                     ? [JsonLd.RECORD_KEY] + path.drop(2)
                     : (path.take(2) == Document.thingPath ? path.drop(2) : path)
             )
-                    .findAll { it instanceof String } as List<String>
-            if (normalizedPath && exceptedProperties.contains(normalizedPath.last())) {
+                    .findAll { it instanceof String }
+                    .join('.')
+            if (exceptedPaths.contains(normalizedPath)) {
                 return
             }
-            String primaryId = lookupPrimaryId(id, normalizedPath.join('.'))
+            String primaryId = lookupPrimaryId(id, normalizedPath)
             if (primaryId != null)
                 data.put("@id", primaryId)
             return

@@ -50,7 +50,7 @@ class JsonLd {
     public static final List<String> NS_SEPARATORS = ['#', '/', ':']
 
     public static final List<String> NON_DEPENDANT_RELATIONS = ['narrower', 'broader', 'expressionOf', 'related',
-                                                                'derivedFrom', 'bulk:changeSpec.bulk:deprecate']
+                                                                'derivedFrom']
     public static final List<String> ALLOW_LINK_TO_DELETED = [
         'meta.derivedFrom', 'hasTitle.source', 'bulk:changeSpec.bulk:deprecate',
         /* following are combinations only needed while there are local unlinked works */
