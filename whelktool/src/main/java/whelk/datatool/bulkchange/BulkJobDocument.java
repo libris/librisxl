@@ -20,7 +20,8 @@ public class BulkJobDocument extends Document {
         Update("bulk:Update"),
         Delete("bulk:Delete"),
         Create("bulk:Create"),
-        Merge("bulk:Merge");
+        Merge("bulk:Merge"),
+        Other("bulk:Other");
 
         private final String key;
 
@@ -63,6 +64,7 @@ public class BulkJobDocument extends Document {
     public static final String LABEL_KEY = "label";
     public static final String KEEP_KEY = "bulk:keep";
     public static final String DEPRECATE_KEY = "bulk:deprecate";
+    public static final String SCRIPT_KEY = "bulk:script";
 
     private static final List<Object> STATUS_PATH = List.of(JsonLd.GRAPH_KEY, 1, STATUS_KEY);
     private static final List<Object> UPDATE_TIMESTAMP_PATH = List.of(JsonLd.GRAPH_KEY, 1, SHOULD_UPDATE_TIMESTAMP_KEY);
@@ -127,6 +129,10 @@ public class BulkJobDocument extends Document {
             case SpecType.Merge -> new Specification.Merge(
                     get(spec, List.of(DEPRECATE_KEY, "*", ID_KEY), Collections.emptyList()),
                     get(spec, List.of(KEEP_KEY, ID_KEY), "")
+            );
+            case SpecType.Other -> new Specification.Other(
+                    get(spec, SCRIPT_KEY, null),
+                    spec
             );
             case null -> throw new ModelValidationException(String.format("Bad %s %s: %s",
                     CHANGE_SPEC_KEY, JsonLd.TYPE_KEY, specType));

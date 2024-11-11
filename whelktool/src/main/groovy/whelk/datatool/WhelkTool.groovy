@@ -25,6 +25,7 @@ import javax.script.Bindings
 import javax.script.CompiledScript
 import javax.script.ScriptEngineManager
 import javax.script.SimpleBindings
+import java.nio.charset.StandardCharsets
 import java.time.ZonedDateTime
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -762,6 +763,7 @@ class WhelkTool {
         cli.idchg(longOpt: 'allow-id-removal', '[UNSAFE] Allow script to remove document ids, e.g. sameAs.')
         cli.sv(longOpt: 'skip-validation', '[UNSAFE] Skip JSON-LD validation before saving to database.')
         cli.n(longOpt: 'stats-num-ids', args: 1, 'Number of ids to print per entry in STATISTICS.txt.')
+        cli.p(longOpt: 'parameters', args: 1, argName: 'PARAMETER-FILE', 'Path to JSON file with parameters to script')
 
         def options = cli.parse(args)
         if (options.h) {
@@ -776,6 +778,11 @@ class WhelkTool {
         Script script = null
         try {
             script = new FileScript(scriptPath)
+
+            String paramPath = options.p
+            if (paramPath) {
+                script.setParameters(mapper.readValue(new File(paramPath).getText("UTF-8"), Map))
+            }
         }
         catch (IOException e) {
             System.err.println("Could not load script [$scriptPath] : $e")

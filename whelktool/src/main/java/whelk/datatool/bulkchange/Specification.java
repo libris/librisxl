@@ -1,5 +1,6 @@
 package whelk.datatool.bulkchange;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.io.IOUtils;
 import whelk.Document;
 import whelk.Whelk;
@@ -11,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +23,7 @@ import static whelk.datatool.bulkchange.BulkJobDocument.MATCH_FORM_KEY;
 import static whelk.datatool.bulkchange.BulkJobDocument.DEPRECATE_KEY;
 import static whelk.datatool.bulkchange.BulkJobDocument.TARGET_FORM_KEY;
 
-public sealed interface Specification permits Specification.Create, Specification.Delete, Specification.Merge, Specification.Update {
+public sealed interface Specification permits Specification.Create, Specification.Delete, Specification.Merge, Specification.Update, Specification.Other {
 
     Script getScript(String bulkJobId);
 
@@ -119,6 +121,26 @@ public sealed interface Specification permits Specification.Create, Specificatio
                     DEPRECATE_KEY, deprecate,
                     KEEP_KEY, keep
             ));
+            return s;
+        }
+    }
+
+    record Other(String name, Map<String, ?> parameters) implements Specification {
+        private static final Map<String, List<String>> ALLOWED_SCRIPTS_PARAMS = Map.of(
+                "removeTopicSubdivision", List.of(DEPRECATE_KEY, KEEP_KEY)
+        );
+
+        @Override
+        public Script getScript(String bulkJobId) {
+            if (!ALLOWED_SCRIPTS_PARAMS.containsKey(name)) {
+                throw new IllegalArgumentException("Script " + name + " not supported");
+            }
+
+            Script s = new Script(loadClasspathScriptSource(name +".groovy"), bulkJobId);
+
+            Map<Object, Object> params = new HashMap<>();
+            params.putAll(Maps.filterKeys(parameters, k -> ALLOWED_SCRIPTS_PARAMS.get(name).contains(k)));
+            s.setParameters(params);
             return s;
         }
     }
