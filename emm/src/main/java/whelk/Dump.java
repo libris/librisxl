@@ -6,6 +6,8 @@ import org.apache.logging.log4j.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,6 +25,12 @@ public class Dump {
 
     public static void sendDumpResponse(Whelk whelk, String apiBaseUrl, HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException {
         String dump = req.getParameter("dump");
+
+        if (dump.equals("index")) {
+            sendDumpIndexResponse(apiBaseUrl, res);
+            return;
+        }
+
         String offset = req.getParameter("offset");
         long offsetNumeric = Long.parseLong(offset);
 
@@ -33,8 +41,39 @@ public class Dump {
 
         invalidateIfOld(dumpFilePath);
         if (!Files.exists(dumpFilePath))
-            generateDump(whelk, dumpFilePath);
+            generateDump(whelk, dump, dumpFilePath);
         sendDumpPageResponse(whelk, apiBaseUrl, dump, dumpFilePath, offsetNumeric, res);
+    }
+
+    private static void sendDumpIndexResponse(String apiBaseUrl, HttpServletResponse res) throws IOException {
+        HashMap responseObject = new HashMap();
+
+        // This could perhaps be better?
+        ArrayList<Map> categoriesList = new ArrayList<>();
+
+        HashMap allCategory = new HashMap();
+        allCategory.put("url", apiBaseUrl+"?dump=all&offset=0");
+        allCategory.put("description", "This category represents the whole collection, without reservations.");
+        categoriesList.add(allCategory);
+
+        HashMap libraryCategory = new HashMap();
+        libraryCategory.put("url", apiBaseUrl+"?dump=itemAndInstance-X&offset=0");
+        libraryCategory.put("description", "These categories represent the Items and Instances held by a particular library. " +
+                "The relevant library-code (sigel) for which you want data must replace the X in the category url.");
+        categoriesList.add(libraryCategory);
+
+        HashMap agentsCategory = new HashMap();
+        agentsCategory.put("url", apiBaseUrl+"?dump=agents");
+        agentsCategory.put("description", "This category represent agents (typically persons and organizations).");
+        categoriesList.add(agentsCategory);
+
+        // TODO: More categories! Subjects ? type=X ? etc
+
+        responseObject.put("categories", categoriesList);
+        String jsonResponse = mapper.writeValueAsString(responseObject);
+        BufferedWriter writer = new BufferedWriter( res.getWriter() );
+        writer.write(jsonResponse);
+        writer.close();
     }
 
     private static void sendDumpPageResponse(Whelk whelk, String apiBaseUrl, String dump, Path dumpFilePath, long offsetLines, HttpServletResponse res) throws IOException {
@@ -103,7 +142,7 @@ public class Dump {
             responseObject.put("totalEntityCount", totalEntityCount);
         }
 
-        if (nextLineOffset < totalEntityCount) {
+        if (totalEntityCount == null || nextLineOffset < totalEntityCount) {
             responseObject.put("next", apiBaseUrl+"?dump="+dump+"&offset="+nextLineOffset);
         }
 
@@ -124,12 +163,13 @@ public class Dump {
         // TODO
     }
 
-    private static void generateDump(Whelk whelk, Path dumpFilePath) {
+    private static void generateDump(Whelk whelk, String dump, Path dumpFilePath) {
         new Thread(() -> {
             try (BufferedWriter dumpFileWriter = new BufferedWriter(new FileWriter(dumpFilePath.toFile()));
                  Connection connection = whelk.getStorage().getOuterConnection()) {
-
                 connection.setAutoCommit(false);
+
+                /*
                 String library = "https://libris.kb.se/library/Li"; // TEMP
                 String sql = " SELECT " +
                         "  id" +
@@ -138,15 +178,30 @@ public class Dump {
                         " WHERE" +
                         "  data#>>'{@graph,1,heldBy,@id}' = ?";
                 PreparedStatement preparedStatement = connection.prepareStatement(sql);
+                 */
 
-                preparedStatement.setString(1, library);
-                preparedStatement.setFetchSize(EmmChangeSet.TARGET_HITS_PER_PAGE);
-                try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                    while (resultSet.next()) {
+                PreparedStatement preparedStatement = null;
 
-                        // Each line must be exactly 17 bytes long, including the (unix-)line break.
-                        String id = String.format("%-16s\n", resultSet.getString(1));
-                        dumpFileWriter.write(id);
+                if (dump.equals("all")) {
+                    preparedStatement = getAllDumpStatement(connection);
+                } else if (dump.startsWith("itemAndInstance-")) {
+                    preparedStatement = getLibraryXDumpStatement(connection, dump.substring(16));
+                }
+
+                if (preparedStatement == null) {
+                    logger.info("Dump request for unknown category: " + dump);
+                    return;
+                }
+
+                try (PreparedStatement p = preparedStatement) {
+                    p.setFetchSize(EmmChangeSet.TARGET_HITS_PER_PAGE);
+                    try (ResultSet resultSet = p.executeQuery()) {
+                        while (resultSet.next()) {
+
+                            // Each line must be exactly 17 bytes long, including the (unix-)line break.
+                            String id = String.format("%-16s\n", resultSet.getString(1));
+                            dumpFileWriter.write(id);
+                        }
                     }
                 }
 
@@ -155,5 +210,35 @@ public class Dump {
                 logger.error("Failed dump generation", e);
             }
         }).start();
+    }
+
+    private static PreparedStatement getAllDumpStatement(Connection connection) throws SQLException {
+        String sql = " SELECT " +
+                "  id" +
+                " FROM" +
+                "  lddb";
+        PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        return preparedStatement;
+    }
+
+    private static PreparedStatement getLibraryXDumpStatement(Connection connection, String library) throws SQLException {
+        String sql = " SELECT " +
+                "  id" +
+                " FROM" +
+                "  lddb" +
+                " WHERE" +
+                "  collection = 'hold' AND" +
+                "  (data#>>'{@graph,1,heldBy,@id}' = ? OR data#>>'{@graph,1,heldBy,@id}' = ?)";
+        PreparedStatement preparedStatement = connection.prepareStatement(sql);
+
+        preparedStatement.setString(1, Document.getBASE_URI().resolve("/library/"+library).toString());
+
+        // This is uncomfortable. Library URIs are "https://libris.kb.se/library/.." regardless of environment base-URI.
+        // To protect ourselves from the fact that this could change, check both these URIs and environment-specific ones.
+        URI defaultLibrisURI = null;
+        try { defaultLibrisURI = new URI("https://libris.kb.se"); } catch (URISyntaxException e) { /*ignore*/ }
+        preparedStatement.setString(2, defaultLibrisURI.resolve("/library/"+library).toString());
+
+        return preparedStatement;
     }
 }
