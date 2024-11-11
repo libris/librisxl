@@ -1,5 +1,6 @@
 /**
  * Remove all uses of a certain TopicSubdivision within ComplexSubject
+ * The TopicSubdivision itself is not removed, only the usages.
  *
  * Parameters:
  * bulk:deprecate - The subdivision(s) to be removed
