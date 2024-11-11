@@ -82,7 +82,7 @@ public class BulkJob implements Runnable {
     protected WhelkTool buildWhelkTool(BulkJobDocument jobDoc) throws IOException {
 
         // FIXME handle bulk job thing vs record id consistently
-        var bulkJobThingId = stripPrefix(id, HASH_IT) + HASH_IT;
+        var bulkJobThingId = stripSuffix(id, HASH_IT) + HASH_IT;
 
         Script script = jobDoc.getSpecification().getScript(bulkJobThingId);
         WhelkTool tool = new WhelkTool(whelk, script, reportDir(systemId), WhelkTool.getDEFAULT_STATS_NUM_IDS());
