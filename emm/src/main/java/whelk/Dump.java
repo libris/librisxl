@@ -150,7 +150,32 @@ public class Dump {
         responseObject.put("entities", entitesList);
         Map<String, Document> idsAndRecords = whelk.bulkLoad(recordIdsOnPage);
         for (Document doc : idsAndRecords.values()) {
-            entitesList.add(doc.getThing());
+
+            // Here is a bit of SPECIALIZED treatment only for the itemAndInstance-categories. These should
+            // include not only the Item (which is the root node for this category), but also the linked Instance.
+            // Without this, a client must individually GET every single Instance in their dataset, which scales poorly.
+            if (dump.startsWith("itemAndInstance-")) {
+                String itemOf = doc.getHoldingFor();
+                if (itemOf == null) {
+                    logger.warn("Holding of nothing? " + doc.getId());
+                    continue;
+                }
+                Document instance = new Document( whelk.loadData(itemOf) );
+                if (instance == null) {
+                    logger.warn("Bad instance? " + itemOf);
+                    continue;
+                }
+                ArrayList itemOfPath = new ArrayList();
+                itemOfPath.add("@graph"); itemOfPath.add(1); itemOfPath.add("itemOf"); // unggh..
+                doc._set(itemOfPath, instance.getThing(), doc.data);
+                entitesList.add(doc.getThing());
+            }
+
+            // For normal categories
+            else {
+                entitesList.add(doc.getThing());
+            }
+
         }
 
         String jsonResponse = mapper.writeValueAsString(responseObject);
@@ -168,17 +193,6 @@ public class Dump {
             try (BufferedWriter dumpFileWriter = new BufferedWriter(new FileWriter(dumpFilePath.toFile()));
                  Connection connection = whelk.getStorage().getOuterConnection()) {
                 connection.setAutoCommit(false);
-
-                /*
-                String library = "https://libris.kb.se/library/Li"; // TEMP
-                String sql = " SELECT " +
-                        "  id" +
-                        " FROM" +
-                        "  lddb" +
-                        " WHERE" +
-                        "  data#>>'{@graph,1,heldBy,@id}' = ?";
-                PreparedStatement preparedStatement = connection.prepareStatement(sql);
-                 */
 
                 PreparedStatement preparedStatement = null;
 
