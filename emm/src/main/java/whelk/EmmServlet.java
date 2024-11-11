@@ -18,11 +18,8 @@ import static whelk.util.Jackson.mapper;
 
 public class EmmServlet extends HttpServlet {
     private final Logger logger = LogManager.getLogger(this.getClass());
-    private final HashSet<String> availableCategories;
     private final Whelk whelk;
     public EmmServlet() {
-        availableCategories = new HashSet<>();
-        availableCategories.add("all");
         whelk = Whelk.createLoadedCoreWhelk();
     }
 
@@ -35,7 +32,6 @@ public class EmmServlet extends HttpServlet {
     public void doGet(HttpServletRequest req, HttpServletResponse res) {
         try {
             String dump = req.getParameter("dump");
-            String category = req.getParameter("category");
             String until = req.getParameter("until");
             String apiBaseUrl = req.getRequestURL().toString();
 
@@ -47,11 +43,6 @@ public class EmmServlet extends HttpServlet {
                 return;
             }
 
-            if (!availableCategories.contains(category)) {
-                res.sendError(404);
-                return;
-            }
-
             // Send an Entry-Point reply
             if (until == null) {
                 HashMap responseObject = new HashMap();
@@ -60,11 +51,11 @@ public class EmmServlet extends HttpServlet {
                 contexts.add("https://emm-spec.org/1.0/context.json");
                 responseObject.put("@context", contexts);
                 responseObject.put("type", "OrderedCollection");
-                responseObject.put("id", apiBaseUrl+"?category="+category);
+                responseObject.put("id", apiBaseUrl);
                 responseObject.put("url", apiBaseUrl+"?dump=index");
                 HashMap first = new HashMap();
                 first.put("type", "OrderedCollectionPage");
-                first.put("id", apiBaseUrl+"?category="+category+"&until="+System.currentTimeMillis());
+                first.put("id", apiBaseUrl+"?until="+System.currentTimeMillis());
                 responseObject.put("first", first);
 
                 String jsonResponse = mapper.writeValueAsString(responseObject);
@@ -75,7 +66,7 @@ public class EmmServlet extends HttpServlet {
             }
 
             // Send ChangeSet reply
-            EmmChangeSet.sendChangeSet(whelk, res, category, until, apiBaseUrl);
+            EmmChangeSet.sendChangeSet(whelk, res, until, apiBaseUrl);
 
         } catch (Exception e) {
             e.printStackTrace();

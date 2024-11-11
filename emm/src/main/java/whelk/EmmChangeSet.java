@@ -19,10 +19,10 @@ public class EmmChangeSet {
     public static final int TARGET_HITS_PER_PAGE = 100;
     private static final Logger logger = LogManager.getLogger(EmmChangeSet.class);
 
-    static void sendChangeSet(Whelk whelk, HttpServletResponse res, String category, String until, String apiBaseUrl) throws IOException {
+    static void sendChangeSet(Whelk whelk, HttpServletResponse res, String until, String apiBaseUrl) throws IOException {
 
         List<EmmActivity> activitiesOnPage = new ArrayList<>(TARGET_HITS_PER_PAGE+5);
-        Timestamp nextTimeStamp = getPage(whelk, category, until, activitiesOnPage);
+        Timestamp nextTimeStamp = getPage(whelk, until, activitiesOnPage);
         if (nextTimeStamp == null) {
             res.sendError(500);
             return;
@@ -35,12 +35,12 @@ public class EmmChangeSet {
         contexts.add("https://emm-spec.org/1.0/context.json");
         responseObject.put("@context", contexts);
         responseObject.put("type", "OrderedCollectionPage");
-        responseObject.put("id", apiBaseUrl+"?category="+category+"&until="+until);
+        responseObject.put("id", apiBaseUrl+"?until="+until);
         HashMap partOf = new HashMap();
         partOf.put("type", "OrderedCollection");
-        partOf.put("id", apiBaseUrl+"?category="+category);
+        partOf.put("id", apiBaseUrl);
         responseObject.put("partOf", partOf);
-        responseObject.put("next", apiBaseUrl+"?category="+category+"&until="+nextTimeStamp.getTime());
+        responseObject.put("next", apiBaseUrl+"?until="+nextTimeStamp.getTime());
         List orderedItems = new ArrayList();
         responseObject.put("orderedItems", orderedItems);
 
@@ -70,7 +70,7 @@ public class EmmChangeSet {
      * Get a page's worth of items. The results will be added to the 'result'-list. The return value will be "the next timestamp"
      * to start getting the next page at, or null on failure.
      */
-    private static Timestamp getPage(Whelk whelk, String category, String until, List<EmmActivity> result) {
+    private static Timestamp getPage(Whelk whelk, String until, List<EmmActivity> result) {
 
         // Internally 'until' is "milliseconds since epoch".
         long untilNumerical = Long.parseLong(until);
