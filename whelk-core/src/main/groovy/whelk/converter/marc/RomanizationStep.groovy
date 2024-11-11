@@ -433,7 +433,7 @@ class RomanizationStep extends MarcFramePostProcStepBase {
             def fieldNumber = it.keySet()[0]
             def field = it[fieldNumber]
             if (field instanceof Map) {
-                def sf6 = field[SUBFIELDS].find { it.containsKey('6') }
+                def sf6 = field[SUBFIELDS]?.find { it.containsKey('6') }
                 if (sf6 && field[SUBFIELDS].any { Map sf -> sf.values().any { it.startsWith(OG_MARK) } }) {
                     field[SUBFIELDS] = (field[SUBFIELDS] - sf6).collect {
                         def subfield = it.keySet()[0]
