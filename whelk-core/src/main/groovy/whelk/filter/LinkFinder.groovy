@@ -115,8 +115,11 @@ class LinkFinder {
     }
 
     private void replaceSameAsLinksWithPrimaries(Map data, List path = []) {
+        def exceptedProperties = ['bulk:deprecate'] as Set
+        if (path && exceptedProperties.contains(path.last())) {
+            return
+        }
         // If this is a link (an object containing _only_ an id)
-
         String id = data.get("@id")
         if (id != null && data.keySet().size() == 1) {
             // Path to same form as in lddb__dependencies.relation
@@ -142,9 +145,9 @@ class LinkFinder {
             Object value = data.get(key)
 
             if (value instanceof List)
-                replaceSameAsLinksWithPrimaries( (List) value, path + keyString )
+                replaceSameAsLinksWithPrimaries((List) value, path + keyString)
             if (value instanceof Map)
-                replaceSameAsLinksWithPrimaries( (Map) value, path + keyString )
+                replaceSameAsLinksWithPrimaries((Map) value, path + keyString)
         }
     }
 
