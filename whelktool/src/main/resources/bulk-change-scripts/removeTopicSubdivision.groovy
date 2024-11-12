@@ -13,12 +13,14 @@ import whelk.util.DocumentUtil
 import static whelk.JsonLd.ID_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.DEPRECATE_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.KEEP_KEY
+import static whelk.datatool.bulkchange.BulkJobDocument.RDF_VALUE
 
-List deprecateLinks = asList(parameters.get(DEPRECATE_KEY))
-Map keepLink = parameters.get(KEEP_KEY)
+List deprecateUris = asList(parameters.get(DEPRECATE_KEY))
+Map keepUri = parameters.get(KEEP_KEY)
 
-deprecateLinks.each { deprecate ->
-    selectByIds([deprecate[ID_KEY]]) { obsoleteSubdivision ->
+deprecateUris.each { deprecate ->
+    Map deprecateLink = [(ID_KEY): deprecate[RDF_VALUE]]
+    selectByIds([deprecateLink[ID_KEY]]) { obsoleteSubdivision ->
         selectByIds(obsoleteSubdivision.getDependers()) { depender ->
             Map thing = depender.graph[1] as Map
 
@@ -29,16 +31,17 @@ deprecateLinks.each { deprecate ->
             def modified = DocumentUtil.traverse(thing) { value, path ->
                 if (value instanceof Map && value[JsonLd.TYPE_KEY] == 'ComplexSubject') {
                     var t = asList(value.get('termComponentList'))
-                    if (deprecate in t) {
+                    if (deprecateLink in t) {
                         // TODO? add way to do this with an op? SplitReplace? [Replace, Insert]?
-                        if (keepLink && path.size() > 1) {
+                        if (keepUri && path.size() > 1) {
+                            var keepLink = [(ID_KEY): keepUri[RDF_VALUE]]
                             var parent = DocumentUtil.getAtPath(thing, path.dropRight(1))
                             if (parent instanceof List && !parent.contains(keepLink)) {
                                 parent.add(keepLink)
                             }
                         }
 
-                        return mapSubject(value, t, deprecate)
+                        return mapSubject(value, t, deprecateLink)
                     }
                 }
                 return DocumentUtil.NOP
