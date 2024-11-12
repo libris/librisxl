@@ -65,7 +65,7 @@ public class BulkJobDocument extends Document {
     public static final String KEEP_KEY = "bulk:keep";
     public static final String DEPRECATE_KEY = "bulk:deprecate";
     public static final String SCRIPT_KEY = "bulk:script";
-    private static final String RDF_VALUE = "value";
+    public static final String RDF_VALUE = "value";
 
     private static final List<Object> STATUS_PATH = List.of(JsonLd.GRAPH_KEY, 1, STATUS_KEY);
     private static final List<Object> UPDATE_TIMESTAMP_PATH = List.of(JsonLd.GRAPH_KEY, 1, SHOULD_UPDATE_TIMESTAMP_KEY);
