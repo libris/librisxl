@@ -31,7 +31,7 @@ deprecateUris.each { deprecate ->
             def modified = DocumentUtil.traverse(thing) { value, path ->
                 if (value instanceof Map && value[JsonLd.TYPE_KEY] == 'ComplexSubject') {
                     var t = asList(value.get('termComponentList'))
-                    if (deprecate in t) {
+                    if (deprecateLink in t) {
                         // TODO? add way to do this with an op? SplitReplace? [Replace, Insert]?
                         if (keepUri && path.size() > 1) {
                             var keepLink = [(ID_KEY): keepUri[RDF_VALUE]]
