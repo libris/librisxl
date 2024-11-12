@@ -169,8 +169,12 @@ public class BulkChangePreviewAPI extends HttpServlet {
         recordAfter.remove(ID_KEY);
 
         // We want to compute the diff for a "framed" thing
-        thingBefore.put(RECORD_KEY, recordBefore);
-        thingAfter.put(RECORD_KEY, recordAfter);
+        if (!recordBefore.isEmpty()) {
+            thingBefore.put(RECORD_KEY, recordBefore);
+        }
+        if (!recordAfter.isEmpty()) {
+            thingAfter.put(RECORD_KEY, recordAfter);
+        }
 
         // However when the diff is computed we need "@graph form", hence the same record copy at @graph,0 in both versions
         var beforeDoc = new Document(Map.of(GRAPH_KEY, List.of(recordCopy, thingBefore)));
