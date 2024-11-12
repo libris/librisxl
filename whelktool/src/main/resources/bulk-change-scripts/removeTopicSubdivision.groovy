@@ -15,10 +15,11 @@ import static whelk.datatool.bulkchange.BulkJobDocument.DEPRECATE_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.KEEP_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.RDF_VALUE
 
-List deprecateUris = asList(parameters.get(DEPRECATE_KEY))
+List<Map> deprecateUris = asList(parameters.get(DEPRECATE_KEY))
 Map keepUri = parameters.get(KEEP_KEY)
 
 deprecateUris.each { deprecate ->
+    if (!deprecate.containsKey(RDF_VALUE)) return
     Map deprecateLink = [(ID_KEY): deprecate[RDF_VALUE]]
     selectByIds([deprecateLink[ID_KEY]]) { obsoleteSubdivision ->
         selectByIds(obsoleteSubdivision.getDependers()) { depender ->
@@ -33,7 +34,7 @@ deprecateUris.each { deprecate ->
                     var t = asList(value.get('termComponentList'))
                     if (deprecateLink in t) {
                         // TODO? add way to do this with an op? SplitReplace? [Replace, Insert]?
-                        if (keepUri && path.size() > 1) {
+                        if (keepUri && keepUri.containsKey(RDF_VALUE) && path.size() > 1) {
                             var keepLink = [(ID_KEY): keepUri[RDF_VALUE]]
                             var parent = DocumentUtil.getAtPath(thing, path.dropRight(1))
                             if (parent instanceof List && !parent.contains(keepLink)) {
