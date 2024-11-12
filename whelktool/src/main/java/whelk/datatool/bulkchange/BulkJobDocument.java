@@ -65,6 +65,7 @@ public class BulkJobDocument extends Document {
     public static final String KEEP_KEY = "bulk:keep";
     public static final String DEPRECATE_KEY = "bulk:deprecate";
     public static final String SCRIPT_KEY = "bulk:script";
+    private static final String RDF_VALUE = "value";
 
     private static final List<Object> STATUS_PATH = List.of(JsonLd.GRAPH_KEY, 1, STATUS_KEY);
     private static final List<Object> UPDATE_TIMESTAMP_PATH = List.of(JsonLd.GRAPH_KEY, 1, SHOULD_UPDATE_TIMESTAMP_KEY);
@@ -127,8 +128,8 @@ public class BulkJobDocument extends Document {
                     get(spec, TARGET_FORM_KEY, Collections.emptyMap())
             );
             case SpecType.Merge -> new Specification.Merge(
-                    get(spec, List.of(DEPRECATE_KEY, "*", ID_KEY), Collections.emptyList()),
-                    get(spec, List.of(KEEP_KEY, ID_KEY), "")
+                    get(spec, List.of(DEPRECATE_KEY, "*", RDF_VALUE), Collections.emptyList()),
+                    get(spec, List.of(KEEP_KEY, RDF_VALUE), "")
             );
             case SpecType.Other -> new Specification.Other(
                     get(spec, SCRIPT_KEY, null),
