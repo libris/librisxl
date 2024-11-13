@@ -9,7 +9,10 @@ import whelk.datatool.WhelkTool;
 import whelk.datatool.bulkchange.BulkJobDocument.Status;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -18,11 +21,16 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static whelk.Document.HASH_IT;
+import static whelk.datatool.WhelkTool.CREATED_LOG_NAME;
+import static whelk.datatool.WhelkTool.DELETED_LOG_NAME;
 import static whelk.datatool.WhelkTool.MAIN_LOG_NAME;
+import static whelk.datatool.WhelkTool.MODIFIED_LOG_NAME;
 import static whelk.datatool.bulkchange.BulkJobDocument.JOB_TYPE;
 import static whelk.datatool.bulkchange.BulkJobDocument.Status.Completed;
 import static whelk.datatool.bulkchange.BulkJobDocument.Status.Failed;
@@ -36,6 +44,7 @@ public class BulkJob implements Runnable {
 
     public static final String BULK_CONTEXT_PATH = "/_bulk-change";
     public static final String BULK_REPORTS_PATH = BULK_CONTEXT_PATH + "/reports";
+    public static final Set<String> FORBIDDEN_REPORTS = Set.of(MAIN_LOG_NAME);
 
     protected static final String REPORTS_DIR = "bulk-change-reports";
 
@@ -91,14 +100,31 @@ public class BulkJob implements Runnable {
     private void finish(Status status) {
         storeUpdate(doc -> {
             doc.setStatus(status);
-            doc.addExecution(ZonedDateTime.now(ZoneId.systemDefault()), status, filteredReports());
+            doc.addExecution(
+                    ZonedDateTime.now(ZoneId.systemDefault()),
+                    status,
+                    filteredReports(),
+                    lineCount(CREATED_LOG_NAME),
+                    lineCount(MODIFIED_LOG_NAME),
+                    lineCount(DELETED_LOG_NAME));
         });
+    }
+
+    private long lineCount(String reportName) {
+        try (Stream<String> stream = Files.lines(new File(reportDir(), reportName).toPath(), StandardCharsets.UTF_8)) {
+            return stream.count();
+        } catch(FileNotFoundException ignored) {
+            return 0;
+        } catch (IOException e) {
+            logger.warn("Could not get line count", e);
+            return 0;
+        }
     }
 
     private List<String> filteredReports() {
         try {
             var files = reportDir().listFiles(pathname ->
-                pathname.isFile() && !MAIN_LOG_NAME.equals(pathname.getName())
+                pathname.isFile() && !FORBIDDEN_REPORTS.contains(pathname.getName())
             );
 
             if (files == null) {
@@ -106,7 +132,10 @@ public class BulkJob implements Runnable {
             }
 
             var path = BULK_REPORTS_PATH + "/" + reportDir().getName() + "/";
-            return Arrays.stream(files).map(f -> path + f.getName()).toList();
+            return Arrays.stream(files)
+                    .filter(f -> lineCount(f.getName()) > 0)
+                    .map(f -> path + f.getName())
+                    .toList();
         } catch (IOException e) {
             logger.warn(e.getMessage(), e);
             return Collections.emptyList();
