@@ -10,7 +10,6 @@ import whelk.datatool.bulkchange.BulkJobDocument.Status;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;

@@ -41,10 +41,10 @@ public class HouseKeepingServer extends XlServer {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        //var dir = "/home/OloYli/kod/librisxl/housekeeping/logs/bulk-change-reports";
+        
         ServletHolder staticContent = new ServletHolder("bulk-reports", DefaultServlet.class);
         staticContent.setInitParameter("resourceBase", dir);
-        staticContent.setInitParameter("dirAllowed", "true");
+        staticContent.setInitParameter("dirAllowed", "false");
         staticContent.setInitParameter("pathInfoOnly", "true");
         var path = "/_bulk-change/reports/*";
         context.addServlet(staticContent, path);
