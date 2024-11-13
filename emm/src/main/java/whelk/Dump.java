@@ -12,7 +12,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.*;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static whelk.util.Jackson.mapper;
@@ -54,7 +57,7 @@ public class Dump {
         categoriesList.add(allCategory);
 
         HashMap libraryCategory = new HashMap();
-        libraryCategory.put("url", apiBaseUrl+"?dump=itemAndInstance-X&offset=0");
+        libraryCategory.put("url", apiBaseUrl+"?dump=itemAndInstance:X&offset=0");
         libraryCategory.put("description", "These categories represent the Items and Instances held by a particular library. " +
                 "The relevant library-code (sigel) for which you want data must replace the X in the category URL.");
         categoriesList.add(libraryCategory);
@@ -127,12 +130,15 @@ public class Dump {
             logger.error("Failed reading dumpfile: " + dumpFilePath, e);
         }
 
-        sendFormattedResponse(whelk, apiBaseUrl, dump, recordIdsOnPage, res, offsetLines + EmmChangeSet.TARGET_HITS_PER_PAGE, totalEntityCount);
+        BasicFileAttributes attributes = Files.readAttributes(dumpFilePath, BasicFileAttributes.class);
+        String dumpId = ""+(dumpFilePath.toString() + attributes.creationTime().toInstant().toEpochMilli()).hashCode();
+        sendFormattedResponse(whelk, apiBaseUrl, dump, recordIdsOnPage, res, offsetLines + EmmChangeSet.TARGET_HITS_PER_PAGE, totalEntityCount, dumpId);
     }
 
-    private static void sendFormattedResponse(Whelk whelk, String apiBaseUrl, String dump, ArrayList<String> recordIdsOnPage, HttpServletResponse res, long nextLineOffset, Long totalEntityCount) throws IOException{
+    private static void sendFormattedResponse(Whelk whelk, String apiBaseUrl, String dump, ArrayList<String> recordIdsOnPage, HttpServletResponse res, long nextLineOffset, Long totalEntityCount, String dumpId) throws IOException{
         HashMap responseObject = new HashMap();
 
+        responseObject.put("id", dumpId);
         if (totalEntityCount == null)
             responseObject.put("status", "generating");
         else {
@@ -149,10 +155,10 @@ public class Dump {
         Map<String, Document> idsAndRecords = whelk.bulkLoad(recordIdsOnPage);
         for (Document doc : idsAndRecords.values()) {
 
-            // Here is a bit of SPECIALIZED treatment only for the itemAndInstance-categories. These should
+            // Here is a bit of SPECIALIZED treatment only for the itemAndInstance:categories. These should
             // include not only the Item (which is the root node for this category), but also the linked Instance.
             // Without this, a client must individually GET every single Instance in their dataset, which scales poorly.
-            if (dump.startsWith("itemAndInstance-")) {
+            if (dump.startsWith("itemAndInstance:")) {
                 String itemOf = doc.getHoldingFor();
                 if (itemOf == null) {
                     logger.warn("Holding of nothing? " + doc.getId());
@@ -183,7 +189,21 @@ public class Dump {
     }
 
     private static void invalidateIfOld(Path dumpFilePath) {
-        // TODO
+        try {
+            if (!Files.exists(dumpFilePath))
+                return;
+
+            BasicFileAttributes attributes = Files.readAttributes(dumpFilePath, BasicFileAttributes.class);
+            if (attributes.creationTime().toInstant().isBefore(Instant.now().minus(5, ChronoUnit.DAYS))) {
+                Files.delete(dumpFilePath);
+            }
+        } catch (IOException e) {
+            // These exceptions are caught here due to the (theoretical) risk of files access race conditions.
+            // For example, it could be that a dump is being read by one thread, while passing the too-old-threshold
+            // and then while still being read, another thread sees the dump as too old and tries to delete it.
+            // Just log this sort of thing and carry on.
+            logger.info("Failed to invalidate (delete) EMM dump: " + dumpFilePath, e);
+        }
     }
 
     private static void generateDump(Whelk whelk, String dump, Path dumpFilePath) {
@@ -196,7 +216,7 @@ public class Dump {
 
                 if (dump.equals("all")) {
                     preparedStatement = getAllDumpStatement(connection);
-                } else if (dump.startsWith("itemAndInstance-")) {
+                } else if (dump.startsWith("itemAndInstance:")) {
                     preparedStatement = getLibraryXDumpStatement(connection, dump.substring(16));
                 } else if (dump.startsWith("type:")) {
                     preparedStatement = getTypeXStatement(connection, whelk, dump.substring(5));
@@ -212,7 +232,7 @@ public class Dump {
                     try (ResultSet resultSet = p.executeQuery()) {
                         while (resultSet.next()) {
 
-                            // Each line must be exactly 17 bytes long, including the (unix-)line break.
+                            // Each line must be exactly 17 bytes long, including the (unix) line break.
                             String id = String.format("%-16s\n", resultSet.getString(1));
                             dumpFileWriter.write(id);
                         }
