@@ -47,6 +47,7 @@ class WhelkTool {
     static final int DEFAULT_BATCH_SIZE = 500
     public static final int DEFAULT_FETCH_SIZE = 100
     static final int DEFAULT_STATS_NUM_IDS = 3
+    public static final String MAIN_LOG_NAME = "MAIN.txt"
 
     Whelk whelk
     IdLoader idLoader
@@ -114,7 +115,7 @@ class WhelkTool {
         this.defaultChangedBy = script.scriptJobUri
         this.reportsDir = reportsDir
         reportsDir.mkdirs()
-        mainLog = new PrintWriter(new File(reportsDir, "MAIN.txt"))
+        mainLog = new PrintWriter(new File(reportsDir, MAIN_LOG_NAME))
         errorLog = new PrintWriter(new File(reportsDir, "ERRORS.txt"))
 
         def modifiedLogFile = new File(reportsDir, "MODIFIED.txt")

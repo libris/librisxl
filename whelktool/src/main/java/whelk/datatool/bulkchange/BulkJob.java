@@ -6,17 +6,24 @@ import whelk.Whelk;
 import whelk.component.PostgreSQLComponent;
 import whelk.datatool.Script;
 import whelk.datatool.WhelkTool;
+import whelk.datatool.bulkchange.BulkJobDocument.Status;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import static whelk.Document.HASH_IT;
+import static whelk.datatool.WhelkTool.MAIN_LOG_NAME;
 import static whelk.datatool.bulkchange.BulkJobDocument.JOB_TYPE;
 import static whelk.datatool.bulkchange.BulkJobDocument.Status.Completed;
 import static whelk.datatool.bulkchange.BulkJobDocument.Status.Failed;
@@ -27,6 +34,10 @@ import static whelk.util.Unicode.stripSuffix;
 
 public class BulkJob implements Runnable {
     private static final Logger logger = Logger.getLogger(BulkJob.class);
+
+    public static final String BULK_CONTEXT_PATH = "/_bulk-change";
+    public static final String BULK_REPORTS_PATH = BULK_CONTEXT_PATH + "/reports";
+
     protected static final String REPORTS_DIR = "bulk-change-reports";
 
     protected final String id;
@@ -65,12 +76,41 @@ public class BulkJob implements Runnable {
 
             tool.run();
 
-            storeUpdate(doc -> doc.setStatus(Completed));
+            if ((tool.getErrorDetected() != null)) {
+                finish(Failed);
+            } else {
+                finish(Completed);
+            }
         } catch (Exception e) {
             // TODO
             logger.error(e);
             System.err.println(e);
-            storeUpdate(doc -> doc.setStatus(Failed));
+            finish(Failed);
+        }
+    }
+
+    private void finish(Status status) {
+        storeUpdate(doc -> {
+            doc.setStatus(status);
+            doc.addExecution(ZonedDateTime.now(ZoneId.systemDefault()), status, filteredReports());
+        });
+    }
+
+    private List<String> filteredReports() {
+        try {
+            var files = reportDir().listFiles(pathname ->
+                pathname.isFile() && !MAIN_LOG_NAME.equals(pathname.getName())
+            );
+
+            if (files == null) {
+                throw new IOException("Could not list files");
+            }
+
+            var path = BULK_REPORTS_PATH + "/" + reportDir().getName() + "/";
+            return Arrays.stream(files).map(f -> path + f.getName()).toList();
+        } catch (IOException e) {
+            logger.warn(e.getMessage(), e);
+            return Collections.emptyList();
         }
     }
 
