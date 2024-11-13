@@ -13,9 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static whelk.util.Jackson.mapper;
 
@@ -48,7 +46,6 @@ public class Dump {
     private static void sendDumpIndexResponse(String apiBaseUrl, HttpServletResponse res) throws IOException {
         HashMap responseObject = new HashMap();
 
-        // This could perhaps be better?
         ArrayList<Map> categoriesList = new ArrayList<>();
 
         HashMap allCategory = new HashMap();
@@ -59,17 +56,18 @@ public class Dump {
         HashMap libraryCategory = new HashMap();
         libraryCategory.put("url", apiBaseUrl+"?dump=itemAndInstance-X&offset=0");
         libraryCategory.put("description", "These categories represent the Items and Instances held by a particular library. " +
-                "The relevant library-code (sigel) for which you want data must replace the X in the category url.");
+                "The relevant library-code (sigel) for which you want data must replace the X in the category URL.");
         categoriesList.add(libraryCategory);
 
-        HashMap agentsCategory = new HashMap();
-        agentsCategory.put("url", apiBaseUrl+"?dump=agents");
-        agentsCategory.put("description", "This category represent agents (typically persons and organizations).");
-        categoriesList.add(agentsCategory);
-
-        // TODO: More categories! Subjects ? type=X ? etc
+        HashMap typesCategory = new HashMap();
+        typesCategory.put("url", apiBaseUrl+"?dump=type:X&offset=0");
+        typesCategory.put("description", "These categories represent the set of a entities of a certain type, including subtypes. " +
+                "For example the type Agent would include both Persons and Organizations etc. The X in the URL must be replaced " +
+                "with the type you want.");
+        categoriesList.add(typesCategory);
 
         responseObject.put("categories", categoriesList);
+
         String jsonResponse = mapper.writeValueAsString(responseObject);
         BufferedWriter writer = new BufferedWriter( res.getWriter() );
         writer.write(jsonResponse);
@@ -200,6 +198,8 @@ public class Dump {
                     preparedStatement = getAllDumpStatement(connection);
                 } else if (dump.startsWith("itemAndInstance-")) {
                     preparedStatement = getLibraryXDumpStatement(connection, dump.substring(16));
+                } else if (dump.startsWith("type:")) {
+                    preparedStatement = getTypeXStatement(connection, whelk, dump.substring(5));
                 }
 
                 if (preparedStatement == null) {
@@ -252,6 +252,23 @@ public class Dump {
         URI defaultLibrisURI = null;
         try { defaultLibrisURI = new URI("https://libris.kb.se"); } catch (URISyntaxException e) { /*ignore*/ }
         preparedStatement.setString(2, defaultLibrisURI.resolve("/library/"+library).toString());
+
+        return preparedStatement;
+    }
+
+    private static PreparedStatement getTypeXStatement(Connection connection, Whelk whelk, String type) throws SQLException {
+        Set<String> types = whelk.getJsonld().getSubClasses(type);
+        types.add(type);
+
+        String sql = " SELECT " +
+                "  id" +
+                " FROM" +
+                "  lddb" +
+                " WHERE" +
+                "  data#>>'{@graph,1,@type}' = ANY( ? )";
+
+        PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        preparedStatement.setArray(1, connection.createArrayOf("TEXT",  types.toArray() ));
 
         return preparedStatement;
     }

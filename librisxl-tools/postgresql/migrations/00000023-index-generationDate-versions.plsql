@@ -24,6 +24,8 @@ BEGIN
    -- ACTUAL SCHEMA CHANGES HERE:
 
    CREATE INDEX IF NOT EXISTS idx_lddb__versions_generation_date ON lddb__versions (GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')));
+
+   CREATE INDEX IF NOT EXISTS idx_lddb_thing_type ON lddb ((data#>>'{@graph,1,@type}'));
    
 END$$;
 
