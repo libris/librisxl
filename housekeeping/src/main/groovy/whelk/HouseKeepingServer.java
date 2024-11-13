@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 
+import static whelk.datatool.bulkchange.BulkJob.BULK_CONTEXT_PATH;
 import static whelk.datatool.bulkchange.BulkJob.BULK_REPORTS_PATH;
 
 public class HouseKeepingServer extends XlServer {
@@ -38,13 +39,13 @@ public class HouseKeepingServer extends XlServer {
         ServletHolder holder = new ServletHolder(WebInterface.class);
         holder.setInitOrder(0);
         context.addServlet(holder, "/");
-        context.addServlet(BulkChangePreviewAPI.class, "/_bulk-change/*");
+        context.addServlet(BulkChangePreviewAPI.class, BULK_CONTEXT_PATH + "/*");
 
         serveBulkReports(context);
 
         serveStaticContent(context);
     }
-    
+
     private static void serveBulkReports(ServletContextHandler context) {
         String dir;
         try {
