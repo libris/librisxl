@@ -44,8 +44,7 @@ public class HouseKeepingServer extends XlServer {
 
         serveStaticContent(context);
     }
-
-    // TODO Access control!!
+    
     private static void serveBulkReports(ServletContextHandler context) {
         String dir;
         try {
