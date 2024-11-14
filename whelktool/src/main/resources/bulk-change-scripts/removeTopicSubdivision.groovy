@@ -14,41 +14,52 @@ import static whelk.JsonLd.ID_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.DEPRECATE_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.KEEP_KEY
 
-List deprecateLinks = asList(parameters.get(DEPRECATE_KEY))
-Map keepLink = parameters.get(KEEP_KEY)
+Map deprecate = parameters.get(DEPRECATE_KEY)
+Map addLink = parameters.get(KEEP_KEY)
 
-deprecateLinks.each { deprecate ->
-    selectByIds([deprecate[ID_KEY]]) { obsoleteSubdivision ->
-        selectByIds(obsoleteSubdivision.getDependers()) { depender ->
-            Map thing = depender.graph[1] as Map
+if (!deprecate) return
 
-            if (thing[JsonLd.TYPE_KEY] == 'ComplexSubject') {
-                return
-            }
+def process = { doc ->
+    Map thing = doc.graph[1] as Map
 
-            def modified = DocumentUtil.traverse(thing) { value, path ->
-                if (value instanceof Map && value[JsonLd.TYPE_KEY] == 'ComplexSubject') {
-                    var t = asList(value.get('termComponentList'))
-                    if (deprecate in t) {
-                        // TODO? add way to do this with an op? SplitReplace? [Replace, Insert]?
-                        if (keepLink && path.size() > 1) {
-                            var parent = DocumentUtil.getAtPath(thing, path.dropRight(1))
-                            if (parent instanceof List && !parent.contains(keepLink)) {
-                                parent.add(keepLink)
-                            }
-                        }
+    if (thing[JsonLd.TYPE_KEY] == 'ComplexSubject') {
+        return
+    }
 
-                        return mapSubject(value, t, deprecate)
+    def modified = DocumentUtil.traverse(thing) { value, path ->
+        if (value instanceof Map && value[JsonLd.TYPE_KEY] == 'ComplexSubject') {
+            var t = asList(value.get('termComponentList'))
+            if (deprecate in t) {
+                var parent = DocumentUtil.getAtPath(thing, path.dropRight(1))
+                // TODO? add way to do this with an op? SplitReplace? [Replace, Insert]?
+                if (addLink && addLink[ID_KEY] && path.size() > 1) {
+                    if (parent instanceof List && !parent.contains(addLink)) {
+                        parent.add(addLink)
                     }
                 }
-                return DocumentUtil.NOP
-            }
 
-            if (modified) {
-                depender.scheduleSave(loud: isLoudAllowed)
+                return mapSubject(value, t, deprecate)
             }
         }
+        return DocumentUtil.NOP
     }
+
+    if (modified) {
+        doc.scheduleSave(loud: isLoudAllowed)
+    }
+}
+
+if (deprecate[ID_KEY]) {
+    selectByIds([deprecate[ID_KEY]]) { obsoleteSubdivision ->
+        selectByIds(obsoleteSubdivision.getDependers()) {
+            process(it)
+        }
+    }
+} else {
+    // TODO
+//    selectByForm(deprecate) {
+//        process(it)
+//    }
 }
 
 static DocumentUtil.Operation mapSubject(Map subject, termComponentList, deprecateLink) {
