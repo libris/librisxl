@@ -80,8 +80,6 @@ public class BulkJob implements Runnable {
             printScriptLogHeader(tool, jobDoc);
             logger.info(String.format("Running %s: %s", JOB_TYPE, id));
 
-            storeUpdate(doc -> doc.setStatus(Completed));
-
             tool.run();
 
             if ((tool.getErrorDetected() != null)) {
