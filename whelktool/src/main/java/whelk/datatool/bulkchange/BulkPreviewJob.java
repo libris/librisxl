@@ -1,6 +1,7 @@
 package whelk.datatool.bulkchange;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import whelk.Whelk;
 import whelk.datatool.RecordedChange;
 import whelk.datatool.WhelkTool;
@@ -13,9 +14,9 @@ import java.util.List;
 import static whelk.datatool.bulkchange.BulkJobDocument.JOB_TYPE;
 
 public class BulkPreviewJob extends BulkJob {
-    public static final int RECORD_MAX_ITEMS = 500;
+    private static final Logger log = LogManager.getLogger(BulkPreviewJob.class);
 
-    private static final Logger logger = Logger.getLogger(BulkPreviewJob.class);
+    public static final int RECORD_MAX_ITEMS = 500;
 
     WhelkTool tool;
     BulkJobDocument jobDoc;
@@ -65,12 +66,12 @@ public class BulkPreviewJob extends BulkJob {
             scriptLog.println();
 
             printScriptLogHeader(tool, jobDoc);
-            logger.info(String.format("Running %s: %s", JOB_TYPE, id));
+            log.info("Running {}: {}", JOB_TYPE, id);
 
             tool.run();
         } catch (Exception e) {
             // TODO
-            logger.error(e);
+            log.error(e);
             System.err.println(e);
         }
     }

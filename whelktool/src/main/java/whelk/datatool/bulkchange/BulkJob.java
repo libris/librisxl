@@ -1,6 +1,7 @@
 package whelk.datatool.bulkchange;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import whelk.Document;
 import whelk.Whelk;
 import whelk.component.PostgreSQLComponent;
@@ -40,7 +41,7 @@ import static whelk.util.Unicode.stripPrefix;
 import static whelk.util.Unicode.stripSuffix;
 
 public class BulkJob implements Runnable {
-    private static final Logger logger = Logger.getLogger(BulkJob.class);
+    private static final Logger log = LogManager.getLogger(BulkJob.class);
 
     public static final String BULK_CONTEXT_PATH = "/_bulk-change";
     public static final String BULK_REPORTS_PATH = BULK_CONTEXT_PATH + "/reports";
@@ -78,7 +79,7 @@ public class BulkJob implements Runnable {
             var jobDoc = loadDocument();
             var tool = buildWhelkTool(jobDoc);
             printScriptLogHeader(tool, jobDoc);
-            logger.info(String.format("Running %s: %s", JOB_TYPE, id));
+            log.info("Running {}: {}", JOB_TYPE, id);
 
             tool.run();
 
@@ -89,7 +90,7 @@ public class BulkJob implements Runnable {
             }
         } catch (Exception e) {
             // TODO
-            logger.error(e);
+            log.error(e);
             System.err.println(e);
             finish(Failed);
         }
@@ -114,7 +115,7 @@ public class BulkJob implements Runnable {
         } catch(FileNotFoundException ignored) {
             return 0;
         } catch (IOException e) {
-            logger.warn("Could not get line count", e);
+            log.warn("Could not get line count", e);
             return 0;
         }
     }
@@ -135,7 +136,7 @@ public class BulkJob implements Runnable {
                     .map(f -> path + f.getName())
                     .toList();
         } catch (IOException e) {
-            logger.warn(e.getMessage(), e);
+            log.warn(e.getMessage(), e);
             return Collections.emptyList();
         }
     }
