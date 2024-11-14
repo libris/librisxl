@@ -77,6 +77,6 @@ public class HouseKeepingServer extends XlServer {
     }
 
     public static void main(String[] args) throws Exception {
-         new HouseKeepingServer().run();
+        new HouseKeepingServer().run();
     }
 }

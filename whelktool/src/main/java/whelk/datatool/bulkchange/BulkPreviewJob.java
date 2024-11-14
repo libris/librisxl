@@ -30,6 +30,7 @@ public class BulkPreviewJob extends BulkJob {
         tool.setDryRun(true);
         tool.setRecordChanges(true);
         tool.setRecordingLimit(RECORD_MAX_ITEMS);
+        tool.setLogger(log);
     }
 
     public boolean isFinished() {

@@ -2,6 +2,7 @@ package whelk.datatool
 
 import com.google.common.util.concurrent.MoreExecutors
 import groovy.transform.Immutable
+import org.apache.logging.log4j.Logger
 import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl
 import whelk.Document
 import whelk.IdGenerator
@@ -71,6 +72,7 @@ class WhelkTool {
     PrintWriter createdLog
     PrintWriter deletedLog
     ConcurrentHashMap<String, PrintWriter> reports = new ConcurrentHashMap<>()
+    Logger logger
 
     Counter counter = new Counter()
 
@@ -428,9 +430,9 @@ class WhelkTool {
             var newGlobals = bindings.keySet() - globals
             if (newGlobals) {
                 String msg = "FORBIDDEN - new bindings detected: ${newGlobals}"
-                System.err.println(msg)
-                System.err.println("Adding new global bindings during record processing is forbidden (since they share state across threads).")
-                System.err.println("Aborting.")
+                log(msg)
+                log("Adding new global bindings during record processing is forbidden (since they share state across threads).")
+                log("Aborting.")
                 errorDetected = new Exception(msg)
                 return false
             }
@@ -741,8 +743,13 @@ class WhelkTool {
     }
 
     private void log(String msg) {
+        if (logger) {
+            logger.info(msg)
+        } else {
+            System.err.println(msg)
+        }
+
         mainLog.println(msg)
-        System.err.println(msg)
     }
 
     private void repeat(String msg) {
