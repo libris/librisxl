@@ -26,15 +26,20 @@ def process = { doc ->
         return
     }
 
+    List<List> modifiedListPaths = []
     def modified = DocumentUtil.traverse(thing) { value, path ->
         if (value instanceof Map && value[JsonLd.TYPE_KEY] == 'ComplexSubject') {
             var t = asList(value.get('termComponentList'))
             if (deprecate in t) {
-                var parent = DocumentUtil.getAtPath(thing, path.dropRight(1))
-                // TODO? add way to do this with an op? SplitReplace? [Replace, Insert]?
-                if (addLink && addLink[ID_KEY] && path.size() > 1) {
-                    if (parent instanceof List && !parent.contains(addLink)) {
-                        parent.add(addLink)
+                var parentPath = path.size() > 1 ? path.dropRight(1) : null
+                if (parentPath) {
+                    var parent = DocumentUtil.getAtPath(thing, parentPath)
+                    if (parent instanceof List) {
+                        modifiedListPaths.add(parentPath)
+                        // TODO? add way to do this with an op? SplitReplace? [Replace, Insert]?
+                        if (addLink && addLink[ID_KEY]) {
+                            parent.add(addLink)
+                        }
                     }
                 }
 
@@ -42,6 +47,14 @@ def process = { doc ->
             }
         }
         return DocumentUtil.NOP
+    }
+
+    // Remove duplicates
+    modifiedListPaths.each {
+        var obj = DocumentUtil.getAtPath(thing, it)
+        if (obj instanceof List) {
+            obj.unique(true)
+        }
     }
 
     if (modified) {
