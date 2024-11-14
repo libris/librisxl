@@ -1,14 +1,12 @@
 package whelk.datatool
 
 import com.google.common.util.concurrent.MoreExecutors
-import groovy.transform.Immutable
 import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl
 import whelk.Document
 import whelk.IdGenerator
 import whelk.JsonLd
 import whelk.JsonLdValidator
 import whelk.Whelk
-import whelk.datatool.form.ModifiedThing
 import whelk.datatool.form.Transform
 import whelk.datatool.util.IdLoader
 import whelk.exception.StaleUpdateException
@@ -20,12 +18,10 @@ import whelk.util.DocumentUtil
 import whelk.util.LegacyIntegrationTools
 import whelk.util.Statistics
 
-import javax.print.Doc
 import javax.script.Bindings
 import javax.script.CompiledScript
 import javax.script.ScriptEngineManager
 import javax.script.SimpleBindings
-import java.nio.charset.StandardCharsets
 import java.time.ZonedDateTime
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -40,7 +36,6 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 import static java.util.concurrent.TimeUnit.SECONDS
-import static whelk.JsonLd.RECORD_KEY
 import static whelk.util.Jackson.mapper
 
 class WhelkTool {
@@ -49,6 +44,7 @@ class WhelkTool {
     static final int DEFAULT_STATS_NUM_IDS = 3
     public static final String MAIN_LOG_NAME = "MAIN.txt"
     public static final String ERROR_LOG_NAME = "ERRORS.txt"
+    public static final String INVALID_LOG_NAME = "INVALID.txt"
     public static final String MODIFIED_LOG_NAME = "MODIFIED.txt"
     public static final String CREATED_LOG_NAME = "CREATED.txt"
     public static final String DELETED_LOG_NAME = "DELETED.txt"
@@ -67,6 +63,8 @@ class WhelkTool {
     File reportsDir
     PrintWriter mainLog
     PrintWriter errorLog
+
+    PrintWriter invalidLog
     PrintWriter modifiedLog
     PrintWriter createdLog
     PrintWriter deletedLog
@@ -121,7 +119,7 @@ class WhelkTool {
         reportsDir.mkdirs()
         mainLog = new PrintWriter(new File(reportsDir, MAIN_LOG_NAME))
         errorLog = new PrintWriter(new File(reportsDir, ERROR_LOG_NAME))
-
+        invalidLog = new PrintWriter(new File(reportsDir, INVALID_LOG_NAME))
         def modifiedLogFile = new File(reportsDir, MODIFIED_LOG_NAME)
         modifiedLog = new PrintWriter(modifiedLogFile)
         def createdLogFile = new File(reportsDir, CREATED_LOG_NAME)
@@ -560,8 +558,8 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(item.generationProcess ?: script.scriptJobUri)
 
-        if (!skipValidation) {
-            validateJsonLd(doc)
+        if (!skipValidation && !validateJsonLd(doc)) {
+            return
         }
 
         if (recordChanges) {
@@ -580,8 +578,8 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(item.generationProcess ?: script.scriptJobUri)
 
-        if (!skipValidation) {
-            validateJsonLd(doc)
+        if (!skipValidation && !validateJsonLd(doc)) {
+            return
         }
 
         if (recordChanges) {
@@ -595,11 +593,14 @@ class WhelkTool {
         createdLog.println(doc.shortId)
     }
 
-    private void validateJsonLd(Document doc) {
+    private boolean validateJsonLd(Document doc) {
         List<JsonLdValidator.Error> errors = validator.validate(doc.data, doc.getLegacyCollection(whelk.jsonld))
         if (errors) {
-            throw new Exception("Invalid JSON-LD. Errors: ${errors.collect{ it.toMap() }}")
+            invalidLog.println(doc.shortId)
+            errorLog.println("Invalid JSON-LD in document ${doc.completeId}. Errors: ${errors.collect{ it.toMap() }}")
+            return false
         }
+        return true
     }
 
     private boolean confirmNextStep(String inJsonStr, Document doc) {
