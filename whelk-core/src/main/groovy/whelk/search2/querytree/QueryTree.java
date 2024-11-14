@@ -38,11 +38,11 @@ public class QueryTree {
         removeNeedlessWildcard();
     }
 
-    public Map<String, Object> toEs(QueryUtil queryUtil, Disambiguate disambiguate, List<String> boostedfields) {
+    public Map<String, Object> toEs(QueryUtil queryUtil, Disambiguate disambiguate) {
         return (isFiltered() ? filtered.tree : tree)
                 .expand(disambiguate, getOutsetType())
                 .insertNested(queryUtil::getNestedPath)
-                .toEs(boostedfields);
+                .toEs(queryUtil.boostedFields);
                 //.toEs(queryUtil.lensBoost.computeBoostFieldsFromLenses(new String[0])); // TODO: Implement boosting
     }
 
