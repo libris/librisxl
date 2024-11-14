@@ -165,8 +165,8 @@ public class BulkJobDocument extends Document {
                     get(spec, TARGET_FORM_KEY, Collections.emptyMap())
             );
             case SpecType.Merge -> new Specification.Merge(
-                    get(spec, List.of(DEPRECATE_KEY, "*", RDF_VALUE), Collections.emptyList()),
-                    get(spec, List.of(KEEP_KEY, RDF_VALUE), "")
+                    get(spec, List.of(DEPRECATE_KEY, "*", ID_KEY), Collections.emptyList()),
+                    get(spec, List.of(KEEP_KEY, ID_KEY), "")
             );
             case SpecType.Other -> new Specification.Other(
                     get(spec, SCRIPT_KEY, null),
