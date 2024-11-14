@@ -47,6 +47,11 @@ class WhelkTool {
     static final int DEFAULT_BATCH_SIZE = 500
     public static final int DEFAULT_FETCH_SIZE = 100
     static final int DEFAULT_STATS_NUM_IDS = 3
+    public static final String MAIN_LOG_NAME = "MAIN.txt"
+    public static final String ERROR_LOG_NAME = "ERRORS.txt"
+    public static final String MODIFIED_LOG_NAME = "MODIFIED.txt"
+    public static final String CREATED_LOG_NAME = "CREATED.txt"
+    public static final String DELETED_LOG_NAME = "DELETED.txt"
 
     Whelk whelk
     IdLoader idLoader
@@ -114,14 +119,14 @@ class WhelkTool {
         this.defaultChangedBy = script.scriptJobUri
         this.reportsDir = reportsDir
         reportsDir.mkdirs()
-        mainLog = new PrintWriter(new File(reportsDir, "MAIN.txt"))
-        errorLog = new PrintWriter(new File(reportsDir, "ERRORS.txt"))
+        mainLog = new PrintWriter(new File(reportsDir, MAIN_LOG_NAME))
+        errorLog = new PrintWriter(new File(reportsDir, ERROR_LOG_NAME))
 
-        def modifiedLogFile = new File(reportsDir, "MODIFIED.txt")
+        def modifiedLogFile = new File(reportsDir, MODIFIED_LOG_NAME)
         modifiedLog = new PrintWriter(modifiedLogFile)
-        def createdLogFile = new File(reportsDir, "CREATED.txt")
+        def createdLogFile = new File(reportsDir, CREATED_LOG_NAME)
         createdLog = new PrintWriter(createdLogFile)
-        def deletedLogFile = new File(reportsDir, "DELETED.txt")
+        def deletedLogFile = new File(reportsDir, DELETED_LOG_NAME)
         deletedLog = new PrintWriter(deletedLogFile)
 
         try {

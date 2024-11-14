@@ -6,11 +6,15 @@ import whelk.exception.ModelValidationException;
 import whelk.util.DocumentUtil;
 import whelk.util.JsonLdKey;
 
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static whelk.JsonLd.ID_KEY;
+import static whelk.JsonLd.asList;
 import static whelk.util.JsonLdKey.fromKey;
 
 // All terms are defined in https://github.com/libris/definitions/blob/develop/source/vocab/platform.ttl
@@ -66,12 +70,20 @@ public class BulkJobDocument extends Document {
     public static final String DEPRECATE_KEY = "bulk:deprecate";
     public static final String SCRIPT_KEY = "bulk:script";
     public static final String RDF_VALUE = "value";
+    public static final String EXECUTION_KEY = "bulk:execution";
+    public static final String EXECUTION_TYPE = "bulk:Execution";
+    public static final String REPORT_KEY = "bulk:report";
+    public static final String END_TIME_KEY = "endTime";
+    public static final String NUM_CREATED_KEY = "bulk:numCreated";
+    public static final String NUM_UPDATED_KEY = "bulk:numUpdated";
+    public static final String NUM_DELETED_KEY = "bulk:numDeleted";
 
     private static final List<Object> STATUS_PATH = List.of(JsonLd.GRAPH_KEY, 1, STATUS_KEY);
     private static final List<Object> UPDATE_TIMESTAMP_PATH = List.of(JsonLd.GRAPH_KEY, 1, SHOULD_UPDATE_TIMESTAMP_KEY);
     private static final List<Object> LABELS_PATH = List.of(JsonLd.GRAPH_KEY, 1, LABEL_KEY, "*");
     private static final List<Object> COMMENTS_PATH = List.of(JsonLd.GRAPH_KEY, 1, COMMENT_KEY, "*");
     private static final List<Object> SPECIFICATION_PATH = List.of(JsonLd.GRAPH_KEY, 1, CHANGE_SPEC_KEY);
+    private static final List<Object> EXECUTION_PATH = List.of(JsonLd.GRAPH_KEY, 1, EXECUTION_KEY);
 
     public BulkJobDocument(Document doc) {
         this(doc.data);
@@ -107,6 +119,31 @@ public class BulkJobDocument extends Document {
 
     public Map<String, Object> getSpecificationRaw() {
         return get(data, SPECIFICATION_PATH);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void addExecution(ZonedDateTime endTime, Status status, List<String> reportPaths,
+                             long numCreated, long numUpdated, long numDeleted) {
+        var e = new HashMap<>(Map.of(
+                JsonLd.TYPE_KEY, EXECUTION_TYPE,
+                REPORT_KEY, reportPaths.stream().map(s -> Map.of(ID_KEY, s)).toList(),
+                END_TIME_KEY, endTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+                STATUS_KEY, status.key()
+        ));
+
+        if (numCreated > 0) {
+            e.put(NUM_CREATED_KEY, numCreated);
+        }
+        if (numUpdated > 0) {
+            e.put(NUM_UPDATED_KEY, numUpdated);
+        }
+        if (numDeleted > 0) {
+            e.put(NUM_DELETED_KEY, numDeleted);
+        }
+
+        var executions = asList(get(data, EXECUTION_PATH));
+        executions.add(e);
+        _set(EXECUTION_PATH, executions, data);
     }
 
     public Specification getSpecification() {
