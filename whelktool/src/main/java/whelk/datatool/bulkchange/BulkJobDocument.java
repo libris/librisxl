@@ -181,6 +181,10 @@ public class BulkJobDocument extends Document {
         return getDescriptionLastModifier();
     }
 
+    public BulkJobDocument clone() {
+        return new BulkJobDocument(super.clone());
+    }
+
     @SuppressWarnings("unchecked")
     private <T> T get(Object thing, List<Object> path, T defaultTo) {
         return (T) DocumentUtil.getAtPath(thing, path, defaultTo);

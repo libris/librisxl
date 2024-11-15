@@ -3,6 +3,8 @@ package whelk.housekeeping;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import whelk.Document;
 import whelk.JsonLd;
@@ -41,6 +43,7 @@ import static whelk.datatool.bulkchange.BulkPreviewJob.RECORD_MAX_ITEMS;
 import static whelk.util.Unicode.stripPrefix;
 
 public class BulkChangePreviewAPI extends HttpServlet {
+    private static final Logger log = LogManager.getLogger(BulkChangePreviewAPI.class);
 
     private static final String BULK_CHANGE_PREVIEW_TYPE = "bulk:Preview";
     private static final String PREVIEW_API_PATH = "/_bulk-change/preview";
@@ -60,6 +63,7 @@ public class BulkChangePreviewAPI extends HttpServlet {
             .build(new CacheLoader<>() {
                 @Override
                 public @NotNull Preview load(@NotNull String id) {
+                    log.info("New preview for {}", id);
                     return new Preview(id);
                 }
             });
@@ -256,6 +260,7 @@ public class BulkChangePreviewAPI extends HttpServlet {
         synchronized List<RecordedChange> getChanges(int minNumWanted, int timeoutMs) {
             var jobDoc = load(systemId);
             if (job!= null && !job.isSameVersion(jobDoc)) {
+                log.info("Cancelling obsolete preview for {}", id);
                 job.cancel();
                 job = null;
             }

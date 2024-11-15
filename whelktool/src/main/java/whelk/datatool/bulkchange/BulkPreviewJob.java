@@ -26,7 +26,7 @@ public class BulkPreviewJob extends BulkJob {
 
         jobDoc = loadDocument();
 
-        tool = buildWhelkTool(jobDoc);
+        tool = buildWhelkTool(jobDoc.clone()); // guard against script modifying spec data
         tool.setDryRun(true);
         tool.setRecordChanges(true);
         tool.setRecordingLimit(RECORD_MAX_ITEMS);
@@ -68,7 +68,6 @@ public class BulkPreviewJob extends BulkJob {
 
             printScriptLogHeader(tool, jobDoc);
             log.info("Running {}: {}", JOB_TYPE, id);
-
             tool.run();
         } catch (Exception e) {
             // TODO
