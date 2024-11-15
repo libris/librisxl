@@ -11,11 +11,11 @@ import whelk.JsonLd
 import whelk.util.DocumentUtil
 
 import static whelk.JsonLd.ID_KEY
+import static whelk.datatool.bulkchange.BulkJobDocument.ADD_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.DEPRECATE_KEY
-import static whelk.datatool.bulkchange.BulkJobDocument.KEEP_KEY
 
 Map deprecate = parameters.get(DEPRECATE_KEY)
-Map addLink = parameters.get(KEEP_KEY)
+Map addLink = parameters.get(ADD_KEY)
 
 if (!deprecate) return
 
