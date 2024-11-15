@@ -6,10 +6,10 @@ import static whelk.datatool.bulkchange.BulkJobDocument.JOB_TYPE
 import static whelk.datatool.bulkchange.BulkJobDocument.KEEP_KEY
 
 Map deprecateLink = parameters.get(DEPRECATE_KEY)
-Map keep = parameters.get(KEEP_KEY)
+Map keepLink = parameters.get(KEEP_KEY)
 
 String deprecateId = deprecateLink[ID_KEY]
-String keepId = deprecateLink[ID_KEY]
+String keepId = keepLink[ID_KEY]
 
 if (!deprecateId || !keepId) return
 
