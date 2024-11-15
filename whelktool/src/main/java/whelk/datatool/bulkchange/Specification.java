@@ -11,7 +11,6 @@ import whelk.datatool.form.Transform;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +46,10 @@ public sealed interface Specification permits Specification.Create, Specificatio
                     TARGET_FORM_KEY, targetForm
             ));
             return s;
+        }
+
+        public List<String> findIds(Whelk whelk) {
+            return queryIds(getTransform(whelk), whelk);
         }
 
         @SuppressWarnings("unchecked")
@@ -95,7 +98,11 @@ public sealed interface Specification permits Specification.Create, Specificatio
             return getMatchForm(whelk).matches(thing);
         }
 
-        public Transform.MatchForm getMatchForm(Whelk whelk) {
+        public List<String> findIds(Whelk whelk) {
+            return queryIds(getMatchForm(whelk), whelk);
+        }
+
+        private Transform.MatchForm getMatchForm(Whelk whelk) {
             if (matchFormObj == null) {
                 matchFormObj = new Transform.MatchForm(matchForm, whelk);
             }
@@ -154,5 +161,10 @@ public sealed interface Specification permits Specification.Create, Specificatio
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static List<String> queryIds(Transform transform, Whelk whelk) {
+        return whelk.getSparqlQueryClient()
+                .queryIdsByPattern(transform.getSparqlPattern(whelk.getJsonld().context));
     }
 }
