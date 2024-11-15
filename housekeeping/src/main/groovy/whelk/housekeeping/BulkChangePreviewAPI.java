@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -163,7 +164,6 @@ public class BulkChangePreviewAPI extends HttpServlet {
         var recordAfter = getRecord.apply(recordChange.after());
 
         var recordCopy = new LinkedHashMap<>(recordBefore.isEmpty() ? recordAfter : recordBefore);
-
         // Remove @id from record to prevent it from being shown as a link in the diff view
         recordBefore.remove(ID_KEY);
         recordAfter.remove(ID_KEY);
@@ -179,6 +179,13 @@ public class BulkChangePreviewAPI extends HttpServlet {
         // However when the diff is computed we need "@graph form", hence the same record copy at @graph,0 in both versions
         var beforeDoc = new Document(Map.of(GRAPH_KEY, List.of(recordCopy, thingBefore)));
         var afterDoc = new Document(Map.of(GRAPH_KEY, List.of(recordCopy, thingAfter)));
+        if (beforeDoc.getModified() == null) {
+            beforeDoc.setModified(new Date());
+        }
+        if (afterDoc.getModified() == null) {
+            afterDoc.setModified(new Date());
+        }
+
         var id = (String) recordCopy.get(ID_KEY);
 
         var result = getChangeSetsMap(beforeDoc, afterDoc, id);
