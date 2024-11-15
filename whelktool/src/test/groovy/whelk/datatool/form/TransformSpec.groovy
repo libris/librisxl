@@ -94,7 +94,7 @@ class TransformSpec extends Specification {
     def "form to sparql pattern: ordered list value"() {
         given:
         def form = ['bulk:formBlankNodeId': '#1', 'p3': [['bulk:formBlankNodeId': '#2', 'p1': 'x'], ['bulk:formBlankNodeId': '#3', 'p2': 'y']]]
-        def expectedPattern = "?graph :mainEntity ?1 .\n\n?1 :p3 ( ( [ :p1 \"x\" ] ) ( [ :p2 \"y\" ] ) ) ."
+        def expectedPattern = "?graph :mainEntity ?1 .\n\n?1 :p3 ( [ :p1 \"x\" ] [ :p2 \"y\" ] ) ."
 
         expect:
         new Transform.MatchForm(form).getSparqlPattern(context) == expectedPattern
