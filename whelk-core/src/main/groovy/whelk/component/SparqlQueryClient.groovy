@@ -7,7 +7,9 @@ import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.query.ResultSet
 import whelk.Document
 import whelk.JsonLd
+import whelk.converter.JsonLdToTrigSerializer
 
+import static java.nio.charset.StandardCharsets.UTF_8
 import static trld.trig.Serializer.collectPrefixes
 
 @Log
@@ -67,5 +69,21 @@ class SparqlQueryClient {
             prefixes += "PREFIX $k: <$v>\n"
         }
         return prefixes
+    }
+
+    public static getTurtle(List<Map> graph, Map context) {
+        ((ByteArrayOutputStream) JsonLdToTrigSerializer.toTurtle(context, graph))
+                .toByteArray()
+                .with { new String(it, UTF_8) }
+        // Add skip prelude flag to JsonLdToTrigSerializer.toTurtle?
+                .with { withoutPrefixes(it) }
+    }
+
+    private static String withoutPrefixes(String ttl) {
+        ttl.readLines()
+                .split { it.startsWith('prefix') }
+                .get(1)
+                .join('\n')
+                .trim()
     }
 }

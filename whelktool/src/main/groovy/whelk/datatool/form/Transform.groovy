@@ -17,6 +17,7 @@ import static whelk.JsonLd.THING_KEY
 import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
 import static whelk.component.SparqlQueryClient.GRAPH_VAR
+import static whelk.component.SparqlQueryClient.getTurtle
 import static whelk.util.DocumentUtil.getAtPath
 import static whelk.util.LegacyIntegrationTools.getMarcCollectionInHierarchy
 
@@ -180,11 +181,7 @@ class Transform {
         thing[ID_KEY] = getThingTmpId()
         record[THING_KEY] = [(ID_KEY): getThingTmpId()]
 
-        def ttl = ((ByteArrayOutputStream) JsonLdToTrigSerializer.toTurtle(context, [record, thing]))
-                .toByteArray()
-                .with { new String(it, UTF_8) }
-        // Add skip prelude flag to JsonLdToTrigSerializer.toTurtle?
-                .with { withoutPrefixes(it) }
+        def ttl = getTurtle([record, thing], context)
 
         return insertTypeMappings(insertIdMappings(insertVars(ttl)))
     }
@@ -252,14 +249,6 @@ class Transform {
         return bNodeId == getRecordTmpId()
                 ? "?$GRAPH_VAR"
                 : "?${bNodeId.replace('#', '')}"
-    }
-
-    private static String withoutPrefixes(String ttl) {
-        ttl.readLines()
-                .split { it.startsWith('prefix') }
-                .get(1)
-                .join('\n')
-                .trim()
     }
 
     Map<String, Set<String>> collectNodeIdMappings(Whelk whelk) {

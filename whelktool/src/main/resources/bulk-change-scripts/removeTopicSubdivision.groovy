@@ -8,11 +8,13 @@
  */
 
 import whelk.JsonLd
+import whelk.Whelk
 import whelk.util.DocumentUtil
 
 import static whelk.JsonLd.ID_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.ADD_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.DEPRECATE_KEY
+import static whelk.component.SparqlQueryClient.getTurtle
 
 Map deprecate = parameters.get(DEPRECATE_KEY)
 Map addLink = parameters.get(ADD_KEY)
@@ -69,10 +71,12 @@ if (deprecate[ID_KEY]) {
         }
     }
 } else {
-    // TODO
-//    selectByForm(deprecate) {
-//        process(it)
-//    }
+    // TODO: make this a selectBy...
+    Whelk whelk = getWhelk()
+    def ids = whelk.sparqlQueryClient.queryIdsByPattern(getTurtle([[:], deprecate], whelk.jsonld.context))
+    selectByIds(ids) {
+        process(it)
+    }
 }
 
 static DocumentUtil.Operation mapSubject(Map subject, termComponentList, deprecateLink) {
