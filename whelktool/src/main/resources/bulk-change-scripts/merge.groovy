@@ -50,7 +50,7 @@ selectByIds([deprecateId]) { obsolete ->
     obsolete.scheduleDelete()
 }
 
-selectByIds([keep]) { kept ->
+selectByIds([keepId]) { kept ->
     obsoleteThingUris.each { uri ->
         kept.doc.addThingIdentifier(uri)
         kept.scheduleSave()
