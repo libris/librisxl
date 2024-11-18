@@ -111,6 +111,7 @@ public class ImageLinker extends HouseKeeper {
             e.printStackTrace(p);
             String stacktrace = w.toString();
             status = "Failed with:\n" + e + "\nat:\n" + stacktrace;
+            logger.error("Image linking failed.", e);
             throw new RuntimeException(e);
         }
 
