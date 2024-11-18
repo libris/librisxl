@@ -15,6 +15,8 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.*;
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -64,7 +66,7 @@ public class Dump {
 
         HashMap typesCategory = new HashMap();
         typesCategory.put("url", apiBaseUrl+"?dump=type:X&offset=0");
-        typesCategory.put("description", "These categories represent the set of a entities of a certain type, including subtypes. " +
+        typesCategory.put("description", "These categories represent the set of entities of a certain type, including subtypes. " +
                 "For example the type Agent would include both Persons and Organizations etc. The X in the URL must be replaced " +
                 "with the type you want.");
         categoriesList.add(typesCategory);
@@ -131,14 +133,14 @@ public class Dump {
         }
 
         BasicFileAttributes attributes = Files.readAttributes(dumpFilePath, BasicFileAttributes.class);
-        String dumpId = ""+(dumpFilePath.toString() + attributes.creationTime().toInstant().toEpochMilli()).hashCode();
-        sendFormattedResponse(whelk, apiBaseUrl, dump, recordIdsOnPage, res, offsetLines + EmmChangeSet.TARGET_HITS_PER_PAGE, totalEntityCount, dumpId);
+        Instant dumpCreationTime = attributes.creationTime().toInstant();
+        sendFormattedResponse(whelk, apiBaseUrl, dump, recordIdsOnPage, res, offsetLines + EmmChangeSet.TARGET_HITS_PER_PAGE, totalEntityCount, dumpCreationTime);
     }
 
-    private static void sendFormattedResponse(Whelk whelk, String apiBaseUrl, String dump, ArrayList<String> recordIdsOnPage, HttpServletResponse res, long nextLineOffset, Long totalEntityCount, String dumpId) throws IOException{
+    private static void sendFormattedResponse(Whelk whelk, String apiBaseUrl, String dump, ArrayList<String> recordIdsOnPage, HttpServletResponse res, long nextLineOffset, Long totalEntityCount, Instant dumpCreationTime) throws IOException{
         HashMap responseObject = new HashMap();
 
-        responseObject.put("id", dumpId);
+        responseObject.put("creationTime", ZonedDateTime.ofInstant(dumpCreationTime, ZoneOffset.UTC).toString());
         if (totalEntityCount == null)
             responseObject.put("status", "generating");
         else {
