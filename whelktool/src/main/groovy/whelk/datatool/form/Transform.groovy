@@ -4,12 +4,11 @@ import groovy.transform.Memoized
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
-import whelk.converter.JsonLdToTrigSerializer
 import whelk.datatool.util.DocumentComparator
 import whelk.datatool.util.IdLoader
 import whelk.util.DocumentUtil
 
-import static java.nio.charset.StandardCharsets.UTF_8
+import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.RECORD_KEY
 import static whelk.JsonLd.RECORD_TYPE
@@ -17,7 +16,7 @@ import static whelk.JsonLd.THING_KEY
 import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
 import static whelk.component.SparqlQueryClient.GRAPH_VAR
-import static whelk.component.SparqlQueryClient.getTurtle
+import static whelk.converter.JsonLDTurtleConverter.toTurtle
 import static whelk.util.DocumentUtil.getAtPath
 import static whelk.util.LegacyIntegrationTools.getMarcCollectionInHierarchy
 
@@ -181,7 +180,9 @@ class Transform {
         thing[ID_KEY] = getThingTmpId()
         record[THING_KEY] = [(ID_KEY): getThingTmpId()]
 
-        def ttl = getTurtle([record, thing], context)
+        Map graph = [(GRAPH_KEY): [record, thing]]
+
+        String ttl = toTurtle(graph, context, true)
 
         return insertTypeMappings(insertIdMappings(insertVars(ttl)))
     }

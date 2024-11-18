@@ -3,10 +3,8 @@ package whelk.converter
 import groovy.util.logging.Log4j2 as Log
 import whelk.JsonLd
 import whelk.Whelk
-import whelk.component.PostgreSQLComponent
-import whelk.util.PropertyLoader
 
-import static whelk.util.Jackson.mapper
+import static java.nio.charset.StandardCharsets.UTF_8
 
 @Log
 class JsonLDTurtleConverter implements FormatConverter {
@@ -20,7 +18,25 @@ class JsonLDTurtleConverter implements FormatConverter {
     }
 
     Map convert(Map source, String id) {
-        def bytes = JsonLdToTrigSerializer.toTurtle(null, source, base).toByteArray()
-        return [(JsonLd.NON_JSON_CONTENT_KEY) : (new String(bytes, "UTF-8"))]
+        return [(JsonLd.NON_JSON_CONTENT_KEY) : _toTurtle(source, null, base, false)]
+    }
+
+    static String toTurtle(Map source, Map context, boolean skipPrelude) {
+        return _toTurtle(source, context, null, skipPrelude)
+    }
+
+    private static String _toTurtle(Map source, Map context, base, boolean skipPrelude) {
+        def bytes = JsonLdToTrigSerializer.toTurtle(context, source, base).toByteArray()
+        def s = new String(bytes, UTF_8)
+        // Add skip prelude flag in trld.trig.SerializerState.serialize?
+        return skipPrelude ? withoutPrefixes(s) : s
+    }
+
+    private static String withoutPrefixes(String ttl) {
+        return ttl.readLines()
+                .split { it.startsWith('prefix') }
+                .get(1)
+                .join('\n')
+                .trim()
     }
 }

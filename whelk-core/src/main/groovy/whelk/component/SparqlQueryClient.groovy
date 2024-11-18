@@ -70,20 +70,4 @@ class SparqlQueryClient {
         }
         return prefixes
     }
-
-    public static getTurtle(List<Map> graph, Map context) {
-        ((ByteArrayOutputStream) JsonLdToTrigSerializer.toTurtle(context, graph))
-                .toByteArray()
-                .with { new String(it, UTF_8) }
-        // Add skip prelude flag to JsonLdToTrigSerializer.toTurtle?
-                .with { withoutPrefixes(it) }
-    }
-
-    private static String withoutPrefixes(String ttl) {
-        ttl.readLines()
-                .split { it.startsWith('prefix') }
-                .get(1)
-                .join('\n')
-                .trim()
-    }
 }

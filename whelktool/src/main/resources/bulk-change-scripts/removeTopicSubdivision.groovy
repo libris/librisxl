@@ -11,10 +11,11 @@ import whelk.JsonLd
 import whelk.Whelk
 import whelk.util.DocumentUtil
 
+import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
+import static whelk.converter.JsonLDTurtleConverter.toTurtle
 import static whelk.datatool.bulkchange.BulkJobDocument.ADD_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.DEPRECATE_KEY
-import static whelk.component.SparqlQueryClient.getTurtle
 
 Map deprecate = parameters.get(DEPRECATE_KEY)
 Map addLink = parameters.get(ADD_KEY)
@@ -71,9 +72,8 @@ if (deprecate[ID_KEY]) {
         }
     }
 } else {
-    // TODO: make this a selectBy...
     Whelk whelk = getWhelk()
-    def ids = whelk.sparqlQueryClient.queryIdsByPattern(getTurtle([[:], deprecate], whelk.jsonld.context))
+    def ids = whelk.sparqlQueryClient.queryIdsByPattern(asTurtle(deprecate, whelk.jsonld.context))
     selectByIds(ids) {
         process(it)
     }
@@ -91,4 +91,9 @@ static DocumentUtil.Operation mapSubject(Map subject, termComponentList, depreca
     Map result = new HashMap(subject)
     result.termComponentList = t2
     return new DocumentUtil.Replace(result)
+}
+
+static String asTurtle(Map thing, Map context) {
+    Map graph = [(GRAPH_KEY): [[:], thing]]
+    return toTurtle(graph, context, true)
 }
