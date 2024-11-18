@@ -11,17 +11,17 @@ import whelk.datatool.form.Transform;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static whelk.JsonLd.GRAPH_KEY;
 import static whelk.JsonLd.RECORD_KEY;
-import static whelk.datatool.bulkchange.BulkJobDocument.ADD_KEY;
+import static whelk.datatool.bulkchange.BulkJobDocument.ADD_SUBJECT_KEY;
 import static whelk.datatool.bulkchange.BulkJobDocument.KEEP_KEY;
 import static whelk.datatool.bulkchange.BulkJobDocument.MATCH_FORM_KEY;
 import static whelk.datatool.bulkchange.BulkJobDocument.DEPRECATE_KEY;
+import static whelk.datatool.bulkchange.BulkJobDocument.REMOVE_SUBDIVISION_KEY;
 import static whelk.datatool.bulkchange.BulkJobDocument.TARGET_FORM_KEY;
 
 public sealed interface Specification permits Specification.Create, Specification.Delete, Specification.Merge, Specification.Update, Specification.Other {
@@ -47,6 +47,10 @@ public sealed interface Specification permits Specification.Create, Specificatio
                     TARGET_FORM_KEY, targetForm
             ));
             return s;
+        }
+
+        public List<String> findIds(Whelk whelk) {
+            return queryIds(getTransform(whelk), whelk);
         }
 
         @SuppressWarnings("unchecked")
@@ -95,7 +99,11 @@ public sealed interface Specification permits Specification.Create, Specificatio
             return getMatchForm(whelk).matches(thing);
         }
 
-        public Transform.MatchForm getMatchForm(Whelk whelk) {
+        public List<String> findIds(Whelk whelk) {
+            return queryIds(getMatchForm(whelk), whelk);
+        }
+
+        private Transform.MatchForm getMatchForm(Whelk whelk) {
             if (matchFormObj == null) {
                 matchFormObj = new Transform.MatchForm(matchForm, whelk);
             }
@@ -128,7 +136,7 @@ public sealed interface Specification permits Specification.Create, Specificatio
 
     record Other(String name, Map<String, ?> parameters) implements Specification {
         private static final Map<String, List<String>> ALLOWED_SCRIPTS_PARAMS = Map.of(
-                "removeTopicSubdivision", List.of(DEPRECATE_KEY, ADD_KEY)
+                "removeSubdivision", List.of(REMOVE_SUBDIVISION_KEY, ADD_SUBJECT_KEY)
         );
 
         @Override
@@ -154,5 +162,10 @@ public sealed interface Specification permits Specification.Create, Specificatio
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static List<String> queryIds(Transform transform, Whelk whelk) {
+        return whelk.getSparqlQueryClient()
+                .queryIdsByPattern(transform.getSparqlPattern(whelk.getJsonld().context));
     }
 }

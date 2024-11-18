@@ -41,10 +41,6 @@ contributor(ctx) {
     method name:"selectByIds", params:['ids':Collection<String>, 'process':DC, 'batchSize':int], type:void
     method name:"selectByIds", params:['ids':Collection<String>, 'process':DC, 'silent':boolean], type:void
     method name:"selectByIds", params:['ids':Collection<String>, 'process':DC], type:void
-    method name:"selectByForm", params:['form':Map, 'process':DC, 'batchSize':int, 'silent':boolean], type:void
-    method name:"selectByForm", params:['form':Map, 'process':DC, 'batchSize':int], type:void
-    method name:"selectByForm", params:['form':Map, 'process':DC, 'silent':boolean], type:void
-    method name:"selectByForm", params:['form':Map, 'process':DC], type:void
     method name:"selectBySqlWhere", params:['whereClause':String, 'batchSize':int, 'silent':boolean, 'process':DC], type:void
     method name:"selectBySqlWhere", params:['whereClause':String, 'batchSize':int, 'process':DC], type:void
     method name:"selectBySqlWhere", params:['whereClause':String, 'silent':boolean, 'process':DC], type:void

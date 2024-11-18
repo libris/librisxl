@@ -69,6 +69,8 @@ public class BulkJobDocument extends Document {
     public static final String ADD_KEY = "bulk:add";
     public static final String KEEP_KEY = "bulk:keep";
     public static final String DEPRECATE_KEY = "bulk:deprecate";
+    public static final String REMOVE_SUBDIVISION_KEY = "bulk:removeSubdivision";
+    public static final String ADD_SUBJECT_KEY = "bulk:addSubject";
     public static final String SCRIPT_KEY = "bulk:script";
     public static final String EXECUTION_KEY = "bulk:execution";
     public static final String EXECUTION_TYPE = "bulk:Execution";

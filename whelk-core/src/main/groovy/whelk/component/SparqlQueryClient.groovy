@@ -7,7 +7,9 @@ import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.query.ResultSet
 import whelk.Document
 import whelk.JsonLd
+import whelk.converter.JsonLdToTrigSerializer
 
+import static java.nio.charset.StandardCharsets.UTF_8
 import static trld.trig.Serializer.collectPrefixes
 
 @Log

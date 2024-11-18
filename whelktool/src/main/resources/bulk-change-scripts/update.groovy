@@ -7,8 +7,9 @@ Map matchForm = parameters.get(MATCH_FORM_KEY)
 Map targetForm = parameters.get(TARGET_FORM_KEY)
 
 Specification.Update update = new Specification.Update(matchForm, targetForm)
+List<String> ids = update.findIds(getWhelk())
 
-selectByForm(matchForm) {
+selectByIds(ids) {
     if(update.modify(it.doc, it.whelk)) {
         it.scheduleSave(loud: isLoudAllowed)
     }
