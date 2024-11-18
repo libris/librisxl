@@ -92,9 +92,9 @@ else
     }
 fi
 
-REPLACEID="s!\(\(\"@id\": \"\|\t\)https://libris\)\(-\w\+\)\?\(.kb.se/[bcdfghjklmnpqrstvwxz0-9]\+\)\>!\1-$DESTENV\4!g"
+REPLACEID="s/((@id\": \"|\t)https:\/\/libris)(?:-\w+)?(.kb.se\/[bcdfghjklmnpqrstvwxz0-9]+)\b/\1-$DESTENV\3/g"
 
 pg_restore -f - "${DUMPPATH}" |
     ( read; cat - |
-    sed "$REPLACEID" |
+    perl -pe "$REPLACEID" |
     handle_sql_dump )
