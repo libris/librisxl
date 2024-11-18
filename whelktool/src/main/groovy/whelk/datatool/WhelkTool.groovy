@@ -818,11 +818,24 @@ class WhelkTool {
         tool.dryRun = options.d
         tool.stepWise = options.s
         tool.noThreads = options.T
-        tool.numThreads = options.t ? Integer.parseInt(options.t) : -1
-        tool.limit = options.l ? Integer.parseInt(options.l) : -1
         tool.allowLoud = options.a
         tool.allowIdRemoval = options.idchg
-        tool.validationMode = parseValidationMode(options.v) ?: tool.validationMode
+        try {
+            if (options.t) {
+                tool.numThreads = Integer.parseInt(options.t)
+            }
+            if (options.l) {
+                tool.limit = Integer.parseInt(options.l)
+            }
+            if (options.v) {
+                tool.validationMode = parseValidationMode(options.v)
+            }
+        } catch (IllegalArgumentException ignored) {
+            System.err.println("Invalid argument(s)")
+            cli.usage()
+            System.exit(1)
+        }
+
         try {
             tool.run()
         } catch (Exception e) {
@@ -831,13 +844,8 @@ class WhelkTool {
         }
     }
 
-    private static ValidationMode parseValidationMode(String arg) {
-        for (vm in ValidationMode.getEnumConstants()) {
-            if (arg.toUpperCase() == vm.name()) {
-                return vm
-            }
-        }
-        return null
+    private static ValidationMode parseValidationMode(String arg) throws IllegalArgumentException {
+        return ValidationMode.valueOf(arg.toUpperCase())
     }
 
     void recordChange(Document before, Document after, int number) {
