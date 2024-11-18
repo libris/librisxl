@@ -804,9 +804,8 @@ class WhelkTool {
         try {
             script = new FileScript(scriptPath)
 
-            String paramPath = options.p
-            if (paramPath) {
-                script.setParameters(mapper.readValue(new File(paramPath).getText("UTF-8"), Map))
+            if (options.p) {
+                script.setParameters(mapper.readValue(new File(options.p).getText("UTF-8"), Map))
             }
         }
         catch (IOException e) {
