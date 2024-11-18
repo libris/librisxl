@@ -1,10 +1,10 @@
 /**
- * Remove all uses of a certain TopicSubdivision within ComplexSubject
- * The TopicSubdivision itself is not removed, only the usages.
+ * Remove all uses of a certain Subdivision within ComplexSubject
+ * The Subdivision itself is not removed, only the usages.
  *
  * Parameters:
- * bulk:deprecate - The subdivision(s) to be removed
- * bulk:keep - If specified, add this regular Topic to :subject instead
+ * bulk:removeSubdivision - The subdivision(s) to be removed
+ * bulk:addSubject - If specified, add this regular Subject to :subject instead
  */
 
 import whelk.JsonLd
@@ -13,14 +13,13 @@ import whelk.util.DocumentUtil
 
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.asList
 import static whelk.converter.JsonLDTurtleConverter.toTurtle
-import static whelk.datatool.bulkchange.BulkJobDocument.ADD_KEY
-import static whelk.datatool.bulkchange.BulkJobDocument.DEPRECATE_KEY
+import static whelk.datatool.bulkchange.BulkJobDocument.ADD_SUBJECT_KEY
+import static whelk.datatool.bulkchange.BulkJobDocument.REMOVE_SUBDIVISION_KEY
 
-Map deprecate = parameters.get(DEPRECATE_KEY)
-Map addLink = parameters.get(ADD_KEY)
-
-if (!deprecate) return
+List<Map> removeSubdivision = asList(parameters.get(REMOVE_SUBDIVISION_KEY))
+Map addSubject = parameters.get(ADD_SUBJECT_KEY)
 
 def process = { doc ->
     Map thing = doc.graph[1] as Map
@@ -29,24 +28,23 @@ def process = { doc ->
         return
     }
 
-    List<List> modifiedListPaths = []
+    Set<List> modifiedListPaths = [] as Set
     def modified = DocumentUtil.traverse(thing) { value, path ->
         if (value instanceof Map && value[JsonLd.TYPE_KEY] == 'ComplexSubject') {
             var t = asList(value.get('termComponentList'))
-            if (deprecate in t) {
+            if (t.containsAll(removeSubdivision)) {
                 var parentPath = path.size() > 1 ? path.dropRight(1) : null
                 if (parentPath) {
                     var parent = DocumentUtil.getAtPath(thing, parentPath)
                     if (parent instanceof List) {
                         modifiedListPaths.add(parentPath)
-                        // TODO? add way to do this with an op? SplitReplace? [Replace, Insert]?
-                        if (addLink && addLink[ID_KEY]) {
-                            parent.add(addLink)
+                        if (addSubject) {
+                            parent.add(addSubject)
                         }
                     }
                 }
 
-                return mapSubject(value, t, deprecate)
+                return mapSubject(value, t, removeSubdivision)
             }
         }
         return DocumentUtil.NOP
@@ -65,22 +63,24 @@ def process = { doc ->
     }
 }
 
-if (deprecate[ID_KEY]) {
-    selectByIds([deprecate[ID_KEY]]) { obsoleteSubdivision ->
-        selectByIds(obsoleteSubdivision.getDependers()) {
-            process(it)
+Set<String> ids = Collections.synchronizedSet([] as Set<String>)
+removeSubdivision.each { subdivision ->
+    if (subdivision[ID_KEY]) {
+        selectByIds([subdivision[ID_KEY]]) { obsoleteSubdivision ->
+            ids.addAll(obsoleteSubdivision.getDependers())
         }
-    }
-} else {
-    Whelk whelk = getWhelk()
-    def ids = whelk.sparqlQueryClient.queryIdsByPattern(asTurtle(deprecate, whelk.jsonld.context))
-    selectByIds(ids) {
-        process(it)
+    } else {
+        Whelk whelk = getWhelk()
+        ids.addAll(whelk.sparqlQueryClient.queryIdsByPattern(asTurtle((Map) subdivision, whelk.jsonld.context)))
     }
 }
 
-static DocumentUtil.Operation mapSubject(Map subject, termComponentList, deprecateLink) {
-    var t2 = termComponentList.findAll { it != deprecateLink }
+selectByIds(ids) {
+    process(it)
+}
+
+static DocumentUtil.Operation mapSubject(Map subject, termComponentList, removeSubdivision) {
+    var t2 = termComponentList.findAll { !removeSubdivision.contains(it) }
     if (t2.size() == 0) {
         return new DocumentUtil.Remove()
     }
