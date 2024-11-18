@@ -30,6 +30,7 @@ import java.util.stream.Stream;
 import static whelk.Document.HASH_IT;
 import static whelk.datatool.WhelkTool.CREATED_LOG_NAME;
 import static whelk.datatool.WhelkTool.DELETED_LOG_NAME;
+import static whelk.datatool.WhelkTool.FAILED_LOG_NAME;
 import static whelk.datatool.WhelkTool.MAIN_LOG_NAME;
 import static whelk.datatool.WhelkTool.MODIFIED_LOG_NAME;
 import static whelk.datatool.WhelkTool.ValidationMode.LOG_ONLY;
@@ -106,7 +107,8 @@ public class BulkJob implements Runnable {
                     filteredReports(),
                     lineCount(CREATED_LOG_NAME),
                     lineCount(MODIFIED_LOG_NAME),
-                    lineCount(DELETED_LOG_NAME));
+                    lineCount(DELETED_LOG_NAME),
+                    lineCount(FAILED_LOG_NAME));
         });
     }
 
