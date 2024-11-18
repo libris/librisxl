@@ -11,48 +11,68 @@ import whelk.JsonLd
 import whelk.util.DocumentUtil
 
 import static whelk.JsonLd.ID_KEY
+import static whelk.datatool.bulkchange.BulkJobDocument.ADD_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.DEPRECATE_KEY
-import static whelk.datatool.bulkchange.BulkJobDocument.KEEP_KEY
-import static whelk.datatool.bulkchange.BulkJobDocument.RDF_VALUE
 
-List<Map> deprecateUris = asList(parameters.get(DEPRECATE_KEY))
-Map keepUri = parameters.get(KEEP_KEY)
+Map deprecate = parameters.get(DEPRECATE_KEY)
+Map addLink = parameters.get(ADD_KEY)
 
-deprecateUris.each { deprecate ->
-    if (!deprecate.containsKey(RDF_VALUE)) return
-    Map deprecateLink = [(ID_KEY): deprecate[RDF_VALUE]]
-    selectByIds([deprecateLink[ID_KEY]]) { obsoleteSubdivision ->
-        selectByIds(obsoleteSubdivision.getDependers()) { depender ->
-            Map thing = depender.graph[1] as Map
+if (!deprecate) return
 
-            if (thing[JsonLd.TYPE_KEY] == 'ComplexSubject') {
-                return
-            }
+def process = { doc ->
+    Map thing = doc.graph[1] as Map
 
-            def modified = DocumentUtil.traverse(thing) { value, path ->
-                if (value instanceof Map && value[JsonLd.TYPE_KEY] == 'ComplexSubject') {
-                    var t = asList(value.get('termComponentList'))
-                    if (deprecateLink in t) {
+    if (thing[JsonLd.TYPE_KEY] == 'ComplexSubject') {
+        return
+    }
+
+    List<List> modifiedListPaths = []
+    def modified = DocumentUtil.traverse(thing) { value, path ->
+        if (value instanceof Map && value[JsonLd.TYPE_KEY] == 'ComplexSubject') {
+            var t = asList(value.get('termComponentList'))
+            if (deprecate in t) {
+                var parentPath = path.size() > 1 ? path.dropRight(1) : null
+                if (parentPath) {
+                    var parent = DocumentUtil.getAtPath(thing, parentPath)
+                    if (parent instanceof List) {
+                        modifiedListPaths.add(parentPath)
                         // TODO? add way to do this with an op? SplitReplace? [Replace, Insert]?
-                        if (keepUri && keepUri.containsKey(RDF_VALUE) && path.size() > 1) {
-                            var keepLink = [(ID_KEY): keepUri[RDF_VALUE]]
-                            var parent = DocumentUtil.getAtPath(thing, path.dropRight(1))
-                            if (parent instanceof List && !parent.contains(keepLink)) {
-                                parent.add(keepLink)
-                            }
+                        if (addLink && addLink[ID_KEY]) {
+                            parent.add(addLink)
                         }
-
-                        return mapSubject(value, t, deprecateLink)
                     }
                 }
-                return DocumentUtil.NOP
-            }
 
-            if (modified) {
-                depender.scheduleSave(loud: isLoudAllowed)
+                return mapSubject(value, t, deprecate)
             }
         }
+        return DocumentUtil.NOP
     }
+
+    // Remove duplicates
+    modifiedListPaths.each {
+        var obj = DocumentUtil.getAtPath(thing, it)
+        if (obj instanceof List) {
+            obj.unique(true)
+        }
+    }
+
+    if (modified) {
+        doc.scheduleSave(loud: isLoudAllowed)
+    }
+}
+
+if (deprecate[ID_KEY]) {
+    selectByIds([deprecate[ID_KEY]]) { obsoleteSubdivision ->
+        selectByIds(obsoleteSubdivision.getDependers()) {
+            process(it)
+        }
+    }
+} else {
+    // TODO
+//    selectByForm(deprecate) {
+//        process(it)
+//    }
 }
 
 static DocumentUtil.Operation mapSubject(Map subject, termComponentList, deprecateLink) {

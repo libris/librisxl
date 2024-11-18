@@ -18,6 +18,7 @@ import java.util.Map;
 
 import static whelk.JsonLd.GRAPH_KEY;
 import static whelk.JsonLd.RECORD_KEY;
+import static whelk.datatool.bulkchange.BulkJobDocument.ADD_KEY;
 import static whelk.datatool.bulkchange.BulkJobDocument.KEEP_KEY;
 import static whelk.datatool.bulkchange.BulkJobDocument.MATCH_FORM_KEY;
 import static whelk.datatool.bulkchange.BulkJobDocument.DEPRECATE_KEY;
@@ -113,7 +114,7 @@ public sealed interface Specification permits Specification.Create, Specificatio
         }
     }
 
-    record Merge(Collection<String> deprecate, String keep) implements Specification {
+    record Merge(Map<String, String> deprecate, Map<String, String> keep) implements Specification {
         @Override
         public Script getScript(String bulkJobId) {
             Script s = new Script(loadClasspathScriptSource("merge.groovy"), bulkJobId);
@@ -127,7 +128,7 @@ public sealed interface Specification permits Specification.Create, Specificatio
 
     record Other(String name, Map<String, ?> parameters) implements Specification {
         private static final Map<String, List<String>> ALLOWED_SCRIPTS_PARAMS = Map.of(
-                "removeTopicSubdivision", List.of(DEPRECATE_KEY, KEEP_KEY)
+                "removeTopicSubdivision", List.of(DEPRECATE_KEY, ADD_KEY)
         );
 
         @Override

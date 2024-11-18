@@ -44,7 +44,7 @@ class SparqlQueryClient {
             queryString += "\nLIMIT ${limit}"
         }
 
-        log.debug(queryString)
+        log.info(queryString)
 
         QueryExecution qe = QueryExecutionFactory.sparqlService(sparqlEndpoint, queryString)
         ResultSet res = qe.execSelect()

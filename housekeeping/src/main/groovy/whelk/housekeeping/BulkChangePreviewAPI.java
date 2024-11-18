@@ -3,6 +3,8 @@ package whelk.housekeeping;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import whelk.Document;
 import whelk.JsonLd;
@@ -26,6 +28,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -40,6 +43,7 @@ import static whelk.datatool.bulkchange.BulkPreviewJob.RECORD_MAX_ITEMS;
 import static whelk.util.Unicode.stripPrefix;
 
 public class BulkChangePreviewAPI extends HttpServlet {
+    private static final Logger log = LogManager.getLogger(BulkChangePreviewAPI.class);
 
     private static final String BULK_CHANGE_PREVIEW_TYPE = "bulk:Preview";
     private static final String PREVIEW_API_PATH = "/_bulk-change/preview";
@@ -59,6 +63,7 @@ public class BulkChangePreviewAPI extends HttpServlet {
             .build(new CacheLoader<>() {
                 @Override
                 public @NotNull Preview load(@NotNull String id) {
+                    log.info("New preview for {}", id);
                     return new Preview(id);
                 }
             });
@@ -163,7 +168,6 @@ public class BulkChangePreviewAPI extends HttpServlet {
         var recordAfter = getRecord.apply(recordChange.after());
 
         var recordCopy = new LinkedHashMap<>(recordBefore.isEmpty() ? recordAfter : recordBefore);
-
         // Remove @id from record to prevent it from being shown as a link in the diff view
         recordBefore.remove(ID_KEY);
         recordAfter.remove(ID_KEY);
@@ -179,6 +183,13 @@ public class BulkChangePreviewAPI extends HttpServlet {
         // However when the diff is computed we need "@graph form", hence the same record copy at @graph,0 in both versions
         var beforeDoc = new Document(Map.of(GRAPH_KEY, List.of(recordCopy, thingBefore)));
         var afterDoc = new Document(Map.of(GRAPH_KEY, List.of(recordCopy, thingAfter)));
+        if (beforeDoc.getModified() == null) {
+            beforeDoc.setModified(new Date());
+        }
+        if (afterDoc.getModified() == null) {
+            afterDoc.setModified(new Date());
+        }
+
         var id = (String) recordCopy.get(ID_KEY);
 
         var result = getChangeSetsMap(beforeDoc, afterDoc, id);
@@ -249,6 +260,7 @@ public class BulkChangePreviewAPI extends HttpServlet {
         synchronized List<RecordedChange> getChanges(int minNumWanted, int timeoutMs) {
             var jobDoc = load(systemId);
             if (job!= null && !job.isSameVersion(jobDoc)) {
+                log.info("Cancelling obsolete preview for {}", id);
                 job.cancel();
                 job = null;
             }

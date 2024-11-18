@@ -66,10 +66,10 @@ public class BulkJobDocument extends Document {
     public static final String TARGET_FORM_KEY = "bulk:targetForm";
     public static final String COMMENT_KEY = "comment";
     public static final String LABEL_KEY = "label";
+    public static final String ADD_KEY = "bulk:add";
     public static final String KEEP_KEY = "bulk:keep";
     public static final String DEPRECATE_KEY = "bulk:deprecate";
     public static final String SCRIPT_KEY = "bulk:script";
-    public static final String RDF_VALUE = "value";
     public static final String EXECUTION_KEY = "bulk:execution";
     public static final String EXECUTION_TYPE = "bulk:Execution";
     public static final String REPORT_KEY = "bulk:report";
@@ -165,8 +165,8 @@ public class BulkJobDocument extends Document {
                     get(spec, TARGET_FORM_KEY, Collections.emptyMap())
             );
             case SpecType.Merge -> new Specification.Merge(
-                    get(spec, List.of(DEPRECATE_KEY, "*", RDF_VALUE), Collections.emptyList()),
-                    get(spec, List.of(KEEP_KEY, RDF_VALUE), "")
+                    get(spec, DEPRECATE_KEY, Collections.emptyMap()),
+                    get(spec, KEEP_KEY, Collections.emptyMap())
             );
             case SpecType.Other -> new Specification.Other(
                     get(spec, SCRIPT_KEY, null),
@@ -179,6 +179,10 @@ public class BulkJobDocument extends Document {
 
     public String getChangeAgentId() {
         return getDescriptionLastModifier();
+    }
+
+    public BulkJobDocument clone() {
+        return new BulkJobDocument(super.clone());
     }
 
     @SuppressWarnings("unchecked")
