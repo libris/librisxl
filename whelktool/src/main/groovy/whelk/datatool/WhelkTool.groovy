@@ -86,7 +86,14 @@ class WhelkTool {
 
     boolean allowLoud
     boolean allowIdRemoval
-    boolean skipValidation = false
+
+    enum ValidationMode {
+        ON,
+        OFF,
+        LOG_ONLY
+    }
+
+    ValidationMode validationMode = ValidationMode.ON
 
     Throwable errorDetected
 
@@ -558,8 +565,8 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(item.generationProcess ?: script.scriptJobUri)
 
-        if (!skipValidation && !validateJsonLd(doc)) {
-            return
+        if (validationMode in [ValidationMode.ON, ValidationMode.LOG_ONLY]) {
+            validateJsonLd(doc)
         }
 
         if (recordChanges) {
@@ -578,8 +585,8 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(item.generationProcess ?: script.scriptJobUri)
 
-        if (!skipValidation && !validateJsonLd(doc)) {
-            return
+        if (validationMode in [ValidationMode.ON, ValidationMode.LOG_ONLY]) {
+            validateJsonLd(doc)
         }
 
         if (recordChanges) {
@@ -593,14 +600,17 @@ class WhelkTool {
         createdLog.println(doc.shortId)
     }
 
-    private boolean validateJsonLd(Document doc) {
+    private void validateJsonLd(Document doc) {
         List<JsonLdValidator.Error> errors = validator.validate(doc.data, doc.getLegacyCollection(whelk.jsonld))
         if (errors) {
-            invalidLog.println(doc.shortId)
-            errorLog.println("Invalid JSON-LD in document ${doc.completeId}. Errors: ${errors.collect{ it.toMap() }}")
-            return false
+            String msg = "Invalid JSON-LD in document ${doc.completeId}. Errors: ${errors.collect { it.toMap() }}"
+            if (validationMode == ValidationMode.ON) {
+                throw new Exception(msg)
+            } else if (validationMode == ValidationMode.LOG_ONLY) {
+                invalidLog.println(doc.shortId)
+                errorLog.println(msg)
+            }
         }
-        return true
     }
 
     private boolean confirmNextStep(String inJsonStr, Document doc) {
@@ -706,7 +716,7 @@ class WhelkTool {
         if (limit > -1) log "  limit: $limit"
         if (allowLoud) log "  allowLoud"
         if (allowIdRemoval) log "  allowIdRemoval"
-        if (skipValidation) log " skipValidation"
+        log "  validation: ${validationMode.name()}"
         log()
 
         bindings = createMainBindings()
@@ -767,7 +777,8 @@ class WhelkTool {
         cli.l(longOpt: 'limit', args: 1, argName: 'LIMIT', 'Amount of documents to process.')
         cli.a(longOpt: 'allow-loud', 'Allow scripts to do loud modifications.')
         cli.idchg(longOpt: 'allow-id-removal', '[UNSAFE] Allow script to remove document ids, e.g. sameAs.')
-        cli.sv(longOpt: 'skip-validation', '[UNSAFE] Skip JSON-LD validation before saving to database.')
+        cli.v(longOpt: 'validation', args: 1, argName: 'MODE', '[UNSAFE] Set JSON-LD validation mode. Defaults to ON.' +
+                ' Possible values: ON/OFF/LOG-ONLY')
         cli.n(longOpt: 'stats-num-ids', args: 1, 'Number of ids to print per entry in STATISTICS.txt.')
         cli.p(longOpt: 'parameters', args: 1, argName: 'PARAMETER-FILE', 'Path to JSON file with parameters to script')
 
@@ -804,13 +815,22 @@ class WhelkTool {
         tool.limit = options.l ? Integer.parseInt(options.l) : -1
         tool.allowLoud = options.a
         tool.allowIdRemoval = options.idchg
-        tool.skipValidation = options.sv
+        tool.validationMode = parseValidationMode(options.v) ?: tool.validationMode
         try {
             tool.run()
         } catch (Exception e) {
             System.err.println(e.toString())
             System.exit(1)
         }
+    }
+
+    private static ValidationMode parseValidationMode(String arg) {
+        for (vm in ValidationMode.getEnumConstants()) {
+            if (arg.toUpperCase() == vm.name()) {
+                return vm
+            }
+        }
+        return null
     }
 
     void recordChange(Document before, Document after, int number) {

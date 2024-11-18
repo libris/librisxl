@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
+import static whelk.datatool.WhelkTool.ValidationMode.LOG_ONLY;
 import static whelk.datatool.bulkchange.BulkJobDocument.JOB_TYPE;
 
 public class BulkPreviewJob extends BulkJob {
@@ -29,6 +30,7 @@ public class BulkPreviewJob extends BulkJob {
         tool.setDryRun(true);
         tool.setRecordChanges(true);
         tool.setRecordingLimit(RECORD_MAX_ITEMS);
+        tool.setValidationMode(LOG_ONLY);
     }
 
     public boolean isFinished() {
