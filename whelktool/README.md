@@ -45,7 +45,7 @@ usage: whelktool [options] <SCRIPT>
                                     (32).
  -v,--validation <MODE>             [UNSAFE] Set JSON-LD validation mode.
                                     Defaults to ON. Possible values:
-                                    ON/OFF/LOG-ONLY
+                                    ON/OFF/LOG_ONLY
 ```
 
 * Use `--dry-run` to test your script without writing any changes.

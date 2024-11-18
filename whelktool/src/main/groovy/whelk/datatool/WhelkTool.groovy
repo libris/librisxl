@@ -786,7 +786,7 @@ class WhelkTool {
         cli.a(longOpt: 'allow-loud', 'Allow scripts to do loud modifications.')
         cli.idchg(longOpt: 'allow-id-removal', '[UNSAFE] Allow script to remove document ids, e.g. sameAs.')
         cli.v(longOpt: 'validation', args: 1, argName: 'MODE', '[UNSAFE] Set JSON-LD validation mode. Defaults to ON.' +
-                ' Possible values: ON/OFF/LOG-ONLY')
+                ' Possible values: ON/OFF/LOG_ONLY')
         cli.n(longOpt: 'stats-num-ids', args: 1, 'Number of ids to print per entry in STATISTICS.txt.')
         cli.p(longOpt: 'parameters', args: 1, argName: 'PARAMETER-FILE', 'Path to JSON file with parameters to script')
 
