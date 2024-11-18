@@ -19,6 +19,12 @@ class LinkFinder {
 
     static String ENTITY_QUERY
 
+    /*
+    Non-primary ids appearing in these paths should be kept as is upon normalization, i.e. they should *not* be
+    replaced by their primary id.
+     */
+    private static Set<String> RETAIN_NON_PRIMARY_IDS = ['bulk:changeSpec.bulk:deprecate'] as Set
+
     LinkFinder(PostgreSQLComponent pgsql) {
         postgres = pgsql
         ENTITY_QUERY = """SELECT ids2.iri AS thingUri
@@ -115,8 +121,6 @@ class LinkFinder {
     }
 
     private void replaceSameAsLinksWithPrimaries(Map data, List path = []) {
-        def exceptedPaths = ['bulk:changeSpec.bulk:deprecate'] as Set
-
         // If this is a link (an object containing _only_ an id)
         String id = data.get("@id")
         if (id != null && data.keySet().size() == 1) {
@@ -127,7 +131,7 @@ class LinkFinder {
             )
                     .findAll { it instanceof String }
                     .join('.')
-            if (exceptedPaths.contains(normalizedPath)) {
+            if (RETAIN_NON_PRIMARY_IDS.contains(normalizedPath)) {
                 return
             }
             String primaryId = lookupPrimaryId(id, normalizedPath)
