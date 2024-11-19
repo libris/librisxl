@@ -1,7 +1,6 @@
 package whelk.datatool
 
 import com.google.common.util.concurrent.MoreExecutors
-import groovy.transform.Immutable
 import org.apache.logging.log4j.Logger
 import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl
 import whelk.Document
@@ -568,8 +567,8 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(item.generationProcess ?: script.scriptJobUri)
 
-        if (validationMode in [ValidationMode.ON, ValidationMode.LOG_ONLY]) {
-            validateJsonLd(doc)
+        if (validationMode in [ValidationMode.ON, ValidationMode.LOG_ONLY] && !validateJsonLd(doc)) {
+            return
         }
 
         if (recordChanges) {
@@ -588,8 +587,8 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(item.generationProcess ?: script.scriptJobUri)
 
-        if (validationMode in [ValidationMode.ON, ValidationMode.LOG_ONLY]) {
-            validateJsonLd(doc)
+        if (validationMode in [ValidationMode.ON, ValidationMode.LOG_ONLY] && !validateJsonLd(doc)) {
+            return
         }
 
         if (recordChanges) {
@@ -603,7 +602,7 @@ class WhelkTool {
         createdLog.println(doc.shortId)
     }
 
-    private void validateJsonLd(Document doc) {
+    private boolean validateJsonLd(Document doc) {
         List<JsonLdValidator.Error> errors = validator.validate(doc.data, doc.getLegacyCollection(whelk.jsonld))
         if (errors) {
             String msg = "Invalid JSON-LD in document ${doc.completeId}. Errors: ${errors.collect { it.toMap() }}"
@@ -612,8 +611,10 @@ class WhelkTool {
             } else if (validationMode == ValidationMode.LOG_ONLY) {
                 failedLog.println(doc.shortId)
                 errorLog.println(msg)
+                return true
             }
         }
+        return false
     }
 
     private boolean confirmNextStep(String inJsonStr, Document doc) {
