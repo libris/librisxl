@@ -16,7 +16,7 @@ import static whelk.JsonLd.THING_KEY
 import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
 import static whelk.component.SparqlQueryClient.GRAPH_VAR
-import static whelk.converter.JsonLDTurtleConverter.toTurtle
+import static whelk.converter.JsonLDTurtleConverter.toTurtleData
 import static whelk.util.DocumentUtil.getAtPath
 import static whelk.util.LegacyIntegrationTools.getMarcCollectionInHierarchy
 
@@ -182,7 +182,7 @@ class Transform {
 
         Map graph = [(GRAPH_KEY): [record, thing]]
 
-        String ttl = toTurtle(graph, context, true)
+        String ttl = toTurtleData(graph, context)
 
         return insertTypeMappings(insertIdMappings(insertVars(ttl)))
     }

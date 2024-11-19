@@ -18,18 +18,17 @@ class JsonLDTurtleConverter implements FormatConverter {
     }
 
     Map convert(Map source, String id) {
-        return [(JsonLd.NON_JSON_CONTENT_KEY) : _toTurtle(source, null, base, false)]
+        return [(JsonLd.NON_JSON_CONTENT_KEY) : toTurtle(source, null, base)]
     }
 
-    static String toTurtle(Map source, Map context, boolean skipPrelude) {
-        return _toTurtle(source, context, null, skipPrelude)
-    }
-
-    private static String _toTurtle(Map source, Map context, base, boolean skipPrelude) {
-        def bytes = JsonLdToTrigSerializer.toTurtle(context, source, base).toByteArray()
-        def s = new String(bytes, UTF_8)
+    static String toTurtleData(source, Map context) {
         // Add skip prelude flag in trld.trig.SerializerState.serialize?
-        return skipPrelude ? withoutPrefixes(s) : s
+        return withoutPrefixes(toTurtle(source, context, null))
+    }
+
+    private static String toTurtle(source, Map context, base) {
+        def bytes = JsonLdToTrigSerializer.toTurtle(context, source, base).toByteArray()
+        return new String(bytes, UTF_8)
     }
 
     private static String withoutPrefixes(String ttl) {
