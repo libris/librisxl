@@ -89,18 +89,6 @@ def download_entity(url):
     return json.load(urlopen(req))["@graph"][1]
 
 
-def replace_entity(node, replacement_entity):
-    #print(f" ** consider replacing {replacement_entity}\n\nin\n\n{node}\n\n")
-    print(f"Will now compare for replacement {replacement_entity['@id']} with {node['@id']}")
-    uri_to_replace = replacement_entity["@id"]
-    if isinstance(node, dict) and "@id" in node and node["@id"] == uri_to_replace:
-        print("            ROOT REPLACEMENT! ****\n\n")
-        return replacement_entity
-    else:
-        replace_subentity(node, replacement_entity)
-    return node
-
-
 def replace_subentity(node, replacement_entity):
     uri_to_replace = replacement_entity["@id"]
     if isinstance(node, dict):
@@ -115,9 +103,16 @@ def replace_subentity(node, replacement_entity):
             replace_subentity(node[i], replacement_entity)
 
 
-def handle_activity(connection, activity):
-    #print(f"Will now handle stuff: {json.dumps(activity)}")
+def replace_entity(node, replacement_entity):
+    uri_to_replace = replacement_entity["@id"]
+    if isinstance(node, dict) and "@id" in node and node["@id"] == uri_to_replace: # Root-replacement
+        return replacement_entity
+    else: # Embedded replacement
+        replace_subentity(node, replacement_entity)
+    return node
 
+
+def handle_activity(connection, activity):
     cursor = connection.cursor()
     if activity["type"] == "create":
         pass # TODO
@@ -132,11 +127,11 @@ def handle_activity(connection, activity):
         for row in rows:
             if not updated_data:
                 updated_data = download_entity(activity["object"]["id"])
-                #print( f"downloaded record: {json.dumps(download_entity(activity["object"]["id"]))}" )
             entity_id = row[0]
             entity_data = json.loads(row[1])
             entity_data = replace_entity(entity_data, updated_data)
-            print(f"REPLACED part of entity that now looks like this: {entity_data}")
+            cursor.execute("UPDATE entities SET entity = ? WHERE id = ?", (json.dumps(entity_data),entity_id))
+            connection.commit()
 
 
 
@@ -161,8 +156,9 @@ def update(connection):
                     next_url = None
                     break
                 handle_activity(connection, item)
-                cursor.execute("UPDATE state SET changes_consumed_until = ?", (item["published"],))
-                connection.commit()
+                # Disable for dev, temporary
+                #cursor.execute("UPDATE state SET changes_consumed_until = ?", (item["published"],))
+                #connection.commit()
 
 
 def main():
