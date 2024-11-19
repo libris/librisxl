@@ -7,14 +7,14 @@
  * bulk:addSubject - If specified, add this regular Subject to :subject instead
  */
 
+
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.util.DocumentUtil
 
-import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.asList
-import static whelk.converter.JsonLDTurtleConverter.toTurtle
+import static whelk.converter.JsonLDTurtleConverter.toTurtleData
 import static whelk.datatool.bulkchange.BulkJobDocument.ADD_SUBJECT_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.REMOVE_SUBDIVISION_KEY
 
@@ -68,15 +68,15 @@ def process = { doc ->
     }
 }
 
-Set<String> ids = Collections.synchronizedSet([] as Set<String>)
+Set<String> ids = [] as Set
 removeSubdivision.each { subdivision ->
     if (subdivision[ID_KEY]) {
         selectByIds([subdivision[ID_KEY]]) { obsoleteSubdivision ->
-            ids.addAll(obsoleteSubdivision.getDependers())
+            ids = ids.intersect(obsoleteSubdivision.getDependers()) as Set<String>
         }
     } else {
         Whelk whelk = getWhelk()
-        ids.addAll(whelk.sparqlQueryClient.queryIdsByPattern(asTurtle((Map) subdivision, whelk.jsonld.context)))
+        ids = ids.intersect(whelk.sparqlQueryClient.queryIdsByPattern(toTurtleData((Map) subdivision, whelk.jsonld.context)))
     }
 }
 
@@ -100,9 +100,4 @@ static DocumentUtil.Operation mapSubject(Map complexSubject, termComponentList, 
     Map result = new HashMap(complexSubject)
     result.termComponentList = t2
     return new DocumentUtil.Replace(result)
-}
-
-static String asTurtle(Map thing, Map context) {
-    Map graph = [(GRAPH_KEY): [[:], thing]]
-    return toTurtle(graph, context, true)
 }
