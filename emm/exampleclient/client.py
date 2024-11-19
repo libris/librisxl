@@ -1,4 +1,4 @@
-# Standard library only. 3rd party dependencies not permitted.
+# Standard library only, 3rd party dependencies are not permitted.
 import sqlite3
 import urllib.request
 from urllib.request import Request, urlopen
@@ -9,6 +9,7 @@ import os
 cache_location = "./libris-cache.sqlite3"
 libris_emm_base_url = "http://localhost:8182/"
 local_library_code = "S"
+properties_of_interest = ["itemOf", "instanceOf", "agent", "subject"]
 
 def collect_entity(data, uri):
     return {}
@@ -25,6 +26,62 @@ def collect_uris_with_data(entity):
         for item in entity:
             uris = uris + collect_uris_with_data(item)
     return uris
+
+
+def collect_entity_with_uri(entity, uri):
+    if isinstance(entity, dict):
+        if "@id" in entity and len(entity) > 1 and entity["@id"] == uri:
+            return entity
+        for key in entity:
+            result = collect_entity_with_uri(entity[key], uri)
+            if result:
+                return result
+    elif isinstance(entity, list):
+        for item in entity:
+            result = collect_entity_with_uri(item, uri)
+            if result:
+                return result
+    return None
+
+
+def download_entity(url):
+    req = Request(url)
+    req.add_header('accept', 'application/json+ld')
+    return json.load(urlopen(req))["@graph"][1]
+
+
+def embed_links(entity, connection):
+    if isinstance(entity, dict) and len(entity) == 1 and "@id" in entity:
+        # Find data for this ID, somewhere and replace the stuff in our entity
+        # First see if we have more of this data somewhere already
+        cursor = connection.cursor()
+        rows = cursor.execute("SELECT entities.entity FROM uris JOIN entities on uris.entity_id = entities.id WHERE uris.uri = ?", (entity["@id"],))
+        row = rows.fetchone()
+        if row:
+            whole_other_record = json.loads(row[0])
+            sought_entity = collect_entity_with_uri(whole_other_record, entity["@id"])
+            entity.clear()
+            entity.update(sought_entity)
+        # Otherwise do a GET on the ID try to get some data from there
+        else:
+            sought_entity = download_entity(entity["@id"])
+            if sought_entity:
+                entity.clear()
+                entity.update(sought_entity)
+    elif isinstance(entity, list):
+        for item in entity:
+            embed_links(item, connection)
+
+
+def embellish(entity, connection):
+    if isinstance(entity, dict):
+        for key in entity:
+            if key in properties_of_interest:
+                embed_links(entity[key], connection)
+            embellish(entity[key], connection)
+    elif isinstance(entity, list):
+        for item in entity:
+            embellish(item, connection)
 
 
 def ingest_entity(entity, connection):
@@ -130,6 +187,7 @@ def handle_activity(connection, activity):
             entity_id = row[0]
             entity_data = json.loads(row[1])
             entity_data = replace_entity(entity_data, updated_data)
+            embellish(entity_data, connection)
             cursor.execute("UPDATE entities SET entity = ? WHERE id = ?", (json.dumps(entity_data),entity_id))
             connection.commit()
 
