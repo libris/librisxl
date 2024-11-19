@@ -1,20 +1,85 @@
-# Standard library only, 3rd party dependencies are not permitted.
+#
+# This example Libris EMM client is intended to illustrate how one can use
+# the EMM protocol to obtain a cache of some subset of libris data and keep
+# that cache up to date over time. By default this example client caches
+# data for one selected libris library (see the configuration section below).
+# But the selected subset might as well be "all agents", "all everything"
+# or something else.
+#
+# Beware: This client has not been written with defensive coding in mind,
+# and is not intended for production use.
+#
+# Key to using the EMM protocol (at least as seen here), is to define what
+# you consider to be the root set of entities to cache. For us this is
+# going to mean:
+# Entities (I) of type 'Item' with a library code (I->helBy->@id) identifying
+# our selected library.
+#
+# Knowing this, we will consume a dump of this set of entities (the initial
+# load).
+# We are then going to consume/monitor the stream of all changes in Libris,
+# and for every activity in that stream, we will consider the following:
+# 1. Is this a creation or a deletion of an entity that fits our root entity
+#    definition?
+#    If so, we must add or remove said entity from our collection.
+# 2. Is this an update of an entity that we have (be it as a root, or
+#    embedded within another entity, or somewhere else)?
+#    If so, we must update that entity wherever we keep it.
+#
+# This is all we need to do to keap our cache up date in perpetuity.
+# 
+# For this example client we are going to keep knowledge graphs in an SQLITE
+# table called 'entities'. These knowledge graphs will always consist of an
+# entity of type 'Item' with various other entities that are being linked to
+# embedded inside that root entity.
+# 
+# We will also have a table called 'uris' which will provide a mapping from
+# entity IDs (URIs) to all of our knowledge graphs that reference that URI
+# (which means they also keep an embedded copy of the referenced entity).
+#
+# Finally we will have a single-value table called 'state', which will hold
+# the latest update time from the server that we have already consumed.
+#
+
+
+#
+# Configuration section
+#
+
+# This parameter tells the client where on disc, to store its cache.
+cache_location = "./libris-cache.sqlite3"
+
+# This parameter tells the client which EMM server to use.
+libris_emm_base_url = "http://localhost:8182/"
+
+# This parameter tells the client which library we are downloading data for.
+local_library_code = "S"
+
+# This parameter tells the client which properties we would like to follow
+# links for and download additional data to keep with our entities.
+properties_of_interest = ["itemOf", "instanceOf", "agent", "subject"]
+
+
+#
+# Code section
+#
+# This client was written for python 3.13.0, but it is believed that many
+# python 3 implementations can run this code.
+# 
+# It uses only the Python standard library. There are no 3rd party 
+# dependencies.
+#
 import sqlite3
 import urllib.request
 from urllib.request import Request, urlopen
 import json
 import os
 
-# Configuration section:
-cache_location = "./libris-cache.sqlite3"
-libris_emm_base_url = "http://localhost:8182/"
-local_library_code = "S"
-properties_of_interest = ["itemOf", "instanceOf", "agent", "subject"]
 
-def collect_entity(data, uri):
-    return {}
-
-
+#
+# For a given entity, return all URIs within that entity (embedded or not)
+# for which we have any data.
+#
 def collect_uris_with_data(entity):
     uris = []
     if isinstance(entity, dict):
@@ -28,6 +93,10 @@ def collect_uris_with_data(entity):
     return uris
 
 
+#
+# For a given entity and uri, return any embedded entities identified by the
+# uri.
+#
 def collect_entity_with_uri(entity, uri):
     if isinstance(entity, dict):
         if "@id" in entity and len(entity) > 1 and entity["@id"] == uri:
@@ -44,12 +113,20 @@ def collect_entity_with_uri(entity, uri):
     return None
 
 
+#
+# Attempt to download and return data for a given URI.
+#
 def download_entity(url):
     req = Request(url)
     req.add_header('accept', 'application/json+ld')
     return json.load(urlopen(req))["@graph"][1]
 
 
+#
+# For a given entity, iff that entity is a link (a lone @id-property and
+# nothing else) attempt to find data on that URI, and embed that data into
+# this entity.
+#
 def embed_links(entity, connection):
     if isinstance(entity, dict) and len(entity) == 1 and "@id" in entity:
         # Find data for this ID, somewhere and replace the stuff in our entity
@@ -73,6 +150,11 @@ def embed_links(entity, connection):
             embed_links(item, connection)
 
 
+#
+# For a given entity, check if we can get more data on the things it links
+# to (that we are interested in - see the configuration section), and embed
+# copies of that data.
+#
 def embellish(entity, connection):
     if isinstance(entity, dict):
         for key in entity:
@@ -84,6 +166,10 @@ def embellish(entity, connection):
             embellish(item, connection)
 
 
+#
+# Given an entity (that's been changed), update the mappings of URIs to
+# this entity.
+#
 def update_uris_table(entity, entity_id, connection):
     cursor = connection.cursor()
     uris = collect_uris_with_data(entity)
@@ -101,6 +187,9 @@ def update_uris_table(entity, entity_id, connection):
     connection.commit()
 
 
+#
+# Ingest a root entity from a dump.
+#
 def ingest_entity(entity, connection):
     cursor = connection.cursor()
     entity_id = cursor.execute(
@@ -116,6 +205,9 @@ def ingest_entity(entity, connection):
     update_uris_table(entity, entity_id, connection)
 
 
+#
+# Load an itial dump of the configured data set.
+#
 def load_dump(connection):
     next_url = f"{libris_emm_base_url}?dump=itemAndInstance:{local_library_code}&offset=0"
     dumpCreationTime = None
@@ -146,12 +238,10 @@ def load_dump(connection):
     connection.commit()
 
 
-def download_entity(url):
-    req = Request(url)
-    req.add_header('accept', 'application/json+ld')
-    return json.load(urlopen(req))["@graph"][1]
-
-
+#
+# Given a root entity 'r', and a replacement/update of some embedded entity 'u',
+# update the data of 'u' wherever it is copied/embedded into 'r'.
+#
 def replace_subentity(node, replacement_entity):
     uri_to_replace = replacement_entity["@id"]
     if isinstance(node, dict):
@@ -166,6 +256,10 @@ def replace_subentity(node, replacement_entity):
             replace_subentity(node[i], replacement_entity)
 
 
+#
+# Given a root entity 'r', and a replacement/update of some embedded entity 'u',
+# update the data of 'u' wherever it is copied/embedded into 'r'.
+#
 def replace_entity(node, replacement_entity):
     uri_to_replace = replacement_entity["@id"]
     if isinstance(node, dict) and "@id" in node and node["@id"] == uri_to_replace: # Root-replacement
@@ -175,6 +269,10 @@ def replace_entity(node, replacement_entity):
     return node
 
 
+#
+# This is the heart of the update mechanism. Consume an update activity, and take
+# whatever action is necesseray to keep our cache up to date.
+#
 def handle_activity(connection, activity):
     cursor = connection.cursor()
     if activity["type"] == "create":
@@ -200,6 +298,9 @@ def handle_activity(connection, activity):
 
 
 
+#
+# Scan for new updates to consume.
+#
 def update(connection):
     cursor = connection.cursor()
     with urllib.request.urlopen(libris_emm_base_url) as response:
@@ -259,6 +360,8 @@ CREATE TABLE state (
     changes_consumed_until TEXT
 );
 """)
+        cursor.execute("CREATE INDEX idx_uris_uri ON uris(uri);")
+        cursor.execute("CREATE INDEX idx_uris_entity_id ON uris(entity_id);")
         connection.commit()
         load_dump(connection)
 
