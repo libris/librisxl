@@ -84,19 +84,10 @@ def embellish(entity, connection):
             embellish(item, connection)
 
 
-def ingest_entity(entity, connection):
-    uris = collect_uris_with_data(entity)
+def update_uris_table(entity, entity_id, connection):
     cursor = connection.cursor()
-    entity_id = cursor.execute(
-        """
-    INSERT INTO
-        entities(entity)
-    VALUES
-        (?)
-    """,
-        (json.dumps(entity),)
-    ).lastrowid
-
+    uris = collect_uris_with_data(entity)
+    cursor.execute("DELETE FROM uris WHERE id = ?", (entity_id,))
     for uri in uris:
         cursor.execute(
             """
@@ -108,6 +99,21 @@ def ingest_entity(entity, connection):
             (entity_id, uri,)
         )
     connection.commit()
+
+
+def ingest_entity(entity, connection):
+    cursor = connection.cursor()
+    entity_id = cursor.execute(
+        """
+    INSERT INTO
+        entities(entity)
+    VALUES
+        (?)
+    """,
+        (json.dumps(entity),)
+    ).lastrowid
+    connection.commit()
+    update_uris_table(entity, entity_id, connection)
 
 
 def load_dump(connection):
@@ -190,6 +196,7 @@ def handle_activity(connection, activity):
             embellish(entity_data, connection)
             cursor.execute("UPDATE entities SET entity = ? WHERE id = ?", (json.dumps(entity_data),entity_id))
             connection.commit()
+            update_uris_table(entity_data, entity_id, connection)
 
 
 
