@@ -196,6 +196,18 @@ class WhelkTool {
                 batchSize, [1: idItems, 2: collection])
     }
 
+    void selectByForm(Map form, Closure process,
+                      int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false) {
+        if (!silent) {
+            log "Select by form"
+        }
+
+        var sparqlPattern = new Transform.MatchForm(form, whelk).getSparqlPattern(whelk.jsonld.context)
+        var ids = whelk.sparqlQueryClient.queryIdsByPattern(sparqlPattern)
+
+        selectByIds(ids, process, batchSize, silent)
+    }
+
     DocumentItem create(Map data) {
         Document doc = new Document(data)
         doc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
@@ -677,6 +689,7 @@ class WhelkTool {
         bindings.put("selectByIds", this.&selectByIds)
         bindings.put("selectByIdsAndCollection", this.&selectByIdsAndCollection)
         bindings.put("selectBySqlWhere", this.&selectBySqlWhere)
+        bindings.put("selectByForm", this.&selectByForm)
         bindings.put("selectFromIterable", this.&selectFromIterable)
         bindings.put("create", this.&create)
         bindings.put("queryIds", this.&queryIds)

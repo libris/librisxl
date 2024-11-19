@@ -49,10 +49,6 @@ public sealed interface Specification permits Specification.Create, Specificatio
             return s;
         }
 
-        public List<String> findIds(Whelk whelk) {
-            return queryIds(getTransform(whelk), whelk);
-        }
-
         @SuppressWarnings("unchecked")
         public boolean modify(Document doc, Whelk whelk) {
             Map<String, Object> thing = doc.getThing();
@@ -99,11 +95,7 @@ public sealed interface Specification permits Specification.Create, Specificatio
             return getMatchForm(whelk).matches(thing);
         }
 
-        public List<String> findIds(Whelk whelk) {
-            return queryIds(getMatchForm(whelk), whelk);
-        }
-
-        private Transform.MatchForm getMatchForm(Whelk whelk) {
+        public Transform.MatchForm getMatchForm(Whelk whelk) {
             if (matchFormObj == null) {
                 matchFormObj = new Transform.MatchForm(matchForm, whelk);
             }
@@ -162,10 +154,5 @@ public sealed interface Specification permits Specification.Create, Specificatio
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private static List<String> queryIds(Transform transform, Whelk whelk) {
-        return whelk.getSparqlQueryClient()
-                .queryIdsByPattern(transform.getSparqlPattern(whelk.getJsonld().context));
     }
 }
