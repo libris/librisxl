@@ -84,16 +84,20 @@ selectByIds(ids) {
     process(it)
 }
 
-static DocumentUtil.Operation mapSubject(Map subject, termComponentList, removeSubdivision) {
+static DocumentUtil.Operation mapSubject(Map complexSubject, termComponentList, removeSubdivision) {
     var t2 = termComponentList.findAll { !removeSubdivision.contains(it) }
     if (t2.size() == 0) {
         return new DocumentUtil.Remove()
     }
     if (t2.size() == 1) {
-        return new DocumentUtil.Replace(t2.first())
+        def remaining = t2.first()
+        if (complexSubject['inScheme']) {
+            remaining['inScheme'] = complexSubject['inScheme']
+        }
+        return new DocumentUtil.Replace(remaining)
     }
 
-    Map result = new HashMap(subject)
+    Map result = new HashMap(complexSubject)
     result.termComponentList = t2
     return new DocumentUtil.Replace(result)
 }
