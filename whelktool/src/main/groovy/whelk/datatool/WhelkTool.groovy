@@ -196,13 +196,13 @@ class WhelkTool {
                 batchSize, [1: idItems, 2: collection])
     }
 
-    void selectByForm(Map form, Closure process,
+    void selectByForm(Transform transform, Closure process,
                       int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false) {
         if (!silent) {
             log "Select by form"
         }
 
-        var sparqlPattern = new Transform.MatchForm(form, whelk).getSparqlPattern(whelk.jsonld.context)
+        var sparqlPattern = transform.getSparqlPattern(whelk.jsonld.context)
         var ids = whelk.sparqlQueryClient.queryIdsByPattern(sparqlPattern)
 
         selectByIds(ids, process, batchSize, silent)

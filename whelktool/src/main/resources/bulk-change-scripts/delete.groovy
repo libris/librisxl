@@ -8,7 +8,7 @@ Map matchForm = parameters.get(MATCH_FORM_KEY)
 
 Transform.MatchForm mf = new Transform.MatchForm(matchForm, getWhelk())
 
-selectByForm(matchForm) {
+selectByForm(mf) {
     if(mf.matches(getFramedThing(it.doc))) {
         it.scheduleDelete(loud: isLoudAllowed)
     }

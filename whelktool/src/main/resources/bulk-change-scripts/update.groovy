@@ -13,7 +13,7 @@ Map targetForm = parameters.get(TARGET_FORM_KEY)
 
 Transform transform = new Transform(matchForm, targetForm, getWhelk())
 
-selectByForm(matchForm) {
+selectByForm(transform) {
     if(modify(transform, it.doc, it.whelk)) {
         it.scheduleSave(loud: isLoudAllowed)
     }
