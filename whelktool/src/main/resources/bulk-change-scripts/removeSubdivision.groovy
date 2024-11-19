@@ -18,7 +18,12 @@ import static whelk.converter.JsonLDTurtleConverter.toTurtle
 import static whelk.datatool.bulkchange.BulkJobDocument.ADD_SUBJECT_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.REMOVE_SUBDIVISION_KEY
 
-List<Map> removeSubdivision = asList(parameters.get(REMOVE_SUBDIVISION_KEY))
+String inScheme
+List<Map> removeSubdivision = asList(parameters.get(REMOVE_SUBDIVISION_KEY)).collect {
+    Map copy = new HashMap((Map) it)
+    inScheme = copy.remove('inScheme')
+    return copy
+}
 Map addSubject = parameters.get(ADD_SUBJECT_KEY)
 
 def process = { doc ->
@@ -32,7 +37,7 @@ def process = { doc ->
     def modified = DocumentUtil.traverse(thing) { value, path ->
         if (value instanceof Map && value[JsonLd.TYPE_KEY] == 'ComplexSubject') {
             var t = asList(value.get('termComponentList'))
-            if (t.containsAll(removeSubdivision)) {
+            if (inScheme == value['inScheme'] && t.containsAll(removeSubdivision)) {
                 var parentPath = path.size() > 1 ? path.dropRight(1) : null
                 if (parentPath) {
                     var parent = DocumentUtil.getAtPath(thing, parentPath)
