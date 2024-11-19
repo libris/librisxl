@@ -1,7 +1,6 @@
 package whelk.datatool
 
 import com.google.common.util.concurrent.MoreExecutors
-import groovy.transform.Immutable
 import org.apache.logging.log4j.Logger
 import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl
 import whelk.Document
@@ -9,7 +8,6 @@ import whelk.IdGenerator
 import whelk.JsonLd
 import whelk.JsonLdValidator
 import whelk.Whelk
-import whelk.datatool.form.ModifiedThing
 import whelk.datatool.form.Transform
 import whelk.datatool.util.IdLoader
 import whelk.exception.StaleUpdateException
@@ -21,12 +19,10 @@ import whelk.util.DocumentUtil
 import whelk.util.LegacyIntegrationTools
 import whelk.util.Statistics
 
-import javax.print.Doc
 import javax.script.Bindings
 import javax.script.CompiledScript
 import javax.script.ScriptEngineManager
 import javax.script.SimpleBindings
-import java.nio.charset.StandardCharsets
 import java.time.ZonedDateTime
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -41,7 +37,6 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 import static java.util.concurrent.TimeUnit.SECONDS
-import static whelk.JsonLd.RECORD_KEY
 import static whelk.util.Jackson.mapper
 
 class WhelkTool {
@@ -50,6 +45,7 @@ class WhelkTool {
     static final int DEFAULT_STATS_NUM_IDS = 3
     public static final String MAIN_LOG_NAME = "MAIN.txt"
     public static final String ERROR_LOG_NAME = "ERRORS.txt"
+    public static final String FAILED_LOG_NAME = "FAILED.txt"
     public static final String MODIFIED_LOG_NAME = "MODIFIED.txt"
     public static final String CREATED_LOG_NAME = "CREATED.txt"
     public static final String DELETED_LOG_NAME = "DELETED.txt"
@@ -68,6 +64,8 @@ class WhelkTool {
     File reportsDir
     PrintWriter mainLog
     PrintWriter errorLog
+
+    PrintWriter failedLog
     PrintWriter modifiedLog
     PrintWriter createdLog
     PrintWriter deletedLog
@@ -90,7 +88,14 @@ class WhelkTool {
 
     boolean allowLoud
     boolean allowIdRemoval
-    boolean skipValidation = false
+
+    enum ValidationMode {
+        ON,
+        OFF,
+        LOG_ONLY
+    }
+
+    ValidationMode validationMode = ValidationMode.ON
 
     Throwable errorDetected
 
@@ -123,7 +128,7 @@ class WhelkTool {
         reportsDir.mkdirs()
         mainLog = new PrintWriter(new File(reportsDir, MAIN_LOG_NAME))
         errorLog = new PrintWriter(new File(reportsDir, ERROR_LOG_NAME))
-
+        failedLog = new PrintWriter(new File(reportsDir, FAILED_LOG_NAME))
         def modifiedLogFile = new File(reportsDir, MODIFIED_LOG_NAME)
         modifiedLog = new PrintWriter(modifiedLogFile)
         def createdLogFile = new File(reportsDir, CREATED_LOG_NAME)
@@ -550,8 +555,8 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(item.generationProcess ?: script.scriptJobUri)
 
-        if (!skipValidation) {
-            validateJsonLd(doc)
+        if (validationMode in [ValidationMode.ON, ValidationMode.LOG_ONLY] && !validateJsonLd(doc)) {
+            return
         }
 
         if (recordChanges) {
@@ -570,8 +575,8 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(item.generationProcess ?: script.scriptJobUri)
 
-        if (!skipValidation) {
-            validateJsonLd(doc)
+        if (validationMode in [ValidationMode.ON, ValidationMode.LOG_ONLY] && !validateJsonLd(doc)) {
+            return
         }
 
         if (recordChanges) {
@@ -585,11 +590,19 @@ class WhelkTool {
         createdLog.println(doc.shortId)
     }
 
-    private void validateJsonLd(Document doc) {
+    private boolean validateJsonLd(Document doc) {
         List<JsonLdValidator.Error> errors = validator.validate(doc.data, doc.getLegacyCollection(whelk.jsonld))
         if (errors) {
-            throw new Exception("Invalid JSON-LD. Errors: ${errors.collect{ it.toMap() }}")
+            String msg = "Invalid JSON-LD in document ${doc.completeId}. Errors: ${errors.collect { it.toMap() }}"
+            if (validationMode == ValidationMode.ON) {
+                throw new Exception(msg)
+            } else if (validationMode == ValidationMode.LOG_ONLY) {
+                failedLog.println(doc.shortId)
+                errorLog.println(msg)
+                return true
+            }
         }
+        return false
     }
 
     private boolean confirmNextStep(String inJsonStr, Document doc) {
@@ -694,7 +707,7 @@ class WhelkTool {
         if (limit > -1) log "  limit: $limit"
         if (allowLoud) log "  allowLoud"
         if (allowIdRemoval) log "  allowIdRemoval"
-        if (skipValidation) log " skipValidation"
+        log "  validation: ${validationMode.name()}"
         log()
 
         bindings = createMainBindings()
@@ -760,7 +773,8 @@ class WhelkTool {
         cli.l(longOpt: 'limit', args: 1, argName: 'LIMIT', 'Amount of documents to process.')
         cli.a(longOpt: 'allow-loud', 'Allow scripts to do loud modifications.')
         cli.idchg(longOpt: 'allow-id-removal', '[UNSAFE] Allow script to remove document ids, e.g. sameAs.')
-        cli.sv(longOpt: 'skip-validation', '[UNSAFE] Skip JSON-LD validation before saving to database.')
+        cli.v(longOpt: 'validation', args: 1, argName: 'MODE', '[UNSAFE] Set JSON-LD validation mode. Defaults to ON.' +
+                ' Possible values: ON/OFF/LOG_ONLY')
         cli.n(longOpt: 'stats-num-ids', args: 1, 'Number of ids to print per entry in STATISTICS.txt.')
         cli.p(longOpt: 'parameters', args: 1, argName: 'PARAMETER-FILE', 'Path to JSON file with parameters to script')
 
@@ -778,9 +792,8 @@ class WhelkTool {
         try {
             script = new FileScript(scriptPath)
 
-            String paramPath = options.p
-            if (paramPath) {
-                script.setParameters(mapper.readValue(new File(paramPath).getText("UTF-8"), Map))
+            if (options.p) {
+                script.setParameters(mapper.readValue(new File(options.p).getText("UTF-8"), Map))
             }
         }
         catch (IOException e) {
@@ -793,17 +806,34 @@ class WhelkTool {
         tool.dryRun = options.d
         tool.stepWise = options.s
         tool.noThreads = options.T
-        tool.numThreads = options.t ? Integer.parseInt(options.t) : -1
-        tool.limit = options.l ? Integer.parseInt(options.l) : -1
         tool.allowLoud = options.a
         tool.allowIdRemoval = options.idchg
-        tool.skipValidation = options.sv
+        try {
+            if (options.t) {
+                tool.numThreads = Integer.parseInt(options.t)
+            }
+            if (options.l) {
+                tool.limit = Integer.parseInt(options.l)
+            }
+            if (options.v) {
+                tool.validationMode = parseValidationMode(options.v)
+            }
+        } catch (IllegalArgumentException ignored) {
+            System.err.println("Invalid argument(s)")
+            cli.usage()
+            System.exit(1)
+        }
+
         try {
             tool.run()
         } catch (Exception e) {
             System.err.println(e.toString())
             System.exit(1)
         }
+    }
+
+    private static ValidationMode parseValidationMode(String arg) throws IllegalArgumentException {
+        return ValidationMode.valueOf(arg.toUpperCase())
     }
 
     void recordChange(Document before, Document after, int number) {

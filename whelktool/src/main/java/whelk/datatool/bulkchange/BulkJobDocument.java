@@ -79,6 +79,7 @@ public class BulkJobDocument extends Document {
     public static final String NUM_CREATED_KEY = "bulk:numCreated";
     public static final String NUM_UPDATED_KEY = "bulk:numUpdated";
     public static final String NUM_DELETED_KEY = "bulk:numDeleted";
+    public static final String NUM_FAILED_KEY = "bulk:numFailed";
 
     private static final List<Object> STATUS_PATH = List.of(JsonLd.GRAPH_KEY, 1, STATUS_KEY);
     private static final List<Object> UPDATE_TIMESTAMP_PATH = List.of(JsonLd.GRAPH_KEY, 1, SHOULD_UPDATE_TIMESTAMP_KEY);
@@ -125,7 +126,7 @@ public class BulkJobDocument extends Document {
 
     @SuppressWarnings("unchecked")
     public void addExecution(ZonedDateTime endTime, Status status, List<String> reportPaths,
-                             long numCreated, long numUpdated, long numDeleted) {
+                             long numCreated, long numUpdated, long numDeleted, long numFailed) {
         var e = new HashMap<>(Map.of(
                 JsonLd.TYPE_KEY, EXECUTION_TYPE,
                 REPORT_KEY, reportPaths.stream().map(s -> Map.of(ID_KEY, s)).toList(),
@@ -141,6 +142,9 @@ public class BulkJobDocument extends Document {
         }
         if (numDeleted > 0) {
             e.put(NUM_DELETED_KEY, numDeleted);
+        }
+        if (numFailed > 0) {
+            e.put(NUM_FAILED_KEY, numFailed);
         }
 
         var executions = asList(get(data, EXECUTION_PATH));

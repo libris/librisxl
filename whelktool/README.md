@@ -22,20 +22,30 @@ Options
 ```
 $ java -jar build/libs/whelktool.jar --help
 usage: whelktool [options] <SCRIPT>
- -a,--allow-loud            Allow scripts to do loud modifications.
- -d,--dry-run               Do not save any modifications.
- -h,--help                  Print this help message and exit.
- -I,--skip-index            Do not index any changes, only write to
-                            storage.
- -l,--limit <LIMIT>         Amount of documents to process.
- -n,--stats-num-ids <arg>   Number of ids to print per entry in
-                            STATISTICS.txt.
- -r,--report <REPORT-DIR>   Directory where reports are written (defaults
-                            to "reports").
- -s,--step                  Change one document at a time, prompting to
-                            continue.
- -T,--no-threads            Do not use threads to parallellize batch
-                            processing.
+ -a,--allow-loud                    Allow scripts to do loud
+                                    modifications.
+ -d,--dry-run                       Do not save any modifications.
+ -h,--help                          Print this help message and exit.
+ -I,--skip-index                    Do not index any changes, only write
+                                    to storage.
+ -idchg,--allow-id-removal          [UNSAFE] Allow script to remove
+                                    document ids, e.g. sameAs.
+ -l,--limit <LIMIT>                 Amount of documents to process.
+ -n,--stats-num-ids <arg>           Number of ids to print per entry in
+                                    STATISTICS.txt.
+ -p,--parameters <PARAMETER-FILE>   Path to JSON file with parameters to
+                                    script
+ -r,--report <REPORT-DIR>           Directory where reports are written
+                                    (defaults to "reports").
+ -s,--step                          Change one document at a time,
+                                    prompting to continue.
+ -T,--no-threads                    Do not use threads to parallellize
+                                    batch processing.
+ -t,--num-threads <N>               Override default number of threads
+                                    (32).
+ -v,--validation <MODE>             [UNSAFE] Set JSON-LD validation mode.
+                                    Defaults to ON. Possible values:
+                                    ON/OFF/LOG_ONLY
 ```
 
 * Use `--dry-run` to test your script without writing any changes.
