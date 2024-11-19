@@ -37,7 +37,7 @@ def process = { doc ->
     def modified = DocumentUtil.traverse(thing) { value, path ->
         if (value instanceof Map && value[JsonLd.TYPE_KEY] == 'ComplexSubject') {
             var t = asList(value.get('termComponentList'))
-            if (inScheme == value['inScheme'] && t.containsAll(removeSubdivision)) {
+            if ((!inScheme || inScheme == value['inScheme']) && t.containsAll(removeSubdivision)) {
                 var parentPath = path.size() > 1 ? path.dropRight(1) : null
                 if (parentPath) {
                     var parent = DocumentUtil.getAtPath(thing, parentPath)
