@@ -555,13 +555,14 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(item.generationProcess ?: script.scriptJobUri)
 
-        if (validationMode in [ValidationMode.ON, ValidationMode.LOG_ONLY] && !validateJsonLd(doc)) {
-            return
-        }
-
         if (recordChanges) {
             recordChange(whelk.getDocument(doc.shortId), doc.clone(), item.number)
         }
+
+        if (!validateJsonLd(doc)) {
+            return
+        }
+
         if (!dryRun) {
             whelk.storeAtomicUpdate(doc, !item.loud, true, changedIn, item.changedBy ?: defaultChangedBy, item.preUpdateChecksum)
         }
@@ -575,13 +576,14 @@ class WhelkTool {
         doc.setGenerationDate(new Date())
         doc.setGenerationProcess(item.generationProcess ?: script.scriptJobUri)
 
-        if (validationMode in [ValidationMode.ON, ValidationMode.LOG_ONLY] && !validateJsonLd(doc)) {
-            return
-        }
-
         if (recordChanges) {
             recordChange(null, doc.clone(), item.number)
         }
+
+        if (!validateJsonLd(doc)) {
+            return
+        }
+
         if (!dryRun) {
             var collection = LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld())
             if (!whelk.createDocument(doc, changedIn, item.changedBy ?: defaultChangedBy, collection, false))
@@ -591,6 +593,9 @@ class WhelkTool {
     }
 
     private boolean validateJsonLd(Document doc) {
+        if (validationMode == ValidationMode.OFF) {
+            return true
+        }
         List<JsonLdValidator.Error> errors = validator.validate(doc.data, doc.getLegacyCollection(whelk.jsonld))
         if (errors) {
             String msg = "Invalid JSON-LD in document ${doc.completeId}. Errors: ${errors.collect { it.toMap() }}"
@@ -599,10 +604,10 @@ class WhelkTool {
             } else if (validationMode == ValidationMode.LOG_ONLY) {
                 failedLog.println(doc.shortId)
                 errorLog.println(msg)
-                return true
+                return false
             }
         }
-        return false
+        return true
     }
 
     private boolean confirmNextStep(String inJsonStr, Document doc) {
