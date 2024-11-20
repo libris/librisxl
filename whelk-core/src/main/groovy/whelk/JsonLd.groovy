@@ -2,6 +2,7 @@ package whelk
 
 import groovy.transform.CompileStatic
 import groovy.transform.Immutable
+import groovy.transform.Memoized
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.apache.logging.log4j.LogManager
@@ -701,6 +702,7 @@ class JsonLd {
         return asList(entity['@type']).any { isSubClassOf((String) it, baseType) }
     }
 
+    @Memoized
     Set<String> getSubClasses(String type) {
         return getSubTerms(type, superClassOf, subClassesByType)
     }

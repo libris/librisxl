@@ -308,7 +308,6 @@ class MatchForm {
         return mappings
     }
 
-    @Memoized
     private static Set<String> getSubtypes(String type, JsonLd jsonLd) {
         return jsonLd.getSubClasses(type)
     }
