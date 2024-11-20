@@ -15,8 +15,8 @@ class MatchFormSpec extends Specification {
     def "match data against form"() {
         given:
         def matchForm = new MatchForm()
-        matchForm.nodeIdMappings = ["#1": ["https://libris.kb.se/x#it", "https://libris.kb.se/y#it"] as Set]
-        matchForm.baseTypeMappings = ["T": ["Tx", "Ty"] as Set]
+        matchForm.formBNodeIdToResourceIds = ["#1": ["https://libris.kb.se/x#it", "https://libris.kb.se/y#it"] as Set]
+        matchForm.baseTypeToSubtypes = ["T": ["Tx", "Ty"] as Set]
 
         expect:
         matchForm.matches(form, node) == result
@@ -170,7 +170,7 @@ class MatchFormSpec extends Specification {
                 "?1 a ?T1 ."
 
         def transform = new MatchForm(form)
-        transform.baseTypeMappings['T1'] = ['T1x', 'T1y', 'T1z'] as Set
+        transform.baseTypeToSubtypes['T1'] = ['T1x', 'T1y', 'T1z'] as Set
 
         expect:
         transform.getSparqlPattern(context) == expectedPattern

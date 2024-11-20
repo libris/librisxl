@@ -14,7 +14,7 @@ import whelk.util.DocumentUtil
 
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.asList
-import static whelk.converter.JsonLDTurtleConverter.toTurtleData
+import static whelk.converter.JsonLDTurtleConverter.toTurtleNoPrelude
 import static whelk.datatool.bulkchange.BulkJobDocument.ADD_SUBJECT_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.REMOVE_SUBDIVISION_KEY
 
@@ -37,6 +37,8 @@ def process = { doc ->
     def modified = DocumentUtil.traverse(thing) { value, path ->
         if (value instanceof Map && value[JsonLd.TYPE_KEY] == 'ComplexSubject') {
             var t = asList(value.get('termComponentList'))
+            println(t)
+            println()
             if ((!inScheme || inScheme == value['inScheme']) && t.containsAll(removeSubdivision)) {
                 var parentPath = path.size() > 1 ? path.dropRight(1) : null
                 if (parentPath) {
@@ -87,7 +89,7 @@ if (!blank.isEmpty()) {
     query for each subdivision. However the maximum number of results from a Sparql query is 100k so if we just take the
     intersection of each result we risk missing some records. Better to just save the result with least hits.
      */
-    blank.collect { whelk.sparqlQueryClient.queryIdsByPattern(toTurtleData((Map) it, whelk.jsonld.context)) }
+    blank.collect { whelk.sparqlQueryClient.queryIdsByPattern(toTurtleNoPrelude((Map) it, whelk.jsonld.context)) }
             .min { it.size() }
             .with {
                 if (ids.isEmpty()) {
