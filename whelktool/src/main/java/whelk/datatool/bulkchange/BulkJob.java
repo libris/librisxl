@@ -33,7 +33,7 @@ import static whelk.datatool.WhelkTool.DELETED_LOG_NAME;
 import static whelk.datatool.WhelkTool.FAILED_LOG_NAME;
 import static whelk.datatool.WhelkTool.MAIN_LOG_NAME;
 import static whelk.datatool.WhelkTool.MODIFIED_LOG_NAME;
-import static whelk.datatool.WhelkTool.ValidationMode.LOG_ONLY;
+import static whelk.datatool.WhelkTool.ValidationMode.SKIP_AND_LOG;
 import static whelk.datatool.bulkchange.BulkJobDocument.JOB_TYPE;
 import static whelk.datatool.bulkchange.BulkJobDocument.Status.Completed;
 import static whelk.datatool.bulkchange.BulkJobDocument.Status.Failed;
@@ -166,7 +166,8 @@ public class BulkJob implements Runnable {
         tool.setDefaultChangedBy(jobDoc.getChangeAgentId());
         tool.setAllowLoud(jobDoc.shouldUpdateModifiedTimestamp());
         tool.setNoThreads(false);
-        tool.setValidationMode(LOG_ONLY);
+        tool.setJsonLdValidation(SKIP_AND_LOG);
+        tool.setInDatasetValidation(SKIP_AND_LOG);
 
         return tool;
     }
