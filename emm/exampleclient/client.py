@@ -117,9 +117,13 @@ def collect_entity_with_uri(entity, uri):
 # Attempt to download and return data for a given URI.
 #
 def download_entity(url):
+    #print(f"Requesting external resource: {url}")
     req = Request(url)
     req.add_header('accept', 'application/json+ld')
-    return json.load(urlopen(req))["@graph"][1]
+    try:
+        return json.load(urlopen(req))["@graph"][1]
+    except:
+        return None
 
 
 #
@@ -160,7 +164,8 @@ def embellish(entity, connection):
         for key in entity:
             if key in properties_of_interest:
                 embed_links(entity[key], connection)
-            embellish(entity[key], connection)
+            if not key == "@reverse":
+                embellish(entity[key], connection)
     elif isinstance(entity, list):
         for item in entity:
             embellish(item, connection)
@@ -224,6 +229,7 @@ def load_dump(connection):
                 next_url = None
             if "entities" in data:
                 for entity in data["entities"]:
+                    embellish(entity, connection)
                     ingest_entity(entity, connection)
     cursor = connection.cursor()
     cursor.execute(
