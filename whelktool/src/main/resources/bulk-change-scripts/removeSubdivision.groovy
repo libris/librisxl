@@ -7,18 +7,23 @@
  * bulk:addSubject - If specified, add this regular Subject to :subject instead
  */
 
+
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.util.DocumentUtil
 
-import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.asList
-import static whelk.converter.JsonLDTurtleConverter.toTurtle
+import static whelk.converter.JsonLDTurtleConverter.toTurtleData
 import static whelk.datatool.bulkchange.BulkJobDocument.ADD_SUBJECT_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.REMOVE_SUBDIVISION_KEY
 
-List<Map> removeSubdivision = asList(parameters.get(REMOVE_SUBDIVISION_KEY))
+String inScheme
+List<Map> removeSubdivision = asList(parameters.get(REMOVE_SUBDIVISION_KEY)).collect {
+    Map copy = new HashMap((Map) it)
+    inScheme = copy.remove('inScheme')
+    return copy
+}
 Map addSubject = parameters.get(ADD_SUBJECT_KEY)
 
 def process = { doc ->
@@ -32,7 +37,7 @@ def process = { doc ->
     def modified = DocumentUtil.traverse(thing) { value, path ->
         if (value instanceof Map && value[JsonLd.TYPE_KEY] == 'ComplexSubject') {
             var t = asList(value.get('termComponentList'))
-            if (t.containsAll(removeSubdivision)) {
+            if ((!inScheme || inScheme == value['inScheme']) && t.containsAll(removeSubdivision)) {
                 var parentPath = path.size() > 1 ? path.dropRight(1) : null
                 if (parentPath) {
                     var parent = DocumentUtil.getAtPath(thing, parentPath)
@@ -63,37 +68,54 @@ def process = { doc ->
     }
 }
 
-Set<String> ids = Collections.synchronizedSet([] as Set<String>)
-removeSubdivision.each { subdivision ->
-    if (subdivision[ID_KEY]) {
-        selectByIds([subdivision[ID_KEY]]) { obsoleteSubdivision ->
-            ids.addAll(obsoleteSubdivision.getDependers())
+Set<String> ids = [] as Set
+def (linked, blank) = removeSubdivision.split { it[ID_KEY] }
+linked.each { l ->
+    selectByIds(linked.collect { it[ID_KEY] }) {
+        def dependers = it.getDependers() as Set<String>
+        if (ids.isEmpty()) {
+            ids.addAll(it.getDependers())
+        } else {
+            ids = ids.intersect(dependers)
         }
-    } else {
-        Whelk whelk = getWhelk()
-        ids.addAll(whelk.sparqlQueryClient.queryIdsByPattern(asTurtle((Map) subdivision, whelk.jsonld.context)))
     }
+}
+if (!blank.isEmpty()) {
+    Whelk whelk = getWhelk()
+    /*
+    Querying records containing the given combination of blank subdivisions is very slow so we have to run a separate
+    query for each subdivision. However the maximum number of results from a Sparql query is 100k so if we just take the
+    intersection of each result we risk missing some records. Better to just save the result with least hits.
+     */
+    blank.collect { whelk.sparqlQueryClient.queryIdsByPattern(toTurtleData((Map) it, whelk.jsonld.context)) }
+            .min { it.size() }
+            .with {
+                if (ids.isEmpty()) {
+                    ids.addAll(it)
+                } else {
+                    ids = ids.intersect(it)
+                }
+            }
 }
 
 selectByIds(ids) {
     process(it)
 }
 
-static DocumentUtil.Operation mapSubject(Map subject, termComponentList, removeSubdivision) {
+static DocumentUtil.Operation mapSubject(Map complexSubject, termComponentList, removeSubdivision) {
     var t2 = termComponentList.findAll { !removeSubdivision.contains(it) }
     if (t2.size() == 0) {
         return new DocumentUtil.Remove()
     }
     if (t2.size() == 1) {
-        return new DocumentUtil.Replace(t2.first())
+        def remaining = t2.first()
+        if (complexSubject['inScheme']) {
+            remaining['inScheme'] = complexSubject['inScheme']
+        }
+        return new DocumentUtil.Replace(remaining)
     }
 
-    Map result = new HashMap(subject)
+    Map result = new HashMap(complexSubject)
     result.termComponentList = t2
     return new DocumentUtil.Replace(result)
-}
-
-static String asTurtle(Map thing, Map context) {
-    Map graph = [(GRAPH_KEY): [[:], thing]]
-    return toTurtle(graph, context, true)
 }

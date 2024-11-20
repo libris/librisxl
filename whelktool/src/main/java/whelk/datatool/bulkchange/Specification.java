@@ -28,17 +28,7 @@ public sealed interface Specification permits Specification.Create, Specificatio
 
     Script getScript(String bulkJobId);
 
-    final class Update implements Specification {
-        private final Map<String, Object> matchForm;
-        private final Map<String, Object> targetForm;
-
-        private Transform transform;
-
-        public Update(Map<String, Object> matchForm, Map<String, Object> targetForm) {
-            this.matchForm = matchForm;
-            this.targetForm = targetForm;
-        }
-
+    record Update(Map<String, Object> matchForm, Map<String, Object> targetForm) implements Specification {
         @Override
         public Script getScript(String bulkJobId) {
             Script s = new Script(loadClasspathScriptSource("update.groovy"), bulkJobId);
@@ -49,40 +39,12 @@ public sealed interface Specification permits Specification.Create, Specificatio
             return s;
         }
 
-        public List<String> findIds(Whelk whelk) {
-            return queryIds(getTransform(whelk), whelk);
-        }
-
-        @SuppressWarnings("unchecked")
-        public boolean modify(Document doc, Whelk whelk) {
-            Map<String, Object> thing = doc.getThing();
-            thing.put(RECORD_KEY, doc.getRecord());
-
-            var m = new ModifiedThing(thing, getTransform(whelk), whelk.getJsonld().repeatableTerms);
-
-            ((List<Map<?,?>>) doc.data.get(GRAPH_KEY)).set(0, (Map<?, ?>) m.getAfter().remove(RECORD_KEY));
-            ((List<Map<?,?>>) doc.data.get(GRAPH_KEY)).set(1, m.getAfter());
-
-            return m.isModified();
-        }
-
         public Transform getTransform(Whelk whelk) {
-            if (transform == null) {
-                transform = new Transform(matchForm, targetForm, whelk);
-            }
-            return transform;
+            return new Transform(matchForm, targetForm, whelk);
         }
     }
 
-    final class Delete implements Specification {
-        private final Map<String, Object> matchForm;
-
-        private Transform.MatchForm matchFormObj;
-
-        public Delete(Map<String, Object> matchForm) {
-            this.matchForm = matchForm;
-        }
-
+    record Delete(Map<String, Object> matchForm) implements Specification {
         @Override
         public Script getScript(String bulkJobId) {
             Script s = new Script(loadClasspathScriptSource("delete.groovy"), bulkJobId);
@@ -90,24 +52,6 @@ public sealed interface Specification permits Specification.Create, Specificatio
                     MATCH_FORM_KEY, matchForm
             ));
             return s;
-        }
-
-        @SuppressWarnings("unchecked")
-        public boolean matches(Document doc, Whelk whelk) {
-            Map<String, Object> thing = doc.clone().getThing();
-            thing.put(RECORD_KEY, doc.getRecord());
-            return getMatchForm(whelk).matches(thing);
-        }
-
-        public List<String> findIds(Whelk whelk) {
-            return queryIds(getMatchForm(whelk), whelk);
-        }
-
-        private Transform.MatchForm getMatchForm(Whelk whelk) {
-            if (matchFormObj == null) {
-                matchFormObj = new Transform.MatchForm(matchForm, whelk);
-            }
-            return matchFormObj;
         }
     }
 
@@ -162,10 +106,5 @@ public sealed interface Specification permits Specification.Create, Specificatio
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private static List<String> queryIds(Transform transform, Whelk whelk) {
-        return whelk.getSparqlQueryClient()
-                .queryIdsByPattern(transform.getSparqlPattern(whelk.getJsonld().context));
     }
 }

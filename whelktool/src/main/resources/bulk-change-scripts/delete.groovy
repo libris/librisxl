@@ -1,15 +1,21 @@
-import whelk.datatool.bulkchange.Specification
+import whelk.Document
+import whelk.datatool.form.MatchForm
 
+import static whelk.JsonLd.RECORD_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.MATCH_FORM_KEY
 
 Map matchForm = parameters.get(MATCH_FORM_KEY)
 
-Specification.Delete delete = new Specification.Delete(matchForm)
-List<String> ids = delete.findIds(getWhelk())
+MatchForm mf = new MatchForm(matchForm, getWhelk())
 
-selectByIds(ids) {
-    if(delete.matches(it.doc, it.whelk)) {
+selectByForm(mf) {
+    if(mf.matches(getFramedThing(it.doc))) {
         it.scheduleDelete(loud: isLoudAllowed)
     }
 }
 
+private static Map getFramedThing(Document doc) {
+    Map<String, Object> thing = doc.clone().getThing();
+    thing.put(RECORD_KEY, doc.getRecord());
+    return thing
+}
