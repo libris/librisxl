@@ -16,6 +16,11 @@ if (!deprecateId || !keepId) return
 List<String> obsoleteThingUris = []
 
 selectByIds([deprecateId]) { obsolete ->
+    // Assert that the resource to deprecate is not the same as the one to be kept
+    if (obsolete.doc.getThingIdentifiers().first() == keepId) {
+        return
+    }
+
     obsoleteThingUris = obsolete.doc.getThingIdentifiers()
 
     selectByIds(obsolete.getDependers()) { depender ->
