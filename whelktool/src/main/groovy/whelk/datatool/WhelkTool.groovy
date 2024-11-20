@@ -89,6 +89,7 @@ class WhelkTool {
 
     boolean allowLoud
     boolean allowIdRemoval
+    boolean allowReadOnlyDatasets
 
     enum ValidationMode {
         ON,
@@ -467,6 +468,9 @@ class WhelkTool {
             if (item.loud) {
                 assert allowLoud: "Loud changes need to be explicitly allowed"
             }
+            if (item.doc.isInReadOnlyDataset()) {
+                assert allowReadOnlyDatasets: "Changing documents in read-only datasets needs to be explicitly allowed: ${item.doc.shortId}"
+            }
             if (item.restoreToTime != null) {
                 if (!doRevertToTime(item))
                     return true
@@ -794,6 +798,7 @@ class WhelkTool {
         cli.idchg(longOpt: 'allow-id-removal', '[UNSAFE] Allow script to remove document ids, e.g. sameAs.')
         cli.v(longOpt: 'validation', args: 1, argName: 'MODE', '[UNSAFE] Set JSON-LD validation mode. Defaults to ON.' +
                 ' Possible values: ON/OFF/LOG_ONLY')
+        cli.rod(longOpt: 'allow-read-only-datasets', 'Allow script to change documents in read-only datasets.')
         cli.n(longOpt: 'stats-num-ids', args: 1, 'Number of ids to print per entry in STATISTICS.txt.')
         cli.p(longOpt: 'parameters', args: 1, argName: 'PARAMETER-FILE', 'Path to JSON file with parameters to script')
 
@@ -826,6 +831,7 @@ class WhelkTool {
         tool.stepWise = options.s
         tool.noThreads = options.T
         tool.allowLoud = options.a
+        tool.allowReadOnlyDatasets = options.rod
         tool.allowIdRemoval = options.idchg
         try {
             if (options.t) {
