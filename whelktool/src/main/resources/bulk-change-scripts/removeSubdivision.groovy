@@ -69,15 +69,22 @@ def process = { doc ->
 }
 
 Set<String> ids = [] as Set
-removeSubdivision.each { subdivision ->
-    if (subdivision[ID_KEY]) {
-        selectByIds([subdivision[ID_KEY]]) { obsoleteSubdivision ->
-            ids = ids.intersect(obsoleteSubdivision.getDependers()) as Set<String>
-        }
-    } else {
-        Whelk whelk = getWhelk()
-        ids = ids.intersect(whelk.sparqlQueryClient.queryIdsByPattern(toTurtleData((Map) subdivision, whelk.jsonld.context)))
+def (linked, blank) = removeSubdivision.split { it[ID_KEY] }
+linked.each { l ->
+    selectByIds(linked.collect { it[ID_KEY] }) {
+        ids = ids.intersect(it.getDependers()) as Set<String>
     }
+}
+if (!blank.isEmpty()) {
+    Whelk whelk = getWhelk()
+    /*
+    Querying records containing the given combination of blank subdivisions is very slow so we have to run a separate
+    query for each subdivision. However the maximum number of results from a Sparql query is 100k so if we just take the
+    intersection of each result we risk missing some records. Better to just save the result with least hits.
+     */
+    blank.collect { whelk.sparqlQueryClient.queryIdsByPattern(toTurtleData((Map) it, whelk.jsonld.context)) }
+            .min { it.size() }
+            .with { ids = ids.intersect(it) }
 }
 
 selectByIds(ids) {
