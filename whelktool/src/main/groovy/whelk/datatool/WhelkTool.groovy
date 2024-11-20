@@ -9,7 +9,6 @@ import whelk.JsonLd
 import whelk.JsonLdValidator
 import whelk.Whelk
 import whelk.datatool.form.MatchForm
-import whelk.datatool.form.Transform
 import whelk.datatool.util.IdLoader
 import whelk.exception.StaleUpdateException
 import whelk.exception.WhelkException
@@ -93,10 +92,11 @@ class WhelkTool {
     enum ValidationMode {
         ON,
         OFF,
-        LOG_ONLY
+        SKIP_AND_LOG
     }
 
-    ValidationMode validationMode = ValidationMode.ON
+    ValidationMode jsonLdValidation = ValidationMode.ON
+    ValidationMode inDatasetValidation = ValidationMode.ON
 
     Throwable errorDetected
 
@@ -517,6 +517,9 @@ class WhelkTool {
         if (recordChanges) {
             recordChange(whelk.getDocument(item.doc.shortId), null, item.number)
         }
+        if (!validateInDataset(item.doc)) {
+            return
+        }
         if (!dryRun) {
             whelk.remove(item.doc.shortId, changedIn, item.changedBy ?: defaultChangedBy)
         }
@@ -572,7 +575,7 @@ class WhelkTool {
             recordChange(whelk.getDocument(doc.shortId), doc.clone(), item.number)
         }
 
-        if (!validateJsonLd(doc)) {
+        if (!validateJsonLd(doc) || !validateInDataset(doc)) {
             return
         }
 
@@ -593,7 +596,7 @@ class WhelkTool {
             recordChange(null, doc.clone(), item.number)
         }
 
-        if (!validateJsonLd(doc)) {
+        if (!validateJsonLd(doc) || !validateInDataset(doc)) {
             return
         }
 
@@ -606,15 +609,32 @@ class WhelkTool {
     }
 
     private boolean validateJsonLd(Document doc) {
-        if (validationMode == ValidationMode.OFF) {
+        if (jsonLdValidation == ValidationMode.OFF) {
             return true
         }
         List<JsonLdValidator.Error> errors = validator.validate(doc.data, doc.getLegacyCollection(whelk.jsonld))
         if (errors) {
             String msg = "Invalid JSON-LD in document ${doc.completeId}. Errors: ${errors.collect { it.toMap() }}"
-            if (validationMode == ValidationMode.ON) {
+            if (jsonLdValidation == ValidationMode.ON) {
                 throw new Exception(msg)
-            } else if (validationMode == ValidationMode.LOG_ONLY) {
+            } else if (jsonLdValidation == ValidationMode.SKIP_AND_LOG) {
+                failedLog.println(doc.shortId)
+                errorLog.println(msg)
+                return false
+            }
+        }
+        return true
+    }
+
+    private boolean validateInDataset(Document doc) {
+        if (inDatasetValidation == ValidationMode.OFF) {
+            return true
+        }
+        if (doc.isInReadOnlyDataset()) {
+            var msg = "Cannot write document belonging to read-only dataset: ${doc.completeId}"
+            if (inDatasetValidation == ValidationMode.ON) {
+                throw new Exception(msg)
+            } else if (inDatasetValidation == ValidationMode.SKIP_AND_LOG) {
                 failedLog.println(doc.shortId)
                 errorLog.println(msg)
                 return false
@@ -726,7 +746,8 @@ class WhelkTool {
         if (limit > -1) log "  limit: $limit"
         if (allowLoud) log "  allowLoud"
         if (allowIdRemoval) log "  allowIdRemoval"
-        log "  validation: ${validationMode.name()}"
+        log "  JSON-LD validation: ${jsonLdValidation.name()}"
+        log "  Dataset validation: ${inDatasetValidation.name()}"
         log()
 
         bindings = createMainBindings()
@@ -739,7 +760,7 @@ class WhelkTool {
     }
 
     private void finish() {
-        def logWriters = [mainLog, errorLog, modifiedLog, createdLog, deletedLog] + reports.values()
+        def logWriters = [mainLog, errorLog, modifiedLog, createdLog, deletedLog, failedLog] + reports.values()
         logWriters.each {
             it.flush()
             it.close()
@@ -793,7 +814,9 @@ class WhelkTool {
         cli.a(longOpt: 'allow-loud', 'Allow scripts to do loud modifications.')
         cli.idchg(longOpt: 'allow-id-removal', '[UNSAFE] Allow script to remove document ids, e.g. sameAs.')
         cli.v(longOpt: 'validation', args: 1, argName: 'MODE', '[UNSAFE] Set JSON-LD validation mode. Defaults to ON.' +
-                ' Possible values: ON/OFF/LOG_ONLY')
+                ' Possible values: ON/OFF/SKIP_AND_LOG')
+        cli.dv(longOpt: 'dataset-validation', args: 1, argName: 'MODE', '[UNSAFE] Set read-only dataset validation mode. Defaults to ON.' +
+                ' Possible values: ON/OFF/SKIP_AND_LOG')
         cli.n(longOpt: 'stats-num-ids', args: 1, 'Number of ids to print per entry in STATISTICS.txt.')
         cli.p(longOpt: 'parameters', args: 1, argName: 'PARAMETER-FILE', 'Path to JSON file with parameters to script')
 
@@ -808,6 +831,11 @@ class WhelkTool {
         int statsNumIds = options.n ? Integer.parseInt(options.n) : DEFAULT_STATS_NUM_IDS
 
         Script script = null
+        if (!scriptPath) {
+            cli.usage()
+            System.exit(1)
+        }
+
         try {
             script = new FileScript(scriptPath)
 
@@ -835,10 +863,13 @@ class WhelkTool {
                 tool.limit = Integer.parseInt(options.l)
             }
             if (options.v) {
-                tool.validationMode = parseValidationMode(options.v)
+                tool.jsonLdValidation = parseValidationMode(options.v)
             }
-        } catch (IllegalArgumentException ignored) {
-            System.err.println("Invalid argument(s)")
+            if (options.dv) {
+                tool.inDatasetValidation = parseValidationMode(options.dv)
+            }
+        } catch (IllegalArgumentException e) {
+            System.err.println("Invalid argument(s) $e")
             cli.usage()
             System.exit(1)
         }

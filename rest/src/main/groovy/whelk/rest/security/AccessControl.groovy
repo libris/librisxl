@@ -85,7 +85,9 @@ class AccessControl {
             // TODO step 2, configure as permission on user instead (in libris login)
             return hasPermissionForSigel("SEK", userPrivileges)
         }
-        else {
+        else if (document.isInReadOnlyDataset()) {
+            return false
+        } else {
             return hasCatalogingPermission(userPrivileges)
         }
     }
