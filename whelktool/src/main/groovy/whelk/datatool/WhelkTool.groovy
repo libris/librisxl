@@ -835,7 +835,7 @@ class WhelkTool {
             cli.usage()
             System.exit(1)
         }
-        
+
         try {
             script = new FileScript(scriptPath)
 
