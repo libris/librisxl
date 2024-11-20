@@ -1,12 +1,12 @@
 import whelk.Document
-import whelk.datatool.form.Transform
+import whelk.datatool.form.MatchForm
 
 import static whelk.JsonLd.RECORD_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.MATCH_FORM_KEY
 
 Map matchForm = parameters.get(MATCH_FORM_KEY)
 
-Transform.MatchForm mf = new Transform.MatchForm(matchForm, getWhelk())
+MatchForm mf = new MatchForm(matchForm, getWhelk())
 
 selectByForm(mf) {
     if(mf.matches(getFramedThing(it.doc))) {

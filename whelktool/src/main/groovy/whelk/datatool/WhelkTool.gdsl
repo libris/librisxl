@@ -8,7 +8,7 @@
 
 package whelk.datatool
 
-import whelk.datatool.form.Transform
+import whelk.datatool.form.MatchForm
 
 String ITEM = 'whelk.datatool.DocumentItem'
 String DC = "Closure<$ITEM>"
@@ -43,10 +43,10 @@ contributor(ctx) {
     method name:"selectByIds", params:['ids':Collection<String>, 'process':DC, 'batchSize':int], type:void
     method name:"selectByIds", params:['ids':Collection<String>, 'process':DC, 'silent':boolean], type:void
     method name:"selectByIds", params:['ids':Collection<String>, 'process':DC], type:void
-    method name:"selectByForm", params:['form':Transform, 'process':DC, 'batchSize':int, 'silent':boolean], type:void
-    method name:"selectByForm", params:['form':Transform, 'process':DC, 'batchSize':int], type:void
-    method name:"selectByForm", params:['form':Transform, 'process':DC, 'silent':boolean], type:void
-    method name:"selectByForm", params:['form':Transform, 'process':DC], type:void
+    method name:"selectByForm", params:['form':MatchForm, 'process':DC, 'batchSize':int, 'silent':boolean], type:void
+    method name:"selectByForm", params:['form':MatchForm, 'process':DC, 'batchSize':int], type:void
+    method name:"selectByForm", params:['form':MatchForm, 'process':DC, 'silent':boolean], type:void
+    method name:"selectByForm", params:['form':MatchForm, 'process':DC], type:void
     method name:"selectBySqlWhere", params:['whereClause':String, 'batchSize':int, 'silent':boolean, 'process':DC], type:void
     method name:"selectBySqlWhere", params:['whereClause':String, 'batchSize':int, 'process':DC], type:void
     method name:"selectBySqlWhere", params:['whereClause':String, 'silent':boolean, 'process':DC], type:void

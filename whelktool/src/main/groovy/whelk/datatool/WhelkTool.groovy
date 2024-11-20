@@ -8,6 +8,7 @@ import whelk.IdGenerator
 import whelk.JsonLd
 import whelk.JsonLdValidator
 import whelk.Whelk
+import whelk.datatool.form.MatchForm
 import whelk.datatool.form.Transform
 import whelk.datatool.util.IdLoader
 import whelk.exception.StaleUpdateException
@@ -196,13 +197,13 @@ class WhelkTool {
                 batchSize, [1: idItems, 2: collection])
     }
 
-    void selectByForm(Transform transform, Closure process,
+    void selectByForm(MatchForm matchForm, Closure process,
                       int batchSize = DEFAULT_BATCH_SIZE, boolean silent = false) {
         if (!silent) {
             log "Select by form"
         }
 
-        var sparqlPattern = transform.getSparqlPattern(whelk.jsonld.context)
+        var sparqlPattern = matchForm.getSparqlPattern(whelk.jsonld.context)
         var ids = whelk.sparqlQueryClient.queryIdsByPattern(sparqlPattern)
 
         selectByIds(ids, process, batchSize, silent)

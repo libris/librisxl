@@ -13,13 +13,13 @@ Map targetForm = parameters.get(TARGET_FORM_KEY)
 
 Transform transform = new Transform(matchForm, targetForm, getWhelk())
 
-selectByForm(transform) {
+selectByForm(transform.matchForm) {
     if(modify(transform, it.doc, it.whelk)) {
         it.scheduleSave(loud: isLoudAllowed)
     }
 }
 
-static boolean modify(Transform tf, Document doc, Whelk whelk) {
+private static boolean modify(Transform tf, Document doc, Whelk whelk) {
     Map<String, Object> thing = doc.getThing();
     thing.put(RECORD_KEY, doc.getRecord());
 
