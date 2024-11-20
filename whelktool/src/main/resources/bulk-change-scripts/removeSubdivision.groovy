@@ -72,7 +72,12 @@ Set<String> ids = [] as Set
 def (linked, blank) = removeSubdivision.split { it[ID_KEY] }
 linked.each { l ->
     selectByIds(linked.collect { it[ID_KEY] }) {
-        ids = ids.intersect(it.getDependers()) as Set<String>
+        def dependers = it.getDependers() as Set<String>
+        if (ids.isEmpty()) {
+            ids.addAll(it.getDependers())
+        } else {
+            ids = ids.intersect(dependers)
+        }
     }
 }
 if (!blank.isEmpty()) {
@@ -84,7 +89,13 @@ if (!blank.isEmpty()) {
      */
     blank.collect { whelk.sparqlQueryClient.queryIdsByPattern(toTurtleData((Map) it, whelk.jsonld.context)) }
             .min { it.size() }
-            .with { ids = ids.intersect(it) }
+            .with {
+                if (ids.isEmpty()) {
+                    ids.addAll(it)
+                } else {
+                    ids = ids.intersect(it)
+                }
+            }
 }
 
 selectByIds(ids) {
