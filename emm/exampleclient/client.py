@@ -276,17 +276,37 @@ def replace_entity(node, replacement_entity):
 
 
 #
+# Return True if 'entity' matches our root-entity criteria, otherwise False
+#
+def is_root_entity(entity):
+    if entity == None:
+        return False
+    if "@type" in entity and entity["@type"] == 'Item':
+        if "heldBy" in entity and isinstance(entity["heldBy"], dict) and "@id" in entity["heldBy"]:
+            return entity["heldBy"]["@id"].endswith(local_library_code)
+    return False
+
+
+#
 # This is the heart of the update mechanism. Consume an update activity, and take
 # whatever action is necesseray to keep our cache up to date.
 #
 def handle_activity(connection, activity):
     cursor = connection.cursor()
+
     if activity["type"] == "create":
-        pass # TODO
+        created_data = download_entity(activity["object"]["id"])
+        if is_root_entity(created_data):
+            embellish(created_data, connection)
+            ingest_entity(created_data, connection)
+
     elif activity["type"] == "delete":
-        pass # TODO
+        # This is a "cascading delete", but doing so is safe as long as libris
+        # maintains its principle that linked records cannot be deleted.
+        cursor.execute("DELETE FROM uris WHERE uri = ?", (activity["object"]["id"],))
+        connection.commit()
+
     elif activity["type"] == "update":
-        
         # Find all of our records that depend on this URI
         rows = cursor.execute("SELECT entities.id, entities.entity FROM uris JOIN entities on uris.entity_id = entities.id WHERE uris.uri = ?", (activity["object"]["id"],))
         
@@ -357,7 +377,7 @@ CREATE TABLE uris (
     uri TEXT,
     entity_id INTEGER,
     UNIQUE(uri, entity_id) ON CONFLICT IGNORE,
-    FOREIGN KEY (entity_id) REFERENCES entities(id)
+    FOREIGN KEY (entity_id) REFERENCES entities(id) ON DELETE CASCADE
 );
 """)
         cursor.execute("""
