@@ -760,7 +760,7 @@ class WhelkTool {
     }
 
     private void finish() {
-        def logWriters = [mainLog, errorLog, modifiedLog, createdLog, deletedLog] + reports.values()
+        def logWriters = [mainLog, errorLog, modifiedLog, createdLog, deletedLog, failedLog] + reports.values()
         logWriters.each {
             it.flush()
             it.close()
