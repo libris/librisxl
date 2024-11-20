@@ -21,10 +21,14 @@ Example of using a timestamp based report dir
 Options
 ```
 $ java -jar build/libs/whelktool.jar --help
+11 actionable tasks: 11 up-to-date
 usage: whelktool [options] <SCRIPT>
  -a,--allow-loud                    Allow scripts to do loud
                                     modifications.
  -d,--dry-run                       Do not save any modifications.
+ -dv,--dataset-validation <MODE>    [UNSAFE] Set read-only dataset
+                                    validation mode. Defaults to ON.
+                                    Possible values: ON/OFF/SKIP_AND_LOG
  -h,--help                          Print this help message and exit.
  -I,--skip-index                    Do not index any changes, only write
                                     to storage.
@@ -42,10 +46,10 @@ usage: whelktool [options] <SCRIPT>
  -T,--no-threads                    Do not use threads to parallellize
                                     batch processing.
  -t,--num-threads <N>               Override default number of threads
-                                    (32).
+                                    (48).
  -v,--validation <MODE>             [UNSAFE] Set JSON-LD validation mode.
                                     Defaults to ON. Possible values:
-                                    ON/OFF/LOG_ONLY
+                                    ON/OFF/SKIP_AND_LOG
 ```
 
 * Use `--dry-run` to test your script without writing any changes.
