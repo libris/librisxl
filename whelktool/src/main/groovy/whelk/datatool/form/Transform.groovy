@@ -1,5 +1,6 @@
 package whelk.datatool.form
 
+import groovy.transform.PackageScope
 import whelk.Whelk
 import whelk.datatool.util.DocumentComparator
 
@@ -32,6 +33,8 @@ class Transform {
         this.addedPaths = collectAddedPaths()
     }
 
+    // For testing only
+    @PackageScope
     Transform(Map matchForm, Map targetForm) {
         this(matchForm, targetForm, null)
     }
@@ -145,7 +148,7 @@ class Transform {
         ChangesForNode(String nodeId, List<Change> changeList) {
             this.nodeId = nodeId
             this.changeList = changeList
-            this.propertyPath = dropIndexes(matchForm.nodeIdToMatchFormPath[nodeId])
+            this.propertyPath = dropIndexes(matchForm.formBNodeIdToPath[nodeId])
         }
 
         boolean matches(Map node) {
@@ -169,7 +172,7 @@ class Transform {
         }
 
         private Map form() {
-            return getAtPath(matchForm.form, matchForm.nodeIdToMatchFormPath[nodeId]) as Map
+            return getAtPath(matchForm.form, matchForm.formBNodeIdToPath[nodeId]) as Map
         }
     }
 

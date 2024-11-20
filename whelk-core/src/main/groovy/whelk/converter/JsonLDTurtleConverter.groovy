@@ -21,7 +21,7 @@ class JsonLDTurtleConverter implements FormatConverter {
         return [(JsonLd.NON_JSON_CONTENT_KEY) : toTurtle(source, null, base)]
     }
 
-    static String toTurtleData(source, Map context) {
+    static String toTurtleNoPrelude(source, Map context) {
         // Add skip prelude flag in trld.trig.SerializerState.serialize?
         return withoutPrefixes(toTurtle(source, context, null))
     }
