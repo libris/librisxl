@@ -831,6 +831,11 @@ class WhelkTool {
         int statsNumIds = options.n ? Integer.parseInt(options.n) : DEFAULT_STATS_NUM_IDS
 
         Script script = null
+        if (!scriptPath) {
+            cli.usage()
+            System.exit(1)
+        }
+        
         try {
             script = new FileScript(scriptPath)
 
