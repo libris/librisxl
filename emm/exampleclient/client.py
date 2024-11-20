@@ -348,9 +348,8 @@ def update(connection):
                     next_url = None
                     break
                 handle_activity(connection, item)
-                # Disable for dev, temporary
-                #cursor.execute("UPDATE state SET changes_consumed_until = ?", (item["published"],))
-                #connection.commit()
+                cursor.execute("UPDATE state SET changes_consumed_until = ?", (item["published"],))
+                connection.commit()
 
 
 def main():
