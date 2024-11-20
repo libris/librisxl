@@ -1,6 +1,5 @@
 package whelk.datatool.form
 
-import groovy.transform.Memoized
 import groovy.transform.PackageScope
 import whelk.Document
 import whelk.JsonLd
@@ -9,7 +8,6 @@ import whelk.datatool.util.DocumentComparator
 import whelk.datatool.util.IdLoader
 import whelk.util.DocumentUtil
 
-import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.RECORD_KEY
 import static whelk.JsonLd.RECORD_TYPE
@@ -78,9 +76,7 @@ class MatchForm {
         thing[ID_KEY] = getThingTmpId()
         record[THING_KEY] = [(ID_KEY): getThingTmpId()]
 
-        Map graph = [(GRAPH_KEY): [record, thing]]
-
-        String ttl = toTurtleNoPrelude(graph, context)
+        String ttl = toTurtleNoPrelude([record, thing], context)
 
         return insertTypeMappings(insertIdMappings(insertVars(ttl)))
     }
@@ -164,7 +160,7 @@ class MatchForm {
                 if (node[TYPE_KEY] == ANY_TYPE) {
                     node.remove(TYPE_KEY)
                 }
-                if (asList(node.remove(MATCHING_MODE)).contains(SUBTYPES)) {
+                if (asList(node.remove(MATCHING_MODE)).contains(SUBTYPES) && baseTypeToSubtypes.containsKey(node[TYPE_KEY])) {
                     def baseType = node.remove(TYPE_KEY)
                     node[HAS_BASE_TYPE_TMP] = baseType
                 }
@@ -300,7 +296,9 @@ class MatchForm {
             if (node instanceof Map && node.containsKey(MATCHING_MODE) && ((List) node[MATCHING_MODE]).contains(SUBTYPES)) {
                 def baseType = (String) node[TYPE_KEY]
                 Set<String> subTypes = getSubtypes(baseType, jsonLd) as Set
-                mappings[baseType] = subTypes
+                if (!subTypes.isEmpty()) {
+                    mappings[baseType] = subTypes
+                }
                 return new DocumentUtil.Nop()
             }
         }

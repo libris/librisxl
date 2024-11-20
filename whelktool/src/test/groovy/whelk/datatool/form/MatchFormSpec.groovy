@@ -175,4 +175,22 @@ class MatchFormSpec extends Specification {
         expect:
         transform.getSparqlPattern(context) == expectedPattern
     }
+
+    def "form to sparql pattern: no subtypes to match"() {
+        given:
+        def form = [
+                'bulk:formBlankNodeId': '#1',
+                '@type'               : 'T1',
+                'bulk:matchingMode'   : ['bulk:Subtypes']
+        ]
+
+        def expectedPattern = "?graph :mainEntity ?1 .\n" +
+                "\n" +
+                "?1 a :T1 ."
+
+        def transform = new MatchForm(form)
+
+        expect:
+        transform.getSparqlPattern(context) == expectedPattern
+    }
 }
