@@ -20,6 +20,10 @@ import static whelk.util.Jackson.mapper
  * A document is represented as a data Map (containing Maps, Lists and Value objects).
  *
  * This class serves as a wrapper around such a map, with access methods for specific parts of the data.
+ *
+ * TODO:
+ * Many of the accessors of this class assumes the underlying data is an INSTANCE. We may want to break that
+ * assumption up at some point down the line, or check that it is actually the case in the accessors themselves.
  */
 @Log
 class Document {
@@ -54,6 +58,7 @@ class Document {
     static final List recordPath = ["@graph", 0]
     static final List recordIdPath = ["@graph", 0, "@id"]
     static final List workIdPath = ["@graph", 1, "instanceOf", "@id"]
+    static final List workPath = ["@graph", 1, "instanceOf"]
     static final List thingMetaPath = ["@graph", 1, "meta", "@id"]
     static final List recordSameAsPath = ["@graph", 0, "sameAs"]
     static final List recordTypedIDsPath = ["@graph", 0, "identifiedBy"]
@@ -219,6 +224,11 @@ class Document {
     void setRecordStatus(status) { set(statusPath, status) }
 
     void setThingMeta(meta) { set(thingMetaPath, meta) }
+
+    Map getWorkEntity() { return get(workPath) }
+
+    void setWorkEntity(work) { set(workPath, work) }
+
 
     /**
      * Will have base URI prepended if not already there
