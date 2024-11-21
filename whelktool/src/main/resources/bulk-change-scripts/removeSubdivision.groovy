@@ -109,7 +109,7 @@ static DocumentUtil.Operation mapSubject(Map complexSubject, termComponentList, 
     }
     if (t2.size() == 1) {
         def remaining = t2.first()
-        if (complexSubject['inScheme']) {
+        if (complexSubject['inScheme'] && !remaining[ID_KEY]) {
             remaining['inScheme'] = complexSubject['inScheme']
         }
         return new DocumentUtil.Replace(remaining)
