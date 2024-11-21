@@ -386,9 +386,50 @@ class ElasticSearch {
         }
     }
 
+    Set collectTechnicalNotes(Object data, List typedPath, JsonLd jsonld) {
+        Set results = []
+        if (data instanceof Map) {
+
+            if ("ChangeNote" == data["@type"]) {
+                results.add( se.kb.libris.SignificantChangeCalculator.getImpliedTechnicalNote(data, typedPath, jsonld) )
+                results.add( data )
+            }
+
+            data.keySet().each {
+                List<String> nextPath = new ArrayList<>(typedPath)
+                nextPath.add(it)
+                if (data[it] instanceof Map && data[it]["@type"])
+                    nextPath.add("@type=" + data[it]["@type"])
+                results.addAll(collectTechnicalNotes(data[it], nextPath, jsonld))
+            }
+        } else if (data instanceof List) {
+            data.each { it ->
+                List<String> nextPath = new ArrayList<>(typedPath)
+                if (it instanceof Map && it["@type"])
+                    nextPath.add("@type=" + it["@type"])
+                results.addAll(collectTechnicalNotes(it, nextPath, jsonld))
+            }
+        }
+        return results
+    }
+
+    void compileTechnicalNotes(Map framed, JsonLd jsonld) {
+        Set<Map> compiledNotes = collectTechnicalNotes(framed, [], jsonld)
+
+        System.err.println("Final technical notes for " + framed["@id"] + " : " + compiledNotes)
+
+        if ( framed["technicalNote"] ) {
+            if ( framed["technicalNote"] instanceof List )
+                compiledNotes.addAll(framed["technicalNote"])
+            else
+                compiledNotes.add(framed["technicalNote"])
+        }
+        framed["technicalNote"] = compiledNotes.toList()
+    }
+
     String getShapeForIndex(Document document, Whelk whelk) {
         Document copy = document.clone()
-        
+
         whelk.embellish(copy, ['search-chips'])
 
         if (log.isDebugEnabled()) {
@@ -417,6 +458,8 @@ class ElasticSearch {
                 whelk.jsonld.locales as Set,
                 REMOVABLE_BASE_URIS,
                 document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
+
+        compileTechnicalNotes(framed, whelk.getJsonld())
 
         DocumentUtil.traverse(framed) { value, path ->
             if (path && JsonLd.SEARCH_KEY == path.last() && !Unicode.isNormalizedForSearch(value)) {
