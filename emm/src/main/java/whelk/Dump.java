@@ -23,6 +23,27 @@ import java.util.*;
 import static whelk.util.Jackson.mapper;
 
 public class Dump {
+    /* Here is how these dumps work:
+     * When someone asks for a dump of particular category, we check if we have one already.
+     * If we do not, we start generating one and delay our response a little bit, until enough
+     * of the new dump has been generated to fill the first page.
+     *
+     * The generated dumps on disks are text files containing only XL system IDs of the records
+     * that make up the dump. The actual data for each record is not stored in these files, but
+     * only added into the response stream at the last moment.
+     *
+     * The dumps on disk have a rather particular format. They consist of a number of lines,
+     * that are all exactly 17 bytes long, with one ID on each line. The number 17 is chosen
+     * merely because it is the smallest number that can hold any internal libris ID followed
+     * by a line break, but there is another reason why *all* lines must be exactly 17 bytes
+     * (even though some IDs are shorter). The point of this, is to be able to serve any part
+     * (page) of the response, without having the scan through the whole dump. If someone asks
+     * for a page starting att offset one million, we can simply start reading the dump file
+     * at byte offset 17 million, and not have to read through the millions of bytes before that.
+     *
+     * The last line of a finished dump holds a (also 17 bytes) marker, to separate the finished
+     * dump from one that is still being generated but just haven't gotten any further yet.
+     */
     private static final Logger logger = LogManager.getLogger(Dump.class);
     private static final String DUMP_END_MARKER = "_DUMP_END_MARKER\n"; // Must be 17 bytes
 
@@ -72,6 +93,7 @@ public class Dump {
         categoriesList.add(typesCategory);
 
         responseObject.put("categories", categoriesList);
+        responseObject.put("warning", "This description of the available dump categories is a temporary one which will NOT look like this for long. Be careful not to rely on the format or even existence of this particular page.");
 
         String jsonResponse = mapper.writeValueAsString(responseObject);
         BufferedWriter writer = new BufferedWriter( res.getWriter() );
@@ -200,7 +222,7 @@ public class Dump {
                 Files.delete(dumpFilePath);
             }
         } catch (IOException e) {
-            // These exceptions are caught here due to the (theoretical) risk of files access race conditions.
+            // These exceptions are caught here due to the (theoretical) risk of file access race conditions.
             // For example, it could be that a dump is being read by one thread, while passing the too-old-threshold
             // and then while still being read, another thread sees the dump as too old and tries to delete it.
             // Just log this sort of thing and carry on.
@@ -221,7 +243,7 @@ public class Dump {
                 } else if (dump.startsWith("itemAndInstance:")) {
                     preparedStatement = getLibraryXDumpStatement(connection, dump.substring(16));
                 } else if (dump.startsWith("type:")) {
-                    preparedStatement = getTypeXStatement(connection, whelk, dump.substring(5));
+                    preparedStatement = getTypeXDumpStatement(connection, whelk, dump.substring(5));
                 }
 
                 if (preparedStatement == null) {
@@ -278,7 +300,7 @@ public class Dump {
         return preparedStatement;
     }
 
-    private static PreparedStatement getTypeXStatement(Connection connection, Whelk whelk, String type) throws SQLException {
+    private static PreparedStatement getTypeXDumpStatement(Connection connection, Whelk whelk, String type) throws SQLException {
         Set<String> types = whelk.getJsonld().getSubClasses(type);
         types.add(type);
 

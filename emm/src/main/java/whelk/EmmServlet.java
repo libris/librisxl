@@ -36,7 +36,7 @@ public class EmmServlet extends HttpServlet {
             String apiBaseUrl = req.getRequestURL().toString();
 
             res.setCharacterEncoding("utf-8");
-            res.setContentType("application/json");
+            res.setContentType("application/activity+json");
 
             if (dump != null) {
                 Dump.sendDumpResponse(whelk, apiBaseUrl, req, res);
