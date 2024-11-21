@@ -32,7 +32,6 @@ class MatchForm {
     private static final String VALUE = 'value'
     private static final String VALUE_FROM = 'bulk:valueFrom'
     private static final String ANY_OF = 'bulk:AnyOf'
-    private static final String HAS_BASE_TYPE_TMP = '_hasBaseTypeTmp'
 
     Map form
 
@@ -40,28 +39,26 @@ class MatchForm {
     Map<String, List> formBNodeIdToPath
     // For looking up resource ids (if given in bulk:hasId) associated with a certain blank node in the form
     Map<String, Set<String>> formBNodeIdToResourceIds
-    // For looking up subtypes of a type appearing in the form
-    Map<String, Set<String>> baseTypeToSubtypes
+    // For looking up subtypes of the top-level entity type
+    Set<String> thingSubtypes
 
     MatchForm(Map form, Whelk whelk) {
         this.form = form
         this.formBNodeIdToPath = collectFormBNodeIdToPath()
         this.formBNodeIdToResourceIds = collectFormBNodeIdToResourceIds(whelk)
-        this.baseTypeToSubtypes = collectBaseTypeToSubtypes(whelk?.jsonld)
+        if (matchSubtypes()) {
+            this.thingSubtypes = collectSubtypes(whelk?.jsonld)
+        }
     }
 
     // For testing only
     @PackageScope
-    MatchForm(Map matchForm) {
-        this(matchForm, null)
+    MatchForm(Map form) {
+        this(form, null)
     }
 
-    // For testing only
-    @PackageScope
-    MatchForm() {}
-
-    boolean matches(Object node) {
-        return matches(form, node)
+    boolean matches(Map thing) {
+        return matches(form, thing)
     }
 
     boolean matches(Object matchForm, Object node) {
@@ -85,68 +82,86 @@ class MatchForm {
         return path.findAll { it instanceof String } as List<String>
     }
 
-    private boolean mapMatches(Map matchForm, Map bNode) {
-        if (matchForm == null || bNode == null) {
-            return false
-        }
-        matchForm = new LinkedHashMap(matchForm)
-        def match = asList(matchForm[MATCHING_MODE])
-        if (match.contains(EXACT)) {
-            return exactMatches(matchForm, bNode)
-        }
-        if (match.contains(SUBTYPES)) {
-            String aType = matchForm[TYPE_KEY]
-            String bType = bNode[TYPE_KEY]
-            if (!(baseTypeToSubtypes[aType] + aType).contains(bType)) {
-                return false
-            } else {
-                matchForm.remove(TYPE_KEY)
-            }
-        }
-        matchForm.remove(MATCHING_MODE)
-        if (matchForm[TYPE_KEY] == ANY_TYPE) {
-            matchForm.remove(TYPE_KEY)
-        }
-        def ids = formBNodeIdToResourceIds[matchForm.remove(BNODE_ID)]
-        if (ids && !ids.contains(bNode[ID_KEY])) {
-            return false
-        }
-        matchForm.remove(HAS_ID)
-        if (matchForm.size() > bNode.size()) {
-            return false
-        }
-        return comparator.isSubset(matchForm, bNode, this::mapMatches)
+    private boolean matchSubtypes() {
+        return asList(form[MATCHING_MODE]).contains(SUBTYPES)
     }
 
-    private boolean exactMatches(Map matchForm, Map bNode) {
-        if (matchForm == null || bNode == null) {
+    private boolean mapMatches(Map formBNode, Map bNode) {
+        if (formBNode == null || bNode == null) {
             return false
         }
-        matchForm = new HashMap(matchForm)
+
+        formBNode = new LinkedHashMap(formBNode)
+
+        def match = asList(formBNode[MATCHING_MODE])
+        if (match.contains(EXACT)) {
+            return exactMatches(formBNode, bNode)
+        }
+        if (formBNode[TYPE_KEY] && !typeMatches(formBNode, bNode)) {
+            return false
+        }
+        formBNode.remove(TYPE_KEY)
+        formBNode.remove(MATCHING_MODE)
+
+        if (!idMatches(formBNode, bNode)) {
+            return false
+        }
+        formBNode.remove(HAS_ID)
+        formBNode.remove(BNODE_ID)
+
+        if (formBNode.size() > bNode.size()) {
+            return false
+        }
+
+        return comparator.isSubset(formBNode, bNode, this::mapMatches)
+    }
+
+    private boolean exactMatches(Map formBNode, Map bNode) {
+        if (formBNode == null || bNode == null) {
+            return false
+        }
+
+        formBNode = new HashMap(formBNode)
         bNode = new HashMap(bNode)
-        if (asList(matchForm.remove(MATCHING_MODE)).contains(SUBTYPES)) {
-            String aType = matchForm[TYPE_KEY]
-            String bType = bNode[TYPE_KEY]
-            if ((baseTypeToSubtypes[aType] + aType).contains(bType)) {
-                matchForm.remove(TYPE_KEY)
-                bNode.remove(TYPE_KEY)
-            } else {
-                return false
-            }
-        }
-        if (matchForm[TYPE_KEY] == ANY_TYPE) {
-            matchForm.remove(TYPE_KEY)
-            bNode.remove(TYPE_KEY)
-        }
-        def ids = formBNodeIdToResourceIds[matchForm.remove(BNODE_ID)]
-        if (ids && !ids.contains(bNode[ID_KEY])) {
+
+        if (!typeMatches(formBNode, bNode)) {
             return false
         }
-        matchForm.remove(HAS_ID)
-        if (matchForm.size() != bNode.size()) {
+        formBNode.remove(TYPE_KEY)
+        bNode.remove(TYPE_KEY)
+        formBNode.remove(MATCHING_MODE)
+
+        if (!idMatches(formBNode, bNode)) {
             return false
         }
-        return comparator.isEqual(matchForm, bNode, this::exactMatches)
+        formBNode.remove(HAS_ID)
+        formBNode.remove(BNODE_ID)
+
+        if (formBNode.size() != bNode.size()) {
+            return false
+        }
+
+        return comparator.isEqual(formBNode, bNode, this::exactMatches)
+    }
+
+    private boolean idMatches(Map formBNode, Map bNode) {
+        def ids = formBNodeIdToResourceIds[formBNode[BNODE_ID]]
+        return ids ? ids.contains(bNode[ID_KEY]) : true
+    }
+
+    private boolean typeMatches(Map formBNode, Map bNode) {
+        if (isRoot(formBNode) && matchSubtypes()) {
+            return hasSameBaseType(bNode)
+        }
+        return formBNode[TYPE_KEY] == ANY_TYPE || formBNode[TYPE_KEY] == bNode[TYPE_KEY]
+    }
+
+    private boolean isRoot(Map formBNode) {
+        return formBNode[BNODE_ID] == form[BNODE_ID]
+    }
+
+    private boolean hasSameBaseType(Map thing) {
+        ([form[TYPE_KEY]] + thingSubtypes).contains(thing[TYPE_KEY])
     }
 
     private Map getSparqlPreparedForm() {
@@ -160,13 +175,10 @@ class MatchForm {
                 if (node[TYPE_KEY] == ANY_TYPE) {
                     node.remove(TYPE_KEY)
                 }
-                if (asList(node.remove(MATCHING_MODE)).contains(SUBTYPES) && baseTypeToSubtypes.containsKey(node[TYPE_KEY])) {
-                    def baseType = node.remove(TYPE_KEY)
-                    node[HAS_BASE_TYPE_TMP] = baseType
-                }
                 if (formBNodeIdToResourceIds.containsKey(bNodeId)) {
                     node[ID_KEY] = bNodeId
                 }
+                node.remove(MATCHING_MODE)
                 return new DocumentUtil.Nop()
             }
             if (asList(node).isEmpty()) {
@@ -183,23 +195,29 @@ class MatchForm {
                 ("<" + getRecordTmpId() + ">"): getVar(getRecordTmpId())
         ]
 
-        baseTypeToSubtypes.keySet().each { baseType ->
-            substitutions.put(":$HAS_BASE_TYPE_TMP \"$baseType\"".toString(), "a ?" + baseType)
-        }
-
         formBNodeIdToResourceIds.keySet().each { _id ->
             substitutions.put("<" + _id + ">", getVar(_id))
         }
 
-        return ttl.replace(substitutions)
+        def sparqlPattern = ttl.replace(substitutions)
+
+        if (matchSubtypes() && !thingSubtypes.isEmpty()) {
+            def baseType = form[TYPE_KEY]
+            def thingVar = getVar(getThingTmpId())
+            return sparqlPattern.replace("$thingVar a :$baseType", "$thingVar a ?$baseType")
+        }
+
+        return sparqlPattern
     }
 
 
     private String insertTypeMappings(String sparqlPattern) {
-        def valuesClause = baseTypeToSubtypes.collect { baseType, subTypes ->
-            "VALUES ?$baseType { ${([baseType] + subTypes).collect { ":$it" }.join(" ")} }\n"
-        }.join()
-        return valuesClause + sparqlPattern
+        if (matchSubtypes() && !thingSubtypes.isEmpty()) {
+            def baseType = form[TYPE_KEY]
+            String valuesClause = "VALUES ?$baseType { ${([baseType] + thingSubtypes).collect { ":$it" }.join(" ")} }\n"
+            return valuesClause + sparqlPattern
+        }
+        return sparqlPattern
     }
 
     private String insertIdMappings(String sparqlPattern) {
@@ -285,28 +303,7 @@ class MatchForm {
         return nodeIdToPath
     }
 
-    private Map<String, Set<String>> collectBaseTypeToSubtypes(JsonLd jsonLd) {
-        Map<String, Set<String>> mappings = [:]
-
-        if (jsonLd == null) {
-            return mappings
-        }
-
-        DocumentUtil.traverse(form) { node, path ->
-            if (node instanceof Map && node.containsKey(MATCHING_MODE) && ((List) node[MATCHING_MODE]).contains(SUBTYPES)) {
-                def baseType = (String) node[TYPE_KEY]
-                Set<String> subTypes = getSubtypes(baseType, jsonLd) as Set
-                if (!subTypes.isEmpty()) {
-                    mappings[baseType] = subTypes
-                }
-                return new DocumentUtil.Nop()
-            }
-        }
-
-        return mappings
-    }
-
-    private static Set<String> getSubtypes(String type, JsonLd jsonLd) {
-        return jsonLd.getSubClasses(type)
+    private Set<String> collectSubtypes(JsonLd jsonLd) {
+        return jsonLd?.getSubClasses((String) form[TYPE_KEY]) ?: [] as Set
     }
 }
