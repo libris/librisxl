@@ -113,8 +113,9 @@ public class Dump {
 
         try {
             // Has the dump not begun being written yet ?
+            var t = new Timeout(60 * 1000);
             while (!Files.exists(dumpFilePath)) {
-                Thread.sleep(10);
+                t.sleep();
             }
 
             try (RandomAccessFile file = new RandomAccessFile(dumpFilePath.toFile(), "r")) {
@@ -129,14 +130,9 @@ public class Dump {
 
                 // Is there not enough data for a full page yet ?
                 long offsetBytes = 17 * offsetLines;
-                long startWait = System.currentTimeMillis();
+                t = new Timeout(60 * 1000);
                 while (!dumpFinished && file.length() < offsetBytes + (17 * (long)EmmChangeSet.TARGET_HITS_PER_PAGE)) {
-                    if (System.currentTimeMillis() > startWait + (60 * 1000)) {
-                        logger.info("Timed out (1 minute) waiting for enough data to be generated in: " + dumpFilePath);
-                        res.sendError(500);
-                        return;
-                    }
-                    Thread.sleep(10);
+                    t.sleep();
 
                     if (file.length() >= 17) {
                         file.seek(file.length() - 17);
@@ -162,8 +158,12 @@ public class Dump {
                 }
 
             }
-        } catch (IOException | InterruptedException e) {
-            logger.error("Failed reading dumpfile: " + dumpFilePath, e);
+        } catch (Timeout.TimeOutException | InterruptedException e) {
+            logger.info("Timed out (1 minute) waiting for enough data to be generated in: {}", dumpFilePath);
+            HttpTools.sendError(res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "timeout");
+            return;
+        } catch (IOException e) {
+            logger.error("Failed reading dumpfile: {}", dumpFilePath, e);
             HttpTools.sendError(res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "");
             return;
         }
@@ -222,7 +222,7 @@ public class Dump {
 
         HttpTools.sendResponse(res, responseObject, JSON_CONTENT_TYPE);
     }
-    
+
     private static void invalidateIfOld(Path dumpFilePath) {
         try {
             if (!Files.exists(dumpFilePath))
@@ -337,5 +337,21 @@ public class Dump {
         preparedStatement.setArray(1, connection.createArrayOf("TEXT",  types.toArray() ));
 
         return preparedStatement;
+    }
+
+    private static class Timeout {
+        long time;
+        Timeout(long maxWaitMs) {
+            this.time = System.currentTimeMillis() + maxWaitMs;
+        }
+
+        public void sleep() throws InterruptedException, TimeOutException {
+            Thread.sleep(10);
+            if (System.currentTimeMillis() > time) {
+                throw new TimeOutException();
+            }
+        }
+
+        static class TimeOutException extends Exception {}
     }
 }
