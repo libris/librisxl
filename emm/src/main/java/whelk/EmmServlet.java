@@ -1,18 +1,14 @@
 package whelk;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedWriter;
-import java.io.IOException;
-import java.sql.*;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import java.util.LinkedHashMap;
 
 import static whelk.util.Jackson.mapper;
 
@@ -45,15 +41,15 @@ public class EmmServlet extends HttpServlet {
 
             // Send an Entry-Point reply
             if (until == null) {
-                HashMap responseObject = new HashMap();
-                ArrayList contexts = new ArrayList();
+                var responseObject = new LinkedHashMap<>();
+                var contexts = new ArrayList<>();
                 contexts.add("https://www.w3.org/ns/activitystreams");
                 contexts.add("https://emm-spec.org/1.0/context.json");
                 responseObject.put("@context", contexts);
                 responseObject.put("type", "OrderedCollection");
                 responseObject.put("id", apiBaseUrl);
                 responseObject.put("url", apiBaseUrl+"?dump=index");
-                HashMap first = new HashMap();
+                var first = new LinkedHashMap<>();
                 first.put("type", "OrderedCollectionPage");
                 first.put("id", apiBaseUrl+"?until="+System.currentTimeMillis());
                 responseObject.put("first", first);

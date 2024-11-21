@@ -6,11 +6,16 @@ import org.apache.logging.log4j.Logger;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import static whelk.util.Jackson.mapper;
@@ -28,31 +33,30 @@ public class EmmChangeSet {
             return;
         }
 
-        // THIS SHIT is so painful in Java :(
-        HashMap responseObject = new HashMap();
-        ArrayList contexts = new ArrayList();
+        var responseObject = new LinkedHashMap<>();
+        var contexts = new ArrayList<>();
         contexts.add("https://www.w3.org/ns/activitystreams");
         contexts.add("https://emm-spec.org/1.0/context.json");
         responseObject.put("@context", contexts);
         responseObject.put("type", "OrderedCollectionPage");
         responseObject.put("id", apiBaseUrl+"?until="+until);
-        HashMap partOf = new HashMap();
+        var partOf = new LinkedHashMap<>();
         partOf.put("type", "OrderedCollection");
         partOf.put("id", apiBaseUrl);
         responseObject.put("partOf", partOf);
         responseObject.put("next", apiBaseUrl+"?until="+nextTimeStamp.getTime());
-        List orderedItems = new ArrayList();
+        var orderedItems = new ArrayList<>();
         responseObject.put("orderedItems", orderedItems);
 
         for (EmmActivity activityInList : activitiesOnPage) {
-            HashMap activityInStream = new HashMap();
+            var activityInStream = new LinkedHashMap<>();
             activityInStream.put("type", switch (activityInList.activityType) {
                 case CREATE -> "create";
                 case UPDATE -> "update";
                 case DELETE -> "delete";
             });
             activityInStream.put("published", ZonedDateTime.ofInstant(activityInList.modificationTime.toInstant(), ZoneOffset.UTC).toString());
-            HashMap activityObject = new HashMap();
+            var activityObject = new HashMap<>();
             activityInStream.put("object", activityObject);
             activityObject.put("id", activityInList.uri);
             activityObject.put("type", activityInList.entityType);

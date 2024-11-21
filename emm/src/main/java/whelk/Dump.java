@@ -5,7 +5,10 @@ import org.apache.logging.log4j.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -13,12 +16,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 
 import static whelk.util.Jackson.mapper;
 
@@ -70,22 +79,22 @@ public class Dump {
     }
 
     private static void sendDumpIndexResponse(String apiBaseUrl, HttpServletResponse res) throws IOException {
-        HashMap responseObject = new HashMap();
+        var responseObject = new LinkedHashMap<>();
 
-        ArrayList<Map> categoriesList = new ArrayList<>();
+        var categoriesList = new ArrayList<>();
 
-        HashMap allCategory = new HashMap();
+        var allCategory = new LinkedHashMap<>();
         allCategory.put("url", apiBaseUrl+"?dump=all&offset=0");
         allCategory.put("description", "This category represents the whole collection, without reservations.");
         categoriesList.add(allCategory);
 
-        HashMap libraryCategory = new HashMap();
+        var libraryCategory = new LinkedHashMap<>();
         libraryCategory.put("url", apiBaseUrl+"?dump=itemAndInstance:X&offset=0");
         libraryCategory.put("description", "These categories represent the Items and Instances held by a particular library. " +
                 "The relevant library-code (sigel) for which you want data must replace the X in the category URL.");
         categoriesList.add(libraryCategory);
 
-        HashMap typesCategory = new HashMap();
+        var typesCategory = new LinkedHashMap<>();
         typesCategory.put("url", apiBaseUrl+"?dump=type:X&offset=0");
         typesCategory.put("description", "These categories represent the set of entities of a certain type, including subtypes. " +
                 "For example the type Agent would include both Persons and Organizations etc. The X in the URL must be replaced " +
@@ -166,7 +175,7 @@ public class Dump {
     }
 
     private static void sendFormattedResponse(Whelk whelk, String apiBaseUrl, String dump, ArrayList<String> recordIdsOnPage, HttpServletResponse res, long nextLineOffset, Long totalEntityCount, Instant dumpCreationTime) throws IOException{
-        HashMap responseObject = new HashMap();
+        var responseObject = new LinkedHashMap<>();
 
         responseObject.put("creationTime", ZonedDateTime.ofInstant(dumpCreationTime, ZoneOffset.UTC).toString());
         if (totalEntityCount == null)
@@ -180,8 +189,8 @@ public class Dump {
             responseObject.put("next", apiBaseUrl+"?dump="+dump+"&offset="+nextLineOffset);
         }
 
-        ArrayList<Map> entitesList = new ArrayList<>(EmmChangeSet.TARGET_HITS_PER_PAGE);
-        responseObject.put("entities", entitesList);
+        var entitiesList = new ArrayList<>(EmmChangeSet.TARGET_HITS_PER_PAGE);
+        responseObject.put("entities", entitiesList);
         Map<String, Document> idsAndRecords = whelk.bulkLoad(recordIdsOnPage);
         for (Document doc : idsAndRecords.values()) {
 
@@ -199,15 +208,15 @@ public class Dump {
                     logger.warn("Bad instance? " + itemOf);
                     continue;
                 }
-                ArrayList itemOfPath = new ArrayList();
+                var itemOfPath = new ArrayList<>();
                 itemOfPath.add("@graph"); itemOfPath.add(1); itemOfPath.add("itemOf"); // unggh..
                 doc._set(itemOfPath, instance.getThing(), doc.data);
-                entitesList.add(doc.getThing());
+                entitiesList.add(doc.getThing());
             }
 
             // For normal categories
             else {
-                entitesList.add(doc.getThing());
+                entitiesList.add(doc.getThing());
             }
 
         }
