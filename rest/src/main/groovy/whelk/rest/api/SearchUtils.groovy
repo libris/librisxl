@@ -383,6 +383,7 @@ class SearchUtils {
             aggregation['buckets'].each { bucket ->
                 String itemId = bucket['key']
 
+                Map observation
                 if (key in multiSelected.keySet()) {
                     String param = makeParam(key, itemId)
                     boolean isSelected = escapeQueryParam(itemId) in multiSelected[key]
@@ -390,22 +391,28 @@ class SearchUtils {
                         ? baseUrlForKey.replace("&${param}", '') // FIXME: generate up-link in a cleaner way
                         : "${baseUrlForKey}&${param}"
 
-                    Map observation = ['totalItems': bucket.getAt('doc_count'),
+                    observation = ['totalItems': bucket.getAt('doc_count'),
                                        'view': [(JsonLd.ID_KEY): searchPageUrl],
                                        '_selected': isSelected,
                                        'object': lookup.chip(itemId)]
-
-                    observations << observation
                 }
                 else {
                     String searchPageUrl = "${baseUrlForKey}&${ESQuery.AND_PREFIX}${makeParam(key, itemId)}"
 
-                    Map observation = ['totalItems': bucket.getAt('doc_count'),
+                    observation = ['totalItems': bucket.getAt('doc_count'),
                                        'view': [(JsonLd.ID_KEY): searchPageUrl],
                                        'object': lookup.chip(itemId)]
 
-                    observations << observation
                 }
+
+                Map bucketAggs = bucket[ESQuery.FILTERED_AGG_NAME]
+                if (bucketAggs) {
+                  Map nestedAggs = bucketAggs.clone()
+                  nestedAggs.remove('doc_count')
+                  observation = addSlices(lookup, observation, nestedAggs, baseUrlForKey, null, multiSelected)
+                }
+
+                observations << observation
             }
 
             if (observations) {
