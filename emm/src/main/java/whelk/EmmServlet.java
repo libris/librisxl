@@ -2,19 +2,20 @@ package whelk;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import whelk.util.http.HttpTools;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedWriter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-
-import static whelk.util.Jackson.mapper;
 
 public class EmmServlet extends HttpServlet {
     private final Logger logger = LogManager.getLogger(this.getClass());
     private final Whelk whelk;
+
+    public static final String AS2_CONTENT_TYPE = "application/activity+json";
+
     public EmmServlet() {
         whelk = Whelk.createLoadedCoreWhelk();
     }
@@ -30,9 +31,6 @@ public class EmmServlet extends HttpServlet {
             String dump = req.getParameter("dump");
             String until = req.getParameter("until");
             String apiBaseUrl = req.getRequestURL().toString();
-
-            res.setCharacterEncoding("utf-8");
-            res.setContentType("application/activity+json");
 
             if (dump != null) {
                 Dump.sendDumpResponse(whelk, apiBaseUrl, req, res);
@@ -54,10 +52,7 @@ public class EmmServlet extends HttpServlet {
                 first.put("id", apiBaseUrl+"?until="+System.currentTimeMillis());
                 responseObject.put("first", first);
 
-                String jsonResponse = mapper.writeValueAsString(responseObject);
-                BufferedWriter writer = new BufferedWriter( res.getWriter() );
-                writer.write(jsonResponse);
-                writer.close();
+                HttpTools.sendResponse(res, responseObject, AS2_CONTENT_TYPE);
                 return;
             }
 

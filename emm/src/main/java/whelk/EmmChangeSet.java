@@ -2,9 +2,9 @@ package whelk;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import whelk.util.http.HttpTools;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import static whelk.util.Jackson.mapper;
+import static whelk.EmmServlet.AS2_CONTENT_TYPE;
 
 public class EmmChangeSet {
     public static final int TARGET_HITS_PER_PAGE = 100;
@@ -64,10 +64,7 @@ public class EmmChangeSet {
             orderedItems.add(activityInStream);
         }
 
-        String jsonResponse = mapper.writeValueAsString(responseObject);
-        BufferedWriter writer = new BufferedWriter( res.getWriter() );
-        writer.write(jsonResponse);
-        writer.close();
+        HttpTools.sendResponse(res, responseObject, AS2_CONTENT_TYPE);
     }
 
     /**

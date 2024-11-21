@@ -2,6 +2,7 @@ package whelk;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import whelk.util.http.HttpTools;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,8 +30,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import static whelk.util.Jackson.mapper;
-
 public class Dump {
     /* Here is how these dumps work:
      * When someone asks for a dump of particular category, we check if we have one already.
@@ -55,6 +54,7 @@ public class Dump {
      */
     private static final Logger logger = LogManager.getLogger(Dump.class);
     private static final String DUMP_END_MARKER = "_DUMP_END_MARKER\n"; // Must be 17 bytes
+    private static final String JSON_CONTENT_TYPE = "application/json";
 
     public static void sendDumpResponse(Whelk whelk, String apiBaseUrl, HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException {
         String dump = req.getParameter("dump");
@@ -104,10 +104,7 @@ public class Dump {
         responseObject.put("categories", categoriesList);
         responseObject.put("warning", "This description of the available dump categories is a temporary one which will NOT look like this for long. Be careful not to rely on the format or even existence of this particular page.");
 
-        String jsonResponse = mapper.writeValueAsString(responseObject);
-        BufferedWriter writer = new BufferedWriter( res.getWriter() );
-        writer.write(jsonResponse);
-        writer.close();
+        HttpTools.sendResponse(res, responseObject, JSON_CONTENT_TYPE);
     }
 
     private static void sendDumpPageResponse(Whelk whelk, String apiBaseUrl, String dump, Path dumpFilePath, long offsetLines, HttpServletResponse res) throws IOException {
@@ -158,8 +155,8 @@ public class Dump {
                     if (17 == file.read(lineBuffer)) {
                         recordIdsOnPage.add(new String(lineBuffer, StandardCharsets.UTF_8).trim());
                     } else {
-                        logger.error("Suspected corrupt dump (non-17-byte line detected): " + dumpFilePath);
-                        res.sendError(500);
+                        logger.error("Suspected corrupt dump (non-17-byte line detected): {}", dumpFilePath);
+                        HttpTools.sendError(res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "");
                         return;
                     }
                 }
@@ -167,6 +164,8 @@ public class Dump {
             }
         } catch (IOException | InterruptedException e) {
             logger.error("Failed reading dumpfile: " + dumpFilePath, e);
+            HttpTools.sendError(res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "");
+            return;
         }
 
         BasicFileAttributes attributes = Files.readAttributes(dumpFilePath, BasicFileAttributes.class);
@@ -221,12 +220,9 @@ public class Dump {
 
         }
 
-        String jsonResponse = mapper.writeValueAsString(responseObject);
-        BufferedWriter writer = new BufferedWriter( res.getWriter() );
-        writer.write(jsonResponse);
-        writer.close();
+        HttpTools.sendResponse(res, responseObject, JSON_CONTENT_TYPE);
     }
-
+    
     private static void invalidateIfOld(Path dumpFilePath) {
         try {
             if (!Files.exists(dumpFilePath))
