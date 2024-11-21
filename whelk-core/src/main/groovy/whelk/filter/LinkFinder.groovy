@@ -143,9 +143,12 @@ class LinkFinder {
         // Keep looking for more links
         for (Object key : data.keySet()) {
 
-            // sameAs objects are not links per se, and must not be replaced
+            // sameAs objects are not links per se, and must not be replaced.
+            // itemUsed is used to target specific components of holding records. If we let those
+            // be upgraded, links to those specific components would be lost (replaced with links
+            // to the record as a whole). So we don't upgrade them. This is a cheat/hack. :(
             String keyString = (String) key
-            if (keyString == "sameAs")
+            if (keyString == "sameAs" || keyString == "itemUsed")
                 continue
 
             Object value = data.get(key)
@@ -183,7 +186,7 @@ class LinkFinder {
     /**
      * A heavy-handed last line of defense against confusing embedded entities with references.
      * After running this, 'document' can no longer have both @id and other data in any same
-     * embedded entity (root entities are exempt).
+     * embedded entity (root entities and root entites under hasComponent are exempt).
      */
     private void clearReferenceAmbiguities(Document document) {
         List graphList = document.data.get(JsonLd.GRAPH_KEY)
@@ -226,19 +229,22 @@ class LinkFinder {
         for (Object key : data.keySet()) {
             Object value = data.get(key)
 
+            // Components must themselves be considered "root" entities, as they must be allowed both @id and data.
+            boolean viewNextAsRoot = key.equals("hasComponent")
+
             if (value instanceof List)
-                clearReferenceAmbiguities_internal( (List) value )
+                clearReferenceAmbiguities_internal( (List) value, viewNextAsRoot )
             if (value instanceof Map)
-                clearReferenceAmbiguities_internal( (Map) value, false )
+                clearReferenceAmbiguities_internal( (Map) value, viewNextAsRoot )
         }
     }
 
-    private void clearReferenceAmbiguities_internal(List data) {
+    private void clearReferenceAmbiguities_internal(List data, boolean isRootEntry) {
         for (Object element : data){
             if (element instanceof List)
-                clearReferenceAmbiguities_internal( (List) element )
+                clearReferenceAmbiguities_internal( (List) element, false )
             else if (element instanceof Map)
-                clearReferenceAmbiguities_internal( (Map) element, false )
+                clearReferenceAmbiguities_internal( (Map) element, isRootEntry )
         }
     }
 }
