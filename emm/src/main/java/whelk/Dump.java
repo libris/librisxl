@@ -123,7 +123,13 @@ public class Dump {
 
                 // Is there not enough data for a full page yet ?
                 long offsetBytes = 17 * offsetLines;
+                long startWait = System.currentTimeMillis();
                 while (!dumpFinished && file.length() < offsetBytes + (17 * (long)EmmChangeSet.TARGET_HITS_PER_PAGE)) {
+                    if (System.currentTimeMillis() > startWait + (60 * 1000)) {
+                        logger.info("Timed out (1 minute) waiting for enough data to be generated in: " + dumpFilePath);
+                        res.sendError(500);
+                        return;
+                    }
                     Thread.sleep(10);
 
                     if (file.length() >= 17) {
@@ -232,6 +238,16 @@ public class Dump {
 
     private static void generateDump(Whelk whelk, String dump, Path dumpFilePath) {
         new Thread(() -> {
+
+            // Guard against two racing threads trying to generate the same dump.
+            // createNewFile atomically checks if the file exists.
+            try {
+                if (!dumpFilePath.toFile().createNewFile())
+                    return;
+            } catch (IOException e) {
+                return;
+            }
+
             try (BufferedWriter dumpFileWriter = new BufferedWriter(new FileWriter(dumpFilePath.toFile()));
                  Connection connection = whelk.getStorage().getOuterConnection()) {
                 connection.setAutoCommit(false);
@@ -266,6 +282,7 @@ public class Dump {
                 dumpFileWriter.write( String.format("%-17s", DUMP_END_MARKER) );
             } catch (IOException | SQLException e) {
                 logger.error("Failed dump generation", e);
+                dumpFilePath.toFile().delete();
             }
         }).start();
     }
