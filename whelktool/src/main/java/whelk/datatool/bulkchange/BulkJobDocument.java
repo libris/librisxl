@@ -66,11 +66,10 @@ public class BulkJobDocument extends Document {
     public static final String TARGET_FORM_KEY = "bulk:targetForm";
     public static final String COMMENT_KEY = "comment";
     public static final String LABEL_KEY = "label";
-    public static final String ADD_KEY = "bulk:add";
     public static final String KEEP_KEY = "bulk:keep";
     public static final String DEPRECATE_KEY = "bulk:deprecate";
     public static final String REMOVE_SUBDIVISION_KEY = "bulk:removeSubdivision";
-    public static final String ADD_SUBJECT_KEY = "bulk:addSubject";
+    public static final String ADD_TERM_KEY = "bulk:addTerm";
     public static final String SCRIPT_KEY = "bulk:script";
     public static final String EXECUTION_KEY = "bulk:execution";
     public static final String EXECUTION_TYPE = "bulk:Execution";
