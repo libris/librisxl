@@ -14,7 +14,7 @@ class MatchFormSpec extends Specification {
 
     def "match data against form"() {
         given:
-        def matchForm = new MatchForm()
+        def matchForm = new MatchForm([:])
         matchForm.formBNodeIdToResourceIds = ["#1": ["https://libris.kb.se/x#it", "https://libris.kb.se/y#it"] as Set]
         matchForm.baseTypeToSubtypes = ["T": ["Tx", "Ty"] as Set]
 
