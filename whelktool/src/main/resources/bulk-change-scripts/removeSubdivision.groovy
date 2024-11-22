@@ -8,34 +8,37 @@
  */
 
 
-import whelk.JsonLd
 import whelk.Whelk
+import whelk.datatool.DocumentItem
 import whelk.util.DocumentUtil
 
 import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
 import static whelk.converter.JsonLDTurtleConverter.toTurtleNoPrelude
-import static whelk.datatool.bulkchange.BulkJobDocument.ADD_SUBJECT_KEY
+import static whelk.datatool.bulkchange.BulkJobDocument.ADD_TERM_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.REMOVE_SUBDIVISION_KEY
+
+Whelk whelk = getWhelk()
 
 Map inScheme
 List<Map> removeSubdivision = asList(parameters.get(REMOVE_SUBDIVISION_KEY)).collect {
     Map copy = new HashMap((Map) it)
-    inScheme = copy.remove('inScheme')
+    inScheme = (Map) copy.remove('inScheme')
     return copy
 }
-Map addSubject = parameters.get(ADD_SUBJECT_KEY)
+Map addTerm = parameters.get(ADD_TERM_KEY)
+String addTermType = addTerm ? getType(addTerm) : null
 
-def process = { doc ->
+def process = { DocumentItem doc ->
     Map thing = doc.graph[1] as Map
 
-    if (thing[JsonLd.TYPE_KEY] == 'ComplexSubject') {
+    if (thing[TYPE_KEY] == 'ComplexSubject') {
         return
     }
-
     Set<List> modifiedListPaths = [] as Set
     def modified = DocumentUtil.traverse(thing) { value, path ->
-        if (value instanceof Map && value[JsonLd.TYPE_KEY] == 'ComplexSubject') {
+        if (value instanceof Map && value[TYPE_KEY] == 'ComplexSubject') {
             var t = asList(value.get('termComponentList'))
             if ((!inScheme || inScheme == value['inScheme']) && t.containsAll(removeSubdivision)) {
                 var parentPath = path.size() > 1 ? path.dropRight(1) : null
@@ -43,8 +46,17 @@ def process = { doc ->
                     var parent = DocumentUtil.getAtPath(thing, parentPath)
                     if (parent instanceof List) {
                         modifiedListPaths.add(parentPath)
-                        if (addSubject) {
-                            parent.add(addSubject)
+                        if (whelk.jsonld.isSubClassOf(addTermType, 'Subject')) {
+                            parent.add(addTerm)
+                        } else if (whelk.jsonld.isSubClassOf(addTermType, 'GenreForm')) {
+                            var grandParent = DocumentUtil.getAtPath(thing, parentPath.dropRight(1))
+                            if (grandParent instanceof Map) {
+                                def genreForm = asList(grandParent['genreForm'])
+                                if (!genreForm.contains(addTerm)) {
+                                    genreForm.add(addTerm)
+                                }
+                                grandParent['genreForm'] = genreForm
+                            }
                         }
                     }
                 }
@@ -81,7 +93,6 @@ linked.each { l ->
     }
 }
 if (!blank.isEmpty()) {
-    Whelk whelk = getWhelk()
     /*
     Querying records containing the given combination of blank subdivisions is very slow so we have to run a separate
     query for each subdivision. However the maximum number of results from a Sparql query is 100k so if we just take the
@@ -109,7 +120,7 @@ static DocumentUtil.Operation mapSubject(Map complexSubject, termComponentList, 
     }
     if (t2.size() == 1) {
         def remaining = t2.first()
-        if (complexSubject['inScheme'] && !remaining[ID_KEY]) {
+        if (complexSubject['inScheme'] && !remaining['inScheme'] && !remaining[ID_KEY]) {
             remaining['inScheme'] = complexSubject['inScheme']
         }
         return new DocumentUtil.Replace(remaining)
@@ -119,3 +130,15 @@ static DocumentUtil.Operation mapSubject(Map complexSubject, termComponentList, 
     result.termComponentList = t2
     return new DocumentUtil.Replace(result)
 }
+
+String getType(Map term) {
+    if (term[ID_KEY]) {
+        String type
+        selectByIds([term[ID_KEY]]) {
+            type = it.doc.getThingType()
+        }
+        return type
+    }
+    return term[TYPE_KEY]
+}
+

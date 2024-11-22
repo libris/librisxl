@@ -2,10 +2,8 @@ package whelk.datatool.bulkchange;
 
 import com.google.common.collect.Maps;
 import org.apache.commons.io.IOUtils;
-import whelk.Document;
 import whelk.Whelk;
 import whelk.datatool.Script;
-import whelk.datatool.form.ModifiedThing;
 import whelk.datatool.form.Transform;
 
 import java.io.IOException;
@@ -15,9 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static whelk.JsonLd.GRAPH_KEY;
-import static whelk.JsonLd.RECORD_KEY;
-import static whelk.datatool.bulkchange.BulkJobDocument.ADD_SUBJECT_KEY;
+import static whelk.datatool.bulkchange.BulkJobDocument.ADD_TERM_KEY;
 import static whelk.datatool.bulkchange.BulkJobDocument.KEEP_KEY;
 import static whelk.datatool.bulkchange.BulkJobDocument.MATCH_FORM_KEY;
 import static whelk.datatool.bulkchange.BulkJobDocument.DEPRECATE_KEY;
@@ -80,7 +76,7 @@ public sealed interface Specification permits Specification.Create, Specificatio
 
     record Other(String name, Map<String, ?> parameters) implements Specification {
         private static final Map<String, List<String>> ALLOWED_SCRIPTS_PARAMS = Map.of(
-                "removeSubdivision", List.of(REMOVE_SUBDIVISION_KEY, ADD_SUBJECT_KEY)
+                "removeSubdivision", List.of(REMOVE_SUBDIVISION_KEY, ADD_TERM_KEY)
         );
 
         @Override
