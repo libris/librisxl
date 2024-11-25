@@ -27,6 +27,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -170,26 +171,39 @@ public class Dump {
 
         BasicFileAttributes attributes = Files.readAttributes(dumpFilePath, BasicFileAttributes.class);
         Instant dumpCreationTime = attributes.creationTime().toInstant();
-        sendFormattedResponse(whelk, apiBaseUrl, dump, recordIdsOnPage, res, offsetLines + EmmChangeSet.TARGET_HITS_PER_PAGE, totalEntityCount, dumpCreationTime);
+        sendFormattedResponse(whelk, apiBaseUrl, dump, recordIdsOnPage, res, offsetLines, totalEntityCount, dumpCreationTime);
     }
 
-    private static void sendFormattedResponse(Whelk whelk, String apiBaseUrl, String dump, ArrayList<String> recordIdsOnPage, HttpServletResponse res, long nextLineOffset, Long totalEntityCount, Instant dumpCreationTime) throws IOException{
+    private static void sendFormattedResponse(Whelk whelk, String apiBaseUrl, String dump, ArrayList<String> recordIdsOnPage, HttpServletResponse res, long offset, Long totalEntityCount, Instant dumpCreationTime) throws IOException{
         var responseObject = new LinkedHashMap<>();
 
-        responseObject.put("creationTime", ZonedDateTime.ofInstant(dumpCreationTime, ZoneOffset.UTC).toString());
+        responseObject.put(JsonLd.CONTEXT_KEY, "https://www.w3.org/ns/activitystreams");
+        responseObject.put(JsonLd.ID_KEY, apiBaseUrl+"?dump="+dump+"&offset="+offset);
+        responseObject.put("type", "CollectionPage");
+        responseObject.put("startTime", ZonedDateTime.ofInstant(dumpCreationTime, ZoneOffset.UTC).toString());
         if (totalEntityCount == null)
-            responseObject.put("status", "generating");
+            responseObject.put("_status", "generating");
         else {
-            responseObject.put("status", "done");
-            responseObject.put("totalEntityCount", totalEntityCount);
+            responseObject.put("_status", "done");
+            responseObject.put("totalItems", totalEntityCount);
         }
 
-        if (totalEntityCount == null || nextLineOffset < totalEntityCount) {
-            responseObject.put("next", apiBaseUrl+"?dump="+dump+"&offset="+nextLineOffset);
+        long nextOffset = offset + EmmChangeSet.TARGET_HITS_PER_PAGE;
+        if (totalEntityCount == null || nextOffset < totalEntityCount) {
+            responseObject.put("next", apiBaseUrl+"?dump="+dump+"&offset="+nextOffset);
         }
 
-        var entitiesList = new ArrayList<>(EmmChangeSet.TARGET_HITS_PER_PAGE);
-        responseObject.put("entities", entitiesList);
+        var items = new ArrayList<>(EmmChangeSet.TARGET_HITS_PER_PAGE);
+        responseObject.put("items", items);
+
+        var contextDoc = contextDoc(whelk);
+        if (offset == 0) {
+            items.add(Map.of(
+                    JsonLd.ID_KEY, contextDoc.getRecordIdentifiers().getFirst(),
+                    JsonLd.CONTEXT_KEY, contextDoc.data.get(JsonLd.CONTEXT_KEY)
+            ));
+        }
+
         Map<String, Document> idsAndRecords = whelk.bulkLoad(recordIdsOnPage);
         for (Document doc : idsAndRecords.values()) {
 
@@ -207,20 +221,39 @@ public class Dump {
                     logger.warn("Bad instance? " + itemOf);
                     continue;
                 }
+                // TODO just put instance as its own graph in items?
                 var itemOfPath = new ArrayList<>();
                 itemOfPath.add("@graph"); itemOfPath.add(1); itemOfPath.add("itemOf"); // unggh..
                 doc._set(itemOfPath, instance.getThing(), doc.data);
-                entitiesList.add(doc.getThing());
-            }
 
+                items.add(wrapDoc(doc, contextDoc));
+            }
             // For normal categories
             else {
-                entitiesList.add(doc.getThing());
+                items.add(wrapDoc(doc, contextDoc));
             }
 
         }
 
         HttpTools.sendResponse(res, responseObject, JSON_CONTENT_TYPE);
+    }
+
+    private static Object wrapDoc(Document doc, Document contextDoc) {
+        var context = new ArrayList<>();
+        context.add(null);
+        context.add(contextDoc.getRecordIdentifiers().getFirst());
+        return Map.of(
+                JsonLd.ID_KEY, doc.getRecordIdentifiers().getFirst(),
+                JsonLd.CONTEXT_KEY, context,
+                JsonLd.GRAPH_KEY, doc.data.get(JsonLd.GRAPH_KEY)
+        );
+    }
+
+    private static Document contextDoc(Whelk whelk) {
+        // FIXME whelk load by IRI
+        var docs = whelk.bulkLoad(List.of(whelk.getSystemContextUri()));
+        assert docs.size() == 1;
+        return docs.entrySet().stream().findFirst().get().getValue();
     }
 
     private static void invalidateIfOld(Path dumpFilePath) {
