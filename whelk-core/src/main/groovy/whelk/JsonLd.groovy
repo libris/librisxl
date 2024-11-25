@@ -44,6 +44,7 @@ class JsonLd {
 
     public static final String RECORD_TYPE = 'Record'
     public static final String CACHE_RECORD_TYPE = 'CacheRecord'
+    public static final String SYSTEM_RECORD_TYPE = 'SystemRecord'
     public static final String VIRTUAL_RECORD_TYPE = 'VirtualRecord'
     
     public static final String SEARCH_KEY = "_str"
