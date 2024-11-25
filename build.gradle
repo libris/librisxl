@@ -1,5 +1,5 @@
 plugins {
-    id "nebula.lint" version "16.16.0"
+    id "nebula.lint" version "20.2.0"
     id "com.github.johnrengelman.shadow" version "8.1.1"
 }
 

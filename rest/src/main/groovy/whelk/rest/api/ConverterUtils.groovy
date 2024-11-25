@@ -8,6 +8,7 @@ import whelk.converter.JsonLD2N3Converter
 import whelk.converter.JsonLD2RdfXml
 import whelk.converter.JsonLDTrigConverter
 import whelk.converter.JsonLDTurtleConverter
+import whelk.util.http.MimeTypes
 
 @Log
 class ConverterUtils {
@@ -18,10 +19,10 @@ class ConverterUtils {
         this.whelk = whelk
 
         converters = [
-                (MimeTypes.RDF): new JsonLD2RdfXml(whelk),
+                (MimeTypes.RDF)   : new JsonLD2RdfXml(whelk),
                 (MimeTypes.TURTLE): new JsonLDTurtleConverter(null, whelk),
-                (MimeTypes.TRIG): new JsonLDTrigConverter(null, whelk),
-                (MimeTypes.N3): new JsonLD2N3Converter(whelk),
+                (MimeTypes.TRIG)  : new JsonLDTrigConverter(null, whelk),
+                (MimeTypes.N3)    : new JsonLD2N3Converter(whelk),
         ]
     }
 

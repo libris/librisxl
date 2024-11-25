@@ -63,7 +63,7 @@ $ curl -XGET -H "Accept: application/ld+json" https://libris-qa.kb.se/s93ns5h436
 To get data in a different flavour (using a specific selection of RDF
 vocabularies), we support a form of profile negotiation.
 
-(Note: As of 2023, Profile Negotiation is not yet a standard. See the
+(Note: As of 2024, Profile Negotiation is not yet a standard. See the
 [IETF Internet Draft on Profile Negotiation](https://profilenegotiation.github.io/I-D-Profile-Negotiation/I-D-Profile-Negotiation.html)
 and
 [W3C Working Draft on Content Negotiation by Profile](https://www.w3.org/TR/dx-prof-conneg/)
@@ -93,6 +93,49 @@ Using only headers for negotation:
 ```
 $ curl -s -H 'Accept: application/trig' -H 'Accept-Profile: <https://id.kb.se/sys/context/target/loc-w3c-sdo>' \
       http://libris-qa.kb.se/fxql7jqr38b1dkf
+```
+
+### Content Negotiation
+
+To get data in different representations, we support [content negotiation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Content_negotiation).
+Currently supported:
+
+* `application/ld+json` ([JSON-LD](https://www.w3.org/TR/json-ld11/))
+* `application/json` (JSON)
+* `text/turtle` ([Turtle](https://www.w3.org/TR/turtle/))
+* `application/trig` ([TriG](https://www.w3.org/TR/trig/))
+* `application/rdf+xml` ([RDF/XML](https://www.w3.org/TR/rdf-syntax-grammar/))
+
+```
+$ curl -s -H'Accept: application/ld+json' https://libris-qa.kb.se/s93ns5h436dxqsh
+
+$ curl -s -H'Accept: application/json' https://libris-qa.kb.se/s93ns5h436dxqsh
+
+$ curl -s -H'Accept: text/turtle' https://libris-qa.kb.se/s93ns5h436dxqsh
+
+$ curl -s -H'Accept: application/trig' https://libris-qa.kb.se/s93ns5h436dxqsh
+
+$ curl -s -H'Accept: application/rdf+xml' https://libris-qa.kb.se/s93ns5h436dxqsh
+```
+
+For convenience, you can add `/data.<extension>` to get a certain representation
+without having to specify it with `Accept` (in this case, the `Accept` header is ignored):
+
+```
+# JSON-LD
+$ curl -s https://libris-qa.kb.se/s93ns5h436dxqsh/data.jsonld
+
+# JSON
+$ curl -s https://libris-qa.kb.se/s93ns5h436dxqsh/data.json
+
+# Turtle
+$ curl -s https://libris-qa.kb.se/s93ns5h436dxqsh/data.ttl
+
+# TriG
+$ curl -s https://libris-qa.kb.se/s93ns5h436dxqsh/data.trig
+
+# RDF/XML
+$ curl -s https://libris-qa.kb.se/s93ns5h436dxqsh/data.rdf
 ```
 
 ## Requests that require authentication – create, update and remove

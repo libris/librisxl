@@ -28,6 +28,8 @@ dependencies {
     implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
     implementation "org.eclipse.jetty.ee8:jetty-ee8-servlet:${jettyVersion}"
 
+    implementation "org.apache.httpcomponents:httpclient:${httpComponentsClientVersion}"
+
     // Logging
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"

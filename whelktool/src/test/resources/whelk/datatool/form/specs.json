@@ -1,0 +1,3890 @@
+{
+  "specs": [
+    {
+      "name": "Remove literal: non-repeatable property",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": "v2"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "removedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "addedPaths": [
+      ],
+      "before": {
+        "p1": "v1",
+        "p2": "v2"
+      },
+      "after": {
+        "p1": "v1"
+      }
+    },
+    {
+      "name": "Remove literal: repeatable property, single value",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          "v2"
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "removedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "addedPaths": [
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": "v2"
+      },
+      "after": {
+        "p1": "v1"
+      }
+    },
+    {
+      "name": "Remove literal: repeatable property, all values",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3",
+          "v4"
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "removedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "addedPaths": [
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3",
+          "v4"
+        ]
+      },
+      "after": {
+        "p1": "v1"
+      }
+    },
+    {
+      "name": "Remove literal: repeatable property, some values",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3",
+          "v4"
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          "v2"
+        ]
+      },
+      "removedPaths": [
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
+      "addedPaths": [
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3",
+          "v4",
+          "v5"
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v5"
+        ]
+      }
+    },
+    {
+      "name": "Remove link: non-repeatable property",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "@id": "https://id.kb.se/x"
+        }
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "removedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "addedPaths": [
+      ],
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "@id": "https://id.kb.se/x"
+        }
+      },
+      "after": {
+        "p1": "v1"
+      }
+    },
+    {
+      "name": "Remove link: repeatable property, single value",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          }
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "removedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "addedPaths": [
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1"
+      }
+    },
+    {
+      "name": "Remove link: repeatable property, all values",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          },
+          {
+            "@id": "https://id.kb.se/z"
+          }
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "removedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "addedPaths": [
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          },
+          {
+            "@id": "https://id.kb.se/z"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1"
+      }
+    },
+    {
+      "name": "Remove link: repeatable property, some values",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          },
+          {
+            "@id": "https://id.kb.se/b"
+          },
+          {
+            "@id": "https://id.kb.se/c"
+          }
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/b"
+          }
+        ]
+      },
+      "removedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
+      "addedPaths": [
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          },
+          {
+            "@id": "https://id.kb.se/b"
+          },
+          {
+            "@id": "https://id.kb.se/c"
+          },
+          {
+            "@id": "https://id.kb.se/d"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/b"
+          },
+          {
+            "@id": "https://id.kb.se/d"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Remove blank node: non-repeatable property",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "bulk:formBlankNodeId": "2",
+          "p3": "v3"
+        }
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "removedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "addedPaths": [
+      ],
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": "v3"
+        }
+      },
+      "after": {
+        "p1": "v1"
+      }
+    },
+    {
+      "name": "Remove blank node: repeatable property, single value",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "2",
+            "p2": "v2"
+          }
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "removedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "addedPaths": [
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1"
+      }
+    },
+    {
+      "name": "Remove blank node: repeatable property, all values",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "2",
+            "p2": "v2"
+          },
+          {
+            "bulk:formBlankNodeId": "3",
+            "p3": "v3"
+          },
+          {
+            "bulk:formBlankNodeId": "4",
+            "p4": "v4"
+          }
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "removedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "addedPaths": [
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3"
+          },
+          {
+            "p4": "v4"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1"
+      }
+    },
+    {
+      "name": "Remove blank node: repeatable property, some values",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "2",
+            "p2": "v2"
+          },
+          {
+            "bulk:formBlankNodeId": "3",
+            "p3": "v3"
+          },
+          {
+            "bulk:formBlankNodeId": "4",
+            "p4": "v4"
+          }
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "2",
+            "p2": "v2"
+          }
+        ]
+      },
+      "removedPaths": [
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
+      "addedPaths": [
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3"
+          },
+          {
+            "p4": "v4"
+          },
+          {
+            "p5": "v5"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          },
+          {
+            "p5": "v5"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Remove blank node: repeatable property, exact match some values",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "2",
+            "p2": "v2"
+          },
+          {
+            "bulk:formBlankNodeId": "3",
+            "p3": "v3"
+          },
+          {
+            "bulk:formBlankNodeId": "4",
+            "bulk:matchingMode": "bulk:Exact",
+            "p4": "v4"
+          },
+          {
+            "bulk:formBlankNodeId": "5",
+            "bulk:matchingMode": "bulk:Exact",
+            "p5": "v5"
+          }
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "2",
+            "p2": "v2"
+          }
+        ]
+      },
+      "removedPaths": [
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ],
+        [
+          "r1",
+          3
+        ]
+      ],
+      "addedPaths": [
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2",
+            "p4": "v4"
+          },
+          {
+            "p3": "v3",
+            "p4": "v4"
+          },
+          {
+            "p4": "v4"
+          },
+          {
+            "p5": "v5"
+          },
+          {
+            "p4": "v4",
+            "p5": "v5"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2",
+            "p4": "v4"
+          },
+          {
+            "p4": "v4",
+            "p5": "v5"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Remove any blank node",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "bulk:formBlankNodeId": "2",
+          "p3": {
+            "@type": "bulk:Any",
+            "bulk:formBlankNodeId": "3"
+          }
+        }
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "bulk:formBlankNodeId": "2"
+        }
+      },
+      "removedPaths": [
+        [
+          "p2",
+          "p3"
+        ]
+      ],
+      "addedPaths": [
+      ],
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "@type": "T",
+            "p1": "v2"
+          }
+        }
+      },
+      "after": {
+        "p1": "v1"
+      }
+    },
+    {
+      "name": "Remove various",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": {
+          "bulk:formBlankNodeId": "2",
+          "r1": [
+            "v2",
+            "v3"
+          ],
+          "p2": "v2",
+          "p3": {
+            "@id": "https://id.kb.se/x"
+          },
+          "r2": [
+            {
+              "bulk:formBlankNodeId": "4",
+              "p5": "v5"
+            },
+            {
+              "bulk:formBlankNodeId": "5",
+              "p6": "v6",
+              "p7": {
+                "@id": "https://id.kb.se/y"
+              }
+            }
+          ]
+        }
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": {
+          "bulk:formBlankNodeId": "2",
+          "r1": [
+            "v2"
+          ],
+          "r2": [
+            {
+              "bulk:formBlankNodeId": "5",
+              "p6": "v6"
+            }
+          ]
+        }
+      },
+      "removedPaths": [
+        [
+          "p1",
+          "r1",
+          1
+        ],
+        [
+          "p1",
+          "p2"
+        ],
+        [
+          "p1",
+          "p3"
+        ],
+        [
+          "p1",
+          "r2",
+          0
+        ],
+        [
+          "p1",
+          "r2",
+          1,
+          "p7"
+        ]
+      ],
+      "addedPaths": [
+      ],
+      "before": {
+        "p1": {
+          "r1": [
+            "v2",
+            "v3",
+            "v4"
+          ],
+          "p2": "v2",
+          "p3": {
+            "@id": "https://id.kb.se/x"
+          },
+          "r2": [
+            {
+              "p5": "v5"
+            },
+            {
+              "p6": "v6",
+              "p7": {
+                "@id": "https://id.kb.se/y"
+              },
+              "p8": {
+                "@id": "https://id.kb.se/y"
+              }
+            },
+            {
+              "p9": "v9"
+            }
+          ],
+          "p10": "v10"
+        }
+      },
+      "after": {
+        "p1": {
+          "r1": [
+            "v2",
+            "v4"
+          ],
+          "r2": [
+            {
+              "p6": "v6",
+              "p8": {
+                "@id": "https://id.kb.se/y"
+              }
+            },
+            {
+              "p9": "v9"
+            }
+          ],
+          "p10": "v10"
+        }
+      }
+    },
+    {
+      "name": "Add literal: non-repeatable property",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": "v2"
+      },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "before": {
+        "p1": "v1"
+      },
+      "after": {
+        "p1": "v1",
+        "p2": "v2"
+      }
+    },
+    {
+      "name": "Add literal: repeatable property, single value",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          "v2"
+        ]
+      },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "before": {
+        "p1": "v1"
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          "v2"
+        ]
+      }
+    },
+    {
+      "name": "Add literal: repeatable property, multiple values",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3"
+        ]
+      },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "before": {
+        "p1": "v1"
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3"
+        ]
+      }
+    },
+    {
+      "name": "Add literal: repeatable property, multiple values, property already present",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3"
+        ]
+      },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          "v4",
+          "v5"
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          "v4",
+          "v5",
+          "v2",
+          "v3"
+        ]
+      }
+    },
+    {
+      "name": "Add literal: repeatable property, overlapping values",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3",
+          "v4"
+        ]
+      },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3"
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3",
+          "v4"
+        ]
+      }
+    },
+    {
+      "name": "Add link: non-repeatable property",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "@id": "https://id.kb.se/x"
+        }
+      },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "before": {
+        "p1": "v1"
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "@id": "https://id.kb.se/x"
+        }
+      }
+    },
+    {
+      "name": "Add link: repeatable property, single value",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          }
+        ]
+      },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "before": {
+        "p1": "v1"
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Add link: repeatable property, multiple values",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          }
+        ]
+      },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "before": {
+        "p1": "v1"
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Add link: repeatable property, multiple values, property already present",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          }
+        ]
+      },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          },
+          {
+            "@id": "https://id.kb.se/b"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          },
+          {
+            "@id": "https://id.kb.se/b"
+          },
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Add link: repeatable property, overlapping values",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          },
+          {
+            "@id": "https://id.kb.se/z"
+          }
+        ]
+      },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          },
+          {
+            "@id": "https://id.kb.se/z"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Add blank node: non-repeatable property",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "p3": "v3"
+        }
+      },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "before": {
+        "p1": "v1"
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p3": "v3"
+        }
+      }
+    },
+    {
+      "name": "Add blank node: repeatable property, single value",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          }
+        ]
+      },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "before": {
+        "p1": "v1"
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Add blank node: repeatable property, multiple values",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3"
+          }
+        ]
+      },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "before": {
+        "p1": "v1"
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Add blank node: repeatable property, multiple values, property already present",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3"
+          }
+        ]
+      },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p4": "v4",
+            "p2": "v2"
+          },
+          {
+            "p5": "v5",
+            "p3": "v3"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p4": "v4",
+            "p2": "v2"
+          },
+          {
+            "p5": "v5",
+            "p3": "v3"
+          },
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Add blank node: repeatable property, overlapping values",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3"
+          },
+          {
+            "p4": "v4"
+          }
+        ]
+      },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3"
+          },
+          {
+            "p4": "v4",
+            "p2": "v2"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3"
+          },
+          {
+            "p4": "v4",
+            "p2": "v2"
+          },
+          {
+            "p4": "v4"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Add value deeper in structure: property missing",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "r1": [
+            {
+              "@id": "https://id.kb.se/x"
+            }
+          ]
+        }
+      },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": "v3"
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p3": "v3",
+          "r1": [
+            {
+              "@id": "https://id.kb.se/x"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Add value deeper in structure: property already exists",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "r1": [
+            {
+              "@id": "https://id.kb.se/y"
+            }
+          ]
+        }
+      },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": "v3",
+          "r1": [
+            {
+              "@id": "https://id.kb.se/x"
+            }
+          ]
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p3": "v3",
+          "r1": [
+            {
+              "@id": "https://id.kb.se/x"
+            },
+            {
+              "@id": "https://id.kb.se/y"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "FAIL: Try add value deeper in structure: property not repeatable",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "@id": "https://id.kb.se/y"
+          }
+        }
+      },
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p1": "v2",
+          "p3": {
+            "@id": "https://id.kb.se/x"
+          }
+        }
+      },
+      "shouldFailWithException": true
+    },
+    {
+      "name": "Add nested value to repeatable property",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": {
+          "p2": {
+            "@id": "https://id.kb.se/term/y"
+          }
+        }
+      },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": {
+          "p3": "v3"
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p3": "v3"
+          },
+          {
+            "p2": {
+              "@id": "https://id.kb.se/term/y"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Add value to any blank node",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "p1": "v2",
+          "bulk:formBlankNodeId": "2",
+          "p3": {
+            "bulk:formBlankNodeId": "3",
+            "@type": "bulk:Any"
+          }
+        }
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "p1": "v2",
+          "bulk:formBlankNodeId": "2",
+          "p3": {
+            "bulk:formBlankNodeId": "3",
+            "@type": "bulk:Any",
+            "p4": {
+              "@id": "https://id.kb.se/x"
+            }
+          }
+        }
+      },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "p2",
+          "p3",
+          "p4"
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p1": "v2",
+          "p3": {
+            "@type": "T",
+            "p1": "v3"
+          }
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p1": "v2",
+          "p3": {
+            "@type": "T",
+            "p1": "v3",
+            "p4": {
+              "@id": "https://id.kb.se/x"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Add various",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": {
+          "bulk:formBlankNodeId": "2",
+          "r1": [
+            "v2"
+          ],
+          "r2": [
+            {
+              "bulk:formBlankNodeId": "3",
+              "p4": "v4"
+            },
+            {
+              "bulk:formBlankNodeId": "4",
+              "@type": "bulk:Any"
+            }
+          ]
+        }
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": {
+          "bulk:formBlankNodeId": "2",
+          "r1": [
+            "v2",
+            "v3"
+          ],
+          "p2": "v2",
+          "p3": {
+            "@id": "https://id.kb.se/x"
+          },
+          "r2": [
+            {
+              "bulk:formBlankNodeId": "3",
+              "p4": "v4",
+              "p5": {
+                "@id": "https://id.kb.se/y"
+              },
+              "p6": "v6"
+            },
+            {
+              "bulk:formBlankNodeId": "4",
+              "@type": "bulk:Any",
+              "p7": "v7"
+            },
+            {
+              "p8": "v8"
+            }
+          ]
+        }
+      },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "p1",
+          "r1",
+          1
+        ],
+        [
+          "p1",
+          "p2"
+        ],
+        [
+          "p1",
+          "p3"
+        ],
+        [
+          "p1",
+          "r2",
+          0,
+          "p5"
+        ],
+        [
+          "p1",
+          "r2",
+          0,
+          "p6"
+        ],
+        [
+          "p1",
+          "r2",
+          1,
+          "p7"
+        ],
+        [
+          "p1",
+          "r2",
+          2
+        ]
+      ],
+      "before": {
+        "p1": {
+          "r1": [
+            "v2",
+            "v4"
+          ],
+          "r2": [
+            {
+              "@type": "T1",
+              "p4": "v4",
+              "p5": {
+                "@id": "https://id.kb.se/y"
+              }
+            },
+            {
+              "@type": "T2",
+              "p9": "v9"
+            }
+          ],
+          "p10": "v10"
+        }
+      },
+      "after": {
+        "p1": {
+          "r1": [
+            "v2",
+            "v4",
+            "v3"
+          ],
+          "p2": "v2",
+          "p3": {
+            "@id": "https://id.kb.se/x"
+          },
+          "r2": [
+            {
+              "@type": "T1",
+              "p4": "v4",
+              "p5": {
+                "@id": "https://id.kb.se/y"
+              },
+              "p6": "v6"
+            },
+            {
+              "@type": "T2",
+              "p9": "v9",
+              "p7": "v7"
+            },
+            {
+              "p8": "v8"
+            }
+          ],
+          "p10": "v10"
+        }
+      }
+    },
+    {
+      "name": "UNCHANGED: Add value: repeatable property, all values already present",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3"
+        ]
+      },
+      "removedPaths": [
+      ],
+      "addedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3"
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3"
+        ]
+      }
+    },
+    {
+      "name": "FAIL: Try add value: property not repeatable",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": "v2"
+      },
+      "before": {
+        "p1": "v1",
+        "p2": "v3"
+      },
+      "shouldFailWithException": true
+    },
+    {
+      "name": "Replace literal: non-repeatable property",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": "v2"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": "v3"
+      },
+      "removedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "p2": "v2"
+      },
+      "after": {
+        "p1": "v1",
+        "p2": "v3"
+      }
+    },
+    {
+      "name": "Replace literal: repeatable property, single value",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          "v2"
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          "v3"
+        ]
+      },
+      "removedPaths": [
+        [
+          "r1",
+          0
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1",
+          0
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": "v2"
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          "v3"
+        ]
+      }
+    },
+    {
+      "name": "Replace literal: repeatable property, all values",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3",
+          "v4"
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          "v5",
+          "v6",
+          "v7"
+        ]
+      },
+      "removedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3",
+          "v4"
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          "v5",
+          "v6",
+          "v7"
+        ]
+      }
+    },
+    {
+      "name": "Replace literal: repeatable property, some values",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3",
+          "v4"
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v5",
+          "v6"
+        ]
+      },
+      "removedPaths": [
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v3",
+          "v4",
+          "v5"
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          "v2",
+          "v6",
+          "v5"
+        ]
+      }
+    },
+    {
+      "name": "Replace link: non-repeatable property",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "@id": "https://id.kb.se/x"
+        }
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "@id": "https://id.kb.se/y"
+        }
+      },
+      "removedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "@id": "https://id.kb.se/x"
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "@id": "https://id.kb.se/y"
+        }
+      }
+    },
+    {
+      "name": "Replace link: repeatable property, single value",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          }
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/y"
+          }
+        ]
+      },
+      "removedPaths": [
+        [
+          "r1",
+          0
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1",
+          0
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": {
+          "@id": "https://id.kb.se/x"
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/y"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Replace link: repeatable property, all values",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          },
+          {
+            "@id": "https://id.kb.se/z"
+          }
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          },
+          {
+            "@id": "https://id.kb.se/b"
+          },
+          {
+            "@id": "https://id.kb.se/c"
+          }
+        ]
+      },
+      "removedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          },
+          {
+            "@id": "https://id.kb.se/z"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          },
+          {
+            "@id": "https://id.kb.se/b"
+          },
+          {
+            "@id": "https://id.kb.se/c"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Replace link: repeatable property, some values",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          }
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          },
+          {
+            "@id": "https://id.kb.se/b"
+          },
+          {
+            "@id": "https://id.kb.se/c"
+          }
+        ]
+      },
+      "removedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          1
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          },
+          {
+            "@id": "https://id.kb.se/z"
+          },
+          {
+            "@id": "https://id.kb.se/a"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/b"
+          },
+          {
+            "@id": "https://id.kb.se/c"
+          },
+          {
+            "@id": "https://id.kb.se/z"
+          },
+          {
+            "@id": "https://id.kb.se/a"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Replace blank node: non-repeatable property",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "bulk:formBlankNodeId": "2",
+          "p3": "v3"
+        }
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "p4": "v4"
+        }
+      },
+      "removedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": "v3",
+          "p5": "v5"
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p4": "v4"
+        }
+      }
+    },
+    {
+      "name": "Replace blank node: repeatable property, single value",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "2",
+            "p2": "v2"
+          }
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "p3": "v3"
+          }
+        ]
+      },
+      "removedPaths": [
+        [
+          "r1",
+          0
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1",
+          0
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p3": "v3"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Replace blank node: repeatable property, all values",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "2",
+            "p2": "v2"
+          },
+          {
+            "bulk:formBlankNodeId": "3",
+            "p3": "v3"
+          },
+          {
+            "bulk:formBlankNodeId": "4",
+            "p4": "v4"
+          }
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "p5": "v5"
+          },
+          {
+            "p6": "v6"
+          },
+          {
+            "p7": "v7"
+          }
+        ]
+      },
+      "removedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          1
+        ],
+        [
+          "r1",
+          2
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3",
+            "p5": "v5"
+          },
+          {
+            "p4": "v4"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p5": "v5"
+          },
+          {
+            "p6": "v6"
+          },
+          {
+            "p7": "v7"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Replace blank node: repeatable property, some values",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "2",
+            "p2": "v2"
+          },
+          {
+            "bulk:formBlankNodeId": "3",
+            "p3": "v3"
+          },
+          {
+            "bulk:formBlankNodeId": "4",
+            "p4": "v4"
+          }
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "4",
+            "p4": "v4"
+          },
+          {
+            "p5": "v5"
+          }
+        ]
+      },
+      "removedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          1
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1",
+          1
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3",
+            "p4": "v4"
+          },
+          {
+            "p4": "v4"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p5": "v5"
+          },
+          {
+            "p4": "v4"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Replace blank node: repeatable property, exact match some values",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "2",
+            "p2": "v2"
+          },
+          {
+            "bulk:formBlankNodeId": "3",
+            "p3": "v3"
+          },
+          {
+            "bulk:formBlankNodeId": "4",
+            "bulk:matchingMode": "bulk:Exact",
+            "p4": "v4"
+          },
+          {
+            "bulk:formBlankNodeId": "5",
+            "bulk:matchingMode": "bulk:Exact",
+            "p5": "v5"
+          }
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "3",
+            "p3": "v3"
+          },
+          {
+            "p4": "v4",
+            "p5": {
+              "@id": "https://id.kb.se/x"
+            }
+          }
+        ]
+      },
+      "removedPaths": [
+        [
+          "r1",
+          0
+        ],
+        [
+          "r1",
+          2
+        ],
+        [
+          "r1",
+          3
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1",
+          1
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p2": "v2"
+          },
+          {
+            "p3": "v3",
+            "p4": "v4"
+          },
+          {
+            "p2": "v2",
+            "p4": "v4"
+          },
+          {
+            "p3": "v3",
+            "p5": "v5"
+          },
+          {
+            "p4": "v4"
+          },
+          {
+            "p5": "v5"
+          }
+        ]
+      },
+      "after": {
+        "p1": "v1",
+        "r1": [
+          {
+            "p4": "v4",
+            "p5": {
+              "@id": "https://id.kb.se/x"
+            }
+          },
+          {
+            "p3": "v3",
+            "p4": "v4"
+          },
+          {
+            "p2": "v2",
+            "p4": "v4"
+          },
+          {
+            "p3": "v3",
+            "p5": "v5"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UNCHANGED: Form matched but no exact matching blank node to replace in actual data",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "bulk:formBlankNodeId": "2",
+          "p3": {
+            "bulk:formBlankNodeId": "3",
+            "bulk:matchingMode": "bulk:Exact",
+            "p1": "v2"
+          }
+        }
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "bulk:formBlankNodeId": "2",
+          "p3": {
+            "p4": {
+              "@id": "https://id.kb.se/x"
+            }
+          }
+        }
+      },
+      "removedPaths": [
+        [
+          "p2",
+          "p3"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "p2",
+          "p3"
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "p1": "v2",
+            "r1": [
+              "v3"
+            ]
+          }
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "p1": "v2",
+            "r1": [
+              "v3"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "Replace any blank node",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "bulk:formBlankNodeId": "2",
+          "p3": {
+            "@type": "bulk:Any",
+            "bulk:formBlankNodeId": "3"
+          }
+        }
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "bulk:formBlankNodeId": "2",
+          "p3": {
+            "p4": {
+              "@id": "https://id.kb.se/x"
+            }
+          }
+        }
+      },
+      "removedPaths": [
+        [
+          "p2",
+          "p3"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "p2",
+          "p3"
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "@type": "T",
+            "p1": "v2"
+          }
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "p4": {
+              "@id": "https://id.kb.se/x"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Replace various",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "2",
+            "bulk:matchingMode": "bulk:Exact",
+            "r2": [
+              "v1",
+              "v2"
+            ]
+          },
+          {
+            "bulk:formBlankNodeId": "3",
+            "p2": {
+              "bulk:formBlankNodeId": "4",
+              "p3": {
+                "@id": "https://id.kb.se/x"
+              }
+            }
+          },
+          {
+            "bulk:formBlankNodeId": "6",
+            "p4": "v4"
+          }
+        ],
+        "p5": {
+          "bulk:formBlankNodeId": "7",
+          "p6": "v6",
+          "p7": "v7"
+        }
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v2",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "2",
+            "bulk:matchingMode": "bulk:Exact",
+            "r2": [
+              "v1",
+              "v3"
+            ]
+          },
+          {
+            "bulk:formBlankNodeId": "3",
+            "p2": {
+              "bulk:formBlankNodeId": "4",
+              "p3": {
+                "@id": "https://id.kb.se/y"
+              }
+            }
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          }
+        ],
+        "p5": {
+          "@id": "https://id.kb.se/z"
+        }
+      },
+      "removedPaths": [
+        [
+          "p1"
+        ],
+        [
+          "r1",
+          0,
+          "r2",
+          1
+        ],
+        [
+          "r1",
+          1,
+          "p2",
+          "p3"
+        ],
+        [
+          "r1",
+          2
+        ],
+        [
+          "p5"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "p1"
+        ],
+        [
+          "r1",
+          0,
+          "r2",
+          1
+        ],
+        [
+          "r1",
+          1,
+          "p2",
+          "p3"
+        ],
+        [
+          "r1",
+          2
+        ],
+        [
+          "p5"
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "r1": [
+          {
+            "r2": [
+              "v1"
+            ]
+          },
+          {
+            "r2": [
+              "v1",
+              "v2"
+            ]
+          },
+          {
+            "p1": "v1",
+            "r2": [
+              "v1",
+              "v2"
+            ]
+          },
+          {
+            "p2": {
+              "p3": {
+                "@id": "https://id.kb.se/x"
+              },
+              "p4": "v4",
+              "p6": "v6"
+            }
+          },
+          {
+            "p4": "v4",
+            "p5": "v5"
+          }
+        ],
+        "p5": {
+          "p6": "v6",
+          "p7": "v7",
+          "r2": [
+            "v1",
+            "v2"
+          ]
+        }
+      },
+      "after": {
+        "p1": "v2",
+        "r1": [
+          {
+            "r2": [
+              "v1"
+            ]
+          },
+          {
+            "r2": [
+              "v1",
+              "v3"
+            ]
+          },
+          {
+            "p1": "v1",
+            "r2": [
+              "v1",
+              "v2"
+            ]
+          },
+          {
+            "p2": {
+              "p3": {
+                "@id": "https://id.kb.se/y"
+              },
+              "p4": "v4",
+              "p6": "v6"
+            }
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          }
+        ],
+        "p5": {
+          "@id": "https://id.kb.se/z"
+        }
+      }
+    },
+    {
+      "name": "UNCHANGED: Form does not match actual data",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "bulk:formBlankNodeId": "2",
+          "p3": {
+            "bulk:formBlankNodeId": "3",
+            "bulk:matchingMode": "bulk:Exact",
+            "p1": "v2"
+          },
+          "p4": "v4"
+        }
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "bulk:formBlankNodeId": "2",
+          "p3": {
+            "p4": {
+              "@id": "https://id.kb.se/x"
+            }
+          }
+        }
+      },
+      "removedPaths": [
+        [
+          "p2",
+          "p3"
+        ],
+        [
+          "p2",
+          "p4"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "p2",
+          "p3"
+        ]
+      ],
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "p1": "v2"
+          }
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p3": {
+            "p1": "v2"
+          }
+        }
+      }
+    },
+    {
+      "name": "UNCHANGED: Form does not (exactly) match actual data",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1",
+        "p2": {
+          "bulk:formBlankNodeId": "2",
+          "bulk:matchingMode": "bulk:Exact",
+          "p3": "v3"
+        }
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": "v1"
+      },
+      "removedPaths": [
+        [
+          "p2"
+        ]
+      ],
+      "addedPaths": [
+      ],
+      "before": {
+        "p1": "v1",
+        "p2": {
+          "p3": "v3",
+          "p4": "v4"
+        }
+      },
+      "after": {
+        "p1": "v1",
+        "p2": {
+          "p3": "v3",
+          "p4": "v4"
+        }
+      }
+    },
+    {
+      "name": "Modify multiple properties on specific node in set",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": {
+          "bulk:formBlankNodeId": "2",
+          "r1": [
+            {
+              "bulk:formBlankNodeId": "3",
+              "p2": {
+                "bulk:formBlankNodeId": "4",
+                "p3": "v3",
+                "p4": "v4"
+              }
+            }
+          ]
+        }
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": {
+          "bulk:formBlankNodeId": "2",
+          "r1": [
+            {
+              "bulk:formBlankNodeId": "3",
+              "p2": {
+                "@id": "https://id.kb.se/x"
+              },
+              "r2": [
+                {
+                  "@id": "https://id.kb.se/y"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "removedPaths": [
+        [
+          "p1",
+          "r1",
+          0,
+          "p2"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "p1",
+          "r1",
+          0,
+          "p2"
+        ],
+        [
+          "p1",
+          "r1",
+          0,
+          "r2"
+        ]
+      ],
+      "before": {
+        "p1": {
+          "r1": [
+            {
+              "p2": {
+                "p3": "v3",
+                "p4": "v4"
+              }
+            },
+            {
+              "p2": {
+                "p5": "v5",
+                "p6": "v6"
+              }
+            }
+          ]
+        }
+      },
+      "after": {
+        "p1": {
+          "r1": [
+            {
+              "p2": {
+                "@id": "https://id.kb.se/x"
+              },
+              "r2": [
+                {
+                  "@id": "https://id.kb.se/y"
+                }
+              ]
+            },
+            {
+              "p2": {
+                "p5": "v5",
+                "p6": "v6"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "UNCHANGED: Data does not match given ids",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": {
+          "bulk:formBlankNodeId": "2",
+          "bulk:hasId": {
+            "@type": "bulk:AnyOf",
+            "value": [
+              "https://id.kb.se/x",
+              "https://id.kb.se/y",
+              "https://id.kb.se/z"
+            ]
+          }
+        },
+        "p2": {
+          "bulk:formBlankNodeId": "3",
+          "bulk:hasId": {
+            "@type": "bulk:AnyOf",
+            "value": [
+              "https://id.kb.se/a",
+              "https://id.kb.se/b",
+              "https://id.kb.se/c"
+            ]
+          }
+        },
+        "p3": "v3"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": {
+          "bulk:formBlankNodeId": "2",
+          "bulk:hasId": {
+            "@type": "bulk:AnyOf",
+            "value": [
+              "https://id.kb.se/x",
+              "https://id.kb.se/y",
+              "https://id.kb.se/z"
+            ]
+          }
+        },
+        "p2": {
+          "bulk:formBlankNodeId": "3",
+          "bulk:hasId": {
+            "@type": "bulk:AnyOf",
+            "value": [
+              "https://id.kb.se/a",
+              "https://id.kb.se/b",
+              "https://id.kb.se/c"
+            ]
+          }
+        }
+      },
+      "removedPaths": [
+        [
+          "p3"
+        ]
+      ],
+      "addedPaths": [],
+      "before": {
+        "p1": {
+          "@id": "https://id.kb.se/y"
+        },
+        "p2": {
+          "@id": "https://id.kb.se/d"
+        },
+        "p3": "v3"
+      },
+      "after": {
+        "p1": {
+          "@id": "https://id.kb.se/y"
+        },
+        "p2": {
+          "@id": "https://id.kb.se/d"
+        },
+        "p3": "v3"
+      }
+    },
+    {
+      "name": "Remove any of given ids",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": {
+          "bulk:formBlankNodeId": "2",
+          "bulk:hasId": {
+            "@type": "bulk:AnyOf",
+            "value": [
+              "https://id.kb.se/x",
+              "https://id.kb.se/y",
+              "https://id.kb.se/z"
+            ]
+          }
+        },
+        "p2": "v2"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p2": "v2"
+      },
+      "removedPaths": [
+        [
+          "p1"
+        ]
+      ],
+      "addedPaths": [],
+      "before": {
+        "p1": {
+          "@id": "https://id.kb.se/x"
+        },
+        "p2": "v2"
+      },
+      "after": {
+        "p2": "v2"
+      }
+    },
+    {
+      "name": "Remove any of given ids from set",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "2",
+            "bulk:hasId": {
+              "@type": "bulk:AnyOf",
+              "value": [
+                "https://id.kb.se/x",
+                "https://id.kb.se/y",
+                "https://id.kb.se/z"
+              ]
+            }
+          }
+        ],
+        "p2": "v2"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p2": "v2"
+      },
+      "removedPaths": [
+        [
+          "r1"
+        ]
+      ],
+      "addedPaths": [],
+      "before": {
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          },
+          {
+            "@id": "https://id.kb.se/y"
+          },
+          {
+            "@id": "https://id.kb.se/z"
+          }
+        ],
+        "p2": "v2"
+      },
+      "after": {
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          }
+        ],
+        "p2": "v2"
+      }
+    },
+    {
+      "name": "Replace any of given ids",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": {
+          "bulk:formBlankNodeId": "2",
+          "bulk:hasId": {
+            "@type": "bulk:AnyOf",
+            "value": [
+              "https://id.kb.se/x",
+              "https://id.kb.se/y",
+              "https://id.kb.se/z"
+            ]
+          }
+        },
+        "p2": "v2"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "p1": {
+          "@id": "https://id.kb.se/a"
+        },
+        "p2": "v2"
+      },
+      "removedPaths": [
+        [
+          "p1"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "p1"
+        ]
+      ],
+      "before": {
+        "p1": {
+          "@id": "https://id.kb.se/y"
+        },
+        "p2": "v2"
+      },
+      "after": {
+        "p1": {
+          "@id": "https://id.kb.se/a"
+        },
+        "p2": "v2"
+      }
+    },
+    {
+      "name": "Replace any of given ids in set",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "2",
+            "bulk:hasId": {
+              "@type": "bulk:AnyOf",
+              "value": [
+                "https://id.kb.se/x",
+                "https://id.kb.se/y",
+                "https://id.kb.se/z"
+              ]
+            }
+          }
+        ],
+        "p2": "v2"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          }
+        ],
+        "p2": "v2"
+      },
+      "removedPaths": [
+        [
+          "r1",
+          0
+        ]
+      ],
+      "addedPaths": [
+        [
+          "r1",
+          0
+        ]
+      ],
+      "before": {
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "@id": "https://id.kb.se/b"
+          },
+          {
+            "@id": "https://id.kb.se/z"
+          }
+        ],
+        "p2": "v2"
+      },
+      "after": {
+        "r1": [
+          {
+            "@id": "https://id.kb.se/a"
+          },
+          {
+            "@id": "https://id.kb.se/b"
+          }
+        ],
+        "p2": "v2"
+      }
+    },
+    {
+      "name": "Match any type",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "@type": "bulk:Any",
+        "p1": "v1",
+        "p2": "v2"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "@type": "bulk:Any",
+        "p3": "v3"
+      },
+      "removedPaths": [
+        [
+          "p1"
+        ],
+        [
+          "p2"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "p3"
+        ]
+      ],
+      "before": {
+        "@type": "Work",
+        "p1": "v1",
+        "p2": "v2",
+        "p4": "v4"
+      },
+      "after": {
+        "@type": "Work",
+        "p3": "v3",
+        "p4": "v4"
+      }
+    },
+    {
+      "name": "Replace any type",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "1",
+        "@type": "bulk:Any",
+        "p1": "v1"
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "1",
+        "@type": "T2",
+        "p1": "v1"
+      },
+      "removedPaths": [
+        [
+          "@type"
+        ]
+      ],
+      "addedPaths": [
+        [
+          "@type"
+        ]
+      ],
+      "before": {
+        "@type": "T1",
+        "p1": "v1"
+      },
+      "after": {
+        "@type": "T2",
+        "p1": "v1"
+      }
+    },
+    {
+      "name": "Remove duplicate",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "#1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "#2",
+            "p1": "v1"
+          },
+          {
+            "bulk:formBlankNodeId": "#3",
+            "p1": "v1"
+          }
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "#1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "#2",
+            "p1": "v1"
+          }
+        ]
+      },
+      "before": {
+        "r1": [
+          {
+            "p1": "v1"
+          },
+          {
+            "p1": "v1"
+          }
+        ]
+      },
+      "after": {
+        "r1": [
+          {
+            "p1": "v1"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Remove only the first out of several matching nodes",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "#1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "#2",
+            "p1": "v1"
+          }
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "#1"
+      },
+      "before": {
+        "r1": [
+          {
+            "p1": "v1",
+            "p2": "v2"
+          },
+          {
+            "p1": "v1",
+            "p3": "v3"
+          }
+        ]
+      },
+      "after": {
+        "r1": [
+          {
+            "p1": "v1",
+            "p3": "v3"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Replace only the first out of several matching nodes",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "#1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "#2",
+            "p1": "v1"
+          }
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "#1",
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          }
+        ]
+      },
+      "before": {
+        "r1": [
+          {
+            "p1": "v1",
+            "p2": "v2"
+          },
+          {
+            "p1": "v1",
+            "p3": "v3"
+          }
+        ]
+      },
+      "after": {
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "p1": "v1",
+            "p3": "v3"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Remove the same number of nodes that differ between matchForm and targetForm",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "#1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "#2",
+            "p1": "v1"
+          },
+          {
+            "bulk:formBlankNodeId": "#3",
+            "p2": "v2"
+          },
+          {
+            "bulk:formBlankNodeId": "#4",
+            "p3": "v3"
+          },
+          {
+            "bulk:formBlankNodeId": "#5",
+            "p4": "v4"
+          }
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "#1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "#3",
+            "p2": "v2"
+          },
+          {
+            "bulk:formBlankNodeId": "#4",
+            "p3": "v3"
+          }
+        ]
+      },
+      "before": {
+        "r1": [
+          {
+            "p1": "v1",
+            "p2": "v2"
+          },
+          {
+            "p1": "v1",
+            "p3": "v3"
+          },
+          {
+            "p1": "v1",
+            "p4": "v4"
+          },
+          {
+            "p2": "v2",
+            "p4": "v4"
+          }
+        ]
+      },
+      "after": {
+        "r1": [
+          {
+            "p1": "v1",
+            "p3": "v3"
+          },
+          {
+            "p2": "v2",
+            "p4": "v4"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Prioritize removing nodes with higher specificity",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "#1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "#2",
+            "p1": "v1"
+          },
+          {
+            "bulk:formBlankNodeId": "#3",
+            "@type": "bulk:Any"
+          },
+          {
+            "bulk:formBlankNodeId": "#4",
+            "bulk:matchingMode": ["bulk:Exact"],
+            "p1": "v1",
+            "p2": "v2"
+          }
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "#1"
+      },
+      "before": {
+        "r1": [
+          {
+            "p1": "v1",
+            "p2": "v2"
+          },
+          {
+            "p1": "v1",
+            "p3": "v3"
+          },
+          {
+            "p4": "v4"
+          },
+          {
+            "p5": "v5"
+          }
+        ]
+      },
+      "after": {
+        "r1": [
+          {
+            "p5": "v5"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Prioritize changes for nodes with higher specificity",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "#1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "#3",
+            "@type": "bulk:Any"
+          },
+          {
+            "bulk:formBlankNodeId": "#4",
+            "p2": "v2"
+          },
+          {
+            "bulk:formBlankNodeId": "#5",
+            "bulk:matchingMode": ["bulk:Exact"],
+            "p2": "v2",
+            "p3": "v3"
+          }
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "#1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "#3",
+            "@type": "bulk:Any",
+            "p1": "v1"
+          },
+          {
+            "bulk:formBlankNodeId": "#4",
+            "p2": "v3"
+          },
+          {
+            "bulk:formBlankNodeId": "#5",
+            "bulk:matchingMode": ["bulk:Exact"],
+            "p2": "v2"
+          }
+        ]
+      },
+      "before": {
+        "r1": [
+          {
+            "p1": "v1",
+            "p2": "v2"
+          },
+          {
+            "p2": "v2",
+            "p3": "v3"
+          },
+          {
+            "p2": "v2",
+            "p4": "v4"
+          },
+          {
+            "p5": "v5"
+          }
+        ]
+      },
+      "after": {
+        "r1": [
+          {
+            "p1": "v1",
+            "p2": "v3"
+          },
+          {
+            "p2": "v2"
+          },
+          {
+            "p2": "v2",
+            "p4": "v4",
+            "p1": "v1"
+          },
+          {
+            "p5": "v5"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Remove/add to/change/replace duplicates",
+      "bulk:matchForm": {
+        "bulk:formBlankNodeId": "#1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "#2",
+            "p1": "v1"
+          },
+          {
+            "bulk:formBlankNodeId": "#3",
+            "p1": "v1"
+          },
+          {
+            "bulk:formBlankNodeId": "#4",
+            "p1": "v1"
+          },
+          {
+            "bulk:formBlankNodeId": "#5",
+            "p1": "v1"
+          },
+          {
+            "bulk:formBlankNodeId": "#6",
+            "p1": "v1"
+          },
+          {
+            "bulk:formBlankNodeId": "#7",
+            "p1": "v1"
+          }
+        ]
+      },
+      "bulk:targetForm": {
+        "bulk:formBlankNodeId": "#1",
+        "r1": [
+          {
+            "bulk:formBlankNodeId": "#4",
+            "p1": "v1",
+            "p2": "v2"
+          },
+          {
+            "bulk:formBlankNodeId": "#5",
+            "p1": "v1",
+            "p3": "v3"
+          },
+          {
+            "bulk:formBlankNodeId": "#6",
+            "p1": "v2"
+          },
+          {
+            "bulk:formBlankNodeId": "#7",
+            "p1": "v3"
+          },
+          {
+            "@id": "https://id.kb.se/x"
+          }
+        ]
+      },
+      "before": {
+        "r1": [
+          {
+            "p1": "v1"
+          },
+          {
+            "p1": "v1"
+          },
+          {
+            "p1": "v1"
+          },
+          {
+            "p1": "v1"
+          },
+          {
+            "p1": "v1"
+          },
+          {
+            "p1": "v1"
+          },
+          {
+            "p1": "v1"
+          }
+        ]
+      },
+      "after": {
+        "r1": [
+          {
+            "@id": "https://id.kb.se/x"
+          },
+          {
+            "p1": "v1",
+            "p2": "v2"
+          },
+          {
+            "p1": "v1",
+            "p3": "v3"
+          },
+          {
+            "p1": "v2"
+          },
+          {
+            "p1": "v3"
+          },
+          {
+            "p1": "v1"
+          }
+        ]
+      }
+    }
+  ]
+}

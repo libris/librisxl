@@ -2,7 +2,8 @@ package whelk.rest.api
 
 import com.google.common.net.MediaType
 import spock.lang.Specification
-import whelk.rest.api.CrudUtils
+import whelk.util.http.BadRequestException
+import whelk.util.http.NotFoundException
 
 class CrudUtilsSpec extends Specification {
 
@@ -55,7 +56,7 @@ class CrudUtilsSpec extends Specification {
         CrudUtils.getBestContentType(acceptHeader, requestPath)
 
         then:
-        thrown(Crud.NotFoundException)
+        thrown(NotFoundException)
 
         where:
         suffix << ['.invalid']

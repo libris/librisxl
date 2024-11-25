@@ -2,6 +2,7 @@ package whelk
 
 import groovy.transform.CompileStatic
 import groovy.transform.Immutable
+import groovy.transform.Memoized
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 import org.apache.logging.log4j.LogManager
@@ -43,15 +44,17 @@ class JsonLd {
 
     public static final String RECORD_TYPE = 'Record'
     public static final String CACHE_RECORD_TYPE = 'CacheRecord'
+    public static final String SYSTEM_RECORD_TYPE = 'SystemRecord'
     public static final String VIRTUAL_RECORD_TYPE = 'VirtualRecord'
     
     public static final String SEARCH_KEY = "_str"
 
     public static final List<String> NS_SEPARATORS = ['#', '/', ':']
 
-    public static final List<String> NON_DEPENDANT_RELATIONS = ['narrower', 'broader', 'expressionOf', 'related', 'derivedFrom']
+    public static final List<String> NON_DEPENDANT_RELATIONS = ['narrower', 'broader', 'expressionOf', 'related',
+                                                                'derivedFrom']
     public static final List<String> ALLOW_LINK_TO_DELETED = [
-        'meta.derivedFrom', 'hasTitle.source',
+        'meta.derivedFrom', 'hasTitle.source', 'bulk:changeSpec.bulk:deprecate',
         /* following are combinations only needed while there are local unlinked works */
          'translationOf.hasTitle.source', 'instanceOf.hasTitle.source', 'instanceOf.translationOf.hasTitle.source']
     public static final String CATEGORY_DEPENDENT = 'dependent'
@@ -81,7 +84,7 @@ class JsonLd {
 
     public Map<String, Map> context
     public Map displayData
-    public Map<String, Map> vocabIndex
+    public Map<String, Map<String, Object>> vocabIndex
 
     public List<String> locales
     private String vocabId
@@ -700,6 +703,7 @@ class JsonLd {
         return asList(entity['@type']).any { isSubClassOf((String) it, baseType) }
     }
 
+    @Memoized
     Set<String> getSubClasses(String type) {
         return getSubTerms(type, superClassOf, subClassesByType)
     }

@@ -90,11 +90,13 @@ public class ImageLinker extends HouseKeeper {
                     List<String> imagesToLink = new ArrayList<>();
                     if (identifiedByString != null) {
                         List identifiedByObject = mapper.readValue(identifiedByString, List.class);
-                        for (Object indirectID : identifiedByObject) {
-                            if (indirectID instanceof Map identifiedByMap) {
-                                if (identifiedByMap.get("@type").equals("ISBN")) {
-                                    List<String> uris = getImagesByISBN((String) identifiedByMap.get("value"));
-                                    imagesToLink.addAll(uris);
+                        if (identifiedByObject != null) {
+                            for (Object indirectID : identifiedByObject) {
+                                if (indirectID instanceof Map identifiedByMap) {
+                                    if (identifiedByMap.containsKey("@type") && identifiedByMap.get("@type").equals("ISBN")) {
+                                        List<String> uris = getImagesByISBN((String) identifiedByMap.get("value"));
+                                        imagesToLink.addAll(uris);
+                                    }
                                 }
                             }
                         }
@@ -111,6 +113,7 @@ public class ImageLinker extends HouseKeeper {
             e.printStackTrace(p);
             String stacktrace = w.toString();
             status = "Failed with:\n" + e + "\nat:\n" + stacktrace;
+            logger.error("Image linking failed.", e);
             throw new RuntimeException(e);
         }
 

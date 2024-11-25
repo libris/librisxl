@@ -17,6 +17,7 @@ import whelk.util.DocumentUtil
 
 import static whelk.search.ESQuery.Connective.AND
 import static whelk.search.ESQuery.Connective.OR
+import static whelk.util.Unicode.stripPrefix
 
 @Log
 class SearchUtils {
@@ -488,11 +489,7 @@ class SearchUtils {
     private String removeWildcardForKey(String url, String key) {
         url.replace("&${makeParam(key, '*')}", "")
     }
-    
-    private static String stripPrefix(String s, String prefix) {
-        s.startsWith(prefix) ? s.substring(prefix.length()) : s
-    }
-    
+
     private boolean hasHugeNumberOfIncomingLinks(String iri) {
         def num = numberOfIncomingLinks(iri)
         return num < 0 || num > 500_000

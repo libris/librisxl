@@ -4,13 +4,11 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import whelk.Whelk;
-import whelk.housekeeping.HouseKeeper;
+import whelk.datatool.WhelkTool;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -57,7 +55,7 @@ public class ScriptRunner extends HouseKeeper {
                             reportPath.toString(),
                             scriptFilePath.toString(),
                     };
-            whelk.datatool.WhelkTool.main2(args, premadeWhelk);
+            WhelkTool.main2(args, premadeWhelk);
 
             Path errorLogPath = reportPath.resolve("ERRORS.txt");
             if (Files.size(errorLogPath) > 0) {

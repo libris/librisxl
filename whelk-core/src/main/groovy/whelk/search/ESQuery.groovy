@@ -1,11 +1,9 @@
 package whelk.search
 
-
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.transform.TypeCheckingMode
 import groovy.util.logging.Log4j2 as Log
-import whelk.FeatureFlags
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.InvalidQueryException
@@ -14,6 +12,7 @@ import whelk.util.Unicode
 
 import static whelk.component.ElasticSearch.flattenedLangMapKey
 import static whelk.util.Jackson.mapper
+import static whelk.util.Unicode.stripPrefix
 
 @CompileStatic
 @Log
@@ -808,10 +807,6 @@ class ESQuery {
         }
 
         return result
-    }
-
-    private static String stripPrefix(String s, String prefix) {
-        s.startsWith(prefix) ? s.substring(prefix.length()) : s
     }
 
     private static class Q {

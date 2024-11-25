@@ -1,6 +1,8 @@
 package whelk.housekeeping
 
-import whelk.Whelk;
+import whelk.Whelk
+import whelk.util.WhelkFactory;
+
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -38,7 +40,7 @@ public class WebInterface extends HttpServlet {
     Scheduler cronScheduler = new Scheduler()
 
     public void init() {
-        Whelk whelk = Whelk.createLoadedSearchWhelk()
+        Whelk whelk = WhelkFactory.getSingletonWhelk();
 
         List<HouseKeeper> houseKeepers = [
                 // Automatic generation is disabled for now, may need design changes approved before activation.
@@ -50,6 +52,12 @@ public class WebInterface extends HttpServlet {
                 new ImageLinker(whelk),
                 new ExportSizePredictor(whelk),
                 new ScriptRunner(whelk, "wikidatalinking.groovy", "0 19 22 2,4,6,8,10,12 *"),
+                new ScriptRunner(whelk, "lxl-3599-instance-types-from-mediaterm.groovy", "0 20 1 * *"),
+                new ScriptRunner(whelk, "lxl-3601-change-type-Instance-to-Print.groovy", "0 20 2 * *"),
+                new ScriptRunner(whelk, "lxl-3785-supplementTo-isIssueOf.groovy", "0 20 3 * *"),
+                new ScriptRunner(whelk, "lxl-3785-fix-title-chars.groovy", "0 20 4 * *"),
+                new ScriptRunner(whelk, "lxl-3873-remove-classification-without-code.groovy", "0 20 5 * *"),
+                new BulkChangeRunner(whelk)
         ]
 
         houseKeepers.each { hk ->
@@ -100,7 +108,7 @@ public class WebInterface extends HttpServlet {
         } else {
             houseKeepersById.values()
                     .findAll{ it.class.getSimpleName() == key }
-                    .each {it.trigger() }
+                    .each {it._trigger() }
         }
     }
 }
