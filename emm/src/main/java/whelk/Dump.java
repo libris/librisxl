@@ -206,6 +206,9 @@ public class Dump {
 
         Map<String, Document> idsAndRecords = whelk.bulkLoad(recordIdsOnPage);
         for (Document doc : idsAndRecords.values()) {
+            if (doc.getDeleted()) {
+                continue;
+            }
 
             // Here is a bit of SPECIALIZED treatment only for the itemAndInstance:categories. These should
             // include not only the Item (which is the root node for this category), but also the linked Instance.
@@ -326,22 +329,23 @@ public class Dump {
     }
 
     private static PreparedStatement getAllDumpStatement(Connection connection) throws SQLException {
-        String sql = " SELECT " +
-                "  id" +
-                " FROM" +
-                "  lddb";
+        String sql = """
+                SELECT id
+                FROM lddb
+                WHERE deleted = false
+                """;
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         return preparedStatement;
     }
 
     private static PreparedStatement getLibraryXDumpStatement(Connection connection, String library) throws SQLException {
-        String sql = " SELECT " +
-                "  id" +
-                " FROM" +
-                "  lddb" +
-                " WHERE" +
-                "  collection = 'hold' AND" +
-                "  (data#>>'{@graph,1,heldBy,@id}' = ? OR data#>>'{@graph,1,heldBy,@id}' = ?)";
+        String sql = """
+                SELECT id
+                FROM lddb
+                WHERE collection = 'hold' 
+                  AND (data#>>'{@graph,1,heldBy,@id}' = ? OR data#>>'{@graph,1,heldBy,@id}' = ?)
+                  AND deleted = false
+                """;
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
 
         preparedStatement.setString(1, Document.getBASE_URI().resolve("/library/"+library).toString());
@@ -359,12 +363,12 @@ public class Dump {
         Set<String> types = whelk.getJsonld().getSubClasses(type);
         types.add(type);
 
-        String sql = " SELECT " +
-                "  id" +
-                " FROM" +
-                "  lddb" +
-                " WHERE" +
-                "  data#>>'{@graph,1,@type}' = ANY( ? )";
+        String sql = """
+                SELECT id
+                FROM lddb
+                WHERE data#>>'{@graph,1,@type}' = ANY( ? )
+                  AND deleted = false
+                """;
 
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         preparedStatement.setArray(1, connection.createArrayOf("TEXT",  types.toArray() ));
