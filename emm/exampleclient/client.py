@@ -26,7 +26,7 @@
 #    embedded within another entity, or somewhere else)?
 #    If so, we must update that entity wherever we keep it.
 #
-# This is all we need to do to keap our cache up date in perpetuity.
+# This is all we need to do to keep our cache up date in perpetuity.
 # 
 # For this example client we are going to keep knowledge graphs in an SQLITE
 # table called 'entities'. These knowledge graphs will always consist of an
@@ -121,7 +121,7 @@ def download_entity(url):
     req = Request(url)
     req.add_header('accept', 'application/json+ld')
     try:
-        return json.load(urlopen(req))["@graph"][1]
+        return get_main_entity(json.load(urlopen(req)))
     except:
         return None
 
@@ -218,8 +218,9 @@ def load_dump(connection):
     dumpCreationTime = None
     while next_url:
         with urllib.request.urlopen(next_url) as response:
+            print(f"Getting {next_url}")
             data = json.load(response)
-            dumpCreationTimeOnPage = data["creationTime"]
+            dumpCreationTimeOnPage = data["startTime"]
             if (dumpCreationTime and dumpCreationTime != dumpCreationTimeOnPage):
                 print(" DUMP INVALIDATED WHILE DOWNLOADING, TODO: DEAL WITH THIS ")
             dumpCreationTime = dumpCreationTimeOnPage
@@ -227,8 +228,12 @@ def load_dump(connection):
                 next_url = data["next"]
             else:
                 next_url = None
-            if "entities" in data:
-                for entity in data["entities"]:
+            if "items" in data:
+                for item in data["items"]:
+                    if "@graph" not in item: # skip @context
+                        continue
+
+                    entity = get_main_entity(item)
                     embellish(entity, connection)
                     ingest_entity(entity, connection)
     cursor = connection.cursor()
@@ -242,6 +247,11 @@ def load_dump(connection):
         (dumpCreationTime,)
     )
     connection.commit()
+
+
+def get_main_entity(named_graph):
+    # FIXME? relying on XL convention @graph[0] = Record, @graph[1] = Main entity
+    named_graph["@graph"][1]
 
 
 #
@@ -344,7 +354,7 @@ def update(connection):
                 result = cursor.execute("SELECT julianday(changes_consumed_until) - julianday(?) FROM state", (item["published"],))
                 diff = result.fetchone()[0]
                 if (float(diff) >= 0.0):
-                    print(f"{item["published"]} is before our last taken update, stop here.")
+                    print(f"{item['published']} is before our last taken update, stop here.")
                     next_url = None
                     break
                 handle_activity(connection, item)
