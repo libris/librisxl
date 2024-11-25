@@ -142,7 +142,7 @@ class Document {
     // FIXME: don't hardcode
     // see also https://github.com/libris/lxlviewer/blob/5dc7807b3434cd1e29943d14d73e3f6f251e3c1b/cataloging/src/components/inspector/toolbar.vue#L312
     boolean isInReadOnlyDataset() {
-        getRecord()[JsonLd.TYPE_KEY] == JsonLd.CACHE_RECORD_TYPE
+        getRecord()[JsonLd.TYPE_KEY] != JsonLd.RECORD_TYPE
         || getInDataset().any {
             var id = (String) it[JsonLd.ID_KEY] ?: ''
             id.startsWith('https://id.kb.se/dataset/') || id.startsWith('https://libris.kb.se/dataset/')
