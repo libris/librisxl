@@ -28,14 +28,13 @@ public class EmmServlet extends HttpServlet {
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) {
         try {
-            String dump = req.getParameter("dump");
-            String until = req.getParameter("until");
             String apiBaseUrl = req.getRequestURL().toString();
 
-            if (dump != null) {
+            if (req.getServletPath() != null && req.getServletPath().endsWith("/full")) {
                 Dump.sendDumpResponse(whelk, apiBaseUrl, req, res);
                 return;
             }
+            String until = req.getParameter("until");
 
             // Send an Entry-Point reply
             if (until == null) {
@@ -46,7 +45,7 @@ public class EmmServlet extends HttpServlet {
                 responseObject.put("@context", contexts);
                 responseObject.put("type", "OrderedCollection");
                 responseObject.put("id", apiBaseUrl);
-                responseObject.put("url", apiBaseUrl+"?dump=index");
+                responseObject.put("url", apiBaseUrl + "full");
                 var first = new LinkedHashMap<>();
                 first.put("type", "OrderedCollectionPage");
                 first.put("id", apiBaseUrl+"?until="+System.currentTimeMillis());

@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static whelk.EmmServlet.AS2_CONTENT_TYPE;
+
 public class Dump {
     /* Here is how these dumps work:
      * When someone asks for a dump of particular category, we check if we have one already.
@@ -58,25 +60,45 @@ public class Dump {
     private static final String JSON_CONTENT_TYPE = "application/json";
 
     public static void sendDumpResponse(Whelk whelk, String apiBaseUrl, HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException {
-        String dump = req.getParameter("dump");
+        String selection = req.getParameter("selection");
 
-        if (dump.equals("index")) {
+        if (selection == null) {
             sendDumpIndexResponse(apiBaseUrl, res);
             return;
         }
 
         String offset = req.getParameter("offset");
+        if (offset == null) {
+            sendDumpEntryPoint(apiBaseUrl, selection, res);
+            return;
+        }
+
         long offsetNumeric = Long.parseLong(offset);
 
         String tmpDir = System.getProperty("java.io.tmpdir");
         Path dumpsPath = Paths.get(tmpDir, "dumps");
         Files.createDirectories(dumpsPath);
-        Path dumpFilePath = dumpsPath.resolve(dump+".dump");
+        Path dumpFilePath = dumpsPath.resolve(selection+".dump");
 
         invalidateIfOld(dumpFilePath);
         if (!Files.exists(dumpFilePath))
-            generateDump(whelk, dump, dumpFilePath);
-        sendDumpPageResponse(whelk, apiBaseUrl, dump, dumpFilePath, offsetNumeric, res);
+            generateDump(whelk, selection, dumpFilePath);
+        sendDumpPageResponse(whelk, apiBaseUrl, selection, dumpFilePath, offsetNumeric, res);
+    }
+
+    private static void sendDumpEntryPoint(String apiBaseUrl, String selection, HttpServletResponse res) throws IOException {
+        var responseObject = new LinkedHashMap<>();
+        var contexts = new ArrayList<>();
+        contexts.add("https://www.w3.org/ns/activitystreams");
+        responseObject.put("@context", contexts);
+        responseObject.put("type", "Collection");
+        responseObject.put("id", apiBaseUrl + "?selection=" + selection);
+        var first = new LinkedHashMap<>();
+        first.put("type", "CollectionPage");
+        first.put("id", apiBaseUrl + "?selection=" + selection + "&offset=0");
+        responseObject.put("first", first);
+
+        HttpTools.sendResponse(res, responseObject, AS2_CONTENT_TYPE);
     }
 
     private static void sendDumpIndexResponse(String apiBaseUrl, HttpServletResponse res) throws IOException {
@@ -85,18 +107,18 @@ public class Dump {
         var categoriesList = new ArrayList<>();
 
         var allCategory = new LinkedHashMap<>();
-        allCategory.put("url", apiBaseUrl+"?dump=all&offset=0");
+        allCategory.put("url", apiBaseUrl+"?selection=all");
         allCategory.put("description", "This category represents the whole collection, without reservations.");
         categoriesList.add(allCategory);
 
         var libraryCategory = new LinkedHashMap<>();
-        libraryCategory.put("url", apiBaseUrl+"?dump=itemAndInstance:X&offset=0");
+        libraryCategory.put("url", apiBaseUrl+"?selection=itemAndInstance:X");
         libraryCategory.put("description", "These categories represent the Items and Instances held by a particular library. " +
                 "The relevant library-code (sigel) for which you want data must replace the X in the category URL.");
         categoriesList.add(libraryCategory);
 
         var typesCategory = new LinkedHashMap<>();
-        typesCategory.put("url", apiBaseUrl+"?dump=type:X&offset=0");
+        typesCategory.put("url", apiBaseUrl+"?selection=type:X");
         typesCategory.put("description", "These categories represent the set of entities of a certain type, including subtypes. " +
                 "For example the type Agent would include both Persons and Organizations etc. The X in the URL must be replaced " +
                 "with the type you want.");
@@ -178,7 +200,7 @@ public class Dump {
         var responseObject = new LinkedHashMap<>();
 
         responseObject.put(JsonLd.CONTEXT_KEY, "https://www.w3.org/ns/activitystreams");
-        responseObject.put(JsonLd.ID_KEY, apiBaseUrl+"?dump="+dump+"&offset="+offset);
+        responseObject.put(JsonLd.ID_KEY, apiBaseUrl+"?selection="+dump+"&offset="+offset);
         responseObject.put("type", "CollectionPage");
         responseObject.put("startTime", ZonedDateTime.ofInstant(dumpCreationTime, ZoneOffset.UTC).toString());
         if (totalEntityCount == null)
@@ -190,7 +212,7 @@ public class Dump {
 
         long nextOffset = offset + EmmChangeSet.TARGET_HITS_PER_PAGE;
         if (totalEntityCount == null || nextOffset < totalEntityCount) {
-            responseObject.put("next", apiBaseUrl+"?dump="+dump+"&offset="+nextOffset);
+            responseObject.put("next", apiBaseUrl+"?selection="+dump+"&offset="+nextOffset);
         }
 
         var items = new ArrayList<>(EmmChangeSet.TARGET_HITS_PER_PAGE);

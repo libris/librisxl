@@ -214,7 +214,7 @@ def ingest_entity(entity, connection):
 # Load an itial dump of the configured data set.
 #
 def load_dump(connection):
-    next_url = f"{libris_emm_base_url}?dump=itemAndInstance:{local_library_code}&offset=0"
+    next_url = f"{libris_emm_base_url}full?selection=itemAndInstance:{local_library_code}&offset=0"
     dumpCreationTime = None
     while next_url:
         with urllib.request.urlopen(next_url) as response:
