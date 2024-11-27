@@ -64,6 +64,11 @@ properties_of_interest = ["itemOf", "instanceOf", "agent", "subject"]
 # runs in a loop, keeping up to date over time.
 continous_mode = False
 
+# This parameter tells the client to output entities as they are received or
+# updated. If set to true, the output will be jsonld-lines, one root entity
+# with all things it depends on, on each line. This is for when this client
+# is used as a proxy to assembe embedded views of data, WHICH IS NOT RECOMMENDED.
+data_on_stdout = False
 
 #
 # Code section
@@ -215,6 +220,8 @@ def ingest_entity(entity, connection):
     ).lastrowid
     connection.commit()
     update_uris_table(entity, entity_id, connection)
+    if data_on_stdout:
+        print(json.dumps(entity))
 
 
 #
@@ -263,7 +270,7 @@ def load_dump(connection):
 
 def get_main_entity(named_graph):
     # FIXME? relying on XL convention @graph[0] = Record, @graph[1] = Main entity
-    named_graph["@graph"][1]
+    return named_graph["@graph"][1]
 
 
 #
@@ -273,7 +280,7 @@ def get_main_entity(named_graph):
 def replace_subentity(node, replacement_entity):
     uri_to_replace = replacement_entity["@id"]
     if isinstance(node, dict):
-        for key in node.keys:
+        for key in node:
             if isinstance(node[key], dict) and "@id" in node[key] and node[key]["@id"] == uri_to_replace:
                 node[key] = replacement_entity
             replace_subentity(node[key], replacement_entity)
@@ -343,6 +350,8 @@ def handle_activity(connection, activity):
             cursor.execute("UPDATE entities SET entity = ? WHERE id = ?", (json.dumps(entity_data),entity_id))
             connection.commit()
             update_uris_table(entity_data, entity_id, connection)
+            if data_on_stdout:
+                print(json.dumps(entity_data))
 
 
 
