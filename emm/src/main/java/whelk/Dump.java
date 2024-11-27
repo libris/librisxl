@@ -97,7 +97,7 @@ public class Dump {
         }
 
         if (isDownload) {
-            sendDumpDownloadResponse(whelk, apiBaseUrl, selection, dumpFilePath, res);
+            sendDumpDownloadResponse(whelk, dumpFilePath, res);
         } else {
             long offsetNumeric = Long.parseLong(offset);
             sendDumpPageResponse(whelk, apiBaseUrl, selection, dumpFilePath, offsetNumeric, res);
@@ -284,7 +284,7 @@ public class Dump {
         HttpTools.sendResponse(res, responseObject, JSON_CONTENT_TYPE);
     }
 
-    private static void sendDumpDownloadResponse(Whelk whelk, String apiBaseUrl, String dump, Path dumpFilePath, HttpServletResponse res) {
+    private static void sendDumpDownloadResponse(Whelk whelk, Path dumpFilePath, HttpServletResponse res) {
         String filename = Unicode.stripSuffix(dumpFilePath.getFileName().toString(), ".dump") + ND_JSON_LD_GZ_EXT;
         res.setHeader("Content-Disposition", "attachment; filename=" + filename);
         res.setHeader("Content-Type", "application/octet-stream");
@@ -294,7 +294,7 @@ public class Dump {
             res.flushBuffer();
 
             var contextDoc = contextDoc(whelk);
-            writeJsonLdLines(wrapContextDoc(contextDoc), os);
+            writeJsonLdLine(wrapContextDoc(contextDoc), os);
 
             // Has the dump not begun being written yet ?
             var t = new Timeout(60 * 1000);
@@ -313,11 +313,11 @@ public class Dump {
                         do {
                             t.sleep();
                             line = r.readLine();
-                        } while(line == null);
+                        } while (line == null);
                     }
 
                     // Reached end of dump
-                    if(DUMP_END_MARKER_NO_NEWLINE.equals(line)) {
+                    if (DUMP_END_MARKER_NO_NEWLINE.equals(line)) {
                         break;
                     }
 
@@ -344,14 +344,14 @@ public class Dump {
                 continue;
             }
 
-            writeJsonLdLines(wrapDoc(doc, contextDoc), os);
+            writeJsonLdLine(wrapDoc(doc, contextDoc), os);
         }
         os.flush();
     }
 
     // TODO jackson2 can do json lines natively - upgrade?
     // https://fasterxml.github.io/jackson-databind/javadoc/2.6/com/fasterxml/jackson/databind/SequenceWriter.html
-    private static void writeJsonLdLines(Object object, OutputStream os) throws IOException {
+    private static void writeJsonLdLine(Object object, OutputStream os) throws IOException {
         String json = mapper.writeValueAsString(object).replaceAll("\n", "");
         os.write(json.getBytes(StandardCharsets.UTF_8));
         os.write("\n".getBytes(StandardCharsets.UTF_8));
