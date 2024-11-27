@@ -59,6 +59,11 @@ local_library_code = "S"
 # links for and download additional data to keep with our entities.
 properties_of_interest = ["itemOf", "instanceOf", "agent", "subject"]
 
+# This parameter decides whether or not the client terminates after reaching
+# the point where the cache is up to date. With this set to true, it instead
+# runs in a loop, keeping up to date over time.
+continous_mode = False
+
 
 #
 # Code section
@@ -74,6 +79,8 @@ import urllib.request
 from urllib.request import Request, urlopen
 import json
 import os
+import time
+import sys
 
 
 #
@@ -215,15 +222,18 @@ def ingest_entity(entity, connection):
 #
 def load_dump(connection):
     next_url = f"{libris_emm_base_url}full?selection=itemAndInstance:{local_library_code}&offset=0"
-    dumpCreationTime = None
+    dump_creation_time = None
+    items_so_far = 0
     while next_url:
         with urllib.request.urlopen(next_url) as response:
-            print(f"Getting {next_url}")
             data = json.load(response)
-            dumpCreationTimeOnPage = data["startTime"]
-            if (dumpCreationTime and dumpCreationTime != dumpCreationTimeOnPage):
+            dump_creation_time_on_page = data["startTime"]
+            if data["totalItems"]:
+                print(f"\rLoading initial dump itemAndInstance:{local_library_code}, currently at {(items_so_far / data["totalItems"]):.0%}", file=sys.stderr, end="")
+
+            if (dump_creation_time and dump_creation_time != dump_creation_time_on_page):
                 print(" DUMP INVALIDATED WHILE DOWNLOADING, TODO: DEAL WITH THIS ")
-            dumpCreationTime = dumpCreationTimeOnPage
+            dump_creation_time = dump_creation_time_on_page
             if "next" in data:
                 next_url = data["next"]
             else:
@@ -236,6 +246,8 @@ def load_dump(connection):
                     entity = get_main_entity(item)
                     embellish(entity, connection)
                     ingest_entity(entity, connection)
+                    items_so_far = items_so_far + 1
+    print("\rLoaded initial dump itemAndInstance:{local_library_code}. Now done.", file=sys.stderr)
     cursor = connection.cursor()
     cursor.execute(
         """
@@ -244,7 +256,7 @@ def load_dump(connection):
     VALUES
         (?)
     """,
-        (dumpCreationTime,)
+        (dump_creation_time,)
     )
     connection.commit()
 
@@ -354,7 +366,7 @@ def update(connection):
                 result = cursor.execute("SELECT julianday(changes_consumed_until) - julianday(?) FROM state", (item["published"],))
                 diff = result.fetchone()[0]
                 if (float(diff) >= 0.0):
-                    print(f"{item['published']} is before our last taken update, stop here.")
+                    print(f"{item['published']} is before our last taken update, cache is now up to date.", file=sys.stderr)
                     next_url = None
                     break
                 handle_activity(connection, item)
@@ -401,6 +413,11 @@ CREATE TABLE state (
         load_dump(connection)
 
     update(connection)
+
+    if continous_mode:
+        while True:
+            time.sleep(5)
+            update(connection)
 
         
 
