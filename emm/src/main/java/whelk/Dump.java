@@ -69,6 +69,7 @@ public class Dump {
     private static final String DUMP_END_MARKER = DUMP_END_MARKER_NO_NEWLINE + "\n"; // Must be 17 bytes
     private static final String JSON_CONTENT_TYPE = "application/json";
     private static final int GZIP_BUF_SIZE = 64 * 1024;
+    private static final String ND_JSON_LD_GZ_EXT = ".jsonld.gz";
 
     public static void sendDumpResponse(Whelk whelk, String apiBaseUrl, HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException {
         String selection = req.getParameter("selection");
@@ -110,7 +111,7 @@ public class Dump {
         responseObject.put("@context", contexts);
         responseObject.put("type", "Collection");
         responseObject.put("id", apiBaseUrl + "?selection=" + selection);
-        responseObject.put("url", apiBaseUrl + "?selection=" + selection + "&download");
+        responseObject.put("url", apiBaseUrl + "?selection=" + selection + "&download=" + ND_JSON_LD_GZ_EXT);
         var first = new LinkedHashMap<>();
         first.put("type", "CollectionPage");
         first.put("id", apiBaseUrl + "?selection=" + selection + "&offset=0");
@@ -284,7 +285,7 @@ public class Dump {
     }
 
     private static void sendDumpDownloadResponse(Whelk whelk, String apiBaseUrl, String dump, Path dumpFilePath, HttpServletResponse res) {
-        String filename = Unicode.stripSuffix(dumpFilePath.getFileName().toString(), ".dump") +  ".ndjsonld.gz";
+        String filename = Unicode.stripSuffix(dumpFilePath.getFileName().toString(), ".dump") + ND_JSON_LD_GZ_EXT;
         res.setHeader("Content-Disposition", "attachment; filename=" + filename);
         res.setHeader("Content-Type", "application/octet-stream");
 
