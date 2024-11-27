@@ -210,6 +210,11 @@ public class Dump {
             responseObject.put("totalItems", totalEntityCount);
         }
 
+        var partOf = new LinkedHashMap<>();
+        partOf.put("type", "Collection");
+        partOf.put("id", apiBaseUrl + "?selection=" + dump);
+        responseObject.put("partOf", partOf);
+
         long nextOffset = offset + EmmChangeSet.TARGET_HITS_PER_PAGE;
         if (totalEntityCount == null || nextOffset < totalEntityCount) {
             responseObject.put("next", apiBaseUrl+"?selection="+dump+"&offset="+nextOffset);
