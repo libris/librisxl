@@ -21,7 +21,6 @@ import static whelk.JsonLd.SEARCH_KEY;
 import static whelk.JsonLd.SUB_PROPERTY_OF;
 import static whelk.JsonLd.TYPE_KEY;
 import static whelk.JsonLd.asList;
-import static whelk.search2.QueryUtil.boolWrap;
 import static whelk.search2.QueryUtil.mustWrap;
 import static whelk.search2.QueryUtil.shouldWrap;
 import static whelk.util.DocumentUtil.getAtPath;

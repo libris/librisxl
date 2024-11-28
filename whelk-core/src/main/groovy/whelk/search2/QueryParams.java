@@ -28,6 +28,7 @@ public class QueryParams {
         public static final String EXTRA = "_x";
         public static final String DEBUG = "_debug";
         public static final String APP_CONFIG = "_appConfig";
+        public static final String BOOST = "_boost";
     }
 
     public static class Debug {
@@ -44,6 +45,7 @@ public class QueryParams {
     public final List<String> debug;
     public final String lens;
     public final Spell spell;
+    public final String boost;
 
     public final String q;
     public final String i;
@@ -58,6 +60,7 @@ public class QueryParams {
         this.offset = getOffset(apiParameters);
         this.lens = getOptionalSingleNonEmpty(ApiParams.LENS, apiParameters).orElse("cards");
         this.spell = new Spell(getOptionalSingleNonEmpty(ApiParams.SPELL, apiParameters).orElse(""));
+        this.boost = getOptionalSingleNonEmpty(ApiParams.BOOST, apiParameters).orElse("");
         this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse("");
         this.i = getOptionalSingle(ApiParams.SIMPLE_FREETEXT, apiParameters).orElse("");
     }

@@ -38,8 +38,7 @@ public class QueryTree {
         removeNeedlessWildcard();
     }
 
-    public Map<String, Object> toEs(QueryUtil queryUtil, Disambiguate disambiguate) {
-        List<String> boostFields = queryUtil.esBoost.getBoostFields(getFiltered().collectGivenTypes());
+    public Map<String, Object> toEs(QueryUtil queryUtil, Disambiguate disambiguate, List<String> boostFields) {
         return expand(disambiguate)
                 .insertNested(queryUtil::getNestedPath)
                 .toEs(boostFields);
@@ -201,14 +200,14 @@ public class QueryTree {
         };
     }
 
-    public Set<String> collectGivenTypes() {
-        return collectGivenTypes(tree, new HashSet<>());
+    public Set<String> collectTypes() {
+        return collectTypes(getFiltered().tree, new HashSet<>());
     }
 
-    private static Set<String> collectGivenTypes(Node sqtNode, Set<String> types) {
+    private static Set<String> collectTypes(Node sqtNode, Set<String> types) {
         switch (sqtNode) {
-            case And and -> and.children().forEach(c -> collectGivenTypes(c, types));
-            case Or or -> or.children().forEach(d -> collectGivenTypes(d, types));
+            case And and -> and.children().forEach(c -> collectTypes(c, types));
+            case Or or -> or.children().forEach(d -> collectTypes(d, types));
             case PropertyValue pv -> {
                 if (pv.property().isRdfType() && pv.operator().equals(Operator.EQUALS)) {
                     types.add(pv.value().string());
@@ -368,7 +367,7 @@ public class QueryTree {
     }
 
     public void addFilters(QueryParams queryParams, AppParams appParams) {
-        boolean typeNotGiven = collectGivenTypes().isEmpty();
+        boolean typeNotGiven = collectTypes().isEmpty();
         var currentActiveBfNodes = getActiveBfNodes();
 
         Function<PropertyValue, Boolean> isTypeEquals = pv ->
