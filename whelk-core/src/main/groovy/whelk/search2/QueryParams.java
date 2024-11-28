@@ -2,7 +2,6 @@ package whelk.search2;
 
 import whelk.exception.InvalidQueryException;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -10,8 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
-
-import static whelk.util.Jackson.mapper;
 
 public class QueryParams {
     private final static int DEFAULT_LIMIT = 200;
@@ -35,6 +32,7 @@ public class QueryParams {
 
     public static class Debug {
         public static final String ES_QUERY = "esQuery";
+        public static final String ES_SCORE = "esScore";
     }
 
     public final int limit;
@@ -50,8 +48,7 @@ public class QueryParams {
     public final String q;
     public final String i;
 
-    public QueryParams(Map<String, String[]> apiParameters) throws InvalidQueryException,
-            IOException {
+    public QueryParams(Map<String, String[]> apiParameters) throws InvalidQueryException {
         this.sortBy = Sort.fromString(getOptionalSingleNonEmpty(ApiParams.SORT, apiParameters).orElse(""));
         this.object = getOptionalSingleNonEmpty(ApiParams.OBJECT, apiParameters).orElse(null);
         this.predicates = getMultiple(ApiParams.PREDICATES, apiParameters);
