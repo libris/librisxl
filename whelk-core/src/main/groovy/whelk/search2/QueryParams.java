@@ -45,7 +45,7 @@ public class QueryParams {
     public final List<String> debug;
     public final String lens;
     public final Spell spell;
-    public final String boost;
+    public final List<String> boostFields;
 
     public final String q;
     public final String i;
@@ -60,7 +60,7 @@ public class QueryParams {
         this.offset = getOffset(apiParameters);
         this.lens = getOptionalSingleNonEmpty(ApiParams.LENS, apiParameters).orElse("cards");
         this.spell = new Spell(getOptionalSingleNonEmpty(ApiParams.SPELL, apiParameters).orElse(""));
-        this.boost = getOptionalSingleNonEmpty(ApiParams.BOOST, apiParameters).orElse("");
+        this.boostFields = getMultiple(ApiParams.BOOST, apiParameters);
         this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse("");
         this.i = getOptionalSingle(ApiParams.SIMPLE_FREETEXT, apiParameters).orElse("");
     }
@@ -94,6 +94,9 @@ public class QueryParams {
         }
         if (!debug.isEmpty()) {
             params.put(ApiParams.DEBUG, String.join(",", debug));
+        }
+        if (!boostFields.isEmpty()) {
+            params.put(ApiParams.BOOST, String.join(",", boostFields));
         }
         return params;
     }

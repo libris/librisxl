@@ -85,7 +85,7 @@ public class SearchUtils2 {
     private Map<String, Object> getEsQueryDsl(QueryTree queryTree, QueryParams queryParams, AppParams.StatsRepr statsRepr) {
         var queryDsl = new LinkedHashMap<String, Object>();
 
-        queryDsl.put("query", getEsQuery(queryTree, queryParams.boost));
+        queryDsl.put("query", getEsQuery(queryTree, queryParams.boostFields));
         queryDsl.put("size", queryParams.limit);
         queryDsl.put("from", queryParams.offset);
         queryDsl.put("sort", (queryParams.sortBy == Sort.DEFAULT_BY_RELEVANCY && queryTree.isWild()
@@ -115,11 +115,11 @@ public class SearchUtils2 {
         return queryDsl;
     }
 
-    private Map<String, Object> getEsQuery(QueryTree queryTree, String boostParam) {
-        if (boostParam.contains("^")) {
-            return queryTree.toEs(queryUtil, disambiguate, List.of(boostParam.split(",")));
+    private Map<String, Object> getEsQuery(QueryTree queryTree, List<String> boostFields) {
+        if (!boostFields.isEmpty()) {
+            return queryTree.toEs(queryUtil, disambiguate, boostFields);
         }
-        List<String> boostFields = queryUtil.esBoost.getBoostFields(queryTree.collectTypes());
+        boostFields = queryUtil.esBoost.getBoostFields(queryTree.collectTypes());
         return addConstantBoosts(queryTree.toEs(queryUtil, disambiguate, boostFields));
     }
 
