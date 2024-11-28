@@ -331,6 +331,12 @@ def handle_activity(connection, activity):
             ingest_entity(created_data, connection)
 
     elif activity["type"] == "delete":
+        if data_on_stdout:
+            rows = cursor.execute("SELECT entities.entity -> '@id' FROM entities JOIN uris ON uris.entity_id = entities.id WHERE uri = ?", (activity["object"]["id"],))
+            for row in rows:
+                deleted_entity = {"@id": row[0].strip('\"'), "status": "deleted"}
+                print(f"{json.dumps(deleted_entity)}")
+
         # This is a "cascading delete", but doing so is safe as long as libris
         # maintains its principle that linked records cannot be deleted.
         cursor.execute("DELETE FROM uris WHERE uri = ?", (activity["object"]["id"],))
