@@ -45,7 +45,7 @@ public class EmmServlet extends HttpServlet {
                 responseObject.put("@context", contexts);
                 responseObject.put("type", "OrderedCollection");
                 responseObject.put("id", apiBaseUrl);
-                responseObject.put("url", apiBaseUrl + "full");
+                responseObject.put("url", apiBaseUrl + (apiBaseUrl.endsWith("/") ? "full" : "/full"));
                 var first = new LinkedHashMap<>();
                 first.put("type", "OrderedCollectionPage");
                 first.put("id", apiBaseUrl+"?until="+System.currentTimeMillis());
@@ -62,6 +62,5 @@ public class EmmServlet extends HttpServlet {
             e.printStackTrace();
         }
     }
-
 
 }

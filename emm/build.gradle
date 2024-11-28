@@ -60,7 +60,7 @@ task(appRun, dependsOn: "classes", type: JavaExec) {
     systemProperties(
             'xl.secret.properties': System.getProperty("xl.secret.properties"),
             'xl.logRoot': System.getProperty("xl.logRoot", "./logs"),
-            'xl.http.port': System.getProperty("xl.http.port", "8182")
+            'xl.http.port': System.getProperty("xl.http.port", "8186")
     )
     args(System.getProperty("args", "").split() as String[])
 
