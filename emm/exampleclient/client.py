@@ -66,8 +66,9 @@ continous_mode = False
 
 # This parameter tells the client to output entities as they are received or
 # updated. If set to true, the output will be jsonld-lines, one root entity
-# with all things it depends on, on each line. This is for when this client
-# is used as a proxy to assembe embedded views of data, WHICH IS NOT RECOMMENDED.
+# with all things it depends on, on each line, when the combined graph is
+# changed. This is for when this client is used as a proxy or pipe to assemble
+# embedded views of data for another system, WHICH IS NOT RECOMMENDED.
 data_on_stdout = False
 
 #
@@ -190,7 +191,7 @@ def embellish(entity, connection):
 def update_uris_table(entity, entity_id, connection):
     cursor = connection.cursor()
     uris = collect_uris_with_data(entity)
-    cursor.execute("DELETE FROM uris WHERE id = ?", (entity_id,))
+    cursor.execute("DELETE FROM uris WHERE entity_id = ?", (entity_id,))
     for uri in uris:
         cursor.execute(
             """
