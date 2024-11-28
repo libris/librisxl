@@ -4,7 +4,6 @@ import com.google.common.escape.Escaper;
 import com.google.common.net.UrlEscapers;
 import whelk.JsonLd;
 import whelk.Whelk;
-import whelk.search.ESQueryLensBoost;
 import whelk.search2.querytree.QueryTree;
 import whelk.util.DocumentUtil;
 
@@ -25,12 +24,12 @@ public class QueryUtil {
 
     private final Whelk whelk;
     public final EsMappings esMappings;
-    public final ESQueryLensBoost lensBoost;
+    public final EsBoost esBoost;
 
     public QueryUtil(Whelk whelk) {
         this.whelk = whelk;
         this.esMappings = new EsMappings(whelk.elastic != null ? whelk.elastic.getMappings() : Collections.emptyMap());
-        this.lensBoost = new ESQueryLensBoost(whelk.getJsonld());
+        this.esBoost = new EsBoost(whelk.getJsonld());
     }
 
     public Map<?, ?> query(Map<String, Object> queryDsl) {

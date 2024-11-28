@@ -39,10 +39,14 @@ public class QueryTree {
     }
 
     public Map<String, Object> toEs(QueryUtil queryUtil, Disambiguate disambiguate) {
-        return (isFiltered() ? filtered.tree : tree)
-                .expand(disambiguate, getOutsetType())
+        List<String> boostFields = queryUtil.esBoost.getBoostFields(getFiltered().collectGivenTypes());
+        return expand(disambiguate)
                 .insertNested(queryUtil::getNestedPath)
-                .toEs(queryUtil.lensBoost.computeBoostFieldsFromLenses(new String[0])); // TODO: Implement boosting
+                .toEs(boostFields);
+    }
+
+    private Node expand(Disambiguate disambiguate) {
+        return getFiltered().tree.expand(disambiguate, getOutsetType());
     }
 
     public Map<String, Object> toSearchMapping(Map<String, String> nonQueryParams) {
@@ -62,7 +66,7 @@ public class QueryTree {
     }
 
     public void setOutsetType(Disambiguate disambiguate) {
-        this.outsetType = disambiguate.decideOutset(isFiltered() ? filtered : this);
+        this.outsetType = disambiguate.decideOutset(getFiltered());
     }
 
     /**
@@ -394,8 +398,8 @@ public class QueryTree {
         this.filtered = new QueryTree(newTree);
     }
 
-    private boolean isFiltered() {
-        return filtered != null;
+    private QueryTree getFiltered() {
+        return filtered != null ? filtered : this;
     }
 
     private List<Node> getFilters(QueryParams queryParams, AppParams appParams) {
