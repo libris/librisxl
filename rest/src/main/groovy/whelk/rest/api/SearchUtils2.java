@@ -21,6 +21,7 @@ import whelk.util.http.RedirectException;
 import java.io.IOException;
 import java.util.*;
 
+import static whelk.search2.EsBoost.addConstantBoosts;
 import static whelk.search2.Spell.buildSpellSuggestions;
 import static whelk.util.Jackson.mapper;
 
@@ -84,7 +85,7 @@ public class SearchUtils2 {
     private Map<String, Object> getEsQueryDsl(QueryTree queryTree, QueryParams queryParams, AppParams.StatsRepr statsRepr) {
         var queryDsl = new LinkedHashMap<String, Object>();
 
-        queryDsl.put("query", queryTree.toEs(queryUtil, disambiguate));
+        queryDsl.put("query", addConstantBoosts(queryTree.toEs(queryUtil, disambiguate)));
         queryDsl.put("size", queryParams.limit);
         queryDsl.put("from", queryParams.offset);
         queryDsl.put("sort", (queryParams.sortBy == Sort.DEFAULT_BY_RELEVANCY && queryTree.isWild()

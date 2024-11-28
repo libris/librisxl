@@ -13,12 +13,17 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static whelk.JsonLd.ALTERNATE_PROPERTIES;
+import static whelk.JsonLd.CACHE_RECORD_TYPE;
 import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.RANGE;
+import static whelk.JsonLd.RECORD_TYPE;
 import static whelk.JsonLd.SEARCH_KEY;
 import static whelk.JsonLd.SUB_PROPERTY_OF;
 import static whelk.JsonLd.TYPE_KEY;
 import static whelk.JsonLd.asList;
+import static whelk.search2.QueryUtil.boolWrap;
+import static whelk.search2.QueryUtil.mustWrap;
+import static whelk.search2.QueryUtil.shouldWrap;
 import static whelk.util.DocumentUtil.getAtPath;
 
 public class EsBoost {
@@ -47,6 +52,16 @@ public class EsBoost {
         boostFieldsByType.put(typeKey, boostFields);
 
         return boostFields;
+    }
+
+    public static Map<String, Object> addConstantBoosts(Map<String, Object> esQuery) {
+        List<Map<String, Object>> constantBoosts = List.of(recordsOverCacheRecordsBoost());
+
+        var mustClause = new ArrayList<>();
+        mustClause.add(esQuery);
+        mustClause.addAll(constantBoosts);
+
+        return mustWrap(mustClause);
     }
 
     private List<String> computeBoostFields(List<String> types) {
@@ -330,6 +345,23 @@ public class EsBoost {
         }
 
         return boostFields;
+    }
+
+    private static Map<String, Object> recordsOverCacheRecordsBoost() {
+        var recordType = JsonLd.RECORD_KEY + '.' + JsonLd.TYPE_KEY;
+
+        var recordBoost = Map.of(
+                "constant_score", Map.of(
+                        "filter", Map.of("term", Map.of(recordType, RECORD_TYPE)),
+                        "boost", 1000)
+        );
+        var cacheRecordBoost = Map.of(
+                "constant_score", Map.of(
+                        "filter", Map.of("term", Map.of(recordType, CACHE_RECORD_TYPE)),
+                        "boost", 1)
+        );
+
+        return shouldWrap(List.of(recordBoost, cacheRecordBoost));
     }
 
     private static final List<String> CONCEPT_BOOST = List.of(
