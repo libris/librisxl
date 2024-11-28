@@ -69,7 +69,7 @@ public class Dump {
     private static final String DUMP_END_MARKER = DUMP_END_MARKER_NO_NEWLINE + "\n"; // Must be 17 bytes
     private static final String JSON_CONTENT_TYPE = "application/json";
     private static final int GZIP_BUF_SIZE = 64 * 1024;
-    private static final String ND_JSON_LD_GZ_EXT = ".jsonld.gz";
+    private static final String ND_JSON_LD_GZ_EXT = ".ndjsonld.gz";
 
     public static void sendDumpResponse(Whelk whelk, String apiBaseUrl, HttpServletRequest req, HttpServletResponse res) throws IOException, SQLException {
         String selection = req.getParameter("selection");
