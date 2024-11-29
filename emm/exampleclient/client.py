@@ -50,7 +50,7 @@
 cache_location = "./libris-cache.sqlite3"
 
 # This parameter tells the client which EMM server to use.
-libris_emm_base_url = "http://localhost:8182/"
+libris_emm_base_url = "http://localhost:8186/"
 
 # This parameter tells the client which library we are downloading data for.
 local_library_code = "S"
