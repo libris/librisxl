@@ -237,7 +237,7 @@ def load_dump(connection):
             data = json.load(response)
             dump_creation_time_on_page = data["startTime"]
             if data["totalItems"]:
-                print(f"\rLoading initial dump itemAndInstance:{local_library_code}, currently at {(items_so_far / data["totalItems"]):.0%}", file=sys.stderr, end="")
+                print(f"\rLoading initial dump itemAndInstance:{local_library_code}, currently at {(items_so_far / data['totalItems']):.0%}", file=sys.stderr, end="")
 
             if (dump_creation_time and dump_creation_time != dump_creation_time_on_page):
                 print(" DUMP INVALIDATED WHILE DOWNLOADING, TODO: DEAL WITH THIS ")
