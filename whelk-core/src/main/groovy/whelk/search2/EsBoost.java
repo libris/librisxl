@@ -287,11 +287,11 @@ public class EsBoost {
                 String termType = (String) term.get(TYPE_KEY);
                 if ("ObjectProperty".equals(termType)) {
                     key = key + "." + SEARCH_KEY;
-                } else if (jsonLd.isLangContainer(jsonLd.context.get(key))) {
-                    key = key + "." + jsonLd.locales.getFirst();
                 }
+                boostFields.put(key, boost);
+            } else if (jsonLd.isLangContainer(jsonLd.context.get(key))) {
+                boostFields.put(key + "." + jsonLd.locales.getFirst(), boost);
             }
-            boostFields.put(key, boost);
         }
 
         return boostFields;
