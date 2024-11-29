@@ -86,8 +86,9 @@ public class EsBoost {
             boostFields = CONCEPT_BOOST.stream()
                     .map(s -> s.split("\\^"))
                     .collect(Collectors.toMap(parts -> parts[0], parts -> Integer.parseInt(parts[1])));
-
-            computeBoostFieldsFromLenses(otherTypes).forEach(boostFields::putIfAbsent);
+            if (!otherTypes.isEmpty()) {
+                computeBoostFieldsFromLenses(otherTypes).forEach(boostFields::putIfAbsent);
+            }
         }
 
         return boostFields.entrySet()
@@ -326,18 +327,21 @@ public class EsBoost {
         Map<String, Object> dfn = jsonLd.vocabIndex.get(prop);
 
         // Follow the object property range to append chip properties to the boosted path.
-        if (dfn != null && "ObjectProperty".equals(dfn.get(TYPE_KEY))) {
-            Optional<String> rangeKey = Optional.ofNullable(dfn.get(RANGE))
-                    .map(r -> r instanceof List ? ((List<?>) r).getFirst() : r)
-                    .map(Map.class::cast)
-                    .map(r -> (String) r.get(ID_KEY))
-                    .map(jsonLd::toTermKey);
-
-            if (rangeKey.isPresent() && jsonLd.isSubClassOf(rangeKey.get(), "QualifiedRole")) {
-                var rangeChipLens = chipLenses.getLensForType(rangeKey.get());
-                collectBoostFields(rangeChipLens, CARD_BOOST).forEach((k, v) -> boostFields.put(prop + "." + k, v));
-            } else {
+        if (dfn != null) {
+            if ("ObjectProperty".equals(dfn.get(TYPE_KEY))) {
+                Optional<String> rangeKey = Optional.ofNullable(dfn.get(RANGE))
+                        .map(r -> r instanceof List ? ((List<?>) r).getFirst() : r)
+                        .map(Map.class::cast)
+                        .map(r -> (String) r.get(ID_KEY))
+                        .map(jsonLd::toTermKey);
+                if (rangeKey.isPresent() && jsonLd.isSubClassOf(rangeKey.get(), "QualifiedRole")) {
+                    var rangeChipLens = chipLenses.getLensForType(rangeKey.get());
+                    collectBoostFields(rangeChipLens, CARD_BOOST).forEach((k, v) -> boostFields.put(prop + "." + k, v));
+                    return boostFields;
+                }
                 boostFields.put(prop + "." + SEARCH_KEY, CARD_BOOST);
+            } else {
+                boostFields.put(prop, CARD_BOOST);
             }
         } else if (jsonLd.isLangContainer(jsonLd.context.get(prop))) {
             boostFields.put(prop + "." + jsonLd.locales.getFirst(), CARD_BOOST);
