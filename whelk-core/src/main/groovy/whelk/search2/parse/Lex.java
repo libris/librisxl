@@ -38,9 +38,7 @@ public class Lex {
     }
 
     private static void consumeWhiteSpace(StringBuilder query, MutableInteger offset) {
-        if (query.isEmpty())
-            return;
-        while (Character.isWhitespace(query.charAt(0))) {
+        while (!query.isEmpty() && Character.isWhitespace(query.charAt(0))) {
             query.deleteCharAt(0);
             offset.increase(1);
         }
