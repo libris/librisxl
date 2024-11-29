@@ -51,9 +51,9 @@ public class EmmChangeSet {
         for (EmmActivity activityInList : activitiesOnPage) {
             var activityInStream = new LinkedHashMap<>();
             activityInStream.put("type", switch (activityInList.activityType) {
-                case CREATE -> "create";
-                case UPDATE -> "update";
-                case DELETE -> "delete";
+                case CREATE -> "Create";
+                case UPDATE -> "Update";
+                case DELETE -> "Delete";
             });
             activityInStream.put("published", ZonedDateTime.ofInstant(activityInList.modificationTime.toInstant(), ZoneOffset.UTC).toString());
             var activityObject = new HashMap<>();

@@ -324,13 +324,13 @@ def is_root_entity(entity):
 def handle_activity(connection, activity):
     cursor = connection.cursor()
 
-    if activity["type"] == "create":
+    if activity["type"] == "Create":
         created_data = download_entity(activity["object"]["id"])
         if is_root_entity(created_data):
             embellish(created_data, connection)
             ingest_entity(created_data, connection)
 
-    elif activity["type"] == "delete":
+    elif activity["type"] == "Delete":
         if data_on_stdout:
             rows = cursor.execute("SELECT entities.entity -> '@id' FROM entities JOIN uris ON uris.entity_id = entities.id WHERE uri = ?", (activity["object"]["id"],))
             for row in rows:
@@ -342,7 +342,7 @@ def handle_activity(connection, activity):
         cursor.execute("DELETE FROM uris WHERE uri = ?", (activity["object"]["id"],))
         connection.commit()
 
-    elif activity["type"] == "update":
+    elif activity["type"] == "Update":
         # Find all of our records that depend on this URI
         rows = cursor.execute("SELECT entities.id, entities.entity FROM uris JOIN entities on uris.entity_id = entities.id WHERE uris.uri = ?", (activity["object"]["id"],))
         
