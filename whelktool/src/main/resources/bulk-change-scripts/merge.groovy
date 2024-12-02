@@ -14,6 +14,7 @@ String keepId = keepLink[ID_KEY]
 if (!deprecateId || !keepId) return
 
 List<String> obsoleteThingUris = []
+Set<String> dependsOnObsolete = []
 
 selectByIds([deprecateId]) { obsolete ->
     // Assert that the resource to deprecate is not the same as the one to be kept
@@ -22,37 +23,42 @@ selectByIds([deprecateId]) { obsolete ->
     }
 
     obsoleteThingUris = obsolete.doc.getThingIdentifiers()
+    dependsOnObsolete = obsolete.getDependers()
+}
 
-    selectByIds(obsolete.getDependers()) { depender ->
-        if (depender.doc.getThingType() == JOB_TYPE) {
-            return
-        }
-
-        List<List> modifiedListPaths = []
-        def modified = DocumentUtil.traverse(depender.graph) { value, path ->
-            // TODO: What if there are links to a record uri?
-            if (path && path.last() == ID_KEY && obsoleteThingUris.contains(value)) {
-                path.dropRight(1).with {
-                    if (it.last() instanceof Integer) {
-                        modifiedListPaths.add(it.dropRight(1))
-                    }
-                }
-                return new DocumentUtil.Replace(keepId)
-            }
-        }
-        // Remove duplicates
-        modifiedListPaths.each {
-            var obj = DocumentUtil.getAtPath(depender.graph, it)
-            if (obj instanceof List) {
-                obj.unique(true)
-            }
-        }
-        if (modified) {
-            depender.scheduleSave(loud: isLoudAllowed)
-        }
+selectByIds(dependsOnObsolete) { depender ->
+    if (depender.doc.getThingType() == JOB_TYPE) {
+        return
     }
 
-    obsolete.scheduleDelete()
+    List<List> modifiedListPaths = []
+    def modified = DocumentUtil.traverse(depender.graph) { value, path ->
+        // TODO: What if there are links to a record uri?
+        if (path && path.last() == ID_KEY && obsoleteThingUris.contains(value)) {
+            path.dropRight(1).with {
+                if (it.last() instanceof Integer) {
+                    modifiedListPaths.add(it.dropRight(1))
+                }
+            }
+            return new DocumentUtil.Replace(keepId)
+        }
+    }
+    // Remove duplicates
+    modifiedListPaths.each {
+        var obj = DocumentUtil.getAtPath(depender.graph, it)
+        if (obj instanceof List) {
+            obj.unique(true)
+        }
+    }
+    if (modified) {
+        depender.scheduleSave(loud: isLoudAllowed)
+    }
+}
+
+selectByIds([deprecateId]) { obsolete ->
+    if (obsolete.doc.getThingIdentifiers().first() != keepId) {
+        obsolete.scheduleDelete()
+    }
 }
 
 selectByIds([keepId]) { kept ->
