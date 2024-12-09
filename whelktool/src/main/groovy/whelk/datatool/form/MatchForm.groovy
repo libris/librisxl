@@ -221,8 +221,9 @@ class MatchForm {
 
     private String insertTypeMappings(String sparqlPattern) {
         if (shouldMatchSubtypes() && getSubtypes()) {
-            def baseType = form[TYPE_KEY]
-            String valuesClause = "VALUES ?$baseType { ${([baseType] + getSubtypes()).collect { ":$it" }.join(" ")} }\n"
+            String baseType = form[TYPE_KEY]
+            String values = ([baseType] + getSubtypes()).collect { it.contains(":") ? it : ":$it" }.join(" ")
+            String valuesClause = "VALUES ?$baseType { $values }\n"
             return valuesClause + sparqlPattern
         }
         return sparqlPattern
