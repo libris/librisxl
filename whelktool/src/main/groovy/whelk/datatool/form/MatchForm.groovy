@@ -81,7 +81,7 @@ class MatchForm {
         return path.findAll { it instanceof String } as List<String>
     }
 
-    private getSubtypes() {
+    private Set<String> getSubtypes() {
         return getSubtypes(form)
     }
 
