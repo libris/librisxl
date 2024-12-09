@@ -44,7 +44,7 @@ boolean interpretClassification(Map thing) {
           cls.inScheme = [(ID): SAB]
           cls.broader = sabRefs
 
-          var missed = sabRefs.findAll { ID !in it && it[TYPE] != 'ShelfLocal' }
+          var missed = sabRefs.findAll { ID !in it && it[TYPE] != 'Resource' }
           if (missed) {
             missed.each {
               missing.get(it.code, []) << clsCode
@@ -76,7 +76,7 @@ List<Map> splitSabCode(String code) {
 
     if (chunk.indexOf(' ') > -1) {
       if (chunk.startsWith('z ')) {
-        return [(TYPE): 'ShelfLocal', label: chunk.substring(2)]
+        return [(TYPE): 'Resource', label: chunk.substring(2)]
       }
       return null
     }
