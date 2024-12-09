@@ -11,6 +11,7 @@ Session.vim
 /*.properties
 /*.properties-*
 !gradle.properties
+emm/exampleclient/libris-cache.sqlite3
 
 # Java/Gradle Artifacts
 /.gradle

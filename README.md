@@ -234,8 +234,8 @@ instead of `rest`.)
 To run the frontend, first set up the Libris cataloging client and the
 id.kb.se web app (follow the README in each):
 
-* [Libris cataloging](https://github.com/libris/lxlviewer/tree/develop/vue-client)
-* [id.kb.se](https://github.com/libris/lxlviewer/tree/develop/nuxt-app)
+* [Libris cataloging](https://github.com/libris/lxlviewer/tree/develop/cataloging)
+* [id.kb.se](https://github.com/libris/lxlviewer/tree/develop/idkbse)
 
 At this point, you should have the LXLViewer cataloging client running on port 8080
 and the id.kb.se app running on port 3000, but they won't work yet.

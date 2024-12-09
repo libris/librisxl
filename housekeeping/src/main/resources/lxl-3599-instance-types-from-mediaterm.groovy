@@ -1,0 +1,1 @@
+../../../../whelktool/scripts/cleanups/2021/05/lxl-3599-instance-types-from-mediaterm.groovy

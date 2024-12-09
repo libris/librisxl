@@ -42,6 +42,7 @@ dependencies {
 
 shadowJar {
     archiveClassifier = null // removes `-all` in the filename of the created .jar
+    mergeServiceFiles()
 }
 
 jar {

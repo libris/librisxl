@@ -1,7 +1,3 @@
-plugins {
-    id "nebula.lint" version "16.16.0"
-}
-
 apply plugin: 'groovy'
 apply plugin: 'java-library'
 apply plugin: 'jacoco'
@@ -61,6 +57,7 @@ dependencies {
     // XL
     implementation(project(':whelk-core'))
     implementation(project(':server-common'))
+    implementation(project(':whelktool'))
 
     // Groovy
     implementation "org.codehaus.groovy:groovy-all:${groovyVersion}"
@@ -126,7 +123,8 @@ task(appRun, dependsOn: "classes", type: JavaExec) {
     systemProperties(
             'xl.secret.properties': System.getProperty("xl.secret.properties"),
             'xl.logRoot': System.getProperty("xl.logRoot", "./logs"),
-            'xl.http.port': System.getProperty("xl.http.port", "8180")
+            'xl.http.port': System.getProperty("xl.http.port", "8180"),
+            'xl.test.rewriteSparqlResultIds': System.getProperty("xl.test.rewriteSparqlResultIds", "false")
     )
     args(System.getProperty("args", "").split() as String[])
 

@@ -16,6 +16,7 @@ import whelk.filter.LinkFinder
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 import whelk.util.WhelkFactory
+import whelk.util.http.HttpTools
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest

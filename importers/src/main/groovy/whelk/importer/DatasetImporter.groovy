@@ -220,7 +220,7 @@ class DatasetImporter {
         } else if (givenDsData != null) {
             System.err.println("Using given dataset description")
             setDatasetInfo(datasetUri, givenDsData)
-            dsRecord = completeRecord(givenDsData, 'SystemRecord')
+            dsRecord = completeRecord(givenDsData, JsonLd.SYSTEM_RECORD_TYPE)
             createOrUpdateDocument(dsRecord)
             dsId = dsRecord.getShortId()
         } else if (useExistingDatasetDescription) {

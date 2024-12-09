@@ -17,6 +17,7 @@ import whelk.util.DocumentUtil
 
 import static whelk.search.ESQuery.Connective.AND
 import static whelk.search.ESQuery.Connective.OR
+import static whelk.util.Unicode.stripPrefix
 
 @Log
 class SearchUtils {
@@ -64,6 +65,7 @@ class SearchUtils {
         String lens = getReservedQueryParameter('_lens', queryParameters)
         String addStats = getReservedQueryParameter('_stats', queryParameters)
         String suggest = getReservedQueryParameter('_suggest', queryParameters)
+        String spell = getReservedQueryParameter('_spell', queryParameters)
 
         if (queryParameters['p'] && !object) {
             throw new InvalidQueryException("Parameter 'p' can only be used together with 'o'")
@@ -86,6 +88,7 @@ class SearchUtils {
                           '_lens' : lens,
                           '_stats' : addStats,
                           '_suggest' : suggest,
+                          '_spell': spell,
         ]
 
         Map results = queryElasticSearch(
@@ -121,6 +124,7 @@ class SearchUtils {
         List<String> predicates = pageParams['p']
         String addStats = pageParams['_stats']
         String suggest = pageParams['_suggest']
+        String spell = pageParams['_spell']
         lens = lens ?: 'cards'
 
         log.debug("Querying ElasticSearch")
@@ -132,7 +136,7 @@ class SearchUtils {
         // TODO Only manipulate `_limit` in one place
         queryParameters['_limit'] = [limit.toString()]
 
-        Map esResult = esQuery.doQuery(queryParameters, suggest)
+        Map esResult = esQuery.doQuery(queryParameters, suggest, spell)
         Lookup lookup = new Lookup()
         
         List<Map> mappings = []
@@ -182,7 +186,7 @@ class SearchUtils {
         } 
 
         Map stats = null
-        if (addStats == null || (addStats == 'true' || addStats == 'on')) {
+        if ((addStats == null || (addStats == 'true' || addStats == 'on')) && spell != "only") {
             stats = buildStats(lookup, aggregations,
                                makeFindUrl(SearchType.ELASTIC, stripNonStatsParams(pageParams)),
                                (total > 0 && !predicates) ? reverseObject : null,
@@ -221,9 +225,25 @@ class SearchUtils {
                                            items, mappings, pageParams,
                                            limit, offset, total)
 
-        if (stats && !suggest) {
+        if (stats && (!suggest || spell != "only")) {
             stats[JsonLd.ID_KEY] = '#stats'
             result['stats'] = stats
+        }
+
+        if (spell) {
+            result['_spell'] = []
+            esResult["spell"].each { Map suggestion ->
+                result['_spell'] << [
+                        'label': suggestion['text'],
+                        'labelHTML': suggestion['highlighted'],
+                        'view': [
+                                '@id': makeFindUrl(
+                                        SearchType.ELASTIC,
+                                        pageParams - ['q': pageParams['q']] + ['q': suggestion['text']],
+                                        offset)
+                        ]
+                ]
+            }
         }
 
         if (esResult['_debug']) {
@@ -469,11 +489,7 @@ class SearchUtils {
     private String removeWildcardForKey(String url, String key) {
         url.replace("&${makeParam(key, '*')}", "")
     }
-    
-    private static String stripPrefix(String s, String prefix) {
-        s.startsWith(prefix) ? s.substring(prefix.length()) : s
-    }
-    
+
     private boolean hasHugeNumberOfIncomingLinks(String iri) {
         def num = numberOfIncomingLinks(iri)
         return num < 0 || num > 500_000
@@ -787,7 +803,7 @@ class SearchUtils {
      * Return a list of reserved query params
      */
     private List getReservedParameters() {
-        return ['q', 'p', 'o', 'value', '_limit', '_offset', '_suggest']
+        return ['q', 'p', 'o', 'value', '_limit', '_offset', '_suggest', '_spell']
     }
 
     /*

@@ -742,6 +742,17 @@ class PostgreSQLComponent {
                 if (collection == "hold") {
                     checkLinkedShelfMarkOwnership(doc, connection)
 
+                    String heldBy = doc.getHeldBy()
+                    if (heldBy == null) {
+                        log.warn("Was asked to save a holding record lacking a correct library/heldBy (so, did nothing).")
+                        return false
+                    }
+                    String libraryRecordId = getRecordId(heldBy, connection)
+                    if (libraryRecordId == null) {
+                        log.warn("Was asked to save a holding record for a library that could not be located: " + heldBy + " (so, did nothing).")
+                        return false
+                    }
+
                     String holdingFor = doc.getHoldingFor()
                     if (holdingFor == null) {
                         log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")
@@ -760,8 +771,8 @@ class PostgreSQLComponent {
 
                     acquireRowLock(holdingForSystemId, connection)
 
-                    if (getHoldingIdByItemOfAndHeldBy(holdingFor, doc.getHeldBy(), connection) != null)
-                        throw new ConflictingHoldException("Already exists a holding record for ${doc.getHeldBy()} and bib: $holdingFor")
+                    if (getHoldingIdByItemOfAndHeldBy(holdingFor, heldBy, connection) != null)
+                        throw new ConflictingHoldException("Already exists a holding record for ${heldBy} and bib: $holdingFor")
                 }
 
                 if (linkFinder != null)
@@ -876,6 +887,29 @@ class PostgreSQLComponent {
         }
     }
 
+    /**
+     * Like quickCreateDocument, but only for saving to the versions table.
+     * It should NOT be used in a production environment. It's only meant to (optionally)
+     * be used with WhelkCopier when copying records from one XL environment to another,
+     * for dev purposes.
+     */
+    boolean quickCreateDocumentVersion(Document doc, Date createdTime, Date modTime, String changedIn, String changedBy, String collection) {
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            try {
+                connection.setAutoCommit(false)
+                saveVersion(doc, connection, createdTime, modTime, changedIn, changedBy, collection, false)
+                connection.commit()
+                return true
+            } catch (Exception e) {
+                log.error("Failed to save document version: ${e.message}. Rolling back.")
+                connection.rollback()
+                throw e
+            }
+        }
+    }
+
+
     void acquireRowLock(String id, Connection connection) {
         PreparedStatement lockStatement = connection.prepareStatement(GET_DOCUMENT_FOR_UPDATE)
         lockStatement.setString(1, id)
@@ -979,6 +1013,20 @@ class PostgreSQLComponent {
             
             if (collection == "hold") {
                 checkLinkedShelfMarkOwnership(doc, connection)
+
+                if (!deleted) {
+                    String heldBy = doc.getHeldBy()
+                    if (heldBy == null) {
+                        log.warn("Was asked to save a holding record lacking a correct library/heldBy (so, did nothing).")
+                        return null
+                    }
+                    String libraryRecordId = getRecordId(heldBy, connection)
+                    if (libraryRecordId == null) {
+                        log.warn("Was asked to save a holding record for a library that could not be located: " + heldBy + " (so, did nothing).")
+                        return null
+                    }
+                }
+
                 String holdingFor = doc.getHoldingFor()
                 if (holdingFor == null) {
                     log.warn("Was asked to save a holding record linked to a bib record that could not be located: " + doc.getHoldingFor() + " (so, did nothing).")

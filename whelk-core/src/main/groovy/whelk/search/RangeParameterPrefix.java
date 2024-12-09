@@ -7,7 +7,7 @@ public enum RangeParameterPrefix {
     MAX_EX("maxEx-"),
     MATCHES("matches-");
 
-    String prefix;
+    final String prefix;
 
     RangeParameterPrefix(String prefix) {
         this.prefix = prefix;
@@ -18,12 +18,12 @@ public enum RangeParameterPrefix {
     }
 
     String asElasticRangeOperator() {
-        switch(this) {
-            case MIN: return "gte";
-            case MIN_EX: return "gt";
-            case MAX: return "lte";
-            case MAX_EX: return "lt";
-            default: throw new IllegalArgumentException("No elastic operator for " + this);
-        }
+        return switch (this) {
+            case MIN -> "gte";
+            case MIN_EX -> "gt";
+            case MAX -> "lte";
+            case MAX_EX -> "lt";
+            default -> throw new IllegalArgumentException("No elastic operator for " + this);
+        };
     }
 }

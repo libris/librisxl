@@ -78,6 +78,7 @@ class Normalizers {
                 'ansi'    : 'Ansi',
                 'doi'     : 'DOI',
                 'danacode': 'Danacode',
+                'grid'    : 'GRID',
                 'gtin-14' : 'GTIN14',
                 'hdl'     : 'Hdl',
                 'isan'    : 'ISAN',

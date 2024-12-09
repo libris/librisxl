@@ -3,8 +3,11 @@ package whelk.rest.security
 import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.JsonLd
+import whelk.datatool.bulkchange.BulkAccessControl
 import whelk.exception.ModelValidationException
 import whelk.util.LegacyIntegrationTools
+
+import static whelk.datatool.bulkchange.BulkJobDocument.JOB_TYPE
 
 @Log
 class AccessControl {
@@ -13,12 +16,13 @@ class AccessControl {
     static final KAT_KEY = 'cataloger'
 
 
-    boolean checkDocumentToPost(Document newDoc, Map userPrivileges, JsonLd jsonld) {
+    static boolean checkDocumentToPost(Document newDoc, Map userPrivileges, JsonLd jsonld) {
         return checkDocument(newDoc, userPrivileges, jsonld)
     }
 
+    // FIXME Mocking in CrudSpec breaks if this is made static
     boolean checkDocumentToPut(Document newDoc, Document oldDoc,
-                               Map userPrivileges, JsonLd jsonld) {
+                                      Map userPrivileges, JsonLd jsonld) {
         if (oldDoc.isHolding(jsonld)) {
             def newDocSigel = newDoc.getHeldBySigel()
             def oldDocSigel = oldDoc.getHeldBySigel()
@@ -46,16 +50,20 @@ class AccessControl {
             }
 
         }
+        else if (oldDoc.getThingType() == JOB_TYPE) {
+            BulkAccessControl.verify(oldDoc, newDoc)
+        }
 
         return checkDocument(newDoc, userPrivileges, jsonld) &&
                 checkDocument(oldDoc, userPrivileges, jsonld)
     }
 
+    // FIXME Mocking in CrudSpec breaks if this is made static
     boolean checkDocumentToDelete(Document oldDoc, Map userPrivileges, JsonLd jsonld) {
         return checkDocument(oldDoc, userPrivileges, jsonld)
     }
 
-    boolean checkDocument(Document document, Map userPrivileges, JsonLd jsonld) {
+    private static boolean checkDocument(Document document, Map userPrivileges, JsonLd jsonld) {
         if (!isValidActiveSigel(userPrivileges)) {
             return false
         }
@@ -72,12 +80,19 @@ class AccessControl {
             String ownedBySigel = LegacyIntegrationTools.uriToLegacySigel(document.getDescriptionCreator())
             return hasGlobalRegistrantPermission(userPrivileges) || hasPermissionForSigel(ownedBySigel, userPrivileges)
         }
-        else {
+        else if (document.getThingType() == JOB_TYPE) {
+            // TODO step 1, new specific sigel instead
+            // TODO step 2, configure as permission on user instead (in libris login)
+            return hasPermissionForSigel("SEK", userPrivileges)
+        }
+        else if (document.isInReadOnlyDataset()) {
+            return false
+        } else {
             return hasCatalogingPermission(userPrivileges)
         }
     }
 
-    private boolean hasPermissionForSigel(String sigel, Map userPrivileges) {
+    private static boolean hasPermissionForSigel(String sigel, Map userPrivileges) {
         boolean result = false
 
         // redundant, but we want to safeguard against future mishaps
@@ -99,29 +114,29 @@ class AccessControl {
         return result
     }
 
-    private boolean hasCatalogingPermission(Map userPrivileges) {
+    private static boolean hasCatalogingPermission(Map userPrivileges) {
         return userPrivileges.permissions.any { item ->
             item.get(KAT_KEY)
         }
     }
 
-    private boolean hasGlobalRegistrantPermission(Map userPrivileges) {
+    private static boolean hasGlobalRegistrantPermission(Map userPrivileges) {
         return activeSigelPermissions(userPrivileges)
                 .map({p -> p[GLOBALREG_KEY] == true})
                 .orElse(false)
     }
 
-    boolean isValidActiveSigel(Map userPrivileges) {
+    private static boolean isValidActiveSigel(Map userPrivileges) {
         return activeSigelPermissions(userPrivileges).isPresent()
     }
 
-    private Optional<Map> activeSigelPermissions(Map userPrivileges) {
+    private static Optional<Map> activeSigelPermissions(Map userPrivileges) {
         String activeSigel = userPrivileges.get('active_sigel')
         Map permissions = null
         if (activeSigel) {
             permissions = userPrivileges.permissions.find { permission ->
                 return permission.code == activeSigel
-            }
+            } as Map
         }
         return Optional.ofNullable(permissions)
     }

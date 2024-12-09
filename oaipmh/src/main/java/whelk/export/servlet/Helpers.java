@@ -100,6 +100,7 @@ public class Helpers
             {
                 String type = updated.getThingType();
 
+
                 if (requestedCollection.equals("auth") &&
                         (type == null || !OaiPmh.workDerivativeTypes.contains(type)))
                     queueDocument(updated);

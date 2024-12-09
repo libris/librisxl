@@ -8,6 +8,10 @@ import org.apache.commons.io.FilenameUtils
 import org.apache.http.HeaderElement
 import org.apache.http.NameValuePair
 import org.apache.http.message.BasicHeaderValueParser
+import whelk.util.http.BadRequestException
+import whelk.util.http.MimeTypes
+import whelk.util.http.NotFoundException
+import whelk.util.http.UnsupportedContentTypeException
 
 import javax.servlet.http.HttpServletRequest
 import java.lang.management.ManagementFactory
@@ -27,8 +31,8 @@ class CrudUtils {
             'json': [JSON],
             'trig': [TRIG],
             'ttl': [TURTLE],
-            'rdf': [RDFXML],
             'xml': [RDFXML],
+            'rdf': [RDFXML],
             'n3': [N3]
     ]
 
@@ -75,9 +79,9 @@ class CrudUtils {
             return ALLOWED_MEDIA_TYPES_BY_EXT.get(extension)
         } else {
             if (extension) {
-                throw new Crud.NotFoundException('.' + extension)
+                throw new NotFoundException('.' + extension)
             } else {
-                throw new Crud.NotFoundException("${mediaTypeIntersect}")
+                throw new NotFoundException("${mediaTypeIntersect}")
             }
         }
     }

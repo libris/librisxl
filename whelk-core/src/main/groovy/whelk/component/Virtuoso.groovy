@@ -125,12 +125,13 @@ class Virtuoso {
             // From experiments:
             // - Virtuoso responds with 500 for broken documents
             // - PUT fails sporadically with 404 NOT FOUND and 501 NOT IMPLEMENTED
-            if (statusCode == 401 || statusCode == 404 || statusCode == 501) {
+            // - DELETE/PUT fails sporadically with 503 Service Unavailable
+            if (statusCode == 401 || statusCode == 404 || statusCode == 501 || statusCode == 503) {
                 throw new UnexpectedHttpStatusException(msg, statusCode)
             }
             else {
                 // Cannot recover from these
-                log.warn("$msg")
+                log.info("$msg")
             }
         }
     }
