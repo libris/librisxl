@@ -338,14 +338,19 @@ class Crud extends HttpServlet {
 
         Document doc = whelk.storage.load(id, version)
         if (doc) {
-            if (!doc.deleted) {
-                return new Tuple2(doc, null)
+            // it has been merged with another doc - main id is in sameAs of remaining doc
+            // TODO this could/should be implemented as a replacedBy inside the tombstone?
+            if (doc.deleted && !JsonLd.looksLikeIri(id)) {
+                String iri = Document.BASE_URI.toString() + id + Document.HASH_IT
+                String location = whelk.storage.getMainId(iri)
+                if (location) {
+                    return new Tuple2(null, location)
+                }
             }
-            else {
-                result = new Tuple2(doc, null)
-            }
+
+            return new Tuple2(doc, null)
         }
-        
+
         // we couldn't find the document directly, so we look it up using the
         // identifiers table instead
         switch (whelk.storage.getIdType(id)) {
