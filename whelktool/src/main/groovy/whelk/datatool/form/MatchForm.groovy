@@ -14,6 +14,7 @@ import static whelk.JsonLd.RECORD_TYPE
 import static whelk.JsonLd.THING_KEY
 import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
+import static whelk.JsonLd.looksLikeIri
 import static whelk.component.SparqlQueryClient.GRAPH_VAR
 import static whelk.converter.JsonLDTurtleConverter.toTurtleNoPrelude
 import static whelk.util.DocumentUtil.getAtPath
@@ -265,34 +266,31 @@ class MatchForm {
             if (!anyOf) {
                 return
             }
-            def ids = (anyOf[VALUE] ?: (anyOf[VALUE_FROM] ? IdLoader.fromFile((String) anyOf[VALUE_FROM][ID_KEY]) : [])) as Set<String>
+            def ids = (anyOf[VALUE] ?: (anyOf[VALUE_FROM] ? IdLoader.fromFile((String) anyOf[VALUE_FROM][ID_KEY]) : [])) as List<String>
             if (ids) {
                 String nodeId = node[BNODE_ID]
 
-                def (iris, shortIds) = ids.split(JsonLd::looksLikeIri)
-                if (shortIds.isEmpty()) {
-                    nodeIdMappings[nodeId] = iris
-                    return
-                }
-
                 if (!idLoader) {
-                    nodeIdMappings[nodeId] = iris + shortIds.collect { Document.BASE_URI.toString() + it + Document.HASH_IT }
+                    nodeIdMappings[nodeId] = ids.findResults {
+                        IdLoader.isXlShortId(it)
+                                ? Document.BASE_URI.toString() + it + Document.HASH_IT
+                                : (looksLikeIri(it) ? it : null)
+                    } as Set<String>
                     return
                 }
 
                 def nodeType = node[TYPE_KEY]
                 def marcCollection = nodeType ? getMarcCollectionInHierarchy((String) nodeType, whelk.jsonld) : null
-                def xlShortIds = idLoader.collectXlShortIds(shortIds as List<String>, marcCollection)
+                def xlShortIds = idLoader.collectXlShortIds(ids, marcCollection)
                 def parentProp = dropIndexes(path).reverse()[1]
                 def isInRange = { type -> whelk.jsonld.getInRange(type).contains(parentProp) }
                 // TODO: Fix hardcoding
-                def isRecord = whelk.jsonld.isInstanceOf(node, "AdminMetadata")
+                def isRecord = whelk.jsonld.isInstanceOf((Map) node, "AdminMetadata")
                         || isInRange(RECORD_TYPE)
                         || isInRange("AdminMetadata")
 
-                nodeIdMappings[nodeId] = iris + xlShortIds.collect {
-                    Document.BASE_URI.toString() + it + (isRecord ? "" : Document.HASH_IT)
-                }
+                nodeIdMappings[nodeId] = idLoader.loadAllIds(xlShortIds)
+                        .collect { isRecord ? it.recordIri() : it.thingIri() } as Set<String>
 
                 return new DocumentUtil.Nop()
             }
