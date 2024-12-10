@@ -44,8 +44,8 @@ class MatchForm {
 
     MatchForm(Map form, Whelk whelk) {
         this.form = form
-        this.formBNodeIdToPath = collectFormBNodeIdToPath()
-        this.formBNodeIdToResourceIds = collectFormBNodeIdToResourceIds(whelk)
+        this.formBNodeIdToPath = collectFormBNodeIdToPath(form)
+        this.formBNodeIdToResourceIds = collectFormBNodeIdToResourceIds(form, whelk)
         this.baseTypeToSubtypes = collectBaseTypeToSubtypes(whelk?.jsonld)
     }
 
@@ -248,11 +248,7 @@ class MatchForm {
         return getAtPath(form, [RECORD_KEY, BNODE_ID], "TEMP_ID")
     }
 
-    private Map<String, Set<String>> collectFormBNodeIdToResourceIds(Whelk whelk) {
-        return collectFormBNodeIdToResourceIds(form, whelk)
-    }
-
-    private static Map<String, Set<String>> collectFormBNodeIdToResourceIds(Map form, Whelk whelk) {
+    static Map<String, Set<String>> collectFormBNodeIdToResourceIds(Map form, Whelk whelk) {
         Map<String, Set<String>> nodeIdMappings = [:]
 
         IdLoader idLoader = whelk ? new IdLoader(whelk.storage) : null
@@ -301,7 +297,7 @@ class MatchForm {
         return nodeIdMappings
     }
 
-    private Map<String, List> collectFormBNodeIdToPath() {
+    static Map<String, List> collectFormBNodeIdToPath(Map form) {
         Map<String, List> nodeIdToPath = [:]
         DocumentUtil.findKey(form, BNODE_ID) { nodeId, path ->
             nodeIdToPath[(String) nodeId] = path.dropRight(1)
