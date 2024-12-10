@@ -1,5 +1,6 @@
 package whelk.datatool.util;
 
+import whelk.JsonLd;
 import whelk.component.PostgreSQLComponent;
 
 import java.io.BufferedReader;
@@ -18,6 +19,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 
 import static whelk.datatool.WhelkTool.DEFAULT_FETCH_SIZE;
@@ -65,20 +67,30 @@ public class IdLoader {
         }
     }
 
-    public List<String> collectXlShortIds(Collection<String> xlIds) {
-        Map<String, String> iriToShortId = findShortIdsForIris(xlIds.stream().filter(id -> id.contains(":")).toList());
-        return xlIds.stream().map(id -> iriToShortId.getOrDefault(id, id)).toList();
+    public List<String> collectXlShortIds(Collection<String> ids) {
+        Map<String, String> iriToShortId = findShortIdsForIris(ids.stream().filter(JsonLd::looksLikeIri).toList());
+        return ids.stream()
+                .map(id -> iriToShortId.getOrDefault(id, isXlShortId(id) ? id : null))
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     public List<String> collectXlShortIds(Collection<String> ids, String marcCollection) {
         if (!Arrays.asList("bib", "auth", "hold").contains(marcCollection)) {
             return collectXlShortIds(ids);
         }
-        Map<String, String> iriToShortId = findShortIdsForIris(ids.stream().filter(id -> id.contains(":")).toList());
-        Map<String, String> voyagerIdToXlShortID = findXlShortIdsForVoyagerIds(
+        Map<String, String> iriToShortId = findShortIdsForIris(ids.stream().filter(JsonLd::looksLikeIri).toList());
+        Map<String, String> voyagerIdToXlShortId = findXlShortIdsForVoyagerIds(
                 ids.stream().filter(IdLoader::isVoyagerId).toList(),
                 marcCollection);
-        return ids.stream().map(id -> iriToShortId.getOrDefault(id, voyagerIdToXlShortID.getOrDefault(id, id))).toList();
+        return ids.stream()
+                .map(id -> iriToShortId.getOrDefault(id, voyagerIdToXlShortId.getOrDefault(id, isXlShortId(id) ? id : null)))
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    public static boolean isXlShortId(String id) {
+        return id.matches("[0-9a-z]{15,17}");
     }
 
     private Map<String, String> findXlShortIdsForVoyagerIds(Collection<String> voyagerIds, String marcCollection) {
