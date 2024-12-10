@@ -231,7 +231,7 @@ class MatchForm {
 
     private String insertIdMappings(String sparqlPattern) {
         def valuesClauses = formBNodeIdToResourceIds.collect { _id, ids ->
-            "VALUES ${getVar(_id)} { ${ids.collect { "<$it>" }.join(" ")} }\n"
+            "VALUES ${getVar(_id)} { <${ids.join("> <")}> }\n"
         }.join()
         return valuesClauses + sparqlPattern
     }
