@@ -20,14 +20,16 @@ selectByForm(transform.matchForm) {
 }
 
 private static boolean modify(Transform tf, Document doc, Whelk whelk) {
-    Map<String, Object> thing = doc.getThing();
-    thing.put(RECORD_KEY, doc.getRecord());
+    Map thing = doc.getThing()
+    thing.put(RECORD_KEY, doc.getRecord())
 
-    var m = new ModifiedThing(thing, tf, whelk.getJsonld().repeatableTerms);
+    var m = new ModifiedThing(thing, tf, whelk.getJsonld().repeatableTerms)
 
-    ((List<Map<?,?>>) doc.data.get(GRAPH_KEY)).set(0, (Map<?, ?>) m.getAfter().remove(RECORD_KEY));
-    ((List<Map<?,?>>) doc.data.get(GRAPH_KEY)).set(1, m.getAfter());
+    Map after = new HashMap<>(m.after)
 
-    return m.isModified();
+    ((List) doc.data.get(GRAPH_KEY)).set(0, after.remove(RECORD_KEY))
+    ((List) doc.data.get(GRAPH_KEY)).set(1, after)
+
+    return m.isModified()
 }
 
