@@ -14,6 +14,7 @@ import static whelk.JsonLd.RECORD_TYPE
 import static whelk.JsonLd.THING_KEY
 import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
+import static whelk.JsonLd.looksLikeIri
 import static whelk.component.SparqlQueryClient.GRAPH_VAR
 import static whelk.converter.JsonLDTurtleConverter.toTurtleNoPrelude
 import static whelk.util.DocumentUtil.getAtPath
@@ -44,8 +45,8 @@ class MatchForm {
 
     MatchForm(Map form, Whelk whelk) {
         this.form = form
-        this.formBNodeIdToPath = collectFormBNodeIdToPath()
-        this.formBNodeIdToResourceIds = collectFormBNodeIdToResourceIds(whelk)
+        this.formBNodeIdToPath = collectFormBNodeIdToPath(form)
+        this.formBNodeIdToResourceIds = collectFormBNodeIdToResourceIds(form, whelk)
         this.baseTypeToSubtypes = collectBaseTypeToSubtypes(whelk?.jsonld)
     }
 
@@ -80,7 +81,7 @@ class MatchForm {
         return path.findAll { it instanceof String } as List<String>
     }
 
-    private getSubtypes() {
+    private Set<String> getSubtypes() {
         return getSubtypes(form)
     }
 
@@ -220,8 +221,9 @@ class MatchForm {
 
     private String insertTypeMappings(String sparqlPattern) {
         if (shouldMatchSubtypes() && getSubtypes()) {
-            def baseType = form[TYPE_KEY]
-            String valuesClause = "VALUES ?$baseType { ${([baseType] + getSubtypes()).collect { ":$it" }.join(" ")} }\n"
+            String baseType = form[TYPE_KEY]
+            String values = ([baseType] + getSubtypes()).collect { it.contains(":") ? it : ":$it" }.join(" ")
+            String valuesClause = "VALUES ?$baseType { $values }\n"
             return valuesClause + sparqlPattern
         }
         return sparqlPattern
@@ -229,7 +231,7 @@ class MatchForm {
 
     private String insertIdMappings(String sparqlPattern) {
         def valuesClauses = formBNodeIdToResourceIds.collect { _id, ids ->
-            "VALUES ${getVar(_id)} { ${ids.collect { "<$it>" }.join(" ")} }\n"
+            "VALUES ${getVar(_id)} { <${ids.join("> <")}> }\n"
         }.join()
         return valuesClauses + sparqlPattern
     }
@@ -248,11 +250,7 @@ class MatchForm {
         return getAtPath(form, [RECORD_KEY, BNODE_ID], "TEMP_ID")
     }
 
-    private Map<String, Set<String>> collectFormBNodeIdToResourceIds(Whelk whelk) {
-        return collectFormBNodeIdToResourceIds(form, whelk)
-    }
-
-    private static Map<String, Set<String>> collectFormBNodeIdToResourceIds(Map form, Whelk whelk) {
+    static Map<String, Set<String>> collectFormBNodeIdToResourceIds(Map form, Whelk whelk) {
         Map<String, Set<String>> nodeIdMappings = [:]
 
         IdLoader idLoader = whelk ? new IdLoader(whelk.storage) : null
@@ -265,34 +263,31 @@ class MatchForm {
             if (!anyOf) {
                 return
             }
-            def ids = (anyOf[VALUE] ?: (anyOf[VALUE_FROM] ? IdLoader.fromFile((String) anyOf[VALUE_FROM][ID_KEY]) : [])) as Set<String>
+            def ids = (anyOf[VALUE] ?: (anyOf[VALUE_FROM] ? IdLoader.fromFile((String) anyOf[VALUE_FROM][ID_KEY]) : [])) as List<String>
             if (ids) {
                 String nodeId = node[BNODE_ID]
 
-                def (iris, shortIds) = ids.split(JsonLd::looksLikeIri)
-                if (shortIds.isEmpty()) {
-                    nodeIdMappings[nodeId] = iris
-                    return
-                }
-
                 if (!idLoader) {
-                    nodeIdMappings[nodeId] = iris + shortIds.collect { Document.BASE_URI.toString() + it + Document.HASH_IT }
+                    nodeIdMappings[nodeId] = ids.findResults {
+                        IdLoader.isXlShortId(it)
+                                ? Document.BASE_URI.toString() + it + Document.HASH_IT
+                                : (looksLikeIri(it) ? it : null)
+                    } as Set<String>
                     return
                 }
 
                 def nodeType = node[TYPE_KEY]
                 def marcCollection = nodeType ? getMarcCollectionInHierarchy((String) nodeType, whelk.jsonld) : null
-                def xlShortIds = idLoader.collectXlShortIds(shortIds as List<String>, marcCollection)
+                def xlShortIds = idLoader.collectXlShortIds(ids, marcCollection)
                 def parentProp = dropIndexes(path).reverse()[1]
                 def isInRange = { type -> whelk.jsonld.getInRange(type).contains(parentProp) }
                 // TODO: Fix hardcoding
-                def isRecord = whelk.jsonld.isInstanceOf(node, "AdminMetadata")
+                def isRecord = whelk.jsonld.isInstanceOf((Map) node, "AdminMetadata")
                         || isInRange(RECORD_TYPE)
                         || isInRange("AdminMetadata")
 
-                nodeIdMappings[nodeId] = iris + xlShortIds.collect {
-                    Document.BASE_URI.toString() + it + (isRecord ? "" : Document.HASH_IT)
-                }
+                nodeIdMappings[nodeId] = idLoader.loadAllIds(xlShortIds)
+                        .collect { isRecord ? it.recordIri() : it.thingIri() } as Set<String>
 
                 return new DocumentUtil.Nop()
             }
@@ -301,7 +296,7 @@ class MatchForm {
         return nodeIdMappings
     }
 
-    private Map<String, List> collectFormBNodeIdToPath() {
+    static Map<String, List> collectFormBNodeIdToPath(Map form) {
         Map<String, List> nodeIdToPath = [:]
         DocumentUtil.findKey(form, BNODE_ID) { nodeId, path ->
             nodeIdToPath[(String) nodeId] = path.dropRight(1)

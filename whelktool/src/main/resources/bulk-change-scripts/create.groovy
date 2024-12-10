@@ -1,5 +1,4 @@
 import whelk.Document
-import whelk.datatool.form.Transform
 import whelk.util.DocumentUtil
 
 import static java.util.Collections.synchronizedSet;
@@ -10,11 +9,13 @@ import static whelk.JsonLd.RECORD_TYPE
 import static whelk.JsonLd.THING_KEY
 import static whelk.JsonLd.TYPE_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.TARGET_FORM_KEY
+import static whelk.datatool.form.MatchForm.collectFormBNodeIdToPath
+import static whelk.datatool.form.MatchForm.collectFormBNodeIdToResourceIds
 import static whelk.util.DocumentUtil.traverse
 
 Map targetForm = parameters.get(TARGET_FORM_KEY)
 
-Map<String, Set<String>> nodeIdMappings = Transform.collectNodeIdMappings(targetForm, getWhelk())
+Map<String, Set<String>> nodeIdMappings = collectFormBNodeIdToResourceIds(targetForm, getWhelk())
 
 if (nodeIdMappings.size() != 1) {
     // Allow only one id list
@@ -22,7 +23,7 @@ if (nodeIdMappings.size() != 1) {
 }
 
 def varyingNodeId = nodeIdMappings.keySet().find()
-def varyingNodePath = Transform.collectNodeIdToPath(targetForm)[varyingNodeId]
+def varyingNodePath = collectFormBNodeIdToPath(targetForm)[varyingNodeId]
 def ids = nodeIdMappings.values().find()
 
 if (varyingNodePath == [] || varyingNodePath == [RECORD_KEY]) {
