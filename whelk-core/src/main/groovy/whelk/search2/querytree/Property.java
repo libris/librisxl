@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import static whelk.search2.Disambiguate.Rdfs.RDF_TYPE;
@@ -90,24 +89,6 @@ public class Property {
         }
 
         return expanded;
-    }
-
-    public Optional<String> getAlias(String outsetType) {
-        // FIXME
-        var alias = switch (outsetType) {
-            case "Instance" -> switch (name) {
-                case RDF_TYPE -> "instanceType";
-                case "instanceOfType" -> "workType";
-                default -> null;
-            };
-            default -> switch (name) {
-                case RDF_TYPE -> "workType";
-                case "hasInstanceType" -> "instanceType";
-                default -> null;
-            };
-        };
-
-        return Optional.ofNullable(alias);
     }
 
     @Override

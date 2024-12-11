@@ -29,7 +29,6 @@ public record PropertyValue(Property property, Operator operator, Value value) i
         Map<String, Object> m = new LinkedHashMap<>();
 
         m.put("property", property.definition());
-//        property.getAlias(qt.getOutsetType()).ifPresent(a -> m.put("alias", a));
         m.put(operator.termKey, value.description());
         m.put("up", qt.makeUpLink(this, nonQueryParams));
 
