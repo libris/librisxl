@@ -13,36 +13,55 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static whelk.search2.QueryUtil.castToStringObjectMap;
+import static whelk.util.DocumentUtil.getAtPath;
+
 public class QueryResult {
     public final int numHits;
     private final List<EsItem> esItems;
     public final List<Aggs.Aggregation> aggs;
     public final List<Aggs.Bucket> pAggs;
     public final List<Spell.Suggestion> spell;
+    public final List<Map<String, Object>> scores;
 
     public QueryResult(Map<?, ?> esResponse) {
         var normResponse = normalizeResponse(esResponse);
-        this.numHits = (int) normResponse.getOrDefault("totalHits", 0);
-        this.esItems = getEsItems(normResponse);
+        this.numHits = getNumHits(normResponse);
+        this.esItems = collectEsItems(normResponse);
         this.aggs = Aggs.collectAggResult(normResponse);
         this.pAggs = Aggs.collectPAggResult(normResponse);
         this.spell = Spell.collectSuggestions(normResponse);
+        this.scores = collectScores(normResponse);
     }
 
     public List<Map<String, Object>> collectItems(Function<Map<String, Object>, Map<String, Object>> applyLens) {
         return esItems.stream().map(item -> item.toLd(applyLens)).toList();
     }
 
-    private static List<EsItem> getEsItems(Map<String, Object> esResponse) {
-        return getAsList(esResponse, "items")
+    private static int getNumHits(Map<String, Object> esResponse) {
+        return (int) getAtPath(esResponse, List.of("hits", "total", "value"), 1);
+    }
+
+    private static List<EsItem> collectEsItems(Map<String, Object> esResponse) {
+        return ((List<?>) getAtPath(esResponse, List.of("hits", "hits"), Collections.emptyList()))
                 .stream()
-                .map(QueryUtil::castToStringObjectMap)
+                .map(Map.class::cast)
+                .map(hit -> {
+                    var item = castToStringObjectMap(hit.get("_source"));
+                    item.put("_id", hit.get("_id"));
+                    return item;
+                })
                 .map(EsItem::new)
                 .toList();
     }
 
-    private static List<?> getAsList(Map<String, Object> m, String key) {
-        return ((List<?>) m.getOrDefault(key, Collections.emptyList()));
+    private static List<Map<String, Object>> collectScores(Map<String, Object> esResponse) {
+        return ((List<?>) getAtPath(esResponse, List.of("hits", "hits"), Collections.emptyList()))
+                .stream()
+                .filter(m -> ((Map<?, ?>) m).get("_score") != null)
+                .map(QueryUtil::castToStringObjectMap)
+                .filter(m -> m.keySet().retainAll(List.of("_id", "_score", "_explanation")))
+                .toList();
     }
 
     private static Map<String, Object> normalizeResponse(Map<?, ?> esResponse) {
@@ -97,7 +116,7 @@ public class QueryResult {
         }
 
         private List<Map<String, Object>> getIdentifiedBy() {
-            return getAsList(map, "identifiedBy")
+            return ((List<?>) map.getOrDefault("identifiedBy", Collections.emptyList()))
                     .stream()
                     .map(QueryUtil::castToStringObjectMap)
                     .collect(Collectors.toList());

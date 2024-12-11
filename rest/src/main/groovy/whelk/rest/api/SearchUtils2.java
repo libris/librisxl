@@ -21,6 +21,7 @@ import whelk.util.http.RedirectException;
 import java.io.IOException;
 import java.util.*;
 
+import static whelk.search2.EsBoost.addConstantBoosts;
 import static whelk.search2.Spell.buildSpellSuggestions;
 import static whelk.util.Jackson.mapper;
 
@@ -67,8 +68,15 @@ public class SearchUtils2 {
 
         Map<String, Object> partialCollectionView = getPartialCollectionView(queryRes, qTree, queryParams, appParams);
 
+        Map<String, Object> debugView = new HashMap<>();
         if (queryParams.debug.contains(QueryParams.Debug.ES_QUERY)) {
-            partialCollectionView.put(QueryParams.ApiParams.DEBUG, Map.of(QueryParams.Debug.ES_QUERY, esQueryDsl));
+            debugView.put(QueryParams.Debug.ES_QUERY, esQueryDsl);
+        }
+        if (queryParams.debug.contains(QueryParams.Debug.ES_SCORE)) {
+            debugView.put(QueryParams.Debug.ES_SCORE, queryRes.scores);
+        }
+        if (!debugView.isEmpty()) {
+            partialCollectionView.put(QueryParams.ApiParams.DEBUG, debugView);
         }
 
         return partialCollectionView;
@@ -76,12 +84,14 @@ public class SearchUtils2 {
 
     private Map<String, Object> getEsQueryDsl(QueryTree queryTree, QueryParams queryParams, AppParams.StatsRepr statsRepr) {
         var queryDsl = new LinkedHashMap<String, Object>();
-        queryDsl.put("query", queryTree.toEs(queryUtil, disambiguate));
+
+        queryDsl.put("query", getEsQuery(queryTree, queryParams.boostFields));
         queryDsl.put("size", queryParams.limit);
         queryDsl.put("from", queryParams.offset);
         queryDsl.put("sort", (queryParams.sortBy == Sort.DEFAULT_BY_RELEVANCY && queryTree.isWild()
                 ? Sort.BY_DOC_ID
                 : queryParams.sortBy).getSortClauses(queryUtil::getSortField));
+
         if (queryParams.spell.suggest && queryUtil.esMappings.isSpellCheckAvailable()) {
             var spellQuery = Spell.getSpellQuery(queryTree);
             if (spellQuery.isPresent()) {
@@ -92,12 +102,28 @@ public class SearchUtils2 {
                 }
             }
         }
+
         queryDsl.put("aggs", Aggs.buildAggQuery(statsRepr, disambiguate, queryTree.getOutsetType(), queryUtil::getNestedPath));
         queryDsl.put("track_total_hits", true);
+
+        if (queryParams.debug.contains(QueryParams.Debug.ES_SCORE)) {
+            queryDsl.put("explain", true);
+            // Scores won't be calculated when also using sort unless explicitly asked for
+            queryDsl.put("track_scores", true);
+        }
+
         return queryDsl;
     }
 
-    public Map<String, Object> getPartialCollectionView(QueryResult queryResult,
+    private Map<String, Object> getEsQuery(QueryTree queryTree, List<String> boostFields) {
+        if (!boostFields.isEmpty()) {
+            return queryTree.toEs(queryUtil, disambiguate, boostFields);
+        }
+        boostFields = queryUtil.esBoost.getBoostFields(queryTree.collectTypes());
+        return addConstantBoosts(queryTree.toEs(queryUtil, disambiguate, boostFields));
+    }
+
+    private Map<String, Object> getPartialCollectionView(QueryResult queryResult,
                                                         QueryTree qt,
                                                         QueryParams queryParams,
                                                         AppParams appParams) {

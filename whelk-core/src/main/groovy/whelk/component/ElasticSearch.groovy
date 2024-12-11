@@ -580,18 +580,13 @@ class ElasticSearch {
     }
 
     Map query(Map jsonDsl) {
-        return performQuery(
-                jsonDsl,
-                getQueryUrl(),
-                { def d = it."_source"; d."_id" = it."_id"; return d }
-        )
+        return performQuery(jsonDsl, getQueryUrl())
     }
 
     Map queryIds(Map jsonDsl) {
         return performQuery(
                 jsonDsl,
-                getQueryUrl(['took','hits.total','hits.hits._id']),
-                { it."_id" }
+                getQueryUrl(['took','hits.total','hits.hits._id'])
         )
     }
     
@@ -629,7 +624,7 @@ class ElasticSearch {
         return super.hashCode()
     }
 
-    private Map performQuery(Map jsonDsl, String queryUrl, Closure<Map> hitCollector) {
+    private Map performQuery(Map jsonDsl, String queryUrl) {
         try {
             def start = System.currentTimeMillis()
             String responseBody = client.performRequest('POST',
@@ -643,17 +638,7 @@ class ElasticSearch {
                 log.info("ES query took ${duration} (${responseMap.took} server-side)")
             }
 
-            def results = [:]
-
-            results.startIndex = jsonDsl.from
-            results.totalHits = responseMap.hits.total.value
-            results.items = responseMap.hits.hits.collect(hitCollector)
-            results.aggregations = responseMap.aggregations
-            // Spell checking
-            if (responseMap.suggest?.simple_phrase) {
-                results.spell = responseMap.suggest.simple_phrase[0].options
-            }
-            return results
+            return responseMap
         }
         catch (Exception e) {
             if (isBadRequest(e)) {

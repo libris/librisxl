@@ -104,7 +104,7 @@ public class Disambiguate {
     }
 
     public OutsetType decideOutset(QueryTree qt) {
-        Set<OutsetType> outset = qt.collectGivenTypes()
+        Set<OutsetType> outset = qt.collectTypes()
                 .stream()
                 .map(this::getOutsetType)
                 .collect(Collectors.toSet());
