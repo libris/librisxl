@@ -58,6 +58,7 @@ public class QueryResult {
     private static List<Map<String, Object>> collectScores(Map<String, Object> esResponse) {
         return ((List<?>) getAtPath(esResponse, List.of("hits", "hits"), Collections.emptyList()))
                 .stream()
+                .filter(m -> ((Map<?, ?>) m).get("_score") != null)
                 .map(QueryUtil::castToStringObjectMap)
                 .filter(m -> m.keySet().retainAll(List.of("_id", "_score", "_explanation")))
                 .toList();
