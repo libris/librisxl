@@ -20,6 +20,7 @@ import static whelk.JsonLd.RECORD_TYPE;
 import static whelk.JsonLd.SEARCH_KEY;
 import static whelk.JsonLd.SUB_PROPERTY_OF;
 import static whelk.JsonLd.TYPE_KEY;
+import static whelk.JsonLd.VIRTUAL_RECORD_TYPE;
 import static whelk.JsonLd.asList;
 import static whelk.search2.QueryUtil.mustWrap;
 import static whelk.search2.QueryUtil.shouldWrap;
@@ -358,13 +359,18 @@ public class EsBoost {
                         "filter", Map.of("term", Map.of(recordType, RECORD_TYPE)),
                         "boost", 1000)
         );
+        var virtualRecordBoost = Map.of(
+                "constant_score", Map.of(
+                        "filter", Map.of("term", Map.of(recordType, VIRTUAL_RECORD_TYPE)),
+                        "boost", 1000)
+        );
         var cacheRecordBoost = Map.of(
                 "constant_score", Map.of(
                         "filter", Map.of("term", Map.of(recordType, CACHE_RECORD_TYPE)),
                         "boost", 1)
         );
 
-        return shouldWrap(List.of(recordBoost, cacheRecordBoost));
+        return shouldWrap(List.of(recordBoost, virtualRecordBoost, cacheRecordBoost));
     }
 
     private static final List<String> CONCEPT_BOOST = List.of(
