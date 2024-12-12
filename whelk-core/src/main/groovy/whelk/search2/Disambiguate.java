@@ -338,11 +338,6 @@ public class Disambiguate {
         getAsListOfMaps(propertyDefinition, "equivalentProperty")
                 .forEach(ep -> getDefinition(ep, whelk).ifPresent(inheritable::add));
 
-        getAsOptionalListOfMaps(propertyDefinition, "propertyChainAxiom")
-                .map(List::getFirst)
-                .flatMap(firstInChain -> getDefinition(firstInChain, whelk))
-                .ifPresent(inheritable::add);
-
         getAsListOfMaps(propertyDefinition, Rdfs.SUBPROPERTY_OF)
                 .forEach(superProp -> getDefinition(superProp, whelk).ifPresent(inheritable::add));
 
