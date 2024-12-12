@@ -111,8 +111,8 @@ public class Property {
     }
 
     private boolean isShortHand() {
-        // TODO: All short forms should be marked with :category :shortHand?
-        return definition.containsKey("propertyChainAxiom");
+        return ((List<?>) definition.getOrDefault("category", List.of())).stream()
+                .anyMatch(c -> Map.of(JsonLd.ID_KEY, "https://id.kb.se/vocab/shorthand").equals(c));
     }
 
     private Node getAlternativePaths(Node n, Disambiguate disambiguate, Collection<String> types) {
