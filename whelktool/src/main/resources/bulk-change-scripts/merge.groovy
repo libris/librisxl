@@ -27,15 +27,14 @@ selectByIds([deprecateId]) { obsolete ->
 }
 
 selectByIds(dependsOnObsolete) { depender ->
-    if (depender.doc.getThingType() == JOB_TYPE) {
-        return
-    }
-
     List<List> modifiedListPaths = []
     def modified = DocumentUtil.traverse(depender.graph) { value, path ->
         // TODO: What if there are links to a record uri?
         if (path && path.last() == ID_KEY && obsoleteThingUris.contains(value)) {
             path.dropRight(1).with {
+                if (it.last() == DEPRECATE_KEY) {
+                    return
+                }
                 if (it.last() instanceof Integer) {
                     modifiedListPaths.add(it.dropRight(1))
                 }
