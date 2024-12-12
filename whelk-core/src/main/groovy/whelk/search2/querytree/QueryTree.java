@@ -10,12 +10,11 @@ import whelk.search2.QueryParams;
 import whelk.search2.QueryUtil;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static whelk.search2.Disambiguate.Rdfs.RESOURCE;
 import static whelk.search2.QueryUtil.quoteIfPhraseOrContainsSpecialSymbol;
 import static whelk.search2.querytree.QueryTreeBuilder.buildTree;
 
@@ -23,7 +22,6 @@ public class QueryTree {
     public Node tree;
     private QueryTree filtered;
     private String freeTextPart;
-    private String queryBaseType;
 
     public QueryTree(String queryString, Disambiguate disambiguate,
                      Map<String, AppParams.Filter> aliasToFilter) throws InvalidQueryException {
@@ -39,14 +37,10 @@ public class QueryTree {
         removeNeedlessWildcard();
     }
 
-    public Map<String, Object> toEs(QueryUtil queryUtil, Disambiguate disambiguate, List<String> boostFields) {
-        return expand(disambiguate)
+    public Map<String, Object> toEs(QueryUtil queryUtil, Disambiguate disambiguate, Collection<String> boostFields) {
+        return getFiltered().tree.expand(disambiguate, List.of(), boostFields.isEmpty() ? queryUtil.esBoost::getBoostFields : x -> boostFields)
                 .insertNested(queryUtil::getNestedPath)
-                .toEs(boostFields);
-    }
-
-    private Node expand(Disambiguate disambiguate) {
-        return getFiltered().tree.expand(disambiguate, getQueryBaseType(disambiguate));
+                .toEs();
     }
 
     public Map<String, Object> toSearchMapping(Map<String, String> nonQueryParams) {
@@ -59,20 +53,6 @@ public class QueryTree {
         QueryTree reducedTree = excludeFromTree(n);
         String upUrl = QueryUtil.makeFindUrl(reducedTree, nonQueryParams);
         return Map.of(JsonLd.ID_KEY, upUrl);
-    }
-
-    public String getQueryBaseType(Disambiguate disambiguate) {
-        if (queryBaseType == null) {
-            Set<String> types = collectTypes();
-            if (types.isEmpty()) {
-                this.queryBaseType = RESOURCE;
-            } else if (types.size() == 1) {
-                this.queryBaseType = types.iterator().next();
-            } else {
-                this.queryBaseType = disambiguate.lowestCommonBaseType(collectTypes());
-            }
-        }
-        return queryBaseType;
     }
 
     /**
@@ -207,25 +187,15 @@ public class QueryTree {
         };
     }
 
-    public Set<String> collectTypes() {
-        return collectTypes(getFiltered().tree, new HashSet<>());
-    }
-
-    private static Set<String> collectTypes(Node sqtNode, Set<String> types) {
-        switch (sqtNode) {
-            case And and -> and.children().forEach(c -> collectTypes(c, types));
-            case Or or -> or.children().forEach(d -> collectTypes(d, types));
-            case PropertyValue pv -> {
-                if (pv.property().isRdfType() && pv.operator().equals(Operator.EQUALS)) {
-                    types.add(pv.value().string());
-                }
-            }
-            default -> {
-                // Nothing to do here
+    public List<String> collectRulingTypes(Disambiguate disambiguate) {
+        var tree = getFiltered().tree;
+        if (tree instanceof And) {
+            var reduced = tree.reduceTypes(disambiguate);
+            if (reduced instanceof And) {
+                return ((And) reduced).collectRulingTypes();
             }
         }
-
-        return types;
+        return List.of();
     }
 
     public boolean isEmpty() {
@@ -374,34 +344,27 @@ public class QueryTree {
     }
 
     public void addFilters(QueryParams queryParams, AppParams appParams) {
-        boolean typeNotGiven = collectTypes().isEmpty();
         var currentActiveBfNodes = getActiveBfNodes();
-
-        Function<PropertyValue, Boolean> isTypeEquals = pv ->
-                pv.property().isRdfType() && pv.operator().equals(Operator.EQUALS);
 
         var newTree = tree;
         for (var node : getFilters(queryParams, appParams)) {
-            switch (node) {
-                case PropertyValue pv -> {
-                    if (isTypeEquals.apply(pv)) {
-                        if (typeNotGiven) {
-                            newTree = addToTopLevel(newTree, pv);
-                        }
-                    } else {
-                        newTree = addToTopLevel(newTree, pv);
-                    }
-                }
-                case ActiveBoolFilter abf -> {
-                    if (currentActiveBfNodes.stream().noneMatch(bf -> bf.nullifies(abf))) {
-                        newTree = addToTopLevel(newTree, abf);
-                    }
-                }
-                default -> newTree = addToTopLevel(newTree, node);
+            // Don't add type filter when type is already given somewhere in the query
+            if (node.isTypeNode() && containsTypeNode(tree)) {
+                continue;
             }
+            // Don't add filter X if there is already something saying NOT X
+            if (node instanceof ActiveBoolFilter && currentActiveBfNodes.stream().anyMatch(bf -> bf.nullifies((ActiveBoolFilter) node))) {
+                continue;
+            }
+            newTree = addToTopLevel(newTree, node);
         }
 
         this.filtered = new QueryTree(newTree);
+    }
+
+    private static boolean containsTypeNode(Node tree) {
+        return StreamSupport.stream(allDescendants(tree).spliterator(), false)
+                .anyMatch(Node::isTypeNode);
     }
 
     private QueryTree getFiltered() {

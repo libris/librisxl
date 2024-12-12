@@ -178,7 +178,7 @@ class QueryTreeSpec extends Specification {
         ]))
 
         expect:
-        qt.collectTypes() == [v1.string(), v3.string()] as Set
+        qt.collectRulingTypes() == [v1.string(), v3.string()] as Set
     }
 
     def "collect given types"() {
@@ -191,7 +191,7 @@ class QueryTreeSpec extends Specification {
         ]))
 
         expect:
-        qt.collectTypes() == ['type1', 'type3'] as Set
+        qt.collectRulingTypes() == ['type1', 'type3'] as Set
     }
 
     def "get top level free text as string"() {

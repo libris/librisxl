@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -32,6 +34,8 @@ public sealed abstract class Group implements Node permits And, Or {
 
     abstract Map<String, Object> wrap(List<Map<String, Object>> esChildren);
 
+    abstract List<String> collectRulingTypes();
+
     // Abstract class does not allow records as subclasses, however when comparing nodes we want the same behaviour
     // as for records, hence the following.
     @Override
@@ -45,9 +49,9 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     @Override
-    public Map<String, Object> toEs(List<String> boostedFields) {
+    public Map<String, Object> toEs() {
         List<List<PathValue>> nestedGroups = getNestedGroups();
-        return nestedGroups.isEmpty() ? wrap(childrenToEs(boostedFields)) : toEsNested(nestedGroups, boostedFields);
+        return nestedGroups.isEmpty() ? wrap(childrenToEs()) : toEsNested(nestedGroups);
     }
 
     @Override
@@ -59,8 +63,16 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     @Override
-    public Node expand(Disambiguate disambiguate, String queryBaseType) {
-        return expandChildren(disambiguate, queryBaseType);
+    public Node expand(Disambiguate disambiguate, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
+        Node reduced = reduceTypes(disambiguate);
+        return switch (reduced) {
+            case Group g -> {
+                rulingTypes = Stream.concat(g.collectRulingTypes().stream(), rulingTypes.stream())
+                        .collect(Collectors.toSet());
+                yield g.expandChildren(disambiguate, rulingTypes, getBoostFields);
+            }
+            default -> reduced.expand(disambiguate, rulingTypes, getBoostFields);
+        };
     }
 
     @Override
@@ -89,6 +101,18 @@ public sealed abstract class Group implements Node permits And, Or {
                 .collect(Collectors.joining(delimiter()));
 
         return topLevel ? group : "(" + group + ")";
+    }
+
+    @Override
+    public Node reduceTypes(Disambiguate disambiguate) {
+        BiFunction<Node, Node, Boolean> hasMoreSpecificTypeThan = (a, b) -> a.isTypeNode()
+                && b.isTypeNode()
+                && disambiguate.isSubclassOf(((PropertyValue) a).value().string(), ((PropertyValue) b).value().string());
+        return reduceByCondition(hasMoreSpecificTypeThan);
+    }
+
+    Node expandChildren(Disambiguate disambiguate, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
+        return mapFilterAndReinstantiate(c -> c.expand(disambiguate, rulingTypes, getBoostFields), Objects::nonNull);
     }
 
     List<Node> flattenChildren(List<Node> children) {
@@ -120,8 +144,40 @@ public sealed abstract class Group implements Node permits And, Or {
         };
     }
 
+    Node reduceByCondition(BiFunction<Node, Node, Boolean> condition) {
+        List<Node> reduced = children().stream()
+                .filter(child ->
+                        children().stream()
+                                .noneMatch(otherChild -> !otherChild.equals(child) && implies(otherChild, child, condition))
+                )
+                .map(child -> child instanceof Group ? ((Group) child).reduceByCondition(condition) : child)
+                .toList();
+
+        return switch (reduced.size()) {
+            // If reduced is empty it means all children imply each other, just pick any child (preferably not a group)
+            case 0 -> children().stream()
+                    .filter(Predicate.not(Group.class::isInstance))
+                    .findFirst()
+                    .orElse(children().getFirst());
+            case 1 -> reduced.getFirst();
+            default -> newInstance(reduced);
+        };
+    }
+
+
+    private boolean implies(Node a, Node b, BiFunction<Node, Node, Boolean> condition) {
+        return switch (a) {
+            case Group g -> !(b instanceof Group) && implies(b, g, condition);
+            default -> switch (b) {
+                case Or or -> or.children().stream().anyMatch(n -> condition.apply(a, n));
+                case And and -> and.children().stream().allMatch(n -> condition.apply(a, n));
+                default -> condition.apply(a, b);
+            };
+        };
+    }
+
     // TODO: Review/refine nested logic and proper tests
-    private Map<String, Object> toEsNested(List<List<PathValue>> nestedGroups, List<String> boostedFields) {
+    private Map<String, Object> toEsNested(List<List<PathValue>> nestedGroups) {
         List<Map<String, Object>> esChildren = new ArrayList<>();
         List<Node> nonNested = new ArrayList<>(children());
 
@@ -145,7 +201,7 @@ public sealed abstract class Group implements Node permits And, Or {
         }
 
         for (Node n : nonNested) {
-            esChildren.add(n.toEs(boostedFields));
+            esChildren.add(n.toEs());
         }
 
         return esChildren.size() == 1 ? esChildren.getFirst() : wrap(esChildren);
@@ -175,12 +231,8 @@ public sealed abstract class Group implements Node permits And, Or {
         return n instanceof PathValue && ((PathValue) n).isNested();
     }
 
-    private Node expandChildren(Disambiguate disambiguate, String queryBaseType) {
-        return mapFilterAndReinstantiate(c -> c.expand(disambiguate, queryBaseType), Objects::nonNull);
-    }
-
-    private List<Map<String, Object>> childrenToEs(List<String> boostedFields) {
-        return mapToMap(c -> c.toEs(boostedFields));
+    private List<Map<String, Object>> childrenToEs() {
+        return mapToMap(Node::toEs);
     }
 
     private List<Node> mapToNode(Function<Node, Node> mapper) {

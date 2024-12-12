@@ -40,6 +40,11 @@ public final class Or extends Group {
     }
 
     @Override
+    List<String> collectRulingTypes() {
+        return List.of();
+    }
+
+    @Override
     public Group insertOperator(Operator operator) {
         return operator == Operator.NOT_EQUALS
                 ? new And(children).insertOperator(operator)

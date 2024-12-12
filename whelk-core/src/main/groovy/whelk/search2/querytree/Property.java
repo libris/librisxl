@@ -3,6 +3,7 @@ package whelk.search2.querytree;
 import whelk.JsonLd;
 import whelk.search2.Disambiguate;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +66,7 @@ public class Property {
         return isVocabTerm;
     }
 
-    public Node expand(Disambiguate disambiguate, String queryBaseType) {
+    public Node expand(Disambiguate disambiguate, Collection<String> types) {
         if (definition.isEmpty()) {
             setVars(disambiguate);
         }
@@ -84,7 +85,7 @@ public class Property {
                 // The property only appears on Record
                 expanded = prependMetaKey(expanded);
             } else {
-                expanded = getAlternativePaths(expanded, disambiguate, queryBaseType);
+                expanded = getAlternativePaths(expanded, disambiguate, types);
             }
         }
 
@@ -133,8 +134,12 @@ public class Property {
         return definition.containsKey("propertyChainAxiom");
     }
 
-    private Node getAlternativePaths(Node n, Disambiguate disambiguate, String queryBaseType) {
-        List<String> applicableIntegralRelations = disambiguate.getIntegralRelationsForType(queryBaseType);
+    private Node getAlternativePaths(Node n, Disambiguate disambiguate, Collection<String> types) {
+        List<String> applicableIntegralRelations = types.stream()
+                .map(disambiguate::getIntegralRelationsForType)
+                .flatMap(List::stream)
+                .distinct()
+                .toList();
 
         List<Node> altPaths = applicableIntegralRelations.stream()
                 .filter(ir -> disambiguate.getRange(ir).stream().anyMatch(type -> mayAppearOnType(type, disambiguate)))
@@ -142,7 +147,7 @@ public class Property {
                 .toList();
 
         if (!altPaths.isEmpty()) {
-            return mayAppearOnType(queryBaseType, disambiguate)
+            return types.stream().anyMatch(t -> mayAppearOnType(t, disambiguate))
                     ? new Or(Stream.concat(Stream.of(n), altPaths.stream()).toList())
                     : (altPaths.size() == 1 ? altPaths.getFirst() : new Or(altPaths));
         }

@@ -1,5 +1,7 @@
 package whelk.search2.querytree;
 
+import whelk.search2.Disambiguate;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +17,7 @@ public final class And extends Group {
         this(children, true);
     }
 
+    // For test only
     public And(List<Node> children, boolean flattenChildren) {
         this.children = flattenChildren ? flattenChildren(children) : children;
     }
@@ -42,6 +45,17 @@ public final class And extends Group {
     @Override
     public Map<String, Object> wrap(List<Map<String, Object>> esChildren) {
         return mustWrap(esChildren);
+    }
+
+    @Override
+    List<String> collectRulingTypes() {
+        return children().stream()
+                .filter(n -> n.isTypeNode() || (n instanceof Or && n.children().stream().allMatch(Node::isTypeNode)))
+                .flatMap(n -> n instanceof Or ? n.children().stream() : Stream.of(n))
+                .map(PropertyValue.class::cast)
+                .map(PropertyValue::value)
+                .map(Value::string)
+                .toList();
     }
 
     public boolean contains(Node node) {

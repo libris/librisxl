@@ -5,10 +5,11 @@ import whelk.search2.Disambiguate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 public record InactiveBoolFilter(String alias) implements Node {
     @Override
-    public Map<String, Object> toEs(List<String> boostedFields) {
+    public Map<String, Object> toEs() {
         throw new UnsupportedOperationException("Query tree must not contain inactive filters");
     }
 
@@ -18,7 +19,7 @@ public record InactiveBoolFilter(String alias) implements Node {
     }
 
     @Override
-    public Node expand(Disambiguate disambiguate, String queryBaseType) {
+    public Node expand(Disambiguate disambiguate, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
         return null;
     }
 

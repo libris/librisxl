@@ -5,14 +5,13 @@ import whelk.search2.Disambiguate;
 import whelk.search2.Operator;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static whelk.search2.Disambiguate.Rdfs.RESOURCE;
 import static whelk.search2.QueryUtil.quoteIfPhraseOrContainsSpecialSymbol;
 
 public record PropertyValue(Property property, Operator operator, Value value) implements Node {
@@ -21,7 +20,7 @@ public record PropertyValue(Property property, Operator operator, Value value) i
     }
 
     @Override
-    public Map<String, Object> toEs(List<String> boostedFields) {
+    public Map<String, Object> toEs() {
         throw new UnsupportedOperationException("Expand before converting to ES");
     }
 
@@ -38,16 +37,16 @@ public record PropertyValue(Property property, Operator operator, Value value) i
     }
 
     @Override
-    public Node expand(Disambiguate disambiguate, String queryBaseType) {
+    public Node expand(Disambiguate disambiguate, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
         return property.isRdfType()
                 ? buildTypeNode(value, disambiguate).insertOperator(operator)
-                : property.expand(disambiguate, queryBaseType)
+                : property.expand(disambiguate, rulingTypes)
                 .insertOperator(operator)
                 .insertValue(value);
     }
 
     public Node expand(Disambiguate disambiguate) {
-        return expand(disambiguate, RESOURCE);
+        return expand(disambiguate, List.of(), Function.identity());
     }
 
     @Override
@@ -59,6 +58,11 @@ public record PropertyValue(Property property, Operator operator, Value value) i
         String p = quoteIfPhraseOrContainsSpecialSymbol(property.canonicalForm());
         String v = quoteIfPhraseOrContainsSpecialSymbol(value.canonicalForm());
         return operator.format(p, v);
+    }
+
+    @Override
+    public boolean isTypeNode() {
+        return property.isRdfType() && operator.equals(Operator.EQUALS);
     }
 
     public PropertyValue toOrEquals() {
