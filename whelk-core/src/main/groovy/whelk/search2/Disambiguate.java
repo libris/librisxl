@@ -121,39 +121,6 @@ public class Disambiguate {
         return rangeByProperty.get(property);
     }
 
-    public boolean isInRange(String property, String type) {
-        return jsonLd.getInRange(type).contains(property);
-    }
-
-    public String lowestCommonBaseType(Collection<String> types) {
-        List<List<List<String>>> trees = types.stream().map(Arrays::asList).map(Arrays::asList).toList();
-        while (true) {
-            for (List<List<String>> tree : trees) {
-                var typesAtLevel = tree.getLast();
-                var typesAtNextLevel = typesAtLevel.stream()
-                        .map(t -> getAtPath(vocab, List.of(t, Rdfs.SUBCLASS_OF, "*", ID_KEY)))
-                        .filter(Objects::nonNull)
-                        .flatMap(obj -> ((List<?>) obj).stream())
-                        .map(t -> jsonLd.toTermKey((String) t))
-                        .toList();
-                tree.add(typesAtNextLevel);
-            }
-            Set<String> commonBaseTypes = trees.stream()
-                    .map(tree -> tree.stream().flatMap(List::stream).collect(Collectors.toSet()))
-                    .reduce((a, b) -> a.stream().filter(b::contains).collect(Collectors.toSet()))
-                    .get();
-            if (commonBaseTypes.size() > 1) {
-                // TODO: Test if this is a possible case
-            }
-            if (!commonBaseTypes.isEmpty()) {
-                return commonBaseTypes.iterator().next();
-            }
-            if (trees.stream().map(List::getLast).noneMatch(Predicate.not(List::isEmpty))) {
-                return Rdfs.RESOURCE;
-            }
-        }
-    }
-
     public List<String> getIntegralRelationsForType(String type) {
         return integralRelations.stream()
                 .filter(prop -> getDomain(prop).stream().anyMatch(domain -> jsonLd.isSubClassOf(type, domain)))
