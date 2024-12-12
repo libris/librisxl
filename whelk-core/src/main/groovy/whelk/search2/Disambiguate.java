@@ -9,13 +9,16 @@ import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Path;
 import whelk.search2.querytree.PathValue;
 import whelk.search2.querytree.Property;
-import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.VocabTerm;
 
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static whelk.JsonLd.ID_KEY;
+import static whelk.JsonLd.asList;
+import static whelk.util.DocumentUtil.getAtPath;
 
 public class Disambiguate {
     // :category :heuristicIdentifier too broad...?
@@ -24,7 +27,8 @@ public class Disambiguate {
     private Whelk whelk;
     private JsonLd jsonLd;
     private Map<String, Map<String, Object>> vocab;
-    private Map<String, String> domainByProperty;
+    private Map<String, List<String>> domainByProperty;
+    private Map<String, List<String>> rangeByProperty;
 
     private Map<String, String> propertyAliasMappings;
     private Map<String, Set<String>> ambiguousPropertyAliases;
@@ -33,10 +37,7 @@ public class Disambiguate {
     private Map<String, String> enumAliasMappings;
     private Map<String, Set<String>> ambiguousEnumAliases;
 
-    private Set<String> adminMetadataTypes;
-    private Set<String> creationSuperTypes;
-    public Set<String> workTypes;
-    public Set<String> instanceTypes;
+    private Set<String> integralRelations;
 
     private enum TermType {
         CLASS,
@@ -44,9 +45,15 @@ public class Disambiguate {
         ENUM
     }
 
-    public static final String UNKNOWN_DOMAIN = "Unknown domain";
+    public static final class Rdfs {
+        public static final String RESOURCE = "Resource";
+        public static final String RDF_TYPE = "rdf:type";
 
-    public static final String RDF_TYPE = "rdf:type";
+        private static final String DOMAIN = "domain";
+        private static final String RANGE = "range";
+        private static final String SUBCLASS_OF = "subClassOf";
+        private static final String SUBPROPERTY_OF = "subPropertyOf";
+    }
 
     public static Map<String, Object> freeTextDefinition = Collections.emptyMap();
 
@@ -54,9 +61,10 @@ public class Disambiguate {
         this.whelk = whelk;
         this.jsonLd = whelk.getJsonld();
         this.vocab = jsonLd.vocabIndex;
-        this.domainByProperty = loadDomainByProperty(whelk);
+        this.integralRelations = jsonLd.getCategoryMembers("integral");
+        this.domainByProperty = new HashMap<>();
+        this.rangeByProperty = new HashMap<>();
         setAliasMappings(whelk);
-        setTypeSets(jsonLd);
         // FIXME: This should probably not be a static variable...
         if (freeTextDefinition.isEmpty()) {
             freeTextDefinition = getDefinition("textQuery");
@@ -99,52 +107,57 @@ public class Disambiguate {
         return JsonLd.LD_KEYS.contains(s);
     }
 
-    private String getDomain(String property) {
-        return domainByProperty.getOrDefault(property, UNKNOWN_DOMAIN);
+    public List<String> getDomain(String property) {
+        if (!domainByProperty.containsKey(property)) {
+            domainByProperty.put(property, findDomainOrRange(property, Rdfs.DOMAIN));
+        }
+        return domainByProperty.get(property);
     }
 
-    public OutsetType decideOutset(QueryTree qt) {
-        Set<OutsetType> outset = qt.collectTypes()
-                .stream()
-                .map(this::getOutsetType)
-                .collect(Collectors.toSet());
-
-        // TODO: Review this (for now default to Resource)
-        return outset.size() == 1 ? outset.stream().findFirst().get() : OutsetType.RESOURCE;
+    public List<String> getRange(String property) {
+        if (!rangeByProperty.containsKey(property)) {
+            rangeByProperty.put(property, findDomainOrRange(property, Rdfs.RANGE));
+        }
+        return rangeByProperty.get(property);
     }
 
-    private OutsetType getOutsetType(String type) {
-        if (workTypes.contains(type)) {
-            return OutsetType.WORK;
-        }
-        if (instanceTypes.contains(type)) {
-            return OutsetType.INSTANCE;
-        }
-        return OutsetType.RESOURCE;
+    public boolean isInRange(String property, String type) {
+        return jsonLd.getInRange(type).contains(property);
     }
 
-    public Property.DomainCategory getDomainCategory(String property) {
-        String domain = getDomain(property);
+    public String lowestCommonBaseType(Collection<String> types) {
+        List<List<List<String>>> trees = types.stream().map(Arrays::asList).map(Arrays::asList).toList();
+        while (true) {
+            for (List<List<String>> tree : trees) {
+                var typesAtLevel = tree.getLast();
+                var typesAtNextLevel = typesAtLevel.stream()
+                        .map(t -> getAtPath(vocab, List.of(t, Rdfs.SUBCLASS_OF, "*", ID_KEY)))
+                        .filter(Objects::nonNull)
+                        .flatMap(obj -> ((List<?>) obj).stream())
+                        .map(t -> jsonLd.toTermKey((String) t))
+                        .toList();
+                tree.add(typesAtNextLevel);
+            }
+            Set<String> commonBaseTypes = trees.stream()
+                    .map(tree -> tree.stream().flatMap(List::stream).collect(Collectors.toSet()))
+                    .reduce((a, b) -> a.stream().filter(b::contains).collect(Collectors.toSet()))
+                    .get();
+            if (commonBaseTypes.size() > 1) {
+                // TODO: Test if this is a possible case
+            }
+            if (!commonBaseTypes.isEmpty()) {
+                return commonBaseTypes.iterator().next();
+            }
+            if (trees.stream().map(List::getLast).noneMatch(Predicate.not(List::isEmpty))) {
+                return Rdfs.RESOURCE;
+            }
+        }
+    }
 
-        if (adminMetadataTypes.contains(domain)) {
-            return Property.DomainCategory.ADMIN_METADATA;
-        }
-        if (workTypes.contains(domain)) {
-            return Property.DomainCategory.WORK;
-        }
-        if (instanceTypes.contains(domain)) {
-            return Property.DomainCategory.INSTANCE;
-        }
-        if (creationSuperTypes.contains(domain)) {
-            return Property.DomainCategory.CREATION_SUPER;
-        }
-        if ("Embodiment".equals(domain)) {
-            return Property.DomainCategory.EMBODIMENT;
-        }
-        if (UNKNOWN_DOMAIN.equals(domain)) {
-            return Property.DomainCategory.UNKNOWN;
-        }
-        return Property.DomainCategory.OTHER;
+    public List<String> getIntegralRelationsForType(String type) {
+        return integralRelations.stream()
+                .filter(prop -> getDomain(prop).stream().anyMatch(domain -> jsonLd.isSubClassOf(type, domain)))
+                .toList();
     }
 
     public boolean isVocabTerm(String property) {
@@ -152,7 +165,15 @@ public class Disambiguate {
     }
 
     public boolean isType(String property) {
-        return RDF_TYPE.equals(property) || jsonLd.getSubProperties(RDF_TYPE).contains(property);
+        return Rdfs.RDF_TYPE.equals(property) || jsonLd.getSubProperties(Rdfs.RDF_TYPE).contains(property);
+    }
+
+    public Set<String> getSubclasses(String type) {
+        return jsonLd.getSubClasses(type);
+    }
+
+    public boolean isSubclassOf(String type, String baseType) {
+        return jsonLd.isSubClassOf(type, baseType);
     }
 
     public Node expandChainAxiom(Property property) {
@@ -182,12 +203,12 @@ public class Disambiguate {
                 getLinkIri(r).map(jsonLd::toTermKey)
                         .filter(vocab::containsKey)
                         .ifPresent(term -> pathValueList.add(new PathValue(
-                                new Path(path).append(new Property(RDF_TYPE, this)),
+                                new Path(path).append(new Property(Rdfs.RDF_TYPE, this)),
                                 null,
                                 new VocabTerm(term, getDefinition(term))
                         )));
 
-                for (Map<?, ?> sc : getAsListOfMaps(r, "subClassOf")) {
+                for (Map<?, ?> sc : getAsListOfMaps(r, Rdfs.SUBCLASS_OF)) {
                     if ("Restriction".equals(sc.get(JsonLd.TYPE_KEY))) {
                         var onProperty = getAsOptionalMap(sc, "onProperty")
                                 .flatMap(Disambiguate::getLinkIri)
@@ -203,7 +224,7 @@ public class Disambiguate {
                                         }
                                 );
                         if (onProperty.isPresent() && hasValue.isPresent()) {
-                            pathValueList.add(new PathValue(new Path(path).append(onProperty.get()),null, hasValue.get()));
+                            pathValueList.add(new PathValue(new Path(path).append(onProperty.get()), null, hasValue.get()));
                         }
                     }
                 }
@@ -213,13 +234,6 @@ public class Disambiguate {
         pathValueList.add(new PathValue(path, null, null));
 
         return pathValueList.size() == 1 ? pathValueList.getFirst() : new And(pathValueList);
-    }
-
-    private void setTypeSets(JsonLd jsonLd) {
-        this.adminMetadataTypes = addString(jsonLd.getSubClasses("AdminMetadata"), "AdminMetadata");
-        this.creationSuperTypes = addString(getSuperclasses("Creation", jsonLd), "Creation");
-        this.workTypes = addString(jsonLd.getSubClasses("Work"), "Work");
-        this.instanceTypes = addString(jsonLd.getSubClasses("Instance"), "Instance");
     }
 
     private void setAliasMappings(Whelk whelk) {
@@ -250,7 +264,7 @@ public class Disambiguate {
                 addAllMappings(termDefinition, termKey, TermType.ENUM, whelk);
             }
 
-            if (RDF_TYPE.equals(termKey)) {
+            if (Rdfs.RDF_TYPE.equals(termKey)) {
                 addMapping(JsonLd.TYPE_KEY, termKey, TermType.PROPERTY);
                 addAllMappings(termDefinition, termKey, TermType.PROPERTY, whelk);
             }
@@ -311,48 +325,44 @@ public class Disambiguate {
                                         (equivPropDef) ->
                                                 addMappings(equivPropDef, termKey, termType),
                                         () -> {
-                                                addMapping(equivPropId, termKey, termType);
-                                                addMapping(toPrefixed(equivPropId), termKey, termType);
+                                            addMapping(equivPropId, termKey, termType);
+                                            addMapping(toPrefixed(equivPropId), termKey, termType);
                                         }
                                 );
                             }
                         }));
     }
 
-    private Map<String, String> loadDomainByProperty(Whelk whelk) {
-        Map<String, String> domainByProperty = new TreeMap<>();
-        vocab.entrySet()
-                .stream()
-                .filter(e -> isKbvTerm(e.getValue()) && isProperty(e.getValue()))
-                .forEach(e -> findDomain(e.getValue(), whelk)
-                        .ifPresent(domain ->
-                                domainByProperty.put(jsonLd.toTermKey(e.getKey()), jsonLd.toTermKey(domain))
-                        )
-                );
-        return domainByProperty;
+    private List<String> findDomainOrRange(String property, String domainOrRange) {
+        var propertyDefinition = vocab.get(property);
+        if (propertyDefinition == null) {
+            return Collections.emptyList();
+        }
+        return findDomainOrRange(propertyDefinition, domainOrRange, whelk);
     }
 
-    private Optional<String> findDomain(Map<?, ?> propertyDefinition, Whelk whelk) {
-        return findDomain(new LinkedList<>(List.of(propertyDefinition)), whelk, new HashSet<>());
+    private List<String> findDomainOrRange(Map<?, ?> propertyDefinition, String domainOrRange, Whelk whelk) {
+        return findDomainOrRange(new LinkedList<>(List.of(propertyDefinition)), domainOrRange, whelk, new HashSet<>());
     }
 
-    private Optional<String> findDomain(LinkedList<Map<?, ?>> queue, Whelk whelk, Set<Map<?, ?>> seenDefs) {
+    private List<String> findDomainOrRange(LinkedList<Map<?, ?>> queue, String domainOrRange, Whelk whelk, Set<Map<?, ?>> seenDefs) {
         if (queue.isEmpty()) {
-            return Optional.empty();
+            return Collections.emptyList();
         }
 
         var propertyDefinition = queue.pop();
 
         seenDefs.add(propertyDefinition);
 
-        Optional<String> domain = getDomainIri(propertyDefinition);
-        if (domain.isPresent()) {
-            return domain;
+        List<String> domainOrRangeIris = getDomainOrRangeIris(propertyDefinition, domainOrRange);
+
+        if (!domainOrRangeIris.isEmpty()) {
+            return domainOrRangeIris.stream().map(jsonLd::toTermKey).toList();
         }
 
         queue.addAll(collectInheritable(propertyDefinition, whelk).stream().filter(Predicate.not(seenDefs::contains)).toList());
 
-        return findDomain(queue, whelk, seenDefs);
+        return findDomainOrRange(queue, domainOrRange, whelk, seenDefs);
     }
 
     List<Map<?, ?>> collectInheritable(Map<?, ?> propertyDefinition, Whelk whelk) {
@@ -366,7 +376,7 @@ public class Disambiguate {
                 .flatMap(firstInChain -> getDefinition(firstInChain, whelk))
                 .ifPresent(inheritable::add);
 
-        getAsListOfMaps(propertyDefinition, "subPropertyOf")
+        getAsListOfMaps(propertyDefinition, Rdfs.SUBPROPERTY_OF)
                 .forEach(superProp -> getDefinition(superProp, whelk).ifPresent(inheritable::add));
 
         return inheritable;
@@ -377,10 +387,14 @@ public class Disambiguate {
                 .map(propDef -> (String) propDef.get("librisQueryCode"));
     }
 
-    private Optional<String> getDomainIri(Map<?, ?> propertyDefinition) {
-        return getAsOptionalListOfMaps(propertyDefinition, "domain")
-                .map(List::getFirst)
-                .flatMap(Disambiguate::getLinkIri);
+    private List<String> getDomainOrRangeIris(Map<?, ?> propertyDefinition, String domainOrRange) {
+        String prop = propertyDefinition.containsKey(domainOrRange) ? domainOrRange : domainOrRange + "Includes";
+        return get(propertyDefinition, List.of(prop, "*", ID_KEY), Collections.emptyList());
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T get(Map<?, ?> m, List<Object> path, T defaultTo) {
+        return (T) getAtPath(m, path, defaultTo);
     }
 
     public Object getChip(String iri) {
@@ -401,7 +415,7 @@ public class Disambiguate {
     }
 
     private void addMappings(Map<?, ?> fromTermData, String toTermKey, TermType termType) {
-        String fromTermId = (String) fromTermData.get(JsonLd.ID_KEY);
+        String fromTermId = (String) fromTermData.get(ID_KEY);
 
         addMapping(fromTermId, toTermKey, termType);
         addMapping(toPrefixed(fromTermId), toTermKey, termType);
@@ -416,7 +430,7 @@ public class Disambiguate {
             if (fromTermData.containsKey(alias)) {
                 Map<?, ?> byLang = (Map<?, ?>) fromTermData.get(alias);
                 for (String lang : jsonLd.locales) {
-                    List<?> values = JsonLd.asList(byLang.get(lang));
+                    List<?> values = asList(byLang.get(lang));
                     values.forEach(v -> addMapping((String) v, toTermKey, termType));
                 }
             }
@@ -493,7 +507,7 @@ public class Disambiguate {
     }
 
     private static List<String> getTypes(Map<?, ?> termDefinition) {
-        return JsonLd.asList(termDefinition.get(JsonLd.TYPE_KEY));
+        return asList(termDefinition.get(JsonLd.TYPE_KEY));
     }
 
     public static String toPrefixed(String iri) {
@@ -565,7 +579,7 @@ public class Disambiguate {
     }
 
     private static Optional<String> getLinkIri(Map<?, ?> m) {
-        return Optional.ofNullable((String) m.get(JsonLd.ID_KEY));
+        return Optional.ofNullable((String) m.get(ID_KEY));
     }
 
     private static List<Map<?, ?>> getAsListOfMaps(Map<?, ?> m, String property) {

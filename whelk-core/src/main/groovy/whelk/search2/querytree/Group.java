@@ -2,9 +2,9 @@ package whelk.search2.querytree;
 
 import whelk.search2.Disambiguate;
 import whelk.search2.Operator;
-import whelk.search2.OutsetType;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -59,8 +59,8 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     @Override
-    public Node expand(Disambiguate disambiguate, OutsetType outsetType) {
-        return expandChildren(disambiguate, outsetType);
+    public Node expand(Disambiguate disambiguate, String queryBaseType) {
+        return expandChildren(disambiguate, queryBaseType);
     }
 
     @Override
@@ -175,8 +175,8 @@ public sealed abstract class Group implements Node permits And, Or {
         return n instanceof PathValue && ((PathValue) n).isNested();
     }
 
-    private Node expandChildren(Disambiguate disambiguate, OutsetType outsetType) {
-        return mapFilterAndReinstantiate(c -> c.expand(disambiguate, outsetType), Objects::nonNull);
+    private Node expandChildren(Disambiguate disambiguate, String queryBaseType) {
+        return mapFilterAndReinstantiate(c -> c.expand(disambiguate, queryBaseType), Objects::nonNull);
     }
 
     private List<Map<String, Object>> childrenToEs(List<String> boostedFields) {

@@ -33,6 +33,8 @@ import static DummyNodes.pathV1
 import static DummyNodes.pathV2
 import static DummyNodes.pathV3
 
+import static whelk.search2.Disambiguate.Rdfs.RDF_TYPE
+
 
 class QueryTreeSpec extends Specification {
     def "to search mapping"() {
@@ -168,7 +170,7 @@ class QueryTreeSpec extends Specification {
 
     def "collect given types"() {
         given:
-        def rdfType = new Property(Disambiguate.RDF_TYPE)
+        def rdfType = new Property(RDF_TYPE)
         QueryTree qt = new QueryTree(and([
                 propV(rdfType, eq, v1),
                 propV(rdfType, neq, v2),
@@ -181,7 +183,7 @@ class QueryTreeSpec extends Specification {
 
     def "collect given types"() {
         given:
-        def rdfType = new Property(Disambiguate.RDF_TYPE)
+        def rdfType = new Property(RDF_TYPE)
         QueryTree qt = new QueryTree(and([
                 propV(rdfType, eq, new VocabTerm('type1')),
                 propV(rdfType, neq, new VocabTerm('type2')),

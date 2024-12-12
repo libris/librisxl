@@ -2,8 +2,8 @@ package whelk.search2.querytree;
 
 import whelk.search2.Disambiguate;
 import whelk.search2.Operator;
-import whelk.search2.OutsetType;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +21,7 @@ public sealed interface Node permits ActiveBoolFilter, FreeText, Group, Inactive
         return toEs(Collections.emptyList());
     }
 
-    default Node expand(Disambiguate disambiguate, OutsetType outsetType) { return this; }
+    default Node expand(Disambiguate disambiguate, String queryBaseType) { return this; }
 
     default Node insertOperator(Operator operator) {
         return this;

@@ -1,12 +1,10 @@
 package whelk.search2.querytree;
 
 import whelk.search2.Disambiguate;
-import whelk.search2.OutsetType;
-import whelk.search2.QueryUtil;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 public record InactiveBoolFilter(String alias) implements Node {
     @Override
@@ -20,7 +18,7 @@ public record InactiveBoolFilter(String alias) implements Node {
     }
 
     @Override
-    public Node expand(Disambiguate disambiguate, OutsetType outsetType) {
+    public Node expand(Disambiguate disambiguate, String queryBaseType) {
         return null;
     }
 

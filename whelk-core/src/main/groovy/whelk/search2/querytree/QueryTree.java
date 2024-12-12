@@ -5,7 +5,7 @@ import whelk.exception.InvalidQueryException;
 import whelk.search2.AppParams;
 import whelk.search2.Disambiguate;
 import whelk.search2.Operator;
-import whelk.search2.OutsetType;
+
 import whelk.search2.QueryParams;
 import whelk.search2.QueryUtil;
 
@@ -15,6 +15,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static whelk.search2.Disambiguate.Rdfs.RESOURCE;
 import static whelk.search2.QueryUtil.quoteIfPhraseOrContainsSpecialSymbol;
 import static whelk.search2.querytree.QueryTreeBuilder.buildTree;
 
@@ -22,7 +23,7 @@ public class QueryTree {
     public Node tree;
     private QueryTree filtered;
     private String freeTextPart;
-    private OutsetType outsetType;
+    private String queryBaseType;
 
     public QueryTree(String queryString, Disambiguate disambiguate,
                      Map<String, AppParams.Filter> aliasToFilter) throws InvalidQueryException {
@@ -45,7 +46,7 @@ public class QueryTree {
     }
 
     private Node expand(Disambiguate disambiguate) {
-        return getFiltered().tree.expand(disambiguate, getOutsetType());
+        return getFiltered().tree.expand(disambiguate, getQueryBaseType(disambiguate));
     }
 
     public Map<String, Object> toSearchMapping(Map<String, String> nonQueryParams) {
@@ -60,12 +61,18 @@ public class QueryTree {
         return Map.of(JsonLd.ID_KEY, upUrl);
     }
 
-    public OutsetType getOutsetType() {
-        return outsetType == null ? OutsetType.RESOURCE : outsetType;
-    }
-
-    public void setOutsetType(Disambiguate disambiguate) {
-        this.outsetType = disambiguate.decideOutset(getFiltered());
+    public String getQueryBaseType(Disambiguate disambiguate) {
+        if (queryBaseType == null) {
+            Set<String> types = collectTypes();
+            if (types.isEmpty()) {
+                this.queryBaseType = RESOURCE;
+            } else if (types.size() == 1) {
+                this.queryBaseType = types.iterator().next();
+            } else {
+                this.queryBaseType = disambiguate.lowestCommonBaseType(collectTypes());
+            }
+        }
+        return queryBaseType;
     }
 
     /**
