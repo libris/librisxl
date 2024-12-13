@@ -13,11 +13,14 @@ import java.util.LinkedHashMap;
 public class EmmServlet extends HttpServlet {
     private final Logger logger = LogManager.getLogger(this.getClass());
     private final Whelk whelk;
+    private final TargetVocabMapper targetVocabMapper;
 
     public static final String AS2_CONTENT_TYPE = "application/activity+json";
 
     public EmmServlet() {
         whelk = Whelk.createLoadedCoreWhelk();
+        Document contextDocument = whelk.getStorage().getDocumentByIri(whelk.getSystemContextUri());
+        targetVocabMapper = new TargetVocabMapper(whelk.getJsonld(), contextDocument.data);
     }
 
     public void init() {
@@ -31,7 +34,7 @@ public class EmmServlet extends HttpServlet {
             String apiBaseUrl = req.getRequestURL().toString();
 
             if (req.getServletPath() != null && req.getServletPath().endsWith("/full")) {
-                Dump.sendDumpResponse(whelk, apiBaseUrl, req, res);
+                Dump.sendDumpResponse(whelk, targetVocabMapper, apiBaseUrl, req, res);
                 return;
             }
             String until = req.getParameter("until");
