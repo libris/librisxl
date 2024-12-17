@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import static whelk.JsonLd.asList;
 import static whelk.search2.Disambiguate.Rdfs.RDF_TYPE;
 
 public class Property {
@@ -111,7 +112,7 @@ public class Property {
     }
 
     private boolean isShortHand() {
-        return ((List<?>) definition.getOrDefault("category", List.of())).stream()
+        return ((List<?>) asList(definition.get("category"))).stream()
                 .anyMatch(c -> Map.of(JsonLd.ID_KEY, "https://id.kb.se/vocab/shorthand").equals(c));
     }
 
