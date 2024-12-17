@@ -8,7 +8,7 @@ class AstSpec extends Specification {
 
     def "normal tree"() {
         given:
-        def input = "AAA BBB and (CCC or DDD)"
+        def input = "AAA BBB AND (CCC OR DDD)"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
         Ast.Node ast = Ast.buildFrom(parseTree)
@@ -114,7 +114,7 @@ class AstSpec extends Specification {
 
     def "Flatten code groups"() {
         given:
-        def input = "AAA:(BBB and CCC)"
+        def input = "AAA:(BBB AND CCC)"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
         Ast.Node ast = Ast.buildFrom(parseTree)
@@ -130,7 +130,7 @@ class AstSpec extends Specification {
 
     def "Flatten code groups2"() {
         given:
-        def input = "author:(Alice and (Bob or Cecilia))"
+        def input = "author:(Alice AND (Bob OR Cecilia))"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
         Ast.Node ast = Ast.buildFrom(parseTree)
@@ -149,7 +149,7 @@ class AstSpec extends Specification {
 
     def "Flatten code groups3"() {
         given:
-        def input = "author:(Alice and (Bob or Cecilia) and not David)"
+        def input = "author:(Alice AND (Bob OR Cecilia) AND NOT David)"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
         Ast.Node ast = Ast.buildFrom(parseTree)
@@ -169,7 +169,7 @@ class AstSpec extends Specification {
 
     def "Flatten code groups4"() {
         given:
-        def input = "\"everything\" or author:(Alice and (Bob or Cecilia) and not David)"
+        def input = "\"everything\" OR author:(Alice AND (Bob OR Cecilia) AND NOT David)"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
         Ast.Node ast = Ast.buildFrom(parseTree)
@@ -193,7 +193,7 @@ class AstSpec extends Specification {
 
     def "flatten negations"() {
         given:
-        def input = "\"everything\" and not (author:Alice and published > 2022)"
+        def input = "\"everything\" AND NOT (author:Alice AND published > 2022)"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
         Ast.Node ast = Ast.flattenCodes(Ast.buildFrom(parseTree))
@@ -214,7 +214,7 @@ class AstSpec extends Specification {
 
     def "flatten negations 2"() {
         given:
-        def input = "\"everything\" and !(author:Alice and not published: 2022)"
+        def input = "\"everything\" AND !(author:Alice AND NOT published: 2022)"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
         Ast.Node ast = Ast.flattenCodes(Ast.buildFrom(parseTree))
@@ -235,7 +235,7 @@ class AstSpec extends Specification {
 
     def "flatten negations 3"() {
         given:
-        def input = "!(author:Alice and \"everything\" and not \"something\")"
+        def input = "!(author:Alice AND \"everything\" AND NOT \"something\")"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
         Ast.Node ast = Ast.flattenCodes(Ast.buildFrom(parseTree))
