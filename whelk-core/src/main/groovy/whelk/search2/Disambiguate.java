@@ -12,21 +12,23 @@ import whelk.search2.querytree.Property;
 import whelk.search2.querytree.VocabTerm;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
+import static whelk.JsonLd.TYPE_KEY;
 import static whelk.JsonLd.asList;
+import static whelk.search2.QueryUtil.loadThing;
 import static whelk.util.DocumentUtil.getAtPath;
 
 public class Disambiguate {
     // :category :heuristicIdentifier too broad...?
-    private static final Set<String> notatingProps = new HashSet<>(Arrays.asList("label", "prefLabel", "altLabel", "code", "librisQueryCode"));
+    private static final Set<String> notatingProps = Set.of("label", "prefLabel", "altLabel", "code", "librisQueryCode");
 
     private Whelk whelk;
     private JsonLd jsonLd;
-    private Map<String, Map<String, Object>> vocab;
+    private final Map<String, Map<String, Object>> vocab;
     private Map<String, List<String>> domainByProperty;
     private Map<String, List<String>> rangeByProperty;
 
@@ -39,12 +41,6 @@ public class Disambiguate {
 
     private Set<String> integralRelations;
 
-    private enum TermType {
-        CLASS,
-        PROPERTY,
-        ENUM
-    }
-
     public static final class Rdfs {
         public static final String RESOURCE = "Resource";
         public static final String RDF_TYPE = "rdf:type";
@@ -53,6 +49,18 @@ public class Disambiguate {
         private static final String RANGE = "range";
         private static final String SUBCLASS_OF = "subClassOf";
         private static final String SUBPROPERTY_OF = "subPropertyOf";
+        private static final String IS_DEFINED_BY = "isDefinedBy";
+    }
+
+    private static final class Owl {
+        private static final String PROPERTY_CHAIN_AXIOM = "propertyChainAxiom";
+        private static final String RESTRICTION = "Restriction";
+        private static final String ON_PROPERTY = "onProperty";
+        private static final String HAS_VALUE = "hasValue";
+        private static final String EQUIVALENT_CLASS = "equivalentClass";
+        private static final String EQUIVALENT_PROPERTY = "equivalentProperty";
+        private static final String OBJECT_PROPERTY = "ObjectProperty";
+        private static final String DATATYPE_PROPERTY = "DatatypeProperty";
     }
 
     public static Map<String, Object> freeTextDefinition = Collections.emptyMap();
@@ -64,7 +72,7 @@ public class Disambiguate {
         this.integralRelations = jsonLd.getCategoryMembers("integral");
         this.domainByProperty = new HashMap<>();
         this.rangeByProperty = new HashMap<>();
-        setAliasMappings(whelk);
+        setAliasMappings();
         // FIXME: This should probably not be a static variable...
         if (freeTextDefinition.isEmpty()) {
             freeTextDefinition = getDefinition("textQuery");
@@ -72,11 +80,8 @@ public class Disambiguate {
     }
 
     // For test
-    public Disambiguate(Map<String, Object> data) {
-        // TODO: Load data to use for testing methods depending on this class
-        if (data.containsKey("vocab")) {
-            this.vocab = getVocab(data);
-        }
+    public Disambiguate(Map<String, Map<String, Object>> vocab) {
+        this.vocab = vocab;
     }
 
     public Optional<String> mapToProperty(String alias) {
@@ -103,8 +108,8 @@ public class Disambiguate {
         return ambiguousEnumAliases.getOrDefault(alias, Collections.emptySet());
     }
 
-    static public boolean isLdKey(String s) {
-        return JsonLd.LD_KEYS.contains(s);
+    public Map<String, Object> getDefinition(String termKey) {
+        return vocab.getOrDefault(termKey, Collections.emptyMap());
     }
 
     public List<String> getDomain(String property) {
@@ -127,6 +132,18 @@ public class Disambiguate {
                 .toList();
     }
 
+    public Set<String> getSubclasses(String type) {
+        return jsonLd.getSubClasses(type);
+    }
+
+    public Set<String> getSuperclasses(String type) {
+        return getSuperclasses(type, jsonLd);
+    }
+
+    public Object getChip(String iri) {
+        return loadThing(iri, whelk).map(jsonLd::toChip).orElse(Collections.emptyMap());
+    }
+
     public boolean isVocabTerm(String property) {
         return jsonLd.isVocabTerm(property);
     }
@@ -135,301 +152,33 @@ public class Disambiguate {
         return Rdfs.RDF_TYPE.equals(property) || jsonLd.getSubProperties(Rdfs.RDF_TYPE).contains(property);
     }
 
-    public Set<String> getSubclasses(String type) {
-        return jsonLd.getSubClasses(type);
-    }
-
     public boolean isSubclassOf(String type, String baseType) {
         return jsonLd.isSubClassOf(type, baseType);
     }
 
+    static public boolean isLdKey(String s) {
+        return JsonLd.LD_KEYS.contains(s);
+    }
+    
     public Node expandChainAxiom(Property property) {
-        List<Node> pathValueList = new ArrayList<>();
+        return _expandChainAxiom(property);
+    }
 
-        List<Object> path = new ArrayList<>();
+    private String getQueryCode(String property) {
+        return (String) getDefinition(property).get("librisQueryCode");
+    }
 
-        for (Map<?, ?> prop : getAsListOfMaps(property.definition(), "propertyChainAxiom")) {
-            var propKey = getLinkIri(prop).map(jsonLd::toTermKey);
-            if (propKey.isPresent()) {
-                path.add(new Property(propKey.get(), this));
-                continue;
-            }
-
-            propKey = getAsOptionalListOfMaps(prop, JsonLd.SUB_PROPERTY_OF)
-                    .map(List::getFirst)
-                    .flatMap(Disambiguate::getLinkIri)
-                    .map(jsonLd::toTermKey);
-
-            if (propKey.isEmpty()) {
-                throw new RuntimeException("Failed to expand chain axiom for property " + property);
-            }
-
-            path.add(new Property(propKey.get(), this));
-
-            for (Map<?, ?> r : getAsListOfMaps(prop, JsonLd.RANGE)) {
-                getLinkIri(r).map(jsonLd::toTermKey)
-                        .filter(vocab::containsKey)
-                        .ifPresent(term -> pathValueList.add(new PathValue(
-                                new Path(path).append(new Property(Rdfs.RDF_TYPE, this)),
-                                null,
-                                new VocabTerm(term, getDefinition(term))
-                        )));
-
-                for (Map<?, ?> sc : getAsListOfMaps(r, Rdfs.SUBCLASS_OF)) {
-                    if ("Restriction".equals(sc.get(JsonLd.TYPE_KEY))) {
-                        var onProperty = getAsOptionalMap(sc, "onProperty")
-                                .flatMap(Disambiguate::getLinkIri)
-                                .map(jsonLd::toTermKey)
-                                .map(p -> new Property(p, this));
-                        var hasValue = getAsOptionalMap(sc, "hasValue")
-                                .flatMap(Disambiguate::getLinkIri)
-                                .map(iri -> {
-                                            var termKey = jsonLd.toTermKey(iri);
-                                            return vocab.containsKey(termKey)
-                                                    ? new VocabTerm(termKey, getDefinition(termKey))
-                                                    : new Link(iri, getChip(iri));
-                                        }
-                                );
-                        if (onProperty.isPresent() && hasValue.isPresent()) {
-                            pathValueList.add(new PathValue(new Path(path).append(onProperty.get()), null, hasValue.get()));
-                        }
-                    }
-                }
-            }
+    private Optional<Map<?, ?>> getDefinition(Map<?, ?> link, Whelk whelk) {
+        var iri = get(link, ID_KEY, "");
+        if (iri.isEmpty()) {
+            return Optional.empty();
         }
-
-        pathValueList.add(new PathValue(path, null, null));
-
-        return pathValueList.size() == 1 ? pathValueList.getFirst() : new And(pathValueList);
-    }
-
-    private void setAliasMappings(Whelk whelk) {
-        this.propertyAliasMappings = new TreeMap<>();
-        this.ambiguousPropertyAliases = new TreeMap<>();
-        this.classAliasMappings = new TreeMap<>();
-        this.ambiguousClassAliases = new TreeMap<>();
-        this.enumAliasMappings = new TreeMap<>();
-        this.ambiguousEnumAliases = new TreeMap<>();
-
-        for (String termKey : vocab.keySet()) {
-            var termDefinition = vocab.get(termKey);
-
-            if (isKbvTerm(termDefinition)) {
-                if (isClass(termDefinition)) {
-                    addAllMappings(termDefinition, termKey, TermType.CLASS, whelk);
-                } else if (isProperty(termDefinition)) {
-                    addAllMappings(termDefinition, termKey, TermType.PROPERTY, whelk);
-                }
-            }
-
-            if (isMarc(termKey) && isProperty(termDefinition)) {
-                addMapping(termKey, termKey, TermType.PROPERTY);
-                addMapping(jsonLd.toTermId(termKey), termKey, TermType.PROPERTY);
-            }
-
-            if (isEnum(termDefinition)) {
-                addAllMappings(termDefinition, termKey, TermType.ENUM, whelk);
-            }
-
-            if (Rdfs.RDF_TYPE.equals(termKey)) {
-                addMapping(JsonLd.TYPE_KEY, termKey, TermType.PROPERTY);
-                addAllMappings(termDefinition, termKey, TermType.PROPERTY, whelk);
-            }
-        }
-
-        for (var m : ambiguousPropertyAliases.entrySet()) {
-            var alias = m.getKey();
-            var mappedProps = m.getValue();
-            for (String prop : mappedProps) {
-                if (getQueryCode(prop).filter(alias.toUpperCase()::equals).isPresent()) {
-                    propertyAliasMappings.put(alias, prop);
-                }
-                if (alias.equals(prop.toLowerCase())) {
-                    propertyAliasMappings.put(alias, prop);
-                }
-            }
-        }
-
-        for (var m : ambiguousClassAliases.entrySet()) {
-            var alias = m.getKey();
-            var mappedClasses = m.getValue();
-            for (String cls : mappedClasses) {
-                if (alias.equals(cls.toLowerCase())) {
-                    classAliasMappings.put(alias, cls);
-                }
-            }
-        }
-
-        for (var m : ambiguousEnumAliases.entrySet()) {
-            var alias = m.getKey();
-            var mappedEnums = m.getValue();
-            for (String e : mappedEnums) {
-                if (alias.equals(e.toLowerCase())) {
-                    enumAliasMappings.put(alias, e);
-                }
-            }
-        }
-    }
-
-    private void addAllMappings(Map<?, ?> termDefinition, String termKey, TermType termType, Whelk whelk) {
-        addMapping(termKey, termKey, termType);
-        addMappings(termDefinition, termKey, termType);
-        addEquivTermMappings(termDefinition, termKey, termType, whelk);
-    }
-
-    private void addEquivTermMappings(Map<?, ?> termDefinition, String termKey, TermType termType, Whelk whelk) {
-        String mappingProperty = switch (termType) {
-            case CLASS, ENUM -> "equivalentClass";
-            case PROPERTY -> "equivalentProperty";
-        };
-
-        getAsListOfMaps(termDefinition, mappingProperty)
-                .forEach(ep ->
-                        getLinkIri(ep).ifPresent(equivPropId -> {
-                            String equivPropKey = jsonLd.toTermKey(equivPropId);
-                            if (!vocab.containsKey(equivPropKey)) {
-                                QueryUtil.loadThing(equivPropId, whelk).ifPresentOrElse(
-                                        (equivPropDef) ->
-                                                addMappings(equivPropDef, termKey, termType),
-                                        () -> {
-                                            addMapping(equivPropId, termKey, termType);
-                                            addMapping(toPrefixed(equivPropId), termKey, termType);
-                                        }
-                                );
-                            }
-                        }));
-    }
-
-    private List<String> findDomainOrRange(String property, String domainOrRange) {
-        var propertyDefinition = vocab.get(property);
-        if (propertyDefinition == null) {
-            return Collections.emptyList();
-        }
-        return findDomainOrRange(propertyDefinition, domainOrRange, whelk);
-    }
-
-    private List<String> findDomainOrRange(Map<?, ?> propertyDefinition, String domainOrRange, Whelk whelk) {
-        return findDomainOrRange(new LinkedList<>(List.of(propertyDefinition)), domainOrRange, whelk, new HashSet<>());
-    }
-
-    private List<String> findDomainOrRange(LinkedList<Map<?, ?>> queue, String domainOrRange, Whelk whelk, Set<Map<?, ?>> seenDefs) {
-        if (queue.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        var propertyDefinition = queue.pop();
-
-        seenDefs.add(propertyDefinition);
-
-        List<String> domainOrRangeIris = getDomainOrRangeIris(propertyDefinition, domainOrRange);
-
-        if (!domainOrRangeIris.isEmpty()) {
-            return domainOrRangeIris.stream().map(jsonLd::toTermKey).toList();
-        }
-
-        queue.addAll(collectInheritable(propertyDefinition, whelk).stream().filter(Predicate.not(seenDefs::contains)).toList());
-
-        return findDomainOrRange(queue, domainOrRange, whelk, seenDefs);
-    }
-
-    List<Map<?, ?>> collectInheritable(Map<?, ?> propertyDefinition, Whelk whelk) {
-        List<Map<?, ?>> inheritable = new ArrayList<>();
-
-        getAsListOfMaps(propertyDefinition, "equivalentProperty")
-                .forEach(ep -> getDefinition(ep, whelk).ifPresent(inheritable::add));
-
-        getAsListOfMaps(propertyDefinition, Rdfs.SUBPROPERTY_OF)
-                .forEach(superProp -> getDefinition(superProp, whelk).ifPresent(inheritable::add));
-
-        return inheritable;
-    }
-
-    private Optional<String> getQueryCode(String property) {
-        return Optional.ofNullable((Map<?, ?>) vocab.get(property))
-                .map(propDef -> (String) propDef.get("librisQueryCode"));
-    }
-
-    private List<String> getDomainOrRangeIris(Map<?, ?> propertyDefinition, String domainOrRange) {
-        String prop = propertyDefinition.containsKey(domainOrRange) ? domainOrRange : domainOrRange + "Includes";
-        return get(propertyDefinition, List.of(prop, "*", ID_KEY), Collections.emptyList());
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T> T get(Map<?, ?> m, List<Object> path, T defaultTo) {
-        return (T) getAtPath(m, path, defaultTo);
-    }
-
-    public Object getChip(String iri) {
-        return QueryUtil.loadThing(iri, whelk).map(jsonLd::toChip).orElse(Collections.emptyMap());
-    }
-
-    public Map<String, Object> getDefinition(String termKey) {
-        return vocab.getOrDefault(termKey, Collections.emptyMap());
-    }
-
-    private Optional<Map<?, ?>> getDefinition(Map<?, ?> node, Whelk whelk) {
-        return getLinkIri(node)
-                .flatMap(id -> {
-                            var fromVocab = Optional.ofNullable((Map<?, ?>) vocab.get(jsonLd.toTermKey(id)));
-                            return fromVocab.isPresent() ? fromVocab : QueryUtil.loadThing(id, whelk);
-                        }
-                );
-    }
-
-    private void addMappings(Map<?, ?> fromTermData, String toTermKey, TermType termType) {
-        String fromTermId = (String) fromTermData.get(ID_KEY);
-
-        addMapping(fromTermId, toTermKey, termType);
-        addMapping(toPrefixed(fromTermId), toTermKey, termType);
-
-        for (String prop : notatingProps) {
-            if (fromTermData.containsKey(prop)) {
-                addMapping((String) fromTermData.get(prop), toTermKey, termType);
-            }
-
-            String alias = (String) jsonLd.langContainerAlias.get(prop);
-
-            if (fromTermData.containsKey(alias)) {
-                Map<?, ?> byLang = (Map<?, ?>) fromTermData.get(alias);
-                for (String lang : jsonLd.locales) {
-                    List<?> values = asList(byLang.get(lang));
-                    values.forEach(v -> addMapping((String) v, toTermKey, termType));
-                }
-            }
-        }
-    }
-
-    private void addMapping(String from, String to, TermType termType) {
-        from = from.toLowerCase();
-
-        Map<String, String> aliasMappings = switch (termType) {
-            case CLASS -> classAliasMappings;
-            case PROPERTY -> propertyAliasMappings;
-            case ENUM -> enumAliasMappings;
-        };
-        Map<String, Set<String>> ambiguousAliases = switch (termType) {
-            case CLASS -> ambiguousClassAliases;
-            case PROPERTY -> ambiguousPropertyAliases;
-            case ENUM -> ambiguousEnumAliases;
-        };
-
-        if (ambiguousAliases.containsKey(from)) {
-            ambiguousAliases.get(from).add(to);
-        } else if (aliasMappings.containsKey(from)) {
-            if (aliasMappings.get(from).equals(to)) {
-                return;
-            }
-            ambiguousAliases.put(from, new HashSet<>(Arrays.asList(to, aliasMappings.remove(from))));
-        } else {
-            aliasMappings.put(from, to);
-        }
+        var fromVocab = get(vocab, jsonLd.toTermKey(iri), Map.of());
+        return fromVocab.isEmpty() ? loadThing(iri, whelk) : Optional.of(fromVocab);
     }
 
     private static boolean isKbvTerm(Map<?, ?> termDefinition) {
-        return getAsOptionalMap(termDefinition, "isDefinedBy")
-                .flatMap(Disambiguate::getLinkIri)
-                .filter("https://id.kb.se/vocab/"::equals)
-                .isPresent();
+        return "https://id.kb.se/vocab/".equals(get(termDefinition, List.of(Rdfs.IS_DEFINED_BY, ID_KEY), ""));
     }
 
     private boolean isMarc(String termKey) {
@@ -437,13 +186,13 @@ public class Disambiguate {
     }
 
     private boolean isClass(Map<?, ?> termDefinition) {
-        return getTypes(termDefinition).stream().anyMatch(type -> jsonLd.isSubClassOf(type, "Class"));
+        return getTypes(termDefinition).stream().anyMatch(type -> jsonLd.isSubClassOf((String) type, "Class"));
     }
 
     private boolean isEnum(Map<?, ?> termDefinition) {
         return getTypes(termDefinition).stream()
-                .map(type -> addString(getSuperclasses(type, jsonLd), type))
-                .flatMap(Set::stream)
+                .map(String.class::cast)
+                .flatMap(type -> Stream.concat(getSuperclasses(type, jsonLd).stream(), Stream.of(type)))
                 .map(jsonLd::getInRange)
                 .flatMap(Set::stream)
                 .filter(this::isProperty)
@@ -461,14 +210,14 @@ public class Disambiguate {
     }
 
     public static boolean isObjectProperty(Map<?, ?> termDefinition) {
-        return getTypes(termDefinition).stream().anyMatch("ObjectProperty"::equals);
+        return getTypes(termDefinition).stream().anyMatch(Owl.OBJECT_PROPERTY::equals);
     }
 
     private static boolean isDatatypeProperty(Map<?, ?> termDefinition) {
-        return getTypes(termDefinition).stream().anyMatch("DatatypeProperty"::equals);
+        return getTypes(termDefinition).stream().anyMatch(Owl.DATATYPE_PROPERTY::equals);
     }
 
-    private static List<String> getTypes(Map<?, ?> termDefinition) {
+    private static List<?> getTypes(Map<?, ?> termDefinition) {
         return asList(termDefinition.get(JsonLd.TYPE_KEY));
     }
 
@@ -526,8 +275,109 @@ public class Disambiguate {
         return s;
     }
 
-    public Set<String> getSuperclasses(String cls) {
-        return getSuperclasses(cls, jsonLd);
+    private Node _expandChainAxiom(Property property) {
+        List<Node> pathValueList = new ArrayList<>();
+
+        List<Object> path = new ArrayList<>();
+
+        for (var prop : getAsList(property.definition(), Owl.PROPERTY_CHAIN_AXIOM)) {
+            String propIri = get(prop, ID_KEY, "");
+            if (!propIri.isEmpty()) {
+                path.add(new Property(jsonLd.toTermKey(propIri), this));
+                continue;
+            }
+
+            propIri = get(prop, List.of(Rdfs.SUBPROPERTY_OF, 0, ID_KEY), "");
+            if (propIri.isEmpty()) {
+                throw new RuntimeException("Failed to expand chain axiom for property " + property);
+            }
+            path.add(new Property(jsonLd.toTermKey(propIri), this));
+
+            getAsList(prop, List.of(Rdfs.RANGE, "*", ID_KEY)).stream()
+                    .map(rangeIri -> jsonLd.toTermKey((String) rangeIri))
+                    .map(rangeKey ->
+                            new PathValue(
+                                    new Path(path).append(new Property(Rdfs.RDF_TYPE, this)),
+                                    null,
+                                    new VocabTerm(rangeKey, getDefinition(rangeKey))
+                            )
+                    )
+                    .forEach(pathValueList::add);
+
+            getAsList(prop, Rdfs.RANGE).stream()
+                    .flatMap(r -> getAsList(r, Rdfs.SUBCLASS_OF).stream())
+                    .filter(superClass -> Owl.RESTRICTION.equals(get(superClass, TYPE_KEY, "")))
+                    .forEach(superClass -> {
+                                var onPropertyIri = get(superClass, List.of(Owl.ON_PROPERTY, ID_KEY), "");
+                                var hasValueIri = get(superClass, List.of(Owl.HAS_VALUE, ID_KEY), "");
+                                if (!onPropertyIri.isEmpty() && !hasValueIri.isEmpty()) {
+                                    var onPropertyKey = jsonLd.toTermKey(onPropertyIri);
+                                    var hasValueKey = jsonLd.toTermKey(hasValueIri);
+                                    var pathValue = new PathValue(
+                                            new Path(path).append(new Property(onPropertyKey, this)),
+                                            null,
+                                            vocab.containsKey(hasValueKey)
+                                                    ? new VocabTerm(hasValueKey, getDefinition(hasValueKey))
+                                                    : new Link(hasValueIri, getDefinition(hasValueKey))
+                                    );
+                                    pathValueList.add(pathValue);
+                                }
+                            }
+                    );
+        }
+
+        pathValueList.add(new PathValue(path, null, null));
+
+        return pathValueList.size() == 1 ? pathValueList.getFirst() : new And(pathValueList);
+    }
+
+    private List<String> findDomainOrRange(String property, String domainOrRange) {
+        var propertyDefinition = vocab.get(property);
+        if (propertyDefinition == null) {
+            return Collections.emptyList();
+        }
+        return findDomainOrRange(propertyDefinition, domainOrRange, whelk);
+    }
+
+    private List<String> findDomainOrRange(Map<?, ?> propertyDefinition, String domainOrRange, Whelk whelk) {
+        return findDomainOrRange(new LinkedList<>(List.of(propertyDefinition)), domainOrRange, whelk, new HashSet<>());
+    }
+
+    private List<String> findDomainOrRange(LinkedList<Map<?, ?>> queue, String domainOrRange, Whelk whelk, Set<Map<?, ?>> seenDefs) {
+        if (queue.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        var propertyDefinition = queue.pop();
+
+        seenDefs.add(propertyDefinition);
+
+        List<String> domainOrRangeIris = getDomainOrRangeIris(propertyDefinition, domainOrRange);
+
+        if (!domainOrRangeIris.isEmpty()) {
+            return domainOrRangeIris.stream().map(jsonLd::toTermKey).filter(vocab::containsKey).toList();
+        }
+
+        queue.addAll(collectInheritable(propertyDefinition, whelk).stream().filter(Predicate.not(seenDefs::contains)).toList());
+
+        return findDomainOrRange(queue, domainOrRange, whelk, seenDefs);
+    }
+
+    List<Map<?, ?>> collectInheritable(Map<?, ?> propertyDefinition, Whelk whelk) {
+        List<Map<?, ?>> inheritable = new ArrayList<>();
+
+        getAsList(propertyDefinition, Owl.EQUIVALENT_PROPERTY)
+                .forEach(ep -> getDefinition((Map<?, ?>) ep, whelk).ifPresent(inheritable::add));
+
+        getAsList(propertyDefinition, Rdfs.SUBPROPERTY_OF)
+                .forEach(superProp -> getDefinition((Map<?, ?>) superProp, whelk).ifPresent(inheritable::add));
+
+        return inheritable;
+    }
+
+    private List<String> getDomainOrRangeIris(Map<?, ?> propertyDefinition, String domainOrRange) {
+        String p = propertyDefinition.containsKey(domainOrRange) ? domainOrRange : domainOrRange + "Includes";
+        return get(propertyDefinition, List.of(p, "*", ID_KEY), List.of());
     }
 
     private static Set<String> getSuperclasses(String cls, JsonLd jsonLd) {
@@ -536,29 +386,126 @@ public class Disambiguate {
         return new HashSet<>(superclasses);
     }
 
-    private static Set<String> addString(Set<String> set, String s) {
-        return Stream.concat(set.stream(), Stream.of(s)).collect(Collectors.toSet());
+    @SuppressWarnings("unchecked")
+    private static <T> T get(Object o, List<Object> path, T defaultTo) {
+        return (T) getAtPath(o, path, defaultTo);
     }
 
-    private static Optional<String> getLinkIri(Map<?, ?> m) {
-        return Optional.ofNullable((String) m.get(ID_KEY));
+    private static <T> T get(Object o, String key, T defaultTo) {
+        return get(o, List.of(key), defaultTo);
     }
 
-    private static List<Map<?, ?>> getAsListOfMaps(Map<?, ?> m, String property) {
-        return getAsOptionalListOfMaps(m, property).orElse(Collections.emptyList());
+    private static List<?> getAsList(Object o, List<Object> path) {
+        return asList(get(o, path, null));
     }
 
-    private static Optional<List<Map<?, ?>>> getAsOptionalListOfMaps(Map<?, ?> m, String property) {
-        return Optional.ofNullable((List<Map<?, ?>>) m.get(property));
+    private static List<?> getAsList(Object o, String key) {
+        return getAsList(o, List.of(key));
     }
 
-    private static Optional<Map<?, ?>> getAsOptionalMap(Map<?, ?> m, String property) {
-        return Optional.ofNullable((Map<?, ?>) m.get(property));
+    private void setAliasMappings() {
+        this.propertyAliasMappings = new TreeMap<>();
+        this.ambiguousPropertyAliases = new TreeMap<>();
+        this.classAliasMappings = new TreeMap<>();
+        this.ambiguousClassAliases = new TreeMap<>();
+        this.enumAliasMappings = new TreeMap<>();
+        this.ambiguousEnumAliases = new TreeMap<>();
+
+        vocab.forEach((termKey, termDefinition) -> {
+            if (isKbvTerm(termDefinition)) {
+                if (isClass(termDefinition)) {
+                    addAllMappings(termKey, classAliasMappings, ambiguousClassAliases);
+                } else if (isProperty(termDefinition)) {
+                    addAllMappings(termKey, propertyAliasMappings, ambiguousPropertyAliases);
+                }
+            }
+
+            if (isMarc(termKey) && isProperty(termDefinition)) {
+                addMapping(termKey, termKey, propertyAliasMappings, ambiguousPropertyAliases);
+                addMapping((String) termDefinition.get(ID_KEY), termKey, propertyAliasMappings, ambiguousPropertyAliases);
+            }
+
+            if (isEnum(termDefinition)) {
+                addAllMappings(termKey, enumAliasMappings, ambiguousEnumAliases);
+            }
+
+            if (Rdfs.RDF_TYPE.equals(termKey)) {
+                addMapping(JsonLd.TYPE_KEY, termKey, propertyAliasMappings, ambiguousPropertyAliases);
+                addAllMappings(termKey, propertyAliasMappings, ambiguousPropertyAliases);
+            }
+        });
+
+        BiConsumer<Map<String, Set<String>>, Map<String, String>> disambiguateAliases = (ambiguousAliases, aliasMappings) ->
+                ambiguousAliases.forEach((alias, mappedTerms) ->
+                        mappedTerms.stream()
+                                .filter(term -> alias.equals(term) || alias.toUpperCase().equals(getQueryCode(term)))
+                                .forEach(term -> aliasMappings.put(alias, term))
+                );
+
+        disambiguateAliases.accept(ambiguousClassAliases, classAliasMappings);
+        disambiguateAliases.accept(ambiguousPropertyAliases, propertyAliasMappings);
+        disambiguateAliases.accept(ambiguousEnumAliases, enumAliasMappings);
     }
 
-    private static Map<String, Map<String, Object>> getVocab(Map<String, Object> data) {
-        return ((Map<?, ?>) data.get("vocab")).entrySet()
-                .stream()
-                .collect(Collectors.toMap(e -> (String) e.getKey(), e -> QueryUtil.castToStringObjectMap(e.getValue())));
+    private void addAllMappings(String termKey, Map<String, String> aliasMappings, Map<String, Set<String>> ambiguousAliases) {
+        addMapping(termKey, termKey, aliasMappings, ambiguousAliases);
+        addMappings(termKey, aliasMappings, ambiguousAliases);
+        addEquivTermMappings(termKey, aliasMappings, ambiguousAliases);
+    }
+
+    private void addMappings(String termKey, Map<String, String> aliasMappings, Map<String, Set<String>> ambiguousAliases) {
+        Map<String, Object> termDefinition = getDefinition(termKey);
+        String termId = (String) termDefinition.get(ID_KEY);
+
+        addMapping(termId, termKey, aliasMappings, ambiguousAliases);
+        addMapping(toPrefixed(termId), termKey, aliasMappings, ambiguousAliases);
+
+        for (String prop : notatingProps) {
+            if (termDefinition.containsKey(prop)) {
+                addMapping((String) termDefinition.get(prop), termKey, aliasMappings, ambiguousAliases);
+            }
+
+            String alias = (String) jsonLd.langContainerAlias.get(prop);
+            if (termDefinition.containsKey(alias)) {
+                for (String lang : jsonLd.locales) {
+                    getAsList(termDefinition, List.of(alias, lang))
+                            .forEach(langStr -> addMapping((String) langStr, termKey, aliasMappings, ambiguousAliases));
+                }
+            }
+        }
+    }
+
+    private void addMapping(String from, String to, Map<String, String> aliasMappings, Map<String, Set<String>> ambiguousAliases) {
+        from = from.toLowerCase();
+        if (ambiguousAliases.containsKey(from)) {
+            ambiguousAliases.get(from).add(to);
+        } else if (aliasMappings.containsKey(from)) {
+            if (aliasMappings.get(from).equals(to)) {
+                return;
+            }
+            ambiguousAliases.put(from, new HashSet<>(Set.of(to, aliasMappings.remove(from))));
+        } else {
+            aliasMappings.put(from, to);
+        }
+    }
+
+    private void addEquivTermMappings(String termKey, Map<String, String> aliasMappings, Map<String, Set<String>> ambiguousAliases) {
+        String mappingProperty = isProperty(termKey) ? Owl.EQUIVALENT_PROPERTY : Owl.EQUIVALENT_CLASS;
+
+        getAsList(vocab, List.of(termKey, mappingProperty)).forEach(term -> {
+            String equivPropIri = get(term, ID_KEY, "");
+            if (!equivPropIri.isEmpty()) {
+                String equivPropKey = jsonLd.toTermKey(equivPropIri);
+                if (!vocab.containsKey(equivPropKey)) {
+                    loadThing(equivPropIri, whelk).ifPresentOrElse(
+                            (equivPropDef) -> addMappings(termKey, aliasMappings, ambiguousAliases),
+                            () -> {
+                                addMapping(equivPropIri, termKey, aliasMappings, ambiguousAliases);
+                                addMapping(toPrefixed(equivPropIri), termKey, aliasMappings, ambiguousAliases);
+                            }
+                    );
+                }
+            }
+        });
     }
 }
