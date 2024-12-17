@@ -8,52 +8,37 @@ boolean interpretClassification(Map thing) {
   var modified = false
   var isInstance = 'instanceOf' in thing
 
+  List<String> additionalCodes = []
+
   for (Map cls : asList(thing.classification)) {
     if (asList(cls.inScheme).any {
       it[ID] == SAB || it.code?.toLowerCase()?.startsWith("kssb")
     }) {
-      List<Map> sabRefs = null
+      def clsCode = cls.code
 
-      var clsCode = cls.code
-
-      if (isInstance) {
-        var mediaSubdiv = clsCode.find(/(\/[A-Z]+)/)
-        if (mediaSubdiv in SAB_MAP) {
-          var basecode = clsCode.replace(mediaSubdiv, '')
-          if (basecode in SAB_MAP) {
-            sabRefs = [ [(ID): SAB_MAP[basecode]], [(ID): SAB_MAP[mediaSubdiv]] ]
-          }
-        }
+      if (clsCode instanceof List && clsCode.size() > 0) {
+        additionalCodes = clsCode[1..-1].findAll { it instanceof String }
+        clsCode = clsCode[0]
       }
 
-      if (!sabRefs) {
-        if (clsCode in SAB_MAP) {
-          sabRefs = [ [(ID): SAB_MAP[clsCode]] ]
-        } else if (clsCode) {
-          sabRefs = splitSabCode(clsCode)
-        }
+      if (clsCode !instanceof String) {
+        continue
       }
 
-      if (sabRefs) {
+      var newCls = getClassification(clsCode, isInstance)
+      if (newCls != null) {
         cls.clear()
-        if (sabRefs.size() == 1) {
-          cls.putAll(sabRefs[0])
-        } else {
-          cls[TYPE] = 'Classification'
-          cls.code = clsCode
-          cls.inScheme = [(ID): SAB]
-          cls.broader = sabRefs
-
-          var missed = sabRefs.findAll { ID !in it && it[TYPE] != 'Resource' }
-          if (missed) {
-            missed.each {
-              missing.get(it.code, []) << clsCode
-            }
-          }
-        }
+        cls.putAll(newCls)
         modified = true
-      } else if (clsCode && !clsCode.contains('z ')) {
-        missing.get(clsCode, []) << ''
+      }
+    }
+  }
+
+  if (thing.classification instanceof List && additionalCodes) {
+    additionalCodes.each {
+      var newCls = getClassification(it, isInstance)
+      if (newCls != null) {
+        thing.classification << newCls
       }
     }
   }
@@ -65,6 +50,53 @@ boolean interpretClassification(Map thing) {
   }
 
   return modified
+}
+
+Map getClassification(String clsCode, isInstance=false) {
+  List<Map> sabRefs = null
+
+  if (isInstance) {
+    var mediaSubdiv = clsCode.find(/(\/[A-Z]+)/)
+    if (mediaSubdiv in SAB_MAP) {
+      var basecode = clsCode.replace(mediaSubdiv, '')
+      if (basecode in SAB_MAP) {
+        sabRefs = [ [(ID): SAB_MAP[basecode]], [(ID): SAB_MAP[mediaSubdiv]] ]
+      }
+    }
+  }
+
+  if (!sabRefs) {
+    if (clsCode in SAB_MAP) {
+      sabRefs = [ [(ID): SAB_MAP[clsCode]] ]
+    } else if (clsCode) {
+      sabRefs = splitSabCode(clsCode)
+    }
+  }
+
+  if (sabRefs) {
+    var cls = [:]
+    if (sabRefs.size() == 1) {
+      cls.putAll(sabRefs[0])
+    } else {
+      cls[TYPE] = 'Classification'
+      cls.code = clsCode
+      cls.inScheme = [(ID): SAB]
+      cls.broader = sabRefs
+
+      var missed = sabRefs.findAll { ID !in it && it[TYPE] != 'Resource' }
+      if (missed) {
+        missed.each {
+          missing.get(it.code, []) << clsCode
+        }
+      }
+    }
+
+    return cls
+  } else if (!clsCode.contains('z ')) {
+    missing.get(clsCode, []) << ''
+  }
+
+  return null
 }
 
 List<Map> splitSabCode(String code) {
@@ -143,7 +175,7 @@ selectBySqlWhere("""
     data#>>'{@graph,1}' LIKE '%kssb%'
 """) { data ->
 /*
-selectByIds(['8rkj0wql14q40gb']) { data ->
+selectByIds(['8rkj0wql14q40gb', '2kc9d80d2kl6v14']) { data ->
 */
   def (record, instance) = data.graph
 
