@@ -17,7 +17,9 @@ boolean interpretClassification(Map thing) {
       def clsCode = cls.code
 
       if (clsCode instanceof List && clsCode.size() > 0) {
-        additionalCodes = clsCode[1..-1].findAll { it instanceof String }
+        if (clsCode.size() > 1) {
+          additionalCodes += clsCode[1..-1].findAll { it instanceof String }
+        }
         clsCode = clsCode[0]
       }
 
@@ -175,7 +177,7 @@ selectBySqlWhere("""
     data#>>'{@graph,1}' LIKE '%kssb%'
 """) { data ->
 /*
-selectByIds(['8rkj0wql14q40gb', '2kc9d80d2kl6v14']) { data ->
+selectByIds(['8rkj0wql14q40gb', '2kc9d80d2kl6v14', 'vc5xkl562s3bj8w']) { data ->
 */
   def (record, instance) = data.graph
 
