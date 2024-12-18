@@ -68,7 +68,7 @@ public class SearchUtils2 {
 
         Map<String, Object> partialCollectionView = getPartialCollectionView(queryRes, qTree, queryParams, appParams);
 
-        if (!queryParams.debug.contains(QueryParams.Debug.ES_QUERY)) {
+        if (queryParams.debug.contains(QueryParams.Debug.ES_QUERY)) {
             partialCollectionView.put(QueryParams.ApiParams.DEBUG, Map.of(QueryParams.Debug.ES_QUERY, esQueryDsl));
         }
 
