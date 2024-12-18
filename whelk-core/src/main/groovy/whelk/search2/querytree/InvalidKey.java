@@ -5,16 +5,14 @@ import java.util.Map;
 
 import static whelk.JsonLd.TYPE_KEY;
 
-public sealed interface InvalidKey {
-    record UnrecognizedKey(String key) implements InvalidKey {}
-    record AmbiguousKey(String key) implements InvalidKey {}
+public sealed interface InvalidKey extends PropertyLike {
+    record UnrecognizedKey(String name) implements InvalidKey {}
+    record AmbiguousKey(String name) implements InvalidKey {}
 
-    String key();
-
-    default Map<String, Object> getDefinition() {
+    default Map<String, Object> definition() {
         var m = new LinkedHashMap<String, Object>();
         m.put(TYPE_KEY, "_Invalid");
-        m.put("label", key());
+        m.put("label", name());
         return m;
     }
 }
