@@ -45,17 +45,17 @@ public class FacetTree {
 
     private Map<String, Object> findParent(Map<String, Object> observation, List<Map<String, Object>> observations) {
         return observations.stream()
-                .filter(o -> isSubCLass(observation, o))
+                .filter(o -> isSubClass(observation, o))
                 .findFirst().orElse(null);
     }
 
     private List<Map<String, Object>> findChildren(Map<String, Object> observation, List<Map<String, Object>> observations) {
         return observations.stream()
-                .filter(o -> isSubCLass(o, observation))
+                .filter(o -> isSubClass(o, observation))
                 .collect(Collectors.toList());
     }
 
-    private boolean isSubCLass(Map<String, Object> obsA, Map<String, Object> obsB) {
+    private boolean isSubClass(Map<String, Object> obsA, Map<String, Object> obsB) {
         String idA = get(obsA, List.of("object", "@id"), "");
         String idB = get(obsB, List.of("object", "@id"), "");
         return !idA.equals(idB) && jsonLd.isSubClassOf(idA, idB);
