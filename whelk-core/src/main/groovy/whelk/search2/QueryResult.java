@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -47,10 +46,6 @@ public class QueryResult {
 
     public List<Map<String, Object>> collectItems(Function<Map<String, Object>, Map<String, Object>> applyLens) {
         return esItems.stream().map(item -> item.toLd(applyLens)).toList();
-    }
-
-    public List<Map<String, Object>> collectScores() {
-        return esItems.stream().map(EsItem::getScoreData).filter(Predicate.not(Map::isEmpty)).toList();
     }
 
     private static int getNumHits(Map<String, Object> esResponse) {
@@ -100,16 +95,6 @@ public class QueryResult {
             return ldItem.map;
         }
 
-        private Map<String, Object> getScoreData() {
-            Map<String, Object> scoreMap = new LinkedHashMap<>();
-            if (map.get("_score") != null) {
-                scoreMap.put("_id", map.get("_id"));
-                scoreMap.put("_score", map.get("_score"));
-                scoreMap.put("_explanation", map.get("_explanation"));
-            }
-            return scoreMap;
-        }
-
         private Optional<Map<String, Object>> getReverseLinks() {
             return Optional.ofNullable(map.get("reverseLinks"))
                     .map(QueryUtil::castToStringObjectMap);
@@ -152,10 +137,9 @@ public class QueryResult {
 
         private void addScore(Map<String, Object> scoreExplanation) {
             var scorePerField = getScorePerField(scoreExplanation);
-            if (!scorePerField.isEmpty()) {
-                var totalScore = scorePerField.values().stream().reduce((double) 0, Double::sum);
-                map.put("_debug", Map.of("_score", Map.of("_total", totalScore, "_perField", scorePerField)));
-            }
+            var totalScore = scorePerField.values().stream().reduce((double) 0, Double::sum);
+            var scoreData = Map.of("_total", totalScore, "_perField", scorePerField, "_explain", scoreExplanation);
+            map.put("_debug", Map.of("_score", scoreData));
         }
 
         private static Map<String, Double> getScorePerField(Map<String, Object> scoreExplanation) {
