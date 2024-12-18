@@ -1,5 +1,6 @@
 package whelk.search2.querytree;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static whelk.JsonLd.TYPE_KEY;
@@ -11,6 +12,9 @@ public sealed interface InvalidKey {
     String key();
 
     default Map<String, Object> getDefinition() {
-        return Map.of(TYPE_KEY, "_Invalid", "label", key());
+        var m = new LinkedHashMap<String, Object>();
+        m.put(TYPE_KEY, "_Invalid");
+        m.put("label", key());
+        return m;
     }
 }

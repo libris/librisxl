@@ -1,5 +1,6 @@
 package whelk.search2.querytree;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static whelk.JsonLd.TYPE_KEY;
@@ -13,6 +14,9 @@ sealed interface InvalidValue extends Value {
 
     @Override
     default Object description() {
-        return Map.of(TYPE_KEY, "_Invalid", "label", string());
+        var m = new LinkedHashMap<String, Object>();
+        m.put(TYPE_KEY, "_Invalid");
+        m.put("label", string());
+        return m;
     }
 }
