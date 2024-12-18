@@ -26,7 +26,9 @@ public record Path(List<Object> path, Optional<String> nestedStem) {
     @Override
     public String toString() {
         return path.stream()
-                .map(x -> x instanceof Property ? ((Property) x).name() : (String) x)
+                .map(x -> x instanceof Property p
+                        ? p.name() :
+                        (x instanceof InvalidKey i ? i.key() : (String) x))
                 .map(this::substitute)
                 .collect(Collectors.joining("."));
     }

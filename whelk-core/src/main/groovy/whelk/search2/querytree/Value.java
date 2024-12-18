@@ -1,6 +1,6 @@
 package whelk.search2.querytree;
 
-public sealed interface Value permits Link, Literal, VocabTerm {
+public sealed interface Value permits Link, Literal, InvalidValue, VocabTerm {
     String string();
 
     Object description();
