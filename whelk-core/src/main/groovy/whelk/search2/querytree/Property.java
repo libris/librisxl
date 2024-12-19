@@ -13,7 +13,8 @@ import java.util.stream.Stream;
 import static whelk.JsonLd.asList;
 import static whelk.search2.Disambiguate.Rdfs.RDF_TYPE;
 
-public class Property {
+
+public class Property implements PropertyLike {
     private final String name;
     private Map<String, Object> definition;
     private boolean isVocabTerm;

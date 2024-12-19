@@ -161,9 +161,6 @@ public class Lex {
 
             // These words (when not quoted) are keywords
             switch (symbolValue.toString()) {
-                case "and":
-                case "or":
-                case "not":
                 case "AND":
                 case "OR":
                 case "NOT":

@@ -9,7 +9,7 @@ class ParseSpec extends Specification {
 
     def "normal parse"() {
         given:
-        def input = "AAA BBB and (CCC or DDD)"
+        def input = "AAA BBB AND (CCC OR DDD)"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
 
@@ -19,7 +19,7 @@ class ParseSpec extends Specification {
 
     def "implicit and group"() {
         given:
-        def input = "AAA BBB (CCC or DDD)"
+        def input = "AAA BBB (CCC OR DDD)"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
 
@@ -39,7 +39,7 @@ class ParseSpec extends Specification {
 
     def "parse negative2"() {
         given:
-        def input = "not AAA"
+        def input = "NOT AAA"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
 
@@ -49,7 +49,7 @@ class ParseSpec extends Specification {
 
     def "parse negative3"() {
         given:
-        def input = "not (AAA)"
+        def input = "NOT (AAA)"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
 
@@ -59,7 +59,7 @@ class ParseSpec extends Specification {
 
     def "crazy grouping"() {
         given:
-        def input = "AAA BBB and (CCC or DDD or (EEE) AND (FFF OR GGG))"
+        def input = "AAA BBB AND (CCC OR DDD OR (EEE) AND (FFF OR GGG))"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
 
@@ -69,7 +69,7 @@ class ParseSpec extends Specification {
 
     def "fail crazy grouping with bad parens"() {
         given:
-        def input = "AAA BBB and (CCC or DDD or (EEE) AND (FFF OR GGG)"
+        def input = "AAA BBB AND (CCC OR DDD OR (EEE) AND (FFF OR GGG)"
         def lexedSymbols = Lex.lexQuery(input)
 
         when:
@@ -171,7 +171,7 @@ class ParseSpec extends Specification {
 
     def "code group2"() {
         given:
-        def input = "förf:(AAA or BBB and CCC)"
+        def input = "förf:(AAA OR BBB AND CCC)"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
 
@@ -192,7 +192,7 @@ class ParseSpec extends Specification {
 
     def "Bad use of code2"() {
         given:
-        def input = "AAA or förf:"
+        def input = "AAA OR förf:"
         def lexedSymbols = Lex.lexQuery(input)
 
         when:
@@ -203,7 +203,7 @@ class ParseSpec extends Specification {
 
     def "Don't parse missing or-tail"() {
         given:
-        def input = "AAA BBB and (CCC or)"
+        def input = "AAA BBB AND (CCC OR)"
         def lexedSymbols = Lex.lexQuery(input)
 
         when:
@@ -214,7 +214,7 @@ class ParseSpec extends Specification {
 
     def "Don't parse missing and-tail"() {
         given:
-        def input = "AAA BBB and"
+        def input = "AAA BBB AND"
         def lexedSymbols = Lex.lexQuery(input)
 
         when:

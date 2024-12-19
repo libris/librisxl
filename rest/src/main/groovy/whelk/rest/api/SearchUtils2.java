@@ -63,19 +63,12 @@ public class SearchUtils2 {
 
         Map<String, Object> esQueryDsl = getEsQueryDsl(qTree, queryParams, appParams.statsRepr);
 
-        QueryResult queryRes = new QueryResult(queryUtil.query(esQueryDsl));
+        QueryResult queryRes = new QueryResult(queryUtil.query(esQueryDsl), queryParams.debug);
 
         Map<String, Object> partialCollectionView = getPartialCollectionView(queryRes, qTree, queryParams, appParams);
 
-        Map<String, Object> debugView = new HashMap<>();
         if (queryParams.debug.contains(QueryParams.Debug.ES_QUERY)) {
-            debugView.put(QueryParams.Debug.ES_QUERY, esQueryDsl);
-        }
-        if (queryParams.debug.contains(QueryParams.Debug.ES_SCORE)) {
-            debugView.put(QueryParams.Debug.ES_SCORE, queryRes.scores);
-        }
-        if (!debugView.isEmpty()) {
-            partialCollectionView.put(QueryParams.ApiParams.DEBUG, debugView);
+            partialCollectionView.put(QueryParams.ApiParams.DEBUG, Map.of(QueryParams.Debug.ES_QUERY, esQueryDsl));
         }
 
         return partialCollectionView;

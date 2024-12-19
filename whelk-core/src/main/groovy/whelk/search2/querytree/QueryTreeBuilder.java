@@ -91,10 +91,9 @@ public class QueryTreeBuilder {
             } else {
                 var ambiguous = disambiguate.getAmbiguousPropertyMapping(part);
                 if (ambiguous.isEmpty()) {
-                    throw new InvalidQueryException("Unrecognized property alias: " + part);
+                    path.add(new InvalidKey.UnrecognizedKey(part));
                 } else {
-                    throw new InvalidQueryException("\"" + part + "\" maps to multiple properties: " + ambiguous + "," +
-                            " please specify which one is meant.");
+                    path.add(new InvalidKey.AmbiguousKey(part));
                 }
             }
         }
@@ -117,26 +116,18 @@ public class QueryTreeBuilder {
             if (mappedType.isPresent()) {
                 return new VocabTerm(mappedType.get(), disambiguate.getDefinition(mappedType.get()));
             } else {
-                var ambiguous = disambiguate.getAmbiguousClassMapping(value);
-                if (ambiguous.isEmpty()) {
-                    throw new InvalidQueryException("Unrecognized type: " + value);
-                } else {
-                    throw new InvalidQueryException("\"" + value + "\" maps to multiple types: " + ambiguous + "," +
-                            " please specify which one is meant.");
-                }
+                return disambiguate.getAmbiguousClassMapping(value).isEmpty()
+                        ? new InvalidValue.ForbiddenValue(value)
+                        : new InvalidValue.AmbiguousValue(value);
             }
         } else if (property.isVocabTerm()) {
             Optional<String> mappedEnum = disambiguate.mapToEnum(value);
             if (mappedEnum.isPresent()) {
                 return new VocabTerm(mappedEnum.get(), disambiguate.getDefinition(mappedEnum.get()));
             } else {
-                var ambiguous = disambiguate.getAmbiguousEnumMapping(value);
-                if (ambiguous.isEmpty()) {
-                    throw new InvalidQueryException("Invalid value " + value + " for property " + property);
-                } else {
-                    throw new InvalidQueryException("\"" + value + "\" maps to multiple types: " + ambiguous + "," +
-                            " please specify which one is meant.");
-                }
+                return disambiguate.getAmbiguousEnumMapping(value).isEmpty()
+                        ? new InvalidValue.ForbiddenValue(value)
+                        : new InvalidValue.AmbiguousValue(value);
             }
         }
         // Expand and encode URIs, e.g. sao:Hästar -> https://id.kb.se/term/sao/H%C3%A4star
