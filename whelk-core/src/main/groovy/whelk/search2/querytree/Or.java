@@ -4,6 +4,7 @@ import whelk.search2.Operator;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 import static whelk.search2.QueryUtil.shouldWrap;
 
@@ -42,6 +43,20 @@ public final class Or extends Group {
     @Override
     List<String> collectRulingTypes() {
         return List.of();
+    }
+
+    @Override
+    boolean implies(Node a, Node b, BiFunction<Node, Node, Boolean> condition) {
+        return switch (a) {
+            case Group aGroup -> switch (b) {
+                case Group bGroup -> bGroup.children().stream().anyMatch(child -> implies(a, child, condition));
+                default -> aGroup.children().stream().anyMatch(child -> condition.apply(child, b));
+            };
+            default -> switch (b) {
+                case Group g -> g.children().stream().anyMatch(child -> condition.apply(a, child));
+                default -> condition.apply(a, b);
+            };
+        };
     }
 
     @Override

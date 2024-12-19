@@ -5,6 +5,7 @@ import whelk.search2.Operator;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,7 +22,7 @@ import java.util.stream.Stream;
 import static whelk.search2.QueryUtil.boolWrap;
 import static whelk.search2.QueryUtil.nestedWrap;
 
-//
+
 public sealed abstract class Group implements Node permits And, Or {
     @Override
     public abstract List<Node> children();
@@ -35,6 +36,8 @@ public sealed abstract class Group implements Node permits And, Or {
     abstract Map<String, Object> wrap(List<Map<String, Object>> esChildren);
 
     abstract List<String> collectRulingTypes();
+
+    abstract boolean implies(Node a, Node b, BiFunction<Node, Node, Boolean> condition);
 
     // Abstract class does not allow records as subclasses, however when comparing nodes we want the same behaviour
     // as for records, hence the following.
@@ -145,35 +148,16 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     Node reduceByCondition(BiFunction<Node, Node, Boolean> condition) {
-        List<Node> reduced = children().stream()
-                .filter(child ->
-                        children().stream()
-                                .noneMatch(otherChild -> !otherChild.equals(child) && implies(otherChild, child, condition))
-                )
-                .map(child -> child instanceof Group ? ((Group) child).reduceByCondition(condition) : child)
-                .toList();
-
-        return switch (reduced.size()) {
-            // If reduced is empty it means all children imply each other, just pick any child (preferably not a group)
-            case 0 -> children().stream()
-                    .filter(Predicate.not(Group.class::isInstance))
-                    .findFirst()
-                    .orElse(children().getFirst());
-            case 1 -> reduced.getFirst();
-            default -> newInstance(reduced);
-        };
-    }
-
-
-    private boolean implies(Node a, Node b, BiFunction<Node, Node, Boolean> condition) {
-        return switch (a) {
-            case Group g -> !(b instanceof Group) && implies(b, g, condition);
-            default -> switch (b) {
-                case Or or -> or.children().stream().anyMatch(n -> condition.apply(a, n));
-                case And and -> and.children().stream().allMatch(n -> condition.apply(a, n));
-                default -> condition.apply(a, b);
-            };
-        };
+        List<Node> reduced = new ArrayList<>();
+        children().stream()
+                .map(child -> child instanceof Group g ? g.reduceByCondition(condition) : child)
+                .sorted(Comparator.comparing(Group.class::isInstance))
+                .forEach(child -> {
+                    if (reduced.stream().noneMatch(otherChild -> implies(otherChild, child, condition))) {
+                        reduced.add(child);
+                    }
+                });
+        return reduced.size() == 1 ? reduced.getFirst() : newInstance(reduced);
     }
 
     // TODO: Review/refine nested logic and proper tests

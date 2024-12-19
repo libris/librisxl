@@ -5,6 +5,7 @@ import whelk.search2.Disambiguate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -56,6 +57,22 @@ public final class And extends Group {
                 .map(PropertyValue::value)
                 .map(Value::string)
                 .toList();
+    }
+
+    @Override
+    boolean implies(Node a, Node b, BiFunction<Node, Node, Boolean> condition) {
+        return switch (a) {
+            case Group g -> switch (b) {
+                case And and -> and.children().stream().allMatch(child -> implies(a, child, condition));
+                case Or or -> or.children().stream().anyMatch(child -> implies(a, child, condition));
+                default -> g.children().stream().anyMatch(child -> condition.apply(child, b));
+            };
+            default -> switch (b) {
+                case And and -> and.children().stream().allMatch(child -> condition.apply(a, child));
+                case Or or -> or.children().stream().anyMatch(child -> condition.apply(a, child));
+                default -> condition.apply(a, b);
+            };
+        };
     }
 
     public boolean contains(Node node) {
