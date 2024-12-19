@@ -28,10 +28,12 @@ import static whelk.util.Jackson.mapper;
 public class SearchUtils2 {
     private final QueryUtil queryUtil;
     private final Disambiguate disambiguate;
+    private final JsonLd jsonLd;
 
     SearchUtils2(Whelk whelk) {
         this.queryUtil = new QueryUtil(whelk);
         this.disambiguate = new Disambiguate(whelk);
+        this.jsonLd = whelk.getJsonld();
     }
 
     Map<String, Object> doSearch(Map<String, String[]> queryParameters) throws InvalidQueryException, IOException {
@@ -133,7 +135,7 @@ public class SearchUtils2 {
         view.put("search", Map.of("mapping", List.of(qt.toSearchMapping(queryParams.getNonQueryParams(0)))));
         view.putAll(Pagination.makeLinks(queryResult.numHits, queryUtil.maxItems(), freeText, fullQuery, queryParams));
         view.put("items", queryResult.collectItems(queryUtil.getApplyLensFunc(queryParams)));
-        view.put("stats", new Stats(disambiguate, queryUtil, qt, queryResult, queryParams, appParams).build());
+        view.put("stats", new Stats(disambiguate, queryUtil, qt, queryResult, queryParams, appParams, jsonLd).build());
         if (!queryResult.spell.isEmpty()) {
             view.put("_spell", buildSpellSuggestions(queryResult, qt, queryParams.getNonQueryParams(0)));
         }
