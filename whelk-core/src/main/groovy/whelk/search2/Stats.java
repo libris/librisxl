@@ -130,7 +130,6 @@ public class Stats {
                 sliceNode.put("dimension", property.name());
                 sliceNode.put("observation", observations);
                 sliceNode.put("maxItems", sliceParamsByProperty.get(property).size());
-//                property.getAlias(queryTree.getOutsetType()).ifPresent(a -> sliceNode.put("alias", a));
                 sliceByDimension.put(property.name(), sliceNode);
             }
         });

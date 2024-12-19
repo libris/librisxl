@@ -44,7 +44,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
     @Override
     public Node expand(Disambiguate disambiguate, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
-        throw new UnsupportedOperationException("");
+        return this;
     }
 
     @Override

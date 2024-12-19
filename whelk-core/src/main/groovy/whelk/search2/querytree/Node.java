@@ -46,8 +46,4 @@ public sealed interface Node permits ActiveBoolFilter, FreeText, Group, Inactive
     default boolean isTypeNode() {
         return false;
     }
-
-    default List<String> collectTypes(Disambiguate disambiguate) {
-        return List.of();
-    }
 }
