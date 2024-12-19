@@ -47,12 +47,10 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         var propertyChainAxiom = new LinkedList<>();
 
         for (int i = getPath().size() - 1; i >= 0; i--) {
-            if (getPath().get(i) instanceof Property property) {
+            if (getPath().get(i) instanceof PropertyLike property) {
                 propertyChainAxiom.push(i > 0 && getPath().get(i - 1).equals(JsonLd.REVERSE_KEY)
                         ? Map.of("inverseOf", property.definition())
                         : property.definition());
-            } else if (getPath().get(i) instanceof InvalidKey invalid) {
-                propertyChainAxiom.push(invalid.getDefinition());
             }
         }
 
