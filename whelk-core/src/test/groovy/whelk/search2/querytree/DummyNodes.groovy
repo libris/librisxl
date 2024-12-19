@@ -41,6 +41,9 @@ class DummyNodes {
 
     static def ft1 = new FreeText(Operator.EQUALS, 'ft1')
 
+    static def type1 = new PropertyValue(new Property("rdf:type"), Operator.EQUALS, new VocabTerm("T1"))
+    static def type2 = new PropertyValue(new Property("rdf:type"), Operator.EQUALS, new VocabTerm("T2"))
+
     static def ft(String s) {
         return new FreeText(eq, s)
     }

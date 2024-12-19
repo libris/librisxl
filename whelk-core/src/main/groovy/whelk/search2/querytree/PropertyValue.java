@@ -3,18 +3,15 @@ package whelk.search2.querytree;
 import whelk.JsonLd;
 import whelk.search2.Disambiguate;
 import whelk.search2.Operator;
-import whelk.search2.OutsetType;
 
-import java.util.Collections;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.stream.Stream;
 
-import static whelk.search2.Disambiguate.RDF_TYPE;
 import static whelk.search2.QueryUtil.quoteIfPhraseOrContainsSpecialSymbol;
 
 public record PropertyValue(Property property, Operator operator, Value value) implements Node {
@@ -23,7 +20,7 @@ public record PropertyValue(Property property, Operator operator, Value value) i
     }
 
     @Override
-    public Map<String, Object> toEs(List<String> boostedFields) {
+    public Map<String, Object> toEs() {
         throw new UnsupportedOperationException("Expand before converting to ES");
     }
 
@@ -32,7 +29,6 @@ public record PropertyValue(Property property, Operator operator, Value value) i
         Map<String, Object> m = new LinkedHashMap<>();
 
         m.put("property", property.definition());
-        property.getAlias(qt.getOutsetType()).ifPresent(a -> m.put("alias", a));
         m.put(operator.termKey, value.description());
         m.put("up", qt.makeUpLink(this, nonQueryParams));
 
@@ -40,16 +36,16 @@ public record PropertyValue(Property property, Operator operator, Value value) i
     }
 
     @Override
-    public Node expand(Disambiguate disambiguate, OutsetType outsetType) {
+    public Node expand(Disambiguate disambiguate, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
         return property.isRdfType()
                 ? buildTypeNode(value, disambiguate).insertOperator(operator)
-                : property.expand(disambiguate, outsetType)
+                : property.expand(disambiguate, rulingTypes)
                 .insertOperator(operator)
                 .insertValue(value);
     }
 
     public Node expand(Disambiguate disambiguate) {
-        return expand(disambiguate, OutsetType.RESOURCE);
+        return expand(disambiguate, List.of(), Function.identity());
     }
 
     @Override
@@ -63,6 +59,11 @@ public record PropertyValue(Property property, Operator operator, Value value) i
         return operator.format(p, v);
     }
 
+    @Override
+    public boolean isTypeNode() {
+        return property.isRdfType() && operator.equals(Operator.EQUALS);
+    }
+
     public PropertyValue toOrEquals() {
         return switch (operator) {
             case GREATER_THAN ->
@@ -72,18 +73,16 @@ public record PropertyValue(Property property, Operator operator, Value value) i
         };
     }
 
-    private static Node buildTypeNode(Value value, Disambiguate disambiguate) {
-        Set<String> altTypes = "Work".equals(value.string())
-                ? disambiguate.workTypes
-                : ("Instance".equals(value.string()) ? disambiguate.instanceTypes : Collections.emptySet());
+    private static Node buildTypeNode(Value type, Disambiguate disambiguate) {
+        Set<String> subtypes = disambiguate.getSubclasses(type.string());
 
-        if (altTypes.isEmpty()) {
-            return new PathValue(JsonLd.TYPE_KEY, null, value);
+        if (subtypes.isEmpty()) {
+            return new PathValue(JsonLd.TYPE_KEY, null, type);
         }
 
-        List<Node> altFields = altTypes.stream()
+        List<Node> altFields = Stream.concat(Stream.of(type.string()), subtypes.stream())
                 .sorted()
-                .map(type -> (Node) new PathValue(JsonLd.TYPE_KEY, null, new VocabTerm(type)))
+                .map(t -> (Node) new PathValue(JsonLd.TYPE_KEY, null, new VocabTerm(t)))
                 .toList();
 
         return new Or(altFields);

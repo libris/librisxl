@@ -2,27 +2,19 @@ package whelk.search2.querytree;
 
 import whelk.JsonLd;
 import whelk.search2.Disambiguate;
-import whelk.search2.OutsetType;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.stream.Stream;
 
-import static whelk.search2.Disambiguate.RDF_TYPE;
+import static whelk.JsonLd.asList;
+import static whelk.search2.Disambiguate.Rdfs.RDF_TYPE;
+
 
 public class Property implements PropertyLike {
-    public enum DomainCategory {
-        ADMIN_METADATA,
-        WORK,
-        INSTANCE,
-        CREATION_SUPER,
-        EMBODIMENT,
-        UNKNOWN,
-        OTHER
-    }
-
     private final String name;
     private Map<String, Object> definition;
     private boolean isVocabTerm;
@@ -56,7 +48,7 @@ public class Property implements PropertyLike {
     }
 
     public boolean isRdfType() {
-        return Disambiguate.RDF_TYPE.equals(name);
+        return RDF_TYPE.equals(name);
     }
 
     public boolean isType() {
@@ -75,7 +67,7 @@ public class Property implements PropertyLike {
         return isVocabTerm;
     }
 
-    public Node expand(Disambiguate disambiguate, OutsetType outsetType) {
+    public Node expand(Disambiguate disambiguate, Collection<String> types) {
         if (definition.isEmpty()) {
             setVars(disambiguate);
         }
@@ -85,31 +77,20 @@ public class Property implements PropertyLike {
                 : new PathValue(List.of(this), null, null);
 
         if (!isType) {
-            var domainCategory = disambiguate.getDomainCategory(name);
-            if (domainCategory == DomainCategory.ADMIN_METADATA) {
+            List<String> domain = disambiguate.getDomain(name);
+            if (!domain.isEmpty()
+                    && domain.stream()
+                    .filter(d -> disambiguate.isSubclassOf(d, "Record"))
+                    .count() == domain.size()
+            ) {
+                // The property only appears on Record
                 expanded = prependMetaKey(expanded);
+            } else {
+                expanded = getAlternativePaths(expanded, disambiguate, types);
             }
-            expanded = setAlternativePaths(expanded, domainCategory, outsetType);
         }
 
         return expanded;
-    }
-
-    public Optional<String> getAlias(OutsetType outsetType) {
-        var alias = switch (outsetType) {
-            case INSTANCE -> switch (name) {
-                case RDF_TYPE -> "instanceType";
-                case "instanceOfType" -> "workType";
-                default -> null;
-            };
-            case WORK, RESOURCE -> switch (name) {
-                case RDF_TYPE -> "workType";
-                case "hasInstanceType" -> "instanceType";
-                default -> null;
-            };
-        };
-
-        return Optional.ofNullable(alias);
     }
 
     @Override
@@ -132,36 +113,35 @@ public class Property implements PropertyLike {
     }
 
     private boolean isShortHand() {
-        // TODO: All short forms should be marked with :category :shortHand?
-        return definition.containsKey("propertyChainAxiom");
+        return ((List<?>) asList(definition.get("category"))).stream()
+                .anyMatch(c -> Map.of(JsonLd.ID_KEY, "https://id.kb.se/vocab/shorthand").equals(c));
     }
 
-    private Node setAlternativePaths(Node n, DomainCategory domainCategory, OutsetType outsetType) {
-        return switch (outsetType) {
-            case WORK -> switch (domainCategory) {
-                // The property p appears only on instance, modify path to @reverse.instanceOf.p...
-                case INSTANCE, EMBODIMENT -> setWorkToInstancePath(n);
-                // The property p may appear on instance, add alternative path @reverse.instanceOf.p...
-                case CREATION_SUPER, UNKNOWN -> new Or(List.of(n, setWorkToInstancePath(n)));
-                default -> n;
-            };
-            case INSTANCE -> switch (domainCategory) {
-                // The property p appears only work, modify path to instanceOf.p...
-                case WORK -> setWorkToInstancePath(n);
-                // The property p may appear on work, add alternative path instanceOf.p...
-                case CREATION_SUPER, UNKNOWN -> new Or(List.of(n, setInstanceToWorkPath(n)));
-                default -> n;
-            };
-            case RESOURCE -> n;
-        };
+    private Node getAlternativePaths(Node n, Disambiguate disambiguate, Collection<String> types) {
+        List<String> applicableIntegralRelations = types.stream()
+                .map(disambiguate::getIntegralRelationsForType)
+                .flatMap(List::stream)
+                .distinct()
+                .toList();
+
+        List<Node> altPaths = applicableIntegralRelations.stream()
+                .filter(ir -> disambiguate.getRange(ir).stream().anyMatch(type -> mayAppearOnType(type, disambiguate)))
+                .map(ir -> n.modifyAllPathValue(pathValue -> pathValue.prepend(ir)))
+                .toList();
+
+        if (!altPaths.isEmpty()) {
+            return types.stream().anyMatch(t -> mayAppearOnType(t, disambiguate))
+                    ? new Or(Stream.concat(Stream.of(n), altPaths.stream()).toList())
+                    : (altPaths.size() == 1 ? altPaths.getFirst() : new Or(altPaths));
+        }
+
+        return n;
     }
 
-    private static Node setWorkToInstancePath(Node n) {
-        return n.modifyAllPathValue(pathValue -> pathValue.prepend(List.of(JsonLd.REVERSE_KEY, JsonLd.WORK_KEY)));
-    }
-
-    private static Node setInstanceToWorkPath(Node n) {
-        return n.modifyAllPathValue(pathValue -> pathValue.prepend(JsonLd.WORK_KEY));
+    private boolean mayAppearOnType(String type, Disambiguate disambiguate) {
+        List<String> domain = disambiguate.getDomain(name);
+        return domain.isEmpty()
+                || domain.stream().anyMatch(d -> disambiguate.isSubclassOf(d, type) || disambiguate.isSubclassOf(type, d));
     }
 
     private void setVars(Disambiguate disambiguate) {

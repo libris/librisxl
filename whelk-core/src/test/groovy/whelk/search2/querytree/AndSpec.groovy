@@ -1,7 +1,6 @@
 package whelk.search2.querytree
 
 import spock.lang.Specification
-
 import static DummyNodes.and
 import static DummyNodes.or
 
@@ -13,6 +12,8 @@ import static DummyNodes.pathV5
 import static DummyNodes.orXY
 import static DummyNodes.andXY
 import static DummyNodes.andXYZ
+import static DummyNodes.type1
+import static DummyNodes.type2
 
 class AndSpec extends Specification {
     def "contains"() {
@@ -73,5 +74,18 @@ class AndSpec extends Specification {
         andXYZ                              | and([pathV2, pathV3]) | pathV1                | pathV1
         and([orXY, pathV3])                 | orXY                  | andXY                 | and([pathV3, pathV1, pathV2])
         and([orXY, pathV4, pathV5, pathV3]) | pathV4                | and([pathV1, pathV3]) | and([orXY, pathV5, pathV3, pathV1])
+    }
+
+    def "collect ruling types"() {
+        expect:
+        and.collectRulingTypes() == result
+
+        where:
+        and                                             | result
+        and([type1, pathV1])                            | ["T1"]
+        and([type1, type2, pathV1])                     | ["T1", "T2"]
+        and([pathV1, pathV2])                           | []
+        and([or([type1, type2]), pathV1])               | ["T1", "T2"]
+        and([or([type1, pathV1]), or([type2, pathV2])]) | []
     }
 }
