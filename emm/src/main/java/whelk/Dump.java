@@ -87,6 +87,14 @@ public class Dump {
         }
 
         String profile = req.getParameter("profile"); // May be null, meaning default (kbv)
+        Document profileDoc = null;
+        if (profile != null) {
+            profileDoc = whelk.getStorage().getDocumentByIri(profile);
+            if (profileDoc == null) {
+                logger.info("Bad profile requested for EMM dump: {}", profile);
+                profile = null;
+            }
+        }
 
         String tmpDir = System.getProperty("java.io.tmpdir");
         Path dumpsPath = Paths.get(tmpDir, "dumps");
@@ -99,10 +107,10 @@ public class Dump {
         }
 
         if (isDownload) {
-            sendDumpDownloadResponse(whelk, targetVocabMapper, profile, dumpFilePath, res);
+            sendDumpDownloadResponse(whelk, targetVocabMapper, profile, profileDoc, dumpFilePath, res);
         } else {
             long offsetNumeric = Long.parseLong(offset);
-            sendDumpPageResponse(whelk, targetVocabMapper, profile, apiBaseUrl, selection, dumpFilePath, offsetNumeric, res);
+            sendDumpPageResponse(whelk, targetVocabMapper, profile, profileDoc, apiBaseUrl, selection, dumpFilePath, offsetNumeric, res);
         }
     }
 
@@ -151,7 +159,7 @@ public class Dump {
         HttpTools.sendResponse(res, responseObject, JSON_CONTENT_TYPE);
     }
 
-    private static void sendDumpPageResponse(Whelk whelk, TargetVocabMapper targetVocabMapper, String profile, String apiBaseUrl, String dump, Path dumpFilePath, long offsetLines, HttpServletResponse res) throws IOException {
+    private static void sendDumpPageResponse(Whelk whelk, TargetVocabMapper targetVocabMapper, String profile, Document profileDoc, String apiBaseUrl, String dump, Path dumpFilePath, long offsetLines, HttpServletResponse res) throws IOException {
         ArrayList<String> recordIdsOnPage = new ArrayList<>(EmmChangeSet.TARGET_HITS_PER_PAGE);
         Long totalEntityCount = null;
 
@@ -214,10 +222,10 @@ public class Dump {
 
         BasicFileAttributes attributes = Files.readAttributes(dumpFilePath, BasicFileAttributes.class);
         Instant dumpCreationTime = attributes.creationTime().toInstant();
-        sendFormattedResponse(whelk, targetVocabMapper, profile, apiBaseUrl, dump, recordIdsOnPage, res, offsetLines, totalEntityCount, dumpCreationTime);
+        sendFormattedResponse(whelk, targetVocabMapper, profile, profileDoc, apiBaseUrl, dump, recordIdsOnPage, res, offsetLines, totalEntityCount, dumpCreationTime);
     }
 
-    private static void sendFormattedResponse(Whelk whelk, TargetVocabMapper targetVocabMapper, String profile, String apiBaseUrl, String dump, ArrayList<String> recordIdsOnPage, HttpServletResponse res, long offset, Long totalEntityCount, Instant dumpCreationTime) throws IOException{
+    private static void sendFormattedResponse(Whelk whelk, TargetVocabMapper targetVocabMapper, String profile, Document profileDoc, String apiBaseUrl, String dump, ArrayList<String> recordIdsOnPage, HttpServletResponse res, long offset, Long totalEntityCount, Instant dumpCreationTime) throws IOException{
         var responseObject = new LinkedHashMap<>();
 
         responseObject.put(JsonLd.CONTEXT_KEY, "https://www.w3.org/ns/activitystreams");
@@ -244,7 +252,12 @@ public class Dump {
         var items = new ArrayList<>(EmmChangeSet.TARGET_HITS_PER_PAGE);
         responseObject.put("items", items);
 
-        var contextDoc = contextDoc(whelk);
+        Document contextDoc = null;
+        if (profileDoc != null)
+            contextDoc = profileDoc;
+        else {
+            contextDoc = contextDoc(whelk);
+        }
         if (offset == 0) {
             items.add(wrapContextDoc(contextDoc));
         }
@@ -274,11 +287,11 @@ public class Dump {
                 itemOfPath.add("@graph"); itemOfPath.add(1); itemOfPath.add("itemOf"); // unggh..
                 doc._set(itemOfPath, instance.getThing(), doc.data);
 
-                items.add(formatDoc(doc, contextDoc, whelk, targetVocabMapper, profile));
+                items.add(formatDoc(doc, contextDoc, targetVocabMapper, profile, profileDoc));
             }
             // For normal categories
             else {
-                items.add(formatDoc(doc, contextDoc, whelk, targetVocabMapper, profile));
+                items.add(formatDoc(doc, contextDoc, targetVocabMapper, profile, profileDoc));
             }
 
         }
@@ -286,7 +299,7 @@ public class Dump {
         HttpTools.sendResponse(res, responseObject, JSON_CONTENT_TYPE);
     }
 
-    private static void sendDumpDownloadResponse(Whelk whelk, TargetVocabMapper targetVocabMapper, String profile, Path dumpFilePath, HttpServletResponse res) {
+    private static void sendDumpDownloadResponse(Whelk whelk, TargetVocabMapper targetVocabMapper, String profile, Document profileDoc, Path dumpFilePath, HttpServletResponse res) {
         String filename = Unicode.stripSuffix(dumpFilePath.getFileName().toString(), ".dump") + ND_JSON_LD_GZ_EXT;
         res.setHeader("Content-Disposition", "attachment; filename=" + filename);
         res.setHeader("Content-Type", "application/octet-stream");
@@ -294,8 +307,13 @@ public class Dump {
         int batchSize = EmmChangeSet.TARGET_HITS_PER_PAGE;
         try (GZIPOutputStream os = new GZIPOutputStream(new BufferedOutputStream(res.getOutputStream()), GZIP_BUF_SIZE)) {
             res.flushBuffer();
-
-            var contextDoc = contextDoc(whelk);
+            
+            Document contextDoc = null;
+            if (profileDoc != null)
+                contextDoc = profileDoc;
+            else {
+                contextDoc = contextDoc(whelk);
+            }
             writeJsonLdLine(wrapContextDoc(contextDoc), os);
 
             // Has the dump not begun being written yet ?
@@ -327,11 +345,11 @@ public class Dump {
                     batch.add(line.trim());
 
                     if (batch.size() >= batchSize) {
-                        writeJsonLdLines(whelk, targetVocabMapper, profile, batch, contextDoc, os);
+                        writeJsonLdLines(whelk, targetVocabMapper, profile, profileDoc, batch, contextDoc, os);
                         batch = new ArrayList<>(batchSize);
                     }
                 }
-                writeJsonLdLines(whelk, targetVocabMapper, profile, batch, contextDoc, os);
+                writeJsonLdLines(whelk, targetVocabMapper, profile, profileDoc, batch, contextDoc, os);
                 res.flushBuffer();
             }
         } catch (Exception e) {
@@ -339,14 +357,14 @@ public class Dump {
         }
     }
 
-    private static void writeJsonLdLines(Whelk whelk, TargetVocabMapper targetVocabMapper, String profile, Collection<String> ids, Document contextDoc, OutputStream os) throws IOException {
+    private static void writeJsonLdLines(Whelk whelk, TargetVocabMapper targetVocabMapper, String profile, Document profileDoc, Collection<String> ids, Document contextDoc, OutputStream os) throws IOException {
         Map<String, Document> idsAndRecords = whelk.bulkLoad(ids);
         for (Document doc : idsAndRecords.values()) {
             if (doc.getDeleted()) {
                 continue;
             }
 
-            writeJsonLdLine(formatDoc(doc, contextDoc, whelk, targetVocabMapper, profile), os);
+            writeJsonLdLine(formatDoc(doc, contextDoc, targetVocabMapper, profile, profileDoc), os);
         }
         os.flush();
     }
@@ -359,20 +377,14 @@ public class Dump {
         os.write("\n".getBytes(StandardCharsets.UTF_8));
     }
 
-    private static Object formatDoc(Document doc, Document contextDoc, Whelk whelk, TargetVocabMapper targetVocabMapper, String profile) {
+    private static Object formatDoc(Document doc, Document contextDoc, TargetVocabMapper targetVocabMapper, String profile, Document profileDoc) {
         var context = new ArrayList<>();
         context.add(null);
         context.add(contextDoc.getRecordIdentifiers().getFirst());
 
         Document formattedDoc = doc; // Will be replaced if there's a profile
-        if (profile != null) {
-            Document profileDoc = whelk.getStorage().getDocumentByIri(profile);
-            if (profileDoc != null) {
-                formattedDoc = new Document((Map) targetVocabMapper.applyTargetVocabularyMap(profile, profileDoc.data, doc.data));
-            }
-            else {
-                logger.info("Bad profile requested for EMM dump: {}", profile);
-            }
+        if (profile != null && profileDoc != null) {
+            formattedDoc = new Document((Map) targetVocabMapper.applyTargetVocabularyMap(profile, profileDoc.data, doc.data));
         }
 
         Map data = Map.of(
