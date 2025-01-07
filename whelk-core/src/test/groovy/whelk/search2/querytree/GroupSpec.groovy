@@ -37,27 +37,27 @@ class GroupSpec extends Specification {
         ((Group) group).reduceByCondition { a, b -> (a == b) } == result
 
         where:
-        group                                                      | result
-        andXY                                                      | andXY
-        new And([pathV1, pathV1], false)                           | pathV1
-        and([pathV1, or([pathV1, pathV2])])                        | pathV1
-        or([pathV1, and([pathV1, pathV2])])                        | pathV1
-        and([pathV1, or([pathV2, pathV3])])                        | and([pathV1, or([pathV2, pathV3])])
-        or([pathV1, and([pathV2, pathV3])])                        | or([pathV1, and([pathV2, pathV3])])
-        and([pathV1, or([pathV1, pathV3, and([pathV3, pathV4])])]) | pathV1
-        or([pathV1, and([pathV1, pathV3, or([pathV3, pathV4])])])  | pathV1
-        and([pathV1, or([pathV2, pathV3, and([pathV3, pathV4])])]) | and([pathV1, or([pathV2, pathV3])])
-        or([pathV1, and([pathV2, pathV3, or([pathV3, pathV4])])])  | or([pathV1, and([pathV2, pathV3])])
-        and([pathV1, or([pathV2, pathV3, and([pathV1, pathV4])])]) | and([pathV1, or([pathV2, pathV3, and([pathV1, pathV4])])])
-        or([pathV1, and([pathV2, pathV3, or([pathV1, pathV4])])])  | or([pathV1, and([pathV2, pathV3, or([pathV1, pathV4])])])
-        and([pathV2, pathV3, or([pathV3, pathV4])])                | and([pathV2, pathV3])
-        or([pathV2, pathV3, and([pathV3, pathV4])])                | or([pathV2, pathV3])
-        and([or([pathV1, pathV2]), or([pathV3, pathV4])])          | and([or([pathV1, pathV2]), or([pathV3, pathV4])])
-        or([and([pathV1, pathV2]), and([pathV3, pathV4])])         | or([and([pathV1, pathV2]), and([pathV3, pathV4])])
-        and([or([pathV1, pathV2]), or([pathV3, pathV4]), pathV1])  | and([pathV1, or([pathV3, pathV4])])
-        or([and([pathV1, pathV2]), and([pathV3, pathV4]), pathV1]) | or([pathV1, and([pathV3, pathV4])])
-        and([or([pathV1, pathV2]), or([pathV2, pathV3])])          | or([pathV1, pathV2])
-        or([and([pathV1, pathV2]), and([pathV2, pathV3])])         | and([pathV1, pathV2])
-        or([and([pathV1, pathV2]), and([pathV1, pathV2])])         | and([pathV1, pathV2])
+        group                                                         | result
+        andXY                                                         | andXY
+        new And([pathV1, pathV1], false)                              | pathV1
+        and([pathV1, or([pathV1, pathV2])])                           | pathV1
+        or([pathV1, and([pathV1, pathV2])])                           | pathV1
+        and([pathV1, or([pathV2, pathV3])])                           | and([pathV1, or([pathV2, pathV3])])
+        or([pathV1, and([pathV2, pathV3])])                           | or([pathV1, and([pathV2, pathV3])])
+        and([pathV1, or([pathV1, pathV3, and([pathV3, pathV4])])])    | pathV1
+        or([pathV1, and([pathV1, pathV3, or([pathV3, pathV4])])])     | pathV1
+        and([pathV1, or([pathV2, pathV3, and([pathV3, pathV4])])])    | and([pathV1, or([pathV2, pathV3])])
+        or([pathV1, and([pathV2, pathV3, or([pathV3, pathV4])])])     | or([pathV1, and([pathV2, pathV3])])
+        and([pathV1, or([pathV2, pathV3, and([pathV1, pathV4])])])    | and([pathV1, or([pathV2, pathV3, and([pathV1, pathV4])])])
+        or([pathV1, and([pathV2, pathV3, or([pathV1, pathV4])])])     | or([pathV1, and([pathV2, pathV3, or([pathV1, pathV4])])])
+        and([pathV2, pathV3, or([pathV3, pathV4])])                   | and([pathV2, pathV3])
+        or([pathV2, pathV3, and([pathV3, pathV4])])                   | or([pathV2, pathV3])
+        and([or([pathV1, pathV2]), or([pathV3, pathV4])])             | and([or([pathV1, pathV2]), or([pathV3, pathV4])])
+        or([and([pathV1, pathV2]), and([pathV3, pathV4])])            | or([and([pathV1, pathV2]), and([pathV3, pathV4])])
+        and([or([pathV1, pathV2]), or([pathV3, pathV4]), pathV1])     | and([pathV1, or([pathV3, pathV4])])
+        or([and([pathV1, pathV2]), and([pathV3, pathV4]), pathV1])    | or([pathV1, and([pathV3, pathV4])])
+        and([or([pathV1, pathV2]), or([pathV2, pathV3])])             | and([or([pathV1, pathV2]), or([pathV2, pathV3])])
+        or([and([pathV1, pathV2]), and([pathV2, pathV3])])            | and([pathV1, pathV2])
+        new Or([and([pathV1, pathV2]), and([pathV1, pathV2])], false) | and([pathV1, pathV2])
     }
 }

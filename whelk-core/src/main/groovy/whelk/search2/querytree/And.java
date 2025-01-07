@@ -62,10 +62,9 @@ public final class And extends Group {
     @Override
     boolean implies(Node a, Node b, BiFunction<Node, Node, Boolean> condition) {
         return switch (a) {
-            case Group g -> switch (b) {
-                case And and -> and.children().stream().allMatch(child -> implies(a, child, condition));
-                case Or or -> or.children().stream().anyMatch(child -> implies(a, child, condition));
-                default -> g.children().stream().anyMatch(child -> condition.apply(child, b));
+            case Group aGroup -> switch (b) {
+                case Group bGroup -> bGroup.children().stream().allMatch(child -> implies(aGroup, child, condition));
+                default -> aGroup.children().stream().anyMatch(child -> condition.apply(child, b));
             };
             default -> switch (b) {
                 case And and -> and.children().stream().allMatch(child -> condition.apply(a, child));

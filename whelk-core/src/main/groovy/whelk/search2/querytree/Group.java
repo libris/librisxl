@@ -107,6 +107,12 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     @Override
+    public String toString() {
+        return doMapToString(n -> n.toString(false))
+                .collect(Collectors.joining(delimiter()));
+    }
+
+    @Override
     public Node reduceTypes(Disambiguate disambiguate) {
         BiFunction<Node, Node, Boolean> hasMoreSpecificTypeThan = (a, b) -> a.isTypeNode()
                 && b.isTypeNode()

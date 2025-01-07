@@ -12,7 +12,12 @@ public final class Or extends Group {
     private final List<Node> children;
 
     public Or(List<Node> children) {
-        this.children = flattenChildren(children);
+        this(children, true);
+    }
+
+    // For test only
+    public Or(List<Node> children, boolean flattenChildren) {
+        this.children = flattenChildren ? flattenChildren(children) : children;
     }
 
     @Override
