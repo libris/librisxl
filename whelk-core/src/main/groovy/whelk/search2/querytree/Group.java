@@ -100,10 +100,7 @@ public sealed abstract class Group implements Node permits And, Or {
 
     @Override
     public String toString(boolean topLevel) {
-        String group = doMapToString(n -> n.toString(false))
-                .collect(Collectors.joining(delimiter()));
-
-        return topLevel ? group : "(" + group + ")";
+        return topLevel ? this.toString() : "(" + this + ")";
     }
 
     @Override
