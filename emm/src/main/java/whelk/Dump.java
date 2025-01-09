@@ -246,7 +246,10 @@ public class Dump {
 
         long nextOffset = offset + EmmChangeSet.TARGET_HITS_PER_PAGE;
         if (totalEntityCount == null || nextOffset < totalEntityCount) {
-            responseObject.put("next", apiBaseUrl+"?selection="+dump+"&offset="+nextOffset);
+            if (profile != null)
+                responseObject.put("next", apiBaseUrl+"?selection="+dump+"&offset="+nextOffset+"&profile="+profile);
+            else
+                responseObject.put("next", apiBaseUrl+"?selection="+dump+"&offset="+nextOffset);
         }
 
         var items = new ArrayList<>(EmmChangeSet.TARGET_HITS_PER_PAGE);
