@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.TYPE_KEY;
+import static whelk.JsonLd.VOCAB_KEY;
 import static whelk.JsonLd.asList;
 import static whelk.search2.QueryUtil.loadThing;
 import static whelk.util.DocumentUtil.getAtPath;
@@ -177,8 +178,9 @@ public class Disambiguate {
         return fromVocab.isEmpty() ? loadThing(iri, whelk) : Optional.of(fromVocab);
     }
 
-    private static boolean isKbvTerm(Map<?, ?> termDefinition) {
-        return "https://id.kb.se/vocab/".equals(get(termDefinition, List.of(Rdfs.IS_DEFINED_BY, ID_KEY), ""));
+    private boolean isSystemVocabTerm(Map<?, ?> termDefinition) {
+        return get(termDefinition, List.of(Rdfs.IS_DEFINED_BY, ID_KEY), "")
+                .equals(jsonLd.context.get(VOCAB_KEY));
     }
 
     private boolean isMarc(String termKey) {
@@ -412,7 +414,7 @@ public class Disambiguate {
         this.ambiguousEnumAliases = new TreeMap<>();
 
         vocab.forEach((termKey, termDefinition) -> {
-            if (isKbvTerm(termDefinition)) {
+            if (isSystemVocabTerm(termDefinition)) {
                 if (isClass(termDefinition)) {
                     addAllMappings(termKey, classAliasMappings, ambiguousClassAliases);
                 } else if (isProperty(termDefinition)) {
