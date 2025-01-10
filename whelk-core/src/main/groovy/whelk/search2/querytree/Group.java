@@ -2,15 +2,18 @@ package whelk.search2.querytree;
 
 import whelk.search2.Disambiguate;
 import whelk.search2.Operator;
-import whelk.search2.OutsetType;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -19,7 +22,7 @@ import java.util.stream.Stream;
 import static whelk.search2.QueryUtil.boolWrap;
 import static whelk.search2.QueryUtil.nestedWrap;
 
-//
+
 public sealed abstract class Group implements Node permits And, Or {
     @Override
     public abstract List<Node> children();
@@ -31,6 +34,10 @@ public sealed abstract class Group implements Node permits And, Or {
     abstract String key();
 
     abstract Map<String, Object> wrap(List<Map<String, Object>> esChildren);
+
+    abstract List<String> collectRulingTypes();
+
+    abstract boolean implies(Node a, Node b, BiFunction<Node, Node, Boolean> condition);
 
     // Abstract class does not allow records as subclasses, however when comparing nodes we want the same behaviour
     // as for records, hence the following.
@@ -45,9 +52,9 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     @Override
-    public Map<String, Object> toEs(List<String> boostedFields) {
+    public Map<String, Object> toEs() {
         List<List<PathValue>> nestedGroups = getNestedGroups();
-        return nestedGroups.isEmpty() ? wrap(childrenToEs(boostedFields)) : toEsNested(nestedGroups, boostedFields);
+        return nestedGroups.isEmpty() ? wrap(childrenToEs()) : toEsNested(nestedGroups);
     }
 
     @Override
@@ -59,8 +66,16 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     @Override
-    public Node expand(Disambiguate disambiguate, OutsetType outsetType) {
-        return expandChildren(disambiguate, outsetType);
+    public Node expand(Disambiguate disambiguate, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
+        Node reduced = reduceTypes(disambiguate);
+        return switch (reduced) {
+            case Group g -> {
+                rulingTypes = Stream.concat(g.collectRulingTypes().stream(), rulingTypes.stream())
+                        .collect(Collectors.toSet());
+                yield g.expandChildren(disambiguate, rulingTypes, getBoostFields);
+            }
+            default -> reduced.expand(disambiguate, rulingTypes, getBoostFields);
+        };
     }
 
     @Override
@@ -85,10 +100,25 @@ public sealed abstract class Group implements Node permits And, Or {
 
     @Override
     public String toString(boolean topLevel) {
-        String group = doMapToString(n -> n.toString(false))
-                .collect(Collectors.joining(delimiter()));
+        return topLevel ? this.toString() : "(" + this + ")";
+    }
 
-        return topLevel ? group : "(" + group + ")";
+    @Override
+    public String toString() {
+        return doMapToString(n -> n.toString(false))
+                .collect(Collectors.joining(delimiter()));
+    }
+
+    @Override
+    public Node reduceTypes(Disambiguate disambiguate) {
+        BiFunction<Node, Node, Boolean> hasMoreSpecificTypeThan = (a, b) -> a.isTypeNode()
+                && b.isTypeNode()
+                && disambiguate.isSubclassOf(((PropertyValue) a).value().string(), ((PropertyValue) b).value().string());
+        return reduceByCondition(hasMoreSpecificTypeThan);
+    }
+
+    Node expandChildren(Disambiguate disambiguate, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
+        return mapFilterAndReinstantiate(c -> c.expand(disambiguate, rulingTypes, getBoostFields), Objects::nonNull);
     }
 
     List<Node> flattenChildren(List<Node> children) {
@@ -120,8 +150,21 @@ public sealed abstract class Group implements Node permits And, Or {
         };
     }
 
+    Node reduceByCondition(BiFunction<Node, Node, Boolean> condition) {
+        List<Node> reduced = new ArrayList<>();
+        children().stream()
+                .map(child -> child instanceof Group g ? g.reduceByCondition(condition) : child)
+                .sorted(Comparator.comparing(Group.class::isInstance))
+                .forEach(child -> {
+                    if (reduced.stream().noneMatch(otherChild -> implies(otherChild, child, condition))) {
+                        reduced.add(child);
+                    }
+                });
+        return reduced.size() == 1 ? reduced.getFirst() : newInstance(reduced);
+    }
+
     // TODO: Review/refine nested logic and proper tests
-    private Map<String, Object> toEsNested(List<List<PathValue>> nestedGroups, List<String> boostedFields) {
+    private Map<String, Object> toEsNested(List<List<PathValue>> nestedGroups) {
         List<Map<String, Object>> esChildren = new ArrayList<>();
         List<Node> nonNested = new ArrayList<>(children());
 
@@ -145,7 +188,7 @@ public sealed abstract class Group implements Node permits And, Or {
         }
 
         for (Node n : nonNested) {
-            esChildren.add(n.toEs(boostedFields));
+            esChildren.add(n.toEs());
         }
 
         return esChildren.size() == 1 ? esChildren.getFirst() : wrap(esChildren);
@@ -175,12 +218,8 @@ public sealed abstract class Group implements Node permits And, Or {
         return n instanceof PathValue && ((PathValue) n).isNested();
     }
 
-    private Node expandChildren(Disambiguate disambiguate, OutsetType outsetType) {
-        return mapFilterAndReinstantiate(c -> c.expand(disambiguate, outsetType), Objects::nonNull);
-    }
-
-    private List<Map<String, Object>> childrenToEs(List<String> boostedFields) {
-        return mapToMap(c -> c.toEs(boostedFields));
+    private List<Map<String, Object>> childrenToEs() {
+        return mapToMap(Node::toEs);
     }
 
     private List<Node> mapToNode(Function<Node, Node> mapper) {
