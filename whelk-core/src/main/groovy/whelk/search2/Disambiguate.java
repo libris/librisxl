@@ -12,6 +12,7 @@ import whelk.search2.querytree.Property;
 import whelk.search2.querytree.VocabTerm;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -71,8 +72,8 @@ public class Disambiguate {
         this.jsonLd = whelk.getJsonld();
         this.vocab = jsonLd.vocabIndex;
         this.integralRelations = jsonLd.getCategoryMembers("integral");
-        this.domainByProperty = new HashMap<>();
-        this.rangeByProperty = new HashMap<>();
+        this.domainByProperty = new ConcurrentHashMap<>();
+        this.rangeByProperty = new ConcurrentHashMap<>();
         setAliasMappings();
         // FIXME: This should probably not be a static variable...
         if (freeTextDefinition.isEmpty()) {
