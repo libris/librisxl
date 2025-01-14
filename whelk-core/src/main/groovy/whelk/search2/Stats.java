@@ -124,7 +124,7 @@ public class Stats {
             var sliceNode = new LinkedHashMap<>();
             var isRange = rangeProps.contains(property);
             var observations = getObservations(buckets, isRange ? queryTree.removeTopLevelPropValueWithRangeIfPropEquals(property) : queryTree, nonQueryParams);
-            if (property.name().equals(Disambiguate.Rdfs.RDF_TYPE)) {
+            if (property.isType()) {
                 observations = new FacetTree(disambiguate).sortObservationsAsTree(observations);
             }
             if (!observations.isEmpty()) {
