@@ -1,7 +1,5 @@
 package whelk.search2;
 
-import whelk.JsonLd;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -13,10 +11,10 @@ import static whelk.util.DocumentUtil.getAtPath;
 
 public class FacetTree {
 
-    private final JsonLd jsonLd;
+    private final Disambiguate disambiguate;
 
-    public FacetTree(JsonLd jsonLd) {
-        this.jsonLd = jsonLd;
+    public FacetTree(Disambiguate disambiguate) {
+        this.disambiguate = disambiguate;
     }
 
     public List<Map<String, Object>> sortObservationsAsTree(List<Map<String, Object>> observations) {
@@ -58,7 +56,7 @@ public class FacetTree {
     private boolean isSubClass(Map<String, Object> obsA, Map<String, Object> obsB) {
         String idA = get(obsA, List.of("object", "@id"), "");
         String idB = get(obsB, List.of("object", "@id"), "");
-        return !idA.equals(idB) && jsonLd.isSubClassOf(idA, idB);
+        return !idA.equals(idB) && disambiguate.isSubclassOf(idA, idB);
     }
 
     @SuppressWarnings("unchecked")

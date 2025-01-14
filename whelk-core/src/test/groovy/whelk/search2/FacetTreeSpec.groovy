@@ -1,19 +1,18 @@
 package whelk.search2
 
 import spock.lang.Specification
-import whelk.JsonLd
 
 class FacetTreeSpec extends Specification {
 
-    JsonLd jsonLd
+    Disambiguate disambiguate
 
     void setup() {
-        jsonLd = GroovyMock(JsonLd.class)
+        disambiguate = GroovyMock(Disambiguate.class)
     }
 
     def "Single observation should return list with one observation"() {
         expect:
-        def tree = new FacetTree(jsonLd)
+        def tree = new FacetTree(disambiguate)
         tree.sortObservationsAsTree(observations) == sorted
 
         where:
@@ -23,15 +22,15 @@ class FacetTreeSpec extends Specification {
 
     def "Sort one parent and one child"() {
         given:
-        jsonLd.isSubClassOf("child", "parent") >> {
+        disambiguate.isSubclassOf("child", "parent") >> {
             true
         }
-        jsonLd.isSubClassOf("parent", "child") >> {
+        disambiguate.isSubclassOf("parent", "child") >> {
             false
         }
 
         expect:
-        def tree = new FacetTree(jsonLd)
+        def tree = new FacetTree(disambiguate)
         tree.sortObservationsAsTree(observations) == sorted
 
         where:
@@ -42,21 +41,21 @@ class FacetTreeSpec extends Specification {
 
     def "Sort one parent with two children"() {
         given:
-        jsonLd.isSubClassOf("child1", "parent") >> {
+        disambiguate.isSubclassOf("child1", "parent") >> {
             true
         }
-        jsonLd.isSubClassOf("child2", "parent") >> {
+        disambiguate.isSubclassOf("child2", "parent") >> {
             true
         }
-        jsonLd.isSubClassOf("parent", "child1") >> {
+        disambiguate.isSubclassOf("parent", "child1") >> {
             false
         }
-        jsonLd.isSubClassOf("parent", "child2") >> {
+        disambiguate.isSubclassOf("parent", "child2") >> {
             false
         }
 
         expect:
-        def tree = new FacetTree(jsonLd)
+        def tree = new FacetTree(disambiguate)
         tree.sortObservationsAsTree(observations) == sorted
 
         where:
@@ -70,24 +69,24 @@ class FacetTreeSpec extends Specification {
 
     def "Sort one parent with one child that has one child"() {
         given:
-        jsonLd.isSubClassOf("child1", "parent") >> {
+        disambiguate.isSubclassOf("child1", "parent") >> {
             true
         }
-        jsonLd.isSubClassOf("child2", "parent") >> {
+        disambiguate.isSubclassOf("child2", "parent") >> {
             false
         }
-        jsonLd.isSubClassOf("child2", "child1") >> {
+        disambiguate.isSubclassOf("child2", "child1") >> {
             true
         }
-        jsonLd.isSubClassOf("parent", "child1") >> {
+        disambiguate.isSubclassOf("parent", "child1") >> {
             false
         }
-        jsonLd.isSubClassOf("parent", "child2") >> {
+        disambiguate.isSubclassOf("parent", "child2") >> {
             false
         }
 
         expect:
-        def tree = new FacetTree(jsonLd)
+        def tree = new FacetTree(disambiguate)
         tree.sortObservationsAsTree(observations) == sorted
 
         where:
@@ -101,27 +100,27 @@ class FacetTreeSpec extends Specification {
 
     def "One parent, two children"() {
         given:
-        jsonLd.isSubClassOf("child1", "root") >> {
+        disambiguate.isSubclassOf("child1", "root") >> {
             true
         }
-        jsonLd.isSubClassOf("child2", "root") >> {
+        disambiguate.isSubclassOf("child2", "root") >> {
             true
         }
-        jsonLd.isSubClassOf("root", "child1") >> {
+        disambiguate.isSubclassOf("root", "child1") >> {
             false
         }
-        jsonLd.isSubClassOf("root", "child2") >> {
+        disambiguate.isSubclassOf("root", "child2") >> {
             false
         }
-        jsonLd.isSubClassOf("child1", "child2") >> {
+        disambiguate.isSubclassOf("child1", "child2") >> {
             false
         }
-        jsonLd.isSubClassOf("child2", "child1") >> {
+        disambiguate.isSubclassOf("child2", "child1") >> {
             false
         }
 
         expect:
-        def tree = new FacetTree(jsonLd)
+        def tree = new FacetTree(disambiguate)
         tree.sortObservationsAsTree(observations) == sorted
 
         where:
@@ -134,10 +133,10 @@ class FacetTreeSpec extends Specification {
 
     def "Three root nodes"() {
         given:
-        jsonLd.isSubClassOf(_, _) >> false
+        disambiguate.isSubclassOf(_, _) >> false
 
         expect:
-        def tree = new FacetTree(jsonLd)
+        def tree = new FacetTree(disambiguate)
         tree.sortObservationsAsTree(observations) == sorted
 
         where:
@@ -151,10 +150,10 @@ class FacetTreeSpec extends Specification {
 
     def "Children should not be considered parents of themselves"() {
         given:
-        jsonLd.isSubClassOf(_, _) >> true
+        disambiguate.isSubclassOf(_, _) >> true
 
         expect:
-        def tree = new FacetTree(jsonLd)
+        def tree = new FacetTree(disambiguate)
         tree.sortObservationsAsTree(observations) == sorted
 
         where:
