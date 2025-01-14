@@ -53,7 +53,7 @@ public class Lex {
 
         int symbolOffset = offset.value;
 
-        // Special symbols that need not be whitespace separated:
+        // Special multi-char symbols that need not be whitespace separated:
         if (query.length() >= 2) {
             if (query.substring(0, 2).equals(">=")) {
                 query.deleteCharAt(0);
@@ -66,43 +66,6 @@ public class Lex {
                 query.deleteCharAt(0);
                 offset.increase(2);
                 return new Symbol(TokenName.OPERATOR, "<=", symbolOffset);
-            }
-        }
-        if (!query.isEmpty()) {
-            if (query.substring(0, 1).equals("=")) {
-                query.deleteCharAt(0);
-                offset.increase(1);
-                return new Symbol(TokenName.OPERATOR, "=", symbolOffset);
-            }
-            if (query.substring(0, 1).equals("!")) {
-                query.deleteCharAt(0);
-                offset.increase(1);
-                return new Symbol(TokenName.OPERATOR, "!", symbolOffset);
-            }
-            if (query.substring(0, 1).equals("~")) {
-                query.deleteCharAt(0);
-                offset.increase(1);
-                return new Symbol(TokenName.OPERATOR, "~", symbolOffset);
-            }
-            if (query.substring(0, 1).equals("<")) {
-                query.deleteCharAt(0);
-                offset.increase(1);
-                return new Symbol(TokenName.OPERATOR, "<", symbolOffset);
-            }
-            if (query.substring(0, 1).equals(">")) {
-                query.deleteCharAt(0);
-                offset.increase(1);
-                return new Symbol(TokenName.OPERATOR, ">", symbolOffset);
-            }
-            if (query.substring(0, 1).equals("(")) {
-                query.deleteCharAt(0);
-                offset.increase(1);
-                return new Symbol(TokenName.OPERATOR, "(", symbolOffset);
-            }
-            if (query.substring(0, 1).equals(")")) {
-                query.deleteCharAt(0);
-                offset.increase(1);
-                return new Symbol(TokenName.OPERATOR, ")", symbolOffset);
             }
         }
 
