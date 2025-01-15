@@ -54,6 +54,18 @@ class LexSpec extends Specification {
         ]
     }
 
+    def "escaped white space separation2"() {
+        given:
+        def input = "AAA\\  BBB"
+        def lexedSymbols = Lex.lexQuery(input)
+
+        expect:
+        lexedSymbols as List == [
+                new Lex.Symbol(Lex.TokenName.STRING, "AAA ", 0),
+                new Lex.Symbol(Lex.TokenName.STRING, "BBB", 6),
+        ]
+    }
+
     def "error on escaped eol"() {
         given:
         def input = "AAA\\"
