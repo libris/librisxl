@@ -1,6 +1,7 @@
 package whelk.search2.parse
 
 import spock.lang.Specification
+import whelk.exception.InvalidQueryException
 import whelk.search2.parse.Lex
 
 class LexSpec extends Specification {
@@ -29,6 +30,50 @@ class LexSpec extends Specification {
                 new Lex.Symbol(Lex.TokenName.OPERATOR, "=", 4),
                 new Lex.Symbol(Lex.TokenName.STRING, "BBB", 6),
         ]
+    }
+
+    def "outer escape"() {
+        given:
+        def input = "AAA\\=BBB"
+        def lexedSymbols = Lex.lexQuery(input)
+
+        expect:
+        lexedSymbols as List == [
+                new Lex.Symbol(Lex.TokenName.STRING, "AAA=BBB", 0)
+        ]
+    }
+
+    def "escaped white space separation"() {
+        given:
+        def input = "AAA\\ BBB"
+        def lexedSymbols = Lex.lexQuery(input)
+
+        expect:
+        lexedSymbols as List == [
+                new Lex.Symbol(Lex.TokenName.STRING, "AAA BBB", 0)
+        ]
+    }
+
+    def "error on escaped eol"() {
+        given:
+        def input = "AAA\\"
+
+        when:
+        Lex.lexQuery(input)
+
+        then:
+        thrown InvalidQueryException
+    }
+
+    def "error on escaped eol2"() {
+        given:
+        def input = "AAA\"\\"
+
+        when:
+        Lex.lexQuery(input)
+
+        then:
+        thrown InvalidQueryException
     }
 
     def "normal lex"() {

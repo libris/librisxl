@@ -111,14 +111,24 @@ public class Lex {
                         return new Symbol(TokenName.OPERATOR, symbolValue.toString(), symbolOffset);
                     }
                     break;
+                } else if (c == '\\') { // char escaping ...
+                    query.deleteCharAt(0);
+                    offset.increase(1);
+                    if (query.isEmpty())
+                        throw new InvalidQueryException("Lexer error: Escaped EOF at character index: " + symbolOffset);
+                    char escapedC = query.charAt(0);
+                    symbolValue.append(escapedC);
+                    query.deleteCharAt(0);
+                    offset.increase(1);
+                } else {
+                    query.deleteCharAt(0);
+                    offset.increase(1);
+                    if (Character.isWhitespace(c))
+                        break;
+                    symbolValue.append(c);
+                    if (query.isEmpty())
+                        break;
                 }
-                query.deleteCharAt(0);
-                offset.increase(1);
-                if (Character.isWhitespace(c))
-                    break;
-                symbolValue.append(c);
-                if (query.isEmpty())
-                    break;
             }
             TokenName name;
 
