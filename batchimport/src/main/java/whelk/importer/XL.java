@@ -186,6 +186,7 @@ class XL
                         for (Tuple tuple : typedIDs)
                             if (tuple.get(0).equals("SystemNumber"))
                                 systemNumbers.add( (String) tuple.get(1) );
+                        List<Map<String, String>> images = existing.getImages();
 
                         History existingHistory = new History(m_whelk.getStorage().loadDocumentHistory(existing.getShortId()), m_whelk.getJsonld());
                         m_merge.merge(existing, incoming, m_parameters.getChangedBy(), existingHistory);
@@ -201,6 +202,8 @@ class XL
                             existing.addTypedRecordIdentifier("SystemNumber", systemNumber);
                         if (controlNumber != null)
                             existing.setControlNumber(controlNumber);
+                        for (Map<String, String> imageEntity : images)
+                            existing.addImage( imageEntity.get("@id") );
 
                         String modifiedChecksum = existing.getChecksum(m_whelk.getJsonld());
                         // Avoid writing an identical version
@@ -314,6 +317,7 @@ class XL
                         for (Tuple tuple : typedIDs)
                             if (tuple.get(0).equals("SystemNumber"))
                                 systemNumbers.add( (String) tuple.get(1) );
+                        List<Map<String, String>> images = doc.getImages();
 
                         doc.data = rdfDoc.data;
 
@@ -328,6 +332,8 @@ class XL
                             doc.addTypedRecordIdentifier("SystemNumber", systemNumber);
                         if (controlNumber != null)
                             doc.setControlNumber(controlNumber);
+                        for (Map<String, String> imageEntity : images)
+                            doc.addImage( imageEntity.get("@id") );
                     });
                 }
                 catch (TooHighEncodingLevelException e)
