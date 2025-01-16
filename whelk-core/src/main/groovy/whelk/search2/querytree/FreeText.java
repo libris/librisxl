@@ -4,27 +4,27 @@ import whelk.JsonLd;
 import whelk.search.ESQuery;
 import whelk.search2.Disambiguate;
 import whelk.search2.Operator;
-import whelk.search2.QueryUtil;
 import whelk.util.Unicode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 
 import static whelk.search2.QueryUtil.mustNotWrap;
 import static whelk.search2.QueryUtil.shouldWrap;
 import static whelk.search2.Operator.EQUALS;
 
-public record FreeText(Operator operator, String value) implements Node {
+public record FreeText(Operator operator, String value, Collection<String> boostFields) implements Node {
+    public FreeText(Operator operator, String value) { this(operator, value, List.of()); }
+
     @Override
     // TODO: Review/refine this. So far it's basically just copy-pasted from old search code (EsQuery)
-    public Map<String, Object> toEs(List<String> boostedFields) {
+    public Map<String, Object> toEs() {
         String s = value;
         s = Unicode.normalizeForSearch(s);
         boolean isSimple = ESQuery.isSimple(s);
@@ -40,7 +40,7 @@ public record FreeText(Operator operator, String value) implements Node {
                 )
         );
 
-        if (boostedFields.isEmpty()) {
+        if (boostFields.isEmpty()) {
             if (operator() == Operator.EQUALS) {
                 return simpleQuery;
             }
@@ -49,10 +49,10 @@ public record FreeText(Operator operator, String value) implements Node {
             }
         }
 
-        List<String> softFields = boostedFields.stream()
+        List<String> softFields = boostFields.stream()
                 .filter(f -> f.contains(JsonLd.SEARCH_KEY))
                 .toList();
-        List<String> exactFields = boostedFields.stream()
+        List<String> exactFields = boostFields.stream()
                 .map(f -> f.replace(JsonLd.SEARCH_KEY, JsonLd.SEARCH_KEY + ".exact"))
                 .toList();
 
@@ -90,6 +90,11 @@ public record FreeText(Operator operator, String value) implements Node {
             return mustNotWrap(shouldWrap(shouldClause));
         }
         throw new RuntimeException("Invalid operator"); // Not reachable
+    }
+
+    @Override
+    public Node expand(Disambiguate disambiguate, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
+        return new FreeText(operator, value, getBoostFields.apply(rulingTypes));
     }
 
     @Override

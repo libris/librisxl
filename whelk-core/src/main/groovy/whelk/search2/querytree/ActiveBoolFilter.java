@@ -1,8 +1,8 @@
 package whelk.search2.querytree;
 
 import whelk.search2.Disambiguate;
-import whelk.search2.OutsetType;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,7 +10,7 @@ import java.util.function.Function;
 
 public record ActiveBoolFilter(String alias, Node filter, Map<?, ?> prefLabelByLang) implements Node {
     @Override
-    public Map<String, Object> toEs(List<String> boostedFields) {
+    public Map<String, Object> toEs() {
         throw new UnsupportedOperationException("Expand filter before converting to ES");
     }
 
@@ -24,8 +24,8 @@ public record ActiveBoolFilter(String alias, Node filter, Map<?, ?> prefLabelByL
     }
 
     @Override
-    public Node expand(Disambiguate disambiguate, OutsetType outsetType) {
-        return filter.expand(disambiguate, outsetType);
+    public Node expand(Disambiguate disambiguate, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
+        return filter.expand(disambiguate, rulingTypes, getBoostFields);
     }
 
     @Override

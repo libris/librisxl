@@ -10,6 +10,7 @@ import whelk.search2.querytree.Property;
 import whelk.search2.querytree.PropertyValue;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -34,7 +35,7 @@ public class Aggs {
 
     public static Map<String, Object> buildAggQuery(AppParams.StatsRepr statsRepr,
                                                     Disambiguate disambiguate,
-                                                    OutsetType outsetType,
+                                                    Collection<String> types,
                                                     Function<String, Optional<String>> getNestedPath) {
         if (statsRepr.isEmpty()) {
             return Map.of(JsonLd.TYPE_KEY,
@@ -46,7 +47,7 @@ public class Aggs {
 
         for (AppParams.Slice slice : statsRepr.sliceList()) {
             Property property = slice.property();
-            Node expanded = property.expand(disambiguate, outsetType);
+            Node expanded = property.expand(disambiguate, types);
             List<Node> altPaths = expanded instanceof Or ? expanded.children() : List.of(expanded);
 
             for (Node n : altPaths) {

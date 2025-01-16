@@ -9,7 +9,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static whelk.search2.Disambiguate.RDF_TYPE;
+import static whelk.search2.Disambiguate.Rdfs.RDF_TYPE;
 
 public record Path(List<Object> path, Optional<String> nestedStem) {
     // TODO: Get substitutions from context instead?

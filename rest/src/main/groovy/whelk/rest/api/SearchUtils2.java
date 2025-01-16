@@ -60,7 +60,6 @@ public class SearchUtils2 {
         }
 
         qTree.addFilters(queryParams, appParams);
-        qTree.setOutsetType(disambiguate);
 
         Map<String, Object> esQueryDsl = getEsQueryDsl(qTree, queryParams, appParams.statsRepr);
 
@@ -96,7 +95,7 @@ public class SearchUtils2 {
             }
         }
 
-        queryDsl.put("aggs", Aggs.buildAggQuery(statsRepr, disambiguate, queryTree.getOutsetType(), queryUtil::getNestedPath));
+        queryDsl.put("aggs", Aggs.buildAggQuery(statsRepr, disambiguate, queryTree.collectRulingTypes(disambiguate), queryUtil::getNestedPath));
         queryDsl.put("track_total_hits", true);
 
         if (queryParams.debug.contains(QueryParams.Debug.ES_SCORE)) {
@@ -109,10 +108,6 @@ public class SearchUtils2 {
     }
 
     private Map<String, Object> getEsQuery(QueryTree queryTree, List<String> boostFields) {
-        if (!boostFields.isEmpty()) {
-            return queryTree.toEs(queryUtil, disambiguate, boostFields);
-        }
-        boostFields = queryUtil.esBoost.getBoostFields(queryTree.collectTypes());
         return addConstantBoosts(queryTree.toEs(queryUtil, disambiguate, boostFields));
     }
 

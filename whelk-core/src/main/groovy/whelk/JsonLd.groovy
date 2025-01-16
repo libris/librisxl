@@ -82,7 +82,7 @@ class JsonLd {
 
     private static Logger log = LogManager.getLogger(JsonLd.class)
 
-    public Map<String, Map> context
+    public Map<String, Object> context
     public Map displayData
     public Map<String, Map<String, Object>> vocabIndex
 

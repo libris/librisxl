@@ -33,6 +33,8 @@ import static DummyNodes.pathV1
 import static DummyNodes.pathV2
 import static DummyNodes.pathV3
 
+import static whelk.search2.Disambiguate.Rdfs.RDF_TYPE
+
 
 class QueryTreeSpec extends Specification {
     def "to search mapping"() {
@@ -164,32 +166,6 @@ class QueryTreeSpec extends Specification {
                 or([propV(prop1, lt, v1), propV(prop1, gt, v1)]),
                 propV(prop2, gt, v1)
         ])
-    }
-
-    def "collect given types"() {
-        given:
-        def rdfType = new Property(Disambiguate.RDF_TYPE)
-        QueryTree qt = new QueryTree(and([
-                propV(rdfType, eq, v1),
-                propV(rdfType, neq, v2),
-                or([pathV1, propV(rdfType, eq, v3)]),
-        ]))
-
-        expect:
-        qt.collectTypes() == [v1.string(), v3.string()] as Set
-    }
-
-    def "collect given types"() {
-        given:
-        def rdfType = new Property(Disambiguate.RDF_TYPE)
-        QueryTree qt = new QueryTree(and([
-                propV(rdfType, eq, new VocabTerm('type1')),
-                propV(rdfType, neq, new VocabTerm('type2')),
-                or([pathV1, propV(rdfType, eq, new VocabTerm('type3'))]),
-        ]))
-
-        expect:
-        qt.collectTypes() == ['type1', 'type3'] as Set
     }
 
     def "get top level free text as string"() {
