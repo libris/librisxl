@@ -71,7 +71,9 @@ public class Disambiguate {
         this.whelk = whelk;
         this.jsonLd = whelk.getJsonld();
         this.vocab = jsonLd.vocabIndex;
-        this.integralRelations = jsonLd.getCategoryMembers("integral");
+//        TODO
+//        this.integralRelations = jsonLd.getCategoryMembers("integral");
+        this.integralRelations = Set.of("hasInstance", "instanceOf");
         this.domainByProperty = new ConcurrentHashMap<>();
         this.rangeByProperty = new ConcurrentHashMap<>();
         setAliasMappings();
