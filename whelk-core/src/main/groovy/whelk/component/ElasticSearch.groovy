@@ -400,7 +400,7 @@ class ElasticSearch {
         def graph = ((List) copy.data['@graph'])
         int originalSize = document.data['@graph'].size()
         copy.data['@graph'] =
-                graph.take(originalSize).collect { toSearchCard(whelk, it, links) } +
+                graph.take(originalSize) +
                 graph.drop(originalSize).collect { getShapeForEmbellishment(whelk, it) }
 
         setComputedProperties(copy, links, whelk)
@@ -411,7 +411,8 @@ class ElasticSearch {
             return copy.data
         }
         String thingId = thingIds.get(0)
-        Map framed = JsonLd.frame(thingId, copy.data)
+        Map framed = toSearchCard(whelk, JsonLd.frame(thingId, copy.data), links)
+
         framed['_sortKeyByLang'] = whelk.jsonld.applyLensAsMapByLang(
                 framed,
                 whelk.jsonld.locales as Set,
