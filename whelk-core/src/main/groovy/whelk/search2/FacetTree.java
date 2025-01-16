@@ -35,7 +35,7 @@ public class FacetTree {
             var children = findChildren(observation, observations);
             if (!children.isEmpty()) {
                 queue.addAll(children);
-                observation.put("children", children);
+                observation.put("_children", children);
             }
         }
         return List.copyOf(tree);

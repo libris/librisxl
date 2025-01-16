@@ -36,7 +36,7 @@ class FacetTreeSpec extends Specification {
         where:
         observations                                                  | sorted
         [["object": ["@id": "parent"]],
-         ["object": ["@id": "child"]]]             |    [["object": ["@id": "parent"], "children": [["object": ["@id": "child"]]]]]
+         ["object": ["@id": "child"]]]             |    [["object": ["@id": "parent"], "_children": [["object": ["@id": "child"]]]]]
     }
 
     def "Sort one parent with two children"() {
@@ -63,7 +63,7 @@ class FacetTreeSpec extends Specification {
         [["object": ["@id": "parent"]],
          ["object": ["@id": "child1"]],
          ["object": ["@id": "child2"]]]     |   [["object": ["@id": "parent"],
-                                                  "children": [["object": ["@id": "child1"]],
+                                                  "_children": [["object": ["@id": "child1"]],
                                                                ["object": ["@id": "child2"]]]]]
     }
 
@@ -94,8 +94,8 @@ class FacetTreeSpec extends Specification {
         [["object": ["@id": "parent"]],
          ["object": ["@id": "child1"]],
          ["object": ["@id": "child2"]]]     |   [["object": ["@id": "parent"],
-                                                  "children": [["object": ["@id": "child1"],
-                                                               "children": [["object": ["@id": "child2"]]]]]]]
+                                                  "_children": [["object": ["@id": "child1"],
+                                                               "_children": [["object": ["@id": "child2"]]]]]]]
     }
 
     def "One parent, two children"() {
@@ -127,7 +127,7 @@ class FacetTreeSpec extends Specification {
         observations                           | sorted
         [["object": ["@id": "root"]],
          ["object": ["@id": "child1"]],
-         ["object": ["@id": "child2"]]]        |    [["object": ["@id": "root"], "children" : [["object": ["@id": "child1"]],
+         ["object": ["@id": "child2"]]]        |    [["object": ["@id": "root"], "_children" : [["object": ["@id": "child1"]],
                                                                                                 ["object": ["@id": "child2"]]]]]
     }
 
