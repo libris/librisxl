@@ -30,6 +30,7 @@ dependencies {
     // XL dependencies
     implementation(project(':whelk-core'))
     implementation(project(':server-common'))
+    implementation(project(':whelktool'))
 
     // Groovy
     implementation "org.codehaus.groovy:groovy:${groovyVersion}"
@@ -53,6 +54,9 @@ dependencies {
     // Cron
     implementation group: 'it.sauronsoftware.cron4j', name: 'cron4j', version: '2.2.5'
 
+    // Utils
+    implementation "com.google.guava:guava:${guavaVersion}"
+
     // Testing
     testImplementation "org.spockframework:spock-core:${spockVersion}"
 }
@@ -67,6 +71,7 @@ test.testLogging {
 }
 
 shadowJar {
+    mergeServiceFiles()
     archiveClassifier = null // removes `-all` in the filename of the created .jar
 }
 
@@ -93,7 +98,8 @@ task(appRun, dependsOn: "classes", type: JavaExec) {
     systemProperties(
             'xl.secret.properties': System.getProperty("xl.secret.properties"),
             'xl.logRoot': System.getProperty("xl.logRoot", "./logs"),
-            'xl.http.port': System.getProperty("xl.http.port", "8181")
+            'xl.http.port': System.getProperty("xl.http.port", "8181"),
+            'xl.test.rewriteSparqlResultIds': System.getProperty("xl.test.rewriteSparqlResultIds", "false")
     )
     args(System.getProperty("args", "").split() as String[])
 

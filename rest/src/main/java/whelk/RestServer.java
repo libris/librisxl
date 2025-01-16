@@ -39,13 +39,21 @@ public class RestServer extends XlServer {
         ServletContextHandler context = new ServletContextHandler();
         context.setContextPath("/");
 
-        // TODO: this takes care of double slashes in id.kb.se paths from nginx
+        // TODO: AMBIGUOUS_EMPTY_SEGMENT care of double slashes in id.kb.se paths from nginx
         // try to eliminate them there instead?
+        // AMBIGUOUS_PATH_SEPARATOR allows e.g. /term/gmgpc%2F%2Fswe/Kartor
+        // https://jetty.org/docs/jetty/12/programming-guide/server/compliance.html
+        // https://javadoc.jetty.org/jetty-12/org/eclipse/jetty/http/UriCompliance.Violation.html
         Arrays.stream(server.getConnectors()).forEach(
                 connector -> { connector
                         .getConnectionFactory(HttpConnectionFactory.class)
                         .getHttpConfiguration()
-                        .setUriCompliance(UriCompliance.DEFAULT.with("DOUBLE_SLASH", UriCompliance.Violation.AMBIGUOUS_EMPTY_SEGMENT));
+                        .setUriCompliance(UriCompliance.DEFAULT
+                                .with("DOUBLE_SLASH",
+                                        UriCompliance.Violation.AMBIGUOUS_EMPTY_SEGMENT,
+                                        UriCompliance.Violation.AMBIGUOUS_PATH_SEPARATOR
+                                )
+                        );
                 }
         );
         var rewriteHandler = new RewriteHandler();

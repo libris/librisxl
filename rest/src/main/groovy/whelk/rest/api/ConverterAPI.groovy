@@ -5,9 +5,9 @@ import org.apache.http.entity.ContentType
 import whelk.Document
 import whelk.Whelk
 import whelk.converter.marc.MarcFrameConverter
-import whelk.util.Tools
 import whelk.util.Unicode
 import whelk.util.WhelkFactory
+import whelk.util.http.HttpTools
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest

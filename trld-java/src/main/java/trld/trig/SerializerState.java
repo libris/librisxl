@@ -193,6 +193,9 @@ public class SerializerState {
     return this.writeObject(obj, depth, null);
   }
   public List<Map<String, Object>> writeObject(Object obj, Integer depth, /*@Nullable*/ String viaKey) {
+    return this.writeObject(obj, depth, viaKey, false);
+  }
+  public List<Map<String, Object>> writeObject(Object obj, Integer depth, /*@Nullable*/ String viaKey, Boolean inList) {
     if ((depth > 0 && obj instanceof Map && ((Map) obj).containsKey(CONTEXT))) {
       throw new RuntimeException("Nested context not supported yet");
     }
@@ -214,7 +217,7 @@ public class SerializerState {
       this.toLiteral(((Object) obj), viaKey);
       return new ArrayList<>();
     }
-    if ((viaKey != null && this.isListContainer(viaKey))) {
+    if ((!(inList) && viaKey != null && this.isListContainer(viaKey))) {
       obj = Builtins.mapOf(this.aliases.list, obj);
     }
     /*@Nullable*/ String s = (/*@Nullable*/ String) ((/*@Nullable*/ String) ((Map) obj).get(this.aliases.id));
@@ -377,7 +380,7 @@ public class SerializerState {
             topObjects.add((Map) v);
             this.write(this.refRepr(((Map) v).get(this.aliases.id)));
           } else if (v != null) {
-            List<Map<String, Object>> objects = this.writeObject(v, nestedDepth, key);
+            List<Map<String, Object>> objects = this.writeObject(v, nestedDepth, key, startedList);
             for (Map<String, Object> it : objects) {
               topObjects.add(it);
             }

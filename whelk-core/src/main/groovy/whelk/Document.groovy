@@ -40,6 +40,8 @@ class Document {
         }
     }
 
+    public static final String HASH_IT = '#it'
+
     static final List thingPath = ["@graph", 1]
     static final List thingIdPath = ["@graph", 0, "mainEntity", "@id"]
     static final List thingIdPath2 = ["@graph", 1, "@id"]
@@ -134,14 +136,20 @@ class Document {
     }
 
     List getInDataset() {
-        def dataset = get(datasetPath)
-        if (dataset instanceof List)
-            return dataset
-        return [dataset]
+        JsonLd.asList(get(datasetPath))
+    }
+
+    // FIXME: don't hardcode
+    // see also https://github.com/libris/lxlviewer/blob/5dc7807b3434cd1e29943d14d73e3f6f251e3c1b/cataloging/src/components/inspector/toolbar.vue#L312
+    boolean isInReadOnlyDataset() {
+        getRecord()[JsonLd.TYPE_KEY] != JsonLd.RECORD_TYPE
+        || getInDataset().any {
+            var id = (String) it[JsonLd.ID_KEY] ?: ''
+            id.startsWith('https://id.kb.se/dataset/') || id.startsWith('https://libris.kb.se/dataset/')
+        }
     }
 
     void addImage(String imageUri) {
-
         // Make imagePath point to a list
         preparePath(imagePath)
         Object imageList = get(imagePath)
@@ -161,6 +169,8 @@ class Document {
 
     List getImages() {
         def images = get(imagePath)
+        if (images == null)
+            return Collections.emptyList()
         if (images instanceof List)
             return images
         return [images]
@@ -187,6 +197,10 @@ class Document {
     void setThingInScheme(inScheme) { set(thingInSchemePath, inScheme) }
 
     String getThingInScheme() { get(thingInSchemePath) }
+
+    Map getThing() { get(thingPath) as Map }
+
+    Map getRecord() { get(recordPath) as Map }
 
     void setDescriptionCreator(creator) { set(descriptionCreatorPath, creator) }
 
@@ -316,6 +330,10 @@ class Document {
         get(createdPath)
     }
 
+    Instant getCreatedTimestamp() {
+        ZonedDateTime.parse(getCreated(), DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant()
+    }
+
     void setModified(Date modified) {
         ZonedDateTime zdt = ZonedDateTime.ofInstant(modified.toInstant(), ZoneId.systemDefault())
         String formatedModified = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
@@ -365,7 +383,7 @@ class Document {
     }
 
     boolean isHolding(JsonLd jsonld) {
-        return ("hold" == getLegacyCollection(jsonld))
+        return "hold" == getLegacyCollection(jsonld) || jsonld.isSubClassOf(getThingType(), "Item")
     }
     
     String getLegacyCollection(JsonLd jsonld) {

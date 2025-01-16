@@ -35,5 +35,11 @@
             <AppenderRef ref="STDOUT"/>
             <AppenderRef ref="File" />
         </Root>
+        <Logger name="org.apache.jena.riot">
+            <!-- JsonLD2RdfXml.groovy passes embellished JSON-LD dataset, i.e. with named graphs to Jena.
+                 It's ok that Jena drops them. -->
+            <RegexFilter regex="Only triples or default graph data expected : named graph data ignored"
+                         onMatch="DENY" onMismatch="ACCEPT"/>
+        </Logger>
     </Loggers>
 </Configuration>

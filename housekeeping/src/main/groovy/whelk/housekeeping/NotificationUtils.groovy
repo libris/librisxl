@@ -21,7 +21,7 @@ class NotificationUtils {
     static final String EMAIL_FOOTER = """
         $DIVIDER
         Läs mer om CXZ-meddelanden:
-        https://www.kb.se/samverkan-och-utveckling/libris/librissamarbetet/sandlistor/andringsmeddelanden-cxz.html
+        https://metadatabyran.kb.se/arbetsfloden/hantera-poster-i-libris/cxz---andringsmeddelanden-och-fragor-i-libris
         """.stripIndent()
 
     enum NotificationType {

@@ -25,8 +25,8 @@ import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND
 import static javax.servlet.http.HttpServletResponse.SC_NOT_MODIFIED
 import static javax.servlet.http.HttpServletResponse.SC_OK
-import static whelk.rest.api.MimeTypes.JSON
-import static whelk.rest.api.MimeTypes.JSONLD
+import static whelk.util.http.MimeTypes.JSON
+import static whelk.util.http.MimeTypes.JSONLD
 import static whelk.util.Jackson.mapper
 
 /**
@@ -459,6 +459,25 @@ class CrudSpec extends Specification {
         response.getContentType() == "text/turtle"
     }
 
+    def "GET /<id>/data.trig should display document in TriG format"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        request.getPathInfo() >> {
+            "/${id}/data.trig".toString()
+        }
+        request.getHeader("Accept") >> {
+            "*/*"
+        }
+        storage.load(_, _) >> {
+            new Document(["@graph": [["@id": id, "foo": "bar"]]])
+        }
+        when:
+        crud.doGet(request, response)
+        then:
+        response.getStatus() == SC_OK
+        response.getContentType() == "application/trig"
+    }
+
     @Unroll
     def "GET document with If-None-Match should return 200 Ok or 304 Not Modified"() {
         given:
@@ -543,6 +562,15 @@ class CrudSpec extends Specification {
         '/data'      |'.json'   | '*/*'                  || 'application/json'    | SC_OK
         '/data'      |'.json'   | 'application/json'     || 'application/json'    | SC_OK
         '/data'      |'.json'   | 'application/ld+json'  || 'application/json'    | SC_OK
+        '/data'      |'.ttl'    | '*/*'                  || 'text/turtle'         | SC_OK
+        '/data'      |'.ttl'    | 'application/json'     || 'text/turtle'         | SC_OK
+        '/data'      |'.ttl'    | 'application/ld+json'  || 'text/turtle'         | SC_OK
+        '/data'      |'.trig'   | '*/*'                  || 'application/trig'    | SC_OK
+        '/data'      |'.trig'   | 'application/json'     || 'application/trig'    | SC_OK
+        '/data'      |'.trig'   | 'application/ld+json'  || 'application/trig'    | SC_OK
+        '/data'      |'.rdf'    | '*/*'                  || 'application/rdf+xml' | SC_OK
+        '/data'      |'.rdf'    | 'application/json'     || 'application/rdf+xml' | SC_OK
+        '/data'      |'.rdf'    | 'application/ld+json'  || 'application/rdf+xml' | SC_OK
 
         '/data-view' |''        | '*/*'                  || 'application/ld+json' | SC_OK
         '/data-view' |''        | 'application/ld+json'  || 'application/ld+json' | SC_OK
@@ -553,9 +581,19 @@ class CrudSpec extends Specification {
         '/data-view' |'.json'   | '*/*'                  || 'application/json'    | SC_OK
         '/data-view' |'.json'   | 'application/json'     || 'application/json'    | SC_OK
         '/data-view' |'.json'   | 'application/ld+json'  || 'application/json'    | SC_OK
+        '/data-view' |'.ttl'    | '*/*'                  || 'text/turtle'         | SC_OK
+        '/data-view' |'.ttl'    | 'application/json'     || 'text/turtle'         | SC_OK
+        '/data-view' |'.ttl'    | 'application/ld+json'  || 'text/turtle'         | SC_OK
+        '/data-view' |'.trig'   | '*/*'                  || 'application/trig'    | SC_OK
+        '/data-view' |'.trig'   | 'application/json'     || 'application/trig'    | SC_OK
+        '/data-view' |'.trig'   | 'application/ld+json'  || 'application/trig'    | SC_OK
+        '/data-view' |'.rdf'    | '*/*'                  || 'application/rdf+xml' | SC_OK
+        '/data-view' |'.rdf'    | 'application/json'     || 'application/rdf+xml' | SC_OK
+        '/data-view' |'.rdf'    | 'application/ld+json'  || 'application/rdf+xml' | SC_OK
 
         ''           |''        | ''                     || 'application/ld+json' | SC_OK
         ''           |''        | 'text/turtle'          || 'text/turtle'         | SC_OK
+        ''           |''        | 'application/trig'     || 'application/trig'    | SC_OK
         ''           |''        | 'application/rdf+xml'  || 'application/rdf+xml' | SC_OK
         ''           |''        | 'x/x'                  || 'application/ld+json' | SC_OK
         '/data-view' |'.invalid'| '*/*'                  || 'application/json'    | SC_NOT_FOUND
@@ -1190,7 +1228,7 @@ class CrudSpec extends Specification {
                                     "@type": "Item",
                                     "contains": "some new data",
                                     "heldBy":
-                                            ["code": "Ting"]]]]
+                                            ["@id": "https://libris.kb.se/library/Ting"]]]]
         request.getInputStream() >> {
             new ServletInputStreamMock(mapper.writeValueAsBytes(postData))
         }
@@ -1201,7 +1239,7 @@ class CrudSpec extends Specification {
             "POST"
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "bib"
+            return "hold"
         }
         request.getContentType() >> {
             "application/ld+json"

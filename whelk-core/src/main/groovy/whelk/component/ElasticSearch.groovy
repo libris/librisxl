@@ -38,10 +38,6 @@ class ElasticSearch {
             'http://id.kb.se/',
             'https://id.kb.se/',
     ]
-    
-    // TODO: temporary feature flag, to be removed
-    // this feature only works after a full reindex has been done, so we have to detect that
-    public boolean ENABLE_SMUSH_LANG_TAGGED_PROPS = false 
 
     public int maxResultWindow = 10000 // Elasticsearch default (fallback value)
     public int maxTermsCount = 65536 // Elasticsearch default (fallback value)
@@ -304,7 +300,7 @@ class ElasticSearch {
             }
         } catch (Exception e) {
             if (!isBadRequest(e)) {
-                log.error("Failed to index ${doc.getShortId()} in elastic, placing in retry queue: $e", e)
+                log.info("Failed to index ${doc.getShortId()} in elastic, placing in retry queue: $e", e)
                 indexingRetryQueue.add({ -> index(doc, whelk) })
             }
             else {
@@ -432,7 +428,7 @@ class ElasticSearch {
             // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" } }
             // -->
             // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" }, "__foo": ["FOO", "EN", "SV"] }
-            if (ENABLE_SMUSH_LANG_TAGGED_PROPS && value instanceof Map) {
+            if (value instanceof Map) {
                 var flattened = [:]
                 value.each { k, v ->
                     if (k in whelk.jsonld.langContainerAlias) {
@@ -584,18 +580,13 @@ class ElasticSearch {
     }
 
     Map query(Map jsonDsl) {
-        return performQuery(
-                jsonDsl,
-                getQueryUrl(),
-                { def d = it."_source"; d."_id" = it."_id"; return d }
-        )
+        return performQuery(jsonDsl, getQueryUrl())
     }
 
     Map queryIds(Map jsonDsl) {
         return performQuery(
                 jsonDsl,
-                getQueryUrl(['took','hits.total','hits.hits._id']),
-                { it."_id" }
+                getQueryUrl(['took','hits.total','hits.hits._id'])
         )
     }
     
@@ -633,7 +624,7 @@ class ElasticSearch {
         return super.hashCode()
     }
 
-    private Map performQuery(Map jsonDsl, String queryUrl, Closure<Map> hitCollector) {
+    private Map performQuery(Map jsonDsl, String queryUrl) {
         try {
             def start = System.currentTimeMillis()
             String responseBody = client.performRequest('POST',
@@ -647,13 +638,7 @@ class ElasticSearch {
                 log.info("ES query took ${duration} (${responseMap.took} server-side)")
             }
 
-            def results = [:]
-
-            results.startIndex = jsonDsl.from
-            results.totalHits = responseMap.hits.total.value
-            results.items = responseMap.hits.hits.collect(hitCollector)
-            results.aggregations = responseMap.aggregations
-            return results
+            return responseMap
         }
         catch (Exception e) {
             if (isBadRequest(e)) {

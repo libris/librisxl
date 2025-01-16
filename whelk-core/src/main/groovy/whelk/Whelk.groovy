@@ -9,6 +9,7 @@ import whelk.component.DocumentNormalizer
 import whelk.component.ElasticSearch
 import whelk.component.PostgreSQLComponent
 import whelk.component.PostgreSQLComponent.UpdateAgent
+import whelk.component.SparqlQueryClient
 import whelk.component.SparqlUpdater
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.StorageCreateFailedException
@@ -37,6 +38,7 @@ class Whelk {
     PostgreSQLComponent storage
     public ElasticSearch elastic
     SparqlUpdater sparqlUpdater
+    SparqlQueryClient sparqlQueryClient
 
     boolean completeCore = false
 
@@ -62,6 +64,7 @@ class Whelk {
     DocumentNormalizer normalizer
     Romanizer romanizer
     FeatureFlags features
+    File logRoot
 
     URI baseUri = null
     boolean skipIndex = false
@@ -133,9 +136,12 @@ class Whelk {
         
         features = new FeatureFlags(configuration)
 
+        logRoot = new File(System.getProperty("xl.logRoot", "./logs"))
+
         loadCoreData(systemContextUri)
 
         sparqlUpdater = SparqlUpdater.build(storage, jsonld.context, configuration)
+        sparqlQueryClient = new SparqlQueryClient(configuration.getProperty('sparqlEndpoint', null), jsonld);
     }
 
     static Map<String, Map<String, String>> collectNamedApplications(Properties configuration) {
@@ -509,6 +515,14 @@ class Whelk {
      */
     boolean quickCreateDocument(Document document, String changedIn, String changedBy, String collection) {
         return storage.quickCreateDocument(document, changedIn, changedBy, collection)
+    }
+
+    /**
+     * Like quickCreateDocument but for adding historical document versions. NOT to be used in production
+     * environments; for development purposes only.
+     */
+    boolean quickCreateDocumentVersion(Document document, Date createdTime, Date modTime, String changedIn, String changedBy, String collection) {
+        return storage.quickCreateDocumentVersion(document, createdTime, modTime, changedIn, changedBy, collection)
     }
 
     void remove(String id, String changedIn, String changedBy, boolean force = false) {

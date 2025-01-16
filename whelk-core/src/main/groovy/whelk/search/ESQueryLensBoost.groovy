@@ -122,9 +122,10 @@ class ESQueryLensBoost {
                 def obj = [(JsonLd.TYPE_KEY): rangeKey]
                 def rangeChipLens = jsonld.getLensFor(obj, chipsLenses)
                 def rangeChipFields = collectBoostFields(
-                        rangeChipLens, CARD_BOOST, seenKeys)
+                        rangeChipLens, CARD_BOOST, [] as Set)
 
                 return rangeChipFields.collect { "${key}.$it" as String }
+                        .findAll {!seenKeys.contains(it) }
             } else {
                 key = "${key}.${JsonLd.SEARCH_KEY}"
             }

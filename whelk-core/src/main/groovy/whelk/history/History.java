@@ -71,6 +71,9 @@ public class History {
                 Map tool = new HashMap();
                 tool.put("@id", "https://id.kb.se/generator/globalchanges");
                 changeSet.put("tool", tool);
+                HashMap agent = new HashMap();
+                agent.put("@id", "https://libris.kb.se/library/SEK");
+                changeSet.put("agent", agent);
             } else if ("APIX".equals(version.changedIn)) {
                 Map tool = new HashMap();
                 tool.put("@id", "https://id.kb.se/generator/apix");

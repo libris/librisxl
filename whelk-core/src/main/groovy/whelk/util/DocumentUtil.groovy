@@ -91,15 +91,23 @@ class DocumentUtil {
      * @param item
      * @param path
      * @param defaultTo
+     * @param requireListIndex
      * @return
      */
-    static def getAtPath(item, Iterable path, defaultTo = null) {
+    static def getAtPath(item, Iterable path, defaultTo = null, boolean requireListIndex = true) {
         if (!item) {
             return defaultTo
         }
 
         for (int i = 0; i < path.size(); i++) {
             def p = path[i]
+            if (p instanceof JsonLdKey) {
+                p = p.key()
+            }
+            if (p instanceof Enum) {
+                p = p.toString()
+            }
+
             if (p.equals('*')) {
                 if (item instanceof Collection) {
                     return item.collect { getAtPath(it, path.drop(i + 1), []) }.flatten()
@@ -108,6 +116,8 @@ class DocumentUtil {
                 }
             } else if (((item instanceof Collection && p instanceof Integer) || item instanceof Map) && item[p] != null) {
                 item = item[p]
+            } else if (item instanceof Collection && !requireListIndex) {
+                return item.collect { getAtPath(it, path.drop(i), [], requireListIndex) }.flatten()
             } else {
                 return defaultTo
             }
