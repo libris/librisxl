@@ -34,13 +34,15 @@ public class Stats {
     private final AppParams appParams;
     private final QueryTree queryTree;
     private final QueryUtil queryUtil;
+    private final JsonLd jsonLd;
 
     public Stats(Disambiguate disambiguate,
                  QueryUtil queryUtil,
                  QueryTree queryTree,
                  QueryResult queryResult,
                  QueryParams queryParams,
-                 AppParams appParams
+                 AppParams appParams,
+                 JsonLd jsonLd
     ) {
         this.disambiguate = disambiguate;
         this.queryResult = queryResult;
@@ -48,6 +50,7 @@ public class Stats {
         this.appParams = appParams;
         this.queryTree = queryTree;
         this.queryUtil = queryUtil;
+        this.jsonLd = jsonLd;
     }
 
     public Map<String, Object> build() {
@@ -124,8 +127,9 @@ public class Stats {
             var sliceNode = new LinkedHashMap<>();
             var isRange = rangeProps.contains(property);
             var observations = getObservations(buckets, isRange ? queryTree.removeTopLevelPropValueWithRangeIfPropEquals(property) : queryTree, nonQueryParams);
+
             if (property.isType()) {
-                observations = new FacetTree(disambiguate).sortObservationsAsTree(observations);
+                observations = new FacetTree(jsonLd).sortObservationsAsTree(observations);
             }
             if (!observations.isEmpty()) {
                 if (isRange) {
