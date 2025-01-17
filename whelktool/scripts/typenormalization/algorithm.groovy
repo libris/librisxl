@@ -278,19 +278,24 @@ class TypeNormalizerUtils extends Utils {
 
 class TypeNormalizer extends TypeNormalizerUtils {
 
-  static boolean normalize(Map instance, Map work) {
+  static List normalize(Map instance, Map work) {
     var changed = false
+    var map_path = ""
 
-    changed |= MarcLegacy.fixMarcLegacyType(instance, work)
+    //changed |= MarcLegacy.fixMarcLegacyType(instance, work)
 
-    changed |= foldType(instance, work)
+    //changed |= foldType(instance, work)
 
     if (instance.containsKey("issuanceType")) {
       // work.genreForm marc:MapBoundAsPartOfAnotherWork
-      changed |= MarcLegacy.convertIssuanceType(instance, work)
+      // changed |= MarcLegacy.convertIssuanceType(instance, work)
+      def (change, mapped) = testingSomething(instance, work)
+      changed |= change
+      map_path += mapped
     }
 
-    return changed
+    println("Mapped $changed $map_path")
+    return [changed, map_path]
   }
 
   static boolean foldType(Map instance, Map work) {
@@ -526,6 +531,24 @@ class TypeNormalizer extends TypeNormalizerUtils {
     return false
   }
 
+  static List testingSomething(Map instance, Map work) {
+    var changed = false
+
+    // Lisa's test thing
+    def map_path = ""
+    if (instance.get("issuanceType") == "Serial") {
+        map_path += "Serial."
+        if (work.get("@type") == "Text") {
+            map_path += "Text."
+            work.put(TYPE, "Textserie")
+            changed = true
+        }
+    }
+
+    return [changed, map_path]
+
+  }
+
 }
 
 // NOTE: Since instance and work types may co-depend; fetch work and normalize
@@ -543,9 +566,10 @@ process { def doc, Closure loadWorkItem ->
         work = work[0]
       }
 
-      var changed = TypeNormalizer.normalize(instance, work)
+      var (changed, map) = TypeNormalizer.normalize(instance, work)
 
       if (changed) doc.scheduleSave()
+      return map
     } else {
       def loadedWorkId = instance.instanceOf[ID]
       // TODO: refactor very hacky solution...
