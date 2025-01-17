@@ -9,6 +9,7 @@ class FacetTreeSpec extends Specification {
 
     void setup() {
         jsonLd = GroovyMock(JsonLd.class)
+        jsonLd.toTermKey(_ as String) >> { String s -> s }
     }
 
     def "Single observation should return list with one observation"() {
