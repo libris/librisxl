@@ -58,7 +58,12 @@ public class FacetTree {
     private boolean isSubClass(Map<String, Object> obsA, Map<String, Object> obsB) {
         String idA = jsonLd.toTermKey(get(obsA, List.of("object", "@id"), ""));
         String idB = jsonLd.toTermKey(get(obsB, List.of("object", "@id"), ""));
-        return !idA.equals(idB) && jsonLd.isSubClassOf(idA, idB);
+        return !idA.equals(idB) && isDirectSubClass(idA, idB);
+    }
+
+    private boolean isDirectSubClass(String type, String base) {
+        List<String> directSubclasses = jsonLd.getDirectSubclasses(base);
+        return directSubclasses.contains(type);
     }
 
     @SuppressWarnings("unchecked")
