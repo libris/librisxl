@@ -24,12 +24,8 @@ class FacetTreeSpec extends Specification {
 
     def "Sort one parent and one child"() {
         given:
-        jsonLd.isSubClassOf("child", "parent") >> {
-            true
-        }
-        jsonLd.isSubClassOf("parent", "child") >> {
-            false
-        }
+        jsonLd.getDirectSubclasses("parent") >> ["child"]
+        jsonLd.getDirectSubclasses("child") >> []
 
         expect:
         def tree = new FacetTree(jsonLd)
@@ -43,18 +39,9 @@ class FacetTreeSpec extends Specification {
 
     def "Sort one parent with two children"() {
         given:
-        jsonLd.isSubClassOf("child1", "parent") >> {
-            true
-        }
-        jsonLd.isSubClassOf("child2", "parent") >> {
-            true
-        }
-        jsonLd.isSubClassOf("parent", "child1") >> {
-            false
-        }
-        jsonLd.isSubClassOf("parent", "child2") >> {
-            false
-        }
+        jsonLd.getDirectSubclasses("parent") >> ["child1", "child2"]
+        jsonLd.getDirectSubclasses("child1") >> []
+        jsonLd.getDirectSubclasses("child2") >> []
 
         expect:
         def tree = new FacetTree(jsonLd)
@@ -71,21 +58,9 @@ class FacetTreeSpec extends Specification {
 
     def "Sort one parent with one child that has one child"() {
         given:
-        jsonLd.isSubClassOf("child1", "parent") >> {
-            true
-        }
-        jsonLd.isSubClassOf("child2", "parent") >> {
-            false
-        }
-        jsonLd.isSubClassOf("child2", "child1") >> {
-            true
-        }
-        jsonLd.isSubClassOf("parent", "child1") >> {
-            false
-        }
-        jsonLd.isSubClassOf("parent", "child2") >> {
-            false
-        }
+        jsonLd.getDirectSubclasses("parent") >> ["child1"]
+        jsonLd.getDirectSubclasses("child1") >> ["child2"]
+        jsonLd.getDirectSubclasses("child2") >> []
 
         expect:
         def tree = new FacetTree(jsonLd)
@@ -102,24 +77,9 @@ class FacetTreeSpec extends Specification {
 
     def "One parent, two children"() {
         given:
-        jsonLd.isSubClassOf("child1", "root") >> {
-            true
-        }
-        jsonLd.isSubClassOf("child2", "root") >> {
-            true
-        }
-        jsonLd.isSubClassOf("root", "child1") >> {
-            false
-        }
-        jsonLd.isSubClassOf("root", "child2") >> {
-            false
-        }
-        jsonLd.isSubClassOf("child1", "child2") >> {
-            false
-        }
-        jsonLd.isSubClassOf("child2", "child1") >> {
-            false
-        }
+        jsonLd.getDirectSubclasses("root") >> ["child1", "child2"]
+        jsonLd.getDirectSubclasses("child1") >> []
+        jsonLd.getDirectSubclasses("child2") >> []
 
         expect:
         def tree = new FacetTree(jsonLd)
@@ -135,7 +95,7 @@ class FacetTreeSpec extends Specification {
 
     def "Three root nodes"() {
         given:
-        jsonLd.isSubClassOf(_, _) >> false
+        jsonLd.getDirectSubclasses(_) >> []
 
         expect:
         def tree = new FacetTree(jsonLd)
@@ -152,7 +112,7 @@ class FacetTreeSpec extends Specification {
 
     def "Children should not be considered parents of themselves"() {
         given:
-        jsonLd.isSubClassOf(_, _) >> true
+        jsonLd.getDirectSubclasses(_) >> []
 
         expect:
         def tree = new FacetTree(jsonLd)
