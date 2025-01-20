@@ -7,6 +7,7 @@ import spock.lang.Unroll
 import whelk.Document
 import whelk.JsonLd
 import whelk.Link
+import whelk.Whelk
 import whelk.exception.FramingException
 
 @Unroll
@@ -1124,4 +1125,215 @@ class JsonLdSpec extends Specification {
             .getResourceAsStream(filename).getText("UTF-8")
     }
 
+    def "TEST"() {
+        given:
+        def data =
+                [
+                        "@type": "PrimaryContribution",
+                        "agent": [
+                                "@type": "Jurisdiction",
+                                "isPartOf": [
+                                        [
+                                                "@type": "Jurisdiction",
+                                                "name": "Sverige.",
+                                                "_str": "Sverige."
+                                        ]
+                                ],
+                                "marc:subordinateUnit": "Utredningen en nationell cancerstrategi",
+                                "_str": "Sverige. Utredningen en nationell cancerstrategi"
+                        ],
+                        "role": [
+                                "@id": "https://id.kb.se/relator/author",
+                                "@type": "Role",
+                                "sameAs": [
+                                        [
+                                                "@id": "https://id.kb.se/relator/aut"
+                                        ]
+                                ],
+                                "meta": [
+                                        "@id": "http://libris.kb.se.localhost:5000/01671gl323zxzzhh",
+                                        "@type": "Record",
+                                        "mainEntity": [
+                                                "@id": "https://id.kb.se/relator/author"
+                                        ],
+                                        "inDataset": [
+                                                [
+                                                        "@id": "https://id.kb.se/dataset/common"
+                                                ],
+                                                [
+                                                        "@id": "https://id.kb.se/dataset/relators"
+                                                ]
+                                        ]
+                                ],
+                                "prefLabelByLang": [
+                                        "en": "author",
+                                        "sv": "Författare"
+                                ],
+                                "code": "aut",
+                                "_str": "Författare aut"
+                        ],
+                        "_str": "Sverige. Utredningen en nationell cancerstrategi"
+                ]
+//                [
+//                "@type": "Text",
+//                "hasTitle": [
+//                        [
+//                            "@type": "Title",
+//                            "mainTitle": "En nationell cancerstrategi för framtiden",
+//                            "subtitle": "betänkande",
+//                            "_str": "En nationell cancerstrategi för framtiden betänkande"
+//                        ]
+//                ],
+//                "contribution": [
+//                        [
+//                            "@type": "PrimaryContribution",
+//                            "agent": [
+//                            "@type": "Jurisdiction",
+//                            "isPartOf": [
+//                                    [
+//                                        "@type": "Jurisdiction",
+//                                        "name": "Sverige.",
+//                                        "_str": "Sverige."
+//                                    ]
+//                            ],
+//                            "marc:subordinateUnit": "Utredningen en nationell cancerstrategi",
+//                            "_str": "Sverige. Utredningen en nationell cancerstrategi"
+//                        ],
+//                            "role": [
+//                            "@id": "https://id.kb.se/relator/author",
+//                            "@type": "Role",
+//                            "sameAs": [
+//                                    [
+//                                        "@id": "https://id.kb.se/relator/aut"
+//                                    ]
+//                            ],
+//                            "meta": [
+//                                "@id": "http://libris.kb.se.localhost:5000/01671gl323zxzzhh",
+//                                "@type": "Record",
+//                                "mainEntity": [
+//                                    "@id": "https://id.kb.se/relator/author"
+//                                ],
+//                                "inDataset": [
+//                                        [
+//                                            "@id": "https://id.kb.se/dataset/common"
+//                                        ],
+//                                        [
+//                                            "@id": "https://id.kb.se/dataset/relators"
+//                                        ]
+//                                ]
+//                            ],
+//                            "prefLabelByLang": [
+//                                "en": "author",
+//                                "sv": "Författare"
+//                            ],
+//                            "code": "aut",
+//                            "_str": "Författare aut"
+//                        ],
+//                            "_str": "Sverige. Utredningen en nationell cancerstrategi"
+//                        ]
+//                ],
+//                "language": [
+//                        [
+//                            "@id": "https://id.kb.se/language/swe",
+//                            "@type": "Language",
+//                            "sameAs": [
+//                                [
+//                                    "@id": "https://id.kb.se/i18n/lang/sv"
+//                                ]
+//                        ],
+//                            "meta": [
+//                            "@id": "http://libris.kb.se.localhost:5000/93lzl5lfc2l3hvc7",
+//                            "@type": "Record",
+//                            "mainEntity": [
+//                                "@id": "https://id.kb.se/language/swe"
+//                            ],
+//                            "inDataset": [
+//                                    [
+//                                        "@id": "https://id.kb.se/dataset/common"
+//                                    ],
+//                                    [
+//                                        "@id": "https://id.kb.se/dataset/languages"
+//                                    ]
+//                            ]
+//                        ],
+//                            "prefLabelByLang": [
+//                            "en": "Swedish",
+//                            "sv": "Svenska"
+//                        ],
+//                            "code": "swe",
+//                            "_str": "Svenska swe"
+//                        ]
+//                ],
+//        ]
+                [
+                "@type": "Text",
+                "contribution": [
+                        [
+                                "@type": "PrimaryContribution",
+                                "agent": [
+                                        "@type": "Person",
+                                        "givenName": "Kalle",
+                                        "familyName": "Kamel"
+                                ]
+                        ],
+                        [
+                                "role": [
+                                        [
+                                                "@type": "Role",
+                                                "label": "Författare"
+                                        ]
+                                ],
+                                "@type": "Contribution",
+                                "agent": [
+                                        "@type": "Person",
+                                        "givenName": "Knut",
+                                        "familyName": "Midgaard"
+                                ]
+                        ],
+                        [
+                                "@type": "Contribution",
+                                "agent": [
+                                        "@type": "Person",
+                                        "givenName": "Bjørn Erik",
+                                        "familyName": "Rasch"
+                                ]
+                        ],
+                        [
+                                "@type": "Contribution",
+                                "agent": [
+                                        "@id": "https://libris.kb.se/9n9c122z7kf1cphk#it"
+                                ]
+                        ]
+                ]
+        ]
+/*                [
+                        "year": "1990",
+                        "@type": "PrimaryPublication",
+                        "agent": [
+                                "@type": "Agent",
+                                "label": [
+                                        "Akademisk Utgivertjeneste for LIFO Liberalt Forskningssenter"
+                                ]
+                        ],
+                        "place": [
+                                [
+                                        "@type": "Place",
+                                        "label": [
+                                                "Oslo"
+                                        ]
+                                ]
+                        ],
+                        "country": [
+                                "@id": "https://id.kb.se/country/no"
+                        ]
+                ]*/
+//        def hej = Whelk.createLoadedSearchWhelk().jsonld.makeSearchKeyParts(data)
+//        def hej = Whelk.createLoadedSearchWhelk().jsonld.toCard(data, false, true, false, [], true)
+        def whelk = Whelk.createLoadedSearchWhelk()
+        def doc = whelk.getDocument('vc54wn663fwn2wv')
+        def shape = whelk.elastic.getShapeForIndex(doc, whelk)
+
+        expect:
+        true
+    }
 }
