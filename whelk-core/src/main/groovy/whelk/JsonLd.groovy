@@ -1035,8 +1035,9 @@ class JsonLd {
 
     List makeSearchKeyParts(Map object) {
         Map lensGroups = (Map) displayData.get('lensGroups')
-        Map lensGroup = (Map) lensGroups?.get('chips')
-        Map lens = getLensFor(object, lensGroup)
+        Map chips = (Map) lensGroups?.get('chips')
+        Map tokens = (Map) lensGroups?.get('tokens')
+        Map lens = getLensFor(object, tokens) ?: getLensFor(object, chips)
         List parts = []
         def type = object.get(TYPE_KEY)
         // TODO: a bit too hard-coded...
@@ -1058,16 +1059,13 @@ class JsonLd {
                 if (isLangContainer(context[prop]) && values instanceof Map) {
                     values = locales.findResult { values[it] }
                 }
-                if (!(values instanceof List)) {
-                    values = values ? [values] : []
-                }
-                // TODO: find recursively (up to a point)? For what? Only
-                // StructuredValue? Or if a chip property value is a
-                // StructuredValue? (Use 'tokens' if available...)
-                for (value in values) {
+                for (value in asList(values)) {
                     if (value instanceof String) {
                         // TODO: marc:nonfilingChars?
                         parts << value
+                    }
+                    if (value instanceof Map) {
+                        parts.addAll(makeSearchKeyParts(value))
                     }
                 }
             }
