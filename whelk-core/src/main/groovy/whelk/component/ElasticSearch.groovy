@@ -414,7 +414,53 @@ class ElasticSearch {
         }
         String thingId = thingIds.get(0)
         Map framed = toSearchCard(whelk, JsonLd.frame(thingId, copy.data), links)
-        setComputedProperties(copy, framed, links, whelk)
+
+        framed['_links'] = links
+        framed['_outerEmbellishments'] = copy.getEmbellishments() - links
+
+        Map<String, Long> incomingLinkCountByRelation = whelk.getStorage().getIncomingLinkCountByIdAndRelation(stripHash(copy.getShortId()))
+        framed['reverseLinks'] = [
+                (JsonLd.TYPE_KEY) : 'PartialCollectionView',
+                'totalItems': incomingLinkCountByRelation.values().sum(0),
+                'totalItemsByRelation': incomingLinkCountByRelation,
+        ]
+
+        framed['_sortKeyByLang'] = whelk.jsonld.applyLensAsMapByLang(
+                framed,
+                whelk.jsonld.locales as Set,
+                REMOVABLE_BASE_URIS,
+                document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
+
+        DocumentUtil.traverse(framed) { value, path ->
+            if (path && JsonLd.SEARCH_KEY == path.last() && !Unicode.isNormalizedForSearch(value)) {
+                // TODO: replace with elastic ICU Analysis plugin?
+                // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
+                return new DocumentUtil.Replace(Unicode.normalizeForSearch(value))
+            }
+
+            // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" } }
+            // -->
+            // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" }, "__foo": ["FOO", "EN", "SV"] }
+            if (value instanceof Map) {
+                var flattened = [:]
+                value.each { k, v ->
+                    if (k in whelk.jsonld.langContainerAlias) {
+                        var __k = flattenedLangMapKey(k)
+                        flattened[__k] = (flattened[__k] ?: []) + asList(v)
+                    } else if (k in whelk.jsonld.langContainerAliasInverted) {
+                        var __k = flattenedLangMapKey(whelk.jsonld.langContainerAliasInverted[k])
+                        flattened[__k] = (flattened[__k] ?: []) + ((Map) v).values().flatten()
+                    }
+                }
+                value.putAll(flattened)
+            }
+        }
+
+        // In ES up until 7.8 we could use the _id field for aggregations and sorting, but it was discouraged
+        // for performance reasons. In 7.9 such use was deprecated, and since 8.x it's no longer supported, so
+        // we follow the advice and use a separate field.
+        // (https://www.elastic.co/guide/en/elasticsearch/reference/8.8/mapping-id-field.html).
+        framed["_es_id"] =  toElasticId(copy.getShortId())
 
         if (log.isTraceEnabled()) {
             log.trace("Framed data: ${framed}")
@@ -466,55 +512,6 @@ class ElasticSearch {
                 return new DocumentUtil.Replace(keep)
             }
         })
-    }
-
-    private static void setComputedProperties(Document doc, Map framed, Set<String> links, Whelk whelk) {
-        framed['_links'] = links
-        framed['_outerEmbellishments'] = doc.getEmbellishments() - links
-
-        Map<String, Long> incomingLinkCountByRelation = whelk.getStorage().getIncomingLinkCountByIdAndRelation(stripHash(doc.getShortId()))
-        framed['reverseLinks'] = [
-                (JsonLd.TYPE_KEY) : 'PartialCollectionView',
-                'totalItems': incomingLinkCountByRelation.values().sum(0),
-                'totalItemsByRelation': incomingLinkCountByRelation,
-        ]
-
-        framed['_sortKeyByLang'] = whelk.jsonld.applyLensAsMapByLang(
-                framed,
-                whelk.jsonld.locales as Set,
-                REMOVABLE_BASE_URIS,
-                doc.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
-
-        DocumentUtil.traverse(framed) { value, path ->
-            if (path && JsonLd.SEARCH_KEY == path.last() && !Unicode.isNormalizedForSearch(value)) {
-                // TODO: replace with elastic ICU Analysis plugin?
-                // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
-                return new DocumentUtil.Replace(Unicode.normalizeForSearch(value))
-            }
-
-            // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" } }
-            // -->
-            // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" }, "__foo": ["FOO", "EN", "SV"] }
-            if (value instanceof Map) {
-                var flattened = [:]
-                value.each { k, v ->
-                    if (k in whelk.jsonld.langContainerAlias) {
-                        var __k = flattenedLangMapKey(k)
-                        flattened[__k] = (flattened[__k] ?: []) + asList(v)
-                    } else if (k in whelk.jsonld.langContainerAliasInverted) {
-                        var __k = flattenedLangMapKey(whelk.jsonld.langContainerAliasInverted[k])
-                        flattened[__k] = (flattened[__k] ?: []) + ((Map) v).values().flatten()
-                    }
-                }
-                value.putAll(flattened)
-            }
-        }
-
-        // In ES up until 7.8 we could use the _id field for aggregations and sorting, but it was discouraged
-        // for performance reasons. In 7.9 such use was deprecated, and since 8.x it's no longer supported, so
-        // we follow the advice and use a separate field.
-        // (https://www.elastic.co/guide/en/elasticsearch/reference/8.8/mapping-id-field.html).
-        framed["_es_id"] =  toElasticId(doc.getShortId())
     }
 
     private static setIdentifiers(Document doc) {
