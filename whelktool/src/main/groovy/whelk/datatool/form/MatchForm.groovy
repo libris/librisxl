@@ -9,6 +9,7 @@ import whelk.datatool.util.IdLoader
 import whelk.util.DocumentUtil
 
 import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.RANGE
 import static whelk.JsonLd.RECORD_KEY
 import static whelk.JsonLd.RECORD_TYPE
 import static whelk.JsonLd.THING_KEY
@@ -276,10 +277,10 @@ class MatchForm {
                     return
                 }
 
-                def nodeType = node[TYPE_KEY]
+                def parentProp = dropIndexes(path).reverse()[0]
+                def nodeType = node[TYPE_KEY] ?: getUnambiguousRange(parentProp, whelk.jsonld)
                 def marcCollection = nodeType ? getMarcCollectionInHierarchy((String) nodeType, whelk.jsonld) : null
                 def xlShortIds = idLoader.collectXlShortIds(ids, marcCollection)
-                def parentProp = dropIndexes(path).reverse()[1]
                 def isInRange = { type -> whelk.jsonld.getInRange(type).contains(parentProp) }
                 // TODO: Fix hardcoding
                 def isRecord = whelk.jsonld.isInstanceOf((Map) node, "AdminMetadata")
@@ -321,5 +322,10 @@ class MatchForm {
         }
 
         return mappings
+    }
+
+    private static String getUnambiguousRange(String property, JsonLd jsonLd) {
+        List range = getAtPath(jsonLd.vocabIndex, [property, RANGE, "*", ID_KEY], [])
+        return range.size() == 1 ? jsonLd.toTermKey((String) range.first()) : null
     }
 }
