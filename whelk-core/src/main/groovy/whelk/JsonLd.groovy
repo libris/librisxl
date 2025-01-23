@@ -98,7 +98,9 @@ class JsonLd {
     private Map<String, Set<String>> categories
     private Map<String, Set<String>> inRange
 
+    // xByLang -> x
     public Map langContainerAlias = [:]
+    // x -> xByLang
     public Map langContainerAliasInverted
 
     /**
@@ -1146,11 +1148,11 @@ class JsonLd {
         }
     }
     
-    private static boolean isAlternateProperties(def p) {
+    static boolean isAlternateProperties(def p) {
         p instanceof Map && p.size() == 1 && p[ALTERNATE_PROPERTIES]
     }
     
-    private static boolean isAlternateSubProperty(def p) {
+    static boolean isAlternateSubProperty(def p) {
         p instanceof Map && p[SUB_PROPERTY_OF] && p[RANGE]
     }
 
