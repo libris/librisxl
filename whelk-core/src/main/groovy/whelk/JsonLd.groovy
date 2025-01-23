@@ -1089,7 +1089,11 @@ class JsonLd {
             if (!it.isEmpty()) {
                 def key = it[0]
                 if (thing.containsKey(key) && !cardOrChip.containsKey(key)) {
-                    cardOrChip[key] = thing[key]
+                    if (thing[key] instanceof Map) {
+                        cardOrChip[key] = ((Map) thing[key]).subMap([ID_KEY])
+                    } else if (thing[key] instanceof List) {
+                        cardOrChip[key] = ((List) thing[key]).collect { ((Map) it).subMap([ID_KEY]) }.grep()
+                    }
                 }
             }
         }
