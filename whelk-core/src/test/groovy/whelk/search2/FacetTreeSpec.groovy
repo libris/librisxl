@@ -147,4 +147,26 @@ class FacetTreeSpec extends Specification {
         [["object": ["@id": "A"]], ["object": ["@id": "A"]]]    |   [["object": ["@id": "A"]], ["object": ["@id": "A"]]]
     }
 
+    def "Root with one intermediate observation before one child"() {
+        given:
+        jsonLd.getDirectSubclasses("root") >> ["intermediate"]
+        jsonLd.getDirectSubclasses("intermediate") >> ["child"]
+        jsonLd.getDirectSubclasses("child") >> []
+
+        jsonLd.getSuperClasses("child") >> ["intermediate", "root"]
+        jsonLd.getSuperClasses("root") >> []
+
+        expect:
+        def tree = new FacetTree(jsonLd)
+        tree.sortObservationsAsTree(observations) == sorted
+
+        // TODO: don't depend on exact form of fake observation
+        where:
+        observations                           | sorted
+        [["object": ["@id": "root"]],
+         ["object": ["@id": "child"]]]         |   [["object": ["@id": "root"],
+                                                     "_children": [["totalItems" : 0, "view": ["@id" : "fake"], "object": ["@id": "intermediate"],
+                                                                    "_children": [["object": ["@id": "child"]]]]]]]
+    }
+
 }
