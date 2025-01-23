@@ -80,10 +80,10 @@ public class Property implements PropertyLike {
             List<String> domain = disambiguate.getDomain(name);
             if (!domain.isEmpty()
                     && domain.stream()
-                    .filter(d -> disambiguate.isSubclassOf(d, "Record"))
+                    .filter(d -> disambiguate.isSubclassOf(d, "AdminMetadata"))
                     .count() == domain.size()
             ) {
-                // The property only appears on Record
+                // The property only appears on AdminMetadata
                 expanded = prependMetaKey(expanded);
             } else {
                 expanded = getAlternativePaths(expanded, disambiguate, types);
