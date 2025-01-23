@@ -20,7 +20,7 @@ public class FacetTree {
     public List<Map<String, Object>> sortObservationsAsTree(List<Map<String, Object>> observations) {
         List<Map<String, Object>> tree = new ArrayList<>();
         Queue<Map<String, Object>> queue = new ConcurrentLinkedQueue<>();
-        List<String> intermediateClasses = new ArrayList<>();
+        Set<String> intermediateClasses = new HashSet<>();
 
         observationsAsTypeKeys = observations.stream()
                 .map(o -> jsonLd.toTermKey(get(o, List.of("object", "@id"), "")))
