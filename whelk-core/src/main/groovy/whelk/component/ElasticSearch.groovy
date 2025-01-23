@@ -16,7 +16,6 @@ import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
-import java.util.function.Function
 
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
 import static whelk.JsonLd.asList
@@ -572,10 +571,8 @@ class ElasticSearch {
     /**
      * @return ISNIs with with four groups of four digits separated by space
      */
-    private static Collection<String> getFormattedIsnis(Collection<String> isnis) {
-        isnis.findAll{ it.size() == 16 }.collect{isni ->
-            isni.split("").collate(4).collect{ it.join() }.join(" ")
-        }
+    static Collection<String> getFormattedIsnis(Collection<String> isnis) {
+        isnis.findAll{ it.size() == 16 }.collect { Unicode.formatIsni(it) }
     }
 
     Map query(Map jsonDsl) {
