@@ -11,7 +11,7 @@ import static whelk.util.DocumentUtil.getAtPath;
 public class FacetTree {
 
     private final JsonLd jsonLd;
-    private List<String> observationsAsTypeKeys = Collections.emptyList();
+    private List<String> observationsAsTypeKeys = new ArrayList<>();
 
     public FacetTree(JsonLd jsonLd) {
         this.jsonLd = jsonLd;
@@ -24,18 +24,36 @@ public class FacetTree {
 
         observationsAsTypeKeys = observations.stream()
                 .map(o -> jsonLd.toTermKey(get(o, List.of("object", "@id"), "")))
-                .toList();
+                .collect(Collectors.toList());
 
-        observations.forEach(observation -> {
-            if (isRootNode(observation)) {
-                tree.add(observation);
-                queue.add(observation);
-            } else {
-                intermediateClasses.addAll(getAbsentSuperClasses(observation));
+        List<String> roots = observationsAsTypeKeys.stream().filter(this::isRootNode).toList();
+
+        String rootKey;
+
+        if (roots.size() == 1) {
+            Map<String, Object> root = observations.stream()
+                    .filter(o -> jsonLd.toTermKey(get(o, List.of("object", "@id"), "")).equals(roots.getFirst()))
+                    .findFirst()
+                    .orElse(null);
+            tree.add(root);
+            queue.add(root);
+            rootKey = jsonLd.toTermKey(get(root, List.of("object", "@id"), ""));
+        } else {
+            rootKey = getAbsentRoot(observationsAsTypeKeys.getFirst());
+            observationsAsTypeKeys.add(rootKey);
+            Map<String, Object> root = createFakeObservation(rootKey);
+            observations.add(root);
+            tree.add(root);
+            queue.add(root);
+
+        }
+
+        observationsAsTypeKeys.forEach(typeKey -> {
+            if (!typeKey.equals(rootKey)) {
+                intermediateClasses.addAll(getIntermediateClassesFor(typeKey));
             }
         });
 
-        // Create empty observations for intermediate classes with 0 totalHits
         observations.addAll(intermediateClasses.stream().map(this::createFakeObservation).toList());
 
         while (!queue.isEmpty()) {
@@ -60,8 +78,11 @@ public class FacetTree {
         return fakeObservation;
     }
 
-    private List<String> getAbsentSuperClasses(Map<String, Object> observation) {
-        String typeKey = jsonLd.toTermKey(get(observation, List.of("object", "@id"), ""));
+    private List<String> getIntermediateClassesFor(String typeKey) {
+        return getAbsentSuperClasses(typeKey);
+    }
+
+    private List<String> getAbsentSuperClasses(String typeKey) {
         List<String> allSuperClasses = jsonLd.getSuperClasses(typeKey);
 
         return allSuperClasses.stream()
@@ -69,16 +90,27 @@ public class FacetTree {
                 .toList();
     }
 
-    private boolean hasParentInObservations(Map<String, Object> observation) {
-        String typeKey = jsonLd.toTermKey(get(observation, List.of("object", "@id"), ""));
+    private String getAbsentRoot(String typeKey) {
+        List<String> allSuperClasses = jsonLd.getSuperClasses(typeKey);
+        return allSuperClasses.stream()
+                .filter(this::subClassesContainsAllObservations)
+                .findFirst().orElse(null);
+    }
+
+    private boolean subClassesContainsAllObservations(String c) {
+        Set<String> subClasses = jsonLd.getSubClasses(c);
+        return subClasses.containsAll(observationsAsTypeKeys);
+    }
+
+    private boolean hasParentInObservations(String typeKey) {
         List<String> allSuperClasses = jsonLd.getSuperClasses(typeKey);
 
         return allSuperClasses.stream()
                 .anyMatch(s -> observationsAsTypeKeys.contains(s));
     }
 
-    private boolean isRootNode(Map<String, Object> observation) {
-        return !hasParentInObservations(observation);
+    private boolean isRootNode(String typeKey) {
+        return !hasParentInObservations(typeKey);
     }
 
     private List<Map<String, Object>> findChildren(Map<String, Object> observation, List<Map<String, Object>> observations) {
