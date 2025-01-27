@@ -502,7 +502,7 @@ class JsonLd {
         }
         Set<Link> result = new HashSet<>() 
         DocumentUtil.traverse(jsonLd[GRAPH_KEY]) { value, path ->
-            if (value instanceof Map && isReference(value) && !path.contains(JSONLD_ALT_ID_KEY)) {
+            if (value instanceof Map && isLink(value) && !path.contains(JSONLD_ALT_ID_KEY)) {
                 def graphIndex = (Integer) path[0]
                 List p = path.findAll { !(it instanceof Integer) } // filter out list indices
                 if (graphIndex == 0) {
@@ -516,14 +516,6 @@ class JsonLd {
             return DocumentUtil.NOP
         }
         return result
-    }
-    
-    private static boolean isReference(Map map) {
-        if(map.get(ID_KEY) && map.size() == 1) {
-            return true
-        } else {
-            return false
-        }
     }
 
     boolean softMerge(Map<String, Object> obj, Map<String, Object> into) {
