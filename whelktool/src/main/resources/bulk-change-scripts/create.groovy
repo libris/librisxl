@@ -1,4 +1,5 @@
 import whelk.Document
+import whelk.component.PostgreSQLComponent.ConflictingHoldException
 import whelk.util.DocumentUtil
 
 import static java.util.Collections.synchronizedSet;
@@ -12,6 +13,8 @@ import static whelk.datatool.bulkchange.BulkJobDocument.TARGET_FORM_KEY
 import static whelk.datatool.form.MatchForm.collectFormBNodeIdToPath
 import static whelk.datatool.form.MatchForm.collectFormBNodeIdToResourceIds
 import static whelk.util.DocumentUtil.traverse
+
+PrintWriter conflictingHoldReport = getReportWriter("conflicting-holding.txt")
 
 Map targetForm = parameters.get(TARGET_FORM_KEY)
 
@@ -54,7 +57,13 @@ def docs = verifiedUris.collect { uri ->
 }
 
 selectFromIterable(docs) {
-    it.scheduleSave(loud: true)
+    it.scheduleSave(loud: true, onError: { e ->
+        if (e instanceof ConflictingHoldException) {
+            conflictingHoldReport.println("Failed to create document due to: $e")
+        } else {
+            throw e
+        }
+    })
 }
 
 static void clearBulkTerms(Map form) {
