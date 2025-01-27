@@ -49,12 +49,19 @@ class FacetTreeSpec extends Specification {
     def "Sort one parent with two children, superclasses of root should be ignored"() {
         given:
         jsonLd.getDirectSubclasses("root") >> ["child1", "child2"]
+        jsonLd.getDirectSubclasses("Resource") >> ["root"]
         jsonLd.getDirectSubclasses("child1") >> []
         jsonLd.getDirectSubclasses("child2") >> []
 
         jsonLd.getSuperClasses("child1") >> ["root", "Resource"]
         jsonLd.getSuperClasses("child2") >> ["child1", "root", "Resource"]
         jsonLd.getSuperClasses("root") >> ["Resource"]
+        jsonLd.getSuperClasses("Resource") >> []
+
+        jsonLd.getSubClasses("Resource") >> ["root", "child1", "child2"]
+        jsonLd.getSubClasses("root") >> ["child1", "child2"]
+        jsonLd.getSubClasses("child1") >> []
+        jsonLd.getSubClasses("child2") >> []
 
 
         expect:
@@ -169,4 +176,29 @@ class FacetTreeSpec extends Specification {
                                                                     "_children": [["object": ["@id": "child"]]]]]]]
     }
 
+    def "Absent root, two children"() {
+        given:
+        jsonLd.getDirectSubclasses("root") >> ["child1", "child2"]
+        jsonLd.getDirectSubclasses("child1") >> []
+        jsonLd.getDirectSubclasses("child2") >> []
+
+        jsonLd.getSuperClasses("child1") >> ["root"]
+        jsonLd.getSuperClasses("child2") >> ["root"]
+        jsonLd.getSuperClasses("root") >> []
+
+        jsonLd.getSubClasses("root") >> ["child1", "child2"]
+        jsonLd.getSubClasses("child1") >> []
+        jsonLd.getSubClasses("child2") >> []
+
+        expect:
+        def tree = new FacetTree(jsonLd)
+        tree.sortObservationsAsTree(observations) == sorted
+
+        where:
+        observations                           | sorted
+        [["object": ["@id": "child1"]],
+         ["object": ["@id": "child2"]]]        |    [["totalItems" : 0, "view": ["@id" : "fake"], "object": ["@id": "root"],
+                                                      "_children" : [["object": ["@id": "child1"]],
+                                                                     ["object": ["@id": "child2"]]]]]
+    }
 }

@@ -11,7 +11,7 @@ import static whelk.util.DocumentUtil.getAtPath;
 public class FacetTree {
 
     private final JsonLd jsonLd;
-    private List<String> observationsAsTypeKeys = Collections.emptyList();
+    private List<String> observationsAsTypeKeys = new ArrayList<>();
 
     public FacetTree(JsonLd jsonLd) {
         this.jsonLd = jsonLd;
@@ -24,7 +24,9 @@ public class FacetTree {
 
         observationsAsTypeKeys = observations.stream()
                 .map(o -> jsonLd.toTermKey(get(o, List.of("object", "@id"), "")))
-                .toList();
+                .collect(Collectors.toList());
+
+        getAbsentRoot(observationsAsTypeKeys.getFirst()).ifPresent(s -> addToObservations(observations, s));
 
         observations.forEach(observation -> {
             if (isRootNode(observation)) {
@@ -50,6 +52,11 @@ public class FacetTree {
         return List.copyOf(tree);
     }
 
+    private void addToObservations(List<Map<String, Object>> observations, String s) {
+        observationsAsTypeKeys.add(s);
+        observations.add(createFakeObservation(s));
+    }
+
     private Map<String, Object> createFakeObservation(String termKey) {
         Map<String, Object> fakeObservation = new LinkedHashMap<>();
         String termId = jsonLd.toTermId(termKey);
@@ -67,6 +74,25 @@ public class FacetTree {
         return allSuperClasses.stream()
                 .takeWhile(s -> !observationsAsTypeKeys.contains(s))
                 .toList();
+    }
+
+    private Optional<String> getAbsentRoot(String typeKey) {
+        // Any observation will do
+        List<String> allSuperClasses = jsonLd.getSuperClasses(typeKey);
+        return allSuperClasses.stream()
+                .filter(this::includesAllSubClasses)
+                .filter(type -> !hasOneDirectSubClass(type))
+                .filter(c -> !observationsAsTypeKeys.contains(c))
+                .findFirst();
+    }
+
+    private boolean hasOneDirectSubClass(String type) {
+        return jsonLd.getDirectSubclasses(type).size() == 1;
+    }
+
+    private boolean includesAllSubClasses(String c) {
+        Set<String> subClasses = jsonLd.getSubClasses(c);
+        return subClasses.containsAll(observationsAsTypeKeys);
     }
 
     private boolean hasParentInObservations(Map<String, Object> observation) {
