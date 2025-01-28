@@ -36,14 +36,19 @@ public class FacetTree {
                     .findFirst()
                     .orElse(null);
             rootKey = jsonLd.toTermKey(get(root, List.of("object", "@id"), ""));
+            tree.add(root);
+            queue.add(root);
         } else {
             rootKey = getAbsentRoot(observationsAsTypeKeys.getFirst());
-            observationsAsTypeKeys.add(rootKey);
-            root = createFakeObservation(rootKey);
-            observations.add(root);
+            //TODO: should not be null
+            if (rootKey != null) {
+                observationsAsTypeKeys.add(rootKey);
+                root = createFakeObservation(rootKey);
+                observations.add(root);
+                tree.add(root);
+                queue.add(root);
+            }
         }
-        tree.add(root);
-        queue.add(root);
 
         observationsAsTypeKeys.forEach(typeKey -> {
             if (!typeKey.equals(rootKey)) {
