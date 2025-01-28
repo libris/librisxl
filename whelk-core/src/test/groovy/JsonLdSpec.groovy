@@ -984,34 +984,34 @@ class JsonLdSpec extends Specification {
 
     def "should preserve links"() {
         given:
-        Map doc = readMap("preserve-paths/molecular-aspects.jsonld")
+        Map doc = readMap("preserve-links/molecular-aspects.jsonld")
 
         def ld = new JsonLd(
-                readMap("preserve-paths/context.jsonld"),
-                readMap("preserve-paths/display-data.jsonld"),
-                readMap("preserve-paths/vocab.jsonld"))
+                readMap("preserve-links/context.jsonld"),
+                readMap("preserve-links/display-data.jsonld"),
+                readMap("preserve-links/vocab.jsonld"))
 
         Set<String> preserveLinks = ["http://libris.kb.se.localhost:5000/n602lbw018zh88k#work", "https://id.kb.se/marc/Document"] as Set
         
         expect:
-        ld.toChip(doc, preserveLinks) == readMap("preserve-paths/molecular-aspects-chips.jsonld")
-        ld.toCard(doc, true, false, false, preserveLinks) == readMap("preserve-paths/molecular-aspects-cards-chips.jsonld")
-        ld.toCard(doc, false, false, false, preserveLinks) == readMap("preserve-paths/molecular-aspects-cards-cards.jsonld")
+        ld.toChip(doc, preserveLinks) == readMap("preserve-links/molecular-aspects-chips.jsonld")
+        ld.toCard(doc, true, false, false, preserveLinks) == readMap("preserve-links/molecular-aspects-cards-chips.jsonld")
+        ld.toCard(doc, false, false, false, preserveLinks) == readMap("preserve-links/molecular-aspects-cards-cards.jsonld")
     }
 
     def "should preserve links 2"() {
         given:
-        Map data = readMap("preserve-paths/dtestpost.jsonld")
+        Map data = readMap("preserve-links/dtestpost.jsonld")
 
         def ld = new JsonLd(
-                readMap("preserve-paths/context.jsonld"),
-                readMap("preserve-paths/display-data.jsonld"),
-                readMap("preserve-paths/vocab.jsonld"))
+                readMap("preserve-links/context.jsonld"),
+                readMap("preserve-links/display-data.jsonld"),
+                readMap("preserve-links/vocab.jsonld"))
 
         Set<String> preserveLinks = ld.expandLinks(new Document(data).getExternalRefs()).collect{ it.iri }
 
         expect:
-        ld.toChip(data, preserveLinks) == readMap("preserve-paths/dtestpost-chips-links.jsonld")
+        ld.toChip(data, preserveLinks) == readMap("preserve-links/dtestpost-chips-links.jsonld")
     }
 
     def "should apply inverses"() {
