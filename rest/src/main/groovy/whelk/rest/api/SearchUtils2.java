@@ -102,6 +102,7 @@ public class SearchUtils2 {
             queryDsl.put("explain", true);
             // Scores won't be calculated when also using sort unless explicitly asked for
             queryDsl.put("track_scores", true);
+            queryDsl.put("fields", List.of("*"));
         }
 
         return queryDsl;
