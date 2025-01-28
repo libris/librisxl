@@ -73,6 +73,11 @@ public class FacetTree {
     private Map<String, Object> createFakeObservation(String termKey) {
         Map<String, Object> fakeObservation = new LinkedHashMap<>();
         String termId = jsonLd.toTermId(termKey);
+        if (termId == null) {
+            // TODO: investigate!!
+            // Happens when observations are "" and "Dataset".
+            return new HashMap<>();
+        }
         var fakeObject = Map.of(JsonLd.ID_KEY, termId);
         fakeObservation.put("totalItems", 0);
         fakeObservation.put("view", Map.of(JsonLd.ID_KEY, "fake"));
