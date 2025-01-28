@@ -26,27 +26,24 @@ public class FacetTree {
                 .map(o -> jsonLd.toTermKey(get(o, List.of("object", "@id"), "")))
                 .collect(Collectors.toList());
 
-        List<String> roots = observationsAsTypeKeys.stream().filter(this::isRootNode).toList();
-
+        List<String> rootCandidates = observationsAsTypeKeys.stream().filter(this::isRootNode).toList();
         String rootKey;
+        Map<String, Object> root;
 
-        if (roots.size() == 1) {
-            Map<String, Object> root = observations.stream()
-                    .filter(o -> jsonLd.toTermKey(get(o, List.of("object", "@id"), "")).equals(roots.getFirst()))
+        if (rootCandidates.size() == 1) {
+            root = observations.stream()
+                    .filter(o -> jsonLd.toTermKey(get(o, List.of("object", "@id"), "")).equals(rootCandidates.getFirst()))
                     .findFirst()
                     .orElse(null);
-            tree.add(root);
-            queue.add(root);
             rootKey = jsonLd.toTermKey(get(root, List.of("object", "@id"), ""));
         } else {
             rootKey = getAbsentRoot(observationsAsTypeKeys.getFirst());
             observationsAsTypeKeys.add(rootKey);
-            Map<String, Object> root = createFakeObservation(rootKey);
+            root = createFakeObservation(rootKey);
             observations.add(root);
-            tree.add(root);
-            queue.add(root);
-
         }
+        tree.add(root);
+        queue.add(root);
 
         observationsAsTypeKeys.forEach(typeKey -> {
             if (!typeKey.equals(rootKey)) {
