@@ -584,54 +584,6 @@ class JsonLd {
         s && (s.startsWith('https://') || s.startsWith('http://'))
     }
 
-    static List<List> findPaths(Map obj, String key, String value) {
-        return findPaths(obj, key, [value].toSet())
-    }
-
-    static List<List> findPaths(Map obj, String key, Set<String> values) {
-        List<List> paths = []
-        new DFS().search(obj, { List path, v ->
-            if (v in values && key == path[-1]) {
-                paths << (List) path.collect()
-            }
-        })
-        return paths
-    }
-
-    private static class DFS {
-        interface Callback {
-            void node(List path, value)
-        }
-
-        List path = []
-        Callback cb
-
-        void search(obj, Callback callback) {
-            cb = callback
-            path = []
-            node(obj)
-        }
-
-        private void node(obj) {
-            cb.node(path, obj)
-            if (obj instanceof Map) {
-                descend(((Map) obj).entrySet().collect({ new Tuple2(it.value, it.key) }))
-            } else if (obj instanceof List) {
-                descend(((List) obj).withIndex())
-            }
-        }
-
-        private void descend(List<Tuple2> nodes) {
-            for (n in nodes) {
-                path << n.v2
-                node(n.v1)
-                path.remove(path.size()-1)
-            }
-        }
-    }
-
-
-
     //==== Class-hierarchies ====
 
     void getSuperClasses(String type, List<String> result) {
@@ -783,12 +735,8 @@ class JsonLd {
         return "$id?lens=card"
     }
 
-    Map toCard(Map thing, List<List> preservePaths) {
-        return toCard(thing, true, false, false, preservePaths)
-    }
-
     Map toCard(Map thing, boolean chipsify = true, boolean addSearchKey = false,
-            final boolean reduceKey = false, List<List> preservePaths = [], boolean searchCard = false) {
+            final boolean reduceKey = false, Set<String> preserveLinks = [], boolean searchCard = false) {
         Map result = [:]
 
         Map card = removeProperties(thing, getLens(thing, searchCard ? ['search-cards', 'cards'] : ['cards']))
@@ -798,7 +746,9 @@ class JsonLd {
             card = removeProperties(thing, getLens(thing, searchCard ? ['search-chips', 'chips'] : ['chips']))
         }
 
-        restorePreserved(card, thing, preservePaths)
+        if (preserveLinks) {
+            restoreLinks(card, thing, preserveLinks)
+        }
 
         // Using a new variable here is because changing the value of reduceKey
         // causes "java.lang.VerifyError: Bad type on operand stack" when running
@@ -811,16 +761,16 @@ class JsonLd {
         card.each { key, value ->
             def lensValue = value
             if (chipsify) {
-                lensValue = toChip(value, pathRemainders([key], preservePaths))
+                lensValue = toChip(value, preserveLinks)
             } else {
                 if (value instanceof List) {
-                    lensValue = ((List) value).withIndex().collect { it, index ->
+                    lensValue = ((List) value).collect {
                         it instanceof Map
-                        ? toCard((Map) it, chipsify, addSearchKey, reduce, pathRemainders([key, index], preservePaths), searchCard)
+                        ? toCard((Map) it, chipsify, addSearchKey, reduce, preserveLinks, searchCard)
                         : it
                     }
                 } else if (value instanceof Map) {
-                    lensValue = toCard((Map) value, chipsify, addSearchKey, reduce, pathRemainders([key], preservePaths), searchCard)
+                    lensValue = toCard((Map) value, chipsify, addSearchKey, reduce, preserveLinks, searchCard)
                 }
             }
             result[key] = lensValue
@@ -851,17 +801,17 @@ class JsonLd {
         return result
     }
 
-    Object toChip(Object object, List<List> preservePaths = [], boolean searchChip = false) {
+    Object toChip(Object object, Set<String> preserveLinks = [], boolean searchChip = false) {
         if (object instanceof List) {
-            return object.withIndex().collect { it, ix ->
-                toChip(it, pathRemainders([ix], preservePaths), searchChip)
-            }
-        } else if ((object instanceof Map)) {
+            return object.collect { toChip(it, preserveLinks, searchChip) }
+        } else if (object instanceof Map) {
             Map result = [:]
             Map reduced = removeProperties(object, getLens(object, searchChip ? ['search-chips', 'chips'] : ['chips']))
-            restorePreserved(reduced, (Map) object, preservePaths)
+            if (preserveLinks) {
+                restoreLinks(reduced, (Map) object, preserveLinks)
+            }
             reduced.each { key, value ->
-                result[key] = toChip(value, pathRemainders([key], preservePaths), searchChip)
+                result[key] = toChip(value, preserveLinks, searchChip)
             }
             return result
         } else {
@@ -1076,25 +1026,35 @@ class JsonLd {
         return new LinkedHashSet((List) lens?.get('inverseProperties') ?: [])
     }
 
-    private static void restorePreserved(Map cardOrChip, Map thing, List<List> preservePaths) {
-        preservePaths.each {
-            if (!it.isEmpty()) {
-                def key = it[0]
-                if (thing.containsKey(key) && !cardOrChip.containsKey(key)) {
-                    if (thing[key] instanceof Map) {
-                        cardOrChip[key] = ((Map) thing[key]).subMap([ID_KEY])
-                    } else if (thing[key] instanceof List) {
-                        cardOrChip[key] = ((List) thing[key]).collect { ((Map) it).subMap([ID_KEY]) }.grep()
-                    }
+    private static void restoreLinks(Map cardOrChip, Map thing, Set<String> preserveLinks) {
+        thing.each { k, v ->
+            if (!cardOrChip.containsKey(k)) {
+                def links = retainLinks(v, preserveLinks)
+                if (links) {
+                    cardOrChip[k] = links
                 }
             }
         }
     }
 
-    private static List<List> pathRemainders(List prefix, List<List> paths) {
-        return paths
-                .findAll{ it.size() >= prefix.size() && it.subList(0, prefix.size()) == prefix }
-                .collect{ it.drop(prefix.size()) }
+    private static Object retainLinks(Object o, Set<String> preserveLinks) {
+        if (o instanceof Map) {
+            if (preserveLinks.contains(o.get(ID_KEY))) {
+                return o.subMap([ID_KEY])
+            }
+            Map m = [:]
+            o.each { k, v ->
+                v = retainLinks(v, preserveLinks)
+                if (v) {
+                    m[k] = v
+                }
+            }
+            return m
+        } else if (o instanceof List) {
+            return o.collect { retainLinks(it, preserveLinks) }.grep()
+        } else {
+            return []
+        }
     }
 
     private Map getLens(Map thing, List<String> lensTypes) {
