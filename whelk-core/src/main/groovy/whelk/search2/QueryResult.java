@@ -6,6 +6,7 @@ import whelk.util.DocumentUtil;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -187,9 +188,26 @@ public class QueryResult {
         }
 
         private static String parseField(String description) {
-            Matcher m = Pattern.compile("^weight\\(.+:((\".+\")|[^ ]+)").matcher(description);
-            if (m.find()) {
-                return m.group().replace("weight(", "");
+            if (description.startsWith("weight(")) {
+                description = description.replace("weight(", "");
+                if (description.startsWith("Synonym(")) {
+                    description = description.replace("Synonym(", "");
+                    Matcher matcher = Pattern.compile("^[^ ]+:[^ ]+( [^ ]+:[^ )]+)+").matcher(description);
+                    if (matcher.find()) {
+                        String match = matcher.group();
+                        String key = match.substring(0, match.indexOf(":"));
+                        String values = Arrays.stream(match.split(" "))
+                                .map(s -> s.split(":"))
+                                .map(s -> s[1])
+                                .collect(Collectors.joining(" "));
+                        return key + ":(" + values + ")";
+                    }
+                } else {
+                    Matcher m = Pattern.compile("^[^ ]+:((\".+\")|[^ ]+)").matcher(description);
+                    if (m.find()) {
+                        return m.group();
+                    }
+                }
             }
             return description;
         }
