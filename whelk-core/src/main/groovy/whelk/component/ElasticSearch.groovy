@@ -396,7 +396,6 @@ class ElasticSearch {
         }
 
         Set<String> links = whelk.jsonld.expandLinks(document.getExternalRefs()).collect{ it.iri }
-
         def graph = ((List) copy.data['@graph'])
         int originalSize = document.data['@graph'].size()
         copy.data['@graph'] =
@@ -477,10 +476,9 @@ class ElasticSearch {
         boolean chipsify = false
         boolean addSearchKey = true
         boolean reduceKey = false
-        def preservedPaths = preserveLinks ? JsonLd.findPaths(thing, '@id', preserveLinks) : []
         boolean searchCard = true
         
-        whelk.jsonld.toCard(thing, chipsify, addSearchKey, reduceKey, preservedPaths, searchCard)
+        whelk.jsonld.toCard(thing, chipsify, addSearchKey, reduceKey, preserveLinks, searchCard)
     }
 
     private static Map getShapeForEmbellishment(Whelk whelk, Map thing) {
@@ -492,7 +490,7 @@ class ElasticSearch {
 
     private static void recordToChip(Whelk whelk, Map thing) {
         if (thing[JsonLd.GRAPH_KEY]) {
-            thing[JsonLd.GRAPH_KEY][0] = whelk.jsonld.toChip(thing[JsonLd.GRAPH_KEY][0], [], true)
+            thing[JsonLd.GRAPH_KEY][0] = whelk.jsonld.toChip(thing[JsonLd.GRAPH_KEY][0], [] as Set, true)
         }
     }
 

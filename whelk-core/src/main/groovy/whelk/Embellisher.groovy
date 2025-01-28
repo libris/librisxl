@@ -178,7 +178,7 @@ class Embellisher {
         if (lens == 'search-chips') {
             // NB! This depends on search-chips being subsets of cards. Since we shrink the cards to search-chips. 
             var searchChips = true
-            data = data.collect{ (Map) jsonld.toChip(it, [], searchChips) }
+            data = data.collect{ (Map) jsonld.toChip(it, [] as Set, searchChips) }
         }
         else if (lens == 'chips') {
             data = data.collect{ (Map) jsonld.toChip(it) }

@@ -1,0 +1,18 @@
+{
+  "@id": "http://libris.kb.se.localhost:5000/n602lbw018zh88k#it",
+  "@type": "Electronic",
+  "sameAs": [
+    {
+      "@id": "http://libris.kb.se/resource/bib/12915810"
+    }
+  ],
+  "hasTitle": [
+    {
+      "@type": "Title",
+      "mainTitle": "Molecular aspects of enzyme catalysis"
+    }
+  ],
+  "instanceOf": {
+    "@id": "http://libris.kb.se.localhost:5000/n602lbw018zh88k#work"
+  }
+}

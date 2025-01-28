@@ -102,15 +102,15 @@ class SearchUtils {
     }
 
     private Map applyLens(Map framedThing, String lens, String preserveId = null) {
-        def preservedPaths = preserveId ? JsonLd.findPaths(framedThing, '@id', preserveId) : []
+        Set<String> preserveLinks = preserveId ? [preserveId] : []
 
         switch (lens) {
             case 'chips':
-                return ld.toChip(framedThing, preservedPaths)
+                return ld.toChip(framedThing, preserveLinks)
             case 'full':
                 return removeSystemInternalProperties(framedThing)
             default:
-                return ld.toCard(framedThing, false, false, false , preservedPaths, true)
+                return ld.toCard(framedThing, false, false, false, preserveLinks, true)
         }
     }
 
