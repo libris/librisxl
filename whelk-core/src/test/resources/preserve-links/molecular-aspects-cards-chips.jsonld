@@ -28,7 +28,6 @@
     ],
     "hasPart": [
       {
-        "@type": "Multimedia",
         "genreForm": [
           {
             "@id": "https://id.kb.se/marc/Document"
@@ -47,8 +46,8 @@
   ],
   "publication": [
     {
-      "year": "1994",
-      "@type": "PrimaryPublication"
+      "@type": "PrimaryPublication",
+      "year": "1994"
     }
   ],
   "identifiedBy": [

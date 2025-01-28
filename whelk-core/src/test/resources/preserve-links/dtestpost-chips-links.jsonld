@@ -4,8 +4,6 @@
     {
       "@id": "https://libris-qa.kb.se/wd6wp1r75clmp21",
       "@type": "Record",
-      "controlNumber": "3100087",
-      "encodingLevel": "marc:AbbreviatedLevel",
       "mainEntity": {
         "@id": "https://libris-qa.kb.se/wd6wp1r75clmp21#it"
       },
@@ -14,6 +12,8 @@
           "@id": "http://libris.kb.se/bib/3100087"
         }
       ],
+      "controlNumber": "3100087",
+      "encodingLevel": "marc:AbbreviatedLevel",
       "descriptionConventions": [
         {
           "@id": "https://id.kb.se/marc/Aacr2"
@@ -32,6 +32,11 @@
     {
       "@id": "https://libris-qa.kb.se/wd6wp1r75clmp21#it",
       "@type": "Instance",
+      "sameAs": [
+        {
+          "@id": "http://libris.kb.se/resource/bib/3100087"
+        }
+      ],
       "hasTitle": [
         {
           "@type": "Title",
@@ -41,29 +46,8 @@
           "@type": "SpineTitle"
         }
       ],
-      "sameAs": [
-        {
-          "@id": "http://libris.kb.se/resource/bib/3100087"
-        }
-      ],
       "publication": [
         {
-          "@type": "PrimaryPublication",
-          "agent": {
-            "@type": "Agent",
-            "label": [
-              "Förf."
-            ]
-          },
-          "place": [
-            {
-              "@type": "Place",
-              "label": [
-                "Huddinge"
-              ]
-            }
-          ],
-          "year": "2000",
           "country": {
             "@id": "https://id.kb.se/country/sw"
           }
@@ -80,13 +64,6 @@
       ],
       "contribution": [
         {
-          "@type": "Contribution",
-          "agent": {
-            "@type": "Person",
-            "familyName": "Alexandersson",
-            "givenName": "Mats",
-            "lifeSpan": "1960-"
-          },
           "role": [
             {
               "@id": "https://id.kb.se/relator/unspecifiedContributor"
@@ -94,11 +71,6 @@
           ]
         },
         {
-          "@type": "Contribution",
-          "agent": {
-            "@type": "Organization",
-            "name": "Testpostinstitutet (Primus)"
-          },
           "role": [
             {
               "@id": "https://id.kb.se/relator/unspecifiedContributor"
@@ -106,11 +78,6 @@
           ]
         },
         {
-          "@type": "Contribution",
-          "agent": {
-            "@type": "Meeting",
-            "name": "Testpostning på hög nivå"
-          },
           "role": [
             {
               "@id": "https://id.kb.se/relator/unspecifiedContributor"
@@ -130,7 +97,6 @@
         }
       ],
       "originalVersion": {
-        "@type": "Work",
         "language": [
           {
             "@id": "https://id.kb.se/language/eng"
@@ -139,7 +105,6 @@
       },
       "summary": [
         {
-          "@type": "Summary",
           "language": [
             {
               "@id": "https://id.kb.se/language/ger"
