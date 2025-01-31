@@ -2208,7 +2208,9 @@ class PostgreSQLComponent {
 
             String replacement = "'" + excludeRelations.join("', '") + "'"
             query = query.replace("€", replacement)
+            connection.setAutoCommit(false)
             preparedStatement = connection.prepareStatement(query)
+            preparedStatement.setFetchSize(256)
             preparedStatement.setString(1, id)
             rs = preparedStatement.executeQuery()
             List<Tuple2<String, String>> dependencies = []
