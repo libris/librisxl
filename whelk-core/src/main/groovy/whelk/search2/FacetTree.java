@@ -4,6 +4,7 @@ import whelk.JsonLd;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static whelk.util.DocumentUtil.getAtPath;
@@ -11,7 +12,7 @@ import static whelk.util.DocumentUtil.getAtPath;
 public class FacetTree {
 
     private final JsonLd jsonLd;
-    private List<String> observationsAsTypeKeys = new ArrayList<>();
+    private Map<String, Map<String, Object>> keyToObservation = new HashMap<>();
 
     public FacetTree(JsonLd jsonLd) {
         this.jsonLd = jsonLd;
@@ -22,39 +23,36 @@ public class FacetTree {
         Queue<Map<String, Object>> queue = new ConcurrentLinkedQueue<>();
         Set<String> intermediateClasses = new HashSet<>();
 
-        observationsAsTypeKeys = observations.stream()
-                .map(o -> jsonLd.toTermKey(get(o, List.of("object", "@id"), "")))
-                .collect(Collectors.toList());
+        keyToObservation = observations.stream()
+                .collect(Collectors.toMap(o -> jsonLd.toTermKey(get(o, List.of("object", "@id"), "")), Function.identity()));
 
-        List<String> rootCandidates = observationsAsTypeKeys.stream().filter(this::isRootNode).toList();
-        String rootKey;
-        Map<String, Object> root;
+        List<String> rootCandidates = keyToObservation.keySet().stream().filter(this::isRootNode).toList();
+        String rootKey = "";
 
         if (rootCandidates.size() == 1) {
-            root = observations.stream()
-                    .filter(o -> jsonLd.toTermKey(get(o, List.of("object", "@id"), "")).equals(rootCandidates.getFirst()))
-                    .findFirst()
-                    .orElse(null);
-            rootKey = jsonLd.toTermKey(get(root, List.of("object", "@id"), ""));
+            rootKey = rootCandidates.getFirst();
+            var root = keyToObservation.get(rootKey);
             tree.add(root);
             queue.add(root);
         } else {
-            rootKey = getAbsentRoot(observationsAsTypeKeys.getFirst());
-            //TODO: should not be null
-            if (rootKey != null) {
-                observationsAsTypeKeys.add(rootKey);
-                root = createFakeObservation(rootKey);
-                observations.add(root);
-                tree.add(root);
-                queue.add(root);
+            Optional<String> first = keyToObservation.keySet().stream().findFirst();
+            if (first.isPresent()) {
+                Optional<String> rootKeyOpt = getAbsentRoot(first.get());
+                if (rootKeyOpt.isPresent()) {
+                    rootKey = rootKeyOpt.get();
+                    var root = createFakeObservation(rootKey);
+                    observations.add(root);
+                    tree.add(root);
+                    queue.add(root);
+                }
             }
         }
 
-        observationsAsTypeKeys.forEach(typeKey -> {
+        for (String typeKey : keyToObservation.keySet()) {
             if (!typeKey.equals(rootKey)) {
                 intermediateClasses.addAll(getIntermediateClassesFor(typeKey));
             }
-        });
+        }
 
         observations.addAll(intermediateClasses.stream().map(this::createFakeObservation).toList());
 
@@ -93,27 +91,27 @@ public class FacetTree {
         List<String> allSuperClasses = jsonLd.getSuperClasses(typeKey);
 
         return allSuperClasses.stream()
-                .takeWhile(s -> !observationsAsTypeKeys.contains(s))
+                .takeWhile(s -> !keyToObservation.containsKey(s))
                 .toList();
     }
 
-    private String getAbsentRoot(String typeKey) {
+    private Optional<String> getAbsentRoot(String typeKey) {
         List<String> allSuperClasses = jsonLd.getSuperClasses(typeKey);
         return allSuperClasses.stream()
                 .filter(this::subClassesContainsAllObservations)
-                .findFirst().orElse(null);
+                .findFirst();
     }
 
     private boolean subClassesContainsAllObservations(String c) {
         Set<String> subClasses = jsonLd.getSubClasses(c);
-        return subClasses.containsAll(observationsAsTypeKeys);
+        return subClasses.containsAll(keyToObservation.keySet());
     }
 
     private boolean hasParentInObservations(String typeKey) {
         List<String> allSuperClasses = jsonLd.getSuperClasses(typeKey);
 
         return allSuperClasses.stream()
-                .anyMatch(s -> observationsAsTypeKeys.contains(s));
+                .anyMatch(s -> keyToObservation.containsKey(s));
     }
 
     private boolean isRootNode(String typeKey) {
