@@ -1299,8 +1299,10 @@ class PostgreSQLComponent {
         PreparedStatement statement = null
         ResultSet rs = null
         Connection connection = getOuterConnection()
+        connection.setAutoCommit(false)
         try {
             statement = connection.prepareStatement(GET_DATASET_ID_LIST)
+            statement.setFetchSize(256)
 
             PGobject jsonb = new PGobject()
             jsonb.setType("jsonb")
