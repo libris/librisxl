@@ -365,14 +365,19 @@ def handle_activity(connection, activity):
 # Scan for new updates to consume.
 #
 def update(connection):
+    publish_time_reached = None
     cursor = connection.cursor()
     with urllib.request.urlopen(libris_emm_base_url) as response:
         data = json.load(response)
         next_url = data["first"]["id"]
-    
+
     while next_url:
         with urllib.request.urlopen(next_url) as response:
             data = json.load(response)
+
+            if (len(data["orderedItems"]) > 0 and publish_time_reached == None):
+                publish_time_reached = data["orderedItems"][0]["published"]
+
             if "next" in data:
                 next_url = data["next"]
             else:
@@ -385,8 +390,10 @@ def update(connection):
                     next_url = None
                     break
                 handle_activity(connection, item)
-            cursor.execute("UPDATE state SET changes_consumed_until = ?", (item["published"],))
-            connection.commit()
+
+    if (publish_time_reached is not None):
+        cursor.execute("UPDATE state SET changes_consumed_until = ?", (publish_time_reached,))
+        connection.commit()
 
 
 def main():
