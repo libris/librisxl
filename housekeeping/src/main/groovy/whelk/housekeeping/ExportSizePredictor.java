@@ -42,7 +42,7 @@ public class ExportSizePredictor extends HouseKeeper {
         int topics = countChanged("Topic");
         int agents = countChanged("Agent");
 
-        if (items > 750000 || instances > 100000 || works > 10000 || topics > 500 || agents > 500) {
+        if (items > 350000 || instances > 50000 || works > 5000 || topics > 250 || agents > 300) {
             logger.warn("Potentially too large export going tonight, changed so far today: "
                     + items + " items, " + instances + " instances, " + works + " works, "
                     + topics + " topics, " + agents + " agents." );
