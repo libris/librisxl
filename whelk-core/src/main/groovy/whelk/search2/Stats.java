@@ -34,19 +34,23 @@ public class Stats {
     private final AppParams appParams;
     private final QueryTree queryTree;
     private final QueryUtil queryUtil;
+    private final JsonLd jsonLd;
 
     public Stats(Disambiguate disambiguate,
                  QueryUtil queryUtil,
                  QueryTree queryTree,
                  QueryResult queryResult,
                  QueryParams queryParams,
-                 AppParams appParams) {
+                 AppParams appParams,
+                 JsonLd jsonLd
+    ) {
         this.disambiguate = disambiguate;
         this.queryResult = queryResult;
         this.queryParams = queryParams;
         this.appParams = appParams;
         this.queryTree = queryTree;
         this.queryUtil = queryUtil;
+        this.jsonLd = jsonLd;
     }
 
     public Map<String, Object> build() {
@@ -123,6 +127,10 @@ public class Stats {
             var sliceNode = new LinkedHashMap<>();
             var isRange = rangeProps.contains(property);
             var observations = getObservations(buckets, isRange ? queryTree.removeTopLevelPropValueWithRangeIfPropEquals(property) : queryTree, nonQueryParams);
+
+            if (property.isType()) {
+                observations = new FacetTree(jsonLd).sortObservationsAsTree(observations);
+            }
             if (!observations.isEmpty()) {
                 if (isRange) {
                     sliceNode.put("search", getRangeTemplate(property, makeParams(nonQueryParams)));
@@ -138,7 +146,7 @@ public class Stats {
     }
 
     private List<Map<String, Object>> getObservations(Map<PropertyValue, Integer> buckets, QueryTree qt, Map<String, String> nonQueryParams) {
-        List<Map<String, Object>> observations = new ArrayList<>();
+            List<Map<String, Object>> observations = new ArrayList<>();
 
         buckets.forEach((pv, count) -> {
             Map<String, Object> observation = new LinkedHashMap<>();
