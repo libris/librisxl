@@ -1,5 +1,6 @@
 import java.util.stream.Collectors
 
+import whelk.Whelk
 import static whelk.util.Jackson.mapper
 
 class Utils {
@@ -278,6 +279,12 @@ class TypeNormalizerUtils extends Utils {
 
 class TypeNormalizer extends TypeNormalizerUtils {
 
+  Whelk whelk
+
+  TypeNormalizer(Whelk whelk) {
+    this.whelk = whelk
+  }
+
   static boolean normalize(Map instance, Map work) {
     var changed = false
 
@@ -533,6 +540,8 @@ class TypeNormalizer extends TypeNormalizerUtils {
 // TODO: Instead, normalize linked works first, then instances w/o linked works?
 convertedWorks = java.util.concurrent.ConcurrentHashMap.newKeySet()
 
+typeNormalizer = new TypeNormalizer(getWhelk())
+
 process { def doc, Closure loadWorkItem ->
   def (record, instance) = doc.graph
 
@@ -543,7 +552,7 @@ process { def doc, Closure loadWorkItem ->
         work = work[0]
       }
 
-      var changed = TypeNormalizer.normalize(instance, work)
+      var changed = typeNormalizer.normalize(instance, work)
 
       if (changed) doc.scheduleSave()
     } else {
@@ -552,7 +561,7 @@ process { def doc, Closure loadWorkItem ->
       loadWorkItem(loadedWorkId) { workIt ->
         def (workRecord, work) = workIt.graph
 
-        var changed = TypeNormalizer.normalize(instance, work)
+        var changed = typeNormalizer.normalize(instance, work)
 
         if (changed) {
           doc.scheduleSave()
