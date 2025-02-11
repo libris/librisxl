@@ -8,13 +8,13 @@ class DummyNodes {
     static def gt = Operator.GREATER_THAN
     static def lt = Operator.LESS_THAN
 
-    static def path1 = new Path(['p1'])
-    static def path2 = new Path(['p2'])
-    static def path3 = new Path(['p3'])
+    static def path1 = new Path(new Key.RecognizedKey('p1'))
+    static def path2 = new Path(new Key.RecognizedKey('p2'))
+    static def path3 = new Path(new Key.RecognizedKey('p3'))
 
-    static def prop1 = new Property('p1', ['prefLabel': 'p1'])
-    static def prop2 = new Property('p:2', ['prefLabel': 'p2'])
-    static def prop3 = new Property('p3', ['prefLabel': 'p3'])
+    static def prop1 = new Property('p1', ['prefLabel': 'p1'], null)
+    static def prop2 = new Property('p:2', ['prefLabel': 'p2'], 'p2')
+    static def prop3 = new Property('p3', ['prefLabel': 'p3'], null)
 
     static def v1 = new Literal('v1')
     static def v2 = new Link('v:2', ['prefLabel': 'v2'])
@@ -30,42 +30,42 @@ class DummyNodes {
     static def notPathV2 = new PathValue(path2, neq, v2)
     static def notPathV3 = new PathValue(path3, neq, v3)
 
-    static def propV1 = new PropertyValue(prop1, eq, v1)
-    static def propV2 = new PropertyValue(prop2, eq, v2)
-    static def propV3 = new PropertyValue(prop3, eq, v3)
+    static def propV1 = new PathValue(new Path(prop1), eq, v1)
+    static def propV2 = new PathValue(new Path(prop2), eq, v2)
+    static def propV3 = new PathValue(new Path(prop3), eq, v3)
 
     static def orXY = new Or([pathV1, pathV2])
     static def andXY = new And([pathV1, pathV2])
     static def andXYZ = new And([pathV1, pathV2, pathV3])
     static def notXY = new And([notPathV1, notPathV2])
 
-    static def ft1 = new FreeText(Operator.EQUALS, 'ft1')
+    static def ft1 = new FreeText(new FreeText.TextQuery(['prefLabel': 'freetext query']), Operator.EQUALS, 'ft1')
 
-    static def type1 = new PropertyValue(new Property("rdf:type"), Operator.EQUALS, new VocabTerm("T1"))
-    static def type2 = new PropertyValue(new Property("rdf:type"), Operator.EQUALS, new VocabTerm("T2"))
+    static def type1 = new PathValue(new Path(new Property("rdf:type", [:], null)), Operator.EQUALS, new VocabTerm("T1", [:]))
+    static def type2 = new PathValue(new Path(new Property("rdf:type", [:], null)), Operator.EQUALS, new VocabTerm("T2", [:]))
 
     static def ft(String s) {
-        return new FreeText(eq, s)
+        return new FreeText(new FreeText.TextQuery(['prefLabel': 'freetext query']), eq, s)
     }
 
     static def notFt(String s) {
-        return new FreeText(neq, s)
-    }
-
-    static def propV(String p) {
-        return new PropertyValue(p, eq, v1)
+        return new FreeText(null, neq, s)
     }
 
     static def propV(Property p, Operator op, Value v) {
-        return new PropertyValue(p, op, v)
+        return new PathValue(p, op, v)
     }
 
-    static def pathV(String p) {
-        return new PathValue(p, eq, v1)
+    static def propV(String p) {
+        propV(new Property(p, [:], null), eq, v1)
     }
 
     static def pathV(Path p, Operator op, Value v) {
         return new PathValue(p, op, v)
+    }
+
+    static def pathV(String p) {
+        return new PathValue(p, eq, v1)
     }
 
     static def abf(String alias, Node filter, Map prefLabelByLang) {

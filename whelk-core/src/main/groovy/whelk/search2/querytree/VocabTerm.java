@@ -1,17 +1,11 @@
 package whelk.search2.querytree;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
-public record VocabTerm(String key, Map<String, Object> definition) implements Value {
-    public VocabTerm(String string) {
-        this(string, Collections.emptyMap());
-    }
-
-    @Override
-    public String string() {
-        return key;
+public record VocabTerm(String key, Map<String, Object> definition, String raw) implements Value {
+    public VocabTerm(String key, Map<String, Object> definition) {
+        this(key, definition, null);
     }
 
     @Override
@@ -20,8 +14,23 @@ public record VocabTerm(String key, Map<String, Object> definition) implements V
     }
 
     @Override
+    public String raw() {
+        return raw != null ? raw : key;
+    }
+
+    @Override
+    public String jsonForm() {
+        return key;
+    }
+
+    @Override
+    public String toString() {
+        return key;
+    }
+
+    @Override
     public boolean equals(Object o) {
-        return o instanceof VocabTerm && ((VocabTerm) o).key().equals(key);
+        return o instanceof VocabTerm vt && vt.key().equals(key);
     }
 
     @Override

@@ -3,7 +3,6 @@ package whelk.search2;
 import whelk.JsonLd;
 import whelk.search.ESQuery;
 import whelk.search2.querytree.QueryTree;
-import whelk.util.DocumentUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;

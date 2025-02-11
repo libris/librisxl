@@ -57,6 +57,7 @@ class JsonLd {
         'meta.derivedFrom', 'hasTitle.source', 'bulk:changeSpec.bulk:deprecate',
         /* following are combinations only needed while there are local unlinked works */
          'translationOf.hasTitle.source', 'instanceOf.hasTitle.source', 'instanceOf.translationOf.hasTitle.source']
+
     public static final String CATEGORY_DEPENDENT = 'dependent'
 
     public static final Set<String> LD_KEYS
@@ -76,9 +77,29 @@ class JsonLd {
         ] as Set
     }
 
-    public static final String SUB_PROPERTY_OF = 'subPropertyOf'
+    static final class Owl {
+        public static final String PROPERTY_CHAIN_AXIOM = "propertyChainAxiom"
+        public static final String RESTRICTION = "Restriction"
+        public static final String ON_PROPERTY = "onProperty"
+        public static final String HAS_VALUE = "hasValue"
+        public static final String OBJECT_PROPERTY = "ObjectProperty"
+        public static final String DATATYPE_PROPERTY = "DatatypeProperty"
+        public static final String INVERSE_OF = "inverseOf"
+        public static final String EQUIVALENT_CLASS = "equivalentClass"
+        public static final String EQUIVALENT_PROPERTY = "equivalentProperty"
+    }
+
+    static final class Rdfs {
+        public static final String RESOURCE = "Resource";
+        public static final String RDF_TYPE = "rdf:type";
+        public static final String DOMAIN = "domain";
+        public static final String RANGE = "range";
+        public static final String SUBCLASS_OF = "subClassOf";
+        public static final String SUB_PROPERTY_OF = "subPropertyOf";
+        public static final String IS_DEFINED_BY = "isDefinedBy";
+    }
+
     public static final String ALTERNATE_PROPERTIES = 'alternateProperties'
-    public static final String RANGE = 'range'
 
     private static Logger log = LogManager.getLogger(JsonLd.class)
 
@@ -163,12 +184,12 @@ class JsonLd {
         superClassOf = generateSubTermLists("subClassOf")
 
         subPropertiesByType = new HashMap<String, Set>()
-        superPropertyOf = generateSubTermLists(SUB_PROPERTY_OF)
+        superPropertyOf = generateSubTermLists(Rdfs.SUB_PROPERTY_OF)
 
         categories = generateSubTermLists('category')
         
         def zipMaps = { a, b -> (a.keySet() + b.keySet()).collectEntries{k -> [k, a.get(k, []) + b.get(k, [])]}}
-        inRange = zipMaps(generateSubTermLists('rangeIncludes'), generateSubTermLists(RANGE))
+        inRange = zipMaps(generateSubTermLists('rangeIncludes'), generateSubTermLists(Rdfs.RANGE))
         
         buildLangContainerAliasMap()
 
@@ -642,6 +663,12 @@ class JsonLd {
 
     //==== Class-hierarchies ====
 
+    Set<String> getSuperClasses(String type) {
+        List<String> res = []
+        getSuperClasses(type, res)
+        return res as Set
+    }
+
     void getSuperClasses(String type, List<String> result) {
         def termMap = vocabIndex[type]
         if (termMap == null)
@@ -947,8 +974,8 @@ class JsonLd {
                 // For our current use cases we have no need for that. But we have a need to match against exactly Title without 
                 // any subclasses (e.g. VariantTitle) which is actually not possible to express with this construct. 
                 // So we use this broken implementation for now.
-                def range = it[RANGE]
-                def p = asList(it[SUB_PROPERTY_OF])
+                def range = it[Rdfs.RANGE]
+                def p = asList(it[Rdfs.SUB_PROPERTY_OF])
                 if (p.any { thing[it] instanceof Map && thing[it]['@type'] == range }) {
                     return p.first()
                 }
@@ -1048,7 +1075,7 @@ class JsonLd {
             List propertiesToKeep = (List) lens.get("showProperties")
                     .collect { prop -> 
                         isAlternateProperties(prop) 
-                                ? prop[ALTERNATE_PROPERTIES].collect { isAlternateSubProperty(it) ? it[SUB_PROPERTY_OF] : it } 
+                                ? prop[ALTERNATE_PROPERTIES].collect { isAlternateSubProperty(it) ? it[Rdfs.SUB_PROPERTY_OF] : it }
                                 : prop 
                     }
                     .flatten()
@@ -1134,8 +1161,8 @@ class JsonLd {
                         else if (a instanceof List) {
                             a.each { if (thing[it]) result[it] = thing[it] }
                         }
-                        else if (isAlternateSubProperty(a) && thing[a[SUB_PROPERTY_OF]]) {
-                            result[a[SUB_PROPERTY_OF]] = thing[a[SUB_PROPERTY_OF]]
+                        else if (isAlternateSubProperty(a) && thing[a[Rdfs.SUB_PROPERTY_OF]]) {
+                            result[a[Rdfs.SUB_PROPERTY_OF]] = thing[a[Rdfs.SUB_PROPERTY_OF]]
                         }
                     }
                 }
@@ -1151,7 +1178,7 @@ class JsonLd {
     }
     
     private static boolean isAlternateSubProperty(def p) {
-        p instanceof Map && p[SUB_PROPERTY_OF] && p[RANGE]
+        p instanceof Map && p[Rdfs.SUB_PROPERTY_OF] && p[Rdfs.RANGE]
     }
 
     Map getLensFor(Map thing, Map lensGroup) {

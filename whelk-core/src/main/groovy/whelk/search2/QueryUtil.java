@@ -62,14 +62,16 @@ public class QueryUtil {
                 .collect(Collectors.toMap(e -> (String) e.getKey(), e -> (Object) e.getValue()));
     }
 
-    public Optional<Map<?, ?>> loadThing(String id) {
-        return loadThing(id, whelk);
+    public Map<String, Object> loadThing(String iri) {
+        return loadThing(iri, whelk);
     }
 
-    public static Optional<Map<?, ?>> loadThing(String id, Whelk whelk) {
-        return Optional.ofNullable(whelk.loadData(id))
+    public static Map<String, Object> loadThing(String iri, Whelk whelk) {
+        return Optional.ofNullable(whelk.loadData(iri))
                 .map(data -> data.get(JsonLd.GRAPH_KEY))
-                .map(graph -> (Map<?, ?>) ((List<?>) graph).get(1));
+                .map(graph -> ((List<?>) graph).get(1))
+                .map(QueryUtil::castToStringObjectMap)
+                .orElse(Collections.emptyMap());
     }
 
     public static String makeFindUrl(String i, String q, Map<String, String> nonQueryParams) {
@@ -77,7 +79,7 @@ public class QueryUtil {
     }
 
     public static String makeFindUrl(QueryTree qt, Map<String, String> nonQueryParams) {
-        return makeFindUrl(qt.getTopLevelFreeText(), qt.toString(), nonQueryParams);
+        return makeFindUrl(qt.getTopLevelFreeText(), qt.toQueryString(), nonQueryParams);
     }
 
     public static String makeFindUrl(String i, String q, List<String> nonQueryParams) {

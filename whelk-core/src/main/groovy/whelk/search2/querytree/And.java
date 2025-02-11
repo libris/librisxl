@@ -1,7 +1,5 @@
 package whelk.search2.querytree;
 
-import whelk.search2.Disambiguate;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -53,25 +51,25 @@ public final class And extends Group {
         return children().stream()
                 .filter(n -> n.isTypeNode() || (n instanceof Or && n.children().stream().allMatch(Node::isTypeNode)))
                 .flatMap(n -> n instanceof Or ? n.children().stream() : Stream.of(n))
-                .map(PropertyValue.class::cast)
-                .map(PropertyValue::value)
-                .map(Value::string)
+                .map(PathValue.class::cast)
+                .map(PathValue::value)
+                .map(Value::jsonForm)
                 .toList();
     }
 
     @Override
     boolean implies(Node a, Node b, BiFunction<Node, Node, Boolean> condition) {
-        return switch (a) {
-            case Group aGroup -> switch (b) {
-                case Group bGroup -> bGroup.children().stream().allMatch(child -> implies(aGroup, child, condition));
-                default -> aGroup.children().stream().anyMatch(child -> condition.apply(child, b));
-            };
-            default -> switch (b) {
+        if (a instanceof Group aGroup) {
+            return b instanceof Group bGroup
+                    ? bGroup.children().stream().allMatch(child -> implies(aGroup, child, condition))
+                    : aGroup.children().stream().anyMatch(child -> condition.apply(child, b));
+        } else {
+            return switch (b) {
                 case And and -> and.children().stream().allMatch(child -> condition.apply(a, child));
                 case Or or -> or.children().stream().anyMatch(child -> condition.apply(a, child));
                 default -> condition.apply(a, b);
             };
-        };
+        }
     }
 
     public boolean contains(Node node) {

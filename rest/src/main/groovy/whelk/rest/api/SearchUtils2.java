@@ -5,7 +5,6 @@ import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.exception.WhelkRuntimeException;
 
-import whelk.search2.Aggs;
 import whelk.search2.AppParams;
 import whelk.search2.Disambiguate;
 import whelk.search2.Pagination;
@@ -13,7 +12,6 @@ import whelk.search2.QueryParams;
 import whelk.search2.QueryResult;
 import whelk.search2.QueryUtil;
 import whelk.search2.Sort;
-import whelk.search2.Spell;
 import whelk.search2.Stats;
 import whelk.search2.querytree.QueryTree;
 import whelk.util.http.RedirectException;
@@ -21,17 +19,21 @@ import whelk.util.http.RedirectException;
 import java.io.IOException;
 import java.util.*;
 
+import static whelk.search2.Aggs.buildAggQuery;
 import static whelk.search2.EsBoost.addConstantBoosts;
 import static whelk.search2.Spell.buildSpellSuggestions;
+import static whelk.search2.Spell.getSpellQuery;
 import static whelk.util.Jackson.mapper;
 
 public class SearchUtils2 {
     private final QueryUtil queryUtil;
     private final Disambiguate disambiguate;
+    private final Whelk whelk;
 
     SearchUtils2(Whelk whelk) {
         this.queryUtil = new QueryUtil(whelk);
         this.disambiguate = new Disambiguate(whelk);
+        this.whelk = whelk;
     }
 
     Map<String, Object> doSearch(Map<String, String[]> queryParameters) throws InvalidQueryException, IOException {
@@ -49,17 +51,17 @@ public class SearchUtils2 {
             }
         }
 
-        AppParams appParams = getAppParams(queryParameters, disambiguate);
+        AppParams appParams = getAppParams(queryParameters, disambiguate, whelk);
 
-        QueryTree qTree = new QueryTree(queryParams.q, disambiguate, appParams.siteFilters.aliasToFilter())
+        QueryTree qTree = new QueryTree(queryParams.q, disambiguate, whelk, appParams.siteFilters.aliasToFilter())
                 .normalizeFilters(appParams.siteFilters);
-        QueryTree iTree = new QueryTree(queryParams.i, disambiguate, appParams.siteFilters.aliasToFilter());
+        QueryTree iTree = new QueryTree(queryParams.i, disambiguate, whelk, appParams.siteFilters.aliasToFilter());
 
         if (!iTree.isEmpty() && !iTree.isFreeText()) {
             throw new RedirectException(QueryUtil.makeFindUrl(qTree, queryParams.getNonQueryParams()));
         }
 
-        qTree.addFilters(queryParams, appParams);
+        qTree.addFilters(queryParams, appParams, whelk.getJsonld());
 
         Map<String, Object> esQueryDsl = getEsQueryDsl(qTree, queryParams, appParams.statsRepr);
 
@@ -85,7 +87,7 @@ public class SearchUtils2 {
                 : queryParams.sortBy).getSortClauses(queryUtil::getSortField));
 
         if (queryParams.spell.suggest && queryUtil.esMappings.isSpellCheckAvailable()) {
-            var spellQuery = Spell.getSpellQuery(queryTree);
+            var spellQuery = getSpellQuery(queryTree);
             if (spellQuery.isPresent()) {
                 if (queryParams.spell.suggestOnly) {
                     return Map.of("suggest", spellQuery.get());
@@ -95,7 +97,7 @@ public class SearchUtils2 {
             }
         }
 
-        queryDsl.put("aggs", Aggs.buildAggQuery(statsRepr, disambiguate, queryTree.collectRulingTypes(disambiguate), queryUtil::getNestedPath));
+        queryDsl.put("aggs", buildAggQuery(statsRepr, whelk.getJsonld(), queryTree.collectRulingTypes(whelk.getJsonld()), queryUtil::getNestedPath));
         queryDsl.put("track_total_hits", true);
 
         if (queryParams.debug.contains(QueryParams.Debug.ES_SCORE)) {
@@ -108,14 +110,14 @@ public class SearchUtils2 {
     }
 
     private Map<String, Object> getEsQuery(QueryTree queryTree, List<String> boostFields) {
-        return addConstantBoosts(queryTree.toEs(queryUtil, disambiguate, boostFields));
+        return addConstantBoosts(queryTree.toEs(queryUtil, whelk.getJsonld(), boostFields));
     }
 
     private Map<String, Object> getPartialCollectionView(QueryResult queryResult,
                                                         QueryTree qt,
                                                         QueryParams queryParams,
                                                         AppParams appParams) {
-        var fullQuery = qt.toString();
+        var fullQuery = qt.toQueryString();
         var freeText = qt.getTopLevelFreeText();
         var view = new LinkedHashMap<String, Object>();
 
@@ -124,11 +126,11 @@ public class SearchUtils2 {
         view.put("itemOffset", queryParams.offset);
         view.put("itemsPerPage", queryParams.limit);
         view.put("totalItems", queryResult.numHits);
-        // TODO: Include _o search respresentation in search mapping?
+        // TODO: Include _o search representation in search mapping?
         view.put("search", Map.of("mapping", List.of(qt.toSearchMapping(queryParams.getNonQueryParams(0)))));
         view.putAll(Pagination.makeLinks(queryResult.numHits, queryUtil.maxItems(), freeText, fullQuery, queryParams));
         view.put("items", queryResult.collectItems(queryUtil.getApplyLensFunc(queryParams)));
-        view.put("stats", new Stats(disambiguate, queryUtil, qt, queryResult, queryParams, appParams).build());
+        view.put("stats", new Stats(whelk.getJsonld(), queryUtil, qt, queryResult, queryParams, appParams).build());
         if (!queryResult.spell.isEmpty()) {
             view.put("_spell", buildSpellSuggestions(queryResult, qt, queryParams.getNonQueryParams(0)));
         }
@@ -137,7 +139,7 @@ public class SearchUtils2 {
         return view;
     }
 
-    private AppParams getAppParams(Map<String, String[]> queryParameters, Disambiguate disambiguate) throws IOException {
+    private AppParams getAppParams(Map<String, String[]> queryParameters, Disambiguate disambiguate, Whelk whelk) throws IOException {
         Map<String, Object> config = new LinkedHashMap<>();
 
         var statsJson = Optional.ofNullable(queryParameters.get(QueryParams.ApiParams.APP_CONFIG))
@@ -149,7 +151,7 @@ public class SearchUtils2 {
             config.put((String) entry.getKey(), entry.getValue());
         }
 
-        return new AppParams(config, disambiguate);
+        return new AppParams(config, disambiguate, whelk);
     }
 
     public Map<String, Object> buildAppConfig(Map<String, Object> findDesc) {
