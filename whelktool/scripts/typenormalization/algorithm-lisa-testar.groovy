@@ -537,28 +537,17 @@ class TypeNormalizer extends TypeNormalizerUtils {
 
   static List testingSomething(Map instance, Map work) {
     var changed = false
+    def change_types = ["Serial", "Collection", "Integrating", "ComponentPart", "SubCollection"]
 
     // Lisa's test thing
-    def map_path = ""
-    if (instance.get("issuanceType") == "Serial") {
-        map_path += "Serial."
-        if (work.get("@type") == "Text") {
-            map_path += "Text."
-            work.put(TYPE, "Textserie")
+    def map_path = "${work.get("@type")} -> "
+
+    if (instance.get("issuanceType") in change_types) {
+            work.put(TYPE, instance.get("issuanceType"))
             changed = true
         }
-    }
-    else if (instance.get("issuanceType") == "Monograph") {
-        map_path += "Monograph."
-        if (work.get("@type") == "Text") {
-            map_path += "Text."
-            work.put(TYPE, "Textmonograf")
-            changed = true
-        }
-    }
-    else {
-        map_path += "IssuanceTypeNotMapped."
-    }
+
+    map_path += "${work.get("@type")}"
 
     return [changed, map_path]
 

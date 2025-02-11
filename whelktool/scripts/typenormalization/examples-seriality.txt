@@ -47,7 +47,7 @@
 <https://libris.kb.se/q71p516233z95l6#it>
 
 # Monograph Text
-<https://libris.kb.se/4ngthh5g5qmqbhr#it>
+#<https://libris.kb.se/4ngthh5g5qmqbhr#it>
 
 # Monograph StillImage
 <https://libris.kb.se/5phjr83h486wrh1 #it>
