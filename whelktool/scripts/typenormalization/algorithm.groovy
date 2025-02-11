@@ -35,6 +35,19 @@ class Utils {
 
 class MarcLegacy extends Utils {
 
+  static var knownContentTypes = [
+    Audio: KBRDA + 'Audio',
+    Globe: KBRDA + 'CartographicThreeDimensionalForm',
+    Multimedia: KBRDA + 'ComputerDataset',  // FIXME: wild guess, likely wrong (cf. ComputerProgram)
+    MovingImage: KBRDA + 'TwoDimensionalMovingImage',
+    Music: KBRDA + 'PerformedMusic',
+    NotatedMovement: KBRDA + 'NotatedMovement',
+    NotatedMusic: KBRDA + 'NotatedMusic',
+    Object: KBRDA + 'ThreeDimensionalForm',
+    StillImage: KBRDA + 'StillImage',
+    Text: KBRDA + 'Text',
+  ]
+
   static boolean fixMarcLegacyType(Map instance, Map work) {
     var changed = false
 
@@ -126,28 +139,54 @@ class MarcLegacy extends Utils {
   }
 
   static boolean convertIssuanceType(Map instance, Map work) {
-    var collectiontype = (String) instance.remove("issuanceType")
-    if (!collectiontype) {
+    var issuancetype = (String) instance.remove("issuanceType")
+    if (!issuancetype) {
       return false
     }
-    if (collectiontype.equals("ComponentPart")) {
-        instance[TYPE] += collectiontype
-    } else if ((!collectiontype.equals("Monograph"))) {
-      // TODO: check genres and heuristics (some Serial are mistyped!)
-      if ('collectsType' in work) {
-        assert work['collectsType'] == instance.get(TYPE)
-        assert work[TYPE] == collectiontype
+
+    if (issuancetype == 'SubCollection') {
+      issuancetype = 'Collection'
+    }
+
+    if (issuancetype.equals('Monograph')) {
+        instance['issuanceType'] = 'SingleUnit'
+    } else if (issuancetype.equals('ComponentPart')) {
+        // FIXME: or remove and add "isPartOf": {"@type": "Resource"} unless  implied?
+        // instance[TYPE] += issuancetype
+        instance['issuanceType'] = 'SingleUnit'
+    } else {
+      if ('contentType' in work) {
+        // assert work['contentType'] == instance.get(TYPE)
+        // assert work[TYPE] == issuancetype
       } else {
-        work['collectsType'] = work.get(TYPE)
-        work[TYPE] = collectiontype
-        // FIXME:
-        // move instance['carrierType'] to 'collectsType' and set instance[TYPE] = 'Multipart'?
-        // Examples (e.g. "Samling av trycksaker"):
-        // select ?crt1 ?crt2 (count(?g) as ?count)  (sample(?g) as ?sample) {
-        //  graph ?g { ?s kbv:carrierType ?crt1, ?crt2 . FILTER(isIRI(?crt1) && isIRI(?crt2) && ?crt1 > ?crt2) }
-        //  } order by desc(?count)
-        return true
+        work['contentType'] = []
       }
+
+      def wtype = work.get(TYPE)
+
+      if (wtype == 'Manuscript') {
+        work.get('genreForm', []) << [(ID): SAOGF + 'Handskrifter']
+      } else if (wtype == 'Cartography') {
+        if ( ! work['contentType'].any { it[ID].startsWith(KBRDA + 'Cartographic') } ) {
+          work['contentType'] << [(ID): KBRDA + 'CartographicImage'] // TODO: good enough guess?
+        }
+      } else if (wtype == 'MixedMaterial') {
+        // TODO:? assert work['contentType'].size() > 1
+      } else {
+        var mappedContentType = knownContentTypes[wtype]
+        assert mappedContentType, "Unable to map ${wtype} to contentType or genreForm"
+        work['contentType'] << [(ID): mappedContentType]
+      }
+
+      work[TYPE] = issuancetype
+      instance['issuanceType'] = 'MultipleUnits'
+      // TODO:
+      // Or move instance[TYPE] to instance['carrierType'] unless implied, and set instance[TYPE] = 'Multipart'?
+      // Examples (e.g. "Samling av trycksaker"):
+      // select ?crt1 ?crt2 (count(?g) as ?count)  (sample(?g) as ?sample) {
+      //  graph ?g { ?s kbv:carrierType ?crt1, ?crt2 . FILTER(isIRI(?crt1) && isIRI(?crt2) && ?crt1 > ?crt2) }
+      //  } order by desc(?count)
+      return true
     }
     return false
   }
