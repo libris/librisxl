@@ -78,6 +78,10 @@ class MatchForm {
         return insertTypeMappings(insertIdMappings(insertVars(ttl)))
     }
 
+    Set<String> getThingIds() {
+        return formBNodeIdToResourceIds[getThingTmpId()] ?: [] as Set
+    }
+
     static List<String> dropIndexes(List path) {
         return path.findAll { it instanceof String } as List<String>
     }
