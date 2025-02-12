@@ -186,11 +186,10 @@ public record PathValue(Path path, Operator operator, Value value) implements No
             }
         }
 
-        Node expanded = expandedPath.last().isType()
-                ? expandType(expandedPath, jsonLd) // When querying type, match any subclass by default (TODO: make this optional)
-                : new PathValue(expandedPath, operator, value);
-
         List<Node> prefilledFields = getPrefilledFields(expandedPath.path(), jsonLd);
+
+        // When querying type, match any subclass by default (TODO: make this optional)
+        Node expanded = new PathValue(expandedPath, operator, value).expandType(jsonLd);
 
         return prefilledFields.isEmpty() ? expanded : new And(Stream.concat(Stream.of(expanded), prefilledFields.stream()).toList());
     }
@@ -202,22 +201,25 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         for (Subpath sp : path) {
             currentPath.add(sp);
             if (sp instanceof Property p) {
-                p.restrictions().stream()
-                        .map(r -> new PathValue(new Path.ExpandedPath(Stream.concat(currentPath.stream(), Stream.of(r.property())).toList()),
-                                operator,
-                                r.value()))
-                        .map(pv -> pv.expand(jsonLd))
-                        .forEach(prefilledFields::add);
+                for (Property.Restriction r : p.restrictions()) {
+                    List<Subpath> restrictedPath = Stream.concat(currentPath.stream(), Stream.of(r.property())).toList();
+                    Node expanded = new PathValue(new Path(restrictedPath).expand(jsonLd), operator, r.value()).expandType(jsonLd);
+                    prefilledFields.add(expanded);
+                }
             }
         }
         return prefilledFields;
     }
 
-    private Node expandType(Path.ExpandedPath path, JsonLd jsonLd) {
-        Set<String> subtypes = jsonLd.getSubClasses(value.jsonForm());
+    // When querying type, match any subclass by default (TODO: make this optional)
+    private Node expandType(JsonLd jsonLd) {
+        if (!path.last().isType()) {
+            return this;
+        }
 
+        Set<String> subtypes = jsonLd.getSubClasses(value.jsonForm());
         if (subtypes.isEmpty()) {
-            return new PathValue(path, operator, value);
+            return this;
         }
 
         List<Node> altFields = Stream.concat(Stream.of(value.jsonForm()), subtypes.stream())
