@@ -176,14 +176,12 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
         if (!rulingTypes.isEmpty()) {
             List<Path.ExpandedPath> altPaths = expandedPath.getAltPaths(jsonLd, rulingTypes);
-            if (altPaths.size() > 1) {
-                var altPvNodes = altPaths.stream()
-                        .map(ap -> new PathValue(ap, operator, value).expand(jsonLd))
-                        .toList();
-                return operator == Operator.NOT_EQUALS ? new And(altPvNodes) : new Or(altPvNodes);
-            } else {
-                expandedPath = altPaths.getFirst();
-            }
+            var altPvNodes = altPaths.stream()
+                    .map(ap -> new PathValue(ap, operator, value).expand(jsonLd))
+                    .toList();
+            return altPaths.size() > 1
+                    ? (operator == Operator.NOT_EQUALS ? new And(altPvNodes) : new Or(altPvNodes))
+                    : altPvNodes.getFirst();
         }
 
         List<Node> prefilledFields = getPrefilledFields(expandedPath.path(), jsonLd);

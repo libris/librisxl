@@ -100,7 +100,7 @@ public class Path {
                 expandedPath.addFirst(new Property(RECORD_KEY, jsonLd));
             }
         });
-        return new ExpandedPath(expandedPath);
+        return new ExpandedPath(expandedPath, this);
     }
 
     @Override
@@ -132,6 +132,13 @@ public class Path {
     }
 
     public static class ExpandedPath extends Path {
+        private Path origPath;
+
+        ExpandedPath(List<Subpath> path, Path origPath) {
+            super(path);
+            this.origPath = origPath;
+        }
+
         ExpandedPath(List<Subpath> path) {
             super(path);
         }
@@ -146,22 +153,21 @@ public class Path {
         }
 
         public List<ExpandedPath> getAltPaths(JsonLd jsonLd, Collection<String> types) {
-            return switch (first()) {
-                case Key ignored -> List.of(this);
-                case Property p -> {
-                    List<ExpandedPath> altPaths = p.getApplicableIntegralRelations(jsonLd, types).stream()
-                            .map(ir -> Stream.concat(Stream.of(ir), path().stream()))
-                            .map(Stream::toList)
-                            .map(ExpandedPath::new)
-                            .collect(Collectors.toList());
+            if (origPath.first() instanceof Property p) {
+                List<ExpandedPath> altPaths = p.getApplicableIntegralRelations(jsonLd, types).stream()
+                        .map(ir -> Stream.concat(Stream.of(ir), path().stream()))
+                        .map(Stream::toList)
+                        .map(ExpandedPath::new)
+                        .collect(Collectors.toList());
 
-                    if (altPaths.isEmpty() || types.stream().anyMatch(t -> p.mayAppearOnType(t, jsonLd))) {
-                        altPaths.add(this);
-                    }
-
-                    yield altPaths;
+                if (altPaths.isEmpty() || types.stream().anyMatch(t -> p.mayAppearOnType(t, jsonLd))) {
+                    altPaths.add(this);
                 }
-            };
+
+                return altPaths;
+            }
+
+            return List.of(this);
         }
     }
 }
