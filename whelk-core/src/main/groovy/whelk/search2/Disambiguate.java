@@ -97,7 +97,7 @@ public class Disambiguate {
         BiConsumer<Map<String, Set<String>>, Map<String, String>> disambiguateAliases = (ambiguousAliases, aliasMappings) ->
                 ambiguousAliases.forEach((alias, mappedTerms) ->
                         mappedTerms.stream()
-                                .filter(term -> alias.equals(term) || alias.toUpperCase().equals(vocab.get(term).get("librisQueryCode")))
+                                .filter(term -> alias.equals(term.toLowerCase()) || alias.toUpperCase().equals(vocab.get(term).get("librisQueryCode")))
                                 .forEach(term -> aliasMappings.put(alias, term))
                 );
 
