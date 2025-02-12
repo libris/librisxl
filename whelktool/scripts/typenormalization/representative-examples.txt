@@ -1,0 +1,164 @@
+# SubCollection Text
+<https://libris.kb.se/4ngxvgrg51pwbr5#it>
+
+# SubCollection StillImage
+<https://libris.kb.se/t4dclrnjr3n3t2r2#it>
+
+# SubCollection NotatedMusic
+<https://libris.kb.se/r7n6c8tbptw9jtm5#it>
+
+# SubCollection Multimedia
+# No example available at the moment
+
+# SubCollection MixedMaterial
+<https://libris.kb.se/ds56l1hrbhxz96fd#it>
+
+# SerialComponentPart Text
+<https://libris.kb.se/sbt4hkk1qjc231sm#it>
+
+# SerialComponentPart MixedMaterial
+# No example available at the moment
+
+# Serial Text
+<https://libris.kb.se/m5z2w4lz3m2zxpk#it>
+
+# Serial StillImage
+<https://libris.kb.se/n60c9k900tbnng7#it>
+
+# Serial NotatedMusic
+<https://libris.kb.se/5ng5mcmh3mxp16d#it>
+
+# Serial Music
+<https://libris.kb.se/7qj4zxjk2lvzqv1#it>
+
+# Serial Multimedia
+<https://libris.kb.se/k2vkcx5w2l39l4r#it>
+
+# Serial MovingImage
+<https://libris.kb.se/r82045j34mrcwp2#it>
+
+# Serial MixedMaterial
+# No example available at the moment
+
+# Serial Cartography
+<https://libris.kb.se/gzrc04ds5qhh3dl#it>
+
+# Serial Audio
+<https://libris.kb.se/q71p516233z95l6#it>
+
+# Monograph Text
+<https://libris.kb.se/4ngthh5g5qmqbhr#it>
+
+# Monograph StillImage
+<https://libris.kb.se/5phjr83h486wrh1 #it>
+
+# Monograph Object
+<https://libris.kb.se/7hdk49b8520xmtnw#it>
+
+# Monograph NotatedMusic
+<https://libris.kb.se/0dphh3jgx9lwnf7d#it>
+
+# Monograph Music
+<https://libris.kb.se/9tm0ncmm3mgdmpr#it>
+
+# Monograph Multimedia
+<https://libris.kb.se/br5qv75r8kf7c970#it>
+
+# Monograph MovingImage
+<https://libris.kb.se/kt026rx7h9q4dvmk#it>
+
+# Monograph MixedMaterial
+<https://libris.kb.se/4pks9ll52r9zg4bg#it>
+
+# Monograph Kit
+<https://libris.kb.se/p7181bx12t3jkcb#it>
+
+# Monograph Dataset
+<https://libris.kb.se/l04kthsljkkgjk41#it>
+
+# Monograph Cartography
+<https://libris.kb.se/1jb8cczc1rtgfcf#it>
+
+# Monograph Audio
+<https://libris.kb.se/8pt86bk3663s63vl#it>
+
+# Integrating Text
+<https://libris.kb.se/dq3pwjt7bxg7zhrs#it>
+
+# Integrating StillImage
+<https://libris.kb.se/q82481w236tljz3#it>
+
+# Integrating NotatedMusic
+<https://libris.kb.se/2lddjq3d3kps06n#it>
+
+# Integrating Multimedia
+<https://libris.kb.se/1kcdvbbc5vq3ch8#it>
+
+# Integrating MovingImage
+<https://libris.kb.se/p71cl4g1040fmrn #it>
+
+# Integrating MixedMaterial
+# No example available at the moment
+
+# Integrating Audio
+<https://libris.kb.se/r6lx70h6phx37fjt#it>
+
+# ComponentPart Text
+<https://libris.kb.se/8rk82hzl2r7wrh7#it>
+
+# ComponentPart StillImage
+<https://libris.kb.se/vc5trbn61zf1lq0#it>
+
+# ComponentPart Object
+<https://libris.kb.se/vd691n165fqwtjn#it>
+
+# ComponentPart NotatedMusic
+<https://libris.kb.se/7qj7d09k395ddn4#it>
+
+# ComponentPart Music
+<https://libris.kb.se/1jbb04rc05tjgrx#it>
+
+# ComponentPart MovingImage
+<https://libris.kb.se/h1tvcwft23qxxbk#it>
+
+# ComponentPart Cartography
+<https://libris.kb.se/m1jqjd5fk4rcmmsh#it>
+
+# ComponentPart Audio
+# No example available at the moment
+
+# Collection Text
+<https://libris.kb.se/3mfkckqf1wst7bt#it>
+
+# Collection StillImage
+<https://libris.kb.se/9slpxtq171tppxn0#it>
+
+# Collection NotatedMusic
+<https://libris.kb.se/h1tvvltt5nrbb27#it>
+
+# Collection Music
+<https://libris.kb.se/5ngg2zsh394mwfp#it>
+
+# Collection Multimedia
+<https://libris.kb.se/k2vvphvw5l4z89j#it>
+
+# Collection MovingImage
+<https://libris.kb.se/9rd0srhm7zhzqbx0#it>
+
+# Collection MixedMaterial
+<https://libris.kb.se/h175dtwmf3l7s258#it>
+
+# Collection Cartography
+<https://libris.kb.se/5kr8q4rd3753xws8#it>
+
+# Serial Kit
+<https://libris.kb.se/2kc130wd1zlrn79#it>
+
+# Monograph ManuscriptNotatedMusic
+<https://libris.kb.se/cxr5l44793wl17h4#it>
+
+# ComponentPart ManuscriptText
+<https://libris.kb.se/zhjdr22wws62c7tn#it>
+
+# Monograph ManuscriptText
+<https://libris.kb.se/vd67bpm659txhxb#it>
