@@ -62,6 +62,10 @@ public class QueryUtil {
                 .collect(Collectors.toMap(e -> (String) e.getKey(), e -> (Object) e.getValue()));
     }
 
+    public Object getChip(String iri) {
+        return whelk.getJsonld().toChip(loadThing(iri));
+    }
+
     public Map<String, Object> loadThing(String iri) {
         return loadThing(iri, whelk);
     }

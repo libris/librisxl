@@ -94,7 +94,7 @@ public class Stats {
                             if (jsonLd.isVocabTerm(propertyKey) || property.isType()) {
                                 v = new VocabTerm(bucketKey, jsonLd.vocabIndex.get(bucketKey));
                             } else if (property.isObjectProperty()) {
-                                v = new Link(bucketKey, jsonLd.toChip(bucketKey));
+                                v = new Link(bucketKey, queryUtil.getChip(bucketKey));
                             } else {
                                 v = new Literal(bucketKey);
                             }
