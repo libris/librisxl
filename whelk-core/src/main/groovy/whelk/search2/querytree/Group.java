@@ -173,8 +173,8 @@ public sealed abstract class Group implements Node permits And, Or {
         children().stream()
                 .filter(PathValue.class::isInstance)
                 .map(PathValue.class::cast)
-                .collect(Collectors.groupingBy(pv -> getNestedPath.apply(pv.path().toString()),
-                        Collectors.groupingBy(pv -> pv.path().toString()))
+                .collect(Collectors.groupingBy(pv -> getNestedPath.apply(pv.path().fullSearchPath()),
+                        Collectors.groupingBy(pv -> pv.path().fullSearchPath()))
                 )
                 .forEach((nestedStem, groupedByPath) -> {
                     // At least two different paths sharing the same nested stem
