@@ -295,7 +295,8 @@ public class FresnelUtil {
                 }
                 else if (p.isTypeVocabTerm()) {
                     if (value instanceof List<?> list) {
-                        orderedProps.add(new Property(p.name, list.stream().map(this::mapVocabTerm).toList()));
+                        var values = list.stream().map(this::mapVocabTerm).toList();
+                        orderedProps.add(new Property(p.name, values));
                     }
                     else {
                         orderedProps.add(new Property(p.name, mapVocabTerm(value)));
