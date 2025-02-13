@@ -10,6 +10,7 @@ import whelk.JsonLd
 /**
  * These tests mostly use context, vocab and display that are similar to KBV.
  * This in order to make the tests a little less abstract and more readable.
+ * Not sure if it makes it more confusing in the long run.
  */
 class FresnelUtilSpec extends Specification {
     static final Map CONTEXT_DATA = [
