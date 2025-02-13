@@ -255,6 +255,10 @@ public class FresnelUtil {
         public String langAliasFor() {
             return (String) jsonLd.langContainerAliasInverted.get(name);
         }
+
+        boolean isTypeVocabTerm() {
+            return jsonLd.isVocabTerm(name);
+        }
     }
 
     // FIXME naming
@@ -289,7 +293,7 @@ public class FresnelUtil {
                 else if (JsonLd.ID_KEY.equals(p.name)) {
                     id = (String) value;
                 }
-                else if (jsonLd.isVocabTerm(p.name)) {
+                else if (p.isTypeVocabTerm()) {
                     if (value instanceof List<?> list) {
                         orderedProps.add(new Property(p.name, list.stream().map(this::mapVocabTerm).toList()));
                     }
