@@ -663,10 +663,10 @@ class JsonLd {
 
     //==== Class-hierarchies ====
 
-    Set<String> getSuperClasses(String type) {
+    List<String> getSuperClasses(String type) {
         List<String> res = []
         getSuperClasses(type, res)
-        return res as Set
+        return res
     }
 
     void getSuperClasses(String type, List<String> result) {
