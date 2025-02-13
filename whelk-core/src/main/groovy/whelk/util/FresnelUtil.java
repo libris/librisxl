@@ -679,14 +679,6 @@ public class FresnelUtil {
         }
     }
 
-    private static <T, U> List<U> mapWithIndex(List<T> list, BiFunction<T, Integer, U> mapper) {
-        var result = new ArrayList<U>(list.size());
-        for (int ix = 0; ix < list.size(); ix++) {
-            result.add(mapper.apply(list.get(ix), ix));
-        }
-        return result;
-    }
-
     record FormatDetails(String contentBefore, String contentAfter, String contentFirst, String contentLast) {
         public void apply(Decorated result,
                           boolean isFirst,
@@ -1000,5 +992,13 @@ public class FresnelUtil {
             return m;
         }
         return new HashMap<>();
+    }
+
+    private static <T, U> List<U> mapWithIndex(List<T> list, BiFunction<T, Integer, U> mapper) {
+        var result = new ArrayList<U>(list.size());
+        for (int ix = 0; ix < list.size(); ix++) {
+            result.add(mapper.apply(list.get(ix), ix));
+        }
+        return result;
     }
 }
