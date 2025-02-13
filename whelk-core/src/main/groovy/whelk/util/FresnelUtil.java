@@ -77,7 +77,6 @@ public class FresnelUtil {
     }
 
     private static final Logger logger = LogManager.getLogger(FresnelUtil.class);
-    private static final String RDF_TYPE = "rdf:type";
 
     //TODO load from display.jsonld
     private static final Map<?, ?> DEFAULT_LENS = Map.of(
@@ -283,7 +282,7 @@ public class FresnelUtil {
         void pick(Map<?, ?> thing, PropertyKey p) {
             // TODO JsonLd class expands lang container aliases. Do we want that?
 
-            if (RDF_TYPE.equals(p.name)) {
+            if (Rdfs.RDF_TYPE.equals(p.name)) {
                 var type = (String) first(thing.get(JsonLd.TYPE_KEY)); // TODO how to handle multiple types?
                 orderedProps.add(new Property(p.name, mapVocabTerm(type)));
             }
@@ -362,7 +361,7 @@ public class FresnelUtil {
     }
 
     private boolean has(Map<?, ?> thing, String key) {
-        if (RDF_TYPE.equals(key)) {
+        if (Rdfs.RDF_TYPE.equals(key)) {
             return thing.containsKey(JsonLd.TYPE_KEY);
         }
         return thing.containsKey(key);
