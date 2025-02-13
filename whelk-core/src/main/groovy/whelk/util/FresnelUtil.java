@@ -223,13 +223,8 @@ public class FresnelUtil {
             valueStyle = emptyStyle;
         }
 
-        public Format(Map<?,?> f) {
-            classFormatDomain = getUnsafe(f, Fresnel.classFormatDomain, Collections.emptyList());
-            propertyFormatDomain = getUnsafe(f, Fresnel.propertyFormatDomain, Collections.emptyList());
-        }
-
         public static Format parse(Map<?,?> f) {
-            Format format = new Format(f);
+            Format format = new Format();
             format.classFormatDomain = getUnsafe(f, Fresnel.classFormatDomain, Collections.emptyList());
             format.propertyFormatDomain = getUnsafe(f, Fresnel.propertyFormatDomain, Collections.emptyList());
             format.resourceFormat = FormatDetails.parse(getUnsafe(f, Fresnel.resourceFormat, null));
