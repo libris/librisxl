@@ -1,14 +1,9 @@
 package whelk.search2;
 
-import whelk.Whelk;
-
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-
-import static whelk.component.ElasticSearch.flattenedLangMapKey;
 
 public class Sort {
     public static Sort DEFAULT_BY_RELEVANCY = new Sort("");

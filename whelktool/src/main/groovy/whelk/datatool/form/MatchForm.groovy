@@ -9,7 +9,7 @@ import whelk.datatool.util.IdLoader
 import whelk.util.DocumentUtil
 
 import static whelk.JsonLd.ID_KEY
-import static whelk.JsonLd.RANGE
+import static whelk.JsonLd.Rdfs.RANGE
 import static whelk.JsonLd.RECORD_KEY
 import static whelk.JsonLd.RECORD_TYPE
 import static whelk.JsonLd.THING_KEY

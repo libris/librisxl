@@ -1,16 +1,7 @@
 package whelk.search2;
 
 import whelk.JsonLd;
-import whelk.search2.querytree.FreeText;
-import whelk.search2.querytree.Link;
-import whelk.search2.querytree.Literal;
-import whelk.search2.querytree.Node;
-import whelk.search2.querytree.PathValue;
-import whelk.search2.querytree.Property;
-import whelk.search2.querytree.PropertyValue;
-import whelk.search2.querytree.QueryTree;
-import whelk.search2.querytree.Value;
-import whelk.search2.querytree.VocabTerm;
+import whelk.search2.querytree.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,24 +15,26 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static whelk.JsonLd.TYPE_KEY;
+import static whelk.JsonLd.asList;
 import static whelk.search2.QueryUtil.makeFindUrl;
 import static whelk.search2.QueryUtil.makeParams;
 
 public class Stats {
-    private final Disambiguate disambiguate;
+    private final JsonLd jsonLd;
     private final QueryResult queryResult;
     private final QueryParams queryParams;
     private final AppParams appParams;
     private final QueryTree queryTree;
     private final QueryUtil queryUtil;
 
-    public Stats(Disambiguate disambiguate,
+    public Stats(JsonLd jsonLd,
                  QueryUtil queryUtil,
                  QueryTree queryTree,
                  QueryResult queryResult,
                  QueryParams queryParams,
                  AppParams appParams) {
-        this.disambiguate = disambiguate;
+        this.jsonLd = jsonLd;
         this.queryResult = queryResult;
         this.queryParams = queryParams;
         this.appParams = appParams;
@@ -68,7 +61,7 @@ public class Stats {
     }
 
     // Problem: Same value in different fields will be counted twice, e.g. contribution.agent + instanceOf.contribution.agent
-    private Map<Property, Map<PropertyValue, Integer>> collectBuckets() {
+    private Map<Property, Map<PathValue, Integer>> collectBuckets() {
         Map<Property, AppParams.Slice> sliceParamsByProperty = appParams.statsRepr.getSliceByProperty();
         Map<String, Map<String, Integer>> propertyNameToBucketCounts = new LinkedHashMap<>();
 
@@ -82,13 +75,14 @@ public class Stats {
             }
         }
 
-        Map<Property, Map<PropertyValue, Integer>> propertyToBucketCounts = new LinkedHashMap<>();
+        Map<Property, Map<PathValue, Integer>> propertyToBucketCounts = new LinkedHashMap<>();
 
         for (Property property : sliceParamsByProperty.keySet()) {
-            var buckets = propertyNameToBucketCounts.get(property.name());
+            var propertyKey = property.name();
+            var buckets = propertyNameToBucketCounts.get(propertyKey);
             if (buckets != null) {
                 int maxBuckets = sliceParamsByProperty.get(property).size();
-                Map<PropertyValue, Integer> newBuckets = new LinkedHashMap<>();
+                Map<PathValue, Integer> newBuckets = new LinkedHashMap<>();
                 buckets.entrySet()
                         .stream()
                         .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
@@ -97,14 +91,14 @@ public class Stats {
                             String bucketKey = entry.getKey();
                             int count = entry.getValue();
                             Value v;
-                            if (property.hasVocabValue()) {
-                                v = new VocabTerm(bucketKey, disambiguate.getDefinition(bucketKey));
+                            if (jsonLd.isVocabTerm(propertyKey) || property.isType()) {
+                                v = new VocabTerm(bucketKey, jsonLd.vocabIndex.get(bucketKey));
                             } else if (property.isObjectProperty()) {
-                                v = new Link(bucketKey, disambiguate.getChip(bucketKey));
+                                v = new Link(bucketKey, jsonLd.toChip(bucketKey));
                             } else {
                                 v = new Literal(bucketKey);
                             }
-                            newBuckets.put(new PropertyValue(property, Operator.EQUALS, v), count);
+                            newBuckets.put(new PathValue(property, Operator.EQUALS, v), count);
                         });
                 propertyToBucketCounts.put(property, newBuckets);
             }
@@ -113,7 +107,7 @@ public class Stats {
         return propertyToBucketCounts;
     }
 
-    private Map<String, Object> buildSliceByDimension(Map<Property, Map<PropertyValue, Integer>> propToBuckets, Set<Property> rangeProps) {
+    private Map<String, Object> buildSliceByDimension(Map<Property, Map<PathValue, Integer>> propToBuckets, Set<Property> rangeProps) {
         Map<String, String> nonQueryParams = queryParams.getNonQueryParams(0);
         Map<Property, AppParams.Slice> sliceParamsByProperty = appParams.statsRepr.getSliceByProperty();
 
@@ -122,7 +116,7 @@ public class Stats {
         propToBuckets.forEach((property, buckets) -> {
             var sliceNode = new LinkedHashMap<>();
             var isRange = rangeProps.contains(property);
-            var observations = getObservations(buckets, isRange ? queryTree.removeTopLevelPropValueWithRangeIfPropEquals(property) : queryTree, nonQueryParams);
+            var observations = getObservations(buckets, isRange ? queryTree.removeTopLevelPathValueWithRangeIfPropEquals(property) : queryTree, nonQueryParams);
             if (!observations.isEmpty()) {
                 if (isRange) {
                     sliceNode.put("search", getRangeTemplate(property, makeParams(nonQueryParams)));
@@ -137,13 +131,13 @@ public class Stats {
         return sliceByDimension;
     }
 
-    private List<Map<String, Object>> getObservations(Map<PropertyValue, Integer> buckets, QueryTree qt, Map<String, String> nonQueryParams) {
+    private List<Map<String, Object>> getObservations(Map<PathValue, Integer> buckets, QueryTree qt, Map<String, String> nonQueryParams) {
         List<Map<String, Object>> observations = new ArrayList<>();
 
         buckets.forEach((pv, count) -> {
             Map<String, Object> observation = new LinkedHashMap<>();
             boolean queried = qt.getTopLevelPvNodes().contains(pv)
-                    || pv.value().string().equals(nonQueryParams.get(QueryParams.ApiParams.OBJECT));
+                    || (pv.value() instanceof Link l && l.iri().equals(nonQueryParams.get(QueryParams.ApiParams.OBJECT)));
             if (!queried) {
                 observation.put("totalItems", count);
                 var url = makeFindUrl(qt.addToTopLevel(pv), nonQueryParams);
@@ -158,12 +152,12 @@ public class Stats {
 
     private Map<String, Object> getRangeTemplate(Property property, List<String> nonQueryParams) {
         var GtLtNodes = queryTree.getTopLevelPvNodes().stream()
-                .filter(pv -> pv.property().equals(property))
+                .filter(pv -> pv.hasEqualProperty(property))
                 .filter(pv -> switch (pv.operator()) {
                     case EQUALS, NOT_EQUALS -> false;
                     case GREATER_THAN_OR_EQUALS, GREATER_THAN, LESS_THAN_OR_EQUALS, LESS_THAN -> true;
                 })
-                .filter(pv -> pv.value().isNumeric())
+                .filter(pv -> pv.value() instanceof Literal l && l.isNumeric())
                 .toList();
 
         String min = null;
@@ -172,9 +166,9 @@ public class Stats {
         for (var pv : GtLtNodes) {
             var orEquals = pv.toOrEquals();
             if (orEquals.operator() == Operator.GREATER_THAN_OR_EQUALS && min == null) {
-                min = orEquals.value().string();
+                min = orEquals.value().raw();
             } else if (orEquals.operator() == Operator.LESS_THAN_OR_EQUALS && max == null) {
-                max = orEquals.value().string();
+                max = orEquals.value().raw();
             } else {
                 // Not a proper range, reset and abort
                 min = null;
@@ -183,12 +177,12 @@ public class Stats {
             }
         }
 
-        var tree = queryTree.removeTopLevelPropValueIfPropEquals(property);
+        var tree = queryTree.removeTopLevelPathValueIfPropEquals(property);
 
         Map<String, Object> template = new LinkedHashMap<>();
 
-        var placeholderNode = new FreeText(Operator.EQUALS, String.format("{?%s}", property.name()));
-        var templateQueryString = tree.addToTopLevel(placeholderNode).toString();
+        var placeholderNode = new FreeText(Operator.EQUALS, String.format("{?%s}", property.name()), jsonLd);
+        var templateQueryString = tree.addToTopLevel(placeholderNode).toQueryString();
         var templateUrl = makeFindUrl(tree.getTopLevelFreeText(), templateQueryString, nonQueryParams);
         template.put("template", templateUrl);
 
@@ -222,7 +216,7 @@ public class Stats {
             Map<String, Object> res = new LinkedHashMap<>();
             // TODO: fix form
             res.put("totalItems", 0);
-            res.put("object", Map.of(JsonLd.TYPE_KEY, "Resource", "prefLabelByLang", f.getPrefLabelByLang()));
+            res.put("object", Map.of(TYPE_KEY, "Resource", "prefLabelByLang", f.getPrefLabelByLang()));
             res.put("view", Map.of(JsonLd.ID_KEY, makeFindUrl(newTree, nonQueryParams)));
             res.put("_selected", isSelected);
 
@@ -256,10 +250,10 @@ public class Stats {
 
     private Map<String, Object> getCuratedPredicateEsQueryDsl(Entity o, List<String> curatedPredicates) {
         var queryDsl = new LinkedHashMap<String, Object>();
-        queryDsl.put("query", new PathValue("_links", Operator.EQUALS, o.id()).toEs());
+        queryDsl.put("query", new PathValue("_links", Operator.EQUALS, new Literal(o.id())).toEs(queryUtil::getNestedPath));
         queryDsl.put("size", 0);
         queryDsl.put("from", 0);
-        queryDsl.put("aggs", Aggs.buildPAggQuery(o, curatedPredicates, disambiguate));
+        queryDsl.put("aggs", Aggs.buildPAggQuery(o, curatedPredicates, jsonLd, queryUtil::getNestedPath));
         queryDsl.put("track_total_hits", true);
         return queryDsl;
     }
@@ -287,7 +281,7 @@ public class Stats {
                 result.add(Map.of(
                         "totalItems", count,
                         "view", Map.of(JsonLd.ID_KEY, makeFindUrl(makeParams(params))),
-                        "object", disambiguate.getDefinition(p),
+                        "object", jsonLd.vocabIndex.get(p),
                         "_selected", selected.contains(p)
                 ));
             }
@@ -299,12 +293,11 @@ public class Stats {
     private Entity getObject(QueryParams queryParams) {
         var object = queryParams.object;
         if (object != null) {
-            return queryUtil.loadThing(object)
-                    .map(thing -> thing.getOrDefault(JsonLd.TYPE_KEY, null))
-                    .map(JsonLd::asList)
-                    .map(List::getFirst)
-                    .map(type -> new Entity(object, (String) type, disambiguate.getSuperclasses((String) type)))
-                    .orElse(null);
+            Map<String, Object> thing = queryUtil.loadThing(object);
+            if (!thing.isEmpty()) {
+                String type = (String) asList(thing.get(TYPE_KEY)).getFirst();
+                return new Entity(object, type, jsonLd.getSuperClasses(type));
+            }
         }
         return null;
     }

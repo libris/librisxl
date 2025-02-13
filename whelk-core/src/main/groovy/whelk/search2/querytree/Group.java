@@ -1,6 +1,6 @@
 package whelk.search2.querytree;
 
-import whelk.search2.Disambiguate;
+import whelk.JsonLd;
 import whelk.search2.Operator;
 
 import java.util.ArrayList;
@@ -52,9 +52,9 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     @Override
-    public Map<String, Object> toEs() {
-        List<List<PathValue>> nestedGroups = getNestedGroups();
-        return nestedGroups.isEmpty() ? wrap(childrenToEs()) : toEsNested(nestedGroups);
+    public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath) {
+        Map<String, List<PathValue>> nestedGroups = getNestedGroups(getNestedPath);
+        return nestedGroups.isEmpty() ? wrap(childrenToEs(getNestedPath)) : toEsNested(nestedGroups, getNestedPath);
     }
 
     @Override
@@ -66,69 +66,44 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     @Override
-    public Node expand(Disambiguate disambiguate, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
-        Node reduced = reduceTypes(disambiguate);
-        return switch (reduced) {
-            case Group g -> {
-                rulingTypes = Stream.concat(g.collectRulingTypes().stream(), rulingTypes.stream())
-                        .collect(Collectors.toSet());
-                yield g.expandChildren(disambiguate, rulingTypes, getBoostFields);
-            }
-            default -> reduced.expand(disambiguate, rulingTypes, getBoostFields);
-        };
+    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
+        Node reduced = reduceTypes(jsonLd);
+        if (reduced instanceof Group g) {
+            rulingTypes = Stream.concat(g.collectRulingTypes().stream(), rulingTypes.stream())
+                    .collect(Collectors.toSet());
+            return g.expandChildren(jsonLd, rulingTypes, getBoostFields);
+        }
+        return reduced.expand(jsonLd, rulingTypes, getBoostFields);
     }
 
     @Override
-    public Group insertValue(Value value) {
-        return mapAndReinstantiate(c -> c.insertValue(value));
-    }
-
-    @Override
-    public Group insertOperator(Operator operator) {
-        return mapAndReinstantiate(c -> c.insertOperator(operator));
-    }
-
-    @Override
-    public Node insertNested(Function<String, Optional<String>> getNestedPath) {
-        return mapAndReinstantiate(c -> c.insertNested(getNestedPath));
-    }
-
-    @Override
-    public Node modifyAllPathValue(Function<PathValue, PathValue> modifier) {
-        return mapAndReinstantiate(c -> c.modifyAllPathValue(modifier));
-    }
-
-    @Override
-    public String toString(boolean topLevel) {
+    public String toQueryString(boolean topLevel) {
         return topLevel ? this.toString() : "(" + this + ")";
     }
 
     @Override
     public String toString() {
-        return doMapToString(n -> n.toString(false))
+        return doMapToString(n -> n.toQueryString(false))
                 .collect(Collectors.joining(delimiter()));
     }
 
     @Override
-    public Node reduceTypes(Disambiguate disambiguate) {
+    public Node reduceTypes(JsonLd jsonLd) {
         BiFunction<Node, Node, Boolean> hasMoreSpecificTypeThan = (a, b) -> a.isTypeNode()
                 && b.isTypeNode()
-                && disambiguate.isSubclassOf(((PropertyValue) a).value().string(), ((PropertyValue) b).value().string());
+                && jsonLd.isSubClassOf(((PathValue) a).value().jsonForm(), ((PathValue) b).value().jsonForm());
         return reduceByCondition(hasMoreSpecificTypeThan);
     }
 
-    Node expandChildren(Disambiguate disambiguate, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
-        return mapFilterAndReinstantiate(c -> c.expand(disambiguate, rulingTypes, getBoostFields), Objects::nonNull);
+    Node expandChildren(JsonLd jsonLd, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
+        return mapFilterAndReinstantiate(c -> c.expand(jsonLd, rulingTypes, getBoostFields), Objects::nonNull);
     }
 
     List<Node> flattenChildren(List<Node> children) {
         return children.stream()
-                .flatMap(c -> switch (c) {
-                    case Group g -> g.getClass() == this.getClass()
-                            ? g.children().stream()
-                            : Stream.of(g);
-                    default -> Stream.of(c);
-                })
+                .flatMap(c -> c instanceof Group g
+                        ? (g.getClass() == this.getClass() ? g.children().stream() : Stream.of(g))
+                        : Stream.of(c))
                 .distinct()
                 .toList();
     }
@@ -164,62 +139,61 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     // TODO: Review/refine nested logic and proper tests
-    private Map<String, Object> toEsNested(List<List<PathValue>> nestedGroups) {
+    private Map<String, Object> toEsNested(Map<String, List<PathValue>> nestedGroups, Function<String, Optional<String>> getNestedPath) {
         List<Map<String, Object>> esChildren = new ArrayList<>();
         List<Node> nonNested = new ArrayList<>(children());
 
-        for (List<PathValue> nodeList : nestedGroups) {
-            var groupedByStem = nodeList.stream().collect(Collectors.groupingBy(PathValue::getNestedStem));
-            if (groupedByStem.size() != 1) {
-                throw new RuntimeException("Nested group must not contain different stems");
-            }
-
-            var stem = groupedByStem.keySet().iterator().next().get();
+        nestedGroups.forEach((nestedStem, group) -> {
             var bool = new HashMap<String, Object>();
-
-            nodeList.stream().collect(Collectors.groupingBy(pv -> pv.operator().equals(Operator.NOT_EQUALS)))
+            group.stream().collect(Collectors.groupingBy(pv -> pv.operator().equals(Operator.NOT_EQUALS)))
                     .forEach((k, v) -> {
-                        var es = v.stream().map(PathValue::getEs).toList();
-                        bool.put(k ? "must_not" : "must", nestedWrap(stem, es.size() > 1 ? wrap(es) : es.getFirst()));
+                        boolean isGroup = v.size() > 1;
+                        boolean isNegatedGroup = k && isGroup;
+                        var es = v.stream().map(pv -> pv.toEs(isNegatedGroup)).toList();
+                        if (isNegatedGroup) {
+                            bool.put("must_not", nestedWrap(nestedStem, wrap(es)));
+                        } else {
+                            bool.put("must", nestedWrap(nestedStem, isGroup ? wrap(es) : es.getFirst()));
+                        }
                     });
-
             esChildren.add(boolWrap(bool));
-            nonNested.removeAll(nodeList);
-        }
+            nonNested.removeAll(group);
+        });
 
         for (Node n : nonNested) {
-            esChildren.add(n.toEs());
+            esChildren.add(n.toEs(getNestedPath));
         }
 
         return esChildren.size() == 1 ? esChildren.getFirst() : wrap(esChildren);
     }
 
     // TODO: Review/refine nested logic and proper tests
-    private List<List<PathValue>> getNestedGroups() {
-        return children().stream()
-                .filter(Group::childIsNested)
+    private Map<String, List<PathValue>> getNestedGroups(Function<String, Optional<String>> getNestedPath) {
+        Map<String, List<PathValue>> nestedGroups = new HashMap<>();
+        children().stream()
+                .filter(PathValue.class::isInstance)
                 .map(PathValue.class::cast)
-                .collect(Collectors.groupingBy(PathValue::getNestedStem, Collectors.groupingBy(PathValue::getPath)))
-                .values()
-                .stream()
-                .filter(groupedByPath -> groupedByPath.keySet().size() > 1 // At least two different paths with the same stem
-                        && groupedByPath.values()
-                        .stream()
-                        .map(List::size)
-                        .allMatch(samePathCount -> samePathCount < 2)) // Don't group if the same path is repeated
-                .map(groupedByPath -> groupedByPath.values()
-                        .stream()
-                        .flatMap(List::stream)
-                        .toList())
-                .toList();
+                .collect(Collectors.groupingBy(pv -> getNestedPath.apply(pv.path().fullSearchPath()),
+                        Collectors.groupingBy(pv -> pv.path().fullSearchPath()))
+                )
+                .forEach((nestedStem, groupedByPath) -> {
+                    // At least two different paths sharing the same nested stem
+                    if (nestedStem.isPresent() && groupedByPath.size() > 1) {
+                        // Don't group if the same path is repeated
+                        if (groupedByPath.values().stream().noneMatch(l -> l.size() > 1)) {
+                            List<PathValue> group = groupedByPath.values()
+                                    .stream()
+                                    .flatMap(List::stream)
+                                    .toList();
+                            nestedGroups.put(nestedStem.get(), group);
+                        }
+                    }
+                });
+        return nestedGroups;
     }
 
-    private static boolean childIsNested(Node n) {
-        return n instanceof PathValue && ((PathValue) n).isNested();
-    }
-
-    private List<Map<String, Object>> childrenToEs() {
-        return mapToMap(Node::toEs);
+    private List<Map<String, Object>> childrenToEs(Function<String, Optional<String>> getNestedPath) {
+        return mapToMap(n -> n.toEs(getNestedPath));
     }
 
     private List<Node> mapToNode(Function<Node, Node> mapper) {
