@@ -1049,6 +1049,9 @@ class JsonLd {
                     m[k] = v
                 }
             }
+            if (!m.isEmpty()) {
+                m[TYPE_KEY] = o[TYPE_KEY]
+            }
             return m
         } else if (o instanceof List) {
             return o.collect { retainLinks(it, preserveLinks) }.grep()

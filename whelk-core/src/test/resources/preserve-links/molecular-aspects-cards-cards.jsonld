@@ -140,6 +140,7 @@
     ],
     "hasPart": [
       {
+        "@type": "Multimedia",
         "genreForm": [
           {
             "@id": "https://id.kb.se/marc/Document"

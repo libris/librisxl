@@ -48,6 +48,7 @@
       ],
       "publication": [
         {
+          "@type": "PrimaryPublication",
           "country": {
             "@id": "https://id.kb.se/country/sw"
           }
@@ -64,6 +65,7 @@
       ],
       "contribution": [
         {
+          "@type": "Contribution",
           "role": [
             {
               "@id": "https://id.kb.se/relator/unspecifiedContributor"
@@ -71,6 +73,7 @@
           ]
         },
         {
+          "@type": "Contribution",
           "role": [
             {
               "@id": "https://id.kb.se/relator/unspecifiedContributor"
@@ -78,6 +81,7 @@
           ]
         },
         {
+          "@type": "Contribution",
           "role": [
             {
               "@id": "https://id.kb.se/relator/unspecifiedContributor"
@@ -97,6 +101,7 @@
         }
       ],
       "originalVersion": {
+        "@type": "Work",
         "language": [
           {
             "@id": "https://id.kb.se/language/eng"
@@ -105,6 +110,7 @@
       },
       "summary": [
         {
+          "@type": "Summary",
           "language": [
             {
               "@id": "https://id.kb.se/language/ger"
