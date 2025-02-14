@@ -13,9 +13,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static whelk.component.ElasticSearch.flattenedLangMapKey;
 
@@ -171,14 +174,12 @@ public class QueryUtil {
     public Function<Map<String, Object>, Map<String, Object>> getApplyLensFunc(QueryParams queryParams) {
         return framedThing -> {
             @SuppressWarnings("rawtypes")
-            List<List> preservedPaths = queryParams.object != null
-                    ? JsonLd.findPaths(framedThing, "@id", queryParams.object)
-                    : Collections.emptyList();
+            Set<String> preserveLinks = Stream.ofNullable(queryParams.object).collect(Collectors.toSet());
 
             return switch (queryParams.lens) {
-                case "chips" -> (Map<String, Object>) whelk.getJsonld().toChip(framedThing, preservedPaths);
+                case "chips" -> (Map<String, Object>) whelk.getJsonld().toChip(framedThing, preserveLinks);
                 case "full" -> removeSystemInternalProperties(framedThing);
-                default -> whelk.getJsonld().toCard(framedThing, false, false, false, preservedPaths, true);
+                default -> whelk.getJsonld().toCard(framedThing, false, false, false, preserveLinks, true);
             };
         };
     }

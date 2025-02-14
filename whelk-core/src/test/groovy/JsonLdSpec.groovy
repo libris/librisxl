@@ -7,6 +7,7 @@ import spock.lang.Unroll
 import whelk.Document
 import whelk.JsonLd
 import whelk.Link
+import whelk.Whelk
 import whelk.exception.FramingException
 
 @Unroll
@@ -981,55 +982,36 @@ class JsonLdSpec extends Specification {
         into == ['@type': 'ProvisionActivity', date: ['1978', '1980']]
     }
 
-    def "shouldFindPaths"() {
+    def "should preserve links"() {
         given:
-        Map doc = readMap("preserve-paths/molecular-aspects.jsonld")
-
-        expect:
-        JsonLd.findPaths(doc, key, value) == paths
-        where:
-        key    | value                            || paths
-        '@id'  | 'https://id.kb.se/marc/Document' || [['instanceOf', 'hasPart' , 0, 'genreForm', 0, '@id']]
-        '@type'| "Title"                          || [['hasTitle', 0, '@type'], ['otherPhysicalFormat', 0, 'hasTitle', 0, '@type']]
-        '@type'| "No"                             || []
-        '@type'| 'Place'                          || [['publication', 0, 'hasPart' , 0, 'place', '@type'],
-                                                      ['publication', 0, 'hasPart' , 1, 'place', '@type'],
-                                                      ['publication', 0, 'hasPart' , 2, 'place', '@type'],
-                                                      ['hasReproduction', 0, 'provisionActivity', 0, 'place', 0, '@type']]
-    }
-
-    def "shouldPreservePaths"() {
-        given:
-        Map doc = readMap("preserve-paths/molecular-aspects.jsonld")
+        Map doc = readMap("preserve-links/molecular-aspects.jsonld")
 
         def ld = new JsonLd(
-                readMap("preserve-paths/context.jsonld"),
-                readMap("preserve-paths/display-data.jsonld"),
-                readMap("preserve-paths/vocab.jsonld"))
+                readMap("preserve-links/context.jsonld"),
+                readMap("preserve-links/display-data.jsonld"),
+                readMap("preserve-links/vocab.jsonld"))
 
-        def preservePaths = ld.findPaths(doc, '@id', 'https://id.kb.se/marc/Document')
+        Set<String> preserveLinks = ["http://libris.kb.se.localhost:5000/n602lbw018zh88k#work", "https://id.kb.se/marc/Document"] as Set
         
         expect:
-        ld.toChip(doc, preservePaths) == readMap("preserve-paths/molecular-aspects-chips.jsonld")
-        ld.toCard(doc, preservePaths) == readMap("preserve-paths/molecular-aspects-cards-chips.jsonld")
-        ld.toCard(doc, false, false, false, preservePaths) ==
-                readMap("preserve-paths/molecular-aspects-cards-cards.jsonld")
+        ld.toChip(doc, preserveLinks) == readMap("preserve-links/molecular-aspects-chips.jsonld")
+        ld.toCard(doc, true, false, false, preserveLinks) == readMap("preserve-links/molecular-aspects-cards-chips.jsonld")
+        ld.toCard(doc, false, false, false, preserveLinks) == readMap("preserve-links/molecular-aspects-cards-cards.jsonld")
     }
 
-    def "should preserve all links"() {
+    def "should preserve links 2"() {
         given:
-        Map data = readMap("preserve-paths/dtestpost.jsonld")
+        Map data = readMap("preserve-links/dtestpost.jsonld")
 
         def ld = new JsonLd(
-                readMap("preserve-paths/context.jsonld"),
-                readMap("preserve-paths/display-data.jsonld"),
-                readMap("preserve-paths/vocab.jsonld"))
+                readMap("preserve-links/context.jsonld"),
+                readMap("preserve-links/display-data.jsonld"),
+                readMap("preserve-links/vocab.jsonld"))
 
-        Set<String> links = ld.expandLinks(new Document(data).getExternalRefs()).collect{ it.iri }
-        def preservePaths = ld.findPaths(data, '@id', links)
+        Set<String> preserveLinks = ld.expandLinks(new Document(data).getExternalRefs()).collect{ it.iri }
 
         expect:
-        ld.toChip(data, preservePaths) == readMap("preserve-paths/dtestpost-chips-links.jsonld")
+        ld.toChip(data, preserveLinks) == readMap("preserve-links/dtestpost-chips-links.jsonld")
     }
 
     def "should apply inverses"() {
@@ -1123,5 +1105,4 @@ class JsonLdSpec extends Specification {
         return JsonLdSpec.class.getClassLoader()
             .getResourceAsStream(filename).getText("UTF-8")
     }
-
 }
