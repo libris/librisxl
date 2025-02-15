@@ -2,6 +2,8 @@ package whelk.importer
 
 import groovy.util.logging.Log4j2 as Log
 import groovy.transform.CompileStatic
+import whelk.WorkMerging
+
 import static groovy.transform.TypeCheckingMode.SKIP
 
 import whelk.Document
@@ -148,15 +150,29 @@ class DatasetImporter {
             Document incomingDoc = completeRecord(data, recordType, true)
             idsInInput.add(incomingDoc.getShortId())
 
-            // This race condition should be benign. If there is a document with
-            // the same ID created in between the check and the creation, we'll
-            // get an exception and fail early (unfortunate but acceptable).
-            switch (createOrUpdateDocument(incomingDoc)) {
-                case WRITE_RESULT.CREATED:
-                    createdCount++;
-                    break;
-                case WRITE_RESULT.UPDATED:
-                    updatedCount++;
+            if (data.get("@type") != null &&
+                    whelk.getJsonld().isSubClassOf( incomingDoc.getThingType(), "Work" )) {
+
+                switch (createOrUpdateWork(incomingDoc)) {
+                    case WorkMerging.WRITE_RESULT.CREATED:
+                        createdCount++;
+                        break;
+                    case WorkMerging.WRITE_RESULT.UPDATED:
+                        updatedCount++;
+                }
+
+            } else { // Not a work
+
+                // This race condition should be benign. If there is a document with
+                // the same ID created in between the check and the creation, we'll
+                // get an exception and fail early (unfortunate but acceptable).
+                switch (createOrUpdateDocument(incomingDoc)) {
+                    case WRITE_RESULT.CREATED:
+                        createdCount++;
+                        break;
+                    case WRITE_RESULT.UPDATED:
+                        updatedCount++;
+                }
             }
 
             if ( lineCount % 100 == 0 ) {
@@ -376,8 +392,8 @@ class DatasetImporter {
     }
 
     private WRITE_RESULT createOrUpdateDocument(Document incomingDoc) {
-        Document storedDoc = whelk.getDocument(incomingDoc.getShortId())
         WRITE_RESULT result
+        Document storedDoc = whelk.getDocument(incomingDoc.getShortId())
         if (storedDoc != null) {
             boolean updated = whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, false, "xl", null, { doc ->
                 doc.data = incomingDoc.data
@@ -391,7 +407,22 @@ class DatasetImporter {
             whelk.createDocument(incomingDoc, "xl", null, collection, false)
             result = WRITE_RESULT.CREATED
         }
+
         return result
+    }
+
+    private void createOrUpdateWork(Document incomingWork) {
+        List bibIDs = []
+        List graphList = incomingWork.data.get("@graph")
+        Map mainEntity = graphList[1]
+        mainEntity.get("@reverse", [:]).get("instanceOf", []).each { bib ->
+            String instanceID = whelk.getStorage().getSystemIdByIri( (String) bib["@id"] )
+            if (instanceID != null)
+                bibIDs.add(instanceID)
+        }
+        if (!bibIDs.isEmpty()) {
+            WorkMerging.mergeWorksOf(bibIDs, [incomingWork], whelk)
+        }
     }
 
     private long removeDeleted(Set<String> idsInInput, List<String> needsRetry) {

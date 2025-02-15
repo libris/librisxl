@@ -1118,6 +1118,19 @@ class PostgreSQLComponent {
         return doc
     }
 
+    public removeAndTransferMainEntityURIs(String removeID, String inheritsAliasesID) {
+        withDbConnection {
+            Connection connection = getMyConnection()
+            Document from = lockAndLoad(removeID, connection)
+            remove(from.getShortId(), "xl", null, false)
+            storeUpdate(inheritsAliasesID, true, false, true, "xl", null, { to ->
+                from.getThingIdentifiers().each {
+                    to.addThingIdentifier(it)
+                }
+            })
+        }
+    }
+
     private Document lockAndLoad(String id, Connection connection) throws DocumentNotFoundException {
         PreparedStatement statement = null
         ResultSet resultSet = null
