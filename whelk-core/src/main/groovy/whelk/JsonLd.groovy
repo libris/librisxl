@@ -108,7 +108,7 @@ class JsonLd {
     public Map<String, Map<String, Object>> vocabIndex
 
     public List<String> locales
-    private String vocabId
+    public String vocabId
     private Map<String, String> nsToPrefixMap = [:]
     private Map<String, String> prefixToNsMap = [:]
 

@@ -29,8 +29,8 @@ allprojects {
         configFile = new File("${project.projectDir}/../codenarc.config")
         ignoreFailures = true
         dependencies {
-            codenarc('org.codenarc:CodeNarc:3.3.0')
-            codenarc('org.codehaus.groovy:groovy-all:3.0.20')
+            codenarc("org.apache.groovy:groovy-all:${groovyVersion}")
+            codenarc("org.codenarc:CodeNarc:${codenarcVersion}")
         }
     }
 }
