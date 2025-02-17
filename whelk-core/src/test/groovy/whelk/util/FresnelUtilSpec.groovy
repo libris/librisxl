@@ -374,7 +374,6 @@ class FresnelUtilSpec extends Specification {
 
         var fresnel = new FresnelUtil(ld)
         var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensLevel.Chip), new FresnelUtil.LangCode('sv'))
-
         expect:
         result.asString() == "Titel • Svenska • Namnsson, Namn, 1972-"
     }

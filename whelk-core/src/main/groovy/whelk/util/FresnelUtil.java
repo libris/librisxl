@@ -761,6 +761,7 @@ public class FresnelUtil {
             public static String CONTENT_BEFORE = "_contentBefore";
             public static String STYLE = "_style";
             public static String LABEL = "_label";
+            public static String SCRIPTS = "_scripts";
         }
 
         String contentBefore;
@@ -948,17 +949,12 @@ public class FresnelUtil {
 
         public Object asJsonLd() {
             var result = new HashMap<String, Object>();
-            /*
-            super.serialize(result);
-            if (result.isEmpty()) {
-                return unwrapSingle(value);
-            } else {
-                result.put(JsonLd.VALUE_KEY, unwrapSingle(value));
-                return result;
-            }
 
-             */
-            return result;
+            scripts.forEach((code, decorated) -> {
+                result.put(code.code,  decorated.asJsonLd());
+            });
+
+            return Map.of(Fmt.SCRIPTS, result);
         }
     }
 
