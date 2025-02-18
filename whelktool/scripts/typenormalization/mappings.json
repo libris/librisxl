@@ -46,6 +46,18 @@
     "https://id.kb.se/term/barngf/Bilderb%C3%B6cker": "TextAndImagesBook"
   },
 
+  "complexTypeMap": {
+      "Text": {"BookForm": "WrittenBook", "TextAndImagesBook": "TextAndImagesBook"},
+      "Cartography": {"AtlasForm": "Atlas"},
+      "Audio": {"BookForm": "Audiobook", "Fiction": "Audiobook"},
+      "Tactile": {"BookForm": "TactileBook"}
+  },
+  "complexTypeMap:TODO": {"Tactile": "move to work first? See also Braille* logic"},
+
+  "impliedContentTypes": {
+      "Atlas": ["https://id.kb.se/term/rda/CartographicImage", "https://id.kb.se/term/rda/Text"]
+  },
+
   "select:carrierMediaMap": "select ?carrier ?media where { ?carrier a :CarrierType ; :broader ?media }",
    "carrierMediaMap": {
     "https://id.kb.se/term/rda/OverheadTransparency": "https://id.kb.se/term/rda/Projected",
