@@ -18,6 +18,8 @@ class DefinitionsData implements UsingJsonKeys {
   static final var BARNGF = "https://id.kb.se/term/barngf/"
   static final var KBRDA = "https://id.kb.se/term/rda/"
 
+  Whelk whelk
+
   Map typeToContentType = [:]
   Map genreFormImpliesFormMap = [:]
   Map carrierMediaMap = [:]
@@ -34,10 +36,11 @@ class DefinitionsData implements UsingJsonKeys {
 
   Map<String, String> contentToTypeMap = [:]
 
-  DefinitionsData(File scriptDir) {
+  DefinitionsData(Whelk whelk, File scriptDir) {
     // FIXME: Process type and gf definitions loaded into XL and remove these hard-coded mappings!
     var f = new File(scriptDir, "mappings.json")
     Map mappings = mapper.readValue(f, Map)
+
     typeToContentType = mappings.get('typeToContentType')
     genreFormImpliesFormMap = mappings.get('genreFormImpliesFormMap')
     carrierMediaMap = mappings.get('carrierMediaMap')
@@ -93,7 +96,7 @@ class DefinitionsData implements UsingJsonKeys {
 
 class TypeMappings extends DefinitionsData {
 
-  TypeMappings(File scriptDir) { super(scriptDir) }
+  TypeMappings(Whelk whelk, File scriptDir) { super(whelk, scriptDir) }
 
   boolean fixMarcLegacyType(Map instance, Map work) {
     var changed = false
@@ -214,12 +217,10 @@ class TypeMappings extends DefinitionsData {
 
 class TypeNormalizer implements UsingJsonKeys {
 
-  Whelk whelk
   TypeMappings mappings
 
-  TypeNormalizer(Whelk whelk, File scriptDir) {
-    this.whelk = whelk
-    mappings = new TypeMappings(scriptDir)
+  TypeNormalizer(TypeMappings mappings) {
+    this.mappings = mappings
   }
 
   boolean normalize(Map instance, Map work) {
@@ -526,7 +527,7 @@ class TypeNormalizer implements UsingJsonKeys {
 // TODO: Instead, normalize linked works first, then instances w/o linked works?
 convertedWorks = java.util.concurrent.ConcurrentHashMap.newKeySet()
 
-typeNormalizer = new TypeNormalizer(getWhelk(), scriptDir)
+typeNormalizer = new TypeNormalizer(new TypeMappings(getWhelk(), scriptDir))
 
 process { def doc, Closure loadWorkItem ->
   def (record, instance) = doc.graph
