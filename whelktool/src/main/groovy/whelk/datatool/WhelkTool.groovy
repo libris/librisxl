@@ -203,9 +203,13 @@ class WhelkTool {
             log "Select by form"
         }
 
-        var ids = matchForm.getThingIds().isEmpty()
-                ? whelk.sparqlQueryClient.queryIdsByPattern(matchForm.getSparqlPattern(whelk.jsonld.context))
-                : matchForm.getThingIds()
+        var ids = matchForm.getIdsForSelection()
+        if (ids.isEmpty()) {
+            var pathToIds = matchForm.getIdsForSelectionByPath()
+            ids = pathToIds.isEmpty()
+                    ? whelk.sparqlQueryClient.queryIdsByPattern(matchForm.getSparqlPattern(whelk.jsonld.context))
+                    : idLoader.loadShortIdsByIdsAtPaths(pathToIds)
+        }
 
         selectByIds(ids, process, batchSize, silent)
     }
