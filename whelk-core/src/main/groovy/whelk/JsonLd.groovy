@@ -30,6 +30,7 @@ class JsonLd {
     public static final String REVERSE_KEY = "@reverse"
     // JSON-LD 1.1
     public static final String PREFIX_KEY = "@prefix"
+    public static final String NONE_KEY = "@none"
 
     public static final String DISPLAY_KEY = "dataDisplay"
     public static final String THING_KEY = "mainEntity"
@@ -119,7 +120,9 @@ class JsonLd {
     private Map<String, Set<String>> categories
     private Map<String, Set<String>> inRange
 
+    // x -> xByLang
     public Map langContainerAlias = [:]
+    // xByLang -> x
     public Map langContainerAliasInverted
 
     /**
@@ -909,7 +912,7 @@ class JsonLd {
                      it.endsWith('ByLang') && ((Map<String, ?>) thing.get(it))?.keySet()?.any{ it in languagesToKeep } 
                  })
             }
-            if (isAlternateSubProperty(it)) {
+            if (isAlternateRangeRestriction(it)) {
                 // alternateProperties with locally defined subProperty with narrower range.
                 // Example: {"subPropertyOf": "hasTitle", "range": "KeyTitle"},
                 // The correct RDF semantics would be to match range against all subclasses.
@@ -1015,10 +1018,10 @@ class JsonLd {
         }
         if (lens) {
             List propertiesToKeep = (List) lens.get("showProperties")
-                    .collect { prop -> 
+                    .collect { prop ->
                         isAlternateProperties(prop) 
-                                ? prop[ALTERNATE_PROPERTIES].collect { isAlternateSubProperty(it) ? it[Rdfs.SUB_PROPERTY_OF] : it }
-                                : prop 
+                                ? prop[ALTERNATE_PROPERTIES].collect { isAlternateRangeRestriction(it) ? it[Rdfs.SUB_PROPERTY_OF] : it }
+                                : prop
                     }
                     .flatten()
                     .unique()
@@ -1120,7 +1123,7 @@ class JsonLd {
                         else if (a instanceof List) {
                             a.each { if (thing[it]) result[it] = thing[it] }
                         }
-                        else if (isAlternateSubProperty(a) && thing[a[Rdfs.SUB_PROPERTY_OF]]) {
+                        else if (isAlternateRangeRestriction(a) && thing[a[Rdfs.SUB_PROPERTY_OF]]) {
                             result[a[Rdfs.SUB_PROPERTY_OF]] = thing[a[Rdfs.SUB_PROPERTY_OF]]
                         }
                     }
@@ -1132,12 +1135,13 @@ class JsonLd {
         }
     }
     
-    private static boolean isAlternateProperties(def p) {
+    static boolean isAlternateProperties(def p) {
         p instanceof Map && p.size() == 1 && p[ALTERNATE_PROPERTIES]
     }
-    
-    private static boolean isAlternateSubProperty(def p) {
-        p instanceof Map && p[Rdfs.SUB_PROPERTY_OF] && p[Rdfs.RANGE]
+
+    static boolean isAlternateRangeRestriction(def p) {
+            p instanceof Map && p[Rdfs.SUB_PROPERTY_OF] && p[Rdfs.RANGE]
+
     }
 
     Map getLensFor(Map thing, Map lensGroup) {
