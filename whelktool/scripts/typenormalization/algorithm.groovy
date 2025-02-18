@@ -18,9 +18,12 @@ class DefinitionsData implements UsingJsonKeys {
   static final var BARNGF = "https://id.kb.se/term/barngf/"
   static final var KBRDA = "https://id.kb.se/term/rda/"
 
-  static Map typeToContentType = [:]
-  static Map genreFormImpliesFormMap = [:]
-  static Map carrierMediaMap = [:]
+  Map typeToContentType = [:]
+  Map genreFormImpliesFormMap = [:]
+  Map carrierMediaMap = [:]
+
+  Map complexTypeMap = [:]
+  Map impliedContentTypes = [:]
 
   // Mixes subclasses and subconcepts
   Map<String, Set<String>> baseEqualOrSubMap = [ // matchesMap
@@ -38,6 +41,9 @@ class DefinitionsData implements UsingJsonKeys {
     typeToContentType = mappings.get('typeToContentType')
     genreFormImpliesFormMap = mappings.get('genreFormImpliesFormMap')
     carrierMediaMap = mappings.get('carrierMediaMap')
+
+    impliedContentTypes = mappings.get('impliedContentTypes')
+    complexTypeMap = mappings.get('complexTypeMap')
 
     typeToContentType.each { rtype, ctype ->
       if (ctype instanceof Map) {
@@ -88,17 +94,6 @@ class DefinitionsData implements UsingJsonKeys {
 class TypeMappings extends DefinitionsData {
 
   TypeMappings(File scriptDir) { super(scriptDir) }
-
-  var complexTypeMap = [
-      'Text': ['BookForm': 'WrittenBook', 'TextAndImagesBook': 'TextAndImagesBook'],
-      'Cartography': ['AtlasForm': 'Atlas'],
-      'Audio': ['BookForm': 'Audiobook', 'Fiction': 'Audiobook'],
-      'Tactile': ['BookForm': 'TactileBook'],  // FIXME: move to work first? See also Braille* logic
-  ]
-
-  var impliedContentTypes = [
-      'Atlas': ["${KBRDA}CartographicImage" as String, "${KBRDA}Text" as String] as Set
-  ]
 
   boolean fixMarcLegacyType(Map instance, Map work) {
     var changed = false
@@ -293,7 +288,7 @@ class TypeNormalizer implements UsingJsonKeys {
         var complexType = formsToTypeMap.get(possibleForm)
         if (complexType) {
           work.put(TYPE, complexType)
-          var impliedCTs = mappings.impliedContentTypes[complexType]
+          var impliedCTs = mappings.impliedContentTypes[complexType] as Set
           if (impliedCTs && contenttypes.every { it[ID] in impliedCTs }) {
             work.remove("contentType")
           }
