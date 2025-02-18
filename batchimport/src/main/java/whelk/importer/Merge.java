@@ -110,11 +110,19 @@ public class Merge {
         List<Object> temp = new ArrayList<>(path);
         List<Object> trueTemp = new ArrayList<>(truePath);
 
-        Ownership owner = history.getOwnership(truePath);
+        Ownership owner = null;
+        if (history != null) {
+            owner = history.getOwnership(truePath);
+        }
 
         while (!temp.isEmpty() && !trueTemp.isEmpty()) {
             if (m_pathAddRules.containsKey(temp)) {
                 //System.err.println("  found rule! :" + temp + " matching true path: " + trueTemp + " existing owner is: " + owner);
+
+                if (history == null) {
+                    // There's a rule saying were allowed to add here, and we've been told to ignore all history (it was set to null), so we're good.
+                    return true;
+                }
 
                 Map prioMap = m_pathAddRules.get(temp);
                 if (prioMap == null) // No priority list given for this rule = anyone may add (unless hand-edited)!
@@ -162,15 +170,17 @@ public class Merge {
             // Determine (the maximum) priority for any part of the already existing subtree (below 'path')
             int basePriorityHere = 0;
             boolean baseContainsHandEdits = false;
-            Set<Ownership> baseOwners = baseHistory.getSubtreeOwnerships(truePath);
-            for (Ownership baseOwnership : baseOwners) {
-                if (baseOwnership.m_manualEditTime != null)
-                    baseContainsHandEdits = true;
-                String baseAgent = baseOwnership.m_systematicEditor;
-                if (replacePriority.get(baseAgent) != null) {
-                    int priority = (Integer) replacePriority.get(baseAgent);
-                    if (priority > basePriorityHere)
-                    basePriorityHere = priority;
+            if (baseHistory != null) {
+                Set<Ownership> baseOwners = baseHistory.getSubtreeOwnerships(truePath);
+                for (Ownership baseOwnership : baseOwners) {
+                    if (baseOwnership.m_manualEditTime != null)
+                        baseContainsHandEdits = true;
+                    String baseAgent = baseOwnership.m_systematicEditor;
+                    if (replacePriority.get(baseAgent) != null) {
+                        int priority = (Integer) replacePriority.get(baseAgent);
+                        if (priority > basePriorityHere)
+                            basePriorityHere = priority;
+                    }
                 }
             }
 

@@ -175,7 +175,10 @@ class XL
                 Document incoming = convertToRDF(incomingMarcRecord, idToMerge);
                 if (m_parameters.getReadOnly()) {
                     Document existing = m_whelk.getDocument(idToMerge);
-                    History existingHistory = new History(m_whelk.getStorage().loadDocumentHistory(existing.getShortId()), m_whelk.getJsonld());
+                    History existingHistory = null;
+                    if (!m_parameters.getIgnoreHistory()) {
+                        existingHistory = new History(m_whelk.getStorage().loadDocumentHistory(existing.getShortId()), m_whelk.getJsonld());
+                    }
                     m_merge.merge(existing, incoming, m_parameters.getChangedBy(), existingHistory);
                     System.out.println("info: Would now (if --live had been specified) have written the following json-ld to whelk as a merged record:\n"
                             + existing.getDataAsString());
