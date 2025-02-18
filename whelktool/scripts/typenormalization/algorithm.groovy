@@ -4,23 +4,51 @@ import java.util.regex.Pattern
 import whelk.Whelk
 import static whelk.util.Jackson.mapper
 
-class Common {
-  static final var GRAPH = '@graph'
+interface UsingJsonKeys {
   static final var ID = '@id'
   static final var TYPE = '@type'
   static final var VALUE = '@value'
   static final var ANNOTATION = "@annotation"
+}
 
-  static final var KBV = "https://id.kb.se/vocab/"
+class DefinitionsData implements UsingJsonKeys {
+
   static final var MARC = "https://id.kb.se/marc/"
-  static final var SAO = "https://id.kb.se/term/sao/"
-  static final var BARN = "https://id.kb.se/term/barn/"
   static final var SAOGF = "https://id.kb.se/term/saogf/"
   static final var BARNGF = "https://id.kb.se/term/barngf/"
   static final var KBRDA = "https://id.kb.se/term/rda/"
-  static final var TGM = "https://id.kb.se/term/gmgpc/swe/"
 
-  static boolean matches(ArrayList<Map> typelikes, String value) {
+  static Map typeToContentType = [:]
+  static Map genreFormImpliesFormMap = [:]
+  static Map carrierMediaMap = [:]
+
+  // Mixes subclasses and subconcepts
+  Map<String, Set<String>> baseEqualOrSubMap = [ // matchesMap
+    (MARC + 'DirectElectronic'): [MARC + 'ChipCartridge'] as Set,
+    (MARC + 'Novel'): [SAOGF + 'Romaner'] as Set,
+    'Audio': ['PerformedMusic', 'SpokenWord'] as Set,
+  ]
+
+  Map<String, String> contentToTypeMap = [:]
+
+  DefinitionsData(File scriptDir) {
+    // FIXME: Process type and gf definitions loaded into XL and remove these hard-coded mappings!
+    var f = new File(scriptDir, "mappings.json")
+    Map mappings = mapper.readValue(f, Map)
+    typeToContentType = mappings.get('typeToContentType')
+    genreFormImpliesFormMap = mappings.get('genreFormImpliesFormMap')
+    carrierMediaMap = mappings.get('carrierMediaMap')
+
+    typeToContentType.each { rtype, ctype ->
+      if (ctype instanceof Map) {
+        // FIXME: guessing!
+        ctype = ctype['unionOf'][0]
+      }
+      contentToTypeMap[ctype] = rtype
+    }
+  }
+
+  boolean matches(ArrayList<Map> typelikes, String value) {
     /* TODO:
     if (termKey in ld.vocabIndex) {
         return ld.getSubClasses(termKey).findResults{ ld.toTermId(it) }
@@ -36,27 +64,43 @@ class Common {
     return false
   }
 
-  static List asList(Object o) {
-    return (o instanceof List ? (List) o : o == null ? [] : [o])
+  List reduceSymbols(List symbols) {
+    return reduceSymbols(symbols, null)
   }
+
+  List reduceSymbols(List symbols, String expectedtype) {
+    List mostSpecific = symbols.stream().filter(x -> !(symbols.stream().anyMatch(y -> isbaseof(x, y)))).collect(Collectors.toList())
+    return mostSpecific
+  }
+
+  boolean isbaseof(Object x, Object y) {
+    if (x instanceof Map && y instanceof Map) {
+      var subterms = baseEqualOrSubMap[x[ID]]
+      if (subterms) {
+        return y[ID] in subterms
+      }
+    }
+    return false
+  }
+
 }
 
-class MarcLegacy extends Common {
+class TypeMappings extends DefinitionsData {
 
-  static var knownContentTypes = [
-    Audio: KBRDA + 'Audio',
-    Globe: KBRDA + 'CartographicThreeDimensionalForm',
-    Multimedia: KBRDA + 'ComputerDataset',  // FIXME: wild guess, likely wrong (cf. ComputerProgram)
-    MovingImage: KBRDA + 'TwoDimensionalMovingImage',
-    Music: KBRDA + 'PerformedMusic',
-    NotatedMovement: KBRDA + 'NotatedMovement',
-    NotatedMusic: KBRDA + 'NotatedMusic',
-    Object: KBRDA + 'ThreeDimensionalForm',
-    StillImage: KBRDA + 'StillImage',
-    Text: KBRDA + 'Text',
+  TypeMappings(File scriptDir) { super(scriptDir) }
+
+  var complexTypeMap = [
+      'Text': ['BookForm': 'WrittenBook', 'TextAndImagesBook': 'TextAndImagesBook'],
+      'Cartography': ['AtlasForm': 'Atlas'],
+      'Audio': ['BookForm': 'Audiobook', 'Fiction': 'Audiobook'],
+      'Tactile': ['BookForm': 'TactileBook'],  // FIXME: move to work first? See also Braille* logic
   ]
 
-  static boolean fixMarcLegacyType(Map instance, Map work) {
+  var impliedContentTypes = [
+      'Atlas': ["${KBRDA}CartographicImage" as String, "${KBRDA}Text" as String] as Set
+  ]
+
+  boolean fixMarcLegacyType(Map instance, Map work) {
     var changed = false
 
     var itype = (String) instance[TYPE]
@@ -64,11 +108,12 @@ class MarcLegacy extends Common {
     if (itype == 'Map') {
       if (work[TYPE] == 'Cartography') {
         instance[TYPE] = 'Instance'
+        // TODO: *may* be digital (online); *maybe* not a 2d-map... (a few Volume, a few Object)?
         if (!instance['carrierType']) {
           instance['carrierType'] = [ [(ID): "${MARC}Sheet" as String] ]
         }
         work[TYPE] = 'SingleMap'
-        // TODO: drop instance['genreForm'] marc:MapATwoDimensionalMap
+        // TODO: drop instance['genreForm'] marc:MapATwoDimensionalMap, add kbgf:Map ?
         changed = true
       }
     } else if (itype == 'Globe') {
@@ -86,7 +131,7 @@ class MarcLegacy extends Common {
       'NotatedMusicInstance': ['NotatedMusic'],
       'TextInstance': ['Text', ['Volume', 'Electronic']],
       'StillImageInstance': ['StillImage', ['Sheet', 'DigitalResource']],
-      'MapInstance': ['Map', ['Sheet', 'DigitalResource']],
+      // TODO: seeAbove 'Map': ['SingleMap', ['Sheet', 'DigitalResource']],
       'GlobeInstance': ['Globe', 'Object'],
     ]
 
@@ -111,7 +156,7 @@ class MarcLegacy extends Common {
     return changed
   }
 
-  static boolean convertIssuanceType(Map instance, Map work) {
+  boolean convertIssuanceType(Map instance, Map work) {
     // TODO: check genres and heuristics (some Serial are mistyped!)
     var issuancetype = (String) instance.remove("issuanceType")
     if (!issuancetype) {
@@ -149,7 +194,11 @@ class MarcLegacy extends Common {
       } else if (wtype == 'MixedMaterial') {
         // FIXME:? assert work['contentType'].size() > 1
       } else {
-        var mappedContentType = knownContentTypes[wtype]
+        def mappedContentType = typeToContentType[wtype]
+        if (mappedContentType instanceof Map) {
+          // FIXME: guessing!
+          mappedContentType = mappedContentType['unionOf'][0]
+        }
         assert mappedContentType, "Unable to map ${wtype} to contentType or genreForm"
         work['contentType'] << [(ID): mappedContentType]
       }
@@ -168,148 +217,27 @@ class MarcLegacy extends Common {
 
 }
 
-// FIXME: Process type and gf definitions loaded into XL and remove these hard-coded mappings!
-class TypeNormalizerUtils extends Common {
-  // Mixes subclasses and subconcepts
-  static Map<String, Set<String>> baseEqualOrSubMap = [ // matchesMap
-    (MARC + 'DirectElectronic'): [MARC + 'ChipCartridge'] as Set,
-    (MARC + 'Novel'): [SAOGF + 'Romaner'] as Set,
-    'Audio': ['PerformedMusic', 'SpokenWord'] as Set,
-  ]
-
-  static var genreFormImpliesFormMap = [
-      ("${MARC}Atlas" as String): 'AtlasForm',
-      'https://id.kb.se/term/gmgpc/swe/Atlaser': 'AtlasForm',
-      ("${MARC}Novel" as String): 'BookForm',
-      ("${MARC}Fiction" as String): 'Fiction',
-      ("${SAOGF}Romaner" as String): 'BookForm',
-      ("${SAOGF}Pop-up-b%C3%B6cker" as String): 'PopupBook',
-      ("${SAOGF}%C3%85rsb%C3%B6cker" as String): 'Yearbook',
-      ("${SAOGF}Miniatyrb%C3%B6cker" as String): 'BookForm',
-      ("${SAOGF}Mekaniska%20b%C3%B6cker" as String): 'InteractiveBook',
-      ("${SAOGF}Pysselb%C3%B6cker" as String): 'BookForm',
-      ("${SAOGF}Målarb%C3%B6cker" as String): 'BookForm',
-      ("${SAOGF}Guideb%C3%B6cker" as String): 'BookForm',
-      ("${SAOGF}Pop-up-b%C3%B6cker" as String): 'InteractiveBook',
-      ("${SAOGF}Kokb%C3%B6cker" as String): 'BookForm',
-      ("${BARNGF}Kapitelb%C3%B6cker" as String): 'BookForm',
-      'https://id.kb.se/term/barngf/Bilderb%C3%B6cker': 'TextAndImagesBook',
-  ]
-
-  static var complexTypeMap = [
-      'Text': ['BookForm': 'WrittenBook', 'TextAndImagesBook': 'TextAndImagesBook'],
-      'Cartography': ['AtlasForm': 'Atlas'],
-      'Audio': ['BookForm': 'AudioBook', 'Fiction': 'AudioBook'],
-      'Tactile': ['BookForm': 'TactileBook'],  // FIXME: move to work first? See also Braille* logic
-  ]
-
-  static var impliedContentTypes = [
-      'Atlas': ["${KBRDA}CartographicImage" as String, "${KBRDA}Text" as String] as Set
-  ]
-
-  static Map<String, String> contentToTypeMap = [
-    (KBRDA + "Text"): "Text",
-    (KBRDA + "NotatedMusic"): "NotatedMusic",
-    (KBRDA + "PerformedMusic"): "PerformedMusic",
-    (KBRDA + "SpokenWord"): "SpokenWord",
-    // 'StillImage' ...
-    (KBRDA + "TwoDimensionalMovingImage"): 'MovingImage',
-  ]
-
-  /*
-  prefix : <https://id.kb.se/vocab/>
-  prefix kbrda: <https://id.kb.se/term/rda/>
-  select ?carrier ?media where { ?carrier a :CarrierType ; :broader ?media }
-  */
-  static Map<String, String> carrierMediaMap = [
-    'https://id.kb.se/term/rda/OverheadTransparency': 'https://id.kb.se/term/rda/Projected',
-    'https://id.kb.se/term/rda/OnlineResource': 'https://id.kb.se/term/rda/Computer',
-    'https://id.kb.se/term/rda/Sheet': 'https://id.kb.se/term/rda/Unmediated',
-    'https://id.kb.se/term/rda/Volume': 'https://id.kb.se/term/rda/Unmediated',
-    'https://id.kb.se/term/rda/AudioDisc': 'https://id.kb.se/term/rda/Audio',
-    'https://id.kb.se/term/rda/ComputerDisc': 'https://id.kb.se/term/rda/Computer',
-    'https://id.kb.se/term/rda/MicrofilmReel': 'https://id.kb.se/term/rda/Microform',
-    'https://id.kb.se/term/rda/Audiocassette': 'https://id.kb.se/term/rda/Audio',
-    'https://id.kb.se/term/rda/Slide': 'https://id.kb.se/term/rda/Projected',
-    'https://id.kb.se/term/rda/Object': 'https://id.kb.se/term/rda/Unmediated',
-    'https://id.kb.se/term/rda/StereographCard': 'https://id.kb.se/term/rda/Stereographic',
-    'https://id.kb.se/term/rda/Card': 'https://id.kb.se/term/rda/Unmediated',
-    'https://id.kb.se/term/rda/Videodisc': 'https://id.kb.se/term/rda/Video',
-    'https://id.kb.se/term/rda/SoundTrackReel': 'https://id.kb.se/term/rda/Audio',
-    'https://id.kb.se/term/rda/ComputerChipCartridge': 'https://id.kb.se/term/rda/Computer',
-    'https://id.kb.se/term/rda/Microfiche': 'https://id.kb.se/term/rda/Microform',
-    'https://id.kb.se/term/rda/ComputerCard': 'https://id.kb.se/term/rda/Computer',
-    'https://id.kb.se/term/rda/Videocassette': 'https://id.kb.se/term/rda/Video',
-    'https://id.kb.se/term/rda/Roll': 'https://id.kb.se/term/rda/Unmediated',
-    'https://id.kb.se/term/rda/MicrofilmRoll': 'https://id.kb.se/term/rda/Microform',
-    'https://id.kb.se/term/rda/ComputerDiscCartridge': 'https://id.kb.se/term/rda/Computer',
-    'https://id.kb.se/term/rda/FilmCartridge': 'https://id.kb.se/term/rda/Projected',
-    'https://id.kb.se/term/rda/VideotapeReel': 'https://id.kb.se/term/rda/Video',
-    'https://id.kb.se/term/rda/ApertureCard': 'https://id.kb.se/term/rda/Microform',
-    'https://id.kb.se/term/rda/Filmslip': 'https://id.kb.se/term/rda/Projected',
-    'https://id.kb.se/term/rda/Filmstrip': 'https://id.kb.se/term/rda/Projected',
-    'https://id.kb.se/term/rda/Flipchart': 'https://id.kb.se/term/rda/Unmediated',
-    'https://id.kb.se/term/rda/Microopaque': 'https://id.kb.se/term/rda/Microform',
-    'https://id.kb.se/term/rda/MicroscopeSlide': 'https://id.kb.se/term/rda/Microscopic',
-    'https://id.kb.se/term/rda/AudioCartridge': 'https://id.kb.se/term/rda/Audio',
-    'https://id.kb.se/term/rda/AudioCylinder': 'https://id.kb.se/term/rda/Audio',
-    'https://id.kb.se/term/rda/AudioRoll': 'https://id.kb.se/term/rda/Audio',
-    'https://id.kb.se/term/rda/AudiotapeReel': 'https://id.kb.se/term/rda/Audio',
-    'https://id.kb.se/term/rda/ComputerTapeCartridge': 'https://id.kb.se/term/rda/Computer',
-    'https://id.kb.se/term/rda/ComputerTapeCassette': 'https://id.kb.se/term/rda/Computer',
-    'https://id.kb.se/term/rda/ComputerTapeReel': 'https://id.kb.se/term/rda/Computer',
-    'https://id.kb.se/term/rda/FilmCassette': 'https://id.kb.se/term/rda/Projected',
-    'https://id.kb.se/term/rda/FilmReel': 'https://id.kb.se/term/rda/Projected',
-    'https://id.kb.se/term/rda/FilmRoll': 'https://id.kb.se/term/rda/Projected',
-    'https://id.kb.se/term/rda/FilmstripCartridge': 'https://id.kb.se/term/rda/Projected',
-    'https://id.kb.se/term/rda/MicroficheCassette': 'https://id.kb.se/term/rda/Microform',
-    'https://id.kb.se/term/rda/MicrofilmCartridge': 'https://id.kb.se/term/rda/Microform',
-    'https://id.kb.se/term/rda/MicrofilmCassette': 'https://id.kb.se/term/rda/Microform',
-    'https://id.kb.se/term/rda/MicrofilmSlip': 'https://id.kb.se/term/rda/Microform',
-    'https://id.kb.se/term/rda/StereographDisc': 'https://id.kb.se/term/rda/Stereographic',
-    'https://id.kb.se/term/rda/VideoCartridge': 'https://id.kb.se/term/rda/Video',
-  ]
-
-  static List reduceSymbols(List symbols) {
-    return reduceSymbols(symbols, null)
-  }
-
-  static List reduceSymbols(List symbols, String expectedtype) {
-    List mostSpecific = symbols.stream().filter(x -> !(symbols.stream().anyMatch(y -> isbaseof(x, y)))).collect(Collectors.toList())
-    return mostSpecific
-  }
-
-  static boolean isbaseof(Object x, Object y) {
-    if (x instanceof Map && y instanceof Map) {
-      var subterms = baseEqualOrSubMap[x[ID]]
-      if (subterms) {
-        return y[ID] in subterms
-      }
-    }
-    return false
-  }
-
-}
-
-class TypeNormalizer extends TypeNormalizerUtils {
+class TypeNormalizer implements UsingJsonKeys {
 
   Whelk whelk
+  TypeMappings mappings
 
-  TypeNormalizer(Whelk whelk) {
+  TypeNormalizer(Whelk whelk, File scriptDir) {
     this.whelk = whelk
+    mappings = new TypeMappings(scriptDir)
   }
 
-  static boolean normalize(Map instance, Map work) {
+  boolean normalize(Map instance, Map work) {
     var changed = false
 
-    changed |= MarcLegacy.fixMarcLegacyType(instance, work)
+    changed |= mappings.fixMarcLegacyType(instance, work)
 
     changed |= foldTypeOfSingleUnitWork(work)
     changed |= foldTypeOfSingleUnitInstance(instance)
 
     if (instance.containsKey("issuanceType")) {
       // work.genreForm marc:MapBoundAsPartOfAnotherWork
-      changed |= MarcLegacy.convertIssuanceType(instance, work)
+      changed |= mappings.convertIssuanceType(instance, work)
     }
 
     if (instance['issuanceType'] == 'MultipleUnits') {
@@ -322,7 +250,7 @@ class TypeNormalizer extends TypeNormalizerUtils {
     return changed
   }
 
-  static boolean foldTypeOfSingleUnitWork(Map work) {
+  boolean foldTypeOfSingleUnitWork(Map work) {
     var refSize = work.containsKey(ANNOTATION) ? 2 : 1
     if (work.containsKey(ID) && work.size() == refSize) {
       return false
@@ -332,14 +260,14 @@ class TypeNormalizer extends TypeNormalizerUtils {
 
     var worktype = (String) work.get(TYPE)
 
-    var contenttypes = (List) reduceSymbols(asList(work.get("contentType")))
+    var contenttypes = (List) mappings.reduceSymbols(asList(work.get("contentType")))
     if (contenttypes.size() == 1) {
       String ctypeid = contenttypes.get(0).get(ID)
       // TODO: change this. This currently drops contenttypes if implied by wtype;
       // but we need to map wrype+contenttype combo to a name, both ways (store both for search?)...
-      var contentbasictype = contentToTypeMap[ctypeid]
+      var contentbasictype = mappings.contentToTypeMap[ctypeid]
       if (contentbasictype &&
-        (contentbasictype == worktype || contentbasictype in baseEqualOrSubMap[worktype])
+        (contentbasictype == worktype || contentbasictype in mappings.baseEqualOrSubMap[worktype])
       ) {
         if (contentbasictype != worktype) {
           work.put(TYPE, contentbasictype)
@@ -350,7 +278,7 @@ class TypeNormalizer extends TypeNormalizerUtils {
       }
     }
 
-    var genreforms = (List) reduceSymbols(asList(work.get("genreForm")))
+    var genreforms = (List) mappings.reduceSymbols(asList(work.get("genreForm")))
     /* TODO: drop from picklist...?
     var gfPicklist = genreforms.stream().filter(
         (it) -> (it.containsKey(ID) &&
@@ -358,14 +286,14 @@ class TypeNormalizer extends TypeNormalizerUtils {
       ).collect(Collectors.toList())
     */
 
-    var formsToTypeMap = complexTypeMap.get(worktype)
+    var formsToTypeMap = mappings.complexTypeMap.get(worktype)
     if (formsToTypeMap) {
-      var possibleForm = genreforms.findResult { genreFormImpliesFormMap[it[ID]] }
+      var possibleForm = genreforms.findResult { mappings.genreFormImpliesFormMap[it[ID]] }
       if (possibleForm) {
         var complexType = formsToTypeMap.get(possibleForm)
         if (complexType) {
           work.put(TYPE, complexType)
-          var impliedCTs = impliedContentTypes[complexType]
+          var impliedCTs = mappings.impliedContentTypes[complexType]
           if (impliedCTs && contenttypes.every { it[ID] in impliedCTs }) {
             work.remove("contentType")
           }
@@ -400,15 +328,18 @@ class TypeNormalizer extends TypeNormalizerUtils {
     return changed
   }
 
-  static boolean foldTypeOfSingleUnitInstance(Map instance) {
+  boolean foldTypeOfSingleUnitInstance(Map instance) {
+    var MARC = DefinitionsData.MARC
+    var KBRDA = DefinitionsData.KBRDA
+
     var changed = false
 
     var itype = instance.get(TYPE)
 
-    var mediatypes = reduceSymbols(asList(instance["mediaType"]), "MediaType")
-    var carriertypes = reduceSymbols(asList(instance["carrierType"]), "CarrierType")
+    var mediatypes = mappings.reduceSymbols(asList(instance["mediaType"]), "MediaType")
+    var carriertypes = mappings.reduceSymbols(asList(instance["carrierType"]), "CarrierType")
 
-    var impliedMediaIds = carriertypes.findResults { carrierMediaMap[it[ID]] } as Set
+    var impliedMediaIds = carriertypes.findResults { mappings.carrierMediaMap[it[ID]] } as Set
     if (mediatypes.every { it[ID] in impliedMediaIds }) {
       instance.remove("mediaType")
       changed = true
@@ -419,11 +350,11 @@ class TypeNormalizer extends TypeNormalizerUtils {
     var isVideoRecording = itype == "VideoRecording"
     var isTactile = itype == "Tactile"
 
-    var isVolume = matches(carriertypes, "Volume") || looksLikeVolume(instance)
+    var isVolume = mappings.matches(carriertypes, "Volume") || looksLikeVolume(instance)
 
-    if ((isElectronic && matches(carriertypes, "Online"))) {
+    if ((isElectronic && mappings.matches(carriertypes, "Online"))) {
       carriertypes = carriertypes.stream().filter((x) -> !x.getOrDefault(ID, "").contains("Online")).collect(Collectors.toList())
-      if ((carriertypes.size() > 1 || !(matches(carriertypes, "Electronic")))) {
+      if ((carriertypes.size() > 1 || !(mappings.matches(carriertypes, "Electronic")))) {
         instance.put("carrierType", carriertypes)
       } else {
         instance.remove("carrierType")
@@ -457,7 +388,7 @@ class TypeNormalizer extends TypeNormalizerUtils {
     ]
     for (tuple in tuples) {
       def (isIt, matchTokens, useType) = tuple
-      List gotMatches = matchTokens.findAll { matches(carriertypes, it) }
+      List gotMatches = matchTokens.findAll { mappings.matches(carriertypes, it) }
       if (isIt && gotMatches.size() > 0) {
         isElectronic = true
         instance.put(TYPE, useType)
@@ -469,7 +400,7 @@ class TypeNormalizer extends TypeNormalizerUtils {
     }
 
     if (instance.get(TYPE) == "Instance") {
-      if ((carriertypes.size() == 1 && matches(carriertypes, "Electronic"))) {
+      if ((carriertypes.size() == 1 && mappings.matches(carriertypes, "Electronic"))) {
         isElectronic = true
         instance.put(TYPE, "Electronic")
         instance.remove("carrierType")
@@ -516,14 +447,14 @@ class TypeNormalizer extends TypeNormalizerUtils {
           }
         } else {
           if (probablyPrint) {
-            if (matches(carriertypes, "Sheet")) {
+            if (mappings.matches(carriertypes, "Sheet")) {
               instance.put(TYPE, "PrintedSheet")
             } else {
               instance.put(TYPE, "Print") // TODO: may be PartOfPrint ?
             }
             changed = true
           } else {
-            if (matches(carriertypes, "Sheet")) {
+            if (mappings.matches(carriertypes, "Sheet")) {
               instance.put(TYPE, "Sheet")
               if (dropReundantString(instance, "marc:mediaTerm", ~/(?i)affisch/)) {
                 // TODO: work.genreForm << [(ID): SAOGF + 'Poster']? (and work[TYPE] = IllustratedWork | StillImage?)
@@ -562,8 +493,8 @@ class TypeNormalizer extends TypeNormalizerUtils {
     return changed
   }
 
-  static boolean dropReundantString(Map instance, String propertyKey, Pattern matches) {
-    if (instance.get(propertyKey)?.matches(matches)) {
+  static boolean dropReundantString(Map instance, String propertyKey, Pattern pattern) {
+    if (instance.get(propertyKey)?.matches(pattern)) {
       instance.remove(propertyKey)
       return true
     }
@@ -589,6 +520,10 @@ class TypeNormalizer extends TypeNormalizerUtils {
     return false
   }
 
+  static List asList(Object o) {
+    return (o instanceof List ? (List) o : o == null ? [] : [o])
+  }
+
 }
 
 // NOTE: Since instance and work types may co-depend; fetch work and normalize
@@ -596,7 +531,7 @@ class TypeNormalizer extends TypeNormalizerUtils {
 // TODO: Instead, normalize linked works first, then instances w/o linked works?
 convertedWorks = java.util.concurrent.ConcurrentHashMap.newKeySet()
 
-typeNormalizer = new TypeNormalizer(getWhelk())
+typeNormalizer = new TypeNormalizer(getWhelk(), scriptDir)
 
 process { def doc, Closure loadWorkItem ->
   def (record, instance) = doc.graph
