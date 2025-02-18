@@ -4,8 +4,7 @@
  * See https://kbse.atlassian.net/browse/LXL-3651
  */
 
-// all docs
-selectByCollection(null) { doc ->
+var process = { doc ->
     List rda = asList(doc.graph[0]["descriptionConventions"]).findAll { it.code == "rda" }
 
     rda.forEach {
@@ -22,3 +21,6 @@ selectByCollection(null) { doc ->
         doc.scheduleSave()
     }
 }
+
+selectByCollection("auth", process)
+selectByCollection("bib", process)
