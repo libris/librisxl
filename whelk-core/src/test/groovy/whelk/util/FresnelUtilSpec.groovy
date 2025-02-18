@@ -218,11 +218,11 @@ class FresnelUtilSpec extends Specification {
                 "note": ["NOTE 1", "NOTE 2"]
         ]
 
-        expect:
         var lensed = fresnel.applyLens(thing, FresnelUtil.LensLevel.Chip)
         var result = fresnel.format(lensed, new FresnelUtil.LangCode('sv'))
-        println(result.asJsonLd())
-        println(result.asString())
+
+        expect:
+        result.asString() == "NOTATION • etikett • NOTE 1, NOTE 2 • Το νησι των θησαυρων ’To nisi ton thisavron’"
     }
 
     def "Heliogabalus"() {
