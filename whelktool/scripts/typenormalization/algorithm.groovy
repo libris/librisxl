@@ -24,6 +24,9 @@ class DefinitionsData implements UsingJsonKeys {
   Map genreFormImpliesFormMap = [:]
   Map carrierMediaMap = [:]
 
+  // TODO: see also e.g. 'Map' and 'Globe' in fixMarcLegacyType (used only if wtype is Cartography)
+  Map cleanupTypes =  [:]
+
   Map complexTypeMap = [:]
   Map impliedContentTypes = [:]
 
@@ -44,6 +47,8 @@ class DefinitionsData implements UsingJsonKeys {
     typeToContentType = mappings.get('typeToContentType')
     genreFormImpliesFormMap = mappings.get('genreFormImpliesFormMap')
     carrierMediaMap = mappings.get('carrierMediaMap')
+
+    cleanupTypes = mappings.get('cleanupTypes')
 
     impliedContentTypes = mappings.get('impliedContentTypes')
     complexTypeMap = mappings.get('complexTypeMap')
@@ -110,28 +115,17 @@ class TypeMappings extends DefinitionsData {
         if (!instance['carrierType']) {
           instance['carrierType'] = [ [(ID): "${MARC}Sheet" as String] ]
         }
-        work[TYPE] = 'SingleMap'
+        work[TYPE] = 'CartographicImage' // MapImage
         // TODO: drop instance['genreForm'] marc:MapATwoDimensionalMap, add kbgf:Map ?
         changed = true
       }
     } else if (itype == 'Globe') {
       if (work[TYPE] == 'Cartography') {
         instance[TYPE] = 'Object'
-        work[TYPE] = 'Globe'
+        work[TYPE] = 'CartographicObject' // MapGlobe
         changed = true
       }
     }
-
-    def cleanupTypes =  [
-      'ProjectedImageInstance': ['ProjectedImage'],
-      'MovingImageInstance': ['MovingImage'],
-      'KitInstance': ['Kit'],
-      'NotatedMusicInstance': ['NotatedMusic'],
-      'TextInstance': ['Text', ['Volume', 'Electronic']],
-      'StillImageInstance': ['StillImage', ['Sheet', 'DigitalResource']],
-      // TODO: seeAbove 'Map': ['SingleMap', ['Sheet', 'DigitalResource']],
-      'GlobeInstance': ['Globe', 'Object'],
-    ]
 
     var mappedTypes = cleanupTypes[itype]
     if (mappedTypes) {
@@ -163,6 +157,10 @@ class TypeMappings extends DefinitionsData {
 
     if (issuancetype == 'SubCollection') {
       issuancetype = 'Collection'
+    }
+
+    if (issuancetype == 'SerialComponentPart') {
+      issuancetype = 'ComponentPart'
     }
 
     if (issuancetype == 'Monograph') {
@@ -502,7 +500,7 @@ class TypeNormalizer implements UsingJsonKeys {
     // TODO: this is added to AudioCD:s etc.!
     return (instance.get("identifiedBy").stream().anyMatch(
         x -> x.get(TYPE).equals("ISBN"))
-      ) || instance.containsKey("publication")
+      ) || instance.containsKey("publication") // TODO: publication is sometimes used on Manuscripts
   }
 
   static boolean looksLikeVolume(Map instance) {

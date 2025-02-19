@@ -2,7 +2,7 @@
 
   "typeToContentType": {
     "Audio": "https://id.kb.se/term/rda/Sounds",
-    "Globe": "https://id.kb.se/term/rda/CartographicThreeDimensionalForm",
+    "CartographicObject": "https://id.kb.se/term/rda/CartographicThreeDimensionalForm",
     "Multimedia": {
       "unionOf": ["https://id.kb.se/term/rda/ComputerDataset", "https://id.kb.se/term/rda/ComputerProgram"]
     },
@@ -15,16 +15,6 @@
     "SpokenWord": "https://id.kb.se/term/rda/SpokenWord",
     "StillImage": "https://id.kb.se/term/rda/StillImage",
     "Text": "https://id.kb.se/term/rda/Text"
-  },
-
-  "cleanupTypes": {
-    "ProjectedImageInstance": ["ProjectedImage"],
-    "MovingImageInstance": ["MovingImage"],
-    "KitInstance": ["Kit"],
-    "NotatedMusicInstance": ["NotatedMusic"],
-    "TextInstance": ["Text", ["Volume", "Electronic"]],
-    "StillImageInstance": ["StillImage", ["Sheet", "DigitalResource"]],
-    "GlobeInstance": ["Globe", "Object"]
   },
 
   "genreFormImpliesFormMap": {
@@ -53,6 +43,16 @@
       "Tactile": {"BookForm": "TactileBook"}
   },
   "complexTypeMap:TODO": {"Tactile": "move to work first? See also Braille* logic"},
+
+  "cleanupTypes": {
+    "ProjectedImageInstance": ["ProjectedImage"],
+    "MovingImageInstance": ["MovingImage"],
+    "KitInstance": ["Kit"],
+    "NotatedMusicInstance": ["NotatedMusic"],
+    "TextInstance": ["Text", ["Volume", "Electronic"]],
+    "StillImageInstance": ["StillImage", ["Sheet", "DigitalResource"]],
+    "GlobeInstance": ["CartographicObject", "PhysicalObject"]
+  },
 
   "impliedContentTypes": {
       "Atlas": ["https://id.kb.se/term/rda/CartographicImage", "https://id.kb.se/term/rda/Text"]
