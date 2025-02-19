@@ -82,7 +82,13 @@ public class IdLoader {
                 .toList();
     }
 
-    public Collection<String> loadShortIdsByIdsAtPaths(Map<String, Collection<String>> pathToIds) {
+    /*
+    * Load short ids of records containing outgoing links matching those specified in pathToIds.
+    * Given (example):
+    * pathToIds = { "x.y": [ "IDx", "IDy", "IDz" ], "a.b": [ "IDa", "IDb", "IDc" ] }
+    * Load records in which x.y links to a resource in record "IDx", "IDy" or "IDz" (short IDs) and a.b to either "IDa", "IDb" or "IDc".
+    * */
+    public Collection<String> loadIdsByLinksAtPaths(Map<String, Collection<String>> pathToIds) {
         Set<String> matchingIds = new HashSet<>();
 
         for (var e : pathToIds.entrySet()) {

@@ -79,14 +79,17 @@ class MatchForm {
         return insertTypeMappings(insertVars(ttl))
     }
 
-    Map<String, List<String>> getIdsForSelectionByPath() {
+    // If there is an ID list associated with the top level node, then that specifies the record selection.
+    List<String> getIdSelection() {
+        return formBNodeIdToResourceIds[getThingTmpId()]?.values().collect { it.shortId() }
+    }
+
+    // There can be multiple ID lists, each associated with a different path.
+    // This specifies the selection by saying that every record must, at each path, link to any of the associated IDs.
+    Map<String, List<String>> getIdListsForPaths() {
         return formBNodeIdToResourceIds.collectEntries{ bNodeId, idMap ->
             [dropIndexes(formBNodeIdToPath[bNodeId]).join("."), idMap.values().collect { it.shortId() }]
         }
-    }
-
-    List<String> getIdsForSelection() {
-        return formBNodeIdToResourceIds[getThingTmpId()]?.values().collect { it.shortId() }
     }
 
     static List<String> dropIndexes(List path) {
