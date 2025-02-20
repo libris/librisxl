@@ -417,10 +417,21 @@ class ElasticSearch {
         framed['_outerEmbellishments'] = copy.getEmbellishments() - links
 
         Map<String, Long> incomingLinkCountByRelation = whelk.getStorage().getIncomingLinkCountByIdAndRelation(stripHash(copy.getShortId()))
+        var totalItems = incomingLinkCountByRelation.values().sum(0)
+
+        // These indirect relations shouldn't count towards the total
+        // TODO should they be placed somewhere else than totalItemsByRelation?
+        // TODO what should be the key "itemOf.instanceOf"?
+        // FIXME don't hardcode this
+        var itemPath = ["@reverse", "instanceOf", "*", "@reverse", "itemOf", "*"]
+        var itemCount = ((List) DocumentUtil.getAtPath(framed, itemPath, []))
+                .collect{ it['heldBy']?[JsonLd.ID_KEY] }.grep().unique().size()
+        incomingLinkCountByRelation.put('itemOf.instanceOf', itemCount)
+        
         framed['reverseLinks'] = [
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',
-                'totalItems': incomingLinkCountByRelation.values().sum(0),
-                'totalItemsByRelation': incomingLinkCountByRelation,
+                'totalItems': totalItems,
+                'totalItemsByRelation': incomingLinkCountByRelation
         ]
 
         framed['_sortKeyByLang'] = whelk.jsonld.applyLensAsMapByLang(
