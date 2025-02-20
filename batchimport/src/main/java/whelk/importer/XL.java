@@ -197,7 +197,10 @@ class XL
                                 systemNumbers.add( (String) tuple.get(1) );
                         List<Map<String, String>> images = existing.getImages();
 
-                        History existingHistory = new History(m_whelk.getStorage().loadDocumentHistory(existing.getShortId()), m_whelk.getJsonld());
+                        History existingHistory = null;
+                        if (!m_parameters.getIgnoreHistory()) {
+                            existingHistory = new History(m_whelk.getStorage().loadDocumentHistory(existing.getShortId()), m_whelk.getJsonld());
+                        }
                         m_merge.merge(existing, incoming, m_parameters.getChangedBy(), existingHistory);
 
                         // The mainID must remain unaffected.
