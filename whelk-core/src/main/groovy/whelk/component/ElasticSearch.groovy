@@ -421,6 +421,13 @@ class ElasticSearch {
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',
                 'totalItems': incomingLinkCountByRelation.values().sum(0),
                 'totalItemsByRelation': incomingLinkCountByRelation,
+
+                // FIXME don't hardcode this
+                // TODO where should they be placed "_totalItemsByIndirectRelation"?
+                // TODO what should be the key "itemOf.instanceOf"?
+                '_totalItemsByIndirectRelation': [
+                        'itemOf.instanceOf': ((List) DocumentUtil.getAtPath(framed, ["@reverse", "instanceOf", "*", "@reverse", "itemOf", "*"], [])).size()
+                ],
         ]
 
         framed['_sortKeyByLang'] = whelk.jsonld.applyLensAsMapByLang(
