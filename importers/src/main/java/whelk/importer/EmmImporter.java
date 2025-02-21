@@ -56,7 +56,7 @@ public class EmmImporter {
                     .GET()
                     .build();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            Map responseMap = mapper.readValue(response.body(), Map.class);
+            Map<?, ?> responseMap = mapper.readValue(response.body(), Map.class);
             if (responseMap.containsKey("next")) {
                 next = new URI( (String) responseMap.get("next") );
             } else {
@@ -85,11 +85,12 @@ public class EmmImporter {
 
             // Create records
             if (responseMap.containsKey("items")) {
-                List items = (List) responseMap.get("items");
+                List<?> items = (List<?>) responseMap.get("items");
                 for (Object item : items) {
-                    Map itemMap = (Map) item;
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> itemMap = (Map<String, Object>) item;
                     if (itemMap.containsKey("@graph")) {
-                        HashMap docMap = new HashMap();
+                        HashMap<String, Object> docMap = new HashMap<>();
                         docMap.put("@graph", itemMap.get("@graph")); // We just want the graph list, not the other attached stuff
                         Document doc = new Document(docMap);
                         claimRecord(doc);
