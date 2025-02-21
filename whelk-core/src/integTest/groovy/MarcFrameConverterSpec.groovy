@@ -2,6 +2,7 @@ package whelk.converter.marc
 
 import whelk.Whelk
 import spock.lang.*
+import whelk.filter.LinkFinder
 
 
 @Unroll
@@ -35,8 +36,12 @@ class MarcFrameConverterSpec extends Specification {
     static postProcStepSpecs = []
 
     static {
-
-        MarcFrameCli.addJsonLd(converter)
+        if (whelk) {
+            converter.linkFinder = new LinkFinder(whelk.storage)
+            converter.ld = whelk.jsonld
+        } else {
+            MarcFrameCli.addJsonLd(converter)
+        }
 
         converter.conversion.sharedPostProcSteps.eachWithIndex { step, i ->
             def dfn = converter.config.postProcessing
