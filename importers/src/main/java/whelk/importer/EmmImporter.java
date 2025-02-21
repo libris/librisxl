@@ -22,9 +22,6 @@ public class EmmImporter {
     private final Logger logger = LogManager.getLogger(this.getClass());
     private final Whelk whelk;
     private final boolean usingQuickCreate;
-
-    // temp
-    //final String emmUrl = "http://export-qa.libris.kb.se:8186/full?selection=type:X";
     final String emmBaseUrl;
 
     public EmmImporter(Whelk whelk, String emmBaseUrl, boolean usingQuickCreate) {
@@ -86,6 +83,7 @@ public class EmmImporter {
                 }
             }
 
+            // Create records
             if (responseMap.containsKey("items")) {
                 List items = (List) responseMap.get("items");
                 for (Object item : items) {
