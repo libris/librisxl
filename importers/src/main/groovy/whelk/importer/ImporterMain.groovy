@@ -121,6 +121,17 @@ class ImporterMain {
         reindex.reindexFrom(fromUnixTime)
     }
 
+    @Command(args='EMM_BASE_URL TYPE...', flags='--quick-create')
+    void importEmm(Map flags, String emmBaseUrl, String... types) {
+        Whelk whelk = Whelk.createLoadedSearchWhelk(props)
+        boolean usingQuickCreate = false
+        if (flags['quick-create']) {
+            usingQuickCreate = true
+        }
+        def importer = new EmmImporter(whelk, emmBaseUrl, usingQuickCreate)
+        importer.importFromLibrisEmm(types)
+    }
+
     /**
      * The --additional-types argument can look like one of the following:
      * --additional-types=all              # Copy all types

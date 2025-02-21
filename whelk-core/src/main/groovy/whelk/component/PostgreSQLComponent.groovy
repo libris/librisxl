@@ -809,25 +809,10 @@ class PostgreSQLComponent {
 
                 log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
                 return true
-            } catch (PSQLException psqle) {
-                log.error("SQL failed: ${psqle.message}")
-                connection.rollback()
-                if (psqle.serverErrorMessage?.message?.startsWith("duplicate key value violates unique constraint")) {
-                    Pattern messageDetailPattern = Pattern.compile(".+\\((.+)\\)\\=\\((.+)\\).+", Pattern.DOTALL)
-                    Matcher m = messageDetailPattern.matcher(psqle.message)
-                    String duplicateId = doc.getShortId()
-                    if (m.matches()) {
-                        log.debug("Problem is that ${m.group(1)} already contains value ${m.group(2)}")
-                        duplicateId = m.group(2)
-                    }
-                    throw new StorageCreateFailedException(duplicateId)
-                } else {
-                    throw psqle
-                }
             } catch (Exception e) {
-                log.error("Failed to save document: ${e.message}. Rolling back.")
+                log.debug("Failed to save document: ${e.message}. Rolling back.")
                 connection.rollback()
-                throw e
+                return false
             }
         } // withDbConnection
     }
@@ -880,9 +865,9 @@ class PostgreSQLComponent {
                 connection.commit()
                 return true
             } catch (Exception e) {
-                log.error("Failed to save document: ${e.message}. Rolling back.")
+                log.debug("Failed to save document: ${e.message}. Rolling back.")
                 connection.rollback()
-                throw e
+                return false
             }
         }
     }
