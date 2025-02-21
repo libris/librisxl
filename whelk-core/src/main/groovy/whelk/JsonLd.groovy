@@ -30,6 +30,7 @@ class JsonLd {
     public static final String REVERSE_KEY = "@reverse"
     // JSON-LD 1.1
     public static final String PREFIX_KEY = "@prefix"
+    public static final String NONE_KEY = "@none"
 
     public static final String DISPLAY_KEY = "dataDisplay"
     public static final String THING_KEY = "mainEntity"
@@ -57,6 +58,7 @@ class JsonLd {
         'meta.derivedFrom', 'hasTitle.source', 'bulk:changeSpec.bulk:deprecate',
         /* following are combinations only needed while there are local unlinked works */
          'translationOf.hasTitle.source', 'instanceOf.hasTitle.source', 'instanceOf.translationOf.hasTitle.source']
+
     public static final String CATEGORY_DEPENDENT = 'dependent'
 
     public static final Set<String> LD_KEYS
@@ -76,13 +78,33 @@ class JsonLd {
         ] as Set
     }
 
-    public static final String SUB_PROPERTY_OF = 'subPropertyOf'
+    static final class Owl {
+        public static final String PROPERTY_CHAIN_AXIOM = "propertyChainAxiom"
+        public static final String RESTRICTION = "Restriction"
+        public static final String ON_PROPERTY = "onProperty"
+        public static final String HAS_VALUE = "hasValue"
+        public static final String OBJECT_PROPERTY = "ObjectProperty"
+        public static final String DATATYPE_PROPERTY = "DatatypeProperty"
+        public static final String INVERSE_OF = "inverseOf"
+        public static final String EQUIVALENT_CLASS = "equivalentClass"
+        public static final String EQUIVALENT_PROPERTY = "equivalentProperty"
+    }
+
+    static final class Rdfs {
+        public static final String RESOURCE = "Resource";
+        public static final String RDF_TYPE = "rdf:type";
+        public static final String DOMAIN = "domain";
+        public static final String RANGE = "range";
+        public static final String SUBCLASS_OF = "subClassOf";
+        public static final String SUB_PROPERTY_OF = "subPropertyOf";
+        public static final String IS_DEFINED_BY = "isDefinedBy";
+    }
+
     public static final String ALTERNATE_PROPERTIES = 'alternateProperties'
-    public static final String RANGE = 'range'
 
     private static Logger log = LogManager.getLogger(JsonLd.class)
 
-    public Map<String, Map> context
+    public Map<String, Object> context
     public Map displayData
     public Map<String, Map<String, Object>> vocabIndex
 
@@ -98,7 +120,9 @@ class JsonLd {
     private Map<String, Set<String>> categories
     private Map<String, Set<String>> inRange
 
+    // x -> xByLang
     public Map langContainerAlias = [:]
+    // xByLang -> x
     public Map langContainerAliasInverted
 
     /**
@@ -163,12 +187,12 @@ class JsonLd {
         superClassOf = generateSubTermLists("subClassOf")
 
         subPropertiesByType = new HashMap<String, Set>()
-        superPropertyOf = generateSubTermLists(SUB_PROPERTY_OF)
+        superPropertyOf = generateSubTermLists(Rdfs.SUB_PROPERTY_OF)
 
         categories = generateSubTermLists('category')
         
         def zipMaps = { a, b -> (a.keySet() + b.keySet()).collectEntries{k -> [k, a.get(k, []) + b.get(k, [])]}}
-        inRange = zipMaps(generateSubTermLists('rangeIncludes'), generateSubTermLists(RANGE))
+        inRange = zipMaps(generateSubTermLists('rangeIncludes'), generateSubTermLists(Rdfs.RANGE))
         
         buildLangContainerAliasMap()
 
@@ -502,7 +526,7 @@ class JsonLd {
         }
         Set<Link> result = new HashSet<>() 
         DocumentUtil.traverse(jsonLd[GRAPH_KEY]) { value, path ->
-            if (value instanceof Map && isReference(value) && !path.contains(JSONLD_ALT_ID_KEY)) {
+            if (value instanceof Map && isLink(value) && !path.contains(JSONLD_ALT_ID_KEY)) {
                 def graphIndex = (Integer) path[0]
                 List p = path.findAll { !(it instanceof Integer) } // filter out list indices
                 if (graphIndex == 0) {
@@ -516,14 +540,6 @@ class JsonLd {
             return DocumentUtil.NOP
         }
         return result
-    }
-    
-    private static boolean isReference(Map map) {
-        if(map.get(ID_KEY) && map.size() == 1) {
-            return true
-        } else {
-            return false
-        }
     }
 
     boolean softMerge(Map<String, Object> obj, Map<String, Object> into) {
@@ -592,55 +608,13 @@ class JsonLd {
         s && (s.startsWith('https://') || s.startsWith('http://'))
     }
 
-    static List<List> findPaths(Map obj, String key, String value) {
-        return findPaths(obj, key, [value].toSet())
-    }
-
-    static List<List> findPaths(Map obj, String key, Set<String> values) {
-        List<List> paths = []
-        new DFS().search(obj, { List path, v ->
-            if (v in values && key == path[-1]) {
-                paths << (List) path.collect()
-            }
-        })
-        return paths
-    }
-
-    private static class DFS {
-        interface Callback {
-            void node(List path, value)
-        }
-
-        List path = []
-        Callback cb
-
-        void search(obj, Callback callback) {
-            cb = callback
-            path = []
-            node(obj)
-        }
-
-        private void node(obj) {
-            cb.node(path, obj)
-            if (obj instanceof Map) {
-                descend(((Map) obj).entrySet().collect({ new Tuple2(it.value, it.key) }))
-            } else if (obj instanceof List) {
-                descend(((List) obj).withIndex())
-            }
-        }
-
-        private void descend(List<Tuple2> nodes) {
-            for (n in nodes) {
-                path << n.v2
-                node(n.v1)
-                path.remove(path.size()-1)
-            }
-        }
-    }
-
-
-
     //==== Class-hierarchies ====
+
+    List<String> getSuperClasses(String type) {
+        List<String> res = []
+        getSuperClasses(type, res)
+        return res
+    }
 
     void getSuperClasses(String type, List<String> result) {
         def termMap = vocabIndex[type]
@@ -791,12 +765,8 @@ class JsonLd {
         return "$id?lens=card"
     }
 
-    Map toCard(Map thing, List<List> preservePaths) {
-        return toCard(thing, true, false, false, preservePaths)
-    }
-
     Map toCard(Map thing, boolean chipsify = true, boolean addSearchKey = false,
-            final boolean reduceKey = false, List<List> preservePaths = [], boolean searchCard = false) {
+            final boolean reduceKey = false, Set<String> preserveLinks = [], boolean searchCard = false) {
         Map result = [:]
 
         Map card = removeProperties(thing, getLens(thing, searchCard ? ['search-cards', 'cards'] : ['cards']))
@@ -806,7 +776,9 @@ class JsonLd {
             card = removeProperties(thing, getLens(thing, searchCard ? ['search-chips', 'chips'] : ['chips']))
         }
 
-        restorePreserved(card, thing, preservePaths)
+        if (preserveLinks) {
+            restoreLinks(card, thing, preserveLinks)
+        }
 
         // Using a new variable here is because changing the value of reduceKey
         // causes "java.lang.VerifyError: Bad type on operand stack" when running
@@ -819,16 +791,16 @@ class JsonLd {
         card.each { key, value ->
             def lensValue = value
             if (chipsify) {
-                lensValue = toChip(value, pathRemainders([key], preservePaths))
+                lensValue = toChip(value, preserveLinks)
             } else {
                 if (value instanceof List) {
-                    lensValue = ((List) value).withIndex().collect { it, index ->
+                    lensValue = ((List) value).collect {
                         it instanceof Map
-                        ? toCard((Map) it, chipsify, addSearchKey, reduce, pathRemainders([key, index], preservePaths), searchCard)
+                        ? toCard((Map) it, chipsify, addSearchKey, reduce, preserveLinks, searchCard)
                         : it
                     }
                 } else if (value instanceof Map) {
-                    lensValue = toCard((Map) value, chipsify, addSearchKey, reduce, pathRemainders([key], preservePaths), searchCard)
+                    lensValue = toCard((Map) value, chipsify, addSearchKey, reduce, preserveLinks, searchCard)
                 }
             }
             result[key] = lensValue
@@ -859,17 +831,17 @@ class JsonLd {
         return result
     }
 
-    Object toChip(Object object, List<List> preservePaths = [], boolean searchChip = false) {
+    Object toChip(Object object, Set<String> preserveLinks = [], boolean searchChip = false) {
         if (object instanceof List) {
-            return object.withIndex().collect { it, ix ->
-                toChip(it, pathRemainders([ix], preservePaths), searchChip)
-            }
-        } else if ((object instanceof Map)) {
+            return object.collect { toChip(it, preserveLinks, searchChip) }
+        } else if (object instanceof Map) {
             Map result = [:]
             Map reduced = removeProperties(object, getLens(object, searchChip ? ['search-chips', 'chips'] : ['chips']))
-            restorePreserved(reduced, (Map) object, preservePaths)
+            if (preserveLinks) {
+                restoreLinks(reduced, (Map) object, preserveLinks)
+            }
             reduced.each { key, value ->
-                result[key] = toChip(value, pathRemainders([key], preservePaths), searchChip)
+                result[key] = toChip(value, preserveLinks, searchChip)
             }
             return result
         } else {
@@ -940,15 +912,15 @@ class JsonLd {
                      it.endsWith('ByLang') && ((Map<String, ?>) thing.get(it))?.keySet()?.any{ it in languagesToKeep } 
                  })
             }
-            if (isAlternateSubProperty(it)) {
+            if (isAlternateRangeRestriction(it)) {
                 // alternateProperties with locally defined subProperty with narrower range.
                 // Example: {"subPropertyOf": "hasTitle", "range": "KeyTitle"},
                 // The correct RDF semantics would be to match range against all subclasses.
                 // For our current use cases we have no need for that. But we have a need to match against exactly Title without 
                 // any subclasses (e.g. VariantTitle) which is actually not possible to express with this construct. 
                 // So we use this broken implementation for now.
-                def range = it[RANGE]
-                def p = asList(it[SUB_PROPERTY_OF])
+                def range = it[Rdfs.RANGE]
+                def p = asList(it[Rdfs.SUB_PROPERTY_OF])
                 if (p.any { thing[it] instanceof Map && thing[it]['@type'] == range }) {
                     return p.first()
                 }
@@ -1035,8 +1007,9 @@ class JsonLd {
 
     List makeSearchKeyParts(Map object) {
         Map lensGroups = (Map) displayData.get('lensGroups')
-        Map lensGroup = (Map) lensGroups?.get('chips')
-        Map lens = getLensFor(object, lensGroup)
+        Map chips = (Map) lensGroups?.get('chips')
+        Map tokens = (Map) lensGroups?.get('tokens')
+        Map lens = getLensFor(object, tokens) ?: getLensFor(object, chips)
         List parts = []
         def type = object.get(TYPE_KEY)
         // TODO: a bit too hard-coded...
@@ -1045,10 +1018,10 @@ class JsonLd {
         }
         if (lens) {
             List propertiesToKeep = (List) lens.get("showProperties")
-                    .collect { prop -> 
+                    .collect { prop ->
                         isAlternateProperties(prop) 
-                                ? prop[ALTERNATE_PROPERTIES].collect { isAlternateSubProperty(it) ? it[SUB_PROPERTY_OF] : it } 
-                                : prop 
+                                ? prop[ALTERNATE_PROPERTIES].collect { isAlternateRangeRestriction(it) ? it[Rdfs.SUB_PROPERTY_OF] : it }
+                                : prop
                     }
                     .flatten()
                     .unique()
@@ -1058,16 +1031,13 @@ class JsonLd {
                 if (isLangContainer(context[prop]) && values instanceof Map) {
                     values = locales.findResult { values[it] }
                 }
-                if (!(values instanceof List)) {
-                    values = values ? [values] : []
-                }
-                // TODO: find recursively (up to a point)? For what? Only
-                // StructuredValue? Or if a chip property value is a
-                // StructuredValue? (Use 'tokens' if available...)
-                for (value in values) {
+                for (value in asList(values)) {
                     if (value instanceof String) {
                         // TODO: marc:nonfilingChars?
                         parts << value
+                    }
+                    if (value instanceof Map) {
+                        parts.addAll(makeSearchKeyParts(value))
                     }
                 }
             }
@@ -1086,21 +1056,38 @@ class JsonLd {
         return new LinkedHashSet((List) lens?.get('inverseProperties') ?: [])
     }
 
-    private static void restorePreserved(Map cardOrChip, Map thing, List<List> preservePaths) {
-        preservePaths.each {
-            if (!it.isEmpty()) {
-                def key = it[0]
-                if (thing.containsKey(key) && !cardOrChip.containsKey(key)) {
-                    cardOrChip[key] = thing[key]
+    private static void restoreLinks(Map cardOrChip, Map thing, Set<String> preserveLinks) {
+        thing.each { k, v ->
+            if (!cardOrChip.containsKey(k)) {
+                def links = retainLinks(v, preserveLinks)
+                if (links) {
+                    cardOrChip[k] = links
                 }
             }
         }
     }
 
-    private static List<List> pathRemainders(List prefix, List<List> paths) {
-        return paths
-                .findAll{ it.size() >= prefix.size() && it.subList(0, prefix.size()) == prefix }
-                .collect{ it.drop(prefix.size()) }
+    private static Object retainLinks(Object o, Set<String> preserveLinks) {
+        if (o instanceof Map) {
+            if (preserveLinks.contains(o.get(ID_KEY))) {
+                return o.subMap([ID_KEY])
+            }
+            Map m = [:]
+            o.each { k, v ->
+                v = retainLinks(v, preserveLinks)
+                if (v) {
+                    m[k] = v
+                }
+            }
+            if (!m.isEmpty()) {
+                m[TYPE_KEY] = o[TYPE_KEY]
+            }
+            return m
+        } else if (o instanceof List) {
+            return o.collect { retainLinks(it, preserveLinks) }.grep()
+        } else {
+            return []
+        }
     }
 
     private Map getLens(Map thing, List<String> lensTypes) {
@@ -1136,8 +1123,8 @@ class JsonLd {
                         else if (a instanceof List) {
                             a.each { if (thing[it]) result[it] = thing[it] }
                         }
-                        else if (isAlternateSubProperty(a) && thing[a[SUB_PROPERTY_OF]]) {
-                            result[a[SUB_PROPERTY_OF]] = thing[a[SUB_PROPERTY_OF]]
+                        else if (isAlternateRangeRestriction(a) && thing[a[Rdfs.SUB_PROPERTY_OF]]) {
+                            result[a[Rdfs.SUB_PROPERTY_OF]] = thing[a[Rdfs.SUB_PROPERTY_OF]]
                         }
                     }
                 }
@@ -1148,12 +1135,13 @@ class JsonLd {
         }
     }
     
-    private static boolean isAlternateProperties(def p) {
+    static boolean isAlternateProperties(def p) {
         p instanceof Map && p.size() == 1 && p[ALTERNATE_PROPERTIES]
     }
-    
-    private static boolean isAlternateSubProperty(def p) {
-        p instanceof Map && p[SUB_PROPERTY_OF] && p[RANGE]
+
+    static boolean isAlternateRangeRestriction(def p) {
+            p instanceof Map && p[Rdfs.SUB_PROPERTY_OF] && p[Rdfs.RANGE]
+
     }
 
     Map getLensFor(Map thing, Map lensGroup) {

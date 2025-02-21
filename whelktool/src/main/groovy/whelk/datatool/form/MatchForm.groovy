@@ -9,6 +9,7 @@ import whelk.datatool.util.IdLoader
 import whelk.util.DocumentUtil
 
 import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.Rdfs.RANGE
 import static whelk.JsonLd.RECORD_KEY
 import static whelk.JsonLd.RECORD_TYPE
 import static whelk.JsonLd.THING_KEY
@@ -19,6 +20,7 @@ import static whelk.component.SparqlQueryClient.GRAPH_VAR
 import static whelk.converter.JsonLDTurtleConverter.toTurtleNoPrelude
 import static whelk.util.DocumentUtil.getAtPath
 import static whelk.util.LegacyIntegrationTools.getMarcCollectionInHierarchy
+import static whelk.datatool.util.IdLoader.Id
 
 class MatchForm {
     private static final DocumentComparator comparator = new DocumentComparator()
@@ -39,7 +41,7 @@ class MatchForm {
     // For looking up where in the form a certain blank node is located
     Map<String, List> formBNodeIdToPath
     // For looking up resource ids (if given in bulk:hasId) associated with a certain blank node in the form
-    Map<String, Set<String>> formBNodeIdToResourceIds
+    Map<String, Map<String, Id>> formBNodeIdToResourceIds
     // For looking up subtypes of a type appearing in the form
     Map<String, Set<String>> baseTypeToSubtypes
 
@@ -74,7 +76,20 @@ class MatchForm {
 
         String ttl = toTurtleNoPrelude([record, thing], context)
 
-        return insertTypeMappings(insertIdMappings(insertVars(ttl)))
+        return insertTypeMappings(insertVars(ttl))
+    }
+
+    // If there is an ID list associated with the top level node, then that specifies the record selection.
+    List<String> getIdSelection() {
+        return formBNodeIdToResourceIds[getThingTmpId()]?.values().collect { it.shortId() }
+    }
+
+    // There can be multiple ID lists, each associated with a different path.
+    // This specifies the selection by saying that every record must, at each path, link to any of the associated IDs.
+    Map<String, List<String>> getIdListsForPaths() {
+        return formBNodeIdToResourceIds.collectEntries{ bNodeId, idMap ->
+            [dropIndexes(formBNodeIdToPath[bNodeId]).join("."), idMap.values().collect { it.shortId() }]
+        }
     }
 
     static List<String> dropIndexes(List path) {
@@ -159,7 +174,7 @@ class MatchForm {
     }
 
     private boolean idMatches(Map formBNode, Map bNode) {
-        def ids = formBNodeIdToResourceIds[formBNode[BNODE_ID]]
+        def ids = formBNodeIdToResourceIds[formBNode[BNODE_ID]]?.keySet()
         return ids ? ids.contains(bNode[ID_KEY]) : true
     }
 
@@ -183,9 +198,6 @@ class MatchForm {
                 if (node[TYPE_KEY] == ANY_TYPE) {
                     node.remove(TYPE_KEY)
                 }
-                if (formBNodeIdToResourceIds.containsKey(bNodeId)) {
-                    node[ID_KEY] = bNodeId
-                }
                 node.remove(MATCHING_MODE)
                 return new DocumentUtil.Nop()
             }
@@ -202,10 +214,6 @@ class MatchForm {
                 ("<" + getThingTmpId() + ">") : getVar(getThingTmpId()),
                 ("<" + getRecordTmpId() + ">"): getVar(getRecordTmpId())
         ]
-
-        formBNodeIdToResourceIds.keySet().each { _id ->
-            substitutions.put("<" + _id + ">", getVar(_id))
-        }
 
         def sparqlPattern = ttl.replace(substitutions)
 
@@ -229,13 +237,6 @@ class MatchForm {
         return sparqlPattern
     }
 
-    private String insertIdMappings(String sparqlPattern) {
-        def valuesClauses = formBNodeIdToResourceIds.collect { _id, ids ->
-            "VALUES ${getVar(_id)} { <${ids.join("> <")}> }\n"
-        }.join()
-        return valuesClauses + sparqlPattern
-    }
-
     private String getVar(String bNodeId) {
         return bNodeId == getRecordTmpId()
                 ? "?$GRAPH_VAR"
@@ -250,8 +251,8 @@ class MatchForm {
         return getAtPath(form, [RECORD_KEY, BNODE_ID], "TEMP_ID")
     }
 
-    static Map<String, Set<String>> collectFormBNodeIdToResourceIds(Map form, Whelk whelk) {
-        Map<String, Set<String>> nodeIdMappings = [:]
+    static Map<String, Map<String, Id>> collectFormBNodeIdToResourceIds(Map form, Whelk whelk) {
+        Map<String, Map<String, Id>> nodeIdMappings = [:]
 
         IdLoader idLoader = whelk ? new IdLoader(whelk.storage) : null
 
@@ -272,14 +273,14 @@ class MatchForm {
                         IdLoader.isXlShortId(it)
                                 ? Document.BASE_URI.toString() + it + Document.HASH_IT
                                 : (looksLikeIri(it) ? it : null)
-                    } as Set<String>
+                    }.collectEntries { [it, null] } as Map<String, Id>
                     return
                 }
 
-                def nodeType = node[TYPE_KEY]
+                def parentProp = dropIndexes(path).reverse()[0]
+                def nodeType = node[TYPE_KEY] ?: getUnambiguousRange(parentProp, whelk.jsonld)
                 def marcCollection = nodeType ? getMarcCollectionInHierarchy((String) nodeType, whelk.jsonld) : null
                 def xlShortIds = idLoader.collectXlShortIds(ids, marcCollection)
-                def parentProp = dropIndexes(path).reverse()[1]
                 def isInRange = { type -> whelk.jsonld.getInRange(type).contains(parentProp) }
                 // TODO: Fix hardcoding
                 def isRecord = whelk.jsonld.isInstanceOf((Map) node, "AdminMetadata")
@@ -287,7 +288,10 @@ class MatchForm {
                         || isInRange("AdminMetadata")
 
                 nodeIdMappings[nodeId] = idLoader.loadAllIds(xlShortIds)
-                        .collect { isRecord ? it.recordIri() : it.thingIri() } as Set<String>
+                        .collectEntries {
+                            // The key here is the IRI as it appears in the data
+                            [isRecord ? it.recordIri() : it.thingIri(), it]
+                        } as Map<String, Id>
 
                 return new DocumentUtil.Nop()
             }
@@ -321,5 +325,10 @@ class MatchForm {
         }
 
         return mappings
+    }
+
+    private static String getUnambiguousRange(String property, JsonLd jsonLd) {
+        List range = getAtPath(jsonLd.vocabIndex, [property, RANGE, "*", ID_KEY], [])
+        return range.size() == 1 ? jsonLd.toTermKey((String) range.first()) : null
     }
 }

@@ -2,29 +2,32 @@ package whelk.search2.querytree;
 
 import whelk.JsonLd;
 import whelk.search.ESQuery;
-import whelk.search2.Disambiguate;
 import whelk.search2.Operator;
-import whelk.search2.QueryUtil;
 import whelk.util.Unicode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 import static whelk.search2.QueryUtil.mustNotWrap;
 import static whelk.search2.QueryUtil.shouldWrap;
 import static whelk.search2.Operator.EQUALS;
 
-public record FreeText(Operator operator, String value) implements Node {
+public record FreeText(TextQuery textQuery, Operator operator, String value, Collection<String> boostFields) implements Node {
+    public FreeText(Operator operator, String value, JsonLd jsonLd) {
+        this(new TextQuery(jsonLd), operator, value);
+    }
+    public FreeText(TextQuery textQuery, Operator operator, String value) { this(textQuery, operator, value, List.of()); }
+
     @Override
     // TODO: Review/refine this. So far it's basically just copy-pasted from old search code (EsQuery)
-    public Map<String, Object> toEs(List<String> boostedFields) {
+    public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath) {
         String s = value;
         s = Unicode.normalizeForSearch(s);
         boolean isSimple = ESQuery.isSimple(s);
@@ -40,7 +43,7 @@ public record FreeText(Operator operator, String value) implements Node {
                 )
         );
 
-        if (boostedFields.isEmpty()) {
+        if (boostFields.isEmpty()) {
             if (operator() == Operator.EQUALS) {
                 return simpleQuery;
             }
@@ -49,10 +52,10 @@ public record FreeText(Operator operator, String value) implements Node {
             }
         }
 
-        List<String> softFields = boostedFields.stream()
+        List<String> softFields = boostFields.stream()
                 .filter(f -> f.contains(JsonLd.SEARCH_KEY))
                 .toList();
-        List<String> exactFields = boostedFields.stream()
+        List<String> exactFields = boostFields.stream()
                 .map(f -> f.replace(JsonLd.SEARCH_KEY, JsonLd.SEARCH_KEY + ".exact"))
                 .toList();
 
@@ -93,16 +96,21 @@ public record FreeText(Operator operator, String value) implements Node {
     }
 
     @Override
+    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
+        return new FreeText(textQuery, operator, value, getBoostFields.apply(rulingTypes));
+    }
+
+    @Override
     public Map<String, Object> toSearchMapping(QueryTree qt, Map<String, String> nonQueryParams) {
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("property", Disambiguate.freeTextDefinition);
+        m.put("property", textQuery.definition());
         m.put(operator.termKey, value);
         m.put("up", qt.makeUpLink(this, nonQueryParams));
         return m;
     }
 
     @Override
-    public String toString(boolean topLevel) {
+    public String toQueryString(boolean topLevel) {
         return operator == Operator.NOT_EQUALS
                 ? "NOT " + value :
                 value;
@@ -110,5 +118,16 @@ public record FreeText(Operator operator, String value) implements Node {
 
     public boolean isWild() {
         return operator == EQUALS && Operator.WILDCARD.equals(value);
+    }
+
+    public static class TextQuery extends Property {
+        TextQuery(JsonLd jsonLd) {
+            super("textQuery", jsonLd);
+        }
+
+        // For test only
+        TextQuery(Map<String, Object> definition) {
+            super("textQuery", definition, null);
+        }
     }
 }

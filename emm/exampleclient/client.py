@@ -50,10 +50,10 @@
 cache_location = "./libris-cache.sqlite3"
 
 # This parameter tells the client which EMM server to use.
-libris_emm_base_url = "http://localhost:8186/"
+libris_emm_base_url = "https://libris-qa.kb.se/api/emm/"
 
 # This parameter tells the client which library we are downloading data for.
-local_library_code = "S"
+local_library_code = "SRo"
 
 # This parameter tells the client which properties we would like to follow
 # links for and download additional data to keep with our entities.
@@ -236,7 +236,7 @@ def load_dump(connection):
         with urllib.request.urlopen(next_url) as response:
             data = json.load(response)
             dump_creation_time_on_page = data["startTime"]
-            if data["totalItems"]:
+            if "totalItems" in data:
                 print(f"\rLoading initial dump itemAndInstance:{local_library_code}, currently at {(items_so_far / data['totalItems']):.0%}", file=sys.stderr, end="")
 
             if (dump_creation_time and dump_creation_time != dump_creation_time_on_page):
@@ -343,7 +343,6 @@ def handle_activity(connection, activity):
         connection.commit()
 
     elif activity["type"] == "Update":
-        # Find all of our records that depend on this URI
         rows = cursor.execute("SELECT entities.id, entities.entity FROM uris JOIN entities on uris.entity_id = entities.id WHERE uris.uri = ?", (activity["object"]["id"],))
         
         updated_data = None
@@ -366,14 +365,19 @@ def handle_activity(connection, activity):
 # Scan for new updates to consume.
 #
 def update(connection):
+    publish_time_reached = None
     cursor = connection.cursor()
     with urllib.request.urlopen(libris_emm_base_url) as response:
         data = json.load(response)
         next_url = data["first"]["id"]
-    
+
     while next_url:
         with urllib.request.urlopen(next_url) as response:
             data = json.load(response)
+
+            if (len(data["orderedItems"]) > 0 and publish_time_reached == None):
+                publish_time_reached = data["orderedItems"][0]["published"]
+
             if "next" in data:
                 next_url = data["next"]
             else:
@@ -386,8 +390,10 @@ def update(connection):
                     next_url = None
                     break
                 handle_activity(connection, item)
-                cursor.execute("UPDATE state SET changes_consumed_until = ?", (item["published"],))
-                connection.commit()
+
+    if (publish_time_reached is not None):
+        cursor.execute("UPDATE state SET changes_consumed_until = ?", (publish_time_reached,))
+        connection.commit()
 
 
 def main():

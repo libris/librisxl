@@ -1,5 +1,6 @@
 package whelk.search2;
 
+import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.ActiveBoolFilter;
 import whelk.search2.querytree.Node;
@@ -17,12 +18,15 @@ import java.util.stream.Collectors;
 
 public class AppParams {
     private final Disambiguate disambiguate;
+    private final Whelk whelk;
+
     public final StatsRepr statsRepr;
     public final SiteFilters siteFilters;
     public final Map<String, List<String>> relationFilters;
 
-    public AppParams(Map<String, Object> appConfig, Disambiguate disambiguate) {
+    public AppParams(Map<String, Object> appConfig, Disambiguate disambiguate, Whelk whelk) {
         this.disambiguate = disambiguate;
+        this.whelk = whelk;
         this.statsRepr = getStatsRepr(appConfig);
         this.siteFilters = getSiteFilters(appConfig);
         this.relationFilters = getRelationFilters(appConfig);
@@ -59,7 +63,7 @@ public class AppParams {
     private Slice getSlice(Map.Entry<?, ?> statsReprEntry) {
         var p = (String) statsReprEntry.getKey();
         var settings = (Map<?, ?>) statsReprEntry.getValue();
-        return new Slice(new Property(p, disambiguate), settings);
+        return new Slice(new Property(p, whelk.getJsonld()), settings);
     }
 
     private Map<String, Filter> getAliasedFilters(Map<String, Object> appConfig) {
@@ -185,7 +189,7 @@ public class AppParams {
         public Node getExplicit() {
             if (explicitNode == null) {
                 try {
-                    this.explicitNode = QueryTreeBuilder.buildTree(explicit, disambiguate, AppParams.this.siteFilters.aliasToFilter());
+                    this.explicitNode = QueryTreeBuilder.buildTree(explicit, disambiguate, whelk, AppParams.this.siteFilters.aliasToFilter());
                 } catch (InvalidQueryException e) {
                     throw new RuntimeException(e);
                 }
@@ -199,7 +203,7 @@ public class AppParams {
             }
             if (aliasNode == null) {
                 try {
-                    this.aliasNode = QueryTreeBuilder.buildTree(alias, disambiguate, AppParams.this.siteFilters.aliasToFilter());
+                    this.aliasNode = QueryTreeBuilder.buildTree(alias, disambiguate, whelk, AppParams.this.siteFilters.aliasToFilter());
                 } catch (InvalidQueryException e) {
                     throw new RuntimeException(e);
                 }

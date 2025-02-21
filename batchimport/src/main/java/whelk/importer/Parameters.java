@@ -30,6 +30,7 @@ class Parameters
     private boolean forceUpdate = false;
     private final HashMap<String, Set<String>> specialRules = new HashMap<>();
     private Path mergeRuleFilePath = null;
+    private boolean ignoreHistory = false;
 
     Path getPath() { return path; }
     INPUT_FORMAT getFormat() { return format; }
@@ -47,6 +48,7 @@ class Parameters
     boolean getForceUpdate() { return forceUpdate; }
     HashMap<String, Set<String>> getSpecialRules() { return specialRules; }
     Path getMergeRuleFile() { return mergeRuleFilePath; }
+    boolean getIgnoreHistory() { return ignoreHistory; }
 
 
     enum INPUT_FORMAT
@@ -168,9 +170,15 @@ class Parameters
         System.err.println();
         System.err.println("--replaceHold If this flag is set, matching holding records will be replaced.");
         System.err.println();
-        System.err.println("--mergeBibUsing Bibliographic records can be \"partially uppated\" (merged) with incoming");
+        System.err.println("--mergeBibUsing Bibliographic records can be \"partially updated\" (merged) with incoming");
         System.err.println("              records according to some specified set of rules.");
         System.err.println("              Using this option, a file containing such merge rules can be specified.");
+        System.err.println();
+        System.err.println("--ignoreHistory When using --mergeBibUsing, the \"ownership\" of various parts of the record");
+        System.err.println("              is taken into account. Hand edited things remain locked, and there can be an");
+        System.err.println("              order of priority with regards to \"whose\" edits we trust more. But when this");
+        System.err.println("              flag is specified, we ignore the existing history of all records, and apply");
+        System.err.println("              merge rules, as if all existing data had the lowest possible priority (0).");
         System.err.println();
         System.err.println("--changedBy   A string to use as descriptionCreator (MARC 040) for imported records.");
         System.err.println("              This parameter must be specified.");
@@ -326,6 +334,9 @@ class Parameters
                 break;
             case "--forceUpdate":
                 forceUpdate = true;
+                break;
+            case "--ignoreHistory":
+                ignoreHistory = true;
                 break;
             default:
                 throw new IllegalArgumentException(parameter);
