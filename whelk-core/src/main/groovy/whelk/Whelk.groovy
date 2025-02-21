@@ -429,7 +429,7 @@ class Whelk {
 
                     // We currently are not allowed to enforce typed identifier uniqueness. :(
                     // We can warn at least.
-                    log.info("While testing " + document.getShortId() + " for collisions: Ignoring typed ID collision with : "
+                    log.debug("While testing " + document.getShortId() + " for collisions: Ignoring typed ID collision with : "
                             + collisions + " on " + type + "," + graphIndex + "," + value)
                 }
             }
