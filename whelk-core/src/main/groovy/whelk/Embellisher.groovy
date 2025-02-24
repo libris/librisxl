@@ -35,7 +35,7 @@ class Embellisher {
         this.getCards = getCards
         this.getByReverseRelation = getByReverseRelation
         
-        def integral = jsonld.getCategoryMembers('integral')
+        def integral = jsonld.getCategoryMembers(JsonLd.Category.INTEGRAL)
         if (integral) {
             this.integralRelations = integral
             this.inverseIntegralRelations = integralRelations.collect{ jsonld.getInverseProperty(it) }.grep()

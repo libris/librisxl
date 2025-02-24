@@ -59,7 +59,10 @@ class JsonLd {
         /* following are combinations only needed while there are local unlinked works */
          'translationOf.hasTitle.source', 'instanceOf.hasTitle.source', 'instanceOf.translationOf.hasTitle.source']
 
-    public static final String CATEGORY_DEPENDENT = 'dependent'
+    static final class Category {
+        public static final String DEPENDENT = 'dependent'
+        public static final String INTEGRAL = 'integral'
+    }
 
     public static final Set<String> LD_KEYS
 
@@ -119,6 +122,7 @@ class JsonLd {
     private Map<String, Set<String>> subPropertiesByType
     private Map<String, Set<String>> categories
     private Map<String, Set<String>> inRange
+    private Map<String, Set<String>> range
 
     // x -> xByLang
     public Map langContainerAlias = [:]
@@ -193,7 +197,15 @@ class JsonLd {
         
         def zipMaps = { a, b -> (a.keySet() + b.keySet()).collectEntries{k -> [k, a.get(k, []) + b.get(k, [])]}}
         inRange = zipMaps(generateSubTermLists('rangeIncludes'), generateSubTermLists(Rdfs.RANGE))
-        
+
+        range = new HashMap<>()
+        inRange.forEach { type, props ->
+            props.forEach { prop ->
+                range.computeIfAbsent(prop, _ -> new HashSet<>())
+                range.get(prop).add(type)
+            }
+        }
+
         buildLangContainerAliasMap()
 
         expandAliasesInLensProperties()
@@ -691,11 +703,27 @@ class JsonLd {
     }
 
     Set <String> cascadingDeleteRelations() {
-        getCategoryMembers(CATEGORY_DEPENDENT)
+        getCategoryMembers(Category.DEPENDENT)
     }
 
+    boolean isIntegral(String property) {
+        getCategoryMembers(Category.INTEGRAL).contains(property)
+    }
+
+    /**
+     * @param type
+     * @return properties with range or rangeIncludes type
+     */
     Set<String> getInRange(String type) {
         return inRange.get(type, Collections.EMPTY_SET)
+    }
+
+    /**
+     * @param property
+     * @return types in range or rangeIncludes of property
+     */
+    Set<String> getRange(String property) {
+        return range.get(property, Collections.EMPTY_SET)
     }
 
     private Set<String> getSubTerms(String type,
@@ -1470,6 +1498,14 @@ class Link {
         iri == this.iri
                 ? this
                 : new Link(iri: iri, relation: this.relation)
+    }
+
+    List<String> propertyPath() {
+        return relation.split("\\.") as List
+    }
+
+    String property() {
+        return propertyPath().last()
     }
 }
 
