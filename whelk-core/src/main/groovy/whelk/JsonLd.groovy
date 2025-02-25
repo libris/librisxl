@@ -54,15 +54,25 @@ class JsonLd {
 
     public static final List<String> NON_DEPENDANT_RELATIONS = ['narrower', 'broader', 'expressionOf', 'related',
                                                                 'derivedFrom']
-    public static final List<String> ALLOW_LINK_TO_DELETED = [
-        'meta.derivedFrom', 'hasTitle.source', 'bulk:changeSpec.bulk:deprecate',
-        /* following are combinations only needed while there are local unlinked works */
-         'translationOf.hasTitle.source', 'instanceOf.hasTitle.source', 'instanceOf.translationOf.hasTitle.source']
+
+    // The following relations may hold links to deleted resources.
+    // In general we don't allow dead links within XL so don't add to this list without good reason.
+    private static final List<String> WEAK_RELATIONS = [
+            'concerning',
+            'meta.derivedFrom',
+            'hasTitle.source',
+            'bulk:changeSpec.*',
+            /* following are combinations only needed while there are local unlinked works */
+            'translationOf.hasTitle.source',
+            'instanceOf.hasTitle.source',
+            'instanceOf.translationOf.hasTitle.source'
+    ]
 
     static final class Category {
         public static final String DEPENDENT = 'dependent'
         public static final String INTEGRAL = 'integral'
     }
+
 
     public static final Set<String> LD_KEYS
 
@@ -91,6 +101,7 @@ class JsonLd {
         public static final String INVERSE_OF = "inverseOf"
         public static final String EQUIVALENT_CLASS = "equivalentClass"
         public static final String EQUIVALENT_PROPERTY = "equivalentProperty"
+        public static final String SAME_AS = "sameAs"
     }
 
     static final class Rdfs {
@@ -404,6 +415,12 @@ class JsonLd {
         jsonLd.size() == 1 && jsonLd[ID_KEY]
     }
 
+    static boolean isWeak(String relation) {
+        return WEAK_RELATIONS.any { wr ->
+            wr == relation || (wr.endsWith("*") && relation.startsWith(wr.take(wr.size() - 1)))
+        }
+    }
+
     static URI findRecordURI(Map jsonLd) {
         String foundIdentifier = findIdentifier(jsonLd)
         if (foundIdentifier) {
@@ -700,10 +717,6 @@ class JsonLd {
     
     Set<String> getCategoryMembers(String category) {
         return categories.get(category, Collections.EMPTY_SET)
-    }
-
-    Set <String> cascadingDeleteRelations() {
-        getCategoryMembers(Category.DEPENDENT)
     }
 
     boolean isIntegral(String property) {
