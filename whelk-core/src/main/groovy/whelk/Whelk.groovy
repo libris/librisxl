@@ -27,6 +27,7 @@ import java.time.Instant
 import java.time.ZoneId
 
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
+import static whelk.exception.LinkValidationException.IncomingLinksException
 
 /**
  * The Whelk is the root component of the XL system.
@@ -556,7 +557,10 @@ class Whelk {
             log.warn "Could not remove object from whelk. No entry with id $id found"
         }
         if (doc) {
-            storage.remove(id, changedIn, changedBy, force)
+            if (!force) {
+                assertNoDependers(doc)
+            }
+            storage.remove(id, changedIn, changedBy)
             indexAsyncOrSync {
                 elastic.remove(id)
                 if (features.isEnabled(INDEX_BLANK_WORKS)) {
@@ -566,6 +570,14 @@ class Whelk {
                     reindexAffected(doc, doc.getExternalRefs(), Collections.emptySet())
                 }
             }
+        }
+    }
+
+    private void assertNoDependers(Document doc) {
+        boolean isDependedUpon = storage.getIncomingLinkCountByIdAndRelation(doc.getShortId())
+                .any { relation, _ -> !JsonLd.isWeak(relation) }
+        if (isDependedUpon) {
+            throw new IncomingLinksException("Record is referenced by other records")
         }
     }
 

@@ -18,7 +18,6 @@ import whelk.IdType
 import whelk.JsonLd
 import whelk.Link
 import whelk.exception.CancelUpdateException
-import whelk.exception.LinkValidationException
 import whelk.exception.MissingMainIriException
 import whelk.exception.StaleUpdateException
 import whelk.exception.StorageCreateFailedException
@@ -47,7 +46,9 @@ import java.util.regex.Pattern
 
 import static groovy.transform.TypeCheckingMode.SKIP
 import static java.sql.Types.OTHER
+import static whelk.JsonLd.Owl.SAME_AS
 import static whelk.util.Jackson.mapper
+import static whelk.exception.LinkValidationException.OutgoingLinksException
 
 /**
  *  It is important to not grab more than one connection per request/thread to avoid connection related deadlocks.
@@ -457,7 +458,7 @@ class PostgreSQLComponent {
     private static final String DELETE_USER_DATA =
             "DELETE FROM lddb__user_data WHERE id = ?"
 
-    private static final String GET_IRI_IS_LINKABLE = """
+    private static final String GET_IRI_IS_DELETED = """
             SELECT lddb.deleted
             FROM lddb__identifiers
             JOIN lddb ON lddb__identifiers.id = lddb.id WHERE lddb__identifiers.iri = ?
@@ -775,8 +776,7 @@ class PostgreSQLComponent {
                         throw new ConflictingHoldException("Already exists a holding record for ${heldBy} and bib: $holdingFor")
                 }
 
-                if (linkFinder != null)
-                    linkFinder.normalizeIdentifiers(doc)
+                assertNoLinksToDeleted(doc.getExternalRefs())
 
                 //FIXME: throw exception on null changedBy
                 if (changedBy != null) {
@@ -995,7 +995,12 @@ class PostgreSQLComponent {
             }
             
             boolean deleted = doc.getDeleted()
-            
+
+            if (!deleted) {
+                var addedLinks = doc.getExternalRefs() - preUpdateDoc.getExternalRefs()
+                assertNoLinksToDeleted(addedLinks)
+            }
+
             if (collection == "hold") {
                 checkLinkedShelfMarkOwnership(doc, connection)
 
@@ -1230,10 +1235,7 @@ class PostgreSQLComponent {
             }
 
         getSystemIds(linksByIri.keySet(), connection) { String iri, String systemId, boolean deleted ->
-            if (deleted && !JsonLd.ALLOW_LINK_TO_DELETED.containsAll(linksByIri[iri]*.relation))
-                throw new LinkValidationException("Forbidden link(s) to deleted resource ${systemId} found in ${linksByIri[iri]*.relation}")
-
-            if (systemId != doc.getShortId()) // Exclude A -> A (self-references)
+            if (!deleted && systemId != doc.getShortId()) // Exclude A -> A (self-references)
                 dependencies.addAll(linksByIri[iri].collect { [it.relation, systemId] as String[] })
         }
 
@@ -2079,19 +2081,18 @@ class PostgreSQLComponent {
         }
     }
 
-    boolean iriIsLinkable(String iri, String path) {
-        if (path in JsonLd.ALLOW_LINK_TO_DELETED) {
-            return true
-        }
+    boolean isDeleted(String iri) {
         withDbConnection {
             PreparedStatement preparedStatement = null
             ResultSet rs = null
             try {
-                preparedStatement = getMyConnection().prepareStatement(GET_IRI_IS_LINKABLE)
+                preparedStatement = getMyConnection().prepareStatement(GET_IRI_IS_DELETED)
                 preparedStatement.setString(1, iri)
                 rs = preparedStatement.executeQuery()
+
                 if (rs.next())
-                    return !rs.getBoolean(1) // not deleted
+                    return rs.getBoolean(1) // deleted
+                // not in lddb
                 return false
             }
             finally {
@@ -2756,16 +2757,8 @@ class PostgreSQLComponent {
         }
     }
 
-    void remove(String identifier, String changedIn, String changedBy, boolean force=false) {
+    void remove(String identifier, String changedIn, String changedBy) {
         if (versioning) {
-            if (!force) {
-                def allow = JsonLd.ALLOW_LINK_TO_DELETED + (jsonld?.cascadingDeleteRelations() ?: Collections.EMPTY_SET)
-                def referencedBy = followDependers(identifier, allow)
-                if (!referencedBy.isEmpty()) {
-                    throw new RuntimeException("Deleting depended upon records is not allowed.")
-                }
-            }
-
             log.debug("Marking document with ID ${identifier} as deleted.")
             try {
                 storeUpdate(identifier, false, true, changedIn, changedBy,
@@ -2961,7 +2954,16 @@ class PostgreSQLComponent {
             }
         }
     }
-    
+
+    private void assertNoLinksToDeleted(Set<Link> links) {
+        links.each {link ->
+            // sameAs is allowed because when merging two entities, the id of the deleted entity is added to sameAs of the remaining entity
+            if (link.property() != SAME_AS && isDeleted(link.iri)) {
+                throw new OutgoingLinksException("Document contains link to deleted resource $link.iri at path $link.relation")
+            }
+        }
+    }
+
     class NotificationListener extends Thread {
         private static final String NAME = 'pg_listener'
         private static final Counter counter = Counter.build()

@@ -4,12 +4,15 @@ import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.JsonLd
 import whelk.component.PostgreSQLComponent
-import whelk.exception.LinkValidationException
 import whelk.util.LegacyIntegrationTools
 
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 
+import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.Owl.SAME_AS
+import static whelk.JsonLd.RECORD_KEY
+import static whelk.JsonLd.isLink
 import static whelk.util.Jackson.mapper
 
 @Log
@@ -18,12 +21,6 @@ class LinkFinder {
     PostgreSQLComponent postgres
 
     static String ENTITY_QUERY
-
-    /*
-    Non-primary ids appearing in these paths should be kept as is upon normalization, i.e. they should *not* be
-    replaced by their primary id.
-     */
-    private static Set<String> RETAIN_NON_PRIMARY_IDS = ['bulk:changeSpec.bulk:deprecate'] as Set
 
     LinkFinder(PostgreSQLComponent pgsql) {
         postgres = pgsql
@@ -101,7 +98,7 @@ class LinkFinder {
         }
 
         clearReferenceAmbiguities(document)
-        replaceSameAsLinksWithPrimaries(document.data)
+        replaceSameAsLinksWithPrimaries(document)
         // TODO: check what happens in the sameas table when id:s are changed and changed back!
         restoreNewCanonicalMainEntityUri(document.data)
     }
@@ -112,7 +109,7 @@ class LinkFinder {
      * with purposefully changing the primary id, which is therefore restored
      * here.
      */
-    private void restoreNewCanonicalMainEntityUri(Map data) {
+    private static void restoreNewCanonicalMainEntityUri(Map data) {
         List items = data['@graph']
         if (items.size() < 2) {
             return
@@ -120,64 +117,45 @@ class LinkFinder {
         items[0][JsonLd.THING_KEY]['@id'] = items[1]['@id']
     }
 
-    private void replaceSameAsLinksWithPrimaries(Map data, List path = []) {
-        // If this is a link (an object containing _only_ an id)
-        String id = data.get("@id")
-        if (id != null && data.keySet().size() == 1) {
-            // Path to same form as in lddb__dependencies.relation
-            String normalizedPath = (path.take(2) == Document.recordPath
-                    ? [JsonLd.RECORD_KEY] + path.drop(2)
-                    : (path.take(2) == Document.thingPath ? path.drop(2) : path)
-            )
-                    .findAll { it instanceof String }
-                    .join('.')
-            if (RETAIN_NON_PRIMARY_IDS.contains(normalizedPath)) {
+    private void replaceSameAsLinksWithPrimaries(Document doc) {
+        // "Frame" temporarily to avoid cumbersome rewriting of property paths
+        Map thing = doc.getThing()
+        thing.put(RECORD_KEY, doc.getRecord())
+        replaceSameAsLinksWithPrimaries(thing, [])
+        // "Unframe"
+        thing.remove(RECORD_KEY)
+    }
+
+    private void replaceSameAsLinksWithPrimaries(data, List<String> propertyPath) {
+        if (data instanceof List) {
+            for (def element : data) {
+                replaceSameAsLinksWithPrimaries(data, propertyPath)
+            }
+        }
+        if (data instanceof Map) {
+            if (isLink(data)) {
+                if (!JsonLd.isWeak(propertyPath.join("."))) {
+                    String primaryId = postgres.getMainId((String) data[ID_KEY])
+                    if (primaryId != null) {
+                        data.put(ID_KEY, primaryId)
+                    }
+                }
                 return
             }
-            String primaryId = lookupPrimaryId(id, normalizedPath)
-            if (primaryId != null)
-                data.put("@id", primaryId)
-            return
+
+            // Keep looking for more links
+            for (Object key : data.keySet()) {
+
+                // sameAs objects are not links per se, and must not be replaced
+                String keyString = (String) key
+                if (keyString == SAME_AS)
+                    continue
+
+                Object value = data.get(key)
+
+                replaceSameAsLinksWithPrimaries(value, propertyPath + keyString)
+            }
         }
-
-        // Keep looking for more links
-        for (Object key : data.keySet()) {
-
-            // sameAs objects are not links per se, and must not be replaced
-            String keyString = (String) key
-            if (keyString == "sameAs")
-                continue
-
-            Object value = data.get(key)
-
-            if (value instanceof List)
-                replaceSameAsLinksWithPrimaries((List) value, path + keyString)
-            if (value instanceof Map)
-                replaceSameAsLinksWithPrimaries((Map) value, path + keyString)
-        }
-    }
-
-    private void replaceSameAsLinksWithPrimaries(List data, List path) {
-        int idx = 0
-        for (Object element : data){
-            if (element instanceof List)
-                replaceSameAsLinksWithPrimaries( (List) element, path + idx )
-            else if (element instanceof Map)
-                replaceSameAsLinksWithPrimaries( (Map) element, path + idx )
-            idx += 1
-        }
-    }
-
-    private String lookupPrimaryId(String id, String path) {
-        String mainIri = postgres.getMainId(id)
-
-        if (mainIri == null)
-            return null
-
-        if (postgres.iriIsLinkable(mainIri, path))
-            return mainIri
-
-        throw new LinkValidationException("Forbidden link to deleted resource $mainIri found at $path")
     }
 
     /**
