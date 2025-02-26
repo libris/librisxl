@@ -1,13 +1,10 @@
 package whelk.search2;
 
 import whelk.JsonLd;
-import whelk.search2.querytree.And;
 import whelk.search2.querytree.Link;
-import whelk.search2.querytree.Node;
-import whelk.search2.querytree.Or;
+import whelk.search2.querytree.Path;
 import whelk.search2.querytree.PathValue;
 import whelk.search2.querytree.Property;
-import whelk.search2.querytree.PropertyValue;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,9 +31,10 @@ public class Aggs {
     }
 
     public static Map<String, Object> buildAggQuery(AppParams.StatsRepr statsRepr,
-                                                    Disambiguate disambiguate,
+                                                    JsonLd jsonLd,
                                                     Collection<String> types,
-                                                    Function<String, Optional<String>> getNestedPath) {
+                                                    Function<String, Optional<String>> getNestedPath)
+    {
         if (statsRepr.isEmpty()) {
             return Map.of(JsonLd.TYPE_KEY,
                     Map.of("terms",
@@ -47,37 +45,37 @@ public class Aggs {
 
         for (AppParams.Slice slice : statsRepr.sliceList()) {
             Property property = slice.property();
-            Node expanded = property.expand(disambiguate, types);
-            List<Node> altPaths = expanded instanceof Or ? expanded.children() : List.of(expanded);
 
-            for (Node n : altPaths) {
-                if (n instanceof And) {
-                    // TODO: E.g. author (combining contribution.role and contribution.agent)
-                    throw new RuntimeException("Can't handle combined fields in aggs query");
-                }
-
-                String path = ((PathValue) n).getFullSearchPath();
-
-                // Core agg query
-                var aggs = Map.of("terms",
-                        Map.of("field", path,
-                                "size", slice.size(),
-                                "order", Map.of(slice.bucketSortKey(), slice.sortOrder())));
-
-                // If field is nested, wrap agg query with nested
-                var nested = getNestedPath.apply(path);
-                if (nested.isPresent()) {
-                    aggs = Map.of("nested", Map.of("path", nested.get()),
-                            "aggs", Map.of(NESTED_AGG_NAME, aggs));
-                }
-
-                // Wrap agg query with a filter
-                var filter = mustWrap(Collections.emptyList());
-                aggs = Map.of("aggs", Map.of(property.name(), aggs),
-                        "filter", filter);
-
-                query.put(path, aggs);
+            if (!property.restrictions().isEmpty()) {
+                // TODO: E.g. author (combining contribution.role and contribution.agent)
+                throw new RuntimeException("Can't handle combined fields in aggs query");
             }
+
+            new Path(property).expand(jsonLd)
+                    .getAltPaths(jsonLd, types)
+                    .stream()
+                    .map(Path::fullSearchPath)
+                    .forEach(path -> {
+                        // Core agg query
+                        var aggs = Map.of("terms",
+                                Map.of("field", path,
+                                        "size", slice.size(),
+                                        "order", Map.of(slice.bucketSortKey(), slice.sortOrder())));
+
+                        // If field is nested, wrap agg query with nested
+                        var nested = getNestedPath.apply(path);
+                        if (nested.isPresent()) {
+                            aggs = Map.of("nested", Map.of("path", nested.get()),
+                                    "aggs", Map.of(NESTED_AGG_NAME, aggs));
+                        }
+
+                        // Wrap agg query with a filter
+                        var filter = mustWrap(Collections.emptyList());
+                        aggs = Map.of("aggs", Map.of(property.name(), aggs),
+                                "filter", filter);
+
+                        query.put(path, aggs);
+                    });
         }
 
         return query;
@@ -85,16 +83,17 @@ public class Aggs {
 
     public static Map<String, Object> buildPAggQuery(Entity entity,
                                                      List<String> curatedPredicates,
-                                                     Disambiguate disambiguate) {
+                                                     JsonLd jsonLd,
+                                                     Function<String, Optional<String>> getNestedPath) {
         Map<String, Object> query = new LinkedHashMap<>();
 
         var filters = curatedPredicates
                 .stream()
                 .collect(Collectors.toMap(
                         Function.identity(),
-                        p -> new PropertyValue(new Property(p, disambiguate), Operator.EQUALS, new Link(entity.id()))
-                                .expand(disambiguate)
-                                .toEs())
+                        p -> new PathValue(new Property(p, jsonLd), Operator.EQUALS, new Link(entity.id()))
+                                .expand(jsonLd)
+                                .toEs(getNestedPath))
                 );
 
         if (!filters.isEmpty()) {
@@ -146,7 +145,7 @@ public class Aggs {
 
             var buckets = ((List<?>) agg.get("buckets")).stream()
                     .map(Map.class::cast)
-                    .map(b -> new Bucket((String) b.get("key"),(Integer) b.get("doc_count")))
+                    .map(b -> new Bucket((String) b.get("key"), (Integer) b.get("doc_count")))
                     .toList();
 
             aggregations.add(new Aggregation(property, path, buckets));

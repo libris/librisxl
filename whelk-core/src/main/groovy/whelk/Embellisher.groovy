@@ -35,7 +35,7 @@ class Embellisher {
         this.getCards = getCards
         this.getByReverseRelation = getByReverseRelation
         
-        def integral = jsonld.getCategoryMembers('integral')
+        def integral = jsonld.getCategoryMembers(JsonLd.Category.INTEGRAL)
         if (integral) {
             this.integralRelations = integral
             this.inverseIntegralRelations = integralRelations.collect{ jsonld.getInverseProperty(it) }.grep()
@@ -178,7 +178,7 @@ class Embellisher {
         if (lens == 'search-chips') {
             // NB! This depends on search-chips being subsets of cards. Since we shrink the cards to search-chips. 
             var searchChips = true
-            data = data.collect{ (Map) jsonld.toChip(it, [], searchChips) }
+            data = data.collect{ (Map) jsonld.toChip(it, [] as Set, searchChips) }
         }
         else if (lens == 'chips') {
             data = data.collect{ (Map) jsonld.toChip(it) }

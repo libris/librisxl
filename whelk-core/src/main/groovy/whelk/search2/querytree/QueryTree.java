@@ -1,6 +1,7 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
+import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.AppParams;
 import whelk.search2.Disambiguate;
@@ -12,7 +13,6 @@ import whelk.search2.QueryUtil;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static whelk.search2.QueryUtil.quoteIfPhraseOrContainsSpecialSymbol;
@@ -23,10 +23,9 @@ public class QueryTree {
     private QueryTree filtered;
     private String freeTextPart;
 
-    public QueryTree(String queryString, Disambiguate disambiguate,
-                     Map<String, AppParams.Filter> aliasToFilter) throws InvalidQueryException {
+    public QueryTree(String queryString, Disambiguate disambiguate, Whelk whelk, Map<String, AppParams.Filter> aliasToFilter) throws InvalidQueryException {
         if (!queryString.isEmpty()) {
-            this.tree = buildTree(queryString, disambiguate, aliasToFilter);
+            this.tree = buildTree(queryString, disambiguate, whelk, aliasToFilter);
             normalizeFreeText();
             removeNeedlessWildcard();
         }
@@ -37,10 +36,9 @@ public class QueryTree {
         removeNeedlessWildcard();
     }
 
-    public Map<String, Object> toEs(QueryUtil queryUtil, Disambiguate disambiguate, Collection<String> boostFields) {
-        return getFiltered().tree.expand(disambiguate, List.of(), boostFields.isEmpty() ? queryUtil.esBoost::getBoostFields : x -> boostFields)
-                .insertNested(queryUtil::getNestedPath)
-                .toEs();
+    public Map<String, Object> toEs(QueryUtil queryUtil, JsonLd jsonLd, Collection<String> boostFields) {
+        return getFiltered().tree.expand(jsonLd, List.of(), boostFields.isEmpty() ? queryUtil.esBoost::getBoostFields : x -> boostFields)
+                .toEs(queryUtil::getNestedPath);
     }
 
     public Map<String, Object> toSearchMapping(Map<String, String> nonQueryParams) {
@@ -60,7 +58,7 @@ public class QueryTree {
      */
     public boolean isWild() {
         return StreamSupport.stream(allDescendants(tree).spliterator(), false)
-                .noneMatch(n -> n instanceof FreeText && !((FreeText) n).isWild());
+                .noneMatch(n -> n instanceof FreeText ft && !ft.isWild());
     }
 
     private static Iterable<Node> allDescendants(Node node) {
@@ -95,33 +93,36 @@ public class QueryTree {
         return switch (node) {
             case And and -> {
                 List<Node> conjuncts = new ArrayList<>();
-                List<String> ftStrings = new ArrayList<>();
+                List<FreeText> fts = new ArrayList<>();
                 for (Node n : and.children()) {
                     if (isFreeText(n)) {
-                        ftStrings.add(quoteIfPhraseOrContainsSpecialSymbol(((FreeText) n).value()));
+                        fts.add((FreeText) n);
                     } else {
                         conjuncts.add(normalizeFreeText(n));
                     }
                 }
-                if (!ftStrings.isEmpty()) {
-                    conjuncts.addFirst(new FreeText(Operator.EQUALS, String.join(" ", ftStrings)));
+                if (!fts.isEmpty()) {
+                    String joinedFts = fts.stream().map(FreeText::value)
+                            .map(QueryUtil::quoteIfPhraseOrContainsSpecialSymbol)
+                            .collect(Collectors.joining(" "));
+                    conjuncts.addFirst(new FreeText(fts.getFirst().textQuery(), Operator.EQUALS, joinedFts));
                 }
                 yield conjuncts.size() > 1 ? new And(conjuncts) : conjuncts.getFirst();
             }
             case Or or -> or.mapAndReinstantiate(QueryTree::normalizeFreeText);
-            case FreeText ft -> new FreeText(ft.operator(), quoteIfPhraseOrContainsSpecialSymbol(ft.value()));
+            case FreeText ft -> new FreeText(ft.textQuery(), ft.operator(), quoteIfPhraseOrContainsSpecialSymbol(ft.value()));
             case null, default -> node;
         };
     }
 
     public QueryTree replaceFreeText(String replacement) {
         if (isFreeText()) {
-            return new QueryTree(new FreeText(Operator.EQUALS, replacement));
+            return new QueryTree(new FreeText(((FreeText) tree).textQuery(), Operator.EQUALS, replacement));
         }
         if (tree instanceof And) {
             return new QueryTree(
                     ((And) tree).mapAndReinstantiate(n -> isFreeText(n)
-                            ? new FreeText(Operator.EQUALS, replacement)
+                            ? new FreeText(((FreeText) n).textQuery(), Operator.EQUALS, replacement)
                             : n)
             );
         }
@@ -148,10 +149,10 @@ public class QueryTree {
         if (nodeToExclude == tree) {
             return null;
         }
-        return switch (tree) {
-            case Group group -> group.mapFilterAndReinstantiate(c -> excludeFromTree(nodeToExclude, c), Objects::nonNull);
-            default -> tree;
-        };
+        if (tree instanceof Group g) {
+            return g.mapFilterAndReinstantiate(c -> excludeFromTree(nodeToExclude, c), Objects::nonNull);
+        }
+        return tree;
     }
 
     public QueryTree removeTopLevelNode(Node node) {
@@ -159,22 +160,20 @@ public class QueryTree {
     }
 
     private static Node removeTopLevelNode(Node tree, Node node) {
-        return switch (tree) {
-            case And and -> and.remove(node);
-            default -> node.equals(tree) ? null : tree;
-        };
+        return tree instanceof And and
+                ? and.remove(node)
+                : (node.equals(tree) ? null : tree);
     }
 
-    public QueryTree removeTopLevelPropValueWithRangeIfPropEquals(Property property) {
-        Predicate<Node> p = (node -> node instanceof PropertyValue
-                && ((PropertyValue) node).property().equals(property)
-                && Operator.rangeOperators().contains(((PropertyValue) node).operator()));
+    public QueryTree removeTopLevelPathValueWithRangeIfPropEquals(Property property) {
+        Predicate<Node> p = (node -> node instanceof PathValue pv
+                && pv.hasEqualProperty(property)
+                && Operator.rangeOperators().contains(pv.operator()));
         return new QueryTree(removeTopLevelNodesByCondition(tree, p));
     }
 
-    public QueryTree removeTopLevelPropValueIfPropEquals(Property property) {
-        Predicate<Node> p = (node -> node instanceof PropertyValue
-                && ((PropertyValue) node).property().equals(property));
+    public QueryTree removeTopLevelPathValueIfPropEquals(Property property) {
+        Predicate<Node> p = (node -> node instanceof PathValue pv && pv.hasEqualProperty(property));
         return new QueryTree(removeTopLevelNodesByCondition(tree, p));
     }
 
@@ -187,10 +186,10 @@ public class QueryTree {
         };
     }
 
-    public List<String> collectRulingTypes(Disambiguate disambiguate) {
+    public List<String> collectRulingTypes(JsonLd jsonLd) {
         var tree = getFiltered().tree;
         if (tree instanceof And) {
-            var reduced = tree.reduceTypes(disambiguate);
+            var reduced = tree.reduceTypes(jsonLd);
             if (reduced instanceof And) {
                 return ((And) reduced).collectRulingTypes();
             }
@@ -207,7 +206,7 @@ public class QueryTree {
     }
 
     private static boolean isFreeText(Node node) {
-        return node instanceof FreeText && ((FreeText) node).operator().equals(Operator.EQUALS);
+        return node instanceof FreeText ft && ft.operator().equals(Operator.EQUALS);
     }
 
     public Set<InactiveBoolFilter> getInactiveBfNodes() {
@@ -224,10 +223,10 @@ public class QueryTree {
                 .collect(Collectors.toSet());
     }
 
-    public List<PropertyValue> getTopLevelPvNodes() {
+    public List<PathValue> getTopLevelPvNodes() {
         return getTopLevelNodes().stream()
-                .filter(n -> n instanceof PropertyValue)
-                .map(PropertyValue.class::cast)
+                .filter(PathValue.class::isInstance)
+                .map(PathValue.class::cast)
                 .toList();
     }
 
@@ -262,15 +261,25 @@ public class QueryTree {
         this.freeTextPart = null;
     }
 
+    public String toQueryString() {
+        return isEmpty() ? "*" : tree.toQueryString(true);
+    }
+
     @Override
     public String toString() {
-        return isEmpty() ? "*" : tree.toString(true);
+        return toQueryString();
     }
 
     public void removeNeedlessWildcard() {
         if (!isFreeText() && Operator.WILDCARD.equals(getTopLevelFreeText())) {
-            this.tree = removeTopLevelNode(tree, new FreeText(Operator.EQUALS, Operator.WILDCARD));
-            resetFreeTextPart();
+            getTopLevelNodes().stream().filter(FreeText.class::isInstance)
+                    .map(FreeText.class::cast)
+                    .filter(FreeText::isWild)
+                    .findFirst()
+                    .ifPresent(ft -> {
+                                this.tree = removeTopLevelNode(tree, ft);
+                                resetFreeTextPart();
+                    });
         }
     }
 
@@ -288,17 +297,10 @@ public class QueryTree {
         var newTree = tree;
 
         for (var filter : aliasedFilters) {
-            switch (newTree) {
-                case And and -> {
-                    if (and.contains(filter.getExplicit())) {
-                        newTree = and.replace(filter.getExplicit(), filter.getAlias().get());
-                    }
-                }
-                default -> {
-                    if (filter.getExplicit().equals(newTree)) {
-                        newTree = filter.getAlias().get();
-                    }
-                }
+            if (newTree instanceof And and && and.contains(filter.getExplicit())) {
+                newTree = and.replace(filter.getExplicit(), filter.getAlias().get());
+            } else if (filter.getExplicit().equals(newTree)) {
+                newTree = filter.getAlias().get();
             }
         }
 
@@ -343,11 +345,11 @@ public class QueryTree {
         return new QueryTree(newTree);
     }
 
-    public void addFilters(QueryParams queryParams, AppParams appParams) {
+    public void addFilters(QueryParams queryParams, AppParams appParams, JsonLd jsonLd) {
         var currentActiveBfNodes = getActiveBfNodes();
 
         var newTree = tree;
-        for (var node : getFilters(queryParams, appParams)) {
+        for (var node : getFilters(queryParams, appParams, jsonLd)) {
             // Don't add type filter when type is already given somewhere in the query
             if (node.isTypeNode() && containsTypeNode(tree)) {
                 continue;
@@ -371,7 +373,7 @@ public class QueryTree {
         return filtered != null ? filtered : this;
     }
 
-    private List<Node> getFilters(QueryParams queryParams, AppParams appParams) {
+    private List<Node> getFilters(QueryParams queryParams, AppParams appParams, JsonLd jsonLd) {
         var siteFilters = appParams.siteFilters;
         var object = queryParams.object;
         var predicates = queryParams.predicates;
@@ -382,10 +384,10 @@ public class QueryTree {
         }
         if (object != null) {
             if (predicates.isEmpty()) {
-                filters.add(new PathValue("_links", Operator.EQUALS, object));
+                filters.add(new PathValue("_links", Operator.EQUALS, new Literal(object)));
             } else {
                 filters.addAll(predicates.stream()
-                        .map(p -> new PropertyValue(p, Operator.EQUALS, new Link(object)))
+                        .map(p -> new PathValue(new Property(p, jsonLd), Operator.EQUALS, new Link(object)))
                         .toList()
                 );
             }

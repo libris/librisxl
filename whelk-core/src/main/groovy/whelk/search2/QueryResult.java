@@ -6,6 +6,7 @@ import whelk.util.DocumentUtil;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -17,6 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static whelk.JsonLd.SEARCH_KEY;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 import static whelk.util.DocumentUtil.getAtPath;
 import static whelk.util.DocumentUtil.traverse;
@@ -81,7 +83,13 @@ public class QueryResult {
         return norm;
     }
 
-    private record EsItem(Map<String, Object> map) {
+    private class EsItem {
+        private final Map<String, Object> map;
+
+        EsItem(Map<String, Object> map) {
+            this.map = map;
+        }
+
         private Map<String, Object> toLd(Function<Map<String, Object>, Map<String, Object>> applyLens) {
             LdItem ldItem = new LdItem(applyLens.apply(map));
 
@@ -90,7 +98,10 @@ public class QueryResult {
             // reverseLinks must be re-added because they might get filtered out in applyLens().
             getReverseLinks().ifPresent(ldItem::addReverseLinks);
 
-            getScoreExplanation().ifPresent(ldItem::addScore);
+            if (debug.contains(QueryParams.Debug.ES_SCORE)) {
+                ldItem.addSearchStrings(this);
+                getScoreExplanation().ifPresent(ldItem::addScore);
+            }
 
             return ldItem.map;
         }
@@ -135,6 +146,18 @@ public class QueryResult {
             map.put("reverseLinks", reverseLinks);
         }
 
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        private void addSearchStrings(EsItem esItem) {
+            DocumentUtil.traverse(esItem.map, (value, path) -> {
+                if (!path.isEmpty() && path.getLast().equals(SEARCH_KEY)) {
+                    if (getAtPath(map, path.subList(0, path.size() - 1)) instanceof Map m) {
+                        m.put(SEARCH_KEY, value);
+                    }
+                }
+                return new DocumentUtil.Nop();
+            });
+        }
+
         private void addScore(Map<String, Object> scoreExplanation) {
             var scorePerField = getScorePerField(scoreExplanation);
             var totalScore = scorePerField.values().stream().reduce((double) 0, Double::sum);
@@ -165,9 +188,26 @@ public class QueryResult {
         }
 
         private static String parseField(String description) {
-            Matcher m = Pattern.compile("^weight\\(.+:((\".+\")|[^ ]+)").matcher(description);
-            if (m.find()) {
-                return m.group().replace("weight(", "");
+            if (description.startsWith("weight(")) {
+                description = description.replace("weight(", "");
+                if (description.startsWith("Synonym(")) {
+                    description = description.replace("Synonym(", "");
+                    Matcher matcher = Pattern.compile("^[^ ]+:[^ ]+( [^ ]+:[^ )]+)+").matcher(description);
+                    if (matcher.find()) {
+                        String match = matcher.group();
+                        String key = match.substring(0, match.indexOf(":"));
+                        String values = Arrays.stream(match.split(" "))
+                                .map(s -> s.split(":"))
+                                .map(s -> s[1])
+                                .collect(Collectors.joining(" "));
+                        return key + ":(" + values + ")";
+                    }
+                } else {
+                    Matcher m = Pattern.compile("^[^ ]+:((\".+\")|[^ ]+)").matcher(description);
+                    if (m.find()) {
+                        return m.group();
+                    }
+                }
             }
             return description;
         }

@@ -43,7 +43,7 @@ public class ImageLinker extends HouseKeeper {
     }
 
     public String getCronSchedule() {
-        return "* * * * *";
+        return "0 4 * * *";
     }
 
     public void trigger() {

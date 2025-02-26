@@ -66,8 +66,8 @@ class ModifiedThing {
                     try {
                         executeModification(matchingNode, property, removeList, addList)
                     } catch (Exception e) {
-                        throw new Exception("Failed to modify ${thing[ID_KEY]} at path ${cfn.propertyPath + property}: " +
-                                "${e.getMessage()}")
+                        def msg = "Failed to modify ${thing[ID_KEY]} at path ${cfn.propertyPath + property}: ${e.getMessage()}"
+                        throw e instanceof IllegalModificationException ? new IllegalModificationException(msg) : new Exception(msg)
                     }
                 }
             }
@@ -135,7 +135,7 @@ class ModifiedThing {
                         addRecursive((Map) current, (String) k, asList(v).collect { transform.newAddValue(it) })
                     }
                 } else {
-                    throw new Exception("Property $property is not repeatable.")
+                    throw new IllegalModificationException("Property $property is not repeatable.")
                 }
             }
         }
@@ -172,5 +172,11 @@ class ModifiedThing {
         node[property] = current.size() == 1 && !repeatableTerms.contains(property)
                 ? current.first()
                 : current
+    }
+
+    class IllegalModificationException extends Exception {
+        IllegalModificationException(String msg) {
+            super(msg)
+        }
     }
 }
