@@ -129,7 +129,7 @@ class LinkFinder {
     private void replaceSameAsLinksWithPrimaries(data, List<String> propertyPath) {
         if (data instanceof List) {
             for (def element : data) {
-                replaceSameAsLinksWithPrimaries(data, propertyPath)
+                replaceSameAsLinksWithPrimaries(element, propertyPath)
             }
         }
         if (data instanceof Map) {
