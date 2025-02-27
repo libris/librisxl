@@ -306,13 +306,15 @@ public class EsBoost {
             if (dfn instanceof String) {
                 properties.add((String) dfn);
             } else if (dfn instanceof Map) {
-                for (var alt : asList(((Map<?, ?>) dfn).get(ALTERNATE_PROPERTIES))) {
-                    if (alt instanceof String) {
-                        properties.add((String) alt);
-                    } else if (alt instanceof Map) {
-                        var subPropertyOf = ((Map<?, ?>) alt).get(SUB_PROPERTY_OF);
-                        if (subPropertyOf != null) {
-                            properties.add((String) subPropertyOf);
+                for (var ap : asList(((Map<?, ?>) dfn).get(ALTERNATE_PROPERTIES))) {
+                    for (var prop : asList(ap)) {
+                        if (prop instanceof String) {
+                            properties.add((String) prop);
+                        } else if (prop instanceof Map) {
+                            var subPropertyOf = ((Map<?, ?>) prop).get(SUB_PROPERTY_OF);
+                            if (subPropertyOf != null) {
+                                properties.add((String) subPropertyOf);
+                            }
                         }
                     }
                 }
