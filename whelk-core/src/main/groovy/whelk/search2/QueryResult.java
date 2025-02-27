@@ -120,7 +120,7 @@ public class QueryResult {
         private Map<String, Object> getFields() {
             return castToStringObjectMap(map.get("_fields")).entrySet().stream()
                     .flatMap(this::flattenNestedField)
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a,b) -> a));
         }
 
         private Stream<Map.Entry<String, Object>> flattenNestedField(Map.Entry<String, Object> entry) {
