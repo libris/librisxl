@@ -574,10 +574,16 @@ class Whelk {
     }
 
     private void assertNoDependers(Document doc) {
-        boolean isDependedUpon = storage.getIncomingLinkCountByIdAndRelation(doc.getShortId())
-                .any { relation, _ -> !JsonLd.isWeak(relation) }
-        if (isDependedUpon) {
-            throw new LinkValidationException("Record is referenced by other records")
+        Set<String> dependingRelations = storage.getIncomingLinkCountByIdAndRelation(doc.getShortId()).keySet()
+                .findAll { !JsonLd.isWeak(it) }
+        if (!dependingRelations.isEmpty()) {
+            Set<String> allDependers = dependingRelations.collect { storage.getDependersOfType(doc.getShortId(), it) }
+                    .flatten()
+                    .toSet() as Set<String>
+            String example = allDependers.first()
+            int numDependers = allDependers.size()
+            String msg = "Record is referenced by $example${allDependers.size() > 1 ? " and ${numDependers - 1} other records" : "" }."
+            throw new LinkValidationException(msg)
         }
     }
 
