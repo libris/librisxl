@@ -582,7 +582,7 @@ class Whelk {
                     .toSet() as Set<String>
             String example = allDependers.first()
             int numDependers = allDependers.size()
-            String msg = "Record is referenced by $example${allDependers.size() > 1 ? " and ${numDependers - 1} other records" : "" }."
+            String msg = "Record is referenced by $example${numDependers > 1 ? " and ${numDependers - 1} other records" : "" }."
             throw new LinkValidationException(msg)
         }
     }
