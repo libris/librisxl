@@ -60,7 +60,9 @@ public class QueryUtil {
     }
 
     public static Map<String, Object> castToStringObjectMap(Object o) {
-        return ((Map<?, ?>) o).entrySet()
+        return o == null
+                ? Map.of()
+                : ((Map<?, ?>) o).entrySet()
                 .stream()
                 .collect(Collectors.toMap(e -> (String) e.getKey(), e -> (Object) e.getValue()));
     }
