@@ -12,13 +12,14 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static whelk.JsonLd.SEARCH_KEY;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 import static whelk.util.DocumentUtil.getAtPath;
 import static whelk.util.DocumentUtil.traverse;
@@ -64,6 +65,7 @@ public class QueryResult {
                     if (debug.contains(QueryParams.Debug.ES_SCORE)) {
                         item.put("_score", hit.get("_score"));
                         item.put("_explanation", hit.get("_explanation"));
+                        item.put("_fields", hit.get("fields"));
                     }
                     return item;
                 })
@@ -96,24 +98,40 @@ public class QueryResult {
             // ISNIs and ORCIDs are indexed with and without spaces, remove the one with spaces.
             ldItem.normalizeIsniAndOrcid();
             // reverseLinks must be re-added because they might get filtered out in applyLens().
-            getReverseLinks().ifPresent(ldItem::addReverseLinks);
-
+            var reverseLinks = getReverseLinks();
+            if (!reverseLinks.isEmpty()) {
+                ldItem.addReverseLinks(reverseLinks);
+            }
             if (debug.contains(QueryParams.Debug.ES_SCORE)) {
-                ldItem.addSearchStrings(this);
-                getScoreExplanation().ifPresent(ldItem::addScore);
+                ldItem.addScore(getScoreExplanation(), getFields());
             }
 
             return ldItem.map;
         }
 
-        private Optional<Map<String, Object>> getReverseLinks() {
-            return Optional.ofNullable(map.get("reverseLinks"))
-                    .map(QueryUtil::castToStringObjectMap);
+        private Map<String, Object> getReverseLinks() {
+            return castToStringObjectMap(map.get("reverseLinks"));
         }
 
-        private Optional<Map<String, Object>> getScoreExplanation() {
-            return Optional.ofNullable(map.get("_explanation"))
-                    .map(QueryUtil::castToStringObjectMap);
+        private Map<String, Object> getScoreExplanation() {
+            return castToStringObjectMap(map.get("_explanation"));
+        }
+
+        private Map<String, Object> getFields() {
+            return castToStringObjectMap(map.get("_fields")).entrySet().stream()
+                    .flatMap(this::flattenNestedField)
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a,b) -> a));
+        }
+
+        private Stream<Map.Entry<String, Object>> flattenNestedField(Map.Entry<String, Object> entry) {
+            var k = entry.getKey();
+            var v = (List<?>) entry.getValue();
+            if (v.stream().allMatch(Map.class::isInstance)) {
+                return v.stream().map(QueryUtil::castToStringObjectMap)
+                        .flatMap(m -> m.entrySet().stream().map(e -> Map.entry(k + "." + e.getKey(), e.getValue())))
+                        .flatMap(this::flattenNestedField);
+            }
+            return Stream.of(entry);
         }
     }
 
@@ -146,22 +164,16 @@ public class QueryResult {
             map.put("reverseLinks", reverseLinks);
         }
 
-        @SuppressWarnings({"rawtypes", "unchecked"})
-        private void addSearchStrings(EsItem esItem) {
-            DocumentUtil.traverse(esItem.map, (value, path) -> {
-                if (!path.isEmpty() && path.getLast().equals(SEARCH_KEY)) {
-                    if (getAtPath(map, path.subList(0, path.size() - 1)) instanceof Map m) {
-                        m.put(SEARCH_KEY, value);
-                    }
-                }
-                return new DocumentUtil.Nop();
-            });
-        }
-
-        private void addScore(Map<String, Object> scoreExplanation) {
+        private void addScore(Map<String, Object> scoreExplanation, Map<String, Object> fields) {
             var scorePerField = getScorePerField(scoreExplanation);
             var totalScore = scorePerField.values().stream().reduce((double) 0, Double::sum);
-            var scoreData = Map.of("_total", totalScore, "_perField", scorePerField, "_explain", scoreExplanation);
+            var matchedFields = scorePerField.keySet().stream()
+                    .map(f -> f.split(":")[0])
+                    .collect(Collectors.toMap(Function.identity(),
+                            fields::get,
+                            (k1, k2) -> k1)
+                    );
+            var scoreData = Map.of("_total", totalScore, "_perField", scorePerField, "_matchedFields", matchedFields, "_explain", scoreExplanation);
             map.put("_debug", Map.of("_score", scoreData));
         }
 
