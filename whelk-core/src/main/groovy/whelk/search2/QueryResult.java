@@ -1,5 +1,6 @@
 package whelk.search2;
 
+import com.github.jsonldjava.utils.Obj;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.util.DocumentUtil;
@@ -117,10 +118,16 @@ public class QueryResult {
             return castToStringObjectMap(map.get("_explanation"));
         }
 
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         private Map<String, Object> getFields() {
             return castToStringObjectMap(map.get("_fields")).entrySet().stream()
                     .flatMap(this::flattenNestedField)
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a,b) -> a));
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a,b) -> {
+                        if (a instanceof List l1 &&  b instanceof List l2) {
+                            l1.addAll(l2);
+                        }
+                        return a;
+                    }));
         }
 
         private Stream<Map.Entry<String, Object>> flattenNestedField(Map.Entry<String, Object> entry) {
