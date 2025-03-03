@@ -1,9 +1,8 @@
 package whelk.search2.querytree;
 
-import whelk.search2.Operator;
-
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 import static whelk.search2.QueryUtil.shouldWrap;
 
@@ -11,7 +10,12 @@ public final class Or extends Group {
     private final List<Node> children;
 
     public Or(List<Node> children) {
-        this.children = flattenChildren(children);
+        this(children, true);
+    }
+
+    // For test only
+    public Or(List<Node> children, boolean flattenChildren) {
+        this.children = flattenChildren ? flattenChildren(children) : children;
     }
 
     @Override
@@ -40,10 +44,21 @@ public final class Or extends Group {
     }
 
     @Override
-    public Group insertOperator(Operator operator) {
-        return operator == Operator.NOT_EQUALS
-                ? new And(children).insertOperator(operator)
-                : super.insertOperator(operator);
+    List<String> collectRulingTypes() {
+        return List.of();
+    }
+
+    @Override
+    boolean implies(Node a, Node b, BiFunction<Node, Node, Boolean> condition) {
+        if (a instanceof Group aGroup) {
+            return b instanceof Group bGroup
+                    ? bGroup.children().stream().anyMatch(child -> implies(a, child, condition))
+                    : aGroup.children().stream().anyMatch(child -> condition.apply(child, b));
+        } else {
+            return b instanceof Group bGroup
+                    ? bGroup.children().stream().anyMatch(child -> condition.apply(a, child))
+                    : condition.apply(a, b);
+        }
     }
 }
 

@@ -78,7 +78,7 @@ boolean replaceShelfMarkSequence(old, newItem, newLabel, String prop) {
 }
 
 void createNewAndUpdateOld(old, newItem) {
-    selectFromIterable([newItem], { it.scheduleSave() })
+    selectFromIterable([newItem], { it.scheduleSave(loud: true) })
     selectByIds([newItem.doc.shortId], {
         // ShelfMarkSequences are access controlled on meta.descriptionCreator.
         // But we cannot set that while creating, update it afterwards instead.

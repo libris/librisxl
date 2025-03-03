@@ -290,4 +290,13 @@ class Unicode {
 
         return d[rows-1][cols-1]
     }
+
+    /**
+     * @return ISNI with with four groups of four digits separated by space
+     */
+    static String formatIsni(String isni)  {
+        isni.size() == 16
+                ? isni.split("").collate(4).collect{ it.join() }.join(" ")
+                : isni
+    }
 }

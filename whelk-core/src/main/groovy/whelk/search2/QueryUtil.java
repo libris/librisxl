@@ -4,7 +4,6 @@ import com.google.common.escape.Escaper;
 import com.google.common.net.UrlEscapers;
 import whelk.JsonLd;
 import whelk.Whelk;
-import whelk.search.ESQueryLensBoost;
 import whelk.search2.querytree.QueryTree;
 import whelk.util.DocumentUtil;
 
@@ -14,9 +13,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static whelk.component.ElasticSearch.flattenedLangMapKey;
 
@@ -25,12 +27,12 @@ public class QueryUtil {
 
     private final Whelk whelk;
     public final EsMappings esMappings;
-    public final ESQueryLensBoost lensBoost;
+    public final EsBoost esBoost;
 
     public QueryUtil(Whelk whelk) {
         this.whelk = whelk;
         this.esMappings = new EsMappings(whelk.elastic != null ? whelk.elastic.getMappings() : Collections.emptyMap());
-        this.lensBoost = new ESQueryLensBoost(whelk.getJsonld());
+        this.esBoost = new EsBoost(whelk.getJsonld());
     }
 
     public Map<?, ?> query(Map<String, Object> queryDsl) {
@@ -58,19 +60,27 @@ public class QueryUtil {
     }
 
     public static Map<String, Object> castToStringObjectMap(Object o) {
-        return ((Map<?, ?>) o).entrySet()
+        return o == null
+                ? Map.of()
+                : ((Map<?, ?>) o).entrySet()
                 .stream()
                 .collect(Collectors.toMap(e -> (String) e.getKey(), e -> (Object) e.getValue()));
     }
 
-    public Optional<Map<?, ?>> loadThing(String id) {
-        return loadThing(id, whelk);
+    public Object getChip(String iri) {
+        return whelk.getJsonld().toChip(loadThing(iri));
     }
 
-    public static Optional<Map<?, ?>> loadThing(String id, Whelk whelk) {
-        return Optional.ofNullable(whelk.loadData(id))
+    public Map<String, Object> loadThing(String iri) {
+        return loadThing(iri, whelk);
+    }
+
+    public static Map<String, Object> loadThing(String iri, Whelk whelk) {
+        return Optional.ofNullable(whelk.loadData(iri))
                 .map(data -> data.get(JsonLd.GRAPH_KEY))
-                .map(graph -> (Map<?, ?>) ((List<?>) graph).get(1));
+                .map(graph -> ((List<?>) graph).get(1))
+                .map(QueryUtil::castToStringObjectMap)
+                .orElse(Collections.emptyMap());
     }
 
     public static String makeFindUrl(String i, String q, Map<String, String> nonQueryParams) {
@@ -78,7 +88,7 @@ public class QueryUtil {
     }
 
     public static String makeFindUrl(QueryTree qt, Map<String, String> nonQueryParams) {
-        return makeFindUrl(qt.getTopLevelFreeText(), qt.toString(), nonQueryParams);
+        return makeFindUrl(qt.getTopLevelFreeText(), qt.toQueryString(), nonQueryParams);
     }
 
     public static String makeFindUrl(String i, String q, List<String> nonQueryParams) {
@@ -166,14 +176,12 @@ public class QueryUtil {
     public Function<Map<String, Object>, Map<String, Object>> getApplyLensFunc(QueryParams queryParams) {
         return framedThing -> {
             @SuppressWarnings("rawtypes")
-            List<List> preservedPaths = queryParams.object != null
-                    ? JsonLd.findPaths(framedThing, "@id", queryParams.object)
-                    : Collections.emptyList();
+            Set<String> preserveLinks = Stream.ofNullable(queryParams.object).collect(Collectors.toSet());
 
             return switch (queryParams.lens) {
-                case "chips" -> (Map<String, Object>) whelk.getJsonld().toChip(framedThing, preservedPaths);
+                case "chips" -> (Map<String, Object>) whelk.getJsonld().toChip(framedThing, preserveLinks);
                 case "full" -> removeSystemInternalProperties(framedThing);
-                default -> whelk.getJsonld().toCard(framedThing, false, false, false, preservedPaths, true);
+                default -> whelk.getJsonld().toCard(framedThing, false, false, false, preserveLinks, true);
             };
         };
     }

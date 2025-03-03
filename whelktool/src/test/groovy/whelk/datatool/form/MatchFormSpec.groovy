@@ -1,6 +1,7 @@
 package whelk.datatool.form
 
 import spock.lang.Specification
+import static whelk.datatool.util.IdLoader.Id
 
 class MatchFormSpec extends Specification {
     static Map context = [
@@ -15,7 +16,7 @@ class MatchFormSpec extends Specification {
     def "match data against form"() {
         given:
         def matchForm = new MatchForm([:])
-        matchForm.formBNodeIdToResourceIds = ["#1": ["https://libris.kb.se/x#it", "https://libris.kb.se/y#it"] as Set]
+        matchForm.formBNodeIdToResourceIds = ["#1": ["https://libris.kb.se/x#it": null, "https://libris.kb.se/y#it": null]] as Map<String, Map<String, Id>>
         matchForm.baseTypeToSubtypes = ["T": ["Tx", "Ty"] as Set]
 
         expect:
@@ -103,33 +104,6 @@ class MatchFormSpec extends Specification {
         given:
         def form = ['bulk:formBlankNodeId': '#1', 'p3': [['bulk:formBlankNodeId': '#2', 'p1': 'x'], ['bulk:formBlankNodeId': '#3', 'p2': 'y']]]
         def expectedPattern = "?graph :mainEntity ?1 .\n\n?1 :p3 ( [ :p1 \"x\" ] [ :p2 \"y\" ] ) ."
-
-        expect:
-        new MatchForm(form).getSparqlPattern(context) == expectedPattern
-    }
-
-    def "form to sparql pattern: id mappings"() {
-        given:
-        def recordIds = ['@type': 'bulk:AnyOf', 'value': ['https://libris.kb.se/x', 'https://libris.kb.se/y',
-                                                          'https://libris.kb.se/z']]
-        def thingIds = ['@type': 'bulk:AnyOf', 'value': ['https://libris.kb.se/x#it', 'https://libris.kb.se/y#it',
-                                                         'https://libris.kb.se/z#it']]
-        def values = ['@type': 'bulk:AnyOf', 'value': ['https://id.kb.se/x', 'https://id.kb.se/y',
-                                                       'https://id.kb.se/z#it']]
-
-        def form = [
-                'bulk:formBlankNodeId': '#1',
-                'bulk:hasId'          : thingIds,
-                'meta'                : ['bulk:formBlankNodeId': '#2', 'bulk:hasId': recordIds],
-                'p1'                  : ['bulk:formBlankNodeId': '#3', 'bulk:hasId': values]
-        ]
-
-        def expectedPattern = "VALUES ?1 { <https://libris.kb.se/x#it> <https://libris.kb.se/y#it> <https://libris.kb.se/z#it> }\n" +
-                "VALUES ?graph { <https://libris.kb.se/x> <https://libris.kb.se/y> <https://libris.kb.se/z> }\n" +
-                "VALUES ?3 { <https://id.kb.se/x> <https://id.kb.se/y> <https://id.kb.se/z#it> }\n" +
-                "?graph :mainEntity ?1 .\n" +
-                "\n" +
-                "?1 :p1 ?3 ."
 
         expect:
         new MatchForm(form).getSparqlPattern(context) == expectedPattern

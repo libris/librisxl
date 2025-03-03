@@ -16,7 +16,6 @@ import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
-import java.util.function.Function
 
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
 import static whelk.JsonLd.asList
@@ -396,14 +395,15 @@ class ElasticSearch {
         }
 
         Set<String> links = whelk.jsonld.expandLinks(document.getExternalRefs()).collect{ it.iri }
-
         def graph = ((List) copy.data['@graph'])
         int originalSize = document.data['@graph'].size()
         copy.data['@graph'] =
-                graph.take(originalSize).collect { toSearchCard(whelk, it, links) } +
+                graph.take(originalSize) +
                 graph.drop(originalSize).collect { getShapeForEmbellishment(whelk, it) }
-
-        setComputedProperties(copy, links, whelk)
+        setIdentifiers(copy)
+        if (copy.isVirtual()) {
+            copy.centerOnVirtualMainEntity()
+        }
         copy.setThingMeta(document.getCompleteId())
         List<String> thingIds = copy.getThingIdentifiers()
         if (thingIds.isEmpty()) {
@@ -411,7 +411,29 @@ class ElasticSearch {
             return copy.data
         }
         String thingId = thingIds.get(0)
-        Map framed = JsonLd.frame(thingId, copy.data)
+        Map framed = toSearchCard(whelk, JsonLd.frame(thingId, copy.data), links)
+
+        framed['_links'] = links
+        framed['_outerEmbellishments'] = copy.getEmbellishments() - links
+
+        Map<String, Long> incomingLinkCountByRelation = whelk.getStorage().getIncomingLinkCountByIdAndRelation(stripHash(copy.getShortId()))
+        var totalItems = incomingLinkCountByRelation.values().sum(0)
+
+        // These indirect relations shouldn't count towards the total
+        // TODO should they be placed somewhere else than totalItemsByRelation?
+        // TODO what should be the key "itemOf.instanceOf"?
+        // FIXME don't hardcode this
+        var itemPath = ["@reverse", "instanceOf", "*", "@reverse", "itemOf", "*"]
+        var itemCount = ((List) DocumentUtil.getAtPath(framed, itemPath, []))
+                .collect{ it['heldBy']?[JsonLd.ID_KEY] }.grep().unique().size()
+        incomingLinkCountByRelation.put('itemOf.instanceOf', itemCount)
+        
+        framed['reverseLinks'] = [
+                (JsonLd.TYPE_KEY) : 'PartialCollectionView',
+                'totalItems': totalItems,
+                'totalItemsByRelation': incomingLinkCountByRelation
+        ]
+
         framed['_sortKeyByLang'] = whelk.jsonld.applyLensAsMapByLang(
                 framed,
                 whelk.jsonld.locales as Set,
@@ -424,7 +446,7 @@ class ElasticSearch {
                 // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
                 return new DocumentUtil.Replace(Unicode.normalizeForSearch(value))
             }
-            
+
             // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" } }
             // -->
             // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" }, "__foo": ["FOO", "EN", "SV"] }
@@ -464,10 +486,9 @@ class ElasticSearch {
         boolean chipsify = false
         boolean addSearchKey = true
         boolean reduceKey = false
-        def preservedPaths = preserveLinks ? JsonLd.findPaths(thing, '@id', preserveLinks) : []
         boolean searchCard = true
         
-        whelk.jsonld.toCard(thing, chipsify, addSearchKey, reduceKey, preservedPaths, searchCard)
+        whelk.jsonld.toCard(thing, chipsify, addSearchKey, reduceKey, preserveLinks, searchCard)
     }
 
     private static Map getShapeForEmbellishment(Whelk whelk, Map thing) {
@@ -479,7 +500,7 @@ class ElasticSearch {
 
     private static void recordToChip(Whelk whelk, Map thing) {
         if (thing[JsonLd.GRAPH_KEY]) {
-            thing[JsonLd.GRAPH_KEY][0] = whelk.jsonld.toChip(thing[JsonLd.GRAPH_KEY][0], [], true)
+            thing[JsonLd.GRAPH_KEY][0] = whelk.jsonld.toChip(thing[JsonLd.GRAPH_KEY][0], [] as Set, true)
         }
     }
 
@@ -501,7 +522,7 @@ class ElasticSearch {
         })
     }
 
-    private static void setComputedProperties(Document doc, Set<String> links, Whelk whelk) {
+    private static setIdentifiers(Document doc) {
         DocumentUtil.findKey(doc.data, ["identifiedBy", "indirectlyIdentifiedBy"]) { value, path ->
             if (value !instanceof Collection) {
                 return
@@ -514,20 +535,6 @@ class ElasticSearch {
 
             return DocumentUtil.NOP
         }
-
-        if (doc.isVirtual()) {
-            doc.centerOnVirtualMainEntity()
-        }
-
-        doc.data['@graph'][1]['_links'] = links
-        doc.data['@graph'][1]['_outerEmbellishments'] = doc.getEmbellishments() - links
-
-        Map<String, Long> incomingLinkCountByRelation = whelk.getStorage().getIncomingLinkCountByIdAndRelation(stripHash(doc.getShortId()))
-        doc.data['@graph'][1]['reverseLinks'] = [
-                (JsonLd.TYPE_KEY) : 'PartialCollectionView',
-                'totalItems': incomingLinkCountByRelation.values().sum(0),
-                'totalItemsByRelation': incomingLinkCountByRelation,
-        ]
     }
 
     private static String stripHash(String s) {
@@ -573,25 +580,18 @@ class ElasticSearch {
     /**
      * @return ISNIs with with four groups of four digits separated by space
      */
-    private static Collection<String> getFormattedIsnis(Collection<String> isnis) {
-        isnis.findAll{ it.size() == 16 }.collect{isni ->
-            isni.split("").collate(4).collect{ it.join() }.join(" ")
-        }
+    static Collection<String> getFormattedIsnis(Collection<String> isnis) {
+        isnis.findAll{ it.size() == 16 }.collect { Unicode.formatIsni(it) }
     }
 
     Map query(Map jsonDsl) {
-        return performQuery(
-                jsonDsl,
-                getQueryUrl(),
-                { def d = it."_source"; d."_id" = it."_id"; return d }
-        )
+        return performQuery(jsonDsl, getQueryUrl())
     }
 
     Map queryIds(Map jsonDsl) {
         return performQuery(
                 jsonDsl,
-                getQueryUrl(['took','hits.total','hits.hits._id']),
-                { it."_id" }
+                getQueryUrl(['took','hits.total','hits.hits._id'])
         )
     }
     
@@ -629,7 +629,7 @@ class ElasticSearch {
         return super.hashCode()
     }
 
-    private Map performQuery(Map jsonDsl, String queryUrl, Closure<Map> hitCollector) {
+    private Map performQuery(Map jsonDsl, String queryUrl) {
         try {
             def start = System.currentTimeMillis()
             String responseBody = client.performRequest('POST',
@@ -643,17 +643,7 @@ class ElasticSearch {
                 log.info("ES query took ${duration} (${responseMap.took} server-side)")
             }
 
-            def results = [:]
-
-            results.startIndex = jsonDsl.from
-            results.totalHits = responseMap.hits.total.value
-            results.items = responseMap.hits.hits.collect(hitCollector)
-            results.aggregations = responseMap.aggregations
-            // Spell checking
-            if (responseMap.suggest?.simple_phrase) {
-                results.spell = responseMap.suggest.simple_phrase[0].options
-            }
-            return results
+            return responseMap
         }
         catch (Exception e) {
             if (isBadRequest(e)) {

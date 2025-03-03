@@ -448,6 +448,7 @@ class DatasetImporter {
 
     private boolean remove(String id, boolean force) {
         try {
+            log.info("Removing " + id + " from dataset")
             whelk.remove(id, "xl", null, force)
             return true
         } catch ( RuntimeException re ) {

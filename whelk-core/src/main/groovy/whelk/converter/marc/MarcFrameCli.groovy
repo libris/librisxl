@@ -77,8 +77,8 @@ if (perf) {
 }
 
 
-void addSystemComponents(converter) {
-    if ('xl.secret.properties' in System.properties) {
+static void addSystemComponents(converter) {
+    if (System.properties.getProperty('xl.secret.properties')) {
         def whelk = Whelk.createLoadedCoreWhelk()
         converter.linkFinder = new LinkFinder(whelk.storage)
         converter.ld = whelk.jsonld

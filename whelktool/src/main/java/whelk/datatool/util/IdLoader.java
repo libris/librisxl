@@ -12,14 +12,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 
 import static whelk.datatool.WhelkTool.DEFAULT_FETCH_SIZE;
@@ -87,6 +80,52 @@ public class IdLoader {
                 .map(id -> iriToShortId.getOrDefault(id, voyagerIdToXlShortId.getOrDefault(id, isXlShortId(id) ? id : null)))
                 .filter(Objects::nonNull)
                 .toList();
+    }
+
+    /*
+    * Load short ids of records containing outgoing links matching those specified in pathToIds.
+    * Given (example):
+    * pathToIds = { "x.y": [ "IDx", "IDy", "IDz" ], "a.b": [ "IDa", "IDb", "IDc" ] }
+    * Load records in which x.y links to a resource in record "IDx", "IDy" or "IDz" (short IDs) and a.b to either "IDa", "IDb" or "IDc".
+    * */
+    public Collection<String> loadIdsByLinksAtPaths(Map<String, Collection<String>> pathToIds) {
+        Set<String> matchingIds = new HashSet<>();
+
+        for (var e : pathToIds.entrySet()) {
+            String path = e.getKey();
+            Collection<String> idsAtPath = e.getValue();
+
+            String q = """
+                    SELECT id
+                    FROM lddb__dependencies
+                    WHERE relation = ? AND dependsonid = ANY(?)
+                    """;
+
+            Function<ResultSet, Set<String>> collectResults = (rs) -> {
+                Set<String> ids = new HashSet<>();
+                try {
+                    while (rs.next()) {
+                        ids.add(rs.getString("id"));
+                    }
+                } catch (SQLException ignored) {
+                    return Collections.emptySet();
+                }
+                return ids;
+            };
+
+            try {
+                if (matchingIds.isEmpty()) {
+                    matchingIds = query(q, collectResults, Map.of(1, path, 2, idsAtPath));
+                } else {
+                    matchingIds.retainAll(query(q, collectResults, Map.of(1, path, 2, idsAtPath)));
+
+                }
+            } catch (SQLException ignored) {
+                return Collections.emptySet();
+            }
+        }
+
+        return matchingIds;
     }
 
     public static boolean isXlShortId(String id) {

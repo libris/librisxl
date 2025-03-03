@@ -1,7 +1,6 @@
 package whelk.search2.querytree
 
 import spock.lang.Specification
-import whelk.search2.Disambiguate
 
 import static DummyNodes.abf
 import static DummyNodes.and
@@ -27,17 +26,14 @@ import static DummyNodes.propV1
 import static DummyNodes.propV2
 import static DummyNodes.propV3
 import static DummyNodes.v1
-import static DummyNodes.v2
 import static DummyNodes.v3
 import static DummyNodes.pathV1
 import static DummyNodes.pathV2
 import static DummyNodes.pathV3
 
-
 class QueryTreeSpec extends Specification {
     def "to search mapping"() {
         given:
-        Disambiguate.freeTextDefinition = ['prefLabel': 'freetext query']
         def tree = and([
                 ft1,
                 or([propV(prop1, neq, v1), propV2]),
@@ -50,19 +46,23 @@ class QueryTreeSpec extends Specification {
                         [
                                 'property': ['prefLabel': 'freetext query'],
                                 'equals'  : 'ft1',
-                                'up'      : ['@id': '/find?_i=&_q=%28NOT+p1:v1+OR+%22p:2%22:%22v:2%22%29+x']
+                                'up'      : ['@id': '/find?_i=&_q=%28NOT+p1:v1+OR+p2:%22v:2%22%29+x']
                         ],
                         [
                                 'or': [
                                         [
                                                 'property' : ['prefLabel': 'p1'],
                                                 'notEquals': 'v1',
-                                                'up'       : ['@id': '/find?_i=ft1&_q=ft1+%22p:2%22:%22v:2%22+x']
+                                                'up'       : ['@id': '/find?_i=ft1&_q=ft1+p2:%22v:2%22+x'],
+                                                '_key'     : 'p1',
+                                                '_value'   : 'v1'
                                         ],
                                         [
                                                 'property': ['prefLabel': 'p2'],
                                                 'equals'  : ['prefLabel': 'v2'],
-                                                'up'      : ['@id': '/find?_i=ft1&_q=ft1+NOT+p1:v1+x']
+                                                'up'      : ['@id': '/find?_i=ft1&_q=ft1+NOT+p1:v1+x'],
+                                                '_key'    : 'p2',
+                                                '_value'  : 'v:2'
                                         ]
                                 ],
                                 'up': ['@id': '/find?_i=ft1&_q=ft1+x']
@@ -70,7 +70,7 @@ class QueryTreeSpec extends Specification {
                         [
                                 'object': ['prefLabelByLang': ['prefLabel': 'filter x']],
                                 'value' : 'x',
-                                'up'    : ['@id': '/find?_i=ft1&_q=ft1+%28NOT+p1:v1+OR+%22p:2%22:%22v:2%22%29']
+                                'up'    : ['@id': '/find?_i=ft1&_q=ft1+%28NOT+p1:v1+OR+p2:%22v:2%22%29']
                         ]
                 ],
                 'up' : ['@id': '/find?_i=&_q=*']
@@ -131,7 +131,7 @@ class QueryTreeSpec extends Specification {
         qt.excludeFromTree(or([pathV1, pathV2])).tree == qt.tree
     }
 
-    def "remove all top level PropertyValue nodes having a range operator if their property matches the input"() {
+    def "remove all top level PathValue nodes having a range operator if their (sole) property matches the input"() {
         given:
         QueryTree qt = new QueryTree(and([
                 propV(prop1, lt, v1),
@@ -142,14 +142,14 @@ class QueryTreeSpec extends Specification {
         ]))
 
         expect:
-        qt.removeTopLevelPropValueWithRangeIfPropEquals(prop1).tree == and([
+        qt.removeTopLevelPathValueWithRangeIfPropEquals(prop1).tree == and([
                 propV(prop1, eq, v1),
                 or([propV(prop1, lt, v1), propV(prop1, gt, v1)]),
                 propV(prop2, gt, v1)
         ])
     }
 
-    def "remove all PropertyValue nodes from top level if their property matches the input"() {
+    def "remove all PathValue nodes from top level if their (sole) property matches the input"() {
         given:
         QueryTree qt = new QueryTree(and([
                 propV(prop1, lt, v1),
@@ -160,36 +160,10 @@ class QueryTreeSpec extends Specification {
         ]))
 
         expect:
-        qt.removeTopLevelPropValueIfPropEquals(prop1).tree == and([
+        qt.removeTopLevelPathValueIfPropEquals(prop1).tree == and([
                 or([propV(prop1, lt, v1), propV(prop1, gt, v1)]),
                 propV(prop2, gt, v1)
         ])
-    }
-
-    def "collect given types"() {
-        given:
-        def rdfType = new Property(Disambiguate.RDF_TYPE)
-        QueryTree qt = new QueryTree(and([
-                propV(rdfType, eq, v1),
-                propV(rdfType, neq, v2),
-                or([pathV1, propV(rdfType, eq, v3)]),
-        ]))
-
-        expect:
-        qt.collectGivenTypes() == [v1.string(), v3.string()] as Set
-    }
-
-    def "collect given types"() {
-        given:
-        def rdfType = new Property(Disambiguate.RDF_TYPE)
-        QueryTree qt = new QueryTree(and([
-                propV(rdfType, eq, new VocabTerm('type1')),
-                propV(rdfType, neq, new VocabTerm('type2')),
-                or([pathV1, propV(rdfType, eq, new VocabTerm('type3'))]),
-        ]))
-
-        expect:
-        qt.collectGivenTypes() == ['type1', 'type3'] as Set
     }
 
     def "get top level free text as string"() {
@@ -207,20 +181,20 @@ class QueryTreeSpec extends Specification {
 
     def "to query string"() {
         expect:
-        new QueryTree(tree).toString() == result
+        new QueryTree(tree).toQueryString() == result
 
         where:
-        tree                                | result
-        null                                | "*"
-        pathV1                              | "p1:v1"
-        pathV2                              | "p2:\"v:2\""
-        propV1                              | "p1:v1"
-        propV2                              | "\"p:2\":\"v:2\""
-        pathV(new Path(['x', 'y']), eq, v1) | "x.y:v1"
-        ft1                                 | "ft1"
-        notPathV1                           | "NOT p1:v1"
-        orXY                                | "p1:v1 OR p2:\"v:2\""
-        andXYZ                              | "p1:v1 p2:\"v:2\" p3:v3"
-        and([ft1, orXY, notPathV3])         | "ft1 (p1:v1 OR p2:\"v:2\") NOT p3:v3"
+        tree                                                                              | result
+        null                                                                              | "*"
+        pathV1                                                                            | "p1:v1"
+        pathV2                                                                            | "p2:\"v:2\""
+        propV1                                                                            | "p1:v1"
+        propV2                                                                            | "p2:\"v:2\""
+        pathV(new Path([new Key.RecognizedKey('x'), new Key.RecognizedKey('y')]), eq, v1) | "x.y:v1"
+        ft1                                                                               | "ft1"
+        notPathV1                                                                         | "NOT p1:v1"
+        orXY                                                                              | "p1:v1 OR p2:\"v:2\""
+        andXYZ                                                                            | "p1:v1 p2:\"v:2\" p3:v3"
+        and([ft1, orXY, notPathV3])                                                       | "ft1 (p1:v1 OR p2:\"v:2\") NOT p3:v3"
     }
 }

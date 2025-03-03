@@ -32,7 +32,7 @@ class ModifiedThingSpec extends Specification {
         new ModifiedThing(before, transform, repeatable)
 
         then:
-        thrown Exception
+        thrown ModifiedThing.IllegalModificationException
 
         where:
         spec << specs.findAll { it["before"] && it['shouldFailWithException'] }

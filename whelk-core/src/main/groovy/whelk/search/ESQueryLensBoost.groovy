@@ -2,6 +2,8 @@ package whelk.search
 
 import whelk.JsonLd
 
+import static whelk.JsonLd.asList
+
 /**
  * A utility to compute a list of boosted fields for ElasticSearch.
  * The fields are computed from lens definitions of chips ans cards. It is
@@ -71,7 +73,7 @@ class ESQueryLensBoost {
             if (dfn instanceof String) {
                 properties << dfn
             } else if (dfn instanceof Map) {
-                for (alt in dfn.alternateProperties) {
+                for (alt in asList(dfn.alternateProperties).flatten()) {
                     if (alt instanceof String) {
                         properties << alt
                     } else if (alt instanceof Map && alt.subPropertyOf) {
@@ -122,9 +124,10 @@ class ESQueryLensBoost {
                 def obj = [(JsonLd.TYPE_KEY): rangeKey]
                 def rangeChipLens = jsonld.getLensFor(obj, chipsLenses)
                 def rangeChipFields = collectBoostFields(
-                        rangeChipLens, CARD_BOOST, seenKeys)
+                        rangeChipLens, CARD_BOOST, [] as Set)
 
                 return rangeChipFields.collect { "${key}.$it" as String }
+                        .findAll {!seenKeys.contains(it) }
             } else {
                 key = "${key}.${JsonLd.SEARCH_KEY}"
             }

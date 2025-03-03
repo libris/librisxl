@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import static whelk.util.DocumentUtil.getAtPath;
+
 public class Spell {
     public record Suggestion(String text, String highlighted) {
     }
@@ -45,7 +47,7 @@ public class Spell {
     }
 
     public static List<Suggestion> collectSuggestions(Map<String, Object> esResponse) {
-        return ((List<?>) esResponse.getOrDefault("spell", Collections.emptyList()))
+        return ((List<?>) getAtPath(esResponse, List.of("suggest", "simple_phrase", 0, "options"), Collections.emptyList()))
                 .stream()
                 .map(Map.class::cast)
                 .map(m -> new Suggestion((String) m.get("text"), (String) m.get("highlighted")))

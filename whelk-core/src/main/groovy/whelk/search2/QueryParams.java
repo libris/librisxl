@@ -2,7 +2,6 @@ package whelk.search2;
 
 import whelk.exception.InvalidQueryException;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -10,8 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
-
-import static whelk.util.Jackson.mapper;
 
 public class QueryParams {
     private final static int DEFAULT_LIMIT = 200;
@@ -31,10 +28,13 @@ public class QueryParams {
         public static final String EXTRA = "_x";
         public static final String DEBUG = "_debug";
         public static final String APP_CONFIG = "_appConfig";
+        public static final String BOOST = "_boost";
+        public static final String STATS = "_stats";
     }
 
     public static class Debug {
         public static final String ES_QUERY = "esQuery";
+        public static final String ES_SCORE = "esScore";
     }
 
     public final int limit;
@@ -46,12 +46,14 @@ public class QueryParams {
     public final List<String> debug;
     public final String lens;
     public final Spell spell;
+    public final List<String> boostFields;
 
     public final String q;
     public final String i;
 
-    public QueryParams(Map<String, String[]> apiParameters) throws InvalidQueryException,
-            IOException {
+    public final boolean skipStats;
+
+    public QueryParams(Map<String, String[]> apiParameters) throws InvalidQueryException {
         this.sortBy = Sort.fromString(getOptionalSingleNonEmpty(ApiParams.SORT, apiParameters).orElse(""));
         this.object = getOptionalSingleNonEmpty(ApiParams.OBJECT, apiParameters).orElse(null);
         this.predicates = getMultiple(ApiParams.PREDICATES, apiParameters);
@@ -61,8 +63,10 @@ public class QueryParams {
         this.offset = getOffset(apiParameters);
         this.lens = getOptionalSingleNonEmpty(ApiParams.LENS, apiParameters).orElse("cards");
         this.spell = new Spell(getOptionalSingleNonEmpty(ApiParams.SPELL, apiParameters).orElse(""));
+        this.boostFields = getMultiple(ApiParams.BOOST, apiParameters);
         this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse("");
         this.i = getOptionalSingle(ApiParams.SIMPLE_FREETEXT, apiParameters).orElse("");
+        this.skipStats = getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
     }
 
     public Map<String, String> getNonQueryParams() {
@@ -94,6 +98,12 @@ public class QueryParams {
         }
         if (!debug.isEmpty()) {
             params.put(ApiParams.DEBUG, String.join(",", debug));
+        }
+        if (!boostFields.isEmpty()) {
+            params.put(ApiParams.BOOST, String.join(",", boostFields));
+        }
+        if (skipStats) {
+            params.put(ApiParams.STATS, "false");
         }
         return params;
     }

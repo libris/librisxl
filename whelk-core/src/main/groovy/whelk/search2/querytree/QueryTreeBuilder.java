@@ -1,6 +1,7 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
+import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.AppParams;
 import whelk.search2.Disambiguate;
@@ -15,20 +16,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static whelk.JsonLd.LD_KEYS;
+import static whelk.JsonLd.looksLikeIri;
+import static whelk.search2.Disambiguate.expandPrefixed;
 import static whelk.search2.QueryUtil.encodeUri;
+import static whelk.search2.QueryUtil.loadThing;
 
 public class QueryTreeBuilder {
-    public static Node buildTree(String queryString, Disambiguate disambiguate, Map<String, AppParams.Filter> aliasToFilter) throws InvalidQueryException {
-        return buildTree(getAst(queryString).tree, disambiguate, aliasToFilter);
+    public static Node buildTree(String queryString, Disambiguate disambiguate, Whelk whelk, Map<String, AppParams.Filter> aliasToFilter) throws InvalidQueryException {
+        return buildTree(getAst(queryString).tree, disambiguate, whelk, aliasToFilter);
     }
 
-    private static Node buildTree(Ast.Node ast, Disambiguate disambiguate, Map<String, AppParams.Filter> aliasToFilter) throws InvalidQueryException {
+    private static Node buildTree(Ast.Node ast, Disambiguate disambiguate, Whelk whelk, Map<String, AppParams.Filter> aliasToFilter) throws InvalidQueryException {
         return switch (ast) {
-            case Ast.And and -> buildAnd(and, disambiguate, aliasToFilter);
-            case Ast.Or or -> buildOr(or, disambiguate, aliasToFilter);
-            case Ast.Not not -> buildFromNot(not, aliasToFilter);
-            case Ast.Leaf l -> buildFromLeaf(l, aliasToFilter);
-            case Ast.Code c -> buildFromCode(c, disambiguate);
+            case Ast.And and -> buildAnd(and, disambiguate, whelk, aliasToFilter);
+            case Ast.Or or -> buildOr(or, disambiguate, whelk, aliasToFilter);
+            case Ast.Not not -> buildFromNot(not, whelk.getJsonld(), aliasToFilter);
+            case Ast.Leaf l -> buildFromLeaf(l, whelk.getJsonld(), aliasToFilter);
+            case Ast.Code c -> buildFromCode(c, disambiguate, whelk);
         };
     }
 
@@ -38,113 +43,99 @@ public class QueryTreeBuilder {
         return new Ast(parseTree);
     }
 
-    private static Node buildAnd(Ast.And and, Disambiguate disambiguate, Map<String, AppParams.Filter> aliasToFilter) throws InvalidQueryException {
+    private static Node buildAnd(Ast.And and, Disambiguate disambiguate, Whelk whelk, Map<String, AppParams.Filter> aliasToFilter) throws InvalidQueryException {
         List<Node> conjuncts = new ArrayList<>();
         for (Ast.Node o : and.operands()) {
-            conjuncts.add(buildTree(o, disambiguate, aliasToFilter));
+            conjuncts.add(buildTree(o, disambiguate, whelk, aliasToFilter));
         }
         return new And(conjuncts);
     }
 
-    private static Node buildOr(Ast.Or or, Disambiguate disambiguate, Map<String, AppParams.Filter> aliasToFilter) throws InvalidQueryException {
+    private static Node buildOr(Ast.Or or, Disambiguate disambiguate, Whelk whelk, Map<String, AppParams.Filter> aliasToFilter) throws InvalidQueryException {
         List<Node> disjuncts = new ArrayList<>();
         for (Ast.Node o : or.operands()) {
-            disjuncts.add(buildTree(o, disambiguate, aliasToFilter));
+            disjuncts.add(buildTree(o, disambiguate, whelk, aliasToFilter));
         }
         return new Or(disjuncts);
     }
 
-    private static Node buildFromNot(Ast.Not not, Map<String, AppParams.Filter> aliasToFilter) {
+    private static Node buildFromNot(Ast.Not not, JsonLd jsonLd, Map<String, AppParams.Filter> aliasToFilter) {
         String value = ((Ast.Leaf) not.operand()).value();
         return aliasToFilter.containsKey(value)
                 ? new InactiveBoolFilter(value)
-                : new FreeText(Operator.NOT_EQUALS, value);
+                : new FreeText(Operator.NOT_EQUALS, value, jsonLd);
     }
 
-    private static Node buildFromLeaf(Ast.Leaf leaf, Map<String, AppParams.Filter> aliasToFilter) {
+    private static Node buildFromLeaf(Ast.Leaf leaf, JsonLd jsonLd, Map<String, AppParams.Filter> aliasToFilter) {
         var filter = aliasToFilter.get(leaf.value());
         if (filter == null) {
-            return new FreeText(Operator.EQUALS, leaf.value());
+            return new FreeText(Operator.EQUALS, leaf.value(), jsonLd);
         }
         return new ActiveBoolFilter(leaf.value(), filter.getExplicit(), filter.getPrefLabelByLang());
     }
 
-    private static Node buildFromCode(Ast.Code c, Disambiguate disambiguate) throws InvalidQueryException {
-        Optional<String> property = disambiguate.mapToProperty(c.code());
-        if (property.isPresent()) {
-            Property p = new Property(property.get(), disambiguate);
-            Value v = buildValue(p, ((Ast.Leaf) c.operand()).value(), disambiguate);
-            return new PropertyValue(p, c.operator(), v);
-        }
-        return buildPathValue(c, disambiguate);
-    }
-
-    private static PathValue buildPathValue(Ast.Code c, Disambiguate disambiguate) throws InvalidQueryException {
-        List<Object> path = new ArrayList<>();
+    private static PathValue buildFromCode(Ast.Code c, Disambiguate disambiguate, Whelk whelk) {
+        List<Subpath> path = new ArrayList<>();
 
         for (String part : c.code().split("\\.")) {
-            Optional<String> mappedProperty = disambiguate.mapToProperty(part);
-            if (mappedProperty.isPresent()) {
-                path.add(new Property(mappedProperty.get(), disambiguate));
-            } else if (Disambiguate.isLdKey(part) || JsonLd.SEARCH_KEY.equals(part)) {
-                path.add(part);
+            // TODO: Look up all indexed keys starting with underscore?
+            if (LD_KEYS.contains(part) || part.startsWith("_")) {
+                path.add(new Key.RecognizedKey(part));
             } else {
-                var ambiguous = disambiguate.getAmbiguousPropertyMapping(part);
-                if (ambiguous.isEmpty()) {
-                    throw new InvalidQueryException("Unrecognized property alias: " + part);
+                Optional<String> mappedProperty = disambiguate.mapToProperty(part);
+                if (mappedProperty.isPresent()) {
+                    path.add(new Property(mappedProperty.get(), whelk.getJsonld(), part));
                 } else {
-                    throw new InvalidQueryException("\"" + part + "\" maps to multiple properties: " + ambiguous + "," +
-                            " please specify which one is meant.");
+                    path.add(disambiguate.getAmbiguousPropertyMapping(part).isEmpty()
+                            ? new Key.UnrecognizedKey(part)
+                            : new Key.AmbiguousKey(part));
                 }
             }
         }
 
         String value = ((Ast.Leaf) c.operand()).value();
         Path pathObj = new Path(path);
-        Value valueObj = pathObj.mainProperty().isEmpty()
-                ? new Literal(value)
-                : buildValue(pathObj.mainProperty().get(), value, disambiguate);
 
-        return new PathValue(path, c.operator(), valueObj);
+        if (!pathObj.isValid()) {
+            return new PathValue(new Path.ExpandedPath(path), c.operator(), new Literal(value));
+        }
+
+        Value valueObj = pathObj.lastProperty().isPresent()
+                ? buildValue(pathObj.lastProperty().get(), value, disambiguate, whelk)
+                : new Literal(value);
+
+        return new PathValue(pathObj, c.operator(), valueObj);
     }
 
-    private static Value buildValue(Property property, String value, Disambiguate disambiguate) throws InvalidQueryException {
+    private static Value buildValue(Property property, String value, Disambiguate disambiguate, Whelk whelk) {
         if (value.equals(Operator.WILDCARD)) {
             return new Literal(value);
         }
         if (property.isType()) {
             Optional<String> mappedType = disambiguate.mapToKbvClass(value);
             if (mappedType.isPresent()) {
-                return new VocabTerm(mappedType.get(), disambiguate.getDefinition(mappedType.get()));
+                return new VocabTerm(mappedType.get(), whelk.getJsonld().vocabIndex.get(mappedType.get()), value);
             } else {
-                var ambiguous = disambiguate.getAmbiguousClassMapping(value);
-                if (ambiguous.isEmpty()) {
-                    throw new InvalidQueryException("Unrecognized type: " + value);
-                } else {
-                    throw new InvalidQueryException("\"" + value + "\" maps to multiple types: " + ambiguous + "," +
-                            " please specify which one is meant.");
-                }
+                return disambiguate.getAmbiguousClassMapping(value).isEmpty()
+                        ? new InvalidValue.ForbiddenValue(value)
+                        : new InvalidValue.AmbiguousValue(value);
             }
-        } else if (property.isVocabTerm()) {
+        } else if (whelk.getJsonld().isVocabTerm(property.name())) {
             Optional<String> mappedEnum = disambiguate.mapToEnum(value);
             if (mappedEnum.isPresent()) {
-                return new VocabTerm(mappedEnum.get(), disambiguate.getDefinition(mappedEnum.get()));
+                return new VocabTerm(mappedEnum.get(), whelk.getJsonld().vocabIndex.get(mappedEnum.get()), value);
             } else {
-                var ambiguous = disambiguate.getAmbiguousEnumMapping(value);
-                if (ambiguous.isEmpty()) {
-                    throw new InvalidQueryException("Invalid value " + value + " for property " + property);
-                } else {
-                    throw new InvalidQueryException("\"" + value + "\" maps to multiple types: " + ambiguous + "," +
-                            " please specify which one is meant.");
-                }
+                return disambiguate.getAmbiguousEnumMapping(value).isEmpty()
+                        ? new InvalidValue.ForbiddenValue(value)
+                        : new InvalidValue.AmbiguousValue(value);
             }
         }
         // Expand and encode URIs, e.g. sao:Hästar -> https://id.kb.se/term/sao/H%C3%A4star
         else if (property.isObjectProperty()) {
-            String expanded = Disambiguate.expandPrefixed(value);
-            if (JsonLd.looksLikeIri(expanded)) {
+            String expanded = expandPrefixed(value);
+            if (looksLikeIri(expanded)) {
                 var encoded = encodeUri(expanded);
-                return new Link(encoded, disambiguate.getChip(encoded));
+                return new Link(encoded, whelk.getJsonld().toChip(loadThing(encoded, whelk)), value);
             } else {
                 return new Literal(value);
             }

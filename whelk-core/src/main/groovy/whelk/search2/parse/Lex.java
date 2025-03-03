@@ -38,9 +38,7 @@ public class Lex {
     }
 
     private static void consumeWhiteSpace(StringBuilder query, MutableInteger offset) {
-        if (query.isEmpty())
-            return;
-        while (Character.isWhitespace(query.charAt(0))) {
+        while (!query.isEmpty() && Character.isWhitespace(query.charAt(0))) {
             query.deleteCharAt(0);
             offset.increase(1);
         }
@@ -55,7 +53,7 @@ public class Lex {
 
         int symbolOffset = offset.value;
 
-        // Special symbols that need not be whitespace separated:
+        // Special multi-char symbols that need not be whitespace separated:
         if (query.length() >= 2) {
             if (query.substring(0, 2).equals(">=")) {
                 query.deleteCharAt(0);
@@ -68,43 +66,6 @@ public class Lex {
                 query.deleteCharAt(0);
                 offset.increase(2);
                 return new Symbol(TokenName.OPERATOR, "<=", symbolOffset);
-            }
-        }
-        if (!query.isEmpty()) {
-            if (query.substring(0, 1).equals("=")) {
-                query.deleteCharAt(0);
-                offset.increase(1);
-                return new Symbol(TokenName.OPERATOR, "=", symbolOffset);
-            }
-            if (query.substring(0, 1).equals("!")) {
-                query.deleteCharAt(0);
-                offset.increase(1);
-                return new Symbol(TokenName.OPERATOR, "!", symbolOffset);
-            }
-            if (query.substring(0, 1).equals("~")) {
-                query.deleteCharAt(0);
-                offset.increase(1);
-                return new Symbol(TokenName.OPERATOR, "~", symbolOffset);
-            }
-            if (query.substring(0, 1).equals("<")) {
-                query.deleteCharAt(0);
-                offset.increase(1);
-                return new Symbol(TokenName.OPERATOR, "<", symbolOffset);
-            }
-            if (query.substring(0, 1).equals(">")) {
-                query.deleteCharAt(0);
-                offset.increase(1);
-                return new Symbol(TokenName.OPERATOR, ">", symbolOffset);
-            }
-            if (query.substring(0, 1).equals("(")) {
-                query.deleteCharAt(0);
-                offset.increase(1);
-                return new Symbol(TokenName.OPERATOR, "(", symbolOffset);
-            }
-            if (query.substring(0, 1).equals(")")) {
-                query.deleteCharAt(0);
-                offset.increase(1);
-                return new Symbol(TokenName.OPERATOR, ")", symbolOffset);
             }
         }
 
@@ -150,22 +111,29 @@ public class Lex {
                         return new Symbol(TokenName.OPERATOR, symbolValue.toString(), symbolOffset);
                     }
                     break;
+                } else if (c == '\\') { // char escaping ...
+                    query.deleteCharAt(0);
+                    offset.increase(1);
+                    if (query.isEmpty())
+                        throw new InvalidQueryException("Lexer error: Escaped EOF at character index: " + symbolOffset);
+                    char escapedC = query.charAt(0);
+                    symbolValue.append(escapedC);
+                    query.deleteCharAt(0);
+                    offset.increase(1);
+                } else {
+                    query.deleteCharAt(0);
+                    offset.increase(1);
+                    if (Character.isWhitespace(c))
+                        break;
+                    symbolValue.append(c);
+                    if (query.isEmpty())
+                        break;
                 }
-                query.deleteCharAt(0);
-                offset.increase(1);
-                if (Character.isWhitespace(c))
-                    break;
-                symbolValue.append(c);
-                if (query.isEmpty())
-                    break;
             }
             TokenName name;
 
             // These words (when not quoted) are keywords
             switch (symbolValue.toString()) {
-                case "and":
-                case "or":
-                case "not":
                 case "AND":
                 case "OR":
                 case "NOT":

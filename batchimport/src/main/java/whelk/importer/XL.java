@@ -119,7 +119,7 @@ class XL
 
         if (collection.equals("hold") && relatedWithBibResourceId.equals(DISCARD_ATTACHED_HOLDINGS_MARKER))
         {
-            // discard/ignore
+            logger.info("Incoming (holding) record:\n" + incomingMarcRecord.toString() + "was ignored, as it arrived with a bib we couldn't match, and creating new bibs was not allowed (running with --ignoreNewBib).");
             return null;
         }
 
@@ -141,6 +141,7 @@ class XL
         {
             if (collection.equals("bib") && m_parameters.getIgnoreNewBib())
             {
+                logger.info("Incoming record:\n" + incomingMarcRecord.toString() + "was not matched with any existing records. The record was ignored (running with --ignoreNewBib).");
                 // We matched nothing, and have been asked to not create new bib records. Return a signal that any
                 // associated holdings must now be discarded.
                 return DISCARD_ATTACHED_HOLDINGS_MARKER;
@@ -148,10 +149,15 @@ class XL
 
             resultingResourceId = importNewRecord(incomingMarcRecord, collection, relatedWithBibResourceId, null);
 
-            if (collection.equals("bib"))
+            if (collection.equals("bib")) {
                 importedBibRecords.inc();
-            else
+                logger.info("Incoming record:\n" + incomingMarcRecord.toString() + "was not matched with any existing records. Created a new one with ID: " + resultingResourceId);
+            }
+            else {
                 importedHoldRecords.inc();
+
+                logger.info("Incoming (holding) record:\n" + incomingMarcRecord.toString() + "was not matched, created a new holding record for " + relatedWithBibResourceId);
+            }
         }
         else if (duplicateIDs.size() == 1) // merge, keep or replace
         {
@@ -169,7 +175,10 @@ class XL
                 Document incoming = convertToRDF(incomingMarcRecord, idToMerge);
                 if (m_parameters.getReadOnly()) {
                     Document existing = m_whelk.getDocument(idToMerge);
-                    History existingHistory = new History(m_whelk.getStorage().loadDocumentHistory(existing.getShortId()), m_whelk.getJsonld());
+                    History existingHistory = null;
+                    if (!m_parameters.getIgnoreHistory()) {
+                        existingHistory = new History(m_whelk.getStorage().loadDocumentHistory(existing.getShortId()), m_whelk.getJsonld());
+                    }
                     m_merge.merge(existing, incoming, m_parameters.getChangedBy(), existingHistory);
                     System.out.println("info: Would now (if --live had been specified) have written the following json-ld to whelk as a merged record:\n"
                             + existing.getDataAsString());
@@ -188,7 +197,10 @@ class XL
                                 systemNumbers.add( (String) tuple.get(1) );
                         List<Map<String, String>> images = existing.getImages();
 
-                        History existingHistory = new History(m_whelk.getStorage().loadDocumentHistory(existing.getShortId()), m_whelk.getJsonld());
+                        History existingHistory = null;
+                        if (!m_parameters.getIgnoreHistory()) {
+                            existingHistory = new History(m_whelk.getStorage().loadDocumentHistory(existing.getShortId()), m_whelk.getJsonld());
+                        }
                         m_merge.merge(existing, incoming, m_parameters.getChangedBy(), existingHistory);
 
                         // The mainID must remain unaffected.
