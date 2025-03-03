@@ -30,8 +30,8 @@ var DATADIR = System.properties['nowhelk.datadir'] ?: '/var/tmp/kb'
 var basename = System.properties['nowhelk.basename'] ?: 'lddb-examples'
 
 var workDataFileName = "$DATADIR/${basename}-works.jsonl.gz"
-var inDataFileName = "$DATADIR/${name}-instances.jsonl.gz"
-var outDataFileName = "$DATADIR/${name}-NORMALIZED.jsonl"
+var inDataFileName = "$DATADIR/${basename}-instances.jsonl.gz"
+var outDataFileName = "$DATADIR/${basename}-NORMALIZED.jsonl"
 
 System.err.println inDataFileName
 System.err.println outDataFileName
