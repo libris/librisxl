@@ -163,7 +163,7 @@ class TypeMappings extends DefinitionsData {
       issuancetype = 'ComponentPart'
     }
 
-    if (issuancetype == 'Monograph') {
+    if (issuancetype == 'Monograph' || issuancetype == 'Integrating') {
       instance['issuanceType'] = 'SingleUnit'
       return true
     } else if (issuancetype == 'ComponentPart') {
@@ -195,8 +195,11 @@ class TypeMappings extends DefinitionsData {
           // FIXME: guessing!
           mappedContentType = mappedContentType['unionOf'][0]
         }
-        assert mappedContentType, "Unable to map ${wtype} to contentType or genreForm"
-        work['contentType'] << [(ID): mappedContentType]
+        if (mappedContentType) {
+          work['contentType'] << [(ID): mappedContentType]
+        } else {
+          System.err.println "WARNING: Unable to map ${wtype} to contentType or genreForm"
+        }
       }
 
       work[TYPE] = issuancetype
@@ -298,7 +301,7 @@ class TypeNormalizer implements UsingJsonKeys {
 
     if (genreforms.removeIf { !it[ID] && it['prefLabel'] == 'DAISY'} ) {
       // TODO: assert isA(instance[TYPE], 'SoundRecording')
-      work.put(TYPE, "AudioBook")
+      work.put(TYPE, "Audiobook")
       changed = true
     }
 
