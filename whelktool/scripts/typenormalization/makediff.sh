@@ -1,20 +1,20 @@
 #!/bin/bash
 set -euo pipefail
-BASENAME=$1
+BASEPATH=$1
 CONTEXT=$(dirname $0)/../../../../definitions/build/sys/context/kbv.jsonld
 (
-  zcat ${BASENAME}.jsonl.gz | trld -indjson -c $CONTEXT -ottl
-  zcat ${BASENAME}_works.jsonl.gz | trld -indjson -c $CONTEXT -ottl
+  zcat ${BASEPATH}-instances.jsonl.gz | trld -indjson -c $CONTEXT -ottl
+  zcat ${BASEPATH}-works.jsonl.gz | trld -indjson -c $CONTEXT -ottl
 ) > /tmp/datain.ttl
 (
-  cat $BASENAME-NORMALIZED.jsonl | trld -indjson -c $CONTEXT -ottl
+  cat $BASEPATH-NORMALIZED.jsonl | trld -indjson -c $CONTEXT -ottl
 ) > /tmp/normout.ttl
 
 diffld -b /tmp/datain.ttl /tmp/normout.ttl -ottl |
   sed '
     s! {| :addedIn </tmp/datain> |}!!g
     s! :addedIn </tmp/datain> ;!!g
-    s/:issuanceType "Monograph"/:issuanceType :Monograph/
+    s/:issuance\(Type\)\? "\(\w\+\)"/:issuance\1 :\2/
     s/"\(marc:[^"]\+\)"/\1/
     s|</tmp/normout>|<#typenormalization>|
   ' |
