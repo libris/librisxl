@@ -1,49 +1,5 @@
 {
 
-  "typeToContentType": {
-    "Audio": "https://id.kb.se/term/rda/Sounds",
-    "CartographicObject": "https://id.kb.se/term/rda/CartographicThreeDimensionalForm",
-    "Multimedia": {
-      "unionOf": ["https://id.kb.se/term/rda/ComputerDataset", "https://id.kb.se/term/rda/ComputerProgram"]
-    },
-    "MovingImage": "https://id.kb.se/term/rda/TwoDimensionalMovingImage",
-    "Music": "https://id.kb.se/term/rda/PerformedMusic",
-    "NotatedMovement": "https://id.kb.se/term/rda/NotatedMovement",
-    "NotatedMusic": "https://id.kb.se/term/rda/NotatedMusic",
-    "Object": "https://id.kb.se/term/rda/ThreeDimensionalForm",
-    "PerformedMusic": "https://id.kb.se/term/rda/PerformedMusic",
-    "SpokenWord": "https://id.kb.se/term/rda/SpokenWord",
-    "StillImage": "https://id.kb.se/term/rda/StillImage",
-    "Text": "https://id.kb.se/term/rda/Text"
-  },
-
-  "genreFormImpliesFormMap": {
-    "https://id.kb.se/marc/Atlas": "AtlasForm",
-    "https://id.kb.se/term/gmgpc/swe/Atlaser": "AtlasForm",
-    "https://id.kb.se/marc/Novel": "BookForm",
-    "https://id.kb.se/marc/Fiction": "Fiction",
-    "https://id.kb.se/term/saogf/Romaner": "BookForm",
-    "https://id.kb.se/term/saogf/Pop-up-b%C3%B6cker": "PopupBook",
-    "https://id.kb.se/term/saogf/%C3%85rsb%C3%B6cker": "Yearbook",
-    "https://id.kb.se/term/saogf/Miniatyrb%C3%B6cker": "BookForm",
-    "https://id.kb.se/term/saogf/Mekaniska%20b%C3%B6cker": "InteractiveBook",
-    "https://id.kb.se/term/saogf/Pysselb%C3%B6cker": "BookForm",
-    "https://id.kb.se/term/saogf/Målarb%C3%B6cker": "BookForm",
-    "https://id.kb.se/term/saogf/Guideb%C3%B6cker": "BookForm",
-    "https://id.kb.se/term/saogf/Pop-up-b%C3%B6cker": "InteractiveBook",
-    "https://id.kb.se/term/saogf/Kokb%C3%B6cker": "BookForm",
-    "https://id.kb.se/term/barngf/Kapitelb%C3%B6cker": "BookForm",
-    "https://id.kb.se/term/barngf/Bilderb%C3%B6cker": "TextAndImagesBook"
-  },
-
-  "complexTypeMap": {
-      "Text": {"BookForm": "WrittenBook", "TextAndImagesBook": "TextAndImagesBook"},
-      "Cartography": {"AtlasForm": "Atlas"},
-      "Audio": {"BookForm": "Audiobook", "Fiction": "Audiobook"},
-      "Tactile": {"BookForm": "TactileBook"}
-  },
-  "complexTypeMap:TODO": {"Tactile": "move to work first? See also Braille* logic"},
-
   "cleanupTypes": {
     "ProjectedImageInstance": ["ProjectedImage"],
     "MovingImageInstance": ["MovingImage"],
@@ -54,8 +10,10 @@
     "GlobeInstance": ["CartographicObject", "PhysicalObject"]
   },
 
-  "impliedContentTypes": {
-      "Atlas": ["https://id.kb.se/term/rda/CartographicImage", "https://id.kb.se/term/rda/Text"]
+  "cleanupContentTypes": {
+    "https://id.kb.se/marc/Picture": {"contentType": "https://id.kb.se/term/rda/StillImage"},
+    "https://id.kb.se/marc/ComputerProgram": {"contentType": "https://id.kb.se/term/rda/ComputerProgram"},
+    "https://id.kb.se/marc/ProgrammedText": {"genreForm": "https://id.kb.se/term/saogf/Instruktions-%20och%20undervisningsmaterial"}
   },
 
   "select:carrierMediaMap": "select ?carrier ?media where { ?carrier a :CarrierType ; :broader ?media }",
@@ -106,6 +64,55 @@
     "https://id.kb.se/term/rda/MicrofilmSlip": "https://id.kb.se/term/rda/Microform",
     "https://id.kb.se/term/rda/StereographDisc": "https://id.kb.se/term/rda/Stereographic",
     "https://id.kb.se/term/rda/VideoCartridge": "https://id.kb.se/term/rda/Video"
-  }
+  },
+
+  "typeToContentType": {
+    "Audio": "https://id.kb.se/term/rda/Sounds",
+    "CartographicObject": "https://id.kb.se/term/rda/CartographicThreeDimensionalForm",
+    "Kit": null,
+    "Multimedia": {
+      "unionOf": ["https://id.kb.se/term/rda/ComputerDataset", "https://id.kb.se/term/rda/ComputerProgram"]
+    },
+    "MovingImage": "https://id.kb.se/term/rda/TwoDimensionalMovingImage",
+    "Music": "https://id.kb.se/term/rda/PerformedMusic",
+    "NotatedMovement": "https://id.kb.se/term/rda/NotatedMovement",
+    "NotatedMusic": "https://id.kb.se/term/rda/NotatedMusic",
+    "Object": "https://id.kb.se/term/rda/ThreeDimensionalForm",
+    "PerformedMusic": "https://id.kb.se/term/rda/PerformedMusic",
+    "SpokenWord": "https://id.kb.se/term/rda/SpokenWord",
+    "StillImage": "https://id.kb.se/term/rda/StillImage",
+    "Text": "https://id.kb.se/term/rda/Text"
+  },
+
+  "impliedContentTypes": {
+      "Atlas": ["https://id.kb.se/term/rda/CartographicImage", "https://id.kb.se/term/rda/Text"]
+  },
+
+  "genreFormImpliesFormMap": {
+    "https://id.kb.se/marc/Atlas": "AtlasForm",
+    "https://id.kb.se/term/gmgpc/swe/Atlaser": "AtlasForm",
+    "https://id.kb.se/marc/Novel": "BookForm",
+    "https://id.kb.se/marc/Fiction": "Fiction",
+    "https://id.kb.se/term/saogf/Romaner": "BookForm",
+    "https://id.kb.se/term/saogf/Pop-up-b%C3%B6cker": "PopupBook",
+    "https://id.kb.se/term/saogf/%C3%85rsb%C3%B6cker": "Yearbook",
+    "https://id.kb.se/term/saogf/Miniatyrb%C3%B6cker": "BookForm",
+    "https://id.kb.se/term/saogf/Mekaniska%20b%C3%B6cker": "InteractiveBook",
+    "https://id.kb.se/term/saogf/Pysselb%C3%B6cker": "BookForm",
+    "https://id.kb.se/term/saogf/Målarb%C3%B6cker": "BookForm",
+    "https://id.kb.se/term/saogf/Guideb%C3%B6cker": "BookForm",
+    "https://id.kb.se/term/saogf/Pop-up-b%C3%B6cker": "InteractiveBook",
+    "https://id.kb.se/term/saogf/Kokb%C3%B6cker": "BookForm",
+    "https://id.kb.se/term/barngf/Kapitelb%C3%B6cker": "BookForm",
+    "https://id.kb.se/term/barngf/Bilderb%C3%B6cker": "TextAndImagesBook"
+  },
+
+  "complexTypeMap": {
+      "Text": {"BookForm": "WrittenBook", "TextAndImagesBook": "TextAndImagesBook"},
+      "Cartography": {"AtlasForm": "Atlas"},
+      "Audio": {"BookForm": "Audiobook", "Fiction": "Audiobook"},
+      "Tactile": {"BookForm": "TactileBook"}
+  },
+  "complexTypeMap:TODO": {"Tactile": "move to work first? See also Braille* logic"}
 
 }
