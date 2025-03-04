@@ -367,8 +367,12 @@ class TypeNormalizer implements UsingJsonKeys {
 
     } else {
 
-      if (itype == "Print" && isVolume) {
-        categories << [(ID): KBGF + 'PrintedVolume']
+      if (itype == "Print") {
+        if (isVolume) {
+          categories << [(ID): KBGF + 'PrintedVolume']
+        } else {
+          categories << [(ID): KBGF + 'Print']
+        }
         changed = true
       } else if (itype == "Instance") {
         if (isVolume) {
@@ -398,11 +402,6 @@ class TypeNormalizer implements UsingJsonKeys {
             }
           }
         }
-      }
-
-      if (carriertypes.size() == 1) {
-        instance.remove("carrierType")
-        changed = true
       }
 
     }
