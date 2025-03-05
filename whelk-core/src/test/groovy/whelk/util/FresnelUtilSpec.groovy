@@ -439,8 +439,8 @@ class FresnelUtilSpec extends Specification {
                 FresnelUtil.LensGroupName.Token
         )
 
-        var result = fresnel.format(fresnel.applyLens(thing, cardOnly), new FresnelUtil.LangCode('sv'))
+        var result = fresnel.applyLens(thing, cardOnly)
         expect:
-        result.asString() == "Överzet, Namnsson, Namn, 1972- • Hästar"
+        result.asString() == "Överzet Namnsson Namn 1972- Hästar"
     }
 }

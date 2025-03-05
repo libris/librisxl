@@ -315,7 +315,13 @@ public class FresnelUtil {
     }
 
     // FIXME naming
-    public sealed abstract class Lensed permits Node, TransliteratedNode {}
+    public sealed abstract class Lensed permits Node, TransliteratedNode {
+        public String asString() {
+            return printTo(new StringBuilder()).toString();
+        }
+
+        protected abstract StringBuilder printTo(StringBuilder s);
+    }
 
     public final class Node extends Lensed {
         record Property(String name, Object value) {}
@@ -381,6 +387,23 @@ public class FresnelUtil {
             }
         }
 
+        @Override
+        protected StringBuilder printTo(StringBuilder s) {
+            orderedProps.forEach(prop -> printTo(s, prop.value));
+            return s;
+        }
+
+        private void printTo(StringBuilder s, Object value) {
+            if(!s.isEmpty() && s.charAt(s.length() - 1) != ' ') {
+                s.append(" ");
+            }
+            switch(value) {
+                case Collection<?> l -> l.forEach(v -> printTo(s, v));
+                case Lensed l -> l.printTo(s);
+                default -> s.append(value);
+            }
+        }
+
         private Object mapVocabTerm(Object value) {
             if (value instanceof String s) {
                 var def = jsonLd.vocabIndex.get(s);
@@ -396,6 +419,15 @@ public class FresnelUtil {
         Map<LangCode, Node> transliterations = new HashMap<>();
         void add(LangCode langCode, Node node) {
             transliterations.put(langCode, node);
+        }
+
+        @Override
+        protected StringBuilder printTo(StringBuilder s) {
+            if(!s.isEmpty() && s.charAt(s.length() - 1) != ' ') {
+                s.append(" ");
+            }
+            transliterations.values().forEach(node -> node.printTo(s));
+            return s;
         }
     }
 
