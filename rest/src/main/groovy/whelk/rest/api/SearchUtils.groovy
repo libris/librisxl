@@ -66,6 +66,7 @@ class SearchUtils {
         String addStats = getReservedQueryParameter('_stats', queryParameters)
         String suggest = getReservedQueryParameter('_suggest', queryParameters)
         String spell = getReservedQueryParameter('_spell', queryParameters)
+        String searchMainOnly = getReservedQueryParameter('_searchMainOnly', queryParameters)
 
         if (queryParameters['p'] && !object) {
             throw new InvalidQueryException("Parameter 'p' can only be used together with 'o'")
@@ -89,6 +90,7 @@ class SearchUtils {
                           '_stats' : addStats,
                           '_suggest' : suggest,
                           '_spell': spell,
+                          '_searchMainOnly': searchMainOnly,
         ]
 
         Map results = queryElasticSearch(
@@ -125,6 +127,7 @@ class SearchUtils {
         String addStats = pageParams['_stats']
         String suggest = pageParams['_suggest']
         String spell = pageParams['_spell']
+        String searchMainOnly = pageParams['_searchMainOnly']
         lens = lens ?: 'cards'
 
         log.debug("Querying ElasticSearch")
@@ -136,7 +139,7 @@ class SearchUtils {
         // TODO Only manipulate `_limit` in one place
         queryParameters['_limit'] = [limit.toString()]
 
-        Map esResult = esQuery.doQuery(queryParameters, suggest, spell)
+        Map esResult = esQuery.doQuery(queryParameters, suggest, spell, searchMainOnly)
         Lookup lookup = new Lookup()
         
         List<Map> mappings = []
@@ -803,7 +806,7 @@ class SearchUtils {
      * Return a list of reserved query params
      */
     private List getReservedParameters() {
-        return ['q', 'p', 'o', 'value', '_limit', '_offset', '_suggest', '_spell']
+        return ['q', 'p', 'o', 'value', '_limit', '_offset', '_suggest', '_spell', '_searchMainOnly']
     }
 
     /*

@@ -32,7 +32,7 @@ class ESQuery {
 
     private static final int DEFAULT_PAGE_SIZE = 50
     private static final List RESERVED_PARAMS = [
-            'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens', '_stats', '_suggest', '_site', '_spell'
+            'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens', '_stats', '_suggest', '_site', '_spell', '_searchMainOnly'
     ]
     public static final String AND_PREFIX = 'and-'
     public static final String AND_MATCHES_PREFIX = 'and-matches-'
@@ -86,11 +86,12 @@ class ESQuery {
     void initFieldMappings(Whelk whelk) {
         if (whelk.elastic) {
             Map mappings = whelk.elastic.getMappings()
-            this.keywordFields = getKeywordFields(mappings)
-            this.dateFields = getFieldsOfType('date', mappings)
-            this.nestedFields = getFieldsOfType('nested', mappings)
-            this.nestedNotInParentFields = nestedFields - getFieldsWithSetting('include_in_parent', true, mappings)
-            this.numericExtractorFields = getFieldsWithAnalyzer('numeric_extractor', mappings)
+            Map mappingsSecondary = whelk.elastic.getMappings(whelk.elastic.secondaryIndexName)
+            this.keywordFields = getKeywordFields(mappings) + getKeywordFields(mappingsSecondary)
+            this.dateFields = getFieldsOfType('date', mappings) + getFieldsOfType('date', mappingsSecondary)
+            this.nestedFields = getFieldsOfType('nested', mappings) + getFieldsOfType('nested', mappingsSecondary)
+            this.nestedNotInParentFields = nestedFields - (getFieldsWithSetting('include_in_parent', true, mappings) + getFieldsWithSetting('include_in_parent', true, mappingsSecondary))
+            this.numericExtractorFields = getFieldsWithAnalyzer('numeric_extractor', mappings) + getFieldsWithAnalyzer('numeric_extractor', mappingsSecondary)
 
             if (DocumentUtil.getAtPath(mappings, ['properties', '_sortKeyByLang', 'properties', 'sv', 'fields', 'trigram'], null)) {
                 ENABLE_SPELL_CHECK = true
@@ -109,9 +110,14 @@ class ESQuery {
     }
 
     @CompileStatic(TypeCheckingMode.SKIP)
-    Map doQuery(Map<String, String[]> queryParameters, String suggest = null, String spell = null) {
+    Map doQuery(Map<String, String[]> queryParameters, String suggest = null, String spell = null, String searchMainOnly = null) {
         Map esQuery = getESQuery(queryParameters, suggest, spell)
-        Map esResponse = whelk.elastic.query(esQuery)
+        Map esResponse
+        if (searchMainOnly == 'true') {
+            esResponse = whelk.elastic.query(esQuery, true)
+        } else {
+            esResponse = whelk.elastic.query(esQuery)
+        }
         return collectQueryResults(esResponse, esQuery, queryParameters, { def d = it."_source"; d."_id" = it."_id"; return d })
     }
 
@@ -1078,11 +1084,11 @@ class ESQuery {
         }
     }
 
-    static Set getFieldsOfType(String type, Map mappings) {
+    static Set<String> getFieldsOfType(String type, Map mappings) {
         getFieldsWithSetting('type', type, mappings)
     }
 
-    static Set getFieldsWithAnalyzer(String analyzer, Map mappings) {
+    static Set<String> getFieldsWithAnalyzer(String analyzer, Map mappings) {
         getFieldsWithSetting('analyzer', analyzer, mappings)
     }
 
