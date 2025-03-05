@@ -399,6 +399,7 @@ public class FresnelUtil {
             }
             switch(value) {
                 case Collection<?> l -> l.forEach(v -> printTo(s, v));
+                case LanguageContainer l -> l.languages.values().forEach(v -> printTo(s, v));
                 case Lensed l -> l.printTo(s);
                 default -> s.append(value);
             }
