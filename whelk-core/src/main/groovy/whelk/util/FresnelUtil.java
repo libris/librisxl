@@ -80,7 +80,8 @@ public class FresnelUtil {
         public static String Identity = "Identity";
     }
 
-    private static record DerivedCacheKey(DerivedLens lens, String type) {}
+    private record DerivedCacheKey(Object types, DerivedLens lens) {}
+    private record LensCacheKey(Object types, LensGroupName lensGroupName) {}
 
     private static final Logger logger = LogManager.getLogger(FresnelUtil.class);
 
@@ -98,7 +99,8 @@ public class FresnelUtil {
     JsonLd jsonLd;
     Formats formats;
 
-    private Map<DerivedCacheKey, Lens> lensCache = new HashMap<>();
+    private final Map<DerivedCacheKey, Lens> derivedLensCache = new HashMap<>();
+    private final Map<LensCacheKey, Lens> lensCache = new HashMap<>();
 
     public FresnelUtil(JsonLd jsonLd) {
         this.jsonLd = jsonLd;
@@ -120,8 +122,8 @@ public class FresnelUtil {
             throw new IllegalArgumentException("Thing is not typed node: " + thing);
         }
 
-        var type = firstType(t);
-        var lens = lensCache.computeIfAbsent(new DerivedCacheKey(derived, type), k -> {
+        var types = t.get(JsonLd.TYPE_KEY);
+        var lens = derivedLensCache.computeIfAbsent(new DerivedCacheKey(types, derived), k -> {
             var base = findLens(t, derived.base);
             var minus = derived.minus.stream().map(l -> findLens(t, l)).toList();
             return base.minus(minus, derived.subLens);
@@ -449,17 +451,22 @@ public class FresnelUtil {
     }
 
     private Lens findLens(Map<?,?> thing, LensGroupName lensGroupName) {
-        for (var groupName : lensGroupName.groups) {
-            @SuppressWarnings("unchecked")
-            var group = ((Map<String, Map<String,Object>>) jsonLd.displayData.get("lensGroups")).get(groupName);
-            @SuppressWarnings("unchecked")
-            var lens = (Map<String, Object>) jsonLd.getLensFor(thing, group);
-            if (lens != null) {
-                return new Lens(lens, subLens(lensGroupName));
-            }
-        }
+        var types = thing.get(JsonLd.TYPE_KEY);
+        var cacheKey = new LensCacheKey(types, lensGroupName);
 
-        return new Lens(DEFAULT_LENS, subLens(lensGroupName));
+        return lensCache.computeIfAbsent(cacheKey, k -> {
+            for (var groupName : lensGroupName.groups) {
+                @SuppressWarnings("unchecked")
+                var group = ((Map<String, Map<String,Object>>) jsonLd.displayData.get("lensGroups")).get(groupName);
+                @SuppressWarnings("unchecked")
+                var lens = (Map<String, Object>) jsonLd.getLensFor(thing, group);
+                if (lens != null) {
+                    return new Lens(lens, subLens(lensGroupName));
+                }
+            }
+
+            return new Lens(DEFAULT_LENS, subLens(lensGroupName));
+        });
     }
 
     public class Lens {
