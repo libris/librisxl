@@ -155,9 +155,20 @@ public class FresnelUtil {
         var showProperties = Stream.concat(Stream.of(new PropertyKey(JsonLd.TYPE_KEY), new PropertyKey(JsonLd.ID_KEY)), lens.showProperties().stream()).toList();
         for (var p : showProperties) {
             switch (p) {
+                case PropertyKey k -> {
+                    if (k.isIn(thing)) {
+                        result.pick(thing, k);
+                    }
+                }
                 case AlternateProperties a -> {
                     alt: for (var alternative : a.alternatives) {
                         switch (alternative) {
+                            case PropertyKey k -> {
+                                if (k.isIn(thing)) {
+                                    result.pick(thing, k);
+                                    break alt;
+                                }
+                            }
                             case RangeRestriction r -> {
                                 // can never be language container
                                 var k = r.subPropertyOf;
@@ -172,12 +183,6 @@ public class FresnelUtil {
                                     break alt;
                                 }
                             }
-                            case PropertyKey k -> {
-                                if (has(thing, k)) {
-                                    result.pick(thing, k);
-                                    break alt;
-                                }
-                            }
                             default -> {
 
                             }
@@ -189,11 +194,6 @@ public class FresnelUtil {
                     if (thing.get(JsonLd.REVERSE_KEY) instanceof Map<?, ?> r && r.containsKey(i.name)) {
                         var v = r.get(i.name);
                         result.pick(Map.of(i.inverseName, v), new PropertyKey(i.inverseName));
-                    }
-                }
-                case PropertyKey k -> {
-                    if (has(thing, k)) {
-                        result.pick(thing, k);
                     }
                 }
                 case RangeRestriction ignored -> {
@@ -260,10 +260,6 @@ public class FresnelUtil {
             return name;
         }
 
-        boolean isLangAlias() {
-            return jsonLd.langContainerAliasInverted.containsKey(name);
-        }
-
         boolean hasLangAlias() {
             return jsonLd.langContainerAlias.containsKey(name);
         }
@@ -274,6 +270,13 @@ public class FresnelUtil {
 
         boolean isTypeVocabTerm() {
             return jsonLd.isVocabTerm(name);
+        }
+
+        private boolean isIn(Map<?, ?> thing) {
+            if (Rdfs.RDF_TYPE.equals(name)) {
+                return thing.containsKey(JsonLd.TYPE_KEY);
+            }
+            return thing.containsKey(name) || (hasLangAlias() && thing.containsKey(langAlias()));
         }
 
         @Override
@@ -391,13 +394,6 @@ public class FresnelUtil {
         }
     }
 
-    private boolean has(Map<?, ?> thing, PropertyKey key) {
-        if (Rdfs.RDF_TYPE.equals(key.name())) {
-            return thing.containsKey(JsonLd.TYPE_KEY);
-        }
-        return thing.containsKey(key.name()) || (key.hasLangAlias() && thing.containsKey(key.langAlias()));
-    }
-
     private Lens findLens(Map<?,?> thing, LensGroupName lensGroupName) {
         for (var groupName : lensGroupName.groups) {
             @SuppressWarnings("unchecked")
@@ -509,7 +505,7 @@ public class FresnelUtil {
             Set<String> codes = new HashSet<>();
             thing.entrySet().stream()
                     .filter(e -> e.getKey() instanceof String s
-                            && (new PropertyKey(s)).isLangAlias()
+                            && jsonLd.langContainerAliasInverted.containsKey(s)
                             && (new LanguageContainer(asMap(e.getValue()))).isTransliterated()
                     )
                     .forEach(e ->
