@@ -156,41 +156,30 @@ public class FresnelUtil {
         for (var p : showProperties) {
             switch (p) {
                 case AlternateProperties a -> {
-                    for (var alternative : a.alternatives) {
-                        if (JsonLd.isAlternateRangeRestriction(alternative)) {
-                            // can never be language container
-                            var r = asRangeRestriction(alternative);
-                            var k = r.subPropertyOf;
-                            @SuppressWarnings("unchecked")
-                            var v = ((List<Object>) JsonLd.asList(thing.get(k)))
-                                    .stream()
-                                    .filter(n -> isTypedNode(n) && r.range.equals(asMap(n).get(JsonLd.TYPE_KEY)))
-                                    .toList();
+                    alt: for (var alternative : a.alternatives) {
+                        switch (alternative) {
+                            case RangeRestriction r -> {
+                                // can never be language container
+                                var k = r.subPropertyOf;
+                                @SuppressWarnings("unchecked")
+                                var v = ((List<Object>) JsonLd.asList(thing.get(k)))
+                                        .stream()
+                                        .filter(n -> isTypedNode(n) && r.range.equals(asMap(n).get(JsonLd.TYPE_KEY)))
+                                        .toList();
 
-                            if (!v.isEmpty()) {
-                                result.pick(Map.of(k, v), new PropertyKey(k));
-                                break;
-                            }
-                        }
-                        else if (alternative instanceof List<?> list) {
-                            // expanded lang alias, i.e. ["x", "xByLang"]
-                            var found = false;
-                            for (var k : list) {
-                                var kk = new PropertyKey((String) k);
-                                if (has(thing, kk)) {
-                                    result.pick(thing, kk);
-                                    found = true;
+                                if (!v.isEmpty()) {
+                                    result.pick(Map.of(k, v), new PropertyKey(k));
+                                    break alt;
                                 }
                             }
-                            if (found) {
-                                break;
+                            case PropertyKey k -> {
+                                if (has(thing, k)) {
+                                    result.pick(thing, k);
+                                    break alt;
+                                }
                             }
-                        }
-                        else if (alternative instanceof String k) {
-                            var kk = new PropertyKey(k);
-                            if (has(thing, kk)) {
-                                result.pick(thing, kk);
-                                break;
+                            default -> {
+
                             }
                         }
                     }
@@ -443,8 +432,18 @@ public class FresnelUtil {
                 if (JsonLd.isAlternateProperties(p)) {
                     return new AlternateProperties(alternatives(p));
                 }
+                if (p instanceof List<?> list) {
+                    // expanded lang alias, i.e. ["x", "xByLang"] inside alternateProperties
+                    // TODO remove expansion in jsonLd?
+                    if (list.size() == 2) {
+                        return new PropertyKey((String) list.getFirst());
+                    }
+                }
                 if (isInverseProperty(p)) {
                     return asInverseProperty(p);
+                }
+                if (JsonLd.isAlternateRangeRestriction(p)) {
+                    return asRangeRestriction(p);
                 }
                 if (p instanceof String k) {
                     // ignore langContainer aliases expanded by jsonld
@@ -457,8 +456,9 @@ public class FresnelUtil {
         }
 
         @SuppressWarnings("unchecked")
-        private List<Object> alternatives(Object alternateProperties) {
-            return (List<Object>) ((Map<String, Object>) alternateProperties).get(JsonLd.ALTERNATE_PROPERTIES);
+        private List<PropertySelector> alternatives(Object alternateProperties) {
+            var alternatives = (List<Object>) ((Map<String, Object>) alternateProperties).get(JsonLd.ALTERNATE_PROPERTIES);
+            return parseShowProperties(alternatives);
         }
 
         private boolean isInverseProperty(Object showProperty) {
@@ -482,13 +482,11 @@ public class FresnelUtil {
         };
     }
 
-    // TODO RangeRestriction
     private sealed interface PropertySelector permits PropertyKey, InverseProperty, AlternateProperties, RangeRestriction, Unrecognized {
 
     }
 
-    // TODO
-    private record AlternateProperties(List<Object> alternatives) implements PropertySelector {
+    private record AlternateProperties(List<PropertySelector> alternatives) implements PropertySelector {
 
     }
 
