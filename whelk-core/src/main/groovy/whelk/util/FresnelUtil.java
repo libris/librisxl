@@ -6,6 +6,7 @@ import whelk.JsonLd;
 import whelk.JsonLd.Rdfs;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -79,6 +80,8 @@ public class FresnelUtil {
         public static String Identity = "Identity";
     }
 
+    private static record DerivedCacheKey(DerivedLens lens, String type) {}
+
     private static final Logger logger = LogManager.getLogger(FresnelUtil.class);
 
     //TODO load from display.jsonld
@@ -95,6 +98,8 @@ public class FresnelUtil {
     JsonLd jsonLd;
     Formats formats;
 
+    private Map<DerivedCacheKey, Lens> lensCache = new HashMap<>();
+
     public FresnelUtil(JsonLd jsonLd) {
         this.jsonLd = jsonLd;
         this.formats = new Formats(getUnsafe(jsonLd.displayData, "formatters", null));
@@ -105,6 +110,22 @@ public class FresnelUtil {
         if (!isTypedNode(thing)) {
             throw new IllegalArgumentException("Thing is not typed node: " + thing);
         }
+
+        return (Lensed) applyLens(thing, lens, null);
+    }
+
+    public Lensed applyLens(Object thing, DerivedLens derived) {
+        // TODO
+        if (!(thing instanceof Map<?, ?> t)) {
+            throw new IllegalArgumentException("Thing is not typed node: " + thing);
+        }
+
+        var type = (String) t.get(JsonLd.TYPE_KEY);
+        var lens = lensCache.computeIfAbsent(new DerivedCacheKey(derived, type), k -> {
+            var base = findLens(t, derived.base);
+            var minus = derived.minus.stream().map(l -> findLens(t, l)).toList();
+            return base.minus(minus, derived.subLens);
+        });
 
         return (Lensed) applyLens(thing, lens, null);
     }
@@ -465,6 +486,29 @@ public class FresnelUtil {
             String p = (String) ((Map<?, ?>) showProperty).get("inverseOf");
             return new InverseProperty(p, jsonLd.getInverseProperty(p));
         }
+
+        // TODO
+        Lens minus(Collection<Lens> minus, LensGroupName subLens) {
+            @SuppressWarnings("unchecked")
+            var showProperties = (List<Object>) lensDefinition.get(Fresnel.showProperties);
+            var keep = new ArrayList<>(showProperties);
+
+            for (var m : minus) {
+                @SuppressWarnings("unchecked")
+                var remove = (List<Object>) m.lensDefinition.get(Fresnel.showProperties);
+                keep.removeAll(remove);
+            }
+
+            var def = Map.of(
+                    Fresnel.showProperties, (Object) keep
+            );
+
+            return new Lens(def, subLens);
+        }
+    }
+
+    public record DerivedLens(LensGroupName base, List<LensGroupName> minus, LensGroupName subLens) {
+
     }
 
     private static LensGroupName subLens(LensGroupName lensGroupName) {
