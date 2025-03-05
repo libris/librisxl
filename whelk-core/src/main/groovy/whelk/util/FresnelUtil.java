@@ -338,6 +338,8 @@ public class FresnelUtil {
             return printTo(new StringBuilder()).toString();
         }
 
+        public abstract Lensed firstProperty();
+
         protected abstract StringBuilder printTo(StringBuilder s);
     }
 
@@ -406,6 +408,17 @@ public class FresnelUtil {
         }
 
         @Override
+        public Node firstProperty() {
+            var result = new Node(lens, selectedLang);
+            result.id = id;
+            result.type = type;
+            result.orderedProps = orderedProps.isEmpty()
+                ? Collections.emptyList()
+                : List.of(orderedProps.getFirst());
+            return result;
+        }
+
+        @Override
         protected StringBuilder printTo(StringBuilder s) {
             orderedProps.forEach(prop -> printTo(s, prop.value));
             return s;
@@ -438,6 +451,15 @@ public class FresnelUtil {
         Map<LangCode, Node> transliterations = new HashMap<>();
         void add(LangCode langCode, Node node) {
             transliterations.put(langCode, node);
+        }
+
+        @Override
+        public Lensed firstProperty() {
+            var result = new TransliteratedNode();
+            transliterations.forEach((langCode, node) -> {
+                result.transliterations.put(langCode, node.firstProperty());
+            });
+            return result;
         }
 
         @Override
