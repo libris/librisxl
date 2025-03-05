@@ -158,13 +158,13 @@ class TypeMappings extends DefinitionsData {
     work[TYPE] = issuancetype
 
     if (issuancetype == 'Monograph' || issuancetype == 'Integrating') {
-      instance['issuance'] = 'SingleUnit'
+      instance['issuanceType'] = 'SingleUnit'
     } else if (issuancetype == 'ComponentPart') {
       // FIXME: or remove and add "isPartOf": {"@type": "Resource"} unless  implied?
       // instance[TYPE] += issuancetype
-      instance['issuance'] = 'SingleUnit'
+      instance['issuanceType'] = 'SingleUnit'
     } else {
-      instance['issuance'] = 'MultipleUnits'
+      instance['issuanceType'] = 'MultipleUnits'
       // TODO:
       // Or instance[TYPE] += 'MultipleUnits'?
     }
@@ -206,7 +206,7 @@ class TypeNormalizer implements UsingJsonKeys {
   void reorder(Map thing) {
     var copy = thing.clone()
     thing.clear()
-    for (var key : [ID, TYPE, 'sameAs', 'category', 'issuance']) {
+    for (var key : [ID, TYPE, 'sameAs', 'category', 'issuanceType']) {
       if (key in copy) thing[key] = copy[key]
     }
     thing.putAll(copy)
