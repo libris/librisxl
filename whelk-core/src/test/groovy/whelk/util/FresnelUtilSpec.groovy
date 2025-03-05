@@ -218,7 +218,7 @@ class FresnelUtilSpec extends Specification {
                 "note": ["NOTE 1", "NOTE 2"]
         ]
 
-        var lensed = fresnel.applyLens(thing, FresnelUtil.LensLevel.Chip)
+        var lensed = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
         var result = fresnel.format(lensed, new FresnelUtil.LangCode('sv'))
 
         expect:
@@ -243,7 +243,7 @@ class FresnelUtilSpec extends Specification {
                 'marc:titlesAndOtherWordsAssociatedWithAName':['romersk kejsare']
         ]
 
-        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensLevel.Chip), new FresnelUtil.LangCode('sv'))
+        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
 
         expect:
         result.asString() == "Heliogabalus, 203-222, romersk kejsare"
@@ -264,7 +264,7 @@ class FresnelUtilSpec extends Specification {
         ]
 
         var fresnel = new FresnelUtil(ld)
-        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensLevel.Chip), new FresnelUtil.LangCode('sv'))
+        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
 
         expect:
         result.asString() == "Teater-biblioteket • N:o 15 • En friare i lifsfara : skämt med sång i en akt"
@@ -283,7 +283,7 @@ class FresnelUtilSpec extends Specification {
                         "grc-Latn-t-grc-Grek-x0-skr-1980": "Lysistratē"]
         ]
 
-        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensLevel.Chip), new FresnelUtil.LangCode('sv'))
+        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
 
         expect:
         result.asString() == "Νεφέλαι : Λυσιστράτη ’Nephelai : Lysistratē’"
@@ -294,7 +294,7 @@ class FresnelUtilSpec extends Specification {
         var fresnel = new FresnelUtil(ld)
 
         expect:
-        fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensLevel.Chip), new FresnelUtil.LangCode(locale)).asString() == result
+        fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode(locale)).asString() == result
 
         where:
         thing                                                  | locale | result
@@ -308,7 +308,7 @@ class FresnelUtilSpec extends Specification {
         var fresnel = new FresnelUtil(ld)
 
         expect:
-        fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensLevel.Chip), new FresnelUtil.LangCode(locale)).asString() == result
+        fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode(locale)).asString() == result
 
         where:
         thing                                        | locale | result
@@ -327,7 +327,7 @@ class FresnelUtilSpec extends Specification {
         var fresnel = new FresnelUtil(ld)
 
         expect:
-        fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensLevel.Chip), new FresnelUtil.LangCode(locale)).asString() == result
+        fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode(locale)).asString() == result
 
         where:
         thing                                        | locale | result
@@ -349,7 +349,7 @@ class FresnelUtilSpec extends Specification {
         ]
 
         var fresnel = new FresnelUtil(ld)
-        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensLevel.Chip), new FresnelUtil.LangCode('sv'))
+        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
 
         expect:
         result.asString() == "ISNI 0000 0001 0340 7488"
@@ -373,7 +373,7 @@ class FresnelUtilSpec extends Specification {
         ]
 
         var fresnel = new FresnelUtil(ld)
-        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensLevel.Chip), new FresnelUtil.LangCode('sv'))
+        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
         expect:
         result.asString() == "Titel • Svenska • Namnsson, Namn, 1972-"
     }

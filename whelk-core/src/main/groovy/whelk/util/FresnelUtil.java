@@ -27,21 +27,24 @@ import static whelk.util.FresnelUtil.LangCode.ORIGINAL_SCRIPT_FIRST;
 
 public class FresnelUtil {
 
-    public enum LensLevel {
+    public enum LensGroupName {
         Full(List.of("full", "cards")),
         Card(List.of("cards")),
         Chip(List.of("chips")),
-        Token(List.of("tokens", "chips"));
+        Token(List.of("tokens", "chips")),
+
+        SearchCard(List.of("search-cards", "cards")),
+        SearchChip(List.of("search-chips", "chips"));
 
         final List<String> groups;
 
-        LensLevel(List<String> groups) {
+        LensGroupName(List<String> groups) {
             this.groups = groups;
         }
     }
 
     // https://www.w3.org/2005/04/fresnel-info/manual/
-    static class Fresnel {
+    public static class Fresnel {
         public static String Format = "fresnel:Format";
         public static String Group = "fresnel:Group";
         public static String Lens = "fresnel:Lens";
@@ -79,7 +82,7 @@ public class FresnelUtil {
     private static final Logger logger = LogManager.getLogger(FresnelUtil.class);
 
     //TODO load from display.jsonld
-    private static final Map<?, ?> DEFAULT_LENS = Map.of(
+    private static final Map<String, Object> DEFAULT_LENS = Map.of(
             JsonLd.TYPE_KEY, Fresnel.Lens,
             Fresnel.showProperties, List.of(
                     Map.of(Fresnel.alternateProperties, List.of(
@@ -92,12 +95,12 @@ public class FresnelUtil {
     JsonLd jsonLd;
     Formats formats;
 
-    FresnelUtil(JsonLd jsonLd) {
+    public FresnelUtil(JsonLd jsonLd) {
         this.jsonLd = jsonLd;
         this.formats = new Formats(getUnsafe(jsonLd.displayData, "formatters", null));
     }
 
-    public Lensed applyLens(Object thing, LensLevel lens) {
+    public Lensed applyLens(Object thing, LensGroupName lens) {
         // TODO
         if (!isTypedNode(thing)) {
             throw new IllegalArgumentException("Thing is not typed node: " + thing);
@@ -116,7 +119,7 @@ public class FresnelUtil {
 
     private Object applyLens(
             Object value,
-            LensLevel lensLevel,
+            LensGroupName lensGroupName,
             LangCode selectedLang
     ) {
         if (!(value instanceof Map<?, ?> thing)) {
@@ -128,13 +131,13 @@ public class FresnelUtil {
         if (!scripts.isEmpty()) {
             TransliteratedNode n = new TransliteratedNode();
             for (var script : scripts) {
-                n.add(script, (Node) applyLens(thing, lensLevel, script));
+                n.add(script, (Node) applyLens(thing, lensGroupName, script));
             }
             return n;
         }
 
-        var result = new Node(lensLevel, selectedLang);
-        var lens = findLens(thing, lensLevel);
+        var result = new Node(lensGroupName, selectedLang);
+        var lens = findLens(thing, lensGroupName);
 
         @SuppressWarnings("unchecked")
         var showProperties = (List<Object>) lens.get(Fresnel.showProperties);
@@ -271,10 +274,10 @@ public class FresnelUtil {
         String id;
         String type;
         List<Property> orderedProps = new ArrayList<>();
-        LensLevel nextLensLevel;
+        LensGroupName nextLensGroupName;
 
-        Node(LensLevel lensLevel, LangCode selectedLang) {
-            this.nextLensLevel = subLens(lensLevel);
+        Node(LensGroupName lensGroupName, LangCode selectedLang) {
+            this.nextLensGroupName = subLens(lensGroupName);
             this.selectedLang = selectedLang;
         }
 
@@ -304,11 +307,11 @@ public class FresnelUtil {
                 }
                 else {
                     if (value instanceof List<?> list) {
-                        var values = list.stream().map(v -> applyLens(v, nextLensLevel, selectedLang)).toList();
+                        var values = list.stream().map(v -> applyLens(v, nextLensGroupName, selectedLang)).toList();
                         orderedProps.add(new Property(p.name, values));
                     }
                     else {
-                        orderedProps.add(new Property(p.name, applyLens(value, nextLensLevel, selectedLang)));
+                        orderedProps.add(new Property(p.name, applyLens(value, nextLensGroupName, selectedLang)));
                     }
                 }
             }
@@ -329,10 +332,10 @@ public class FresnelUtil {
         private Object mapVocabTerm(Object value) {
             if (value instanceof String s) {
                 var def = jsonLd.vocabIndex.get(s);
-                return applyLens(def != null ? def : s, nextLensLevel, selectedLang);
+                return applyLens(def != null ? def : s, nextLensGroupName, selectedLang);
             } else {
                 // bad data
-                return applyLens(value, nextLensLevel, selectedLang);
+                return applyLens(value, nextLensGroupName, selectedLang);
             }
         }
     }
@@ -367,8 +370,12 @@ public class FresnelUtil {
         return thing.containsKey(key);
     }
 
-    private Map<?, ?> findLens(Map<?,?> thing, LensLevel lensLevel) {
-        for (var groupName : lensLevel.groups) {
+    private Map<String, Object> findLens(Map<?,?> thing, LensGroupName lensGroupName) {
+        return findLens(thing, lensGroupName, jsonLd);
+    }
+
+    public static Map<String, Object> findLens(Map<?,?> thing, LensGroupName lensGroupName, JsonLd jsonLd) {
+        for (var groupName : lensGroupName.groups) {
             @SuppressWarnings("unchecked")
             var group = ((Map<String, Map<String,Object>>) jsonLd.displayData.get("lensGroups")).get(groupName);
             @SuppressWarnings("unchecked")
@@ -381,11 +388,14 @@ public class FresnelUtil {
         return DEFAULT_LENS;
     }
 
-    private LensLevel subLens(LensLevel lensLevel) {
-        return switch (lensLevel) {
-            case Full -> LensLevel.Card;
-            case Card -> LensLevel.Chip;
-            case Chip, Token -> LensLevel.Token;
+    private LensGroupName subLens(LensGroupName lensGroupName) {
+        return switch (lensGroupName) {
+            case Full -> LensGroupName.Card;
+            case Card -> LensGroupName.Chip;
+            case Chip, Token -> LensGroupName.Token;
+
+            case SearchCard -> LensGroupName.SearchChip;
+            case SearchChip -> LensGroupName.Token; // TODO ??
         };
     }
 
