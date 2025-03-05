@@ -126,22 +126,33 @@ public class FresnelUtil {
             // literal
             return value;
         }
+        var lens = findLens(thing, lensGroupName);
+
+        return applyLens(value, lens, selectedLang);
+    }
+
+    private Object applyLens(
+            Object value,
+            Lens lens,
+            LangCode selectedLang
+    ) {
+        if (!(value instanceof Map<?, ?> thing)) {
+            // literal
+            return value;
+        }
 
         List<LangCode> scripts = selectedLang == null ? scriptAlternatives(thing) : Collections.emptyList();
         if (!scripts.isEmpty()) {
             TransliteratedNode n = new TransliteratedNode();
             for (var script : scripts) {
-                n.add(script, (Node) applyLens(thing, lensGroupName, script));
+                n.add(script, (Node) applyLens(thing, lens, script));
             }
             return n;
         }
 
-        var result = new Node(lensGroupName, selectedLang);
-        var lens = findLens(thing, lensGroupName);
+        var result = new Node(lens, selectedLang);
 
-        @SuppressWarnings("unchecked")
-        var showProperties = (List<Object>) lens.get(Fresnel.showProperties);
-        showProperties = Stream.concat(Stream.of(JsonLd.TYPE_KEY, JsonLd.ID_KEY), showProperties.stream()).toList();
+        var showProperties = Stream.concat(Stream.of(JsonLd.TYPE_KEY, JsonLd.ID_KEY), lens.showProperties().stream()).toList();
         for (var p : showProperties) {
             if (JsonLd.isAlternateProperties(p)) {
                 for (var alternative : alternatives(p)) {
@@ -274,10 +285,10 @@ public class FresnelUtil {
         String id;
         String type;
         List<Property> orderedProps = new ArrayList<>();
-        LensGroupName nextLensGroupName;
+        Lens lens;
 
-        Node(LensGroupName lensGroupName, LangCode selectedLang) {
-            this.nextLensGroupName = subLens(lensGroupName);
+        Node(Lens lens, LangCode selectedLang) {
+            this.lens = lens;
             this.selectedLang = selectedLang;
         }
 
@@ -307,11 +318,11 @@ public class FresnelUtil {
                 }
                 else {
                     if (value instanceof List<?> list) {
-                        var values = list.stream().map(v -> applyLens(v, nextLensGroupName, selectedLang)).toList();
+                        var values = list.stream().map(v -> applyLens(v, lens.subLensGroup, selectedLang)).toList();
                         orderedProps.add(new Property(p.name, values));
                     }
                     else {
-                        orderedProps.add(new Property(p.name, applyLens(value, nextLensGroupName, selectedLang)));
+                        orderedProps.add(new Property(p.name, applyLens(value, lens.subLensGroup, selectedLang)));
                     }
                 }
             }
@@ -332,10 +343,10 @@ public class FresnelUtil {
         private Object mapVocabTerm(Object value) {
             if (value instanceof String s) {
                 var def = jsonLd.vocabIndex.get(s);
-                return applyLens(def != null ? def : s, nextLensGroupName, selectedLang);
+                return applyLens(def != null ? def : s, lens.subLensGroup, selectedLang);
             } else {
                 // bad data
-                return applyLens(value, nextLensGroupName, selectedLang);
+                return applyLens(value, lens.subLensGroup, selectedLang);
             }
         }
     }
@@ -370,25 +381,33 @@ public class FresnelUtil {
         return thing.containsKey(key);
     }
 
-    private Map<String, Object> findLens(Map<?,?> thing, LensGroupName lensGroupName) {
+    private Lens findLens(Map<?,?> thing, LensGroupName lensGroupName) {
         return findLens(thing, lensGroupName, jsonLd);
     }
 
-    public static Map<String, Object> findLens(Map<?,?> thing, LensGroupName lensGroupName, JsonLd jsonLd) {
+    public static Lens findLens(Map<?,?> thing, LensGroupName lensGroupName, JsonLd jsonLd) {
         for (var groupName : lensGroupName.groups) {
             @SuppressWarnings("unchecked")
             var group = ((Map<String, Map<String,Object>>) jsonLd.displayData.get("lensGroups")).get(groupName);
             @SuppressWarnings("unchecked")
             var lens = (Map<String, Object>) jsonLd.getLensFor(thing, group);
             if (lens != null) {
-                return  lens;
+                return new Lens(lens, subLens(lensGroupName));
             }
         }
 
-        return DEFAULT_LENS;
+        return new Lens(DEFAULT_LENS, subLens(lensGroupName));
     }
 
-    private LensGroupName subLens(LensGroupName lensGroupName) {
+    public record Lens(Map<String, Object> lensDefinition, LensGroupName subLensGroup) {
+        List<Object> showProperties() {
+            @SuppressWarnings("unchecked")
+            var showProperties = (List<Object>) lensDefinition.get(Fresnel.showProperties);
+            return showProperties;
+        }
+    }
+
+    private static LensGroupName subLens(LensGroupName lensGroupName) {
         return switch (lensGroupName) {
             case Full -> LensGroupName.Card;
             case Card -> LensGroupName.Chip;
@@ -726,8 +745,6 @@ public class FresnelUtil {
     }
 
     record Style(List<String> styles) {
-
-        // TODO refactor? JsonLd is only needed for displayType()
         public void apply(Decorated result) {
             var s = new ArrayList<String>();
             for (String style : styles) {
