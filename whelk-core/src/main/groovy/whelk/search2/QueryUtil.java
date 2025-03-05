@@ -36,7 +36,6 @@ public class QueryUtil {
         } else {
             this.esMappings = new EsMappings(Collections.emptyMap(), Collections.emptyMap());
         }
-        //this.esMappings = new EsMappings(whelk.elastic != null ? whelk.elastic.getMappings() : Collections.emptyMap());
         this.esBoost = new EsBoost(whelk.getJsonld());
     }
 
