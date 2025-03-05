@@ -35,6 +35,7 @@ public class EsMappings {
 
         this.nestedNotInParentFields = new HashSet<>(nestedFields);
         this.nestedNotInParentFields.removeAll(getFieldsWithSetting("include_in_parent", true, mappings));
+        this.nestedNotInParentFields.removeAll(getFieldsWithSetting("include_in_parent", true, mappingsSecondary));
 
         // TODO: temporary feature flag, to be removed
         // this feature only works after a full reindex has been done, so we have to detect that
