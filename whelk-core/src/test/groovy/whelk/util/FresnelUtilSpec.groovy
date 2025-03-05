@@ -185,7 +185,41 @@ class FresnelUtilSpec extends Specification {
                                                  "originDate"
                                          ]
                                      ],
-                             ]]
+                             ]],
+                    "cards":
+                            ["lenses": [
+                                    "Work": [
+                                            "@id": "Work-cards",
+                                            "@type": "fresnel:Lens",
+                                            "classLensDomain": "Work",
+                                            "showProperties": [
+                                                    ["alternateProperties": [
+                                                            ["subPropertyOf": "hasTitle", "range": "KeyTitle"],
+                                                            ["subPropertyOf": "hasTitle", "range": "Title"],
+                                                            "hasTitle"
+                                                    ]],
+                                                    "legalDate",
+                                                    "version",
+                                                    "marc:arrangedStatementForMusic",
+                                                    "originDate",
+                                                    "contribution",
+                                                    "language",
+                                                    "translationOf",
+                                                    "hasNotation",
+                                                    "hasVariant",
+                                                    "inCollection",
+                                                    "genreForm",
+                                                    "classification",
+                                                    "subject",
+                                                    "intendedAudience",
+                                                    "contentType",
+                                                    "dissertation",
+                                                    "cartographicAttributes",
+                                                    "isPartOf",
+                                                    ["inverseOf": "instanceOf"]
+                                            ]
+                                    ],
+                            ]]
                     ],
             "formatters" : [
                     'commaBeforeProperty-format': ['TODO': 'fullerFormOfName skrivs alltid med parenteser i libris nu, ska det vara så?', '@id': 'commaBeforeProperty-format', '@type': 'fresnel:Format', 'fresnel:propertyFormatDomain': ['lifeSpan', 'familyName', 'givenName', 'name', 'marc:numeration', 'lifeSpan', 'marc:titlesAndOtherWordsAssociatedWithAName', 'fullerFormOfName'], 'fresnel:propertyFormat': ['fresnel:contentBefore': ', ', 'fresnel:contentFirst': '']],
@@ -218,7 +252,7 @@ class FresnelUtilSpec extends Specification {
                 "note": ["NOTE 1", "NOTE 2"]
         ]
 
-        var lensed = fresnel.applyLens(thing, FresnelUtil.LensLevel.Chip)
+        var lensed = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
         var result = fresnel.format(lensed, new FresnelUtil.LangCode('sv'))
 
         expect:
@@ -243,7 +277,7 @@ class FresnelUtilSpec extends Specification {
                 'marc:titlesAndOtherWordsAssociatedWithAName':['romersk kejsare']
         ]
 
-        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensLevel.Chip), new FresnelUtil.LangCode('sv'))
+        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
 
         expect:
         result.asString() == "Heliogabalus, 203-222, romersk kejsare"
@@ -264,7 +298,7 @@ class FresnelUtilSpec extends Specification {
         ]
 
         var fresnel = new FresnelUtil(ld)
-        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensLevel.Chip), new FresnelUtil.LangCode('sv'))
+        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
 
         expect:
         result.asString() == "Teater-biblioteket • N:o 15 • En friare i lifsfara : skämt med sång i en akt"
@@ -283,7 +317,7 @@ class FresnelUtilSpec extends Specification {
                         "grc-Latn-t-grc-Grek-x0-skr-1980": "Lysistratē"]
         ]
 
-        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensLevel.Chip), new FresnelUtil.LangCode('sv'))
+        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
 
         expect:
         result.asString() == "Νεφέλαι : Λυσιστράτη ’Nephelai : Lysistratē’"
@@ -294,7 +328,7 @@ class FresnelUtilSpec extends Specification {
         var fresnel = new FresnelUtil(ld)
 
         expect:
-        fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensLevel.Chip), new FresnelUtil.LangCode(locale)).asString() == result
+        fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode(locale)).asString() == result
 
         where:
         thing                                                  | locale | result
@@ -308,7 +342,7 @@ class FresnelUtilSpec extends Specification {
         var fresnel = new FresnelUtil(ld)
 
         expect:
-        fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensLevel.Chip), new FresnelUtil.LangCode(locale)).asString() == result
+        fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode(locale)).asString() == result
 
         where:
         thing                                        | locale | result
@@ -327,7 +361,7 @@ class FresnelUtilSpec extends Specification {
         var fresnel = new FresnelUtil(ld)
 
         expect:
-        fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensLevel.Chip), new FresnelUtil.LangCode(locale)).asString() == result
+        fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode(locale)).asString() == result
 
         where:
         thing                                        | locale | result
@@ -349,7 +383,7 @@ class FresnelUtilSpec extends Specification {
         ]
 
         var fresnel = new FresnelUtil(ld)
-        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensLevel.Chip), new FresnelUtil.LangCode('sv'))
+        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
 
         expect:
         result.asString() == "ISNI 0000 0001 0340 7488"
@@ -373,8 +407,40 @@ class FresnelUtilSpec extends Specification {
         ]
 
         var fresnel = new FresnelUtil(ld)
-        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensLevel.Chip), new FresnelUtil.LangCode('sv'))
+        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
         expect:
         result.asString() == "Titel • Svenska • Namnsson, Namn, 1972-"
+    }
+
+    def "derived lens"() {
+        given:
+        var thing = [
+                '@type': 'Work',
+                'hasTitle': [
+                        ['@type': 'Title', 'mainTitle': 'Titel'],
+                        ['@type': 'Variant', 'mainTitle': 'variant title']
+                ],
+                'language' : [
+                        ['@type': 'Language', 'code': 'sv', 'labelByLang': [ 'en': 'Swedish', 'sv': 'Svenska' ]],
+                ],
+                'subject' : [
+                        ['@type': 'Topic', 'prefLabel': "Hästar"],
+                ],
+                'contribution' : [
+                        ['@type': 'Contribution', 'role': 'translator', 'agent': [ '@type': 'Person', 'name': 'Överzet' ]],
+                        ['@type': 'PrimaryContribution', 'role': 'author', 'agent': [ '@type': 'Person', 'givenName': 'Namn', 'familyName': 'Namnsson', 'lifeSpan': "1972-"]],
+                ]
+        ]
+
+        var fresnel = new FresnelUtil(ld)
+        var cardOnly = new FresnelUtil.DerivedLens(
+                FresnelUtil.LensGroupName.Card,
+                [FresnelUtil.LensGroupName.Chip],
+                FresnelUtil.LensGroupName.Token
+        )
+
+        var result = fresnel.applyLens(thing, cardOnly)
+        expect:
+        result.asString() == "Överzet Namnsson Namn 1972- Hästar"
     }
 }
