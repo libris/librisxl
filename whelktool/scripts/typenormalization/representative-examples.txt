@@ -50,7 +50,7 @@
 <https://libris.kb.se/4ngthh5g5qmqbhr#it>
 
 # Monograph StillImage
-<https://libris.kb.se/5phjr83h486wrh1 #it>
+<https://libris.kb.se/5phjr83h486wrh1#it>
 
 # Monograph Object
 <https://libris.kb.se/7hdk49b8520xmtnw#it>
@@ -95,7 +95,7 @@
 <https://libris.kb.se/1kcdvbbc5vq3ch8#it>
 
 # Integrating MovingImage
-<https://libris.kb.se/p71cl4g1040fmrn #it>
+<https://libris.kb.se/p71cl4g1040fmrn#it>
 
 # Integrating MixedMaterial
 # No example available at the moment
