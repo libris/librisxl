@@ -281,6 +281,9 @@ public class EsBoost {
     }
 
     private Map<String, Integer> collectBoostFields(Map<?, ?> lens, int boost) {
+        System.out.println("LENS");
+        System.out.println(lens);
+        System.out.println("BOOST " + boost);
         Map<String, Integer> boostFields = new HashMap<>();
 
         for (String key : getPropertiesToShow(lens)) {

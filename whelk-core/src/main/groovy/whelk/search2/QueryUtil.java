@@ -31,12 +31,17 @@ public class QueryUtil {
 
     public QueryUtil(Whelk whelk) {
         this.whelk = whelk;
-        this.esMappings = new EsMappings(whelk.elastic != null ? whelk.elastic.getMappings() : Collections.emptyMap());
+        if (whelk.elastic != null) {
+            this.esMappings = new EsMappings(whelk.elastic.getMappings(), whelk.elastic.getMappings(whelk.elastic.getSecondaryIndexName()));
+        } else {
+            this.esMappings = new EsMappings(Collections.emptyMap(), Collections.emptyMap());
+        }
+        //this.esMappings = new EsMappings(whelk.elastic != null ? whelk.elastic.getMappings() : Collections.emptyMap());
         this.esBoost = new EsBoost(whelk.getJsonld());
     }
 
-    public Map<?, ?> query(Map<String, Object> queryDsl) {
-        return whelk.elastic.query(queryDsl);
+    public Map<?, ?> query(Map<String, Object> queryDsl, boolean searchMainOnly) {
+        return whelk.elastic.query(queryDsl, searchMainOnly);
     }
 
     public boolean esIsConfigured() {

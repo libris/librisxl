@@ -30,6 +30,7 @@ public class QueryParams {
         public static final String APP_CONFIG = "_appConfig";
         public static final String BOOST = "_boost";
         public static final String STATS = "_stats";
+        public static final String SEARCH_MAIN_ONLY = "_searchMainOnly";
     }
 
     public static class Debug {
@@ -52,6 +53,7 @@ public class QueryParams {
     public final String i;
 
     public final boolean skipStats;
+    public final boolean searchMainOnly;
 
     public QueryParams(Map<String, String[]> apiParameters) throws InvalidQueryException {
         this.sortBy = Sort.fromString(getOptionalSingleNonEmpty(ApiParams.SORT, apiParameters).orElse(""));
@@ -67,6 +69,7 @@ public class QueryParams {
         this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse("");
         this.i = getOptionalSingle(ApiParams.SIMPLE_FREETEXT, apiParameters).orElse("");
         this.skipStats = getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
+        this.searchMainOnly = getOptionalSingle(ApiParams.SEARCH_MAIN_ONLY, apiParameters).map("true"::equalsIgnoreCase).isPresent();
     }
 
     public Map<String, String> getNonQueryParams() {
@@ -104,6 +107,9 @@ public class QueryParams {
         }
         if (skipStats) {
             params.put(ApiParams.STATS, "false");
+        }
+        if (searchMainOnly) {
+            params.put(ApiParams.SEARCH_MAIN_ONLY, "true");
         }
         return params;
     }
