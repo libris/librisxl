@@ -23,6 +23,9 @@ import static whelk.util.FresnelUtil.LangCode.ORIGINAL_SCRIPT_FIRST;
 
 // https://www.w3.org/2005/04/fresnel-info/manual/
 
+// TODO handle subPropertyOf
+//   -- https://www.w3.org/2005/04/fresnel-info/fsl/#rdfsowl
+//   -- https://github.com/libris/definitions/blob/41b0ac7b7089974dc1d1c41f221c038f1353df75/source/vocab/display.jsonld#L171
 // TODO fallback style for things that fall outside the class hierarchy?
 // TODO defer language selection?
 // TODO bad data - blank nodes without type?
