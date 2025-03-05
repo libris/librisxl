@@ -139,7 +139,7 @@
 
 # Bamses julalbum
 <https://libris.kb.se/wd6339675g3dqdr#it> # 1102-4534
-<https://libris.kb.se/wf7hs3v745v37c7> # nr 25
+<https://libris.kb.se/wf7hs3v745v37c7#it> # nr 25
 
 # Skurken i Muminhuset
 <https://libris.kb.se/k2vr7f1w5cdgjj2#it> # textverk
@@ -234,7 +234,7 @@
 ### mp3-spelare med ljudbok (bestånd: 0)
 <https://libris.kb.se/0jbrgkhb09b8k1f#it>
 ### Talbok + text
-<https://libris.kb.se/m5z08g9z13kp6r6#it#it>
+<https://libris.kb.se/m5z08g9z13kp6r6#it>
 ### SMDB
 <https://libris.kb.se/0h98z1nb1jk6qfr#it>
 ### ? CD-äänilevy
@@ -242,7 +242,7 @@
 
 ## *Inte* ljudböcker
 ### Termen ljudbok används även för uppläsningar i radio:
-<https://smdb.kb.se/catalog/id/004193610/55>
+#<https://smdb.kb.se/catalog/id/004193610/55>
 ### Radioprogram - UR
 <https://libris.kb.se/n5ml8mjqlmxvxh9g#it> # (role <https://id.kb.se/relator/producer>)
 ### eplikt
@@ -427,7 +427,7 @@
 
 ## More tricky NonBookText (tillagt 240610)
 <https://libris.kb.se/g0g6gg05d5lz8h2k#it>
-<https://id.kb.se/term/saogf/Dagb%C3%B6cker>  # 32 onumrerade sidor, häftad
+#<https://id.kb.se/term/saogf/Dagb%C3%B6cker>  # 32 onumrerade sidor, häftad
 <https://libris.kb.se/cwpqgxjp5mcg4gw#it>  # saogf:Verksamhetsber%C3%A4ttelser
 
 ## More tricky ones (tillagt 240612)
