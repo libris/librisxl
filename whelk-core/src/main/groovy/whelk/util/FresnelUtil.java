@@ -152,57 +152,61 @@ public class FresnelUtil {
 
         var result = new Node(lens, selectedLang);
 
-        var showProperties = Stream.concat(Stream.of(JsonLd.TYPE_KEY, JsonLd.ID_KEY), lens.showProperties().stream()).toList();
+        var showProperties = Stream.concat(Stream.of(new PropertyKey(JsonLd.TYPE_KEY), new PropertyKey(JsonLd.ID_KEY)), lens.showProperties().stream()).toList();
         for (var p : showProperties) {
-            if (JsonLd.isAlternateProperties(p)) {
-                for (var alternative : alternatives(p)) {
-                    if (JsonLd.isAlternateRangeRestriction(alternative)) {
-                        // can never be language container
-                        var r = asRangeRestriction(alternative);
-                        var k = r.subPropertyOf;
-                        @SuppressWarnings("unchecked")
-                        var v = ((List<Object>) JsonLd.asList(thing.get(k)))
-                                .stream()
-                                .filter(n -> isTypedNode(n) && r.range.equals(asMap(n).get(JsonLd.TYPE_KEY)))
-                                .toList();
+            switch (p) {
+                case AlternateProperties a -> {
+                    for (var alternative : a.alternatives) {
+                        if (JsonLd.isAlternateRangeRestriction(alternative)) {
+                            // can never be language container
+                            var r = asRangeRestriction(alternative);
+                            var k = r.subPropertyOf;
+                            @SuppressWarnings("unchecked")
+                            var v = ((List<Object>) JsonLd.asList(thing.get(k)))
+                                    .stream()
+                                    .filter(n -> isTypedNode(n) && r.range.equals(asMap(n).get(JsonLd.TYPE_KEY)))
+                                    .toList();
 
-                        if (!v.isEmpty()) {
-                            result.pick(Map.of(k, v), new PropertyKey(k));
-                            break;
-                        }
-                    }
-                    else if (alternative instanceof List<?> list) {
-                        // expanded lang alias, i.e. ["x", "xByLang"]
-                        var found = false;
-                        for (var k : list) {
-                            if (has(thing, (String) k)) {
-                                result.pick(thing, new PropertyKey((String) k));
-                                found = true;
+                            if (!v.isEmpty()) {
+                                result.pick(Map.of(k, v), new PropertyKey(k));
+                                break;
                             }
                         }
-                        if (found) {
-                            break;
+                        else if (alternative instanceof List<?> list) {
+                            // expanded lang alias, i.e. ["x", "xByLang"]
+                            var found = false;
+                            for (var k : list) {
+                                if (has(thing, (String) k)) {
+                                    result.pick(thing, new PropertyKey((String) k));
+                                    found = true;
+                                }
+                            }
+                            if (found) {
+                                break;
+                            }
                         }
-                    }
-                    else if (alternative instanceof String k) {
-                        if (has(thing, k)) {
-                            result.pick(thing, new PropertyKey(k));
-                            break;
+                        else if (alternative instanceof String k) {
+                            if (has(thing, k)) {
+                                result.pick(thing, new PropertyKey(k));
+                                break;
+                            }
                         }
                     }
                 }
-            }
-            else if (isInverseProperty(p)) {
-                // never language container
-                var i = asInverseProperty(p);
-                if (thing.get(JsonLd.REVERSE_KEY) instanceof Map<?, ?> r && r.containsKey(i.name)) {
-                    var v = r.get(i.name);
-                    result.pick(Map.of(i.inverseName, v), new PropertyKey(i.inverseName));
+                case InverseProperty i -> {
+                    // never language container
+                    if (thing.get(JsonLd.REVERSE_KEY) instanceof Map<?, ?> r && r.containsKey(i.name)) {
+                        var v = r.get(i.name);
+                        result.pick(Map.of(i.inverseName, v), new PropertyKey(i.inverseName));
+                    }
                 }
-            }
-            else if (p instanceof String k) {
-                if (has(thing, k)) {
-                    result.pick(thing, new PropertyKey(k));
+                case PropertyKey k -> {
+                    if (has(thing, k.name)) {
+                        result.pick(thing, k);
+                    }
+                }
+                case Unrecognized ignored -> {
+
                 }
             }
         }
@@ -251,7 +255,7 @@ public class FresnelUtil {
         }
     }
 
-    class PropertyKey {
+    final class PropertyKey implements PropertySelector {
         String name;
 
         public PropertyKey(String name) {
@@ -382,10 +386,6 @@ public class FresnelUtil {
     }
 
     private Lens findLens(Map<?,?> thing, LensGroupName lensGroupName) {
-        return findLens(thing, lensGroupName, jsonLd);
-    }
-
-    public static Lens findLens(Map<?,?> thing, LensGroupName lensGroupName, JsonLd jsonLd) {
         for (var groupName : lensGroupName.groups) {
             @SuppressWarnings("unchecked")
             var group = ((Map<String, Map<String,Object>>) jsonLd.displayData.get("lensGroups")).get(groupName);
@@ -399,11 +399,48 @@ public class FresnelUtil {
         return new Lens(DEFAULT_LENS, subLens(lensGroupName));
     }
 
-    public record Lens(Map<String, Object> lensDefinition, LensGroupName subLensGroup) {
-        List<Object> showProperties() {
+    public class Lens {
+        Map<String, Object> lensDefinition;
+        LensGroupName subLensGroup;
+
+        public Lens(Map<String, Object> lensDefinition, LensGroupName subLensGroup) {
+            this.lensDefinition = lensDefinition;
+            this.subLensGroup = subLensGroup;
+        }
+
+        List<PropertySelector> showProperties() {
             @SuppressWarnings("unchecked")
             var showProperties = (List<Object>) lensDefinition.get(Fresnel.showProperties);
-            return showProperties;
+            return parseShowProperties(showProperties);
+        }
+
+        private List<PropertySelector> parseShowProperties(List<Object> showProperties) {
+            return showProperties.stream().map(p -> {
+                if (JsonLd.isAlternateProperties(p)) {
+                    return new AlternateProperties(alternatives(p));
+                }
+                if (isInverseProperty(p)) {
+                    return asInverseProperty(p);
+                }
+                if (p instanceof String k) {
+                    return new PropertyKey(k);
+                }
+                return new Unrecognized();
+            }).toList();
+        }
+
+        @SuppressWarnings("unchecked")
+        private List<Object> alternatives(Object alternateProperties) {
+            return (List<Object>) ((Map<String, Object>) alternateProperties).get(JsonLd.ALTERNATE_PROPERTIES);
+        }
+
+        private boolean isInverseProperty(Object showProperty) {
+            return showProperty instanceof Map && ((Map<?, ?>) showProperty).containsKey("inverseOf");
+        }
+
+        private InverseProperty asInverseProperty(Object showProperty) {
+            String p = (String) ((Map<?, ?>) showProperty).get("inverseOf");
+            return new InverseProperty(p, jsonLd.getInverseProperty(p));
         }
     }
 
@@ -418,9 +455,18 @@ public class FresnelUtil {
         };
     }
 
-    @SuppressWarnings("unchecked")
-    private List<Object> alternatives(Object alternateProperties) {
-        return (List<Object>) ((Map<String, Object>) alternateProperties).get(JsonLd.ALTERNATE_PROPERTIES);
+    // TODO RangeRestriction
+    private sealed interface PropertySelector permits PropertyKey, InverseProperty, AlternateProperties, Unrecognized {
+
+    }
+
+    // TODO
+    private record AlternateProperties(List<Object> alternatives) implements PropertySelector {
+
+    }
+
+    private record Unrecognized() implements PropertySelector {
+
     }
 
     private record RangeRestriction(String subPropertyOf, String range) {}
@@ -458,16 +504,7 @@ public class FresnelUtil {
         return jsonLd.isSubClassOf((String) thing.get(JsonLd.TYPE_KEY), Base.Identity);
     }
 
-    private boolean isInverseProperty(Object showProperty) {
-        return showProperty instanceof Map && ((Map<?, ?>) showProperty).containsKey("inverseOf");
-    }
-
-    private record InverseProperty(String name, String inverseName) {}
-
-    private InverseProperty asInverseProperty(Object showProperty) {
-        String p = (String) ((Map<?, ?>) showProperty).get("inverseOf");
-        return new InverseProperty(p, jsonLd.getInverseProperty(p));
-    }
+    private record InverseProperty(String name, String inverseName) implements PropertySelector {}
 
     public record LangCode(String code) {
         public static final Comparator<LangCode> ORIGINAL_SCRIPT_FIRST = (a, b) -> {
