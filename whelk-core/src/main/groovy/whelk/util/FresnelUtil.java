@@ -176,8 +176,9 @@ public class FresnelUtil {
                             // expanded lang alias, i.e. ["x", "xByLang"]
                             var found = false;
                             for (var k : list) {
-                                if (has(thing, (String) k)) {
-                                    result.pick(thing, new PropertyKey((String) k));
+                                var kk = new PropertyKey((String) k);
+                                if (has(thing, kk)) {
+                                    result.pick(thing, kk);
                                     found = true;
                                 }
                             }
@@ -186,8 +187,9 @@ public class FresnelUtil {
                             }
                         }
                         else if (alternative instanceof String k) {
-                            if (has(thing, k)) {
-                                result.pick(thing, new PropertyKey(k));
+                            var kk = new PropertyKey(k);
+                            if (has(thing, kk)) {
+                                result.pick(thing, kk);
                                 break;
                             }
                         }
@@ -201,9 +203,12 @@ public class FresnelUtil {
                     }
                 }
                 case PropertyKey k -> {
-                    if (has(thing, k.name)) {
+                    if (has(thing, k)) {
                         result.pick(thing, k);
                     }
+                }
+                case RangeRestriction ignored -> {
+                    // Not allowed here currently
                 }
                 case Unrecognized ignored -> {
 
@@ -270,12 +275,29 @@ public class FresnelUtil {
             return jsonLd.langContainerAliasInverted.containsKey(name);
         }
 
-        public String langAliasFor() {
-            return (String) jsonLd.langContainerAliasInverted.get(name);
+        boolean hasLangAlias() {
+            return jsonLd.langContainerAlias.containsKey(name);
+        }
+
+        public String langAlias() {
+            return (String) jsonLd.langContainerAlias.get(name);
         }
 
         boolean isTypeVocabTerm() {
             return jsonLd.isVocabTerm(name);
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder s = new StringBuilder();
+            s.append(name);
+            if (hasLangAlias()) {
+                s.append(" (").append(langAlias()).append(")");
+            }
+            if (isTypeVocabTerm()) {
+                s.append(" (vocab)");
+            }
+            return s.toString();
         }
     }
 
@@ -302,8 +324,10 @@ public class FresnelUtil {
             if (Rdfs.RDF_TYPE.equals(p.name)) {
                 var type = (String) first(thing.get(JsonLd.TYPE_KEY)); // TODO how to handle multiple types?
                 orderedProps.add(new Property(p.name, mapVocabTerm(type)));
+                return;
             }
-            else if (!p.isLangAlias() && thing.containsKey(p.name)) {
+
+            if (thing.containsKey(p.name)) {
                 Object value = thing.get(p.name);
                 if (JsonLd.TYPE_KEY.equals(p.name)) {
                     type = (String) first(value); // TODO how to handle multiple types?
@@ -330,16 +354,16 @@ public class FresnelUtil {
                     }
                 }
             }
-            else if (p.isLangAlias() && thing.containsKey(p.name)) {
+            if (p.hasLangAlias() && thing.containsKey(p.langAlias())) {
                 @SuppressWarnings("unchecked")
-                Map<String, Object> langContainer = (Map<String, Object>) thing.get(p.name);
+                Map<String, Object> langContainer = (Map<String, Object>) thing.get(p.langAlias());
                 if (selectedLang != null) {
                     // TODO should we remember here that these are script alts?
                     if(langContainer.containsKey(selectedLang.code)) {
-                        orderedProps.add(new Property(p.langAliasFor(), langContainer.get(selectedLang.code)));
+                        orderedProps.add(new Property(p.name(), langContainer.get(selectedLang.code)));
                     }
                 } else {
-                    orderedProps.add(new Property(p.langAliasFor(), new LanguageContainer(langContainer)));
+                    orderedProps.add(new Property(p.name(), new LanguageContainer(langContainer)));
                 }
             }
         }
@@ -378,11 +402,11 @@ public class FresnelUtil {
         }
     }
 
-    private boolean has(Map<?, ?> thing, String key) {
-        if (Rdfs.RDF_TYPE.equals(key)) {
+    private boolean has(Map<?, ?> thing, PropertyKey key) {
+        if (Rdfs.RDF_TYPE.equals(key.name())) {
             return thing.containsKey(JsonLd.TYPE_KEY);
         }
-        return thing.containsKey(key);
+        return thing.containsKey(key.name()) || (key.hasLangAlias() && thing.containsKey(key.langAlias()));
     }
 
     private Lens findLens(Map<?,?> thing, LensGroupName lensGroupName) {
@@ -423,7 +447,10 @@ public class FresnelUtil {
                     return asInverseProperty(p);
                 }
                 if (p instanceof String k) {
-                    return new PropertyKey(k);
+                    // ignore langContainer aliases expanded by jsonld
+                    if (!jsonLd.langContainerAliasInverted.containsKey(k)) {
+                        return new PropertyKey(k);
+                    }
                 }
                 return new Unrecognized();
             }).toList();
@@ -456,7 +483,7 @@ public class FresnelUtil {
     }
 
     // TODO RangeRestriction
-    private sealed interface PropertySelector permits PropertyKey, InverseProperty, AlternateProperties, Unrecognized {
+    private sealed interface PropertySelector permits PropertyKey, InverseProperty, AlternateProperties, RangeRestriction, Unrecognized {
 
     }
 
@@ -469,7 +496,7 @@ public class FresnelUtil {
 
     }
 
-    private record RangeRestriction(String subPropertyOf, String range) {}
+    private record RangeRestriction(String subPropertyOf, String range) implements PropertySelector {}
 
     @SuppressWarnings("unchecked")
     private RangeRestriction asRangeRestriction(Object o) {
