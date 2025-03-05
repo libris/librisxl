@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
@@ -314,6 +315,18 @@ public class FresnelUtil {
             }
             return s.toString();
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            PropertyKey that = (PropertyKey) o;
+            return Objects.equals(name, that.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(name);
+        }
     }
 
     // FIXME naming
@@ -470,18 +483,24 @@ public class FresnelUtil {
     }
 
     public class Lens {
-        Map<String, Object> lensDefinition;
-        LensGroupName subLensGroup;
+        private final LensGroupName subLensGroup;
+        private final List<PropertySelector> showProperties;
 
         public Lens(Map<String, Object> lensDefinition, LensGroupName subLensGroup) {
-            this.lensDefinition = lensDefinition;
+            this.subLensGroup = subLensGroup;
+
+            @SuppressWarnings("unchecked")
+            var showProperties = (List<Object>) lensDefinition.get(Fresnel.showProperties);
+            this.showProperties = parseShowProperties(showProperties);
+        }
+
+        private Lens(List<PropertySelector> showProperties, LensGroupName subLensGroup) {
+            this.showProperties = showProperties;
             this.subLensGroup = subLensGroup;
         }
 
         List<PropertySelector> showProperties() {
-            @SuppressWarnings("unchecked")
-            var showProperties = (List<Object>) lensDefinition.get(Fresnel.showProperties);
-            return parseShowProperties(showProperties);
+            return showProperties;
         }
 
         private List<PropertySelector> parseShowProperties(List<Object> showProperties) {
@@ -529,21 +548,13 @@ public class FresnelUtil {
 
         // TODO
         Lens minus(Collection<Lens> minus, LensGroupName subLens) {
-            @SuppressWarnings("unchecked")
-            var showProperties = (List<Object>) lensDefinition.get(Fresnel.showProperties);
             var keep = new ArrayList<>(showProperties);
 
             for (var m : minus) {
-                @SuppressWarnings("unchecked")
-                var remove = (List<Object>) m.lensDefinition.get(Fresnel.showProperties);
-                keep.removeAll(remove);
+                keep.removeAll(m.showProperties);
             }
 
-            var def = Map.of(
-                    Fresnel.showProperties, (Object) keep
-            );
-
-            return new Lens(def, subLens);
+            return new Lens(keep, subLens);
         }
     }
 
