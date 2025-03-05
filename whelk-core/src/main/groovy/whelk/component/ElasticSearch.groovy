@@ -68,12 +68,14 @@ class ElasticSearch {
         )
     }
 
+    public static final String TOP_CHIP_STR = '_topChipStr'
     public static final String CHIP_STR = '_chipStr'
     public static final String CARD_STR = '_cardStr'
     public static final String SEARCH_CARD_STR = '_searchCardStr'
 
     private static final Set<String> SEARCH_STRINGS = [
             JsonLd.SEARCH_KEY,
+            TOP_CHIP_STR,
             CHIP_STR,
             CARD_STR,
             SEARCH_CARD_STR
@@ -468,7 +470,9 @@ class ElasticSearch {
                 document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
 
         try {
-            framed[CHIP_STR] = whelk.fresnelUtil.applyLens(framed, FresnelUtil.LensGroupName.Chip).asString()
+            var chip = whelk.fresnelUtil.applyLens(framed, FresnelUtil.LensGroupName.Chip);
+            framed[TOP_CHIP_STR] = chip.firstProperty().asString()
+            framed[CHIP_STR] = chip.asString()
             framed[CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.CARD_ONLY).asString()
             framed[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.SEARCH_CARD_ONLY).asString()
         } catch (Exception e) {
