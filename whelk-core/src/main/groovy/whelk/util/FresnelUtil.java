@@ -120,7 +120,7 @@ public class FresnelUtil {
             throw new IllegalArgumentException("Thing is not typed node: " + thing);
         }
 
-        var type = (String) t.get(JsonLd.TYPE_KEY);
+        var type = firstType(t);
         var lens = lensCache.computeIfAbsent(new DerivedCacheKey(derived, type), k -> {
             var base = findLens(t, derived.base);
             var minus = derived.minus.stream().map(l -> findLens(t, l)).toList();
@@ -341,7 +341,7 @@ public class FresnelUtil {
             // TODO JsonLd class expands lang container aliases. Do we want that?
 
             if (Rdfs.RDF_TYPE.equals(p.name)) {
-                var type = (String) first(thing.get(JsonLd.TYPE_KEY)); // TODO how to handle multiple types?
+                var type = firstType(thing); // TODO how to handle multiple types?
                 orderedProps.add(new Property(p.name, mapVocabTerm(type)));
                 return;
             }
@@ -594,14 +594,12 @@ public class FresnelUtil {
     }
 
     private boolean isStructuredValue(Map<?,?> thing) {
-        return jsonLd.isSubClassOf((String) thing.get(JsonLd.TYPE_KEY), Base.StructuredValue);
+        return jsonLd.isSubClassOf(firstType(thing), Base.StructuredValue);
     }
 
     private boolean isIdentity(Map<?,?> thing) {
-        return jsonLd.isSubClassOf((String) thing.get(JsonLd.TYPE_KEY), Base.Identity);
+        return jsonLd.isSubClassOf(firstType(thing), Base.Identity);
     }
-
-
 
     private record InverseProperty(String name, String inverseName) implements PropertySelector {}
 
@@ -623,6 +621,18 @@ public class FresnelUtil {
 
     private boolean isTypedNode(Object o) {
         return o instanceof Map && ((Map<?, ?>) o).containsKey(JsonLd.TYPE_KEY);
+    }
+
+    // TODO handle multiple types=
+    private String firstType(Map<?,?> thing) {
+        var types = thing.get(JsonLd.TYPE_KEY);
+        if (types instanceof String) {
+            return (String) types;
+        }
+        if (types instanceof List<?> l) {
+            return (String) l.getFirst();
+        }
+        throw new RuntimeException("Expected type/types, found " + types);
     }
 
     private class Formatter {
