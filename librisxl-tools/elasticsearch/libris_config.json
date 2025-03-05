@@ -423,6 +423,40 @@
                 }
             },
             {
+                "str_template": {
+                    "match": ["_topChipStr"],
+                    "mapping": {
+                        "fields": {
+                            "exact": {
+                                "type": "text",
+                                "analyzer": "standard"
+                            }
+                        },
+                        "analyzer": "softmatcher",
+                        "type": "text",
+                        "index": true
+                    }
+                }
+            },
+            {
+                "str-ignore-length_template": {
+                    "match": ["_chipStr", "_cardStr", "_searchCardStr"],
+                    "mapping": {
+                        "fields": {
+                            "exact": {
+                                "type": "text",
+                                "analyzer": "standard",
+                                "similarity": "bm25-ignore-length"
+                            }
+                        },
+                        "analyzer": "softmatcher",
+                        "similarity": "bm25-ignore-length",
+                        "type": "text",
+                        "index": true
+                    }
+                }
+            },
+            {
                 "catchall_template": {
                     "match_mapping_type": "string",
                     "mapping": {

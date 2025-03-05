@@ -646,6 +646,8 @@ public class FresnelUtil {
         return jsonLd.isSubClassOf(firstType(thing), Base.Identity);
     }
 
+
+
     private record InverseProperty(String name, String inverseName) implements PropertySelector {}
 
     public record LangCode(String code) {

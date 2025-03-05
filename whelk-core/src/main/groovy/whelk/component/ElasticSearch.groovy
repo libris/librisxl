@@ -13,6 +13,8 @@ import whelk.Whelk
 import whelk.exception.InvalidQueryException
 import whelk.exception.UnexpectedHttpStatusException
 import whelk.util.DocumentUtil
+import whelk.util.FresnelUtil
+import whelk.util.FresnelUtil.DerivedLens
 import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
@@ -51,6 +53,33 @@ class ElasticSearch {
     private static final int ES_LOG_MIN_DURATION = 2000 // Only log queries taking at least this amount of milliseconds
 
     private final Queue<Runnable> indexingRetryQueue = new LinkedBlockingQueue<>()
+
+    private static final class Lenses {
+        public static final DerivedLens CARD_ONLY = new DerivedLens(
+                FresnelUtil.LensGroupName.Card,
+                List.of(FresnelUtil.LensGroupName.Chip),
+                FresnelUtil.LensGroupName.SearchChip
+        )
+
+        public static final DerivedLens SEARCH_CARD_ONLY = new DerivedLens(
+                FresnelUtil.LensGroupName.SearchCard,
+                List.of(FresnelUtil.LensGroupName.Chip, FresnelUtil.LensGroupName.Card),
+                FresnelUtil.LensGroupName.SearchChip
+        )
+    }
+
+    public static final String TOP_CHIP_STR = '_topChipStr'
+    public static final String CHIP_STR = '_chipStr'
+    public static final String CARD_STR = '_cardStr'
+    public static final String SEARCH_CARD_STR = '_searchCardStr'
+
+    private static final Set<String> SEARCH_STRINGS = [
+            JsonLd.SEARCH_KEY,
+            TOP_CHIP_STR,
+            CHIP_STR,
+            CARD_STR,
+            SEARCH_CARD_STR
+    ] as Set
 
     ElasticSearch(Properties props) {
         this(
@@ -440,8 +469,18 @@ class ElasticSearch {
                 REMOVABLE_BASE_URIS,
                 document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
 
+        try {
+            var chip = whelk.fresnelUtil.applyLens(framed, FresnelUtil.LensGroupName.Chip);
+            framed[TOP_CHIP_STR] = chip.firstProperty().asString()
+            framed[CHIP_STR] = chip.asString()
+            framed[CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.CARD_ONLY).asString()
+            framed[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.SEARCH_CARD_ONLY).asString()
+        } catch (Exception e) {
+            log.error(e, e)
+        }
+
         DocumentUtil.traverse(framed) { value, path ->
-            if (path && JsonLd.SEARCH_KEY == path.last() && !Unicode.isNormalizedForSearch(value)) {
+            if (path && SEARCH_STRINGS.contains(path.last()) && !Unicode.isNormalizedForSearch(value)) {
                 // TODO: replace with elastic ICU Analysis plugin?
                 // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
                 return new DocumentUtil.Replace(Unicode.normalizeForSearch(value))
