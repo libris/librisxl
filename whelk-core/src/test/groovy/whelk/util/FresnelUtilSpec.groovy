@@ -418,7 +418,7 @@ class FresnelUtilSpec extends Specification {
                 '@type': 'Work',
                 'hasTitle': [
                         ['@type': 'Title', 'mainTitle': 'Titel'],
-                        ['@type': 'Variant', 'mainTitle': 'variant title']
+                        ['@type': 'VariantTitle', 'mainTitle': 'variant title']
                 ],
                 'language' : [
                         ['@type': 'Language', 'code': 'sv', 'labelByLang': [ 'en': 'Swedish', 'sv': 'Svenska' ]],
@@ -442,5 +442,32 @@ class FresnelUtilSpec extends Specification {
         var result = fresnel.applyLens(thing, cardOnly)
         expect:
         result.asString() == "Överzet Namnsson Namn 1972- Hästar"
+    }
+
+    def "take all alternate"() {
+        given:
+        var thing = [
+                '@type': 'Work',
+                'hasTitle': [
+                        ['@type': 'Title', 'mainTitle': 'Titel'],
+                        ['@type': 'VariantTitle', 'mainTitle': 'variant title']
+                ],
+                'language' : [
+                        ['@type': 'Language', 'code': 'sv', 'labelByLang': [ 'en': 'Swedish', 'sv': 'Svenska' ]],
+                ],
+                'subject' : [
+                        ['@type': 'Topic', 'prefLabel': "Hästar"],
+                ],
+                'contribution' : [
+                        ['@type': 'Contribution', 'role': 'translator', 'agent': [ '@type': 'Person', 'name': 'Överzet' ]],
+                        ['@type': 'PrimaryContribution', 'role': 'author', 'agent': [ '@type': 'Person', 'givenName': 'Namn', 'familyName': 'Namnsson', 'lifeSpan': "1972-"]],
+                ]
+        ]
+        var fresnel = new FresnelUtil(ld)
+
+        var result = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Card, FresnelUtil.Options.TAKE_ALL_ALTERNATE)
+
+        expect:
+        result.asString() == "Titel Titel variant title Överzet translator Namnsson Namn 1972- author Svenska Swedish Hästar"
     }
 }

@@ -85,6 +85,11 @@ public class FresnelUtil {
         public static String Identity = "Identity";
     }
 
+    public enum Options {
+        DEFAULT,
+        TAKE_ALL_ALTERNATE
+    }
+
     private record DerivedCacheKey(Object types, DerivedLens lens) {}
     private record LensCacheKey(Object types, LensGroupName lensGroupName) {}
 
@@ -113,15 +118,23 @@ public class FresnelUtil {
     }
 
     public Lensed applyLens(Object thing, LensGroupName lens) {
+        return applyLens(thing, lens, Options.DEFAULT);
+    }
+
+    public Lensed applyLens(Object thing, LensGroupName lens, Options options) {
         // TODO
         if (!isTypedNode(thing)) {
             throw new IllegalArgumentException("Thing is not typed node: " + thing);
         }
 
-        return (Lensed) applyLens(thing, lens, null);
+        return (Lensed) applyLens(thing, lens, options, null);
     }
 
     public Lensed applyLens(Object thing, DerivedLens derived) {
+        return applyLens(thing, derived, Options.DEFAULT);
+    }
+
+    public Lensed applyLens(Object thing, DerivedLens derived, Options options) {
         // TODO
         if (!(thing instanceof Map<?, ?> t)) {
             throw new IllegalArgumentException("Thing is not typed node: " + thing);
@@ -134,7 +147,7 @@ public class FresnelUtil {
             return base.minus(minus, derived.subLens);
         });
 
-        return (Lensed) applyLens(thing, lens, null);
+        return (Lensed) applyLens(thing, lens, options, null);
     }
 
     public Decorated format(Lensed lensed, LangCode locale) {
@@ -148,6 +161,7 @@ public class FresnelUtil {
     private Object applyLens(
             Object value,
             LensGroupName lensGroupName,
+            Options options,
             LangCode selectedLang
     ) {
         if (!(value instanceof Map<?, ?> thing)) {
@@ -156,12 +170,13 @@ public class FresnelUtil {
         }
         var lens = findLens(thing, lensGroupName);
 
-        return applyLens(value, lens, selectedLang);
+        return applyLens(value, lens, options, selectedLang);
     }
 
     private Object applyLens(
             Object value,
             Lens lens,
+            Options options,
             LangCode selectedLang
     ) {
         if (!(value instanceof Map<?, ?> thing)) {
@@ -173,12 +188,12 @@ public class FresnelUtil {
         if (!scripts.isEmpty()) {
             TransliteratedNode n = new TransliteratedNode();
             for (var script : scripts) {
-                n.add(script, (Node) applyLens(thing, lens, script));
+                n.add(script, (Node) applyLens(thing, lens, options, script));
             }
             return n;
         }
 
-        var result = new Node(lens, selectedLang);
+        var result = new Node(lens, options, selectedLang);
 
         var showProperties = Stream.concat(Stream.of(new PropertyKey(JsonLd.TYPE_KEY), new PropertyKey(JsonLd.ID_KEY)), lens.showProperties().stream()).toList();
         for (var p : showProperties) {
@@ -194,7 +209,9 @@ public class FresnelUtil {
                             case PropertyKey k -> {
                                 if (k.isIn(thing)) {
                                     result.pick(thing, k);
-                                    break alt;
+                                    if (options != Options.TAKE_ALL_ALTERNATE) {
+                                        break alt;
+                                    }
                                 }
                             }
                             case RangeRestriction r -> {
@@ -208,7 +225,9 @@ public class FresnelUtil {
 
                                 if (!v.isEmpty()) {
                                     result.pick(Map.of(k, v), new PropertyKey(k));
-                                    break alt;
+                                    if (options != Options.TAKE_ALL_ALTERNATE) {
+                                        break alt;
+                                    }
                                 }
                             }
                             default -> {
@@ -347,14 +366,16 @@ public class FresnelUtil {
     public final class Node extends Lensed {
         record Property(String name, Object value) {}
 
+        Options options;
         LangCode selectedLang;
         String id;
         String type;
         List<Property> orderedProps = new ArrayList<>();
         Lens lens;
 
-        Node(Lens lens, LangCode selectedLang) {
+        Node(Lens lens, Options options, LangCode selectedLang) {
             this.lens = lens;
+            this.options = options;
             this.selectedLang = selectedLang;
         }
 
@@ -386,11 +407,11 @@ public class FresnelUtil {
                 }
                 else {
                     if (value instanceof List<?> list) {
-                        var values = list.stream().map(v -> applyLens(v, lens.subLensGroup, selectedLang)).toList();
+                        var values = list.stream().map(v -> applyLens(v, lens.subLensGroup, options, selectedLang)).toList();
                         orderedProps.add(new Property(p.name, values));
                     }
                     else {
-                        orderedProps.add(new Property(p.name, applyLens(value, lens.subLensGroup, selectedLang)));
+                        orderedProps.add(new Property(p.name, applyLens(value, lens.subLensGroup, options, selectedLang)));
                     }
                 }
             }
@@ -410,7 +431,7 @@ public class FresnelUtil {
 
         @Override
         public Node firstProperty() {
-            var result = new Node(lens, selectedLang);
+            var result = new Node(lens, options, selectedLang);
             result.id = id;
             result.type = type;
             result.orderedProps = orderedProps.isEmpty()
@@ -440,10 +461,10 @@ public class FresnelUtil {
         private Object mapVocabTerm(Object value) {
             if (value instanceof String s) {
                 var def = jsonLd.vocabIndex.get(s);
-                return applyLens(def != null ? def : s, lens.subLensGroup, selectedLang);
+                return applyLens(def != null ? def : s, lens.subLensGroup, options, selectedLang);
             } else {
                 // bad data
-                return applyLens(value, lens.subLensGroup, selectedLang);
+                return applyLens(value, lens.subLensGroup, options, selectedLang);
             }
         }
     }
