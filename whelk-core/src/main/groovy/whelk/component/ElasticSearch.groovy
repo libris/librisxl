@@ -18,7 +18,6 @@ import whelk.util.Unicode
 import java.util.concurrent.LinkedBlockingQueue
 
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
-import static whelk.JsonLd.SEARCH_KEY
 import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
@@ -413,7 +412,6 @@ class ElasticSearch {
         }
         String thingId = thingIds.get(0)
         Map framed = toSearchCard(whelk, JsonLd.frame(thingId, copy.data), links)
-        framed.remove(SEARCH_KEY)
 
         framed['_links'] = links
         framed['_outerEmbellishments'] = copy.getEmbellishments() - links
@@ -443,7 +441,7 @@ class ElasticSearch {
                 document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
 
         DocumentUtil.traverse(framed) { value, path ->
-            if (path && SEARCH_KEY == path.last() && !Unicode.isNormalizedForSearch(value)) {
+            if (path && JsonLd.SEARCH_KEY == path.last() && !Unicode.isNormalizedForSearch(value)) {
                 // TODO: replace with elastic ICU Analysis plugin?
                 // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
                 return new DocumentUtil.Replace(Unicode.normalizeForSearch(value))

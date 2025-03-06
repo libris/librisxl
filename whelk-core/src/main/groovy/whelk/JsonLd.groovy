@@ -1077,9 +1077,6 @@ class JsonLd {
                         // TODO: marc:nonfilingChars?
                         parts << value
                     }
-                    if (value instanceof Map) {
-                        parts.addAll(makeSearchKeyParts(value))
-                    }
                 }
             }
         }
