@@ -127,7 +127,8 @@ public class Disambiguate {
 
         for (String prop : notatingProps) {
             if (termDefinition.containsKey(prop)) {
-                addMapping((String) termDefinition.get(prop), termKey, aliasMappings, ambiguousAliases);
+                getAsList(termDefinition, List.of(prop))
+                        .forEach(value -> addMapping((String) value, termKey, aliasMappings, ambiguousAliases));
             }
 
             String alias = (String) jsonLd.langContainerAlias.get(prop);
