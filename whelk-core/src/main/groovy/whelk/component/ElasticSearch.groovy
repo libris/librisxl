@@ -23,6 +23,7 @@ import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
 import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
+import static whelk.util.FresnelUtil.Options.TAKE_ALL_ALTERNATE
 import static whelk.util.Jackson.mapper
 
 @Log
@@ -470,11 +471,11 @@ class ElasticSearch {
                 document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
 
         try {
-            var chip = whelk.fresnelUtil.applyLens(framed, FresnelUtil.LensGroupName.Chip);
+            var chip = whelk.fresnelUtil.applyLens(framed, FresnelUtil.LensGroupName.Chip, TAKE_ALL_ALTERNATE);
             framed[TOP_CHIP_STR] = chip.firstProperty().asString()
             framed[CHIP_STR] = chip.asString()
-            framed[CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.CARD_ONLY).asString()
-            framed[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.SEARCH_CARD_ONLY).asString()
+            framed[CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
+            framed[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.SEARCH_CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
         } catch (Exception e) {
             log.error(e, e)
         }
