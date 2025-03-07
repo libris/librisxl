@@ -13,6 +13,11 @@
                 "bm25-ignore-length": {
                     "type": "BM25",
                     "b": 0
+                },
+                "bm25-ignore-length-quick-saturation": {
+                    "type": "BM25",
+                    "b": 0,
+                    "k1": 0.1
                 }
             }
         },
@@ -446,11 +451,11 @@
                             "exact": {
                                 "type": "text",
                                 "analyzer": "standard",
-                                "similarity": "bm25-ignore-length"
+                                "similarity": "bm25-ignore-length-quick-saturation"
                             }
                         },
                         "analyzer": "softmatcher",
-                        "similarity": "bm25-ignore-length",
+                        "similarity": "bm25-ignore-length-quick-saturation",
                         "type": "text",
                         "index": true
                     }
