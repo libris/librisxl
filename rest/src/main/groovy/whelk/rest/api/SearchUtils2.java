@@ -65,7 +65,7 @@ public class SearchUtils2 {
 
         Map<String, Object> esQueryDsl = getEsQueryDsl(qTree, queryParams, appParams.statsRepr);
 
-        QueryResult queryRes = new QueryResult(queryUtil.query(esQueryDsl), queryParams.debug);
+        QueryResult queryRes = new QueryResult(queryUtil.query(esQueryDsl, queryParams.searchMainOnly), queryParams.debug);
 
         Map<String, Object> partialCollectionView = getPartialCollectionView(queryRes, qTree, queryParams, appParams);
 
