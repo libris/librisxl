@@ -3,9 +3,10 @@ set -euo pipefail
 
 # Prerequisite: Generated files located a given BASEPATH (see ./dump-lddb-excerpts.sh)
 BASEPATH=$1
+BASE_URI=$2
 
 # Replace XL IDs but don't overwrite e.g. librarry IRIs from prod:
-RM_XL_ID='s!https://libris(-\w+)?\.kb\.se/(\w{13,})!\2!g'
+RM_XL_ID="s!https://libris(-\w+)?\.kb\.se/(\w{13,})!$BASE_URI\2!g"
 
 # 1. Create *self-described* dataset-filea (with relative id:s)
 (echo '{"@id": "https://libris.kb.se/dataset/works", "@type": "Dataset", "label": "Works", "created": "2025-02-21T13:37:00Z"}'; zcat $BASEPATH-works.jsonl.gz) | sed -E $RM_XL_ID > $BASEPATH-works-dataset.json.lines
