@@ -78,7 +78,10 @@ public record FreeText(TextQuery textQuery, Operator operator, String value, Col
         );
         boostedSoft.put(queryMode, bs);
 
-        var shouldClause = new ArrayList<>(Arrays.asList(boostedExact, boostedSoft, simpleQuery));
+        var shouldClause = boostFields.contains("no-default-field") // dont search index.query.default_field, i.e. _all
+            ? new ArrayList<>(List.of(boostedExact))
+            : new ArrayList<>(Arrays.asList(boostedExact, boostedSoft, simpleQuery));
+
         if (operator() == Operator.EQUALS) {
             return shouldWrap(shouldClause);
         }
