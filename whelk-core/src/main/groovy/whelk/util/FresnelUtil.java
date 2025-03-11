@@ -447,6 +447,9 @@ public class FresnelUtil {
         }
 
         private void printTo(StringBuilder s, Object value) {
+            if (value == null) {
+                return;
+            }
             if(!s.isEmpty() && s.charAt(s.length() - 1) != ' ') {
                 s.append(" ");
             }
