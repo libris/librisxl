@@ -5,6 +5,17 @@ import java.util.*;
 
 import static whelk.util.Jackson.mapper;
 
+/**
+ * This is a very simple algorithm for generating JSON-diffs, it does not however
+ * always produce optimal diffs. In particular, in cases where elements move around in
+ * lists, this algorithm will produce *correct* but not optimally small diffs.
+ *
+ * This diffing algorithm underpins all history keeping of LIBRIS, and so it MUST NEVER
+ * GO WRONG. And things that must never go wrong must remain simple.
+ *
+ * DO NOT MAKE THE MISTAKE OF ADDING COMPLEXITY TO THIS IN ORDER TO TRY TO OPTIMIZE
+ * THE PRODUCED DIFFS.
+ */
 public class Diff {
 
     public static List diff(String json_a, String json_b) throws IOException {
@@ -24,7 +35,7 @@ public class Diff {
     private static void diffInternal(Object oA, Object oB, List path, List result) {
 
         if (!oA.getClass().equals(oB.getClass())) {
-            result.add(Map.of("op", "replace", "path", path, "value", oB));
+            result.add(Map.of("op", "replace", "path", formatRFC6901pointer(path), "value", oB));
             return;
         }
 
@@ -46,7 +57,7 @@ public class Diff {
                 for (Object key : added) {
                     ArrayList addedPath = new ArrayList(path);
                     addedPath.add(key);
-                    result.add(Map.of("op", "add", "path", addedPath, "value", b.get(key)));
+                    result.add(Map.of("op", "add", "path", formatRFC6901pointer(addedPath), "value", b.get(key)));
                 }
             }
 
@@ -54,7 +65,7 @@ public class Diff {
                 for (Object key : missing) {
                     ArrayList missingPath = new ArrayList(path);
                     missingPath.add(key);
-                    result.add(Map.of("op", "remove", "path", missingPath));
+                    result.add(Map.of("op", "remove", "path", formatRFC6901pointer(missingPath)));
                 }
             }
 
@@ -72,13 +83,13 @@ public class Diff {
                 for (int i = a.size(); i < b.size(); ++i) {
                     List addedPath = new ArrayList(path);
                     addedPath.add(i);
-                    result.add(Map.of("op", "add", "path", addedPath, "value", b.get(i)));
+                    result.add(Map.of("op", "add", "path", formatRFC6901pointer(addedPath), "value", b.get(i)));
                 }
             } else if (countDiff < 0) {
                 for (int i = b.size(); i < a.size(); ++i) {
                     List missingPath = new ArrayList(path);
                     missingPath.add(i);
-                    result.add(Map.of("op", "remove", "path", missingPath));
+                    result.add(Map.of("op", "remove", "path", formatRFC6901pointer(missingPath)));
                 }
             }
 
@@ -91,8 +102,24 @@ public class Diff {
             }
         } else { // String, Integer, Boolean etc
             if ( !oA.equals(oB) ) {
-                result.add(Map.of("op", "replace", "path", path, "value", oB));
+                result.add(Map.of("op", "replace", "path", formatRFC6901pointer(path), "value", oB));
             }
         }
+    }
+
+    private static String formatRFC6901pointer(List path) {
+        StringBuilder sb = new StringBuilder("");
+        for (Object node : path) {
+            if (node instanceof Integer i) {
+                sb.append("/");
+                sb.append(i);
+            } else if (node instanceof String s) {
+                s = s.replace("~", "~0");
+                s = s.replace("/", "~1");
+                sb.append("/");
+                sb.append(s);
+            }
+        }
+        return sb.toString();
     }
 }

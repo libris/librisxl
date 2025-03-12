@@ -15,7 +15,7 @@ class DiffSpec extends Specification {
         result == [
                 [
                         "op":"replace",
-                        "path": ["a"],
+                        "path": "/a",
                         "value": "c"
                 ]
         ]
@@ -32,7 +32,7 @@ class DiffSpec extends Specification {
         result == [
                 [
                         "op":"add",
-                        "path": ["c"],
+                        "path": "/c",
                         "value": "d"
                 ]
         ]
@@ -50,7 +50,7 @@ class DiffSpec extends Specification {
         result == [
                 [
                         "op":"remove",
-                        "path": ["c"]
+                        "path": "/c"
                 ]
         ]
     }
@@ -66,7 +66,7 @@ class DiffSpec extends Specification {
         result == [
                 [
                         "op":"replace",
-                        "path": ["a"],
+                        "path": "/a",
                         "value": ["b"]
                 ]
         ]
@@ -83,7 +83,7 @@ class DiffSpec extends Specification {
         result == [
                 [
                         "op":"add",
-                        "path": ["a",1],
+                        "path": "/a/1",
                         "value": "c"
                 ]
         ]
@@ -100,9 +100,25 @@ class DiffSpec extends Specification {
         result == [
                 [
                         "op":"remove",
-                        "path": ["a",1]
+                        "path": "/a/1"
                 ]
         ]
     }
 
+    def "add to list at escaped path"() {
+        given:
+        def before = "{\"/something~\":[\"b\"]}"
+        def after = "{\"/something~\":[\"b\", \"c\"]}"
+
+        def result = Diff.diff(before, after);
+
+        expect:
+        result == [
+                [
+                        "op":"add",
+                        "path": "/~1something~0/1",
+                        "value": "c"
+                ]
+        ]
+    }
 }
