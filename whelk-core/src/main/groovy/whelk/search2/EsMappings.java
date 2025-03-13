@@ -20,13 +20,22 @@ public class EsMappings {
 
     private final boolean isSpellCheckAvailable;
 
-    public EsMappings(Map<?, ?> mappings) {
+    public EsMappings(Map<?, ?> mappings, Map<?, ?> mappingsSecondary) {
         this.keywordFields = getKeywordFields(mappings);
         this.dateFields = getFieldsOfType("date", mappings);
         this.nestedFields = getFieldsOfType("nested", mappings);
+        this.numericExtractorFields = getFieldsWithAnalyzer("numeric_extractor", mappings);
+
+        if (!mappingsSecondary.isEmpty()) {
+            this.keywordFields.addAll(getKeywordFields(mappingsSecondary));
+            this.dateFields.addAll(getFieldsOfType("date", mappingsSecondary));
+            this.nestedFields.addAll(getFieldsOfType("nested", mappingsSecondary));
+            this.numericExtractorFields.addAll(getFieldsWithAnalyzer("numeric_extractor", mappingsSecondary));
+        }
+
         this.nestedNotInParentFields = new HashSet<>(nestedFields);
         this.nestedNotInParentFields.removeAll(getFieldsWithSetting("include_in_parent", true, mappings));
-        this.numericExtractorFields = getFieldsWithAnalyzer("numeric_extractor", mappings);
+        this.nestedNotInParentFields.removeAll(getFieldsWithSetting("include_in_parent", true, mappingsSecondary));
 
         // TODO: temporary feature flag, to be removed
         // this feature only works after a full reindex has been done, so we have to detect that

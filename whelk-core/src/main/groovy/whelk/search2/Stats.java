@@ -236,7 +236,7 @@ public class Stats {
         if (curatedPredicates.isEmpty()) {
             return Collections.emptyList();
         }
-        QueryResult queryRes = new QueryResult(queryUtil.query(getCuratedPredicateEsQueryDsl(o, curatedPredicates)));
+        QueryResult queryRes = new QueryResult(queryUtil.query(getCuratedPredicateEsQueryDsl(o, curatedPredicates), queryParams.searchMainOnly));
         return predicateLinks(queryRes.pAggs, o, queryParams.getNonQueryParams(0));
     }
 

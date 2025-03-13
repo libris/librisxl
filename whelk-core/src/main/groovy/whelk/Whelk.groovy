@@ -360,7 +360,8 @@ class Whelk {
         removedLinks.each { link ->
             String id = storage.getSystemIdByIri(link.iri)
             if (id) {
-                elastic.decrementReverseLinks(id, link.relation)
+                Document doc = storage.load(id)
+                elastic.decrementReverseLinks(id, link.relation, elastic.getIndexForDoc(doc))
             }
         }
 
@@ -380,7 +381,7 @@ class Whelk {
                     reindexAffectedReverseIntegral(doc)
                 } else {
                     // just update link counter
-                    elastic.incrementReverseLinks(id, link.relation)
+                    elastic.incrementReverseLinks(id, link.relation, elastic.getIndexForDoc(doc))
                 }
             }
         }
@@ -564,6 +565,7 @@ class Whelk {
                 assertNoDependers(doc)
             }
             storage.remove(id, changedIn, changedBy)
+            // TODO use getThingType here?
             indexAsyncOrSync {
                 elastic.remove(id)
                 if (features.isEnabled(INDEX_BLANK_WORKS)) {

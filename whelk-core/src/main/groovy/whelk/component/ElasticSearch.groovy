@@ -45,6 +45,7 @@ class ElasticSearch {
     public int maxTermsCount = 65536 // Elasticsearch default (fallback value)
     
     String defaultIndex = null
+    String defaultIndexSecondary = null
     private List<String> elasticHosts
     private String elasticUser
     private String elasticPassword
@@ -86,14 +87,16 @@ class ElasticSearch {
         this(
                 props.getProperty("elasticHost"),
                 props.getProperty("elasticIndex"),
+                props.getProperty("elasticIndexSecondary"),
                 props.getProperty("elasticUser"),
                 props.getProperty("elasticPassword")
         )
     }
 
-    ElasticSearch(String elasticHost, String elasticIndex, String elasticUser, String elasticPassword) {
+    ElasticSearch(String elasticHost, String elasticIndex, String elasticIndexSecondary, String elasticUser, String elasticPassword) {
         this.elasticHosts = getElasticHosts(elasticHost)
         this.defaultIndex = elasticIndex
+        this.defaultIndexSecondary = elasticIndexSecondary
         this.elasticUser = elasticUser
         this.elasticPassword = elasticPassword
 
@@ -156,17 +159,23 @@ class ElasticSearch {
     }
 
     String getIndexName() { defaultIndex }
+    String getSecondaryIndexName() { defaultIndexSecondary }
 
 	/**
 	 * Get ES mappings for associated index
 	 *
 	 */
-	Map getMappings() {
+	Map getMappings(String index = null) {
+        String indexToCheck = indexName
+        if (index) {
+            indexToCheck = index
+        }
+
         Map response
         try {
-            response = mapper.readValue(client.performRequest('GET', "/${indexName}/_mappings", ''), Map)
+            response = mapper.readValue(client.performRequest('GET', "/${indexToCheck}/_mappings", ''), Map)
         } catch (UnexpectedHttpStatusException e) {
-            log.warn("Got unexpected status code ${e.statusCode} when getting ES mappings: ${e.message}", e)
+            log.warn("Got unexpected status code ${e.statusCode} when getting ES mappings for ${indexToCheck}: ${e.message}", e)
             return [:]
         }
 
@@ -177,7 +186,7 @@ class ElasticSearch {
         if (keys.size() == 1 && response[(keys[0])].containsKey('mappings')) {
             return response[(keys[0])]['mappings']
         } else {
-            log.warn("Couldn't get mappings from ES index ${indexName}, response was ${response}.")
+            log.warn("Couldn't get mappings from ES index ${indexToCheck}, response was ${response}.")
             return [:]
         }
     }
@@ -309,8 +318,15 @@ class ElasticSearch {
         }
     }
 
+    String getIndexForDoc(Document doc) {
+        if (doc.getThingType() in ["Item", "ImageObject"]) {
+            return secondaryIndexName
+        }
+        return indexName
+    }
+
     String createActionRow(Document doc) {
-        def action = ["index" : [ "_index" : indexName,
+        def action = ["index" : [ "_index" : getIndexForDoc(doc),
                                   "_id" : toElasticId(doc.getShortId()) ]]
         return mapper.writeValueAsString(action)
     }
@@ -321,11 +337,11 @@ class ElasticSearch {
         try {
             String response = client.performRequest(
                     'PUT',
-                    "/${indexName}/_doc/${toElasticId(doc.getShortId())}",
+                    "/${getIndexForDoc(doc)}/_doc/${toElasticId(doc.getShortId())}",
                     getShapeForIndex(doc, whelk))
             if (log.isDebugEnabled()) {
                 Map responseMap = mapper.readValue(response, Map)
-                log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/_doc/${responseMap['_id']} as version ${responseMap['_version']}")
+                log.debug("Indexed the document ${doc.getShortId()} as ${getIndexForDoc(doc)}/_doc/${responseMap['_id']} as version ${responseMap['_version']}")
             }
         } catch (Exception e) {
             if (!isBadRequest(e)) {
@@ -338,15 +354,15 @@ class ElasticSearch {
         }
     }
 
-    void incrementReverseLinks(String shortId, String relation) {
-        updateReverseLinkCounter(shortId, relation, 1)
+    void incrementReverseLinks(String shortId, String relation, String indexToUse) {
+        updateReverseLinkCounter(shortId, relation, indexToUse, 1)
     }
 
-    void decrementReverseLinks(String shortId, String relation) {
-        updateReverseLinkCounter(shortId, relation, -1)
+    void decrementReverseLinks(String shortId, String relation, String indexToUse) {
+        updateReverseLinkCounter(shortId, relation, indexToUse, -1)
     }
 
-    private void updateReverseLinkCounter(String shortId, String relation, int deltaCount) {
+    private void updateReverseLinkCounter(String shortId, String relation, String indexToUse, int deltaCount) {
         // An indexed document will always have reverseLinks.totalItems set to an integer,
         // and reverseLinks.totalItemsByRelation set to a map, but reverseLinks.totalItemsByRelation['foo']
         // doesn't necessarily exist at this time; hence the null check before trying to update the link counter.
@@ -364,7 +380,7 @@ class ElasticSearch {
         try {
             client.performRequest(
                     'POST',
-                    "/${indexName}/_update/${toElasticId(shortId)}",
+                    "/${indexToUse}/_update/${toElasticId(shortId)}",
                     body)
         }
         catch (Exception e) {
@@ -378,7 +394,7 @@ class ElasticSearch {
             }
             else {
                 log.warn("Failed to update reverse link counter ($deltaCount) for $shortId: $e, placing in retry queue.", e)
-                indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, relation, deltaCount) })
+                indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, relation, indexToUse, deltaCount) })
             }
         }
     }
@@ -390,7 +406,7 @@ class ElasticSearch {
         def dsl = ["query":["term":["_id":toElasticId(identifier)]]]
         try {
             def response = client.performRequest('POST',
-                    "/${indexName}/_delete_by_query",
+                    "/${indexName},${secondaryIndexName}/_delete_by_query",
                     JsonOutput.toJson(dsl))
 
             Map responseMap = mapper.readValue(response, Map)
@@ -624,8 +640,11 @@ class ElasticSearch {
         isnis.findAll{ it.size() == 16 }.collect { Unicode.formatIsni(it) }
     }
 
-    Map query(Map jsonDsl) {
-        return performQuery(jsonDsl, getQueryUrl())
+    Map query(Map jsonDsl, boolean searchMainOnly = false) {
+        if (searchMainOnly) {
+            return performQuery(jsonDsl, getQueryUrl())
+        }
+        return performQuery(jsonDsl, getQueryUrl([], "${indexName},${secondaryIndexName}"))
     }
 
     Map queryIds(Map jsonDsl) {
@@ -868,7 +887,7 @@ class ElasticSearch {
         String queryPath() {
             isPitApiAvailable // point in time is created on index and then index cannot be specified here 
                     ? getQueryUrlWithoutIndex(filterPath)
-                    : getQueryUrl(filterPath)
+                    : getQueryUrl(filterPath, "${indexName},${secondaryIndexName}")
         }
 
         @Override
@@ -899,7 +918,7 @@ class ElasticSearch {
     
     private String createPointInTime(String keepAlive = "1m") {
         try {
-            return performRequest('POST', "/$indexName/_pit?keep_alive=$keepAlive").id
+            return performRequest('POST', "/$indexName,$secondaryIndexName/_pit?keep_alive=$keepAlive").id
         }
         catch (Exception e) {
             log.warn("Failed to create Point In Time: $e")
