@@ -6,8 +6,8 @@ class DiffSpec extends Specification {
 
     def "simple value replace"() {
         given:
-        def before = "{\"a\":\"b\"}"
-        def after = "{\"a\":\"c\"}"
+        def before = ["a":"b"]
+        def after = ["a":"c"]
 
         def result = Diff.diff(before, after);
 
@@ -23,8 +23,8 @@ class DiffSpec extends Specification {
 
     def "simple property add"() {
         given:
-        def before = "{\"a\":\"b\"}"
-        def after = "{\"a\":\"b\", \"c\":\"d\"}"
+        def before = ["a":"b"]
+        def after = ["a":"b", "c":"d"]
 
         def result = Diff.diff(before, after);
 
@@ -40,9 +40,8 @@ class DiffSpec extends Specification {
 
     def "simple property remove"() {
         given:
-        def before = "{\"a\":\"b\", \"c\":\"d\"}"
-        def after = "{\"a\":\"b\"}"
-
+        def before = ["a":"b", "c":"d"]
+        def after = ["a":"b"]
 
         def result = Diff.diff(before, after);
 
@@ -57,8 +56,8 @@ class DiffSpec extends Specification {
 
     def "replace type"() {
         given:
-        def before = "{\"a\":\"b\"}"
-        def after = "{\"a\":[\"b\"]}"
+        def before = ["a": "b"]
+        def after = ["a": ["b"]]
 
         def result = Diff.diff(before, after);
 
@@ -74,8 +73,8 @@ class DiffSpec extends Specification {
 
     def "add to list"() {
         given:
-        def before = "{\"a\":[\"b\"]}"
-        def after = "{\"a\":[\"b\", \"c\"]}"
+        def before = ["a": ["b"]]
+        def after = ["a":["b", "c"]]
 
         def result = Diff.diff(before, after);
 
@@ -91,8 +90,8 @@ class DiffSpec extends Specification {
 
     def "remove from list"() {
         given:
-        def before = "{\"a\":[\"b\", \"c\"]}"
-        def after = "{\"a\":[\"b\"]}"
+        def before = ["a":["b", "c"]]
+        def after = ["a":["b"]]
 
         def result = Diff.diff(before, after);
 
@@ -107,8 +106,8 @@ class DiffSpec extends Specification {
 
     def "add to list at escaped path"() {
         given:
-        def before = "{\"/something~\":[\"b\"]}"
-        def after = "{\"/something~\":[\"b\", \"c\"]}"
+        def before = ["/something~":["b"]]
+        def after = ["/something~":["b", "c"]]
 
         def result = Diff.diff(before, after);
 

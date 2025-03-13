@@ -2,9 +2,17 @@ package whelk.diff;
 
 import whelk.Document;
 
+import java.io.IOException;
 import java.util.*;
 
+import static whelk.util.Jackson.mapper;
+
 public class Patch {
+
+    public static Map patch(Map base, String rfc6902patch) throws IOException {
+        List patch = mapper.readValue(rfc6902patch, List.class);
+        return patch(base, patch);
+    }
 
     public static Map patch(Map base, List patch) {
         Map data = (Map) Document.deepCopy(base);
@@ -16,7 +24,7 @@ public class Patch {
                 case "add": {
                     String path = (String) op.get("path");
                     Object value = op.get("value");
-                    if (path.equals("")) {// whole-document add
+                    if (path.equals("")) { // whole-document add
                         if (value instanceof Map)
                             return (Map) value;
                         return null;
@@ -27,22 +35,22 @@ public class Patch {
                 }
                 case "remove": {
                     String path = (String) op.get("path");
-                    if (path.equals("")) {// whole-document remove
-                        return new HashMap();
-                    }
-                    if (!removeAtRFC6901(data, path))
+                    if (path.equals("")) { // whole-document remove
+                        data = new HashMap();
+                    } else if (!removeAtRFC6901(data, path))
                         return null;
                     break;
                 }
                 case "replace":{
                     String path = (String) op.get("path");
                     Object value = op.get("value");
-                    if (path.equals("")) {// whole-document replace
+                    if (path.equals("")) { // whole-document replace
                         if (value instanceof Map)
-                            return (Map) value;
-                        return null;
+                            data = (Map) value;
+                        else
+                            return null;
                     }
-                    if (getAtRFC6901(data, path) == null || !setAtRFC6901(data, value, path)) // Value at path MUST exist
+                    else if (getAtRFC6901(data, path) == null || !setAtRFC6901(data, value, path)) // Value at path MUST exist
                         return null;
                     break;
                 }
@@ -52,12 +60,13 @@ public class Patch {
                     Object value = getAtRFC6901(data, fromPath);
                     if (value == null)
                         return null;
-                    if (toPath.equals("")) {// whole-document add
+                    if (toPath.equals("")) { // part to whole document copy
                         if (value instanceof Map)
-                            return (Map) value;
-                        return null;
+                            data = (Map) value;
+                        else
+                            return null;
                     }
-                    if (!setAtRFC6901(data, value, toPath))
+                    else if (!setAtRFC6901(data, value, toPath))
                         return null;
                     break;
                 }
@@ -102,7 +111,7 @@ public class Patch {
                 Integer index = parseArrayIndex(token);
                 if (index != null && listNode.size() >= index)
                     if (finalToken) {
-                        listNode.remove(index);
+                        listNode.remove(index.intValue());
                         return true;
                     }
                     else

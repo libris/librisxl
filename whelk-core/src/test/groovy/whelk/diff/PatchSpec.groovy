@@ -110,6 +110,23 @@ class PatchSpec extends Specification {
         after.equals(result)
     }
 
+    def "list remove"() {
+        given:
+        def patch = [
+                [
+                        "op":"remove",
+                        "path": "/a/1"
+                ]
+        ]
+        def before = ["a": ["b", "c"]]
+        def after = ["a": ["b"]]
+
+        def result = Patch.patch(before, patch)
+
+        expect:
+        after.equals(result)
+    }
+
     def "deep remove"() {
         given:
         def patch = [
@@ -227,6 +244,24 @@ class PatchSpec extends Specification {
         ]
         def before = ["a": "b", "c": "d"]
         def after = ["a": "b", "c": "b"]
+
+        def result = Patch.patch(before, patch)
+
+        expect:
+        after.equals(result)
+    }
+
+    def "copy to root"() {
+        given:
+        def patch = [
+                [
+                        "op":"copy",
+                        "from": "/a",
+                        "to": ""
+                ]
+        ]
+        def before = ["a": ["b":"c"]]
+        def after = ["b":"c"]
 
         def result = Patch.patch(before, patch)
 

@@ -18,11 +18,11 @@ import static whelk.util.Jackson.mapper;
  */
 public class Diff {
 
-    public static List diff(String json_a, String json_b) throws IOException {
+    public static String diff(String json_a, String json_b) throws IOException {
         Map a = mapper.readValue(json_a, Map.class);
         Map b = mapper.readValue(json_b, Map.class);
 
-        return diff(a, b);
+        return mapper().writeValueAsString( diff(a, b) );
     }
 
     public static List diff(Map a, Map b) throws IOException {
@@ -73,7 +73,6 @@ public class Diff {
                 List nextPath = new ArrayList(path);
                 nextPath.add(key);
                 diffInternal(a.get(key), b.get(key), nextPath, result);
-                return;
             }
         } else if (oA instanceof List a) {
             List b = (List) oB;
@@ -98,7 +97,6 @@ public class Diff {
                 List nextPath = new ArrayList(path);
                 nextPath.add(i);
                 diffInternal(a.get(i), b.get(i), nextPath, result);
-                return;
             }
         } else { // String, Integer, Boolean etc
             if ( !oA.equals(oB) ) {
