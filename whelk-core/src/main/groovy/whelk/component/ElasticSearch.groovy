@@ -847,7 +847,7 @@ class ElasticSearch {
         String queryPath() {
             isPitApiAvailable // point in time is created on index and then index cannot be specified here 
                     ? getQueryUrlWithoutIndex(filterPath)
-                    : getQueryUrl(filterPath)
+                    : getQueryUrl(filterPath, "${indexName},${secondaryIndexName}")
         }
 
         @Override
@@ -878,7 +878,7 @@ class ElasticSearch {
     
     private String createPointInTime(String keepAlive = "1m") {
         try {
-            return performRequest('POST', "/$indexName/_pit?keep_alive=$keepAlive").id
+            return performRequest('POST', "/$indexName,$secondaryIndexName/_pit?keep_alive=$keepAlive").id
         }
         catch (Exception e) {
             log.warn("Failed to create Point In Time: $e")
