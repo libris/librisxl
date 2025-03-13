@@ -155,5 +155,34 @@ class LinearitySpec extends Specification {
         expect:
         recreatedVersions.equals(versions)
     }
-    
+
+    def "linearity 5"() {
+        given:
+
+        def versions = [
+                [
+                        "a":["b", "c", "d", "e", "f", "g"]
+                ],
+                [
+                        "a":["e", "c", "d", "b", "f", "g", "h"]
+                ],
+                [
+                        "a":["i", "e", "g", "d", "b", "f", "c"]
+                ],
+        ]
+
+        // Common for all tests:
+        def diffs = []
+        for (int i = 0; i < versions.size()-1; ++i) {
+            diffs.add( Diff.diff(versions[i], versions[i+1]) )
+        }
+        def recreatedVersions = [versions[0]]
+        for (int i = 0; i < diffs.size(); ++i) {
+            //System.err.println(mapper.writeValueAsString(diffs[i]))
+            recreatedVersions.add( Patch.patch( versions[i], mapper.writeValueAsString(diffs[i])) )
+        }
+        expect:
+        recreatedVersions.equals(versions)
+    }
+
 }
