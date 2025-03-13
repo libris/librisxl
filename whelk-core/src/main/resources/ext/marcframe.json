@@ -355,6 +355,25 @@
       "NOTE:_spec": "For Serial issuanceTypes see 008",
       "_spec": [
         {
+          "name": "Generic LEADER. The LEADER of the first 000 test case will be reused in all cases without a LEADER specified.",
+          "originalLeader": "00887cam a2200277 a 4500",
+          "source": {"leader": "     cam a        a 4500", "fields": [{"001": "0000000"}]},
+          "result": {
+            "@type": "Record",
+            "@id": "http://libris.kb.se/bib/0000000",
+            "recordStatus": "marc:CorrectedOrRevised",
+            "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatFormType-a"}],
+            "controlNumber": "0000000",
+            "encodingLevel": "marc:FullLevel",
+            "mainEntity": {
+              "@type": "Instance",
+              "issuanceType": "Monograph",
+              "@id": "http://libris.kb.se/resource/bib/0000000",
+              "instanceOf": {"@type": "Text"}
+            }
+          }
+        },
+        {
           "name": "@type Text (Monograph)",
           "originalLeader": "00887cam a2200277 a 4500",
           "source": {"leader": "     cam a        a 4500", "fields": [{"001": "0000000"}]},
