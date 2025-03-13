@@ -306,12 +306,12 @@
       "[6]": {
         "aboutEntity": "?work",
         "tokenMap": "TypeOfRecordType",
-        "property": "@type"
+        "property": "category"
       },
       "[7]": {
-        "aboutEntity": "?thing",
+        "aboutEntity": "?work",
         "tokenMap": "BibLevelType",
-        "property": "issuanceType"
+        "property": "@type"
       },
       "[8]": {
         "NOTE": "Type of control - # - No specified type (was marc:typeOfControl marc:TypeOfControlType-{_})",
@@ -374,7 +374,7 @@
           }
         },
         {
-          "name": "@type Serial (NEW), contentType Text",
+          "name": "NEW @type Serial, contentType Text",
           "originalLeader": "00887cas a2200277 a 4500",
           "source": {"leader": "     cas a        a 4500", "fields": [{"001": "0000000"}]},
           "result": {
