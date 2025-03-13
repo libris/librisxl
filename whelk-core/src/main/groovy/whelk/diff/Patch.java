@@ -50,7 +50,7 @@ public class Patch {
                         else
                             return null;
                     }
-                    else if (getAtRFC6901(data, path) == null || !setAtRFC6901(data, value, path)) // Value at path MUST exist
+                    else if (getAtRFC6901(data, path) == null || !removeAtRFC6901(data, path) || !setAtRFC6901(data, value, path)) // Value at path MUST exist
                         return null;
                     break;
                 }
