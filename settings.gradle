@@ -3,7 +3,6 @@ include(
         'apix_export',
         'apix_server',
         'batchimport',
-        'gui-whelktool',
         'housekeeping',
         'importers',
         'librisworks',
