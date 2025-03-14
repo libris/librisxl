@@ -7,6 +7,15 @@ import java.util.*;
 
 import static whelk.util.Jackson.mapper;
 
+/**
+ * This code should be compliant with rfc6902 and able to handle any correct and compliant
+ * patches. But this compliance has one exception: It assumes that the root node of the
+ * data to be patched is a Map ("JSON Object"). It does not handle the other legal
+ * JSON option: A List "JSON Array" as root object.
+ *
+ * This simplifies things, and is based on the fact that all Libris records by definition
+ * have a Map as the root.
+ */
 public class Patch {
 
     public static Map patch(Map base, String rfc6902patch) throws IOException {
