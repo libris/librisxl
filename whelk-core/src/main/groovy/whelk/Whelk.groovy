@@ -20,6 +20,7 @@ import whelk.filter.NormalizerChain
 import whelk.meta.WhelkConstants
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
+import whelk.util.FresnelUtil
 import whelk.util.PropertyLoader
 import whelk.util.Romanizer
 
@@ -27,6 +28,7 @@ import java.time.Instant
 import java.time.ZoneId
 
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
+import static whelk.exception.LinkValidationException.IncomingLinksException
 
 /**
  * The Whelk is the root component of the XL system.
@@ -57,6 +59,7 @@ class Whelk {
     Map contextData
     JsonLd jsonld
 
+    FresnelUtil fresnelUtil
     MarcFrameConverter marcFrameConverter
     ResourceCache resourceCache
     ElasticFind elasticFind
@@ -226,6 +229,7 @@ class Whelk {
             elasticFind = new ElasticFind(new ESQuery(this))
             initDocumentNormalizers(elasticFind)
         }
+        this.fresnelUtil = new FresnelUtil(jsonld)
     }
 
     // FIXME: de-KBV/Libris-ify: some of these are KBV specific, is that a problem?
@@ -369,6 +373,11 @@ class Whelk {
                 if (reverseRelations.contains(link.relation)) {
                     // we added a link to a document that includes us in its @reverse relations, reindex it
                     elastic.index(doc, this)
+                    // that document may in turn have documents that include it, and by extension us in their
+                    // @reverse relations. Reindex them. (For example item -> instance -> work)
+                    // TODO this should be calculated in a more general fashion. We depend on the fact that indexed
+                    // TODO docs are embellished one level (cards, chips) -> everything else must be integral relations
+                    reindexAffectedReverseIntegral(doc)
                 } else {
                     // just update link counter
                     elastic.incrementReverseLinks(id, link.relation)
@@ -378,6 +387,23 @@ class Whelk {
 
         if (storage.isCardChangedOrNonexistent(document.getShortId())) {
             bulkIndex(elastic.getAffectedIds(document.getThingIdentifiers() + document.getRecordIdentifiers()))
+        }
+    }
+
+    private void reindexAffectedReverseIntegral(Document reIndexedDoc) {
+        JsonLd.getExternalReferences(reIndexedDoc.data).forEach { link ->
+            String p = link.property()
+            if (jsonld.isIntegral(jsonld.getInverseProperty(p))) {
+                String id = storage.getSystemIdByIri(link.iri)
+                Document doc = storage.load(id)
+                def lenses = ['chips', 'cards', 'full']
+                def reverseRelations = lenses
+                        .collect { jsonld.getInverseProperties(doc.data, it) }
+                        .flatten()
+                if (reverseRelations.contains(p)) {
+                    elastic.index(doc, this)
+                }
+            }
         }
     }
 
@@ -534,7 +560,10 @@ class Whelk {
             log.warn "Could not remove object from whelk. No entry with id $id found"
         }
         if (doc) {
-            storage.remove(id, changedIn, changedBy, force)
+            if (!force) {
+                assertNoDependers(doc)
+            }
+            storage.remove(id, changedIn, changedBy)
             indexAsyncOrSync {
                 elastic.remove(id)
                 if (features.isEnabled(INDEX_BLANK_WORKS)) {
@@ -544,6 +573,14 @@ class Whelk {
                     reindexAffected(doc, doc.getExternalRefs(), Collections.emptySet())
                 }
             }
+        }
+    }
+
+    private void assertNoDependers(Document doc) {
+        boolean isDependedUpon = storage.getIncomingLinkCountByIdAndRelation(doc.getShortId())
+                .any { relation, _ -> !JsonLd.isWeak(relation) }
+        if (isDependedUpon) {
+            throw new IncomingLinksException("Record is referenced by other records")
         }
     }
 

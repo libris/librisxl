@@ -54,12 +54,25 @@ class JsonLd {
 
     public static final List<String> NON_DEPENDANT_RELATIONS = ['narrower', 'broader', 'expressionOf', 'related',
                                                                 'derivedFrom']
-    public static final List<String> ALLOW_LINK_TO_DELETED = [
-        'meta.derivedFrom', 'hasTitle.source', 'bulk:changeSpec.bulk:deprecate',
-        /* following are combinations only needed while there are local unlinked works */
-         'translationOf.hasTitle.source', 'instanceOf.hasTitle.source', 'instanceOf.translationOf.hasTitle.source']
 
-    public static final String CATEGORY_DEPENDENT = 'dependent'
+    // The following relations may hold links to deleted resources.
+    // In general we don't allow dead links within XL so don't add to this list without good reason.
+    private static final List<String> WEAK_RELATIONS = [
+            'concerning',
+            'meta.derivedFrom',
+            'hasTitle.source',
+            'bulk:changeSpec.*',
+            /* following are combinations only needed while there are local unlinked works */
+            'translationOf.hasTitle.source',
+            'instanceOf.hasTitle.source',
+            'instanceOf.translationOf.hasTitle.source'
+    ]
+
+    static final class Category {
+        public static final String DEPENDENT = 'dependent'
+        public static final String INTEGRAL = 'integral'
+    }
+
 
     public static final Set<String> LD_KEYS
 
@@ -88,6 +101,7 @@ class JsonLd {
         public static final String INVERSE_OF = "inverseOf"
         public static final String EQUIVALENT_CLASS = "equivalentClass"
         public static final String EQUIVALENT_PROPERTY = "equivalentProperty"
+        public static final String SAME_AS = "sameAs"
     }
 
     static final class Rdfs {
@@ -119,6 +133,7 @@ class JsonLd {
     private Map<String, Set<String>> subPropertiesByType
     private Map<String, Set<String>> categories
     private Map<String, Set<String>> inRange
+    private Map<String, Set<String>> range
 
     // x -> xByLang
     public Map langContainerAlias = [:]
@@ -193,7 +208,15 @@ class JsonLd {
         
         def zipMaps = { a, b -> (a.keySet() + b.keySet()).collectEntries{k -> [k, a.get(k, []) + b.get(k, [])]}}
         inRange = zipMaps(generateSubTermLists('rangeIncludes'), generateSubTermLists(Rdfs.RANGE))
-        
+
+        range = new HashMap<>()
+        inRange.forEach { type, props ->
+            props.forEach { prop ->
+                range.computeIfAbsent(prop, _ -> new HashSet<>())
+                range.get(prop).add(type)
+            }
+        }
+
         buildLangContainerAliasMap()
 
         expandAliasesInLensProperties()
@@ -390,6 +413,12 @@ class JsonLd {
     
     static boolean isLink(Map jsonLd) {
         jsonLd.size() == 1 && jsonLd[ID_KEY]
+    }
+
+    static boolean isWeak(String relation) {
+        return WEAK_RELATIONS.any { wr ->
+            wr == relation || (wr.endsWith("*") && relation.startsWith(wr.take(wr.size() - 1)))
+        }
     }
 
     static URI findRecordURI(Map jsonLd) {
@@ -690,12 +719,24 @@ class JsonLd {
         return categories.get(category, Collections.EMPTY_SET)
     }
 
-    Set <String> cascadingDeleteRelations() {
-        getCategoryMembers(CATEGORY_DEPENDENT)
+    boolean isIntegral(String property) {
+        getCategoryMembers(Category.INTEGRAL).contains(property)
     }
 
+    /**
+     * @param type
+     * @return properties with range or rangeIncludes type
+     */
     Set<String> getInRange(String type) {
         return inRange.get(type, Collections.EMPTY_SET)
+    }
+
+    /**
+     * @param property
+     * @return types in range or rangeIncludes of property
+     */
+    Set<String> getRange(String property) {
+        return range.get(property, Collections.EMPTY_SET)
     }
 
     private Set<String> getSubTerms(String type,
@@ -1035,9 +1076,6 @@ class JsonLd {
                     if (value instanceof String) {
                         // TODO: marc:nonfilingChars?
                         parts << value
-                    }
-                    if (value instanceof Map) {
-                        parts.addAll(makeSearchKeyParts(value))
                     }
                 }
             }
@@ -1470,6 +1508,14 @@ class Link {
         iri == this.iri
                 ? this
                 : new Link(iri: iri, relation: this.relation)
+    }
+
+    List<String> propertyPath() {
+        return relation.split("\\.") as List
+    }
+
+    String property() {
+        return propertyPath().last()
     }
 }
 

@@ -14,8 +14,11 @@ Map targetForm = parameters.get(TARGET_FORM_KEY)
 Transform transform = new Transform(matchForm, targetForm, getWhelk())
 
 selectByForm(transform.matchForm) {
-    if(modify(transform, it.doc, it.whelk)) {
-        it.scheduleSave(loud: isLoudAllowed)
+    try {
+        if (modify(transform, it.doc, it.whelk)) {
+            it.scheduleSave(loud: isLoudAllowed)
+        }
+    } catch (ModifiedThing.IllegalModificationException ignored) {
     }
 }
 

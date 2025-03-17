@@ -71,6 +71,9 @@ public class Disambiguate {
         var vocab = jsonLd.vocabIndex;
 
         vocab.forEach((termKey, termDefinition) -> {
+            if (isAbstract(termDefinition)) {
+                return;
+            }
             if (isSystemVocabTerm(termDefinition, jsonLd)) {
                 if (isClass(termDefinition, jsonLd)) {
                     addAllMappings(termKey, classAliasMappings, ambiguousClassAliases, whelk);
@@ -174,7 +177,7 @@ public class Disambiguate {
         });
     }
 
-    private static boolean isSystemVocabTerm(Map<?, ?> termDefinition, JsonLd jsonLd) {
+    private static boolean isSystemVocabTerm(Map<String, Object> termDefinition, JsonLd jsonLd) {
         return get(termDefinition, List.of(IS_DEFINED_BY, ID_KEY), "")
                 .equals(jsonLd.context.get(VOCAB_KEY));
     }
@@ -183,11 +186,11 @@ public class Disambiguate {
         return termKey.startsWith("marc:");
     }
 
-    private static boolean isClass(Map<?, ?> termDefinition, JsonLd jsonLd) {
+    private static boolean isClass(Map<String, Object> termDefinition, JsonLd jsonLd) {
         return getTypes(termDefinition).stream().anyMatch(type -> jsonLd.isSubClassOf((String) type, "Class"));
     }
 
-    private static boolean isEnum(Map<?, ?> termDefinition, JsonLd jsonLd) {
+    private static boolean isEnum(Map<String, Object> termDefinition, JsonLd jsonLd) {
         return getTypes(termDefinition).stream()
                 .map(String.class::cast)
                 .flatMap(type -> Stream.concat(jsonLd.getSuperClasses(type).stream(), Stream.of(type)))
@@ -197,16 +200,20 @@ public class Disambiguate {
                 .anyMatch(jsonLd::isVocabTerm);
     }
 
-    private static boolean isProperty(Map<?, ?> termDefinition) {
+    private static boolean isProperty(Map<String, Object> termDefinition) {
         return isObjectProperty(termDefinition) || isDatatypeProperty(termDefinition);
     }
 
-    public static boolean isObjectProperty(Map<?, ?> termDefinition) {
+    public static boolean isObjectProperty(Map<String, Object> termDefinition) {
         return getTypes(termDefinition).stream().anyMatch(OBJECT_PROPERTY::equals);
     }
 
-    private static boolean isDatatypeProperty(Map<?, ?> termDefinition) {
+    private static boolean isDatatypeProperty(Map<String, Object> termDefinition) {
         return getTypes(termDefinition).stream().anyMatch(DATATYPE_PROPERTY::equals);
+    }
+
+    private static boolean isAbstract(Map<String, Object> termDefinition) {
+        return (boolean) termDefinition.getOrDefault("abstract", false);
     }
 
     private static List<?> getTypes(Map<?, ?> termDefinition) {

@@ -8,7 +8,18 @@
                 }
             },
             "number_of_shards": 15,
-            "number_of_replicas": 2
+            "number_of_replicas": 2,
+            "similarity": {
+                "bm25-ignore-length": {
+                    "type": "BM25",
+                    "b": 0
+                },
+                "bm25-ignore-length-quick-saturation": {
+                    "type": "BM25",
+                    "b": 0,
+                    "k1": 0.1
+                }
+            }
         },
         "index.query.default_field": "_all",
         "analysis": {
@@ -302,7 +313,8 @@
             "_all": {
                 "type": "text",
                 "store": false,
-                "analyzer": "softmatcher"
+                "analyzer": "softmatcher",
+                "similarity": "bm25-ignore-length"
             },
             "_es_id": {
                 "type": "keyword"
@@ -413,6 +425,40 @@
                     },
                     "match": "_str",
                     "match_mapping_type": "string"
+                }
+            },
+            {
+                "str_template": {
+                    "match": ["_topChipStr"],
+                    "mapping": {
+                        "fields": {
+                            "exact": {
+                                "type": "text",
+                                "analyzer": "standard"
+                            }
+                        },
+                        "analyzer": "softmatcher",
+                        "type": "text",
+                        "index": true
+                    }
+                }
+            },
+            {
+                "str-ignore-length_template": {
+                    "match": ["_chipStr", "_cardStr", "_searchCardStr"],
+                    "mapping": {
+                        "fields": {
+                            "exact": {
+                                "type": "text",
+                                "analyzer": "standard",
+                                "similarity": "bm25-ignore-length-quick-saturation"
+                            }
+                        },
+                        "analyzer": "softmatcher",
+                        "similarity": "bm25-ignore-length-quick-saturation",
+                        "type": "text",
+                        "index": true
+                    }
                 }
             },
             {

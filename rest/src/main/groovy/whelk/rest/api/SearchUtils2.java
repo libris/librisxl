@@ -97,13 +97,17 @@ public class SearchUtils2 {
             }
         }
 
-        queryDsl.put("aggs", buildAggQuery(statsRepr, whelk.getJsonld(), queryTree.collectRulingTypes(whelk.getJsonld()), queryUtil::getNestedPath));
+        if (!queryParams.skipStats) {
+            queryDsl.put("aggs", buildAggQuery(statsRepr, whelk.getJsonld(), queryTree.collectRulingTypes(whelk.getJsonld()), queryUtil::getNestedPath));
+        }
+
         queryDsl.put("track_total_hits", true);
 
         if (queryParams.debug.contains(QueryParams.Debug.ES_SCORE)) {
             queryDsl.put("explain", true);
             // Scores won't be calculated when also using sort unless explicitly asked for
             queryDsl.put("track_scores", true);
+            queryDsl.put("fields", List.of("*"));
         }
 
         return queryDsl;
@@ -130,7 +134,9 @@ public class SearchUtils2 {
         view.put("search", Map.of("mapping", List.of(qt.toSearchMapping(queryParams.getNonQueryParams(0)))));
         view.putAll(Pagination.makeLinks(queryResult.numHits, queryUtil.maxItems(), freeText, fullQuery, queryParams));
         view.put("items", queryResult.collectItems(queryUtil.getApplyLensFunc(queryParams)));
-        view.put("stats", new Stats(whelk.getJsonld(), queryUtil, qt, queryResult, queryParams, appParams).build());
+        if (!queryParams.skipStats) {
+            view.put("stats", new Stats(whelk.getJsonld(), queryUtil, qt, queryResult, queryParams, appParams).build());
+        }
         if (!queryResult.spell.isEmpty()) {
             view.put("_spell", buildSpellSuggestions(queryResult, qt, queryParams.getNonQueryParams(0)));
         }

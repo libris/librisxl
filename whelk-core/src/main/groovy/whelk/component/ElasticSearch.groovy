@@ -13,6 +13,8 @@ import whelk.Whelk
 import whelk.exception.InvalidQueryException
 import whelk.exception.UnexpectedHttpStatusException
 import whelk.util.DocumentUtil
+import whelk.util.FresnelUtil
+import whelk.util.FresnelUtil.DerivedLens
 import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
@@ -21,6 +23,7 @@ import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
 import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
+import static whelk.util.FresnelUtil.Options.TAKE_ALL_ALTERNATE
 import static whelk.util.Jackson.mapper
 
 @Log
@@ -51,6 +54,33 @@ class ElasticSearch {
     private static final int ES_LOG_MIN_DURATION = 2000 // Only log queries taking at least this amount of milliseconds
 
     private final Queue<Runnable> indexingRetryQueue = new LinkedBlockingQueue<>()
+
+    private static final class Lenses {
+        public static final DerivedLens CARD_ONLY = new DerivedLens(
+                FresnelUtil.LensGroupName.Card,
+                List.of(FresnelUtil.LensGroupName.Chip),
+                FresnelUtil.LensGroupName.SearchChip
+        )
+
+        public static final DerivedLens SEARCH_CARD_ONLY = new DerivedLens(
+                FresnelUtil.LensGroupName.SearchCard,
+                List.of(FresnelUtil.LensGroupName.Chip, FresnelUtil.LensGroupName.Card),
+                FresnelUtil.LensGroupName.SearchChip
+        )
+    }
+
+    public static final String TOP_CHIP_STR = '_topChipStr'
+    public static final String CHIP_STR = '_chipStr'
+    public static final String CARD_STR = '_cardStr'
+    public static final String SEARCH_CARD_STR = '_searchCardStr'
+
+    private static final Set<String> SEARCH_STRINGS = [
+            JsonLd.SEARCH_KEY,
+            TOP_CHIP_STR,
+            CHIP_STR,
+            CARD_STR,
+            SEARCH_CARD_STR
+    ] as Set
 
     ElasticSearch(Properties props) {
         this(
@@ -417,10 +447,21 @@ class ElasticSearch {
         framed['_outerEmbellishments'] = copy.getEmbellishments() - links
 
         Map<String, Long> incomingLinkCountByRelation = whelk.getStorage().getIncomingLinkCountByIdAndRelation(stripHash(copy.getShortId()))
+        var totalItems = incomingLinkCountByRelation.values().sum(0)
+
+        // These indirect relations shouldn't count towards the total
+        // TODO should they be placed somewhere else than totalItemsByRelation?
+        // TODO what should be the key "itemOf.instanceOf"?
+        // FIXME don't hardcode this
+        var itemPath = ["@reverse", "instanceOf", "*", "@reverse", "itemOf", "*"]
+        var itemCount = ((List) DocumentUtil.getAtPath(framed, itemPath, []))
+                .collect{ it['heldBy']?[JsonLd.ID_KEY] }.grep().unique().size()
+        incomingLinkCountByRelation.put('itemOf.instanceOf', itemCount)
+        
         framed['reverseLinks'] = [
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',
-                'totalItems': incomingLinkCountByRelation.values().sum(0),
-                'totalItemsByRelation': incomingLinkCountByRelation,
+                'totalItems': totalItems,
+                'totalItemsByRelation': incomingLinkCountByRelation
         ]
 
         framed['_sortKeyByLang'] = whelk.jsonld.applyLensAsMapByLang(
@@ -429,8 +470,18 @@ class ElasticSearch {
                 REMOVABLE_BASE_URIS,
                 document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
 
+        try {
+            var chip = whelk.fresnelUtil.applyLens(framed, FresnelUtil.LensGroupName.Chip, TAKE_ALL_ALTERNATE);
+            framed[TOP_CHIP_STR] = chip.firstProperty().asString()
+            framed[CHIP_STR] = chip.asString()
+            framed[CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
+            framed[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.SEARCH_CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
+        } catch (Exception e) {
+            log.error(e, e)
+        }
+
         DocumentUtil.traverse(framed) { value, path ->
-            if (path && JsonLd.SEARCH_KEY == path.last() && !Unicode.isNormalizedForSearch(value)) {
+            if (path && SEARCH_STRINGS.contains(path.last()) && !Unicode.isNormalizedForSearch(value)) {
                 // TODO: replace with elastic ICU Analysis plugin?
                 // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
                 return new DocumentUtil.Replace(Unicode.normalizeForSearch(value))

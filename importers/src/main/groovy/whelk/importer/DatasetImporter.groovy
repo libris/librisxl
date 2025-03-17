@@ -2,6 +2,8 @@ package whelk.importer
 
 import groovy.util.logging.Log4j2 as Log
 import groovy.transform.CompileStatic
+import whelk.exception.LinkValidationException
+
 import static groovy.transform.TypeCheckingMode.SKIP
 
 import whelk.Document
@@ -451,8 +453,7 @@ class DatasetImporter {
             log.info("Removing " + id + " from dataset")
             whelk.remove(id, "xl", null, force)
             return true
-        } catch ( RuntimeException re ) {
-            // The expected exception here is: java.lang.RuntimeException: Deleting depended upon records is not allowed.
+        } catch (LinkValidationException ignored) {
             return false
         }
     }

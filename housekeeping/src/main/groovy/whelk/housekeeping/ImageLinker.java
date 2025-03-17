@@ -143,7 +143,7 @@ public class ImageLinker extends HouseKeeper {
                   data#>'{@graph,0,inDataset}' @> '[{"@id": "https://id.kb.se/dataset/images"}]'::jsonb AND
                   data#>>'{@graph,1,@type}' = 'ImageObject' AND
                   deleted = false AND
-                  created > ?;
+                  modified > ?;
                 """.stripIndent();
 
         try (Connection connection = whelk.getStorage().getOuterConnection();

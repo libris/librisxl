@@ -107,8 +107,10 @@ class HttpTools {
         switch(e) {
             case BadRequestException:
             case ModelValidationException:
-            case LinkValidationException:
                 return HttpServletResponse.SC_BAD_REQUEST
+
+            case LinkValidationException:
+                return HttpServletResponse.SC_FORBIDDEN
 
             case NotFoundException:
                 return HttpServletResponse.SC_NOT_FOUND
