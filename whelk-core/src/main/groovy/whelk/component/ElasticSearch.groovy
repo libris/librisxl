@@ -472,7 +472,9 @@ class ElasticSearch {
 
         try {
             var chip = whelk.fresnelUtil.applyLens(framed, FresnelUtil.LensGroupName.Chip, TAKE_ALL_ALTERNATE);
-            framed[TOP_CHIP_STR] = chip.firstProperty().asString()
+            framed[TOP_CHIP_STR] = chip.tmpFirstProperty().asString()
+            // FIXME: Switch to commented-out call once it returns a satisfying result for this purpose
+//            framed[TOP_CHIP_STR] = chip.firstProperty().asString()
             framed[CHIP_STR] = chip.asString()
             framed[CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
             framed[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.SEARCH_CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
