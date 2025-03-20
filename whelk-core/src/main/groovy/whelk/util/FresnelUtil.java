@@ -360,6 +360,9 @@ public class FresnelUtil {
 
         public abstract Lensed firstProperty();
 
+        // FIXME: Temporary method for experimenting with indexing of _topChipStr field
+        public abstract Lensed tmpFirstProperty();
+
         protected abstract StringBuilder printTo(StringBuilder s);
     }
 
@@ -435,8 +438,34 @@ public class FresnelUtil {
             result.id = id;
             result.type = type;
             result.orderedProps = orderedProps.isEmpty()
-                ? Collections.emptyList()
-                : List.of(orderedProps.getFirst());
+                    ? Collections.emptyList()
+                    : List.of(orderedProps.getFirst());
+            return result;
+        }
+
+        @Override
+        public Node tmpFirstProperty() {
+            var result = new Node(lens, options, selectedLang);
+            result.id = id;
+            result.type = type;
+            if (orderedProps.isEmpty()) {
+                result.orderedProps = Collections.emptyList();
+            } else {
+                Node.Property first = orderedProps.getFirst();
+                if (first.name().equals("hasTitle")) {
+                    (first.value() instanceof Collection<?> c ? c : List.of(first.value()))
+                            .stream()
+                            .filter(Node.class::isInstance)
+                            .map(Node.class::cast)
+                            .forEach(n ->
+                                    n.orderedProps = n.orderedProps
+                                            .stream()
+                                            .filter(p -> p.name().equals("mainTitle"))
+                                            .toList()
+                            );
+                }
+                result.orderedProps = List.of(first);
+            }
             return result;
         }
 
@@ -483,6 +512,15 @@ public class FresnelUtil {
             var result = new TransliteratedNode();
             transliterations.forEach((langCode, node) -> {
                 result.transliterations.put(langCode, node.firstProperty());
+            });
+            return result;
+        }
+
+        @Override
+        public Lensed tmpFirstProperty() {
+            var result = new TransliteratedNode();
+            transliterations.forEach((langCode, node) -> {
+                result.transliterations.put(langCode, node.tmpFirstProperty());
             });
             return result;
         }

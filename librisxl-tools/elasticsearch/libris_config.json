@@ -14,6 +14,10 @@
                     "type": "BM25",
                     "b": 0
                 },
+                "bm25-quick-saturation": {
+                    "type": "BM25",
+                    "k1": 0.1
+                },
                 "bm25-ignore-length-quick-saturation": {
                     "type": "BM25",
                     "b": 0,
@@ -434,10 +438,12 @@
                         "fields": {
                             "exact": {
                                 "type": "text",
-                                "analyzer": "standard"
+                                "analyzer": "standard",
+                                "similarity": "bm25-quick-saturation"
                             }
                         },
                         "analyzer": "softmatcher",
+                        "similarity": "bm25-quick-saturation",
                         "type": "text",
                         "index": true
                     }
