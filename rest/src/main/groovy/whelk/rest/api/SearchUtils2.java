@@ -7,6 +7,7 @@ import whelk.exception.WhelkRuntimeException;
 
 import whelk.search2.AppParams;
 import whelk.search2.Disambiguate;
+import whelk.search2.EsBoost;
 import whelk.search2.Pagination;
 import whelk.search2.QueryParams;
 import whelk.search2.QueryResult;
@@ -79,7 +80,7 @@ public class SearchUtils2 {
     private Map<String, Object> getEsQueryDsl(QueryTree queryTree, QueryParams queryParams, AppParams.StatsRepr statsRepr) {
         var queryDsl = new LinkedHashMap<String, Object>();
 
-        queryDsl.put("query", getEsQuery(queryTree, queryParams.boostFields));
+        queryDsl.put("query", getEsQuery(queryTree, queryParams.boostFields, queryParams.fieldValueFactors));
         queryDsl.put("size", queryParams.limit);
         queryDsl.put("from", queryParams.offset);
         queryDsl.put("sort", (queryParams.sortBy == Sort.DEFAULT_BY_RELEVANCY && queryTree.isWild()
@@ -113,8 +114,14 @@ public class SearchUtils2 {
         return queryDsl;
     }
 
-    private Map<String, Object> getEsQuery(QueryTree queryTree, List<String> boostFields) {
-        return addConstantBoosts(queryTree.toEs(queryUtil, whelk.getJsonld(), boostFields));
+    private Map<String, Object> getEsQuery(QueryTree queryTree, List<String> boostFields, List<EsBoost.FieldValueFactor> fieldValueFactors) {
+        Map<String, Object> esQuery = addConstantBoosts(queryTree.toEs(queryUtil, whelk.getJsonld(), boostFields));
+        if (fieldValueFactors.isEmpty()) {
+            return esQuery;
+        }
+        return Map.of("function_score",
+                Map.of("query", esQuery,
+                        "functions", fieldValueFactors.stream().map(EsBoost.FieldValueFactor::toEs).toList()));
     }
 
     private Map<String, Object> getPartialCollectionView(QueryResult queryResult,

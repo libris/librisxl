@@ -398,4 +398,17 @@ public class EsBoost {
             "scopeNote^10",
             "keyword._str.exact^10"
     );
+
+    public record FieldValueFactor(String field, int factor, String modifier) {
+        public Map<String, Object> toEs() {
+            return Map.of("field_value_factor",
+                    Map.of("field", field,
+                            "factor", factor,
+                            "modifier", modifier));
+        }
+
+        public List<String> paramList() {
+            return List.of(field, Integer.toString(factor), modifier);
+        }
+    }
 }
