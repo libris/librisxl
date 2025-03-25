@@ -180,9 +180,9 @@ public class QueryParams {
                     .map(s -> s.split(";"))
                     .map(fieldConfig -> {
                         String field = fieldConfig[0];
-                        int score = Integer.parseInt(fieldConfig[1]);
+                        int factor = Integer.parseInt(fieldConfig[1]);
                         String modifier = fieldConfig[2];
-                        return new EsBoost.FieldValueFactor(field, score, modifier);
+                        return new EsBoost.FieldValueFactor(field, factor, modifier);
                     })
                     .toList();
         } catch (Exception ignored) {
