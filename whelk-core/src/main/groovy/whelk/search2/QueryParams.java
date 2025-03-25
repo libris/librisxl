@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class QueryParams {
     private final static int DEFAULT_LIMIT = 200;
@@ -30,6 +31,7 @@ public class QueryParams {
         public static final String APP_CONFIG = "_appConfig";
         public static final String BOOST = "_boost";
         public static final String STATS = "_stats";
+        public static final String FN_SCORE = "_fnScore";
     }
 
     public static class Debug {
@@ -47,6 +49,7 @@ public class QueryParams {
     public final String lens;
     public final Spell spell;
     public final List<String> boostFields;
+    public final List<EsBoost.FieldValueFactor> fieldValueFactors;
 
     public final String q;
     public final String i;
@@ -67,6 +70,7 @@ public class QueryParams {
         this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse("");
         this.i = getOptionalSingle(ApiParams.SIMPLE_FREETEXT, apiParameters).orElse("");
         this.skipStats = getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
+        this.fieldValueFactors = getEsFieldValueFactors(apiParameters);
     }
 
     public Map<String, String> getNonQueryParams() {
@@ -104,6 +108,13 @@ public class QueryParams {
         }
         if (skipStats) {
             params.put(ApiParams.STATS, "false");
+        }
+        if (!fieldValueFactors.isEmpty()) {
+            params.put(ApiParams.FN_SCORE,
+                    fieldValueFactors.stream()
+                            .map(f -> String.join(";", f.paramList()))
+                            .collect(Collectors.joining(","))
+            );
         }
         return params;
     }
@@ -160,6 +171,22 @@ public class QueryParams {
             return Integer.parseInt(s);
         } catch (NumberFormatException ignored) {
             return defaultTo;
+        }
+    }
+
+    private List<EsBoost.FieldValueFactor> getEsFieldValueFactors(Map<String, String[]> queryParameters) {
+        try {
+            return getMultiple(ApiParams.FN_SCORE, queryParameters).stream()
+                    .map(s -> s.split(";"))
+                    .map(fieldConfig -> {
+                        String field = fieldConfig[0];
+                        int factor = Integer.parseInt(fieldConfig[1]);
+                        String modifier = fieldConfig[2];
+                        return new EsBoost.FieldValueFactor(field, factor, modifier);
+                    })
+                    .toList();
+        } catch (Exception ignored) {
+            return List.of();
         }
     }
 }

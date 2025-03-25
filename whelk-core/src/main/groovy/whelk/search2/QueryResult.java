@@ -187,7 +187,7 @@ public class QueryResult {
             traverse(scoreExplanation, (value, path) -> {
                 if (value instanceof Map<?, ?> m) {
                     String description = (String) m.get("description");
-                    if (description.contains("[PerFieldSimilarity]")) {
+                    if (description.contains("[PerFieldSimilarity]") || description.startsWith("field value function:")) {
                         Double score = (Double) m.get("value");
                         if (score > 0) {
                             scorePerField.put(parseField(description), score);
@@ -223,6 +223,13 @@ public class QueryResult {
                     if (m.find()) {
                         return m.group();
                     }
+                }
+            } else if (description.startsWith("field value function:")) {
+                Matcher matcher = Pattern.compile("doc\\['[^ ]+']").matcher(description);
+                if (matcher.find()) {
+                    String match = matcher.group();
+                    String key = match.substring(match.indexOf("'") + 1);
+                    return key.substring(0, key.indexOf("'")) + ":N/A";
                 }
             }
             return description;
