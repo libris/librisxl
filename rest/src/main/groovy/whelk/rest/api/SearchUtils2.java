@@ -122,8 +122,7 @@ public class SearchUtils2 {
         return Map.of("function_score",
                 Map.of("query", esQuery,
                         "functions", fieldValueFactors.stream().map(EsBoost.FieldValueFactor::toEs).toList(),
-                        "score_mode", "sum",
-                        "boost_mode", "sum"));
+                        "score_mode", "sum"));
     }
 
     private Map<String, Object> getPartialCollectionView(QueryResult queryResult,
