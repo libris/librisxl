@@ -182,7 +182,8 @@ public class QueryParams {
                         String field = fieldConfig[0];
                         int factor = Integer.parseInt(fieldConfig[1]);
                         String modifier = fieldConfig[2];
-                        return new EsBoost.FieldValueFactor(field, factor, modifier);
+                        int missing = Integer.parseInt(fieldConfig[3]);
+                        return new EsBoost.FieldValueFactor(field, factor, modifier, missing);
                     })
                     .toList();
         } catch (Exception ignored) {

@@ -173,6 +173,7 @@ public class QueryResult {
             var totalScore = scorePerField.values().stream().reduce((double) 0, Double::sum);
             var matchedFields = scorePerField.keySet().stream()
                     .map(f -> f.split(":")[0])
+                    .filter(fields::containsKey)
                     .collect(Collectors.toMap(Function.identity(),
                             fields::get,
                             (k1, k2) -> k1)

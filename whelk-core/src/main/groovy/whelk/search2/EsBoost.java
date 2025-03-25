@@ -399,16 +399,17 @@ public class EsBoost {
             "keyword._str.exact^10"
     );
 
-    public record FieldValueFactor(String field, int factor, String modifier) {
+    public record FieldValueFactor(String field, int factor, String modifier, int missing) {
         public Map<String, Object> toEs() {
             return Map.of("field_value_factor",
                     Map.of("field", field,
                             "factor", factor,
-                            "modifier", modifier));
+                            "modifier", modifier,
+                            "missing", missing));
         }
 
         public List<String> paramList() {
-            return List.of(field, Integer.toString(factor), modifier);
+            return List.of(field, Integer.toString(factor), modifier, Integer.toString(missing));
         }
     }
 }
