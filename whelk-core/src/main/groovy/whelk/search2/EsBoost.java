@@ -401,12 +401,13 @@ public class EsBoost {
 
     public record FieldValueFactor(String field, int factor, String modifier, int missing, int weight) {
         public Map<String, Object> toEs() {
-            return Map.of("field_value_factor",
-                    Map.of("field", field,
+            return Map.of(
+                    "field_value_factor", Map.of(
+                            "field", field,
                             "factor", factor,
                             "modifier", modifier,
-                            "missing", missing,
-                            "weight", weight));
+                            "missing", missing),
+                    "weight", weight);
         }
 
         public List<String> paramList() {
