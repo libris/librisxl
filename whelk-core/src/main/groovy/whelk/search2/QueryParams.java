@@ -183,7 +183,8 @@ public class QueryParams {
                         int factor = Integer.parseInt(fieldConfig[1]);
                         String modifier = fieldConfig[2];
                         int missing = Integer.parseInt(fieldConfig[3]);
-                        return new EsBoost.FieldValueFactor(field, factor, modifier, missing);
+                        int weight = Integer.parseInt(fieldConfig[4]);
+                        return new EsBoost.FieldValueFactor(field, factor, modifier, missing, weight);
                     })
                     .toList();
         } catch (Exception ignored) {
