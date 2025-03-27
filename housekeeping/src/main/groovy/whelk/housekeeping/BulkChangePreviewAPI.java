@@ -93,8 +93,8 @@ public class BulkChangePreviewAPI extends HttpServlet {
             var result = makePreview(changes, offset, limit, id, preview.isFinished());
 
             var spec = preview.getSpec();
-            if (spec instanceof Specification.Update) {
-                result.put("changeSets", ((Specification.Update) spec).getTransform(whelk).getChangeSets());
+            if (spec instanceof Specification.Update update) {
+                result.put("changeSets", update.getTransform().getChangeSets());
             }
 
             // TODO support turtle etc?
