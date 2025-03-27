@@ -80,7 +80,7 @@ public class SearchUtils2 {
     private Map<String, Object> getEsQueryDsl(QueryTree queryTree, QueryParams queryParams, AppParams.StatsRepr statsRepr) {
         var queryDsl = new LinkedHashMap<String, Object>();
 
-        queryDsl.put("query", getEsQuery(queryTree, queryParams.boostFields, queryParams.fieldValueFactors));
+        queryDsl.put("query", getEsQuery(queryTree, queryParams.boostFields, queryParams.esScoreFunctions));
         queryDsl.put("size", queryParams.limit);
         queryDsl.put("from", queryParams.offset);
         queryDsl.put("sort", (queryParams.sortBy == Sort.DEFAULT_BY_RELEVANCY && queryTree.isWild()
@@ -114,14 +114,14 @@ public class SearchUtils2 {
         return queryDsl;
     }
 
-    private Map<String, Object> getEsQuery(QueryTree queryTree, List<String> boostFields, List<EsBoost.FieldValueFactor> fieldValueFactors) {
+    private Map<String, Object> getEsQuery(QueryTree queryTree, List<String> boostFields, List<EsBoost.ScoreFunction> scoreFunctions) {
         Map<String, Object> esQuery = addConstantBoosts(queryTree.toEs(queryUtil, whelk.getJsonld(), boostFields));
-        if (fieldValueFactors.isEmpty()) {
+        if (scoreFunctions.isEmpty()) {
             return esQuery;
         }
         return Map.of("function_score",
                 Map.of("query", esQuery,
-                        "functions", fieldValueFactors.stream().map(EsBoost.FieldValueFactor::toEs).toList(),
+                        "functions", scoreFunctions.stream().map(EsBoost.ScoreFunction::toEs).toList(),
                         "score_mode", "sum",
                         "boost_mode", "sum"));
     }

@@ -221,6 +221,11 @@ public class QueryResult {
                                     .findFirst()
                                     .ifPresent(field -> scorePerField.put(field, score));
                         }
+                    } else if (description.startsWith("script score function")) {
+                        Double score = (Double) m.get("value");
+                        if (score > 0) {
+                            scorePerField.put(parseField(description), score);
+                        }
                     }
                 }
                 return new DocumentUtil.Nop();
@@ -253,7 +258,7 @@ public class QueryResult {
                         return m.group();
                     }
                 }
-            } else if (description.startsWith("field value function:")) {
+            } else if (description.startsWith("field value function:") || description.startsWith("script score function")) {
                 Matcher matcher = Pattern.compile("doc\\['[^ ]+']").matcher(description);
                 if (matcher.find()) {
                     String match = matcher.group();

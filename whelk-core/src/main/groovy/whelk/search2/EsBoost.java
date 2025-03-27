@@ -399,7 +399,13 @@ public class EsBoost {
             "keyword._str.exact^10"
     );
 
-    public record FieldValueFactor(String field, int factor, String modifier, int missing, int weight) {
+    public sealed interface ScoreFunction permits FieldValueFactor, MatchingFieldValue {
+        Map<String, Object> toEs();
+        List<String> paramList();
+    }
+
+    public record FieldValueFactor(String field, int factor, String modifier, int missing, int weight) implements ScoreFunction {
+        @Override
         public Map<String, Object> toEs() {
             return Map.of(
                     "field_value_factor", Map.of(
@@ -410,8 +416,22 @@ public class EsBoost {
                     "weight", weight);
         }
 
+        @Override
         public List<String> paramList() {
-            return List.of(field, Integer.toString(factor), modifier, Integer.toString(missing), Integer.toString(weight));
+            return List.of("fvf", field, Integer.toString(factor), modifier, Integer.toString(missing), Integer.toString(weight));
+        }
+    }
+
+    public record MatchingFieldValue(String field, String value, int boost) implements ScoreFunction {
+        @Override
+        public Map<String, Object> toEs() {
+            return Map.of("script_score", Map.of(
+                            "script", String.format("doc['%s'].value == '%s' ? %d : 0", field, value, boost)));
+        }
+
+        @Override
+        public List<String> paramList() {
+            return List.of("mfv", field, value, Integer.toString(boost));
         }
     }
 }
