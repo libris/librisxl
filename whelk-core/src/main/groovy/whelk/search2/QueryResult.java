@@ -188,11 +188,27 @@ public class QueryResult {
             traverse(scoreExplanation, (value, path) -> {
                 if (value instanceof Map<?, ?> m) {
                     String description = (String) m.get("description");
-                    if (description.contains("[PerFieldSimilarity]") || description.startsWith("field value function:")) {
+                    if (description.contains("[PerFieldSimilarity]")) {
                         Double score = (Double) m.get("value");
                         if (score > 0) {
                             scorePerField.put(parseField(description), score);
                         }
+                    }
+                    if ("function score, score mode [sum]".equals(description)) {
+                        ((List<?>) m.get("details")).stream()
+                                .map(Map.class::cast)
+                                .forEach(o -> {
+                                    Double score = (Double) o.get("value");
+                                    if (score > 0) {
+                                        ((List<?>) o.get("details")).stream()
+                                                .map(Map.class::cast)
+                                                .map(_m -> (String) _m.get("description"))
+                                                .filter(desc -> desc.startsWith("field value function:"))
+                                                .map(LdItem::parseField)
+                                                .findFirst()
+                                                .ifPresent(field -> scorePerField.put(field, score));
+                                    }
+                                });
                     }
                 }
                 return new DocumentUtil.Nop();
