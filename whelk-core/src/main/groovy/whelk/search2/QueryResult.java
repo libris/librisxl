@@ -194,7 +194,7 @@ public class QueryResult {
                             scorePerField.put(parseField(description), score);
                         }
                     }
-                    if ("function score, score mode [sum]".equals(description)) {
+                    else if ("function score, score mode [sum]".equals(description)) {
                         ((List<?>) m.get("details")).stream()
                                 .map(Map.class::cast)
                                 .forEach(o -> {
@@ -209,6 +209,18 @@ public class QueryResult {
                                                 .ifPresent(field -> scorePerField.put(field, score));
                                     }
                                 });
+                    }
+                    else if ("max of:".equals(description)) {
+                        Double score = (Double) m.get("value");
+                        if (score > 0) {
+                            ((List<?>) m.get("details")).stream()
+                                    .map(Map.class::cast)
+                                    .filter(_m -> score.equals(_m.get("value")))
+                                    .map(_m -> (String) _m.get("description"))
+                                    .map(LdItem::parseField)
+                                    .findFirst()
+                                    .ifPresent(field -> scorePerField.put(field, score));
+                        }
                     }
                 }
                 return new DocumentUtil.Nop();
@@ -249,7 +261,7 @@ public class QueryResult {
                     return key.substring(0, key.indexOf("'")) + ":N/A";
                 }
             }
-            return description;
+            return Stream.of(description.split("\\^")).findFirst().get();
         }
 
         private static String makeFindOLink(String iri) {
