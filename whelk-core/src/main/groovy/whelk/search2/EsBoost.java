@@ -404,7 +404,7 @@ public class EsBoost {
         List<String> paramList();
     }
 
-    public record FieldValueFactor(String field, int factor, String modifier, int missing, int weight) implements ScoreFunction {
+    public record FieldValueFactor(String field, float factor, String modifier, float missing, float weight) implements ScoreFunction {
         @Override
         public Map<String, Object> toEs() {
             return Map.of(
@@ -418,20 +418,20 @@ public class EsBoost {
 
         @Override
         public List<String> paramList() {
-            return List.of("fvf", field, Integer.toString(factor), modifier, Integer.toString(missing), Integer.toString(weight));
+            return List.of("fvf", field, Float.toString(factor), modifier, Float.toString(missing), Float.toString(weight));
         }
     }
 
-    public record MatchingFieldValue(String field, String value, int boost) implements ScoreFunction {
+    public record MatchingFieldValue(String field, String value, float boost) implements ScoreFunction {
         @Override
         public Map<String, Object> toEs() {
             return Map.of("script_score", Map.of(
-                            "script", String.format("doc['%s'].value == '%s' ? %d : 0", field, value, boost)));
+                            "script", String.format("doc['%s'].value == '%s' ? %f : 0", field, value, boost)));
         }
 
         @Override
         public List<String> paramList() {
-            return List.of("mfv", field, value, Integer.toString(boost));
+            return List.of("mfv", field, value, Float.toString(boost));
         }
     }
 }

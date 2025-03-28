@@ -185,16 +185,16 @@ public class QueryParams {
                         String fnType = fieldConfig[0];
                         if (fnType.equalsIgnoreCase("fvf")) {
                             String field = fieldConfig[1];
-                            int factor = Integer.parseInt(fieldConfig[2]);
+                            float factor = Float.parseFloat(fieldConfig[2]);
                             String modifier = fieldConfig[3];
-                            int missing = Integer.parseInt(fieldConfig[4]);
-                            int weight = Integer.parseInt(fieldConfig[5]);
+                            float missing = Float.parseFloat(fieldConfig[4]);
+                            float weight = Float.parseFloat(fieldConfig[5]);
                             scoreFunctions.add(new EsBoost.FieldValueFactor(field, factor, modifier, missing, weight));
                         }
                         if (fnType.equalsIgnoreCase("mfv")) {
                             String field = fieldConfig[1];
                             String value = fieldConfig[2];
-                            int boost = Integer.parseInt(fieldConfig[3]);
+                            float boost = Float.parseFloat(fieldConfig[3]);
                             scoreFunctions.add(new EsBoost.MatchingFieldValue(field, value, boost));
                         }
                     });
