@@ -472,7 +472,6 @@ class PostgreSQLComponent {
     private HikariDataSource connectionPool
     private HikariDataSource outerConnectionPool
 
-    boolean versioning = true
     boolean doVerifyDocumentIdRetention = true
     boolean sparqlQueueEnabled = false
 
@@ -726,6 +725,37 @@ class PostgreSQLComponent {
         }
     }
 
+    void logUpdate(String id, boolean loud, Date time, Connection connection) {
+
+        // Which version did we just create?
+        // This rests on the assumption that lddb-row being updated is locked for the transaction, so that a new
+        // version could not slip in until this is done.
+
+        int resultingVersion = 0
+        PreparedStatement countStatement = connection.prepareStatement("SELECT COUNT(id) FROM lddb__versions WHERE id = ?")
+        ResultSet resultSet = null
+        try {
+            countStatement.setString(1, id)
+            resultSet = countStatement.executeQuery()
+            if (resultSet.next()) {
+                resultingVersion = resultSet.getInt(1) - 1
+            }
+        } finally {
+            close(resultSet, countStatement)
+        }
+
+        PreparedStatement logStatement = connection.prepareStatement("INSERT INTO lddb__change_log (id, loud, time, resulting_record_version) VALUES (?,?,?,?)")
+        try {
+            logStatement.setString(1, id)
+            logStatement.setBoolean(2, loud)
+            logStatement.setTimestamp(3, new Timestamp(time.getTime()))
+            logStatement.setInt(4, resultingVersion)
+            logStatement.execute()
+        } finally {
+            close(logStatement)
+        }
+    }
+
     boolean createDocument(Document doc, String changedIn, String changedBy, String collection, boolean deleted) {
         log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
 
@@ -795,6 +825,7 @@ class PostgreSQLComponent {
                 insert.executeUpdate()
 
                 saveVersion(doc, connection, now, now, changedIn, changedBy, collection, deleted)
+                logUpdate(doc.getShortId(), true, now, connection)
                 refreshDerivativeTables(doc, connection, deleted)
 
                 connection.commit()
@@ -1049,11 +1080,12 @@ class PostgreSQLComponent {
             if (doVerifyDocumentIdRetention) {
                 verifyDocumentIdRetention(preUpdateDoc, doc, connection)
             }
-            
+
+            Date actualUpdateTime = new Date()
             Date createdTime = new Date(resultSet.getTimestamp("created").getTime())
             Date modTime = minorUpdate
                 ? new Date(resultSet.getTimestamp("modified").getTime())
-                : new Date()
+                : actualUpdateTime
             doc.setModified(modTime)
 
             if (!minorUpdate) {
@@ -1065,6 +1097,7 @@ class PostgreSQLComponent {
             updateStatement.execute()
 
             saveVersion(doc, connection, createdTime, modTime, changedIn, changedBy, collection, deleted)
+            logUpdate(doc.getShortId(), !minorUpdate, actualUpdateTime, connection)
 
             // If the mainentity has changed URI (for example happens when new id.kb.se-uris are added to records)
             if ( preUpdateDoc.getThingIdentifiers()[0] &&
@@ -1624,24 +1657,21 @@ class PostgreSQLComponent {
     boolean saveVersion(Document doc, Connection connection, Date createdTime,
                         Date modTime, String changedIn, String changedBy,
                         String collection, boolean deleted) {
-        if (versioning) {
-            PreparedStatement insVersion = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
-            try {
-                log.debug("Trying to save a version of ${doc.getShortId() ?: ""} with checksum ${doc.getChecksum(jsonld)}. Modified: $modTime")
-                insVersion = rigVersionStatement(insVersion, doc, createdTime,
-                        modTime, changedIn, changedBy,
-                        collection, deleted)
-                insVersion.executeUpdate()
-                return true
-            } catch (Exception e) {
-                log.error("Failed to save document version: ${e.message}")
-                throw e
-            }
-            finally {
-                close(insVersion)
-            }
-        } else {
-            return false
+
+        PreparedStatement insVersion = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
+        try {
+            log.debug("Trying to save a version of ${doc.getShortId() ?: ""} with checksum ${doc.getChecksum(jsonld)}. Modified: $modTime")
+            insVersion = rigVersionStatement(insVersion, doc, createdTime,
+                    modTime, changedIn, changedBy,
+                    collection, deleted)
+            insVersion.executeUpdate()
+            return true
+        } catch (Exception e) {
+            log.error("Failed to save document version: ${e.message}")
+            throw e
+        }
+        finally {
+            close(insVersion)
         }
     }
     
@@ -1681,10 +1711,8 @@ class PostgreSQLComponent {
                     doc.setCreated(now)
                     doc.setModified(now)
                     doc.setDeleted(false)
-                    if (versioning) {
-                        ver_batch = rigVersionStatement(ver_batch, doc, now, now, changedIn, changedBy, collection, false)
-                        ver_batch.addBatch()
-                    }
+                    ver_batch = rigVersionStatement(ver_batch, doc, now, now, changedIn, changedBy, collection, false)
+                    ver_batch.addBatch()
                     batch = rigInsertStatement(batch, doc, now, changedIn, changedBy, collection, false)
                     batch.addBatch()
                 }
@@ -1696,7 +1724,7 @@ class PostgreSQLComponent {
                 }
                 clearEmbellishedCache(connection)
                 connection.commit()
-                log.debug("Stored ${docs.size()} documents in collection ${collection} (versioning: ${versioning})")
+                log.debug("Stored ${docs.size()} documents in collection ${collection}")
                 return true
             } catch (Exception e) {
                 log.error("Failed to save batch: ${e.message}. Rolling back..", e)
@@ -2758,21 +2786,17 @@ class PostgreSQLComponent {
     }
 
     void remove(String identifier, String changedIn, String changedBy) {
-        if (versioning) {
-            log.debug("Marking document with ID ${identifier} as deleted.")
-            try {
-                storeUpdate(identifier, false, true, changedIn, changedBy,
-                    { Document doc ->
-                        doc.setDeleted(true)
-                        // Add a tombstone marker (without removing anything) perhaps?
-                    })
-            } catch (Throwable e) {
-                log.warn("Could not mark document with ID ${identifier} as deleted: ${e}")
-                throw e
-            }
-        } else {
-            throw new WhelkException(
-                    "Actually deleting data from lddb is currently not supported")
+
+        log.debug("Marking document with ID ${identifier} as deleted.")
+        try {
+            storeUpdate(identifier, false, true, changedIn, changedBy,
+                { Document doc ->
+                    doc.setDeleted(true)
+                    // Add a tombstone marker (without removing anything) perhaps?
+                })
+        } catch (Throwable e) {
+            log.warn("Could not mark document with ID ${identifier} as deleted: ${e}")
+            throw e
         }
 
         // Clear out dependencies
