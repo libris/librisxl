@@ -61,7 +61,7 @@ public class SearchUtils2 {
                 .map(SearchUtils2::buildStatsReprFromSliceSpec)
                 .ifPresent(statsRepr -> config.put("_statsRepr", statsRepr));
 
-        Stream.of("_filterAliases", "defaultSiteFilters", "optionalSiteFilters", "relationFilters")
+        Stream.of("filterAliases", "defaultSiteFilters", "optionalSiteFilters", "relationFilters")
                 .forEach(key ->
                         Optional.ofNullable(findDesc.get(key))
                                 .ifPresent(filters -> config.put("_" + key, filters))
