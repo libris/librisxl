@@ -58,6 +58,12 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     @Override
+    public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
+        Map<String, List<PathValue>> nestedGroups = getNestedGroups(getNestedPath);
+        return nestedGroups.isEmpty() ? wrap(childrenToEs(getNestedPath, boostFields)) : toEsNested(nestedGroups, getNestedPath, boostFields);
+    }
+
+    @Override
     public Map<String, Object> toSearchMapping(QueryTree qt, Map<String, String> nonQueryParams) {
         var m = new LinkedHashMap<String, Object>();
         m.put(key(), mapToMap(c -> c.toSearchMapping(qt, nonQueryParams)));
@@ -74,6 +80,17 @@ public sealed abstract class Group implements Node permits And, Or {
             return g.expandChildren(jsonLd, rulingTypes, getBoostFields);
         }
         return reduced.expand(jsonLd, rulingTypes, getBoostFields);
+    }
+
+    @Override
+    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes) {
+        Node reduced = reduceTypes(jsonLd);
+        if (reduced instanceof Group g) {
+            rulingTypes = Stream.concat(g.collectRulingTypes().stream(), rulingTypes.stream())
+                    .collect(Collectors.toSet());
+            return g.expandChildren(jsonLd, rulingTypes);
+        }
+        return reduced.expand(jsonLd, rulingTypes);
     }
 
     @Override
@@ -97,6 +114,10 @@ public sealed abstract class Group implements Node permits And, Or {
 
     Node expandChildren(JsonLd jsonLd, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
         return mapFilterAndReinstantiate(c -> c.expand(jsonLd, rulingTypes, getBoostFields), Objects::nonNull);
+    }
+
+    Node expandChildren(JsonLd jsonLd, Collection<String> rulingTypes) {
+        return mapFilterAndReinstantiate(c -> c.expand(jsonLd, rulingTypes), Objects::nonNull);
     }
 
     List<Node> flattenChildren(List<Node> children) {
@@ -167,6 +188,34 @@ public sealed abstract class Group implements Node permits And, Or {
         return esChildren.size() == 1 ? esChildren.getFirst() : wrap(esChildren);
     }
 
+    private Map<String, Object> toEsNested(Map<String, List<PathValue>> nestedGroups, Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
+        List<Map<String, Object>> esChildren = new ArrayList<>();
+        List<Node> nonNested = new ArrayList<>(children());
+
+        nestedGroups.forEach((nestedStem, group) -> {
+            var bool = new HashMap<String, Object>();
+            group.stream().collect(Collectors.groupingBy(pv -> pv.operator().equals(Operator.NOT_EQUALS)))
+                    .forEach((k, v) -> {
+                        boolean isGroup = v.size() > 1;
+                        boolean isNegatedGroup = k && isGroup;
+                        var es = v.stream().map(pv -> pv.toEs(isNegatedGroup)).toList();
+                        if (isNegatedGroup) {
+                            bool.put("must_not", nestedWrap(nestedStem, wrap(es)));
+                        } else {
+                            bool.put("must", nestedWrap(nestedStem, isGroup ? wrap(es) : es.getFirst()));
+                        }
+                    });
+            esChildren.add(boolWrap(bool));
+            nonNested.removeAll(group);
+        });
+
+        for (Node n : nonNested) {
+            esChildren.add(n.toEs(getNestedPath, boostFields));
+        }
+
+        return esChildren.size() == 1 ? esChildren.getFirst() : wrap(esChildren);
+    }
+
     // TODO: Review/refine nested logic and proper tests
     private Map<String, List<PathValue>> getNestedGroups(Function<String, Optional<String>> getNestedPath) {
         Map<String, List<PathValue>> nestedGroups = new HashMap<>();
@@ -194,6 +243,10 @@ public sealed abstract class Group implements Node permits And, Or {
 
     private List<Map<String, Object>> childrenToEs(Function<String, Optional<String>> getNestedPath) {
         return mapToMap(n -> n.toEs(getNestedPath));
+    }
+
+    private List<Map<String, Object>> childrenToEs(Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
+        return mapToMap(n -> n.toEs(getNestedPath, boostFields));
     }
 
     private List<Node> mapToNode(Function<Node, Node> mapper) {

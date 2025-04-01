@@ -15,6 +15,11 @@ public record ActiveBoolFilter(String alias, Node filter, Map<?, ?> prefLabelByL
     }
 
     @Override
+    public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
+        throw new UnsupportedOperationException("Expand filter before converting to ES");
+    }
+
+    @Override
     public Map<String, Object> toSearchMapping(QueryTree qt, Map<String, String> nonQueryParams) {
         var m = new LinkedHashMap<String, Object>();
         m.put("object", Map.of("prefLabelByLang", prefLabelByLang));
@@ -26,6 +31,11 @@ public record ActiveBoolFilter(String alias, Node filter, Map<?, ?> prefLabelByL
     @Override
     public Node expand(JsonLd jsonLd, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
         return filter.expand(jsonLd, rulingTypes, getBoostFields);
+    }
+
+    @Override
+    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes) {
+        return filter.expand(jsonLd, rulingTypes);
     }
 
     @Override

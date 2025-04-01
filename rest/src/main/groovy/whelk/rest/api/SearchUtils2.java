@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static whelk.search2.Aggs.buildAggQuery;
-import static whelk.search2.EsBoost.addConstantBoosts;
+import static whelk.search2.EsBoost.addBoosts;
 import static whelk.search2.Spell.buildSpellSuggestions;
 import static whelk.search2.Spell.getSpellQuery;
 import static whelk.util.Jackson.mapper;
@@ -80,6 +80,7 @@ public class SearchUtils2 {
     private Map<String, Object> getEsQueryDsl(QueryTree queryTree, QueryParams queryParams, AppParams.StatsRepr statsRepr) {
         var queryDsl = new LinkedHashMap<String, Object>();
 
+//        queryDsl.put("query", getEsQuery(queryTree, queryParams.boostFields, queryParams.esScoreFunctions.isEmpty() ? EsBoost.SCORE_FUNCTIONS : queryParams.esScoreFunctions));
         queryDsl.put("query", getEsQuery(queryTree, queryParams.boostFields, queryParams.esScoreFunctions));
         queryDsl.put("size", queryParams.limit);
         queryDsl.put("from", queryParams.offset);
@@ -115,15 +116,7 @@ public class SearchUtils2 {
     }
 
     private Map<String, Object> getEsQuery(QueryTree queryTree, List<String> boostFields, List<EsBoost.ScoreFunction> scoreFunctions) {
-        Map<String, Object> esQuery = addConstantBoosts(queryTree.toEs(queryUtil, whelk.getJsonld(), boostFields));
-        if (scoreFunctions.isEmpty()) {
-            return esQuery;
-        }
-        return Map.of("function_score",
-                Map.of("query", esQuery,
-                        "functions", scoreFunctions.stream().map(EsBoost.ScoreFunction::toEs).toList(),
-                        "score_mode", "sum",
-                        "boost_mode", "sum"));
+        return addBoosts(queryTree.toEs(queryUtil, whelk.getJsonld(), boostFields), scoreFunctions);
     }
 
     private Map<String, Object> getPartialCollectionView(QueryResult queryResult,
