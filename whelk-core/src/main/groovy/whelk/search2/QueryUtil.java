@@ -2,50 +2,26 @@ package whelk.search2;
 
 import com.google.common.escape.Escaper;
 import com.google.common.net.UrlEscapers;
+
 import whelk.JsonLd;
 import whelk.Whelk;
+import whelk.search2.querytree.Node;
 import whelk.search2.querytree.QueryTree;
-import whelk.util.DocumentUtil;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static whelk.component.ElasticSearch.flattenedLangMapKey;
+import static whelk.search2.QueryParams.ApiParams.OFFSET;
+import static whelk.search2.QueryParams.ApiParams.QUERY;
+import static whelk.search2.QueryParams.ApiParams.SIMPLE_FREETEXT;
 
 public class QueryUtil {
     private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper();
-
-    private final Whelk whelk;
-    public final EsMappings esMappings;
-    public final EsBoost esBoost;
-
-    public QueryUtil(Whelk whelk) {
-        this.whelk = whelk;
-        this.esMappings = new EsMappings(whelk.elastic != null ? whelk.elastic.getMappings() : Collections.emptyMap());
-        this.esBoost = new EsBoost(whelk.getJsonld());
-    }
-
-    public Map<?, ?> query(Map<String, Object> queryDsl) {
-        return whelk.elastic.query(queryDsl);
-    }
-
-    public boolean esIsConfigured() {
-        return whelk != null && whelk.elastic != null;
-    }
-
-    public int maxItems() {
-        return whelk.elastic.maxResultWindow;
-    }
 
     public static String quoteIfPhraseOrContainsSpecialSymbol(String s) {
         // TODO: Don't hardcode
@@ -67,47 +43,45 @@ public class QueryUtil {
                 .collect(Collectors.toMap(e -> (String) e.getKey(), e -> (Object) e.getValue()));
     }
 
-    public Object getChip(String iri) {
-        return whelk.getJsonld().toChip(loadThing(iri));
+    public static String makeFindUrlNoOffset(QueryTree qt, QueryParams queryParams) {
+        return makeFindUrlNoOffset(qt.getFreeTextPart(), qt.toQueryString(), queryParams);
     }
 
-    public Map<String, Object> loadThing(String iri) {
-        return loadThing(iri, whelk);
+    public static String makeFindUrlNoOffset(String i, String q, QueryParams queryParams) {
+        return makeFindUrl(i, q, queryParams.getNonQueryParamsNoOffset());
     }
 
-    public static Map<String, Object> loadThing(String iri, Whelk whelk) {
-        return Optional.ofNullable(whelk.loadData(iri))
-                .map(data -> data.get(JsonLd.GRAPH_KEY))
-                .map(graph -> ((List<?>) graph).get(1))
-                .map(QueryUtil::castToStringObjectMap)
-                .orElse(Collections.emptyMap());
+    public static String makeFindUrlWithOffset(QueryTree qt, QueryParams queryParams, int offset) {
+        return makeFindUrl(qt.getFreeTextPart(), qt.toQueryString(), queryParams.getNonQueryParamsNoOffset(), offset);
     }
 
-    public static String makeFindUrl(String i, String q, Map<String, String> nonQueryParams) {
-        return makeFindUrl(i, q, makeParams(nonQueryParams));
+    public static String makeFindUrl(QueryTree qt, QueryParams queryParams) {
+        return makeFindUrl(qt.getFreeTextPart(), qt.toQueryString(), queryParams.getNonQueryParams());
     }
 
-    public static String makeFindUrl(QueryTree qt, Map<String, String> nonQueryParams) {
-        return makeFindUrl(qt.getTopLevelFreeText(), qt.toQueryString(), nonQueryParams);
+    private static String makeFindUrl(String i, String q, Map<String, String> nonQueryParams) {
+        return makeFindUrl(i, q, nonQueryParams, null);
     }
 
-    public static String makeFindUrl(String i, String q, List<String> nonQueryParams) {
-        List<String> params = new ArrayList<>();
-        params.add(makeParam(QueryParams.ApiParams.SIMPLE_FREETEXT, i));
-        params.add(makeParam(QueryParams.ApiParams.QUERY, q));
-        params.addAll(nonQueryParams);
-        return makeFindUrl(params);
+    private static String makeFindUrl(String i, String q, Map<String, String> nonQueryParams, Integer customOffset) {
+        nonQueryParams.put(SIMPLE_FREETEXT, i);
+        nonQueryParams.put(QUERY, q);
+        if (customOffset != null) {
+            nonQueryParams.put(OFFSET, "" + customOffset);
+        }
+        return makeFindUrl(nonQueryParams);
     }
 
-    public static String makeFindUrl(List<String> params) {
-        return "/find?" + String.join("&", params);
+    public static String makeFindUrl(Map<String, String> params) {
+        return "/find?" + params.entrySet().stream()
+                .map(e -> makeParam(e.getKey(), e.getValue()))
+                .collect(Collectors.joining("&"));
     }
 
-    public static List<String> makeParams(Map<String, String> params) {
-        return params.entrySet()
-                .stream()
-                .map(entry -> makeParam(entry.getKey(), entry.getValue()))
-                .toList();
+    public static Map<String, String> makeUpLink(QueryTree queryTree, Node n, QueryParams queryParams) {
+        QueryTree reducedTree = queryTree.omitNode(n);
+        String upUrl = makeFindUrlNoOffset(reducedTree, queryParams);
+        return Map.of(JsonLd.ID_KEY, upUrl);
     }
 
     private static String makeParam(String key, String value) {
@@ -121,13 +95,6 @@ public class QueryUtil {
                 .replace("%3A", ":")
                 .replace("%2F", "/")
                 .replace("%40", "@");
-    }
-
-    public Optional<String> getNestedPath(String path) {
-        if (esMappings.isNestedField(path)) {
-            return Optional.of(path);
-        }
-        return esMappings.getNestedFields().stream().filter(path::startsWith).findFirst();
     }
 
     public static Map<String, Object> mustWrap(Object l) {
@@ -150,49 +117,11 @@ public class QueryUtil {
         return Map.of("nested", Map.of("path", nestedPath, "query", query));
     }
 
-    public String getSortField(String termPath) {
-        var path = expandLangMapKeys(termPath);
-        if (esMappings.isKeywordField(path) && !esMappings.isFourDigitField(path)) {
-            return String.format("%s.keyword", path);
-        } else {
-            return termPath;
-        }
-    }
-
-    private String expandLangMapKeys(String field) {
-        var parts = field.split("\\.");
-        if (parts.length > 0) {
-            assert whelk != null;
-            var lastIx = parts.length - 1;
-            if (whelk.getJsonld().langContainerAlias.containsKey(parts[lastIx])) {
-                parts[lastIx] = flattenedLangMapKey(parts[lastIx]);
-                return String.join(".", parts);
-            }
-        }
-        return field;
-    }
-
-    @SuppressWarnings("unchecked")
-    public Function<Map<String, Object>, Map<String, Object>> getApplyLensFunc(QueryParams queryParams) {
-        return framedThing -> {
-            @SuppressWarnings("rawtypes")
-            Set<String> preserveLinks = Stream.ofNullable(queryParams.object).collect(Collectors.toSet());
-
-            return switch (queryParams.lens) {
-                case "chips" -> (Map<String, Object>) whelk.getJsonld().toChip(framedThing, preserveLinks);
-                case "full" -> removeSystemInternalProperties(framedThing);
-                default -> whelk.getJsonld().toCard(framedThing, false, false, false, preserveLinks, true);
-            };
-        };
-    }
-
-    private static Map<String, Object> removeSystemInternalProperties(Map<String, Object> framedThing) {
-        DocumentUtil.traverse(framedThing, (value, path) -> {
-            if (!path.isEmpty() && ((String) path.getLast()).startsWith("_")) {
-                return new DocumentUtil.Remove();
-            }
-            return DocumentUtil.NOP;
-        });
-        return framedThing;
+    public static Map<String, Object> loadThing(String iri, Whelk whelk) {
+        return Optional.ofNullable(whelk.loadData(iri))
+                .map(data -> data.get(JsonLd.GRAPH_KEY))
+                .map(graph -> ((List<?>) graph).get(1))
+                .map(QueryUtil::castToStringObjectMap)
+                .orElse(Collections.emptyMap());
     }
 }

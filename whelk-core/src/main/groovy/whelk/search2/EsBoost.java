@@ -54,14 +54,8 @@ public class EsBoost {
         return boostFields;
     }
 
-    public static Map<String, Object> addConstantBoosts(Map<String, Object> esQuery) {
-        List<Map<String, Object>> constantBoosts = List.of(recordsOverCacheRecordsBoost());
-
-        var mustClause = new ArrayList<>();
-        mustClause.add(esQuery);
-        mustClause.addAll(constantBoosts);
-
-        return mustWrap(mustClause);
+    public static List<Map<String, Object>> getConstantBoosts() {
+        return List.of(recordsOverCacheRecordsBoost());
     }
 
     private List<String> computeBoostFields(List<String> types) {

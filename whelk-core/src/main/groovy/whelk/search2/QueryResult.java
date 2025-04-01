@@ -18,6 +18,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static whelk.search2.QueryParams.ApiParams.PREDICATES;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 import static whelk.util.DocumentUtil.getAtPath;
 import static whelk.util.DocumentUtil.traverse;
@@ -32,17 +33,14 @@ public class QueryResult {
     private final List<String> debug;
 
     public QueryResult(Map<?, ?> esResponse, List<String> debug) {
-        var normResponse = normalizeResponse(esResponse);
+        Map<String, Object> mainQueryResponse = getMainResponse(esResponse);
         this.debug = debug;
-        this.numHits = getNumHits(normResponse);
-        this.esItems = collectEsItems(normResponse);
-        this.aggs = Aggs.collectAggResult(normResponse);
-        this.pAggs = Aggs.collectPAggResult(normResponse);
-        this.spell = Spell.collectSuggestions(normResponse);
-    }
-
-    public QueryResult(Map<?, ?> esResponse) {
-        this(esResponse, List.of());
+        this.numHits = getNumHits(mainQueryResponse);
+        this.esItems = collectEsItems(mainQueryResponse);
+        // TODO: move method here
+        this.aggs = Aggs.collectAggResult(getAggregations(mainQueryResponse));
+        this.spell = Spell.collectSuggestions(mainQueryResponse);
+        this.pAggs = Aggs.collectPAggResult(getPAggregations(mainQueryResponse, getSecondaryResponse(esResponse)));
     }
 
     public List<Map<String, Object>> collectItems(Function<Map<String, Object>, Map<String, Object>> applyLens) {
@@ -71,12 +69,38 @@ public class QueryResult {
                 .toList();
     }
 
+    private static Map<String, Object> getMainResponse(Map<?, ?> esResponse) {
+        return normalizeResponse(esResponse.get("responses") instanceof List<?> l
+                ? (Map<?, ?>) l.getFirst()
+                : esResponse);
+    }
+
+    private static Map<String, Object> getSecondaryResponse(Map<?, ?> esResponse) {
+        return normalizeResponse(esResponse.get("responses") instanceof List<?> l && l.size() > 1
+                ? (Map<?, ?>) l.get(1)
+                : Map.of());
+    }
+
+    private static Map<String, Object> getAggregations(Map<String, Object> esResponse) {
+        var aggs = castToStringObjectMap(esResponse.get("aggregations"));
+        aggs.remove(PREDICATES);
+        return aggs;
+    }
+
+    private static Map<String, Object> getPAggregations(Map<String, Object> mainResponse, Map<String, Object> secondaryResponse) {
+        var aggs = ((Map<?, ?>) (secondaryResponse.isEmpty() ? mainResponse : secondaryResponse)
+                .getOrDefault("aggregations", Map.of()))
+                .get(PREDICATES);
+        return castToStringObjectMap(aggs);
+    }
+
     private static Map<String, Object> normalizeResponse(Map<?, ?> esResponse) {
         var norm = new LinkedHashMap<String, Object>();
         esResponse.forEach((k, v) ->
                 {
                     if (v != null) {
                         norm.put((String) k, v);
+
                     }
                 }
         );
@@ -115,12 +139,12 @@ public class QueryResult {
             return castToStringObjectMap(map.get("_explanation"));
         }
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
+        @SuppressWarnings({"unchecked", "rawtypes"})
         private Map<String, Object> getFields() {
             return castToStringObjectMap(map.get("_fields")).entrySet().stream()
                     .flatMap(this::flattenNestedField)
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a,b) -> {
-                        if (a instanceof List l1 &&  b instanceof List l2) {
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> {
+                        if (a instanceof List l1 && b instanceof List l2) {
                             l1.addAll(l2);
                         }
                         return a;

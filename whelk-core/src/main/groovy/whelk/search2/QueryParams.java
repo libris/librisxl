@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 
 public class QueryParams {
@@ -53,6 +54,8 @@ public class QueryParams {
 
     public final boolean skipStats;
 
+    private Map<String, String> paramsMap;
+
     public QueryParams(Map<String, String[]> apiParameters) throws InvalidQueryException {
         this.sortBy = Sort.fromString(getOptionalSingleNonEmpty(ApiParams.SORT, apiParameters).orElse(""));
         this.object = getOptionalSingleNonEmpty(ApiParams.OBJECT, apiParameters).orElse(null);
@@ -69,43 +72,64 @@ public class QueryParams {
         this.skipStats = getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
     }
 
-    public Map<String, String> getNonQueryParams() {
-        return getNonQueryParams(offset);
+    public Map<String, String> getNonQueryParamsNoOffset() {
+        Map<String, String> params = getNonQueryParams();
+        params.remove(ApiParams.OFFSET);
+        return params;
     }
 
-    public Map<String, String> getNonQueryParams(int offset) {
-        Map<String, String> params = new LinkedHashMap<>();
-        if (offset > 0) {
-            params.put(ApiParams.OFFSET, "" + offset);
-        }
-        params.put(ApiParams.LIMIT, "" + limit);
-        if (object != null) {
-            params.put(ApiParams.OBJECT, object);
-        }
-        if (!predicates.isEmpty()) {
-            params.put(ApiParams.PREDICATES, String.join(",", predicates));
-        }
-        if (mode != null) {
-            params.put(ApiParams.EXTRA, mode);
-        }
-        var spellP = spell.asString();
-        if (!spellP.isEmpty()) {
-            params.put(ApiParams.SPELL, spellP);
-        }
-        var sort = sortBy.asString();
-        if (!sort.isEmpty()) {
-            params.put(ApiParams.SORT, sort);
-        }
-        if (!debug.isEmpty()) {
-            params.put(ApiParams.DEBUG, String.join(",", debug));
-        }
-        if (!boostFields.isEmpty()) {
-            params.put(ApiParams.BOOST, String.join(",", boostFields));
-        }
-        if (skipStats) {
-            params.put(ApiParams.STATS, "false");
-        }
+    public Map<String, String> getNonQueryParams() {
+        var params = getParamsMap();
+        params.remove(ApiParams.SIMPLE_FREETEXT);
+        params.remove(ApiParams.QUERY);
         return params;
+    }
+
+    private Map<String, String> getParamsMap() {
+        if (paramsMap == null) {
+            Map<String, String> params = new LinkedHashMap<>();
+
+            if (i != null) {
+                params.put(ApiParams.SIMPLE_FREETEXT, i);
+            }
+            if (q != null) {
+                params.put(ApiParams.QUERY, q);
+            }
+            if (offset > 0) {
+                params.put(ApiParams.OFFSET, "" + offset);
+            }
+            params.put(ApiParams.LIMIT, "" + limit);
+            if (object != null) {
+                params.put(ApiParams.OBJECT, object);
+            }
+            if (!predicates.isEmpty()) {
+                params.put(ApiParams.PREDICATES, String.join(",", predicates));
+            }
+            if (mode != null) {
+                params.put(ApiParams.EXTRA, mode);
+            }
+            var spellP = spell.asString();
+            if (!spellP.isEmpty()) {
+                params.put(ApiParams.SPELL, spellP);
+            }
+            var sort = sortBy.asString();
+            if (!sort.isEmpty()) {
+                params.put(ApiParams.SORT, sort);
+            }
+            if (!debug.isEmpty()) {
+                params.put(ApiParams.DEBUG, String.join(",", debug));
+            }
+            if (!boostFields.isEmpty()) {
+                params.put(ApiParams.BOOST, String.join(",", boostFields));
+            }
+            if (skipStats) {
+                params.put(ApiParams.STATS, "false");
+            }
+
+            this.paramsMap = params;
+        }
+
+        return new LinkedHashMap<>(paramsMap);
     }
 
     private static Optional<String> getOptionalSingleNonEmpty(String name, Map<String, String[]> queryParameters) {

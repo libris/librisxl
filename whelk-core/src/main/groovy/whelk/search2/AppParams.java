@@ -195,7 +195,7 @@ public class AppParams {
     }
 
     private Map<String, Filter.AliasedFilter> getFilterByAlias(Map<String, Object> appConfig) {
-        return getAsListOfMap(appConfig, "_filterDefinitions").stream()
+        return getAsListOfMap(appConfig, "_filterAliases").stream()
                 .map(m -> new Filter.AliasedFilter(
                         (String) m.get("alias"),
                         (String) m.get("filter"),

@@ -17,8 +17,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static whelk.search2.QueryUtil.mustWrap;
-
 public class Aggs {
     private static final String NESTED_AGG_NAME = "n";
 
@@ -44,7 +42,7 @@ public class Aggs {
         Map<String, Object> query = new LinkedHashMap<>();
 
         for (AppParams.Slice slice : statsRepr.sliceList()) {
-            Property property = slice.property();
+            Property property = slice.getProperty(jsonLd);
 
             if (!property.restrictions().isEmpty()) {
                 // TODO: E.g. author (combining contribution.role and contribution.agent)
@@ -70,7 +68,7 @@ public class Aggs {
                         }
 
                         // Wrap agg query with a filter
-                        var filter = mustWrap(Collections.emptyList());
+                        var filter = QueryUtil.mustWrap(Collections.emptyList());
                         aggs = Map.of("aggs", Map.of(property.name(), aggs),
                                 "filter", filter);
 
@@ -81,7 +79,7 @@ public class Aggs {
         return query;
     }
 
-    public static Map<String, Object> buildPAggQuery(Entity entity,
+    public static Map<String, Object> buildPAggQuery(Link link,
                                                      List<String> curatedPredicates,
                                                      JsonLd jsonLd,
                                                      Function<String, Optional<String>> getNestedPath) {
@@ -91,7 +89,7 @@ public class Aggs {
                 .stream()
                 .collect(Collectors.toMap(
                         Function.identity(),
-                        p -> new PathValue(new Property(p, jsonLd), Operator.EQUALS, new Link(entity.id()))
+                        p -> new PathValue(new Property(p, jsonLd), Operator.EQUALS, link)
                                 .expand(jsonLd)
                                 .toEs(getNestedPath))
                 );
@@ -103,37 +101,31 @@ public class Aggs {
         return query;
     }
 
-    public static List<Bucket> collectPAggResult(Map<String, Object> esResponse) {
-        var agg = getAggregations(esResponse).get(QueryParams.ApiParams.PREDICATES);
-        if (agg == null) {
-            return Collections.emptyList();
-        }
-        var buckets = (Map<?, ?>) agg.get("buckets");
-        if (buckets == null) {
-            return Collections.emptyList();
-        }
-        return buckets.entrySet()
+    public static List<Bucket> collectPAggResult(Map<String, Object> aggs) {
+        return ((Map<?, ?>) aggs.getOrDefault("buckets", Map.of()))
+                .entrySet()
                 .stream()
                 .map(e -> new Bucket((String) e.getKey(), (int) ((Map<?, ?>) e.getValue()).get("doc_count")))
                 .toList();
     }
 
-    public static List<Aggregation> collectAggResult(Map<String, Object> esResponse) {
+    public static List<Aggregation> collectAggResult(Map<String, Object> aggsMap) {
         var aggregations = new ArrayList<Aggregation>();
 
-        for (var e : getAggregations(esResponse).entrySet()) {
+        for (var e : aggsMap.entrySet()) {
             var path = e.getKey();
+            var aggs = (Map<?, ?>) e.getValue();
             if (path.equals(QueryParams.ApiParams.PREDICATES)) {
                 continue;
             }
-            var property = e.getValue()
+            var property = aggs
                     .keySet()
                     .stream()
                     .filter(Predicate.not("doc_count"::equals))
                     .map(String.class::cast)
                     .findFirst()
                     .get();
-            var agg = (Map<?, ?>) e.getValue().get(property);
+            var agg = (Map<?, ?>) aggs.get(property);
 
             if (agg == null) {
                 continue;
@@ -152,12 +144,5 @@ public class Aggs {
         }
 
         return aggregations;
-    }
-
-    private static Map<String, Map<?, ?>> getAggregations(Map<String, Object> esResponse) {
-        return ((Map<?, ?>) esResponse.getOrDefault("aggregations", Collections.emptyMap()))
-                .entrySet()
-                .stream()
-                .collect(Collectors.toMap(e -> (String) e.getKey(), e -> (Map<?, ?>) e.getValue()));
     }
 }
