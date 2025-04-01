@@ -3,25 +3,6 @@ package whelk.search2.querytree
 import spock.lang.Specification
 import whelk.search2.Disambiguate
 
-import static DummyNodes.and
-import static DummyNodes.or
-import static DummyNodes.eq
-import static DummyNodes.neq
-import static DummyNodes.pathV
-import static DummyNodes.andXY
-import static DummyNodes.notXY
-import static DummyNodes.orXY
-import static DummyNodes.v1
-import static DummyNodes.ft1
-import static DummyNodes.notPathV1
-import static DummyNodes.path1
-import static DummyNodes.path2
-import static DummyNodes.pathV1
-import static DummyNodes.pathV2
-import static DummyNodes.pathV3
-import static DummyNodes.propV1
-import static DummyNodes.v2
-
 class NodeSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()
 

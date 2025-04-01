@@ -4,15 +4,6 @@ import spock.lang.Specification
 import whelk.search2.Disambiguate
 import whelk.search2.QueryParams
 
-import static DummyNodes.eq
-import static DummyNodes.neq
-import static DummyNodes.pathV
-import static DummyNodes.prop1
-import static DummyNodes.prop2
-import static DummyNodes.v1
-import static DummyNodes.v3
-import static whelk.JsonLd.REVERSE_KEY
-
 class PathValueSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()
 

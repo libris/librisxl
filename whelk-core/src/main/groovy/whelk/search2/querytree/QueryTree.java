@@ -29,7 +29,7 @@ public class QueryTree {
     public Node tree;
 
     public QueryTree(String queryString, Disambiguate disambiguate) throws InvalidQueryException {
-        if (!queryString.isEmpty()) {
+        if (queryString != null && !queryString.isEmpty()) {
             this.tree = buildTree(queryString, disambiguate);
             normalizeTree();
         }

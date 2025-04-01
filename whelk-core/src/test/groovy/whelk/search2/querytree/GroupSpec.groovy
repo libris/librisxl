@@ -3,15 +3,6 @@ package whelk.search2.querytree
 import spock.lang.Specification
 import whelk.search2.Disambiguate
 
-import static DummyNodes.and
-import static DummyNodes.or
-
-import static DummyNodes.pathV1
-import static DummyNodes.pathV2
-import static DummyNodes.orXY
-import static DummyNodes.andXY
-import static whelk.search2.querytree.DummyNodes.pathV3
-import static whelk.search2.querytree.DummyNodes.pathV4
 import static whelk.search2.querytree.QueryTreeBuilder.buildTree
 
 class GroupSpec extends Specification {
