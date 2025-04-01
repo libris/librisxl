@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.util.FresnelUtil.LangCode.ORIGINAL_SCRIPT_FIRST;
@@ -107,6 +108,7 @@ public class FresnelUtil {
     );
 
     JsonLd jsonLd;
+    List<LangCode> fallbackLocales;
     Formats formats;
 
     private final Map<DerivedCacheKey, Lens> derivedLensCache = new ConcurrentHashMap<>();
@@ -114,6 +116,7 @@ public class FresnelUtil {
 
     public FresnelUtil(JsonLd jsonLd) {
         this.jsonLd = jsonLd;
+        this.fallbackLocales = jsonLd.locales.stream().map(LangCode::new).toList();
         this.formats = new Formats(getUnsafe(jsonLd.displayData, "formatters", null));
     }
 
@@ -563,14 +566,19 @@ public class FresnelUtil {
             }
         }
 
-        public List<String> pick(LangCode langCode) {
+        public List<String> pick(LangCode langCode, List<LangCode> fallbackLocales) {
             if (languages.containsKey(langCode)) {
                 return languages.get(langCode);
-            } else {
-                // TODO pick "best"
-                var randomLang = languages.keySet().stream().findFirst();
-                return randomLang.map(languages::get).orElse(Collections.emptyList());
             }
+
+            for (LangCode fallbackLocale : fallbackLocales) {
+                if (languages.containsKey(fallbackLocale)) {
+                    return languages.get(fallbackLocale);
+                }
+            }
+
+            var randomLang = languages.keySet().stream().findFirst();
+            return randomLang.map(languages::get).orElse(Collections.emptyList());
         }
 
         public boolean isTransliterated() {
@@ -827,7 +835,7 @@ public class FresnelUtil {
                 // can never be inside array
                 return lang.isTransliterated()
                         ? List.of(new DecoratedTransliterated(lang))
-                        : formatValues(lang.pick(locale), className, propertyName);
+                        : formatValues(lang.pick(locale, fallbackLocales), className, propertyName);
             }
             else if (val instanceof List<?> list) {
                 return mapWithIndex(list,
