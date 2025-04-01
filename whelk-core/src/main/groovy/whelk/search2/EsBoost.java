@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -54,14 +55,8 @@ public class EsBoost {
         return boostFields;
     }
 
-    public static Map<String, Object> addConstantBoosts(Map<String, Object> esQuery) {
-        List<Map<String, Object>> constantBoosts = List.of(recordsOverCacheRecordsBoost());
-
-        var mustClause = new ArrayList<>();
-        mustClause.add(esQuery);
-        mustClause.addAll(constantBoosts);
-
-        return mustWrap(mustClause);
+    public static Map<String, Object> addBoosts(Map<String, Object> esQuery, List<ScoreFunction> scoreFunctions) {
+        return mustWrap(List.of(esQuery, recordsOverCacheRecordsBoost(), functionScores(scoreFunctions)));
     }
 
     private List<String> computeBoostFields(List<String> types) {
@@ -375,6 +370,17 @@ public class EsBoost {
         return shouldWrap(List.of(recordBoost, virtualRecordBoost, cacheRecordBoost));
     }
 
+    private static Map<String, Object> functionScores(List<ScoreFunction> scoreFunctions) {
+        List<Map<String, Object>> functions = (scoreFunctions.isEmpty() ? SCORE_FUNCTIONS : scoreFunctions).stream()
+                .map(EsBoost.ScoreFunction::toEs)
+                .toList();
+        return Map.of("function_score",
+                Map.of("query", Map.of("match_all", Map.of()),
+                        "functions", functions,
+                        "score_mode", "sum",
+                        "boost_mode", "sum"));
+    }
+
     private static final List<String> CONCEPT_BOOST = List.of(
             "prefLabel^1500",
             "prefLabelByLang.sv^1500",
@@ -397,6 +403,25 @@ public class EsBoost {
             "related._str.exact^10",
             "scopeNote^10",
             "keyword._str.exact^10"
+    );
+
+    public static List<String> BOOST_FIELDS = List.of(
+//            "_topChipStr^400(1 / doc['_topChipStr.length'].value)",
+//            "_topChipStr.exact^400(1 / doc['_topChipStr.length'].value)",
+            "_topChipStr^400",
+            "_topChipStr.exact^400",
+            "_chipStr^200",
+            "_chipStr.exact^200",
+            "_cardStr^50",
+            "_cardStr.exact^50",
+            "_searchCardStr^1",
+            "_searchCardStr.exact^1"
+    );
+
+    public static List<ScoreFunction> SCORE_FUNCTIONS = List.of(
+            new FieldValueFactor("reverseLinks.totalItemsByRelation.instanceOf", 10, "ln1p", 0, 15),
+            new FieldValueFactor("reverseLinks.totalItemsByRelation.itemOf.instanceOf", 10, "ln1p", 0, 10)
+//            new MatchingFieldValue("language.@id", "https://id.kb.se/language/swe", 50)
     );
 
     public sealed interface ScoreFunction permits FieldValueFactor, MatchingFieldValue {
@@ -425,8 +450,8 @@ public class EsBoost {
     public record MatchingFieldValue(String field, String value, float boost) implements ScoreFunction {
         @Override
         public Map<String, Object> toEs() {
-            return Map.of("script_score", Map.of(
-                            "script", String.format("doc['%s'].value == '%s' ? %f : 0", field, value, boost)));
+            String script = String.format(Locale.US, "doc['%s'].value == '%s' ? %.2f : 0", field, value, boost);
+            return Map.of("script_score", Map.of("script", Map.of("source", script)));
         }
 
         @Override

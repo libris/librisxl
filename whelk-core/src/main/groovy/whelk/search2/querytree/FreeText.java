@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 import static whelk.search2.QueryUtil.mustNotWrap;
 import static whelk.search2.QueryUtil.shouldWrap;
@@ -78,9 +79,7 @@ public record FreeText(TextQuery textQuery, Operator operator, String value, Col
         );
         boostedSoft.put(queryMode, bs);
 
-        var shouldClause = boostFields.contains("no-default-field") // dont search index.query.default_field, i.e. _all
-            ? new ArrayList<>(List.of(boostedExact))
-            : new ArrayList<>(Arrays.asList(boostedExact, boostedSoft, simpleQuery));
+        var shouldClause = new ArrayList<>(Arrays.asList(boostedExact, boostedSoft, simpleQuery));
 
         if (operator() == Operator.EQUALS) {
             return shouldWrap(shouldClause);
@@ -99,8 +98,55 @@ public record FreeText(TextQuery textQuery, Operator operator, String value, Col
     }
 
     @Override
+    public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
+        String s = value;
+        s = Unicode.normalizeForSearch(s);
+        boolean isSimple = ESQuery.isSimple(s);
+        String queryMode = isSimple ? "simple_query_string" : "query_string";
+        if (!isSimple) {
+            s = ESQuery.escapeNonSimpleQueryString(s);
+        }
+        String queryString = s;
+
+        if (boostFields.isEmpty()) {
+            return wrap(buildSimpleQuery(queryMode, queryString));
+        }
+
+        List<String> basicBoostFields = boostFields.stream().filter(f -> Pattern.matches(".+\\^(0\\.)?[0-9]+", f)).toList();
+        List<String> functionBoostFields = boostFields.stream().filter(f -> Pattern.matches(".+\\^(0\\.)?[0-9]+\\(.+\\)", f)).toList();
+
+        List<Map<String, Object>> queries = new ArrayList<>();
+
+        queries.add(buildSimpleQuery(queryMode, queryString, basicBoostFields));
+
+        Map<String, List<String>> fieldsGroupedByFunction = new HashMap<>();
+        for (String bf : functionBoostFields) {
+            String[] split = bf.split("\\(");
+            String field = split[0];
+            String multiplier = split[1].replace(")", "");
+            String function = "_score * " + multiplier;
+            fieldsGroupedByFunction.computeIfAbsent(function, k -> new ArrayList<>()).add(field);
+        }
+
+        fieldsGroupedByFunction.forEach((function, fields) -> {
+            Map<String, Object> scriptScoreQuery = Map.of(
+                    "script_score", Map.of(
+                            "query", buildSimpleQuery(queryMode, queryString, fields),
+                            "script", Map.of("source", function)));
+            queries.add(scriptScoreQuery);
+        });
+
+        return wrap(queries.size() == 1 ? queries.getFirst() : shouldWrap(queries));
+    }
+
+    @Override
     public Node expand(JsonLd jsonLd, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
         return new FreeText(textQuery, operator, value, getBoostFields.apply(rulingTypes));
+    }
+
+    @Override
+    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes) {
+        return this;
     }
 
     @Override
@@ -132,5 +178,30 @@ public record FreeText(TextQuery textQuery, Operator operator, String value, Col
         TextQuery(Map<String, Object> definition) {
             super("textQuery", definition, null);
         }
+    }
+
+    private Map<String, Object> wrap(Map<String, Object> query) {
+        if (operator == Operator.EQUALS) {
+            return query;
+        }
+        if (operator == Operator.NOT_EQUALS) {
+            return mustNotWrap(query);
+        }
+        throw new RuntimeException("Invalid operator"); // Not reachable
+    }
+
+    private Map<String, Object> buildSimpleQuery(String queryMode, String queryString) {
+        return buildSimpleQuery(queryMode, queryString, List.of());
+    }
+
+    private Map<String, Object> buildSimpleQuery(String queryMode, String queryString, Collection<String> fields) {
+        var query = new HashMap<>();
+        query.put("query", queryString);
+        query.put("analyze_wildcard", true);
+        query.put("default_operator", "AND");
+        if (!fields.isEmpty()) {
+            query.put("fields", fields);
+        }
+        return Map.of(queryMode, query);
     }
 }
