@@ -408,8 +408,10 @@ public class EsBoost {
     );
 
     public static List<String> BOOST_FIELDS = List.of(
-            "_topChipStr^400(1 / doc['_topChipStr.length'].value)",
-            "_topChipStr.exact^400(1 / doc['_topChipStr.length'].value)",
+//            "_topChipStr^400(1 / doc['_topChipStr.length'].value)",
+//            "_topChipStr.exact^400(1 / doc['_topChipStr.length'].value)",
+            "_topChipStr^400",
+            "_topChipStr.exact^400",
             "_chipStr^200",
             "_chipStr.exact^200",
             "_cardStr^50",
