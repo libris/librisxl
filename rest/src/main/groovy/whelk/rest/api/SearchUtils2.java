@@ -80,7 +80,6 @@ public class SearchUtils2 {
     private Map<String, Object> getEsQueryDsl(QueryTree queryTree, QueryParams queryParams, AppParams.StatsRepr statsRepr) {
         var queryDsl = new LinkedHashMap<String, Object>();
 
-//        queryDsl.put("query", getEsQuery(queryTree, queryParams.boostFields, queryParams.esScoreFunctions.isEmpty() ? EsBoost.SCORE_FUNCTIONS : queryParams.esScoreFunctions));
         queryDsl.put("query", getEsQuery(queryTree, queryParams.boostFields, queryParams.esScoreFunctions));
         queryDsl.put("size", queryParams.limit);
         queryDsl.put("from", queryParams.offset);

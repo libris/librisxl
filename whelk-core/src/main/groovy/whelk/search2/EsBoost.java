@@ -371,9 +371,7 @@ public class EsBoost {
     }
 
     private static Map<String, Object> functionScores(List<ScoreFunction> scoreFunctions) {
-        List<Map<String, Object>> functions = scoreFunctions.stream()
-                // TODO: Use this when switching over to new boost fields
-//                (scoreFunctions.isEmpty() ? SCORE_FUNCTIONS : scoreFunctions).stream()
+        List<Map<String, Object>> functions = (scoreFunctions.isEmpty() ? SCORE_FUNCTIONS : scoreFunctions).stream()
                 .map(EsBoost.ScoreFunction::toEs)
                 .toList();
         return Map.of("function_score",
@@ -421,8 +419,8 @@ public class EsBoost {
     );
 
     public static List<ScoreFunction> SCORE_FUNCTIONS = List.of(
-            new FieldValueFactor("reverseLinks.totalItemsByRelation.instanceOf", 100, "ln1p", 0, 15),
-            new FieldValueFactor("reverseLinks.totalItemsByRelation.itemOf.instanceOf", 100, "ln1p", 0, 10)
+            new FieldValueFactor("reverseLinks.totalItemsByRelation.instanceOf", 10, "ln1p", 0, 15),
+            new FieldValueFactor("reverseLinks.totalItemsByRelation.itemOf.instanceOf", 10, "ln1p", 0, 10)
 //            new MatchingFieldValue("language.@id", "https://id.kb.se/language/swe", 50)
     );
 

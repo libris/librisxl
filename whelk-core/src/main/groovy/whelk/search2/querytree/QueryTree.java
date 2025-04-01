@@ -38,11 +38,6 @@ public class QueryTree {
     }
 
     public Map<String, Object> toEs(QueryUtil queryUtil, JsonLd jsonLd, Collection<String> boostFields) {
-        if (boostFields.isEmpty()) {
-            // TODO: Remove this when switching to new boost fields
-            return getFiltered().tree.expand(jsonLd, List.of(), queryUtil.esBoost::getBoostFields).toEs(queryUtil::getNestedPath, List.of());
-        }
-        // TODO: Make this default
         return getFiltered().tree.expand(jsonLd, List.of()).toEs(queryUtil::getNestedPath, boostFields.isEmpty() ? EsBoost.BOOST_FIELDS : boostFields);
     }
 
