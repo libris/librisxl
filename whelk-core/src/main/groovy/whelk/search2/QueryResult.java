@@ -197,6 +197,7 @@ public class QueryResult {
             var totalScore = scorePerField.values().stream().reduce((double) 0, Double::sum);
             var matchedFields = scorePerField.keySet().stream()
                     .map(f -> f.split(":")[0])
+                    .filter(fields::containsKey)
                     .collect(Collectors.toMap(Function.identity(),
                             fields::get,
                             (k1, k2) -> k1)
@@ -212,6 +213,39 @@ public class QueryResult {
                 if (value instanceof Map<?, ?> m) {
                     String description = (String) m.get("description");
                     if (description.contains("[PerFieldSimilarity]")) {
+                        Double score = (Double) m.get("value");
+                        if (score > 0) {
+                            scorePerField.put(parseField(description), score);
+                        }
+                    }
+                    else if ("function score, score mode [sum]".equals(description)) {
+                        ((List<?>) m.get("details")).stream()
+                                .map(Map.class::cast)
+                                .forEach(o -> {
+                                    Double score = (Double) o.get("value");
+                                    if (score > 0) {
+                                        ((List<?>) o.get("details")).stream()
+                                                .map(Map.class::cast)
+                                                .map(_m -> (String) _m.get("description"))
+                                                .filter(desc -> desc.startsWith("field value function:"))
+                                                .map(LdItem::parseField)
+                                                .findFirst()
+                                                .ifPresent(field -> scorePerField.put(field, score));
+                                    }
+                                });
+                    }
+                    else if ("max of:".equals(description)) {
+                        Double score = (Double) m.get("value");
+                        if (score > 0) {
+                            ((List<?>) m.get("details")).stream()
+                                    .map(Map.class::cast)
+                                    .filter(_m -> score.equals(_m.get("value")))
+                                    .map(_m -> (String) _m.get("description"))
+                                    .map(LdItem::parseField)
+                                    .findFirst()
+                                    .ifPresent(field -> scorePerField.put(field, score));
+                        }
+                    } else if (description.startsWith("script score function")) {
                         Double score = (Double) m.get("value");
                         if (score > 0) {
                             scorePerField.put(parseField(description), score);
@@ -248,8 +282,15 @@ public class QueryResult {
                         return m.group();
                     }
                 }
+            } else if (description.startsWith("field value function:") || description.startsWith("script score function")) {
+                Matcher matcher = Pattern.compile("doc\\['[^ ]+']").matcher(description);
+                if (matcher.find()) {
+                    String match = matcher.group();
+                    String key = match.substring(match.indexOf("'") + 1);
+                    return key.substring(0, key.indexOf("'")) + ":N/A";
+                }
             }
-            return description;
+            return Stream.of(description.split("\\^")).findFirst().get();
         }
 
         private static String makeFindOLink(String iri) {

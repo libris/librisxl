@@ -4,7 +4,11 @@ import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.exception.WhelkRuntimeException;
 
-import whelk.search2.*;
+
+import whelk.search2.ESSettings;
+import whelk.search2.Query;
+import whelk.search2.QueryParams;
+import whelk.search2.VocabMappings;
 import whelk.util.http.RedirectException;
 
 import java.io.IOException;

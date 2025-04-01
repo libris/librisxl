@@ -233,7 +233,15 @@ public class Query {
     private Map<String, Object> getEsQuery(QueryTree queryTree) {
         var query = toEsQuery(queryTree);
         var withConstantBoost = Stream.concat(Stream.of(query), getConstantBoosts().stream()).toList();
-        return mustWrap(withConstantBoost);
+        var must = mustWrap(withConstantBoost);
+        if (queryParams.esScoreFunctions.isEmpty()) {
+            return must;
+        }
+        return Map.of("function_score",
+                Map.of("query", must,
+                        "functions", queryParams.esScoreFunctions.stream().map(EsBoost.ScoreFunction::toEs).toList(),
+                        "score_mode", "sum",
+                        "boost_mode", "sum"));
     }
 
     private Map<String, Object> toEsQuery(QueryTree queryTree) {

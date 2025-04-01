@@ -2,14 +2,17 @@ package whelk.search2;
 
 import whelk.exception.InvalidQueryException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class QueryParams {
     private final static int DEFAULT_LIMIT = 200;
@@ -31,6 +34,7 @@ public class QueryParams {
         public static final String APP_CONFIG = "_appConfig";
         public static final String BOOST = "_boost";
         public static final String STATS = "_stats";
+        public static final String FN_SCORE = "_fnScore";
     }
 
     public static class Debug {
@@ -48,6 +52,7 @@ public class QueryParams {
     public final String lens;
     public final Spell spell;
     public final List<String> boostFields;
+    public final List<EsBoost.ScoreFunction> esScoreFunctions;
 
     public final String q;
     public final String i;
@@ -70,6 +75,7 @@ public class QueryParams {
         this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse("");
         this.i = getOptionalSingle(ApiParams.SIMPLE_FREETEXT, apiParameters).orElse("");
         this.skipStats = getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
+        this.esScoreFunctions = getEsScoreFunctions(apiParameters);
     }
 
     public Map<String, String> getNonQueryParamsNoOffset() {
@@ -185,5 +191,32 @@ public class QueryParams {
         } catch (NumberFormatException ignored) {
             return defaultTo;
         }
+    }
+
+    private List<EsBoost.ScoreFunction> getEsScoreFunctions(Map<String, String[]> queryParameters) {
+        List<EsBoost.ScoreFunction> scoreFunctions = new ArrayList<>();
+        try {
+            getMultiple(ApiParams.FN_SCORE, queryParameters).stream()
+                    .map(s -> s.split(";"))
+                    .forEach(fieldConfig -> {
+                        String fnType = fieldConfig[0];
+                        if (fnType.equalsIgnoreCase("fvf")) {
+                            String field = fieldConfig[1];
+                            float factor = Float.parseFloat(fieldConfig[2]);
+                            String modifier = fieldConfig[3];
+                            float missing = Float.parseFloat(fieldConfig[4]);
+                            float weight = Float.parseFloat(fieldConfig[5]);
+                            scoreFunctions.add(new EsBoost.FieldValueFactor(field, factor, modifier, missing, weight));
+                        }
+                        if (fnType.equalsIgnoreCase("mfv")) {
+                            String field = fieldConfig[1];
+                            String value = fieldConfig[2];
+                            float boost = Float.parseFloat(fieldConfig[3]);
+                            scoreFunctions.add(new EsBoost.MatchingFieldValue(field, value, boost));
+                        }
+                    });
+        } catch (Exception ignored) {
+        }
+        return scoreFunctions;
     }
 }

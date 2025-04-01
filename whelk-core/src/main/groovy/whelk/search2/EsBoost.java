@@ -392,4 +392,40 @@ public class EsBoost {
             "scopeNote^10",
             "keyword._str.exact^10"
     );
+
+    public sealed interface ScoreFunction permits FieldValueFactor, MatchingFieldValue {
+        Map<String, Object> toEs();
+        List<String> paramList();
+    }
+
+    public record FieldValueFactor(String field, float factor, String modifier, float missing, float weight) implements ScoreFunction {
+        @Override
+        public Map<String, Object> toEs() {
+            return Map.of(
+                    "field_value_factor", Map.of(
+                            "field", field,
+                            "factor", factor,
+                            "modifier", modifier,
+                            "missing", missing),
+                    "weight", weight);
+        }
+
+        @Override
+        public List<String> paramList() {
+            return List.of("fvf", field, Float.toString(factor), modifier, Float.toString(missing), Float.toString(weight));
+        }
+    }
+
+    public record MatchingFieldValue(String field, String value, float boost) implements ScoreFunction {
+        @Override
+        public Map<String, Object> toEs() {
+            return Map.of("script_score", Map.of(
+                            "script", String.format("doc['%s'].value == '%s' ? %f : 0", field, value, boost)));
+        }
+
+        @Override
+        public List<String> paramList() {
+            return List.of("mfv", field, value, Float.toString(boost));
+        }
+    }
 }
