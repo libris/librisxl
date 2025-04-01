@@ -39,13 +39,13 @@ class DummyNodes {
     static def andXYZ = new And([pathV1, pathV2, pathV3])
     static def notXY = new And([notPathV1, notPathV2])
 
-    static def ft1 = new FreeText(new FreeText.TextQuery(['prefLabel': 'freetext query']), Operator.EQUALS, 'ft1')
+    static def ft1 = new FreeText('ft1')
 
     static def type1 = new PathValue(new Path(new Property("rdf:type", [:], null)), Operator.EQUALS, new VocabTerm("T1", [:]))
     static def type2 = new PathValue(new Path(new Property("rdf:type", [:], null)), Operator.EQUALS, new VocabTerm("T2", [:]))
 
     static def ft(String s) {
-        return new FreeText(new FreeText.TextQuery(['prefLabel': 'freetext query']), eq, s)
+        return new FreeText(s)
     }
 
     static def notFt(String s) {
@@ -64,12 +64,16 @@ class DummyNodes {
         return new PathValue(p, op, v)
     }
 
+    static def pathV(Operator op) {
+        return new PathValue('p', op, new Literal('v'))
+    }
+
     static def pathV(String p) {
         return new PathValue(p, eq, v1)
     }
 
     static def abf(String alias, Node filter, Map prefLabelByLang) {
-        return new ActiveBoolFilter(alias, filter, prefLabelByLang)
+        return new ActiveFilter(alias, filter, prefLabelByLang)
     }
 
     static def and(List l) {

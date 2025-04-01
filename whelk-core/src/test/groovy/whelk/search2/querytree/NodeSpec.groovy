@@ -1,6 +1,7 @@
 package whelk.search2.querytree
 
 import spock.lang.Specification
+import whelk.search2.Disambiguate
 
 import static DummyNodes.and
 import static DummyNodes.or
@@ -22,9 +23,11 @@ import static DummyNodes.propV1
 import static DummyNodes.v2
 
 class NodeSpec extends Specification {
+    Disambiguate disambiguate = TestData.getDisambiguate()
+
     def "convert to ES"() {
         given:
-        def tree = and([or([notPathV1, pathV2]), ft1])
+        def tree = QueryTreeBuilder.buildTree('(NOT p1:v1 OR p2:v2) something', disambiguate)
 
         expect:
         tree.toEs(x -> Optional.empty()) ==
@@ -49,7 +52,7 @@ class NodeSpec extends Specification {
                                                         'filter': [
                                                                 'simple_query_string': [
                                                                         'default_operator': 'AND',
-                                                                        'query'           : 'v:2',
+                                                                        'query'           : 'v2',
                                                                         'fields'          : ['p2']
                                                                 ]
                                                         ]
@@ -60,7 +63,7 @@ class NodeSpec extends Specification {
                                         'simple_query_string': [
                                                 'default_operator': 'AND',
                                                 'analyze_wildcard': true,
-                                                'query'           : 'ft1'
+                                                'query'           : 'something'
                                         ]
                                 ]
                         ]

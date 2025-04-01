@@ -1,6 +1,8 @@
 package whelk.search2.querytree
 
 import spock.lang.Specification
+import whelk.search2.Disambiguate
+import whelk.search2.QueryParams
 
 import static DummyNodes.eq
 import static DummyNodes.neq
@@ -12,16 +14,18 @@ import static DummyNodes.v3
 import static whelk.JsonLd.REVERSE_KEY
 
 class PathValueSpec extends Specification {
+    Disambiguate disambiguate = TestData.getDisambiguate()
+
     def "convert to search mapping 1"() {
         given:
-        def pathValue = pathV(new Path([prop1, new Key.RecognizedKey('@id')]), eq, v1)
-        def searchMapping = pathValue.toSearchMapping(new QueryTree(pathValue), [:])
+        def pathValue = QueryTreeBuilder.buildTree('p1.@id:v1', disambiguate)
+        def searchMapping = pathValue.toSearchMapping(new QueryTree(pathValue), new QueryParams([:]))
 
         expect:
         searchMapping == [
-                'property': ['prefLabel': 'p1'],
+                'property': ['@id': 'p1', '@type': 'DatatypeProperty'],
                 'equals'  : 'v1',
-                'up'      : ['@id': '/find?_i=&_q=*'],
+                'up'      : ['@id': '/find?_limit=200&_i=&_q=*'],
                 '_key'    : 'p1.@id',
                 '_value'  : 'v1'
         ]
@@ -29,40 +33,40 @@ class PathValueSpec extends Specification {
 
     def "convert to search mapping 2"() {
         given:
-        def pathValue = pathV(new Path([prop1, prop2]), neq, v3)
-        def searchMapping = pathValue.toSearchMapping(new QueryTree(pathValue), [:])
+        def pathValue = QueryTreeBuilder.buildTree('NOT p1.p2:E1', disambiguate)
+        def searchMapping = pathValue.toSearchMapping(new QueryTree(pathValue), new QueryParams([:]))
 
         expect:
         searchMapping == [
                 'property' : [
                         'propertyChainAxiom': [
-                                ['prefLabel': 'p1'],
-                                ['prefLabel': 'p2']
+                                ['@id': 'p1', '@type': 'DatatypeProperty'],
+                                ['@id': 'p2', '@type': 'ObjectProperty']
                         ]
                 ],
-                'notEquals': ['prefLabel': 'v3'],
-                'up'       : ['@id': '/find?_i=&_q=*'],
+                'notEquals': ['@id': 'E1', '@type': 'Class'],
+                'up'       : ['@id': '/find?_limit=200&_i=&_q=*'],
                 '_key'    : 'p1.p2',
-                '_value'  : 'v3'
+                '_value'  : 'E1'
         ]
     }
 
     def "convert to search mapping 3"() {
         given:
-        def pathValue = pathV(new Path([new Key.RecognizedKey(REVERSE_KEY), prop1, new Key.RecognizedKey(REVERSE_KEY), prop2]), eq, v1)
-        def searchMapping = pathValue.toSearchMapping(new QueryTree(pathValue), [:])
+        def pathValue = QueryTreeBuilder.buildTree('@reverse.p3.@reverse.p4:v1', disambiguate)
+        def searchMapping = pathValue.toSearchMapping(new QueryTree(pathValue), new QueryParams([:]))
 
         expect:
         searchMapping == [
                 'property': [
                         'propertyChainAxiom': [
-                                ['inverseOf': ['prefLabel': 'p1']],
-                                ['inverseOf': ['prefLabel': 'p2']]
+                                ['inverseOf': ['@id': 'p3', '@type': 'ObjectProperty']],
+                                ['inverseOf': ['@id': 'p4', '@type': 'ObjectProperty']]
                         ]
                 ],
                 'equals'  : 'v1',
-                'up'      : ['@id': '/find?_i=&_q=*'],
-                '_key'    : '@reverse.p1.@reverse.p2',
+                'up'      : ['@id': '/find?_limit=200&_i=&_q=*'],
+                '_key'    : '@reverse.p3.@reverse.p4',
                 '_value'  : 'v1'
         ]
     }
