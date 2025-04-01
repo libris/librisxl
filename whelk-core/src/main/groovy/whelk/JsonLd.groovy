@@ -114,6 +114,10 @@ class JsonLd {
         public static final String IS_DEFINED_BY = "isDefinedBy";
     }
 
+    static final class Platform {
+        public static final String COMPUTED_LABEL = "computedLabel";
+    }
+
     public static final String ALTERNATE_PROPERTIES = 'alternateProperties'
 
     private static Logger log = LogManager.getLogger(JsonLd.class)

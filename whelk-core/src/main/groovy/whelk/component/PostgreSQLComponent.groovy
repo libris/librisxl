@@ -2603,8 +2603,8 @@ class PostgreSQLComponent {
     }
 
     private void normalizeDocumentForStorage(Document doc, Connection connection) {
-        // Synthetic property, should never be stored
-        DocumentUtil.findKey(doc.data, JsonLd.REVERSE_KEY) { value, path ->
+        // Synthetic properties, should never be stored
+        DocumentUtil.findKey(doc.data, [JsonLd.REVERSE_KEY, JsonLd.Platform.COMPUTED_LABEL] ) { value, path ->
             new DocumentUtil.Remove()
         }
 
