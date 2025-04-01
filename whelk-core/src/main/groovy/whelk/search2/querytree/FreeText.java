@@ -3,6 +3,7 @@ package whelk.search2.querytree;
 import whelk.JsonLd;
 import whelk.search.ESQuery;
 import whelk.search2.Operator;
+import whelk.search2.QueryParams;
 import whelk.util.Unicode;
 
 import java.util.ArrayList;
@@ -15,15 +16,17 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static whelk.search2.QueryUtil.makeUpLink;
 import static whelk.search2.QueryUtil.mustNotWrap;
 import static whelk.search2.QueryUtil.shouldWrap;
 import static whelk.search2.Operator.EQUALS;
 
-public record FreeText(TextQuery textQuery, Operator operator, String value, Collection<String> boostFields) implements Node {
-    public FreeText(Operator operator, String value, JsonLd jsonLd) {
-        this(new TextQuery(jsonLd), operator, value);
+public record FreeText(Property.TextQuery textQuery, Operator operator, String value, Collection<String> boostFields) implements Node {
+    public FreeText(String value) {
+        this(null, EQUALS, value, List.of());
     }
-    public FreeText(TextQuery textQuery, Operator operator, String value) { this(textQuery, operator, value, List.of()); }
+
+    public FreeText(Property.TextQuery textQuery, Operator operator, String value) { this(textQuery, operator, value, List.of()); }
 
     @Override
     // TODO: Review/refine this. So far it's basically just copy-pasted from old search code (EsQuery)
@@ -104,11 +107,11 @@ public record FreeText(TextQuery textQuery, Operator operator, String value, Col
     }
 
     @Override
-    public Map<String, Object> toSearchMapping(QueryTree qt, Map<String, String> nonQueryParams) {
+    public Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("property", textQuery.definition());
         m.put(operator.termKey, value);
-        m.put("up", qt.makeUpLink(this, nonQueryParams));
+        m.put("up", makeUpLink(qt, this, queryParams));
         return m;
     }
 
@@ -119,18 +122,28 @@ public record FreeText(TextQuery textQuery, Operator operator, String value, Col
                 value;
     }
 
-    public boolean isWild() {
-        return operator == EQUALS && Operator.WILDCARD.equals(value);
+    @Override
+    public Node getInverse() {
+        return new FreeText(textQuery, operator.getInverse(), value);
     }
 
-    public static class TextQuery extends Property {
-        TextQuery(JsonLd jsonLd) {
-            super("textQuery", jsonLd);
-        }
+    @Override
+    public boolean isFreeTextNode() {
+        return operator.equals(EQUALS);
+    }
 
-        // For test only
-        TextQuery(Map<String, Object> definition) {
-            super("textQuery", definition, null);
-        }
+    @Override
+    public String toString() {
+        return operator == Operator.NOT_EQUALS
+                ? "NOT " + value :
+                value;
+    }
+
+    public FreeText replace(String replacement) {
+        return new FreeText(textQuery, operator, replacement, boostFields);
+    }
+
+    public boolean isWild() {
+        return operator == EQUALS && Operator.WILDCARD.equals(value);
     }
 }

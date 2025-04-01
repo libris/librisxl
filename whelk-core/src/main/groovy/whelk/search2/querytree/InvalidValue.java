@@ -4,7 +4,7 @@ import java.util.LinkedHashMap;
 
 import static whelk.JsonLd.TYPE_KEY;
 
-sealed interface InvalidValue extends Value {
+sealed public interface InvalidValue extends Value {
     record ForbiddenValue(String raw) implements InvalidValue {
         @Override
         public String toString() {

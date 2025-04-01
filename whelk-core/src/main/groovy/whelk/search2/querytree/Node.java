@@ -1,6 +1,7 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
+import whelk.search2.QueryParams;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -9,14 +10,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-public sealed interface Node permits ActiveBoolFilter, FreeText, Group, InactiveBoolFilter, PathValue {
+public sealed interface Node permits ActiveFilter, FreeText, Group, InactiveFilter, PathValue {
     Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath);
 
     Node expand(JsonLd jsonLd, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields);
 
-    Map<String, Object> toSearchMapping(QueryTree qt, Map<String, String> nonQueryParams);
+    Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams);
 
     String toQueryString(boolean topLevel);
+
+    Node getInverse();
 
     default List<Node> children() {
         return Collections.emptyList();
@@ -27,6 +30,10 @@ public sealed interface Node permits ActiveBoolFilter, FreeText, Group, Inactive
     }
 
     default boolean isTypeNode() {
+        return false;
+    }
+
+    default boolean isFreeTextNode() {
         return false;
     }
 }
