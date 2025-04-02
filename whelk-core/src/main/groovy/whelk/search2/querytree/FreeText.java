@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 
 import static whelk.search2.QueryUtil.mustNotWrap;
 import static whelk.search2.QueryUtil.shouldWrap;
@@ -112,29 +111,26 @@ public record FreeText(TextQuery textQuery, Operator operator, String value, Col
             return wrap(buildSimpleQuery(queryMode, queryString));
         }
 
-        List<String> basicBoostFields = boostFields.stream().filter(f -> Pattern.matches(".+\\^(0\\.)?[0-9]+", f)).toList();
-        List<String> functionBoostFields = boostFields.stream().filter(f -> Pattern.matches(".+\\^(0\\.)?[0-9]+\\(.+\\)", f)).toList();
+        Map<String, Float> basicBoostFields = new HashMap<>();
+        Map<String, String> functionBoostFields = new HashMap<>();
+
+        for (String bf : boostFields) {
+            try {
+                String field = bf.substring(0, bf.indexOf('^'));
+                String[] boost = bf.substring(bf.indexOf('^') + 1).split("[()]");
+                Float basicBoost = Float.parseFloat(boost[0]);
+                basicBoostFields.put(field, basicBoost);
+                if (boost.length > 1) {
+                    functionBoostFields.put(field, boost[1]);
+                }
+            } catch (Exception ignored) {
+            }
+        }
 
         List<Map<String, Object>> queries = new ArrayList<>();
 
-        queries.add(buildSimpleQuery(queryMode, queryString, basicBoostFields));
-
-        Map<String, List<String>> fieldsGroupedByFunction = new HashMap<>();
-        for (String bf : functionBoostFields) {
-            String[] split = bf.split("\\(");
-            String field = split[0];
-            String multiplier = split[1].replace(")", "");
-            String function = "_score * " + multiplier;
-            fieldsGroupedByFunction.computeIfAbsent(function, k -> new ArrayList<>()).add(field);
-        }
-
-        fieldsGroupedByFunction.forEach((function, fields) -> {
-            Map<String, Object> scriptScoreQuery = Map.of(
-                    "script_score", Map.of(
-                            "query", buildSimpleQuery(queryMode, queryString, fields),
-                            "script", Map.of("source", function)));
-            queries.add(scriptScoreQuery);
-        });
+        queries.add(buildBasicBoostQuery(queryMode, queryString, basicBoostFields, functionBoostFields));
+        queries.addAll(buildFunctionBoostQueries(queryMode, queryString, basicBoostFields, functionBoostFields));
 
         return wrap(queries.size() == 1 ? queries.getFirst() : shouldWrap(queries));
     }
@@ -190,6 +186,33 @@ public record FreeText(TextQuery textQuery, Operator operator, String value, Col
         throw new RuntimeException("Invalid operator"); // Not reachable
     }
 
+    private Map<String, Object> buildBasicBoostQuery(String queryMode, String queryString, Map<String, Float> basicBoostFields, Map<String, String> functionBoostFields) {
+        Map<String, Float> boostFields = new HashMap<>();
+        basicBoostFields.forEach((field, boost) -> boostFields.put(field, functionBoostFields.containsKey(field) ? 0 : boost));
+        return buildSimpleQuery(queryMode, queryString, boostFields);
+    }
+
+    private List<Map<String, Object>> buildFunctionBoostQueries(String queryMode, String queryString, Map<String, Float> basicBoostFields, Map<String, String> functionBoostFields) {
+        List<Map<String, Object>> queries = new ArrayList<>();
+
+        Map<String, List<String>> fieldsGroupedByFunction = new HashMap<>();
+        functionBoostFields.forEach((field, function) -> fieldsGroupedByFunction.computeIfAbsent(function, v -> new ArrayList<>()).add(field));
+
+        fieldsGroupedByFunction.forEach((function, fields) -> {
+            Map<String, Float> boostFields = new HashMap<>();
+            basicBoostFields.forEach((f, boost) -> boostFields.put(f, fields.contains(f) ? boost : 0));
+
+            Map<String, Object> scriptScoreQuery = Map.of(
+                    "script_score", Map.of(
+                            "query", buildSimpleQuery(queryMode, queryString, boostFields),
+                            "script", Map.of("source", "_score * " + function)));
+
+            queries.add(scriptScoreQuery);
+        });
+
+        return queries;
+    }
+
     private Map<String, Object> buildSimpleQuery(String queryMode, String queryString) {
         return buildSimpleQuery(queryMode, queryString, List.of());
     }
@@ -203,5 +226,10 @@ public record FreeText(TextQuery textQuery, Operator operator, String value, Col
             query.put("fields", fields);
         }
         return Map.of(queryMode, query);
+    }
+
+    private Map<String, Object> buildSimpleQuery(String queryMode, String queryString, Map<String, Float> fields) {
+        var fieldsStrings = fields.entrySet().stream().map(e -> e.getKey() + "^" + e.getValue()).toList();
+        return buildSimpleQuery(queryMode, queryString, fieldsStrings);
     }
 }
