@@ -29,7 +29,7 @@ public class Indexing {
             resetStateToNow(psql);
             storedIndexerState = psql.getState(INDEXER_STATE_KEY);
         }
-        long lastIndexedChangeNumber = (Long) storedIndexerState.get("lastIndexed");
+        long lastIndexedChangeNumber = Long.parseLong( (String) storedIndexerState.get("lastIndexed") );
 
         String sql = "SELECT * FROM lddb__change_log WHERE changenumber > ? ORDER BY changenumber ASC LIMIT 500";
         try (Connection connection = psql.getOuterConnection();
@@ -51,7 +51,7 @@ public class Indexing {
             }
 
             if (changeNumber > lastIndexedChangeNumber) {
-                psql.putState(INDEXER_STATE_KEY, Map.of("lastIndexed", changeNumber));
+                psql.putState(INDEXER_STATE_KEY, Map.of("lastIndexed", ""+changeNumber));
             }
         }
 
@@ -66,7 +66,7 @@ public class Indexing {
     public synchronized static void resetStateToNow(PostgreSQLComponent psql) throws SQLException {
         String sql = """
         INSERT INTO lddb__state (key, value)
-        SELECT 'ElasticIndexer', jsonb_build_object( 'lastIndexed', MAX(changenumber) ) FROM lddb__change_log
+        SELECT 'ElasticIndexer', jsonb_build_object( 'lastIndexed', MAX(changenumber)::text ) FROM lddb__change_log
         ON CONFLICT (key)
         DO UPDATE SET value = EXCLUDED.value;
         """.stripIndent();

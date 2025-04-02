@@ -1,5 +1,6 @@
 package whelk.housekeeping
 
+import whelk.Indexing
 import whelk.Whelk
 import whelk.util.WhelkFactory;
 
@@ -40,7 +41,9 @@ public class WebInterface extends HttpServlet {
     Scheduler cronScheduler = new Scheduler()
 
     public void init() {
-        Whelk whelk = WhelkFactory.getSingletonWhelk();
+        Whelk whelk = WhelkFactory.getSingletonWhelk()
+
+        Indexing.start(whelk.getStorage(), whelk.elastic)
 
         List<HouseKeeper> houseKeepers = [
                 // Automatic generation is disabled for now, may need design changes approved before activation.
