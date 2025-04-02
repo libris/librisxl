@@ -20,6 +20,8 @@ import whelk.exception.WhelkRuntimeException
 import whelk.history.History
 import whelk.rest.api.CrudGetRequest.Lens
 import whelk.rest.security.AccessControl
+import whelk.util.DocumentUtil
+import whelk.util.FresnelUtil
 import whelk.util.WhelkFactory
 import whelk.util.http.BadRequestException
 import whelk.util.http.HttpTools
@@ -33,11 +35,10 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import java.lang.management.ManagementFactory
 
-
 import static whelk.rest.api.CrudUtils.ETag
+import static whelk.util.Jackson.mapper
 import static whelk.util.http.HttpTools.getBaseUri
 import static whelk.util.http.HttpTools.sendResponse
-import static whelk.util.Jackson.mapper
 
 /**
  * Handles all GET/PUT/POST/DELETE requests against the backend.
@@ -270,6 +271,21 @@ class Crud extends HttpServlet {
     }
 
     private Object getNegotiatedDataBody(CrudGetRequest request, Object contextData, Map data, String uri) {
+        if (request.shouldComputeLabels()) {
+            if (!JsonLd.isFramed(data)) {
+                // TODO? should we support this? Requires more work in FresnelUtil
+                throw new BadRequestException("Cannot compute labels when not framed")
+            }
+
+            // FIXME FresnelUtil can't handle the whole search response because of @container @index in stats
+            // TODO at least compute labels in stats observations and search mappings predicate/object?
+            if (siteSearch.isSearchResource(request.getHttpServletRequest().pathInfo)) {
+                whelk.fresnelUtil.insertComputedLabels(data.items, new FresnelUtil.LangCode(request.computedLabelLocale()))
+            } else {
+                whelk.fresnelUtil.insertComputedLabels(data, new FresnelUtil.LangCode(request.computedLabelLocale()))
+            }
+        }
+
         if (!(request.getContentType() in [MimeTypes.JSON, MimeTypes.JSONLD])) {
             data[JsonLd.CONTEXT_KEY] = contextData
             return converterUtils.convert(data, uri, request.getContentType())

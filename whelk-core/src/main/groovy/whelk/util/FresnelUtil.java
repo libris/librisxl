@@ -107,6 +107,7 @@ public class FresnelUtil {
     );
 
     JsonLd jsonLd;
+    List<LangCode> fallbackLocales;
     Formats formats;
 
     private final Map<DerivedCacheKey, Lens> derivedLensCache = new ConcurrentHashMap<>();
@@ -114,6 +115,7 @@ public class FresnelUtil {
 
     public FresnelUtil(JsonLd jsonLd) {
         this.jsonLd = jsonLd;
+        this.fallbackLocales = jsonLd.locales.stream().map(LangCode::new).toList();
         this.formats = new Formats(getUnsafe(jsonLd.displayData, "formatters", null));
     }
 
@@ -156,6 +158,23 @@ public class FresnelUtil {
             case Node n -> f.displayDecorate(n);
             case TransliteratedNode n -> f.displayDecorate(n);
         };
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public void insertComputedLabels(Object data, LangCode locale) {
+        DocumentUtil.traverse(data, (var value, var path) -> {
+            if (value instanceof Map node && node.containsKey(JsonLd.TYPE_KEY)) {
+                try {
+                    var label = format(applyLens(value, FresnelUtil.LensGroupName.Chip), locale).asString();
+                    node.put(JsonLd.Platform.COMPUTED_LABEL, label);
+                    // TODO Check if structured value and don't compute for sub-nodes?
+                } catch (Exception e) {
+                    logger.warn("Error computing label for {}: {}", data, e, e);
+                }
+            }
+
+            return DocumentUtil.NOP;
+        });
     }
 
     private Object applyLens(
@@ -546,6 +565,21 @@ public class FresnelUtil {
             }
         }
 
+        public List<String> pick(LangCode langCode, List<LangCode> fallbackLocales) {
+            if (languages.containsKey(langCode)) {
+                return languages.get(langCode);
+            }
+
+            for (LangCode fallbackLocale : fallbackLocales) {
+                if (languages.containsKey(fallbackLocale)) {
+                    return languages.get(fallbackLocale);
+                }
+            }
+
+            var randomLang = languages.keySet().stream().findFirst();
+            return randomLang.map(languages::get).orElse(Collections.emptyList());
+        }
+
         public boolean isTransliterated() {
             return languages.keySet().stream().anyMatch(LangCode::isTransliterated);
         }
@@ -800,7 +834,7 @@ public class FresnelUtil {
                 // can never be inside array
                 return lang.isTransliterated()
                         ? List.of(new DecoratedTransliterated(lang))
-                        : formatValues(pickLanguage(lang), className, propertyName);
+                        : formatValues(lang.pick(locale, fallbackLocales), className, propertyName);
             }
             else if (val instanceof List<?> list) {
                 return mapWithIndex(list,
@@ -854,12 +888,6 @@ public class FresnelUtil {
             };
             formats.valueDetails(className, propertyName).apply(result, isFirst, isLast);
             return result;
-        }
-
-        private List<String> pickLanguage(LanguageContainer value) {
-            // TODO
-            // TODO handle missing
-            return value.languages.get(this.locale);
         }
     }
 
@@ -1211,7 +1239,15 @@ public class FresnelUtil {
             var codes = scripts.keySet().stream().sorted(ORIGINAL_SCRIPT_FIRST).toList();
             before(s);
             if (!codes.isEmpty()) {
-                scripts.get(codes.getFirst()).printTo(s);
+                var originalScript = scripts.get(codes.getFirst()).printTo(new StringBuilder()).toString();
+                var isRtl = Unicode.guessScript(originalScript).map(Unicode::isRtl).orElse(false);
+                if (isRtl) {
+                    s.append(Unicode.RIGHT_TO_LEFT_ISOLATE);
+                }
+                s.append(originalScript);
+                if (isRtl) {
+                    s.append(Unicode.POP_DIRECTIONAL_ISOLATE);
+                }
             }
             if (codes.size() > 1) {
                 s.append(T_START);
