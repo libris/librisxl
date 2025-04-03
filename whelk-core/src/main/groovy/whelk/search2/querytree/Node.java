@@ -10,13 +10,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 public sealed interface Node permits ActiveBoolFilter, FreeText, Group, InactiveBoolFilter, PathValue {
-    // TODO: Remove this when switching over to new boost fields
-    Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath);
-
     Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath, Collection<String> boostFields);
-
-    // TODO: Remove this when switching over to new boost fields
-    Node expand(JsonLd jsonLd, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields);
 
     Node expand(JsonLd jsonLd, Collection<String> rulingTypes);
 

@@ -27,12 +27,10 @@ public class QueryUtil {
 
     private final Whelk whelk;
     public final EsMappings esMappings;
-    public final EsBoost esBoost;
 
     public QueryUtil(Whelk whelk) {
         this.whelk = whelk;
         this.esMappings = new EsMappings(whelk.elastic != null ? whelk.elastic.getMappings() : Collections.emptyMap());
-        this.esBoost = new EsBoost(whelk.getJsonld());
     }
 
     public Map<?, ?> query(Map<String, Object> queryDsl) {

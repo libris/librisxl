@@ -27,7 +27,7 @@ class NodeSpec extends Specification {
         def tree = and([or([notPathV1, pathV2]), ft1])
 
         expect:
-        tree.toEs(x -> Optional.empty()) ==
+        tree.toEs(x -> Optional.empty(), []) ==
                 ['bool': [
                         'must': [
                                 ['bool': [
