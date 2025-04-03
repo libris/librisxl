@@ -11,12 +11,6 @@ public sealed interface Key extends Subpath permits Key.AmbiguousKey, Key.Recogn
         return TYPE_KEY.equals(toString());
     }
 
-    @Override
-    boolean isValid();
-
-    @Override
-    String toString();
-
     record RecognizedKey(String raw) implements Key {
         @Override
         public boolean isValid() {

@@ -33,7 +33,4 @@ sealed public interface InvalidValue extends Value {
     default String jsonForm() {
         return raw();
     }
-
-    @Override
-    String toString();
 }
