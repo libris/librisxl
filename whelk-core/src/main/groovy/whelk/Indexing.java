@@ -52,7 +52,18 @@ public class Indexing {
                 int resultingVersion = resultSet.getInt("resulting_record_version");
                 boolean skipIndexDependers = resultSet.getBoolean("skipindexdependers");
 
-                System.err.println("Now want to reindex: " + id + " ch-nr: " + changeNumber + " recordv: " + resultingVersion);
+                List<Document> versions = whelk.getStorage().loadAllVersions(id);
+                if (resultingVersion == 0)
+                    whelk.elastic.index(versions.getFirst(), whelk);
+                else {
+                    Document updated = versions.get(resultingVersion);
+                    Document preUpdateDoc = versions.get(resultingVersion-1);
+
+                    System.err.println("Now want to reindex: " + id + " ch-nr: " + changeNumber + " recordv: " + resultingVersion);
+                    System.err.println("data to index:\n\t" + updated.getDataAsString()+"\n");
+                    System.err.println("previous version:\n\t" + preUpdateDoc.getDataAsString() + "\n\n");
+                    reindexUpdated(updated, preUpdateDoc, skipIndexDependers, whelk);
+                }
             }
 
             if (changeNumber > lastIndexedChangeNumber) {
@@ -62,7 +73,7 @@ public class Indexing {
 
     }
 
-    private void reindexUpdated(Document updated, Document preUpdateDoc, boolean skipIndexDependers, Whelk whelk) {
+    private static void reindexUpdated(Document updated, Document preUpdateDoc, boolean skipIndexDependers, Whelk whelk) {
         whelk.elastic.index(updated, whelk);
         if (whelk.getFeatures().isEnabled(INDEX_BLANK_WORKS)) {
             Set<String> removedIDs = preUpdateDoc.getVirtualRecordIds();
@@ -83,7 +94,7 @@ public class Indexing {
         }
     }
 
-    static boolean hasChangedMainEntityId(Document updated, Document preUpdateDoc) {
+    private static boolean hasChangedMainEntityId(Document updated, Document preUpdateDoc) {
         List<String> preMainEntityIDs = preUpdateDoc.getThingIdentifiers();
         List<String> postMainEntityIDs = updated.getThingIdentifiers();
 
@@ -93,19 +104,20 @@ public class Indexing {
         return false;
     }
 
-    private void reindexAllLinks(String id, Whelk whelk) {
+    private static void reindexAllLinks(String id, Whelk whelk) {
         SortedSet<String> links = whelk.getStorage().getDependencies(id);
         links.addAll(whelk.getStorage().getDependers(id));
         bulkIndex(links, whelk);
     }
 
-    private void bulkIndex(Iterable<String> ids, Whelk whelk) {
+    private static void bulkIndex(Iterable<String> ids, Whelk whelk) {
         for (List a : Iterables.partition(ids, 100)) {
-            whelk.elastic.bulkIndex(a, whelk);
+            Collection<Document> docs = whelk.bulkLoad(a).values();
+            whelk.elastic.bulkIndex(docs, whelk);
         }
     }
 
-    private void reindexAffected(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks, Whelk whelk) {
+    private static void reindexAffected(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks, Whelk whelk) {
         Set<Link> addedLinks = new HashSet<>(postUpdateLinks);
         addedLinks.removeAll(preUpdateLinks);
         Set<Link> removedLinks = new HashSet<>(preUpdateLinks);
@@ -150,7 +162,7 @@ public class Indexing {
         }
     }
 
-    private void reindexAffectedReverseIntegral(Document reIndexedDoc, Whelk whelk) {
+    private static void reindexAffectedReverseIntegral(Document reIndexedDoc, Whelk whelk) {
         Set<Link> externalReferences = JsonLd.getExternalReferences(reIndexedDoc.data);
         for (Link link : externalReferences) {
                 String p = link.property();
