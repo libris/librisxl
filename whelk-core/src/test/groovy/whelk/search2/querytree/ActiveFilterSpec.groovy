@@ -13,7 +13,7 @@ class ActiveFilterSpec extends Specification {
         ActiveFilter filter = (ActiveFilter) QueryTreeBuilder.buildTree("excludeA", disambiguate)
 
         expect:
-        filter.expand(jsonLd, [], x -> []).toString() == "NOT p1:A"
+        filter.expand(jsonLd, []).toString() == "NOT p1:A"
     }
 
     def "invert"() {

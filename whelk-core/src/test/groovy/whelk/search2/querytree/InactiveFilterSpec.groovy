@@ -13,7 +13,7 @@ class InactiveFilterSpec extends Specification {
         InactiveFilter filter = (InactiveFilter) QueryTreeBuilder.buildTree("NOT excludeA", disambiguate)
 
         expect:
-        filter.expand(jsonLd, [], x -> []) == null
+        filter.expand(jsonLd, []) == null
     }
 
     def "invert"() {
