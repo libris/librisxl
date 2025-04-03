@@ -27,6 +27,7 @@ BEGIN
     changenumber BIGSERIAL PRIMARY KEY,
     id text NOT NULL,
     loud BOOLEAN NOT NULL,
+    skipindexdependers BOOLEAN NOT NULL,
     time timestamp with time zone DEFAULT now() NOT NULL,
     resulting_record_version INTEGER NOT NULL
    );

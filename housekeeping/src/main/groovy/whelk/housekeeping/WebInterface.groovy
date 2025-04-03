@@ -43,7 +43,7 @@ public class WebInterface extends HttpServlet {
     public void init() {
         Whelk whelk = WhelkFactory.getSingletonWhelk()
 
-        Indexing.start(whelk.getStorage(), whelk.elastic)
+        Indexing.start(whelk)
 
         List<HouseKeeper> houseKeepers = [
                 // Automatic generation is disabled for now, may need design changes approved before activation.

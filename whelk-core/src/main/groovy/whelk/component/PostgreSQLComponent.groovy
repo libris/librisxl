@@ -725,7 +725,7 @@ class PostgreSQLComponent {
         }
     }
 
-    void logUpdate(String id, boolean loud, Date time, Connection connection) {
+    void logUpdate(String id, boolean loud, boolean skipIndexDependers, Date time, Connection connection) {
 
         // Which version did we just create?
         // This rests on the assumption that lddb-row being updated is locked for the transaction, so that a new
@@ -744,19 +744,20 @@ class PostgreSQLComponent {
             close(resultSet, countStatement)
         }
 
-        PreparedStatement logStatement = connection.prepareStatement("INSERT INTO lddb__change_log (id, loud, time, resulting_record_version) VALUES (?,?,?,?)")
+        PreparedStatement logStatement = connection.prepareStatement("INSERT INTO lddb__change_log (id, loud, skipindexdependers, time, resulting_record_version) VALUES (?,?,?,?,?)")
         try {
             logStatement.setString(1, id)
             logStatement.setBoolean(2, loud)
-            logStatement.setTimestamp(3, new Timestamp(time.getTime()))
-            logStatement.setInt(4, resultingVersion)
+            logStatement.setBoolean(3, skipIndexDependers)
+            logStatement.setTimestamp(4, new Timestamp(time.getTime()))
+            logStatement.setInt(5, resultingVersion)
             logStatement.execute()
         } finally {
             close(logStatement)
         }
     }
 
-    boolean createDocument(Document doc, String changedIn, String changedBy, String collection, boolean deleted) {
+    boolean createDocument(Document doc, String changedIn, String changedBy, String collection, boolean deleted, boolean skipIndexDependers) {
         log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
 
         return withDbConnection {
@@ -825,7 +826,7 @@ class PostgreSQLComponent {
                 insert.executeUpdate()
 
                 saveVersion(doc, connection, now, now, changedIn, changedBy, collection, deleted)
-                logUpdate(doc.getShortId(), true, now, connection)
+                logUpdate(doc.getShortId(), true, skipIndexDependers, now, connection)
                 refreshDerivativeTables(doc, connection, deleted)
 
                 connection.commit()
@@ -958,12 +959,12 @@ class PostgreSQLComponent {
         }
     }
 
-    Document storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, String oldChecksum) {
+    Document storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, boolean skipIndexDependers, String changedIn, String changedBy, String oldChecksum) {
         return withDbConnection {
             Connection connection = getMyConnection()
             connection.setAutoCommit(false)
             List<Runnable> postCommitActions = []
-            Document result = storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, changedIn, changedBy, oldChecksum, connection, postCommitActions)
+            Document result = storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, skipIndexDependers, changedIn, changedBy, oldChecksum, connection, postCommitActions)
             connection.commit()
             connection.setAutoCommit(true)
             postCommitActions.each { it.run() }
@@ -971,14 +972,14 @@ class PostgreSQLComponent {
         }
     }
 
-    Document storeUpdate(String id, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, UpdateAgent updateAgent) {
+    Document storeUpdate(String id, boolean minorUpdate, boolean writeIdenticalVersions, boolean skipIndexDependers, String changedIn, String changedBy, UpdateAgent updateAgent) {
         int retriesLeft = STALE_UPDATE_RETRIES
         while (true) {
             try {
                 Document doc = load(id)
                 String checksum = doc.getChecksum(jsonld)
                 updateAgent.update(doc)
-                Document updated = storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, changedIn, changedBy, checksum)
+                Document updated = storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, skipIndexDependers, changedIn, changedBy, checksum)
                 return updated
             }
             catch (StaleUpdateException e) {
@@ -993,7 +994,7 @@ class PostgreSQLComponent {
         }
     }
 
-    Document storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, String oldChecksum,
+    Document storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, boolean skipIndexDependers, String changedIn, String changedBy, String oldChecksum,
                                Connection connection, List<Runnable> postCommitActions) {
         String id = doc.shortId
         log.debug("Saving (atomic update) ${id}")
@@ -1097,7 +1098,7 @@ class PostgreSQLComponent {
             updateStatement.execute()
 
             saveVersion(doc, connection, createdTime, modTime, changedIn, changedBy, collection, deleted)
-            logUpdate(doc.getShortId(), !minorUpdate, actualUpdateTime, connection)
+            logUpdate(doc.getShortId(), !minorUpdate, skipIndexDependers, actualUpdateTime, connection)
 
             // If the mainentity has changed URI (for example happens when new id.kb.se-uris are added to records)
             if ( preUpdateDoc.getThingIdentifiers()[0] &&
@@ -1110,7 +1111,7 @@ class PostgreSQLComponent {
                 SortedSet<String> idsLinkingToOldId = getDependencyData(id, GET_DEPENDERS, connection)
                 for (String dependerId : idsLinkingToOldId) {
                     Document depender = load(dependerId)
-                    storeAtomicUpdate(depender, true, false, changedIn, changedBy, depender.getChecksum(jsonld), connection, postCommitActions)
+                    storeAtomicUpdate(depender, true, false, true, changedIn, changedBy, depender.getChecksum(jsonld), connection, postCommitActions)
                 }
             }
 
@@ -2785,11 +2786,11 @@ class PostgreSQLComponent {
         }
     }
 
-    void remove(String identifier, String changedIn, String changedBy) {
+    void remove(String identifier, String changedIn, String changedBy, boolean skipIndexDependers) {
 
         log.debug("Marking document with ID ${identifier} as deleted.")
         try {
-            storeUpdate(identifier, false, true, changedIn, changedBy,
+            storeUpdate(identifier, false, true, skipIndexDependers, changedIn, changedBy,
                 { Document doc ->
                     doc.setDeleted(true)
                     // Add a tombstone marker (without removing anything) perhaps?

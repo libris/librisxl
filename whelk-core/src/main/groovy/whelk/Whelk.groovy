@@ -302,117 +302,6 @@ class Whelk {
                 .collectEntries { id, doc -> [(idMap.getOrDefault(id, id)): doc] }
     }
 
-    private void reindexUpdated(Document updated, Document preUpdateDoc) {
-        indexAsyncOrSync {
-            elastic.index(updated, this)
-            if (features.isEnabled(INDEX_BLANK_WORKS)) {
-                (preUpdateDoc.getVirtualRecordIds() - updated.getVirtualRecordIds()).each { elastic.remove(it) }
-                updated.getVirtualRecordIds().each {elastic.index(updated.getVirtualRecord(it), this) }
-            }
-            if (!skipIndexDependers) {
-                if (hasChangedMainEntityId(updated, preUpdateDoc)) {
-                    reindexAllLinks(updated.shortId)
-                } else {
-                    reindexAffected(updated, preUpdateDoc.getExternalRefs(), updated.getExternalRefs())
-                }
-            }
-        }
-    }
-
-    private void indexAsyncOrSync(Runnable runnable) {
-        if (skipIndex) {
-            return
-        }
-
-        if (!elastic) {
-            log.warn("Elasticsearch not configured when trying to reindex")
-            return
-        }
-
-        Runnable reindex = {
-            try {
-                runnable.run()
-            }
-            catch (Exception e) {
-                log.error("Error reindexing: $e", e)
-            }
-        }
-
-        if (isBatchJobThread()) {
-            // Update them synchronously
-            reindex.run()
-        } else {
-            // else use a fire-and-forget thread
-            new Thread(indexers, reindex).start()
-        }
-    }
-
-    private void reindexAllLinks(String id) {
-        SortedSet<String> links = storage.getDependencies(id)
-        links.addAll(storage.getDependers(id))
-        bulkIndex(links)
-    }
-
-    private void reindexAffected(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks) {
-        Set<Link> addedLinks = (postUpdateLinks - preUpdateLinks)
-        Set<Link> removedLinks = (preUpdateLinks - postUpdateLinks)
-
-        removedLinks.each { link ->
-            String id = storage.getSystemIdByIri(link.iri)
-            if (id) {
-                elastic.decrementReverseLinks(id, link.relation)
-            }
-        }
-
-        addedLinks.each { link ->
-            String id = storage.getSystemIdByIri(link.iri)
-            if (id) {
-                Document doc = storage.load(id)
-                def lenses = ['chips', 'cards', 'full']
-                def reverseRelations = lenses.collect { jsonld.getInverseProperties(doc.data, it) }.flatten()
-                if (reverseRelations.contains(link.relation)) {
-                    // we added a link to a document that includes us in its @reverse relations, reindex it
-                    elastic.index(doc, this)
-                    // that document may in turn have documents that include it, and by extension us in their
-                    // @reverse relations. Reindex them. (For example item -> instance -> work)
-                    // TODO this should be calculated in a more general fashion. We depend on the fact that indexed
-                    // TODO docs are embellished one level (cards, chips) -> everything else must be integral relations
-                    reindexAffectedReverseIntegral(doc)
-                } else {
-                    // just update link counter
-                    elastic.incrementReverseLinks(id, link.relation)
-                }
-            }
-        }
-
-        if (storage.isCardChangedOrNonexistent(document.getShortId())) {
-            bulkIndex(elastic.getAffectedIds(document.getThingIdentifiers() + document.getRecordIdentifiers()))
-        }
-    }
-
-    private void reindexAffectedReverseIntegral(Document reIndexedDoc) {
-        JsonLd.getExternalReferences(reIndexedDoc.data).forEach { link ->
-            String p = link.property()
-            if (jsonld.isIntegral(jsonld.getInverseProperty(p))) {
-                String id = storage.getSystemIdByIri(link.iri)
-                Document doc = storage.load(id)
-                def lenses = ['chips', 'cards', 'full']
-                def reverseRelations = lenses
-                        .collect { jsonld.getInverseProperties(doc.data, it) }
-                        .flatten()
-                if (reverseRelations.contains(p)) {
-                    elastic.index(doc, this)
-                }
-            }
-        }
-    }
-
-    private void bulkIndex(Iterable<String> ids) {
-        Iterables.partition(ids, 100).each {
-            elastic.bulkIndexWithRetry(it, this)
-        }
-    }
-
     /**
      * Returns tuples for ID collisions, the first entry in the tuple is the system ID of the colliding record,
      * the second is a freetext description of the reason for the collision
@@ -477,17 +366,8 @@ class Whelk {
             throw new StorageCreateFailedException(document.getShortId(), "Document considered a duplicate of : " + collidingIDs)
         }
 
-        boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted)
+        boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted, this.skipIndexDependers)
         if (success) {
-            indexAsyncOrSync {
-                elastic.index(document, this)
-                if (features.isEnabled(INDEX_BLANK_WORKS)) {
-                    document.getVirtualRecordIds().each {elastic.index(document.getVirtualRecord(it), this) }
-                }
-                if (!skipIndexDependers) {
-                    reindexAffected(document, new TreeSet<>(), document.getExternalRefs())
-                }
-            }
             sparqlUpdater?.pollNow()
         }
         return success
@@ -505,7 +385,7 @@ class Whelk {
      */
     boolean storeAtomicUpdate(String id, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, UpdateAgent updateAgent) {
         Document preUpdateDoc = null
-        Document updated = storage.storeUpdate(id, minorUpdate, writeIdenticalVersions, changedIn, changedBy, { Document doc ->
+        Document updated = storage.storeUpdate(id, minorUpdate, writeIdenticalVersions, skipIndexDependers, changedIn, changedBy, { Document doc ->
             preUpdateDoc = doc.clone()
             updateAgent.update(doc)
             normalize(doc)
@@ -515,7 +395,7 @@ class Whelk {
             return false
         }
 
-        reindexUpdated(updated, preUpdateDoc)
+        //reindexUpdated(updated, preUpdateDoc)
         sparqlUpdater?.pollNow()
 
         return true
@@ -524,13 +404,13 @@ class Whelk {
     void storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, String oldChecksum) {
         normalize(doc)
         Document preUpdateDoc = storage.load(doc.shortId)
-        Document updated = storage.storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, changedIn, changedBy, oldChecksum)
+        Document updated = storage.storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, skipIndexDependers, changedIn, changedBy, oldChecksum)
 
         if (updated == null) {
             return
         }
 
-        reindexUpdated(updated, preUpdateDoc)
+        //reindexUpdated(updated, preUpdateDoc)
         sparqlUpdater?.pollNow()
     }
 
@@ -563,16 +443,7 @@ class Whelk {
             if (!force) {
                 assertNoDependers(doc)
             }
-            storage.remove(id, changedIn, changedBy)
-            indexAsyncOrSync {
-                elastic.remove(id)
-                if (features.isEnabled(INDEX_BLANK_WORKS)) {
-                    doc.getVirtualRecordIds().each { elastic.remove(it) }
-                }
-                if (!skipIndexDependers) {
-                    reindexAffected(doc, doc.getExternalRefs(), Collections.emptySet())
-                }
-            }
+            storage.remove(id, changedIn, changedBy, skipIndexDependers)
         }
     }
 
@@ -582,12 +453,6 @@ class Whelk {
         if (isDependedUpon) {
             throw new IncomingLinksException("Record is referenced by other records")
         }
-    }
-
-    static boolean hasChangedMainEntityId(Document updated, Document preUpdateDoc) {
-        preUpdateDoc.getThingIdentifiers()[0] &&
-                updated.getThingIdentifiers()[0] &&
-                updated.getThingIdentifiers()[0] != preUpdateDoc.getThingIdentifiers()[0]
     }
 
     void embellish(Document document, List<String> levels = null) {
