@@ -11,7 +11,7 @@ import java.util.function.Function;
 
 public record InactiveFilter(Filter.AliasedFilter aliasedFilter) implements Node {
     @Override
-    public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath) {
+    public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
         throw new UnsupportedOperationException("Query tree must not contain inactive filters");
     }
 
@@ -21,7 +21,7 @@ public record InactiveFilter(Filter.AliasedFilter aliasedFilter) implements Node
     }
 
     @Override
-    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
+    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes) {
         return null;
     }
 

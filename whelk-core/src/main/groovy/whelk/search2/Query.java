@@ -18,12 +18,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.component.ElasticSearch.flattenedLangMapKey;
-import static whelk.search2.EsBoost.getConstantBoosts;
+import static whelk.search2.EsBoost.addBoosts;
 import static whelk.search2.QueryParams.ApiParams.PREDICATES;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 import static whelk.search2.QueryUtil.makeFindUrl;
 import static whelk.search2.QueryUtil.makeFindUrlNoOffset;
-import static whelk.search2.QueryUtil.mustWrap;
 
 public class Query {
     private final Whelk whelk;
@@ -52,7 +51,6 @@ public class Query {
     }
 
     public final SearchMode searchMode;
-
 
     public Query(Map<String, String[]> queryParameters,
                  Map<String, Object> appConfig,
@@ -232,20 +230,11 @@ public class Query {
 
     private Map<String, Object> getEsQuery(QueryTree queryTree) {
         var query = toEsQuery(queryTree);
-        var withConstantBoost = Stream.concat(Stream.of(query), getConstantBoosts().stream()).toList();
-        var must = mustWrap(withConstantBoost);
-        if (queryParams.esScoreFunctions.isEmpty()) {
-            return must;
-        }
-        return Map.of("function_score",
-                Map.of("query", must,
-                        "functions", queryParams.esScoreFunctions.stream().map(EsBoost.ScoreFunction::toEs).toList(),
-                        "score_mode", "sum",
-                        "boost_mode", "sum"));
+        return addBoosts(query, queryParams.esScoreFunctions);
     }
 
     private Map<String, Object> toEsQuery(QueryTree queryTree) {
-        return queryTree.toEs(whelk.getJsonld(), this::getBoostFields, this::getNestedPath);
+        return queryTree.toEs(whelk.getJsonld(), this::getNestedPath, queryParams.boostFields);
     }
 
     private Map<String, Object> getEsAggQuery() {
@@ -260,12 +249,6 @@ public class Query {
             return Optional.of(path);
         }
         return esSettings.mappings.getNestedFields().stream().filter(path::startsWith).findFirst();
-    }
-
-    private Collection<String> getBoostFields(Collection<String> boostFields) {
-        return queryParams.boostFields.isEmpty()
-                ? esSettings.boost.getBoostFields(boostFields)
-                : queryParams.boostFields;
     }
 
     private String getSortField(String termPath) {

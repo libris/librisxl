@@ -6,12 +6,14 @@ import whelk.util.DocumentUtil;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -208,14 +210,27 @@ public class QueryResult {
 
         private static Map<String, Double> getScorePerField(Map<String, Object> scoreExplanation) {
             Map<String, Double> scorePerField = new HashMap<>();
-
+            Map<String, Double> scriptScorePerField = new HashMap<>();
+            List<Object> scriptScorePath = new ArrayList<>();
+            AtomicReference<Double> scriptScore = new AtomicReference<>(0.0);
             traverse(scoreExplanation, (value, path) -> {
+                if (!scriptScorePath.isEmpty() && (path.size() < scriptScorePath.size() || !path.subList(0, scriptScorePath.size()).equals(scriptScorePath))) {
+                    Double factor = scriptScore.get() / scriptScorePerField.values().stream().reduce(0.0, Double::sum);
+                    scriptScorePerField.forEach((field, score) -> scorePerField.put(field, score * factor));
+                    scriptScorePerField.clear();
+                    scriptScorePath.clear();
+                    scriptScore.set(0.0);
+                }
                 if (value instanceof Map<?, ?> m) {
                     String description = (String) m.get("description");
                     if (description.contains("[PerFieldSimilarity]")) {
                         Double score = (Double) m.get("value");
                         if (score > 0) {
-                            scorePerField.put(parseField(description), score);
+                            if (scriptScorePath.isEmpty()) {
+                                scorePerField.put(parseField(description), score);
+                            } else {
+                                scriptScorePerField.put(parseField(description), score);
+                            }
                         }
                     }
                     else if ("function score, score mode [sum]".equals(description)) {
@@ -248,7 +263,8 @@ public class QueryResult {
                     } else if (description.startsWith("script score function")) {
                         Double score = (Double) m.get("value");
                         if (score > 0) {
-                            scorePerField.put(parseField(description), score);
+                            scriptScore.set(score);
+                            scriptScorePath.addAll(path);
                         }
                     }
                 }

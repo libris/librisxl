@@ -5,6 +5,7 @@ import whelk.exception.InvalidQueryException;
 import whelk.search2.AppParams;
 import whelk.search2.Disambiguate;
 import whelk.search2.Filter;
+import whelk.search2.EsBoost;
 import whelk.search2.Operator;
 
 import whelk.search2.Query;
@@ -43,19 +44,15 @@ public class QueryTree {
         return new QueryTree(tree, filtered);
     }
 
+    public Map<String, Object> toEs(JsonLd jsonLd, Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
+        return getFiltered().tree.expand(jsonLd, List.of()).toEs(getNestedPath, boostFields.isEmpty() ? EsBoost.BOOST_FIELDS : boostFields);
+    }
+
     private QueryTree(Node tree, QueryTree filtered) {
         this.tree = tree;
         if (filtered != null) {
             this.filtered = new QueryTree(filtered.tree);
         }
-    }
-
-    public Map<String, Object> toEs(JsonLd jsonLd,
-                                    Function<Collection<String>, Collection<String>> getBoostFields,
-                                    Function<String, Optional<String>> getNestedPath)
-    {
-        return getFiltered().tree.expand(jsonLd, List.of(), getBoostFields)
-                .toEs(getNestedPath);
     }
 
     public Map<String, Object> toSearchMapping(QueryParams queryParams) {

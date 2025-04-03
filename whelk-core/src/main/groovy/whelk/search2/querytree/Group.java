@@ -42,9 +42,9 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     @Override
-    public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath) {
+    public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
         Map<String, List<PathValue>> nestedGroups = getNestedGroups(getNestedPath);
-        return nestedGroups.isEmpty() ? wrap(childrenToEs(getNestedPath)) : toEsNested(nestedGroups, getNestedPath);
+        return nestedGroups.isEmpty() ? wrap(childrenToEs(getNestedPath, boostFields)) : toEsNested(nestedGroups, getNestedPath, boostFields);
     }
 
     @Override
@@ -56,14 +56,14 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     @Override
-    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
+    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes) {
         Node reduced = reduceTypes(jsonLd);
         if (reduced instanceof Group g) {
             rulingTypes = Stream.concat(g.collectRulingTypes().stream(), rulingTypes.stream())
                     .collect(Collectors.toSet());
-            return g.expandChildren(jsonLd, rulingTypes, getBoostFields);
+            return g.expandChildren(jsonLd, rulingTypes);
         }
-        return reduced.expand(jsonLd, rulingTypes, getBoostFields);
+        return reduced.expand(jsonLd, rulingTypes);
     }
 
     @Override
@@ -85,8 +85,8 @@ public sealed abstract class Group implements Node permits And, Or {
         return reduceByCondition(hasMoreSpecificTypeThan);
     }
 
-    Node expandChildren(JsonLd jsonLd, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
-        return mapFilterAndReinstantiate(c -> c.expand(jsonLd, rulingTypes, getBoostFields), Objects::nonNull);
+    Node expandChildren(JsonLd jsonLd, Collection<String> rulingTypes) {
+        return mapFilterAndReinstantiate(c -> c.expand(jsonLd, rulingTypes), Objects::nonNull);
     }
 
     List<Node> flattenChildren(List<Node> children) {
@@ -129,7 +129,7 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     // TODO: Review/refine nested logic and proper tests
-    private Map<String, Object> toEsNested(Map<String, List<PathValue>> nestedGroups, Function<String, Optional<String>> getNestedPath) {
+    private Map<String, Object> toEsNested(Map<String, List<PathValue>> nestedGroups, Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
         List<Map<String, Object>> esChildren = new ArrayList<>();
         List<Node> nonNested = new ArrayList<>(children());
 
@@ -151,7 +151,7 @@ public sealed abstract class Group implements Node permits And, Or {
         });
 
         for (Node n : nonNested) {
-            esChildren.add(n.toEs(getNestedPath));
+            esChildren.add(n.toEs(getNestedPath, boostFields));
         }
 
         return esChildren.size() == 1 ? esChildren.getFirst() : wrap(esChildren);
@@ -182,8 +182,8 @@ public sealed abstract class Group implements Node permits And, Or {
         return nestedGroups;
     }
 
-    private List<Map<String, Object>> childrenToEs(Function<String, Optional<String>> getNestedPath) {
-        return mapToMap(n -> n.toEs(getNestedPath));
+    private List<Map<String, Object>> childrenToEs(Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
+        return mapToMap(n -> n.toEs(getNestedPath, boostFields));
     }
 
     private List<Node> mapToNode(Function<Node, Node> mapper) {

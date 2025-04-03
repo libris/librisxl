@@ -14,7 +14,7 @@ import static whelk.search2.QueryUtil.makeUpLink;
 
 public record ActiveFilter(Filter.AliasedFilter aliasedFilter) implements Node {
     @Override
-    public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath) {
+    public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
         throw new UnsupportedOperationException("Expand filter before converting to ES");
     }
 
@@ -28,8 +28,8 @@ public record ActiveFilter(Filter.AliasedFilter aliasedFilter) implements Node {
     }
 
     @Override
-    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
-        return aliasedFilter.getParsed().expand(jsonLd, rulingTypes, getBoostFields);
+    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes) {
+        return aliasedFilter.getParsed().expand(jsonLd, rulingTypes);
     }
 
     @Override

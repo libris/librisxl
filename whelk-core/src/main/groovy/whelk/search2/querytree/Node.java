@@ -11,9 +11,9 @@ import java.util.Optional;
 import java.util.function.Function;
 
 public sealed interface Node permits ActiveFilter, FreeText, Group, InactiveFilter, PathValue {
-    Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath);
+    Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath, Collection<String> boostFields);
 
-    Node expand(JsonLd jsonLd, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields);
+    Node expand(JsonLd jsonLd, Collection<String> rulingTypes);
 
     Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams);
 

@@ -11,7 +11,7 @@ class NodeSpec extends Specification {
         def tree = QueryTreeBuilder.buildTree('(NOT p1:v1 OR p2:v2) something', disambiguate)
 
         expect:
-        tree.toEs(x -> Optional.empty()) ==
+        tree.toEs(x -> Optional.empty(), []) ==
                 ['bool': [
                         'must': [
                                 ['bool': [

@@ -91,7 +91,7 @@ public class Aggs {
                         Function.identity(),
                         p -> new PathValue(new Property(p, jsonLd), Operator.EQUALS, link)
                                 .expand(jsonLd)
-                                .toEs(getNestedPath))
+                                .toEs(getNestedPath, List.of()))
                 );
 
         if (!filters.isEmpty()) {
