@@ -250,7 +250,7 @@ public class Stats {
 
     private Map<String, Object> getCuratedPredicateEsQueryDsl(Entity o, List<String> curatedPredicates) {
         var queryDsl = new LinkedHashMap<String, Object>();
-        queryDsl.put("query", new PathValue("_links", Operator.EQUALS, new Literal(o.id())).toEs(queryUtil::getNestedPath));
+        queryDsl.put("query", new PathValue("_links", Operator.EQUALS, new Literal(o.id())).toEs(queryUtil::getNestedPath, List.of()));
         queryDsl.put("size", 0);
         queryDsl.put("from", 0);
         queryDsl.put("aggs", Aggs.buildPAggQuery(o, curatedPredicates, jsonLd, queryUtil::getNestedPath));

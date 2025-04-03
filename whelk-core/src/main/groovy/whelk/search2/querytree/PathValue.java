@@ -36,13 +36,6 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     }
 
     @Override
-    public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath) {
-        return getNestedPath.apply(path.fullSearchPath())
-                .map(this::toEsNested)
-                .orElseGet(this::toEs);
-    }
-
-    @Override
     public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
         return getNestedPath.apply(path.fullSearchPath())
                 .map(this::toEsNested)
@@ -55,11 +48,6 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
     public Map<String, Object> toEs(boolean negated) {
         return _toEs(negated);
-    }
-
-    @Override
-    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
-        return path.isValid() ? _expand(jsonLd, rulingTypes) : this;
     }
 
     @Override

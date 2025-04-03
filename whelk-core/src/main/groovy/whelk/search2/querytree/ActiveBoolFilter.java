@@ -10,11 +10,6 @@ import java.util.function.Function;
 
 public record ActiveBoolFilter(String alias, Node filter, Map<?, ?> prefLabelByLang) implements Node {
     @Override
-    public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath) {
-        throw new UnsupportedOperationException("Expand filter before converting to ES");
-    }
-
-    @Override
     public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
         throw new UnsupportedOperationException("Expand filter before converting to ES");
     }
@@ -26,11 +21,6 @@ public record ActiveBoolFilter(String alias, Node filter, Map<?, ?> prefLabelByL
         m.put("value", alias);
         m.put("up", qt.makeUpLink(this, nonQueryParams));
         return m;
-    }
-
-    @Override
-    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
-        return filter.expand(jsonLd, rulingTypes, getBoostFields);
     }
 
     @Override
