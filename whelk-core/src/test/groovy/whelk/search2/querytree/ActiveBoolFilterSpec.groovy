@@ -13,7 +13,7 @@ class ActiveBoolFilterSpec extends Specification {
         def includeA = new ActiveBoolFilter('includeA', new InactiveBoolFilter('excludeA'), [:])
 
         expect:
-        excludeA.expand(jsonLd, [], x -> []) == pathV1
-        includeA.expand(jsonLd, [], x -> []) == null
+        excludeA.expand(jsonLd, []) == pathV1
+        includeA.expand(jsonLd, []) == null
     }
 }
