@@ -30,6 +30,7 @@ public class QueryParams {
         public static final String APP_CONFIG = "_appConfig";
         public static final String BOOST = "_boost";
         public static final String STATS = "_stats";
+        public static final String MY_LIBRARIES = "_myLibraries";
         public static final String FN_SCORE = "_fnScore";
     }
 
@@ -49,6 +50,7 @@ public class QueryParams {
     public final Spell spell;
     public final List<String> boostFields;
     public final List<EsBoost.ScoreFunction> esScoreFunctions;
+    public final String myLibraries;
 
     public final String q;
 
@@ -70,6 +72,7 @@ public class QueryParams {
         this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse("");
         this.skipStats = getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
         this.esScoreFunctions = getEsScoreFunctions(apiParameters);
+        this.myLibraries = getOptionalSingle(ApiParams.MY_LIBRARIES, apiParameters).orElse("");
     }
 
     public Map<String, String> getNonQueryParamsNoOffset() {
