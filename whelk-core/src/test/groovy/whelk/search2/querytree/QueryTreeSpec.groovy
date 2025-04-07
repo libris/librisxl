@@ -1,11 +1,62 @@
 package whelk.search2.querytree
 
 import spock.lang.Specification
+import whelk.JsonLd
+import whelk.search2.AppParams
 import whelk.search2.Disambiguate
+import whelk.search2.Filter
+import whelk.search2.Query
 import whelk.search2.QueryParams
 
 class QueryTreeSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()
+    JsonLd jsonLd = TestData.getJsonLd()
+
+    def "convert to ES query"() {
+        given:
+        QueryTree tree = new QueryTree('(NOT p1:v1 OR p2:v2) something', disambiguate)
+
+        expect:
+        tree.toEs(jsonLd, x -> Optional.empty(), ['_str^10']) ==
+                ['bool': [
+                        'must': [
+                                [
+                                        'simple_query_string': [
+                                                'default_operator': 'AND',
+                                                'analyze_wildcard': true,
+                                                'query'           : 'something',
+                                                'fields'          : ['_str^10.0']
+                                        ]
+                                ],
+                                ['bool': [
+                                        'should': [
+                                                ['bool': [
+                                                        'filter': [
+                                                                'bool': [
+                                                                        'must_not': [
+                                                                                'simple_query_string': [
+                                                                                        'default_operator': 'AND',
+                                                                                        'query'           : 'v1',
+                                                                                        'fields'          : ['p1']
+                                                                                ]
+                                                                        ]
+                                                                ]
+                                                        ]
+                                                ]],
+                                                ['bool': [
+                                                        'filter': [
+                                                                'simple_query_string': [
+                                                                        'default_operator': 'AND',
+                                                                        'query'           : 'v2',
+                                                                        'fields'          : ['p2']
+                                                                ]
+                                                        ]
+                                                ]]
+                                        ]
+                                ]]
+                        ]
+                ]]
+    }
 
     def "to search mapping"() {
         given:
@@ -132,5 +183,38 @@ class QueryTreeSpec extends Specification {
         "p1:v1 p2:\"v:2\" p3:v3"               | "p1:v1 p2:\"v:2\" p3:v3"
         "something (p1:v1 OR p3:v3) NOT p4:v4" | "something (p1:v1 OR p3:v3) NOT p4:v4"
         "something p4:v4 includeA"             | "something p4:v4 includeA"
+    }
+
+    def "apply site filters"() {
+        given:
+        QueryTree queryTree = new QueryTree(origQuery, disambiguate)
+        def basicSearchMode = Query.SearchMode.BASIC_SEARCH
+        AppParams.DefaultSiteFilter dsf1 = new AppParams.DefaultSiteFilter(TestData.excludeFilter, [basicSearchMode] as Set)
+        AppParams.DefaultSiteFilter dsf2 = new AppParams.DefaultSiteFilter(new Filter("type:T1"), [basicSearchMode] as Set)
+        AppParams.DefaultSiteFilter dsf3 = new AppParams.DefaultSiteFilter(new Filter("type:T2"), [] as Set)
+        AppParams.OptionalSiteFilter osf = new AppParams.OptionalSiteFilter(TestData.includeFilter, [basicSearchMode] as Set)
+
+        AppParams.SiteFilters siteFilters = new AppParams.SiteFilters([dsf1, dsf2, dsf3], [osf])
+        siteFilters.parse(disambiguate)
+
+        queryTree.applySiteFilters(basicSearchMode, siteFilters)
+
+        expect:
+        queryTree.toString() == normalizedQuery
+        queryTree.getFiltered().toString() == filteredQuery
+
+        where:
+        origQuery            | normalizedQuery      | filteredQuery
+        "x"                  | "x"                  | "x excludeA type:T1"
+        "x type:T2"          | "x type:T2"          | "x type:T2 excludeA"
+        "x type:T1"          | "x"                  | "x type:T1 excludeA"
+        "x NOT type:T2"      | "x NOT type:T2"      | "x NOT type:T2 excludeA type:T1"
+        "x NOT type:T1"      | "x NOT type:T1"      | "x NOT type:T1 excludeA"
+        "x type:T1 NOT p1:A" | "x"                  | "x type:T1 excludeA"
+        "x excludeA"         | "x"                  | "x excludeA type:T1"
+        "x includeA"         | "x includeA"         | "x includeA type:T1"
+        "x NOT excludeA"     | "x includeA"         | "x includeA type:T1"
+        "x NOT includeA"     | "x"                  | "x excludeA type:T1"
+        "x type:T2 includeA" | "x type:T2 includeA" | "x type:T2 includeA"
     }
 }

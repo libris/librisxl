@@ -15,7 +15,7 @@ public class Filter {
     private final String raw;
     private Node parsed;
 
-    Filter(String raw) {
+    public Filter(String raw) {
         this.raw = raw;
     }
 

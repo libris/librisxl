@@ -208,7 +208,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
             if (sp instanceof Property p) {
                 for (Property.Restriction r : p.restrictions()) {
                     List<Subpath> restrictedPath = Stream.concat(currentPath.stream(), Stream.of(r.property())).toList();
-                    Node expanded = new PathValue(new Path(restrictedPath).expand(jsonLd), operator, r.value()).expandType(jsonLd);
+                    Node expanded = new PathValue(new Path(restrictedPath).expand(jsonLd, r.value()), operator, r.value()).expandType(jsonLd);
                     prefilledFields.add(expanded);
                 }
             }

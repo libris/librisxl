@@ -61,6 +61,7 @@ public class QueryTree {
                 : tree.toSearchMapping(this, queryParams);
     }
 
+    // NOTE: This may mutate the original (non-filtered) tree should it contain filters already
     public void applySiteFilters(Query.SearchMode searchMode, AppParams.SiteFilters siteFilters) {
         _applySiteFilters(searchMode, siteFilters);
         resetStrings();
@@ -184,7 +185,7 @@ public class QueryTree {
         return toQueryString();
     }
 
-    private QueryTree getFiltered() {
+    public QueryTree getFiltered() {
         return filtered != null ? filtered : copy();
     }
 
@@ -340,39 +341,51 @@ public class QueryTree {
     }
 
     private void _applySiteFilters(Query.SearchMode searchMode, AppParams.SiteFilters siteFilters) {
-        QueryTree filtered = getFiltered();
-
         siteFilters.getAliasedFilters().forEach(af ->
-                // e.g. "NOT bibliography:\"sigel:EPLK\"" -> "excludeEplikt"
+                // If a node matches a filter alias, replace that node with the alias in the original query.
+                // e.g. "NOT bibliography:\"sigel:EPLK\"" -> "excludeEplikt".
                 _replaceTopLevelNode(af.getParsed(), af.getActive())
         );
 
-        // e.g. NOT includeEplikt (Inactive by default)
+        // Remove any aliased filter that is inactive by default from original query (redundant).
+        // e.g. "NOT includeEplikt" if "excludeEplikt" is a default filter.
         siteFilters.optionalFilters().stream()
                 .map(AppParams.OptionalSiteFilter::filter)
                 .map(Filter.AliasedFilter::getInactive)
                 .forEach(this::_removeTopLevelNode);
 
+        QueryTree filtered = getFiltered();
+
         for (AppParams.DefaultSiteFilter df : siteFilters.defaultFilters()) {
-            var f = df.filter();
-
-            // e.g. excludeEplikt if excludeEplikt is a default filter
-            // e.g. "rdf:type":Work if "rdf:type":Work is a default filter
-            _removeTopLevelNode(f instanceof Filter.AliasedFilter af ? af.getActive() : f.getParsed());
-
             if (!df.appliesTo().contains(searchMode)) {
                 continue;
             }
 
+            var f = df.filter();
+
+            var filterNode = f instanceof Filter.AliasedFilter af ? af.getActive() : f.getParsed();
+
+            if (topLevelContains(filterNode)) {
+                // Remove any default filter from original query (redundant).
+                // e.g. "excludeEplikt" if "excludeEplikt" is a default filter
+                // e.g. "\"rdf:type\":Work" if "\"rdf:type\":Work" is a default filter
+                _removeTopLevelNode(filterNode);
+                continue;
+            }
+
             if (f.getParsed().isTypeNode() && containsTypeNode()) {
+                // Override default type filter if the original query already states which types to search.
+                // e.g. don't add "\"rdf:type\":Work" if query is "\"rdf:type\":Agent Astrid Lindgren"
                 continue;
             }
 
             if (containsInverseFilter(f)) {
+                // Override default filter if the original query contains its inverse.
+                // e.g. don't add "\"rdf:type\":Work" if query is "NOT \"rdf:type\":Work something"
                 continue;
             }
 
-            filtered._addTopLevelNode(f.getParsed());
+            filtered._addTopLevelNode(filterNode);
         }
 
         this.filtered = filtered;
