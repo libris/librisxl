@@ -46,10 +46,6 @@ public class AppParams {
                     .map(AppParams.Slice::propertyKey)
                     .collect(Collectors.toSet());
         }
-
-        boolean isEmpty() {
-            return sliceList().isEmpty();
-        }
     }
 
     public record SiteFilters(List<DefaultSiteFilter> defaultFilters, List<OptionalSiteFilter> optionalFilters) {
@@ -106,7 +102,7 @@ public class AppParams {
 
         private Property property;
 
-        Slice(String propertyKey, Map<?, ?> settings) {
+        public Slice(String propertyKey, Map<?, ?> settings) {
             this.propertyKey = propertyKey;
             this.sortOrder = getSortOrder(settings);
             this.bucketSortKey = getBucketSortKey(settings);

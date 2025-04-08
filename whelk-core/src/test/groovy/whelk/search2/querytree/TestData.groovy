@@ -57,17 +57,8 @@ class TestData {
                         '@type'             : 'ObjectProperty',
                         'category'          : ['@id': "https://id.kb.se/vocab/shorthand"],
                         'propertyChainAxiom': [
-                                ['@id': 'p2'],
-                                ['@id': 'p3']
-                        ]
-                ],
-                [
-                        '@id'               : 'p6',
-                        '@type'             : 'ObjectProperty',
-                        'category'          : ['@id': "https://id.kb.se/vocab/shorthand"],
-                        'propertyChainAxiom': [
-                                ['@id': 'p2'],
-                                ['@id': 'p3']
+                                ['@id': 'p3'],
+                                ['@id': 'p4']
                         ]
                 ],
                 [

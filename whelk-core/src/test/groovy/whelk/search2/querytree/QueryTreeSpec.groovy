@@ -17,7 +17,7 @@ class QueryTreeSpec extends Specification {
         QueryTree tree = new QueryTree('(NOT p1:v1 OR p2:v2) something', disambiguate)
 
         expect:
-        tree.toEs(jsonLd, x -> Optional.empty(), ['_str^10']) ==
+        tree.toEs(jsonLd, x -> Optional.empty(), ['_str^10'], []) ==
                 ['bool': [
                         'must': [
                                 [

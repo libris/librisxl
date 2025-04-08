@@ -28,12 +28,12 @@ public class Aggs {
     public record Bucket(String value, int count) {
     }
 
-    public static Map<String, Object> buildAggQuery(AppParams.StatsRepr statsRepr,
+    public static Map<String, Object> buildAggQuery(List<AppParams.Slice> sliceList,
                                                     JsonLd jsonLd,
                                                     Collection<String> types,
                                                     Function<String, Optional<String>> getNestedPath)
     {
-        if (statsRepr.isEmpty()) {
+        if (sliceList.isEmpty()) {
             return Map.of(JsonLd.TYPE_KEY,
                     Map.of("terms",
                             Map.of("field", JsonLd.TYPE_KEY)));
@@ -41,7 +41,7 @@ public class Aggs {
 
         Map<String, Object> query = new LinkedHashMap<>();
 
-        for (AppParams.Slice slice : statsRepr.sliceList()) {
+        for (AppParams.Slice slice : sliceList) {
             Property property = slice.getProperty(jsonLd);
 
             if (!property.restrictions().isEmpty()) {
@@ -79,8 +79,8 @@ public class Aggs {
         return query;
     }
 
-    public static Map<String, Object> buildPAggQuery(Link link,
-                                                     List<String> curatedPredicates,
+    public static Map<String, Object> buildPAggQuery(Link object,
+                                                     List<Property> curatedPredicates,
                                                      JsonLd jsonLd,
                                                      Function<String, Optional<String>> getNestedPath) {
         Map<String, Object> query = new LinkedHashMap<>();
@@ -88,9 +88,9 @@ public class Aggs {
         var filters = curatedPredicates
                 .stream()
                 .collect(Collectors.toMap(
-                        Function.identity(),
-                        p -> new PathValue(new Property(p, jsonLd), Operator.EQUALS, link)
-                                .expand(jsonLd)
+                        Property::name,
+                        p -> new PathValue(p, Operator.EQUALS, object)
+                                .expand(jsonLd, p.domain())
                                 .toEs(getNestedPath, List.of()))
                 );
 

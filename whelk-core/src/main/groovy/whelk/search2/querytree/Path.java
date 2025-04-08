@@ -115,7 +115,6 @@ public class Path {
 
     private boolean shouldAddSuffix(Value value) {
         return !(value instanceof Literal l && l.isWildcard())
-                && value != null
                 && last() instanceof Property p
                 && p.isObjectProperty()
                 && !p.isType()
