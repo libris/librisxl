@@ -68,34 +68,34 @@ class QueryTreeSpec extends Specification {
                         [
                                 'property': ['@id': 'textQuery', '@type': 'DatatypeProperty'],
                                 'equals'  : 'something',
-                                'up'      : ['@id': '/find?_limit=200&_i=&_q=%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA']
+                                'up'      : ['@id': '/find?_limit=200&_q=%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA']
                         ],
                         [
                                 'or': [
                                         [
                                                 'property' : ['@id': 'p3', '@type': 'ObjectProperty'],
                                                 'notEquals': 'v3',
-                                                'up'       : ['@id': '/find?_limit=200&_i=something&_q=something+p4:%22v:4%22+includeA'],
+                                                'up'       : ['@id': '/find?_limit=200&_q=something+p4:%22v:4%22+includeA'],
                                                 '_key'     : 'p3',
                                                 '_value'   : 'v3'
                                         ],
                                         [
                                                 'property': ['@id': 'p4', '@type': 'ObjectProperty'],
                                                 'equals'  : 'v:4',
-                                                'up'      : ['@id': '/find?_limit=200&_i=something&_q=something+NOT+p3:v3+includeA'],
+                                                'up'      : ['@id': '/find?_limit=200&_q=something+NOT+p3:v3+includeA'],
                                                 '_key'    : 'p4',
                                                 '_value'  : 'v:4'
                                         ]
                                 ],
-                                'up': ['@id': '/find?_limit=200&_i=something&_q=something+includeA']
+                                'up': ['@id': '/find?_limit=200&_q=something+includeA']
                         ],
                         [
                                 'object': ['prefLabelByLang': [:], '@type': 'Resource'],
                                 'value' : 'includeA',
-                                'up'    : ['@id': '/find?_limit=200&_i=something&_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29']
+                                'up'    : ['@id': '/find?_limit=200&_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29']
                         ]
                 ],
-                'up' : ['@id': '/find?_limit=200&_i=&_q=*']
+                'up' : ['@id': '/find?_limit=200&_q=*']
         ]
     }
 
