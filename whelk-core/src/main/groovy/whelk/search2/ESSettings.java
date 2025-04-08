@@ -10,7 +10,7 @@ public class ESSettings {
     public ESSettings(Whelk whelk) {
         if (whelk.elastic != null) {
             this.mappings = new EsMappings(whelk.elastic.getMappings());
-            this.maxItems = whelk.elastic.maxResultWindow;;
+            this.maxItems = whelk.elastic.maxResultWindow;
         }
     }
 

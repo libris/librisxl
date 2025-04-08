@@ -81,12 +81,6 @@ public class Query {
         return QueryUtil.makeFindUrl(queryTree, queryParams);
     }
 
-    public boolean hasUnbalancedParams() throws InvalidQueryException {
-        // _i param may only contain free text
-        QueryTree iTree = new QueryTree(queryParams.i, disambiguate);
-        return !iTree.isEmpty() && !iTree.isFreeText();
-    }
-
     public void applySiteFilters() throws InvalidQueryException {
         appParams.siteFilters.parse(disambiguate);
         queryTree.applySiteFilters(searchMode, appParams.siteFilters);
@@ -466,7 +460,7 @@ public class Query {
 
             var placeholderNode = new FreeText(String.format("{?%s}", property.name()));
             var templateQueryString = tree.addTopLevelNode(placeholderNode).toQueryString();
-            var templateUrl = makeFindUrlNoOffset(tree.getFreeTextPart(), templateQueryString, queryParams);
+            var templateUrl = makeFindUrlNoOffset(templateQueryString, queryParams);
             template.put("template", templateUrl);
 
             var mapping = new LinkedHashMap<>();

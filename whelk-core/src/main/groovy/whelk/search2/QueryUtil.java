@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 
 import static whelk.search2.QueryParams.ApiParams.OFFSET;
 import static whelk.search2.QueryParams.ApiParams.QUERY;
-import static whelk.search2.QueryParams.ApiParams.SIMPLE_FREETEXT;
 
 public class QueryUtil {
     private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper();
@@ -44,27 +43,26 @@ public class QueryUtil {
     }
 
     public static String makeFindUrlNoOffset(QueryTree qt, QueryParams queryParams) {
-        return makeFindUrlNoOffset(qt.getFreeTextPart(), qt.toQueryString(), queryParams);
+        return makeFindUrlNoOffset(qt.toQueryString(), queryParams);
     }
 
-    public static String makeFindUrlNoOffset(String i, String q, QueryParams queryParams) {
-        return makeFindUrl(i, q, queryParams.getNonQueryParamsNoOffset());
+    public static String makeFindUrlNoOffset(String q, QueryParams queryParams) {
+        return makeFindUrl(q, queryParams.getNonQueryParamsNoOffset());
     }
 
     public static String makeFindUrlWithOffset(QueryTree qt, QueryParams queryParams, int offset) {
-        return makeFindUrl(qt.getFreeTextPart(), qt.toQueryString(), queryParams.getNonQueryParamsNoOffset(), offset);
+        return makeFindUrl(qt.toQueryString(), queryParams.getNonQueryParamsNoOffset(), offset);
     }
 
     public static String makeFindUrl(QueryTree qt, QueryParams queryParams) {
-        return makeFindUrl(qt.getFreeTextPart(), qt.toQueryString(), queryParams.getNonQueryParams());
+        return makeFindUrl(qt.toQueryString(), queryParams.getNonQueryParams());
     }
 
-    private static String makeFindUrl(String i, String q, Map<String, String> nonQueryParams) {
-        return makeFindUrl(i, q, nonQueryParams, null);
+    private static String makeFindUrl(String q, Map<String, String> nonQueryParams) {
+        return makeFindUrl(q, nonQueryParams, null);
     }
 
-    private static String makeFindUrl(String i, String q, Map<String, String> nonQueryParams, Integer customOffset) {
-        nonQueryParams.put(SIMPLE_FREETEXT, i);
+    private static String makeFindUrl(String q, Map<String, String> nonQueryParams, Integer customOffset) {
         nonQueryParams.put(QUERY, q);
         if (customOffset != null) {
             nonQueryParams.put(OFFSET, "" + customOffset);

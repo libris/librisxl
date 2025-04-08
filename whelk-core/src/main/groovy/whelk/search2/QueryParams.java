@@ -9,9 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class QueryParams {
     private final static int DEFAULT_LIMIT = 200;
@@ -20,7 +18,6 @@ public class QueryParams {
 
     public static class ApiParams {
         public static final String QUERY = "_q";
-        public static final String SIMPLE_FREETEXT = "_i";
         public static final String SORT = "_sort";
         public static final String LIMIT = "_limit";
         public static final String OFFSET = "_offset";
@@ -54,7 +51,6 @@ public class QueryParams {
     public final List<EsBoost.ScoreFunction> esScoreFunctions;
 
     public final String q;
-    public final String i;
 
     public final boolean skipStats;
 
@@ -72,7 +68,6 @@ public class QueryParams {
         this.spell = new Spell(getOptionalSingleNonEmpty(ApiParams.SPELL, apiParameters).orElse(""));
         this.boostFields = getMultiple(ApiParams.BOOST, apiParameters);
         this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse("");
-        this.i = getOptionalSingle(ApiParams.SIMPLE_FREETEXT, apiParameters).orElse("");
         this.skipStats = getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
         this.esScoreFunctions = getEsScoreFunctions(apiParameters);
     }
@@ -85,7 +80,6 @@ public class QueryParams {
 
     public Map<String, String> getNonQueryParams() {
         var params = getParamsMap();
-        params.remove(ApiParams.SIMPLE_FREETEXT);
         params.remove(ApiParams.QUERY);
         return params;
     }
@@ -94,10 +88,7 @@ public class QueryParams {
         if (paramsMap == null) {
             Map<String, String> params = new LinkedHashMap<>();
 
-            if (i != null) {
-                params.put(ApiParams.SIMPLE_FREETEXT, i);
-            }
-            if (q != null) {
+            if (!q.isEmpty()) {
                 params.put(ApiParams.QUERY, q);
             }
             if (offset > 0) {

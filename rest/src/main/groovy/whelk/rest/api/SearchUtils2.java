@@ -9,7 +9,6 @@ import whelk.search2.ESSettings;
 import whelk.search2.Query;
 import whelk.search2.QueryParams;
 import whelk.search2.VocabMappings;
-import whelk.util.http.RedirectException;
 
 import java.io.IOException;
 import java.util.*;
@@ -34,10 +33,6 @@ public class SearchUtils2 {
         }
 
         Query query = new Query(queryParameters, getAppConfig(queryParameters), vocabMappings, esSettings, whelk);
-
-        if (query.hasUnbalancedParams()) {
-            throw new RedirectException(query.findUrl());
-        }
 
         return query.collectResults();
     }

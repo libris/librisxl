@@ -25,7 +25,6 @@ public class QueryTree {
     private QueryTree filtered;
 
     private String asString;
-    private String freeTextPart;
 
     public Node tree;
 
@@ -64,7 +63,7 @@ public class QueryTree {
     // NOTE: This may mutate the original (non-filtered) tree should it contain filters already
     public void applySiteFilters(Query.SearchMode searchMode, AppParams.SiteFilters siteFilters) {
         _applySiteFilters(searchMode, siteFilters);
-        resetStrings();
+        resetString();
     }
 
     public void applyObjectFilter(String object) {
@@ -121,10 +120,6 @@ public class QueryTree {
         return tree == null;
     }
 
-    public boolean isFreeText() {
-        return tree.isFreeTextNode();
-    }
-
     /**
      * There is no freetext or all freetext nodes are "*"
      */
@@ -164,13 +159,10 @@ public class QueryTree {
     }
 
     public String getFreeTextPart() {
-        if (freeTextPart == null) {
-            this.freeTextPart = findTopLevelNode(Node::isFreeTextNode)
-                    .map(FreeText.class::cast)
-                    .map(FreeText::value)
-                    .orElse("");
-        }
-        return freeTextPart;
+        return findTopLevelNode(Node::isFreeTextNode)
+                .map(FreeText.class::cast)
+                .map(FreeText::value)
+                .orElse("");
     }
 
     public String toQueryString() {
@@ -235,9 +227,8 @@ public class QueryTree {
         _removeTopLevelNodesByCondition(n -> n.isFreeTextNode() && ((FreeText) n).isWild());
     }
 
-    private void resetStrings() {
+    private void resetString() {
         this.asString = null;
-        this.freeTextPart = null;
     }
 
     private static boolean topLevelContains(Node tree, Node node) {
