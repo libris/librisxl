@@ -43,8 +43,12 @@ public class QueryTree {
         return new QueryTree(tree, filtered);
     }
 
-    public Map<String, Object> toEs(JsonLd jsonLd, Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
-        return getFiltered().tree.expand(jsonLd, List.of()).toEs(getNestedPath, boostFields.isEmpty() ? EsBoost.BOOST_FIELDS : boostFields);
+    public Map<String, Object> toEs(JsonLd jsonLd, Function<String, Optional<String>> getNestedPath) {
+        return toEs(jsonLd, getNestedPath, List.of(), List.of());
+    }
+
+    public Map<String, Object> toEs(JsonLd jsonLd, Function<String, Optional<String>> getNestedPath, Collection<String> boostFields, Collection<String> rulingTypes) {
+        return getFiltered().tree.expand(jsonLd, rulingTypes).toEs(getNestedPath, boostFields.isEmpty() ? EsBoost.BOOST_FIELDS : boostFields);
     }
 
     private QueryTree(Node tree, QueryTree filtered) {
@@ -70,8 +74,8 @@ public class QueryTree {
         _applyObjectFilter(object);
     }
 
-    public void applyPredicateObjectFilter(Collection<String> predicates, String object, JsonLd jsonLd) {
-        _applyPredicateObjectFilter(predicates, object, jsonLd);
+    public void applyPredicateObjectFilter(Collection<Property> predicates, String object) {
+        _applyPredicateObjectFilter(predicates, object);
     }
 
     public QueryTree omitNode(Node node) {
@@ -404,10 +408,10 @@ public class QueryTree {
         this.filtered = filtered;
     }
 
-    private void _applyPredicateObjectFilter(Collection<String> predicates, String object, JsonLd jsonLd) {
+    private void _applyPredicateObjectFilter(Collection<Property> predicates, String object) {
         QueryTree filtered = getFiltered();
         predicates.stream()
-                .map(p -> new PathValue(new Property(p, jsonLd), Operator.EQUALS, new Link(object)))
+                .map(p -> new PathValue(p, Operator.EQUALS, new Link(object)))
                 .forEach(filtered::_addTopLevelNode);
         this.filtered = filtered;
     }

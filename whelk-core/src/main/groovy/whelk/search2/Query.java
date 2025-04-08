@@ -86,13 +86,6 @@ public class Query {
         queryTree.applySiteFilters(searchMode, appParams.siteFilters);
     }
 
-    private void applySearchModeFilters() {
-        switch (searchMode) {
-            case OBJECT_SEARCH -> queryTree.applyObjectFilter(queryParams.object);
-            case PREDICATE_OBJECT_SEARCH -> queryTree.applyPredicateObjectFilter(queryParams.predicates, queryParams.object, whelk.getJsonld());
-        }
-    }
-
     private SearchMode getSearchMode() throws InvalidQueryException {
         if (hasObject()) {
             return queryParams.predicates.isEmpty() ? SearchMode.OBJECT_SEARCH : SearchMode.PREDICATE_OBJECT_SEARCH;
@@ -161,30 +154,37 @@ public class Query {
     private Object getEsQueryDsl() {
         if (esQueryDsl == null) {
             if (queryParams.skipStats) {
-                this.esQueryDsl = getMainQueryDsl();
+                this.esQueryDsl = getMainQueryDsl(getEsQuery(), getEsAggQuery());
             } else {
                 this.esQueryDsl = switch (searchMode) {
-                    case BASIC_SEARCH -> getMainQueryDsl();
+                    case BASIC_SEARCH -> getMainQueryDsl(getEsQuery(), getEsAggQuery());
                     case OBJECT_SEARCH -> {
+                        queryTree.applyObjectFilter(queryParams.object);
                         var aggs = getEsAggQuery();
                         aggs.putAll(pAggQuery.getEsAggQuery());
-                        yield getMainQueryDsl(aggs);
+                        yield getMainQueryDsl(getEsQuery(), aggs);
                     }
-                    case PREDICATE_OBJECT_SEARCH -> List.of(getMainQueryDsl(), pAggQuery.getEsQueryDsl());
+                    case PREDICATE_OBJECT_SEARCH -> {
+                        List<Property> predicates = queryParams.predicates.stream()
+                                .map(p -> new Property(p, whelk.getJsonld()))
+                                .toList();
+                        queryTree.applyPredicateObjectFilter(predicates, queryParams.object);
+                        var subjectTypes = getSubjectTypes(predicates);
+                        var mainQuery = getEsQuery(subjectTypes);
+                        var aggQuery = getEsAggQuery(subjectTypes);
+                        var mainQueryDsl = getMainQueryDsl(mainQuery, aggQuery);
+                        yield List.of(mainQueryDsl, pAggQuery.getEsQueryDsl());
+                    }
                 };
             }
         }
         return esQueryDsl;
     }
 
-    private Map<String, Object> getMainQueryDsl() {
-        return getMainQueryDsl(getEsAggQuery());
-    }
-
-    private Map<String, Object> getMainQueryDsl(Map<String, Object> aggs) {
+    private Map<String, Object> getMainQueryDsl(Map<String, Object> query, Map<String, Object> aggs) {
         var queryDsl = new LinkedHashMap<String, Object>();
 
-        queryDsl.put("query", getEsQuery());
+        queryDsl.put("query", query);
         queryDsl.put("size", queryParams.limit);
         queryDsl.put("from", queryParams.offset);
         queryDsl.put("sort", (queryParams.sortBy == Sort.DEFAULT_BY_RELEVANCY && queryTree.isWild()
@@ -217,25 +217,27 @@ public class Query {
     }
 
     private Map<String, Object> getEsQuery() {
-        // TODO: Mutate original tree or not? (Include p and o in search mappings?)
-        applySearchModeFilters();
-        return getEsQuery(queryTree);
+        return getEsQuery(List.of());
     }
 
-    private Map<String, Object> getEsQuery(QueryTree queryTree) {
-        var query = toEsQuery(queryTree);
-        return addBoosts(query, queryParams.esScoreFunctions);
-    }
-
-    private Map<String, Object> toEsQuery(QueryTree queryTree) {
-        return queryTree.toEs(whelk.getJsonld(), this::getNestedPath, queryParams.boostFields);
+    private Map<String, Object> getEsQuery(Collection<String> rulingTypes) {
+        var esQuery = queryTree.toEs(whelk.getJsonld(), this::getNestedPath, queryParams.boostFields, rulingTypes);
+        return addBoosts(esQuery, queryParams.esScoreFunctions);
     }
 
     private Map<String, Object> getEsAggQuery() {
-        return Aggs.buildAggQuery(appParams.statsRepr,
+        return getEsAggQuery(queryTree.collectRulingTypes(whelk.getJsonld()));
+    }
+
+    private Map<String, Object> getEsAggQuery(Collection<String> rulingTypes) {
+        return Aggs.buildAggQuery(appParams.statsRepr.sliceList(),
                 whelk.getJsonld(),
-                queryTree.collectRulingTypes(whelk.getJsonld()),
+                rulingTypes,
                 this::getNestedPath);
+    }
+
+    private static Set<String> getSubjectTypes(List<Property> predicates) {
+        return predicates.stream().map(Property::domain).flatMap(List::stream).collect(Collectors.toSet());
     }
 
     private Optional<String> getNestedPath(String path) {
@@ -511,24 +513,26 @@ public class Query {
             Map<String, Integer> counts = getQueryResult().pAggs.stream()
                     .collect(Collectors.toMap(Aggs.Bucket::value, Aggs.Bucket::count));
 
-            for (String p : pAggQuery.curatedPredicates) {
-                if (!counts.containsKey(p)) {
-                    continue;
-                }
+            pAggQuery.curatedPredicates.stream()
+                    .map(Property::name)
+                    .forEach(p -> {
+                        if (!counts.containsKey(p)) {
+                            return;
+                        }
 
-                int count = counts.get(p);
+                        int count = counts.get(p);
 
-                if (count > 0) {
-                    Map<String, String> params = queryParams.getNonQueryParamsNoOffset();
-                    params.put(PREDICATES, p);
-                    result.add(Map.of(
-                            "totalItems", count,
-                            "view", Map.of(JsonLd.ID_KEY, makeFindUrl(params)),
-                            "object", whelk.getJsonld().vocabIndex.get(p),
-                            "_selected", queryParams.predicates.contains(p)
-                    ));
-                }
-            }
+                        if (count > 0) {
+                            Map<String, String> params = queryParams.getNonQueryParamsNoOffset();
+                            params.put(PREDICATES, p);
+                            result.add(Map.of(
+                                    "totalItems", count,
+                                    "view", Map.of(JsonLd.ID_KEY, makeFindUrl(params)),
+                                    "object", whelk.getJsonld().vocabIndex.get(p),
+                                    "_selected", queryParams.predicates.contains(p)
+                            ));
+                        }
+                    });
 
             return result;
         }
@@ -537,7 +541,7 @@ public class Query {
     private class PAggQuery {
         QueryTree queryTree;
         Link object;
-        List<String> curatedPredicates;
+        List<Property> curatedPredicates;
 
         PAggQuery(QueryTree queryTree) throws InvalidQueryException {
             this.queryTree = queryTree;
@@ -558,14 +562,14 @@ public class Query {
         }
 
         private Map<String, Object> getEsQuery() {
-            queryTree.applyObjectFilter(object.iri());
-            return Query.this.getEsQuery(queryTree);
+            return queryTree.toEs(whelk.getJsonld(), Query.this::getNestedPath);
         }
 
-        private List<String> curatedPredicates() {
+        private List<Property> curatedPredicates() {
             return Stream.concat(Stream.of(object.getType()), whelk.getJsonld().getSuperClasses(object.getType()).stream())
                     .filter(appParams.relationFilters::containsKey)
                     .findFirst().map(appParams.relationFilters::get)
+                    .map(predicates -> predicates.stream().map(p -> new Property(p, whelk.getJsonld())).toList())
                     .orElse(Collections.emptyList());
         }
 
@@ -577,8 +581,7 @@ public class Query {
                     return new Link(object, thing);
                 }
             }
-            // TODO: More informative message
-            throw new InvalidQueryException("Object not found");
+            throw new InvalidQueryException("No resource with id " + object + " was found");
         }
 
         private Map<String, Object> getEsAggQuery() {

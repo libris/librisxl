@@ -119,7 +119,7 @@ public non-sealed class Property implements Subpath {
     }
 
     public boolean mayAppearOnType(String type, JsonLd jsonLd) {
-        return domain.isEmpty() || domain.stream().anyMatch(d -> jsonLd.isSubClassOf(d, type) || jsonLd.isSubClassOf(type, d));
+        return domain.isEmpty() || domain.stream().anyMatch(d -> directDescendants(d, type, jsonLd));
     }
 
     public boolean isInverseOf(Property property) {
@@ -167,8 +167,12 @@ public non-sealed class Property implements Subpath {
 
     private List<Property> getIntegralRelationsForType(String type, Collection<Property> integralRelations, JsonLd jsonLd) {
         return integralRelations.stream()
-                .filter(prop -> prop.domain().stream().anyMatch(domain -> jsonLd.isSubClassOf(type, domain)))
+                .filter(prop -> prop.domain().stream().anyMatch(d -> directDescendants(d, type, jsonLd)))
                 .toList();
+    }
+
+    private static boolean directDescendants(String a, String b, JsonLd jsonLd) {
+        return jsonLd.isSubClassOf(a, b) || jsonLd.isSubClassOf(b, a);
     }
 
     private String getSuperKey(JsonLd jsonLd) {
