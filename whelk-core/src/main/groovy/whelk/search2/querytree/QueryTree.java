@@ -16,6 +16,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static whelk.search2.QueryUtil.quoteIfPhraseOrContainsSpecialSymbol;
@@ -187,7 +188,6 @@ public class QueryTree {
 
     private void normalizeTree() {
         concatFreeText();
-        // TODO: Se vad som händer om tomt träd
         removeFreeTextWildcard();
     }
 
@@ -279,25 +279,24 @@ public class QueryTree {
     private static Node concatFreeText(Node node) {
         return switch (node) {
             case And and -> {
-                List<Node> conjuncts = new ArrayList<>();
-                List<FreeText> fts = new ArrayList<>();
-                for (Node n : and.children()) {
-                    if (n.isFreeTextNode()) {
-                        fts.add((FreeText) n);
-                    } else {
-                        conjuncts.add(concatFreeText(n));
-                    }
+                List<FreeText> fts = and.children().stream().filter(Node::isFreeTextNode)
+                        .map(FreeText.class::cast)
+                        .toList();
+                if (fts.size() < 2) {
+                    yield and.mapAndReinstantiate(QueryTree::concatFreeText);
                 }
-                if (!fts.isEmpty()) {
-                    String joinedFts = fts.stream().map(FreeText::value)
-                            .map(QueryUtil::quoteIfPhraseOrContainsSpecialSymbol)
-                            .collect(Collectors.joining(" "));
-                    conjuncts.addFirst(fts.getFirst().replace(joinedFts));
-                }
-                yield conjuncts.size() > 1 ? new And(conjuncts) : conjuncts.getFirst();
+                String joinedFts = fts.stream().map(FreeText::value)
+                        .map(QueryUtil::quoteIfPhraseOrContainsSpecialSymbol)
+                        .collect(Collectors.joining(" "));
+                FreeText ft = fts.getFirst().replace(joinedFts);
+                List<Node> rest = and.children().stream()
+                        .filter(Predicate.not(Node::isFreeTextNode))
+                        .map(QueryTree::concatFreeText)
+                        .toList();
+                yield rest.isEmpty() ? ft : new And(Stream.concat(Stream.of(ft), rest.stream()).toList());
             }
             case Or or -> or.mapAndReinstantiate(QueryTree::concatFreeText);
-            case FreeText ft -> ft.replace(quoteIfPhraseOrContainsSpecialSymbol(ft.value()));
+            case FreeText ft -> ft;
             case null, default -> node;
         };
     }
