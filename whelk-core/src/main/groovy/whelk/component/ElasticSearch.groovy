@@ -53,8 +53,6 @@ class ElasticSearch {
     private boolean isPitApiAvailable = false
     private static final int ES_LOG_MIN_DURATION = 2000 // Only log queries taking at least this amount of milliseconds
 
-    private final Queue<Runnable> indexingRetryQueue = new LinkedBlockingQueue<>()
-
     private static final class Lenses {
         public static final DerivedLens CARD_ONLY = new DerivedLens(
                 FresnelUtil.LensGroupName.Card,
@@ -99,16 +97,6 @@ class ElasticSearch {
 
         client = ElasticClient.withDefaultHttpClient(elasticHosts, elasticUser, elasticPassword)
         bulkClient = ElasticClient.withBulkHttpClient(elasticHosts, elasticUser, elasticPassword)
-
-        new Timer("ElasticIndexingRetries", true).schedule(new TimerTask() {
-            void run() {
-                indexingRetryQueue.size().times {
-                    Runnable entry = indexingRetryQueue.poll()
-                    if (entry != null)
-                        entry.run()
-                }
-            }
-        }, 60*1000, 10*1000)
         
         initSettings()
     }
@@ -221,7 +209,7 @@ class ElasticSearch {
         }
     }
 
-    void bulkIndex(Collection<Document> docs, Whelk whelk) {
+    void bulkIndex(Collection<Document> docs, Whelk whelk, boolean tolerant) {
         if (docs) {
             String bulkString = docs.findResults{ doc ->
                 try {
@@ -280,9 +268,9 @@ class ElasticSearch {
                 int docsCount = docs.count{it}
                 int numFailed = numFailedDueToDocError + numFailedDueToESError
                 if (numFailed) {
-                    log.warn("Tried bulk indexing ${docsCount} docs: ${docsCount - numFailed} succeeded, ${numFailed} failed " +
+                    log.error("Tried bulk indexing ${docsCount} docs: ${docsCount - numFailed} succeeded, ${numFailed} failed " +
                             "(${numFailedDueToDocError} due to document error, ${numFailedDueToESError} due to ES error). Took ${responseMap.took} ms")
-                    if (numFailedDueToESError) {
+                    if (numFailedDueToESError || !tolerant) {
                         throw new UnexpectedHttpStatusException("Failed indexing documents due to ES error", 500)
                     }
                 } else {
@@ -294,21 +282,6 @@ class ElasticSearch {
         }
     }
 
-    void bulkIndexWithRetry(Collection<String> ids, Whelk whelk) {
-        Collection<Document> docs = whelk.bulkLoad(ids).values()
-        try {
-            bulkIndex(docs, whelk)
-        } catch (Exception e) {
-            if (!isBadRequest(e)) {
-                log.info("Failed to index batch ${ids} in elastic, placing in retry queue: $e", e)
-                indexingRetryQueue.add({ -> bulkIndexWithRetry(ids, whelk) })
-            }
-            else {
-                log.error("Failed to index ${ids} in elastic: $e", e)
-            }
-        }
-    }
-
     String createActionRow(Document doc) {
         def action = ["index" : [ "_index" : indexName,
                                   "_id" : toElasticId(doc.getShortId()) ]]
@@ -316,25 +289,13 @@ class ElasticSearch {
     }
 
     void index(Document doc, Whelk whelk) {
-        // The justification for this uncomfortable catch-all, is that an index-failure must raise an alert (log entry)
-        // _internally_ but be otherwise invisible to clients (If postgres writing was ok, the save is considered ok).
-        try {
-            String response = client.performRequest(
-                    'PUT',
-                    "/${indexName}/_doc/${toElasticId(doc.getShortId())}",
-                    getShapeForIndex(doc, whelk))
-            if (log.isDebugEnabled()) {
-                Map responseMap = mapper.readValue(response, Map)
-                log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/_doc/${responseMap['_id']} as version ${responseMap['_version']}")
-            }
-        } catch (Exception e) {
-            if (!isBadRequest(e)) {
-                log.info("Failed to index ${doc.getShortId()} in elastic, placing in retry queue: $e", e)
-                indexingRetryQueue.add({ -> index(doc, whelk) })
-            }
-            else {
-                log.error("Failed to index ${doc.getShortId()} in elastic: $e", e)
-            }
+        String response = client.performRequest(
+                'PUT',
+                "/${indexName}/_doc/${toElasticId(doc.getShortId())}",
+                getShapeForIndex(doc, whelk))
+        if (log.isDebugEnabled()) {
+            Map responseMap = mapper.readValue(response, Map)
+            log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/_doc/${responseMap['_id']} as version ${responseMap['_version']}")
         }
     }
 
@@ -361,26 +322,10 @@ class ElasticSearch {
         }
         """.stripIndent()
 
-        try {
-            client.performRequest(
-                    'POST',
-                    "/${indexName}/_update/${toElasticId(shortId)}",
-                    body)
-        }
-        catch (Exception e) {
-            if (isBadRequest(e)) {
-                log.warn("Failed to update reverse link counter ($deltaCount) for $shortId: $e", e)
-            }
-            else if (isNotFound(e)) {
-                // OK. All dependers must be removed before the dependee in lddb. But the index update can happen
-                // in any order, so the dependee might already be gone when trying to decrement the counter.
-                log.info("Could not update reverse link counter ($deltaCount) for $shortId: $e, it does not exist", e)
-            }
-            else {
-                log.warn("Failed to update reverse link counter ($deltaCount) for $shortId: $e, placing in retry queue.", e)
-                indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, relation, deltaCount) })
-            }
-        }
+        client.performRequest(
+                'POST',
+                "/${indexName}/_update/${toElasticId(shortId)}",
+                body)
     }
     
     void remove(String identifier) {
@@ -388,30 +333,16 @@ class ElasticSearch {
             log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
         }
         def dsl = ["query":["term":["_id":toElasticId(identifier)]]]
-        try {
-            def response = client.performRequest('POST',
-                    "/${indexName}/_delete_by_query",
-                    JsonOutput.toJson(dsl))
+        def response = client.performRequest('POST',
+                "/${indexName}/_delete_by_query",
+                JsonOutput.toJson(dsl))
 
-            Map responseMap = mapper.readValue(response, Map)
-            if (log.isDebugEnabled()) {
-                log.debug("Response: ${responseMap.deleted} of ${responseMap.total} objects deleted")
-            }
-            if (responseMap.deleted == 0) {
-                log.warn("Record with id $identifier was not deleted from the Elasticsearch index.")
-            }
+        Map responseMap = mapper.readValue(response, Map)
+        if (log.isDebugEnabled()) {
+            log.debug("Response: ${responseMap.deleted} of ${responseMap.total} objects deleted")
         }
-        catch(Exception e) {
-            if (isBadRequest(e)) {
-                log.warn("Failed to delete $identifier from index: $e", e)
-            }
-            else if (isNotFound(e)) {
-                log.warn("Tried to delete $identifier from index, but it was not there: $e", e)
-            }
-            else {
-                log.warn("Failed to delete $identifier from index: $e, placing in retry queue.", e)
-                indexingRetryQueue.add({ -> remove(identifier) })
-            }
+        if (responseMap.deleted == 0) {
+            log.error("Record with id $identifier was not deleted from the Elasticsearch index.")
         }
     }
 

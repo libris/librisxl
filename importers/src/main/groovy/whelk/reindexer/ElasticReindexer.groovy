@@ -121,7 +121,7 @@ class ElasticReindexer {
 
     private Exception tryBulkIndex(List<Document> docs, Whelk whelk) {
         try {
-            whelk.elastic.bulkIndex(docs, whelk)
+            whelk.elastic.bulkIndex(docs, whelk, true)
             return null
         }
         catch (Exception e) {

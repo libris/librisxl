@@ -10,7 +10,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAmount;
 import java.util.*;
 
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS;
@@ -22,11 +25,14 @@ public class Indexing {
     static Thread worker;
     private final static String INDEXER_STATE_KEY = "ElasticIndexer";
     private final static Logger logger = LogManager.getLogger(Indexing.class);
+    private static Instant lastBehindMessageAt = Instant.EPOCH;
 
     /**
      * Index all changes since last invocation of this function
+     *
+     * returns false if there was nothing to index, true otherwise
      */
-    private static void iterate(Whelk whelk) throws SQLException {
+    private static boolean iterate(Whelk whelk) throws SQLException {
         PostgreSQLComponent psql = whelk.getStorage();
         Map storedIndexerState = psql.getState(INDEXER_STATE_KEY);
         if (storedIndexerState == null){
@@ -44,33 +50,58 @@ public class Indexing {
 
             statement.setLong(1, lastIndexedChangeNumber);
             ResultSet resultSet = statement.executeQuery();
-            Long changeNumber = 0L;
+            Long indexedChangeNumber = 0L;
+            if (!resultSet.isBeforeFirst()) {
+                return false;
+            }
             while (resultSet.next()) {
-                changeNumber = resultSet.getLong("changenumber");
+                Long changeNumber = resultSet.getLong("changenumber");
                 String id = resultSet.getString("id");
                 Instant modificationInstant = resultSet.getTimestamp("time").toInstant();
                 int resultingVersion = resultSet.getInt("resulting_record_version");
                 boolean skipIndexDependers = resultSet.getBoolean("skipindexdependers");
 
-                List<Document> versions = whelk.getStorage().loadAllVersions(id);
-                if (resultingVersion == 0)
-                    whelk.elastic.index(versions.getFirst(), whelk);
-                else {
-                    Document updated = versions.get(resultingVersion);
-                    Document preUpdateDoc = versions.get(resultingVersion-1);
-
-                    System.err.println("Now want to reindex: " + id + " ch-nr: " + changeNumber + " recordv: " + resultingVersion);
-                    System.err.println("data to index:\n\t" + updated.getDataAsString()+"\n");
-                    System.err.println("previous version:\n\t" + preUpdateDoc.getDataAsString() + "\n\n");
-                    reindexUpdated(updated, preUpdateDoc, skipIndexDependers, whelk);
+                long minutesBehind = modificationInstant.until(Instant.now(), ChronoUnit.MINUTES);
+                if (minutesBehind >= 15 && lastBehindMessageAt.until(Instant.now(), ChronoUnit.MINUTES) >= 30) {
+                    lastBehindMessageAt = Instant.now();
+                    logger.error("Elastic indexing is currently " + minutesBehind + " minutes behind. The next change to index is: " + changeNumber +
+                            " (" + id + "). If this number is the same between two of these messages, it means that indexing is stuck on this change " +
+                            "and cannot proceed until indexing it becomes possible. If you (in an emergency) need to proceed without indexing " +
+                            "this change, do the following in the database: \"DELETE FROM lddb__change_log WHERE changenumber = " + changeNumber + ";\" " +
+                            "No data will be lost (the log is temporary). But be aware: The inconsistency in the search index is now on YOU and will " +
+                            "remain until the record is resaved or a full reindexing is done.");
                 }
+
+                try {
+                    List<Document> versions = whelk.getStorage().loadAllVersions(id);
+                    if (resultingVersion == 0)
+                        whelk.elastic.index(versions.getFirst(), whelk);
+                    else {
+                        Document updated = versions.get(resultingVersion);
+                        Document preUpdateDoc = versions.get(resultingVersion - 1);
+
+                        //System.err.println("Now want to reindex: " + id + " ch-nr: " + changeNumber + " recordv: " + resultingVersion);
+                        //System.err.println("data to index:\n\t" + updated.getDataAsString() + "\n");
+                        //System.err.println("previous version:\n\t" + preUpdateDoc.getDataAsString() + "\n\n");
+                        reindexUpdated(updated, preUpdateDoc, skipIndexDependers, whelk);
+                    }
+                } catch (Exception e) {
+                    logger.warn("Failed to index " + id + ", will try again.", e);
+                    // When we fail, wait a little before trying again.
+                    try {
+                        Thread.sleep(10 * 1000);
+                    } catch (InterruptedException ie) { /* ignore */ }
+                    break; // out of the while, without updating indexedChangeNumber
+                }
+                indexedChangeNumber = changeNumber;
             }
 
-            if (changeNumber > lastIndexedChangeNumber) {
-                psql.putState(INDEXER_STATE_KEY, Map.of("lastIndexed", ""+changeNumber));
+            if (indexedChangeNumber > lastIndexedChangeNumber) {
+                psql.putState(INDEXER_STATE_KEY, Map.of("lastIndexed", ""+indexedChangeNumber));
             }
         }
 
+        return true;
     }
 
     private static void reindexUpdated(Document updated, Document preUpdateDoc, boolean skipIndexDependers, Whelk whelk) {
@@ -113,7 +144,7 @@ public class Indexing {
     private static void bulkIndex(Iterable<String> ids, Whelk whelk) {
         for (List a : Iterables.partition(ids, 100)) {
             Collection<Document> docs = whelk.bulkLoad(a).values();
-            whelk.elastic.bulkIndex(docs, whelk);
+            whelk.elastic.bulkIndex(docs, whelk, false);
         }
     }
 
@@ -233,12 +264,12 @@ public class Indexing {
             while (true) {
 
                 try {
-                    iterate(whelk);
-
-                    // Don't run hot, wait a little before the next pass.
-                    try {
-                        Thread.sleep(100); // 0.1 seconds
-                    } catch (InterruptedException ie) { /* ignore */ }
+                    if (!iterate(whelk)) {
+                        // If there was nothing to index, don't run hot! Wait a little before the next pass!
+                        try {
+                            Thread.sleep(200); // 0.2 seconds
+                        } catch (InterruptedException ie) { /* ignore */ }
+                    }
                 } catch (Exception e) {
                     // Catch all, and wait a little before retrying. This thread should never be allowed to crash completely.
                     logger.error("Unexpected exception while indexing.", e);

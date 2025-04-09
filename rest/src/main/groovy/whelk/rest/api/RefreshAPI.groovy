@@ -108,6 +108,5 @@ class RefreshAPI extends HttpServlet
 
     void refreshQuietly(Document doc) {
         whelk.storage.refreshDerivativeTables(doc)
-        whelk.elastic.index(doc, whelk)
     }
 }
