@@ -239,6 +239,8 @@ public class Indexing {
         if (storedIndexerState != null && storedIndexerState.get("lastIndexed") == null) {
             psql.putState(INDEXER_STATE_KEY, Map.of("lastIndexed", "0"));
         }
+
+        logger.info("Elastic indexer state was reset (and is now considered \"caught up\").");
     }
 
     /**
