@@ -1,9 +1,10 @@
-package whelk.search2.querytree
+package whelk.search2
 
 import spock.lang.Specification
 import whelk.JsonLd
-import whelk.search2.Aggs
-import whelk.search2.AppParams
+import whelk.search2.querytree.Link
+import whelk.search2.querytree.Property
+import whelk.search2.querytree.TestData
 
 class AggsSpec extends Specification {
     JsonLd jsonLd = TestData.getJsonLd()

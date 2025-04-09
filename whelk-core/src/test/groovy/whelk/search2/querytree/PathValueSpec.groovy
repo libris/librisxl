@@ -34,7 +34,7 @@ class PathValueSpec extends Specification {
                 'property' : [
                         'propertyChainAxiom': [
                                 ['@id': 'p1', '@type': 'DatatypeProperty'],
-                                ['@id': 'p2', '@type': 'ObjectProperty']
+                                ['@id': 'p2', '@type': 'ObjectProperty', 'librisQueryCode': 'P2']
                         ]
                 ],
                 'notEquals': ['@id': 'E1', '@type': 'Class'],

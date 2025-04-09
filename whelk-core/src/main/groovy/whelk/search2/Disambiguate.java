@@ -61,14 +61,14 @@ public class Disambiguate {
             return new Key.UnrecognizedKey(key);
         }
 
-        Optional<String> equalPropertyKey = multipleMappedProperties.stream().filter(key::equals).findFirst();
+        Optional<String> equalPropertyKey = multipleMappedProperties.stream().filter(key::equalsIgnoreCase).findFirst();
         if (equalPropertyKey.isPresent()) {
             return new Property(equalPropertyKey.get(), jsonLd);
         }
 
         Optional<Property> propertyWithCode = multipleMappedProperties.stream()
                 .map(pKey -> new Property(pKey, jsonLd))
-                .filter(property -> key.toUpperCase().equals(property.definition().get("librisQueryCode")))
+                .filter(property -> property.definition().containsKey("librisQueryCode"))
                 .findFirst();
         if (propertyWithCode.isPresent()) {
             return propertyWithCode.get();
@@ -124,7 +124,7 @@ public class Disambiguate {
             return new InvalidValue.ForbiddenValue(value);
         }
 
-        return multipleMappedValues.stream().filter(value::equals).findFirst()
+        return multipleMappedValues.stream().filter(value::equalsIgnoreCase).findFirst()
                 .map(v -> (Value) new VocabTerm(v, jsonLd.vocabIndex.get(v), value))
                 .orElse(new InvalidValue.AmbiguousValue(value));
     }
