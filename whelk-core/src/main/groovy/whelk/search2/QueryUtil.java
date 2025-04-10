@@ -24,8 +24,12 @@ public class QueryUtil {
     private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper();
 
     public static String quoteIfPhraseOrContainsSpecialSymbol(String s) {
-        // TODO: Don't hardcode
-        return s.matches(".*(>=|<=|[=!~<>(): ]).*") ? "\"" + s + "\"" : s;
+        // TODO: Don't hardcode. Keep quotes in parsing instead of requoting?
+        return !isQuoted(s) && s.matches(".*(>=|<=|[=!~<>(): ]).*") ? "\"" + s + "\"" : s;
+    }
+
+    private static boolean isQuoted(String s) {
+        return s.matches("\".+\"");
     }
 
     public static String encodeUri(String uri) {

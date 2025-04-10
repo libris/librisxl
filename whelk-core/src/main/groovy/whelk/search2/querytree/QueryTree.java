@@ -10,7 +10,6 @@ import whelk.search2.Operator;
 
 import whelk.search2.Query;
 import whelk.search2.QueryParams;
-import whelk.search2.QueryUtil;
 
 import java.util.*;
 import java.util.function.Function;
@@ -19,7 +18,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static whelk.search2.QueryUtil.quoteIfPhraseOrContainsSpecialSymbol;
 import static whelk.search2.querytree.QueryTreeBuilder.buildTree;
 
 public class QueryTree {
@@ -286,7 +284,6 @@ public class QueryTree {
                     yield and.mapAndReinstantiate(QueryTree::concatFreeText);
                 }
                 String joinedFts = fts.stream().map(FreeText::value)
-                        .map(QueryUtil::quoteIfPhraseOrContainsSpecialSymbol)
                         .collect(Collectors.joining(" "));
                 FreeText ft = fts.getFirst().replace(joinedFts);
                 List<Node> rest = and.children().stream()

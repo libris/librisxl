@@ -4,6 +4,7 @@ import whelk.exception.InvalidQueryException;
 import whelk.search2.Disambiguate;
 import whelk.search2.Filter;
 import whelk.search2.Operator;
+import whelk.search2.QueryUtil;
 import whelk.search2.parse.Ast;
 import whelk.search2.parse.Lex;
 import whelk.search2.parse.Parse;
@@ -13,6 +14,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
+
+import static whelk.search2.QueryUtil.quoteIfPhraseOrContainsSpecialSymbol;
 
 public class QueryTreeBuilder {
     public static Node buildTree(String queryString, Disambiguate disambiguate) throws InvalidQueryException {
@@ -56,7 +59,7 @@ public class QueryTreeBuilder {
         Optional<Filter.AliasedFilter> filter = disambiguate.mapToFilter(value);
         return filter.isPresent()
                 ? new InactiveFilter(filter.get().parseAndGet(disambiguate))
-                : new FreeText(disambiguate.getTextQueryProperty(), Operator.NOT_EQUALS, value);
+                : new FreeText(disambiguate.getTextQueryProperty(), Operator.NOT_EQUALS, quoteIfPhraseOrContainsSpecialSymbol(value));
     }
 
     private static Node buildFromLeaf(Ast.Leaf leaf, Disambiguate disambiguate) throws InvalidQueryException {
@@ -64,7 +67,7 @@ public class QueryTreeBuilder {
         Optional<Filter.AliasedFilter> filter = disambiguate.mapToFilter(value);
         return filter.isPresent()
                 ? new ActiveFilter(filter.get().parseAndGet(disambiguate))
-                : new FreeText(disambiguate.getTextQueryProperty(), Operator.EQUALS, leaf.value());
+                : new FreeText(disambiguate.getTextQueryProperty(), Operator.EQUALS, quoteIfPhraseOrContainsSpecialSymbol(leaf.value()));
     }
 
     private static PathValue buildFromCode(Ast.Code c, Disambiguate disambiguate) {
