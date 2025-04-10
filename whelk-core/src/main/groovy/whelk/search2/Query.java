@@ -19,26 +19,23 @@ import java.util.stream.Stream;
 
 import static whelk.component.ElasticSearch.flattenedLangMapKey;
 import static whelk.search2.EsBoost.addBoosts;
-import static whelk.search2.QueryParams.ApiParams.PREDICATES;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
-import static whelk.search2.QueryUtil.makeFindUrl;
 import static whelk.search2.QueryUtil.makeFindUrlNoOffset;
 
 public class Query {
-    private final Whelk whelk;
+    protected final Whelk whelk;
 
-    private final QueryParams queryParams;
-    private final AppParams appParams;
-    private final Disambiguate disambiguate;
+    protected final QueryParams queryParams;
+    protected final AppParams appParams;
+    protected final QueryTree queryTree;
+
     private final ESSettings esSettings;
-    private final QueryTree queryTree;
-
+    private final Disambiguate disambiguate;
     private final Stats stats;
     private final LinkLoader linkLoader;
 
-    private Object esQueryDsl;
-    private QueryResult queryResult;
-    private PAggQuery pAggQuery;
+    protected Object esQueryDsl;
+    protected QueryResult queryResult;
 
     public enum SearchMode {
         BASIC_SEARCH,
@@ -50,27 +47,29 @@ public class Query {
         }
     }
 
-    public final SearchMode searchMode;
-
-    public Query(Map<String, String[]> queryParameters,
-                 Map<String, Object> appConfig,
+    public Query(QueryParams queryParams,
+                 AppParams appParams,
                  VocabMappings vocabMappings,
                  ESSettings esSettings,
                  Whelk whelk) throws InvalidQueryException
     {
-        this.queryParams = new QueryParams(queryParameters);
-        this.searchMode = getSearchMode();
-        this.appParams = new AppParams(appConfig);
+        this.queryParams = queryParams;
+        this.appParams = appParams;
         this.disambiguate = new Disambiguate(vocabMappings, appParams, whelk.getJsonld());
+        appParams.siteFilters.parse(disambiguate);
         this.esSettings = esSettings;
         this.queryTree = new QueryTree(queryParams.q, disambiguate);
         this.whelk = whelk;
         this.linkLoader = new LinkLoader();
         this.stats = new Stats();
-        applySiteFilters();
-        if (hasObject()) {
-            this.pAggQuery = new PAggQuery(queryTree.copy());
-        }
+    }
+
+    public static Query init(QueryParams queryParams, AppParams appParams, VocabMappings vocabMappings, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
+        return switch (getSearchMode(queryParams)) {
+            case BASIC_SEARCH -> new Query(queryParams, appParams, vocabMappings, esSettings, whelk);
+            case OBJECT_SEARCH -> new ObjectQuery(queryParams, appParams, vocabMappings, esSettings, whelk);
+            case PREDICATE_OBJECT_SEARCH -> new PredicateObjectQuery(queryParams, appParams, vocabMappings, esSettings, whelk);
+        };
     }
 
     public Map<String, Object> collectResults() {
@@ -81,23 +80,76 @@ public class Query {
         return QueryUtil.makeFindUrl(queryTree, queryParams);
     }
 
-    public void applySiteFilters() throws InvalidQueryException {
-        appParams.siteFilters.parse(disambiguate);
-        queryTree.applySiteFilters(searchMode, appParams.siteFilters);
+    protected Object doGetEsQueryDsl() {
+        queryTree.applySiteFilters(SearchMode.BASIC_SEARCH, appParams.siteFilters);
+        return getEsQueryDsl(getEsQuery(), queryParams.skipStats ? Map.of() : getEsAggQuery());
     }
 
-    private SearchMode getSearchMode() throws InvalidQueryException {
-        if (hasObject()) {
-            return queryParams.predicates.isEmpty() ? SearchMode.OBJECT_SEARCH : SearchMode.PREDICATE_OBJECT_SEARCH;
-        }
-        if (!queryParams.q.isEmpty()) {
-            return SearchMode.BASIC_SEARCH;
-        }
-        throw new InvalidQueryException("Missing required query parameter: _q");
+    protected List<Map<String, Object>> predicateLinks() {
+        return List.of();
     }
 
-    private boolean hasObject() {
-        return queryParams.object != null;
+    protected QueryResult getQueryResult() {
+        if (queryResult == null) {
+            this.queryResult = new QueryResult(doQuery(getEsQueryDsl()), queryParams.debug);
+        }
+        return queryResult;
+    }
+
+    protected Map<String, Object> getEsQuery(QueryTree queryTree, Collection<String> rulingTypes) {
+        var esQuery = queryTree.toEs(whelk.getJsonld(), this::getNestedPath, queryParams.boostFields, rulingTypes);
+        return addBoosts(esQuery, queryParams.esScoreFunctions);
+    }
+
+    protected Map<String, Object> getEsAggQuery(Collection<String> rulingTypes) {
+        return Aggs.buildAggQuery(appParams.statsRepr.sliceList(),
+                whelk.getJsonld(),
+                rulingTypes,
+                this::getNestedPath);
+    }
+
+    protected Map<String, Object> getEsQueryDsl(Map<String, Object> query, Map<String, Object> aggs) {
+        var queryDsl = new LinkedHashMap<String, Object>();
+
+        queryDsl.put("query", query);
+        queryDsl.put("size", queryParams.limit);
+        queryDsl.put("from", queryParams.offset);
+        queryDsl.put("sort", (queryParams.sortBy == Sort.DEFAULT_BY_RELEVANCY && queryTree.isWild()
+                ? Sort.BY_DOC_ID
+                : queryParams.sortBy).getSortClauses(this::getSortField));
+
+        if (queryParams.spell.suggest && esSettings.mappings.isSpellCheckAvailable()) {
+            var spellQuery = Spell.getSpellQuery(queryTree);
+            if (spellQuery.isPresent()) {
+                if (queryParams.spell.suggestOnly) {
+                    return Map.of("suggest", spellQuery.get());
+                } else {
+                    queryDsl.put("suggest", spellQuery.get());
+                }
+            }
+        }
+
+        if (!aggs.isEmpty()) {
+            queryDsl.put("aggs", aggs);
+        }
+
+        queryDsl.put("track_total_hits", true);
+
+        if (queryParams.debug.contains(QueryParams.Debug.ES_SCORE)) {
+            queryDsl.put("explain", true);
+            // Scores won't be calculated when also using sort unless explicitly asked for
+            queryDsl.put("track_scores", true);
+            queryDsl.put("fields", List.of("*"));
+        }
+
+        return queryDsl;
+    }
+
+    protected Optional<String> getNestedPath(String path) {
+        if (esSettings.mappings.isNestedField(path)) {
+            return Optional.of(path);
+        }
+        return esSettings.mappings.getNestedFields().stream().filter(path::startsWith).findFirst();
     }
 
     private Map<String, Object> getPartialCollectionView() {
@@ -138,113 +190,35 @@ public class Query {
         return view;
     }
 
-    private QueryResult getQueryResult() {
-        if (queryResult == null) {
-            this.queryResult = new QueryResult(doQuery(getEsQueryDsl()), queryParams.debug);
-        }
-        return queryResult;
-    }
-
     private Map<?, ?> doQuery(Object dsl) {
         return dsl instanceof List<?> l
                 ? whelk.elastic.multiQuery(l)
                 : whelk.elastic.query((Map<?, ?>) dsl);
     }
 
+    private static SearchMode getSearchMode(QueryParams queryParams) throws InvalidQueryException {
+        if (queryParams.object != null) {
+            return queryParams.predicates.isEmpty() ? SearchMode.OBJECT_SEARCH : SearchMode.PREDICATE_OBJECT_SEARCH;
+        }
+        if (!queryParams.q.isEmpty()) {
+            return SearchMode.BASIC_SEARCH;
+        }
+        throw new InvalidQueryException("Missing required query parameter: _q");
+    }
+
     private Object getEsQueryDsl() {
         if (esQueryDsl == null) {
-            if (queryParams.skipStats) {
-                this.esQueryDsl = getMainQueryDsl(getEsQuery(), getEsAggQuery());
-            } else {
-                this.esQueryDsl = switch (searchMode) {
-                    case BASIC_SEARCH -> getMainQueryDsl(getEsQuery(), getEsAggQuery());
-                    case OBJECT_SEARCH -> {
-                        queryTree.applyObjectFilter(queryParams.object);
-                        var aggs = getEsAggQuery();
-                        aggs.putAll(pAggQuery.getEsAggQuery());
-                        yield getMainQueryDsl(getEsQuery(), aggs);
-                    }
-                    case PREDICATE_OBJECT_SEARCH -> {
-                        List<Property> predicates = queryParams.predicates.stream()
-                                .map(p -> new Property(p, whelk.getJsonld()))
-                                .toList();
-                        queryTree.applyPredicateObjectFilter(predicates, queryParams.object);
-                        var subjectTypes = getSubjectTypes(predicates);
-                        var mainQuery = getEsQuery(subjectTypes);
-                        var aggQuery = getEsAggQuery(subjectTypes);
-                        var mainQueryDsl = getMainQueryDsl(mainQuery, aggQuery);
-                        yield List.of(mainQueryDsl, pAggQuery.getEsQueryDsl());
-                    }
-                };
-            }
+            this.esQueryDsl = doGetEsQueryDsl();
         }
         return esQueryDsl;
     }
 
-    private Map<String, Object> getMainQueryDsl(Map<String, Object> query, Map<String, Object> aggs) {
-        var queryDsl = new LinkedHashMap<String, Object>();
-
-        queryDsl.put("query", query);
-        queryDsl.put("size", queryParams.limit);
-        queryDsl.put("from", queryParams.offset);
-        queryDsl.put("sort", (queryParams.sortBy == Sort.DEFAULT_BY_RELEVANCY && queryTree.isWild()
-                ? Sort.BY_DOC_ID
-                : queryParams.sortBy).getSortClauses(this::getSortField));
-
-        if (queryParams.spell.suggest && esSettings.mappings.isSpellCheckAvailable()) {
-            var spellQuery = Spell.getSpellQuery(queryTree);
-            if (spellQuery.isPresent()) {
-                if (queryParams.spell.suggestOnly) {
-                    return Map.of("suggest", spellQuery.get());
-                } else {
-                    queryDsl.put("suggest", spellQuery.get());
-                }
-            }
-        }
-        //
-
-        queryDsl.put("aggs", aggs);
-        queryDsl.put("track_total_hits", true);
-
-        if (queryParams.debug.contains(QueryParams.Debug.ES_SCORE)) {
-            queryDsl.put("explain", true);
-            // Scores won't be calculated when also using sort unless explicitly asked for
-            queryDsl.put("track_scores", true);
-            queryDsl.put("fields", List.of("*"));
-        }
-
-        return queryDsl;
-    }
-
     private Map<String, Object> getEsQuery() {
-        return getEsQuery(List.of());
-    }
-
-    private Map<String, Object> getEsQuery(Collection<String> rulingTypes) {
-        var esQuery = queryTree.toEs(whelk.getJsonld(), this::getNestedPath, queryParams.boostFields, rulingTypes);
-        return addBoosts(esQuery, queryParams.esScoreFunctions);
+        return getEsQuery(queryTree, List.of());
     }
 
     private Map<String, Object> getEsAggQuery() {
         return getEsAggQuery(queryTree.collectRulingTypes(whelk.getJsonld()));
-    }
-
-    private Map<String, Object> getEsAggQuery(Collection<String> rulingTypes) {
-        return Aggs.buildAggQuery(appParams.statsRepr.sliceList(),
-                whelk.getJsonld(),
-                rulingTypes,
-                this::getNestedPath);
-    }
-
-    private static Set<String> getSubjectTypes(List<Property> predicates) {
-        return predicates.stream().map(Property::domain).flatMap(List::stream).collect(Collectors.toSet());
-    }
-
-    private Optional<String> getNestedPath(String path) {
-        if (esSettings.mappings.isNestedField(path)) {
-            return Optional.of(path);
-        }
-        return esSettings.mappings.getNestedFields().stream().filter(path::startsWith).findFirst();
     }
 
     private String getSortField(String termPath) {
@@ -291,7 +265,7 @@ public class Query {
         return framedThing;
     }
 
-    private class LinkLoader {
+    protected class LinkLoader {
         private final Map<String, Collection<Link>> links = new HashMap<>();
 
         private void loadChips() {
@@ -307,10 +281,6 @@ public class Query {
 
         private void addLinks(Collection<Link> links) {
             links.forEach(this::addLink);
-        }
-
-        private Map<String, Object> loadThing(String iri) {
-            return QueryUtil.loadThing(iri, whelk);
         }
     }
 
@@ -501,91 +471,6 @@ public class Query {
             }
 
             return results;
-        }
-
-        private List<Map<String, Object>> predicateLinks() {
-            if (pAggQuery == null) {
-                return Collections.emptyList();
-            }
-
-            var result = new ArrayList<Map<String, Object>>();
-
-            Map<String, Integer> counts = getQueryResult().pAggs.stream()
-                    .collect(Collectors.toMap(Aggs.Bucket::value, Aggs.Bucket::count));
-
-            pAggQuery.curatedPredicates.stream()
-                    .map(Property::name)
-                    .forEach(p -> {
-                        if (!counts.containsKey(p)) {
-                            return;
-                        }
-
-                        int count = counts.get(p);
-
-                        if (count > 0) {
-                            Map<String, String> params = queryParams.getNonQueryParamsNoOffset();
-                            params.put(PREDICATES, p);
-                            result.add(Map.of(
-                                    "totalItems", count,
-                                    "view", Map.of(JsonLd.ID_KEY, makeFindUrl(params)),
-                                    "object", whelk.getJsonld().vocabIndex.get(p),
-                                    "_selected", queryParams.predicates.contains(p)
-                            ));
-                        }
-                    });
-
-            return result;
-        }
-    }
-
-    private class PAggQuery {
-        QueryTree queryTree;
-        Link object;
-        List<Property> curatedPredicates;
-
-        PAggQuery(QueryTree queryTree) throws InvalidQueryException {
-            this.queryTree = queryTree;
-            this.object = getObject();
-            this.curatedPredicates = curatedPredicates();
-        }
-
-        private Map<String, Object> getEsQueryDsl() {
-            var queryDsl = new LinkedHashMap<String, Object>();
-
-            queryDsl.put("query", getEsQuery());
-            queryDsl.put("size", 0);
-            queryDsl.put("from", 0);
-            queryDsl.put("aggs", getEsAggQuery());
-            queryDsl.put("track_total_hits", true);
-
-            return queryDsl;
-        }
-
-        private Map<String, Object> getEsQuery() {
-            return queryTree.toEs(whelk.getJsonld(), Query.this::getNestedPath);
-        }
-
-        private List<Property> curatedPredicates() {
-            return Stream.concat(Stream.of(object.getType()), whelk.getJsonld().getSuperClasses(object.getType()).stream())
-                    .filter(appParams.relationFilters::containsKey)
-                    .findFirst().map(appParams.relationFilters::get)
-                    .map(predicates -> predicates.stream().map(p -> new Property(p, whelk.getJsonld())).toList())
-                    .orElse(Collections.emptyList());
-        }
-
-        private Link getObject() throws InvalidQueryException {
-            var object = queryParams.object;
-            if (object != null) {
-                Map<String, Object> thing = linkLoader.loadThing(object);
-                if (!thing.isEmpty()) {
-                    return new Link(object, thing);
-                }
-            }
-            throw new InvalidQueryException("No resource with id " + object + " was found");
-        }
-
-        private Map<String, Object> getEsAggQuery() {
-            return Aggs.buildPAggQuery(object, curatedPredicates, whelk.getJsonld(), Query.this::getNestedPath);
         }
     }
 }

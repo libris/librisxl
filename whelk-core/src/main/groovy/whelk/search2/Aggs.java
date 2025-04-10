@@ -82,7 +82,9 @@ public class Aggs {
     public static Map<String, Object> buildPAggQuery(Link object,
                                                      List<Property> curatedPredicates,
                                                      JsonLd jsonLd,
-                                                     Function<String, Optional<String>> getNestedPath) {
+                                                     Collection<String> types,
+                                                     Function<String, Optional<String>> getNestedPath
+    ) {
         Map<String, Object> query = new LinkedHashMap<>();
 
         var filters = curatedPredicates
@@ -90,7 +92,7 @@ public class Aggs {
                 .collect(Collectors.toMap(
                         Property::name,
                         p -> new PathValue(p, Operator.EQUALS, object)
-                                .expand(jsonLd, p.domain())
+                                .expand(jsonLd, types.isEmpty() ? p.domain() : types)
                                 .toEs(getNestedPath, List.of()))
                 );
 

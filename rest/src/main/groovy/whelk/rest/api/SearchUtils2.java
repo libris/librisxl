@@ -5,6 +5,7 @@ import whelk.exception.InvalidQueryException;
 import whelk.exception.WhelkRuntimeException;
 
 
+import whelk.search2.AppParams;
 import whelk.search2.ESSettings;
 import whelk.search2.Query;
 import whelk.search2.QueryParams;
@@ -32,7 +33,10 @@ public class SearchUtils2 {
             throw new WhelkRuntimeException("ElasticSearch not configured.");
         }
 
-        Query query = new Query(queryParameters, getAppConfig(queryParameters), vocabMappings, esSettings, whelk);
+        QueryParams queryParams = new QueryParams(queryParameters);
+        AppParams appParams = new AppParams(getAppConfig(queryParameters));
+
+        Query query = Query.init(queryParams, appParams, vocabMappings, esSettings, whelk);;
 
         return query.collectResults();
     }

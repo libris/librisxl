@@ -142,7 +142,7 @@ class AggsSpec extends Specification {
         given:
         Link object = new Link("https://libris.kb.se/fcrtpljz1qp2bdv#it")
         List<Property> predicates = ['p2', 'p6'].collect { new Property(it, jsonLd) }
-        Map aggQuery = Aggs.buildPAggQuery(object, predicates, jsonLd, x -> x == 'p3.p4.@id' ? Optional.of('p3') : Optional.empty())
+        Map aggQuery = Aggs.buildPAggQuery(object, predicates, jsonLd, List.of(), x -> x == 'p3.p4.@id' ? Optional.of('p3') : Optional.empty())
 
         expect:
         aggQuery == [
