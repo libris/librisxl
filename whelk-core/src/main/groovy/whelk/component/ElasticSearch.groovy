@@ -209,7 +209,7 @@ class ElasticSearch {
         }
     }
 
-    void bulkIndex(Collection<Document> docs, Whelk whelk, boolean tolerant) {
+    void bulkIndex(Collection<Document> docs, Whelk whelk) {
         if (docs) {
             String bulkString = docs.findResults{ doc ->
                 try {
@@ -270,7 +270,7 @@ class ElasticSearch {
                 if (numFailed) {
                     log.error("Tried bulk indexing ${docsCount} docs: ${docsCount - numFailed} succeeded, ${numFailed} failed " +
                             "(${numFailedDueToDocError} due to document error, ${numFailedDueToESError} due to ES error). Took ${responseMap.took} ms")
-                    if (numFailedDueToESError || !tolerant) {
+                    if (numFailedDueToESError) {
                         throw new UnexpectedHttpStatusException("Failed indexing documents due to ES error", 500)
                     }
                 } else {
@@ -289,13 +289,22 @@ class ElasticSearch {
     }
 
     void index(Document doc, Whelk whelk) {
-        String response = client.performRequest(
-                'PUT',
-                "/${indexName}/_doc/${toElasticId(doc.getShortId())}",
-                getShapeForIndex(doc, whelk))
-        if (log.isDebugEnabled()) {
-            Map responseMap = mapper.readValue(response, Map)
-            log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/_doc/${responseMap['_id']} as version ${responseMap['_version']}")
+        try {
+            String response = client.performRequest(
+                    'PUT',
+                    "/${indexName}/_doc/${toElasticId(doc.getShortId())}",
+                    getShapeForIndex(doc, whelk))
+            if (log.isDebugEnabled()) {
+                Map responseMap = mapper.readValue(response, Map)
+                log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/_doc/${responseMap['_id']} as version ${responseMap['_version']}")
+            }
+        } catch (Exception e) {
+            if (isBadRequest(e)) {
+                // These errors are caught and ignored (but logged) to avoid blocking further indexing.
+                log.error("Failed to index ${doc.getShortId()} in elastic: $e ACTION REQUIRED TO FIX THIS (it shouldn't happen), or the index will remain incomplete.", e)
+            } else {
+                throw e
+            }
         }
     }
 
@@ -322,10 +331,24 @@ class ElasticSearch {
         }
         """.stripIndent()
 
-        client.performRequest(
-                'POST',
-                "/${indexName}/_update/${toElasticId(shortId)}",
-                body)
+        try {
+            client.performRequest(
+                    'POST',
+                    "/${indexName}/_update/${toElasticId(shortId)}",
+                    body)
+        } catch (Exception e) {
+            if (isBadRequest(e)) {
+                log.error("Failed to update reverse link counter ($deltaCount) for $shortId: $e ACTION REQUIRED or link counters will be WRONG. This shouldn't happen.", e)
+            }
+            else if (isNotFound(e)) {
+                // OK. All dependers must be removed before the dependee in lddb. But the index update can happen
+                // in any order, so the dependee might already be gone when trying to decrement the counter.
+                log.info("Could not update reverse link counter ($deltaCount) for $shortId: $e, it does not exist", e)
+            }
+            else {
+                throw e
+            }
+        }
     }
     
     void remove(String identifier) {
@@ -333,16 +356,27 @@ class ElasticSearch {
             log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
         }
         def dsl = ["query":["term":["_id":toElasticId(identifier)]]]
-        def response = client.performRequest('POST',
-                "/${indexName}/_delete_by_query",
-                JsonOutput.toJson(dsl))
+        try {
+            def response = client.performRequest('POST',
+                    "/${indexName}/_delete_by_query",
+                    JsonOutput.toJson(dsl))
 
-        Map responseMap = mapper.readValue(response, Map)
-        if (log.isDebugEnabled()) {
-            log.debug("Response: ${responseMap.deleted} of ${responseMap.total} objects deleted")
-        }
-        if (responseMap.deleted == 0) {
-            log.error("Record with id $identifier was not deleted from the Elasticsearch index.")
+            Map responseMap = mapper.readValue(response, Map)
+            if (log.isDebugEnabled()) {
+                log.debug("Response: ${responseMap.deleted} of ${responseMap.total} objects deleted")
+            }
+            if (responseMap.deleted == 0) {
+                log.error("Record with id $identifier was not deleted from the Elasticsearch index.")
+            }
+        } catch (Exception e) {
+            // warn and ignore
+            if (isBadRequest(e)) {
+                log.warn("Failed to delete $identifier from index: $e", e)
+            }
+            else if (isNotFound(e)) {
+                log.warn("Tried to delete $identifier from index, but it was not there: $e", e)
+            }
+            else throw e
         }
     }
 

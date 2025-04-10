@@ -144,7 +144,7 @@ public class Indexing {
     private static void bulkIndex(Iterable<String> ids, Whelk whelk) {
         for (List a : Iterables.partition(ids, 100)) {
             Collection<Document> docs = whelk.bulkLoad(a).values();
-            whelk.elastic.bulkIndex(docs, whelk, false);
+            whelk.elastic.bulkIndex(docs, whelk);
         }
     }
 
