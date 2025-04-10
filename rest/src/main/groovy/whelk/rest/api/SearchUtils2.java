@@ -34,7 +34,7 @@ public class SearchUtils2 {
         }
 
         QueryParams queryParams = new QueryParams(queryParameters);
-        AppParams appParams = new AppParams(getAppConfig(queryParameters));
+        AppParams appParams = new AppParams(getAppConfig(queryParameters), queryParams);
 
         Query query = Query.init(queryParams, appParams, vocabMappings, esSettings, whelk);;
 

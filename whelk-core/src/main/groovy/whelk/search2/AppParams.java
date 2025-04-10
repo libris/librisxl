@@ -172,7 +172,7 @@ public class AppParams {
 
     private List<OptionalSiteFilter> getQueryDefinedSiteFilters(QueryParams queryParams, Map<String, Filter.AliasedFilter> filterByAlias) {
         return filterByAlias.entrySet().stream()
-                .filter(e -> e.getKey().startsWith(ALIAS))
+                .filter(e -> e.getKey().startsWith(asqPrefix(ALIAS)))
                 .filter(e -> queryParams.q.contains(asqPrefix(e.getKey())))
                 .map(e ->  new OptionalSiteFilter(e.getValue(), Query.SearchMode.asSet()))
                 .toList();
@@ -200,7 +200,7 @@ public class AppParams {
 
     private Map<String, Filter.AliasedFilter> getFilterByAlias(Map<String, Object> appConfig, Map<String, String[]> aliasedParams) {
         Stream<Filter.AliasedFilter> queryDefined = aliasedParams.entrySet().stream()
-                .map(e -> new Filter.AliasedFilter(e.getKey(), e.getValue()[0], new HashMap<>()));
+                .map(e -> new Filter.AliasedFilter(asqPrefix(e.getKey()), e.getValue()[0], new HashMap<>()));
 
         Stream<Filter.AliasedFilter> predefined = getAsListOfMap(appConfig, "_filterAliases").stream()
                 .map(m -> new Filter.AliasedFilter(
