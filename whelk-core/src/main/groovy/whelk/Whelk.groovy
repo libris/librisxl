@@ -395,7 +395,6 @@ class Whelk {
             return false
         }
 
-        //reindexUpdated(updated, preUpdateDoc)
         sparqlUpdater?.pollNow()
 
         return true
@@ -410,7 +409,6 @@ class Whelk {
             return
         }
 
-        //reindexUpdated(updated, preUpdateDoc)
         sparqlUpdater?.pollNow()
     }
 

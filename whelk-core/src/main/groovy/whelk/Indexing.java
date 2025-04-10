@@ -62,11 +62,11 @@ public class Indexing {
                 boolean skipIndexDependers = resultSet.getBoolean("skipindexdependers");
 
                 long minutesBehind = modificationInstant.until(Instant.now(), ChronoUnit.MINUTES);
-                if (minutesBehind >= 15 && lastBehindMessageAt.until(Instant.now(), ChronoUnit.MINUTES) >= 30) {
+                if (minutesBehind >= 10 && lastBehindMessageAt.until(Instant.now(), ChronoUnit.MINUTES) >= 30) {
                     lastBehindMessageAt = Instant.now();
                     logger.error("Elastic indexing is currently " + minutesBehind + " minutes behind. The next change to index is: " + changeNumber +
-                            " (" + id + "). If this number is the same between two of these messages, it means that indexing is stuck on this change " +
-                            "and cannot proceed until indexing it becomes possible. If you (in an emergency) need to proceed without indexing " +
+                            " (" + id + "). It should not be possible, but IF this number is the same between two of these messages, it means that " +
+                            "indexing is stuck on a particular change and cannot proceed. If you (in an emergency) need to proceed without indexing " +
                             "this change, do the following in the database: \"DELETE FROM lddb__change_log WHERE changenumber = " + changeNumber + ";\" " +
                             "No data will be lost (the log is temporary). But be aware: The inconsistency in the search index is now on YOU and will " +
                             "remain until the record is resaved or a full reindexing is done.");
@@ -79,17 +79,13 @@ public class Indexing {
                     else {
                         Document updated = versions.get(resultingVersion);
                         Document preUpdateDoc = versions.get(resultingVersion - 1);
-
-                        //System.err.println("Now want to reindex: " + id + " ch-nr: " + changeNumber + " recordv: " + resultingVersion);
-                        //System.err.println("data to index:\n\t" + updated.getDataAsString() + "\n");
-                        //System.err.println("previous version:\n\t" + preUpdateDoc.getDataAsString() + "\n\n");
                         reindexUpdated(updated, preUpdateDoc, skipIndexDependers, whelk);
                     }
                 } catch (Exception e) {
                     logger.warn("Failed to index " + id + ", will try again.", e);
                     // When we fail, wait a little before trying again.
                     try {
-                        Thread.sleep(10 * 1000);
+                        Thread.sleep(5000);
                     } catch (InterruptedException ie) { /* ignore */ }
                     break; // out of the while, without updating indexedChangeNumber
                 }
