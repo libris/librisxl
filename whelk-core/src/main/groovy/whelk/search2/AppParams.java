@@ -15,7 +15,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static whelk.search2.Query.SearchMode.BASIC_SEARCH;
+import static whelk.search2.Query.SearchMode.STANDARD_SEARCH;
 import static whelk.search2.Query.SearchMode.OBJECT_SEARCH;
 import static whelk.search2.Query.SearchMode.PREDICATE_OBJECT_SEARCH;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
@@ -76,7 +76,7 @@ public class AppParams {
     public record DefaultSiteFilter(Filter filter, Set<Query.SearchMode> appliesTo) implements SiteFilter {
         public DefaultSiteFilter(String rawFilter, String application, Map<String, Filter.AliasedFilter> filterByAlias) {
             this(getFilter(rawFilter, filterByAlias), switch (application) {
-                case "basicSearch" -> Set.of(BASIC_SEARCH);
+                case "standardSearch" -> Set.of(STANDARD_SEARCH);
                 case "objectSearch" -> Set.of(OBJECT_SEARCH, PREDICATE_OBJECT_SEARCH);
                 case null, default -> Query.SearchMode.asSet();
             });
@@ -202,7 +202,7 @@ public class AppParams {
 
     private List<DefaultSiteFilter> getDefaultSiteFilters(Map<String, Object> appConfig, Map<String, Filter.AliasedFilter> filterByAlias) {
         return getAsListOfMap(appConfig, "_defaultSiteFilters").stream()
-                .map(m -> new DefaultSiteFilter((String) m.get("filter"), (String) m.get("application"), filterByAlias))
+                .map(m -> new DefaultSiteFilter((String) m.get("filter"), (String) m.get("applyTo"), filterByAlias))
                 .toList();
     }
 

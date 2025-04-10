@@ -38,7 +38,7 @@ public class Query {
     protected QueryResult queryResult;
 
     public enum SearchMode {
-        BASIC_SEARCH,
+        STANDARD_SEARCH,
         OBJECT_SEARCH,
         PREDICATE_OBJECT_SEARCH;
 
@@ -66,7 +66,7 @@ public class Query {
 
     public static Query init(QueryParams queryParams, AppParams appParams, VocabMappings vocabMappings, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
         return switch (getSearchMode(queryParams)) {
-            case BASIC_SEARCH -> new Query(queryParams, appParams, vocabMappings, esSettings, whelk);
+            case STANDARD_SEARCH -> new Query(queryParams, appParams, vocabMappings, esSettings, whelk);
             case OBJECT_SEARCH -> new ObjectQuery(queryParams, appParams, vocabMappings, esSettings, whelk);
             case PREDICATE_OBJECT_SEARCH -> new PredicateObjectQuery(queryParams, appParams, vocabMappings, esSettings, whelk);
         };
@@ -81,7 +81,7 @@ public class Query {
     }
 
     protected Object doGetEsQueryDsl() {
-        queryTree.applySiteFilters(SearchMode.BASIC_SEARCH, appParams.siteFilters);
+        queryTree.applySiteFilters(SearchMode.STANDARD_SEARCH, appParams.siteFilters);
         return getEsQueryDsl(getEsQuery(), queryParams.skipStats ? Map.of() : getEsAggQuery());
     }
 
@@ -201,7 +201,7 @@ public class Query {
             return queryParams.predicates.isEmpty() ? SearchMode.OBJECT_SEARCH : SearchMode.PREDICATE_OBJECT_SEARCH;
         }
         if (!queryParams.q.isEmpty()) {
-            return SearchMode.BASIC_SEARCH;
+            return SearchMode.STANDARD_SEARCH;
         }
         throw new InvalidQueryException("Missing required query parameter: _q");
     }

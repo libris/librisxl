@@ -188,7 +188,7 @@ class QueryTreeSpec extends Specification {
     def "apply site filters"() {
         given:
         QueryTree queryTree = new QueryTree(origQuery, disambiguate)
-        def basicSearchMode = Query.SearchMode.BASIC_SEARCH
+        def basicSearchMode = Query.SearchMode.STANDARD_SEARCH
         AppParams.DefaultSiteFilter dsf1 = new AppParams.DefaultSiteFilter(TestData.excludeFilter, [basicSearchMode] as Set)
         AppParams.DefaultSiteFilter dsf2 = new AppParams.DefaultSiteFilter(new Filter("type:T1"), [basicSearchMode] as Set)
         AppParams.DefaultSiteFilter dsf3 = new AppParams.DefaultSiteFilter(new Filter("type:T2"), [] as Set)
