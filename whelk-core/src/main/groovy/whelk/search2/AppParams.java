@@ -4,13 +4,7 @@ import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.Property;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -18,7 +12,7 @@ import java.util.stream.Stream;
 import static whelk.search2.Query.SearchMode.STANDARD_SEARCH;
 import static whelk.search2.Query.SearchMode.OBJECT_SEARCH;
 import static whelk.search2.Query.SearchMode.PREDICATE_OBJECT_SEARCH;
-import static whelk.search2.QueryParams.ApiParams.MY_LIBRARIES;
+import static whelk.search2.QueryParams.ApiParams.ALIAS;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 
 public class AppParams {
@@ -169,10 +163,23 @@ public class AppParams {
     }
 
     private SiteFilters getSiteFilters(Map<String, Object> appConfig, QueryParams queryParams) {
-        Map<String, Filter.AliasedFilter> filterByAlias = getFilterByAlias(appConfig, queryParams);
+        Map<String, Filter.AliasedFilter> filterByAlias = getFilterByAlias(appConfig, queryParams.aliased);
         List<DefaultSiteFilter> defaultSiteFilters = getDefaultSiteFilters(appConfig, filterByAlias);
         List<OptionalSiteFilter> optionalSiteFilters = getOptionalSiteFilters(appConfig, filterByAlias);
-        return new SiteFilters(defaultSiteFilters, optionalSiteFilters);
+        List<OptionalSiteFilter> queryDefinedSiteFilters = getQueryDefinedSiteFilters(queryParams, filterByAlias);
+        return new SiteFilters(defaultSiteFilters, Stream.concat(optionalSiteFilters.stream(), queryDefinedSiteFilters.stream()).toList());
+    }
+
+    private List<OptionalSiteFilter> getQueryDefinedSiteFilters(QueryParams queryParams, Map<String, Filter.AliasedFilter> filterByAlias) {
+        return filterByAlias.entrySet().stream()
+                .filter(e -> e.getKey().startsWith(ALIAS))
+                .filter(e -> queryParams.q.contains(asqPrefix(e.getKey())))
+                .map(e ->  new OptionalSiteFilter(e.getValue(), Query.SearchMode.asSet()))
+                .toList();
+    }
+
+    public String asqPrefix(String queryParameter) {
+        return queryParameter.replaceAll("_","");
     }
 
     private Map<String, List<String>> getRelationFilters(Map<String, Object> appConfig) {
@@ -191,25 +198,18 @@ public class AppParams {
         return new Slice(p, settings);
     }
 
-    private Map<String, Filter.AliasedFilter> getFilterByAlias(Map<String, Object> appConfig, QueryParams queryParams) {
-        return getAsListOfMap(appConfig, "_filterAliases").stream()
-                .map(filter -> handleDynamicFilters(filter, queryParams))
+    private Map<String, Filter.AliasedFilter> getFilterByAlias(Map<String, Object> appConfig, Map<String, String[]> aliasedParams) {
+        Stream<Filter.AliasedFilter> queryDefined = aliasedParams.entrySet().stream()
+                .map(e -> new Filter.AliasedFilter(e.getKey(), e.getValue()[0], new HashMap<>()));
+
+        Stream<Filter.AliasedFilter> predefined = getAsListOfMap(appConfig, "_filterAliases").stream()
                 .map(m -> new Filter.AliasedFilter(
                         (String) m.get("alias"),
                         (String) m.get("filter"),
                         castToStringObjectMap(m.get("prefLabelByLang")))
-                )
-                .collect(Collectors.toMap(Filter.AliasedFilter::alias, Function.identity()));
-    }
+                );
 
-    private Map<String, Object> handleDynamicFilters(Map<String, Object> filter, QueryParams queryParams) {
-        // TODO: For each dynamic filter instead?
-        if (filter.get("alias").equals(MY_LIBRARIES.replaceAll("_",""))) {
-            if (!queryParams.myLibraries.isEmpty()) {
-                filter.put("filter", queryParams.myLibraries);
-            }
-        }
-        return filter;
+        return Stream.concat(queryDefined, predefined).collect(Collectors.toMap(Filter.AliasedFilter::alias, Function.identity()));
     }
 
     private List<DefaultSiteFilter> getDefaultSiteFilters(Map<String, Object> appConfig, Map<String, Filter.AliasedFilter> filterByAlias) {

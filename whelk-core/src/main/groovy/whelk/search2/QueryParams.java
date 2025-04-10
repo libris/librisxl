@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class QueryParams {
     private final static int DEFAULT_LIMIT = 200;
@@ -30,7 +31,7 @@ public class QueryParams {
         public static final String APP_CONFIG = "_appConfig";
         public static final String BOOST = "_boost";
         public static final String STATS = "_stats";
-        public static final String MY_LIBRARIES = "_myLibraries";
+        public static final String ALIAS = "_alias-";
         public static final String FN_SCORE = "_fnScore";
     }
 
@@ -50,7 +51,7 @@ public class QueryParams {
     public final Spell spell;
     public final List<String> boostFields;
     public final List<EsBoost.ScoreFunction> esScoreFunctions;
-    public final String myLibraries;
+    public final Map<String, String[]> aliased;
 
     public final String q;
 
@@ -72,7 +73,7 @@ public class QueryParams {
         this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse("");
         this.skipStats = getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
         this.esScoreFunctions = getEsScoreFunctions(apiParameters);
-        this.myLibraries = getOptionalSingle(ApiParams.MY_LIBRARIES, apiParameters).orElse("");
+        this.aliased = getAliased(apiParameters);
     }
 
     public Map<String, String> getNonQueryParamsNoOffset() {
@@ -146,6 +147,12 @@ public class QueryParams {
                 .stream()
                 .flatMap((s -> Arrays.stream(s.split(",")).map(String::trim)))
                 .toList();
+    }
+
+    private static Map<String, String[]> getAliased(Map<String, String[]> queryParameters) {
+        return queryParameters.entrySet().stream()
+                .filter((entry) -> entry.getKey().startsWith(ApiParams.ALIAS))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     private int getLimit(Map<String, String[]> queryParameters) throws InvalidQueryException {

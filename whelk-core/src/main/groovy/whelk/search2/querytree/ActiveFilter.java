@@ -21,7 +21,8 @@ public record ActiveFilter(Filter.AliasedFilter aliasedFilter) implements Node {
     @Override
     public Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams) {
         var m = new LinkedHashMap<String, Object>();
-        m.put("object", description());
+        var description = description().put("parsedFilter", aliasedFilter.getParsed().toSearchMapping(qt, queryParams));
+        m.put("object", description);
         m.put("value", alias());
         m.put("up", makeUpLink(qt, this, queryParams));
         return m;
