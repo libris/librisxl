@@ -11,6 +11,7 @@ import whelk.search2.querytree.QueryTree;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,11 +36,12 @@ public class QueryUtil {
     }
 
     public static Map<String, Object> castToStringObjectMap(Object o) {
-        return o == null
-                ? Map.of()
-                : ((Map<?, ?>) o).entrySet()
-                .stream()
-                .collect(Collectors.toMap(e -> (String) e.getKey(), e -> (Object) e.getValue()));
+        Map<String, Object> m = new HashMap<>();
+        if (o == null) {
+            return m;
+        }
+        ((Map<?, ?>) o).forEach((k, v) -> m.put((String) k, v));
+        return m;
     }
 
     public static String makeFindUrlNoOffset(QueryTree qt, QueryParams queryParams) {
