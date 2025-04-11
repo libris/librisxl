@@ -265,7 +265,7 @@ public class Query {
         return framedThing;
     }
 
-    protected class LinkLoader {
+    private class LinkLoader {
         private final Map<String, Collection<Link>> links = new HashMap<>();
 
         private void loadChips() {
