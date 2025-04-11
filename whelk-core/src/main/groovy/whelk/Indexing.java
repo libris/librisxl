@@ -1,20 +1,26 @@
 package whelk;
 
 import com.google.common.collect.Iterables;
+import io.prometheus.client.Gauge;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import whelk.component.ElasticSearch;
 import whelk.component.PostgreSQLComponent;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAmount;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
 
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS;
 
@@ -26,6 +32,11 @@ public class Indexing {
     private final static String INDEXER_STATE_KEY = "ElasticIndexer";
     private final static Logger logger = LogManager.getLogger(Indexing.class);
     private static Instant lastBehindMessageAt = Instant.EPOCH;
+
+    private static final Gauge gauge = Gauge.build()
+            .name("elastic_indexing_latency_millis")
+            .help("Current elasticsearch indexing latency (ms)")
+            .register();
 
     /**
      * Index all changes since last invocation of this function
@@ -52,6 +63,7 @@ public class Indexing {
             ResultSet resultSet = statement.executeQuery();
             long indexedChangeNumber = 0L;
             if (!resultSet.isBeforeFirst()) {
+                gauge.set(0);
                 return false;
             }
             while (resultSet.next()) {
@@ -60,6 +72,8 @@ public class Indexing {
                 Instant modificationInstant = resultSet.getTimestamp("time").toInstant();
                 int resultingVersion = resultSet.getInt("resulting_record_version");
                 boolean skipIndexDependers = resultSet.getBoolean("skipindexdependers");
+
+                gauge.set(modificationInstant.until(Instant.now(), ChronoUnit.MILLIS));
 
                 long minutesBehind = modificationInstant.until(Instant.now(), ChronoUnit.MINUTES);
                 if (minutesBehind >= 10 && lastBehindMessageAt.until(Instant.now(), ChronoUnit.MINUTES) >= 30) {
