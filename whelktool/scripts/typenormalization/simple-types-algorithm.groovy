@@ -36,9 +36,9 @@ class DefinitionsData implements UsingJsonKeys {
 
   // Mixes subclasses and subconcepts
   Map<String, Set<String>> baseEqualOrSubMap = [ // matchesMap
-    (MARC + 'DirectElectronic'): [MARC + 'ChipCartridge'] as Set,
-    (MARC + 'Novel'): [SAOGF + 'Romaner'] as Set,
-    'Audio': ['PerformedMusic', 'SpokenWord'] as Set,
+                                                 (MARC + 'DirectElectronic'): [MARC + 'ChipCartridge'] as Set,
+                                                 (MARC + 'Novel'): [SAOGF + 'Romaner'] as Set,
+                                                 'Audio': ['PerformedMusic', 'SpokenWord'] as Set,
   ]
 
   Map<String, String> contentToTypeMap = [:]
@@ -76,8 +76,8 @@ class DefinitionsData implements UsingJsonKeys {
 
   List reduceSymbols(List symbols, String expectedType = null) {
     List mostSpecific = symbols.stream()
-      .filter(x -> !(symbols.stream().anyMatch(y -> isbaseof(x, y))))
-      .collect(Collectors.toList())
+            .filter(x -> !(symbols.stream().anyMatch(y -> isbaseof(x, y))))
+            .collect(Collectors.toList())
     return mostSpecific.toSet().toList()
   }
 
@@ -178,6 +178,8 @@ class TypeMappings extends DefinitionsData {
 
 class TypeNormalizer implements UsingJsonKeys {
 
+  //Parse system property "addCategory" as a boolean, default to false if none given
+  boolean addCategory = Boolean.parseBoolean(System.getProperty("addCategory")) ?: false
   static MARC = DefinitionsData.MARC
   static KBRDA = DefinitionsData.KBRDA
   static KBGF = DefinitionsData.KBGF
@@ -188,6 +190,7 @@ class TypeNormalizer implements UsingJsonKeys {
     this.mappings = mappings
   }
 
+  // ----- Normalization action-----
   boolean normalize(Map instance, Map work) {
     var changed = false
 
@@ -195,6 +198,7 @@ class TypeNormalizer implements UsingJsonKeys {
 
     changed |= simplifyWorkType(work)
     changed |= simplfyInstanceType(instance)
+
     changed |= mappings.convertIssuanceType(instance, work)
 
     if (changed) {
@@ -205,15 +209,8 @@ class TypeNormalizer implements UsingJsonKeys {
     return changed
   }
 
-  void reorder(Map thing) {
-    var copy = thing.clone()
-    thing.clear()
-    for (var key : [ID, TYPE, 'sameAs', 'category', 'issuanceType']) {
-      if (key in copy) thing[key] = copy[key]
-    }
-    thing.putAll(copy)
-  }
 
+  // ----- Work action-----
   boolean simplifyWorkType(Map work) {
     var refSize = work.containsKey(ANNOTATION) ? 2 : 1
     if (work.containsKey(ID) && work.size() == refSize) {
@@ -221,7 +218,6 @@ class TypeNormalizer implements UsingJsonKeys {
     }
 
     var changed = false
-    List<String> categories = []
 
     def wtype = work.get(TYPE)
 
@@ -247,50 +243,79 @@ class TypeNormalizer implements UsingJsonKeys {
     var contenttypes = mappings.reduceSymbols(asList(work.get("contentType")))
     var genreforms = mappings.reduceSymbols(asList(work.get("genreForm")))
 
-    categories += genreforms + contenttypes
-
-    if (genreforms.removeIf { !it[ID] && it['prefLabel'] == 'DAISY'} ) {
-      categories << [(ID): KBGF + 'Audiobook']
+    if (genreforms.removeIf { !it[ID] && it['prefLabel'] == 'DAISY' }) {
+      genreforms << [(ID): KBGF + 'Audiobook']
     }
 
-    if (categories.size() > 0) {
-      work.put("category", mappings.reduceSymbols(categories))
+    // If we want to use the new property "category"
+    if (addCategory) {
+      List<String> categories = []
+      categories += genreforms + contenttypes
       work.remove("genreForm")
       work.remove("contentType")
-      changed = true
+
+      if (categories.size() > 0) {
+        work.put("category", mappings.reduceSymbols(categories))
+        changed = true
+      }
     }
 
     return changed
   }
 
+
+  // ----- Instance action -----
   boolean simplfyInstanceType(Map instance) {
     var changed = false
-    List<String> categories = []
 
     var itype = instance.get(TYPE)
-    var mediatypes = mappings.reduceSymbols(asList(instance["mediaType"]), "MediaType")
-    var carriertypes = mappings.reduceSymbols(asList(instance["carrierType"]), "CarrierType")
 
+    // Get instance GenreForms and remove ones that are marc/Print
+    List instanceGfs = asList(instance.get("genreForm")).stream().
+            filter((it) -> !it[ID] != MARC + 'Print').collect(Collectors.toList())
+    // FIXME Why replace GF "E-böcker" with KBRDA EBook?
+    //if (instanceGfs.removeIf { it['prefLabel'] == 'E-böcker'}) {
+    //  categories << [(ID): KBRDA + 'EBook']
+    //changed = true
+    //}
+
+    // Only keep the most specific mediaTypes and carrierTypes
+    List mediatypes = mappings.reduceSymbols(asList(instance["mediaType"]), "MediaType")
+    List carriertypes = mappings.reduceSymbols(asList(instance["carrierType"]), "CarrierType")
+
+    // Remove the mediaType if it can be inferred by the carrierType
     var impliedMediaIds = carriertypes.findResults { mappings.carrierMediaMap[it[ID]] } as Set
     if (mediatypes.every { it[ID] in impliedMediaIds }) {
       instance.remove("mediaType")
       changed = true
     }
 
+    // Store information about the old instanceType
+    // In the case of volume, it is inferred
     var isElectronic = itype == "Electronic"
     var isSoundRecording = itype == "SoundRecording"
     var isVideoRecording = itype == "VideoRecording"
     var isTactile = itype == "Tactile"
-
     var isVolume = mappings.matches(carriertypes, "Volume") || looksLikeVolume(instance)
 
+    // FIXME Which of these are only true for the "category" scenario?
+
+    // If the resource is electronic and has at least on carrierType that is "Online"
     if ((isElectronic && mappings.matches(carriertypes, "Online"))) {
+      // FIXME Understand what is going on here
+      // Is the purpose of this to make sure that 1) there is minimal duplication between instanceType and carrierType,
+      // but that there is always a carrier type (even if this means duplication)?
       carriertypes = carriertypes.stream()
-        .filter((x) -> !x.getOrDefault(ID, "").contains("Online"))
-        .collect(Collectors.toList())
+              .filter((x) -> !x.getOrDefault(ID, "").contains("Online"))
+              .collect(Collectors.toList())
       if (carriertypes.size() == 0) {
-        categories << [(ID): KBRDA + 'OnlineResource']
+        // FIXME make sure this carries through to categories
+        carriertypes << [(ID): KBRDA + 'OnlineResource']
       }
+
+      // Apply new instance types DigitalResource and PhysicalResource
+      // FIXME For readability, could this happen before the carrier/media type cleanup?
+      //  Old instancetype is already stored in itype
       instance.put(TYPE, "DigitalResource")
       changed = true
     } else {
@@ -298,16 +323,16 @@ class TypeNormalizer implements UsingJsonKeys {
       changed = true
     }
 
+    // Remove redundant MARC mediaTerms if the information is given by the old itype
     if (isSoundRecording && dropReundantString(instance, "marc:mediaTerm", ~/(?i)ljudupptagning/)) {
       changed = true
     }
-
     if (isVideoRecording && dropReundantString(instance, "marc:mediaTerm", ~/(?i)videoupptagning/)) {
       changed = true
     }
-
     var isBraille = dropReundantString(instance, "marc:mediaTerm", ~/(?i)punktskrift/)
 
+    // Clean up some Braille-related terms
     var toDrop = [KBRDA + "Volume", MARC + "Braille", MARC + "TacMaterialType-b"] as Set
     var nonBrailleCarrierTypes = carriertypes.findAll { !toDrop.contains(it.get(ID)) }
     if (nonBrailleCarrierTypes.size() < carriertypes.size()) {
@@ -315,34 +340,36 @@ class TypeNormalizer implements UsingJsonKeys {
       carriertypes = nonBrailleCarrierTypes
     }
 
-    categories += carriertypes
-
+    // FIXME check that this carrie over to categories
     if (isTactile && isBraille) {
       if (isVolume) {
-        categories << [(ID): KBGF + 'BrailleVolume']
+        instanceGfs << [(ID): KBGF + 'BrailleVolume']
       } else {
-        categories << [(ID): KBGF + 'BrailleResource']
+        instanceGfs << [(ID): KBGF + 'BrailleResource']
       }
       changed = true
     }
 
+    // FIXME Clarify the logic/outcome here
     // TODO: should work with regular reduceSymbols ...
-    def tuples = [
-      [isElectronic, ["ChipCartridge"], "ChipCartridge"],
-      [isSoundRecording, [MARC + 'SoundDisc', KBRDA + 'AudioDisc']],
-      [isSoundRecording, [MARC + 'SoundCassette', KBGF + 'AudioCassette']],
-      [isVideoRecording, [MARC + 'VideoDisc', "${MARC}VideoMaterialType-d", KBRDA + 'Videodisc']]
+    def carrierTuples = [
+            [isElectronic, ["ChipCartridge"], "ChipCartridge"],
+            [isSoundRecording, [MARC + 'SoundDisc', KBRDA + 'AudioDisc']],
+            [isSoundRecording, [MARC + 'SoundCassette', KBGF + 'AudioCassette']],
+            [isVideoRecording, [MARC + 'VideoDisc', "${MARC}VideoMaterialType-d", KBRDA + 'Videodisc']]
     ]
-    for (tuple in tuples) {
-      def (isIt, matchTokens) = tuple
+    for (carrierTuple in carrierTuples) {
+      def (isIt, matchTokens) = carrierTuple
       List gotMatches = matchTokens.findAll { mappings.matches(carriertypes, it) }
       if (isIt && gotMatches.size() > 0) {
         isElectronic = true
-        categories << [(ID): matchTokens[-1]]
+        // FIXME can we add this to carriertypes instead of categories?
+        carriertypes << [(ID): matchTokens[-1]]
         changed = true
       }
     }
 
+    // This overlaps with "instance instance" cleanup
     if (instance.get(TYPE) == "Instance") {
       if ((carriertypes.size() == 1 && mappings.matches(carriertypes, "Electronic"))) {
         isElectronic = true
@@ -351,54 +378,43 @@ class TypeNormalizer implements UsingJsonKeys {
 
     var probablyPrint = assumedToBePrint(instance)
 
-    List instanceGfs = asList(instance.get("genreForm"))
-    List reducedGfs = instanceGfs.stream()
-        .filter((it) -> !it[ID] != MARC + 'Print')
-        .collect(Collectors.toList())
-
     if (isElectronic) {
-
-        if (dropReundantString(instance, "marc:mediaTerm", ~/(?i)elektronisk (resurs|utgåva)/)) {
-          changed = true
-        }
-
-        if (reducedGfs.removeIf { it['prefLabel'] == 'E-böcker'}) {
-          categories << [(ID): KBRDA + 'EBook']
-          changed = true
-        }
+      if (dropReundantString(instance, "marc:mediaTerm", ~/(?i)elektronisk (resurs|utgåva)/)) {
+        changed = true
+      }
 
     } else {
 
       if (itype == "Print") {
         if (isVolume) {
-          categories << [(ID): KBGF + 'PrintedVolume']
+          instanceGfs << [(ID): KBGF + 'PrintedVolume']
         } else {
-          categories << [(ID): KBGF + 'Print']
+          instanceGfs << [(ID): KBGF + 'Print']
         }
         changed = true
       } else if (itype == "Instance") {
         if (isVolume) {
           if (probablyPrint) {
-            categories << [(ID): KBGF + 'PrintedVolume']
+            instanceGfs << [(ID): KBGF + 'PrintedVolume']
             changed = true
             // TODO: if marc:RegularPrintReproduction, add production a Reproduction?
           } else {
-            categories << [(ID): KBRDA + 'Volume']
+            instanceGfs << [(ID): KBRDA + 'Volume']
             changed = true
           }
         } else {
           if (probablyPrint) {
             if (mappings.matches(carriertypes, "Sheet")) {
-              categories << [(ID): KBGF + 'PrintedSheet']
+              instanceGfs << [(ID): KBGF + 'PrintedSheet']
             } else {
-              categories << [(ID): KBGF + 'Print'] // TODO: may be PartOfPrint ?
+              instanceGfs << [(ID): KBGF + 'Print'] // TODO: may be PartOfPrint ?
             }
             changed = true
           } else {
             if (mappings.matches(carriertypes, "Sheet")) {
-              categories << [(ID): KBRDA + 'Sheet']
+              instanceGfs << [(ID): KBRDA + 'Sheet']
               if (dropReundantString(instance, "marc:mediaTerm", ~/(?i)affisch/)) {
-                categories << [(ID): SAOGF + 'Poster']
+                instanceGfs << [(ID): SAOGF + 'Poster']
               }
               changed = true
             }
@@ -408,16 +424,27 @@ class TypeNormalizer implements UsingJsonKeys {
 
     }
 
-    if (categories.size() > 0) {
-      instance.put("category", mappings.reduceSymbols(categories))
+    // If we want to use the new property "category"
+    if (addCategory) {
+      List<String> categories = []
+
+      categories += instanceGfs
+      categories += carriertypes
+
       instance.remove("genreForm")
       instance.remove("carrierType")
-      changed = true
+
+      if (categories.size() > 0) {
+        instance.put("category", mappings.reduceSymbols(categories))
+        changed = true
+      }
     }
 
     return changed
   }
 
+
+  // ----- Helper methods -----
   static boolean dropReundantString(Map instance, String propertyKey, Pattern pattern) {
     if (instance.get(propertyKey)?.matches(pattern)) {
       instance.remove(propertyKey)
@@ -430,8 +457,8 @@ class TypeNormalizer implements UsingJsonKeys {
     // TODO: carrierType == marc:RegularPrint || marc:RegularPrintReproduction
     // TODO: this is added to AudioCD:s etc.!
     return (instance.get("identifiedBy").stream().anyMatch(
-        x -> x.get(TYPE).equals("ISBN"))
-      ) || instance.containsKey("publication") // TODO: publication is sometimes used on Manuscripts
+            x -> x.get(TYPE).equals("ISBN"))
+    ) || instance.containsKey("publication") // TODO: publication is sometimes used on Manuscripts
   }
 
   static boolean looksLikeVolume(Map instance) {
@@ -449,7 +476,18 @@ class TypeNormalizer implements UsingJsonKeys {
     return (o instanceof List ? (List) o : o == null ? [] : [o])
   }
 
+  void reorder(Map thing) {
+    var copy = thing.clone()
+    thing.clear()
+    for (var key : [ID, TYPE, 'sameAs', 'category', 'issuanceType']) {
+      if (key in copy) thing[key] = copy[key]
+    }
+    thing.putAll(copy)
+  }
+
 }
+
+// ----- Main action -----
 
 // NOTE: Since instance and work types may co-depend; fetch work and normalize
 // that in tandem. We store work ids in memory to avoid converting again.
@@ -457,6 +495,12 @@ class TypeNormalizer implements UsingJsonKeys {
 convertedWorks = java.util.concurrent.ConcurrentHashMap.newKeySet()
 
 typeNormalizer = new TypeNormalizer(new TypeMappings(getWhelk(), scriptDir))
+if (typeNormalizer.addCategory) {
+  System.out.println("\n---\nAdding new property: category\nRemoving properties: genreForm, contentType, carrierType\n---\n")
+}
+else {
+  System.out.println("Keeping properties genreForm, contentType, and carrierType.")
+}
 
 process { def doc, Closure loadWorkItem ->
   def (record, instance) = doc.graph
