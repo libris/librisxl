@@ -74,9 +74,9 @@ public class Indexing {
 
                 try {
                     List<Document> versions = whelk.getStorage().loadAllVersions(id);
-                    if (resultingVersion == 0)
-                        whelk.elastic.index(versions.getFirst(), whelk);
-                    else {
+                    if (resultingVersion == 0) {
+                        indexCreated(versions.getFirst(), skipIndexDependers, whelk);
+                    } else {
                         Document updated = versions.get(resultingVersion);
                         Document preUpdateDoc = versions.get(resultingVersion - 1);
                         reindexUpdated(updated, preUpdateDoc, skipIndexDependers, whelk);
@@ -98,6 +98,18 @@ public class Indexing {
         }
 
         return true;
+    }
+
+    private static void indexCreated(Document document, boolean skipIndexDependers, Whelk whelk) {
+        whelk.elastic.index(document, whelk);
+        if (whelk.getFeatures().isEnabled(INDEX_BLANK_WORKS)) {
+            for (String id : document.getVirtualRecordIds()) {
+                whelk.elastic.index(document.getVirtualRecord(id), whelk);
+            }
+        }
+        if (!skipIndexDependers) {
+            reindexAffected(document, Collections.emptySet(), document.getExternalRefs(), whelk);
+        }
     }
 
     private static void reindexUpdated(Document updated, Document preUpdateDoc, boolean skipIndexDependers, Whelk whelk) {
