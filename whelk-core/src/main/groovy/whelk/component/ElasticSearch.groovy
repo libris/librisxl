@@ -626,13 +626,20 @@ class ElasticSearch {
         isnis.findAll{ it.size() == 16 }.collect { Unicode.formatIsni(it) }
     }
 
+    Map multiQuery(List jsonDslList) {
+        return performQuery(
+                jsonDslList.collect { [[:], it].collect { JsonOutput.toJson(it) + '\n' } }.flatten().join(),
+                getMultiSearchQueryUrl()
+        )
+    }
+
     Map query(Map jsonDsl) {
-        return performQuery(jsonDsl, getQueryUrl())
+        return performQuery(JsonOutput.toJson(jsonDsl), getQueryUrl())
     }
 
     Map queryIds(Map jsonDsl) {
         return performQuery(
-                jsonDsl,
+                JsonOutput.toJson(jsonDsl),
                 getQueryUrl(['took','hits.total','hits.hits._id'])
         )
     }
@@ -671,12 +678,12 @@ class ElasticSearch {
         return super.hashCode()
     }
 
-    private Map performQuery(Map jsonDsl, String queryUrl) {
+    private Map performQuery(String json, String queryUrl) {
         try {
             def start = System.currentTimeMillis()
             String responseBody = client.performRequest('POST',
                     queryUrl,
-                    JsonOutput.toJson(jsonDsl))
+                    json)
 
             def duration = System.currentTimeMillis() - start
             Map responseMap = mapper.readValue(responseBody, Map)
@@ -702,9 +709,13 @@ class ElasticSearch {
     private String getQueryUrlWithoutIndex(filterPath = []) {
         getQueryUrl(filterPath, null)
     }
+
+    private getMultiSearchQueryUrl() {
+        return getQueryUrl([], indexName, true)
+    }
     
-    private String getQueryUrl(filterPath = [], index = indexName) {
-        def url = (index ? "/${index}" : '') + "/_search?search_type=$SEARCH_TYPE"
+    private String getQueryUrl(filterPath = [], index = indexName, multiSearch = false) {
+        def url = (index ? "/${index}" : '') + (multiSearch ? '/_msearch' : '/_search') + "?search_type=$SEARCH_TYPE"
         if (filterPath) {
             url += "&filter_path=${filterPath.join(',')}"
         }

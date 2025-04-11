@@ -3,6 +3,7 @@ package whelk.search2.querytree;
 import whelk.JsonLd;
 import whelk.search.ESQuery;
 import whelk.search2.Operator;
+import whelk.search2.QueryParams;
 import whelk.util.Unicode;
 
 import java.util.ArrayList;
@@ -14,15 +15,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static whelk.search2.QueryUtil.makeUpLink;
 import static whelk.search2.QueryUtil.mustNotWrap;
 import static whelk.search2.QueryUtil.shouldWrap;
 import static whelk.search2.Operator.EQUALS;
 
-public record FreeText(TextQuery textQuery, Operator operator, String value, Collection<String> boostFields) implements Node {
-    public FreeText(Operator operator, String value, JsonLd jsonLd) {
-        this(new TextQuery(jsonLd), operator, value);
+public record FreeText(Property.TextQuery textQuery, Operator operator, String value) implements Node {
+    public FreeText(String value) {
+        this(null, EQUALS, value);
     }
-    public FreeText(TextQuery textQuery, Operator operator, String value) { this(textQuery, operator, value, List.of()); }
 
     @Override
     public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
@@ -39,17 +40,20 @@ public record FreeText(TextQuery textQuery, Operator operator, String value, Col
             return wrap(buildSimpleQuery(queryMode, queryString));
         }
 
-        Map<String, Float> basicBoostFields = new HashMap<>();
-        Map<String, String> functionBoostFields = new HashMap<>();
+        Map<String, Float> basicBoostFields = new LinkedHashMap<>();
+        Map<String, String> functionBoostFields = new LinkedHashMap<>();
 
         for (String bf : boostFields) {
             try {
                 String field = bf.substring(0, bf.indexOf('^'));
-                String[] boost = bf.substring(bf.indexOf('^') + 1).split("[()]");
-                Float basicBoost = Float.parseFloat(boost[0]);
-                basicBoostFields.put(field, basicBoost);
-                if (boost.length > 1) {
-                    functionBoostFields.put(field, boost[1]);
+                String boost = bf.substring(bf.indexOf('^') + 1);
+                if (boost.contains("(")) {
+                    Float basicBoost = Float.parseFloat(boost.substring(0, boost.indexOf('(')));
+                    String function = boost.substring(boost.indexOf('(') + 1, boost.lastIndexOf(')'));
+                    basicBoostFields.put(field, basicBoost);
+                    functionBoostFields.put(field, function);
+                } else {
+                    basicBoostFields.put(field, Float.parseFloat(boost));
                 }
             } catch (Exception ignored) {
             }
@@ -57,7 +61,9 @@ public record FreeText(TextQuery textQuery, Operator operator, String value, Col
 
         List<Map<String, Object>> queries = new ArrayList<>();
 
-        queries.add(buildBasicBoostQuery(queryMode, queryString, basicBoostFields, functionBoostFields));
+        if (functionBoostFields.size() != basicBoostFields.size()) {
+            queries.add(buildBasicBoostQuery(queryMode, queryString, basicBoostFields, functionBoostFields));
+        }
         queries.addAll(buildFunctionBoostQueries(queryMode, queryString, basicBoostFields, functionBoostFields));
 
         return wrap(queries.size() == 1 ? queries.getFirst() : shouldWrap(queries));
@@ -69,11 +75,11 @@ public record FreeText(TextQuery textQuery, Operator operator, String value, Col
     }
 
     @Override
-    public Map<String, Object> toSearchMapping(QueryTree qt, Map<String, String> nonQueryParams) {
+    public Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("property", textQuery.definition());
         m.put(operator.termKey, value);
-        m.put("up", qt.makeUpLink(this, nonQueryParams));
+        m.put("up", makeUpLink(qt, this, queryParams));
         return m;
     }
 
@@ -84,19 +90,29 @@ public record FreeText(TextQuery textQuery, Operator operator, String value, Col
                 value;
     }
 
-    public boolean isWild() {
-        return operator == EQUALS && Operator.WILDCARD.equals(value);
+    @Override
+    public Node getInverse() {
+        return new FreeText(textQuery, operator.getInverse(), value);
     }
 
-    public static class TextQuery extends Property {
-        TextQuery(JsonLd jsonLd) {
-            super("textQuery", jsonLd);
-        }
+    @Override
+    public boolean isFreeTextNode() {
+        return operator.equals(EQUALS);
+    }
 
-        // For test only
-        TextQuery(Map<String, Object> definition) {
-            super("textQuery", definition, null);
-        }
+    @Override
+    public String toString() {
+        return operator == Operator.NOT_EQUALS
+                ? "NOT " + value :
+                value;
+    }
+
+    public FreeText replace(String replacement) {
+        return new FreeText(textQuery, operator, replacement);
+    }
+
+    public boolean isWild() {
+        return operator == EQUALS && Operator.WILDCARD.equals(value);
     }
 
     private Map<String, Object> wrap(Map<String, Object> query) {
@@ -110,7 +126,7 @@ public record FreeText(TextQuery textQuery, Operator operator, String value, Col
     }
 
     private Map<String, Object> buildBasicBoostQuery(String queryMode, String queryString, Map<String, Float> basicBoostFields, Map<String, String> functionBoostFields) {
-        Map<String, Float> boostFields = new HashMap<>();
+        Map<String, Float> boostFields = new LinkedHashMap<>();
         basicBoostFields.forEach((field, boost) -> boostFields.put(field, functionBoostFields.containsKey(field) ? 0 : boost));
         return buildSimpleQuery(queryMode, queryString, boostFields);
     }
@@ -118,11 +134,11 @@ public record FreeText(TextQuery textQuery, Operator operator, String value, Col
     private List<Map<String, Object>> buildFunctionBoostQueries(String queryMode, String queryString, Map<String, Float> basicBoostFields, Map<String, String> functionBoostFields) {
         List<Map<String, Object>> queries = new ArrayList<>();
 
-        Map<String, List<String>> fieldsGroupedByFunction = new HashMap<>();
+        Map<String, List<String>> fieldsGroupedByFunction = new LinkedHashMap<>();
         functionBoostFields.forEach((field, function) -> fieldsGroupedByFunction.computeIfAbsent(function, v -> new ArrayList<>()).add(field));
 
         fieldsGroupedByFunction.forEach((function, fields) -> {
-            Map<String, Float> boostFields = new HashMap<>();
+            Map<String, Float> boostFields = new LinkedHashMap<>();
             basicBoostFields.forEach((f, boost) -> boostFields.put(f, fields.contains(f) ? boost : 0));
 
             Map<String, Object> scriptScoreQuery = Map.of(

@@ -2,16 +2,9 @@ package whelk.search2.querytree;
 
 import whelk.JsonLd;
 import whelk.search2.Operator;
+import whelk.search2.QueryParams;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -20,6 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.search2.QueryUtil.boolWrap;
+import static whelk.search2.QueryUtil.makeUpLink;
 import static whelk.search2.QueryUtil.nestedWrap;
 
 
@@ -39,16 +33,12 @@ public sealed abstract class Group implements Node permits And, Or {
 
     abstract boolean implies(Node a, Node b, BiFunction<Node, Node, Boolean> condition);
 
-    // Abstract class does not allow records as subclasses, however when comparing nodes we want the same behaviour
-    // as for records, hence the following.
     @Override
-    public boolean equals(Object o) {
-        return o.getClass() == this.getClass() && ((Group) o).children().equals(children());
-    }
+    public abstract boolean equals(Object o);
 
     @Override
     public int hashCode() {
-        return Objects.hash(children());
+        return Objects.hash(this.getClass(), new HashSet<>(children()));
     }
 
     @Override
@@ -58,10 +48,10 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     @Override
-    public Map<String, Object> toSearchMapping(QueryTree qt, Map<String, String> nonQueryParams) {
+    public Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams) {
         var m = new LinkedHashMap<String, Object>();
-        m.put(key(), mapToMap(c -> c.toSearchMapping(qt, nonQueryParams)));
-        m.put("up", qt.makeUpLink(this, nonQueryParams));
+        m.put(key(), mapToMap(c -> c.toSearchMapping(qt, queryParams)));
+        m.put("up", makeUpLink(qt, this, queryParams));
         return m;
     }
 

@@ -13,6 +13,15 @@ public enum Operator {
     LESS_THAN_OR_EQUALS("lessThanOrEquals", "%s<=%s"),
     LESS_THAN("lessThan", "%s<%s");
 
+    private static final Map<Operator, Operator> opposites =  Map.of(
+            EQUALS, NOT_EQUALS,
+            NOT_EQUALS, EQUALS,
+            GREATER_THAN_OR_EQUALS, LESS_THAN,
+            GREATER_THAN, LESS_THAN_OR_EQUALS,
+            LESS_THAN_OR_EQUALS, GREATER_THAN,
+            LESS_THAN, GREATER_THAN_OR_EQUALS
+    );
+
     public static final String WILDCARD = "*";
 
     public final String termKey;
@@ -27,15 +36,8 @@ public enum Operator {
         return String.format(format, property, value);
     }
 
-    public static Map<Operator, Operator> opposites() {
-        return Map.of(
-                EQUALS, NOT_EQUALS,
-                NOT_EQUALS, EQUALS,
-                GREATER_THAN_OR_EQUALS, LESS_THAN,
-                GREATER_THAN, LESS_THAN_OR_EQUALS,
-                LESS_THAN_OR_EQUALS, GREATER_THAN,
-                LESS_THAN, GREATER_THAN_OR_EQUALS
-        );
+    public Operator getInverse() {
+        return opposites.get(this);
     }
 
     public static Map<String, Operator> symbolMappings() {
