@@ -26,6 +26,10 @@ public class Filter {
         return parsed;
     }
 
+    public String getRaw() {
+        return raw;
+    }
+
     public void parse(Disambiguate disambiguate) throws InvalidQueryException {
         if (parsed == null) {
             this.parsed = QueryTreeBuilder.buildTree(raw, disambiguate);
@@ -53,7 +57,10 @@ public class Filter {
 
         public Map<String, Object> description() {
             return Map.of(TYPE_KEY, RESOURCE,
-                    "prefLabelByLang", prefLabelByLang);
+                    "prefLabelByLang", prefLabelByLang,
+                    "alias", alias,
+                    "raw", this.getRaw()
+            );
         }
 
         @Override
