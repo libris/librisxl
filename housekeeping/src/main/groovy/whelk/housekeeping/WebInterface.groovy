@@ -60,7 +60,8 @@ public class WebInterface extends HttpServlet {
                 new ScriptRunner(whelk, "lxl-3785-supplementTo-isIssueOf.groovy", "0 20 3 * *"),
                 new ScriptRunner(whelk, "lxl-3785-fix-title-chars.groovy", "0 20 4 * *"),
                 new ScriptRunner(whelk, "lxl-3873-remove-classification-without-code.groovy", "0 20 5 * *"),
-                new BulkChangeRunner(whelk)
+                new BulkChangeRunner(whelk),
+                new HistoryArchiver(whelk),
         ]
 
         houseKeepers.each { hk ->
