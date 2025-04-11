@@ -70,7 +70,6 @@ class Whelk {
     File logRoot
 
     URI baseUri = null
-    boolean skipIndex = false
     boolean skipIndexDependers = false
 
     // useCache may be set to true only when doing initial imports (temporary processes with the rest of Libris down).
