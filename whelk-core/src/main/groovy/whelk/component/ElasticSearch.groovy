@@ -308,15 +308,15 @@ class ElasticSearch {
         }
     }
 
-    void incrementReverseLinks(String shortId, String relation) {
-        updateReverseLinkCounter(shortId, relation, 1)
+    void incrementReverseLinks(String shortId, String relation, Whelk whelk) {
+        updateReverseLinkCounter(shortId, relation, whelk, 1)
     }
 
-    void decrementReverseLinks(String shortId, String relation) {
-        updateReverseLinkCounter(shortId, relation, -1)
+    void decrementReverseLinks(String shortId, String relation, Whelk whelk) {
+        updateReverseLinkCounter(shortId, relation, whelk, -1)
     }
 
-    private void updateReverseLinkCounter(String shortId, String relation, int deltaCount) {
+    private void updateReverseLinkCounter(String shortId, String relation, Whelk whelk, int deltaCount) {
         // An indexed document will always have reverseLinks.totalItems set to an integer,
         // and reverseLinks.totalItemsByRelation set to a map, but reverseLinks.totalItemsByRelation['foo']
         // doesn't necessarily exist at this time; hence the null check before trying to update the link counter.
@@ -341,9 +341,16 @@ class ElasticSearch {
                 log.error("Failed to update reverse link counter ($deltaCount) for $shortId: $e ACTION REQUIRED or link counters will be WRONG. This shouldn't happen.", e)
             }
             else if (isNotFound(e)) {
-                // OK. All dependers must be removed before the dependee in lddb. But the index update can happen
-                // in any order, so the dependee might already be gone when trying to decrement the counter.
-                log.info("Could not update reverse link counter ($deltaCount) for $shortId: $e, it does not exist", e)
+                var doc = whelk.getDocument(shortId)
+                if (!doc) {
+                    log.error("Was told to update reverse link counter for an id that doesn't exist: $shortId")
+                } else if (!doc.deleted) {
+                    // The document should exist in the index but wasn't found. This can be because it has just been
+                    // added but the ES index refresh hasn't happened yet. Index the whole doc and the counters will be
+                    // correct
+                    log.info("Tried to update reverse link counter for $shortId but could't find it. Indexing the whole doc.")
+                    index(doc, whelk)
+                }
             }
             else {
                 throw e

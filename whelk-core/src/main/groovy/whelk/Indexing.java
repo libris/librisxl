@@ -165,7 +165,7 @@ public class Indexing {
         for (Link link : removedLinks) {
             String id = whelk.getStorage().getSystemIdByIri(link.getIri());
             if (id != null) {
-                whelk.elastic.decrementReverseLinks(id, link.getRelation());
+                whelk.elastic.decrementReverseLinks(id, link.getRelation(), whelk);
             }
         }
 
@@ -189,7 +189,7 @@ public class Indexing {
                     reindexAffectedReverseIntegral(doc, whelk);
                 } else {
                     // just update link counter
-                    whelk.elastic.incrementReverseLinks(id, link.getRelation());
+                    whelk.elastic.incrementReverseLinks(id, link.getRelation(), whelk);
                 }
             }
         }
