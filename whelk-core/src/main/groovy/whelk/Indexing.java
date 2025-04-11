@@ -152,7 +152,7 @@ public class Indexing {
         List<String> postMainEntityIDs = updated.getThingIdentifiers();
 
         if (!postMainEntityIDs.isEmpty() && !preMainEntityIDs.isEmpty()){
-            return postMainEntityIDs.getFirst().equals(preMainEntityIDs.getFirst());
+            return !postMainEntityIDs.getFirst().equals(preMainEntityIDs.getFirst());
         }
         return false;
     }
