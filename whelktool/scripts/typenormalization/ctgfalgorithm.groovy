@@ -178,6 +178,8 @@ class TypeMappings extends DefinitionsData {
 
 class TypeNormalizer implements UsingJsonKeys {
 
+  //Parse system property "addCategory" as a boolean, default to false if none given
+  boolean addCategory = Boolean.parseBoolean(System.getProperty("addCategory")) ?: false
   static MARC = DefinitionsData.MARC
   static KBRDA = DefinitionsData.KBRDA
   static KBGF = DefinitionsData.KBGF
@@ -246,18 +248,24 @@ class TypeNormalizer implements UsingJsonKeys {
 
     var contenttypes = mappings.reduceSymbols(asList(work.get("contentType")))
     var genreforms = mappings.reduceSymbols(asList(work.get("genreForm")))
+    if (addCategory) {
+      categories += genreforms + contenttypes
 
-    categories += genreforms + contenttypes
+      //TODO Should this snippet happen also if not adding category? Is it removing local GFs with prefLabel "DAISY"
+      //TODO replacing it with "Audiobook"? Is "Audiobook" a good term here correct?
+      System.out.println genreforms.findAll {it['prefLabel']}.collect {it}
 
-    if (genreforms.removeIf { !it[ID] && it['prefLabel'] == 'DAISY'} ) {
-      categories << [(ID): KBGF + 'Audiobook']
-    }
+      if (genreforms.removeIf { !it[ID] && it['prefLabel'] == 'DAISY' }) {
+        categories << [(ID): KBGF + 'Audiobook']
+        System.out.println categories
+      }
 
-    if (categories.size() > 0) {
-      //work.put("category", mappings.reduceSymbols(categories))
-      //work.remove("genreForm")
-      //work.remove("contentType")
-      changed = true
+      if (categories.size() > 0) {
+        work.put("category", mappings.reduceSymbols(categories))
+        work.remove("genreForm")
+        work.remove("contentType")
+        changed = true
+      }
     }
 
     return changed
