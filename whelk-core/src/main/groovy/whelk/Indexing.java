@@ -34,7 +34,7 @@ public class Indexing {
      */
     private static boolean iterate(Whelk whelk) throws SQLException {
         PostgreSQLComponent psql = whelk.getStorage();
-        Map storedIndexerState = psql.getState(INDEXER_STATE_KEY);
+        var storedIndexerState = psql.getState(INDEXER_STATE_KEY);
         if (storedIndexerState == null){
             resetStateToNow(psql);
             storedIndexerState = psql.getState(INDEXER_STATE_KEY);
@@ -50,12 +50,12 @@ public class Indexing {
 
             statement.setLong(1, lastIndexedChangeNumber);
             ResultSet resultSet = statement.executeQuery();
-            Long indexedChangeNumber = 0L;
+            long indexedChangeNumber = 0L;
             if (!resultSet.isBeforeFirst()) {
                 return false;
             }
             while (resultSet.next()) {
-                Long changeNumber = resultSet.getLong("changenumber");
+                long changeNumber = resultSet.getLong("changenumber");
                 String id = resultSet.getString("id");
                 Instant modificationInstant = resultSet.getTimestamp("time").toInstant();
                 int resultingVersion = resultSet.getInt("resulting_record_version");
@@ -150,7 +150,7 @@ public class Indexing {
     }
 
     private static void bulkIndex(Iterable<String> ids, Whelk whelk) {
-        for (List a : Iterables.partition(ids, 100)) {
+        for (var a : Iterables.partition(ids, 100)) {
             Collection<Document> docs = whelk.bulkLoad(a).values();
             whelk.elastic.bulkIndex(docs, whelk);
         }
@@ -243,7 +243,7 @@ public class Indexing {
 
         // At the one first start of this, the above 'MAX(changenumber)' will be null, as there are no
         // logged changenumbers yet. To cover this case, set an initial 0 explicitly.
-        Map storedIndexerState = psql.getState(INDEXER_STATE_KEY);
+        var storedIndexerState = psql.getState(INDEXER_STATE_KEY);
         if (storedIndexerState != null && storedIndexerState.get("lastIndexed") == null) {
             psql.putState(INDEXER_STATE_KEY, Map.of("lastIndexed", "0"));
         }
