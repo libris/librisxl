@@ -190,6 +190,7 @@ class TypeNormalizer implements UsingJsonKeys {
     this.mappings = mappings
   }
 
+  // ----- Normalization action-----
   boolean normalize(Map instance, Map work) {
     var changed = false
 
@@ -197,6 +198,7 @@ class TypeNormalizer implements UsingJsonKeys {
 
     changed |= simplifyWorkType(work)
     changed |= simplfyInstanceType(instance)
+
     changed |= mappings.convertIssuanceType(instance, work)
 
     if (changed) {
@@ -207,15 +209,8 @@ class TypeNormalizer implements UsingJsonKeys {
     return changed
   }
 
-  void reorder(Map thing) {
-    var copy = thing.clone()
-    thing.clear()
-    for (var key : [ID, TYPE, 'sameAs', 'category', 'issuanceType']) {
-      if (key in copy) thing[key] = copy[key]
-    }
-    thing.putAll(copy)
-  }
 
+  // ----- Work action-----
   boolean simplifyWorkType(Map work) {
     var refSize = work.containsKey(ANNOTATION) ? 2 : 1
     if (work.containsKey(ID) && work.size() == refSize) {
@@ -248,22 +243,19 @@ class TypeNormalizer implements UsingJsonKeys {
     var contenttypes = mappings.reduceSymbols(asList(work.get("contentType")))
     var genreforms = mappings.reduceSymbols(asList(work.get("genreForm")))
 
+    if (genreforms.removeIf { !it[ID] && it['prefLabel'] == 'DAISY' }) {
+      genreforms << [(ID): KBGF + 'Audiobook']
+    }
+
     // If we want to use the new property "category"
     if (addCategory) {
       List<String> categories = []
       categories += genreforms + contenttypes
+      work.remove("genreForm")
+      work.remove("contentType")
 
-      // FIXME Should this snippet be moved out of the category section?
-      if (genreforms.removeIf { !it[ID] && it['prefLabel'] == 'DAISY' }) {
-        categories << [(ID): KBGF + 'Audiobook']
-        System.out.println categories
-      }
-
-      // This is where the new property is added, and the old ones removed
       if (categories.size() > 0) {
         work.put("category", mappings.reduceSymbols(categories))
-        work.remove("genreForm")
-        work.remove("contentType")
         changed = true
       }
     }
@@ -271,6 +263,8 @@ class TypeNormalizer implements UsingJsonKeys {
     return changed
   }
 
+
+  // ----- Instance action -----
   boolean simplfyInstanceType(Map instance) {
     var changed = false
 
@@ -434,22 +428,23 @@ class TypeNormalizer implements UsingJsonKeys {
     if (addCategory) {
       List<String> categories = []
 
-      categories += carriertypes
       categories += instanceGfs
+      categories += carriertypes
+
+      instance.remove("genreForm")
+      instance.remove("carrierType")
 
       if (categories.size() > 0) {
         instance.put("category", mappings.reduceSymbols(categories))
-        instance.remove("genreForm")
-        instance.remove("carrierType")
         changed = true
       }
     }
 
-
-
     return changed
   }
 
+
+  // ----- Helper methods -----
   static boolean dropReundantString(Map instance, String propertyKey, Pattern pattern) {
     if (instance.get(propertyKey)?.matches(pattern)) {
       instance.remove(propertyKey)
@@ -481,7 +476,18 @@ class TypeNormalizer implements UsingJsonKeys {
     return (o instanceof List ? (List) o : o == null ? [] : [o])
   }
 
+  void reorder(Map thing) {
+    var copy = thing.clone()
+    thing.clear()
+    for (var key : [ID, TYPE, 'sameAs', 'category', 'issuanceType']) {
+      if (key in copy) thing[key] = copy[key]
+    }
+    thing.putAll(copy)
+  }
+
 }
+
+// ----- Main action -----
 
 // NOTE: Since instance and work types may co-depend; fetch work and normalize
 // that in tandem. We store work ids in memory to avoid converting again.
@@ -489,6 +495,12 @@ class TypeNormalizer implements UsingJsonKeys {
 convertedWorks = java.util.concurrent.ConcurrentHashMap.newKeySet()
 
 typeNormalizer = new TypeNormalizer(new TypeMappings(getWhelk(), scriptDir))
+if (typeNormalizer.addCategory) {
+  System.out.println("\n---\nAdding new property: category\nRemoving properties: genreForm, contentType, carrierType\n---\n")
+}
+else {
+  System.out.println("Keeping properties genreForm, contentType, and carrierType.")
+}
 
 process { def doc, Closure loadWorkItem ->
   def (record, instance) = doc.graph
