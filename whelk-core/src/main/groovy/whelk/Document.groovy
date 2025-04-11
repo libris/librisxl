@@ -951,7 +951,7 @@ class Document {
         def work = get(["@graph", 1, "instanceOf"])
         return (!work || work !instanceof Map || JsonLd.isLink(work) || isSuppressedRecord())
             ? []
-            : [ "${getShortId()}#work-record" ]
+            : [ "${getShortId()}#work-record".toString() ]
     }
 
     // All these "virtual record" methods are hardcoded for blank Works

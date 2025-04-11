@@ -2,6 +2,7 @@ package whelk.reindexer
 
 import groovy.util.logging.Log4j2 as Log
 import whelk.Document
+import whelk.Indexing
 import whelk.Whelk
 import whelk.util.BlockingThreadPool
 
@@ -102,6 +103,8 @@ class ElasticReindexer {
         } finally {
             threadPool.awaitAllAndShutdown()
         }
+        if (suppliedCollection == null) // If a "full" reindex.
+            Indexing.resetStateToNow(whelk.storage)
     }
 
     private void bulkIndexWithRetries(List<Document> docs, Whelk whelk) {

@@ -39,12 +39,9 @@ class ImporterMain {
     }
 
     @Command(args='SOURCE_URL DATASET_URI [DATASET_DESCRIPTION_FILE]',
-             flags='--skip-index --replace-main-ids --force-delete --skip-dependers')
+             flags='--replace-main-ids --force-delete --skip-dependers')
     void dataset(Map flags, String sourceUrl, String datasetUri, String datasetDescPath=null) {
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
-        if (flags['skip-index']) {
-            whelk.setSkipIndex(true)
-        }
         if (flags['skip-dependers']) {
             whelk.setSkipIndexDependers(true)
         }
@@ -52,12 +49,9 @@ class ImporterMain {
     }
 
     @Command(args='DATASETS_DESCRIPTION_FILE [SOURCE_BASE_DIR] [DATASET_URI...]',
-             flags='--skip-index --replace-main-ids --force-delete --skip-dependers')
+             flags='--replace-main-ids --force-delete --skip-dependers')
     void datasets(Map flags, String datasetDescPath, String sourceBaseDir=null, String... onlyDatasets=null) {
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
-        if (flags['skip-index']) {
-            whelk.setSkipIndex(true)
-        }
         if (flags['skip-dependers']) {
             whelk.setSkipIndexDependers(true)
         }
