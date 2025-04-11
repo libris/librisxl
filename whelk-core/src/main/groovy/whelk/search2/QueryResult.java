@@ -39,7 +39,6 @@ public class QueryResult {
         this.debug = debug;
         this.numHits = getNumHits(mainQueryResponse);
         this.esItems = collectEsItems(mainQueryResponse);
-        // TODO: move method here
         this.aggs = Aggs.collectAggResult(getAggregations(mainQueryResponse));
         this.spell = Spell.collectSuggestions(mainQueryResponse);
         this.pAggs = Aggs.collectPAggResult(getPAggregations(mainQueryResponse, getSecondaryResponse(esResponse)));
