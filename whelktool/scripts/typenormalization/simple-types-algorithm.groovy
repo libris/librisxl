@@ -143,6 +143,12 @@ class TypeMappings extends DefinitionsData {
   }
 
   boolean convertIssuanceType(Map instance, Map work) {
+    /**
+     * Replace deprecated issuanceType values
+     * Assign issuanceType value to work type
+     * Assign either "SingleUnit" or "MultipelUnit" to issuanceType
+     */
+
     // TODO: check genres and heuristics (some Serial are mistyped!)
     var issuancetype = (String) instance.remove("issuanceType")
     if (!issuancetype) {
@@ -153,6 +159,7 @@ class TypeMappings extends DefinitionsData {
       issuancetype = 'Collection'
     }
 
+    // FIXME Decide if we want to keep componentPart as work type
     if (issuancetype == 'SerialComponentPart') {
       issuancetype = 'ComponentPart'
     }
@@ -212,6 +219,12 @@ class TypeNormalizer implements UsingJsonKeys {
 
   // ----- Work action-----
   boolean simplifyWorkType(Map work) {
+    /**
+     * Retain information from old work type by assigning a mapped contentType or genreForm.
+     * If there are interrelated genreForms or contentTypes, keep only the most specific one.
+     * Optionally, replace properties contentType and genreForm with new property category.
+     */
+
     var refSize = work.containsKey(ANNOTATION) ? 2 : 1
     if (work.containsKey(ID) && work.size() == refSize) {
       return false
