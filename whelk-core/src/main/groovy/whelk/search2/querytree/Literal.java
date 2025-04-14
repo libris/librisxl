@@ -32,11 +32,11 @@ public record Literal(String raw) implements Value {
     }
 
     public Literal increment() {
-        return isNumeric() ? new Literal(Integer.toString(Integer.parseInt(raw()) + 1)) : this;
+        return isNumeric() ? new Literal(Integer.toString(Integer.parseInt(raw) + 1)) : this;
     }
 
     public Literal decrement() {
-        return isNumeric() ? new Literal(Integer.toString(Integer.parseInt(raw()) - 1)) : this;
+        return isNumeric() ? new Literal(Integer.toString(Integer.parseInt(raw) - 1)) : this;
     }
 }
 

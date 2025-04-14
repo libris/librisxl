@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class QueryParams {
     private final static int DEFAULT_LIMIT = 200;
@@ -19,7 +18,6 @@ public class QueryParams {
 
     public static class ApiParams {
         public static final String QUERY = "_q";
-        public static final String SIMPLE_FREETEXT = "_i";
         public static final String SORT = "_sort";
         public static final String LIMIT = "_limit";
         public static final String OFFSET = "_offset";
@@ -53,9 +51,10 @@ public class QueryParams {
     public final List<EsBoost.ScoreFunction> esScoreFunctions;
 
     public final String q;
-    public final String i;
 
     public final boolean skipStats;
+
+    private Map<String, String> paramsMap;
 
     public QueryParams(Map<String, String[]> apiParameters) throws InvalidQueryException {
         this.sortBy = Sort.fromString(getOptionalSingleNonEmpty(ApiParams.SORT, apiParameters).orElse(""));
@@ -69,55 +68,64 @@ public class QueryParams {
         this.spell = new Spell(getOptionalSingleNonEmpty(ApiParams.SPELL, apiParameters).orElse(""));
         this.boostFields = getMultiple(ApiParams.BOOST, apiParameters);
         this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse("");
-        this.i = getOptionalSingle(ApiParams.SIMPLE_FREETEXT, apiParameters).orElse("");
         this.skipStats = getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
         this.esScoreFunctions = getEsScoreFunctions(apiParameters);
     }
 
-    public Map<String, String> getNonQueryParams() {
-        return getNonQueryParams(offset);
+    public Map<String, String> getNonQueryParamsNoOffset() {
+        Map<String, String> params = getNonQueryParams();
+        params.remove(ApiParams.OFFSET);
+        return params;
     }
 
-    public Map<String, String> getNonQueryParams(int offset) {
-        Map<String, String> params = new LinkedHashMap<>();
-        if (offset > 0) {
-            params.put(ApiParams.OFFSET, "" + offset);
-        }
-        params.put(ApiParams.LIMIT, "" + limit);
-        if (object != null) {
-            params.put(ApiParams.OBJECT, object);
-        }
-        if (!predicates.isEmpty()) {
-            params.put(ApiParams.PREDICATES, String.join(",", predicates));
-        }
-        if (mode != null) {
-            params.put(ApiParams.EXTRA, mode);
-        }
-        var spellP = spell.asString();
-        if (!spellP.isEmpty()) {
-            params.put(ApiParams.SPELL, spellP);
-        }
-        var sort = sortBy.asString();
-        if (!sort.isEmpty()) {
-            params.put(ApiParams.SORT, sort);
-        }
-        if (!debug.isEmpty()) {
-            params.put(ApiParams.DEBUG, String.join(",", debug));
-        }
-        if (!boostFields.isEmpty()) {
-            params.put(ApiParams.BOOST, String.join(",", boostFields));
-        }
-        if (skipStats) {
-            params.put(ApiParams.STATS, "false");
-        }
-        if (!esScoreFunctions.isEmpty()) {
-            params.put(ApiParams.FN_SCORE,
-                    esScoreFunctions.stream()
-                            .map(f -> String.join(";", f.paramList()))
-                            .collect(Collectors.joining(","))
-            );
-        }
+    public Map<String, String> getNonQueryParams() {
+        var params = getParamsMap();
+        params.remove(ApiParams.QUERY);
         return params;
+    }
+
+    private Map<String, String> getParamsMap() {
+        if (paramsMap == null) {
+            Map<String, String> params = new LinkedHashMap<>();
+
+            if (!q.isEmpty()) {
+                params.put(ApiParams.QUERY, q);
+            }
+            if (offset > 0) {
+                params.put(ApiParams.OFFSET, "" + offset);
+            }
+            params.put(ApiParams.LIMIT, "" + limit);
+            if (object != null) {
+                params.put(ApiParams.OBJECT, object);
+            }
+            if (!predicates.isEmpty()) {
+                params.put(ApiParams.PREDICATES, String.join(",", predicates));
+            }
+            if (mode != null) {
+                params.put(ApiParams.EXTRA, mode);
+            }
+            var spellP = spell.asString();
+            if (!spellP.isEmpty()) {
+                params.put(ApiParams.SPELL, spellP);
+            }
+            var sort = sortBy.asString();
+            if (!sort.isEmpty()) {
+                params.put(ApiParams.SORT, sort);
+            }
+            if (!debug.isEmpty()) {
+                params.put(ApiParams.DEBUG, String.join(",", debug));
+            }
+            if (!boostFields.isEmpty()) {
+                params.put(ApiParams.BOOST, String.join(",", boostFields));
+            }
+            if (skipStats) {
+                params.put(ApiParams.STATS, "false");
+            }
+
+            this.paramsMap = params;
+        }
+
+        return new LinkedHashMap<>(paramsMap);
     }
 
     private static Optional<String> getOptionalSingleNonEmpty(String name, Map<String, String[]> queryParameters) {

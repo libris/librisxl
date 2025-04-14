@@ -2,7 +2,7 @@ package whelk.search2.querytree;
 
 import static whelk.JsonLd.TYPE_KEY;
 
-public sealed interface Key extends Subpath permits Key.RecognizedKey, Key.UnrecognizedKey, Key.AmbiguousKey {
+public sealed interface Key extends Subpath permits Key.AmbiguousKey, Key.RecognizedKey, Key.UnrecognizedKey {
     @Override
     default Key key() { return this; }
 
@@ -10,12 +10,6 @@ public sealed interface Key extends Subpath permits Key.RecognizedKey, Key.Unrec
     default boolean isType() {
         return TYPE_KEY.equals(toString());
     }
-
-    @Override
-    boolean isValid();
-
-    @Override
-    String toString();
 
     record RecognizedKey(String raw) implements Key {
         @Override
@@ -28,6 +22,7 @@ public sealed interface Key extends Subpath permits Key.RecognizedKey, Key.Unrec
             return raw;
         }
     }
+
     record UnrecognizedKey(String raw) implements Key {
         @Override
         public boolean isValid() {

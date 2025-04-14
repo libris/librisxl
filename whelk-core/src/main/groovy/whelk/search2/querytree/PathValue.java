@@ -3,6 +3,7 @@ package whelk.search2.querytree;
 import whelk.JsonLd;
 import whelk.search.ESQuery;
 import whelk.search2.Operator;
+import whelk.search2.QueryParams;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,6 +22,7 @@ import static whelk.JsonLd.Owl.PROPERTY_CHAIN_AXIOM;
 import static whelk.JsonLd.TYPE_KEY;
 import static whelk.search2.Operator.GREATER_THAN;
 import static whelk.search2.QueryUtil.boolWrap;
+import static whelk.search2.QueryUtil.makeUpLink;
 import static whelk.search2.QueryUtil.mustNotWrap;
 import static whelk.search2.QueryUtil.mustWrap;
 import static whelk.search2.QueryUtil.nestedWrap;
@@ -60,13 +62,18 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     }
 
     @Override
-    public Map<String, Object> toSearchMapping(QueryTree qt, Map<String, String> nonQueryParams) {
-        return _toSearchMapping(qt, nonQueryParams);
+    public Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams) {
+        return _toSearchMapping(qt, queryParams);
     }
 
     @Override
     public String toQueryString(boolean topLevel) {
         return toRawQueryString();
+    }
+
+    @Override
+    public Node getInverse() {
+        return new PathValue(path, operator.getInverse(), value);
     }
 
     private String toRawQueryString() {
@@ -134,7 +141,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         };
     }
 
-    private Map<String, Object> _toSearchMapping(QueryTree qt, Map<String, String> nonQueryParams) {
+    private Map<String, Object> _toSearchMapping(QueryTree qt, QueryParams queryParams) {
         Map<String, Object> m = new LinkedHashMap<>();
 
         var propertyChainAxiom = new LinkedList<>();
@@ -157,7 +164,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         };
         m.put("property", property);
         m.put(operator.termKey, value.description());
-        m.put("up", qt.makeUpLink(this, nonQueryParams));
+        m.put("up", makeUpLink(qt, this, queryParams));
 
         m.put("_key", path.asKey());
         m.put("_value", value.raw());
@@ -201,7 +208,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
             if (sp instanceof Property p) {
                 for (Property.Restriction r : p.restrictions()) {
                     List<Subpath> restrictedPath = Stream.concat(currentPath.stream(), Stream.of(r.property())).toList();
-                    Node expanded = new PathValue(new Path(restrictedPath).expand(jsonLd), operator, r.value()).expandType(jsonLd);
+                    Node expanded = new PathValue(new Path(restrictedPath).expand(jsonLd, r.value()), operator, r.value()).expandType(jsonLd);
                     prefilledFields.add(expanded);
                 }
             }
