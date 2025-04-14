@@ -1,5 +1,6 @@
 package whelk.search2;
 
+import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
@@ -13,7 +14,16 @@ import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.Value;
 import whelk.util.DocumentUtil;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -269,10 +279,24 @@ public class Query {
         private final Map<String, Collection<Link>> links = new HashMap<>();
 
         private void loadChips() {
-            whelk.bulkLoad(links.keySet()).forEach((id, doc) -> {
-                var chip = castToStringObjectMap(whelk.getJsonld().toChip(doc.getThing()));
-                links.get(id).forEach(link -> link.setChip(chip));
+            var cards = whelk.getCards(links.keySet());
+
+            links.forEach((id, links) -> {
+                var cardGraph = cards.get(id);
+                if (cardGraph != null) {
+                    var chip = castToStringObjectMap(whelk.getJsonld().toChip(new Document(cardGraph).getThing()));
+                    links.forEach(link -> link.setChip(chip));
+                } else {
+                    links.forEach(link -> link.setChip(dummyChip(id)));
+                }
             });
+        }
+
+        private Map<String, Object> dummyChip(String id) {
+            return Map.of(
+                    JsonLd.ID_KEY, id,
+                    JsonLd.Rdfs.LABEL, id
+            );
         }
 
         private void queue(Link link) {
