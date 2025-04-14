@@ -26,8 +26,7 @@ public record InactiveFilter(Filter.AliasedFilter aliasedFilter) implements Node
         m.put("object", description);
         m.put("value", alias());
         m.put("up", makeUpLink(qt, this, queryParams));
-        //TODO: mustNotWrap???
-        return m;
+        return Map.of("not", m);
     }
 
     @Override
