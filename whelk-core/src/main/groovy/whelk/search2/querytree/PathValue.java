@@ -132,8 +132,8 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         }
 
         return switch (operator) {
-            case EQUALS -> equalsFilter(p, v);
-            case NOT_EQUALS -> negated ? equalsFilter(p, v) : notEqualsFilter(p, v);
+            case EQUALS -> esEquals(p, v);
+            case NOT_EQUALS -> negated ? esEquals(p, v) : esNotEquals(p, v);
             case LESS_THAN -> rangeFilter(p, v, "lt");
             case LESS_THAN_OR_EQUALS -> rangeFilter(p, v, "lte");
             case GREATER_THAN -> rangeFilter(p, v, "gt");
@@ -241,24 +241,14 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         return operator.format(p, v);
     }
 
-    private static Map<String, Object> equalsFilter(String path, String value) {
-        return equalsFilter(path, value, false);
+    private Map<String, Object> esEquals(String path, String value) {
+        return this.value instanceof Resource
+                ? filterWrap(buildTermQuery(path, value))
+                : mustWrap(buildSimpleQuery(path, value));
     }
 
-    private static Map<String, Object> notEqualsFilter(String path, String value) {
-        return equalsFilter(path, value, true);
-    }
-
-    private static Map<String, Object> equalsFilter(String path, String value, boolean negate) {
-        var clause = new HashMap<>();
-        boolean isSimple = ESQuery.isSimple(value);
-        String queryMode = isSimple ? "simple_query_string" : "query_string";
-        var sq = new HashMap<>();
-        sq.put("query", isSimple ? value : ESQuery.escapeNonSimpleQueryString(value));
-        sq.put("fields", new ArrayList<>(List.of(path)));
-        sq.put("default_operator", "AND");
-        clause.put(queryMode, sq);
-        return negate ? filterWrap(mustNotWrap(clause)) : filterWrap(clause);
+    private static Map<String, Object> esNotEquals(String path, String value) {
+        return mustNotWrap(buildSimpleQuery(path, value));
     }
 
     private static Map<String, Object> rangeFilter(String path, String value, String key) {
@@ -279,5 +269,19 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
     private static Map<String, Object> rangeWrap(Map<?, ?> m) {
         return Map.of("range", m);
+    }
+
+    private static Map<String, Object> buildSimpleQuery(String field, String value) {
+        boolean isSimple = ESQuery.isSimple(value);
+        String queryMode = isSimple ? "simple_query_string" : "query_string";
+        var query = new HashMap<>();
+        query.put("query", isSimple ? value : ESQuery.escapeNonSimpleQueryString(value));
+        query.put("fields", List.of(field + "^400")); // TODO: Configure boost value elsewhere
+        query.put("default_operator", "AND");
+        return Map.of(queryMode, query);
+    }
+
+    private static Map<String, Object> buildTermQuery(String field, String value) {
+        return Map.of("term", Map.of(field, value));
     }
 }
