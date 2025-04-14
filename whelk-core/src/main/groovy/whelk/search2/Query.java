@@ -183,8 +183,8 @@ public class Query {
             view.put(QueryParams.ApiParams.DEBUG, Map.of(QueryParams.Debug.ES_QUERY, getEsQueryDsl()));
         }
 
-        linkLoader.addLinks(stats.getLinks());
-        linkLoader.addLinks(queryTree.collectLinks());
+        linkLoader.queue(stats.getLinks());
+        linkLoader.queue(queryTree.collectLinks());
         linkLoader.loadChips();
 
         return view;
@@ -271,16 +271,16 @@ public class Query {
         private void loadChips() {
             whelk.bulkLoad(links.keySet()).forEach((id, doc) -> {
                 var chip = castToStringObjectMap(whelk.getJsonld().toChip(doc.getThing()));
-                links.get(id).forEach(link -> link.loadChip(chip));
+                links.get(id).forEach(link -> link.setChip(chip));
             });
         }
 
-        private void addLink(Link link) {
+        private void queue(Link link) {
             links.computeIfAbsent(link.iri(), k -> new ArrayList<>()).add(link);
         }
 
-        private void addLinks(Collection<Link> links) {
-            links.forEach(this::addLink);
+        private void queue(Collection<Link> links) {
+            links.forEach(this::queue);
         }
     }
 

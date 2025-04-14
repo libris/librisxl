@@ -26,14 +26,16 @@ public final class Link extends Resource {
 
     public Link(String iri, Map<String, Object> thing) {
         this.iri = iri;
-        loadThing(thing);
+        setThing(thing);
     }
 
-    public void loadChip(Map<String, Object> chip) {
+    public void setChip(Map<String, Object> chip) {
+        this.chip.clear();
         this.chip.putAll(chip);
     }
 
-    public void loadThing(Map<String, Object> thing) {
+    public void setThing(Map<String, Object> thing) {
+        this.chip.clear();
         this.thing.putAll(thing);
     }
 
