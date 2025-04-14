@@ -38,8 +38,8 @@ public class Query {
     protected final QueryParams queryParams;
     protected final AppParams appParams;
     protected final QueryTree queryTree;
+    protected final ESSettings esSettings;
 
-    private final ESSettings esSettings;
     private final Disambiguate disambiguate;
     private final Stats stats;
     private final LinkLoader linkLoader;
@@ -107,7 +107,7 @@ public class Query {
     }
 
     protected Map<String, Object> getEsQuery(QueryTree queryTree, Collection<String> rulingTypes) {
-        var esQuery = queryTree.toEs(whelk.getJsonld(), this::getNestedPath, queryParams.boostFields, rulingTypes);
+        var esQuery = queryTree.toEs(whelk.getJsonld(), esSettings.mappings, queryParams.boostFields, rulingTypes);
         return addBoosts(esQuery, queryParams.esScoreFunctions);
     }
 
@@ -115,7 +115,7 @@ public class Query {
         return Aggs.buildAggQuery(appParams.statsRepr.sliceList(),
                 whelk.getJsonld(),
                 rulingTypes,
-                this::getNestedPath);
+                esSettings.mappings);
     }
 
     protected Map<String, Object> getEsQueryDsl(Map<String, Object> query, Map<String, Object> aggs) {
@@ -153,13 +153,6 @@ public class Query {
         }
 
         return queryDsl;
-    }
-
-    protected Optional<String> getNestedPath(String path) {
-        if (esSettings.mappings.isNestedField(path)) {
-            return Optional.of(path);
-        }
-        return esSettings.mappings.getNestedFields().stream().filter(path::startsWith).findFirst();
     }
 
     private Map<String, Object> getPartialCollectionView() {

@@ -1,6 +1,7 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
+import whelk.search2.EsMappings;
 import whelk.search2.Operator;
 import whelk.search2.QueryParams;
 
@@ -42,9 +43,9 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     @Override
-    public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
-        Map<String, List<PathValue>> nestedGroups = getNestedGroups(getNestedPath);
-        return nestedGroups.isEmpty() ? wrap(childrenToEs(getNestedPath, boostFields)) : toEsNested(nestedGroups, getNestedPath, boostFields);
+    public Map<String, Object> toEs(EsMappings esMappings, Collection<String> boostFields) {
+        Map<String, List<PathValue>> nestedGroups = getNestedGroups(esMappings);
+        return nestedGroups.isEmpty() ? wrap(childrenToEs(esMappings, boostFields)) : toEsNested(nestedGroups, esMappings, boostFields);
     }
 
     @Override
@@ -129,7 +130,7 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     // TODO: Review/refine nested logic and proper tests
-    private Map<String, Object> toEsNested(Map<String, List<PathValue>> nestedGroups, Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
+    private Map<String, Object> toEsNested(Map<String, List<PathValue>> nestedGroups, EsMappings esMappings, Collection<String> boostFields) {
         List<Map<String, Object>> esChildren = new ArrayList<>();
         List<Node> nonNested = new ArrayList<>(children());
 
@@ -151,20 +152,20 @@ public sealed abstract class Group implements Node permits And, Or {
         });
 
         for (Node n : nonNested) {
-            esChildren.add(n.toEs(getNestedPath, boostFields));
+            esChildren.add(n.toEs(esMappings, boostFields));
         }
 
         return esChildren.size() == 1 ? esChildren.getFirst() : wrap(esChildren);
     }
 
     // TODO: Review/refine nested logic and proper tests
-    private Map<String, List<PathValue>> getNestedGroups(Function<String, Optional<String>> getNestedPath) {
+    private Map<String, List<PathValue>> getNestedGroups(EsMappings esMappings) {
         Map<String, List<PathValue>> nestedGroups = new HashMap<>();
         children().stream()
                 .filter(PathValue.class::isInstance)
                 .map(PathValue.class::cast)
-                .collect(Collectors.groupingBy(pv -> getNestedPath.apply(pv.path().fullSearchPath()),
-                        Collectors.groupingBy(pv -> pv.path().fullSearchPath()))
+                .collect(Collectors.groupingBy(pv -> pv.path().getEsNestedStem(esMappings),
+                        Collectors.groupingBy(pv -> pv.path().fullEsSearchPath()))
                 )
                 .forEach((nestedStem, groupedByPath) -> {
                     // At least two different paths sharing the same nested stem
@@ -182,8 +183,8 @@ public sealed abstract class Group implements Node permits And, Or {
         return nestedGroups;
     }
 
-    private List<Map<String, Object>> childrenToEs(Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
-        return mapToMap(n -> n.toEs(getNestedPath, boostFields));
+    private List<Map<String, Object>> childrenToEs(EsMappings esMappings, Collection<String> boostFields) {
+        return mapToMap(n -> n.toEs(esMappings, boostFields));
     }
 
     private List<Node> mapToNode(Function<Node, Node> mapper) {

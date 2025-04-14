@@ -2,6 +2,8 @@ package whelk.search2.querytree;
 
 import whelk.JsonLd;
 import whelk.search.ESQuery;
+import whelk.search2.EsBoost;
+import whelk.search2.EsMappings;
 import whelk.search2.Operator;
 import whelk.search2.QueryParams;
 
@@ -14,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.Owl.INVERSE_OF;
@@ -38,8 +39,8 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     }
 
     @Override
-    public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
-        return getNestedPath.apply(path.fullSearchPath())
+    public Map<String, Object> toEs(EsMappings esMappings, Collection<String> boostFields) {
+        return path.getEsNestedStem(esMappings)
                 .map(this::toEsNested)
                 .orElseGet(this::toEs);
     }
@@ -120,7 +121,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     }
 
     private Map<String, Object> _toEs(boolean negated) {
-        var p = path.fullSearchPath();
+        var p = path.fullEsSearchPath();
         var v = value.jsonForm();
 
         if (Operator.WILDCARD.equals(v)) {
@@ -244,11 +245,13 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     private Map<String, Object> esEquals(String path, String value) {
         return this.value instanceof Resource
                 ? filterWrap(buildTermQuery(path, value))
-                : mustWrap(buildSimpleQuery(path, value));
+                : mustWrap(buildSimpleQuery(path + "^" + EsBoost.WITHIN_FIELD_BOOST, value));
     }
 
-    private static Map<String, Object> esNotEquals(String path, String value) {
-        return mustNotWrap(buildSimpleQuery(path, value));
+    private Map<String, Object> esNotEquals(String path, String value) {
+        return mustNotWrap(this.value instanceof Resource
+                ? buildTermQuery(path, value)
+                : buildSimpleQuery(path, value));
     }
 
     private static Map<String, Object> rangeFilter(String path, String value, String key) {
@@ -276,7 +279,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         String queryMode = isSimple ? "simple_query_string" : "query_string";
         var query = new HashMap<>();
         query.put("query", isSimple ? value : ESQuery.escapeNonSimpleQueryString(value));
-        query.put("fields", List.of(field + "^400")); // TODO: Configure boost value elsewhere
+        query.put("fields", List.of(field));
         query.put("default_operator", "AND");
         return Map.of(queryMode, query);
     }

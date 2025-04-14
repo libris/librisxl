@@ -1,17 +1,16 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
+import whelk.search2.EsMappings;
 import whelk.search2.QueryParams;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
 
 public sealed interface Node permits ActiveFilter, FreeText, Group, InactiveFilter, PathValue {
-    Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath, Collection<String> boostFields);
+    Map<String, Object> toEs(EsMappings esMappings, Collection<String> boostFields);
 
     Node expand(JsonLd jsonLd, Collection<String> rulingTypes);
 

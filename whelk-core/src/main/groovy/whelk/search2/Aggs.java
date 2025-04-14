@@ -12,8 +12,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -31,8 +29,7 @@ public class Aggs {
     public static Map<String, Object> buildAggQuery(List<AppParams.Slice> sliceList,
                                                     JsonLd jsonLd,
                                                     Collection<String> types,
-                                                    Function<String, Optional<String>> getNestedPath)
-    {
+                                                    EsMappings esMappings) {
         if (sliceList.isEmpty()) {
             return Map.of(JsonLd.TYPE_KEY,
                     Map.of("terms",
@@ -51,39 +48,41 @@ public class Aggs {
 
             new Path(property).expand(jsonLd)
                     .getAltPaths(jsonLd, types)
-                    .stream()
-                    .map(Path::fullSearchPath)
                     .forEach(path -> {
-                        // Core agg query
-                        var aggs = Map.of("terms",
-                                Map.of("field", path,
-                                        "size", slice.size(),
-                                        "order", Map.of(slice.bucketSortKey(), slice.sortOrder())));
-
-                        // If field is nested, wrap agg query with nested
-                        var nested = getNestedPath.apply(path);
-                        if (nested.isPresent()) {
-                            aggs = Map.of("nested", Map.of("path", nested.get()),
-                                    "aggs", Map.of(NESTED_AGG_NAME, aggs));
-                        }
-
-                        // Wrap agg query with a filter
-                        var filter = QueryUtil.mustWrap(Collections.emptyList());
-                        aggs = Map.of("aggs", Map.of(property.name(), aggs),
-                                "filter", filter);
-
-                        query.put(path, aggs);
+                        Map<String, Object> aggs = path.getEsNestedStem(esMappings)
+                                .map(nestedStem -> buildNestedAggQuery(path, slice, nestedStem))
+                                .orElse(buildCoreAqqQuery(path, slice));
+                        query.put(path.fullEsSearchPath(), filterWrap(aggs, property.name()));
                     });
         }
 
         return query;
     }
 
+    private static Map<String, Object> buildCoreAqqQuery(Path path, AppParams.Slice slice) {
+        return Map.of("terms",
+                Map.of("field", path.fullEsSearchPath(),
+                        "size", slice.size(),
+                        "order", Map.of(slice.bucketSortKey(), slice.sortOrder())));
+    }
+
+    private static Map<String, Object> buildNestedAggQuery(Path path, AppParams.Slice slice, String nestedStem) {
+        return Map.of("nested", Map.of("path", nestedStem),
+                "aggs", Map.of(NESTED_AGG_NAME, buildCoreAqqQuery(path, slice)));
+    }
+
+    private static Map<String, Object> filterWrap(Map<String, Object> aggs, String property) {
+        var filter = QueryUtil.mustWrap(Collections.emptyList());
+        return Map.of("aggs", Map.of(property, aggs),
+                "filter", filter);
+
+    }
+
     public static Map<String, Object> buildPAggQuery(Link object,
                                                      List<Property> curatedPredicates,
                                                      JsonLd jsonLd,
                                                      Collection<String> types,
-                                                     Function<String, Optional<String>> getNestedPath
+                                                     EsMappings esMappings
     ) {
         Map<String, Object> query = new LinkedHashMap<>();
 
@@ -93,7 +92,7 @@ public class Aggs {
                         Property::name,
                         p -> new PathValue(p, Operator.EQUALS, object)
                                 .expand(jsonLd, types.isEmpty() ? p.domain() : types)
-                                .toEs(getNestedPath, List.of()))
+                                .toEs(esMappings, List.of()))
                 );
 
         if (!filters.isEmpty()) {

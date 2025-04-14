@@ -4,6 +4,7 @@ import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.AppParams;
 import whelk.search2.Disambiguate;
+import whelk.search2.EsMappings;
 import whelk.search2.Filter;
 import whelk.search2.EsBoost;
 import whelk.search2.Operator;
@@ -42,12 +43,12 @@ public class QueryTree {
         return new QueryTree(tree, filtered);
     }
 
-    public Map<String, Object> toEs(JsonLd jsonLd, Function<String, Optional<String>> getNestedPath) {
-        return toEs(jsonLd, getNestedPath, List.of(), List.of());
+    public Map<String, Object> toEs(JsonLd jsonLd, EsMappings esMappings) {
+        return toEs(jsonLd, esMappings, List.of(), List.of());
     }
 
-    public Map<String, Object> toEs(JsonLd jsonLd, Function<String, Optional<String>> getNestedPath, Collection<String> boostFields, Collection<String> rulingTypes) {
-        return getFiltered().tree.expand(jsonLd, rulingTypes).toEs(getNestedPath, boostFields.isEmpty() ? EsBoost.BOOST_FIELDS : boostFields);
+    public Map<String, Object> toEs(JsonLd jsonLd, EsMappings esMappings, Collection<String> boostFields, Collection<String> rulingTypes) {
+        return getFiltered().tree.expand(jsonLd, rulingTypes).toEs(esMappings, boostFields.isEmpty() ? EsBoost.BOOST_FIELDS : boostFields);
     }
 
     private QueryTree(Node tree, QueryTree filtered) {

@@ -1,6 +1,7 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
+import whelk.search2.EsMappings;
 
 import java.util.Collection;
 import java.util.List;
@@ -72,7 +73,7 @@ public class Path {
                 .collect(Collectors.joining("."));
     }
 
-    public String fullSearchPath() {
+    public String fullEsSearchPath() {
         return path.stream()
                 .map(Subpath::toString)
                 .map(Path::substitute)
@@ -111,6 +112,14 @@ public class Path {
     @Override
     public int hashCode() {
         return Objects.hash(path);
+    }
+
+    public Optional<String> getEsNestedStem(EsMappings esMappings) {
+        String esPath = fullEsSearchPath();
+        if (esMappings.isNestedField(esPath)) {
+            return Optional.of(esPath);
+        }
+        return esMappings.getNestedFields().stream().filter(esPath::startsWith).findFirst();
     }
 
     private boolean shouldAddSuffix(Value value) {
