@@ -324,13 +324,13 @@ class TypeNormalizer implements UsingJsonKeys {
     }
 
     // Remove redundant MARC mediaTerms if the information is given by the old itype
-    if (isSoundRecording && dropReundantString(instance, "marc:mediaTerm", ~/(?i)ljudupptagning/)) {
+    if (isSoundRecording && dropRedundantString(instance, "marc:mediaTerm", ~/(?i)ljudupptagning/)) {
       changed = true
     }
-    if (isVideoRecording && dropReundantString(instance, "marc:mediaTerm", ~/(?i)videoupptagning/)) {
+    if (isVideoRecording && dropRedundantString(instance, "marc:mediaTerm", ~/(?i)videoupptagning/)) {
       changed = true
     }
-    var isBraille = dropReundantString(instance, "marc:mediaTerm", ~/(?i)punktskrift/)
+    var isBraille = dropRedundantString(instance, "marc:mediaTerm", ~/(?i)punktskrift/)
 
     // Clean up some Braille-related terms
     var toDrop = [KBRDA + "Volume", MARC + "Braille", MARC + "TacMaterialType-b"] as Set
@@ -379,7 +379,7 @@ class TypeNormalizer implements UsingJsonKeys {
     var probablyPrint = assumedToBePrint(instance)
 
     if (isElectronic) {
-      if (dropReundantString(instance, "marc:mediaTerm", ~/(?i)elektronisk (resurs|utgåva)/)) {
+      if (dropRedundantString(instance, "marc:mediaTerm", ~/(?i)elektronisk (resurs|utgåva)/)) {
         changed = true
       }
 
@@ -413,7 +413,7 @@ class TypeNormalizer implements UsingJsonKeys {
           } else {
             if (mappings.matches(carriertypes, "Sheet")) {
               instanceGfs << [(ID): KBRDA + 'Sheet']
-              if (dropReundantString(instance, "marc:mediaTerm", ~/(?i)affisch/)) {
+              if (dropRedundantString(instance, "marc:mediaTerm", ~/(?i)affisch/)) {
                 instanceGfs << [(ID): SAOGF + 'Poster']
               }
               changed = true
@@ -445,14 +445,6 @@ class TypeNormalizer implements UsingJsonKeys {
 
 
   // ----- Helper methods -----
-  static boolean dropReundantString(Map instance, String propertyKey, Pattern pattern) {
-    if (instance.get(propertyKey)?.matches(pattern)) {
-      instance.remove(propertyKey)
-      return true
-    }
-    return false
-  }
-
   static boolean assumedToBePrint(Map instance) {
     // TODO: carrierType == marc:RegularPrint || marc:RegularPrintReproduction
     // TODO: this is added to AudioCD:s etc.!
@@ -472,6 +464,14 @@ class TypeNormalizer implements UsingJsonKeys {
     return false
   }
 
+  static boolean dropRedundantString(Map instance, String propertyKey, Pattern pattern) {
+    if (instance.get(propertyKey)?.matches(pattern)) {
+      instance.remove(propertyKey)
+      return true
+    }
+    return false
+  }
+  
   static List asList(Object o) {
     return (o instanceof List ? (List) o : o == null ? [] : [o])
   }
@@ -499,7 +499,7 @@ if (typeNormalizer.addCategory) {
   System.out.println("\n---\nAdding new property: category\nRemoving properties: genreForm, contentType, carrierType\n---\n")
 }
 else {
-  System.out.println("Keeping properties genreForm, contentType, and carrierType.")
+  System.out.println("\n---\nKeeping properties genreForm, contentType, and carrierType.\n---\n")
 }
 
 process { def doc, Closure loadWorkItem ->
