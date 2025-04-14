@@ -123,12 +123,12 @@ public class QueryTree {
         return tree == null;
     }
 
-    /**
-     * There is no freetext or all freetext nodes are "*"
-     */
     public boolean isWild() {
-        return StreamSupport.stream(allDescendants(tree).spliterator(), false)
-                .noneMatch(n -> n.isFreeTextNode() && !((FreeText) n).isWild());
+        return isWild(tree);
+    }
+
+    private static boolean isWild(Node tree) {
+        return tree.isFreeTextNode() && ((FreeText) tree).isWild();
     }
 
     public List<String> collectRulingTypes(JsonLd jsonLd) {
@@ -226,7 +226,9 @@ public class QueryTree {
     }
 
     private void removeFreeTextWildcard() {
-        _removeTopLevelNodesByCondition(n -> n.isFreeTextNode() && ((FreeText) n).isWild());
+        if (!isWild()) {
+            _removeTopLevelNodesByCondition(QueryTree::isWild);
+        }
     }
 
     private void resetString() {
