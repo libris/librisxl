@@ -17,7 +17,7 @@ class QueryTreeSpec extends Specification {
         QueryTree tree = new QueryTree('(NOT p1:v1 OR p2:v2) something', disambiguate)
 
         expect:
-        tree.toEs(jsonLd, x -> Optional.empty(), ['_str^10'], []) ==
+        tree.toEs(jsonLd, TestData.getEsMappings(), ['_str^10'], []) ==
                 ['bool': [
                         'must': [
                                 [
@@ -31,24 +31,20 @@ class QueryTreeSpec extends Specification {
                                 ['bool': [
                                         'should': [
                                                 ['bool': [
-                                                        'filter': [
-                                                                'bool': [
-                                                                        'must_not': [
-                                                                                'simple_query_string': [
-                                                                                        'default_operator': 'AND',
-                                                                                        'query'           : 'v1',
-                                                                                        'fields'          : ['p1']
-                                                                                ]
-                                                                        ]
+                                                        'must_not': [
+                                                                'simple_query_string': [
+                                                                        'default_operator': 'AND',
+                                                                        'query'           : 'v1',
+                                                                        'fields'          : ['p1']
                                                                 ]
                                                         ]
                                                 ]],
                                                 ['bool': [
-                                                        'filter': [
+                                                        'must': [
                                                                 'simple_query_string': [
                                                                         'default_operator': 'AND',
                                                                         'query'           : 'v2',
-                                                                        'fields'          : ['p2']
+                                                                        'fields'          : ['p2^400']
                                                                 ]
                                                         ]
                                                 ]]
