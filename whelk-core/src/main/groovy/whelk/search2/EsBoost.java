@@ -25,6 +25,9 @@ public class EsBoost {
             "_searchCardStr.exact^1"
     );
 
+    // TODO: Better name
+    public static int WITHIN_FIELD_BOOST = 400;
+
     public static List<ScoreFunction> SCORE_FUNCTIONS = List.of(
             new FieldValueFactor("reverseLinks.totalItemsByRelation.instanceOf", 10, "ln1p", 0, 15),
             new FieldValueFactor("reverseLinks.totalItemsByRelation.itemOf.instanceOf", 10, "ln1p", 0, 10)

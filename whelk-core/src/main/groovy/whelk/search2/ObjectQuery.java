@@ -87,7 +87,7 @@ public class ObjectQuery extends Query {
                 curatedPredicates,
                 whelk.getJsonld(),
                 rulingTypes,
-                this::getNestedPath);
+                esSettings.mappings);
     }
 
     private List<String> inferSubjectTypes() {
