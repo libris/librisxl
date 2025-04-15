@@ -227,7 +227,7 @@ public class QueryTree {
     }
 
     private void removeFreeTextWildcard() {
-        if (!isWild()) {
+        if (tree != null && !isWild()) {
             _removeTopLevelNodesByCondition(QueryTree::isWild);
         }
     }
