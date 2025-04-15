@@ -63,40 +63,86 @@ class QueryTreeSpec extends Specification {
         def tree = QueryTreeBuilder.buildTree('something (NOT p3:v3 OR p4:"v:4") includeA', disambiguate)
 
         expect:
-        new QueryTree(tree).toSearchMapping(new QueryParams([:])) == [
-                'and': [
-                        [
-                                'property': ['@id': 'textQuery', '@type': 'DatatypeProperty'],
-                                'equals'  : 'something',
-                                'up'      : ['@id': '/find?_limit=200&_q=%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA']
-                        ],
-                        [
-                                'or': [
-                                        [
-                                                'property' : ['@id': 'p3', '@type': 'ObjectProperty'],
-                                                'notEquals': 'v3',
-                                                'up'       : ['@id': '/find?_limit=200&_q=something+p4:%22v:4%22+includeA'],
-                                                '_key'     : 'p3',
-                                                '_value'   : 'v3'
+        new QueryTree(tree).toSearchMapping(new QueryParams([:])) ==
+                [
+                        "and": [[
+                                        "property": [
+                                                "@id"  : "textQuery",
+                                                "@type": "DatatypeProperty"
                                         ],
-                                        [
-                                                'property': ['@id': 'p4', '@type': 'ObjectProperty'],
-                                                'equals'  : 'v:4',
-                                                'up'      : ['@id': '/find?_limit=200&_q=something+NOT+p3:v3+includeA'],
-                                                '_key'    : 'p4',
-                                                '_value'  : 'v:4'
+                                        "equals"  : "something",
+                                        "up"      : [
+                                                "@id": "/find?_limit=200&_q=%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA"
                                         ]
-                                ],
-                                'up': ['@id': '/find?_limit=200&_q=something+includeA']
-                        ],
-                        [
-                                'object': ['prefLabelByLang': [:], '@type': 'Resource'],
-                                'value' : 'includeA',
-                                'up'    : ['@id': '/find?_limit=200&_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29']
+                                ], [
+                                        "or": [[
+                                                       "property" : [
+                                                               "@id"  : "p3",
+                                                               "@type": "ObjectProperty"
+                                                       ],
+                                                       "notEquals": "v3",
+                                                       "up"       : [
+                                                               "@id": "/find?_limit=200&_q=something+p4:%22v:4%22+includeA"
+                                                       ],
+                                                       "_key"     : "p3",
+                                                       "_value"   : "v3"
+                                               ], [
+                                                       "property": [
+                                                               "@id"  : "p4",
+                                                               "@type": "ObjectProperty"
+                                                       ],
+                                                       "equals"  : "v:4",
+                                                       "up"      : [
+                                                               "@id": "/find?_limit=200&_q=something+NOT+p3:v3+includeA"
+                                                       ],
+                                                       "_key"    : "p4",
+                                                       "_value"  : "v:4"
+                                               ]],
+                                        "up": [
+                                                "@id": "/find?_limit=200&_q=something+includeA"
+                                        ]
+                                ], [
+                                        "object": [
+                                                "prefLabelByLang": [:],
+                                                "alias"          : "includeA",
+                                                "raw"            : "NOT excludeA",
+                                                "@type"          : "Resource",
+                                                "parsedFilter"   : [
+                                                        "not": [
+                                                                "object": [
+                                                                        "prefLabelByLang": [:],
+                                                                        "alias"          : "excludeA",
+                                                                        "raw"            : "NOT p1:A",
+                                                                        "@type"          : "Resource",
+                                                                        "parsedFilter"   : [
+                                                                                "property" : [
+                                                                                        "@id"  : "p1",
+                                                                                        "@type": "DatatypeProperty"
+                                                                                ],
+                                                                                "notEquals": "A",
+                                                                                "up"       : [
+                                                                                        "@id": "/find?_limit=200&_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA"
+                                                                                ],
+                                                                                "_key"     : "p1",
+                                                                                "_value"   : "A"
+                                                                        ]
+                                                                ],
+                                                                "value" : "excludeA",
+                                                                "up"    : [
+                                                                        "@id": "/find?_limit=200&_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA"
+                                                                ]
+                                                        ]
+                                                ]
+                                        ],
+                                        "value" : "includeA",
+                                        "up"    : [
+                                                "@id": "/find?_limit=200&_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29"
+                                        ]
+                                ]],
+                        "up" : [
+                                "@id": "/find?_limit=200&_q=*"
                         ]
-                ],
-                'up' : ['@id': '/find?_limit=200&_q=*']
-        ]
+                ]
     }
 
     def "normalize free text on instantiation"() {
