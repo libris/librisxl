@@ -76,4 +76,10 @@ public class Filter {
             return new InactiveFilter(this);
         }
     }
+
+    public static class QueryDefinedFilter extends AliasedFilter {
+        public QueryDefinedFilter(String alias, String raw, Map<String, Object> prefLabelByLang) {
+            super(alias, raw, prefLabelByLang);
+        }
+    }
 }

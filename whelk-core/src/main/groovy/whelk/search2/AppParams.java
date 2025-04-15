@@ -200,7 +200,7 @@ public class AppParams {
 
     private Map<String, Filter.AliasedFilter> getFilterByAlias(Map<String, Object> appConfig, Map<String, String[]> aliasedParams) {
         Stream<Filter.AliasedFilter> queryDefined = aliasedParams.entrySet().stream()
-                .map(e -> new Filter.AliasedFilter(asqPrefix(e.getKey()), e.getValue()[0], new HashMap<>()));
+                .map(e -> new Filter.QueryDefinedFilter(asqPrefix(e.getKey()), e.getValue()[0], new HashMap<>()));
 
         Stream<Filter.AliasedFilter> predefined = getAsListOfMap(appConfig, "_filterAliases").stream()
                 .map(m -> new Filter.AliasedFilter(
