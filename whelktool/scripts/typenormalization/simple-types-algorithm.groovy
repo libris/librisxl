@@ -282,11 +282,14 @@ class TypeNormalizer implements UsingJsonKeys {
 
     // ----- Instance action -----
     boolean simplfyInstanceType(Map instance) {
+        // FIXME Can we gather the GF/CT/MT cleanup in one single section, apart from the instance type?
         /**
-         * Do what with marc/print???
-         * Reduce redundancy by removing mediaTypes and carrierTypes that can be inferred from more specific ones.
-         * Remove mediaTypes if they can be inferred from carrierTypes.
+         * Clean up and enrich genreForm, carrierType and mediaType
+         * Assign one of instance types PhysicalResource/DigitalResource
+         * Clean up and enrich genreForm, carrierType and mediaType
          */
+
+
         var changed = false
 
         var itype = instance.get(TYPE)
@@ -321,19 +324,19 @@ class TypeNormalizer implements UsingJsonKeys {
         var isTactile = itype == "Tactile"
         var isVolume = mappings.matches(carriertypes, "Volume") || looksLikeVolume(instance)
 
-        // FIXME Which of these are only true for the "category" scenario?
-
+        // ----- Section: set Simple instanceType -----
+        /**
+         * The part right below applies the new simple instance types Digital/Physical
+         */
         // If the resource is electronic and has at least on carrierType that contains "Online"
-        // FIXME Verify that "matches" here means "contains"
         if ((isElectronic && mappings.matches(carriertypes, "Online"))) {
-            // FIXME Understand what is going on here
+            // FIXME Understand what is going on here - can we move to cleanup section?
             // Is the purpose of this to make sure that 1) there is minimal duplication between instanceType and carrierType,
             // but that there is always a carrier type (even if this means duplication)?
             carriertypes = carriertypes.stream()
                     .filter((x) -> !x.getOrDefault(ID, "").contains("Online"))
                     .collect(Collectors.toList())
             if (carriertypes.size() == 0) {
-                // FIXME make sure this carries through to categories
                 carriertypes << [(ID): KBRDA + 'OnlineResource']
             }
 
@@ -347,6 +350,8 @@ class TypeNormalizer implements UsingJsonKeys {
             changed = true
         }
 
+        // ----- Section: clean up GF and carriertType -----
+        
         // Remove redundant MARC mediaTerms if the information is given by the old itype
         if (isSoundRecording && dropRedundantString(instance, "marc:mediaTerm", ~/(?i)ljudupptagning/)) {
             changed = true
