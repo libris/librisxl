@@ -1,5 +1,6 @@
 package whelk;
 
+import io.prometheus.client.exporter.MetricsServlet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.ee8.servlet.DefaultServlet;
@@ -40,6 +41,7 @@ public class HouseKeepingServer extends XlServer {
         holder.setInitOrder(0);
         context.addServlet(holder, "/");
         context.addServlet(BulkChangePreviewAPI.class, BULK_CONTEXT_PATH + "/*");
+        context.addServlet(MetricsServlet.class, "/metrics");
 
         serveBulkReports(context);
 

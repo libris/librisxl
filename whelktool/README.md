@@ -30,8 +30,6 @@ usage: whelktool [options] <SCRIPT>
                                     validation mode. Defaults to ON.
                                     Possible values: ON/OFF/SKIP_AND_LOG
  -h,--help                          Print this help message and exit.
- -I,--skip-index                    Do not index any changes, only write
-                                    to storage.
  -idchg,--allow-id-removal          [UNSAFE] Allow script to remove
                                     document ids, e.g. sameAs.
  -l,--limit <LIMIT>                 Amount of documents to process.
