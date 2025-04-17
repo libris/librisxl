@@ -323,6 +323,22 @@ class FresnelUtilSpec extends Specification {
         result.asString() == "Νεφέλαι : Λυσιστράτη ’Nephelai : Lysistratē’"
     }
 
+    def "Handle RTL original script"() {
+        given:
+        var fresnel = new FresnelUtil(ld)
+        var thing = [
+                "@type"          : "Title",
+                "mainTitleByLang": [
+                        "ira"                : "تالشی زَوُن",
+                        "ira-Latn-t-ira-Arab": "talysj"],
+        ]
+
+        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
+
+        expect:
+        result.asString() == "⁧تالشی زَوُن⁩ ’talysj’"
+    }
+
     def "showProperties rdf:type"() {
         given:
         var fresnel = new FresnelUtil(ld)

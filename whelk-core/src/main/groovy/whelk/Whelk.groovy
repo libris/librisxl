@@ -499,7 +499,10 @@ class Whelk {
     void normalize(Document doc) {
         try {
             doc.normalizeUnicode()
-            doc.trimStrings()
+
+            if (!doc.getThingIdentifiers().contains(vocabDisplayUri)) { // don't trim fmt contentBefore / contentAfter
+                doc.trimStrings()
+            }
 
             // TODO: just ensure that normalizers don't trip on these?
             if (doc.data.containsKey(JsonLd.CONTEXT_KEY)) {

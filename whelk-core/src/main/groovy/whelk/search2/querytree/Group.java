@@ -2,16 +2,9 @@ package whelk.search2.querytree;
 
 import whelk.JsonLd;
 import whelk.search2.Operator;
+import whelk.search2.QueryParams;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -20,6 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.search2.QueryUtil.boolWrap;
+import static whelk.search2.QueryUtil.makeUpLink;
 import static whelk.search2.QueryUtil.nestedWrap;
 
 
@@ -39,41 +33,37 @@ public sealed abstract class Group implements Node permits And, Or {
 
     abstract boolean implies(Node a, Node b, BiFunction<Node, Node, Boolean> condition);
 
-    // Abstract class does not allow records as subclasses, however when comparing nodes we want the same behaviour
-    // as for records, hence the following.
     @Override
-    public boolean equals(Object o) {
-        return o.getClass() == this.getClass() && ((Group) o).children().equals(children());
-    }
+    public abstract boolean equals(Object o);
 
     @Override
     public int hashCode() {
-        return Objects.hash(children());
+        return Objects.hash(this.getClass(), new HashSet<>(children()));
     }
 
     @Override
-    public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath) {
+    public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
         Map<String, List<PathValue>> nestedGroups = getNestedGroups(getNestedPath);
-        return nestedGroups.isEmpty() ? wrap(childrenToEs(getNestedPath)) : toEsNested(nestedGroups, getNestedPath);
+        return nestedGroups.isEmpty() ? wrap(childrenToEs(getNestedPath, boostFields)) : toEsNested(nestedGroups, getNestedPath, boostFields);
     }
 
     @Override
-    public Map<String, Object> toSearchMapping(QueryTree qt, Map<String, String> nonQueryParams) {
+    public Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams) {
         var m = new LinkedHashMap<String, Object>();
-        m.put(key(), mapToMap(c -> c.toSearchMapping(qt, nonQueryParams)));
-        m.put("up", qt.makeUpLink(this, nonQueryParams));
+        m.put(key(), mapToMap(c -> c.toSearchMapping(qt, queryParams)));
+        m.put("up", makeUpLink(qt, this, queryParams));
         return m;
     }
 
     @Override
-    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
+    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes) {
         Node reduced = reduceTypes(jsonLd);
         if (reduced instanceof Group g) {
             rulingTypes = Stream.concat(g.collectRulingTypes().stream(), rulingTypes.stream())
                     .collect(Collectors.toSet());
-            return g.expandChildren(jsonLd, rulingTypes, getBoostFields);
+            return g.expandChildren(jsonLd, rulingTypes);
         }
-        return reduced.expand(jsonLd, rulingTypes, getBoostFields);
+        return reduced.expand(jsonLd, rulingTypes);
     }
 
     @Override
@@ -95,8 +85,8 @@ public sealed abstract class Group implements Node permits And, Or {
         return reduceByCondition(hasMoreSpecificTypeThan);
     }
 
-    Node expandChildren(JsonLd jsonLd, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
-        return mapFilterAndReinstantiate(c -> c.expand(jsonLd, rulingTypes, getBoostFields), Objects::nonNull);
+    Node expandChildren(JsonLd jsonLd, Collection<String> rulingTypes) {
+        return mapFilterAndReinstantiate(c -> c.expand(jsonLd, rulingTypes), Objects::nonNull);
     }
 
     List<Node> flattenChildren(List<Node> children) {
@@ -139,7 +129,7 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     // TODO: Review/refine nested logic and proper tests
-    private Map<String, Object> toEsNested(Map<String, List<PathValue>> nestedGroups, Function<String, Optional<String>> getNestedPath) {
+    private Map<String, Object> toEsNested(Map<String, List<PathValue>> nestedGroups, Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
         List<Map<String, Object>> esChildren = new ArrayList<>();
         List<Node> nonNested = new ArrayList<>(children());
 
@@ -161,7 +151,7 @@ public sealed abstract class Group implements Node permits And, Or {
         });
 
         for (Node n : nonNested) {
-            esChildren.add(n.toEs(getNestedPath));
+            esChildren.add(n.toEs(getNestedPath, boostFields));
         }
 
         return esChildren.size() == 1 ? esChildren.getFirst() : wrap(esChildren);
@@ -192,8 +182,8 @@ public sealed abstract class Group implements Node permits And, Or {
         return nestedGroups;
     }
 
-    private List<Map<String, Object>> childrenToEs(Function<String, Optional<String>> getNestedPath) {
-        return mapToMap(n -> n.toEs(getNestedPath));
+    private List<Map<String, Object>> childrenToEs(Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
+        return mapToMap(n -> n.toEs(getNestedPath, boostFields));
     }
 
     private List<Node> mapToNode(Function<Node, Node> mapper) {

@@ -112,6 +112,11 @@ class JsonLd {
         public static final String SUBCLASS_OF = "subClassOf";
         public static final String SUB_PROPERTY_OF = "subPropertyOf";
         public static final String IS_DEFINED_BY = "isDefinedBy";
+        public static final String LABEL = "label";
+    }
+
+    static final class Platform {
+        public static final String COMPUTED_LABEL = "computedLabel";
     }
 
     public static final String ALTERNATE_PROPERTIES = 'alternateProperties'

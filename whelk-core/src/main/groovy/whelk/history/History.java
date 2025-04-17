@@ -459,6 +459,10 @@ public class History {
     }
 
     private boolean equalsDisregardOrder(Object a, Object b) {
+        if (a == null && b == null)
+            return true;
+        if (a == null || b == null)
+            return false;
         if (a.getClass() != b.getClass()) {
             return false;
         }

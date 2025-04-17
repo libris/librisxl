@@ -1,200 +1,220 @@
 package whelk.search2.querytree
 
 import spock.lang.Specification
-
-import static DummyNodes.abf
-import static DummyNodes.and
-import static DummyNodes.andXY
-import static DummyNodes.andXYZ
-import static DummyNodes.eq
-import static DummyNodes.ft
-import static DummyNodes.ft1
-import static DummyNodes.gt
-import static DummyNodes.lt
-import static DummyNodes.neq
-import static DummyNodes.notFt
-import static DummyNodes.notPathV1
-import static DummyNodes.notPathV3
-import static DummyNodes.or
-import static DummyNodes.orXY
-import static DummyNodes.path3
-import static DummyNodes.prop1
-import static DummyNodes.prop2
-import static DummyNodes.pathV
-import static DummyNodes.propV
-import static DummyNodes.propV1
-import static DummyNodes.propV2
-import static DummyNodes.propV3
-import static DummyNodes.v1
-import static DummyNodes.v3
-import static DummyNodes.pathV1
-import static DummyNodes.pathV2
-import static DummyNodes.pathV3
+import whelk.JsonLd
+import whelk.search2.AppParams
+import whelk.search2.Disambiguate
+import whelk.search2.Filter
+import whelk.search2.Query
+import whelk.search2.QueryParams
 
 class QueryTreeSpec extends Specification {
-    def "to search mapping"() {
+    Disambiguate disambiguate = TestData.getDisambiguate()
+    JsonLd jsonLd = TestData.getJsonLd()
+
+    def "convert to ES query"() {
         given:
-        def tree = and([
-                ft1,
-                or([propV(prop1, neq, v1), propV2]),
-                abf('x', propV3, ['prefLabel': 'filter x'])
-        ])
+        QueryTree tree = new QueryTree('(NOT p1:v1 OR p2:v2) something', disambiguate)
 
         expect:
-        new QueryTree(tree).toSearchMapping([:]) == [
+        tree.toEs(jsonLd, x -> Optional.empty(), ['_str^10'], []) ==
+                ['bool': [
+                        'must': [
+                                [
+                                        'simple_query_string': [
+                                                'default_operator': 'AND',
+                                                'analyze_wildcard': true,
+                                                'query'           : 'something',
+                                                'fields'          : ['_str^10.0']
+                                        ]
+                                ],
+                                ['bool': [
+                                        'should': [
+                                                ['bool': [
+                                                        'filter': [
+                                                                'bool': [
+                                                                        'must_not': [
+                                                                                'simple_query_string': [
+                                                                                        'default_operator': 'AND',
+                                                                                        'query'           : 'v1',
+                                                                                        'fields'          : ['p1']
+                                                                                ]
+                                                                        ]
+                                                                ]
+                                                        ]
+                                                ]],
+                                                ['bool': [
+                                                        'filter': [
+                                                                'simple_query_string': [
+                                                                        'default_operator': 'AND',
+                                                                        'query'           : 'v2',
+                                                                        'fields'          : ['p2']
+                                                                ]
+                                                        ]
+                                                ]]
+                                        ]
+                                ]]
+                        ]
+                ]]
+    }
+
+    def "to search mapping"() {
+        given:
+        def tree = QueryTreeBuilder.buildTree('something (NOT p3:v3 OR p4:"v:4") includeA', disambiguate)
+
+        expect:
+        new QueryTree(tree).toSearchMapping(new QueryParams([:])) == [
                 'and': [
                         [
-                                'property': ['prefLabel': 'freetext query'],
-                                'equals'  : 'ft1',
-                                'up'      : ['@id': '/find?_i=&_q=%28NOT+p1:v1+OR+p2:%22v:2%22%29+x']
+                                'property': ['@id': 'textQuery', '@type': 'DatatypeProperty'],
+                                'equals'  : 'something',
+                                'up'      : ['@id': '/find?_limit=200&_q=%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA']
                         ],
                         [
                                 'or': [
                                         [
-                                                'property' : ['prefLabel': 'p1'],
-                                                'notEquals': 'v1',
-                                                'up'       : ['@id': '/find?_i=ft1&_q=ft1+p2:%22v:2%22+x'],
-                                                '_key'     : 'p1',
-                                                '_value'   : 'v1'
+                                                'property' : ['@id': 'p3', '@type': 'ObjectProperty'],
+                                                'notEquals': 'v3',
+                                                'up'       : ['@id': '/find?_limit=200&_q=something+p4:%22v:4%22+includeA'],
+                                                '_key'     : 'p3',
+                                                '_value'   : 'v3'
                                         ],
                                         [
-                                                'property': ['prefLabel': 'p2'],
-                                                'equals'  : ['prefLabel': 'v2'],
-                                                'up'      : ['@id': '/find?_i=ft1&_q=ft1+NOT+p1:v1+x'],
-                                                '_key'    : 'p2',
-                                                '_value'  : 'v:2'
+                                                'property': ['@id': 'p4', '@type': 'ObjectProperty'],
+                                                'equals'  : 'v:4',
+                                                'up'      : ['@id': '/find?_limit=200&_q=something+NOT+p3:v3+includeA'],
+                                                '_key'    : 'p4',
+                                                '_value'  : 'v:4'
                                         ]
                                 ],
-                                'up': ['@id': '/find?_i=ft1&_q=ft1+x']
+                                'up': ['@id': '/find?_limit=200&_q=something+includeA']
                         ],
                         [
-                                'object': ['prefLabelByLang': ['prefLabel': 'filter x']],
-                                'value' : 'x',
-                                'up'    : ['@id': '/find?_i=ft1&_q=ft1+%28NOT+p1:v1+OR+p2:%22v:2%22%29']
+                                'object': ['prefLabelByLang': [:], '@type': 'Resource'],
+                                'value' : 'includeA',
+                                'up'    : ['@id': '/find?_limit=200&_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29']
                         ]
                 ],
-                'up' : ['@id': '/find?_i=&_q=*']
+                'up' : ['@id': '/find?_limit=200&_q=*']
         ]
     }
 
-    def "normalize free text"() {
+    def "normalize free text on instantiation"() {
         given:
-        QueryTree qt = new QueryTree(and([
-                ft('x'),
-                ft('y'),
-                or([ft('x'), ft('y')]),
-                ft('a b c'),
-                ft('d'),
-                ft('e:f'),
-                notFt('g'),
-                ft('h'),
-                ft('i')
-        ]))
-        qt.normalizeFreeText()
+        QueryTree qt = new QueryTree("x y (x OR y) \"a b c\" d \"e:f\" NOT g h i", disambiguate)
+        var ft1 = (FreeText) new QueryTree("x y \"a b c\" d \"e:f\" h i", disambiguate).tree
+        var ft2 = (FreeText) QueryTreeBuilder.buildTree("x", disambiguate)
+        var ft3 = (FreeText) QueryTreeBuilder.buildTree("y", disambiguate)
+        var ft4 = (FreeText) QueryTreeBuilder.buildTree("NOT g", disambiguate)
 
         expect:
-        qt.tree == and([
-                ft('x y \"a b c\" d \"e:f\" h i'),
-                or([ft('x'), ft('y')]),
-                notFt('g')
+        qt.tree == new And([
+                ft1,
+                new Or([ft2, ft3]),
+                ft4
         ])
     }
 
     def "add node to top level of tree"() {
+        given:
+        Node add = QueryTreeBuilder.buildTree(_add, disambiguate)
+        QueryTree tree = new QueryTree(_tree, disambiguate)
+
         expect:
-        new QueryTree(tree).addToTopLevel(nodeToAdd).tree == result
+        tree.addTopLevelNode(add).toString() == result
 
         where:
-        tree   | nodeToAdd | result
-        null   | pathV1    | pathV1
-        pathV1 | pathV2    | andXY
-        pathV1 | pathV1    | pathV1
-        orXY   | pathV2    | and([orXY, pathV2])
-        andXY  | pathV1    | andXY
-        andXY  | pathV3    | andXYZ
+        _tree            | _add    | result
+        null             | 'p1:v1' | 'p1:v1'
+        'p1:v1'          | 'p2:v2' | 'p1:v1 p2:v2'
+        'p1:v1'          | 'p1:v1' | 'p1:v1'
+        'p1:v1 OR p2:v2' | 'p2:v2' | '(p1:v1 OR p2:v2) p2:v2'
+        'p1:v1 p2:v2'    | 'p1:v1' | 'p1:v1 p2:v2'
+        'p1:v1 p2:v2'    | 'p3:v3' | 'p1:v1 p2:v2 p3:v3'
     }
 
-    def "exclude node from tree"() {
+    def "omit node from tree"() {
         given:
-        // We don't want a new instance of Or(x, y) in the tree, hence the flattenChildren set to false
-        And andInstance = new And([orXY, pathV3], false)
-        QueryTree qt = new QueryTree(andInstance)
+        PathValue pv1 = (PathValue) QueryTreeBuilder.buildTree('p1:v1', disambiguate)
+        PathValue pv2 = (PathValue) QueryTreeBuilder.buildTree('p2:v2', disambiguate)
+        PathValue pv3 = (PathValue) QueryTreeBuilder.buildTree('p3:v3', disambiguate)
+        Or or = new Or([pv1, pv2])
+        // We don't want a new instance of Or in the tree, hence the flattenChildren set to false
+        And and = new And([or, pv3], false)
+        QueryTree qt = new QueryTree(and)
 
         expect:
-        qt.excludeFromTree(orXY).tree == pathV3
-        qt.excludeFromTree(pathV3).tree == orXY
-        qt.excludeFromTree(pathV1).tree == and([pathV2, pathV3])
-        qt.excludeFromTree(pathV2).tree == and([pathV1, pathV3])
-        qt.excludeFromTree(andInstance).tree == null
+        qt.omitNode(or).tree == pv3
+        qt.omitNode(pv3).tree == or
+        qt.omitNode(pv1).tree == new And([pv2, pv3])
+        qt.omitNode(pv2).tree == new And([pv1, pv3])
+        qt.omitNode(and).tree == null
         // A node's content is irrelevant, the given input must refer to a specific instance in the tree
-        qt.excludeFromTree(pathV(path3, eq, v3)).tree == qt.tree
-        qt.excludeFromTree(or([pathV1, pathV2])).tree == qt.tree
-    }
-
-    def "remove all top level PathValue nodes having a range operator if their (sole) property matches the input"() {
-        given:
-        QueryTree qt = new QueryTree(and([
-                propV(prop1, lt, v1),
-                propV(prop1, eq, v1),
-                or([propV(prop1, lt, v1), propV(prop1, gt, v1)]),
-                propV(prop1, gt, v1),
-                propV(prop2, gt, v1)
-        ]))
-
-        expect:
-        qt.removeTopLevelPathValueWithRangeIfPropEquals(prop1).tree == and([
-                propV(prop1, eq, v1),
-                or([propV(prop1, lt, v1), propV(prop1, gt, v1)]),
-                propV(prop2, gt, v1)
-        ])
-    }
-
-    def "remove all PathValue nodes from top level if their (sole) property matches the input"() {
-        given:
-        QueryTree qt = new QueryTree(and([
-                propV(prop1, lt, v1),
-                propV(prop1, eq, v1),
-                or([propV(prop1, lt, v1), propV(prop1, gt, v1)]),
-                propV(prop1, gt, v1),
-                propV(prop2, gt, v1)
-        ]))
-
-        expect:
-        qt.removeTopLevelPathValueIfPropEquals(prop1).tree == and([
-                or([propV(prop1, lt, v1), propV(prop1, gt, v1)]),
-                propV(prop2, gt, v1)
-        ])
+        qt.omitNode(QueryTreeBuilder.buildTree('p3:v3', disambiguate)).tree == qt.tree
+        qt.omitNode(QueryTreeBuilder.buildTree('p1:v1 OR p2:v2', disambiguate)).tree == qt.tree
     }
 
     def "get top level free text as string"() {
         expect:
-        new QueryTree(tree).getTopLevelFreeText() == result
+        new QueryTree(tree, disambiguate).getFreeTextPart() == result
 
         where:
-        tree                               | result
-        and([ft('x y z'), pathV1, pathV2]) | 'x y z'
-        ft('x y z')                        | 'x y z'
-        pathV1                             | ''
-        or([ft('x'), ft('y')])             | ''
-        null                               | ''
+        tree                | result
+        'x y z p1:v1 p2:v2' | 'x y z'
+        'x y z'             | 'x y z'
+        'p1:v1'             | ''
+        'x OR y'            | ''
+        null                | ''
     }
 
     def "to query string"() {
         expect:
-        new QueryTree(tree).toQueryString() == result
+        new QueryTree(tree, disambiguate).toQueryString() == result
 
         where:
-        tree                                                                              | result
-        null                                                                              | "*"
-        pathV1                                                                            | "p1:v1"
-        pathV2                                                                            | "p2:\"v:2\""
-        propV1                                                                            | "p1:v1"
-        propV2                                                                            | "p2:\"v:2\""
-        pathV(new Path([new Key.RecognizedKey('x'), new Key.RecognizedKey('y')]), eq, v1) | "x.y:v1"
-        ft1                                                                               | "ft1"
-        notPathV1                                                                         | "NOT p1:v1"
-        orXY                                                                              | "p1:v1 OR p2:\"v:2\""
-        andXYZ                                                                            | "p1:v1 p2:\"v:2\" p3:v3"
-        and([ft1, orXY, notPathV3])                                                       | "ft1 (p1:v1 OR p2:\"v:2\") NOT p3:v3"
+        tree                                   | result
+        null                                   | "*"
+        "p1:v1"                                | "p1:v1"
+        "p2:\"v:2\""                           | "p2:\"v:2\""
+        "p5:v5"                                | "p5:v5"
+        "_x._y:v1"                             | "_x._y:v1"
+        "NOT p1:v1"                            | "NOT p1:v1"
+        "p1:v1 OR p3:v3"                       | "p1:v1 OR p3:v3"
+        "p1:v1 p2:\"v:2\" p3:v3"               | "p1:v1 p2:\"v:2\" p3:v3"
+        "something (p1:v1 OR p3:v3) NOT p4:v4" | "something (p1:v1 OR p3:v3) NOT p4:v4"
+        "something p4:v4 includeA"             | "something p4:v4 includeA"
+    }
+
+    def "apply site filters"() {
+        given:
+        QueryTree queryTree = new QueryTree(origQuery, disambiguate)
+        def basicSearchMode = Query.SearchMode.STANDARD_SEARCH
+        AppParams.DefaultSiteFilter dsf1 = new AppParams.DefaultSiteFilter(TestData.excludeFilter, [basicSearchMode] as Set)
+        AppParams.DefaultSiteFilter dsf2 = new AppParams.DefaultSiteFilter(new Filter("type:T1"), [basicSearchMode] as Set)
+        AppParams.DefaultSiteFilter dsf3 = new AppParams.DefaultSiteFilter(new Filter("type:T2"), [] as Set)
+        AppParams.OptionalSiteFilter osf = new AppParams.OptionalSiteFilter(TestData.includeFilter, [basicSearchMode] as Set)
+
+        AppParams.SiteFilters siteFilters = new AppParams.SiteFilters([dsf1, dsf2, dsf3], [osf])
+        siteFilters.parse(disambiguate)
+
+        queryTree.applySiteFilters(basicSearchMode, siteFilters)
+
+        expect:
+        queryTree.toString() == normalizedQuery
+        queryTree.getFiltered().toString() == filteredQuery
+
+        where:
+        origQuery            | normalizedQuery      | filteredQuery
+        "x"                  | "x"                  | "x excludeA type:T1"
+        "x type:T2"          | "x type:T2"          | "x type:T2 excludeA"
+        "x type:T1"          | "x"                  | "x type:T1 excludeA"
+        "x NOT type:T2"      | "x NOT type:T2"      | "x NOT type:T2 excludeA type:T1"
+        "x NOT type:T1"      | "x NOT type:T1"      | "x NOT type:T1 excludeA"
+        "x type:T1 NOT p1:A" | "x"                  | "x type:T1 excludeA"
+        "x excludeA"         | "x"                  | "x excludeA type:T1"
+        "x includeA"         | "x includeA"         | "x includeA type:T1"
+        "x NOT excludeA"     | "x includeA"         | "x includeA type:T1"
+        "x NOT includeA"     | "x"                  | "x excludeA type:T1"
+        "x type:T2 includeA" | "x type:T2 includeA" | "x type:T2 includeA"
     }
 }

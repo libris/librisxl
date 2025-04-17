@@ -3,9 +3,26 @@ package whelk.search2.querytree;
 import java.util.Map;
 import java.util.Objects;
 
-public record VocabTerm(String key, Map<String, Object> definition, String raw) implements Value {
+import static whelk.JsonLd.TYPE_KEY;
+import static whelk.JsonLd.asList;
+
+public final class VocabTerm extends Resource {
+    private final String key;
+    private final String raw;
+    private final Map<String, Object> definition;
+
+    public VocabTerm(String key, Map<String, Object> definition, String raw) {
+        this.key = key;
+        this.definition = definition;
+        this.raw = raw;
+    }
+
     public VocabTerm(String key, Map<String, Object> definition) {
         this(key, definition, null);
+    }
+
+    public String key() {
+        return key;
     }
 
     @Override
@@ -36,5 +53,10 @@ public record VocabTerm(String key, Map<String, Object> definition, String raw) 
     @Override
     public int hashCode() {
         return Objects.hash(key);
+    }
+
+    @Override
+    public String getType() {
+        return (String) asList(definition.get(TYPE_KEY)).getFirst();
     }
 }
