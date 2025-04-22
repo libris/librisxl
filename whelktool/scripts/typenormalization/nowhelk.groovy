@@ -33,6 +33,10 @@ var workDataFileName = "$DATADIR/${basename}-works.jsonl.gz"
 var inDataFileName = "$DATADIR/${basename}-instances.jsonl.gz"
 var outDataFileName = "$DATADIR/${basename}-NORMALIZED.jsonl"
 
+if (Boolean.parseBoolean(System.getProperty("addCategory"))) {
+  outDataFileName = "$DATADIR/${basename}-NORMALIZED-with-category.jsonl"
+}
+
 System.err.println inDataFileName
 System.err.println outDataFileName
 System.err.println workDataFileName
