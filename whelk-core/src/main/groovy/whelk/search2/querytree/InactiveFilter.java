@@ -5,9 +5,12 @@ import whelk.search2.Filter;
 import whelk.search2.QueryParams;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+
+import static whelk.search2.QueryUtil.makeUpLink;
 
 public record InactiveFilter(Filter.AliasedFilter aliasedFilter) implements Node {
     @Override
@@ -17,7 +20,13 @@ public record InactiveFilter(Filter.AliasedFilter aliasedFilter) implements Node
 
     @Override
     public Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams) {
-        throw new UnsupportedOperationException("Query tree must not contain inactive filters");
+        var m = new LinkedHashMap<String, Object>();
+        LinkedHashMap<String, Object> description = new LinkedHashMap<>(description());
+        description.put("parsedFilter", aliasedFilter.getParsed().toSearchMapping(qt, queryParams));
+        m.put("object", description);
+        m.put("value", alias());
+        m.put("up", makeUpLink(qt, this, queryParams));
+        return Map.of("not", m);
     }
 
     @Override
@@ -46,5 +55,9 @@ public record InactiveFilter(Filter.AliasedFilter aliasedFilter) implements Node
 
     private String alias() {
         return aliasedFilter.alias();
+    }
+
+    public Map<String, Object> description() {
+        return aliasedFilter.description();
     }
 }
