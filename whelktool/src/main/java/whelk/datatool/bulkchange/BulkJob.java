@@ -166,6 +166,7 @@ public class BulkJob implements Runnable {
         tool.setDefaultChangedBy(jobDoc.getChangeAgentId());
         tool.setAllowLoud(jobDoc.shouldUpdateModifiedTimestamp());
         tool.setNoThreads(false);
+        tool.setNumThreads(Runtime.getRuntime().availableProcessors());
         tool.setJsonLdValidation(SKIP_AND_LOG);
         tool.setInDatasetValidation(SKIP_AND_LOG);
 

@@ -28,6 +28,7 @@ public class BulkPreviewJob extends BulkJob {
         jobDoc = loadDocument();
 
         tool = buildWhelkTool(jobDoc.clone()); // guard against script modifying spec data
+        tool.setNumThreads(2);
         tool.setDryRun(true);
         tool.setRecordChanges(true);
         tool.setRecordingLimit(RECORD_MAX_ITEMS);
