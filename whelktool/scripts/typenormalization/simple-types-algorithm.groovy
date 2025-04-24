@@ -273,7 +273,9 @@ class TypeNormalizer implements UsingJsonKeys {
             }
         } else {
             // Put back the reduced GFs and contentTypes
+            // FIXME Don't add these if empty!
             work.put("genreForm", workGenreforms)
+            work.put("contentType", contenttypes)
         }
 
         return changed
@@ -472,10 +474,11 @@ class TypeNormalizer implements UsingJsonKeys {
                 changed = true
             }
         } else {
+            // FIXME Don't add these if empty!
             instance.put("mediaType", mediatypes - impliedMediaIds)
             instance.put("carrierType", carriertypes)
             instance.put("genreForm", instanceGenreforms)
-        }
+            }
 
         return changed
     }
