@@ -361,7 +361,7 @@ class TypeNormalizer implements UsingJsonKeys {
         }
 
         if (reducedGfs.removeIf { it['prefLabel'] == 'E-böcker'}) {
-          categories << [(ID): KBRDA + 'EBook']
+          categories << [(ID): KBGF + 'EBook']
           changed = true
         }
 
