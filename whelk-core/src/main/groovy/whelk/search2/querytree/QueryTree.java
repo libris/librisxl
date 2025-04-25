@@ -364,7 +364,7 @@ public class QueryTree {
                 continue;
             }
 
-            if (f.getParsed().isTypeNode() && containsTypeNode()) {
+            if (f.isTypeFilter() && containsTypeNode()) {
                 // Override default type filter if the original query already states which types to search.
                 // e.g. don't add "\"rdf:type\":Work" if query is "\"rdf:type\":Agent Astrid Lindgren"
                 continue;

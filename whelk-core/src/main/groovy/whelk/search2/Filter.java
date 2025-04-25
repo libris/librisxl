@@ -2,6 +2,7 @@ package whelk.search2;
 
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.ActiveFilter;
+import whelk.search2.querytree.Group;
 import whelk.search2.querytree.InactiveFilter;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.QueryTreeBuilder;
@@ -39,6 +40,10 @@ public class Filter {
     public Filter parseAndGet(Disambiguate disambiguate) throws InvalidQueryException {
         parse(disambiguate);
         return this;
+    }
+
+    public boolean isTypeFilter() {
+        return getParsed().isTypeNode() || (getParsed() instanceof Group g && g.children().stream().allMatch(Node::isTypeNode));
     }
 
     public static class AliasedFilter extends Filter {
