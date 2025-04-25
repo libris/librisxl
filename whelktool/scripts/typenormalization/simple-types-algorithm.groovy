@@ -1,5 +1,3 @@
-package typenormalization
-
 import java.util.stream.Collectors
 import java.util.regex.Pattern
 
@@ -35,10 +33,10 @@ class DefinitionsData implements UsingJsonKeys {
     Map complexTypeMap = [:]
 
     // Mixes subclasses and subconcepts
-    Map<String, Set<String>> baseEqualOrSubMap = [ // matchesMap
-                                                   (MARC + 'DirectElectronic'): [MARC + 'ChipCartridge'] as Set,
-                                                   (MARC + 'Novel')           : [SAOGF + 'Romaner'] as Set,
-                                                   'Audio'                    : ['PerformedMusic', 'SpokenWord'] as Set,
+    Map<String, Set<String>> baseEqualOrSubMap = [
+        (MARC + 'DirectElectronic'): [MARC + 'ChipCartridge'] as Set,
+        (MARC + 'Novel'): [SAOGF + 'Romaner'] as Set,
+        'Audio': ['PerformedMusic', 'SpokenWord'] as Set,
     ]
 
     Map<String, String> contentToTypeMap = [:]
@@ -142,13 +140,12 @@ class TypeMappings extends DefinitionsData {
         return changed
     }
 
+    /**
+     * - Replace deprecated issuanceType values
+     * - Assign issuanceType value to work type
+     * - Assign either "SingleUnit" or "MultipelUnit" to instance issuanceType
+     */
     boolean convertIssuanceType(Map instance, Map work) {
-        /**
-         * Replace deprecated issuanceType values
-         * Assign issuanceType value to work type
-         * Assign either "SingleUnit" or "MultipelUnit" to issuanceType
-         */
-
         // TODO: check genres and heuristics (some Serial are mistyped!)
         var issuancetype = (String) instance.remove("issuanceType")
         if (!issuancetype) {
@@ -159,7 +156,7 @@ class TypeMappings extends DefinitionsData {
             issuancetype = 'Collection'
         }
 
-        // FIXME Decide if we want to keep componentPart as work type
+        // FIXME: Decide if we want to keep componentPart as work type!
         if (issuancetype == 'SerialComponentPart') {
             issuancetype = 'ComponentPart'
         }
@@ -169,7 +166,7 @@ class TypeMappings extends DefinitionsData {
         if (issuancetype == 'Monograph' || issuancetype == 'Integrating') {
             instance['issuanceType'] = 'SingleUnit'
         } else if (issuancetype == 'ComponentPart') {
-            // FIXME: or remove and add "isPartOf": {"@type": "Resource"} unless  implied?
+            // FIXME: or remove and add "isPartOf": {"@type": "Resource"} unless implied?
             // instance[TYPE] += issuancetype
             instance['issuanceType'] = 'SingleUnit'
         } else {
@@ -187,6 +184,7 @@ class TypeNormalizer implements UsingJsonKeys {
 
     //Parse system property "addCategory" as a boolean, default to false if none given
     boolean addCategory = Boolean.parseBoolean(System.getProperty("addCategory")) ?: false
+
     static MARC = DefinitionsData.MARC
     static KBRDA = DefinitionsData.KBRDA
     static KBGF = DefinitionsData.KBGF
@@ -197,7 +195,7 @@ class TypeNormalizer implements UsingJsonKeys {
         this.mappings = mappings
     }
 
-    // ----- Normalization action-----
+    /** Normalization action */
     boolean normalize(Map instance, Map work) {
         var changed = false
 
@@ -209,22 +207,20 @@ class TypeNormalizer implements UsingJsonKeys {
         changed |= mappings.convertIssuanceType(instance, work)
 
         if (changed) {
-            reorder(work)
-            reorder(instance)
+            reorderForReadability(work)
+            reorderForReadability(instance)
         }
 
         return changed
     }
 
-
-    // ----- Work action-----
+    /**
+     * Work action.
+     * - Retain information from old work type by assigning a mapped contentType or genreForm.
+     * - Reduce redundancy by removing genreForms and contentTypes that can be inferred from more specific ones.
+     * - Optionally, replace properties contentType and genreForm with new property category.
+     */
     boolean simplifyWorkType(Map work) {
-        /**
-         * Retain information from old work type by assigning a mapped contentType or genreForm.
-         * Reduce redundancy by removing genreForms and contentTypes that can be inferred from more specific ones.
-         * Optionally, replace properties contentType and genreForm with new property category.
-         */
-
         var refSize = work.containsKey(ANNOTATION) ? 2 : 1
         if (work.containsKey(ID) && work.size() == refSize) {
             return false
@@ -253,67 +249,55 @@ class TypeNormalizer implements UsingJsonKeys {
             }
         }
 
-        var contenttypes = mappings.reduceSymbols(asList(work.get("contentType")))
-        var workGenreforms = mappings.reduceSymbols(asList(work.get("genreForm")))
+        var contentTypes = mappings.reduceSymbols(asList(work.get("contentType")))
+        var workGenreForms = mappings.reduceSymbols(asList(work.get("genreForm")))
 
-        if (workGenreforms.removeIf { !it[ID] && it['prefLabel'] == 'DAISY' }) {
-            workGenreforms << [(ID): KBGF + 'Audiobook']
+        if (workGenreForms.removeIf { !it[ID] && it['prefLabel'] == 'DAISY' }) {
+            workGenreForms << [(ID): KBGF + 'Audiobook']
         }
 
-        // If we want to use the new property "category"
         if (addCategory) {
             List<String> categories = []
-            categories += workGenreforms + contenttypes
+            categories += workGenreForms + contentTypes
             work.remove("genreForm")
             work.remove("contentType")
 
             if (categories.size() > 0) {
+                // Further reduce, e.g. removing contentTypes implied by workGenreForms.
                 work.put("category", mappings.reduceSymbols(categories))
                 changed = true
             }
         } else {
             // Put back the reduced GFs and contentTypes
-            // FIXME Don't add these if empty!
-            work.put("genreForm", workGenreforms)
-            work.put("contentType", contenttypes)
+            if (workGenreForms.size() > 0) {
+              work.put("genreForm", workGenreForms)
+            }
+            if (contentType.size() > 0) {
+              work.put("contentType", contentTypes)
+            }
         }
 
         return changed
     }
 
-
-    // ----- Instance action -----
+    /**
+     * - Clean up and enrich carrierType and mediaType
+     * - Assign one of instance types PhysicalResource/DigitalResource
+     * - Clean up and enrich genreForm, carrierType and mediaType again. TODO: Can we do this just once?
+     */
     boolean simplfyInstanceType(Map instance) {
-        // FIXME Can we gather the GF/CT/MT cleanup in one single section, apart from the instance type?
-        /**
-         * Clean up and enrich genreForm, carrierType and mediaType
-         * Assign one of instance types PhysicalResource/DigitalResource
-         * Clean up and enrich genreForm, carrierType and mediaType
-         */
-
-
         var changed = false
 
         var itype = instance.get(TYPE)
 
-        // FIXME decide if we want to keep or remove GFs that are marc/Print
-        List instanceGenreforms = asList(instance.get("genreForm")).stream().
-                filter((it) -> !it[ID] != MARC + 'Print').collect(Collectors.toList())
-
-        // FIXME Why replace GF "E-böcker" with KBRDA EBook?
-        //if (instanceGenreforms.removeIf { it['prefLabel'] == 'E-böcker'}) {
-        //  categories << [(ID): KBRDA + 'EBook']
-        //changed = true
-        //}
-
         // Only keep the most specific mediaTypes and carrierTypes
-        List mediatypes = mappings.reduceSymbols(asList(instance["mediaType"]), "MediaType")
-        List carriertypes = mappings.reduceSymbols(asList(instance["carrierType"]), "CarrierType")
+        List mediaTypes = mappings.reduceSymbols(asList(instance["mediaType"]), "MediaType")
+        List carrierTypes = mappings.reduceSymbols(asList(instance["carrierType"]), "CarrierType")
 
         // Remove the mediaType if it can be inferred by the carrierType
-        // FIXME If it cannot be inferred from the carrierType, do we want to put it back to the instance?
-        var impliedMediaIds = carriertypes.findResults { mappings.carrierMediaMap[it[ID]] } as Set
-        if (mediatypes.every { it[ID] in impliedMediaIds }) {
+        // FIXME: If it cannot be inferred from the carrierType, do we want to put it back?
+        var impliedMediaIds = carrierTypes.findResults { mappings.carrierMediaMap[it[ID]] } as Set
+        if (mediaTypes.every { it[ID] in impliedMediaIds }) {
             instance.remove("mediaType")
             changed = true
         }
@@ -324,22 +308,21 @@ class TypeNormalizer implements UsingJsonKeys {
         var isSoundRecording = itype == "SoundRecording"
         var isVideoRecording = itype == "VideoRecording"
         var isTactile = itype == "Tactile"
-        var isVolume = mappings.matches(carriertypes, "Volume") || looksLikeVolume(instance)
+
+        var isVolume = mappings.matches(carrierTypes, "Volume") || looksLikeVolume(instance)
 
         // ----- Section: set Simple instanceType -----
         /**
          * The part right below applies the new simple instance types Digital/Physical
          */
         // If the resource is electronic and has at least on carrierType that contains "Online"
-        if ((isElectronic && mappings.matches(carriertypes, "Online"))) {
+        if ((isElectronic && mappings.matches(carrierTypes, "Online"))) {
             // FIXME Understand what is going on here - can we move to cleanup section?
             // Is the purpose of this to make sure that 1) there is minimal duplication between instanceType and carrierType,
             // but that there is always a carrier type (even if this means duplication)?
-            carriertypes = carriertypes.stream()
-                    .filter((x) -> !x.getOrDefault(ID, "").contains("Online"))
-                    .collect(Collectors.toList())
-            if (carriertypes.size() == 0) {
-                carriertypes << [(ID): KBRDA + 'OnlineResource']
+            carrierTypes = carrierTypes.findAll { !it.getOrDefault(ID, "").contains("Online") }
+            if (carrierTypes.size() == 0) {
+                carrierTypes << [(ID): KBRDA + 'OnlineResource']
             }
 
             // Apply new instance types DigitalResource and PhysicalResource
@@ -352,51 +335,52 @@ class TypeNormalizer implements UsingJsonKeys {
             changed = true
         }
 
-        // ----- Section: clean up GF and carriertType -----
-        
-        // Remove redundant MARC mediaTerms if the information is given by the old itype
-        if (isSoundRecording && dropRedundantString(instance, "marc:mediaTerm", ~/(?i)ljudupptagning/)) {
-            changed = true
-        }
-        if (isVideoRecording && dropRedundantString(instance, "marc:mediaTerm", ~/(?i)videoupptagning/)) {
-            changed = true
-        }
+        // ----- Section: clean up GF and carrierType -----
+
+        // NOTE: We will put non-RDA "carriers" in instanceGenreForms...
+        List instanceGenreForms = instance.get("genreForm"))
+
         var isBraille = dropRedundantString(instance, "marc:mediaTerm", ~/(?i)punktskrift/)
 
         // Remove old Braille terms and replace them with KBGF terms
         var toDrop = [KBRDA + "Volume", MARC + "Braille", MARC + "TacMaterialType-b"] as Set
-        var nonBrailleCarrierTypes = carriertypes.findAll { !toDrop.contains(it.get(ID)) }
-        if (nonBrailleCarrierTypes.size() < carriertypes.size()) {
+        var nonBrailleCarrierTypes = carrierTypes.findAll { !toDrop.contains(it.get(ID)) }
+        if (nonBrailleCarrierTypes.size() < carrierTypes.size()) {
             isBraille = true
-            carriertypes = nonBrailleCarrierTypes
+            carrierTypes = nonBrailleCarrierTypes
         }
 
         if (isTactile && isBraille) {
             if (isVolume) {
-                instanceGenreforms << [(ID): KBGF + 'BrailleVolume']
+                instanceGenreForms << [(ID): KBGF + 'BrailleVolume']
             } else {
-                instanceGenreforms << [(ID): KBGF + 'BrailleResource']
+                instanceGenreForms << [(ID): KBGF + 'BrailleResource']
             }
             changed = true
         }
 
-        // What does this do?
+        // NOTE: Replacing unlinked "E-böcker" with linked, tentative kbgf:EBook
+        if (instanceGenreForms.removeIf { it['prefLabel'] == 'E-böcker'}) {
+          instanceGenreForms << [(ID): KBGF + 'EBook']
+          changed = true
+        }
+
         // If an instance has a certain (old) type which implies physical electronic carrier
         // and carrierTypes corroborating this, assume it is electronic
         // TODO: should work with regular reduceSymbols ...
-        def carrierTuples = [
-                [isElectronic, ["ChipCartridge"], "ChipCartridge"],
+        var carrierTuples = [
+                [isElectronic, [KBRDA + 'ComputerChipCartridge']],
                 [isSoundRecording, [MARC + 'SoundDisc', KBRDA + 'AudioDisc']],
-                [isSoundRecording, [MARC + 'SoundCassette', KBGF + 'AudioCassette']],
-                [isVideoRecording, [MARC + 'VideoDisc', "${MARC}VideoMaterialType-d", KBRDA + 'Videodisc']]
+                [isSoundRecording, [MARC + 'SoundCassette', KBGF + 'AudioCassette']], // FIXME [680ba995]: Not defined in KBRDA.
+                [isVideoRecording, [MARC + 'VideoDisc', MARC + 'VideoMaterialType-d', KBRDA + 'Videodisc']]
         ]
         for (carrierTuple in carrierTuples) {
-            def (isIt, matchTokens) = carrierTuple
-            List gotMatches = matchTokens.findAll { mappings.matches(carriertypes, it) }
+            var (isIt, matchTokens) = carrierTuple
+            var gotMatches = matchTokens.findAll { mappings.matches(carrierTypes, it) }
             if (isIt && gotMatches.size() > 0) {
                 isElectronic = true
-                // FIXME can we add this to carriertypes instead of categories?
-                carriertypes << [(ID): matchTokens[-1]]
+                // FIXME: see 680ba995.
+                carrierTypes << [(ID): matchTokens[-1]]
                 changed = true
             }
         }
@@ -404,52 +388,61 @@ class TypeNormalizer implements UsingJsonKeys {
         // If old instance type is "instance" and there is a carrierType that contains "Electronic"
         // Assume that it is electronic
         if (instance.get(TYPE) == "Instance") {
-            if ((carriertypes.size() == 1 && mappings.matches(carriertypes, "Electronic"))) {
+            if ((carrierTypes.size() == 1 && mappings.matches(carrierTypes, "Electronic"))) {
                 isElectronic = true
             }
         }
 
         var probablyPrint = assumedToBePrint(instance)
 
-        // isElectronic has consequences here
-        // FIXME Compare with 328, where isElectronic is also used but is narrower
-        if (isElectronic) {
-            if (dropRedundantString(instance, "marc:mediaTerm", ~/(?i)elektronisk (resurs|utgåva)/)) {
-                changed = true
-            }
+        // TODO: is this handled by reduceSymbols? Also, probablyPrint?
+        //instanceGenreForms.findAll { it[ID] != MARC + 'Print' }
 
-        } else {
+        // Remove redundant MARC mediaTerms if the information is given by the old itype
+        if (isSoundRecording && dropRedundantString(instance, "marc:mediaTerm", ~/(?i)ljudupptagning/)) {
+            changed = true
+        }
+
+        if (isVideoRecording && dropRedundantString(instance, "marc:mediaTerm", ~/(?i)videoupptagning/)) {
+            changed = true
+        }
+
+        if (isElectronic && if (dropRedundantString(instance, "marc:mediaTerm", ~/(?i)elektronisk (resurs|utgåva)/)) {
+            changed = true
+        }
+
+        if (!isElectronic) {
 
             if (itype == "Print") {
                 if (isVolume) {
-                    instanceGenreforms << [(ID): KBGF + 'PrintedVolume']
+                    instanceGenreForms << [(ID): KBGF + 'PrintedVolume']
                 } else {
-                    instanceGenreforms << [(ID): KBGF + 'Print']
+                    instanceGenreForms << [(ID): KBGF + 'Print']
                 }
                 changed = true
             } else if (itype == "Instance") {
                 if (isVolume) {
                     if (probablyPrint) {
-                        instanceGenreforms << [(ID): KBGF + 'PrintedVolume']
+                        instanceGenreForms << [(ID): KBGF + 'PrintedVolume']
                         changed = true
                         // TODO: if marc:RegularPrintReproduction, add production a Reproduction?
                     } else {
-                        instanceGenreforms << [(ID): KBRDA + 'Volume']
+                        instanceGenreForms << [(ID): KBRDA + 'Volume']
                         changed = true
                     }
                 } else {
                     if (probablyPrint) {
-                        if (mappings.matches(carriertypes, "Sheet")) {
-                            instanceGenreforms << [(ID): KBGF + 'PrintedSheet']
+                        if (mappings.matches(carrierTypes, "Sheet")) {
+                            instanceGenreForms << [(ID): KBGF + 'PrintedSheet']
                         } else {
-                            instanceGenreforms << [(ID): KBGF + 'Print'] // TODO: may be PartOfPrint ?
+                            instanceGenreForms << [(ID): KBGF + 'Print'] // TODO: may be PartOfPrint ?
                         }
                         changed = true
                     } else {
-                        if (mappings.matches(carriertypes, "Sheet")) {
-                            instanceGenreforms << [(ID): KBRDA + 'Sheet']
+                        if (mappings.matches(carrierTypes, "Sheet")) {
+                            instanceGenreForms << [(ID): KBRDA + 'Sheet']
                             if (dropRedundantString(instance, "marc:mediaTerm", ~/(?i)affisch/)) {
-                                instanceGenreforms << [(ID): SAOGF + 'Poster']
+                                instanceGenreForms << [(ID): SAOGF + 'Poster']
                             }
                             changed = true
                         }
@@ -459,12 +452,12 @@ class TypeNormalizer implements UsingJsonKeys {
 
         }
 
-        // If we want to use the new property "category"
         if (addCategory) {
             List<String> categories = []
 
-            categories += instanceGenreforms
-            categories += carriertypes
+            categories += instanceGenreForms
+            categories += mediaTypes
+            categories += carrierTypes
 
             instance.remove("genreForm")
             instance.remove("carrierType")
@@ -474,11 +467,17 @@ class TypeNormalizer implements UsingJsonKeys {
                 changed = true
             }
         } else {
-            // FIXME Don't add these if empty!
-            instance.put("mediaType", mediatypes - impliedMediaIds)
-            instance.put("carrierType", carriertypes)
-            instance.put("genreForm", instanceGenreforms)
+            var explicitMediaTypes = mediaTypes.findAll { it[ID] !in impliedMediaIds }
+            if (explicitMediaTypes.size() > 0) {
+              instance.put("mediaType", explicitMediaTypes)
             }
+            if (carrierType.size() > 0) {
+              instance.put("carrierType", carrierTypes)
+            }
+            if (instanceGenreForms.size() > 0) {
+              instance.put("genreForm", instanceGenreForms)
+            }
+          }
 
         return changed
     }
@@ -516,7 +515,7 @@ class TypeNormalizer implements UsingJsonKeys {
         return (o instanceof List ? (List) o : o == null ? [] : [o])
     }
 
-    void reorder(Map thing) {
+    protected static void reorderForReadability(Map thing) {
         var copy = thing.clone()
         thing.clear()
         for (var key : [ID, TYPE, 'sameAs', 'category', 'issuanceType']) {
@@ -537,9 +536,7 @@ convertedWorks = java.util.concurrent.ConcurrentHashMap.newKeySet()
 typeNormalizer = new TypeNormalizer(new TypeMappings(getWhelk(), scriptDir))
 
 if (typeNormalizer.addCategory) {
-    System.out.println("\n---\nAdding new property: category\nRemoving properties: genreForm, contentType, carrierType\n---\n")
-} else {
-    System.out.println("\n---\nKeeping properties genreForm, contentType, and carrierType.\n---\n")
+    System.out.println("Normalizing using property: category")
 }
 
 process { def doc, Closure loadWorkItem ->
