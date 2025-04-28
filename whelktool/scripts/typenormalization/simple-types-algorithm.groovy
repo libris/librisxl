@@ -272,7 +272,7 @@ class TypeNormalizer implements UsingJsonKeys {
             if (workGenreForms.size() > 0) {
               work.put("genreForm", workGenreForms)
             }
-            if (contentType.size() > 0) {
+            if (contentTypes.size() > 0) {
               work.put("contentType", contentTypes)
             }
         }
@@ -338,7 +338,7 @@ class TypeNormalizer implements UsingJsonKeys {
         // ----- Section: clean up GF and carrierType -----
 
         // NOTE: We will put non-RDA "carriers" in instanceGenreForms...
-        List instanceGenreForms = instance.get("genreForm"))
+        List instanceGenreForms = instance.get("genreForm", [])
 
         var isBraille = dropRedundantString(instance, "marc:mediaTerm", ~/(?i)punktskrift/)
 
@@ -407,7 +407,7 @@ class TypeNormalizer implements UsingJsonKeys {
             changed = true
         }
 
-        if (isElectronic && if (dropRedundantString(instance, "marc:mediaTerm", ~/(?i)elektronisk (resurs|utgåva)/)) {
+        if (isElectronic && dropRedundantString(instance, "marc:mediaTerm", ~/(?i)elektronisk (resurs|utgåva)/)) {
             changed = true
         }
 
@@ -471,7 +471,7 @@ class TypeNormalizer implements UsingJsonKeys {
             if (explicitMediaTypes.size() > 0) {
               instance.put("mediaType", explicitMediaTypes)
             }
-            if (carrierType.size() > 0) {
+            if (carrierTypes.size() > 0) {
               instance.put("carrierType", carrierTypes)
             }
             if (instanceGenreForms.size() > 0) {
