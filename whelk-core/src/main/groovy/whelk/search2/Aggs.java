@@ -127,6 +127,9 @@ public class Aggs {
                     .map(String.class::cast)
                     .findFirst()
                     .get();
+
+            if (! (aggs.get(property) instanceof Map) )
+                continue;
             var agg = (Map<?, ?>) aggs.get(property);
 
             if (agg == null) {
