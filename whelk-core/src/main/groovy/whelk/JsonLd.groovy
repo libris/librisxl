@@ -416,6 +416,7 @@ class JsonLd {
         getVocabPrefix() + ':' + termKey
     }
 
+    @Memoized
     String getVocabPrefix() {
         var prefixEntry = prefixToNsMap.find { it.value == vocabId }
         if (!prefixEntry) {
