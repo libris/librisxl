@@ -63,11 +63,11 @@ public class Disambiguate {
 
         Optional<String> equalPropertyKey = multipleMappedProperties.stream().filter(key::equalsIgnoreCase).findFirst();
         if (equalPropertyKey.isPresent()) {
-            return new Property(equalPropertyKey.get(), jsonLd);
+            return new Property(equalPropertyKey.get(), jsonLd, key);
         }
 
         Optional<Property> propertyWithCode = multipleMappedProperties.stream()
-                .map(pKey -> new Property(pKey, jsonLd))
+                .map(pKey -> new Property(pKey, jsonLd, key))
                 .filter(property -> property.definition().containsKey("librisQueryCode"))
                 .findFirst();
         if (propertyWithCode.isPresent()) {
