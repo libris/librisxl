@@ -338,7 +338,7 @@ class TypeNormalizer implements UsingJsonKeys {
         // ----- Section: clean up GF and carrierType -----
 
         // NOTE: We will put non-RDA "carriers" in instanceGenreForms...
-        List instanceGenreForms = instance.get("genreForm", [])
+        List instanceGenreForms = asList(instance.get("genreForm"))
 
         var isBraille = dropRedundantString(instance, "marc:mediaTerm", ~/(?i)punktskrift/)
 
