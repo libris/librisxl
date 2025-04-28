@@ -408,6 +408,32 @@ class JsonLd {
         }
     }
 
+    String addVocabPrefix(String termKey) {
+        if (termKey.contains(':')) {
+            return termKey
+        }
+
+        getVocabPrefix() + ':' + termKey
+    }
+
+    @Memoized
+    String getVocabPrefix() {
+        var prefixEntry = prefixToNsMap.find { it.value == vocabId }
+        if (!prefixEntry) {
+            throw new IllegalStateException("Could not find prefix for " + vocabId )
+        }
+
+        return prefixEntry.key
+    }
+
+    String getNamespaceUri(String prefix) {
+        prefixToNsMap[prefix]
+    }
+
+    String getVocabId() {
+        return vocabId
+    }
+
     Set<Link> expandLinks(Set<Link> refs) {
         return expandLinks(refs, (Map) displayData[CONTEXT_KEY])
     }
