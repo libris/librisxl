@@ -28,10 +28,14 @@ public class SruServlet extends HttpServlet {
     Whelk whelk;
     JsonLD2MarcXMLConverter converter;
     XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+    VocabMappings vocabMappings;
+    ESSettings esSettings;
 
     public void init() {
         whelk = WhelkFactory.getSingletonWhelk();
         converter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
+        vocabMappings = new VocabMappings(whelk);
+        esSettings = new ESSettings(whelk);
     }
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
@@ -63,7 +67,7 @@ public class SruServlet extends HttpServlet {
             paramsAsIfSearch.put("_q", q);
             QueryParams qp = new QueryParams(paramsAsIfSearch);
             AppParams ap = new AppParams(new HashMap<>(), qp);
-            Query query = new Query(qp, ap, new VocabMappings(whelk), new ESSettings(whelk), whelk);
+            Query query = new Query(qp, ap, vocabMappings, esSettings, whelk);
             results = query.collectResults();
         } catch (InvalidQueryException e) {
             logger.error("Bad query.", e);
