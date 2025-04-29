@@ -70,7 +70,7 @@ public class EmmChangeSet {
             var activityObject = new HashMap<>();
             activityInStream.put("object", activityObject);
             activityObject.put("id", activityInList.uri);
-            activityObject.put("type", ld.addVocabPrefix(activityInList.entityType));
+            activityObject.put("type", ld.prependVocabPrefix(activityInList.entityType));
             activityObject.put("updated", ZonedDateTime.ofInstant(activityInList.modificationTime.toInstant(), ZoneOffset.UTC).toString());
             orderedItems.add(activityInStream);
         }

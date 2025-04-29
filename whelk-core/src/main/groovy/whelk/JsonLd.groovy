@@ -408,7 +408,7 @@ class JsonLd {
         }
     }
 
-    String addVocabPrefix(String termKey) {
+    String prependVocabPrefix(String termKey) {
         if (termKey.contains(':')) {
             return termKey
         }
