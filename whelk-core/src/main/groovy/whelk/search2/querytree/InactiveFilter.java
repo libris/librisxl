@@ -39,6 +39,11 @@ public record InactiveFilter(Filter.AliasedFilter aliasedFilter) implements Node
         return filter();
     }
 
+    @Override
+    public boolean shouldContributeToEsScore() {
+        return false;
+    }
+
     public Node filter() {
         return new ActiveFilter(aliasedFilter);
     }

@@ -73,6 +73,11 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         return new PathValue(path, operator.getInverse(), value);
     }
 
+    @Override
+    public boolean shouldContributeToEsScore() {
+        return value instanceof Literal l && !l.isWildcard();
+    }
+
     private String toRawQueryString() {
         return format(path.asKey(), value.raw());
     }

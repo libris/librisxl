@@ -95,6 +95,11 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
     }
 
     @Override
+    public boolean shouldContributeToEsScore() {
+        return operator == EQUALS && !Operator.WILDCARD.equals(value);
+    }
+
+    @Override
     public boolean isFreeTextNode() {
         return operator.equals(EQUALS);
     }

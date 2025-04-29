@@ -48,6 +48,11 @@ public record ActiveFilter(Filter.AliasedFilter aliasedFilter) implements Node {
                 : new InactiveFilter(aliasedFilter);
     }
 
+    @Override
+    public boolean shouldContributeToEsScore() {
+        return false;
+    }
+
     public Node filter() {
         return aliasedFilter.getParsed();
     }

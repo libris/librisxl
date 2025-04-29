@@ -86,6 +86,11 @@ public sealed abstract class Group implements Node permits And, Or {
         return reduceByCondition(hasMoreSpecificTypeThan);
     }
 
+    @Override
+    public boolean shouldContributeToEsScore() {
+        return children().stream().anyMatch(Node::shouldContributeToEsScore);
+    }
+
     Node expandChildren(JsonLd jsonLd, Collection<String> rulingTypes) {
         return mapFilterAndReinstantiate(c -> c.expand(jsonLd, rulingTypes), Objects::nonNull);
     }

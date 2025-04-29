@@ -26,7 +26,7 @@ public class QueryTree {
 
     private String asString;
 
-    public Node tree;
+    private Node tree;
 
     public QueryTree(String queryString, Disambiguate disambiguate) throws InvalidQueryException {
         if (queryString != null && !queryString.isEmpty()) {
@@ -124,12 +124,8 @@ public class QueryTree {
         return tree == null;
     }
 
-    public boolean isWild() {
-        return isWild(tree);
-    }
-
-    private static boolean isWild(Node tree) {
-        return tree.isFreeTextNode() && ((FreeText) tree).isWild();
+    public Stream<Node> allDescendants() {
+        return StreamSupport.stream(allDescendants(tree).spliterator(), false);
     }
 
     public List<String> collectRulingTypes(JsonLd jsonLd) {
@@ -144,7 +140,7 @@ public class QueryTree {
     }
 
     public List<Link> collectLinks() {
-        return StreamSupport.stream(allDescendants(tree).spliterator(), false)
+        return allDescendants()
                 .map(n -> n instanceof PathValue pv && pv.value() instanceof Link l ? l : null)
                 .filter(Objects::nonNull)
                 .toList();
@@ -227,7 +223,7 @@ public class QueryTree {
     }
 
     private void removeFreeTextWildcard() {
-        if (tree != null && !isWild()) {
+        if (tree != null && !isWild(tree)) {
             _removeTopLevelNodesByCondition(QueryTree::isWild);
         }
     }
@@ -308,6 +304,10 @@ public class QueryTree {
             case And and -> and.filterAndReinstantiate(Predicate.not(p));
             default -> p.test(tree) ? null : tree;
         };
+    }
+
+    private static boolean isWild(Node tree) {
+        return tree instanceof FreeText ft && ft.isWild();
     }
 
     private static Iterable<Node> allDescendants(Node node) {
@@ -393,12 +393,7 @@ public class QueryTree {
     }
 
     private boolean containsTypeNode() {
-        return containsTypeNode(tree);
-    }
-
-    private static boolean containsTypeNode(Node tree) {
-        return StreamSupport.stream(allDescendants(tree).spliterator(), false)
-                .anyMatch(Node::isTypeNode);
+        return allDescendants().anyMatch(Node::isTypeNode);
     }
 
     private void _applyObjectFilter(String object) {
