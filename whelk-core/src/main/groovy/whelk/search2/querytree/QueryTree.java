@@ -306,8 +306,8 @@ public class QueryTree {
         };
     }
 
-    private static boolean isWild(Node tree) {
-        return tree instanceof FreeText ft && ft.isWild();
+    private static boolean isWild(Node node) {
+        return node instanceof FreeText ft && ft.isWild();
     }
 
     private static Iterable<Node> allDescendants(Node node) {
