@@ -10,15 +10,12 @@ class GroupSpec extends Specification {
 
     def "flatten children on instantiation"() {
         given:
-        def nestedAnd = buildTree("p1:v1 (p1:v1 p2:v2)", disambiguate)
-        def or = buildTree("p1:v1 OR p2:v2", disambiguate)
-        def pv = buildTree("p2:v2", disambiguate)
-        def nestedOr = buildTree("(p1:v1 OR p2:v2) OR p2:v2", disambiguate)
-        def children = [nestedAnd, or, pv, nestedOr]
+        var andTree = buildTree("x x p1:v1 (p1:v1 p2:v2 (p2:v2 p3:v3)) (p1:v1 p2:v2) (p1:v1 OR p2:v2)", disambiguate)
+        var orTree = buildTree("((x OR p1:v1 OR (p1:v1 OR p2:v2 OR (p2:v2 OR p3:v3))) OR (p1:v1 OR p2:v2)) (p1:v1 p2:v2)", disambiguate)
 
         expect:
-        new And(children).toString() == 'p1:v1 p2:v2 (p1:v1 OR p2:v2)'
-        new Or(children).toString() == '(p1:v1 p2:v2) OR p1:v1 OR p2:v2'
+        andTree.toString() == 'x x p1:v1 p2:v2 p3:v3 (p1:v1 OR p2:v2)'
+        orTree.toString() == '(x OR p1:v1 OR p2:v2 OR p3:v3) p1:v1 p2:v2'
     }
 
     def "equality check"() {

@@ -96,12 +96,15 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     List<Node> flattenChildren(List<Node> children) {
-        return children.stream()
-                .flatMap(c -> c instanceof Group g
-                        ? (g.getClass() == this.getClass() ? g.children().stream() : Stream.of(g))
-                        : Stream.of(c))
-                .distinct()
-                .toList();
+        List<Node> flattened = new ArrayList<>();
+        for (Node child : children) {
+            if (child instanceof Group g && g.getClass() == this.getClass()) {
+                g.children().stream().filter(c -> !flattened.contains(c) && !children.contains(c)).forEach(flattened::add);
+            } else {
+                flattened.add(child);
+            }
+        }
+        return flattened;
     }
 
     Node filterAndReinstantiate(Predicate<Node> p) {
