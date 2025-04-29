@@ -2,8 +2,11 @@ package whelk.search2.querytree;
 
 import whelk.JsonLd;
 import whelk.search.ESQuery;
+import whelk.search2.EsBoost;
+import whelk.search2.EsMappings;
 import whelk.search2.Operator;
 import whelk.search2.QueryParams;
+import whelk.search2.QueryUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.Owl.INVERSE_OF;
@@ -38,18 +40,13 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     }
 
     @Override
-    public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath, Collection<String> boostFields) {
-        return getNestedPath.apply(path.fullSearchPath())
-                .map(this::toEsNested)
-                .orElseGet(this::toEs);
+    public Map<String, Object> toEs(EsMappings esMappings, Collection<String> boostFields) {
+        var es = getCoreEsQuery(esMappings);
+        return getEsNestedQuery(es, esMappings).orElse(es);
     }
 
-    public Map<String, Object> toEs() {
-        return toEs(false);
-    }
-
-    public Map<String, Object> toEs(boolean negated) {
-        return _toEs(negated);
+    public Map<String, Object> getCoreEsQuery(EsMappings esMappings) {
+        return _getCoreEsQuery(esMappings);
     }
 
     @Override
@@ -76,6 +73,11 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         return new PathValue(path, operator.getInverse(), value);
     }
 
+    @Override
+    public boolean shouldContributeToEsScore() {
+        return value instanceof Literal l && !l.isWildcard();
+    }
+
     private String toRawQueryString() {
         return format(path.asKey(), value.raw());
     }
@@ -93,6 +95,10 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
     public boolean hasEqualProperty(Property property) {
         return getSoleProperty().filter(property::equals).isPresent();
+    }
+
+    public PathValue replaceOperator(Operator replacement) {
+        return new PathValue(path, replacement, value);
     }
 
     public PathValue toOrEquals() {
@@ -119,9 +125,15 @@ public record PathValue(Path path, Operator operator, Value value) implements No
                 : Optional.empty();
     }
 
-    private Map<String, Object> _toEs(boolean negated) {
-        var p = path.fullSearchPath();
-        var v = value.jsonForm();
+    private Optional<Map<String, Object>> getEsNestedQuery(Map<String, Object> esCoreQuery, EsMappings esMappings) {
+        return path.getEsNestedStem(esMappings)
+                .map(nestedStem -> nestedWrap(nestedStem, esCoreQuery))
+                .map(operator == Operator.NOT_EQUALS ? QueryUtil::mustNotWrap : QueryUtil::mustWrap);
+    }
+
+    private Map<String, Object> _getCoreEsQuery(EsMappings esMappings) {
+        String p = path.fullEsSearchPath();
+        String v = value.jsonForm();
 
         if (Operator.WILDCARD.equals(v)) {
             return switch (operator) {
@@ -132,12 +144,12 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         }
 
         return switch (operator) {
-            case EQUALS -> equalsFilter(p, v);
-            case NOT_EQUALS -> negated ? equalsFilter(p, v) : notEqualsFilter(p, v);
-            case LESS_THAN -> rangeFilter(p, v, "lt");
-            case LESS_THAN_OR_EQUALS -> rangeFilter(p, v, "lte");
-            case GREATER_THAN -> rangeFilter(p, v, "gt");
-            case GREATER_THAN_OR_EQUALS -> rangeFilter(p, v, "gte");
+            case EQUALS -> esEquals(p, v, esMappings);
+            case NOT_EQUALS -> esNotEquals(p, v);
+            case LESS_THAN -> esRangeFilter(p, v, "lt");
+            case LESS_THAN_OR_EQUALS -> esRangeFilter(p, v, "lte");
+            case GREATER_THAN -> esRangeFilter(p, v, "gt");
+            case GREATER_THAN_OR_EQUALS -> esRangeFilter(p, v, "gte");
         };
     }
 
@@ -170,12 +182,6 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         m.put("_value", value.raw());
 
         return m;
-    }
-
-    private Map<String, Object> toEsNested(String nestedStem) {
-        return operator == Operator.NOT_EQUALS
-                ? mustNotWrap(nestedWrap(nestedStem, toEs(true)))
-                : mustWrap(nestedWrap(nestedStem, toEs()));
     }
 
     private Node _expand(JsonLd jsonLd, Collection<String> rulingTypes) {
@@ -241,27 +247,26 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         return operator.format(p, v);
     }
 
-    private static Map<String, Object> equalsFilter(String path, String value) {
-        return equalsFilter(path, value, false);
+    private Map<String, Object> esEquals(String path, String value, EsMappings esMappings) {
+        if (this.value instanceof Resource) {
+            return filterWrap(buildTermQuery(path, value));
+        }
+        var simpleQuery = buildSimpleQuery(path, value);
+        if (esMappings.isFourDigitField(path) || esMappings.isDateField(path)) {
+            // TODO: Rather search keyword field with a term query?
+            return filterWrap(simpleQuery);
+        }
+        path += ("^" + EsBoost.WITHIN_FIELD_BOOST);
+        return mustWrap(buildSimpleQuery(path, value));
     }
 
-    private static Map<String, Object> notEqualsFilter(String path, String value) {
-        return equalsFilter(path, value, true);
+    private Map<String, Object> esNotEquals(String path, String value) {
+        return mustNotWrap(this.value instanceof Resource
+                ? buildTermQuery(path, value)
+                : buildSimpleQuery(path, value));
     }
 
-    private static Map<String, Object> equalsFilter(String path, String value, boolean negate) {
-        var clause = new HashMap<>();
-        boolean isSimple = ESQuery.isSimple(value);
-        String queryMode = isSimple ? "simple_query_string" : "query_string";
-        var sq = new HashMap<>();
-        sq.put("query", isSimple ? value : ESQuery.escapeNonSimpleQueryString(value));
-        sq.put("fields", new ArrayList<>(List.of(path)));
-        sq.put("default_operator", "AND");
-        clause.put(queryMode, sq);
-        return negate ? filterWrap(mustNotWrap(clause)) : filterWrap(clause);
-    }
-
-    private static Map<String, Object> rangeFilter(String path, String value, String key) {
+    private static Map<String, Object> esRangeFilter(String path, String value, String key) {
         return filterWrap(rangeWrap(Map.of(path, Map.of(key, value))));
     }
 
@@ -279,5 +284,19 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
     private static Map<String, Object> rangeWrap(Map<?, ?> m) {
         return Map.of("range", m);
+    }
+
+    private static Map<String, Object> buildSimpleQuery(String field, String value) {
+        boolean isSimple = ESQuery.isSimple(value);
+        String queryMode = isSimple ? "simple_query_string" : "query_string";
+        var query = new HashMap<>();
+        query.put("query", isSimple ? value : ESQuery.escapeNonSimpleQueryString(value));
+        query.put("fields", List.of(field));
+        query.put("default_operator", "AND");
+        return Map.of(queryMode, query);
+    }
+
+    private static Map<String, Object> buildTermQuery(String field, String value) {
+        return Map.of("term", Map.of(field, value));
     }
 }

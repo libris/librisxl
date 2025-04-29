@@ -4,6 +4,7 @@ import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.AppParams;
 import whelk.search2.Disambiguate;
+import whelk.search2.EsMappings;
 import whelk.search2.Filter;
 import whelk.search2.EsBoost;
 import whelk.search2.Operator;
@@ -25,7 +26,7 @@ public class QueryTree {
 
     private String asString;
 
-    public Node tree;
+    private Node tree;
 
     public QueryTree(String queryString, Disambiguate disambiguate) throws InvalidQueryException {
         if (queryString != null && !queryString.isEmpty()) {
@@ -42,12 +43,12 @@ public class QueryTree {
         return new QueryTree(tree, filtered);
     }
 
-    public Map<String, Object> toEs(JsonLd jsonLd, Function<String, Optional<String>> getNestedPath) {
-        return toEs(jsonLd, getNestedPath, List.of(), List.of());
+    public Map<String, Object> toEs(JsonLd jsonLd, EsMappings esMappings) {
+        return toEs(jsonLd, esMappings, List.of(), List.of());
     }
 
-    public Map<String, Object> toEs(JsonLd jsonLd, Function<String, Optional<String>> getNestedPath, Collection<String> boostFields, Collection<String> rulingTypes) {
-        return getFiltered().tree.expand(jsonLd, rulingTypes).toEs(getNestedPath, boostFields.isEmpty() ? EsBoost.BOOST_FIELDS : boostFields);
+    public Map<String, Object> toEs(JsonLd jsonLd, EsMappings esMappings, Collection<String> boostFields, Collection<String> rulingTypes) {
+        return getFiltered().tree.expand(jsonLd, rulingTypes).toEs(esMappings, boostFields.isEmpty() ? EsBoost.BOOST_FIELDS : boostFields);
     }
 
     private QueryTree(Node tree, QueryTree filtered) {
@@ -123,12 +124,8 @@ public class QueryTree {
         return tree == null;
     }
 
-    /**
-     * There is no freetext or all freetext nodes are "*"
-     */
-    public boolean isWild() {
-        return StreamSupport.stream(allDescendants(tree).spliterator(), false)
-                .noneMatch(n -> n.isFreeTextNode() && !((FreeText) n).isWild());
+    public Stream<Node> allDescendants() {
+        return StreamSupport.stream(allDescendants(tree).spliterator(), false);
     }
 
     public List<String> collectRulingTypes(JsonLd jsonLd) {
@@ -143,7 +140,7 @@ public class QueryTree {
     }
 
     public List<Link> collectLinks() {
-        return StreamSupport.stream(allDescendants(tree).spliterator(), false)
+        return allDescendants()
                 .map(n -> n instanceof PathValue pv && pv.value() instanceof Link l ? l : null)
                 .filter(Objects::nonNull)
                 .toList();
@@ -226,7 +223,9 @@ public class QueryTree {
     }
 
     private void removeFreeTextWildcard() {
-        _removeTopLevelNodesByCondition(n -> n.isFreeTextNode() && ((FreeText) n).isWild());
+        if (tree != null && !isWild(tree)) {
+            _removeTopLevelNodesByCondition(QueryTree::isWild);
+        }
     }
 
     private void resetString() {
@@ -305,6 +304,10 @@ public class QueryTree {
             case And and -> and.filterAndReinstantiate(Predicate.not(p));
             default -> p.test(tree) ? null : tree;
         };
+    }
+
+    private static boolean isWild(Node node) {
+        return node instanceof FreeText ft && ft.isWild();
     }
 
     private static Iterable<Node> allDescendants(Node node) {
@@ -390,12 +393,7 @@ public class QueryTree {
     }
 
     private boolean containsTypeNode() {
-        return containsTypeNode(tree);
-    }
-
-    private static boolean containsTypeNode(Node tree) {
-        return StreamSupport.stream(allDescendants(tree).spliterator(), false)
-                .anyMatch(Node::isTypeNode);
+        return allDescendants().anyMatch(Node::isTypeNode);
     }
 
     private void _applyObjectFilter(String object) {
