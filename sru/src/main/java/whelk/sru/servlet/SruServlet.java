@@ -116,7 +116,6 @@ public class SruServlet extends HttpServlet {
                 writer.writeEndElement(); // recordPacking
 
                 writer.writeStartElement("recordSchema");
-                // This is in imitation of the old implementation. Perhaps it should really be http://www.loc.gov/MARC21/slim ? *shrug*
                 writer.writeCharacters("info:srw/schema/1/marcxml-v1.1");
                 writer.writeEndElement(); // recordSchema
 
