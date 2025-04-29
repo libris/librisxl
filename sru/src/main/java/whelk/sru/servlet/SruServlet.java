@@ -9,7 +9,6 @@ import whelk.Whelk;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.*;
-import whelk.search2.querytree.QueryTree;
 import whelk.util.WhelkFactory;
 
 import javax.servlet.http.HttpServlet;
@@ -44,11 +43,13 @@ public class SruServlet extends HttpServlet {
         Map<String, String[]> parameters = req.getParameterMap();
 
         if ( !parameters.containsKey("operation") || !parameters.containsKey("query") ) {
-            res.sendError(400); // DEAL WITH IN A BETTER WAY
+            logger.debug("Bad SRU query: " + parameters);
+            res.sendError(400);
         }
 
         if ( parameters.get("operation").length != 1 || !parameters.get("operation")[0].equals("searchRetrieve") ) {
-            res.sendError(400); // DEAL WITH IN A BETTER WAY
+            logger.debug("Bad SRU query (operation/searchRetrieve expected): " + parameters);
+            res.sendError(400);
         }
 
         String queryString = parameters.get("query")[0];
