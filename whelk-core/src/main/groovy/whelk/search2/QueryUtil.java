@@ -25,10 +25,14 @@ public class QueryUtil {
 
     public static String quoteIfPhraseOrContainsSpecialSymbol(String s) {
         // TODO: Don't hardcode. Keep quotes in parsing instead of requoting?
-        return !isQuoted(s) && s.matches(".*(>=|<=|[=!~<>(): ]).*") ? "\"" + s + "\"" : s;
+        return !isQuoted(s) && s.matches(".*(>=|<=|[=!~<>(): ]).*") ? quote(s) : s;
     }
 
-    private static boolean isQuoted(String s) {
+    public static String quote(String s) {
+        return "\"" + s + "\"";
+    }
+
+    public static boolean isQuoted(String s) {
         return s.matches("\".+\"");
     }
 

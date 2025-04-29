@@ -14,8 +14,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static whelk.search2.QueryUtil.isQuoted;
 import static whelk.search2.QueryUtil.makeUpLink;
 import static whelk.search2.QueryUtil.mustNotWrap;
+import static whelk.search2.QueryUtil.quote;
 import static whelk.search2.QueryUtil.shouldWrap;
 import static whelk.search2.Operator.EQUALS;
 
@@ -58,12 +60,10 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
             }
         }
 
-        List<Map<String, Object>> queries = new ArrayList<>();
-
-        if (functionBoostFields.size() != basicBoostFields.size()) {
-            queries.add(buildBasicBoostQuery(queryMode, queryString, basicBoostFields, functionBoostFields));
+        var queries = buildQueries(queryMode, queryString, basicBoostFields, functionBoostFields);
+        if (!isQuoted(queryString) && isMultiWord(queryString)) {
+            queries.addAll(buildQueries(queryMode, quote(queryString), basicBoostFields, functionBoostFields));
         }
-        queries.addAll(buildFunctionBoostQueries(queryMode, queryString, basicBoostFields, functionBoostFields));
 
         return wrap(queries.size() == 1 ? queries.getFirst() : shouldWrap(queries));
     }
@@ -119,6 +119,10 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
         return operator == EQUALS && Operator.WILDCARD.equals(value);
     }
 
+    private boolean isMultiWord(String s) {
+        return s.matches(".*\\S\\s+\\S.*");
+    }
+
     private Map<String, Object> wrap(Map<String, Object> query) {
         if (operator == Operator.EQUALS) {
             return query;
@@ -127,6 +131,17 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
             return mustNotWrap(query);
         }
         throw new RuntimeException("Invalid operator"); // Not reachable
+    }
+
+    private List<Map<String, Object>> buildQueries(String queryMode, String queryString, Map<String, Float> basicBoostFields, Map<String, String> functionBoostFields) {
+        List<Map<String, Object>> queries = new ArrayList<>();
+
+        if (functionBoostFields.size() != basicBoostFields.size()) {
+            queries.add(buildBasicBoostQuery(queryMode, queryString, basicBoostFields, functionBoostFields));
+        }
+        queries.addAll(buildFunctionBoostQueries(queryMode, queryString, basicBoostFields, functionBoostFields));
+
+        return queries;
     }
 
     private Map<String, Object> buildBasicBoostQuery(String queryMode, String queryString, Map<String, Float> basicBoostFields, Map<String, String> functionBoostFields) {
