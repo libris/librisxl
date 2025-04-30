@@ -65,6 +65,7 @@ public class SruServlet extends HttpServlet {
             HashMap<String, String[]> paramsAsIfSearch = new HashMap<>();
             String[] q = new String[]{instanceOnlyQueryString};
             paramsAsIfSearch.put("_q", q);
+            paramsAsIfSearch.put("_stats", new String[] { "false" }); // don't need facets
             QueryParams qp = new QueryParams(paramsAsIfSearch);
             AppParams ap = new AppParams(new HashMap<>(), qp);
             Query query = new Query(qp, ap, vocabMappings, esSettings, whelk);
