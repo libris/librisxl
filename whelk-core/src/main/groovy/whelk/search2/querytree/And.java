@@ -1,5 +1,6 @@
 package whelk.search2.querytree;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -96,9 +97,10 @@ public final class And extends Group {
     }
 
     public Node add(Node node) {
-        List<Node> newChildren = Stream.concat(children.stream(), node instanceof And ? node.children().stream() : Stream.of(node))
-                .distinct()
-                .toList();
+        List<Node> newChildren = new ArrayList<>(children);
+        (node instanceof And ? node.children().stream() : Stream.of(node))
+                .filter(Predicate.not(children::contains))
+                .forEach(newChildren::add);
         return new And(newChildren);
     }
 
