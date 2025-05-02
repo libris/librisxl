@@ -2,27 +2,27 @@
 set -euo pipefail
 
 BASEPATH=$1
-CONTEXT=$(dirname $0)/../../../../definitions/build/sys/context/kbv.jsonld
+CONTEXTPATH=$2
+echo ${BASEPATH}-instances.jsonl.gz
 
 skiprecords() {
   awk -v RS=$'\n\n' -v ORS=$'\n\n' '$0 !~ "a :Record"'
 }
 
 (
-  zcat ${BASEPATH}-instances.jsonl.gz | trld -indjson -c $CONTEXT -ottl
-  zcat ${BASEPATH}-works.jsonl.gz | trld -indjson -c $CONTEXT -ottl
-) | skiprecords > /tmp/datain.ttl
+  gzcat ${BASEPATH}-instances.jsonl.gz | trld -indjson -c $CONTEXTPATH -ottl
+  gzcat ${BASEPATH}-works.jsonl.gz | trld -indjson -c $CONTEXTPATH -ottl
+) > ${BASEPATH}-datain.ttl
 (
-  cat $BASEPATH-NORMALIZED.jsonl | trld -indjson -c $CONTEXT -ottl
-) | skiprecords > /tmp/normout.ttl
+  cat ${BASEPATH}-NORMALIZED.jsonl | trld -indjson -c $CONTEXTPATH -ottl
+)  > ${BASEPATH}-normout.ttl
 
-diffld -b /tmp/datain.ttl /tmp/normout.ttl -ottl |
+diffld -b ${BASEPATH}-datain.ttl ${BASEPATH}-normout.ttl -ottl |
   sed '
-    s! {| :addedIn </tmp/datain> |}!!g
-    s! :addedIn </tmp/datain> ;!!g
+    s! {| :addedIn <qa-datain> |}!!g
+    s! :addedIn <qa-datain> ;!!g
     s/:issuance\(Type\)\? "\(\w\+\)"/:issuance\1 :\2/
     s/"\(marc:[^"]\+\)"/\1/
-    s|</tmp/normout>|<#typenormalization>|
+    s|<qa-normout>|<#typenormalization>|
   ' |
-  skiprecords |
-  cat - > /tmp/diff.ttl
+  cat - > ${BASEPATH}-diff.ttl
