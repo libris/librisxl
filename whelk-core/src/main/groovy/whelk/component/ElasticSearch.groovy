@@ -53,8 +53,6 @@ class ElasticSearch {
     private boolean isPitApiAvailable = false
     private static final int ES_LOG_MIN_DURATION = 2000 // Only log queries taking at least this amount of milliseconds
 
-    private final Queue<Runnable> indexingRetryQueue = new LinkedBlockingQueue<>()
-
     private static final class Lenses {
         public static final DerivedLens CARD_ONLY = new DerivedLens(
                 FresnelUtil.LensGroupName.Card,
@@ -99,16 +97,6 @@ class ElasticSearch {
 
         client = ElasticClient.withDefaultHttpClient(elasticHosts, elasticUser, elasticPassword)
         bulkClient = ElasticClient.withBulkHttpClient(elasticHosts, elasticUser, elasticPassword)
-
-        new Timer("ElasticIndexingRetries", true).schedule(new TimerTask() {
-            void run() {
-                indexingRetryQueue.size().times {
-                    Runnable entry = indexingRetryQueue.poll()
-                    if (entry != null)
-                        entry.run()
-                }
-            }
-        }, 60*1000, 10*1000)
         
         initSettings()
     }
@@ -280,7 +268,7 @@ class ElasticSearch {
                 int docsCount = docs.count{it}
                 int numFailed = numFailedDueToDocError + numFailedDueToESError
                 if (numFailed) {
-                    log.warn("Tried bulk indexing ${docsCount} docs: ${docsCount - numFailed} succeeded, ${numFailed} failed " +
+                    log.error("Tried bulk indexing ${docsCount} docs: ${docsCount - numFailed} succeeded, ${numFailed} failed " +
                             "(${numFailedDueToDocError} due to document error, ${numFailedDueToESError} due to ES error). Took ${responseMap.took} ms")
                     if (numFailedDueToESError) {
                         throw new UnexpectedHttpStatusException("Failed indexing documents due to ES error", 500)
@@ -294,21 +282,6 @@ class ElasticSearch {
         }
     }
 
-    void bulkIndexWithRetry(Collection<String> ids, Whelk whelk) {
-        Collection<Document> docs = whelk.bulkLoad(ids).values()
-        try {
-            bulkIndex(docs, whelk)
-        } catch (Exception e) {
-            if (!isBadRequest(e)) {
-                log.info("Failed to index batch ${ids} in elastic, placing in retry queue: $e", e)
-                indexingRetryQueue.add({ -> bulkIndexWithRetry(ids, whelk) })
-            }
-            else {
-                log.error("Failed to index ${ids} in elastic: $e", e)
-            }
-        }
-    }
-
     String createActionRow(Document doc) {
         def action = ["index" : [ "_index" : indexName,
                                   "_id" : toElasticId(doc.getShortId()) ]]
@@ -316,8 +289,6 @@ class ElasticSearch {
     }
 
     void index(Document doc, Whelk whelk) {
-        // The justification for this uncomfortable catch-all, is that an index-failure must raise an alert (log entry)
-        // _internally_ but be otherwise invisible to clients (If postgres writing was ok, the save is considered ok).
         try {
             String response = client.performRequest(
                     'PUT',
@@ -328,25 +299,24 @@ class ElasticSearch {
                 log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/_doc/${responseMap['_id']} as version ${responseMap['_version']}")
             }
         } catch (Exception e) {
-            if (!isBadRequest(e)) {
-                log.info("Failed to index ${doc.getShortId()} in elastic, placing in retry queue: $e", e)
-                indexingRetryQueue.add({ -> index(doc, whelk) })
-            }
-            else {
-                log.error("Failed to index ${doc.getShortId()} in elastic: $e", e)
+            if (isBadRequest(e)) {
+                // These errors are caught and ignored (but logged) to avoid blocking further indexing.
+                log.error("Failed to index ${doc.getShortId()} in elastic: $e ACTION REQUIRED TO FIX THIS (it shouldn't happen), or the index will remain incomplete.", e)
+            } else {
+                throw e
             }
         }
     }
 
-    void incrementReverseLinks(String shortId, String relation) {
-        updateReverseLinkCounter(shortId, relation, 1)
+    void incrementReverseLinks(String shortId, String relation, Whelk whelk) {
+        updateReverseLinkCounter(shortId, relation, whelk, 1)
     }
 
-    void decrementReverseLinks(String shortId, String relation) {
-        updateReverseLinkCounter(shortId, relation, -1)
+    void decrementReverseLinks(String shortId, String relation, Whelk whelk) {
+        updateReverseLinkCounter(shortId, relation, whelk, -1)
     }
 
-    private void updateReverseLinkCounter(String shortId, String relation, int deltaCount) {
+    private void updateReverseLinkCounter(String shortId, String relation, Whelk whelk, int deltaCount) {
         // An indexed document will always have reverseLinks.totalItems set to an integer,
         // and reverseLinks.totalItemsByRelation set to a map, but reverseLinks.totalItemsByRelation['foo']
         // doesn't necessarily exist at this time; hence the null check before trying to update the link counter.
@@ -366,19 +336,24 @@ class ElasticSearch {
                     'POST',
                     "/${indexName}/_update/${toElasticId(shortId)}",
                     body)
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             if (isBadRequest(e)) {
-                log.warn("Failed to update reverse link counter ($deltaCount) for $shortId: $e", e)
+                log.error("Failed to update reverse link counter ($deltaCount) for $shortId: $e ACTION REQUIRED or link counters will be WRONG. This shouldn't happen.", e)
             }
             else if (isNotFound(e)) {
-                // OK. All dependers must be removed before the dependee in lddb. But the index update can happen
-                // in any order, so the dependee might already be gone when trying to decrement the counter.
-                log.info("Could not update reverse link counter ($deltaCount) for $shortId: $e, it does not exist", e)
+                var doc = whelk.getDocument(shortId)
+                if (!doc) {
+                    log.error("Was told to update reverse link counter for an id that doesn't exist: $shortId")
+                } else if (!doc.deleted) {
+                    // The document should exist in the index but wasn't found. This can be because it has just been
+                    // added but the ES index refresh hasn't happened yet. Index the whole doc and the counters will be
+                    // correct
+                    log.info("Tried to update reverse link counter for $shortId but could't find it. Indexing the whole doc.")
+                    index(doc, whelk)
+                }
             }
             else {
-                log.warn("Failed to update reverse link counter ($deltaCount) for $shortId: $e, placing in retry queue.", e)
-                indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, relation, deltaCount) })
+                throw e
             }
         }
     }
@@ -398,20 +373,17 @@ class ElasticSearch {
                 log.debug("Response: ${responseMap.deleted} of ${responseMap.total} objects deleted")
             }
             if (responseMap.deleted == 0) {
-                log.warn("Record with id $identifier was not deleted from the Elasticsearch index.")
+                log.error("Record with id $identifier was not deleted from the Elasticsearch index.")
             }
-        }
-        catch(Exception e) {
+        } catch (Exception e) {
+            // warn and ignore
             if (isBadRequest(e)) {
                 log.warn("Failed to delete $identifier from index: $e", e)
             }
             else if (isNotFound(e)) {
                 log.warn("Tried to delete $identifier from index, but it was not there: $e", e)
             }
-            else {
-                log.warn("Failed to delete $identifier from index: $e, placing in retry queue.", e)
-                indexingRetryQueue.add({ -> remove(identifier) })
-            }
+            else throw e
         }
     }
 

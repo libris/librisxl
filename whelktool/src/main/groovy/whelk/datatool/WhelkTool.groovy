@@ -74,7 +74,6 @@ class WhelkTool {
 
     Counter counter = new Counter()
 
-    boolean skipIndex
     boolean dryRun
     boolean noThreads = true
     int numThreads = -1
@@ -729,7 +728,6 @@ class WhelkTool {
     }
 
     public void run() {
-        whelk.setSkipIndex(skipIndex)
         if (allowIdRemoval) {
             whelk.storage.doVerifyDocumentIdRetention = false
         }
@@ -744,7 +742,6 @@ class WhelkTool {
         }
         log "Using script: $script"
         log "Using report dir: $reportsDir"
-        if (skipIndex) log "  skipIndex"
         if (dryRun) log "  dryRun"
         if (stepWise) log "  stepWise"
         if (noThreads) log "  noThreads"
@@ -810,7 +807,6 @@ class WhelkTool {
         def cli = new CliBuilder(usage: 'whelktool [options] <SCRIPT>')
         cli.h(longOpt: 'help', 'Print this help message and exit.')
         cli.r(longOpt: 'report', args: 1, argName: 'REPORT-DIR', 'Directory where reports are written (defaults to "reports").')
-        cli.I(longOpt: 'skip-index', 'Do not index any changes, only write to storage.')
         cli.d(longOpt: 'dry-run', 'Do not save any modifications.')
         cli.T(longOpt: 'no-threads', 'Do not use threads to parallellize batch processing.')
         cli.t(longOpt: 'num-threads', args: 1, argName: 'N', "Override default number of threads (${defaultNumThreads()}).")
@@ -854,7 +850,6 @@ class WhelkTool {
         }
 
         def tool = new WhelkTool(preExistingWhelk, script, reportsDir, statsNumIds)
-        tool.skipIndex = options.I
         tool.dryRun = options.d
         tool.stepWise = options.s
         tool.noThreads = options.T
