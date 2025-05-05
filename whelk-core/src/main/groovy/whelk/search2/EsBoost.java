@@ -30,7 +30,10 @@ public class EsBoost {
 
     public static List<ScoreFunction> SCORE_FUNCTIONS = List.of(
             new FieldValueFactor("reverseLinks.totalItemsByRelation.instanceOf", 10, "ln1p", 0, 15),
-            new FieldValueFactor("reverseLinks.totalItemsByRelation.itemOf.instanceOf", 10, "ln1p", 0, 10)
+            new FieldValueFactor("reverseLinks.totalItemsByRelation.itemOf.instanceOf", 10, "ln1p", 0, 10),
+            new FieldValueFactor("reverseLinks.totalItemsByRelation.instanceOf.contribution.agent", 10, "ln1p", 0, 10),
+            new FieldValueFactor("reverseLinks.totalItemsByRelation.instanceOf.subject", 10, "ln1p", 0, 10),
+            new FieldValueFactor("reverseLinks.totalItemsByRelation.instanceOf.genreForm", 10, "ln1p", 0, 10)
 //            new MatchingFieldValue("language.@id", "https://id.kb.se/language/swe", 50)
     );
 
