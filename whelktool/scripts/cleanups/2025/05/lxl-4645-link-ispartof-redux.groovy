@@ -9,6 +9,7 @@ String where = """
 """
 
 skipped = getReportWriter("skipped")
+def whelk = getWhelk()
 
 selectBySqlWhere(where) { doc ->
     def source_thing = doc.graph[1]
@@ -96,6 +97,12 @@ selectBySqlWhere(where) { doc ->
     if (properUri != null) {
         def targetDoc = whelk.storage.loadDocumentByMainId(properUri)
         def targetThing = targetDoc.data["@graph"][1]
+
+        // Sanity check
+        if (doc.doc.getShortId() == targetDoc.getShortId()) {
+            _logSkip("Source and target are equal! NOPEing out.")
+            return
+        }
 
         if (!(whelk.jsonld.isSubClassOf(targetThing["@type"], "Instance"))) {
             _logSkip("@type not Instance (or subclass thereof) in target ${properUri}: ${targetThing['@type']}")
