@@ -26,7 +26,7 @@ selectBySqlWhere(where) { doc ->
         return
     }
 
-    if (isPartOf["@type"] != "Instance") {
+    if (!(whelk.jsonld.isSubClassOf(isPartOf["@type"], "Instance"))) {
         _logSkip("isPartOf.@type not Instance: ${isPartOf['@type']}")
         return
     }
@@ -95,6 +95,11 @@ selectBySqlWhere(where) { doc ->
     if (properUri != null) {
         def targetDoc = whelk.storage.loadDocumentByMainId(properUri)
         def targetThing = targetDoc.data["@graph"][1]
+
+        if (!(whelk.jsonld.isSubClassOf(targetThing["@type"], "Instance"))) {
+            _logSkip("@type not Instance (or subclass thereof) in target ${properUri}: ${targetThing['@type']}")
+            return
+        }
 
         if (targetThing["@type"] != "Instance") {
             _logSkip("@type not Instance in target ${properUri}: ${targetThing['@type']}")
