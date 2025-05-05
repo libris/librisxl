@@ -12,6 +12,7 @@ import whelk.component.PostgreSQLComponent.UpdateAgent
 import whelk.component.SparqlQueryClient
 import whelk.component.SparqlUpdater
 import whelk.converter.marc.MarcFrameConverter
+import whelk.exception.LinkValidationException
 import whelk.exception.StorageCreateFailedException
 import whelk.filter.LanguageLinker
 import whelk.exception.WhelkException
@@ -28,7 +29,6 @@ import java.time.Instant
 import java.time.ZoneId
 
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
-import static whelk.exception.LinkValidationException.IncomingLinksException
 
 /**
  * The Whelk is the root component of the XL system.
@@ -577,10 +577,16 @@ class Whelk {
     }
 
     private void assertNoDependers(Document doc) {
-        boolean isDependedUpon = storage.getIncomingLinkCountByIdAndRelation(doc.getShortId())
-                .any { relation, _ -> !JsonLd.isWeak(relation) }
-        if (isDependedUpon) {
-            throw new IncomingLinksException("Record is referenced by other records")
+        Set<String> dependingRelations = storage.getIncomingLinkCountByIdAndRelation(doc.getShortId()).keySet()
+                .findAll { !JsonLd.isWeak(it) }
+        if (!dependingRelations.isEmpty()) {
+            Set<String> allDependers = dependingRelations.collect { storage.getDependersOfType(doc.getShortId(), it) }
+                    .flatten()
+                    .toSet() as Set<String>
+            String example = allDependers.first()
+            int numDependers = allDependers.size()
+            String msg = "Record is referenced by $example${numDependers > 1 ? " and ${numDependers - 1} other records" : "" }."
+            throw new LinkValidationException(msg)
         }
     }
 
