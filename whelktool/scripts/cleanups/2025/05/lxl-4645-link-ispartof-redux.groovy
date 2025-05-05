@@ -16,6 +16,7 @@ selectBySqlWhere(where) { doc ->
 
     List isPartOfs = asList(source_thing["isPartOf"])
     if (isPartOfs.size() != 1) {
+        _logSkip("more than one isPartOf")
         return
     }
 
@@ -52,7 +53,7 @@ selectBySqlWhere(where) { doc ->
     }
 
     if (!isPartOf["identifiedBy"][0].keySet().equals(["@type", "value"].toSet())) {
-        _logSkip("identifiedBy has something other than [@type,mainTitle]: ${isPartOf["identifiedBy"][0].keySet()}")
+        _logSkip("identifiedBy has something other than [@type,value]: ${isPartOf["identifiedBy"][0].keySet()}")
         return
     }
 
@@ -124,7 +125,7 @@ selectBySqlWhere(where) { doc ->
 
         List targetIdentifiers = getAtPath(targetThing, ['identifiedBy', '*'], [])
 
-        List filteredIdentifiers = targetIdentifiers.findAll { it["@type"] == sourceIdentifiedByType }
+        List filteredIdentifiers = targetIdentifiers.findAll { it.containsKey("@type") && it.containsKey("value") && it["@type"] == sourceIdentifiedByType }
         if (filteredIdentifiers.size() == 0) {
             _logSkip("no identifier with type ${sourceIdentifiedByType} in target ${properUri}, probably LibrisIIINumber")
             return
