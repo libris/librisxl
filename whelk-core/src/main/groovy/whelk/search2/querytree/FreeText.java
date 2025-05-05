@@ -156,6 +156,8 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
         Map<String, List<String>> fieldsGroupedByFunction = new LinkedHashMap<>();
         functionBoostFields.forEach((field, function) -> fieldsGroupedByFunction.computeIfAbsent(function, v -> new ArrayList<>()).add(field));
 
+        String lengthNormMultiplier = isQuoted(queryString) ? queryString.split("\\s+").length + " * " : "";
+
         fieldsGroupedByFunction.forEach((function, fields) -> {
             Map<String, Float> boostFields = new LinkedHashMap<>();
             basicBoostFields.forEach((f, boost) -> boostFields.put(f, fields.contains(f) ? boost : 0));
@@ -163,7 +165,7 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
             Map<String, Object> scriptScoreQuery = Map.of(
                     "script_score", Map.of(
                             "query", buildSimpleQuery(queryMode, queryString, boostFields),
-                            "script", Map.of("source", "_score * " + function)));
+                            "script", Map.of("source", "_score * " + lengthNormMultiplier + function)));
 
             queries.add(scriptScoreQuery);
         });
