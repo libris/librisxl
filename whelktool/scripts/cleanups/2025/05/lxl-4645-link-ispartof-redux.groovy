@@ -102,11 +102,6 @@ selectBySqlWhere(where) { doc ->
             return
         }
 
-        if (targetThing["@type"] != "Instance") {
-            _logSkip("@type not Instance in target ${properUri}: ${targetThing['@type']}")
-            return
-        }
-
         List targetTitles = []
         targetThing.hasTitle.each {
             if (it["@type"] == "Title" && it.mainTitle) {
