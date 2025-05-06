@@ -20,11 +20,17 @@ selectBySqlWhere(where) { doc ->
         _logSkip("more than one isPartOf")
         return
     }
-
     def isPartOf = isPartOfs[0]
 
-    if (!isPartOf.keySet().equals(["@type", "hasTitle", "describedBy", "identifiedBy"].toSet())) {
-        _logSkip("isPartOf contains something other than [@type,hasTitle,describedBy,identifiedBy]: ${isPartOf.keySet()}")
+    def validSets = [
+        ["@type", "describedBy"] as Set,
+        ["@type", "describedBy", "identifiedBy"] as Set,
+        ["@type", "describedBy", "hasTitle"] as Set,
+        ["@type", "describedBy", "hasTitle", "identifiedBy"] as Set,
+    ]
+
+    if (!(validSets.any { it.equals(isPartOf.keySet()) })) {
+        _logSkip("too much stuff in isPartOf: ${isPartOf.keySet()}")
         return
     }
 
@@ -38,40 +44,9 @@ selectBySqlWhere(where) { doc ->
         return
     }
 
-    if (isPartOf["identifiedBy"].size() != 1) {
-        _logSkip("more than one identifiedBy: ${isPartOf.identifiedBy}")
-        return
-    }
-
-    if (isPartOf["hasTitle"].size() != 1) {
-        _logSkip("more than one hasTitle: ${isPartOf.hasTitle}")
-        return
-    }
-
-    if (!isPartOf["hasTitle"][0].keySet().equals(["@type", "mainTitle"].toSet())) {
-        _logSkip("hasTitle[0] has something other than @type and mainTitle: ${isPartOf["hasTitle"][0].keySet()}")
-        return
-    }
-
-    if (!isPartOf["identifiedBy"][0].keySet().equals(["@type", "value"].toSet())) {
-        _logSkip("identifiedBy has something other than [@type,value]: ${isPartOf["identifiedBy"][0].keySet()}")
-        return
-    }
-
-    if (!(isPartOf["identifiedBy"][0]["@type"] in ["ISSN", "ISBN"])) {
-        _logSkip("identifiedBy.@type is neither ISSN nor ISBN; found ${isPartOf['identifiedBy'][0]['@type']}")
-        return
-    }
-    String sourceIdentifiedByType = isPartOf["identifiedBy"][0]["@type"]
-    String sourceIdentifiedByValue = isPartOf["identifiedBy"][0]["value"]
-    // Some docs have the ISSN value prefixed with "ISSN "...
-    if (sourceIdentifiedByValue.startsWith("ISSN ")) {
-        sourceIdentifiedByValue = sourceIdentifiedByValue.substring("ISSN ".size())
-    }
-
     def describedBy = isPartOf["describedBy"][0]
     if (!(describedBy instanceof Map && describedBy.keySet().equals(["@type", "controlNumber"].toSet()))) {
-        _logSkip("describedBy contains something other than [@type,controlNumber]: ${describedBy.keySet()}")
+        _logSkip("describedBy contains something other than [@type, controlNumber]: ${describedBy.keySet()}")
         return
     }
     if (!(describedBy["controlNumber"] instanceof String)) {
@@ -84,47 +59,89 @@ selectBySqlWhere(where) { doc ->
         return
     }
 
-    if (!(isPartOf["hasTitle"][0]["mainTitle"] instanceof String)) {
-        _logSkip("hasTitle.mainTitle not a string")
+    def sourceTitle
+    if (isPartOf.containsKey("hasTitle")) {
+        if (isPartOf["hasTitle"].size() != 1) {
+            _logSkip("more than one hasTitle: ${isPartOf.hasTitle}")
+            return
+        }
+
+        if (!isPartOf["hasTitle"][0].keySet().equals(["@type", "mainTitle"].toSet())) {
+            _logSkip("hasTitle[0] has something other than [@type, mainTitle]: ${isPartOf["hasTitle"][0].keySet()}")
+            return
+        }
+
+        if (!(isPartOf["hasTitle"][0]["mainTitle"] instanceof String)) {
+            _logSkip("hasTitle.mainTitle not a string")
+            return
+        }
+
+        sourceTitle = isPartOf["hasTitle"][0]["mainTitle"].trim()
+        if (sourceTitle == "") {
+            _logSkip("empty mainTitle")
+            return
+        }
+    }
+
+    String sourceIdentifiedByType
+    String sourceIdentifiedByValue
+    if (isPartOf.containsKey("identifiedBy")) {
+        if (isPartOf["identifiedBy"].size() != 1) {
+            _logSkip("more than one identifiedBy: ${isPartOf.identifiedBy}")
+            return
+        }
+
+        if (!isPartOf["identifiedBy"][0].keySet().equals(["@type", "value"].toSet())) {
+            _logSkip("identifiedBy has something other than [@type, value]: ${isPartOf["identifiedBy"][0].keySet()}")
+            return
+        }
+
+        if (!(isPartOf["identifiedBy"][0]["@type"] in ["ISSN", "ISBN"])) {
+            _logSkip("identifiedBy.@type is neither ISSN nor ISBN; found ${isPartOf['identifiedBy'][0]['@type']}")
+            return
+        }
+        sourceIdentifiedByType = isPartOf["identifiedBy"][0]["@type"]
+        sourceIdentifiedByValue = isPartOf["identifiedBy"][0]["value"]
+        // Some docs have the ISSN value prefixed with "ISSN "...
+        if (sourceIdentifiedByValue.startsWith("ISSN ")) {
+            sourceIdentifiedByValue = sourceIdentifiedByValue.substring("ISSN ".size())
+        }
+        if (sourceIdentifiedByValue.startsWith("ISBN ")) {
+            sourceIdentifiedByValue = sourceIdentifiedByValue.substring("ISBN ".size())
+        }
+        if (sourceIdentifiedByType == "ISBN") {
+            sourceIdentifiedByValue = sourceIdentifiedByValue.replace("-", "")
+        }
+    }
+
+    String properUri = findMainEntityId(sanitize(describedBy["controlNumber"]))
+    if (properUri == null) {
+        _logSkip("couldn't find target")
         return
     }
-    def sourceTitle = isPartOf["hasTitle"][0]["mainTitle"].trim()
-    if (sourceTitle == "") {
-        _logSkip("Skipping because of empty sourceTitle")
-        return 
+    def targetDoc = whelk.storage.loadDocumentByMainId(properUri)
+    def targetThing = targetDoc.data["@graph"][1]
+
+    // Sanity check
+    if (doc.doc.getShortId() == targetDoc.getShortId()) {
+        _logSkip("Source and target are equal! NOPEing out.")
+        return
     }
-    String properUri = findMainEntityId(sanitize(describedBy["controlNumber"]))
-    if (properUri != null) {
-        def targetDoc = whelk.storage.loadDocumentByMainId(properUri)
-        def targetThing = targetDoc.data["@graph"][1]
 
-        // Sanity check
-        if (doc.doc.getShortId() == targetDoc.getShortId()) {
-            _logSkip("Source and target are equal! NOPEing out.")
+    if (!(whelk.jsonld.isSubClassOf(targetThing["@type"], "Instance"))) {
+        _logSkip("@type not Instance (or subclass thereof) in target ${properUri}: ${targetThing['@type']}")
+        return
+    }
+
+    if (isPartOf.containsKey("hasTitle")) {
+        def (isSameTitle, titleResult) = isSeeminglySameTitle(sourceTitle, targetThing.hasTitle)
+        if (!isSameTitle) {
+            _logSkip("title mismatch: source: ${titleResult.source}, target: ${titleResult.target}, words not in target: ${titleResult.notInTarget}. Target ${properUri}")
             return
         }
+    }
 
-        if (!(whelk.jsonld.isSubClassOf(targetThing["@type"], "Instance"))) {
-            _logSkip("@type not Instance (or subclass thereof) in target ${properUri}: ${targetThing['@type']}")
-            return
-        }
-
-        List targetTitles = []
-        targetThing.hasTitle.each {
-            if (it["@type"] == "Title" && it.mainTitle) {
-                targetTitles << it["mainTitle"].trim()
-            }
-            if (it["@type"] == "KeyTitle" && it.mainTitle && it.qualifier) {
-                targetTitles << "${it.mainTitle} ${it['qualifier'][0]}".trim()
-            } else if (it["@type"] == "KeyTitle" && it.mainTitle) {
-                targetTitles << it.mainTitle.trim()
-            }
-        }
-        if (!(targetTitles.any { it.equalsIgnoreCase(sourceTitle) })) {
-            _logSkip("title mismatch: '${sourceTitle}' [source] does not match mainTitle or mainTitle+qualifier ${targetTitles} in target ${properUri}")
-            return
-        }
-
+    if (isPartOf.containsKey("identifiedBy")) {
         List targetIdentifiers = getAtPath(targetThing, ['identifiedBy', '*'], [])
 
         List filteredIdentifiers = targetIdentifiers.findAll { it.containsKey("@type") && it.containsKey("value") && it["@type"] == sourceIdentifiedByType }
@@ -141,12 +158,56 @@ selectBySqlWhere(where) { doc ->
             _logSkip("identifiedBy.value mismatch: ${sourceIdentifiedByValue} in source, ${filteredIdentifiers[0]['value']} in target ${properUri}")
             return
         }
-
-        source_thing["isPartOf"][0].clear()
-        source_thing["isPartOf"][0]["@id"] = properUri
-
-        doc.scheduleSave()
     }
+
+    source_thing["isPartOf"][0].clear()
+    source_thing["isPartOf"][0]["@id"] = properUri
+
+    doc.scheduleSave()
+}
+
+List isSeeminglySameTitle(String sourceTitle, List targetHasTitle) {
+    boolean isMatch = false
+    List targetTitles = []
+    targetHasTitle.each {
+        if (it["@type"] == "Title") {
+            if (it.mainTitle) {
+                targetTitles << it.mainTitle
+            }
+            if (it.subtitle) {
+                targetTitles << it.subtitle
+            }
+        }
+
+        if (it["@type"] == "KeyTitle") {
+            if (it.mainTitle) {
+                targetTitles << it.mainTitle
+            }
+            if (it.qualifier) {
+                targetTitles << it.qualifier[0]
+            }
+        }
+    }
+
+    Set sourceTitleWords = extractWords(sourceTitle) as Set
+    Set targetTitleWords = new HashSet()
+    targetTitles.each { targetTitleWords.addAll(extractWords(it)) }
+
+    if (targetTitleWords.containsAll(sourceTitleWords)) {
+        isMatch = true
+    }
+
+    // TODO add looser matching?
+
+    return [
+        isMatch,
+        [
+            source: sourceTitleWords,
+            target: targetTitleWords,
+            //difference: (targetTitleWords + sourceTitleWords) - sourceTitleWords.intersect(targetTitleWords)
+            notInTarget: sourceTitleWords - targetTitleWords,
+        ]
+    ]
 }
 
 String findMainEntityId(String ctrlNumber) {
@@ -164,11 +225,6 @@ String findMainEntityId(String ctrlNumber) {
         return mainId
     }
 
-// Skipping the following for now to focus on the really simple stuff.
-// There are targets with only LibrisIIINumber in their identifiedBy.
-// These we'll probably want to enrich with data from the source but that's
-// a later problem.
-/*
     def byLibris3Ids = []
     // IMPORTANT: This REQUIRES an index on '@graph[0]identifiedBy*.value'.
     // If that is removed, this slows to a GLACIAL crawl!
@@ -183,10 +239,13 @@ String findMainEntityId(String ctrlNumber) {
     if (byLibris3Ids.size() == 1) {
         return byLibris3Ids[0]
     }
-*/
     return null
 }
 
 static String sanitize(String value) {
     return value.replaceAll(/\9/, '')
+}
+
+static Set extractWords(String title) {
+    return title.replaceAll(/[^a-zA-Z0-9 ]/, "").toLowerCase().split('\\s+')
 }
