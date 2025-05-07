@@ -4,6 +4,8 @@
  * See https://kbse.atlassian.net/browse/LXL-4645
  */
 
+import whelk.util.Unicode
+
 String where = """
     collection = 'bib' and deleted = false and data#>>'{@graph,1,isPartOf}' LIKE '%"controlNumber":%'
 """
@@ -247,5 +249,5 @@ static String sanitize(String value) {
 }
 
 static Set extractWords(String title) {
-    return title.replaceAll(/[^a-zA-Z0-9 ]/, "").toLowerCase().split('\\s+')
+    return Unicode.removeAllDiacritics(title).replaceAll(/[^a-zA-Z0-9 ]/, "").toLowerCase().split('\\s+')
 }
