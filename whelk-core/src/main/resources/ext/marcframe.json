@@ -313,6 +313,21 @@
         "tokenMap": "BibLevelType",
         "property": "@type"
       },
+      "[7-issuance]": {
+        "aboutEntity": "?thing",
+        "tokenMap": {
+          "9": "SingleUnit",
+          "a": "SingleUnit",
+          "b": "SingleUnit",
+          "c": "MultipleUnits",
+          "d": "MultipleUnits",
+          "i": "SingleUnit",
+          "m": "SingleUnit",
+          "p": "MultipleUnits",
+          "s": "MultipleUnits"
+        },
+        "property": "@issuanceType"
+      },
       "[8]": {
         "NOTE": "Type of control - # - No specified type (was marc:typeOfControl marc:TypeOfControlType-{_})",
         "ignored": true,
