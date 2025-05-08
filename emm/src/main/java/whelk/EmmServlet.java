@@ -17,6 +17,7 @@ public class EmmServlet extends CoreWhelkHttpServlet {
 
     public static final String AS2_CONTENT_TYPE = "application/activity+json";
 
+    @Override
     public void init(Whelk whelk) {
         Document contextDocument = whelk.getStorage().getDocumentByIri(whelk.getSystemContextUri());
         targetVocabMapper = new TargetVocabMapper(whelk.getJsonld(), contextDocument.data);
