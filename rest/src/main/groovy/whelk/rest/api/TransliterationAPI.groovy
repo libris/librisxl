@@ -1,9 +1,11 @@
 package whelk.rest.api
 
 import groovy.util.logging.Log4j2 as Log
+import whelk.Whelk
 import whelk.util.Romanizer
 import whelk.util.WhelkFactory
 import whelk.util.http.HttpTools
+import whelk.util.http.WhelkHttpServlet
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
@@ -12,21 +14,14 @@ import javax.servlet.http.HttpServletResponse
 import static whelk.util.Jackson.mapper
 
 @Log
-class TransliterationAPI extends HttpServlet {
+class TransliterationAPI extends WhelkHttpServlet {
 
     Romanizer romanizer
     
     @Override
-    void init() {
+    void init(Whelk whelk) {
         log.info("Starting Transliteration API")
-        getRomanizer()
-    }
-    
-    private synchronized getRomanizer() {
-        if (!romanizer) {
-            romanizer = WhelkFactory.getSingletonWhelk().getRomanizer()
-        }
-        return romanizer
+        romanizer = whelk.getRomanizer()
     }
 
     @Override
@@ -44,11 +39,11 @@ class TransliterationAPI extends HttpServlet {
         def languageTag = body["langTag"]
         def source = body["source"]
         
-        if (!getRomanizer().isMaybeRomanizable(languageTag)) {
+        if (!romanizer.isMaybeRomanizable(languageTag)) {
             log.warn("Language tag ${languageTag} not found")
             HttpTools.sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid language code")
         } else {
-            def romanized = getRomanizer().romanize(source.toString(), languageTag.toString())
+            def romanized = romanizer.romanize(source.toString(), languageTag.toString())
             HttpTools.sendResponse(response,  romanized, "application/json")
         }
     }
@@ -75,7 +70,7 @@ class TransliterationAPI extends HttpServlet {
         HttpTools.sendResponse(response, null, null, HttpServletResponse.SC_NO_CONTENT)
         
         String languageTag = request.getPathInfo().split("/", 3).last()
-        if (getRomanizer().isMaybeRomanizable(languageTag)) {
+        if (romanizer.isMaybeRomanizable(languageTag)) {
             HttpTools.sendResponse(response, null, null, HttpServletResponse.SC_NO_CONTENT)
         } else {
             log.debug("Language tag ${languageTag} not found")
