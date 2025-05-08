@@ -4,6 +4,7 @@ import whelk.Whelk;
 
 public class WhelkFactory {
     private static Whelk whelk;
+    private static Whelk coreWhelk;
 
     public static synchronized Whelk getSingletonWhelk() {
         if (whelk == null) {
@@ -11,5 +12,13 @@ public class WhelkFactory {
         }
 
         return whelk;
+    }
+
+    public static synchronized Whelk getSingletonCoreWhelk() {
+        if (coreWhelk == null) {
+            coreWhelk = Whelk.createLoadedCoreWhelk();
+        }
+
+        return coreWhelk;
     }
 }
