@@ -8,15 +8,15 @@ import whelk.converter.marc.MarcFrameConverter
 import whelk.util.Unicode
 import whelk.util.WhelkFactory
 import whelk.util.http.HttpTools
+import whelk.util.http.WhelkHttpServlet
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 @Log
-class ConverterAPI extends HttpServlet {
+class ConverterAPI extends WhelkHttpServlet {
 
-    Whelk whelk
     MarcFrameConverter marcFrameConverter
 
     ConverterAPI() {
@@ -24,10 +24,9 @@ class ConverterAPI extends HttpServlet {
     }
 
     @Override
-    void init() {
+    void init(Whelk whelk) {
         log.info("Starting converterAPI")
         if (!marcFrameConverter) {
-            whelk = WhelkFactory.getSingletonWhelk()
             marcFrameConverter = whelk.getMarcFrameConverter()
         }
         log.info("Started ...")
