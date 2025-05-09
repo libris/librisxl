@@ -2,9 +2,11 @@ package whelk.search2;
 
 import whelk.JsonLd;
 import whelk.search2.querytree.Link;
+import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Path;
 import whelk.search2.querytree.PathValue;
 import whelk.search2.querytree.Property;
+import whelk.search2.querytree.QueryTree;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,58 +26,6 @@ public class Aggs {
     }
 
     public record Bucket(String value, int count) {
-    }
-
-    public static Map<String, Object> buildAggQuery(List<AppParams.Slice> sliceList,
-                                                    JsonLd jsonLd,
-                                                    Collection<String> types,
-                                                    EsMappings esMappings) {
-        if (sliceList.isEmpty()) {
-            return Map.of(JsonLd.TYPE_KEY,
-                    Map.of("terms",
-                            Map.of("field", JsonLd.TYPE_KEY)));
-        }
-
-        Map<String, Object> query = new LinkedHashMap<>();
-
-        for (AppParams.Slice slice : sliceList) {
-            Property property = slice.getProperty(jsonLd);
-
-            if (!property.restrictions().isEmpty()) {
-                // TODO: E.g. author (combining contribution.role and contribution.agent)
-                throw new RuntimeException("Can't handle combined fields in aggs query");
-            }
-
-            new Path(property).expand(jsonLd)
-                    .getAltPaths(jsonLd, types)
-                    .forEach(path -> {
-                        Map<String, Object> aggs = path.getEsNestedStem(esMappings)
-                                .map(nestedStem -> buildNestedAggQuery(path, slice, nestedStem))
-                                .orElse(buildCoreAqqQuery(path, slice));
-                        query.put(path.fullEsSearchPath(), filterWrap(aggs, property.name()));
-                    });
-        }
-
-        return query;
-    }
-
-    private static Map<String, Object> buildCoreAqqQuery(Path path, AppParams.Slice slice) {
-        return Map.of("terms",
-                Map.of("field", path.fullEsSearchPath(),
-                        "size", slice.size(),
-                        "order", Map.of(slice.bucketSortKey(), slice.sortOrder())));
-    }
-
-    private static Map<String, Object> buildNestedAggQuery(Path path, AppParams.Slice slice, String nestedStem) {
-        return Map.of("nested", Map.of("path", nestedStem),
-                "aggs", Map.of(NESTED_AGG_NAME, buildCoreAqqQuery(path, slice)));
-    }
-
-    private static Map<String, Object> filterWrap(Map<String, Object> aggs, String property) {
-        var filter = QueryUtil.mustWrap(Collections.emptyList());
-        return Map.of("aggs", Map.of(property, aggs),
-                "filter", filter);
-
     }
 
     public static Map<String, Object> buildPAggQuery(Link object,

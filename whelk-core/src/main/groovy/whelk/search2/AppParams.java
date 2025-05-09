@@ -89,11 +89,17 @@ public class AppParams {
     }
 
     public static class Slice {
+        public enum Connective {
+            AND,
+            OR
+        }
+
         private final String propertyKey;
         private final Sort.Order sortOrder;
         private final Sort.BucketSortKey bucketSortKey;
         private final int size;
         private final boolean isRange;
+        private final Connective defaultConnective;
 
         private Property property;
 
@@ -103,6 +109,7 @@ public class AppParams {
             this.bucketSortKey = getBucketSortKey(settings);
             this.size = getSize(settings);
             this.isRange = getRangeFlag(settings);
+            this.defaultConnective = getConnective(settings);
         }
 
         public String propertyKey() {
@@ -123,6 +130,10 @@ public class AppParams {
 
         public boolean isRange() {
             return isRange;
+        }
+
+        public Connective defaultConnective() {
+            return defaultConnective;
         }
 
         public Property getProperty(JsonLd jsonLd) {
@@ -151,6 +162,12 @@ public class AppParams {
         private boolean getRangeFlag(Map<?, ?> settings) {
             return Optional.ofNullable((Boolean) settings.get("range"))
                     .orElse(false);
+        }
+
+        private Connective getConnective(Map<?, ?> settings) {
+            return Optional.ofNullable((String) settings.get("connective"))
+                    .map(Connective::valueOf)
+                    .orElse(Connective.AND);
         }
     }
 

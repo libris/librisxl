@@ -79,8 +79,12 @@ public class QueryTree {
     }
 
     public QueryTree omitNode(Node node) {
+        return omitNodes(List.of(node));
+    }
+
+    public QueryTree omitNodes(List<Node> nodes) {
         QueryTree copy = copy();
-        copy._omitNode(node);
+        nodes.forEach(copy::_omitNode);
         return copy;
     }
 
