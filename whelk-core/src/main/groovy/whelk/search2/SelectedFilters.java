@@ -11,13 +11,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
-public class SelectedObservations {
+public class SelectedFilters {
     private final Map<String, List<Node>> selectedByPropertyKey = new HashMap<>();
     private final List<Node> selectedBoolFilter = new ArrayList<>();
 
     private final Map<String, AppParams.Slice.Connective> propertyKeyToConnective = new HashMap<>();
 
-    SelectedObservations(QueryTree queryTree, AppParams appParams) {
+    SelectedFilters(QueryTree queryTree, AppParams appParams) {
         init(queryTree, appParams);
     }
 
@@ -37,17 +37,16 @@ public class SelectedObservations {
         return isSelectable(propertyKey) && selectedByPropertyKey.get(propertyKey).contains(pathValue);
     }
 
-    public AppParams.Slice.Connective getConnective(String propertyKey) {
-        return propertyKeyToConnective.get(propertyKey);
-    }
-
-    public List<Node> getAllMultiSelected() {
+    public List<List<Node>> getAllMultiSelected() {
         return selectedByPropertyKey.keySet().stream()
                 .filter(this::isMultiSelectable)
                 .map(this::getSelected)
                 .filter(Predicate.not(List::isEmpty))
-                .map(selected -> selected.size() > 1 ? new Or(selected) : selected.getFirst())
                 .toList();
+    }
+
+    public AppParams.Slice.Connective getConnective(String propertyKey) {
+        return propertyKeyToConnective.get(propertyKey);
     }
 
     private void init(QueryTree queryTree, AppParams appParams) {

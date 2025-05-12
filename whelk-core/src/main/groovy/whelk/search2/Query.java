@@ -26,11 +26,11 @@ public class Query {
     protected final ESSettings esSettings;
 
     private final Disambiguate disambiguate;
-    private final Stats stats;
     private final LinkLoader linkLoader;
-    private final Agg agg;
 
-    protected final SelectedObservations selectedObservations;
+    private SelectedFilters selectedFilters;
+    private Stats stats;
+    private Agg agg;
 
     protected Object esQueryDsl;
     protected QueryResult queryResult;
@@ -59,9 +59,11 @@ public class Query {
         this.queryTree = new QueryTree(queryParams.q, disambiguate);
         this.whelk = whelk;
         this.linkLoader = new LinkLoader();
-        this.stats = new Stats();
-        this.agg = new Agg();
-        this.selectedObservations = new SelectedObservations(queryTree, appParams);
+        if (!queryParams.skipStats) {
+            this.stats = new Stats();
+            this.agg = new Agg();
+            this.selectedFilters = new SelectedFilters(queryTree, appParams);
+        }
     }
 
     public static Query init(QueryParams queryParams, AppParams appParams, VocabMappings vocabMappings, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
@@ -82,7 +84,12 @@ public class Query {
 
     protected Object doGetEsQueryDsl() {
         queryTree.applySiteFilters(SearchMode.STANDARD_SEARCH, appParams.siteFilters);
-        return getEsQueryDsl(getEsQuery(), queryParams.skipStats ? Map.of() : getEsAggQuery());
+        if (queryParams.skipStats) {
+            return getEsQueryDsl(getEsQuery());
+        } else {
+            List<String> rulingTypes = queryTree.collectRulingTypes(whelk.getJsonld());
+            return getEsQueryDsl(getEsQuery(), getEsAggQuery(rulingTypes), getPostFilter(rulingTypes));
+        }
     }
 
     protected List<Map<String, Object>> predicateLinks() {
@@ -96,16 +103,11 @@ public class Query {
         return queryResult;
     }
 
-    protected Map<String, Object> getEsQuery(QueryTree queryTree, Collection<String> rulingTypes) {
-        var esQuery = queryTree.toEs(whelk.getJsonld(), esSettings.mappings, queryParams.boostFields, rulingTypes);
-        return addBoosts(esQuery, queryParams.esScoreFunctions);
+    protected Map<String, Object> getEsQueryDsl(Map<String, Object> query) {
+        return getEsQueryDsl(query, Map.of(), Map.of());
     }
 
-    protected Map<String, Object> getEsAggQuery(Collection<String> rulingTypes) {
-        return agg.buildAggQuery(rulingTypes);
-    }
-
-    protected Map<String, Object> getEsQueryDsl(Map<String, Object> query, Map<String, Object> aggs) {
+    protected Map<String, Object> getEsQueryDsl(Map<String, Object> query, Map<String, Object> aggs, Map<String, Object> postFilter) {
         var queryDsl = new LinkedHashMap<String, Object>();
 
         queryDsl.put("query", query);
@@ -130,6 +132,10 @@ public class Query {
             queryDsl.put("aggs", aggs);
         }
 
+        if (!postFilter.isEmpty()) {
+            queryDsl.put("post_filter", postFilter);
+        }
+
         queryDsl.put("track_total_hits", true);
 
         if (queryParams.debug.contains(QueryParams.Debug.ES_SCORE)) {
@@ -140,6 +146,22 @@ public class Query {
         }
 
         return queryDsl;
+    }
+
+    protected Map<String, Object> getEsQuery(QueryTree queryTree, Collection<String> rulingTypes) {
+        List<Node> multiSelectedFilters = selectedFilters != null
+                ? selectedFilters.getAllMultiSelected().stream().flatMap(List::stream).toList()
+                : List.of();
+        var esQuery = queryTree.toEs(whelk.getJsonld(), esSettings.mappings, queryParams.boostFields, rulingTypes, multiSelectedFilters);
+        return addBoosts(esQuery, queryParams.esScoreFunctions);
+    }
+
+    protected Map<String, Object> getEsAggQuery(Collection<String> rulingTypes) {
+        return agg.buildAggQuery(rulingTypes);
+    }
+
+    protected Map<String, Object> getPostFilter(Collection<String> rulingTypes) {
+        return getEsMultiSelectedFilters(rulingTypes);
     }
 
     private Map<String, Object> getPartialCollectionView() {
@@ -161,6 +183,7 @@ public class Query {
 
         if (!queryParams.skipStats) {
             view.put("stats", stats.build());
+            linkLoader.queue(stats.getLinks());
         }
 
         if (!getQueryResult().spell.isEmpty()) {
@@ -173,7 +196,6 @@ public class Query {
             view.put(QueryParams.ApiParams.DEBUG, Map.of(QueryParams.Debug.ES_QUERY, getEsQueryDsl()));
         }
 
-        linkLoader.queue(stats.getLinks());
         linkLoader.queue(queryTree.collectLinks());
         linkLoader.loadChips();
 
@@ -207,8 +229,16 @@ public class Query {
         return getEsQuery(queryTree, List.of());
     }
 
-    private Map<String, Object> getEsAggQuery() {
-        return getEsAggQuery(queryTree.collectRulingTypes(whelk.getJsonld()));
+    private Map<String, Object> getEsMultiSelectedFilters(Collection<String> rulingTypes) {
+        List<Node> multiSelectedFilters = selectedFilters.getAllMultiSelected()
+                .stream()
+                .map(selected -> selected.size() > 1 ? new Or(selected) : selected.getFirst())
+                .toList();
+        if (multiSelectedFilters.isEmpty()) {
+            return Map.of();
+        }
+        return new QueryTree(multiSelectedFilters.size() == 1 ? multiSelectedFilters.getFirst() : new And(multiSelectedFilters))
+                .toEs(whelk.getJsonld(), esSettings.mappings, List.of(), rulingTypes, List.of());
     }
 
     private String getSortField(String termPath) {
@@ -358,7 +388,7 @@ public class Query {
 
             propToBuckets.forEach((property, buckets) -> {
                 var propertyKey = property.name();
-                if (!selectedObservations.isSelectable(propertyKey)) {
+                if (!selectedFilters.isSelectable(propertyKey)) {
                     return;
                 }
                 var sliceNode = new LinkedHashMap<>();
@@ -387,7 +417,7 @@ public class Query {
         private List<Map<String, Object>> getObservations(String propertyKey, Map<PathValue, Integer> buckets) {
             List<Map<String, Object>> observations = new ArrayList<>();
 
-            AppParams.Slice.Connective connective = selectedObservations.getConnective(propertyKey);
+            AppParams.Slice.Connective connective = selectedFilters.getConnective(propertyKey);
 
             buckets.forEach((pv, count) -> {
                 if (pv.value() instanceof Link l && l.iri().equals(queryParams.object)) {
@@ -395,7 +425,7 @@ public class Query {
                     return;
                 }
 
-                boolean isSelected = selectedObservations.isSelected(pv, propertyKey);
+                boolean isSelected = selectedFilters.isSelected(pv, propertyKey);
 
                 Consumer<QueryTree> addObservation = alteredTree -> {
                     Map<String, Object> observation = new LinkedHashMap<>();
@@ -421,7 +451,7 @@ public class Query {
                         }
                     }
                     case OR -> {
-                        var selected = selectedObservations.getSelected(propertyKey);
+                        var selected = selectedFilters.getSelected(propertyKey);
                         if (isSelected) {
                             selected.stream()
                                     .filter(pv::equals)
@@ -528,18 +558,14 @@ public class Query {
                                 Map.of("field", JsonLd.TYPE_KEY)));
             }
 
-            List<Map<String, Object>> multiSelectFilters = selectedObservations
-                    .getAllMultiSelected()
-                    .stream()
-                    .map(node -> node.toEs(esSettings.mappings, List.of()))
-                    .toList();
+            Map<String, Object> multiSelectedFilters = getEsMultiSelectedFilters(rulingTypes);
 
             Map<String, Object> query = new LinkedHashMap<>();
 
             for (AppParams.Slice slice : sliceList) {
                 String pKey = slice.propertyKey();
 
-                if (!selectedObservations.isSelectable(pKey)) {
+                if (!selectedFilters.isSelectable(pKey)) {
                     continue;
                 }
 
@@ -556,10 +582,9 @@ public class Query {
                             Map<String, Object> aggs = path.getEsNestedStem(esSettings.mappings)
                                     .map(nestedStem -> buildNestedAggQuery(path, slice, nestedStem))
                                     .orElse(buildCoreAqqQuery(path, slice));
-                            var filter = QueryUtil.mustWrap(List.of());
-//                            var filter = selectedObservations.isMultiSelectable(slice.propertyKey())
-//                                    ? QueryUtil.mustWrap(List.of())
-//                                    : (multiSelectFilters.size() == 1 ? multiSelectFilters.getFirst() : QueryUtil.mustWrap(multiSelectFilters));
+                            var filter = selectedFilters.isMultiSelectable(slice.propertyKey()) || multiSelectedFilters.isEmpty()
+                                    ? QueryUtil.mustWrap(List.of())
+                                    : multiSelectedFilters;
                             query.put(path.fullEsSearchPath(), filterWrap(aggs, property.name(), filter));
                         });
             }

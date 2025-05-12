@@ -31,12 +31,13 @@ public class PredicateObjectQuery extends ObjectQuery {
         var mainQuery = getEsQuery(queryTree, inferredSubjectTypes);
 
         if (queryParams.skipStats) {
-            return getEsQueryDsl(mainQuery, Map.of());
+            return getEsQueryDsl(mainQuery);
         }
 
         var aggQuery = getEsAggQuery(inferredSubjectTypes);
+        var postFilter = getPostFilter(inferredSubjectTypes);
 
-        var mainQueryDsl = getEsQueryDsl(mainQuery, aggQuery);
+        var mainQueryDsl = getEsQueryDsl(mainQuery, aggQuery, postFilter);
         var pAggQueryDsl = getPAggQueryDsl(getEsQuery(queryTreeCopy, inferredSubjectTypes), getPAggQuery(rulingTypes));
 
         return List.of(mainQueryDsl, pAggQueryDsl);

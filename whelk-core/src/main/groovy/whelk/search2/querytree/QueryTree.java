@@ -43,12 +43,15 @@ public class QueryTree {
         return new QueryTree(tree, filtered);
     }
 
-    public Map<String, Object> toEs(JsonLd jsonLd, EsMappings esMappings) {
-        return toEs(jsonLd, esMappings, List.of(), List.of());
-    }
-
-    public Map<String, Object> toEs(JsonLd jsonLd, EsMappings esMappings, Collection<String> boostFields, Collection<String> rulingTypes) {
-        return getFiltered().tree.expand(jsonLd, rulingTypes).toEs(esMappings, boostFields.isEmpty() ? EsBoost.BOOST_FIELDS : boostFields);
+    public Map<String, Object> toEs(JsonLd jsonLd,
+                                    EsMappings esMappings,
+                                    Collection<String> boostFields,
+                                    Collection<String> rulingTypes,
+                                    List<Node> exclude)
+    {
+        return getFiltered().omitNodes(exclude)
+                .expand(jsonLd, rulingTypes)
+                .toEs(esMappings, boostFields.isEmpty() ? EsBoost.BOOST_FIELDS : boostFields);
     }
 
     private QueryTree(Node tree, QueryTree filtered) {
@@ -183,6 +186,10 @@ public class QueryTree {
 
     public QueryTree getFiltered() {
         return filtered != null ? filtered : copy();
+    }
+
+    private Node expand(JsonLd jsonLd, Collection<String> rulingTypes) {
+        return tree.expand(jsonLd, rulingTypes);
     }
 
     private void normalizeTree() {

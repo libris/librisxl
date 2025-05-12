@@ -38,13 +38,14 @@ public class ObjectQuery extends Query {
         var mainQuery = getEsQuery(queryTree, inferredSubjectTypes);
 
         if (queryParams.skipStats) {
-            return getEsQueryDsl(mainQuery, Map.of());
+            return getEsQueryDsl(mainQuery);
         }
 
         var aggQuery = getEsAggQuery(inferredSubjectTypes);
         aggQuery.putAll(getPAggQuery(rulingTypes));
+        var postFilter = getPostFilter(inferredSubjectTypes);
 
-        return getEsQueryDsl(mainQuery, aggQuery);
+        return getEsQueryDsl(mainQuery, aggQuery, postFilter);
     }
 
     @Override
