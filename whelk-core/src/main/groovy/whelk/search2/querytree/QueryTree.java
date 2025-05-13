@@ -193,8 +193,8 @@ public class QueryTree {
     }
 
     private void normalizeTree() {
-        concatFreeText();
         removeFreeTextWildcard();
+        concatFreeText();
     }
 
     private void concatFreeText() {
