@@ -34,13 +34,6 @@ public class AppParams {
             }
             return m;
         }
-
-        public Set<String> getRangeProperties() {
-            return sliceList().stream()
-                    .filter(AppParams.Slice::isRange)
-                    .map(AppParams.Slice::propertyKey)
-                    .collect(Collectors.toSet());
-        }
     }
 
     public record SiteFilters(List<DefaultSiteFilter> defaultFilters, List<OptionalSiteFilter> optionalFilters) {

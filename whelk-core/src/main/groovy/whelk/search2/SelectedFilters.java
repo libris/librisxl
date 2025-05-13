@@ -1,5 +1,6 @@
 package whelk.search2;
 
+import whelk.search2.querytree.Literal;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
 import whelk.search2.querytree.PathValue;
@@ -7,15 +8,19 @@ import whelk.search2.querytree.QueryTree;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class SelectedFilters {
     private final Map<String, List<Node>> selectedByPropertyKey = new HashMap<>();
     private final List<Node> selectedBoolFilter = new ArrayList<>();
 
     private final Map<String, AppParams.Slice.Connective> propertyKeyToConnective = new HashMap<>();
+    private final Set<String> rangeProps = new HashSet<>();
 
     SelectedFilters(QueryTree queryTree, AppParams appParams) {
         init(queryTree, appParams);
@@ -45,16 +50,33 @@ public class SelectedFilters {
                 .toList();
     }
 
+    public List<Node> getRangeSelected(String propertyKey) {
+        return getSelected(propertyKey).stream()
+                .filter(n -> Operator.rangeOperators().contains(((PathValue) n).operator()))
+                .toList();
+    }
+
     public AppParams.Slice.Connective getConnective(String propertyKey) {
         return propertyKeyToConnective.get(propertyKey);
+    }
+
+    public boolean isRangeFilter(String propertyKey) {
+        return rangeProps.contains(propertyKey);
     }
 
     private void init(QueryTree queryTree, AppParams appParams) {
         for (AppParams.Slice slice : appParams.statsRepr.sliceList()) {
             String pKey = slice.propertyKey();
 
+            if (slice.isRange()) {
+                rangeProps.add(pKey);
+            }
+
             Predicate<Node> isProperty = n -> n instanceof PathValue pv && pv.hasEqualProperty(slice.propertyKey());
-            Predicate<Node> isPropertyEquals = n -> isProperty.test(n) && ((PathValue) n).operator().equals(Operator.EQUALS);
+            Predicate<Node> hasEqualsOp = n -> ((PathValue) n).operator().equals(Operator.EQUALS);
+            Predicate<Node> hasRangeOp = n -> Operator.rangeOperators().contains(((PathValue) n).operator());
+            Predicate<Node> hasNumericValue = n -> ((PathValue) n).value() instanceof Literal l && l.isNumeric();
+            Predicate<Node> isPropertyEquals = n -> isProperty.test(n) && hasEqualsOp.test(n);
 
             List<PathValue> allNodesWithProperty = queryTree.allDescendants().filter(isProperty).map(PathValue.class::cast).toList();
 
@@ -64,9 +86,34 @@ public class SelectedFilters {
                 continue;
             }
 
-            List<Node> selected = queryTree.getTopLevelNodes().stream().
-                    filter(isPropertyEquals)
+            List<Node> selected = queryTree.getTopLevelNodes().stream()
+                    .filter(isPropertyEquals)
                     .toList();
+
+            if (slice.isRange()) {
+                List<Node> rangeSelected = queryTree.getTopLevelNodes().stream()
+                        .filter(isProperty)
+                        .filter(hasRangeOp)
+                        .filter(hasNumericValue)
+                        .toList();
+                if (!rangeSelected.isEmpty()) {
+                    if (rangeSelected.equals(allNodesWithProperty)) {
+                        boolean isSelectableRange = rangeSelected.stream()
+                                .map(PathValue.class::cast)
+                                .map(PathValue::toOrEquals)
+                                .collect(Collectors.groupingBy(PathValue::operator))
+                                .values()
+                                .stream()
+                                .allMatch(group -> group.size() == 1);
+                        if (isSelectableRange) {
+                            selectedByPropertyKey.put(pKey, rangeSelected);
+                            propertyKeyToConnective.put(pKey, slice.defaultConnective());
+                        }
+                    }
+                    continue;
+                }
+            }
+
             List<Or> multiSelected = queryTree.getTopLevelNodesOfType(Or.class).stream()
                     .filter(or -> or.children().stream().allMatch(isPropertyEquals))
                     .toList();

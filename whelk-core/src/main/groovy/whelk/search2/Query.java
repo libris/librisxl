@@ -9,6 +9,7 @@ import whelk.util.DocumentUtil;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -382,7 +383,6 @@ public class Query {
 
         private Map<String, Object> buildSliceByDimension(Map<Property, Map<PathValue, Integer>> propToBuckets) {
             Map<String, AppParams.Slice> sliceByPropertyKey = appParams.statsRepr.getSliceByPropertyKey();
-            Set<String> rangeProps = appParams.statsRepr.getRangeProperties();
 
             Map<String, Object> sliceByDimension = new LinkedHashMap<>();
 
@@ -392,17 +392,10 @@ public class Query {
                     return;
                 }
                 var sliceNode = new LinkedHashMap<>();
-                // TODO: Handle range
-                var isRange = rangeProps.contains(propertyKey);
-                var qTree = isRange
-                        ? queryTree.removeTopLevelNodesByCondition(node -> node instanceof PathValue pv
-                            && pv.hasEqualProperty(property)
-                            && Operator.rangeOperators().contains(pv.operator()))
-                        : queryTree;
                 var observations = getObservations(propertyKey, buckets);
                 if (!observations.isEmpty()) {
-                    if (isRange) {
-                        sliceNode.put("search", getRangeTemplate(property));
+                    if (selectedFilters.isRangeFilter(propertyKey)) {
+                        sliceNode.put("search", getRangeTemplate(propertyKey));
                     }
                     sliceNode.put("dimension", propertyKey);
                     sliceNode.put("observation", observations);
@@ -418,6 +411,10 @@ public class Query {
             List<Map<String, Object>> observations = new ArrayList<>();
 
             AppParams.Slice.Connective connective = selectedFilters.getConnective(propertyKey);
+
+            QueryTree qt = selectedFilters.isRangeFilter(propertyKey)
+                    ? queryTree.omitNodes(selectedFilters.getRangeSelected(propertyKey))
+                    : queryTree;
 
             buckets.forEach((pv, count) -> {
                 if (pv.value() instanceof Link l && l.iri().equals(queryParams.object)) {
@@ -447,7 +444,7 @@ public class Query {
                 switch (connective) {
                     case AND -> {
                         if (!isSelected) {
-                            addObservation.accept(queryTree.addTopLevelNode(pv));
+                            addObservation.accept(qt.addTopLevelNode(pv));
                         }
                     }
                     case OR -> {
@@ -456,11 +453,11 @@ public class Query {
                             selected.stream()
                                     .filter(pv::equals)
                                     .findFirst()
-                                    .map(queryTree::omitNode)
+                                    .map(qt::omitNode)
                                     .ifPresent(addObservation);
                         } else {
                             var newSelected = new ArrayList<>(selected) {{ add(pv); }};
-                            var alteredTree = queryTree.omitNodes(selected).addTopLevelNode(new Or(newSelected));
+                            var alteredTree = qt.omitNodes(selected).addTopLevelNode(new Or(newSelected));
                             addObservation.accept(alteredTree);
                         }
                     }
@@ -470,50 +467,39 @@ public class Query {
             return observations;
         }
 
-        private Map<String, Object> getRangeTemplate(Property property) {
-            var GtLtNodes = queryTree.getTopLevelNodesOfType(PathValue.class).stream()
-                    .filter(pv -> pv.hasEqualProperty(property))
-                    .filter(pv -> switch (pv.operator()) {
-                        case EQUALS, NOT_EQUALS -> false;
-                        case GREATER_THAN_OR_EQUALS, GREATER_THAN, LESS_THAN_OR_EQUALS, LESS_THAN -> true;
-                    })
-                    .filter(pv -> pv.value() instanceof Literal l && l.isNumeric())
-                    .toList();
+        private Map<String, Object> getRangeTemplate(String propertyKey) {
+            FreeText placeholderNode = new FreeText(String.format("{?%s}", propertyKey));
+            String templateQueryString = queryTree.omitNodes(selectedFilters.getSelected(propertyKey))
+                    .addTopLevelNode(placeholderNode)
+                    .toQueryString();
+            String templateUrl = makeFindUrlNoOffset(templateQueryString, queryParams);
 
-            String min = null;
-            String max = null;
+            Function<Operator, String> getLimit = op -> selectedFilters.getRangeSelected(propertyKey)
+                    .stream()
+                    .map(PathValue.class::cast)
+                    .map(PathValue::toOrEquals)
+                    .filter(pv -> pv.operator().equals(op))
+                    .findFirst()
+                    .map(PathValue::value)
+                    .map(Value::toString)
+                    .orElse("");
 
-            for (var pv : GtLtNodes) {
-                var orEquals = pv.toOrEquals();
-                if (orEquals.operator() == Operator.GREATER_THAN_OR_EQUALS && min == null) {
-                    min = orEquals.value().raw();
-                } else if (orEquals.operator() == Operator.LESS_THAN_OR_EQUALS && max == null) {
-                    max = orEquals.value().raw();
-                } else {
-                    // Not a proper range, reset and abort
-                    min = null;
-                    max = null;
-                    break;
-                }
-            }
+            String minLimit = getLimit.apply(Operator.GREATER_THAN_OR_EQUALS);
+            String maxLimit = getLimit.apply(Operator.LESS_THAN_OR_EQUALS);
 
-            var tree = queryTree.removeTopLevelNodesByCondition(node -> node instanceof PathValue pv
-                    && pv.hasEqualProperty(property));
+            String gtoe = Operator.GREATER_THAN_OR_EQUALS.termKey;
+            String ltoe = Operator.LESS_THAN_OR_EQUALS.termKey;
 
-            Map<String, Object> template = new LinkedHashMap<>();
+            Map<String, String> mapping = Map.of(
+                    "variable", propertyKey,
+                    gtoe, minLimit,
+                    ltoe, maxLimit
+            );
 
-            var placeholderNode = new FreeText(String.format("{?%s}", property.name()));
-            var templateQueryString = tree.addTopLevelNode(placeholderNode).toQueryString();
-            var templateUrl = makeFindUrlNoOffset(templateQueryString, queryParams);
-            template.put("template", templateUrl);
-
-            var mapping = new LinkedHashMap<>();
-            mapping.put("variable", property.name());
-            mapping.put(Operator.GREATER_THAN_OR_EQUALS.termKey, Objects.toString(min, ""));
-            mapping.put(Operator.LESS_THAN_OR_EQUALS.termKey, Objects.toString(max, ""));
-            template.put("mapping", mapping);
-
-            return template;
+            return Map.of(
+                    "template", templateUrl,
+                    "mapping", mapping
+            );
         }
 
         private List<Map<String, Object>> getBoolFilters() {
