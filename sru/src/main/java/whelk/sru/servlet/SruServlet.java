@@ -21,6 +21,9 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.*;
 
+// Test locally like so:
+// curl "http://localhost:8187/?operation=searchRetrieve&query=isbn=9789130008650"
+// (Elastic must be running)
 public class SruServlet extends WhelkHttpServlet {
     private final Logger logger = LogManager.getLogger(this.getClass());
 
@@ -55,6 +58,10 @@ public class SruServlet extends WhelkHttpServlet {
         }
 
         String queryString = parameters.get("query")[0];
+
+        if (queryString.endsWith(" sortBy libris.legacysort"))
+            queryString = queryString.substring(0, queryString.length()-25);
+
         String instanceOnlyQueryString = "(" + queryString + ") AND type=Instance";
 
         Map<String, Object> results;
