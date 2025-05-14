@@ -11,9 +11,6 @@ class C {
 
 Whelk whelk = getWhelk()
 
-PrintWriter byPath = getReportWriter("changes-by-path.txt")
-PrintWriter byVersion = getReportWriter("changes-by-version.txt")
-
 process = { bib ->
     try {
         var shortId = bib.doc.getShortId()
