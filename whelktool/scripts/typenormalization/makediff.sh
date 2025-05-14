@@ -2,10 +2,11 @@
 set -euo pipefail
 
 BASEPATH=$1
+DIFFLAG="${2:-}"
 CONTEXT=$(dirname $0)/../../../../definitions/build/sys/context/kbv.jsonld
 
 skiprecords() {
-  awk -v RS=$'\n\n' -v ORS=$'\n\n' '$0 !~ "a :Record"'
+  awk -v RS=$'\n\n' -v ORS=$'\n\n' '$0 !~ "> a :Record"'
 }
 
 (
@@ -13,8 +14,12 @@ skiprecords() {
   zcat ${BASEPATH}-works.jsonl.gz | trld -indjson -c $CONTEXT -ottl
 ) | skiprecords > /tmp/datain.ttl
 (
-  cat $BASEPATH-NORMALIZED.jsonl | trld -indjson -c $CONTEXT -ottl
+  cat $BASEPATH-NORMALIZED-with-category.jsonl | trld -indjson -c $CONTEXT -ottl
 ) | skiprecords > /tmp/normout.ttl
+
+if [[ "$DIFFLAG" = "-D" ]]; then
+  exit
+fi
 
 diffld -b /tmp/datain.ttl /tmp/normout.ttl -ottl |
   sed '
