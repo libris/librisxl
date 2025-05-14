@@ -3,15 +3,12 @@ package whelk.rest.api
 import whelk.Document
 import whelk.Whelk
 import whelk.converter.marc.JsonLD2MarcXMLConverter
-import whelk.util.WhelkFactory
+import whelk.util.http.WhelkHttpServlet
 
-import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
-class DuplicatesAPI extends HttpServlet {
-
-    private Whelk whelk
+class DuplicatesAPI extends WhelkHttpServlet {
     private JsonLD2MarcXMLConverter toMarcXmlConverter
 
     DuplicatesAPI() {
@@ -20,13 +17,11 @@ class DuplicatesAPI extends HttpServlet {
 
     DuplicatesAPI(Whelk whelk) {
         this.whelk = whelk
+        init(whelk)
     }
 
     @Override
-    void init() {
-        if (!whelk) {
-            whelk = WhelkFactory.getSingletonWhelk()
-        }
+    void init(Whelk whelk) {
         toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter())
     }
 
