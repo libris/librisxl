@@ -28,10 +28,10 @@ public class Query {
 
     private final Disambiguate disambiguate;
     private final LinkLoader linkLoader;
+    private final SelectedFilters selectedFilters;
 
-    private SelectedFilters selectedFilters;
-    private Stats stats;
-    private Agg agg;
+    private final Stats stats;
+    private final Agg agg;
 
     protected Object esQueryDsl;
     protected QueryResult queryResult;
@@ -60,11 +60,9 @@ public class Query {
         this.queryTree = new QueryTree(queryParams.q, disambiguate);
         this.whelk = whelk;
         this.linkLoader = new LinkLoader();
-        if (!queryParams.skipStats) {
-            this.stats = new Stats();
-            this.agg = new Agg();
-            this.selectedFilters = new SelectedFilters(queryTree, appParams);
-        }
+        this.selectedFilters = queryParams.skipStats ? new SelectedFilters(queryTree, appParams.siteFilters) : new SelectedFilters(queryTree, appParams);
+        this.stats = new Stats();
+        this.agg = new Agg();
     }
 
     public static Query init(QueryParams queryParams, AppParams appParams, VocabMappings vocabMappings, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
@@ -84,13 +82,17 @@ public class Query {
     }
 
     protected Object doGetEsQueryDsl() {
-        queryTree.applySiteFilters(SearchMode.STANDARD_SEARCH, appParams.siteFilters);
+        applySiteFilters(SearchMode.STANDARD_SEARCH);
         if (queryParams.skipStats) {
             return getEsQueryDsl(getEsQuery());
         } else {
             List<String> rulingTypes = queryTree.collectRulingTypes(whelk.getJsonld());
             return getEsQueryDsl(getEsQuery(), getEsAggQuery(rulingTypes), getPostFilter(rulingTypes));
         }
+    }
+
+    protected void applySiteFilters(SearchMode searchMode) {
+        queryTree.applySiteFilters(searchMode, appParams.siteFilters, selectedFilters);
     }
 
     protected List<Map<String, Object>> predicateLinks() {
@@ -150,9 +152,7 @@ public class Query {
     }
 
     protected Map<String, Object> getEsQuery(QueryTree queryTree, Collection<String> rulingTypes) {
-        List<Node> multiSelectedFilters = selectedFilters != null
-                ? selectedFilters.getAllMultiSelected().stream().flatMap(List::stream).toList()
-                : List.of();
+        List<Node> multiSelectedFilters = selectedFilters.getAllMultiSelected().stream().flatMap(List::stream).toList();
         var esQuery = queryTree.toEs(whelk.getJsonld(), esSettings.mappings, queryParams.boostFields, rulingTypes, multiSelectedFilters);
         return addBoosts(esQuery, queryParams.esScoreFunctions);
     }
@@ -506,23 +506,23 @@ public class Query {
             List<Map<String, Object>> results = new ArrayList<>();
 
             for (var of : appParams.siteFilters.optionalFilters()) {
-                QueryTree newTree;
-                boolean isSelected;
-                Node filterNode = of.filter().getActive();
+                Filter.AliasedFilter f = of.filter();
+                boolean isSelected = selectedFilters.isSelected(f);
 
-                if (queryTree.topLevelContains(filterNode)) {
-                    newTree = queryTree.removeTopLevelNode(filterNode);
-                    isSelected = true;
+                QueryTree alteredTree;
+                if (isSelected) {
+                    alteredTree = queryTree.removeTopLevelNodes(selectedFilters.getSelectedNodes(f));
                 } else {
-                    newTree = queryTree.addTopLevelNode(filterNode);
-                    isSelected = false;
+                    alteredTree = (selectedFilters.isExplicitlyDeselected(f)
+                            ? queryTree.removeTopLevelNodes(selectedFilters.getDeselectedNodes(f))
+                            : queryTree).addTopLevelNode(f.getActive());
                 }
 
                 Map<String, Object> res = new LinkedHashMap<>();
                 // TODO: fix form
                 res.put("totalItems", 0);
-                res.put("object", of.filter().description());
-                res.put("view", Map.of(JsonLd.ID_KEY, makeFindUrlNoOffset(newTree, queryParams)));
+                res.put("object", f.description());
+                res.put("view", Map.of(JsonLd.ID_KEY, makeFindUrlNoOffset(alteredTree, queryParams)));
                 res.put("_selected", isSelected);
 
                 results.add(res);

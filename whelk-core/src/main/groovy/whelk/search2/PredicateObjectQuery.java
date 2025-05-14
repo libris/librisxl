@@ -16,7 +16,7 @@ public class PredicateObjectQuery extends ObjectQuery {
 
     @Override
     protected Object doGetEsQueryDsl() {
-        queryTree.applySiteFilters(SearchMode.PREDICATE_OBJECT_SEARCH, appParams.siteFilters);
+        applySiteFilters(SearchMode.PREDICATE_OBJECT_SEARCH);
 
         QueryTree queryTreeCopy = queryTree.copy();
 

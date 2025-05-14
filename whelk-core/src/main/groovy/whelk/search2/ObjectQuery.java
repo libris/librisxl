@@ -29,7 +29,7 @@ public class ObjectQuery extends Query {
 
     @Override
     protected Object doGetEsQueryDsl() {
-        queryTree.applySiteFilters(SearchMode.OBJECT_SEARCH, appParams.siteFilters);
+        applySiteFilters(SearchMode.OBJECT_SEARCH);
         queryTree.applyObjectFilter(object.iri());
 
         List<String> rulingTypes = queryTree.collectRulingTypes(whelk.getJsonld());

@@ -7,6 +7,7 @@ import whelk.search2.Disambiguate
 import whelk.search2.Filter
 import whelk.search2.Query
 import whelk.search2.QueryParams
+import whelk.search2.SelectedFilters
 
 class QueryTreeSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()
@@ -239,7 +240,9 @@ class QueryTreeSpec extends Specification {
         AppParams.SiteFilters siteFilters = new AppParams.SiteFilters([dsf1, dsf2, dsf3], [osf])
         siteFilters.parse(disambiguate)
 
-        queryTree.applySiteFilters(basicSearchMode, siteFilters)
+        SelectedFilters selectedFilters = new SelectedFilters(queryTree, siteFilters)
+
+        queryTree.applySiteFilters(basicSearchMode, siteFilters, selectedFilters)
 
         expect:
         queryTree.toString() == normalizedQuery
@@ -249,10 +252,10 @@ class QueryTreeSpec extends Specification {
         origQuery            | normalizedQuery      | filteredQuery
         "x"                  | "x"                  | "x excludeA type:T1"
         "x type:T2"          | "x type:T2"          | "x type:T2 excludeA"
-        "x type:T1"          | "x"                  | "x type:T1 excludeA"
+        "x type:T1"          | "x"                  | "x excludeA type:T1"
         "x NOT type:T2"      | "x NOT type:T2"      | "x NOT type:T2 excludeA type:T1"
         "x NOT type:T1"      | "x NOT type:T1"      | "x NOT type:T1 excludeA"
-        "x type:T1 NOT p1:A" | "x"                  | "x type:T1 excludeA"
+        "x type:T1 NOT p1:A" | "x"                  | "x excludeA type:T1"
         "x excludeA"         | "x"                  | "x excludeA type:T1"
         "x includeA"         | "x includeA"         | "x includeA type:T1"
         "x NOT excludeA"     | "x includeA"         | "x includeA type:T1"
