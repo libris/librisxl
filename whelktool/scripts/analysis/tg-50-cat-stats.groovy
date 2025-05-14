@@ -11,6 +11,9 @@ class C {
 
 Whelk whelk = getWhelk()
 
+PrintWriter byPath = getReportWriter("changes-by-path.txt")
+PrintWriter byVersion = getReportWriter("changes-by-version.txt")
+
 process = { bib ->
     try {
         var shortId = bib.doc.getShortId()
@@ -21,6 +24,14 @@ process = { bib ->
             if (version.tool != C.CRUD) {
                 continue
             }
+
+            String timestamp = version.date
+            String year = timestamp.split("-").first()
+
+            if (Integer.parseInt(year) < 2021) {
+                continue
+            }
+
             var added = filteredPaths(version.addedPaths)
             var removed = filteredPaths(version.removedPaths)
             var modified = added.intersect(removed)
@@ -31,7 +42,7 @@ process = { bib ->
 
             StringBuilder s = new StringBuilder()
             var append = { operation, path ->
-                s.append([shortId, versionNo, sigel, agent, operation, path].join('\t')).append("\n")
+                s.append([shortId, timestamp, year, versionNo, sigel, agent, operation, path].join('\t')).append("\n")
             }
 
             added.each { append("ADD", it)}
@@ -42,7 +53,7 @@ process = { bib ->
 
             var allPaths = added + removed + modified
             if (allPaths) {
-                byVersion.println([shortId, versionNo, sigel, agent, allPaths.join(",")].join('\t'))
+                byVersion.println([shortId, timestamp, year, versionNo, sigel, agent, allPaths.join(",")].join('\t'))
             }
 
             versionNo++
