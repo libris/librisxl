@@ -124,9 +124,7 @@ public class Query {
         queryDsl.put("query", query);
         queryDsl.put("size", queryParams.limit);
         queryDsl.put("from", queryParams.offset);
-        queryDsl.put("sort", (queryParams.sortBy == Sort.DEFAULT_BY_RELEVANCY && queryTree.allDescendants().noneMatch(Node::shouldContributeToEsScore)
-                ? Sort.BY_DOC_ID
-                : queryParams.sortBy).getSortClauses(this::getSortField));
+        queryDsl.put("sort", queryParams.sortBy.getSortClauses(this::getSortField));
 
         if (queryParams.spell.suggest && esSettings.mappings.isSpellCheckAvailable()) {
             var spellQuery = Spell.getSpellQuery(queryTree);
