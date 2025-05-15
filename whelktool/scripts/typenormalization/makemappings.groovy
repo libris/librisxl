@@ -46,6 +46,7 @@ categoryMatchesQuery = """
 prefix : <https://id.kb.se/vocab/>
 
 prefix saogf: <https://id.kb.se/term/saogf/>
+prefix barngf: <https://id.kb.se/term/barngf/>
 prefix tgm: <https://id.kb.se/term/gmgpc/swe/>
 prefix kbrda: <https://id.kb.se/term/rda/>
 prefix ktg: <https://id.kb.se/term/ktg/>
@@ -62,6 +63,7 @@ select ?src ?bdr {
   }
   filter(
     strstarts(str(?bdr), str(saogf:))
+    || strstarts(str(?bdr), str(barngf:))
     || strstarts(str(?bdr), str(kbrda:))
     || strstarts(str(?bdr), str(tgm:))
     || strstarts(str(?bdr), str(ktg:))
