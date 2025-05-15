@@ -59,7 +59,7 @@ void processEditSession(shortId, versionNo, List edits) {
     if(!edits) {
         return
     }
-    
+
     var added = edits.collectMany { filteredPaths(it.addedPaths) } as Set
     var removed = edits.collectMany { filteredPaths(it.removedPaths) } as Set
     var modified = added.intersect(removed)
@@ -75,7 +75,7 @@ void processEditSession(shortId, versionNo, List edits) {
 
     StringBuilder s = new StringBuilder()
     var append = { operation, path ->
-        s.append([shortId, timestamp, year, versionNo, sigel, agent, operation, path].join('\t')).append("\n")
+        s.append([shortId, timestamp, year, versionNo, edits.size(), sigel, agent, operation, path].join('\t')).append("\n")
     }
 
     added.each { append("ADD", it)}
@@ -86,7 +86,7 @@ void processEditSession(shortId, versionNo, List edits) {
 
     var allPaths = added + removed + modified
     if (allPaths) {
-        byVersion.println([shortId, timestamp, year, versionNo, sigel, agent, allPaths.join(",")].join('\t'))
+        byVersion.println([shortId, timestamp, year, versionNo, edits.size(), sigel, agent, allPaths.join(",")].join('\t'))
     }
 }
 
