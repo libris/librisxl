@@ -18,6 +18,11 @@ errors = getReportWriter("errors.txt")
 
 whelk = getWhelk()
 
+//selectByIds(['bvnpzmmn4qf7nzs']) {
+selectByCollection('bib') {
+    process(it)
+}
+
 void process(bib) {
     try {
         var shortId = bib.doc.getShortId()
@@ -42,6 +47,10 @@ void process(bib) {
         var saves = []
         var isFirstManual = true
 
+        if (shortId == 'bvnpzmmn4qf7nzs') {
+            println(changeSets.join("\n\n\n"))
+        }
+
         for (var save : changeSets) {
             String timestamp = save.date
             String year = timestamp.split("-").first()
@@ -56,10 +65,13 @@ void process(bib) {
             String agent = save.agent["@id"]
 
             if(agent != lastAgent || day != lastDay) {
-                processVersionSession(shortId, versionNo, isFirstManual, saves)
-                saves = []
+                if(saves) {
+                    processVersionSession(shortId, versionNo, isFirstManual, saves)
+                    saves = []
+                    isFirstManual = false
+                }
+
                 versionNo = editNo
-                isFirstManual = false
             }
 
             saves.add(save)
@@ -69,7 +81,10 @@ void process(bib) {
 
             editNo++
         }
-        processVersionSession(shortId, versionNo, isFirstManual, saves)
+
+        if(saves) {
+            processVersionSession(shortId, versionNo, isFirstManual, saves)
+        }
     }
     catch (Exception e) {
         errors.println("Error in ${bib.doc.shortId}: ${e}")
@@ -78,10 +93,6 @@ void process(bib) {
 }
 
 void processVersionSession(shortId, versionNo, isFirstManual, List saves) {
-    if(!saves) {
-        return
-    }
-
     var added = saves.collectMany { filteredPaths(it.addedPaths) } as Set
     var removed = saves.collectMany { filteredPaths(it.removedPaths) } as Set
     var modified = added.intersect(removed)
@@ -98,9 +109,9 @@ void processVersionSession(shortId, versionNo, isFirstManual, List saves) {
     var createdOrModified =
             versionNo == 0
                 ? "CREATE"
-                : isFirstManual
+                : (isFirstManual
                     ? "UPGRADE"
-                    : "MODIFY"
+                    : "MODIFY")
 
     StringBuilder s = new StringBuilder()
     var append = { operation, path ->
@@ -118,11 +129,6 @@ void processVersionSession(shortId, versionNo, isFirstManual, List saves) {
         byVersion.println([shortId, timestamp, year, createdOrModified, versionNo, saves.size(), sigel, agent, allPaths.join(",")].join('\t'))
     }
 }
-
-selectByCollection('bib') {
-    process(it)
-}
-
 
 static Set<String> filteredPaths(Collection<List<Object>> paths) {
     paths.findResults {
