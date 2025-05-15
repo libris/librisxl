@@ -1,13 +1,4 @@
 {
-  "cleanupTypes" : {
-    "ProjectedImageInstance" : [ "ProjectedImage" ],
-    "MovingImageInstance" : [ "MovingImage" ],
-    "KitInstance" : [ "Kit" ],
-    "NotatedMusicInstance" : [ "NotatedMusic" ],
-    "TextInstance" : [ "Text", [ "Volume", "Electronic" ] ],
-    "StillImageInstance" : [ "StillImage", [ "Sheet", "DigitalResource" ] ],
-    "GlobeInstance" : [ "CartographicObject", "PhysicalObject" ]
-  },
   "typeToCategory" : {
     "Audio" : "https://id.kb.se/term/ktg/Audio",
     "Cartography" : "https://id.kb.se/term/ktg/Cartography",
