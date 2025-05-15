@@ -23,7 +23,16 @@ class TypeMappings implements UsingJsonKeys {
     Whelk whelk
 
     // TODO: see also e.g. 'Map' and 'Globe' in fixMarcLegacyType (used only if wtype is Cartography)
-    Map cleanupTypes = [:]
+    Map cleanupTypes = [
+      'ProjectedImageInstance': ['ProjectedImage'],
+      'MovingImageInstance': ['MovingImage'],
+      'KitInstance': ['Kit'],
+      'NotatedMusicInstance': ['NotatedMusic'],
+      'TextInstance': ['Text', ['Volume', 'Electronic']],
+      'StillImageInstance': ['StillImage', ['Sheet', 'DigitalResource']],
+      'GlobeInstance': ['CartographicObject', 'PhysicalObject']
+    ]
+
 
     Map<String, String> typeToCategory = [:]
     Map<String, String> preferredCategory = [:]
@@ -33,8 +42,6 @@ class TypeMappings implements UsingJsonKeys {
         // TODO: Replace this generated json (see makemappings.groovy) by runtime that logic on startup!
         var f = new File(scriptDir, "mappings.json")
         Map mappings = mapper.readValue(f, Map)
-
-        cleanupTypes = mappings.get('cleanupTypes')
 
         typeToCategory = mappings.get('typeToCategory')
         preferredCategory = mappings.get('preferredCategory')

@@ -3,16 +3,6 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.util.Jackson
 
-cleanupTypes = [
-  'ProjectedImageInstance': ['ProjectedImage'],
-  'MovingImageInstance': ['MovingImage'],
-  'KitInstance': ['Kit'],
-  'NotatedMusicInstance': ['NotatedMusic'],
-  'TextInstance': ['Text', ['Volume', 'Electronic']],
-  'StillImageInstance': ['StillImage', ['Sheet', 'DigitalResource']],
-  'GlobeInstance': ['CartographicObject', 'PhysicalObject']
-]
-
 typeToCategoryQuery = """
 prefix : <https://id.kb.se/vocab/>
 prefix owl: <http://www.w3.org/2002/07/owl#>
@@ -98,7 +88,6 @@ Map makeMappings(String sparqlEndpoint) {
     var categoryMatches = getMappings(sparqlEndpoint, categoryMatchesQuery, 'src', 'bdr', true)
 
     return [
-        cleanupTypes: cleanupTypes,
         typeToCategory: typeToCategory,
         preferredCategory: preferredCategory,
         categoryMatches: categoryMatches,
