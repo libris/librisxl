@@ -11,9 +11,9 @@ import whelk.search2.Operator;
 
 import whelk.search2.Query;
 import whelk.search2.QueryParams;
+import whelk.search2.SelectedFilters;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -23,8 +23,6 @@ import static whelk.search2.querytree.QueryTreeBuilder.buildTree;
 
 public class QueryTree {
     private QueryTree filtered;
-
-    private String asString;
 
     private Node tree;
 
@@ -43,12 +41,19 @@ public class QueryTree {
         return new QueryTree(tree, filtered);
     }
 
-    public Map<String, Object> toEs(JsonLd jsonLd, EsMappings esMappings) {
-        return toEs(jsonLd, esMappings, List.of(), List.of());
+    public static QueryTree empty() {
+        return new QueryTree(null);
     }
 
-    public Map<String, Object> toEs(JsonLd jsonLd, EsMappings esMappings, Collection<String> boostFields, Collection<String> rulingTypes) {
-        return getFiltered().tree.expand(jsonLd, rulingTypes).toEs(esMappings, boostFields.isEmpty() ? EsBoost.BOOST_FIELDS : boostFields);
+    public Map<String, Object> toEs(JsonLd jsonLd,
+                                    EsMappings esMappings,
+                                    Collection<String> boostFields,
+                                    Collection<String> rulingTypes,
+                                    List<Node> exclude)
+    {
+        return getFiltered().omitNodes(exclude)
+                .expand(jsonLd, rulingTypes)
+                .toEs(esMappings, boostFields.isEmpty() ? EsBoost.BOOST_FIELDS : boostFields);
     }
 
     private QueryTree(Node tree, QueryTree filtered) {
@@ -64,10 +69,8 @@ public class QueryTree {
                 : tree.toSearchMapping(this, queryParams);
     }
 
-    // NOTE: This may mutate the original (non-filtered) tree should it contain filters already
-    public void applySiteFilters(Query.SearchMode searchMode, AppParams.SiteFilters siteFilters) {
-        _applySiteFilters(searchMode, siteFilters);
-        resetString();
+    public void applySiteFilters(Query.SearchMode searchMode, AppParams.SiteFilters siteFilters, SelectedFilters selectedFilters) {
+        _applySiteFilters(searchMode, siteFilters, selectedFilters);
     }
 
     public void applyObjectFilter(String object) {
@@ -79,8 +82,12 @@ public class QueryTree {
     }
 
     public QueryTree omitNode(Node node) {
+        return omitNodes(List.of(node));
+    }
+
+    public QueryTree omitNodes(List<Node> nodes) {
         QueryTree copy = copy();
-        copy._omitNode(node);
+        nodes.forEach(copy::_omitNode);
         return copy;
     }
 
@@ -92,8 +99,12 @@ public class QueryTree {
     }
 
     public QueryTree removeTopLevelNode(Node node) {
+        return removeTopLevelNodes(List.of(node));
+    }
+
+    public QueryTree removeTopLevelNodes(List<Node> nodes) {
         QueryTree copy = copy();
-        copy._removeTopLevelNode(node);
+        nodes.forEach(copy::_removeTopLevelNode);
         return copy;
     }
 
@@ -146,6 +157,10 @@ public class QueryTree {
                 .toList();
     }
 
+    public Optional<Node> findTopLevelNodeByCondition(Predicate<Node> condition) {
+        return getTopLevelNodes().stream().filter(condition).findFirst();
+    }
+
     public <T> List<T> getTopLevelNodesOfType(Class<T> nodeType) {
         return getTopLevelNodes().stream().filter(nodeType::isInstance).map(nodeType::cast).toList();
     }
@@ -166,10 +181,7 @@ public class QueryTree {
     }
 
     public String toQueryString() {
-        if (asString == null) {
-            this.asString = isEmpty() ? Operator.WILDCARD : tree.toQueryString(true);
-        }
-        return asString;
+        return isEmpty() ? Operator.WILDCARD : tree.toQueryString(true);
     }
 
     @Override
@@ -181,9 +193,13 @@ public class QueryTree {
         return filtered != null ? filtered : copy();
     }
 
+    private Node expand(JsonLd jsonLd, Collection<String> rulingTypes) {
+        return tree.expand(jsonLd, rulingTypes);
+    }
+
     private void normalizeTree() {
-        concatFreeText();
         removeFreeTextWildcard();
+        concatFreeText();
     }
 
     private void concatFreeText() {
@@ -226,10 +242,6 @@ public class QueryTree {
         if (tree != null && !isWild(tree)) {
             _removeTopLevelNodesByCondition(QueryTree::isWild);
         }
-    }
-
-    private void resetString() {
-        this.asString = null;
     }
 
     private static boolean topLevelContains(Node tree, Node node) {
@@ -334,66 +346,26 @@ public class QueryTree {
         return () -> node != null ? i : Collections.emptyIterator();
     }
 
-    private void _applySiteFilters(Query.SearchMode searchMode, AppParams.SiteFilters siteFilters) {
-        siteFilters.getAliasedFilters().forEach(af ->
-                // If a node matches a filter alias, replace that node with the alias in the original query.
-                // e.g. "NOT bibliography:\"sigel:EPLK\"" -> "excludeEplikt".
-                _replaceTopLevelNode(af.getParsed(), af.getActive())
-        );
-
-        // Remove any aliased filter that is inactive by default from original query (redundant).
-        // e.g. "NOT includeEplikt" if "excludeEplikt" is a default filter.
-        siteFilters.optionalFilters().stream()
-                .map(AppParams.OptionalSiteFilter::filter)
-                .map(Filter.AliasedFilter::getInactive)
-                .forEach(this::_removeTopLevelNode);
-
+    private void _applySiteFilters(Query.SearchMode searchMode, AppParams.SiteFilters siteFilters, SelectedFilters selectedFilters) {
         QueryTree filtered = getFiltered();
 
-        for (AppParams.DefaultSiteFilter df : siteFilters.defaultFilters()) {
-            if (!df.appliesTo().contains(searchMode)) {
-                continue;
-            }
+        Predicate<AppParams.DefaultSiteFilter> isApplicable = df ->
+                df.appliesTo().contains(searchMode)
+                        && !selectedFilters.isActivated(df.filter())
+                        // Override default filter if the original query contains its inverse.
+                        // e.g. don't add "\"rdf:type\":Work" if query is "NOT \"rdf:type\":Work something"
+                        && !selectedFilters.isExplicitlyDeactivated(df.filter())
+                        // Override default type filter if the original query already states which types to search.
+                        // e.g. don't add "\"rdf:type\":Work" if query is "\"rdf:type\":Agent Astrid Lindgren"
+                        && !(df.filter().isTypeFilter() && allDescendants().anyMatch(Node::isTypeNode));
 
-            var f = df.filter();
-
-            var filterNode = f instanceof Filter.AliasedFilter af ? af.getActive() : f.getParsed();
-
-            if (topLevelContains(filterNode)) {
-                // Remove any default filter from original query (redundant).
-                // e.g. "excludeEplikt" if "excludeEplikt" is a default filter
-                // e.g. "\"rdf:type\":Work" if "\"rdf:type\":Work" is a default filter
-                _removeTopLevelNode(filterNode);
-                continue;
-            }
-
-            if (f.isTypeFilter() && containsTypeNode()) {
-                // Override default type filter if the original query already states which types to search.
-                // e.g. don't add "\"rdf:type\":Work" if query is "\"rdf:type\":Agent Astrid Lindgren"
-                continue;
-            }
-
-            if (containsInverseFilter(f)) {
-                // Override default filter if the original query contains its inverse.
-                // e.g. don't add "\"rdf:type\":Work" if query is "NOT \"rdf:type\":Work something"
-                continue;
-            }
-
-            filtered._addTopLevelNode(filterNode);
-        }
+        siteFilters.defaultFilters().stream()
+                .filter(isApplicable)
+                .map(AppParams.DefaultSiteFilter::filter)
+                .map(Filter::getParsed)
+                .forEach(filtered::_addTopLevelNode);
 
         this.filtered = filtered;
-    }
-
-    private boolean containsInverseFilter(Filter f) {
-        Node filterNode = f instanceof Filter.AliasedFilter af ? af.getActive() : f.getParsed();
-        return getTopLevelNodes().stream()
-                .map(Node::getInverse)
-                .anyMatch(filterNode::equals);
-    }
-
-    private boolean containsTypeNode() {
-        return allDescendants().anyMatch(Node::isTypeNode);
     }
 
     private void _applyObjectFilter(String object) {

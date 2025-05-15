@@ -97,6 +97,10 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         return getSoleProperty().filter(property::equals).isPresent();
     }
 
+    public boolean hasEqualProperty(String propertyKey) {
+        return getSoleProperty().map(Property::name).filter(propertyKey::equals).isPresent();
+    }
+
     public PathValue replaceOperator(Operator replacement) {
         return new PathValue(path, replacement, value);
     }

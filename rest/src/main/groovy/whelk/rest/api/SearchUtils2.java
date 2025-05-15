@@ -80,12 +80,16 @@ public class SearchUtils2 {
             String key = (String) ((List<?>) slice.get("dimensionChain")).getFirst();
             int limit = (Integer) slice.get("itemLimit");
             Boolean range = (Boolean) slice.get("range");
+            String connective = (String) slice.get("connective");
             var m = new HashMap<>();
             m.put("sort", "count");
             m.put("sortOrder", "desc");
             m.put("size", limit);
             if (range != null) {
                 m.put("range", range);
+            }
+            if (connective != null) {
+                m.put("connective", connective);
             }
             statsRepr.put(key, m);
         }

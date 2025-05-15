@@ -58,7 +58,7 @@ public class QueryTreeBuilder {
         String value = ((Ast.Leaf) not.operand()).value();
         Optional<Filter.AliasedFilter> filter = disambiguate.mapToFilter(value);
         return filter.isPresent()
-                ? new InactiveFilter(filter.get().parseAndGet(disambiguate))
+                ? new ActiveFilter(filter.get().parseAndGet(disambiguate)).getInverse()
                 : new FreeText(disambiguate.getTextQueryProperty(), Operator.NOT_EQUALS, quoteIfPhraseOrContainsSpecialSymbol(value));
     }
 
