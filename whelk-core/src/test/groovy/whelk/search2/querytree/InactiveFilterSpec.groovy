@@ -29,6 +29,6 @@ class InactiveFilterSpec extends Specification {
         def filter = QueryTreeBuilder.buildTree("NOT includeA", disambiguate)
 
         expect:
-        filter.getInverse().toString() == "includeA"
+        filter.getInverse().toString() == "NOT excludeA"
     }
 }

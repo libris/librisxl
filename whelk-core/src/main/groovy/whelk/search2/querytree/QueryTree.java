@@ -41,6 +41,10 @@ public class QueryTree {
         return new QueryTree(tree, filtered);
     }
 
+    public static QueryTree empty() {
+        return new QueryTree(null);
+    }
+
     public Map<String, Object> toEs(JsonLd jsonLd,
                                     EsMappings esMappings,
                                     Collection<String> boostFields,
@@ -66,7 +70,6 @@ public class QueryTree {
     }
 
     public void applySiteFilters(Query.SearchMode searchMode, AppParams.SiteFilters siteFilters, SelectedFilters selectedFilters) {
-//        normalizePresentSiteFilters(searchMode, siteFilters, selectedFilters);
         _applySiteFilters(searchMode, siteFilters, selectedFilters);
     }
 
@@ -152,6 +155,10 @@ public class QueryTree {
                 .map(n -> n instanceof PathValue pv && pv.value() instanceof Link l ? l : null)
                 .filter(Objects::nonNull)
                 .toList();
+    }
+
+    public Optional<Node> findTopLevelNodeByCondition(Predicate<Node> condition) {
+        return getTopLevelNodes().stream().filter(condition).findFirst();
     }
 
     public <T> List<T> getTopLevelNodesOfType(Class<T> nodeType) {

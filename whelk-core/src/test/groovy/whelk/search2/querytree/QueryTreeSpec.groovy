@@ -245,21 +245,21 @@ class QueryTreeSpec extends Specification {
         queryTree.applySiteFilters(basicSearchMode, siteFilters, selectedFilters)
 
         expect:
-        queryTree.toString() == normalizedQuery
         queryTree.getFiltered().toString() == filteredQuery
 
         where:
-        origQuery            | normalizedQuery      | filteredQuery
-        "x"                  | "x"                  | "x excludeA type:T1"
-        "x type:T2"          | "x type:T2"          | "x type:T2 excludeA"
-        "x type:T1"          | "x"                  | "x excludeA type:T1"
-        "x NOT type:T2"      | "x NOT type:T2"      | "x NOT type:T2 excludeA type:T1"
-        "x NOT type:T1"      | "x NOT type:T1"      | "x NOT type:T1 excludeA"
-        "x type:T1 NOT p1:A" | "x"                  | "x excludeA type:T1"
-        "x excludeA"         | "x"                  | "x excludeA type:T1"
-        "x includeA"         | "x includeA"         | "x includeA type:T1"
-        "x NOT excludeA"     | "x includeA"         | "x includeA type:T1"
-        "x NOT includeA"     | "x"                  | "x excludeA type:T1"
-        "x type:T2 includeA" | "x type:T2 includeA" | "x type:T2 includeA"
+        origQuery            | filteredQuery
+        "x"                  | "x NOT p1:A type:T1"
+        "x type:T2"          | "x type:T2 NOT p1:A"
+        "x type:T1"          | "x type:T1 NOT p1:A"
+        "x NOT type:T2"      | "x NOT type:T2 NOT p1:A type:T1"
+        "x NOT type:T1"      | "x NOT type:T1 NOT p1:A"
+        "x type:T1 NOT p1:A" | "x type:T1 NOT p1:A"
+        "x excludeA"         | "x excludeA type:T1"
+        "x includeA"         | "x includeA type:T1"
+        "x NOT excludeA"     | "x NOT excludeA type:T1"
+        "x NOT includeA"     | "x excludeA type:T1"
+        "x type:T2 includeA" | "x type:T2 includeA"
+        "x p1:A"             | "x p1:A type:T1"
     }
 }

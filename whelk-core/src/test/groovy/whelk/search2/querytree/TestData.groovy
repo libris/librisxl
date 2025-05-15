@@ -2,9 +2,11 @@ package whelk.search2.querytree
 
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.search2.AppParams
 import whelk.search2.Disambiguate
 import whelk.search2.EsMappings
 import whelk.search2.Filter
+import whelk.search2.QueryParams
 import whelk.search2.VocabMappings
 
 class TestData {
@@ -172,5 +174,16 @@ class TestData {
                 ]
         ]
         return new EsMappings(mappings)
+    }
+
+    static def getAppParams() {
+        def appConfig = [
+                '_statsRepr': [
+                        'rdf:type': [:],
+                        'p2': [:],
+                        'p6': [:]
+                ]
+        ]
+        return new AppParams(appConfig, new QueryParams([:]))
     }
 }
