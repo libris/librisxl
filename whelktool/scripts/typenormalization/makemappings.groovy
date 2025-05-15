@@ -7,7 +7,12 @@ typeToCategoryQuery = """
 prefix : <https://id.kb.se/vocab/>
 prefix owl: <http://www.w3.org/2002/07/owl#>
 select (strafter(str(?type), str(:)) as ?typekey) ?cat {
-  ?type owl:intersectionOf ( :Monograph [ owl:onProperty :category ; owl:hasValue ?cat ] ) .
+  ?type owl:intersectionOf ( ?basetype [ owl:onProperty :category ; owl:hasValue ?cat ] ) .
+  values ?basetype {
+    :Monograph
+    :PhysicalResource
+    :DigitalResource
+  }
 } order by ?type ?cat
 """
 
@@ -43,21 +48,27 @@ prefix ktg: <https://id.kb.se/term/ktg/>
 prefix marc: <https://id.kb.se/marc/>
 
 select ?src ?bdr {
-  ?src a ?type ; :closeMatch|:broadMatch|:broader ?bdr .
-  values ?type {
-    :Category
-    :Genre
-    :GenreForm
-    :ContentType
-    :CarrierType
+  {
+    ?src a ?type ; :closeMatch|:broadMatch|:broader ?bdr .
+    values ?type {
+      :Category
+      :Genre
+      :GenreForm
+      :ContentType
+      :CarrierType
+    }
+    filter(
+      strstarts(str(?bdr), str(saogf:))
+      || strstarts(str(?bdr), str(barngf:))
+      || strstarts(str(?bdr), str(kbrda:))
+      || strstarts(str(?bdr), str(tgm:))
+      || strstarts(str(?bdr), str(ktg:))
+    )
+  } union {
+    ?bdr :exactMatch ?src .
+    filter strstarts(str(?bdr), str(ktg:))
+    filter strstarts(str(?src), str(saogf:))
   }
-  filter(
-    strstarts(str(?bdr), str(saogf:))
-    || strstarts(str(?bdr), str(barngf:))
-    || strstarts(str(?bdr), str(kbrda:))
-    || strstarts(str(?bdr), str(tgm:))
-    || strstarts(str(?bdr), str(ktg:))
-  )
 } order by ?src ?bdr
 """
 
