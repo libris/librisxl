@@ -185,7 +185,7 @@ selectBySqlWhere(where) { doc ->
         List targetStartYears = getAtPath(targetThing, ['publication', '*', 'startYear'], [])
         List targetEndYears = getAtPath(targetThing, ['publication', '*', 'endYear'], [])
         List targetYears = getAtPath(targetThing, ['publication', '*', 'year'], [])
-        List targetAgents = getAtPath(targetThing, ['publication', '*', 'agent', 'label'], []) + getAtPath(targetThing, ['publication', '*', 'hasPart', '*', 'agent', 'label'], [])
+        List targetAgents = getAtPath(targetThing, ['publication', '*', 'agent', 'label'], []) + getAtPath(targetThing, ['publication', '*', 'hasPart', '*', 'agent', 'label'], []) + getAtPath(targetThing, ['hasTitle', '*', 'mainTitle'], [])
         List targetPlaces = getAtPath(targetThing, ['publication', '*', 'place', '*', 'label'], []) + getAtPath(targetThing, ['publication', '*', 'hasPart', '*', 'place', '*', 'label'], [])
 
         if (sourceProvision.isSerial) {
