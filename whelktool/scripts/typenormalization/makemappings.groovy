@@ -16,7 +16,7 @@ cleanupTypes = [
 typeToCategoryQuery = """
 prefix : <https://id.kb.se/vocab/>
 prefix owl: <http://www.w3.org/2002/07/owl#>
-select ?type ?cat {
+select (strafter(str(?type), str(:)) as ?typekey) ?cat {
   ?type owl:intersectionOf ( :Monograph [ owl:onProperty :category ; owl:hasValue ?cat ] ) .
 } order by ?type ?cat
 """
@@ -91,7 +91,7 @@ Map getMappings(String sparqlEndpoint, String query, srcKey, tgtKey, list=false)
 
 Map makeMappings(String sparqlEndpoint) {
 
-    var typeToCategory = getMappings(sparqlEndpoint, typeToCategoryQuery, 'type', 'cat')
+    var typeToCategory = getMappings(sparqlEndpoint, typeToCategoryQuery, 'typekey', 'cat')
     var preferredCategory = getMappings(sparqlEndpoint, preferredCategoryQuery, 'src', 'tgt')
     var categoryMatches = getMappings(sparqlEndpoint, categoryMatchesQuery, 'src', 'bdr', true)
 

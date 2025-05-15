@@ -9,16 +9,16 @@
     "GlobeInstance" : [ "CartographicObject", "PhysicalObject" ]
   },
   "typeToCategory" : {
-    "https://id.kb.se/vocab/Audio" : "https://id.kb.se/term/ktg/Audio",
-    "https://id.kb.se/vocab/Cartography" : "https://id.kb.se/term/ktg/Cartography",
-    "https://id.kb.se/vocab/Dataset" : "https://id.kb.se/term/ktg/Dataset",
-    "https://id.kb.se/vocab/Movement" : "https://id.kb.se/term/ktg/Movement",
-    "https://id.kb.se/vocab/MovingImage" : "https://id.kb.se/term/ktg/MovingImage",
-    "https://id.kb.se/vocab/Multimedia" : "https://id.kb.se/term/ktg/Multimedia",
-    "https://id.kb.se/vocab/NotatedMovement" : "https://id.kb.se/term/rda/NotatedMovement",
-    "https://id.kb.se/vocab/NotatedMusic" : "https://id.kb.se/term/rda/NotatedMusic",
-    "https://id.kb.se/vocab/Tactile" : "https://id.kb.se/term/ktg/Tactile",
-    "https://id.kb.se/vocab/Text" : "https://id.kb.se/term/rda/Text"
+    "Audio" : "https://id.kb.se/term/ktg/Audio",
+    "Cartography" : "https://id.kb.se/term/ktg/Cartography",
+    "Dataset" : "https://id.kb.se/term/ktg/Dataset",
+    "Movement" : "https://id.kb.se/term/ktg/Movement",
+    "MovingImage" : "https://id.kb.se/term/ktg/MovingImage",
+    "Multimedia" : "https://id.kb.se/term/ktg/Multimedia",
+    "NotatedMovement" : "https://id.kb.se/term/rda/NotatedMovement",
+    "NotatedMusic" : "https://id.kb.se/term/rda/NotatedMusic",
+    "Tactile" : "https://id.kb.se/term/ktg/Tactile",
+    "Text" : "https://id.kb.se/term/rda/Text"
   },
   "preferredCategory" : {
     "https://id.kb.se/marc/ApertureCard" : "https://id.kb.se/term/rda/ApertureCard",
