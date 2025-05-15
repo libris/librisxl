@@ -577,14 +577,14 @@ public class Query {
 
             for (var of : appParams.siteFilters.optionalFilters()) {
                 Filter.AliasedFilter f = of.filter();
-                boolean isSelected = selectedFilters.isSelected(f);
+                boolean isSelected = selectedFilters.isActivated(f);
 
                 QueryTree alteredTree;
                 if (isSelected) {
-                    alteredTree = queryTree.removeTopLevelNodes(selectedFilters.getSelectedNodes(f));
+                    alteredTree = queryTree.removeTopLevelNodes(selectedFilters.getActivatingNodes(f));
                 } else {
-                    alteredTree = (selectedFilters.isExplicitlyDeselected(f)
-                            ? queryTree.removeTopLevelNodes(selectedFilters.getDeselectedNodes(f))
+                    alteredTree = (selectedFilters.isExplicitlyDeactivated(f)
+                            ? queryTree.removeTopLevelNodes(selectedFilters.getDeactivatingNodes(f))
                             : queryTree).addTopLevelNode(f.getActive());
                 }
 

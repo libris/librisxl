@@ -17,10 +17,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class SelectedFilters {
-    private final Map<String, List<Node>> selectedByPropertyKey = new HashMap<>();
-    private final Map<Filter, List<Node>> selectedSiteFilters = new HashMap<>();
-    private final Map<Filter, List<Node>> deselectedSiteFilters = new HashMap<>();
+    private final Map<Filter, List<Node>> activatedSiteFilters = new HashMap<>();
+    private final Map<Filter, List<Node>> deactivatedSiteFilters = new HashMap<>();
 
+    private final Map<String, List<Node>> selectedByPropertyKey = new HashMap<>();
     private final Map<String, Query.Connective> propertyKeyToConnective = new HashMap<>();
     private final Set<String> rangeProps = new HashSet<>();
 
@@ -70,20 +70,20 @@ public class SelectedFilters {
         return rangeProps.contains(propertyKey);
     }
 
-    public boolean isSelected(Filter filter) {
-        return selectedSiteFilters.containsKey(filter);
+    public boolean isActivated(Filter filter) {
+        return activatedSiteFilters.containsKey(filter);
     }
 
-    public boolean isExplicitlyDeselected(Filter filter) {
-        return deselectedSiteFilters.containsKey(filter);
+    public boolean isExplicitlyDeactivated(Filter filter) {
+        return deactivatedSiteFilters.containsKey(filter);
     }
 
-    public List<Node> getSelectedNodes(Filter filter) {
-        return selectedSiteFilters.get(filter);
+    public List<Node> getActivatingNodes(Filter filter) {
+        return activatedSiteFilters.get(filter);
     }
 
-    public List<Node> getDeselectedNodes(Filter filter) {
-        return deselectedSiteFilters.get(filter);
+    public List<Node> getDeactivatingNodes(Filter filter) {
+        return deactivatedSiteFilters.get(filter);
     }
 
     private void init(QueryTree queryTree, AppParams appParams) {
@@ -160,26 +160,26 @@ public class SelectedFilters {
             Filter f = sf.filter();
 
             if (queryTree.topLevelContains(f.getParsed())) {
-                selectedSiteFilters.computeIfAbsent(f, x -> new ArrayList<>()).add(f.getParsed());
+                activatedSiteFilters.computeIfAbsent(f, x -> new ArrayList<>()).add(f.getParsed());
             }
             if (queryTree.topLevelContains(f.getParsed().getInverse())) {
-                deselectedSiteFilters.computeIfAbsent(f, x -> new ArrayList<>()).add(f.getParsed().getInverse());
+                deactivatedSiteFilters.computeIfAbsent(f, x -> new ArrayList<>()).add(f.getParsed().getInverse());
             }
 
             if (f instanceof Filter.AliasedFilter af) {
                 if (queryTree.topLevelContains(af.getActive())) {
-                    selectedSiteFilters.computeIfAbsent(f, x -> new ArrayList<>()).add(af.getActive());
+                    activatedSiteFilters.computeIfAbsent(f, x -> new ArrayList<>()).add(af.getActive());
                 }
                 Node inverse = af.getActive().getInverse();
 
                 if (queryTree.topLevelContains(inverse)) {
-                    deselectedSiteFilters.computeIfAbsent(f, x -> new ArrayList<>()).add(inverse);
+                    deactivatedSiteFilters.computeIfAbsent(f, x -> new ArrayList<>()).add(inverse);
                 }
 
                 if (inverse instanceof ActiveFilter(Filter.AliasedFilter aliasedFilter)) {
-                    if (isSelected(af)) {
-                        deselectedSiteFilters.computeIfAbsent(aliasedFilter, x -> new ArrayList<>())
-                                .addAll(getSelectedNodes(af));
+                    if (isActivated(af)) {
+                        deactivatedSiteFilters.computeIfAbsent(aliasedFilter, x -> new ArrayList<>())
+                                .addAll(getActivatingNodes(af));
                     }
                 }
             }

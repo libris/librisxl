@@ -351,10 +351,10 @@ public class QueryTree {
 
         Predicate<AppParams.DefaultSiteFilter> isApplicable = df ->
                 df.appliesTo().contains(searchMode)
-                        && !selectedFilters.isSelected(df.filter())
+                        && !selectedFilters.isActivated(df.filter())
                         // Override default filter if the original query contains its inverse.
                         // e.g. don't add "\"rdf:type\":Work" if query is "NOT \"rdf:type\":Work something"
-                        && !selectedFilters.isExplicitlyDeselected(df.filter())
+                        && !selectedFilters.isExplicitlyDeactivated(df.filter())
                         // Override default type filter if the original query already states which types to search.
                         // e.g. don't add "\"rdf:type\":Work" if query is "\"rdf:type\":Agent Astrid Lindgren"
                         && !(df.filter().isTypeFilter() && allDescendants().anyMatch(Node::isTypeNode));
