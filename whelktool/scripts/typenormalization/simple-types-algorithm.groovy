@@ -124,7 +124,7 @@ class TypeMappings implements UsingJsonKeys {
         var mappedTypes = cleanupTypes[itype]
         if (mappedTypes) {
             work[TYPE] = mappedTypes[0]
-            if (false && mappedTypes.size() > 1) {
+            if (mappedTypes.size() > 1) {
                 // TODO: unless implied! (Not even needed? Better types seem to be computed at least for test data...)
                 if (mappedTypes[1] instanceof List) {
                     // TODO: check if physical before assuming so! mappedTypes[1][1] is the Electronic-as-in-Digital
@@ -242,6 +242,7 @@ class TypeNormalizer implements UsingJsonKeys {
                 work.get('contentType', []) << [(ID): KBRDA + 'CartographicImage'] // TODO: good enough guess?
             }
         } else if (wtype == 'MixedMaterial') {
+            // TODO: replace or map to ktg:MixedMaterial ?
         } else {
             def mappedCategory = mappings.typeToCategory[wtype]
             // assert mappedCategory, "Unable to map ${wtype} to contentType or genreForm"
