@@ -555,3 +555,9 @@
 ## Tapet/affisch/poster (240704)
 <https://libris.kb.se/wf7764g75pzv0vg#it> # Plan för tretton namngivna Gobelins tapeter i Stockholms slott
 <https://libris.kb.se/zh9rwv391s5fpfr#it> # Poster med tapetmönster av Ginko-trädblad
+
+## Lärobok med (samling av) sagor (250415)
+<https://libris.kb.se/n5ftk434lvfp6nq9#it>
+
+## Handritad karta
+<https://libris-dev2.kb.se/tc59svb50tgb2sb#it>
