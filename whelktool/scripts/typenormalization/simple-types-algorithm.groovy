@@ -22,17 +22,14 @@ class TypeMappings implements UsingJsonKeys {
 
     Whelk whelk
 
-    // TODO: see also e.g. 'Map' and 'Globe' in fixMarcLegacyType (used only if wtype is Cartography)
-    Map cleanupTypes = [
-      'ProjectedImageInstance': ['ProjectedImage'],
-      'MovingImageInstance': ['MovingImage'],
-      'KitInstance': ['Kit'],
-      'NotatedMusicInstance': ['NotatedMusic'],
-      'TextInstance': ['Text', ['Volume', 'Electronic']],
-      'StillImageInstance': ['StillImage', ['Sheet', 'DigitalResource']],
-      'GlobeInstance': ['CartographicObject', 'PhysicalObject']
+    Map cleanupInstanceTypes = [
+      'SoundRecording': [category: 'https://id.kb.se/term/ktg/SoundStorageMedium', workCategory: 'https://id.kb.se/term/ktg/Audio'],  // 170467
+      'VideoRecording': [category: 'https://id.kb.se/term/ktg/VideoStorageMedium', workCategory: 'https://id.kb.se/term/ktg/MovingImage'],  // 20515
+      'Map': [category: 'https://id.kb.se/term/rda/Sheet', workCategory: 'https://id.kb.se/rda/CartographicImage'],  // 12686
+      'Globe': [category: 'https://id.kb.se/term/rda/Object', workCategory: 'https://id.kb.se/ktg/Globe'],  // 74
+      'StillImageInstance': [category: 'https://id.kb.se/term/rda/Sheet', workCategory: 'https://id.kb.se/term/ktg/StillImage'], // 54954
+      'TextInstance': [category: 'https://id.kb.se/term/rda/Volume' , workCategory: 'https://id.kb.se/rda/Text'], // 301
     ]
-
 
     Map<String, String> typeToCategory = [:]
     Map<String, String> preferredCategory = [:]
@@ -97,46 +94,33 @@ class TypeMappings implements UsingJsonKeys {
         return mostSpecific.toList()
     }
 
+    boolean anyImplies(List<Map> categories, String symbol) {
+        for (var category in categories) {
+            if (isImpliedBy(symbol, category)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    /**
+     * Replace complex legacy types with structures that this algorithm will subsequently normalize.
+     */
     boolean fixMarcLegacyType(Map instance, Map work) {
         var changed = false
 
         var itype = (String) instance[TYPE]
-
-        if (itype == 'Map') {
-            if (work[TYPE] == 'Cartography') {
-                instance[TYPE] = 'Instance'
-                // TODO: *may* be digital (online); *maybe* not a 2d-map... (a few Volume, a few Object)?
-                if (!instance['carrierType']) {
-                    instance['carrierType'] = [[(ID): MARC + 'Sheet']]
-                }
-                work[TYPE] = 'CartographicImage' // MapImage
-                // TODO: drop instance['genreForm'] marc:MapATwoDimensionalMap, add kbgf:Map ?
-                changed = true
-            }
-        } else if (itype == 'Globe') {
-            if (work[TYPE] == 'Cartography') {
-                instance[TYPE] = 'Object'
-                work[TYPE] = 'CartographicObject' // MapGlobe
-                changed = true
-            }
-        }
-
-        var mappedTypes = cleanupTypes[itype]
-        if (mappedTypes) {
-            work[TYPE] = mappedTypes[0]
-            if (mappedTypes.size() > 1) {
-                // TODO: unless implied! (Not even needed? Better types seem to be computed at least for test data...)
-                if (mappedTypes[1] instanceof List) {
-                    // TODO: check if physical before assuming so! mappedTypes[1][1] is the Electronic-as-in-Digital
-                    instance[TYPE] = mappedTypes[1][0]
-                } else {
-                    assert mappedTypes[1] instanceof String
-                    instance[TYPE] = mappedTypes[1]
-                }
-            } else { // failed...
-                instance[TYPE] = 'Instance'
-            }
+        def mappedCategory = typeToCategory[itype]
+        if (mappedCategory) {
+            instance.get('carrierType', []) << [(ID): mappedCategory]
             changed = true
+        } else {
+            var mappedTypes = cleanupInstanceTypes[itype]
+            if (mappedTypes) {
+                instance.get('carrierType', []) << [(ID): mappedTypes.category]
+                work.get('genreForm', []) << [(ID): mappedTypes.workCategory]
+                changed = true
+            }
         }
 
         return changed
@@ -297,14 +281,14 @@ class TypeNormalizer implements UsingJsonKeys {
         List mediaTypes = mappings.reduceSymbols(asList(instance["mediaType"]))
         List carrierTypes = mappings.reduceSymbols(asList(instance["carrierType"]))
 
+        // TODO: Remove *all* uses of itype here? See e.g. AbstractElectronic
+        // below, which should already have been computed, making this check
+        // obsolete. OTOH, the fixMarcLegacyType does this, which might be a
+        // step too far?
+
         // Store information about the old instanceType
         // In the case of volume, it may also be inferred
         var isElectronic = itype == "Electronic"
-        var isSoundRecording = itype == "SoundRecording"
-        var isVideoRecording = itype == "VideoRecording"
-        var isTactile = itype == "Tactile"
-
-        var isVolume = mappings.matches(carrierTypes, "Volume") || looksLikeVolume(instance)
 
         // ----- Section: set Simple instanceType -----
         /**
@@ -336,6 +320,8 @@ class TypeNormalizer implements UsingJsonKeys {
         List instanceGenreForms = asList(instance.get("genreForm"))
 
         var isBraille = dropRedundantString(instance, "marc:mediaTerm", ~/(?i)punktskrift/)
+        var isTactile = itype == "Tactile"
+        var isVolume = mappings.matches(carrierTypes, "Volume") || looksLikeVolume(instance)
 
         // Remove old Braille terms and replace them with KTG terms
         var toDrop = [KBRDA + "Volume", MARC + "Braille", MARC + "TacMaterialType-b"] as Set
@@ -360,24 +346,13 @@ class TypeNormalizer implements UsingJsonKeys {
           changed = true
         }
 
+        var isSoundRecording = mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/ktg/SoundStorageMedium')
+        var isVideoRecording = mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/ktg/VideoStorageMedium')
+
         // If an instance has a certain (old) type which implies physical electronic carrier
-        // and carrierTypes corroborating this, assume it is electronic
-        // TODO: should work with regular reduceSymbols ...
-        var carrierTuples = [
-                [isElectronic, [KBRDA + 'ComputerChipCartridge']],
-                [isSoundRecording, [MARC + 'SoundDisc', KBRDA + 'AudioDisc']],
-                [isSoundRecording, [MARC + 'SoundCassette', KTG + 'AudioCassette']], // FIXME [680ba995]: Not defined in KBRDA.
-                [isVideoRecording, [MARC + 'VideoDisc', MARC + 'VideoMaterialType-d', KBRDA + 'Videodisc']]
-        ]
-        for (carrierTuple in carrierTuples) {
-            var (isIt, matchTokens) = carrierTuple
-            var gotMatches = matchTokens.findAll { mappings.matches(carrierTypes, it) }
-            if (isIt && gotMatches.size() > 0) {
-                isElectronic = true
-                // FIXME: see 680ba995.
-                carrierTypes << [(ID): matchTokens[-1]]
-                changed = true
-            }
+        // and carrierTypes corroborating this:
+        if (mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/ktg/AbstractElectronic')) {
+            isElectronic = true // assume it is electronic
         }
 
         // If old instance type is "instance" and there is a carrierType that contains "Electronic"
@@ -390,10 +365,7 @@ class TypeNormalizer implements UsingJsonKeys {
 
         var probablyPrint = assumedToBePrint(instance)
 
-        // TODO: is this handled by reduceSymbols? Also, probablyPrint?
-        //instanceGenreForms.findAll { it[ID] != MARC + 'Print' }
-
-        // Remove redundant MARC mediaTerms if the information is given by the old itype
+        // Remove redundant MARC mediaTerms if the information is implied by computed category:
         if (isSoundRecording && dropRedundantString(instance, "marc:mediaTerm", ~/(?i)ljudupptagning/)) {
             changed = true
         }
@@ -406,6 +378,8 @@ class TypeNormalizer implements UsingJsonKeys {
             changed = true
         }
 
+        // TODO: instead, for Monograph, fold overlapping categories into common specific category...
+        // e.g. [Print, Volume] => PrintedVolume
         if (!isElectronic) {
 
             if (itype == "Print") {
