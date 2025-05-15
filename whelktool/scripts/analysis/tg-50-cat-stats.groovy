@@ -1,4 +1,15 @@
+/**
+ *
+ *
+ *
+ * See https://kbse.atlassian.net/browse/TG-50
+ *
+ */
+
+
+import whelk.JsonLd
 import whelk.history.History
+import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
 byPath = getReportWriter("changes-by-path.txt")
@@ -10,44 +21,55 @@ whelk = getWhelk()
 void process(bib) {
     try {
         var shortId = bib.doc.getShortId()
-        History history = new History(whelk.storage.loadDocumentHistory(shortId), whelk.jsonld)
+        var docVersions = whelk.storage.loadDocumentHistory(shortId)
+        History history = new History(docVersions, whelk.jsonld)
         List changeSets = history.m_changeSetsMap.changeSets
+
+        // First version from History contains no paths, add them
+        if (changeSets) {
+            DocumentUtil.traverse(docVersions.first().doc.data) {_, path ->
+                if (path && path.last() != JsonLd.TYPE_KEY && path.last() != JsonLd.ID_KEY) {
+                    changeSets.first().addedPaths.add(path.collect())
+                }
+                return DocumentUtil.NOP
+            }
+        }
 
         var lastAgent = null
         var lastDay = null
         var editNo = 0
         int versionNo = 0
-        var edits = []
+        var saves = []
+        var isFirstManual = true
 
-        for (var version : changeSets) {
-            if (version.tool != [ "@id": "https://id.kb.se/generator/crud" ]) {
-                continue
-            }
-
-            String timestamp = version.date
+        for (var save : changeSets) {
+            String timestamp = save.date
             String year = timestamp.split("-").first()
 
-            if (Integer.parseInt(year) < 2021) {
+            if (Integer.parseInt(year) < 2021 || save.tool != [ "@id": "https://id.kb.se/generator/crud" ]) {
+                editNo++
+                versionNo = editNo
                 continue
             }
 
             String day = timestamp.split("T").first()
-            String agent = version.agent["@id"]
+            String agent = save.agent["@id"]
 
             if(agent != lastAgent || day != lastDay) {
-                processEditSession(shortId, versionNo, edits)
-                edits = []
+                processVersionSession(shortId, versionNo, isFirstManual, saves)
+                saves = []
                 versionNo = editNo
+                isFirstManual = false
             }
 
-            edits.add(version)
+            saves.add(save)
 
             lastAgent = agent
             lastDay = day
 
             editNo++
         }
-        processEditSession(shortId, versionNo, edits)
+        processVersionSession(shortId, versionNo, isFirstManual, saves)
     }
     catch (Exception e) {
         errors.println("Error in ${bib.doc.shortId}: ${e}")
@@ -55,17 +77,17 @@ void process(bib) {
     }
 }
 
-void processEditSession(shortId, versionNo, List edits) {
-    if(!edits) {
+void processVersionSession(shortId, versionNo, isFirstManual, List saves) {
+    if(!saves) {
         return
     }
 
-    var added = edits.collectMany { filteredPaths(it.addedPaths) } as Set
-    var removed = edits.collectMany { filteredPaths(it.removedPaths) } as Set
+    var added = saves.collectMany { filteredPaths(it.addedPaths) } as Set
+    var removed = saves.collectMany { filteredPaths(it.removedPaths) } as Set
     var modified = added.intersect(removed)
 
-    var agent = edits.first().agent["@id"]
-    String timestamp = edits.last().date
+    var agent = saves.first().agent["@id"]
+    String timestamp = saves.last().date
 
     added -= modified
     removed -= modified
@@ -73,9 +95,16 @@ void processEditSession(shortId, versionNo, List edits) {
     var sigel = Unicode.stripPrefix(agent, "https://libris.kb.se/library/")
     String year = timestamp.split("-").first()
 
+    var createdOrModified =
+            versionNo == 0
+                ? "CREATE"
+                : isFirstManual
+                    ? "UPGRADE"
+                    : "MODIFY"
+
     StringBuilder s = new StringBuilder()
     var append = { operation, path ->
-        s.append([shortId, timestamp, year, versionNo, edits.size(), sigel, agent, operation, path].join('\t')).append("\n")
+        s.append([shortId, timestamp, year, createdOrModified, versionNo, saves.size(), sigel, agent, operation, path].join('\t')).append("\n")
     }
 
     added.each { append("ADD", it)}
@@ -86,7 +115,7 @@ void processEditSession(shortId, versionNo, List edits) {
 
     var allPaths = added + removed + modified
     if (allPaths) {
-        byVersion.println([shortId, timestamp, year, versionNo, edits.size(), sigel, agent, allPaths.join(",")].join('\t'))
+        byVersion.println([shortId, timestamp, year, createdOrModified, versionNo, saves.size(), sigel, agent, allPaths.join(",")].join('\t'))
     }
 }
 
