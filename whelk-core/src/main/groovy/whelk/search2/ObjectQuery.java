@@ -4,10 +4,13 @@ import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.Link;
+import whelk.search2.querytree.PathValue;
 import whelk.search2.querytree.Property;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -57,7 +60,7 @@ public class ObjectQuery extends Query {
         var result = new ArrayList<Map<String, Object>>();
 
         Map<String, Integer> counts = getQueryResult().pAggs.stream()
-                .collect(Collectors.toMap(Aggs.Bucket::value, Aggs.Bucket::count));
+                .collect(Collectors.toMap(QueryResult.Bucket::value, QueryResult.Bucket::count));
 
         curatedPredicates.stream()
                 .map(Property::name)
@@ -84,11 +87,31 @@ public class ObjectQuery extends Query {
     }
 
     protected Map<String, Object> getPAggQuery(List<String> rulingTypes) {
-        return Aggs.buildPAggQuery(object,
-                curatedPredicates,
-                whelk.getJsonld(),
-                rulingTypes,
-                esSettings.mappings);
+        return buildPAggQuery(object, curatedPredicates, whelk.getJsonld(), rulingTypes, esSettings.mappings);
+    }
+
+    private static Map<String, Object> buildPAggQuery(Link object,
+                                                      List<Property> curatedPredicates,
+                                                      JsonLd jsonLd,
+                                                      Collection<String> rulingTypes,
+                                                      EsMappings esMappings)
+    {
+        Map<String, Object> query = new LinkedHashMap<>();
+
+        var filters = curatedPredicates
+                .stream()
+                .collect(Collectors.toMap(
+                        Property::name,
+                        p -> new PathValue(p, Operator.EQUALS, object)
+                                .expand(jsonLd, rulingTypes.isEmpty() ? p.domain() : rulingTypes)
+                                .toEs(esMappings, List.of()))
+                );
+
+        if (!filters.isEmpty()) {
+            query.put(QueryParams.ApiParams.PREDICATES, Map.of("filters", Map.of("filters", filters)));
+        }
+
+        return query;
     }
 
     private List<String> inferSubjectTypes() {

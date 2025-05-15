@@ -82,17 +82,14 @@ public class AppParams {
     }
 
     public static class Slice {
-        public enum Connective {
-            AND,
-            OR
-        }
+        public static final Integer DEFAULT_BUCKET_SIZE = 10;
 
         private final String propertyKey;
         private final Sort.Order sortOrder;
         private final Sort.BucketSortKey bucketSortKey;
         private final int size;
         private final boolean isRange;
-        private final Connective defaultConnective;
+        private final Query.Connective defaultConnective;
 
         private Property property;
 
@@ -125,7 +122,7 @@ public class AppParams {
             return isRange;
         }
 
-        public Connective defaultConnective() {
+        public Query.Connective defaultConnective() {
             return defaultConnective;
         }
 
@@ -149,7 +146,7 @@ public class AppParams {
         }
 
         private int getSize(Map<?, ?> settings) {
-            return Optional.ofNullable((Integer) settings.get("size")).orElse(Aggs.DEFAULT_BUCKET_SIZE);
+            return Optional.ofNullable((Integer) settings.get("size")).orElse(DEFAULT_BUCKET_SIZE);
         }
 
         private boolean getRangeFlag(Map<?, ?> settings) {
@@ -157,10 +154,10 @@ public class AppParams {
                     .orElse(false);
         }
 
-        private Connective getConnective(Map<?, ?> settings) {
+        private Query.Connective getConnective(Map<?, ?> settings) {
             return Optional.ofNullable((String) settings.get("connective"))
-                    .map(Connective::valueOf)
-                    .orElse(Connective.AND);
+                    .map(Query.Connective::valueOf)
+                    .orElse(Query.Connective.AND);
         }
     }
 

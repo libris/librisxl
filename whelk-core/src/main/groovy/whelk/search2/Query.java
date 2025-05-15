@@ -29,9 +29,7 @@ public class Query {
     private final Disambiguate disambiguate;
     private final LinkLoader linkLoader;
     private final SelectedFilters selectedFilters;
-
     private final Stats stats;
-    private final Agg agg;
 
     protected Object esQueryDsl;
     protected QueryResult queryResult;
@@ -45,6 +43,13 @@ public class Query {
             return Set.of(values());
         }
     }
+
+    public enum Connective {
+        AND,
+        OR
+    }
+
+    public static final String NESTED_AGG_NAME = "n";
 
     public Query(QueryParams queryParams,
                  AppParams appParams,
@@ -62,7 +67,6 @@ public class Query {
         this.linkLoader = new LinkLoader();
         this.selectedFilters = queryParams.skipStats ? new SelectedFilters(queryTree, appParams.siteFilters) : new SelectedFilters(queryTree, appParams);
         this.stats = new Stats();
-        this.agg = new Agg();
     }
 
     public static Query init(QueryParams queryParams, AppParams appParams, VocabMappings vocabMappings, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
@@ -158,11 +162,11 @@ public class Query {
     }
 
     protected Map<String, Object> getEsAggQuery(Collection<String> rulingTypes) {
-        return agg.buildAggQuery(rulingTypes);
+        return buildAggQuery(appParams.statsRepr.sliceList(), whelk.getJsonld(), rulingTypes, esSettings.mappings, selectedFilters);
     }
 
     protected Map<String, Object> getPostFilter(Collection<String> rulingTypes) {
-        return getEsMultiSelectedFilters(rulingTypes);
+        return getEsMultiSelectedFilters(rulingTypes, whelk.getJsonld(), esSettings.mappings, selectedFilters);
     }
 
     private Map<String, Object> getPartialCollectionView() {
@@ -230,7 +234,11 @@ public class Query {
         return getEsQuery(queryTree, List.of());
     }
 
-    private Map<String, Object> getEsMultiSelectedFilters(Collection<String> rulingTypes) {
+    private static Map<String, Object> getEsMultiSelectedFilters(Collection<String> rulingTypes,
+                                                                 JsonLd jsonLd,
+                                                                 EsMappings esMappings,
+                                                                 SelectedFilters selectedFilters)
+    {
         List<Node> multiSelectedFilters = selectedFilters.getAllMultiSelected()
                 .stream()
                 .map(selected -> selected.size() > 1 ? new Or(selected) : selected.getFirst())
@@ -239,7 +247,7 @@ public class Query {
             return Map.of();
         }
         return new QueryTree(multiSelectedFilters.size() == 1 ? multiSelectedFilters.getFirst() : new And(multiSelectedFilters))
-                .toEs(whelk.getJsonld(), esSettings.mappings, List.of(), rulingTypes, List.of());
+                .toEs(jsonLd, esMappings, List.of(), rulingTypes, List.of());
     }
 
     private String getSortField(String termPath) {
@@ -284,6 +292,68 @@ public class Query {
             return DocumentUtil.NOP;
         });
         return framedThing;
+    }
+
+    private static Map<String, Object> buildAggQuery(List<AppParams.Slice> sliceList,
+                                               JsonLd jsonLd,
+                                               Collection<String> rulingTypes,
+                                               EsMappings esMappings,
+                                               SelectedFilters selectedFilters) {
+        if (sliceList.isEmpty()) {
+            return Map.of(JsonLd.TYPE_KEY,
+                    Map.of("terms",
+                            Map.of("field", JsonLd.TYPE_KEY)));
+        }
+
+        Map<String, Object> multiSelectedFilters = getEsMultiSelectedFilters(rulingTypes, jsonLd, esMappings, selectedFilters);
+
+        Map<String, Object> query = new LinkedHashMap<>();
+
+        for (AppParams.Slice slice : sliceList) {
+            String pKey = slice.propertyKey();
+
+            if (!selectedFilters.isSelectable(pKey)) {
+                continue;
+            }
+
+            Property property = slice.getProperty(jsonLd);
+
+            if (!property.restrictions().isEmpty()) {
+                // TODO: E.g. author (combining contribution.role and contribution.agent)
+                throw new RuntimeException("Can't handle combined fields in aggs query");
+            }
+
+            new Path(property).expand(jsonLd)
+                    .getAltPaths(jsonLd, rulingTypes)
+                    .forEach(path -> {
+                        Map<String, Object> aggs = path.getEsNestedStem(esMappings)
+                                .map(nestedStem -> buildNestedAggQuery(path, slice, nestedStem))
+                                .orElse(buildCoreAqqQuery(path, slice));
+                        var filter = selectedFilters.isMultiSelectable(slice.propertyKey()) || multiSelectedFilters.isEmpty()
+                                ? QueryUtil.mustWrap(List.of())
+                                : multiSelectedFilters;
+                        query.put(path.fullEsSearchPath(), filterWrap(aggs, property.name(), filter));
+                    });
+        }
+
+        return query;
+    }
+
+    private static Map<String, Object> buildCoreAqqQuery(Path path, AppParams.Slice slice) {
+        return Map.of("terms",
+                Map.of("field", path.fullEsSearchPath(),
+                        "size", slice.size(),
+                        "order", Map.of(slice.bucketSortKey(), slice.sortOrder())));
+    }
+
+    private static Map<String, Object> buildNestedAggQuery(Path path, AppParams.Slice slice, String nestedStem) {
+        return Map.of("nested", Map.of("path", nestedStem),
+                "aggs", Map.of(NESTED_AGG_NAME, buildCoreAqqQuery(path, slice)));
+    }
+
+    private static Map<String, Object> filterWrap(Map<String, Object> aggs, String property, Map<String, Object> filter) {
+        return Map.of("aggs", Map.of(property, aggs),
+                "filter", filter);
     }
 
     private class LinkLoader {
@@ -410,7 +480,7 @@ public class Query {
         private List<Map<String, Object>> getObservations(String propertyKey, Map<PathValue, Integer> buckets) {
             List<Map<String, Object>> observations = new ArrayList<>();
 
-            AppParams.Slice.Connective connective = selectedFilters.getConnective(propertyKey);
+            Connective connective = selectedFilters.getConnective(propertyKey);
 
             QueryTree qt = selectedFilters.isRangeFilter(propertyKey)
                     ? queryTree.omitNodes(selectedFilters.getRangeSelected(propertyKey))
@@ -430,7 +500,7 @@ public class Query {
                     observation.put("totalItems", count);
                     observation.put("view", Map.of(JsonLd.ID_KEY, makeFindUrlNoOffset(alteredTree, queryParams)));
                     observation.put("object", pv.value().description());
-                    if (connective == AppParams.Slice.Connective.OR) {
+                    if (connective == Connective.OR) {
                         observation.put("_selected", isSelected);
                     }
 
@@ -529,70 +599,6 @@ public class Query {
             }
 
             return results;
-        }
-    }
-
-    private class Agg {
-        private static final String NESTED_AGG_NAME = "n";
-
-        private Map<String, Object> buildAggQuery(Collection<String> rulingTypes) {
-            List<AppParams.Slice> sliceList = appParams.statsRepr.sliceList();
-
-            if (sliceList.isEmpty()) {
-                return Map.of(JsonLd.TYPE_KEY,
-                        Map.of("terms",
-                                Map.of("field", JsonLd.TYPE_KEY)));
-            }
-
-            Map<String, Object> multiSelectedFilters = getEsMultiSelectedFilters(rulingTypes);
-
-            Map<String, Object> query = new LinkedHashMap<>();
-
-            for (AppParams.Slice slice : sliceList) {
-                String pKey = slice.propertyKey();
-
-                if (!selectedFilters.isSelectable(pKey)) {
-                    continue;
-                }
-
-                Property property = slice.getProperty(whelk.getJsonld());
-
-                if (!property.restrictions().isEmpty()) {
-                    // TODO: E.g. author (combining contribution.role and contribution.agent)
-                    throw new RuntimeException("Can't handle combined fields in aggs query");
-                }
-
-                new Path(property).expand(whelk.getJsonld())
-                        .getAltPaths(whelk.getJsonld(), rulingTypes)
-                        .forEach(path -> {
-                            Map<String, Object> aggs = path.getEsNestedStem(esSettings.mappings)
-                                    .map(nestedStem -> buildNestedAggQuery(path, slice, nestedStem))
-                                    .orElse(buildCoreAqqQuery(path, slice));
-                            var filter = selectedFilters.isMultiSelectable(slice.propertyKey()) || multiSelectedFilters.isEmpty()
-                                    ? QueryUtil.mustWrap(List.of())
-                                    : multiSelectedFilters;
-                            query.put(path.fullEsSearchPath(), filterWrap(aggs, property.name(), filter));
-                        });
-            }
-
-            return query;
-        }
-
-        private static Map<String, Object> buildCoreAqqQuery(Path path, AppParams.Slice slice) {
-            return Map.of("terms",
-                    Map.of("field", path.fullEsSearchPath(),
-                            "size", slice.size(),
-                            "order", Map.of(slice.bucketSortKey(), slice.sortOrder())));
-        }
-
-        private static Map<String, Object> buildNestedAggQuery(Path path, AppParams.Slice slice, String nestedStem) {
-            return Map.of("nested", Map.of("path", nestedStem),
-                    "aggs", Map.of(NESTED_AGG_NAME, buildCoreAqqQuery(path, slice)));
-        }
-
-        private static Map<String, Object> filterWrap(Map<String, Object> aggs, String property, Map<String, Object> filter) {
-            return Map.of("aggs", Map.of(property, aggs),
-                    "filter", filter);
         }
     }
 }
