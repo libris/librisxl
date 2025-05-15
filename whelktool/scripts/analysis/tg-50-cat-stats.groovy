@@ -47,22 +47,22 @@ void process(bib) {
         var saves = []
         var isFirstManual = true
 
-        if (shortId == 'bvnpzmmn4qf7nzs') {
-            println(changeSets.join("\n\n\n"))
-        }
-
         for (var save : changeSets) {
             String timestamp = save.date
             String year = timestamp.split("-").first()
 
-            if (Integer.parseInt(year) < 2021 || save.tool != [ "@id": "https://id.kb.se/generator/crud" ]) {
+            String agent = save.agent["@id"]
+
+            if (Integer.parseInt(year) < 2021
+                    || save.tool != [ "@id": "https://id.kb.se/generator/crud" ]
+                    || !agent.startsWith("https://libris.kb.se/library/") // History bug?? tool not set
+            ) {
                 editNo++
                 versionNo = editNo
                 continue
             }
 
             String day = timestamp.split("T").first()
-            String agent = save.agent["@id"]
 
             if(agent != lastAgent || day != lastDay) {
                 if(saves) {
