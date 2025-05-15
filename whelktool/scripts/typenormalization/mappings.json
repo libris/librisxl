@@ -769,7 +769,7 @@
     "https://id.kb.se/term/ktg/CelestialGlobe" : [ "https://id.kb.se/term/ktg/Globe" ],
     "https://id.kb.se/term/ktg/ChapterBook" : [ "https://id.kb.se/term/ktg/WrittenBookWithImages" ],
     "https://id.kb.se/term/ktg/CollectedWork" : [ "https://id.kb.se/term/ktg/CollectingResource" ],
-    "https://id.kb.se/term/ktg/Comic" : [ "https://id.kb.se/term/ktg/GraphicLiterature", "https://id.kb.se/term/saogf/Tecknade%20serier" ],
+    "https://id.kb.se/term/ktg/Comic" : [ "https://id.kb.se/term/barngf/Tecknade%20serier", "https://id.kb.se/term/ktg/GraphicLiterature", "https://id.kb.se/term/saogf/Tecknade%20serier" ],
     "https://id.kb.se/term/ktg/ComicStory" : [ "https://id.kb.se/term/ktg/Comic", "https://id.kb.se/term/ktg/ShortStory" ],
     "https://id.kb.se/term/ktg/ComputerCode" : [ "https://id.kb.se/term/ktg/Software" ],
     "https://id.kb.se/term/ktg/ComputerGame" : [ "https://id.kb.se/term/ktg/PuzzleOrGame", "https://id.kb.se/term/rda/ComputerProgram" ],
