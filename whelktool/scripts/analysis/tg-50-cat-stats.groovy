@@ -59,9 +59,7 @@ void processEditSession(shortId, versionNo, List edits) {
     if(!edits) {
         return
     }
-
-    println("-----\n" + edits.join('\n\n')+"-----" )
-
+    
     var added = edits.collectMany { filteredPaths(it.addedPaths) } as Set
     var removed = edits.collectMany { filteredPaths(it.removedPaths) } as Set
     var modified = added.intersect(removed)
