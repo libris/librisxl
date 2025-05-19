@@ -165,7 +165,7 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
             Map<String, Object> scriptScoreQuery = Map.of(
                     "script_score", Map.of(
                             "query", buildSimpleQuery(queryMode, queryString, boostFields),
-                            "script", Map.of("source", "_score * " + lengthNormMultiplier + function)));
+                            "script", Map.of("source", lengthNormMultiplier + function)));
 
             queries.add(scriptScoreQuery);
         });
