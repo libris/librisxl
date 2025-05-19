@@ -1,5 +1,6 @@
 package whelk.rest.api
 
+import whelk.JsonLd
 import whelk.util.http.BadRequestException
 import whelk.util.http.MimeTypes
 import whelk.util.http.NotFoundException
@@ -143,7 +144,7 @@ class CrudGetRequest {
     }
 
     static Optional<String> parseComputedLabelLocale(HttpServletRequest request) {
-        return Optional.ofNullable(request.getParameter("_computedLabel"))
+        return Optional.ofNullable(request.getParameter(JsonLd.Platform.COMPUTED_LABEL))
     }
 
     private Optional<Boolean> getBoolParameter(String name) {
