@@ -1,5 +1,6 @@
 package whelk.search2;
 
+import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
 
 import java.util.ArrayList;
@@ -49,6 +50,7 @@ public class QueryParams {
     public final List<String> debug;
     public final String lens;
     public final Spell spell;
+    public final String computedLabelLocale;
     public final List<String> boostFields;
     public final List<EsBoost.ScoreFunction> esScoreFunctions;
     public final Map<String, String[]> aliased;
@@ -69,6 +71,7 @@ public class QueryParams {
         this.offset = getOffset(apiParameters);
         this.lens = getOptionalSingleNonEmpty(ApiParams.LENS, apiParameters).orElse("cards");
         this.spell = new Spell(getOptionalSingleNonEmpty(ApiParams.SPELL, apiParameters).orElse(""));
+        this.computedLabelLocale = getOptionalSingleNonEmpty(JsonLd.Platform.COMPUTED_LABEL, apiParameters).orElse(null);
         this.boostFields = getMultiple(ApiParams.BOOST, apiParameters);
         this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse("");
         this.skipStats = getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
@@ -111,6 +114,9 @@ public class QueryParams {
             var spellP = spell.asString();
             if (!spellP.isEmpty()) {
                 params.put(ApiParams.SPELL, spellP);
+            }
+            if (computedLabelLocale != null) {
+                params.put(JsonLd.Platform.COMPUTED_LABEL, computedLabelLocale);
             }
             var sort = sortBy.asString();
             if (!sort.isEmpty()) {
