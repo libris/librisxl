@@ -48,12 +48,14 @@ public class SelectedFilters {
         return isSelectable(propertyKey) && selectedByPropertyKey.get(propertyKey).contains(pathValue);
     }
 
-    public List<List<Node>> getAllMultiSelected() {
-        return selectedByPropertyKey.keySet().stream()
-                .filter(this::isMultiSelectable)
-                .map(this::getSelected)
-                .filter(Predicate.not(List::isEmpty))
-                .toList();
+    public Map<String, List<Node>> getAllMultiSelected() {
+        Map<String, List<Node>> multiSelected = new HashMap<>();
+        selectedByPropertyKey.forEach((pKey, selected) -> {
+            if (isMultiSelectable(pKey) && !getSelected(pKey).isEmpty()) {
+                multiSelected.put(pKey, getSelected(pKey));
+            }
+        });
+        return multiSelected;
     }
 
     public List<Node> getRangeSelected(String propertyKey) {

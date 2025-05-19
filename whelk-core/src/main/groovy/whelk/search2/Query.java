@@ -10,6 +10,7 @@ import whelk.util.DocumentUtil;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -156,7 +157,7 @@ public class Query {
     }
 
     protected Map<String, Object> getEsQuery(QueryTree queryTree, Collection<String> rulingTypes) {
-        List<Node> multiSelectedFilters = selectedFilters.getAllMultiSelected().stream().flatMap(List::stream).toList();
+        List<Node> multiSelectedFilters = selectedFilters.getAllMultiSelected().values().stream().flatMap(List::stream).toList();
         var esQuery = queryTree.toEs(whelk.getJsonld(), esSettings.mappings, queryParams.boostFields, rulingTypes, multiSelectedFilters);
         return addBoosts(esQuery, queryParams.esScoreFunctions);
     }
@@ -166,7 +167,7 @@ public class Query {
     }
 
     protected Map<String, Object> getPostFilter(Collection<String> rulingTypes) {
-        return getEsMultiSelectedFilters(rulingTypes, whelk.getJsonld(), esSettings.mappings, selectedFilters);
+        return getEsMultiSelectedFilters(selectedFilters.getAllMultiSelected(), rulingTypes, whelk.getJsonld(), esSettings.mappings);
     }
 
     private Map<String, Object> getPartialCollectionView() {
@@ -234,19 +235,19 @@ public class Query {
         return getEsQuery(queryTree, List.of());
     }
 
-    private static Map<String, Object> getEsMultiSelectedFilters(Collection<String> rulingTypes,
-                                                                 JsonLd jsonLd,
-                                                                 EsMappings esMappings,
-                                                                 SelectedFilters selectedFilters)
+    private static Map<String, Object> getEsMultiSelectedFilters(Map<String, List<Node>> multiSelected,
+                                                          Collection<String> rulingTypes,
+                                                          JsonLd jsonLd,
+                                                          EsMappings esMappings)
     {
-        List<Node> multiSelectedFilters = selectedFilters.getAllMultiSelected()
+        if (multiSelected.isEmpty()) {
+            return Map.of();
+        }
+        List<Node> orGrouped = multiSelected.values()
                 .stream()
                 .map(selected -> selected.size() > 1 ? new Or(selected) : selected.getFirst())
                 .toList();
-        if (multiSelectedFilters.isEmpty()) {
-            return Map.of();
-        }
-        return new QueryTree(multiSelectedFilters.size() == 1 ? multiSelectedFilters.getFirst() : new And(multiSelectedFilters))
+        return new QueryTree(orGrouped.size() == 1 ? orGrouped.getFirst() : new And(orGrouped))
                 .toEs(jsonLd, esMappings, List.of(), rulingTypes, List.of());
     }
 
@@ -305,7 +306,7 @@ public class Query {
                             Map.of("field", JsonLd.TYPE_KEY)));
         }
 
-        Map<String, Object> multiSelectedFilters = getEsMultiSelectedFilters(rulingTypes, jsonLd, esMappings, selectedFilters);
+        Map<String, List<Node>> multiSelected = selectedFilters.getAllMultiSelected();
 
         Map<String, Object> query = new LinkedHashMap<>();
 
@@ -329,9 +330,10 @@ public class Query {
                         Map<String, Object> aggs = path.getEsNestedStem(esMappings)
                                 .map(nestedStem -> buildNestedAggQuery(path, slice, nestedStem))
                                 .orElse(buildCoreAqqQuery(path, slice));
-                        var filter = selectedFilters.isMultiSelectable(slice.propertyKey()) || multiSelectedFilters.isEmpty()
-                                ? QueryUtil.mustWrap(List.of())
-                                : multiSelectedFilters;
+                        Map<String, List<Node>> mSelected = selectedFilters.isMultiSelectable(pKey)
+                                ? new HashMap<>(multiSelected) {{ remove(pKey); }}
+                                : multiSelected;
+                        Map<String, Object> filter = getEsMultiSelectedFilters(mSelected, rulingTypes, jsonLd, esMappings);
                         query.put(path.fullEsSearchPath(), filterWrap(aggs, property.name(), filter));
                     });
         }
@@ -353,7 +355,7 @@ public class Query {
 
     private static Map<String, Object> filterWrap(Map<String, Object> aggs, String property, Map<String, Object> filter) {
         return Map.of("aggs", Map.of(property, aggs),
-                "filter", filter);
+                "filter", filter.isEmpty() ? QueryUtil.mustWrap(List.of()) : filter);
     }
 
     private class LinkLoader {
