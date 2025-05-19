@@ -37,7 +37,7 @@ class FreeTextSpec extends Specification {
                                 [
                                         "script_score": [
                                                 "script": [
-                                                        "source": "_score * someFunc"
+                                                        "source": "someFunc"
                                                 ],
                                                 "query" : [
                                                         "simple_query_string": [
@@ -56,7 +56,7 @@ class FreeTextSpec extends Specification {
                                 [
                                         "script_score": [
                                                 "script": [
-                                                        "source": "_score * another(func)"
+                                                        "source": "another(func)"
                                                 ],
                                                 "query" : [
                                                         "simple_query_string": [
@@ -101,7 +101,7 @@ class FreeTextSpec extends Specification {
                                 [
                                         "script_score": [
                                                 "script": [
-                                                        "source": "_score * someFunc"
+                                                        "source": "someFunc"
                                                 ],
                                                 "query" : [
                                                         "simple_query_string": [
