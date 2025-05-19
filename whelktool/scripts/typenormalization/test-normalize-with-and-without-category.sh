@@ -19,4 +19,8 @@ time java -Xmx2G -Dxl.secret.properties=../secret.properties-${LIBRISENV} -Dtype
 # 4. Run the typenormalization on instances and works script to nromalize without category as qa-NORMALIZED.jsonl
 time java -Xmx2G -Dxl.secret.properties=../secret.properties-${LIBRISENV} -Dtypenormalization=simple-types-algorithm -DaddCategory=false -Dnowhelk.datadir=../../${TESTFOLDER} -Dnowhelk.basename=qa -jar build/libs/whelktool.jar --report ../../${TESTFOLDER}/reports/without-category --dry-run --no-threads scripts/typenormalization/nowhelk.groovy
 
-# 5. Compare the original works and instances files, qa-NORMALIZED-with-category.jsonl and qa-NORMALIZED.jsonl
+# 5. Skriv ut testsammanfattningar
+python3 ./scripts/typenormalization/review_tests.py ../../${TESTFOLDER}/qa-instances.jsonl
+
+# 6. Compare the original works and instances files, qa-NORMALIZED-with-category.jsonl and qa-NORMALIZED.jsonl
+
