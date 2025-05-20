@@ -2,32 +2,33 @@ package whelk.search2.querytree;
 
 import whelk.JsonLd;
 import whelk.search.ESQuery;
+import whelk.search2.EsMappings;
 import whelk.search2.Operator;
+import whelk.search2.QueryParams;
 import whelk.util.Unicode;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import static whelk.search2.QueryUtil.isQuoted;
+import static whelk.search2.QueryUtil.makeUpLink;
 import static whelk.search2.QueryUtil.mustNotWrap;
+import static whelk.search2.QueryUtil.quote;
 import static whelk.search2.QueryUtil.shouldWrap;
 import static whelk.search2.Operator.EQUALS;
 
-public record FreeText(TextQuery textQuery, Operator operator, String value, Collection<String> boostFields) implements Node {
-    public FreeText(Operator operator, String value, JsonLd jsonLd) {
-        this(new TextQuery(jsonLd), operator, value);
+public record FreeText(Property.TextQuery textQuery, Operator operator, String value) implements Node {
+    public FreeText(String value) {
+        this(null, EQUALS, value);
     }
-    public FreeText(TextQuery textQuery, Operator operator, String value) { this(textQuery, operator, value, List.of()); }
 
     @Override
-    // TODO: Review/refine this. So far it's basically just copy-pasted from old search code (EsQuery)
-    public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath) {
+    public Map<String, Object> toEs(EsMappings esMappings, Collection<String> boostFields) {
         String s = value;
         s = Unicode.normalizeForSearch(s);
         boolean isSimple = ESQuery.isSimple(s);
@@ -35,77 +36,62 @@ public record FreeText(TextQuery textQuery, Operator operator, String value, Col
         if (!isSimple) {
             s = ESQuery.escapeNonSimpleQueryString(s);
         }
-        Map<String, Object> simpleQuery = new HashMap<>();
-        simpleQuery.put(queryMode,
-                Map.of("query", s,
-                        "analyze_wildcard", true,
-                        "default_operator", "AND"
-                )
-        );
+        String queryString = s;
 
         if (boostFields.isEmpty()) {
-            if (operator() == Operator.EQUALS) {
-                return simpleQuery;
+            return wrap(buildSimpleQuery(queryMode, queryString));
+        }
+
+        Map<String, Float> basicBoostFields = new LinkedHashMap<>();
+        Map<String, String> functionBoostFields = new LinkedHashMap<>();
+
+        // This is only temporary, for experimenting
+        int phraseBoostDivisor = 1;
+
+        for (String bf : boostFields) {
+            try {
+                String field = bf.substring(0, bf.indexOf('^'));
+                String boost = bf.substring(bf.indexOf('^') + 1);
+                if (field.equals(QueryParams.ApiParams.PHRASE_BOOST_DIVISOR)) {
+                    phraseBoostDivisor = Integer.parseInt(boost);
+                    continue;
+                }
+                if (boost.contains("(")) {
+                    Float basicBoost = Float.parseFloat(boost.substring(0, boost.indexOf('(')));
+                    String function = boost.substring(boost.indexOf('(') + 1, boost.lastIndexOf(')'));
+                    basicBoostFields.put(field, basicBoost);
+                    functionBoostFields.put(field, function);
+                } else {
+                    basicBoostFields.put(field, Float.parseFloat(boost));
+                }
+            } catch (Exception ignored) {
             }
-            if (operator() == Operator.NOT_EQUALS) {
-                return mustNotWrap(simpleQuery);
+        }
+
+        var queries = buildQueries(queryMode, queryString, basicBoostFields, functionBoostFields);
+        if (!isQuoted(queryString) && isMultiWord(queryString)) {
+            int divisor = phraseBoostDivisor;
+            if (divisor != 1) {
+                basicBoostFields = basicBoostFields.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue() / divisor));
             }
+            queries.addAll(buildQueries(queryMode, quote(queryString), basicBoostFields, functionBoostFields));
         }
 
-        List<String> softFields = boostFields.stream()
-                .filter(f -> f.contains(JsonLd.SEARCH_KEY))
-                .toList();
-        List<String> exactFields = boostFields.stream()
-                .map(f -> f.replace(JsonLd.SEARCH_KEY, JsonLd.SEARCH_KEY + ".exact"))
-                .toList();
-
-        var boostedExact = new HashMap<>();
-        var be = Map.of(
-                "query", s,
-                "fields", exactFields,
-                "analyze_wildcard", true,
-                "default_operator", "AND"
-        );
-        boostedExact.put(queryMode, be);
-
-        var boostedSoft = new HashMap<>();
-        var bs = Map.of(
-                "query", s,
-                "fields", softFields,
-                "quote_field_suffix", ".exact",
-                "analyze_wildcard", true,
-                "default_operator", "AND"
-        );
-        boostedSoft.put(queryMode, bs);
-
-        var shouldClause = new ArrayList<>(Arrays.asList(boostedExact, boostedSoft, simpleQuery));
-        if (operator() == Operator.EQUALS) {
-            return shouldWrap(shouldClause);
-        }
-        if (operator() == Operator.NOT_EQUALS) {
-                /*
-                Better with { must: [must_not:{}, must_not:{}, must_not:{}] }?
-                https://opster.com/guides/elasticsearch/search-apis/elasticsearch-query-bool/
-                Limit the use of should clauses:
-                While `should` clauses can be useful for boosting scores, they can also slow down your queries if used excessively.
-                Try to limit the use of `should` clauses and only use them when necessary.
-                 */
-            return mustNotWrap(shouldWrap(shouldClause));
-        }
-        throw new RuntimeException("Invalid operator"); // Not reachable
+        return wrap(queries.size() == 1 ? queries.getFirst() : shouldWrap(queries));
     }
 
     @Override
-    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
-        return new FreeText(textQuery, operator, value, getBoostFields.apply(rulingTypes));
+    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes) {
+        return this;
     }
 
     @Override
-    public Map<String, Object> toSearchMapping(QueryTree qt, Map<String, String> nonQueryParams) {
+    public Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("property", textQuery.definition());
         m.put(operator.termKey, value);
-        m.put("up", qt.makeUpLink(this, nonQueryParams));
+        m.put("up", makeUpLink(qt, this, queryParams));
         return m;
     }
 
@@ -116,18 +102,107 @@ public record FreeText(TextQuery textQuery, Operator operator, String value, Col
                 value;
     }
 
+    @Override
+    public Node getInverse() {
+        return new FreeText(textQuery, operator.getInverse(), value);
+    }
+
+    @Override
+    public boolean shouldContributeToEsScore() {
+        return operator == EQUALS && !Operator.WILDCARD.equals(value);
+    }
+
+    @Override
+    public boolean isFreeTextNode() {
+        return operator.equals(EQUALS);
+    }
+
+    @Override
+    public String toString() {
+        return operator == Operator.NOT_EQUALS
+                ? "NOT " + value :
+                value;
+    }
+
+    public FreeText replace(String replacement) {
+        return new FreeText(textQuery, operator, replacement);
+    }
+
     public boolean isWild() {
         return operator == EQUALS && Operator.WILDCARD.equals(value);
     }
 
-    public static class TextQuery extends Property {
-        TextQuery(JsonLd jsonLd) {
-            super("textQuery", jsonLd);
-        }
+    private boolean isMultiWord(String s) {
+        return s.matches(".*\\S\\s+\\S.*");
+    }
 
-        // For test only
-        TextQuery(Map<String, Object> definition) {
-            super("textQuery", definition, null);
+    private Map<String, Object> wrap(Map<String, Object> query) {
+        if (operator == Operator.EQUALS) {
+            return query;
         }
+        if (operator == Operator.NOT_EQUALS) {
+            return mustNotWrap(query);
+        }
+        throw new RuntimeException("Invalid operator"); // Not reachable
+    }
+
+    private List<Map<String, Object>> buildQueries(String queryMode, String queryString, Map<String, Float> basicBoostFields, Map<String, String> functionBoostFields) {
+        List<Map<String, Object>> queries = new ArrayList<>();
+
+        if (functionBoostFields.size() != basicBoostFields.size()) {
+            queries.add(buildBasicBoostQuery(queryMode, queryString, basicBoostFields, functionBoostFields));
+        }
+        queries.addAll(buildFunctionBoostQueries(queryMode, queryString, basicBoostFields, functionBoostFields));
+
+        return queries;
+    }
+
+    private Map<String, Object> buildBasicBoostQuery(String queryMode, String queryString, Map<String, Float> basicBoostFields, Map<String, String> functionBoostFields) {
+        Map<String, Float> boostFields = new LinkedHashMap<>();
+        basicBoostFields.forEach((field, boost) -> boostFields.put(field, functionBoostFields.containsKey(field) ? 0 : boost));
+        return buildSimpleQuery(queryMode, queryString, boostFields);
+    }
+
+    private List<Map<String, Object>> buildFunctionBoostQueries(String queryMode, String queryString, Map<String, Float> basicBoostFields, Map<String, String> functionBoostFields) {
+        List<Map<String, Object>> queries = new ArrayList<>();
+
+        Map<String, List<String>> fieldsGroupedByFunction = new LinkedHashMap<>();
+        functionBoostFields.forEach((field, function) -> fieldsGroupedByFunction.computeIfAbsent(function, v -> new ArrayList<>()).add(field));
+
+        String lengthNormMultiplier = isQuoted(queryString) ? queryString.split("\\s+").length + " * " : "";
+
+        fieldsGroupedByFunction.forEach((function, fields) -> {
+            Map<String, Float> boostFields = new LinkedHashMap<>();
+            basicBoostFields.forEach((f, boost) -> boostFields.put(f, fields.contains(f) ? boost : 0));
+
+            Map<String, Object> scriptScoreQuery = Map.of(
+                    "script_score", Map.of(
+                            "query", buildSimpleQuery(queryMode, queryString, boostFields),
+                            "script", Map.of("source", lengthNormMultiplier + function)));
+
+            queries.add(scriptScoreQuery);
+        });
+
+        return queries;
+    }
+
+    private Map<String, Object> buildSimpleQuery(String queryMode, String queryString) {
+        return buildSimpleQuery(queryMode, queryString, List.of());
+    }
+
+    private Map<String, Object> buildSimpleQuery(String queryMode, String queryString, Collection<String> fields) {
+        var query = new HashMap<>();
+        query.put("query", queryString);
+        query.put("analyze_wildcard", true);
+        query.put("default_operator", "AND");
+        if (!fields.isEmpty()) {
+            query.put("fields", fields);
+        }
+        return Map.of(queryMode, query);
+    }
+
+    private Map<String, Object> buildSimpleQuery(String queryMode, String queryString, Map<String, Float> fields) {
+        var fieldsStrings = fields.entrySet().stream().map(e -> e.getKey() + "^" + e.getValue()).toList();
+        return buildSimpleQuery(queryMode, queryString, fieldsStrings);
     }
 }

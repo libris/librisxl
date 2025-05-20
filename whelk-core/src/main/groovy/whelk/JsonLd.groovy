@@ -112,6 +112,11 @@ class JsonLd {
         public static final String SUBCLASS_OF = "subClassOf";
         public static final String SUB_PROPERTY_OF = "subPropertyOf";
         public static final String IS_DEFINED_BY = "isDefinedBy";
+        public static final String LABEL = "label";
+    }
+
+    static final class Platform {
+        public static final String COMPUTED_LABEL = "computedLabel";
     }
 
     public static final String ALTERNATE_PROPERTIES = 'alternateProperties'
@@ -401,6 +406,32 @@ class JsonLd {
         } else {
             return vocabId + termKey
         }
+    }
+
+    String prependVocabPrefix(String termKey) {
+        if (termKey.contains(':')) {
+            return termKey
+        }
+
+        getVocabPrefix() + ':' + termKey
+    }
+
+    @Memoized
+    String getVocabPrefix() {
+        var prefixEntry = prefixToNsMap.find { it.value == vocabId }
+        if (!prefixEntry) {
+            throw new IllegalStateException("Could not find prefix for " + vocabId )
+        }
+
+        return prefixEntry.key
+    }
+
+    String getNamespaceUri(String prefix) {
+        prefixToNsMap[prefix]
+    }
+
+    String getVocabId() {
+        return vocabId
     }
 
     Set<Link> expandLinks(Set<Link> refs) {

@@ -2,21 +2,17 @@ package whelk.rest.api
 
 import whelk.Document
 import whelk.Whelk
-import whelk.component.PostgreSQLComponent
 import whelk.converter.marc.JsonLD2MarcXMLConverter
-import whelk.util.Jackson
 import whelk.util.LegacyIntegrationTools
-import whelk.util.WhelkFactory
+import whelk.util.http.WhelkHttpServlet
 
-import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 import static whelk.util.Jackson.mapper
 
-class HoldAPI extends HttpServlet {
+class HoldAPI extends WhelkHttpServlet {
 
-    private Whelk whelk
     private JsonLD2MarcXMLConverter toMarcXmlConverter
 
     HoldAPI() {
@@ -25,13 +21,11 @@ class HoldAPI extends HttpServlet {
 
     HoldAPI(Whelk whelk) {
         this.whelk = whelk
+        init(whelk)
     }
 
     @Override
-    void init() {
-        if (!whelk) {
-            whelk = WhelkFactory.getSingletonWhelk()
-        }
+    void init(Whelk whelk) {
         toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter())
     }
 

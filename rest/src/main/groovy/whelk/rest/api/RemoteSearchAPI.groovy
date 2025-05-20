@@ -15,10 +15,9 @@ import whelk.converter.marc.MarcFrameConverter
 import whelk.filter.LinkFinder
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
-import whelk.util.WhelkFactory
 import whelk.util.http.HttpTools
+import whelk.util.http.WhelkHttpServlet
 
-import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import java.util.concurrent.Callable
@@ -28,7 +27,7 @@ import java.util.concurrent.Executors
 import static whelk.util.Jackson.mapper
 
 @Log
-class RemoteSearchAPI extends HttpServlet {
+class RemoteSearchAPI extends WhelkHttpServlet {
     MarcFrameConverter marcFrameConverter
     static final URL metaProxyInfoUrl
     static final String metaProxyBaseUrl
@@ -40,7 +39,6 @@ class RemoteSearchAPI extends HttpServlet {
 
     final String DEFAULT_DATABASE = "LC"
 
-    private Whelk whelk
     private LinkFinder linkFinder
 
     private Set<String> m_undesirableFields
@@ -51,11 +49,8 @@ class RemoteSearchAPI extends HttpServlet {
     }
 
     @Override
-    void init() {
+    void init(Whelk whelk) {
         log.info("Starting Remote Search API")
-        if (!whelk) {
-            whelk = WhelkFactory.getSingletonWhelk()
-        }
         marcFrameConverter = whelk.getMarcFrameConverter()
         linkFinder = new LinkFinder(whelk.storage)
 

@@ -1,5 +1,6 @@
 package whelk.rest.api
 
+import whelk.JsonLd
 import whelk.util.http.BadRequestException
 import whelk.util.http.MimeTypes
 import whelk.util.http.NotFoundException
@@ -16,6 +17,7 @@ class CrudGetRequest {
     private View view
     private Lens lens
     private String profile
+    private String computedLabelLocale
 
     static CrudGetRequest parse(HttpServletRequest request) {
         return new CrudGetRequest(request)
@@ -27,6 +29,8 @@ class CrudGetRequest {
         contentType = getBestContentType(getAcceptHeader(request), dataLeaf)
         lens = parseLens(request)
         profile = parseProfile(request)
+
+        computedLabelLocale = parseComputedLabelLocale(request).orElse(null)
     }
 
     HttpServletRequest getHttpServletRequest() {
@@ -67,6 +71,14 @@ class CrudGetRequest {
 
     boolean shouldApplyInverseOf() {
         return getBoolParameter("_applyInverseOf").orElse(false)
+    }
+
+    boolean shouldComputeLabels() {
+        return computedLabelLocale != null
+    }
+
+    String computedLabelLocale() {
+        return computedLabelLocale
     }
 
     View getView() {
@@ -129,6 +141,10 @@ class CrudGetRequest {
             return header
         }
         return null
+    }
+
+    static Optional<String> parseComputedLabelLocale(HttpServletRequest request) {
+        return Optional.ofNullable(request.getParameter(JsonLd.Platform.COMPUTED_LABEL))
     }
 
     private Optional<Boolean> getBoolParameter(String name) {

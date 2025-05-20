@@ -216,7 +216,7 @@ public class Ast {
             }
             case Code code -> {
                 if (code.operand() instanceof Leaf) {
-                    yield negate ? new Code(code.code(), Operator.opposites().get(code.operator()), code.operand()) : code;
+                    yield negate ? new Code(code.code(), code.operator().getInverse(), code.operand()) : code;
                 }
                 throw new RuntimeException("Error: Operand must be nothing but Leaf. Run flattenCodes to avoid this.");
             }

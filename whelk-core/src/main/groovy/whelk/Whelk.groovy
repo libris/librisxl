@@ -20,6 +20,7 @@ import whelk.filter.NormalizerChain
 import whelk.meta.WhelkConstants
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
+import whelk.util.FresnelUtil
 import whelk.util.PropertyLoader
 import whelk.util.Romanizer
 
@@ -58,6 +59,7 @@ class Whelk {
     Map contextData
     JsonLd jsonld
 
+    FresnelUtil fresnelUtil
     MarcFrameConverter marcFrameConverter
     ResourceCache resourceCache
     ElasticFind elasticFind
@@ -227,6 +229,7 @@ class Whelk {
             elasticFind = new ElasticFind(new ESQuery(this))
             initDocumentNormalizers(elasticFind)
         }
+        this.fresnelUtil = new FresnelUtil(jsonld)
     }
 
     // FIXME: de-KBV/Libris-ify: some of these are KBV specific, is that a problem?
@@ -634,7 +637,10 @@ class Whelk {
     void normalize(Document doc) {
         try {
             doc.normalizeUnicode()
-            doc.trimStrings()
+
+            if (!doc.getThingIdentifiers().contains(vocabDisplayUri)) { // don't trim fmt contentBefore / contentAfter
+                doc.trimStrings()
+            }
 
             // TODO: just ensure that normalizers don't trip on these?
             if (doc.data.containsKey(JsonLd.CONTEXT_KEY)) {

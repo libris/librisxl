@@ -1,17 +1,11 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
+import whelk.search2.EsMappings;
 import whelk.search2.Operator;
+import whelk.search2.QueryParams;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -20,6 +14,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.search2.QueryUtil.boolWrap;
+import static whelk.search2.QueryUtil.makeUpLink;
 import static whelk.search2.QueryUtil.nestedWrap;
 
 
@@ -39,41 +34,37 @@ public sealed abstract class Group implements Node permits And, Or {
 
     abstract boolean implies(Node a, Node b, BiFunction<Node, Node, Boolean> condition);
 
-    // Abstract class does not allow records as subclasses, however when comparing nodes we want the same behaviour
-    // as for records, hence the following.
     @Override
-    public boolean equals(Object o) {
-        return o.getClass() == this.getClass() && ((Group) o).children().equals(children());
-    }
+    public abstract boolean equals(Object o);
 
     @Override
     public int hashCode() {
-        return Objects.hash(children());
+        return Objects.hash(this.getClass(), new HashSet<>(children()));
     }
 
     @Override
-    public Map<String, Object> toEs(Function<String, Optional<String>> getNestedPath) {
-        Map<String, List<PathValue>> nestedGroups = getNestedGroups(getNestedPath);
-        return nestedGroups.isEmpty() ? wrap(childrenToEs(getNestedPath)) : toEsNested(nestedGroups, getNestedPath);
+    public Map<String, Object> toEs(EsMappings esMappings, Collection<String> boostFields) {
+        Map<String, List<PathValue>> nestedGroups = getNestedGroups(esMappings);
+        return nestedGroups.isEmpty() ? wrap(childrenToEs(esMappings, boostFields)) : toEsNested(nestedGroups, esMappings, boostFields);
     }
 
     @Override
-    public Map<String, Object> toSearchMapping(QueryTree qt, Map<String, String> nonQueryParams) {
+    public Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams) {
         var m = new LinkedHashMap<String, Object>();
-        m.put(key(), mapToMap(c -> c.toSearchMapping(qt, nonQueryParams)));
-        m.put("up", qt.makeUpLink(this, nonQueryParams));
+        m.put(key(), mapToMap(c -> c.toSearchMapping(qt, queryParams)));
+        m.put("up", makeUpLink(qt, this, queryParams));
         return m;
     }
 
     @Override
-    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
+    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes) {
         Node reduced = reduceTypes(jsonLd);
         if (reduced instanceof Group g) {
             rulingTypes = Stream.concat(g.collectRulingTypes().stream(), rulingTypes.stream())
                     .collect(Collectors.toSet());
-            return g.expandChildren(jsonLd, rulingTypes, getBoostFields);
+            return g.expandChildren(jsonLd, rulingTypes);
         }
-        return reduced.expand(jsonLd, rulingTypes, getBoostFields);
+        return reduced.expand(jsonLd, rulingTypes);
     }
 
     @Override
@@ -95,17 +86,25 @@ public sealed abstract class Group implements Node permits And, Or {
         return reduceByCondition(hasMoreSpecificTypeThan);
     }
 
-    Node expandChildren(JsonLd jsonLd, Collection<String> rulingTypes, Function<Collection<String>, Collection<String>> getBoostFields) {
-        return mapFilterAndReinstantiate(c -> c.expand(jsonLd, rulingTypes, getBoostFields), Objects::nonNull);
+    @Override
+    public boolean shouldContributeToEsScore() {
+        return children().stream().anyMatch(Node::shouldContributeToEsScore);
+    }
+
+    Node expandChildren(JsonLd jsonLd, Collection<String> rulingTypes) {
+        return mapFilterAndReinstantiate(c -> c.expand(jsonLd, rulingTypes), Objects::nonNull);
     }
 
     List<Node> flattenChildren(List<Node> children) {
-        return children.stream()
-                .flatMap(c -> c instanceof Group g
-                        ? (g.getClass() == this.getClass() ? g.children().stream() : Stream.of(g))
-                        : Stream.of(c))
-                .distinct()
-                .toList();
+        List<Node> flattened = new ArrayList<>();
+        for (Node child : children) {
+            if (child instanceof Group g && g.getClass() == this.getClass()) {
+                g.children().stream().filter(c -> !flattened.contains(c) && !children.contains(c)).forEach(flattened::add);
+            } else {
+                flattened.add(child);
+            }
+        }
+        return flattened;
     }
 
     Node filterAndReinstantiate(Predicate<Node> p) {
@@ -139,7 +138,7 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     // TODO: Review/refine nested logic and proper tests
-    private Map<String, Object> toEsNested(Map<String, List<PathValue>> nestedGroups, Function<String, Optional<String>> getNestedPath) {
+    private Map<String, Object> toEsNested(Map<String, List<PathValue>> nestedGroups, EsMappings esMappings, Collection<String> boostFields) {
         List<Map<String, Object>> esChildren = new ArrayList<>();
         List<Node> nonNested = new ArrayList<>(children());
 
@@ -149,10 +148,11 @@ public sealed abstract class Group implements Node permits And, Or {
                     .forEach((k, v) -> {
                         boolean isGroup = v.size() > 1;
                         boolean isNegatedGroup = k && isGroup;
-                        var es = v.stream().map(pv -> pv.toEs(isNegatedGroup)).toList();
                         if (isNegatedGroup) {
+                            var es = v.stream().map(pv -> pv.replaceOperator(Operator.EQUALS).getCoreEsQuery(esMappings)).toList();
                             bool.put("must_not", nestedWrap(nestedStem, wrap(es)));
                         } else {
+                            var es = v.stream().map(pv -> pv.getCoreEsQuery(esMappings)).toList();
                             bool.put("must", nestedWrap(nestedStem, isGroup ? wrap(es) : es.getFirst()));
                         }
                     });
@@ -161,20 +161,20 @@ public sealed abstract class Group implements Node permits And, Or {
         });
 
         for (Node n : nonNested) {
-            esChildren.add(n.toEs(getNestedPath));
+            esChildren.add(n.toEs(esMappings, boostFields));
         }
 
         return esChildren.size() == 1 ? esChildren.getFirst() : wrap(esChildren);
     }
 
     // TODO: Review/refine nested logic and proper tests
-    private Map<String, List<PathValue>> getNestedGroups(Function<String, Optional<String>> getNestedPath) {
+    private Map<String, List<PathValue>> getNestedGroups(EsMappings esMappings) {
         Map<String, List<PathValue>> nestedGroups = new HashMap<>();
         children().stream()
                 .filter(PathValue.class::isInstance)
                 .map(PathValue.class::cast)
-                .collect(Collectors.groupingBy(pv -> getNestedPath.apply(pv.path().fullSearchPath()),
-                        Collectors.groupingBy(pv -> pv.path().fullSearchPath()))
+                .collect(Collectors.groupingBy(pv -> pv.path().getEsNestedStem(esMappings),
+                        Collectors.groupingBy(pv -> pv.path().fullEsSearchPath()))
                 )
                 .forEach((nestedStem, groupedByPath) -> {
                     // At least two different paths sharing the same nested stem
@@ -192,8 +192,8 @@ public sealed abstract class Group implements Node permits And, Or {
         return nestedGroups;
     }
 
-    private List<Map<String, Object>> childrenToEs(Function<String, Optional<String>> getNestedPath) {
-        return mapToMap(n -> n.toEs(getNestedPath));
+    private List<Map<String, Object>> childrenToEs(EsMappings esMappings, Collection<String> boostFields) {
+        return mapToMap(n -> n.toEs(esMappings, boostFields));
     }
 
     private List<Node> mapToNode(Function<Node, Node> mapper) {

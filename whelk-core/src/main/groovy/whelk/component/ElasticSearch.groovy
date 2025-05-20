@@ -13,6 +13,8 @@ import whelk.Whelk
 import whelk.exception.InvalidQueryException
 import whelk.exception.UnexpectedHttpStatusException
 import whelk.util.DocumentUtil
+import whelk.util.FresnelUtil
+import whelk.util.FresnelUtil.DerivedLens
 import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
@@ -21,6 +23,7 @@ import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
 import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
+import static whelk.util.FresnelUtil.Options.TAKE_ALL_ALTERNATE
 import static whelk.util.Jackson.mapper
 
 @Log
@@ -51,6 +54,33 @@ class ElasticSearch {
     private static final int ES_LOG_MIN_DURATION = 2000 // Only log queries taking at least this amount of milliseconds
 
     private final Queue<Runnable> indexingRetryQueue = new LinkedBlockingQueue<>()
+
+    private static final class Lenses {
+        public static final DerivedLens CARD_ONLY = new DerivedLens(
+                FresnelUtil.LensGroupName.Card,
+                List.of(FresnelUtil.LensGroupName.Chip),
+                FresnelUtil.LensGroupName.SearchChip
+        )
+
+        public static final DerivedLens SEARCH_CARD_ONLY = new DerivedLens(
+                FresnelUtil.LensGroupName.SearchCard,
+                List.of(FresnelUtil.LensGroupName.Chip, FresnelUtil.LensGroupName.Card),
+                FresnelUtil.LensGroupName.SearchChip
+        )
+    }
+
+    public static final String TOP_CHIP_STR = '_topChipStr'
+    public static final String CHIP_STR = '_chipStr'
+    public static final String CARD_STR = '_cardStr'
+    public static final String SEARCH_CARD_STR = '_searchCardStr'
+
+    private static final Set<String> SEARCH_STRINGS = [
+            JsonLd.SEARCH_KEY,
+            TOP_CHIP_STR,
+            CHIP_STR,
+            CARD_STR,
+            SEARCH_CARD_STR
+    ] as Set
 
     ElasticSearch(Properties props) {
         this(
@@ -440,8 +470,20 @@ class ElasticSearch {
                 REMOVABLE_BASE_URIS,
                 document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
 
+        try {
+            var chip = whelk.fresnelUtil.applyLens(framed, FresnelUtil.LensGroupName.Chip, TAKE_ALL_ALTERNATE);
+            framed[TOP_CHIP_STR] = chip.tmpFirstProperty().asString()
+            // FIXME: Switch to commented-out call once it returns a satisfying result for this purpose
+//            framed[TOP_CHIP_STR] = chip.firstProperty().asString()
+            framed[CHIP_STR] = chip.asString()
+            framed[CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
+            framed[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.SEARCH_CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
+        } catch (Exception e) {
+            log.error(e, e)
+        }
+
         DocumentUtil.traverse(framed) { value, path ->
-            if (path && JsonLd.SEARCH_KEY == path.last() && !Unicode.isNormalizedForSearch(value)) {
+            if (path && SEARCH_STRINGS.contains(path.last()) && !Unicode.isNormalizedForSearch(value)) {
                 // TODO: replace with elastic ICU Analysis plugin?
                 // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
                 return new DocumentUtil.Replace(Unicode.normalizeForSearch(value))
@@ -584,13 +626,20 @@ class ElasticSearch {
         isnis.findAll{ it.size() == 16 }.collect { Unicode.formatIsni(it) }
     }
 
+    Map multiQuery(List jsonDslList) {
+        return performQuery(
+                jsonDslList.collect { [[:], it].collect { JsonOutput.toJson(it) + '\n' } }.flatten().join(),
+                getMultiSearchQueryUrl()
+        )
+    }
+
     Map query(Map jsonDsl) {
-        return performQuery(jsonDsl, getQueryUrl())
+        return performQuery(JsonOutput.toJson(jsonDsl), getQueryUrl())
     }
 
     Map queryIds(Map jsonDsl) {
         return performQuery(
-                jsonDsl,
+                JsonOutput.toJson(jsonDsl),
                 getQueryUrl(['took','hits.total','hits.hits._id'])
         )
     }
@@ -629,12 +678,12 @@ class ElasticSearch {
         return super.hashCode()
     }
 
-    private Map performQuery(Map jsonDsl, String queryUrl) {
+    private Map performQuery(String json, String queryUrl) {
         try {
             def start = System.currentTimeMillis()
             String responseBody = client.performRequest('POST',
                     queryUrl,
-                    JsonOutput.toJson(jsonDsl))
+                    json)
 
             def duration = System.currentTimeMillis() - start
             Map responseMap = mapper.readValue(responseBody, Map)
@@ -660,9 +709,13 @@ class ElasticSearch {
     private String getQueryUrlWithoutIndex(filterPath = []) {
         getQueryUrl(filterPath, null)
     }
+
+    private getMultiSearchQueryUrl() {
+        return getQueryUrl([], indexName, true)
+    }
     
-    private String getQueryUrl(filterPath = [], index = indexName) {
-        def url = (index ? "/${index}" : '') + "/_search?search_type=$SEARCH_TYPE"
+    private String getQueryUrl(filterPath = [], index = indexName, multiSearch = false) {
+        def url = (index ? "/${index}" : '') + (multiSearch ? '/_msearch' : '/_search') + "?search_type=$SEARCH_TYPE"
         if (filterPath) {
             url += "&filter_path=${filterPath.join(',')}"
         }

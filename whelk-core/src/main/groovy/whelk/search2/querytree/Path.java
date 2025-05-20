@@ -1,6 +1,7 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
+import whelk.search2.EsMappings;
 
 import java.util.Collection;
 import java.util.List;
@@ -72,7 +73,7 @@ public class Path {
                 .collect(Collectors.joining("."));
     }
 
-    public String fullSearchPath() {
+    public String fullEsSearchPath() {
         return path.stream()
                 .map(Subpath::toString)
                 .map(Path::substitute)
@@ -92,7 +93,7 @@ public class Path {
 
     public ExpandedPath expand(JsonLd jsonLd, Value value) {
         List<Subpath> expandedPath = expandShortHand(path);
-        if (shouldAddSuffix(jsonLd, value)) {
+        if (shouldAddSuffix(value)) {
             expandedPath.add(new Key.RecognizedKey(value instanceof Literal ? SEARCH_KEY : ID_KEY));
         }
         firstProperty().ifPresent(property -> {
@@ -113,12 +114,20 @@ public class Path {
         return Objects.hash(path);
     }
 
-    private boolean shouldAddSuffix(JsonLd jsonLd, Value value) {
+    public Optional<String> getEsNestedStem(EsMappings esMappings) {
+        String esPath = fullEsSearchPath();
+        if (esMappings.isNestedField(esPath)) {
+            return Optional.of(esPath);
+        }
+        return esMappings.getNestedFields().stream().filter(esPath::startsWith).findFirst();
+    }
+
+    private boolean shouldAddSuffix(Value value) {
         return !(value instanceof Literal l && l.isWildcard())
                 && last() instanceof Property p
                 && p.isObjectProperty()
                 && !p.isType()
-                && !jsonLd.isVocabTerm(p.name());
+                && !p.isVocabTerm();
     }
 
     private static List<Subpath> expandShortHand(List<Subpath> path) {
@@ -153,7 +162,7 @@ public class Path {
         }
 
         public List<ExpandedPath> getAltPaths(JsonLd jsonLd, Collection<String> types) {
-            if (origPath.first() instanceof Property p) {
+            if (origPath != null && origPath.first() instanceof Property p) {
                 List<ExpandedPath> altPaths = p.getApplicableIntegralRelations(jsonLd, types).stream()
                         .map(ir -> Stream.concat(Stream.of(ir), path().stream()))
                         .map(Stream::toList)

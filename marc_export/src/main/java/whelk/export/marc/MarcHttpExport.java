@@ -10,8 +10,8 @@ import se.kb.libris.util.marc.io.MarcRecordWriter;
 import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
 import whelk.Whelk;
 import whelk.exception.WhelkRuntimeException;
+import whelk.util.http.CoreWhelkHttpServlet;
 
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
@@ -25,15 +25,13 @@ import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.TreeMap;
 
 /**
  * Call like so:
  * curl -v -XPOST "http://localhost:8080/marc_export/?from=2018-09-10T00:00:00Z&until=2018-12-01T00:00:00Z" --data-binary @./etc/export.properties
  */
-public class MarcHttpExport extends HttpServlet
+public class MarcHttpExport extends CoreWhelkHttpServlet
 {
-    private Whelk whelk = null;
     private ProfileExport profileExport = null;
     private final Logger logger = LogManager.getLogger(this.getClass());
 
@@ -54,9 +52,9 @@ public class MarcHttpExport extends HttpServlet
         .help("API request latency in seconds.")
         .register();
 
-    public void init()
+    @Override
+    protected void init(Whelk whelk)
     {
-        whelk = Whelk.createLoadedCoreWhelk();
         profileExport = new ProfileExport(whelk, whelk.getStorage().createAdditionalConnectionPool("ProfileExport"));
     }
 

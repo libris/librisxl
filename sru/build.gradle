@@ -1,0 +1,80 @@
+apply plugin: 'java-library'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+def mainClassName = "whelk.SruServer"
+
+repositories {
+    mavenCentral()
+}
+
+// Don't blame me for this TRAVESTY. It is a necessity because of the versioning of xml-apis (2.0.2 which gradle otherwise chooses is OLDER (and broken) despite the version.)
+configurations.all {
+    resolutionStrategy {
+        force "xml-apis:xml-apis:1.4.01"
+    }
+}
+
+dependencies {
+    // XL dependencies
+    implementation(project(':whelk-core'))
+    implementation(project(':server-common'))
+
+    // Servlet
+    api "jakarta.servlet:jakarta.servlet-api:${servletApiVersion}"
+    implementation "org.eclipse.jetty:jetty-server:${jettyVersion}"
+    implementation "org.eclipse.jetty.ee8:jetty-ee8-servlet:${jettyVersion}"
+
+    // Necessary for inlining XML into XMLStreamWriter
+    implementation group: 'org.apache.cxf', name: 'cxf-core', version: '3.0.2'
+
+    // Logging
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
+
+    // metrics
+    implementation "io.prometheus:simpleclient:${prometheusVersion}"
+    implementation "io.prometheus:simpleclient_servlet:${prometheusVersion}"
+
+    // Testing
+    testImplementation 'junit:junit:4.12'
+}
+
+shadowJar {
+    archiveClassifier = null // removes `-all` in the filename of the created .jar
+    mergeServiceFiles()
+}
+
+jar {
+    dependsOn ':server-common:jar'
+    dependsOn(shadowJar)
+
+    manifest {
+        attributes "Main-Class": mainClassName,
+                // log4j uses multi-release to ship different stack walking implementations for different java
+                // versions. Since we repackage everything as a fat jar, that jar must also be multi-release.
+                "Multi-Release": true
+    }
+
+    archiveClassifier = "nonfat"
+    enabled = false
+}
+
+task(appRun, dependsOn: "classes", type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = mainClassName
+    minHeapSize = "1g"
+    maxHeapSize = "4g"
+    systemProperties(
+            'xl.secret.properties': System.getProperty("xl.secret.properties"),
+            'xl.logRoot': System.getProperty("xl.logRoot", "./logs"),
+            'xl.http.port': System.getProperty("xl.http.port", "8187")
+    )
+    args(System.getProperty("args", "").split() as String[])
+
+    debugOptions {
+        enabled = true
+        port = 5007
+        server = true
+        suspend = false
+    }
+}
