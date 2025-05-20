@@ -45,16 +45,12 @@ public record InactiveFilter(Filter.AliasedFilter aliasedFilter) implements Node
 
     @Override
     public Node getInverse() {
-        return filter();
+        return new ActiveFilter(aliasedFilter);
     }
 
     @Override
     public boolean shouldContributeToEsScore() {
         return false;
-    }
-
-    public Node filter() {
-        return new ActiveFilter(aliasedFilter);
     }
 
     private String alias() {

@@ -45,7 +45,7 @@ public record ActiveFilter(Filter.AliasedFilter aliasedFilter) implements Node {
 
     @Override
     public Node getInverse() {
-        return filter() instanceof InactiveFilter(Filter.AliasedFilter af)
+        return aliasedFilter.getParsed() instanceof InactiveFilter(Filter.AliasedFilter af)
                 ? new ActiveFilter(af)
                 : new InactiveFilter(aliasedFilter);
     }
@@ -53,10 +53,6 @@ public record ActiveFilter(Filter.AliasedFilter aliasedFilter) implements Node {
     @Override
     public boolean shouldContributeToEsScore() {
         return false;
-    }
-
-    public Node filter() {
-        return aliasedFilter.getParsed();
     }
 
     public String alias() {

@@ -4,26 +4,13 @@ import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
-import whelk.search2.querytree.FreeText;
-import whelk.search2.querytree.Link;
-import whelk.search2.querytree.Literal;
-import whelk.search2.querytree.Node;
-import whelk.search2.querytree.PathValue;
-import whelk.search2.querytree.Property;
-import whelk.search2.querytree.QueryTree;
-import whelk.search2.querytree.Value;
+import whelk.search2.querytree.*;
 import whelk.util.DocumentUtil;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -41,8 +28,9 @@ public class Query {
     protected final ESSettings esSettings;
 
     private final Disambiguate disambiguate;
-    private final Stats stats;
     private final LinkLoader linkLoader;
+    private final SelectedFilters selectedFilters;
+    private final Stats stats;
 
     protected Object esQueryDsl;
     protected QueryResult queryResult;
@@ -56,6 +44,13 @@ public class Query {
             return Set.of(values());
         }
     }
+
+    public enum Connective {
+        AND,
+        OR
+    }
+
+    public static final String NESTED_AGG_NAME = "n";
 
     public Query(QueryParams queryParams,
                  AppParams appParams,
@@ -71,6 +66,7 @@ public class Query {
         this.queryTree = new QueryTree(queryParams.q, disambiguate);
         this.whelk = whelk;
         this.linkLoader = new LinkLoader();
+        this.selectedFilters = queryParams.skipStats ? new SelectedFilters(queryTree, appParams.siteFilters) : new SelectedFilters(queryTree, appParams);
         this.stats = new Stats();
     }
 
@@ -91,8 +87,17 @@ public class Query {
     }
 
     protected Object doGetEsQueryDsl() {
-        queryTree.applySiteFilters(SearchMode.STANDARD_SEARCH, appParams.siteFilters);
-        return getEsQueryDsl(getEsQuery(), queryParams.skipStats ? Map.of() : getEsAggQuery());
+        applySiteFilters(SearchMode.STANDARD_SEARCH);
+        if (queryParams.skipStats) {
+            return getEsQueryDsl(getEsQuery());
+        } else {
+            List<String> rulingTypes = queryTree.collectRulingTypes(whelk.getJsonld());
+            return getEsQueryDsl(getEsQuery(), getEsAggQuery(rulingTypes), getPostFilter(rulingTypes));
+        }
+    }
+
+    protected void applySiteFilters(SearchMode searchMode) {
+        queryTree.applySiteFilters(searchMode, appParams.siteFilters, selectedFilters);
     }
 
     protected List<Map<String, Object>> predicateLinks() {
@@ -106,27 +111,17 @@ public class Query {
         return queryResult;
     }
 
-    protected Map<String, Object> getEsQuery(QueryTree queryTree, Collection<String> rulingTypes) {
-        var esQuery = queryTree.toEs(whelk.getJsonld(), esSettings.mappings, queryParams.boostFields, rulingTypes);
-        return addBoosts(esQuery, queryParams.esScoreFunctions);
+    protected Map<String, Object> getEsQueryDsl(Map<String, Object> query) {
+        return getEsQueryDsl(query, Map.of(), Map.of());
     }
 
-    protected Map<String, Object> getEsAggQuery(Collection<String> rulingTypes) {
-        return Aggs.buildAggQuery(appParams.statsRepr.sliceList(),
-                whelk.getJsonld(),
-                rulingTypes,
-                esSettings.mappings);
-    }
-
-    protected Map<String, Object> getEsQueryDsl(Map<String, Object> query, Map<String, Object> aggs) {
+    protected Map<String, Object> getEsQueryDsl(Map<String, Object> query, Map<String, Object> aggs, Map<String, Object> postFilter) {
         var queryDsl = new LinkedHashMap<String, Object>();
 
         queryDsl.put("query", query);
         queryDsl.put("size", queryParams.limit);
         queryDsl.put("from", queryParams.offset);
-        queryDsl.put("sort", (queryParams.sortBy == Sort.DEFAULT_BY_RELEVANCY && queryTree.allDescendants().noneMatch(Node::shouldContributeToEsScore)
-                ? Sort.BY_DOC_ID
-                : queryParams.sortBy).getSortClauses(this::getSortField));
+        queryDsl.put("sort", queryParams.sortBy.getSortClauses(this::getSortField));
 
         if (queryParams.spell.suggest && esSettings.mappings.isSpellCheckAvailable()) {
             var spellQuery = Spell.getSpellQuery(queryTree);
@@ -143,6 +138,10 @@ public class Query {
             queryDsl.put("aggs", aggs);
         }
 
+        if (!postFilter.isEmpty()) {
+            queryDsl.put("post_filter", postFilter);
+        }
+
         queryDsl.put("track_total_hits", true);
 
         if (queryParams.debug.contains(QueryParams.Debug.ES_SCORE)) {
@@ -153,6 +152,20 @@ public class Query {
         }
 
         return queryDsl;
+    }
+
+    protected Map<String, Object> getEsQuery(QueryTree queryTree, Collection<String> rulingTypes) {
+        List<Node> multiSelectedFilters = selectedFilters.getAllMultiSelected().values().stream().flatMap(List::stream).toList();
+        var esQuery = queryTree.toEs(whelk.getJsonld(), esSettings.mappings, queryParams.boostFields, rulingTypes, multiSelectedFilters);
+        return addBoosts(esQuery, queryParams.esScoreFunctions);
+    }
+
+    protected Map<String, Object> getEsAggQuery(Collection<String> rulingTypes) {
+        return buildAggQuery(appParams.statsRepr.sliceList(), whelk.getJsonld(), rulingTypes, esSettings.mappings, selectedFilters);
+    }
+
+    protected Map<String, Object> getPostFilter(Collection<String> rulingTypes) {
+        return getEsMultiSelectedFilters(selectedFilters.getAllMultiSelected(), rulingTypes, whelk.getJsonld(), esSettings.mappings);
     }
 
     private Map<String, Object> getPartialCollectionView() {
@@ -174,6 +187,7 @@ public class Query {
 
         if (!queryParams.skipStats) {
             view.put("stats", stats.build());
+            linkLoader.queue(stats.getLinks());
         }
 
         if (!getQueryResult().spell.isEmpty()) {
@@ -186,7 +200,6 @@ public class Query {
             view.put(QueryParams.ApiParams.DEBUG, Map.of(QueryParams.Debug.ES_QUERY, getEsQueryDsl()));
         }
 
-        linkLoader.queue(stats.getLinks());
         linkLoader.queue(queryTree.collectLinks());
         linkLoader.loadChips();
 
@@ -220,8 +233,20 @@ public class Query {
         return getEsQuery(queryTree, List.of());
     }
 
-    private Map<String, Object> getEsAggQuery() {
-        return getEsAggQuery(queryTree.collectRulingTypes(whelk.getJsonld()));
+    private static Map<String, Object> getEsMultiSelectedFilters(Map<String, List<Node>> multiSelected,
+                                                          Collection<String> rulingTypes,
+                                                          JsonLd jsonLd,
+                                                          EsMappings esMappings)
+    {
+        if (multiSelected.isEmpty()) {
+            return Map.of();
+        }
+        List<Node> orGrouped = multiSelected.values()
+                .stream()
+                .map(selected -> selected.size() > 1 ? new Or(selected) : selected.getFirst())
+                .toList();
+        return new QueryTree(orGrouped.size() == 1 ? orGrouped.getFirst() : new And(orGrouped))
+                .toEs(jsonLd, esMappings, List.of(), rulingTypes, List.of());
     }
 
     private String getSortField(String termPath) {
@@ -266,6 +291,69 @@ public class Query {
             return DocumentUtil.NOP;
         });
         return framedThing;
+    }
+
+    private static Map<String, Object> buildAggQuery(List<AppParams.Slice> sliceList,
+                                               JsonLd jsonLd,
+                                               Collection<String> rulingTypes,
+                                               EsMappings esMappings,
+                                               SelectedFilters selectedFilters) {
+        if (sliceList.isEmpty()) {
+            return Map.of(JsonLd.TYPE_KEY,
+                    Map.of("terms",
+                            Map.of("field", JsonLd.TYPE_KEY)));
+        }
+
+        Map<String, List<Node>> multiSelected = selectedFilters.getAllMultiSelected();
+
+        Map<String, Object> query = new LinkedHashMap<>();
+
+        for (AppParams.Slice slice : sliceList) {
+            String pKey = slice.propertyKey();
+
+            if (!selectedFilters.isSelectable(pKey)) {
+                continue;
+            }
+
+            Property property = slice.getProperty(jsonLd);
+
+            if (!property.restrictions().isEmpty()) {
+                // TODO: E.g. author (combining contribution.role and contribution.agent)
+                throw new RuntimeException("Can't handle combined fields in aggs query");
+            }
+
+            new Path(property).expand(jsonLd)
+                    .getAltPaths(jsonLd, rulingTypes)
+                    .forEach(path -> {
+                        Map<String, Object> aggs = path.getEsNestedStem(esMappings)
+                                .map(nestedStem -> buildNestedAggQuery(path, slice, nestedStem))
+                                .orElse(buildCoreAqqQuery(path, slice));
+                        Map<String, List<Node>> mSelected = selectedFilters.isMultiSelectable(pKey)
+                                ? new HashMap<>(multiSelected) {{ remove(pKey); }}
+                                : multiSelected;
+                        Map<String, Object> filter = getEsMultiSelectedFilters(mSelected, rulingTypes, jsonLd, esMappings);
+                        query.put(path.fullEsSearchPath(), filterWrap(aggs, property.name(), filter));
+                    });
+        }
+
+        return query;
+    }
+
+    private static Map<String, Object> buildCoreAqqQuery(Path path, AppParams.Slice slice) {
+        return Map.of("terms",
+                Map.of("field", path.fullEsSearchPath(),
+                        "size", slice.size(),
+                        "order", Map.of(slice.bucketSortKey(), slice.sortOrder())));
+    }
+
+    private static Map<String, Object> buildNestedAggQuery(Path path, AppParams.Slice slice, String nestedStem) {
+        return Map.of("nested", Map.of("path", nestedStem),
+                "aggs", Map.of(NESTED_AGG_NAME, buildCoreAqqQuery(path, slice)));
+    }
+
+    private static Map<String, Object> filterWrap(Map<String, Object> aggs, String property, Map<String, Object> filter) {
+        return Map.of("aggs", Map.of(property, aggs),
+                "filter", filter.isEmpty() ? QueryUtil.mustWrap(List.of()) : filter);
     }
 
     private class LinkLoader {
@@ -319,9 +407,7 @@ public class Query {
         }
 
         private Map<String, Object> getSliceByDimension() {
-            var buckets = collectBuckets();
-            var rangeProps = appParams.statsRepr.getRangeProperties();
-            return buildSliceByDimension(buckets, rangeProps);
+            return buildSliceByDimension(collectBuckets());
         }
 
         // Problem: Same value in different fields will be counted twice, e.g. contribution.agent + instanceOf.contribution.agent
@@ -365,24 +451,21 @@ public class Query {
             return propertyToBucketCounts;
         }
 
-        private Map<String, Object> buildSliceByDimension(Map<Property, Map<PathValue, Integer>> propToBuckets, Set<String> rangeProps) {
+        private Map<String, Object> buildSliceByDimension(Map<Property, Map<PathValue, Integer>> propToBuckets) {
             Map<String, AppParams.Slice> sliceByPropertyKey = appParams.statsRepr.getSliceByPropertyKey();
 
             Map<String, Object> sliceByDimension = new LinkedHashMap<>();
 
             propToBuckets.forEach((property, buckets) -> {
                 var propertyKey = property.name();
+                if (!selectedFilters.isSelectable(propertyKey)) {
+                    return;
+                }
                 var sliceNode = new LinkedHashMap<>();
-                var isRange = rangeProps.contains(propertyKey);
-                var qTree = isRange
-                        ? queryTree.removeTopLevelNodesByCondition(node -> node instanceof PathValue pv
-                            && pv.hasEqualProperty(property)
-                            && Operator.rangeOperators().contains(pv.operator()))
-                        : queryTree;
-                var observations = getObservations(buckets, qTree);
+                var observations = getObservations(propertyKey, buckets);
                 if (!observations.isEmpty()) {
-                    if (isRange) {
-                        sliceNode.put("search", getRangeTemplate(property));
+                    if (selectedFilters.isRangeFilter(propertyKey)) {
+                        sliceNode.put("search", getRangeTemplate(propertyKey));
                     }
                     sliceNode.put("dimension", propertyKey);
                     sliceNode.put("observation", observations);
@@ -394,94 +477,122 @@ public class Query {
             return sliceByDimension;
         }
 
-        private List<Map<String, Object>> getObservations(Map<PathValue, Integer> buckets, QueryTree qt) {
+        private List<Map<String, Object>> getObservations(String propertyKey, Map<PathValue, Integer> buckets) {
             List<Map<String, Object>> observations = new ArrayList<>();
 
+            Connective connective = selectedFilters.getConnective(propertyKey);
+
+            QueryTree qt = selectedFilters.isRangeFilter(propertyKey)
+                    ? queryTree.omitNodes(selectedFilters.getRangeSelected(propertyKey))
+                    : queryTree;
+
             buckets.forEach((pv, count) -> {
-                Map<String, Object> observation = new LinkedHashMap<>();
-                boolean queried = qt.topLevelContains(pv) || (pv.value() instanceof Link l && l.iri().equals(queryParams.object));
-                if (!queried) {
+                if (pv.value() instanceof Link l && l.iri().equals(queryParams.object)) {
+                    // TODO: This check won't be needed if/when we remove facets from resource page.
+                    return;
+                }
+
+                boolean isSelected = selectedFilters.isSelected(pv, propertyKey);
+
+                Consumer<QueryTree> addObservation = alteredTree -> {
+                    Map<String, Object> observation = new LinkedHashMap<>();
+
                     observation.put("totalItems", count);
-                    var url = makeFindUrlNoOffset(qt.addTopLevelNode(pv), queryParams);
-                    observation.put("view", Map.of(JsonLd.ID_KEY, url));
+                    observation.put("view", Map.of(JsonLd.ID_KEY, makeFindUrlNoOffset(alteredTree, queryParams)));
                     observation.put("object", pv.value().description());
+                    if (connective == Connective.OR) {
+                        observation.put("_selected", isSelected);
+                    }
+
+                    observations.add(observation);
+
                     if (pv.value() instanceof Link l) {
                         links.add(l);
                     }
-                    observations.add(observation);
+                };
+
+                switch (connective) {
+                    case AND -> {
+                        if (!isSelected) {
+                            addObservation.accept(qt.addTopLevelNode(pv));
+                        }
+                    }
+                    case OR -> {
+                        var selected = selectedFilters.getSelected(propertyKey);
+                        if (isSelected) {
+                            selected.stream()
+                                    .filter(pv::equals)
+                                    .findFirst()
+                                    .map(qt::omitNode)
+                                    .ifPresent(addObservation);
+                        } else {
+                            var newSelected = new ArrayList<>(selected) {{ add(pv); }};
+                            var alteredTree = qt.omitNodes(selected).addTopLevelNode(new Or(newSelected));
+                            addObservation.accept(alteredTree);
+                        }
+                    }
                 }
             });
 
             return observations;
         }
 
-        private Map<String, Object> getRangeTemplate(Property property) {
-            var GtLtNodes = queryTree.getTopLevelNodesOfType(PathValue.class).stream()
-                    .filter(pv -> pv.hasEqualProperty(property))
-                    .filter(pv -> switch (pv.operator()) {
-                        case EQUALS, NOT_EQUALS -> false;
-                        case GREATER_THAN_OR_EQUALS, GREATER_THAN, LESS_THAN_OR_EQUALS, LESS_THAN -> true;
-                    })
-                    .filter(pv -> pv.value() instanceof Literal l && l.isNumeric())
-                    .toList();
+        private Map<String, Object> getRangeTemplate(String propertyKey) {
+            FreeText placeholderNode = new FreeText(String.format("{?%s}", propertyKey));
+            String templateQueryString = queryTree.omitNodes(selectedFilters.getSelected(propertyKey))
+                    .addTopLevelNode(placeholderNode)
+                    .toQueryString();
+            String templateUrl = makeFindUrlNoOffset(templateQueryString, queryParams);
 
-            String min = null;
-            String max = null;
+            Function<Operator, String> getLimit = op -> selectedFilters.getRangeSelected(propertyKey)
+                    .stream()
+                    .map(PathValue.class::cast)
+                    .map(PathValue::toOrEquals)
+                    .filter(pv -> pv.operator().equals(op))
+                    .findFirst()
+                    .map(PathValue::value)
+                    .map(Value::toString)
+                    .orElse("");
 
-            for (var pv : GtLtNodes) {
-                var orEquals = pv.toOrEquals();
-                if (orEquals.operator() == Operator.GREATER_THAN_OR_EQUALS && min == null) {
-                    min = orEquals.value().raw();
-                } else if (orEquals.operator() == Operator.LESS_THAN_OR_EQUALS && max == null) {
-                    max = orEquals.value().raw();
-                } else {
-                    // Not a proper range, reset and abort
-                    min = null;
-                    max = null;
-                    break;
-                }
-            }
+            String minLimit = getLimit.apply(Operator.GREATER_THAN_OR_EQUALS);
+            String maxLimit = getLimit.apply(Operator.LESS_THAN_OR_EQUALS);
 
-            var tree = queryTree.removeTopLevelNodesByCondition(node -> node instanceof PathValue pv
-                    && pv.hasEqualProperty(property));
+            String gtoe = Operator.GREATER_THAN_OR_EQUALS.termKey;
+            String ltoe = Operator.LESS_THAN_OR_EQUALS.termKey;
 
-            Map<String, Object> template = new LinkedHashMap<>();
+            Map<String, String> mapping = Map.of(
+                    "variable", propertyKey,
+                    gtoe, minLimit,
+                    ltoe, maxLimit
+            );
 
-            var placeholderNode = new FreeText(String.format("{?%s}", property.name()));
-            var templateQueryString = tree.addTopLevelNode(placeholderNode).toQueryString();
-            var templateUrl = makeFindUrlNoOffset(templateQueryString, queryParams);
-            template.put("template", templateUrl);
-
-            var mapping = new LinkedHashMap<>();
-            mapping.put("variable", property.name());
-            mapping.put(Operator.GREATER_THAN_OR_EQUALS.termKey, Objects.toString(min, ""));
-            mapping.put(Operator.LESS_THAN_OR_EQUALS.termKey, Objects.toString(max, ""));
-            template.put("mapping", mapping);
-
-            return template;
+            return Map.of(
+                    "template", templateUrl,
+                    "mapping", mapping
+            );
         }
 
         private List<Map<String, Object>> getBoolFilters() {
             List<Map<String, Object>> results = new ArrayList<>();
 
             for (var of : appParams.siteFilters.optionalFilters()) {
-                QueryTree newTree;
-                boolean isSelected;
-                Node filterNode = of.filter().getActive();
+                Filter.AliasedFilter f = of.filter();
+                boolean isSelected = selectedFilters.isActivated(f);
 
-                if (queryTree.topLevelContains(filterNode)) {
-                    newTree = queryTree.removeTopLevelNode(filterNode);
-                    isSelected = true;
+                QueryTree alteredTree;
+                if (isSelected) {
+                    alteredTree = queryTree.removeTopLevelNodes(selectedFilters.getActivatingNodes(f));
                 } else {
-                    newTree = queryTree.addTopLevelNode(filterNode);
-                    isSelected = false;
+                    alteredTree = (selectedFilters.isExplicitlyDeactivated(f)
+                            ? queryTree.removeTopLevelNodes(selectedFilters.getDeactivatingNodes(f))
+                            : queryTree).addTopLevelNode(f.getActive());
                 }
 
                 Map<String, Object> res = new LinkedHashMap<>();
                 // TODO: fix form
                 res.put("totalItems", 0);
-                res.put("object", of.filter().description());
-                res.put("view", Map.of(JsonLd.ID_KEY, makeFindUrlNoOffset(newTree, queryParams)));
+                res.put("object", f.description());
+                res.put("view", Map.of(JsonLd.ID_KEY, makeFindUrlNoOffset(alteredTree, queryParams)));
                 res.put("_selected", isSelected);
 
                 results.add(res);

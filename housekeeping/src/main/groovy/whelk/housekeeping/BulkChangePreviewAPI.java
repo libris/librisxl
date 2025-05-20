@@ -8,7 +8,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import whelk.Document;
 import whelk.JsonLd;
-import whelk.Whelk;
 import whelk.datatool.RecordedChange;
 import whelk.datatool.bulkchange.BulkJobDocument;
 import whelk.datatool.bulkchange.BulkPreviewJob;
@@ -17,14 +16,13 @@ import whelk.history.DocumentVersion;
 import whelk.history.History;
 import whelk.util.DocumentUtil;
 import whelk.util.Offsets;
-import whelk.util.WhelkFactory;
 import whelk.util.http.BadRequestException;
+import whelk.util.http.WhelkHttpServlet;
 import whelk.util.http.HttpTools;
 import whelk.util.http.MimeTypes;
 import whelk.util.http.NotFoundException;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -42,7 +40,7 @@ import static whelk.JsonLd.RECORD_KEY;
 import static whelk.datatool.bulkchange.BulkPreviewJob.RECORD_MAX_ITEMS;
 import static whelk.util.Unicode.stripPrefix;
 
-public class BulkChangePreviewAPI extends HttpServlet {
+public class BulkChangePreviewAPI extends WhelkHttpServlet {
     private static final Logger log = LogManager.getLogger(BulkChangePreviewAPI.class);
 
     private static final String BULK_CHANGE_PREVIEW_TYPE = "bulk:Preview";
@@ -53,8 +51,6 @@ public class BulkChangePreviewAPI extends HttpServlet {
 
     private static final int CACHE_SIZE = 20;
     private static final int CACHE_TIMEOUT_MINUTES = 10;
-
-    private Whelk whelk;
 
     private final LoadingCache<String, Preview> cache = CacheBuilder.newBuilder()
             .maximumSize(CACHE_SIZE)
@@ -67,11 +63,6 @@ public class BulkChangePreviewAPI extends HttpServlet {
                     return new Preview(id);
                 }
             });
-
-    @Override
-    public void init() {
-        whelk = WhelkFactory.getSingletonWhelk();
-    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

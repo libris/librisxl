@@ -9,9 +9,8 @@ import whelk.Whelk;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.*;
-import whelk.util.WhelkFactory;
+import whelk.util.http.WhelkHttpServlet;
 
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.stream.XMLInputFactory;
@@ -22,17 +21,19 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.*;
 
-public class SruServlet extends HttpServlet {
+// Test locally like so:
+// curl "http://localhost:8187/?operation=searchRetrieve&query=isbn=9789130008650"
+// (Elastic must be running)
+public class SruServlet extends WhelkHttpServlet {
     private final Logger logger = LogManager.getLogger(this.getClass());
 
-    Whelk whelk;
     JsonLD2MarcXMLConverter converter;
     XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
     VocabMappings vocabMappings;
     ESSettings esSettings;
 
-    public void init() {
-        whelk = WhelkFactory.getSingletonWhelk();
+    @Override
+    protected void init(Whelk whelk) {
         converter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
         vocabMappings = new VocabMappings(whelk);
         esSettings = new ESSettings(whelk);
@@ -57,6 +58,10 @@ public class SruServlet extends HttpServlet {
         }
 
         String queryString = parameters.get("query")[0];
+
+        if (queryString.endsWith(" sortBy libris.legacysort"))
+            queryString = queryString.substring(0, queryString.length()-25);
+
         String instanceOnlyQueryString = "(" + queryString + ") AND type=Instance";
 
         Map<String, Object> results;

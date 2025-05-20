@@ -34,13 +34,6 @@ public class AppParams {
             }
             return m;
         }
-
-        public Set<String> getRangeProperties() {
-            return sliceList().stream()
-                    .filter(AppParams.Slice::isRange)
-                    .map(AppParams.Slice::propertyKey)
-                    .collect(Collectors.toSet());
-        }
     }
 
     public record SiteFilters(List<DefaultSiteFilter> defaultFilters, List<OptionalSiteFilter> optionalFilters) {
@@ -89,11 +82,14 @@ public class AppParams {
     }
 
     public static class Slice {
+        public static final Integer DEFAULT_BUCKET_SIZE = 10;
+
         private final String propertyKey;
         private final Sort.Order sortOrder;
         private final Sort.BucketSortKey bucketSortKey;
         private final int size;
         private final boolean isRange;
+        private final Query.Connective defaultConnective;
 
         private Property property;
 
@@ -103,6 +99,7 @@ public class AppParams {
             this.bucketSortKey = getBucketSortKey(settings);
             this.size = getSize(settings);
             this.isRange = getRangeFlag(settings);
+            this.defaultConnective = getConnective(settings);
         }
 
         public String propertyKey() {
@@ -125,6 +122,10 @@ public class AppParams {
             return isRange;
         }
 
+        public Query.Connective defaultConnective() {
+            return defaultConnective;
+        }
+
         public Property getProperty(JsonLd jsonLd) {
             if (property == null) {
                 this.property = new Property(propertyKey, jsonLd);
@@ -145,12 +146,18 @@ public class AppParams {
         }
 
         private int getSize(Map<?, ?> settings) {
-            return Optional.ofNullable((Integer) settings.get("size")).orElse(Aggs.DEFAULT_BUCKET_SIZE);
+            return Optional.ofNullable((Integer) settings.get("size")).orElse(DEFAULT_BUCKET_SIZE);
         }
 
         private boolean getRangeFlag(Map<?, ?> settings) {
             return Optional.ofNullable((Boolean) settings.get("range"))
                     .orElse(false);
+        }
+
+        private Query.Connective getConnective(Map<?, ?> settings) {
+            return Optional.ofNullable((String) settings.get("connective"))
+                    .map(Query.Connective::valueOf)
+                    .orElse(Query.Connective.AND);
         }
     }
 

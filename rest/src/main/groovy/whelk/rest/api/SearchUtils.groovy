@@ -66,7 +66,7 @@ class SearchUtils {
         String addStats = getReservedQueryParameter('_stats', queryParameters)
         String suggest = getReservedQueryParameter('_suggest', queryParameters)
         String spell = getReservedQueryParameter('_spell', queryParameters)
-        String computedLabel = getReservedQueryParameter('_computedLabel', queryParameters)
+        String computedLabel = getReservedQueryParameter(JsonLd.Platform.COMPUTED_LABEL, queryParameters)
 
         if (queryParameters['p'] && !object) {
             throw new InvalidQueryException("Parameter 'p' can only be used together with 'o'")
@@ -90,7 +90,7 @@ class SearchUtils {
                           '_stats' : addStats,
                           '_suggest' : suggest,
                           '_spell': spell,
-                          '_computedLabel': computedLabel,
+                          (JsonLd.Platform.COMPUTED_LABEL): computedLabel,
 
         ]
 
@@ -806,7 +806,7 @@ class SearchUtils {
      * Return a list of reserved query params
      */
     private List getReservedParameters() {
-        return ['q', 'p', 'o', 'value', '_limit', '_offset', '_suggest', '_spell', '_computedLabel']
+        return ['q', 'p', 'o', 'value', '_limit', '_offset', '_suggest', '_spell', JsonLd.Platform.COMPUTED_LABEL]
     }
 
     /*

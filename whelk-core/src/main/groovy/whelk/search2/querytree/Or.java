@@ -1,9 +1,12 @@
 package whelk.search2.querytree;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static whelk.search2.QueryUtil.shouldWrap;
 

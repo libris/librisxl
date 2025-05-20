@@ -1,5 +1,6 @@
 package whelk.search2;
 
+import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
 
 import java.util.ArrayList;
@@ -33,6 +34,8 @@ public class QueryParams {
         public static final String STATS = "_stats";
         public static final String ALIAS = "_alias-";
         public static final String FN_SCORE = "_fnScore";
+        // Temporary param for experimenting
+        public static final String PHRASE_BOOST_DIVISOR = "_phraseBoostDivisor";
     }
 
     public static class Debug {
@@ -49,6 +52,7 @@ public class QueryParams {
     public final List<String> debug;
     public final String lens;
     public final Spell spell;
+    public final String computedLabelLocale;
     public final List<String> boostFields;
     public final List<EsBoost.ScoreFunction> esScoreFunctions;
     public final Map<String, String[]> aliased;
@@ -69,7 +73,9 @@ public class QueryParams {
         this.offset = getOffset(apiParameters);
         this.lens = getOptionalSingleNonEmpty(ApiParams.LENS, apiParameters).orElse("cards");
         this.spell = new Spell(getOptionalSingleNonEmpty(ApiParams.SPELL, apiParameters).orElse(""));
-        this.boostFields = getMultiple(ApiParams.BOOST, apiParameters);
+        this.computedLabelLocale = getOptionalSingleNonEmpty(JsonLd.Platform.COMPUTED_LABEL, apiParameters).orElse(null);
+//        this.boostFields = getMultiple(ApiParams.BOOST, apiParameters);
+        this.boostFields = getBoostFields(apiParameters); // Use this only temporarily for experimenting
         this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse("");
         this.skipStats = getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
         this.esScoreFunctions = getEsScoreFunctions(apiParameters);
@@ -111,6 +117,9 @@ public class QueryParams {
             var spellP = spell.asString();
             if (!spellP.isEmpty()) {
                 params.put(ApiParams.SPELL, spellP);
+            }
+            if (computedLabelLocale != null) {
+                params.put(JsonLd.Platform.COMPUTED_LABEL, computedLabelLocale);
             }
             var sort = sortBy.asString();
             if (!sort.isEmpty()) {
@@ -218,5 +227,17 @@ public class QueryParams {
         } catch (Exception ignored) {
         }
         return scoreFunctions;
+    }
+
+    private List<String> getBoostFields(Map<String, String[]> queryParameters) {
+        List<String> boostFields = getMultiple(ApiParams.BOOST, queryParameters);
+        Optional<String> phraseBoostDivisor = getOptionalSingle(ApiParams.PHRASE_BOOST_DIVISOR, queryParameters)
+                .map(s -> ApiParams.PHRASE_BOOST_DIVISOR + "^" + s);
+        if (phraseBoostDivisor.isPresent()) {
+            return new ArrayList<>(boostFields.isEmpty() ? EsBoost.BOOST_FIELDS : boostFields) {{
+                add(phraseBoostDivisor.get());
+            }};
+        }
+        return boostFields;
     }
 }

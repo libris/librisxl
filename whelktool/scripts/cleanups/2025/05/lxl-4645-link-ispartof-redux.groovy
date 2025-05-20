@@ -4,6 +4,8 @@
  * See https://kbse.atlassian.net/browse/LXL-4645
  */
 
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 import whelk.util.Unicode
 
 String where = """
@@ -29,6 +31,9 @@ selectBySqlWhere(where) { doc ->
         ["@type", "describedBy", "identifiedBy"] as Set,
         ["@type", "describedBy", "hasTitle"] as Set,
         ["@type", "describedBy", "hasTitle", "identifiedBy"] as Set,
+        ["@type", "describedBy", "provisionActivityStatement"] as Set,
+        ["@type", "hasTitle", "describedBy", "provisionActivityStatement"] as Set,
+        ["@type", "hasTitle", "describedBy", "identifiedBy", "provisionActivityStatement"] as Set,
     ]
 
     if (!(validSets.any { it.equals(isPartOf.keySet()) })) {
@@ -116,6 +121,20 @@ selectBySqlWhere(where) { doc ->
         }
     }
 
+    Map sourceProvision = null
+    if (isPartOf.containsKey("provisionActivityStatement")) {
+        if (!(isPartOf.provisionActivityStatement instanceof String)) {
+            _logSkip("provisionActivityStatement not a String: ${isPartOf.provisionActivityStatement}")
+            return
+        }
+
+        sourceProvision = Provision.parseProvisionActivityStatement(isPartOf.provisionActivityStatement)
+        if (!sourceProvision) {
+            _logSkip("could not parse provisionActivityStatement: ${isPartOf.provisionActivityStatement}")
+            return
+        }
+    }
+
     String properUri = findMainEntityId(sanitize(describedBy["controlNumber"]))
     if (properUri == null) {
         _logSkip("couldn't find target")
@@ -162,13 +181,122 @@ selectBySqlWhere(where) { doc ->
         }
     }
 
+    if (isPartOf.containsKey("provisionActivityStatement")) {
+        List targetStartYears = getAtPath(targetThing, ['publication', '*', 'startYear'], [])
+        List targetEndYears = getAtPath(targetThing, ['publication', '*', 'endYear'], [])
+        List targetYears = getAtPath(targetThing, ['publication', '*', 'year'], [])
+        List targetAgents = getAtPath(targetThing, ['publication', '*', 'agent', 'label'], []) + getAtPath(targetThing, ['publication', '*', 'hasPart', '*', 'agent', 'label'], []) + getAtPath(targetThing, ['hasTitle', '*', 'mainTitle'], [])
+        List targetPlaces = getAtPath(targetThing, ['publication', '*', 'place', '*', 'label'], []) + getAtPath(targetThing, ['publication', '*', 'hasPart', '*', 'place', '*', 'label'], [])
+
+        if (sourceProvision.isSerial) {
+            if (!(targetStartYears.contains(sourceProvision.startYear))) {
+                _logSkip("pAS startYear ${sourceProvision.startYear} not found in ${targetStartYears} in target ${properUri}")
+                return
+            }
+            if (sourceProvision.endYear && !(targetEndYears.contains(sourceProvision.endYear))) {
+                _logSkip("pAS endYear ${sourceProvision.endYear} not found in ${targetEndYears} in target ${properUri}")
+                return
+            }
+        } else {
+            if (!(targetYears.contains(sourceProvision.startYear))) {
+                _logSkip("pAS year/startYear ${sourceProvision.startYear} not found in ${targetYears} in target ${properUri}")
+                return
+            }
+        }
+
+        if (sourceProvision.agent) {
+            if (!(targetAgents.any { targetAgentLabel ->
+                def (agentIsSame, _agentResult) = compareStrings(sourceProvision.agent, targetAgentLabel)
+                return agentIsSame
+            })) {
+                _logSkip("pAS agent ${sourceProvision.agent} not found in ${targetAgents} in target ${properUri}")
+                return
+            }
+        }
+
+        if (sourceProvision.place) {
+            if (!(targetPlaces.any { targetPlaceLabel ->
+                def (placeIsSame, _placeResult) = compareStrings(sourceProvision.place, targetPlaceLabel)
+                return placeIsSame
+            })) {
+                _logSkip("pAS place ${sourceProvision.place} not found in ${targetPlaces} in target ${properUri}")
+                return
+            }
+        }
+    }
+
     source_thing["isPartOf"][0].clear()
     source_thing["isPartOf"][0]["@id"] = properUri
 
     doc.scheduleSave()
 }
 
-List isSeeminglySameTitle(String sourceTitle, List targetHasTitle) {
+class Provision {
+    // provisionActivityStatement *USUALLY* follows a few specific patterns but there are
+    // tons of small variations and corner cases, hence these ugly regexes.
+
+    // Matches "Lund : Lund University Press, 1882-", " Uppsala : Informationsavdelningen, Uppsala universitet, 1976-1996", ..
+    static final Pattern patternFull = Pattern.compile('^\\[?([\\p{L}\\s,\\.-]+)\\]?\\s?:\\s([\\p{L}0-9,\\.\\-&:\\(\\)\\[\\]\\/\'\\s]+),\\s(?:(?:Cop|cop)\\.\\s?)?\\[?(\\d{4})\\??\\]?(-\\d{4})?\\]?(-)?$')
+    // Matches "1998-", "1970-1975", "1990-", ..
+    static final Pattern patternYearsOnly = Pattern.compile('^(?:(?:Cop\\.?|cop\\.?|c\\.?)\\s?)?\\[?(\\d{4})\\??(-\\d{4})?(-)?(?:\\s?;)?\\,?\\.?\\]?(?:\\s?;)?(?:\\s?,)?$')
+    // Matches "Stockholm, 1974", "Uppsala, 1990-1995", ..
+    static final Pattern patternPlaceAndYear = Pattern.compile('^([\\p{L}\\s-,\'\\.]+), \\[?(\\d{4})\\??\\]?(-\\d{4})?\\]?(-)?$')
+
+    static Map parseProvisionActivityStatement(String pa) {
+        Matcher yearsOnlyMatcher = patternYearsOnly.matcher(pa.trim())
+        if (yearsOnlyMatcher.matches()) {
+            return [
+                    startYear: yearsOnlyMatcher.group(1),
+                    endYear: yearsOnlyMatcher.group(2) ? yearsOnlyMatcher.group(2).substring(1) : false,
+                    isSerial: yearsOnlyMatcher.group(2) ? true : (yearsOnlyMatcher.group(3) ? true : false),
+            ]
+        }
+
+        Matcher fullMatcher = patternFull.matcher(pa.trim())
+        if (fullMatcher.matches()) {
+            return [
+                    place: fullMatcher.group(1).trim(),
+                    agent: fullMatcher.group(2).trim(),
+                    startYear: fullMatcher.group(3),
+                    endYear: fullMatcher.group(4) ? fullMatcher.group(4).substring(1) : null,
+                    isSerial: fullMatcher.group(4) ? true : (fullMatcher.group(5) ? true : false),
+            ]
+        }
+
+        Matcher placeAndYearMatcher = patternPlaceAndYear.matcher(pa.trim())
+        if (placeAndYearMatcher.matches()) {
+            return [
+                    place: placeAndYearMatcher.group(1).trim(),
+                    startYear: placeAndYearMatcher.group(2),
+                    endYear: placeAndYearMatcher.group(3) ? placeAndYearMatcher.group(3).substring(1) : null,
+                    isSerial: placeAndYearMatcher.group(3) ? true : (placeAndYearMatcher.group(4) ? true : false),
+            ]
+        }
+
+        return [:]
+    }
+}
+
+static List compareStrings(String sourceString, String targetString) {
+    boolean isMatch = false
+    Set sourceStringWords = extractWords(sourceString) as Set
+    Set targetStringWords = extractWords(targetString) as Set
+
+    if (targetStringWords.containsAll(sourceStringWords)) {
+        isMatch = true
+    }
+
+    return [
+            isMatch,
+            [
+                source: sourceStringWords,
+                target: targetStringWords,
+                notInTarget: sourceStringWords - targetStringWords,
+            ]
+    ]
+}
+
+static List isSeeminglySameTitle(String sourceTitle, List targetHasTitle) {
     boolean isMatch = false
     List targetTitles = []
     targetHasTitle.each {
@@ -249,5 +377,5 @@ static String sanitize(String value) {
 }
 
 static Set extractWords(String title) {
-    return Unicode.removeAllDiacritics(title).replaceAll(/[^a-zA-Z0-9 ]/, "").toLowerCase().split('\\s+')
+    return Unicode.removeAllDiacritics(title).replaceAll(/\//, " ").replaceAll(/[^a-zA-Z0-9 ]/, "").toLowerCase().split('\\s+')
 }
