@@ -291,7 +291,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     }
 
     private static Map<String, Object> buildSimpleQuery(String field, String value) {
-        boolean isSimple = ESQuery.isSimple(value);
+        boolean isSimple = QueryUtil.isSimple(value);
         String queryMode = isSimple ? "simple_query_string" : "query_string";
         var query = new HashMap<>();
         query.put("query", isSimple ? value : ESQuery.escapeNonSimpleQueryString(value));

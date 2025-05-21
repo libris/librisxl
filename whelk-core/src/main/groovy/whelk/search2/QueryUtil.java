@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static whelk.search2.QueryParams.ApiParams.OFFSET;
@@ -131,5 +132,15 @@ public class QueryUtil {
                 .map(graph -> ((List<?>) graph).get(1))
                 .map(QueryUtil::castToStringObjectMap)
                 .orElse(Collections.emptyMap());
+    }
+
+    static Pattern NON_SIMPLE_QUERY = Pattern.compile("([*?])\\S+");
+    /**
+     * Can this query string be handled by ES simple_query_string?
+     * TODO define syntax for masking in last position? ("foo?")
+     */
+    public static boolean isSimple(String queryString) {
+        // leading wildcards e.g. "*foo" are removed by simple_query_string
+        return !NON_SIMPLE_QUERY.matcher(queryString).find();
     }
 }

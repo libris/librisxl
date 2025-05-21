@@ -5,6 +5,7 @@ import whelk.search.ESQuery;
 import whelk.search2.EsMappings;
 import whelk.search2.Operator;
 import whelk.search2.QueryParams;
+import whelk.search2.QueryUtil;
 import whelk.util.Unicode;
 
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static whelk.search2.QueryUtil.isQuoted;
@@ -31,7 +33,7 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
     public Map<String, Object> toEs(EsMappings esMappings, Collection<String> boostFields) {
         String s = value;
         s = Unicode.normalizeForSearch(s);
-        boolean isSimple = ESQuery.isSimple(s);
+        boolean isSimple = QueryUtil.isSimple(s);
         String queryMode = isSimple ? "simple_query_string" : "query_string";
         if (!isSimple) {
             s = ESQuery.escapeNonSimpleQueryString(s);
