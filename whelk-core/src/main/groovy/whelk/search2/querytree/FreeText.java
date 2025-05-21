@@ -200,6 +200,9 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
         if (!fields.isEmpty()) {
             query.put("fields", fields);
         }
+        if ("query_string".equals(queryMode)) {
+            query.put("rewrite", "scoring_boolean");
+        }
         return Map.of(queryMode, query);
     }
 
