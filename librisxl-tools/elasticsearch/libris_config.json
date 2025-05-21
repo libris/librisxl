@@ -19,10 +19,10 @@
                     "b": 0.9,
                     "k1": 0.1
                 },
-                "bm25-ignore-length-quick-saturation": {
+                "bm25-only-idf-ignore-tf": {
                     "type": "BM25",
                     "b": 0,
-                    "k1": 0.1
+                    "k1": 0
                 }
             }
         },
@@ -462,11 +462,11 @@
                             "exact": {
                                 "type": "text",
                                 "analyzer": "standard",
-                                "similarity": "bm25-ignore-length-quick-saturation"
+                                "similarity": "bm25-only-idf-ignore-tf"
                             }
                         },
                         "analyzer": "softmatcher",
-                        "similarity": "bm25-ignore-length-quick-saturation",
+                        "similarity": "bm25-only-idf-ignore-tf",
                         "type": "text",
                         "index": true
                     }
