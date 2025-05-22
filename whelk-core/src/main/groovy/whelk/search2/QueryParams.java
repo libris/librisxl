@@ -14,7 +14,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class QueryParams {
-    private final static int DEFAULT_LIMIT = 200;
+    private final static int DEFAULT_LIMIT = 20;
     private final static int MAX_LIMIT = 4000;
     private final static int DEFAULT_OFFSET = 0;
 
