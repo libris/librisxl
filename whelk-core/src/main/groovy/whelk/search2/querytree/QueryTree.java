@@ -47,13 +47,13 @@ public class QueryTree {
 
     public Map<String, Object> toEs(JsonLd jsonLd,
                                     EsMappings esMappings,
-                                    Collection<String> boostFields,
+                                    EsBoost.Config boostConfig,
                                     Collection<String> rulingTypes,
                                     List<Node> exclude)
     {
         return getFiltered().omitNodes(exclude)
                 .expand(jsonLd, rulingTypes)
-                .toEs(esMappings, boostFields.isEmpty() ? EsBoost.BOOST_FIELDS : boostFields);
+                .toEs(esMappings, boostConfig);
     }
 
     private QueryTree(Node tree, QueryTree filtered) {

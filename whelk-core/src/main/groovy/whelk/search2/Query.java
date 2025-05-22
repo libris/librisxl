@@ -10,7 +10,6 @@ import whelk.util.DocumentUtil;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -156,8 +155,9 @@ public class Query {
 
     protected Map<String, Object> getEsQuery(QueryTree queryTree, Collection<String> rulingTypes) {
         List<Node> multiSelectedFilters = selectedFilters.getAllMultiSelected().values().stream().flatMap(List::stream).toList();
-        var esQuery = queryTree.toEs(whelk.getJsonld(), esSettings.mappings, queryParams.boostFields, rulingTypes, multiSelectedFilters);
-        return addBoosts(esQuery, queryParams.esScoreFunctions);
+        EsBoost.Config esBoostConfig = EsBoost.Config.getConfig(queryParams);
+        var esQuery = queryTree.toEs(whelk.getJsonld(), esSettings.mappings, esBoostConfig, rulingTypes, multiSelectedFilters);
+        return addBoosts(esQuery, esBoostConfig.getScoreFunctions());
     }
 
     protected Map<String, Object> getEsAggQuery(Collection<String> rulingTypes) {
@@ -246,7 +246,7 @@ public class Query {
                 .map(selected -> selected.size() > 1 ? new Or(selected) : selected.getFirst())
                 .toList();
         return new QueryTree(orGrouped.size() == 1 ? orGrouped.getFirst() : new And(orGrouped))
-                .toEs(jsonLd, esMappings, List.of(), rulingTypes, List.of());
+                .toEs(jsonLd, esMappings, EsBoost.Config.defaultConfig(), rulingTypes, List.of());
     }
 
     private String getSortField(String termPath) {

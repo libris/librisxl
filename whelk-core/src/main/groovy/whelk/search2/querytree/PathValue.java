@@ -40,7 +40,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     }
 
     @Override
-    public Map<String, Object> toEs(EsMappings esMappings, Collection<String> boostFields) {
+    public Map<String, Object> toEs(EsMappings esMappings, EsBoost.Config boostConfig) {
         var es = getCoreEsQuery(esMappings);
         return getEsNestedQuery(es, esMappings).orElse(es);
     }

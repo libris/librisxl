@@ -104,7 +104,7 @@ public class ObjectQuery extends Query {
                         Property::name,
                         p -> new PathValue(p, Operator.EQUALS, object)
                                 .expand(jsonLd, rulingTypes.isEmpty() ? p.domain() : rulingTypes)
-                                .toEs(esMappings, List.of()))
+                                .toEs(esMappings, EsBoost.Config.empty()))
                 );
 
         if (!filters.isEmpty()) {

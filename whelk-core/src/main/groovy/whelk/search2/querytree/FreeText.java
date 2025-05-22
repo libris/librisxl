@@ -2,6 +2,7 @@ package whelk.search2.querytree;
 
 import whelk.JsonLd;
 import whelk.search.ESQuery;
+import whelk.search2.EsBoost;
 import whelk.search2.EsMappings;
 import whelk.search2.Operator;
 import whelk.search2.QueryParams;
@@ -14,7 +15,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static whelk.search2.QueryUtil.isQuoted;
@@ -30,7 +31,7 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
     }
 
     @Override
-    public Map<String, Object> toEs(EsMappings esMappings, Collection<String> boostFields) {
+    public Map<String, Object> toEs(EsMappings esMappings, EsBoost.Config boostConfig) {
         String s = value;
         s = Unicode.normalizeForSearch(s);
         boolean isSimple = QueryUtil.isSimple(s);
@@ -40,6 +41,8 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
         }
         String queryString = s;
 
+        List<String> boostFields = boostConfig.getBoostFields();
+
         if (boostFields.isEmpty()) {
             return wrap(buildSimpleQuery(queryMode, queryString));
         }
@@ -47,17 +50,10 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
         Map<String, Float> basicBoostFields = new LinkedHashMap<>();
         Map<String, String> functionBoostFields = new LinkedHashMap<>();
 
-        // This is only temporary, for experimenting
-        int phraseBoostDivisor = 1;
-
         for (String bf : boostFields) {
             try {
                 String field = bf.substring(0, bf.indexOf('^'));
                 String boost = bf.substring(bf.indexOf('^') + 1);
-                if (field.equals(QueryParams.ApiParams.PHRASE_BOOST_DIVISOR)) {
-                    phraseBoostDivisor = Integer.parseInt(boost);
-                    continue;
-                }
                 if (boost.contains("(")) {
                     Float basicBoost = Float.parseFloat(boost.substring(0, boost.indexOf('(')));
                     String function = boost.substring(boost.indexOf('(') + 1, boost.lastIndexOf(')'));
@@ -72,10 +68,11 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
 
         var queries = buildQueries(queryMode, queryString, basicBoostFields, functionBoostFields);
         if (!isQuoted(queryString) && isMultiWord(queryString)) {
-            int divisor = phraseBoostDivisor;
-            if (divisor != 1) {
+            Optional<Integer> phraseBoostDivisor = boostConfig.getPhraseBoostDivisor();
+            if (phraseBoostDivisor.isPresent()) {
                 basicBoostFields = basicBoostFields.entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue() / divisor));
+                        .collect(Collectors.toMap(Map.Entry::getKey,
+                                e -> e.getValue() / phraseBoostDivisor.get()));
             }
             queries.addAll(buildQueries("query_string", quote(queryString), basicBoostFields, functionBoostFields));
         }

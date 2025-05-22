@@ -2,9 +2,11 @@ package whelk.search2;
 
 import whelk.JsonLd;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import static whelk.JsonLd.CACHE_RECORD_TYPE;
 import static whelk.JsonLd.RECORD_TYPE;
@@ -28,6 +30,8 @@ public class EsBoost {
     // TODO: Better name
     public static int WITHIN_FIELD_BOOST = 400;
 
+    public static int PHRASE_BOOST_DIVISOR = 100;
+
     public static List<ScoreFunction> SCORE_FUNCTIONS = List.of(
             new FieldValueFactor("reverseLinks.totalItemsByRelation.instanceOf", 10, "ln1p", 0, 15),
             new FieldValueFactor("reverseLinks.totalItemsByRelation.itemOf.instanceOf", 10, "ln1p", 0, 10),
@@ -36,6 +40,63 @@ public class EsBoost {
             new FieldValueFactor("reverseLinks.totalItemsByRelation.instanceOf.genreForm", 10, "ln1p", 0, 10)
 //            new MatchingFieldValue("language.@id", "https://id.kb.se/language/swe", 50)
     );
+
+    public record Config(Map<String, Object> config) {
+        @SuppressWarnings("unchecked")
+        public List<String> getBoostFields() {
+            return (List<String>) config.getOrDefault("_boostFields", List.of());
+        }
+
+        @SuppressWarnings("unchecked")
+        public List<ScoreFunction> getScoreFunctions() {
+            return (List<ScoreFunction>) config.getOrDefault("_scoreFunctions", List.of());
+        }
+
+        public Optional<Integer> getPhraseBoostDivisor() {
+            return Optional.ofNullable((Integer) config.get("_phraseBoostDivisor"));
+        }
+
+        public static Config empty() {
+            return new Config(Map.of());
+        }
+
+        public static Config defaultConfig() {
+            return new Config(getDefaultConfigMap());
+        }
+
+        public static Config getConfig(QueryParams queryParams) {
+            Map<String, Object> configMap = new HashMap<>(getDefaultConfigMap()) {{
+                putAll(queryParams.esBoostConfig.config());
+            }};
+            return new Config(configMap);
+        }
+
+        public static Config newConfig(List<String> boostFields, List<ScoreFunction> scoreFunctions, Integer phraseBoostDivisor) {
+            return new Config(getConfigMap(boostFields, scoreFunctions, phraseBoostDivisor));
+        }
+
+        public static Config newBoostFieldsConfig(List<String> boostFields) {
+            return newConfig(boostFields, List.of(), null);
+        }
+
+        private static Map<String, Object> getDefaultConfigMap() {
+            return getConfigMap(BOOST_FIELDS, SCORE_FUNCTIONS, PHRASE_BOOST_DIVISOR);
+        }
+
+        private static Map<String, Object> getConfigMap(List<String> boostFields, List<ScoreFunction> scoreFunctions, Integer phraseBoostDivisor) {
+            Map<String, Object> m = new HashMap<>();
+            if (!boostFields.isEmpty()) {
+                m.put("_boostFields", boostFields);
+            }
+            if (!scoreFunctions.isEmpty()) {
+                m.put("_scoreFunctions", scoreFunctions);
+            }
+            if (phraseBoostDivisor != null) {
+                m.put("_phraseBoostDivisor", phraseBoostDivisor);
+            }
+            return m;
+        }
+    }
 
     public static Map<String, Object> addBoosts(Map<String, Object> esQuery, List<ScoreFunction> scoreFunctions) {
         return mustWrap(List.of(esQuery, recordsOverCacheRecordsBoost(), functionScores(scoreFunctions)));
