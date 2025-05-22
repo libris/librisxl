@@ -21,8 +21,8 @@ public class EsBoost {
             "_chipStr.exact^200",
             "_cardStr^50",
             "_cardStr.exact^50",
-            "_searchCardStr^1",
-            "_searchCardStr.exact^1"
+            "_searchCardStr^0",
+            "_searchCardStr.exact^0"
     );
 
     // TODO: Better name
