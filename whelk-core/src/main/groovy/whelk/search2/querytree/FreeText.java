@@ -33,6 +33,17 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
 
     @Override
     public Map<String, Object> toEs(EsMappings esMappings, EsBoost.Config boostConfig) {
+        if (boostConfig.suggest()) {
+            var shouldClauses = List.of(
+                    _toEs(boostConfig),
+                    replace(value + Operator.WILDCARD)._toEs(boostConfig)
+            );
+            return shouldWrap(shouldClauses);
+        }
+        return _toEs(boostConfig);
+    }
+
+    public Map<String, Object> _toEs(EsBoost.Config boostConfig) {
         String s = value;
         s = Unicode.normalizeForSearch(s);
         boolean isSimple = isSimple(s);

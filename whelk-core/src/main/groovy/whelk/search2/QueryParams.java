@@ -37,6 +37,7 @@ public class QueryParams {
         public static final String FN_SCORE = "_fnScore";
         // Temporary param for experimenting
         public static final String PHRASE_BOOST_DIVISOR = "_phraseBoostDivisor";
+        public static final String SUGGEST = "_suggest";
     }
 
     public static class Debug {
@@ -60,6 +61,7 @@ public class QueryParams {
     public final String q;
 
     public final boolean skipStats;
+    public final boolean suggest;
 
     private Map<String, String> paramsMap;
 
@@ -75,7 +77,8 @@ public class QueryParams {
         this.spell = new Spell(getOptionalSingleNonEmpty(ApiParams.SPELL, apiParameters).orElse(""));
         this.computedLabelLocale = getOptionalSingleNonEmpty(JsonLd.Platform.COMPUTED_LABEL, apiParameters).orElse(null);
         this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse("");
-        this.skipStats = getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
+        this.suggest = getOptionalSingle(ApiParams.SUGGEST, apiParameters).map("true"::equalsIgnoreCase).isPresent();
+        this.skipStats = suggest || getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
         this.esBoostConfig = getEsBoostConfig(apiParameters);
         this.aliased = getAliased(apiParameters);
     }
@@ -230,6 +233,6 @@ public class QueryParams {
         Integer phraseBoostDivisor = getOptionalSingle(ApiParams.PHRASE_BOOST_DIVISOR, queryParameters)
                 .map(s -> parseInt(s, null))
                 .orElse(null);
-        return EsBoost.Config.newConfig(boostFields, scoreFunctions, phraseBoostDivisor);
+        return EsBoost.Config.newConfig(boostFields, scoreFunctions, phraseBoostDivisor, suggest);
     }
 }

@@ -41,7 +41,11 @@ public class EsBoost {
 //            new MatchingFieldValue("language.@id", "https://id.kb.se/language/swe", 50)
     );
 
-    public record Config(Map<String, Object> config) {
+    public record Config(Map<String, Object> config, boolean suggest) {
+        Config(Map<String, Object> config) {
+            this(config, false);
+        }
+
         @SuppressWarnings("unchecked")
         public List<String> getBoostFields() {
             return (List<String>) config.getOrDefault("_boostFields", List.of());
@@ -68,15 +72,15 @@ public class EsBoost {
             Map<String, Object> configMap = new HashMap<>(getDefaultConfigMap()) {{
                 putAll(queryParams.esBoostConfig.config());
             }};
-            return new Config(configMap);
+            return new Config(configMap, queryParams.esBoostConfig.suggest());
         }
 
-        public static Config newConfig(List<String> boostFields, List<ScoreFunction> scoreFunctions, Integer phraseBoostDivisor) {
-            return new Config(getConfigMap(boostFields, scoreFunctions, phraseBoostDivisor));
+        public static Config newConfig(List<String> boostFields, List<ScoreFunction> scoreFunctions, Integer phraseBoostDivisor, boolean suggest) {
+            return new Config(getConfigMap(boostFields, scoreFunctions, phraseBoostDivisor), suggest);
         }
 
         public static Config newBoostFieldsConfig(List<String> boostFields) {
-            return newConfig(boostFields, List.of(), null);
+            return newConfig(boostFields, List.of(), null, false);
         }
 
         private static Map<String, Object> getDefaultConfigMap() {
