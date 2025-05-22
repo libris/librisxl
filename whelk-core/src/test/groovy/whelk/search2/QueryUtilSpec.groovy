@@ -25,19 +25,20 @@ class QueryUtilSpec extends Specification {
         QueryUtil.isSimple(query) == result
 
         where:
-        query                       | result
-        "Hästar"                    | true
-        "Häst*"                     | true
-        "H*star"                    | false
-        "*star"                     | false
-        "Häst?"                     | true // treat these as no masking when last char. (e.g. pasted titles)
-        "H?star"                    | false
-        "H?star?"                   | false
-        "H*star?"                   | false
-        "?ästar"                    | false
-        'Это дом'                   | true
-        'Это д?м'                   | false
-        'վիրված'                    | true
-        'վիրվ?ած'                   | false
+        query           | result
+        "Hästar"        | true
+        "Häst*"         | true
+        "H*star"        | false
+        "*star"         | false
+        "Häst?"         | true // treat these as no masking when last char. (e.g. pasted titles)
+        "H?star"        | false
+        "H?star?"       | false
+        "H*star?"       | false
+        "?ästar"        | false
+        'Это дом'       | true
+        'Это д?м'       | false
+        'վիրված'        | true
+        'վիրվ?ած'       | false
+        "häst* i hagen" | false
     }
 }
