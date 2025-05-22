@@ -6,7 +6,6 @@ import whelk.search2.EsBoost;
 import whelk.search2.EsMappings;
 import whelk.search2.Operator;
 import whelk.search2.QueryParams;
-import whelk.search2.QueryUtil;
 import whelk.util.Unicode;
 
 import java.util.ArrayList;
@@ -16,9 +15,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 import java.util.stream.Collectors;
 
 import static whelk.search2.QueryUtil.isQuoted;
+import static whelk.search2.QueryUtil.isSimple;
 import static whelk.search2.QueryUtil.makeUpLink;
 import static whelk.search2.QueryUtil.mustNotWrap;
 import static whelk.search2.QueryUtil.quote;
@@ -34,7 +35,7 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
     public Map<String, Object> toEs(EsMappings esMappings, EsBoost.Config boostConfig) {
         String s = value;
         s = Unicode.normalizeForSearch(s);
-        boolean isSimple = QueryUtil.isSimple(s);
+        boolean isSimple = isSimple(s);
         String queryMode = isSimple ? "simple_query_string" : "query_string";
         if (!isSimple) {
             s = ESQuery.escapeNonSimpleQueryString(s);
@@ -67,14 +68,20 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
         }
 
         var queries = buildQueries(queryMode, queryString, basicBoostFields, functionBoostFields);
+
         if (!isQuoted(queryString) && isMultiWord(queryString)) {
-            Optional<Integer> phraseBoostDivisor = boostConfig.getPhraseBoostDivisor();
-            if (phraseBoostDivisor.isPresent()) {
-                basicBoostFields = basicBoostFields.entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey,
-                                e -> e.getValue() / phraseBoostDivisor.get()));
+            List<String> simplePhrases = getSimplePhrases(queryString);
+            if (!simplePhrases.isEmpty()) {
+                Optional<Integer> phraseBoostDivisor = boostConfig.getPhraseBoostDivisor();
+                if (phraseBoostDivisor.isPresent()) {
+                    basicBoostFields = basicBoostFields.entrySet().stream()
+                            .collect(Collectors.toMap(Map.Entry::getKey,
+                                    e -> e.getValue() / phraseBoostDivisor.get()));
+                }
+                for (String phrase : simplePhrases) {
+                    queries.addAll(buildQueries("query_string", phrase, basicBoostFields, functionBoostFields));
+                }
             }
-            queries.addAll(buildQueries("query_string", quote(queryString), basicBoostFields, functionBoostFields));
         }
 
         return wrap(queries.size() == 1 ? queries.getFirst() : shouldWrap(queries));
@@ -206,5 +213,29 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
     private Map<String, Object> buildSimpleQuery(String queryMode, String queryString, Map<String, Float> fields) {
         var fieldsStrings = fields.entrySet().stream().map(e -> e.getKey() + "^" + e.getValue()).toList();
         return buildSimpleQuery(queryMode, queryString, fieldsStrings);
+    }
+
+    private List<String> getSimplePhrases(String queryString) {
+        String[] tokens = queryString.split("\\s+");
+
+        List<String> simplePhrases = new ArrayList<>();
+        List<String> currentSimpleSequence = new ArrayList<>();
+
+        for (int i = 0; i < tokens.length; i++) {
+            String token = tokens[i];
+            if (isSimple(token) && !token.endsWith(Operator.WILDCARD)) {
+                currentSimpleSequence.add(token);
+            } else {
+                if (currentSimpleSequence.size() > 1) {
+                    simplePhrases.add(quote(String.join(" ", currentSimpleSequence)));
+                }
+                currentSimpleSequence.clear();
+            }
+            if (i == tokens.length - 1 && currentSimpleSequence.size() > 1)  {
+                simplePhrases.add(quote(String.join(" ", currentSimpleSequence)));
+            }
+        }
+
+        return simplePhrases;
     }
 }
