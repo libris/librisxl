@@ -77,7 +77,7 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
                 basicBoostFields = basicBoostFields.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue() / divisor));
             }
-            queries.addAll(buildQueries(queryMode, quote(queryString), basicBoostFields, functionBoostFields));
+            queries.addAll(buildQueries("query_string", quote(queryString), basicBoostFields, functionBoostFields));
         }
 
         return wrap(queries.size() == 1 ? queries.getFirst() : shouldWrap(queries));
@@ -199,6 +199,9 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
         query.put("default_operator", "AND");
         if (!fields.isEmpty()) {
             query.put("fields", fields);
+        }
+        if (queryMode.equals("query_string")) {
+            query.put("type", "most_fields");
         }
         return Map.of(queryMode, query);
     }
