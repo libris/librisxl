@@ -21,8 +21,6 @@ public sealed interface Node permits ActiveFilter, FreeText, Group, InactiveFilt
 
     Node getInverse();
 
-    boolean shouldContributeToEsScore();
-
     default List<Node> children() {
         return Collections.emptyList();
     }

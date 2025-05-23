@@ -51,11 +51,6 @@ public record ActiveFilter(Filter.AliasedFilter aliasedFilter) implements Node {
                 : new InactiveFilter(aliasedFilter);
     }
 
-    @Override
-    public boolean shouldContributeToEsScore() {
-        return false;
-    }
-
     public String alias() {
         return aliasedFilter.alias();
     }
