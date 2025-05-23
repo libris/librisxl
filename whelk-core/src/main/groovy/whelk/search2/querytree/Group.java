@@ -145,10 +145,10 @@ public sealed abstract class Group implements Node permits And, Or {
                         boolean isGroup = v.size() > 1;
                         boolean isNegatedGroup = k && isGroup;
                         if (isNegatedGroup) {
-                            var es = v.stream().map(pv -> pv.replaceOperator(Operator.EQUALS).getCoreEsQuery(esMappings)).toList();
+                            var es = v.stream().map(pv -> pv.replaceOperator(Operator.EQUALS).getCoreEsQuery(esMappings, boostConfig)).toList();
                             bool.put("must_not", nestedWrap(nestedStem, wrap(es)));
                         } else {
-                            var es = v.stream().map(pv -> pv.getCoreEsQuery(esMappings)).toList();
+                            var es = v.stream().map(pv -> pv.getCoreEsQuery(esMappings, boostConfig)).toList();
                             bool.put("must", nestedWrap(nestedStem, isGroup ? wrap(es) : es.getFirst()));
                         }
                     });

@@ -1,7 +1,6 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
-import whelk.search.ESQuery;
 import whelk.search2.EsBoost;
 import whelk.search2.EsMappings;
 import whelk.search2.Operator;
@@ -10,7 +9,6 @@ import whelk.search2.QueryUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,10 +21,10 @@ import static whelk.JsonLd.Owl.INVERSE_OF;
 import static whelk.JsonLd.Owl.PROPERTY_CHAIN_AXIOM;
 import static whelk.JsonLd.TYPE_KEY;
 import static whelk.search2.Operator.GREATER_THAN;
+import static whelk.search2.Operator.NOT_EQUALS;
 import static whelk.search2.QueryUtil.boolWrap;
 import static whelk.search2.QueryUtil.makeUpLink;
 import static whelk.search2.QueryUtil.mustNotWrap;
-import static whelk.search2.QueryUtil.mustWrap;
 import static whelk.search2.QueryUtil.nestedWrap;
 import static whelk.search2.QueryUtil.quoteIfPhraseOrContainsSpecialSymbol;
 
@@ -41,12 +39,12 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
     @Override
     public Map<String, Object> toEs(EsMappings esMappings, EsBoost.Config boostConfig) {
-        var es = getCoreEsQuery(esMappings);
+        var es = getCoreEsQuery(esMappings, boostConfig);
         return getEsNestedQuery(es, esMappings).orElse(es);
     }
 
-    public Map<String, Object> getCoreEsQuery(EsMappings esMappings) {
-        return _getCoreEsQuery(esMappings);
+    public Map<String, Object> getCoreEsQuery(EsMappings esMappings, EsBoost.Config boostConfig) {
+        return _getCoreEsQuery(esMappings, boostConfig);
     }
 
     @Override
@@ -130,7 +128,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
                 .map(operator == Operator.NOT_EQUALS ? QueryUtil::mustNotWrap : QueryUtil::mustWrap);
     }
 
-    private Map<String, Object> _getCoreEsQuery(EsMappings esMappings) {
+    private Map<String, Object> _getCoreEsQuery(EsMappings esMappings, EsBoost.Config boostConfig) {
         String p = path.fullEsSearchPath();
         String v = value.jsonForm();
 
@@ -143,7 +141,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         }
 
         return switch (operator) {
-            case EQUALS -> esEquals(p, v, esMappings);
+            case EQUALS -> esEquals(p, v, esMappings, boostConfig);
             case NOT_EQUALS -> esNotEquals(p, v);
             case LESS_THAN -> esRangeFilter(p, v, "lt");
             case LESS_THAN_OR_EQUALS -> esRangeFilter(p, v, "lte");
@@ -246,23 +244,23 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         return operator.format(p, v);
     }
 
-    private Map<String, Object> esEquals(String path, String value, EsMappings esMappings) {
+    private Map<String, Object> esEquals(String path, String value, EsMappings esMappings, EsBoost.Config boostConfig) {
         if (this.value instanceof Resource) {
             return filterWrap(buildTermQuery(path, value));
         }
-        var simpleQuery = buildSimpleQuery(path, value);
-        if (esMappings.isFourDigitField(path) || esMappings.isDateField(path)) {
-            // TODO: Rather search keyword field with a term query?
-            return filterWrap(simpleQuery);
-        }
-        path += ("^" + EsBoost.WITHIN_FIELD_BOOST);
-        return mustWrap(buildSimpleQuery(path, value));
+        // TODO: Prefer searching keyword field with a term query unless the value is masked/truncated.
+        //  Need to sort out what is indexed into e.g. publication.year.keyword first.
+        int boost = esMappings.isFourDigitField(path) || esMappings.isDateField(path)
+                ? 0 // Don't count score from this field
+                : boostConfig.withinFieldBoost();
+        String boostField = path + "^" + boost;
+        return new FreeText(value).toEs(boostConfig.withBoostFields(List.of(boostField)));
     }
 
     private Map<String, Object> esNotEquals(String path, String value) {
-        return mustNotWrap(this.value instanceof Resource
-                ? buildTermQuery(path, value)
-                : buildSimpleQuery(path, value));
+        return this.value instanceof Resource
+                ? mustNotWrap(buildTermQuery(path, value))
+                : new FreeText(value, NOT_EQUALS).toEs(EsBoost.Config.newBoostFieldsConfig(List.of(path)));
     }
 
     private static Map<String, Object> esRangeFilter(String path, String value, String key) {
@@ -283,16 +281,6 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
     private static Map<String, Object> rangeWrap(Map<?, ?> m) {
         return Map.of("range", m);
-    }
-
-    private static Map<String, Object> buildSimpleQuery(String field, String value) {
-        boolean isSimple = QueryUtil.isSimple(value);
-        String queryMode = isSimple ? "simple_query_string" : "query_string";
-        var query = new HashMap<>();
-        query.put("query", isSimple ? value : ESQuery.escapeNonSimpleQueryString(value));
-        query.put("fields", List.of(field));
-        query.put("default_operator", "AND");
-        return Map.of(queryMode, query);
     }
 
     private static Map<String, Object> buildTermQuery(String field, String value) {

@@ -30,6 +30,10 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
         this(null, EQUALS, value);
     }
 
+    public FreeText(String value, Operator op) {
+        this(null, op, value);
+    }
+
     @Override
     public Map<String, Object> toEs(EsMappings esMappings, EsBoost.Config boostConfig) {
         if (boostConfig.suggest()) {
@@ -41,6 +45,10 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
             );
             return shouldWrap(shouldClauses);
         }
+        return _toEs(boostConfig);
+    }
+
+    public Map<String, Object> toEs(EsBoost.Config boostConfig) {
         return _toEs(boostConfig);
     }
 
