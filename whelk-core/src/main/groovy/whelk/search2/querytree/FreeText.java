@@ -35,15 +35,68 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
     public Map<String, Object> toEs(EsMappings esMappings, EsBoost.Config boostConfig) {
         if (boostConfig.suggest()) {
             var shouldClauses = List.of(
-                    _toEs(boostConfig),
-                    replace(value + Operator.WILDCARD)._toEs(boostConfig)
+                    // Make a prefix query (e.g. add a trailing * to query string) to get suggestions
+                    replace(value + Operator.WILDCARD)._toEs(boostConfig),
+                    // Also make a non-prefix query to get higher relevancy score for exact matches
+                    _toEs(boostConfig)
             );
             return shouldWrap(shouldClauses);
         }
         return _toEs(boostConfig);
     }
 
-    public Map<String, Object> _toEs(EsBoost.Config boostConfig) {
+    @Override
+    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes) {
+        return this;
+    }
+
+    @Override
+    public Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("property", textQuery.definition());
+        m.put(operator.termKey, value);
+        m.put("up", makeUpLink(qt, this, queryParams));
+        return m;
+    }
+
+    @Override
+    public String toQueryString(boolean topLevel) {
+        return operator == Operator.NOT_EQUALS
+                ? "NOT " + value :
+                value;
+    }
+
+    @Override
+    public Node getInverse() {
+        return new FreeText(textQuery, operator.getInverse(), value);
+    }
+
+    @Override
+    public boolean shouldContributeToEsScore() {
+        return operator == EQUALS && !Operator.WILDCARD.equals(value);
+    }
+
+    @Override
+    public boolean isFreeTextNode() {
+        return operator.equals(EQUALS);
+    }
+
+    @Override
+    public String toString() {
+        return operator == Operator.NOT_EQUALS
+                ? "NOT " + value :
+                value;
+    }
+
+    public FreeText replace(String replacement) {
+        return new FreeText(textQuery, operator, replacement);
+    }
+
+    public boolean isWild() {
+        return operator == EQUALS && Operator.WILDCARD.equals(value);
+    }
+
+    private Map<String, Object> _toEs(EsBoost.Config boostConfig) {
         String s = value;
         s = Unicode.normalizeForSearch(s);
         boolean isSimple = isSimple(s);
@@ -96,57 +149,6 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
         }
 
         return wrap(queries.size() == 1 ? queries.getFirst() : shouldWrap(queries));
-    }
-
-    @Override
-    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes) {
-        return this;
-    }
-
-    @Override
-    public Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams) {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("property", textQuery.definition());
-        m.put(operator.termKey, value);
-        m.put("up", makeUpLink(qt, this, queryParams));
-        return m;
-    }
-
-    @Override
-    public String toQueryString(boolean topLevel) {
-        return operator == Operator.NOT_EQUALS
-                ? "NOT " + value :
-                value;
-    }
-
-    @Override
-    public Node getInverse() {
-        return new FreeText(textQuery, operator.getInverse(), value);
-    }
-
-    @Override
-    public boolean shouldContributeToEsScore() {
-        return operator == EQUALS && !Operator.WILDCARD.equals(value);
-    }
-
-    @Override
-    public boolean isFreeTextNode() {
-        return operator.equals(EQUALS);
-    }
-
-    @Override
-    public String toString() {
-        return operator == Operator.NOT_EQUALS
-                ? "NOT " + value :
-                value;
-    }
-
-    public FreeText replace(String replacement) {
-        return new FreeText(textQuery, operator, replacement);
-    }
-
-    public boolean isWild() {
-        return operator == EQUALS && Operator.WILDCARD.equals(value);
     }
 
     private boolean isMultiWord(String s) {
