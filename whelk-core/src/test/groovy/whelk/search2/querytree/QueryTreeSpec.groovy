@@ -69,7 +69,7 @@ class QueryTreeSpec extends Specification {
                                         ],
                                         "equals"  : "something",
                                         "up"      : [
-                                                "@id": "/find?_limit=200&_q=%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA"
+                                                "@id": "/find?_limit=20&_q=%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA"
                                         ]
                                 ], [
                                         "or": [[
@@ -79,7 +79,7 @@ class QueryTreeSpec extends Specification {
                                                        ],
                                                        "notEquals": "v3",
                                                        "up"       : [
-                                                               "@id": "/find?_limit=200&_q=something+p4:%22v:4%22+includeA"
+                                                               "@id": "/find?_limit=20&_q=something+p4:%22v:4%22+includeA"
                                                        ],
                                                        "_key"     : "p3",
                                                        "_value"   : "v3"
@@ -90,13 +90,13 @@ class QueryTreeSpec extends Specification {
                                                        ],
                                                        "equals"  : "v:4",
                                                        "up"      : [
-                                                               "@id": "/find?_limit=200&_q=something+NOT+p3:v3+includeA"
+                                                               "@id": "/find?_limit=20&_q=something+NOT+p3:v3+includeA"
                                                        ],
                                                        "_key"    : "p4",
                                                        "_value"  : "v:4"
                                                ]],
                                         "up": [
-                                                "@id": "/find?_limit=200&_q=something+includeA"
+                                                "@id": "/find?_limit=20&_q=something+includeA"
                                         ]
                                 ], [
                                         "object": [
@@ -118,7 +118,7 @@ class QueryTreeSpec extends Specification {
                                                                                 ],
                                                                                 "notEquals": "A",
                                                                                 "up"       : [
-                                                                                        "@id": "/find?_limit=200&_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA"
+                                                                                        "@id": "/find?_limit=20&_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA"
                                                                                 ],
                                                                                 "_key"     : "p1",
                                                                                 "_value"   : "A"
@@ -126,18 +126,18 @@ class QueryTreeSpec extends Specification {
                                                                 ],
                                                                 "value" : "excludeA",
                                                                 "up"    : [
-                                                                        "@id": "/find?_limit=200&_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA"
+                                                                        "@id": "/find?_limit=20&_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA"
                                                                 ]
                                                         ]
                                                 ]
                                         ],
                                         "value" : "includeA",
                                         "up"    : [
-                                                "@id": "/find?_limit=200&_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29"
+                                                "@id": "/find?_limit=20&_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29"
                                         ]
                                 ]],
                         "up" : [
-                                "@id": "/find?_limit=200&_q=*"
+                                "@id": "/find?_limit=20&_q=*"
                         ]
                 ]
     }
