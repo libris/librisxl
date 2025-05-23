@@ -1,6 +1,7 @@
 package whelk.search2.querytree
 
 import spock.lang.Specification
+import whelk.search2.EsBoost
 import whelk.search2.EsMappings
 
 class FreeTextSpec extends Specification {
@@ -9,7 +10,7 @@ class FreeTextSpec extends Specification {
     def "to ES query (basic boosting)"() {
         given:
         List<String> boostFields = ["field1^10", "field2^20"]
-        Map esQuery = new FreeText("something").toEs(esMappings, boostFields)
+        Map esQuery = new FreeText("something").toEs(esMappings, EsBoost.Config.newBoostFieldsConfig(boostFields))
 
         expect:
         esQuery == [
@@ -28,7 +29,7 @@ class FreeTextSpec extends Specification {
     def "to ES query (function boosting)"() {
         given:
         List<String> boostFields = ["field1^10(someFunc)", "field2^20(someFunc)", "field3^10(another(func))"]
-        Map esQuery = new FreeText("something").toEs(esMappings, boostFields)
+        Map esQuery = new FreeText("something").toEs(esMappings, EsBoost.Config.newBoostFieldsConfig(boostFields))
 
         expect:
         esQuery == [
@@ -80,7 +81,7 @@ class FreeTextSpec extends Specification {
     def "to ES query (basic boosting + function boosting)"() {
         given:
         List<String> boostFields = ["field1^10", "field2^20", "field3^10(someFunc)"]
-        Map esQuery = new FreeText("something").toEs(esMappings, boostFields)
+        Map esQuery = new FreeText("something").toEs(esMappings, EsBoost.Config.newBoostFieldsConfig(boostFields))
 
         expect:
         esQuery == [

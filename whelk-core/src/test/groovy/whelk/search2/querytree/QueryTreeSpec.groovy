@@ -4,6 +4,7 @@ import spock.lang.Specification
 import whelk.JsonLd
 import whelk.search2.AppParams
 import whelk.search2.Disambiguate
+import whelk.search2.EsBoost
 import whelk.search2.Filter
 import whelk.search2.Query
 import whelk.search2.QueryParams
@@ -16,9 +17,10 @@ class QueryTreeSpec extends Specification {
     def "convert to ES query"() {
         given:
         QueryTree tree = new QueryTree('(NOT p1:v1 OR p2:v2) something', disambiguate)
+        EsBoost.Config esBoostConfig = EsBoost.Config.newBoostFieldsConfig(["_str^10"])
 
         expect:
-        tree.toEs(jsonLd, TestData.getEsMappings(), ['_str^10'], [], []) ==
+        tree.toEs(jsonLd, TestData.getEsMappings(), esBoostConfig, [], []) ==
                 ['bool': [
                         'must': [
                                 [

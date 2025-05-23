@@ -6,6 +6,7 @@ import whelk.exception.InvalidQueryException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,8 +54,7 @@ public class QueryParams {
     public final String lens;
     public final Spell spell;
     public final String computedLabelLocale;
-    public final List<String> boostFields;
-    public final List<EsBoost.ScoreFunction> esScoreFunctions;
+    public final EsBoost.Config esBoostConfig;
     public final Map<String, String[]> aliased;
 
     public final String q;
@@ -74,11 +74,9 @@ public class QueryParams {
         this.lens = getOptionalSingleNonEmpty(ApiParams.LENS, apiParameters).orElse("cards");
         this.spell = new Spell(getOptionalSingleNonEmpty(ApiParams.SPELL, apiParameters).orElse(""));
         this.computedLabelLocale = getOptionalSingleNonEmpty(JsonLd.Platform.COMPUTED_LABEL, apiParameters).orElse(null);
-//        this.boostFields = getMultiple(ApiParams.BOOST, apiParameters);
-        this.boostFields = getBoostFields(apiParameters); // Use this only temporarily for experimenting
         this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse("");
         this.skipStats = getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
-        this.esScoreFunctions = getEsScoreFunctions(apiParameters);
+        this.esBoostConfig = getEsBoostConfig(apiParameters);
         this.aliased = getAliased(apiParameters);
     }
 
@@ -127,9 +125,6 @@ public class QueryParams {
             }
             if (!debug.isEmpty()) {
                 params.put(ApiParams.DEBUG, String.join(",", debug));
-            }
-            if (!boostFields.isEmpty()) {
-                params.put(ApiParams.BOOST, String.join(",", boostFields));
             }
             if (skipStats) {
                 params.put(ApiParams.STATS, "false");
@@ -194,7 +189,7 @@ public class QueryParams {
         return offset;
     }
 
-    private static int parseInt(String s, int defaultTo) {
+    private static int parseInt(String s, Integer defaultTo) {
         try {
             return Integer.parseInt(s);
         } catch (NumberFormatException ignored) {
@@ -229,15 +224,12 @@ public class QueryParams {
         return scoreFunctions;
     }
 
-    private List<String> getBoostFields(Map<String, String[]> queryParameters) {
+    private EsBoost.Config getEsBoostConfig(Map<String, String[]> queryParameters) {
         List<String> boostFields = getMultiple(ApiParams.BOOST, queryParameters);
-        Optional<String> phraseBoostDivisor = getOptionalSingle(ApiParams.PHRASE_BOOST_DIVISOR, queryParameters)
-                .map(s -> ApiParams.PHRASE_BOOST_DIVISOR + "^" + s);
-        if (phraseBoostDivisor.isPresent()) {
-            return new ArrayList<>(boostFields.isEmpty() ? EsBoost.BOOST_FIELDS : boostFields) {{
-                add(phraseBoostDivisor.get());
-            }};
-        }
-        return boostFields;
+        List<EsBoost.ScoreFunction> scoreFunctions = getEsScoreFunctions(queryParameters);
+        Integer phraseBoostDivisor = getOptionalSingle(ApiParams.PHRASE_BOOST_DIVISOR, queryParameters)
+                .map(s -> parseInt(s, null))
+                .orElse(null);
+        return EsBoost.Config.newConfig(boostFields, scoreFunctions, phraseBoostDivisor);
     }
 }

@@ -1,6 +1,7 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
+import whelk.search2.EsBoost;
 import whelk.search2.EsMappings;
 import whelk.search2.Operator;
 import whelk.search2.QueryParams;
@@ -43,9 +44,9 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     @Override
-    public Map<String, Object> toEs(EsMappings esMappings, Collection<String> boostFields) {
+    public Map<String, Object> toEs(EsMappings esMappings, EsBoost.Config boostConfig) {
         Map<String, List<PathValue>> nestedGroups = getNestedGroups(esMappings);
-        return nestedGroups.isEmpty() ? wrap(childrenToEs(esMappings, boostFields)) : toEsNested(nestedGroups, esMappings, boostFields);
+        return nestedGroups.isEmpty() ? wrap(childrenToEs(esMappings, boostConfig)) : toEsNested(nestedGroups, esMappings, boostConfig);
     }
 
     @Override
@@ -138,7 +139,7 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     // TODO: Review/refine nested logic and proper tests
-    private Map<String, Object> toEsNested(Map<String, List<PathValue>> nestedGroups, EsMappings esMappings, Collection<String> boostFields) {
+    private Map<String, Object> toEsNested(Map<String, List<PathValue>> nestedGroups, EsMappings esMappings, EsBoost.Config boostConfig) {
         List<Map<String, Object>> esChildren = new ArrayList<>();
         List<Node> nonNested = new ArrayList<>(children());
 
@@ -161,7 +162,7 @@ public sealed abstract class Group implements Node permits And, Or {
         });
 
         for (Node n : nonNested) {
-            esChildren.add(n.toEs(esMappings, boostFields));
+            esChildren.add(n.toEs(esMappings, boostConfig));
         }
 
         return esChildren.size() == 1 ? esChildren.getFirst() : wrap(esChildren);
@@ -192,8 +193,8 @@ public sealed abstract class Group implements Node permits And, Or {
         return nestedGroups;
     }
 
-    private List<Map<String, Object>> childrenToEs(EsMappings esMappings, Collection<String> boostFields) {
-        return mapToMap(n -> n.toEs(esMappings, boostFields));
+    private List<Map<String, Object>> childrenToEs(EsMappings esMappings, EsBoost.Config boostConfig) {
+        return mapToMap(n -> n.toEs(esMappings, boostConfig));
     }
 
     private List<Node> mapToNode(Function<Node, Node> mapper) {
