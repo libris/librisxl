@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import java.util.stream.Collectors;
 
@@ -106,7 +105,7 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
         }
         String queryString = s;
 
-        List<String> boostFields = boostConfig.getBoostFields();
+        List<String> boostFields = boostConfig.boostFields();
 
         if (boostFields.isEmpty()) {
             return wrap(buildSimpleQuery(queryMode, queryString));
@@ -136,11 +135,11 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
         if (!isQuoted(queryString) && isMultiWord(queryString)) {
             List<String> simplePhrases = getSimplePhrases(queryString);
             if (!simplePhrases.isEmpty()) {
-                Optional<Integer> phraseBoostDivisor = boostConfig.getPhraseBoostDivisor();
-                if (phraseBoostDivisor.isPresent()) {
+                Integer phraseBoostDivisor = boostConfig.phraseBoostDivisor();
+                if (phraseBoostDivisor != null) {
                     basicBoostFields = basicBoostFields.entrySet().stream()
                             .collect(Collectors.toMap(Map.Entry::getKey,
-                                    e -> e.getValue() / phraseBoostDivisor.get()));
+                                    e -> e.getValue() / phraseBoostDivisor));
                 }
                 for (String phrase : simplePhrases) {
                     queries.addAll(buildQueries("query_string", phrase, basicBoostFields, functionBoostFields));

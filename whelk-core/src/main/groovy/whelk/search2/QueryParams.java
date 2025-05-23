@@ -37,6 +37,7 @@ public class QueryParams {
         public static final String FN_SCORE = "_fnScore";
         // Temporary param for experimenting
         public static final String PHRASE_BOOST_DIVISOR = "_phraseBoostDivisor";
+        // TODO: Decide on the function of this parameter and what to call it
         public static final String SUGGEST = "_suggest";
     }
 
@@ -233,6 +234,6 @@ public class QueryParams {
         Integer phraseBoostDivisor = getOptionalSingle(ApiParams.PHRASE_BOOST_DIVISOR, queryParameters)
                 .map(s -> parseInt(s, null))
                 .orElse(null);
-        return EsBoost.Config.newConfig(boostFields, scoreFunctions, phraseBoostDivisor, suggest);
+        return new EsBoost.Config(boostFields, scoreFunctions, phraseBoostDivisor, null, suggest);
     }
 }

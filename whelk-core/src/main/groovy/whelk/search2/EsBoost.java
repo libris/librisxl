@@ -2,11 +2,9 @@ package whelk.search2;
 
 import whelk.JsonLd;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 
 import static whelk.JsonLd.CACHE_RECORD_TYPE;
 import static whelk.JsonLd.RECORD_TYPE;
@@ -41,64 +39,38 @@ public class EsBoost {
 //            new MatchingFieldValue("language.@id", "https://id.kb.se/language/swe", 50)
     );
 
-    public record Config(Map<String, Object> config, boolean suggest) {
-        Config(Map<String, Object> config) {
-            this(config, false);
-        }
-
-        @SuppressWarnings("unchecked")
-        public List<String> getBoostFields() {
-            return (List<String>) config.getOrDefault("_boostFields", List.of());
-        }
-
-        @SuppressWarnings("unchecked")
-        public List<ScoreFunction> getScoreFunctions() {
-            return (List<ScoreFunction>) config.getOrDefault("_scoreFunctions", List.of());
-        }
-
-        public Optional<Integer> getPhraseBoostDivisor() {
-            return Optional.ofNullable((Integer) config.get("_phraseBoostDivisor"));
+    public record Config(List<String> boostFields,
+                         List<ScoreFunction> scoreFunctions,
+                         Integer phraseBoostDivisor,
+                         Integer withinFieldBoost,
+                         boolean suggest)
+    {
+        public Config withBoostFields(List<String> boostFields) {
+            return new Config(boostFields, scoreFunctions, phraseBoostDivisor, withinFieldBoost, suggest);
         }
 
         public static Config empty() {
-            return new Config(Map.of());
+            return new Config(List.of(), List.of(), null, null, false);
         }
 
         public static Config defaultConfig() {
-            return new Config(getDefaultConfigMap());
-        }
-
-        public static Config getConfig(QueryParams queryParams) {
-            Map<String, Object> configMap = new HashMap<>(getDefaultConfigMap()) {{
-                putAll(queryParams.esBoostConfig.config());
-            }};
-            return new Config(configMap, queryParams.esBoostConfig.suggest());
-        }
-
-        public static Config newConfig(List<String> boostFields, List<ScoreFunction> scoreFunctions, Integer phraseBoostDivisor, boolean suggest) {
-            return new Config(getConfigMap(boostFields, scoreFunctions, phraseBoostDivisor), suggest);
+            return new Config(BOOST_FIELDS, SCORE_FUNCTIONS, PHRASE_BOOST_DIVISOR, WITHIN_FIELD_BOOST, false);
         }
 
         public static Config newBoostFieldsConfig(List<String> boostFields) {
-            return newConfig(boostFields, List.of(), null, false);
+            return new Config(boostFields, List.of(), null, null, false);
         }
 
-        private static Map<String, Object> getDefaultConfigMap() {
-            return getConfigMap(BOOST_FIELDS, SCORE_FUNCTIONS, PHRASE_BOOST_DIVISOR);
-        }
-
-        private static Map<String, Object> getConfigMap(List<String> boostFields, List<ScoreFunction> scoreFunctions, Integer phraseBoostDivisor) {
-            Map<String, Object> m = new HashMap<>();
-            if (!boostFields.isEmpty()) {
-                m.put("_boostFields", boostFields);
-            }
-            if (!scoreFunctions.isEmpty()) {
-                m.put("_scoreFunctions", scoreFunctions);
-            }
-            if (phraseBoostDivisor != null) {
-                m.put("_phraseBoostDivisor", phraseBoostDivisor);
-            }
-            return m;
+        public static Config getCustomConfig(QueryParams queryParams) {
+            Config customConf = queryParams.esBoostConfig;
+            Config defaultConf = defaultConfig();
+            return new Config(
+                    customConf.boostFields().isEmpty() ? defaultConf.boostFields() : customConf.boostFields(),
+                    customConf.scoreFunctions().isEmpty() ? defaultConf.scoreFunctions() : customConf.scoreFunctions(),
+                    customConf.phraseBoostDivisor() == null ? defaultConf.phraseBoostDivisor() : customConf.phraseBoostDivisor(),
+                    customConf.withinFieldBoost() == null ? defaultConf.withinFieldBoost() : customConf.withinFieldBoost(),
+                    customConf.suggest()
+            );
         }
     }
 

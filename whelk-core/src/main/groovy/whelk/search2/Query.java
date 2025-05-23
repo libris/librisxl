@@ -155,7 +155,7 @@ public class Query {
 
     protected Map<String, Object> getEsQuery(QueryTree queryTree, Collection<String> rulingTypes) {
         List<Node> multiSelectedFilters = selectedFilters.getAllMultiSelected().values().stream().flatMap(List::stream).toList();
-        EsBoost.Config esBoostConfig = EsBoost.Config.getConfig(queryParams);
+        EsBoost.Config esBoostConfig = EsBoost.Config.getCustomConfig(queryParams);
         var esQuery = queryTree.toEs(whelk.getJsonld(), esSettings.mappings, esBoostConfig, rulingTypes, multiSelectedFilters);
         return addBoosts(esQuery, esBoostConfig.getScoreFunctions());
     }
