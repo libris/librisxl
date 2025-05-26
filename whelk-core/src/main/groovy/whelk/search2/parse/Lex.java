@@ -120,6 +120,8 @@ public class Lex {
                     symbolValue.append(escapedC);
                     query.deleteCharAt(0);
                     offset.increase(1);
+                    if (query.isEmpty())
+                        break;
                 } else {
                     query.deleteCharAt(0);
                     offset.increase(1);

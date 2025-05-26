@@ -66,6 +66,28 @@ class LexSpec extends Specification {
         ]
     }
 
+    def "escape last char"() {
+        given:
+        def input = "quo\\="
+        def lexedSymbols = Lex.lexQuery(input)
+
+        expect:
+        lexedSymbols as List == [
+                new Lex.Symbol(Lex.TokenName.STRING, "quo=", 0),
+        ]
+    }
+
+    def "escape last char + whitespace"() {
+        given:
+        def input = "quo\\= "
+        def lexedSymbols = Lex.lexQuery(input)
+
+        expect:
+        lexedSymbols as List == [
+                new Lex.Symbol(Lex.TokenName.STRING, "quo=", 0),
+        ]
+    }
+
     def "error on escaped eol"() {
         given:
         def input = "AAA\\"
