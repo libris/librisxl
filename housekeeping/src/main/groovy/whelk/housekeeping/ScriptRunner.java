@@ -46,7 +46,7 @@ public class ScriptRunner extends HouseKeeper {
             String scriptUri = "/sys/housekeeping/" + scriptName;
             Script script = new Script(scriptText, scriptUri);
 
-            Path reportPath = Files.createTempDirectory("housekeeping_script_execution").resolve("report");
+            var reportPath = Files.createTempDirectory("housekeeping_script_execution");
 
             WhelkTool tool = new WhelkTool(premadeWhelk, script, reportPath.toFile(), WhelkTool.getDEFAULT_STATS_NUM_IDS());
             tool.setAllowLoud(true);
