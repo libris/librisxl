@@ -34,6 +34,7 @@ import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 import static java.util.concurrent.TimeUnit.SECONDS
@@ -70,6 +71,7 @@ class WhelkTool {
     PrintWriter createdLog
     PrintWriter deletedLog
     ConcurrentHashMap<String, PrintWriter> reports = new ConcurrentHashMap<>()
+    Closure finalizeLogs
     Logger logger
 
     Counter counter = new Counter()
@@ -144,7 +146,8 @@ class WhelkTool {
             log "Could not initialize elasticsearch: " + e
         }
         statistics = new Statistics(statsNumIds)
-        Runtime.addShutdownHook {
+
+        var finishLogs = {
             if (!statistics.isEmpty()) {
                 new PrintWriter(new File(reportsDir, "STATISTICS.txt")).withCloseable {
                     statistics.print(0, it)
@@ -152,6 +155,19 @@ class WhelkTool {
             }
 
             [modifiedLogFile, createdLogFile, deletedLogFile].each { if (it.length() == 0) it.delete() }
+        }
+
+        var lock = new Object()
+        var isFinalized = new AtomicBoolean()
+        finalizeLogs = {
+            if (!isFinalized.get()) {
+                synchronized (lock) {
+                    if (!isFinalized.get()) {
+                        isFinalized.set(true)
+                        finishLogs()
+                    }
+                }
+            }
         }
     }
 
@@ -770,6 +786,8 @@ class WhelkTool {
             it.flush()
             it.close()
         }
+        finalizeLogs()
+        
         if (errorDetected) {
             log "Script terminated due to an error, see $reportsDir/ERRORS.txt for more info"
             throw new RuntimeException("Script terminated due to an error", errorDetected)
@@ -880,6 +898,9 @@ class WhelkTool {
         }
 
         try {
+            Runtime.addShutdownHook {
+                tool.finalizeLogs() // print stats even if process is killed from outside
+            }
             tool.run()
         } catch (Exception e) {
             System.err.println(e.toString())
