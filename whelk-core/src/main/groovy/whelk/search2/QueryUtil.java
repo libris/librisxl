@@ -134,13 +134,36 @@ public class QueryUtil {
                 .orElse(Collections.emptyMap());
     }
 
-    static Pattern NON_SIMPLE_QUERY = Pattern.compile("([*?])\\S+");
+    // leading wildcards e.g. "*foo" are removed by simple_query_string
+    static Pattern NON_SIMPLE_QUERY = Pattern.compile("\\\\[?]|([*?])\\S+");
+
     /**
      * Can this query string be handled by ES simple_query_string?
-     * TODO define syntax for masking in last position? ("foo?")
      */
     public static boolean isSimple(String queryString) {
-        // leading wildcards e.g. "*foo" are removed by simple_query_string
         return !NON_SIMPLE_QUERY.matcher(queryString).find();
+    }
+
+    public static String escapeNonSimpleQueryString(String queryString) {
+        // Treat escaped question marks as actual wildcards
+        queryString = queryString.replace("\\?", "?");
+
+        // The following chars are reserved in ES and need to be escaped to be used as literals: \+-=|&><!(){}[]^"~*?:/
+        // Escape the ones that are not part of our query language.
+        for (char c : List.of('=', '&', '!', '{', '}', '[', ']', '^', ':', '/')) {
+            queryString = queryString.replace("" + c, "\\" + c);
+        }
+
+        // Inside words, treat '-' as regular hyphen instead of "NOT" and escape it
+        queryString = queryString.replaceAll("(^|\\s+)-(\\S+)", "$1#ACTUAL_NOT#$2");
+        queryString = queryString.replace("-", "\\-");
+        queryString = queryString.replace("#ACTUAL_NOT#", "-");
+
+        // Strip un-escapable characters
+        for (char c : List.of('<', '>')) {
+            queryString = queryString.replace("" + c, "");
+        }
+
+        return queryString;
     }
 }

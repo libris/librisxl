@@ -294,7 +294,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         boolean isSimple = QueryUtil.isSimple(value);
         String queryMode = isSimple ? "simple_query_string" : "query_string";
         var query = new HashMap<>();
-        query.put("query", isSimple ? value : ESQuery.escapeNonSimpleQueryString(value));
+        query.put("query", isSimple ? value : QueryUtil.escapeNonSimpleQueryString(value));
         query.put("fields", List.of(field));
         query.put("default_operator", "AND");
         return Map.of(queryMode, query);
