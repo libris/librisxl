@@ -4,6 +4,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import whelk.Whelk;
+import whelk.datatool.Script;
 import whelk.datatool.WhelkTool;
 
 import java.io.BufferedReader;
@@ -40,22 +41,18 @@ public class ScriptRunner extends HouseKeeper {
     public void trigger() {
         try {
             InputStream scriptStream = ScriptRunner.class.getClassLoader().getResourceAsStream(scriptName);
+            assert scriptStream != null;
             String scriptText = IOUtils.toString(new InputStreamReader(scriptStream));
+            String scriptUri = "/sys/housekeeping/" + scriptName;
+            Script script = new Script(scriptText, scriptUri);
 
-            Path scriptWorkingDir = Files.createTempDirectory("housekeeping_script_execution");
-            Path scriptFilePath = scriptWorkingDir.resolve("script.groovy");
-            Path reportPath = scriptWorkingDir.resolve("report");
-            Files.createDirectories(reportPath);
+            Path reportPath = Files.createTempDirectory("housekeeping_script_execution").resolve("report");
 
-            Files.writeString(scriptFilePath, scriptText);
-            String[] args =
-                    {
-                            "--allow-loud",
-                            "--report",
-                            reportPath.toString(),
-                            scriptFilePath.toString(),
-                    };
-            WhelkTool.main2(args, premadeWhelk);
+            WhelkTool tool = new WhelkTool(premadeWhelk, script, reportPath.toFile(), WhelkTool.getDEFAULT_STATS_NUM_IDS());
+            tool.setAllowLoud(true);
+            tool.setNoThreads(false);
+            tool.setNumThreads(Runtime.getRuntime().availableProcessors());
+            tool.run();
 
             Path errorLogPath = reportPath.resolve("ERRORS.txt");
             if (Files.size(errorLogPath) > 0) {
