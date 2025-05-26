@@ -6,13 +6,16 @@ import whelk.JsonLd;
 import whelk.JsonLd.Rdfs;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -21,27 +24,33 @@ import static whelk.util.FresnelUtil.LangCode.ORIGINAL_SCRIPT_FIRST;
 
 // https://www.w3.org/2005/04/fresnel-info/manual/
 
+// TODO handle subPropertyOf
+//   -- https://www.w3.org/2005/04/fresnel-info/fsl/#rdfsowl
+//   -- https://github.com/libris/definitions/blob/41b0ac7b7089974dc1d1c41f221c038f1353df75/source/vocab/display.jsonld#L171
 // TODO fallback style for things that fall outside the class hierarchy?
 // TODO defer language selection?
 // TODO bad data - blank nodes without type?
 
 public class FresnelUtil {
 
-    public enum LensLevel {
+    public enum LensGroupName {
         Full(List.of("full", "cards")),
         Card(List.of("cards")),
         Chip(List.of("chips")),
-        Token(List.of("tokens", "chips"));
+        Token(List.of("tokens", "chips")),
+
+        SearchCard(List.of("search-cards", "cards")),
+        SearchChip(List.of("search-chips", "chips"));
 
         final List<String> groups;
 
-        LensLevel(List<String> groups) {
+        LensGroupName(List<String> groups) {
             this.groups = groups;
         }
     }
 
     // https://www.w3.org/2005/04/fresnel-info/manual/
-    static class Fresnel {
+    public static class Fresnel {
         public static String Format = "fresnel:Format";
         public static String Group = "fresnel:Group";
         public static String Lens = "fresnel:Lens";
@@ -76,10 +85,18 @@ public class FresnelUtil {
         public static String Identity = "Identity";
     }
 
+    public enum Options {
+        DEFAULT,
+        TAKE_ALL_ALTERNATE
+    }
+
+    private record DerivedCacheKey(Object types, DerivedLens lens) {}
+    private record LensCacheKey(Object types, LensGroupName lensGroupName) {}
+
     private static final Logger logger = LogManager.getLogger(FresnelUtil.class);
 
     //TODO load from display.jsonld
-    private static final Map<?, ?> DEFAULT_LENS = Map.of(
+    private static final Map<String, Object> DEFAULT_LENS = Map.of(
             JsonLd.TYPE_KEY, Fresnel.Lens,
             Fresnel.showProperties, List.of(
                     Map.of(Fresnel.alternateProperties, List.of(
@@ -90,20 +107,49 @@ public class FresnelUtil {
     );
 
     JsonLd jsonLd;
+    List<LangCode> fallbackLocales;
     Formats formats;
 
-    FresnelUtil(JsonLd jsonLd) {
+    private final Map<DerivedCacheKey, Lens> derivedLensCache = new ConcurrentHashMap<>();
+    private final Map<LensCacheKey, Lens> lensCache = new ConcurrentHashMap<>();
+
+    public FresnelUtil(JsonLd jsonLd) {
         this.jsonLd = jsonLd;
+        this.fallbackLocales = jsonLd.locales.stream().map(LangCode::new).toList();
         this.formats = new Formats(getUnsafe(jsonLd.displayData, "formatters", null));
     }
 
-    public Lensed applyLens(Object thing, LensLevel lens) {
+    public Lensed applyLens(Object thing, LensGroupName lens) {
+        return applyLens(thing, lens, Options.DEFAULT);
+    }
+
+    public Lensed applyLens(Object thing, LensGroupName lens, Options options) {
         // TODO
         if (!isTypedNode(thing)) {
             throw new IllegalArgumentException("Thing is not typed node: " + thing);
         }
 
-        return (Lensed) applyLens(thing, lens, null);
+        return (Lensed) applyLens(thing, lens, options, null);
+    }
+
+    public Lensed applyLens(Object thing, DerivedLens derived) {
+        return applyLens(thing, derived, Options.DEFAULT);
+    }
+
+    public Lensed applyLens(Object thing, DerivedLens derived, Options options) {
+        // TODO
+        if (!(thing instanceof Map<?, ?> t)) {
+            throw new IllegalArgumentException("Thing is not typed node: " + thing);
+        }
+
+        var types = t.get(JsonLd.TYPE_KEY);
+        var lens = derivedLensCache.computeIfAbsent(new DerivedCacheKey(types, derived), k -> {
+            var base = findLens(t, derived.base);
+            var minus = derived.minus.stream().map(l -> findLens(t, l)).toList();
+            return base.minus(minus, derived.subLens);
+        });
+
+        return (Lensed) applyLens(thing, lens, options, null);
     }
 
     public Decorated format(Lensed lensed, LangCode locale) {
@@ -114,9 +160,42 @@ public class FresnelUtil {
         };
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public void insertComputedLabels(Object data, LangCode locale) {
+        DocumentUtil.traverse(data, (var value, var path) -> {
+            if (value instanceof Map node && node.containsKey(JsonLd.TYPE_KEY)) {
+                try {
+                    var label = format(applyLens(value, FresnelUtil.LensGroupName.Chip), locale).asString();
+                    node.put(JsonLd.Platform.COMPUTED_LABEL, label);
+                    // TODO Check if structured value and don't compute for sub-nodes?
+                } catch (Exception e) {
+                    logger.warn("Error computing label for {}: {}", data, e, e);
+                }
+            }
+
+            return DocumentUtil.NOP;
+        });
+    }
+
     private Object applyLens(
             Object value,
-            LensLevel lensLevel,
+            LensGroupName lensGroupName,
+            Options options,
+            LangCode selectedLang
+    ) {
+        if (!(value instanceof Map<?, ?> thing)) {
+            // literal
+            return value;
+        }
+        var lens = findLens(thing, lensGroupName);
+
+        return applyLens(value, lens, options, selectedLang);
+    }
+
+    private Object applyLens(
+            Object value,
+            Lens lens,
+            Options options,
             LangCode selectedLang
     ) {
         if (!(value instanceof Map<?, ?> thing)) {
@@ -128,67 +207,66 @@ public class FresnelUtil {
         if (!scripts.isEmpty()) {
             TransliteratedNode n = new TransliteratedNode();
             for (var script : scripts) {
-                n.add(script, (Node) applyLens(thing, lensLevel, script));
+                n.add(script, (Node) applyLens(thing, lens, options, script));
             }
             return n;
         }
 
-        var result = new Node(lensLevel, selectedLang);
-        var lens = findLens(thing, lensLevel);
+        var result = new Node(lens, options, selectedLang);
 
-        @SuppressWarnings("unchecked")
-        var showProperties = (List<Object>) lens.get(Fresnel.showProperties);
-        showProperties = Stream.concat(Stream.of(JsonLd.TYPE_KEY, JsonLd.ID_KEY), showProperties.stream()).toList();
+        var showProperties = Stream.concat(Stream.of(new PropertyKey(JsonLd.TYPE_KEY), new PropertyKey(JsonLd.ID_KEY)), lens.showProperties().stream()).toList();
         for (var p : showProperties) {
-            if (JsonLd.isAlternateProperties(p)) {
-                for (var alternative : alternatives(p)) {
-                    if (JsonLd.isAlternateRangeRestriction(alternative)) {
-                        // can never be language container
-                        var r = asRangeRestriction(alternative);
-                        var k = r.subPropertyOf;
-                        @SuppressWarnings("unchecked")
-                        var v = ((List<Object>) JsonLd.asList(thing.get(k)))
-                                .stream()
-                                .filter(n -> isTypedNode(n) && r.range.equals(asMap(n).get(JsonLd.TYPE_KEY)))
-                                .toList();
-
-                        if (!v.isEmpty()) {
-                            result.pick(Map.of(k, v), new PropertyKey(k));
-                            break;
-                        }
+            switch (p) {
+                case PropertyKey k -> {
+                    if (k.isIn(thing)) {
+                        result.pick(thing, k);
                     }
-                    else if (alternative instanceof List<?> list) {
-                        // expanded lang alias, i.e. ["x", "xByLang"]
-                        var found = false;
-                        for (var k : list) {
-                            if (has(thing, (String) k)) {
-                                result.pick(thing, new PropertyKey((String) k));
-                                found = true;
+                }
+                case AlternateProperties a -> {
+                    alt: for (var alternative : a.alternatives) {
+                        switch (alternative) {
+                            case PropertyKey k -> {
+                                if (k.isIn(thing)) {
+                                    result.pick(thing, k);
+                                    if (options != Options.TAKE_ALL_ALTERNATE) {
+                                        break alt;
+                                    }
+                                }
+                            }
+                            case RangeRestriction r -> {
+                                // can never be language container
+                                var k = r.subPropertyOf;
+                                @SuppressWarnings("unchecked")
+                                var v = ((List<Object>) JsonLd.asList(thing.get(k)))
+                                        .stream()
+                                        .filter(n -> isTypedNode(n) && r.range.equals(asMap(n).get(JsonLd.TYPE_KEY)))
+                                        .toList();
+
+                                if (!v.isEmpty()) {
+                                    result.pick(Map.of(k, v), new PropertyKey(k));
+                                    if (options != Options.TAKE_ALL_ALTERNATE) {
+                                        break alt;
+                                    }
+                                }
+                            }
+                            default -> {
+
                             }
                         }
-                        if (found) {
-                            break;
-                        }
-                    }
-                    else if (alternative instanceof String k) {
-                        if (has(thing, k)) {
-                            result.pick(thing, new PropertyKey(k));
-                            break;
-                        }
                     }
                 }
-            }
-            else if (isInverseProperty(p)) {
-                // never language container
-                var i = asInverseProperty(p);
-                if (thing.get(JsonLd.REVERSE_KEY) instanceof Map<?, ?> r && r.containsKey(i.name)) {
-                    var v = r.get(i.name);
-                    result.pick(Map.of(i.inverseName, v), new PropertyKey(i.inverseName));
+                case InverseProperty i -> {
+                    // never language container
+                    if (thing.get(JsonLd.REVERSE_KEY) instanceof Map<?, ?> r && r.containsKey(i.name)) {
+                        var v = r.get(i.name);
+                        result.pick(Map.of(i.inverseName, v), new PropertyKey(i.inverseName));
+                    }
                 }
-            }
-            else if (p instanceof String k) {
-                if (has(thing, k)) {
-                    result.pick(thing, new PropertyKey(k));
+                case RangeRestriction ignored -> {
+                    // Not allowed here currently
+                }
+                case Unrecognized ignored -> {
+
                 }
             }
         }
@@ -237,7 +315,7 @@ public class FresnelUtil {
         }
     }
 
-    class PropertyKey {
+    final class PropertyKey implements PropertySelector {
         String name;
 
         public PropertyKey(String name) {
@@ -248,33 +326,78 @@ public class FresnelUtil {
             return name;
         }
 
-        boolean isLangAlias() {
-            return jsonLd.langContainerAliasInverted.containsKey(name);
+        boolean hasLangAlias() {
+            return jsonLd.langContainerAlias.containsKey(name);
         }
 
-        public String langAliasFor() {
-            return (String) jsonLd.langContainerAliasInverted.get(name);
+        public String langAlias() {
+            return (String) jsonLd.langContainerAlias.get(name);
         }
 
         boolean isTypeVocabTerm() {
             return jsonLd.isVocabTerm(name);
         }
+
+        private boolean isIn(Map<?, ?> thing) {
+            if (Rdfs.RDF_TYPE.equals(name)) {
+                return thing.containsKey(JsonLd.TYPE_KEY);
+            }
+            return thing.containsKey(name) || (hasLangAlias() && thing.containsKey(langAlias()));
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder s = new StringBuilder();
+            s.append(name);
+            if (hasLangAlias()) {
+                s.append(" (").append(langAlias()).append(")");
+            }
+            if (isTypeVocabTerm()) {
+                s.append(" (vocab)");
+            }
+            return s.toString();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            PropertyKey that = (PropertyKey) o;
+            return Objects.equals(name, that.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(name);
+        }
     }
 
     // FIXME naming
-    public sealed abstract class Lensed permits Node, TransliteratedNode {}
+    public sealed abstract class Lensed permits Node, TransliteratedNode {
+        public String asString() {
+            return printTo(new StringBuilder()).toString();
+        }
+
+        public abstract Lensed firstProperty();
+
+        // FIXME: Temporary method for experimenting with indexing of _topChipStr field
+        public abstract Lensed tmpFirstProperty();
+
+        protected abstract StringBuilder printTo(StringBuilder s);
+    }
 
     public final class Node extends Lensed {
         record Property(String name, Object value) {}
 
+        Options options;
         LangCode selectedLang;
         String id;
         String type;
         List<Property> orderedProps = new ArrayList<>();
-        LensLevel nextLensLevel;
+        Lens lens;
 
-        Node(LensLevel lensLevel, LangCode selectedLang) {
-            this.nextLensLevel = subLens(lensLevel);
+        Node(Lens lens, Options options, LangCode selectedLang) {
+            this.lens = lens;
+            this.options = options;
             this.selectedLang = selectedLang;
         }
 
@@ -282,10 +405,12 @@ public class FresnelUtil {
             // TODO JsonLd class expands lang container aliases. Do we want that?
 
             if (Rdfs.RDF_TYPE.equals(p.name)) {
-                var type = (String) first(thing.get(JsonLd.TYPE_KEY)); // TODO how to handle multiple types?
+                var type = firstType(thing); // TODO how to handle multiple types?
                 orderedProps.add(new Property(p.name, mapVocabTerm(type)));
+                return;
             }
-            else if (!p.isLangAlias() && thing.containsKey(p.name)) {
+
+            if (thing.containsKey(p.name)) {
                 Object value = thing.get(p.name);
                 if (JsonLd.TYPE_KEY.equals(p.name)) {
                     type = (String) first(value); // TODO how to handle multiple types?
@@ -304,35 +429,93 @@ public class FresnelUtil {
                 }
                 else {
                     if (value instanceof List<?> list) {
-                        var values = list.stream().map(v -> applyLens(v, nextLensLevel, selectedLang)).toList();
+                        var values = list.stream().map(v -> applyLens(v, lens.subLensGroup, options, selectedLang)).toList();
                         orderedProps.add(new Property(p.name, values));
                     }
                     else {
-                        orderedProps.add(new Property(p.name, applyLens(value, nextLensLevel, selectedLang)));
+                        orderedProps.add(new Property(p.name, applyLens(value, lens.subLensGroup, options, selectedLang)));
                     }
                 }
             }
-            else if (p.isLangAlias() && thing.containsKey(p.name)) {
+            if (p.hasLangAlias() && thing.containsKey(p.langAlias())) {
                 @SuppressWarnings("unchecked")
-                Map<String, Object> langContainer = (Map<String, Object>) thing.get(p.name);
+                Map<String, Object> langContainer = (Map<String, Object>) thing.get(p.langAlias());
                 if (selectedLang != null) {
                     // TODO should we remember here that these are script alts?
                     if(langContainer.containsKey(selectedLang.code)) {
-                        orderedProps.add(new Property(p.langAliasFor(), langContainer.get(selectedLang.code)));
+                        orderedProps.add(new Property(p.name(), langContainer.get(selectedLang.code)));
                     }
                 } else {
-                    orderedProps.add(new Property(p.langAliasFor(), new LanguageContainer(langContainer)));
+                    orderedProps.add(new Property(p.name(), new LanguageContainer(langContainer)));
                 }
+            }
+        }
+
+        @Override
+        public Node firstProperty() {
+            var result = new Node(lens, options, selectedLang);
+            result.id = id;
+            result.type = type;
+            result.orderedProps = orderedProps.isEmpty()
+                    ? Collections.emptyList()
+                    : List.of(orderedProps.getFirst());
+            return result;
+        }
+
+        @Override
+        public Node tmpFirstProperty() {
+            var result = new Node(lens, options, selectedLang);
+            result.id = id;
+            result.type = type;
+            if (orderedProps.isEmpty()) {
+                result.orderedProps = Collections.emptyList();
+            } else {
+                Node.Property first = orderedProps.getFirst();
+                if (first.name().equals("hasTitle")) {
+                    (first.value() instanceof Collection<?> c ? c : List.of(first.value()))
+                            .stream()
+                            .filter(Node.class::isInstance)
+                            .map(Node.class::cast)
+                            .forEach(n ->
+                                    n.orderedProps = n.orderedProps
+                                            .stream()
+                                            .filter(p -> p.name().equals("mainTitle"))
+                                            .toList()
+                            );
+                }
+                result.orderedProps = List.of(first);
+            }
+            return result;
+        }
+
+        @Override
+        protected StringBuilder printTo(StringBuilder s) {
+            orderedProps.forEach(prop -> printTo(s, prop.value));
+            return s;
+        }
+
+        private void printTo(StringBuilder s, Object value) {
+            if (value == null) {
+                return;
+            }
+            if(!s.isEmpty() && s.charAt(s.length() - 1) != ' ') {
+                s.append(" ");
+            }
+            switch(value) {
+                case Collection<?> l -> l.forEach(v -> printTo(s, v));
+                case LanguageContainer l -> l.languages.values().forEach(v -> printTo(s, v));
+                case Lensed l -> l.printTo(s);
+                default -> s.append(value);
             }
         }
 
         private Object mapVocabTerm(Object value) {
             if (value instanceof String s) {
                 var def = jsonLd.vocabIndex.get(s);
-                return applyLens(def != null ? def : s, nextLensLevel, selectedLang);
+                return applyLens(def != null ? def : s, lens.subLensGroup, options, selectedLang);
             } else {
                 // bad data
-                return applyLens(value, nextLensLevel, selectedLang);
+                return applyLens(value, lens.subLensGroup, options, selectedLang);
             }
         }
     }
@@ -341,6 +524,33 @@ public class FresnelUtil {
         Map<LangCode, Node> transliterations = new HashMap<>();
         void add(LangCode langCode, Node node) {
             transliterations.put(langCode, node);
+        }
+
+        @Override
+        public Lensed firstProperty() {
+            var result = new TransliteratedNode();
+            transliterations.forEach((langCode, node) -> {
+                result.transliterations.put(langCode, node.firstProperty());
+            });
+            return result;
+        }
+
+        @Override
+        public Lensed tmpFirstProperty() {
+            var result = new TransliteratedNode();
+            transliterations.forEach((langCode, node) -> {
+                result.transliterations.put(langCode, node.tmpFirstProperty());
+            });
+            return result;
+        }
+
+        @Override
+        protected StringBuilder printTo(StringBuilder s) {
+            if(!s.isEmpty() && s.charAt(s.length() - 1) != ' ') {
+                s.append(" ");
+            }
+            transliterations.values().forEach(node -> node.printTo(s));
+            return s;
         }
     }
 
@@ -355,46 +565,149 @@ public class FresnelUtil {
             }
         }
 
+        public List<String> pick(LangCode langCode, List<LangCode> fallbackLocales) {
+            if (languages.containsKey(langCode)) {
+                return languages.get(langCode);
+            }
+
+            for (LangCode fallbackLocale : fallbackLocales) {
+                if (languages.containsKey(fallbackLocale)) {
+                    return languages.get(fallbackLocale);
+                }
+            }
+
+            var randomLang = languages.keySet().stream().findFirst();
+            return randomLang.map(languages::get).orElse(Collections.emptyList());
+        }
+
         public boolean isTransliterated() {
             return languages.keySet().stream().anyMatch(LangCode::isTransliterated);
         }
     }
 
-    private boolean has(Map<?, ?> thing, String key) {
-        if (Rdfs.RDF_TYPE.equals(key)) {
-            return thing.containsKey(JsonLd.TYPE_KEY);
-        }
-        return thing.containsKey(key);
-    }
+    private Lens findLens(Map<?,?> thing, LensGroupName lensGroupName) {
+        var types = thing.get(JsonLd.TYPE_KEY);
+        var cacheKey = new LensCacheKey(types, lensGroupName);
 
-    private Map<?, ?> findLens(Map<?,?> thing, LensLevel lensLevel) {
-        for (var groupName : lensLevel.groups) {
-            @SuppressWarnings("unchecked")
-            var group = ((Map<String, Map<String,Object>>) jsonLd.displayData.get("lensGroups")).get(groupName);
-            @SuppressWarnings("unchecked")
-            var lens = (Map<String, Object>) jsonLd.getLensFor(thing, group);
-            if (lens != null) {
-                return  lens;
+        return lensCache.computeIfAbsent(cacheKey, k -> {
+            for (var groupName : lensGroupName.groups) {
+                @SuppressWarnings("unchecked")
+                var group = ((Map<String, Map<String,Object>>) jsonLd.displayData.get("lensGroups")).get(groupName);
+                @SuppressWarnings("unchecked")
+                var lens = (Map<String, Object>) jsonLd.getLensFor(thing, group);
+                if (lens != null) {
+                    return new Lens(lens, subLens(lensGroupName));
+                }
             }
-        }
 
-        return DEFAULT_LENS;
+            return new Lens(DEFAULT_LENS, subLens(lensGroupName));
+        });
     }
 
-    private LensLevel subLens(LensLevel lensLevel) {
-        return switch (lensLevel) {
-            case Full -> LensLevel.Card;
-            case Card -> LensLevel.Chip;
-            case Chip, Token -> LensLevel.Token;
+    public class Lens {
+        private final LensGroupName subLensGroup;
+        private final List<PropertySelector> showProperties;
+
+        public Lens(Map<String, Object> lensDefinition, LensGroupName subLensGroup) {
+            this.subLensGroup = subLensGroup;
+
+            @SuppressWarnings("unchecked")
+            var showProperties = (List<Object>) lensDefinition.get(Fresnel.showProperties);
+            this.showProperties = parseShowProperties(showProperties);
+        }
+
+        private Lens(List<PropertySelector> showProperties, LensGroupName subLensGroup) {
+            this.showProperties = showProperties;
+            this.subLensGroup = subLensGroup;
+        }
+
+        List<PropertySelector> showProperties() {
+            return showProperties;
+        }
+
+        private List<PropertySelector> parseShowProperties(List<Object> showProperties) {
+            return showProperties.stream().map(p -> {
+                if (JsonLd.isAlternateProperties(p)) {
+                    return new AlternateProperties(alternatives(p));
+                }
+                if (p instanceof List<?> list) {
+                    // expanded lang alias, i.e. ["x", "xByLang"] inside alternateProperties
+                    // TODO remove expansion in jsonLd?
+                    if (list.size() == 2) {
+                        return new PropertyKey((String) list.getFirst());
+                    }
+                }
+                if (isInverseProperty(p)) {
+                    return asInverseProperty(p);
+                }
+                if (JsonLd.isAlternateRangeRestriction(p)) {
+                    return asRangeRestriction(p);
+                }
+                if (p instanceof String k) {
+                    // ignore langContainer aliases expanded by jsonld
+                    if (!jsonLd.langContainerAliasInverted.containsKey(k)) {
+                        return new PropertyKey(k);
+                    }
+                }
+                return new Unrecognized();
+            }).toList();
+        }
+
+        @SuppressWarnings("unchecked")
+        private List<PropertySelector> alternatives(Object alternateProperties) {
+            var alternatives = (List<Object>) ((Map<String, Object>) alternateProperties).get(JsonLd.ALTERNATE_PROPERTIES);
+            return parseShowProperties(alternatives);
+        }
+
+        private boolean isInverseProperty(Object showProperty) {
+            return showProperty instanceof Map && ((Map<?, ?>) showProperty).containsKey("inverseOf");
+        }
+
+        private InverseProperty asInverseProperty(Object showProperty) {
+            String p = (String) ((Map<?, ?>) showProperty).get("inverseOf");
+            return new InverseProperty(p, jsonLd.getInverseProperty(p));
+        }
+
+        // TODO
+        Lens minus(Collection<Lens> minus, LensGroupName subLens) {
+            var keep = new ArrayList<>(showProperties);
+
+            for (var m : minus) {
+                keep.removeAll(m.showProperties);
+            }
+
+            return new Lens(keep, subLens);
+        }
+    }
+
+    public record DerivedLens(LensGroupName base, List<LensGroupName> minus, LensGroupName subLens) {
+
+    }
+
+    private static LensGroupName subLens(LensGroupName lensGroupName) {
+        return switch (lensGroupName) {
+            case Full -> LensGroupName.Card;
+            case Card -> LensGroupName.Chip;
+            case Chip, Token -> LensGroupName.Token;
+
+            case SearchCard -> LensGroupName.SearchChip;
+            case SearchChip -> LensGroupName.Token; // TODO ??
         };
     }
 
-    @SuppressWarnings("unchecked")
-    private List<Object> alternatives(Object alternateProperties) {
-        return (List<Object>) ((Map<String, Object>) alternateProperties).get(JsonLd.ALTERNATE_PROPERTIES);
+    private sealed interface PropertySelector permits PropertyKey, InverseProperty, AlternateProperties, RangeRestriction, Unrecognized {
+
     }
 
-    private record RangeRestriction(String subPropertyOf, String range) {}
+    private record AlternateProperties(List<PropertySelector> alternatives) implements PropertySelector {
+
+    }
+
+    private record Unrecognized() implements PropertySelector {
+
+    }
+
+    private record RangeRestriction(String subPropertyOf, String range) implements PropertySelector {}
 
     @SuppressWarnings("unchecked")
     private RangeRestriction asRangeRestriction(Object o) {
@@ -409,7 +722,7 @@ public class FresnelUtil {
             Set<String> codes = new HashSet<>();
             thing.entrySet().stream()
                     .filter(e -> e.getKey() instanceof String s
-                            && (new PropertyKey(s)).isLangAlias()
+                            && jsonLd.langContainerAliasInverted.containsKey(s)
                             && (new LanguageContainer(asMap(e.getValue()))).isTransliterated()
                     )
                     .forEach(e ->
@@ -422,23 +735,16 @@ public class FresnelUtil {
     }
 
     private boolean isStructuredValue(Map<?,?> thing) {
-        return jsonLd.isSubClassOf((String) thing.get(JsonLd.TYPE_KEY), Base.StructuredValue);
+        return jsonLd.isSubClassOf(firstType(thing), Base.StructuredValue);
     }
 
     private boolean isIdentity(Map<?,?> thing) {
-        return jsonLd.isSubClassOf((String) thing.get(JsonLd.TYPE_KEY), Base.Identity);
+        return jsonLd.isSubClassOf(firstType(thing), Base.Identity);
     }
 
-    private boolean isInverseProperty(Object showProperty) {
-        return showProperty instanceof Map && ((Map<?, ?>) showProperty).containsKey("inverseOf");
-    }
 
-    private record InverseProperty(String name, String inverseName) {}
 
-    private InverseProperty asInverseProperty(Object showProperty) {
-        String p = (String) ((Map<?, ?>) showProperty).get("inverseOf");
-        return new InverseProperty(p, jsonLd.getInverseProperty(p));
-    }
+    private record InverseProperty(String name, String inverseName) implements PropertySelector {}
 
     public record LangCode(String code) {
         public static final Comparator<LangCode> ORIGINAL_SCRIPT_FIRST = (a, b) -> {
@@ -458,6 +764,18 @@ public class FresnelUtil {
 
     private boolean isTypedNode(Object o) {
         return o instanceof Map && ((Map<?, ?>) o).containsKey(JsonLd.TYPE_KEY);
+    }
+
+    // TODO handle multiple types=
+    private String firstType(Map<?,?> thing) {
+        var types = thing.get(JsonLd.TYPE_KEY);
+        if (types instanceof String) {
+            return (String) types;
+        }
+        if (types instanceof List<?> l) {
+            return (String) l.getFirst();
+        }
+        throw new RuntimeException("Expected type/types, found " + types);
     }
 
     private class Formatter {
@@ -516,7 +834,7 @@ public class FresnelUtil {
                 // can never be inside array
                 return lang.isTransliterated()
                         ? List.of(new DecoratedTransliterated(lang))
-                        : formatValues(pickLanguage(lang), className, propertyName);
+                        : formatValues(lang.pick(locale, fallbackLocales), className, propertyName);
             }
             else if (val instanceof List<?> list) {
                 return mapWithIndex(list,
@@ -570,12 +888,6 @@ public class FresnelUtil {
             };
             formats.valueDetails(className, propertyName).apply(result, isFirst, isLast);
             return result;
-        }
-
-        private List<String> pickLanguage(LanguageContainer value) {
-            // TODO
-            // TODO handle missing
-            return value.languages.get(this.locale);
         }
     }
 
@@ -716,8 +1028,6 @@ public class FresnelUtil {
     }
 
     record Style(List<String> styles) {
-
-        // TODO refactor? JsonLd is only needed for displayType()
         public void apply(Decorated result) {
             var s = new ArrayList<String>();
             for (String style : styles) {
@@ -929,7 +1239,15 @@ public class FresnelUtil {
             var codes = scripts.keySet().stream().sorted(ORIGINAL_SCRIPT_FIRST).toList();
             before(s);
             if (!codes.isEmpty()) {
-                scripts.get(codes.getFirst()).printTo(s);
+                var originalScript = scripts.get(codes.getFirst()).printTo(new StringBuilder()).toString();
+                var isRtl = Unicode.guessScript(originalScript).map(Unicode::isRtl).orElse(false);
+                if (isRtl) {
+                    s.append(Unicode.RIGHT_TO_LEFT_ISOLATE);
+                }
+                s.append(originalScript);
+                if (isRtl) {
+                    s.append(Unicode.POP_DIRECTIONAL_ISOLATE);
+                }
             }
             if (codes.size() > 1) {
                 s.append(T_START);

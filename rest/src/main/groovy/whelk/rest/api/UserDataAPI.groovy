@@ -6,6 +6,7 @@ import groovy.json.JsonSlurper
 import whelk.Whelk
 import whelk.util.WhelkFactory
 import whelk.util.http.HttpTools
+import whelk.util.http.WhelkHttpServlet
 
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
@@ -14,8 +15,7 @@ import javax.servlet.http.HttpServletResponse
 import java.util.stream.Collectors
 
 @Log
-class UserDataAPI extends HttpServlet {
-    private Whelk whelk
+class UserDataAPI extends WhelkHttpServlet {
     private static final int POST_MAX_SIZE = 1000000
     static final String ID_HASH_FUNCTION = "SHA-256"
 
@@ -27,11 +27,8 @@ class UserDataAPI extends HttpServlet {
     }
 
     @Override
-    void init() {
+    void init(Whelk whelk) {
         log.info("Starting User Data API")
-        if (!whelk) {
-            whelk = WhelkFactory.getSingletonWhelk()
-        }
     }
 
     @Override

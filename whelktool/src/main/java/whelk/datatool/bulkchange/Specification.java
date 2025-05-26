@@ -2,7 +2,7 @@ package whelk.datatool.bulkchange;
 
 import com.google.common.collect.Maps;
 import org.apache.commons.io.IOUtils;
-import whelk.Whelk;
+
 import whelk.datatool.Script;
 import whelk.datatool.form.Transform;
 
@@ -35,8 +35,8 @@ public sealed interface Specification permits Specification.Create, Specificatio
             return s;
         }
 
-        public Transform getTransform(Whelk whelk) {
-            return new Transform(matchForm, targetForm, whelk);
+        public Transform getTransform() {
+            return new Transform(matchForm, targetForm);
         }
     }
 

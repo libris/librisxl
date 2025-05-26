@@ -20,38 +20,35 @@ import whelk.exception.WhelkRuntimeException
 import whelk.history.History
 import whelk.rest.api.CrudGetRequest.Lens
 import whelk.rest.security.AccessControl
-import whelk.util.WhelkFactory
+import whelk.util.FresnelUtil
 import whelk.util.http.BadRequestException
 import whelk.util.http.HttpTools
 import whelk.util.http.MimeTypes
 import whelk.util.http.NotFoundException
 import whelk.util.http.OtherStatusException
 import whelk.util.http.RedirectException
+import whelk.util.http.WhelkHttpServlet
 
-import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import java.lang.management.ManagementFactory
 
-
 import static whelk.rest.api.CrudUtils.ETag
+import static whelk.util.Jackson.mapper
 import static whelk.util.http.HttpTools.getBaseUri
 import static whelk.util.http.HttpTools.sendResponse
-import static whelk.util.Jackson.mapper
 
 /**
  * Handles all GET/PUT/POST/DELETE requests against the backend.
  */
 @Log
 @CompileStatic
-class Crud extends HttpServlet {
+class Crud extends WhelkHttpServlet {
     final static String XL_ACTIVE_SIGEL_HEADER = 'XL-Active-Sigel'
     final static String CONTEXT_PATH = '/context.jsonld'
     final static String DATA_CONTENT_TYPE = "application/ld+json"
 
     static final RestMetrics metrics = new RestMetrics()
-
-    Whelk whelk
 
     JsonLdValidator validator
     TargetVocabMapper targetVocabMapper
@@ -67,8 +64,10 @@ class Crud extends HttpServlet {
         // Do nothing - only here for Tomcat to have something to call
     }
 
+    // For testing
     Crud(Whelk whelk) {
         this.whelk = whelk
+        init(whelk)
     }
 
     JsonLd getJsonld() {
@@ -76,11 +75,7 @@ class Crud extends HttpServlet {
     }
 
     @Override
-    void init() {
-        if (!whelk) {
-            whelk = WhelkFactory.getSingletonWhelk()
-        }
-
+    void init(Whelk whelk) {
         siteSearch = new SiteSearch(whelk)
         validator = JsonLdValidator.from(jsonld)
         converterUtils = new ConverterUtils(whelk)
@@ -94,7 +89,6 @@ class Crud extends HttpServlet {
         if (contextDoc) {
             targetVocabMapper = new TargetVocabMapper(jsonld, contextDoc.data)
         }
-
     }
 
     protected void cacheFetchedResource(String resourceUri) {
@@ -270,6 +264,21 @@ class Crud extends HttpServlet {
     }
 
     private Object getNegotiatedDataBody(CrudGetRequest request, Object contextData, Map data, String uri) {
+        if (request.shouldComputeLabels()) {
+            if (!JsonLd.isFramed(data)) {
+                // TODO? should we support this? Requires more work in FresnelUtil
+                throw new BadRequestException("Cannot compute labels when not framed")
+            }
+
+            // FIXME FresnelUtil can't handle the whole search response because of @container @index in stats
+            // TODO at least compute labels in stats observations and search mappings predicate/object?
+            if (siteSearch.isSearchResource(request.getHttpServletRequest().pathInfo)) {
+                whelk.fresnelUtil.insertComputedLabels(data.items, new FresnelUtil.LangCode(request.computedLabelLocale()))
+            } else {
+                whelk.fresnelUtil.insertComputedLabels(data, new FresnelUtil.LangCode(request.computedLabelLocale()))
+            }
+        }
+
         if (!(request.getContentType() in [MimeTypes.JSON, MimeTypes.JSONLD])) {
             data[JsonLd.CONTEXT_KEY] = contextData
             return converterUtils.convert(data, uri, request.getContentType())

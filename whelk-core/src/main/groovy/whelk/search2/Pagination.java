@@ -1,15 +1,17 @@
 package whelk.search2;
 
 import whelk.JsonLd;
+import whelk.search2.querytree.QueryTree;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static whelk.search2.QueryUtil.makeFindUrl;
+import static whelk.search2.QueryUtil.makeFindUrlNoOffset;
+import static whelk.search2.QueryUtil.makeFindUrlWithOffset;
 
 public class Pagination {
-    public static Map<String, Map<String, String>> makeLinks(int numHits, int maxItems, String freeText, String fullQuery, QueryParams queryParams) {
+    public static Map<String, Map<String, String>> makeLinks(int numHits, int maxItems, QueryTree queryTree, QueryParams queryParams) {
         if (queryParams.limit == 0) {
             // we don't have anything to paginate over
             return Collections.emptyMap();
@@ -19,19 +21,19 @@ public class Pagination {
 
         Offsets offsets = new Offsets(Math.min(numHits, maxItems), queryParams.limit, queryParams.offset);
 
-        result.put("first", Map.of(JsonLd.ID_KEY, makeFindUrl(freeText, fullQuery, queryParams.getNonQueryParams(0))));
-        result.put("last", Map.of(JsonLd.ID_KEY, makeFindUrl(freeText, fullQuery, queryParams.getNonQueryParams(offsets.last))));
+        result.put("first", Map.of(JsonLd.ID_KEY, makeFindUrlNoOffset(queryTree, queryParams)));
+        result.put("last", Map.of(JsonLd.ID_KEY, makeFindUrlWithOffset(queryTree, queryParams, offsets.last)));
 
         if (offsets.prev != null) {
             if (offsets.prev == 0) {
                 result.put("previous", result.get("first"));
             } else {
-                result.put("previous", Map.of(JsonLd.ID_KEY, makeFindUrl(freeText, fullQuery, queryParams.getNonQueryParams(offsets.prev))));
+                result.put("previous", Map.of(JsonLd.ID_KEY, makeFindUrlWithOffset(queryTree, queryParams, offsets.prev)));
             }
         }
 
         if (offsets.next != null) {
-            result.put("next", Map.of(JsonLd.ID_KEY, makeFindUrl(freeText, fullQuery, queryParams.getNonQueryParams(offsets.next))));
+            result.put("next", Map.of(JsonLd.ID_KEY, makeFindUrlWithOffset(queryTree, queryParams, offsets.next)));
         }
 
         return result;

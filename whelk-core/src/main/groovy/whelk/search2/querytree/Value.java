@@ -1,6 +1,6 @@
 package whelk.search2.querytree;
 
-public sealed interface Value permits Link, Literal, InvalidValue, VocabTerm {
+public sealed interface Value permits InvalidValue, Literal, Resource {
     Object description();
 
     // Input form

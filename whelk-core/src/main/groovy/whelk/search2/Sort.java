@@ -7,7 +7,6 @@ import java.util.function.Function;
 
 public class Sort {
     public static Sort DEFAULT_BY_RELEVANCY = new Sort("");
-    public static Sort BY_DOC_ID = new Sort("_es_id");
 
     public enum Order {
         asc,

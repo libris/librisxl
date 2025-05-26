@@ -126,6 +126,20 @@ class UnicodeSpec extends Specification {
         Optional.of('Kana') | 'デスノート'
         Optional.of('Hira') | 'とんとんとんと'
     }
+
+    def "rtl"() {
+        expect:
+        Unicode.guessScript(string).map(Unicode::isRtl).orElse(false) == rtl
+        where:
+        string                          | rtl
+        ''                              | false
+        '  '                            | false
+        'Это дом'                       | false
+        'dom'                           | false
+        'վիրված'                        | false
+        'می خوانم و غرق در کویر می شوم' | true
+        'קונסט און קינסטלער'            | true
+    }
         
     def "u"() {
         given:

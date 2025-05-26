@@ -52,8 +52,6 @@ class MatchForm {
         this.baseTypeToSubtypes = collectBaseTypeToSubtypes(whelk?.jsonld)
     }
 
-    // For testing only
-    @PackageScope
     MatchForm(Map form) {
         this(form, null)
     }
@@ -254,29 +252,31 @@ class MatchForm {
     static Map<String, Map<String, Id>> collectFormBNodeIdToResourceIds(Map form, Whelk whelk) {
         Map<String, Map<String, Id>> nodeIdMappings = [:]
 
-        IdLoader idLoader = whelk ? new IdLoader(whelk.storage) : null
+        def getAnyOf = { it instanceof Map ? asList(it[HAS_ID]).find { it[TYPE_KEY] == ANY_OF } : null }
+
+        if (whelk == null) {
+            // For unit testing without a Whelk instance at hand
+            DocumentUtil.traverse(form) { node, path ->
+                def ids = getAnyOf(node)?[VALUE] as List<String>
+                if (ids) {
+                    String nodeId = node[BNODE_ID]
+                    nodeIdMappings[nodeId] = ids.collectEntries { [it, null] } as Map<String, Id>
+                    return new DocumentUtil.Nop()
+                }
+            }
+            return nodeIdMappings
+        }
+
+        IdLoader idLoader = new IdLoader(whelk.storage)
 
         DocumentUtil.traverse(form) { node, path ->
-            if (!(node instanceof Map)) {
-                return
-            }
-            def anyOf = asList(node[HAS_ID]).find { it[TYPE_KEY] == ANY_OF }
+            def anyOf = getAnyOf(node)
             if (!anyOf) {
                 return
             }
+            String nodeId = node[BNODE_ID]
             def ids = (anyOf[VALUE] ?: (anyOf[VALUE_FROM] ? IdLoader.fromFile((String) anyOf[VALUE_FROM][ID_KEY]) : [])) as List<String>
             if (ids) {
-                String nodeId = node[BNODE_ID]
-
-                if (!idLoader) {
-                    nodeIdMappings[nodeId] = ids.findResults {
-                        IdLoader.isXlShortId(it)
-                                ? Document.BASE_URI.toString() + it + Document.HASH_IT
-                                : (looksLikeIri(it) ? it : null)
-                    }.collectEntries { [it, null] } as Map<String, Id>
-                    return
-                }
-
                 def parentProp = dropIndexes(path).reverse()[0]
                 def nodeType = node[TYPE_KEY] ?: getUnambiguousRange(parentProp, whelk.jsonld)
                 def marcCollection = nodeType ? getMarcCollectionInHierarchy((String) nodeType, whelk.jsonld) : null

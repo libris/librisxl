@@ -3,31 +3,21 @@ package whelk.rest.api
 import whelk.Document
 import whelk.Whelk
 import whelk.util.LegacyIntegrationTools
-import whelk.util.WhelkFactory
+import whelk.util.http.WhelkHttpServlet
 
-import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 import static whelk.util.Jackson.mapper
 
-class RecordRelationAPI extends HttpServlet {
-
-    private Whelk whelk
-
+class RecordRelationAPI extends WhelkHttpServlet {
     RecordRelationAPI() {
         // Do nothing - only here for Tomcat to have something to call
     }
 
     RecordRelationAPI(Whelk whelk) {
         this.whelk = whelk
-    }
-
-    @Override
-    void init() {
-        if (!whelk) {
-            whelk = WhelkFactory.getSingletonWhelk()
-        }
+        init(whelk)
     }
 
     @Override

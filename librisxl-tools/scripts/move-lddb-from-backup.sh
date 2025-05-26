@@ -81,7 +81,7 @@ if [[ -v DESTHOST ]]; then
         exit 1
     fi
 
-    echo cat $TOOLDIR/postgresql/drop-all-lddb-tables.plsql | PGPASSWORD=$DESTPASSWORD psql -h $DESTHOST -U $DESTUSER $DESTDB
+    cat $TOOLDIR/postgresql/drop-all-lddb-tables.plsql | PGPASSWORD=$DESTPASSWORD psql -h $DESTHOST -U $DESTUSER $DESTDB
 
     handle_sql_dump() {
         PGPASSWORD=$DESTPASSWORD psql -h $DESTHOST -U $DESTUSER $DESTDB

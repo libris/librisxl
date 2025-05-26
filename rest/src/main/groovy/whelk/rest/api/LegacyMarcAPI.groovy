@@ -10,9 +10,8 @@ import whelk.Whelk
 import whelk.converter.marc.JsonLD2MarcXMLConverter
 import whelk.util.LegacyIntegrationTools
 import whelk.util.MarcExport
-import whelk.util.WhelkFactory
+import whelk.util.http.WhelkHttpServlet
 
-import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
@@ -22,9 +21,8 @@ import javax.servlet.http.HttpServletResponse
  * The purpose of this API is to fill the vacuum left by "librisXP".
  */
 @Log4j2
-class LegacyMarcAPI extends HttpServlet {
+class LegacyMarcAPI extends WhelkHttpServlet {
 
-    private Whelk whelk
     private JsonLD2MarcXMLConverter toMarcXmlConverter
 
     private static final defaultProfileString =
@@ -72,13 +70,11 @@ class LegacyMarcAPI extends HttpServlet {
 
     LegacyMarcAPI(Whelk whelk) {
         this.whelk = whelk
+        init(whelk)
     }
 
     @Override
-    void init() {
-        if (!whelk) {
-            whelk = WhelkFactory.getSingletonWhelk()
-        }
+    void init(Whelk whelk) {
         toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter())
     }
 

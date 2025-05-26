@@ -33,8 +33,6 @@ class Transform {
         this.addedPaths = collectAddedPaths()
     }
 
-    // For testing only
-    @PackageScope
     Transform(Map matchForm, Map targetForm) {
         this(matchForm, targetForm, null)
     }

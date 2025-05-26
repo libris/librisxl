@@ -7,6 +7,7 @@ import whelk.converter.JsonLD2RdfXml;
 import whelk.converter.JsonLDTurtleConverter;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -68,20 +69,37 @@ public class OaiPmh extends HttpServlet
         public final String xmlSchema;
         public final String xmlNamespace;
     }
-    public final static HashMap<String, FormatDescription> supportedFormats;
+    public static HashMap<String, FormatDescription> supportedFormats;
     public final static String FORMAT_EXPANDED_POSTFIX = "_expanded";
     public final static String FORMAT_INCLUDE_HOLD_POSTFIX = "_includehold";
 
-    public static Whelk s_whelk;
+    public static volatile Whelk s_whelk;
+    private static final Object whelkInitLock = new Object();
 
     // Placed here, because the call to generate this is expensive, and should not be done on every request.
     public static Set<String> workDerivativeTypes;
 
     private final Logger logger = LogManager.getLogger(this.getClass());
 
-    static
-    {
-        s_whelk = Whelk.createLoadedCoreWhelk();
+    private static Whelk getWhelk(HttpServletResponse res) throws IOException {
+        if (s_whelk == null) {
+            synchronized (whelkInitLock) {
+                if (s_whelk == null) {
+                    try {
+                        s_whelk = Whelk.createLoadedCoreWhelk();
+                    } catch (Exception e) {
+                        LogManager.getLogger(OaiPmh.class).error("Failed to initialize Whelk", e);
+                        res.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Whelk unavailable");
+                        return null;
+                    }
+                    initSupportedFormats();
+                }
+            }
+        }
+        return s_whelk;
+    }
+
+    private static void initSupportedFormats() {
         supportedFormats = new HashMap<String, FormatDescription>();
         supportedFormats.put("oai_dc", new FormatDescription(new JsonLD2DublinCoreConverter(), true, "http://www.openarchives.org/OAI/2.0/oai_dc.xsd", "http://www.openarchives.org/OAI/2.0"));
         supportedFormats.put("marcxml", new FormatDescription(new JsonLD2MarcXMLConverter(s_whelk.getMarcFrameConverter()), true, "http://www.loc.gov/standards/marcxml/schema/MARC21slim.xsd", "http://www.loc.gov/MARC21/slim"));
@@ -96,6 +114,15 @@ public class OaiPmh extends HttpServlet
             supportedFormats.put(format+FORMAT_EXPANDED_POSTFIX, supportedFormats.get(format));
             supportedFormats.put(format+FORMAT_INCLUDE_HOLD_POSTFIX+FORMAT_EXPANDED_POSTFIX, supportedFormats.get(format));
         }
+
+        workDerivativeTypes = new HashSet<>(s_whelk.getJsonld().getSubClasses("Work"));
+    }
+
+    protected void service(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+        if (getWhelk(res) == null) {
+            return;
+        }
+        super.service(req, res);
     }
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException
@@ -106,11 +133,6 @@ public class OaiPmh extends HttpServlet
     public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException
     {
         handleRequest(req, res);
-    }
-
-    public void init()
-    {
-        workDerivativeTypes = new HashSet<>(s_whelk.getJsonld().getSubClasses("Work"));
     }
 
     public void destroy()
