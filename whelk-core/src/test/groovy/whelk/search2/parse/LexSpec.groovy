@@ -66,6 +66,52 @@ class LexSpec extends Specification {
         ]
     }
 
+    def "escape last char"() {
+        given:
+        def input = "quo\\="
+        def lexedSymbols = Lex.lexQuery(input)
+
+        expect:
+        lexedSymbols as List == [
+                new Lex.Symbol(Lex.TokenName.STRING, "quo=", 0),
+        ]
+    }
+
+    def "escape last char + whitespace"() {
+        given:
+        def input = "quo\\= "
+        def lexedSymbols = Lex.lexQuery(input)
+
+        expect:
+        lexedSymbols as List == [
+                new Lex.Symbol(Lex.TokenName.STRING, "quo=", 0),
+        ]
+    }
+
+    def "escaped wildcard"() {
+        given:
+        def input = "quo\\?"
+        def lexedSymbols = Lex.lexQuery(input)
+
+        expect:
+        lexedSymbols as List == [
+                new Lex.Symbol(Lex.TokenName.STRING, "quo\\?", 0),
+        ]
+    }
+
+    def "escaped wildcard in quoted string"() {
+        given:
+        def input = "AAA:\"BB\\?\""
+        def lexedSymbols = Lex.lexQuery(input)
+
+        expect:
+        lexedSymbols as List == [
+                new Lex.Symbol(Lex.TokenName.STRING, "AAA", 0),
+                new Lex.Symbol(Lex.TokenName.OPERATOR, ":", 3),
+                new Lex.Symbol(Lex.TokenName.STRING, "BB\\?", 4),
+        ]
+    }
+
     def "error on escaped eol"() {
         given:
         def input = "AAA\\"

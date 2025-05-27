@@ -37,7 +37,7 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
         boolean isSimple = QueryUtil.isSimple(s);
         String queryMode = isSimple ? "simple_query_string" : "query_string";
         if (!isSimple) {
-            s = ESQuery.escapeNonSimpleQueryString(s);
+            s = QueryUtil.escapeNonSimpleQueryString(s);
         }
         String queryString = s;
 
