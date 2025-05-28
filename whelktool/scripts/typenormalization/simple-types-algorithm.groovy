@@ -26,7 +26,7 @@ class TypeMappings implements UsingJsonKeys {
       'SoundRecording': [category: 'https://id.kb.se/term/ktg/SoundStorageMedium', workCategory: 'https://id.kb.se/term/ktg/Audio'],  // 170467
       'VideoRecording': [category: 'https://id.kb.se/term/ktg/VideoStorageMedium', workCategory: 'https://id.kb.se/term/ktg/MovingImage'],  // 20515
       'Map': [category: 'https://id.kb.se/term/rda/Sheet', workCategory: 'https://id.kb.se/rda/CartographicImage'],  // 12686
-      'Globe': [category: 'https://id.kb.se/term/rda/Object', workCategory: 'https://id.kb.se/ktg/Globe'],  // 74
+      'Globe': [category: 'https://id.kb.se/term/rda/Object', workCategory: 'https://id.kb.se/term/ktg/Globe'],  // 74
       'StillImageInstance': [category: 'https://id.kb.se/term/rda/Sheet', workCategory: 'https://id.kb.se/term/ktg/StillImage'], // 54954
       'TextInstance': [category: 'https://id.kb.se/term/rda/Volume' , workCategory: 'https://id.kb.se/rda/Text'], // 301
     ]
@@ -352,6 +352,7 @@ class TypeNormalizer implements UsingJsonKeys {
         // If an instance has a certain (old) type which implies physical electronic carrier
         // and carrierTypes corroborating this:
         if (mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/ktg/AbstractElectronic')) {
+            // TODO: if PhysicalResource, precisize category to ElectronicStorageMedium ...
             isElectronic = true // assume it is electronic
         }
 
