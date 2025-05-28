@@ -43,22 +43,23 @@ public class EsBoost {
                          List<ScoreFunction> scoreFunctions,
                          Integer phraseBoostDivisor,
                          Integer withinFieldBoost,
-                         boolean suggest)
+                         boolean suggest,
+                         int cursor)
     {
         public Config withBoostFields(List<String> boostFields) {
-            return new Config(boostFields, scoreFunctions, phraseBoostDivisor, withinFieldBoost, suggest);
+            return new Config(boostFields, scoreFunctions, phraseBoostDivisor, withinFieldBoost, suggest, cursor);
         }
 
         public static Config empty() {
-            return new Config(List.of(), List.of(), null, null, false);
+            return new Config(List.of(), List.of(), null, null, false, -1);
         }
 
         public static Config defaultConfig() {
-            return new Config(BOOST_FIELDS, SCORE_FUNCTIONS, PHRASE_BOOST_DIVISOR, WITHIN_FIELD_BOOST, false);
+            return new Config(BOOST_FIELDS, SCORE_FUNCTIONS, PHRASE_BOOST_DIVISOR, WITHIN_FIELD_BOOST, false, -1);
         }
 
         public static Config newBoostFieldsConfig(List<String> boostFields) {
-            return new Config(boostFields, List.of(), null, null, false);
+            return new Config(boostFields, List.of(), null, null, false, -1);
         }
 
         public static Config getCustomConfig(QueryParams queryParams) {
@@ -69,7 +70,8 @@ public class EsBoost {
                     customConf.scoreFunctions().isEmpty() ? defaultConf.scoreFunctions() : customConf.scoreFunctions(),
                     customConf.phraseBoostDivisor() == null ? defaultConf.phraseBoostDivisor() : customConf.phraseBoostDivisor(),
                     customConf.withinFieldBoost() == null ? defaultConf.withinFieldBoost() : customConf.withinFieldBoost(),
-                    customConf.suggest()
+                    customConf.suggest(),
+                    customConf.cursor()
             );
         }
     }

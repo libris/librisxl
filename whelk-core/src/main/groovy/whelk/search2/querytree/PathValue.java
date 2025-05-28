@@ -26,7 +26,6 @@ import static whelk.search2.QueryUtil.boolWrap;
 import static whelk.search2.QueryUtil.makeUpLink;
 import static whelk.search2.QueryUtil.mustNotWrap;
 import static whelk.search2.QueryUtil.nestedWrap;
-import static whelk.search2.QueryUtil.quoteIfPhraseOrContainsSpecialSymbol;
 
 public record PathValue(Path path, Operator operator, Value value) implements Node {
     public PathValue(Property property, Operator operator, Value value) {

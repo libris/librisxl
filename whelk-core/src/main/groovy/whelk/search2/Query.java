@@ -538,7 +538,7 @@ public class Query {
         }
 
         private Map<String, Object> getRangeTemplate(String propertyKey) {
-            FreeText placeholderNode = new FreeText(String.format("{?%s}", propertyKey));
+            FreeText placeholderNode = new FreeText(new Token.Raw(String.format("{?%s}", propertyKey)));
             String templateQueryString = queryTree.omitNodes(selectedFilters.getSelected(propertyKey))
                     .addTopLevelNode(placeholderNode)
                     .toQueryString();

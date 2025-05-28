@@ -15,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static whelk.search2.QueryUtil.isQuoted;
@@ -41,19 +42,38 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, List<Tok
     @Override
     public Map<String, Object> toEs(EsMappings esMappings, EsBoost.Config boostConfig) {
         if (boostConfig.suggest()) {
-            var shouldClauses = List.of(
-                    // Make a prefix query (e.g. add a trailing * to query string) to get suggestions
-                    replace(stringValue() + Operator.WILDCARD)._toEs(boostConfig),
-                    // Also make a non-prefix query to get higher relevancy score for exact matches
-                    _toEs(boostConfig)
-            );
-            return shouldWrap(shouldClauses);
+            int cursor = boostConfig.cursor();
+            Optional<Token> currentlyEditedToken = tokens.stream()
+                    .filter(t -> cursor > t.offset() && cursor <= t.offset() + t.value().length())
+                    .findFirst();
+            if (currentlyEditedToken.isPresent()) {
+                var token = currentlyEditedToken.get();
+                if (!token.isQuoted()) {
+                    var tokenIdx = tokens.indexOf(token);
+                    var prefixedToken = new Token.Raw(token.value() + Operator.WILDCARD);
+                    var altTokens = new ArrayList<>(tokens) {{
+                        remove(tokenIdx);
+                        add(tokenIdx, prefixedToken);
+                    }};
+                    var shouldClause = List.of(
+                            // Make a query with the currently edited token prefixed to get suggestions
+                            _toEs(altTokens, operator, boostConfig),
+                            // Also make a non-prefix query to get higher relevancy score for exact matches
+                            _toEs(tokens, operator, boostConfig)
+                    );
+                    return shouldWrap(shouldClause);
+                }
+            }
         }
-        return _toEs(boostConfig);
+        return _toEs(tokens, operator, boostConfig);
     }
 
     public Map<String, Object> toEs(EsBoost.Config boostConfig) {
-        return _toEs(boostConfig);
+        return _toEs(tokens, operator, boostConfig);
+    }
+
+    public static Map<String, Object> toEs(List<Token> tokens, Operator operator, EsBoost.Config boostConfig) {
+        return _toEs(tokens, operator, boostConfig);
     }
 
     @Override
@@ -98,8 +118,8 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, List<Tok
         return operator == EQUALS && Operator.WILDCARD.equals(stringValue());
     }
 
-    private Map<String, Object> _toEs(EsBoost.Config boostConfig) {
-        String s = stringValue();
+    private static Map<String, Object> _toEs(List<Token> tokens, Operator operator, EsBoost.Config boostConfig) {
+        String s = joinTokens(tokens);
         s = Unicode.normalizeForSearch(s);
         boolean isSimple = isSimple(s);
         String queryMode = isSimple ? "simple_query_string" : "query_string";
@@ -111,7 +131,7 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, List<Tok
         List<String> boostFields = boostConfig.boostFields();
 
         if (boostFields.isEmpty()) {
-            return wrap(buildSimpleQuery(queryMode, queryString));
+            return wrap(buildSimpleQuery(queryMode, queryString), operator);
         }
 
         Map<String, Float> basicBoostFields = new LinkedHashMap<>();
@@ -135,33 +155,32 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, List<Tok
 
         var queries = buildQueries(queryMode, queryString, basicBoostFields, functionBoostFields);
 
-        if (!isQuoted(queryString) && isMultiWord(queryString)) {
-            List<String> simplePhrases = getSimplePhrases(queryString);
-            if (!simplePhrases.isEmpty()) {
-                Integer phraseBoostDivisor = boostConfig.phraseBoostDivisor();
-                if (phraseBoostDivisor != null) {
-                    basicBoostFields = basicBoostFields.entrySet().stream()
-                            .collect(Collectors.toMap(Map.Entry::getKey,
-                                    e -> e.getValue() / phraseBoostDivisor));
-                }
-                for (String phrase : simplePhrases) {
-                    queries.addAll(buildQueries("query_string", phrase, basicBoostFields, functionBoostFields));
-                }
+        List<String> simplePhrases = getSimplePhrases(tokens);
+
+        if (!simplePhrases.isEmpty()) {
+            Integer phraseBoostDivisor = boostConfig.phraseBoostDivisor();
+            if (phraseBoostDivisor != null) {
+                basicBoostFields = basicBoostFields.entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey,
+                                e -> e.getValue() / phraseBoostDivisor));
+            }
+            for (String phrase : simplePhrases) {
+                queries.addAll(buildQueries("query_string", phrase, basicBoostFields, functionBoostFields));
             }
         }
 
-        return wrap(queries.size() == 1 ? queries.getFirst() : shouldWrap(queries));
-    }
-
-    private boolean isMultiWord(String s) {
-        return s.matches(".*\\S\\s+\\S.*");
+        return wrap(queries.size() == 1 ? queries.getFirst() : shouldWrap(queries), operator);
     }
 
     private String stringValue() {
+        return joinTokens(tokens);
+    }
+
+    private static String joinTokens(List<Token> tokens) {
         return tokens.stream().map(Token::toString).collect(Collectors.joining(" "));
     }
 
-    private Map<String, Object> wrap(Map<String, Object> query) {
+    private static Map<String, Object> wrap(Map<String, Object> query, Operator operator) {
         if (operator == Operator.EQUALS) {
             return query;
         }
@@ -171,7 +190,7 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, List<Tok
         throw new RuntimeException("Invalid operator"); // Not reachable
     }
 
-    private List<Map<String, Object>> buildQueries(String queryMode, String queryString, Map<String, Float> basicBoostFields, Map<String, String> functionBoostFields) {
+    private static List<Map<String, Object>> buildQueries(String queryMode, String queryString, Map<String, Float> basicBoostFields, Map<String, String> functionBoostFields) {
         List<Map<String, Object>> queries = new ArrayList<>();
 
         if (functionBoostFields.size() != basicBoostFields.size()) {
@@ -182,13 +201,13 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, List<Tok
         return queries;
     }
 
-    private Map<String, Object> buildBasicBoostQuery(String queryMode, String queryString, Map<String, Float> basicBoostFields, Map<String, String> functionBoostFields) {
+    private static Map<String, Object> buildBasicBoostQuery(String queryMode, String queryString, Map<String, Float> basicBoostFields, Map<String, String> functionBoostFields) {
         Map<String, Float> boostFields = new LinkedHashMap<>();
         basicBoostFields.forEach((field, boost) -> boostFields.put(field, functionBoostFields.containsKey(field) ? 0 : boost));
         return buildSimpleQuery(queryMode, queryString, boostFields);
     }
 
-    private List<Map<String, Object>> buildFunctionBoostQueries(String queryMode, String queryString, Map<String, Float> basicBoostFields, Map<String, String> functionBoostFields) {
+    private static List<Map<String, Object>> buildFunctionBoostQueries(String queryMode, String queryString, Map<String, Float> basicBoostFields, Map<String, String> functionBoostFields) {
         List<Map<String, Object>> queries = new ArrayList<>();
 
         Map<String, List<String>> fieldsGroupedByFunction = new LinkedHashMap<>();
@@ -211,11 +230,11 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, List<Tok
         return queries;
     }
 
-    private Map<String, Object> buildSimpleQuery(String queryMode, String queryString) {
+    private static Map<String, Object> buildSimpleQuery(String queryMode, String queryString) {
         return buildSimpleQuery(queryMode, queryString, List.of());
     }
 
-    private Map<String, Object> buildSimpleQuery(String queryMode, String queryString, Collection<String> fields) {
+    private static Map<String, Object> buildSimpleQuery(String queryMode, String queryString, Collection<String> fields) {
         var query = new HashMap<>();
         query.put("query", queryString);
         query.put("analyze_wildcard", true);
@@ -229,28 +248,26 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, List<Tok
         return Map.of(queryMode, query);
     }
 
-    private Map<String, Object> buildSimpleQuery(String queryMode, String queryString, Map<String, Float> fields) {
+    private static Map<String, Object> buildSimpleQuery(String queryMode, String queryString, Map<String, Float> fields) {
         var fieldsStrings = fields.entrySet().stream().map(e -> e.getKey() + "^" + e.getValue()).toList();
         return buildSimpleQuery(queryMode, queryString, fieldsStrings);
     }
 
-    private List<String> getSimplePhrases(String queryString) {
-        String[] tokens = queryString.split("\\s+");
-
+    private static List<String> getSimplePhrases(List<Token> tokens) {
         List<String> simplePhrases = new ArrayList<>();
         List<String> currentSimpleSequence = new ArrayList<>();
 
-        for (int i = 0; i < tokens.length; i++) {
-            String token = tokens[i];
-            if (isSimple(token) && !token.endsWith(Operator.WILDCARD)) {
-                currentSimpleSequence.add(token);
+        for (int i = 0; i < tokens.size(); i++) {
+            Token token = tokens.get(i);
+            if (!token.isQuoted() && isSimple(token.value()) && !token.value().endsWith(Operator.WILDCARD)) {
+                currentSimpleSequence.add(token.value());
             } else {
                 if (currentSimpleSequence.size() > 1) {
                     simplePhrases.add(quote(String.join(" ", currentSimpleSequence)));
                 }
                 currentSimpleSequence.clear();
             }
-            if (i == tokens.length - 1 && currentSimpleSequence.size() > 1)  {
+            if (i == tokens.size() - 1 && currentSimpleSequence.size() > 1)  {
                 simplePhrases.add(quote(String.join(" ", currentSimpleSequence)));
             }
         }

@@ -8,8 +8,8 @@ public sealed interface Token permits Key.AmbiguousKey, Key.RecognizedKey, Key.U
     String value();
     int offset();
 
-    default Optional<Integer> getOffset() {
-        return offset() >= 0 ? Optional.of(offset()) : Optional.empty();
+    default boolean isQuoted() {
+        return false;
     }
 
     record Raw(String value, int offset) implements whelk.search2.querytree.Token {
@@ -24,13 +24,14 @@ public sealed interface Token permits Key.AmbiguousKey, Key.RecognizedKey, Key.U
     }
     
     record Quoted(String value, int offset) implements whelk.search2.querytree.Token {
-        public Quoted(String value) {
-            this(value, -1);
-        }
-
         @Override
         public String toString() {
             return QueryUtil.quote(value);
+        }
+
+        @Override
+        public boolean isQuoted() {
+            return true;
         }
     }
 }
