@@ -129,7 +129,7 @@ public class QueryUtil {
                 .orElse(Collections.emptyMap());
     }
 
-    static Pattern NON_SIMPLE_QUERY = Pattern.compile("([*?])[^$]");
+    static Pattern NON_SIMPLE_QUERY = Pattern.compile("([*?])\\S+");
     /**
      * Can this query string be handled by ES simple_query_string?
      * TODO define syntax for masking in last position? ("foo?")
