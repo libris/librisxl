@@ -254,13 +254,13 @@ public record PathValue(Path path, Operator operator, Value value) implements No
                 ? 0 // Don't count score from this field
                 : boostConfig.withinFieldBoost();
         String boostField = path + "^" + boost;
-        return new FreeText(value).toEs(boostConfig.withBoostFields(List.of(boostField)));
+        return new FreeText(new Token.Raw(value)).toEs(boostConfig.withBoostFields(List.of(boostField)));
     }
 
     private Map<String, Object> esNotEquals(String path, String value) {
         return this.value instanceof Resource
                 ? mustNotWrap(buildTermQuery(path, value))
-                : new FreeText(value, NOT_EQUALS).toEs(EsBoost.Config.newBoostFieldsConfig(List.of(path)));
+                : new FreeText(new Token.Raw(value), NOT_EQUALS).toEs(EsBoost.Config.newBoostFieldsConfig(List.of(path)));
     }
 
     private static Map<String, Object> esRangeFilter(String path, String value, String key) {

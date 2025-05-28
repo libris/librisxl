@@ -11,17 +11,18 @@ import static whelk.JsonLd.asList;
 
 public final class Link extends Resource {
     private final String iri;
-    private String raw;
     private final Map<String, Object> thing = new LinkedHashMap<>();
     private final Map<String, Object> chip = new LinkedHashMap<>();
+
+    private Token token;
 
     public Link(String iri) {
         this.iri = iri;
     }
 
-    public Link(String iri, String raw) {
+    public Link(String iri, Token token) {
         this.iri = iri;
-        this.raw = raw;
+        this.token = token;
     }
 
     public Link(String iri, Map<String, Object> thing) {
@@ -54,7 +55,7 @@ public final class Link extends Resource {
 
     @Override
     public String raw() {
-        return raw != null ? raw : iri;
+        return token != null ? token.value() : iri;
     }
 
     @Override

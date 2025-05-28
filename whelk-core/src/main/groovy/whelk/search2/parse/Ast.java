@@ -38,7 +38,7 @@ public class Ast {
     public record Not(Node operand) implements Node {
     }
 
-    public record Code(String code, Operator operator, Node operand) implements Node {
+    public record Code(Lex.Symbol code, Operator operator, Node operand) implements Node {
         private boolean isEquals() {
             return operator.equals(Operator.EQUALS);
         }
@@ -46,7 +46,7 @@ public class Ast {
 
     //    public record Like (Node operand) implements Node {}
 
-    public record Leaf(String value) implements Node {
+    public record Leaf(Lex.Symbol value) implements Node {
     }
 
     public Node tree;
@@ -123,9 +123,9 @@ public class Ast {
                 term.bopeq() == null &&
                 term.string2() == null) {
 
-            if (term.uop().s().equals("!") || term.uop().s().equals("not")) {
+            if (term.uop().s().value().equals("!") || term.uop().s().value().equals("not")) {
                 return new Not(reduce(term.term()));
-            } else if (term.uop().s().equals("~")) {
+            } else if (term.uop().s().value().equals("~")) {
                 throw new InvalidQueryException("Like operator (~) not yet supported");
 //                return new Like(reduce(term.term()));
             }
@@ -150,7 +150,7 @@ public class Ast {
                 term.bop() != null &&
                 term.bopeq() == null &&
                 term.string2() != null) {
-            return new Code(term.string2(), Operator.symbolMappings().get(term.bop().op()), new Leaf(term.string1()));
+            return new Code(term.string2(), Operator.symbolMappings().get(term.bop().op().value()), new Leaf(term.string1()));
         }
 
         throw new RuntimeException("XLQL Error when reducing: " + term); // Should not be reachable. This is a bug.
@@ -190,7 +190,7 @@ public class Ast {
         };
     }
 
-    private static Node wrapAllChildrenInCode(String code, Node node) {
+    private static Node wrapAllChildrenInCode(Lex.Symbol code, Node node) {
         return switch (node) {
             case Group g -> g.newInstance(g.mapChildren(c -> wrapAllChildrenInCode(code, c)));
             case Not not -> new Not(wrapAllChildrenInCode(code, not.operand()));

@@ -18,7 +18,7 @@ import static whelk.JsonLd.Rdfs.*;
 public non-sealed class Property implements Subpath {
     private final String name;
     private final Map<String, Object> definition;
-    private String mappedKey;
+    private Key.RecognizedKey mappedKey;
 
     private List<String> domain;
     private List<String> range;
@@ -32,7 +32,7 @@ public non-sealed class Property implements Subpath {
     private List<Restriction> restrictions;
     private List<Property> propertyChain;
 
-    public Property(String name, JsonLd jsonLd, String mappedKey) {
+    public Property(String name, JsonLd jsonLd, Key.RecognizedKey mappedKey) {
         this(name, jsonLd);
         this.mappedKey = mappedKey;
     }
@@ -52,7 +52,7 @@ public non-sealed class Property implements Subpath {
     public Property(String name, Map<String, Object> definition, String mappedKey) {
         this.name = name;
         this.definition = definition;
-        this.mappedKey = mappedKey;
+        this.mappedKey = new Key.RecognizedKey(mappedKey);
     }
 
     private Property(Map<String, Object> anonymousPropertyDef, JsonLd jsonLd) {
@@ -87,7 +87,7 @@ public non-sealed class Property implements Subpath {
 
     @Override
     public Key key() {
-        return new Key.RecognizedKey(mappedKey != null ? mappedKey : name);
+        return mappedKey != null ? mappedKey : new Key.RecognizedKey(name);
     }
 
     @Override

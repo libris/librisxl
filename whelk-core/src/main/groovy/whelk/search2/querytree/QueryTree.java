@@ -15,7 +15,6 @@ import whelk.search2.SelectedFilters;
 
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -176,7 +175,7 @@ public class QueryTree {
     public String getFreeTextPart() {
         return findTopLevelNode(Node::isFreeTextNode)
                 .map(FreeText.class::cast)
-                .map(FreeText::value)
+                .map(FreeText::toString)
                 .orElse("");
     }
 
@@ -199,11 +198,6 @@ public class QueryTree {
 
     private void normalizeTree() {
         removeFreeTextWildcard();
-        concatFreeText();
-    }
-
-    private void concatFreeText() {
-        this.tree = concatFreeText(tree);
     }
 
     private void _omitNode(Node omit) {
@@ -283,30 +277,6 @@ public class QueryTree {
                 .map(FreeText.class::cast)
                 .map(ft -> _replaceTopLevelNode(tree, ft, ft.replace(replacement)))
                 .orElse(tree);
-    }
-
-    private static Node concatFreeText(Node node) {
-        return switch (node) {
-            case And and -> {
-                List<FreeText> fts = and.children().stream().filter(Node::isFreeTextNode)
-                        .map(FreeText.class::cast)
-                        .toList();
-                if (fts.size() < 2) {
-                    yield and.mapAndReinstantiate(QueryTree::concatFreeText);
-                }
-                String joinedFts = fts.stream().map(FreeText::value)
-                        .collect(Collectors.joining(" "));
-                FreeText ft = fts.getFirst().replace(joinedFts);
-                List<Node> rest = and.children().stream()
-                        .filter(Predicate.not(Node::isFreeTextNode))
-                        .map(QueryTree::concatFreeText)
-                        .toList();
-                yield rest.isEmpty() ? ft : new And(Stream.concat(Stream.of(ft), rest.stream()).toList());
-            }
-            case Or or -> or.mapAndReinstantiate(QueryTree::concatFreeText);
-            case FreeText ft -> ft;
-            case null, default -> node;
-        };
     }
 
     private static Node _removeTopLevelNodesByCondition(Node tree, Predicate<Node> p) {

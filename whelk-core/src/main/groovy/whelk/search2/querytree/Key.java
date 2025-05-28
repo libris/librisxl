@@ -11,7 +11,11 @@ public sealed interface Key extends Subpath permits Key.AmbiguousKey, Key.Recogn
         return TYPE_KEY.equals(toString());
     }
 
-    record RecognizedKey(String raw) implements Key {
+    record RecognizedKey(String value, int offset) implements Key, Token {
+        public RecognizedKey(String value) {
+            this(value, -1);
+        }
+
         @Override
         public boolean isValid() {
             return true;
@@ -19,11 +23,15 @@ public sealed interface Key extends Subpath permits Key.AmbiguousKey, Key.Recogn
 
         @Override
         public String toString() {
-            return raw;
+            return value;
         }
     }
 
-    record UnrecognizedKey(String raw) implements Key {
+    record UnrecognizedKey(String value, int offset) implements Key, Token {
+        public UnrecognizedKey(String value) {
+            this(value, -1);
+        }
+
         @Override
         public boolean isValid() {
             return false;
@@ -31,10 +39,15 @@ public sealed interface Key extends Subpath permits Key.AmbiguousKey, Key.Recogn
 
         @Override
         public String toString() {
-            return raw;
+            return value;
         }
     }
-    record AmbiguousKey(String raw) implements Key {
+
+    record AmbiguousKey(String value, int offset) implements Key, Token {
+        public AmbiguousKey(String value) {
+            this(value, -1);
+        }
+
         @Override
         public boolean isValid() {
             return false;
@@ -42,7 +55,7 @@ public sealed interface Key extends Subpath permits Key.AmbiguousKey, Key.Recogn
 
         @Override
         public String toString() {
-            return raw;
+            return value;
         }
     }
 }

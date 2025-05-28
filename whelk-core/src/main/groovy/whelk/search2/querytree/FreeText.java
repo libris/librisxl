@@ -25,13 +25,17 @@ import static whelk.search2.QueryUtil.quote;
 import static whelk.search2.QueryUtil.shouldWrap;
 import static whelk.search2.Operator.EQUALS;
 
-public record FreeText(Property.TextQuery textQuery, Operator operator, String value) implements Node {
-    public FreeText(String value) {
-        this(null, EQUALS, value);
+public record FreeText(Property.TextQuery textQuery, Operator operator, List<Token> tokens) implements Node {
+    public FreeText(Property.TextQuery textQuery, Operator operator, Token token) {
+        this(textQuery, operator, List.of(token));
     }
 
-    public FreeText(String value, Operator op) {
-        this(null, op, value);
+    public FreeText(Token token) {
+        this(null, EQUALS, token);
+    }
+
+    public FreeText(Token token, Operator op) {
+        this(null, op, token);
     }
 
     @Override
@@ -39,7 +43,7 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
         if (boostConfig.suggest()) {
             var shouldClauses = List.of(
                     // Make a prefix query (e.g. add a trailing * to query string) to get suggestions
-                    replace(value + Operator.WILDCARD)._toEs(boostConfig),
+                    replace(stringValue() + Operator.WILDCARD)._toEs(boostConfig),
                     // Also make a non-prefix query to get higher relevancy score for exact matches
                     _toEs(boostConfig)
             );
@@ -61,21 +65,19 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
     public Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("property", textQuery.definition());
-        m.put(operator.termKey, value);
+        m.put(operator.termKey, stringValue());
         m.put("up", makeUpLink(qt, this, queryParams));
         return m;
     }
 
     @Override
     public String toQueryString(boolean topLevel) {
-        return operator == Operator.NOT_EQUALS
-                ? "NOT " + value :
-                value;
+        return toString();
     }
 
     @Override
     public Node getInverse() {
-        return new FreeText(textQuery, operator.getInverse(), value);
+        return new FreeText(textQuery, operator.getInverse(), tokens);
     }
 
     @Override
@@ -85,21 +87,19 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
 
     @Override
     public String toString() {
-        return operator == Operator.NOT_EQUALS
-                ? "NOT " + value :
-                value;
+        return (operator == Operator.NOT_EQUALS ? "NOT " : "") + stringValue();
     }
 
     public FreeText replace(String replacement) {
-        return new FreeText(textQuery, operator, replacement);
+        return new FreeText(textQuery, operator, new Token.Raw(replacement));
     }
 
     public boolean isWild() {
-        return operator == EQUALS && Operator.WILDCARD.equals(value);
+        return operator == EQUALS && Operator.WILDCARD.equals(stringValue());
     }
 
     private Map<String, Object> _toEs(EsBoost.Config boostConfig) {
-        String s = value;
+        String s = stringValue();
         s = Unicode.normalizeForSearch(s);
         boolean isSimple = isSimple(s);
         String queryMode = isSimple ? "simple_query_string" : "query_string";
@@ -155,6 +155,10 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
 
     private boolean isMultiWord(String s) {
         return s.matches(".*\\S\\s+\\S.*");
+    }
+
+    private String stringValue() {
+        return tokens.stream().map(Token::toString).collect(Collectors.joining(" "));
     }
 
     private Map<String, Object> wrap(Map<String, Object> query) {

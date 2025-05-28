@@ -5,18 +5,20 @@ import java.util.LinkedHashMap;
 import static whelk.JsonLd.TYPE_KEY;
 
 sealed public interface InvalidValue extends Value {
-    record ForbiddenValue(String raw) implements InvalidValue {
+    record ForbiddenValue(Token token) implements InvalidValue {
         @Override
         public String toString() {
-            return raw;
+            return token.value();
         }
     }
-    record AmbiguousValue(String raw) implements InvalidValue {
+    record AmbiguousValue(Token token) implements InvalidValue {
         @Override
         public String toString() {
-            return raw;
+            return token.value();
         }
     }
+
+    Token token();
 
     @Override
     default Object description() {
@@ -27,7 +29,9 @@ sealed public interface InvalidValue extends Value {
     }
 
     @Override
-    String raw();
+    default String raw() {
+        return token().value();
+    }
 
     @Override
     default String jsonForm() {

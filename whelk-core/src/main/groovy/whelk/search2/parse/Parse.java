@@ -29,14 +29,14 @@ public class Parse {
     public record AndComb(List<Term> ts) {
     }
 
-    public record Term(String string1, Uoperator uop, Term term, Group group, Boperator bop, BoperatorEq bopeq,
-                       String string2) {
+    public record Term(Lex.Symbol string1, Uoperator uop, Term term, Group group, Boperator bop, BoperatorEq bopeq,
+                       Lex.Symbol string2) {
     }
 
-    public record Uoperator(String s, String c) {
+    public record Uoperator(Lex.Symbol s, Lex.Symbol c) {
     }
 
-    public record Boperator(String op) {
+    public record Boperator(Lex.Symbol op) {
     }
 
     public record BoperatorEq() {
@@ -89,7 +89,7 @@ public class Parse {
                         s.name() == Lex.TokenName.OPERATOR &&
                         (s.value().equals("<") || s.value().equals(">") || s.value().equals("<=") || s.value().equals(">="))) {
                     stack.pop();
-                    stack.push(new Boperator(s.value()));
+                    stack.push(new Boperator(s));
                     return true;
                 }
             }
@@ -115,14 +115,14 @@ public class Parse {
                         s.name() == Lex.TokenName.OPERATOR &&
                         (s.value().equals("!") || s.value().equals("~"))) {
                     stack.pop();
-                    stack.push(new Uoperator(s.value(), null));
+                    stack.push(new Uoperator(s, null));
                     return true;
                 }
                 if (stack.getFirst() instanceof Lex.Symbol s &&
                         s.name() == Lex.TokenName.KEYWORD &&
                         s.value().equals("not")) {
                     stack.pop();
-                    stack.push(new Uoperator(s.value(), null));
+                    stack.push(new Uoperator(s, null));
                     return true;
                 }
             }
@@ -133,26 +133,26 @@ public class Parse {
             if (stack.size() >= 3) {
 
                 // STRING BOPERATOR STRING
-                if (stack.get(2) instanceof Lex.Symbol s1 && s1.name() == Lex.TokenName.STRING) {
+                if (stack.get(2) instanceof Lex.Symbol s1 && (s1.name() == Lex.TokenName.STRING || s1.name() == Lex.TokenName.QUOTED_STRING)) {
                     if (stack.get(1) instanceof Boperator bop) {
-                        if (stack.getFirst() instanceof Lex.Symbol s3 && s3.name() == Lex.TokenName.STRING) {
+                        if (stack.getFirst() instanceof Lex.Symbol s3 && (s3.name() == Lex.TokenName.STRING || s3.name() == Lex.TokenName.QUOTED_STRING)) {
                             stack.pop();
                             stack.pop();
                             stack.pop();
-                            stack.push(new Term(s3.value(), null, null, null, bop, null, s1.value()));
+                            stack.push(new Term(s3, null, null, null, bop, null, s1));
                             return true;
                         }
                     }
                 }
 
                 // STRING BOPERATOREQ TERM
-                if (stack.get(2) instanceof Lex.Symbol s1 && s1.name() == Lex.TokenName.STRING) {
+                if (stack.get(2) instanceof Lex.Symbol s1 && (s1.name() == Lex.TokenName.STRING || s1.name() == Lex.TokenName.QUOTED_STRING)) {
                     if (stack.get(1) instanceof BoperatorEq bop) {
                         if (stack.getFirst() instanceof Term t) {
                             stack.pop();
                             stack.pop();
                             stack.pop();
-                            stack.push(new Term(null, null, t, null, null, bop, s1.value()));
+                            stack.push(new Term(null, null, t, null, null, bop, s1));
                             return true;
                         }
                     }
@@ -170,7 +170,7 @@ public class Parse {
             }
             if (!stack.isEmpty()) {
                 if (stack.getFirst() instanceof Lex.Symbol s &&
-                        s.name() == Lex.TokenName.STRING) {
+                        (s.name() == Lex.TokenName.STRING || s.name() == Lex.TokenName.QUOTED_STRING)) {
 
                     boolean okToReduce = true; // Assumption
                     if (lookahead != null) {
@@ -190,7 +190,7 @@ public class Parse {
 
                     if (okToReduce) {
                         stack.pop();
-                        stack.push(new Term(s.value(), null, null, null, null, null, null));
+                        stack.push(new Term(s, null, null, null, null, null, null));
                         return true;
                     }
                 }
@@ -213,7 +213,7 @@ public class Parse {
 
                     boolean wholeListOnStack = true; // Assumption
                     if (lookahead != null) {
-                        if (lookahead.name() == Lex.TokenName.STRING)
+                        if (lookahead.name() == Lex.TokenName.STRING || lookahead.name() == Lex.TokenName.QUOTED_STRING)
                             wholeListOnStack = false;
                         if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals("!"))
                             wholeListOnStack = false;

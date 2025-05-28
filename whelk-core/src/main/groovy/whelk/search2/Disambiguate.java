@@ -8,6 +8,7 @@ import whelk.search2.querytree.Link;
 import whelk.search2.querytree.Literal;
 import whelk.search2.querytree.Property;
 import whelk.search2.querytree.Subpath;
+import whelk.search2.querytree.Token;
 import whelk.search2.querytree.Value;
 import whelk.search2.querytree.VocabTerm;
 
@@ -45,55 +46,59 @@ public class Disambiguate {
         this.jsonLd = jsonLd;
     }
 
-    public Subpath mapKey(String key) {
+    public Subpath mapKey(String key, int offset) {
         // TODO: Look up all indexed keys starting with underscore?
         if (LD_KEYS.contains(key) || key.startsWith("_")) {
-            return new Key.RecognizedKey(key);
+            return new Key.RecognizedKey(key, offset);
         }
 
         Optional<String> mappedProperty = getMappedTerm(key, vocabMappings.propertyAliasMappings);
         if (mappedProperty.isPresent()) {
-            return new Property(mappedProperty.get(), jsonLd, key);
+            return new Property(mappedProperty.get(), jsonLd, new Key.RecognizedKey(key, offset));
         }
 
         Set<String> multipleMappedProperties = getMappedTermsForAmbiguous(key, vocabMappings.ambiguousPropertyAliases);
         if (multipleMappedProperties.isEmpty()) {
-            return new Key.UnrecognizedKey(key);
+            return new Key.UnrecognizedKey(key, offset);
         }
 
         Optional<String> equalPropertyKey = multipleMappedProperties.stream().filter(key::equalsIgnoreCase).findFirst();
         if (equalPropertyKey.isPresent()) {
-            return new Property(equalPropertyKey.get(), jsonLd, key);
+            return new Property(equalPropertyKey.get(), jsonLd, new Key.RecognizedKey(key, offset));
         }
 
         Optional<Property> propertyWithCode = multipleMappedProperties.stream()
-                .map(pKey -> new Property(pKey, jsonLd, key))
+                .map(pKey -> new Property(pKey, jsonLd, new Key.RecognizedKey(key, offset)))
                 .filter(property -> property.definition().containsKey("librisQueryCode"))
                 .findFirst();
         if (propertyWithCode.isPresent()) {
             return propertyWithCode.get();
         }
 
-        return new Key.AmbiguousKey(key);
+        return new Key.AmbiguousKey(key, offset);
     }
 
     public Value getValueForProperty(Property property, String rawValue) {
-        if (rawValue.equals(Operator.WILDCARD)) {
-            return new Literal(rawValue);
+        return getValueForProperty(property, new Token.Raw(rawValue));
+    }
+
+    public Value getValueForProperty(Property property, Token token) {
+        if (token.value().equals(Operator.WILDCARD)) {
+            return new Literal(token);
         }
         if (property.isType()) {
-            return mapVocabTermValue(rawValue, VocabTermType.CLASS);
+            return mapVocabTermValue(token, VocabTermType.CLASS);
         }
         if (property.isVocabTerm()) {
-            return mapVocabTermValue(rawValue, VocabTermType.ENUM);
+            return mapVocabTermValue(token, VocabTermType.ENUM);
         }
         if (property.isObjectProperty()) {
-            String expanded = expandPrefixed(rawValue);
+            String expanded = expandPrefixed(token.value());
             if (looksLikeIri(expanded)) {
-                return new Link(encodeUri(expanded), rawValue);
+                return new Link(encodeUri(expanded), token);
             }
         }
-        return new Literal(rawValue);
+        return new Literal(token);
     }
 
     public Optional<Filter.AliasedFilter> mapToFilter(String alias) {
@@ -104,7 +109,9 @@ public class Disambiguate {
         return new Property.TextQuery(jsonLd);
     }
 
-    private Value mapVocabTermValue(String value, VocabTermType vocabTermType) {
+    private Value mapVocabTermValue(Token token, VocabTermType vocabTermType) {
+        String value = token.value();
+
         Map<String, String> unambiguousMappings = switch (vocabTermType) {
             case CLASS -> vocabMappings.classAliasMappings;
             case ENUM -> vocabMappings.enumAliasMappings;
@@ -116,17 +123,17 @@ public class Disambiguate {
 
         Optional<String> mappedValue = getMappedTerm(value, unambiguousMappings);
         if (mappedValue.isPresent()) {
-            return new VocabTerm(mappedValue.get(), jsonLd.vocabIndex.get(mappedValue.get()), value);
+            return new VocabTerm(mappedValue.get(), jsonLd.vocabIndex.get(mappedValue.get()), token);
         }
 
         Set<String> multipleMappedValues = getMappedTermsForAmbiguous(value, ambiguousMappings);
         if (multipleMappedValues.isEmpty()) {
-            return new InvalidValue.ForbiddenValue(value);
+            return new InvalidValue.ForbiddenValue(token);
         }
 
         return multipleMappedValues.stream().filter(value::equalsIgnoreCase).findFirst()
-                .map(v -> (Value) new VocabTerm(v, jsonLd.vocabIndex.get(v), value))
-                .orElse(new InvalidValue.AmbiguousValue(value));
+                .map(v -> (Value) new VocabTerm(v, jsonLd.vocabIndex.get(v), token))
+                .orElse(new InvalidValue.AmbiguousValue(token));
     }
 
     private static Optional<String> getMappedTerm(String alias, Map<String, String> unambiguousMappings) {

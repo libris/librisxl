@@ -27,6 +27,13 @@ public class Path {
 
     private final List<Subpath> path;
 
+    private Token token;
+
+    public Path(List<Subpath> path, Token token) {
+        this.path = path;
+        this.token = token;
+    }
+
     public Path(List<Subpath> path) {
         this.path = path;
     }
@@ -81,10 +88,9 @@ public class Path {
     }
 
     public String asKey() {
-        return path.stream()
-                .map(Subpath::key)
-                .map(Key::toString)
-                .collect(Collectors.joining("."));
+        return token != null
+                ? token.value()
+                : path.stream().map(Subpath::key).map(Key::toString).collect(Collectors.joining("."));
     }
 
     public ExpandedPath expand(JsonLd jsonLd) {
