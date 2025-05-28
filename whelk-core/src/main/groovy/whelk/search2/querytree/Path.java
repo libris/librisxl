@@ -88,9 +88,7 @@ public class Path {
     }
 
     public String asKey() {
-        return token != null
-                ? token.value()
-                : path.stream().map(Subpath::key).map(Key::toString).collect(Collectors.joining("."));
+        return token != null ? token.value() : toString();
     }
 
     public ExpandedPath expand(JsonLd jsonLd) {

@@ -24,11 +24,6 @@ import static whelk.search2.QueryParams.ApiParams.QUERY;
 public class QueryUtil {
     private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper();
 
-    public static String quoteIfPhraseOrContainsSpecialSymbol(String s) {
-        // TODO: Don't hardcode. Keep quotes in parsing instead of requoting?
-        return !isQuoted(s) && s.matches(".*(>=|<=|[=!~<>(): ]).*") ? quote(s) : s;
-    }
-
     public static String quote(String s) {
         return "\"" + s + "\"";
     }

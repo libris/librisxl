@@ -1,5 +1,6 @@
 package whelk.search2.querytree;
 
+import whelk.search2.QueryUtil;
 import whelk.search2.VocabMappings;
 
 import java.util.LinkedHashMap;
@@ -55,7 +56,7 @@ public final class Link extends Resource {
 
     @Override
     public String raw() {
-        return token != null ? token.value() : iri;
+        return token != null ? token.value() : QueryUtil.quote(iri);
     }
 
     @Override

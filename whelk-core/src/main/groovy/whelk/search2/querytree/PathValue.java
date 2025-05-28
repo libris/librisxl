@@ -72,12 +72,12 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     }
 
     private String toRawQueryString() {
-        return format(path.asKey(), value.raw());
+        return operator.format(path.asKey(), value.raw());
     }
 
     @Override
     public String toString() {
-        return format(path.toString(), value.toString());
+        return operator.format(path.toString(), value.toString());
     }
 
     @Override
@@ -236,12 +236,6 @@ public record PathValue(Path path, Operator operator, Value value) implements No
                 .toList();
 
         return operator == Operator.NOT_EQUALS ? new And(altFields) : new Or(altFields);
-    }
-
-    private String format(String path, String value) {
-        String p = quoteIfPhraseOrContainsSpecialSymbol(path);
-        String v = quoteIfPhraseOrContainsSpecialSymbol(value);
-        return operator.format(p, v);
     }
 
     private Map<String, Object> esEquals(String path, String value, EsMappings esMappings, EsBoost.Config boostConfig) {
