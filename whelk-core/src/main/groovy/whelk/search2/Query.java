@@ -463,8 +463,9 @@ public class Query {
                 }
                 var sliceNode = new LinkedHashMap<>();
                 var observations = getObservations(propertyKey, buckets);
-                if (property.name().equals(Disambiguate.RDF_TYPE)) {
-                    observations = new FacetTree(jsonLd).sortObservationsAsTree(observations);
+
+                if (property.name().equals(JsonLd.Rdfs.RDF_TYPE)) {
+                    observations = new FacetTree(whelk.getJsonld()).sortObservationsAsTree(observations);
                 }
                 if (!observations.isEmpty()) {
                     if (selectedFilters.isRangeFilter(propertyKey)) {
