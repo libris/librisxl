@@ -5,7 +5,7 @@ import whelk.JsonLd;
 import whelk.search2.querytree.InvalidValue;
 import whelk.search2.querytree.Key;
 import whelk.search2.querytree.Link;
-import whelk.search2.querytree.Literal;
+import whelk.search2.querytree.Numeric;
 import whelk.search2.querytree.Property;
 import whelk.search2.querytree.Subpath;
 import whelk.search2.querytree.Token;
@@ -78,27 +78,67 @@ public class Disambiguate {
         return new Key.AmbiguousKey(key, offset);
     }
 
-    public Value getValueForProperty(Property property, String rawValue) {
-        return getValueForProperty(property, new Token.Raw(rawValue));
-    }
-
-    public Value getValueForProperty(Property property, Token token) {
-        if (token.value().equals(Operator.WILDCARD)) {
-            return new Literal(token);
+    public Optional<Value> mapValueForProperty(Property property, String value) {
+        if (value.equals(Operator.WILDCARD)) {
+            return Optional.empty();
         }
-        if (property.isType()) {
-            return mapVocabTermValue(token, VocabTermType.CLASS);
+        if (value.matches("\\d+")) {
+            return Optional.of(new Numeric(Integer.parseInt(value)));
         }
-        if (property.isVocabTerm()) {
-            return mapVocabTermValue(token, VocabTermType.ENUM);
+//        if (isDate(value)) {
+//            // TODO
+//            return Optional.of(new Date(date));
+//        }
+        if (property.isType() || property.isVocabTerm()) {
+            Set<String> mappedTerms = mapToVocabTerm(value, property.isType() ? VocabTermType.CLASS : VocabTermType.ENUM);
+            return switch (mappedTerms.size()) {
+                case 0 -> Optional.of(InvalidValue.forbidden(value));
+                case 1 -> mappedTerms.stream().findFirst().map(term -> new VocabTerm(term, jsonLd.vocabIndex.get(term)));
+                default -> mappedTerms.stream().filter(value::equalsIgnoreCase).findFirst()
+                        .map(v -> (Value) new VocabTerm(v, jsonLd.vocabIndex.get(v)))
+                        .map(Optional::of)
+                        .map(o -> o.orElse(InvalidValue.forbidden(value)));
+            };
         }
         if (property.isObjectProperty()) {
-            String expanded = expandPrefixed(token.value());
+            String expanded = expandPrefixed(value);
             if (looksLikeIri(expanded)) {
-                return new Link(encodeUri(expanded), token);
+                return Optional.of(new Link(encodeUri(expanded)));
             }
         }
-        return new Literal(token);
+        return Optional.empty();
+    }
+
+    public Optional<Value> mapValueForProperty(Property property, Token token) {
+        String value = token.value();
+        if (value.equals(Operator.WILDCARD)) {
+            return Optional.empty();
+        }
+        if (value.matches("\\d+")) {
+            return Optional.of(new Numeric(Integer.parseInt(value)));
+        }
+//        if (isDate(value)) {
+//            // TODO
+//            return Optional.of(new Date(date));
+//        }
+        if (property.isType() || property.isVocabTerm()) {
+            Set<String> mappedTerms = mapToVocabTerm(value, property.isType() ? VocabTermType.CLASS : VocabTermType.ENUM);
+            return switch (mappedTerms.size()) {
+                case 0 -> Optional.of(InvalidValue.forbidden(token));
+                case 1 -> mappedTerms.stream().findFirst().map(term -> new VocabTerm(term, jsonLd.vocabIndex.get(term), token));
+                default -> mappedTerms.stream().filter(value::equalsIgnoreCase).findFirst()
+                        .map(v -> (Value) new VocabTerm(v, jsonLd.vocabIndex.get(v), token))
+                        .map(Optional::of)
+                        .map(o -> o.orElse(InvalidValue.forbidden(token)));
+            };
+        }
+        if (property.isObjectProperty()) {
+            String expanded = expandPrefixed(value);
+            if (looksLikeIri(expanded)) {
+                return Optional.of(new Link(encodeUri(expanded), token));
+            }
+        }
+        return Optional.empty();
     }
 
     public Optional<Filter.AliasedFilter> mapToFilter(String alias) {
@@ -109,9 +149,7 @@ public class Disambiguate {
         return new Property.TextQuery(jsonLd);
     }
 
-    private Value mapVocabTermValue(Token token, VocabTermType vocabTermType) {
-        String value = token.value();
-
+    private Set<String> mapToVocabTerm(String s, VocabTermType vocabTermType) {
         Map<String, String> unambiguousMappings = switch (vocabTermType) {
             case CLASS -> vocabMappings.classAliasMappings;
             case ENUM -> vocabMappings.enumAliasMappings;
@@ -120,20 +158,9 @@ public class Disambiguate {
             case CLASS -> vocabMappings.ambiguousClassAliases;
             case ENUM -> vocabMappings.ambiguousEnumAliases;
         };
-
-        Optional<String> mappedValue = getMappedTerm(value, unambiguousMappings);
-        if (mappedValue.isPresent()) {
-            return new VocabTerm(mappedValue.get(), jsonLd.vocabIndex.get(mappedValue.get()), token);
-        }
-
-        Set<String> multipleMappedValues = getMappedTermsForAmbiguous(value, ambiguousMappings);
-        if (multipleMappedValues.isEmpty()) {
-            return new InvalidValue.ForbiddenValue(token);
-        }
-
-        return multipleMappedValues.stream().filter(value::equalsIgnoreCase).findFirst()
-                .map(v -> (Value) new VocabTerm(v, jsonLd.vocabIndex.get(v), token))
-                .orElse(new InvalidValue.AmbiguousValue(token));
+        return getMappedTerm(s, unambiguousMappings)
+                .map(Set::of)
+                .orElse(getMappedTermsForAmbiguous(s, ambiguousMappings));
     }
 
     private static Optional<String> getMappedTerm(String alias, Map<String, String> unambiguousMappings) {

@@ -32,8 +32,4 @@ public sealed interface Node permits ActiveFilter, FreeText, Group, InactiveFilt
     default boolean isTypeNode() {
         return false;
     }
-
-    default boolean isFreeTextNode() {
-        return false;
-    }
 }

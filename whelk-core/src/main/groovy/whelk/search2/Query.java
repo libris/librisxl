@@ -441,7 +441,7 @@ public class Query {
                             .forEach(entry -> {
                                 String bucketKey = entry.getKey();
                                 int count = entry.getValue();
-                                Value v = disambiguate.getValueForProperty(property, bucketKey);
+                                Value v = disambiguate.mapValueForProperty(property, bucketKey).orElse(new FreeText(bucketKey));
                                 newBuckets.put(new PathValue(property, Operator.EQUALS, v), count);
                             });
                     propertyToBucketCounts.put(property, newBuckets);
@@ -495,11 +495,13 @@ public class Query {
                 boolean isSelected = selectedFilters.isSelected(pv, propertyKey);
 
                 Consumer<QueryTree> addObservation = alteredTree -> {
+                    Value v = pv.value();
+
                     Map<String, Object> observation = new LinkedHashMap<>();
 
                     observation.put("totalItems", count);
                     observation.put("view", Map.of(JsonLd.ID_KEY, makeFindUrlNoOffset(alteredTree, queryParams)));
-                    observation.put("object", pv.value().description());
+                    observation.put("object", v instanceof Resource r ? r.description() : v.toString());
                     if (connective == Connective.OR) {
                         observation.put("_selected", isSelected);
                     }
@@ -538,7 +540,7 @@ public class Query {
         }
 
         private Map<String, Object> getRangeTemplate(String propertyKey) {
-            FreeText placeholderNode = new FreeText(new Token.Raw(String.format("{?%s}", propertyKey)));
+            FreeText placeholderNode = new FreeText(String.format("{?%s}", propertyKey));
             String templateQueryString = queryTree.omitNodes(selectedFilters.getSelected(propertyKey))
                     .addTopLevelNode(placeholderNode)
                     .toQueryString();

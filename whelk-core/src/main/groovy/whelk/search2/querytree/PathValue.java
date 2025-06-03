@@ -15,17 +15,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.Owl.INVERSE_OF;
 import static whelk.JsonLd.Owl.PROPERTY_CHAIN_AXIOM;
 import static whelk.JsonLd.TYPE_KEY;
+import static whelk.search2.Operator.EQUALS;
 import static whelk.search2.Operator.GREATER_THAN;
 import static whelk.search2.Operator.NOT_EQUALS;
 import static whelk.search2.QueryUtil.boolWrap;
 import static whelk.search2.QueryUtil.makeUpLink;
 import static whelk.search2.QueryUtil.mustNotWrap;
 import static whelk.search2.QueryUtil.nestedWrap;
+import static whelk.search2.QueryUtil.parenthesize;
 
 public record PathValue(Path path, Operator operator, Value value) implements Node {
     public PathValue(Property property, Operator operator, Value value) {
@@ -62,7 +65,12 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
     @Override
     public String toQueryString(boolean topLevel) {
-        return toRawQueryString();
+        return operator.format(path.asKey(), value.isMultiToken() ? parenthesize(value.queryForm()) : value.queryForm());
+    }
+
+    @Override
+    public String toString() {
+        return operator.format(path.toString(), value.isMultiToken() ? parenthesize(value.toString()) : value.toString());
     }
 
     @Override
@@ -70,19 +78,10 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         return new PathValue(path, operator.getInverse(), value);
     }
 
-    private String toRawQueryString() {
-        return operator.format(path.asKey(), value.raw());
-    }
-
-    @Override
-    public String toString() {
-        return operator.format(path.toString(), value.toString());
-    }
-
     @Override
     public boolean isTypeNode() {
         return (getSoleProperty().filter(Property::isRdfType).isPresent() || getSoleKey().filter(Key::isType).isPresent())
-                && operator.equals(Operator.EQUALS);
+                && operator.equals(EQUALS);
     }
 
     public boolean hasEqualProperty(Property property) {
@@ -98,12 +97,12 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     }
 
     public PathValue toOrEquals() {
-        if (value instanceof Literal l) {
+        if (value instanceof Numeric n) {
             if (operator.equals(GREATER_THAN)) {
-                return new PathValue(path, Operator.GREATER_THAN_OR_EQUALS, l.increment());
+                return new PathValue(path, Operator.GREATER_THAN_OR_EQUALS, n.increment());
             }
             if (operator.equals(Operator.LESS_THAN)) {
-                return new PathValue(path, Operator.LESS_THAN_OR_EQUALS, l.decrement());
+                return new PathValue(path, Operator.LESS_THAN_OR_EQUALS, n.decrement());
             }
         }
         return this;
@@ -124,28 +123,54 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     private Optional<Map<String, Object>> getEsNestedQuery(Map<String, Object> esCoreQuery, EsMappings esMappings) {
         return path.getEsNestedStem(esMappings)
                 .map(nestedStem -> nestedWrap(nestedStem, esCoreQuery))
-                .map(operator == Operator.NOT_EQUALS ? QueryUtil::mustNotWrap : QueryUtil::mustWrap);
+                .map(operator == NOT_EQUALS ? QueryUtil::mustNotWrap : QueryUtil::mustWrap);
     }
 
     private Map<String, Object> _getCoreEsQuery(EsMappings esMappings, EsBoost.Config boostConfig) {
         String p = path.fullEsSearchPath();
-        String v = value.jsonForm();
+        Value v = value;
 
-        if (Operator.WILDCARD.equals(v)) {
-            return switch (operator) {
-                case EQUALS -> existsFilter(p);
-                case NOT_EQUALS -> notExistsFilter(p);
-                default -> notExistsFilter(p); // TODO?
-            };
+        if ((v instanceof Numeric n && !esMappings.isFourDigitField(p))) {
+            // Treat as free text
+            v = new FreeText(n.toString());
+        } else if (v instanceof Date d && !esMappings.isDateField(p)) {
+            // Treat as free text
+            v = new FreeText(d.toString());
         }
 
-        return switch (operator) {
-            case EQUALS -> esEquals(p, v, esMappings, boostConfig);
-            case NOT_EQUALS -> esNotEquals(p, v);
-            case LESS_THAN -> esRangeFilter(p, v, "lt");
-            case LESS_THAN_OR_EQUALS -> esRangeFilter(p, v, "lte");
-            case GREATER_THAN -> esRangeFilter(p, v, "gt");
-            case GREATER_THAN_OR_EQUALS -> esRangeFilter(p, v, "gte");
+        Function<Value, Map<String, Object>> getQueryForRangeField = numOrDate -> switch (operator) {
+            case EQUALS -> filterWrap(buildTermQuery(p, numOrDate.toString()));
+            case NOT_EQUALS -> mustNotWrap(buildTermQuery(p, numOrDate.toString()));
+            case GREATER_THAN_OR_EQUALS -> esRangeFilter(p, numOrDate.toString(), "gte");
+            case GREATER_THAN -> esRangeFilter(p, numOrDate.toString(), "gt");
+            case LESS_THAN_OR_EQUALS -> esRangeFilter(p, numOrDate.toString(), "lte");
+            case LESS_THAN -> esRangeFilter(p, numOrDate.toString(), "lt");
+        };
+
+        return switch (v) {
+            case Date date -> getQueryForRangeField.apply(date);
+            case FreeText ft -> {
+                if (ft.isWild()) {
+                    yield switch (operator) {
+                        case EQUALS -> existsFilter(p);
+                        case NOT_EQUALS -> notExistsFilter(p);
+                        default -> Map.of(); // TODO: Makes no sense
+                    };
+                }
+                // TODO: Suggest for e.g. contributor
+                yield switch (operator) {
+                    case EQUALS -> ft.toEs(esMappings, boostConfig.withBoostFields(List.of(p + "^" + boostConfig.withinFieldBoost())));
+                    case NOT_EQUALS -> mustNotWrap(ft.toEs(esMappings, boostConfig.withBoostFields(List.of(p))));
+                    default -> Map.of(); // TODO: Makes no sense
+                };
+            }
+            case InvalidValue invalidValue -> Map.of(); // TODO: Treat whole expression as free text?
+            case Numeric numeric -> getQueryForRangeField.apply(numeric); // TODO: Sort out keyword fields, e.g. what is indexed into publication.year.keyword
+            case Resource resource -> switch (operator) {
+                case EQUALS -> filterWrap(buildTermQuery(p, resource.jsonForm()));
+                case NOT_EQUALS -> mustNotWrap(buildTermQuery(p, resource.jsonForm()));
+                default -> Map.of(); // TODO: Makes no sense
+            };
         };
     }
 
@@ -171,11 +196,11 @@ public record PathValue(Path path, Operator operator, Value value) implements No
             default -> Map.of(PROPERTY_CHAIN_AXIOM, propertyChainAxiom);
         };
         m.put("property", property);
-        m.put(operator.termKey, value.description());
+        m.put(operator.termKey, value instanceof Resource r ? r.description() : value.queryForm());
         m.put("up", makeUpLink(qt, this, queryParams));
 
         m.put("_key", path.asKey());
-        m.put("_value", value.raw());
+        m.put("_value", value.queryForm());
 
         return m;
     }
@@ -189,7 +214,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
                     .map(ap -> new PathValue(ap, operator, value).expand(jsonLd))
                     .toList();
             return altPaths.size() > 1
-                    ? (operator == Operator.NOT_EQUALS ? new And(altPvNodes) : new Or(altPvNodes))
+                    ? (operator == NOT_EQUALS ? new And(altPvNodes) : new Or(altPvNodes))
                     : altPvNodes.getFirst();
         }
 
@@ -224,36 +249,19 @@ public record PathValue(Path path, Operator operator, Value value) implements No
             return this;
         }
 
-        Set<String> subtypes = jsonLd.getSubClasses(value.jsonForm());
+        String baseType = ((VocabTerm) value).jsonForm();
+
+        Set<String> subtypes = jsonLd.getSubClasses(baseType);
         if (subtypes.isEmpty()) {
             return this;
         }
 
-        List<Node> altFields = Stream.concat(Stream.of(value.jsonForm()), subtypes.stream())
+        List<Node> altFields = Stream.concat(Stream.of(baseType), subtypes.stream())
                 .sorted()
                 .map(t -> (Node) new PathValue(path, operator, new VocabTerm(t, jsonLd.vocabIndex.get(t))))
                 .toList();
 
-        return operator == Operator.NOT_EQUALS ? new And(altFields) : new Or(altFields);
-    }
-
-    private Map<String, Object> esEquals(String path, String value, EsMappings esMappings, EsBoost.Config boostConfig) {
-        if (this.value instanceof Resource) {
-            return filterWrap(buildTermQuery(path, value));
-        }
-        // TODO: Prefer searching keyword field with a term query unless the value is masked/truncated.
-        //  Need to sort out what is indexed into e.g. publication.year.keyword first.
-        int boost = esMappings.isFourDigitField(path) || esMappings.isDateField(path)
-                ? 0 // Don't count score from this field
-                : boostConfig.withinFieldBoost();
-        String boostField = path + "^" + boost;
-        return new FreeText(new Token.Raw(value)).toEs(boostConfig.withBoostFields(List.of(boostField)));
-    }
-
-    private Map<String, Object> esNotEquals(String path, String value) {
-        return this.value instanceof Resource
-                ? mustNotWrap(buildTermQuery(path, value))
-                : new FreeText(new Token.Raw(value), NOT_EQUALS).toEs(EsBoost.Config.newBoostFieldsConfig(List.of(path)));
+        return operator == NOT_EQUALS ? new And(altFields) : new Or(altFields);
     }
 
     private static Map<String, Object> esRangeFilter(String path, String value, String key) {

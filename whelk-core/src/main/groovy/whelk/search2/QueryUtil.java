@@ -32,6 +32,10 @@ public class QueryUtil {
         return s.matches("\".+\"");
     }
 
+    public static String parenthesize(String s) {
+        return "(" + s + ")";
+    }
+
     public static String encodeUri(String uri) {
         String decoded = URLDecoder.decode(uri.replace("+", "%2B"), StandardCharsets.UTF_8);
         return escapeQueryParam(decoded)

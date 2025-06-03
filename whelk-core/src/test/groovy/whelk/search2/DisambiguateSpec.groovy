@@ -32,7 +32,7 @@ class DisambiguateSpec extends Specification {
 
     def "get value for property"() {
         expect:
-        disambiguate.getValueForProperty(new Property(p, jsonLd), v) == result
+        disambiguate.mapValueForProperty(new Property(p, jsonLd), v) == result
 
         where:
         p          | v                                       | result

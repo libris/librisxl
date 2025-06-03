@@ -1,8 +1,8 @@
 package whelk.search2;
 
 import whelk.search2.querytree.ActiveFilter;
-import whelk.search2.querytree.Literal;
 import whelk.search2.querytree.Node;
+import whelk.search2.querytree.Numeric;
 import whelk.search2.querytree.Or;
 import whelk.search2.querytree.PathValue;
 import whelk.search2.querytree.QueryTree;
@@ -99,7 +99,7 @@ public class SelectedFilters {
             Predicate<Node> isProperty = n -> n instanceof PathValue pv && pv.hasEqualProperty(slice.propertyKey());
             Predicate<Node> hasEqualsOp = n -> ((PathValue) n).operator().equals(Operator.EQUALS);
             Predicate<Node> hasRangeOp = n -> Operator.rangeOperators().contains(((PathValue) n).operator());
-            Predicate<Node> hasNumericValue = n -> ((PathValue) n).value() instanceof Literal l && l.isNumeric();
+            Predicate<Node> hasNumericValue = n -> ((PathValue) n).value() instanceof Numeric;
             Predicate<Node> isPropertyEquals = n -> isProperty.test(n) && hasEqualsOp.test(n);
 
             List<PathValue> allNodesWithProperty = queryTree.allDescendants().filter(isProperty).map(PathValue.class::cast).toList();

@@ -18,7 +18,7 @@ public final class VocabTerm extends Resource {
     }
 
     public VocabTerm(String key, Map<String, Object> definition) {
-        this(key, definition, null);
+        this(key, definition, new Token.Raw(key));
     }
 
     public String key() {
@@ -26,13 +26,13 @@ public final class VocabTerm extends Resource {
     }
 
     @Override
-    public Object description() {
+    public Map<String, Object> description() {
         return definition;
     }
 
     @Override
-    public String raw() {
-        return token != null ? token.value() : key;
+    public String queryForm() {
+        return token.toString();
     }
 
     @Override

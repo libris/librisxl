@@ -1,40 +1,65 @@
 package whelk.search2.querytree;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static whelk.JsonLd.TYPE_KEY;
 
-sealed public interface InvalidValue extends Value {
-    record ForbiddenValue(Token token) implements InvalidValue {
-        @Override
-        public String toString() {
-            return token.value();
-        }
-    }
-    record AmbiguousValue(Token token) implements InvalidValue {
-        @Override
-        public String toString() {
-            return token.value();
-        }
+public final class InvalidValue extends Resource {
+    private enum Reason {
+        FORBIDDEN,
+        AMBIGUOUS
     }
 
-    Token token();
+    private final Token token;
+    private final Reason reason;
+
+    public InvalidValue(Token token, Reason reason) {
+        this.token = token;
+        this.reason = reason;
+    }
+
+    public static InvalidValue ambiguous(Token token) {
+        return new InvalidValue(token, Reason.AMBIGUOUS);
+    }
+
+    public static InvalidValue ambiguous(String value) {
+        return ambiguous(new Token.Raw(value));
+    }
+
+    public static InvalidValue forbidden(Token token) {
+        return new InvalidValue(token, Reason.FORBIDDEN);
+    }
+
+    public static InvalidValue forbidden(String value) {
+        return forbidden(new Token.Raw(value));
+    }
 
     @Override
-    default Object description() {
+    public String getType() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Map<String, Object> description() {
         var m = new LinkedHashMap<String, Object>();
         m.put(TYPE_KEY, "_Invalid");
-        m.put("label", raw());
+        m.put("label", token.value());
         return m;
     }
 
     @Override
-    default String raw() {
-        return token().value();
+    public String jsonForm() {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    default String jsonForm() {
-        return raw();
+    public String queryForm() {
+        return token.value();
+    }
+
+    @Override
+    public String toString() {
+        return token.value();
     }
 }

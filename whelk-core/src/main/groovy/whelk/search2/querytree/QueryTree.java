@@ -156,6 +156,12 @@ public class QueryTree {
                 .toList();
     }
 
+    public Optional<FreeText> findSimpleFreeText() {
+        return findTopLevelNodeByCondition(node -> node instanceof FreeText ft
+                && !ft.negate()
+                && ft.connective() == Query.Connective.AND).map(FreeText.class::cast);
+    }
+
     public Optional<Node> findTopLevelNodeByCondition(Predicate<Node> condition) {
         return getTopLevelNodes().stream().filter(condition).findFirst();
     }
@@ -173,10 +179,7 @@ public class QueryTree {
     }
 
     public String getFreeTextPart() {
-        return findTopLevelNode(Node::isFreeTextNode)
-                .map(FreeText.class::cast)
-                .map(FreeText::toString)
-                .orElse("");
+        return findSimpleFreeText().map(FreeText::queryForm).orElse("");
     }
 
     public String toQueryString() {
@@ -226,12 +229,6 @@ public class QueryTree {
         this.tree = _removeTopLevelNodesByCondition(tree, p);
     }
 
-    private Optional<Node> findTopLevelNode(Predicate<Node> condition) {
-        return !isEmpty() && condition.test(tree)
-                ? Optional.of(tree)
-                : (tree instanceof And and ? and.findChild(condition) : Optional.empty());
-    }
-
     private void removeFreeTextWildcard() {
         if (tree != null && !isWild(tree)) {
             _removeTopLevelNodesByCondition(QueryTree::isWild);
@@ -273,9 +270,8 @@ public class QueryTree {
     }
 
     private Node _replaceTopLevelFreeText(Node tree, String replacement) {
-        return findTopLevelNode(Node::isFreeTextNode)
-                .map(FreeText.class::cast)
-                .map(ft -> _replaceTopLevelNode(tree, ft, ft.replace(replacement)))
+        return findSimpleFreeText()
+                .map(ft -> _replaceTopLevelNode(tree, ft, new FreeText(replacement)))
                 .orElse(tree);
     }
 
@@ -340,7 +336,7 @@ public class QueryTree {
 
     private void _applyObjectFilter(String object) {
         QueryTree filtered = getFiltered();
-        filtered._addTopLevelNode(new PathValue("_links", Operator.EQUALS, new Literal(object)));
+        filtered._addTopLevelNode(new PathValue("_links", Operator.EQUALS, new FreeText(object)));
         this.filtered = filtered;
     }
 

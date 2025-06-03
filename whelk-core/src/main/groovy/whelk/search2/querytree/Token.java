@@ -2,8 +2,6 @@ package whelk.search2.querytree;
 
 import whelk.search2.QueryUtil;
 
-import java.util.Optional;
-
 public sealed interface Token permits Key.AmbiguousKey, Key.RecognizedKey, Key.UnrecognizedKey, Token.Quoted, Token.Raw {
     String value();
     int offset();
@@ -12,7 +10,7 @@ public sealed interface Token permits Key.AmbiguousKey, Key.RecognizedKey, Key.U
         return false;
     }
 
-    record Raw(String value, int offset) implements whelk.search2.querytree.Token {
+    record Raw(String value, int offset) implements Token {
         public Raw(String value) {
             this(value, -1);
         }
@@ -23,7 +21,11 @@ public sealed interface Token permits Key.AmbiguousKey, Key.RecognizedKey, Key.U
         }
     }
     
-    record Quoted(String value, int offset) implements whelk.search2.querytree.Token {
+    record Quoted(String value, int offset) implements Token {
+        public Quoted(String value) {
+            this(value, -1);
+        }
+
         @Override
         public String toString() {
             return QueryUtil.quote(value);

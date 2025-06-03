@@ -97,14 +97,15 @@ public class Path {
 
     public ExpandedPath expand(JsonLd jsonLd, Value value) {
         List<Subpath> expandedPath = expandShortHand(path);
-        if (shouldAddSuffix(value)) {
-            expandedPath.add(new Key.RecognizedKey(value instanceof Literal ? SEARCH_KEY : ID_KEY));
-        }
+
+        getSuffix(value).ifPresent(expandedPath::add);
+
         firstProperty().ifPresent(property -> {
             if (property.hasDomainAdminMetadata(jsonLd)) {
                 expandedPath.addFirst(new Property(RECORD_KEY, jsonLd));
             }
         });
+
         return new ExpandedPath(expandedPath, this);
     }
 
@@ -126,12 +127,21 @@ public class Path {
         return esMappings.getNestedFields().stream().filter(esPath::startsWith).findFirst();
     }
 
-    private boolean shouldAddSuffix(Value value) {
-        return !(value instanceof Literal l && l.isWildcard())
-                && last() instanceof Property p
-                && p.isObjectProperty()
-                && !p.isType()
-                && !p.isVocabTerm();
+    private Optional<Key> getSuffix(Value value) {
+        if (last() instanceof Property p && p.isObjectProperty()) {
+            return switch (value) {
+                case Date ignored -> Optional.empty();
+                case FreeText freeText -> freeText.isWild() ? Optional.empty() : Optional.of(new Key.RecognizedKey(SEARCH_KEY));
+                case Numeric ignored -> Optional.empty();
+                case Resource resource -> switch (resource) {
+                    case InvalidValue ignored -> Optional.empty();
+                    case Link ignored -> Optional.of(new Key.RecognizedKey(ID_KEY));
+                    case VocabTerm ignored -> Optional.empty();
+                };
+                case null -> p.isType() || p.isVocabTerm() ? Optional.empty() : Optional.of(new Key.RecognizedKey(ID_KEY));
+            };
+        }
+        return Optional.empty();
     }
 
     private static List<Subpath> expandShortHand(List<Subpath> path) {

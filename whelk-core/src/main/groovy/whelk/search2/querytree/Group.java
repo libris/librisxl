@@ -83,7 +83,8 @@ public sealed abstract class Group implements Node permits And, Or {
     public Node reduceTypes(JsonLd jsonLd) {
         BiFunction<Node, Node, Boolean> hasMoreSpecificTypeThan = (a, b) -> a.isTypeNode()
                 && b.isTypeNode()
-                && jsonLd.isSubClassOf(((PathValue) a).value().jsonForm(), ((PathValue) b).value().jsonForm());
+                && jsonLd.isSubClassOf(((VocabTerm) (((PathValue) a).value())).key(), ((VocabTerm) (((PathValue) b).value())).key());
+
         return reduceByCondition(hasMoreSpecificTypeThan);
     }
 

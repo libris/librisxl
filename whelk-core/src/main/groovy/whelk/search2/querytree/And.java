@@ -60,7 +60,8 @@ public final class And extends Group {
                 .flatMap(n -> n instanceof Or ? n.children().stream() : Stream.of(n))
                 .map(PathValue.class::cast)
                 .map(PathValue::value)
-                .map(Value::jsonForm)
+                .map(VocabTerm.class::cast)
+                .map(VocabTerm::jsonForm)
                 .toList();
     }
 
