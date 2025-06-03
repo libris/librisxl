@@ -484,7 +484,11 @@ class TypeNormalizer implements UsingJsonKeys {
     }
 
     static boolean dropRedundantString(Map instance, String propertyKey, Pattern pattern) {
-        if (instance.get(propertyKey)?.matches(pattern)) {
+        def value = instance.get(propertyKey)
+        if (value instanceof List && value.size() == 1) {
+          value = value[0]
+        }
+        if (value instanceof String && value.matches(pattern)) {
             instance.remove(propertyKey)
             return true
         }
