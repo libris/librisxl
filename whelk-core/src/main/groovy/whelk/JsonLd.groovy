@@ -670,12 +670,6 @@ class JsonLd {
 
     //==== Class-hierarchies ====
 
-    List<String> getSuperClasses(String type) {
-        List<String> res = []
-        getSuperClasses(type, res)
-        return res
-    }
-
     void getSuperClasses(String type, List<String> result) {
         def termMap = vocabIndex[type]
         if (termMap == null)
@@ -693,6 +687,13 @@ class JsonLd {
                 getSuperClasses(superClassType, result)
             }
         }
+    }
+
+    // Returns all superclasses in an ordered List of typeKeys
+    List<String> getSuperClasses(String type) {
+        List<String> allSuperClasses = new ArrayList<>()
+        getSuperClasses(type, allSuperClasses)
+        return allSuperClasses
     }
 
     private Map<String, List<String>> generateSubTermLists(String relationToSuper) {
@@ -728,6 +729,10 @@ class JsonLd {
         }
         Set<String> bases = getSubClasses(baseType)
         return type in bases
+    }
+
+    List<String> getDirectSubclasses(String type) {
+        return superClassOf.get(type) ?: []
     }
 
     boolean isInstanceOf(Map entity, String baseType) {
