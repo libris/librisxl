@@ -37,7 +37,7 @@ public class QueryParams {
         // Temporary param for experimenting
         public static final String PHRASE_BOOST_DIVISOR = "_phraseBoostDivisor";
         public static final String SUGGEST = "_suggest";
-        public static final String CURSOR = "_cursor";
+        public static final String CURSOR = "cursor";
     }
 
     public static class Debug {

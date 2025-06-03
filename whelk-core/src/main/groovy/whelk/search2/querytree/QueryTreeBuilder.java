@@ -125,7 +125,7 @@ public class QueryTreeBuilder {
         Token token = getToken(leaf.value());
         Value value = path.lastProperty()
                 .flatMap(p -> disambiguate.mapValueForProperty(p, token))
-                .orElse(new FreeText(token.value()));
+                .orElse(new FreeText(token));
         return new PathValue(path, negate ? operator.getInverse() : operator, value);
     }
 

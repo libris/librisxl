@@ -81,7 +81,8 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     @Override
     public boolean isTypeNode() {
         return (getSoleProperty().filter(Property::isRdfType).isPresent() || getSoleKey().filter(Key::isType).isPresent())
-                && operator.equals(EQUALS);
+                && operator.equals(EQUALS)
+                && value instanceof VocabTerm;
     }
 
     public boolean hasEqualProperty(Property property) {
@@ -157,7 +158,6 @@ public record PathValue(Path path, Operator operator, Value value) implements No
                         default -> Map.of(); // TODO: Makes no sense
                     };
                 }
-                // TODO: Suggest for e.g. contributor
                 yield switch (operator) {
                     case EQUALS -> ft.toEs(esMappings, boostConfig.withBoostFields(List.of(p + "^" + boostConfig.withinFieldBoost())));
                     case NOT_EQUALS -> mustNotWrap(ft.toEs(esMappings, boostConfig.withBoostFields(List.of(p))));

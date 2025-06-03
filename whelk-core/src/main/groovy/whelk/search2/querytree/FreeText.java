@@ -47,9 +47,7 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
     public Map<String, Object> toEs(EsMappings esMappings, EsBoost.Config boostConfig) {
         if (boostConfig.suggest() && !negate) {
             int cursor = boostConfig.cursor();
-            Optional<Token> currentlyEditedToken = tokens.stream()
-                    .filter(t -> cursor > t.offset() && cursor <= t.offset() + t.value().length())
-                    .findFirst();
+            Optional<Token> currentlyEditedToken = getCurrentlyEditedToken(cursor);
             if (currentlyEditedToken.isPresent()) {
                 var token = currentlyEditedToken.get();
                 if (!token.isQuoted()) {
@@ -84,7 +82,7 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
     @Override
     public Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams) {
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("property", textQuery.definition());
+        m.put("property", textQuery != null ? textQuery.definition() : Map.of());
         m.put(negate ? NOT_EQUALS.termKey : EQUALS.termKey, queryForm());
         m.put("up", makeUpLink(qt, this, queryParams));
         return m;
@@ -120,6 +118,16 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
 
     public boolean isWild() {
         return !negate && Operator.WILDCARD.equals(toString());
+    }
+
+    public boolean isEdited(int cursorPos) {
+        return getCurrentlyEditedToken(cursorPos).isPresent();
+    }
+
+    private Optional<Token> getCurrentlyEditedToken(int cursorPos) {
+        return tokens.stream()
+                .filter(t -> cursorPos > t.offset() && cursorPos <= t.offset() + t.value().length())
+                .findFirst();
     }
 
     private String joinTokens() {

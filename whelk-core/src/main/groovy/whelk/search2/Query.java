@@ -17,6 +17,7 @@ import static whelk.component.ElasticSearch.flattenedLangMapKey;
 import static whelk.search2.EsBoost.addBoosts;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 import static whelk.search2.QueryUtil.makeFindUrlNoOffset;
+import static whelk.search2.QueryUtil.parenthesize;
 
 public class Query {
     protected final Whelk whelk;
@@ -55,15 +56,14 @@ public class Query {
                  AppParams appParams,
                  VocabMappings vocabMappings,
                  ESSettings esSettings,
-                 Whelk whelk) throws InvalidQueryException
-    {
+                 Whelk whelk) throws InvalidQueryException {
         this.queryParams = queryParams;
         this.appParams = appParams;
         this.disambiguate = new Disambiguate(vocabMappings, appParams, whelk.getJsonld());
         appParams.siteFilters.parse(disambiguate);
         this.esSettings = esSettings;
-        this.queryTree = new QueryTree(queryParams.q, disambiguate);
         this.whelk = whelk;
+        this.queryTree = queryParams.suggest ? getSuggestQueryTree() : new QueryTree(queryParams.q, disambiguate);
         this.linkLoader = new LinkLoader();
         this.selectedFilters = queryParams.skipStats ? new SelectedFilters(queryTree, appParams.siteFilters) : new SelectedFilters(queryTree, appParams);
         this.stats = new Stats();
@@ -233,11 +233,43 @@ public class Query {
         return getEsQuery(queryTree, List.of());
     }
 
+    private QueryTree getSuggestQueryTree() throws InvalidQueryException {
+        // TODO: Don't hardcode
+        List<String> defaultBaseTypes = List.of("Agent", "Concept", "Language", "Work");
+        QueryTree qt = new QueryTree(queryParams.q, disambiguate);
+        int cursorPos = queryParams.cursor;
+        Optional<PathValue> currentlyEditedPathValue = qt.allDescendants()
+                .filter(n -> n instanceof PathValue pv && pv.value() instanceof FreeText ft && ft.isEdited(cursorPos))
+                .map(PathValue.class::cast)
+                .findFirst();
+        if (currentlyEditedPathValue.isPresent()) {
+            PathValue pv = currentlyEditedPathValue.get();
+            Optional<Property> property = pv.path().lastProperty();
+            if (property.isPresent()) {
+                Property p = property.get();
+                String searchableTypes = p.range().stream()
+                        .filter(type -> defaultBaseTypes.stream().anyMatch(baseType ->
+                                baseType.equals(type) || whelk.getJsonld().getSubClasses(baseType).contains(type)))
+                        .collect(Collectors.joining(" OR "));
+                if (!searchableTypes.isEmpty()) {
+                    String rawTypeFilter = "\"rdf:type\":" + parenthesize(searchableTypes);
+                    Node typeFilter = QueryTreeBuilder.buildTree(rawTypeFilter, disambiguate);
+                    // TODO: Add reverseLinks.totalItems > 0
+                    return new QueryTree(new And(List.of((FreeText) pv.value(), typeFilter)));
+                }
+            }
+        } else if (qt.allDescendants().anyMatch(n -> n instanceof FreeText ft && ft.isEdited(cursorPos))) {
+            String rawTypeFilter = "\"rdf:type\":" + parenthesize(String.join(" OR ", defaultBaseTypes));
+            Node typeFilter = QueryTreeBuilder.buildTree(rawTypeFilter, disambiguate);
+            return qt.addTopLevelNode(typeFilter);
+        }
+        return qt;
+    }
+
     private static Map<String, Object> getEsMultiSelectedFilters(Map<String, List<Node>> multiSelected,
-                                                          Collection<String> rulingTypes,
-                                                          JsonLd jsonLd,
-                                                          EsMappings esMappings)
-    {
+                                                                 Collection<String> rulingTypes,
+                                                                 JsonLd jsonLd,
+                                                                 EsMappings esMappings) {
         if (multiSelected.isEmpty()) {
             return Map.of();
         }
@@ -294,10 +326,10 @@ public class Query {
     }
 
     private static Map<String, Object> buildAggQuery(List<AppParams.Slice> sliceList,
-                                               JsonLd jsonLd,
-                                               Collection<String> rulingTypes,
-                                               EsMappings esMappings,
-                                               SelectedFilters selectedFilters) {
+                                                     JsonLd jsonLd,
+                                                     Collection<String> rulingTypes,
+                                                     EsMappings esMappings,
+                                                     SelectedFilters selectedFilters) {
         if (sliceList.isEmpty()) {
             return Map.of(JsonLd.TYPE_KEY,
                     Map.of("terms",
