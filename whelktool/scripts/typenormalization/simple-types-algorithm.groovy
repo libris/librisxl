@@ -222,7 +222,7 @@ class TypeNormalizer implements UsingJsonKeys {
         if (wtype == 'Manuscript') {
             work.get('genreForm', []) << [(ID): SAOGF + 'Handskrifter']
         } else if (wtype == 'Cartography') {
-            if (!work['contentType'].any { it[ID].startsWith(KBRDA + 'Cartographic') }) {
+            if (!work['contentType'].any { it[ID]?.startsWith(KBRDA + 'Cartographic') }) {
                 work.get('contentType', []) << [(ID): KBRDA + 'CartographicImage'] // TODO: good enough guess?
             }
         } else if (wtype == 'MixedMaterial') {
