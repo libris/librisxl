@@ -7,13 +7,15 @@
  */
 
 
+import groovy.transform.Memoized
+import whelk.Document
 import whelk.JsonLd
 import whelk.history.History
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
-byPath = getReportWriter("changes-by-path.txt")
-byVersion = getReportWriter("changes-by-version.txt")
+byPath = getReportWriter("changes-by-path.tsv")
+byVersion = getReportWriter("changes-by-version.tsv")
 errors = getReportWriter("errors.txt")
 
 whelk = getWhelk()
@@ -26,7 +28,8 @@ selectByCollection('bib') {
 void process(bib) {
     try {
         var shortId = bib.doc.getShortId()
-        var docVersions = whelk.storage.loadDocumentHistory(shortId)
+        List docVersions = whelk.storage.loadDocumentHistory(shortId)
+        var lastDoc = docVersions.last().doc
         History history = new History(docVersions, whelk.jsonld)
         List changeSets = history.m_changeSetsMap.changeSets
 
@@ -66,7 +69,7 @@ void process(bib) {
 
             if(agent != lastAgent || day != lastDay) {
                 if(saves) {
-                    processVersionSession(shortId, versionNo, isFirstManual, saves)
+                    processVersionSession(shortId, versionNo, isFirstManual, saves, lastDoc)
                     saves = []
                     isFirstManual = false
                 }
@@ -83,7 +86,7 @@ void process(bib) {
         }
 
         if(saves) {
-            processVersionSession(shortId, versionNo, isFirstManual, saves)
+            processVersionSession(shortId, versionNo, isFirstManual, saves, lastDoc)
         }
     }
     catch (Exception e) {
@@ -92,7 +95,7 @@ void process(bib) {
     }
 }
 
-void processVersionSession(shortId, versionNo, isFirstManual, List saves) {
+void processVersionSession(shortId, versionNo, isFirstManual, List saves, Document lastDoc) {
     var added = saves.collectMany { filteredPaths(it.addedPaths) } as Set
     var removed = saves.collectMany { filteredPaths(it.removedPaths) } as Set
     var modified = added.intersect(removed)
@@ -106,6 +109,11 @@ void processVersionSession(shortId, versionNo, isFirstManual, List saves) {
     var sigel = Unicode.stripPrefix(agent, "https://libris.kb.se/library/")
     String year = timestamp.split("-").first()
 
+    var langs = getAtPath(lastDoc.data, ["@graph", 1, "instanceOf", "language", "*", "@id"], [])
+            .collect { Unicode.stripPrefix(it, "https://id.kb.se/language/") }
+            .sort()
+            .join(",")
+
     var createdOrModified =
             versionNo == 0
                 ? "CREATE"
@@ -113,9 +121,11 @@ void processVersionSession(shortId, versionNo, isFirstManual, List saves) {
                     ? "UPGRADE"
                     : "MODIFY")
 
+    var libType = getLibType(agent)
+
     StringBuilder s = new StringBuilder()
     var append = { operation, path ->
-        s.append([shortId, timestamp, year, createdOrModified, versionNo, saves.size(), sigel, agent, operation, path].join('\t')).append("\n")
+        s.append([shortId, timestamp, year, createdOrModified, sigel, agent, libType, langs, operation, path].join('\t')).append("\n")
     }
 
     added.each { append("ADD", it)}
@@ -126,8 +136,19 @@ void processVersionSession(shortId, versionNo, isFirstManual, List saves) {
 
     var allPaths = added + removed + modified
     if (allPaths) {
-        byVersion.println([shortId, timestamp, year, createdOrModified, versionNo, saves.size(), sigel, agent, allPaths.join(",")].join('\t'))
+        byVersion.println([shortId, timestamp, year, createdOrModified, sigel, agent, libType, langs, allPaths.join(","), langs].join('\t'))
     }
+}
+
+@Memoized
+getLibType(id) {
+    var data = whelk.loadData(id)
+    var types = getAtPath(data, ["@graph", 1, "bibdb:libraryType", "*", "@id"], []) + getAtPath(data, ["@graph", 1, "bibdb:libraryType", "@id"], [])
+
+    var codes = types
+            .collect { Unicode.stripPrefix(it, "https://id.kb.se/term/bibdb/") }
+            .sort()
+            .join(",")
 }
 
 static Set<String> filteredPaths(Collection<List<Object>> paths) {
