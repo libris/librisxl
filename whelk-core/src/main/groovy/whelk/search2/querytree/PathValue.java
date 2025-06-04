@@ -152,12 +152,8 @@ public record PathValue(Path path, Operator operator, Value value) implements No
                 yield switch (operator) {
                     case EQUALS -> ft.toEs(esMappings, boostConfig.withBoostFields(List.of(p + "^" + boostConfig.withinFieldBoost())));
                     case NOT_EQUALS -> mustNotWrap(ft.toEs(esMappings, boostConfig.withBoostFields(List.of(p))));
-                    // Range makes no sense for text in general, however there are fields such as reverseLinks.totalItemsByRelation.x
-                    // that aren't explicitly typed as numeric in the ES index but nonetheless have numeric values.
-                    case GREATER_THAN_OR_EQUALS -> esRangeFilter(p, ft.toString(), "gte");
-                    case GREATER_THAN -> esRangeFilter(p, ft.toString(), "gt");
-                    case LESS_THAN_OR_EQUALS -> esRangeFilter(p, ft.toString(), "lte");
-                    case LESS_THAN -> esRangeFilter(p, ft.toString(), "lt");
+                    // FIXME: Range makes no sense here
+                    default -> nonsenseFilter();
                 };
             }
             case InvalidValue ignored -> nonsenseFilter(); // TODO: Treat whole expression as free text?
