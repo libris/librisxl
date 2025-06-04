@@ -67,7 +67,10 @@ select ?src ?bdr {
   } union {
     ?bdr :exactMatch ?src .
     filter strstarts(str(?bdr), str(ktg:))
-    filter strstarts(str(?src), str(saogf:))
+    filter(
+      strstarts(str(?src), str(saogf:))
+      || strstarts(str(?src), str(barngf:))
+    )
   }
 } order by ?src ?bdr
 """
