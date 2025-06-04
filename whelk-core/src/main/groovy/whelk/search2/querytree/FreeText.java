@@ -50,7 +50,7 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
             Optional<Token> currentlyEditedToken = getCurrentlyEditedToken(cursor);
             if (currentlyEditedToken.isPresent()) {
                 var token = currentlyEditedToken.get();
-                if (!token.isQuoted()) {
+                if (!token.isQuoted() && !token.value().endsWith(Operator.WILDCARD)) {
                     var tokenIdx = tokens.indexOf(token);
                     var prefixedToken = new Token.Raw(token.value() + Operator.WILDCARD);
                     var altTokens = new ArrayList<>(tokens) {{
@@ -90,7 +90,7 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
 
     @Override
     public String toQueryString(boolean topLevel) {
-        String s = isMultiToken() && (negate || !topLevel)
+        String s = isMultiToken() && negate
                 ? parenthesize(joinTokens())
                 : joinTokens();
         return negate ? "NOT " + s : s;

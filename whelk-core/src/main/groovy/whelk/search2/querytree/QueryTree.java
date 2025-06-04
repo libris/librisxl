@@ -178,6 +178,10 @@ public class QueryTree {
         };
     }
 
+    public boolean isFreeText() {
+        return tree instanceof FreeText;
+    }
+
     public String getFreeTextPart() {
         return findSimpleFreeText().map(FreeText::queryForm).orElse("");
     }

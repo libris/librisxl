@@ -258,7 +258,7 @@ public class Query {
                     return new QueryTree(new And(List.of((FreeText) pv.value(), typeFilter)));
                 }
             }
-        } else if (qt.allDescendants().anyMatch(n -> n instanceof FreeText ft && ft.isEdited(cursorPos))) {
+        } else if (qt.isFreeText()) {
             String rawTypeFilter = "\"rdf:type\":" + parenthesize(String.join(" OR ", defaultBaseTypes));
             Node typeFilter = QueryTreeBuilder.buildTree(rawTypeFilter, disambiguate);
             return qt.addTopLevelNode(typeFilter);
