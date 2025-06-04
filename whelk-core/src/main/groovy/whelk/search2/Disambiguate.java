@@ -2,6 +2,7 @@ package whelk.search2;
 
 import groovy.transform.PackageScope;
 import whelk.JsonLd;
+import whelk.search2.querytree.Date;
 import whelk.search2.querytree.InvalidValue;
 import whelk.search2.querytree.Key;
 import whelk.search2.querytree.Link;
@@ -82,13 +83,12 @@ public class Disambiguate {
         if (value.equals(Operator.WILDCARD)) {
             return Optional.empty();
         }
+        if (property.isXsdDateTime()) {
+            return Optional.of(new Date(value));
+        }
         if (value.matches("\\d+")) {
             return Optional.of(new Numeric(Integer.parseInt(value)));
         }
-//        if (isDate(value)) {
-//            // TODO
-//            return Optional.of(new Date(date));
-//        }
         if (property.isType() || property.isVocabTerm()) {
             Set<String> mappedTerms = mapToVocabTerm(value, property.isType() ? VocabTermType.CLASS : VocabTermType.ENUM);
             return switch (mappedTerms.size()) {
@@ -114,13 +114,12 @@ public class Disambiguate {
         if (value.equals(Operator.WILDCARD)) {
             return Optional.empty();
         }
-        if (value.matches("\\d+")) {
-            return Optional.of(new Numeric(Integer.parseInt(value)));
+        if (property.isXsdDateTime()) {
+            return Optional.of(new Date(token));
         }
-//        if (isDate(value)) {
-//            // TODO
-//            return Optional.of(new Date(date));
-//        }
+        if (value.matches("\\d+")) {
+            return Optional.of(new Numeric(Integer.parseInt(value), token));
+        }
         if (property.isType() || property.isVocabTerm()) {
             Set<String> mappedTerms = mapToVocabTerm(value, property.isType() ? VocabTermType.CLASS : VocabTermType.ENUM);
             return switch (mappedTerms.size()) {

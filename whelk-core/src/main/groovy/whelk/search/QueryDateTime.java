@@ -43,7 +43,7 @@ public class QueryDateTime {
         return precision.elasticFormat.format(time);
     }
 
-    static QueryDateTime parse(String s) throws DateTimeParseException {
+    public static QueryDateTime parse(String s) throws DateTimeParseException {
         for (Precision f : Precision.values()) {
             try {
                 return new QueryDateTime(f.parser.parse(s), f);

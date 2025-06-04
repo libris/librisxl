@@ -1,12 +1,14 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
+import whelk.search.QueryDateTime;
 import whelk.search2.EsBoost;
 import whelk.search2.EsMappings;
 import whelk.search2.Operator;
 import whelk.search2.QueryParams;
 import whelk.search2.QueryUtil;
 
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -15,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.Owl.INVERSE_OF;
@@ -138,8 +141,25 @@ public record PathValue(Path path, Operator operator, Value value) implements No
             v = new FreeText(d.toString());
         }
 
+        Function<Object, Map<String, Object>> numOrDateFilter = numOrDate -> switch (operator) {
+            case EQUALS -> filterWrap(buildTermQuery(p, numOrDate));
+            case NOT_EQUALS -> mustNotWrap(buildTermQuery(p, numOrDate));
+            case GREATER_THAN_OR_EQUALS -> esRangeFilter(p, numOrDate, "gte");
+            case GREATER_THAN -> esRangeFilter(p, numOrDate, "gt");
+            case LESS_THAN_OR_EQUALS -> esRangeFilter(p, numOrDate, "lte");
+            case LESS_THAN -> esRangeFilter(p, numOrDate, "lt");
+        };
+
         return switch (v) {
-            case Date date -> Map.of(); // TODO
+            case Date date -> {
+                QueryDateTime parsedDate;
+                try {
+                    parsedDate = QueryDateTime.parse(date.toString());
+                } catch (DateTimeParseException e) {
+                    yield nonsenseFilter();
+                }
+                yield numOrDateFilter.apply(parsedDate.toElasticDateString());
+            }
             case FreeText ft -> {
                 if (ft.isWild()) {
                     yield switch (operator) {
@@ -157,15 +177,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
                 };
             }
             case InvalidValue ignored -> nonsenseFilter(); // TODO: Treat whole expression as free text?
-            case Numeric numeric -> switch (operator) {
-                // TODO: Sort out keyword fields, e.g. what is indexed into publication.year.keyword
-                case EQUALS -> filterWrap(buildTermQuery(p, numeric.value()));
-                case NOT_EQUALS -> mustNotWrap(buildTermQuery(p, numeric.value()));
-                case GREATER_THAN_OR_EQUALS -> esRangeFilter(p, numeric.value(), "gte");
-                case GREATER_THAN -> esRangeFilter(p, numeric.value(), "gt");
-                case LESS_THAN_OR_EQUALS -> esRangeFilter(p, numeric.value(), "lte");
-                case LESS_THAN -> esRangeFilter(p, numeric.value(), "lt");
-            };
+            case Numeric numeric -> numOrDateFilter.apply(numeric.value()); // TODO: Sort out keyword fields, e.g. what is indexed into publication.year.keyword
             case Resource resource -> switch (operator) {
                 case EQUALS -> filterWrap(buildTermQuery(p, resource.jsonForm()));
                 case NOT_EQUALS -> mustNotWrap(buildTermQuery(p, resource.jsonForm()));

@@ -1,14 +1,18 @@
 package whelk.search2.querytree;
 
-public record Numeric(int value) implements Value {
+public record Numeric(int value, Token token) implements Value {
+    public Numeric(int value) {
+        this(value, new Token.Raw("" + value));
+    }
+
     @Override
     public String queryForm() {
-        return "" + value;
+        return token.value();
     }
 
     @Override
     public String toString() {
-        return "" + value;
+        return token.value();
     }
 
     public Numeric increment() {

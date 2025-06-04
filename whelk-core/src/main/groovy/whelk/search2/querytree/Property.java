@@ -113,6 +113,10 @@ public non-sealed class Property implements Subpath {
                 .anyMatch(c -> Map.of(JsonLd.ID_KEY, "https://id.kb.se/vocab/platform").equals(c));
     }
 
+    public boolean isXsdDateTime() {
+        return range.contains("xsd:dateTime");
+    }
+
     public boolean isObjectProperty() {
         return ((List<?>) asList(definition.get(TYPE_KEY))).stream().anyMatch(OBJECT_PROPERTY::equals);
     }
