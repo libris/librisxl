@@ -252,9 +252,8 @@ public class Query {
                                 baseType.equals(type) || whelk.getJsonld().getSubClasses(baseType).contains(type)))
                         .collect(Collectors.joining(" OR "));
                 if (!searchableTypes.isEmpty()) {
-                    String rawTypeFilter = "\"rdf:type\":" + parenthesize(searchableTypes);
-                    Node typeFilter = QueryTreeBuilder.buildTree(rawTypeFilter, disambiguate);
-                    PathValue reverseLinksFilter = new PathValue("reverseLinks.totalItems", Operator.GREATER_THAN, new Numeric(0));
+                    Node typeFilter = QueryTreeBuilder.buildTree("\"rdf:type\":" + parenthesize(searchableTypes), disambiguate);
+                    Node reverseLinksFilter = QueryTreeBuilder.buildTree("reverseLinks.totalItems>0", disambiguate);
                     return new QueryTree(new And(List.of((FreeText) pv.value(), typeFilter, reverseLinksFilter)));
                 }
             }
