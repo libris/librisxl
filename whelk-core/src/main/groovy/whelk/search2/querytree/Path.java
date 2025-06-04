@@ -176,7 +176,7 @@ public class Path {
         }
 
         public List<ExpandedPath> getAltPaths(JsonLd jsonLd, Collection<String> types) {
-            if (origPath != null && origPath.first() instanceof Property p) {
+            if (origPath != null && origPath.first() instanceof Property p && !p.isPlatformTerm()) {
                 List<ExpandedPath> altPaths = p.getApplicableIntegralRelations(jsonLd, types).stream()
                         .map(ir -> Stream.concat(Stream.of(ir), path().stream()))
                         .map(Stream::toList)

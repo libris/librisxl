@@ -24,7 +24,7 @@ public non-sealed class Property implements Subpath {
     private List<String> range;
     private String inverseOf;
 
-    public boolean isVocabTerm;
+    private boolean isVocabTerm;
 
     public record Restriction(Property property, Value value) {
     }
@@ -106,6 +106,11 @@ public non-sealed class Property implements Subpath {
 
     public boolean isVocabTerm() {
         return isVocabTerm;
+    }
+
+    public boolean isPlatformTerm() {
+        return ((List<?>) asList(definition.get("category"))).stream()
+                .anyMatch(c -> Map.of(JsonLd.ID_KEY, "https://id.kb.se/vocab/platform").equals(c));
     }
 
     public boolean isObjectProperty() {
