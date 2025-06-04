@@ -64,7 +64,7 @@ class TypeMappings implements UsingJsonKeys {
     }
 
     // Any kind of broad/matches base...
-    boolean isImpliedBy(Object x, Object y) {
+    boolean isImpliedBy(Object x, Object y, Set visited = new HashSet()) {
         String xId = x instanceof Map ? x[ID] : x
         String yId = y instanceof Map ? y[ID] : y
 
@@ -72,9 +72,13 @@ class TypeMappings implements UsingJsonKeys {
             return true
         }
 
+        visited << yId
         List bases = categoryMatches[yId]
         for (var base in bases) {
-            if (isImpliedBy(xId, base)) {
+            if (base in visited) {
+              return xId == base
+            }
+            if (isImpliedBy(xId, base, visited + new HashSet())) {
                 return true
             }
         }
