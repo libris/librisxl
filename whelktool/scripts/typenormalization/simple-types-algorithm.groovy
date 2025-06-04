@@ -73,13 +73,13 @@ class TypeMappings implements UsingJsonKeys {
         }
 
         visited << yId
+
         List bases = categoryMatches[yId]
         for (var base in bases) {
-            if (base in visited) {
-              return xId == base
-            }
-            if (isImpliedBy(xId, base, visited + new HashSet())) {
-                return true
+            if (base !in visited) {
+              if (isImpliedBy(xId, base, visited + new HashSet())) {
+                  return true
+              }
             }
         }
 
