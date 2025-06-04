@@ -254,8 +254,8 @@ public class Query {
                 if (!searchableTypes.isEmpty()) {
                     String rawTypeFilter = "\"rdf:type\":" + parenthesize(searchableTypes);
                     Node typeFilter = QueryTreeBuilder.buildTree(rawTypeFilter, disambiguate);
-                    // TODO: Add reverseLinks.totalItems > 0
-                    return new QueryTree(new And(List.of((FreeText) pv.value(), typeFilter)));
+                    PathValue reverseLinksFilter = new PathValue("reverseLinks.totalItems", Operator.GREATER_THAN, new Numeric(0));
+                    return new QueryTree(new And(List.of((FreeText) pv.value(), typeFilter, reverseLinksFilter)));
                 }
             }
         } else if (qt.isFreeText()) {
