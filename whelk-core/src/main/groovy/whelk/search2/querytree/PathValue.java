@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.Owl.INVERSE_OF;
@@ -139,37 +138,43 @@ public record PathValue(Path path, Operator operator, Value value) implements No
             v = new FreeText(d.toString());
         }
 
-        Function<Value, Map<String, Object>> getQueryForRangeField = numOrDate -> switch (operator) {
-            case EQUALS -> filterWrap(buildTermQuery(p, numOrDate.toString()));
-            case NOT_EQUALS -> mustNotWrap(buildTermQuery(p, numOrDate.toString()));
-            case GREATER_THAN_OR_EQUALS -> esRangeFilter(p, numOrDate.toString(), "gte");
-            case GREATER_THAN -> esRangeFilter(p, numOrDate.toString(), "gt");
-            case LESS_THAN_OR_EQUALS -> esRangeFilter(p, numOrDate.toString(), "lte");
-            case LESS_THAN -> esRangeFilter(p, numOrDate.toString(), "lt");
-        };
-
         return switch (v) {
-            case Date date -> getQueryForRangeField.apply(date);
+            case Date date -> Map.of(); // TODO
             case FreeText ft -> {
                 if (ft.isWild()) {
                     yield switch (operator) {
                         case EQUALS -> existsFilter(p);
                         case NOT_EQUALS -> notExistsFilter(p);
-                        default -> Map.of(); // TODO: Makes no sense
+                        // FIXME: Range makes no sense here
+                        default -> nonsenseFilter();
                     };
                 }
                 yield switch (operator) {
                     case EQUALS -> ft.toEs(esMappings, boostConfig.withBoostFields(List.of(p + "^" + boostConfig.withinFieldBoost())));
                     case NOT_EQUALS -> mustNotWrap(ft.toEs(esMappings, boostConfig.withBoostFields(List.of(p))));
-                    default -> Map.of(); // TODO: Makes no sense
+                    // Range makes no sense for text in general, however there are fields such as reverseLinks.totalItemsByRelation.x
+                    // that aren't explicitly typed as numeric in the ES index but nonetheless have numeric values.
+                    case GREATER_THAN_OR_EQUALS -> esRangeFilter(p, ft.toString(), "gte");
+                    case GREATER_THAN -> esRangeFilter(p, ft.toString(), "gt");
+                    case LESS_THAN_OR_EQUALS -> esRangeFilter(p, ft.toString(), "lte");
+                    case LESS_THAN -> esRangeFilter(p, ft.toString(), "lt");
                 };
             }
-            case InvalidValue invalidValue -> Map.of(); // TODO: Treat whole expression as free text?
-            case Numeric numeric -> getQueryForRangeField.apply(numeric); // TODO: Sort out keyword fields, e.g. what is indexed into publication.year.keyword
+            case InvalidValue ignored -> nonsenseFilter(); // TODO: Treat whole expression as free text?
+            case Numeric numeric -> switch (operator) {
+                // TODO: Sort out keyword fields, e.g. what is indexed into publication.year.keyword
+                case EQUALS -> filterWrap(buildTermQuery(p, numeric.value()));
+                case NOT_EQUALS -> mustNotWrap(buildTermQuery(p, numeric.value()));
+                case GREATER_THAN_OR_EQUALS -> esRangeFilter(p, numeric.value(), "gte");
+                case GREATER_THAN -> esRangeFilter(p, numeric.value(), "gt");
+                case LESS_THAN_OR_EQUALS -> esRangeFilter(p, numeric.value(), "lte");
+                case LESS_THAN -> esRangeFilter(p, numeric.value(), "lt");
+            };
             case Resource resource -> switch (operator) {
                 case EQUALS -> filterWrap(buildTermQuery(p, resource.jsonForm()));
                 case NOT_EQUALS -> mustNotWrap(buildTermQuery(p, resource.jsonForm()));
-                default -> Map.of(); // TODO: Makes no sense
+                // FIXME: Range makes no sense here
+                default -> nonsenseFilter();
             };
         };
     }
@@ -264,7 +269,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         return operator == NOT_EQUALS ? new And(altFields) : new Or(altFields);
     }
 
-    private static Map<String, Object> esRangeFilter(String path, String value, String key) {
+    private static Map<String, Object> esRangeFilter(String path, Object value, String key) {
         return filterWrap(rangeWrap(Map.of(path, Map.of(key, value))));
     }
 
@@ -284,7 +289,12 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         return Map.of("range", m);
     }
 
-    private static Map<String, Object> buildTermQuery(String field, String value) {
+    private static Map<String, Object> buildTermQuery(String field, Object value) {
         return Map.of("term", Map.of(field, value));
+    }
+
+    // FIXME: Handle queries that are syntactically correct but make no sense and are guaranteed to return no hits
+    private static Map<String, Object> nonsenseFilter() {
+        return existsFilter("nonsense.field");
     }
 }
