@@ -130,7 +130,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         String p = path.fullEsSearchPath();
         Value v = value;
 
-        if ((v instanceof Numeric n && !esMappings.isFourDigitField(p))) {
+        if ((v instanceof Numeric n && !esMappings.isFourDigitField(p) && !esMappings.isLongField(p))) {
             // Treat as free text
             v = new FreeText(n.toString());
         } else if (v instanceof Date d && !esMappings.isDateField(p)) {
