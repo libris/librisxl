@@ -67,11 +67,7 @@ public class EmmChangeSet {
             activityObject.put("id", activityInList.uri);
             activityObject.put("type", ld.prependVocabPrefix(activityInList.entityType));
             if (activityInList.library != null) {
-                int lastSlashAt = activityInList.library.lastIndexOf('/');
-                if (activityInList.library.length() > lastSlashAt + 1) {
-                    String libraryCode = activityInList.library.substring(lastSlashAt + 1);
-                    activityObject.put("heldBy", Map.of("@id", "sigel:" + libraryCode));
-                }
+                activityObject.put("kbv:heldBy", Map.of("@id", activityInList.library));
             }
             activityObject.put("updated", ZonedDateTime.ofInstant(activityInList.modificationTime.toInstant(), ZoneOffset.UTC).toString());
             orderedItems.add(activityInStream);
