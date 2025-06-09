@@ -13,12 +13,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static whelk.EmmServlet.AS2_CONTENT_TYPE;
@@ -75,7 +70,7 @@ public class EmmChangeSet {
                 int lastSlashAt = activityInList.library.lastIndexOf('/');
                 if (activityInList.library.length() > lastSlashAt + 1) {
                     String libraryCode = activityInList.library.substring(lastSlashAt + 1);
-                    activityObject.put("sigel", libraryCode);
+                    activityObject.put("heldBy", Map.of("@id", "sigel:" + libraryCode));
                 }
             }
             activityObject.put("updated", ZonedDateTime.ofInstant(activityInList.modificationTime.toInstant(), ZoneOffset.UTC).toString());
