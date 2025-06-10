@@ -1,12 +1,12 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
-import whelk.search.ESQuery;
 import whelk.search2.EsBoost;
 import whelk.search2.EsMappings;
 import whelk.search2.Operator;
 import whelk.search2.Query;
 import whelk.search2.QueryParams;
+import whelk.search2.QueryUtil;
 import whelk.util.Unicode;
 
 import java.util.ArrayList;
@@ -158,7 +158,7 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
         boolean isSimple = isSimple(s);
         String queryMode = isSimple ? "simple_query_string" : "query_string";
         if (!isSimple) {
-            s = ESQuery.escapeNonSimpleQueryString(s);
+            s = QueryUtil.escapeNonSimpleQueryString(s);
         }
         String queryString = s;
 

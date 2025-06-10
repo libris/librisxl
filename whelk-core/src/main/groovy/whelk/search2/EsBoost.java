@@ -21,21 +21,22 @@ public class EsBoost {
             "_chipStr.exact^200",
             "_cardStr^50",
             "_cardStr.exact^50",
-            "_searchCardStr^1",
-            "_searchCardStr.exact^1"
+            "_searchCardStr^0",
+            "_searchCardStr.exact^0"
     );
 
     // TODO: Better name
     public static int WITHIN_FIELD_BOOST = 400;
 
-    public static int PHRASE_BOOST_DIVISOR = 100;
+    public static int PHRASE_BOOST_DIVISOR = 8;
 
     public static List<ScoreFunction> SCORE_FUNCTIONS = List.of(
             new FieldValueFactor("reverseLinks.totalItemsByRelation.instanceOf", 10, "ln1p", 0, 15),
             new FieldValueFactor("reverseLinks.totalItemsByRelation.itemOf.instanceOf", 10, "ln1p", 0, 10),
             new FieldValueFactor("reverseLinks.totalItemsByRelation.instanceOf.contribution.agent", 10, "ln1p", 0, 10),
             new FieldValueFactor("reverseLinks.totalItemsByRelation.instanceOf.subject", 10, "ln1p", 0, 10),
-            new FieldValueFactor("reverseLinks.totalItemsByRelation.instanceOf.genreForm", 10, "ln1p", 0, 10)
+            new FieldValueFactor("reverseLinks.totalItemsByRelation.instanceOf.genreForm", 10, "ln1p", 0, 10),
+            new FieldValueFactor("reverseLinks.totalItemsByRelation.instanceOf.language", 10, "ln1p", 0, 10)
 //            new MatchingFieldValue("language.@id", "https://id.kb.se/language/swe", 50)
     );
 

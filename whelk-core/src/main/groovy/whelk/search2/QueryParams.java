@@ -6,6 +6,7 @@ import whelk.exception.InvalidQueryException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +15,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class QueryParams {
-    private final static int DEFAULT_LIMIT = 200;
+    private final static int DEFAULT_LIMIT = 20;
     private final static int MAX_LIMIT = 4000;
     private final static int DEFAULT_OFFSET = 0;
 
