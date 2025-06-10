@@ -2,6 +2,7 @@ package whelk.search2.querytree;
 
 import whelk.JsonLd;
 import whelk.search2.EsMappings;
+import whelk.search2.QueryUtil;
 
 import java.util.Collection;
 import java.util.List;
@@ -80,15 +81,21 @@ public class Path {
                 .collect(Collectors.joining("."));
     }
 
-    public String fullEsSearchPath() {
+    // As represented in indexed docs
+    public String jsonForm() {
         return path.stream()
                 .map(Subpath::toString)
                 .map(Path::substitute)
                 .collect(Collectors.joining("."));
     }
 
-    public String asKey() {
-        return token != null ? token.value() : toString();
+    // As represented in query string
+    public String queryForm() {
+        if (token != null) {
+            return token.formatted();
+        }
+        String s = path.stream().map(Subpath::queryForm).collect(Collectors.joining("."));
+        return s.contains(":") ? QueryUtil.quote(s) : s;
     }
 
     public ExpandedPath expand(JsonLd jsonLd) {
@@ -120,7 +127,7 @@ public class Path {
     }
 
     public Optional<String> getEsNestedStem(EsMappings esMappings) {
-        String esPath = fullEsSearchPath();
+        String esPath = jsonForm();
         if (esMappings.isNestedField(esPath)) {
             return Optional.of(esPath);
         }
@@ -130,7 +137,7 @@ public class Path {
     private Optional<Key> getSuffix(Value value) {
         if (last() instanceof Property p && p.isObjectProperty()) {
             return switch (value) {
-                case Date ignored -> Optional.empty();
+                case DateTime ignored -> Optional.empty();
                 case FreeText freeText -> freeText.isWild() ? Optional.empty() : Optional.of(new Key.RecognizedKey(SEARCH_KEY));
                 case Numeric ignored -> Optional.empty();
                 case Resource resource -> switch (resource) {

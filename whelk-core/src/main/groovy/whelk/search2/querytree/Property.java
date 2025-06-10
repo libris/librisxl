@@ -86,8 +86,8 @@ public non-sealed class Property implements Subpath {
     }
 
     @Override
-    public Key key() {
-        return mappedKey != null ? mappedKey : new Key.RecognizedKey(name);
+    public String queryForm() {
+        return mappedKey != null ? mappedKey.value() : name;
     }
 
     @Override
@@ -113,12 +113,16 @@ public non-sealed class Property implements Subpath {
                 .anyMatch(c -> Map.of(JsonLd.ID_KEY, "https://id.kb.se/vocab/platform").equals(c));
     }
 
-    public boolean isXsdDateTime() {
-        return range.contains("xsd:dateTime");
+    public boolean isXsdDate() {
+        return range.contains("xsd:dateTime") || range.contains("xsd:date");
     }
 
     public boolean isObjectProperty() {
         return ((List<?>) asList(definition.get(TYPE_KEY))).stream().anyMatch(OBJECT_PROPERTY::equals);
+    }
+
+    public boolean isDatatypeProperty() {
+        return ((List<?>) asList(definition.get(TYPE_KEY))).stream().anyMatch(DATATYPE_PROPERTY::equals);
     }
 
     public boolean hasDomainAdminMetadata(JsonLd jsonLd) {

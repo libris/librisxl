@@ -1,14 +1,12 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
-import whelk.search.QueryDateTime;
 import whelk.search2.EsBoost;
 import whelk.search2.EsMappings;
 import whelk.search2.Operator;
 import whelk.search2.QueryParams;
 import whelk.search2.QueryUtil;
 
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -67,12 +65,12 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
     @Override
     public String toQueryString(boolean topLevel) {
-        return operator.format(path.asKey(), value.isMultiToken() ? parenthesize(value.queryForm()) : value.queryForm());
+        return operator.format(path.queryForm(), value.isMultiToken() ? parenthesize(value.queryForm()) : value.queryForm());
     }
 
     @Override
     public String toString() {
-        return operator.format(path.toString(), value.isMultiToken() ? parenthesize(value.toString()) : value.toString());
+        return toQueryString(true);
     }
 
     @Override
@@ -130,14 +128,14 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     }
 
     private Map<String, Object> _getCoreEsQuery(EsMappings esMappings, EsBoost.Config boostConfig) {
-        String p = path.fullEsSearchPath();
+        String p = path.jsonForm();
         Value v = value;
 
         if ((v instanceof Numeric n && !esMappings.isFourDigitField(p) && !esMappings.isLongField(p))) {
             // Treat as free text
             v = new FreeText(n.toString());
-        } else if (v instanceof Date d && !esMappings.isDateField(p)) {
-            // Treat as free text
+        } else if (v instanceof DateTime d && !esMappings.isDateField(p)) {
+            // TODO: What about e.g. :firstIssueDate/:lastIssueDate? These have range xsd:date however are not indexed as date type in ES.
             v = new FreeText(d.toString());
         }
 
@@ -151,15 +149,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         };
 
         return switch (v) {
-            case Date date -> {
-                QueryDateTime parsedDate;
-                try {
-                    parsedDate = QueryDateTime.parse(date.toString());
-                } catch (DateTimeParseException e) {
-                    yield nonsenseFilter();
-                }
-                yield numOrDateFilter.apply(parsedDate.toElasticDateString());
-            }
+            case DateTime dateTime -> numOrDateFilter.apply(dateTime.dateTime().toElasticDateString());
             case FreeText ft -> {
                 if (ft.isWild()) {
                     yield switch (operator) {
@@ -171,7 +161,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
                 }
                 yield switch (operator) {
                     case EQUALS -> ft.toEs(esMappings, boostConfig.withBoostFields(List.of(p + "^" + boostConfig.withinFieldBoost())));
-                    case NOT_EQUALS -> mustNotWrap(ft.toEs(esMappings, boostConfig.withBoostFields(List.of(p))));
+                    case NOT_EQUALS -> mustNotWrap(ft.toEs(esMappings, boostConfig.withBoostFields(List.of(p + "^0"))));
                     // FIXME: Range makes no sense here
                     default -> nonsenseFilter();
                 };
@@ -194,11 +184,11 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         for (int i = path.path().size() - 1; i >= 0; i--) {
             Subpath sp = path.path().get(i);
             if (!sp.isValid()) {
-                propertyChainAxiom.push(Map.of(TYPE_KEY, "_Invalid", "label", sp.key().toString()));
+                propertyChainAxiom.push(Map.of(TYPE_KEY, "_Invalid", "label", sp.queryForm()));
                 continue;
             }
             if (sp instanceof Property p) {
-                propertyChainAxiom.push(i > 0 && path.path().get(i - 1).key().toString().equals(JsonLd.REVERSE_KEY)
+                propertyChainAxiom.push(i > 0 && path.path().get(i - 1).queryForm().equals(JsonLd.REVERSE_KEY)
                         ? Map.of(INVERSE_OF, p.definition())
                         : p.definition());
             }
@@ -212,7 +202,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         m.put(operator.termKey, value instanceof Resource r ? r.description() : value.queryForm());
         m.put("up", makeUpLink(qt, this, queryParams));
 
-        m.put("_key", path.asKey());
+        m.put("_key", path.queryForm());
         m.put("_value", value.queryForm());
 
         return m;
@@ -262,7 +252,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
             return this;
         }
 
-        String baseType = ((VocabTerm) value).jsonForm();
+        String baseType = ((VocabTerm) value).key();
 
         Set<String> subtypes = jsonLd.getSubClasses(baseType);
         if (subtypes.isEmpty()) {

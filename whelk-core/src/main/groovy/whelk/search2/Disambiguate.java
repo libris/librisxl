@@ -2,7 +2,8 @@ package whelk.search2;
 
 import groovy.transform.PackageScope;
 import whelk.JsonLd;
-import whelk.search2.querytree.Date;
+import whelk.search.QueryDateTime;
+import whelk.search2.querytree.DateTime;
 import whelk.search2.querytree.InvalidValue;
 import whelk.search2.querytree.Key;
 import whelk.search2.querytree.Link;
@@ -13,6 +14,7 @@ import whelk.search2.querytree.Token;
 import whelk.search2.querytree.Value;
 import whelk.search2.querytree.VocabTerm;
 
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -80,55 +82,33 @@ public class Disambiguate {
     }
 
     public Optional<Value> mapValueForProperty(Property property, String value) {
-        if (value.equals(Operator.WILDCARD)) {
-            return Optional.empty();
-        }
-        if (property.isXsdDateTime()) {
-            return Optional.of(new Date(value));
-        }
-        if (value.matches("\\d+")) {
-            return Optional.of(new Numeric(Integer.parseInt(value)));
-        }
-        if (property.isType() || property.isVocabTerm()) {
-            Set<String> mappedTerms = mapToVocabTerm(value, property.isType() ? VocabTermType.CLASS : VocabTermType.ENUM);
-            return switch (mappedTerms.size()) {
-                case 0 -> Optional.of(InvalidValue.forbidden(value));
-                case 1 -> mappedTerms.stream().findFirst().map(term -> new VocabTerm(term, jsonLd.vocabIndex.get(term)));
-                default -> mappedTerms.stream().filter(value::equalsIgnoreCase).findFirst()
-                        .map(v -> (Value) new VocabTerm(v, jsonLd.vocabIndex.get(v)))
-                        .map(Optional::of)
-                        .map(o -> o.orElse(InvalidValue.forbidden(value)));
-            };
-        }
-        if (property.isObjectProperty()) {
-            String expanded = expandPrefixed(value);
-            if (looksLikeIri(expanded)) {
-                return Optional.of(new Link(encodeUri(expanded)));
-            }
-        }
-        return Optional.empty();
+        return mapValueForProperty(property, value, null);
     }
 
     public Optional<Value> mapValueForProperty(Property property, Token token) {
-        String value = token.value();
+        return mapValueForProperty(property, token.value(), token);
+    }
+
+    public Optional<Value> mapValueForProperty(Property property, String value, Token token) {
         if (value.equals(Operator.WILDCARD)) {
             return Optional.empty();
         }
-        if (property.isXsdDateTime()) {
-            return Optional.of(new Date(token));
-        }
-        if (value.matches("\\d+")) {
-            return Optional.of(new Numeric(Integer.parseInt(value), token));
+        if (property.isXsdDate()) {
+            try {
+                QueryDateTime parsedDate = QueryDateTime.parse(value);
+                return Optional.of(new DateTime(parsedDate, token));
+            } catch (DateTimeParseException ignored) {
+                return Optional.empty();
+            }
         }
         if (property.isType() || property.isVocabTerm()) {
             Set<String> mappedTerms = mapToVocabTerm(value, property.isType() ? VocabTermType.CLASS : VocabTermType.ENUM);
             return switch (mappedTerms.size()) {
-                case 0 -> Optional.of(InvalidValue.forbidden(token));
+                case 0 -> Optional.of(token != null ? InvalidValue.forbidden(token) : InvalidValue.forbidden(value));
                 case 1 -> mappedTerms.stream().findFirst().map(term -> new VocabTerm(term, jsonLd.vocabIndex.get(term), token));
                 default -> mappedTerms.stream().filter(value::equalsIgnoreCase).findFirst()
                         .map(v -> (Value) new VocabTerm(v, jsonLd.vocabIndex.get(v), token))
-                        .map(Optional::of)
-                        .map(o -> o.orElse(InvalidValue.forbidden(token)));
+                        .or(() -> Optional.of(token != null ? InvalidValue.ambiguous(token) : InvalidValue.ambiguous(value)));
             };
         }
         if (property.isObjectProperty()) {
@@ -136,6 +116,17 @@ public class Disambiguate {
             if (looksLikeIri(expanded)) {
                 return Optional.of(new Link(encodeUri(expanded), token));
             }
+        }
+        if (value.matches("\\d+")) {
+            /*
+            TODO?
+            Optimally we would also check here that the given property is a DatatypeProperty and not an ObjectProperty
+            since only the former may have a numeric values, however there are fields such as reverseLinks.totalItemsByRelation.p
+            where p is not a DatatypeProperty but still the field has numeric values, so a query like
+            reverseLinks.totalItemsByRelation.instanceOf>1 wouldn't work due to the value 1 not being typed as Numeric
+            and by extension the query wouldn't pass as a valid range query.
+            */
+            return Optional.of(new Numeric(Integer.parseInt(value), token));
         }
         return Optional.empty();
     }

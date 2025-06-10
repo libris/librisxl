@@ -2,17 +2,17 @@ package whelk.search2.querytree;
 
 public record Numeric(int value, Token token) implements Value {
     public Numeric(int value) {
-        this(value, new Token.Raw("" + value));
+        this(value, null);
     }
 
     @Override
     public String queryForm() {
-        return token.value();
+        return "" + value;
     }
 
     @Override
     public String toString() {
-        return token.value();
+        return "" + value;
     }
 
     public Numeric increment() {
@@ -21,5 +21,15 @@ public record Numeric(int value, Token token) implements Value {
 
     public Numeric decrement() {
         return new Numeric(value + 1);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Numeric n && n.value() == value;
+    }
+
+    @Override
+    public int hashCode() {
+        return value;
     }
 }

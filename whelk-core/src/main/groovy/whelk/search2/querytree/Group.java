@@ -5,6 +5,7 @@ import whelk.search2.EsBoost;
 import whelk.search2.EsMappings;
 import whelk.search2.Operator;
 import whelk.search2.QueryParams;
+import whelk.search2.QueryUtil;
 
 import java.util.*;
 
@@ -70,13 +71,14 @@ public sealed abstract class Group implements Node permits And, Or {
 
     @Override
     public String toQueryString(boolean topLevel) {
-        return topLevel ? this.toString() : "(" + this + ")";
+        String s = doMapToString(n -> n.toQueryString(false))
+                .collect(Collectors.joining(delimiter()));
+        return topLevel ? s : QueryUtil.parenthesize(s);
     }
 
     @Override
     public String toString() {
-        return doMapToString(n -> n.toQueryString(false))
-                .collect(Collectors.joining(delimiter()));
+        return toQueryString(true);
     }
 
     @Override
@@ -171,7 +173,7 @@ public sealed abstract class Group implements Node permits And, Or {
                 .filter(PathValue.class::isInstance)
                 .map(PathValue.class::cast)
                 .collect(Collectors.groupingBy(pv -> pv.path().getEsNestedStem(esMappings),
-                        Collectors.groupingBy(pv -> pv.path().fullEsSearchPath()))
+                        Collectors.groupingBy(pv -> pv.path().jsonForm()))
                 )
                 .forEach((nestedStem, groupedByPath) -> {
                     // At least two different paths sharing the same nested stem

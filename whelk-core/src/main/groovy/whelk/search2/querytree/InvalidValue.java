@@ -2,6 +2,7 @@ package whelk.search2.querytree;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static whelk.JsonLd.TYPE_KEY;
 
@@ -61,5 +62,15 @@ public final class InvalidValue extends Resource {
     @Override
     public String toString() {
         return token.value();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof InvalidValue iv && iv.queryForm().equals(queryForm());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(queryForm());
     }
 }

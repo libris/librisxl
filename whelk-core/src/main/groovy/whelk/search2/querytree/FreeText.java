@@ -16,6 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -116,8 +117,18 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
         return tokens.size() > 1;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof FreeText ft && ft.toString().equals(toString());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(toString());
+    }
+
     public boolean isWild() {
-        return !negate && Operator.WILDCARD.equals(toString());
+        return Operator.WILDCARD.equals(toString());
     }
 
     public boolean isEdited(int cursorPos) {
@@ -138,7 +149,7 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
     }
 
     private static String joinTokens(List<Token> tokens, String delimiter) {
-        return tokens.stream().map(Token::toString).collect(Collectors.joining(delimiter));
+        return tokens.stream().map(Token::formatted).collect(Collectors.joining(delimiter));
     }
 
     private Map<String, Object> _toEs(List<Token> tokens, EsBoost.Config boostConfig) {

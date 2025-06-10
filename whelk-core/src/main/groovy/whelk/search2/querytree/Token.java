@@ -6,6 +6,9 @@ public sealed interface Token permits Key.AmbiguousKey, Key.RecognizedKey, Key.U
     String value();
     int offset();
 
+    default String formatted() {
+        return value();
+    }
     default boolean isQuoted() {
         return false;
     }
@@ -27,13 +30,18 @@ public sealed interface Token permits Key.AmbiguousKey, Key.RecognizedKey, Key.U
         }
 
         @Override
-        public String toString() {
+        public String formatted() {
             return QueryUtil.quote(value);
         }
 
         @Override
         public boolean isQuoted() {
             return true;
+        }
+
+        @Override
+        public String toString() {
+            return formatted();
         }
     }
 }

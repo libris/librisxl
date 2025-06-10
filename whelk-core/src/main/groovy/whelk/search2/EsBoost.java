@@ -59,7 +59,7 @@ public class EsBoost {
         }
 
         public static Config newBoostFieldsConfig(List<String> boostFields) {
-            return new Config(boostFields, List.of(), null, null, false, -1);
+            return new Config(boostFields, List.of(), null, WITHIN_FIELD_BOOST, false, -1);
         }
 
         public static Config getCustomConfig(QueryParams queryParams) {

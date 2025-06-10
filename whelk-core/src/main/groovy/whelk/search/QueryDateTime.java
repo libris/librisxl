@@ -43,6 +43,10 @@ public class QueryDateTime {
         return precision.elasticFormat.format(time);
     }
 
+    public String toDateString() {
+        return precision.parser.format(time);
+    }
+
     public static QueryDateTime parse(String s) throws DateTimeParseException {
         for (Precision f : Precision.values()) {
             try {

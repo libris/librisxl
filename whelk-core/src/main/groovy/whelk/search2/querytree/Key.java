@@ -4,12 +4,16 @@ import static whelk.JsonLd.TYPE_KEY;
 
 public sealed interface Key extends Subpath permits Key.AmbiguousKey, Key.RecognizedKey, Key.UnrecognizedKey {
     @Override
-    default Key key() { return this; }
+    default String queryForm() {
+        return value();
+    }
 
     @Override
     default boolean isType() {
         return TYPE_KEY.equals(toString());
     }
+
+    String value();
 
     record RecognizedKey(String value, int offset) implements Key, Token {
         public RecognizedKey(String value) {

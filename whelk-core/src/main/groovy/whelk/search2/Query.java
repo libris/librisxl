@@ -236,6 +236,13 @@ public class Query {
     private QueryTree getSuggestQueryTree() throws InvalidQueryException {
         // TODO: Don't hardcode
         List<String> defaultBaseTypes = List.of("BibliographicAgent", "Concept", "Language", "Work");
+        return getSuggestQueryTree(defaultBaseTypes, queryParams, whelk.getJsonld(), disambiguate);
+    }
+
+    private static QueryTree getSuggestQueryTree(List<String> defaultBaseTypes,
+                                                 QueryParams queryParams,
+                                                 JsonLd jsonLd,
+                                                 Disambiguate disambiguate) throws InvalidQueryException {
         QueryTree qt = new QueryTree(queryParams.q, disambiguate);
         int cursorPos = queryParams.cursor;
         Optional<PathValue> currentlyEditedPathValue = qt.allDescendants()
@@ -249,7 +256,7 @@ public class Query {
                 Property p = property.get();
                 String searchableTypes = p.range().stream()
                         .filter(type -> defaultBaseTypes.stream().anyMatch(baseType ->
-                                baseType.equals(type) || whelk.getJsonld().getSubClasses(baseType).contains(type)))
+                                baseType.equals(type) || jsonLd.getSubClasses(baseType).contains(type)))
                         .collect(Collectors.joining(" OR "));
                 if (!searchableTypes.isEmpty()) {
                     Node typeFilter = QueryTreeBuilder.buildTree("\"rdf:type\":" + parenthesize(searchableTypes), disambiguate);
@@ -363,7 +370,7 @@ public class Query {
                                 ? new HashMap<>(multiSelected) {{ remove(pKey); }}
                                 : multiSelected;
                         Map<String, Object> filter = getEsMultiSelectedFilters(mSelected, rulingTypes, jsonLd, esMappings);
-                        query.put(path.fullEsSearchPath(), filterWrap(aggs, property.name(), filter));
+                        query.put(path.jsonForm(), filterWrap(aggs, property.name(), filter));
                     });
         }
 
@@ -372,7 +379,7 @@ public class Query {
 
     private static Map<String, Object> buildCoreAqqQuery(Path path, AppParams.Slice slice) {
         return Map.of("terms",
-                Map.of("field", path.fullEsSearchPath(),
+                Map.of("field", path.jsonForm(),
                         "size", slice.size(),
                         "order", Map.of(slice.bucketSortKey(), slice.sortOrder())));
     }

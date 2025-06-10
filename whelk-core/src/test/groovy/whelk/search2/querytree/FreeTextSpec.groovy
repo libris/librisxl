@@ -1,11 +1,13 @@
 package whelk.search2.querytree
 
 import spock.lang.Specification
+import whelk.search2.Disambiguate
 import whelk.search2.EsBoost
 import whelk.search2.EsMappings
 
 class FreeTextSpec extends Specification {
     EsMappings esMappings = TestData.getEsMappings()
+    Disambiguate disambiguate = TestData.getDisambiguate()
 
     def "to ES query (basic boosting)"() {
         given:
@@ -119,6 +121,116 @@ class FreeTextSpec extends Specification {
                                         ]
                                 ]
                         ]
+                ]
+        ]
+    }
+
+    def "to ES query (with suggest)"() {
+        given:
+        int cursor
+        EsBoost.Config boostConfig
+        FreeText freeText = (FreeText) QueryTreeBuilder.buildTree("abc xyz", disambiguate)
+
+        when:
+        // First word is being edited
+        cursor = 3
+        boostConfig = new EsBoost.Config(["field1^10"], [], null, null, true, cursor)
+
+        then:
+        freeText.toEs(esMappings, boostConfig) == [
+                "bool": [
+                        "should": [[
+                                           "simple_query_string": [
+                                                   "default_operator": "AND",
+                                                   "query"           : "abc* xyz",
+                                                   "analyze_wildcard": true,
+                                                   "fields"          : ["field1^10.0"]
+                                           ]
+                                   ], [
+                                           "bool": [
+                                                   "should": [[
+                                                                      "simple_query_string": [
+                                                                              "default_operator": "AND",
+                                                                              "query"           : "abc xyz",
+                                                                              "analyze_wildcard": true,
+                                                                              "fields"          : ["field1^10.0"]
+                                                                      ]
+                                                              ], [
+                                                                      "query_string": [
+                                                                              "default_operator": "AND",
+                                                                              "query"           : "\"abc xyz\"",
+                                                                              "analyze_wildcard": true,
+                                                                              "fields"          : ["field1^10.0"],
+                                                                              "type"            : "most_fields"
+                                                                      ]
+                                                              ]]
+                                           ]
+                                   ]]
+                ]
+        ]
+
+        when:
+        // No word is being edited
+        cursor = 4
+        boostConfig = new EsBoost.Config(["field1^10"], [], null, null, true, cursor)
+
+        then:
+        freeText.toEs(esMappings, boostConfig) == [
+                "bool": [
+                        "should": [[
+                                           "simple_query_string": [
+                                                   "default_operator": "AND",
+                                                   "query"           : "abc xyz",
+                                                   "analyze_wildcard": true,
+                                                   "fields"          : ["field1^10.0"]
+                                           ]
+                                   ], [
+                                           "query_string": [
+                                                   "default_operator": "AND",
+                                                   "query"           : "\"abc xyz\"",
+                                                   "analyze_wildcard": true,
+                                                   "fields"          : ["field1^10.0"],
+                                                   "type"            : "most_fields"
+                                           ]
+                                   ]]
+                ]
+        ]
+
+        when:
+        // Second word is being edited
+        cursor = 7
+        boostConfig = new EsBoost.Config(["field1^10"], [], null, null, true, cursor)
+
+        then:
+        freeText.toEs(esMappings, boostConfig) == [
+                "bool": [
+                        "should": [[
+                                           "simple_query_string": [
+                                                   "default_operator": "AND",
+                                                   "query"           : "abc xyz*",
+                                                   "analyze_wildcard": true,
+                                                   "fields"          : ["field1^10.0"]
+                                           ]
+                                   ], [
+                                           "bool": [
+                                                   "should": [[
+                                                                      "simple_query_string": [
+                                                                              "default_operator": "AND",
+                                                                              "query"           : "abc xyz",
+                                                                              "analyze_wildcard": true,
+                                                                              "fields"          : ["field1^10.0"]
+                                                                      ]
+                                                              ], [
+                                                                      "query_string": [
+                                                                              "default_operator": "AND",
+                                                                              "query"           : "\"abc xyz\"",
+                                                                              "analyze_wildcard": true,
+                                                                              "fields"          : ["field1^10.0"],
+                                                                              "type"            : "most_fields"
+                                                                      ]
+                                                              ]]
+                                           ]
+                                   ]]
                 ]
         ]
     }

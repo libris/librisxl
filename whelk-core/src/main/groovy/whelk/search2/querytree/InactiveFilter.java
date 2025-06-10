@@ -36,12 +36,12 @@ public record InactiveFilter(Filter.AliasedFilter aliasedFilter) implements Node
 
     @Override
     public String toQueryString(boolean topLevel) {
-        return toString();
+        return "NOT " + alias();
     }
 
     @Override
     public String toString() {
-        return "NOT " + alias();
+        return toQueryString(true);
     }
 
     @Override

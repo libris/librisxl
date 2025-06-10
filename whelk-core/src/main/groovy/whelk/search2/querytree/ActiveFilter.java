@@ -36,7 +36,7 @@ public record ActiveFilter(Filter.AliasedFilter aliasedFilter) implements Node {
 
     @Override
     public String toQueryString(boolean topLevel) {
-        return toString();
+        return alias();
     }
 
     @Override
