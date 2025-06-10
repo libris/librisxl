@@ -235,7 +235,7 @@ public class Query {
 
     private QueryTree getSuggestQueryTree() throws InvalidQueryException {
         // TODO: Don't hardcode
-        List<String> defaultBaseTypes = List.of("BibliographicAgent", "Concept", "Language", "Work");
+        List<String> defaultBaseTypes = List.of("Agent", "Concept", "Language", "Work");
         return getSuggestQueryTree(defaultBaseTypes, queryParams, whelk.getJsonld(), disambiguate);
     }
 
