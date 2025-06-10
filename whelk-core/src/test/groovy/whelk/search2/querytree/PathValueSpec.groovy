@@ -3,11 +3,14 @@ package whelk.search2.querytree
 import spock.lang.Specification
 import whelk.JsonLd
 import whelk.search2.Disambiguate
+import whelk.search2.EsBoost
+import whelk.search2.EsMappings
 import whelk.search2.QueryParams
 
 class PathValueSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()
     JsonLd jsonLd = TestData.getJsonLd()
+    EsMappings esMappings = TestData.getEsMappings()
 
     def "convert to search mapping 1"() {
         given:
@@ -83,5 +86,30 @@ class PathValueSpec extends Specification {
         "type:T3"                    | "type:T3 OR type:T4"
         "p10:v1"                     | "p4.p1:v1 p4.p3.@id:\"https://id.kb.se/x\""
         "p11:v1"                     | "p3.p4._str:v1 (\"p3.rdf:type\":T3 OR \"p3.rdf:type\":T4)"
+    }
+
+    def "To ES query (negation + nested field)"() {
+        given:
+        PathValue pathValue = (PathValue) QueryTreeBuilder.buildTree("NOT p3:\"https://id.kb.se/x\"", disambiguate)
+
+        expect:
+        pathValue.toEs(esMappings, EsBoost.Config.defaultConfig()) == [
+                "bool": [
+                        "must_not": [
+                                "nested": [
+                                        "query": [
+                                                "bool": [
+                                                        "filter": [
+                                                                "term": [
+                                                                        "p3": "https://id.kb.se/x"
+                                                                ]
+                                                        ]
+                                                ]
+                                        ],
+                                        "path" : "p3"
+                                ]
+                        ]
+                ]
+        ]
     }
 }

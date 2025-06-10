@@ -5,7 +5,6 @@ import whelk.search2.EsBoost;
 import whelk.search2.EsMappings;
 import whelk.search2.Operator;
 import whelk.search2.QueryParams;
-import whelk.search2.QueryUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,6 +26,7 @@ import static whelk.search2.Operator.NOT_EQUALS;
 import static whelk.search2.QueryUtil.boolWrap;
 import static whelk.search2.QueryUtil.makeUpLink;
 import static whelk.search2.QueryUtil.mustNotWrap;
+import static whelk.search2.QueryUtil.mustWrap;
 import static whelk.search2.QueryUtil.nestedWrap;
 import static whelk.search2.QueryUtil.parenthesize;
 
@@ -41,8 +41,8 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
     @Override
     public Map<String, Object> toEs(EsMappings esMappings, EsBoost.Config boostConfig) {
-        var es = getCoreEsQuery(esMappings, boostConfig);
-        return getEsNestedQuery(es, esMappings).orElse(es);
+        return getEsNestedQuery(esMappings, boostConfig)
+                .orElse(getCoreEsQuery(esMappings, boostConfig));
     }
 
     public Map<String, Object> getCoreEsQuery(EsMappings esMappings, EsBoost.Config boostConfig) {
@@ -93,7 +93,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         return getSoleProperty().map(Property::name).filter(propertyKey::equals).isPresent();
     }
 
-    public PathValue replaceOperator(Operator replacement) {
+    public PathValue withOperator(Operator replacement) {
         return new PathValue(path, replacement, value);
     }
 
@@ -121,10 +121,11 @@ public record PathValue(Path path, Operator operator, Value value) implements No
                 : Optional.empty();
     }
 
-    private Optional<Map<String, Object>> getEsNestedQuery(Map<String, Object> esCoreQuery, EsMappings esMappings) {
+    private Optional<Map<String, Object>> getEsNestedQuery(EsMappings esMappings, EsBoost.Config boostConfig) {
         return path.getEsNestedStem(esMappings)
-                .map(nestedStem -> nestedWrap(nestedStem, esCoreQuery))
-                .map(operator == NOT_EQUALS ? QueryUtil::mustNotWrap : QueryUtil::mustWrap);
+                .map(nestedStem -> operator == NOT_EQUALS
+                        ? mustNotWrap(nestedWrap(nestedStem, withOperator(EQUALS).getCoreEsQuery(esMappings, boostConfig)))
+                        : mustWrap(nestedWrap(nestedStem, getCoreEsQuery(esMappings, boostConfig))));
     }
 
     private Map<String, Object> _getCoreEsQuery(EsMappings esMappings, EsBoost.Config boostConfig) {
