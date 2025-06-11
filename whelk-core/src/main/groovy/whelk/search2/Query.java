@@ -17,7 +17,6 @@ import static whelk.component.ElasticSearch.flattenedLangMapKey;
 import static whelk.search2.EsBoost.addBoosts;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 import static whelk.search2.QueryUtil.makeFindUrlNoOffset;
-import static whelk.search2.QueryUtil.parenthesize;
 
 public class Query {
     protected final Whelk whelk;
@@ -26,8 +25,8 @@ public class Query {
     protected final AppParams appParams;
     protected final QueryTree queryTree;
     protected final ESSettings esSettings;
+    protected final Disambiguate disambiguate;
 
-    private final Disambiguate disambiguate;
     private final LinkLoader linkLoader;
     private final SelectedFilters selectedFilters;
     private final Stats stats;
@@ -36,6 +35,7 @@ public class Query {
     protected QueryResult queryResult;
 
     public enum SearchMode {
+        SUGGEST,
         STANDARD_SEARCH,
         OBJECT_SEARCH,
         PREDICATE_OBJECT_SEARCH;
@@ -63,7 +63,7 @@ public class Query {
         appParams.siteFilters.parse(disambiguate);
         this.esSettings = esSettings;
         this.whelk = whelk;
-        this.queryTree = queryParams.suggest ? getSuggestQueryTree() : new QueryTree(queryParams.q, disambiguate);
+        this.queryTree = new QueryTree(queryParams.q, disambiguate);
         this.linkLoader = new LinkLoader();
         this.selectedFilters = queryParams.skipStats ? new SelectedFilters(queryTree, appParams.siteFilters) : new SelectedFilters(queryTree, appParams);
         this.stats = new Stats();
@@ -74,6 +74,7 @@ public class Query {
             case STANDARD_SEARCH -> new Query(queryParams, appParams, vocabMappings, esSettings, whelk);
             case OBJECT_SEARCH -> new ObjectQuery(queryParams, appParams, vocabMappings, esSettings, whelk);
             case PREDICATE_OBJECT_SEARCH -> new PredicateObjectQuery(queryParams, appParams, vocabMappings, esSettings, whelk);
+            case SUGGEST -> new SuggestQuery(queryParams, appParams, vocabMappings, esSettings, whelk);
         };
     }
 
@@ -86,7 +87,7 @@ public class Query {
     }
 
     protected Object doGetEsQueryDsl() {
-        applySiteFilters(SearchMode.STANDARD_SEARCH);
+        applySiteFilters(queryTree, SearchMode.STANDARD_SEARCH);
         if (queryParams.skipStats) {
             return getEsQueryDsl(getEsQuery());
         } else {
@@ -95,7 +96,7 @@ public class Query {
         }
     }
 
-    protected void applySiteFilters(SearchMode searchMode) {
+    protected void applySiteFilters(QueryTree queryTree, SearchMode searchMode) {
         queryTree.applySiteFilters(searchMode, appParams.siteFilters, selectedFilters);
     }
 
@@ -213,6 +214,9 @@ public class Query {
     }
 
     private static SearchMode getSearchMode(QueryParams queryParams) throws InvalidQueryException {
+        if (queryParams.suggest) {
+            return SearchMode.SUGGEST;
+        }
         if (queryParams.object != null) {
             return queryParams.predicates.isEmpty() ? SearchMode.OBJECT_SEARCH : SearchMode.PREDICATE_OBJECT_SEARCH;
         }
@@ -231,45 +235,6 @@ public class Query {
 
     private Map<String, Object> getEsQuery() {
         return getEsQuery(queryTree, List.of());
-    }
-
-    private QueryTree getSuggestQueryTree() throws InvalidQueryException {
-        // TODO: Don't hardcode
-        List<String> defaultBaseTypes = List.of("Agent", "Concept", "Language", "Work");
-        return getSuggestQueryTree(defaultBaseTypes, queryParams, whelk.getJsonld(), disambiguate);
-    }
-
-    private static QueryTree getSuggestQueryTree(List<String> defaultBaseTypes,
-                                                 QueryParams queryParams,
-                                                 JsonLd jsonLd,
-                                                 Disambiguate disambiguate) throws InvalidQueryException {
-        QueryTree qt = new QueryTree(queryParams.q, disambiguate);
-        int cursorPos = queryParams.cursor;
-        Optional<PathValue> currentlyEditedPathValue = qt.allDescendants()
-                .filter(n -> n instanceof PathValue pv && pv.value() instanceof FreeText ft && ft.isEdited(cursorPos))
-                .map(PathValue.class::cast)
-                .findFirst();
-        if (currentlyEditedPathValue.isPresent()) {
-            PathValue pv = currentlyEditedPathValue.get();
-            Optional<Property> property = pv.path().lastProperty();
-            if (property.isPresent()) {
-                Property p = property.get();
-                String searchableTypes = p.range().stream()
-                        .filter(type -> defaultBaseTypes.stream().anyMatch(baseType ->
-                                baseType.equals(type) || jsonLd.getSubClasses(baseType).contains(type)))
-                        .collect(Collectors.joining(" OR "));
-                if (!searchableTypes.isEmpty()) {
-                    Node typeFilter = QueryTreeBuilder.buildTree("\"rdf:type\":" + parenthesize(searchableTypes), disambiguate);
-                    Node reverseLinksFilter = QueryTreeBuilder.buildTree("reverseLinks.totalItems>0", disambiguate);
-                    return new QueryTree(new And(List.of((FreeText) pv.value(), typeFilter, reverseLinksFilter)));
-                }
-            }
-        } else if (qt.isFreeText()) {
-            String rawTypeFilter = "\"rdf:type\":" + parenthesize(String.join(" OR ", defaultBaseTypes));
-            Node typeFilter = QueryTreeBuilder.buildTree(rawTypeFilter, disambiguate);
-            return qt.addTopLevelNode(typeFilter);
-        }
-        return qt;
     }
 
     private static Map<String, Object> getEsMultiSelectedFilters(Map<String, List<Node>> multiSelected,
