@@ -15,7 +15,7 @@ public record DateTime(QueryDateTime dateTime, Token token) implements Value {
         if (token != null) {
             return token.formatted();
         }
-        String dateString = dateTime.toString();
+        String dateString = dateTime.toDateString();
         return dateString.contains(":") ? QueryUtil.quote(dateString) : dateString;
     }
 
