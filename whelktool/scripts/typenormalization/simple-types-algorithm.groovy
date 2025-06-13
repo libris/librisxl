@@ -142,6 +142,11 @@ class TypeMappings implements UsingJsonKeys {
             return false
         }
 
+        // Already new type of value == already normalized:
+        if (issuancetype == 'SingleUnit' || issuancetype == 'MultipleUnits') {
+            return false
+        }
+
         if (issuancetype == 'SubCollection') {
             issuancetype = 'Collection'
         }
