@@ -1467,13 +1467,10 @@ class JsonLd {
      * anywhere in the structure/document (and thus cannot be safely removed).
      */
     static void getReferencedBNodes(Map map, Set referencedBNodes) {
-        // A jsonld reference is denoted as a json object containing exactly one member, with the key "@id".
-        if (map.size() == 1) {
-            String key = map.keySet()[0]
-            if (key == ID_KEY) {
-                String id = map.get(key)
-                if (id.startsWith("_:"))
-                    referencedBNodes.add(id)
+        if (isLink(map)) {
+            String id = map[ID_KEY]
+            if (id && id.startsWith("_:")) {
+                referencedBNodes.add(id)
             }
         }
 
