@@ -25,10 +25,10 @@ class TypeMappings implements UsingJsonKeys {
     Map cleanupInstanceTypes = [
       'SoundRecording': [category: 'https://id.kb.se/term/ktg/SoundStorageMedium', workCategory: 'https://id.kb.se/term/ktg/Audio'],  // 170467
       'VideoRecording': [category: 'https://id.kb.se/term/ktg/VideoStorageMedium', workCategory: 'https://id.kb.se/term/ktg/MovingImage'],  // 20515
-      'Map': [category: 'https://id.kb.se/term/rda/Sheet', workCategory: 'https://id.kb.se/rda/CartographicImage'],  // 12686
+      'Map': [category: 'https://id.kb.se/term/rda/Sheet', workCategory: 'https://id.kb.se/term/rda/CartographicImage'],  // 12686
       'Globe': [category: 'https://id.kb.se/term/rda/Object', workCategory: 'https://id.kb.se/term/ktg/Globe'],  // 74
       'StillImageInstance': [category: 'https://id.kb.se/term/rda/Sheet', workCategory: 'https://id.kb.se/term/ktg/StillImage'], // 54954
-      'TextInstance': [category: 'https://id.kb.se/term/rda/Volume' , workCategory: 'https://id.kb.se/rda/Text'], // 301
+      'TextInstance': [category: 'https://id.kb.se/term/rda/Volume' , workCategory: 'https://id.kb.se/term/rda/Text'], // 301
     ]
 
     Map<String, String> typeToCategory = [:]
