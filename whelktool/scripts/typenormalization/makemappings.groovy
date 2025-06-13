@@ -20,6 +20,7 @@ preferredCategoryQuery = """
 prefix : <https://id.kb.se/vocab/>
 
 prefix saogf: <https://id.kb.se/term/saogf/>
+prefix barngf: <https://id.kb.se/term/barngf/>
 prefix tgm: <https://id.kb.se/term/gmgpc/swe/>
 prefix kbrda: <https://id.kb.se/term/rda/>
 prefix ktg: <https://id.kb.se/term/ktg/>
@@ -27,11 +28,14 @@ prefix marc: <https://id.kb.se/marc/>
 
 select ?src ?tgt {
   ?src (:closeMatch|:exactMatch)|^(:closeMatch|:exactMatch) ?tgt .
-  filter(strstarts(str(?src), str(marc:)) || strstarts(str(?src), str(tgm:)))
   filter(
-    strstarts(str(?tgt), str(saogf:))
-    || strstarts(str(?tgt), str(kbrda:))
-    || strstarts(str(?tgt), str(tgm:))
+    strstarts(str(?src), str(marc:))
+    || strstarts(str(?src), str(tgm:))
+    || strstarts(str(?src), str(saogf:))
+    || strstarts(str(?src), str(barngf:))
+  )
+  filter(
+    strstarts(str(?tgt), str(kbrda:))
     || strstarts(str(?tgt), str(ktg:))
   )
 } order by ?src ?tgt
@@ -49,7 +53,7 @@ prefix marc: <https://id.kb.se/marc/>
 
 select ?src ?bdr {
   {
-    ?src a ?type ; :closeMatch|:broadMatch|:broader ?bdr .
+    ?src a ?type ; :exactMatch|:closeMatch|:broadMatch|:broader ?bdr .
     values ?type {
       :Category
       :Genre
@@ -70,6 +74,7 @@ select ?src ?bdr {
     filter(
       strstarts(str(?src), str(saogf:))
       || strstarts(str(?src), str(barngf:))
+      || strstarts(str(?src), str(tgm:))
     )
   }
 } order by ?src ?bdr
