@@ -169,7 +169,7 @@ public class Query {
         return getEsMultiSelectedFilters(selectedFilters.getAllMultiSelected(), rulingTypes, whelk.getJsonld(), esSettings.mappings);
     }
 
-    private Map<String, Object> getPartialCollectionView() {
+    protected Map<String, Object> getPartialCollectionView() {
         var view = new LinkedHashMap<String, Object>();
 
         view.put(JsonLd.TYPE_KEY, "PartialCollectionView");

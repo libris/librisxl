@@ -109,7 +109,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         return this;
     }
 
-    private Optional<Property> getSoleProperty() {
+    public Optional<Property> getSoleProperty() {
         return path.path().size() == 1 && path.first() instanceof Property p
                 ? Optional.of(p)
                 : Optional.empty();
@@ -204,7 +204,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         m.put("up", makeUpLink(qt, this, queryParams));
 
         m.put("_key", path.queryForm());
-        m.put("_value", value.queryForm());
+        m.put("_value", value.queryForm().replaceAll("\"", "")); // FIXME
 
         return m;
     }

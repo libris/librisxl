@@ -131,11 +131,7 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
         return Operator.WILDCARD.equals(toString());
     }
 
-    public boolean isEdited(int cursorPos) {
-        return getCurrentlyEditedToken(cursorPos).isPresent();
-    }
-
-    private Optional<Token> getCurrentlyEditedToken(int cursorPos) {
+    public Optional<Token> getCurrentlyEditedToken(int cursorPos) {
         return tokens.stream()
                 .filter(t -> cursorPos > t.offset() && cursorPos <= t.offset() + t.value().length())
                 .findFirst();
@@ -190,7 +186,6 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
         var queries = buildQueries(queryMode, queryString, basicBoostFields, functionBoostFields);
 
         List<String> simplePhrases = getSimplePhrases(tokens);
-
         if (!simplePhrases.isEmpty()) {
             Integer phraseBoostDivisor = boostConfig.phraseBoostDivisor();
             if (phraseBoostDivisor != null) {

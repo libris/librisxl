@@ -223,23 +223,4 @@ class QuerySpec extends Specification {
                 ]
         ]
     }
-
-    def "get suggest query for property"() {
-        given:
-        List<String> defaultBaseTypes = ['T1', 'T2', 'T3']
-        QueryParams queryParams = new QueryParams(['_q'      : [q] as String[],
-                                                   '_suggest': ['true'] as String[],
-                                                   'cursor'  : [cursor] as String[]])
-        QueryTree qt = Query.getSuggestQueryTree(defaultBaseTypes, queryParams, jsonLd, disambiguate)
-
-        expect:
-        qt.toQueryString() == suggestQueryString
-
-        where:
-        q             | cursor | suggestQueryString
-        'xyz'         | '3'    | 'xyz ("rdf:type":T1 OR "rdf:type":T2 OR "rdf:type":T3)'
-        'xyz p13:abc' | '3'    | 'xyz p13:abc'
-        'xyz p13:abc' | '11'   | 'abc "rdf:type":T1 reverseLinks.totalItems>0'
-        'xyz p13:abc' | '7'    | 'xyz p13:abc'
-    }
 }

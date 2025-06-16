@@ -13,6 +13,7 @@ class SuggestQuerySpec extends Specification {
         given:
         List<String> defaultBaseTypes = ['T1', 'T2', 'T3']
         QueryTree queryTree = new QueryTree(q, disambiguate)
+
         QueryTree suggestQueryTree = SuggestQuery.getSuggestQueryTree(defaultBaseTypes, queryTree, jsonLd, disambiguate, cursor)
 
         expect:

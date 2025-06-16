@@ -49,6 +49,10 @@ public final class Link extends Resource {
         return thing;
     }
 
+    public Token token() {
+        return token;
+    }
+
     @Override
     public Map<String, Object> description() {
         return chip;
@@ -56,7 +60,7 @@ public final class Link extends Resource {
 
     @Override
     public String queryForm() {
-        return token != null ? token.formatted() : QueryUtil.quote(iri);
+        return token != null ? token.formatted() : QueryUtil.quote(VocabMappings.toPrefixed(iri));
     }
 
     @Override
