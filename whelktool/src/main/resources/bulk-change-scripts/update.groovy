@@ -1,5 +1,6 @@
 import whelk.Document
 import whelk.Whelk
+import whelk.component.PostgreSQLComponent
 import whelk.datatool.form.ModifiedThing
 import whelk.datatool.form.Transform
 
@@ -16,7 +17,13 @@ Transform transform = new Transform(matchForm, targetForm, getWhelk())
 selectByForm(transform.matchForm) {
     try {
         if (modify(transform, it.doc, it.whelk)) {
-            it.scheduleSave(loud: isLoudAllowed)
+            it.scheduleSave(loud: isLoudAllowed, onError: { e ->
+                if (e instanceof PostgreSQLComponent.ConflictingHoldException) {
+                    it.reportFailed("Failed to update document: ${e.getMessage()}")
+                } else {
+                    throw e
+                }
+            })
         }
     } catch (ModifiedThing.IllegalModificationException ignored) {
     }

@@ -233,7 +233,12 @@ class WhelkTool {
     DocumentItem create(Map data) {
         Document doc = new Document(data)
         doc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
-        DocumentItem item = new DocumentItem(number: counter.createdCount, doc: doc, whelk: whelk)
+        DocumentItem item = new DocumentItem(
+                number: counter.createdCount,
+                doc: doc,
+                whelk: whelk,
+                logFailed: this.&logFailed
+        )
         item.existsInStorage = false
         return item
     }
@@ -331,7 +336,13 @@ class WhelkTool {
             if (limit > -1 && counter.readCount > limit) {
                 break
             }
-            DocumentItem item = new DocumentItem(number: counter.readCount, doc: doc, whelk: whelk, preUpdateChecksum: doc.getChecksum(whelk.jsonld))
+            DocumentItem item = new DocumentItem(
+                    number: counter.readCount,
+                    doc: doc,
+                    whelk: whelk,
+                    preUpdateChecksum: doc.getChecksum(whelk.jsonld),
+                    logFailed: this.&logFailed
+            )
             item.existsInStorage = !newItems
             batch.items << item
             if (batch.items.size() == batchSize) {
@@ -506,8 +517,14 @@ class WhelkTool {
                     catch (StaleUpdateException e) {
                         logRetry(e, item)
                         Document doc = whelk.getDocument(item.doc.shortId)
-                        item = new DocumentItem(number: item.number, doc: doc, whelk: whelk,
-                                preUpdateChecksum: doc.getChecksum(whelk.jsonld), existsInStorage: true)
+                        item = new DocumentItem(
+                                number: item.number,
+                                doc: doc,
+                                whelk: whelk,
+                                preUpdateChecksum: doc.getChecksum(whelk.jsonld),
+                                existsInStorage: true,
+                                logFailed: this.&logFailed
+                        )
                         return doProcess(process, item, counter)
                     }
                     counter.countModified()
@@ -639,8 +656,7 @@ class WhelkTool {
             if (jsonLdValidation == ValidationMode.ON) {
                 throw new Exception(msg)
             } else if (jsonLdValidation == ValidationMode.SKIP_AND_LOG) {
-                failedLog.println(doc.shortId)
-                errorLog.println(msg)
+                logFailed(doc, msg)
                 return false
             }
         }
@@ -656,12 +672,16 @@ class WhelkTool {
             if (inDatasetValidation == ValidationMode.ON) {
                 throw new Exception(msg)
             } else if (inDatasetValidation == ValidationMode.SKIP_AND_LOG) {
-                failedLog.println(doc.shortId)
-                errorLog.println(msg)
+                logFailed(doc, msg)
                 return false
             }
         }
         return true
+    }
+
+    void logFailed(Document doc, String msg) {
+        failedLog.println(doc.shortId)
+        errorLog.println(msg)
     }
 
     private boolean confirmNextStep(String inJsonStr, Document doc) {
@@ -1018,6 +1038,7 @@ class DocumentItem {
     boolean existsInStorage = true
     private String restoreToTime = null
     Closure onError = null
+    Closure logFailed = null
 
     List getGraph() {
         return doc.data['@graph']
@@ -1039,6 +1060,10 @@ class DocumentItem {
         needsSaving = true
         set(params)
         assert (restoreToTime != null)
+    }
+
+    void reportFailed(String message) {
+        logFailed(doc, message)
     }
 
     private void set(Map params) {
