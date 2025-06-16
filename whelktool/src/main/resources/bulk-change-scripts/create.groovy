@@ -14,8 +14,6 @@ import static whelk.datatool.form.MatchForm.collectFormBNodeIdToPath
 import static whelk.datatool.form.MatchForm.collectFormBNodeIdToResourceIds
 import static whelk.util.DocumentUtil.traverse
 
-PrintWriter conflictingHoldReport = getReportWriter("holding-conflict.txt")
-
 Map targetForm = parameters.get(TARGET_FORM_KEY)
 
 Map<String, Set<String>> nodeIdMappings = collectFormBNodeIdToResourceIds(targetForm, getWhelk())
@@ -59,7 +57,7 @@ def docs = verifiedUris.collect { uri ->
 selectFromIterable(docs) {
     it.scheduleSave(loud: true, onError: { e ->
         if (e instanceof ConflictingHoldException) {
-            conflictingHoldReport.println("Failed to create document: ${e.getMessage()}")
+            it.reportFailed("Failed to create document: ${e.getMessage()}")
         } else {
             throw e
         }
