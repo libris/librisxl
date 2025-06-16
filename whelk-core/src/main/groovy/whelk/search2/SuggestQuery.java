@@ -27,7 +27,7 @@ public class SuggestQuery extends Query {
         put("Library", List.of("itemHeldBy"));
         put("Subject", List.of("subject"));
         put("GenreForm", List.of("genreForm"));
-        put("Language", List.of("language", "translationOf.language")); // TODO: Add originalLanguage to vocab
+        put("Language", List.of("language", "originalLanguage"));
         put("BibliographicAgent", List.of("contributor", "subject"));
     }};
 
@@ -68,8 +68,12 @@ public class SuggestQuery extends Query {
                                 int placeholderLinkEnd = placeholderLinkStart + placeholderLink.queryForm().length();
                                 String q = template.substring(0, placeholderLinkStart) + formattedLink + template.substring(placeholderLinkEnd);
                                 int newCursorPos = placeholderLinkStart + formattedLink.length();
+                                if (newCursorPos == q.length()) {
+                                    q += " ";
+                                    newCursorPos += 1;
+                                }
                                 return Map.of("_predicate", predicateDefinition,
-                                        "_q", q, // TODO: Rather a complete find URL with cursor included?
+                                        "_q", QueryUtil.makeFindUrlNoOffset(q, queryParams),
                                         "_cursor", newCursorPos);
                             })
                             .toList();
@@ -117,7 +121,7 @@ public class SuggestQuery extends Query {
                                     .stream();
                             case PathValue pv -> pv.value() instanceof FreeText ft
                                     ? ft.getCurrentlyEditedToken(queryParams.cursor)
-                                    .map(token -> new Edited(ft, token))
+                                    .map(token -> new Edited(node, token))
                                     .stream()
                                     : Stream.empty();
                             default -> Stream.empty();

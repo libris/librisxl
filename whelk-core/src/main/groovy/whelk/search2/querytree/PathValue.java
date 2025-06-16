@@ -204,7 +204,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         m.put("up", makeUpLink(qt, this, queryParams));
 
         m.put("_key", path.queryForm());
-        m.put("_value", value.queryForm().replaceAll("\"", "")); // FIXME
+        m.put("_value", value.queryForm());
 
         return m;
     }
