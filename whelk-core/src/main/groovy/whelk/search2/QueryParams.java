@@ -132,7 +132,7 @@ public class QueryParams {
             if (!debug.isEmpty()) {
                 params.put(ApiParams.DEBUG, String.join(",", debug));
             }
-            if (skipStats) {
+            if (skipStats && !suggest) {
                 params.put(ApiParams.STATS, "false");
             }
 
