@@ -61,9 +61,7 @@ public class SuggestQuery extends Query {
                                 String formattedLink = new Link((String) item.get(ID_KEY)).queryForm();
                                 Link placeholderLink = new Link("http://PLACEHOLDER_LINK");
                                 PathValue placeholderNode = new PathValue(predicate, Operator.EQUALS, placeholderLink);
-                                // TODO: Förutsätter att man är på toppnivå. Borde fungera var som helst i trädet?
-                                // Fixa replace-metod
-                                String template = queryTree.replaceTopLevelNode(edited.node(), placeholderNode).toQueryString();
+                                String template = queryTree.replaceNode(edited.node(), placeholderNode).toQueryString();
                                 int placeholderLinkStart = template.indexOf(placeholderLink.queryForm());
                                 int placeholderLinkEnd = placeholderLinkStart + placeholderLink.queryForm().length();
                                 String q = template.substring(0, placeholderLinkStart) + formattedLink + template.substring(placeholderLinkEnd);

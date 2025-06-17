@@ -97,6 +97,12 @@ public class QueryTree {
         return copy;
     }
 
+    public QueryTree removeNode(Node node) {
+        QueryTree copy = copy();
+        copy._removeNode(node);
+        return copy;
+    }
+
     public QueryTree removeTopLevelNode(Node node) {
         return removeTopLevelNodes(List.of(node));
     }
@@ -104,6 +110,12 @@ public class QueryTree {
     public QueryTree removeTopLevelNodes(List<Node> nodes) {
         QueryTree copy = copy();
         nodes.forEach(copy::_removeTopLevelNode);
+        return copy;
+    }
+
+    public QueryTree replaceNode(Node node, Node replacement) {
+        QueryTree copy = copy();
+        copy._replaceNode(node, replacement);
         return copy;
     }
 
@@ -211,18 +223,25 @@ public class QueryTree {
         this.tree = _omitNode(tree, omit);
     }
 
-    private void _replaceTopLevelNode(Node replace, Node replacement) {
-        this.tree = _replaceTopLevelNode(tree, replace, replacement);
+    private void _addTopLevelNode(Node add) {
+        this.tree = _addTopLevelNode(tree, add);
         normalizeTree();
+    }
+
+    private void  _removeNode(Node remove) {
+        this.tree = _removeNode(tree, remove);
     }
 
     private void _removeTopLevelNode(Node remove) {
         this.tree = _removeTopLevelNode(tree, remove);
     }
 
-    private void _addTopLevelNode(Node add) {
-        this.tree = _addTopLevelNode(tree, add);
-        normalizeTree();
+    private void _replaceTopLevelNode(Node replace, Node replacement) {
+        this.tree = _replaceTopLevelNode(tree, replace, replacement);
+    }
+
+    private void  _replaceNode(Node replace, Node replacement) {
+        this.tree = _replaceNode(tree, replace, replacement);
     }
 
     private void _replaceTopLevelFreeText(String replacement) {
@@ -243,16 +262,14 @@ public class QueryTree {
         return tree instanceof And and ? and.contains(node) : node.equals(tree);
     }
 
-    private static Node _replaceTopLevelNode(Node tree, Node replace, Node replacement) {
-        return tree instanceof And and
-                ? and.replace(replace, replacement)
-                : (replace.equals(tree) ? replacement : tree);
-    }
-
-    private static Node _removeTopLevelNode(Node tree, Node remove) {
-        return tree instanceof And and
-                ? and.remove(remove)
-                : (remove.equals(tree) ? null : tree);
+    private static Node _omitNode(Node tree, Node omit) {
+        if (omit == tree) {
+            return null;
+        }
+        if (tree instanceof Group g) {
+            return g.mapFilterAndReinstantiate(c -> _omitNode(c, omit), Objects::nonNull);
+        }
+        return tree;
     }
 
     private static Node _addTopLevelNode(Node tree, Node add) {
@@ -263,14 +280,36 @@ public class QueryTree {
         };
     }
 
-    private static Node _omitNode(Node tree, Node omit) {
-        if (omit == tree) {
+    private static Node _removeNode(Node tree, Node remove) {
+        if (remove.equals(tree)) {
             return null;
         }
         if (tree instanceof Group g) {
-            return g.mapFilterAndReinstantiate(c -> _omitNode(c, omit), Objects::nonNull);
+            return g.mapFilterAndReinstantiate(c -> _removeNode(c, remove), Objects::nonNull);
         }
         return tree;
+    }
+
+    private static Node _removeTopLevelNode(Node tree, Node remove) {
+        return tree instanceof And and
+                ? and.remove(remove)
+                : (remove.equals(tree) ? null : tree);
+    }
+
+    private static Node _replaceNode(Node tree, Node replace, Node replacement) {
+        if (replace.equals(tree)) {
+            return replacement;
+        }
+        if (tree instanceof Group g) {
+            return g.mapAndReinstantiate(c -> _replaceNode(c, replace, replacement));
+        }
+        return tree;
+    }
+
+    private static Node _replaceTopLevelNode(Node tree, Node replace, Node replacement) {
+        return tree instanceof And and
+                ? and.replace(replace, replacement)
+                : (replace.equals(tree) ? replacement : tree);
     }
 
     private Node _replaceTopLevelFreeText(Node tree, String replacement) {
