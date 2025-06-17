@@ -87,7 +87,7 @@ public class QueryUtil {
     }
 
     public static Map<String, String> makeUpLink(QueryTree queryTree, Node n, QueryParams queryParams) {
-        QueryTree reducedTree = queryTree.omitNode(n);
+        QueryTree reducedTree = queryTree.remove(n);
         String upUrl = makeFindUrlNoOffset(reducedTree, queryParams);
         return Map.of(JsonLd.ID_KEY, upUrl);
     }

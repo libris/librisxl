@@ -203,43 +203,70 @@ class QueryTreeSpec extends Specification {
         qt.tree == new And([ft1, ft2, ft3])
     }
 
-    def "add node to top level of tree"() {
+    def "add node"() {
         given:
-        Node add = QueryTreeBuilder.buildTree(_add, disambiguate)
-        QueryTree tree = new QueryTree(_tree, disambiguate)
+        Node nodeToAdd = QueryTreeBuilder.buildTree(add, disambiguate)
+        QueryTree qt = new QueryTree(q, disambiguate)
 
         expect:
-        tree.addTopLevelNode(add).toString() == result
+        qt.add(nodeToAdd).toQueryString() == result
 
         where:
-        _tree            | _add    | result
-        null             | 'p1:v1' | 'p1:v1'
-        'p1:v1'          | 'p2:v2' | 'p1:v1 p2:v2'
-        'p1:v1'          | 'p1:v1' | 'p1:v1'
-        'p1:v1 OR p2:v2' | 'p2:v2' | '(p1:v1 OR p2:v2) p2:v2'
-        'p1:v1 p2:v2'    | 'p1:v1' | 'p1:v1 p2:v2'
-        'p1:v1 p2:v2'    | 'p3:v3' | 'p1:v1 p2:v2 p3:v3'
+        q                | add                                    | result
+        null             | 'p1:v1'                                | 'p1:v1'
+        'p1:v1'          | 'p2:v2'                                | 'p1:v1 p2:v2'
+        'p1:v1'          | 'p1:v1'                                | 'p1:v1'
+        'p1:v1 OR p2:v2' | 'p2:v2'                                | '(p1:v1 OR p2:v2) p2:v2'
+        'p1:v1 p2:v2'    | 'p1:v1'                                | 'p1:v1 p2:v2'
+        'p1:v1 p2:v2'    | 'p3:v3'                                | 'p1:v1 p2:v2 p3:v3'
+        'p1:v1 p2:v2'    | 'p1:v1 p3:v3'                          | 'p1:v1 p2:v2 p3:v3'
+        'p1:v1 p2:v2'    | 'p1:v1 p2:v2'                          | 'p1:v1 p2:v2'
+        'p1:v1 p2:v2'    | '((p1:v1 p2:v2) OR p3:v3) p2:v2 p3:v3' | 'p1:v1 p2:v2 ((p1:v1 p2:v2) OR p3:v3) p3:v3'
     }
 
-    def "omit node from tree"() {
+    def "remove node"() {
         given:
-        PathValue pv1 = (PathValue) QueryTreeBuilder.buildTree('p1:v1', disambiguate)
-        PathValue pv2 = (PathValue) QueryTreeBuilder.buildTree('p2:v2', disambiguate)
-        PathValue pv3 = (PathValue) QueryTreeBuilder.buildTree('p3:v3', disambiguate)
-        Or or = new Or([pv1, pv2])
-        // We don't want a new instance of Or in the tree, hence the flattenChildren set to false
-        And and = new And([or, pv3], false)
-        QueryTree qt = new QueryTree(and)
+        QueryTree queryTree = new QueryTree(q, disambiguate)
+        List<Node> nodesToMatch = remove.collect { QueryTreeBuilder.buildTree(it, disambiguate) }
+        List<Node> nodesToRemove = queryTree.allDescendants().filter(nodesToMatch::contains).toList();
 
         expect:
-        qt.omitNode(or).tree == pv3
-        qt.omitNode(pv3).tree == or
-        qt.omitNode(pv1).tree == new And([pv2, pv3])
-        qt.omitNode(pv2).tree == new And([pv1, pv3])
-        qt.omitNode(and).tree == null
-        // A node's content is irrelevant, the given input must refer to a specific instance in the tree
-        qt.omitNode(QueryTreeBuilder.buildTree('p3:v3', disambiguate)).tree == qt.tree
-        qt.omitNode(QueryTreeBuilder.buildTree('p1:v1 OR p2:v2', disambiguate)).tree == qt.tree
+        queryTree.remove(nodesToRemove).toQueryString() == result
+
+        where:
+        q                              | remove                               | result
+        'p1:v1 p2:v2'                  | ['p1:v1']                            | 'p2:v2'
+        'p1:v1 p2:v2'                  | ['p3:v3']                            | 'p1:v1 p2:v2'
+        'p1:v1 p2:v2 p3:v3'            | ['p3:v3']                            | 'p1:v1 p2:v2'
+        'p1:v1 p2:v2 p3:v3'            | ['p1:v1 p2:v2 p3:v3']                | '*'
+        'p1:v1 p2:v2 p3:v3'            | ['p1:v1 p2:v2']                      | 'p1:v1 p2:v2 p3:v3'
+        'p1:v1 p2:v2 p3:v3'            | ['p1:v1', 'p2:v2']                   | 'p3:v3'
+        'p1:v1 p2:v2 p3:v3'            | ['p1:v1 p2:v2 p3:v3 p4:v4']          | 'p1:v1 p2:v2 p3:v3'
+        'p1:v1 p2:v2 p3:v3'            | ['p1:v1', 'p2:v2', 'p3:v3', 'p4:v4'] | '*'
+        'p1:v1 p2:v2 p3:v3 p4:v4'      | ['p1:v1', 'p2:v2', 'p3:v3']          | 'p4:v4'
+        'p1:v1 (p2:v2 OR p3:v3) p4:v4' | ['p1:v1', 'p4:v4']                   | 'p2:v2 OR p3:v3'
+        'p1:v1 (p2:v2 OR p3:v3) p4:v4' | ['p1:v1', 'p2:v2 OR p3:v3']          | 'p4:v4'
+        'p1:v1 (p2:v2 OR p3:v3) p4:v4' | ['p3:v3']                            | 'p1:v1 p2:v2 p4:v4'
+    }
+
+    def "replace node"() {
+        given:
+        QueryTree queryTree = new QueryTree(q, disambiguate)
+        Node nodeToMatch = QueryTreeBuilder.buildTree(replace, disambiguate)
+        Node nodeToReplace = queryTree.allDescendants().find(nodeToMatch::equals)
+        Node replacementNode = QueryTreeBuilder.buildTree(replacement, disambiguate)
+
+        expect:
+        queryTree.replace(nodeToReplace, replacementNode).toQueryString() == result
+
+        where:
+        q                              | replace             | replacement      | result
+        'p1:v1 p2:v2'                  | 'p2:v2'             | 'p3:v3'          | 'p1:v1 p3:v3'
+        'p1:v1 p2:v2'                  | 'p3:v3'             | 'p4:v4'          | 'p1:v1 p2:v2'
+        'p1:v1 p2:v2 p3:v3'            | 'p1:v1 p2:v2 p3:v3' | 'x y z'          | 'x y z'
+        'p1:v1 p2:v2 p3:v3'            | 'p1:v1 p2:v2'       | 'x y z'          | 'p1:v1 p2:v2 p3:v3'
+        'p1:v1 p2:v2 p3:v3'            | 'p2:v2'             | 'p4:v4 OR p5:v5' | 'p1:v1 (p4:v4 OR p5:v5) p3:v3'
+        'p1:v1 (p4:v4 OR p5:v5) p3:v3' | 'p5:v5'             | 'p6:v6 p7:v7'    | 'p1:v1 (p4:v4 OR (p6:v6 p7:v7)) p3:v3'
     }
 
     def "get top level free text as string"() {

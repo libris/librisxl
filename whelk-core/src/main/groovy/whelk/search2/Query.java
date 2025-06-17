@@ -486,7 +486,7 @@ public class Query {
             Connective connective = selectedFilters.getConnective(propertyKey);
 
             QueryTree qt = selectedFilters.isRangeFilter(propertyKey)
-                    ? queryTree.omitNodes(selectedFilters.getRangeSelected(propertyKey))
+                    ? queryTree.remove(selectedFilters.getRangeSelected(propertyKey))
                     : queryTree;
 
             buckets.forEach((pv, count) -> {
@@ -519,7 +519,7 @@ public class Query {
                 switch (connective) {
                     case AND -> {
                         if (!isSelected) {
-                            addObservation.accept(qt.addTopLevelNode(pv));
+                            addObservation.accept(qt.add(pv));
                         }
                     }
                     case OR -> {
@@ -528,11 +528,11 @@ public class Query {
                             selected.stream()
                                     .filter(pv::equals)
                                     .findFirst()
-                                    .map(qt::omitNode)
+                                    .map(qt::remove)
                                     .ifPresent(addObservation);
                         } else {
                             var newSelected = new ArrayList<>(selected) {{ add(pv); }};
-                            var alteredTree = qt.omitNodes(selected).addTopLevelNode(new Or(newSelected));
+                            var alteredTree = qt.remove(selected).add(new Or(newSelected));
                             addObservation.accept(alteredTree);
                         }
                     }
@@ -544,8 +544,8 @@ public class Query {
 
         private Map<String, Object> getRangeTemplate(String propertyKey) {
             FreeText placeholderNode = new FreeText(String.format("{?%s}", propertyKey));
-            String templateQueryString = queryTree.omitNodes(selectedFilters.getSelected(propertyKey))
-                    .addTopLevelNode(placeholderNode)
+            String templateQueryString = queryTree.remove(selectedFilters.getSelected(propertyKey))
+                    .add(placeholderNode)
                     .toQueryString();
             String templateUrl = makeFindUrlNoOffset(templateQueryString, queryParams);
 
@@ -586,11 +586,11 @@ public class Query {
 
                 QueryTree alteredTree;
                 if (isSelected) {
-                    alteredTree = queryTree.removeTopLevelNodes(selectedFilters.getActivatingNodes(f));
+                    alteredTree = queryTree.remove(selectedFilters.getActivatingNodes(f));
                 } else {
                     alteredTree = (selectedFilters.isExplicitlyDeactivated(f)
-                            ? queryTree.removeTopLevelNodes(selectedFilters.getDeactivatingNodes(f))
-                            : queryTree).addTopLevelNode(f.getActive());
+                            ? queryTree.remove(selectedFilters.getDeactivatingNodes(f))
+                            : queryTree).add(f.getActive());
                 }
 
                 Map<String, Object> res = new LinkedHashMap<>();

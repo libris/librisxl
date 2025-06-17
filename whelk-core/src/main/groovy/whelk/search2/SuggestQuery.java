@@ -61,7 +61,7 @@ public class SuggestQuery extends Query {
                                 String formattedLink = new Link((String) item.get(ID_KEY)).queryForm();
                                 Link placeholderLink = new Link("http://PLACEHOLDER_LINK");
                                 PathValue placeholderNode = new PathValue(predicate, Operator.EQUALS, placeholderLink);
-                                String template = queryTree.replaceNode(edited.node(), placeholderNode).toQueryString();
+                                String template = queryTree.replace(edited.node(), placeholderNode).toQueryString();
                                 int placeholderLinkStart = template.indexOf(placeholderLink.queryForm());
                                 int placeholderLinkEnd = placeholderLinkStart + placeholderLink.queryForm().length();
                                 String q = template.substring(0, placeholderLinkStart) + formattedLink + template.substring(placeholderLinkEnd);
@@ -146,7 +146,7 @@ public class SuggestQuery extends Query {
         } else if (edited.node() instanceof FreeText && queryTree.isSimpleFreeText()) {
             String rawTypeFilter = "\"rdf:type\":" + parenthesize(String.join(" OR ", defaultBaseTypes));
             Node typeFilter = QueryTreeBuilder.buildTree(rawTypeFilter, disambiguate);
-            return queryTree.addTopLevelNode(typeFilter);
+            return queryTree.add(typeFilter);
         }
         return queryTree;
     }

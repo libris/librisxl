@@ -48,9 +48,8 @@ public class QueryTree {
                                     EsMappings esMappings,
                                     EsBoost.Config boostConfig,
                                     Collection<String> rulingTypes,
-                                    List<Node> exclude)
-    {
-        return getFiltered().omitNodes(exclude)
+                                    List<Node> exclude) {
+        return getFiltered().remove(exclude)
                 .expand(jsonLd, rulingTypes)
                 .toEs(esMappings, boostConfig);
     }
@@ -80,66 +79,33 @@ public class QueryTree {
         _applyPredicateObjectFilter(predicates, object);
     }
 
-    public QueryTree omitNode(Node node) {
-        return omitNodes(List.of(node));
+    public QueryTree remove(Node node) {
+        return remove(List.of(node));
     }
 
-    public QueryTree omitNodes(List<Node> nodes) {
+    public QueryTree remove(List<Node> nodes) {
         QueryTree copy = copy();
-        nodes.forEach(copy::_omitNode);
+        copy._remove(nodes);
         return copy;
     }
 
-    public QueryTree addTopLevelNode(Node node) {
+    public QueryTree replace(Node node, Node replacement) {
         QueryTree copy = copy();
-        copy._addTopLevelNode(node);
+        copy._replace(node, replacement);
+        return copy;
+    }
+
+    public QueryTree add(Node node) {
+        QueryTree copy = copy();
+        copy._add(node);
         copy.normalizeTree();
         return copy;
     }
 
-    public QueryTree removeNode(Node node) {
-        QueryTree copy = copy();
-        copy._removeNode(node);
-        return copy;
-    }
-
-    public QueryTree removeTopLevelNode(Node node) {
-        return removeTopLevelNodes(List.of(node));
-    }
-
-    public QueryTree removeTopLevelNodes(List<Node> nodes) {
-        QueryTree copy = copy();
-        nodes.forEach(copy::_removeTopLevelNode);
-        return copy;
-    }
-
-    public QueryTree replaceNode(Node node, Node replacement) {
-        QueryTree copy = copy();
-        copy._replaceNode(node, replacement);
-        return copy;
-    }
-
-    public QueryTree replaceTopLevelNode(Node node, Node replacement) {
-        QueryTree copy = copy();
-        copy._replaceTopLevelNode(node, replacement);
-        copy.normalizeTree();
-        return copy;
-    }
-
-    public boolean topLevelContains(Node node) {
-        return topLevelContains(tree, node);
-    }
-
-    public QueryTree replaceTopLevelFreeText(String replacement) {
-        QueryTree copy = copy();
-        copy._replaceTopLevelFreeText(replacement);
-        return copy;
-    }
-
-    public QueryTree removeTopLevelNodesByCondition(Predicate<Node> condition) {
-        QueryTree copy = copy();
-        copy._removeTopLevelNodesByCondition(condition);
-        return copy;
+    public QueryTree replaceSimpleFreeText(String replacement) {
+        return findSimpleFreeText()
+                .map(ft -> replace(ft, new FreeText(replacement)))
+                .orElse(this);
     }
 
     public boolean isEmpty() {
@@ -169,20 +135,24 @@ public class QueryTree {
     }
 
     public Optional<FreeText> findSimpleFreeText() {
-        return findTopLevelNodeByCondition(node -> node instanceof FreeText ft
+        return findTopNodeByCondition(node -> node instanceof FreeText ft
                 && !ft.negate()
                 && ft.connective() == Query.Connective.AND).map(FreeText.class::cast);
     }
 
-    public Optional<Node> findTopLevelNodeByCondition(Predicate<Node> condition) {
-        return getTopLevelNodes().stream().filter(condition).findFirst();
+    public List<Node> findTopNodesByCondition(Predicate<Node> condition) {
+        return getTopNodes().stream().filter(condition).toList();
     }
 
-    public <T> List<T> getTopLevelNodesOfType(Class<T> nodeType) {
-        return getTopLevelNodes().stream().filter(nodeType::isInstance).map(nodeType::cast).toList();
+    public Optional<Node> findTopNodeByCondition(Predicate<Node> condition) {
+        return getTopNodes().stream().filter(condition).findFirst();
     }
 
-    public List<Node> getTopLevelNodes() {
+    public <T> List<T> getTopNodesOfType(Class<T> nodeType) {
+        return getTopNodes().stream().filter(nodeType::isInstance).map(nodeType::cast).toList();
+    }
+
+    public List<Node> getTopNodes() {
         return switch (tree) {
             case And and -> and.children();
             case null -> List.of();
@@ -219,106 +189,58 @@ public class QueryTree {
         removeFreeTextWildcard();
     }
 
-    private void _omitNode(Node omit) {
-        this.tree = _omitNode(tree, omit);
+    private void _remove(List<Node> remove) {
+        this.tree = _remove(tree, remove);
     }
 
-    private void _addTopLevelNode(Node add) {
-        this.tree = _addTopLevelNode(tree, add);
+    private void _replace(Node replace, Node replacement) {
+        this.tree = _replace(tree, replace, replacement);
+    }
+
+    private void _add(Node add) {
+        this.tree = _add(tree, add);
         normalizeTree();
     }
 
-    private void  _removeNode(Node remove) {
-        this.tree = _removeNode(tree, remove);
-    }
-
-    private void _removeTopLevelNode(Node remove) {
-        this.tree = _removeTopLevelNode(tree, remove);
-    }
-
-    private void _replaceTopLevelNode(Node replace, Node replacement) {
-        this.tree = _replaceTopLevelNode(tree, replace, replacement);
-    }
-
-    private void  _replaceNode(Node replace, Node replacement) {
-        this.tree = _replaceNode(tree, replace, replacement);
-    }
-
-    private void _replaceTopLevelFreeText(String replacement) {
-        this.tree = _replaceTopLevelFreeText(tree, replacement);
-    }
-
-    private void _removeTopLevelNodesByCondition(Predicate<Node> p) {
-        this.tree = _removeTopLevelNodesByCondition(tree, p);
+    private void _removeTopNodesByCondition(Predicate<Node> p) {
+        this.tree = _removeTopNodesByCondition(tree, p);
     }
 
     private void removeFreeTextWildcard() {
         if (tree != null && !isWild(tree)) {
-            _removeTopLevelNodesByCondition(QueryTree::isWild);
+            _removeTopNodesByCondition(QueryTree::isWild);
         }
     }
 
-    private static boolean topLevelContains(Node tree, Node node) {
-        return tree instanceof And and ? and.contains(node) : node.equals(tree);
-    }
-
-    private static Node _omitNode(Node tree, Node omit) {
-        if (omit == tree) {
+    private static Node _remove(Node tree, List<Node> remove) {
+        if (remove.stream().anyMatch(n -> n == tree)) {
             return null;
         }
         if (tree instanceof Group g) {
-            return g.mapFilterAndReinstantiate(c -> _omitNode(c, omit), Objects::nonNull);
+            return g.mapFilterAndReinstantiate(c -> _remove(c, remove), Objects::nonNull);
         }
         return tree;
     }
 
-    private static Node _addTopLevelNode(Node tree, Node add) {
+    private static Node _replace(Node tree, Node replace, Node replacement) {
+        if (tree == replace) {
+            return replacement;
+        }
+        if (tree instanceof Group g) {
+            return g.mapAndReinstantiate(c -> _replace(c, replace, replacement));
+        }
+        return tree;
+    }
+
+    private static Node _add(Node tree, Node add) {
         return switch (tree) {
             case null -> add;
-            case And and -> and.add(add);
+            case And and -> new And(Stream.concat(and.children().stream(), Stream.of(add)).distinct().toList());
             default -> tree.equals(add) ? tree : new And(List.of(tree, add));
         };
     }
 
-    private static Node _removeNode(Node tree, Node remove) {
-        if (remove.equals(tree)) {
-            return null;
-        }
-        if (tree instanceof Group g) {
-            return g.mapFilterAndReinstantiate(c -> _removeNode(c, remove), Objects::nonNull);
-        }
-        return tree;
-    }
-
-    private static Node _removeTopLevelNode(Node tree, Node remove) {
-        return tree instanceof And and
-                ? and.remove(remove)
-                : (remove.equals(tree) ? null : tree);
-    }
-
-    private static Node _replaceNode(Node tree, Node replace, Node replacement) {
-        if (replace.equals(tree)) {
-            return replacement;
-        }
-        if (tree instanceof Group g) {
-            return g.mapAndReinstantiate(c -> _replaceNode(c, replace, replacement));
-        }
-        return tree;
-    }
-
-    private static Node _replaceTopLevelNode(Node tree, Node replace, Node replacement) {
-        return tree instanceof And and
-                ? and.replace(replace, replacement)
-                : (replace.equals(tree) ? replacement : tree);
-    }
-
-    private Node _replaceTopLevelFreeText(Node tree, String replacement) {
-        return findSimpleFreeText()
-                .map(ft -> _replaceTopLevelNode(tree, ft, new FreeText(replacement)))
-                .orElse(tree);
-    }
-
-    private static Node _removeTopLevelNodesByCondition(Node tree, Predicate<Node> p) {
+    private static Node _removeTopNodesByCondition(Node tree, Predicate<Node> p) {
         // Remove all nodes meeting the condition p
         return switch (tree) {
             case null -> null;
@@ -372,14 +294,14 @@ public class QueryTree {
                 .filter(isApplicable)
                 .map(AppParams.DefaultSiteFilter::filter)
                 .map(Filter::getParsed)
-                .forEach(filtered::_addTopLevelNode);
+                .forEach(filtered::_add);
 
         this.filtered = filtered;
     }
 
     private void _applyObjectFilter(String object) {
         QueryTree filtered = getFiltered();
-        filtered._addTopLevelNode(new PathValue("_links", Operator.EQUALS, new FreeText(object)));
+        filtered._add(new PathValue("_links", Operator.EQUALS, new FreeText(object)));
         this.filtered = filtered;
     }
 
@@ -387,7 +309,7 @@ public class QueryTree {
         QueryTree filtered = getFiltered();
         predicates.stream()
                 .map(p -> new PathValue(p, Operator.EQUALS, new Link(object)))
-                .forEach(filtered::_addTopLevelNode);
+                .forEach(filtered::_add);
         this.filtered = filtered;
     }
 }
