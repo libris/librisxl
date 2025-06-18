@@ -15,19 +15,22 @@ class TestData {
 
     static def getDisambiguate() {
         def propertyAliasMappings = [
-                'p1'     : 'p1',
-                'p1label': 'p1',
-                'p2'     : 'p2',
-                'p3'     : 'p3',
-                'p4'     : 'p4',
-                'p5'     : 'p5',
-                'p6'     : 'p6',
-                'p7'     : 'p7',
-                'p8'     : 'p8',
-                'p9'     : 'p9',
-                'p10'    : 'p10',
-                'p11'    : 'p11',
-                'type'   : 'rdf:type'
+                'p1'      : 'p1',
+                'p1label' : 'p1',
+                'p2'      : 'p2',
+                'p3'      : 'p3',
+                'p4'      : 'p4',
+                'p5'      : 'p5',
+                'p6'      : 'p6',
+                'p7'      : 'p7',
+                'p8'      : 'p8',
+                'p9'      : 'p9',
+                'p10'     : 'p10',
+                'p11'     : 'p11',
+                'p12'     : 'p12',
+                'p13'     : 'p13',
+                'type'    : 'rdf:type',
+                'rdf:type': 'rdf:type'
         ]
         def ambiguousPropertyAliases = [
                 'p'     : ['p', 'p1'] as Set,
@@ -36,14 +39,16 @@ class TestData {
         ]
         def classAliasMappings = [
                 't1': 'T1',
-                't2': 'T2'
+                't2': 'T2',
+                't3': 'T3'
         ]
         def ambiguousClassAliases = [
                 't' : ['T', 'T1'] as Set,
                 'tt': ['T', 'T1'] as Set
         ]
         def enumAliasMappings = [
-                'e1': 'E1'
+                'e1': 'E1',
+                'e2': 'E2'
         ]
         def vocabMappings = new VocabMappings([
                 "propertyAliasMappings"   : propertyAliasMappings,
@@ -135,6 +140,16 @@ class TestData {
                         ]
                 ],
                 [
+                        '@id'  : 'p12',
+                        '@type': 'DatatypeProperty',
+                        'range': ['@id': 'xsd:dateTime']
+                ],
+                [
+                        '@id'  : 'p13',
+                        '@type': 'ObjectProperty',
+                        'range': ['@id': 'T1']
+                ],
+                [
                         '@id'      : 'instanceOf',
                         '@type'    : 'ObjectProperty',
                         'category' : ['@id': 'integral'],
@@ -150,7 +165,6 @@ class TestData {
                         'range'    : ['@id': 'T1'],
                         'inverseOf': ['@id': 'instanceOf']
                 ],
-                ['@id': 'hasInstance', '@type': 'ObjectProperty', 'domain': ['@id': 'T2'], 'range': ['@id': 'T1']],
                 ['@id': 'textQuery', '@type': 'DatatypeProperty'],
                 ['@id': 'rdf:type', '@type': 'ObjectProperty'],
                 ['@id': 'meta', '@type': 'ObjectProperty'],
@@ -159,6 +173,7 @@ class TestData {
                 ['@id': 'T3', '@type': 'Class'],
                 ['@id': 'T4', '@type': 'Class', 'subClassOf': [['@id': 'T3']]],
                 ['@id': 'E1', '@type': 'Class'],
+                ['@id': 'E2', '@type': 'Class'],
                 ['@id': 'p', '@type': 'DatatypeProperty']
         ]]
         def ctx = [
@@ -180,8 +195,8 @@ class TestData {
         def appConfig = [
                 '_statsRepr': [
                         'rdf:type': [:],
-                        'p2': [:],
-                        'p6': [:]
+                        'p2'      : [:],
+                        'p6'      : [:]
                 ]
         ]
         return new AppParams(appConfig, new QueryParams([:]))

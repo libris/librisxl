@@ -1,7 +1,8 @@
 package whelk.search2.querytree;
 
 public sealed interface Subpath permits Key, Property {
-    Key key();
+    // As represented in query string
+    String queryForm();
     boolean isType();
     boolean isValid();
     @Override

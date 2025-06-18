@@ -15,6 +15,7 @@ public class EsMappings {
     private final Set<String> keywordFields;
     private final Set<String> dateFields;
     private final Set<String> nestedFields;
+    private final Set<String> longFields;
     private final Set<String> nestedNotInParentFields;
     private final Set<String> numericExtractorFields;
 
@@ -24,6 +25,7 @@ public class EsMappings {
         this.keywordFields = getKeywordFields(mappings);
         this.dateFields = getFieldsOfType("date", mappings);
         this.nestedFields = getFieldsOfType("nested", mappings);
+        this.longFields = getFieldsOfType("long", mappings);
         this.nestedNotInParentFields = new HashSet<>(nestedFields);
         this.nestedNotInParentFields.removeAll(getFieldsWithSetting("include_in_parent", true, mappings));
         this.numericExtractorFields = getFieldsWithAnalyzer("numeric_extractor", mappings);
@@ -43,6 +45,10 @@ public class EsMappings {
 
     public boolean isNestedField(String fieldPath) {
         return nestedFields.contains(fieldPath);
+    }
+
+    public boolean isLongField(String fieldPath) {
+        return longFields.contains(fieldPath);
     }
 
     public boolean isNestedNotInParentField(String fieldPath) {

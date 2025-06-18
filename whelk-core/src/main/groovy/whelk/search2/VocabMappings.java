@@ -63,13 +63,13 @@ public class VocabMappings {
         var vocab = jsonLd.vocabIndex;
 
         vocab.forEach((termKey, termDefinition) -> {
-            if (isAbstract(termDefinition)) {
-                return;
-            }
             if (isSystemVocabTerm(termDefinition, jsonLd)) {
                 if (isClass(termDefinition, jsonLd)) {
                     addAllMappings(termKey, classAliasMappings, ambiguousClassAliases, whelk);
                 } else if (isProperty(termDefinition)) {
+                    if (isAbstract(termDefinition)) {
+                        return;
+                    }
                     addAllMappings(termKey, propertyAliasMappings, ambiguousPropertyAliases, whelk);
                 }
             }

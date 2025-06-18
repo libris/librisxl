@@ -8,13 +8,13 @@ import static whelk.JsonLd.asList;
 
 public final class VocabTerm extends Resource {
     private final String key;
-    private final String raw;
+    private final Token token;
     private final Map<String, Object> definition;
 
-    public VocabTerm(String key, Map<String, Object> definition, String raw) {
+    public VocabTerm(String key, Map<String, Object> definition, Token token) {
         this.key = key;
         this.definition = definition;
-        this.raw = raw;
+        this.token = token;
     }
 
     public VocabTerm(String key, Map<String, Object> definition) {
@@ -26,13 +26,13 @@ public final class VocabTerm extends Resource {
     }
 
     @Override
-    public Object description() {
+    public Map<String, Object> description() {
         return definition;
     }
 
     @Override
-    public String raw() {
-        return raw != null ? raw : key;
+    public String queryForm() {
+        return token != null ? token.toString() : key;
     }
 
     @Override

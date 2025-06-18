@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 import static whelk.search2.Query.SearchMode.STANDARD_SEARCH;
 import static whelk.search2.Query.SearchMode.OBJECT_SEARCH;
 import static whelk.search2.Query.SearchMode.PREDICATE_OBJECT_SEARCH;
+import static whelk.search2.Query.SearchMode.SUGGEST;
 import static whelk.search2.QueryParams.ApiParams.ALIAS;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 
@@ -64,7 +65,7 @@ public class AppParams {
     public record DefaultSiteFilter(Filter filter, Set<Query.SearchMode> appliesTo) implements SiteFilter {
         public DefaultSiteFilter(String rawFilter, String application, Map<String, Filter.AliasedFilter> filterByAlias) {
             this(getFilter(rawFilter, filterByAlias), switch (application) {
-                case "standardSearch" -> Set.of(STANDARD_SEARCH);
+                case "standardSearch" -> Set.of(STANDARD_SEARCH, SUGGEST);
                 case "objectSearch" -> Set.of(OBJECT_SEARCH, PREDICATE_OBJECT_SEARCH);
                 case null, default -> Query.SearchMode.asSet();
             });
