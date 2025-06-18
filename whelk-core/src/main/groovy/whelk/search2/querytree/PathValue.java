@@ -41,6 +41,16 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
     @Override
     public Map<String, Object> toEs(EsMappings esMappings, EsBoost.Config boostConfig) {
+        if (value instanceof FreeText ft) {
+            // FIXME: This is only needed until frontend no longer rely on quoted values not being treated as such.
+            List<Token> unquotedTokens = ft.tokens().stream()
+                    .map(t -> t.isQuoted() ? new Token.Raw(t.value(), t.offset()) : t)
+                    .toList();
+            FreeText newFt = new FreeText(ft.textQuery(), ft.negate(), unquotedTokens, ft.connective());
+            PathValue newPv = new PathValue(path, operator, newFt);
+            return newPv.getEsNestedQuery(esMappings, boostConfig)
+                    .orElse(newPv.getCoreEsQuery(esMappings, boostConfig));
+        }
         return getEsNestedQuery(esMappings, boostConfig)
                 .orElse(getCoreEsQuery(esMappings, boostConfig));
     }
