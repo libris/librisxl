@@ -4,6 +4,10 @@ import spock.lang.Specification
 import whelk.exception.InvalidQueryException
 import whelk.search2.Operator
 
+import static whelk.search2.parse.Lex.TokenName.OPERATOR
+import static whelk.search2.parse.Lex.TokenName.QUOTED_STRING
+import static whelk.search2.parse.Lex.TokenName.STRING
+
 class AstSpec extends Specification {
 
     def "normal tree"() {
@@ -16,9 +20,10 @@ class AstSpec extends Specification {
         expect:
         ast == new Ast.And(
                 [
-                        new Ast.Leaf("AAA"),
-                        new Ast.Leaf("BBB"),
-                        new Ast.Or([new Ast.Leaf("CCC"), new Ast.Leaf("DDD")])
+                        new Ast.Leaf(new Lex.Symbol(STRING, "AAA", 0)),
+                        new Ast.Leaf(new Lex.Symbol(STRING, "BBB", 4)),
+                        new Ast.Or([new Ast.Leaf(new Lex.Symbol(STRING, "CCC", 13)),
+                                    new Ast.Leaf(new Lex.Symbol(STRING, "DDD", 20))])
                 ] as List<Ast.Node>
         )
     }
@@ -33,9 +38,13 @@ class AstSpec extends Specification {
         expect:
         ast == new Ast.And(
                 [
-                        new Ast.Code("subject", Operator.EQUALS, new Ast.Leaf("lcsh:Physics")),
-                        new Ast.Not(new Ast.Code("published", Operator.LESS_THAN, new Ast.Leaf("2023"))),
-                        new Ast.Leaf("svarta hål")
+                        new Ast.Code(new Lex.Symbol(STRING, "subject", 0),
+                                Operator.EQUALS,
+                                new Ast.Leaf(new Lex.Symbol(QUOTED_STRING, "lcsh:Physics", 9))),
+                        new Ast.Not(new Ast.Code(new Lex.Symbol(STRING, "published", 32),
+                                Operator.LESS_THAN,
+                                new Ast.Leaf(new Lex.Symbol(STRING, "2023", 44)))),
+                        new Ast.Leaf(new Lex.Symbol(QUOTED_STRING, "svarta hål", 53))
                 ] as List<Ast.Node>
         )
     }
@@ -50,8 +59,13 @@ class AstSpec extends Specification {
         expect:
         ast == new Ast.And(
                 [
-                        new Ast.Code("subject", Operator.EQUALS, new Ast.Or([new Ast.Leaf("lcsh:Physics"), new Ast.Leaf("Fysik")])),
-                        new Ast.Not(new Ast.Code("published", Operator.LESS_THAN, new Ast.Leaf("2023")))
+                        new Ast.Code(new Lex.Symbol(STRING, "subject", 0),
+                                Operator.EQUALS,
+                                new Ast.Or([new Ast.Leaf(new Lex.Symbol(QUOTED_STRING, "lcsh:Physics", 10)),
+                                            new Ast.Leaf(new Lex.Symbol(STRING, "Fysik", 28))])),
+                        new Ast.Not(new Ast.Code(new Lex.Symbol(STRING, "published", 43),
+                                Operator.LESS_THAN,
+                                new Ast.Leaf(new Lex.Symbol(STRING, "2023", 55))))
                 ] as List<Ast.Node>
         )
     }
@@ -66,8 +80,10 @@ class AstSpec extends Specification {
         expect:
         ast == new Ast.And(
                 [
-                        new Ast.Code("bf:subject", Operator.EQUALS, new Ast.Leaf("lcsh:Physics")),
-                        new Ast.Leaf("bf:subject")
+                        new Ast.Code(new Lex.Symbol(QUOTED_STRING, "bf:subject", 0),
+                                Operator.EQUALS,
+                                new Ast.Leaf(new Lex.Symbol(QUOTED_STRING, "lcsh:Physics", 13))),
+                        new Ast.Leaf(new Lex.Symbol(QUOTED_STRING, "bf:subject", 32))
                 ] as List<Ast.Node>
         )
     }
@@ -80,7 +96,9 @@ class AstSpec extends Specification {
         Ast.Node ast = Ast.buildFrom(parseTree)
 
         expect:
-        ast == new Ast.Code("published", Operator.GREATER_THAN_OR_EQUALS, new Ast.Leaf("2000"))
+        ast == new Ast.Code(new Lex.Symbol(STRING, "published", 0),
+                Operator.GREATER_THAN_OR_EQUALS,
+                new Ast.Leaf(new Lex.Symbol(STRING, "2000", 13)))
     }
 
     def "comparison2"() {
@@ -93,9 +111,13 @@ class AstSpec extends Specification {
         expect:
         ast == new Ast.And(
                 [
-                        new Ast.Leaf("Pippi"),
-                        new Ast.Code("author", Operator.EQUALS, new Ast.Leaf("Astrid Lindgren")),
-                        new Ast.Code("published", Operator.LESS_THAN_OR_EQUALS, new Ast.Leaf("1970"))
+                        new Ast.Leaf(new Lex.Symbol(STRING, "Pippi", 0)),
+                        new Ast.Code(new Lex.Symbol(STRING, "author", 6),
+                                Operator.EQUALS,
+                                new Ast.Leaf(new Lex.Symbol(QUOTED_STRING, "Astrid Lindgren", 13))),
+                        new Ast.Code(new Lex.Symbol(STRING, "published", 31),
+                                Operator.LESS_THAN_OR_EQUALS,
+                                new Ast.Leaf(new Lex.Symbol(STRING, "1970", 42)))
                 ] as List<Ast.Node>
         )
     }
@@ -110,143 +132,5 @@ class AstSpec extends Specification {
         Ast.buildFrom(parseTree)
         then:
         thrown InvalidQueryException
-    }
-
-    def "Flatten code groups"() {
-        given:
-        def input = "AAA:(BBB AND CCC)"
-        def lexedSymbols = Lex.lexQuery(input)
-        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
-        Ast.Node ast = Ast.buildFrom(parseTree)
-
-        expect:
-        Ast.flattenCodes(ast) == new Ast.And(
-                [
-                        new Ast.Code("AAA", Operator.EQUALS, new Ast.Leaf("BBB")),
-                        new Ast.Code("AAA", Operator.EQUALS, new Ast.Leaf("CCC"))
-                ]
-        )
-    }
-
-    def "Flatten code groups2"() {
-        given:
-        def input = "author:(Alice AND (Bob OR Cecilia))"
-        def lexedSymbols = Lex.lexQuery(input)
-        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
-        Ast.Node ast = Ast.buildFrom(parseTree)
-
-        expect:
-        Ast.flattenCodes(ast) == new Ast.And(
-                [
-                        new Ast.Code("author", Operator.EQUALS, new Ast.Leaf("Alice")),
-                        new Ast.Or([
-                                new Ast.Code("author", Operator.EQUALS, new Ast.Leaf("Bob")),
-                                new Ast.Code("author", Operator.EQUALS, new Ast.Leaf("Cecilia"))
-                        ])
-                ] as List<Ast.Node>
-        )
-    }
-
-    def "Flatten code groups3"() {
-        given:
-        def input = "author:(Alice AND (Bob OR Cecilia) AND NOT David)"
-        def lexedSymbols = Lex.lexQuery(input)
-        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
-        Ast.Node ast = Ast.buildFrom(parseTree)
-
-        expect:
-        Ast.flattenCodes(ast) == new Ast.And(
-                [
-                        new Ast.Code("author", Operator.EQUALS, new Ast.Leaf("Alice")),
-                        new Ast.Or([
-                                new Ast.Code("author", Operator.EQUALS, new Ast.Leaf("Bob")),
-                                new Ast.Code("author", Operator.EQUALS, new Ast.Leaf("Cecilia"))
-                        ]),
-                        new Ast.Not(new Ast.Code("author", Operator.EQUALS, new Ast.Leaf("David")))
-                ] as List<Ast.Node>
-        )
-    }
-
-    def "Flatten code groups4"() {
-        given:
-        def input = "\"everything\" OR author:(Alice AND (Bob OR Cecilia) AND NOT David)"
-        def lexedSymbols = Lex.lexQuery(input)
-        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
-        Ast.Node ast = Ast.buildFrom(parseTree)
-
-        expect:
-        Ast.flattenCodes(ast) == new Ast.Or(
-                [
-                        new Ast.Leaf("everything"),
-                        new Ast.And(
-                                [
-                                        new Ast.Code("author", Operator.EQUALS, new Ast.Leaf("Alice")),
-                                        new Ast.Or([
-                                                new Ast.Code("author", Operator.EQUALS, new Ast.Leaf("Bob")),
-                                                new Ast.Code("author", Operator.EQUALS, new Ast.Leaf("Cecilia"))
-                                        ]),
-                                        new Ast.Not(new Ast.Code("author", Operator.EQUALS, new Ast.Leaf("David")))
-                                ] as List<Ast.Node>)
-                ] as List<Ast.Node>
-        )
-    }
-
-    def "flatten negations"() {
-        given:
-        def input = "\"everything\" AND NOT (author:Alice AND published > 2022)"
-        def lexedSymbols = Lex.lexQuery(input)
-        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
-        Ast.Node ast = Ast.flattenCodes(Ast.buildFrom(parseTree))
-
-        expect:
-        Ast.flattenNegations(ast) == new Ast.And(
-                [
-                        new Ast.Leaf("everything"),
-                        new Ast.Or(
-                                [
-                                        new Ast.Code("author", Operator.NOT_EQUALS, new Ast.Leaf("Alice")),
-                                        new Ast.Code("published", Operator.LESS_THAN_OR_EQUALS, new Ast.Leaf("2022"))
-                                ]
-                        )
-                ] as List<Ast.Node>
-        )
-    }
-
-    def "flatten negations 2"() {
-        given:
-        def input = "\"everything\" AND !(author:Alice AND NOT published: 2022)"
-        def lexedSymbols = Lex.lexQuery(input)
-        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
-        Ast.Node ast = Ast.flattenCodes(Ast.buildFrom(parseTree))
-
-        expect:
-        Ast.flattenNegations(ast) == new Ast.And(
-                [
-                        new Ast.Leaf("everything"),
-                        new Ast.Or(
-                                [
-                                        new Ast.Code("author", Operator.NOT_EQUALS, new Ast.Leaf("Alice")),
-                                        new Ast.Code("published", Operator.EQUALS, new Ast.Leaf("2022"))
-                                ]
-                        )
-                ] as List<Ast.Node>
-        )
-    }
-
-    def "flatten negations 3"() {
-        given:
-        def input = "!(author:Alice AND \"everything\" AND NOT \"something\")"
-        def lexedSymbols = Lex.lexQuery(input)
-        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
-        Ast.Node ast = Ast.flattenCodes(Ast.buildFrom(parseTree))
-
-        expect:
-        Ast.flattenNegations(ast) == new Ast.Or(
-                [
-                        new Ast.Code("author", Operator.NOT_EQUALS, new Ast.Leaf("Alice")),
-                        new Ast.Not(new Ast.Leaf("everything")),
-                        new Ast.Leaf("something")
-                ] as List<Ast.Node>
-        )
     }
 }

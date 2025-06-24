@@ -21,6 +21,7 @@ public class Lex {
         OPERATOR,
         KEYWORD,
         STRING,
+        QUOTED_STRING
     }
 
     public record Symbol(TokenName name, String value, int offset) {
@@ -82,7 +83,7 @@ public class Lex {
                 query.deleteCharAt(0);
                 offset.increase(1);
                 if (c == '"')
-                    return new Symbol(TokenName.STRING, symbolValue.toString(), symbolOffset);
+                    return new Symbol(TokenName.QUOTED_STRING, symbolValue.toString(), symbolOffset);
                 else if (c == '\\') { // char escaping ...
                     char escapedC = query.charAt(0);
                     query.deleteCharAt(0);

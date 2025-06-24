@@ -1,10 +1,10 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
-import whelk.search.ESQuery;
 import whelk.search2.EsBoost;
 import whelk.search2.EsMappings;
 import whelk.search2.Operator;
+import whelk.search2.Query;
 import whelk.search2.QueryParams;
 import whelk.search2.QueryUtil;
 import whelk.util.Unicode;
@@ -15,33 +15,150 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static whelk.search2.Operator.NOT_EQUALS;
 import static whelk.search2.QueryUtil.isQuoted;
+import static whelk.search2.QueryUtil.isSimple;
 import static whelk.search2.QueryUtil.makeUpLink;
 import static whelk.search2.QueryUtil.mustNotWrap;
+import static whelk.search2.QueryUtil.parenthesize;
 import static whelk.search2.QueryUtil.quote;
 import static whelk.search2.QueryUtil.shouldWrap;
 import static whelk.search2.Operator.EQUALS;
 
-public record FreeText(Property.TextQuery textQuery, Operator operator, String value) implements Node {
-    public FreeText(String value) {
-        this(null, EQUALS, value);
+public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token> tokens,
+                       Query.Connective connective) implements Node, Value {
+    public FreeText(Property.TextQuery textQuery, boolean negate, Token token) {
+        this(textQuery, negate, List.of(token), Query.Connective.AND);
+    }
+
+    public FreeText(Token token) {
+        this(null, false, token);
+    }
+
+    public FreeText(String s) {
+        this(new Token.Raw(s));
     }
 
     @Override
     public Map<String, Object> toEs(EsMappings esMappings, EsBoost.Config boostConfig) {
-        String s = value;
+        if (boostConfig.suggest() && !negate) {
+            int cursor = boostConfig.cursor();
+            Optional<Token> currentlyEditedToken = getCurrentlyEditedToken(cursor);
+            if (currentlyEditedToken.isPresent()) {
+                var token = currentlyEditedToken.get();
+                if (!token.isQuoted() && !token.value().endsWith(Operator.WILDCARD)) {
+                    var tokenIdx = tokens.indexOf(token);
+                    var prefixedToken = new Token.Raw(token.value() + Operator.WILDCARD);
+                    var altTokens = new ArrayList<>(tokens) {{
+                        remove(tokenIdx);
+                        add(tokenIdx, prefixedToken);
+                    }};
+                    var shouldClause = List.of(
+                            // Make a query with the currently edited token prefixed to get suggestions
+                            _toEs(altTokens, boostConfig),
+                            // Also make a non-prefix query to get higher relevancy score for exact matches
+                            _toEs(tokens, boostConfig)
+                    );
+                    return shouldWrap(shouldClause);
+                }
+            }
+        }
+        return _toEs(tokens, boostConfig);
+    }
+
+    public Map<String, Object> toEs(EsBoost.Config boostConfig) {
+        return _toEs(tokens, boostConfig);
+    }
+
+    @Override
+    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes) {
+        return this;
+    }
+
+    @Override
+    public Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("property", textQuery != null ? textQuery.definition() : Map.of());
+        m.put(negate ? NOT_EQUALS.termKey : EQUALS.termKey, queryForm());
+        m.put("up", makeUpLink(qt, this, queryParams));
+        return m;
+    }
+
+    @Override
+    public String toQueryString(boolean topLevel) {
+        String s = isMultiToken() && negate
+                ? parenthesize(joinTokens())
+                : joinTokens();
+        return negate ? "NOT " + s : s;
+    }
+
+    @Override
+    public String queryForm() {
+        return joinTokens();
+    }
+
+    @Override
+    public String toString() {
+        return toQueryString(true);
+    }
+
+    @Override
+    public Node getInverse() {
+        return new FreeText(textQuery, !negate, tokens, connective);
+    }
+
+    @Override
+    public boolean isMultiToken() {
+        return tokens.size() > 1;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof FreeText ft && ft.toString().equals(toString());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(toString());
+    }
+
+    public boolean isWild() {
+        return Operator.WILDCARD.equals(toString());
+    }
+
+    public Optional<Token> getCurrentlyEditedToken(int cursorPos) {
+        return tokens.stream()
+                .filter(t -> cursorPos > t.offset() && cursorPos <= t.offset() + t.value().length())
+                .findFirst();
+    }
+
+    private String joinTokens() {
+        return switch (connective) {
+            case AND -> joinTokens(tokens, " ");
+            case OR -> joinTokens(tokens, " OR ");
+        };
+    }
+
+    private static String joinTokens(List<Token> tokens, String delimiter) {
+        return tokens.stream().map(Token::formatted).collect(Collectors.joining(delimiter));
+    }
+
+    private Map<String, Object> _toEs(List<Token> tokens, EsBoost.Config boostConfig) {
+        String s = joinTokens(tokens, " ");
         s = Unicode.normalizeForSearch(s);
-        boolean isSimple = QueryUtil.isSimple(s);
+        boolean isSimple = isSimple(s);
         String queryMode = isSimple ? "simple_query_string" : "query_string";
         if (!isSimple) {
             s = QueryUtil.escapeNonSimpleQueryString(s);
         }
         String queryString = s;
 
-        List<String> boostFields = boostConfig.getBoostFields();
+        List<String> boostFields = boostConfig.boostFields();
 
         if (boostFields.isEmpty()) {
             return wrap(buildSimpleQuery(queryMode, queryString));
@@ -67,82 +184,25 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
         }
 
         var queries = buildQueries(queryMode, queryString, basicBoostFields, functionBoostFields);
-        if (!isQuoted(queryString) && isMultiWord(queryString)) {
-            Optional<Integer> phraseBoostDivisor = boostConfig.getPhraseBoostDivisor();
-            if (phraseBoostDivisor.isPresent()) {
+
+        List<String> simplePhrases = getSimplePhrases(tokens);
+        if (!simplePhrases.isEmpty()) {
+            Integer phraseBoostDivisor = boostConfig.phraseBoostDivisor();
+            if (phraseBoostDivisor != null) {
                 basicBoostFields = basicBoostFields.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,
-                                e -> e.getValue() / phraseBoostDivisor.get()));
+                                e -> e.getValue() / phraseBoostDivisor));
             }
-            queries.addAll(buildQueries("query_string", quote(queryString), basicBoostFields, functionBoostFields));
+            for (String phrase : simplePhrases) {
+                queries.addAll(buildQueries("query_string", phrase, basicBoostFields, functionBoostFields));
+            }
         }
 
         return wrap(queries.size() == 1 ? queries.getFirst() : shouldWrap(queries));
     }
 
-    @Override
-    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes) {
-        return this;
-    }
-
-    @Override
-    public Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams) {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("property", textQuery.definition());
-        m.put(operator.termKey, value);
-        m.put("up", makeUpLink(qt, this, queryParams));
-        return m;
-    }
-
-    @Override
-    public String toQueryString(boolean topLevel) {
-        return operator == Operator.NOT_EQUALS
-                ? "NOT " + value :
-                value;
-    }
-
-    @Override
-    public Node getInverse() {
-        return new FreeText(textQuery, operator.getInverse(), value);
-    }
-
-    @Override
-    public boolean shouldContributeToEsScore() {
-        return operator == EQUALS && !Operator.WILDCARD.equals(value);
-    }
-
-    @Override
-    public boolean isFreeTextNode() {
-        return operator.equals(EQUALS);
-    }
-
-    @Override
-    public String toString() {
-        return operator == Operator.NOT_EQUALS
-                ? "NOT " + value :
-                value;
-    }
-
-    public FreeText replace(String replacement) {
-        return new FreeText(textQuery, operator, replacement);
-    }
-
-    public boolean isWild() {
-        return operator == EQUALS && Operator.WILDCARD.equals(value);
-    }
-
-    private boolean isMultiWord(String s) {
-        return s.matches(".*\\S\\s+\\S.*");
-    }
-
     private Map<String, Object> wrap(Map<String, Object> query) {
-        if (operator == Operator.EQUALS) {
-            return query;
-        }
-        if (operator == Operator.NOT_EQUALS) {
-            return mustNotWrap(query);
-        }
-        throw new RuntimeException("Invalid operator"); // Not reachable
+        return negate ? mustNotWrap(query) : query;
     }
 
     private List<Map<String, Object>> buildQueries(String queryMode, String queryString, Map<String, Float> basicBoostFields, Map<String, String> functionBoostFields) {
@@ -193,7 +253,7 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
         var query = new HashMap<>();
         query.put("query", queryString);
         query.put("analyze_wildcard", true);
-        query.put("default_operator", "AND");
+        query.put("default_operator", connective.name());
         if (!fields.isEmpty()) {
             query.put("fields", fields);
         }
@@ -206,5 +266,27 @@ public record FreeText(Property.TextQuery textQuery, Operator operator, String v
     private Map<String, Object> buildSimpleQuery(String queryMode, String queryString, Map<String, Float> fields) {
         var fieldsStrings = fields.entrySet().stream().map(e -> e.getKey() + "^" + e.getValue()).toList();
         return buildSimpleQuery(queryMode, queryString, fieldsStrings);
+    }
+
+    private static List<String> getSimplePhrases(List<Token> tokens) {
+        List<String> simplePhrases = new ArrayList<>();
+        List<String> currentSimpleSequence = new ArrayList<>();
+
+        for (int i = 0; i < tokens.size(); i++) {
+            Token token = tokens.get(i);
+            if (!token.isQuoted() && isSimple(token.value()) && !token.value().endsWith(Operator.WILDCARD)) {
+                currentSimpleSequence.add(token.value());
+            } else {
+                if (currentSimpleSequence.size() > 1) {
+                    simplePhrases.add(quote(String.join(" ", currentSimpleSequence)));
+                }
+                currentSimpleSequence.clear();
+            }
+            if (i == tokens.size() - 1 && currentSimpleSequence.size() > 1) {
+                simplePhrases.add(quote(String.join(" ", currentSimpleSequence)));
+            }
+        }
+
+        return simplePhrases;
     }
 }

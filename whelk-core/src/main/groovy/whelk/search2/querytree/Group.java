@@ -5,6 +5,7 @@ import whelk.search2.EsBoost;
 import whelk.search2.EsMappings;
 import whelk.search2.Operator;
 import whelk.search2.QueryParams;
+import whelk.search2.QueryUtil;
 
 import java.util.*;
 
@@ -70,26 +71,23 @@ public sealed abstract class Group implements Node permits And, Or {
 
     @Override
     public String toQueryString(boolean topLevel) {
-        return topLevel ? this.toString() : "(" + this + ")";
+        String s = doMapToString(n -> n.toQueryString(false))
+                .collect(Collectors.joining(delimiter()));
+        return topLevel ? s : QueryUtil.parenthesize(s);
     }
 
     @Override
     public String toString() {
-        return doMapToString(n -> n.toQueryString(false))
-                .collect(Collectors.joining(delimiter()));
+        return toQueryString(true);
     }
 
     @Override
     public Node reduceTypes(JsonLd jsonLd) {
         BiFunction<Node, Node, Boolean> hasMoreSpecificTypeThan = (a, b) -> a.isTypeNode()
                 && b.isTypeNode()
-                && jsonLd.isSubClassOf(((PathValue) a).value().jsonForm(), ((PathValue) b).value().jsonForm());
-        return reduceByCondition(hasMoreSpecificTypeThan);
-    }
+                && jsonLd.isSubClassOf(((VocabTerm) (((PathValue) a).value())).key(), ((VocabTerm) (((PathValue) b).value())).key());
 
-    @Override
-    public boolean shouldContributeToEsScore() {
-        return children().stream().anyMatch(Node::shouldContributeToEsScore);
+        return reduceByCondition(hasMoreSpecificTypeThan);
     }
 
     Node expandChildren(JsonLd jsonLd, Collection<String> rulingTypes) {
@@ -150,10 +148,10 @@ public sealed abstract class Group implements Node permits And, Or {
                         boolean isGroup = v.size() > 1;
                         boolean isNegatedGroup = k && isGroup;
                         if (isNegatedGroup) {
-                            var es = v.stream().map(pv -> pv.replaceOperator(Operator.EQUALS).getCoreEsQuery(esMappings)).toList();
+                            var es = v.stream().map(pv -> pv.withOperator(Operator.EQUALS).getCoreEsQuery(esMappings, boostConfig)).toList();
                             bool.put("must_not", nestedWrap(nestedStem, wrap(es)));
                         } else {
-                            var es = v.stream().map(pv -> pv.getCoreEsQuery(esMappings)).toList();
+                            var es = v.stream().map(pv -> pv.getCoreEsQuery(esMappings, boostConfig)).toList();
                             bool.put("must", nestedWrap(nestedStem, isGroup ? wrap(es) : es.getFirst()));
                         }
                     });
@@ -175,7 +173,7 @@ public sealed abstract class Group implements Node permits And, Or {
                 .filter(PathValue.class::isInstance)
                 .map(PathValue.class::cast)
                 .collect(Collectors.groupingBy(pv -> pv.path().getEsNestedStem(esMappings),
-                        Collectors.groupingBy(pv -> pv.path().fullEsSearchPath()))
+                        Collectors.groupingBy(pv -> pv.path().jsonForm()))
                 )
                 .forEach((nestedStem, groupedByPath) -> {
                     // At least two different paths sharing the same nested stem

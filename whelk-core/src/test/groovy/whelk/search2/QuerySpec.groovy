@@ -18,7 +18,7 @@ class QuerySpec extends Specification {
 
         expect:
         aggQuery == [
-                "@type"       : [
+                "@type"    : [
                         "filter": [
                                 "bool": [
                                         "must": []

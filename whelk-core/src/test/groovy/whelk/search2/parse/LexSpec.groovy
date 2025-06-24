@@ -108,7 +108,7 @@ class LexSpec extends Specification {
         lexedSymbols as List == [
                 new Lex.Symbol(Lex.TokenName.STRING, "AAA", 0),
                 new Lex.Symbol(Lex.TokenName.OPERATOR, ":", 3),
-                new Lex.Symbol(Lex.TokenName.STRING, "BB\\?", 4),
+                new Lex.Symbol(Lex.TokenName.QUOTED_STRING, "BB\\?", 4),
         ]
     }
 
@@ -158,7 +158,7 @@ class LexSpec extends Specification {
         lexedSymbols as List == [
                 new Lex.Symbol(Lex.TokenName.STRING, "AAA", 0),
                 new Lex.Symbol(Lex.TokenName.OPERATOR, ":", 3),
-                new Lex.Symbol(Lex.TokenName.STRING, "BB\"B", 4),
+                new Lex.Symbol(Lex.TokenName.QUOTED_STRING, "BB\"B", 4),
         ]
     }
 
@@ -171,7 +171,7 @@ class LexSpec extends Specification {
         lexedSymbols as List == [
                 new Lex.Symbol(Lex.TokenName.STRING, "AAA", 0),
                 new Lex.Symbol(Lex.TokenName.OPERATOR, ":", 3),
-                new Lex.Symbol(Lex.TokenName.STRING, "BB\\B", 4),
+                new Lex.Symbol(Lex.TokenName.QUOTED_STRING, "BB\\B", 4),
         ]
     }
 

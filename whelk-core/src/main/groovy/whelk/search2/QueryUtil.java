@@ -24,17 +24,16 @@ import static whelk.search2.QueryParams.ApiParams.QUERY;
 public class QueryUtil {
     private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper();
 
-    public static String quoteIfPhraseOrContainsSpecialSymbol(String s) {
-        // TODO: Don't hardcode. Keep quotes in parsing instead of requoting?
-        return !isQuoted(s) && s.matches(".*(>=|<=|[=!~<>(): ]).*") ? quote(s) : s;
-    }
-
     public static String quote(String s) {
         return "\"" + s + "\"";
     }
 
     public static boolean isQuoted(String s) {
         return s.matches("\".+\"");
+    }
+
+    public static String parenthesize(String s) {
+        return "(" + s + ")";
     }
 
     public static String encodeUri(String uri) {
@@ -88,7 +87,7 @@ public class QueryUtil {
     }
 
     public static Map<String, String> makeUpLink(QueryTree queryTree, Node n, QueryParams queryParams) {
-        QueryTree reducedTree = queryTree.omitNode(n);
+        QueryTree reducedTree = queryTree.remove(n);
         String upUrl = makeFindUrlNoOffset(reducedTree, queryParams);
         return Map.of(JsonLd.ID_KEY, upUrl);
     }

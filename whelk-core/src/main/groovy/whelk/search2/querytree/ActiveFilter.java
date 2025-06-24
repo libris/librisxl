@@ -36,7 +36,7 @@ public record ActiveFilter(Filter.AliasedFilter aliasedFilter) implements Node {
 
     @Override
     public String toQueryString(boolean topLevel) {
-        return toString();
+        return alias();
     }
 
     @Override
@@ -49,11 +49,6 @@ public record ActiveFilter(Filter.AliasedFilter aliasedFilter) implements Node {
         return aliasedFilter.getParsed() instanceof InactiveFilter(Filter.AliasedFilter af)
                 ? new ActiveFilter(af)
                 : new InactiveFilter(aliasedFilter);
-    }
-
-    @Override
-    public boolean shouldContributeToEsScore() {
-        return false;
     }
 
     public String alias() {

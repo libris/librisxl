@@ -37,6 +37,8 @@ public class QueryParams {
         public static final String FN_SCORE = "_fnScore";
         // Temporary param for experimenting
         public static final String PHRASE_BOOST_DIVISOR = "_phraseBoostDivisor";
+        public static final String SUGGEST = "_suggest";
+        public static final String CURSOR = "cursor";
     }
 
     public static class Debug {
@@ -56,10 +58,12 @@ public class QueryParams {
     public final String computedLabelLocale;
     public final EsBoost.Config esBoostConfig;
     public final Map<String, String[]> aliased;
+    public final int cursor;
 
     public final String q;
 
     public final boolean skipStats;
+    public final boolean suggest;
 
     private Map<String, String> paramsMap;
 
@@ -75,7 +79,9 @@ public class QueryParams {
         this.spell = new Spell(getOptionalSingleNonEmpty(ApiParams.SPELL, apiParameters).orElse(""));
         this.computedLabelLocale = getOptionalSingleNonEmpty(JsonLd.Platform.COMPUTED_LABEL, apiParameters).orElse(null);
         this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse("");
-        this.skipStats = getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
+        this.suggest = getOptionalSingle(ApiParams.SUGGEST, apiParameters).map("true"::equalsIgnoreCase).isPresent();
+        this.cursor = getCursor(apiParameters);
+        this.skipStats = suggest || getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
         this.esBoostConfig = getEsBoostConfig(apiParameters);
         this.aliased = getAliased(apiParameters);
     }
@@ -126,7 +132,7 @@ public class QueryParams {
             if (!debug.isEmpty()) {
                 params.put(ApiParams.DEBUG, String.join(",", debug));
             }
-            if (skipStats) {
+            if (skipStats && !suggest) {
                 params.put(ApiParams.STATS, "false");
             }
 
@@ -189,6 +195,12 @@ public class QueryParams {
         return offset;
     }
 
+    private int getCursor(Map<String, String[]> queryParameters) {
+        return getOptionalSingleNonEmpty(ApiParams.CURSOR, queryParameters)
+                .map(x -> parseInt(x, -1))
+                .orElse(-1);
+    }
+
     private static int parseInt(String s, Integer defaultTo) {
         try {
             return Integer.parseInt(s);
@@ -230,6 +242,6 @@ public class QueryParams {
         Integer phraseBoostDivisor = getOptionalSingle(ApiParams.PHRASE_BOOST_DIVISOR, queryParameters)
                 .map(s -> parseInt(s, null))
                 .orElse(null);
-        return EsBoost.Config.newConfig(boostFields, scoreFunctions, phraseBoostDivisor);
+        return new EsBoost.Config(boostFields, scoreFunctions, phraseBoostDivisor, null, suggest, cursor);
     }
 }

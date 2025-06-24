@@ -1,5 +1,6 @@
 package whelk.search2.querytree;
 
+import whelk.search2.QueryUtil;
 import whelk.search2.VocabMappings;
 
 import java.util.LinkedHashMap;
@@ -11,17 +12,18 @@ import static whelk.JsonLd.asList;
 
 public final class Link extends Resource {
     private final String iri;
-    private String raw;
     private final Map<String, Object> thing = new LinkedHashMap<>();
     private final Map<String, Object> chip = new LinkedHashMap<>();
+
+    private Token token;
 
     public Link(String iri) {
         this.iri = iri;
     }
 
-    public Link(String iri, String raw) {
+    public Link(String iri, Token token) {
         this.iri = iri;
-        this.raw = raw;
+        this.token = token;
     }
 
     public Link(String iri, Map<String, Object> thing) {
@@ -47,14 +49,18 @@ public final class Link extends Resource {
         return thing;
     }
 
+    public Token token() {
+        return token;
+    }
+
     @Override
-    public Object description() {
+    public Map<String, Object> description() {
         return chip;
     }
 
     @Override
-    public String raw() {
-        return raw != null ? raw : iri;
+    public String queryForm() {
+        return token != null ? token.formatted() : QueryUtil.quote(VocabMappings.toPrefixed(iri));
     }
 
     @Override
