@@ -130,8 +130,10 @@ class WhelkTool {
         this.reportsDir = reportsDir
         reportsDir.mkdirs()
         mainLog = new PrintWriter(new File(reportsDir, MAIN_LOG_NAME))
-        errorLog = new PrintWriter(new File(reportsDir, ERROR_LOG_NAME))
-        failedLog = new PrintWriter(new File(reportsDir, FAILED_LOG_NAME))
+        def errorLogFile = new File(reportsDir, ERROR_LOG_NAME)
+        errorLog = new PrintWriter(errorLogFile)
+        def failedLogFile = new File(reportsDir, FAILED_LOG_NAME)
+        failedLog = new PrintWriter(failedLogFile)
         def modifiedLogFile = new File(reportsDir, MODIFIED_LOG_NAME)
         modifiedLog = new PrintWriter(modifiedLogFile)
         def createdLogFile = new File(reportsDir, CREATED_LOG_NAME)
@@ -154,7 +156,7 @@ class WhelkTool {
                 }
             }
 
-            [modifiedLogFile, createdLogFile, deletedLogFile].each { if (it.length() == 0) it.delete() }
+            [modifiedLogFile, createdLogFile, deletedLogFile, errorLogFile, failedLogFile].each { if (it.length() == 0) it.delete() }
         }
 
         var lock = new Object()
