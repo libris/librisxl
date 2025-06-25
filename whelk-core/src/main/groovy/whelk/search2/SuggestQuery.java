@@ -40,6 +40,8 @@ public class SuggestQuery extends Query {
     private final Edited edited;
     private final QueryTree suggestQueryTree;
 
+    boolean propertySearch = false;
+
     public SuggestQuery(QueryParams queryParams, AppParams appParams, VocabMappings vocabMappings, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
         super(queryParams, appParams, vocabMappings, esSettings, whelk);
         this.edited = getEdited();
@@ -92,7 +94,7 @@ public class SuggestQuery extends Query {
 
     private List<Path> getApplicablePredicates(Map<?, ?> item, Map<String, Property> propertyByKey) {
         List<Path> applicablePredicates = new ArrayList<>();
-        if (edited.node() instanceof PathValue editedPv) {
+        if (edited.node() instanceof PathValue editedPv && propertySearch) {
             applicablePredicates.add(editedPv.path());
         } else if (edited.node() instanceof FreeText) {
             var types = asList(item.get(TYPE_KEY));
@@ -138,6 +140,7 @@ public class SuggestQuery extends Query {
                                 baseType.equals(type) || whelk.getJsonld().getSubClasses(baseType).contains(type)))
                         .collect(Collectors.joining(" OR "));
                 if (!searchableTypes.isEmpty()) {
+                    this.propertySearch = true;
                     Node typeFilter = QueryTreeBuilder.buildTree("\"rdf:type\":" + parenthesize(searchableTypes), disambiguate);
                     Node reverseLinksFilter = QueryTreeBuilder.buildTree("reverseLinks.totalItems>0", disambiguate);
                     return new QueryTree(new And(List.of((FreeText) pv.value(), typeFilter, reverseLinksFilter)));
