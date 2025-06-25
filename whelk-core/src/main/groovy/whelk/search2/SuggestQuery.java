@@ -141,9 +141,15 @@ public class SuggestQuery extends Query {
                         .collect(Collectors.joining(" OR "));
                 if (!searchableTypes.isEmpty()) {
                     this.propertySearch = true;
+                    FreeText ft = (FreeText) pv.value();
+                    // FIXME: This is only needed until frontend no longer rely on quoted values not being treated as such.
+                    List<Token> unquotedTokens = ft.tokens().stream()
+                            .map(t -> t.isQuoted() ? new Token.Raw(t.value(), t.offset()) : t)
+                            .toList();
+                    ft = new FreeText(ft.textQuery(), ft.negate(), unquotedTokens, ft.connective());
                     Node typeFilter = QueryTreeBuilder.buildTree("\"rdf:type\":" + parenthesize(searchableTypes), disambiguate);
                     Node reverseLinksFilter = QueryTreeBuilder.buildTree("reverseLinks.totalItems>0", disambiguate);
-                    return new QueryTree(new And(List.of((FreeText) pv.value(), typeFilter, reverseLinksFilter)));
+                    return new QueryTree(new And(List.of(ft, typeFilter, reverseLinksFilter)));
                 }
             }
         } else if (edited.node() instanceof FreeText && queryTree.isSimpleFreeText()) {
