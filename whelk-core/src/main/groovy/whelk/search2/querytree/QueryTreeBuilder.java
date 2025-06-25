@@ -131,7 +131,7 @@ public class QueryTreeBuilder {
 
     private static Token getToken(Lex.Symbol symbol) {
         return symbol.name() == Lex.TokenName.QUOTED_STRING
-                ? new Token.Quoted(symbol.value(), symbol.offset())
+                ? new Token.Quoted(symbol.value(), symbol.offset() + 1)
                 : new Token.Raw(symbol.value(), symbol.offset());
     }
 }
