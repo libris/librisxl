@@ -40,7 +40,7 @@ public class SuggestQuery extends Query {
     private final Edited edited;
     private final QueryTree suggestQueryTree;
 
-    boolean propertySearch = false;
+    private boolean propertySearch = false;
 
     public SuggestQuery(QueryParams queryParams, AppParams appParams, VocabMappings vocabMappings, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
         super(queryParams, appParams, vocabMappings, esSettings, whelk);
