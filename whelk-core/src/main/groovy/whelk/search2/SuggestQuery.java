@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -136,8 +137,9 @@ public class SuggestQuery extends Query {
             if (property.isPresent()) {
                 Property p = property.get();
                 String searchableTypes = p.range().stream()
-                        .filter(type -> defaultBaseTypes.stream().anyMatch(baseType ->
-                                baseType.equals(type) || whelk.getJsonld().getSubClasses(baseType).contains(type)))
+                        .filter(type -> defaultBaseTypes.stream()
+                                .filter(Predicate.not("Work"::equals))
+                                .anyMatch(baseType -> baseType.equals(type) || whelk.getJsonld().getSubClasses(baseType).contains(type)))
                         .collect(Collectors.joining(" OR "));
                 if (!searchableTypes.isEmpty()) {
                     this.propertySearch = true;
