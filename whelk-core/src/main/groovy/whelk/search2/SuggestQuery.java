@@ -90,7 +90,9 @@ public class SuggestQuery extends Query {
     @Override
     protected Object doGetEsQueryDsl() {
         applySiteFilters(suggestQueryTree, SearchMode.SUGGEST);
-        return getEsQueryDsl(getEsQuery(suggestQueryTree, List.of()));
+        var queryDsl = getEsQueryDsl(getEsQuery(suggestQueryTree, List.of()));
+        queryDsl.remove("sort");
+        return queryDsl;
     }
 
     private List<Path> getApplicablePredicates(Map<?, ?> item, Map<String, Property> propertyByKey) {
