@@ -28,7 +28,6 @@ public class QueryParams {
         public static final String SPELL = "_spell";
         public static final String OBJECT = "_o";
         public static final String PREDICATES = "_p";
-        public static final String EXTRA = "_x";
         public static final String DEBUG = "_debug";
         public static final String APP_CONFIG = "_appConfig";
         public static final String BOOST = "_boost";
@@ -51,7 +50,6 @@ public class QueryParams {
     public final Sort sortBy;
     public final String object;
     public final List<String> predicates;
-    public final String mode;
     public final List<String> debug;
     public final String lens;
     public final Spell spell;
@@ -71,7 +69,6 @@ public class QueryParams {
         this.sortBy = Sort.fromString(getOptionalSingleNonEmpty(ApiParams.SORT, apiParameters).orElse(""));
         this.object = getOptionalSingleNonEmpty(ApiParams.OBJECT, apiParameters).orElse(null);
         this.predicates = getMultiple(ApiParams.PREDICATES, apiParameters);
-        this.mode = getOptionalSingleNonEmpty(ApiParams.EXTRA, apiParameters).orElse(null);
         this.debug = getMultiple(ApiParams.DEBUG, apiParameters);
         this.limit = getLimit(apiParameters);
         this.offset = getOffset(apiParameters);
@@ -114,9 +111,6 @@ public class QueryParams {
             }
             if (!predicates.isEmpty()) {
                 params.put(ApiParams.PREDICATES, String.join(",", predicates));
-            }
-            if (mode != null) {
-                params.put(ApiParams.EXTRA, mode);
             }
             var spellP = spell.asString();
             if (!spellP.isEmpty()) {
