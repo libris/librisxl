@@ -74,7 +74,7 @@ public class SuggestQuery extends Query {
                                     newCursorPos += 1;
                                 }
                                 return Map.of("_predicate", predicateDefinition,
-                                        "_q", QueryUtil.makeFindUrlNoOffset(q, queryParams),
+                                        "_q", QueryUtil.makeViewFindUrl(q, queryParams),
                                         "_cursor", newCursorPos);
                             })
                             .toList();

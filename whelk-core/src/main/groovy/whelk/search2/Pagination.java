@@ -7,8 +7,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static whelk.search2.QueryUtil.makeFindUrlNoOffset;
-import static whelk.search2.QueryUtil.makeFindUrlWithOffset;
+import static whelk.search2.QueryUtil.makeFindUrl;
 
 public class Pagination {
     public static Map<String, Map<String, String>> makeLinks(int numHits, int maxItems, QueryTree queryTree, QueryParams queryParams) {
@@ -21,19 +20,19 @@ public class Pagination {
 
         Offsets offsets = new Offsets(Math.min(numHits, maxItems), queryParams.limit, queryParams.offset);
 
-        result.put("first", Map.of(JsonLd.ID_KEY, makeFindUrlNoOffset(queryTree, queryParams)));
-        result.put("last", Map.of(JsonLd.ID_KEY, makeFindUrlWithOffset(queryTree, queryParams, offsets.last)));
+        result.put("first", Map.of(JsonLd.ID_KEY, makeFindUrl(queryTree, queryParams, 0)));
+        result.put("last", Map.of(JsonLd.ID_KEY, makeFindUrl(queryTree, queryParams, offsets.last)));
 
         if (offsets.prev != null) {
             if (offsets.prev == 0) {
                 result.put("previous", result.get("first"));
             } else {
-                result.put("previous", Map.of(JsonLd.ID_KEY, makeFindUrlWithOffset(queryTree, queryParams, offsets.prev)));
+                result.put("previous", Map.of(JsonLd.ID_KEY, makeFindUrl(queryTree, queryParams, offsets.prev)));
             }
         }
 
         if (offsets.next != null) {
-            result.put("next", Map.of(JsonLd.ID_KEY, makeFindUrlWithOffset(queryTree, queryParams, offsets.next)));
+            result.put("next", Map.of(JsonLd.ID_KEY, makeFindUrl(queryTree, queryParams, offsets.next)));
         }
 
         return result;
