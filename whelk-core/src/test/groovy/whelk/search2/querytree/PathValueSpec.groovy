@@ -21,7 +21,7 @@ class PathValueSpec extends Specification {
         searchMapping == [
                 'property': ['@id': 'p1', '@type': 'DatatypeProperty'],
                 'equals'  : 'v1',
-                'up'      : ['@id': '/find?_limit=20&_q=*'],
+                'up'      : ['@id': '/find?_q=*'],
                 '_key'    : 'p1.@id',
                 '_value'  : 'v1'
         ]
@@ -41,7 +41,7 @@ class PathValueSpec extends Specification {
                         ]
                 ],
                 'notEquals': ['@id': 'E1', '@type': 'Class'],
-                'up'       : ['@id': '/find?_limit=20&_q=*'],
+                'up'       : ['@id': '/find?_q=*'],
                 '_key'     : 'p1.p2',
                 '_value'   : 'E1'
         ]
@@ -61,7 +61,7 @@ class PathValueSpec extends Specification {
                         ]
                 ],
                 'equals'  : 'v1',
-                'up'      : ['@id': '/find?_limit=20&_q=*'],
+                'up'      : ['@id': '/find?_q=*'],
                 '_key'    : '@reverse.p3.@reverse.p4',
                 '_value'  : 'v1'
         ]

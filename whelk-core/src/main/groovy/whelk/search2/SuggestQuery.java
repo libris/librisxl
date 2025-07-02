@@ -74,7 +74,7 @@ public class SuggestQuery extends Query {
                                     newCursorPos += 1;
                                 }
                                 return Map.of("_predicate", predicateDefinition,
-                                        "_q", QueryUtil.makeFindUrlNoOffset(q, queryParams),
+                                        "_q", QueryUtil.makeViewFindUrl(q, queryParams),
                                         "_cursor", newCursorPos);
                             })
                             .toList();
@@ -90,7 +90,9 @@ public class SuggestQuery extends Query {
     @Override
     protected Object doGetEsQueryDsl() {
         applySiteFilters(suggestQueryTree, SearchMode.SUGGEST);
-        return getEsQueryDsl(getEsQuery(suggestQueryTree, List.of()));
+        var queryDsl = getEsQueryDsl(getEsQuery(suggestQueryTree, List.of()));
+        queryDsl.remove("sort");
+        return queryDsl;
     }
 
     private List<Path> getApplicablePredicates(Map<?, ?> item, Map<String, Property> propertyByKey) {

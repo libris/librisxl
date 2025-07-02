@@ -6,7 +6,6 @@ import whelk.exception.InvalidQueryException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,57 +82,79 @@ public class QueryParams {
         this.aliased = getAliased(apiParameters);
     }
 
-    public Map<String, String> getNonQueryParamsNoOffset() {
-        Map<String, String> params = getNonQueryParams();
-        params.remove(ApiParams.OFFSET);
-        return params;
+    public Map<String, String> getFullParamsMap() {
+        return getParamsMap(List.of(ApiParams.QUERY,
+                ApiParams.SORT,
+                ApiParams.OFFSET,
+                ApiParams.LIMIT,
+                ApiParams.LENS,
+                ApiParams.SPELL,
+                ApiParams.OBJECT,
+                ApiParams.DEBUG,
+                ApiParams.STATS,
+                JsonLd.Platform.COMPUTED_LABEL));
     }
 
-    public Map<String, String> getNonQueryParams() {
-        var params = getParamsMap();
-        params.remove(ApiParams.QUERY);
-        return params;
+    public Map<String, String> getCustomParamsMap(List<String> apiParams) {
+        return getParamsMap(apiParams);
     }
 
-    private Map<String, String> getParamsMap() {
-        if (paramsMap == null) {
-            Map<String, String> params = new LinkedHashMap<>();
+    private Map<String, String> getParamsMap(List<String> apiParams) {
+        Map<String, String> params = new LinkedHashMap<>();
 
-            if (!q.isEmpty()) {
-                params.put(ApiParams.QUERY, q);
+        for (String param : apiParams) {
+            switch (param) {
+                case ApiParams.QUERY -> {
+                    if (!q.isEmpty()) {
+                        params.put(ApiParams.QUERY, q);
+                    }
+                }
+                case ApiParams.SORT -> {
+                    var sort = sortBy.asString();
+                    if (!sort.isEmpty()) {
+                        params.put(ApiParams.SORT, sort);
+                    }
+                }
+                case ApiParams.OFFSET -> {
+                    if (offset > 0) {
+                        params.put(ApiParams.OFFSET, "" + offset);
+                    }
+                }
+                case ApiParams.LIMIT -> params.put(ApiParams.LIMIT, "" + limit);
+                case ApiParams.LENS -> {} // TODO
+                case ApiParams.SPELL -> {
+                    var spellP = spell.asString();
+                    if (!spellP.isEmpty()) {
+                        params.put(ApiParams.SPELL, spellP);
+                    }
+                }
+                case ApiParams.OBJECT -> {
+                    if (object != null) {
+                        params.put(ApiParams.OBJECT, object);
+                    }
+                }
+                case ApiParams.PREDICATES -> {
+                    if (!predicates.isEmpty()) {
+                        params.put(ApiParams.PREDICATES, String.join(",", predicates));
+                    }
+                }
+                case ApiParams.DEBUG -> {
+                    if (!debug.isEmpty()) {
+                        params.put(ApiParams.DEBUG, String.join(",", debug));
+                    }
+                }
+                case ApiParams.STATS -> {
+                    if (skipStats && !suggest) {
+                        params.put(ApiParams.STATS, "false");
+                    }
+                }
             }
-            if (offset > 0) {
-                params.put(ApiParams.OFFSET, "" + offset);
-            }
-            params.put(ApiParams.LIMIT, "" + limit);
-            if (object != null) {
-                params.put(ApiParams.OBJECT, object);
-            }
-            if (!predicates.isEmpty()) {
-                params.put(ApiParams.PREDICATES, String.join(",", predicates));
-            }
-            var spellP = spell.asString();
-            if (!spellP.isEmpty()) {
-                params.put(ApiParams.SPELL, spellP);
-            }
-            if (computedLabelLocale != null) {
+            if (param.equals(JsonLd.Platform.COMPUTED_LABEL) && computedLabelLocale != null) {
                 params.put(JsonLd.Platform.COMPUTED_LABEL, computedLabelLocale);
             }
-            var sort = sortBy.asString();
-            if (!sort.isEmpty()) {
-                params.put(ApiParams.SORT, sort);
-            }
-            if (!debug.isEmpty()) {
-                params.put(ApiParams.DEBUG, String.join(",", debug));
-            }
-            if (skipStats && !suggest) {
-                params.put(ApiParams.STATS, "false");
-            }
-
-            this.paramsMap = params;
         }
 
-        return new LinkedHashMap<>(paramsMap);
+        return params;
     }
 
     private static Optional<String> getOptionalSingleNonEmpty(String name, Map<String, String[]> queryParameters) {

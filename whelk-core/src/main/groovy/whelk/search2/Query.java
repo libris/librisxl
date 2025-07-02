@@ -16,7 +16,7 @@ import java.util.stream.Stream;
 import static whelk.component.ElasticSearch.flattenedLangMapKey;
 import static whelk.search2.EsBoost.addBoosts;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
-import static whelk.search2.QueryUtil.makeFindUrlNoOffset;
+import static whelk.search2.QueryUtil.makeViewFindUrl;
 
 public class Query {
     protected final Whelk whelk;
@@ -503,7 +503,7 @@ public class Query {
                     Map<String, Object> observation = new LinkedHashMap<>();
 
                     observation.put("totalItems", count);
-                    observation.put("view", Map.of(JsonLd.ID_KEY, makeFindUrlNoOffset(alteredTree, queryParams)));
+                    observation.put("view", Map.of(JsonLd.ID_KEY, makeViewFindUrl(alteredTree, queryParams)));
                     observation.put("object", v instanceof Resource r ? r.description() : v.toString());
                     if (connective == Connective.OR) {
                         observation.put("_selected", isSelected);
@@ -547,7 +547,7 @@ public class Query {
             String templateQueryString = queryTree.remove(selectedFilters.getSelected(propertyKey))
                     .add(placeholderNode)
                     .toQueryString();
-            String templateUrl = makeFindUrlNoOffset(templateQueryString, queryParams);
+            String templateUrl = QueryUtil.makeViewFindUrl(templateQueryString, queryParams);
 
             Function<Operator, String> getLimit = op -> selectedFilters.getRangeSelected(propertyKey)
                     .stream()
@@ -597,7 +597,7 @@ public class Query {
                 // TODO: fix form
                 res.put("totalItems", 0);
                 res.put("object", f.description());
-                res.put("view", Map.of(JsonLd.ID_KEY, makeFindUrlNoOffset(alteredTree, queryParams)));
+                res.put("view", Map.of(JsonLd.ID_KEY, makeViewFindUrl(alteredTree, queryParams)));
                 res.put("_selected", isSelected);
 
                 results.add(res);

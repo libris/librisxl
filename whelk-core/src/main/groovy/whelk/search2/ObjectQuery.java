@@ -17,7 +17,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static whelk.search2.QueryParams.ApiParams.OBJECT;
 import static whelk.search2.QueryParams.ApiParams.PREDICATES;
+import static whelk.search2.QueryParams.ApiParams.SORT;
 import static whelk.search2.QueryUtil.makeFindUrl;
 
 public class ObjectQuery extends Query {
@@ -72,7 +74,7 @@ public class ObjectQuery extends Query {
                     int count = counts.get(p);
 
                     if (count > 0) {
-                        Map<String, String> params = queryParams.getNonQueryParamsNoOffset();
+                        Map<String, String> params = queryParams.getCustomParamsMap(List.of(SORT, OBJECT));
                         params.put(PREDICATES, p);
                         result.add(Map.of(
                                 "totalItems", count,
