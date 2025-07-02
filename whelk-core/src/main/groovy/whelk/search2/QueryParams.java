@@ -62,8 +62,6 @@ public class QueryParams {
     public final boolean skipStats;
     public final boolean suggest;
 
-    private Map<String, String> paramsMap;
-
     public QueryParams(Map<String, String[]> apiParameters) throws InvalidQueryException {
         this.sortBy = Sort.fromString(getOptionalSingleNonEmpty(ApiParams.SORT, apiParameters).orElse(""));
         this.object = getOptionalSingleNonEmpty(ApiParams.OBJECT, apiParameters).orElse(null);
@@ -121,7 +119,6 @@ public class QueryParams {
                     }
                 }
                 case ApiParams.LIMIT -> params.put(ApiParams.LIMIT, "" + limit);
-                case ApiParams.LENS -> {} // TODO
                 case ApiParams.SPELL -> {
                     var spellP = spell.asString();
                     if (!spellP.isEmpty()) {
