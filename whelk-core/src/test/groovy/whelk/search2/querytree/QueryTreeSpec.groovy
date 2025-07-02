@@ -60,6 +60,9 @@ class QueryTreeSpec extends Specification {
         "p12:1990-01-01"                            | "p12:1990-01-01"
         "NOT p12<=1990-01-01"                       | "p12>1990-01-01"
         "p12:\"1990-01-01T01:01\""                  | "p12:\"1990-01-01T01:01\""
+        "(x OR y) p1:x"                             | "(x OR y) p1:x"
+        "x OR y"                                    | "x OR y"
+        "(x OR y) z"                                | "(x OR y) z"
     }
 
     def "convert to ES query"() {

@@ -21,6 +21,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static whelk.search2.Operator.NOT_EQUALS;
+import static whelk.search2.Query.Connective.AND;
+import static whelk.search2.Query.Connective.OR;
 import static whelk.search2.QueryUtil.isQuoted;
 import static whelk.search2.QueryUtil.isSimple;
 import static whelk.search2.QueryUtil.makeUpLink;
@@ -33,7 +35,7 @@ import static whelk.search2.Operator.EQUALS;
 public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token> tokens,
                        Query.Connective connective) implements Node, Value {
     public FreeText(Property.TextQuery textQuery, boolean negate, Token token) {
-        this(textQuery, negate, List.of(token), Query.Connective.AND);
+        this(textQuery, negate, List.of(token), AND);
     }
 
     public FreeText(Token token) {
@@ -91,7 +93,7 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
 
     @Override
     public String toQueryString(boolean topLevel) {
-        String s = isMultiToken() && negate
+        String s = isMultiToken() && (negate || (!topLevel && connective.equals(OR)))
                 ? parenthesize(joinTokens())
                 : joinTokens();
         return negate ? "NOT " + s : s;
