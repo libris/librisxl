@@ -531,9 +531,13 @@ public class Query {
                                     .map(qt::remove)
                                     .ifPresent(addObservation);
                         } else {
-                            var newSelected = new ArrayList<>(selected) {{ add(pv); }};
-                            var alteredTree = qt.remove(selected).add(new Or(newSelected));
-                            addObservation.accept(alteredTree);
+                            if (selected.isEmpty()) {
+                                addObservation.accept(qt.add(pv));
+                            } else {
+                                var newSelected = new ArrayList<>(selected) {{ add(pv); }};
+                                var alteredTree = qt.remove(selected).add(new Or(newSelected));
+                                addObservation.accept(alteredTree);
+                            }
                         }
                     }
                 }
