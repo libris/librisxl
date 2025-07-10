@@ -60,6 +60,7 @@ public class FresnelUtil {
         public static String contentFirst = "fresnel:contentFirst";
         public static String contentLast = "fresnel:contentLast";
         public static String extends_ = "fresnel:extends";
+        public static String fslselector = "fresnel:fslselector";
         public static String group = "fresnel:group";
         public static String propertyFormat = "fresnel:propertyFormat";
         public static String propertyFormatDomain = "fresnel:propertyFormatDomain";
@@ -272,7 +273,10 @@ public class FresnelUtil {
 
                 }
                 case FslPath fslPath -> {
-                    // TODO
+                    String endArcStep = fslPath.getEndArcStep();
+                    if (!endArcStep.isEmpty()) {
+                        fslPath.getTargetEntities(thing).forEach(entity -> result.pick(entity, new PropertyKey(endArcStep)));
+                    }
                 }
             }
         }
@@ -649,6 +653,9 @@ public class FresnelUtil {
                 if (JsonLd.isAlternateRangeRestriction(p)) {
                     return asRangeRestriction(p);
                 }
+                if (isFslPath(p)) {
+                    return asFslPath(p);
+                }
                 if (p instanceof String k) {
                     // ignore langContainer aliases expanded by jsonld
                     if (!jsonLd.langContainerAliasInverted.containsKey(k)) {
@@ -672,6 +679,16 @@ public class FresnelUtil {
         private InverseProperty asInverseProperty(Object showProperty) {
             String p = (String) ((Map<?, ?>) showProperty).get("inverseOf");
             return new InverseProperty(p, jsonLd.getInverseProperty(p));
+        }
+
+        private boolean isFslPath(Object showProperty) {
+            return showProperty instanceof Map<?, ?> m
+                    && Fresnel.fslselector.equals(m.get(JsonLd.TYPE_KEY))
+                    && m.get(JsonLd.VALUE_KEY) instanceof String s && s.contains("/");
+        }
+
+        private FslPath asFslPath(Object showProperty) {
+            return new FslPath((String) ((Map<?, ?>) showProperty).get(JsonLd.VALUE_KEY));
         }
 
         // TODO
@@ -715,6 +732,7 @@ public class FresnelUtil {
 
     private record RangeRestriction(String subPropertyOf, String range) implements PropertySelector {}
 
+    // TODO: Support "range restriction" style? e.g. "hasTitle[KeyTitle]"^^fresnel:fslselector
     private record FslPath(String path) implements PropertySelector {
         List<Map<?, ?>> getTargetEntities(Map<?, ?> sourceEntity) {
             return getTargetEntities(sourceEntity, new ArrayList<>(List.of(path.split("/"))));

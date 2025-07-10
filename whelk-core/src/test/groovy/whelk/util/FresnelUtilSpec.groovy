@@ -508,4 +508,49 @@ class FresnelUtilSpec extends Specification {
         "hasTitle/VariantTitle/mainTitle" | [['@type': 'VariantTitle', 'mainTitle': 'variant title']]
         "hasTitle/*/mainTitle"            | [['@type': 'Title', 'mainTitle': 'Titel', 'subtitle': "subtitle"], ['@type': 'VariantTitle', 'mainTitle': 'variant title']]
     }
+
+    def "Handle fslselector type in showProperties"() {
+        given:
+        Map displayData = [
+                "@context": [
+
+                ],
+                "lensGroups": [
+                        "chips":
+                                ["lenses": [
+                                        "Thing": [
+                                                "@id": "Thing-chips",
+                                                "@type": "fresnel:Lens",
+                                                "classLensDomain": "Thing",
+                                                "showProperties": [
+                                                        [
+                                                            "@type": "fresnel:fslselector",
+                                                            "@value": "hasTitle/Title/mainTitle"
+                                                        ],
+                                                        "language"
+                                                ]
+                                        ]
+                                ]]
+                ],
+        ]
+        var thing = [
+                '@type': 'Thing',
+                'hasTitle': [
+                        ['@type': 'Title', 'mainTitle': 'Titel'],
+                        ['@type': 'VariantTitle', 'mainTitle': 'variant title']
+                ],
+                'language' : [
+                        ['@type': 'Language', 'code': 'sv', 'labelByLang': [ 'en': 'Swedish', 'sv': 'Svenska' ]],
+                ],
+                'subject' : [
+                        ['@type': 'Topic', 'prefLabel': "Hästar"],
+                ]
+        ]
+        var fresnel = new FresnelUtil(new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA))
+
+        var result = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
+
+        expect:
+        result.asString() == "Titel Svenska Swedish"
+    }
 }
