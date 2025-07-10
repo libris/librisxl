@@ -271,6 +271,9 @@ public class FresnelUtil {
                 case Unrecognized ignored -> {
 
                 }
+                case FslPath fslPath -> {
+                    // TODO
+                }
             }
         }
 
@@ -698,7 +701,7 @@ public class FresnelUtil {
         };
     }
 
-    private sealed interface PropertySelector permits PropertyKey, InverseProperty, AlternateProperties, RangeRestriction, Unrecognized {
+    private sealed interface PropertySelector permits AlternateProperties, FslPath, InverseProperty, PropertyKey, RangeRestriction, Unrecognized {
 
     }
 
@@ -711,6 +714,36 @@ public class FresnelUtil {
     }
 
     private record RangeRestriction(String subPropertyOf, String range) implements PropertySelector {}
+
+    private record FslPath(String path) implements PropertySelector {
+        List<Map<?, ?>> getTargetEntities(Map<?, ?> sourceEntity) {
+            return getTargetEntities(sourceEntity, new ArrayList<>(List.of(path.split("/"))));
+        }
+
+        String getEndArcStep() {
+            int idx = path.lastIndexOf("/");
+            return idx == -1 ? "" : path.substring(idx + 1);
+        }
+
+        private static List<Map<?, ?>> getTargetEntities(Map<?, ?> currentEntity, List<String> pathRemainder) {
+            if (pathRemainder.isEmpty()) {
+                return List.of();
+            }
+            if (pathRemainder.size() == 1) {
+                return List.of(currentEntity);
+            }
+            String nextArcStep = pathRemainder.removeFirst();
+            String nextNodeStep = pathRemainder.removeFirst();
+            List<?> nextNodes = currentEntity.get(nextArcStep) instanceof List<?> l ? l : List.of(currentEntity.get(nextArcStep));
+            return nextNodes.stream()
+                    .filter(Map.class::isInstance)
+                    .map(Map.class::cast)
+                    .filter(m -> nextNodeStep.equals("*") || JsonLd.asList(m.get(JsonLd.TYPE_KEY)).contains(nextNodeStep))
+                    .map(m -> getTargetEntities(m, pathRemainder))
+                    .flatMap(List::stream)
+                    .toList();
+        }
+    }
 
     @SuppressWarnings("unchecked")
     private RangeRestriction asRangeRestriction(Object o) {

@@ -486,4 +486,26 @@ class FresnelUtilSpec extends Specification {
         expect:
         result.asString() == "Titel Titel variant title Överzet translator Namnsson Namn 1972- author Svenska Swedish Hästar"
     }
+
+    def "get FSL path target entities"() {
+        // https://www.w3.org/2005/04/fresnel-info/fsl/
+        given:
+        var thing = [
+                '@type'   : 'Work',
+                'hasTitle': [
+                        ['@type': 'Title', 'mainTitle': 'Titel', 'subtitle': "subtitle"],
+                        ['@type': 'VariantTitle', 'mainTitle': 'variant title']
+                ]
+        ]
+
+        expect:
+        new FresnelUtil.FslPath(fslPath).getTargetEntities(thing) == result
+
+        where:
+        fslPath                           | result
+        "hasTitle/Title/mainTitle"        | [['@type': 'Title', 'mainTitle': 'Titel', 'subtitle': "subtitle"]]
+        "hasTitle/KeyTitle/mainTitle"     | []
+        "hasTitle/VariantTitle/mainTitle" | [['@type': 'VariantTitle', 'mainTitle': 'variant title']]
+        "hasTitle/*/mainTitle"            | [['@type': 'Title', 'mainTitle': 'Titel', 'subtitle': "subtitle"], ['@type': 'VariantTitle', 'mainTitle': 'variant title']]
+    }
 }
