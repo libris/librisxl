@@ -259,7 +259,10 @@ public class FresnelUtil {
                     // never language container
                     if (thing.get(JsonLd.REVERSE_KEY) instanceof Map<?, ?> r && r.containsKey(i.name)) {
                         var v = r.get(i.name);
-                        result.pick(Map.of(i.inverseName, v), new PropertyKey(i.inverseName));
+                        String inverseName = i.inverseName;
+                        if (inverseName == null)
+                            logger.error("Null inverse name for: {} / {}", i.name, i); // fall through into NPE, to not alter behaviour.
+                        result.pick(Map.of(inverseName, v), new PropertyKey(inverseName));
                     }
                 }
                 case RangeRestriction ignored -> {
