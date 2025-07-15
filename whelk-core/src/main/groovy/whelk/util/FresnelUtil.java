@@ -250,6 +250,19 @@ public class FresnelUtil {
                                     }
                                 }
                             }
+                            case FslPath fslPath -> {
+                                String endArcStep = fslPath.getEndArcStep();
+                                if (!endArcStep.isEmpty()) {
+                                    var pKey = new PropertyKey(endArcStep);
+                                    var targetEntities = fslPath.getTargetEntities(thing).stream().filter(pKey::isIn).toList();
+                                    if (!targetEntities.isEmpty()) {
+                                        targetEntities.forEach(entity -> result.pick(entity, pKey));
+                                        if (options != Options.TAKE_ALL_ALTERNATE) {
+                                            break alt;
+                                        }
+                                    }
+                                }
+                            }
                             default -> {
 
                             }
