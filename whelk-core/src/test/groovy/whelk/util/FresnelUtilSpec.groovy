@@ -509,23 +509,23 @@ class FresnelUtilSpec extends Specification {
         "hasTitle/*/mainTitle"            | [['@type': 'Title', 'mainTitle': 'Titel', 'subtitle': "subtitle"], ['@type': 'VariantTitle', 'mainTitle': 'variant title']]
     }
 
-    def "Handle fslselector type in showProperties"() {
+    def "Handle FSL path in showProperties"() {
         given:
         Map displayData = [
-                "@context": [
+                "@context"  : [
 
                 ],
                 "lensGroups": [
                         "chips":
                                 ["lenses": [
                                         "Thing": [
-                                                "@id": "Thing-chips",
-                                                "@type": "fresnel:Lens",
+                                                "@id"            : "Thing-chips",
+                                                "@type"          : "fresnel:Lens",
                                                 "classLensDomain": "Thing",
-                                                "showProperties": [
+                                                "showProperties" : [
                                                         [
-                                                            "@type": "fresnel:fslselector",
-                                                            "@value": "hasTitle/Title/mainTitle"
+                                                                "@type" : "fresnel:fslselector",
+                                                                "@value": fslPath
                                                         ],
                                                         "language"
                                                 ]
@@ -534,13 +534,13 @@ class FresnelUtilSpec extends Specification {
                 ],
         ]
         var thing = [
-                '@type': 'Thing',
+                '@type'   : 'Thing',
                 'hasTitle': [
                         ['@type': 'Title', 'mainTitle': 'Titel'],
-                        ['@type': 'VariantTitle', 'mainTitle': 'variant title']
+                        ['@type': 'VariantTitle', 'mainTitleByLang': ['sv': 'varianttitel', 'en': 'variant title']]
                 ],
-                'language' : [
-                        ['@type': 'Language', 'code': 'sv', 'labelByLang': [ 'en': 'Swedish', 'sv': 'Svenska' ]],
+                'language': [
+                        ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
                 ],
                 'subject' : [
                         ['@type': 'Topic', 'prefLabel': "Hästar"],
@@ -548,9 +548,65 @@ class FresnelUtilSpec extends Specification {
         ]
         var fresnel = new FresnelUtil(new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA))
 
-        var result = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
+        var lensed = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
 
         expect:
-        result.asString() == "Titel Svenska Swedish"
+        lensed.asString() == result
+
+        where:
+        fslPath                           | result
+        "hasTitle/Title/mainTitle"        | "Titel Svenska Swedish"
+        "hasTitle/VariantTitle/mainTitle" | "varianttitel variant title Svenska Swedish"
+        "hasTitle/*/mainTitle"            | "Titel varianttitel variant title Svenska Swedish"
+        "language/Language/code"          | "sv Svenska Swedish"
+        "language/Language/mainTitle"     | "Svenska Swedish"
+        "language/Title/code"             | "Svenska Swedish"
+    }
+
+    def "Handle FSL paths as alternateProperties"() {
+        given:
+        List alternateProperties = fslPaths.collect { ["@type": "fresnel:fslselector", "@value": it] }
+        Map displayData = [
+                "@context"  : [
+
+                ],
+                "lensGroups": [
+                        "chips":
+                                ["lenses": [
+                                        "Thing": [
+                                                "@id"            : "Thing-chips",
+                                                "@type"          : "fresnel:Lens",
+                                                "classLensDomain": "Thing",
+                                                "showProperties" : [
+                                                        [
+                                                                "alternateProperties": alternateProperties
+                                                        ]
+                                                ]
+                                        ]
+                                ]]
+                ],
+        ]
+        var thing = [
+                '@type'   : 'Thing',
+                'hasTitle': [
+                        ['@type': 'Title', 'mainTitle': 'Titel'],
+                        ['@type': 'VariantTitle', 'mainTitle': 'variant title']
+                ]
+        ]
+        var fresnel = new FresnelUtil(new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA))
+
+        var takeFirst = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
+        var takeAllAlternate = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip, FresnelUtil.Options.TAKE_ALL_ALTERNATE)
+
+        expect:
+        takeFirst.asString() == takeFirstRes
+        takeAllAlternate.asString() == takeAllAlternateRes
+
+        where:
+        fslPaths                                                           | takeFirstRes          | takeAllAlternateRes
+        ["hasTitle/Title/mainTitle", "hasTitle/VariantTitle/mainTitle"]    | "Titel"               | "Titel variant title"
+        ["hasTitle/VariantTitle/mainTitle", "hasTitle/Title/mainTitle"]    | "variant title"       | "variant title Titel"
+        ["hasTitle/KeyTitle/mainTitle", "hasTitle/VariantTitle/mainTitle"] | "variant title"       | "variant title"
+        ["hasTitle/KeyTitle/mainTitle", "hasTitle/*/mainTitle"]            | "Titel variant title" | "Titel variant title"
     }
 }
