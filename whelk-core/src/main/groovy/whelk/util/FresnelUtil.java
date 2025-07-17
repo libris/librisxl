@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
@@ -88,7 +89,8 @@ public class FresnelUtil {
 
     public enum Options {
         DEFAULT,
-        TAKE_ALL_ALTERNATE
+        TAKE_ALL_ALTERNATE,
+        TAKE_FIRST_SHOW_PROPERTY
     }
 
     private record DerivedCacheKey(Object types, DerivedLens lens) {}
@@ -178,6 +180,10 @@ public class FresnelUtil {
         });
     }
 
+    private Object applyLens(Object value, LensGroupName lensGroupName, LangCode selectedLang) {
+        return applyLens(value, lensGroupName, Options.DEFAULT, selectedLang);
+    }
+
     private Object applyLens(
             Object value,
             LensGroupName lensGroupName,
@@ -213,9 +219,13 @@ public class FresnelUtil {
             return n;
         }
 
-        var result = new Node(lens, options, selectedLang);
+        var result = new Node(lens, selectedLang);
 
-        var showProperties = Stream.concat(Stream.of(new FslPath(JsonLd.TYPE_KEY), new FslPath(JsonLd.ID_KEY)), lens.showProperties().stream()).toList();
+        var showProperties = Stream.concat(Stream.of(new FslPath(JsonLd.TYPE_KEY), new FslPath(JsonLd.ID_KEY)),
+                        options == Options.TAKE_FIRST_SHOW_PROPERTY && !lens.showProperties.isEmpty()
+                                ? Stream.of(lens.showProperties.getFirst())
+                                : lens.showProperties().stream()).toList();
+
         for (var p : showProperties) {
             switch (p) {
                 case AlternateProperties a -> {
@@ -283,27 +293,20 @@ public class FresnelUtil {
             return printTo(new StringBuilder()).toString();
         }
 
-        public abstract Lensed firstProperty();
-
-        // FIXME: Temporary method for experimenting with indexing of _topChipStr field
-        public abstract Lensed tmpFirstProperty();
-
         protected abstract StringBuilder printTo(StringBuilder s);
     }
 
     public final class Node extends Lensed {
         record Selected(FslPath selector, Object value) {}
 
-        Options options;
         LangCode selectedLang;
         String id;
         String type;
         List<Selected> orderedSelection = new ArrayList<>();
         Lens lens;
 
-        Node(Lens lens, Options options, LangCode selectedLang) {
+        Node(Lens lens, LangCode selectedLang) {
             this.lens = lens;
-            this.options = options;
             this.selectedLang = selectedLang;
         }
 
@@ -341,49 +344,12 @@ public class FresnelUtil {
                         .map(v -> v instanceof LanguageContainer l && selectedLang != null
                                 // TODO should we remember here that these are script alts?
                                 ? l.languages.get(selectedLang)
-                                : applyLens(v, lens.subLensGroup, options, selectedLang))
+                                : applyLens(v, lens.subLensGroup, selectedLang))
                         .toList();
                 orderedSelection.add(new Selected(fslPath, values));
             }
 
             return true;
-        }
-
-        @Override
-        public Node firstProperty() {
-            var result = new Node(lens, options, selectedLang);
-            result.id = id;
-            result.type = type;
-            result.orderedSelection = orderedSelection.isEmpty()
-                    ? Collections.emptyList()
-                    : List.of(orderedSelection.getFirst());
-            return result;
-        }
-
-        @Override
-        public Node tmpFirstProperty() {
-            var result = new Node(lens, options, selectedLang);
-            result.id = id;
-            result.type = type;
-            if (orderedSelection.isEmpty()) {
-                result.orderedSelection = Collections.emptyList();
-            } else {
-                Selected first = orderedSelection.getFirst();
-                if (first.selector().getEndArcStep().asPropertyKey().name().equals("hasTitle")) {
-                    (first.value() instanceof Collection<?> c ? c : List.of(first.value()))
-                            .stream()
-                            .filter(Node.class::isInstance)
-                            .map(Node.class::cast)
-                            .forEach(n ->
-                                    n.orderedSelection = n.orderedSelection
-                                            .stream()
-                                            .filter(p -> p.selector().getEndArcStep().asPropertyKey().name().equals("mainTitle"))
-                                            .toList()
-                            );
-                }
-                result.orderedSelection = List.of(first);
-            }
-            return result;
         }
 
         @Override
@@ -410,10 +376,10 @@ public class FresnelUtil {
         private Object mapVocabTerm(Object value) {
             if (value instanceof String s) {
                 var def = jsonLd.vocabIndex.get(s);
-                return applyLens(def != null ? def : s, lens.subLensGroup, options, selectedLang);
+                return applyLens(def != null ? def : s, lens.subLensGroup, selectedLang);
             } else {
                 // bad data
-                return applyLens(value, lens.subLensGroup, options, selectedLang);
+                return applyLens(value, lens.subLensGroup, selectedLang);
             }
         }
     }
@@ -422,24 +388,6 @@ public class FresnelUtil {
         Map<LangCode, Node> transliterations = new HashMap<>();
         void add(LangCode langCode, Node node) {
             transliterations.put(langCode, node);
-        }
-
-        @Override
-        public Lensed firstProperty() {
-            var result = new TransliteratedNode();
-            transliterations.forEach((langCode, node) -> {
-                result.transliterations.put(langCode, node.firstProperty());
-            });
-            return result;
-        }
-
-        @Override
-        public Lensed tmpFirstProperty() {
-            var result = new TransliteratedNode();
-            transliterations.forEach((langCode, node) -> {
-                result.transliterations.put(langCode, node.tmpFirstProperty());
-            });
-            return result;
         }
 
         @Override
