@@ -259,7 +259,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
     // When querying type, match any subclass by default (TODO: make this optional)
     private Node expandType(JsonLd jsonLd) {
-        if (!path.last().isType()) {
+        if (!path.last().isType() || !(value instanceof VocabTerm)) {
             return this;
         }
 
