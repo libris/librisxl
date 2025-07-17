@@ -108,7 +108,45 @@ class FresnelUtilSpec extends Specification {
 
             ],
             "lensGroups": [
-                    "tokens":
+                    "search-tokens": [
+                            "@id"   : "search-tokens",
+                            "@type" : "fresnel:Group",
+                            "lenses": [
+                                    "Work"  : [
+                                            "@type"          : "fresnel:Lens",
+                                            "classLensDomain": "Work",
+                                            "showProperties" : [
+                                                    [
+                                                            // TODO
+//                                                            "alternateProperties": [
+//                                                                    [
+//                                                                            "@type" : "fresnel:fslselector",
+//                                                                            "@value": "hasTitle/Title/mainTitle"
+//                                                                    ],
+//                                                                    [
+//                                                                            "@type" : "fresnel:fslselector",
+//                                                                            "@value": "hasTitle/KeyTitle/mainTitle"
+//                                                                    ],
+//                                                                    [
+//                                                                            "@type" : "fresnel:fslselector",
+//                                                                            "@value": "hasTitle/*/mainTitle"
+//                                                                    ]
+//                                                            ]
+                                                    ]
+                                            ]
+                                    ],
+                                    "Person": [
+                                            "@type"          : "fresnel:Lens",
+                                            "classLensDomain": "Person",
+                                            "showProperties" : [
+                                                    "givenName",
+                                                    "familyName",
+                                                    "name"
+                                            ]
+                                    ]
+                            ]
+                    ],
+                    "tokens"       :
                             ["lenses": [
                                     "Contribution": [
                                             "@id"            : "Contribution-tokens",
@@ -117,7 +155,7 @@ class FresnelUtilSpec extends Specification {
                                             "showProperties" : ["agent"]
                                     ],
                             ]],
-                    "chips" :
+                    "chips"        :
                             ["lenses": [
                                     "Contribution": [
                                             "@id"            : "Contribution-chips",
@@ -186,7 +224,7 @@ class FresnelUtilSpec extends Specification {
                                             ]
                                     ],
                             ]],
-                    "cards" :
+                    "cards"        :
                             ["lenses": [
                                     "Work": [
                                             "@id"            : "Work-cards",
@@ -706,9 +744,9 @@ class FresnelUtilSpec extends Specification {
         when:
         thing = [
                 '@type'   : 'Work',
-                'hasTitle': [['@type': 'Title',
+                'hasTitle': [['@type'          : 'Title',
                               'mainTitleByLang': ["grc": "Νεφέλαι", "grc-Latn-t-grc-Grek-x0-skr-1980": "Nephelai"],
-                              'subtitleByLang': ["grc": "Λυσιστράτη", "grc-Latn-t-grc-Grek-x0-skr-1980": "Lysistratē"]]],
+                              'subtitleByLang' : ["grc": "Λυσιστράτη", "grc-Latn-t-grc-Grek-x0-skr-1980": "Lysistratē"]]],
                 'language': [
                         ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
                 ]
@@ -721,9 +759,9 @@ class FresnelUtilSpec extends Specification {
         when:
         thing = [
                 '@type'   : 'Work',
-                'hasTitle': [['@type': 'Title',
+                'hasTitle': [['@type'          : 'Title',
                               'mainTitleByLang': ["grc": "Νεφέλαι", "grc-Latn-t-grc-Grek-x0-skr-1980": "Nephelai"],
-                              'subtitleByLang': ["grc": "Λυσιστράτη", "grc-Latn-t-grc-Grek-x0-skr-1980": "Lysistratē"]]],
+                              'subtitleByLang' : ["grc": "Λυσιστράτη", "grc-Latn-t-grc-Grek-x0-skr-1980": "Lysistratē"]]],
                 'language': [
                         ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
                 ]
@@ -732,5 +770,57 @@ class FresnelUtilSpec extends Specification {
 
         then:
         chip.byScript() == ['grc': 'Νεφέλαι Λυσιστράτη Svenska Swedish', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai Lysistratē Svenska Swedish']
+    }
+
+    def "search-tokens"() {
+        given:
+        var fresnel = new FresnelUtil(ld)
+        var thing
+        var searchToken
+
+        when:
+        thing = [
+                '@type'   : 'Work',
+                'hasTitle': [['@type': 'Title', 'mainTitle': 'Titel'], ['@type': 'VariantTitle', 'mainTitle': 'variant title']],
+                'language': [
+                        ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
+                ]
+        ]
+        searchToken = fresnel.applyLens(thing, FresnelUtil.LensGroupName.SearchToken, FresnelUtil.Options.NO_FALLBACK)
+
+        then:
+        searchToken.asString() == "" //TODO
+
+        when:
+        thing = [
+                '@type'     : 'Person',
+                'givenName' : 'Namn',
+                'familyName': 'Namnsson',
+                'lifeSpan'  : '1990-'
+        ]
+        searchToken = fresnel.applyLens(thing, FresnelUtil.LensGroupName.SearchToken, FresnelUtil.Options.NO_FALLBACK)
+
+        then:
+        searchToken.asString() == "Namn Namnsson"
+
+        when:
+        thing = [
+                '@type'    : 'Topic',
+                'prefLabel': 'Hästar'
+        ]
+        searchToken = fresnel.applyLens(thing, FresnelUtil.LensGroupName.SearchToken, FresnelUtil.Options.NO_FALLBACK)
+
+        then:
+        searchToken.asString() == ""
+
+        when:
+        thing = [
+                '@type'    : 'Topic',
+                'prefLabel': 'Hästar'
+        ]
+        searchToken = fresnel.applyLens(thing, FresnelUtil.LensGroupName.SearchToken)
+
+        then:
+        searchToken.asString() == "Hästar"
     }
 }

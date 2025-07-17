@@ -43,7 +43,8 @@ public class FresnelUtil {
         Token(List.of("tokens", "chips")),
 
         SearchCard(List.of("search-cards", "cards")),
-        SearchChip(List.of("search-chips", "chips"));
+        SearchChip(List.of("search-chips", "chips")),
+        SearchToken(List.of("search-tokens"));
 
         final List<String> groups;
 
@@ -92,24 +93,37 @@ public class FresnelUtil {
     public enum Options {
         DEFAULT,
         TAKE_ALL_ALTERNATE,
-        TAKE_FIRST_SHOW_PROPERTY
+        TAKE_FIRST_SHOW_PROPERTY,
+        NO_FALLBACK
+    }
+
+    private enum FallbackLens {
+        //TODO load from display.jsonld
+        DEFAULT(Map.of(
+                JsonLd.TYPE_KEY, Fresnel.Lens,
+                Fresnel.showProperties, List.of(
+                        Map.of(Fresnel.alternateProperties, List.of(
+                                // TODO this is the expanded form with xByLang like in JsonLd
+                                "prefLabel", "prefLabelByLang", "label", "labelByLang", "name", "nameByLang", "@id"
+                        ))
+                )
+        )),
+        EMPTY(Map.of(
+                JsonLd.TYPE_KEY, Fresnel.Lens,
+                Fresnel.showProperties, List.of()
+        ));
+
+        private final Map<String, Object> lens;
+
+        FallbackLens(Map<String, Object> lens) {
+            this.lens = lens;
+        }
     }
 
     private record DerivedCacheKey(Object types, DerivedLens lens) {}
-    private record LensCacheKey(Object types, LensGroupName lensGroupName) {}
+    private record LensCacheKey(Object types, LensGroupName lensGroupName, FallbackLens fallbackLens) {}
 
     private static final Logger logger = LogManager.getLogger(FresnelUtil.class);
-
-    //TODO load from display.jsonld
-    private static final Map<String, Object> DEFAULT_LENS = Map.of(
-            JsonLd.TYPE_KEY, Fresnel.Lens,
-            Fresnel.showProperties, List.of(
-                    Map.of(Fresnel.alternateProperties, List.of(
-                            // TODO this is the expanded form with xByLang like in JsonLd
-                            "prefLabel", "prefLabelByLang", "label", "labelByLang", "name", "nameByLang", "@id"
-                    ))
-            )
-    );
 
     JsonLd jsonLd;
     List<LangCode> fallbackLocales;
@@ -196,7 +210,7 @@ public class FresnelUtil {
             // literal
             return value;
         }
-        var lens = findLens(thing, lensGroupName);
+        var lens = findLens(thing, lensGroupName, options.equals(Options.NO_FALLBACK) ? FallbackLens.EMPTY : FallbackLens.DEFAULT);
 
         return applyLens(value, lens, options, selectedLang);
     }
@@ -506,8 +520,12 @@ public class FresnelUtil {
     }
 
     private Lens findLens(Map<?,?> thing, LensGroupName lensGroupName) {
+        return findLens(thing, lensGroupName, FallbackLens.DEFAULT);
+    }
+
+    private Lens findLens(Map<?,?> thing, LensGroupName lensGroupName, FallbackLens fallbackLens) {
         var types = thing.get(JsonLd.TYPE_KEY);
-        var cacheKey = new LensCacheKey(types, lensGroupName);
+        var cacheKey = new LensCacheKey(types, lensGroupName, fallbackLens);
 
         return lensCache.computeIfAbsent(cacheKey, k -> {
             for (var groupName : lensGroupName.groups) {
@@ -520,7 +538,7 @@ public class FresnelUtil {
                 }
             }
 
-            return new Lens(DEFAULT_LENS, subLens(lensGroupName));
+            return new Lens(fallbackLens.lens, subLens(lensGroupName));
         });
     }
 
@@ -635,6 +653,7 @@ public class FresnelUtil {
 
             case SearchCard -> LensGroupName.SearchChip;
             case SearchChip -> LensGroupName.Token; // TODO ??
+            case SearchToken -> LensGroupName.SearchToken;
         };
     }
 
