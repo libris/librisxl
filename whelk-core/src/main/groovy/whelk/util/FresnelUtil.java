@@ -317,6 +317,8 @@ public class FresnelUtil {
             return asLangMap(byScript(new LinkedHashMap<>()));
         }
 
+        public abstract boolean isEmpty();
+
         protected abstract StringBuilder printTo(StringBuilder s);
 
         protected abstract Map<LangCode, StringBuilder> byLang(Map<LangCode, StringBuilder> stringsByLang);
@@ -391,6 +393,11 @@ public class FresnelUtil {
         }
 
         @Override
+        protected boolean isEmpty() {
+            return orderedProps.isEmpty();
+        }
+
+        @Override
         protected StringBuilder printTo(StringBuilder s) {
             orderedSelection.forEach(p -> printTo(s, p.value));
             return s;
@@ -460,6 +467,11 @@ public class FresnelUtil {
         Map<LangCode, Node> transliterations = new HashMap<>();
         void add(LangCode langCode, Node node) {
             transliterations.put(langCode, node);
+        }
+
+        @Override
+        protected boolean isEmpty() {
+            return transliterations.values().stream().allMatch(Node::isEmpty);
         }
 
         @Override

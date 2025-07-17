@@ -23,6 +23,7 @@ import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
 import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
+import static whelk.util.FresnelUtil.Options.NO_FALLBACK
 import static whelk.util.FresnelUtil.Options.TAKE_ALL_ALTERNATE
 import static whelk.util.FresnelUtil.Options.TAKE_FIRST_SHOW_PROPERTY
 import static whelk.util.Jackson.mapper
@@ -70,14 +71,14 @@ class ElasticSearch {
         )
     }
 
-    public static final String TOP_CHIP_STR = '_topChipStr'
+    public static final String TOP_STR = '_topStr'
     public static final String CHIP_STR = '_chipStr'
     public static final String CARD_STR = '_cardStr'
     public static final String SEARCH_CARD_STR = '_searchCardStr'
 
     private static final Set<String> SEARCH_STRINGS = [
             JsonLd.SEARCH_KEY,
-            TOP_CHIP_STR,
+            TOP_STR,
             CHIP_STR,
             CARD_STR,
             SEARCH_CARD_STR
@@ -472,12 +473,16 @@ class ElasticSearch {
                 document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
 
         try {
-            var firstProperty = whelk.fresnelUtil.applyLens(framed, FresnelUtil.LensGroupName.Chip, TAKE_FIRST_SHOW_PROPERTY)
-            var topStr = firstProperty.byLang().subMap(whelk.jsonld.locales).values()
-                    ?: firstProperty.byScript().values()
-                    ?: firstProperty.asString()
+            var topLens = whelk.fresnelUtil.applyLens(framed, FresnelUtil.LensGroupName.SearchToken, NO_FALLBACK)
+            if (topLens.isEmpty()) {
+                // If there is no search token, take first property of chip instead
+                topLens = whelk.fresnelUtil.applyLens(framed, FresnelUtil.LensGroupName.Chip, TAKE_FIRST_SHOW_PROPERTY)
+            }
+            var topStr = topLens.byLang().subMap(whelk.jsonld.locales).values()
+                    ?: topLens.byScript().values()
+                    ?: topLens.asString()
             if (topStr) {
-                framed[TOP_CHIP_STR] = topStr
+                framed[TOP_STR] = topStr
             }
             framed[CHIP_STR] = whelk.fresnelUtil.applyLens(framed, FresnelUtil.LensGroupName.Chip, TAKE_ALL_ALTERNATE).asString()
             framed[CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
