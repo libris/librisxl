@@ -24,6 +24,7 @@ import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
 import static whelk.util.FresnelUtil.Options.TAKE_ALL_ALTERNATE
+import static whelk.util.FresnelUtil.Options.TAKE_FIRST_SHOW_PROPERTY
 import static whelk.util.Jackson.mapper
 
 @Log
@@ -471,11 +472,14 @@ class ElasticSearch {
                 document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
 
         try {
-            var chip = whelk.fresnelUtil.applyLens(framed, FresnelUtil.LensGroupName.Chip, TAKE_ALL_ALTERNATE);
-            framed[TOP_CHIP_STR] = chip.tmpFirstProperty().asString()
-            // FIXME: Switch to commented-out call once it returns a satisfying result for this purpose
-//            framed[TOP_CHIP_STR] = chip.firstProperty().asString()
-            framed[CHIP_STR] = chip.asString()
+            var firstProperty = whelk.fresnelUtil.applyLens(framed, FresnelUtil.LensGroupName.Chip, TAKE_FIRST_SHOW_PROPERTY)
+            var topStr = firstProperty.byLang().subMap(whelk.jsonld.locales).values()
+                    ?: firstProperty.byScript().values()
+                    ?: firstProperty.asString()
+            if (topStr) {
+                framed[TOP_CHIP_STR] = topStr
+            }
+            framed[CHIP_STR] = whelk.fresnelUtil.applyLens(framed, FresnelUtil.LensGroupName.Chip, TAKE_ALL_ALTERNATE).asString()
             framed[CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
             framed[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.SEARCH_CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
         } catch (Exception e) {
@@ -483,10 +487,15 @@ class ElasticSearch {
         }
 
         DocumentUtil.traverse(framed) { value, path ->
-            if (path && SEARCH_STRINGS.contains(path.last()) && !Unicode.isNormalizedForSearch(value)) {
+            if (path && SEARCH_STRINGS.contains(path.last())) {
                 // TODO: replace with elastic ICU Analysis plugin?
                 // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
-                return new DocumentUtil.Replace(Unicode.normalizeForSearch(value))
+                if (value instanceof List) {
+                    return new DocumentUtil.Replace(value.collect { !Unicode.isNormalizedForSearch(it) ? Unicode.normalizeForSearch(it) : it })
+                }
+                if (value instanceof String && !Unicode.isNormalizedForSearch(value)) {
+                    return new DocumentUtil.Replace(Unicode.normalizeForSearch(value))
+                }
             }
 
             // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" } }
