@@ -609,4 +609,128 @@ class FresnelUtilSpec extends Specification {
         ["hasTitle/KeyTitle/mainTitle", "hasTitle/VariantTitle/mainTitle"] | "variant title"       | "variant title"
         ["hasTitle/KeyTitle/mainTitle", "hasTitle/*/mainTitle"]            | "Titel variant title" | "Titel variant title"
     }
+
+    def "Take first in showProperties"() {
+        given:
+        var thing = [
+                '@type'   : 'Work',
+                'hasTitle': title,
+                'language': [
+                        ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
+                ]
+        ]
+        var fresnel = new FresnelUtil(ld)
+        var first = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip, FresnelUtil.Options.TAKE_FIRST_SHOW_PROPERTY)
+
+        expect:
+        first.asString() == res
+
+        where:
+        title                                                                                                                                | res
+        [['@type': 'Title', 'mainTitle': 'Titel'], ['@type': 'VariantTitle', 'mainTitle': 'variant title']]                                  | "Titel"
+        [['@type': 'VariantTitle', 'mainTitle': 'variant title']]                                                                            | 'variant title'
+        [['@type': 'Title', 'mainTitleByLang': ['sv': 'Titel', 'en': 'Title']]]                                                              | "Titel Title"
+        [['@type': 'Title', 'mainTitleByLang': ['sv': 'Titel', 'en': 'Title'], 'subtitle': 'subtitle']]                                      | "Titel Title subtitle"
+        [['@type': 'Title', 'mainTitleByLang': ["grc": "Νεφέλαι", "grc-Latn-t-grc-Grek-x0-skr-1980": "Nephelai"], 'subtitle': 'Lysistratē']] | "Nephelai Lysistratē Νεφέλαι Lysistratē"
+    }
+
+    def "Split up strings by language"() {
+        given:
+        var thing = [
+                '@type'   : 'Work',
+                'hasTitle': title,
+                'language': [
+                        ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
+                ]
+        ]
+        var fresnel = new FresnelUtil(ld)
+        var chip = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
+
+        expect:
+        chip.byLang() == res
+
+        where:
+        title                                                                                                      | res
+        [['@type': 'Title', 'mainTitle': 'Titel'], ['@type': 'VariantTitle', 'mainTitle': 'variant title']]        | ['sv': 'Titel Svenska', 'en': 'Titel Swedish']
+        [['@type': 'VariantTitle', 'mainTitle': 'variant title']]                                                  | ['sv': 'variant title Svenska', 'en': 'variant title Swedish']
+        [['@type': 'Title', 'mainTitleByLang': ['sv': 'Titel', 'en': 'Title']]]                                    | ['sv': 'Titel Svenska', 'en': 'Title Swedish']
+        [['@type': 'Title', 'mainTitleByLang': ['sv': 'Titel', 'en': 'Title'], 'subtitle': 'subtitle']]            | ['sv': 'Titel subtitle Svenska', 'en': 'Title subtitle Swedish']
+        [['@type': 'Title', 'mainTitleByLang': ["grc": "Νεφέλαι", "grc-Latn-t-grc-Grek-x0-skr-1980": "Nephelai"]]] | ['sv': 'Nephelai Νεφέλαι Svenska', 'en': 'Nephelai Νεφέλαι Swedish']
+    }
+
+    def "Split up strings by script language"() {
+        given:
+        var fresnel = new FresnelUtil(ld)
+        var thing
+        var chip
+
+        when:
+        thing = [
+                '@type'   : 'Work',
+                'hasTitle': [['@type': 'Title', 'mainTitle': 'Titel'], ['@type': 'VariantTitle', 'mainTitle': 'variant title']],
+                'language': [
+                        ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
+                ]
+        ]
+        chip = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
+
+        then:
+        chip.byScript() == [:]
+
+        when:
+        thing = [
+                '@type'   : 'Work',
+                'hasTitle': [['@type': 'Title', 'mainTitleByLang': ["grc": "Νεφέλαι", "grc-Latn-t-grc-Grek-x0-skr-1980": "Nephelai"]]],
+                'language': [
+                        ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
+                ]
+        ]
+        chip = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
+
+        then:
+        chip.byScript() == ['grc': 'Νεφέλαι Svenska Swedish', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai Svenska Swedish']
+
+        when:
+        thing = [
+                '@type'   : 'Work',
+                'hasTitle': [['@type': 'Title', 'mainTitleByLang': ["grc": "Νεφέλαι", "grc-Latn-t-grc-Grek-x0-skr-1980": "Nephelai"], 'subtitle': 'subtitle']],
+                'language': [
+                        ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
+                ]
+        ]
+        chip = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
+
+        then:
+        chip.byScript() == ['grc': 'Νεφέλαι subtitle Svenska Swedish', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai subtitle Svenska Swedish']
+
+        when:
+        thing = [
+                '@type'   : 'Work',
+                'hasTitle': [['@type': 'Title',
+                              'mainTitleByLang': ["grc": "Νεφέλαι", "grc-Latn-t-grc-Grek-x0-skr-1980": "Nephelai"],
+                              'subtitleByLang': ["grc": "Λυσιστράτη", "grc-Latn-t-grc-Grek-x0-skr-1980": "Lysistratē"]]],
+                'language': [
+                        ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
+                ]
+        ]
+        chip = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
+
+        then:
+        chip.byScript() == ['grc': 'Νεφέλαι Λυσιστράτη Svenska Swedish', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai Lysistratē Svenska Swedish']
+
+        when:
+        thing = [
+                '@type'   : 'Work',
+                'hasTitle': [['@type': 'Title',
+                              'mainTitleByLang': ["grc": "Νεφέλαι", "grc-Latn-t-grc-Grek-x0-skr-1980": "Nephelai"],
+                              'subtitleByLang': ["grc": "Λυσιστράτη", "grc-Latn-t-grc-Grek-x0-skr-1980": "Lysistratē"]]],
+                'language': [
+                        ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
+                ]
+        ]
+        chip = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
+
+        then:
+        chip.byScript() == ['grc': 'Νεφέλαι Λυσιστράτη Svenska Swedish', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai Lysistratē Svenska Swedish']
+    }
 }

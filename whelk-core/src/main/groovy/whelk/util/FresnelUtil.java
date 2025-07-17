@@ -384,13 +384,13 @@ public class FresnelUtil {
 
         @Override
         public Map<LangCode, StringBuilder> byLang(Map<LangCode, StringBuilder> stringsByLang) {
-            orderedProps.forEach(prop -> byLang(stringsByLang, prop.value()));
+            orderedSelection.forEach(p -> byLang(stringsByLang, p.value()));
             return stringsByLang;
         }
 
         @Override
         protected Map<LangCode, StringBuilder> byScript(Map<LangCode, StringBuilder> stringsByLang) {
-            orderedProps.forEach(prop -> byScript(stringsByLang, prop.value()));
+            orderedSelection.forEach(p -> byScript(stringsByLang, p.value()));
             return stringsByLang;
         }
 
