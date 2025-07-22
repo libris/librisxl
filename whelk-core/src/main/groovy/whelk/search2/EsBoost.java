@@ -15,8 +15,8 @@ import static whelk.search2.QueryUtil.shouldWrap;
 public class EsBoost {
     // TODO: Don't hardcode boost configuration
     public static List<String> BOOST_FIELDS = List.of(
-            "_topChipStr^400(_score / (doc['_topChipStr.length'].size() == 0 || doc['_topChipStr.length'].value == 0 ? 1 : doc['_topChipStr.length'].value))",
-            "_topChipStr.exact^400(_score / (doc['_topChipStr.length'].size() == 0 || doc['_topChipStr.length'].value == 0 ? 1 : doc['_topChipStr.length'].value))",
+            "_topStr^400(_score / (doc['_topStr.length'].size() == 0 || doc['_topStr.length'].value == 0 ? 1 : doc['_topStr.length'].value))",
+            "_topStr.exact^400(_score / (doc['_topStr.length'].size() == 0 || doc['_topStr.length'].value == 0 ? 1 : doc['_topStr.length'].value))",
             "_chipStr^200",
             "_chipStr.exact^200",
             "_cardStr^50",

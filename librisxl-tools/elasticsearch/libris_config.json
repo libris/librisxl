@@ -443,7 +443,7 @@
             },
             {
                 "str_template": {
-                    "match": ["_topChipStr"],
+                    "match": ["_topStr"],
                     "mapping": {
                         "fields": {
                             "exact": {
