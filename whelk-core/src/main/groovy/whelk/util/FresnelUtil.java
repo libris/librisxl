@@ -430,25 +430,39 @@ public class FresnelUtil {
             }
         }
 
-        private void byLang(Map<LangCode, StringBuilder> stringsByLang, Object value) {
-            StringBuilder noLang = stringsByLang.computeIfAbsent(NO_LANG, k -> new StringBuilder());
+        private void byLang(Map<LangCode, StringBuilder> stringsByLangTag, Object value) {
+            StringBuilder noLang = stringsByLangTag.computeIfAbsent(NO_LANG, k -> new StringBuilder());
             switch (value) {
-                case Collection<?> c -> c.forEach(v -> byLang(stringsByLang, v));
-                case LanguageContainer l -> l.languages.forEach((lang, v) ->
-                        printTo(stringsByLang.computeIfAbsent(lang, k -> new StringBuilder(noLang.toString())), v)
-                );
-                case Lensed l -> l.byLang(stringsByLang);
-                default -> stringsByLang.values().forEach(s -> printTo(s, value));
+                case Collection<?> c -> c.forEach(v -> byLang(stringsByLangTag, v));
+                case LanguageContainer l -> {
+                    if (!l.isTransliterated()) {
+                        l.languages.forEach((lang, v) ->
+                                printTo(stringsByLangTag.computeIfAbsent(lang, k -> new StringBuilder(noLang.toString())), v)
+                        );
+                    } else {
+                        byLang(stringsByLangTag, l.languages.values());
+                    }
+                }
+                case Lensed l -> l.byLang(stringsByLangTag);
+                default -> stringsByLangTag.values().forEach(s -> printTo(s, value));
             }
         }
 
-        private void byScript(Map<LangCode, StringBuilder> stringsByLang, Object value) {
-            stringsByLang.putIfAbsent(NO_LANG, new StringBuilder());
+        private void byScript(Map<LangCode, StringBuilder> stringsByLangTag, Object value) {
+            StringBuilder noLang = stringsByLangTag.computeIfAbsent(NO_LANG, k -> new StringBuilder());
             switch (value) {
-                case Collection<?> c -> c.forEach(v -> byScript(stringsByLang, v));
-                case LanguageContainer l -> l.languages.values().forEach(v -> byScript(stringsByLang, v));
-                case Lensed l -> l.byScript(stringsByLang);
-                default -> stringsByLang.values().forEach(s -> printTo(s, value));
+                case Collection<?> c -> c.forEach(v -> byScript(stringsByLangTag, v));
+                case LanguageContainer l -> {
+                    if (l.isTransliterated()) {
+                        l.languages.forEach((lang, v) ->
+                                printTo(stringsByLangTag.computeIfAbsent(lang, k -> new StringBuilder(noLang.toString())), v)
+                        );
+                    } else {
+                        byScript(stringsByLangTag, l.languages.values());
+                    }
+                }
+                case Lensed l -> l.byScript(stringsByLangTag);
+                default -> stringsByLangTag.values().forEach(s -> printTo(s, value));
             }
         }
 
