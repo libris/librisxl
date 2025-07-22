@@ -518,10 +518,10 @@ class FresnelUtilSpec extends Specification {
                 "lensGroups": [
                         "chips":
                                 ["lenses": [
-                                        "Thing": [
-                                                "@id"            : "Thing-chips",
+                                        "Work": [
+                                                "@id"            : "Work-chips",
                                                 "@type"          : "fresnel:Lens",
-                                                "classLensDomain": "Thing",
+                                                "classLensDomain": "Work",
                                                 "showProperties" : [
                                                         [
                                                                 "@type" : "fresnel:fslselector",
@@ -534,7 +534,7 @@ class FresnelUtilSpec extends Specification {
                 ],
         ]
         var thing = [
-                '@type'   : 'Thing',
+                '@type'   : 'Work',
                 'hasTitle': [
                         ['@type': 'Title', 'mainTitle': 'Titel'],
                         ['@type': 'VariantTitle', 'mainTitleByLang': ['sv': 'varianttitel', 'en': 'variant title']]
@@ -544,6 +544,16 @@ class FresnelUtilSpec extends Specification {
                 ],
                 'subject' : [
                         ['@type': 'Topic', 'prefLabel': "Hästar"],
+                ],
+                '@reverse': [
+                        'instanceOf': [
+                                '@type'                  : 'Instance',
+                                'responsibilityStatement': 'av En Författare',
+                                'meta'                   : [
+                                        '@type'        : 'Record',
+                                        'controlNumber': 'dz7666s5bdksvtls'
+                                ]
+                        ]
                 ]
         ]
         var fresnel = new FresnelUtil(new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA))
@@ -554,13 +564,15 @@ class FresnelUtilSpec extends Specification {
         lensed.asString() == result
 
         where:
-        fslPath                           | result
-        "hasTitle/Title/mainTitle"        | "Titel Svenska Swedish"
-        "hasTitle/VariantTitle/mainTitle" | "varianttitel variant title Svenska Swedish"
-        "hasTitle/*/mainTitle"            | "Titel varianttitel variant title Svenska Swedish"
-        "language/Language/code"          | "sv Svenska Swedish"
-        "language/Language/mainTitle"     | "Svenska Swedish"
-        "language/Title/code"             | "Svenska Swedish"
+        fslPath                                    | result
+        "hasTitle/Title/mainTitle"                 | "Titel Svenska Swedish"
+        "hasTitle/VariantTitle/mainTitle"          | "varianttitel variant title Svenska Swedish"
+        "hasTitle/*/mainTitle"                     | "Titel varianttitel variant title Svenska Swedish"
+        "language/Language/code"                   | "sv Svenska Swedish"
+        "language/Language/mainTitle"              | "Svenska Swedish"
+        "language/Title/code"                      | "Svenska Swedish"
+        'in::instanceOf/*/responsibilityStatement' | 'av En Författare Svenska Swedish'
+        'in::instanceOf/*/meta/*/controlNumber'    | 'dz7666s5bdksvtls Svenska Swedish'
     }
 
     def "Handle FSL paths as alternateProperties"() {

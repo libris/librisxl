@@ -747,6 +747,8 @@ public class FresnelUtil {
 
     // TODO: Support "range restriction" style? e.g. "hasTitle[KeyTitle]"^^fresnel:fslselector
     private record FslPath(String path) implements PropertySelector {
+        private static final String IN = "in::";
+
         List<Map<?, ?>> getTargetEntities(Map<?, ?> sourceEntity) {
             return getTargetEntities(sourceEntity, new ArrayList<>(List.of(path.split("/"))));
         }
@@ -763,10 +765,14 @@ public class FresnelUtil {
             if (pathRemainder.size() == 1) {
                 return List.of(currentEntity);
             }
+
             String nextArcStep = pathRemainder.removeFirst();
             String nextNodeStep = pathRemainder.removeFirst();
-            List<?> nextNodes = currentEntity.get(nextArcStep) instanceof List<?> l ? l : List.of(currentEntity.get(nextArcStep));
-            return nextNodes.stream()
+
+            List<String> path = nextArcStep.startsWith(IN) ? List.of(JsonLd.REVERSE_KEY, nextArcStep.replaceFirst(IN, "")) : List.of(nextArcStep);
+            var nextNode = DocumentUtil.getAtPath(currentEntity, path, List.of());
+
+            return (nextNode instanceof List<?> l ? l : List.of(nextNode)).stream()
                     .filter(Map.class::isInstance)
                     .map(Map.class::cast)
                     .filter(m -> nextNodeStep.equals("*") || JsonLd.asList(m.get(JsonLd.TYPE_KEY)).contains(nextNodeStep))
