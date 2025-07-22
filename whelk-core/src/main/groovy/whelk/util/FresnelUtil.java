@@ -393,7 +393,7 @@ public class FresnelUtil {
         }
 
         @Override
-        protected boolean isEmpty() {
+        public boolean isEmpty() {
             return orderedProps.isEmpty();
         }
 
@@ -470,7 +470,7 @@ public class FresnelUtil {
         }
 
         @Override
-        protected boolean isEmpty() {
+        public boolean isEmpty() {
             return transliterations.values().stream().allMatch(Node::isEmpty);
         }
 
