@@ -109,14 +109,9 @@ public class History {
                    the whole containing object (the instance in this case).
             */
             {
+                TrieNode trieRoot = buildTrie(claimedPaths);
                 for (List<Object> claimedPath : claimedPaths) {
-                    boolean existsMoreSpecific = false;
-                    for (List deeperPath : claimedPaths) {
-                        if (isSubList(claimedPath, deeperPath) && deeperPath.size() > claimedPath.size()) {
-                            existsMoreSpecific = true;
-                        }
-                    }
-
+                    boolean existsMoreSpecific = hasMoreSpecific(trieRoot, claimedPath);
                     if (!existsMoreSpecific) {
                         List<Object> finalClaim;
                         if (claimedPath.get(claimedPath.size()-1) instanceof String) {
@@ -166,7 +161,37 @@ public class History {
             }
         }
     }
-        
+
+    private static class TrieNode {
+        Map<Object, TrieNode> children = new HashMap<>();
+        boolean isEnd = false;
+    }
+
+    private static TrieNode buildTrie(List<List<Object>> paths) {
+        TrieNode root = new TrieNode();
+        for (List<Object> path : paths) {
+            TrieNode node = root;
+            for (Object part : path) {
+                node = node.children.computeIfAbsent(part, k -> new TrieNode());
+            }
+            node.isEnd = true;
+        }
+        return root;
+    }
+
+    private static boolean hasMoreSpecific(TrieNode root, List<Object> path) {
+        TrieNode node = root;
+        for (Object part : path) {
+            node = node.children.get(part);
+            if (node == null) {
+                // No more specific path found
+                return false;
+            }
+        }
+        // If there are any children at this point, a more specific path exists
+        return !node.children.isEmpty();
+    }
+
     private static boolean isSubList(List a, List b) {
         if (a.size() > b.size())
             return false;
