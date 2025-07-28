@@ -28,7 +28,6 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -325,10 +324,14 @@ public class ProfileExport
         return !oldCard.equals(newCard);
     }
 
-    private Collection<String> getAffectedBibIdsForAuth(String authId, ExportProfile profile) {
+    private List<String> getAffectedBibIdsForAuth(String authId, ExportProfile profile) {
         List<String> allIds = m_whelk.getStorage()
                 .followDependers(authId, JsonLd.NON_DEPENDANT_RELATIONS)
-                .stream().map(Tuple2::getFirst).collect(Collectors.toList());
+                .stream().map(Tuple2::getFirst).toList();
+
+        if (allIds.size() > 50000) {
+            logger.warn("Unusually large amount of affected IDs ({}) caused by {}", allIds.size(), authId);
+        }
 
         if (profile.shouldExportAllLocations()) {
             return allIds.stream()
@@ -336,7 +339,17 @@ public class ProfileExport
                     .collect(Collectors.toList());
         }
         else {
-            return m_whelk.getStorage().filterBibIdsByHeldBy(allIds, locationLibraryUris(profile));
+            List<String> locationLibraryUris = locationLibraryUris(profile);
+            int batchSize = 5000;
+            List<String> result = new java.util.ArrayList<>();
+            int numBatches = (allIds.size() + batchSize - 1) / batchSize;
+
+            for (int i = 0; i < numBatches; i++) {
+                List<String> batch = allIds.subList(i * batchSize, Math.min((i + 1) * batchSize, allIds.size()));
+                result.addAll(m_whelk.getStorage().filterBibIdsByHeldBy(batch, locationLibraryUris));
+            }
+
+            return result;
         }
     }
 
