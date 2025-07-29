@@ -1,23 +1,27 @@
 {
   "field_boost": {
-    "fields": {
-      "_topStr": {
+    "fields": [
+      {
+        "name": "_topStr",
         "boost": 400,
         "script_score": {
           "function": "_score / doc['_topStr.length'].value",
           "apply_if": "doc['_topStr.length'].size() > 0 && doc['_topStr.length'].value > 0"
         }
       },
-      "_chipStr": {
+      {
+        "name": "_chipStr",
         "boost": 200
       },
-      "_cardStr": {
+      {
+        "name": "_cardStr",
         "boost": 50
       },
-      "_searchCardStr": {
+      {
+        "name": "_chipStr",
         "boost": 0
       }
-    },
+    ],
     "default_boost_factor": 400,
     "phrase_boost_divisor": 8,
     "analyze_wildcard": true,

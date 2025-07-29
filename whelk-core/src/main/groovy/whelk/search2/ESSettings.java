@@ -4,7 +4,6 @@ import whelk.Whelk;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -39,10 +38,14 @@ public class ESSettings {
 
     public Boost loadBoostSettings() {
         Map<?, ?> settings = toMap(Boost.class.getClassLoader().getResourceAsStream(BOOST_SETTINGS_FILE));
-        return Boost.load(settings);
+        return new Boost(settings);
     }
 
     public record Boost(FieldBoost fieldBoost, FunctionScore functionScore, ConstantScore constantScore) {
+        Boost(Map<?, ?> settings) {
+            this(FieldBoost.load(settings), FunctionScore.load(settings), ConstantScore.load(settings));
+        }
+
         record FieldBoost(List<Field> fields,
                           int defaultBoostFactor,
                           int phraseBoostDivisor,
@@ -50,8 +53,30 @@ public class ESSettings {
                           boolean analyzeWildcard,
                           boolean includeExactFields) {
             record Field(String name, int boost, ScriptScore scriptScore) {
-                record ScriptScore(String function, String applyIf) {
+                Field(Map<?, ?> settings) {
+                    this((String) settings.get("name"), (int) settings.get("boost"), new ScriptScore(getAsMap(settings, "script_score")));
                 }
+
+                record ScriptScore(String function, String applyIf) {
+                    ScriptScore(Map<?, ?> settings) {
+                        this((String) settings.get("function"), (String) settings.get("apply_if"));
+                    }
+                }
+            }
+
+            static FieldBoost load(Map<?, ?> settings) {
+                Map<?, ?> fieldBoostSettings = getAsMap(settings, "field_boost");
+                List<Field> fields = getAsStream(fieldBoostSettings, "fields")
+                        .map(Map.class::cast)
+                        .map(Field::new)
+                        .toList();
+                return new FieldBoost(fields,
+                        (int) fieldBoostSettings.get("default_boost_factor"),
+                        (int) fieldBoostSettings.get("phrase_boost_divisor"),
+                        (String) fieldBoostSettings.get("multi_match_type"),
+                        (Boolean) fieldBoostSettings.get("analyze_wildcard"),
+                        (Boolean) fieldBoostSettings.get("include_exact_fields")
+                );
             }
         }
 
@@ -73,9 +98,21 @@ public class ESSettings {
 
                 static ScoreFunction load(Map<?, ?> settings) {
                     return FieldValueFactor.key().equals(settings.get("type"))
-                            ? new FieldValueFactor((Map<?, ?>) settings.get("params"), (int) settings.get("weight"))
+                            ? new FieldValueFactor(getAsMap(settings, "params"), (int) settings.get("weight"))
                             : null;
                 }
+            }
+
+            static FunctionScore load(Map<?, ?> settings) {
+                Map<?, ?> functionScoreSettings = getAsMap(settings, "function_score");
+                List<FunctionScore.ScoreFunction> scoreFunctions = getAsStream(functionScoreSettings, "functions")
+                        .map(Map.class::cast)
+                        .map(FunctionScore.ScoreFunction::load)
+                        .filter(Objects::nonNull)
+                        .toList();
+                return new FunctionScore(scoreFunctions,
+                        (String) functionScoreSettings.get("score_mode"),
+                        (String) functionScoreSettings.get("boost_mode"));
             }
         }
 
@@ -117,49 +154,14 @@ public class ESSettings {
                     return new Constant(scores, Wrapper.load(settings));
                 }
             }
-        }
 
-        private static Boost load(Map<?, ?> settings) {
-            Map<?, ?> fieldBoostSettings = getAsMap(settings, "field_boost");
-            List<FieldBoost.Field> fields = new ArrayList<>();
-            getAsMap(fieldBoostSettings, "fields").forEach((k, v) -> {
-                String field = (String) k;
-                int boost = (int) ((Map<?, ?>) v).get("boost");
-                Map<?, ?> scriptScore = getAsMap((Map<?, ?>) v, "script_score");
-                if (scriptScore.isEmpty()) {
-                    fields.add(new FieldBoost.Field(field, boost, null));
-                } else {
-                    String function = (String) scriptScore.get("function");
-                    String applyIf = (String) scriptScore.get("apply_if");
-                    fields.add(new FieldBoost.Field(field, boost, new FieldBoost.Field.ScriptScore(function, applyIf)));
-                }
-            });
-            FieldBoost fieldBoost = new FieldBoost(fields,
-                    (int) fieldBoostSettings.get("default_boost_factor"),
-                    (int) fieldBoostSettings.get("phrase_boost_divisor"),
-                    (String) fieldBoostSettings.get("multi_match_type"),
-                    (Boolean) fieldBoostSettings.get("analyze_wildcard"),
-                    (Boolean) fieldBoostSettings.get("include_exact_fields")
-            );
-
-            Map<?, ?> functionScoreSettings = getAsMap(settings, "function_score");
-            List<FunctionScore.ScoreFunction> scoreFunctions = getAsStream(functionScoreSettings, "functions")
-                    .map(Map.class::cast)
-                    .map(FunctionScore.ScoreFunction::load)
-                    .filter(Objects::nonNull)
-                    .toList();
-            FunctionScore functionScore = new FunctionScore(scoreFunctions,
-                    (String) functionScoreSettings.get("score_mode"),
-                    (String) functionScoreSettings.get("boost_mode"));
-
-
-            List<ConstantScore.Constant> constants = getAsStream(settings, "constant_score")
-                    .map(Map.class::cast)
-                    .map(ConstantScore.Constant::load)
-                    .toList();
-            ConstantScore constantScore = new ConstantScore(constants);
-
-            return new Boost(fieldBoost, functionScore, constantScore);
+            static ConstantScore load(Map<?, ?> settings) {
+                List<ConstantScore.Constant> constants = getAsStream(settings, "constant_score")
+                        .map(Map.class::cast)
+                        .map(ConstantScore.Constant::load)
+                        .toList();
+                return new ConstantScore(constants);
+            }
         }
 
         private static Stream<?> getAsStream(Map<?, ?> m, String k) {
