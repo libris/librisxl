@@ -107,6 +107,10 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         return new PathValue(path, replacement, value);
     }
 
+    public PathValue withValue(Value replacement) {
+        return new PathValue(path, operator, replacement);
+    }
+
     public PathValue toOrEquals() {
         if (value instanceof Numeric n) {
             if (operator.equals(GREATER_THAN)) {

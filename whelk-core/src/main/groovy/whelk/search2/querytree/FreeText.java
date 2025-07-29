@@ -48,28 +48,6 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
 
     @Override
     public Map<String, Object> toEs(EsMappings esMappings, EsBoost.Config boostConfig) {
-        if (boostConfig.suggest() && !negate) {
-            int cursor = boostConfig.cursor();
-            Optional<Token> currentlyEditedToken = getCurrentlyEditedToken(cursor);
-            if (currentlyEditedToken.isPresent()) {
-                var token = currentlyEditedToken.get();
-                if (!token.isQuoted() && !token.value().endsWith(Operator.WILDCARD)) {
-                    var tokenIdx = tokens.indexOf(token);
-                    var prefixedToken = new Token.Raw(token.value() + Operator.WILDCARD);
-                    var altTokens = new ArrayList<>(tokens) {{
-                        remove(tokenIdx);
-                        add(tokenIdx, prefixedToken);
-                    }};
-                    var shouldClause = List.of(
-                            // Make a query with the currently edited token prefixed to get suggestions
-                            _toEs(altTokens, boostConfig),
-                            // Also make a non-prefix query to get higher relevancy score for exact matches
-                            _toEs(tokens, boostConfig)
-                    );
-                    return shouldWrap(shouldClause);
-                }
-            }
-        }
         return _toEs(tokens, boostConfig);
     }
 
@@ -137,6 +115,10 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
         return tokens.stream()
                 .filter(t -> cursorPos > t.offset() && cursorPos <= t.offset() + t.value().length())
                 .findFirst();
+    }
+
+    public FreeText withTokens(List<Token> tokens) {
+        return new FreeText(textQuery, negate, tokens, connective);
     }
 
     private String joinTokens() {

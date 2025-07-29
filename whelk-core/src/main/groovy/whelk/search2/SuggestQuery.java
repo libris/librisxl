@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -143,24 +144,45 @@ public class SuggestQuery extends Query {
                                 .filter(Predicate.not("Work"::equals))
                                 .anyMatch(baseType -> baseType.equals(type) || whelk.getJsonld().getSubClasses(baseType).contains(type)))
                         .collect(Collectors.joining(" OR "));
-                if (!searchableTypes.isEmpty()) {
-                    this.propertySearch = true;
-                    FreeText ft = (FreeText) pv.value();
-                    // FIXME: This is only needed until frontend no longer rely on quoted values not being treated as such.
-                    List<Token> unquotedTokens = ft.tokens().stream()
-                            .map(t -> t.isQuoted() ? new Token.Raw(t.value(), t.offset()) : t)
+
+                FreeText ft = (FreeText) pv.value();
+                FreeText prefixFt = editedTokenAsPrefix(ft);
+
+                // FIXME: The unquoting is only needed until frontend no longer relies on quoted values not being treated as such.
+                Function<FreeText, FreeText> unquote = f -> {
+                    List<Token> unquotedTokens = f.tokens().stream()
+                            .map(t -> t.isQuoted() ? new Token.Raw(t.value()) : t)
                             .toList();
-                    ft = new FreeText(ft.textQuery(), ft.negate(), unquotedTokens, ft.connective());
-                    Node typeFilter = QueryTreeBuilder.buildTree("\"rdf:type\":" + parenthesize(searchableTypes), disambiguate);
-                    Node reverseLinksFilter = QueryTreeBuilder.buildTree("reverseLinks.totalItems>0", disambiguate);
-                    return new QueryTree(new And(List.of(ft, typeFilter, reverseLinksFilter)));
+                    return f.withTokens(unquotedTokens);
+                };
+
+                if (searchableTypes.isEmpty()) {
+                    // Make a query with the currently edited token treated as prefix to get suggestions
+                    // Also make a non-prefix query to get a higher relevancy score for exact matches
+                    Or or = new Or(List.of(pv.withValue(unquote.apply(prefixFt)), pv.withValue(unquote.apply(ft))));
+                    return queryTree.replace(ft, or);
                 }
+
+                this.propertySearch = true;
+                Or or = new Or(List.of(unquote.apply(prefixFt), unquote.apply(ft)));
+                Node typeFilter = QueryTreeBuilder.buildTree("\"rdf:type\":" + parenthesize(searchableTypes), disambiguate);
+                Node reverseLinksFilter = QueryTreeBuilder.buildTree("reverseLinks.totalItems>0", disambiguate);
+                return new QueryTree(new And(List.of(or, typeFilter, reverseLinksFilter)));
             }
-        } else if (edited.node() instanceof FreeText && queryTree.isSimpleFreeText()) {
+        } else if (edited.node() instanceof FreeText ft && queryTree.isSimpleFreeText()) {
             String rawTypeFilter = "\"rdf:type\":" + parenthesize(String.join(" OR ", defaultBaseTypes));
             Node typeFilter = QueryTreeBuilder.buildTree(rawTypeFilter, disambiguate);
-            return queryTree.add(typeFilter);
+            return (edited.token().isQuoted() ? queryTree : queryTree.replace(ft, new Or(List.of(editedTokenAsPrefix(ft), ft))))
+                    .add(typeFilter);
         }
         return queryTree;
+    }
+
+    private FreeText editedTokenAsPrefix(FreeText ft) {
+        List<Token> tokensCopy = new ArrayList<>(ft.tokens());
+        int editedIdx = ft.tokens().indexOf(edited.token());
+        Token editedAsPrefix = new Token.Raw(edited.token().value() + Operator.WILDCARD);
+        tokensCopy.set(editedIdx, editedAsPrefix);
+        return ft.withTokens(tokensCopy);
     }
 }
