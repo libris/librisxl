@@ -46,6 +46,10 @@ class MarcFrameConverter implements FormatConverter {
         if (ld) initialize()
     }
 
+    ObjectMapper getMapper() {
+        return mapper
+    }
+
     void initialize() {
         if (conversion) return
         initialize((Map) readConfig(marcframeFile))
