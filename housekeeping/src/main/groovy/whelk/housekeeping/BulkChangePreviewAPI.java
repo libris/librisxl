@@ -89,7 +89,7 @@ public class BulkChangePreviewAPI extends WhelkHttpServlet {
             }
 
             // TODO support turtle etc?
-            HttpTools.sendResponse(response, result, (String) MimeTypes.getJSONLD());
+            HttpTools.sendResponse(response, result, (String) MimeTypes.JSONLD);
         } catch (Exception e) {
             HttpTools.sendError(response, HttpTools.mapError(e), e.getMessage(), e);
         }
