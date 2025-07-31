@@ -1,8 +1,7 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
-import whelk.search2.EsBoost;
-import whelk.search2.EsMappings;
+import whelk.search2.ESSettings;
 import whelk.search2.Filter;
 import whelk.search2.QueryParams;
 
@@ -14,7 +13,7 @@ import static whelk.search2.QueryUtil.makeUpLink;
 
 public record ActiveFilter(Filter.AliasedFilter aliasedFilter) implements Node {
     @Override
-    public Map<String, Object> toEs(EsMappings esMappings, EsBoost.Config boostConfig) {
+    public Map<String, Object> toEs(ESSettings esSettings) {
         throw new UnsupportedOperationException("Expand filter before converting to ES");
     }
 

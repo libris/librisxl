@@ -5,6 +5,7 @@
         "name": "_topStr",
         "boost": 400,
         "script_score": {
+          "name": "length normalizer",
           "function": "_score / doc['_topStr.length'].value",
           "apply_if": "doc['_topStr.length'].size() > 0 && doc['_topStr.length'].value > 0"
         }
@@ -18,7 +19,7 @@
         "boost": 50
       },
       {
-        "name": "_chipStr",
+        "name": "_searchCardStr",
         "boost": 0
       }
     ],
@@ -86,33 +87,24 @@
   },
   "constant_score": [
     {
-      "scores": [
-        {
-          "field": "meta.@type",
-          "value": "Record",
-          "score": 1000
-        },
-        {
-          "field": "meta.@type",
-          "value": "VirtualRecord",
-          "score": 1000
-        },
-        {
-          "field": "meta.@type",
-          "value": "CacheRecord",
-          "score": 1
-        }
-      ],
-      "wrapper": "should"
+      "field": "meta.@type",
+      "value": "Record",
+      "score": 1000
     },
     {
-      "scores": [
-        {
-          "field": "language.@id",
-          "value": "https://id.kb.se/language/swe",
-          "score": 50
-        }
-      ]
+      "field": "meta.@type",
+      "value": "VirtualRecord",
+      "score": 1000
+    },
+    {
+      "field": "meta.@type",
+      "value": "CacheRecord",
+      "score": 1
+    },
+    {
+      "field": "language.@id",
+      "value": "https://id.kb.se/language/swe",
+      "score": 50
     }
   ]
 }

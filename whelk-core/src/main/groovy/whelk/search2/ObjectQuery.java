@@ -89,14 +89,14 @@ public class ObjectQuery extends Query {
     }
 
     protected Map<String, Object> getPAggQuery(List<String> rulingTypes) {
-        return buildPAggQuery(object, curatedPredicates, whelk.getJsonld(), rulingTypes, esSettings.mappings);
+        return buildPAggQuery(object, curatedPredicates, whelk.getJsonld(), rulingTypes, esSettings);
     }
 
     private static Map<String, Object> buildPAggQuery(Link object,
                                                       List<Property> curatedPredicates,
                                                       JsonLd jsonLd,
                                                       Collection<String> rulingTypes,
-                                                      EsMappings esMappings)
+                                                      ESSettings esSettings)
     {
         Map<String, Object> query = new LinkedHashMap<>();
 
@@ -106,7 +106,7 @@ public class ObjectQuery extends Query {
                         Property::name,
                         p -> new PathValue(p, Operator.EQUALS, object)
                                 .expand(jsonLd, rulingTypes.isEmpty() ? p.domain() : rulingTypes)
-                                .toEs(esMappings, EsBoost.Config.empty()))
+                                .toEs(esSettings))
                 );
 
         if (!filters.isEmpty()) {

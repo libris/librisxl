@@ -1,7 +1,7 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
-import whelk.search2.EsBoost;
+import whelk.search2.ESSettings;
 import whelk.search2.EsMappings;
 import whelk.search2.Operator;
 import whelk.search2.QueryParams;
@@ -40,7 +40,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     }
 
     @Override
-    public Map<String, Object> toEs(EsMappings esMappings, EsBoost.Config boostConfig) {
+    public Map<String, Object> toEs(ESSettings esSettings) {
         if (value instanceof FreeText ft) {
             // FIXME: This is only needed until frontend no longer rely on quoted values not being treated as such.
             List<Token> unquotedTokens = ft.tokens().stream()
@@ -48,15 +48,15 @@ public record PathValue(Path path, Operator operator, Value value) implements No
                     .toList();
             FreeText newFt = new FreeText(ft.textQuery(), ft.negate(), unquotedTokens, ft.connective());
             PathValue newPv = new PathValue(path, operator, newFt);
-            return newPv.getEsNestedQuery(esMappings, boostConfig)
-                    .orElse(newPv.getCoreEsQuery(esMappings, boostConfig));
+            return newPv.getEsNestedQuery(esSettings)
+                    .orElse(newPv.getCoreEsQuery(esSettings));
         }
-        return getEsNestedQuery(esMappings, boostConfig)
-                .orElse(getCoreEsQuery(esMappings, boostConfig));
+        return getEsNestedQuery(esSettings)
+                .orElse(getCoreEsQuery(esSettings));
     }
 
-    public Map<String, Object> getCoreEsQuery(EsMappings esMappings, EsBoost.Config boostConfig) {
-        return _getCoreEsQuery(esMappings, boostConfig);
+    public Map<String, Object> getCoreEsQuery(ESSettings esSettings) {
+        return _getCoreEsQuery(esSettings);
     }
 
     @Override
@@ -135,16 +135,18 @@ public record PathValue(Path path, Operator operator, Value value) implements No
                 : Optional.empty();
     }
 
-    private Optional<Map<String, Object>> getEsNestedQuery(EsMappings esMappings, EsBoost.Config boostConfig) {
-        return path.getEsNestedStem(esMappings)
+    private Optional<Map<String, Object>> getEsNestedQuery(ESSettings esSettings) {
+        return path.getEsNestedStem(esSettings.mappings())
                 .map(nestedStem -> operator == NOT_EQUALS
-                        ? mustNotWrap(nestedWrap(nestedStem, withOperator(EQUALS).getCoreEsQuery(esMappings, boostConfig)))
-                        : mustWrap(nestedWrap(nestedStem, getCoreEsQuery(esMappings, boostConfig))));
+                        ? mustNotWrap(nestedWrap(nestedStem, withOperator(EQUALS).getCoreEsQuery(esSettings)))
+                        : mustWrap(nestedWrap(nestedStem, getCoreEsQuery(esSettings))));
     }
 
-    private Map<String, Object> _getCoreEsQuery(EsMappings esMappings, EsBoost.Config boostConfig) {
+    private Map<String, Object> _getCoreEsQuery(ESSettings esSettings) {
         String p = path.jsonForm();
         Value v = value;
+
+        EsMappings esMappings = esSettings.mappings();
 
         if ((v instanceof Numeric n && !esMappings.isFourDigitField(p) && !esMappings.isLongField(p))) {
             // Treat as free text
@@ -174,9 +176,11 @@ public record PathValue(Path path, Operator operator, Value value) implements No
                         default -> nonsenseFilter();
                     };
                 }
+                var boostSettings = esSettings.boost().fieldBoost();
+
                 yield switch (operator) {
-                    case EQUALS -> ft.toEs(esMappings, boostConfig.withBoostFields(List.of(p + "^" + boostConfig.withinFieldBoost())));
-                    case NOT_EQUALS -> mustNotWrap(ft.toEs(esMappings, boostConfig.withBoostFields(List.of(p + "^0"))));
+                    case EQUALS -> ft.toEs(boostSettings.withField(p));
+                    case NOT_EQUALS -> mustNotWrap(ft.toEs(boostSettings.withField(p, 0)));
                     // FIXME: Range makes no sense here
                     default -> nonsenseFilter();
                 };

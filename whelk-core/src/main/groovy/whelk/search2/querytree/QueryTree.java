@@ -2,16 +2,7 @@ package whelk.search2.querytree;
 
 import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
-import whelk.search2.AppParams;
-import whelk.search2.Disambiguate;
-import whelk.search2.EsMappings;
-import whelk.search2.Filter;
-import whelk.search2.EsBoost;
-import whelk.search2.Operator;
-
-import whelk.search2.Query;
-import whelk.search2.QueryParams;
-import whelk.search2.SelectedFilters;
+import whelk.search2.*;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -44,14 +35,10 @@ public class QueryTree {
         return new QueryTree(null);
     }
 
-    public Map<String, Object> toEs(JsonLd jsonLd,
-                                    EsMappings esMappings,
-                                    EsBoost.Config boostConfig,
-                                    Collection<String> rulingTypes,
-                                    List<Node> exclude) {
+    public Map<String, Object> toEs(JsonLd jsonLd, ESSettings esSettings, Collection<String> rulingTypes, List<Node> exclude) {
         return getFiltered().remove(exclude)
                 .expand(jsonLd, rulingTypes)
-                .toEs(esMappings, boostConfig);
+                .toEs(esSettings);
     }
 
     private QueryTree(Node tree, QueryTree filtered) {

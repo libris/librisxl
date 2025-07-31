@@ -4,7 +4,7 @@ import spock.lang.Specification
 import whelk.JsonLd
 import whelk.search2.AppParams
 import whelk.search2.Disambiguate
-import whelk.search2.EsBoost
+import whelk.search2.ESSettings
 import whelk.search2.Filter
 import whelk.search2.Query
 import whelk.search2.QueryParams
@@ -68,44 +68,95 @@ class QueryTreeSpec extends Specification {
     def "convert to ES query"() {
         given:
         QueryTree tree = new QueryTree('(NOT p1:v1 OR p4:v4) something', disambiguate)
-        EsBoost.Config esBoostConfig = EsBoost.Config.newBoostFieldsConfig(["_str^10"])
-
-        expect:
-        tree.toEs(jsonLd, TestData.getEsMappings(), esBoostConfig, [], []) ==
-                ['bool': [
-                        'must': [
+        Map boostSettings = [
+                "field_boost": [
+                        "fields"              : [
                                 [
-                                        'simple_query_string': [
-                                                'default_operator': 'AND',
-                                                'analyze_wildcard': true,
-                                                'query'           : 'something',
-                                                'fields'          : ['_str^10.0']
+                                        "name"        : "fieldA",
+                                        "boost"       : 10,
+                                        "script_score": [
+                                                "name"    : "a function",
+                                                "function": "f(_score)",
+                                                "apply_if": "condition"
                                         ]
                                 ],
-                                ['bool': [
-                                        'should': [
-                                                ['bool': [
-                                                        'must_not': [
-                                                                'simple_query_string': [
-                                                                        'default_operator': 'AND',
-                                                                        'analyze_wildcard': true,
-                                                                        'query'           : 'v1',
-                                                                        'fields'          : ['p1^0.0']
+                                [
+                                        "name" : "fieldB",
+                                        "boost": 2
+                                ],
+                                [
+                                        "name" : "fieldC",
+                                        "boost": 1
+                                ]
+                        ],
+                        "default_boost_factor": 5,
+                        "analyze_wildcard"    : true
+                ]
+        ]
+        ESSettings esSettings = new ESSettings(TestData.getEsMappings(), new ESSettings.Boost(boostSettings))
+
+        expect:
+        tree.toEs(jsonLd, esSettings, [], []) == [
+                "bool": [
+                        "must": [
+                                [
+                                        "bool": [
+                                                "should": [
+                                                        [
+                                                                "simple_query_string": [
+                                                                        "default_operator": "AND",
+                                                                        "query"           : "something",
+                                                                        "analyze_wildcard": true,
+                                                                        "fields"          : ["fieldA^0.0", "fieldB^2.0", "fieldC^1.0"]
                                                                 ]
-                                                        ]
-                                                ]],
-                                                [
-                                                        'simple_query_string': [
-                                                                'default_operator': 'AND',
-                                                                'analyze_wildcard': true,
-                                                                'query'           : 'v4',
-                                                                'fields'          : ['p4._str^400.0']
+                                                        ],
+                                                        [
+                                                                "script_score": [
+                                                                        "query" : [
+                                                                                "simple_query_string": [
+                                                                                        "default_operator": "AND",
+                                                                                        "query"           : "something",
+                                                                                        "analyze_wildcard": true,
+                                                                                        "fields"          : ["fieldA^10.0", "fieldB^0.0", "fieldC^0.0"]
+                                                                                ]
+                                                                        ],
+                                                                        "script": [
+                                                                                "source": "condition ? f(_score) : _score"
+                                                                        ]
+                                                                ]
                                                         ]
                                                 ]
                                         ]
-                                ]]
+                                ],
+                                [
+                                        "bool": [
+                                                "should": [
+                                                        [
+                                                                "bool": [
+                                                                        "must_not": [
+                                                                                "simple_query_string": [
+                                                                                        "default_operator": "AND",
+                                                                                        "query"           : "v1",
+                                                                                        "analyze_wildcard": true,
+                                                                                        "fields"          : ["p1^0.0"]
+                                                                                ]
+                                                                        ]
+                                                                ]
+                                                        ],
+                                                        [
+                                                                "simple_query_string": [
+                                                                        "default_operator": "AND",
+                                                                        "query"           : "v4",
+                                                                        "analyze_wildcard": true,
+                                                                        "fields"          : ["p4._str^5.0"]
+                                                                ]
+                                                        ]
+                                                ]
+                                        ]
+                                ]
                         ]
-                ]]
+                ]
+        ]
     }
 
     def "to search mapping"() {
