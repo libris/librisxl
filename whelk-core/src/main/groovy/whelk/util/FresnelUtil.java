@@ -260,6 +260,8 @@ public class FresnelUtil {
                     if (thing.get(JsonLd.REVERSE_KEY) instanceof Map<?, ?> r && r.containsKey(i.name)) {
                         var v = r.get(i.name);
                         String inverseName = i.inverseName;
+                        if (inverseName == null)
+                            logger.error("Null inverse name for: {} / {}", i.name, i); // fall through into NPE, to not alter behaviour.
                         result.pick(Map.of(inverseName, v), new PropertyKey(inverseName));
                     }
                 }
@@ -666,8 +668,7 @@ public class FresnelUtil {
 
         private InverseProperty asInverseProperty(Object showProperty) {
             String p = (String) ((Map<?, ?>) showProperty).get("inverseOf");
-            String inverse = jsonLd.getInverseProperty(p);
-            return new InverseProperty(p, inverse == null ? "anonymous inverse of: " + p : p);
+            return new InverseProperty(p, jsonLd.getInverseProperty(p));
         }
 
         // TODO
