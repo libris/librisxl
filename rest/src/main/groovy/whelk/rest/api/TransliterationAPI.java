@@ -1,90 +1,97 @@
-package whelk.rest.api
+package whelk.rest.api;
 
-import groovy.util.logging.Log4j2 as Log
-import whelk.Whelk
-import whelk.util.Romanizer
-import whelk.util.WhelkFactory
-import whelk.util.http.HttpTools
-import whelk.util.http.WhelkHttpServlet
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import whelk.Whelk;
+import whelk.util.Romanizer;
+import whelk.util.http.HttpTools;
+import whelk.util.http.WhelkHttpServlet;
 
-import javax.servlet.http.HttpServlet
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.EOFException;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
-import static whelk.util.Jackson.mapper
+import static whelk.util.Jackson.mapper;
 
-@Log
-class TransliterationAPI extends WhelkHttpServlet {
+public class TransliterationAPI extends WhelkHttpServlet {
+    private static final Logger log = LogManager.getLogger(TransliterationAPI.class);
+    private Romanizer romanizer;
 
-    Romanizer romanizer
-    
     @Override
-    void init(Whelk whelk) {
-        log.info("Starting Transliteration API")
-        romanizer = whelk.getRomanizer()
+    public void init(Whelk whelk) {
+        log.info("Starting Transliteration API");
+        romanizer = whelk.getRomanizer();
     }
 
     @Override
-    void doPost(HttpServletRequest request, HttpServletResponse response) {
-        log.debug("Handling POST request for ${request.pathInfo}")
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        log.debug("Handling POST request for {}", request.getPathInfo());
 
-        Map body = getRequestBody(request)
+        Map<String, Object> body = getRequestBody(request);
 
         if (!(body.containsKey("langTag") && body.containsKey("source"))) {
-            log.warn("Transliteration parameter missing")
-            HttpTools.sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Parameter missing; needs langTag and source")
-            return
+            log.warn("Transliteration parameter missing");
+            HttpTools.sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Parameter missing; needs langTag and source");
+            return;
         }
 
-        def languageTag = body["langTag"]
-        def source = body["source"]
-        
-        if (!romanizer.isMaybeRomanizable(languageTag)) {
-            log.warn("Language tag ${languageTag} not found")
-            HttpTools.sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid language code")
+        Object languageTag = body.get("langTag");
+        Object source = body.get("source");
+
+        if (!romanizer.isMaybeRomanizable(languageTag.toString())) {
+            log.warn("Language tag {} not found", languageTag);
+            HttpTools.sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Invalid language code");
         } else {
-            def romanized = romanizer.romanize(source.toString(), languageTag.toString())
-            HttpTools.sendResponse(response,  romanized, "application/json")
+            Map<String, String> romanized = romanizer.romanize(source.toString(), languageTag.toString());
+            HttpTools.sendResponse(response, mapper.writeValueAsString(romanized), "application/json");
         }
     }
 
     @Override
-    void doGet(HttpServletRequest request, HttpServletResponse response) {
-        log.debug("Handling GET request for ${request.pathInfo}")
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        log.debug("Handling GET request for {}", request.getPathInfo());
 
-        if (request.getPathInfo()?.startsWith("/language/")) {
-            handleLanguageCheck(request, response)
+        String pathInfo = request.getPathInfo();
+        if (pathInfo != null && pathInfo.startsWith("/language/")) {
+            handleLanguageCheck(request, response);
         } else {
-            HttpTools.sendResponse(response, null, null, HttpServletResponse.SC_NOT_FOUND)
+            HttpTools.sendResponse(response, "", null, HttpServletResponse.SC_NOT_FOUND);
         }
     }
 
     @Override
-    void doHead(HttpServletRequest request, HttpServletResponse response) {
-        if (request.getPathInfo()?.startsWith("/language/")) {
-            handleLanguageCheck(request, response)
+    protected void doHead(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String pathInfo = request.getPathInfo();
+        if (pathInfo != null && pathInfo.startsWith("/language/")) {
+            handleLanguageCheck(request, response);
         }
     }
 
-    private void handleLanguageCheck(HttpServletRequest request, HttpServletResponse response) {
-        HttpTools.sendResponse(response, null, null, HttpServletResponse.SC_NO_CONTENT)
-        
-        String languageTag = request.getPathInfo().split("/", 3).last()
+    private void handleLanguageCheck(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String pathInfo = request.getPathInfo();
+        String[] parts = pathInfo.split("/", 3);
+        String languageTag = parts.length > 2 ? parts[2] : "";
+
         if (romanizer.isMaybeRomanizable(languageTag)) {
-            HttpTools.sendResponse(response, null, null, HttpServletResponse.SC_NO_CONTENT)
+            HttpTools.sendResponse(response, "", null, HttpServletResponse.SC_NO_CONTENT);
         } else {
-            log.debug("Language tag ${languageTag} not found")
-            HttpTools.sendResponse(response, null, null, HttpServletResponse.SC_NOT_FOUND)
+            log.debug("Language tag {} not found", languageTag);
+            HttpTools.sendResponse(response, "", null, HttpServletResponse.SC_NOT_FOUND);
         }
     }
 
-    static Map getRequestBody(HttpServletRequest request) {
-        byte[] body = request.getInputStream().getBytes()
+    static Map<String, Object> getRequestBody(HttpServletRequest request) throws IOException {
+        byte[] body = request.getInputStream().readAllBytes();
 
         try {
-            return mapper.readValue(body, Map)
-        } catch (EOFException) {
-            return [:]
+            @SuppressWarnings("unchecked")
+            Map<String, Object> result = mapper.readValue(body, Map.class);
+            return result;
+        } catch (EOFException e) {
+            return new HashMap<>();
         }
     }
 }
