@@ -1,6 +1,6 @@
 apply plugin: 'application'
 apply plugin: 'groovy'
-apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'com.gradleup.shadow'
 
 repositories {
     mavenCentral()

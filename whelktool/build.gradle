@@ -1,6 +1,6 @@
 apply plugin: 'groovy'
 apply plugin: 'application'
-apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'com.gradleup.shadow'
 
 def loadConfiguration() {
     ext {
@@ -69,9 +69,9 @@ dependencies {
     testImplementation "org.spockframework:spock-core:${spockVersion}"
     testImplementation 'junit:junit:4.13.2'
     implementation "com.google.guava:guava:${guavaVersion}"
-    implementation "org.codehaus.groovy:groovy-cli-commons:${groovyVersion}"
-    implementation "org.codehaus.groovy:groovy-jsr223:${groovyVersion}"
-    implementation "org.codehaus.groovy:groovy:${groovyVersion}"
+    implementation "org.apache.groovy:groovy-cli-commons:${groovyVersion}"
+    implementation "org.apache.groovy:groovy-jsr223:${groovyVersion}"
+    implementation "org.apache.groovy:groovy:${groovyVersion}"
     implementation 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
     implementation 'commons-codec:commons-codec:1.7'
     implementation group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
