@@ -1,80 +1,86 @@
-package whelk.rest.api
+package whelk.rest.api;
 
-import whelk.Document
-import whelk.Whelk
-import whelk.converter.marc.JsonLD2MarcXMLConverter
-import whelk.util.LegacyIntegrationTools
-import whelk.util.http.WhelkHttpServlet
+import whelk.Document;
+import whelk.Whelk;
+import whelk.util.LegacyIntegrationTools;
+import whelk.util.http.WhelkHttpServlet;
 
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
-import static whelk.util.Jackson.mapper
+import static whelk.util.Jackson.mapper;
 
-class HoldAPI extends WhelkHttpServlet {
+public class HoldAPI extends WhelkHttpServlet {
+    private static final Logger log = LogManager.getLogger(HoldAPI.class);
 
-    private JsonLD2MarcXMLConverter toMarcXmlConverter
-
-    HoldAPI() {
+    public HoldAPI() {
         // Do nothing - only here for Tomcat to have something to call
     }
 
-    HoldAPI(Whelk whelk) {
-        this.whelk = whelk
-        init(whelk)
+    public HoldAPI(Whelk whelk) {
+        this.whelk = whelk;
+        init(whelk);
     }
 
     @Override
-    void init(Whelk whelk) {
-        toMarcXmlConverter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter())
+    public void init(Whelk whelk) {
+        log.info("Starting HoldAPI");
     }
 
     @Override
-    void doGet(HttpServletRequest request, HttpServletResponse response) {
-        String library = request.getParameter("library")
-        String id = request.getParameter("id")
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String library = request.getParameter("library");
+        String id = request.getParameter("id");
         if (id == null || library == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "\"library\" (sigel) and \"id\" parameters required.")
-            return
+                    "\"library\" (sigel) and \"id\" parameters required.");
+            return;
         }
-        id = LegacyIntegrationTools.fixUri(id)
-        library = LegacyIntegrationTools.fixUri(library)
-        String recordId = whelk.storage.getRecordId(id)
+        id = LegacyIntegrationTools.fixUri(id);
+        library = LegacyIntegrationTools.fixUri(library);
+        String recordId = whelk.getStorage().getRecordId(id);
         if (recordId == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "The supplied \"id\"-parameter must refer to an existing bibliographic record.")
-            return
+                    "The supplied \"id\"-parameter must refer to an existing bibliographic record.");
+            return;
         }
 
-        Document document = whelk.storage.loadDocumentByMainId(recordId)
-        String collection = LegacyIntegrationTools.determineLegacyCollection(document, whelk.jsonld)
-        if (collection != "bib"){
+        Document document = whelk.getStorage().loadDocumentByMainId(recordId);
+        String collection = LegacyIntegrationTools.determineLegacyCollection(document, whelk.getJsonld());
+        if (!"bib".equals(collection)) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "The supplied \"id\"-parameter must refer to an existing bibliographic record.")
-            return
+                    "The supplied \"id\"-parameter must refer to an existing bibliographic record.");
+            return;
         }
 
-        library = LegacyIntegrationTools.legacySigelToUri(library)
-        if (library == null){
+        library = LegacyIntegrationTools.legacySigelToUri(library);
+        if (library == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "Could not find a profile for the supplied \"library\"-parameter.")
-            return
+                    "Could not find a profile for the supplied \"library\"-parameter.");
+            return;
         }
 
-        List<Document> holdings = whelk.getAttachedHoldings(document.getThingIdentifiers())
-        List<String> holdingIDs = []
-        for (Document holding in holdings) {
-            if (holding.getHeldBy().equals(library))
-                holdingIDs.add(holding.getCompleteId())
+        List<Document> holdings = whelk.getAttachedHoldings(document.getThingIdentifiers());
+        List<String> holdingIDs = new ArrayList<>();
+        for (Document holding : holdings) {
+            if (holding.getHeldBy().equals(library)) {
+                holdingIDs.add(holding.getCompleteId());
+            }
         }
 
-        String jsonString = mapper.writeValueAsString(holdingIDs)
-        response.setContentType("application/json")
-        response.setHeader("Expires", "0")
-        response.setHeader('Cache-Control', 'no-cache')
-        OutputStream out = response.getOutputStream()
-        out.write(jsonString.getBytes("UTF-8"))
-        out.close()
+        String jsonString = mapper.writeValueAsString(holdingIDs);
+        response.setContentType("application/json");
+        response.setHeader("Expires", "0");
+        response.setHeader("Cache-Control", "no-cache");
+        OutputStream out = response.getOutputStream();
+        out.write(jsonString.getBytes(StandardCharsets.UTF_8));
+        out.close();
     }
 }

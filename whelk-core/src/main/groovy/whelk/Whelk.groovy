@@ -222,6 +222,14 @@ class Whelk {
         return this.storage.getDocumentByIri(uri)?.data
     }
 
+    PostgreSQLComponent getStorage() {
+        return storage
+    }
+
+    JsonLd getJsonld() {
+        return jsonld
+    }
+
     void setJsonld(JsonLd jsonld) {
         this.jsonld = jsonld
         storage.setJsonld(jsonld)
