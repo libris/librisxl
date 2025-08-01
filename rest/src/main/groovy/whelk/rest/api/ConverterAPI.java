@@ -1,91 +1,119 @@
-package whelk.rest.api
+package whelk.rest.api;
 
-import groovy.util.logging.Log4j2 as Log
-import org.apache.http.entity.ContentType
-import whelk.Document
-import whelk.Whelk
-import whelk.converter.marc.MarcFrameConverter
-import whelk.util.Unicode
-import whelk.util.WhelkFactory
-import whelk.util.http.HttpTools
-import whelk.util.http.WhelkHttpServlet
+import org.apache.http.entity.ContentType;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.codehaus.jackson.map.ObjectMapper;
+import whelk.Document;
+import whelk.Whelk;
+import whelk.converter.marc.MarcFrameConverter;
+import whelk.util.Unicode;
+import whelk.util.http.HttpTools;
+import whelk.util.http.WhelkHttpServlet;
 
-import javax.servlet.http.HttpServlet
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
-@Log
-class ConverterAPI extends WhelkHttpServlet {
+public class ConverterAPI extends WhelkHttpServlet {
+    private static final Logger log = LogManager.getLogger(ConverterAPI.class);
+    private static final ObjectMapper mapper = new ObjectMapper();
+    private MarcFrameConverter marcFrameConverter;
 
-    MarcFrameConverter marcFrameConverter
-
-    ConverterAPI() {
+    public ConverterAPI() {
         // Do nothing - only here for Tomcat to have something to call
     }
 
     @Override
-    void init(Whelk whelk) {
-        log.info("Starting converterAPI")
-        if (!marcFrameConverter) {
-            marcFrameConverter = whelk.getMarcFrameConverter()
+    public void init(Whelk whelk) {
+        log.info("Starting converterAPI");
+        if (marcFrameConverter == null) {
+            marcFrameConverter = whelk.getMarcFrameConverter();
         }
-        log.info("Started ...")
+        log.info("Started ...");
     }
 
     @Override
-    void doGet(HttpServletRequest request, HttpServletResponse response) {
-        handleConversion(request, response)
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        handleConversion(request, response);
     }
 
     @Override
-    void doPost(HttpServletRequest request, HttpServletResponse response) {
-        handleConversion(request, response)
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        handleConversion(request, response);
     }
 
-    void handleConversion(HttpServletRequest request, HttpServletResponse response) {
+    private void handleConversion(HttpServletRequest request, HttpServletResponse response) throws IOException {
         if (request.getContentType() == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "Missing Content-Type")
-            return
+                    "Missing Content-Type");
+            return;
         }
 
-        String ctype = ContentType.parse(request.getContentType()).getMimeType()
-        if (ctype != "application/ld+json") {
+        String ctype = ContentType.parse(request.getContentType()).getMimeType();
+        if (!"application/ld+json".equals(ctype)) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "Received data in unexpected format: ${ctype}")
-            return
+                    "Received data in unexpected format: " + ctype);
+            return;
         }
+
         if (request.getContentLength() == 0) {
-            log.warn("Received no content to reformat.")
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No content received.")
-            return
+            log.warn("Received no content to reformat.");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No content received.");
+            return;
         }
 
-        String requestedContentType = request.getParameter("to") ?:
-                ContentType.parse(request.getHeader("Accept")).getMimeType() ?:
-                        "application/x-marc-json"
+        String requestedContentType = getRequestedContentType(request);
 
-        if (requestedContentType == "application/x-marc-json") {
-            String jsonText = Unicode.normalize(request.getInputStream().getText("UTF-8"))
-            Map json = marcFrameConverter.mapper.readValue(jsonText, Map)
-            log.info("Constructed document. Converting to $requestedContentType")
-            Document doc = new Document(json)
-            if (whelk) {
-                whelk.embellish(doc)
+        if ("application/x-marc-json".equals(requestedContentType)) {
+            try {
+                String jsonText = Unicode.normalize(
+                        new String(request.getInputStream().readAllBytes(), StandardCharsets.UTF_8)
+                );
+                Map<String, Object> json = mapper.readValue(jsonText, Map.class);
+                log.info("Constructed document. Converting to {}", requestedContentType);
+
+                Document doc = new Document(json);
+                if (whelk != null) {
+                    whelk.embellish(doc);
+                }
+
+                json = marcFrameConverter.runRevert(doc.data);
+                String framedText = marcFrameConverter.getMapper().writeValueAsString(json);
+                HttpTools.sendResponse(response, framedText, requestedContentType);
+            } catch (Exception e) {
+                log.error("Error during conversion", e);
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                        "Error during conversion: " + e.getMessage());
             }
-            json = marcFrameConverter.runRevert(doc.data)
-            def framedText = marcFrameConverter.mapper.writeValueAsString(json)
-            HttpTools.sendResponse(response, framedText, requestedContentType)
-        }
-        else if (requestedContentType) {
-            def msg = "Can not convert to $requestedContentType."
-            log.info(msg)
-            response.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE , msg)
+        } else if (requestedContentType != null) {
+            String msg = "Can not convert to " + requestedContentType + ".";
+            log.info(msg);
+            response.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE, msg);
         } else {
-            def msg = "No conversion requested."
-            log.info(msg)
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, msg)
+            String msg = "No conversion requested.";
+            log.info(msg);
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
         }
     }
 
+    private String getRequestedContentType(HttpServletRequest request) {
+        String toParam = request.getParameter("to");
+        if (toParam != null) {
+            return toParam;
+        }
+
+        String acceptHeader = request.getHeader("Accept");
+        if (acceptHeader != null) {
+            try {
+                return ContentType.parse(acceptHeader).getMimeType();
+            } catch (Exception e) {
+                log.debug("Could not parse Accept header: {}", acceptHeader);
+            }
+        }
+
+        return "application/x-marc-json";
+    }
 }
