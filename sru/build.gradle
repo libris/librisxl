@@ -1,5 +1,5 @@
 apply plugin: 'java-library'
-apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'com.gradleup.shadow'
 
 def mainClassName = "whelk.SruServer"
 

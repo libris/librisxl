@@ -1,7 +1,7 @@
 apply plugin: 'groovy'
 apply plugin: 'java-library'
 apply plugin: 'jacoco'
-apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'com.gradleup.shadow'
 
 def mainClassName = "whelk.RestServer"
 
