@@ -60,10 +60,10 @@ dependencies {
     implementation(project(':whelktool'))
 
     // Groovy
-    implementation "org.codehaus.groovy:groovy-all:${groovyVersion}"
-    implementation "org.codehaus.groovy:groovy-dateutil:${groovyVersion}"
-    implementation "org.codehaus.groovy:groovy-xml:${groovyVersion}"
-    implementation "org.codehaus.groovy:groovy:${groovyVersion}"
+    implementation "org.apache.groovy:groovy-all:${groovyVersion}"
+    implementation "org.apache.groovy:groovy-dateutil:${groovyVersion}"
+    implementation "org.apache.groovy:groovy-xml:${groovyVersion}"
+    implementation "org.apache.groovy:groovy:${groovyVersion}"
 
     // Servlet
     api "jakarta.servlet:jakarta.servlet-api:${servletApiVersion}"
@@ -92,7 +92,7 @@ dependencies {
 
     // profiling and test
     testImplementation "org.spockframework:spock-core:${spockVersion}"
-    testImplementation 'cglib:cglib-nodep:3.1'
+    testImplementation "net.bytebuddy:byte-buddy:${byteBuddyVersion}" // required for mocking classes in spock
 }
 
 shadowJar {

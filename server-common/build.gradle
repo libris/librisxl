@@ -21,7 +21,7 @@ dependencies {
     implementation(project(':whelk-core'))
 
     // Groovy
-    implementation "org.codehaus.groovy:groovy:${groovyVersion}"
+    implementation "org.apache.groovy:groovy:${groovyVersion}"
 
     // Servlet
     api "jakarta.servlet:jakarta.servlet-api:${servletApiVersion}"
