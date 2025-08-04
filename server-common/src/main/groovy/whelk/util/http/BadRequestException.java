@@ -1,13 +1,21 @@
-package whelk.util.http
+package whelk.util.http;
 
-class BadRequestException extends NoStackTraceException {
-    Map extraInfo
-    BadRequestException(String msg, Map extraInfo = null) {
-        super(msg)
-        this.extraInfo = extraInfo
+import java.util.Collections;
+import java.util.Map;
+
+public class BadRequestException extends NoStackTraceException {
+    private Map<String, Object> extraInfo;
+
+    public BadRequestException(String msg) {
+        this(msg, null);
     }
-    
-    Map getExtraInfo() {
-        return extraInfo ?: Collections.EMPTY_MAP
+
+    public BadRequestException(String msg, Map<String, Object> extraInfo) {
+        super(msg);
+        this.extraInfo = extraInfo;
+    }
+
+    public Map<String, Object> getExtraInfo() {
+        return extraInfo != null ? extraInfo : Collections.emptyMap();
     }
 }

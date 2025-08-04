@@ -1,7 +1,7 @@
-package whelk.util.http
+package whelk.util.http;
 
-class RedirectException extends NoStackTraceException {
-    RedirectException(String msg) {
-        super(msg)
+public class RedirectException extends NoStackTraceException {
+    public RedirectException(String msg) {
+        super(msg);
     }
 }

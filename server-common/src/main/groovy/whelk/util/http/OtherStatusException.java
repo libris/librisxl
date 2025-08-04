@@ -1,10 +1,18 @@
-package whelk.util.http
+package whelk.util.http;
 
-class OtherStatusException extends NoStackTraceException {
-    int code
+public class OtherStatusException extends NoStackTraceException {
+    private int code;
 
-    OtherStatusException(String msg, int code, Throwable cause = null) {
-        super(msg, cause)
-        this.code = code
+    public OtherStatusException(String msg, int code) {
+        this(msg, code, null);
+    }
+
+    public OtherStatusException(String msg, int code, Throwable cause) {
+        super(msg, cause);
+        this.code = code;
+    }
+
+    public int getCode() {
+        return code;
     }
 }

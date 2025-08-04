@@ -1,7 +1,7 @@
-package whelk.util.http
+package whelk.util.http;
 
-class NotFoundException extends NoStackTraceException {
-    NotFoundException(String msg) {
-        super(msg)
+public class NotFoundException extends NoStackTraceException {
+    public NotFoundException(String msg) {
+        super(msg);
     }
 }
