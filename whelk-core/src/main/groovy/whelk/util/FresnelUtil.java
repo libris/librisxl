@@ -629,7 +629,7 @@ public class FresnelUtil {
 
     public class Lens {
         private final LensGroupName subLensGroup;
-        private final List<PropertySelector> showProperties;
+        private final List<ShowProperty> showProperties;
 
         public Lens(Map<String, Object> lensDefinition, LensGroupName subLensGroup) {
             this.subLensGroup = subLensGroup;
@@ -639,16 +639,16 @@ public class FresnelUtil {
             this.showProperties = parseShowProperties(showProperties);
         }
 
-        private Lens(List<PropertySelector> showProperties, LensGroupName subLensGroup) {
+        private Lens(List<ShowProperty> showProperties, LensGroupName subLensGroup) {
             this.showProperties = showProperties;
             this.subLensGroup = subLensGroup;
         }
 
-        List<PropertySelector> showProperties() {
+        List<ShowProperty> showProperties() {
             return showProperties;
         }
 
-        private List<PropertySelector> parseShowProperties(List<Object> showProperties) {
+        private List<ShowProperty> parseShowProperties(List<Object> showProperties) {
             return showProperties.stream().map(p -> {
                 if (JsonLd.isAlternateProperties(p)) {
                     return new AlternateProperties(alternatives(p));
@@ -657,30 +657,33 @@ public class FresnelUtil {
                     // expanded lang alias, i.e. ["x", "xByLang"] inside alternateProperties
                     // TODO remove expansion in jsonLd?
                     if (list.size() == 2) {
-                        return new PropertyKey((String) list.getFirst());
+                        return new FslPath((String) list.getFirst());
                     }
                 }
                 if (isInverseProperty(p)) {
-                    return asInverseProperty(p);
+                    return parseInverseProperty(p);
                 }
                 if (JsonLd.isAlternateRangeRestriction(p)) {
-                    return asRangeRestriction(p);
+                    return parseRangeRestriction(p);
                 }
-                if (isFslPath(p)) {
-                    return asFslPath(p);
+                if (isFslSelector(p)) {
+                    return parseFslSelector(p);
                 }
                 if (p instanceof String k) {
-                    // ignore langContainer aliases expanded by jsonld
                     if (!jsonLd.langContainerAliasInverted.containsKey(k)) {
-                        return new PropertyKey(k);
+                        return new FslPath(k);
                     }
+                    // ignore langContainer aliases expanded by jsonld
+                    return null;
                 }
-                return new Unrecognized();
-            }).toList();
+                return (ShowProperty) new Unrecognized();
+            })
+            .filter(Objects::nonNull)
+            .toList();
         }
 
         @SuppressWarnings("unchecked")
-        private List<PropertySelector> alternatives(Object alternateProperties) {
+        private List<ShowProperty> alternatives(Object alternateProperties) {
             var alternatives = (List<Object>) ((Map<String, Object>) alternateProperties).get(JsonLd.ALTERNATE_PROPERTIES);
             return parseShowProperties(alternatives);
         }
@@ -689,18 +692,22 @@ public class FresnelUtil {
             return showProperty instanceof Map && ((Map<?, ?>) showProperty).containsKey("inverseOf");
         }
 
-        private InverseProperty asInverseProperty(Object showProperty) {
+        private FslPath parseInverseProperty(Object showProperty) {
             String p = (String) ((Map<?, ?>) showProperty).get("inverseOf");
-            return new InverseProperty(p, jsonLd.getInverseProperty(p));
+            return new FslPath(FslPath.IN + p);
         }
 
-        private boolean isFslPath(Object showProperty) {
-            return showProperty instanceof Map<?, ?> m
-                    && Fresnel.fslselector.equals(m.get(JsonLd.TYPE_KEY))
-                    && m.get(JsonLd.VALUE_KEY) instanceof String s && s.contains("/");
+        @SuppressWarnings("unchecked")
+        private FslPath parseRangeRestriction(Object showProperty) {
+            Map<String, String> r = (Map<String, String>) showProperty;
+            return new FslPath(r.get(Rdfs.SUB_PROPERTY_OF) + '[' + FslPath.SUB + r.get(Rdfs.RANGE) + ']');
         }
 
-        private FslPath asFslPath(Object showProperty) {
+        private boolean isFslSelector(Object showProperty) {
+            return showProperty instanceof Map<?, ?> m && Fresnel.fslselector.equals(m.get(JsonLd.TYPE_KEY));
+        }
+
+        private FslPath parseFslSelector(Object showProperty) {
             return new FslPath((String) ((Map<?, ?>) showProperty).get(JsonLd.VALUE_KEY));
         }
 
@@ -717,7 +724,6 @@ public class FresnelUtil {
     }
 
     public record DerivedLens(LensGroupName base, List<LensGroupName> minus, LensGroupName subLens) {
-
     }
 
     private static LensGroupName subLens(LensGroupName lensGroupName) {
@@ -731,23 +737,19 @@ public class FresnelUtil {
         };
     }
 
-    private sealed interface PropertySelector permits AlternateProperties, FslPath, InverseProperty, PropertyKey, RangeRestriction, Unrecognized {
-
+    private sealed interface ShowProperty permits AlternateProperties, FslPath, Unrecognized {
     }
 
-    private record AlternateProperties(List<PropertySelector> alternatives) implements PropertySelector {
-
+    private record AlternateProperties(List<ShowProperty> alternatives) implements ShowProperty {
     }
 
-    private record Unrecognized() implements PropertySelector {
-
+    private record Unrecognized() implements ShowProperty {
     }
-
-    private record RangeRestriction(String subPropertyOf, String range) implements PropertySelector {}
 
     // TODO: Support "range restriction" style? e.g. "hasTitle[KeyTitle]"^^fresnel:fslselector
-    private record FslPath(String path) implements PropertySelector {
-        private static final String IN = "in::";
+    private record FslPath(String path) implements ShowProperty {
+        static final String IN = "in::";
+        static final char SUB = '^';
 
         List<Map<?, ?>> getTargetEntities(Map<?, ?> sourceEntity) {
             return getTargetEntities(sourceEntity, new ArrayList<>(List.of(path.split("/"))));
@@ -780,12 +782,6 @@ public class FresnelUtil {
                     .flatMap(List::stream)
                     .toList();
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    private RangeRestriction asRangeRestriction(Object o) {
-        Map<String, String> r = (Map<String, String>) o;
-        return new RangeRestriction(r.get(Rdfs.SUB_PROPERTY_OF), r.get(Rdfs.RANGE));
     }
 
     private List<LangCode> scriptAlternatives(Map<?,?> thing) {
