@@ -215,82 +215,21 @@ public class FresnelUtil {
 
         var result = new Node(lens, options, selectedLang);
 
-        var showProperties = Stream.concat(Stream.of(new PropertyKey(JsonLd.TYPE_KEY), new PropertyKey(JsonLd.ID_KEY)), lens.showProperties().stream()).toList();
+        var showProperties = Stream.concat(Stream.of(new FslPath(JsonLd.TYPE_KEY), new FslPath(JsonLd.ID_KEY)), lens.showProperties().stream()).toList();
         for (var p : showProperties) {
             switch (p) {
-                case PropertyKey k -> {
-                    if (k.isIn(thing)) {
-                        result.pick(thing, k);
-                    }
-                }
                 case AlternateProperties a -> {
-                    alt: for (var alternative : a.alternatives) {
-                        switch (alternative) {
-                            case PropertyKey k -> {
-                                if (k.isIn(thing)) {
-                                    result.pick(thing, k);
-                                    if (options != Options.TAKE_ALL_ALTERNATE) {
-                                        break alt;
-                                    }
-                                }
-                            }
-                            case RangeRestriction r -> {
-                                // can never be language container
-                                var k = r.subPropertyOf;
-                                @SuppressWarnings("unchecked")
-                                var v = ((List<Object>) JsonLd.asList(thing.get(k)))
-                                        .stream()
-                                        .filter(n -> isTypedNode(n) && r.range.equals(asMap(n).get(JsonLd.TYPE_KEY)))
-                                        .toList();
-
-                                if (!v.isEmpty()) {
-                                    result.pick(Map.of(k, v), new PropertyKey(k));
-                                    if (options != Options.TAKE_ALL_ALTERNATE) {
-                                        break alt;
-                                    }
-                                }
-                            }
-                            case FslPath fslPath -> {
-                                String endArcStep = fslPath.getEndArcStep();
-                                if (!endArcStep.isEmpty()) {
-                                    var pKey = new PropertyKey(endArcStep);
-                                    var targetEntities = fslPath.getTargetEntities(thing).stream().filter(pKey::isIn).toList();
-                                    if (!targetEntities.isEmpty()) {
-                                        targetEntities.forEach(entity -> result.pick(entity, pKey));
-                                        if (options != Options.TAKE_ALL_ALTERNATE) {
-                                            break alt;
-                                        }
-                                    }
-                                }
-                            }
-                            default -> {
-
+                    for (var alternative : a.alternatives()) {
+                        if (alternative instanceof FslPath fslPath) {
+                            boolean selected = result.select(thing, fslPath);
+                            if (selected && options != Options.TAKE_ALL_ALTERNATE) {
+                                break;
                             }
                         }
                     }
                 }
-                case InverseProperty i -> {
-                    // never language container
-                    if (thing.get(JsonLd.REVERSE_KEY) instanceof Map<?, ?> r && r.containsKey(i.name)) {
-                        var v = r.get(i.name);
-                        String inverseName = i.inverseName;
-                        if (inverseName == null)
-                            logger.error("Null inverse name for: {} / {}", i.name, i); // fall through into NPE, to not alter behaviour.
-                        result.pick(Map.of(inverseName, v), new PropertyKey(inverseName));
-                    }
-                }
-                case RangeRestriction ignored -> {
-                    // Not allowed here currently
-                }
-                case Unrecognized ignored -> {
-
-                }
-                case FslPath fslPath -> {
-                    String endArcStep = fslPath.getEndArcStep();
-                    if (!endArcStep.isEmpty()) {
-                        fslPath.getTargetEntities(thing).forEach(entity -> result.pick(entity, new PropertyKey(endArcStep)));
-                    }
-                }
+                case FslPath fslPath -> result.select(thing, fslPath);
+                case Unrecognized ignored -> {}
             }
         }
 
@@ -338,62 +277,6 @@ public class FresnelUtil {
         }
     }
 
-    final class PropertyKey implements PropertySelector {
-        String name;
-
-        public PropertyKey(String name) {
-            this.name = name;
-        }
-
-        public String name() {
-            return name;
-        }
-
-        boolean hasLangAlias() {
-            return jsonLd.langContainerAlias.containsKey(name);
-        }
-
-        public String langAlias() {
-            return (String) jsonLd.langContainerAlias.get(name);
-        }
-
-        boolean isTypeVocabTerm() {
-            return jsonLd.isVocabTerm(name);
-        }
-
-        private boolean isIn(Map<?, ?> thing) {
-            if (Rdfs.RDF_TYPE.equals(name)) {
-                return thing.containsKey(JsonLd.TYPE_KEY);
-            }
-            return thing.containsKey(name) || (hasLangAlias() && thing.containsKey(langAlias()));
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder s = new StringBuilder();
-            s.append(name);
-            if (hasLangAlias()) {
-                s.append(" (").append(langAlias()).append(")");
-            }
-            if (isTypeVocabTerm()) {
-                s.append(" (vocab)");
-            }
-            return s.toString();
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (o == null || getClass() != o.getClass()) return false;
-            PropertyKey that = (PropertyKey) o;
-            return Objects.equals(name, that.name);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hashCode(name);
-        }
-    }
-
     // FIXME naming
     public sealed abstract class Lensed permits Node, TransliteratedNode {
         public String asString() {
@@ -409,13 +292,13 @@ public class FresnelUtil {
     }
 
     public final class Node extends Lensed {
-        record Property(String name, Object value) {}
+        record Selected(FslPath selector, Object value) {}
 
         Options options;
         LangCode selectedLang;
         String id;
         String type;
-        List<Property> orderedProps = new ArrayList<>();
+        List<Selected> orderedSelection = new ArrayList<>();
         Lens lens;
 
         Node(Lens lens, Options options, LangCode selectedLang) {
@@ -424,54 +307,46 @@ public class FresnelUtil {
             this.selectedLang = selectedLang;
         }
 
-        void pick(Map<?, ?> thing, PropertyKey p) {
-            // TODO JsonLd class expands lang container aliases. Do we want that?
+        boolean select(Map<?, ?> thing, FslPath fslPath) {
+            PropertyKey p = fslPath.getEndArcStep().asPropertyKey();
+            List<?> values = fslPath.getValues(thing);
+
+            if (values.isEmpty()) {
+                return false;
+            }
 
             if (Rdfs.RDF_TYPE.equals(p.name)) {
-                var type = firstType(thing); // TODO how to handle multiple types?
-                orderedProps.add(new Property(p.name, mapVocabTerm(type)));
-                return;
+                var type = (String) values.getFirst(); // TODO how to handle multiple types?
+                orderedSelection.add(new Selected(fslPath, mapVocabTerm(type)));
+            }
+            else if (JsonLd.TYPE_KEY.equals(p.name)) {
+                if (!fslPath.isArcOnly()) {
+                    // TODO: What should be the set as the type when we have a path that traverses several nodes?
+                    throw new RuntimeException("");
+                }
+                type = (String) values.getFirst(); // TODO how to handle multiple types?
+            }
+            else if (JsonLd.ID_KEY.equals(p.name)) {
+                if (!fslPath.isArcOnly()) {
+                    throw new RuntimeException("");
+                }
+                id = (String) values.getFirst();
+            }
+            else if (p.isTypeVocabTerm()) {
+                values = values.stream().map(this::mapVocabTerm).toList();
+                orderedSelection.add(new Selected(fslPath, values));
+            }
+            else {
+                values = values.stream()
+                        .map(v -> v instanceof LanguageContainer l && selectedLang != null
+                                // TODO should we remember here that these are script alts?
+                                ? l.languages.get(selectedLang)
+                                : applyLens(v, lens.subLensGroup, options, selectedLang))
+                        .toList();
+                orderedSelection.add(new Selected(fslPath, values));
             }
 
-            if (thing.containsKey(p.name)) {
-                Object value = thing.get(p.name);
-                if (JsonLd.TYPE_KEY.equals(p.name)) {
-                    type = (String) first(value); // TODO how to handle multiple types?
-                }
-                else if (JsonLd.ID_KEY.equals(p.name)) {
-                    id = (String) value;
-                }
-                else if (p.isTypeVocabTerm()) {
-                    if (value instanceof List<?> list) {
-                        var values = list.stream().map(this::mapVocabTerm).toList();
-                        orderedProps.add(new Property(p.name, values));
-                    }
-                    else {
-                        orderedProps.add(new Property(p.name, mapVocabTerm(value)));
-                    }
-                }
-                else {
-                    if (value instanceof List<?> list) {
-                        var values = list.stream().map(v -> applyLens(v, lens.subLensGroup, options, selectedLang)).toList();
-                        orderedProps.add(new Property(p.name, values));
-                    }
-                    else {
-                        orderedProps.add(new Property(p.name, applyLens(value, lens.subLensGroup, options, selectedLang)));
-                    }
-                }
-            }
-            if (p.hasLangAlias() && thing.containsKey(p.langAlias())) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> langContainer = (Map<String, Object>) thing.get(p.langAlias());
-                if (selectedLang != null) {
-                    // TODO should we remember here that these are script alts?
-                    if(langContainer.containsKey(selectedLang.code)) {
-                        orderedProps.add(new Property(p.name(), langContainer.get(selectedLang.code)));
-                    }
-                } else {
-                    orderedProps.add(new Property(p.name(), new LanguageContainer(langContainer)));
-                }
-            }
+            return true;
         }
 
         @Override
@@ -479,9 +354,9 @@ public class FresnelUtil {
             var result = new Node(lens, options, selectedLang);
             result.id = id;
             result.type = type;
-            result.orderedProps = orderedProps.isEmpty()
+            result.orderedSelection = orderedSelection.isEmpty()
                     ? Collections.emptyList()
-                    : List.of(orderedProps.getFirst());
+                    : List.of(orderedSelection.getFirst());
             return result;
         }
 
@@ -490,30 +365,30 @@ public class FresnelUtil {
             var result = new Node(lens, options, selectedLang);
             result.id = id;
             result.type = type;
-            if (orderedProps.isEmpty()) {
-                result.orderedProps = Collections.emptyList();
+            if (orderedSelection.isEmpty()) {
+                result.orderedSelection = Collections.emptyList();
             } else {
-                Node.Property first = orderedProps.getFirst();
-                if (first.name().equals("hasTitle")) {
+                Selected first = orderedSelection.getFirst();
+                if (first.selector().getEndArcStep().asPropertyKey().name().equals("hasTitle")) {
                     (first.value() instanceof Collection<?> c ? c : List.of(first.value()))
                             .stream()
                             .filter(Node.class::isInstance)
                             .map(Node.class::cast)
                             .forEach(n ->
-                                    n.orderedProps = n.orderedProps
+                                    n.orderedSelection = n.orderedSelection
                                             .stream()
-                                            .filter(p -> p.name().equals("mainTitle"))
+                                            .filter(p -> p.selector().getEndArcStep().asPropertyKey().name().equals("mainTitle"))
                                             .toList()
                             );
                 }
-                result.orderedProps = List.of(first);
+                result.orderedSelection = List.of(first);
             }
             return result;
         }
 
         @Override
         protected StringBuilder printTo(StringBuilder s) {
-            orderedProps.forEach(prop -> printTo(s, prop.value));
+            orderedSelection.forEach(p -> printTo(s, p.value));
             return s;
         }
 
@@ -676,7 +551,7 @@ public class FresnelUtil {
                     // ignore langContainer aliases expanded by jsonld
                     return null;
                 }
-                return (ShowProperty) new Unrecognized();
+                return new Unrecognized();
             })
             .filter(Objects::nonNull)
             .toList();
@@ -746,41 +621,206 @@ public class FresnelUtil {
     private record Unrecognized() implements ShowProperty {
     }
 
-    // TODO: Support "range restriction" style? e.g. "hasTitle[KeyTitle]"^^fresnel:fslselector
-    private record FslPath(String path) implements ShowProperty {
-        static final String IN = "in::";
-        static final char SUB = '^';
+    private final class FslPath implements ShowProperty {
+        private static final String IN = "in::";
+        private static final String SUB = "^";
 
-        List<Map<?, ?>> getTargetEntities(Map<?, ?> sourceEntity) {
-            return getTargetEntities(sourceEntity, new ArrayList<>(List.of(path.split("/"))));
+        private final String path;
+
+        FslPath(String path) {
+            this.path = path;
         }
 
-        String getEndArcStep() {
-            int idx = path.lastIndexOf("/");
-            return idx == -1 ? "" : path.substring(idx + 1);
+        List<Object> getValues(Map<?, ?> sourceEntity) {
+            return isArcOnly()
+                    ? getSoleArcStep().getValues(sourceEntity)
+                    : getValues(sourceEntity, new ArrayList<>(List.of(path.split("/"))));
         }
 
-        private static List<Map<?, ?>> getTargetEntities(Map<?, ?> currentEntity, List<String> pathRemainder) {
+        ArcStep getEndArcStep() {
+            return isArcOnly()
+                    ? getSoleArcStep()
+                    : new ArcStep(path.substring(path.lastIndexOf("/") + 1));
+        }
+
+        ArcStep getSoleArcStep() {
+            return new ArcStep(path);
+        }
+
+        boolean isArcOnly() {
+            return !path.contains("/");
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof FslPath other && path.equals(other.path);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(path);
+        }
+
+        private List<Object> getValues(Map<?, ?> currentEntity, List<String> pathRemainder) {
             if (pathRemainder.isEmpty()) {
                 return List.of();
             }
+
             if (pathRemainder.size() == 1) {
-                return List.of(currentEntity);
+                return new ArcStep(pathRemainder.getFirst()).getValues(currentEntity);
             }
 
-            String nextArcStep = pathRemainder.removeFirst();
-            String nextNodeStep = pathRemainder.removeFirst();
+            ArcStep nextArcStep = new ArcStep(pathRemainder.removeFirst());
+            NodeStep nextNodeStep = new NodeStep(pathRemainder.removeFirst());
 
-            List<String> path = nextArcStep.startsWith(IN) ? List.of(JsonLd.REVERSE_KEY, nextArcStep.replaceFirst(IN, "")) : List.of(nextArcStep);
-            var nextNode = DocumentUtil.getAtPath(currentEntity, path, List.of());
-
-            return (nextNode instanceof List<?> l ? l : List.of(nextNode)).stream()
-                    .filter(Map.class::isInstance)
+            return nextArcStep.getValues(currentEntity).stream()
+                    .filter(nextNodeStep::isCompatible)
                     .map(Map.class::cast)
-                    .filter(m -> nextNodeStep.equals("*") || JsonLd.asList(m.get(JsonLd.TYPE_KEY)).contains(nextNodeStep))
-                    .map(m -> getTargetEntities(m, pathRemainder))
+                    .map(m -> getValues(m, pathRemainder))
                     .flatMap(List::stream)
                     .toList();
+        }
+
+        private sealed abstract class LocationStep permits ArcStep, NodeStep {}
+
+        private final class NodeStep extends LocationStep {
+            private final List<String> allowedTypes = new ArrayList<>();
+
+            NodeStep(String nodeStep) {
+                init(nodeStep);
+            }
+
+            boolean isCompatible(Object node) {
+                return node instanceof Map<?, ?> m && (!restrictTypes() || typeTest(m, allowedTypes));
+            }
+
+            private void init(String nodeStep) {
+                if (nodeStep.equals("*")) {
+                    return;
+                }
+                if (nodeStep.startsWith(SUB)) {
+                    nodeStep = nodeStep.substring(SUB.length());
+                    allowedTypes.add(nodeStep);
+                    allowedTypes.addAll(jsonLd.getSubClasses(nodeStep));
+                } else {
+                    allowedTypes.add(nodeStep);
+                }
+            }
+
+            private boolean restrictTypes() {
+                return !allowedTypes.isEmpty();
+            }
+        }
+
+        private final class ArcStep extends LocationStep {
+            private boolean reverse = false;
+            private final List<String> allowedTypes = new ArrayList<>();
+            private final List<PropertyKey> candidateKeys = new ArrayList<>();
+
+            ArcStep(String arcStep) {
+                init(arcStep);
+            }
+
+            List<Object> getValues(Map<?, ?> entity) {
+                return candidateKeys.stream()
+                        .flatMap(p -> getValues(entity, p).stream())
+                        .filter(v -> !restrictTypes() || (v instanceof Map<?,?> m && typeTest(m, allowedTypes)))
+                        .toList();
+            }
+
+            PropertyKey asPropertyKey() {
+                PropertyKey baseProp = candidateKeys.getFirst();
+                if (reverse) {
+                    var inverse = jsonLd.getInverseProperty(baseProp.name());
+                    return new PropertyKey(inverse != null ? inverse : JsonLd.REVERSE_KEY + "." + baseProp.name());
+                }
+                return baseProp;
+            }
+
+            private List<Object> getValues(Map<?, ?> m, PropertyKey p) {
+                if (reverse) {
+                    m = (Map<?, ?>) DocumentUtil.getAtPath(m, List.of(JsonLd.REVERSE_KEY), Map.of());
+                }
+                String pName = Rdfs.RDF_TYPE.equals(p.name()) ? JsonLd.TYPE_KEY : p.name();
+                @SuppressWarnings("unchecked")
+                List<Object> v = JsonLd.asList(m.get(pName));
+                if (p.hasLangAlias() && m.containsKey(p.langAlias())) {
+                    v.add(new LanguageContainer((Map<?, ?>) m.get(p.langAlias())));
+                }
+                return v;
+            }
+
+            private boolean restrictTypes() {
+                return !allowedTypes.isEmpty();
+            }
+
+            private void init(String arcStep) {
+                if (arcStep.startsWith(IN)) {
+                    reverse = true;
+                    arcStep = arcStep.substring(IN.length());
+                }
+
+                if (arcStep.matches(".+\\[.+]")) {
+                    String typeTest = arcStep.substring(arcStep.indexOf('[') + 1, arcStep.indexOf(']'));
+                    arcStep = arcStep.substring(0, arcStep.indexOf('['));
+                    if (typeTest.startsWith(SUB)) {
+                        typeTest = typeTest.substring(SUB.length());
+                        allowedTypes.add(typeTest);
+                        allowedTypes.addAll(jsonLd.getSubClasses(typeTest));
+                    } else {
+                        allowedTypes.add(typeTest);
+                    }
+                }
+
+                if (arcStep.startsWith(SUB)) {
+                    PropertyKey k = new PropertyKey(arcStep.substring(SUB.length()));
+                    candidateKeys.add(k);
+                    jsonLd.getSubProperties(k.name).stream().map(PropertyKey::new).forEach(candidateKeys::add);
+                } else {
+                    candidateKeys.add(new PropertyKey(arcStep));
+                }
+            }
+        }
+
+        private boolean typeTest(Map<?, ?> m, List<String> allowedTypes) {
+            return allowedTypes.stream().anyMatch(JsonLd.asList(m.get(JsonLd.TYPE_KEY))::contains);
+        }
+    }
+
+    private class PropertyKey {
+        String name;
+
+        public PropertyKey(String name) {
+            this.name = name;
+        }
+
+        public String name() {
+            return name;
+        }
+
+        boolean hasLangAlias() {
+            return jsonLd.langContainerAlias.containsKey(name);
+        }
+
+        public String langAlias() {
+            return (String) jsonLd.langContainerAlias.get(name);
+        }
+
+        boolean isTypeVocabTerm() {
+            return jsonLd.isVocabTerm(name);
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder s = new StringBuilder();
+            s.append(name);
+            if (hasLangAlias()) {
+                s.append(" (").append(langAlias()).append(")");
+            }
+            if (isTypeVocabTerm()) {
+                s.append(" (vocab)");
+            }
+            return s.toString();
         }
     }
 
@@ -810,10 +850,6 @@ public class FresnelUtil {
     private boolean isIdentity(Map<?,?> thing) {
         return jsonLd.isSubClassOf(firstType(thing), Base.Identity);
     }
-
-
-
-    private record InverseProperty(String name, String inverseName) implements PropertySelector {}
 
     public record LangCode(String code) {
         public static final Comparator<LangCode> ORIGINAL_SCRIPT_FIRST = (a, b) -> {
@@ -867,7 +903,7 @@ public class FresnelUtil {
             result.type = node.type;
             result.id = node.id;
             result.fallback = node.id != null ? jsonLd.toTermKey(node.id) : ""; // TODO
-            result.display = formatProperties(node.orderedProps, node.type);
+            result.display = formatProperties(node.orderedSelection, node.type);
             formats.resourceStyle(node.type).apply(result);
             formats.resourceDetails(node.type).apply(result, isFirst, isLast);
 
@@ -882,18 +918,26 @@ public class FresnelUtil {
             return new DecoratedTransliterated(lang);
         }
 
-        private List<Decorated> formatProperties(List<Node.Property> orderedProps, String className) {
-            return mapWithIndex(orderedProps,
-                    (p, ix) -> formatProperty(p, className, ix == 0, ix == orderedProps.size() - 1)
+        private List<Decorated> formatProperties(List<Node.Selected> selected, String className) {
+            return mapWithIndex(selected,
+                    (p, ix) -> formatProperty(p, className, ix == 0, ix == selected.size() - 1)
             );
         }
 
-        private Decorated formatProperty(Node.Property property, String className, boolean isFirst, boolean isLast) {
-            var result = new DecoratedProperty(property.name, formatValues(property.value, className, property.name));
+        private Decorated formatProperty(Node.Selected selected, String className, boolean isFirst, boolean isLast) {
+            FslPath fslPath = selected.selector();
+            if (!fslPath.isArcOnly()) {
+                // TODO
+                throw new UnsupportedOperationException("Formatting with multi-step FSL path is not supported");
+            }
 
-            formats.propertyStyle(className, property.name).apply(result);
+            String pName = fslPath.getSoleArcStep().asPropertyKey().name();
+            Object v = selected.value();
+            var result = new DecoratedProperty(pName, formatValues(v, className, pName));
+
+            formats.propertyStyle(className, pName).apply(result);
             // TODO implement _style sort() ?
-            formats.propertyDetails(className, property.name).apply(result, isFirst, isLast);
+            formats.propertyDetails(className, pName).apply(result, isFirst, isLast);
             return result;
         }
 
