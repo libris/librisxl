@@ -394,7 +394,7 @@ public class FresnelUtil {
 
         @Override
         public boolean isEmpty() {
-            return orderedProps.isEmpty();
+            return orderedSelection.isEmpty();
         }
 
         @Override
