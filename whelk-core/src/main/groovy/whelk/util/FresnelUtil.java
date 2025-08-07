@@ -695,7 +695,7 @@ public class FresnelUtil {
             }
 
             boolean isCompatible(Object node) {
-                return node instanceof Map<?, ?> m && (!restrictTypes() || typeTest(m, allowedTypes));
+                return node instanceof Map<?, ?> m && (!restrictTypes() || isAllowedType(m, allowedTypes));
             }
 
             private void init(String nodeStep) {
@@ -728,7 +728,7 @@ public class FresnelUtil {
             List<Object> getValues(Map<?, ?> entity) {
                 return candidateKeys.stream()
                         .flatMap(p -> getValues(entity, p).stream())
-                        .filter(v -> !restrictTypes() || (v instanceof Map<?,?> m && typeTest(m, allowedTypes)))
+                        .filter(v -> !restrictTypes() || (v instanceof Map<?,?> m && isAllowedType(m, allowedTypes)))
                         .toList();
             }
 
@@ -765,14 +765,14 @@ public class FresnelUtil {
                 }
 
                 if (arcStep.matches(".+\\[.+]")) {
-                    String typeTest = arcStep.substring(arcStep.indexOf('[') + 1, arcStep.indexOf(']'));
+                    String allowedType = arcStep.substring(arcStep.indexOf('[') + 1, arcStep.indexOf(']'));
                     arcStep = arcStep.substring(0, arcStep.indexOf('['));
-                    if (typeTest.startsWith(SUB)) {
-                        typeTest = typeTest.substring(SUB.length());
-                        allowedTypes.add(typeTest);
-                        allowedTypes.addAll(jsonLd.getSubClasses(typeTest));
+                    if (allowedType.startsWith(SUB)) {
+                        allowedType = allowedType.substring(SUB.length());
+                        allowedTypes.add(allowedType);
+                        allowedTypes.addAll(jsonLd.getSubClasses(allowedType));
                     } else {
-                        allowedTypes.add(typeTest);
+                        allowedTypes.add(allowedType);
                     }
                 }
 
@@ -786,8 +786,8 @@ public class FresnelUtil {
             }
         }
 
-        private boolean typeTest(Map<?, ?> m, List<String> allowedTypes) {
-            return allowedTypes.stream().anyMatch(JsonLd.asList(m.get(JsonLd.TYPE_KEY))::contains);
+        private boolean isAllowedType(Map<?, ?> entity, List<String> allowedTypes) {
+            return allowedTypes.stream().anyMatch(JsonLd.asList(entity.get(JsonLd.TYPE_KEY))::contains);
         }
     }
 
