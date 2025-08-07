@@ -443,10 +443,12 @@ class ElasticSearch {
             return copy.data
         }
         String thingId = thingIds.get(0)
-        Map framed = toSearchCard(whelk, JsonLd.frame(thingId, copy.data), links)
 
-        framed['_links'] = links
-        framed['_outerEmbellishments'] = copy.getEmbellishments() - links
+        Map framed = JsonLd.frame(thingId, copy.data)
+        Map searchCard = toSearchCard(whelk, framed, links)
+
+        searchCard['_links'] = links
+        searchCard['_outerEmbellishments'] = copy.getEmbellishments() - links
 
         Map<String, Long> incomingLinkCountByRelation = whelk.getStorage().getIncomingLinkCountByIdAndRelation(stripHash(copy.getShortId()))
         var totalItems = incomingLinkCountByRelation.values().sum(0)
@@ -456,17 +458,17 @@ class ElasticSearch {
         // TODO what should be the key "itemOf.instanceOf"?
         // FIXME don't hardcode this
         var itemPath = ["@reverse", "instanceOf", "*", "@reverse", "itemOf", "*"]
-        var itemCount = ((List) DocumentUtil.getAtPath(framed, itemPath, []))
+        var itemCount = ((List) DocumentUtil.getAtPath(searchCard, itemPath, []))
                 .collect{ it['heldBy']?[JsonLd.ID_KEY] }.grep().unique().size()
         incomingLinkCountByRelation.put('itemOf.instanceOf', itemCount)
         
-        framed['reverseLinks'] = [
+        searchCard['reverseLinks'] = [
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',
                 'totalItems': totalItems,
                 'totalItemsByRelation': incomingLinkCountByRelation
         ]
 
-        framed['_sortKeyByLang'] = whelk.jsonld.applyLensAsMapByLang(
+        searchCard['_sortKeyByLang'] = whelk.jsonld.applyLensAsMapByLang(
                 framed,
                 whelk.jsonld.locales as Set,
                 REMOVABLE_BASE_URIS,
@@ -482,16 +484,16 @@ class ElasticSearch {
                     ?: topLens.byScript().values()
                     ?: topLens.asString()
             if (topStr) {
-                framed[TOP_STR] = topStr
+                searchCard[TOP_STR] = topStr
             }
-            framed[CHIP_STR] = whelk.fresnelUtil.applyLens(framed, FresnelUtil.LensGroupName.Chip, TAKE_ALL_ALTERNATE).asString()
-            framed[CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
-            framed[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.SEARCH_CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
+            searchCard[CHIP_STR] = whelk.fresnelUtil.applyLens(framed, FresnelUtil.LensGroupName.Chip, TAKE_ALL_ALTERNATE).asString()
+            searchCard[CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
+            searchCard[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.SEARCH_CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
         } catch (Exception e) {
             log.error(e, e)
         }
 
-        DocumentUtil.traverse(framed) { value, path ->
+        DocumentUtil.traverse(searchCard) { value, path ->
             if (path && SEARCH_STRINGS.contains(path.last())) {
                 // TODO: replace with elastic ICU Analysis plugin?
                 // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
@@ -525,13 +527,13 @@ class ElasticSearch {
         // for performance reasons. In 7.9 such use was deprecated, and since 8.x it's no longer supported, so
         // we follow the advice and use a separate field.
         // (https://www.elastic.co/guide/en/elasticsearch/reference/8.8/mapping-id-field.html).
-        framed["_es_id"] =  toElasticId(copy.getShortId())
+        searchCard["_es_id"] =  toElasticId(copy.getShortId())
 
         if (log.isTraceEnabled()) {
-            log.trace("Framed data: ${framed}")
+            log.trace("Framed data: ${searchCard}")
         }
 
-        return JsonOutput.toJson(framed)
+        return JsonOutput.toJson(searchCard)
     }
     
     static String flattenedLangMapKey(key) {
