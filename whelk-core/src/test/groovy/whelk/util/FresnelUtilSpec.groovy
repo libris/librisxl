@@ -171,8 +171,8 @@ class FresnelUtilSpec extends Specification {
                                             "classLensDomain": "Work",
                                             "showProperties" : [
                                                     ["alternateProperties": [
-                                                            ["@type": "fresnel:fslselector", "@value": "hasTitle[KeyTitle]"],
-                                                            ["@type": "fresnel:fslselector", "@value": "hasTitle[Title]"],
+                                                            ["subPropertyOf": "hasTitle", "range": "KeyTitle"],
+                                                            ["subPropertyOf": "hasTitle", "range": "Title"],
                                                             "hasTitle"
                                                     ]],
                                                     "legalDate",
@@ -194,8 +194,8 @@ class FresnelUtilSpec extends Specification {
                                             "classLensDomain": "Work",
                                             "showProperties" : [
                                                     ["alternateProperties": [
-                                                            ["@type": "fresnel:fslselector", "@value": "hasTitle[KeyTitle]"],
-                                                            ["@type": "fresnel:fslselector", "@value": "hasTitle[Title]"],
+                                                            ["subPropertyOf": "hasTitle", "range": "KeyTitle"],
+                                                            ["subPropertyOf": "hasTitle", "range": "Title"],
                                                             "hasTitle"
                                                     ]],
                                                     "legalDate",

@@ -575,7 +575,11 @@ public class FresnelUtil {
         @SuppressWarnings("unchecked")
         private FslPath parseRangeRestriction(Object showProperty) {
             Map<String, String> r = (Map<String, String>) showProperty;
-            return new FslPath(r.get(Rdfs.SUB_PROPERTY_OF) + '[' + FslPath.SUB + r.get(Rdfs.RANGE) + ']');
+            // TODO: The correct interpretation of this would be to match all subclasses, i.e. prefix the range class with a ^,
+            //  however we can't do this at the moment since we depend on subclasses *not* being matched for constructions like e.g.
+            //  {"subPropertyOf": "hasTitle", "range": "Title"}
+//            return new FslPath(r.get(Rdfs.SUB_PROPERTY_OF) + '[' + FslPath.SUB + r.get(Rdfs.RANGE) + ']');
+            return new FslPath(r.get(Rdfs.SUB_PROPERTY_OF) + '[' + r.get(Rdfs.RANGE) + ']');
         }
 
         private boolean isFslSelector(Object showProperty) {
