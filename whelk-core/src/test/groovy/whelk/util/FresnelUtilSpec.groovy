@@ -117,21 +117,20 @@ class FresnelUtilSpec extends Specification {
                                             "classLensDomain": "Work",
                                             "showProperties" : [
                                                     [
-                                                            // TODO
-//                                                            "alternateProperties": [
-//                                                                    [
-//                                                                            "@type" : "fresnel:fslselector",
-//                                                                            "@value": "hasTitle/Title/mainTitle"
-//                                                                    ],
-//                                                                    [
-//                                                                            "@type" : "fresnel:fslselector",
-//                                                                            "@value": "hasTitle/KeyTitle/mainTitle"
-//                                                                    ],
-//                                                                    [
-//                                                                            "@type" : "fresnel:fslselector",
-//                                                                            "@value": "hasTitle/*/mainTitle"
-//                                                                    ]
-//                                                            ]
+                                                            "alternateProperties": [
+                                                                    [
+                                                                            "@type" : "fresnel:fslselector",
+                                                                            "@value": "hasTitle/Title/mainTitle"
+                                                                    ],
+                                                                    [
+                                                                            "@type" : "fresnel:fslselector",
+                                                                            "@value": "hasTitle/KeyTitle/mainTitle"
+                                                                    ],
+                                                                    [
+                                                                            "@type" : "fresnel:fslselector",
+                                                                            "@value": "hasTitle/*/mainTitle"
+                                                                    ]
+                                                            ]
                                                     ]
                                             ]
                                     ],
@@ -789,7 +788,7 @@ class FresnelUtilSpec extends Specification {
         searchToken = fresnel.applyLens(thing, FresnelUtil.LensGroupName.SearchToken, FresnelUtil.Options.NO_FALLBACK)
 
         then:
-        searchToken.asString() == "" //TODO
+        searchToken.asString() == "Titel"
 
         when:
         thing = [
