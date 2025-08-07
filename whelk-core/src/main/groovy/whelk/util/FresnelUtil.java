@@ -677,8 +677,7 @@ public class FresnelUtil {
             case Card -> LensGroupName.Chip;
             case Chip, Token -> LensGroupName.Token;
 
-            case SearchCard -> LensGroupName.SearchChip;
-            case SearchChip -> LensGroupName.Token; // TODO ??
+            case SearchCard, SearchChip -> LensGroupName.SearchChip;
             case SearchToken -> LensGroupName.SearchToken;
         };
     }
