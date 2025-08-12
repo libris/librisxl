@@ -321,7 +321,7 @@ public class FresnelUtil {
             }
             else if (JsonLd.TYPE_KEY.equals(p.name)) {
                 if (!fslPath.isArcOnly()) {
-                    // TODO: What should be the set as the type when we have a path that traverses several nodes?
+                    // TODO: What should be set as the type when we have a path that traverses several nodes?
                     throw new RuntimeException("");
                 }
                 type = (String) values.getFirst(); // TODO how to handle multiple types?
