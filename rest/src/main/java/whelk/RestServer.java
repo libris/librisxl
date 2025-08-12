@@ -12,7 +12,6 @@ import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import whelk.rest.api.ConverterAPI;
 import whelk.rest.api.Crud;
-import whelk.rest.api.DuplicatesAPI;
 import whelk.rest.api.HoldAPI;
 import whelk.rest.api.LegacyMarcAPI;
 import whelk.rest.api.MarcFrameConverterInitializer;
@@ -99,7 +98,6 @@ public class RestServer extends XlServer {
         context.addServlet(RefreshAPI.class, "/_refresh");
         context.addServlet(HoldAPI.class, "/_findhold");
         context.addServlet(RecordRelationAPI.class, "/_dependencies");
-        context.addServlet(DuplicatesAPI.class, "/_duplicates");
 
         context.addServlet(se.kb.libris.digi.DigitalReproductionAPI.class, "/_reproduction");
 

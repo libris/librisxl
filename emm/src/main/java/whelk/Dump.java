@@ -21,11 +21,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -220,8 +220,7 @@ public class Dump {
             return;
         }
 
-        BasicFileAttributes attributes = Files.readAttributes(dumpFilePath, BasicFileAttributes.class);
-        Instant dumpCreationTime = attributes.creationTime().toInstant();
+        Instant dumpCreationTime = getDumpCreationTime(dumpFilePath);
         sendFormattedResponse(whelk, targetVocabMapper, profile, profileDoc, apiBaseUrl, dump, recordIdsOnPage, res, offsetLines, totalEntityCount, dumpCreationTime);
     }
 
@@ -413,13 +412,31 @@ public class Dump {
         return docs.entrySet().stream().findFirst().get().getValue();
     }
 
+    private static Instant getDumpCreationTime(Path dumpFilePath) {
+        try {
+            byte[] attributeValue = (byte[]) Files.getAttribute(dumpFilePath, "user:creationTime");
+            return Instant.parse(new String(attributeValue, StandardCharsets.UTF_8));
+        } catch (IOException | DateTimeException e) {
+            logger.warn("Error reading dump file creation time from {}", dumpFilePath, e);
+            return null;
+        }
+    }
+
     private static void invalidateIfOld(Path dumpFilePath) {
         try {
-            if (!Files.exists(dumpFilePath))
+            if (!Files.exists(dumpFilePath)) {
                 return;
+            }
 
-            BasicFileAttributes attributes = Files.readAttributes(dumpFilePath, BasicFileAttributes.class);
-            if (attributes.creationTime().toInstant().isBefore(Instant.now().minus(5, ChronoUnit.DAYS))) {
+            Instant creationTime =  getDumpCreationTime(dumpFilePath);
+
+            // Could happen with old dumps that don't have the xattr set
+            if (creationTime == null) {
+                Files.delete(dumpFilePath);
+                return;
+            }
+
+            if (creationTime.isBefore(Instant.now().minus(5, ChronoUnit.DAYS))) {
                 Files.delete(dumpFilePath);
             }
         } catch (IOException e) {
@@ -433,14 +450,20 @@ public class Dump {
 
     private static void generateDump(Whelk whelk, String dump, Path dumpFilePath) {
         new Thread(() -> {
-
             // Guard against two racing threads trying to generate the same dump.
             // createNewFile atomically checks if the file exists.
             try {
-                if (!dumpFilePath.toFile().createNewFile())
+                if (!dumpFilePath.toFile().createNewFile()) {
                     return;
+                }
             } catch (IOException e) {
                 return;
+            }
+
+            try {
+                Files.setAttribute(dumpFilePath, "user:creationTime", Instant.now().toString().getBytes(StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
 
             try (BufferedWriter dumpFileWriter = new BufferedWriter(new FileWriter(dumpFilePath.toFile()));

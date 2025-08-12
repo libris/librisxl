@@ -396,6 +396,15 @@
                 }
             },
             {
+                "contribution_template": {
+                    "path_match": ["contribution", "instanceOf.contribution", "@reverse.instanceOf.contribution"],
+                    "mapping": {
+                        "type": "nested",
+                        "include_in_parent": true
+                    }
+                }
+            },
+            {
                 "reverse_itemOf_template": {
                     "path_match": ["@reverse.itemOf", "@reverse.instanceOf.@reverse.itemOf"],
                     "mapping": {
