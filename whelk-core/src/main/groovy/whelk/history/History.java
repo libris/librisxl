@@ -555,7 +555,11 @@ public class History {
 
         // Seems like there was a bug at some point where changedBy wasn't updated correctly by WhelkTool.
         // Consecutive versions have the same changedBy, generationProcess contains the correct value.
-        if (uri.contains("sys/globalchanges") && !uri.equals(version.doc.getGenerationProcess())) {
+        // The first version of these have correct value in changedBy and no generationProcess.
+        // TODO rewrite history table and clean up all inconsistencies
+        if (uri.contains("sys/globalchanges")
+                && version.doc.getGenerationProcess() != null
+                && !uri.equals(version.doc.getGenerationProcess())) {
             uri = version.doc.getGenerationProcess();
         }
 
