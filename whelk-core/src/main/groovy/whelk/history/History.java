@@ -588,6 +588,14 @@ public class History {
     }
 
     public static boolean wasScriptEdit(DocumentVersion version) {
+        // At some point there was a bug where generationDate/generationProcess wasn't updated correctly, see getAgent()
+        // TODO rewrite history table and clean up all inconsistencies
+        if (changedByToUri(version.changedBy).contains("sys/globalchanges")
+          && version.doc.getGenerationDate() == null
+          && version.doc.getGenerationProcess() == null) {
+            return true;
+        }
+
         Instant modifiedInstant = ZonedDateTime.parse(version.doc.getModified()).toInstant();
         if (version.doc.getGenerationDate() != null) {
             Instant generatedInstant = ZonedDateTime.parse(version.doc.getGenerationDate()).toInstant();
