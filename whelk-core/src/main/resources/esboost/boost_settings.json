@@ -100,11 +100,6 @@
       "field": "meta.@type",
       "value": "CacheRecord",
       "score": 1
-    },
-    {
-      "field": "language.@id",
-      "value": "https://id.kb.se/language/swe",
-      "score": 50
     }
   ]
 }
