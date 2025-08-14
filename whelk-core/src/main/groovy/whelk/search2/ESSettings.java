@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 import static whelk.util.Jackson.mapper;
 
 public class ESSettings {
-    private static final String BOOST_SETTINGS_FILE = "boost_settings.json";
+    private static final String BOOST_SETTINGS_FILE = "esboost/boost_settings.json";
 
     private EsMappings mappings;
     private final Boost boost;
