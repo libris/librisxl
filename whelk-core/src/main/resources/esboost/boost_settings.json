@@ -95,11 +95,6 @@
       "field": "meta.@type",
       "value": "VirtualRecord",
       "score": 1000
-    },
-    {
-      "field": "meta.@type",
-      "value": "CacheRecord",
-      "score": 1
     }
   ]
 }
