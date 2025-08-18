@@ -153,6 +153,12 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
     private Map<String, Object> _toEs(List<Token> tokens, EsBoost.Config boostConfig) {
         String s = joinTokens(tokens, " ");
         s = Unicode.normalizeForSearch(s);
+
+        // TODO search for original string OR stripped string?
+        if (Unicode.looksLikeIsbn(s) && s.contains("-")) {
+            s = s.replace("-", "");
+        }
+
         boolean isSimple = isSimple(s);
         String queryMode = isSimple ? "simple_query_string" : "query_string";
         if (!isSimple) {
