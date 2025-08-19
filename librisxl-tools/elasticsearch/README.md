@@ -1,6 +1,6 @@
 # Boostning i Elasticsearch
 
-Detta dokument beskriver inställningarna i konfigurationsfilen `settings.json` som styr hur sökresultat rankas i
+Detta avsnitt beskriver inställningarna i konfigurationsfilen `libris_search_boost.json` som styr hur sökresultat rankas i
 Elasticsearch för att ge mer relevanta träffar.
 Inställningarna är uppdelade i tre huvuddelar: **field_boost**, **function_score** och **constant_score**.
 
