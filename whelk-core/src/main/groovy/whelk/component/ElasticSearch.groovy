@@ -444,8 +444,8 @@ class ElasticSearch {
         }
         String thingId = thingIds.get(0)
 
-        Map framed = JsonLd.frame(thingId, copy.data)
-        Map searchCard = toSearchCard(whelk, framed, links)
+        Map framedFull = JsonLd.frame(thingId, copy.data)
+        Map searchCard = toSearchCard(whelk, framedFull, links)
 
         searchCard['_links'] = links
         searchCard['_outerEmbellishments'] = copy.getEmbellishments() - links
@@ -469,16 +469,16 @@ class ElasticSearch {
         ]
 
         searchCard['_sortKeyByLang'] = whelk.jsonld.applyLensAsMapByLang(
-                framed,
+                framedFull,
                 whelk.jsonld.locales as Set,
                 REMOVABLE_BASE_URIS,
                 document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
 
         try {
-            var topLens = whelk.fresnelUtil.applyLens(framed, FresnelUtil.LensGroupName.SearchToken, NO_FALLBACK)
+            var topLens = whelk.fresnelUtil.applyLens(framedFull, FresnelUtil.LensGroupName.SearchToken, NO_FALLBACK)
             if (topLens.isEmpty()) {
                 // If there is no search token, take first property of chip instead
-                topLens = whelk.fresnelUtil.applyLens(framed, FresnelUtil.LensGroupName.Chip, TAKE_FIRST_SHOW_PROPERTY)
+                topLens = whelk.fresnelUtil.applyLens(framedFull, FresnelUtil.LensGroupName.Chip, TAKE_FIRST_SHOW_PROPERTY)
             }
             var topStr = topLens.byLang().subMap(whelk.jsonld.locales).values()
                     ?: topLens.byScript().values()
@@ -486,9 +486,9 @@ class ElasticSearch {
             if (topStr) {
                 searchCard[TOP_STR] = topStr
             }
-            searchCard[CHIP_STR] = whelk.fresnelUtil.applyLens(framed, FresnelUtil.LensGroupName.Chip, TAKE_ALL_ALTERNATE).asString()
-            searchCard[CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
-            searchCard[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(framed, Lenses.SEARCH_CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
+            searchCard[CHIP_STR] = whelk.fresnelUtil.applyLens(framedFull, FresnelUtil.LensGroupName.Chip, TAKE_ALL_ALTERNATE).asString()
+            searchCard[CARD_STR] = whelk.fresnelUtil.applyLens(framedFull, Lenses.CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
+            searchCard[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(framedFull, Lenses.SEARCH_CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
         } catch (Exception e) {
             log.error(e, e)
         }
