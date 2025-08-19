@@ -572,6 +572,7 @@ class ElasticSearch {
 
             var ids = (Collection<Map>) value
             addIdentifierForms(ids, 'ISBN', this::getOtherIsbns)
+            addIdentifierForms(ids, 'ISMN', c -> c.findAll{ it.contains("-") }.collect { it.replace("-", "") })
             addIdentifierForms(ids, 'ISNI', this::getFormattedIsnis)
             addIdentifierForms(ids, 'ORCID', this::getFormattedIsnis) // ORCID is a subset of ISNI, same format
 
