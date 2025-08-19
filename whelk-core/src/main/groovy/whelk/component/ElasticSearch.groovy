@@ -480,7 +480,7 @@ class ElasticSearch {
                 // If there is no search token, take first property of chip instead
                 topLens = whelk.fresnelUtil.applyLens(framedFull, FresnelUtil.LensGroupName.Chip, TAKE_FIRST_SHOW_PROPERTY)
             }
-            var topStr = topLens.byLang().subMap(whelk.jsonld.locales).values()
+            var topStr = topLens.byLang().subMap(whelk.jsonld.locales).values() // The values follow the key order in whelk.jsonld.locales (see subMap method implementation)
                     ?: topLens.byScript().values()
                     ?: topLens.asString()
             if (topStr) {
