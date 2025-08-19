@@ -321,4 +321,11 @@ class Unicode {
                 ? isni.split("").collate(4).collect{ it.join() }.join(" ")
                 : isni
     }
+
+    private static var ISBN10 = Pattern.compile("(?:\\d-?){9}(?:\\d|X)").asMatchPredicate()
+    private static var ISBN13 = Pattern.compile("(?:978|979)(?:-?\\d){10}").asMatchPredicate()
+
+    static boolean looksLikeIsbn(String s) {
+        return ISBN10.test(s) || ISBN13.test(s)
+    }
 }
