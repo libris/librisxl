@@ -32,6 +32,7 @@ public class QueryParams {
         public static final String ALIAS = "_alias-";
         public static final String SUGGEST = "_suggest";
         public static final String CURSOR = "cursor";
+        public static final String BOOST = "_boost";
     }
 
     public static class Debug {
@@ -50,6 +51,7 @@ public class QueryParams {
     public final String computedLabelLocale;
     public final Map<String, String[]> aliased;
     public final int cursor;
+    public final ESSettings.Boost boost;
 
     public final String q;
 
@@ -71,6 +73,7 @@ public class QueryParams {
         this.cursor = getCursor(apiParameters);
         this.skipStats = suggest || getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
         this.aliased = getAliased(apiParameters);
+        this.boost = getOptionalSingle(ApiParams.BOOST, apiParameters).map(ESSettings::loadBoostSettings).orElse(null);
     }
 
     public Map<String, String> getFullParamsMap() {

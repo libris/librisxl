@@ -29,9 +29,19 @@ public class ESSettings {
         this.boost = loadBoostSettings();
     }
 
+    // For test only
     public ESSettings(EsMappings mappings, Boost boost) {
+       this(mappings, boost, 1);
+    }
+
+    public ESSettings withBoostSettings(Boost boost) {
+        return new ESSettings(mappings, boost, maxItems);
+    }
+
+    private ESSettings(EsMappings mappings, Boost boost, int maxItems) {
         this.mappings = mappings;
         this.boost = boost;
+        this.maxItems = maxItems;
     }
 
     public boolean isConfigured() {
@@ -53,6 +63,10 @@ public class ESSettings {
     public Boost loadBoostSettings() {
         Map<?, ?> settings = toMap(Boost.class.getClassLoader().getResourceAsStream(BOOST_SETTINGS_FILE));
         return new Boost(settings);
+    }
+
+    public static Boost loadBoostSettings(String json) {
+        return new Boost(toMap(json));
     }
 
     public record Boost(FieldBoost fieldBoost, FunctionScore functionScore, ConstantScore constantScore) {
@@ -218,11 +232,16 @@ public class ESSettings {
         }
     }
 
-    private static Map<?, ?> toMap(InputStream json) {
+    private static Map<?, ?> toMap(Object json) {
         try {
-            return mapper.readValue(json, Map.class);
+            if (json instanceof String) {
+                return mapper.readValue((String) json, Map.class);
+            } else if (json instanceof InputStream) {
+                return mapper.readValue((InputStream) json, Map.class);
+            }
         } catch (IOException ignored) {
             return Map.of();
         }
+        return Map.of();
     }
 }

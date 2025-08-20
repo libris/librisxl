@@ -157,9 +157,10 @@ public class Query {
 
     protected Map<String, Object> getEsQuery(QueryTree queryTree, Collection<String> rulingTypes) {
         List<Node> multiSelectedFilters = selectedFilters.getAllMultiSelected().values().stream().flatMap(List::stream).toList();
-        var mainQuery = queryTree.toEs(whelk.getJsonld(), esSettings, rulingTypes, multiSelectedFilters);
-        var functionScore = esSettings.boost().functionScore().toEs();
-        var constantScore = esSettings.boost().constantScore().toEs();
+        ESSettings currentEsSettings = queryParams.boost != null ? esSettings.withBoostSettings(queryParams.boost) : esSettings;
+        var mainQuery = queryTree.toEs(whelk.getJsonld(), currentEsSettings, rulingTypes, multiSelectedFilters);
+        var functionScore = currentEsSettings.boost().functionScore().toEs();
+        var constantScore = currentEsSettings.boost().constantScore().toEs();
         return mustWrap(Stream.of(mainQuery, functionScore, constantScore).filter(Predicate.not(Map::isEmpty)).toList());
     }
 
