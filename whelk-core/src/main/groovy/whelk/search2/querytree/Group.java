@@ -1,7 +1,7 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
-import whelk.search2.EsBoost;
+import whelk.search2.ESSettings;
 import whelk.search2.EsMappings;
 import whelk.search2.Operator;
 import whelk.search2.QueryParams;
@@ -45,9 +45,9 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     @Override
-    public Map<String, Object> toEs(EsMappings esMappings, EsBoost.Config boostConfig) {
-        Map<String, List<PathValue>> nestedGroups = getNestedGroups(esMappings);
-        return nestedGroups.isEmpty() ? wrap(childrenToEs(esMappings, boostConfig)) : toEsNested(nestedGroups, esMappings, boostConfig);
+    public Map<String, Object> toEs(ESSettings esSettings) {
+        Map<String, List<PathValue>> nestedGroups = getNestedGroups(esSettings.mappings());
+        return nestedGroups.isEmpty() ? wrap(childrenToEs(esSettings)) : toEsNested(nestedGroups, esSettings);
     }
 
     @Override
@@ -137,7 +137,7 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     // TODO: Review/refine nested logic and proper tests
-    private Map<String, Object> toEsNested(Map<String, List<PathValue>> nestedGroups, EsMappings esMappings, EsBoost.Config boostConfig) {
+    private Map<String, Object> toEsNested(Map<String, List<PathValue>> nestedGroups, ESSettings esSettings) {
         List<Map<String, Object>> esChildren = new ArrayList<>();
         List<Node> nonNested = new ArrayList<>(children());
 
@@ -148,10 +148,10 @@ public sealed abstract class Group implements Node permits And, Or {
                         boolean isGroup = v.size() > 1;
                         boolean isNegatedGroup = k && isGroup;
                         if (isNegatedGroup) {
-                            var es = v.stream().map(pv -> pv.withOperator(Operator.EQUALS).getCoreEsQuery(esMappings, boostConfig)).toList();
+                            var es = v.stream().map(pv -> pv.withOperator(Operator.EQUALS).getCoreEsQuery(esSettings)).toList();
                             bool.put("must_not", nestedWrap(nestedStem, wrap(es)));
                         } else {
-                            var es = v.stream().map(pv -> pv.getCoreEsQuery(esMappings, boostConfig)).toList();
+                            var es = v.stream().map(pv -> pv.getCoreEsQuery(esSettings)).toList();
                             bool.put("must", nestedWrap(nestedStem, isGroup ? wrap(es) : es.getFirst()));
                         }
                     });
@@ -160,7 +160,7 @@ public sealed abstract class Group implements Node permits And, Or {
         });
 
         for (Node n : nonNested) {
-            esChildren.add(n.toEs(esMappings, boostConfig));
+            esChildren.add(n.toEs(esSettings));
         }
 
         return esChildren.size() == 1 ? esChildren.getFirst() : wrap(esChildren);
@@ -191,8 +191,8 @@ public sealed abstract class Group implements Node permits And, Or {
         return nestedGroups;
     }
 
-    private List<Map<String, Object>> childrenToEs(EsMappings esMappings, EsBoost.Config boostConfig) {
-        return mapToMap(n -> n.toEs(esMappings, boostConfig));
+    private List<Map<String, Object>> childrenToEs(ESSettings esSettings) {
+        return mapToMap(n -> n.toEs(esSettings));
     }
 
     private List<Node> mapToNode(Function<Node, Node> mapper) {

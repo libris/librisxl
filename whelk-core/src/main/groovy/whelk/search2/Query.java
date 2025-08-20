@@ -10,13 +10,14 @@ import whelk.util.DocumentUtil;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.component.ElasticSearch.flattenedLangMapKey;
-import static whelk.search2.EsBoost.addBoosts;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 import static whelk.search2.QueryUtil.makeViewFindUrl;
+import static whelk.search2.QueryUtil.mustWrap;
 
 public class Query {
     protected final Whelk whelk;
@@ -123,7 +124,7 @@ public class Query {
         queryDsl.put("from", queryParams.offset);
         queryDsl.put("sort", queryParams.sortBy.getSortClauses(this::getSortField));
 
-        if (queryParams.spell.suggest && esSettings.mappings.isSpellCheckAvailable()) {
+        if (queryParams.spell.suggest && esSettings.mappings().isSpellCheckAvailable()) {
             var spellQuery = Spell.getSpellQuery(queryTree);
             if (spellQuery.isPresent()) {
                 if (queryParams.spell.suggestOnly) {
@@ -156,17 +157,19 @@ public class Query {
 
     protected Map<String, Object> getEsQuery(QueryTree queryTree, Collection<String> rulingTypes) {
         List<Node> multiSelectedFilters = selectedFilters.getAllMultiSelected().values().stream().flatMap(List::stream).toList();
-        EsBoost.Config esBoostConfig = EsBoost.Config.getCustomConfig(queryParams);
-        var esQuery = queryTree.toEs(whelk.getJsonld(), esSettings.mappings, esBoostConfig, rulingTypes, multiSelectedFilters);
-        return addBoosts(esQuery, esBoostConfig.scoreFunctions());
+        ESSettings currentEsSettings = queryParams.boost != null ? esSettings.withBoostSettings(queryParams.boost) : esSettings;
+        var mainQuery = queryTree.toEs(whelk.getJsonld(), currentEsSettings, rulingTypes, multiSelectedFilters);
+        var functionScore = currentEsSettings.boost().functionScore().toEs();
+        var constantScore = currentEsSettings.boost().constantScore().toEs();
+        return mustWrap(Stream.of(mainQuery, functionScore, constantScore).filter(Predicate.not(Map::isEmpty)).toList());
     }
 
     protected Map<String, Object> getEsAggQuery(Collection<String> rulingTypes) {
-        return buildAggQuery(appParams.statsRepr.sliceList(), whelk.getJsonld(), rulingTypes, esSettings.mappings, selectedFilters);
+        return buildAggQuery(appParams.statsRepr.sliceList(), whelk.getJsonld(), rulingTypes, esSettings, selectedFilters);
     }
 
     protected Map<String, Object> getPostFilter(Collection<String> rulingTypes) {
-        return getEsMultiSelectedFilters(selectedFilters.getAllMultiSelected(), rulingTypes, whelk.getJsonld(), esSettings.mappings);
+        return getEsMultiSelectedFilters(selectedFilters.getAllMultiSelected(), rulingTypes, whelk.getJsonld(), esSettings);
     }
 
     protected Map<String, Object> getPartialCollectionView() {
@@ -240,7 +243,7 @@ public class Query {
     private static Map<String, Object> getEsMultiSelectedFilters(Map<String, List<Node>> multiSelected,
                                                                  Collection<String> rulingTypes,
                                                                  JsonLd jsonLd,
-                                                                 EsMappings esMappings) {
+                                                                 ESSettings esSettings) {
         if (multiSelected.isEmpty()) {
             return Map.of();
         }
@@ -249,12 +252,12 @@ public class Query {
                 .map(selected -> selected.size() > 1 ? new Or(selected) : selected.getFirst())
                 .toList();
         return new QueryTree(orGrouped.size() == 1 ? orGrouped.getFirst() : new And(orGrouped))
-                .toEs(jsonLd, esMappings, EsBoost.Config.defaultConfig(), rulingTypes, List.of());
+                .toEs(jsonLd, esSettings, rulingTypes, List.of());
     }
 
     private String getSortField(String termPath) {
         var path = expandLangMapKeys(termPath);
-        if (esSettings.mappings.isKeywordField(path) && !esSettings.mappings.isFourDigitField(path)) {
+        if (esSettings.mappings().isKeywordField(path) && !esSettings.mappings().isFourDigitField(path)) {
             return String.format("%s.keyword", path);
         } else {
             return termPath;
@@ -299,7 +302,7 @@ public class Query {
     private static Map<String, Object> buildAggQuery(List<AppParams.Slice> sliceList,
                                                      JsonLd jsonLd,
                                                      Collection<String> rulingTypes,
-                                                     EsMappings esMappings,
+                                                     ESSettings esSettings,
                                                      SelectedFilters selectedFilters) {
         if (sliceList.isEmpty()) {
             return Map.of(JsonLd.TYPE_KEY,
@@ -328,13 +331,13 @@ public class Query {
             new Path(property).expand(jsonLd)
                     .getAltPaths(jsonLd, rulingTypes)
                     .forEach(path -> {
-                        Map<String, Object> aggs = path.getEsNestedStem(esMappings)
+                        Map<String, Object> aggs = path.getEsNestedStem(esSettings.mappings())
                                 .map(nestedStem -> buildNestedAggQuery(path, slice, nestedStem))
                                 .orElse(buildCoreAqqQuery(path, slice));
                         Map<String, List<Node>> mSelected = selectedFilters.isMultiSelectable(pKey)
                                 ? new HashMap<>(multiSelected) {{ remove(pKey); }}
                                 : multiSelected;
-                        Map<String, Object> filter = getEsMultiSelectedFilters(mSelected, rulingTypes, jsonLd, esMappings);
+                        Map<String, Object> filter = getEsMultiSelectedFilters(mSelected, rulingTypes, jsonLd, esSettings);
                         query.put(path.jsonForm(), filterWrap(aggs, property.name(), filter));
                     });
         }

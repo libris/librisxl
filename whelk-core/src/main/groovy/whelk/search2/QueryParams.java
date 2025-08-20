@@ -3,7 +3,6 @@ package whelk.search2;
 import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -29,14 +28,11 @@ public class QueryParams {
         public static final String PREDICATES = "_p";
         public static final String DEBUG = "_debug";
         public static final String APP_CONFIG = "_appConfig";
-        public static final String BOOST = "_boost";
         public static final String STATS = "_stats";
         public static final String ALIAS = "_alias-";
-        public static final String FN_SCORE = "_fnScore";
-        // Temporary param for experimenting
-        public static final String PHRASE_BOOST_DIVISOR = "_phraseBoostDivisor";
         public static final String SUGGEST = "_suggest";
         public static final String CURSOR = "cursor";
+        public static final String BOOST = "_boost";
     }
 
     public static class Debug {
@@ -53,9 +49,9 @@ public class QueryParams {
     public final String lens;
     public final Spell spell;
     public final String computedLabelLocale;
-    public final EsBoost.Config esBoostConfig;
     public final Map<String, String[]> aliased;
     public final int cursor;
+    public final ESSettings.Boost boost;
 
     public final String q;
 
@@ -76,8 +72,8 @@ public class QueryParams {
         this.suggest = getOptionalSingle(ApiParams.SUGGEST, apiParameters).map("true"::equalsIgnoreCase).isPresent();
         this.cursor = getCursor(apiParameters);
         this.skipStats = suggest || getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
-        this.esBoostConfig = getEsBoostConfig(apiParameters);
         this.aliased = getAliased(apiParameters);
+        this.boost = getOptionalSingle(ApiParams.BOOST, apiParameters).map(ESSettings::loadBoostSettings).orElse(null);
     }
 
     public Map<String, String> getFullParamsMap() {
@@ -219,41 +215,5 @@ public class QueryParams {
         } catch (NumberFormatException ignored) {
             return defaultTo;
         }
-    }
-
-    private List<EsBoost.ScoreFunction> getEsScoreFunctions(Map<String, String[]> queryParameters) {
-        List<EsBoost.ScoreFunction> scoreFunctions = new ArrayList<>();
-        try {
-            getMultiple(ApiParams.FN_SCORE, queryParameters).stream()
-                    .map(s -> s.split(";"))
-                    .forEach(fieldConfig -> {
-                        String fnType = fieldConfig[0];
-                        if (fnType.equalsIgnoreCase("fvf")) {
-                            String field = fieldConfig[1];
-                            float factor = Float.parseFloat(fieldConfig[2]);
-                            String modifier = fieldConfig[3];
-                            float missing = Float.parseFloat(fieldConfig[4]);
-                            float weight = Float.parseFloat(fieldConfig[5]);
-                            scoreFunctions.add(new EsBoost.FieldValueFactor(field, factor, modifier, missing, weight));
-                        }
-                        if (fnType.equalsIgnoreCase("mfv")) {
-                            String field = fieldConfig[1];
-                            String value = fieldConfig[2];
-                            float boost = Float.parseFloat(fieldConfig[3]);
-                            scoreFunctions.add(new EsBoost.MatchingFieldValue(field, value, boost));
-                        }
-                    });
-        } catch (Exception ignored) {
-        }
-        return scoreFunctions;
-    }
-
-    private EsBoost.Config getEsBoostConfig(Map<String, String[]> queryParameters) {
-        List<String> boostFields = getMultiple(ApiParams.BOOST, queryParameters);
-        List<EsBoost.ScoreFunction> scoreFunctions = getEsScoreFunctions(queryParameters);
-        Integer phraseBoostDivisor = getOptionalSingle(ApiParams.PHRASE_BOOST_DIVISOR, queryParameters)
-                .map(s -> parseInt(s, null))
-                .orElse(null);
-        return new EsBoost.Config(boostFields, scoreFunctions, phraseBoostDivisor, null, suggest, cursor);
     }
 }

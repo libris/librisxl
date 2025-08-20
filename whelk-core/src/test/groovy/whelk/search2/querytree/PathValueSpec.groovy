@@ -3,7 +3,7 @@ package whelk.search2.querytree
 import spock.lang.Specification
 import whelk.JsonLd
 import whelk.search2.Disambiguate
-import whelk.search2.EsBoost
+import whelk.search2.ESSettings
 import whelk.search2.EsMappings
 import whelk.search2.QueryParams
 
@@ -91,9 +91,10 @@ class PathValueSpec extends Specification {
     def "To ES query (negation + nested field)"() {
         given:
         PathValue pathValue = (PathValue) QueryTreeBuilder.buildTree("NOT p3:\"https://id.kb.se/x\"", disambiguate)
+        ESSettings esSettings = new ESSettings(esMappings, new ESSettings.Boost([:]))
 
         expect:
-        pathValue.toEs(esMappings, EsBoost.Config.defaultConfig()) == [
+        pathValue.toEs(esSettings) == [
                 "bool": [
                         "must_not": [
                                 "nested": [

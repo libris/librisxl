@@ -1,8 +1,7 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
-import whelk.search2.EsBoost;
-import whelk.search2.EsMappings;
+import whelk.search2.ESSettings;
 import whelk.search2.Operator;
 import whelk.search2.Query;
 import whelk.search2.QueryParams;
@@ -47,34 +46,12 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
     }
 
     @Override
-    public Map<String, Object> toEs(EsMappings esMappings, EsBoost.Config boostConfig) {
-        if (boostConfig.suggest() && !negate) {
-            int cursor = boostConfig.cursor();
-            Optional<Token> currentlyEditedToken = getCurrentlyEditedToken(cursor);
-            if (currentlyEditedToken.isPresent()) {
-                var token = currentlyEditedToken.get();
-                if (!token.isQuoted() && !token.value().endsWith(Operator.WILDCARD)) {
-                    var tokenIdx = tokens.indexOf(token);
-                    var prefixedToken = new Token.Raw(token.value() + Operator.WILDCARD);
-                    var altTokens = new ArrayList<>(tokens) {{
-                        remove(tokenIdx);
-                        add(tokenIdx, prefixedToken);
-                    }};
-                    var shouldClause = List.of(
-                            // Make a query with the currently edited token prefixed to get suggestions
-                            _toEs(altTokens, boostConfig),
-                            // Also make a non-prefix query to get higher relevancy score for exact matches
-                            _toEs(tokens, boostConfig)
-                    );
-                    return shouldWrap(shouldClause);
-                }
-            }
-        }
-        return _toEs(tokens, boostConfig);
+    public Map<String, Object> toEs(ESSettings esSettings) {
+        return _toEs(tokens, esSettings.boost().fieldBoost());
     }
 
-    public Map<String, Object> toEs(EsBoost.Config boostConfig) {
-        return _toEs(tokens, boostConfig);
+    public Map<String, Object> toEs(ESSettings.Boost.FieldBoost boostSettings) {
+        return _toEs(tokens, boostSettings);
     }
 
     @Override
@@ -139,6 +116,10 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
                 .findFirst();
     }
 
+    public FreeText withTokens(List<Token> tokens) {
+        return new FreeText(textQuery, negate, tokens, connective);
+    }
+
     private String joinTokens() {
         return switch (connective) {
             case AND -> joinTokens(tokens, " ");
@@ -150,7 +131,7 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
         return tokens.stream().map(Token::formatted).collect(Collectors.joining(delimiter));
     }
 
-    private Map<String, Object> _toEs(List<Token> tokens, EsBoost.Config boostConfig) {
+    private Map<String, Object> _toEs(List<Token> tokens, ESSettings.Boost.FieldBoost boostSettings) {
         String s = joinTokens(tokens, " ");
         s = Unicode.normalizeForSearch(s);
 
@@ -166,43 +147,16 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
         }
         String queryString = s;
 
-        List<String> boostFields = boostConfig.boostFields();
-
-        if (boostFields.isEmpty()) {
-            return wrap(buildSimpleQuery(queryMode, queryString));
+        if (boostSettings.fields().isEmpty()) {
+            return wrap(buildSimpleQuery(queryMode, queryString, boostSettings));
         }
 
-        Map<String, Float> basicBoostFields = new LinkedHashMap<>();
-        Map<String, String> functionBoostFields = new LinkedHashMap<>();
-
-        for (String bf : boostFields) {
-            try {
-                String field = bf.substring(0, bf.indexOf('^'));
-                String boost = bf.substring(bf.indexOf('^') + 1);
-                if (boost.contains("(")) {
-                    Float basicBoost = Float.parseFloat(boost.substring(0, boost.indexOf('(')));
-                    String function = boost.substring(boost.indexOf('(') + 1, boost.lastIndexOf(')'));
-                    basicBoostFields.put(field, basicBoost);
-                    functionBoostFields.put(field, function);
-                } else {
-                    basicBoostFields.put(field, Float.parseFloat(boost));
-                }
-            } catch (Exception ignored) {
-            }
-        }
-
-        var queries = buildQueries(queryMode, queryString, basicBoostFields, functionBoostFields);
+        var queries = buildQueries(queryMode, queryString, boostSettings);
 
         List<String> simplePhrases = getSimplePhrases(tokens);
         if (!simplePhrases.isEmpty()) {
-            Integer phraseBoostDivisor = boostConfig.phraseBoostDivisor();
-            if (phraseBoostDivisor != null) {
-                basicBoostFields = basicBoostFields.entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey,
-                                e -> e.getValue() / phraseBoostDivisor));
-            }
             for (String phrase : simplePhrases) {
-                queries.addAll(buildQueries("query_string", phrase, basicBoostFields, functionBoostFields));
+                queries.addAll(buildQueries("query_string", phrase, boostSettings));
             }
         }
 
@@ -213,39 +167,64 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
         return negate ? mustNotWrap(query) : query;
     }
 
-    private List<Map<String, Object>> buildQueries(String queryMode, String queryString, Map<String, Float> basicBoostFields, Map<String, String> functionBoostFields) {
+    private List<Map<String, Object>> buildQueries(String queryMode, String queryString, ESSettings.Boost.FieldBoost boostSettings) {
         List<Map<String, Object>> queries = new ArrayList<>();
 
-        if (functionBoostFields.size() != basicBoostFields.size()) {
-            queries.add(buildBasicBoostQuery(queryMode, queryString, basicBoostFields, functionBoostFields));
+        if (boostSettings.fields().stream().anyMatch(f -> f.scriptScore().isEmpty())) {
+            queries.add(buildBasicBoostQuery(queryMode, queryString, boostSettings));
         }
-        queries.addAll(buildFunctionBoostQueries(queryMode, queryString, basicBoostFields, functionBoostFields));
+        queries.addAll(buildScriptScoreQueries(queryMode, queryString, boostSettings));
 
         return queries;
     }
 
-    private Map<String, Object> buildBasicBoostQuery(String queryMode, String queryString, Map<String, Float> basicBoostFields, Map<String, String> functionBoostFields) {
+    private Map<String, Object> buildBasicBoostQuery(String queryMode, String queryString, ESSettings.Boost.FieldBoost boostSettings) {
         Map<String, Float> boostFields = new LinkedHashMap<>();
-        basicBoostFields.forEach((field, boost) -> boostFields.put(field, functionBoostFields.containsKey(field) ? 0 : boost));
-        return buildSimpleQuery(queryMode, queryString, boostFields);
+        boostSettings.fields().forEach(f -> {
+            float boost = f.scriptScore().isEmpty() ? f.boost() : 0;
+            if (isPhrase(queryString)) {
+                boost = boost / boostSettings.phraseBoostDivisor();
+            }
+            boostFields.put(f.name(), boost);
+            if (boostSettings.includeExactFields()) {
+                boostFields.put(f.name() + ESSettings.Boost.EXACT_SUFFIX, boost);
+            }
+        });
+        return buildSimpleQuery(queryMode, queryString, boostSettings, boostFields);
     }
 
-    private List<Map<String, Object>> buildFunctionBoostQueries(String queryMode, String queryString, Map<String, Float> basicBoostFields, Map<String, String> functionBoostFields) {
+    private List<Map<String, Object>> buildScriptScoreQueries(String queryMode, String queryString, ESSettings.Boost.FieldBoost boostSettings) {
         List<Map<String, Object>> queries = new ArrayList<>();
 
-        Map<String, List<String>> fieldsGroupedByFunction = new LinkedHashMap<>();
-        functionBoostFields.forEach((field, function) -> fieldsGroupedByFunction.computeIfAbsent(function, v -> new ArrayList<>()).add(field));
+        var scriptScores = boostSettings.fields().stream()
+                .map(f -> f.scriptScore())
+                .distinct()
+                .filter(f -> !f.isEmpty())
+                .toList();
 
-        String lengthNormMultiplier = isQuoted(queryString) ? queryString.split("\\s+").length + " * " : "";
-
-        fieldsGroupedByFunction.forEach((function, fields) -> {
+        scriptScores.forEach(scriptScore -> {
             Map<String, Float> boostFields = new LinkedHashMap<>();
-            basicBoostFields.forEach((f, boost) -> boostFields.put(f, fields.contains(f) ? boost : 0));
+
+            boostSettings.fields().forEach(f -> {
+                float boost = f.scriptScore().equals(scriptScore) ? f.boost() : 0;
+                boostFields.put(f.name(), boost);
+                if (boostSettings.includeExactFields()) {
+                    boostFields.put(f.name() + ESSettings.Boost.EXACT_SUFFIX, boost);
+                }
+            });
+
+            String lengthNormMultiplier = "length normalizer".equals(scriptScore.name()) && isQuoted(queryString)
+                    ? queryString.split("\\s+").length + " * "
+                    : "";
+            String function = lengthNormMultiplier + scriptScore.function();
+            String source = scriptScore.applyIf() == null
+                    ? function
+                    : scriptScore.applyIf() + " ? " + function + " : _score";
 
             Map<String, Object> scriptScoreQuery = Map.of(
                     "script_score", Map.of(
-                            "query", buildSimpleQuery(queryMode, queryString, boostFields),
-                            "script", Map.of("source", lengthNormMultiplier + function)));
+                            "query", buildSimpleQuery(queryMode, queryString, boostSettings, boostFields),
+                            "script", Map.of("source", source)));
 
             queries.add(scriptScoreQuery);
         });
@@ -253,27 +232,27 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
         return queries;
     }
 
-    private Map<String, Object> buildSimpleQuery(String queryMode, String queryString) {
-        return buildSimpleQuery(queryMode, queryString, List.of());
+    private Map<String, Object> buildSimpleQuery(String queryMode, String queryString, ESSettings.Boost.FieldBoost boostSettings) {
+        return buildSimpleQuery(queryMode, queryString, boostSettings, List.of());
     }
 
-    private Map<String, Object> buildSimpleQuery(String queryMode, String queryString, Collection<String> fields) {
+    private Map<String, Object> buildSimpleQuery(String queryMode, String queryString, ESSettings.Boost.FieldBoost boostSettings, Collection<String> fields) {
         var query = new HashMap<>();
         query.put("query", queryString);
-        query.put("analyze_wildcard", true);
+        query.put("analyze_wildcard", boostSettings.analyzeWildcard());
         query.put("default_operator", connective.name());
         if (!fields.isEmpty()) {
             query.put("fields", fields);
-        }
-        if (queryMode.equals("query_string")) {
-            query.put("type", "most_fields");
+            if (queryMode.equals("query_string") && fields.size() > 1 && boostSettings.multiMatchType() != null) {
+                query.put("type", boostSettings.multiMatchType());
+            }
         }
         return Map.of(queryMode, query);
     }
 
-    private Map<String, Object> buildSimpleQuery(String queryMode, String queryString, Map<String, Float> fields) {
+    private Map<String, Object> buildSimpleQuery(String queryMode, String queryString, ESSettings.Boost.FieldBoost boostSettings, Map<String, Float> fields) {
         var fieldsStrings = fields.entrySet().stream().map(e -> e.getKey() + "^" + e.getValue()).toList();
-        return buildSimpleQuery(queryMode, queryString, fieldsStrings);
+        return buildSimpleQuery(queryMode, queryString, boostSettings, fieldsStrings);
     }
 
     private static List<String> getSimplePhrases(List<Token> tokens) {
@@ -296,5 +275,9 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
         }
 
         return simplePhrases;
+    }
+
+    private static boolean isPhrase(String s) {
+        return s.contains(" ");
     }
 }

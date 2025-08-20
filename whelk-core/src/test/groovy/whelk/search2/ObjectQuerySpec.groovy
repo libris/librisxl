@@ -8,7 +8,7 @@ import whelk.search2.querytree.TestData
 
 class ObjectQuerySpec extends Specification {
     JsonLd jsonLd = TestData.getJsonLd()
-    EsMappings esMappings = TestData.getEsMappings()
+    ESSettings esMappings = new ESSettings(TestData.getEsMappings(), new ESSettings.Boost([:]))
 
     def "build agg query with curated predicates"() {
         given:

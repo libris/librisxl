@@ -9,6 +9,9 @@ sourceSets {
     main {
         java { srcDirs = [] }
         groovy { srcDirs = ['src/main/java', 'src/main/groovy'] }
+        processResources {
+            from("$rootDir/librisxl-tools/elasticsearch/libris_search_boost.json")
+        }
     }
     test {
         groovy { srcDir 'src/test/groovy/' }

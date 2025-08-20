@@ -1,18 +1,27 @@
 package whelk.search2.querytree
 
 import spock.lang.Specification
-import whelk.search2.Disambiguate
-import whelk.search2.EsBoost
-import whelk.search2.EsMappings
+import whelk.search2.ESSettings
 
 class FreeTextSpec extends Specification {
-    EsMappings esMappings = TestData.getEsMappings()
-    Disambiguate disambiguate = TestData.getDisambiguate()
-
     def "to ES query (basic boosting)"() {
         given:
-        List<String> boostFields = ["field1^10", "field2^20"]
-        Map esQuery = new FreeText("something").toEs(esMappings, EsBoost.Config.newBoostFieldsConfig(boostFields))
+        Map boostSettings = [
+                "field_boost": [
+                        "fields": [
+                                [
+                                        "name" : "field1",
+                                        "boost": 10
+                                ],
+                                [
+                                        "name" : "field2",
+                                        "boost": 20
+                                ]
+                        ],
+                        "analyze_wildcard": true
+                ]
+        ]
+        Map esQuery = new FreeText("something").toEs(new ESSettings.Boost(boostSettings).fieldBoost())
 
         expect:
         esQuery == [
@@ -30,8 +39,39 @@ class FreeTextSpec extends Specification {
 
     def "to ES query (function boosting)"() {
         given:
-        List<String> boostFields = ["field1^10(someFunc)", "field2^20(someFunc)", "field3^10(another(func))"]
-        Map esQuery = new FreeText("something").toEs(esMappings, EsBoost.Config.newBoostFieldsConfig(boostFields))
+        Map boostSettings = [
+                "field_boost": [
+                        "fields": [
+                                [
+                                        "name" : "field1",
+                                        "boost": 10,
+                                        "script_score": [
+                                                "name"    : "a function",
+                                                "function": "f1(_score)"
+                                        ]
+                                ],
+                                [
+                                        "name" : "field2",
+                                        "boost": 20,
+                                        "script_score": [
+                                                "name"    : "a function",
+                                                "function": "f1(_score)"
+                                        ]
+                                ],
+                                [
+                                        "name" : "field3",
+                                        "boost": 10,
+                                        "script_score": [
+                                                "name"    : "another function",
+                                                "function": "f2(_score)",
+                                                "apply_if": "condition"
+                                        ]
+                                ]
+                        ],
+                        "analyze_wildcard": true
+                ]
+        ]
+        Map esQuery = new FreeText("something").toEs(new ESSettings.Boost(boostSettings).fieldBoost())
 
         expect:
         esQuery == [
@@ -40,7 +80,7 @@ class FreeTextSpec extends Specification {
                                 [
                                         "script_score": [
                                                 "script": [
-                                                        "source": "someFunc"
+                                                        "source": "f1(_score)"
                                                 ],
                                                 "query" : [
                                                         "simple_query_string": [
@@ -59,7 +99,7 @@ class FreeTextSpec extends Specification {
                                 [
                                         "script_score": [
                                                 "script": [
-                                                        "source": "another(func)"
+                                                        "source": "condition ? f2(_score) : _score"
                                                 ],
                                                 "query" : [
                                                         "simple_query_string": [
@@ -82,8 +122,30 @@ class FreeTextSpec extends Specification {
 
     def "to ES query (basic boosting + function boosting)"() {
         given:
-        List<String> boostFields = ["field1^10", "field2^20", "field3^10(someFunc)"]
-        Map esQuery = new FreeText("something").toEs(esMappings, EsBoost.Config.newBoostFieldsConfig(boostFields))
+        Map boostSettings = [
+                "field_boost": [
+                        "fields": [
+                                [
+                                        "name" : "field1",
+                                        "boost": 10
+                                ],
+                                [
+                                        "name" : "field2",
+                                        "boost": 20
+                                ],
+                                [
+                                        "name" : "field3",
+                                        "boost": 10,
+                                        "script_score": [
+                                                "name"    : "a function",
+                                                "function": "f(_score)"
+                                        ]
+                                ]
+                        ],
+                        "analyze_wildcard": true
+                ]
+        ]
+        Map esQuery = new FreeText("something").toEs(new ESSettings.Boost(boostSettings).fieldBoost())
 
         expect:
         esQuery == [
@@ -104,7 +166,7 @@ class FreeTextSpec extends Specification {
                                 [
                                         "script_score": [
                                                 "script": [
-                                                        "source": "someFunc"
+                                                        "source": "f(_score)"
                                                 ],
                                                 "query" : [
                                                         "simple_query_string": [
@@ -121,116 +183,6 @@ class FreeTextSpec extends Specification {
                                         ]
                                 ]
                         ]
-                ]
-        ]
-    }
-
-    def "to ES query (with suggest)"() {
-        given:
-        int cursor
-        EsBoost.Config boostConfig
-        FreeText freeText = (FreeText) QueryTreeBuilder.buildTree("abc xyz", disambiguate)
-
-        when:
-        // First word is being edited
-        cursor = 3
-        boostConfig = new EsBoost.Config(["field1^10"], [], null, null, true, cursor)
-
-        then:
-        freeText.toEs(esMappings, boostConfig) == [
-                "bool": [
-                        "should": [[
-                                           "simple_query_string": [
-                                                   "default_operator": "AND",
-                                                   "query"           : "abc* xyz",
-                                                   "analyze_wildcard": true,
-                                                   "fields"          : ["field1^10.0"]
-                                           ]
-                                   ], [
-                                           "bool": [
-                                                   "should": [[
-                                                                      "simple_query_string": [
-                                                                              "default_operator": "AND",
-                                                                              "query"           : "abc xyz",
-                                                                              "analyze_wildcard": true,
-                                                                              "fields"          : ["field1^10.0"]
-                                                                      ]
-                                                              ], [
-                                                                      "query_string": [
-                                                                              "default_operator": "AND",
-                                                                              "query"           : "\"abc xyz\"",
-                                                                              "analyze_wildcard": true,
-                                                                              "fields"          : ["field1^10.0"],
-                                                                              "type"            : "most_fields"
-                                                                      ]
-                                                              ]]
-                                           ]
-                                   ]]
-                ]
-        ]
-
-        when:
-        // No word is being edited
-        cursor = 4
-        boostConfig = new EsBoost.Config(["field1^10"], [], null, null, true, cursor)
-
-        then:
-        freeText.toEs(esMappings, boostConfig) == [
-                "bool": [
-                        "should": [[
-                                           "simple_query_string": [
-                                                   "default_operator": "AND",
-                                                   "query"           : "abc xyz",
-                                                   "analyze_wildcard": true,
-                                                   "fields"          : ["field1^10.0"]
-                                           ]
-                                   ], [
-                                           "query_string": [
-                                                   "default_operator": "AND",
-                                                   "query"           : "\"abc xyz\"",
-                                                   "analyze_wildcard": true,
-                                                   "fields"          : ["field1^10.0"],
-                                                   "type"            : "most_fields"
-                                           ]
-                                   ]]
-                ]
-        ]
-
-        when:
-        // Second word is being edited
-        cursor = 7
-        boostConfig = new EsBoost.Config(["field1^10"], [], null, null, true, cursor)
-
-        then:
-        freeText.toEs(esMappings, boostConfig) == [
-                "bool": [
-                        "should": [[
-                                           "simple_query_string": [
-                                                   "default_operator": "AND",
-                                                   "query"           : "abc xyz*",
-                                                   "analyze_wildcard": true,
-                                                   "fields"          : ["field1^10.0"]
-                                           ]
-                                   ], [
-                                           "bool": [
-                                                   "should": [[
-                                                                      "simple_query_string": [
-                                                                              "default_operator": "AND",
-                                                                              "query"           : "abc xyz",
-                                                                              "analyze_wildcard": true,
-                                                                              "fields"          : ["field1^10.0"]
-                                                                      ]
-                                                              ], [
-                                                                      "query_string": [
-                                                                              "default_operator": "AND",
-                                                                              "query"           : "\"abc xyz\"",
-                                                                              "analyze_wildcard": true,
-                                                                              "fields"          : ["field1^10.0"],
-                                                                              "type"            : "most_fields"
-                                                                      ]
-                                                              ]]
-                                           ]
-                                   ]]
                 ]
         ]
     }
