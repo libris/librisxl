@@ -44,6 +44,7 @@ import static javax.xml.stream.XMLStreamConstants.CHARACTERS;
 import static javax.xml.stream.XMLStreamConstants.END_ELEMENT;
 import static javax.xml.stream.XMLStreamConstants.START_ELEMENT;
 import static whelk.JsonLd.asList;
+import static whelk.util.DocumentUtil.getAtPath;
 
 /**
  * Implementation of Libris legacy xsearch API on XL
@@ -296,17 +297,14 @@ public class XSearchServlet extends WhelkHttpServlet {
     }
 
     private Map<?, ?> toXsearchJson(Map<?, ?> item) {
-        var result = new LinkedHashMap<String, Object>();
-        result.put("identifier", "http://libris.kb.se/bib/" + DocumentUtil.getAtPath(item, List.of("meta", "controlNumber")));
-
         Function<Object, String> format = (Object o) -> whelk.getFresnelUtil().format(
                 whelk.getFresnelUtil().applyLens(o, FresnelUtil.LensGroupName.Chip),
                 new FresnelUtil.LangCode("sv")
         ).asString();
 
-        @SuppressWarnings("unchecked")
-        Function<List<String>, List<Map<?,?>>> get = path -> ((List<Map<?,?>>) DocumentUtil.getAtPath(item, path, Collections.emptyList()));
 
+        var result = new LinkedHashMap<String, Object>();
+        result.put("identifier", "http://libris.kb.se/bib/" + getAtPath(item, List.of("meta", "controlNumber")));
 
         /*
         Always one
@@ -314,7 +312,7 @@ public class XSearchServlet extends WhelkHttpServlet {
         "title": "Röda rummet : skildringar ur artist- och författarlifvet",
 
          */
-        var titles = get.apply(List.of("hasTitle"));
+        var titles = get(item, List.of("hasTitle"));
         titles.stream()
                 .filter(t -> "Title".equals(t.get(JsonLd.TYPE_KEY)))
                 .findFirst()
@@ -329,14 +327,14 @@ public class XSearchServlet extends WhelkHttpServlet {
         creator": "Strindberg, August, 1849-1912",
 
          */
-        var contribution = get.apply(List.of("instanceOf", "contribution"));
+        var contribution = get(item, List.of("instanceOf", "contribution"));
         contribution.stream()
                 .filter(t -> "PrimaryContribution".equals(t.get(JsonLd.TYPE_KEY)))
                 .findFirst()
                 .or(() -> contribution.stream()
-                        .filter(c -> get.apply(List.of("role"))
+                        .filter(c -> get(c, List.of("role", "*"))
                                 .stream()
-                                .anyMatch(r -> "".equals(r.get(JsonLd.ID_KEY))))
+                                .anyMatch(r -> "https://id.kb.se/relator/author".equals(r.get(JsonLd.ID_KEY))))
                         .findFirst())
                 .or(() -> contribution.stream().findFirst())
                 .filter(c -> c.containsKey("agent"))
@@ -345,7 +343,7 @@ public class XSearchServlet extends WhelkHttpServlet {
                 .ifPresent(t -> result.put("creator", t));
 
         // TODO XL search result includes generated ISBN10 or ISBN13
-        var isbns = get.apply(List.of("identifiedBy")).stream()
+        var isbns = get(item, List.of("identifiedBy")).stream()
                 .filter(t -> "ISBN".equals(t.get(JsonLd.TYPE_KEY)))
                 .filter(c -> c.containsKey("value"))
                 .map(c -> c.get("value"))
@@ -354,7 +352,7 @@ public class XSearchServlet extends WhelkHttpServlet {
             result.put("isbn", unwrapSingle(isbns));
         }
 
-        var issns = get.apply(List.of("identifiedBy")).stream()
+        var issns = get(item, List.of("identifiedBy")).stream()
                 .filter(t -> "ISSN".equals(t.get(JsonLd.TYPE_KEY)))
                 .filter(c -> c.containsKey("value"))
                 .map(c -> c.get("value"))
@@ -397,14 +395,14 @@ public class XSearchServlet extends WhelkHttpServlet {
 
          */
 
-        var allPublications = get.apply(List.of("publication"));
+        var allPublications = get(item, List.of("publication"));
         var publications = new ArrayList<Map<?,?>>(allPublications.size());
         publications.addAll(allPublications.stream().filter(p -> "PrimaryPublication".equals(p.get(JsonLd.TYPE_KEY))).toList());
         publications.addAll(allPublications.stream().filter(p -> !"PrimaryPublication".equals(p.get(JsonLd.TYPE_KEY))).toList());
         var dates = new TreeSet<>();
         var dateFields = List.of("year", "date", "startYear", "endYear");
 
-        var manufacture = get.apply(List.of("manufacture"));
+        var manufacture = get(item, List.of("manufacture"));
 
         DocumentUtil.Visitor filter = (value,path) -> {
             if (!path.isEmpty()) {
@@ -446,7 +444,7 @@ public class XSearchServlet extends WhelkHttpServlet {
 
          */
 
-        var langs = get.apply(List.of("instanceOf", "language", "*", "code"));
+        var langs = get(item, List.of("instanceOf", "language", "*", "code"));
         if (!langs.isEmpty()) {
             result.put("language", unwrapSingle(langs));
         }
@@ -471,8 +469,8 @@ public class XSearchServlet extends WhelkHttpServlet {
 
         var free = new ArrayList<>();
         Stream.concat(
-                        get.apply(List.of("associatedMedia", "*")).stream(),
-                        get.apply(List.of("@reverse", "reproductionOf", "*", "associatedMedia", "*")).stream())
+                        get(item, List.of("associatedMedia", "*")).stream(),
+                        get(item, List.of("@reverse", "reproductionOf", "*", "associatedMedia", "*")).stream())
                 .filter(t -> "MediaObject".equals(t.get(JsonLd.TYPE_KEY)))
                 .forEach(m -> {
                     if (m.containsKey("uri")) {
@@ -521,6 +519,11 @@ public class XSearchServlet extends WhelkHttpServlet {
         // TODO any other fields?
 
         return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<Map<?,?>> get(Object o, List<String> path) {
+       return ((List<Map<?,?>>) getAtPath(o, path, Collections.emptyList()));
     }
 
     private static Optional<String> getOptionalSingleNonEmpty(String name, Map<String, String[]> queryParameters) {
