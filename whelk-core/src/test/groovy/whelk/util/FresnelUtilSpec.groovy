@@ -2,7 +2,8 @@ package whelk.util
 
 import spock.lang.Specification
 import whelk.JsonLd
-import whelk.component.ElasticSearch
+
+import static whelk.component.ElasticSearch.Lenses.CARD_ONLY
 
 // TODO test resourceStyle, propertyStyle, valueStyle
 // TODO test card, full
@@ -930,8 +931,8 @@ class FresnelUtilSpec extends Specification {
         var chipStr = fresnel.applyLens(work, FresnelUtil.LensGroupName.Chip).asString()
         var cardStr = fresnel.applyLens(work, FresnelUtil.LensGroupName.Card).asString()
         var cardStrAlt = fresnel.applyLens(work, FresnelUtil.LensGroupName.Card, FresnelUtil.Options.TAKE_ALL_ALTERNATE).asString()
-        var cardOnlyStr = fresnel.applyLens(work, ElasticSearch.Lenses.CARD_ONLY).asString()
-        var cardOnlyStrAlt = fresnel.applyLens(work, ElasticSearch.Lenses.CARD_ONLY, FresnelUtil.Options.TAKE_ALL_ALTERNATE).asString()
+        var cardOnlyStr = fresnel.applyLens(work, CARD_ONLY).asString()
+        var cardOnlyStrAlt = fresnel.applyLens(work, CARD_ONLY, FresnelUtil.Options.TAKE_ALL_ALTERNATE).asString()
 
         expect:
         chipStr == "Verkstitel"
