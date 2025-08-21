@@ -342,6 +342,18 @@ public class XSearchServlet extends WhelkHttpServlet {
                 .map(format)
                 .ifPresent(t -> result.put("creator", t));
 
+        /*
+
+        "isbn": "9519519025",
+
+        "isbn": [
+          "9781637846193",
+          "9781637846186 (invalid)"
+        ],
+
+        "issn": "1403-3844",
+
+         */
         // TODO XL search result includes generated ISBN10 or ISBN13
         var isbns = get(item, List.of("identifiedBy")).stream()
                 .filter(t -> "ISBN".equals(t.get(JsonLd.TYPE_KEY)))
@@ -394,7 +406,6 @@ public class XSearchServlet extends WhelkHttpServlet {
         ],
 
          */
-
         var allPublications = get(item, List.of("publication"));
         var publications = new ArrayList<Map<?,?>>(allPublications.size());
         publications.addAll(allPublications.stream().filter(p -> "PrimaryPublication".equals(p.get(JsonLd.TYPE_KEY))).toList());
@@ -443,7 +454,6 @@ public class XSearchServlet extends WhelkHttpServlet {
         "language": "swe",
 
          */
-
         var langs = get(item, List.of("instanceOf", "language", "*", "code"));
         if (!langs.isEmpty()) {
             result.put("language", unwrapSingle(langs));
@@ -466,7 +476,6 @@ public class XSearchServlet extends WhelkHttpServlet {
         ]
 
          */
-
         var free = new ArrayList<>();
         Stream.concat(
                         get(item, List.of("associatedMedia", "*")).stream(),
