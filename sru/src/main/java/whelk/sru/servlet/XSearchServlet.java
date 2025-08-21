@@ -218,12 +218,18 @@ public class XSearchServlet extends WhelkHttpServlet {
 
             // skip "category" element
 
-            for (var o : items) {
-                String systemID = whelk.getStorage().getSystemIdByIri( (String) o.get("@id"));
-                Document embellished = whelk.loadEmbellished(systemID);
-                String convertedText = (String) converter.convert(embellished.data, embellished.getShortId()).get(JsonLd.NON_JSON_CONTENT_KEY);
-                copyRecord(xmlInputFactory.createXMLStreamReader(new StringReader(convertedText)), writer);
-            }
+            items.parallelStream()
+                    .map(i -> {
+                        String systemID = whelk.getStorage().getSystemIdByIri( (String) i.get("@id"));
+                        Document embellished = whelk.loadEmbellished(systemID);
+                        return (String) converter.convert(embellished.data, embellished.getShortId()).get(JsonLd.NON_JSON_CONTENT_KEY);
+                    }).forEachOrdered( convertedText -> {
+                        try {
+                            copyRecord(xmlInputFactory.createXMLStreamReader(new StringReader(convertedText)), writer);
+                        } catch (XMLStreamException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
 
             writer.writeEndElement(); // collection
             writer.writeEndElement(); // xsearch
