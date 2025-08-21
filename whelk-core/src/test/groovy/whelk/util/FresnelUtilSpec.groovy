@@ -822,4 +822,103 @@ class FresnelUtilSpec extends Specification {
         then:
         searchToken.asString() == "Hästar"
     }
+
+    def "inverse integral"() {
+        given:
+        def vocab = [
+                "@graph": [
+                        [
+                                "@id"      : "http://example.org/ns/hasInstance",
+                                "category" : ["@id": "http://example.org/ns/integral"],
+                                "inverseOf": ["@id": "http://example.org/ns/instanceOf"]
+                        ],
+                        [
+                                "@id"      : "http://example.org/ns/instanceOf",
+                                "inverseOf": ["@id": "http://example.org/ns/hasInstance"]
+                        ]
+                ]
+        ]
+        def displayData = [
+                "@context"  : [
+
+                ],
+                "lensGroups": [
+                        "chips":
+                                ["lenses": [
+                                        "Instance": [
+                                                "@id"            : "Instance-chips",
+                                                "@type"          : "fresnel:Lens",
+                                                "classLensDomain": "Instance",
+                                                "showProperties" : [
+                                                        "responsibilityStatement"
+                                                ]
+                                        ],
+                                        "ISBN"    : [
+                                                "@id"            : "ISBN-chips",
+                                                "@type"          : "fresnel:Lens",
+                                                "classLensDomain": "ISBN",
+                                                "showProperties" : ["value"]
+                                        ],
+                                        "Title"   : [
+                                                "@id"            : "Title-chips",
+                                                "@type"          : "fresnel:Lens",
+                                                "classLensDomain": "Title",
+                                                "showProperties" : ["mainTitle"]
+                                        ],
+                                        "Work"    : [
+                                                "@id"            : "Work-chips",
+                                                "@type"          : "fresnel:Lens",
+                                                "classLensDomain": "Work",
+                                                "showProperties" : [
+                                                        ["@type": "fresnel:fslselector", "@value": "hasTitle/*/mainTitle"],
+                                                        ["inverseOf": "instanceOf"]
+                                                ]
+                                        ],
+                                ]],
+                        "cards":
+                                ["lenses": [
+                                        "Instance": [
+                                                "@id"            : "Instance-cards",
+                                                "@type"          : "fresnel:Lens",
+                                                "classLensDomain": "Instance",
+                                                "showProperties" : [
+                                                        "responsibilityStatement",
+                                                        "identifiedBy"
+                                                ]
+                                        ],
+                                        "Work"    : [
+                                                "@id"            : "Work-cards",
+                                                "@type"          : "fresnel:Lens",
+                                                "classLensDomain": "Work",
+                                                "showProperties" : [
+                                                        "hasTitle",
+                                                        "language",
+                                                        ["inverseOf": "instanceOf"]
+                                                ]
+                                        ]
+                                ]]
+                ]
+        ]
+        var fresnel = new FresnelUtil(new JsonLd(CONTEXT_DATA, displayData, vocab))
+        var work = [
+                '@type'   : 'Work',
+                'hasTitle': [['@type': 'Title', 'mainTitle': 'Titel']],
+                'language': [
+                        ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
+                ],
+                '@reverse': [
+                        'instanceOf': [
+                                '@type'                  : 'Instance',
+                                'responsibilityStatement': 'av Någon',
+                                'identifiedBy'           : ['@type': 'ISBN', 'value': '9789178034239']
+                        ]
+                ]
+        ]
+        var chipStr = fresnel.applyLens(work, FresnelUtil.LensGroupName.Chip).asString()
+        var cardStr = fresnel.applyLens(work, FresnelUtil.LensGroupName.Card).asString()
+
+        expect:
+        chipStr == "Titel av Någon"
+        cardStr == "Titel Svenska Swedish av Någon 9789178034239"
+    }
 }
