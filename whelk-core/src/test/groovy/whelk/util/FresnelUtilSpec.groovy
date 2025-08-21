@@ -2,6 +2,7 @@ package whelk.util
 
 import spock.lang.Specification
 import whelk.JsonLd
+import whelk.component.ElasticSearch
 
 // TODO test resourceStyle, propertyStyle, valueStyle
 // TODO test card, full
@@ -850,7 +851,14 @@ class FresnelUtilSpec extends Specification {
                                                 "@type"          : "fresnel:Lens",
                                                 "classLensDomain": "Instance",
                                                 "showProperties" : [
-                                                        "responsibilityStatement"
+                                                        [
+                                                                "alternateProperties": [
+                                                                        ["subPropertyOf": "hasTitle", "range": "KeyTitle"],
+                                                                        ["subPropertyOf": "hasTitle", "range": "Title"],
+                                                                        "hasTitle",
+                                                                        "identifiedBy"
+                                                                ]
+                                                        ]
                                                 ]
                                         ],
                                         "ISBN"    : [
@@ -869,10 +877,7 @@ class FresnelUtilSpec extends Specification {
                                                 "@id"            : "Work-chips",
                                                 "@type"          : "fresnel:Lens",
                                                 "classLensDomain": "Work",
-                                                "showProperties" : [
-                                                        ["@type": "fresnel:fslselector", "@value": "hasTitle/*/mainTitle"],
-                                                        ["inverseOf": "instanceOf"]
-                                                ]
+                                                "showProperties" : [ "hasTitle" ]
                                         ],
                                 ]],
                         "cards":
@@ -882,8 +887,15 @@ class FresnelUtilSpec extends Specification {
                                                 "@type"          : "fresnel:Lens",
                                                 "classLensDomain": "Instance",
                                                 "showProperties" : [
-                                                        "responsibilityStatement",
-                                                        "identifiedBy"
+                                                        [
+                                                                "alternateProperties": [
+                                                                        ["subPropertyOf": "hasTitle", "range": "KeyTitle"],
+                                                                        ["subPropertyOf": "hasTitle", "range": "Title"],
+                                                                        "hasTitle",
+                                                                        "identifiedBy"
+                                                                ]
+                                                        ],
+                                                        "responsibilityStatement"
                                                 ]
                                         ],
                                         "Work"    : [
@@ -902,7 +914,7 @@ class FresnelUtilSpec extends Specification {
         var fresnel = new FresnelUtil(new JsonLd(CONTEXT_DATA, displayData, vocab))
         var work = [
                 '@type'   : 'Work',
-                'hasTitle': [['@type': 'Title', 'mainTitle': 'Titel']],
+                'hasTitle': [['@type': 'Title', 'mainTitle': 'Verkstitel']],
                 'language': [
                         ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
                 ],
@@ -910,15 +922,22 @@ class FresnelUtilSpec extends Specification {
                         'instanceOf': [
                                 '@type'                  : 'Instance',
                                 'responsibilityStatement': 'av Någon',
+                                'hasTitle'               : [['@type': 'Title', 'mainTitle': 'Instanstitel']],
                                 'identifiedBy'           : ['@type': 'ISBN', 'value': '9789178034239']
                         ]
                 ]
         ]
         var chipStr = fresnel.applyLens(work, FresnelUtil.LensGroupName.Chip).asString()
         var cardStr = fresnel.applyLens(work, FresnelUtil.LensGroupName.Card).asString()
+        var cardStrAlt = fresnel.applyLens(work, FresnelUtil.LensGroupName.Card, FresnelUtil.Options.TAKE_ALL_ALTERNATE).asString()
+        var cardOnlyStr = fresnel.applyLens(work, ElasticSearch.Lenses.CARD_ONLY).asString()
+        var cardOnlyStrAlt = fresnel.applyLens(work, ElasticSearch.Lenses.CARD_ONLY, FresnelUtil.Options.TAKE_ALL_ALTERNATE).asString()
 
         expect:
-        chipStr == "Titel av Någon"
-        cardStr == "Titel Svenska Swedish av Någon 9789178034239"
+        chipStr == "Verkstitel"
+        cardStr == "Verkstitel Svenska Swedish Instanstitel av Någon"
+        cardStrAlt == "Verkstitel Svenska Swedish Instanstitel Instanstitel 9789178034239 av Någon"
+        cardOnlyStr == "Svenska Swedish Instanstitel av Någon"
+        cardOnlyStrAlt == "Svenska Swedish Instanstitel Instanstitel 9789178034239 av Någon"
     }
 }

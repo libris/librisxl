@@ -237,27 +237,12 @@ public class FresnelUtil {
 
         var result = new Node(lens, selectedLang);
 
-        var showProperties = Stream.concat(Stream.of(new FslPath(JsonLd.TYPE_KEY), new FslPath(JsonLd.ID_KEY)),
-                        options == Options.TAKE_FIRST_SHOW_PROPERTY && !lens.showProperties.isEmpty()
-                                ? Stream.of(lens.showProperties.getFirst())
-                                : lens.showProperties().stream()).toList();
+        var showProperties = options == Options.TAKE_FIRST_SHOW_PROPERTY && !lens.showProperties.isEmpty()
+                ? lens.showProperties.subList(0, 1)
+                : lens.showProperties;
 
-        for (var p : showProperties) {
-            switch (p) {
-                case AlternateProperties a -> {
-                    for (var alternative : a.alternatives()) {
-                        if (alternative instanceof FslPath fslPath) {
-                            boolean selected = result.select(thing, fslPath);
-                            if (selected && options != Options.TAKE_ALL_ALTERNATE) {
-                                break;
-                            }
-                        }
-                    }
-                }
-                case FslPath fslPath -> result.select(thing, fslPath);
-                case Unrecognized ignored -> {}
-            }
-        }
+        Stream.concat(Stream.of(new FslPath(JsonLd.TYPE_KEY), new FslPath(JsonLd.ID_KEY)), showProperties.stream())
+                .forEach(sp -> result.select(thing, sp, options == Options.TAKE_ALL_ALTERNATE));
 
         return result;
     }
@@ -350,7 +335,24 @@ public class FresnelUtil {
             this.selectedLang = selectedLang;
         }
 
-        boolean select(Map<?, ?> thing, FslPath fslPath) {
+        void select(Map<?, ?> thing, ShowProperty showProperty, boolean takeAllAlternate) {
+            switch (showProperty) {
+                case AlternateProperties a -> {
+                    for (var alternative : a.alternatives()) {
+                        if (alternative instanceof FslPath fslPath) {
+                            boolean selected = select(thing, fslPath, takeAllAlternate);
+                            if (selected && !takeAllAlternate) {
+                                break;
+                            }
+                        }
+                    }
+                }
+                case FslPath fslPath -> select(thing, fslPath, takeAllAlternate);
+                case Unrecognized ignored -> {}
+            }
+        }
+
+        private boolean select(Map<?, ?> thing, FslPath fslPath, boolean takeAllAlternate) {
             PropertyKey p = fslPath.getEndArcStep().asPropertyKey();
             List<?> values = fslPath.getValues(thing);
 
@@ -381,10 +383,16 @@ public class FresnelUtil {
             }
             else {
                 values = values.stream()
-                        .map(v -> v instanceof LanguageContainer l && selectedLang != null
+                        .map(v -> {
+                            if (v instanceof LanguageContainer l && selectedLang != null) {
                                 // TODO should we remember here that these are script alts?
-                                ? l.languages.get(selectedLang)
-                                : applyLens(v, p.isIntegral() ? lens.lensGroup : lens.subLensGroup, selectedLang))
+                                return l.languages.get(selectedLang);
+                            }
+                            if (p.isIntegral()) {
+                                return applyLens(v, lens.lensGroup, takeAllAlternate ? Options.TAKE_ALL_ALTERNATE : Options.DEFAULT, selectedLang);
+                            }
+                            return applyLens(v, lens.subLensGroup, selectedLang);
+                        })
                         .toList();
                 orderedSelection.add(new Selected(fslPath, values));
             }
