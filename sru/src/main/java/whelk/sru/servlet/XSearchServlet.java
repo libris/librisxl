@@ -25,7 +25,6 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 import javax.xml.transform.Templates;
-import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -99,6 +98,7 @@ public class XSearchServlet extends WhelkHttpServlet {
         MARC_XML,
         MODS,
         JSON,
+        JSON_ORG,
         UNSUPPORTED,
     }
 
@@ -125,7 +125,9 @@ public class XSearchServlet extends WhelkHttpServlet {
     XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
     VocabMappings vocabMappings;
     ESSettings esSettings;
-    Map<Format, Templates> transformers;
+
+    private record Transform(Templates templates, String contentType) { }
+    Map<Format, Transform> transformers;
 
     @Override
     protected void init(Whelk whelk) {
@@ -135,7 +137,8 @@ public class XSearchServlet extends WhelkHttpServlet {
 
         try {
             transformers = Map.of(
-                    Format.MODS, loadXslt("transformers/MARC21slim2MODS3.xsl")
+                    Format.MODS, new Transform(loadXslt("transformers/MARC21slim2MODS3.xsl"), "text/xml"),
+                    Format.JSON, new Transform(loadXslt("transformers/MARC21slim2JSON.xsl"), "application/json")
             );
         } catch (IOException | TransformerConfigurationException e) {
             throw new IllegalStateException(e);
@@ -206,8 +209,11 @@ public class XSearchServlet extends WhelkHttpServlet {
 
             switch (format) {
                 case MARC_XML -> sendMarcXML(res, items, start, to, totalItems);
-                case JSON -> sendJson(res, items, start, to, totalItems);
                 case MODS -> sendTransformedMarc(res, Format.MODS, items, start, to, totalItems);
+                case JSON -> sendJson(res, items, start, to, totalItems);
+                // This seems to generate too much data, e.g. multiple contributors.
+                // Too rich MARC as input?
+                // case JSON -> sendTransformedMarc(res, Format.JSON, items, start, to, totalItems);
             }
 
         } catch (InvalidQueryException e) {
@@ -226,14 +232,14 @@ public class XSearchServlet extends WhelkHttpServlet {
                              int totalItems) throws IOException, XMLStreamException {
         res.setCharacterEncoding("UTF-8");
         res.setContentType("text/xml");
-        writeMarxXml(res.getOutputStream(), items, from, to, totalItems);
+        writeMarcXml(res.getOutputStream(), items, from, to, totalItems);
     }
 
-    private void writeMarxXml(OutputStream o,
-                             List<Map<?,?>> items,
-                             int from,
-                             int to,
-                             int totalItems) throws XMLStreamException {
+    private void writeMarcXml(OutputStream o,
+                              List<Map<?,?>> items,
+                              int from,
+                              int to,
+                              int totalItems) throws XMLStreamException {
 
         XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(o);
 
@@ -317,16 +323,15 @@ public class XSearchServlet extends WhelkHttpServlet {
                              int to,
                              int totalItems) throws IOException, XMLStreamException, TransformerException {
 
+        Transform transform = transformers.get(format);
+        res.setContentType(transform.contentType);
         res.setCharacterEncoding("UTF-8");
-        res.setContentType("text/xml");
 
         ByteArrayOutputStream o = new ByteArrayOutputStream();
-        writeMarxXml(o, items, from, to, totalItems);
+        writeMarcXml(o, items, from, to, totalItems);
         ByteArrayInputStream i = new ByteArrayInputStream(o.toByteArray());
 
-        Transformer transformer = transformers.get(format).newTransformer();
-
-        transformer.transform(new StreamSource(i), new StreamResult(res.getOutputStream()));
+        transform.templates.newTransformer().transform(new StreamSource(i), new StreamResult(res.getOutputStream()));
     }
 
     private Templates loadXslt(String name) throws IOException, TransformerConfigurationException {
