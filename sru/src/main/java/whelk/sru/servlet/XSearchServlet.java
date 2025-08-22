@@ -281,6 +281,8 @@ public class XSearchServlet extends WhelkHttpServlet {
         }
     }
 
+    // Or convert from MARC-XML?
+    // https://git.kb.se/libris/legacy/search/-/blob/master/src/main/webapp/transformers/MARC21slim2JSON.xsl?ref_type=heads
     private void sendJson(HttpServletResponse res,
                           List<Map<?,?>> items,
                           int from,
