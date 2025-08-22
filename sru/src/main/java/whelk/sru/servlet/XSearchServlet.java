@@ -24,7 +24,17 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
+import javax.xml.transform.Templates;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,12 +62,13 @@ import static whelk.util.DocumentUtil.getAtPath;
  * <a href="https://libris.kb.se/xsearch?query=qwerty&format=json&start=1">example request</a>
  * <p>
  * Tries to match the behaviour of the old API. e.g. return error as XML with code 200 even when json requested.
- * I haven't bothered looking at the old implementation yet.
- * This is just reverse engineered from API responses.
+ * I haven't bothered looking at the old implementation yet. API behavior is just reverse engineered from API responses.
  * </p>
  */
 public class XSearchServlet extends WhelkHttpServlet {
     private final Logger logger = LogManager.getLogger(this.getClass());
+    private final XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
+    private final TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
     private static final int DEFAULT_N = 10;
     private static final int MAX_N = 200;
@@ -66,7 +77,7 @@ public class XSearchServlet extends WhelkHttpServlet {
     private static final Map<String, Format> FORMATS = Map.of(
             "marcxml", Format.MARC_XML,
             "json", Format.JSON,
-            "mods", Format.UNSUPPORTED,
+            "mods", Format.MODS,
             "ris", Format.UNSUPPORTED,
             "dc", Format.UNSUPPORTED,
             "rdfdc", Format.UNSUPPORTED,
@@ -86,6 +97,7 @@ public class XSearchServlet extends WhelkHttpServlet {
 
     private enum Format {
         MARC_XML,
+        MODS,
         JSON,
         UNSUPPORTED,
     }
@@ -113,12 +125,21 @@ public class XSearchServlet extends WhelkHttpServlet {
     XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
     VocabMappings vocabMappings;
     ESSettings esSettings;
+    Map<Format, Templates> transformers;
 
     @Override
     protected void init(Whelk whelk) {
         converter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
         vocabMappings = new VocabMappings(whelk);
         esSettings = new ESSettings(whelk);
+
+        try {
+            transformers = Map.of(
+                    Format.MODS, loadXslt("transformers/MARC21slim2MODS3.xsl")
+            );
+        } catch (IOException | TransformerConfigurationException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
@@ -183,11 +204,12 @@ public class XSearchServlet extends WhelkHttpServlet {
             int totalItems = (Integer) results.get("totalItems");
             int to = Math.min(start + n, totalItems);
 
-            if (format == Format.MARC_XML) {
-                sendMarcXML(res, items, start, to, totalItems);
-            } else if (format == Format.JSON) {
-                sendJson(res, items, start, to, totalItems);
+            switch (format) {
+                case MARC_XML -> sendMarcXML(res, items, start, to, totalItems);
+                case JSON -> sendJson(res, items, start, to, totalItems);
+                case MODS -> sendTransformedMarc(res, Format.MODS, items, start, to, totalItems);
             }
+
         } catch (InvalidQueryException e) {
             logger.error("Bad query.", e);
             throw new InvalidQueryException(Errors.PARSE);
@@ -199,12 +221,19 @@ public class XSearchServlet extends WhelkHttpServlet {
                              int from,
                              int to,
                              int totalItems) throws IOException {
-        try {
-            res.setCharacterEncoding("UTF-8");
-            res.setContentType("text/xml");
+        res.setCharacterEncoding("UTF-8");
+        res.setContentType("text/xml");
+        writeMarxXml(res.getOutputStream(), items, from, to, totalItems);
+    }
 
-            XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
-            XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(res.getOutputStream());
+    private void writeMarxXml(OutputStream o,
+                             List<Map<?,?>> items,
+                             int from,
+                             int to,
+                             int totalItems) throws IOException {
+
+        try {
+            XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(o);
 
             writer.writeStartDocument("UTF-8", "1.0");
 
@@ -233,6 +262,7 @@ public class XSearchServlet extends WhelkHttpServlet {
                     });
 
             writer.writeEndElement(); // collection
+
             writer.writeEndElement(); // xsearch
             writer.writeEndDocument();
 
@@ -244,7 +274,6 @@ public class XSearchServlet extends WhelkHttpServlet {
 
     private void sendErrorXml(HttpServletResponse res, String errorMsg) throws IOException {
         try {
-            XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
             XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(res.getOutputStream());
 
             writer.writeStartElement("xsearch");
@@ -279,6 +308,35 @@ public class XSearchServlet extends WhelkHttpServlet {
                 case CHARACTERS -> writer.writeCharacters(reader.getText());
             }
         }
+    }
+
+    private void sendTransformedMarc(HttpServletResponse res,
+                             Format format,
+                             List<Map<?,?>> items,
+                             int from,
+                             int to,
+                             int totalItems) throws IOException {
+        try {
+            res.setCharacterEncoding("UTF-8");
+            res.setContentType("text/xml");
+
+            ByteArrayOutputStream o = new ByteArrayOutputStream();
+            writeMarxXml(o, items, from, to, totalItems);
+            ByteArrayInputStream i = new ByteArrayInputStream(o.toByteArray());
+
+            Transformer transformer = transformers.get(format).newTransformer();
+
+            transformer.transform(new StreamSource(i), new StreamResult(res.getOutputStream()));
+        } catch (TransformerException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Templates loadXslt(String name) throws IOException, TransformerConfigurationException {
+        var url = Thread.currentThread().getContextClassLoader().getResource(name);
+        assert url != null;
+        var xsltSource = new StreamSource(url.openStream(), url.toExternalForm());
+        return transformerFactory.newTemplates(xsltSource);
     }
 
     // Or convert from MARC-XML?
