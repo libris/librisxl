@@ -213,6 +213,9 @@ public class XSearchServlet extends WhelkHttpServlet {
         } catch (InvalidQueryException e) {
             logger.error("Bad query.", e);
             throw new InvalidQueryException(Errors.PARSE);
+        } catch (XMLStreamException | TransformerException e) {
+            logger.error("Couldn't build xsearch response.", e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -220,7 +223,7 @@ public class XSearchServlet extends WhelkHttpServlet {
                              List<Map<?,?>> items,
                              int from,
                              int to,
-                             int totalItems) throws IOException {
+                             int totalItems) throws IOException, XMLStreamException {
         res.setCharacterEncoding("UTF-8");
         res.setContentType("text/xml");
         writeMarxXml(res.getOutputStream(), items, from, to, totalItems);
@@ -230,46 +233,43 @@ public class XSearchServlet extends WhelkHttpServlet {
                              List<Map<?,?>> items,
                              int from,
                              int to,
-                             int totalItems) throws IOException {
+                             int totalItems) throws XMLStreamException {
 
-        try {
-            XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(o);
+        XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(o);
 
-            writer.writeStartDocument("UTF-8", "1.0");
+        writer.writeStartDocument("UTF-8", "1.0");
 
-            writer.writeStartElement("xsearch");
-            writer.writeAttribute("xmlns:marc", "http://www.loc.gov/MARC21/slim");
-            writer.writeAttribute("to", "" + to);
-            writer.writeAttribute("from", "" + from);
-            writer.writeAttribute("records", "" + totalItems);
+        writer.writeStartElement("xsearch");
+        writer.writeAttribute("xmlns:marc", "http://www.loc.gov/MARC21/slim");
+        writer.writeAttribute("to", "" + to);
+        writer.writeAttribute("from", "" + from);
+        writer.writeAttribute("records", "" + totalItems);
 
-            writer.writeStartElement("collection");
-            writer.writeAttribute("xmlns", "http://www.loc.gov/MARC21/slim");
+        writer.writeStartElement("collection");
+        writer.writeAttribute("xmlns", "http://www.loc.gov/MARC21/slim");
 
-            // skip "category" element
+        // skip "category" element
 
-            items.parallelStream()
-                    .map(i -> {
-                        String systemID = whelk.getStorage().getSystemIdByIri( (String) i.get("@id"));
-                        Document embellished = whelk.loadEmbellished(systemID);
-                        return (String) converter.convert(embellished.data, embellished.getShortId()).get(JsonLd.NON_JSON_CONTENT_KEY);
-                    }).forEachOrdered( convertedText -> {
-                        try {
-                            copyRecord(xmlInputFactory.createXMLStreamReader(new StringReader(convertedText)), writer);
-                        } catch (XMLStreamException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
+        items.parallelStream()
+                .map(i -> {
+                    String systemID = whelk.getStorage().getSystemIdByIri( (String) i.get("@id"));
+                    Document embellished = whelk.loadEmbellished(systemID);
+                    return (String) converter.convert(embellished.data, embellished.getShortId()).get(JsonLd.NON_JSON_CONTENT_KEY);
+                }).forEachOrdered( convertedText -> {
+                    try {
+                        copyRecord(xmlInputFactory.createXMLStreamReader(new StringReader(convertedText)), writer);
+                    } catch (XMLStreamException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
 
-            writer.writeEndElement(); // collection
+        writer.writeEndElement(); // collection
 
-            writer.writeEndElement(); // xsearch
-            writer.writeEndDocument();
+        writer.writeEndElement(); // xsearch
+        writer.writeEndDocument();
 
-            writer.close();
-        } catch (XMLStreamException e) {
-            logger.error("Couldn't build xsearch response.", e);
-        }
+        writer.close();
+
     }
 
     private void sendErrorXml(HttpServletResponse res, String errorMsg) throws IOException {
@@ -283,7 +283,7 @@ public class XSearchServlet extends WhelkHttpServlet {
 
             writer.close();
         } catch (XMLStreamException e) {
-            logger.error("Couldn't build SRU response.", e);
+            logger.error("Couldn't build xsearch response.", e);
         }
     }
 
@@ -315,21 +315,18 @@ public class XSearchServlet extends WhelkHttpServlet {
                              List<Map<?,?>> items,
                              int from,
                              int to,
-                             int totalItems) throws IOException {
-        try {
-            res.setCharacterEncoding("UTF-8");
-            res.setContentType("text/xml");
+                             int totalItems) throws IOException, XMLStreamException, TransformerException {
 
-            ByteArrayOutputStream o = new ByteArrayOutputStream();
-            writeMarxXml(o, items, from, to, totalItems);
-            ByteArrayInputStream i = new ByteArrayInputStream(o.toByteArray());
+        res.setCharacterEncoding("UTF-8");
+        res.setContentType("text/xml");
 
-            Transformer transformer = transformers.get(format).newTransformer();
+        ByteArrayOutputStream o = new ByteArrayOutputStream();
+        writeMarxXml(o, items, from, to, totalItems);
+        ByteArrayInputStream i = new ByteArrayInputStream(o.toByteArray());
 
-            transformer.transform(new StreamSource(i), new StreamResult(res.getOutputStream()));
-        } catch (TransformerException e) {
-            throw new RuntimeException(e);
-        }
+        Transformer transformer = transformers.get(format).newTransformer();
+
+        transformer.transform(new StreamSource(i), new StreamResult(res.getOutputStream()));
     }
 
     private Templates loadXslt(String name) throws IOException, TransformerConfigurationException {
