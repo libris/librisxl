@@ -50,11 +50,13 @@ public class SruServlet extends WhelkHttpServlet {
         if ( !parameters.containsKey("operation") || !parameters.containsKey("query") ) {
             logger.debug("Bad SRU query: " + parameters);
             res.sendError(400);
+            return;
         }
 
         if ( parameters.get("operation").length != 1 || !parameters.get("operation")[0].equals("searchRetrieve") ) {
             logger.debug("Bad SRU query (operation/searchRetrieve expected): " + parameters);
             res.sendError(400);
+            return;
         }
 
         String queryString = parameters.get("query")[0];
@@ -139,7 +141,6 @@ public class SruServlet extends WhelkHttpServlet {
             writer.close();
         } catch (XMLStreamException e) {
             logger.error("Couldn't build SRU response.", e);
-            return;
         }
     }
 
