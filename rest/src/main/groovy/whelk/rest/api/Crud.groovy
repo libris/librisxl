@@ -117,6 +117,8 @@ class Crud extends WhelkHttpServlet {
             if (request.pathInfo == "/") {
                 measurement = metrics.measure('INDEX')
                 displayInfo(response)
+            } else if (request.pathInfo == CONTEXT_PATH) {
+              sendRedirect(request, response, whelk.systemContextUri)
             } else if (siteSearch.isSearchResource(request.pathInfo)) {
                 measurement = metrics.measure('FIND')
                 handleQuery(request, response)
