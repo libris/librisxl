@@ -35,7 +35,6 @@ import static whelk.util.FresnelUtil.LangCode.ORIGINAL_SCRIPT_FIRST;
 // TODO bad data - blank nodes without type?
 
 public class FresnelUtil {
-
     public enum LensGroupName {
         Full(List.of("full", "cards")),
         Card(List.of("cards")),
@@ -120,7 +119,7 @@ public class FresnelUtil {
         }
     }
 
-    private record DerivedCacheKey(Object types, DerivedLens lens) {}
+    private record DerivedCacheKey(Object types, DerivedLensGroup lens) {}
     private record LensCacheKey(Object types, LensGroupName lensGroupName, FallbackLens fallbackLens) {}
 
     private static final Logger logger = LogManager.getLogger(FresnelUtil.class);
@@ -151,24 +150,24 @@ public class FresnelUtil {
         return (Lensed) applyLens(thing, lens, options, null);
     }
 
-    public Lensed applyLens(Object thing, DerivedLens derived) {
+    public Lensed applyLens(Object thing, DerivedLensGroup derived) {
         return applyLens(thing, derived, Options.DEFAULT);
     }
 
-    public Lensed applyLens(Object thing, DerivedLens derived, Options options) {
+    public Lensed applyLens(Object thing, DerivedLensGroup derived, Options options) {
         // TODO
         if (!(thing instanceof Map<?, ?> t)) {
             throw new IllegalArgumentException("Thing is not typed node: " + thing);
         }
 
         var types = t.get(JsonLd.TYPE_KEY);
-        var lens = derivedLensCache.computeIfAbsent(new DerivedCacheKey(types, derived), k -> {
+        var derivedLens = derivedLensCache.computeIfAbsent(new DerivedCacheKey(types, derived), k -> {
             var base = findLens(t, derived.base);
             var minus = derived.minus.stream().map(l -> findLens(t, l)).toList();
-            return base.minus(minus, derived.base, derived.subLens);
+            return base.minus(minus, derived);
         });
 
-        return (Lensed) applyLens(thing, lens, options, null);
+        return (Lensed) applyLens(thing, derivedLens, options, null);
     }
 
     public Decorated format(Lensed lensed, LangCode locale) {
@@ -237,12 +236,12 @@ public class FresnelUtil {
 
         var result = new Node(lens, selectedLang);
 
-        var showProperties = options == Options.TAKE_FIRST_SHOW_PROPERTY && !lens.showProperties.isEmpty()
-                ? lens.showProperties.subList(0, 1)
-                : lens.showProperties;
+        var showProperties = options == Options.TAKE_FIRST_SHOW_PROPERTY && !lens.showProperties().isEmpty()
+                ? lens.showProperties().subList(0, 1)
+                : lens.showProperties();
 
         Stream.concat(Stream.of(new FslPath(JsonLd.TYPE_KEY), new FslPath(JsonLd.ID_KEY)), showProperties.stream())
-                .forEach(sp -> result.select(thing, sp, options == Options.TAKE_ALL_ALTERNATE));
+                .forEach(sp -> result.select(thing, sp, Options.TAKE_ALL_ALTERNATE.equals(options)));
 
         return result;
     }
@@ -388,10 +387,21 @@ public class FresnelUtil {
                                 // TODO should we remember here that these are script alts?
                                 return l.languages.get(selectedLang);
                             }
-                            if (p.isIntegral()) {
-                                return applyLens(v, lens.lensGroup, takeAllAlternate ? Options.TAKE_ALL_ALTERNATE : Options.DEFAULT, selectedLang);
+                            if (fslPath.isIntegralProperty()) {
+                                Options options = takeAllAlternate ? Options.TAKE_ALL_ALTERNATE : Options.DEFAULT;
+                                if (lens.lensGroup() instanceof DerivedLensGroup d) {
+                                    List<LensGroupName> handled = d.minus().stream()
+                                            .filter(l -> findLens(thing, l).showProperties().contains(fslPath))
+                                            .toList();
+                                    if (!handled.isEmpty()) {
+                                        // The integral thing may have already been handled by a deducted lens
+                                        // Thus we need to continue with a derived lens to avoid repetition at this level
+                                        return applyLens(v, new DerivedLensGroup(d.base(), handled, d.subLens()), options);
+                                    }
+                                }
+                                return applyLens(v, lens.base(), options, selectedLang);
                             }
-                            return applyLens(v, lens.subLensGroup, selectedLang);
+                            return applyLens(v, lens.subLens(), selectedLang);
                         })
                         .toList();
                 orderedSelection.add(new Selected(fslPath, values));
@@ -477,10 +487,10 @@ public class FresnelUtil {
         private Object mapVocabTerm(Object value) {
             if (value instanceof String s) {
                 var def = jsonLd.vocabIndex.get(s);
-                return applyLens(def != null ? def : s, lens.subLensGroup, selectedLang);
+                return applyLens(def != null ? def : s, lens.subLens(), selectedLang);
             } else {
                 // bad data
-                return applyLens(value, lens.subLensGroup, selectedLang);
+                return applyLens(value, lens.subLens(), selectedLang);
             }
         }
     }
@@ -577,23 +587,32 @@ public class FresnelUtil {
     }
 
     public class Lens {
-        private final LensGroupName lensGroup;
-        private final LensGroupName subLensGroup;
+        private final LensGroup lensGroup;
         private final List<ShowProperty> showProperties;
 
-        public Lens(Map<String, Object> lensDefinition, LensGroupName lensGroup) {
-            this.lensGroup = lensGroup;
-            this.subLensGroup = subLens(lensGroup);
+        public Lens(Map<String, Object> lensDefinition, LensGroupName lensGroupName) {
+            this.lensGroup = new DefinedLensGroup(lensGroupName, FresnelUtil.subLens(lensGroupName));
 
             @SuppressWarnings("unchecked")
             var showProperties = (List<Object>) lensDefinition.get(Fresnel.showProperties);
             this.showProperties = parseShowProperties(showProperties);
         }
 
-        private Lens(List<ShowProperty> showProperties, LensGroupName lensGroup, LensGroupName subLensGroup) {
-            this.showProperties = showProperties;
+        private Lens(List<ShowProperty> showProperties, LensGroup lensGroup) {
             this.lensGroup = lensGroup;
-            this.subLensGroup = subLensGroup;
+            this.showProperties = showProperties;
+        }
+
+        LensGroup lensGroup() {
+            return lensGroup;
+        }
+
+        LensGroupName base() {
+            return lensGroup.base();
+        }
+
+        LensGroupName subLens() {
+            return lensGroup.subLens();
         }
 
         List<ShowProperty> showProperties() {
@@ -668,19 +687,29 @@ public class FresnelUtil {
         }
 
         // TODO
-        Lens minus(Collection<Lens> minus, LensGroupName base, LensGroupName subLens) {
+        Lens minus(Collection<Lens> minus, DerivedLensGroup derived) {
             var keep = new ArrayList<>(showProperties);
 
             for (var m : minus) {
-                keep.removeAll(m.showProperties);
+                for (var sp : m.showProperties()) {
+                    if (sp instanceof FslPath f && f.isIntegralProperty()) {
+                        continue;
+                    }
+                    keep.remove(sp);
+                }
             }
 
-            return new Lens(keep, base, subLens);
+            return new Lens(keep, derived);
         }
     }
 
-    public record DerivedLens(LensGroupName base, List<LensGroupName> minus, LensGroupName subLens) {
+    public sealed interface LensGroup permits DefinedLensGroup, DerivedLensGroup {
+        LensGroupName base();
+        LensGroupName subLens();
     }
+
+    public record DefinedLensGroup(LensGroupName base, LensGroupName subLens) implements LensGroup {}
+    public record DerivedLensGroup(LensGroupName base, List<LensGroupName> minus, LensGroupName subLens) implements LensGroup {}
 
     private static LensGroupName subLens(LensGroupName lensGroupName) {
         return switch (lensGroupName) {
@@ -730,6 +759,10 @@ public class FresnelUtil {
 
         boolean isArcOnly() {
             return !path.contains("/");
+        }
+
+        public boolean isIntegralProperty() {
+            return isArcOnly() && getSoleArcStep().asPropertyKey().isIntegral();
         }
 
         @Override

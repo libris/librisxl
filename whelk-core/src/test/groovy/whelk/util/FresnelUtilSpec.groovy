@@ -4,6 +4,7 @@ import spock.lang.Specification
 import whelk.JsonLd
 
 import static whelk.component.ElasticSearch.Lenses.CARD_ONLY
+import static whelk.component.ElasticSearch.Lenses.SEARCH_CARD_ONLY
 
 // TODO test resourceStyle, propertyStyle, valueStyle
 // TODO test card, full
@@ -488,7 +489,7 @@ class FresnelUtilSpec extends Specification {
         ]
 
         var fresnel = new FresnelUtil(ld)
-        var cardOnly = new FresnelUtil.DerivedLens(
+        var cardOnly = new FresnelUtil.DerivedLensGroup(
                 FresnelUtil.LensGroupName.Card,
                 [FresnelUtil.LensGroupName.Chip],
                 FresnelUtil.LensGroupName.Token
@@ -878,7 +879,7 @@ class FresnelUtilSpec extends Specification {
                                                 "@id"            : "Work-chips",
                                                 "@type"          : "fresnel:Lens",
                                                 "classLensDomain": "Work",
-                                                "showProperties" : [ "hasTitle" ]
+                                                "showProperties" : ["hasTitle"]
                                         ],
                                 ]],
                         "cards":
@@ -909,6 +910,25 @@ class FresnelUtilSpec extends Specification {
                                                         ["inverseOf": "instanceOf"]
                                                 ]
                                         ]
+                                ]],
+                        "search-cards":
+                                ["lenses": [
+                                        "Instance": [
+                                                "fresnel:extends": ["@id": "Instance-cards"],
+                                                "classLensDomain": "Instance",
+                                                "showProperties" : [
+                                                        "fresnel:super",
+                                                        "editionStatement"
+                                                ]
+                                        ],
+                                        "Work": [
+                                                "fresnel:extends": ["@id": "Work-cards"],
+                                                "classLensDomain": "Instance",
+                                                "showProperties" : [
+                                                        "fresnel:super",
+                                                        "originDate"
+                                                ]
+                                        ]
                                 ]]
                 ]
         ]
@@ -919,12 +939,14 @@ class FresnelUtilSpec extends Specification {
                 'language': [
                         ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
                 ],
+                'originDate': '2025',
                 '@reverse': [
                         'instanceOf': [
                                 '@type'                  : 'Instance',
                                 'responsibilityStatement': 'av Någon',
                                 'hasTitle'               : [['@type': 'Title', 'mainTitle': 'Instanstitel']],
-                                'identifiedBy'           : ['@type': 'ISBN', 'value': '9789178034239']
+                                'identifiedBy'           : ['@type': 'ISBN', 'value': '9789178034239'],
+                                'editionStatement'       : "upplagan"
                         ]
                 ]
         ]
@@ -933,6 +955,8 @@ class FresnelUtilSpec extends Specification {
         var cardStrAlt = fresnel.applyLens(work, FresnelUtil.LensGroupName.Card, FresnelUtil.Options.TAKE_ALL_ALTERNATE).asString()
         var cardOnlyStr = fresnel.applyLens(work, CARD_ONLY).asString()
         var cardOnlyStrAlt = fresnel.applyLens(work, CARD_ONLY, FresnelUtil.Options.TAKE_ALL_ALTERNATE).asString()
+        var searchCardStr = fresnel.applyLens(work, FresnelUtil.LensGroupName.SearchCard).asString()
+        var searchCardOnlyStr = fresnel.applyLens(work, SEARCH_CARD_ONLY).asString()
 
         expect:
         chipStr == "Verkstitel"
@@ -940,5 +964,7 @@ class FresnelUtilSpec extends Specification {
         cardStrAlt == "Verkstitel Svenska Swedish Instanstitel Instanstitel 9789178034239 av Någon"
         cardOnlyStr == "Svenska Swedish Instanstitel av Någon"
         cardOnlyStrAlt == "Svenska Swedish Instanstitel Instanstitel 9789178034239 av Någon"
+        searchCardStr == "Verkstitel Svenska Swedish Instanstitel av Någon upplagan 2025"
+        searchCardOnlyStr == "upplagan 2025"
     }
 }
