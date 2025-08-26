@@ -3,6 +3,9 @@ package whelk.util
 import spock.lang.Specification
 import whelk.JsonLd
 
+import static whelk.component.ElasticSearch.Lenses.CARD_ONLY
+import static whelk.component.ElasticSearch.Lenses.SEARCH_CARD_ONLY
+
 // TODO test resourceStyle, propertyStyle, valueStyle
 // TODO test card, full
 // TODO test inverse properties
@@ -486,7 +489,7 @@ class FresnelUtilSpec extends Specification {
         ]
 
         var fresnel = new FresnelUtil(ld)
-        var cardOnly = new FresnelUtil.DerivedLens(
+        var cardOnly = new FresnelUtil.DerivedLensGroup(
                 FresnelUtil.LensGroupName.Card,
                 [FresnelUtil.LensGroupName.Chip],
                 FresnelUtil.LensGroupName.Token
@@ -821,5 +824,147 @@ class FresnelUtilSpec extends Specification {
 
         then:
         searchToken.asString() == "Hästar"
+    }
+
+    def "inverse integral"() {
+        given:
+        def vocab = [
+                "@graph": [
+                        [
+                                "@id"      : "http://example.org/ns/hasInstance",
+                                "category" : ["@id": "http://example.org/ns/integral"],
+                                "inverseOf": ["@id": "http://example.org/ns/instanceOf"]
+                        ],
+                        [
+                                "@id"      : "http://example.org/ns/instanceOf",
+                                "inverseOf": ["@id": "http://example.org/ns/hasInstance"]
+                        ]
+                ]
+        ]
+        def displayData = [
+                "@context"  : [
+
+                ],
+                "lensGroups": [
+                        "chips":
+                                ["lenses": [
+                                        "Instance": [
+                                                "@id"            : "Instance-chips",
+                                                "@type"          : "fresnel:Lens",
+                                                "classLensDomain": "Instance",
+                                                "showProperties" : [
+                                                        [
+                                                                "alternateProperties": [
+                                                                        ["subPropertyOf": "hasTitle", "range": "KeyTitle"],
+                                                                        ["subPropertyOf": "hasTitle", "range": "Title"],
+                                                                        "hasTitle",
+                                                                        "identifiedBy"
+                                                                ]
+                                                        ]
+                                                ]
+                                        ],
+                                        "ISBN"    : [
+                                                "@id"            : "ISBN-chips",
+                                                "@type"          : "fresnel:Lens",
+                                                "classLensDomain": "ISBN",
+                                                "showProperties" : ["value"]
+                                        ],
+                                        "Title"   : [
+                                                "@id"            : "Title-chips",
+                                                "@type"          : "fresnel:Lens",
+                                                "classLensDomain": "Title",
+                                                "showProperties" : ["mainTitle"]
+                                        ],
+                                        "Work"    : [
+                                                "@id"            : "Work-chips",
+                                                "@type"          : "fresnel:Lens",
+                                                "classLensDomain": "Work",
+                                                "showProperties" : ["hasTitle"]
+                                        ],
+                                ]],
+                        "cards":
+                                ["lenses": [
+                                        "Instance": [
+                                                "@id"            : "Instance-cards",
+                                                "@type"          : "fresnel:Lens",
+                                                "classLensDomain": "Instance",
+                                                "showProperties" : [
+                                                        [
+                                                                "alternateProperties": [
+                                                                        ["subPropertyOf": "hasTitle", "range": "KeyTitle"],
+                                                                        ["subPropertyOf": "hasTitle", "range": "Title"],
+                                                                        "hasTitle",
+                                                                        "identifiedBy"
+                                                                ]
+                                                        ],
+                                                        "responsibilityStatement"
+                                                ]
+                                        ],
+                                        "Work"    : [
+                                                "@id"            : "Work-cards",
+                                                "@type"          : "fresnel:Lens",
+                                                "classLensDomain": "Work",
+                                                "showProperties" : [
+                                                        "hasTitle",
+                                                        "language",
+                                                        ["inverseOf": "instanceOf"]
+                                                ]
+                                        ]
+                                ]],
+                        "search-cards":
+                                ["lenses": [
+                                        "Instance": [
+                                                "fresnel:extends": ["@id": "Instance-cards"],
+                                                "classLensDomain": "Instance",
+                                                "showProperties" : [
+                                                        "fresnel:super",
+                                                        "editionStatement"
+                                                ]
+                                        ],
+                                        "Work": [
+                                                "fresnel:extends": ["@id": "Work-cards"],
+                                                "classLensDomain": "Instance",
+                                                "showProperties" : [
+                                                        "fresnel:super",
+                                                        "originDate"
+                                                ]
+                                        ]
+                                ]]
+                ]
+        ]
+        var fresnel = new FresnelUtil(new JsonLd(CONTEXT_DATA, displayData, vocab))
+        var work = [
+                '@type'   : 'Work',
+                'hasTitle': [['@type': 'Title', 'mainTitle': 'Verkstitel']],
+                'language': [
+                        ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
+                ],
+                'originDate': '2025',
+                '@reverse': [
+                        'instanceOf': [
+                                '@type'                  : 'Instance',
+                                'responsibilityStatement': 'av Någon',
+                                'hasTitle'               : [['@type': 'Title', 'mainTitle': 'Instanstitel']],
+                                'identifiedBy'           : ['@type': 'ISBN', 'value': '9789178034239'],
+                                'editionStatement'       : "upplagan"
+                        ]
+                ]
+        ]
+        var chipStr = fresnel.applyLens(work, FresnelUtil.LensGroupName.Chip).asString()
+        var cardStr = fresnel.applyLens(work, FresnelUtil.LensGroupName.Card).asString()
+        var cardStrAlt = fresnel.applyLens(work, FresnelUtil.LensGroupName.Card, FresnelUtil.Options.TAKE_ALL_ALTERNATE).asString()
+        var cardOnlyStr = fresnel.applyLens(work, CARD_ONLY).asString()
+        var cardOnlyStrAlt = fresnel.applyLens(work, CARD_ONLY, FresnelUtil.Options.TAKE_ALL_ALTERNATE).asString()
+        var searchCardStr = fresnel.applyLens(work, FresnelUtil.LensGroupName.SearchCard).asString()
+        var searchCardOnlyStr = fresnel.applyLens(work, SEARCH_CARD_ONLY).asString()
+
+        expect:
+        chipStr == "Verkstitel"
+        cardStr == "Verkstitel Svenska Swedish Instanstitel av Någon"
+        cardStrAlt == "Verkstitel Svenska Swedish Instanstitel Instanstitel 9789178034239 av Någon"
+        cardOnlyStr == "Svenska Swedish Instanstitel av Någon"
+        cardOnlyStrAlt == "Svenska Swedish Instanstitel Instanstitel 9789178034239 av Någon"
+        searchCardStr == "Verkstitel Svenska Swedish Instanstitel av Någon upplagan 2025"
+        searchCardOnlyStr == "upplagan 2025"
     }
 }

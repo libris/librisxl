@@ -14,7 +14,7 @@ import whelk.exception.InvalidQueryException
 import whelk.exception.UnexpectedHttpStatusException
 import whelk.util.DocumentUtil
 import whelk.util.FresnelUtil
-import whelk.util.FresnelUtil.DerivedLens
+import whelk.util.FresnelUtil.DerivedLensGroup
 import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
@@ -58,13 +58,13 @@ class ElasticSearch {
     private final Queue<Runnable> indexingRetryQueue = new LinkedBlockingQueue<>()
 
     private static final class Lenses {
-        public static final DerivedLens CARD_ONLY = new DerivedLens(
+        public static final DerivedLensGroup CARD_ONLY = new DerivedLensGroup(
                 FresnelUtil.LensGroupName.Card,
                 List.of(FresnelUtil.LensGroupName.Chip),
                 FresnelUtil.LensGroupName.SearchChip
         )
 
-        public static final DerivedLens SEARCH_CARD_ONLY = new DerivedLens(
+        public static final DerivedLensGroup SEARCH_CARD_ONLY = new DerivedLensGroup(
                 FresnelUtil.LensGroupName.SearchCard,
                 List.of(FresnelUtil.LensGroupName.Chip, FresnelUtil.LensGroupName.Card),
                 FresnelUtil.LensGroupName.SearchChip
