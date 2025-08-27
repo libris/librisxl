@@ -2,6 +2,13 @@ package whelk.sru.servlet;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import se.kb.libris.util.marc.Controlfield;
+import se.kb.libris.util.marc.Datafield;
+import se.kb.libris.util.marc.Field;
+import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.Subfield;
+import se.kb.libris.util.marc.io.MarcXmlRecordReader;
+import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
@@ -36,14 +43,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -53,6 +63,8 @@ import java.util.stream.Stream;
 import static javax.xml.stream.XMLStreamConstants.CHARACTERS;
 import static javax.xml.stream.XMLStreamConstants.END_ELEMENT;
 import static javax.xml.stream.XMLStreamConstants.START_ELEMENT;
+import static se.kb.libris.export.ExportProfile.addSabTitles;
+import static se.kb.libris.export.ExportProfile.mergeBibMfhd;
 import static whelk.JsonLd.asList;
 import static whelk.util.DocumentUtil.getAtPath;
 
@@ -171,6 +183,13 @@ public class XSearchServlet extends WhelkHttpServlet {
                 .map(f -> FORMATS.getOrDefault(f, Format.MARC_XML))
                 .orElse(Format.MARC_XML);
 
+        var includeHoldings = getOptionalSingleNonEmpty(Params.HOLDINGS, parameters)
+                .map("true"::equals).orElse(false)
+                && (format == Format.MARC_XML || format == Format.MODS);
+
+        var include9xx = getOptionalSingleNonEmpty(Params.FORMAT_LEVEL, parameters)
+                .map("full"::equals).orElse(false);
+
         if (format == Format.UNSUPPORTED) {
             throw new InvalidQueryException("format unsupported"); // TODO
         }
@@ -205,9 +224,9 @@ public class XSearchServlet extends WhelkHttpServlet {
             int to = Math.min(start + n, totalItems);
 
             switch (format) {
-                case MARC_XML -> sendMarcXML(res, items, start, to, totalItems);
+                case MARC_XML -> sendMarcXML(res, items, start, to, totalItems, includeHoldings, include9xx);
                 case JSON -> sendJson(res, items, start, to, totalItems);
-                case MODS -> sendTransformedMarc(res, Format.MODS, items, start, to, totalItems);
+                case MODS -> sendTransformedMarc(res, Format.MODS, items, start, to, totalItems, includeHoldings, include9xx);
             }
 
         } catch (InvalidQueryException e) {
@@ -223,17 +242,21 @@ public class XSearchServlet extends WhelkHttpServlet {
                              List<Map<?,?>> items,
                              int from,
                              int to,
-                             int totalItems) throws IOException, XMLStreamException {
+                             int totalItems,
+                             boolean includeHoldings,
+                             boolean include9xx) throws IOException, XMLStreamException {
         res.setCharacterEncoding("UTF-8");
         res.setContentType("text/xml");
-        writeMarxXml(res.getOutputStream(), items, from, to, totalItems);
+        writeMarcXml(res.getOutputStream(), items, from, to, totalItems, includeHoldings, include9xx);
     }
 
-    private void writeMarxXml(OutputStream o,
-                             List<Map<?,?>> items,
-                             int from,
-                             int to,
-                             int totalItems) throws XMLStreamException {
+    private void writeMarcXml(OutputStream o,
+                              List<Map<?,?>> items,
+                              int from,
+                              int to,
+                              int totalItems,
+                              boolean includeHoldings,
+                              boolean include9xx) throws XMLStreamException {
 
         XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(o);
 
@@ -254,7 +277,12 @@ public class XSearchServlet extends WhelkHttpServlet {
                 .map(i -> {
                     String systemID = whelk.getStorage().getSystemIdByIri( (String) i.get("@id"));
                     Document embellished = whelk.loadEmbellished(systemID);
-                    return (String) converter.convert(embellished.data, embellished.getShortId()).get(JsonLd.NON_JSON_CONTENT_KEY);
+                    var bibXml = (String) converter.convert(embellished.data, embellished.getShortId())
+                            .get(JsonLd.NON_JSON_CONTENT_KEY);
+
+                    bibXml = expandRecord(bibXml, embellished, includeHoldings, include9xx);
+
+                    return bibXml;
                 }).forEachOrdered( convertedText -> {
                     try {
                         copyRecord(xmlInputFactory.createXMLStreamReader(new StringReader(convertedText)), writer);
@@ -315,13 +343,15 @@ public class XSearchServlet extends WhelkHttpServlet {
                              List<Map<?,?>> items,
                              int from,
                              int to,
-                             int totalItems) throws IOException, XMLStreamException, TransformerException {
+                             int totalItems,
+                             boolean includeHoldings,
+                             boolean expanded) throws IOException, XMLStreamException, TransformerException {
 
         res.setCharacterEncoding("UTF-8");
         res.setContentType("text/xml");
 
         ByteArrayOutputStream o = new ByteArrayOutputStream();
-        writeMarxXml(o, items, from, to, totalItems);
+        writeMarcXml(o, items, from, to, totalItems, includeHoldings, expanded);
         ByteArrayInputStream i = new ByteArrayInputStream(o.toByteArray());
 
         Transformer transformer = transformers.get(format).newTransformer();
@@ -334,6 +364,62 @@ public class XSearchServlet extends WhelkHttpServlet {
         assert url != null;
         var xsltSource = new StreamSource(url.openStream(), url.toExternalForm());
         return transformerFactory.newTemplates(xsltSource);
+    }
+
+    private String expandRecord(String bibXml, Document bib, boolean includeHoldings, boolean include9xx) {
+        if (!includeHoldings && !include9xx) {
+            return bibXml;
+        }
+
+        try {
+            MarcRecord bibRecord = MarcXmlRecordReader.fromXml(bibXml);
+
+            if (includeHoldings) {
+                List<Document> holdingDocuments = whelk.getAttachedHoldings(bib.getThingIdentifiers());
+                for (Document holding : holdingDocuments) {
+                    var holdXml = (String) converter.convert(holding.data, holding.getShortId())
+                            .get(JsonLd.NON_JSON_CONTENT_KEY);
+                    MarcRecord holdRecord = MarcXmlRecordReader.fromXml(holdXml);
+                    mergeBibHold(bibRecord, holdRecord, holding.getHeldBySigel());
+                }
+            }
+
+            if (include9xx) {
+                // Only 976...
+                addSabTitles(bibRecord);
+            }
+
+            ByteArrayOutputStream o = new ByteArrayOutputStream();
+            var w = new MarcXmlRecordWriter(o);
+            w.writeRecord(bibRecord);
+            w.close();
+            return o.toString(StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void mergeBibHold(MarcRecord bibRecord, MarcRecord holdRecord, String sigel) {
+        for (Datafield f : holdRecord.getDatafields()) {
+            if (f.getTag().equals("852")) {
+                Datafield df = bibRecord.createDatafield(f.getTag());
+                f.getSubfields("b").forEach(df::addSubfield);
+                bibRecord.addField(df);
+            } else if (f.getTag().equals("856")) {
+                Datafield df = bibRecord.createDatafield(f.getTag());
+                df.addSubfield('5', sigel);
+                df.setIndicator(0, f.getIndicator(0));
+                df.setIndicator(1, f.getIndicator(1));
+
+                var i = f.iterator();
+                while (i.hasNext()) {
+                    Subfield sf = i.next();
+                    df.addSubfield(sf.getCode(), sf.getData());
+                }
+
+                bibRecord.addField(df);
+            }
+        }
     }
 
     // Or convert from MARC-XML?

@@ -565,7 +565,7 @@ public class ExportProfile {
         return bibRecord;
     }
 
-    public MarcRecord mergeBibMfhd(MarcRecord bibRecord, String sigel, MarcRecord mfhdRecord) {
+    public static MarcRecord mergeBibMfhd(MarcRecord bibRecord, String sigel, MarcRecord mfhdRecord) {
         // add 841 field
         Datafield df841 = bibRecord.createDatafield("841");
         df841.addSubfield('5', sigel);
