@@ -155,8 +155,9 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
 
         List<String> simplePhrases = getSimplePhrases(tokens);
         if (!simplePhrases.isEmpty()) {
+            var settings = boostSettings.divideBoosts(boostSettings.phraseBoostDivisor());
             for (String phrase : simplePhrases) {
-                queries.addAll(buildQueries("query_string", phrase, boostSettings));
+                queries.addAll(buildQueries("query_string", phrase, settings));
             }
         }
 
@@ -182,9 +183,6 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
         Map<String, Float> boostFields = new LinkedHashMap<>();
         boostSettings.fields().forEach(f -> {
             float boost = f.scriptScore().isEmpty() ? f.boost() : 0;
-            if (isPhrase(queryString)) {
-                boost = boost / boostSettings.phraseBoostDivisor();
-            }
             boostFields.put(f.name(), boost);
             if (boostSettings.includeExactFields()) {
                 boostFields.put(f.name() + ESSettings.Boost.EXACT_SUFFIX, boost);
@@ -207,9 +205,6 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
 
             boostSettings.fields().forEach(f -> {
                 float boost = f.scriptScore().equals(scriptScore) ? f.boost() : 0;
-                if (isPhrase(queryString)) {
-                    boost = boost / boostSettings.phraseBoostDivisor();
-                }
                 boostFields.put(f.name(), boost);
                 if (boostSettings.includeExactFields()) {
                     boostFields.put(f.name() + ESSettings.Boost.EXACT_SUFFIX, boost);
@@ -278,9 +273,5 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
         }
 
         return simplePhrases;
-    }
-
-    private static boolean isPhrase(String s) {
-        return s.contains(" ");
     }
 }

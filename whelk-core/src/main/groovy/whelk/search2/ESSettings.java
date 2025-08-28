@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -112,6 +113,17 @@ public class ESSettings {
 
             public FieldBoost withFields(List<Map<?, ?>> fieldSettings) {
                 List<Field> fields = fieldSettings.stream().map(Field::new).toList();
+                return _withFields(fields);
+            }
+
+            public FieldBoost divideBoosts(int divisor) {
+                List<Field> newFields = fields().stream()
+                        .map(f -> new Field(f.name(), f.boost() / divisor, f.scriptScore()))
+                        .toList();
+                return _withFields(newFields);
+            }
+
+            private FieldBoost _withFields(List<Field> fields) {
                 return new FieldBoost(fields, defaultBoostFactor, phraseBoostDivisor, multiMatchType, analyzeWildcard, includeExactFields);
             }
 
