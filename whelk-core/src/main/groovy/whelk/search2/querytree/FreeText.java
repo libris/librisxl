@@ -207,6 +207,9 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
 
             boostSettings.fields().forEach(f -> {
                 float boost = f.scriptScore().equals(scriptScore) ? f.boost() : 0;
+                if (isPhrase(queryString)) {
+                    boost = boost / boostSettings.phraseBoostDivisor();
+                }
                 boostFields.put(f.name(), boost);
                 if (boostSettings.includeExactFields()) {
                     boostFields.put(f.name() + ESSettings.Boost.EXACT_SUFFIX, boost);
