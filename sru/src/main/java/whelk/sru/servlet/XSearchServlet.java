@@ -340,13 +340,13 @@ public class XSearchServlet extends WhelkHttpServlet {
                              int to,
                              int totalItems,
                              boolean includeHoldings,
-                             boolean expanded) throws IOException, XMLStreamException, TransformerException {
+                             boolean include9xx) throws IOException, XMLStreamException, TransformerException {
 
         res.setCharacterEncoding("UTF-8");
         res.setContentType("text/xml");
 
         ByteArrayOutputStream o = new ByteArrayOutputStream();
-        writeMarcXml(o, items, from, to, totalItems, includeHoldings, expanded);
+        writeMarcXml(o, items, from, to, totalItems, includeHoldings, include9xx);
         ByteArrayInputStream i = new ByteArrayInputStream(o.toByteArray());
 
         Transformer transformer = transformers.get(format).newTransformer();
