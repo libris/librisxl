@@ -28,12 +28,12 @@ class DFS {
     }
 
     private void traverse(Object obj) {
-        var stack = new Stack<Node>();
+        var queue = new ArrayList<Node>();
 
-        stack.push(new Node(obj, new ArrayList<>()));
+        queue.add(new Node(obj, new ArrayList<>()));
 
         do {
-            var node = stack.pop();
+            var node = queue.removeFirst();
 
             var op = visitor.visitElement(node.value, Collections.unmodifiableList(node.path));
             if (op != null && !(op instanceof DocumentUtil.Nop)) {
@@ -41,28 +41,28 @@ class DFS {
                 operations.add(op);
             }
 
-            if (node.value instanceof SequencedMap<?, ?> map) {
-                for (var e : map.reversed().entrySet()) {
-                    var path = new ArrayList<>(node.path.size() + 1);
-                    path.addAll(node.path);
-                    path.add(e.getKey());
-                    stack.push(new Node(e.getValue(), path));
-                }
-            } else if (node.value instanceof List<?> list) {
-                for (int i = list.size() - 1 ; i >= 0 ; i--) {
-                    var path = new ArrayList<>(node.path.size() + 1);
-                    path.addAll(node.path);
-                    path.add(i);
-                    stack.push(new Node(list.get(i), path));
-                }
-            } else if (node.value instanceof Map<?, ?> map) {
+            if (node.value instanceof Map<?, ?> map) {
+                var newQueue = new ArrayList<Node>(queue.size() + map.size());
                 for (var e : map.entrySet()) {
                     var path = new ArrayList<>(node.path.size() + 1);
                     path.addAll(node.path);
                     path.add(e.getKey());
-                    stack.push(new Node(e.getValue(), path));
+                    newQueue.add(new Node(e.getValue(), path));
                 }
+                newQueue.addAll(queue);
+                queue = newQueue;
             }
-        } while (!stack.isEmpty());
+            else if (node.value instanceof List<?> list) {
+                var newQueue = new ArrayList<Node>(queue.size() + list.size());
+                for (int i = 0 ; i < list.size(); i++) {
+                    var path = new ArrayList<>(node.path.size() + 1);
+                    path.addAll(node.path);
+                    path.add(i);
+                    newQueue.add(new Node(list.get(i), path));
+                }
+                newQueue.addAll(queue);
+                queue = newQueue;
+            }
+        } while (!queue.isEmpty());
     }
 }
