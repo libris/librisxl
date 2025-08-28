@@ -4,56 +4,65 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.SequencedMap;
 import java.util.Stack;
 
 // This is a straightforward port of the old groovy version in DocumentUtil. Can probably be improved
 class DFS {
-    private Stack<Object> path;
     private DocumentUtil.Visitor visitor;
     private List<DocumentUtil.Operation> operations;
 
-    private record Node(Object value, Object keyOrIndex) {}
+    private record Node(Object value, List<Object> path) {}
 
     public boolean traverse(final Object obj, DocumentUtil.Visitor visitor) {
         this.visitor = visitor;
-        path = new Stack<>();
         operations = new ArrayList<>();
 
-        node(obj);
+        traverse(obj);
 
         Collections.reverse(operations);
-        for  (DocumentUtil.Operation op : operations) {
+        for (DocumentUtil.Operation op : operations) {
             op.perform(obj);
-        };
+        }
         return !operations.isEmpty();
     }
 
-    private void node(Object obj) {
-        var op = visitor.visitElement(obj, Collections.unmodifiableList(path));
-        if (op != null && !(op instanceof DocumentUtil.Nop)) {
-            op.setPath(path);
-            operations.add(op);
-        }
+    private void traverse(Object obj) {
+        var stack = new Stack<Node>();
 
-        if (obj instanceof Map<?, ?> map) {
-            var nodes = map.entrySet().stream()
-                    .map(e -> new Node(e.getValue(), e.getKey()))
-                    .toList();
-            descend(nodes);
-        } else if (obj instanceof List<?> list) {
-            var nodes = new ArrayList<Node>(list.size());
-            for (int i = 0 ; i < list.size() ; i++) {
-                nodes.add(new Node(list.get(i), i));
+        stack.push(new Node(obj, new ArrayList<>()));
+
+        do {
+            var node = stack.pop();
+
+            var op = visitor.visitElement(node.value, Collections.unmodifiableList(node.path));
+            if (op != null && !(op instanceof DocumentUtil.Nop)) {
+                op.setPath(node.path);
+                operations.add(op);
             }
-            descend(nodes);
-        }
-    }
 
-    private void descend(List<Node> nodes) {
-        for (var n : nodes) {
-            path.push(n.keyOrIndex);
-            node(n.value);
-            path.pop();
-        }
+            if (node.value instanceof SequencedMap<?, ?> map) {
+                for (var e : map.reversed().entrySet()) {
+                    var path = new ArrayList<>(node.path.size() + 1);
+                    path.addAll(node.path);
+                    path.add(e.getKey());
+                    stack.push(new Node(e.getValue(), path));
+                }
+            } else if (node.value instanceof List<?> list) {
+                for (int i = list.size() - 1 ; i >= 0 ; i--) {
+                    var path = new ArrayList<>(node.path.size() + 1);
+                    path.addAll(node.path);
+                    path.add(i);
+                    stack.push(new Node(list.get(i), path));
+                }
+            } else if (node.value instanceof Map<?, ?> map) {
+                for (var e : map.entrySet()) {
+                    var path = new ArrayList<>(node.path.size() + 1);
+                    path.addAll(node.path);
+                    path.add(e.getKey());
+                    stack.push(new Node(e.getValue(), path));
+                }
+            }
+        } while (!stack.isEmpty());
     }
 }
