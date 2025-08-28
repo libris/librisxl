@@ -393,9 +393,10 @@ public class XSearchServlet extends WhelkHttpServlet {
             throw new RuntimeException(e);
         }
     }
-
+    
     // xsearch responses only include 852 and 856
     // not the full "interleaved" format from marc_export, i.e. more 8xx holding fields in the style of 856
+    // (see ExportProfile::mergeBibMfhd)
     private static void mergeBibHold(MarcRecord bibRecord, MarcRecord holdRecord, String sigel) {
         for (Datafield f : holdRecord.getDatafields()) {
             if (f.getTag().equals("852")) {
