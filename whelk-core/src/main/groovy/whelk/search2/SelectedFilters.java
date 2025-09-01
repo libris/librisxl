@@ -1,8 +1,9 @@
 package whelk.search2;
 
 import whelk.search2.querytree.ActiveFilter;
-import whelk.search2.querytree.Literal;
+import whelk.search2.querytree.And;
 import whelk.search2.querytree.Node;
+import whelk.search2.querytree.Numeric;
 import whelk.search2.querytree.Or;
 import whelk.search2.querytree.PathValue;
 import whelk.search2.querytree.QueryTree;
@@ -12,7 +13,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -99,7 +102,7 @@ public class SelectedFilters {
             Predicate<Node> isProperty = n -> n instanceof PathValue pv && pv.hasEqualProperty(slice.propertyKey());
             Predicate<Node> hasEqualsOp = n -> ((PathValue) n).operator().equals(Operator.EQUALS);
             Predicate<Node> hasRangeOp = n -> Operator.rangeOperators().contains(((PathValue) n).operator());
-            Predicate<Node> hasNumericValue = n -> ((PathValue) n).value() instanceof Literal l && l.isNumeric();
+            Predicate<Node> hasNumericValue = n -> ((PathValue) n).value() instanceof Numeric;
             Predicate<Node> isPropertyEquals = n -> isProperty.test(n) && hasEqualsOp.test(n);
 
             List<PathValue> allNodesWithProperty = queryTree.allDescendants().filter(isProperty).map(PathValue.class::cast).toList();
@@ -110,12 +113,12 @@ public class SelectedFilters {
                 continue;
             }
 
-            List<Node> selected = queryTree.getTopLevelNodes().stream()
+            List<Node> selected = queryTree.getTopNodes().stream()
                     .filter(isPropertyEquals)
                     .toList();
 
             if (slice.isRange()) {
-                List<Node> rangeSelected = queryTree.getTopLevelNodes().stream()
+                List<Node> rangeSelected = queryTree.getTopNodes().stream()
                         .filter(isProperty)
                         .filter(hasRangeOp)
                         .filter(hasNumericValue)
@@ -138,7 +141,7 @@ public class SelectedFilters {
                 }
             }
 
-            List<Or> multiSelected = queryTree.getTopLevelNodesOfType(Or.class).stream()
+            List<Or> multiSelected = queryTree.getTopNodesOfType(Or.class).stream()
                     .filter(or -> or.children().stream().allMatch(isPropertyEquals))
                     .toList();
 
@@ -161,23 +164,24 @@ public class SelectedFilters {
         for (AppParams.SiteFilter sf : siteFilters.getAllFilters()) {
             Filter f = sf.filter();
 
-            if (queryTree.topLevelContains(f.getParsed())) {
-                activatedSiteFilters.computeIfAbsent(f, x -> new ArrayList<>()).add(f.getParsed());
-            }
-            if (queryTree.topLevelContains(f.getParsed().getInverse())) {
-                deactivatedSiteFilters.computeIfAbsent(f, x -> new ArrayList<>()).add(f.getParsed().getInverse());
-            }
+            BiConsumer<Node, Map<Filter, List<Node>>> detectPresentFilter = (filterNode, map) -> {
+                if (filterNode instanceof And and) {
+                    List<Node> matching = queryTree.findTopNodesByCondition(and.children()::contains);
+                    if (matching.size() == and.children().size()) {
+                        map.computeIfAbsent(f, x -> new ArrayList<>()).addAll(matching);
+                    }
+                }
+                Optional<Node> matching = queryTree.findTopNodeByCondition(filterNode::equals);
+                matching.ifPresent(node -> map.computeIfAbsent(f, x -> new ArrayList<>()).add(node));
+            };
+
+            detectPresentFilter.accept(f.getParsed(), activatedSiteFilters);
+            detectPresentFilter.accept(f.getParsed().getInverse(), deactivatedSiteFilters);
 
             if (f instanceof Filter.AliasedFilter af) {
-                if (queryTree.topLevelContains(af.getActive())) {
-                    activatedSiteFilters.computeIfAbsent(f, x -> new ArrayList<>()).add(af.getActive());
-                }
+                detectPresentFilter.accept(af.getActive(), activatedSiteFilters);
                 Node inverse = af.getActive().getInverse();
-
-                if (queryTree.topLevelContains(inverse)) {
-                    deactivatedSiteFilters.computeIfAbsent(f, x -> new ArrayList<>()).add(inverse);
-                }
-
+                detectPresentFilter.accept(inverse, deactivatedSiteFilters);
                 if (inverse instanceof ActiveFilter(Filter.AliasedFilter aliasedFilter)) {
                     if (isActivated(af)) {
                         deactivatedSiteFilters.computeIfAbsent(aliasedFilter, x -> new ArrayList<>())

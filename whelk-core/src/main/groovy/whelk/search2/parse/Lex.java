@@ -21,6 +21,7 @@ public class Lex {
         OPERATOR,
         KEYWORD,
         STRING,
+        QUOTED_STRING
     }
 
     public record Symbol(TokenName name, String value, int offset) {
@@ -82,13 +83,19 @@ public class Lex {
                 query.deleteCharAt(0);
                 offset.increase(1);
                 if (c == '"')
-                    return new Symbol(TokenName.STRING, symbolValue.toString(), symbolOffset);
+                    return new Symbol(TokenName.QUOTED_STRING, symbolValue.toString(), symbolOffset);
                 else if (c == '\\') { // char escaping ...
                     char escapedC = query.charAt(0);
                     query.deleteCharAt(0);
                     offset.increase(1);
                     if (query.isEmpty())
                         throw new InvalidQueryException("Lexer error: Escaped EOF at character index: " + symbolOffset);
+                    if (escapedC == '?') {
+                        // ? only needs to be escaped when last char in word
+                        // need to later be able to distinguish between escaped or not
+                        // TODO how should we handle escaping of one-char wildcards?
+                        symbolValue.append("\\");
+                    }
                     symbolValue.append(escapedC);
                 } else {
                     symbolValue.append(c);
@@ -117,9 +124,17 @@ public class Lex {
                     if (query.isEmpty())
                         throw new InvalidQueryException("Lexer error: Escaped EOF at character index: " + symbolOffset);
                     char escapedC = query.charAt(0);
+                    if (escapedC == '?') {
+                        // ? only needs to be escaped when last char in word
+                        // need to later be able to distinguish between escaped or not
+                        // TODO how should we handle escaping of one-char wildcards?
+                        symbolValue.append("\\");
+                    }
                     symbolValue.append(escapedC);
                     query.deleteCharAt(0);
                     offset.increase(1);
+                    if (query.isEmpty())
+                        break;
                 } else {
                     query.deleteCharAt(0);
                     offset.increase(1);

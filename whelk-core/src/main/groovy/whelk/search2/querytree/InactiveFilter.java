@@ -1,7 +1,7 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
-import whelk.search2.EsMappings;
+import whelk.search2.ESSettings;
 import whelk.search2.Filter;
 import whelk.search2.QueryParams;
 
@@ -13,7 +13,7 @@ import static whelk.search2.QueryUtil.makeUpLink;
 
 public record InactiveFilter(Filter.AliasedFilter aliasedFilter) implements Node {
     @Override
-    public Map<String, Object> toEs(EsMappings esMappings, Collection<String> boostFields) {
+    public Map<String, Object> toEs(ESSettings esSettings) {
         throw new UnsupportedOperationException("Query tree must not contain inactive filters");
     }
 
@@ -35,22 +35,17 @@ public record InactiveFilter(Filter.AliasedFilter aliasedFilter) implements Node
 
     @Override
     public String toQueryString(boolean topLevel) {
-        return toString();
+        return "NOT " + alias();
     }
 
     @Override
     public String toString() {
-        return "NOT " + alias();
+        return toQueryString(true);
     }
 
     @Override
     public Node getInverse() {
         return new ActiveFilter(aliasedFilter);
-    }
-
-    @Override
-    public boolean shouldContributeToEsScore() {
-        return false;
     }
 
     private String alias() {

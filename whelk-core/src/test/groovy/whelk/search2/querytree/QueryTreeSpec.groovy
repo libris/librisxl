@@ -4,6 +4,7 @@ import spock.lang.Specification
 import whelk.JsonLd
 import whelk.search2.AppParams
 import whelk.search2.Disambiguate
+import whelk.search2.ESSettings
 import whelk.search2.Filter
 import whelk.search2.Query
 import whelk.search2.QueryParams
@@ -13,46 +14,149 @@ class QueryTreeSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()
     JsonLd jsonLd = TestData.getJsonLd()
 
+    def "back to query string"() {
+        expect:
+        new QueryTree(input, disambiguate).toQueryString() == back
+
+        where:
+        input                                       | back
+        null                                        | "*"
+        "*"                                         | "*"
+        "* p1:x"                                    | "p1:x"
+        "x y"                                       | "x y"
+        "\"x y\""                                   | "\"x y\""
+        "\"x y\" z"                                 | "\"x y\" z"
+        "x OR y z"                                  | "x OR y z"
+        "x OR \"y z\""                              | "x OR \"y z\""
+        "NOT x y"                                   | "NOT x y"
+        "NOT (x y)"                                 | "NOT (x y)"
+        "NOT (x OR y)"                              | "NOT (x OR y)"
+        "p1:x"                                      | "p1:x"
+        "p1:\"x y\""                                | "p1:\"x y\""
+        "p1:\"x OR y\""                             | "p1:\"x OR y\""
+        "p1:(x y)"                                  | "p1:(x y)"
+        "p1:(x OR y)"                               | "p1:(x OR y)"
+        "NOT p1:(x OR y)"                           | "NOT p1:(x OR y)"
+        "NOT p1:(NOT x)"                            | "p1:x"
+        "p2:e1"                                     | "p2:e1"
+        "p2:(e1 e2)"                                | "p2:e1 p2:e2"
+        "p2:(e1 OR e2)"                             | "p2:e1 OR p2:e2"
+        "NOT p2:(e1 e2)"                            | "NOT p2:e1 OR NOT p2:e2"
+        "NOT p2:(e1 OR e2)"                         | "NOT p2:e1 NOT p2:e2"
+        "type:(t1 OR t2)"                           | "type:t1 OR type:t2"
+        "p3:x"                                      | "p3:x"
+        "p3:\"https://id.kb.se/x\""                 | "p3:\"https://id.kb.se/x\""
+        "p3:\"sao:x\""                              | "p3:\"sao:x\""
+        "p3:(\"sao:x\" \"sao:y\")"                  | "p3:\"sao:x\" p3:\"sao:y\""
+        "p3:(\"x y\" z \"sao:x\" \"sao:y\")"        | "p3:(\"x y\" z) p3:\"sao:x\" p3:\"sao:y\""
+        "p3:(x (\"sao:x\" OR \"sao:y\"))"           | "p3:x (p3:\"sao:x\" OR p3:\"sao:y\")"
+        "NOT p3:(NOT x)"                            | "p3:x"
+        "NOT p3:(x y (\"sao:x\" OR NOT \"sao:y\"))" | "NOT p3:(x y) OR (NOT p3:\"sao:x\" p3:\"sao:y\")"
+        "_x._y:z"                                   | "_x._y:z"
+        "x p1:y includeA"                           | "x p1:y includeA"
+        "p1>1990"                                   | "p1>1990"
+        "NOT p1>1990"                               | "p1<=1990"
+        "p1=1990"                                   | "p1:1990"
+        "p12:1990-01-01"                            | "p12:1990-01-01"
+        "NOT p12<=1990-01-01"                       | "p12>1990-01-01"
+        "p12:\"1990-01-01T01:01\""                  | "p12:\"1990-01-01T01:01\""
+        "(x OR y) p1:x"                             | "(x OR y) p1:x"
+        "x OR y"                                    | "x OR y"
+        "(x OR y) z"                                | "(x OR y) z"
+    }
+
     def "convert to ES query"() {
         given:
-        QueryTree tree = new QueryTree('(NOT p1:v1 OR p2:v2) something', disambiguate)
-
-        expect:
-        tree.toEs(jsonLd, TestData.getEsMappings(), ['_str^10'], [], []) ==
-                ['bool': [
-                        'must': [
+        QueryTree tree = new QueryTree('(NOT p1:v1 OR p4:v4) something', disambiguate)
+        Map boostSettings = [
+                "field_boost": [
+                        "fields"              : [
                                 [
-                                        'simple_query_string': [
-                                                'default_operator': 'AND',
-                                                'analyze_wildcard': true,
-                                                'query'           : 'something',
-                                                'fields'          : ['_str^10.0']
+                                        "name"        : "fieldA",
+                                        "boost"       : 10,
+                                        "script_score": [
+                                                "name"    : "a function",
+                                                "function": "f(_score)",
+                                                "apply_if": "condition"
                                         ]
                                 ],
-                                ['bool': [
-                                        'should': [
-                                                ['bool': [
-                                                        'must_not': [
-                                                                'simple_query_string': [
-                                                                        'default_operator': 'AND',
-                                                                        'query'           : 'v1',
-                                                                        'fields'          : ['p1']
+                                [
+                                        "name" : "fieldB",
+                                        "boost": 2
+                                ],
+                                [
+                                        "name" : "fieldC",
+                                        "boost": 1
+                                ]
+                        ],
+                        "default_boost_factor": 5,
+                        "analyze_wildcard"    : true
+                ]
+        ]
+        ESSettings esSettings = new ESSettings(TestData.getEsMappings(), new ESSettings.Boost(boostSettings))
+
+        expect:
+        tree.toEs(jsonLd, esSettings, [], []) == [
+                "bool": [
+                        "must": [
+                                [
+                                        "bool": [
+                                                "should": [
+                                                        [
+                                                                "simple_query_string": [
+                                                                        "default_operator": "AND",
+                                                                        "query"           : "something",
+                                                                        "analyze_wildcard": true,
+                                                                        "fields"          : ["fieldA^0.0", "fieldB^2.0", "fieldC^1.0"]
+                                                                ]
+                                                        ],
+                                                        [
+                                                                "script_score": [
+                                                                        "query" : [
+                                                                                "simple_query_string": [
+                                                                                        "default_operator": "AND",
+                                                                                        "query"           : "something",
+                                                                                        "analyze_wildcard": true,
+                                                                                        "fields"          : ["fieldA^10.0", "fieldB^0.0", "fieldC^0.0"]
+                                                                                ]
+                                                                        ],
+                                                                        "script": [
+                                                                                "source": "condition ? f(_score) : _score"
+                                                                        ]
                                                                 ]
                                                         ]
-                                                ]],
-                                                ['bool': [
-                                                        'must': [
-                                                                'simple_query_string': [
-                                                                        'default_operator': 'AND',
-                                                                        'query'           : 'v2',
-                                                                        'fields'          : ['p2^400']
-                                                                ]
-                                                        ]
-                                                ]]
+                                                ]
                                         ]
-                                ]]
+                                ],
+                                [
+                                        "bool": [
+                                                "should": [
+                                                        [
+                                                                "bool": [
+                                                                        "must_not": [
+                                                                                "simple_query_string": [
+                                                                                        "default_operator": "AND",
+                                                                                        "query"           : "v1",
+                                                                                        "analyze_wildcard": true,
+                                                                                        "fields"          : ["p1^0.0"]
+                                                                                ]
+                                                                        ]
+                                                                ]
+                                                        ],
+                                                        [
+                                                                "simple_query_string": [
+                                                                        "default_operator": "AND",
+                                                                        "query"           : "v4",
+                                                                        "analyze_wildcard": true,
+                                                                        "fields"          : ["p4._str^5.0"]
+                                                                ]
+                                                        ]
+                                                ]
+                                        ]
+                                ]
                         ]
-                ]]
+                ]
+        ]
     }
 
     def "to search mapping"() {
@@ -69,7 +173,7 @@ class QueryTreeSpec extends Specification {
                                         ],
                                         "equals"  : "something",
                                         "up"      : [
-                                                "@id": "/find?_limit=200&_q=%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA"
+                                                "@id": "/find?_q=%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA"
                                         ]
                                 ], [
                                         "or": [[
@@ -79,7 +183,7 @@ class QueryTreeSpec extends Specification {
                                                        ],
                                                        "notEquals": "v3",
                                                        "up"       : [
-                                                               "@id": "/find?_limit=200&_q=something+p4:%22v:4%22+includeA"
+                                                               "@id": "/find?_q=something+p4:%22v:4%22+includeA"
                                                        ],
                                                        "_key"     : "p3",
                                                        "_value"   : "v3"
@@ -88,15 +192,15 @@ class QueryTreeSpec extends Specification {
                                                                "@id"  : "p4",
                                                                "@type": "ObjectProperty"
                                                        ],
-                                                       "equals"  : "v:4",
+                                                       "equals"  : "\"v:4\"",
                                                        "up"      : [
-                                                               "@id": "/find?_limit=200&_q=something+NOT+p3:v3+includeA"
+                                                               "@id": "/find?_q=something+NOT+p3:v3+includeA"
                                                        ],
                                                        "_key"    : "p4",
-                                                       "_value"  : "v:4"
+                                                       "_value"  : "\"v:4\""
                                                ]],
                                         "up": [
-                                                "@id": "/find?_limit=200&_q=something+includeA"
+                                                "@id": "/find?_q=something+includeA"
                                         ]
                                 ], [
                                         "object": [
@@ -118,7 +222,7 @@ class QueryTreeSpec extends Specification {
                                                                                 ],
                                                                                 "notEquals": "A",
                                                                                 "up"       : [
-                                                                                        "@id": "/find?_limit=200&_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA"
+                                                                                        "@id": "/find?_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA"
                                                                                 ],
                                                                                 "_key"     : "p1",
                                                                                 "_value"   : "A"
@@ -126,75 +230,97 @@ class QueryTreeSpec extends Specification {
                                                                 ],
                                                                 "value" : "excludeA",
                                                                 "up"    : [
-                                                                        "@id": "/find?_limit=200&_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA"
+                                                                        "@id": "/find?_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA"
                                                                 ]
                                                         ]
                                                 ]
                                         ],
                                         "value" : "includeA",
                                         "up"    : [
-                                                "@id": "/find?_limit=200&_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29"
+                                                "@id": "/find?_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29"
                                         ]
                                 ]],
                         "up" : [
-                                "@id": "/find?_limit=200&_q=*"
+                                "@id": "/find?_q=*"
                         ]
                 ]
     }
 
-    def "normalize free text on instantiation"() {
+    def "concat simple free text on instantiation"() {
         given:
         QueryTree qt = new QueryTree("x y (x OR y) \"a b c\" d \"e:f\" NOT g h i", disambiguate)
         var ft1 = (FreeText) new QueryTree("x y \"a b c\" d \"e:f\" h i", disambiguate).tree
-        var ft2 = (FreeText) QueryTreeBuilder.buildTree("x", disambiguate)
-        var ft3 = (FreeText) QueryTreeBuilder.buildTree("y", disambiguate)
-        var ft4 = (FreeText) QueryTreeBuilder.buildTree("NOT g", disambiguate)
+        var ft2 = (FreeText) QueryTreeBuilder.buildTree("x OR y", disambiguate)
+        var ft3 = (FreeText) QueryTreeBuilder.buildTree("NOT g", disambiguate)
 
         expect:
-        qt.tree == new And([
-                ft1,
-                new Or([ft2, ft3]),
-                ft4
-        ])
+        qt.tree == new And([ft1, ft2, ft3])
     }
 
-    def "add node to top level of tree"() {
+    def "add node"() {
         given:
-        Node add = QueryTreeBuilder.buildTree(_add, disambiguate)
-        QueryTree tree = new QueryTree(_tree, disambiguate)
+        Node nodeToAdd = QueryTreeBuilder.buildTree(add, disambiguate)
+        QueryTree qt = new QueryTree(q, disambiguate)
 
         expect:
-        tree.addTopLevelNode(add).toString() == result
+        qt.add(nodeToAdd).toQueryString() == result
 
         where:
-        _tree            | _add    | result
-        null             | 'p1:v1' | 'p1:v1'
-        'p1:v1'          | 'p2:v2' | 'p1:v1 p2:v2'
-        'p1:v1'          | 'p1:v1' | 'p1:v1'
-        'p1:v1 OR p2:v2' | 'p2:v2' | '(p1:v1 OR p2:v2) p2:v2'
-        'p1:v1 p2:v2'    | 'p1:v1' | 'p1:v1 p2:v2'
-        'p1:v1 p2:v2'    | 'p3:v3' | 'p1:v1 p2:v2 p3:v3'
+        q                | add                                    | result
+        null             | 'p1:v1'                                | 'p1:v1'
+        'p1:v1'          | 'p2:v2'                                | 'p1:v1 p2:v2'
+        'p1:v1'          | 'p1:v1'                                | 'p1:v1'
+        'p1:v1 OR p2:v2' | 'p2:v2'                                | '(p1:v1 OR p2:v2) p2:v2'
+        'p1:v1 p2:v2'    | 'p1:v1'                                | 'p1:v1 p2:v2'
+        'p1:v1 p2:v2'    | 'p3:v3'                                | 'p1:v1 p2:v2 p3:v3'
+        'p1:v1 p2:v2'    | 'p1:v1 p3:v3'                          | 'p1:v1 p2:v2 p3:v3'
+        'p1:v1 p2:v2'    | 'p1:v1 p2:v2'                          | 'p1:v1 p2:v2'
+        'p1:v1 p2:v2'    | '((p1:v1 p2:v2) OR p3:v3) p2:v2 p3:v3' | 'p1:v1 p2:v2 ((p1:v1 p2:v2) OR p3:v3) p3:v3'
     }
 
-    def "omit node from tree"() {
+    def "remove node"() {
         given:
-        PathValue pv1 = (PathValue) QueryTreeBuilder.buildTree('p1:v1', disambiguate)
-        PathValue pv2 = (PathValue) QueryTreeBuilder.buildTree('p2:v2', disambiguate)
-        PathValue pv3 = (PathValue) QueryTreeBuilder.buildTree('p3:v3', disambiguate)
-        Or or = new Or([pv1, pv2])
-        // We don't want a new instance of Or in the tree, hence the flattenChildren set to false
-        And and = new And([or, pv3], false)
-        QueryTree qt = new QueryTree(and)
+        QueryTree queryTree = new QueryTree(q, disambiguate)
+        List<Node> nodesToMatch = remove.collect { QueryTreeBuilder.buildTree(it, disambiguate) }
+        List<Node> nodesToRemove = queryTree.allDescendants().filter(nodesToMatch::contains).toList();
 
         expect:
-        qt.omitNode(or).tree == pv3
-        qt.omitNode(pv3).tree == or
-        qt.omitNode(pv1).tree == new And([pv2, pv3])
-        qt.omitNode(pv2).tree == new And([pv1, pv3])
-        qt.omitNode(and).tree == null
-        // A node's content is irrelevant, the given input must refer to a specific instance in the tree
-        qt.omitNode(QueryTreeBuilder.buildTree('p3:v3', disambiguate)).tree == qt.tree
-        qt.omitNode(QueryTreeBuilder.buildTree('p1:v1 OR p2:v2', disambiguate)).tree == qt.tree
+        queryTree.remove(nodesToRemove).toQueryString() == result
+
+        where:
+        q                              | remove                               | result
+        'p1:v1 p2:v2'                  | ['p1:v1']                            | 'p2:v2'
+        'p1:v1 p2:v2'                  | ['p3:v3']                            | 'p1:v1 p2:v2'
+        'p1:v1 p2:v2 p3:v3'            | ['p3:v3']                            | 'p1:v1 p2:v2'
+        'p1:v1 p2:v2 p3:v3'            | ['p1:v1 p2:v2 p3:v3']                | '*'
+        'p1:v1 p2:v2 p3:v3'            | ['p1:v1 p2:v2']                      | 'p1:v1 p2:v2 p3:v3'
+        'p1:v1 p2:v2 p3:v3'            | ['p1:v1', 'p2:v2']                   | 'p3:v3'
+        'p1:v1 p2:v2 p3:v3'            | ['p1:v1 p2:v2 p3:v3 p4:v4']          | 'p1:v1 p2:v2 p3:v3'
+        'p1:v1 p2:v2 p3:v3'            | ['p1:v1', 'p2:v2', 'p3:v3', 'p4:v4'] | '*'
+        'p1:v1 p2:v2 p3:v3 p4:v4'      | ['p1:v1', 'p2:v2', 'p3:v3']          | 'p4:v4'
+        'p1:v1 (p2:v2 OR p3:v3) p4:v4' | ['p1:v1', 'p4:v4']                   | 'p2:v2 OR p3:v3'
+        'p1:v1 (p2:v2 OR p3:v3) p4:v4' | ['p1:v1', 'p2:v2 OR p3:v3']          | 'p4:v4'
+        'p1:v1 (p2:v2 OR p3:v3) p4:v4' | ['p3:v3']                            | 'p1:v1 p2:v2 p4:v4'
+    }
+
+    def "replace node"() {
+        given:
+        QueryTree queryTree = new QueryTree(q, disambiguate)
+        Node nodeToMatch = QueryTreeBuilder.buildTree(replace, disambiguate)
+        Node nodeToReplace = queryTree.allDescendants().find(nodeToMatch::equals)
+        Node replacementNode = QueryTreeBuilder.buildTree(replacement, disambiguate)
+
+        expect:
+        queryTree.replace(nodeToReplace, replacementNode).toQueryString() == result
+
+        where:
+        q                              | replace             | replacement      | result
+        'p1:v1 p2:v2'                  | 'p2:v2'             | 'p3:v3'          | 'p1:v1 p3:v3'
+        'p1:v1 p2:v2'                  | 'p3:v3'             | 'p4:v4'          | 'p1:v1 p2:v2'
+        'p1:v1 p2:v2 p3:v3'            | 'p1:v1 p2:v2 p3:v3' | 'x y z'          | 'x y z'
+        'p1:v1 p2:v2 p3:v3'            | 'p1:v1 p2:v2'       | 'x y z'          | 'p1:v1 p2:v2 p3:v3'
+        'p1:v1 p2:v2 p3:v3'            | 'p2:v2'             | 'p4:v4 OR p5:v5' | 'p1:v1 (p4:v4 OR p5:v5) p3:v3'
+        'p1:v1 (p4:v4 OR p5:v5) p3:v3' | 'p5:v5'             | 'p6:v6 p7:v7'    | 'p1:v1 (p4:v4 OR (p6:v6 p7:v7)) p3:v3'
     }
 
     def "get top level free text as string"() {
@@ -208,24 +334,6 @@ class QueryTreeSpec extends Specification {
         'p1:v1'             | ''
         'x OR y'            | ''
         null                | ''
-    }
-
-    def "to query string"() {
-        expect:
-        new QueryTree(tree, disambiguate).toQueryString() == result
-
-        where:
-        tree                                   | result
-        null                                   | "*"
-        "p1:v1"                                | "p1:v1"
-        "p2:\"v:2\""                           | "p2:\"v:2\""
-        "p5:v5"                                | "p5:v5"
-        "_x._y:v1"                             | "_x._y:v1"
-        "NOT p1:v1"                            | "NOT p1:v1"
-        "p1:v1 OR p3:v3"                       | "p1:v1 OR p3:v3"
-        "p1:v1 p2:\"v:2\" p3:v3"               | "p1:v1 p2:\"v:2\" p3:v3"
-        "something (p1:v1 OR p3:v3) NOT p4:v4" | "something (p1:v1 OR p3:v3) NOT p4:v4"
-        "something p4:v4 includeA"             | "something p4:v4 includeA"
     }
 
     def "apply site filters"() {

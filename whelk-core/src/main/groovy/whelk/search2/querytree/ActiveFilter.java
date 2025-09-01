@@ -1,7 +1,7 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
-import whelk.search2.EsMappings;
+import whelk.search2.ESSettings;
 import whelk.search2.Filter;
 import whelk.search2.QueryParams;
 
@@ -13,7 +13,7 @@ import static whelk.search2.QueryUtil.makeUpLink;
 
 public record ActiveFilter(Filter.AliasedFilter aliasedFilter) implements Node {
     @Override
-    public Map<String, Object> toEs(EsMappings esMappings, Collection<String> boostFields) {
+    public Map<String, Object> toEs(ESSettings esSettings) {
         throw new UnsupportedOperationException("Expand filter before converting to ES");
     }
 
@@ -35,7 +35,7 @@ public record ActiveFilter(Filter.AliasedFilter aliasedFilter) implements Node {
 
     @Override
     public String toQueryString(boolean topLevel) {
-        return toString();
+        return alias();
     }
 
     @Override
@@ -48,11 +48,6 @@ public record ActiveFilter(Filter.AliasedFilter aliasedFilter) implements Node {
         return aliasedFilter.getParsed() instanceof InactiveFilter(Filter.AliasedFilter af)
                 ? new ActiveFilter(af)
                 : new InactiveFilter(aliasedFilter);
-    }
-
-    @Override
-    public boolean shouldContributeToEsScore() {
-        return false;
     }
 
     public String alias() {

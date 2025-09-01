@@ -1,6 +1,7 @@
 package whelk.util
 
 import groovy.util.logging.Log4j2
+import groovy.xml.XmlSlurper
 import org.postgresql.util.PSQLException
 import se.kb.libris.export.ExportProfile
 import se.kb.libris.util.marc.Field

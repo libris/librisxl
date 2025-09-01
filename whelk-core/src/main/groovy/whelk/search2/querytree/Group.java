@@ -1,9 +1,11 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
+import whelk.search2.ESSettings;
 import whelk.search2.EsMappings;
 import whelk.search2.Operator;
 import whelk.search2.QueryParams;
+import whelk.search2.QueryUtil;
 
 import java.util.*;
 
@@ -43,9 +45,9 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     @Override
-    public Map<String, Object> toEs(EsMappings esMappings, Collection<String> boostFields) {
-        Map<String, List<PathValue>> nestedGroups = getNestedGroups(esMappings);
-        return nestedGroups.isEmpty() ? wrap(childrenToEs(esMappings, boostFields)) : toEsNested(nestedGroups, esMappings, boostFields);
+    public Map<String, Object> toEs(ESSettings esSettings) {
+        Map<String, List<PathValue>> nestedGroups = getNestedGroups(esSettings.mappings());
+        return nestedGroups.isEmpty() ? wrap(childrenToEs(esSettings)) : toEsNested(nestedGroups, esSettings);
     }
 
     @Override
@@ -69,26 +71,23 @@ public sealed abstract class Group implements Node permits And, Or {
 
     @Override
     public String toQueryString(boolean topLevel) {
-        return topLevel ? this.toString() : "(" + this + ")";
+        String s = doMapToString(n -> n.toQueryString(false))
+                .collect(Collectors.joining(delimiter()));
+        return topLevel ? s : QueryUtil.parenthesize(s);
     }
 
     @Override
     public String toString() {
-        return doMapToString(n -> n.toQueryString(false))
-                .collect(Collectors.joining(delimiter()));
+        return toQueryString(true);
     }
 
     @Override
     public Node reduceTypes(JsonLd jsonLd) {
         BiFunction<Node, Node, Boolean> hasMoreSpecificTypeThan = (a, b) -> a.isTypeNode()
                 && b.isTypeNode()
-                && jsonLd.isSubClassOf(((PathValue) a).value().jsonForm(), ((PathValue) b).value().jsonForm());
-        return reduceByCondition(hasMoreSpecificTypeThan);
-    }
+                && jsonLd.isSubClassOf(((VocabTerm) (((PathValue) a).value())).key(), ((VocabTerm) (((PathValue) b).value())).key());
 
-    @Override
-    public boolean shouldContributeToEsScore() {
-        return children().stream().anyMatch(Node::shouldContributeToEsScore);
+        return reduceByCondition(hasMoreSpecificTypeThan);
     }
 
     Node expandChildren(JsonLd jsonLd, Collection<String> rulingTypes) {
@@ -138,7 +137,7 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     // TODO: Review/refine nested logic and proper tests
-    private Map<String, Object> toEsNested(Map<String, List<PathValue>> nestedGroups, EsMappings esMappings, Collection<String> boostFields) {
+    private Map<String, Object> toEsNested(Map<String, List<PathValue>> nestedGroups, ESSettings esSettings) {
         List<Map<String, Object>> esChildren = new ArrayList<>();
         List<Node> nonNested = new ArrayList<>(children());
 
@@ -149,10 +148,10 @@ public sealed abstract class Group implements Node permits And, Or {
                         boolean isGroup = v.size() > 1;
                         boolean isNegatedGroup = k && isGroup;
                         if (isNegatedGroup) {
-                            var es = v.stream().map(pv -> pv.replaceOperator(Operator.EQUALS).getCoreEsQuery(esMappings)).toList();
+                            var es = v.stream().map(pv -> pv.withOperator(Operator.EQUALS).getCoreEsQuery(esSettings)).toList();
                             bool.put("must_not", nestedWrap(nestedStem, wrap(es)));
                         } else {
-                            var es = v.stream().map(pv -> pv.getCoreEsQuery(esMappings)).toList();
+                            var es = v.stream().map(pv -> pv.getCoreEsQuery(esSettings)).toList();
                             bool.put("must", nestedWrap(nestedStem, isGroup ? wrap(es) : es.getFirst()));
                         }
                     });
@@ -161,7 +160,7 @@ public sealed abstract class Group implements Node permits And, Or {
         });
 
         for (Node n : nonNested) {
-            esChildren.add(n.toEs(esMappings, boostFields));
+            esChildren.add(n.toEs(esSettings));
         }
 
         return esChildren.size() == 1 ? esChildren.getFirst() : wrap(esChildren);
@@ -174,7 +173,7 @@ public sealed abstract class Group implements Node permits And, Or {
                 .filter(PathValue.class::isInstance)
                 .map(PathValue.class::cast)
                 .collect(Collectors.groupingBy(pv -> pv.path().getEsNestedStem(esMappings),
-                        Collectors.groupingBy(pv -> pv.path().fullEsSearchPath()))
+                        Collectors.groupingBy(pv -> pv.path().jsonForm()))
                 )
                 .forEach((nestedStem, groupedByPath) -> {
                     // At least two different paths sharing the same nested stem
@@ -192,8 +191,8 @@ public sealed abstract class Group implements Node permits And, Or {
         return nestedGroups;
     }
 
-    private List<Map<String, Object>> childrenToEs(EsMappings esMappings, Collection<String> boostFields) {
-        return mapToMap(n -> n.toEs(esMappings, boostFields));
+    private List<Map<String, Object>> childrenToEs(ESSettings esSettings) {
+        return mapToMap(n -> n.toEs(esSettings));
     }
 
     private List<Node> mapToNode(Function<Node, Node> mapper) {

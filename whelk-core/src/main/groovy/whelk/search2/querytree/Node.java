@@ -1,7 +1,7 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
-import whelk.search2.EsMappings;
+import whelk.search2.ESSettings;
 import whelk.search2.QueryParams;
 
 import java.util.Collection;
@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 public sealed interface Node permits ActiveFilter, FreeText, Group, InactiveFilter, PathValue {
-    Map<String, Object> toEs(EsMappings esMappings, Collection<String> boostFields);
+    Map<String, Object> toEs(ESSettings esSettings);
 
     Node expand(JsonLd jsonLd, Collection<String> rulingTypes);
 
@@ -19,8 +19,6 @@ public sealed interface Node permits ActiveFilter, FreeText, Group, InactiveFilt
     String toQueryString(boolean topLevel);
 
     Node getInverse();
-
-    boolean shouldContributeToEsScore();
 
     default List<Node> children() {
         return Collections.emptyList();
@@ -31,10 +29,6 @@ public sealed interface Node permits ActiveFilter, FreeText, Group, InactiveFilt
     }
 
     default boolean isTypeNode() {
-        return false;
-    }
-
-    default boolean isFreeTextNode() {
         return false;
     }
 }

@@ -17,7 +17,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static whelk.search2.QueryParams.ApiParams.OBJECT;
 import static whelk.search2.QueryParams.ApiParams.PREDICATES;
+import static whelk.search2.QueryParams.ApiParams.SORT;
 import static whelk.search2.QueryUtil.makeFindUrl;
 
 public class ObjectQuery extends Query {
@@ -32,7 +34,7 @@ public class ObjectQuery extends Query {
 
     @Override
     protected Object doGetEsQueryDsl() {
-        applySiteFilters(SearchMode.OBJECT_SEARCH);
+        applySiteFilters(queryTree, SearchMode.OBJECT_SEARCH);
         queryTree.applyObjectFilter(object.iri());
 
         List<String> rulingTypes = queryTree.collectRulingTypes(whelk.getJsonld());
@@ -72,7 +74,7 @@ public class ObjectQuery extends Query {
                     int count = counts.get(p);
 
                     if (count > 0) {
-                        Map<String, String> params = queryParams.getNonQueryParamsNoOffset();
+                        Map<String, String> params = queryParams.getCustomParamsMap(List.of(SORT, OBJECT));
                         params.put(PREDICATES, p);
                         result.add(Map.of(
                                 "totalItems", count,
@@ -87,14 +89,14 @@ public class ObjectQuery extends Query {
     }
 
     protected Map<String, Object> getPAggQuery(List<String> rulingTypes) {
-        return buildPAggQuery(object, curatedPredicates, whelk.getJsonld(), rulingTypes, esSettings.mappings);
+        return buildPAggQuery(object, curatedPredicates, whelk.getJsonld(), rulingTypes, esSettings);
     }
 
     private static Map<String, Object> buildPAggQuery(Link object,
                                                       List<Property> curatedPredicates,
                                                       JsonLd jsonLd,
                                                       Collection<String> rulingTypes,
-                                                      EsMappings esMappings)
+                                                      ESSettings esSettings)
     {
         Map<String, Object> query = new LinkedHashMap<>();
 
@@ -104,7 +106,7 @@ public class ObjectQuery extends Query {
                         Property::name,
                         p -> new PathValue(p, Operator.EQUALS, object)
                                 .expand(jsonLd, rulingTypes.isEmpty() ? p.domain() : rulingTypes)
-                                .toEs(esMappings, List.of()))
+                                .toEs(esSettings))
                 );
 
         if (!filters.isEmpty()) {

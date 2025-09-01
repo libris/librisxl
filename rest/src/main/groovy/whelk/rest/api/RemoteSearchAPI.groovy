@@ -1,8 +1,9 @@
 package whelk.rest.api
 
 import groovy.util.logging.Log4j2 as Log
-import groovy.util.slurpersupport.GPathResult
 import groovy.xml.StreamingMarkupBuilder
+import groovy.xml.XmlSlurper
+import groovy.xml.slurpersupport.GPathResult
 import se.kb.libris.util.marc.Field
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.MarcXmlRecordReader

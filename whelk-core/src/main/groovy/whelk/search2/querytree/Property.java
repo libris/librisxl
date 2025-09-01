@@ -18,13 +18,13 @@ import static whelk.JsonLd.Rdfs.*;
 public non-sealed class Property implements Subpath {
     private final String name;
     private final Map<String, Object> definition;
-    private String mappedKey;
+    private Key.RecognizedKey mappedKey;
 
     private List<String> domain;
     private List<String> range;
     private String inverseOf;
 
-    public boolean isVocabTerm;
+    private boolean isVocabTerm;
 
     public record Restriction(Property property, Value value) {
     }
@@ -32,7 +32,7 @@ public non-sealed class Property implements Subpath {
     private List<Restriction> restrictions;
     private List<Property> propertyChain;
 
-    public Property(String name, JsonLd jsonLd, String mappedKey) {
+    public Property(String name, JsonLd jsonLd, Key.RecognizedKey mappedKey) {
         this(name, jsonLd);
         this.mappedKey = mappedKey;
     }
@@ -52,7 +52,7 @@ public non-sealed class Property implements Subpath {
     public Property(String name, Map<String, Object> definition, String mappedKey) {
         this.name = name;
         this.definition = definition;
-        this.mappedKey = mappedKey;
+        this.mappedKey = new Key.RecognizedKey(mappedKey);
     }
 
     private Property(Map<String, Object> anonymousPropertyDef, JsonLd jsonLd) {
@@ -86,8 +86,8 @@ public non-sealed class Property implements Subpath {
     }
 
     @Override
-    public Key key() {
-        return new Key.RecognizedKey(mappedKey != null ? mappedKey : name);
+    public String queryForm() {
+        return mappedKey != null ? mappedKey.value() : name;
     }
 
     @Override
@@ -108,8 +108,21 @@ public non-sealed class Property implements Subpath {
         return isVocabTerm;
     }
 
+    public boolean isPlatformTerm() {
+        return ((List<?>) asList(definition.get("category"))).stream()
+                .anyMatch(c -> Map.of(JsonLd.ID_KEY, "https://id.kb.se/vocab/platform").equals(c));
+    }
+
+    public boolean isXsdDate() {
+        return range.contains("xsd:dateTime") || range.contains("xsd:date");
+    }
+
     public boolean isObjectProperty() {
         return ((List<?>) asList(definition.get(TYPE_KEY))).stream().anyMatch(OBJECT_PROPERTY::equals);
+    }
+
+    public boolean isDatatypeProperty() {
+        return ((List<?>) asList(definition.get(TYPE_KEY))).stream().anyMatch(DATATYPE_PROPERTY::equals);
     }
 
     public boolean hasDomainAdminMetadata(JsonLd jsonLd) {

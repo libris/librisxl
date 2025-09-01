@@ -9,6 +9,9 @@ sourceSets {
     main {
         java { srcDirs = [] }
         groovy { srcDirs = ['src/main/java', 'src/main/groovy'] }
+        processResources {
+            from("$rootDir/librisxl-tools/elasticsearch/libris_search_boost.json")
+        }
     }
     test {
         groovy { srcDir 'src/test/groovy/' }
@@ -87,7 +90,7 @@ dependencies {
     implementation "io.github.resilience4j:resilience4j-circuitbreaker:${resilience4jVersion}"
     implementation "io.github.resilience4j:resilience4j-prometheus:${resilience4jVersion}"
     implementation "io.github.resilience4j:resilience4j-retry:${resilience4jVersion}"
-    implementation "org.codehaus.groovy:groovy-all:${groovyVersion}"
+    implementation "org.apache.groovy:groovy-all:${groovyVersion}"
     implementation 'com.damnhandy:handy-uri-templates:2.0.4'
     implementation 'com.zaxxer:HikariCP:4.0.3'
     implementation 'commons-codec:commons-codec:1.7'
@@ -96,10 +99,10 @@ dependencies {
     implementation "org.apache.httpcomponents:httpclient:${httpComponentsClientVersion}"
     implementation "org.apache.httpcomponents:httpcore:${httpComponentsCoreVersion}"
     api 'org.apache.jena:apache-jena-libs:3.0.1'
-    api "org.codehaus.groovy:groovy-json:${groovyVersion}"
-    api "org.codehaus.groovy:groovy-xml:${groovyVersion}"
-    api "org.codehaus.groovy:groovy-yaml:${groovyVersion}"
-    api "org.codehaus.groovy:groovy:${groovyVersion}"
+    api "org.apache.groovy:groovy-json:${groovyVersion}"
+    api "org.apache.groovy:groovy-xml:${groovyVersion}"
+    api "org.apache.groovy:groovy-yaml:${groovyVersion}"
+    api "org.apache.groovy:groovy:${groovyVersion}"
     api 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
     implementation 'xerces:xercesImpl:2.11.0' //KP
 

@@ -13,12 +13,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static whelk.EmmServlet.AS2_CONTENT_TYPE;
@@ -71,6 +66,9 @@ public class EmmChangeSet {
             activityInStream.put("object", activityObject);
             activityObject.put("id", activityInList.uri);
             activityObject.put("type", ld.prependVocabPrefix(activityInList.entityType));
+            if (activityInList.library != null) {
+                activityObject.put("kbv:heldBy", Map.of("@id", activityInList.library));
+            }
             activityObject.put("updated", ZonedDateTime.ofInstant(activityInList.modificationTime.toInstant(), ZoneOffset.UTC).toString());
             orderedItems.add(activityInStream);
         }
@@ -99,7 +97,8 @@ public class EmmChangeSet {
                         "  GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}'))," +
                         "  deleted," +
                         "  created," +
-                        "  data#>>'{@graph,1,@type}'" +
+                        "  data#>>'{@graph,1,@type}', " +
+                        "  data#>>'{@graph,1,heldBy,@id}'" + // In case of holding records, also get which library it is for
                         " FROM" +
                         "  lddb__versions" +
                         " WHERE GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) <= ? " +
@@ -115,7 +114,8 @@ public class EmmChangeSet {
                         boolean deleted = resultSet.getBoolean(3);
                         Timestamp creationTime = resultSet.getTimestamp(4);
                         String type = resultSet.getString(5);
-                        result.add(new EmmActivity(uri, type, creationTime, modificationTime, deleted));
+                        String library = resultSet.getString(6);
+                        result.add(new EmmActivity(uri, type, creationTime, modificationTime, deleted, library));
                         if (modificationTime.before(earliestSeenTimeStamp))
                             earliestSeenTimeStamp = modificationTime;
                     }
@@ -129,7 +129,8 @@ public class EmmChangeSet {
                         "  GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}'))," +
                         "  deleted," +
                         "  created," +
-                        "  data#>>'{@graph,1,@type}'" +
+                        "  data#>>'{@graph,1,@type}', " +
+                        "  data#>>'{@graph,1,heldBy,@id}'" + // In case of holding records, also get which library it is for
                         " FROM lddb__versions WHERE GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) = ?";
                 PreparedStatement preparedStatement = connection.prepareStatement(sql);
                 preparedStatement.setTimestamp(1, untilTimeStamp);
@@ -140,7 +141,8 @@ public class EmmChangeSet {
                         boolean deleted = resultSet.getBoolean(3);
                         Timestamp creationTime = resultSet.getTimestamp(4);
                         String type = resultSet.getString(5);
-                        result.add(new EmmActivity(uri, type, creationTime, modificationTime, deleted));
+                        String library = resultSet.getString(6);
+                        result.add(new EmmActivity(uri, type, creationTime, modificationTime, deleted, library));
                     }
                 }
             }

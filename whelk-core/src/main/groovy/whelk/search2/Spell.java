@@ -39,7 +39,7 @@ public class Spell {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("label", s.text());
             m.put("labelHtml", s.highlighted());
-            m.put("view", Map.of(JsonLd.ID_KEY, QueryUtil.makeFindUrlNoOffset(qt.replaceTopLevelFreeText(s.text()), queryParams)));
+            m.put("view", Map.of(JsonLd.ID_KEY, QueryUtil.makeViewFindUrl(qt.replaceSimpleFreeText(s.text()), queryParams)));
             suggestions.add(m);
         }
         return suggestions;

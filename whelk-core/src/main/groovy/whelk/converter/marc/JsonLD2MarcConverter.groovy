@@ -20,7 +20,9 @@ class JsonLD2MarcConverter implements FormatConverter {
 
     Map convert(Map data, String id) {
         def result = marcFrameConverter.runRevert(data)
-        log.trace("Created frame: $result")
+        if (log.isTraceEnabled()) {
+            log.trace("Created frame: $result")
+        }
         return result
     }
 }

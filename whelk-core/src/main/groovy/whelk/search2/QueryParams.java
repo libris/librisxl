@@ -3,7 +3,6 @@ package whelk.search2;
 import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -14,7 +13,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class QueryParams {
-    private final static int DEFAULT_LIMIT = 200;
+    private final static int DEFAULT_LIMIT = 20;
     private final static int MAX_LIMIT = 4000;
     private final static int DEFAULT_OFFSET = 0;
 
@@ -27,15 +26,13 @@ public class QueryParams {
         public static final String SPELL = "_spell";
         public static final String OBJECT = "_o";
         public static final String PREDICATES = "_p";
-        public static final String EXTRA = "_x";
         public static final String DEBUG = "_debug";
         public static final String APP_CONFIG = "_appConfig";
-        public static final String BOOST = "_boost";
         public static final String STATS = "_stats";
         public static final String ALIAS = "_alias-";
-        public static final String FN_SCORE = "_fnScore";
-        // Temporary param for experimenting
-        public static final String PHRASE_BOOST_DIVISOR = "_phraseBoostDivisor";
+        public static final String SUGGEST = "_suggest";
+        public static final String CURSOR = "cursor";
+        public static final String BOOST = "_boost";
     }
 
     public static class Debug {
@@ -48,97 +45,109 @@ public class QueryParams {
     public final Sort sortBy;
     public final String object;
     public final List<String> predicates;
-    public final String mode;
     public final List<String> debug;
     public final String lens;
     public final Spell spell;
     public final String computedLabelLocale;
-    public final List<String> boostFields;
-    public final List<EsBoost.ScoreFunction> esScoreFunctions;
     public final Map<String, String[]> aliased;
+    public final int cursor;
+    public final ESSettings.Boost boost;
 
     public final String q;
 
     public final boolean skipStats;
-
-    private Map<String, String> paramsMap;
+    public final boolean suggest;
 
     public QueryParams(Map<String, String[]> apiParameters) throws InvalidQueryException {
         this.sortBy = Sort.fromString(getOptionalSingleNonEmpty(ApiParams.SORT, apiParameters).orElse(""));
         this.object = getOptionalSingleNonEmpty(ApiParams.OBJECT, apiParameters).orElse(null);
         this.predicates = getMultiple(ApiParams.PREDICATES, apiParameters);
-        this.mode = getOptionalSingleNonEmpty(ApiParams.EXTRA, apiParameters).orElse(null);
         this.debug = getMultiple(ApiParams.DEBUG, apiParameters);
         this.limit = getLimit(apiParameters);
         this.offset = getOffset(apiParameters);
         this.lens = getOptionalSingleNonEmpty(ApiParams.LENS, apiParameters).orElse("cards");
         this.spell = new Spell(getOptionalSingleNonEmpty(ApiParams.SPELL, apiParameters).orElse(""));
         this.computedLabelLocale = getOptionalSingleNonEmpty(JsonLd.Platform.COMPUTED_LABEL, apiParameters).orElse(null);
-//        this.boostFields = getMultiple(ApiParams.BOOST, apiParameters);
-        this.boostFields = getBoostFields(apiParameters); // Use this only temporarily for experimenting
         this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse("");
-        this.skipStats = getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
-        this.esScoreFunctions = getEsScoreFunctions(apiParameters);
+        this.suggest = getOptionalSingle(ApiParams.SUGGEST, apiParameters).map("true"::equalsIgnoreCase).isPresent();
+        this.cursor = getCursor(apiParameters);
+        this.skipStats = suggest || getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
         this.aliased = getAliased(apiParameters);
+        this.boost = getOptionalSingle(ApiParams.BOOST, apiParameters).map(ESSettings::loadBoostSettings).orElse(null);
     }
 
-    public Map<String, String> getNonQueryParamsNoOffset() {
-        Map<String, String> params = getNonQueryParams();
-        params.remove(ApiParams.OFFSET);
-        return params;
+    public Map<String, String> getFullParamsMap() {
+        return getParamsMap(List.of(ApiParams.QUERY,
+                ApiParams.SORT,
+                ApiParams.OFFSET,
+                ApiParams.LIMIT,
+                ApiParams.LENS,
+                ApiParams.SPELL,
+                ApiParams.OBJECT,
+                ApiParams.DEBUG,
+                ApiParams.STATS,
+                JsonLd.Platform.COMPUTED_LABEL));
     }
 
-    public Map<String, String> getNonQueryParams() {
-        var params = getParamsMap();
-        params.remove(ApiParams.QUERY);
-        return params;
+    public Map<String, String> getCustomParamsMap(List<String> apiParams) {
+        return getParamsMap(apiParams);
     }
 
-    private Map<String, String> getParamsMap() {
-        if (paramsMap == null) {
-            Map<String, String> params = new LinkedHashMap<>();
+    private Map<String, String> getParamsMap(List<String> apiParams) {
+        Map<String, String> params = new LinkedHashMap<>();
 
-            if (!q.isEmpty()) {
-                params.put(ApiParams.QUERY, q);
+        for (String param : apiParams) {
+            switch (param) {
+                case ApiParams.QUERY -> {
+                    if (!q.isEmpty()) {
+                        params.put(ApiParams.QUERY, q);
+                    }
+                }
+                case ApiParams.SORT -> {
+                    var sort = sortBy.asString();
+                    if (!sort.isEmpty()) {
+                        params.put(ApiParams.SORT, sort);
+                    }
+                }
+                case ApiParams.OFFSET -> {
+                    if (offset > 0) {
+                        params.put(ApiParams.OFFSET, "" + offset);
+                    }
+                }
+                case ApiParams.LIMIT -> params.put(ApiParams.LIMIT, "" + limit);
+                case ApiParams.SPELL -> {
+                    var spellP = spell.asString();
+                    if (!spellP.isEmpty()) {
+                        params.put(ApiParams.SPELL, spellP);
+                    }
+                }
+                case ApiParams.OBJECT -> {
+                    if (object != null) {
+                        params.put(ApiParams.OBJECT, object);
+                    }
+                }
+                case ApiParams.PREDICATES -> {
+                    if (!predicates.isEmpty()) {
+                        params.put(ApiParams.PREDICATES, String.join(",", predicates));
+                    }
+                }
+                case ApiParams.DEBUG -> {
+                    if (!debug.isEmpty()) {
+                        params.put(ApiParams.DEBUG, String.join(",", debug));
+                    }
+                }
+                case ApiParams.STATS -> {
+                    if (skipStats && !suggest) {
+                        params.put(ApiParams.STATS, "false");
+                    }
+                }
             }
-            if (offset > 0) {
-                params.put(ApiParams.OFFSET, "" + offset);
-            }
-            params.put(ApiParams.LIMIT, "" + limit);
-            if (object != null) {
-                params.put(ApiParams.OBJECT, object);
-            }
-            if (!predicates.isEmpty()) {
-                params.put(ApiParams.PREDICATES, String.join(",", predicates));
-            }
-            if (mode != null) {
-                params.put(ApiParams.EXTRA, mode);
-            }
-            var spellP = spell.asString();
-            if (!spellP.isEmpty()) {
-                params.put(ApiParams.SPELL, spellP);
-            }
-            if (computedLabelLocale != null) {
+            if (param.equals(JsonLd.Platform.COMPUTED_LABEL) && computedLabelLocale != null) {
                 params.put(JsonLd.Platform.COMPUTED_LABEL, computedLabelLocale);
             }
-            var sort = sortBy.asString();
-            if (!sort.isEmpty()) {
-                params.put(ApiParams.SORT, sort);
-            }
-            if (!debug.isEmpty()) {
-                params.put(ApiParams.DEBUG, String.join(",", debug));
-            }
-            if (!boostFields.isEmpty()) {
-                params.put(ApiParams.BOOST, String.join(",", boostFields));
-            }
-            if (skipStats) {
-                params.put(ApiParams.STATS, "false");
-            }
-
-            this.paramsMap = params;
         }
 
-        return new LinkedHashMap<>(paramsMap);
+        return params;
     }
 
     private static Optional<String> getOptionalSingleNonEmpty(String name, Map<String, String[]> queryParameters) {
@@ -194,50 +203,17 @@ public class QueryParams {
         return offset;
     }
 
-    private static int parseInt(String s, int defaultTo) {
+    private int getCursor(Map<String, String[]> queryParameters) {
+        return getOptionalSingleNonEmpty(ApiParams.CURSOR, queryParameters)
+                .map(x -> parseInt(x, -1))
+                .orElse(-1);
+    }
+
+    private static int parseInt(String s, Integer defaultTo) {
         try {
             return Integer.parseInt(s);
         } catch (NumberFormatException ignored) {
             return defaultTo;
         }
-    }
-
-    private List<EsBoost.ScoreFunction> getEsScoreFunctions(Map<String, String[]> queryParameters) {
-        List<EsBoost.ScoreFunction> scoreFunctions = new ArrayList<>();
-        try {
-            getMultiple(ApiParams.FN_SCORE, queryParameters).stream()
-                    .map(s -> s.split(";"))
-                    .forEach(fieldConfig -> {
-                        String fnType = fieldConfig[0];
-                        if (fnType.equalsIgnoreCase("fvf")) {
-                            String field = fieldConfig[1];
-                            float factor = Float.parseFloat(fieldConfig[2]);
-                            String modifier = fieldConfig[3];
-                            float missing = Float.parseFloat(fieldConfig[4]);
-                            float weight = Float.parseFloat(fieldConfig[5]);
-                            scoreFunctions.add(new EsBoost.FieldValueFactor(field, factor, modifier, missing, weight));
-                        }
-                        if (fnType.equalsIgnoreCase("mfv")) {
-                            String field = fieldConfig[1];
-                            String value = fieldConfig[2];
-                            float boost = Float.parseFloat(fieldConfig[3]);
-                            scoreFunctions.add(new EsBoost.MatchingFieldValue(field, value, boost));
-                        }
-                    });
-        } catch (Exception ignored) {
-        }
-        return scoreFunctions;
-    }
-
-    private List<String> getBoostFields(Map<String, String[]> queryParameters) {
-        List<String> boostFields = getMultiple(ApiParams.BOOST, queryParameters);
-        Optional<String> phraseBoostDivisor = getOptionalSingle(ApiParams.PHRASE_BOOST_DIVISOR, queryParameters)
-                .map(s -> ApiParams.PHRASE_BOOST_DIVISOR + "^" + s);
-        if (phraseBoostDivisor.isPresent()) {
-            return new ArrayList<>(boostFields.isEmpty() ? EsBoost.BOOST_FIELDS : boostFields) {{
-                add(phraseBoostDivisor.get());
-            }};
-        }
-        return boostFields;
     }
 }

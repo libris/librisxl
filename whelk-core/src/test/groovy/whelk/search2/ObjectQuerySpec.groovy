@@ -8,12 +8,12 @@ import whelk.search2.querytree.TestData
 
 class ObjectQuerySpec extends Specification {
     JsonLd jsonLd = TestData.getJsonLd()
-    EsMappings esMappings = TestData.getEsMappings()
+    ESSettings esMappings = new ESSettings(TestData.getEsMappings(), new ESSettings.Boost([:]))
 
     def "build agg query with curated predicates"() {
         given:
         Link object = new Link("https://libris.kb.se/fcrtpljz1qp2bdv#it")
-        List<Property> predicates = ['p2', 'p6'].collect { new Property(it, jsonLd) }
+        List<Property> predicates = ['p4', 'p6'].collect { new Property(it, jsonLd) }
         Map aggQuery = ObjectQuery.buildPAggQuery(object, predicates, jsonLd, List.of(), esMappings)
 
         expect:
@@ -21,11 +21,11 @@ class ObjectQuerySpec extends Specification {
                 "_p": [
                         "filters": [
                                 "filters": [
-                                        "p2": [
+                                        "p4": [
                                                 "bool": [
                                                         "filter": [
                                                                 "term": [
-                                                                        "p2": "https://libris.kb.se/fcrtpljz1qp2bdv#it"
+                                                                        "p4.@id": "https://libris.kb.se/fcrtpljz1qp2bdv#it"
                                                                 ]
                                                         ]
                                                 ]
