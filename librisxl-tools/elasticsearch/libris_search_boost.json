@@ -2,7 +2,7 @@
   "field_boost": {
     "fields": [
       {
-        "name": "_librisId",
+        "name": "_id",
         "boost": 400
       },
       {

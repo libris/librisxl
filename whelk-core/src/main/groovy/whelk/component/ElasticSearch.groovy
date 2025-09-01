@@ -493,8 +493,8 @@ class ElasticSearch {
             log.error(e, e)
         }
 
-        searchCard['_librisId'] = document.getRecordIdentifiers()
-                .collect { stripHash(stripNamespace(it)) }
+        searchCard['_id'] = document.getRecordIdentifiers()
+                .collect { stripHash(lastPathSegment(it)) }
                 .plus(whelk.fresnelUtil.fslSelect(framedFull, "meta/*/identifiedBy/LibrisIIINumber/value") as Collection<String>)
 
         DocumentUtil.traverse(searchCard) { value, path ->
@@ -600,7 +600,7 @@ class ElasticSearch {
         }
     }
 
-    private static stripNamespace(String uri) {
+    private static lastPathSegment(String uri) {
         uri.contains('/') ? uri.substring(uri.lastIndexOf('/') + 1) : uri
     }
 
