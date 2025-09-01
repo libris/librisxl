@@ -493,9 +493,10 @@ class ElasticSearch {
             log.error(e, e)
         }
 
-        searchCard['_id'] = document.getRecordIdentifiers()
+        searchCard['_id'] = (thingIds + document.getRecordIdentifiers())
                 .collect { stripHash(lastPathSegment(it)) }
-                .plus(whelk.fresnelUtil.fslSelect(framedFull, "meta/*/identifiedBy/LibrisIIINumber/value") as Collection<String>)
+                .unique()
+                .plus(whelk.fresnelUtil.fslSelect(framedFull, "meta/*/identifiedBy/*/value") as Collection<String>)
 
         DocumentUtil.traverse(searchCard) { value, path ->
             if (path && SEARCH_STRINGS.contains(path.last())) {
