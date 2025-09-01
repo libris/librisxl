@@ -195,6 +195,10 @@ public class FresnelUtil {
         });
     }
 
+    public List<?> fslSelect(Map<?, ?> thing, String fslSelector) {
+        return new FslPath(fslSelector).getValues(thing);
+    }
+
     private Object applyLens(Object value, LensGroupName lensGroupName, LangCode selectedLang) {
         return applyLens(value, lensGroupName, Options.DEFAULT, selectedLang);
     }

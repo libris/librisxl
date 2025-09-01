@@ -493,6 +493,10 @@ class ElasticSearch {
             log.error(e, e)
         }
 
+        searchCard['_librisId'] = document.getRecordIdentifiers()
+                .collect { stripHash(stripNamespace(it)) }
+                .plus(whelk.fresnelUtil.fslSelect(framedFull, "meta/*/identifiedBy/LibrisIIINumber/value") as Collection<String>)
+
         DocumentUtil.traverse(searchCard) { value, path ->
             if (path && SEARCH_STRINGS.contains(path.last())) {
                 // TODO: replace with elastic ICU Analysis plugin?
@@ -596,8 +600,12 @@ class ElasticSearch {
         }
     }
 
+    private static stripNamespace(String uri) {
+        uri.contains('/') ? uri.substring(uri.lastIndexOf('/') + 1) : uri
+    }
+
     private static String stripHash(String s) {
-        s.contains('#') ?s .substring(0, s.indexOf('#')) : s
+        s.contains('#') ? s.substring(0, s.indexOf('#')) : s
     }
 
     private static void addIdentifierForms(

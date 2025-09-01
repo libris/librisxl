@@ -962,7 +962,6 @@ class Document {
 
         Document doc = clone()
         doc.set(recordIdPath, get(recordIdPath) + "#work-record")
-        doc.get(recordPath).remove(JsonLd.JSONLD_ALT_ID_KEY)
 
         return doc
     }
