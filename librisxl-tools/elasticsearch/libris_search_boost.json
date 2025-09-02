@@ -2,6 +2,10 @@
   "field_boost": {
     "fields": [
       {
+        "name": "_ids",
+        "boost": 400
+      },
+      {
         "name": "_topStr",
         "boost": 400,
         "script_score": {
