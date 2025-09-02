@@ -493,7 +493,7 @@ class ElasticSearch {
             log.error(e, e)
         }
 
-        searchCard['_id'] = (thingIds + document.getRecordIdentifiers())
+        searchCard['_ids'] = (thingIds + document.getRecordIdentifiers())
                 .collect { stripHash(lastPathSegment(it)) }
                 .unique()
                 .plus(whelk.fresnelUtil.fslSelect(framedFull, "meta/*/identifiedBy/*/value") as Collection<String>)
