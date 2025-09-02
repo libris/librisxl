@@ -211,10 +211,9 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
                 }
             });
 
-            String lengthNormMultiplier = "length normalizer".equals(scriptScore.name()) && isQuoted(queryString)
-                    ? queryString.split("\\s+").length + " * "
-                    : "";
-            String function = lengthNormMultiplier + scriptScore.function();
+            int qNumTokens = queryString.split("\\s+").length;
+            int lengthNormMultiplier = isQuoted(queryString) ? queryString.split("\\s+").length : 1;
+            String function = scriptScore.function();
             String source = scriptScore.applyIf() == null
                     ? function
                     : scriptScore.applyIf() + " ? " + function + " : _score";
@@ -222,7 +221,12 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
             Map<String, Object> scriptScoreQuery = Map.of(
                     "script_score", Map.of(
                             "query", buildSimpleQuery(queryMode, queryString, boostSettings, boostFields),
-                            "script", Map.of("source", source)));
+                            "script", Map.of(
+                                    "source", source,
+                                    "params", Map.of(
+                                            "multiplier", lengthNormMultiplier,
+                                            "q_num_tokens", qNumTokens
+                                    ))));
 
             queries.add(scriptScoreQuery);
         });

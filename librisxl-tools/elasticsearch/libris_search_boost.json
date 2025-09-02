@@ -10,8 +10,8 @@
         "boost": 400,
         "script_score": {
           "name": "length normalizer",
-          "function": "_score / doc['_topStr.length'].value",
-          "apply_if": "doc['_topStr.length'].size() > 0 && doc['_topStr.length'].value > 0"
+          "function": "params['multiplier'] * _score / Math.max(doc['_topStr.length'].value, params['q_num_tokens'])",
+          "apply_if": "doc['_topStr.length'].size() > 0"
         }
       },
       {
