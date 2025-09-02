@@ -96,6 +96,10 @@ public class ESSettings {
                     public boolean isEmpty() {
                         return function == null;
                     }
+
+                    public String source() {
+                        return applyIf == null ? function : applyIf + " ? " + function + " : _score";
+                    }
                 }
             }
 

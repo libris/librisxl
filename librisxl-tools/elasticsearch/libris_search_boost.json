@@ -9,7 +9,7 @@
         "name": "_topStr",
         "boost": 400,
         "script_score": {
-          "name": "length normalizer",
+          "name": "length_normalizer",
           "function": "params['multiplier'] * _score / Math.max(doc['_topStr.length'].value, params['q_num_tokens'])",
           "apply_if": "doc['_topStr.length'].size() > 0"
         }

@@ -211,22 +211,20 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
                 }
             });
 
-            int qNumTokens = queryString.split("\\s+").length;
-            int lengthNormMultiplier = isQuoted(queryString) ? queryString.split("\\s+").length : 1;
-            String function = scriptScore.function();
-            String source = scriptScore.applyIf() == null
-                    ? function
-                    : scriptScore.applyIf() + " ? " + function + " : _score";
+            var script = new HashMap<>();
+            script.put("source", scriptScore.source());
+            if ("length_normalizer".equals(scriptScore.name())) {
+                int qNumTokens = queryString.split("\\s+").length;
+                int lengthNormMultiplier = isQuoted(queryString) ? queryString.split("\\s+").length : 1;
+                var params = Map.of("multiplier", lengthNormMultiplier,
+                        "q_num_tokens", qNumTokens);
+                script.put("params", params);
+            }
 
             Map<String, Object> scriptScoreQuery = Map.of(
                     "script_score", Map.of(
                             "query", buildSimpleQuery(queryMode, queryString, boostSettings, boostFields),
-                            "script", Map.of(
-                                    "source", source,
-                                    "params", Map.of(
-                                            "multiplier", lengthNormMultiplier,
-                                            "q_num_tokens", qNumTokens
-                                    ))));
+                            "script", script));
 
             queries.add(scriptScoreQuery);
         });
