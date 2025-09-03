@@ -215,7 +215,7 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
             script.put("source", scriptScore.source());
             if ("length_normalizer".equals(scriptScore.name())) {
                 int qNumTokens = queryString.split("\\s+").length;
-                int lengthNormMultiplier = isQuoted(queryString) ? queryString.split("\\s+").length : 1;
+                int lengthNormMultiplier = isQuoted(queryString) ? qNumTokens : 1;
                 var params = Map.of("multiplier", lengthNormMultiplier,
                         "q_num_tokens", qNumTokens);
                 script.put("params", params);
