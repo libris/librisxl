@@ -214,7 +214,7 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
             var script = new HashMap<>();
             script.put("source", scriptScore.source());
             if ("length_normalizer".equals(scriptScore.name())) {
-                int qNumTokens = queryString.split("[ -]+").length;
+                int qNumTokens = queryString.split("[\\s-]+").length;
                 int lengthNormMultiplier = isQuoted(queryString) ? qNumTokens : 1;
                 var params = Map.of("multiplier", lengthNormMultiplier,
                         "q_num_tokens", qNumTokens);
