@@ -24,6 +24,8 @@ class Embellisher {
     Function<Iterable<String>, Iterable<Map>> getCards
     BiFunction<String, List<String>, Set<String>> getByReverseRelation
 
+    Function<String, Set<String>> getAllBroaderIds
+
     Embellisher(
             JsonLd jsonld,
             Function<Iterable<String>, Iterable<Map>> getDocs,
@@ -55,6 +57,10 @@ class Embellisher {
         this.followInverse = followInverse
     }
 
+    void doFollowCategoryBroader(Function<String, Set<String>> getAllBroaderIds) {
+        this.getAllBroaderIds = getAllBroaderIds
+    }
+
     private List getEmbellishData(Document document) {
         if (document.getThingIdentifiers().isEmpty()) {
             return []
@@ -70,6 +76,13 @@ class Embellisher {
 
         List result = docs.collect()
         Set<Link> links = getAllLinks(start + docs)
+
+        if (this.getAllBroaderIds) {
+            links.findAll { it.property() == "category" }.forEach {
+                links.addAll(getAllBroaderIds.apply(it.iri).collect{new Link(iri: it, relation: "___") })
+            }
+        }
+
         Iterable<Map> previousLevelDocs = start + docs
         String previousLens = 'full'
 

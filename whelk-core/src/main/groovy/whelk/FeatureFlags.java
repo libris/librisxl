@@ -13,9 +13,10 @@ public class FeatureFlags {
     
     public enum Flag {
         INDEX_BLANK_WORKS,
+        EXPERIMENTAL_CATEGORY_COLLECTION
     }
 
-    private Set<Flag> enabled = new HashSet<>();
+    private final Set<Flag> enabled = new HashSet<>();
     
     public FeatureFlags(Properties whelkConfig) {
         Arrays.stream(whelkConfig.getProperty("features", "").split(","))
@@ -24,9 +25,9 @@ public class FeatureFlags {
                 .forEach(flag -> {
                     try {
                         enabled.add(Flag.valueOf(flag));
-                        log.info(String.format("Enabled feature: %s", flag));
+                        log.info("Enabled feature: {}", flag);
                     } catch (IllegalArgumentException ignored) {
-                        log.warn(String.format("Unknown feature flag, ignoring: %s", flag));
+                        log.warn("Unknown feature flag, ignoring: {}", flag);
                     }
                 });
     }

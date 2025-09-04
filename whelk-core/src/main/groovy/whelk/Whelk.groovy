@@ -14,8 +14,8 @@ import whelk.component.SparqlUpdater
 import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.LinkValidationException
 import whelk.exception.StorageCreateFailedException
-import whelk.filter.LanguageLinker
 import whelk.exception.WhelkException
+import whelk.filter.LanguageLinker
 import whelk.filter.LinkFinder
 import whelk.filter.NormalizerChain
 import whelk.meta.WhelkConstants
@@ -29,6 +29,7 @@ import whelk.util.Romanizer
 import java.time.Instant
 import java.time.ZoneId
 
+import static whelk.FeatureFlags.Flag.EXPERIMENTAL_CATEGORY_COLLECTION
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
 
 /**
@@ -616,12 +617,61 @@ class Whelk {
             e.setFollowInverse(false)
         }
 
+        if (features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION)) {
+            e.doFollowCategoryBroader(relations.&followBroader)
+        }
+
         e.embellish(document)
 
-        var ids = DocumentUtil.getAtPath(document.data, ['@graph', 1, 'instanceOf', 'category', '*', '@id'], [])
 
-        for (String id : ids) {
-            println("${id} ${relations.followBroader(id)}")
+        if (features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION)) {
+            var graph = document.data[JsonLd.GRAPH_KEY]
+            var things = DocumentUtil.getAtPath(graph, ['*', JsonLd.GRAPH_KEY, 1], []) as List<Map>
+
+            Map<String, List<String>> inCollectionById = things
+                    .findAll() {it['inCollection']}
+                    .collectEntries{
+                        var id = it[JsonLd.ID_KEY]
+                        var collections = JsonLd
+                                .asList(it['inCollection'])
+                                .collect { ((String) it[JsonLd.ID_KEY]).split('/').last() }
+                        [(id) : collections]
+                    }
+
+            graph.each { n ->
+                if (n[JsonLd.GRAPH_KEY]) {
+                    n = ((List) n[JsonLd.GRAPH_KEY])[1]
+                }
+
+                if (n['category']) {
+                    insertCategoryByCollection(n, inCollectionById)
+                }
+                if (n['instanceOf']?['category']) {
+                    insertCategoryByCollection(n['instanceOf'], inCollectionById)
+                }
+            }
+        }
+    }
+
+    void insertCategoryByCollection(def thing, Map<String, List<String>> inCollectionById) {
+        var ids = DocumentUtil.getAtPath(thing, ['category', '*', JsonLd.ID_KEY], []) as Set<String>
+        ids += ids.collect{ relations.followBroader(it) }.flatten() as Set<String>
+
+        Map<String, Collection<Map<String,String>>> result = [:]
+        for (var categoryId : ids) {
+            inCollectionById[categoryId]?.each {collection ->
+                result
+                        .computeIfAbsent(collection, k -> new HashSet<Map<String,String>>())
+                        .add([(JsonLd.ID_KEY) : categoryId])
+            }
+        }
+
+        result = result.subMap(['find', 'identify'])
+        // FIXME frame() doesn't handle Set, any other place that make the same assumption?
+        result.keySet().each { k -> result[k] = result[k] as List }
+
+        if (!result.isEmpty()) {
+            thing['_categoryByCollection'] = result
         }
     }
 
