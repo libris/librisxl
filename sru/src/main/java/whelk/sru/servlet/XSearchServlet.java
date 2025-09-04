@@ -242,7 +242,10 @@ public class XSearchServlet extends WhelkHttpServlet {
                              boolean include9xx) throws IOException, XMLStreamException {
         res.setCharacterEncoding("UTF-8");
         res.setContentType("text/xml");
-        writeMarcXml(res.getOutputStream(), items, from, to, totalItems, includeHoldings, include9xx);
+        OutputStream out = res.getOutputStream();
+        writeMarcXml(out, items, from, to, totalItems, includeHoldings, include9xx);
+        out.flush();
+        out.close();
     }
 
     private void writeMarcXml(OutputStream o,
@@ -292,12 +295,12 @@ public class XSearchServlet extends WhelkHttpServlet {
         writer.writeEndDocument();
 
         writer.close();
-
     }
 
     private void sendErrorXml(HttpServletResponse res, String errorMsg) throws IOException {
         try {
-            XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(res.getOutputStream());
+            OutputStream out = res.getOutputStream();
+            XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(out);
 
             writer.writeStartElement("xsearch");
             writer.writeAttribute("error", errorMsg );
@@ -305,6 +308,8 @@ public class XSearchServlet extends WhelkHttpServlet {
             writer.writeEndElement();
 
             writer.close();
+            out.flush();
+            out.close();
         } catch (XMLStreamException e) {
             logger.error("Couldn't build xsearch response.", e);
         }
@@ -351,7 +356,10 @@ public class XSearchServlet extends WhelkHttpServlet {
 
         Transformer transformer = transformers.get(format).newTransformer();
 
+        OutputStream out = res.getOutputStream();
         transformer.transform(new StreamSource(i), new StreamResult(res.getOutputStream()));
+        out.flush();
+        out.close();
     }
 
     private Templates loadXslt(String name) throws IOException, TransformerConfigurationException {
