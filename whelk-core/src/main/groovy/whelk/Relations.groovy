@@ -19,6 +19,10 @@ class Relations {
         return followReverse(iri, BROADER_RELATIONS)
     }
 
+    Set<String> followBroader(String iri) {
+        return follow(iri, BROADER_RELATIONS)
+    }
+
     Set<String> getBy(String iri, List<String> relations) {
         Set<String> result = new HashSet<>()
         relations.each { result.addAll(storage.getByRelation(iri, it)) }
@@ -76,6 +80,29 @@ class Relations {
             dependers.removeAll(iris)
             stack.addAll(dependers)
             iris.addAll(dependers)
+        }
+
+        return iris
+    }
+
+    private Set<String> follow(String iri, List<String> relations) {
+        Set<String> iris = []
+        List<String> stack = [iri]
+
+        while (!stack.isEmpty()) {
+            String id = stack.pop()
+
+            Set<String> dependencies = new HashSet<>()
+            for (String relation : relations) {
+                dependencies.addAll(storage.getByRelation(id, relation))
+                if (isSymmetric(relation)) {
+                    dependencies.addAll(storage.getByReverseRelation(id, relation))
+                }
+            }
+
+            dependencies.removeAll(iris)
+            stack.addAll(dependencies)
+            iris.addAll(dependencies)
         }
 
         return iris

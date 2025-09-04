@@ -21,6 +21,7 @@ import whelk.filter.NormalizerChain
 import whelk.meta.WhelkConstants
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
+import whelk.util.DocumentUtil
 import whelk.util.FresnelUtil
 import whelk.util.PropertyLoader
 import whelk.util.Romanizer
@@ -616,6 +617,12 @@ class Whelk {
         }
 
         e.embellish(document)
+
+        var ids = DocumentUtil.getAtPath(document.data, ['@graph', 1, 'instanceOf', 'category', '*', '@id'], [])
+
+        for (String id : ids) {
+            println("${id} ${relations.followBroader(id)}")
+        }
     }
 
     /**
