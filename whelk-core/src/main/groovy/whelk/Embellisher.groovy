@@ -24,7 +24,7 @@ class Embellisher {
     Function<Iterable<String>, Iterable<Map>> getCards
     BiFunction<String, List<String>, Set<String>> getByReverseRelation
 
-    Function<String, Set<String>> getAllBroaderIds
+    Function<String, Set<String>> _getAllBroaderIds
 
     Embellisher(
             JsonLd jsonld,
@@ -57,8 +57,8 @@ class Embellisher {
         this.followInverse = followInverse
     }
 
-    void doFollowCategoryBroader(Function<String, Set<String>> getAllBroaderIds) {
-        this.getAllBroaderIds = getAllBroaderIds
+    void _setShouldFollowCategoryBroader(Function<String, Set<String>> getAllBroaderIds) {
+        this._getAllBroaderIds = getAllBroaderIds
     }
 
     private List getEmbellishData(Document document) {
@@ -76,10 +76,11 @@ class Embellisher {
 
         List result = docs.collect()
         Set<Link> links = getAllLinks(start + docs)
-
-        if (this.getAllBroaderIds) {
+        
+        // EXPERIMENTAL_CATEGORY_COLLECTION
+        if (this._getAllBroaderIds) {
             links.findAll { it.property() == "category" }.forEach {
-                links.addAll(getAllBroaderIds.apply(it.iri).collect{new Link(iri: it, relation: "___") })
+                links.addAll(_getAllBroaderIds.apply(it.iri).collect { new Link(iri: it, relation: "___") })
             }
         }
 

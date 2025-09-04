@@ -618,7 +618,8 @@ class Whelk {
         }
 
         if (features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION)) {
-            e.doFollowCategoryBroader(relations.&followBroader)
+            // Making category + broader integral would have the same effect
+            e._setShouldFollowCategoryBroader(relations.&followBroader)
         }
 
         e.embellish(document)
@@ -632,10 +633,10 @@ class Whelk {
                     .findAll() {it['inCollection']}
                     .collectEntries{
                         var id = it[JsonLd.ID_KEY]
-                        var collections = JsonLd
+                        var collectionSlugs = JsonLd
                                 .asList(it['inCollection'])
                                 .collect { ((String) it[JsonLd.ID_KEY]).split('/').last() }
-                        [(id) : collections]
+                        [(id) : collectionSlugs]
                     }
 
             graph.each { n ->
@@ -667,7 +668,8 @@ class Whelk {
         }
 
         result = result.subMap(['find', 'identify'])
-        // FIXME frame() doesn't handle Set, any other place that make the same assumption?
+
+        // FIXME frame() doesn't handle Set, any other place that makes the same assumption?
         result.keySet().each { k -> result[k] = result[k] as List }
 
         if (!result.isEmpty()) {
