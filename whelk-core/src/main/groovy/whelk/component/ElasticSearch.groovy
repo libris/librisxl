@@ -19,6 +19,7 @@ import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
 
+import static whelk.FeatureFlags.Flag.EXPERIMENTAL_CATEGORY_COLLECTION
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
 import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
@@ -427,6 +428,16 @@ class ElasticSearch {
         }
 
         Set<String> links = whelk.jsonld.expandLinks(document.getExternalRefs()).collect{ it.iri }
+
+        if (whelk.features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION)) {
+            // FIXME workaround for toCard breaking _categoryByCollection
+            // TODO we need these ids in _links / _outerEmbellishments anyway?
+            links += DocumentUtil.getAtPath(copy.data, [JsonLd.GRAPH_KEY, 1, JsonLd.Platform.CATEGORY_BY_COLLECTION, 'find', '*', JsonLd.ID_KEY], [])
+            links += DocumentUtil.getAtPath(copy.data, [JsonLd.GRAPH_KEY, 1, JsonLd.Platform.CATEGORY_BY_COLLECTION, 'identify', '*', JsonLd.ID_KEY], [])
+            links += DocumentUtil.getAtPath(copy.data, [JsonLd.GRAPH_KEY, 1, 'instanceOf', JsonLd.Platform.CATEGORY_BY_COLLECTION, 'find', '*', JsonLd.ID_KEY], [])
+            links += DocumentUtil.getAtPath(copy.data, [JsonLd.GRAPH_KEY, 1, 'instanceOf', JsonLd.Platform.CATEGORY_BY_COLLECTION, 'identify', '*', JsonLd.ID_KEY], [])
+        }
+
         def graph = ((List) copy.data['@graph'])
         int originalSize = document.data['@graph'].size()
         copy.data['@graph'] =
