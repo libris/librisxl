@@ -673,7 +673,7 @@ class Whelk {
         result.keySet().each { k -> result[k] = result[k] as List }
 
         if (!result.isEmpty()) {
-            thing['_categoryByCollection'] = result
+            thing[JsonLd.Platform.CATEGORY_BY_COLLECTION] = result
         }
     }
 
