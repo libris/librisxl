@@ -393,7 +393,7 @@ public class XSearchServlet extends WhelkHttpServlet {
             }
 
             ByteArrayOutputStream o = new ByteArrayOutputStream();
-            var w = new MarcXmlRecordWriter(o);
+            var w = new MarcXmlRecordWriter(o, false);
             w.writeRecord(bibRecord);
             w.close();
             return o.toString(StandardCharsets.UTF_8);
