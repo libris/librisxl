@@ -435,12 +435,12 @@ public class XSearchServlet extends WhelkHttpServlet {
                           int from,
                           int to,
                           int totalItems) {
-        var result = Map.of("xsearch", Map.of(
-                "list", items.stream().map(this::toXsearchJson).toList(),
-                "records", totalItems,
-                "to", to,
-                "from", from
-        ));
+
+        var result = new LinkedHashMap<String, Object>();
+        result.put("from", from);
+        result.put("to", to);
+        result.put("records", totalItems);
+        result.put("list", items.stream().map(this::toXsearchJson).toList());
 
         HttpTools.sendResponse(res, result, "application/json;charset=UTF-8");
     }
