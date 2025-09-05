@@ -67,7 +67,7 @@ configurations.all {
 
 dependencies {
     // KB tools
-    api files('lib/jmarctools-1.3.5.jar')
+    api files('lib/jmarctools-1.3.6.jar')
     api files('lib/isbntools-1.3.jar')
     implementation files('lib/oaij-0.1.jar')
 
