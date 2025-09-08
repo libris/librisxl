@@ -116,6 +116,9 @@ class RomanizerSpec extends Specification {
         // Yo
         'сёрфингист' || 'serfingist'
         'Ё' || 'E'
+        // Yat / Jat'
+        'Нѣсколько' || 'Něskolʹko'
+        'Ѣ' || 'Ě'
     }
 
     def "Russian with KR76"() {
