@@ -1,5 +1,6 @@
 import whelk.Document
 import whelk.component.PostgreSQLComponent.ConflictingHoldException
+import whelk.datatool.util.IdLoader
 import whelk.util.DocumentUtil
 
 import static java.util.Collections.synchronizedSet;
@@ -16,7 +17,7 @@ import static whelk.util.DocumentUtil.traverse
 
 Map targetForm = parameters.get(TARGET_FORM_KEY)
 
-Map<String, Set<String>> nodeIdMappings = collectFormBNodeIdToResourceIds(targetForm, getWhelk())
+Map<String, Map<String, IdLoader.Id>> nodeIdMappings = collectFormBNodeIdToResourceIds(targetForm, getWhelk())
 
 if (nodeIdMappings.size() != 1) {
     // Allow only one id list
@@ -25,7 +26,7 @@ if (nodeIdMappings.size() != 1) {
 
 def varyingNodeId = nodeIdMappings.keySet().find()
 def varyingNodePath = collectFormBNodeIdToPath(targetForm)[varyingNodeId]
-def ids = nodeIdMappings.values().find()
+def ids = nodeIdMappings[varyingNodeId].keySet()
 
 if (varyingNodePath == [] || varyingNodePath == [RECORD_KEY]) {
     // Ids must not apply to thing or record
