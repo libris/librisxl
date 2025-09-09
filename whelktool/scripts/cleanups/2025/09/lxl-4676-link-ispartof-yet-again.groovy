@@ -1,7 +1,8 @@
 /**
  * Replace local isPartOf with link
+*  Based on ../../2025/05/lxl-4645-link-ispartof-redux.groovy
  * Some code borrowed from ../../2020/11/lxl-3379-link-isPartOf.groovy
- * See https://kbse.atlassian.net/browse/LXL-4645
+ * See https://kbse.atlassian.net/browse/LXL-4676
  */
 
 import java.util.regex.Matcher
@@ -16,8 +17,7 @@ skipped = getReportWriter("skipped")
 info = getReportWriter("info")
 def whelk = getWhelk()
 
-selectByIds(new File("titleids").readLines()) { doc ->
-//selectBySqlWhere(where) { doc ->
+selectBySqlWhere(where) { doc ->
     def source_thing = doc.graph[1]
     def _logSkip = { msg -> skipped.println("${doc.doc.getURI()}: ${msg}") }
     def _logInfo = { msg -> info.println("Source: ${doc.doc.getURI()} ${msg}") }
