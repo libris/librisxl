@@ -2,7 +2,9 @@ package whelk.sru.servlet;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.Datafield;
+import se.kb.libris.util.marc.MarcFieldComparator;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.Subfield;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
@@ -47,6 +49,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -60,6 +63,7 @@ import static javax.xml.stream.XMLStreamConstants.CHARACTERS;
 import static javax.xml.stream.XMLStreamConstants.END_ELEMENT;
 import static javax.xml.stream.XMLStreamConstants.START_ELEMENT;
 import static se.kb.libris.export.ExportProfile.addSabTitles;
+import static se.kb.libris.export.ExportProfile.mergeBibMfhd;
 import static whelk.JsonLd.asList;
 import static whelk.util.DocumentUtil.getAtPath;
 
@@ -377,13 +381,21 @@ public class XSearchServlet extends WhelkHttpServlet {
         try {
             MarcRecord bibRecord = MarcXmlRecordReader.fromXml(bibXml);
 
+            ListIterator li = bibRecord.listIterator();
+            while (li.hasNext()) {
+                if (((Field) li.next()).getTag() == "003") {
+                    li.remove();
+                }
+            }
+            bibRecord.addField(bibRecord.createControlfield("003", "SE-LIBR"), MarcFieldComparator.strictSorted);
+
             if (includeHoldings) {
                 List<Document> holdingDocuments = whelk.getAttachedHoldings(bib.getThingIdentifiers());
                 for (Document holding : holdingDocuments) {
                     var holdXml = (String) converter.convert(holding.data, holding.getShortId())
                             .get(JsonLd.NON_JSON_CONTENT_KEY);
                     MarcRecord holdRecord = MarcXmlRecordReader.fromXml(holdXml);
-                    mergeBibHold(bibRecord, holdRecord, holding.getHeldBySigel());
+                    mergeBibMfhd(bibRecord, holding.getHeldBySigel(), holdRecord);
                 }
             }
 
@@ -399,32 +411,6 @@ public class XSearchServlet extends WhelkHttpServlet {
             return o.toString(StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
-    }
-    
-    // xsearch responses only include 852 and 856
-    // not the full "interleaved" format from marc_export, i.e. more 8xx holding fields in the style of 856
-    // (see ExportProfile::mergeBibMfhd)
-    private static void mergeBibHold(MarcRecord bibRecord, MarcRecord holdRecord, String sigel) {
-        for (Datafield f : holdRecord.getDatafields()) {
-            if (f.getTag().equals("852")) {
-                Datafield df = bibRecord.createDatafield(f.getTag());
-                f.getSubfields("b").forEach(df::addSubfield);
-                bibRecord.addField(df);
-            } else if (f.getTag().equals("856")) {
-                Datafield df = bibRecord.createDatafield(f.getTag());
-                df.addSubfield('5', sigel);
-                df.setIndicator(0, f.getIndicator(0));
-                df.setIndicator(1, f.getIndicator(1));
-
-                var i = f.iterator();
-                while (i.hasNext()) {
-                    Subfield sf = i.next();
-                    df.addSubfield(sf.getCode(), sf.getData());
-                }
-
-                bibRecord.addField(df);
-            }
         }
     }
 
