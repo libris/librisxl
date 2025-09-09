@@ -384,9 +384,11 @@ static List isSeeminglySameTitle(String sourceTitle, List targetHasTitle, Map ta
             isMatch = true
         } else {
             def wordDiff = sourceTitleWords - allTargetWords
-            if (wordDiff.size() < 3) {
-                info = "${sourceTitle}\nTarget: ${targetProperUri} ${targetHasTitle}\n${wordDiff.size()} source word(s) not anywhere in whole target record: ${wordDiff}\n\n"
+            def threshold = Math.max(1, (int) Math.ceil(sourceTitleWords.size() * 0.3))
+            if (wordDiff.size() < threshold) {
                 isMatch = true
+            } else {
+                info = "${sourceTitle}\nTarget: ${targetProperUri} ${targetHasTitle}\n${wordDiff.size()} source word(s) not anywhere in whole target record: ${wordDiff}\n\n"
             }
         }
     }
