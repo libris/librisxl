@@ -36,7 +36,7 @@ class CrudUtils {
             'n3': [N3]
     ]
 
-    static Map EXTENSION_BY_MEDIA_TYPE = [:]
+    protected static Map<String, String> EXTENSION_BY_MEDIA_TYPE = [:]
     static {
         ALLOWED_MEDIA_TYPES_BY_EXT.each { ext, mediatypes ->
             if (ext.size() > 0) {
