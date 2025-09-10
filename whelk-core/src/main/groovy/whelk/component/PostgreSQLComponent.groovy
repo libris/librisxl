@@ -725,7 +725,7 @@ class PostgreSQLComponent {
         }
     }
 
-    boolean createDocument(Document doc, String changedIn, String changedBy, String collection, boolean deleted) {
+    boolean createDocument(Document doc, String changedIn, String changedBy, String collection, boolean deleted, boolean handleExceptions) {
         log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
 
         return withDbConnection {
@@ -807,6 +807,9 @@ class PostgreSQLComponent {
                 log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
                 return true
             } catch (Exception e) {
+                if (!handleExceptions) {
+                    throw e;
+                }
                 log.debug("Failed to save document: ${e.message}. Rolling back.")
                 connection.rollback()
                 return false
