@@ -3,10 +3,8 @@ package whelk.sru.servlet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import se.kb.libris.util.marc.Field;
-import se.kb.libris.util.marc.Datafield;
 import se.kb.libris.util.marc.MarcFieldComparator;
 import se.kb.libris.util.marc.MarcRecord;
-import se.kb.libris.util.marc.Subfield;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
 import whelk.Document;
@@ -51,6 +49,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
@@ -381,9 +380,9 @@ public class XSearchServlet extends WhelkHttpServlet {
         try {
             MarcRecord bibRecord = MarcXmlRecordReader.fromXml(bibXml);
 
-            ListIterator li = bibRecord.listIterator();
+            ListIterator<Field> li = bibRecord.listIterator();
             while (li.hasNext()) {
-                if (((Field) li.next()).getTag() == "003") {
+                if (Objects.equals((li.next()).getTag(), "003")) {
                     li.remove();
                 }
             }
