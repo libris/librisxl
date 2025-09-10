@@ -643,7 +643,7 @@ class WhelkTool {
 
         if (!dryRun) {
             var collection = LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld())
-            if (!whelk.createDocument(doc, changedIn, item.changedBy ?: defaultChangedBy, collection, false))
+            if (!whelk.createDocument(doc, changedIn, item.changedBy ?: defaultChangedBy, collection, false, false))
                 throw new WhelkException("Failed to save a new document. See general whelk log for details.")
         }
         createdLog.println(doc.shortId)

@@ -475,7 +475,7 @@ class Whelk {
     /**
      * NEVER use this to _update_ a document. Use storeAtomicUpdate() instead. Using this for new documents is fine.
      */
-    boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted) {
+    boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted, boolean handleExceptions = true) {
         normalize(document)
 
         boolean detectCollisionsOnTypedIDs = false
@@ -485,7 +485,7 @@ class Whelk {
             throw new StorageCreateFailedException(document.getShortId(), "Document considered a duplicate of : " + collidingIDs)
         }
 
-        boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted)
+        boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted, handleExceptions)
         if (success) {
             indexAsyncOrSync {
                 elastic.index(document, this)
