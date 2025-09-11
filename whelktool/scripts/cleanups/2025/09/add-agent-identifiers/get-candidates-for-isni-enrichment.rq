@@ -1,0 +1,76 @@
+prefix : <https://id.kb.se/vocab/>
+
+select ?agent ?name ?given ?lifespan ?alt_name ?alt_given ?id ?idtype ?work_title ?orig_title ?title ?isbn {
+
+  ?agent a :Person ;
+    :nationality ?nat .
+
+  filter isIRI(?agent)
+
+  filter (?nat != <https://id.kb.se/nationality/e-sw--->)
+
+  filter not exists {
+    ?agent :identifiedBy [ a :ISNI ]
+  }
+
+  #filter(?agent = <https://libris.kb.se/4ldlxpl42nj02zbd#it>)
+
+  {
+    ?agent :identifiedBy [ a ?idtype; :value ?id ] .
+  }
+
+  union {
+    ?agent :familyName|:name ?name .
+    optional { ?agent :givenName ?given }
+    optional { ?agent :lifeSpan ?lifespan }
+  }
+
+  union {
+    ?agent :hasVariant ?alt .
+    ?alt :familyName|:name ?alt_name .
+    optional { ?alt :givenName ?alt_given }
+  }
+
+  union
+  {
+    ?work :contribution [ a :PrimaryContribution ; :agent ?agent ] .
+    {
+      {
+          ?work :hasTitle ?worktitlestruct .
+          ?worktitlestruct a :Title ; :mainTitle ?work_maintitle .
+          optional { ?worktitlestruct :subtitle|:titleRemainder ?work_subtitle }
+          bind( if( bound(?work_subtitle),
+                    concat(str(?work_maintitle), " : ", str(?work_subtitle)),
+                    str(?work_maintitle)  )
+                as ?work_title  )
+      }
+    }
+
+    union {
+      optional {
+          ?work :translationOf ?orig .
+          ?orig :hasTitle ?orig_titlestruct .
+          ?orig_titlestruct a :Title ; :mainTitle ?orig_maintitle .
+          optional { ?orig_titlestruct :subtitle|:titleRemainder ?orig_subtitle }
+          bind( if( bound(?orig_subtitle),
+                    concat(str(?orig_maintitle), " : ", str(?orig_subtitle)),
+                    str(?orig_maintitle)  )
+                as ?orig_title  )
+      }
+    }
+
+    union {
+      ?instance :instanceOf ?work ;
+        :identifiedBy [ a :ISBN ; :value ?isbn ] ;
+        :hasTitle ?titlestruct .
+      ?titlestruct a :Title ; :mainTitle ?maintitle .
+      optional { ?titlestruct :subtitle|:titleRemainder ?subtitle }
+      bind( if( bound(?subtitle),
+              concat(str(?maintitle), " : ", str(?subtitle)),
+              str(?maintitle) )
+          as ?title )
+    }
+
+  }
+
+} order by ?agent ?id ?work ?instance
