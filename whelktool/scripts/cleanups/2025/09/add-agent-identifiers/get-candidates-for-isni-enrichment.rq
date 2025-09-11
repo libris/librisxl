@@ -13,8 +13,6 @@ select ?agent ?name ?given ?lifespan ?alt_name ?alt_given ?id ?idtype ?work_titl
     ?agent :identifiedBy [ a :ISNI ]
   }
 
-  #filter(?agent = <https://libris.kb.se/4ldlxpl42nj02zbd#it>)
-
   {
     ?agent :identifiedBy [ a ?idtype; :value ?id ] .
   }
