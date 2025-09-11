@@ -95,8 +95,13 @@ def intersect(a, b, fn) {
 
 enum Match {
     NO,
-    NAME_AND_LIFESPAN,
-    AND_WORK
+    NAME_LIFESPAN,
+    NAME_LIFESPAN_WORK,
+    NO_HITS,
+}
+
+def formatName(Map name) {
+    ((name.familyName ?: "") + ", " + (name.givenName ?: ""))
 }
 
 def map(def agent) {
@@ -122,8 +127,8 @@ def map(def agent) {
     }.each { m ->
         m.match = m.matchingNames.size() > 0 && m.matchingLifeSpans.size() > 0
                 ? m.matchingTitles.size() > 0 || m.matchingIsbns.size()
-                ? Match.AND_WORK
-                : Match.NAME_AND_LIFESPAN
+                ? Match.NAME_LIFESPAN_WORK
+                : Match.NAME_LIFESPAN
                 : Match.NO
     }
 
@@ -146,22 +151,48 @@ var agents = agentsIn.collect { k, v ->
     it.names.size() > 0 && it.lifeSpan
 }
 
+statuses = [:]
+
 for (var agent in agents) {
     try {
         println("")
-        var matches = map(agent)
-        println(agent.names.first())
+        println("-----------------------------------------------------------------")
+        println("")
+        println("${formatName(agent.names.first())} (${agent.lifeSpan})<s")
         println(agent.id)
-        matches.sorted { m1, m2 ->
-            case (m1.match) {
-                case NO -> -1
-                case NAM
-            }
-        }.each {
+        var matches = map(agent)
+        matches.findAll {
+            it.match == Match.NAME_LIFESPAN_WORK
+        } .each {
+            println("${it.match} ${it.c.isniUri} ${it.matchingTitles} ${it.matchingIsbns}")
+        }
+
+        matches.findAll {
+            it.match == Match.NAME_LIFESPAN
+        } .each {
             println("${it.match} ${it.c.isniUri}")
         }
 
-        println("==============================================================")
+        matches.findAll {
+            it.match == Match.NO
+        } .each {
+            var n = asList(it.c.names).size() > 0 ? formatName(it.c.names.first()) : ""
+            println("${it.match} ${it.c.isniUri} ${n} ${it.c.lifeSpans.join(', ')}")
+        }
+
+        var status = matches.isEmpty()
+                ? Match.NO_HITS
+                : (matches.any { it.match == Match.NAME_LIFESPAN_WORK }
+                ? Match.NAME_LIFESPAN_WORK
+                : (matches.any { it.match == Match.NAME_LIFESPAN }
+                ? Match.NAME_LIFESPAN
+                : Match.NO))
+
+        statuses.put(status, statuses.getOrDefault(status, 0) + 1)
+        println(statuses)
+        var tot = statuses.values().sum()
+        var percent = statuses.collectEntries { k, v -> [k, "${String.format('%.0f',((v / tot) * 100.0))}%"]}
+        println(percent)
         sleep(1000)
     }
     catch (Exception e) {
