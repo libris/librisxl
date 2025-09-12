@@ -26,7 +26,6 @@ import whelk.util.http.HttpTools;
 import whelk.util.http.MimeTypes;
 import whelk.util.http.NotFoundException;
 import whelk.util.http.OtherStatusException;
-import whelk.util.http.RedirectException;
 import whelk.util.http.WhelkHttpServlet;
 
 import javax.servlet.http.HttpServletRequest;
