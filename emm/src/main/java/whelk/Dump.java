@@ -332,7 +332,11 @@ public class Dump {
                 res.flushBuffer();
             }
         } catch (Exception e) {
-            logger.info("Error sending dump download: {}", e.getMessage());
+            if (e.getMessage() != null) {
+                logger.info("Error sending dump download: {}", e.getMessage());
+            } else {
+                logger.info("Error sending dump download:", e);
+            }
         }
     }
 
