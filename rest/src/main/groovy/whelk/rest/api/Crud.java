@@ -255,7 +255,7 @@ public class Crud extends WhelkHttpServlet {
         }
 
         Object contextData = whelk.getJsonld().context;
-        if (profileId != null && !profileId.equals(whelk.getSystemContextUri())) {
+        if (!profileId.equals(whelk.getSystemContextUri())) {
             data = applyDataProfile(profileId, data);
             contextData = data.get(JsonLd.CONTEXT_KEY);
             data.put(JsonLd.CONTEXT_KEY, profileId);
