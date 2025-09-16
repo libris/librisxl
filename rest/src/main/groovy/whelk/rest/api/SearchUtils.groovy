@@ -52,7 +52,7 @@ class SearchUtils {
         }
     }
 
-    Map doSearch(Map queryParameters) {
+    Map doSearch(Map queryParameters) throws InvalidQueryException, IOException {
         if (!whelk.elastic) {
             throw new WhelkRuntimeException("ElasticSearch not configured.")
         }

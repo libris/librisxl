@@ -112,6 +112,10 @@ class Document {
         return baseUri.resolve(getShortId())
     }
 
+    static URI getBASE_URI() {
+        return BASE_URI
+    }
+
     String getDataAsString() {
         return mapper.writeValueAsString(data)
     }
