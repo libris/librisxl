@@ -363,33 +363,30 @@ public class Crud extends WhelkHttpServlet {
         // we couldn't find the document directly, so we look it up using the
         // identifiers table instead
         IdType idType = whelk.getStorage().getIdType(id);
-        if (idType != null) {
-            switch (idType) {
-                case RecordMainId -> {
-                    doc = whelk.getStorage().loadDocumentByMainId(id, version);
-                    if (doc != null) {
-                        result = new Tuple2<>(doc, null);
-                    }
-                }
-                case ThingMainId -> {
-                    doc = whelk.getStorage().loadDocumentByMainId(id, version);
-                    if (doc != null) {
-                        String contentLocation = whelk.getStorage().getRecordId(id);
-                        result = new Tuple2<>(doc, contentLocation);
-                    }
-                }
-                case RecordSameAsId, ThingSameAsId -> {
-                    String location = whelk.getStorage().getMainId(id);
-                    if (location != null) {
-                        result = new Tuple2<>(null, location);
-                    }
-                }
-                default -> {
-                    // 404
+        switch (idType) {
+            case RecordMainId -> {
+                doc = whelk.getStorage().loadDocumentByMainId(id, version);
+                if (doc != null) {
+                    result = new Tuple2<>(doc, null);
                 }
             }
+            case ThingMainId -> {
+                doc = whelk.getStorage().loadDocumentByMainId(id, version);
+                if (doc != null) {
+                    String contentLocation = whelk.getStorage().getRecordId(id);
+                    result = new Tuple2<>(doc, contentLocation);
+                }
+            }
+            case RecordSameAsId, ThingSameAsId -> {
+                String location = whelk.getStorage().getMainId(id);
+                if (location != null) {
+                    result = new Tuple2<>(null, location);
+                }
+            }
+            case null, default -> {
+                // 404
+            }
         }
-        // If idType is null, we fall through to return the result (which will be null, null) - 404
 
         return result;
     }
