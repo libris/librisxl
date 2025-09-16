@@ -74,7 +74,10 @@ boolean clearÖmFromShelfMark(Map shelfMark) {
             return false
         } else {
             String newShelfMark = shelfMark.label.replaceAll("ÖM", "").trim()
-            if (newShelfMark != shelfMark.label) {
+            if (newShelfMark == "") {
+                shelfMark.remove("label")
+            }
+            else if (newShelfMark != shelfMark.label) {
                 shelfMark.label = newShelfMark
                 //System.err.println("" + original + " -> " + shelfMark)
                 return true
