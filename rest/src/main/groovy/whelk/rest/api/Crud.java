@@ -283,8 +283,7 @@ public class Crud extends WhelkHttpServlet {
             }
         }
 
-        List<String> acceptedTypes = Arrays.asList(MimeTypes.JSON, MimeTypes.JSONLD);
-        if (!acceptedTypes.contains(request.getContentType())) {
+        if (!List.of(MimeTypes.JSON, MimeTypes.JSONLD).contains(request.getContentType())) {
             data.put(JsonLd.CONTEXT_KEY, contextData);
             return converterUtils.convert(data, uri, request.getContentType());
         } else {
