@@ -80,6 +80,8 @@ class CrudSpec extends Specification {
 
         whelk = new Whelk(storage)
 
+        whelk.systemContextUri = 'https://id.kb.se/sys/context/kbv'
+
         whelk.namedApplications = [
             'https://example.net/': [id: 'https://example.net/', alias: 'http://example.net.localhost/']
         ]
