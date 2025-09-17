@@ -140,7 +140,7 @@ public non-sealed class Property implements Subpath {
     }
 
     public List<Property> expand() {
-        return isShortHand() ? propertyChain : List.of(this);
+        return isShorthand() ? propertyChain : List.of(this);
     }
 
     public List<Property> getApplicableIntegralRelations(JsonLd jsonLd, Collection<String> types) {
@@ -159,7 +159,7 @@ public non-sealed class Property implements Subpath {
                 .flatMap(List::stream)
                 .distinct()
                 .filter(ir -> ir.range().stream().anyMatch(irRangeType -> mayAppearOnType(irRangeType, jsonLd)))
-                .filter(prop -> !(isInverseOf(prop) || (isShortHand() && propertyChain.getFirst().isInverseOf(prop))))
+                .filter(prop -> !(isInverseOf(prop) || (isShorthand() && propertyChain.getFirst().isInverseOf(prop))))
                 .toList();
     }
 
@@ -211,7 +211,7 @@ public non-sealed class Property implements Subpath {
     }
 
     private List<Property> getPropertyChain(JsonLd jsonLd) {
-        if (!isShortHand()) {
+        if (!isShorthand() || !definition.containsKey(PROPERTY_CHAIN_AXIOM)) {
             return List.of();
         }
 
@@ -224,7 +224,7 @@ public non-sealed class Property implements Subpath {
                 .toList();
     }
 
-    private boolean isShortHand() {
+    private boolean isShorthand() {
         return ((List<?>) asList(definition.get("category"))).stream()
                 .anyMatch(c -> Map.of(JsonLd.ID_KEY, "https://id.kb.se/vocab/shorthand").equals(c));
     }
