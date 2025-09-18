@@ -6,60 +6,56 @@ import whelk.search2.Disambiguate
 import whelk.search2.EsMappings
 import whelk.search2.VocabMappings
 
+import java.util.stream.Stream
+
 class TestData {
     static def excludeFilter = new FilterAlias("excludeA", "NOT p1:A", [:])
     static def includeFilter = new FilterAlias("includeA", "NOT excludeA", [:])
     static def XYFilter = new FilterAlias("XY", "p1:X p3:Y", [:])
 
     static def getDisambiguate() {
-        def propertyAliasMappings = [
-                'p1'         : 'p1',
-                'p1label'    : 'p1',
-                'p2'         : 'p2',
-                'p3'         : 'p3',
-                'p4'         : 'p4',
-                'p5'         : 'p5',
-                'p6'         : 'p6',
-                'p7'         : 'p7',
-                'p8'         : 'p8',
-                'p9'         : 'p9',
-                'p10'        : 'p10',
-                'p11'        : 'p11',
-                'p12'        : 'p12',
-                'p13'        : 'p13',
-                'type'       : 'rdf:type',
-                'rdf:type'   : 'rdf:type',
-                'instanceof' : 'instanceOf',
-                'hasinstance': 'hasInstance'
+        def propertyMappings = [
+                'p1'         : ['p1'] as Set,
+                'p1label'    : ['p1'] as Set,
+                'p2'         : ['p2'] as Set,
+                'p3'         : ['p3'] as Set,
+                'p4'         : ['p4'] as Set,
+                'p5'         : ['p5'] as Set,
+                'p6'         : ['p6'] as Set,
+                'p7'         : ['p7'] as Set,
+                'p8'         : ['p8'] as Set,
+                'p9'         : ['p9'] as Set,
+                'p10'        : ['p10'] as Set,
+                'p11'        : ['p11'] as Set,
+                'p12'        : ['p12'] as Set,
+                'p13'        : ['p13'] as Set,
+                'type'       : ['rdf:type'] as Set,
+                'rdf:type'   : ['rdf:type'] as Set,
+                'instanceof' : ['instanceOf'] as Set,
+                'hasinstance': ['hasInstance'] as Set,
+                'p'          : ['p', 'p1'] as Set,
+                'plabel'     : ['p2', 'p3'] as Set,
+                'pp'         : ['p3', 'p4'] as Set
         ]
-        def ambiguousPropertyAliases = [
-                'p'     : ['p', 'p1'] as Set,
-                'plabel': ['p2', 'p3'] as Set,
-                'pp'    : ['p3', 'p4'] as Set
+        def classMappings = [
+                't1' : ['T1'] as Set,
+                't2' : ['T2'] as Set,
+                't3' : ['T3'] as Set,
+                't1x': ['T1x'] as Set,
+                't2x': ['T2x'] as Set,
+                't3x': ['T3x'] as Set,
+                't'  : ['T', 'T1'] as Set,
+                'tt' : ['T', 'T1'] as Set
         ]
-        def classAliasMappings = [
-                't1' : 'T1',
-                't2' : 'T2',
-                't3' : 'T3',
-                't1x': 'T1x',
-                't2x': 'T2x',
-                't3x': 'T3x'
+        def enumMappings = [
+                'e1': ['E1'] as Set,
+                'e2': ['E2'] as Set
         ]
-        def ambiguousClassAliases = [
-                't' : ['T', 'T1'] as Set,
-                'tt': ['T', 'T1'] as Set
-        ]
-        def enumAliasMappings = [
-                'e1': 'E1',
-                'e2': 'E2'
-        ]
-        def vocabMappings = new VocabMappings([
-                "propertyAliasMappings"   : propertyAliasMappings,
-                "classAliasMappings"      : classAliasMappings,
-                "enumAliasMappings"       : enumAliasMappings,
-                "ambiguousPropertyAliases": ambiguousPropertyAliases,
-                "ambiguousClassAliases"   : ambiguousClassAliases
-        ])
+
+        def insertNamespace = m -> m.keySet().each { k -> m.put(k, ['https://id.kb.se/vocab/': m[k]]) }
+        Stream.of(propertyMappings, classMappings, enumMappings).forEach(insertNamespace)
+
+        def vocabMappings = new VocabMappings(propertyMappings, classMappings, enumMappings)
 
         def filterAliases = [
                 excludeFilter,
@@ -185,7 +181,7 @@ class TestData {
         def ctx = [
                 '@context': [
                         '@vocab': 'https://id.kb.se/vocab/',
-                        'p2': ['@type': '@vocab']
+                        'p2'    : ['@type': '@vocab']
                 ]
         ]
         return new JsonLd(ctx, [:], vocab)
@@ -204,9 +200,9 @@ class TestData {
         def appConfig = [
                 'statistics': [
                         'sliceList': [
-                            [ 'dimensionChain' : ['rdf:type']],
-                            [ 'dimensionChain' : ['p2']],
-                            [ 'dimensionChain' : ['p6']],
+                                ['dimensionChain': ['rdf:type']],
+                                ['dimensionChain': ['p2']],
+                                ['dimensionChain': ['p6']],
                         ]
                 ]
         ]
