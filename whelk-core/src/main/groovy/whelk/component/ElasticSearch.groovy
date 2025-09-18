@@ -960,7 +960,7 @@ class ElasticSearch {
             }
         }
         catch (Exception e) {
-            log.warn("Failed to create Point In Time: $e")
+            log.warn("Failed to delete Point In Time: $e")
             throw e
         }
     }
