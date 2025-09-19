@@ -51,6 +51,10 @@ public enum Operator {
         );
     }
 
+    public boolean isRange() {
+        return rangeOperators().contains(this);
+    }
+
     public static Set<Operator> rangeOperators() {
         return Set.of(Operator.GREATER_THAN_OR_EQUALS, Operator.GREATER_THAN, Operator.LESS_THAN, Operator.LESS_THAN_OR_EQUALS);
     }
