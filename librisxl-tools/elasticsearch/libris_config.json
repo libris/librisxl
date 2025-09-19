@@ -378,19 +378,32 @@
                 }
             },
             {
+                "4_digits_keyword_template": {
+                    "match": "*_4_digits_keyword",
+                    "mapping": {
+                        "type": "keyword"
+                    }
+                }
+            },
+            {
+                "4_digits_int_template": {
+                    "match": "*_4_digits_int",
+                    "mapping": {
+                        "type": "integer"
+                    }
+                }
+            },
+            {
                 "year_template": {
                     "match": ["year", "startYear", "endYear"],
                     "mapping": {
                         "fields": {
                             "keyword": {
-                                "index": true,
                                 "type": "keyword"
                             }
                         },
-                        "analyzer": "numeric_extractor",
-                        "index": true,
+                        "analyzer": "standard",
                         "type": "text",
-                        "fielddata": true,
                         "copy_to": "_all"
                     }
                 }
