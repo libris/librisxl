@@ -2,6 +2,11 @@ package whelk.sru.servlet;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import se.kb.libris.util.marc.Field;
+import se.kb.libris.util.marc.MarcFieldComparator;
+import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.io.MarcXmlRecordReader;
+import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
@@ -36,12 +41,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
@@ -53,6 +61,8 @@ import java.util.stream.Stream;
 import static javax.xml.stream.XMLStreamConstants.CHARACTERS;
 import static javax.xml.stream.XMLStreamConstants.END_ELEMENT;
 import static javax.xml.stream.XMLStreamConstants.START_ELEMENT;
+import static se.kb.libris.export.ExportProfile.addSabTitles;
+import static se.kb.libris.export.ExportProfile.mergeBibMfhd;
 import static whelk.JsonLd.asList;
 import static whelk.util.DocumentUtil.getAtPath;
 
@@ -171,6 +181,13 @@ public class XSearchServlet extends WhelkHttpServlet {
                 .map(f -> FORMATS.getOrDefault(f, Format.MARC_XML))
                 .orElse(Format.MARC_XML);
 
+        var includeHoldings = getOptionalSingleNonEmpty(Params.HOLDINGS, parameters)
+                .map("true"::equals).orElse(false)
+                && (format == Format.MARC_XML || format == Format.MODS);
+
+        var include9xx = getOptionalSingleNonEmpty(Params.FORMAT_LEVEL, parameters)
+                .map("full"::equals).orElse(false);
+
         if (format == Format.UNSUPPORTED) {
             throw new InvalidQueryException("format unsupported"); // TODO
         }
@@ -205,9 +222,9 @@ public class XSearchServlet extends WhelkHttpServlet {
             int to = Math.min(start + n, totalItems);
 
             switch (format) {
-                case MARC_XML -> sendMarcXML(res, items, start, to, totalItems);
+                case MARC_XML -> sendMarcXML(res, items, start, to, totalItems, includeHoldings, include9xx);
                 case JSON -> sendJson(res, items, start, to, totalItems);
-                case MODS -> sendTransformedMarc(res, Format.MODS, items, start, to, totalItems);
+                case MODS -> sendTransformedMarc(res, Format.MODS, items, start, to, totalItems, includeHoldings, include9xx);
             }
 
         } catch (InvalidQueryException e) {
@@ -223,17 +240,24 @@ public class XSearchServlet extends WhelkHttpServlet {
                              List<Map<?,?>> items,
                              int from,
                              int to,
-                             int totalItems) throws IOException, XMLStreamException {
+                             int totalItems,
+                             boolean includeHoldings,
+                             boolean include9xx) throws IOException, XMLStreamException {
         res.setCharacterEncoding("UTF-8");
         res.setContentType("text/xml");
-        writeMarxXml(res.getOutputStream(), items, from, to, totalItems);
+        OutputStream out = res.getOutputStream();
+        writeMarcXml(out, items, from, to, totalItems, includeHoldings, include9xx);
+        out.flush();
+        out.close();
     }
 
-    private void writeMarxXml(OutputStream o,
-                             List<Map<?,?>> items,
-                             int from,
-                             int to,
-                             int totalItems) throws XMLStreamException {
+    private void writeMarcXml(OutputStream o,
+                              List<Map<?,?>> items,
+                              int from,
+                              int to,
+                              int totalItems,
+                              boolean includeHoldings,
+                              boolean include9xx) throws XMLStreamException {
 
         XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(o);
 
@@ -254,7 +278,12 @@ public class XSearchServlet extends WhelkHttpServlet {
                 .map(i -> {
                     String systemID = whelk.getStorage().getSystemIdByIri( (String) i.get("@id"));
                     Document embellished = whelk.loadEmbellished(systemID);
-                    return (String) converter.convert(embellished.data, embellished.getShortId()).get(JsonLd.NON_JSON_CONTENT_KEY);
+                    var bibXml = (String) converter.convert(embellished.data, embellished.getShortId())
+                            .get(JsonLd.NON_JSON_CONTENT_KEY);
+
+                    bibXml = expandRecord(bibXml, embellished, includeHoldings, include9xx);
+
+                    return bibXml;
                 }).forEachOrdered( convertedText -> {
                     try {
                         copyRecord(xmlInputFactory.createXMLStreamReader(new StringReader(convertedText)), writer);
@@ -269,12 +298,12 @@ public class XSearchServlet extends WhelkHttpServlet {
         writer.writeEndDocument();
 
         writer.close();
-
     }
 
     private void sendErrorXml(HttpServletResponse res, String errorMsg) throws IOException {
         try {
-            XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(res.getOutputStream());
+            OutputStream out = res.getOutputStream();
+            XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(out);
 
             writer.writeStartElement("xsearch");
             writer.writeAttribute("error", errorMsg );
@@ -282,6 +311,8 @@ public class XSearchServlet extends WhelkHttpServlet {
             writer.writeEndElement();
 
             writer.close();
+            out.flush();
+            out.close();
         } catch (XMLStreamException e) {
             logger.error("Couldn't build xsearch response.", e);
         }
@@ -315,18 +346,23 @@ public class XSearchServlet extends WhelkHttpServlet {
                              List<Map<?,?>> items,
                              int from,
                              int to,
-                             int totalItems) throws IOException, XMLStreamException, TransformerException {
+                             int totalItems,
+                             boolean includeHoldings,
+                             boolean include9xx) throws IOException, XMLStreamException, TransformerException {
 
         res.setCharacterEncoding("UTF-8");
         res.setContentType("text/xml");
 
         ByteArrayOutputStream o = new ByteArrayOutputStream();
-        writeMarxXml(o, items, from, to, totalItems);
+        writeMarcXml(o, items, from, to, totalItems, includeHoldings, include9xx);
         ByteArrayInputStream i = new ByteArrayInputStream(o.toByteArray());
 
         Transformer transformer = transformers.get(format).newTransformer();
 
+        OutputStream out = res.getOutputStream();
         transformer.transform(new StreamSource(i), new StreamResult(res.getOutputStream()));
+        out.flush();
+        out.close();
     }
 
     private Templates loadXslt(String name) throws IOException, TransformerConfigurationException {
@@ -336,6 +372,47 @@ public class XSearchServlet extends WhelkHttpServlet {
         return transformerFactory.newTemplates(xsltSource);
     }
 
+    private String expandRecord(String bibXml, Document bib, boolean includeHoldings, boolean include9xx) {
+        if (!includeHoldings && !include9xx) {
+            return bibXml;
+        }
+
+        try {
+            MarcRecord bibRecord = MarcXmlRecordReader.fromXml(bibXml);
+
+            ListIterator<Field> li = bibRecord.listIterator();
+            while (li.hasNext()) {
+                if (Objects.equals((li.next()).getTag(), "003")) {
+                    li.remove();
+                }
+            }
+            bibRecord.addField(bibRecord.createControlfield("003", "SE-LIBR"), MarcFieldComparator.strictSorted);
+
+            if (includeHoldings) {
+                List<Document> holdingDocuments = whelk.getAttachedHoldings(bib.getThingIdentifiers());
+                for (Document holding : holdingDocuments) {
+                    var holdXml = (String) converter.convert(holding.data, holding.getShortId())
+                            .get(JsonLd.NON_JSON_CONTENT_KEY);
+                    MarcRecord holdRecord = MarcXmlRecordReader.fromXml(holdXml);
+                    mergeBibMfhd(bibRecord, holding.getHeldBySigel(), holdRecord);
+                }
+            }
+
+            if (include9xx) {
+                // Only 976...
+                addSabTitles(bibRecord);
+            }
+
+            ByteArrayOutputStream o = new ByteArrayOutputStream();
+            var w = new MarcXmlRecordWriter(o, false);
+            w.writeRecord(bibRecord);
+            w.close();
+            return o.toString(StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     // Or convert from MARC-XML?
     // https://git.kb.se/libris/legacy/search/-/blob/master/src/main/webapp/transformers/MARC21slim2JSON.xsl?ref_type=heads
     private void sendJson(HttpServletResponse res,
@@ -343,12 +420,12 @@ public class XSearchServlet extends WhelkHttpServlet {
                           int from,
                           int to,
                           int totalItems) {
-        var result = Map.of("xsearch", Map.of(
-                "from", from,
-                "to", to,
-                "records", totalItems,
-                "items", items.stream().map(this::toXsearchJson).toList()
-        ));
+
+        var result = new LinkedHashMap<String, Object>();
+        result.put("from", from);
+        result.put("to", to);
+        result.put("records", totalItems);
+        result.put("list", items.stream().map(this::toXsearchJson).toList());
 
         HttpTools.sendResponse(res, result, "application/json;charset=UTF-8");
     }

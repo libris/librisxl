@@ -18,6 +18,7 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.StringReader;
 import java.util.*;
 
@@ -90,8 +91,9 @@ public class SruServlet extends WhelkHttpServlet {
 
         // Build the xml response feed
         try {
+            OutputStream out = res.getOutputStream();
             XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
-            XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(res.getOutputStream());
+            XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(out);
 
             writer.writeStartDocument("UTF-8", "1.0");
             writer.writeStartElement("searchRetrieveResponse");
@@ -139,6 +141,8 @@ public class SruServlet extends WhelkHttpServlet {
             writer.writeEndDocument();
 
             writer.close();
+            out.flush();
+            out.close();
         } catch (XMLStreamException e) {
             logger.error("Couldn't build SRU response.", e);
         }
