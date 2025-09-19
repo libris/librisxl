@@ -1,0 +1,36 @@
+def fourDigitFields = ["year", "startYear", "endYear"];
+
+def stack = new ArrayDeque();
+stack.push(ctx);
+
+while (!stack.isEmpty()) {
+  def current = stack.pop();
+
+  def updates = new HashMap();
+
+  for (entry in current.entrySet()) {
+      def key = entry.getKey();
+      def value = entry.getValue();
+
+      if (value instanceof String && fourDigitFields.contains(key)) {
+          def matcher = /\d{4}/.matcher(value);
+          if (matcher.find()) {
+              def fourDigitStr = matcher.group(0);
+              updates.put(key + "_4_digits_keyword", fourDigitStr);
+              updates.put(key + "_4_digits_int", Integer.parseInt(fourDigitStr));
+          }
+      } else if (value instanceof Map) {
+          stack.push(value);
+      } else if (value instanceof List) {
+          for (elem in value) {
+              if (elem instanceof Map) {
+                  stack.push(elem);
+              }
+          }
+      }
+  }
+
+  for (u in updates.entrySet()) {
+      current.put(u.getKey(), u.getValue());
+  }
+}

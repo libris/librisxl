@@ -24,7 +24,8 @@
                     "b": 0,
                     "k1": 0
                 }
-            }
+            },
+            "default_pipeline": "extract_4_digits_pipeline"
         },
         "index.query.default_field": "_all",
         "analysis": {
