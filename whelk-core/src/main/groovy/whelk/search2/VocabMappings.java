@@ -1,6 +1,5 @@
 package whelk.search2;
 
-import groovy.transform.PackageScope;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
@@ -10,7 +9,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
