@@ -65,7 +65,8 @@ public class EmmChangeSet {
             var activityObject = new HashMap<>();
             activityInStream.put("object", activityObject);
             activityObject.put("id", activityInList.uri);
-            activityObject.put("type", ld.prependVocabPrefix(activityInList.entityType));
+            if (activityInList.entityType != null)
+                activityObject.put("type", ld.prependVocabPrefix(activityInList.entityType));
             if (activityInList.library != null) {
                 activityObject.put("kbv:heldBy", Map.of("@id", activityInList.library));
             }
@@ -156,8 +157,10 @@ public class EmmChangeSet {
     }
 
     static Set<String> prefixes(Collection<EmmActivity> activities) {
+
         return activities.stream()
                 .map(a -> a.entityType)
+                .filter(Objects::nonNull)
                 .map(type -> type.split(":"))
                 .filter(a -> a.length == 2)
                 .map(a -> a[0])
