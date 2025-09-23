@@ -19,6 +19,7 @@ class TypeMappings implements UsingJsonKeys {
     static final var KBRDA = "https://id.kb.se/term/rda/"
 
     static final var KTG = "https://id.kb.se/term/ktg/"
+    boolean replaceIssuanceTypes = Boolean.parseBoolean(System.getProperty("replaceIssuanceTypes")) ?: false
 
     Whelk whelk
 
@@ -156,18 +157,22 @@ class TypeMappings implements UsingJsonKeys {
             issuancetype = 'ComponentPart'
         }
 
+        // Set the new work type
         work[TYPE] = issuancetype
 
-        if (issuancetype == 'Monograph' || issuancetype == 'Integrating') {
-            instance['issuanceType'] = 'SingleUnit'
-        } else if (issuancetype == 'ComponentPart') {
-            // TODO: or remove and add "isPartOf": {"@type": "Resource"} unless implied?
-            // instance[TYPE] += issuancetype
-            instance['issuanceType'] = 'SingleUnit'
-        } else {
-            instance['issuanceType'] = 'MultipleUnits'
-            // TODO:
-            // Or instance[TYPE] += 'MultipleUnits'?
+        if (replaceIssuanceTypes) {
+            // Add new values to issuanceTyoe
+            if (issuancetype == 'Monograph' || issuancetype == 'Integrating') {
+                instance['issuanceType'] = 'SingleUnit'
+            } else if (issuancetype == 'ComponentPart') {
+                // TODO: or remove and add "isPartOf": {"@type": "Resource"} unless implied?
+                // instance[TYPE] += issuancetype
+                instance['issuanceType'] = 'SingleUnit'
+            } else {
+                instance['issuanceType'] = 'MultipleUnits'
+                // TODO:
+                // Or instance[TYPE] += 'MultipleUnits'?
+            }
         }
 
         return true
@@ -177,7 +182,7 @@ class TypeMappings implements UsingJsonKeys {
 
 class TypeNormalizer implements UsingJsonKeys {
 
-    //Parse system property "addCategory" as a boolean, default to false if none given
+    //Parse system property "addCategory" and "replaceIssuanceTypes" as a boolean, default to false if none given
     boolean addCategory = Boolean.parseBoolean(System.getProperty("addCategory")) ?: false
 
     static MARC = TypeMappings.MARC
