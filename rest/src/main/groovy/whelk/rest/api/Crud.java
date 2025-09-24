@@ -1,6 +1,6 @@
 package whelk.rest.api;
 
-import org.apache.http.entity.ContentType;
+import org.apache.hc.core5.http.ContentType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import whelk.Document;

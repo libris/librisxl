@@ -4,8 +4,8 @@ import com.google.common.util.concurrent.MoreExecutors
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
-import org.apache.http.conn.HttpClientConnectionManager
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
+import org.apache.hc.client5.http.io.HttpClientConnectionManager
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager
 import whelk.Document
 import whelk.exception.UnexpectedHttpStatusException
 
@@ -122,7 +122,7 @@ class SparqlUpdater {
     }
 
     private static HttpClientConnectionManager buildHttpClientConnectionManager(final int poolSize) {
-        HttpClientConnectionManager cm = new PoolingHttpClientConnectionManager()
+        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager()
         cm.setMaxTotal(poolSize)
         cm.setDefaultMaxPerRoute(poolSize)
         return cm

@@ -1,9 +1,9 @@
 package whelk;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jackson.type.TypeReference;
@@ -138,11 +138,11 @@ public class AuthenticationFilter implements Filter {
 
         try {
 
-            HttpClient client = HttpClientBuilder.create().build();
+            CloseableHttpClient client = HttpClients.createDefault();
             HttpGet get = new HttpGet(getVerifyUrl());
 
             get.setHeader("Authorization", "Bearer " + token);
-            HttpResponse response = client.execute(get);
+            ClassicHttpResponse response = client.execute(get);
 
             BufferedReader rd = new BufferedReader(
                     new InputStreamReader(response.getEntity().getContent()));
