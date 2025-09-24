@@ -233,15 +233,28 @@ class TypeNormalizer implements UsingJsonKeys {
 
         def wtype = work.get(TYPE)
 
-        if (wtype == 'Manuscript') {
+        if (wtype == 'ManuscriptText') {
             work.get('genreForm', []) << [(ID): SAOGF + 'Handskrifter']
-        } else if (wtype == 'Cartography') {
+        }
+        else if (wtype == 'ManuscriptNotatedMusic') {
+            work.get('genreForm', []) << [(ID): KTG + 'Manuscript'] // TODO Will this be a ktg term?
+            work.get('contentType', []) << [(ID): KBRDA + 'NotatedMusic']
+        }
+        else if (wtype == 'Cartography') {
             if (!work['contentType'].any { it[ID]?.startsWith(KBRDA + 'Cartographic') }) {
                 work.get('contentType', []) << [(ID): KBRDA + 'CartographicImage'] // TODO: good enough guess?
             }
         } else if (wtype == 'MixedMaterial') {
-            // TODO: replace or map to ktg:MixedMaterial ?
-        } else {
+            work.get('genreForm', []) << [(ID): KTG + 'MixedMaterial'] // TODO Will this be a ktg term?
+        }
+        else if (wtype == 'Kit') {
+            work.get('genreForm', []) << [(ID): KTG + 'Kit'] // TODO Will this be a ktg term?
+        }
+        else if (wtype == 'Object') {
+            work.get('genreForm', []) << [(ID): KBRDA + 'ThreeDimensionalForm'] // TODO map to ktg Object instead instead?
+        }
+
+        else {
             def mappedCategory = mappings.typeToCategory[wtype]
             // assert mappedCategory, "Unable to map ${wtype} to contentType or genreForm"
             if (mappedCategory) assert mappedCategory instanceof String
@@ -468,8 +481,9 @@ class TypeNormalizer implements UsingJsonKeys {
             if (carrierTypes.size() > 0) {
               instance.put("carrierType", carrierTypes)
             }
+            // TODO: Decide in which property we want the instance "genreForms" (including old types)
             if (instanceGenreForms.size() > 0) {
-              instance.put("genreForm", instanceGenreForms)
+              instance.put("category", instanceGenreForms)
             }
           }
 
