@@ -1,9 +1,9 @@
 package whelk;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jackson.type.TypeReference;
@@ -36,6 +36,7 @@ public class AuthenticationFilter implements Filter {
     private List<String> whitelistedPostEndpoints;
     private boolean mockAuthMode = false;
     private String url = null;
+    private CloseableHttpClient httpClient;
 
     final static Logger log = LogManager.getLogger(AuthenticationFilter.class);
 
@@ -50,6 +51,7 @@ public class AuthenticationFilter implements Filter {
         log.debug("Mock auth mode: " + mockAuthMode);
         supportedMethods = splitInitParameters(initParams);
         whitelistedPostEndpoints = splitInitParameters(filterConfig.getInitParameter("whitelistedPostEndpoints"));
+        httpClient = HttpClients.createDefault();
     }
 
     @Override
@@ -135,33 +137,29 @@ public class AuthenticationFilter implements Filter {
     }
 
     private String verifyToken(String token) {
-
         try {
-
-            HttpClient client = HttpClientBuilder.create().build();
             HttpGet get = new HttpGet(getVerifyUrl());
 
             get.setHeader("Authorization", "Bearer " + token);
-            HttpResponse response = client.execute(get);
+            return httpClient.execute(get, response -> {
+                BufferedReader rd = new BufferedReader(
+                        new InputStreamReader(response.getEntity().getContent()));
 
-            BufferedReader rd = new BufferedReader(
-                    new InputStreamReader(response.getEntity().getContent()));
+                StringBuilder result = new StringBuilder();
+                String line;
+                while ((line = rd.readLine()) != null) {
+                    result.append(line);
+                }
 
-            StringBuilder result = new StringBuilder();
-            String line;
-            while ((line = rd.readLine()) != null) {
-                result.append(line);
-            }
+                rd.close();
+                return result.toString();
+            });
 
-            rd.close();
-            return result.toString();
-
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
         return null;
-
     }
 
     @Override

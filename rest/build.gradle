@@ -74,8 +74,8 @@ dependencies {
 
     // Common tools
     implementation "com.google.guava:guava:${guavaVersion}"
-    implementation "org.apache.httpcomponents:httpclient:${httpComponentsClientVersion}"
-    implementation "org.apache.httpcomponents:httpcore:${httpComponentsCoreVersion}"
+    implementation "org.apache.httpcomponents.client5:httpclient5:${httpComponentsClientVersion}"
+    implementation "org.apache.httpcomponents.core5:httpcore5:${httpComponentsCoreVersion}"
     implementation 'commons-cli:commons-cli:1.2'
     implementation 'commons-io:commons-io:2.11.0'
     implementation 'org.codehaus.jackson:jackson-core-asl:1.9.13'
