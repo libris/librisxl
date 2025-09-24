@@ -121,7 +121,7 @@ dependencies {
 
     // Integration
     api "org.apache.commons:commons-lang3:3.18.0"
-    implementation 'org.postgresql:postgresql:42.4.0'
+    implementation 'org.postgresql:postgresql:42.7.8'
 
     // profiling and test
     testImplementation "org.spockframework:spock-core:${spockVersion}"
