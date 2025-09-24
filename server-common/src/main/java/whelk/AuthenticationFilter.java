@@ -36,6 +36,7 @@ public class AuthenticationFilter implements Filter {
     private List<String> whitelistedPostEndpoints;
     private boolean mockAuthMode = false;
     private String url = null;
+    private CloseableHttpClient httpClient;
 
     final static Logger log = LogManager.getLogger(AuthenticationFilter.class);
 
@@ -50,6 +51,7 @@ public class AuthenticationFilter implements Filter {
         log.debug("Mock auth mode: " + mockAuthMode);
         supportedMethods = splitInitParameters(initParams);
         whitelistedPostEndpoints = splitInitParameters(filterConfig.getInitParameter("whitelistedPostEndpoints"));
+        httpClient = HttpClients.createDefault();
     }
 
     @Override
@@ -136,11 +138,10 @@ public class AuthenticationFilter implements Filter {
 
     private String verifyToken(String token) {
         try {
-            CloseableHttpClient client = HttpClients.createDefault();
             HttpGet get = new HttpGet(getVerifyUrl());
 
             get.setHeader("Authorization", "Bearer " + token);
-            return client.execute(get, response -> {
+            return httpClient.execute(get, response -> {
                 BufferedReader rd = new BufferedReader(
                         new InputStreamReader(response.getEntity().getContent()));
 
