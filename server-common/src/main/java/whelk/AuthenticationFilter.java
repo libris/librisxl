@@ -135,33 +135,30 @@ public class AuthenticationFilter implements Filter {
     }
 
     private String verifyToken(String token) {
-
         try {
-
             CloseableHttpClient client = HttpClients.createDefault();
             HttpGet get = new HttpGet(getVerifyUrl());
 
             get.setHeader("Authorization", "Bearer " + token);
-            ClassicHttpResponse response = client.execute(get);
+            return client.execute(get, response -> {
+                BufferedReader rd = new BufferedReader(
+                        new InputStreamReader(response.getEntity().getContent()));
 
-            BufferedReader rd = new BufferedReader(
-                    new InputStreamReader(response.getEntity().getContent()));
+                StringBuilder result = new StringBuilder();
+                String line;
+                while ((line = rd.readLine()) != null) {
+                    result.append(line);
+                }
 
-            StringBuilder result = new StringBuilder();
-            String line;
-            while ((line = rd.readLine()) != null) {
-                result.append(line);
-            }
+                rd.close();
+                return result.toString();
+            });
 
-            rd.close();
-            return result.toString();
-
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
         return null;
-
     }
 
     @Override

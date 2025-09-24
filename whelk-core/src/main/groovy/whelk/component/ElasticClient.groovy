@@ -11,31 +11,33 @@ import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.retry.RetryConfig
 import io.github.resilience4j.retry.RetryRegistry
 import io.prometheus.client.CollectorRegistry
+import org.apache.hc.client5.http.ssl.TlsSocketStrategy
 import org.apache.hc.core5.http.Header
 import org.apache.hc.core5.http.HttpEntity
 import org.apache.hc.core5.http.HttpHeaders
-import org.apache.hc.core5.http.ClassicHttpResponse
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient
 import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.classic.methods.HttpGet
 import org.apache.hc.client5.http.classic.methods.HttpPost
 import org.apache.hc.client5.http.classic.methods.HttpPut
 import org.apache.hc.core5.http.ClassicHttpRequest
-import org.apache.hc.core5.http.config.Registry
-import org.apache.hc.core5.http.config.RegistryBuilder
-import org.apache.hc.client5.http.socket.ConnectionSocketFactory
-import org.apache.hc.client5.http.socket.PlainConnectionSocketFactory
 import org.apache.hc.client5.http.ssl.NoopHostnameVerifier
-import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory
+import org.apache.hc.client5.http.ssl.ClientTlsStrategyBuilder
 import org.apache.hc.core5.ssl.TrustStrategy
 import org.apache.hc.core5.http.ContentType
 import org.apache.hc.core5.http.io.entity.StringEntity
 import org.apache.hc.client5.http.impl.classic.HttpClients
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder
 import org.apache.hc.core5.http.message.BasicHeader
 import org.apache.hc.core5.ssl.SSLContexts
 import org.apache.hc.core5.http.io.entity.EntityUtils
 import org.apache.hc.core5.util.Timeout
+import org.apache.hc.core5.pool.PoolConcurrencyPolicy
+import org.apache.hc.core5.pool.PoolReusePolicy
+import org.apache.hc.client5.http.config.ConnectionConfig
+import org.apache.hc.core5.http.ssl.TLS
+import org.apache.hc.core5.util.TimeValue
 import whelk.exception.ElasticIOException
 import whelk.exception.UnexpectedHttpStatusException
 
@@ -76,18 +78,27 @@ class ElasticClient {
     static ElasticClient withDefaultHttpClient(List<String> elasticHosts, String elasticUser, String elasticPassword) {
         TrustStrategy acceptingTrustStrategy = (cert, authType) -> true
         SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build()
-        SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE)
-        Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory> create()
-            .register("https", sslsf)
-            .register("http", new PlainConnectionSocketFactory())
-            .build()
 
-        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(registry)
-        cm.setMaxTotal(CONNECTION_POOL_SIZE)
-        cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_HOST)
+        PoolingHttpClientConnectionManager cm = PoolingHttpClientConnectionManagerBuilder.create()
+                .setTlsSocketStrategy((TlsSocketStrategy) ClientTlsStrategyBuilder.create()
+                        .setSslContext(sslContext)
+                        .setHostnameVerifier(NoopHostnameVerifier.INSTANCE)
+                        .setTlsVersions(TLS.V_1_3)
+                        .buildClassic())
+                .setMaxConnTotal(CONNECTION_POOL_SIZE)
+                .setMaxConnPerRoute(MAX_CONNECTIONS_PER_HOST)
+                .setPoolConcurrencyPolicy(PoolConcurrencyPolicy.STRICT)
+                .setConnPoolPolicy(PoolReusePolicy.LIFO)
+                .setDefaultConnectionConfig(
+                        ConnectionConfig.custom()
+                                .setConnectTimeout(Timeout.ofMilliseconds(CONNECT_TIMEOUT_MS))
+                                .setSocketTimeout(Timeout.ofMilliseconds(READ_TIMEOUT_MS))
+                                .setTimeToLive(TimeValue.ofMinutes(10))
+                                .build()
+                )
+                .build()
 
         RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectTimeout(Timeout.ofMilliseconds(CONNECT_TIMEOUT_MS))
                 .setConnectionRequestTimeout(Timeout.ofMilliseconds(CONNECT_TIMEOUT_MS))
                 .setResponseTimeout(Timeout.ofMilliseconds(READ_TIMEOUT_MS))
                 .build()
@@ -108,18 +119,28 @@ class ElasticClient {
     static ElasticClient withBulkHttpClient(List<String> elasticHosts, String elasticUser, String elasticPassword) {
         TrustStrategy acceptingTrustStrategy = (cert, authType) -> true
         SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build()
-        SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE)
-        Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory> create()
-                .register("https", sslsf)
-                .register("http", new PlainConnectionSocketFactory())
+
+        PoolingHttpClientConnectionManager cm = PoolingHttpClientConnectionManagerBuilder.create()
+                .setTlsSocketStrategy((TlsSocketStrategy) ClientTlsStrategyBuilder.create()
+                        .setSslContext(sslContext)
+                        .setHostnameVerifier(NoopHostnameVerifier.INSTANCE)
+                        .setTlsVersions(TLS.V_1_3)
+                        .buildClassic())
+                .setMaxConnTotal(CONNECTION_POOL_SIZE)
+                .setMaxConnPerRoute(MAX_CONNECTIONS_PER_HOST)
+                .setPoolConcurrencyPolicy(PoolConcurrencyPolicy.STRICT)
+                .setConnPoolPolicy(PoolReusePolicy.LIFO)
+                .setDefaultConnectionConfig(
+                        ConnectionConfig.custom()
+                                .setConnectTimeout(BATCH_CONNECT_TIMEOUT_MS == 0 ? Timeout.DISABLED : Timeout.ofMilliseconds(BATCH_CONNECT_TIMEOUT_MS))
+                                .setSocketTimeout(Timeout.ofMilliseconds(BATCH_READ_TIMEOUT_MS))
+                                .setTimeToLive(TimeValue.ofMinutes(10))
+                                .build()
+                )
                 .build()
 
-        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(registry)
-        cm.setMaxTotal(CONNECTION_POOL_SIZE)
-        cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_HOST)
-
         RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectTimeout(BATCH_CONNECT_TIMEOUT_MS == 0 ? Timeout.DISABLED : Timeout.ofMilliseconds(BATCH_CONNECT_TIMEOUT_MS))
+                .setConnectionRequestTimeout(Timeout.ofMilliseconds(CONNECT_TIMEOUT_MS))
                 .setResponseTimeout(Timeout.ofMilliseconds(BATCH_READ_TIMEOUT_MS))
                 .build()
 
@@ -225,12 +246,15 @@ class ElasticClient {
         private Tuple2<Integer, String> sendRequestRetry4XX(ClassicHttpRequest request) {
             int backOffSeconds = 1
             while (true) {
-                ClassicHttpResponse response = httpClient.execute(request)
-                int statusCode = response.getCode()
+                def result = httpClient.execute(request) { response ->
+                    int statusCode = response.getCode()
+                    String responseBody = EntityUtils.toString(response.getEntity())
+                    return new Tuple2(statusCode, responseBody)
+                }
+
+                int statusCode = result.v1 as int
 
                 if (statusCode != 429 && statusCode != 409) {
-                    def result = new Tuple2(statusCode, EntityUtils.toString(response.getEntity()))
-
                     if (log.isDebugEnabled()) {
                         String r = result.v2
                         if (r.size() < 50_000) {

@@ -64,12 +64,9 @@ class Virtuoso {
             Metrics.clientTimer.labels(Virtuoso.class.getSimpleName(), method.toString()).time {
                 String credentials = "${this.sparqlUser}:${this.sparqlPass}".bytes.encodeBase64().toString()
                 request.setHeader("Authorization", "Basic " + credentials)
-                ClassicHttpResponse response = httpClient.execute(request)
-                try {
+                httpClient.execute(request) { response ->
                     handleResponse(response, method, doc)
-                }
-                finally {
-                    response.close()
+                    return null
                 }
             }
         }
@@ -139,7 +136,6 @@ class Virtuoso {
     
     private static CloseableHttpClient buildHttpClient(HttpClientConnectionManager cm) {
         RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectTimeout(Timeout.ofMilliseconds(CONNECT_TIMEOUT_MS))
                 .setConnectionRequestTimeout(Timeout.ofMilliseconds(CONNECT_TIMEOUT_MS))
                 .setResponseTimeout(Timeout.ofMilliseconds(READ_TIMEOUT_MS))
                 .build()
