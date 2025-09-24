@@ -87,6 +87,9 @@ dependencies {
 
     // Common tools
     implementation "com.google.guava:guava:${guavaVersion}"
+    // Guava used to have findbugs:jsr305 as a dependency; it provides javax.annotation.Nullable
+    // that we still use in one place.
+    implementation("com.google.code.findbugs:jsr305:3.0.2")
     implementation "io.github.resilience4j:resilience4j-circuitbreaker:${resilience4jVersion}"
     implementation "io.github.resilience4j:resilience4j-prometheus:${resilience4jVersion}"
     implementation "io.github.resilience4j:resilience4j-retry:${resilience4jVersion}"
