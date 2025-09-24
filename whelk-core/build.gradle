@@ -98,7 +98,7 @@ dependencies {
     implementation 'com.zaxxer:HikariCP:4.0.3'
     implementation 'commons-codec:commons-codec:1.19.0'
     implementation 'com.ibm.icu:icu4j:71.1'
-    api 'commons-io:commons-io:2.11.0'
+    api 'commons-io:commons-io:2.20.0'
     implementation "org.apache.httpcomponents.client5:httpclient5:${httpComponentsClientVersion}"
     implementation "org.apache.httpcomponents.core5:httpcore5:${httpComponentsCoreVersion}"
     api 'org.apache.jena:apache-jena-libs:3.0.1'
