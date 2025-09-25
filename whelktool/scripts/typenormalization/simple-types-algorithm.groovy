@@ -126,8 +126,8 @@ class TypeMappings implements UsingJsonKeys {
                 work.get('genreForm', []) << [(ID): mappedTypes.workCategory]
                 changed = true
             }
-        }
 
+        }
         return changed
     }
 
@@ -200,10 +200,13 @@ class TypeNormalizer implements UsingJsonKeys {
     boolean normalize(Map instance, Map work) {
         var changed = false
 
+        var oldItype = instance.get(TYPE)
+        var oldWtype = work.get(TYPE)
+
         changed |= mappings.fixMarcLegacyType(instance, work)
 
         changed |= simplifyWorkType(work)
-        changed |= simplfyInstanceType(instance)
+        changed |= simplifyInstanceType(instance)
 
         changed |= mappings.convertIssuanceType(instance, work)
 
@@ -212,6 +215,12 @@ class TypeNormalizer implements UsingJsonKeys {
         if (changed) {
             reorderForReadability(work)
             reorderForReadability(instance)
+        }
+        if (!instance.category || instance.category.isEmpty()){
+            println("${instance[ID]}\tNo INSTANCE categories after reducing work / instance types\t${oldWtype} / ${oldItype}")
+        }
+        if (!work.category || work.category.isEmpty()){
+            println("${instance[ID]}\t No WORK categories after reducing work / instance types\t${oldWtype} / ${oldItype}")
         }
 
         return changed
@@ -237,7 +246,7 @@ class TypeNormalizer implements UsingJsonKeys {
             work.get('genreForm', []) << [(ID): SAOGF + 'Handskrifter']
         }
         else if (wtype == 'ManuscriptNotatedMusic') {
-            work.get('genreForm', []) << [(ID): KTG + 'Manuscript'] // TODO Will this be a ktg term?
+            work.get('genreForm', []) << [(ID): SAOGF + 'Handskrifter']
             work.get('contentType', []) << [(ID): KBRDA + 'NotatedMusic']
         }
         else if (wtype == 'Cartography') {
@@ -256,11 +265,14 @@ class TypeNormalizer implements UsingJsonKeys {
 
         else {
             def mappedCategory = mappings.typeToCategory[wtype]
-            // assert mappedCategory, "Unable to map ${wtype} to contentType or genreForm"
-            if (mappedCategory) assert mappedCategory instanceof String
+            //assert mappedCategory, "Unable to map ${wtype} to contentType or genreForm"
             if (mappedCategory) {
-                work.get('contentType', []) << [(ID): mappedCategory]
+                assert mappedCategory instanceof String
+                if (mappedCategory) {
+                    work.get('contentType', []) << [(ID): mappedCategory]
+                }
             }
+
         }
 
         var contentTypes = mappings.reduceSymbols(asList(work.get("contentType")))
@@ -299,7 +311,7 @@ class TypeNormalizer implements UsingJsonKeys {
      * - Assign one of instance types PhysicalResource/DigitalResource
      * - Clean up and enrich genreForm, carrierType and mediaType again. TODO: Can we do this just once?
      */
-    boolean simplfyInstanceType(Map instance) {
+    boolean simplifyInstanceType(Map instance) {
         var changed = false
 
         var itype = instance.get(TYPE)
