@@ -13,7 +13,6 @@ import io.github.resilience4j.retry.RetryRegistry
 import io.prometheus.client.CollectorRegistry
 import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy
 import org.apache.hc.client5.http.ssl.HostnameVerificationPolicy
-import org.apache.hc.client5.http.ssl.TlsSocketStrategy
 import org.apache.hc.core5.http.Header
 import org.apache.hc.core5.http.HttpEntity
 import org.apache.hc.core5.http.HttpHeaders
@@ -24,7 +23,6 @@ import org.apache.hc.client5.http.classic.methods.HttpPost
 import org.apache.hc.client5.http.classic.methods.HttpPut
 import org.apache.hc.core5.http.ClassicHttpRequest
 import org.apache.hc.client5.http.ssl.NoopHostnameVerifier
-import org.apache.hc.client5.http.ssl.ClientTlsStrategyBuilder
 import org.apache.hc.core5.ssl.TrustStrategy
 import org.apache.hc.core5.http.ContentType
 import org.apache.hc.core5.http.io.entity.StringEntity
