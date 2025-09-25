@@ -11,6 +11,8 @@ import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.retry.RetryConfig
 import io.github.resilience4j.retry.RetryRegistry
 import io.prometheus.client.CollectorRegistry
+import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy
+import org.apache.hc.client5.http.ssl.HostnameVerificationPolicy
 import org.apache.hc.client5.http.ssl.TlsSocketStrategy
 import org.apache.hc.core5.http.Header
 import org.apache.hc.core5.http.HttpEntity
@@ -80,11 +82,13 @@ class ElasticClient {
         SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build()
 
         PoolingHttpClientConnectionManager cm = PoolingHttpClientConnectionManagerBuilder.create()
-                .setTlsSocketStrategy((TlsSocketStrategy) ClientTlsStrategyBuilder.create()
-                        .setSslContext(sslContext)
-                        .setHostnameVerifier(NoopHostnameVerifier.INSTANCE)
-                        .setTlsVersions(TLS.V_1_3)
-                        .buildClassic())
+                .setTlsSocketStrategy(
+                        new DefaultClientTlsStrategy(
+                                sslContext,
+                                HostnameVerificationPolicy.CLIENT,
+                                NoopHostnameVerifier.INSTANCE
+                        )
+                )
                 .setMaxConnTotal(CONNECTION_POOL_SIZE)
                 .setMaxConnPerRoute(MAX_CONNECTIONS_PER_HOST)
                 .setPoolConcurrencyPolicy(PoolConcurrencyPolicy.STRICT)
@@ -121,11 +125,13 @@ class ElasticClient {
         SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build()
 
         PoolingHttpClientConnectionManager cm = PoolingHttpClientConnectionManagerBuilder.create()
-                .setTlsSocketStrategy((TlsSocketStrategy) ClientTlsStrategyBuilder.create()
-                        .setSslContext(sslContext)
-                        .setHostnameVerifier(NoopHostnameVerifier.INSTANCE)
-                        .setTlsVersions(TLS.V_1_3)
-                        .buildClassic())
+                .setTlsSocketStrategy(
+                        new DefaultClientTlsStrategy(
+                                sslContext,
+                                HostnameVerificationPolicy.CLIENT,
+                                NoopHostnameVerifier.INSTANCE
+                        )
+                )
                 .setMaxConnTotal(CONNECTION_POOL_SIZE)
                 .setMaxConnPerRoute(MAX_CONNECTIONS_PER_HOST)
                 .setPoolConcurrencyPolicy(PoolConcurrencyPolicy.STRICT)
