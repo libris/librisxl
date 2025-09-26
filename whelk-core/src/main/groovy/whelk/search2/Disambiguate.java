@@ -126,7 +126,11 @@ public class Disambiguate {
             reverseLinks.totalItemsByRelation.instanceOf>1 wouldn't work due to the value 1 not being typed as Numeric
             and by extension the query wouldn't pass as a valid range query.
             */
-            return Optional.of(new Numeric(Integer.parseInt(value), token));
+            try {
+                return Optional.of(new Numeric(Long.parseLong(value), token));
+            } catch (NumberFormatException ignored) {
+                return Optional.empty();
+            }
         }
         return Optional.empty();
     }

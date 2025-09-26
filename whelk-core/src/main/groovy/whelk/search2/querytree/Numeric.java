@@ -1,7 +1,7 @@
 package whelk.search2.querytree;
 
-public record Numeric(int value, Token token) implements Value {
-    public Numeric(int value) {
+public record Numeric(long value, Token token) implements Value {
+    public Numeric(long value) {
         this(value, null);
     }
 
@@ -34,6 +34,6 @@ public record Numeric(int value, Token token) implements Value {
 
     @Override
     public int hashCode() {
-        return value;
+        return Long.hashCode(value);
     }
 }
