@@ -143,7 +143,7 @@ public sealed abstract class Group implements Node permits And, Or {
 
         nestedGroups.forEach((nestedStem, group) -> {
             var bool = new HashMap<String, Object>();
-            group.stream().collect(Collectors.groupingBy(pv -> pv.operator().equals(Operator.NOT_EQUALS)))
+            group.stream().collect(Collectors.groupingBy(pv -> pv.operator().equals(Operator.GREATER_THAN))) // FIXME
                     .forEach((k, v) -> {
                         boolean isGroup = v.size() > 1;
                         boolean isNegatedGroup = k && isGroup;

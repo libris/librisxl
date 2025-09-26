@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public sealed interface Node permits ActiveFilter, FreeText, Group, InactiveFilter, PathValue {
+public sealed interface Node permits Filter.AliasedFilter, FreeText, Group, Not, PathValue {
     Map<String, Object> toEs(ESSettings esSettings);
 
     Node expand(JsonLd jsonLd, Collection<String> rulingTypes);

@@ -14,8 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.Owl.INVERSE_OF;
@@ -25,11 +23,8 @@ import static whelk.search2.EsMappings.FOUR_DIGITS_INT_SUFFIX;
 import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
 import static whelk.search2.Operator.EQUALS;
 import static whelk.search2.Operator.GREATER_THAN;
-import static whelk.search2.Operator.NOT_EQUALS;
 import static whelk.search2.QueryUtil.boolWrap;
 import static whelk.search2.QueryUtil.makeUpLink;
-import static whelk.search2.QueryUtil.mustNotWrap;
-import static whelk.search2.QueryUtil.mustWrap;
 import static whelk.search2.QueryUtil.nestedWrap;
 import static whelk.search2.QueryUtil.parenthesize;
 
@@ -49,7 +44,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
             List<Token> unquotedTokens = ft.tokens().stream()
                     .map(t -> t.isQuoted() ? new Token.Raw(t.value(), t.offset()) : t)
                     .toList();
-            FreeText newFt = new FreeText(ft.textQuery(), ft.negate(), unquotedTokens, ft.connective());
+            FreeText newFt = new FreeText(ft.textQuery(), unquotedTokens, ft.connective());
             PathValue newPv = new PathValue(path, operator, newFt);
             return newPv.getEsNestedQuery(esSettings)
                     .orElse(newPv.getCoreEsQuery(esSettings));
@@ -88,7 +83,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
     @Override
     public Node getInverse() {
-        return new PathValue(path, operator.getInverse(), value);
+        return operator.isRange() ? withOperator(operator.getInverse()) : new Not(this);
     }
 
     @Override
@@ -112,6 +107,10 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
     public PathValue withValue(Value replacement) {
         return new PathValue(path, operator, replacement);
+    }
+
+    public PathValue withPath(Path path) {
+        return new PathValue(path, operator, value);
     }
 
     public PathValue toOrEquals() {
@@ -140,9 +139,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
     private Optional<Map<String, Object>> getEsNestedQuery(ESSettings esSettings) {
         return path.getEsNestedStem(esSettings.mappings())
-                .map(nestedStem -> operator == NOT_EQUALS
-                        ? mustNotWrap(nestedWrap(nestedStem, withOperator(EQUALS).getCoreEsQuery(esSettings)))
-                        : mustWrap(nestedWrap(nestedStem, getCoreEsQuery(esSettings))));
+                .map(nestedStem -> nestedWrap(nestedStem, getCoreEsQuery(esSettings)));
     }
 
     private Map<String, Object> _getCoreEsQuery(ESSettings esSettings) {
@@ -185,7 +182,6 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     private Map<String, Object> esNumOrDateFilter(String f, Object v) {
         return switch (operator) {
             case EQUALS -> filterWrap(buildTermQuery(f, v));
-            case NOT_EQUALS -> mustNotWrap(buildTermQuery(f, v));
             case GREATER_THAN_OR_EQUALS -> esRangeFilter(f, v, "gte");
             case GREATER_THAN -> esRangeFilter(f, v, "gt");
             case LESS_THAN_OR_EQUALS -> esRangeFilter(f, v, "lte");
@@ -195,31 +191,29 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
     private Map<String, Object> esFreeTextFilter(String f, FreeText ft, ESSettings esSettings) {
         if (ft.isWild()) {
-            return switch (operator) {
-                case EQUALS -> existsFilter(f);
-                case NOT_EQUALS -> notExistsFilter(f);
+            if (operator.isRange()) {
                 // FIXME: Range makes no sense here
-                default -> nonsenseFilter();
-            };
+                return nonsenseFilter();
+            }
+            return existsFilter(f);
         }
 
         var boostSettings = esSettings.boost().fieldBoost();
 
-        return switch (operator) {
-            case EQUALS -> ft.toEs(boostSettings.withField(f));
-            case NOT_EQUALS -> mustNotWrap(ft.toEs(boostSettings.withField(f, 0)));
+        if (operator.isRange()) {
             // FIXME: Range makes no sense here
-            default -> nonsenseFilter();
-        };
+            return nonsenseFilter();
+        }
+
+        return ft.toEs(boostSettings.withField(f));
     }
 
     private Map<String, Object> esResourceFilter(String f, Resource r) {
-        return switch (operator) {
-            case EQUALS -> filterWrap(buildTermQuery(f, r.jsonForm()));
-            case NOT_EQUALS -> mustNotWrap(buildTermQuery(f, r.jsonForm()));
+        if (operator.isRange()) {
             // FIXME: Range makes no sense here
-            default -> nonsenseFilter();
-        };
+            return nonsenseFilter();
+        }
+        return filterWrap(buildTermQuery(f, r.jsonForm()));
     }
 
     private Map<String, Object> _toSearchMapping(QueryTree qt, QueryParams queryParams) {
@@ -259,21 +253,19 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         if (!rulingTypes.isEmpty()) {
             List<Path.ExpandedPath> altPaths = expandedPath.getAltPaths(jsonLd, rulingTypes);
             var altPvNodes = altPaths.stream()
-                    .map(ap -> new PathValue(ap, operator, value).expand(jsonLd))
+                    .map(this::withPath)
+                    .map(pv -> pv.expand(jsonLd))
                     .toList();
-            return altPaths.size() > 1
-                    ? (operator == NOT_EQUALS ? new And(altPvNodes) : new Or(altPvNodes))
-                    : altPvNodes.getFirst();
+            return altPaths.size() > 1 ? new Or(altPvNodes) : altPvNodes.getFirst();
         }
 
         List<Node> prefilledFields = getPrefilledFields(expandedPath.path(), jsonLd);
 
         // When querying type, match any subclass by default (TODO: make this optional)
-        Node expanded = new PathValue(expandedPath, operator, value).expandType(jsonLd);
+        Node expanded = withPath(expandedPath).expandType(jsonLd);
 
         return prefilledFields.isEmpty() ? expanded : new And(Stream.concat(Stream.of(expanded), prefilledFields.stream()).toList());
     }
-
 
     private List<Node> getPrefilledFields(List<Subpath> path, JsonLd jsonLd) {
         List<Node> prefilledFields = new ArrayList<>();
@@ -283,7 +275,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
             if (sp instanceof Property p) {
                 for (Property.Restriction r : p.restrictions()) {
                     List<Subpath> restrictedPath = Stream.concat(currentPath.stream(), Stream.of(r.property())).toList();
-                    Node expanded = new PathValue(new Path(restrictedPath).expand(jsonLd, r.value()), operator, r.value()).expandType(jsonLd);
+                    Node expanded = new PathValue(new Path(restrictedPath).expand(jsonLd, r.value()), EQUALS, r.value()).expandType(jsonLd);
                     prefilledFields.add(expanded);
                 }
             }
@@ -306,18 +298,14 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
         List<Node> altFields = Stream.concat(Stream.of(baseType), subtypes.stream())
                 .sorted()
-                .map(t -> (Node) new PathValue(path, operator, new VocabTerm(t, jsonLd.vocabIndex.get(t))))
+                .map(t -> (Node) withValue(new VocabTerm(t, jsonLd.vocabIndex.get(t))))
                 .toList();
 
-        return operator == NOT_EQUALS ? new And(altFields) : new Or(altFields);
+        return new Or(altFields);
     }
 
     private static Map<String, Object> esRangeFilter(String path, Object value, String key) {
         return filterWrap(rangeWrap(Map.of(path, Map.of(key, value))));
-    }
-
-    private static Map<String, Object> notExistsFilter(String path) {
-        return mustNotWrap(existsFilter(path));
     }
 
     private static Map<String, Object> existsFilter(String path) {

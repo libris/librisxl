@@ -2,6 +2,7 @@ package whelk.search2;
 
 import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
+import whelk.search2.querytree.Filter;
 import whelk.search2.querytree.Property;
 
 import java.util.*;

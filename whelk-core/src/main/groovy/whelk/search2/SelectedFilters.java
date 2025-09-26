@@ -1,7 +1,7 @@
 package whelk.search2;
 
-import whelk.search2.querytree.ActiveFilter;
 import whelk.search2.querytree.And;
+import whelk.search2.querytree.Filter;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Numeric;
 import whelk.search2.querytree.Or;
@@ -63,7 +63,7 @@ public class SelectedFilters {
 
     public List<Node> getRangeSelected(String propertyKey) {
         return getSelected(propertyKey).stream()
-                .filter(n -> Operator.rangeOperators().contains(((PathValue) n).operator()))
+                .filter(n -> ((PathValue) n).operator().isRange())
                 .toList();
     }
 
@@ -101,7 +101,7 @@ public class SelectedFilters {
 
             Predicate<Node> isProperty = n -> n instanceof PathValue pv && pv.hasEqualProperty(slice.propertyKey());
             Predicate<Node> hasEqualsOp = n -> ((PathValue) n).operator().equals(Operator.EQUALS);
-            Predicate<Node> hasRangeOp = n -> Operator.rangeOperators().contains(((PathValue) n).operator());
+            Predicate<Node> hasRangeOp = n -> ((PathValue) n).operator().isRange();
             Predicate<Node> hasNumericValue = n -> ((PathValue) n).value() instanceof Numeric;
             Predicate<Node> isPropertyEquals = n -> isProperty.test(n) && hasEqualsOp.test(n);
 
@@ -179,10 +179,10 @@ public class SelectedFilters {
             detectPresentFilter.accept(f.getParsed().getInverse(), deactivatedSiteFilters);
 
             if (f instanceof Filter.AliasedFilter af) {
-                detectPresentFilter.accept(af.getActive(), activatedSiteFilters);
-                Node inverse = af.getActive().getInverse();
+                detectPresentFilter.accept(af, activatedSiteFilters);
+                Node inverse = af.getInverse();
                 detectPresentFilter.accept(inverse, deactivatedSiteFilters);
-                if (inverse instanceof ActiveFilter(Filter.AliasedFilter aliasedFilter)) {
+                if (inverse instanceof Filter.AliasedFilter aliasedFilter) {
                     if (isActivated(af)) {
                         deactivatedSiteFilters.computeIfAbsent(aliasedFilter, x -> new ArrayList<>())
                                 .addAll(getActivatingNodes(af));

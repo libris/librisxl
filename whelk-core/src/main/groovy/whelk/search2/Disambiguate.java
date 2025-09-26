@@ -3,16 +3,7 @@ package whelk.search2;
 import groovy.transform.PackageScope;
 import whelk.JsonLd;
 import whelk.search.QueryDateTime;
-import whelk.search2.querytree.DateTime;
-import whelk.search2.querytree.InvalidValue;
-import whelk.search2.querytree.Key;
-import whelk.search2.querytree.Link;
-import whelk.search2.querytree.Numeric;
-import whelk.search2.querytree.Property;
-import whelk.search2.querytree.Subpath;
-import whelk.search2.querytree.Token;
-import whelk.search2.querytree.Value;
-import whelk.search2.querytree.VocabTerm;
+import whelk.search2.querytree.*;
 
 import java.time.format.DateTimeParseException;
 import java.util.*;
