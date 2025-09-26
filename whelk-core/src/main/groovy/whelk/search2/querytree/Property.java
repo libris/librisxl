@@ -16,21 +16,21 @@ import static whelk.JsonLd.Rdfs.*;
 
 
 public non-sealed class Property implements Subpath {
-    private final String name;
-    private final Map<String, Object> definition;
+    protected String name;
+    protected Map<String, Object> definition;
     private Key.RecognizedKey mappedKey;
 
-    private List<String> domain;
-    private List<String> range;
-    private String inverseOf;
+    protected List<String> domain;
+    protected List<String> range;
+    protected String inverseOf;
 
-    private boolean isVocabTerm;
+    protected boolean isVocabTerm;
 
     public record Restriction(Property property, Value value) {
     }
 
-    private List<Restriction> restrictions;
-    private List<Property> propertyChain;
+    protected List<Restriction> restrictions;
+    protected List<Property> propertyChain;
 
     public Property(String name, JsonLd jsonLd, Key.RecognizedKey mappedKey) {
         this(name, jsonLd);
@@ -63,6 +63,10 @@ public non-sealed class Property implements Subpath {
         this.inverseOf = getInverseOf(jsonLd);
         this.propertyChain = getPropertyChain(jsonLd);
         this.restrictions = getAllRangeRestrictions(jsonLd);
+    }
+
+    protected Property() {
+
     }
 
     public String name() {
@@ -301,6 +305,25 @@ public non-sealed class Property implements Subpath {
     public static class TextQuery extends Property {
         public TextQuery(JsonLd jsonLd) {
             super("textQuery", jsonLd);
+        }
+    }
+
+    public static class Ix extends Property {
+        public Ix(String name) {
+            this.definition = Collections.emptyMap();
+            this.name = name;
+            this.domain = Collections.emptyList();
+            this.range = Collections.emptyList();
+            this.inverseOf = null;
+            this.propertyChain = Collections.emptyList();
+            this.restrictions = Collections.emptyList();
+        }
+
+        @Override
+        public List<Property> expand() {
+            return name.contains(".")
+                    ? Arrays.stream(name.split("\\.")).map(s -> (Property) new Ix(s)).toList()
+                    : List.of(this);
         }
     }
 }

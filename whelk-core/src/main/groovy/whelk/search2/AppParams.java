@@ -129,7 +129,11 @@ public class AppParams {
 
         public Property getProperty(JsonLd jsonLd) {
             if (property == null) {
-                this.property = new Property(propertyKey, jsonLd);
+                if (propertyKey.contains(".")) {
+                    this.property = new Property.Ix(propertyKey);
+                } else {
+                    this.property = new Property(propertyKey, jsonLd);
+                }
             }
             return property;
         }
