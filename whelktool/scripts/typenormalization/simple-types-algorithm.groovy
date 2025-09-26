@@ -28,7 +28,7 @@ class TypeMappings implements UsingJsonKeys {
       'VideoRecording': [category: 'https://id.kb.se/term/ktg/VideoStorageMedium', workCategory: 'https://id.kb.se/term/ktg/MovingImage'],  // 20515
       'Map': [category: 'https://id.kb.se/term/rda/Sheet', workCategory: 'https://id.kb.se/term/rda/CartographicImage'],  // 12686
       'Globe': [category: 'https://id.kb.se/term/rda/Object', workCategory: 'https://id.kb.se/term/ktg/Globe'],  // 74
-      'StillImageInstance': [category: 'https://id.kb.se/term/rda/Sheet', workCategory: 'https://id.kb.se/term/ktg/StillImage'], // 54954
+      'StillImageInstance': [category: 'https://id.kb.se/term/rda/Sheet', workCategory: 'https://id.kb.se/term/rda/StillImage'], // 54954
       'TextInstance': [category: 'https://id.kb.se/term/rda/Volume' , workCategory: 'https://id.kb.se/term/rda/Text'], // 301
     ]
 
@@ -205,6 +205,7 @@ class TypeNormalizer implements UsingJsonKeys {
 
         changed |= mappings.fixMarcLegacyType(instance, work)
 
+
         changed |= simplifyWorkType(work)
         changed |= simplifyInstanceType(instance)
 
@@ -363,7 +364,7 @@ class TypeNormalizer implements UsingJsonKeys {
         var isVolume = mappings.matches(carrierTypes, "Volume") || looksLikeVolume(instance)
 
         // Remove old Braille terms and replace them with KTG terms
-        var toDrop = [KBRDA + "Volume", MARC + "Braille", MARC + "TacMaterialType-b"] as Set
+        var toDrop = [MARC + "Braille", MARC + "TacMaterialType-b"] as Set
         var nonBrailleCarrierTypes = carrierTypes.findAll { !toDrop.contains(it.get(ID)) }
         if (nonBrailleCarrierTypes.size() < carrierTypes.size()) {
             isBraille = true
@@ -388,10 +389,11 @@ class TypeNormalizer implements UsingJsonKeys {
         var isSoundRecording = mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/ktg/SoundStorageMedium')
         var isVideoRecording = mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/ktg/VideoStorageMedium')
 
+        // ----- Section: identify electronic and print -----
+
         // If an instance has a certain (old) type which implies physical electronic carrier
         // and carrierTypes corroborating this:
         if (mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/ktg/AbstractElectronic')) {
-            // TODO: if PhysicalResource, precisize category to ElectronicStorageMedium ...
             isElectronic = true // assume it is electronic
         }
 
@@ -403,7 +405,11 @@ class TypeNormalizer implements UsingJsonKeys {
             }
         }
 
-        var probablyPrint = assumedToBePrint(instance)
+        // If something has old itype Electronic and new itype PhysicalResource,
+        // we can assume it id an electronic storage medium
+        if (isElectronic && instance.get(TYPE, 'PhysicalResource')) {
+            instanceGenreForms << [(ID): KTG + 'ElectronicStorageMedium']
+        }
 
         // Remove redundant MARC mediaTerms if the information is implied by computed category:
         if (isSoundRecording && dropRedundantString(instance, "marc:mediaTerm", ~/(?i)ljudupptagning/)) {
@@ -418,6 +424,8 @@ class TypeNormalizer implements UsingJsonKeys {
             changed = true
         }
 
+        // Start wot
+        var probablyPrint = assumedToBePrint(instance)
         // TODO: instead, for Monograph, fold overlapping categories into common specific category...
         // e.g. [Print, Volume] => PrintedVolume
         if (!isElectronic) {
