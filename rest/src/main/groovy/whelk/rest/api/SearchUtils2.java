@@ -77,7 +77,8 @@ public class SearchUtils2 {
         Map<String, Object> statsRepr = new LinkedHashMap<>();
         for (var s : sliceList) {
             var slice = ((Map<?, ?>) s);
-            String key = (String) ((List<?>) slice.get("dimensionChain")).getFirst();
+            var chain = ((List<?>) slice.get("dimensionChain")).stream().map(String::valueOf).toList();
+            String key = String.join(".", chain);
             int limit = (Integer) slice.get("itemLimit");
             Boolean range = (Boolean) slice.get("range");
             String connective = (String) slice.get("connective");
