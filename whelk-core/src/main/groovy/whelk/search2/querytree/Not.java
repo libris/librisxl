@@ -6,6 +6,7 @@ import whelk.search2.QueryParams;
 import whelk.search2.QueryUtil;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import static whelk.search2.QueryUtil.makeUpLink;
@@ -46,5 +47,10 @@ public record Not(Node node) implements Node {
     @Override
     public Node getInverse() {
         return node;
+    }
+
+    @Override
+    public List<Node> children() {
+        return List.of(node);
     }
 }
