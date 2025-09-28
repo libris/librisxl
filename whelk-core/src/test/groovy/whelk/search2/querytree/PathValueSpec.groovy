@@ -93,11 +93,11 @@ class PathValueSpec extends Specification {
 
     def "To ES query (negation + nested field)"() {
         given:
-        PathValue pathValue = (PathValue) QueryTreeBuilder.buildTree("NOT p3:\"https://id.kb.se/x\"", disambiguate)
+        var tree = QueryTreeBuilder.buildTree("NOT p3:\"https://id.kb.se/x\"", disambiguate)
         ESSettings esSettings = new ESSettings(esMappings, new ESSettings.Boost([:]))
 
         expect:
-        pathValue.toEs(esSettings) == [
+        tree.toEs(esSettings) == [
                 "bool": [
                         "must_not": [
                                 "nested": [
