@@ -4,6 +4,8 @@ import java.util.regex.Pattern
 import whelk.Whelk
 import static whelk.util.Jackson.mapper
 
+def missingCategoryLog = getReportWriter("missing_category_log.tsv")
+
 interface UsingJsonKeys {
     static final var ID = '@id'
     static final var TYPE = '@type'
@@ -191,9 +193,12 @@ class TypeNormalizer implements UsingJsonKeys {
     static KTG = TypeMappings.KTG
 
     TypeMappings mappings
+    def missingCategoryLog
 
-    TypeNormalizer(TypeMappings mappings) {
+
+    TypeNormalizer(TypeMappings mappings, missingCategoryLog) {
         this.mappings = mappings
+        this.missingCategoryLog = missingCategoryLog
     }
 
     /** Normalization action */
@@ -218,10 +223,10 @@ class TypeNormalizer implements UsingJsonKeys {
             reorderForReadability(instance)
         }
         if (!instance.category || instance.category.isEmpty()){
-            println("${instance[ID]}\tNo INSTANCE categories after reducing work / instance types\t${oldWtype} / ${oldItype}")
+            missingCategoryLog.println("${instance[ID]}\tNo INSTANCE categories after reducing work / instance types\t${oldWtype} / ${oldItype}")
         }
         if (!work.category || work.category.isEmpty()){
-            println("${instance[ID]}\t No WORK categories after reducing work / instance types\t${oldWtype} / ${oldItype}")
+            missingCategoryLog.println("${instance[ID]}\t No WORK categories after reducing work / instance types\t${oldWtype} / ${oldItype}")
         }
 
         return changed
@@ -565,7 +570,7 @@ class TypeNormalizer implements UsingJsonKeys {
 // TODO: Instead, normalize linked works first, then instances w/o linked works?
 convertedWorks = java.util.concurrent.ConcurrentHashMap.newKeySet()
 
-typeNormalizer = new TypeNormalizer(new TypeMappings(getWhelk(), scriptDir))
+typeNormalizer = new TypeNormalizer(new TypeMappings(getWhelk(), scriptDir), missingCategoryLog)
 
 if (typeNormalizer.addCategory) {
     System.out.println("Normalizing using property: category")
