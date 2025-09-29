@@ -1,10 +1,9 @@
+import whelk.Whelk
 import whelk.JsonLd
 import whelk.converter.TrigToJsonLdParser
-import whelk.datatool.DocumentItem
 
-List<Map> loadPatchGraph(String rdfPatchFile) {
-    Map data = new File(rdfPatchFile).withInputStream { TrigToJsonLdParser.parse(it) }
-    whelk = getWhelk()
+List<Map> loadDescriptions(Whelk whelk, String rdfSourcePath) {
+    Map data = new File(rdfSourcePath).withInputStream { TrigToJsonLdParser.parse(it) }
     contextDocData = whelk.storage.loadDocumentByMainId(whelk.systemContextUri, null).data
     return TrigToJsonLdParser.compact(data, contextDocData)[GRAPH]
 }
@@ -22,7 +21,7 @@ boolean update(JsonLd jsonld, Map mainEntity, Map desc, replaceSingle=true) {
 
         if (jsonld.isSetContainer(key)) {
             if (key !in mainEntity) mainEntity[key] = []
-            mainEntity[key] += values
+            mainEntity[key] += values  // FIXME: manual set logic!
         } else {
             mainEntity[key] = values[0]
         }
@@ -32,21 +31,28 @@ boolean update(JsonLd jsonld, Map mainEntity, Map desc, replaceSingle=true) {
 }
 
 Map descriptionMap = [:]
-List thingIds = []
 
 String rdfPatchFile = System.getProperty("rdfpatch")
-var graph = loadPatchGraph(rdfPatchFile)
-for (desc in graph) {
+var graph = loadDescriptions(getWhelk(), rdfPatchFile)
+for (var desc : graph) {
     id = desc[ID]
     descriptionMap[id] = desc
-    thingIds << id
 }
 
-selectByIds(thingIds) { dataItem ->
+Set<String> createdIds = new HashSet()
+
+selectByIds(descriptionMap.keySet()) { dataItem ->
     def mainEntity = dataItem.graph[1]
     def mainId = mainEntity[ID]
     Map desc = descriptionMap[mainId]
     if (update(dataItem.whelk.jsonld, mainEntity, desc)) {
+        createdIds << mainId
         dataItem.scheduleSave()
+    }
+}
+
+List<Map> newDocs = descriptionMap.values().findResults {
+    if (it[ID] !in createdIds) {
+        println "Unxpected NEW: ${it[ID]}"
     }
 }
