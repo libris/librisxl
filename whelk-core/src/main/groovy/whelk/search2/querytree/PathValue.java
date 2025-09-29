@@ -21,6 +21,7 @@ import static whelk.JsonLd.Owl.PROPERTY_CHAIN_AXIOM;
 import static whelk.JsonLd.TYPE_KEY;
 import static whelk.search2.EsMappings.FOUR_DIGITS_INT_SUFFIX;
 import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
+import static whelk.search2.EsMappings.KEYWORD;
 import static whelk.search2.Operator.EQUALS;
 import static whelk.search2.Operator.GREATER_THAN;
 import static whelk.search2.QueryUtil.boolWrap;
@@ -168,8 +169,13 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         if (operator.isRange() && esMappings.hasFourDigitsIntField(field) && n.isFourDigits()) {
             return esNumOrDateFilter(field + FOUR_DIGITS_INT_SUFFIX, n.value());
         }
-        if (!operator.isRange() && esMappings.hasFourDigitsKeywordField(field) && n.isFourDigits()) {
-            return esNumOrDateFilter(field + FOUR_DIGITS_KEYWORD_SUFFIX, n.toString());
+        if (!operator.isRange()) {
+            if (esMappings.hasFourDigitsKeywordField(field) && n.isFourDigits()) {
+                return esNumOrDateFilter(field + FOUR_DIGITS_KEYWORD_SUFFIX, n.toString());
+            }
+            if (esMappings.hasKeywordSubfield(field)) {
+                return esTermQueryFilter(String.format("%s.%s", field, KEYWORD), n.toString());
+            }
         }
         if (esMappings.isLongTypeField(field)) {
             return esNumOrDateFilter(field, n.value());
@@ -181,7 +187,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
     private Map<String, Object> esNumOrDateFilter(String f, Object v) {
         return switch (operator) {
-            case EQUALS -> filterWrap(buildTermQuery(f, v));
+            case EQUALS -> esTermQueryFilter(f, v);
             case GREATER_THAN_OR_EQUALS -> esRangeFilter(f, v, "gte");
             case GREATER_THAN -> esRangeFilter(f, v, "gt");
             case LESS_THAN_OR_EQUALS -> esRangeFilter(f, v, "lte");
@@ -213,7 +219,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
             // FIXME: Range makes no sense here
             return nonsenseFilter();
         }
-        return filterWrap(buildTermQuery(f, r.jsonForm()));
+        return esTermQueryFilter(f, r.jsonForm());
     }
 
     private Map<String, Object> _toSearchMapping(QueryTree qt, QueryParams queryParams) {
@@ -318,6 +324,10 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
     private static Map<String, Object> rangeWrap(Map<?, ?> m) {
         return Map.of("range", m);
+    }
+
+    private static Map<String, Object> esTermQueryFilter(String field, Object value) {
+        return filterWrap(Map.of("term", Map.of(field, value)));
     }
 
     private static Map<String, Object> buildTermQuery(String field, Object value) {
