@@ -222,6 +222,7 @@ class GroupSpec extends Specification {
 
     def "To ES query: group nested 4"() {
         given:
+        // TODO: Interpret "(p3.p1:x p3.p4:y) (p3.p1:a p3.p4:b)" differently, i.e. don't flatten and treat each group as a distinct nested clause?
         var tree = QueryTreeBuilder.buildTree("p3.p1:x p3.p4:y p3.p1:a p3.p4:b", disambiguate)
         ESSettings esSettings = new ESSettings(TestData.getEsMappings(), new ESSettings.Boost([:]))
 
