@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static whelk.JsonLd.Owl.INVERSE_OF;
 import static whelk.JsonLd.Owl.PROPERTY_CHAIN_AXIOM;
@@ -232,7 +233,8 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
         if (!rulingTypes.isEmpty()) {
             List<Path.ExpandedPath> altPaths = expandedPath.getAltPaths(jsonLd, rulingTypes);
-            var altPvNodes = altPaths.stream()
+            List<Path.ExpandedPath> alt2Paths = expandedPath.getAlt2Paths(jsonLd);
+            var altPvNodes = Stream.concat(altPaths.stream(), alt2Paths.stream())
                     .map(ap -> new PathValue(ap, operator, value).expand(jsonLd))
                     .toList();
             return altPaths.size() > 1

@@ -156,6 +156,8 @@ class JsonLd {
     /**
      * Terms that are declared as index containers in the context.
      */
+    public Map<String, String> indexMapTermsFor
+    public Map<String, Set<String>> indexMapTermsOf
     public Set<String> indexMapTerms
 
     /**
@@ -197,9 +199,14 @@ class JsonLd {
             (isSetContainer(value) || isListContainer(value)) ? key : null
         } as Set<String>
 
-        indexMapTerms = context.findResults { key, value ->
-            isIndexContainer(value) ? key : null
-        } as Set<String>
+        indexMapTermsFor = context
+                .findAll { _, dfn -> isIndexContainer(dfn) && dfn[ID_KEY] }
+                .collectEntries { key, dfn -> [key, dfn[ID_KEY]] }
+        indexMapTermsOf = new HashMap<>();
+        indexMapTermsFor.each {alias, term ->
+            indexMapTermsOf.computeIfAbsent(term, _ -> new HashSet<>()).add(alias)
+        }
+        indexMapTerms = indexMapTermsFor.keySet()
 
         this.displayData = displayData ?: Collections.emptyMap()
 
