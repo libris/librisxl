@@ -11,39 +11,39 @@ import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.retry.RetryConfig
 import io.github.resilience4j.retry.RetryRegistry
 import io.prometheus.client.CollectorRegistry
-import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy
-import org.apache.hc.client5.http.ssl.HostnameVerificationPolicy
-import org.apache.hc.core5.http.Header
-import org.apache.hc.core5.http.HttpEntity
-import org.apache.hc.core5.http.HttpHeaders
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient
-import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.classic.methods.HttpGet
 import org.apache.hc.client5.http.classic.methods.HttpPost
 import org.apache.hc.client5.http.classic.methods.HttpPut
-import org.apache.hc.core5.http.ClassicHttpRequest
-import org.apache.hc.client5.http.ssl.NoopHostnameVerifier
-import org.apache.hc.core5.ssl.TrustStrategy
-import org.apache.hc.core5.http.ContentType
-import org.apache.hc.core5.http.io.entity.StringEntity
+import org.apache.hc.client5.http.config.ConnectionConfig
+import org.apache.hc.client5.http.config.RequestConfig
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient
 import org.apache.hc.client5.http.impl.classic.HttpClients
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder
+import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy
+import org.apache.hc.client5.http.ssl.HostnameVerificationPolicy
+import org.apache.hc.client5.http.ssl.NoopHostnameVerifier
+import org.apache.hc.core5.http.ClassicHttpRequest
+import org.apache.hc.core5.http.ContentType
+import org.apache.hc.core5.http.Header
+import org.apache.hc.core5.http.HttpEntity
+import org.apache.hc.core5.http.HttpHeaders
+import org.apache.hc.core5.http.io.entity.StringEntity
 import org.apache.hc.core5.http.message.BasicHeader
-import org.apache.hc.core5.ssl.SSLContexts
-import org.apache.hc.core5.http.io.entity.EntityUtils
-import org.apache.hc.core5.util.Timeout
 import org.apache.hc.core5.pool.PoolConcurrencyPolicy
 import org.apache.hc.core5.pool.PoolReusePolicy
-import org.apache.hc.client5.http.config.ConnectionConfig
-import org.apache.hc.core5.http.ssl.TLS
+import org.apache.hc.core5.ssl.SSLContexts
+import org.apache.hc.core5.ssl.TrustStrategy
 import org.apache.hc.core5.util.TimeValue
+import org.apache.hc.core5.util.Timeout
 import whelk.exception.ElasticIOException
 import whelk.exception.UnexpectedHttpStatusException
 
 import javax.net.ssl.SSLContext
 import java.time.Duration
 import java.util.function.Function
+
+import static whelk.util.Jackson.mapper
 
 @Log
 class ElasticClient {
@@ -181,7 +181,7 @@ class ElasticClient {
         log.info "ElasticSearch component initialized with ${elasticHosts.size()} nodes."
     }
 
-    String performRequest(String method, String path, String body, String contentType0 = null)
+    Map performRequest(String method, String path, String body, String contentType0 = null)
         throws ElasticIOException, UnexpectedHttpStatusException {
         try {
             def nodes = cycleNodes()
@@ -209,7 +209,7 @@ class ElasticClient {
 
     class ElasticNode {
         String host
-        Function<ClassicHttpRequest, Tuple2<Integer, String>> send
+        Function<ClassicHttpRequest, Tuple2<Integer, Map>> send
 
         ElasticNode(String host) {
             this.host = host
@@ -228,17 +228,17 @@ class ElasticClient {
             }
         }
 
-        String performRequest(String method, String path, String body, String contentType0 = null) {
-            def (int statusCode, String resultBody) = send.apply(buildRequest(method, path, body, contentType0))
+        Map performRequest(String method, String path, String body, String contentType0 = null) {
+            def (int statusCode, Map result) = send.apply(buildRequest(method, path, body, contentType0))
             if (statusCode >= 200 && statusCode < 300) {
-                return resultBody
+                return result
             }
             else {
-                throw new UnexpectedHttpStatusException(resultBody, statusCode)
+                throw new UnexpectedHttpStatusException(mapper.writeValueAsString(result), statusCode)
             }
         }
 
-        private Tuple2<Integer, String> sendRequest(ClassicHttpRequest request) {
+        private Tuple2<Integer, Map> sendRequest(ClassicHttpRequest request) {
             try {
                 return sendRequestRetry4XX(request)
             }
@@ -247,12 +247,12 @@ class ElasticClient {
             }
         }
 
-        private Tuple2<Integer, String> sendRequestRetry4XX(ClassicHttpRequest request) {
+        private Tuple2<Integer, Map> sendRequestRetry4XX(ClassicHttpRequest request) {
             int backOffSeconds = 1
             while (true) {
                 def result = httpClient.execute(request) { response ->
                     int statusCode = response.getCode()
-                    String responseBody = EntityUtils.toString(response.getEntity())
+                    Map responseBody = mapper.readValue(response.getEntity().getContent(), Map)
                     return new Tuple2(statusCode, responseBody)
                 }
 
