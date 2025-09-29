@@ -154,9 +154,10 @@ class TypeMappings implements UsingJsonKeys {
             issuancetype = 'Collection'
         }
 
-        // TODO: Decide if we want to keep componentPart as work type!
-        if (issuancetype == 'SerialComponentPart') {
-            issuancetype = 'ComponentPart'
+        // Remove ComponentPart as a work/issuance type, retaining the information with an instance category
+        if (issuancetype == 'SerialComponentPart' || issuancetype == 'ComponentPart') {
+            instance.get('category', []) << [(ID): KTG + 'ComponentPart']
+            issuancetype = 'Monograph'
         }
 
         // Set the new work type
