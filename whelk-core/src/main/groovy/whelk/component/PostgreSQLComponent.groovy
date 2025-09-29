@@ -2584,7 +2584,9 @@ class PostgreSQLComponent {
                 JsonLd.Platform.CATEGORY_BY_COLLECTION,
         ]
         DocumentUtil.findKey(doc.data, syntheticPropsNeverStore) { value, path ->
-            new DocumentUtil.Remove()
+            if (path.first() != JsonLd.CONTEXT_KEY) {
+                new DocumentUtil.Remove()
+            }
         }
 
         if (linkFinder != null) {
