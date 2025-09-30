@@ -82,6 +82,16 @@ selectByIds(descriptionMap.keySet()) { dataItem ->
 
 List<Map> newDocs = descriptionMap.values().findResults {
     if (it[ID] !in createdIds) {
-        println "Unxpected NEW: ${it[ID]}"
+        create( [ "@graph": [
+            [
+                "@id": "TEMPID",
+                "mainEntity" : ["@id": it[ID]]
+            ],
+            it
+        ]])
     }
 }
+
+selectFromIterable(newDocs, { newItem ->
+    newItem.scheduleSave()
+})
