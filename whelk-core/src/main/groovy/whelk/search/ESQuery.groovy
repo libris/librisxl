@@ -26,6 +26,7 @@ class ESQuery {
     private JsonLd jsonld
     private Set keywordFields
     private Set fourDigitIntFields
+    private Set fourDigitKeywordFields
     private Set dateFields
     private Set<String> nestedFields
     private Set<String> nestedNotInParentFields
@@ -88,6 +89,7 @@ class ESQuery {
             Map mappings = whelk.elastic.getMappings()
             this.keywordFields = getKeywordFields(mappings)
             this.fourDigitIntFields = getFourDigitIntFields(mappings)
+            this.fourDigitKeywordFields = getFourDigitKeywordFields(mappings)
             this.dateFields = getFieldsOfType('date', mappings)
             this.nestedFields = getFieldsOfType('nested', mappings)
             this.nestedNotInParentFields = nestedFields - getFieldsWithSetting('include_in_parent', true, mappings)
@@ -1057,9 +1059,14 @@ class ESQuery {
                 // each value is under its own unique key in parameterToRanges (hence the index)
                 String parameterMapKey = parameter in andParameters ? "${parameterNoPrefix}-${idx}" : parameterNoPrefix
                 Ranges r = parameterToRanges.computeIfAbsent(parameterMapKey, { p ->
-                    parameterNoPrefix in dateFields
-                            ? Ranges.date(parameterNoPrefix, whelk.getTimezone(), whelk)
-                            : Ranges.nonDate(parameterNoPrefix, whelk)
+                    if (parameterNoPrefix in dateFields) {
+                        return Ranges.date(parameterNoPrefix, whelk.getTimezone(), whelk)
+                    }
+                    def fourDigitsFieldName = parameterNoPrefix + '_4_digits_int'
+                    if (fourDigitsFieldName in fourDigitIntFields) {
+                        return Ranges.fourDigits(parameterNoPrefix, fourDigitsFieldName, whelk)
+                    }
+                    return Ranges.nonDate(parameterNoPrefix, whelk)
                 })
 
                 values.each { it.tokenize(',').each { r.add(prefix, it.trim()) } }
@@ -1106,6 +1113,10 @@ class ESQuery {
 
     private static Set getFourDigitIntFields(Map mappings) {
         return getFieldsByCondition(mappings, { String fieldName, _ -> fieldName.endsWith('_4_digits_int') }, '')
+    }
+
+    private static Set getFourDigitKeywordFields(Map mappings) {
+        return getFieldsByCondition(mappings, { String fieldName, _ -> fieldName.endsWith('_4_digits_keyword') }, '')
     }
 
     private static Set getFieldsByCondition(Map mappings, Closure cond, String parentName) {
