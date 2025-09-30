@@ -8,7 +8,9 @@ List<Map> loadDescriptions(Whelk whelk, String rdfSourcePath) {
     return TrigToJsonLdParser.compact(data, contextDocData)[GRAPH]
 }
 
-boolean update(JsonLd jsonld, Map mainEntity, Map desc, replaceSingle=true) {
+boolean update(JsonLd jsonld, Map mainEntity, Map desc, deleteShape=null, replaceSingle=true) {
+    var modified = false
+
     assert mainEntity[ID] == desc[ID]
     for (def key in desc.keySet()) {
         def value = desc[key]
@@ -21,18 +23,26 @@ boolean update(JsonLd jsonld, Map mainEntity, Map desc, replaceSingle=true) {
             }
         }
 
-        if (key !in mainEntity) mainEntity[key] = []
+        if (key !in mainEntity) {
+            mainEntity[key] = []
+            modified = true
+        }
         def existing = mainEntity[key]
 
         // Add to set
         if (jsonld.isSetContainer(key)) {
-            List allExisting = existing instanceof List ? existing : [existing]
-            Set<String> existingLinks = allExisting.findResults {
+            List hasValues = existing instanceof List ? existing : [existing]
+            Set<String> existingLinks = hasValues.findResults {
                 it instanceof Map ? it[ID] : null
             } as Set
-            mainEntity[key] += values.findAll {
-                it instanceof Map ? it[ID] !in existingLinks : it !in existing
+            int hadSize = hasValues.size()
+            hasValues += values.findAll {
+                it instanceof Map ? it[ID] !in existingLinks : it !in hasValues
             }
+            if (hasValues.size() > hadSize) {
+                modified = true
+            }
+            mainEntity[key] = hasValues
         // Overwrite language value
         } else if (jsonld.isLangContainer(key) &&
                    value instanceof Map &&
@@ -46,13 +56,13 @@ boolean update(JsonLd jsonld, Map mainEntity, Map desc, replaceSingle=true) {
         }
     }
 
-    return true
+    return modified
 }
 
 Map descriptionMap = [:]
 
-String rdfPatchFile = System.getProperty("rdfpatch")
-var graph = loadDescriptions(getWhelk(), rdfPatchFile)
+String rdfDataFile = System.getProperty("rdfdata")
+var graph = loadDescriptions(getWhelk(), rdfDataFile)
 for (var desc : graph) {
     id = desc[ID]
     descriptionMap[id] = desc
