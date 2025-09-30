@@ -25,6 +25,7 @@ class TypeMappings implements UsingJsonKeys {
 
     Whelk whelk
 
+    // TODO Should Sound & Video storage medium -- here and further down! -- be replaced with exact matches RDA media type audio and video?
     Map cleanupInstanceTypes = [
       'SoundRecording': [category: 'https://id.kb.se/term/ktg/SoundStorageMedium', workCategory: 'https://id.kb.se/term/ktg/Audio'],  // 170467
       'VideoRecording': [category: 'https://id.kb.se/term/ktg/VideoStorageMedium', workCategory: 'https://id.kb.se/term/ktg/MovingImage'],  // 20515
@@ -261,10 +262,10 @@ class TypeNormalizer implements UsingJsonKeys {
                 work.get('contentType', []) << [(ID): KBRDA + 'CartographicImage'] // TODO: good enough guess?
             }
         } else if (wtype == 'MixedMaterial') {
-            work.get('genreForm', []) << [(ID): KTG + 'MixedMaterial'] // TODO Will this be a ktg term?
+            work.get('genreForm', []) << [(ID): KTG + 'MixedMaterial']
         }
         else if (wtype == 'Kit') {
-            work.get('genreForm', []) << [(ID): KTG + 'Kit'] // TODO Will this be a ktg term?
+            work.get('genreForm', []) << [(ID): KTG + 'Kit']
         }
         else if (wtype == 'Object') {
             work.get('genreForm', []) << [(ID): KBRDA + 'ThreeDimensionalForm'] // TODO map to ktg Object instead instead?
@@ -286,7 +287,7 @@ class TypeNormalizer implements UsingJsonKeys {
         var workGenreForms = mappings.reduceSymbols(asList(work.get("genreForm")))
 
         if (workGenreForms.removeIf { !it[ID] && it['prefLabel'] == 'DAISY' }) {
-            workGenreForms << [(ID): KTG + 'Audiobook']
+            workGenreForms << [(ID): SAOGF + 'Ljudb%C3%B6cker']
         }
 
         if (addCategory) {
