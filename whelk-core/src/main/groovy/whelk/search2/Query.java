@@ -448,7 +448,11 @@ public class Query {
                                 String bucketKey = entry.getKey();
                                 int count = entry.getValue();
                                 Value v = disambiguate.mapValueForProperty(property, bucketKey).orElse(new FreeText(bucketKey));
-                                newBuckets.put(new PathValue(property, Operator.EQUALS, v), count);
+                                if (property instanceof Property.Ix ix) {
+                                    newBuckets.put(new PathValue(ix.term(), Operator.EQUALS, v), count); // TODO this is just for the isSelected comparison
+                                } else {
+                                    newBuckets.put(new PathValue(property, Operator.EQUALS, v), count);
+                                }
                             });
                     propertyToBucketCounts.put(property, newBuckets);
                 }
@@ -468,7 +472,7 @@ public class Query {
                     return;
                 }
                 var sliceNode = new LinkedHashMap<>();
-                var observations = getObservations(propertyKey, buckets);
+                var observations = getObservations(property, buckets);
                 if (!observations.isEmpty()) {
                     if (selectedFilters.isRangeFilter(propertyKey)) {
                         sliceNode.put("search", getRangeTemplate(propertyKey));
@@ -483,7 +487,8 @@ public class Query {
             return sliceByDimension;
         }
 
-        private List<Map<String, Object>> getObservations(String propertyKey, Map<PathValue, Integer> buckets) {
+        private List<Map<String, Object>> getObservations(Property property, Map<PathValue, Integer> buckets) {
+            String propertyKey = property.name();
             List<Map<String, Object>> observations = new ArrayList<>();
 
             Connective connective = selectedFilters.getConnective(propertyKey);
@@ -498,7 +503,7 @@ public class Query {
                     return;
                 }
 
-                boolean isSelected = selectedFilters.isSelected(pv, propertyKey);
+                boolean isSelected = selectedFilters.isSelected(pv, property.queryForm());
 
                 Consumer<QueryTree> addObservation = alteredTree -> {
                     Value v = pv.value();

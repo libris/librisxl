@@ -309,9 +309,13 @@ public non-sealed class Property implements Subpath {
     }
 
     public static class Ix extends Property {
-        public Ix(String name) {
+        private final Property term;
+
+        public Ix(String name, Property term) {
             this.definition = Collections.emptyMap();
             this.name = name;
+            this.term = term;
+
             this.domain = Collections.emptyList();
             this.range = Collections.emptyList();
             this.inverseOf = null;
@@ -322,8 +326,22 @@ public non-sealed class Property implements Subpath {
         @Override
         public List<Property> expand() {
             return name.contains(".")
-                    ? Arrays.stream(name.split("\\.")).map(s -> (Property) new Ix(s)).toList()
+                    ? Arrays.stream(name.split("\\.")).map(s -> (Property) new Ix(s, null)).toList()
                     : List.of(this);
+        }
+
+        @Override
+        public boolean isObjectProperty() {
+            return true;
+        }
+
+        @Override
+        public String queryForm() {
+            return term.name();
+        }
+
+        public Property term() {
+            return term;
         }
     }
 }

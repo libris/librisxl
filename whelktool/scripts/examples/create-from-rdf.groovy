@@ -3,7 +3,7 @@ import whelk.converter.TrigToJsonLdParser
 import whelk.datatool.DocumentItem
 
 List<Map> loadDescriptions(Whelk whelk, String rdfSourcePath) {
-    Map data = new File(rdfPatchFile).withInputStream { TrigToJsonLdParser.parse(it) }
+    Map data = new File(rdfSourcePath).withInputStream { TrigToJsonLdParser.parse(it) }
     contextDocData = whelk.storage.loadDocumentByMainId(whelk.systemContextUri, null).data
     return TrigToJsonLdParser.compact(data, contextDocData)[GRAPH]
 }

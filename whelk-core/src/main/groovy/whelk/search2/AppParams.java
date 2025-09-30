@@ -129,8 +129,10 @@ public class AppParams {
 
         public Property getProperty(JsonLd jsonLd) {
             if (property == null) {
-                if (propertyKey.contains(".")) {
-                    this.property = new Property.Ix(propertyKey);
+                if (propertyKey.contains(".") && jsonLd.indexMapTerms.contains(propertyKey.split("\\.")[0])) {
+                    var path = propertyKey.split("\\.");
+                    var term = new Property(jsonLd.indexMapTermsFor.get(path[0]), jsonLd);
+                    this.property = new Property.Ix(propertyKey, term);
                 } else {
                     this.property = new Property(propertyKey, jsonLd);
                 }
