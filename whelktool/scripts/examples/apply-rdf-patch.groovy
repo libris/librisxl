@@ -13,15 +13,34 @@ boolean update(JsonLd jsonld, Map mainEntity, Map desc, replaceSingle=true) {
     for (def key in desc.keySet()) {
         def value = desc[key]
         List values = value instanceof List ? value : [value]
+
+        // Expand prefix names to full URIs
         for (def v in values) {
             if (v instanceof Map && ID in v) {
                 v[ID] = jsonld.expand(v[ID])
             }
         }
 
+        if (key !in mainEntity) mainEntity[key] = []
+        def existing = mainEntity[key]
+
+        // Add to set
         if (jsonld.isSetContainer(key)) {
-            if (key !in mainEntity) mainEntity[key] = []
-            mainEntity[key] += values  // FIXME: manual set logic!
+            List allExisting = existing instanceof List ? existing : [existing]
+            Set<String> existingLinks = allExisting.findResults {
+                it instanceof Map ? it[ID] : null
+            } as Set
+            mainEntity[key] += values.findAll {
+                it instanceof Map ? it[ID] !in existingLinks : it !in existing
+            }
+        // Overwrite language value
+        } else if (jsonld.isLangContainer(key) &&
+                   value instanceof Map &&
+                   existing instanceof Map) {
+            value.each { lang, string ->
+                existing[lang] = string
+            }
+        // Overwrite non-set value
         } else {
             mainEntity[key] = values[0]
         }
