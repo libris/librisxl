@@ -13,46 +13,61 @@ boolean update(JsonLd jsonld, Map mainEntity, Map desc, deleteShape=null, replac
 
     assert mainEntity[ID] == desc[ID]
     for (def key in desc.keySet()) {
-        def value = desc[key]
-        List values = value instanceof List ? value : [value]
-
-        // Expand prefix names to full URIs
-        for (def v in values) {
-            if (v instanceof Map && ID in v) {
-                v[ID] = jsonld.expand(v[ID])
-            }
+        def newValue = desc[key]
+        // Expand prefix name to full URI
+        if (newValue instanceof Map && ID in newValue) {
+            newValue[ID] = jsonld.expand(newValue[ID])
+            modified = true
         }
 
         if (key !in mainEntity) {
             mainEntity[key] = []
             modified = true
         }
-        def existing = mainEntity[key]
+        def hasValue = mainEntity[key]
 
         // Add to set
         if (jsonld.isSetContainer(key)) {
-            List hasValues = existing instanceof List ? existing : [existing]
-            Set<String> existingLinks = hasValues.findResults {
-                it instanceof Map ? it[ID] : null
-            } as Set
+            List hasValues = hasValue instanceof List ? hasValue : [hasValue]
             int hadSize = hasValues.size()
-            hasValues += values.findAll {
-                it instanceof Map ? it[ID] !in existingLinks : it !in hasValues
+
+            hasValues = hasValues.findAll {
+                it !instanceof Map && ID !in it || it[ID] == jsonld.expand(it[ID])
             }
-            if (hasValues.size() > hadSize) {
+
+            Set<String> existingLinks = hasValues.findResults {
+                it instanceof Map && ID in it ? jsonld.expand(it[ID]) : null
+            } as Set
+
+            List newValues = newValue instanceof List ? newValue : [newValue]
+
+            // Expand prefix names to full URIs
+            for (def v : newValues) {
+                if (v instanceof Map && ID in v) {
+                    v[ID] = jsonld.expand(v[ID])
+                    modified = true
+                }
+            }
+
+            newValues = newValues.findAll {
+                (it instanceof Map && it[ID] !in existingLinks) || it !in hasValues
+            }
+
+            if (newValues.size() > hadSize) {
                 modified = true
             }
-            mainEntity[key] = hasValues
+
+            mainEntity[key] = hasValues + newValues
         // Overwrite language value
         } else if (jsonld.isLangContainer(key) &&
-                   value instanceof Map &&
-                   existing instanceof Map) {
-            value.each { lang, string ->
-                existing[lang] = string
+                   newValue instanceof Map &&
+                   hasValue instanceof Map) {
+            newValue.each { lang, string ->
+                hasValue[lang] = string
             }
         // Overwrite non-set value
         } else {
-            mainEntity[key] = values[0]
+            mainEntity[key] = newValue
         }
     }
 
@@ -60,12 +75,16 @@ boolean update(JsonLd jsonld, Map mainEntity, Map desc, deleteShape=null, replac
 }
 
 Map descriptionMap = [:]
+Map deleteShape = null
 
 String rdfDataFile = System.getProperty("rdfdata")
 var graph = loadDescriptions(getWhelk(), rdfDataFile)
 for (var desc : graph) {
     id = desc[ID]
     descriptionMap[id] = desc
+    if (desc[TYPE] == 'DeleteShape') {
+        deleteShape = desc
+    }
 }
 
 Set<String> createdIds = new HashSet()
@@ -74,7 +93,7 @@ selectByIds(descriptionMap.keySet()) { dataItem ->
     def mainEntity = dataItem.graph[1]
     def mainId = mainEntity[ID]
     Map desc = descriptionMap[mainId]
-    if (update(dataItem.whelk.jsonld, mainEntity, desc)) {
+    if (update(dataItem.whelk.jsonld, mainEntity, desc, deleteShape)) {
         createdIds << mainId
         dataItem.scheduleSave()
     }
