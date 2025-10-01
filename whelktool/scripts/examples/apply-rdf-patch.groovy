@@ -91,14 +91,14 @@ for (var desc : graph) {
     }
 }
 
-Set<String> createdIds = new HashSet()
+Set<String> existingIds = new HashSet()
 
 selectByIds(descriptionMap.keySet()) { dataItem ->
     def mainEntity = dataItem.graph[1]
     def mainId = mainEntity[ID]
     Map desc = descriptionMap[mainId]
+    existingIds << mainId
     if (update(dataItem.whelk.jsonld, mainEntity, desc, deleteShape)) {
-        createdIds << mainId
         dataItem.scheduleSave()
     }
 }
@@ -117,7 +117,7 @@ List<Map> newDocs = descriptionMap.values().findResults {
         }
     }
 
-    if (it[ID] !in createdIds) {
+    if (it[ID] !in existingIds) {
         create( [ "@graph": [
             [
                 "@id": "TEMPID",
