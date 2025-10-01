@@ -173,6 +173,10 @@ public class AppParams {
     private SiteFilters getSiteFilters(Map<String, Object> appConfig, QueryParams queryParams) {
         Map<String, Filter.AliasedFilter> filterByAlias = getFilterByAlias(appConfig, queryParams.aliased);
         List<DefaultSiteFilter> defaultSiteFilters = getDefaultSiteFilters(appConfig, filterByAlias);
+        if (!queryParams.r.isEmpty()) {
+            defaultSiteFilters = new ArrayList<>(defaultSiteFilters);
+            defaultSiteFilters.add(new DefaultSiteFilter(new Filter(queryParams.r), Query.SearchMode.asSet()));
+        }
         List<OptionalSiteFilter> optionalSiteFilters = getOptionalSiteFilters(appConfig, filterByAlias);
         List<OptionalSiteFilter> queryDefinedSiteFilters = getQueryDefinedSiteFilters(queryParams, filterByAlias);
         return new SiteFilters(defaultSiteFilters, Stream.concat(optionalSiteFilters.stream(), queryDefinedSiteFilters.stream()).toList());

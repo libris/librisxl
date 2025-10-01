@@ -19,6 +19,7 @@ public class QueryParams {
 
     public static class ApiParams {
         public static final String QUERY = "_q";
+        public static final String CUSTOM_SITE_FILTER = "_r";
         public static final String SORT = "_sort";
         public static final String LIMIT = "_limit";
         public static final String OFFSET = "_offset";
@@ -54,6 +55,7 @@ public class QueryParams {
     public final ESSettings.Boost boost;
 
     public final String q;
+    public final String r;
 
     public final boolean skipStats;
     public final boolean suggest;
@@ -69,6 +71,7 @@ public class QueryParams {
         this.spell = new Spell(getOptionalSingleNonEmpty(ApiParams.SPELL, apiParameters).orElse(""));
         this.computedLabelLocale = getOptionalSingleNonEmpty(JsonLd.Platform.COMPUTED_LABEL, apiParameters).orElse(null);
         this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse("");
+        this.r = getOptionalSingle(ApiParams.CUSTOM_SITE_FILTER, apiParameters).orElse("");
         this.suggest = getOptionalSingle(ApiParams.SUGGEST, apiParameters).map("true"::equalsIgnoreCase).isPresent();
         this.cursor = getCursor(apiParameters);
         this.skipStats = suggest || getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
@@ -78,6 +81,7 @@ public class QueryParams {
 
     public Map<String, String> getFullParamsMap() {
         return getParamsMap(List.of(ApiParams.QUERY,
+                ApiParams.CUSTOM_SITE_FILTER,
                 ApiParams.SORT,
                 ApiParams.OFFSET,
                 ApiParams.LIMIT,
@@ -101,6 +105,11 @@ public class QueryParams {
                 case ApiParams.QUERY -> {
                     if (!q.isEmpty()) {
                         params.put(ApiParams.QUERY, q);
+                    }
+                }
+                case ApiParams.CUSTOM_SITE_FILTER -> {
+                    if (!r.isEmpty()) {
+                        params.put(ApiParams.CUSTOM_SITE_FILTER, r);
                     }
                 }
                 case ApiParams.SORT -> {
