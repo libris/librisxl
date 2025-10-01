@@ -121,6 +121,7 @@ List<Map> newDocs = descriptionMap.values().findResults {
         create( [ "@graph": [
             [
                 "@id": "TEMPID",
+                "@type": "Record",
                 "mainEntity" : ["@id": it[ID]]
             ],
             it
