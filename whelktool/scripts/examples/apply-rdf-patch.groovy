@@ -14,11 +14,7 @@ boolean update(JsonLd jsonld, Map mainEntity, Map desc, deleteShape=null, replac
     assert mainEntity[ID] == desc[ID]
     for (def key in desc.keySet()) {
         def newValue = desc[key]
-        // Expand prefix name to full URI
-        if (newValue instanceof Map && ID in newValue) {
-            newValue[ID] = jsonld.expand(newValue[ID])
-            modified = true
-        }
+        modified |= expandLink(jsonld, newValue)
 
         if (key !in mainEntity) {
             mainEntity[key] = []
@@ -41,8 +37,8 @@ boolean update(JsonLd jsonld, Map mainEntity, Map desc, deleteShape=null, replac
 
             List newValues = newValue instanceof List ? newValue : [newValue]
 
-            // Expand prefix names to full URIs
             for (def v : newValues) {
+                modified |= expandLink(jsonld, v)
                 if (v instanceof Map && ID in v) {
                     v[ID] = jsonld.expand(v[ID])
                     modified = true
@@ -74,6 +70,14 @@ boolean update(JsonLd jsonld, Map mainEntity, Map desc, deleteShape=null, replac
     return modified
 }
 
+boolean expandLink(JsonLd jsonld, o) {
+    if (o instanceof Map && ID in o) {
+        o[ID] = jsonld.expand(o[ID])
+        return true
+    }
+    return false
+}
+
 Map descriptionMap = [:]
 Map deleteShape = null
 
@@ -100,6 +104,19 @@ selectByIds(descriptionMap.keySet()) { dataItem ->
 }
 
 List<Map> newDocs = descriptionMap.values().findResults {
+    // Expand prefixed names in links
+    var jsonld = getWhelk().jsonld
+    for (def key : it.keySet()) {
+        def value = it[key]
+        if (value instanceof List) {
+            for (def v : value) {
+                expandLink(jsonld, v)
+            }
+        } else {
+            expandLink(jsonld, value)
+        }
+    }
+
     if (it[ID] !in createdIds) {
         create( [ "@graph": [
             [
