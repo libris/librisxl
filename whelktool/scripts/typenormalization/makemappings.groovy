@@ -10,6 +10,7 @@ select (strafter(str(?type), str(:)) as ?typekey) ?cat {
   ?type owl:intersectionOf ( ?basetype [ owl:onProperty :category ; owl:hasValue ?cat ] ) .
   values ?basetype {
     :Monograph
+    :Instance
     :PhysicalResource
     :DigitalResource
   }
@@ -36,6 +37,7 @@ select ?src ?tgt {
   )
   filter(
     strstarts(str(?tgt), str(kbrda:))
+    || strstarts(str(?tgt), str(saogf:))
     || strstarts(str(?tgt), str(ktg:))
   )
 } order by ?src ?tgt
