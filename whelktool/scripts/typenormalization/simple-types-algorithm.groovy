@@ -261,14 +261,9 @@ class TypeNormalizer implements UsingJsonKeys {
             if (!work['contentType'].any { it[ID]?.startsWith(KBRDA + 'Cartographic') }) {
                 work.get('contentType', []) << [(ID): KBRDA + 'CartographicImage'] // TODO: good enough guess?
             }
-        } else if (wtype == 'MixedMaterial') {
-            work.get('genreForm', []) << [(ID): KTG + 'MixedMaterial']
-        }
-        else if (wtype == 'Kit') {
-            work.get('genreForm', []) << [(ID): KTG + 'Kit']
         }
         else if (wtype == 'Object') {
-            work.get('genreForm', []) << [(ID): KBRDA + 'ThreeDimensionalForm'] // TODO map to ktg Object instead instead?
+            work.get('genreForm', []) << [(ID): KBRDA + 'ThreeDimensionalForm'] // TODO map to ktg Object instead?
         }
 
         else {
