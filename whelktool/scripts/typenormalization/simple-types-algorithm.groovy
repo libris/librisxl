@@ -405,7 +405,7 @@ class TypeNormalizer implements UsingJsonKeys {
 
         // If something has old itype Electronic and new itype PhysicalResource,
         // we can assume it id an electronic storage medium
-        if (isElectronic && instance.get(TYPE, 'PhysicalResource')) {
+        if (isElectronic && (instance.get(TYPE, '') == 'PhysicalResource')) {
             instanceGenreForms << [(ID): KTG + 'ElectronicStorageMedium']
         }
 
