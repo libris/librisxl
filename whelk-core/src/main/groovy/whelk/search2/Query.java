@@ -222,6 +222,7 @@ public class Query {
                 .filter(f -> f.getRaw().equals(queryParams.r))
                 .map(Filter::getParsed)
                 .map(QueryTree::new)
+                .peek(qt -> linkLoader.queue(qt.collectLinks()))
                 .map(qt -> qt.toSearchMapping(queryParams))
                 .map(LinkedHashMap::new)
                 .peek(m -> DocumentUtil.findKey(m, "up", ((value, path) -> new DocumentUtil.Remove())))
