@@ -5,7 +5,8 @@ import whelk.converter.TrigToJsonLdParser
 List<Map> loadDescriptions(Whelk whelk, String rdfSourcePath) {
     Map data = new File(rdfSourcePath).withInputStream { TrigToJsonLdParser.parse(it) }
     contextDocData = whelk.storage.loadDocumentByMainId(whelk.systemContextUri, null).data
-    return TrigToJsonLdParser.compact(data, contextDocData)[GRAPH]
+    def results = TrigToJsonLdParser.compact(data, contextDocData)
+    return GRAPH in results ? results[GRAPH] : results instanceof List ? results : [results]
 }
 
 boolean update(JsonLd jsonld, Map mainEntity, Map desc, deleteShape=null, replaceSingle=true) {
@@ -14,7 +15,7 @@ boolean update(JsonLd jsonld, Map mainEntity, Map desc, deleteShape=null, replac
     assert mainEntity[ID] == desc[ID]
     for (def key in desc.keySet()) {
         def newValue = desc[key]
-        modified |= expandLink(jsonld, newValue)
+        expandLink(jsonld, newValue)
 
         if (key !in mainEntity) {
             mainEntity[key] = []
@@ -38,14 +39,14 @@ boolean update(JsonLd jsonld, Map mainEntity, Map desc, deleteShape=null, replac
             List newValues = newValue instanceof List ? newValue : [newValue]
 
             for (def v : newValues) {
-                modified |= expandLink(jsonld, v)
+                expandLink(jsonld, v)
             }
 
             newValues = newValues.findAll {
                 (it instanceof Map && it[ID] !in existingLinks) || it !in hasValues
             }
 
-            if (newValues.size() > hadSize) {
+            if (newValues.size() > 0) {
                 modified = true
             }
 
