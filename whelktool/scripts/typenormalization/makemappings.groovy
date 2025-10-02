@@ -56,13 +56,7 @@ prefix marc: <https://id.kb.se/marc/>
 select ?src ?bdr {
   {
     ?src a ?type ; :exactMatch|:closeMatch|:broadMatch|:broader ?bdr .
-    values ?type {
-      :Category
-      :Genre
-      :GenreForm
-      :ContentType
-      :CarrierType
-    }
+    ?type rdfs:subClassOf* :Category .
     filter(
       strstarts(str(?bdr), str(saogf:))
       || strstarts(str(?bdr), str(barngf:))
