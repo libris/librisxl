@@ -44,6 +44,7 @@ select ?src ?tgt {
 """
 
 categoryMatchesQuery = """
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix : <https://id.kb.se/vocab/>
 
 prefix saogf: <https://id.kb.se/term/saogf/>
@@ -56,13 +57,7 @@ prefix marc: <https://id.kb.se/marc/>
 select ?src ?bdr {
   {
     ?src a ?type ; :exactMatch|:closeMatch|:broadMatch|:broader ?bdr .
-    values ?type {
-      :Category
-      :Genre
-      :GenreForm
-      :ContentType
-      :CarrierType
-    }
+    ?type rdfs:subClassOf* :Category .
     filter(
       strstarts(str(?bdr), str(saogf:))
       || strstarts(str(?bdr), str(barngf:))
