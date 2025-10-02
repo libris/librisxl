@@ -262,10 +262,6 @@ class TypeNormalizer implements UsingJsonKeys {
                 work.get('contentType', []) << [(ID): KBRDA + 'CartographicImage'] // TODO: good enough guess?
             }
         }
-        else if (wtype == 'Object') {
-            work.get('genreForm', []) << [(ID): KBRDA + 'ThreeDimensionalForm'] // TODO map to ktg Object instead?
-        }
-
         else {
             def mappedCategory = mappings.typeToCategory[wtype]
             //assert mappedCategory, "Unable to map ${wtype} to contentType or genreForm"
