@@ -62,8 +62,9 @@ boolean update(JsonLd jsonld, Map mainEntity, Map desc, deleteShape=null, replac
                 hasValue[lang] = string
             }
         // Overwrite non-set value
-        } else {
+        } else if (mainEntity[key] != newValue) {
             mainEntity[key] = newValue
+            modified = true
         }
     }
 
