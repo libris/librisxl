@@ -345,50 +345,76 @@ public class Query {
         Map<String, Object> query = new LinkedHashMap<>();
 
         for (AppParams.Slice slice : sliceList) {
-            String pKey = slice.propertyKey();
-
-            if (!selectedFilters.isSelectable(pKey)) {
-                continue;
-            }
-
-            Property property = slice.getProperty(jsonLd);
-
-            if (!property.restrictions().isEmpty()) {
-                // TODO: E.g. author (combining contribution.role and contribution.agent)
-                throw new RuntimeException("Can't handle combined fields in aggs query");
-            }
-
-            new Path(property).expand(jsonLd)
-                    .getAltPaths(jsonLd, rulingTypes)
-                    .forEach(path -> {
-                        String jsonPath = path.jsonForm();
-                        String field = esMappings.hasFourDigitsKeywordField(jsonPath)
-                                ? String.format("%s%s", jsonPath, FOUR_DIGITS_KEYWORD_SUFFIX)
-                                : (esMappings.hasKeywordSubfield(jsonPath) ? String.format("%s.%s", jsonPath, KEYWORD) : jsonPath);
-                        Map<String, Object> aggs = path.getEsNestedStem(esSettings.mappings())
-                                .map(nestedStem -> buildNestedAggQuery(field, slice, nestedStem))
-                                .orElse(buildCoreAqqQuery(field, slice));
-                        Map<String, List<Node>> mSelected = selectedFilters.isMultiSelectable(pKey)
-                                ? new HashMap<>(multiSelected) {{ remove(pKey); }}
-                                : multiSelected;
-                        Map<String, Object> filter = getEsMultiSelectedFilters(mSelected, rulingTypes, jsonLd, esSettings);
-                        query.put(field, filterWrap(aggs, property.name(), filter));
-                    });
+            addSliceToAggQuery(query, slice, new AggContext(jsonLd, multiSelected, rulingTypes, esSettings, selectedFilters));
         }
 
         return query;
     }
 
-    private static Map<String, Object> buildCoreAqqQuery(String field, AppParams.Slice slice) {
-        return Map.of("terms",
+    private record AggContext(JsonLd jsonLd,
+                              Map<String, List<Node>> multiSelected,
+                              Collection<String> rulingTypes,
+                              ESSettings esSettings,
+                              SelectedFilters selectedFilters) { }
+
+    private static void addSliceToAggQuery(Map<String, Object> query,
+                                           AppParams.Slice slice,
+                                           AggContext ctx) {
+
+        String pKey = slice.propertyKey();
+
+        if (!ctx.selectedFilters.isSelectable(pKey)) {
+            return;
+        }
+
+        Property property = slice.getProperty(ctx.jsonLd);
+
+        if (!property.restrictions().isEmpty()) {
+            // TODO: E.g. author (combining contribution.role and contribution.agent)
+            throw new RuntimeException("Can't handle combined fields in aggs query");
+        }
+
+        new Path(property).expand(ctx.jsonLd)
+                .getAltPaths(ctx.jsonLd, ctx.rulingTypes)
+                .forEach(path -> {
+                    String jsonPath = path.jsonForm();
+                    String field = ctx.esSettings.mappings().hasFourDigitsKeywordField(jsonPath)
+                            ? String.format("%s%s", jsonPath, FOUR_DIGITS_KEYWORD_SUFFIX)
+                            : (ctx.esSettings.mappings().hasKeywordSubfield(jsonPath) ? String.format("%s.%s", jsonPath, KEYWORD) : jsonPath);
+                    Map<String, Object> aggs = path.getEsNestedStem(ctx.esSettings.mappings())
+                            .map(nestedStem -> buildNestedAggQuery(field, slice, nestedStem, ctx))
+                            .orElse(buildCoreAqqQuery(field, slice, ctx));
+                    Map<String, List<Node>> mSelected = ctx.selectedFilters.isMultiSelectable(pKey)
+                            ? new HashMap<>(ctx.multiSelected) {{
+                        remove(pKey);
+                    }}
+                            : ctx.multiSelected;
+                    Map<String, Object> filter = getEsMultiSelectedFilters(mSelected, ctx.rulingTypes, ctx.jsonLd, ctx.esSettings);
+                    query.put(field, filterWrap(aggs, property.name(), filter));
+                });
+    }
+    
+    private static Map<String, Object> buildCoreAqqQuery(String field, AppParams.Slice slice, AggContext ctx) {
+        var q = Map.of("terms",
                 Map.of("field", field,
+
                         "size", slice.size(),
                         "order", Map.of(slice.bucketSortKey(), slice.sortOrder())));
+
+        if (slice.subSlice() != null) {
+            q = new LinkedHashMap<>(q);
+
+            Map<String, Object> query = new LinkedHashMap<>();
+            addSliceToAggQuery(query, slice.subSlice(), ctx);
+            q.put("aggs", query);
+        }
+
+        return castToStringObjectMap(q);
     }
 
-    private static Map<String, Object> buildNestedAggQuery(String field, AppParams.Slice slice, String nestedStem) {
+    private static Map<String, Object> buildNestedAggQuery(String field, AppParams.Slice slice, String nestedStem, AggContext ctx) {
         return Map.of("nested", Map.of("path", nestedStem),
-                "aggs", Map.of(NESTED_AGG_NAME, buildCoreAqqQuery(field, slice)));
+                "aggs", Map.of(NESTED_AGG_NAME, buildCoreAqqQuery(field, slice, ctx)));
     }
 
     private static Map<String, Object> filterWrap(Map<String, Object> aggs, String property, Map<String, Object> filter) {
@@ -437,7 +463,7 @@ public class Query {
         }
 
         private Map<String, Object> build() {
-            var sliceByDimension = getSliceByDimension();
+            var sliceByDimension = collectBuckets2().getSliceByDimension(appParams.statsRepr, selectedFilters);
             var boolFilters = getBoolFilters();
             var predicates = predicateLinks();
             return Map.of(JsonLd.ID_KEY, "#stats",
@@ -446,148 +472,209 @@ public class Query {
                     "_predicates", predicates);
         }
 
-        private Map<String, Object> getSliceByDimension() {
-            return buildSliceByDimension(collectBuckets());
+        class Observation {
+            PathValue object;
+            int count = 0;
+            int largestCount = 0;
+            SliceListResult subSlices;
+            boolean uncertain = false;
+
+            void add(int count, List<QueryResult.Aggregation> subAggregations) {
+                if (count > largestCount) {
+                    largestCount = count;
+                }
+                uncertain = largestCount != count;
+
+                this.count += count;
+
+                if (subAggregations != null && !subAggregations.isEmpty()) {
+                    if (subSlices == null) {
+                        subSlices = new SliceListResult();
+                    }
+
+                    subSlices.add(subAggregations);
+                }
+            }
+
+            int count() {
+                return count;
+            }
+        }
+
+        class SliceResult {
+            Map<String, Observation> buckets;
+
+            void add(QueryResult.Bucket bucket) {
+                if (buckets == null) {
+                    buckets = new HashMap<>();
+                }
+
+                var observation = buckets.computeIfAbsent(bucket.value(), x -> new Observation());
+                observation.add(bucket.count(), bucket.subAggregations());
+            }
+
+            public List<Map<String, Object>> getObservations(AppParams.Slice slice) {
+                if (buckets == null) {
+                   return Collections.emptyList();
+                }
+
+                // FIXME
+                var property = slice.getProperty(Query.this.whelk.getJsonld());
+
+                String propertyKey = property.name();
+                List<Map<String, Object>> observations = new ArrayList<>();
+
+                Connective connective = selectedFilters.getConnective(propertyKey);
+
+                QueryTree qt = selectedFilters.isRangeFilter(propertyKey)
+                        ? queryTree.remove(selectedFilters.getRangeSelected(propertyKey))
+                        : queryTree;
+
+                Map<PathValue, Integer> newBuckets = new LinkedHashMap<>();
+                this.buckets.entrySet()
+                        .stream()
+                        .sorted(Map.Entry.comparingByValue(Comparator.comparing(Observation::count).reversed()))
+                        .limit(slice.size())
+                        .forEach(entry -> {
+                            // FIXME
+                            String bucketKey = entry.getKey();
+                            var o = entry.getValue();
+                            int count = entry.getValue().count();
+                            Value v = disambiguate.mapValueForProperty(property, bucketKey).orElse(new FreeText(bucketKey));
+                            var pv = property instanceof Property.Ix ix
+                                    ? new PathValue(ix.term(), Operator.EQUALS, v) // TODO this is just for the isSelected comparison
+                                    : new PathValue(property, Operator.EQUALS, v);
+
+                            if (pv.value() instanceof Link l && l.iri().equals(queryParams.object)) {
+                                // TODO: This check won't be needed if/when we remove facets from resource page.
+                                return;
+                            }
+
+                            boolean isSelected = selectedFilters.isSelected(pv, property.queryForm());
+
+                            Consumer<QueryTree> addObservation = alteredTree -> {
+                                Map<String, Object> observation = new LinkedHashMap<>();
+
+                                observation.put("totalItems", count);
+                                observation.put("view", Map.of(JsonLd.ID_KEY, makeViewFindUrl(alteredTree, queryParams)));
+                                observation.put("object", v instanceof Resource r ? r.description() : v.toString());
+                                if (connective == Connective.OR) {
+                                    observation.put("_selected", isSelected);
+                                }
+                                if (o.subSlices != null) {
+                                    observation.put("sliceByDimension", o.subSlices.getSliceByDimension(appParams.statsRepr, selectedFilters));
+                                }
+
+                                observations.add(observation);
+
+                                if (pv.value() instanceof Link l) {
+                                    links.add(l);
+                                }
+                            };
+
+                            switch (connective) {
+                                case AND -> {
+                                    if (!isSelected) {
+                                        addObservation.accept(qt.add(pv));
+                                    }
+                                }
+                                case OR -> {
+                                    var selected = selectedFilters.getSelected(propertyKey);
+                                    if (isSelected) {
+                                        selected.stream()
+                                                .filter(pv::equals)
+                                                .findFirst()
+                                                .map(qt::remove)
+                                                .ifPresent(addObservation);
+                                    } else {
+                                        if (selected.isEmpty()) {
+                                            addObservation.accept(qt.add(pv));
+                                        } else {
+                                            var newSelected = new ArrayList<>(selected) {{
+                                                add(pv);
+                                            }};
+                                            var alteredTree = qt.remove(selected).add(new Or(newSelected));
+                                            addObservation.accept(alteredTree);
+                                        }
+                                    }
+                                }
+                            }
+                        });
+
+                return observations;
+            }
+        }
+
+        class SliceListResult {
+            Map<String, SliceResult> slices;
+
+            public SliceListResult () {
+
+            }
+
+            void add(QueryResult.Aggregation aggregation) {
+                if (slices == null) {
+                    slices = new HashMap<>();
+                }
+
+                var slice = slices.computeIfAbsent(aggregation.property(), x -> new SliceResult());
+                for (var bucket : aggregation.buckets()) {
+                    slice.add(bucket);
+                }
+            }
+
+            void add(List<QueryResult.Aggregation> aggregations) {
+                for (var a : aggregations) {
+                    this.add(a);
+                }
+            }
+
+            public Map<String, Object> getSliceByDimension(AppParams.StatsRepr statsRepr, SelectedFilters selectedFilters) {
+                Map<String, Object> result = new LinkedHashMap<>();
+
+                statsRepr.sliceList().forEach(slice -> {
+                    // FIXME
+                    var property = slice.getProperty(Query.this.whelk.getJsonld());
+                    var propertyKey = property.name();
+
+                    if (!selectedFilters.isSelectable(propertyKey)) {
+                        return;
+                    }
+
+                    var mySlice = slices.get(propertyKey);
+                    if (mySlice == null) {
+                        // FIXME ????
+                        return;
+                    }
+
+                    var sliceNode = new LinkedHashMap<>();
+                    var observations = mySlice.getObservations(slice);
+                    if (!observations.isEmpty()) {
+                        if (selectedFilters.isRangeFilter(propertyKey)) {
+                            sliceNode.put("search", getRangeTemplate(propertyKey));
+                        }
+                        sliceNode.put("dimension", propertyKey);
+                        sliceNode.put("observation", observations);
+                        sliceNode.put("maxItems", slice.size());
+                        result.put(propertyKey, sliceNode);
+                    }
+
+                });
+
+                return result;
+            }
         }
 
         // Problem: Same value in different fields will be counted twice, e.g. contribution.agent + instanceOf.contribution.agent
-        private Map<Property, Map<PathValue, Integer>> collectBuckets() {
-            Map<String, Map<String, Integer>> propertyKeyToBucketCounts = new LinkedHashMap<>();
-
-            // TODO: Decide how to handle properties that can appear at both instance and work level.
-            //  Probably not the best idea to just add the counts together like we do now, since it's both inconvenient
-            //  and not guaranteed to produce a correct number.
-            for (var agg : getQueryResult().aggs) {
-                for (var b : agg.buckets()) {
-                    var buckets = propertyKeyToBucketCounts.computeIfAbsent(agg.property(), x -> new HashMap<>());
-                    buckets.compute(b.value(), (k, v) -> v == null ? b.count() : v + b.count());
-                }
-            }
-
-            Map<Property, Map<PathValue, Integer>> propertyToBucketCounts = new LinkedHashMap<>();
-
-            for (AppParams.Slice slice : appParams.statsRepr.sliceList()) {
-                String propertyKey = slice.propertyKey();
-                Property property = slice.getProperty(whelk.getJsonld());
-
-                var buckets = propertyKeyToBucketCounts.get(propertyKey);
-                if (buckets != null) {
-                    int maxBuckets = slice.size();
-                    Map<PathValue, Integer> newBuckets = new LinkedHashMap<>();
-                    buckets.entrySet()
-                            .stream()
-                            .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                            .limit(Math.min(maxBuckets, buckets.size()))
-                            .forEach(entry -> {
-                                String bucketKey = entry.getKey();
-                                int count = entry.getValue();
-                                Value v = disambiguate.mapValueForProperty(property, bucketKey).orElse(new FreeText(bucketKey));
-                                if (property instanceof Property.Ix ix) {
-                                    newBuckets.put(new PathValue(ix.term(), Operator.EQUALS, v), count); // TODO this is just for the isSelected comparison
-                                } else {
-                                    newBuckets.put(new PathValue(property, Operator.EQUALS, v), count);
-                                }
-                            });
-                    propertyToBucketCounts.put(property, newBuckets);
-                }
-            }
-
-            return propertyToBucketCounts;
+        // TODO: Decide how to handle properties that can appear at both instance and work level.
+        //  Probably not the best idea to just add the counts together like we do now, since it's both inconvenient
+        //  and not guaranteed to produce a correct number.
+        private SliceListResult collectBuckets2() {
+            var r = new SliceListResult();
+            r.add(getQueryResult().aggs);
+            return r;
         }
-
-        private Map<String, Object> buildSliceByDimension(Map<Property, Map<PathValue, Integer>> propToBuckets) {
-            Map<String, AppParams.Slice> sliceByPropertyKey = appParams.statsRepr.getSliceByPropertyKey();
-
-            Map<String, Object> sliceByDimension = new LinkedHashMap<>();
-
-            propToBuckets.forEach((property, buckets) -> {
-                var propertyKey = property.name();
-                if (!selectedFilters.isSelectable(propertyKey)) {
-                    return;
-                }
-                var sliceNode = new LinkedHashMap<>();
-                var observations = getObservations(property, buckets);
-                if (!observations.isEmpty()) {
-                    if (selectedFilters.isRangeFilter(propertyKey)) {
-                        sliceNode.put("search", getRangeTemplate(propertyKey));
-                    }
-                    sliceNode.put("dimension", propertyKey);
-                    sliceNode.put("observation", observations);
-                    sliceNode.put("maxItems", sliceByPropertyKey.get(propertyKey).size());
-                    sliceByDimension.put(propertyKey, sliceNode);
-                }
-            });
-
-            return sliceByDimension;
-        }
-
-        private List<Map<String, Object>> getObservations(Property property, Map<PathValue, Integer> buckets) {
-            String propertyKey = property.name();
-            List<Map<String, Object>> observations = new ArrayList<>();
-
-            Connective connective = selectedFilters.getConnective(propertyKey);
-
-            QueryTree qt = selectedFilters.isRangeFilter(propertyKey)
-                    ? queryTree.remove(selectedFilters.getRangeSelected(propertyKey))
-                    : queryTree;
-
-            buckets.forEach((pv, count) -> {
-                if (pv.value() instanceof Link l && l.iri().equals(queryParams.object)) {
-                    // TODO: This check won't be needed if/when we remove facets from resource page.
-                    return;
-                }
-
-                boolean isSelected = selectedFilters.isSelected(pv, property.queryForm());
-
-                Consumer<QueryTree> addObservation = alteredTree -> {
-                    Value v = pv.value();
-
-                    Map<String, Object> observation = new LinkedHashMap<>();
-
-                    observation.put("totalItems", count);
-                    observation.put("view", Map.of(JsonLd.ID_KEY, makeViewFindUrl(alteredTree, queryParams)));
-                    observation.put("object", v instanceof Resource r ? r.description() : v.toString());
-                    if (connective == Connective.OR) {
-                        observation.put("_selected", isSelected);
-                    }
-
-                    observations.add(observation);
-
-                    if (pv.value() instanceof Link l) {
-                        links.add(l);
-                    }
-                };
-
-                switch (connective) {
-                    case AND -> {
-                        if (!isSelected) {
-                            addObservation.accept(qt.add(pv));
-                        }
-                    }
-                    case OR -> {
-                        var selected = selectedFilters.getSelected(propertyKey);
-                        if (isSelected) {
-                            selected.stream()
-                                    .filter(pv::equals)
-                                    .findFirst()
-                                    .map(qt::remove)
-                                    .ifPresent(addObservation);
-                        } else {
-                            if (selected.isEmpty()) {
-                                addObservation.accept(qt.add(pv));
-                            } else {
-                                var newSelected = new ArrayList<>(selected) {{ add(pv); }};
-                                var alteredTree = qt.remove(selected).add(new Or(newSelected));
-                                addObservation.accept(alteredTree);
-                            }
-                        }
-                    }
-                }
-            });
-
-            return observations;
-        }
-
+        
         private Map<String, Object> getRangeTemplate(String propertyKey) {
             FreeText placeholderNode = new FreeText(String.format("{?%s}", propertyKey));
             String templateQueryString = queryTree.remove(selectedFilters.getSelected(propertyKey))

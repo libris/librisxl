@@ -92,6 +92,7 @@ public class AppParams {
         private final int size;
         private final boolean isRange;
         private final Query.Connective defaultConnective;
+        private final Slice subSlice;
 
         private Property property;
 
@@ -102,6 +103,7 @@ public class AppParams {
             this.size = getSize(settings);
             this.isRange = getRangeFlag(settings);
             this.defaultConnective = getConnective(settings);
+            this.subSlice = getSubSlice(settings);
         }
 
         public String propertyKey() {
@@ -126,6 +128,10 @@ public class AppParams {
 
         public Query.Connective defaultConnective() {
             return defaultConnective;
+        }
+
+        public Slice subSlice() {
+            return subSlice;
         }
 
         public Property getProperty(JsonLd jsonLd) {
@@ -167,12 +173,18 @@ public class AppParams {
                     .map(Query.Connective::valueOf)
                     .orElse(Query.Connective.AND);
         }
+
+        private Slice getSubSlice(Map<?, ?> settings) {
+            return Optional.ofNullable((Map<?,?>) settings.get("slice"))
+                    .flatMap(s -> s.entrySet().stream().findFirst().map(AppParams::getSlice))
+                    .orElse(null);
+        }
     }
 
     private StatsRepr getStatsRepr(Map<String, Object> appConfig) {
         return Optional.ofNullable((Map<?, ?>) appConfig.get("_statsRepr"))
                 .map(Map::entrySet)
-                .map(entries -> entries.stream().map(this::getSlice).toList())
+                .map(entries -> entries.stream().map(AppParams::getSlice).toList())
                 .map(StatsRepr::new)
                 .orElse(new StatsRepr(Collections.emptyList()));
     }
@@ -211,7 +223,7 @@ public class AppParams {
         return filters;
     }
 
-    private Slice getSlice(Map.Entry<?, ?> statsReprEntry) {
+    private static Slice getSlice(Map.Entry<?, ?> statsReprEntry) {
         var p = (String) statsReprEntry.getKey();
         var settings = (Map<?, ?>) statsReprEntry.getValue();
         return new Slice(p, settings);

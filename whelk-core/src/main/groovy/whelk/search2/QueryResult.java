@@ -31,7 +31,7 @@ public class QueryResult {
     public record Aggregation(String property, String path, List<Bucket> buckets) {
     }
 
-    public record Bucket(String value, int count) {
+    public record Bucket(String value, int count, List<Aggregation> subAggregations) {
     }
 
     public final int numHits;
@@ -82,7 +82,7 @@ public class QueryResult {
         return ((Map<?, ?>) aggs.getOrDefault("buckets", Map.of()))
                 .entrySet()
                 .stream()
-                .map(e -> new Bucket((String) e.getKey(), (int) ((Map<?, ?>) e.getValue()).get("doc_count")))
+                .map(e -> new Bucket((String) e.getKey(), (int) ((Map<?, ?>) e.getValue()).get("doc_count"), null))
                 .toList();
     }
 
@@ -112,13 +112,23 @@ public class QueryResult {
 
             var buckets = ((List<?>) agg.get("buckets")).stream()
                     .map(Map.class::cast)
-                    .map(b -> new Bucket(String.valueOf(b.get("key")), (Integer) b.get("doc_count")))
+                    .map(b -> new Bucket(
+                            String.valueOf(b.get("key")),
+                            (Integer) b.get("doc_count"),
+                            collectAggResult(aggsMap(b))))
                     .toList();
 
             aggregations.add(new Aggregation(property, path, buckets));
         }
 
         return aggregations;
+    }
+
+    private static Map<String, Object> aggsMap(Map<?, ?> bucketMap) {
+        return castToStringObjectMap(bucketMap).entrySet().stream()
+                .filter(e -> !"key".equals(e.getKey()))
+                .filter(e -> !"doc_count".equals(e.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     private static Map<String, Object> getMainResponse(Map<?, ?> esResponse) {

@@ -92,6 +92,10 @@ public class SearchUtils2 {
             if (connective != null) {
                 m.put("connective", connective);
             }
+            if (slice.containsKey("slice")) {
+                m.put("slice", buildStatsReprFromSliceSpec(List.of(slice.get("slice"))));
+            }
+
             statsRepr.put(key, m);
         }
         return statsRepr;
