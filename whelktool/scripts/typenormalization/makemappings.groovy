@@ -44,6 +44,7 @@ select ?src ?tgt {
 """
 
 categoryMatchesQuery = """
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix : <https://id.kb.se/vocab/>
 
 prefix saogf: <https://id.kb.se/term/saogf/>
