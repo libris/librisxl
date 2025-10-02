@@ -183,7 +183,7 @@ public class Query {
         view.put("totalItems", getQueryResult().numHits);
 
         // TODO: Include _o search representation in search mapping?
-        view.put("search", Map.of("mapping", List.of(queryTree.toSearchMapping(queryParams))));
+        view.put("search", Map.of("mapping", getSearchMapping()));
 
         view.putAll(Pagination.makeLinks(getQueryResult().numHits, esSettings.maxItems(), queryTree, queryParams));
 
@@ -208,6 +208,27 @@ public class Query {
         linkLoader.loadChips();
 
         return view;
+    }
+
+    // FIXME
+    private List<Map<String, Object>> getSearchMapping() {
+        List<Map<String, Object>> mappings = new ArrayList<>();
+        var q = new LinkedHashMap<>(queryTree.toSearchMapping(queryParams));
+        q.put("variable", QueryParams.ApiParams.QUERY);
+        mappings.add(q);
+        appParams.siteFilters.defaultFilters()
+                .stream()
+                .map(AppParams.DefaultSiteFilter::filter)
+                .filter(f -> f.getRaw().equals(queryParams.r))
+                .map(Filter::getParsed)
+                .map(QueryTree::new)
+                .map(qt -> qt.toSearchMapping(queryParams))
+                .map(LinkedHashMap::new)
+                .peek(m -> DocumentUtil.findKey(m, "up", ((value, path) -> new DocumentUtil.Remove())))
+                .peek(m -> m.put("variable", QueryParams.ApiParams.CUSTOM_SITE_FILTER))
+                .findFirst()
+                .ifPresent(mappings::add);
+        return mappings;
     }
 
     private Map<?, ?> doQuery(Object dsl) {
