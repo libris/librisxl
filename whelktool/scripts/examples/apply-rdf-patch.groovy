@@ -39,10 +39,6 @@ boolean update(JsonLd jsonld, Map mainEntity, Map desc, deleteShape=null, replac
 
             for (def v : newValues) {
                 modified |= expandLink(jsonld, v)
-                if (v instanceof Map && ID in v) {
-                    v[ID] = jsonld.expand(v[ID])
-                    modified = true
-                }
             }
 
             newValues = newValues.findAll {
@@ -73,8 +69,11 @@ boolean update(JsonLd jsonld, Map mainEntity, Map desc, deleteShape=null, replac
 
 boolean expandLink(JsonLd jsonld, o) {
     if (o instanceof Map && ID in o) {
-        o[ID] = jsonld.expand(o[ID])
-        return true
+        def expandedId = jsonld.expand(o[ID])
+        if (expandedId != o[ID]) {
+            o[ID] = expandedId
+            return true
+        }
     }
     return false
 }
