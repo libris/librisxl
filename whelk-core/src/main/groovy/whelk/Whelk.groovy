@@ -677,7 +677,9 @@ class Whelk {
             var categoryIds = categories.collect { it[JsonLd.ID_KEY] }
             categories.removeIf {c ->
                 categoryIds.any {otherId -> otherId != c[JsonLd.ID_KEY]
-                        && relations.isImpliedBy(c[JsonLd.ID_KEY], otherId) }
+                        && relations.isImpliedBy(c[JsonLd.ID_KEY], otherId)
+                        // exactMatch term with same category. This case shouldn't normally exist.
+                        && !relations.isImpliedBy(otherId, c[JsonLd.ID_KEY]) }
             }
         }
 
