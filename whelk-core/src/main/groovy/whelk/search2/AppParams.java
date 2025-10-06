@@ -66,7 +66,7 @@ public class AppParams {
         public DefaultSiteFilter(String rawFilter, String application, Map<String, Filter.AliasedFilter> filterByAlias) {
             this(getFilter(rawFilter, filterByAlias), switch (application) {
                 case "standardSearch" -> Set.of(STANDARD_SEARCH, SUGGEST);
-                case "objectSearch" -> Set.of(OBJECT_SEARCH, PREDICATE_OBJECT_SEARCH);
+                case "objectSearch" -> Set.of(OBJECT_SEARCH);
                 case null, default -> Query.SearchMode.asSet();
             });
         }
