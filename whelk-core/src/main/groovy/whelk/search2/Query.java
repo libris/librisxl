@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.component.ElasticSearch.flattenedLangMapKey;
-import static whelk.search2.EsMappings.FOUR_DIGITS_INT_SUFFIX;
+import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
 import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
 import static whelk.search2.EsMappings.KEYWORD;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
@@ -260,8 +260,8 @@ public class Query {
 
     private String getSortField(String termPath) {
         var path = expandLangMapKeys(termPath);
-        if (esSettings.mappings().hasFourDigitsIntField(path)) {
-            return String.format("%s%s", path, FOUR_DIGITS_INT_SUFFIX);
+        if (esSettings.mappings().hasFourDigitsShortField(path)) {
+            return String.format("%s%s", path, FOUR_DIGITS_SHORT_SUFFIX);
         }
         else if (esSettings.mappings().hasKeywordSubfield(path)) {
             return String.format("%s.%s", path, KEYWORD);

@@ -17,7 +17,7 @@ while (!stack.isEmpty()) {
           if (matcher.find()) {
               def fourDigitStr = matcher.group(0);
               updates.put(key + "_4_digits_keyword", fourDigitStr);
-              updates.put(key + "_4_digits_int", Integer.parseInt(fourDigitStr));
+              updates.put(key + "_4_digits_short", Short.parseShort(fourDigitStr));
           }
       } else if (value instanceof Map) {
           stack.push(value);

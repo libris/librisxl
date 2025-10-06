@@ -15,7 +15,7 @@ import static whelk.util.DocumentUtil.NOP;
 public class EsMappings {
     private final Set<String> keywordFields;
     private final Set<String> fourDigitsKeywordFields;
-    private final Set<String> fourDigitsIntFields;
+    private final Set<String> fourDigitsShortFields;
     private final Set<String> dateTypeFields;
     private final Set<String> nestedTypeFields;
     private final Set<String> longTypeFields;
@@ -25,12 +25,12 @@ public class EsMappings {
 
     public static String KEYWORD = "keyword";
     public static String FOUR_DIGITS_KEYWORD_SUFFIX = "_4_digits_keyword";
-    public static String FOUR_DIGITS_INT_SUFFIX = "_4_digits_int";
+    public static String FOUR_DIGITS_SHORT_SUFFIX = "_4_digits_short";
 
     public EsMappings(Map<?, ?> mappings) {
         this.keywordFields = getKeywordFields(mappings);
         this.fourDigitsKeywordFields = getFourDigitsKeywordFields(mappings);
-        this.fourDigitsIntFields = getFourDigitsIntFields(mappings);
+        this.fourDigitsShortFields = getFourDigitsShortFields(mappings);
         this.dateTypeFields = getFieldsOfType("date", mappings);
         this.nestedTypeFields = getFieldsOfType("nested", mappings);
         this.longTypeFields = getFieldsOfType("long", mappings);
@@ -50,8 +50,8 @@ public class EsMappings {
         return fourDigitsKeywordFields.contains(fieldPath + FOUR_DIGITS_KEYWORD_SUFFIX);
     }
 
-    public boolean hasFourDigitsIntField(String fieldPath) {
-        return fourDigitsIntFields.contains(fieldPath + FOUR_DIGITS_INT_SUFFIX);
+    public boolean hasFourDigitsShortField(String fieldPath) {
+        return fourDigitsShortFields.contains(fieldPath + FOUR_DIGITS_SHORT_SUFFIX);
     }
 
     public boolean isDateTypeField(String fieldPath) {
@@ -82,8 +82,8 @@ public class EsMappings {
         return getFieldsWithSuffix(mappings, FOUR_DIGITS_KEYWORD_SUFFIX);
     }
 
-    private static Set<String> getFourDigitsIntFields(Map<?, ?> mappings) {
-        return getFieldsWithSuffix(mappings, FOUR_DIGITS_INT_SUFFIX);
+    private static Set<String> getFourDigitsShortFields(Map<?, ?> mappings) {
+        return getFieldsWithSuffix(mappings, FOUR_DIGITS_SHORT_SUFFIX);
     }
 
     private static Set<String> getKeywordFields(Map<?, ?> mappings) {

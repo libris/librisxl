@@ -14,14 +14,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.Owl.INVERSE_OF;
 import static whelk.JsonLd.Owl.PROPERTY_CHAIN_AXIOM;
 import static whelk.JsonLd.TYPE_KEY;
-import static whelk.search2.EsMappings.FOUR_DIGITS_INT_SUFFIX;
+import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
 import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
 import static whelk.search2.Operator.EQUALS;
 import static whelk.search2.Operator.GREATER_THAN;
@@ -168,8 +166,8 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     private Map<String, Object> esNumFilter(String field, Numeric n, ESSettings esSettings) {
         EsMappings esMappings = esSettings.mappings();
 
-        if (operator.isRange() && esMappings.hasFourDigitsIntField(field) && n.isFourDigits()) {
-            return esNumOrDateFilter(field + FOUR_DIGITS_INT_SUFFIX, n.value());
+        if (operator.isRange() && esMappings.hasFourDigitsShortField(field) && n.isFourDigits()) {
+            return esNumOrDateFilter(field + FOUR_DIGITS_SHORT_SUFFIX, n.value());
         }
         if (!operator.isRange() && esMappings.hasFourDigitsKeywordField(field) && n.isFourDigits()) {
             return esNumOrDateFilter(field + FOUR_DIGITS_KEYWORD_SUFFIX, n.toString());

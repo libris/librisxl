@@ -25,7 +25,7 @@ class ESQuery {
     private Whelk whelk
     private JsonLd jsonld
     private Set keywordFields
-    private Set fourDigitIntFields
+    private Set fourDigitShortFields
     private Set fourDigitKeywordFields
     private Set dateFields
     private Set<String> nestedFields
@@ -88,7 +88,7 @@ class ESQuery {
         if (whelk.elastic) {
             Map mappings = whelk.elastic.getMappings()
             this.keywordFields = getKeywordFields(mappings)
-            this.fourDigitIntFields = getFourDigitIntFields(mappings)
+            this.fourDigitShortFields = getFourDigitShortFields(mappings)
             this.fourDigitKeywordFields = getFourDigitKeywordFields(mappings)
             this.dateFields = getFieldsOfType('date', mappings)
             this.nestedFields = getFieldsOfType('nested', mappings)
@@ -571,8 +571,8 @@ class ESQuery {
     private String getInferredSortTermPath(String termPath) {
         termPath = expandLangMapKeys(termPath)
 
-        if ("${termPath}_4_digits_int" as String in fourDigitIntFields) {
-            return "${termPath}_4_digits_int"
+        if ("${termPath}_4_digits_short" as String in fourDigitShortFields) {
+            return "${termPath}_4_digits_short"
         } else if (termPath in keywordFields) {
             return "${termPath}.keyword"
         } else {
@@ -1062,8 +1062,8 @@ class ESQuery {
                     if (parameterNoPrefix in dateFields) {
                         return Ranges.date(parameterNoPrefix, whelk.getTimezone(), whelk)
                     }
-                    def fourDigitsFieldName = parameterNoPrefix + '_4_digits_int'
-                    if (fourDigitsFieldName in fourDigitIntFields) {
+                    def fourDigitsFieldName = parameterNoPrefix + '_4_digits_short'
+                    if (fourDigitsFieldName in fourDigitShortFields) {
                         return Ranges.fourDigits(parameterNoPrefix, fourDigitsFieldName, whelk)
                     }
                     return Ranges.nonDate(parameterNoPrefix, whelk)
@@ -1111,8 +1111,8 @@ class ESQuery {
         return getFieldsByCondition(mappings, { _, Map fieldData -> ((Map) fieldData.get('fields'))?.containsKey('keyword') }, '')
     }
 
-    private static Set getFourDigitIntFields(Map mappings) {
-        return getFieldsByCondition(mappings, { String fieldName, _ -> fieldName.endsWith('_4_digits_int') }, '')
+    private static Set getFourDigitShortFields(Map mappings) {
+        return getFieldsByCondition(mappings, { String fieldName, _ -> fieldName.endsWith('_4_digits_short') }, '')
     }
 
     private static Set getFourDigitKeywordFields(Map mappings) {
