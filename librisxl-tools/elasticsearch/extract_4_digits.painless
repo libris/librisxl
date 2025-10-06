@@ -16,8 +16,11 @@ while (!stack.isEmpty()) {
           def matcher = /\d{4}/.matcher(value);
           if (matcher.find()) {
               def fourDigitStr = matcher.group(0);
-              updates.put(key + "_4_digits_keyword", fourDigitStr);
-              updates.put(key + "_4_digits_short", Short.parseShort(fourDigitStr));
+              // Exclude known non-year placeholders (0000, 9999) from 4-digit fields.
+              if (fourDigitStr != "0000" && fourDigitStr != "9999") {
+                  updates.put(key + "_4_digits_keyword", fourDigitStr);
+                  updates.put(key + "_4_digits_short", Short.parseShort(fourDigitStr));
+              }
           }
       } else if (value instanceof Map) {
           stack.push(value);

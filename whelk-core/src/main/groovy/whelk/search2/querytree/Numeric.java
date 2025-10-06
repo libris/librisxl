@@ -15,10 +15,6 @@ public record Numeric(int value, Token token) implements Value {
         return "" + value;
     }
 
-    public boolean isFourDigits() {
-        return value >= 1000 && value <= 9999;
-    }
-
     public Numeric increment() {
         return new Numeric(value + 1);
     }

@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.Owl.INVERSE_OF;
@@ -166,10 +167,13 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     private Map<String, Object> esNumFilter(String field, Numeric n, ESSettings esSettings) {
         EsMappings esMappings = esSettings.mappings();
 
-        if (operator.isRange() && esMappings.hasFourDigitsShortField(field) && n.isFourDigits()) {
+        // Known placeholder values (0000, 9999) are excluded from 4-digit fields to prevent them from being treated as valid years in sorting and aggregations.
+        Predicate<String> isFourDigits = s -> s.length() == 4 && !s.equals("0000") && !s.equals("9999");
+
+        if (operator.isRange() && esMappings.hasFourDigitsShortField(field)) {
             return esNumOrDateFilter(field + FOUR_DIGITS_SHORT_SUFFIX, n.value());
         }
-        if (!operator.isRange() && esMappings.hasFourDigitsKeywordField(field) && n.isFourDigits()) {
+        if (!operator.isRange() && esMappings.hasFourDigitsKeywordField(field) && isFourDigits.test(n.toString())) {
             return esNumOrDateFilter(field + FOUR_DIGITS_KEYWORD_SUFFIX, n.toString());
         }
         if (esMappings.isLongTypeField(field)) {
