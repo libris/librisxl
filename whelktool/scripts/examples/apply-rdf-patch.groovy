@@ -6,10 +6,12 @@ List<Map> loadDescriptions(Whelk whelk, String rdfSourcePath) {
     Map data = new File(rdfSourcePath).withInputStream { TrigToJsonLdParser.parse(it) }
     contextDocData = whelk.storage.loadDocumentByMainId(whelk.systemContextUri, null).data
     def results = TrigToJsonLdParser.compact(data, contextDocData)
-    return GRAPH in results ? results[GRAPH] : results instanceof List ? results : [results]
+
+    var graphButNotNamed = GRAPH in results && ID !in results
+    return graphButNotNamed ? results[GRAPH] : (results instanceof List ? results : [results])
 }
 
-boolean update(JsonLd jsonld, Map mainEntity, Map desc, deleteShape=null, replaceSingle=true) {
+boolean update(JsonLd jsonld, Map mainEntity, Map desc, replaceSingle=true) {
     var modified = false
 
     assert mainEntity[ID] == desc[ID]
@@ -52,16 +54,74 @@ boolean update(JsonLd jsonld, Map mainEntity, Map desc, deleteShape=null, replac
 
             mainEntity[key] = hasValues + newValues
         // Overwrite language value
-        } else if (jsonld.isLangContainer(key) &&
+        } else if (key in jsonld.langContainerAliasInverted &&
                    newValue instanceof Map &&
                    hasValue instanceof Map) {
             newValue.each { lang, string ->
-                hasValue[lang] = string
+                if (hasValue[lang] != string) {
+                    hasValue[lang] = string
+                    modified = true
+                }
             }
         // Overwrite non-set value
         } else if (mainEntity[key] != newValue) {
             mainEntity[key] = newValue
             modified = true
+        }
+    }
+
+    return modified
+}
+
+boolean delete(JsonLd jsonld, Map mainEntity, Map dropDesc) {
+    var modified = false
+    for (def key in dropDesc.keySet()) {
+        if (key == ID) {
+            continue
+        }
+
+        def dropValue = dropDesc[key]
+
+        var dropValues = new HashSet()
+        if (dropValue instanceof List) {
+            for (def v in dropValue) {
+                expandLink(jsonld, v)
+            }
+            dropValues += dropValue
+        } else {
+            expandLink(jsonld, dropValue)
+            dropValues << dropValue
+        }
+
+        if (key in mainEntity) {
+            def hasValue = mainEntity[key]
+            if (jsonld.isSetContainer(key) && hasValue instanceof List) {
+                List keptValues = hasValue.findAll {
+                    return it !instanceof Map || it !in dropValues
+                }
+                if (keptValues.size() == 0) {
+                    mainEntity.remove(key)
+                    modified = true
+                } else if (keptValues.size() < hasValue.size()) {
+                    mainEntity[key] = keptValues
+                    modified = true
+                }
+            } else if (key in jsonld.langContainerAliasInverted &&
+                       dropValue instanceof Map &&
+                       hasValue instanceof Map) {
+                dropValue.each { lang, value ->
+                    if (hasValue[lang] == value) {
+                        // TODO: if (value instanceof List) handle each in value set...
+                        hasValue.remove(lang)
+                        modified = true
+                    }
+                }
+            } else {
+                if (hasValue == dropValue) {
+                    mainEntity.remove(key)
+                    modified = true
+                }
+            }
         }
     }
 
@@ -80,26 +140,39 @@ boolean expandLink(JsonLd jsonld, o) {
 }
 
 Map descriptionMap = [:]
-Map deleteShape = null
+Map deletionMap = [:]
 
 String rdfDataFile = System.getProperty("rdfdata")
+String rdfDeletionGraphId = System.getProperty("rdfdelete")
+
 var graph = loadDescriptions(getWhelk(), rdfDataFile)
 for (var desc : graph) {
     id = desc[ID]
-    descriptionMap[id] = desc
-    if (desc[TYPE] == 'DeleteShape') {
-        deleteShape = desc
+    if (rdfDeletionGraphId != null && rdfDeletionGraphId == id) {
+        for (var delDesc : desc[GRAPH]) {
+            if (ID in delDesc) {
+                deletionMap[delDesc[ID]] = delDesc
+            }
+        }
+    } else {
+        descriptionMap[id] = desc
     }
 }
 
 Set<String> existingIds = new HashSet()
 
-selectByIds(descriptionMap.keySet()) { dataItem ->
+selectByIds(descriptionMap.keySet() + deletionMap.keySet()) { dataItem ->
     def mainEntity = dataItem.graph[1]
     def mainId = mainEntity[ID]
-    Map desc = descriptionMap[mainId]
     existingIds << mainId
-    if (update(dataItem.whelk.jsonld, mainEntity, desc, deleteShape)) {
+
+    Map desc = descriptionMap[mainId]
+    if (desc && update(dataItem.whelk.jsonld, mainEntity, desc)) {
+        dataItem.scheduleSave()
+    }
+
+    Map deleteDesc = deletionMap[mainId]
+    if (deleteDesc && delete(dataItem.whelk.jsonld, mainEntity, deleteDesc)) {
         dataItem.scheduleSave()
     }
 }
