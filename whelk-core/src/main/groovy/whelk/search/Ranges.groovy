@@ -18,13 +18,15 @@ import static whelk.search.QueryDateTime.Precision.WEEK
 @Log
 class Ranges {
     String fieldName
+    String fourDigitsFieldName
     ZoneId timezone
     Whelk whelk
 
     private List<Query> ranges = []
 
-    private Ranges(String fieldName, ZoneId timezone = null, Whelk whelk) {
+    private Ranges(String fieldName, String fourDigitsFieldName = null, ZoneId timezone = null, Whelk whelk) {
         this.fieldName = fieldName
+        this.fourDigitsFieldName = fourDigitsFieldName
         this.timezone = timezone
         this.whelk = whelk
     }
@@ -34,7 +36,11 @@ class Ranges {
     }
 
     static Ranges date(String fieldName, ZoneId timezone, Whelk whelk) {
-        new Ranges(fieldName, timezone, whelk)
+        new Ranges(fieldName, null, timezone, whelk)
+    }
+
+    static Ranges fourDigits(String fieldName, String fourDigitsFieldName, Whelk whelk) {
+        new Ranges(fieldName, fourDigitsFieldName, whelk)
     }
 
     void add(RangeParameterPrefix operator, value) {
@@ -60,6 +66,10 @@ class Ranges {
     boolean isDateField() {
         timezone != null
     }
+
+    boolean isFourDigitField() {
+        fourDigitsFieldName != null
+    }
     
     Map toQuery() {
         if (ranges.isEmpty()) {
@@ -84,8 +94,14 @@ class Ranges {
         RangeParameterPrefix operator
         String value
 
-        String elasticValue() {
-            isDateField() ? QueryDateTime.parse(value).toElasticDateString() : value
+        def elasticValue() {
+            if (isDateField()) {
+                return QueryDateTime.parse(value).toElasticDateString()
+            }
+            if (isFourDigitField() && isFourDigits(value)) {
+                return Integer.parseInt(value)
+            }
+            return value
         }
 
         boolean isWeek() {
@@ -95,6 +111,10 @@ class Ranges {
         @Override
         String toString() {
             return "${operator.prefix()}$fieldName=$value"
+        }
+
+        private static isFourDigits(String s) {
+            return s.matches("\\d{4}")
         }
     }
 
@@ -140,7 +160,7 @@ class Ranges {
                 conditions[max.operator.asElasticRangeOperator()] = max.elasticValue()
             }
 
-            ["range": [(fieldName): conditions]]
+            ["range": [(fourDigitsFieldName ?: fieldName): conditions]]
         }
     }
 

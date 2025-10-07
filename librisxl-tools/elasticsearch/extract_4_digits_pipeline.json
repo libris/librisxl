@@ -1,0 +1,10 @@
+{
+  "description": "Extract first 4 digits from year-like fields and populate keyword + integer sibling fields",
+  "processors": [
+    {
+      "script": {
+        "id": "extract_4_digits"
+      }
+    }
+  ]
+}

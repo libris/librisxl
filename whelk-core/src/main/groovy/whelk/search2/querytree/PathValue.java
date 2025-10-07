@@ -14,12 +14,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.Owl.INVERSE_OF;
 import static whelk.JsonLd.Owl.PROPERTY_CHAIN_AXIOM;
 import static whelk.JsonLd.TYPE_KEY;
+import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
+import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
 import static whelk.search2.Operator.EQUALS;
 import static whelk.search2.Operator.GREATER_THAN;
 import static whelk.search2.Operator.NOT_EQUALS;
@@ -143,56 +145,82 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     }
 
     private Map<String, Object> _getCoreEsQuery(ESSettings esSettings) {
-        String p = path.jsonForm();
-        Value v = value;
+        String field = path.jsonForm();
+        return switch (value) {
+            case DateTime dateTime -> esDateFilter(field, dateTime, esSettings);
+            case FreeText ft -> esFreeTextFilter(field, ft, esSettings);
+            case InvalidValue ignored -> nonsenseFilter(); // TODO: Treat whole expression as free text?
+            case Numeric numeric -> esNumFilter(field, numeric, esSettings);
+            case Resource resource -> esResourceFilter(field, resource);
+        };
+    }
 
+    private Map<String, Object> esDateFilter(String field, DateTime d, ESSettings esSettings) {
+        // TODO: What about e.g. :firstIssueDate/:lastIssueDate? These have range xsd:date however are not indexed as date type in ES.
+        if (esSettings.mappings().isDateTypeField(field)) {
+            return esNumOrDateFilter(field, d.dateTime().toElasticDateString());
+        }
+        // Treat as free text
+        return esFreeTextFilter(field, new FreeText(d.toString()), esSettings);
+    }
+
+    private Map<String, Object> esNumFilter(String field, Numeric n, ESSettings esSettings) {
         EsMappings esMappings = esSettings.mappings();
 
-        if ((v instanceof Numeric n && !esMappings.isFourDigitField(p) && !esMappings.isLongField(p))) {
-            // Treat as free text
-            v = new FreeText(n.toString());
-        } else if (v instanceof DateTime d && !esMappings.isDateField(p)) {
-            // TODO: What about e.g. :firstIssueDate/:lastIssueDate? These have range xsd:date however are not indexed as date type in ES.
-            v = new FreeText(d.toString());
+        // Known placeholder values (0000, 9999) are excluded from 4-digit fields to prevent them from being treated as valid years in sorting and aggregations.
+        Predicate<String> isFourDigits = s -> s.length() == 4 && !s.equals("0000") && !s.equals("9999");
+
+        if (operator.isRange() && esMappings.hasFourDigitsShortField(field)) {
+            return esNumOrDateFilter(field + FOUR_DIGITS_SHORT_SUFFIX, n.value());
+        }
+        if (!operator.isRange() && esMappings.hasFourDigitsKeywordField(field) && isFourDigits.test(n.toString())) {
+            return esNumOrDateFilter(field + FOUR_DIGITS_KEYWORD_SUFFIX, n.toString());
+        }
+        if (esMappings.isLongTypeField(field)) {
+            return esNumOrDateFilter(field, n.value());
         }
 
-        Function<Object, Map<String, Object>> numOrDateFilter = numOrDate -> switch (operator) {
-            case EQUALS -> filterWrap(buildTermQuery(p, numOrDate));
-            case NOT_EQUALS -> mustNotWrap(buildTermQuery(p, numOrDate));
-            case GREATER_THAN_OR_EQUALS -> esRangeFilter(p, numOrDate, "gte");
-            case GREATER_THAN -> esRangeFilter(p, numOrDate, "gt");
-            case LESS_THAN_OR_EQUALS -> esRangeFilter(p, numOrDate, "lte");
-            case LESS_THAN -> esRangeFilter(p, numOrDate, "lt");
+        // Treat as free text
+        return esFreeTextFilter(field, new FreeText(n.toString()), esSettings);
+    }
+
+    private Map<String, Object> esNumOrDateFilter(String f, Object v) {
+        return switch (operator) {
+            case EQUALS -> filterWrap(buildTermQuery(f, v));
+            case NOT_EQUALS -> mustNotWrap(buildTermQuery(f, v));
+            case GREATER_THAN_OR_EQUALS -> esRangeFilter(f, v, "gte");
+            case GREATER_THAN -> esRangeFilter(f, v, "gt");
+            case LESS_THAN_OR_EQUALS -> esRangeFilter(f, v, "lte");
+            case LESS_THAN -> esRangeFilter(f, v, "lt");
         };
+    }
 
-        return switch (v) {
-            case DateTime dateTime -> numOrDateFilter.apply(dateTime.dateTime().toElasticDateString());
-            case FreeText ft -> {
-                if (ft.isWild()) {
-                    yield switch (operator) {
-                        case EQUALS -> existsFilter(p);
-                        case NOT_EQUALS -> notExistsFilter(p);
-                        // FIXME: Range makes no sense here
-                        default -> nonsenseFilter();
-                    };
-                }
-                var boostSettings = esSettings.boost().fieldBoost();
-
-                yield switch (operator) {
-                    case EQUALS -> ft.toEs(boostSettings.withField(p));
-                    case NOT_EQUALS -> mustNotWrap(ft.toEs(boostSettings.withField(p, 0)));
-                    // FIXME: Range makes no sense here
-                    default -> nonsenseFilter();
-                };
-            }
-            case InvalidValue ignored -> nonsenseFilter(); // TODO: Treat whole expression as free text?
-            case Numeric numeric -> numOrDateFilter.apply(numeric.value()); // TODO: Sort out keyword fields, e.g. what is indexed into publication.year.keyword
-            case Resource resource -> switch (operator) {
-                case EQUALS -> filterWrap(buildTermQuery(p, resource.jsonForm()));
-                case NOT_EQUALS -> mustNotWrap(buildTermQuery(p, resource.jsonForm()));
+    private Map<String, Object> esFreeTextFilter(String f, FreeText ft, ESSettings esSettings) {
+        if (ft.isWild()) {
+            return switch (operator) {
+                case EQUALS -> existsFilter(f);
+                case NOT_EQUALS -> notExistsFilter(f);
                 // FIXME: Range makes no sense here
                 default -> nonsenseFilter();
             };
+        }
+
+        var boostSettings = esSettings.boost().fieldBoost();
+
+        return switch (operator) {
+            case EQUALS -> ft.toEs(boostSettings.withField(f));
+            case NOT_EQUALS -> mustNotWrap(ft.toEs(boostSettings.withField(f, 0)));
+            // FIXME: Range makes no sense here
+            default -> nonsenseFilter();
+        };
+    }
+
+    private Map<String, Object> esResourceFilter(String f, Resource r) {
+        return switch (operator) {
+            case EQUALS -> filterWrap(buildTermQuery(f, r.jsonForm()));
+            case NOT_EQUALS -> mustNotWrap(buildTermQuery(f, r.jsonForm()));
+            // FIXME: Range makes no sense here
+            default -> nonsenseFilter();
         };
     }
 

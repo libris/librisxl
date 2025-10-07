@@ -24,7 +24,8 @@
                     "b": 0,
                     "k1": 0
                 }
-            }
+            },
+            "default_pipeline": "extract_4_digits_pipeline"
         },
         "index.query.default_field": "_all",
         "analysis": {
@@ -378,19 +379,32 @@
                 }
             },
             {
+                "4_digits_keyword_template": {
+                    "match": "*_4_digits_keyword",
+                    "mapping": {
+                        "type": "keyword"
+                    }
+                }
+            },
+            {
+                "4_digits_short_template": {
+                    "match": "*_4_digits_short",
+                    "mapping": {
+                        "type": "short"
+                    }
+                }
+            },
+            {
                 "year_template": {
                     "match": ["year", "startYear", "endYear"],
                     "mapping": {
                         "fields": {
                             "keyword": {
-                                "index": true,
                                 "type": "keyword"
                             }
                         },
-                        "analyzer": "numeric_extractor",
-                        "index": true,
+                        "analyzer": "standard",
                         "type": "text",
-                        "fielddata": true,
                         "copy_to": "_all"
                     }
                 }
