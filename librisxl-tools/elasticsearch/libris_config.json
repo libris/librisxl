@@ -207,18 +207,6 @@
                     }
                 }
             },
-            "identifiedBy": {
-                "type": "nested",
-                "include_in_parent": true,
-                "properties": {
-                    "@type": {"type": "keyword"},
-                    "value": {
-                        "type": "text",
-                        "analyzer": "isbn_analyzer",
-                        "copy_to": "_all"
-                    }
-                }
-            },
             "hasTitle": {
                 "type": "nested",
                 "include_in_parent": true,
@@ -415,6 +403,28 @@
                     "mapping": {
                         "type": "nested",
                         "include_in_parent": true
+                    }
+                }
+            },
+            {
+                "identifiedBy_template": {
+                    "path_match": ["identifiedBy", "@reverse.instanceOf.identifiedBy"],
+                    "mapping": {
+                        "type": "nested",
+                        "include_in_parent": true,
+                        "properties": {
+                            "@type": {"type": "keyword"},
+                            "value": {
+                                "type": "text",
+                                "fields": {
+                                    "keyword": {
+                                        "type": "keyword"
+                                    }
+                                },
+                                "analyzer": "isbn_analyzer",
+                                "copy_to": "_all"
+                            }
+                        }
                     }
                 }
             },

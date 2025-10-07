@@ -122,9 +122,8 @@ public class QueryTree {
     }
 
     public Optional<FreeText> findSimpleFreeText() {
-        return findTopNodeByCondition(node -> node instanceof FreeText ft
-                && !ft.negate()
-                && ft.connective() == Query.Connective.AND).map(FreeText.class::cast);
+        return findTopNodeByCondition(node -> node instanceof FreeText ft && ft.connective() == Query.Connective.AND)
+                .map(FreeText.class::cast);
     }
 
     public List<Node> findTopNodesByCondition(Predicate<Node> condition) {
@@ -206,6 +205,10 @@ public class QueryTree {
         if (tree instanceof Group g) {
             return g.mapFilterAndReinstantiate(c -> _remove(c, remove), Objects::nonNull);
         }
+        if (tree instanceof Not(Node node)) {
+            var removed = _remove(node, remove);
+            return removed != null ? new Not(removed) : null;
+        }
         return tree;
     }
 
@@ -275,7 +278,7 @@ public class QueryTree {
                         && !selectedFilters.isExplicitlyDeactivated(df.filter())
                         // Override default type filter if the original query already states which types to search.
                         // e.g. don't add "\"rdf:type\":Work" if query is "\"rdf:type\":Agent Astrid Lindgren"
-                        && !(df.filter().isTypeFilter() && allDescendants().anyMatch(Node::isTypeNode));
+                        && !(df.filter().isTypeFilter() && containsTypeNode());
 
         siteFilters.defaultFilters().stream()
                 .filter(isApplicable)
@@ -298,5 +301,18 @@ public class QueryTree {
                 .map(p -> new PathValue(p, Operator.EQUALS, new Link(object)))
                 .forEach(filtered::_add);
         this.filtered = filtered;
+    }
+
+    private boolean containsTypeNode() {
+        return containsTypeNode(tree, false);
+    }
+
+    private static boolean containsTypeNode(Node node, boolean negate) {
+        return switch (node) {
+            case PathValue pv -> !negate && pv.isTypeNode();
+            case Not not -> containsTypeNode(not.node(), !negate);
+            case Group group -> group.children().stream().anyMatch(n -> containsTypeNode(n, negate));
+            default -> false;
+        };
     }
 }

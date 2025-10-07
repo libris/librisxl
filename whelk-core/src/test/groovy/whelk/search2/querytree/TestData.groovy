@@ -1,11 +1,9 @@
 package whelk.search2.querytree
 
 import whelk.JsonLd
-import whelk.Whelk
 import whelk.search2.AppParams
 import whelk.search2.Disambiguate
 import whelk.search2.EsMappings
-import whelk.search2.Filter
 import whelk.search2.QueryParams
 import whelk.search2.VocabMappings
 

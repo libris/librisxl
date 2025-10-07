@@ -631,7 +631,8 @@ public class Query {
                 } else {
                     alteredTree = (selectedFilters.isExplicitlyDeactivated(f)
                             ? queryTree.remove(selectedFilters.getDeactivatingNodes(f))
-                            : queryTree).add(f.getActive());
+                            : queryTree)
+                            .add(f);
                 }
 
                 Map<String, Object> res = new LinkedHashMap<>();

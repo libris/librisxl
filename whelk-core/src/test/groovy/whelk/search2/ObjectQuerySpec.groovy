@@ -31,17 +31,13 @@ class ObjectQuerySpec extends Specification {
                                                 ]
                                         ],
                                         "p6": [
-                                                "bool": [
-                                                        "must": [
-                                                                "nested": [
-                                                                        "path" : "p3",
-                                                                        "query": [
-                                                                                "bool": [
-                                                                                        "filter": [
-                                                                                                "term": [
-                                                                                                        "p3.p4.@id": "https://libris.kb.se/fcrtpljz1qp2bdv#it"
-                                                                                                ]
-                                                                                        ]
+                                                "nested": [
+                                                        "path" : "p3",
+                                                        "query": [
+                                                                "bool": [
+                                                                        "filter": [
+                                                                                "term": [
+                                                                                        "p3.p4.@id": "https://libris.kb.se/fcrtpljz1qp2bdv#it"
                                                                                 ]
                                                                         ]
                                                                 ]
