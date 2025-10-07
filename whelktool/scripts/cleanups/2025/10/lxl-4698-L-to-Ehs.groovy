@@ -58,13 +58,14 @@ void splitToEhs(Object doc) {
             [ "@graph": [
                     [
                             "@id": "TEMPID",
+                            "@type": "Record",
                             "mainEntity" : ["@id": "TEMPID#it"]
                     ],
                     [
                             "@id": "TEMPID#it",
                             "@type": "Item",
                             "heldBy": ["@id": "https://libris.kb.se/library/Ehs"],
-                            "itemOf": ["@id": doc.graph[1]["@id"]]
+                            "itemOf": ["@id": doc.graph[1]["itemOf"]["@id"]]
                     ]
             ]]
 
