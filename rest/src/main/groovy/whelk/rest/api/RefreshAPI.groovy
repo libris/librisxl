@@ -8,6 +8,7 @@ import whelk.util.http.WhelkHttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
+import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
 import static whelk.util.Jackson.mapper
 
 /**
@@ -101,5 +102,8 @@ class RefreshAPI extends WhelkHttpServlet
     void refreshQuietly(Document doc) {
         whelk.storage.refreshDerivativeTables(doc)
         whelk.elastic.index(doc, whelk)
+        if (whelk.features.isEnabled(INDEX_BLANK_WORKS)) {
+            doc.getVirtualRecordIds().forEach { id -> whelk.elastic.index(doc.getVirtualRecord(id), whelk) }
+        }
     }
 }
