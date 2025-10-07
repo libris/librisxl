@@ -87,17 +87,20 @@ dependencies {
 
     // Common tools
     implementation "com.google.guava:guava:${guavaVersion}"
+    // Guava used to have findbugs:jsr305 as a dependency; it provides javax.annotation.Nullable
+    // that we still use in one place.
+    implementation("com.google.code.findbugs:jsr305:3.0.2")
     implementation "io.github.resilience4j:resilience4j-circuitbreaker:${resilience4jVersion}"
     implementation "io.github.resilience4j:resilience4j-prometheus:${resilience4jVersion}"
     implementation "io.github.resilience4j:resilience4j-retry:${resilience4jVersion}"
     implementation "org.apache.groovy:groovy-all:${groovyVersion}"
     implementation 'com.damnhandy:handy-uri-templates:2.0.4'
     implementation 'com.zaxxer:HikariCP:4.0.3'
-    implementation 'commons-codec:commons-codec:1.7'
+    implementation 'commons-codec:commons-codec:1.19.0'
     implementation 'com.ibm.icu:icu4j:71.1'
-    api 'commons-io:commons-io:2.11.0'
-    implementation "org.apache.httpcomponents:httpclient:${httpComponentsClientVersion}"
-    implementation "org.apache.httpcomponents:httpcore:${httpComponentsCoreVersion}"
+    api 'commons-io:commons-io:2.20.0'
+    implementation "org.apache.httpcomponents.client5:httpclient5:${httpComponentsClientVersion}"
+    implementation "org.apache.httpcomponents.core5:httpcore5:${httpComponentsCoreVersion}"
     api 'org.apache.jena:apache-jena-libs:3.0.1'
     api "org.apache.groovy:groovy-json:${groovyVersion}"
     api "org.apache.groovy:groovy-xml:${groovyVersion}"
@@ -117,8 +120,8 @@ dependencies {
     implementation "io.prometheus:simpleclient_guava:${prometheusVersion}"
 
     // Integration
-    api "org.apache.commons:commons-lang3:3.3.2"
-    implementation 'org.postgresql:postgresql:42.4.0'
+    api "org.apache.commons:commons-lang3:3.18.0"
+    implementation 'org.postgresql:postgresql:42.7.8'
 
     // profiling and test
     testImplementation "org.spockframework:spock-core:${spockVersion}"

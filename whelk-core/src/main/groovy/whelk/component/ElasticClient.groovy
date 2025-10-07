@@ -11,38 +11,39 @@ import io.github.resilience4j.retry.Retry
 import io.github.resilience4j.retry.RetryConfig
 import io.github.resilience4j.retry.RetryRegistry
 import io.prometheus.client.CollectorRegistry
-import org.apache.http.Header
-import org.apache.http.HttpEntity
-import org.apache.http.HttpHeaders
-import org.apache.http.HttpResponse
-import org.apache.http.client.HttpClient
-import org.apache.http.client.config.RequestConfig
-import org.apache.http.client.methods.HttpGet
-import org.apache.http.client.methods.HttpPost
-import org.apache.http.client.methods.HttpPut
-import org.apache.http.client.methods.HttpRequestBase
-import org.apache.http.config.Registry
-import org.apache.http.config.RegistryBuilder
-import org.apache.http.conn.HttpClientConnectionManager
-import org.apache.http.conn.socket.ConnectionSocketFactory
-import org.apache.http.conn.socket.PlainConnectionSocketFactory
-import org.apache.http.conn.ssl.NoopHostnameVerifier
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustStrategy
-import org.apache.http.entity.ContentType
-import org.apache.http.entity.StringEntity
-import org.apache.http.impl.client.CloseableHttpClient
-import org.apache.http.impl.client.HttpClients
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
-import org.apache.http.message.BasicHeader
-import org.apache.http.ssl.SSLContexts
-import org.apache.http.util.EntityUtils
+import org.apache.hc.client5.http.classic.methods.HttpGet
+import org.apache.hc.client5.http.classic.methods.HttpPost
+import org.apache.hc.client5.http.classic.methods.HttpPut
+import org.apache.hc.client5.http.config.ConnectionConfig
+import org.apache.hc.client5.http.config.RequestConfig
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient
+import org.apache.hc.client5.http.impl.classic.HttpClients
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder
+import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy
+import org.apache.hc.client5.http.ssl.HostnameVerificationPolicy
+import org.apache.hc.client5.http.ssl.NoopHostnameVerifier
+import org.apache.hc.core5.http.ClassicHttpRequest
+import org.apache.hc.core5.http.ContentType
+import org.apache.hc.core5.http.Header
+import org.apache.hc.core5.http.HttpEntity
+import org.apache.hc.core5.http.HttpHeaders
+import org.apache.hc.core5.http.io.entity.StringEntity
+import org.apache.hc.core5.http.message.BasicHeader
+import org.apache.hc.core5.pool.PoolConcurrencyPolicy
+import org.apache.hc.core5.pool.PoolReusePolicy
+import org.apache.hc.core5.ssl.SSLContexts
+import org.apache.hc.core5.ssl.TrustStrategy
+import org.apache.hc.core5.util.TimeValue
+import org.apache.hc.core5.util.Timeout
 import whelk.exception.ElasticIOException
 import whelk.exception.UnexpectedHttpStatusException
 
 import javax.net.ssl.SSLContext
 import java.time.Duration
 import java.util.function.Function
+
+import static whelk.util.Jackson.mapper
 
 @Log
 class ElasticClient {
@@ -66,7 +67,7 @@ class ElasticClient {
             .build()
 
     List<ElasticNode> elasticNodes
-    HttpClient httpClient
+    CloseableHttpClient httpClient
     Random random = new Random()
     boolean useCircuitBreaker
 
@@ -77,20 +78,31 @@ class ElasticClient {
     static ElasticClient withDefaultHttpClient(List<String> elasticHosts, String elasticUser, String elasticPassword) {
         TrustStrategy acceptingTrustStrategy = (cert, authType) -> true
         SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build()
-        SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE)
-        Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory> create()
-            .register("https", sslsf)
-            .register("http", new PlainConnectionSocketFactory())
-            .build()
 
-        HttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(registry)
-        cm.setMaxTotal(CONNECTION_POOL_SIZE)
-        cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_HOST)
+        PoolingHttpClientConnectionManager cm = PoolingHttpClientConnectionManagerBuilder.create()
+                .setTlsSocketStrategy(
+                        new DefaultClientTlsStrategy(
+                                sslContext,
+                                HostnameVerificationPolicy.CLIENT,
+                                NoopHostnameVerifier.INSTANCE
+                        )
+                )
+                .setMaxConnTotal(CONNECTION_POOL_SIZE)
+                .setMaxConnPerRoute(MAX_CONNECTIONS_PER_HOST)
+                .setPoolConcurrencyPolicy(PoolConcurrencyPolicy.STRICT)
+                .setConnPoolPolicy(PoolReusePolicy.LIFO)
+                .setDefaultConnectionConfig(
+                        ConnectionConfig.custom()
+                                .setConnectTimeout(Timeout.ofMilliseconds(CONNECT_TIMEOUT_MS))
+                                .setSocketTimeout(Timeout.ofMilliseconds(READ_TIMEOUT_MS))
+                                .setTimeToLive(TimeValue.ofMinutes(10))
+                                .build()
+                )
+                .build()
 
         RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectTimeout(CONNECT_TIMEOUT_MS)
-                .setConnectionRequestTimeout(CONNECT_TIMEOUT_MS)
-                .setSocketTimeout(READ_TIMEOUT_MS)
+                .setConnectionRequestTimeout(Timeout.ofMilliseconds(CONNECT_TIMEOUT_MS))
+                .setResponseTimeout(Timeout.ofMilliseconds(READ_TIMEOUT_MS))
                 .build()
 
         String auth = elasticUser + ":" + elasticPassword
@@ -98,7 +110,6 @@ class ElasticClient {
         List<Header> headers = List.of(authHeader)
 
         CloseableHttpClient httpClient = HttpClients.custom()
-                .setSSLSocketFactory(sslsf)
                 .setConnectionManager(cm)
                 .setDefaultRequestConfig(requestConfig)
                 .setDefaultHeaders(headers)
@@ -110,19 +121,31 @@ class ElasticClient {
     static ElasticClient withBulkHttpClient(List<String> elasticHosts, String elasticUser, String elasticPassword) {
         TrustStrategy acceptingTrustStrategy = (cert, authType) -> true
         SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build()
-        SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE)
-        Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory> create()
-                .register("https", sslsf)
-                .register("http", new PlainConnectionSocketFactory())
+
+        PoolingHttpClientConnectionManager cm = PoolingHttpClientConnectionManagerBuilder.create()
+                .setTlsSocketStrategy(
+                        new DefaultClientTlsStrategy(
+                                sslContext,
+                                HostnameVerificationPolicy.CLIENT,
+                                NoopHostnameVerifier.INSTANCE
+                        )
+                )
+                .setMaxConnTotal(CONNECTION_POOL_SIZE)
+                .setMaxConnPerRoute(MAX_CONNECTIONS_PER_HOST)
+                .setPoolConcurrencyPolicy(PoolConcurrencyPolicy.STRICT)
+                .setConnPoolPolicy(PoolReusePolicy.LIFO)
+                .setDefaultConnectionConfig(
+                        ConnectionConfig.custom()
+                                .setConnectTimeout(BATCH_CONNECT_TIMEOUT_MS == 0 ? Timeout.DISABLED : Timeout.ofMilliseconds(BATCH_CONNECT_TIMEOUT_MS))
+                                .setSocketTimeout(Timeout.ofMilliseconds(BATCH_READ_TIMEOUT_MS))
+                                .setTimeToLive(TimeValue.ofMinutes(10))
+                                .build()
+                )
                 .build()
 
-        HttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(registry)
-        cm.setMaxTotal(CONNECTION_POOL_SIZE)
-        cm.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_HOST)
-
         RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectTimeout(BATCH_CONNECT_TIMEOUT_MS)
-                .setSocketTimeout(BATCH_READ_TIMEOUT_MS)
+                .setConnectionRequestTimeout(Timeout.ofMilliseconds(CONNECT_TIMEOUT_MS))
+                .setResponseTimeout(Timeout.ofMilliseconds(BATCH_READ_TIMEOUT_MS))
                 .build()
 
         String auth = elasticUser + ":" + elasticPassword
@@ -130,7 +153,6 @@ class ElasticClient {
         List<Header> headers = List.of(authHeader)
 
         CloseableHttpClient httpClient = HttpClients.custom()
-                .setSSLSocketFactory(sslsf)
                 .setConnectionManager(cm)
                 .setDefaultRequestConfig(requestConfig)
                 .setDefaultHeaders(headers)
@@ -139,7 +161,7 @@ class ElasticClient {
         return new ElasticClient(httpClient, elasticHosts, false)
     }
 
-    private ElasticClient(HttpClient httpClient, List<String> elasticHosts, boolean useCircuitBreaker) {
+    private ElasticClient(CloseableHttpClient httpClient, List<String> elasticHosts, boolean useCircuitBreaker) {
         this.httpClient = httpClient
         this.elasticNodes = elasticHosts.collect { new ElasticNode(it) }
 
@@ -159,7 +181,7 @@ class ElasticClient {
         log.info "ElasticSearch component initialized with ${elasticHosts.size()} nodes."
     }
 
-    String performRequest(String method, String path, String body, String contentType0 = null)
+    Map performRequest(String method, String path, String body, String contentType0 = null)
         throws ElasticIOException, UnexpectedHttpStatusException {
         try {
             def nodes = cycleNodes()
@@ -187,7 +209,7 @@ class ElasticClient {
 
     class ElasticNode {
         String host
-        Function<HttpRequestBase, Tuple2<Integer, String>> send
+        Function<ClassicHttpRequest, Tuple2<Integer, Map>> send
 
         ElasticNode(String host) {
             this.host = host
@@ -206,38 +228,37 @@ class ElasticClient {
             }
         }
 
-        String performRequest(String method, String path, String body, String contentType0 = null) {
-            def (int statusCode, String resultBody) = send.apply(buildRequest(method, path, body, contentType0))
+        Map performRequest(String method, String path, String body, String contentType0 = null) {
+            def (int statusCode, Map result) = send.apply(buildRequest(method, path, body, contentType0))
             if (statusCode >= 200 && statusCode < 300) {
-                return resultBody
+                return result
             }
             else {
-                throw new UnexpectedHttpStatusException(resultBody, statusCode)
+                throw new UnexpectedHttpStatusException(mapper.writeValueAsString(result), statusCode)
             }
         }
 
-        private Tuple2<Integer, String> sendRequest(HttpRequestBase request) {
+        private Tuple2<Integer, Map> sendRequest(ClassicHttpRequest request) {
             try {
                 return sendRequestRetry4XX(request)
             }
             catch (Exception e) {
                 throw new RuntimeException(e.getMessage(), e)
             }
-            finally {
-                request.reset()
-                request.releaseConnection()
-            }
         }
 
-        private Tuple2<Integer, String> sendRequestRetry4XX(HttpRequestBase request) {
+        private Tuple2<Integer, Map> sendRequestRetry4XX(ClassicHttpRequest request) {
             int backOffSeconds = 1
             while (true) {
-                HttpResponse response = httpClient.execute(request)
-                int statusCode = response.getStatusLine().getStatusCode()
+                def result = httpClient.execute(request) { response ->
+                    int statusCode = response.getCode()
+                    Map responseBody = mapper.readValue(response.getEntity().getContent(), Map)
+                    return new Tuple2(statusCode, responseBody)
+                }
+
+                int statusCode = result.v1 as int
 
                 if (statusCode != 429 && statusCode != 409) {
-                    def result = new Tuple2(statusCode, EntityUtils.toString(response.getEntity()))
-
                     if (log.isDebugEnabled()) {
                         String r = result.v2
                         if (r.size() < 50_000) {
@@ -250,8 +271,6 @@ class ElasticClient {
                         throw new RetriesExceededException("Max retries exceeded: HTTP 4XX from ElasticSearch")
                     }
 
-                    request.reset()
-
                     log.info("Bulk indexing request to ElasticSearch was throttled (HTTP 429) waiting $backOffSeconds seconds before retry.")
                     Thread.sleep(backOffSeconds * 1000)
 
@@ -260,7 +279,7 @@ class ElasticClient {
             }
         }
 
-        private HttpRequestBase buildRequest(String method, String path, String body, String contentType0 = null) {
+        private ClassicHttpRequest buildRequest(String method, String path, String body, String contentType0 = null) {
             switch (method) {
                 case 'GET':
                     return new HttpGet(host + path)
@@ -294,7 +313,7 @@ class ElasticClient {
         HttpDeleteWithBody(String uri) {
             super(uri)
         }
-        
+
         @Override
         String getMethod() {
             return 'DELETE'

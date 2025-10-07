@@ -375,10 +375,10 @@
                 }
             },
             {
-                "4_digits_int_template": {
-                    "match": "*_4_digits_int",
+                "4_digits_short_template": {
+                    "match": "*_4_digits_short",
                     "mapping": {
-                        "type": "integer"
+                        "type": "short"
                     }
                 }
             },

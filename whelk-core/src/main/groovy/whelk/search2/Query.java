@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.component.ElasticSearch.flattenedLangMapKey;
-import static whelk.search2.EsMappings.FOUR_DIGITS_INT_SUFFIX;
+import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
 import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
 import static whelk.search2.EsMappings.KEYWORD;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
@@ -186,7 +186,7 @@ public class Query {
         view.put("totalItems", getQueryResult().numHits);
 
         // TODO: Include _o search representation in search mapping?
-        view.put("search", Map.of("mapping", List.of(queryTree.toSearchMapping(queryParams))));
+        view.put("search", Map.of("mapping", getSearchMapping()));
 
         view.putAll(Pagination.makeLinks(getQueryResult().numHits, esSettings.maxItems(), queryTree, queryParams));
 
@@ -211,6 +211,28 @@ public class Query {
         linkLoader.loadChips();
 
         return view;
+    }
+
+    // FIXME
+    private List<Map<String, Object>> getSearchMapping() {
+        List<Map<String, Object>> mappings = new ArrayList<>();
+        var q = new LinkedHashMap<>(queryTree.toSearchMapping(queryParams));
+        q.put("variable", QueryParams.ApiParams.QUERY);
+        mappings.add(q);
+        appParams.siteFilters.defaultFilters()
+                .stream()
+                .map(AppParams.DefaultSiteFilter::filter)
+                .filter(f -> f.getRaw().equals(queryParams.r))
+                .map(Filter::getParsed)
+                .map(QueryTree::new)
+                .peek(qt -> linkLoader.queue(qt.collectLinks()))
+                .map(qt -> qt.toSearchMapping(queryParams))
+                .map(LinkedHashMap::new)
+                .peek(m -> DocumentUtil.findKey(m, "up", ((value, path) -> new DocumentUtil.Remove())))
+                .peek(m -> m.put("variable", QueryParams.ApiParams.CUSTOM_SITE_FILTER))
+                .findFirst()
+                .ifPresent(mappings::add);
+        return mappings;
     }
 
     private Map<?, ?> doQuery(Object dsl) {
@@ -260,8 +282,8 @@ public class Query {
 
     private String getSortField(String termPath) {
         var path = expandLangMapKeys(termPath);
-        if (esSettings.mappings().hasFourDigitsIntField(path)) {
-            return String.format("%s%s", path, FOUR_DIGITS_INT_SUFFIX);
+        if (esSettings.mappings().hasFourDigitsShortField(path)) {
+            return String.format("%s%s", path, FOUR_DIGITS_SHORT_SUFFIX);
         }
         else if (esSettings.mappings().hasKeywordSubfield(path)) {
             return String.format("%s.%s", path, KEYWORD);

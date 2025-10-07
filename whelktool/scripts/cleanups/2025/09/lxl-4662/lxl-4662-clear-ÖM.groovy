@@ -40,7 +40,7 @@ ids.each {id ->
         }
 
         if (changed) {
-            doc.scheduleSave()
+            doc.scheduleSave(loud: true)
         }
     }
 }

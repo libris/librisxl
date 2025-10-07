@@ -14,14 +14,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.Owl.INVERSE_OF;
 import static whelk.JsonLd.Owl.PROPERTY_CHAIN_AXIOM;
 import static whelk.JsonLd.TYPE_KEY;
-import static whelk.search2.EsMappings.FOUR_DIGITS_INT_SUFFIX;
-import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
 import static whelk.search2.EsMappings.KEYWORD;
+import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
+import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
 import static whelk.search2.Operator.EQUALS;
 import static whelk.search2.Operator.GREATER_THAN;
 import static whelk.search2.QueryUtil.boolWrap;
@@ -166,11 +167,14 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     private Map<String, Object> esNumFilter(String field, Numeric n, ESSettings esSettings) {
         EsMappings esMappings = esSettings.mappings();
 
-        if (operator.isRange() && esMappings.hasFourDigitsIntField(field) && n.isFourDigits()) {
-            return esNumOrDateFilter(field + FOUR_DIGITS_INT_SUFFIX, n.value());
+        // Known placeholder values (0000, 9999) are excluded from 4-digit fields to prevent them from being treated as valid years in sorting and aggregations.
+        Predicate<String> isFourDigitsFieldValue = s -> s.length() == 4 && !s.equals("0000") && !s.equals("9999");
+
+        if (operator.isRange() && esMappings.hasFourDigitsShortField(field)) {
+            return esNumOrDateFilter(field + FOUR_DIGITS_SHORT_SUFFIX, n.value());
         }
         if (!operator.isRange()) {
-            if (esMappings.hasFourDigitsKeywordField(field) && n.isFourDigits()) {
+            if (esMappings.hasFourDigitsKeywordField(field) && isFourDigitsFieldValue.test(n.toString())) {
                 return esNumOrDateFilter(field + FOUR_DIGITS_KEYWORD_SUFFIX, n.toString());
             }
             if (esMappings.hasKeywordSubfield(field)) {

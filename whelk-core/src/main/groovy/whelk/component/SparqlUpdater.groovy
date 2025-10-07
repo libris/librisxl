@@ -4,8 +4,12 @@ import com.google.common.util.concurrent.MoreExecutors
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
-import org.apache.http.conn.HttpClientConnectionManager
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
+import org.apache.hc.client5.http.config.ConnectionConfig
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder
+import org.apache.hc.client5.http.io.HttpClientConnectionManager
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager
+import org.apache.hc.core5.util.Timeout
+import org.apache.hc.core5.util.TimeValue
 import whelk.Document
 import whelk.exception.UnexpectedHttpStatusException
 
@@ -122,9 +126,17 @@ class SparqlUpdater {
     }
 
     private static HttpClientConnectionManager buildHttpClientConnectionManager(final int poolSize) {
-        HttpClientConnectionManager cm = new PoolingHttpClientConnectionManager()
-        cm.setMaxTotal(poolSize)
-        cm.setDefaultMaxPerRoute(poolSize)
+        PoolingHttpClientConnectionManager cm = PoolingHttpClientConnectionManagerBuilder.create()
+                .setMaxConnTotal(poolSize)
+                .setMaxConnPerRoute(poolSize)
+                .setDefaultConnectionConfig(
+                        ConnectionConfig.custom()
+                                .setConnectTimeout(Timeout.ofMilliseconds(5000)) // 5 seconds
+                                .setSocketTimeout(Timeout.ofMilliseconds(5000))   // 5 seconds
+                                .setTimeToLive(TimeValue.ofMinutes(10))
+                                .build()
+                )
+                .build()
         return cm
     }
 
