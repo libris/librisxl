@@ -421,6 +421,7 @@
                                         "type": "keyword"
                                     }
                                 },
+                                "analyzer": "isbn_analyzer",
                                 "copy_to": "_all"
                             }
                         }
