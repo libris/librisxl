@@ -112,7 +112,7 @@ class SiteSearch {
                 queryParameters.put('_statsrepr', [mapper.writeValueAsString(searchSettings['statsindex'])] as String[])
             }
             return toDataIndexDescription(appsIndex["${activeSite}data" as String], queryParameters)
-        } else if ("_q" in queryParameters || "_o" in queryParameters) {
+        } else if ("_q" in queryParameters || "_o" in queryParameters || "_r" in queryParameters) {
             var appId = "https://beta.libris.kb.se/"
             var appDesc = getAndIndexDescription(appId)
             if (appDesc) {
