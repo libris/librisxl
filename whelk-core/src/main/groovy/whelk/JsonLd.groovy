@@ -24,6 +24,7 @@ class JsonLd {
     public static final String TYPE_KEY = "@type"
     public static final String VALUE_KEY = "@value"
     public static final String LANGUAGE_KEY = "@language"
+    public static final String INDEX_KEY = "@index"
     public static final String CONTAINER_KEY = "@container"
     public static final String SET_KEY = "@set"
     public static final String LIST_KEY = "@list"
@@ -112,6 +113,12 @@ class JsonLd {
         public static final String SUBCLASS_OF = "subClassOf";
         public static final String SUB_PROPERTY_OF = "subPropertyOf";
         public static final String IS_DEFINED_BY = "isDefinedBy";
+        public static final String LABEL = "label";
+    }
+
+    static final class Platform {
+        public static final String COMPUTED_LABEL = "computedLabel";
+        public static final String CATEGORY_BY_COLLECTION = "_categoryByCollection";
     }
 
     public static final String ALTERNATE_PROPERTIES = 'alternateProperties'
@@ -145,6 +152,13 @@ class JsonLd {
      * in the context.
      */
     public Set<String> repeatableTerms
+
+    /**
+     * Terms that are declared as index containers in the context.
+     */
+    public Map<String, String> indexMapTermsFor
+    public Map<String, Set<String>> indexMapTermsOf
+    public Set<String> indexMapTerms
 
     /**
      * Make an instance to encapsulate model driven behaviour.
@@ -182,9 +196,17 @@ class JsonLd {
         context = getNormalizedContext(contextData)
 
         repeatableTerms = context.findResults { key, value ->
-            if (isSetContainer(value) || isListContainer(value))
-                return key
+            (isSetContainer(value) || isListContainer(value)) ? key : null
         } as Set<String>
+
+        indexMapTermsFor = context
+                .findAll { _, dfn -> isIndexContainer(dfn) && dfn[ID_KEY] }
+                .collectEntries { key, dfn -> [key, dfn[ID_KEY]] }
+        indexMapTermsOf = new HashMap<>();
+        indexMapTermsFor.each {alias, term ->
+            indexMapTermsOf.computeIfAbsent(term, _ -> new HashSet<>()).add(alias)
+        }
+        indexMapTerms = indexMapTermsFor.keySet()
 
         this.displayData = displayData ?: Collections.emptyMap()
 
@@ -248,7 +270,6 @@ class JsonLd {
                 }
             }
         }
-
         langContainerAliasInverted = langContainerAlias.collectEntries { e -> [(e.value): e.key] }
     }
 
@@ -329,17 +350,21 @@ class JsonLd {
     boolean isSetContainer(String property) {
         context?.get(property)?.with(this.&isSetContainer) ?: false
     }
-    
-    boolean isSetContainer(dfn) {
+
+    static boolean isSetContainer(dfn) {
         return dfn instanceof Map && dfn[CONTAINER_KEY] == SET_KEY
     }
 
-    boolean isListContainer(dfn) {
+    static boolean isListContainer(dfn) {
         return dfn instanceof Map && dfn[CONTAINER_KEY] == LIST_KEY
     }
 
-    boolean isLangContainer(dfn) {
+    static boolean isLangContainer(dfn) {
         return dfn instanceof Map && dfn[CONTAINER_KEY] == LANGUAGE_KEY
+    }
+
+    static boolean isIndexContainer(dfn) {
+        return dfn instanceof Map && dfn[CONTAINER_KEY] == INDEX_KEY
     }
 
     boolean isVocabTerm(String key) {
@@ -401,6 +426,32 @@ class JsonLd {
         } else {
             return vocabId + termKey
         }
+    }
+
+    String prependVocabPrefix(String termKey) {
+        if (termKey.contains(':')) {
+            return termKey
+        }
+
+        getVocabPrefix() + ':' + termKey
+    }
+
+    @Memoized
+    String getVocabPrefix() {
+        var prefixEntry = prefixToNsMap.find { it.value == vocabId }
+        if (!prefixEntry) {
+            throw new IllegalStateException("Could not find prefix for " + vocabId )
+        }
+
+        return prefixEntry.key
+    }
+
+    String getNamespaceUri(String prefix) {
+        prefixToNsMap[prefix]
+    }
+
+    String getVocabId() {
+        return vocabId
     }
 
     Set<Link> expandLinks(Set<Link> refs) {
@@ -810,11 +861,11 @@ class JsonLd {
             final boolean reduceKey = false, Set<String> preserveLinks = [], boolean searchCard = false) {
         Map result = [:]
 
-        Map card = removeProperties(thing, getLens(thing, searchCard ? ['search-cards', 'cards'] : ['cards']))
+        Map card = removeProperties(thing, getLens(thing, searchCard ? ['search-cards', 'cards'] : ['cards']), indexMapTerms)
         // If result is too small, use chip instead.
         // TODO: Support and use extends + super in card defs instead.)
         if (card.size() < 2) {
-            card = removeProperties(thing, getLens(thing, searchCard ? ['search-chips', 'chips'] : ['chips']))
+            card = removeProperties(thing, getLens(thing, searchCard ? ['search-chips', 'chips'] : ['chips']), indexMapTerms)
         }
 
         if (preserveLinks) {
@@ -877,7 +928,7 @@ class JsonLd {
             return object.collect { toChip(it, preserveLinks, searchChip) }
         } else if (object instanceof Map) {
             Map result = [:]
-            Map reduced = removeProperties(object, getLens(object, searchChip ? ['search-chips', 'chips'] : ['chips']))
+            Map reduced = removeProperties(object, getLens(object, searchChip ? ['search-chips', 'chips'] : ['chips']), indexMapTerms)
             if (preserveLinks) {
                 restoreLinks(reduced, (Map) object, preserveLinks)
             }
@@ -1138,7 +1189,7 @@ class JsonLd {
         }
     }
     
-    private static Map removeProperties(Map thing, Map lens) {
+    private static Map removeProperties(Map thing, Map lens, Set<String> indexMapTerms) {
         Map result = [:]
         if (lens) {
             List propertiesToKeep = (List) lens.get("showProperties")
@@ -1147,7 +1198,11 @@ class JsonLd {
                 if (shouldAlwaysKeep((String) key)) {
                     result[key] = value
                 }
+                else if (indexMapTerms.contains(key)) {
+                    result[key] = value
+                }
             }
+
             propertiesToKeep.each { p ->
                 if (p instanceof String && thing[p]) {
                     result[p] = thing[p]
@@ -1436,13 +1491,10 @@ class JsonLd {
      * anywhere in the structure/document (and thus cannot be safely removed).
      */
     static void getReferencedBNodes(Map map, Set referencedBNodes) {
-        // A jsonld reference is denoted as a json object containing exactly one member, with the key "@id".
-        if (map.size() == 1) {
-            String key = map.keySet()[0]
-            if (key == ID_KEY) {
-                String id = map.get(key)
-                if (id.startsWith("_:"))
-                    referencedBNodes.add(id)
+        if (isLink(map)) {
+            String id = map[ID_KEY]
+            if (id && id.startsWith("_:")) {
+                referencedBNodes.add(id)
             }
         }
 

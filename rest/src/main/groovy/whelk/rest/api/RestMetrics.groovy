@@ -9,19 +9,19 @@ import io.prometheus.client.Summary
 
 @CompileStatic
 class RestMetrics {
-    static final Counter requests = Counter.build()
+    protected static final Counter requests = Counter.build()
         .name("api_requests_total").help("Total requests to API.")
         .labelNames("method").register()
 
-    static final Counter failedRequests = Counter.build()
+    protected static final Counter failedRequests = Counter.build()
         .name("api_failed_requests_total").help("Total failed requests to API.")
         .labelNames("method", "status").register()
 
-    static final Gauge ongoingRequests = Gauge.build()
+    protected static final Gauge ongoingRequests = Gauge.build()
         .name("api_ongoing_requests_total").help("Total ongoing API requests.")
         .labelNames("method").register()
 
-    static final Summary requestsLatency = Summary.build()
+    protected static final Summary requestsLatency = Summary.build()
         .name("api_requests_latency_seconds")
         .help("API request latency in seconds.")
         .labelNames("method")
@@ -30,7 +30,7 @@ class RestMetrics {
         .quantile(0.99f, 0.001f)
         .register()
 
-    static final Histogram requestsLatencyHistogram = Histogram.build()
+    protected static final Histogram requestsLatencyHistogram = Histogram.build()
             .name("api_requests_latency_seconds_histogram").help("API request latency in seconds.")
             .labelNames("method")
             .register()

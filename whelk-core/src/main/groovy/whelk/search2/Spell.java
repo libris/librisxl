@@ -27,20 +27,19 @@ public class Spell {
     }
 
     public static Optional<Map<String, Object>> getSpellQuery(QueryTree qt) {
-        return Optional.of(qt.getTopLevelFreeText())
+        return Optional.of(qt.getFreeTextPart())
                 .filter(Predicate.not(String::isEmpty))
                 .map(ESQuery::getSpellQuery)
                 .map(QueryUtil::castToStringObjectMap);
     }
 
-    public static List<Map<String, Object>> buildSpellSuggestions(QueryResult queryResult, QueryTree qt,
-                                                      Map<String, String> nonQueryParams) {
+    public static List<Map<String, Object>> buildSpellSuggestions(QueryResult queryResult, QueryTree qt, QueryParams queryParams) {
         List<Map<String, Object>> suggestions = new ArrayList<>();
         for (Suggestion s : queryResult.spell) {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("label", s.text());
             m.put("labelHtml", s.highlighted());
-            m.put("view", Map.of(JsonLd.ID_KEY, QueryUtil.makeFindUrl(qt.replaceFreeText(s.text()), nonQueryParams)));
+            m.put("view", Map.of(JsonLd.ID_KEY, QueryUtil.makeViewFindUrl(qt.replaceSimpleFreeText(s.text()), queryParams)));
             suggestions.add(m);
         }
         return suggestions;

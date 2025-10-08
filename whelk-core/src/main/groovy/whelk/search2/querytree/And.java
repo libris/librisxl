@@ -4,7 +4,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static whelk.search2.QueryUtil.mustWrap;
@@ -19,6 +18,11 @@ public final class And extends Group {
     // For test only
     public And(List<Node> children, boolean flattenChildren) {
         this.children = flattenChildren ? flattenChildren(children) : children;
+    }
+
+    @Override
+    public Node getInverse() {
+        return new Or(children.stream().map(Node::getInverse).toList());
     }
 
     @Override
@@ -53,7 +57,8 @@ public final class And extends Group {
                 .flatMap(n -> n instanceof Or ? n.children().stream() : Stream.of(n))
                 .map(PathValue.class::cast)
                 .map(PathValue::value)
-                .map(Value::jsonForm)
+                .map(VocabTerm.class::cast)
+                .map(VocabTerm::jsonForm)
                 .toList();
     }
 
@@ -72,28 +77,8 @@ public final class And extends Group {
         }
     }
 
-    public boolean contains(Node node) {
-        return new HashSet<>(children).containsAll(node instanceof And ? node.children() : List.of(node));
-    }
-
-    public Node remove(Node node) {
-        if (!contains(node)) {
-            return this;
-        }
-        var filter = Predicate.not(node instanceof And ? ((And) node)::contains : node::equals);
-        return filterAndReinstantiate(filter);
-    }
-
-    public And add(Node node) {
-        List<Node> newChildren = Stream.concat(children.stream(), node instanceof And ? node.children().stream() : Stream.of(node))
-                .distinct()
-                .toList();
-
-        return new And(newChildren);
-    }
-
-    public Node replace(Node old, Node replacement) {
-        var replaced = new And(List.of(remove(old))).add(replacement);
-        return replaced.children().size() == 1 ? replaced.children().getFirst() : replaced;
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof And other && new HashSet<>(other.children()).equals(new HashSet<>(children));
     }
 }

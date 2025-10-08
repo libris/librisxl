@@ -13,14 +13,20 @@ import whelk.Whelk
 import whelk.exception.InvalidQueryException
 import whelk.exception.UnexpectedHttpStatusException
 import whelk.util.DocumentUtil
+import whelk.util.FresnelUtil
+import whelk.util.FresnelUtil.DerivedLensGroup
 import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
 
+import static whelk.FeatureFlags.Flag.EXPERIMENTAL_CATEGORY_COLLECTION
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
 import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
+import static whelk.util.FresnelUtil.Options.NO_FALLBACK
+import static whelk.util.FresnelUtil.Options.TAKE_ALL_ALTERNATE
+import static whelk.util.FresnelUtil.Options.TAKE_FIRST_SHOW_PROPERTY
 import static whelk.util.Jackson.mapper
 
 @Log
@@ -51,6 +57,33 @@ class ElasticSearch {
     private static final int ES_LOG_MIN_DURATION = 2000 // Only log queries taking at least this amount of milliseconds
 
     private final Queue<Runnable> indexingRetryQueue = new LinkedBlockingQueue<>()
+
+    private static final class Lenses {
+        public static final DerivedLensGroup CARD_ONLY = new DerivedLensGroup(
+                FresnelUtil.LensGroupName.Card,
+                List.of(FresnelUtil.LensGroupName.Chip),
+                FresnelUtil.LensGroupName.SearchChip
+        )
+
+        public static final DerivedLensGroup SEARCH_CARD_ONLY = new DerivedLensGroup(
+                FresnelUtil.LensGroupName.SearchCard,
+                List.of(FresnelUtil.LensGroupName.Chip, FresnelUtil.LensGroupName.Card),
+                FresnelUtil.LensGroupName.SearchChip
+        )
+    }
+
+    public static final String TOP_STR = '_topStr'
+    public static final String CHIP_STR = '_chipStr'
+    public static final String CARD_STR = '_cardStr'
+    public static final String SEARCH_CARD_STR = '_searchCardStr'
+
+    private static final Set<String> SEARCH_STRINGS = [
+            JsonLd.SEARCH_KEY,
+            TOP_STR,
+            CHIP_STR,
+            CARD_STR,
+            SEARCH_CARD_STR
+    ] as Set
 
     ElasticSearch(Properties props) {
         this(
@@ -395,6 +428,16 @@ class ElasticSearch {
         }
 
         Set<String> links = whelk.jsonld.expandLinks(document.getExternalRefs()).collect{ it.iri }
+
+        if (whelk.features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION)) {
+            // FIXME workaround for toCard breaking _categoryByCollection
+            // TODO we need these ids in _links / _outerEmbellishments anyway?
+            links += DocumentUtil.getAtPath(copy.data, [JsonLd.GRAPH_KEY, 1, JsonLd.Platform.CATEGORY_BY_COLLECTION, 'find', '*', JsonLd.ID_KEY], [])
+            links += DocumentUtil.getAtPath(copy.data, [JsonLd.GRAPH_KEY, 1, JsonLd.Platform.CATEGORY_BY_COLLECTION, 'identify', '*', JsonLd.ID_KEY], [])
+            links += DocumentUtil.getAtPath(copy.data, [JsonLd.GRAPH_KEY, 1, 'instanceOf', JsonLd.Platform.CATEGORY_BY_COLLECTION, 'find', '*', JsonLd.ID_KEY], [])
+            links += DocumentUtil.getAtPath(copy.data, [JsonLd.GRAPH_KEY, 1, 'instanceOf', JsonLd.Platform.CATEGORY_BY_COLLECTION, 'identify', '*', JsonLd.ID_KEY], [])
+        }
+
         def graph = ((List) copy.data['@graph'])
         int originalSize = document.data['@graph'].size()
         copy.data['@graph'] =
@@ -411,10 +454,12 @@ class ElasticSearch {
             return copy.data
         }
         String thingId = thingIds.get(0)
-        Map framed = toSearchCard(whelk, JsonLd.frame(thingId, copy.data), links)
 
-        framed['_links'] = links
-        framed['_outerEmbellishments'] = copy.getEmbellishments() - links
+        Map framedFull = JsonLd.frame(thingId, copy.data)
+        Map searchCard = toSearchCard(whelk, framedFull, links)
+
+        searchCard['_links'] = links
+        searchCard['_outerEmbellishments'] = copy.getEmbellishments() - links
 
         Map<String, Long> incomingLinkCountByRelation = whelk.getStorage().getIncomingLinkCountByIdAndRelation(stripHash(copy.getShortId()))
         var totalItems = incomingLinkCountByRelation.values().sum(0)
@@ -424,27 +469,56 @@ class ElasticSearch {
         // TODO what should be the key "itemOf.instanceOf"?
         // FIXME don't hardcode this
         var itemPath = ["@reverse", "instanceOf", "*", "@reverse", "itemOf", "*"]
-        var itemCount = ((List) DocumentUtil.getAtPath(framed, itemPath, []))
+        var itemCount = ((List) DocumentUtil.getAtPath(searchCard, itemPath, []))
                 .collect{ it['heldBy']?[JsonLd.ID_KEY] }.grep().unique().size()
         incomingLinkCountByRelation.put('itemOf.instanceOf', itemCount)
         
-        framed['reverseLinks'] = [
+        searchCard['reverseLinks'] = [
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',
                 'totalItems': totalItems,
                 'totalItemsByRelation': incomingLinkCountByRelation
         ]
 
-        framed['_sortKeyByLang'] = whelk.jsonld.applyLensAsMapByLang(
-                framed,
+        searchCard['_sortKeyByLang'] = whelk.jsonld.applyLensAsMapByLang(
+                framedFull,
                 whelk.jsonld.locales as Set,
                 REMOVABLE_BASE_URIS,
                 document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
 
-        DocumentUtil.traverse(framed) { value, path ->
-            if (path && JsonLd.SEARCH_KEY == path.last() && !Unicode.isNormalizedForSearch(value)) {
+        try {
+            var topLens = whelk.fresnelUtil.applyLens(framedFull, FresnelUtil.LensGroupName.SearchToken, NO_FALLBACK)
+            if (topLens.isEmpty()) {
+                // If there is no search token, take first property of chip instead
+                topLens = whelk.fresnelUtil.applyLens(framedFull, FresnelUtil.LensGroupName.Chip, TAKE_FIRST_SHOW_PROPERTY)
+            }
+            var topStr = topLens.byLang().subMap(whelk.jsonld.locales).values() // The values follow the key order in whelk.jsonld.locales (see subMap method implementation)
+                    ?: topLens.byScript().values()
+                    ?: topLens.asString()
+            if (topStr) {
+                searchCard[TOP_STR] = topStr
+            }
+            searchCard[CHIP_STR] = whelk.fresnelUtil.applyLens(framedFull, FresnelUtil.LensGroupName.Chip, TAKE_ALL_ALTERNATE).asString()
+            searchCard[CARD_STR] = whelk.fresnelUtil.applyLens(framedFull, Lenses.CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
+            searchCard[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(framedFull, Lenses.SEARCH_CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
+        } catch (Exception e) {
+            log.error(e, e)
+        }
+
+        searchCard['_ids'] = (thingIds + document.getRecordIdentifiers())
+                .collect { stripHash(lastPathSegment(it)) }
+                .unique()
+                .plus(whelk.fresnelUtil.fslSelect(framedFull, "meta/*/identifiedBy/*/value") as Collection<String>)
+
+        DocumentUtil.traverse(searchCard) { value, path ->
+            if (path && SEARCH_STRINGS.contains(path.last())) {
                 // TODO: replace with elastic ICU Analysis plugin?
                 // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
-                return new DocumentUtil.Replace(Unicode.normalizeForSearch(value))
+                if (value instanceof List) {
+                    return new DocumentUtil.Replace(value.collect { !Unicode.isNormalizedForSearch(it) ? Unicode.normalizeForSearch(it) : it })
+                }
+                if (value instanceof String && !Unicode.isNormalizedForSearch(value)) {
+                    return new DocumentUtil.Replace(Unicode.normalizeForSearch(value))
+                }
             }
 
             // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" } }
@@ -469,13 +543,13 @@ class ElasticSearch {
         // for performance reasons. In 7.9 such use was deprecated, and since 8.x it's no longer supported, so
         // we follow the advice and use a separate field.
         // (https://www.elastic.co/guide/en/elasticsearch/reference/8.8/mapping-id-field.html).
-        framed["_es_id"] =  toElasticId(copy.getShortId())
+        searchCard["_es_id"] =  toElasticId(copy.getShortId())
 
         if (log.isTraceEnabled()) {
-            log.trace("Framed data: ${framed}")
+            log.trace("Framed data: ${searchCard}")
         }
 
-        return JsonOutput.toJson(framed)
+        return JsonOutput.toJson(searchCard)
     }
     
     static String flattenedLangMapKey(key) {
@@ -530,6 +604,7 @@ class ElasticSearch {
 
             var ids = (Collection<Map>) value
             addIdentifierForms(ids, 'ISBN', this::getOtherIsbns)
+            addIdentifierForms(ids, 'ISMN', c -> c.findAll{ it.contains("-") }.collect { it.replace("-", "") })
             addIdentifierForms(ids, 'ISNI', this::getFormattedIsnis)
             addIdentifierForms(ids, 'ORCID', this::getFormattedIsnis) // ORCID is a subset of ISNI, same format
 
@@ -537,8 +612,12 @@ class ElasticSearch {
         }
     }
 
+    private static lastPathSegment(String uri) {
+        uri.contains('/') ? uri.substring(uri.lastIndexOf('/') + 1) : uri
+    }
+
     private static String stripHash(String s) {
-        s.contains('#') ?s .substring(0, s.indexOf('#')) : s
+        s.contains('#') ? s.substring(0, s.indexOf('#')) : s
     }
 
     private static void addIdentifierForms(
@@ -584,13 +663,20 @@ class ElasticSearch {
         isnis.findAll{ it.size() == 16 }.collect { Unicode.formatIsni(it) }
     }
 
+    Map multiQuery(List jsonDslList) {
+        return performQuery(
+                jsonDslList.collect { [[:], it].collect { JsonOutput.toJson(it) + '\n' } }.flatten().join(),
+                getMultiSearchQueryUrl()
+        )
+    }
+
     Map query(Map jsonDsl) {
-        return performQuery(jsonDsl, getQueryUrl())
+        return performQuery(JsonOutput.toJson(jsonDsl), getQueryUrl())
     }
 
     Map queryIds(Map jsonDsl) {
         return performQuery(
-                jsonDsl,
+                JsonOutput.toJson(jsonDsl),
                 getQueryUrl(['took','hits.total','hits.hits._id'])
         )
     }
@@ -629,12 +715,12 @@ class ElasticSearch {
         return super.hashCode()
     }
 
-    private Map performQuery(Map jsonDsl, String queryUrl) {
+    private Map performQuery(String json, String queryUrl) {
         try {
             def start = System.currentTimeMillis()
             String responseBody = client.performRequest('POST',
                     queryUrl,
-                    JsonOutput.toJson(jsonDsl))
+                    json)
 
             def duration = System.currentTimeMillis() - start
             Map responseMap = mapper.readValue(responseBody, Map)
@@ -660,9 +746,13 @@ class ElasticSearch {
     private String getQueryUrlWithoutIndex(filterPath = []) {
         getQueryUrl(filterPath, null)
     }
+
+    private getMultiSearchQueryUrl() {
+        return getQueryUrl([], indexName, true)
+    }
     
-    private String getQueryUrl(filterPath = [], index = indexName) {
-        def url = (index ? "/${index}" : '') + "/_search?search_type=$SEARCH_TYPE"
+    private String getQueryUrl(filterPath = [], index = indexName, multiSearch = false) {
+        def url = (index ? "/${index}" : '') + (multiSearch ? '/_msearch' : '/_search') + "?search_type=$SEARCH_TYPE"
         if (filterPath) {
             url += "&filter_path=${filterPath.join(',')}"
         }
@@ -881,7 +971,7 @@ class ElasticSearch {
             }
         }
         catch (Exception e) {
-            log.warn("Failed to create Point In Time: $e")
+            log.warn("Failed to delete Point In Time: $e")
             throw e
         }
     }

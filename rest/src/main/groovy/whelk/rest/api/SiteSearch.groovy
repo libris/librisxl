@@ -5,6 +5,8 @@ import groovy.util.logging.Log4j2 as Log
 
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.exception.InvalidQueryException
+
 import static whelk.JsonLd.findInData
 import static whelk.util.Jackson.mapper
 
@@ -16,9 +18,9 @@ class SiteSearch {
     SearchUtils search
     SearchUtils2 search2
 
-    Map<String, Map> appsIndex = [:]
-    Map<String, String> siteAlias = [:]
-    Map<String, Map> searchStatsReprs = [:]
+    protected Map<String, Map> appsIndex = [:]
+    protected Map<String, String> siteAlias = [:]
+    protected Map<String, Map> searchStatsReprs = [:]
 
     SiteSearch(Whelk whelk) {
         this.whelk = whelk
@@ -92,7 +94,7 @@ class SiteSearch {
         return activeSite
     }
 
-    Map findData(Map queryParameters, String baseUri, String path) {
+    Map findData(Map queryParameters, String baseUri, String path) throws InvalidQueryException {
         var activeSite = determineActiveSite(queryParameters, baseUri)
 
         var searchSettings = (Map) searchStatsReprs[activeSite]
@@ -110,7 +112,7 @@ class SiteSearch {
                 queryParameters.put('_statsrepr', [mapper.writeValueAsString(searchSettings['statsindex'])] as String[])
             }
             return toDataIndexDescription(appsIndex["${activeSite}data" as String], queryParameters)
-        } else if ("_q" in queryParameters || "_i" in queryParameters || "_o" in queryParameters) {
+        } else if ("_q" in queryParameters || "_o" in queryParameters) {
             var appId = "https://beta.libris.kb.se/"
             var appDesc = getAndIndexDescription(appId)
             if (appDesc) {

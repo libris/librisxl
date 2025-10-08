@@ -30,14 +30,6 @@ class ImporterMain {
         return Whelk.createLoadedSearchWhelk(props)
     }
 
-    @Command(args='FNAME')
-    void defs(String fname) {
-        def whelk = new Whelk(new PostgreSQLComponent(props))
-        DefinitionsImporter defsImporter = new DefinitionsImporter(whelk)
-        defsImporter.definitionsFilename = fname
-        defsImporter.run("definitions")
-    }
-
     @Command(args='SOURCE_URL DATASET_URI [DATASET_DESCRIPTION_FILE]',
              flags='--skip-index --replace-main-ids --force-delete --skip-dependers --allow-id-removal')
     void dataset(Map flags, String sourceUrl, String datasetUri, String datasetDescPath=null) {

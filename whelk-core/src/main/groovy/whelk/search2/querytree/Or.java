@@ -1,8 +1,12 @@
 package whelk.search2.querytree;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static whelk.search2.QueryUtil.shouldWrap;
 
@@ -16,6 +20,11 @@ public final class Or extends Group {
     // For test only
     public Or(List<Node> children, boolean flattenChildren) {
         this.children = flattenChildren ? flattenChildren(children) : children;
+    }
+
+    @Override
+    public Node getInverse() {
+        return new And(children.stream().map(Node::getInverse).toList());
     }
 
     @Override
@@ -59,6 +68,11 @@ public final class Or extends Group {
                     ? bGroup.children().stream().anyMatch(child -> condition.apply(a, child))
                     : condition.apply(a, b);
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Or other && new HashSet<>(other.children()).equals(new HashSet<>(children));
     }
 }
 

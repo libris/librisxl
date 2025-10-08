@@ -113,9 +113,13 @@ public class BulkJob implements Runnable {
     }
 
     private long lineCount(String reportName) {
-        try (Stream<String> stream = Files.lines(new File(reportDir(), reportName).toPath(), StandardCharsets.UTF_8)) {
-            return stream.count();
-        } catch(FileNotFoundException ignored) {
+        try {
+            File reportFile = new File(reportDir(), reportName);
+            if (reportFile.exists()) {
+                try (Stream<String> stream = Files.lines(reportFile.toPath(), StandardCharsets.UTF_8)) {
+                    return stream.count();
+                }
+            }
             return 0;
         } catch (IOException e) {
             log.warn("Could not get line count", e);
@@ -166,6 +170,7 @@ public class BulkJob implements Runnable {
         tool.setDefaultChangedBy(jobDoc.getChangeAgentId());
         tool.setAllowLoud(jobDoc.shouldUpdateModifiedTimestamp());
         tool.setNoThreads(false);
+        tool.setNumThreads(Runtime.getRuntime().availableProcessors());
         tool.setJsonLdValidation(SKIP_AND_LOG);
         tool.setInDatasetValidation(SKIP_AND_LOG);
 

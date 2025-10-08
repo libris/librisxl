@@ -1,27 +1,27 @@
 package whelk.search2.querytree
 
 import spock.lang.Specification
-
-import static DummyNodes.eq
-import static DummyNodes.neq
-import static DummyNodes.pathV
-import static DummyNodes.prop1
-import static DummyNodes.prop2
-import static DummyNodes.v1
-import static DummyNodes.v3
-import static whelk.JsonLd.REVERSE_KEY
+import whelk.JsonLd
+import whelk.search2.Disambiguate
+import whelk.search2.ESSettings
+import whelk.search2.EsMappings
+import whelk.search2.QueryParams
 
 class PathValueSpec extends Specification {
+    Disambiguate disambiguate = TestData.getDisambiguate()
+    JsonLd jsonLd = TestData.getJsonLd()
+    EsMappings esMappings = TestData.getEsMappings()
+
     def "convert to search mapping 1"() {
         given:
-        def pathValue = pathV(new Path([prop1, new Key.RecognizedKey('@id')]), eq, v1)
-        def searchMapping = pathValue.toSearchMapping(new QueryTree(pathValue), [:])
+        def pathValue = QueryTreeBuilder.buildTree('p1.@id:v1', disambiguate)
+        def searchMapping = pathValue.toSearchMapping(new QueryTree(pathValue), new QueryParams([:]))
 
         expect:
         searchMapping == [
-                'property': ['prefLabel': 'p1'],
+                'property': ['@id': 'p1', '@type': 'DatatypeProperty'],
                 'equals'  : 'v1',
-                'up'      : ['@id': '/find?_i=&_q=*'],
+                'up'      : ['@id': '/find?_q=*'],
                 '_key'    : 'p1.@id',
                 '_value'  : 'v1'
         ]
@@ -29,41 +29,88 @@ class PathValueSpec extends Specification {
 
     def "convert to search mapping 2"() {
         given:
-        def pathValue = pathV(new Path([prop1, prop2]), neq, v3)
-        def searchMapping = pathValue.toSearchMapping(new QueryTree(pathValue), [:])
+        def pathValue = QueryTreeBuilder.buildTree('NOT p1.p2:E1', disambiguate)
+        def searchMapping = pathValue.toSearchMapping(new QueryTree(pathValue), new QueryParams([:]))
 
         expect:
         searchMapping == [
                 'property' : [
                         'propertyChainAxiom': [
-                                ['prefLabel': 'p1'],
-                                ['prefLabel': 'p2']
+                                ['@id': 'p1', '@type': 'DatatypeProperty'],
+                                ['@id': 'p2', '@type': 'ObjectProperty', 'librisQueryCode': 'P2']
                         ]
                 ],
-                'notEquals': ['prefLabel': 'v3'],
-                'up'       : ['@id': '/find?_i=&_q=*'],
-                '_key'    : 'p1.p2',
-                '_value'  : 'v3'
+                'notEquals': ['@id': 'E1', '@type': 'Class'],
+                'up'       : ['@id': '/find?_q=*'],
+                '_key'     : 'p1.p2',
+                '_value'   : 'E1'
         ]
     }
 
     def "convert to search mapping 3"() {
         given:
-        def pathValue = pathV(new Path([new Key.RecognizedKey(REVERSE_KEY), prop1, new Key.RecognizedKey(REVERSE_KEY), prop2]), eq, v1)
-        def searchMapping = pathValue.toSearchMapping(new QueryTree(pathValue), [:])
+        def pathValue = QueryTreeBuilder.buildTree('@reverse.p3.@reverse.p4:v1', disambiguate)
+        def searchMapping = pathValue.toSearchMapping(new QueryTree(pathValue), new QueryParams([:]))
 
         expect:
         searchMapping == [
                 'property': [
                         'propertyChainAxiom': [
-                                ['inverseOf': ['prefLabel': 'p1']],
-                                ['inverseOf': ['prefLabel': 'p2']]
+                                ['inverseOf': ['@id': 'p3', '@type': 'ObjectProperty']],
+                                ['inverseOf': ['@id': 'p4', '@type': 'ObjectProperty']]
                         ]
                 ],
                 'equals'  : 'v1',
-                'up'      : ['@id': '/find?_i=&_q=*'],
-                '_key'    : '@reverse.p1.@reverse.p2',
+                'up'      : ['@id': '/find?_q=*'],
+                '_key'    : '@reverse.p3.@reverse.p4',
                 '_value'  : 'v1'
+        ]
+    }
+
+    def "expand"() {
+        given:
+        PathValue pathValue = (PathValue) QueryTreeBuilder.buildTree(query, disambiguate)
+
+        expect:
+        pathValue.expand(jsonLd).toString() == result
+
+        where:
+        query                        | result
+        "p1:v1"                      | "p1:v1"
+        "p3:v1"                      | "p3._str:v1"
+        "p1:T1"                      | "p1:T1"
+        "p2:T1"                      | "p2:T1"
+        "p3:T1"                      | "p3._str:T1"
+        "p1:\"https://id.kb.se/v1\"" | "p1:\"https://id.kb.se/v1\""
+        "p3:\"https://id.kb.se/v1\"" | "p3.@id:\"https://id.kb.se/v1\""
+        "type:T3"                    | "type:T3 OR type:T4"
+        "p10:v1"                     | "p4.p1:v1 p4.p3.@id:\"https://id.kb.se/x\""
+        "p11:v1"                     | "p3.p4._str:v1 (\"p3.rdf:type\":T3 OR \"p3.rdf:type\":T4)"
+    }
+
+    def "To ES query (negation + nested field)"() {
+        given:
+        PathValue pathValue = (PathValue) QueryTreeBuilder.buildTree("NOT p3:\"https://id.kb.se/x\"", disambiguate)
+        ESSettings esSettings = new ESSettings(esMappings, new ESSettings.Boost([:]))
+
+        expect:
+        pathValue.toEs(esSettings) == [
+                "bool": [
+                        "must_not": [
+                                "nested": [
+                                        "query": [
+                                                "bool": [
+                                                        "filter": [
+                                                                "term": [
+                                                                        "p3": "https://id.kb.se/x"
+                                                                ]
+                                                        ]
+                                                ]
+                                        ],
+                                        "path" : "p3"
+                                ]
+                        ]
+                ]
         ]
     }
 }

@@ -112,6 +112,10 @@ class Document {
         return baseUri.resolve(getShortId())
     }
 
+    static URI getBASE_URI() {
+        return BASE_URI
+    }
+
     String getDataAsString() {
         return mapper.writeValueAsString(data)
     }
@@ -962,7 +966,6 @@ class Document {
 
         Document doc = clone()
         doc.set(recordIdPath, get(recordIdPath) + "#work-record")
-        doc.get(recordPath).remove(JsonLd.JSONLD_ALT_ID_KEY)
 
         return doc
     }

@@ -8,6 +8,9 @@ import java.util.regex.Pattern
 class Unicode {
     public static final int MAX_LEVENSHTEIN_LENGTH = 100
 
+    public static final char RIGHT_TO_LEFT_ISOLATE = '\u2067' as char
+    public static final char POP_DIRECTIONAL_ISOLATE = '\u2069' as char
+
     /**
      * Additional characters we want to normalize that are not covered by NFC.
      *
@@ -55,6 +58,21 @@ class Unicode {
 
     private static final Pattern UNICODE_MARK = Pattern.compile('\\p{M}')
     private static final char PRIVATE_USE_AREA = '\uE000' as char
+
+    private static final EnumSet<Character.UnicodeScript> RTL_SCRIPTS = EnumSet.of(
+            Character.UnicodeScript.ADLAM,
+            Character.UnicodeScript.ARABIC,
+            Character.UnicodeScript.AVESTAN,
+            Character.UnicodeScript.HEBREW,
+            Character.UnicodeScript.MANDAIC,
+            Character.UnicodeScript.MENDE_KIKAKUI,
+            Character.UnicodeScript.NKO,
+            Character.UnicodeScript.OLD_NORTH_ARABIAN,
+            Character.UnicodeScript.OLD_SOUTH_ARABIAN,
+            Character.UnicodeScript.SAMARITAN,
+            Character.UnicodeScript.SYRIAC,
+            Character.UnicodeScript.THAANA,
+    )
     
     static boolean isNormalized(String s) {
         return Normalizer.isNormalized(s, Normalizer.Form.NFC) && !EXTRA_NORMALIZATION_MAP.keySet().any{ s.contains(it) }
@@ -106,6 +124,10 @@ class Unicode {
 
     static String stripSuffix(String s, String suffix) {
         s.endsWith(suffix) ? s.substring(0, s.length() - suffix.length()) : s
+    }
+
+    static boolean isRtl(Character.UnicodeScript script) {
+        return RTL_SCRIPTS.contains(script);
     }
 
     static Optional<Character.UnicodeScript> guessScript(String s) {
@@ -298,5 +320,12 @@ class Unicode {
         isni.size() == 16
                 ? isni.split("").collate(4).collect{ it.join() }.join(" ")
                 : isni
+    }
+
+    private static var ISBN10 = Pattern.compile("(?:\\d-?){9}(?:\\d|X)").asMatchPredicate()
+    private static var ISBN13 = Pattern.compile("(?:978|979)(?:-?\\d){10}").asMatchPredicate()
+
+    static boolean looksLikeIsbn(String s) {
+        return ISBN10.test(s) || ISBN13.test(s)
     }
 }

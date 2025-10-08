@@ -1,5 +1,5 @@
 apply plugin: 'java-library'
-apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'com.gradleup.shadow'
 
 def mainClassName = "whelk.export.marc.MarcCliExport"
 
@@ -20,7 +20,7 @@ dependencies {
     implementation(project(':server-common'))
 
     // Groovy
-    implementation "org.codehaus.groovy:groovy:${groovyVersion}"
+    implementation "org.apache.groovy:groovy:${groovyVersion}"
 
     // Servlet
     api "jakarta.servlet:jakarta.servlet-api:${servletApiVersion}"
@@ -38,7 +38,7 @@ dependencies {
 
     // Tools
     implementation group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
-    implementation 'org.apache.commons:commons-lang3:3.3.2'
+    implementation 'org.apache.commons:commons-lang3:3.18.0'
 
     // Dependencies inherited from classic libris, due to profile handling
     implementation group: 'com.ibm.icu', name: 'icu4j', version: '4.8.1.1'

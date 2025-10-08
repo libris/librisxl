@@ -1577,13 +1577,13 @@
           "q": null,
           "r": null,
           "s": "SoundRecording",
-          "t": "TextInstance",
+          "t": "Print",
           "v": "VideoRecording",
           "z": null
         },
         "reverseTokenMapOverrides": {
           "NOTE": "N.B. Should not set to '|' unless all other pos are set to '|'. When all pos are set to '|' no 007 will be created by revert.",
-          "TextInstance": "|"
+          "Print": "|"
         }
       },
       "tokenTypeMap": "[0]",
@@ -2069,7 +2069,7 @@
           "matchUriToken": "^[abde]$"
         }
       },
-      "TextInstance": {
+      "Print": {
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/TextMaterialType-{_}",
@@ -2317,12 +2317,12 @@
           }
         },
         {
-          "name": "@type TextInstance + RegularPrint should not be reverted",
+          "name": "@type Print + RegularPrint should not be reverted",
           "source": {"007":"ta"},
           "normalized": [],
           "result": {
             "mainEntity": {
-              "@type": "TextInstance",
+              "@type": "Print",
               "carrierType": [{"@id": "https://id.kb.se/marc/TextMaterialType-a"}]
             }
           }

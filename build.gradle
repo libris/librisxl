@@ -1,6 +1,6 @@
 plugins {
     id "nebula.lint" version "20.2.0"
-    id "com.github.johnrengelman.shadow" version "8.1.1"
+    id "com.gradleup.shadow" version "9.2.1"
 }
 
 allprojects {
@@ -29,8 +29,8 @@ allprojects {
         configFile = new File("${project.projectDir}/../codenarc.config")
         ignoreFailures = true
         dependencies {
-            codenarc('org.codenarc:CodeNarc:3.3.0')
-            codenarc('org.codehaus.groovy:groovy-all:3.0.20')
+            codenarc("org.codenarc:CodeNarc:${codeNarcVersion}")
+            codenarc("org.apache.groovy:groovy:${groovyVersion}")
         }
     }
 }

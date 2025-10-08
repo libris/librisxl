@@ -3,12 +3,12 @@ package whelk.rest.api
 import org.codehaus.jackson.JsonParseException
 import whelk.Document
 import whelk.Whelk
-import whelk.util.WhelkFactory
+import whelk.util.http.WhelkHttpServlet
 
-import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
+import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
 import static whelk.util.Jackson.mapper
 
 /**
@@ -19,9 +19,8 @@ import static whelk.util.Jackson.mapper
  * Refreshing a record in this context means updating all derivative data of that record in the various places where
  * such data is stored. For example: id/sameAs-tables, dependency-tables, ElasticSearch etc.
  */
-class RefreshAPI extends HttpServlet
+class RefreshAPI extends WhelkHttpServlet
 {
-    private Whelk whelk
 
     RefreshAPI() {
         // Do nothing - only here for Tomcat to have something to call
@@ -29,13 +28,7 @@ class RefreshAPI extends HttpServlet
 
     RefreshAPI(Whelk whelk) {
         this.whelk = whelk
-    }
-
-    @Override
-    void init() {
-        if (!whelk) {
-            whelk = WhelkFactory.getSingletonWhelk()
-        }
+        init(whelk)
     }
 
     @Override
@@ -109,5 +102,8 @@ class RefreshAPI extends HttpServlet
     void refreshQuietly(Document doc) {
         whelk.storage.refreshDerivativeTables(doc)
         whelk.elastic.index(doc, whelk)
+        if (whelk.features.isEnabled(INDEX_BLANK_WORKS)) {
+            doc.getVirtualRecordIds().forEach { id -> whelk.elastic.index(doc.getVirtualRecord(id), whelk) }
+        }
     }
 }

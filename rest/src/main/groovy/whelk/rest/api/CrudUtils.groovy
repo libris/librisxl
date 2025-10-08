@@ -5,9 +5,10 @@ import com.google.common.collect.ListMultimap
 import com.google.common.net.MediaType
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.io.FilenameUtils
-import org.apache.http.HeaderElement
-import org.apache.http.NameValuePair
-import org.apache.http.message.BasicHeaderValueParser
+import org.apache.hc.core5.http.HeaderElement
+import org.apache.hc.core5.http.NameValuePair
+import org.apache.hc.core5.http.message.BasicHeaderValueParser
+import org.apache.hc.core5.http.message.ParserCursor
 import whelk.util.http.BadRequestException
 import whelk.util.http.MimeTypes
 import whelk.util.http.NotFoundException
@@ -36,7 +37,7 @@ class CrudUtils {
             'n3': [N3]
     ]
 
-    static Map EXTENSION_BY_MEDIA_TYPE = [:]
+    protected static Map<String, String> EXTENSION_BY_MEDIA_TYPE = [:]
     static {
         ALLOWED_MEDIA_TYPES_BY_EXT.each { ext, mediatypes ->
             if (ext.size() > 0) {
@@ -134,9 +135,10 @@ class CrudUtils {
      */
     static List<MediaType> parseAcceptHeader(String header) {
         BasicHeaderValueParser parser = new BasicHeaderValueParser()
+        ParserCursor cursor = new ParserCursor(0, header.length())
 
         List<AcceptMediaType> mediaTypes = []
-        for (HeaderElement h : BasicHeaderValueParser.parseElements(header, parser)) {
+        for (HeaderElement h : parser.parseElements(header, cursor)) {
             mediaTypes << AcceptMediaType.fromHeaderElement(h)
         }
 

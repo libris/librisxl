@@ -1,242 +1,110 @@
 package whelk.search2;
 
-import whelk.Whelk;
+import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
-import whelk.search2.querytree.ActiveBoolFilter;
-import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Property;
-import whelk.search2.querytree.QueryTreeBuilder;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static whelk.search2.Query.SearchMode.STANDARD_SEARCH;
+import static whelk.search2.Query.SearchMode.OBJECT_SEARCH;
+import static whelk.search2.Query.SearchMode.PREDICATE_OBJECT_SEARCH;
+import static whelk.search2.Query.SearchMode.SUGGEST;
+import static whelk.search2.QueryParams.ApiParams.ALIAS;
+import static whelk.search2.QueryUtil.castToStringObjectMap;
 
 public class AppParams {
-    private final Disambiguate disambiguate;
-    private final Whelk whelk;
-
     public final StatsRepr statsRepr;
     public final SiteFilters siteFilters;
     public final Map<String, List<String>> relationFilters;
 
-    public AppParams(Map<String, Object> appConfig, Disambiguate disambiguate, Whelk whelk) {
-        this.disambiguate = disambiguate;
-        this.whelk = whelk;
+    public AppParams(Map<String, Object> appConfig, QueryParams queryParams) {
         this.statsRepr = getStatsRepr(appConfig);
-        this.siteFilters = getSiteFilters(appConfig);
+        this.siteFilters = getSiteFilters(appConfig, queryParams);
         this.relationFilters = getRelationFilters(appConfig);
     }
 
-    private StatsRepr getStatsRepr(Map<String, Object> appConfig) {
-        return Optional.ofNullable((Map<?, ?>) appConfig.get("_statsRepr"))
-                .map(Map::entrySet)
-                .map(entries -> entries.stream().map(this::getSlice).toList())
-                .map(StatsRepr::new)
-                .orElse(new StatsRepr(Collections.emptyList()));
-    }
-
-    private SiteFilters getSiteFilters(Map<String, Object> appConfig) {
-        var aliasedFilters = getAliasedFilters(appConfig);
-        var optionalSiteFilters = getOptionalSiteFilters(appConfig, aliasedFilters);
-        return new SiteFilters(aliasedFilters,
-                getDefaultSiteFilters(appConfig, aliasedFilters),
-                getDefaultSiteTypeFilters(appConfig, aliasedFilters),
-                optionalSiteFilters);
-    }
-
-    private Map<String, List<String>> getRelationFilters(Map<String, Object> appConfig) {
-        return Optional.ofNullable((Map<?, ?>) appConfig.get("_relationFilters"))
-                .map(m -> m.entrySet()
-                        .stream()
-                        .map(e -> Map.entry((String) e.getKey(),
-                                ((List<?>) e.getValue()).stream().map(String.class::cast).toList()))
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
-                )
-                .orElse(Collections.emptyMap());
-    }
-
-    private Slice getSlice(Map.Entry<?, ?> statsReprEntry) {
-        var p = (String) statsReprEntry.getKey();
-        var settings = (Map<?, ?>) statsReprEntry.getValue();
-        return new Slice(new Property(p, whelk.getJsonld()), settings);
-    }
-
-    private Map<String, Filter> getAliasedFilters(Map<String, Object> appConfig) {
-        var m = new LinkedHashMap<String, Filter>();
-
-        for (var fa : getAsListOfMap(appConfig, "_filterAliases")) {
-            String alias = (String) fa.get("alias");
-            String filter = (String) fa.get("filter");
-            m.put(alias, new Filter(filter, alias));
-        }
-
-        return m;
-    }
-
-    private List<Filter> getDefaultSiteFilters(Map<String, Object> appConfig, Map<String, Filter> aliasedFilters) {
-        return getAsList(appConfig, "_defaultSiteFilters").stream()
-                .map(m -> (String) ((Map<?, ?>) m).get("filter"))
-                .map(f -> aliasedFilters.getOrDefault(f, new Filter(f)))
-                .toList();
-    }
-
-    private List<Filter> getDefaultSiteTypeFilters(Map<String, Object> appConfig, Map<String, Filter> aliasedFilters) {
-        List<Filter> list = new ArrayList<>();
-        for (Object m : getAsList(appConfig, "_defaultSiteTypeFilters")) {
-            String f = (String) ((Map<?, ?>) m).get("filter");
-            Filter filter = aliasedFilters.getOrDefault(f, new Filter(f));
-            list.add(filter);
-        }
-        return list;
-    }
-
-    private List<Filter> getOptionalSiteFilters(Map<String, Object> appConfig, Map<String, Filter> aliasedFilters) {
-        var l = new ArrayList<Filter>();
-
-        for (var osf : getAsListOfMap(appConfig, "_optionalSiteFilters")) {
-            String f = (String) osf.get("filter");
-            Filter filter = aliasedFilters.getOrDefault(f, new Filter(f));
-            filter.setPrefLabelByLang((Map<?, ?>) osf.get("prefLabelByLang"));
-            l.add(filter);
-        }
-
-        return l;
-    }
-
-    private List<?> getAsList(Map<String, Object> appConfig, String key) {
-        return Optional.ofNullable((List<?>) appConfig.get(key))
-                .orElse(Collections.emptyList());
-    }
-
-    private List<Map> getAsListOfMap(Map<String, Object> appConfig, String key) {
-        return getAsList(appConfig, key).stream().map(Map.class::cast).toList();
-    }
-
     public record StatsRepr(List<Slice> sliceList) {
-        Map<Property, Slice> getSliceByProperty() {
-            var m = new LinkedHashMap<Property, Slice>();
+        Map<String, Slice> getSliceByPropertyKey() {
+            var m = new LinkedHashMap<String, Slice>();
             for (Slice s : sliceList()) {
-                m.put(s.property(), s);
+                m.put(s.propertyKey(), s);
             }
             return m;
         }
+    }
 
-        public Set<Property> getRangeProperties() {
-            return sliceList().stream()
-                    .filter(AppParams.Slice::isRange)
-                    .map(AppParams.Slice::property)
+    public record SiteFilters(List<DefaultSiteFilter> defaultFilters, List<OptionalSiteFilter> optionalFilters) {
+        public Set<Filter.AliasedFilter> getAliasedFilters() {
+            return getAllFilters().stream()
+                    .map(SiteFilter::filter)
+                    .filter(Filter.AliasedFilter.class::isInstance)
+                    .map(Filter.AliasedFilter.class::cast)
                     .collect(Collectors.toSet());
         }
 
-        boolean isEmpty() {
-            return sliceList().isEmpty();
+        public void parse(Disambiguate disambiguate) throws InvalidQueryException {
+            for (SiteFilter sf : getAllFilters()) {
+                sf.filter().parse(disambiguate);
+            }
+        }
+
+        public List<SiteFilter> getAllFilters() {
+            return Stream.concat(defaultFilters.stream(), optionalFilters.stream()).map(SiteFilter.class::cast).toList();
         }
     }
 
-    public record SiteFilters(Map<String, Filter> aliasToFilter,
-                              List<Filter> defaultFilters,
-                              List<Filter> defaultTypeFilters,
-                              List<Filter> optionalFilters) {
-        public Set<String> getSelectableFilterAliases() {
-            return optionalFilters()
-                    .stream()
-                    .map(Filter::getAlias)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .map(n -> ((ActiveBoolFilter) n).alias())
-                    .collect(Collectors.toSet());
+    public sealed interface SiteFilter permits DefaultSiteFilter, OptionalSiteFilter {
+        Filter filter();
+        Set<Query.SearchMode> appliesTo();
+    }
+
+    public record DefaultSiteFilter(Filter filter, Set<Query.SearchMode> appliesTo) implements SiteFilter {
+        public DefaultSiteFilter(String rawFilter, String application, Map<String, Filter.AliasedFilter> filterByAlias) {
+            this(getFilter(rawFilter, filterByAlias), switch (application) {
+                case "standardSearch" -> Set.of(STANDARD_SEARCH, SUGGEST);
+                case "objectSearch" -> Set.of(OBJECT_SEARCH, PREDICATE_OBJECT_SEARCH);
+                case null, default -> Query.SearchMode.asSet();
+            });
         }
 
-        public List<Node> getAllDefaultFilterNodes() {
-            return new ArrayList<>() {
-                {
-                    addAll(getDefaultFilterNodes());
-                    addAll(getDefaultTypeFilterNodes());
-                }
-            };
-        }
-
-        public List<Node> getDefaultFilterNodes() {
-            return defaultFilters().stream().map(f -> f.getAlias().orElse(f.getExplicit())).toList();
-        }
-
-        public List<Node> getDefaultTypeFilterNodes() {
-            return defaultTypeFilters().stream().map(f -> f.getAlias().orElse(f.getExplicit())).toList();
+        private static Filter getFilter(String raw, Map<String, Filter.AliasedFilter> filterByAlias) {
+            return filterByAlias.containsKey(raw) ? filterByAlias.get(raw) : new Filter(raw);
         }
     }
 
-    public class Filter {
-        private final String explicit;
-        private String alias;
-        private Node explicitNode;
-        private Node aliasNode;
-        private Map<?, ?> prefLabelByLang;
-
-        Filter(String explicit) {
-            this.explicit = explicit;
-        }
-
-        Filter(String explicit, String alias) {
-            this.explicit = explicit;
-            this.alias = alias;
-        }
-
-        public Node getExplicit() {
-            if (explicitNode == null) {
-                try {
-                    this.explicitNode = QueryTreeBuilder.buildTree(explicit, disambiguate, whelk, AppParams.this.siteFilters.aliasToFilter());
-                } catch (InvalidQueryException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            return explicitNode;
-        }
-
-        public Optional<Node> getAlias() {
-            if (alias == null) {
-                return Optional.empty();
-            }
-            if (aliasNode == null) {
-                try {
-                    this.aliasNode = QueryTreeBuilder.buildTree(alias, disambiguate, whelk, AppParams.this.siteFilters.aliasToFilter());
-                } catch (InvalidQueryException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            return Optional.ofNullable(aliasNode);
-        }
-
-        public void setPrefLabelByLang(Map<?, ?> prefLabelByLang) {
-            this.prefLabelByLang = prefLabelByLang;
-        }
-
-        public Map<?, ?> getPrefLabelByLang() {
-            return Optional.ofNullable(prefLabelByLang).orElse(Collections.emptyMap());
+    public record OptionalSiteFilter(Filter.AliasedFilter filter, Set<Query.SearchMode> appliesTo) implements SiteFilter {
+        public OptionalSiteFilter(String rawFilter, Map<String, Filter.AliasedFilter> filterByAlias) {
+            this(filterByAlias.get(rawFilter), Query.SearchMode.asSet());
         }
     }
 
     public static class Slice {
-        private final Property property;
+        public static final Integer DEFAULT_BUCKET_SIZE = 10;
+
+        private final String propertyKey;
         private final Sort.Order sortOrder;
         private final Sort.BucketSortKey bucketSortKey;
         private final int size;
         private final boolean isRange;
+        private final Query.Connective defaultConnective;
 
-        Slice(Property property, Map<?, ?> settings) {
-            this.property = property;
+        private Property property;
+
+        public Slice(String propertyKey, Map<?, ?> settings) {
+            this.propertyKey = propertyKey;
             this.sortOrder = getSortOrder(settings);
             this.bucketSortKey = getBucketSortKey(settings);
             this.size = getSize(settings);
             this.isRange = getRangeFlag(settings);
+            this.defaultConnective = getConnective(settings);
         }
 
-        public Property property() {
-            return property;
+        public String propertyKey() {
+            return propertyKey;
         }
 
         public String sortOrder() {
@@ -255,6 +123,23 @@ public class AppParams {
             return isRange;
         }
 
+        public Query.Connective defaultConnective() {
+            return defaultConnective;
+        }
+
+        public Property getProperty(JsonLd jsonLd) {
+            if (property == null) {
+                if (propertyKey.contains(".") && jsonLd.indexMapTerms.contains(propertyKey.split("\\.")[0])) {
+                    var path = propertyKey.split("\\.");
+                    var term = new Property(jsonLd.indexMapTermsFor.get(path[0]), jsonLd);
+                    this.property = new Property.Ix(propertyKey, term);
+                } else {
+                    this.property = new Property(propertyKey, jsonLd);
+                }
+            }
+            return property;
+        }
+
         private Sort.Order getSortOrder(Map<?, ?> settings) {
             return Optional.ofNullable((String) settings.get("sortOrder"))
                     .map(Sort.Order::valueOf)
@@ -268,12 +153,96 @@ public class AppParams {
         }
 
         private int getSize(Map<?, ?> settings) {
-            return Optional.ofNullable((Integer) settings.get("size")).orElse(Aggs.DEFAULT_BUCKET_SIZE);
+            return Optional.ofNullable((Integer) settings.get("size")).orElse(DEFAULT_BUCKET_SIZE);
         }
 
         private boolean getRangeFlag(Map<?, ?> settings) {
             return Optional.ofNullable((Boolean) settings.get("range"))
                     .orElse(false);
         }
+
+        private Query.Connective getConnective(Map<?, ?> settings) {
+            return Optional.ofNullable((String) settings.get("connective"))
+                    .map(Query.Connective::valueOf)
+                    .orElse(Query.Connective.AND);
+        }
+    }
+
+    private StatsRepr getStatsRepr(Map<String, Object> appConfig) {
+        return Optional.ofNullable((Map<?, ?>) appConfig.get("_statsRepr"))
+                .map(Map::entrySet)
+                .map(entries -> entries.stream().map(this::getSlice).toList())
+                .map(StatsRepr::new)
+                .orElse(new StatsRepr(Collections.emptyList()));
+    }
+
+    private SiteFilters getSiteFilters(Map<String, Object> appConfig, QueryParams queryParams) {
+        Map<String, Filter.AliasedFilter> filterByAlias = getFilterByAlias(appConfig, queryParams.aliased);
+        List<DefaultSiteFilter> defaultSiteFilters = getDefaultSiteFilters(appConfig, filterByAlias);
+        List<OptionalSiteFilter> optionalSiteFilters = getOptionalSiteFilters(appConfig, filterByAlias);
+        List<OptionalSiteFilter> queryDefinedSiteFilters = getQueryDefinedSiteFilters(queryParams, filterByAlias);
+        return new SiteFilters(defaultSiteFilters, Stream.concat(optionalSiteFilters.stream(), queryDefinedSiteFilters.stream()).toList());
+    }
+
+    private List<OptionalSiteFilter> getQueryDefinedSiteFilters(QueryParams queryParams, Map<String, Filter.AliasedFilter> filterByAlias) {
+        return filterByAlias.entrySet().stream()
+                .filter(e -> e.getKey().startsWith(asqPrefix(ALIAS)))
+                .filter(e -> queryParams.q.contains(asqPrefix(e.getKey())))
+                .map(e ->  new OptionalSiteFilter(e.getValue(), Query.SearchMode.asSet()))
+                .toList();
+    }
+
+    public String asqPrefix(String queryParameter) {
+        return queryParameter.replaceAll("_","");
+    }
+
+    private Map<String, List<String>> getRelationFilters(Map<String, Object> appConfig) {
+        Map<String, List<String>> filters = new HashMap<>();
+        for (var e : castToStringObjectMap(appConfig.get("_relationFilters")).entrySet()) {
+            String cls = e.getKey();
+            List<String> relations = ((List<?>) e.getValue()).stream().map(String.class::cast).toList();
+            filters.put(cls, relations);
+        }
+        return filters;
+    }
+
+    private Slice getSlice(Map.Entry<?, ?> statsReprEntry) {
+        var p = (String) statsReprEntry.getKey();
+        var settings = (Map<?, ?>) statsReprEntry.getValue();
+        return new Slice(p, settings);
+    }
+
+    private Map<String, Filter.AliasedFilter> getFilterByAlias(Map<String, Object> appConfig, Map<String, String[]> aliasedParams) {
+        Stream<Filter.AliasedFilter> queryDefined = aliasedParams.entrySet().stream()
+                .map(e -> new Filter.QueryDefinedFilter(asqPrefix(e.getKey()), e.getValue()[0], new HashMap<>()));
+
+        Stream<Filter.AliasedFilter> predefined = getAsListOfMap(appConfig, "_filterAliases").stream()
+                .map(m -> new Filter.AliasedFilter(
+                        (String) m.get("alias"),
+                        (String) m.get("filter"),
+                        castToStringObjectMap(m.get("prefLabelByLang")))
+                );
+
+        return Stream.concat(queryDefined, predefined).collect(Collectors.toMap(Filter.AliasedFilter::alias, Function.identity()));
+    }
+
+    private List<DefaultSiteFilter> getDefaultSiteFilters(Map<String, Object> appConfig, Map<String, Filter.AliasedFilter> filterByAlias) {
+        return getAsListOfMap(appConfig, "_defaultSiteFilters").stream()
+                .map(m -> new DefaultSiteFilter((String) m.get("filter"), (String) m.get("applyTo"), filterByAlias))
+                .toList();
+    }
+
+    private List<OptionalSiteFilter> getOptionalSiteFilters(Map<String, Object> appConfig, Map<String, Filter.AliasedFilter> filterByAlias) {
+        return getAsListOfMap(appConfig, "_optionalSiteFilters").stream()
+                .map(m -> new OptionalSiteFilter((String) m.get("filter"), filterByAlias))
+                .toList();
+    }
+
+    private List<?> getAsList(Map<String, Object> appConfig, String key) {
+        return (List<?>) appConfig.getOrDefault(key, Collections.emptyList());
+    }
+
+    private List<Map<String, Object>> getAsListOfMap(Map<String, Object> appConfig, String key) {
+        return getAsList(appConfig, key).stream().map(QueryUtil::castToStringObjectMap).toList();
     }
 }

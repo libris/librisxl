@@ -14,6 +14,19 @@
 # LOTR
 ## Sagan om ringen (Åke Ohlmarks)
 <https://libris.kb.se/n5ftk39xlxc7vs6g#it>
+dwpmt3dq02c3ldm
+fxqnb28r3cprbk1
+7qjfjm8k4p03tzs
+3ld8xgpf1gqmj0z
+2kc8chgd3f10k2h
+s93zpjf45sdb8pc
+n5ztkct05p4ctlv
+vc51rkj629pvbpj
+tb40qj6527rzp87
+fzr7d23r4fsmvvt
+h0sch3zt3gf3wpm
+8rk7w0xl2pm1v29
+r82xnd2346l36b8
 ## Trilogin om härskarringen (Åke Ohlmarks)
 <https://libris.kb.se/vc521d465rndg4d#it>
 <https://libris.kb.se/1jb6xqvc3zfgls4#it>
@@ -344,6 +357,7 @@
 # f:Globe
 <https://libris.kb.se/nz2vsfmflf072sg8#it>
 
+
 # f:Map
 <https://libris.kb.se/8rkj0wql14q40gb#it>
 # :ManuscriptMap # :Cartography ; #Karthandskrift
@@ -356,8 +370,15 @@
 <https://libris.kb.se/vdvw6gwvslt9cz8q#it>  # (:Serial)
 
 # f:ComicIssue
-<https://libris.kb.se/vcm1r9ctszcds54w#it>  # (utbrutet verk med “teckande serier”-genrer)
+<https://libris.kb.se/vcm1r9ctszcds54w#it>
+6qjnk42j2xbgcnz
+0jbczrnb3p3x34s# (utbrutet verk med “teckande serier”-genrer)
 <https://libris.kb.se/8r1f5pgh6r5d20hn#it>  # (d:o)
+cwp3x25p20gvm5r
+xf747hg84914zx3
+5ngb3jqh20gb11b
+gzrchvgs3kscqvz
+
 
 # f:Register
 # Verkar vara svårt att skilja på förteckning (lista) och uppslagsverk (korta beskrivningar av något)
@@ -555,3 +576,9 @@
 ## Tapet/affisch/poster (240704)
 <https://libris.kb.se/wf7764g75pzv0vg#it> # Plan för tretton namngivna Gobelins tapeter i Stockholms slott
 <https://libris.kb.se/zh9rwv391s5fpfr#it> # Poster med tapetmönster av Ginko-trädblad
+
+## Lärobok med (samling av) sagor (250415)
+<https://libris.kb.se/n5ftk434lvfp6nq9#it>
+
+## Handritad karta
+<https://libris-dev2.kb.se/tc59svb50tgb2sb#it>

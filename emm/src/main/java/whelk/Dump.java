@@ -21,11 +21,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -107,7 +107,7 @@ public class Dump {
         }
 
         if (isDownload) {
-            sendDumpDownloadResponse(whelk, targetVocabMapper, profile, profileDoc, dumpFilePath, res);
+            sendDumpDownloadResponse(whelk, targetVocabMapper, profile, profileDoc, selection, dumpFilePath, res);
         } else {
             long offsetNumeric = Long.parseLong(offset);
             sendDumpPageResponse(whelk, targetVocabMapper, profile, profileDoc, apiBaseUrl, selection, dumpFilePath, offsetNumeric, res);
@@ -159,7 +159,7 @@ public class Dump {
         HttpTools.sendResponse(res, responseObject, JSON_CONTENT_TYPE);
     }
 
-    private static void sendDumpPageResponse(Whelk whelk, TargetVocabMapper targetVocabMapper, String profile, Document profileDoc, String apiBaseUrl, String dump, Path dumpFilePath, long offsetLines, HttpServletResponse res) throws IOException {
+    private static void sendDumpPageResponse(Whelk whelk, TargetVocabMapper targetVocabMapper, String profile, Document profileDoc, String apiBaseUrl, String selection, Path dumpFilePath, long offsetLines, HttpServletResponse res) throws IOException {
         ArrayList<String> recordIdsOnPage = new ArrayList<>(EmmChangeSet.TARGET_HITS_PER_PAGE);
         Long totalEntityCount = null;
 
@@ -220,16 +220,15 @@ public class Dump {
             return;
         }
 
-        BasicFileAttributes attributes = Files.readAttributes(dumpFilePath, BasicFileAttributes.class);
-        Instant dumpCreationTime = attributes.creationTime().toInstant();
-        sendFormattedResponse(whelk, targetVocabMapper, profile, profileDoc, apiBaseUrl, dump, recordIdsOnPage, res, offsetLines, totalEntityCount, dumpCreationTime);
+        Instant dumpCreationTime = getDumpCreationTime(dumpFilePath);
+        sendFormattedResponse(whelk, targetVocabMapper, profile, profileDoc, apiBaseUrl, selection, recordIdsOnPage, res, offsetLines, totalEntityCount, dumpCreationTime);
     }
 
-    private static void sendFormattedResponse(Whelk whelk, TargetVocabMapper targetVocabMapper, String profile, Document profileDoc, String apiBaseUrl, String dump, ArrayList<String> recordIdsOnPage, HttpServletResponse res, long offset, Long totalEntityCount, Instant dumpCreationTime) throws IOException{
+    private static void sendFormattedResponse(Whelk whelk, TargetVocabMapper targetVocabMapper, String profile, Document profileDoc, String apiBaseUrl, String selection, ArrayList<String> recordIdsOnPage, HttpServletResponse res, long offset, Long totalEntityCount, Instant dumpCreationTime) throws IOException{
         var responseObject = new LinkedHashMap<>();
 
         responseObject.put(JsonLd.CONTEXT_KEY, "https://www.w3.org/ns/activitystreams");
-        responseObject.put(JsonLd.ID_KEY, apiBaseUrl+"?selection="+dump+"&offset="+offset);
+        responseObject.put(JsonLd.ID_KEY, apiBaseUrl+"?selection="+selection+"&offset="+offset);
         responseObject.put("type", "CollectionPage");
         responseObject.put("startTime", ZonedDateTime.ofInstant(dumpCreationTime, ZoneOffset.UTC).toString());
         if (totalEntityCount == null)
@@ -241,15 +240,15 @@ public class Dump {
 
         var partOf = new LinkedHashMap<>();
         partOf.put("type", "Collection");
-        partOf.put("id", apiBaseUrl + "?selection=" + dump);
+        partOf.put("id", apiBaseUrl + "?selection=" + selection);
         responseObject.put("partOf", partOf);
 
         long nextOffset = offset + EmmChangeSet.TARGET_HITS_PER_PAGE;
         if (totalEntityCount == null || nextOffset < totalEntityCount) {
             if (profile != null)
-                responseObject.put("next", apiBaseUrl+"?selection="+dump+"&offset="+nextOffset+"&profile="+profile);
+                responseObject.put("next", apiBaseUrl+"?selection="+selection+"&offset="+nextOffset+"&profile="+profile);
             else
-                responseObject.put("next", apiBaseUrl+"?selection="+dump+"&offset="+nextOffset);
+                responseObject.put("next", apiBaseUrl+"?selection="+selection+"&offset="+nextOffset);
         }
 
         var items = new ArrayList<>(EmmChangeSet.TARGET_HITS_PER_PAGE);
@@ -265,44 +264,21 @@ public class Dump {
             items.add(wrapContextDoc(contextDoc));
         }
 
-        Map<String, Document> idsAndRecords = whelk.bulkLoad(recordIdsOnPage);
-        for (Document doc : idsAndRecords.values()) {
-            if (doc.getDeleted()) {
-                continue;
-            }
+        var docs = whelk.bulkLoad(recordIdsOnPage).values();
+        docs.removeIf(Document::getDeleted);
 
-            // Here is a bit of SPECIALIZED treatment only for the itemAndInstance:categories. These should
-            // include not only the Item (which is the root node for this category), but also the linked Instance.
-            // Without this, a client must individually GET every single Instance in their dataset, which scales poorly.
-            if (dump.startsWith("itemAndInstance:")) {
-                String itemOf = doc.getHoldingFor();
-                if (itemOf == null) {
-                    logger.warn("Holding of nothing? " + doc.getId());
-                    continue;
-                }
-                Document instance = new Document( whelk.loadData(itemOf) );
-                if (instance == null) {
-                    logger.warn("Bad instance? " + itemOf);
-                    continue;
-                }
-                // TODO just put instance as its own graph in items?
-                var itemOfPath = new ArrayList<>();
-                itemOfPath.add("@graph"); itemOfPath.add(1); itemOfPath.add("itemOf"); // unggh..
-                doc._set(itemOfPath, instance.getThing(), doc.data);
+        if (selection.startsWith("itemAndInstance:")) {
+            embellishWithInstances(docs, whelk);
+        }
 
-                items.add(formatDoc(doc, contextDoc, targetVocabMapper, profile, profileDoc));
-            }
-            // For normal categories
-            else {
-                items.add(formatDoc(doc, contextDoc, targetVocabMapper, profile, profileDoc));
-            }
-
+        for (Document doc : docs) {
+            items.add(formatDoc(doc, contextDoc, targetVocabMapper, profile, profileDoc));
         }
 
         HttpTools.sendResponse(res, responseObject, JSON_CONTENT_TYPE);
     }
 
-    private static void sendDumpDownloadResponse(Whelk whelk, TargetVocabMapper targetVocabMapper, String profile, Document profileDoc, Path dumpFilePath, HttpServletResponse res) {
+    private static void sendDumpDownloadResponse(Whelk whelk, TargetVocabMapper targetVocabMapper, String profile, Document profileDoc, String selection, Path dumpFilePath, HttpServletResponse res) {
         String filename = Unicode.stripSuffix(dumpFilePath.getFileName().toString(), ".dump") + ND_JSON_LD_GZ_EXT;
         res.setHeader("Content-Disposition", "attachment; filename=" + filename);
         res.setHeader("Content-Type", "application/octet-stream");
@@ -348,28 +324,70 @@ public class Dump {
                     batch.add(line.trim());
 
                     if (batch.size() >= batchSize) {
-                        writeJsonLdLines(whelk, targetVocabMapper, profile, profileDoc, batch, contextDoc, os);
+                        writeJsonLdLines(whelk, targetVocabMapper, profile, profileDoc, selection, batch, contextDoc, os);
                         batch = new ArrayList<>(batchSize);
                     }
                 }
-                writeJsonLdLines(whelk, targetVocabMapper, profile, profileDoc, batch, contextDoc, os);
+                writeJsonLdLines(whelk, targetVocabMapper, profile, profileDoc, selection, batch, contextDoc, os);
                 res.flushBuffer();
             }
         } catch (Exception e) {
-            logger.info("Error sending dump download: {}", e.getMessage());
+            if (e.getMessage() != null) {
+                logger.info("Error sending dump download: {}", e.getMessage());
+            } else {
+                logger.info("Error sending dump download:", e);
+            }
         }
     }
 
-    private static void writeJsonLdLines(Whelk whelk, TargetVocabMapper targetVocabMapper, String profile, Document profileDoc, Collection<String> ids, Document contextDoc, OutputStream os) throws IOException {
-        Map<String, Document> idsAndRecords = whelk.bulkLoad(ids);
-        for (Document doc : idsAndRecords.values()) {
-            if (doc.getDeleted()) {
-                continue;
-            }
+    private static void writeJsonLdLines(Whelk whelk, TargetVocabMapper targetVocabMapper, String profile, Document profileDoc, String selection, Collection<String> ids, Document contextDoc, OutputStream os) throws IOException {
+        var docs = whelk.bulkLoad(ids).values();
+        docs.removeIf(Document::getDeleted);
 
+        if (selection.startsWith("itemAndInstance:")) {
+            embellishWithInstances(docs, whelk);
+        }
+
+        for (Document doc : docs) {
             writeJsonLdLine(formatDoc(doc, contextDoc, targetVocabMapper, profile, profileDoc), os);
         }
         os.flush();
+    }
+
+    // Here is a bit of SPECIALIZED treatment only for the itemAndInstance:categories. These should
+    // include not only the Item (which is the root node for this category), but also the linked Instance.
+    // Without this, a client must individually GET every single Instance in their dataset, which scales poorly.
+    private static void embellishWithInstances(Collection<Document> items, Whelk whelk) {
+        var instanceIds = new ArrayList<String>(items.size());
+
+        {
+            var i = items.iterator();
+            while (i.hasNext()) {
+                var item = i.next();
+                if (item.getHoldingFor() == null) {
+                    logger.warn("itemOf nothing? {}", item.getId());
+                    i.remove();
+                    continue;
+                }
+                instanceIds.add(item.getHoldingFor());
+            }
+        }
+
+        var idToInstance = whelk.bulkLoad(instanceIds);
+        var i = items.iterator();
+        while (i.hasNext()) {
+            var item = i.next();
+            var instance = idToInstance.get(item.getHoldingFor());
+            if (instance == null) {
+                logger.warn("Could not find instance {} for {} ?", item.getHoldingFor(), item.getId());
+                i.remove();
+                continue;
+            }
+
+            // TODO just put instance as its own graph, not embedded?
+            Document._set(List.of("@graph", 1, "itemOf"), instance.getThing(), item.data);
+            Document._set(List.of("@graph", 1, "itemOf", "meta"), instance.getRecord(), item.data);
+        }
     }
 
     // TODO jackson2 can do json lines natively - upgrade?
@@ -413,13 +431,31 @@ public class Dump {
         return docs.entrySet().stream().findFirst().get().getValue();
     }
 
+    private static Instant getDumpCreationTime(Path dumpFilePath) {
+        try {
+            byte[] attributeValue = (byte[]) Files.getAttribute(dumpFilePath, "user:creationTime");
+            return Instant.parse(new String(attributeValue, StandardCharsets.UTF_8));
+        } catch (IOException | DateTimeException e) {
+            logger.warn("Error reading dump file creation time from {}", dumpFilePath, e);
+            return null;
+        }
+    }
+
     private static void invalidateIfOld(Path dumpFilePath) {
         try {
-            if (!Files.exists(dumpFilePath))
+            if (!Files.exists(dumpFilePath)) {
                 return;
+            }
 
-            BasicFileAttributes attributes = Files.readAttributes(dumpFilePath, BasicFileAttributes.class);
-            if (attributes.creationTime().toInstant().isBefore(Instant.now().minus(5, ChronoUnit.DAYS))) {
+            Instant creationTime =  getDumpCreationTime(dumpFilePath);
+
+            // Could happen with old dumps that don't have the xattr set
+            if (creationTime == null) {
+                Files.delete(dumpFilePath);
+                return;
+            }
+
+            if (creationTime.isBefore(Instant.now().minus(5, ChronoUnit.DAYS))) {
                 Files.delete(dumpFilePath);
             }
         } catch (IOException e) {
@@ -433,14 +469,20 @@ public class Dump {
 
     private static void generateDump(Whelk whelk, String dump, Path dumpFilePath) {
         new Thread(() -> {
-
             // Guard against two racing threads trying to generate the same dump.
             // createNewFile atomically checks if the file exists.
             try {
-                if (!dumpFilePath.toFile().createNewFile())
+                if (!dumpFilePath.toFile().createNewFile()) {
                     return;
+                }
             } catch (IOException e) {
                 return;
+            }
+
+            try {
+                Files.setAttribute(dumpFilePath, "user:creationTime", Instant.now().toString().getBytes(StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
 
             try (BufferedWriter dumpFileWriter = new BufferedWriter(new FileWriter(dumpFilePath.toFile()));

@@ -1,0 +1,104 @@
+{
+  "field_boost": {
+    "fields": [
+      {
+        "name": "_ids",
+        "boost": 400
+      },
+      {
+        "name": "_topStr",
+        "boost": 400,
+        "script_score": {
+          "name": "length_normalizer",
+          "function": "params['multiplier'] * _score / Math.max(doc['_topStr.length'].value, params['q_num_tokens'])",
+          "apply_if": "doc['_topStr.length'].size() > 0"
+        }
+      },
+      {
+        "name": "_chipStr",
+        "boost": 200
+      },
+      {
+        "name": "_cardStr",
+        "boost": 50
+      },
+      {
+        "name": "_searchCardStr",
+        "boost": 0
+      }
+    ],
+    "default_boost_factor": 400,
+    "phrase_boost_divisor": 8,
+    "analyze_wildcard": true,
+    "multi_match_type": "most_fields",
+    "include_exact_fields": true
+  },
+  "function_score": {
+    "functions": [
+      {
+        "type": "field_value_factor",
+        "params": {
+          "field": "reverseLinks.totalItemsByRelation.instanceOf",
+          "factor": 10,
+          "modifier": "ln1p",
+          "missing": 0
+        },
+        "weight": 15
+      },
+      {
+        "type": "field_value_factor",
+        "params": {
+          "field": "reverseLinks.totalItemsByRelation.itemOf.instanceOf",
+          "factor": 10,
+          "modifier": "ln1p",
+          "missing": 0
+        },
+        "weight": 10
+      },
+      {
+        "type": "field_value_factor",
+        "params": {
+          "field": "reverseLinks.totalItemsByRelation.instanceOf.contribution.agent",
+          "factor": 10,
+          "modifier": "ln1p",
+          "missing": 0
+        },
+        "weight": 10
+      },
+      {
+        "type": "field_value_factor",
+        "params": {
+          "field": "reverseLinks.totalItemsByRelation.instanceOf.subject",
+          "factor": 10,
+          "modifier": "ln1p",
+          "missing": 0
+        },
+        "weight": 10
+      },
+      {
+        "type": "field_value_factor",
+        "params": {
+          "field": "reverseLinks.totalItemsByRelation.instanceOf.genreForm",
+          "factor": 10,
+          "modifier": "ln1p",
+          "missing": 0
+        },
+        "weight": 10
+      }
+    ],
+    "score_mode": "sum",
+    "boost_mode": "sum"
+  },
+  "constant_score": [
+    {
+      "field": "meta.@type",
+      "value": "Record",
+      "score": 1000
+    },
+    {
+      "field": "meta.@type",
+      "value": "VirtualRecord",
+      "score": 1000
+    }
+  ]
+}

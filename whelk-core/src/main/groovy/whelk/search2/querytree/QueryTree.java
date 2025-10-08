@@ -1,64 +1,243 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
-import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
-import whelk.search2.AppParams;
-import whelk.search2.Disambiguate;
-import whelk.search2.Operator;
-
-import whelk.search2.QueryParams;
-import whelk.search2.QueryUtil;
+import whelk.search2.*;
 
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static whelk.search2.QueryUtil.quoteIfPhraseOrContainsSpecialSymbol;
 import static whelk.search2.querytree.QueryTreeBuilder.buildTree;
 
 public class QueryTree {
-    public Node tree;
     private QueryTree filtered;
-    private String freeTextPart;
 
-    public QueryTree(String queryString, Disambiguate disambiguate, Whelk whelk, Map<String, AppParams.Filter> aliasToFilter) throws InvalidQueryException {
-        if (!queryString.isEmpty()) {
-            this.tree = buildTree(queryString, disambiguate, whelk, aliasToFilter);
-            normalizeFreeText();
-            removeNeedlessWildcard();
+    private Node tree;
+
+    public QueryTree(String queryString, Disambiguate disambiguate) throws InvalidQueryException {
+        if (queryString != null && !queryString.isEmpty()) {
+            this.tree = buildTree(queryString, disambiguate);
+            normalizeTree();
         }
     }
 
     public QueryTree(Node tree) {
         this.tree = tree;
-        removeNeedlessWildcard();
     }
 
-    public Map<String, Object> toEs(QueryUtil queryUtil, JsonLd jsonLd, Collection<String> boostFields) {
-        return getFiltered().tree.expand(jsonLd, List.of(), boostFields.isEmpty() ? queryUtil.esBoost::getBoostFields : x -> boostFields)
-                .toEs(queryUtil::getNestedPath);
+    public QueryTree copy() {
+        return new QueryTree(tree, filtered);
     }
 
-    public Map<String, Object> toSearchMapping(Map<String, String> nonQueryParams) {
+    public static QueryTree empty() {
+        return new QueryTree(null);
+    }
+
+    public Map<String, Object> toEs(JsonLd jsonLd, ESSettings esSettings, Collection<String> rulingTypes, List<Node> exclude) {
+        return getFiltered().remove(exclude)
+                .expand(jsonLd, rulingTypes)
+                .toEs(esSettings);
+    }
+
+    private QueryTree(Node tree, QueryTree filtered) {
+        this.tree = tree;
+        if (filtered != null) {
+            this.filtered = new QueryTree(filtered.tree);
+        }
+    }
+
+    public Map<String, Object> toSearchMapping(QueryParams queryParams) {
         return isEmpty()
                 ? Collections.emptyMap()
-                : tree.toSearchMapping(this, nonQueryParams);
+                : tree.toSearchMapping(this, queryParams);
     }
 
-    public Map<String, String> makeUpLink(Node n, Map<String, String> nonQueryParams) {
-        QueryTree reducedTree = excludeFromTree(n);
-        String upUrl = QueryUtil.makeFindUrl(reducedTree, nonQueryParams);
-        return Map.of(JsonLd.ID_KEY, upUrl);
+    public void applySiteFilters(Query.SearchMode searchMode, AppParams.SiteFilters siteFilters, SelectedFilters selectedFilters) {
+        _applySiteFilters(searchMode, siteFilters, selectedFilters);
     }
 
-    /**
-     * There is no freetext or all freetext nodes are "*"
-     */
-    public boolean isWild() {
-        return StreamSupport.stream(allDescendants(tree).spliterator(), false)
-                .noneMatch(n -> n instanceof FreeText ft && !ft.isWild());
+    public void applyObjectFilter(String object) {
+        _applyObjectFilter(object);
+    }
+
+    public void applyPredicateObjectFilter(Collection<Property> predicates, String object) {
+        _applyPredicateObjectFilter(predicates, object);
+    }
+
+    public QueryTree remove(Node node) {
+        return remove(List.of(node));
+    }
+
+    public QueryTree remove(List<Node> nodes) {
+        QueryTree copy = copy();
+        copy._remove(nodes);
+        return copy;
+    }
+
+    public QueryTree replace(Node node, Node replacement) {
+        QueryTree copy = copy();
+        copy._replace(node, replacement);
+        return copy;
+    }
+
+    public QueryTree add(Node node) {
+        QueryTree copy = copy();
+        copy._add(node);
+        copy.normalizeTree();
+        return copy;
+    }
+
+    public QueryTree replaceSimpleFreeText(String replacement) {
+        return findSimpleFreeText()
+                .map(ft -> replace(ft, new FreeText(replacement)))
+                .orElse(this);
+    }
+
+    public boolean isEmpty() {
+        return tree == null;
+    }
+
+    public Stream<Node> allDescendants() {
+        return StreamSupport.stream(allDescendants(tree).spliterator(), false);
+    }
+
+    public List<String> collectRulingTypes(JsonLd jsonLd) {
+        var tree = getFiltered().tree;
+        if (tree instanceof And) {
+            var reduced = tree.reduceTypes(jsonLd);
+            if (reduced instanceof And) {
+                return ((And) reduced).collectRulingTypes();
+            }
+        }
+        return List.of();
+    }
+
+    public List<Link> collectLinks() {
+        return allDescendants()
+                .map(n -> n instanceof PathValue pv && pv.value() instanceof Link l ? l : null)
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    public Optional<FreeText> findSimpleFreeText() {
+        return findTopNodeByCondition(node -> node instanceof FreeText ft
+                && !ft.negate()
+                && ft.connective() == Query.Connective.AND).map(FreeText.class::cast);
+    }
+
+    public List<Node> findTopNodesByCondition(Predicate<Node> condition) {
+        return getTopNodes().stream().filter(condition).toList();
+    }
+
+    public Optional<Node> findTopNodeByCondition(Predicate<Node> condition) {
+        return getTopNodes().stream().filter(condition).findFirst();
+    }
+
+    public <T> List<T> getTopNodesOfType(Class<T> nodeType) {
+        return getTopNodes().stream().filter(nodeType::isInstance).map(nodeType::cast).toList();
+    }
+
+    public List<Node> getTopNodes() {
+        return switch (tree) {
+            case And and -> and.children();
+            case null -> List.of();
+            default -> List.of(tree);
+        };
+    }
+
+    public boolean isSimpleFreeText() {
+        return findSimpleFreeText().map(tree::equals).orElse(false);
+    }
+
+    public String getFreeTextPart() {
+        return findSimpleFreeText().map(FreeText::queryForm).orElse("");
+    }
+
+    public String toQueryString() {
+        return isEmpty() ? Operator.WILDCARD : tree.toQueryString(true);
+    }
+
+    @Override
+    public String toString() {
+        return toQueryString();
+    }
+
+    public QueryTree getFiltered() {
+        return filtered != null ? filtered : copy();
+    }
+
+    private Node expand(JsonLd jsonLd, Collection<String> rulingTypes) {
+        return tree.expand(jsonLd, rulingTypes);
+    }
+
+    private void normalizeTree() {
+        removeFreeTextWildcard();
+    }
+
+    private void _remove(List<Node> remove) {
+        this.tree = _remove(tree, remove);
+    }
+
+    private void _replace(Node replace, Node replacement) {
+        this.tree = _replace(tree, replace, replacement);
+    }
+
+    private void _add(Node add) {
+        this.tree = _add(tree, add);
+        normalizeTree();
+    }
+
+    private void _removeTopNodesByCondition(Predicate<Node> p) {
+        this.tree = _removeTopNodesByCondition(tree, p);
+    }
+
+    private void removeFreeTextWildcard() {
+        if (tree != null && !isWild(tree)) {
+            _removeTopNodesByCondition(QueryTree::isWild);
+        }
+    }
+
+    private static Node _remove(Node tree, List<Node> remove) {
+        if (remove.stream().anyMatch(n -> n == tree)) {
+            return null;
+        }
+        if (tree instanceof Group g) {
+            return g.mapFilterAndReinstantiate(c -> _remove(c, remove), Objects::nonNull);
+        }
+        return tree;
+    }
+
+    private static Node _replace(Node tree, Node replace, Node replacement) {
+        if (tree == replace) {
+            return replacement;
+        }
+        if (tree instanceof Group g) {
+            return g.mapAndReinstantiate(c -> _replace(c, replace, replacement));
+        }
+        return tree;
+    }
+
+    private static Node _add(Node tree, Node add) {
+        return switch (tree) {
+            case null -> add;
+            case And and -> new And(Stream.concat(and.children().stream(), Stream.of(add)).distinct().toList());
+            default -> tree.equals(add) ? tree : new And(List.of(tree, add));
+        };
+    }
+
+    private static Node _removeTopNodesByCondition(Node tree, Predicate<Node> p) {
+        // Remove all nodes meeting the condition p
+        return switch (tree) {
+            case null -> null;
+            case And and -> and.filterAndReinstantiate(Predicate.not(p));
+            default -> p.test(tree) ? null : tree;
+        };
+    }
+
+    private static boolean isWild(Node node) {
+        return node instanceof FreeText ft && ft.isWild();
     }
 
     private static Iterable<Node> allDescendants(Node node) {
@@ -82,317 +261,42 @@ public class QueryTree {
             }
         };
 
-        return () -> i;
+        return () -> node != null ? i : Collections.emptyIterator();
     }
 
-    public void normalizeFreeText() {
-        this.tree = normalizeFreeText(tree);
+    private void _applySiteFilters(Query.SearchMode searchMode, AppParams.SiteFilters siteFilters, SelectedFilters selectedFilters) {
+        QueryTree filtered = getFiltered();
+
+        Predicate<AppParams.DefaultSiteFilter> isApplicable = df ->
+                df.appliesTo().contains(searchMode)
+                        && !selectedFilters.isActivated(df.filter())
+                        // Override default filter if the original query contains its inverse.
+                        // e.g. don't add "\"rdf:type\":Work" if query is "NOT \"rdf:type\":Work something"
+                        && !selectedFilters.isExplicitlyDeactivated(df.filter())
+                        // Override default type filter if the original query already states which types to search.
+                        // e.g. don't add "\"rdf:type\":Work" if query is "\"rdf:type\":Agent Astrid Lindgren"
+                        && !(df.filter().isTypeFilter() && allDescendants().anyMatch(Node::isTypeNode));
+
+        siteFilters.defaultFilters().stream()
+                .filter(isApplicable)
+                .map(AppParams.DefaultSiteFilter::filter)
+                .map(Filter::getParsed)
+                .forEach(filtered::_add);
+
+        this.filtered = filtered;
     }
 
-    private static Node normalizeFreeText(Node node) {
-        return switch (node) {
-            case And and -> {
-                List<Node> conjuncts = new ArrayList<>();
-                List<FreeText> fts = new ArrayList<>();
-                for (Node n : and.children()) {
-                    if (isFreeText(n)) {
-                        fts.add((FreeText) n);
-                    } else {
-                        conjuncts.add(normalizeFreeText(n));
-                    }
-                }
-                if (!fts.isEmpty()) {
-                    String joinedFts = fts.stream().map(FreeText::value)
-                            .map(QueryUtil::quoteIfPhraseOrContainsSpecialSymbol)
-                            .collect(Collectors.joining(" "));
-                    conjuncts.addFirst(new FreeText(fts.getFirst().textQuery(), Operator.EQUALS, joinedFts));
-                }
-                yield conjuncts.size() > 1 ? new And(conjuncts) : conjuncts.getFirst();
-            }
-            case Or or -> or.mapAndReinstantiate(QueryTree::normalizeFreeText);
-            case FreeText ft -> new FreeText(ft.textQuery(), ft.operator(), quoteIfPhraseOrContainsSpecialSymbol(ft.value()));
-            case null, default -> node;
-        };
+    private void _applyObjectFilter(String object) {
+        QueryTree filtered = getFiltered();
+        filtered._add(new PathValue("_links", Operator.EQUALS, new FreeText(object)));
+        this.filtered = filtered;
     }
 
-    public QueryTree replaceFreeText(String replacement) {
-        if (isFreeText()) {
-            return new QueryTree(new FreeText(((FreeText) tree).textQuery(), Operator.EQUALS, replacement));
-        }
-        if (tree instanceof And) {
-            return new QueryTree(
-                    ((And) tree).mapAndReinstantiate(n -> isFreeText(n)
-                            ? new FreeText(((FreeText) n).textQuery(), Operator.EQUALS, replacement)
-                            : n)
-            );
-        }
-        throw new RuntimeException("Failed to replace free text"); // Should never be reached
-    }
-
-    public QueryTree addToTopLevel(Node node) {
-        return new QueryTree(addToTopLevel(tree, node));
-    }
-
-    private static Node addToTopLevel(Node tree, Node node) {
-        return switch (tree) {
-            case null -> node;
-            case And and -> and.add(node);
-            default -> tree.equals(node) ? tree : new And(List.of(tree, node));
-        };
-    }
-
-    public QueryTree excludeFromTree(Node node) {
-        return new QueryTree(excludeFromTree(node, tree));
-    }
-
-    private static Node excludeFromTree(Node nodeToExclude, Node tree) {
-        if (nodeToExclude == tree) {
-            return null;
-        }
-        if (tree instanceof Group g) {
-            return g.mapFilterAndReinstantiate(c -> excludeFromTree(nodeToExclude, c), Objects::nonNull);
-        }
-        return tree;
-    }
-
-    public QueryTree removeTopLevelNode(Node node) {
-        return new QueryTree(removeTopLevelNode(tree, node));
-    }
-
-    private static Node removeTopLevelNode(Node tree, Node node) {
-        return tree instanceof And and
-                ? and.remove(node)
-                : (node.equals(tree) ? null : tree);
-    }
-
-    public QueryTree removeTopLevelPathValueWithRangeIfPropEquals(Property property) {
-        Predicate<Node> p = (node -> node instanceof PathValue pv
-                && pv.hasEqualProperty(property)
-                && Operator.rangeOperators().contains(pv.operator()));
-        return new QueryTree(removeTopLevelNodesByCondition(tree, p));
-    }
-
-    public QueryTree removeTopLevelPathValueIfPropEquals(Property property) {
-        Predicate<Node> p = (node -> node instanceof PathValue pv && pv.hasEqualProperty(property));
-        return new QueryTree(removeTopLevelNodesByCondition(tree, p));
-    }
-
-    private static Node removeTopLevelNodesByCondition(Node tree, Predicate<Node> p) {
-        // Remove all nodes meeting the condition p
-        return switch (tree) {
-            case null -> null;
-            case And and -> and.filterAndReinstantiate(Predicate.not(p));
-            default -> p.test(tree) ? null : tree;
-        };
-    }
-
-    public List<String> collectRulingTypes(JsonLd jsonLd) {
-        var tree = getFiltered().tree;
-        if (tree instanceof And) {
-            var reduced = tree.reduceTypes(jsonLd);
-            if (reduced instanceof And) {
-                return ((And) reduced).collectRulingTypes();
-            }
-        }
-        return List.of();
-    }
-
-    public boolean isEmpty() {
-        return tree == null;
-    }
-
-    public boolean isFreeText() {
-        return isFreeText(tree);
-    }
-
-    private static boolean isFreeText(Node node) {
-        return node instanceof FreeText ft && ft.operator().equals(Operator.EQUALS);
-    }
-
-    public Set<InactiveBoolFilter> getInactiveBfNodes() {
-        return getTopLevelNodes().stream()
-                .filter(n -> n instanceof InactiveBoolFilter)
-                .map(InactiveBoolFilter.class::cast)
-                .collect(Collectors.toSet());
-    }
-
-    public Set<ActiveBoolFilter> getActiveBfNodes() {
-        return getTopLevelNodes().stream()
-                .filter(n -> n instanceof ActiveBoolFilter)
-                .map(ActiveBoolFilter.class::cast)
-                .collect(Collectors.toSet());
-    }
-
-    public List<PathValue> getTopLevelPvNodes() {
-        return getTopLevelNodes().stream()
-                .filter(PathValue.class::isInstance)
-                .map(PathValue.class::cast)
-                .toList();
-    }
-
-    public Set<Node> getTopLevelNodes() {
-        return switch (tree) {
-            case And and -> new HashSet<>(and.children());
-            case null -> Collections.emptySet();
-            default -> Set.of(tree);
-        };
-    }
-
-    public String getTopLevelFreeText() {
-        if (freeTextPart == null) {
-            if (tree instanceof And) {
-                freeTextPart = tree.children()
-                        .stream()
-                        .filter(QueryTree::isFreeText)
-                        .map(n -> ((FreeText) n).value())
-                        .findFirst()
-                        .orElse("");
-            } else if (isFreeText()) {
-                freeTextPart = ((FreeText) tree).value();
-            } else {
-                freeTextPart = "";
-            }
-        }
-
-        return freeTextPart;
-    }
-
-    private void resetFreeTextPart() {
-        this.freeTextPart = null;
-    }
-
-    public String toQueryString() {
-        return isEmpty() ? "*" : tree.toQueryString(true);
-    }
-
-    @Override
-    public String toString() {
-        return toQueryString();
-    }
-
-    public void removeNeedlessWildcard() {
-        if (!isFreeText() && Operator.WILDCARD.equals(getTopLevelFreeText())) {
-            getTopLevelNodes().stream().filter(FreeText.class::isInstance)
-                    .map(FreeText.class::cast)
-                    .filter(FreeText::isWild)
-                    .findFirst()
-                    .ifPresent(ft -> {
-                                this.tree = removeTopLevelNode(tree, ft);
-                                resetFreeTextPart();
-                    });
-        }
-    }
-
-    public QueryTree normalizeFilters(AppParams.SiteFilters siteFilters) {
-        return mapToAliases(siteFilters.aliasToFilter().values())
-                .removeDefaultFilters(siteFilters.getAllDefaultFilterNodes())
-                .removeNegatedSelectableFilters(siteFilters.getSelectableFilterAliases());
-    }
-
-    private QueryTree mapToAliases(Collection<AppParams.Filter> aliasedFilters) {
-        if (isEmpty()) {
-            return this;
-        }
-
-        var newTree = tree;
-
-        for (var filter : aliasedFilters) {
-            if (newTree instanceof And and && and.contains(filter.getExplicit())) {
-                newTree = and.replace(filter.getExplicit(), filter.getAlias().get());
-            } else if (filter.getExplicit().equals(newTree)) {
-                newTree = filter.getAlias().get();
-            }
-        }
-
-        return new QueryTree(newTree);
-    }
-
-    private QueryTree removeDefaultFilters(Collection<Node> defaultFilters) {
-        var newTree = tree;
-
-        for (var filter : defaultFilters) {
-            switch (newTree) {
-                case And and -> {
-                    if (and.contains(filter)) {
-                        newTree = and.remove(filter);
-                    }
-                }
-                case null -> {}
-                default -> {
-                    if (filter.equals(newTree)) {
-                        newTree = null;
-                    }
-                }
-            }
-        }
-
-        return new QueryTree(newTree);
-    }
-
-    private QueryTree removeNegatedSelectableFilters(Collection<String> selectableFilterAliases) {
-        var newTree = tree;
-
-        for (var ibf : getInactiveBfNodes()) {
-            if (selectableFilterAliases.contains(ibf.alias())) {
-                switch (newTree) {
-                    case And and -> newTree = and.remove(ibf);
-                    case null -> {}
-                    default -> newTree = null;
-                }
-            }
-        }
-
-        return new QueryTree(newTree);
-    }
-
-    public void addFilters(QueryParams queryParams, AppParams appParams, JsonLd jsonLd) {
-        var currentActiveBfNodes = getActiveBfNodes();
-
-        var newTree = tree;
-        for (var node : getFilters(queryParams, appParams, jsonLd)) {
-            // Don't add type filter when type is already given somewhere in the query
-            if (node.isTypeNode() && containsTypeNode(tree)) {
-                continue;
-            }
-            // Don't add filter X if there is already something saying NOT X
-            if (node instanceof ActiveBoolFilter && currentActiveBfNodes.stream().anyMatch(bf -> bf.nullifies((ActiveBoolFilter) node))) {
-                continue;
-            }
-            newTree = addToTopLevel(newTree, node);
-        }
-
-        this.filtered = new QueryTree(newTree);
-    }
-
-    private static boolean containsTypeNode(Node tree) {
-        return StreamSupport.stream(allDescendants(tree).spliterator(), false)
-                .anyMatch(Node::isTypeNode);
-    }
-
-    private QueryTree getFiltered() {
-        return filtered != null ? filtered : this;
-    }
-
-    private List<Node> getFilters(QueryParams queryParams, AppParams appParams, JsonLd jsonLd) {
-        var siteFilters = appParams.siteFilters;
-        var object = queryParams.object;
-        var predicates = queryParams.predicates;
-
-        var filters = new ArrayList<>(siteFilters.getDefaultFilterNodes());
-        if (object == null) {
-            filters.addAll(siteFilters.getDefaultTypeFilterNodes());
-        }
-        if (object != null) {
-            if (predicates.isEmpty()) {
-                filters.add(new PathValue("_links", Operator.EQUALS, new Literal(object)));
-            } else {
-                filters.addAll(predicates.stream()
-                        .map(p -> new PathValue(new Property(p, jsonLd), Operator.EQUALS, new Link(object)))
-                        .toList()
-                );
-            }
-        }
-
-        return filters;
+    private void _applyPredicateObjectFilter(Collection<Property> predicates, String object) {
+        QueryTree filtered = getFiltered();
+        predicates.stream()
+                .map(p -> new PathValue(p, Operator.EQUALS, new Link(object)))
+                .forEach(filtered::_add);
+        this.filtered = filtered;
     }
 }

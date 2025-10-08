@@ -13,6 +13,16 @@
                 "bm25-ignore-length": {
                     "type": "BM25",
                     "b": 0
+                },
+                "bm25-prefer-short-quick-saturation": {
+                    "type": "BM25",
+                    "b": 0.9,
+                    "k1": 0.1
+                },
+                "bm25-only-idf-ignore-tf": {
+                    "type": "BM25",
+                    "b": 0,
+                    "k1": 0
                 }
             }
         },
@@ -386,6 +396,15 @@
                 }
             },
             {
+                "contribution_template": {
+                    "path_match": ["contribution", "instanceOf.contribution", "@reverse.instanceOf.contribution"],
+                    "mapping": {
+                        "type": "nested",
+                        "include_in_parent": true
+                    }
+                }
+            },
+            {
                 "reverse_itemOf_template": {
                     "path_match": ["@reverse.itemOf", "@reverse.instanceOf.@reverse.itemOf"],
                     "mapping": {
@@ -420,6 +439,46 @@
                     },
                     "match": "_str",
                     "match_mapping_type": "string"
+                }
+            },
+            {
+                "str_template": {
+                    "match": ["_topStr"],
+                    "mapping": {
+                        "fields": {
+                            "exact": {
+                                "type": "text",
+                                "analyzer": "standard",
+                                "similarity": "bm25-prefer-short-quick-saturation"
+                            },
+                            "length": {
+                                "type":     "token_count",
+                                "analyzer": "standard"
+                            }
+                        },
+                        "analyzer": "softmatcher",
+                        "similarity": "bm25-prefer-short-quick-saturation",
+                        "type": "text",
+                        "index": true
+                    }
+                }
+            },
+            {
+                "str-ignore-length_template": {
+                    "match": ["_chipStr", "_cardStr", "_searchCardStr"],
+                    "mapping": {
+                        "fields": {
+                            "exact": {
+                                "type": "text",
+                                "analyzer": "standard",
+                                "similarity": "bm25-only-idf-ignore-tf"
+                            }
+                        },
+                        "analyzer": "softmatcher",
+                        "similarity": "bm25-only-idf-ignore-tf",
+                        "type": "text",
+                        "index": true
+                    }
                 }
             },
             {

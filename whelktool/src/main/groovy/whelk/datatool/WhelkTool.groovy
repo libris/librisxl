@@ -1,6 +1,7 @@
 package whelk.datatool
 
 import com.google.common.util.concurrent.MoreExecutors
+import groovy.cli.commons.CliBuilder
 import org.apache.logging.log4j.Logger
 import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl
 import whelk.Document
@@ -34,6 +35,7 @@ import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 import static java.util.concurrent.TimeUnit.SECONDS
@@ -70,6 +72,7 @@ class WhelkTool {
     PrintWriter createdLog
     PrintWriter deletedLog
     ConcurrentHashMap<String, PrintWriter> reports = new ConcurrentHashMap<>()
+    Closure finalizeLogs
     Logger logger
 
     Counter counter = new Counter()
@@ -128,8 +131,10 @@ class WhelkTool {
         this.reportsDir = reportsDir
         reportsDir.mkdirs()
         mainLog = new PrintWriter(new File(reportsDir, MAIN_LOG_NAME))
-        errorLog = new PrintWriter(new File(reportsDir, ERROR_LOG_NAME))
-        failedLog = new PrintWriter(new File(reportsDir, FAILED_LOG_NAME))
+        def errorLogFile = new File(reportsDir, ERROR_LOG_NAME)
+        errorLog = new PrintWriter(errorLogFile)
+        def failedLogFile = new File(reportsDir, FAILED_LOG_NAME)
+        failedLog = new PrintWriter(failedLogFile)
         def modifiedLogFile = new File(reportsDir, MODIFIED_LOG_NAME)
         modifiedLog = new PrintWriter(modifiedLogFile)
         def createdLogFile = new File(reportsDir, CREATED_LOG_NAME)
@@ -144,14 +149,28 @@ class WhelkTool {
             log "Could not initialize elasticsearch: " + e
         }
         statistics = new Statistics(statsNumIds)
-        Runtime.addShutdownHook {
+
+        var finishLogs = {
             if (!statistics.isEmpty()) {
                 new PrintWriter(new File(reportsDir, "STATISTICS.txt")).withCloseable {
                     statistics.print(0, it)
                 }
             }
 
-            [modifiedLogFile, createdLogFile, deletedLogFile].each { if (it.length() == 0) it.delete() }
+            [modifiedLogFile, createdLogFile, deletedLogFile, errorLogFile, failedLogFile].each { if (it.length() == 0) it.delete() }
+        }
+
+        var lock = new Object()
+        var isFinalized = new AtomicBoolean()
+        finalizeLogs = {
+            if (!isFinalized.get()) {
+                synchronized (lock) {
+                    if (!isFinalized.get()) {
+                        isFinalized.set(true)
+                        finishLogs()
+                    }
+                }
+            }
         }
     }
 
@@ -217,7 +236,12 @@ class WhelkTool {
     DocumentItem create(Map data) {
         Document doc = new Document(data)
         doc.deepReplaceId(Document.BASE_URI.toString() + IdGenerator.generate())
-        DocumentItem item = new DocumentItem(number: counter.createdCount, doc: doc, whelk: whelk)
+        DocumentItem item = new DocumentItem(
+                number: counter.createdCount,
+                doc: doc,
+                whelk: whelk,
+                logFailed: this.&logFailed
+        )
         item.existsInStorage = false
         return item
     }
@@ -315,7 +339,13 @@ class WhelkTool {
             if (limit > -1 && counter.readCount > limit) {
                 break
             }
-            DocumentItem item = new DocumentItem(number: counter.readCount, doc: doc, whelk: whelk, preUpdateChecksum: doc.getChecksum(whelk.jsonld))
+            DocumentItem item = new DocumentItem(
+                    number: counter.readCount,
+                    doc: doc,
+                    whelk: whelk,
+                    preUpdateChecksum: doc.getChecksum(whelk.jsonld),
+                    logFailed: this.&logFailed
+            )
             item.existsInStorage = !newItems
             batch.items << item
             if (batch.items.size() == batchSize) {
@@ -490,8 +520,14 @@ class WhelkTool {
                     catch (StaleUpdateException e) {
                         logRetry(e, item)
                         Document doc = whelk.getDocument(item.doc.shortId)
-                        item = new DocumentItem(number: item.number, doc: doc, whelk: whelk,
-                                preUpdateChecksum: doc.getChecksum(whelk.jsonld), existsInStorage: true)
+                        item = new DocumentItem(
+                                number: item.number,
+                                doc: doc,
+                                whelk: whelk,
+                                preUpdateChecksum: doc.getChecksum(whelk.jsonld),
+                                existsInStorage: true,
+                                logFailed: this.&logFailed
+                        )
                         return doProcess(process, item, counter)
                     }
                     counter.countModified()
@@ -607,7 +643,7 @@ class WhelkTool {
 
         if (!dryRun) {
             var collection = LegacyIntegrationTools.determineLegacyCollection(doc, whelk.getJsonld())
-            if (!whelk.createDocument(doc, changedIn, item.changedBy ?: defaultChangedBy, collection, false))
+            if (!whelk.createDocument(doc, changedIn, item.changedBy ?: defaultChangedBy, collection, false, false))
                 throw new WhelkException("Failed to save a new document. See general whelk log for details.")
         }
         createdLog.println(doc.shortId)
@@ -623,8 +659,7 @@ class WhelkTool {
             if (jsonLdValidation == ValidationMode.ON) {
                 throw new Exception(msg)
             } else if (jsonLdValidation == ValidationMode.SKIP_AND_LOG) {
-                failedLog.println(doc.shortId)
-                errorLog.println(msg)
+                logFailed(doc, msg)
                 return false
             }
         }
@@ -640,12 +675,16 @@ class WhelkTool {
             if (inDatasetValidation == ValidationMode.ON) {
                 throw new Exception(msg)
             } else if (inDatasetValidation == ValidationMode.SKIP_AND_LOG) {
-                failedLog.println(doc.shortId)
-                errorLog.println(msg)
+                logFailed(doc, msg)
                 return false
             }
         }
         return true
+    }
+
+    void logFailed(Document doc, String msg) {
+        failedLog.println(doc.shortId)
+        errorLog.println(msg)
     }
 
     private boolean confirmNextStep(String inJsonStr, Document doc) {
@@ -770,6 +809,8 @@ class WhelkTool {
             it.flush()
             it.close()
         }
+        finalizeLogs()
+        
         if (errorDetected) {
             log "Script terminated due to an error, see $reportsDir/ERRORS.txt for more info"
             throw new RuntimeException("Script terminated due to an error", errorDetected)
@@ -880,6 +921,9 @@ class WhelkTool {
         }
 
         try {
+            Runtime.addShutdownHook {
+                tool.finalizeLogs() // print stats even if process is killed from outside
+            }
             tool.run()
         } catch (Exception e) {
             System.err.println(e.toString())
@@ -997,6 +1041,7 @@ class DocumentItem {
     boolean existsInStorage = true
     private String restoreToTime = null
     Closure onError = null
+    Closure logFailed = null
 
     List getGraph() {
         return doc.data['@graph']
@@ -1018,6 +1063,10 @@ class DocumentItem {
         needsSaving = true
         set(params)
         assert (restoreToTime != null)
+    }
+
+    void reportFailed(String message) {
+        logFailed(doc, message)
     }
 
     private void set(Map params) {

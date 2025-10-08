@@ -6,7 +6,7 @@ import org.eclipse.jetty.ee8.servlet.DefaultServlet;
 import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import org.eclipse.jetty.server.AsyncRequestLogWriter;
-import org.eclipse.jetty.server.ConnectionLimit;
+import org.eclipse.jetty.server.NetworkConnectionLimit;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.ForwardedRequestCustomizer;
@@ -62,7 +62,7 @@ public abstract class XlServer {
             log.info("Started server on port {}", port);
         }
 
-        server.addBean(new ConnectionLimit(maxConnections, server));
+        server.addBean(new NetworkConnectionLimit(maxConnections, server));
 
         return server;
     }

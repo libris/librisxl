@@ -1,8 +1,12 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
+import whelk.search2.EsMappings;
+import whelk.search2.QueryUtil;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -25,6 +29,13 @@ public class Path {
     );
 
     private final List<Subpath> path;
+
+    private Token token;
+
+    public Path(List<Subpath> path, Token token) {
+        this.path = path;
+        this.token = token;
+    }
 
     public Path(List<Subpath> path) {
         this.path = path;
@@ -72,18 +83,21 @@ public class Path {
                 .collect(Collectors.joining("."));
     }
 
-    public String fullSearchPath() {
+    // As represented in indexed docs
+    public String jsonForm() {
         return path.stream()
                 .map(Subpath::toString)
                 .map(Path::substitute)
                 .collect(Collectors.joining("."));
     }
 
-    public String asKey() {
-        return path.stream()
-                .map(Subpath::key)
-                .map(Key::toString)
-                .collect(Collectors.joining("."));
+    // As represented in query string
+    public String queryForm() {
+        if (token != null) {
+            return token.formatted();
+        }
+        String s = path.stream().map(Subpath::queryForm).collect(Collectors.joining("."));
+        return s.contains(":") ? QueryUtil.quote(s) : s;
     }
 
     public ExpandedPath expand(JsonLd jsonLd) {
@@ -92,14 +106,15 @@ public class Path {
 
     public ExpandedPath expand(JsonLd jsonLd, Value value) {
         List<Subpath> expandedPath = expandShortHand(path);
-        if (shouldAddSuffix(jsonLd, value)) {
-            expandedPath.add(new Key.RecognizedKey(value instanceof Literal ? SEARCH_KEY : ID_KEY));
-        }
+
+        getSuffix(value).ifPresent(expandedPath::add);
+
         firstProperty().ifPresent(property -> {
             if (property.hasDomainAdminMetadata(jsonLd)) {
                 expandedPath.addFirst(new Property(RECORD_KEY, jsonLd));
             }
         });
+
         return new ExpandedPath(expandedPath, this);
     }
 
@@ -113,12 +128,29 @@ public class Path {
         return Objects.hash(path);
     }
 
-    private boolean shouldAddSuffix(JsonLd jsonLd, Value value) {
-        return !(value instanceof Literal l && l.isWildcard())
-                && last() instanceof Property p
-                && p.isObjectProperty()
-                && !p.isType()
-                && !jsonLd.isVocabTerm(p.name());
+    public Optional<String> getEsNestedStem(EsMappings esMappings) {
+        String esPath = jsonForm();
+        if (esMappings.isNestedField(esPath)) {
+            return Optional.of(esPath);
+        }
+        return esMappings.getNestedFields().stream().filter(esPath::startsWith).findFirst();
+    }
+
+    private Optional<Key> getSuffix(Value value) {
+        if (last() instanceof Property p && p.isObjectProperty()) {
+            return switch (value) {
+                case DateTime ignored -> Optional.empty();
+                case FreeText freeText -> freeText.isWild() ? Optional.empty() : Optional.of(new Key.RecognizedKey(SEARCH_KEY));
+                case Numeric ignored -> Optional.empty();
+                case Resource resource -> switch (resource) {
+                    case InvalidValue ignored -> Optional.empty();
+                    case Link ignored -> Optional.of(new Key.RecognizedKey(ID_KEY));
+                    case VocabTerm ignored -> Optional.empty();
+                };
+                case null -> p.isType() || p.isVocabTerm() ? Optional.empty() : Optional.of(new Key.RecognizedKey(ID_KEY));
+            };
+        }
+        return Optional.empty();
     }
 
     private static List<Subpath> expandShortHand(List<Subpath> path) {
@@ -153,7 +185,7 @@ public class Path {
         }
 
         public List<ExpandedPath> getAltPaths(JsonLd jsonLd, Collection<String> types) {
-            if (origPath.first() instanceof Property p) {
+            if (origPath != null && origPath.first() instanceof Property p && !p.isPlatformTerm()) {
                 List<ExpandedPath> altPaths = p.getApplicableIntegralRelations(jsonLd, types).stream()
                         .map(ir -> Stream.concat(Stream.of(ir), path().stream()))
                         .map(Stream::toList)
@@ -168,6 +200,28 @@ public class Path {
             }
 
             return List.of(this);
+        }
+
+        public List<ExpandedPath> getAlt2Paths(JsonLd jsonLd) {
+            // TODO this should be the responsibility of Property?
+            if (origPath != null && origPath.first() instanceof Property p && jsonLd.indexMapTermsOf.containsKey(p.name())) {
+                List<ExpandedPath> altPaths = new ArrayList<>();
+                if (jsonLd.indexMapTermsOf.containsKey(p.name())) {
+                    for (String indexMap : jsonLd.indexMapTermsOf.get(p.name)) {
+                        for (String ix : List.of("find", "identify")) { // FIXME where should we get these?
+                            altPaths.add(new ExpandedPath(List.of(
+                                    new Key.RecognizedKey(indexMap),
+                                    new Key.RecognizedKey(ix),
+                                    new Key.RecognizedKey(ID_KEY)
+                            )));
+                        }
+                    }
+                }
+
+                return altPaths;
+            }
+
+            return Collections.emptyList();
         }
     }
 }
