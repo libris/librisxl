@@ -97,6 +97,9 @@ void splitToEhs(Object doc) {
                 }
                 return false
             }
+            if (doc.graph[1]["marc:hasBindingInformation"].isEmpty()) {
+                doc.graph[1].remove("marc:hasBindingInformation")
+            }
         } else { // not list
             newData["@graph"][1].put( "marc:hasBindingInformation", doc.graph[1]["marc:hasBindingInformation"] )
             doc.graph[1].remove("marc:hasBindingInformation")
