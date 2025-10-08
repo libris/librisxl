@@ -37,7 +37,10 @@ selectBySqlWhere(where) { doc ->
         splitToEhs(doc)
     }
 
-    doc.scheduleSave(loud: true)
+    //if (doc.graph[1]["itemOf"]["@id"] == "https://libris-qa.kb.se/l3wkk17x3zft9bw#it")
+    //    System.err.println("REMAINDER: " + doc.doc.dataAsString)
+
+    doc.scheduleSave(loud: true) // DO THE OTHER ONE TOO!
 }
 
 boolean isEhsComponent(Map item) {
@@ -105,31 +108,46 @@ void splitToEhs(Object doc) {
         doc.graph[1].remove("marc:hasCopyAndVersionIdentificationNote")
     }
 
+    if (doc.graph[1].containsKey("marc:hasTextualHoldingsBasicBibliographicUnit")) {
+        newData["@graph"][1].put( "marc:hasTextualHoldingsBasicBibliographicUnit", doc.graph[1]["marc:hasTextualHoldingsBasicBibliographicUnit"] )
+        doc.graph[1].remove("marc:hasTextualHoldingsBasicBibliographicUnit")
+    }
 
     if (doc.graph[1]?.hasComponent) {
         doc.graph[1]?.hasComponent.removeAll { component ->
-            if (component.containsKey("physicalLocation")) {
 
-                if (!newData.containsKey("hasComponent")) {
-                    newData["@graph"][1].put("hasComponent", [])
+            if (component.containsKey("physicalLocation") ) {
+                if (asList(component["physicalLocation"]).any {
+                    it.startsWith("Einar Hansens bibliotek")
+                }) {
+
+                    if (!newData.containsKey("hasComponent")) {
+                        newData["@graph"][1].put("hasComponent", [])
+                    }
+
+                    component["heldBy"]["@id"] = "https://libris.kb.se/library/Ehs"
+                    newData["@graph"][1]["hasComponent"].add(component)
+                    return true
                 }
-
-                component["heldBy"]["@id"] = "https://libris.kb.se/library/Ehs"
-                newData["@graph"][1]["hasComponent"].add(component)
-                return true
             }
             return false
         }
+
+        if (doc.graph[1].hasComponent.isEmpty())
+            doc.graph[1].remove("hasComponent")
     }
 
     def item = create(newData)
     def itemList = [item]
+
+    //if (item.graph[1]["itemOf"]["@id"] == "https://libris-qa.kb.se/l3wkk17x3zft9bw#it")
+    //    System.err.println("NEW BROKEN OUT: " + item.doc.dataAsString)
+
     selectFromIterable(itemList, { newlyCreatedItem ->
-        newlyCreatedItem.scheduleSave(loud: true)
+        newlyCreatedItem.scheduleSave(loud: true) // DO THE OTHER ONE TOO!
 
         //System.err.println("Broke: " + newData)
         //System.err.println("Out of (remains): " + doc.doc.dataAsString)
-
     })
 
 }
