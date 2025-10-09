@@ -121,7 +121,7 @@ void splitToEhs(Object doc) {
 
                 if (it.containsKey("appliesTo")) {
                     if (it["appliesTo"].containsKey("label")) {
-                        if (it["appliesTo"]["label"].startsWith("EHB") || it["appliesTo"]["label"].startsWith("SVB")) {
+                        if (asList(it["appliesTo"]["label"])[0].startsWith("EHB") || asList(it["appliesTo"]["label"])[0].startsWith("SVB")) {
                             if (!newData["@graph"][1].containsKey("marc:hasCopyAndVersionIdentificationNote")) {
                                 newData["@graph"][1].put("marc:hasCopyAndVersionIdentificationNote", [])
                             }
@@ -155,7 +155,7 @@ void splitToEhs(Object doc) {
 
                 if (it.containsKey("appliesTo")) {
                     if (it["appliesTo"].containsKey("label")) {
-                        if (it["appliesTo"]["label"].startsWith("EHB") || it["appliesTo"]["label"].startsWith("SVB")) {
+                        if (asList(it["appliesTo"]["label"])[0].startsWith("EHB") || asList(it["appliesTo"]["label"])[0].startsWith("SVB")) {
                             if (!newData["@graph"][1].containsKey("marc:hasTextualHoldingsBasicBibliographicUnit")) {
                                 newData["@graph"][1].put("marc:hasTextualHoldingsBasicBibliographicUnit", [])
                             }
