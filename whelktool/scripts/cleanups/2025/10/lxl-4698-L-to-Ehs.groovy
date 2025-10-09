@@ -37,7 +37,7 @@ selectBySqlWhere(where) { doc ->
         splitToEhs(doc)
     }
 
-    //if (doc.graph[1]["itemOf"]["@id"] == "https://libris-qa.kb.se/l3wkk17x3zft9bw#it")
+    //if (doc.graph[1]["itemOf"]["@id"] == "https://libris-qa.kb.se/r82qq7w32wh6m7h#it" || doc.graph[1]["itemOf"]["@id"] == "https://libris-qa.kb.se/fxqd0d6r2wrd0rx#it")
     //    System.err.println("REMAINDER: " + doc.doc.dataAsString)
 
     doc.scheduleSave(loud: true) // DO THE OTHER ONE TOO!
@@ -100,20 +100,53 @@ void splitToEhs(Object doc) {
             if (doc.graph[1]["marc:hasBindingInformation"].isEmpty()) {
                 doc.graph[1].remove("marc:hasBindingInformation")
             }
-        } else { // not list
+        } else { // not list (shouldn't exist)
             newData["@graph"][1].put( "marc:hasBindingInformation", doc.graph[1]["marc:hasBindingInformation"] )
             doc.graph[1].remove("marc:hasBindingInformation")
         }
     }
 
     if (doc.graph[1].containsKey("marc:hasCopyAndVersionIdentificationNote")) {
-        newData["@graph"][1].put( "marc:hasCopyAndVersionIdentificationNote", doc.graph[1]["marc:hasCopyAndVersionIdentificationNote"] )
-        doc.graph[1].remove("marc:hasCopyAndVersionIdentificationNote")
+        if (doc.graph[1]["marc:hasCopyAndVersionIdentificationNote"] instanceof List) {
+            doc.graph[1]["marc:hasCopyAndVersionIdentificationNote"].removeAll {
+                if (it.containsKey("marc:itemCondition")) {
+                    if (asList(it["marc:itemCondition"])[0].startsWith("EHB") || asList(it["marc:itemCondition"])[0].startsWith("SVB")) {
+                        if (!newData["@graph"][1].containsKey("marc:hasCopyAndVersionIdentificationNote")) {
+                            newData["@graph"][1].put("marc:hasCopyAndVersionIdentificationNote", [])
+                        }
+                        newData["@graph"][1]["marc:hasCopyAndVersionIdentificationNote"].add(it)
+                        return true
+                    }
+                }
+                return false
+            }
+            if (doc.graph[1]["marc:hasCopyAndVersionIdentificationNote"].isEmpty()) {
+                doc.graph[1].remove("marc:hasCopyAndVersionIdentificationNote")
+            }
+        }
+        //newData["@graph"][1].put( "marc:hasCopyAndVersionIdentificationNote", doc.graph[1]["marc:hasCopyAndVersionIdentificationNote"] )
+        //doc.graph[1].remove("marc:hasCopyAndVersionIdentificationNote")
     }
 
     if (doc.graph[1].containsKey("marc:hasTextualHoldingsBasicBibliographicUnit")) {
-        newData["@graph"][1].put( "marc:hasTextualHoldingsBasicBibliographicUnit", doc.graph[1]["marc:hasTextualHoldingsBasicBibliographicUnit"] )
-        doc.graph[1].remove("marc:hasTextualHoldingsBasicBibliographicUnit")
+
+        if (doc.graph[1]["marc:hasTextualHoldingsBasicBibliographicUnit"] instanceof List) {
+            doc.graph[1]["marc:hasTextualHoldingsBasicBibliographicUnit"].removeAll {
+                if (it.containsKey("marc:textualString")) {
+                    if (asList(it["marc:textualString"])[0].startsWith("EHB") || asList(it["marc:textualString"])[0].startsWith("SVB")) {
+                        if (!newData["@graph"][1].containsKey("marc:hasTextualHoldingsBasicBibliographicUnit")) {
+                            newData["@graph"][1].put("marc:hasTextualHoldingsBasicBibliographicUnit", [])
+                        }
+                        newData["@graph"][1]["marc:hasTextualHoldingsBasicBibliographicUnit"].add(it)
+                        return true
+                    }
+                }
+                return false
+            }
+            if (doc.graph[1]["marc:hasTextualHoldingsBasicBibliographicUnit"].isEmpty()) {
+                doc.graph[1].remove("marc:hasTextualHoldingsBasicBibliographicUnit")
+            }
+        }
     }
 
     if (doc.graph[1]?.hasComponent) {
@@ -143,8 +176,9 @@ void splitToEhs(Object doc) {
     def item = create(newData)
     def itemList = [item]
 
-    //if (item.graph[1]["itemOf"]["@id"] == "https://libris-qa.kb.se/l3wkk17x3zft9bw#it")
+    //if (item.graph[1]["itemOf"]["@id"] == "https://libris-qa.kb.se/r82qq7w32wh6m7h#it" || item.graph[1]["itemOf"]["@id"] == "https://libris-qa.kb.se/fxqd0d6r2wrd0rx#it")
     //    System.err.println("NEW BROKEN OUT: " + item.doc.dataAsString)
+
 
     selectFromIterable(itemList, { newlyCreatedItem ->
         newlyCreatedItem.scheduleSave(loud: true) // DO THE OTHER ONE TOO!
@@ -154,3 +188,4 @@ void splitToEhs(Object doc) {
     })
 
 }
+    
