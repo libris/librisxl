@@ -2,7 +2,6 @@ package whelk.search2.querytree;
 
 import whelk.exception.InvalidQueryException;
 import whelk.search2.Disambiguate;
-import whelk.search2.Filter;
 import whelk.search2.Operator;
 import whelk.search2.Query;
 import whelk.search2.parse.Ast;
@@ -16,19 +15,19 @@ import java.util.Optional;
 
 public class QueryTreeBuilder {
     public static Node buildTree(String queryString, Disambiguate disambiguate) throws InvalidQueryException {
-        return buildTree(getAst(queryString).tree, disambiguate, false, null, null);
+        return buildTree(getAst(queryString).tree, disambiguate, null, null);
     }
 
-    public static Node buildTree(Ast.Node astNode, Disambiguate disambiguate, boolean negate, Path path, Operator operator) throws InvalidQueryException {
+    public static Node buildTree(Ast.Node astNode, Disambiguate disambiguate, Path path, Operator operator) throws InvalidQueryException {
         return switch (astNode) {
-            case Ast.Group g -> buildFromGroup(g, disambiguate, negate, path, operator);
-            case Ast.Not n -> buildFromNot(n, disambiguate, negate, path, operator);
-            case Ast.Leaf l -> buildFromLeaf(l, disambiguate, negate, path, operator);
+            case Ast.Group g -> buildFromGroup(g, disambiguate, path, operator);
+            case Ast.Not n -> buildFromNot(n, disambiguate, path, operator);
+            case Ast.Leaf l -> buildFromLeaf(l, disambiguate, path, operator);
             case Ast.Code c -> {
                 if (path != null) {
                     throw new InvalidQueryException("Codes within code groups are not allowed.");
                 }
-                yield buildFromCode(c, disambiguate, negate);
+                yield buildFromCode(c, disambiguate);
             }
         };
     }
@@ -39,7 +38,7 @@ public class QueryTreeBuilder {
         return new Ast(parseTree);
     }
 
-    private static Node buildFromGroup(Ast.Group group, Disambiguate disambiguate, boolean negate, Path path, Operator operator) throws InvalidQueryException {
+    private static Node buildFromGroup(Ast.Group group, Disambiguate disambiguate, Path path, Operator operator) throws InvalidQueryException {
         List<Node> children = new ArrayList<>();
         List<Token> freeTextTokens = new ArrayList<>();
         int freeTextStartIdx = -1;
@@ -47,19 +46,17 @@ public class QueryTreeBuilder {
         for (int i = 0; i < group.operands().size(); i++) {
             Ast.Node o = group.operands().get(i);
             if (o instanceof Ast.Leaf leaf) {
-                Node node = buildFromLeaf(leaf, disambiguate, negate, path, operator);
-                if (node instanceof FreeText ft) {
-                    freeTextTokens.add(ft.tokens().getFirst());
-                } else if (node instanceof PathValue pv && pv.value() instanceof FreeText ft) {
-                    freeTextTokens.add(ft.tokens().getFirst());
-                } else {
-                    children.add(node);
+                Node node = buildFromLeaf(leaf, disambiguate, path, operator);
+                switch (node) {
+                    case FreeText ft -> freeTextTokens.add(ft.tokens().getFirst());
+                    case PathValue pv when pv.value() instanceof FreeText ft -> freeTextTokens.add(ft.tokens().getFirst());
+                    default -> children.add(node);
                 }
                 if (!freeTextTokens.isEmpty() && freeTextStartIdx == -1) {
                     freeTextStartIdx = i;
                 }
             } else {
-                children.add(buildTree(o, disambiguate, negate, path, operator));
+                children.add(buildTree(o, disambiguate, path, operator));
             }
         }
 
@@ -69,13 +66,8 @@ public class QueryTreeBuilder {
                 case Ast.Or ignored -> Query.Connective.OR;
             };
 
-            Node node;
-            if (path == null) {
-                node = new FreeText(disambiguate.getTextQueryProperty(), negate, freeTextTokens, connective);
-            } else {
-                FreeText freeText = new FreeText(null, false, freeTextTokens, connective);
-                node = new PathValue(path, negate ? operator.getInverse() : operator, freeText);
-            }
+            FreeText freeText = new FreeText(disambiguate.getTextQueryProperty(), freeTextTokens, connective);
+            Node node = path != null ? new PathValue(path, operator, freeText) : freeText;
 
             if (children.isEmpty()) {
                 return node;
@@ -85,29 +77,33 @@ public class QueryTreeBuilder {
         }
 
         return switch (group) {
-            case Ast.And ignored -> negate ? new Or(children) : new And(children);
-            case Ast.Or ignored -> negate ? new And(children) : new Or(children);
+            case Ast.And ignored -> new And(children);
+            case Ast.Or ignored -> new Or(children);
         };
     }
 
-    private static Node buildFromNot(Ast.Not not, Disambiguate disambiguate, boolean negate, Path path, Operator operator) throws InvalidQueryException {
-        return buildTree(not.operand(), disambiguate, !negate, path, operator);
+    private static Node buildFromNot(Ast.Not not, Disambiguate disambiguate, Path path, Operator operator) throws InvalidQueryException {
+        return buildTree(not.operand(), disambiguate, path, operator).getInverse();
     }
 
-    private static Node buildFromLeaf(Ast.Leaf leaf, Disambiguate disambiguate, boolean negate, Path path, Operator operator) throws InvalidQueryException {
+    private static Node buildFromLeaf(Ast.Leaf leaf, Disambiguate disambiguate, Path path, Operator operator) throws InvalidQueryException {
         if (path != null) {
-            return buildPathValue(path, operator, leaf, negate, disambiguate);
+            return buildPathValue(path, operator, leaf, disambiguate);
         }
+
         Lex.Symbol symbol = leaf.value();
-        Optional<Filter.AliasedFilter> filter = disambiguate.mapToFilter(symbol.value());
-        if (filter.isPresent()) {
-            ActiveFilter activeFilter = new ActiveFilter(filter.get().parseAndGet(disambiguate));
-            return negate ? activeFilter.getInverse() : activeFilter;
+
+        Optional<Filter.AliasedFilter> aliasedFilter = disambiguate.mapToFilter(symbol.value());
+        if (aliasedFilter.isPresent()) {
+            var af = aliasedFilter.get();
+            af.parse(disambiguate);
+            return af;
         }
-        return new FreeText(disambiguate.getTextQueryProperty(), negate, getToken(leaf.value()));
+
+        return new FreeText(disambiguate.getTextQueryProperty(), getToken(leaf.value()));
     }
 
-    private static Node buildFromCode(Ast.Code c, Disambiguate disambiguate, boolean negate) throws InvalidQueryException {
+    private static Node buildFromCode(Ast.Code c, Disambiguate disambiguate) throws InvalidQueryException {
         List<Subpath> subpaths = new ArrayList<>();
         int currentOffset = c.code().offset();
         for (String key : c.code().value().split("\\.")) {
@@ -118,15 +114,15 @@ public class QueryTreeBuilder {
 
         Path path = new Path(subpaths, getToken(c.code()));
 
-        return buildTree(c.operand(), disambiguate, negate, path, c.operator());
+        return buildTree(c.operand(), disambiguate, path, c.operator());
     }
 
-    private static PathValue buildPathValue(Path path, Operator operator, Ast.Leaf leaf, boolean negate, Disambiguate disambiguate) {
+    private static PathValue buildPathValue(Path path, Operator operator, Ast.Leaf leaf, Disambiguate disambiguate) {
         Token token = getToken(leaf.value());
         Value value = path.lastProperty()
                 .flatMap(p -> disambiguate.mapValueForProperty(p, token))
                 .orElse(new FreeText(token));
-        return new PathValue(path, negate ? operator.getInverse() : operator, value);
+        return new PathValue(path, operator, value);
     }
 
     private static Token getToken(Lex.Symbol symbol) {

@@ -130,10 +130,10 @@ public class Path {
 
     public Optional<String> getEsNestedStem(EsMappings esMappings) {
         String esPath = jsonForm();
-        if (esMappings.isNestedField(esPath)) {
+        if (esMappings.isNestedTypeField(esPath)) {
             return Optional.of(esPath);
         }
-        return esMappings.getNestedFields().stream().filter(esPath::startsWith).findFirst();
+        return esMappings.getNestedTypeFields().stream().filter(esPath::startsWith).findFirst();
     }
 
     private Optional<Key> getSuffix(Value value) {

@@ -24,7 +24,8 @@
                     "b": 0,
                     "k1": 0
                 }
-            }
+            },
+            "default_pipeline": "extract_4_digits_pipeline"
         },
         "index.query.default_field": "_all",
         "analysis": {
@@ -206,18 +207,6 @@
                     }
                 }
             },
-            "identifiedBy": {
-                "type": "nested",
-                "include_in_parent": true,
-                "properties": {
-                    "@type": {"type": "keyword"},
-                    "value": {
-                        "type": "text",
-                        "analyzer": "isbn_analyzer",
-                        "copy_to": "_all"
-                    }
-                }
-            },
             "hasTitle": {
                 "type": "nested",
                 "include_in_parent": true,
@@ -378,19 +367,32 @@
                 }
             },
             {
+                "4_digits_keyword_template": {
+                    "match": "*_4_digits_keyword",
+                    "mapping": {
+                        "type": "keyword"
+                    }
+                }
+            },
+            {
+                "4_digits_short_template": {
+                    "match": "*_4_digits_short",
+                    "mapping": {
+                        "type": "short"
+                    }
+                }
+            },
+            {
                 "year_template": {
                     "match": ["year", "startYear", "endYear"],
                     "mapping": {
                         "fields": {
                             "keyword": {
-                                "index": true,
                                 "type": "keyword"
                             }
                         },
-                        "analyzer": "numeric_extractor",
-                        "index": true,
+                        "analyzer": "standard",
                         "type": "text",
-                        "fielddata": true,
                         "copy_to": "_all"
                     }
                 }
@@ -401,6 +403,28 @@
                     "mapping": {
                         "type": "nested",
                         "include_in_parent": true
+                    }
+                }
+            },
+            {
+                "identifiedBy_template": {
+                    "path_match": ["identifiedBy", "@reverse.instanceOf.identifiedBy"],
+                    "mapping": {
+                        "type": "nested",
+                        "include_in_parent": true,
+                        "properties": {
+                            "@type": {"type": "keyword"},
+                            "value": {
+                                "type": "text",
+                                "fields": {
+                                    "keyword": {
+                                        "type": "keyword"
+                                    }
+                                },
+                                "analyzer": "isbn_analyzer",
+                                "copy_to": "_all"
+                            }
+                        }
                     }
                 }
             },

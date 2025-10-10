@@ -18,6 +18,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static whelk.search2.QueryParams.ApiParams.CUSTOM_SITE_FILTER;
 import static whelk.search2.QueryParams.ApiParams.OBJECT;
 import static whelk.search2.QueryParams.ApiParams.OFFSET;
 import static whelk.search2.QueryParams.ApiParams.PREDICATES;
@@ -60,7 +61,7 @@ public class QueryUtil {
     }
 
     public static String makeViewFindUrl(String q, QueryParams queryParams) {
-        return makeFindUrl(q, queryParams.getCustomParamsMap(List.of(SORT, OBJECT, PREDICATES)), null);
+        return makeFindUrl(q, queryParams.getCustomParamsMap(List.of(CUSTOM_SITE_FILTER, SORT, OBJECT, PREDICATES)), null);
     }
 
     public static String makeFindUrl(QueryTree qt, QueryParams queryParams) {

@@ -160,7 +160,7 @@ public class SuggestQuery extends Query {
                     // Make a query with the currently edited token treated as prefix to get suggestions
                     // Also make a non-prefix query to get a higher relevancy score for exact matches
                     Or or = new Or(List.of(pv.withValue(unquote.apply(prefixFt)), pv.withValue(unquote.apply(ft))));
-                    return queryTree.replace(ft, or);
+                    return queryTree.replace(pv, or);
                 }
 
                 this.propertySearch = true;

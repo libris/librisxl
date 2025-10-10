@@ -6,22 +6,21 @@ import org.eclipse.jetty.ee8.servlet.DefaultServlet;
 import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import org.eclipse.jetty.server.AsyncRequestLogWriter;
-import org.eclipse.jetty.server.NetworkConnectionLimit;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.ForwardedRequestCustomizer;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.NetworkConnectionLimit;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.util.thread.ExecutorThreadPool;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.TimeZone;
-import java.util.concurrent.ArrayBlockingQueue;
 
 public abstract class XlServer {
     private final static Logger log = LogManager.getLogger(XlServer.class);
@@ -43,9 +42,7 @@ public abstract class XlServer {
     // TODO: review this...
     protected Server createServer() {
         int maxConnections = Configuration.getMaxConnections();
-        var queue = new ArrayBlockingQueue<Runnable>(maxConnections);
-        var pool = new ExecutorThreadPool(maxConnections, maxConnections, queue);
-
+        var pool = new QueuedThreadPool(maxConnections, maxConnections);
         var server = new Server(pool);
 
         int port = Configuration.getHttpPort();

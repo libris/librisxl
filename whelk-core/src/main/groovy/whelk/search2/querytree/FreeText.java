@@ -19,26 +19,23 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static whelk.search2.Operator.NOT_EQUALS;
 import static whelk.search2.Query.Connective.AND;
 import static whelk.search2.Query.Connective.OR;
 import static whelk.search2.QueryUtil.isQuoted;
 import static whelk.search2.QueryUtil.isSimple;
 import static whelk.search2.QueryUtil.makeUpLink;
-import static whelk.search2.QueryUtil.mustNotWrap;
 import static whelk.search2.QueryUtil.parenthesize;
 import static whelk.search2.QueryUtil.quote;
 import static whelk.search2.QueryUtil.shouldWrap;
 import static whelk.search2.Operator.EQUALS;
 
-public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token> tokens,
-                       Query.Connective connective) implements Node, Value {
-    public FreeText(Property.TextQuery textQuery, boolean negate, Token token) {
-        this(textQuery, negate, List.of(token), AND);
+public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.Connective connective) implements Node, Value {
+    public FreeText(Property.TextQuery textQuery, Token token) {
+        this(textQuery, List.of(token), AND);
     }
 
     public FreeText(Token token) {
-        this(null, false, token);
+        this(null, token);
     }
 
     public FreeText(String s) {
@@ -63,17 +60,15 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
     public Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("property", textQuery != null ? textQuery.definition() : Map.of());
-        m.put(negate ? NOT_EQUALS.termKey : EQUALS.termKey, queryForm());
+        m.put(EQUALS.termKey, queryForm());
         m.put("up", makeUpLink(qt, this, queryParams));
         return m;
     }
 
     @Override
     public String toQueryString(boolean topLevel) {
-        String s = isMultiToken() && (negate || (!topLevel && connective.equals(OR)))
-                ? parenthesize(joinTokens())
-                : joinTokens();
-        return negate ? "NOT " + s : s;
+        String s = joinTokens();
+        return isMultiToken() && !topLevel && connective == OR ? parenthesize(s) : s;
     }
 
     @Override
@@ -88,7 +83,7 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
 
     @Override
     public Node getInverse() {
-        return new FreeText(textQuery, !negate, tokens, connective);
+        return new Not(this);
     }
 
     @Override
@@ -117,7 +112,7 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
     }
 
     public FreeText withTokens(List<Token> tokens) {
-        return new FreeText(textQuery, negate, tokens, connective);
+        return new FreeText(textQuery, tokens, connective);
     }
 
     private String joinTokens() {
@@ -148,7 +143,7 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
         String queryString = s;
 
         if (boostSettings.fields().isEmpty()) {
-            return wrap(buildSimpleQuery(queryMode, queryString, boostSettings));
+            return buildSimpleQuery(queryMode, queryString, boostSettings);
         }
 
         var queries = buildQueries(queryMode, queryString, boostSettings);
@@ -161,11 +156,7 @@ public record FreeText(Property.TextQuery textQuery, boolean negate, List<Token>
             }
         }
 
-        return wrap(queries.size() == 1 ? queries.getFirst() : shouldWrap(queries));
-    }
-
-    private Map<String, Object> wrap(Map<String, Object> query) {
-        return negate ? mustNotWrap(query) : query;
+        return queries.size() == 1 ? queries.getFirst() : shouldWrap(queries);
     }
 
     private List<Map<String, Object>> buildQueries(String queryMode, String queryString, ESSettings.Boost.FieldBoost boostSettings) {

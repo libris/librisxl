@@ -3,16 +3,7 @@ package whelk.search2;
 import groovy.transform.PackageScope;
 import whelk.JsonLd;
 import whelk.search.QueryDateTime;
-import whelk.search2.querytree.DateTime;
-import whelk.search2.querytree.InvalidValue;
-import whelk.search2.querytree.Key;
-import whelk.search2.querytree.Link;
-import whelk.search2.querytree.Numeric;
-import whelk.search2.querytree.Property;
-import whelk.search2.querytree.Subpath;
-import whelk.search2.querytree.Token;
-import whelk.search2.querytree.Value;
-import whelk.search2.querytree.VocabTerm;
+import whelk.search2.querytree.*;
 
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -126,7 +117,11 @@ public class Disambiguate {
             reverseLinks.totalItemsByRelation.instanceOf>1 wouldn't work due to the value 1 not being typed as Numeric
             and by extension the query wouldn't pass as a valid range query.
             */
-            return Optional.of(new Numeric(Integer.parseInt(value), token));
+            try {
+                return Optional.of(new Numeric(Long.parseLong(value), token));
+            } catch (NumberFormatException ignored) {
+                return Optional.empty();
+            }
         }
         return Optional.empty();
     }
