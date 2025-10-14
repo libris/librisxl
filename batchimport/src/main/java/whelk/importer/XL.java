@@ -191,6 +191,7 @@ class XL
                         List<String> thingIDs = existing.getThingIdentifiers();
                         String controlNumber = existing.getControlNumber();
                         List<Tuple> typedIDs = existing.getTypedRecordIdentifiers();
+                        String descriptionCreator = existing.getDescriptionCreator();
                         List<String> systemNumbers = new ArrayList<>();
                         for (Tuple tuple : typedIDs)
                             if (tuple.get(0).equals("SystemNumber"))
@@ -214,6 +215,8 @@ class XL
                             existing.addTypedRecordIdentifier("SystemNumber", systemNumber);
                         if (controlNumber != null)
                             existing.setControlNumber(controlNumber);
+                        if (descriptionCreator != null)
+                            existing.setDescriptionCreator(descriptionCreator);
                         for (Map<String, String> imageEntity : images)
                             existing.addImage( imageEntity.get("@id") );
 
@@ -325,6 +328,7 @@ class XL
                         List<String> thingIDs = doc.getThingIdentifiers();
                         String controlNumber = doc.getControlNumber();
                         List<Tuple> typedIDs = doc.getTypedRecordIdentifiers();
+                        String descriptionCreator = doc.getDescriptionCreator();
                         List<String> systemNumbers = new ArrayList<>();
                         for (Tuple tuple : typedIDs)
                             if (tuple.get(0).equals("SystemNumber"))
@@ -344,6 +348,8 @@ class XL
                             doc.addTypedRecordIdentifier("SystemNumber", systemNumber);
                         if (controlNumber != null)
                             doc.setControlNumber(controlNumber);
+                        if (descriptionCreator != null)
+                            doc.setDescriptionCreator(descriptionCreator);
                         for (Map<String, String> imageEntity : images)
                             doc.addImage( imageEntity.get("@id") );
                     });
@@ -476,7 +482,7 @@ class XL
     {
         Set<String> duplicateIDs = new HashSet<>();
 
-        // Perform an temporary conversion to use for duplicate checking. This conversion will
+        // Perform a temporary conversion to use for duplicate checking. This conversion will
         // then be discarded. The real conversion cannot take place until any duplicates are
         // found (because the correct ID needs to be known when converting). Chicken and egg problem.
         Document rdfDoc = convertToRDF(marcRecord, IdGenerator.generate());
