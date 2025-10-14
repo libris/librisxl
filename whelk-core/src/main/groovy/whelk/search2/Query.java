@@ -1,5 +1,6 @@
 package whelk.search2;
 
+import com.google.common.base.Predicates;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
@@ -513,7 +514,19 @@ public class Query {
                 observation.add(bucket.count(), bucket.subAggregations());
             }
 
-            public List<Map<String, Object>> getObservations(AppParams.Slice slice) {
+            private Predicate<Map.Entry<String, Observation>> narrower(Value parentValue) {
+                return (Map.Entry<String, Observation> entry) -> {
+                    if (//entry.getValue().object.value() instanceof Link narrower
+                        JsonLd.looksLikeIri(entry.getKey())
+                            && parentValue instanceof Link broader) {
+                        var narrower = entry.getKey();
+                        return whelk.getRelations().isImpliedBy(broader.iri(), narrower);
+                    }
+                    return true;
+                };
+            }
+
+            public List<Map<String, Object>> getObservations(AppParams.Slice slice, Value parentValue) {
                 if (buckets == null) {
                    return Collections.emptyList();
                 }
@@ -530,9 +543,9 @@ public class Query {
                         ? queryTree.remove(selectedFilters.getRangeSelected(propertyKey))
                         : queryTree;
 
-                Map<PathValue, Integer> newBuckets = new LinkedHashMap<>();
                 this.buckets.entrySet()
                         .stream()
+                        .filter(parentValue != null ? narrower(parentValue) : Predicates.alwaysTrue())
                         .sorted(Map.Entry.comparingByValue(Comparator.comparing(Observation::count).reversed()))
                         .limit(slice.size())
                         .forEach(entry -> {
@@ -562,7 +575,7 @@ public class Query {
                                     observation.put("_selected", isSelected);
                                 }
                                 if (o.subSlices != null) {
-                                    observation.put("sliceByDimension", o.subSlices.getSliceByDimension(appParams.statsRepr, selectedFilters));
+                                    observation.put("sliceByDimension", o.subSlices.getSliceByDimension(appParams.statsRepr, selectedFilters, v));
                                 }
 
                                 observations.add(observation);
@@ -612,6 +625,7 @@ public class Query {
 
             }
 
+
             void add(QueryResult.Aggregation aggregation) {
                 if (slices == null) {
                     slices = new HashMap<>();
@@ -630,6 +644,10 @@ public class Query {
             }
 
             public Map<String, Object> getSliceByDimension(AppParams.StatsRepr statsRepr, SelectedFilters selectedFilters) {
+                return getSliceByDimension(statsRepr, selectedFilters, null);
+            }
+
+            public Map<String, Object> getSliceByDimension(AppParams.StatsRepr statsRepr, SelectedFilters selectedFilters, Value parentValue) {
                 Map<String, Object> result = new LinkedHashMap<>();
 
                 statsRepr.sliceList().forEach(slice -> {
@@ -648,7 +666,7 @@ public class Query {
                     }
 
                     var sliceNode = new LinkedHashMap<>();
-                    var observations = mySlice.getObservations(slice);
+                    var observations = mySlice.getObservations(slice, parentValue);
                     if (!observations.isEmpty()) {
                         if (selectedFilters.isRangeFilter(propertyKey)) {
                             sliceNode.put("search", getRangeTemplate(propertyKey));
@@ -674,7 +692,7 @@ public class Query {
             r.add(getQueryResult().aggs);
             return r;
         }
-        
+
         private Map<String, Object> getRangeTemplate(String propertyKey) {
             FreeText placeholderNode = new FreeText(String.format("{?%s}", propertyKey));
             String templateQueryString = queryTree.remove(selectedFilters.getSelected(propertyKey))
