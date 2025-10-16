@@ -339,8 +339,6 @@ public class Query {
                             Map.of("field", JsonLd.TYPE_KEY)));
         }
 
-        EsMappings esMappings = esSettings.mappings();
-
         Map<String, List<Node>> multiSelected = selectedFilters.getAllMultiSelected();
 
         Map<String, Object> query = new LinkedHashMap<>();
@@ -375,24 +373,27 @@ public class Query {
             throw new RuntimeException("Can't handle combined fields in aggs query");
         }
 
-        new Path(property).expand(ctx.jsonLd)
-                .getAltPaths(ctx.jsonLd, ctx.rulingTypes)
-                .forEach(path -> {
-                    String jsonPath = path.jsonForm();
-                    String field = ctx.esSettings.mappings().hasFourDigitsKeywordField(jsonPath)
-                            ? String.format("%s%s", jsonPath, FOUR_DIGITS_KEYWORD_SUFFIX)
-                            : (ctx.esSettings.mappings().hasKeywordSubfield(jsonPath) ? String.format("%s.%s", jsonPath, KEYWORD) : jsonPath);
-                    Map<String, Object> aggs = path.getEsNestedStem(ctx.esSettings.mappings())
-                            .map(nestedStem -> buildNestedAggQuery(field, slice, nestedStem, ctx))
-                            .orElse(buildCoreAqqQuery(field, slice, ctx));
-                    Map<String, List<Node>> mSelected = ctx.selectedFilters.isMultiSelectable(pKey)
-                            ? new HashMap<>(ctx.multiSelected) {{
-                        remove(pKey);
-                    }}
-                            : ctx.multiSelected;
-                    Map<String, Object> filter = getEsMultiSelectedFilters(mSelected, ctx.rulingTypes, ctx.jsonLd, ctx.esSettings);
-                    query.put(field, filterWrap(aggs, property.name(), filter));
-                });
+        var p = new Path(property).expand(ctx.jsonLd);
+        var paths = property instanceof Property.Ix // TODO for now exclude altPaths for _categoryByCollection
+                ? List.of(p)
+                : p.getAltPaths(ctx.jsonLd, ctx.rulingTypes);
+
+        paths.forEach(path -> {
+            String jsonPath = path.jsonForm();
+            String field = ctx.esSettings.mappings().hasFourDigitsKeywordField(jsonPath)
+                    ? String.format("%s%s", jsonPath, FOUR_DIGITS_KEYWORD_SUFFIX)
+                    : (ctx.esSettings.mappings().hasKeywordSubfield(jsonPath) ? String.format("%s.%s", jsonPath, KEYWORD) : jsonPath);
+            Map<String, Object> aggs = path.getEsNestedStem(ctx.esSettings.mappings())
+                    .map(nestedStem -> buildNestedAggQuery(field, slice, nestedStem, ctx))
+                    .orElse(buildCoreAqqQuery(field, slice, ctx));
+            Map<String, List<Node>> mSelected = ctx.selectedFilters.isMultiSelectable(pKey)
+                    ? new HashMap<>(ctx.multiSelected) {{
+                remove(pKey);
+            }}
+                    : ctx.multiSelected;
+            Map<String, Object> filter = getEsMultiSelectedFilters(mSelected, ctx.rulingTypes, ctx.jsonLd, ctx.esSettings);
+            query.put(field, filterWrap(aggs, property.name(), filter));
+        });
     }
     
     private static Map<String, Object> buildCoreAqqQuery(String field, AppParams.Slice slice, AggContext ctx) {
@@ -464,7 +465,7 @@ public class Query {
         }
 
         private Map<String, Object> build() {
-            var sliceByDimension = collectBuckets2().getSliceByDimension(appParams.statsRepr, selectedFilters);
+            var sliceByDimension = collectBuckets2().getSliceByDimension(appParams.statsRepr.sliceList(), selectedFilters);
             var boolFilters = getBoolFilters();
             var predicates = predicateLinks();
             return Map.of(JsonLd.ID_KEY, "#stats",
@@ -574,8 +575,8 @@ public class Query {
                                 if (connective == Connective.OR) {
                                     observation.put("_selected", isSelected);
                                 }
-                                if (o.subSlices != null) {
-                                    observation.put("sliceByDimension", o.subSlices.getSliceByDimension(appParams.statsRepr, selectedFilters, v));
+                                if (o.subSlices != null && slice.subSlice() != null) {
+                                    observation.put("sliceByDimension", o.subSlices.getSliceByDimension(List.of(slice.subSlice()), selectedFilters, v));
                                 }
 
                                 observations.add(observation);
@@ -643,14 +644,14 @@ public class Query {
                 }
             }
 
-            public Map<String, Object> getSliceByDimension(AppParams.StatsRepr statsRepr, SelectedFilters selectedFilters) {
-                return getSliceByDimension(statsRepr, selectedFilters, null);
+            public Map<String, Object> getSliceByDimension(List<AppParams.Slice> sliceSpecs, SelectedFilters selectedFilters) {
+                return getSliceByDimension(sliceSpecs, selectedFilters, null);
             }
 
-            public Map<String, Object> getSliceByDimension(AppParams.StatsRepr statsRepr, SelectedFilters selectedFilters, Value parentValue) {
+            public Map<String, Object> getSliceByDimension(List<AppParams.Slice> sliceSpecs, SelectedFilters selectedFilters, Value parentValue) {
                 Map<String, Object> result = new LinkedHashMap<>();
 
-                statsRepr.sliceList().forEach(slice -> {
+                sliceSpecs.forEach(slice -> {
                     // FIXME
                     var property = slice.getProperty(Query.this.whelk.getJsonld());
                     var propertyKey = property.name();
