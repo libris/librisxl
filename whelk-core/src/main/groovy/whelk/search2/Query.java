@@ -547,6 +547,7 @@ public class Query {
 
                 this.buckets.entrySet()
                         .stream()
+                        // TODO only do this for nested aggs of the same property etc etc
                         .filter(parentValue != null ? isNarrower(parentValue) : Predicates.alwaysTrue())
                         .sorted(Map.Entry.comparingByValue(Comparator.comparing(Observation::count).reversed()))
                         .limit(slice.size())
