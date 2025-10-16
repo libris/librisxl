@@ -112,7 +112,7 @@ public class QueryResult {
 
             var buckets = ((List<?>) agg.get("buckets")).stream()
                     .map(Map.class::cast)
-                    .map(b -> new Bucket((String) b.get("key"), (Integer) b.get("doc_count")))
+                    .map(b -> new Bucket(String.valueOf(b.get("key")), (Integer) b.get("doc_count")))
                     .toList();
 
             aggregations.add(new Aggregation(property, path, buckets));

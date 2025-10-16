@@ -167,7 +167,7 @@ class ElasticSearch {
 	Map getMappings() {
         Map response
         try {
-            response = mapper.readValue(client.performRequest('GET', "/${indexName}/_mappings", ''), Map)
+            response = client.performRequest('GET', "/${indexName}/_mappings", '')
         } catch (UnexpectedHttpStatusException e) {
             log.warn("Got unexpected status code ${e.statusCode} when getting ES mappings: ${e.message}", e)
             return [:]
@@ -191,7 +191,7 @@ class ElasticSearch {
     Map getSettings() {
         Map response
         try {
-            response = mapper.readValue(client.performRequest('GET', "/${indexName}/_settings", ''), Map)
+            response = client.performRequest('GET', "/${indexName}/_settings", '')
         } catch (UnexpectedHttpStatusException e) {
             log.warn("Got unexpected status code ${e.statusCode} when getting ES settings: ${e.message}", e)
             return [:]
@@ -210,7 +210,7 @@ class ElasticSearch {
     int getFieldCount() {
         Map response
         try {
-            response = mapper.readValue(client.performRequest('GET', "/${indexName}/_field_caps?fields=*", ''), Map)
+            response = client.performRequest('GET', "/${indexName}/_field_caps?fields=*", '')
         } catch (Exception e) {
             log.warn("Error getting fields from ES: $e", e)
             return -1
@@ -264,8 +264,7 @@ class ElasticSearch {
             }
 
             if (bulkString) {
-                String response = bulkClient.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE)
-                Map responseMap = mapper.readValue(response, Map)
+                Map responseMap = bulkClient.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE)
                 int numFailedDueToDocError = 0
                 int numFailedDueToESError = 0
                 if (responseMap.errors) {
@@ -322,12 +321,11 @@ class ElasticSearch {
         // The justification for this uncomfortable catch-all, is that an index-failure must raise an alert (log entry)
         // _internally_ but be otherwise invisible to clients (If postgres writing was ok, the save is considered ok).
         try {
-            String response = client.performRequest(
+            Map responseMap = client.performRequest(
                     'PUT',
                     "/${indexName}/_doc/${toElasticId(doc.getShortId())}",
                     getShapeForIndex(doc, whelk))
             if (log.isDebugEnabled()) {
-                Map responseMap = mapper.readValue(response, Map)
                 log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/_doc/${responseMap['_id']} as version ${responseMap['_version']}")
             }
         } catch (Exception e) {
@@ -392,11 +390,10 @@ class ElasticSearch {
         }
         def dsl = ["query":["term":["_id":toElasticId(identifier)]]]
         try {
-            def response = client.performRequest('POST',
+            Map responseMap = client.performRequest('POST',
                     "/${indexName}/_delete_by_query",
                     JsonOutput.toJson(dsl))
 
-            Map responseMap = mapper.readValue(response, Map)
             if (log.isDebugEnabled()) {
                 log.debug("Response: ${responseMap.deleted} of ${responseMap.total} objects deleted")
             }
@@ -718,12 +715,10 @@ class ElasticSearch {
     private Map performQuery(String json, String queryUrl) {
         try {
             def start = System.currentTimeMillis()
-            String responseBody = client.performRequest('POST',
+            Map responseMap = client.performRequest('POST',
                     queryUrl,
                     json)
-
             def duration = System.currentTimeMillis() - start
-            Map responseMap = mapper.readValue(responseBody, Map)
 
             if (duration >= ES_LOG_MIN_DURATION) {
                 log.info("ES query took ${duration} (${responseMap.took} server-side)")
@@ -769,7 +764,7 @@ class ElasticSearch {
     
     private Map performRequest(String method, String path, Map body = null) {
         try {
-            return mapper.readValue(client.performRequest(method, path, body ? JsonOutput.toJson(body) : null), Map)    
+            return client.performRequest(method, path, body ? JsonOutput.toJson(body) : null)
         }
         catch (UnexpectedHttpStatusException e) {
             tryMapAndThrow(e)

@@ -34,16 +34,19 @@ class PathValueSpec extends Specification {
 
         expect:
         searchMapping == [
-                'property' : [
-                        'propertyChainAxiom': [
-                                ['@id': 'p1', '@type': 'DatatypeProperty'],
-                                ['@id': 'p2', '@type': 'ObjectProperty', 'librisQueryCode': 'P2']
-                        ]
+                'not': [
+                        'property' : [
+                                'propertyChainAxiom': [
+                                        ['@id': 'p1', '@type': 'DatatypeProperty'],
+                                        ['@id': 'p2', '@type': 'ObjectProperty', 'librisQueryCode': 'P2']
+                                ]
+                        ],
+                        'equals': ['@id': 'E1', '@type': 'Class'],
+                        'up'       : ['@id': '/find?_q=*'],
+                        '_key'     : 'p1.p2',
+                        '_value'   : 'E1'
                 ],
-                'notEquals': ['@id': 'E1', '@type': 'Class'],
-                'up'       : ['@id': '/find?_q=*'],
-                '_key'     : 'p1.p2',
-                '_value'   : 'E1'
+                'up': ['@id': '/find?_q=*']
         ]
     }
 
@@ -90,11 +93,11 @@ class PathValueSpec extends Specification {
 
     def "To ES query (negation + nested field)"() {
         given:
-        PathValue pathValue = (PathValue) QueryTreeBuilder.buildTree("NOT p3:\"https://id.kb.se/x\"", disambiguate)
+        var tree = QueryTreeBuilder.buildTree("NOT p3:\"https://id.kb.se/x\"", disambiguate)
         ESSettings esSettings = new ESSettings(esMappings, new ESSettings.Boost([:]))
 
         expect:
-        pathValue.toEs(esSettings) == [
+        tree.toEs(esSettings) == [
                 "bool": [
                         "must_not": [
                                 "nested": [

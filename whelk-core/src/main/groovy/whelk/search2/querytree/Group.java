@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 
 import static whelk.search2.QueryUtil.boolWrap;
 import static whelk.search2.QueryUtil.makeUpLink;
+import static whelk.search2.QueryUtil.mustWrap;
 import static whelk.search2.QueryUtil.nestedWrap;
 
 
@@ -46,7 +47,7 @@ public sealed abstract class Group implements Node permits And, Or {
 
     @Override
     public Map<String, Object> toEs(ESSettings esSettings) {
-        Map<String, List<PathValue>> nestedGroups = getNestedGroups(esSettings.mappings());
+        Map<String, List<Node>> nestedGroups = getNestedGroups(esSettings.mappings());
         return nestedGroups.isEmpty() ? wrap(childrenToEs(esSettings)) : toEsNested(nestedGroups, esSettings);
     }
 
@@ -136,26 +137,13 @@ public sealed abstract class Group implements Node permits And, Or {
         return reduced.size() == 1 ? reduced.getFirst() : newInstance(reduced);
     }
 
-    // TODO: Review/refine nested logic and proper tests
-    private Map<String, Object> toEsNested(Map<String, List<PathValue>> nestedGroups, ESSettings esSettings) {
+    private Map<String, Object> toEsNested(Map<String, List<Node>> nestedGroups, ESSettings esSettings) {
         List<Map<String, Object>> esChildren = new ArrayList<>();
         List<Node> nonNested = new ArrayList<>(children());
 
         nestedGroups.forEach((nestedStem, group) -> {
-            var bool = new HashMap<String, Object>();
-            group.stream().collect(Collectors.groupingBy(pv -> pv.operator().equals(Operator.NOT_EQUALS)))
-                    .forEach((k, v) -> {
-                        boolean isGroup = v.size() > 1;
-                        boolean isNegatedGroup = k && isGroup;
-                        if (isNegatedGroup) {
-                            var es = v.stream().map(pv -> pv.withOperator(Operator.EQUALS).getCoreEsQuery(esSettings)).toList();
-                            bool.put("must_not", nestedWrap(nestedStem, wrap(es)));
-                        } else {
-                            var es = v.stream().map(pv -> pv.getCoreEsQuery(esSettings)).toList();
-                            bool.put("must", nestedWrap(nestedStem, isGroup ? wrap(es) : es.getFirst()));
-                        }
-                    });
-            esChildren.add(boolWrap(bool));
+            var es = nestedWrap(nestedStem, wrap(group.stream().map(n -> toCoreEsQuery(n, esSettings)).toList()));
+            esChildren.add(es);
             nonNested.removeAll(group);
         });
 
@@ -166,33 +154,47 @@ public sealed abstract class Group implements Node permits And, Or {
         return esChildren.size() == 1 ? esChildren.getFirst() : wrap(esChildren);
     }
 
-    // TODO: Review/refine nested logic and proper tests
-    private Map<String, List<PathValue>> getNestedGroups(EsMappings esMappings) {
-        Map<String, List<PathValue>> nestedGroups = new HashMap<>();
-        children().stream()
-                .filter(PathValue.class::isInstance)
-                .map(PathValue.class::cast)
-                .collect(Collectors.groupingBy(pv -> pv.path().getEsNestedStem(esMappings),
-                        Collectors.groupingBy(pv -> pv.path().jsonForm()))
-                )
-                .forEach((nestedStem, groupedByPath) -> {
+    private Map<String, List<Node>> getNestedGroups(EsMappings esMappings) {
+        Map<String, List<Node>> nestedGroups = new HashMap<>();
+
+        children().stream().collect(Collectors.groupingBy(node -> getEsNestedStem(node, esMappings)))
+                .forEach((nestedStem, group) -> {
                     // At least two different paths sharing the same nested stem
-                    if (nestedStem.isPresent() && groupedByPath.size() > 1) {
-                        // Don't group if the same path is repeated
-                        if (groupedByPath.values().stream().noneMatch(l -> l.size() > 1)) {
-                            List<PathValue> group = groupedByPath.values()
-                                    .stream()
-                                    .flatMap(List::stream)
-                                    .toList();
-                            nestedGroups.put(nestedStem.get(), group);
-                        }
+                    if (nestedStem.isPresent() && group.size() > 1) {
+                        nestedGroups.put(nestedStem.get(), group);
                     }
                 });
+
         return nestedGroups;
+    }
+
+    private Optional<String> getEsNestedStem(Node node, EsMappings esMappings) {
+        if (node instanceof PathValue pv) {
+            return pv.path().getEsNestedStem(esMappings);
+        }
+        if (node instanceof Group g) {
+            var groupedByNestedStem = g.children().stream().collect(Collectors.groupingBy(n -> getEsNestedStem(n, esMappings)));
+            if (groupedByNestedStem.size() == 1) {
+                return groupedByNestedStem.keySet().iterator().next();
+            }
+        }
+        return Optional.empty();
+    }
+
+    private Map<String, Object> toCoreEsQuery(Node node, ESSettings esSettings) {
+        return switch (node) {
+            case PathValue pv -> pv.getCoreEsQuery(esSettings);
+            case Group g -> g.wrap(g.childrenToCoreEs(esSettings));
+            default -> node.toEs(esSettings);
+        };
     }
 
     private List<Map<String, Object>> childrenToEs(ESSettings esSettings) {
         return mapToMap(n -> n.toEs(esSettings));
+    }
+
+    private List<Map<String, Object>> childrenToCoreEs(ESSettings esSettings) {
+        return mapToMap(n -> toCoreEsQuery(n, esSettings));
     }
 
     private List<Node> mapToNode(Function<Node, Node> mapper) {
