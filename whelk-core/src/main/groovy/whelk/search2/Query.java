@@ -465,7 +465,7 @@ public class Query {
         }
 
         private Map<String, Object> build() {
-            var sliceByDimension = collectBuckets2().getSliceByDimension(appParams.statsRepr.sliceList(), selectedFilters);
+            var sliceByDimension = collectBuckets().getSliceByDimension(appParams.statsRepr.sliceList(), selectedFilters);
             var boolFilters = getBoolFilters();
             var predicates = predicateLinks();
             return Map.of(JsonLd.ID_KEY, "#stats",
@@ -688,7 +688,7 @@ public class Query {
         // TODO: Decide how to handle properties that can appear at both instance and work level.
         //  Probably not the best idea to just add the counts together like we do now, since it's both inconvenient
         //  and not guaranteed to produce a correct number.
-        private SliceListResult collectBuckets2() {
+        private SliceListResult collectBuckets() {
             var r = new SliceListResult();
             r.add(getQueryResult().aggs);
             return r;
