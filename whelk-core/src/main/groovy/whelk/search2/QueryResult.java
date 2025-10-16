@@ -115,16 +115,21 @@ public class QueryResult {
                     .map(b -> new Bucket(
                             String.valueOf(b.get("key")),
                             (Integer) b.get("doc_count"),
-                            collectAggResult(aggsMap(b))))
+                            subAggs(b)))
                     .toList();
-
             aggregations.add(new Aggregation(property, path, buckets));
         }
 
         return aggregations;
     }
 
-    private static Map<String, Object> aggsMap(Map<?, ?> bucketMap) {
+    private static List<Aggregation> subAggs(Map<?, ?> bucket) {
+        return bucket.size() > 2
+            ? collectAggResult(toSubAggsMap(bucket))
+            : null;
+    }
+
+    private static Map<String, Object> toSubAggsMap(Map<?, ?> bucketMap) {
         return castToStringObjectMap(bucketMap).entrySet().stream()
                 .filter(e -> !"key".equals(e.getKey()))
                 .filter(e -> !"doc_count".equals(e.getKey()))
