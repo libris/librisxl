@@ -328,6 +328,12 @@ public class Query {
         return framedThing;
     }
 
+    private record AggContext(JsonLd jsonLd,
+                              Map<String, List<Node>> multiSelected,
+                              Collection<String> rulingTypes,
+                              ESSettings esSettings,
+                              SelectedFilters selectedFilters) { }
+
     private static Map<String, Object> buildAggQuery(List<AppParams.Slice> sliceList,
                                                      JsonLd jsonLd,
                                                      Collection<String> rulingTypes,
@@ -343,18 +349,13 @@ public class Query {
 
         Map<String, Object> query = new LinkedHashMap<>();
 
+        var ctx = new AggContext(jsonLd, multiSelected, rulingTypes, esSettings, selectedFilters);
         for (AppParams.Slice slice : sliceList) {
-            addSliceToAggQuery(query, slice, new AggContext(jsonLd, multiSelected, rulingTypes, esSettings, selectedFilters));
+            addSliceToAggQuery(query, slice, ctx);
         }
 
         return query;
     }
-
-    private record AggContext(JsonLd jsonLd,
-                              Map<String, List<Node>> multiSelected,
-                              Collection<String> rulingTypes,
-                              ESSettings esSettings,
-                              SelectedFilters selectedFilters) { }
 
     private static void addSliceToAggQuery(Map<String, Object> query,
                                            AppParams.Slice slice,
