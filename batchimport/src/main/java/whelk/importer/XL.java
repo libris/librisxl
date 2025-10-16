@@ -42,7 +42,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
-import groovy.json.StringEscapeUtils; // Not fun, relying on Groovy. Adding a dependency on Apache Commons may be worse though. Making own implementations are frowned upon :(
 
 import static whelk.util.Jackson.mapper;
 
@@ -824,7 +823,7 @@ class XL
         String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,0,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"SystemNumber\", \"value\": \"" + StringEscapeUtils.escapeJavaScript(systemNumber) + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, "[{\"@type\": \"SystemNumber\", \"value\": \"" + escapeJsonStr(systemNumber) + "\"}]", java.sql.Types.OTHER);
 
         return statement;
     }
@@ -836,7 +835,7 @@ class XL
             String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
             PreparedStatement statement = connection.prepareStatement(query);
 
-            statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + StringEscapeUtils.escapeJavaScript(isbn) + "\"}]", java.sql.Types.OTHER);
+            statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + escapeJsonStr(isbn) + "\"}]", java.sql.Types.OTHER);
 
             return statement;
         } catch (SQLException se)
@@ -851,7 +850,7 @@ class XL
         String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"ISSN\", \"value\": \"" + StringEscapeUtils.escapeJavaScript(issn) + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, "[{\"@type\": \"ISSN\", \"value\": \"" + escapeJsonStr(issn) + "\"}]", java.sql.Types.OTHER);
 
         return statement;
     }
@@ -863,7 +862,7 @@ class XL
             String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,indirectlyIdentifiedBy}' @> ?";
             PreparedStatement statement = connection.prepareStatement(query);
 
-            statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + StringEscapeUtils.escapeJavaScript(isbn) + "\"}]", java.sql.Types.OTHER);
+            statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + escapeJsonStr(isbn) + "\"}]", java.sql.Types.OTHER);
 
             return statement;
         } catch (SQLException se)
@@ -878,8 +877,8 @@ class XL
         String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND ( data#>'{@graph,1,identifiedBy}' @> ? OR data#>'{@graph,1,identifiedBy}' @> ?)";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"ISSN\", \"marc:canceledIssn\": [\"" + StringEscapeUtils.escapeJavaScript(issn) + "\"]}]", java.sql.Types.OTHER);
-        statement.setObject(2, "[{\"@type\": \"ISSN\", \"marc:canceledIssn\": \"" + StringEscapeUtils.escapeJavaScript(issn) + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, "[{\"@type\": \"ISSN\", \"marc:canceledIssn\": [\"" + escapeJsonStr(issn) + "\"]}]", java.sql.Types.OTHER);
+        statement.setObject(2, "[{\"@type\": \"ISSN\", \"marc:canceledIssn\": \"" + escapeJsonStr(issn) + "\"}]", java.sql.Types.OTHER);
 
         return statement;
     }
@@ -890,7 +889,7 @@ class XL
         String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"EAN\", \"value\": \"" + StringEscapeUtils.escapeJavaScript(ean) + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, "[{\"@type\": \"EAN\", \"value\": \"" + escapeJsonStr(ean) + "\"}]", java.sql.Types.OTHER);
 
         return statement;
     }
@@ -901,7 +900,7 @@ class XL
         String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"URI\", \"value\": \"" + StringEscapeUtils.escapeJavaScript(uri) + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, "[{\"@type\": \"URI\", \"value\": \"" + escapeJsonStr(uri) + "\"}]", java.sql.Types.OTHER);
 
         return statement;
     }
@@ -912,9 +911,17 @@ class XL
         String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"URN\", \"value\": \"" + StringEscapeUtils.escapeJavaScript(urn) + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, "[{\"@type\": \"URN\", \"value\": \"" + escapeJsonStr(urn) + "\"}]", java.sql.Types.OTHER);
 
         return statement;
+    }
+
+    private static String escapeJsonStr(String s) {
+        try {
+            return mapper.writeValueAsString(s);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private PreparedStatement getOnHeldByHoldingFor_ps(Connection connection, String heldBy, String holdingForId)
