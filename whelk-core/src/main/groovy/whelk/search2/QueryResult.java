@@ -38,7 +38,6 @@ public class QueryResult {
 
     public final List<Aggregation> aggs;
     public final List<Bucket> pAggs;
-    public final Map<String,Object> esAggs;
     public final List<Spell.Suggestion> spell;
 
     private final List<EsItem> esItems;
@@ -50,7 +49,6 @@ public class QueryResult {
         this.numHits = getNumHits(mainQueryResponse);
         this.esItems = collectEsItems(mainQueryResponse);
         this.aggs = collectAggResult(getAggregations(mainQueryResponse));
-        this.esAggs = getAggregations(mainQueryResponse);
         this.spell = Spell.collectSuggestions(mainQueryResponse);
         this.pAggs = collectPAggResult(getPAggregations(mainQueryResponse, getSecondaryResponse(esResponse)));
     }
