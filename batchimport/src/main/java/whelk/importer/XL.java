@@ -15,6 +15,7 @@ import se.kb.libris.utils.isbn.IsbnException;
 import se.kb.libris.utils.isbn.IsbnParser;
 import whelk.Document;
 import whelk.IdGenerator;
+import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.component.PostgreSQLComponent;
 import whelk.converter.MarcJSONConverter;
@@ -42,7 +43,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
-import groovy.json.StringEscapeUtils; // Not fun, relying on Groovy. Adding a dependency on Apache Commons may be worse though. Making own implementations are frowned upon :(
 
 import static whelk.util.Jackson.mapper;
 
@@ -824,7 +824,7 @@ class XL
         String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,0,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"SystemNumber\", \"value\": \"" + StringEscapeUtils.escapeJavaScript(systemNumber) + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, identifiedByJson("SystemNumber", systemNumber), java.sql.Types.OTHER);
 
         return statement;
     }
@@ -836,7 +836,7 @@ class XL
             String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
             PreparedStatement statement = connection.prepareStatement(query);
 
-            statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + StringEscapeUtils.escapeJavaScript(isbn) + "\"}]", java.sql.Types.OTHER);
+            statement.setObject(1, identifiedByJson("ISBN", isbn), java.sql.Types.OTHER);
 
             return statement;
         } catch (SQLException se)
@@ -851,7 +851,7 @@ class XL
         String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"ISSN\", \"value\": \"" + StringEscapeUtils.escapeJavaScript(issn) + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, identifiedByJson("ISSN", issn), java.sql.Types.OTHER);
 
         return statement;
     }
@@ -863,7 +863,7 @@ class XL
             String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,indirectlyIdentifiedBy}' @> ?";
             PreparedStatement statement = connection.prepareStatement(query);
 
-            statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + StringEscapeUtils.escapeJavaScript(isbn) + "\"}]", java.sql.Types.OTHER);
+            statement.setObject(1, identifiedByJson("ISBN", isbn), java.sql.Types.OTHER);
 
             return statement;
         } catch (SQLException se)
@@ -878,8 +878,11 @@ class XL
         String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND ( data#>'{@graph,1,identifiedBy}' @> ? OR data#>'{@graph,1,identifiedBy}' @> ?)";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"ISSN\", \"marc:canceledIssn\": [\"" + StringEscapeUtils.escapeJavaScript(issn) + "\"]}]", java.sql.Types.OTHER);
-        statement.setObject(2, "[{\"@type\": \"ISSN\", \"marc:canceledIssn\": \"" + StringEscapeUtils.escapeJavaScript(issn) + "\"}]", java.sql.Types.OTHER);
+        var json1 = toJson(List.of(Map.of(JsonLd.TYPE_KEY, "ISSN", "marc:canceledIssn", List.of(issn))));
+        var json2 = toJson(List.of(Map.of(JsonLd.TYPE_KEY, "ISSN", "marc:canceledIssn", issn)));
+
+        statement.setObject(1, json1, java.sql.Types.OTHER);
+        statement.setObject(2, json2, java.sql.Types.OTHER);
 
         return statement;
     }
@@ -890,7 +893,7 @@ class XL
         String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"EAN\", \"value\": \"" + StringEscapeUtils.escapeJavaScript(ean) + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, identifiedByJson("EAN", ean), java.sql.Types.OTHER);
 
         return statement;
     }
@@ -901,7 +904,7 @@ class XL
         String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"URI\", \"value\": \"" + StringEscapeUtils.escapeJavaScript(uri) + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, identifiedByJson("URI", uri), java.sql.Types.OTHER);
 
         return statement;
     }
@@ -912,9 +915,29 @@ class XL
         String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"URN\", \"value\": \"" + StringEscapeUtils.escapeJavaScript(urn) + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, identifiedByJson("URN", urn), java.sql.Types.OTHER);
 
         return statement;
+    }
+
+    private static String identifiedByJson(String type, String value) {
+        return toJson(
+                List.of(
+                        Map.of(
+                                JsonLd.TYPE_KEY, type,
+                                "value", value
+                        )
+                )
+        );
+    }
+
+    private static String toJson(Object o) {
+        try {
+            return mapper.writeValueAsString(o);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private PreparedStatement getOnHeldByHoldingFor_ps(Connection connection, String heldBy, String holdingForId)
