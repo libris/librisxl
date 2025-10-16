@@ -515,7 +515,7 @@ public class Query {
                 observation.add(bucket.count(), bucket.subAggregations());
             }
 
-            private Predicate<Map.Entry<String, Observation>> narrower(Value parentValue) {
+            private Predicate<Map.Entry<String, Observation>> isNarrower(Value parentValue) {
                 return (Map.Entry<String, Observation> entry) -> {
                     if (//entry.getValue().object.value() instanceof Link narrower
                         JsonLd.looksLikeIri(entry.getKey())
@@ -546,7 +546,7 @@ public class Query {
 
                 this.buckets.entrySet()
                         .stream()
-                        .filter(parentValue != null ? narrower(parentValue) : Predicates.alwaysTrue())
+                        .filter(parentValue != null ? isNarrower(parentValue) : Predicates.alwaysTrue())
                         .sorted(Map.Entry.comparingByValue(Comparator.comparing(Observation::count).reversed()))
                         .limit(slice.size())
                         .forEach(entry -> {
@@ -620,7 +620,7 @@ public class Query {
         }
 
         class SliceListResult {
-            Map<String, SliceResult> slices;
+            Map<String, SliceResult> sliceResults;
 
             public SliceListResult () {
 
@@ -628,13 +628,13 @@ public class Query {
 
 
             void add(QueryResult.Aggregation aggregation) {
-                if (slices == null) {
-                    slices = new HashMap<>();
+                if (sliceResults == null) {
+                    sliceResults = new HashMap<>();
                 }
 
-                var slice = slices.computeIfAbsent(aggregation.property(), x -> new SliceResult());
+                var sliceResult = sliceResults.computeIfAbsent(aggregation.property(), x -> new SliceResult());
                 for (var bucket : aggregation.buckets()) {
-                    slice.add(bucket);
+                    sliceResult.add(bucket);
                 }
             }
 
@@ -644,14 +644,14 @@ public class Query {
                 }
             }
 
-            public Map<String, Object> getSliceByDimension(List<AppParams.Slice> sliceSpecs, SelectedFilters selectedFilters) {
-                return getSliceByDimension(sliceSpecs, selectedFilters, null);
+            public Map<String, Object> getSliceByDimension(List<AppParams.Slice> slices, SelectedFilters selectedFilters) {
+                return getSliceByDimension(slices, selectedFilters, null);
             }
 
-            public Map<String, Object> getSliceByDimension(List<AppParams.Slice> sliceSpecs, SelectedFilters selectedFilters, Value parentValue) {
+            public Map<String, Object> getSliceByDimension(List<AppParams.Slice> slices, SelectedFilters selectedFilters, Value parentValue) {
                 Map<String, Object> result = new LinkedHashMap<>();
 
-                sliceSpecs.forEach(slice -> {
+                slices.forEach(slice -> {
                     // FIXME
                     var property = slice.getProperty(Query.this.whelk.getJsonld());
                     var propertyKey = property.name();
@@ -660,14 +660,14 @@ public class Query {
                         return;
                     }
 
-                    var mySlice = slices.get(propertyKey);
-                    if (mySlice == null) {
+                    var sliceResult = sliceResults.get(propertyKey);
+                    if (sliceResult == null) {
                         // FIXME ????
                         return;
                     }
 
                     var sliceNode = new LinkedHashMap<>();
-                    var observations = mySlice.getObservations(slice, parentValue);
+                    var observations = sliceResult.getObservations(slice, parentValue);
                     if (!observations.isEmpty()) {
                         if (selectedFilters.isRangeFilter(propertyKey)) {
                             sliceNode.put("search", getRangeTemplate(propertyKey));
