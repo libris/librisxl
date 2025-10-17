@@ -191,10 +191,12 @@ class TestData {
 
     static def getAppParams() {
         def appConfig = [
-                '_statsRepr': [
-                        'rdf:type': [:],
-                        'p2'      : [:],
-                        'p6'      : [:]
+                'statistics': [
+                        'sliceList': [
+                            [ 'dimensionChain' : ['rdf:type']],
+                            [ 'dimensionChain' : ['p2']],
+                            [ 'dimensionChain' : ['p6']],
+                        ]
                 ]
         ]
         return new AppParams(appConfig, new QueryParams([:]))
