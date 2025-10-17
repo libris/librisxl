@@ -60,9 +60,7 @@ public class SearchUtils2 {
         Map<String, Object> config = new LinkedHashMap<>();
 
         Optional.ofNullable((Map<?, ?>) findDesc.get("statistics"))
-                .map(s -> (List<?>) s.get("sliceList"))
-                .map(SearchUtils2::buildStatsReprFromSliceSpec)
-                .ifPresent(statsRepr -> config.put("_statsRepr", statsRepr));
+                .ifPresent(s -> config.put("statistics", s));
 
         Stream.of("filterAliases", "defaultSiteFilters", "optionalSiteFilters", "relationFilters")
                 .forEach(key ->
@@ -71,33 +69,5 @@ public class SearchUtils2 {
                 );
 
         return config;
-    }
-
-    private static Map<String, Object> buildStatsReprFromSliceSpec(List<?> sliceList) {
-        Map<String, Object> statsRepr = new LinkedHashMap<>();
-        for (var s : sliceList) {
-            var slice = ((Map<?, ?>) s);
-            var chain = ((List<?>) slice.get("dimensionChain")).stream().map(String::valueOf).toList();
-            String key = String.join(".", chain);
-            int limit = (Integer) slice.get("itemLimit");
-            Boolean range = (Boolean) slice.get("range");
-            String connective = (String) slice.get("connective");
-            var m = new HashMap<>();
-            m.put("sort", "count");
-            m.put("sortOrder", "desc");
-            m.put("size", limit);
-            if (range != null) {
-                m.put("range", range);
-            }
-            if (connective != null) {
-                m.put("connective", connective);
-            }
-            if (slice.containsKey("slice")) {
-                m.put("slice", buildStatsReprFromSliceSpec(List.of(slice.get("slice"))));
-            }
-
-            statsRepr.put(key, m);
-        }
-        return statsRepr;
     }
 }
