@@ -125,7 +125,8 @@ task(appRun, dependsOn: "classes", type: JavaExec) {
             'xl.secret.properties': System.getProperty("xl.secret.properties"),
             'xl.logRoot': System.getProperty("xl.logRoot", "./logs"),
             'xl.http.port': System.getProperty("xl.http.port", "8180"),
-            'xl.test.rewriteSparqlResultIds': System.getProperty("xl.test.rewriteSparqlResultIds", "false")
+            'xl.test.rewriteSparqlResultIds': System.getProperty("xl.test.rewriteSparqlResultIds", "false"),
+            'xl.test.apps.jsonld': System.getProperty("xl.test.apps.jsonld")
     )
     args(System.getProperty("args", "").split() as String[])
 
