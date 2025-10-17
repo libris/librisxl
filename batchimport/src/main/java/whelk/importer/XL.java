@@ -817,7 +817,7 @@ class XL
         String query = "SELECT id FROM lddb WHERE deleted = false AND data#>'{@graph,0,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"SystemNumber\", \"value\": \"" + escapeJsonStr(systemNumber) + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, "[{\"@type\": \"SystemNumber\", \"value\": " + escapeJsonStr(systemNumber) + "}]", java.sql.Types.OTHER);
 
         return statement;
     }
@@ -829,7 +829,7 @@ class XL
             String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
             PreparedStatement statement = connection.prepareStatement(query);
 
-            statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + escapeJsonStr(isbn) + "\"}]", java.sql.Types.OTHER);
+            statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": " + escapeJsonStr(isbn) + "}]", java.sql.Types.OTHER);
 
             return statement;
         } catch (SQLException se)
@@ -844,7 +844,7 @@ class XL
         String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"ISSN\", \"value\": \"" + escapeJsonStr(issn) + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, "[{\"@type\": \"ISSN\", \"value\": " + escapeJsonStr(issn) + "}]", java.sql.Types.OTHER);
 
         return statement;
     }
@@ -856,7 +856,7 @@ class XL
             String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,indirectlyIdentifiedBy}' @> ?";
             PreparedStatement statement = connection.prepareStatement(query);
 
-            statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + escapeJsonStr(isbn) + "\"}]", java.sql.Types.OTHER);
+            statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": " + escapeJsonStr(isbn) + "}]", java.sql.Types.OTHER);
 
             return statement;
         } catch (SQLException se)
@@ -871,8 +871,8 @@ class XL
         String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND ( data#>'{@graph,1,identifiedBy}' @> ? OR data#>'{@graph,1,identifiedBy}' @> ?)";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"ISSN\", \"marc:canceledIssn\": [\"" + escapeJsonStr(issn) + "\"]}]", java.sql.Types.OTHER);
-        statement.setObject(2, "[{\"@type\": \"ISSN\", \"marc:canceledIssn\": \"" + escapeJsonStr(issn) + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, "[{\"@type\": \"ISSN\", \"marc:canceledIssn\": [" + escapeJsonStr(issn) + "]}]", java.sql.Types.OTHER);
+        statement.setObject(2, "[{\"@type\": \"ISSN\", \"marc:canceledIssn\": " + escapeJsonStr(issn) + "}]", java.sql.Types.OTHER);
 
         return statement;
     }
@@ -883,7 +883,7 @@ class XL
         String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"EAN\", \"value\": \"" + escapeJsonStr(ean) + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, "[{\"@type\": \"EAN\", \"value\": " + escapeJsonStr(ean) + "}]", java.sql.Types.OTHER);
 
         return statement;
     }
@@ -894,7 +894,7 @@ class XL
         String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"URI\", \"value\": \"" + escapeJsonStr(uri) + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, "[{\"@type\": \"URI\", \"value\": " + escapeJsonStr(uri) + "}]", java.sql.Types.OTHER);
 
         return statement;
     }
@@ -905,7 +905,7 @@ class XL
         String query = "SELECT id FROM lddb WHERE collection = 'bib' AND deleted = false AND data#>'{@graph,1,identifiedBy}' @> ?";
         PreparedStatement statement =  connection.prepareStatement(query);
 
-        statement.setObject(1, "[{\"@type\": \"URN\", \"value\": \"" + escapeJsonStr(urn) + "\"}]", java.sql.Types.OTHER);
+        statement.setObject(1, "[{\"@type\": \"URN\", \"value\": " + escapeJsonStr(urn) + "}]", java.sql.Types.OTHER);
 
         return statement;
     }
