@@ -63,7 +63,16 @@ class SiteSearch {
     }
 
     protected Map getAndIndexDescription(String id) {
-        var data = whelk.loadData(id)
+        var data;
+
+        var appsOverride = System.getProperty("xl.test.apps.jsonld")
+        if (appsOverride) {
+            log.info("Using {} for {}", appsOverride, id);
+            data = mapper.readValue(new File(appsOverride).getText(), Map);
+        } else {
+            data = whelk.loadData(id)
+        }
+
         if (data) {
             var desc = findInData(data, id)
             if (desc) {
