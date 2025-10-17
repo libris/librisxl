@@ -92,7 +92,7 @@ public class SelectedFilters {
     }
 
     private void init(QueryTree queryTree, AppParams appParams) {
-        for (AppParams.Slice slice : appParams.statsRepr.sliceList()) {
+        for (AppParams.Slice slice : appParams.sliceList) {
             String pKey = slice.propertyKey();
 
             if (slice.isRange()) {

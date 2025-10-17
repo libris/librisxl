@@ -169,7 +169,7 @@ public class Query {
     }
 
     protected Map<String, Object> getEsAggQuery(Collection<String> rulingTypes) {
-        return buildAggQuery(appParams.statsRepr.sliceList(), whelk.getJsonld(), rulingTypes, esSettings, selectedFilters);
+        return buildAggQuery(appParams.sliceList, whelk.getJsonld(), rulingTypes, esSettings, selectedFilters);
     }
 
     protected Map<String, Object> getPostFilter(Collection<String> rulingTypes) {
@@ -466,7 +466,7 @@ public class Query {
         }
 
         private Map<String, Object> build() {
-            var sliceByDimension = collectBuckets().getSliceByDimension(appParams.statsRepr.sliceList(), selectedFilters);
+            var sliceByDimension = collectBuckets().getSliceByDimension(appParams.sliceList, selectedFilters);
             var boolFilters = getBoolFilters();
             var predicates = predicateLinks();
             return Map.of(JsonLd.ID_KEY, "#stats",
