@@ -498,7 +498,7 @@ class ElasticSearch {
             searchCard[CARD_STR] = whelk.fresnelUtil.applyLens(framedFull, Lenses.CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
             searchCard[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(framedFull, Lenses.SEARCH_CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
         } catch (Exception e) {
-            log.error(e, e)
+            log.error("Couldn't create search fields for {}: {}", document.shortId, e, e)
         }
 
         searchCard['_ids'] = (thingIds + document.getRecordIdentifiers())
