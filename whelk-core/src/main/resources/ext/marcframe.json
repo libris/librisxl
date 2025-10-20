@@ -306,13 +306,12 @@
       "[6]": {
         "aboutEntity": "?work",
         "tokenMap": "TypeOfRecordType",
-        "addLink": "category",
-        "uriTemplate": "https://id.kb.se/ktg/{_}"
+        "property": "@type"
       },
       "[7]": {
-        "aboutEntity": "?work",
+        "aboutEntity": "?thing",
         "tokenMap": "BibLevelType",
-        "property": "@type"
+        "property": "issuanceType"
       },
       "[8]": {
         "NOTE": "Type of control - # - No specified type (was marc:typeOfControl marc:TypeOfControlType-{_})",
@@ -368,9 +367,10 @@
             "encodingLevel": "marc:FullLevel",
             "mainEntity": {
               "@type": "Instance",
-              "issuanceType": "Monograph",
-              "@id": "http://libris.kb.se/resource/bib/0000000",
-              "instanceOf": {"@type": "Text"}
+              "instanceOf": {
+                "@type": "Text"
+              },
+              "issuanceType" : "Monograph"
             }
           }
         },
@@ -389,15 +389,9 @@
               "@type": "Instance",
               "@id": "http://libris.kb.se/resource/bib/0000000",
               "instanceOf": {
-                "@type": "Serial",
-                "contentType": [
-                  {
-                    "@id": "https://id.kb.se/term/rda/content/text",
-                    "@type": "ContentType",
-                    "label": "text"
-                  }
-                ]
-              }
+                "@type": "Text"
+              },
+              "issuanceType" : "Serial"
             }
           }
         },
@@ -567,9 +561,11 @@
             "encodingLevel": "marc:FullLevel",
             "mainEntity": {
               "@type": "Instance",
-              "issuanceType": "Monograph",
               "@id": "http://libris.kb.se/resource/bib/0000000",
-              "instanceOf": {"@type": "Audio"}
+              "instanceOf": {
+                "@type": "Audio"
+              },
+              "issuanceType" : "Monograph"
             }
           }
         },
@@ -661,7 +657,7 @@
                   "mainTitle": "The encyclopedia mythica"
                 }
               ],
-              "carrierType": [{"@id": "https://id.kb.se/marc/ComputerMaterialType-r"}],
+              "category": [{"@id": "https://id.kb.se/marc/ComputerMaterialType-r"}],
               "@id": "http://libris.kb.se/resource/bib/0000000",
               "instanceOf": {"@type": "Multimedia"}
             }
@@ -1226,7 +1222,7 @@
                 "hasPart": [
                   {
                     "@type": "Text",
-                    "genreForm": [
+                    "category": [
                       {"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"}
                     ]
                   }
@@ -1247,7 +1243,7 @@
                 "hasPart": [
                   {
                     "@type": "ManuscriptText",
-                    "genreForm": [
+                    "category": [
                       {"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"}
                     ]
                   }
@@ -1452,7 +1448,7 @@
             "encodingLevel": "marc:FullLevel",
             "mainEntity": {
               "issuanceType": "Monograph",
-              "carrierType": [{ "@id": "https://id.kb.se/marc/BooksItemType-r" }],
+              "category": [{ "@id": "https://id.kb.se/marc/BooksItemType-r" }],
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "country": [{ "@id": "https://id.kb.se/country/sw" }],
@@ -1461,7 +1457,7 @@
               },
               "instanceOf": {
                 "@type": "Text",
-                "genreForm": [{ "@id": "https://id.kb.se/marc/BooksContentsType-e" }],
+                "category": [{ "@id": "https://id.kb.se/marc/BooksContentsType-e" }],
                 "hasPart": [
                   {
                     "@type": "Text"
@@ -1487,7 +1483,7 @@
             "encodingLevel": "marc:FullLevel",
             "mainEntity": {
               "issuanceType": "Monograph",
-              "carrierType": [{ "@id": "https://id.kb.se/marc/BooksItemType-r" }],
+              "category": [{ "@id": "https://id.kb.se/marc/BooksItemType-r" }],
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "country": [{ "@id": "https://id.kb.se/country/sw" }],
@@ -1496,11 +1492,11 @@
               },
               "instanceOf": {
                 "@type": "Text",
-                "genreForm": [{ "@id": "https://id.kb.se/marc/BooksContentsType-e" }],
+                "category": [{ "@id": "https://id.kb.se/marc/BooksContentsType-e" }],
                 "hasPart": [
                   {
                     "@type": "Multimedia",
-                    "genreForm": [{ "@id": "https://id.kb.se/marc/ComputerTypeOfFileType-j" }]
+                    "category": [{ "@id": "https://id.kb.se/marc/ComputerTypeOfFileType-j" }]
                   }
                 ]
               }
@@ -1549,7 +1545,6 @@
         "embedded": true
       },
       "[0]": {
-        "aboutEntity": "?thing",
         "tokenMap": {
           "a": "Map",
           "c": "Electronic",
@@ -1567,8 +1562,7 @@
           "v": "VideoRecording",
           "z": null
         },
-        "addLink": "category",
-        "uriTemplate": "https://id.kb.se/ktg/{_}",
+        "property": "@type",
         "reverseTokenMapOverrides": {
           "NOTE": "N.B. Should not set to '|' unless all other pos are set to '|'. When all pos are set to '|' no 007 will be created by revert.",
           "Print": "|"
@@ -2119,7 +2113,7 @@
             "mainEntity": {
               "@type": "Map",
               "colorContent": [{"@id": "https://id.kb.se/marc/MapColorType-a"}],
-              "genreForm": [{"@id": "https://id.kb.se/marc/MapMaterialType-j"}],
+              "category": [{"@id": "https://id.kb.se/marc/MapMaterialType-j"}],
               "baseMaterial": [{"@id": "https://id.kb.se/marc/MapMediumType-i"}]
             }
           }
@@ -2132,7 +2126,7 @@
             "mainEntity": {
               "@type": "Map",
               "colorContent": [{"@id": "https://id.kb.se/marc/MapColorType-c"}],
-              "genreForm": [{"@id": "https://id.kb.se/marc/MapMaterialType-d"}],
+              "category": [{"@id": "https://id.kb.se/marc/MapMaterialType-d"}],
               "baseMaterial": [{"@id": "https://id.kb.se/marc/MapMediumType-a"}]
             }
           }
@@ -2150,12 +2144,12 @@
           "result": {
             "mainEntity": {
               "@type": "Map",
-              "genreForm": [{"@id": "https://id.kb.se/marc/MapMaterialType-j"}],
+              "category": [{"@id": "https://id.kb.se/marc/MapMaterialType-j"}],
               "baseMaterial": [{"@id": "https://id.kb.se/marc/MapMediumType-a"}],
               "hasPart": [
                 {
                   "@type": "Electronic",
-                  "carrierType": [{"@id": "https://id.kb.se/marc/ComputerMaterialType-j"}],
+                  "category": [{"@id": "https://id.kb.se/marc/ComputerMaterialType-j"}],
                   "marc:fileFormats": {"@id": "https://id.kb.se/marc/ComputerFileFormatsType-a"}
                 }
               ]
@@ -2169,7 +2163,7 @@
           "result": {
             "mainEntity": {
               "@type": "Electronic",
-              "carrierType": [{"@id": "https://id.kb.se/marc/ComputerMaterialType-r"}]
+              "category": [{"@id": "https://id.kb.se/marc/ComputerMaterialType-r"}]
             }
           }
         },
@@ -2180,7 +2174,7 @@
           "result": {
             "mainEntity": {
               "@type": "Electronic",
-              "carrierType": [{"@id": "https://id.kb.se/marc/ComputerMaterialType-o"}],
+              "category": [{"@id": "https://id.kb.se/marc/ComputerMaterialType-o"}],
               "hasDimensions": {"@id": "https://id.kb.se/marc/ComputerDimensionsType-g"},
               "digitalCharacteristic": {"@type": "ImageBitDepth", "value": "008"},
               "marc:qATarget": {"@id": "https://id.kb.se/marc/ComputerQATargetType-p"}
@@ -2195,7 +2189,7 @@
             "mainEntity": {
               "@type": "Globe",
               "colorContent": [{"@id": "https://id.kb.se/marc/MapColorType-a"}],
-              "genreForm": [{"@id": "https://id.kb.se/marc/GlobeMaterialType-c"}],
+              "category": [{"@id": "https://id.kb.se/marc/GlobeMaterialType-c"}],
               "baseMaterial": [{"@id": "https://id.kb.se/marc/GlobeMediumType-i"}]
             }
           }
@@ -2207,7 +2201,7 @@
           "result": {
             "mainEntity": {
               "@type": "Tactile",
-              "carrierType": [{"@id": "https://id.kb.se/marc/TacMaterialType-b"}]
+              "category": [{"@id": "https://id.kb.se/marc/TacMaterialType-b"}]
             }
           }
         },
@@ -2218,7 +2212,7 @@
           "result": {
             "mainEntity": {
               "@type": "ProjectedImageInstance",
-              "carrierType": [{"@id": "https://id.kb.se/marc/ProjGraphMaterialType-s"}]
+              "category": [{"@id": "https://id.kb.se/marc/ProjGraphMaterialType-s"}]
             }
           }
         },
@@ -2229,7 +2223,7 @@
           "result": {
             "mainEntity": {
               "@type": "Microform",
-              "carrierType": [{"@id": "https://id.kb.se/marc/MicroformMaterialType-b"}]
+              "category": [{"@id": "https://id.kb.se/marc/MicroformMaterialType-b"}]
             }
           }
         },
@@ -2241,7 +2235,7 @@
             "mainEntity": {
               "@type": "StillImageInstance",
               "baseMaterial": [{"@id": "https://id.kb.se/marc/NonProjectedType-o"}],
-              "genreForm": [{"@id": "https://id.kb.se/marc/NonProjMaterialType-d"}],
+              "category": [{"@id": "https://id.kb.se/marc/NonProjMaterialType-d"}],
               "colorContent": [{"@id": "https://id.kb.se/marc/ColorType-a"}]
             }
           }
@@ -2300,7 +2294,7 @@
           "result": {
             "mainEntity": {
               "@type": "SoundRecording",
-              "carrierType": [{"@id": "https://id.kb.se/marc/SoundMaterialType-d"}]
+              "category": [{"@id": "https://id.kb.se/marc/SoundMaterialType-d"}]
             }
           }
         },
@@ -2311,7 +2305,7 @@
           "result": {
             "mainEntity": {
               "@type": "Print",
-              "carrierType": [{"@id": "https://id.kb.se/marc/TextMaterialType-a"}]
+              "category": [{"@id": "https://id.kb.se/marc/TextMaterialType-a"}]
             }
           }
         },
@@ -2322,7 +2316,7 @@
           "result": {
             "mainEntity": {
               "@type": "VideoRecording",
-              "carrierType": [{"@id": "https://id.kb.se/marc/VideoMaterialType-f"}],
+              "category": [{"@id": "https://id.kb.se/marc/VideoMaterialType-f"}],
               "colorContent": [{"@id": "https://id.kb.se/marc/VideoColorType-c"}],
               "videoCharacteristic": [{"@id": "https://id.kb.se/marc/VideoFormatType-b"}],
               "soundCharacteristic":  [{"@id": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-s"}]
@@ -2484,7 +2478,6 @@
         "[33]": {
           "aboutEntity": "?work",
           "addLink": "category",
-          "resourceType": "GenreForm",
           "uriTemplate": "https://id.kb.se/marc/BooksLiteraryFormType-{_}",
           "matchUriToken": "^[01cdefhijmps]$",
           "NOTE:lcMarc2bfCodeMap": "litform",
@@ -2804,7 +2797,7 @@
               "instanceOf": {
                 "@type": "Text",
                 "language": [{"@id": "https://id.kb.se/language/swe"}],
-                "genreForm": [{"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"},
+                "category": [{"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"},
                               {"@id": "https://id.kb.se/marc/BooksBiographyType-a"}
                 ]
               }
@@ -2835,7 +2828,7 @@
               },
               "instanceOf": {
                 "@type": "Text",
-                "genreForm": [{ "@id" : "https://id.kb.se/marc/SerialsTypeOfSerialType-p" }]
+                "category": [{ "@id" : "https://id.kb.se/marc/SerialsTypeOfSerialType-p" }]
               }
             }
           }
@@ -2869,7 +2862,7 @@
               "marc:typeOfEntry" : {"@id" : "https://id.kb.se/marc/SerialsTypeOfEntryType-0"},
               "instanceOf": {
                 "@type": "Text",
-                "genreForm": [
+                "category": [
                   {"@id": "https://id.kb.se/marc/SerialsNatureType-y"}
                 ]
               }
@@ -2897,7 +2890,7 @@
               },
               "instanceOf": {
                 "@type": "Text",
-                "genreForm": [{ "@id" : "https://id.kb.se/marc/SerialsTypeOfSerialType-p" }]
+                "category": [{ "@id" : "https://id.kb.se/marc/SerialsTypeOfSerialType-p" }]
               }
             }
           }
@@ -2920,7 +2913,7 @@
               },
               "instanceOf": {
                 "@type": "Text",
-                "genreForm": [{"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"}],
+                "category": [{"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"}],
                 "language": [{"code": "freeng"}]
               }
             }
@@ -2932,7 +2925,7 @@
             "mainEntity": {
               "instanceOf": {
                 "@type": "Text",
-                "genreForm": [
+                "category": [
                   {
                     "@id": "https://id.kb.se/marc/GovernmentPublicationLevelUndetermined",
                     "@type": "marc:GovernmentPublicationType",
@@ -3004,7 +2997,7 @@
                     "label": "just challenging column itemPos"
                   }
                 ],
-                "genreForm": [{"@id": "https://id.kb.se/marc/BooksContentsType-e"},
+                "category": [{"@id": "https://id.kb.se/marc/BooksContentsType-e"},
                               {"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"},
                               {"@id": "https://id.kb.se/marc/BooksBiographyType-a"}
                 ]
@@ -3028,7 +3021,7 @@
             "encodingLevel": "marc:FullLevel",
             "mainEntity": {
               "issuanceType": "Monograph",
-              "carrierType": [{ "@id": "https://id.kb.se/marc/BooksItemType-r" }],
+              "category": [{ "@id": "https://id.kb.se/marc/BooksItemType-r" }],
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "country": [{ "@id": "https://id.kb.se/country/sw" }],
@@ -3037,7 +3030,7 @@
               },
               "instanceOf": {
                 "@type": "Text",
-                "genreForm": [{ "@id": "https://id.kb.se/marc/BooksContentsType-e" }]
+                "category": [{ "@id": "https://id.kb.se/marc/BooksContentsType-e" }]
               }
             }
           }
@@ -3066,7 +3059,7 @@
               },
               "instanceOf": {
                 "@type": "ManuscriptText",
-                "genreForm": [{ "@id": "https://id.kb.se/marc/BooksContentsType-e" }]
+                "category": [{ "@id": "https://id.kb.se/marc/BooksContentsType-e" }]
               }
             }
           }
@@ -3087,7 +3080,7 @@
             "encodingLevel": "marc:FullLevel",
             "mainEntity": {
               "@type": "Electronic",
-              "carrierType": [{ "@id" : "https://id.kb.se/marc/ComputerMaterialType-o" },{ "@id" : "https://id.kb.se/marc/ComputerItemType-o" }],
+              "category": [{ "@id" : "https://id.kb.se/marc/ComputerMaterialType-o" },{ "@id" : "https://id.kb.se/marc/ComputerItemType-o" }],
               "issuanceType": "Monograph",
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
@@ -3128,7 +3121,7 @@
               "marc:relief": [{ "@id" : "https://id.kb.se/marc/MapsReliefType-b" }],
               "instanceOf": {
                 "@type": "Cartography",
-                "genreForm": [{ "@id" : "https://id.kb.se/marc/MapsMaterialType-a" }]
+                "category": [{ "@id" : "https://id.kb.se/marc/MapsMaterialType-a" }]
               }
             }
           }
@@ -3159,7 +3152,7 @@
               "marc:relief": [{ "@id" : "https://id.kb.se/marc/MapsReliefType-b" }],
               "instanceOf": {
                 "@type": "ManuscriptCartography",
-                "genreForm": [{ "@id" : "https://id.kb.se/marc/MapsMaterialType-a" }]
+                "category": [{ "@id" : "https://id.kb.se/marc/MapsMaterialType-a" }]
               }
             }
           }
@@ -3180,7 +3173,7 @@
             "encodingLevel": "marc:FullLevel",
             "mainEntity": {
               "issuanceType": "Monograph",
-              "carrierType": [{ "@id": "https://id.kb.se/marc/ItemType-f" }],
+              "category": [{ "@id": "https://id.kb.se/marc/ItemType-f" }],
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "country": [{ "@id": "https://id.kb.se/country/sw" }],
@@ -3209,7 +3202,7 @@
             "encodingLevel": "marc:FullLevel",
             "mainEntity": {
               "issuanceType": "Monograph",
-              "carrierType": [{ "@id": "https://id.kb.se/marc/ItemType-r"}],
+              "category": [{ "@id": "https://id.kb.se/marc/ItemType-r"}],
               "marc:primaryProvisionActivity": {
                 "@type": "PrimaryProvisionActivity",
                 "country": [{ "@id": "https://id.kb.se/country/sw" }],
@@ -3218,7 +3211,7 @@
               },
               "instanceOf": {
                 "@type": "NotatedMusic",
-                "genreForm": [{ "@id" : "https://id.kb.se/marc/MusicCompositionType-cr" }],
+                "category": [{ "@id" : "https://id.kb.se/marc/MusicCompositionType-cr" }],
                 "musicFormat": { "@id" : "https://id.kb.se/marc/MusicFormatType-k" },
                 "marc:parts": { "@id" : "https://id.kb.se/marc/MusicPartsType-f" },
                 "intendedAudience": [{ "@id" : "https://id.kb.se/marc/AudienceType-e" }]
@@ -3250,7 +3243,7 @@
               },
               "instanceOf": {
                 "@type": "ManuscriptNotatedMusic",
-                "genreForm": [{ "@id" : "https://id.kb.se/marc/MusicCompositionType-md" }]
+                "category": [{ "@id" : "https://id.kb.se/marc/MusicCompositionType-md" }]
               }
             }
           }
@@ -3279,7 +3272,7 @@
               },
               "instanceOf": {
                 "@type": "Audio",
-                "genreForm": [{ "@id" : "https://id.kb.se/marc/MusicCompositionType-nn" }]
+                "category": [{ "@id" : "https://id.kb.se/marc/MusicCompositionType-nn" }]
               }
             }
           }
@@ -3308,7 +3301,7 @@
               },
               "instanceOf": {
                 "@type": "Music",
-                "genreForm": [{ "@id" : "https://id.kb.se/marc/MusicCompositionType-pp" }]
+                "category": [{ "@id" : "https://id.kb.se/marc/MusicCompositionType-pp" }]
               }
             }
           }
@@ -3334,7 +3327,7 @@
               },
               "instanceOf": {
                 "@type": "Text",
-                "genreForm": [{ "@id" : "https://id.kb.se/marc/SerialsTypeOfSerialType-p" }]
+                "category": [{ "@id" : "https://id.kb.se/marc/SerialsTypeOfSerialType-p" }]
               }
             }
           }
@@ -3364,7 +3357,7 @@
               },
               "instanceOf": {
                 "@type": "MovingImage",
-                "genreForm": [{ "@id" : "https://id.kb.se/marc/VisualMaterialType-m" }]
+                "category": [{ "@id" : "https://id.kb.se/marc/VisualMaterialType-m" }]
               }
             }
           }
@@ -3394,7 +3387,7 @@
               },
               "instanceOf": {
                 "@type": "StillImage",
-                "genreForm": [{ "@id" : "https://id.kb.se/marc/VisualMaterialType-i" }]
+                "category": [{ "@id" : "https://id.kb.se/marc/VisualMaterialType-i" }]
               }
             }
           }
@@ -10050,7 +10043,7 @@
           ],
           "result": {
             "mainEntity": {
-              "carrierType": [
+              "category": [
                 {
                   "@id": "https://id.kb.se/term/rda/carrier/volume",
                   "@type": "CarrierType",
@@ -10059,7 +10052,7 @@
               ],
               "hasPart": [{
                 "@type": "Instance",
-                "carrierType": [
+                "category": [
                   {
                     "@id": "https://id.kb.se/term/rda/carrier/nc",
                     "@type": "CarrierType",
@@ -10076,7 +10069,7 @@
           },
           "result": {
             "mainEntity": {
-                "carrierType": [
+                "category": [
                   {
                     "@id": "https://id.kb.se/term/rda/carrier/nc",
                     "@type": "CarrierType",
@@ -10092,7 +10085,7 @@
           },
           "result": {
             "mainEntity": {
-                "carrierType": [
+                "category": [
                   {
                     "@id": "https://id.kb.se/term/rda/carrier/nc",
                     "@type": "CarrierType",
@@ -10109,7 +10102,7 @@
           },
           "result": {
             "mainEntity": {
-                "carrierType": [
+                "category": [
                   {
                     "@id": "https://id.kb.se/term/rda/carrier/volume",
                     "@type": "CarrierType",
@@ -10125,7 +10118,7 @@
           },
           "result": {
             "mainEntity": {
-                "carrierType": [
+                "category": [
                   {
                     "@type": "CarrierType",
                     "code": "nc",
@@ -10204,7 +10197,7 @@
                   "code": "n"
                 }
               ],
-              "carrierType": [
+              "category": [
                 {
                   "@id": "https://id.kb.se/term/rda/carrier/nc",
                   "@type": "CarrierType",
@@ -10222,7 +10215,7 @@
                       "code": "s"
                     }
                   ],
-                  "carrierType": [
+                  "category": [
                     {
                       "@id": "https://id.kb.se/term/rda/carrier/sd",
                       "@type": "CarrierType",
@@ -10283,7 +10276,7 @@
           "result": {
             "mainEntity": {
               "typeNote": "Textbok",
-              "carrierType": [
+              "category": [
                 {
                   "@id": "https://id.kb.se/term/rda/carrier/nc",
                   "@type": "CarrierType",
@@ -10294,7 +10287,7 @@
                 {
                   "@type": "Instance",
                   "typeNote": "Ljudbok",
-                  "carrierType": [
+                  "category": [
                     {
                       "@id": "https://id.kb.se/term/rda/carrier/sd",
                       "@type": "CarrierType",
@@ -11165,7 +11158,7 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "genreForm": [
+              "category": [
                 {
                   "@type": "GenreForm",
                   "inScheme": {
@@ -11186,7 +11179,7 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "genreForm": [
+              "category": [
                 {
                   "@type": "GenreForm",
                   "prefLabel": "Operas"
@@ -15382,7 +15375,7 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "genreForm": [
+              "category": [
                 {
                   "@type": "GenreForm",
                   "@id": "https://id.kb.se/term/saogf/Deckare",
@@ -15407,7 +15400,7 @@
             {"a": "E-böcker"}
           ]}},
           "result": {"mainEntity": {
-            "genreForm": [
+            "category": [
               {
                 "@type": "GenreForm",
                 "prefLabel": "E-böcker"
@@ -15421,7 +15414,7 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "genreForm": [
+              "category": [
                 {
                   "@type": "GenreForm",
                   "@id": "https://id.kb.se/term/barngf/Deckare",
@@ -15442,7 +15435,7 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "genreForm": [
+              "category": [
                 {
                   "@type": "GenreForm",
                   "@id": "https://id.kb.se/term/gmgpc%2F%2Fswe/Postkartor",
@@ -15468,7 +15461,7 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "genreForm": [
+              "category": [
                 {
                   "@id" : "https://id.kb.se/term/gmgpc%2F%2Fswe/Trafiklinjekartor--Sverige--1930-talet",
                   "@type": "ComplexSubject",
@@ -15502,7 +15495,7 @@
           "TODO:EmptyInd2-result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "genreForm": [
+              "category": [
                 {
                   "@type": "GenreForm",
                   "@id": "hhttp://id.loc.gov/authorities/genreForms/gf2014026203.html",
@@ -15539,7 +15532,7 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "genreForm": [
+              "category": [
                 {
                   "@id": "https://id.kb.se/term/saogf/K%C3%A4rleksskildringar",
                   "@type": "GenreForm",
@@ -15548,7 +15541,7 @@
                 }
               ]
             },
-            "genreForm": [
+            "category": [
               {
                 "@type": "GenreForm",
                 "prefLabel": "E-böcker"
@@ -15570,7 +15563,7 @@
           "result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
-              "genreForm": [
+              "category": [
                 {
                   "@id": "https://id.kb.se/term/saogf/K%C3%A4rleksskildringar",
                   "@type": "GenreForm",
@@ -15579,7 +15572,7 @@
                 }
               ]
             },
-            "genreForm": {
+            "category": {
               "@type": "GenreForm",
               "prefLabel": "E-böcker"
             }
