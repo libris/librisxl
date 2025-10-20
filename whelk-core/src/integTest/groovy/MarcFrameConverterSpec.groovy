@@ -271,7 +271,7 @@ class MarcFrameConverterSpec extends Specification {
                 "instanceOf": [
                     "@type": "Text",
                     "language": [["@id": "https://id.kb.se/language/swe"]],
-                    "genreForm": [
+                    "category": [
                         ["sameAs": [["@id": "https://id.kb.se/marc/BooksLiteraryFormType-1"]]],
                         ["sameAs": [["@id": "https://id.kb.se/marc/BooksBiographyType-d"]]]
                     ]
