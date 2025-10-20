@@ -10191,28 +10191,30 @@
               "typeNote": "Textbok",
               "category": [
                 {
-                  "@id": "https://id.kb.se/term/rda/carrier/nc",
-                  "@type": "CarrierType",
-                  "code": "nc"
-                },
-                {
                   "@id": "https://id.kb.se/term/rda/media/n",
                   "@type": "MediaType",
                   "code": "n"
+                },
+                {
+                  "@id": "https://id.kb.se/term/rda/carrier/nc",
+                  "@type": "CarrierType",
+                  "code": "nc"
                 }
               ],
               "hasPart": [
                 {
+                  "@type": "Instance",
+                  "typeNote": "Ljudbok",
                   "category": [
-                    {
-                      "@id": "https://id.kb.se/term/rda/carrier/sd",
-                      "@type": "CarrierType",
-                      "code": "sd"
-                    },
                     {
                       "@id": "https://id.kb.se/term/rda/media/s",
                       "@type": "MediaType",
                       "code": "s"
+                    },
+                    {
+                      "@id": "https://id.kb.se/term/rda/carrier/sd",
+                      "@type": "CarrierType",
+                      "code": "sd"
                     }
                   ]
                 }
@@ -13143,19 +13145,6 @@
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"},
       "_spec": [
-        {
-          "name": "Random FAILING test representing a simple free text MARC tag",
-          "source": [{"586": {"ind1": "0", "ind2": " ", "subfields": [{"a": "EBZ"}]}}],
-          "normalized": [{"586": {"ind1": " ", "ind2": " ", "subfields": [{"a": "EBZ"}]}}],
-          "result": {
-            "mainEntity": {
-              "instanceOf": {
-                "@type": "Text"
-              },
-              "awardsNote":  "This test is expected to fail. Introduced temporarily just to explore how testing works."
-            }
-          }
-        },
         {
           "source": [{"586": {"ind1": "0", "ind2": " ", "subfields": [{"a": "EBZ"}]}}],
           "normalized": [{"586": {"ind1": " ", "ind2": " ", "subfields": [{"a": "EBZ"}]}}],
