@@ -375,27 +375,6 @@
           }
         },
         {
-          "name": "NEW @type Serial, type Text",
-          "originalLeader": "00887cas a2200277 a 4500",
-          "source": {"leader": "     cas a        a 4500", "fields": [{"001": "0000000"}]},
-          "result": {
-            "@type": "Record",
-            "@id": "http://libris.kb.se/bib/0000000",
-            "recordStatus": "marc:CorrectedOrRevised",
-            "descriptionConventions": [{"@id": "https://id.kb.se/marc/CatFormType-a"}],
-            "controlNumber": "0000000",
-            "encodingLevel": "marc:FullLevel",
-            "mainEntity": {
-              "@type": "Instance",
-              "@id": "http://libris.kb.se/resource/bib/0000000",
-              "instanceOf": {
-                "@type": "Text"
-              },
-              "issuanceType" : "Serial"
-            }
-          }
-        },
-        {
           "name": "@type Text (Monograph)",
           "originalLeader": "00887cam a2200277 a 4500",
           "source": {"leader": "     cam a        a 4500", "fields": [{"001": "0000000"}]},
