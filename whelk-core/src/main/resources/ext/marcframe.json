@@ -375,7 +375,7 @@
           }
         },
         {
-          "name": "NEW @type Serial, contentType Text",
+          "name": "NEW @type Serial, type Text",
           "originalLeader": "00887cas a2200277 a 4500",
           "source": {"leader": "     cas a        a 4500", "fields": [{"001": "0000000"}]},
           "result": {
@@ -2991,15 +2991,14 @@
               "instanceOf": {
                 "@type": "Text",
                 "language": [{"@id": "https://id.kb.se/language/swe"}],
-                "contentType": [
+                "category": [
+                  {"@id": "https://id.kb.se/marc/BooksContentsType-e"},
+                  {"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"},
+                  {"@id": "https://id.kb.se/marc/BooksBiographyType-a"},
                   {
-                    "@type": "ContentType",
-                    "label": "just challenging column itemPos"
-                  }
-                ],
-                "category": [{"@id": "https://id.kb.se/marc/BooksContentsType-e"},
-                              {"@id": "https://id.kb.se/marc/BooksLiteraryFormType-0"},
-                              {"@id": "https://id.kb.se/marc/BooksBiographyType-a"}
+                   "@type": "ContentType",
+                   "label": "just challenging column itemPos"
+                   }
                 ]
               }
             }
@@ -9753,7 +9752,7 @@
             "mainEntity": {
               "instanceOf": {
                 "@type": "Text",
-                "contentType": [
+                "category": [
                   {
                     "@id": "https://id.kb.se/term/rda/content/performed%20music",
                     "@type": "ContentType",
@@ -9762,7 +9761,7 @@
                 ],
                 "hasPart": [{
                   "@type": "Work",
-                  "contentType": [
+                  "category": [
                     {
                       "@id": "https://id.kb.se/term/rda/content/prm",
                       "@type": "ContentType",
@@ -9782,7 +9781,7 @@
             "mainEntity": {
               "instanceOf": {
                 "@type": "Text",
-                "contentType": [
+                "category": [
                   {
                     "@id": "https://id.kb.se/term/rda/content/prm",
                     "@type": "ContentType",
@@ -9802,7 +9801,7 @@
             "mainEntity": {
               "instanceOf": {
                 "@type": "Text",
-                "contentType": [
+                "category": [
                   {
                     "@id": "https://id.kb.se/term/rda/content/performed%20music",
                     "@type": "ContentType",
@@ -9821,7 +9820,7 @@
             "mainEntity": {
               "instanceOf": {
                 "@type": "Text",
-                "contentType": [
+                "category": [
                   {
                     "@id": "https://id.kb.se/term/rda/content/prm",
                     "@type": "ContentType",
@@ -9840,7 +9839,7 @@
             "mainEntity": {
               "instanceOf": {
                 "@type": "Text",
-                "contentType": [
+                "category": [
                   {
                     "@type": "ContentType",
                     "code": "prm",
@@ -9905,7 +9904,7 @@
           ],
           "result": {
             "mainEntity": {
-              "mediaType": [
+              "category": [
                 {
                   "@id": "https://id.kb.se/term/rda/media/audio",
                   "@type": "MediaType",
@@ -9914,7 +9913,7 @@
               ],
               "hasPart": [{
                 "@type": "Instance",
-                "mediaType": [
+                "category": [
                   {
                     "@id": "https://id.kb.se/term/rda/media/s",
                     "@type": "MediaType",
@@ -9931,7 +9930,7 @@
           },
           "result": {
             "mainEntity": {
-              "mediaType": [
+              "category": [
                 {
                   "@id": "https://id.kb.se/term/rda/media/s",
                   "@type": "MediaType",
@@ -9948,7 +9947,7 @@
           },
           "result": {
             "mainEntity": {
-              "mediaType": [
+              "category": [
                 {
                   "@id": "https://id.kb.se/term/rda/media/audio",
                   "@type": "MediaType",
@@ -9964,7 +9963,7 @@
           },
           "result": {
             "mainEntity": {
-              "mediaType": [
+              "category": [
                 {
                   "@id": "https://id.kb.se/term/rda/media/s",
                   "@type": "MediaType",
@@ -9980,7 +9979,7 @@
           },
           "result": {
             "mainEntity": {
-              "mediaType": [
+              "category": [
                 {
                   "@type": "MediaType",
                   "code": "s",
@@ -10190,36 +10189,30 @@
           "result": {
             "mainEntity": {
               "typeNote": "Textbok",
-              "mediaType": [
+              "category": [
+                {
+                  "@id": "https://id.kb.se/term/rda/carrier/nc",
+                  "@type": "CarrierType",
+                  "code": "nc"
+                },
                 {
                   "@id": "https://id.kb.se/term/rda/media/n",
                   "@type": "MediaType",
                   "code": "n"
                 }
               ],
-              "category": [
-                {
-                  "@id": "https://id.kb.se/term/rda/carrier/nc",
-                  "@type": "CarrierType",
-                  "code": "nc"
-                }
-              ],
               "hasPart": [
                 {
-                  "@type": "Instance",
-                  "typeNote": "Ljudbok",
-                  "mediaType": [
-                    {
-                      "@id": "https://id.kb.se/term/rda/media/s",
-                      "@type": "MediaType",
-                      "code": "s"
-                    }
-                  ],
                   "category": [
                     {
                       "@id": "https://id.kb.se/term/rda/carrier/sd",
                       "@type": "CarrierType",
                       "code": "sd"
+                    },
+                    {
+                      "@id": "https://id.kb.se/term/rda/media/s",
+                      "@type": "MediaType",
+                      "code": "s"
                     }
                   ]
                 }
@@ -10227,7 +10220,7 @@
               "instanceOf": {
                 "@type": "Text",
                 "typeNote": "Textbok",
-                "contentType": [
+                "category": [
                   {
                     "@type": "ContentType",
                     "code": "txt",
@@ -10238,7 +10231,7 @@
                   {
                     "@type": "Work",
                     "typeNote": "Ljudbok",
-                    "contentType": [
+                    "category": [
                       {
                         "@type": "ContentType",
                         "code": "spw",
