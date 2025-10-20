@@ -99,6 +99,13 @@ public class SelectedFilters {
                 rangeProps.add(pKey);
             }
 
+            // TODO this is just a workaround. Need to properly handle different levels
+            if (slice.subSlice() != null) {
+                String subKey = slice.subSlice().propertyKey();
+                selectedByPropertyKey.put(subKey, List.of());
+                propertyKeyToConnective.put(subKey, slice.subSlice().defaultConnective());
+            }
+
             Predicate<Node> isProperty = n -> n instanceof PathValue pv && pv.hasEqualProperty(slice.propertyKey());
             Predicate<Node> hasEqualsOp = n -> ((PathValue) n).operator().equals(Operator.EQUALS);
             Predicate<Node> hasRangeOp = n -> ((PathValue) n).operator().isRange();
