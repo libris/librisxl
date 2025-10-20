@@ -92,11 +92,18 @@ public class SelectedFilters {
     }
 
     private void init(QueryTree queryTree, AppParams appParams) {
-        for (AppParams.Slice slice : appParams.statsRepr.sliceList()) {
+        for (AppParams.Slice slice : appParams.sliceList) {
             String pKey = slice.propertyKey();
 
             if (slice.isRange()) {
                 rangeProps.add(pKey);
+            }
+
+            // TODO this is just a workaround. Need to properly handle different levels
+            if (slice.subSlice() != null) {
+                String subKey = slice.subSlice().propertyKey();
+                selectedByPropertyKey.put(subKey, List.of());
+                propertyKeyToConnective.put(subKey, slice.subSlice().defaultConnective());
             }
 
             Predicate<Node> isProperty = n -> n instanceof PathValue pv && pv.hasEqualProperty(slice.propertyKey());

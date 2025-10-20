@@ -14,7 +14,7 @@ class QuerySpec extends Specification {
     def "build agg query"() {
         given:
         SelectedFilters selectedFilters = new SelectedFilters(QueryTree.empty(), appParams)
-        Map aggQuery = Query.buildAggQuery(appParams.statsRepr.sliceList(), jsonLd, [], esSettings, selectedFilters)
+        Map aggQuery = Query.buildAggQuery(appParams.sliceList, jsonLd, [], esSettings, selectedFilters)
 
         expect:
         aggQuery == [
@@ -77,7 +77,7 @@ class QuerySpec extends Specification {
     def "build agg query with multi-selected"() {
         given:
         SelectedFilters selectedFilters = new SelectedFilters(new QueryTree("type:(T1 OR T2)", disambiguate), appParams)
-        Map aggQuery = Query.buildAggQuery(appParams.statsRepr.sliceList(), jsonLd, [], esSettings, selectedFilters)
+        Map aggQuery = Query.buildAggQuery(appParams.sliceList, jsonLd, [], esSettings, selectedFilters)
 
         expect:
         aggQuery == [
@@ -180,7 +180,7 @@ class QuerySpec extends Specification {
     def "build agg query, omit incompatible"() {
         given:
         SelectedFilters selectedFilters = new SelectedFilters(new QueryTree("type:((T1 OR T2) T3)", disambiguate), appParams)
-        Map aggQuery = Query.buildAggQuery(appParams.statsRepr.sliceList(), jsonLd, [], esSettings, selectedFilters)
+        Map aggQuery = Query.buildAggQuery(appParams.sliceList, jsonLd, [], esSettings, selectedFilters)
 
         expect:
         aggQuery == [
