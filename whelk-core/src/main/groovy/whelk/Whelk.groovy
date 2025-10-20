@@ -658,8 +658,8 @@ class Whelk {
     }
 
     void insertCategoryByCollection(def thing, Map<String, List<String>> inCollectionById) {
-        var ids = DocumentUtil.getAtPath(thing, ['category', '*', JsonLd.ID_KEY], []) as Set<String>
-        ids += ids.collect{ relations.followBroader(it) }.flatten() as Set<String>
+        var idsFromRecord = DocumentUtil.getAtPath(thing, ['category', '*', JsonLd.ID_KEY], []) as Set<String>
+        var ids = idsFromRecord + (idsFromRecord.collect{ relations.followBroader(it) }.flatten() as Set<String>)
 
         Map<String, Collection<Map<String,String>>> result = [:]
         for (var categoryId : ids) {
@@ -671,6 +671,7 @@ class Whelk {
         }
 
         result = result.subMap(['find', 'identify'])
+        result[JsonLd.NONE_KEY] = idsFromRecord.collect{[(JsonLd.ID_KEY) : it]} as Set<Map<String, String>> - result.values().flatten()
 
         // Within each collection, only keep the narrowest categories
         result.values().each { categories ->
