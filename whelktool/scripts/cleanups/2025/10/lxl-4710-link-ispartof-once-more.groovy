@@ -156,8 +156,13 @@ selectByIds(new File("ids.txt").readLines()) { doc ->
             return
         }
         if (filteredIdentifiers.size() > 1) {
-            _logSkip("found more than one identifier with type ${sourceIdentifiedByType} in target ${properUri}")
-            return
+            if (filteredIdentifiers.size() == 2 && sourceIdentifiedByType == "ISBN" && isSeeminglySameIdentifier(filteredIdentifiers[0]["value"], filteredIdentifiers[1]["value"], "ISBN")) {
+                // This is OK!
+            } else {
+                def targetIdsString = filteredIdentifiers.collect { "'${it.value}'" }.join(', ')
+                _logSkip("multiple identifiers in target ${properUri}. Type: ${sourceIdentifiedByType}, source: '${sourceIdentifiedByValue}', target: ${targetIdsString}")
+                return
+            }
         }
         if (!isSeeminglySameIdentifier(sourceIdentifiedByValue, filteredIdentifiers[0]["value"], sourceIdentifiedByType)) {
             _logSkip("identifiedBy.value mismatch: ${sourceIdentifiedByValue} in source, ${filteredIdentifiers[0]['value']} in target ${properUri}")
@@ -334,7 +339,10 @@ static boolean compareIsbn(String isbn1, String isbn2) {
         return false
     }
 
-    return Unicode.damerauLevenshteinDistance(normalized1, normalized2) < 2
+    return normalized1.equals(normalized2)
+    // Don't do this here because ISBNs are sometimes sequential, so allowing an edit distance of
+    // 1 would make us erroneously treat two distinct ISBNs as identical
+    //return Unicode.damerauLevenshteinDistance(normalized1, normalized2) < 2
 }
 
 static String cleanIsbnIssn(String number) {
