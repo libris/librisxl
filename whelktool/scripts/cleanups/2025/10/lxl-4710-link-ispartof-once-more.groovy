@@ -112,6 +112,18 @@ selectByIds(new File("ids.txt").readLines()) { doc ->
         }
         sourceIdentifiedByType = isPartOf["identifiedBy"][0]["@type"]
         sourceIdentifiedByValue = isPartOf["identifiedBy"][0]["value"]
+
+        // Sometimes the source ISBN is a single string containing multiple ISBNs, often
+        // ISBN-10 and ISBN-13 representations of the same thing, so we try to detect such
+        // cases and keep only one of them for later comparison (doesn't matter which).
+        if (sourceIdentifiedByType == "ISBN" && sourceIdentifiedByValue.size() > 20) {
+            def extractedIds = extractDualIdentifiers(sourceIdentifiedByValue)
+            if (extractedIds) {
+                if (compareIsbn(extractedIds[0], extractedIds[1])) {
+                    sourceIdentifiedByValue = extractedIds[0]
+                }
+            }
+        }
     }
 
     Map sourceProvision = null
@@ -357,6 +369,19 @@ static String normalizeIsbnForComparison(String isbn) {
     } else {
         return isbn
     }
+}
+
+// Match strings with two identifiers, e.g.,
+// "9781443832908 (hbk.) 1443832901 (hbk.)"
+// "978-952-5934-60-1 9789525934601"
+// "9781571133939 (hardcover : alk. paper) 1571133933 (hardcover : alk. paper)"
+def extractDualIdentifiers(String line) {
+    def pattern = ~/(\d[\d-]+\d|\d)\s+(.*?\s+)?(\d[\d-]+\d|\d)/
+    def matcher = line =~ pattern
+    if (matcher.find()) {
+        return [matcher.group(1), matcher.group(3)]
+    }
+    return null
 }
 
 static List isSeeminglySameTitle(String sourceTitle, List targetHasTitle, Map targetThing, String targetProperUri) {
