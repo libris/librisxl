@@ -7,6 +7,9 @@
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import whelk.util.Unicode
+import se.kb.libris.utils.isbn.Isbn
+import se.kb.libris.utils.isbn.IsbnException
+import se.kb.libris.utils.isbn.IsbnParser
 
 String where = """
     collection = 'bib' and deleted = false and data#>>'{@graph,1,isPartOf}' LIKE '%"controlNumber":%'
@@ -18,11 +21,11 @@ def whelk = getWhelk()
 
 //selectBySqlWhere(where) { doc ->
 selectByIds(new File("ids.txt").readLines()) { doc ->
-    def source_thing = doc.graph[1]
+    def sourceThing = doc.graph[1]
     def _logSkip = { msg -> skipped.println("${doc.doc.getURI()}: ${msg}") }
     def _logInfo = { msg -> info.println("Source: ${doc.doc.getURI()} ${msg}") }
 
-    List isPartOfs = asList(source_thing["isPartOf"])
+    List isPartOfs = asList(sourceThing["isPartOf"])
     if (isPartOfs.size() != 1) {
         _logSkip("more than one isPartOf")
         return
@@ -94,10 +97,10 @@ selectByIds(new File("ids.txt").readLines()) { doc ->
     }
 
     String sourceIdentifiedByType
-    String sourceIdentifiedByValue
+    Set sourceIdentifiedByValue = []
     if (isPartOf.containsKey("identifiedBy")) {
-        if (isPartOf["identifiedBy"].size() != 1) {
-            _logSkip("more than one identifiedBy: ${isPartOf.identifiedBy}")
+        if (!(isPartOf["identifiedBy"][0]["@type"] in ["ISSN", "ISBN"])) {
+            _logSkip("identifiedBy.@type is neither ISSN nor ISBN; found ${isPartOf['identifiedBy'][0]['@type']}")
             return
         }
 
@@ -106,24 +109,43 @@ selectByIds(new File("ids.txt").readLines()) { doc ->
             return
         }
 
-        if (!(isPartOf["identifiedBy"][0]["@type"] in ["ISSN", "ISBN"])) {
-            _logSkip("identifiedBy.@type is neither ISSN nor ISBN; found ${isPartOf['identifiedBy'][0]['@type']}")
-            return
-        }
-        sourceIdentifiedByType = isPartOf["identifiedBy"][0]["@type"]
-        sourceIdentifiedByValue = isPartOf["identifiedBy"][0]["value"]
-
-        // Sometimes the source ISBN is a single string containing multiple ISBNs, often
-        // ISBN-10 and ISBN-13 representations of the same thing, so we try to detect such
-        // cases and keep only one of them for later comparison (doesn't matter which).
-        if (sourceIdentifiedByType == "ISBN" && sourceIdentifiedByValue.size() > 20) {
-            def extractedIds = extractDualIdentifiers(sourceIdentifiedByValue)
-            if (extractedIds) {
-                if (compareIsbn(extractedIds[0], extractedIds[1])) {
-                    sourceIdentifiedByValue = extractedIds[0]
-                }
+        if (isPartOf["identifiedBy"].size() > 1) {
+            Set idByTypes = isPartOf["identifiedBy"].collect { it["@type"] }.toSet()
+            if (idByTypes.size() > 1) {
+                _logSkip("more than one identifiedBy type in source: ${idByTypes}")
+                return
             }
         }
+
+        if (isPartOf["identifiedBy"].size() > 1 && isPartOf["identifiedBy"][0]["@type"] == "ISSN") {
+            _logSkip("more than one identifiedBy of type ISSN: ${isPartOf.identifiedBy}")
+            return
+        }
+
+        sourceIdentifiedByType = isPartOf["identifiedBy"][0]["@type"]
+
+        if (sourceIdentifiedByType == "ISBN") {
+            isPartOf["identifiedBy"].each { idBy ->
+                if (idBy["value"].size() > 20) {
+                    def extractedIds = extractIdentifiers(idBy["value"])
+                    if (extractedIds) {
+                        sourceIdentifiedByValue.addAll(extractedIds.collect { toIsbn13(it) })
+                    } else {
+                        sourceIdentifiedByValue.addAll([toIsbn13(idBy["value"])])
+                    }
+                } else {
+                    sourceIdentifiedByValue.addAll([toIsbn13(idBy["value"])])
+                }
+            }
+        } else if (sourceIdentifiedByType == "ISSN") {
+            isPartOf["identifiedBy"].each { idBy ->
+                // There are records with multiple ISSNs in the same string, so, after cleaning,
+                // split every 8 chars
+                sourceIdentifiedByValue.addAll(cleanIsbnIssn(idBy["value"]).toList().collate(8)*.join())
+            }
+        }
+
+        sourceIdentifiedByValue = sourceIdentifiedByValue - null
     }
 
     Map sourceProvision = null
@@ -161,24 +183,29 @@ selectByIds(new File("ids.txt").readLines()) { doc ->
 
     if (isPartOf.containsKey("identifiedBy")) {
         List targetIdentifiers = getAtPath(targetThing, ['identifiedBy', '*'], [])
-
         List filteredIdentifiers = targetIdentifiers.findAll { it.containsKey("@type") && it.containsKey("value") && it["@type"] == sourceIdentifiedByType }
         if (filteredIdentifiers.size() == 0) {
             _logSkip("no identifier with type ${sourceIdentifiedByType} in target ${properUri}, probably LibrisIIINumber")
             return
         }
-        if (filteredIdentifiers.size() > 1) {
-            if (filteredIdentifiers.size() == 2 && sourceIdentifiedByType == "ISBN" && isSeeminglySameIdentifier(filteredIdentifiers[0]["value"], filteredIdentifiers[1]["value"], "ISBN")) {
-                // This is OK!
-            } else {
-                def targetIdsString = filteredIdentifiers.collect { "'${it.value}'" }.join(', ')
-                _logSkip("multiple identifiers in target ${properUri}. Type: ${sourceIdentifiedByType}, source: '${sourceIdentifiedByValue}', target: ${targetIdsString}")
+
+        if (sourceIdentifiedByType == "ISBN") {
+            Set targetIdentifiedByValue = filteredIdentifiers.collect { toIsbn13(it["value"]) }.toSet() - null
+            if (sourceIdentifiedByValue != targetIdentifiedByValue) {
+                _logSkip("${sourceIdentifiedByType} identifiers not matching in target ${properUri}. Source: ${sourceIdentifiedByValue}; target: ${targetIdentifiedByValue}")
                 return
+            }      
+        } else if (sourceIdentifiedByType == "ISSN") {
+            Set targetIdentifiedByValue = filteredIdentifiers.collect { cleanIsbnIssn(it["value"]) }.toSet() - null
+            // For ISSN it's enough that source and target have one (non-null) value in common
+            if (sourceIdentifiedByValue.disjoint(targetIdentifiedByValue)) {
+                if (sourceIdentifiedByValue.size() == 1 && targetIdentifiedByValue.size() == 1 && Unicode.damerauLevenshteinDistance(sourceIdentifiedByValue[0], targetIdentifiedByValue[0]) < 2) {
+                    // // Allow for a simple typo
+                } else {
+                    _logSkip("${sourceIdentifiedByType} identifiers not matching in target ${properUri}. Source: ${sourceIdentifiedByValue}; target: ${targetIdentifiedByValue}")
+                    return
+                }
             }
-        }
-        if (!isSeeminglySameIdentifier(sourceIdentifiedByValue, filteredIdentifiers[0]["value"], sourceIdentifiedByType)) {
-            _logSkip("identifiedBy.value mismatch: ${sourceIdentifiedByValue} in source, ${filteredIdentifiers[0]['value']} in target ${properUri}")
-            return
         }
     }
 
@@ -238,8 +265,8 @@ selectByIds(new File("ids.txt").readLines()) { doc ->
         }
     }
 
-    source_thing["isPartOf"][0].clear()
-    source_thing["isPartOf"][0]["@id"] = properUri
+    sourceThing["isPartOf"][0].clear()
+    sourceThing["isPartOf"][0]["@id"] = properUri
 
     doc.scheduleSave()
 }
@@ -309,54 +336,6 @@ static List compareStrings(String sourceString, String targetString) {
     ]
 }
 
-static boolean isSeeminglySameIdentifier(String sourceIdentifier, String targetIdentifier, String identifierType) {
-    if (identifierType == "ISBN") {
-        return compareIsbn(sourceIdentifier, targetIdentifier)
-    } else if (identifierType == "ISSN") {
-        return compareIssn(sourceIdentifier, targetIdentifier)
-    } else {
-        return sourceIdentifier.equalsIgnoreCase(targetIdentifier)
-    }
-}
-
-static boolean compareIssn(String issn1, String issn2) {
-    def cleaned1 = cleanIsbnIssn(issn1)
-    def cleaned2 = cleanIsbnIssn(issn2)
-
-    if (cleaned1.size() == 0 && cleaned2.size() == 0) {
-        return true
-    }
-
-    // Do allow one missing digit
-    if (cleaned1.size() < 7 || cleaned2.size() < 7) {
-        return false
-    }
-
-    return Unicode.damerauLevenshteinDistance(cleaned1, cleaned2) < 2
-}
-
-static boolean compareIsbn(String isbn1, String isbn2) {
-    def cleaned1 = cleanIsbnIssn(isbn1)
-    def cleaned2 = cleanIsbnIssn(isbn2)
-
-    if (cleaned1.size() == 0 && cleaned2.size() == 0) {
-        return true
-    }
-
-    def normalized1 = normalizeIsbnForComparison(cleaned1)
-    def normalized2 = normalizeIsbnForComparison(cleaned2)
-
-    // Do allow one missing digit
-    if (normalized1.size() < 9 || normalized2.size() < 9) {
-        return false
-    }
-
-    return normalized1.equals(normalized2)
-    // Don't do this here because ISBNs are sometimes sequential, so allowing an edit distance of
-    // 1 would make us erroneously treat two distinct ISBNs as identical
-    //return Unicode.damerauLevenshteinDistance(normalized1, normalized2) < 2
-}
-
 static String cleanIsbnIssn(String number) {
     return number.replaceAll(/\([^)]*\)/, '').replaceAll(/[^0-9Xx]/, '').toUpperCase()
 }
@@ -371,17 +350,38 @@ static String normalizeIsbnForComparison(String isbn) {
     }
 }
 
-// Match strings with two identifiers, e.g.,
+static String toIsbn13(String isbnStr) {
+    def cleaned = cleanIsbnIssn(isbnStr)
+
+    if (cleaned.length() == 13) {
+        return cleaned
+    }
+
+    if (cleaned.length() != 10) {
+        return null
+    }
+
+    Isbn isbn
+    try {
+        isbn = IsbnParser.parse(cleaned)
+    } catch (IsbnException e) {
+    }
+
+    if (isbn == null) {
+        return null
+    }
+
+    return isbn.convert(Isbn.ISBN13)
+}
+
+// Extract identifiers from strings that might have several of them, e.g.,
 // "9781443832908 (hbk.) 1443832901 (hbk.)"
 // "978-952-5934-60-1 9789525934601"
 // "9781571133939 (hardcover : alk. paper) 1571133933 (hardcover : alk. paper)"
-def extractDualIdentifiers(String line) {
-    def pattern = ~/(\d[\d-]+\d|\d)\s+(.*?\s+)?(\d[\d-]+\d|\d)/
-    def matcher = line =~ pattern
-    if (matcher.find()) {
-        return [matcher.group(1), matcher.group(3)]
-    }
-    return null
+// "978-952-5934-60-1 9789525934601 1443832901"
+def extractIdentifiers(String input) {
+    def pattern = ~/\d[\d-]*[\dX]/
+    return input.findAll(pattern)
 }
 
 static List isSeeminglySameTitle(String sourceTitle, List targetHasTitle, Map targetThing, String targetProperUri) {
