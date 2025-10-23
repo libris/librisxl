@@ -160,9 +160,9 @@ public class Query {
     }
 
     protected Map<String, Object> getEsQuery(QueryTree queryTree, Collection<String> rulingTypes) {
-        List<Node> multiSelectedFilters = selectedFilters.getAllMultiSelected().values().stream().flatMap(List::stream).toList();
+        List<Node> mmSelectedFilters = selectedFilters.getAllMultiOrMenuSelected().values().stream().flatMap(List::stream).toList();
         ESSettings currentEsSettings = queryParams.boost != null ? esSettings.withBoostSettings(queryParams.boost) : esSettings;
-        var mainQuery = queryTree.toEs(whelk.getJsonld(), currentEsSettings, rulingTypes, multiSelectedFilters);
+        var mainQuery = queryTree.toEs(whelk.getJsonld(), currentEsSettings, rulingTypes, mmSelectedFilters);
         var functionScore = currentEsSettings.boost().functionScore().toEs();
         var constantScore = currentEsSettings.boost().constantScore().toEs();
         return mustWrap(Stream.of(mainQuery, functionScore, constantScore).filter(Predicate.not(Map::isEmpty)).toList());
@@ -173,7 +173,7 @@ public class Query {
     }
 
     protected Map<String, Object> getPostFilter(Collection<String> rulingTypes) {
-        return getEsMultiSelectedFilters(selectedFilters.getAllMultiSelected(), rulingTypes, whelk.getJsonld(), esSettings);
+        return getEsMmSelectedFilters(selectedFilters.getAllMultiOrMenuSelected(), rulingTypes, whelk.getJsonld(), esSettings);
     }
 
     protected Map<String, Object> getPartialCollectionView() {
@@ -266,14 +266,14 @@ public class Query {
         return getEsQuery(queryTree, List.of());
     }
 
-    private static Map<String, Object> getEsMultiSelectedFilters(Map<String, List<Node>> multiSelected,
-                                                                 Collection<String> rulingTypes,
-                                                                 JsonLd jsonLd,
-                                                                 ESSettings esSettings) {
-        if (multiSelected.isEmpty()) {
+    private static Map<String, Object> getEsMmSelectedFilters(Map<String, List<Node>> mmSelected,
+                                                              Collection<String> rulingTypes,
+                                                              JsonLd jsonLd,
+                                                              ESSettings esSettings) {
+        if (mmSelected.isEmpty()) {
             return Map.of();
         }
-        List<Node> orGrouped = multiSelected.values()
+        List<Node> orGrouped = mmSelected.values()
                 .stream()
                 .map(selected -> selected.size() > 1 ? new Or(selected) : selected.getFirst())
                 .toList();
@@ -329,7 +329,7 @@ public class Query {
     }
 
     private record AggContext(JsonLd jsonLd,
-                              Map<String, List<Node>> multiSelected,
+                              Map<String, List<Node>> mmSelected,
                               Collection<String> rulingTypes,
                               ESSettings esSettings,
                               SelectedFilters selectedFilters) { }
@@ -345,11 +345,11 @@ public class Query {
                             Map.of("field", JsonLd.TYPE_KEY)));
         }
 
-        Map<String, List<Node>> multiSelected = selectedFilters.getAllMultiSelected();
+        Map<String, List<Node>> mmSelected = selectedFilters.getAllMultiOrMenuSelected();
 
         Map<String, Object> query = new LinkedHashMap<>();
 
-        var ctx = new AggContext(jsonLd, multiSelected, rulingTypes, esSettings, selectedFilters);
+        var ctx = new AggContext(jsonLd, mmSelected, rulingTypes, esSettings, selectedFilters);
         for (AppParams.Slice slice : sliceList) {
             addSliceToAggQuery(query, slice, ctx);
         }
@@ -367,7 +367,7 @@ public class Query {
             return;
         }
 
-        Property property = slice.getProperty(ctx.jsonLd);
+        Property property = slice.getProperty();
 
         if (!property.restrictions().isEmpty()) {
             // TODO: E.g. author (combining contribution.role and contribution.agent)
@@ -387,12 +387,19 @@ public class Query {
             Map<String, Object> aggs = path.getEsNestedStem(ctx.esSettings.mappings())
                     .map(nestedStem -> buildNestedAggQuery(field, slice, nestedStem, ctx))
                     .orElse(buildCoreAqqQuery(field, slice, ctx));
-            Map<String, List<Node>> mSelected = ctx.selectedFilters.isMultiSelectable(pKey)
-                    ? new HashMap<>(ctx.multiSelected) {{
-                remove(pKey);
-            }}
-                    : ctx.multiSelected;
-            Map<String, Object> filter = getEsMultiSelectedFilters(mSelected, ctx.rulingTypes, ctx.jsonLd, ctx.esSettings);
+            Map<String, List<Node>> mSelected = ctx.selectedFilters.isMultiOrMenu(pKey)
+                    ? with(new HashMap<>(ctx.mmSelected), m -> {
+                            m.remove(pKey);
+                            // FIXME
+                            if (slice.parentSlice() != null) {
+                                m.remove(slice.parentSlice().propertyKey());
+                            }
+                            if (slice.subSlice() != null) {
+                                m.remove(slice.subSlice().propertyKey());
+                            }
+                        })
+                    : ctx.mmSelected;
+            Map<String, Object> filter = getEsMmSelectedFilters(mSelected, ctx.rulingTypes, ctx.jsonLd, ctx.esSettings);
             query.put(field, filterWrap(aggs, property.name(), filter));
         });
     }
@@ -475,7 +482,7 @@ public class Query {
                     "_predicates", predicates);
         }
 
-        class Observation {
+        private class Observation {
             PathValue object;
             int count = 0;
             int largestCount = 0;
@@ -502,9 +509,15 @@ public class Query {
             int count() {
                 return count;
             }
+
+            public void collectValues(Set<String> resultValues) {
+                if (subSlices != null) {
+                    subSlices.collectValues(resultValues);
+                }
+            }
         }
 
-        class SliceResult {
+        private class SliceResult {
             Map<String, Observation> buckets;
 
             void add(QueryResult.Bucket bucket) {
@@ -519,8 +532,8 @@ public class Query {
             private Predicate<Map.Entry<String, Observation>> isNarrower(Value parentValue) {
                 return (Map.Entry<String, Observation> entry) -> {
                     if (//entry.getValue().object.value() instanceof Link narrower
-                        JsonLd.looksLikeIri(entry.getKey())
-                            && parentValue instanceof Link broader) {
+                            JsonLd.looksLikeIri(entry.getKey())
+                                    && parentValue instanceof Link broader) {
                         var narrower = entry.getKey();
                         return whelk.getRelations().isImpliedBy(broader.iri(), narrower);
                     }
@@ -528,13 +541,12 @@ public class Query {
                 };
             }
 
-            public List<Map<String, Object>> getObservations(AppParams.Slice slice, Value parentValue) {
+            public List<Map<String, Object>> getObservations(AppParams.Slice slice, Value parentValue, List<Node> selectedValue) {
                 if (buckets == null) {
-                   return Collections.emptyList();
+                    return Collections.emptyList();
                 }
 
-                // FIXME
-                var property = slice.getProperty(Query.this.whelk.getJsonld());
+                var property = slice.getProperty();
 
                 String propertyKey = property.name();
                 List<Map<String, Object>> observations = new ArrayList<>();
@@ -566,7 +578,10 @@ public class Query {
                                 return;
                             }
 
-                            boolean isSelected = selectedFilters.isSelected(pv, property.queryForm());
+                            // TODO
+                            boolean isSelected = selectedValue!=null && !selectedValue.isEmpty()
+                                    ? selectedValue.stream().anyMatch(n -> n instanceof PathValue pv2 && pv2.value() instanceof Link l && v instanceof Link l2 && l.iri().equals(l2.iri()))
+                                    : selectedFilters.isSelected(pv, property.queryForm());
 
                             Consumer<QueryTree> addObservation = alteredTree -> {
                                 Map<String, Object> observation = new LinkedHashMap<>();
@@ -577,8 +592,11 @@ public class Query {
                                 if (connective == Connective.OR) {
                                     observation.put("_selected", isSelected);
                                 }
+                                if (selectedFilters.isMenuSelectable(propertyKey) && isSelected) {
+                                    observation.put("_selected", true);
+                                }
                                 if (o.subSlices != null && slice.subSlice() != null) {
-                                    observation.put("sliceByDimension", o.subSlices.getSliceByDimension(List.of(slice.subSlice()), selectedFilters, v));
+                                    observation.put("sliceByDimension", o.subSlices.getSliceByDimension(List.of(slice.subSlice()), selectedFilters, v, selectedValue));
                                 }
 
                                 observations.add(observation);
@@ -587,6 +605,12 @@ public class Query {
                                     links.add(l);
                                 }
                             };
+
+                            if (selectedFilters.isMenuSelectable(propertyKey)) {
+                                List<Node> selected = selectedValue != null ? selectedValue : Collections.emptyList();
+                                addObservation.accept(qt.remove(selected).add(pv));
+                                return;
+                            }
 
                             switch (connective) {
                                 case AND -> {
@@ -606,9 +630,9 @@ public class Query {
                                         if (selected.isEmpty()) {
                                             addObservation.accept(qt.add(pv));
                                         } else {
-                                            var newSelected = new ArrayList<>(selected) {{
-                                                add(pv);
-                                            }};
+                                            var newSelected = with(new ArrayList<>(selected), l -> {
+                                                l.add(pv);
+                                            });
                                             var alteredTree = qt.remove(selected).add(new Or(newSelected));
                                             addObservation.accept(alteredTree);
                                         }
@@ -618,6 +642,15 @@ public class Query {
                         });
 
                 return observations;
+            }
+
+            public void collectValues(Set<String> resultValues) {
+                if (buckets != null) {
+                    resultValues.addAll(buckets.keySet());
+                    for (var b : buckets.values()) {
+                        b.collectValues(resultValues);
+                    }
+                }
             }
         }
 
@@ -647,15 +680,14 @@ public class Query {
             }
 
             public Map<String, Object> getSliceByDimension(List<AppParams.Slice> slices, SelectedFilters selectedFilters) {
-                return getSliceByDimension(slices, selectedFilters, null);
+                return getSliceByDimension(slices, selectedFilters, null, null);
             }
 
-            public Map<String, Object> getSliceByDimension(List<AppParams.Slice> slices, SelectedFilters selectedFilters, Value parentValue) {
+            private Map<String, Object> getSliceByDimension(List<AppParams.Slice> slices, SelectedFilters selectedFilters, Value parentValue, List<Node> selectedValue) {
                 Map<String, Object> result = new LinkedHashMap<>();
 
                 slices.forEach(slice -> {
-                    // FIXME
-                    var property = slice.getProperty(Query.this.whelk.getJsonld());
+                    var property = slice.getProperty();
                     var propertyKey = property.name();
 
                     if (!selectedFilters.isSelectable(propertyKey)) {
@@ -668,8 +700,27 @@ public class Query {
                         return;
                     }
 
+                    // TODO
+                    List<Node> mySelectedValue = selectedValue;
+                    if (selectedFilters.isMenuSelectable(propertyKey) && parentValue == null && selectedValue == null) {
+                        var values = new HashSet<String>();
+                        sliceResult.collectValues(values);
+
+                        var term = property instanceof Property.Ix ix
+                                ? ix.term()
+                                : property;
+
+                        // TODO
+                        mySelectedValue = queryTree.findTopNodesByCondition(node -> node instanceof PathValue pv
+                            && pv.value() instanceof Link link && values.contains(link.iri()));
+
+//pv.path().expand(whelk.getJsonld()).firstProperty().map(p -> p.equals(property)).orElse(false)
+//&& pv.value() instanceof Link link && values.contains(link.iri())
+
+                    }
+
                     var sliceNode = new LinkedHashMap<>();
-                    var observations = sliceResult.getObservations(slice, parentValue);
+                    var observations = sliceResult.getObservations(slice, parentValue, mySelectedValue);
                     if (!observations.isEmpty()) {
                         if (selectedFilters.isRangeFilter(propertyKey)) {
                             sliceNode.put("search", getRangeTemplate(propertyKey));
@@ -684,6 +735,19 @@ public class Query {
 
                 return result;
             }
+
+            private void collectValues(Set<String> resultValues) {
+                if (sliceResults != null) {
+                    sliceResults.values().forEach(sliceResult -> sliceResult.collectValues(resultValues));
+                }
+            }
+
+            private Set<String> collectValues() {
+                var result = new HashSet<String>();
+                collectValues(result);
+                return result;
+            }
+
         }
 
         // Problem: Same value in different fields will be counted twice, e.g. contribution.agent + instanceOf.contribution.agent
@@ -760,5 +824,10 @@ public class Query {
 
             return results;
         }
+    }
+
+    private static <T> T with(T t, Consumer<T> f) {
+        f.accept(t);
+        return t;
     }
 }

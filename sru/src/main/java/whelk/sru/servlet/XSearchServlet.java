@@ -213,7 +213,7 @@ public class XSearchServlet extends WhelkHttpServlet {
             }
 
             QueryParams qp = new QueryParams(paramsAsIfSearch);
-            AppParams ap = new AppParams(new HashMap<>(), qp);
+            AppParams ap = new AppParams(new HashMap<>(), qp, whelk.getJsonld());
             var results = new Query(qp, ap, vocabMappings, esSettings, whelk).collectResults();
 
             @SuppressWarnings("unchecked")

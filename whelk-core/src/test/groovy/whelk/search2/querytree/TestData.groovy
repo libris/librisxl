@@ -199,6 +199,6 @@ class TestData {
                         ]
                 ]
         ]
-        return new AppParams(appConfig, new QueryParams([:]))
+        return new AppParams(appConfig, new QueryParams([:]), getJsonLd())
     }
 }

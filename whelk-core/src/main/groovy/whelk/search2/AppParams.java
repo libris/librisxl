@@ -27,8 +27,8 @@ public class AppParams {
     public final SiteFilters siteFilters;
     public final Map<String, List<String>> relationFilters;
 
-    public AppParams(Map<String, Object> appConfig, QueryParams queryParams) {
-        this.sliceList = getSliceList(appConfig);
+    public AppParams(Map<String, Object> appConfig, QueryParams queryParams, JsonLd jsonLd) {
+        this.sliceList = getSliceList(appConfig, jsonLd);
         this.siteFilters = getSiteFilters(appConfig, queryParams);
         this.relationFilters = getRelationFilters(appConfig);
     }
@@ -88,20 +88,11 @@ public class AppParams {
         private final boolean isRange;
         private final Query.Connective defaultConnective;
         private final Slice subSlice;
+        private Slice parentSlice = null;
 
-        private Property property;
+        private final Property property;
 
-        public Slice(String propertyKey, Map<?, ?> settings) {
-            this.propertyKey = propertyKey;
-            this.sortOrder = getSortOrder(settings);
-            this.bucketSortKey = getBucketSortKey(settings);
-            this.itemLimit = itemLimit(settings);
-            this.isRange = getRangeFlag(settings);
-            this.defaultConnective = getConnective(settings);
-            this.subSlice = getSubSlice(settings);
-        }
-
-        public Slice(Map<?, ?> settings) {
+        public Slice(Map<?, ?> settings, JsonLd jsonLd) {
             var chain = ((List<?>) settings.get("dimensionChain")).stream().map(String::valueOf).toList();
             this.propertyKey = String.join(".", chain);
             this.sortOrder = getSortOrder(settings);
@@ -109,7 +100,20 @@ public class AppParams {
             this.itemLimit = itemLimit(settings);
             this.isRange = getRangeFlag(settings);
             this.defaultConnective = getConnective(settings);
-            this.subSlice = getSubSlice(settings);
+            this.subSlice = getSubSlice(settings, jsonLd);
+
+            if (propertyKey.contains(".") && jsonLd.indexMapTerms.contains(propertyKey.split("\\.")[0])) {
+                var path = propertyKey.split("\\.");
+                var term = new Property(jsonLd.indexMapTermsFor.get(path[0]), jsonLd);
+                this.property = new Property.Ix(propertyKey, term);
+            } else {
+                this.property = new Property(propertyKey, jsonLd);
+            }
+        }
+
+        public Slice(Map<?, ?> settings, Slice parent, JsonLd jsonLd) {
+            this(settings, jsonLd);
+            parentSlice = parent;
         }
 
         public String propertyKey() {
@@ -140,16 +144,11 @@ public class AppParams {
             return subSlice;
         }
 
-        public Property getProperty(JsonLd jsonLd) {
-            if (property == null) {
-                if (propertyKey.contains(".") && jsonLd.indexMapTerms.contains(propertyKey.split("\\.")[0])) {
-                    var path = propertyKey.split("\\.");
-                    var term = new Property(jsonLd.indexMapTermsFor.get(path[0]), jsonLd);
-                    this.property = new Property.Ix(propertyKey, term);
-                } else {
-                    this.property = new Property(propertyKey, jsonLd);
-                }
-            }
+        public Slice parentSlice() {
+            return parentSlice;
+        }
+
+        public Property getProperty() {
             return property;
         }
 
@@ -180,19 +179,19 @@ public class AppParams {
                     .orElse(Query.Connective.AND);
         }
 
-        private Slice getSubSlice(Map<?, ?> settings) {
+        private Slice getSubSlice(Map<?, ?> settings, JsonLd jsonLd) {
             return Optional.ofNullable((Map<?,?>) settings.get("slice"))
-                    .map(Slice::new)
+                    .map(s -> new Slice(s, this, jsonLd))
                     .orElse(null);
         }
     }
 
-    private List<Slice> getSliceList(Map<String, Object> appConfig) {
+    private List<Slice> getSliceList(Map<String, Object> appConfig, JsonLd jsonLd) {
         if (appConfig.containsKey("statistics")) {
             var s = (Map<?, ?>) appConfig.get("statistics");
             if (s.containsKey("sliceList")) {
                 var sliceList = (List<Map<?, ?>>) s.get("sliceList");
-                return sliceList.stream().map(Slice::new).collect(Collectors.toList());
+                return sliceList.stream().map(settings -> new Slice(settings, jsonLd)).collect(Collectors.toList());
             }
         }
 

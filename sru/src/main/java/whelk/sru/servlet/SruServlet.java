@@ -75,7 +75,7 @@ public class SruServlet extends WhelkHttpServlet {
             paramsAsIfSearch.put("_q", q);
             paramsAsIfSearch.put("_stats", new String[] { "false" }); // don't need facets
             QueryParams qp = new QueryParams(paramsAsIfSearch);
-            AppParams ap = new AppParams(new HashMap<>(), qp);
+            AppParams ap = new AppParams(new HashMap<>(), qp, whelk.getJsonld());
             Query query = new Query(qp, ap, vocabMappings, esSettings, whelk);
             results = query.collectResults();
         } catch (InvalidQueryException e) {
