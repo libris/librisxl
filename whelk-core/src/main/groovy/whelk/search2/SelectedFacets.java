@@ -94,11 +94,11 @@ public class SelectedFacets {
             }
 
             // FIXME
-            var property = slice.getProperty() instanceof Property.Ix ix
-                    ? ix.term()
-                    : slice.getProperty();
+            //var property = slice.getProperty() instanceof Property.Ix ix
+            //        ? ix.term()
+            //       : slice.getProperty();
 
-            Predicate<Node> isProperty = n -> n instanceof PathValue pv && pv.hasEqualProperty(property);
+            Predicate<Node> isProperty = n -> n instanceof PathValue pv && pv.hasEqualProperty(pKey);
             Predicate<Node> hasEqualsOp = n -> ((PathValue) n).operator().equals(Operator.EQUALS);
             Predicate<Node> hasRangeOp = n -> ((PathValue) n).operator().isRange();
             Predicate<Node> hasNumericValue = n -> ((PathValue) n).value() instanceof Numeric;

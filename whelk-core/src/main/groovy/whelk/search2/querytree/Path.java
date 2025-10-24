@@ -208,6 +208,7 @@ public class Path {
             return List.of(this);
         }
 
+<<<<<<< HEAD
         private Optional<ExpandedPath> applyIntegralRelation(Property integral, JsonLd jsonLd) {
             if (first() instanceof Property p) {
                 if (integral.isInverseOf(p)) {
@@ -227,7 +228,7 @@ public class Path {
             return Optional.empty();
         }
 
-        public List<ExpandedPath> getAlt2Paths(JsonLd jsonLd) {
+        public List<ExpandedPath> getAlt2Paths(JsonLd jsonLd, Value value) {
             // TODO this should be the responsibility of Property?
             if (origPath != null && origPath.first() instanceof Property p && jsonLd.indexMapTermsOf.containsKey(p.name())) {
                 List<ExpandedPath> altPaths = new ArrayList<>();

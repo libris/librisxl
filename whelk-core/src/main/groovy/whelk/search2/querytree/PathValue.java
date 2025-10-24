@@ -313,10 +313,9 @@ public sealed class PathValue implements Node permits Type {
     private Node _expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
         Path.ExpandedPath expandedPath = path.expand(jsonLd, value);
 
-
         if (!rdfSubjectTypes.isEmpty()) {
             List<Path.ExpandedPath> altPaths = expandedPath.getAltPaths(jsonLd, rdfSubjectTypes);
-            List<Path.ExpandedPath> alt2Paths = expandedPath.getAlt2Paths(jsonLd);
+            List<Path.ExpandedPath> alt2Paths = expandedPath.getAlt2Paths(jsonLd, value);
             var altPvNodes = Stream.concat(altPaths.stream(), alt2Paths.stream())
                     .map(this::withPath)
                     .map(pv -> pv.expand(jsonLd))
