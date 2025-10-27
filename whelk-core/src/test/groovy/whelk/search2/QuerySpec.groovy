@@ -13,8 +13,8 @@ class QuerySpec extends Specification {
 
     def "build agg query"() {
         given:
-        SelectedFacets selectedFacets = new SelectedFacets(QueryTree.empty(), appParams.statsRepr.sliceList())
-        Map aggQuery = Query.buildAggQuery(appParams.statsRepr.sliceList(), jsonLd, [], esSettings, selectedFacets)
+        SelectedFacets selectedFacets = new SelectedFacets(QueryTree.empty(), appParams.sliceList)
+        Map aggQuery = Query.buildAggQuery(appParams.sliceList, jsonLd, [], esSettings, selectedFacets)
 
         expect:
         aggQuery == [
@@ -76,8 +76,9 @@ class QuerySpec extends Specification {
 
     def "build agg query with multi-selected"() {
         given:
-        SelectedFacets selectedFacets = new SelectedFacets(new QueryTree("type:(T1x OR T2x)", disambiguate), appParams.statsRepr.sliceList())
-        Map aggQuery = Query.buildAggQuery(appParams.statsRepr.sliceList(), jsonLd, [], esSettings, selectedFacets)
+        SelectedFacets selectedFacets = new SelectedFacets(new QueryTree("type:(T1x OR T2x)", disambiguate), appParams.sliceList)
+        Map aggQuery = Query.buildAggQuery(appParams.sliceList, jsonLd, [], esSettings, selectedFacets)
+
 
         expect:
         aggQuery == [
@@ -179,8 +180,8 @@ class QuerySpec extends Specification {
 
     def "build agg query, omit incompatible"() {
         given:
-        SelectedFacets selectedFacets = new SelectedFacets(new QueryTree("type:((T1x OR T2x) T3)", disambiguate), appParams.statsRepr.sliceList())
-        Map aggQuery = Query.buildAggQuery(appParams.statsRepr.sliceList(), jsonLd, [], esSettings, selectedFacets)
+        SelectedFacets selectedFacets = new SelectedFacets(new QueryTree("type:((T1x OR T2x) T3)", disambiguate), appParams.sliceList)
+        Map aggQuery = Query.buildAggQuery(appParams.sliceList, jsonLd, [], esSettings, selectedFacets)
 
         expect:
         aggQuery == [

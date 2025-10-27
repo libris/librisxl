@@ -114,3 +114,10 @@ task(doRun, dependsOn: "classes", type: JavaExec) {
     )
     args(System.getProperty("args", "").split() as String[])
 }
+
+task(groovy, dependsOn: "classes", type: JavaExec) {
+    description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = "groovy.ui.GroovyMain"
+    args(System.getProperty("args", "").split() as String[])
+}

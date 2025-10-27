@@ -4,7 +4,6 @@ import whelk.JsonLd
 import whelk.search2.AppParams
 import whelk.search2.Disambiguate
 import whelk.search2.EsMappings
-import whelk.search2.QueryParams
 import whelk.search2.VocabMappings
 
 class TestData {
@@ -203,12 +202,15 @@ class TestData {
 
     static def getAppParams() {
         def appConfig = [
-                '_statsRepr': [
-                        'rdf:type': [:],
-                        'p2'      : [:],
-                        'p6'      : [:]
+                'statistics': [
+                        'sliceList': [
+                            [ 'dimensionChain' : ['rdf:type']],
+                            [ 'dimensionChain' : ['p2']],
+                            [ 'dimensionChain' : ['p6']],
+                        ]
                 ]
         ]
-        return new AppParams(appConfig)
+
+        return new AppParams(appConfig, getJsonLd())
     }
 }

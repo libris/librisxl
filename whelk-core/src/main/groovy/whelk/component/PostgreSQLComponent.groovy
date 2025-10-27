@@ -737,7 +737,7 @@ class PostgreSQLComponent {
              */
             try {
                 connection.setAutoCommit(false)
-                normalizeDocumentForStorage(doc, connection)
+                normalizeDocumentForStorage(doc)
 
                 if (collection == "hold") {
                     checkLinkedShelfMarkOwnership(doc, connection)
@@ -988,7 +988,7 @@ class PostgreSQLComponent {
             if (changedBy == null || minorUpdate)
                 changedBy = oldChangedBy
 
-            normalizeDocumentForStorage(doc, connection)
+            normalizeDocumentForStorage(doc)
 
             if (!writeIdenticalVersions && preUpdateDoc.getChecksum(jsonld).equals(doc.getChecksum(jsonld))) {
                 throw new CancelUpdateException()
@@ -2577,10 +2577,16 @@ class PostgreSQLComponent {
         }
     }
 
-    private void normalizeDocumentForStorage(Document doc, Connection connection) {
-        // Synthetic properties, should never be stored
-        DocumentUtil.findKey(doc.data, [JsonLd.REVERSE_KEY, JsonLd.Platform.COMPUTED_LABEL] ) { value, path ->
-            new DocumentUtil.Remove()
+    private void normalizeDocumentForStorage(Document doc) {
+        var syntheticPropsNeverStore = [
+                JsonLd.REVERSE_KEY,
+                JsonLd.Platform.COMPUTED_LABEL,
+                JsonLd.Platform.CATEGORY_BY_COLLECTION,
+        ]
+        DocumentUtil.findKey(doc.data, syntheticPropsNeverStore) { value, path ->
+            if (path.first() != JsonLd.CONTEXT_KEY) {
+                new DocumentUtil.Remove()
+            }
         }
 
         if (linkFinder != null) {

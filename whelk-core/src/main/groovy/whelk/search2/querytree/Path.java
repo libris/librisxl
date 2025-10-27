@@ -6,6 +6,7 @@ import whelk.search2.QueryUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -216,12 +217,36 @@ public class Path {
                 } else {
                     boolean followIntegralRelation = integral.range().stream().anyMatch(irRangeType -> p.mayAppearOnType(irRangeType, jsonLd));
                     if (followIntegralRelation && !p.name().equals(RECORD_KEY)) {
-                        List<Subpath> adjustedPath = new ArrayList<>(path()) {{ addFirst(integral); }};
+                        List<Subpath> adjustedPath = new ArrayList<>(path()) {{
+                            addFirst(integral);
+                        }};
                         return Optional.of(new ExpandedPath(adjustedPath));
                     }
                 }
             }
             return Optional.empty();
+        }
+
+        public List<ExpandedPath> getAlt2Paths(JsonLd jsonLd) {
+            // TODO this should be the responsibility of Property?
+            if (origPath != null && origPath.first() instanceof Property p && jsonLd.indexMapTermsOf.containsKey(p.name())) {
+                List<ExpandedPath> altPaths = new ArrayList<>();
+                if (jsonLd.indexMapTermsOf.containsKey(p.name())) {
+                    for (String indexMap : jsonLd.indexMapTermsOf.get(p.name)) {
+                        for (String ix : List.of("find", "identify")) { // FIXME where should we get these?
+                            altPaths.add(new ExpandedPath(List.of(
+                                    new Key.RecognizedKey(indexMap),
+                                    new Key.RecognizedKey(ix),
+                                    new Key.RecognizedKey(ID_KEY)
+                            )));
+                        }
+                    }
+                }
+
+                return altPaths;
+            }
+
+            return Collections.emptyList();
         }
     }
 }

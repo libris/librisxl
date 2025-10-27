@@ -1,13 +1,13 @@
 package whelk.search2;
 
-import whelk.search2.querytree.FilterAlias;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Numeric;
-import whelk.search2.querytree.And;
 import whelk.search2.querytree.Or;
 import whelk.search2.querytree.PathValue;
+import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -15,14 +15,25 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class SelectedFacets {
     private final Map<String, List<Node>> selectedByPropertyKey = new HashMap<>();
     private final Map<String, Query.Connective> propertyKeyToConnective = new HashMap<>();
     private final Set<String> rangeProps = new HashSet<>();
 
+    // TODO: don't hardcode
+    private final Set<String> menuProps = Set.of(
+            "_categoryByCollection.find",
+            "_categoryByCollection.identify"
+    );
+
+
     public SelectedFacets(QueryTree queryTree, List<AppParams.Slice> sliceList) {
+        //FIXME
+        for (String menuProp : menuProps) {
+            selectedByPropertyKey.put(menuProp, new ArrayList<>());
+        }
+
         init(queryTree, sliceList);
     }
 
@@ -30,7 +41,15 @@ public class SelectedFacets {
         return selectedByPropertyKey.containsKey(propertyKey);
     }
 
-    public boolean isMultiSelectable(String propertyKey) {
+    public boolean isMultiOrMenu(String propertyKey) {
+        return isMultiSelectable(propertyKey) || isMenuSelectable(propertyKey);
+    }
+
+    public boolean isMenuSelectable(String propertyKey) {
+        return isSelectable(propertyKey) && menuProps.contains(propertyKey);
+    }
+
+    private boolean isMultiSelectable(String propertyKey) {
         return isSelectable(propertyKey) && Query.Connective.OR.equals(propertyKeyToConnective.get(propertyKey));
     }
 
@@ -42,14 +61,14 @@ public class SelectedFacets {
         return isSelectable(propertyKey) && selectedByPropertyKey.get(propertyKey).contains(pathValue);
     }
 
-    public Map<String, List<Node>> getAllMultiSelected() {
-        Map<String, List<Node>> multiSelected = new HashMap<>();
+    public Map<String, List<Node>> getAllMultiOrMenuSelected() {
+        Map<String, List<Node>> result = new HashMap<>();
         selectedByPropertyKey.forEach((pKey, selected) -> {
-            if (isMultiSelectable(pKey) && !getSelected(pKey).isEmpty()) {
-                multiSelected.put(pKey, getSelected(pKey));
+            if (isMultiOrMenu(pKey) && !getSelected(pKey).isEmpty()) {
+                result.put(pKey, getSelected(pKey));
             }
         });
-        return multiSelected;
+        return result;
     }
 
     public List<Node> getRangeSelected(String propertyKey) {
@@ -66,15 +85,20 @@ public class SelectedFacets {
         return rangeProps.contains(propertyKey);
     }
 
-    private void init(QueryTree queryTree, List<AppParams.Slice> sliceList) {
-        for (AppParams.Slice slice : sliceList) {
+    private void addSlice(AppParams.Slice slice, QueryTree queryTree) {
+        {
             String pKey = slice.propertyKey();
 
             if (slice.isRange()) {
                 rangeProps.add(pKey);
             }
 
-            Predicate<Node> isProperty = n -> n instanceof PathValue pv && pv.hasEqualProperty(slice.propertyKey());
+            // FIXME
+            var property = slice.getProperty() instanceof Property.Ix ix
+                    ? ix.term()
+                    : slice.getProperty();
+
+            Predicate<Node> isProperty = n -> n instanceof PathValue pv && pv.hasEqualProperty(property);
             Predicate<Node> hasEqualsOp = n -> ((PathValue) n).operator().equals(Operator.EQUALS);
             Predicate<Node> hasRangeOp = n -> ((PathValue) n).operator().isRange();
             Predicate<Node> hasNumericValue = n -> ((PathValue) n).value() instanceof Numeric;
@@ -85,12 +109,19 @@ public class SelectedFacets {
             if (allNodesWithProperty.isEmpty()) {
                 selectedByPropertyKey.put(pKey, List.of());
                 propertyKeyToConnective.put(pKey, slice.defaultConnective());
-                continue;
+                return;
             }
 
             List<Node> selected = queryTree.getTopNodes().stream()
                     .filter(isPropertyEquals)
                     .toList();
+
+            if (!selected.isEmpty() && slice.getProperty() instanceof Property.Ix ix) {
+
+                selected = selected.stream()
+                        .filter(n -> true)
+                        .toList();
+            }
 
             if (slice.isRange()) {
                 List<Node> rangeSelected = queryTree.getTopNodes().stream()
@@ -112,7 +143,7 @@ public class SelectedFacets {
                             propertyKeyToConnective.put(pKey, slice.defaultConnective());
                         }
                     }
-                    continue;
+                    return;
                 }
             }
 
@@ -130,6 +161,16 @@ public class SelectedFacets {
                 selectedByPropertyKey.put(pKey, selected);
                 propertyKeyToConnective.put(pKey, selected.size() == 1 ? slice.defaultConnective() : Query.Connective.AND);
             }
+        }
+
+        if (slice.subSlice() != null) {
+            addSlice(slice.subSlice(), queryTree);
+        }
+    }
+
+    private void init(QueryTree queryTree, List<AppParams.Slice> sliceList) {
+        for (var slice : sliceList) {
+            addSlice(slice, queryTree);
         }
     }
 }

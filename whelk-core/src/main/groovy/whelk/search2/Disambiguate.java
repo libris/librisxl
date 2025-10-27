@@ -46,7 +46,7 @@ public class Disambiguate {
         Optional<String> mappedProperty = getMappedTerm(key, vocabMappings.propertyAliasMappings);
         if (mappedProperty.isPresent()) {
             if (mappedProperty.get().equals(RDF_TYPE)) {
-                return new Property.RdfType(jsonLd);
+                return new Property.RdfType(jsonLd, new Key.RecognizedKey(key, offset));
             }
             return new Property(mappedProperty.get(), jsonLd, new Key.RecognizedKey(key, offset));
         }

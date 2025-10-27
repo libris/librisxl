@@ -19,7 +19,7 @@ public final class Type extends PathValue {
     }
 
     public Type(String raw, JsonLd jsonld) {
-        this(new Property.RdfType(jsonld), new VocabTerm(raw, jsonld.vocabIndex.get(raw)));
+        this(new Property.RdfType(jsonld, new Key.RecognizedKey(JsonLd.TYPE_KEY)), new VocabTerm(raw, jsonld.vocabIndex.get(raw)));
     }
 
     @Override

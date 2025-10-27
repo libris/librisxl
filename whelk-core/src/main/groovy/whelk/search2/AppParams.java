@@ -6,7 +6,6 @@ import whelk.search2.querytree.Property;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -16,24 +15,14 @@ import java.util.stream.Collectors;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 
 public class AppParams {
-    public final StatsRepr statsRepr;
+    public final List<Slice> sliceList;
     public final List<FilterAlias> filterAliases;
     public final Filters filters;
 
-    public AppParams(Map<String, Object> appConfig) {
-        this.statsRepr = getStatsRepr(appConfig);
+    public AppParams(Map<String, Object> appConfig, JsonLd jsonLd) {
+        this.sliceList = getSliceList(appConfig, jsonLd);
         this.filterAliases = getFilterAliases(appConfig);
         this.filters = getFilters(appConfig);
-    }
-
-    public record StatsRepr(List<Slice> sliceList) {
-        Map<String, Slice> getSliceByPropertyKey() {
-            var m = new LinkedHashMap<String, Slice>();
-            for (Slice s : sliceList()) {
-                m.put(s.propertyKey(), s);
-            }
-            return m;
-        }
     }
 
     public Map<String, FilterAlias> getFilterByAlias() {
@@ -52,19 +41,36 @@ public class AppParams {
         private final String propertyKey;
         private final Sort.Order sortOrder;
         private final Sort.BucketSortKey bucketSortKey;
-        private final int size;
+        private final int itemLimit;
         private final boolean isRange;
         private final Query.Connective defaultConnective;
+        private final Slice subSlice;
+        private Slice parentSlice = null;
 
-        private Property property;
+        private final Property property;
 
-        public Slice(String propertyKey, Map<?, ?> settings) {
-            this.propertyKey = propertyKey;
+        public Slice(Map<?, ?> settings, JsonLd jsonLd) {
+            var chain = ((List<?>) settings.get("dimensionChain")).stream().map(String::valueOf).toList();
+            this.propertyKey = String.join(".", chain);
             this.sortOrder = getSortOrder(settings);
             this.bucketSortKey = getBucketSortKey(settings);
-            this.size = getSize(settings);
+            this.itemLimit = itemLimit(settings);
             this.isRange = getRangeFlag(settings);
             this.defaultConnective = getConnective(settings);
+            this.subSlice = getSubSlice(settings, jsonLd);
+
+            if (propertyKey.contains(".") && jsonLd.indexMapTerms.contains(propertyKey.split("\\.")[0])) {
+                var path = propertyKey.split("\\.");
+                var term = new Property(jsonLd.indexMapTermsFor.get(path[0]), jsonLd);
+                this.property = new Property.Ix(propertyKey, term);
+            } else {
+                this.property = new Property(propertyKey, jsonLd);
+            }
+        }
+
+        public Slice(Map<?, ?> settings, Slice parent, JsonLd jsonLd) {
+            this(settings, jsonLd);
+            parentSlice = parent;
         }
 
         public String propertyKey() {
@@ -80,7 +86,7 @@ public class AppParams {
         }
 
         public int size() {
-            return size;
+            return itemLimit;
         }
 
         public boolean isRange() {
@@ -91,10 +97,15 @@ public class AppParams {
             return defaultConnective;
         }
 
-        public Property getProperty(JsonLd jsonLd) {
-            if (property == null) {
-                this.property = new Property(propertyKey, jsonLd);
-            }
+        public Slice subSlice() {
+            return subSlice;
+        }
+
+        public Slice parentSlice() {
+            return parentSlice;
+        }
+
+        public Property getProperty() {
             return property;
         }
 
@@ -110,8 +121,8 @@ public class AppParams {
                     .orElse(Sort.BucketSortKey.count);
         }
 
-        private int getSize(Map<?, ?> settings) {
-            return Optional.ofNullable((Integer) settings.get("size")).orElse(DEFAULT_BUCKET_SIZE);
+        private int itemLimit(Map<?, ?> settings) {
+            return Optional.ofNullable((Integer) settings.get("itemLimit")).orElse(DEFAULT_BUCKET_SIZE);
         }
 
         private boolean getRangeFlag(Map<?, ?> settings) {
@@ -124,24 +135,28 @@ public class AppParams {
                     .map(Query.Connective::valueOf)
                     .orElse(Query.Connective.AND);
         }
+
+        private Slice getSubSlice(Map<?, ?> settings, JsonLd jsonLd) {
+            return Optional.ofNullable((Map<?,?>) settings.get("slice"))
+                    .map(s -> new Slice(s, this, jsonLd))
+                    .orElse(null);
+        }
     }
 
-    private StatsRepr getStatsRepr(Map<String, Object> appConfig) {
-        return Optional.ofNullable((Map<?, ?>) appConfig.get("_statsRepr"))
-                .map(Map::entrySet)
-                .map(entries -> entries.stream().map(this::getSlice).toList())
-                .map(StatsRepr::new)
-                .orElse(new StatsRepr(Collections.emptyList()));
-    }
+    private List<Slice> getSliceList(Map<String, Object> appConfig, JsonLd jsonLd) {
+        if (appConfig.containsKey("statistics")) {
+            var s = (Map<?, ?>) appConfig.get("statistics");
+            if (s.containsKey("sliceList")) {
+                var sliceList = (List<Map<?, ?>>) s.get("sliceList");
+                return sliceList.stream().map(settings -> new Slice(settings, jsonLd)).collect(Collectors.toList());
+            }
+        }
 
-    private Slice getSlice(Map.Entry<?, ?> statsReprEntry) {
-        var p = (String) statsReprEntry.getKey();
-        var settings = (Map<?, ?>) statsReprEntry.getValue();
-        return new Slice(p, settings);
+        return Collections.emptyList();
     }
 
     private static List<FilterAlias> getFilterAliases(Map<String, Object> appConfig) {
-        return getAsListOfMap(appConfig, "_filterAliases").stream()
+        return getAsListOfMap(appConfig, "filterAliases").stream()
                 .map(m -> new FilterAlias((String) m.get("alias"),
                         (String) m.get("filter"),
                         castToStringObjectMap(m.get("prefLabelByLang"))))
@@ -149,8 +164,8 @@ public class AppParams {
     }
 
     private static Filters getFilters(Map<String, Object> appConfig) {
-        return new Filters(getFilter(appConfig, "_defaultSiteFilters"),
-                getFilter(appConfig, "_optionalSiteFilters"),
+        return new Filters(getFilter(appConfig, "defaultSiteFilters"),
+                getFilter(appConfig, "optionalSiteFilters"),
                 getRelationFilters(appConfig)
         );
     }
@@ -162,7 +177,7 @@ public class AppParams {
     }
 
     private static List<RelationFilter> getRelationFilters(Map<String, Object> appConfig) {
-        return getAsListOfMap(appConfig, "_relationFilters").stream()
+        return getAsListOfMap(appConfig, "relationFilters").stream()
                 .map(m -> new RelationFilter((String) m.get("objectType"),
                         getAsList(m, "predicates").stream().map(String.class::cast).toList()))
                 .toList();

@@ -28,7 +28,7 @@ public class SuggestQuery extends Query {
         put("Bibliography", List.of("bibliography"));
         put("Library", List.of("itemHeldBy"));
         put("Subject", List.of("subject"));
-        put("GenreForm", List.of("genreForm"));
+        put("GenreForm", List.of("category"));
         put("Language", List.of("language", "originalLanguage"));
         put("BibliographicAgent", List.of("contributor", "subject"));
     }};

@@ -31,10 +31,11 @@ public class QueryResult {
     public record Aggregation(String property, String path, List<Bucket> buckets) {
     }
 
-    public record Bucket(String value, int count) {
+    public record Bucket(String value, int count, List<Aggregation> subAggregations) {
     }
 
     public final int numHits;
+
     public final List<Aggregation> aggs;
     public final List<Bucket> pAggs;
     public final List<Spell.Suggestion> spell;
@@ -82,7 +83,7 @@ public class QueryResult {
         return ((Map<?, ?>) aggs.getOrDefault("buckets", Map.of()))
                 .entrySet()
                 .stream()
-                .map(e -> new Bucket((String) e.getKey(), (int) ((Map<?, ?>) e.getValue()).get("doc_count")))
+                .map(e -> new Bucket((String) e.getKey(), (int) ((Map<?, ?>) e.getValue()).get("doc_count"), null))
                 .toList();
     }
 
@@ -109,13 +110,28 @@ public class QueryResult {
 
             var buckets = ((List<?>) agg.get("buckets")).stream()
                     .map(Map.class::cast)
-                    .map(b -> new Bucket(String.valueOf(b.get("key")), (Integer) b.get("doc_count")))
+                    .map(b -> new Bucket(
+                            String.valueOf(b.get("key")),
+                            (Integer) b.get("doc_count"),
+                            subAggs(b)))
                     .toList();
-
             aggregations.add(new Aggregation(property, path, buckets));
         }
 
         return aggregations;
+    }
+
+    private static List<Aggregation> subAggs(Map<?, ?> bucket) {
+        return bucket.size() > 2
+            ? collectAggResult(toSubAggsMap(bucket))
+            : null;
+    }
+
+    private static Map<String, Object> toSubAggsMap(Map<?, ?> bucketMap) {
+        return castToStringObjectMap(bucketMap).entrySet().stream()
+                .filter(e -> !"key".equals(e.getKey()))
+                .filter(e -> !"doc_count".equals(e.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     private static Map<String, Object> getAggregations(Map<String, Object> esResponse) {

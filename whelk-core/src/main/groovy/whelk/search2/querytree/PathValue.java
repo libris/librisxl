@@ -4,7 +4,6 @@ import whelk.JsonLd;
 import whelk.search2.ESSettings;
 import whelk.search2.EsMappings;
 import whelk.search2.Operator;
-import whelk.search2.QueryParams;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -139,8 +138,8 @@ public sealed class PathValue implements Node permits Type {
         return new Type((Property.RdfType) getSoleProperty().get(), (VocabTerm) value());
     }
 
-    public boolean hasEqualProperty(String propertyKey) {
-        return getSoleProperty().map(Property::name).filter(propertyKey::equals).isPresent();
+    public boolean hasEqualProperty(Property property) {
+        return getSoleProperty().filter(property::equals).isPresent();
     }
 
     public PathValue withOperator(Operator replacement) {
@@ -309,9 +308,11 @@ public sealed class PathValue implements Node permits Type {
     private Node _expand(JsonLd jsonLd, Collection<String> subjectTypes) {
         Path.ExpandedPath expandedPath = path.expand(jsonLd, value);
 
+
         if (!subjectTypes.isEmpty()) {
             List<Path.ExpandedPath> altPaths = expandedPath.getAltPaths(jsonLd, subjectTypes);
-            var altPvNodes = altPaths.stream()
+            List<Path.ExpandedPath> alt2Paths = expandedPath.getAlt2Paths(jsonLd);
+            var altPvNodes = Stream.concat(altPaths.stream(), alt2Paths.stream())
                     .map(this::withPath)
                     .map(pv -> pv.expand(jsonLd))
                     .toList();
